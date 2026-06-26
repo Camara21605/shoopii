@@ -78,7 +78,7 @@ export class Client {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column({ name: 'userId', type: 'varchar', length: 36, update: false })
+  @Column({ name: 'userId', type: 'uuid', update: false })
   userId: string;
 
   // ══════════════════════════════════════════════════════════

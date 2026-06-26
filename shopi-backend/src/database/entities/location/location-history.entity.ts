@@ -27,7 +27,7 @@ export class LocationHistory {
   delivery: Delivery;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   deliveryId: string;
 
   /* ── Coordonnées GPS ─────────────────────────────────── */
@@ -57,7 +57,7 @@ export class LocationHistory {
    * Permet de regrouper une trajectoire complète (départ → arrivée).
    */
   @Index()
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   sessionId: string | null;
 
   /* ── Horodatage ──────────────────────────────────────── */

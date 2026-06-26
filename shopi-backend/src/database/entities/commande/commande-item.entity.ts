@@ -56,7 +56,7 @@ export class CommandeItem {
   commande: Commande;
 
   @Index()
-  @Column({ name: 'commandeId', type: 'varchar', length: 36 })
+  @Column({ name: 'commandeId', type: 'uuid' })
   commandeId: string;
 
   /**
@@ -73,7 +73,7 @@ export class CommandeItem {
   @JoinColumn({ name: 'productId' })
   product: Promise<Product> | Product | null;
 
-  @Column({ name: 'productId', type: 'varchar', length: 36, nullable: true })
+  @Column({ name: 'productId', type: 'uuid', nullable: true })
   productId: string | null;
 
   // ─────────────────────────────────────────────────────────────

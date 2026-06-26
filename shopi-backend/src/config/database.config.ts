@@ -65,20 +65,46 @@ import { LocationHistory } from '../database/entities/location/location-history.
 
 /*****************************************************
  * FICHIER : src/config/database.config.ts
- * RÔLE    : Configuration de la connexion à la base de données MySQL via TypeORM. */
+ * RÔLE    : Configuration de la connexion à la base de données PostgreSQL via TypeORM. */
 
 
 export const databaseConfigFactory = {
   inject: [ConfigService],
-  useFactory: (config: ConfigService): TypeOrmModuleOptions => ({
-    type:     'mysql',
-    host:     config.get<string>('DB_HOST',     'localhost'),
-    port:     config.get<number>('DB_PORT',     3307),
-    username: config.get<string>('DB_USERNAME', 'root'),
-    password: config.get<string>('DB_PASSWORD', ''),
-    database: config.get<string>('DB_NAME',     'shopi'),
+  useFactory: (config: ConfigService): TypeOrmModuleOptions => {
 
-    entities: [
+    /*
+     * ── SSL ────────────────────────────────────────────────────────
+     * Obligatoire pour Supabase et tout hébergement PostgreSQL distant.
+     * rejectUnauthorized: false → accepte les certificats auto-signés
+     * (pratique pour dev/staging ; mettre true + CA en production).
+     */
+    const databaseUrl = config.get<string>('DATABASE_URL');
+    const useSSL      = config.get<string>('DB_SSL') === 'true' || !!databaseUrl;
+    /*
+     * ── Connexion ──────────────────────────────────────────────────
+     * MODE 1 : DATABASE_URL présente → TypeORM la parse automatiquement.
+     * MODE 2 : Paramètres individuels (fallback local / CI).
+     */
+    const connectionParams: Partial<TypeOrmModuleOptions> = databaseUrl
+      ? { url: databaseUrl }
+      : {
+          host:     config.get<string>('DB_HOST',     'localhost'),
+          port:     config.get<number>('DB_PORT',     5432),
+          username: config.get<string>('DB_USERNAME', 'postgres'),
+          password: config.get<string>('DB_PASSWORD', ''),
+          database: config.get<string>('DB_NAME',     'postgres'),
+        };
+
+    /* TypeORM utilise un type discriminé (union par driver).
+       Le spread de connectionParams empêche l'inférence statique exacte →
+       on caste uniquement le return pour rester propre. */
+    return {
+      type: 'postgres' as const,
+      ...connectionParams,
+      /* ssl: spread conditionnel — TypeORM refuse ssl:false, on omet la clé si inutile */
+      ...(useSSL && { ssl: { rejectUnauthorized: false } }),
+
+      entities: [
       // 1. Aucune dépendance
       User,
       PanierItem,
@@ -149,27 +175,6 @@ export const databaseConfigFactory = {
     // ✅ Logs SQL uniquement en développement
     logging: config.get<string>('NODE_ENV') === 'development',
 
-    extra: {
-      charset: 'utf8mb4_unicode_ci',
-      /*
-       * ✅ ROW_FORMAT DYNAMIC requis pour les tables avec beaucoup de colonnes JSON/TEXT.
-       * Exécuté automatiquement au démarrage si nécessaire.
-       * Si erreur "Row size too large", exécuter en SQL :
-       *   SET GLOBAL innodb_default_row_format = 'DYNAMIC';
-       *   ALTER TABLE `clients` ROW_FORMAT=DYNAMIC;
-       *   (répéter pour chaque table concernée)
-       */
-    },
-
-    /*
-     * ⚠️ Pour éviter ER_TOO_BIG_ROWSIZE sur les nouvelles tables :
-     * Ajouter dans my.cnf (MySQL server) :
-     *   [mysqld]
-     *   innodb_default_row_format = DYNAMIC
-     *
-     * Ou exécuter une fois en SQL :
-     *   SET GLOBAL innodb_default_row_format = 'DYNAMIC';
-     *   ALTER TABLE `clients` ROW_FORMAT=DYNAMIC;
-     */
-  }),
+    } as TypeOrmModuleOptions;
+  },
 };

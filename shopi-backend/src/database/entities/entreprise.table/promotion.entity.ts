@@ -120,7 +120,7 @@ export class Promotion {
   company: Promise<Company> | Company;
 
   @Index()
-  @Column({ name: 'companyId', type: 'varchar', length: 36 })
+  @Column({ name: 'companyId', type: 'uuid' })
   companyId: string;
 
   // ── Informations de base ───────────────────────────────────────────────────

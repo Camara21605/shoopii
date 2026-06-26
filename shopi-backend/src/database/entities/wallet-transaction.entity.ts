@@ -137,8 +137,7 @@ export class WalletTransaction {
    * ========================================================== */
 
   @Column({
-    type: 'varchar',
-    length: 36,
+    type: 'uuid',
     nullable: true,
   })
   performedBy: string | null;

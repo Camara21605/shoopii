@@ -129,7 +129,7 @@ export class MessageReadReceipt {
   @JoinColumn({ name: 'messageId' })
   message: Message;
 
-  @Column({ name: 'messageId', type: 'varchar', length: 36 })
+  @Column({ name: 'messageId', type: 'uuid' })
   messageId: string;
 
   /* ==========================================================
@@ -162,7 +162,7 @@ export class MessageReadReceipt {
    *
    * Pas de FK TypeORM — résolu dans les SERVICES.
    */
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   readerId: string;
 
   /* ==========================================================

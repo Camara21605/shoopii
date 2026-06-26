@@ -85,7 +85,7 @@ export class CreationCode {
   @JoinColumn({ name: 'generatedById' })
   generatedBy: User;
 
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   generatedById: string;
 
   /* ================= USED BY ================= */
@@ -97,7 +97,7 @@ export class CreationCode {
   @JoinColumn({ name: 'usedById' })
   usedBy: User | null;
 
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   usedById: string | null;
 
   @Column({ type: 'timestamp', nullable: true })
@@ -109,35 +109,35 @@ export class CreationCode {
   @JoinColumn({ name: 'adminId' })
   admin: Admin | null;
 
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   adminId: string | null;
 
   @ManyToOne(() => Partner, { nullable: true })
   @JoinColumn({ name: 'partnerId' })
   partner: Partner | null;
 
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   partnerId: string | null;
 
   @ManyToOne(() => Company, { nullable: true })
   @JoinColumn({ name: 'companyId' })
   company: Company | null;
 
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   companyId: string | null;
 
   @ManyToOne(() => Delivery, { nullable: true })
   @JoinColumn({ name: 'deliveryId' })
   delivery: Delivery | null;
 
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   deliveryId: string | null;
 
   @ManyToOne(() => Correspondent, { nullable: true })
   @JoinColumn({ name: 'correspondentId' })
   correspondent: Correspondent | null;
 
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   correspondentId: string | null;
 
   /* ================= SECURITY ================= */

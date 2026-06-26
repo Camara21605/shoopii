@@ -100,7 +100,7 @@ export class SubCategory {
   category: Category;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   categoryId: string;
 
   /* ==========================================================

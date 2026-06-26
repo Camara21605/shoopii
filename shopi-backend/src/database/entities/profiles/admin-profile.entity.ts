@@ -54,8 +54,7 @@ export class Admin {
    */
   @Column({
     name: 'userId',
-    type: 'varchar',
-    length: 36,
+    type: 'uuid',
     update: false,
   })
   userId: string;
@@ -73,8 +72,7 @@ export class Admin {
 
   @Column({
     name: 'creationCodeId',
-    type: 'varchar',
-    length: 36,
+    type: 'uuid',
     nullable: true,
   })
   creationCodeId: string | null;

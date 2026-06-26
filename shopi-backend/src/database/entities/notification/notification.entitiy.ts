@@ -322,7 +322,7 @@ export class Notification {
    *
    * Pas de FK TypeORM — résolu dans les SERVICES.
    */
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   recipientId: string;
 
   /* ==========================================================
@@ -350,7 +350,7 @@ export class Notification {
    * UUID du profil de l'acteur déclencheur.
    * null si notification automatique système.
    */
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   actorId: string | null;
 
   /* ==========================================================
@@ -593,7 +593,7 @@ export class Notification {
    *
    * Pas de FK TypeORM — résolu dans les SERVICES.
    */
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   resourceId: string | null;
 
   /* ==========================================================

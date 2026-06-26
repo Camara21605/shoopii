@@ -18,7 +18,7 @@ export class AuditLog {
   id: string;
 
   /* ── Acteur ── */
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   actorId: string | null;
 
   @Column({ type: 'varchar', length: 255 })
@@ -38,7 +38,7 @@ export class AuditLog {
   @Column({ type: 'varchar', length: 50, nullable: true })
   targetType: string | null;
 
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   targetId: string | null;
 
   @CreateDateColumn()

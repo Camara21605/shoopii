@@ -20,7 +20,7 @@ export class PanierItem {
   id: string;
 
   /* ── FK Utilisateur ── */
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   @Index()
   userId: string;
 
@@ -29,7 +29,7 @@ export class PanierItem {
   user: User;
 
   /* ── FK Produit ── */
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   produitId: string;
 
   @ManyToOne(() => Product, { eager: true, onDelete: 'CASCADE' })

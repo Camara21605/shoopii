@@ -46,7 +46,7 @@ export class Report {
   @JoinColumn({ name: 'reporterId' })
   reporter: User | null;
 
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   reporterId: string | null;
 
   /* ── Utilisateur visé par le signalement (optionnel) ── */
@@ -54,16 +54,16 @@ export class Report {
   @JoinColumn({ name: 'targetUserId' })
   targetUser: User | null;
 
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   targetUserId: string | null;
 
   @Column({ type: 'enum', enum: ReportStatus, default: ReportStatus.PENDING })
   status: ReportStatus;
 
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   resolvedById: string | null;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   resolvedAt: Date | null;
 
   @CreateDateColumn()

@@ -85,8 +85,7 @@ export class ProductMedia {
    */
   @Column({
     name: 'productId',
-    type: 'varchar',
-    length: 36,
+    type: 'uuid',
   })
   productId: string;
 

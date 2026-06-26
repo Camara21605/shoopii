@@ -202,7 +202,7 @@ export class CommandeCode {
   commande: Commande;
 
   @Index()
-  @Column({ name: 'commandeId', type: 'varchar', length: 36 })
+  @Column({ name: 'commandeId', type: 'uuid' })
   commandeId: string;
 
   // ─────────────────────────────────────────────────────────────
@@ -255,7 +255,7 @@ export class CommandeCode {
    * que c'est bien la bonne personne qui valide.
    */
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   acteurId: string;
 
   /**

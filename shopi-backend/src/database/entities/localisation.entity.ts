@@ -45,7 +45,7 @@ export class Localisation {
   user: User;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   userId: string;
 
   /* ============================================================

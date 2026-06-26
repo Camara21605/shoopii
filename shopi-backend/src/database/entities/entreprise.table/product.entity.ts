@@ -104,7 +104,7 @@ export class Product {
 
   /** UUID de l'entreprise — accessible sans charger la relation */
   @Index() 
-  @Column({ name: 'companyId', type: 'varchar', length: 36 })
+  @Column({ name: 'companyId', type: 'uuid' })
   companyId: string;
 
   // ── Catégorie & Sous-catégorie ─────────────────────────────────────────────
@@ -114,7 +114,7 @@ export class Product {
   @JoinColumn({ name: 'categoryId' })
   category: Category;
 
-  @Column({ name: 'categoryId', type: 'varchar', length: 36 })
+  @Column({ name: 'categoryId', type: 'uuid' })
   categoryId: string;
 
   /** Sous-catégorie facultative (ex: Smartphones Android) */
@@ -122,7 +122,7 @@ export class Product {
   @JoinColumn({ name: 'subCategoryId' })
   subCategory: SubCategory | null;
 
-  @Column({ name: 'subCategoryId', type: 'varchar', length: 36, nullable: true })
+  @Column({ name: 'subCategoryId', type: 'uuid', nullable: true })
   subCategoryId: string | null;
 
   // ── Informations de base ───────────────────────────────────────────────────
@@ -304,7 +304,7 @@ export class Product {
    * UUID de la promotion active sur ce produit — null si aucune.
    * Dénormalisé pour afficher le badge promo en un seul SELECT.
    */
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   activePromoId: string | null;
 
   // ── Timestamps ─────────────────────────────────────────────────────────────

@@ -179,7 +179,7 @@ export class Commande {
   client: Promise<Client> | Client;
 
   @Index()
-  @Column({ name: 'clientId', type: 'varchar', length: 36 })
+  @Column({ name: 'clientId', type: 'uuid' })
   clientId: string;
 
   // ───────────────────────────────────────────────────────────
@@ -198,7 +198,7 @@ export class Commande {
   company: Promise<Company> | Company;
 
   @Index()
-  @Column({ name: 'companyId', type: 'varchar', length: 36 })
+  @Column({ name: 'companyId', type: 'uuid' })
   companyId: string;
 
   // ───────────────────────────────────────────────────────────
@@ -217,7 +217,7 @@ export class Commande {
   @JoinColumn({ name: 'livreurId' })
   livreur: Promise<Delivery> | Delivery | null;
 
-  @Column({ name: 'livreurId', type: 'varchar', length: 36, nullable: true })
+  @Column({ name: 'livreurId', type: 'uuid', nullable: true })
   livreurId: string | null;
 
   // ───────────────────────────────────────────────────────────
@@ -236,7 +236,7 @@ export class Commande {
   @JoinColumn({ name: 'correspondantId' })
   correspondant: Promise<Correspondent> | Correspondent | null;
 
-  @Column({ name: 'correspondantId', type: 'varchar', length: 36, nullable: true })
+  @Column({ name: 'correspondantId', type: 'uuid', nullable: true })
   correspondantId: string | null;
 
   // ───────────────────────────────────────────────────────────
@@ -255,7 +255,7 @@ export class Commande {
   @JoinColumn({ name: 'partenaireId' })
   partenaire: Promise<Partner> | Partner | null;
 
-  @Column({ name: 'partenaireId', type: 'varchar', length: 36, nullable: true })
+  @Column({ name: 'partenaireId', type: 'uuid', nullable: true })
   partenaireId: string | null;
 
   // ─────────────────────────────────────────────────────────────

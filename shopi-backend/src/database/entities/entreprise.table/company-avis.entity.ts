@@ -23,12 +23,12 @@ export class CompanyAvis {
 
   /** Boutique notée */
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   companyId: string;
 
   /** Commande source (UNIQUE : un seul avis par commande) */
   @Index({ unique: true })
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   commandeId: string;
 
   /** Snapshot nom du client au moment de l'avis */
@@ -40,7 +40,7 @@ export class CompanyAvis {
   clientInitiales: string;
 
   /** Note de 1 à 5 */
-  @Column({ type: 'tinyint', unsigned: true })
+  @Column({ type: 'smallint' })
   note: number;
 
   /** Commentaire optionnel */

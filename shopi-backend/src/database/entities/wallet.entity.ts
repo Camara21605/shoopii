@@ -421,7 +421,7 @@ export class Wallet {
   autoTransferEnabled: boolean;
 
   /** Référence l'`id` d'une entrée de `paymentMethods`. */
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   autoTransferMethodId: string | null;
 
   /* ==========================================================

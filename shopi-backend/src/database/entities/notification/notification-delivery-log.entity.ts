@@ -193,7 +193,7 @@ export class NotificationDeliveryLog {
   @JoinColumn({ name: 'notificationId' })
   notification: Notification;
 
-  @Column({ name: 'notificationId', type: 'varchar', length: 36 })
+  @Column({ name: 'notificationId', type: 'uuid' })
   notificationId: string;
 
   /* ==========================================================

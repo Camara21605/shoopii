@@ -28,7 +28,7 @@ export class CompanyBranch {
   company: Company;
 
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   companyId: string;
 
   /* ── Identité de l'agence ────────────────────────────── */

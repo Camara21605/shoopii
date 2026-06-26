@@ -35,7 +35,7 @@ export class PromotionUsage {
   promotion: Promotion;
 
   @Index()
-  @Column({ name: 'promotionId', type: 'varchar', length: 36 })
+  @Column({ name: 'promotionId', type: 'uuid' })
   promotionId: string;
 
   // ── Relation Client ───────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ export class PromotionUsage {
   client: Client;
 
   @Index()
-  @Column({ name: 'clientId', type: 'varchar', length: 36 })
+  @Column({ name: 'clientId', type: 'uuid' })
   clientId: string;
 
   // ── Commande liée ────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ export class PromotionUsage {
    * Résolu via orderId en string.
    */
   @Index()
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   orderId: string | null;
 
   // ── Montant de la réduction ───────────────────────────────────────────────

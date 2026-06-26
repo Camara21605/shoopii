@@ -205,7 +205,7 @@ export class Conversation {
    *
    * Pas de FK TypeORM — résolu dans les SERVICES.
    */
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   initiatorId: string;
 
   /* ==========================================================
@@ -227,7 +227,7 @@ export class Conversation {
    * UUID du profil receveur.
    * Résolu dans les SERVICES selon recipientType.
    */
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   recipientId: string;
 
   /* ==========================================================
@@ -304,7 +304,7 @@ export class Conversation {
    * Permet d'afficher l'icône lu/non-lu sans requête
    * supplémentaire sur la table messages.
    */
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   lastMessageId: string | null;
 
   /* ==========================================================
@@ -364,7 +364,7 @@ export class Conversation {
    * Peuplé par getOrCreateConversation().
    */
   @Index()
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   initiatorUserId: string | null;
 
   /**
@@ -372,7 +372,7 @@ export class Conversation {
    * Même objectif que initiatorUserId.
    */
   @Index()
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   recipientUserId: string | null;
 
   /* ==========================================================

@@ -35,7 +35,7 @@ export class ProductLike {
   client: Client;
 
   @Index()
-  @Column({ name: 'clientId', type: 'varchar', length: 36 })
+  @Column({ name: 'clientId', type: 'uuid' })
   clientId: string;
 
   // ── Relation Produit ───────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ export class ProductLike {
   product: Product;
 
   @Index()
-  @Column({ name: 'productId', type: 'varchar', length: 36 })
+  @Column({ name: 'productId', type: 'uuid' })
   productId: string;
 
   // ── Timestamp ──────────────────────────────────────────────────────────────

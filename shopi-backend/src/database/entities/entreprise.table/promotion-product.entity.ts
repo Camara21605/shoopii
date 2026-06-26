@@ -39,7 +39,7 @@ export class PromotionProduct {
   @JoinColumn({ name: 'promotionId' })
   promotion: Promotion;
 
-  @Column({ name: 'promotionId', type: 'varchar', length: 36 })
+  @Column({ name: 'promotionId', type: 'uuid' })
   promotionId: string;
 
   // ── Relation Product ──────────────────────────────────────────────────────
@@ -52,7 +52,7 @@ export class PromotionProduct {
   @JoinColumn({ name: 'productId' })
   product: Product;
 
-  @Column({ name: 'productId', type: 'varchar', length: 36 })
+  @Column({ name: 'productId', type: 'uuid' })
   productId: string;
 
   @CreateDateColumn()

@@ -35,7 +35,7 @@ export class ProductVariant {
   @JoinColumn({ name: 'productId' })
   product: Product;
 
-  @Column({ name: 'productId', type: 'varchar', length: 36 })
+  @Column({ name: 'productId', type: 'uuid' })
   productId: string;
 
   @CreateDateColumn()

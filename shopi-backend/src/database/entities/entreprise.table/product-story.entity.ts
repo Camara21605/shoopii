@@ -63,7 +63,7 @@ export class ProductStory {
   @JoinColumn({ name: 'productId' })
   product: Promise<Product> | Product;
 
-  @Column({ name: 'productId', type: 'varchar', length: 36 })
+  @Column({ name: 'productId', type: 'uuid' })
   productId: string;
 
   // ── Relation Entreprise ───────────────────────────────────────────────────
@@ -80,7 +80,7 @@ export class ProductStory {
   @JoinColumn({ name: 'companyId' })
   company: Promise<Company> | Company;
 
-  @Column({ name: 'companyId', type: 'varchar', length: 36 })
+  @Column({ name: 'companyId', type: 'uuid' })
   companyId: string;
 
   // ── Contenu média ─────────────────────────────────────────────────────────

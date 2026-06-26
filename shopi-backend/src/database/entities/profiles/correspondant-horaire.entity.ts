@@ -54,7 +54,7 @@ export class CorrespondantHoraire {
   @JoinColumn({ name: 'correspondantId' })
   correspondant: Correspondent;
 
-  @Column({ name: 'correspondantId', type: 'varchar', length: 36 })
+  @Column({ name: 'correspondantId', type: 'uuid' })
   correspondantId: string;
 
   @Column({ type: 'enum', enum: JourSemaine })

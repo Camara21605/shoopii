@@ -221,7 +221,7 @@ export class Message {
   conversation: Conversation;
 
   @Index()
-  @Column({ name: 'conversationId', type: 'varchar', length: 36 })
+  @Column({ name: 'conversationId', type: 'uuid' })
   conversationId: string;
 
   /* ==========================================================
@@ -254,7 +254,7 @@ export class Message {
    *
    * Pas de FK TypeORM — résolu dans les SERVICES.
    */
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   senderId: string;
 
   /* ==========================================================
@@ -323,7 +323,7 @@ export class Message {
    * Ex: une boutique partage un produit à un client qui hésite.
    */
   @Index()
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   productId: string | null;
 
   /* ==========================================================
@@ -337,7 +337,7 @@ export class Message {
    * Pas de FK TypeORM — résolu dans le service.
    */
   @Index()
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   orderId: string | null;
 
   /* ==========================================================
@@ -372,7 +372,7 @@ export class Message {
    *
    * Ex: le client cite le message produit de la boutique.
    */
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   replyToId: string | null;
 
   /* ==========================================================
@@ -450,7 +450,7 @@ export class Message {
    * UUID de l'acteur qui a supprimé le message.
    * null si non supprimé.
    */
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   deletedById: string | null;
 
   /* ==========================================================

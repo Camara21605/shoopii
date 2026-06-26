@@ -110,7 +110,7 @@ export class Correspondent {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column({ name: 'userId', type: 'varchar', length: 36, update: false })
+  @Column({ name: 'userId', type: 'uuid', update: false })
   userId: string;
 
   /** Code d'invitation utilisé à l'inscription */
@@ -120,7 +120,7 @@ export class Correspondent {
   @JoinColumn({ name: 'creationCodeId' })
   creationCode: Promise<CreationCode> | CreationCode | null;
 
-  @Column({ name: 'creationCodeId', type: 'varchar', length: 36, nullable: true })
+  @Column({ name: 'creationCodeId', type: 'uuid', nullable: true })
   creationCodeId: string | null;
 
   /** Entreprise superviseure (optionnel) */
@@ -131,7 +131,7 @@ export class Correspondent {
   @JoinColumn({ name: 'companyId' })
   company: Promise<Company> | Company | null;
 
-  @Column({ name: 'companyId', type: 'varchar', length: 36, nullable: true })
+  @Column({ name: 'companyId', type: 'uuid', nullable: true })
   companyId: string | null;
 
   /** Livreur superviseur (optionnel) */
@@ -142,7 +142,7 @@ export class Correspondent {
   @JoinColumn({ name: 'deliveryId' })
   delivery: Promise<Delivery> | Delivery | null;
 
-  @Column({ name: 'deliveryId', type: 'varchar', length: 36, nullable: true })
+  @Column({ name: 'deliveryId', type: 'uuid', nullable: true })
   deliveryId: string | null;
 
   /** Partenaire superviseur (optionnel) */
@@ -153,7 +153,7 @@ export class Correspondent {
   @JoinColumn({ name: 'partnerId' })
   partner: Promise<Partner> | Partner | null;
 
-  @Column({ name: 'partnerId', type: 'varchar', length: 36, nullable: true })
+  @Column({ name: 'partnerId', type: 'uuid', nullable: true })
   partnerId: string | null;
 
   /**
@@ -309,7 +309,7 @@ export class Correspondent {
   @Column({ type: 'varchar', length: 20, nullable: true, unique: true })
   codeBoutique: string | null;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   codeBoutiqueExpiry: Date | null;
 
   @Column({ type: 'int', default: 0 })
@@ -322,7 +322,7 @@ export class Correspondent {
   @Column({ type: 'varchar', length: 20, nullable: true, unique: true })
   codeLivreur: string | null;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   codeLivreurExpiry: Date | null;
 
   @Column({ type: 'int', default: 0 })

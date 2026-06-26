@@ -162,7 +162,7 @@ export class NotificationPreference {
    * Pas de FK TypeORM — résolu dans les SERVICES.
    */
   @Index()
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'uuid' })
   actorId: string;
 
   /* ==========================================================
