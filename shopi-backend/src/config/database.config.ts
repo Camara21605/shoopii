@@ -169,11 +169,20 @@ export const databaseConfigFactory = {
     ],
 
 
-    // ✅ Ne jamais utiliser synchronize en production
-    synchronize: true, // ⚠️ À mettre à false en production et gérer les migrations manuellement
+    /*
+     * synchronize: true  → TypeORM crée/modifie les tables automatiquement.
+     * ⚠️ DANGEREUX en production (peut supprimer des colonnes !).
+     * En production, utiliser les migrations TypeORM.
+     * DB_SYNC=true permet de forcer le sync en staging si nécessaire.
+     */
+    synchronize:
+      config.get<string>('NODE_ENV') !== 'production' ||
+      config.get<string>('DB_SYNC') === 'true',
 
-    // ✅ Logs SQL uniquement en développement
-    logging: config.get<string>('NODE_ENV') === 'development',
+    // Logs SQL uniquement en développement
+    logging: config.get<string>('NODE_ENV') === 'development'
+      ? ['query', 'error']
+      : ['error'],
 
     } as TypeOrmModuleOptions;
   },

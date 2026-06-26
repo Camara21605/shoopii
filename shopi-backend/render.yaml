@@ -1,0 +1,66 @@
+# ============================================================
+# FICHIER : render.yaml
+# RÔLE    : Configuration Infrastructure-as-Code pour Render.
+#           Placez ce fichier à la racine du dépôt.
+#           Render le détecte automatiquement.
+# Docs    : https://render.com/docs/infrastructure-as-code
+# ============================================================
+
+services:
+
+  # ── Backend NestJS ───────────────────────────────────────────
+  - type: web
+    name: shopi-backend
+    runtime: node
+    region: frankfurt           # Europe (le plus proche de la Guinée)
+    plan: free                  # free | starter | standard
+    rootDir: shopi-backend      # dossier du backend dans le dépôt
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /api/auth/me   # 401 = OK (endpoint protégé)
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false             # À remplir manuellement dans Render Dashboard
+      - key: DB_SSL
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true     # Render génère une valeur aléatoire sécurisée
+      - key: JWT_EXPIRES_IN
+        value: "24h"
+      - key: REDIS_URL
+        sync: false             # À remplir avec votre URL Upstash/Railway
+      - key: FRONTEND_URL
+        sync: false             # URL de votre frontend déployé
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: SUPER_ADMIN_EMAIL
+        sync: false
+      - key: SUPER_ADMIN_PASSWORD
+        sync: false
+      - key: SUPER_ADMIN_FIRSTNAME
+        value: Super
+      - key: SUPER_ADMIN_LASTNAME
+        value: Admin
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
+        sync: false
