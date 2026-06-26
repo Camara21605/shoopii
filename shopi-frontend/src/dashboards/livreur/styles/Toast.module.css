@@ -1,0 +1,30 @@
+/* Toast.module.css */
+.tmsg {
+  background: var(--navy);
+  color: rgba(200,217,248,.95);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: var(--r-lg);
+  padding: 12px 18px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 20px 56px rgba(11,31,58,.32), 0 4px 12px rgba(11,31,58,.12);
+  transform: translateX(120%);
+  opacity: 0;
+  transition: all .34s var(--spring, cubic-bezier(.34,1.56,.64,1));
+  max-width: 340px;
+  pointer-events: all;
+  position: relative;
+  overflow: hidden;
+}
+/* Barre colorée gauche */
+.tmsg::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--teal);
+  border-radius: 0;
+}
+.show { transform: translateX(0); opacity: 1; }

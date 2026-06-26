@@ -1,0 +1,86 @@
+/* src/dashboards/livreur/styles/ParamNav.module.css */
+
+.nav {
+  background: var(--white);
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--r-xl, 26px);
+  box-shadow: var(--sh-xs);
+  padding: 10px;
+  position: sticky;
+  top: calc(var(--hdr, 64px) + 20px);
+}
+
+/* Retour dashboard */
+.back {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 11px; border-radius: var(--r-md);
+  font-size: 12px; font-weight: 600; color: var(--t3);
+  cursor: pointer; transition: all .18s;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--bdr);
+  padding-bottom: 13px; margin-bottom: 8px;
+}
+.back:hover { color: var(--teal); }
+.back i { font-size: 11px; }
+
+/* Groupe titre */
+.sect {
+  font-size: 9px; font-weight: 800; color: var(--t4);
+  text-transform: uppercase; letter-spacing: 1.2px;
+  padding: 10px 10px 4px;
+}
+
+/* Item */
+.item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 11px; border-radius: var(--r-md);
+  font-size: 13px; font-weight: 500; color: var(--t2);
+  cursor: pointer; transition: all .18s;
+  position: relative; margin-bottom: 2px;
+}
+.item:hover { background: var(--sky); color: var(--navy); }
+
+/* Item actif */
+.on {
+  background: var(--tl-bg);
+  color: var(--teal);
+  font-weight: 700;
+}
+.on::before {
+  content: '';
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px;
+  background: var(--teal);
+  border-radius: 0 3px 3px 0;
+}
+
+/* Icônes */
+.icon { width: 15px; text-align: center; font-size: 13px; flex-shrink: 0; color: var(--t4); }
+.iconOn     { color: var(--teal) !important; }
+.iconDanger { color: var(--red, #DC2626) !important; }
+.dangerItem { color: var(--red, #DC2626) !important; }
+.dangerItem:hover { background: rgba(220,38,38,.06); }
+
+/* Point alerte */
+.dot { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dotR { background: var(--red, #DC2626); }
+.dotA { background: var(--amber, #B45309); }
+
+/* Responsive tablet — nav devient barre horizontale */
+@media (max-width: 960px) {
+  .nav {
+    position: static;
+    display: flex; flex-wrap: wrap; gap: 4px;
+    padding: 8px;
+  }
+  .sect  { display: none; }
+  .back  { border-bottom: none; padding-bottom: 10px; margin-bottom: 0; }
+  .item  { padding: 7px 10px; font-size: 12px; }
+  .on::before { display: none; }
+}
+@media (max-width: 640px) {
+  .item span { display: none; }
+  .item  { padding: 9px; justify-content: center; }
+  .back span { display: none; }
+  .back  { padding: 9px; }
+}

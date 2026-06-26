@@ -1,0 +1,73 @@
+/*
+ * ════════════════════════════════════════════════════════
+ * FICHIER : src/styles/variables.css
+ * ORDRE   : 1 — Importé en premier dans global.css
+ * RÔLE    : Design system Shopi — toutes les custom
+ *           properties CSS (couleurs, ombres, rayons,
+ *           typo, layout) pour la page d'accueil.
+ * ════════════════════════════════════════════════════════
+ */
+
+:root {
+  /* Palette principale */
+  --navy:   #0B1F3A;
+  --navy-2: #112648;
+  --navy-3: #183358;
+  --blue:   #1A4FC4;
+  --blue-2: #2560DC;
+  --blue-3: #3B72F0;
+  --blue-lt:#5B8EF4;
+  --sky:    #EEF3FD;
+  --sky-2:  #E2EAFB;
+  --sky-3:  #C8D9F8;
+
+  /* Couleurs sémantiques */
+  --emerald:#047857; --em-bg: rgba(4,120,87,.09);
+  --violet: #6D28D9; --vl-bg: rgba(109,40,217,.09);
+  --rose:   #BE185D; --rs-bg: rgba(190,24,93,.08);
+  --amber:  #B45309; --am-bg: rgba(180,83,9,.09);
+  --teal:   #0E7490; --tl-bg: rgba(14,116,144,.09);
+  --slate:  #475569; --sl-bg: rgba(71,85,105,.08);
+
+  /* Neutres */
+  --white:  #FFFFFF;
+  --g50:    #F8F9FA;
+  --g100:   #F1F3F5;
+  --g200:   #E8EAED;
+  --g300:   #D1D5DB;
+  --g400:   #9CA3AF;
+  --g500:   #6B7280;
+  --g700:   #374151;
+  --g900:   #111827;
+
+  /* Texte */
+  --t1: #0B1F3A; --t2: #4B5563;
+  --t3: #9CA3AF; --t4: #C5CAD3;
+
+  /* Bordures */
+  --bdr:  rgba(11,31,58,.08);
+  --bdr2: rgba(11,31,58,.13);
+  --bdrb: rgba(26,79,196,.25);
+
+  /* Ombres */
+  --sh-xs: 0 1px 3px rgba(11,31,58,.06),0 1px 2px rgba(11,31,58,.04);
+  --sh-sm: 0 2px 8px rgba(11,31,58,.08);
+  --sh-md: 0 6px 24px rgba(11,31,58,.10);
+  --sh-lg: 0 16px 48px rgba(11,31,58,.13);
+  --sh-xl: 0 24px 64px rgba(11,31,58,.15);
+  --sh-b:  0 6px 24px rgba(26,79,196,.28);
+
+  /* Rayons */
+  --r-sm:4px; --r-md:12px; --r-lg:18px; --r-xl:26px; --pill:999px;
+
+  /* Layout */
+  --hdr: 66px;
+
+  /* Easings */
+  --ease:   cubic-bezier(.4,0,.2,1);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+
+  /* Typographie */
+  --fd: 'Fraunces', Georgia, serif;
+  --fb: 'DM Sans', sans-serif;
+}

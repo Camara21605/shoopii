@@ -1,0 +1,72 @@
+/* ============================================================
+ * FICHIER : src/styles/global.css
+ * RÔLE    : Styles globaux de l'application Shopi
+ * ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,300&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+@import './variables.css';
+
+/* ── Reset ── */
+*,*::before,*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 15px;
+}
+
+body {
+  background: var(--navy);
+  color: var(--t1);
+  font-family: var(--fb);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--fb);
+}
+
+input {
+  font-family: var(--fb);
+}
+
+/* ── Animations globales ── */
+@keyframes atm-move-1 {
+  0%   { transform: translate(0, 0) }
+  100% { transform: translate(-40px, 30px) }
+}
+@keyframes atm-move-2 {
+  0%   { transform: translate(0, 0) }
+  100% { transform: translate(30px, -30px) }
+}
+@keyframes ping {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(91,142,244,.7) }
+  50%       { box-shadow: 0 0 0 6px rgba(91,142,244,0) }
+}
+@keyframes fc-float {
+  0%, 100% { transform: translateX(0) }
+  50%       { transform: translateX(-8px) }
+}
+@keyframes scale-in {
+  0%   { transform: scale(0); opacity: 0 }
+  100% { transform: scale(1); opacity: 1 }
+}
+@keyframes spin {
+  to { transform: rotate(360deg) }
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}

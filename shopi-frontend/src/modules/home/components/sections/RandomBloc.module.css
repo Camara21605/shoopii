@@ -1,0 +1,10 @@
+.sec  { padding: 64px 0; border-top: 1px solid var(--bdr); }
+.wrap { max-width: 1360px; margin: 0 auto; padding: 0 28px; }
+.bgWhite { background: var(--white); }
+.bgGray  { background: var(--g50);   }
+.bgDark  { background: var(--navy); border-color: rgba(255,255,255,.06); }
+/* Grille produits 4 colonnes */
+.pgrid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+@media (max-width: 1200px) { .pgrid { grid-template-columns: repeat(3,1fr); } }
+@media (max-width: 768px)  { .pgrid { grid-template-columns: repeat(2,1fr); gap: 10px; } .wrap { padding: 0 16px; } }
+@media (max-width: 400px)  { .pgrid { grid-template-columns: repeat(2,1fr); gap: 8px; } }

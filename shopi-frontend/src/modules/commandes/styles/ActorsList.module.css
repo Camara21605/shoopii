@@ -1,0 +1,52 @@
+/* ================================================================
+ * src/modules/commande/styles/ActorsList.module.css
+ * Liste des acteurs avec leur état de validation. Colonne droite.
+ * ================================================================ */
+
+.card {
+  background: var(--white); border: 1px solid var(--bdr);
+  border-radius: var(--r-xl); box-shadow: var(--sh-xs);
+  margin-bottom: 18px; overflow: hidden;
+}
+.ch { padding: 14px 18px; border-bottom: 1px solid var(--bdr); }
+.chT { font-family: var(--fd); font-size: 13px; font-weight: 800; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+.chT i { color: var(--blue); }
+
+.cb { padding: 8px 18px 14px; }
+
+.actor { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--bdr); }
+.actor:last-child { border-bottom: none; }
+
+.av {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--fd); font-size: 13px; font-weight: 800;
+}
+.av_entreprise    { background: var(--sky-2); color: var(--blue); }
+.av_livreur       { background: var(--em-bg); color: var(--emerald); }
+.av_correspondant { background: var(--vl-bg); color: var(--violet); }
+.av_client        { background: var(--am-bg); color: var(--amber); }
+
+.inf { flex: 1; min-width: 0; }
+.nm { font-size: 13px; font-weight: 800; color: var(--navy); }
+.rl { font-size: 11.5px; color: var(--t3); margin-top: 1px; }
+
+/* ── Note étoile ── */
+.ratingWrap { margin-top: 6px; }
+.stars      { display: flex; gap: 2px; }
+.star       { font-size: 14px; color: #D1D5DB; line-height: 1; }
+.starOn     { color: #FBBF24; }
+.ratingVal  { font-size: 10px; font-weight: 700; color: var(--blue); margin-top: 2px; display: block; }
+.comment    {
+  font-size: 11px; color: var(--t2); margin-top: 4px;
+  font-style: italic; line-height: 1.5;
+  background: var(--g50); border-left: 2px solid var(--blue);
+  padding: 4px 8px; border-radius: 0 6px 6px 0;
+}
+
+.chk {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 12px;
+}
+.chk.ok   { background: var(--em-bg); color: var(--emerald); }
+.chk.wait { background: var(--g100); color: var(--t4); }

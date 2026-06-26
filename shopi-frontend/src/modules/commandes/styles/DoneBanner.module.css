@@ -1,0 +1,27 @@
+/* ================================================================
+ * src/modules/commande/styles/DoneBanner.module.css
+ * Bannière de succès après livraison + boutons (noter / signaler).
+ * ================================================================ */
+
+.banner {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  background: var(--em-bg); border: 1px solid rgba(4,120,87,.2);
+  border-radius: var(--r-xl); padding: 18px 22px; margin-bottom: 18px;
+}
+
+.icon { font-size: 28px; color: var(--emerald); flex-shrink: 0; }
+
+.text { flex: 1; min-width: 200px; }
+.t { font-family: var(--fd); font-size: 15px; font-weight: 800; color: var(--navy); }
+.s { font-size: 12.5px; color: var(--t2); margin-top: 3px; }
+
+.rate, .issue {
+  display: inline-flex; align-items: center; gap: 7px;
+  border-radius: var(--pill); padding: 10px 18px; font-size: 12.5px; font-weight: 700;
+  transition: all .2s;
+}
+.rate { background: var(--navy); color: #fff; }
+.rate:hover { background: var(--navy-2); transform: translateY(-1px); box-shadow: var(--sh-b); }
+
+.issue { background: var(--white); color: var(--t2); border: 1.5px solid var(--bdr2); }
+.issue:hover { border-color: var(--red); color: var(--red); transform: translateY(-1px); }

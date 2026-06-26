@@ -1,0 +1,452 @@
+/* ============================================================
+   src/modules/home/components/boutique/styles/StoriesStrip.module.css
+
+   Stories produits — bande horizontale + viewer plein écran.
+   ============================================================ */
+
+/* ────────────────────────────────────────────────────────────
+   BANDE PRINCIPALE
+──────────────────────────────────────────────────────────── */
+.strip {
+  position: relative;
+  background: var(--white, #fff);
+  border-bottom: 1px solid var(--bdr, #E8EDF5);
+  padding: 14px 0;
+  user-select: none;
+}
+
+/* Fondu gauche/droite */
+.strip::before,
+.strip::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 56px;
+  pointer-events: none;
+  z-index: 2;
+}
+.strip::before {
+  left: 0;
+  background: linear-gradient(to right, var(--white, #fff), transparent);
+}
+.strip::after {
+  right: 0;
+  background: linear-gradient(to left, var(--white, #fff), transparent);
+}
+
+/* ── Scroll horizontal ── */
+.scroller {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 4px 20px 8px;
+  scrollbar-width: none;
+  cursor: grab;
+  -webkit-overflow-scrolling: touch;
+}
+.scroller:active { cursor: grabbing; }
+.scroller::-webkit-scrollbar { display: none; }
+
+/* ── Bouton "Nouvelle story" ── */
+.addStory {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform .2s;
+}
+.addStory:hover { transform: translateY(-3px); }
+.addRing {
+  width: 70px; height: 70px;
+  border-radius: 50%;
+  background: var(--g100, #F1F5F9);
+  border: 2px dashed var(--bdr2, #C8D6E8);
+  display: flex; align-items: center; justify-content: center;
+}
+.addCircle {
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy, #0B1F3A), var(--blue, #1A4FC4));
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 18px;
+  box-shadow: 0 4px 14px rgba(26,79,196,.35);
+}
+
+/* ── Item story ── */
+.storyBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform .22s var(--ease, cubic-bezier(.4,0,.2,1));
+  width: 74px;
+}
+.storyBtn:hover  { transform: translateY(-4px); }
+.storyBtn:active { transform: translateY(-1px); }
+
+/* Anneau coloré */
+.storyRing {
+  width: 74px; height: 74px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .25s;
+  flex-shrink: 0;
+}
+.storyLu .storyRing { opacity: .55; }
+
+/* Bulle produit (intérieure) */
+.storyCircle {
+  width: 66px; height: 66px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,.12);
+}
+
+/* Image produit dans la bulle */
+.storyImg {
+  width: 100%; height: 100%;
+  object-fit: cover; border-radius: 50%;
+}
+
+/* Emoji produit */
+.storyEmoji {
+  font-size: 28px;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%;
+}
+
+/* Badge dans la bulle (coin bas-gauche) */
+.storyBadge {
+  position: absolute;
+  bottom: 0; left: 50%; transform: translateX(-50%);
+  font-size: 8px; font-weight: 800;
+  padding: 2px 6px;
+  border-radius: var(--pill, 999px);
+  white-space: nowrap;
+  letter-spacing: .2px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+
+/* Nom produit */
+.storyLabel {
+  font-size: 11px; font-weight: 600;
+  color: var(--navy, #0B1F3A);
+  text-align: center;
+  width: 74px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+/* Prix */
+.storyPrice {
+  font-size: 10px; font-weight: 700;
+  color: var(--blue, #1A4FC4);
+  text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  width: 74px;
+}
+.addStory .storyLabel { color: var(--t3, #7B92B2); font-weight: 500; }
+
+/* ── Flèches navigation desktop ── */
+.navArrow {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 1.5px solid var(--bdr2);
+  box-shadow: 0 2px 12px rgba(11,31,58,.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--navy);
+  cursor: pointer; z-index: 3;
+  transition: all .2s; opacity: 0;
+}
+.strip:hover .navArrow { opacity: 1; }
+.navArrow:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+.navLeft  { left: 10px; }
+.navRight { right: 10px; }
+
+/* ────────────────────────────────────────────────────────────
+   VIEWER PLEIN ÉCRAN
+──────────────────────────────────────────────────────────── */
+.viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn .2s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+/* Fond flouté */
+.viewerBg {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(28px) saturate(1.4);
+  background: rgba(11,31,58,.82);
+}
+
+/* Carte centrale */
+.viewerCard {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+  background: linear-gradient(175deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,.03) 100%);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,.55);
+  animation: slideUp .3s var(--spring, cubic-bezier(.34,1.56,.64,1));
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(40px) scale(.95)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+/* ── Barres de progression ── */
+.progBars {
+  display: flex;
+  gap: 3px;
+  padding: 12px 14px 0;
+  flex-shrink: 0;
+}
+.progBar {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255,255,255,.2);
+  overflow: hidden;
+}
+.progFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width .1s linear;
+}
+
+/* ── Header viewer ── */
+.viewerHd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  flex-shrink: 0;
+}
+.viewerAvatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0B1F3A, #1A4FC4);
+  border: 2px solid currentColor;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.viewerShop { font-size: 13px; font-weight: 700; color: #fff; }
+.viewerTime { font-size: 11px; color: rgba(200,217,248,.45); margin-top: 1px; }
+.viewerClose {
+  margin-left: auto;
+  background: rgba(255,255,255,.1);
+  border: none;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,.7);
+  font-size: 15px;
+  cursor: pointer;
+  transition: all .18s;
+  flex-shrink: 0;
+}
+.viewerClose:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+/* ── Visuel produit ── */
+.viewerVisual {
+  flex-shrink: 0;
+  margin: 0 16px;
+  border-radius: 20px;
+  height: 240px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.viewerImg {
+  width: 100%; height: 100%;
+  object-fit: cover; border-radius: 20px;
+}
+.viewerEmoji {
+  font-size: 80px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; z-index: 1;
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,.3));
+  animation: floatEmoji 3s ease infinite;
+}
+@keyframes floatEmoji {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.viewerRing {
+  position: absolute;
+  inset: 16px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: .3;
+  animation: ringPulse 2s ease infinite;
+}
+@keyframes ringPulse {
+  0%,100% { transform: scale(1); opacity:.3; }
+  50%      { transform: scale(1.06); opacity:.12; }
+}
+
+/* ── Prix en overlay bas de l'image ── */
+.viewerPrixTag {
+  position: absolute;
+  bottom: 14px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: baseline; gap: 7px;
+  padding: 8px 18px;
+  border-radius: var(--pill, 999px);
+  box-shadow: 0 6px 24px rgba(0,0,0,.4);
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+  animation: prixPop .35s var(--spring, cubic-bezier(.34,1.56,.64,1)) both;
+}
+@keyframes prixPop {
+  from { opacity:0; transform: translateX(-50%) scale(.8) translateY(8px); }
+  to   { opacity:1; transform: translateX(-50%) scale(1)  translateY(0);   }
+}
+.viewerPrixTagVal {
+  font-family: var(--fd, 'Fraunces', serif);
+  font-size: 18px; font-weight: 900;
+  color: #fff; letter-spacing: -.4px; line-height: 1;
+}
+.viewerPrixTagBarre {
+  font-size: 12px; font-weight: 600;
+  color: rgba(255,255,255,.55);
+  text-decoration: line-through;
+}
+
+/* ── Badge promo overlay haut-gauche ── */
+.viewerBadgeOverlay {
+  position: absolute;
+  top: 12px; left: 12px;
+  font-size: 10px; font-weight: 800;
+  padding: 4px 11px;
+  border-radius: var(--pill, 999px);
+  box-shadow: 0 3px 10px rgba(0,0,0,.3);
+  white-space: nowrap;
+}
+
+/* ── Infos produit ── */
+.viewerInfo {
+  padding: 14px 20px 8px;
+  flex-shrink: 0;
+}
+.viewerProduit {
+  font-family: var(--fd, 'Fraunces', serif);
+  font-size: 19px; font-weight: 800;
+  color: #fff; letter-spacing: -.3px;
+  margin-bottom: 5px; line-height: 1.2;
+}
+.viewerTag {
+  font-size: 11px; font-weight: 700;
+  color: rgba(200,217,248,.55);
+  display: flex; align-items: center; gap: 5px;
+}
+.viewerTag i { color: rgba(200,217,248,.4); }
+
+/* ── Actions viewer ── */
+.viewerActions {
+  padding: 14px 16px 20px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.vaBtn {
+  flex: 1;
+  background: rgba(255,255,255,.95);
+  color: var(--navy, #0B1F3A);
+  border: none; border-radius: var(--pill);
+  padding: 13px 16px;
+  font-size: 13px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  cursor: pointer; transition: all .2s;
+}
+.vaBtn:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.25); }
+.vaBtn2 {
+  flex: 1;
+  background: rgba(255,255,255,.12);
+  color: rgba(200,217,248,.85);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: var(--pill);
+  padding: 12px 14px;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; transition: all .2s;
+}
+.vaBtn2:hover { background: rgba(255,255,255,.2); }
+.vaShare {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.15);
+  color: rgba(200,217,248,.7);
+  font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .2s; flex-shrink: 0;
+}
+.vaShare:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+/* ── Flèches prev/next viewer ── */
+.vNav {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.18);
+  color: rgba(255,255,255,.8);
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 2;
+  transition: all .2s;
+}
+.vNav:hover { background: rgba(255,255,255,.22); color: #fff; }
+.vNavL { left: 12px; }
+.vNavR { right: 12px; }
+
+/* ────────────────────────────────────────────────────────────
+   RESPONSIVE
+──────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .scroller { padding: 4px 14px 8px; gap: 11px; }
+  .storyBtn { width: 64px; }
+  .storyRing { width: 64px; height: 64px; }
+  .storyCircle { width: 56px; height: 56px; }
+  .storyEmoji { font-size: 24px; }
+  .storyLabel { width: 64px; font-size: 10px; }
+  .storyPrice { width: 64px; font-size: 9px; }
+  .addRing { width: 64px; height: 64px; }
+  .addCircle { width: 44px; height: 44px; font-size: 16px; }
+  .navArrow { display: none; }
+  .viewerCard { max-width: 100%; margin: 0 12px; border-radius: 22px; }
+  .viewerVisual { height: 190px; }
+  .viewerEmoji { font-size: 64px; }
+  .vNavL { left: 4px; }
+  .vNavR { right: 4px; }
+}

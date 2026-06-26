@@ -1,0 +1,126 @@
+/* ============================================================
+   src/modules/home/components/boutique/styles/BoutiquePage.module.css
+
+   CORRECTION :
+     Suppression de tout ce qui concernait le header inline :
+       .hdr / .hdrScrolled / .hdrRow / .logo / .lm / .lw
+       .breadcrumb (dans header) / .srch / .srchBox / .srchCat
+       .srchIn / .srchGo / .hdrNav / .nb / .nbg / .nsep
+       .btnIn / .btnUp / .avatar / .hamburger
+
+     Ces styles existent déjà dans Header.module.css.
+
+     On garde uniquement : .root, .pageBody, .breadcrumbWrap,
+     .breadcrumb, .bcCurrent, .layout, .main, .mainFull, .toast,
+     .toastVisible.
+   ============================================================ */
+
+/* ── Root ── */
+.root {
+  min-height: 100vh;
+  background: var(--g50, #F8FAFF);
+  color: var(--t1, #0B1F3A);
+  font-family: var(--fb, 'DM Sans', sans-serif);
+}
+
+/* ── Corps de page
+     paddingTop injecté inline (66px = hauteur Header fixe) ── */
+.pageBody {
+  /* paddingTop: 66px — appliqué via style inline dans le JSX */
+}
+
+/* ── Breadcrumb (entre header et cover) ── */
+.breadcrumbWrap {
+  background: var(--white, #fff);
+  border-bottom: 1px solid var(--bdr, #E8EDF5);
+  padding: 0;
+}
+.breadcrumb {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--t3, #7B92B2);
+  flex-wrap: wrap;
+}
+.breadcrumb a {
+  color: var(--t3);
+  text-decoration: none;
+  transition: color .18s;
+}
+.breadcrumb a:hover { color: var(--blue, #1A4FC4); }
+.breadcrumb i {
+  font-size: 9px;
+  color: var(--t4, #B0C4DE);
+}
+.bcCurrent {
+  color: var(--navy, #0B1F3A);
+  font-weight: 600;
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Layout 2 colonnes (Sidebar + Main) ── */
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px 24px 48px;
+  align-items: start;
+}
+
+/* ── Main (contenu principal) ── */
+.main {}
+
+/* Main pleine largeur quand sidebar absente (onglets autres que produits) */
+.mainFull {
+  grid-column: 1 / -1;
+}
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(120%);
+  background: var(--navy, #0B1F3A);
+  color: rgba(200, 217, 248, .95);
+  border-radius: 999px;
+  padding: 12px 24px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 16px 48px rgba(11, 31, 58, .3);
+  z-index: 9999;
+  transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.toastVisible {
+  transform: translateX(-50%) translateY(0);
+  pointer-events: all;
+}
+.toast i { color: #34D399; }
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+  .layout { grid-template-columns: 240px 1fr; gap: 18px; }
+}
+
+@media (max-width: 960px) {
+  /* Sidebar passe au-dessus du main en colonne */
+  .layout { grid-template-columns: 1fr; padding: 16px; }
+}
+
+@media (max-width: 640px) {
+  .layout  { padding: 12px 14px 32px; gap: 14px; }
+  .breadcrumb { padding: 10px 14px; }
+}

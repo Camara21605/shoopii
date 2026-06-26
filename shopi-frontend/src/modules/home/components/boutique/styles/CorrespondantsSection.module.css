@@ -1,0 +1,99 @@
+/* ============================================================
+   src/modules/home/components/boutique/styles/CorrespondantsSection.module.css
+   ============================================================ */
+
+/* ── Résumé ── */
+.resume {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  background: var(--white, #fff);
+  border: 1.5px solid var(--bdr, #E8EDF5);
+  border-radius: var(--r-xl, 26px);
+  margin-bottom: 16px;
+  box-shadow: var(--sh-xs);
+}
+.resumeItem {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13px; color: var(--t2, #3D5A80); font-weight: 500;
+}
+.resumeDot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 0 3px rgba(16,185,129,.18);
+}
+.resumeDotGray { background: var(--t4, #B0C4DE); box-shadow: none; }
+.resumeGreen strong  { color: #047857; }
+.resumeGray  strong  { color: var(--t3); }
+
+/* ── Bannière info ── */
+.infoBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: linear-gradient(135deg, rgba(67,56,202,.06), rgba(67,56,202,.02));
+  border: 1.5px solid rgba(67,56,202,.18);
+  border-radius: var(--r-xl);
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  position: relative;
+  transition: all .2s;
+}
+.ibIcon {
+  width: 44px; height: 44px;
+  border-radius: 13px;
+  background: rgba(67,56,202,.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.ibText { flex: 1; min-width: 0; }
+.ibTitle {
+  font-size: 13px; font-weight: 800;
+  color: #4338CA;
+  display: flex; align-items: center; gap: 7px;
+  margin-bottom: 7px;
+}
+.ibTitle i { font-size: 12px; }
+.ibDesc {
+  font-size: 12px; color: var(--t2);
+  line-height: 1.6; margin: 0 0 12px;
+}
+.ibSteps {
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.ibStep {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(67,56,202,.08);
+  border: 1px solid rgba(67,56,202,.14);
+  border-radius: var(--pill);
+  padding: 5px 12px;
+  font-size: 11px; font-weight: 700; color: #4338CA;
+}
+.ibStep i { font-size: 10px; }
+.ibClose {
+  position: absolute; top: 12px; right: 12px;
+  background: rgba(67,56,202,.08); border: none;
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #4338CA; font-size: 12px; cursor: pointer; transition: all .18s;
+}
+.ibClose:hover { background: rgba(67,56,202,.18); }
+
+/* ── Grille ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 960px) {
+  .grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .grid   { grid-template-columns: 1fr; }
+  .resume { gap: 12px; padding: 12px 14px; }
+  .ibSteps { display: none; }
+}

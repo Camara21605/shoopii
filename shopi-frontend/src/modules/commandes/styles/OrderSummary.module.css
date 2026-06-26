@@ -1,0 +1,38 @@
+/* ================================================================
+ * src/modules/commande/styles/OrderSummary.module.css
+ * Récapitulatif du colis (articles + montants). Colonne droite.
+ * ================================================================ */
+
+.card {
+  background: var(--white); border: 1px solid var(--bdr);
+  border-radius: var(--r-xl); box-shadow: var(--sh-xs);
+  margin-bottom: 18px; overflow: hidden;
+}
+.ch { padding: 14px 18px; border-bottom: 1px solid var(--bdr); }
+.chT { font-family: var(--fd); font-size: 13px; font-weight: 800; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+.chT i { color: var(--blue); }
+
+.cb { padding: 8px 18px 16px; }
+
+.item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--bdr); }
+
+.em {
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; background: var(--g50);
+}
+
+.inf { flex: 1; min-width: 0; }
+.nm { font-size: 13px; font-weight: 700; color: var(--navy); }
+.meta { font-size: 11.5px; color: var(--t3); margin-top: 1px; }
+
+.pr { font-family: var(--fd); font-size: 13px; font-weight: 800; color: var(--navy); flex-shrink: 0; white-space: nowrap; }
+
+.row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 12.5px; color: var(--t2); }
+.v { font-weight: 700; color: var(--t1); }
+
+.div { height: 1px; background: var(--bdr); margin: 8px 0; }
+
+.total { display: flex; justify-content: space-between; align-items: center; padding-top: 4px; }
+.tl { font-family: var(--fd); font-size: 14px; font-weight: 800; color: var(--navy); }
+.tv { font-family: var(--fd); font-size: 17px; font-weight: 800; color: var(--blue); }

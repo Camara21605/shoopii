@@ -1,0 +1,38 @@
+/* ================================================================
+ * CardLivreurGrid.module.css — Carte livreur vue grille
+ * ================================================================ */
+.card{background:var(--white);border:1px solid var(--bdr);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s;position:relative}
+.card:hover{transform:translateY(-3px);box-shadow:var(--sh-md,0 6px 24px rgba(11,31,58,.1));border-color:var(--bdr2)}
+.band{height:56px;position:relative}
+.bandPattern{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1px);background-size:16px 16px}
+.bandGreen{background:linear-gradient(120deg,#065F46,#047857,#059669)}
+.bandBlue{background:linear-gradient(120deg,#1e3a8a,#1549B8,#2563eb)}
+.bandTeal{background:linear-gradient(120deg,#083650,#0B6B85,#0E7490)}
+.bandPurple{background:linear-gradient(120deg,#4C1D95,#6D28D9,#7C3AED)}
+.bandAmber{background:linear-gradient(120deg,#78350F,#B45309,#D97706)}
+.cardMenu{position:absolute;top:8px;right:8px;width:28px;height:28px;background:rgba(255,255,255,.18);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;cursor:pointer;transition:background .15s}
+.cardMenu:hover{background:rgba(255,255,255,.28)}
+.avaWrap{position:absolute;top:34px;left:14px}
+.ava{width:52px;height:52px;border-radius:50%;border:3px solid var(--white);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:17px;font-weight:700;color:#fff;position:relative}
+.avaDot{position:absolute;bottom:1px;right:1px;width:12px;height:12px;background:#10B981;border-radius:50%;border:2px solid var(--white)}
+.availBadge{position:absolute;top:-9px;right:8px;font-size:9.5px;font-weight:800;padding:3px 8px;border-radius:20px;letter-spacing:.2px;display:flex;align-items:center;gap:4px}
+.availOn{background:#D1FAE5;color:#065F46;border:1.5px solid #A7F3D0}
+.availOff{background:#FEE2E2;color:#991B1B;border:1.5px solid #FECACA}
+.body{padding:28px 14px 14px}
+.name{font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zone{font-size:11.5px;color:var(--t3);display:flex;align-items:center;gap:4px;margin-bottom:7px}
+.vehicule{display:inline-flex;align-items:center;gap:4px;background:var(--g100,#F1F3F5);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;color:var(--t2);margin-bottom:9px}
+.rating{display:flex;align-items:center;gap:5px;margin-bottom:9px}
+.stars{color:#F59E0B;font-size:12px;letter-spacing:1px}
+.ratingVal{font-size:12px;font-weight:800;color:var(--t2)}
+.reviewsCnt{font-size:11px;color:var(--t4)}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:11px}
+.stat{text-align:center;background:var(--g50,#F8F9FA);border-radius:8px;padding:6px 4px}
+.statVal{font-size:13px;font-weight:800;color:var(--navy);line-height:1}
+.statLbl{font-size:9.5px;color:var(--t4);margin-top:2px;font-weight:600}
+.followBtn{width:100%;border-radius:9px;padding:9px 0;font-size:12.5px;font-weight:800;cursor:pointer;font-family:var(--fb);display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s;border:1.5px solid}
+.followBtnOff{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border-color:transparent}
+.followBtnOff:hover{opacity:.88}
+.followBtnOn{background:#F0FDF4;border-color:#047857;color:#065F46}
+.profileLink{display:block;width:100%;text-align:center;font-size:11.5px;color:var(--blue);font-weight:700;margin-top:7px;background:none;border:none;cursor:pointer;font-family:var(--fb);transition:opacity .15s}
+.profileLink:hover{opacity:.7;text-decoration:underline}

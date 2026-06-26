@@ -1,0 +1,31 @@
+/* ================================================================
+ * HeroBanner.module.css — Bannière hero de la page Livreurs
+ * ================================================================ */
+.hero{position:relative;overflow:hidden;padding:36px 28px 32px}
+.bg{position:absolute;inset:0;background:linear-gradient(120deg,#08172E 0%,#0E2A6E 40%,#083650 70%,#063228 100%)}
+.geo{position:absolute;inset:0}
+.geo::before{content:'';position:absolute;width:400px;height:400px;border-radius:50%;border:1px solid rgba(255,255,255,.04);top:-160px;right:-80px}
+.geo::after{content:'';position:absolute;width:220px;height:220px;border-radius:50%;border:1px solid rgba(255,255,255,.04);bottom:-60px;left:40%}
+.dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px);background-size:32px 32px}
+.inner{max-width:1200px;margin:0 auto;position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px}
+.left{flex:1;min-width:280px}
+.sup{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:rgba(255,255,255,.75);margin-bottom:14px;letter-spacing:.3px}
+.title{font-family:var(--fd);font-size:34px;font-weight:700;color:#fff;letter-spacing:-.5px;line-height:1.1;margin-bottom:10px}
+.title em{color:#7CB3FF;font-style:normal}
+.sub{font-size:13.5px;color:rgba(255,255,255,.5);line-height:1.6;max-width:500px;margin-bottom:20px}
+.stats{display:flex;gap:24px;flex-wrap:wrap}
+.stat{text-align:center}
+.statVal{font-family:var(--fd);font-size:22px;font-weight:700;color:#fff;line-height:1}
+.statLbl{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px;font-weight:500}
+.right{display:flex;gap:10px;flex-shrink:0}
+.miniCard{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:16px 14px;width:128px;text-align:center;backdrop-filter:blur(4px);transition:background .15s}
+.miniCard:hover{background:rgba(255,255,255,.12)}
+.miniAvaWrap{position:relative;display:inline-block;margin-bottom:10px}
+.miniAva{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:16px;font-weight:700;color:#fff;position:relative}
+.miniDot{position:absolute;bottom:2px;right:2px;width:10px;height:10px;background:#10B981;border-radius:50%;border:2px solid #0F2444}
+.miniName{font-size:12px;font-weight:700;color:rgba(255,255,255,.9);margin-bottom:2px}
+.miniZone{font-size:10.5px;color:rgba(255,255,255,.45);margin-bottom:9px}
+.miniBtn{width:100%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:7px;color:#fff;font-size:11px;font-weight:700;padding:6px 0;cursor:pointer;font-family:var(--fb);transition:background .15s;display:flex;align-items:center;justify-content:center;gap:5px}
+.miniBtn:hover{background:rgba(255,255,255,.2)}
+.miniBtnOn{background:rgba(16,185,129,.18) !important;border-color:rgba(16,185,129,.35) !important;color:#34D399 !important}
+@media(max-width:860px){.right{display:none}.title{font-size:26px}.hero{padding:24px 16px 20px}}

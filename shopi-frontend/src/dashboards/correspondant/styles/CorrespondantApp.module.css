@@ -1,0 +1,18 @@
+/* CorrespondantApp.module.css — Variables root + layout */
+:global(:root) {
+  --cor:     #B45309;
+  --cor-2:   #92400E;
+  --cor-lt:  #F59E0B;
+  --cor-bg:  rgba(180,83,9,.09);
+  --cor-bg2: rgba(245,158,11,.13);
+  --bdr-cor: rgba(180,83,9,.22);
+  --sh-cor:  0 6px 22px rgba(180,83,9,.28);
+  --sb: 268px;
+  --hdr: 64px;
+}
+.root { min-height:100vh; background:var(--g50,#F8F9FA); font-family:var(--fb,'DM Sans',sans-serif); color:var(--t1,#0B1F3A); }
+.overlay { position:fixed;inset:0;background:rgba(11,31,58,.55);backdrop-filter:blur(5px);z-index:199; }
+.main { margin-left:var(--sb);padding-top:var(--hdr);min-height:100vh;transition:margin-left .3s var(--ease,cubic-bezier(.4,0,.2,1)); }
+.toastWrap { position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none; }
+@media(max-width:960px){.main{margin-left:68px}}
+@media(max-width:640px){.main{margin-left:0}}

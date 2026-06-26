@@ -1,0 +1,371 @@
+/* ============================================================
+   src/modules/home/styles/HomeStoriesStrip.module.css
+   Stories multi-boutiques — page d'accueil
+   ============================================================ */
+
+/* ────────────────────────────────────────────────────────────
+   SECTION WRAPPER
+──────────────────────────────────────────────────────────── */
+.section {
+  background: var(--white, #fff);
+  border-top:    1px solid var(--bdr, #E8EDF5);
+  border-bottom: 1px solid var(--bdr, #E8EDF5);
+  padding: 18px 0 10px;
+}
+
+/* ── En-tête de section ── */
+.secHd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px 14px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+.secLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.secIc {
+  width: 38px; height: 38px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #EEF3FD, #D6E4F8);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.secTitle {
+  font-family: var(--fd, 'Fraunces', serif);
+  font-size: 16px; font-weight: 800;
+  color: var(--navy, #0B1F3A); letter-spacing: -.3px;
+}
+.secSub {
+  font-size: 12px; color: var(--t3, #7B92B2); margin-top: 2px;
+}
+.secLink {
+  background: var(--sky, #EEF3FD);
+  color: var(--blue, #1A4FC4);
+  border: 1px solid var(--sky-3, #C8D6E8);
+  border-radius: var(--pill, 999px);
+  padding: 7px 16px;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; gap: 6px;
+  cursor: pointer; transition: all .2s; white-space: nowrap;
+  flex-shrink: 0;
+}
+.secLink:hover { background: var(--sky-2, #DCE8F8); transform: translateY(-1px); }
+
+/* ────────────────────────────────────────────────────────────
+   BANDE
+──────────────────────────────────────────────────────────── */
+.strip { position: relative; }
+
+.fadeLeft,
+.fadeRight {
+  position: absolute;
+  top: 0; bottom: 0; width: 48px;
+  pointer-events: none; z-index: 2;
+}
+.fadeLeft  { left:  0; background: linear-gradient(to right, var(--white, #fff), transparent); }
+.fadeRight { right: 0; background: linear-gradient(to left,  var(--white, #fff), transparent); }
+
+/* Scroll horizontal */
+.scroller {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 4px 28px 14px;
+  scrollbar-width: none;
+  cursor: grab;
+  -webkit-overflow-scrolling: touch;
+}
+.scroller:active { cursor: grabbing; }
+.scroller::-webkit-scrollbar { display: none; }
+
+/* ────────────────────────────────────────────────────────────
+   ITEM BOUTIQUE
+──────────────────────────────────────────────────────────── */
+.storyBtn {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 7px; background: transparent; border: none;
+  cursor: pointer; padding: 4px 2px; flex-shrink: 0;
+  transition: transform .22s var(--ease, cubic-bezier(.4,0,.2,1));
+  width: 78px;
+}
+.storyBtn:hover  { transform: translateY(-4px); }
+.storyBtn:active { transform: translateY(-1px) scale(.97); }
+.storyLu { opacity: .6; }
+.storyLu:hover { opacity: .85; }
+
+/* Anneau */
+.storyRing {
+  width: 76px; height: 76px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .25s;
+}
+
+/* Cercle intérieur */
+.storyCircle {
+  width: 68px; height: 68px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  border: 2.5px solid #fff;
+  box-shadow: 0 2px 14px rgba(0,0,0,.1);
+  position: relative; overflow: hidden;
+}
+.shopEmoji {
+  font-size: 30px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Badge dans la bulle */
+.storyBadge {
+  position: absolute; bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  border: 2px solid #fff;
+}
+
+/* Point "En ligne" */
+.onlineDot {
+  position: absolute; bottom: 3px; right: 3px;
+  width: 13px; height: 13px; border-radius: 50%;
+  background: #10B981;
+  border: 2.5px solid #fff;
+  box-shadow: 0 1px 4px rgba(16,185,129,.4);
+}
+
+/* Labels */
+.shopLabel {
+  font-size: 11px; font-weight: 700;
+  color: var(--navy, #0B1F3A);
+  text-align: center;
+  width: 78px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.slidesCnt {
+  font-size: 10px; font-weight: 500;
+  color: var(--t3, #7B92B2);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ── Flèches navigation ── */
+.navArrow {
+  position: absolute; top: 50%; transform: translateY(-60%);
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--white); border: 1.5px solid var(--bdr2, #C8D6E8);
+  box-shadow: 0 2px 12px rgba(11,31,58,.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--navy);
+  cursor: pointer; z-index: 3;
+  transition: all .2s; opacity: 0;
+}
+.strip:hover .navArrow { opacity: 1; }
+.navArrow:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+.navLeft  { left: 6px; }
+.navRight { right: 6px; }
+
+/* ────────────────────────────────────────────────────────────
+   VIEWER PLEIN ÉCRAN
+──────────────────────────────────────────────────────────── */
+.viewer {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn .2s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.viewerBg {
+  position: absolute; inset: 0;
+  backdrop-filter: blur(30px) saturate(1.5);
+  background: rgba(11,31,58,.88);
+}
+
+/* Carte */
+.viewerCard {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 400px;
+  background: linear-gradient(175deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.03) 100%);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,.55);
+  animation: slideUp .32s var(--spring, cubic-bezier(.34,1.56,.64,1));
+  max-height: 92vh;
+  display: flex; flex-direction: column;
+}
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(40px) scale(.95); }
+  to   { opacity:1; transform:translateY(0)   scale(1);   }
+}
+
+/* Barres progression */
+.progBars {
+  display: flex; gap: 3px;
+  padding: 12px 14px 0; flex-shrink: 0;
+}
+.progBar {
+  flex: 1; height: 3px; border-radius: 2px;
+  background: rgba(255,255,255,.2); overflow: hidden;
+}
+.progFill { height: 100%; border-radius: 2px; transition: width .1s linear; }
+
+/* Header viewer */
+.viewerHd {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; flex-shrink: 0;
+}
+
+/* Miniatures boutiques */
+.shopRow { display: flex; gap: 5px; flex-shrink: 0; }
+.shopMini {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  border: 2px solid transparent;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; transition: all .2s; flex-shrink: 0;
+}
+.shopMiniActive {
+  background: rgba(255,255,255,.18);
+  transform: scale(1.12);
+}
+
+/* Infos boutique active */
+.viewerShopInfo { flex: 1; min-width: 0; }
+.viewerShopNom  { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.viewerShopSub  { font-size: 11px; color: rgba(200,217,248,.45); margin-top: 2px; display: flex; align-items: center; gap: 5px; }
+.viewerDot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.viewerSep { opacity: .4; }
+.viewerClose {
+  margin-left: auto;
+  background: rgba(255,255,255,.1); border: none;
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,.7); font-size: 15px;
+  cursor: pointer; transition: all .18s; flex-shrink: 0;
+}
+.viewerClose:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+/* Visuel produit */
+.viewerVisual {
+  flex-shrink: 0; margin: 0 16px;
+  border-radius: 20px; height: 228px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.viewerImg {
+  width: 100%; height: 100%;
+  object-fit: cover; border-radius: 20px;
+}
+.viewerEmoji {
+  font-size: 82px;
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,.3));
+  animation: floatEmo 3s ease infinite; position: relative; z-index: 1;
+}
+@keyframes floatEmo { 0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)} }
+.viewerRing {
+  position: absolute; inset: 14px;
+  border-radius: 50%; border: 2px solid currentColor;
+  opacity: .28; animation: ringPulse 2s ease infinite;
+}
+@keyframes ringPulse { 0%,100%{transform:scale(1);opacity:.28}50%{transform:scale(1.06);opacity:.1} }
+
+/* Infos produit */
+.viewerInfo { padding: 14px 20px 8px; flex-shrink: 0; }
+.viewerBadge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 800; color: #fff;
+  padding: 4px 11px; border-radius: var(--pill);
+  margin-bottom: 9px; box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.viewerProduit {
+  font-family: var(--fd, 'Fraunces', serif);
+  font-size: 19px; font-weight: 800;
+  color: #fff; letter-spacing: -.3px; margin-bottom: 7px; line-height: 1.2;
+}
+.viewerPrixRow { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.viewerPrix    { font-family: var(--fd); font-size: 21px; font-weight: 800; letter-spacing: -.5px; }
+.viewerPrixBarre { font-size: 13px; color: rgba(200,217,248,.38); text-decoration: line-through; }
+.viewerTag {
+  font-size: 11px; font-weight: 600;
+  color: rgba(200,217,248,.5);
+  display: flex; align-items: center; gap: 5px;
+}
+
+/* Actions viewer */
+.viewerActions {
+  padding: 12px 16px 20px;
+  display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+}
+.vaMain {
+  flex: 1; background: rgba(255,255,255,.95); color: var(--navy);
+  border: none; border-radius: var(--pill); padding: 12px 14px;
+  font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; transition: all .2s;
+}
+.vaMain:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.25); }
+.vaSecond {
+  flex: 1; background: rgba(255,255,255,.1); color: rgba(200,217,248,.85);
+  border: 1px solid rgba(255,255,255,.14); border-radius: var(--pill);
+  padding: 11px 12px; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; transition: all .2s;
+}
+.vaSecond:hover { background: rgba(255,255,255,.18); }
+.vaShare {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
+  color: rgba(200,217,248,.7); font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .2s; flex-shrink: 0;
+}
+.vaShare:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+/* Flèches prev/next viewer */
+.vNav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
+  color: rgba(255,255,255,.8); font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 2; transition: all .2s;
+}
+.vNav:hover { background: rgba(255,255,255,.22); color: #fff; }
+.vNavL { left: 12px; }
+.vNavR { right: 12px; }
+
+/* ────────────────────────────────────────────────────────────
+   RESPONSIVE
+──────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .secHd   { padding: 0 14px 12px; flex-wrap: wrap; gap: 10px; }
+  .scroller { padding: 4px 14px 12px; gap: 13px; }
+  .storyBtn { width: 66px; }
+  .storyRing { width: 64px; height: 64px; }
+  .storyCircle { width: 56px; height: 56px; }
+  .shopEmoji { font-size: 26px; }
+  .shopLabel { width: 66px; font-size: 10px; }
+  .navArrow { display: none; }
+  .viewerCard { max-width: 100%; margin: 0 10px; border-radius: 22px; }
+  .viewerVisual { height: 188px; }
+  .viewerEmoji { font-size: 64px; }
+  .shopRow     { display: none; }
+  .vNavL { left: 4px; }
+  .vNavR { right: 4px; }
+}
+@media (max-width: 380px) {
+  .storyBtn   { width: 58px; }
+  .storyRing  { width: 56px; height: 56px; }
+  .storyCircle{ width: 48px; height: 48px; }
+  .shopEmoji  { font-size: 22px; }
+}

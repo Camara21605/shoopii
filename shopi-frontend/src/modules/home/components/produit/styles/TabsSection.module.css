@@ -1,0 +1,31 @@
+/* TabsSection.module.css */
+.wrap    { background:var(--white); border:1px solid var(--bdr); border-radius:26px; overflow:hidden; box-shadow:0 1px 3px rgba(11,31,58,.06); margin-top:32px; }
+.nav     { display:flex; border-bottom:1px solid var(--bdr); overflow-x:auto; scrollbar-width:none; }
+.nav::-webkit-scrollbar { display:none; }
+.tabBtn  { padding:15px 22px; font-family:var(--fb); font-size:13px; font-weight:600; color:var(--t2); background:transparent; border:none; border-bottom:2.5px solid transparent; white-space:nowrap; cursor:pointer; transition:all .2s; }
+.tabBtn:hover { color:var(--navy); background:var(--g50); }
+.tabBtnActive { color:var(--blue); border-bottom-color:var(--blue); background:var(--sky); }
+.content { padding:26px; }
+.descContent h3 { font-family:var(--fd,'Fraunces',serif); font-size:16px; font-weight:700; color:var(--navy); margin-bottom:10px; margin-top:20px; }
+.descContent h3:first-child { margin-top:0; }
+.descContent p  { font-size:14px; color:var(--t2); line-height:1.8; margin-bottom:12px; }
+.descContent ul { list-style:none; padding:0; display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.descContent ul li { font-size:13px; color:var(--t2); display:flex; align-items:flex-start; gap:8px; line-height:1.5; }
+.descContent ul li::before { content:'✓'; color:var(--blue); font-weight:700; flex-shrink:0; margin-top:1px; }
+.specsTable { width:100%; border-collapse:collapse; }
+.specsTable tr { border-bottom:1px solid var(--bdr); }
+.specsTable tr:last-child { border-bottom:none; }
+.specLbl { padding:11px 16px; font-size:13px; color:var(--t3); font-weight:600; width:40%; background:var(--g50); }
+.specVal { padding:11px 16px; font-size:13px; color:var(--navy); }
+.avisListe { display:flex; flex-direction:column; gap:0; }
+.avisItem  { padding:16px 0; border-bottom:1px solid var(--bdr); }
+.avisItem:last-child { border-bottom:none; }
+.avisTop   { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+.avisAv    { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--fd,'Fraunces',serif); font-weight:700; color:var(--navy); flex-shrink:0; font-size:13px; }
+.avisNom   { font-size:13px; font-weight:700; color:var(--navy); }
+.avisDate  { font-size:11px; color:var(--t3); }
+.avisVerif { margin-left:auto; font-size:10px; font-weight:700; color:var(--emerald); background:var(--em-bg); padding:2px 8px; border-radius:999px; display:flex; align-items:center; gap:4px; white-space:nowrap; }
+.avisStars { font-size:13px; color:var(--amber,#B45309); margin-bottom:6px; }
+.avisTitre { font-size:13px; font-weight:700; color:var(--navy); margin-bottom:4px; }
+.avisTexte { font-size:13px; color:var(--t2); line-height:1.6; }
+@media(max-width:768px){ .content{padding:16px} }

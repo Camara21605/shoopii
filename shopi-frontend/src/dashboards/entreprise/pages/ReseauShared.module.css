@@ -1,0 +1,40 @@
+/* ================================================================
+ * ReseauShared.module.css — Styles partagés pour les pages
+ * "Suivre des correspondants / livreurs" du dashboard Entreprise
+ * (distinct des pages de gestion "Mes livreurs" / "Correspondants")
+ * ================================================================ */
+
+.page { padding: 24px 26px; }
+
+.card {
+  background: var(--white);
+  border: 1.5px solid var(--bdr, rgba(11,31,58,.09));
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-xs);
+  overflow: hidden;
+  margin-bottom: 16px;
+  transition: border-color .25s, box-shadow .25s;
+}
+.cardLast { margin-bottom: 0; }
+
+.ch {
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--bdr);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--g50);
+}
+.chT {
+  font-family: var(--fd);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chT i { color: var(--blue); font-size: 13px; }
+
+.cb { padding: 18px 20px; }

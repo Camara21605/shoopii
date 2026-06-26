@@ -1,0 +1,85 @@
+/* ================================================================
+ * ParamNav.module.css — Navigation latérale des paramètres
+ * ================================================================ */
+
+.nav {
+  background: var(--white);
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--r-xl, 26px);
+  padding: 10px;
+  box-shadow: var(--sh-xs);
+  position: sticky;
+  top: calc(var(--hdr, 64px) + 18px);
+  overflow: hidden;
+}
+
+/* Ligne amber décorative en haut */
+.nav::before {
+  content: '';
+  display: block; height: 2px;
+  background: linear-gradient(90deg, var(--cor, #B45309), var(--cor-lt, #F59E0B), transparent);
+  margin: -10px -10px 10px; opacity: .6;
+}
+
+/* ── Groupe ── */
+.sect {
+  font-size: 9px; font-weight: 800; color: var(--t4);
+  text-transform: uppercase; letter-spacing: 1.2px;
+  padding: 10px 10px 4px;
+}
+
+/* ── Item ── */
+.item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 11px; border-radius: var(--r-md, 12px);
+  font-size: 13px; font-weight: 500; color: var(--t2);
+  cursor: pointer; transition: all .18s;
+  position: relative; margin-bottom: 2px;
+}
+.item:hover { background: var(--cor-bg, rgba(180,83,9,.09)); color: var(--cor, #B45309); }
+.item:hover .icon { color: var(--cor) !important; }
+
+/* Item actif */
+.itemOn {
+  background: var(--cor-bg);
+  color: var(--cor, #B45309);
+  font-weight: 700;
+}
+.itemOn::before {
+  content: '';
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px;
+  background: var(--cor); border-radius: 0 3px 3px 0;
+}
+.itemOn .icon { color: var(--cor) !important; }
+
+/* Item danger */
+.itemDanger       { color: var(--red, #DC2626) !important; }
+.itemDanger:hover { background: rgba(220,38,38,.06) !important; color: var(--red) !important; }
+.itemDanger .icon { color: var(--red) !important; }
+
+/* Icône */
+.icon { width: 15px; text-align: center; font-size: 13px; flex-shrink: 0; color: var(--t4); transition: color .18s; }
+
+/* Badges droite */
+.pct { margin-left: auto; font-family: var(--fd); font-size: 10px; font-weight: 800; color: var(--cor); flex-shrink: 0; }
+.dot { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dotR { background: var(--red, #DC2626); }
+.dotA { background: var(--cor, #B45309); }
+
+/* ── Responsive : barre horizontale ── */
+@media (max-width: 1100px) {
+  .nav {
+    position: static;
+    display: flex; flex-wrap: wrap; gap: 4px; padding: 8px;
+  }
+  .nav::before { display: none; }
+  .sect     { display: none; }
+  .item     { padding: 7px 11px; font-size: 12px; }
+  .itemOn::before { display: none; }
+  .pct, .dot { display: none; }
+}
+@media (max-width: 640px) {
+  .item span { display: none; }
+  .item { padding: 9px; justify-content: center; }
+}

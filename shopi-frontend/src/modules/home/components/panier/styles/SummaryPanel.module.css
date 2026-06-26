@@ -1,0 +1,257 @@
+/* ============================================================
+   SummaryPanel.module.css — Panneau Récapitulatif Professionnel
+   ============================================================ */
+
+/* ── Carte principale ────────────────────────────────── */
+.card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 24px rgba(11,31,58,.10);
+  overflow: hidden;
+}
+
+/* ── En-tête ─────────────────────────────────────────── */
+.titre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid #F1F5F9;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0B1F3A;
+}
+.titre span {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #1A4FC4;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 7px;
+  transition: background .12s;
+}
+.titre span:hover { background: #EFF6FF; }
+
+/* ── Articles miniatures ─────────────────────────────── */
+.items {
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-bottom: 1px solid #F1F5F9;
+  max-height: 160px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #E2E8F0 transparent;
+}
+.items::-webkit-scrollbar { width: 4px; }
+.items::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 4px; }
+
+.si {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.siImg {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: #F8FAFF;
+  border: 1px solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.siImg img { width: 100%; height: 100%; object-fit: cover; }
+
+.siInfo { flex: 1; min-width: 0; }
+.siNm {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0B1F3A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.siQty {
+  font-size: 11px;
+  color: #94A3B8;
+  margin-top: 1px;
+}
+
+.siPr {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0B1F3A;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Lignes de coûts ─────────────────────────────────── */
+.rows {
+  padding: 14px 20px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rowL {
+  font-size: 12.5px;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.rowL i { color: #94A3B8; font-size: 11px; width: 14px; text-align: center; }
+
+.rowV {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0B1F3A;
+}
+.free  { color: #047857 !important; }
+.disc  { color: #EF4444 !important; }
+.corr  { color: #D97706 !important; }
+
+.divider {
+  height: 1px;
+  background: #E2E8F0;
+  margin: 6px 0 0;
+}
+
+/* ── Total ───────────────────────────────────────────── */
+.totalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #F8FAFF, #EFF6FF);
+  border-top: 2px solid #DBEAFE;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.totalL {
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.totalV {
+  font-size: 20px;
+  font-weight: 900;
+  color: #0B1F3A;
+  font-family: var(--fd, 'Fraunces', serif);
+  letter-spacing: -.3px;
+}
+
+/* ── Bouton confirmer ────────────────────────────────── */
+.btnPlace {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: calc(100% - 40px);
+  margin: 16px 20px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0B1F3A 0%, #1A4FC4 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all .18s;
+  box-shadow: 0 6px 20px rgba(26,79,196,.35);
+  letter-spacing: .2px;
+}
+.btnPlace:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(26,79,196,.45);
+}
+.btnPlace:active:not(:disabled) { transform: translateY(0); }
+.btnPlace:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.btnPlace i { font-size: 15px; }
+
+.loading i { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Garanties ───────────────────────────────────────── */
+.guarantees {
+  padding: 12px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  border-top: 1px solid #F1F5F9;
+}
+
+.g {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+.gGreen { background: #ECFDF5; color: #065F46; }
+.gBlue  { background: #EFF6FF; color: #1E3A8A; }
+.gAmber { background: #FFFBEB; color: #92400E; }
+.g i { font-size: 11px; }
+
+/* ── Carte ETA ───────────────────────────────────────── */
+.etaCard {
+  background: #FFFFFF;
+  border-radius: 14px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 2px 12px rgba(11,31,58,.06);
+  padding: 16px 20px;
+}
+
+.etaTitre {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0B1F3A;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.etaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid #F1F5F9;
+  font-size: 12px;
+}
+.etaRow:last-child { border-bottom: none; }
+
+.etaL { color: #94A3B8; font-weight: 500; }
+.etaV { font-weight: 700; color: #0B1F3A; text-align: right; max-width: 55%; font-size: 11.5px; }
+.etaOk { color: #047857 !important; }
+
+/* ── Mobile drawer handle ────────────────────────────── */
+.drawerHandle {
+  width: 36px;
+  height: 4px;
+  background: #CBD5E1;
+  border-radius: 4px;
+  margin: 10px auto 4px;
+}
+
+@media (max-width: 768px) {
+  .card { border-radius: 0; border: none; box-shadow: none; }
+  .etaCard { border-radius: 0; border: none; border-top: 1px solid #E2E8F0; box-shadow: none; }
+  .items { max-height: 80px; }
+}

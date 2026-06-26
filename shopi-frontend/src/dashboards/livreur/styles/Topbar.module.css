@@ -1,0 +1,174 @@
+/* ================================================================
+ * Topbar.module.css — Barre de navigation haute
+ * DESIGN : Glassmorphism blanc, ligne teal basse, statut pill animé
+ * ================================================================ */
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: var(--sb, 268px);
+  right: 0;
+  height: var(--hdr, 64px);
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--bdr, rgba(11,31,58,.09));
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 12px;
+  z-index: 150;
+  box-shadow: 0 1px 0 rgba(11,31,58,.04), var(--sh-xs);
+  transition: left .3s var(--ease);
+}
+
+/* Ligne teal décorative en bas */
+.topbar::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--teal), var(--tl-lt), transparent 80%);
+  opacity: .45;
+}
+
+.tbInfo { flex: 1; min-width: 0; }
+.tbTtl {
+  font-family: var(--fd);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: -.4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tbSub {
+  font-size: 11px;
+  color: var(--t3);
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tbActs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.tbIc {
+  position: relative;
+  background: transparent;
+  border: none;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t2);
+  font-size: 15px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.tbIc:hover { background: var(--sky); color: var(--navy); }
+
+.tbDot {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 2px solid #fff;
+}
+
+.tbSep {
+  width: 1px;
+  height: 20px;
+  background: var(--g200);
+  margin: 0 5px;
+}
+
+/* ── Statut pill ── */
+.statusPill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: var(--pill);
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: all .25s;
+  cursor: pointer;
+}
+.statusOn {
+  background: rgba(16,185,129,.08);
+  border: 1.5px solid rgba(16,185,129,.22);
+  color: var(--emerald);
+}
+.statusOff {
+  background: rgba(156,163,175,.08);
+  border: 1.5px solid rgba(156,163,175,.18);
+  color: var(--t3);
+}
+.statusOn:hover  { background: rgba(16,185,129,.14); }
+.statusOff:hover { background: rgba(156,163,175,.14); }
+
+.spDot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.spGreen { background: #10B981; animation: pulse 2s ease infinite; }
+.spGray  { background: var(--g300); }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)} }
+
+/* ── Avatar ── */
+.tbAva {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal), var(--navy-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  cursor: pointer;
+  border: 2px solid rgba(14,116,144,.25);
+  overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+}
+.tbAva:hover { transform: scale(1.05); box-shadow: var(--sh-teal); }
+.tbAva img { width:100%; height:100%; object-fit:cover; }
+
+/* ── Hamburger mobile ── */
+.hamburger {
+  display: none;
+  background: transparent;
+  border: none;
+  width: 38px; height: 38px;
+  border-radius: var(--r-md);
+  align-items: center;
+  justify-content: center;
+  color: var(--t2);
+  font-size: 17px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all .2s;
+}
+.hamburger:hover { background: var(--sky); color: var(--navy); }
+
+/* ── Groupe Correspondants / Livreurs ── */
+.tbReseauGroup { display: flex; align-items: center; gap: 4px; }
+
+@media (max-width: 960px) { .topbar { left: 68px; } }
+@media (max-width: 640px) {
+  .topbar { left: 0; padding: 0 16px; }
+  .hamburger { display: flex; }
+  .tbSub, .statusPill { display: none; }
+  .tbTtl { font-size: 16px; }
+
+  /* Correspondants / Livreurs / Mon espace passent dans la bottom nav */
+  .tbReseauGroup, .hideMobile { display: none; }
+}

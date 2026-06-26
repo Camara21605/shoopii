@@ -1,0 +1,54 @@
+/* ============================================================
+   RecapSection.module.css — Design Professionnel
+   ============================================================ */
+
+/* En-tête navy premium */
+.sc    { background:#fff; border:1px solid #0B1F3A; border-radius:16px; overflow:hidden; box-shadow:0 4px 24px rgba(11,31,58,.14); }
+.scHd  {
+  padding:20px 22px; border-bottom:1px solid rgba(255,255,255,.1);
+  display:flex; align-items:center; gap:12px;
+  background:linear-gradient(135deg,#0B1F3A 0%,#1A3A6B 100%);
+}
+.scNum {
+  width:28px; height:28px; border-radius:50%;
+  background:rgba(255,255,255,.15); border:1.5px solid rgba(255,255,255,.25);
+  color:#fff; font-size:11px; font-weight:800;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.scTitre { font-size:14.5px; font-weight:800; color:#fff; }
+.scSub   { font-size:11.5px; color:rgba(200,217,248,.7); margin-top:2px; }
+.scBody  { padding:22px; }
+
+/* ── Grille récap ──────────────────────────────────────── */
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+.box  {
+  background:#F8FAFF; border:1px solid #E2E8F0;
+  border-radius:12px; padding:14px;
+  transition:all .15s;
+}
+.box:hover { border-color:#BFDBFE; background:#EFF6FF; }
+
+.boxTitle { font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.6px; margin-bottom:8px; display:flex; align-items:center; gap:5px; }
+.blue  { color:#1A4FC4; }
+.teal  { color:#0E7490; }
+.green { color:#047857; }
+
+.boxVal  { font-size:13.5px; font-weight:800; color:#0B1F3A; }
+.boxSub  { font-size:11px; color:#64748B; margin-top:3px; line-height:1.5; }
+.totalVal{ font-size:19px; font-weight:900; color:#1A4FC4; font-family:var(--fd,'Fraunces',serif); letter-spacing:-.3px; }
+
+/* ── Conditions ────────────────────────────────────────── */
+.terms { margin-top:18px; padding-top:16px; border-top:1px solid #F1F5F9; }
+.termsLabel {
+  display:flex; align-items:flex-start; gap:10px;
+  font-size:13px; color:#475569; cursor:pointer; line-height:1.6;
+  padding:12px 14px; background:#F8FAFF;
+  border:1.5px solid #E2E8F0; border-radius:12px;
+  transition:all .15s;
+}
+.termsLabel:hover { border-color:#93C5FD; background:#EFF6FF; }
+.termsLabel input { flex-shrink:0; width:16px; height:16px; margin-top:2px; cursor:pointer; accent-color:#1A4FC4; }
+.termsLabel a { color:#1A4FC4; font-weight:700; text-decoration:none; }
+.termsLabel a:hover { text-decoration:underline; }
+
+@media (max-width:640px) { .grid { grid-template-columns:1fr; } }

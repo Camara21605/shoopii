@@ -1,0 +1,39 @@
+/* ================================================================
+ * src/modules/commande/styles/CommissionsCard.module.css
+ * Commissions versées — verrouillées tant que le client n'a pas validé.
+ * ================================================================ */
+
+.card {
+  background: var(--white); border: 1px solid var(--bdr);
+  border-radius: var(--r-xl); box-shadow: var(--sh-xs);
+  margin-bottom: 18px; overflow: hidden;
+}
+.ch { padding: 14px 18px; border-bottom: 1px solid var(--bdr); }
+.chT { font-family: var(--fd); font-size: 13px; font-weight: 800; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+.chT i { color: var(--blue); }
+
+.cb { padding: 8px 18px 14px; }
+
+.locked {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 16px 0; font-size: 12.5px; color: var(--t3); line-height: 1.6;
+}
+.locked i { color: var(--amber); margin-top: 1px; }
+
+.row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--bdr); }
+.row:last-child { border-bottom: none; }
+
+.ic {
+  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.ic_entreprise    { background: var(--sky-2); color: var(--blue); }
+.ic_livreur       { background: var(--em-bg); color: var(--emerald); }
+.ic_correspondant { background: var(--vl-bg); color: var(--violet); }
+.ic_shopi         { background: var(--am-bg); color: var(--amber); }
+
+.row > div:nth-child(2) { flex: 1; min-width: 0; }
+.nm { font-size: 13px; font-weight: 800; color: var(--navy); }
+.rl { font-size: 11.5px; color: var(--t3); margin-top: 1px; }
+
+.amt { font-family: var(--fd); font-size: 14px; font-weight: 800; color: var(--emerald); flex-shrink: 0; }

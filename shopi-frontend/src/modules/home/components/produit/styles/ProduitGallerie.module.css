@@ -1,0 +1,116 @@
+/* ============================================================
+   ProduitGallerie.module.css
+   La galerie est dans .leftCol qui est déjà overflow:hidden
+   donc elle reste naturellement fixe sans besoin de sticky.
+   On conserve sticky pour le cas tablette/mobile où leftCol
+   redevient overflow:visible.
+   ============================================================ */
+
+.gallerie {
+  /* Sur desktop : pas besoin de sticky car leftCol est overflow:hidden */
+  /* Sur tablette : position sticky pour rester visible */
+  position: sticky;
+  top: 24px;
+}
+
+/* ── Image principale ── */
+.main {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(135deg, #EEF3FD, #E2EAFB, #D6E4F8);
+  border-radius: 22px;
+  border: 1px solid var(--bdr, #E8EDF5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 110px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(11,31,58,.08);
+  cursor: zoom-in;
+  margin-bottom: 12px;
+  transition: box-shadow .3s;
+}
+.main:hover { box-shadow: 0 12px 40px rgba(11,31,58,.12); }
+
+.emoji {
+  transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+  user-select: none;
+}
+.main:hover .emoji { transform: scale(1.06); }
+
+/* Badges haut gauche */
+.badges {
+  position: absolute;
+  top: 14px; left: 14px;
+  display: flex; flex-direction: column; gap: 6px;
+  z-index: 2;
+}
+.badge {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px; backdrop-filter: blur(4px);
+}
+.badgeHot   { background: rgba(26,79,196,.9);  color: #fff; }
+.badgePromo { background: rgba(109,40,217,.9); color: #fff; }
+.badgeIntl  { background: rgba(67,56,202,.9);  color: #fff; }
+
+/* Bouton favori */
+.favBtn {
+  position: absolute; top: 14px; right: 14px; z-index: 2;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(11,31,58,.1);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--t3, #7B92B2); font-size: 16px;
+  cursor: pointer; transition: all .2s;
+  backdrop-filter: blur(4px);
+}
+.favBtn:hover  { color: #BE185D; background: rgba(255,241,245,.95); border-color: rgba(190,24,93,.25); transform: scale(1.08); }
+.favBtnOn      { color: #BE185D !important; background: rgba(255,241,245,.95) !important; border-color: rgba(190,24,93,.25) !important; }
+
+/* Bouton partage */
+.shareBtn {
+  position: absolute; bottom: 14px; right: 14px; z-index: 2;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(11,31,58,.1);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--t2, #3D5A80); font-size: 15px;
+  cursor: pointer; transition: all .2s;
+  backdrop-filter: blur(4px);
+}
+.shareBtn:hover { color: var(--blue, #1A4FC4); background: var(--sky, #EEF3FD); border-color: rgba(26,79,196,.2); }
+
+/* ── Miniatures ── */
+.thumbs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.thumb {
+  width: 64px; height: 64px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #EEF3FD, #E2EAFB);
+  border: 2px solid var(--bdr, #E8EDF5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; cursor: pointer; flex-shrink: 0;
+  transition: all .2s;
+}
+.thumb:hover     { border-color: var(--blue, #1A4FC4); transform: translateY(-2px); }
+.thumbActive     { border-color: var(--blue, #1A4FC4); box-shadow: 0 0 0 3px rgba(26,79,196,.15); }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .gallerie  { position: sticky; top: 84px; }
+  .main      { font-size: 88px; border-radius: 18px; }
+  .thumb     { width: 54px; height: 54px; font-size: 22px; }
+}
+@media (max-width: 768px) {
+  .gallerie  { position: static; }
+  .main      { font-size: 80px; }
+  .thumb     { width: 52px; height: 52px; font-size: 20px; }
+}
+@media (max-width: 480px) {
+  .main { font-size: 64px; border-radius: 16px; }
+  .thumb { width: 48px; height: 48px; font-size: 18px; }
+}

@@ -1,0 +1,27 @@
+/*
+ * MessagerieLayout.module.css
+ * Layout 3 colonnes : ConvList | ChatWindow | InfoPanel
+ */
+
+.layout {
+  display: flex;
+  /* Hauteur totale moins la topbar du dashboard (66px) */
+  height: calc(100vh - var(--hdr, 66px));
+  overflow: hidden;
+  background: var(--g50);
+}
+
+/* Overlay mobile */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(11,31,58,.45);
+  backdrop-filter: blur(3px);
+  z-index: 199;
+}
+
+@media (max-width: 1100px) {
+  /* Info panel disparaît */
+}
+@media (max-width: 640px) {
+  .layout { height: calc(100vh - var(--hdr, 66px)); }
+}

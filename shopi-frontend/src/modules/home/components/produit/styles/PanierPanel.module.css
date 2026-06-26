@@ -1,0 +1,141 @@
+/* ============================================================
+   PanierPanel.module.css
+   Le panel est dans .rightCol qui est déjà overflow:auto
+   et ne scrolle que si son contenu dépasse la hauteur visible.
+   Plus besoin de position:sticky ici.
+   ============================================================ */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Carte commande ── */
+.card {
+  background: var(--white, #fff);
+  border: 1.5px solid var(--bdr, #E8EDF5);
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(11,31,58,.07);
+}
+
+/* Prix */
+.prix {
+  font-family: var(--fd, 'Fraunces', serif);
+  font-size: 26px; font-weight: 800;
+  color: var(--blue, #1A4FC4);
+  letter-spacing: -1px; margin-bottom: 3px;
+}
+.prix span { font-size: 13px; font-weight: 400; color: var(--t3); }
+.prixAncien { font-size: 13px; color: var(--t4, #B0C4DE); text-decoration: line-through; }
+.economie {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(4,120,87,.09); color: #047857;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px;
+  margin: 6px 0 14px;
+}
+
+/* Boîte livraison */
+.delBox {
+  background: var(--g50, #F8FAFF);
+  border: 1px solid var(--bdr, #E8EDF5);
+  border-radius: 12px; padding: 11px;
+  margin-bottom: 10px; transition: all .3s;
+}
+.delBoxStd  { border-color: var(--sky-3, #C8D6E8); background: var(--sky, #EEF3FD); }
+.delBoxLvr  { border-color: var(--bdrb, rgba(26,79,196,.25)); background: var(--sky-2, #E2EAFB); }
+.delTop     { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.delIco     { font-size: 18px; flex-shrink: 0; }
+.delTitle   { font-size: 12px; font-weight: 700; color: var(--navy, #0B1F3A); flex: 1; }
+.delTitleGray { font-size: 12px; color: var(--t3); flex: 1; }
+.delConfigure {
+  font-size: 10px; color: var(--blue, #1A4FC4); font-weight: 700;
+  white-space: nowrap; background: none; border: none; cursor: pointer;
+  padding: 3px 8px; border-radius: 6px; transition: background .18s;
+}
+.delConfigure:hover { background: var(--sky-2, #DCE8F8); }
+.delRows    { display: flex; flex-direction: column; gap: 4px; }
+.delRow     { display: flex; justify-content: space-between; font-size: 11px; color: var(--t2, #3D5A80); }
+.delVal     { font-weight: 600; color: var(--navy, #0B1F3A); }
+.delValGreen  { color: #16A34A !important; }
+.delValTeal   { color: var(--teal, #0E7490) !important; }
+.delValIndigo { color: #4338CA !important; }
+
+.divider { height: 1px; background: var(--bdr, #E8EDF5); margin: 10px 0; }
+
+/* Quantité */
+.qtyRow  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.qtyLbl  { font-size: 12px; color: var(--t2); display: flex; align-items: center; gap: 5px; }
+.qtyCtrl { display: flex; align-items: center; background: var(--g50); border: 1px solid var(--bdr2, #C8D6E8); border-radius: 8px; overflow: hidden; }
+.qtyBtn  { width: 28px; height: 28px; background: transparent; border: none; display: flex; align-items: center; justify-content: center; color: var(--t2); font-size: 13px; cursor: pointer; transition: all .2s; }
+.qtyBtn:hover { background: var(--sky); color: var(--navy); }
+.qtyNum  { min-width: 26px; text-align: center; font-family: var(--fd, 'Fraunces', serif); font-size: 13px; font-weight: 700; color: var(--navy); }
+
+/* Breakdown */
+.breakdown { background: var(--sky, #EEF3FD); border-radius: 10px; padding: 10px 12px; margin: 8px 0; }
+.bkrRow    { display: flex; justify-content: space-between; font-size: 11.5px; margin-bottom: 5px; color: var(--t2); }
+.bkrRow:last-child { margin-bottom: 0; }
+.bkrVal    { font-weight: 600; }
+.bkrTotal  { font-size: 13px; font-weight: 700; color: var(--navy); border-top: 1px solid var(--sky-3, #C8D6E8); padding-top: 7px; margin-top: 2px; }
+.bkrValTotal { color: var(--blue, #1A4FC4); font-family: var(--fd, 'Fraunces', serif); font-size: 15px; }
+
+/* Boutons */
+.btnCart {
+  width: 100%; background: var(--navy, #0B1F3A); color: #fff;
+  border: none; border-radius: 14px; padding: 13px;
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; transition: all .25s; margin-top: 12px;
+}
+.btnCart:hover { background: #112648; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(11,31,58,.2); }
+
+.btnBuy {
+  width: 100%; background: var(--blue, #1A4FC4); color: #fff;
+  border: none; border-radius: 14px; padding: 13px;
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; transition: all .25s; margin-top: 8px;
+}
+.btnBuy:hover { background: #2560DC; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,79,196,.3); }
+
+.secure {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  font-size: 10px; color: var(--t3); margin-top: 10px;
+}
+
+/* ── Carte vendeur ── */
+.vendeurCard {
+  background: var(--white, #fff);
+  border: 1.5px solid var(--bdr, #E8EDF5);
+  border-radius: 22px; padding: 18px;
+  box-shadow: 0 2px 10px rgba(11,31,58,.07);
+}
+.vcTop  { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.vcLogo {
+  width: 42px; height: 42px; border-radius: 10px;
+  background: linear-gradient(135deg, #EEF3FD, #D6E4F8);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; border: 1px solid var(--bdr); flex-shrink: 0;
+}
+.vcNom  { font-family: var(--fd, 'Fraunces', serif); font-size: 13px; font-weight: 700; color: var(--navy); }
+.vcVer  { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #047857; font-weight: 600; margin-top: 2px; flex-wrap: wrap; }
+.vcStats { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 12px; }
+.vcStat  { text-align: center; background: var(--g50); border-radius: 10px; padding: 8px 6px; }
+.vcStatV { font-family: var(--fd, 'Fraunces', serif); font-size: 13px; font-weight: 700; color: var(--navy); }
+.vcStatL { font-size: 9.5px; color: var(--t3); margin-top: 1px; }
+.vcBtns  { display: flex; gap: 7px; }
+.vcBtnV  {
+  flex: 1; background: var(--sky, #EEF3FD); color: var(--blue, #1A4FC4);
+  border: 1px solid var(--sky-3, #C8D6E8); border-radius: 8px;
+  padding: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all .2s;
+}
+.vcBtnV:hover { background: var(--sky-2, #DCE8F8); border-color: var(--blue); }
+.vcBtnM  {
+  flex: 1; background: var(--navy, #0B1F3A); color: #fff;
+  border: none; border-radius: 8px; padding: 8px;
+  font-size: 11px; font-weight: 700; cursor: pointer; transition: background .2s;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.vcBtnM:hover { background: #112648; }

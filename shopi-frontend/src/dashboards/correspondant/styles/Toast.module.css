@@ -1,0 +1,5 @@
+/* Toast.module.css */
+.msg { background:var(--navy,#0B1F3A);color:rgba(200,217,248,.95);border:1px solid rgba(255,255,255,.09);border-radius:var(--r-lg,18px);padding:12px 18px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 20px 48px rgba(11,31,58,.3);transform:translateX(120%);opacity:0;transition:all .32s var(--spring,cubic-bezier(.34,1.56,.64,1));max-width:340px;pointer-events:all;position:relative;overflow:hidden; }
+.msg::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cor,#B45309)}
+.show{transform:translateX(0);opacity:1}
+.s{color:#10B981}.i{color:#93C5FD}.w{color:#F59E0B}.e{color:#EF4444}

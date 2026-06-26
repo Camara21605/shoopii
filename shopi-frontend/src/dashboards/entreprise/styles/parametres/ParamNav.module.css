@@ -1,0 +1,76 @@
+/* ============================================================
+ * ParametresNav.module.css
+ * Navigation latérale (sidebar) standalone si utilisé séparément
+ * ============================================================ */
+
+.nav {
+  background: var(--white);
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--r-xl);
+  padding: 10px;
+  box-shadow: var(--sh-xs);
+  position: sticky;
+  top: calc(var(--hdr, 66px) + 18px);
+}
+.sect {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--t4);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 10px 10px 5px;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 11px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t2);
+  cursor: pointer;
+  transition: all 0.18s;
+  position: relative;
+  margin-bottom: 2px;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font-family: var(--fb);
+}
+.item:hover { background: rgba(26,79,196,.09); color: var(--blue); }
+.item.active { background: rgba(26,79,196,.09); color: var(--blue); font-weight: 700; }
+.item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 18px;
+  background: var(--blue);
+  border-radius: 0 3px 3px 0;
+}
+.item i { width: 15px; text-align: center; font-size: 13px; flex-shrink: 0; color: var(--t4); }
+.item.active i, .item:hover i { color: var(--blue); }
+.item.danger { color: #DC2626; }
+.item.danger i { color: #DC2626; }
+.item.danger:hover { background: rgba(220,38,38,.08); }
+.pct { font-family: var(--fd); font-size: 10px; font-weight: 800; color: var(--blue); margin-left: auto; }
+.dot { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot.red   { background: #DC2626; }
+.dot.amber { background: #B45309; }
+.dot.blue  { background: var(--blue); }
+
+@media (max-width: 1100px) {
+  .nav {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding: 8px;
+  }
+  .sect { display: none; }
+  .item { padding: 7px 10px; font-size: 12px; }
+  .item.active::before { display: none; }
+  .pct, .dot { display: none; }
+}

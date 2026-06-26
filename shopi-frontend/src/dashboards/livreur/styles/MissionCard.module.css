@@ -1,0 +1,182 @@
+/* ================================================================
+ * MissionCard.module.css
+ * DESIGN : Card avec accent gauche coloré, route visualisée, hover lift
+ * ================================================================ */
+
+.mc {
+  background: var(--white);
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--r-xl);
+  padding: 15px;
+  cursor: pointer;
+  transition: all .22s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.mc::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--teal);
+  border-radius: 0;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.mc:hover {
+  border-color: var(--bdrb);
+  background: rgba(238,246,255,.5);
+  transform: translateY(-2px) translateX(2px);
+  box-shadow: var(--sh-sm);
+}
+.mc:hover::before { opacity: 1; }
+
+.urgent { border-color: rgba(220,38,38,.28) !important; }
+.urgent::before { background: var(--red); }
+.urgent:hover { background: rgba(220,38,38,.025) !important; }
+
+/* ── Badge ── */
+.mcBadge {
+  position: absolute;
+  top: 12px; right: 12px;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: var(--pill);
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+.badgeNew    { background: var(--tl-bg);              color: var(--teal);   }
+.badgeUrgent { background: rgba(220,38,38,.12);        color: var(--red);    }
+.badgePrep   { background: var(--am-bg);              color: var(--amber);  }
+
+/* ── Top ── */
+.mcTop { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 10px; }
+.mcIcon {
+  width: 42px; height: 42px;
+  border-radius: var(--r-md);
+  background: var(--sky-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  flex-shrink: 0;
+}
+.mcBody { flex: 1; min-width: 0; padding-right: 80px; }
+.mcId {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--t3);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 2px;
+}
+.mcNm {
+  font-family: var(--fd);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.25;
+}
+.mcShop {
+  font-size: 11px;
+  color: var(--teal);
+  font-weight: 600;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Route ── */
+.mcRoute {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  background: var(--g50);
+  border-radius: var(--r-md);
+  border: 1px solid var(--bdr);
+  margin-bottom: 10px;
+}
+.mcDot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dotFr { background: var(--blue); }
+.dotTo { background: var(--emerald); }
+.mcLine {
+  flex: 1;
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg, var(--g300) 0, var(--g300) 4px,
+    transparent 4px, transparent 8px
+  );
+}
+.mcPlace {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--navy);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+.mcDist { font-size: 10px; color: var(--t3); flex-shrink: 0; }
+
+/* ── Meta ── */
+.mcMeta { display: flex; align-items: center; gap: 11px; flex-wrap: wrap; margin-bottom: 11px; }
+.mcMetaItem { font-size: 11px; color: var(--t2); display: flex; align-items: center; gap: 4px; }
+
+/* ── Actions ── */
+.mcActions { display: flex; gap: 8px; align-items: center; }
+.btnAccept {
+  background: var(--teal);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-md);
+  padding: 10px 18px;
+  font-size: 12px;
+  font-weight: 700;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btnAccept:hover { background: var(--teal-2); transform: translateY(-1px); box-shadow: var(--sh-teal); }
+.btnMap {
+  background: var(--white);
+  color: var(--t2);
+  border: 1.5px solid var(--bdr2);
+  border-radius: var(--r-md);
+  padding: 10px 15px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btnMap:hover { border-color: var(--teal); color: var(--teal); background: var(--sky); }
+.btnX {
+  background: rgba(220,38,38,.07);
+  border: 1px solid rgba(220,38,38,.18);
+  border-radius: var(--r-md);
+  padding: 10px;
+  color: var(--red);
+  cursor: pointer;
+  transition: all .2s;
+}
+.btnX:hover { background: rgba(220,38,38,.13); }
+.mcFee {
+  font-family: var(--fd);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--teal);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) { .mcRoute { display: none; } }

@@ -1,0 +1,59 @@
+/*
+ * FICHIER: src/dashboards/entreprise/EntrepriseApp.css
+ * Styles de layout du dashboard Entreprise (wrapping de Sidebar + Topbar + Main)
+ */
+
+/* Conteneur global */
+.entreprise-app {
+  min-height: 100vh;
+  background: var(--g50);
+}
+
+/* Zone de contenu : décalée de la largeur de la sidebar et du header */
+.main {
+  margin-left: var(--sb);
+  padding-top: var(--hdr);
+}
+
+/* Chaque page a une animation d'apparition */
+.page {
+  padding: 24px;
+  display: none;
+  animation: fadeIn 0.25s var(--ease);
+}
+.page.on {
+  display: block;
+}
+
+/* Bouton flottant (FAB) */
+.fab {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.fab-main {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--blue); color: #fff; border: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 6px 20px rgba(22, 82, 240, 0.4);
+  cursor: pointer; transition: all 0.25s;
+}
+.fab-main:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 28px rgba(22, 82, 240, 0.5);
+}
+
+/* ══ RESPONSIVE ══ */
+@media (max-width: 920px) {
+  .main { margin-left: 68px; }
+}
+@media (max-width: 640px) {
+  .main { margin-left: 0; padding-bottom: 112px; }
+  .page { padding: 16px; }
+}

@@ -1,0 +1,120 @@
+/* ============================================================
+   PaiementSection.module.css — Design Professionnel
+   ============================================================ */
+
+.sc    { background:#fff; border:1px solid #E2E8F0; border-radius:16px; overflow:hidden; box-shadow:0 1px 4px rgba(11,31,58,.07),0 4px 16px rgba(11,31,58,.05); }
+.lit   { border-color:#BFDBFE; box-shadow:0 0 0 3px rgba(26,79,196,.08),0 4px 20px rgba(11,31,58,.08); }
+.scHd  { padding:18px 22px; border-bottom:1px solid #F1F5F9; display:flex; align-items:center; gap:12px; background:#FAFBFC; }
+.scNum { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,#1A4FC4,#3B82F6); color:#fff; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 3px 10px rgba(26,79,196,.3); }
+.done  { background:linear-gradient(135deg,#047857,#10B981) !important; box-shadow:0 3px 10px rgba(4,120,87,.3) !important; }
+.scTitre { font-size:14.5px; font-weight:800; color:#0B1F3A; }
+.scSub   { font-size:11.5px; color:#94A3B8; margin-top:2px; }
+.scBody  { padding:20px 22px; }
+
+/* ── Grille modes paiement ─────────────────────────────── */
+.payGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:18px; }
+.payOpt  {
+  background:#F8FAFF; border:1.5px solid #E2E8F0; border-radius:14px;
+  padding:14px 10px; text-align:center; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  position:relative; transition:all .2s;
+}
+.payOpt:hover { border-color:#93C5FD; background:#EFF6FF; transform:translateY(-2px); box-shadow:0 4px 14px rgba(26,79,196,.08); }
+.payOptSel    { border-color:#1A4FC4; background:#EFF6FF; box-shadow:0 0 0 3px rgba(26,79,196,.12); }
+.payOptSel::after {
+  content:'✓'; position:absolute; top:-8px; right:-8px;
+  width:18px; height:18px; border-radius:50%;
+  background:#1A4FC4; color:#fff; font-size:9px; font-weight:900;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 2px 6px rgba(26,79,196,.4);
+}
+.payIcon { font-size:24px; }
+.payNm   { font-size:11.5px; font-weight:700; color:#0B1F3A; }
+.paySub  { font-size:10px; color:#94A3B8; }
+
+/* ── Formulaires ───────────────────────────────────────── */
+.payForm { animation:slideDown .2s ease; margin-top:16px; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+
+.fr    { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+.fr3   { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:14px; }
+.frFull{ grid-template-columns:1fr; }
+.span2 { grid-column:span 2; }
+.fg    { display:flex; flex-direction:column; gap:6px; }
+.fl    { font-size:11.5px; font-weight:700; color:#334155; display:flex; justify-content:space-between; }
+.fl span{ font-weight:500; color:#94A3B8; }
+
+.fw    { position:relative; display:flex; align-items:center; }
+.fi    { position:absolute; left:13px; color:#94A3B8; font-size:13px; pointer-events:none; transition:color .15s; z-index:1; }
+.fw:focus-within .fi { color:#1A4FC4; }
+
+.fin {
+  width:100%; background:#F8FAFF; border:1.5px solid #E2E8F0;
+  border-radius:10px; padding:11px 13px 11px 38px;
+  font-family:'DM Sans',sans-serif; font-size:13px; color:#0B1F3A;
+  outline:none; transition:all .18s;
+}
+.fin::placeholder { color:#CBD5E1; }
+.fin:focus { border-color:#1A4FC4; box-shadow:0 0 0 3px rgba(26,79,196,.1); background:#fff; }
+.finTel { padding-left:90px; }
+
+.dialCode {
+  position:absolute; left:0; top:0; bottom:0; background:#F1F5F9;
+  border-right:1.5px solid #E2E8F0; border-radius:10px 0 0 10px;
+  display:flex; align-items:center; padding:0 12px;
+  font-size:12.5px; font-weight:700; color:#334155; pointer-events:none; z-index:2; white-space:nowrap;
+}
+.cardScheme { position:absolute; right:12px; font-size:18px; pointer-events:none; }
+.eyeBtn     { position:absolute; right:12px; background:none; border:none; color:#94A3B8; cursor:pointer; font-size:13px; }
+
+.saveCard {
+  display:flex; align-items:center; gap:9px; font-size:12.5px; font-weight:600;
+  color:#475569; cursor:pointer; padding:11px 14px;
+  background:#F8FAFF; border:1.5px solid #E2E8F0; border-radius:10px; height:44px;
+  transition:all .15s;
+}
+.saveCard:hover { border-color:#93C5FD; background:#EFF6FF; }
+
+/* Info box */
+.infoBox {
+  display:flex; align-items:flex-start; gap:9px; padding:12px 14px;
+  border-radius:10px; font-size:12px; line-height:1.6; margin-top:12px;
+  background:#EFF6FF; border:1px solid #BFDBFE; color:#334155;
+}
+.infoBox i { font-size:13px; color:#1A4FC4; flex-shrink:0; margin-top:1px; }
+
+/* ── Code promo ────────────────────────────────────────── */
+.promoBorder { margin-top:20px; padding-top:18px; border-top:1px solid #F1F5F9; }
+.promoTitle  { font-size:12px; font-weight:700; color:#334155; margin-bottom:10px; display:flex; align-items:center; gap:7px; }
+.promoRow    { display:flex; gap:10px; }
+.promoIn {
+  flex:1; background:#F8FAFF; border:1.5px solid #E2E8F0; border-radius:10px;
+  padding:11px 14px; font-family:'DM Sans',sans-serif; font-size:13px; color:#0B1F3A;
+  outline:none; text-transform:uppercase; letter-spacing:1px; transition:all .18s;
+}
+.promoIn::placeholder { text-transform:none; letter-spacing:0; color:#CBD5E1; }
+.promoIn:focus { border-color:#1A4FC4; box-shadow:0 0 0 3px rgba(26,79,196,.1); background:#fff; }
+.promoIn:disabled { opacity:.5; cursor:not-allowed; }
+
+.promoBtn {
+  background:linear-gradient(135deg,#0B1F3A,#1A4FC4); color:#fff; border:none;
+  border-radius:10px; padding:0 18px; height:44px;
+  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700;
+  white-space:nowrap; cursor:pointer; transition:opacity .15s;
+  box-shadow:0 4px 12px rgba(26,79,196,.3);
+}
+.promoBtn:hover    { opacity:.9; }
+.promoBtn:disabled { opacity:.4; cursor:not-allowed; }
+
+.promoOk {
+  display:flex; align-items:center; gap:8px; background:#ECFDF5;
+  border:1px solid #A7F3D0; border-radius:10px; padding:10px 14px;
+  margin-top:10px; font-size:13px; font-weight:700; color:#047857;
+  animation:fadeIn .2s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.promoRm { margin-left:auto; font-size:11px; color:#94A3B8; cursor:pointer; font-weight:600; }
+.promoRm:hover { color:#EF4444; }
+
+@media (max-width:900px) { .payGrid{ grid-template-columns:repeat(2,1fr) } }
+@media (max-width:480px) { .fr3{ grid-template-columns:1fr 1fr } .span2{ grid-column:span 2 } }

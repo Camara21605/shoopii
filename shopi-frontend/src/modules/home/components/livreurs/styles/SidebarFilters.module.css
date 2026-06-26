@@ -1,0 +1,44 @@
+/* ================================================================
+ * SidebarFilters.module.css — Sidebar filtres avancés
+ * ================================================================ */
+.sidebar{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--white);border:1px solid var(--bdr);border-radius:14px;overflow:hidden}
+.cardHead{padding:13px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.cardTitle{font-size:12.5px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:7px}
+.cardTitle i{color:var(--blue);font-size:13px}
+.resetBtn{font-size:11.5px;color:var(--blue);background:none;border:none;cursor:pointer;font-weight:700;font-family:var(--fb)}
+.cardBody{padding:14px 16px}
+/* ── Zone chips ── */
+.zoneList{display:flex;flex-direction:column;gap:5px}
+.zoneChip{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;border:1.5px solid var(--bdr);cursor:pointer;transition:all .15s;font-size:12.5px;font-weight:600;color:var(--t2)}
+.zoneChip:hover,.zoneChipOn{border-color:var(--blue);color:var(--blue);background:var(--sky,#EEF3FD)}
+.zoneChipOn{background:var(--blue) !important;color:#fff !important;border-color:var(--blue) !important}
+.zoneCnt{margin-left:auto;background:var(--g100,#F1F3F5);border-radius:20px;padding:1px 7px;font-size:10.5px;font-weight:800;color:var(--t3)}
+.zoneChipOn .zoneCnt{background:rgba(255,255,255,.2);color:#fff}
+/* ── Véhicule ── */
+.vehGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.vehChip{border:1.5px solid var(--bdr);border-radius:9px;padding:9px 8px;cursor:pointer;text-align:center;transition:all .15s}
+.vehChip:hover,.vehChipOn{border-color:var(--blue);background:var(--sky,#EEF3FD)}
+.vehChipOn{background:var(--blue) !important;border-color:var(--blue) !important}
+.vehIco{font-size:20px;margin-bottom:4px}
+.vehLbl{font-size:11px;font-weight:700;color:var(--t2)}
+.vehChipOn .vehLbl{color:#fff}
+/* ── Note ── */
+.ratingList{display:flex;flex-direction:column;gap:4px}
+.ratingOpt{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;cursor:pointer;transition:background .13s;font-size:12.5px;color:var(--t2);font-weight:600}
+.ratingOpt:hover{background:var(--g100,#F1F3F5)}
+.ratingOptOn{background:var(--sky,#EEF3FD);color:var(--blue)}
+.ratingStars{color:#F59E0B;font-size:12px;letter-spacing:1px}
+/* ── Disponibilité ── */
+.availToggle{display:flex;gap:6px}
+.togBtn{flex:1;border:1.5px solid var(--bdr);border-radius:9px;padding:9px 8px;text-align:center;cursor:pointer;font-size:11.5px;font-weight:700;color:var(--t3);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
+.togBtnAvail{background:#D1FAE5;border-color:#047857;color:#065F46}
+.togBtnBusy{background:#FEE2E2;border-color:#B91C1C;color:#991B1B}
+/* ── Abonnements ── */
+.followedCount{font-size:11.5px;font-weight:800;background:var(--sky,#EEF3FD);color:var(--blue);padding:2px 8px;border-radius:20px}
+.followedList{display:flex;flex-direction:column;gap:7px}
+.followedItem{display:flex;align-items:center;gap:8px}
+.followedAva{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.followedName{font-size:12px;font-weight:700;color:var(--t1)}
+.followedMeta{font-size:10.5px;color:var(--t3)}
+.followedDot{margin-left:auto;width:8px;height:8px;border-radius:50%;flex-shrink:0}

@@ -1,0 +1,64 @@
+/* SaveFloat.module.css */
+.float {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(130px);
+  background: var(--navy);
+  border-radius: var(--pill);
+  padding: 14px 26px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 20px 56px rgba(11,31,58,.38), 0 4px 12px rgba(11,31,58,.15);
+  z-index: 800;
+  transition: transform .42s var(--spring, cubic-bezier(.34,1.56,.64,1)), opacity .3s;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.show {
+  transform: translateX(-50%) translateY(0);
+  pointer-events: all;
+  opacity: 1;
+}
+.msg {
+  font-size: 12px;
+  color: rgba(200,217,248,.7);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.msg i { color: var(--amber); }
+.btnSave {
+  background: linear-gradient(135deg, var(--teal), var(--teal-2));
+  color: #fff;
+  border: none;
+  border-radius: var(--pill);
+  padding: 8px 22px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .2s;
+  box-shadow: 0 3px 10px rgba(14,116,144,.35);
+}
+.btnSave:hover { background: var(--teal-2); transform: translateY(-1px); box-shadow: var(--sh-teal); }
+.btnCancel {
+  background: rgba(255,255,255,.07);
+  color: rgba(200,217,248,.55);
+  border: none;
+  border-radius: var(--pill);
+  padding: 8px 16px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btnCancel:hover { background: rgba(255,255,255,.14); color: rgba(200,217,248,.9); }
+@media (max-width: 640px) {
+  .float { left:14px; right:14px; transform:translateY(130px); border-radius:var(--r-xl); flex-wrap:wrap; justify-content:center; }
+  .show  { transform: translateY(0); }
+}

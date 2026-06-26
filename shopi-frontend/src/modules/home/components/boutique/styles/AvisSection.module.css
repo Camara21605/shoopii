@@ -1,0 +1,47 @@
+/* AvisSection.module.css */
+.wrap { display:flex; flex-direction:column; gap:20px; }
+
+.loading { padding:48px 0; text-align:center; color:var(--t3); }
+.loadingIcon { font-size:24px; display:block; margin-bottom:10px; }
+
+/* Résumé note */
+.resume { background:var(--white); border:1px solid var(--bdr); border-radius:20px; padding:24px; display:flex; align-items:center; gap:32px; box-shadow:0 1px 4px rgba(11,31,58,.05); flex-wrap:wrap; }
+.noteGlobale { text-align:center; flex-shrink:0; }
+.noteVal   { font-family:var(--fd,'Fraunces',serif); font-size:52px; font-weight:800; color:var(--navy); line-height:1; }
+.noteTotal { font-size:11.5px; color:var(--t3); margin-top:6px; }
+.stars     { letter-spacing:1px; display:block; margin:4px 0; font-size:13px; }
+.starsLarge { font-size:20px; }
+.starsMuted { color:#D1D5DB; }
+.starFilled { color:#F59E0B; }
+.starEmpty { color:#D1D5DB; }
+
+/* Barres répartition */
+.barres { flex:1; display:flex; flex-direction:column; gap:7px; min-width:200px; }
+.barre  { display:flex; align-items:center; gap:8px; }
+.barreNote  { font-size:12px; color:#F59E0B; width:18px; text-align:right; flex-shrink:0; }
+.barreTrack { flex:1; height:8px; background:var(--g200,#E8EAED); border-radius:999px; overflow:hidden; }
+.barreFill  { height:100%; background:var(--amber,#B45309); border-radius:999px; transition:width .5s; }
+.barrePct   { font-size:11px; color:var(--t3); width:32px; flex-shrink:0; }
+
+/* Liste des avis */
+.liste { display:flex; flex-direction:column; gap:12px; }
+.empty { padding:40px 20px; text-align:center; color:var(--t3); }
+.emptyIcon { font-size:36px; display:block; margin-bottom:14px; color:var(--t4); }
+.emptyTitle { font-weight:700; font-size:15px; color:var(--navy); margin-bottom:6px; }
+.emptyText { font-size:12px; line-height:1.6; max-width:320px; margin:0 auto; }
+.avisCard { background:var(--white); border:1px solid var(--bdr); border-radius:16px; padding:18px; box-shadow:0 1px 4px rgba(11,31,58,.05); }
+.avisTop  { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.avisAv   { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--fd); font-size:13px; font-weight:800; color:var(--navy); flex-shrink:0; }
+.avatarTone0 { background:linear-gradient(135deg,#EEF3FD,#D6E4F8); }
+.avatarTone1 { background:linear-gradient(135deg,#ECFDF5,#D1FAE5); }
+.avatarTone2 { background:linear-gradient(135deg,#FAF5FF,#EDE9FE); }
+.avatarTone3 { background:linear-gradient(135deg,#FFF7ED,#FED7AA); }
+.avatarTone4 { background:linear-gradient(135deg,#FDF2F8,#FBCFE8); }
+.avisInfo { flex:1; }
+.avisNom  { font-size:13px; font-weight:700; color:var(--navy); }
+.avisDate { font-size:10.5px; color:var(--t3); margin-top:2px; }
+.avisTexte{ font-size:12.5px; color:var(--t2); line-height:1.65; margin:0 0 10px; }
+.verifiedBadge { margin-top:8px; display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:700; color:var(--blue); background:var(--sky); border-radius:var(--pill); padding:3px 10px; }
+.avisActions{ display:flex; gap:8px; }
+.avisBtn { background:var(--g50); border:1px solid var(--bdr2); border-radius:8px; padding:5px 12px; font-size:11px; font-weight:600; color:var(--t2); cursor:pointer; display:flex; align-items:center; gap:5px; transition:all .18s; }
+.avisBtn:hover { border-color:var(--blue); color:var(--blue); background:var(--sky); }

@@ -1,0 +1,25 @@
+/* ================================================================
+ * src/modules/commande/styles/CodeInput.module.css
+ * Saisie d'un code à 6 chiffres en cases séparées.
+ * ================================================================ */
+
+.inputs { display: flex; gap: 8px; margin-bottom: 12px; }
+
+.box {
+  width: 42px; height: 48px; text-align: center;
+  font-family: var(--fd); font-size: 18px; font-weight: 800; color: var(--navy);
+  border: 1.5px solid var(--bdr2); border-radius: var(--r-md);
+  background: var(--white); transition: all .15s var(--ease);
+}
+.box:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,79,196,.15); }
+.filled { border-color: var(--blue); background: var(--sky); }
+
+.err {
+  border-color: var(--red); background: rgba(220,38,38,.06);
+  animation: shake .4s var(--ease);
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}

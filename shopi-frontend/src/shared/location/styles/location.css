@@ -1,0 +1,307 @@
+/* ============================================================
+ * FICHIER : src/shared/location/styles/location.css
+ * RÔLE    : Styles partagés du module géolocalisation.
+ *           Corrige les icônes Leaflet (problème Vite/webpack)
+ *           et fournit les styles des composants location.
+ * ============================================================ */
+
+/* ── Conteneur carte ────────────────────────────────────────── */
+.loc-map-container {
+  position:     relative;
+  border-radius: 12px;
+  overflow:      hidden;
+  box-shadow:    0 2px 12px rgba(0,0,0,.10);
+  border:        1.5px solid var(--border, #e5e7eb);
+}
+
+.loc-map-container .leaflet-container {
+  width:         100%;
+  height:        100%;
+  border-radius: inherit;
+  font-family:   inherit;
+  background:    var(--sky-2, #f0f4ff);
+}
+
+/* ── Mode sombre ────────────────────────────────────────────── */
+.loc-map-container.dark .leaflet-container {
+  background: #1a1a2e;
+}
+
+/* ── Marqueur personnalisé ──────────────────────────────────── */
+.loc-marker-icon {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           40px;
+  height:          40px;
+  border-radius:   50% 50% 50% 0;
+  transform:       rotate(-45deg);
+  box-shadow:      0 3px 10px rgba(0,0,0,.25);
+  border:          2.5px solid #fff;
+  cursor:          pointer;
+  transition:      transform .15s, box-shadow .15s;
+}
+
+.loc-marker-icon:hover {
+  transform:  rotate(-45deg) scale(1.15);
+  box-shadow: 0 5px 16px rgba(0,0,0,.3);
+}
+
+.loc-marker-icon .icon-inner {
+  transform: rotate(45deg);
+  font-size:  18px;
+  line-height: 1;
+}
+
+.loc-marker-icon.blue   { background: #1A4FC4; }
+.loc-marker-icon.green  { background: #047857; }
+.loc-marker-icon.orange { background: #d97706; }
+.loc-marker-icon.red    { background: #dc2626; }
+.loc-marker-icon.purple { background: #6d28d9; }
+
+/* ── Marqueur GPS actuel (pulsation) ────────────────────────── */
+.loc-gps-marker {
+  width:       18px;
+  height:      18px;
+  border-radius: 50%;
+  background:  #1A4FC4;
+  border:      3px solid #fff;
+  box-shadow:  0 0 0 4px rgba(26,79,196,.3);
+  animation:   loc-pulse 2s infinite;
+}
+
+@keyframes loc-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(26,79,196,.4); }
+  70%  { box-shadow: 0 0 0 12px rgba(26,79,196,0);  }
+  100% { box-shadow: 0 0 0 0   rgba(26,79,196,0);   }
+}
+
+/* ── Bouton GPS ─────────────────────────────────────────────── */
+.loc-gps-btn {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             8px;
+  padding:         10px 18px;
+  border:          none;
+  border-radius:   10px;
+  background:      var(--blue, #1A4FC4);
+  color:           #fff;
+  font-size:       14px;
+  font-weight:     600;
+  cursor:          pointer;
+  transition:      background .15s, transform .1s;
+  box-shadow:      0 2px 8px rgba(26,79,196,.3);
+}
+
+.loc-gps-btn:hover:not(:disabled) { background: #1642a8; transform: translateY(-1px); }
+.loc-gps-btn:active                { transform: translateY(0); }
+.loc-gps-btn:disabled              { opacity: .55; cursor: not-allowed; }
+
+.loc-gps-btn.loading i { animation: loc-spin .8s linear infinite; }
+@keyframes loc-spin { to { transform: rotate(360deg); } }
+
+/* ── Carte d'adresse ────────────────────────────────────────── */
+.loc-address-card {
+  display:         flex;
+  align-items:     flex-start;
+  gap:             12px;
+  padding:         14px 16px;
+  background:      #fff;
+  border:          1.5px solid var(--border, #e5e7eb);
+  border-radius:   12px;
+  cursor:          pointer;
+  transition:      border-color .15s, box-shadow .15s;
+}
+
+.loc-address-card:hover {
+  border-color: var(--blue, #1A4FC4);
+  box-shadow:   0 2px 10px rgba(26,79,196,.12);
+}
+
+.loc-address-card.default {
+  border-color: var(--blue, #1A4FC4);
+  background:   rgba(26,79,196,.04);
+}
+
+.loc-address-card__icon {
+  font-size:   22px;
+  flex-shrink: 0;
+  margin-top:  2px;
+}
+
+.loc-address-card__body { flex: 1; min-width: 0; }
+
+.loc-address-card__title {
+  font-weight:  700;
+  font-size:    14px;
+  color:        var(--navy, #1a2033);
+  margin-bottom: 3px;
+  display:      flex;
+  align-items:  center;
+  gap:          6px;
+}
+
+.loc-address-card__badge {
+  font-size:    10px;
+  font-weight:  700;
+  padding:      2px 7px;
+  border-radius: 20px;
+  background:   var(--blue, #1A4FC4);
+  color:        #fff;
+}
+
+.loc-address-card__text {
+  font-size:  12.5px;
+  color:      var(--t2, #6b7280);
+  line-height: 1.5;
+}
+
+.loc-address-card__actions {
+  display:    flex;
+  gap:        4px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.loc-address-card__btn {
+  width:           30px;
+  height:          30px;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  border:          none;
+  border-radius:   8px;
+  background:      transparent;
+  color:           var(--t2, #6b7280);
+  font-size:       13px;
+  cursor:          pointer;
+  transition:      background .15s, color .15s;
+}
+
+.loc-address-card__btn:hover           { background: var(--sky-2, #f0f4ff); color: var(--blue, #1A4FC4); }
+.loc-address-card__btn.delete:hover    { background: #fff0f0; color: #dc2626; }
+
+/* ── Partage de position (livreur) ──────────────────────────── */
+.loc-sharing-toggle {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         16px 20px;
+  background:      #fff;
+  border:          1.5px solid var(--border, #e5e7eb);
+  border-radius:   12px;
+  margin-bottom:   16px;
+}
+
+.loc-sharing-toggle.active {
+  border-color: #047857;
+  background:   rgba(4,120,87,.04);
+}
+
+.loc-sharing-label {
+  display:     flex;
+  align-items: center;
+  gap:         10px;
+}
+
+.loc-sharing-dot {
+  width:       10px;
+  height:      10px;
+  border-radius: 50%;
+  background:  var(--t3, #d1d5db);
+}
+
+.loc-sharing-dot.active {
+  background: #10b981;
+  animation:  loc-pulse-green 2s infinite;
+}
+
+@keyframes loc-pulse-green {
+  0%   { box-shadow: 0 0 0 0   rgba(16,185,129,.5); }
+  70%  { box-shadow: 0 0 0 8px rgba(16,185,129,0);  }
+  100% { box-shadow: 0 0 0 0   rgba(16,185,129,0);  }
+}
+
+/* ── Popup Leaflet personnalisé ─────────────────────────────── */
+.loc-popup .leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow:    0 4px 16px rgba(0,0,0,.15);
+  padding:       0;
+  border:        1.5px solid var(--border, #e5e7eb);
+}
+
+.loc-popup .leaflet-popup-content {
+  margin:  0;
+  padding: 14px 16px;
+  min-width: 200px;
+}
+
+.loc-popup .leaflet-popup-tip-container { display: none; }
+
+/* ── Barre de recherche ──────────────────────────────────────── */
+.loc-search-bar {
+  position:     relative;
+  margin-bottom: 12px;
+}
+
+.loc-search-bar input {
+  width:         100%;
+  padding:       10px 14px 10px 40px;
+  border:        1.5px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  font-size:     14px;
+  outline:       none;
+  transition:    border-color .15s;
+  background:    #fff;
+}
+
+.loc-search-bar input:focus { border-color: var(--blue, #1A4FC4); }
+
+.loc-search-bar__icon {
+  position:  absolute;
+  left:      13px;
+  top:       50%;
+  transform: translateY(-50%);
+  color:     var(--t3, #9ca3af);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.loc-search-results {
+  position:     absolute;
+  top:          100%;
+  left:         0;
+  right:        0;
+  z-index:      9999;
+  background:   #fff;
+  border:       1.5px solid var(--border, #e5e7eb);
+  border-top:   none;
+  border-radius: 0 0 10px 10px;
+  max-height:   220px;
+  overflow-y:   auto;
+  box-shadow:   0 4px 12px rgba(0,0,0,.1);
+}
+
+.loc-search-result {
+  padding:    10px 14px;
+  cursor:     pointer;
+  font-size:  13px;
+  border-bottom: 1px solid var(--border, #f3f4f6);
+  transition: background .1s;
+}
+
+.loc-search-result:hover { background: var(--sky-2, #f0f4ff); }
+.loc-search-result:last-child { border-bottom: none; }
+
+.loc-search-result strong {
+  display:     block;
+  font-weight: 600;
+  color:       var(--navy, #1a2033);
+  margin-bottom: 2px;
+}
+
+.loc-search-result span {
+  color:     var(--t2, #6b7280);
+  font-size: 11.5px;
+}

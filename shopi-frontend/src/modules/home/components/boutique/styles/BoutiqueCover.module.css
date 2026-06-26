@@ -1,0 +1,172 @@
+/* BoutiqueCover.module.css — Design professionnel */
+
+/* ── Wrapper principal ── */
+.cover {
+  position: relative;
+  height: 280px;
+  overflow: hidden;
+  background: var(--navy);
+  user-select: none;
+}
+
+/* ── Fond dégradé (fallback sans coverImage) ── */
+.bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 65% 75% at 85% 35%, rgba(59,114,240,.32), transparent 58%),
+    radial-gradient(ellipse 45% 55% at 12% 68%, rgba(26,79,196,.22), transparent 52%),
+    radial-gradient(ellipse 40% 50% at 50% 10%,  rgba(91,142,244,.15), transparent 60%),
+    linear-gradient(145deg, #0B1F3A 0%, #122750 55%, #1A3B6E 100%);
+}
+
+/* ── Grille subtile (fallback uniquement) ── */
+.grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 100% 100% at 50% 0%, black 20%, transparent 90%);
+}
+
+/* ── Overlay sombre en bas (toujours présent) pour lisibilité du texte ── */
+.overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(11,31,58,.82) 0%,
+    rgba(11,31,58,.30) 45%,
+    transparent 75%
+  );
+  z-index: 1;
+}
+
+/* ── Overlay plus léger quand coverImage ── */
+.overlayLight {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(11,31,58,.70) 0%,
+    rgba(11,31,58,.10) 50%,
+    transparent 80%
+  );
+  z-index: 1;
+}
+
+/* ── Infos boutique dans le bas du cover ── */
+.info {
+  position: absolute;
+  bottom: 68px;   /* espace pour l'avatar qui dépasse */
+  left: 160px;    /* après l'avatar (112px + 28px left + 20px gap) */
+  right: 20px;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.infoNom {
+  font-family: var(--fd);
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.15;
+  text-shadow: 0 2px 8px rgba(0,0,0,.35);
+}
+.infoSlogan {
+  font-size: 12px;
+  color: rgba(255,255,255,.75);
+  margin-top: 3px;
+  font-style: italic;
+  text-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+.infoVerif {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(22,163,74,.85);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-top: 5px;
+  width: fit-content;
+}
+
+/* ── Avatar boutique ── */
+.avatarWrap {
+  position: absolute;
+  bottom: -56px;
+  left: 28px;
+  z-index: 10;
+}
+.avatar {
+  width: 112px;
+  height: 112px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, var(--blue), #5B8EF4);
+  border: 4px solid var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(11,31,58,.25), 0 0 0 1px rgba(255,255,255,.12);
+}
+.avatarInitials {
+  font-family: var(--fd);
+  font-size: 38px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Badge statut ── */
+.statusBadge {
+  position: absolute;
+  bottom: 6px;
+  right: -6px;
+  background: #16A34A;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 2px solid var(--white);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+}
+.statusBadgePending {
+  background: #D97706;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .cover      { height: 200px; }
+  .avatar     { width: 88px; height: 88px; border-radius: 18px; }
+  .avatarWrap { bottom: -44px; }
+  .avatarInitials { font-size: 30px; }
+  .info       { bottom: 52px; left: 124px; }
+  .infoNom    { font-size: 18px; }
+}
+
+@media (max-width: 480px) {
+  .cover      { height: 140px; }
+  .avatar     { width: 68px; height: 68px; border-radius: 14px; border-width: 3px; }
+  .avatarWrap { bottom: -34px; left: 16px; }
+  .avatarInitials { font-size: 22px; }
+  .info       { bottom: 38px; left: 96px; right: 12px; }
+  .infoNom    { font-size: 14px; }
+  .infoSlogan { display: none; }
+}

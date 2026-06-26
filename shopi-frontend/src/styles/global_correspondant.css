@@ -1,0 +1,179 @@
+/*
+ * ════════════════════════════════════════════════════════
+ * FICHIER : src/styles/global.css
+ * ORDRE   : 2 — Importé dans main.tsx (point d'entrée)
+ * RÔLE    : Reset, styles de base, scrollbar, animations
+ *           communes, classes utilitaires réutilisables
+ *           (grilles, cartes, tableaux, toggles, toasts…)
+ * ════════════════════════════════════════════════════════
+ */
+
+@import './variables.css';
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+/* ── Reset ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html  { scroll-behavior: smooth; }
+body  {
+  background: var(--g50);
+  color: var(--t1);
+  font-family: var(--fb);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a     { text-decoration: none; color: inherit; }
+button{ cursor: pointer; font-family: var(--fb); }
+
+/* ── Scrollbar ──────────────────────────────────────── */
+::-webkit-scrollbar              { width: 4px; height: 4px; }
+::-webkit-scrollbar-track        { background: transparent; }
+::-webkit-scrollbar-thumb        { background: var(--cor-bg2); border-radius: 4px; }
+
+/* ── Grilles layout ─────────────────────────────────── */
+.g2  { display: grid; grid-template-columns: 1fr 1fr;         gap: 16px; margin-bottom: 16px; }
+.g3  { display: grid; grid-template-columns: 2fr 1fr;         gap: 16px; margin-bottom: 16px; }
+.g3r { display: grid; grid-template-columns: 1fr 2fr;         gap: 16px; margin-bottom: 16px; }
+.g4  { display: grid; grid-template-columns: repeat(4,1fr);   gap: 14px; margin-bottom: 20px; }
+
+/* ── Card ───────────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-xs);
+  overflow: hidden;
+  margin-bottom: 16px;
+  transition: border-color .25s;
+}
+.card:hover { border-color: rgba(180,83,9,.16); }
+
+.ch {
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--bdr);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--g50);
+}
+.ch-t {
+  font-family: var(--fd);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ch-t i  { color: var(--cor); font-size: 13px; }
+.ch-a {
+  background: var(--cor-bg);
+  color: var(--cor);
+  border: 1px solid var(--bdr-cor);
+  border-radius: var(--pill);
+  padding: 5px 13px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all .2s;
+  flex-shrink: 0;
+}
+.ch-a:hover { background: var(--cor-bg2); }
+.cb { padding: 18px 20px; }
+
+/* ── Toggle switch ──────────────────────────────────── */
+.tog { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+.tog input { opacity: 0; width: 0; height: 0; position: absolute; }
+.togs {
+  position: absolute; inset: 0;
+  background: var(--g300);
+  border-radius: var(--pill);
+  cursor: pointer;
+  transition: background .2s;
+}
+.togs::before {
+  content: '';
+  position: absolute; left: 3px; top: 3px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.tog input:checked + .togs { background: var(--cor); }
+.tog input:checked + .togs::before { transform: translateX(18px); }
+
+/* ── Status pills ───────────────────────────────────── */
+.s-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--pill);
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+.s-att   { background: var(--em-bg);               color: var(--emerald); }
+.s-stock { background: var(--cor-bg);              color: var(--cor);     }
+.s-dep   { background: var(--tl-bg);               color: var(--teal);    }
+.s-ret   { background: rgba(220,38,38,.1);          color: var(--red);     }
+.s-livr  { background: var(--sky-2);               color: var(--blue);    }
+
+/* ── Tableau ────────────────────────────────────────── */
+table  { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 9px 13px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--t3);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  text-align: left;
+  background: var(--g50);
+  border-bottom: 1px solid var(--g200);
+  white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--bdr); transition: background .18s; cursor: pointer; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover      { background: var(--cor-bg); }
+tbody td { padding: 11px 13px; font-size: 12px; color: var(--t1); vertical-align: middle; }
+
+/* ── Toast container ────────────────────────────────── */
+#toast-container {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+/* ── Animations clés ────────────────────────────────── */
+@keyframes hpulse   { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
+@keyframes arrowPulse { 0%,100%{transform:translateX(0)} 50%{transform:translateX(4px)} }
+@keyframes cuPulse  { 0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.4)} 50%{box-shadow:0 0 0 12px rgba(245,158,11,0)} }
+@keyframes urgBlink { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 1280px) {
+  .g4  { grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width: 1060px) {
+  .g3, .g3r, .g2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 960px) {
+  :root { --sb: 68px; }
+  .g4   { grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width: 640px) {
+  :root { --sb: 0px; --hdr: 56px; }
+  .g4   { grid-template-columns: 1fr 1fr; gap: 10px; }
+}
+@media (max-width: 380px) {
+  .g4   { grid-template-columns: 1fr 1fr; gap: 8px; }
+}

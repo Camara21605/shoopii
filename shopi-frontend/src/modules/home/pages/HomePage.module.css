@@ -1,0 +1,15 @@
+/* ============================================================
+ * HomePage.module.css
+ *
+ * Sur petit écran : la bande de stories (HomeStoriesStrip, 7e
+ * enfant de <main>) remonte juste sous le header.
+ * ============================================================ */
+@media (max-width: 640px) {
+  .main {
+    display: flex;
+    flex-direction: column;
+  }
+  .main > :nth-child(7) {
+    order: -1;
+  }
+}

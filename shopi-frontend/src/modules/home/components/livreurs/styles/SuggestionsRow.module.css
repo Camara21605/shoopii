@@ -1,0 +1,16 @@
+/* ================================================================
+ * SuggestionsRow.module.css — Rangée suggestions
+ * ================================================================ */
+.row{background:var(--white);border:1px solid var(--bdr);border-radius:14px;padding:13px 18px;margin-bottom:18px;display:flex;align-items:center;gap:12px;overflow-x:auto}
+.label{font-size:12px;font-weight:800;color:var(--navy);white-space:nowrap;min-width:90px}
+.labelTitle{display:block}
+.labelSub{display:block;font-size:10px;color:var(--t3);font-weight:500;margin-top:1px}
+.divider{width:1px;height:40px;background:var(--bdr);flex-shrink:0}
+.item{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:60px;cursor:pointer}
+.avaWrap{position:relative;margin-bottom:2px}
+.ava{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-weight:700;font-size:14px;color:#fff;position:relative}
+.avaDot{width:10px;height:10px;border-radius:50%;background:#10B981;border:2px solid var(--white);position:absolute;bottom:1px;right:1px}
+.name{font-size:10.5px;font-weight:700;color:var(--t1);text-align:center;white-space:nowrap}
+.zone{font-size:9.5px;color:var(--t3);text-align:center}
+.followBtn{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;border:1.5px solid var(--blue);color:var(--blue);background:var(--sky,#EEF3FD);cursor:pointer;font-family:var(--fb);transition:all .15s}
+.followBtn:hover,.followBtnOn{background:var(--blue);color:#fff}

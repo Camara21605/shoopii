@@ -1,0 +1,222 @@
+/* ============================================================
+ * BoutiqueSidebar.module.css
+ * Panneau de filtres latéral de la page boutique
+ * ============================================================ */
+
+/* Sidebar sticky — reste visible pendant le scroll */
+.sidebar {
+  position: sticky;
+  top: calc(66px + 80px + 48px + 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Carte de filtre (conteneur commun) ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--bdr);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(11,31,58,.05);
+}
+
+/* En-tête de la carte */
+.cardHd {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--bdr);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--g50);
+}
+.cardHd h4 {
+  font-family: var(--fd,'Fraunces',serif);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+}
+.cardHd h4 i { color: var(--blue); font-size: 12px; }
+
+/* Bouton "Tout" pour réinitialiser les catégories */
+.clearBtn {
+  font-size: 11px;
+  color: var(--blue);
+  cursor: pointer;
+  font-weight: 600;
+  background: none;
+  border: none;
+  padding: 0;
+  transition: opacity .18s;
+}
+.clearBtn:hover { opacity: .7; }
+
+/* Corps de la carte */
+.cardBd     { padding: 12px 16px; }
+.cardBdPad  { padding: 8px 12px; }
+
+/* ── Sélecteur de tri ── */
+.sortSel {
+  width: 100%;
+  background: var(--g50);
+  border: 1.5px solid var(--bdr2);
+  border-radius: 10px;
+  padding: 9px 32px 9px 12px;
+  font-family: var(--fb);
+  font-size: 13px;
+  color: var(--t1);
+  outline: none;
+  cursor: pointer;
+  transition: border-color .18s;
+  appearance: none;
+  /* Flèche SVG personnalisée */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+.sortSel:focus { border-color: var(--blue); }
+
+/* ── Liste des catégories ── */
+.catList { display: flex; flex-direction: column; gap: 3px; }
+
+.catItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--t2);
+  transition: background .15s;
+}
+.catItem:hover { background: var(--sky); }
+
+/* Catégorie active */
+.catItemActive {
+  background: var(--sky-2,#E2EAFB);
+  color: var(--blue);
+  font-weight: 700;
+}
+.catItemActive .catCnt {
+  background: var(--sky-3,#C8D9F8);
+  color: var(--blue);
+}
+
+.catEm  { font-size: 15px; width: 22px; text-align: center; }
+
+/* Badge nombre de produits */
+.catCnt {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--t4);
+  background: var(--g100);
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+/* ── Slider prix ── */
+.slider {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  appearance: none;
+  background: linear-gradient(to right, var(--blue) 0%, var(--blue) 70%, var(--g200,#E8EAED) 70%);
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--blue);
+  border: 2px solid var(--white);
+  box-shadow: 0 2px 8px rgba(11,31,58,.12);
+}
+
+.priceInputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.priceIn {
+  background: var(--g50);
+  border: 1.5px solid var(--bdr2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--t1);
+  outline: none;
+  width: 100%;
+  transition: border-color .18s;
+  font-family: var(--fb);
+}
+.priceIn:focus { border-color: var(--blue); }
+
+/* ── Filtre par note ── */
+.ratingList { display: flex; flex-direction: column; gap: 6px; }
+
+.ratingOpt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: opacity .18s;
+}
+.ratingOpt:hover { opacity: .8; }
+
+.ratingStars { color: var(--amber,#B45309); font-size: 13px; letter-spacing: -1px; }
+.ratingCnt   { font-size: 11px; color: var(--t3); }
+.ratingAll   { font-size: 12.5px; color: var(--t2); }
+
+/* ── Filtres disponibilité ── */
+.checkList { display: flex; flex-direction: column; gap: 10px; }
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--t2);
+  transition: color .15s;
+}
+.checkItem:hover { color: var(--navy); }
+
+/* ── Infos boutique ── */
+.infoRows { display: flex; flex-direction: column; gap: 10px; }
+
+.infoRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+}
+
+/* Icône colorée */
+.infoIco {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.bg1 { background: var(--sky-2,#E2EAFB);  }
+.bg2 { background: var(--em-bg);           }
+.bg3 { background: var(--am-bg);           }
+.bg4 { background: var(--vl-bg);           }
+
+.infoTitle { font-weight: 700; color: var(--navy); margin-bottom: 2px; font-size: 11.5px; }
+.infoSub   { color: var(--t3); line-height: 1.4; font-size: 11px; }
+
+/* ── Responsive ── */
+/* Sur mobile, la sidebar passe au-dessus du contenu (non sticky) */
+@media (max-width: 900px) {
+  .sidebar { position: static; }
+}

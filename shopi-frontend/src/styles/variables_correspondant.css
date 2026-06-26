@@ -1,0 +1,83 @@
+/*
+ * ════════════════════════════════════════════════════════
+ * FICHIER : src/styles/variables.css
+ * ORDRE   : 1 — Importé en premier dans global.css
+ * RÔLE    : Définit toutes les custom properties CSS
+ *           (couleurs, ombres, rayons, typographie…)
+ *           utilisées dans tout le projet Shopi.
+ * ════════════════════════════════════════════════════════
+ */
+
+:root {
+  /* Palette principale */
+  --navy:   #0B1F3A;
+  --navy-2: #112648;
+  --navy-3: #1e3d6a;
+  --blue:   #1A4FC4;
+  --blue-lt:#5B8EF4;
+  --sky:    #EEF3FD;
+  --sky-2:  #E2EAFB;
+  --sky-3:  #C8D9F8;
+
+  /* Accent correspondant — ambre/orange */
+  --cor:    #B45309;
+  --cor-2:  #92400E;
+  --cor-lt: #F59E0B;
+  --cor-bg: rgba(180,83,9,.09);
+  --cor-bg2:rgba(245,158,11,.12);
+  --bdr-cor:rgba(180,83,9,.22);
+
+  /* Couleurs secondaires */
+  --emerald:#047857;
+  --em-bg:  rgba(4,120,87,.09);
+  --teal:   #0E7490;
+  --tl-bg:  rgba(14,116,144,.09);
+  --violet: #6D28D9;
+  --vl-bg:  rgba(109,40,217,.09);
+  --rose:   #BE185D;
+  --rs-bg:  rgba(190,24,93,.08);
+  --green:  #16A34A;
+  --red:    #DC2626;
+  --orange: #EA580C;
+
+  /* Neutres */
+  --white:  #FFFFFF;
+  --g50:    #F8F9FA;
+  --g100:   #F1F3F5;
+  --g200:   #E8EAED;
+  --g300:   #D1D5DB;
+  --t1:     #0B1F3A;
+  --t2:     #4B5563;
+  --t3:     #9CA3AF;
+  --t4:     #C5CAD3;
+
+  /* Bordures */
+  --bdr:    rgba(11,31,58,.08);
+  --bdr2:   rgba(11,31,58,.12);
+
+  /* Ombres */
+  --sh-xs:  0 1px 4px  rgba(11,31,58,.06);
+  --sh-sm:  0 2px 10px rgba(11,31,58,.08);
+  --sh-md:  0 6px 24px rgba(11,31,58,.10);
+  --sh-lg:  0 16px 48px rgba(11,31,58,.14);
+  --sh-cor: 0 6px 22px rgba(180,83,9,.30);
+
+  /* Rayons */
+  --r-sm:  6px;
+  --r-md:  12px;
+  --r-lg:  18px;
+  --r-xl:  26px;
+  --pill:  999px;
+
+  /* Layout */
+  --sb:    268px;
+  --hdr:   64px;
+
+  /* Easings */
+  --ease:   cubic-bezier(.4,0,.2,1);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+
+  /* Typographie */
+  --fd: 'Fraunces', Georgia, serif;
+  --fb: 'DM Sans', sans-serif;
+}

@@ -1,0 +1,30 @@
+# Dépendances
+**/node_modules/
+
+# Build
+**/dist/
+**/build/
+
+# Variables d'environnement
+**/.env
+**/.env.*
+
+# Logs
+*.log
+
+# Dossiers locaux
+.agents/
+.claude/
+
+# VS Code
+.vscode/
+
+# JetBrains
+.idea/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store

@@ -1,0 +1,59 @@
+/* ============================================================
+ * FormCard.module.css
+ * Carte de formulaire réutilisable dans les paramètres
+ * ============================================================ */
+
+.card {
+  background: var(--white);
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-xs);
+  overflow: hidden;
+  transition: border-color 0.25s;
+}
+.card:hover { border-color: rgba(26,79,196,.12); }
+
+.hd {
+  padding: 16px 22px;
+  background: var(--g50);
+  border-bottom: 1px solid var(--bdr);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hdLeft { display: flex; flex-direction: column; gap: 2px; }
+.title {
+  font-family: var(--fd);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.title i { color: var(--blue); font-size: 13px; }
+.sub { font-size: 11px; color: var(--t3); }
+.action {
+  background: rgba(26,79,196,.09);
+  color: var(--blue);
+  border: 1px solid var(--bdrb);
+  border-radius: var(--pill);
+  padding: 5px 13px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+  cursor: pointer;
+  font-family: var(--fb);
+  flex-shrink: 0;
+}
+.action:hover { background: rgba(26,79,196,.14); }
+
+.body { padding: 22px; }
+
+/* Variante danger (zone sensible) */
+.dangerCard { border-color: rgba(220,38,38,.2); }
+.dangerHd { background: rgba(220,38,38,.04); }

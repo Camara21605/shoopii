@@ -1,0 +1,123 @@
+/* ================================================================
+ * LivreurApp.module.css — Shell principal du dashboard livreur
+ * DESIGN : Dark-teal premium, glassmorphism topbar, sidebar fluide
+ * ================================================================ */
+
+:global(:root) {
+  /* ── Palette teal-navy ── */
+  --teal:    #0E7490;
+  --teal-2:  #0c6480;
+  --teal-3:  #0a5570;
+  --tl-bg:   rgba(14,116,144,.10);
+  --tl-lt:   #67E8F9;
+  --bdrb:    rgba(14,116,144,.25);
+  --sh-teal: 0 8px 28px rgba(14,116,144,.32);
+
+  /* ── Accents ── */
+  --navy:    #0B1F3A;
+  --navy-2:  #112648;
+  --navy-3:  #0d1e35;
+  --white:   #ffffff;
+  --g50:     #F7F9FB;
+  --g100:    #EEF2F6;
+  --g200:    #DDE4ED;
+  --g300:    #C8D4E3;
+  --g400:    #9EB0C7;
+  --t1:      #0B1F3A;
+  --t2:      #3A5068;
+  --t3:      #6B849E;
+  --t4:      #9EB0C7;
+
+  /* ── Sémantiques ── */
+  --emerald: #047857;
+  --em-bg:   rgba(4,120,87,.10);
+  --green:   #16A34A;
+  --amber:   #B45309;
+  --am-bg:   rgba(180,83,9,.10);
+  --red:     #DC2626;
+  --rs-bg:   rgba(220,38,38,.09);
+  --rose:    #E11D48;
+  --blue:    #1A4FC4;
+  --blue-lt: #93C5FD;
+  --blue-2:  #1d40ae;
+  --sky:     #EEF6FF;
+  --sky-2:   #DBEAFE;
+  --sky-3:   #BFDBFE;
+  --orange:  #EA580C;
+  --or-bg:   rgba(234,88,12,.09);
+  --violet:  #7C3AED;
+  --vl-bg:   rgba(124,58,237,.09);
+
+  /* ── Ombres ── */
+  --sh-xs:  0 1px 3px rgba(11,31,58,.07), 0 1px 2px rgba(11,31,58,.05);
+  --sh-sm:  0 3px 10px rgba(11,31,58,.09), 0 1px 3px rgba(11,31,58,.06);
+  --sh-md:  0 8px 24px rgba(11,31,58,.12), 0 3px 8px rgba(11,31,58,.07);
+  --sh-lg:  0 18px 48px rgba(11,31,58,.18), 0 6px 16px rgba(11,31,58,.10);
+  --sh-b:   0 -2px 16px rgba(11,31,58,.08);
+
+  /* ── Rayons ── */
+  --r-sm:   8px;
+  --r-md:   12px;
+  --r-lg:   18px;
+  --r-xl:   26px;
+  --r-2xl:  34px;
+  --pill:   999px;
+
+  /* ── Typographie ── */
+  --fb: 'DM Sans', system-ui, sans-serif;
+  --fd: 'Fraunces', Georgia, serif;
+
+  /* ── Layout ── */
+  --sb:  268px;
+  --hdr: 64px;
+
+  /* ── Animations ── */
+  --ease:   cubic-bezier(.4,0,.2,1);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ── Root ── */
+.root {
+  min-height: 100vh;
+  background: var(--g50);
+  font-family: var(--fb);
+  color: var(--t1);
+}
+
+/* ── Overlay mobile ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(11,31,58,.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 199;
+  animation: fadeIn .2s var(--ease);
+}
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+
+/* ── Zone principale ── */
+.main {
+  margin-left: var(--sb);
+  padding-top: var(--hdr);
+  min-height: 100vh;
+  transition: margin-left .3s var(--ease);
+}
+
+/* ── Toast container ── */
+.toastContainer {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+@media (max-width: 960px) { .main { margin-left: 68px; } }
+@media (max-width: 640px) {
+  .main { margin-left: 0; padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
+}

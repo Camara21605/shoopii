@@ -1,0 +1,98 @@
+/* ================================================================
+ * src/modules/home/components/settings/styles/SettingsSidebar.module.css
+ * ================================================================ */
+
+.nav {
+  background: var(--white); border: 1px solid var(--bdr);
+  border-radius: var(--r-xl); overflow: hidden;
+  box-shadow: var(--sh-xs); position: sticky;
+  top: calc(var(--hdr) + 24px);
+}
+
+/* ── Profile header ── */
+.profile {
+  padding: 22px 20px;
+  background: linear-gradient(135deg, var(--navy), #183358);
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center; gap: 10px;
+  position: relative; overflow: hidden;
+}
+.profile::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(59,114,240,.18), transparent 70%);
+  pointer-events: none;
+}
+.avatarWrap { position: relative; z-index: 1; }
+.avatar {
+  width: 68px; height: 68px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--blue-lt));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--fd); font-size: 26px; font-weight: 700; color: #fff;
+  border: 3px solid rgba(255,255,255,.2);
+}
+.avatarEdit {
+  position: absolute; bottom: -2px; right: -2px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--blue); border: 2px solid var(--white);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 9px; cursor: pointer;
+  transition: background .2s;
+}
+.avatarEdit:hover { background: #2560DC; }
+.profileName {
+  font-family: var(--fd); font-size: 15px; font-weight: 700;
+  color: #fff; position: relative; z-index: 1;
+}
+.profileEmail { font-size: 11px; color: rgba(200,217,248,.5); position: relative; z-index: 1; }
+.profileBadges {
+  display: flex; flex-wrap: wrap; gap: 5px;
+  justify-content: center; position: relative; z-index: 1; margin-top: 2px;
+}
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  border-radius: var(--pill); padding: 3px 10px;
+  font-size: 10px; font-weight: 700;
+}
+.badgeGreen { background: rgba(4,120,87,.2); border: 1px solid rgba(4,120,87,.3); color: #34D399; }
+.badgeBlue  { background: rgba(59,114,240,.2); border: 1px solid rgba(59,114,240,.3); color: #93C5FD; }
+
+/* ── Nav body ── */
+.body { padding: 8px; }
+.section { margin-bottom: 4px; }
+.label {
+  font-size: 9px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 1.2px; color: var(--t4); padding: 10px 12px 4px;
+}
+.item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--r-md);
+  font-size: 13px; font-weight: 500; color: var(--t2);
+  cursor: pointer; transition: all .18s; border: 1.5px solid transparent;
+  position: relative; background: none; border-color: transparent; width: 100%;
+  text-align: left;
+}
+.item i { width: 16px; text-align: center; font-size: 14px; color: var(--t4); transition: color .18s; flex-shrink: 0; }
+.item:hover { background: var(--sky); color: var(--navy); }
+.item:hover i { color: var(--blue); }
+.item.active { background: var(--sky); color: var(--blue); border-color: var(--sky-3); font-weight: 600; }
+.item.active i { color: var(--blue); }
+.item.danger { color: var(--red); }
+.item.danger i { color: var(--red); }
+.item.danger:hover { background: rgba(220,38,38,.08); border-color: rgba(220,38,38,.15); }
+.notif {
+  margin-left: auto; background: var(--red); color: #fff;
+  font-size: 9px; font-weight: 800; min-width: 16px; height: 16px;
+  border-radius: 16px; display: flex; align-items: center;
+  justify-content: center; padding: 0 4px;
+}
+.divider { height: 1px; background: var(--bdr); margin: 6px 0; }
+
+/* ── Responsive ── */
+@media (max-width: 960px) {
+  .nav { position: static; }
+  .profile { flex-direction: row; text-align: left; gap: 14px; }
+  .body { display: flex; flex-wrap: wrap; gap: 4px; padding: 12px; }
+  .section { margin: 0; }
+  .label { display: none; }
+  .item { padding: 7px 12px; font-size: 12px; }
+}

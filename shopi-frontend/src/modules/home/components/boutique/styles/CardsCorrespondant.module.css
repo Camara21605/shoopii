@@ -1,0 +1,229 @@
+/* ============================================================
+   src/modules/home/components/boutique/styles/CardsCorrespondant.module.css
+
+   Carte correspondant — calquée sur CardsLivreur.module.css.
+   Accent indigo/bleu pour différencier visuellement des livreurs.
+   ============================================================ */
+
+/* ── Carte ── */
+.card {
+  background: var(--white, #fff);
+  border: 1.5px solid var(--bdr, #E8EDF5);
+  border-radius: var(--r-xl, 26px);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  text-align: center;
+  position: relative;
+  transition: all .22s var(--ease, cubic-bezier(.4,0,.2,1));
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #4338CA, #6D28D9);
+  opacity: 0;
+  transition: opacity .25s;
+}
+.card:hover {
+  border-color: rgba(67,56,202,.3);
+  box-shadow: 0 8px 28px rgba(67,56,202,.12);
+  transform: translateY(-4px);
+}
+.card:hover::before { opacity: 1; }
+
+/* Carte indisponible (grisée) */
+.cardOff {
+  opacity: .65;
+  filter: grayscale(.3);
+}
+.cardOff:hover { transform: none; box-shadow: none; border-color: var(--bdr); }
+
+/* Carte sélectionnée */
+.cardChoisi {
+  border-color: #4338CA !important;
+  background: rgba(67,56,202,.04);
+}
+.cardChoisi::before { opacity: 1; }
+
+/* ── Badge Vérifié ── */
+.verifBadge {
+  position: absolute;
+  top: 12px; right: 12px;
+  background: rgba(4,120,87,.1);
+  color: var(--emerald, #047857);
+  border: 1px solid rgba(4,120,87,.2);
+  border-radius: var(--pill, 999px);
+  font-size: 9px; font-weight: 800;
+  padding: 3px 9px;
+  display: flex; align-items: center; gap: 4px;
+  white-space: nowrap;
+}
+
+/* ── Avatar ── */
+.avaWrap {
+  position: relative;
+  margin-bottom: 2px;
+}
+.ava {
+  width: 68px; height: 68px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #EEF3FD, #D6E4F8);
+  border: 2px solid rgba(67,56,202,.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px;
+  box-shadow: 0 4px 14px rgba(67,56,202,.12);
+  transition: transform .2s;
+}
+.card:hover .ava { transform: scale(1.05); }
+
+/* Point disponibilité */
+.dot {
+  position: absolute;
+  bottom: -2px; right: -2px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2.5px solid var(--white);
+  box-shadow: 0 1px 4px rgba(0,0,0,.15);
+}
+.dotOn  { background: #10B981; animation: pulse 2s ease infinite; }
+.dotOff { background: #9CA3AF; }
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,.5); }
+  50%      { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+}
+
+/* ── Nom ── */
+.nom {
+  font-family: var(--fd, 'Fraunces', serif);
+  font-size: 15px; font-weight: 800;
+  color: var(--navy, #0B1F3A);
+  line-height: 1.2;
+}
+
+/* ── Localisation ── */
+.loc {
+  font-size: 11px; color: var(--t3, #7B92B2);
+  display: flex; align-items: center; gap: 5px;
+  flex-wrap: wrap; justify-content: center;
+}
+.loc i { color: #4338CA; font-size: 10px; }
+
+/* ── Stats ── */
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.stat {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--t2, #3D5A80);
+}
+.statVal { font-weight: 700; color: var(--navy); }
+.statSep {
+  width: 1px; height: 12px;
+  background: var(--bdr2, #C8D6E8);
+}
+.stars { color: var(--amber, #B45309); font-size: 11px; letter-spacing: -1px; }
+
+/* ── Badge disponibilité ── */
+.dispoBadge {
+  background: rgba(16,185,129,.1);
+  color: #047857;
+  border: 1px solid rgba(16,185,129,.2);
+  border-radius: var(--pill);
+  font-size: 10px; font-weight: 700;
+  padding: 4px 12px;
+}
+.occupeBadge {
+  background: var(--g100, #F1F5F9);
+  color: var(--t3);
+  border: 1px solid var(--bdr2);
+  border-radius: var(--pill);
+  font-size: 10px; font-weight: 700;
+  padding: 4px 12px;
+}
+
+/* ── Infos pratiques ── */
+.infos {
+  width: 100%;
+  background: var(--g50, #F8FAFF);
+  border: 1px solid var(--bdr, #E8EDF5);
+  border-radius: var(--r-lg, 18px);
+  padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.infoRow {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 11px; color: var(--t2, #3D5A80); text-align: left;
+}
+.infoRow i {
+  color: #4338CA; font-size: 11px;
+  flex-shrink: 0; margin-top: 1px; width: 13px; text-align: center;
+}
+
+/* ── Bio ── */
+.bio {
+  font-size: 12px; color: var(--t3, #7B92B2);
+  line-height: 1.6; text-align: left;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+/* ── Boutons ── */
+.btns {
+  display: flex; gap: 8px; width: 100%; margin-top: 4px;
+}
+.btnContact {
+  flex: 1;
+  background: var(--sky, #EEF3FD);
+  color: var(--blue, #1A4FC4);
+  border: 1px solid var(--sky-3, #C8D6E8);
+  border-radius: var(--r-md, 12px);
+  padding: 10px 10px;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; transition: all .2s;
+}
+.btnContact:hover {
+  background: var(--sky-2, #DCE8F8);
+  border-color: var(--blue);
+  transform: translateY(-1px);
+}
+
+.btnChoisir {
+  flex: 1;
+  background: #4338CA;
+  color: #fff;
+  border: none;
+  border-radius: var(--r-md);
+  padding: 10px 10px;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; transition: all .2s;
+}
+.btnChoisir:hover { background: #3730A3; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(67,56,202,.35); }
+
+/* Déjà choisi */
+.btnChoisirOn {
+  background: var(--emerald, #047857) !important;
+}
+.btnChoisirOn:hover { background: #036146 !important; box-shadow: 0 4px 14px rgba(4,120,87,.35) !important; }
+
+/* Indisponible */
+.btnChoisirOff {
+  background: var(--g200, #E5EBF5) !important;
+  color: var(--t3) !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}

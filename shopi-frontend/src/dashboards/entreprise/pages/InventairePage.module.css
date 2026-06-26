@@ -1,0 +1,1142 @@
+/* ============================================================
+ * InventairePage.module.css
+ *
+ * Toutes les classes sont préfixées automatiquement par
+ * CSS Modules → pas de collision avec d'autres fichiers.
+ *
+ * On utilise les variables CSS globales (var(--navy), etc.)
+ * définies dans le thème principal de l'application.
+ * ============================================================ */
+
+/* ══════════════════════════════════════════════════════════════
+   PAGE — Conteneur principal
+   ══════════════════════════════════════════════════════════════ */
+.page {
+  padding: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HEADER — En-tête avec titre et actions
+   ══════════════════════════════════════════════════════════════ */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Titre principal de la page */
+.titre {
+  font-family: var(--fd);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 3px;
+}
+
+/* Sous-titre descriptif */
+.sousTitre {
+  font-size: 13px;
+  color: var(--t3);
+  margin: 0;
+}
+
+/* Groupe de boutons dans le header */
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STATISTIQUES — Grille de 4 KPI cards
+   ══════════════════════════════════════════════════════════════ */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+/* Carte statistique de base */
+.statCard {
+  border-radius: var(--r-lg);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1.5px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Icône dans un cercle coloré */
+.statIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Partie droite : valeur + labels */
+.statRight {}
+
+/* Grand chiffre de la stat */
+.statVal {
+  font-family: var(--fd);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+/* Label principal de la stat */
+.statLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t2);
+}
+
+/* Sous-label plus petit */
+.statSub {
+  font-size: 10.5px;
+  color: var(--t3);
+  margin-top: 2px;
+}
+
+/* Point pulsant pour attirer l'attention sur une alerte */
+.pulseDot {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--rose);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.4); opacity: .6; }
+}
+
+/* Variantes de couleur des cartes stats */
+.statBlue  { background: var(--sky);   border-color: var(--sky-3); }
+.statBlue  .statIcon { background: rgba(59,130,246,.12); color: var(--blue); }
+.statBlue  .statVal  { color: var(--blue); }
+
+.statRose  { background: var(--rs-bg); border-color: rgba(225,29,72,.2); }
+.statRose  .statIcon { background: rgba(225,29,72,.12); color: var(--rose); }
+.statRose  .statVal  { color: var(--rose); }
+
+.statAmber { background: var(--am-bg); border-color: rgba(217,119,6,.2); }
+.statAmber .statIcon { background: rgba(217,119,6,.12); color: var(--amber); }
+.statAmber .statVal  { color: var(--amber); }
+
+.statGreen { background: var(--em-bg); border-color: rgba(5,150,105,.2); }
+.statGreen .statIcon { background: rgba(5,150,105,.12); color: var(--emerald); }
+.statGreen .statVal  { color: var(--emerald); }
+
+/* ══════════════════════════════════════════════════════════════
+   LAYOUT — Tableau principal + Panneau latéral
+   Tableau = 2/3 de l'espace, Panneau = 1/3
+   ══════════════════════════════════════════════════════════════ */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+/* Colonne principale (tableau) */
+.colMain {}
+
+/* Colonne latérale (alertes + actions) */
+.colSide {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOOLBAR — Filtres + Recherche au-dessus du tableau
+   ══════════════════════════════════════════════════════════════ */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+/* Groupe de boutons filtres */
+.filtresBtns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Bouton filtre inactif */
+.filtreBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--white);
+  border: 1.5px solid var(--bdr2);
+  border-radius: var(--pill);
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t2);
+  cursor: pointer;
+  transition: all .18s;
+}
+.filtreBtn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* Bouton filtre actif */
+.filtreBtnActive {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+
+/* Badge nombre dans le bouton filtre */
+.filtreCount {
+  background: rgba(255,255,255,.2);
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.filtreBtnActive .filtreCount { background: rgba(255,255,255,.25); }
+.filtreBtn:not(.filtreBtnActive) .filtreCount {
+  background: var(--g100);
+  color: var(--t3);
+}
+
+/* Champ de recherche */
+.searchWrap {
+  position: relative;
+  min-width: 200px;
+}
+.searchWrap > i {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--t3);
+  font-size: 12px;
+}
+.searchInput {
+  width: 100%;
+  padding: 8px 32px 8px 30px;
+  border: 1.5px solid var(--bdr2);
+  border-radius: var(--pill);
+  font-size: 12.5px;
+  background: var(--white);
+  color: var(--t1);
+  outline: none;
+  transition: border-color .18s;
+  box-sizing: border-box;
+}
+.searchInput:focus { border-color: var(--blue); }
+
+/* Bouton effacer la recherche */
+.clearBtn {
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--t3);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TABLEAU — Inventaire des produits
+   ══════════════════════════════════════════════════════════════ */
+
+/* Conteneur avec scroll horizontal si nécessaire */
+.tableWrap {
+  background: var(--white);
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+/* Tableau HTML */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* En-tête du tableau */
+.th {
+  padding: 11px 14px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--t3);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  text-align: left;
+  background: var(--g50);
+  border-bottom: 1.5px solid var(--bdr);
+  white-space: nowrap;
+}
+
+/* Ligne du tableau */
+.tr {
+  border-bottom: 1px solid var(--bdr);
+  transition: background .15s;
+}
+.tr:last-child { border-bottom: none; }
+.tr:hover { background: var(--g50); }
+
+/* Cellule du tableau */
+.td {
+  padding: 12px 14px;
+  vertical-align: middle;
+}
+
+/* ── Cellule Produit (image + nom) ── */
+.prodCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Miniature image du produit */
+.prodImg {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--bdr);
+  flex-shrink: 0;
+}
+
+/* Placeholder quand pas d'image */
+.prodImgEmpty {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: var(--g100);
+  border: 1px solid var(--bdr);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t4);
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Nom du produit dans le tableau */
+.prodNomTable {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.3;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Référence SKU sous le nom */
+.prodRef {
+  font-size: 10.5px;
+  color: var(--t3);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Marque du produit */
+.prodMarque {
+  font-size: 10.5px;
+  color: var(--t3);
+  margin-top: 1px;
+}
+
+/* ── Cellule Catégorie ── */
+.catTag {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--blue);
+  background: var(--sky);
+  border-radius: var(--pill);
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+.subCatTag {
+  font-size: 10px;
+  color: var(--t3);
+  margin-top: 4px;
+}
+
+/* ── Cellule Prix ── */
+.prixCell {
+  font-family: var(--fd);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+}
+.prixSub {
+  font-size: 10px;
+  color: var(--t3);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* ── Cellule Stock (grand chiffre coloré) ── */
+.stockCell {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+/* Grand chiffre du stock */
+.stockNum {
+  font-family: var(--fd);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* Couleurs selon le statut */
+.stockNum_ok  { color: var(--emerald); }
+.stockNum_low { color: var(--amber); }
+.stockNum_out { color: var(--rose); }
+
+/* "unités" en petit à côté du chiffre */
+.stockUnit {
+  font-size: 10px;
+  color: var(--t3);
+}
+
+/* Label seuil sous le stock */
+.seuilLabel {
+  font-size: 10px;
+  color: var(--t3);
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Cellule Barre de progression ── */
+.barWrap {
+  min-width: 90px;
+}
+
+/* Pourcentage au-dessus */
+.barPct {
+  font-size: 10px;
+  color: var(--t3);
+  margin-bottom: 3px;
+  font-weight: 600;
+}
+
+/* Conteneur de la barre */
+.bar {
+  height: 6px;
+  background: var(--g200);
+  border-radius: var(--pill);
+  overflow: hidden;
+}
+
+/* Remplissage de la barre — couleur selon statut */
+.barFill {
+  height: 100%;
+  border-radius: var(--pill);
+  transition: width .4s ease;
+}
+.barFill_ok  { background: var(--emerald); }
+.barFill_low { background: var(--amber); }
+.barFill_out { background: var(--rose); }
+
+/* ── Cellule Badge statut ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  padding: 4px 9px;
+  border-radius: var(--pill);
+  white-space: nowrap;
+}
+.badge_ok  { background: var(--em-bg);  color: var(--emerald); border: 1px solid rgba(5,150,105,.2); }
+.badge_low { background: var(--am-bg);  color: var(--amber);   border: 1px solid rgba(217,119,6,.2); }
+.badge_out { background: var(--rs-bg);  color: var(--rose);    border: 1px solid rgba(225,29,72,.2); }
+
+/* ── Cellule Actions ── */
+.actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Bouton "Modifier" principal */
+.btnModif {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--sky);
+  border: 1.5px solid var(--sky-3);
+  border-radius: 7px;
+  padding: 6px 11px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--blue);
+  cursor: pointer;
+  transition: all .18s;
+  white-space: nowrap;
+}
+.btnModif:hover {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+/* Bouton "Réappro" icône seul */
+.btnReappro {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  border: 1.5px solid var(--bdr2);
+  background: var(--white);
+  color: var(--t3);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .18s;
+}
+.btnReappro:hover {
+  border-color: var(--emerald);
+  color: var(--emerald);
+  background: var(--em-bg);
+}
+
+/* Pied de tableau */
+.tableFooter {
+  padding: 10px 14px;
+  background: var(--g50);
+  border-top: 1px solid var(--bdr);
+  font-size: 11.5px;
+  color: var(--t3);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ÉTATS — Loading, Erreur, Vide
+   ══════════════════════════════════════════════════════════════ */
+.stateBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  background: var(--white);
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--r-lg);
+  color: var(--t3);
+  font-size: 14px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PANNEAU LATÉRAL — Cartes alertes + actions rapides
+   ══════════════════════════════════════════════════════════════ */
+.sideCard {
+  background: var(--white);
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+/* En-tête de la carte latérale */
+.sideCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--bdr);
+  background: var(--g50);
+}
+
+/* Titre de la carte latérale */
+.sideCardTitle {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.sideCardTitle i { color: var(--blue); }
+
+/* Corps de la carte latérale */
+.sideCardBody {
+  padding: 12px;
+}
+
+/* Badge nombre d'alertes */
+.alerteBadge {
+  background: var(--rose);
+  color: #fff;
+  border-radius: var(--pill);
+  padding: 2px 8px;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+/* Message "aucune alerte" */
+.noAlerte {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--em-bg);
+  border-radius: var(--r-md);
+  border: 1px solid rgba(5,150,105,.15);
+  font-size: 13px;
+}
+.noAlerte span { font-size: 20px; }
+.noAlerte strong { display: block; color: var(--emerald); font-size: 12px; }
+.noAlerte p { margin: 2px 0 0; font-size: 11px; color: var(--t3); }
+
+/* Liste des alertes */
+.alerteList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Item d'alerte individuel */
+.alerteItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+}
+
+/* Couleurs selon le statut */
+.alerte_out {
+  background: rgba(225,29,72,.05);
+  border-color: rgba(225,29,72,.15);
+}
+.alerte_low {
+  background: rgba(217,119,6,.05);
+  border-color: rgba(217,119,6,.15);
+}
+
+/* Icône de l'alerte */
+.alerteIco {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.alerte_out .alerteIco { color: var(--rose); }
+.alerte_low .alerteIco { color: var(--amber); }
+
+/* Infos texte de l'alerte */
+.alerteInfo { flex: 1; min-width: 0; }
+.alerteNom  {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.alerteSub  { font-size: 10px; color: var(--t3); margin-top: 2px; }
+
+/* Bouton action dans l'alerte */
+.alerteAction {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--bdr2);
+  background: var(--white);
+  color: var(--t3);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.alerteAction:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--sky);
+}
+
+/* ── Actions rapides ── */
+.actionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Bouton d'action rapide */
+.quickAction {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--g50);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all .18s;
+  text-align: left;
+}
+.quickAction:hover {
+  background: var(--sky);
+  border-color: var(--bdrb);
+}
+.quickAction i:last-child {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--t4);
+}
+
+.quickActionIco { font-size: 18px; flex-shrink: 0; }
+
+.quickActionText { flex: 1; min-width: 0; }
+.quickActionLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.quickActionSub {
+  font-size: 10.5px;
+  color: var(--t3);
+  margin-top: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BOUTONS GLOBAUX
+   ══════════════════════════════════════════════════════════════ */
+
+/* Bouton primaire (bleu foncé) */
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .18s;
+}
+.btnPrimary:hover:not(:disabled) { background: var(--navy-2); }
+.btnPrimary:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Bouton secondaire (neutre) */
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--g50);
+  color: var(--t2);
+  border: 1.5px solid var(--bdr2);
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .18s;
+}
+.btnSecondary:hover:not(:disabled) {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+.btnSecondary:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Bouton outline (pour "Exporter CSV") */
+.btnSecondaryOutline {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--white);
+  color: var(--t2);
+  border: 1.5px solid var(--bdr2);
+  border-radius: var(--pill);
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .18s;
+}
+.btnSecondaryOutline:hover { border-color: var(--blue); color: var(--blue); }
+
+/* Bouton "Actualiser" */
+.btnRecharger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--sky);
+  color: var(--blue);
+  border: 1.5px solid var(--sky-3);
+  border-radius: var(--pill);
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .18s;
+}
+.btnRecharger:hover:not(:disabled) {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+.btnRecharger:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ══════════════════════════════════════════════════════════════
+   MODALE — Overlay + fenêtre
+   ══════════════════════════════════════════════════════════════ */
+
+/* Fond sombre derrière la modale */
+.overlay {
+  position: fixed;
+  inset: 0;                                   /* Couvre tout l'écran */
+  background: rgba(10, 20, 50, 0.55);        /* Bleu foncé semi-transparent */
+  backdrop-filter: blur(4px);                 /* Flou du fond */
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn .18s ease;               /* Apparition douce */
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Fenêtre de la modale */
+.modal {
+  background: var(--white);
+  border-radius: var(--r-xl, 16px);
+  width: 100%;
+  max-width: 440px;                           /* Largeur maximale */
+  max-height: 90vh;                           /* Hauteur maximale */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .25);
+  animation: slideUp .2s ease;               /* Glissement vers le haut */
+  overflow: hidden;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* En-tête de la modale */
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--bdr);
+  flex-shrink: 0;
+}
+
+/* Titre de la modale */
+.modalTitle {
+  font-family: var(--fd);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.modalTitle i { color: var(--blue); }
+
+/* Sous-titre de la modale */
+.modalSub {
+  font-size: 11.5px;
+  color: var(--t3);
+  margin-top: 4px;
+}
+
+/* Bouton fermer (×) */
+.closeBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1.5px solid var(--bdr2);
+  background: var(--g50);
+  color: var(--t3);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all .18s;
+}
+.closeBtn:hover {
+  background: var(--rs-bg);
+  border-color: var(--rose);
+  color: var(--rose);
+}
+
+/* Corps de la modale — scrollable */
+.modalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Pied de la modale */
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 22px;
+  border-top: 1px solid var(--bdr);
+  flex-shrink: 0;
+  background: var(--g50);
+}
+
+/* ── Résumé produit dans la modale ── */
+.prodResume {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--g50);
+  border-radius: var(--r-md);
+  border: 1px solid var(--bdr);
+}
+
+/* Miniature dans la modale */
+.prodThumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* Placeholder sans image dans la modale */
+.prodThumbEmpty {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  background: var(--g100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t4);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.prodInfo { flex: 1; min-width: 0; }
+
+/* Nom du produit dans la modale */
+.prodNom {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Méta (catégorie + référence) */
+.prodMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--t3);
+}
+
+/* ── Formulaire de la modale ── */
+
+/* Groupe label + input */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Label du champ */
+.formLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t2);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.formLabel i { color: var(--blue); font-size: 11px; }
+
+/* Input avec unité à droite */
+.inputWithUnit {
+  display: flex;
+  border: 1.5px solid var(--bdr2);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  transition: border-color .18s;
+}
+.inputWithUnit:focus-within { border-color: var(--blue); }
+
+/* Champ input dans le groupe */
+.formInput {
+  flex: 1;
+  padding: 9px 12px;
+  border: none;
+  font-size: 13px;
+  color: var(--t1);
+  background: var(--white);
+  outline: none;
+  min-width: 0;
+}
+
+/* Unité (ex: "unités") à droite du champ */
+.inputUnit {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  background: var(--g100);
+  border-left: 1px solid var(--bdr2);
+  font-size: 11.5px;
+  color: var(--t3);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Prévisualisation du nouveau statut */
+.statusPreview {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+/* Point coloré dans le prévisualisation */
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Couleurs des prévisualisations */
+.status_ok  { background: var(--em-bg); color: var(--emerald); border-color: rgba(5,150,105,.2); }
+.status_ok  .statusDot { background: var(--emerald); }
+.status_low { background: var(--am-bg); color: var(--amber);   border-color: rgba(217,119,6,.2); }
+.status_low .statusDot { background: var(--amber); }
+.status_out { background: var(--rs-bg); color: var(--rose);    border-color: rgba(225,29,72,.2); }
+.status_out .statusDot { background: var(--rose); }
+
+/* Note/aide sous le champ */
+.formHint {
+  font-size: 11px;
+  color: var(--t3);
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  line-height: 1.5;
+}
+.formHint i { font-size: 10px; flex-shrink: 0; margin-top: 2px; }
+
+/* ── Barre de stock dans la modale ── */
+.stockVisuel {
+  background: var(--g50);
+  border-radius: var(--r-md);
+  padding: 12px;
+  border: 1px solid var(--bdr);
+}
+
+.stockBarLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--t3);
+  margin-bottom: 8px;
+}
+
+.stockBarPct { font-weight: 700; color: var(--navy); }
+
+/* Conteneur de la barre */
+.stockBar {
+  height: 8px;
+  background: var(--g200);
+  border-radius: var(--pill);
+  overflow: hidden;
+}
+
+/* Remplissage avec transition */
+.stockBarFill {
+  height: 100%;
+  border-radius: var(--pill);
+  transition: width .4s ease;
+}
+.fill_ok  { background: var(--emerald); }
+.fill_low { background: var(--amber); }
+.fill_out { background: var(--rose); }
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 1100px) {
+  /* Sur tablette : panneau latéral en dessous du tableau */
+  .layout { grid-template-columns: 1fr; }
+  .colSide { display: grid; grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 800px) {
+  /* Sur mobile : tout en colonne */
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+  .colSide   { grid-template-columns: 1fr; }
+  .toolbar   { flex-direction: column; align-items: stretch; }
+  .searchWrap { min-width: unset; }
+}

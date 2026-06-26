@@ -1,0 +1,30 @@
+/* ================================================================
+ * ParametresPage.module.css — Page paramètres livreur
+ * ================================================================ */
+
+.page {
+  padding: 26px;
+  position: relative;
+  min-height: 100vh;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 224px 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .layout { grid-template-columns: 1fr; gap: 16px; }
+}
+@media (max-width: 640px) {
+  .page   { padding: 14px 12px; }
+  .layout { gap: 12px; }
+}

@@ -1,0 +1,314 @@
+/* ============================================================
+   CallOverlay.module.css
+   Overlay d'appel audio — 3 états : incoming / calling / connected
+   Style inspiré de Telegram / WhatsApp
+   ============================================================ */
+
+/* ── Fond ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11, 31, 58, 0.92);
+  backdrop-filter: blur(20px) saturate(1.3);
+  animation: fadeIn .25s ease;
+}
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+
+/* ── Carte centrale ── */
+.card {
+  position: relative;
+  width: 320px;
+  background: linear-gradient(160deg, #0f2440 0%, #0b1f3a 100%);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 28px;
+  padding: 40px 28px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  box-shadow: 0 40px 80px rgba(0,0,0,.6);
+  animation: slideUp .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px) scale(.95) }
+  to   { opacity: 1; transform: translateY(0)   scale(1)   }
+}
+
+/* ── Avatar ── */
+.avatarWrap {
+  position: relative;
+  margin-bottom: 24px;
+}
+.avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38px;
+  font-weight: 700;
+  color: #fff;
+  border: 3px solid rgba(255,255,255,.15);
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* ── Animations de sonnerie (rings pulsants) ── */
+.ring {
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255,255,255,.2);
+  animation: ringPulse 1.8s ease infinite;
+}
+.ring:nth-child(2) {
+  inset: -22px;
+  animation-delay: .4s;
+  border-color: rgba(255,255,255,.12);
+}
+.ring:nth-child(3) {
+  inset: -36px;
+  animation-delay: .8s;
+  border-color: rgba(255,255,255,.06);
+}
+@keyframes ringPulse {
+  0%,100% { opacity: 1; transform: scale(1);    }
+  50%      { opacity: 0; transform: scale(1.18); }
+}
+
+/* ── Nom & Statut ── */
+.name {
+  font-family: var(--fd, 'Fraunces', serif);
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 6px;
+  text-align: center;
+  letter-spacing: -.3px;
+}
+.status {
+  font-size: 13px;
+  color: rgba(200,217,248,.55);
+  margin-bottom: 36px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10B981;
+  animation: statusBlink 1s ease infinite;
+}
+@keyframes statusBlink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── Durée (appel connecté) ── */
+.duration {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 2px;
+  margin-bottom: 36px;
+  font-variant-numeric: tabular-nums;
+  font-family: 'DM Mono', monospace, var(--fb);
+}
+
+/* ── Boutons ── */
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  transition: transform .18s;
+}
+.btn:hover { transform: scale(1.1); }
+.btn:active { transform: scale(.95); }
+
+.btnIcon {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  transition: background .2s;
+}
+.btnLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(200,217,248,.6);
+}
+
+/* Couleurs des boutons */
+.btnAccept  .btnIcon { background: #10B981; box-shadow: 0 8px 24px rgba(16,185,129,.4); }
+.btnReject  .btnIcon { background: #DC2626; box-shadow: 0 8px 24px rgba(220,38,38,.4);  }
+.btnHangup  .btnIcon { background: #DC2626; box-shadow: 0 8px 24px rgba(220,38,38,.4);  }
+.btnMute    .btnIcon { background: rgba(255,255,255,.12); }
+.btnMuteOn  .btnIcon { background: rgba(220,38,38,.25); color: #f87171; }
+.btnSpeaker .btnIcon { background: rgba(255,255,255,.12); }
+
+.btnAccept:hover  .btnIcon { background: #059669; }
+.btnReject:hover  .btnIcon { background: #b91c1c; }
+.btnHangup:hover  .btnIcon { background: #b91c1c; }
+
+/* ── Séparateur actions incoming ── */
+.actionsIncoming {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 16px;
+}
+
+/* ── Statut occupé / refusé ── */
+.endedBadge {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(248,113,113,.8);
+  margin-bottom: 20px;
+}
+
+/* ── Badge type d'appel ── */
+.callTypeBadge {
+  font-size: 11px; font-weight: 700;
+  color: rgba(200,217,248,.5);
+  margin-bottom: 18px;
+  display: flex; align-items: center; gap: 5px;
+}
+
+/* Bouton vidéo ON */
+.btnVideo     .btnIcon { background: rgba(255,255,255,.12); }
+/* Bouton vidéo OFF */
+.btnVideoOff  .btnIcon { background: rgba(220,38,38,.25); color: #f87171; }
+/* Bouton flip caméra */
+.btnFlip      .btnIcon { background: rgba(255,255,255,.12); }
+
+/* Contrôles en mode vidéo (plein écran) — icônes plus gros */
+.actionsVideo { gap: 28px; }
+.actionsVideo .btnIcon { width: 64px; height: 64px; font-size: 24px; }
+
+/* ════════════════════════════════════
+   OVERLAY VIDÉO PLEIN ÉCRAN
+════════════════════════════════════ */
+
+.videoOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: fadeIn .2s ease;
+}
+
+/* Flux vidéo distant — plein écran */
+.remoteVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  background: #1a1a1a;
+}
+
+/* Placeholder si flux pas encore reçu */
+.videoPlaceholder {
+  position: absolute;
+  inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #0f2440, #0b1f3a);
+}
+
+/* Barre supérieure (nom + durée + fermer) */
+.videoTopBar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 10;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 48px 20px 20px;
+  background: linear-gradient(to bottom, rgba(0,0,0,.65) 0%, transparent 100%);
+}
+.videoName {
+  font-family: var(--fd,'Fraunces',serif);
+  font-size: 20px; font-weight: 800;
+  color: #fff; letter-spacing: -.3px;
+}
+.videoDuration {
+  font-size: 13px; font-weight: 700;
+  color: rgba(255,255,255,.6);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.videoClose {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  border: none; color: #fff; font-size: 17px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .2s;
+}
+.videoClose:hover { background: rgba(255,255,255,.25); }
+
+/* PiP vidéo local (bas-droit) */
+.localVideoPip {
+  position: absolute;
+  bottom: 130px; right: 16px;
+  width: 110px; height: 148px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2.5px solid rgba(255,255,255,.25);
+  box-shadow: 0 8px 28px rgba(0,0,0,.5);
+  cursor: pointer;
+  z-index: 10;
+  transition: transform .18s;
+  background: #111;
+}
+.localVideoPip:hover { transform: scale(1.04); }
+.localVideoEl {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* miroir pour vue selfie */
+}
+.localVideoOff {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,.4); font-size: 28px;
+  background: #1a1a1a;
+}
+
+/* Barre de contrôles inférieure */
+.videoControls {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 10;
+  padding: 20px 20px 40px;
+  background: linear-gradient(to top, rgba(0,0,0,.75) 0%, transparent 100%);
+  display: flex; align-items: center; justify-content: center;
+}
+
+@media (max-width: 400px) {
+  .card { width: 94vw; padding: 32px 20px 28px; }
+  .localVideoPip { width: 90px; height: 120px; bottom: 110px; right: 10px; }
+}

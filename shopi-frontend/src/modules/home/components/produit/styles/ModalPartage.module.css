@@ -1,0 +1,18 @@
+/* ModalPartage.module.css */
+.overlay { position:fixed; inset:0; background:rgba(11,31,58,.5); backdrop-filter:blur(8px); z-index:2000; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeIn .2s ease; }
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.box  { background:var(--white); border:1px solid var(--bdr); border-radius:26px; padding:26px; width:min(320px,90vw); box-shadow:0 24px 64px rgba(11,31,58,.18); animation:slideUp .25s cubic-bezier(.34,1.56,.64,1); }
+@keyframes slideUp{from{opacity:0;transform:scale(.94) translateY(14px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.hd   { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+.hd h3{ font-family:var(--fd,'Fraunces',serif); font-size:15px; font-weight:700; color:var(--navy); margin:0; }
+.close{ background:none; border:none; color:var(--t2); font-size:17px; cursor:pointer; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:7px; transition:all .15s; }
+.close:hover { background:var(--rs-bg); color:var(--rose); }
+.grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:16px; }
+.btn  { display:flex; flex-direction:column; align-items:center; gap:6px; background:var(--g100); border:1.5px solid var(--bdr); border-radius:12px; padding:13px 8px; cursor:pointer; transition:all .18s; }
+.btn:hover { border-color:var(--bdrb); background:var(--sky); transform:translateY(-2px); }
+.ico  { width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+.btn span  { font-size:10.5px; color:var(--t2); font-weight:600; }
+.lien { display:flex; gap:7px; background:var(--sky); border:1px solid var(--sky-3); border-radius:10px; padding:9px 12px; }
+.url  { flex:1; font-size:11.5px; color:var(--t3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:22px; }
+.copy { background:var(--navy); color:#fff; border:none; border-radius:5px; padding:4px 12px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; white-space:nowrap; }
+.copy:hover { background:#112648; }

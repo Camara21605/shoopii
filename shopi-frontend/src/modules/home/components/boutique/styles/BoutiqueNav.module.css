@@ -1,0 +1,9 @@
+/* BoutiqueNav.module.css */
+.nav   { background:var(--white); border-bottom:1px solid var(--bdr); position:sticky; top:calc(66px + 80px); z-index:799; }
+.inner { max-width:1360px; margin:0 auto; padding:0 28px; display:flex; align-items:center; overflow-x:auto; scrollbar-width:none; }
+.inner::-webkit-scrollbar { display:none; }
+.btn   { padding:14px 18px; font-size:13px; font-weight:600; color:var(--t2); background:transparent; border:none; border-bottom:2.5px solid transparent; white-space:nowrap; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:7px; }
+.btn:hover { color:var(--navy); }
+.btn i { font-size:13px; }
+.btnActive { color:var(--blue); border-bottom-color:var(--blue); }
+.cnt { font-size:10px; background:var(--sky-2,#E2EAFB); color:var(--blue); padding:2px 7px; border-radius:999px; font-weight:700; }

@@ -1,0 +1,32 @@
+/*
+ * FICHIER: src/dashboards/entreprise/pages/SEOPage.css
+ */
+
+.seo-score {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px; background: var(--sky); border-radius: var(--r-lg);
+  margin-bottom: 14px; border: 1px solid var(--sky-3);
+}
+.seo-ring {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: conic-gradient(var(--emerald) 0% 78%, var(--g200) 78% 100%);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; position: relative;
+}
+.seo-ring::before {
+  content: ''; position: absolute; inset: 8px;
+  background: var(--sky); border-radius: 50%;
+}
+.seo-ring span {
+  position: relative; z-index: 1;
+  font-family: var(--fd); font-size: 15px; font-weight: 800; color: var(--navy);
+}
+.seo-inf h4 { font-family: var(--fd); font-size: 15px; font-weight: 700; color: var(--navy); }
+.seo-inf p  { font-size: 11.5px; color: var(--t2); margin-top: 3px; }
+
+.seo-items { display: flex; flex-direction: column; gap: 8px; }
+.seo-item  { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.seo-item i { width: 16px; text-align: center; }
+.seo-item i.ok   { color: var(--emerald); }
+.seo-item i.warn { color: var(--amber); }
+.seo-item i.bad  { color: var(--red); }

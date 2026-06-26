@@ -1,0 +1,32 @@
+/*
+ * ============================================================
+ * FICHIER : src/dashboards/entreprise/layout/ReseauBottomNav.css
+ * Barre mobile "Suivre correspondants / livreurs / Mon espace"
+ * Affichée au-dessus du tb-bottomnav (gestion produits/commandes)
+ * ============================================================
+ */
+
+.rbn-nav {
+  display: none;
+  position: fixed;
+  bottom: 62px; left: 0; right: 0;
+  height: 50px;
+  background: var(--navy);
+  z-index: 299;
+  align-items: center; justify-content: space-around;
+  padding: 0 6px;
+  box-shadow: 0 -2px 12px rgba(6,15,30,.12);
+}
+
+.rbn-it {
+  flex: 1; background: none; border: none; cursor: pointer;
+  display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 7px;
+  color: rgba(255,255,255,.7); font-size: 11px; font-weight: 700; height: 100%;
+  transition: color .15s;
+}
+.rbn-it i { font-size: 14px; }
+.rbn-it.on { color: #fff; }
+
+@media (max-width: 640px) {
+  .rbn-nav { display: flex; }
+}

@@ -1,0 +1,25 @@
+/* BoutiqueIdentity.module.css */
+.bar   { background:var(--white); border-bottom:1px solid var(--bdr); box-shadow:0 2px 8px rgba(11,31,58,.06); position:sticky; top:66px; z-index:800; }
+.inner { max-width:1360px; margin:0 auto; padding:0 28px; display:flex; align-items:center; gap:20px; min-height:80px; padding-left:calc(28px + 112px + 20px); flex-wrap:wrap; }
+.nameBlock {}
+.title { font-family:var(--fd,'Fraunces',serif); font-size:22px; font-weight:800; color:var(--navy); letter-spacing:-.4px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.verifBadge { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; color:var(--emerald,#047857); background:var(--em-bg); padding:3px 9px; border-radius:999px; }
+.meta { display:flex; align-items:center; gap:10px; margin-top:5px; flex-wrap:wrap; }
+.domainBadge { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--blue); background:var(--sky); padding:2px 9px; border-radius:999px; }
+.metaItem { font-size:11px; color:var(--t3); display:flex; align-items:center; gap:4px; }
+.stats { display:flex; align-items:center; gap:16px; margin-left:auto; flex-shrink:0; flex-wrap:wrap; }
+.stat  { text-align:center; }
+.statV { font-family:var(--fd,'Fraunces',serif); font-size:16px; font-weight:800; color:var(--navy); }
+.statL { font-size:10px; color:var(--t3); text-transform:uppercase; letter-spacing:.5px; margin-top:1px; }
+.sep   { width:1px; height:32px; background:var(--bdr2); }
+.actions { display:flex; align-items:center; gap:7px; flex-shrink:0; }
+.btnSub { background:var(--navy); color:#fff; border:none; border-radius:999px; padding:0 20px; height:40px; font-size:13px; font-weight:700; display:flex; align-items:center; gap:7px; cursor:pointer; transition:all .22s; white-space:nowrap; }
+.btnSub:hover { background:#112648; transform:translateY(-1px); }
+.btnSubOn { background:var(--sky-2,#E2EAFB) !important; color:var(--blue) !important; border:1.5px solid rgba(26,79,196,.25) !important; }
+.btnSubOn:hover { background:var(--sky) !important; transform:none !important; }
+.btnMsg { background:var(--white); color:var(--navy); border:1.5px solid var(--bdr2); border-radius:999px; padding:0 16px; height:40px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:7px; cursor:pointer; transition:all .2s; white-space:nowrap; }
+.btnMsg:hover { border-color:var(--blue); color:var(--blue); background:var(--sky); }
+.btnShare { width:40px; height:40px; border-radius:50%; background:var(--white); border:1.5px solid var(--bdr2); display:flex; align-items:center; justify-content:center; color:var(--t2); font-size:15px; cursor:pointer; transition:all .18s; }
+.btnShare:hover { background:var(--sky); border-color:var(--bdrb); color:var(--blue); }
+@media(max-width:900px){ .inner{padding-left:calc(16px + 88px + 16px);min-height:68px} .stats{display:none} }
+@media(max-width:480px){ .inner{padding-left:calc(12px + 72px + 12px)} .title{font-size:17px} }

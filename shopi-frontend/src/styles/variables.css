@@ -1,0 +1,76 @@
+/* ============================================================
+ * FICHIER : src/styles/variables.css
+ * RÔLE    : Variables CSS globales du design system Shopi
+ * ============================================================ */
+
+:root {
+  /* ── Couleurs Navy ── */
+  --navy:    #0B1F3A;
+  --navy-2:  #112648;
+  --navy-3:  #183358;
+
+  /* ── Bleus ── */
+  --blue:    #1A4FC4;
+  --blue-2:  #2560DC;
+  --blue-3:  #3B72F0;
+  --blue-lt: #5B8EF4;
+
+  /* ── Ciel ── */
+  --sky:     #EEF3FD;
+  --sky-2:   #E2EAFB;
+  --sky-3:   #C8D9F8;
+
+  /* ── Couleurs sémantiques ── */
+  --emerald: #047857;
+  --em-bg:   rgba(4,120,87,.09);
+  --violet:  #6D28D9;
+  --vl-bg:   rgba(109,40,217,.09);
+  --rose:    #BE185D;
+  --amber:   #B45309;
+  --am-bg:   rgba(180,83,9,.09);
+  --teal:    #0E7490;
+  --red:     #DC2626;
+  --green:   #16A34A;
+
+  /* ── Blanc & Gris ── */
+  --white:   #FFFFFF;
+  --g50:     #F8F9FA;
+  --g100:    #F1F3F5;
+  --g200:    #E8EAED;
+  --g300:    #D1D5DB;
+  --g400:    #9CA3AF;
+
+  /* ── Texte ── */
+  --t1:      #0B1F3A;
+  --t2:      #4B5563;
+  --t3:      #9CA3AF;
+  --t4:      #C5CAD3;
+
+  /* ── Bordures ── */
+  --bdr:     rgba(11,31,58,.08);
+  --bdr2:    rgba(11,31,58,.13);
+  --bdrb:    rgba(26,79,196,.3);
+
+  /* ── Ombres ── */
+  --sh-xs:   0 1px 3px rgba(11,31,58,.06);
+  --sh-sm:   0 2px 8px rgba(11,31,58,.08);
+  --sh-md:   0 6px 24px rgba(11,31,58,.1);
+  --sh-lg:   0 16px 48px rgba(11,31,58,.13);
+  --sh-xl:   0 24px 64px rgba(11,31,58,.18);
+  --sh-b:    0 8px 32px rgba(26,79,196,.32);
+
+  /* ── Rayons ── */
+  --r-sm:    6px;
+  --r-md:    12px;
+  --r-lg:    18px;
+  --r-xl:    26px;
+  --pill:    999px;
+
+  /* ── Transitions ── */
+  --ease:    cubic-bezier(.4,0,.2,1);
+  --spring:  cubic-bezier(.34,1.56,.64,1);
+
+  /* ── Typographie ── */
+  --fd:      'Fraunces', Georgia, serif;
+  --fb:      'DM Sans', sans-serif;
+}

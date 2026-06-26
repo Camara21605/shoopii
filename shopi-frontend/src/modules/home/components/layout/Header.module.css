@@ -1,0 +1,354 @@
+/* ============================================================
+ * Header.module.css
+ * ============================================================ */
+
+/* ─── Header principal ─────────────────────────────────────── */
+.hdr {
+  position: fixed; top: 0; left: 0; right: 0; height: 66px; z-index: 900;
+  background: rgba(255,255,255,.97); backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--bdr);
+  box-shadow: 0 1px 3px rgba(11,31,58,.04);
+  transition: box-shadow .3s;
+}
+.hdrScrolled { box-shadow: 0 4px 20px rgba(11,31,58,.1); }
+
+.wrap { max-width: 1440px; margin: 0 auto; padding: 0 24px; }
+.row  { display: flex; align-items: center; gap: 12px; height: 66px; }
+
+/* ─── Logo ─────────────────────────────────────────────────── */
+.logo {
+  font-family: var(--fd,'Fraunces',serif); font-size: 22px; font-weight: 700;
+  letter-spacing: -.5px; flex-shrink: 0; display: flex; align-items: center;
+  gap: 8px; text-decoration: none; color: inherit;
+  background: none; border: none; cursor: pointer; padding: 0;
+  transition: opacity .18s;
+}
+.logo:hover { opacity: .85; }
+.lm {
+  width: 32px; height: 32px; border-radius: 9px; background: var(--navy);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 12px; font-weight: 800;
+  box-shadow: 0 4px 14px rgba(26,79,196,.3);
+}
+.lw { color: var(--navy); } .lw b { color: var(--blue); }
+
+/* ─── Nav desktop ──────────────────────────────────────────── */
+.navDesktop { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.navLink {
+  display: flex; align-items: center; gap: 5px;
+  background: none; border: none; border-radius: 8px;
+  padding: 7px 12px; font-size: 12.5px; font-weight: 600;
+  color: var(--t2); cursor: pointer; transition: all .18s; white-space: nowrap;
+}
+.navLink i { font-size: 12px; color: var(--t3); transition: color .18s; }
+.navLink:hover { color: var(--navy); background: var(--sky); }
+.navLink:hover i { color: var(--blue); }
+@media (max-width: 1024px) { .navDesktop { display: none; } }
+
+/* ─── Recherche desktop ────────────────────────────────────── */
+.srch { flex: 1; max-width: 460px; position: relative; }
+.srchBox {
+  display: flex; align-items: center; background: var(--white);
+  border: 1.5px solid var(--bdr2); border-radius: 999px;
+  overflow: hidden; transition: border-color .2s, box-shadow .2s;
+}
+.srchFocus .srchBox { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,79,196,.1); }
+.srchCat {
+  padding: 0 10px 0 14px; font-size: 11.5px; font-weight: 600; color: var(--t3);
+  border-right: 1px solid var(--bdr); height: 40px; display: flex; align-items: center;
+  gap: 5px; white-space: nowrap; flex-shrink: 0;
+}
+.srchIn {
+  flex: 1; background: transparent; border: none; outline: none;
+  padding: 10px 10px; font-family: var(--fb); font-size: 13px; color: var(--t1); min-width: 0;
+}
+.srchIn::placeholder { color: var(--t4); }
+.srchGo {
+  background: var(--navy); border: none; width: 40px; height: 40px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 14px; cursor: pointer; transition: background .2s;
+}
+.srchGo:hover { background: #112648; }
+.srchSugg {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--white); border: 1px solid var(--bdr2); border-radius: 16px;
+  padding: 6px; z-index: 200; box-shadow: 0 8px 32px rgba(11,31,58,.12);
+  animation: fadeDown .15s ease;
+}
+@keyframes fadeDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+.ssIt {
+  padding: 9px 12px; border-radius: 9px; font-size: 13px; color: var(--t2);
+  display: flex; align-items: center; gap: 9px; cursor: pointer; transition: background .14s;
+}
+.ssIt:hover { background: var(--sky); }
+.ssIt i { color: var(--blue); width: 14px; text-align: center; font-size: 12px; }
+
+/* Sur mobile, cacher la barre de recherche desktop */
+@media (max-width: 768px) { .srch { display: none; } }
+
+/* ─── Actions desktop ──────────────────────────────────────── */
+.actions { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+@media (max-width: 768px) { .actions { display: none; } }
+
+/* ─── Actions mobile TOP (visibles sur mobile uniquement) ──── */
+.mobileTopActions {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+@media (max-width: 768px) {
+  .mobileTopActions { display: flex; }
+}
+
+/* Barre recherche mobile dépliable */
+.mobileSearchBar {
+  padding: 8px 0 12px;
+  animation: fadeDown .15s ease;
+}
+
+/* ─── Boutons icônes (partagés desktop + mobile) ────────────── */
+.iconBtn {
+  position: relative; background: transparent; border: none;
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--t2); font-size: 16px; cursor: pointer; transition: all .18s;
+}
+.iconBtn:hover { color: var(--navy); background: var(--sky); }
+/* État actif (page courante) */
+.iconBtnActive { color: var(--blue) !important; background: var(--sky) !important; }
+
+.badge {
+  position: absolute; top: 4px; right: 3px;
+  background: var(--blue); color: #fff;
+  font-size: 8.5px; font-weight: 800; min-width: 14px; height: 14px;
+  border-radius: 14px; display: flex; align-items: center; justify-content: center; padding: 0 3px;
+  border: 2px solid var(--white);
+}
+
+.sep { width: 1px; height: 20px; background: var(--bdr2); margin: 0 2px; flex-shrink: 0; }
+
+.btnIn {
+  background: var(--white); color: var(--navy); border: 1.5px solid var(--bdr2);
+  border-radius: 999px; padding: 0 15px; height: 34px;
+  font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px;
+  cursor: pointer; transition: all .18s; white-space: nowrap;
+}
+.btnIn:hover { border-color: var(--blue); color: var(--blue); background: var(--sky); }
+
+.btnUp {
+  background: var(--navy); color: #fff; border: none;
+  border-radius: 999px; padding: 0 17px; height: 34px;
+  font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px;
+  cursor: pointer; transition: all .18s; white-space: nowrap;
+}
+.btnUp:hover { background: #112648; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(26,79,196,.3); }
+
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), #5B8EF4);
+  color: #fff; font-family: var(--fd); font-size: 12px; font-weight: 700;
+  border: 2px solid rgba(26,79,196,.2); cursor: pointer; transition: all .18s;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.avatar:hover { transform: scale(1.1); box-shadow: 0 4px 16px rgba(26,79,196,.3); }
+
+/* ─── Notifications dropdown ────────────────────────────────── */
+.notifWrap { position: relative; }
+.notifPanel {
+  position: absolute; top: calc(100% + 8px); right: -50px;
+  width: 340px; background: var(--white);
+  border: 1px solid var(--bdr2); border-radius: 18px;
+  box-shadow: 0 16px 48px rgba(11,31,58,.15); z-index: 500;
+  overflow: hidden; animation: fadeDown .18s ease;
+}
+/* Panel notif mobile : aligné à droite de l'écran */
+.notifPanelMobile {
+  position: fixed; top: 66px; right: 8px; left: 8px;
+  background: var(--white);
+  border: 1px solid var(--bdr2); border-radius: 18px;
+  box-shadow: 0 16px 48px rgba(11,31,58,.15); z-index: 500;
+  overflow: hidden; animation: fadeDown .18s ease;
+}
+.notifHd {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 16px; border-bottom: 1px solid var(--bdr);
+  font-size: 13px; font-weight: 700; color: var(--navy);
+}
+.notifHd button { background: none; border: none; font-size: 11px; font-weight: 600; color: var(--blue); cursor: pointer; }
+.notifBody { max-height: 320px; overflow-y: auto; padding: 6px; }
+.notifItem {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px; border-radius: 10px; cursor: pointer; transition: background .14s;
+  border: 1px solid transparent; margin-bottom: 2px;
+}
+.notifItem:hover { background: var(--sky); border-color: var(--sky-3); }
+.notifUnread { background: var(--sky); border-color: var(--sky-3); }
+.notifIco { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.niO { background: var(--sky-2); } .niP { background: var(--am-bg); }
+.niF { background: var(--em-bg); } .niL { background: var(--rs-bg); } .niD { background: var(--vl-bg); }
+.notifTxt p    { font-size: 12px; line-height: 1.4; color: var(--t1); }
+.notifTxt time { font-size: 10px; color: var(--t3); }
+.notifDot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); flex-shrink: 0; margin-top: 4px; }
+
+/* ─── Drawer mobile ──────────────────────────────────────────── */
+.mobileOverlay {
+  position: fixed; inset: 0; background: rgba(11,31,58,.45);
+  backdrop-filter: blur(4px); z-index: 1000;
+  animation: fadeIn .2s ease;
+}
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+.mobileDrawer {
+  position: absolute; top: 0; left: 0; bottom: 0; width: min(320px, 85vw);
+  background: var(--white); box-shadow: 8px 0 32px rgba(11,31,58,.15);
+  overflow-y: auto; animation: slideRight .25s ease;
+  display: flex; flex-direction: column;
+}
+@keyframes slideRight { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+
+.drawerHd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px; border-bottom: 1px solid var(--bdr); flex-shrink: 0;
+}
+.drawerClose {
+  background: var(--g100); border: none; width: 32px; height: 32px;
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: var(--t2); cursor: pointer;
+}
+.drawerNav { display: flex; flex-direction: column; gap: 2px; padding: 12px 10px; }
+.drawerLink {
+  display: flex; align-items: center; gap: 12px;
+  background: none; border: none; border-radius: 10px;
+  padding: 12px 10px; font-size: 13.5px; font-weight: 600; color: var(--t1);
+  cursor: pointer; transition: background .15s; text-align: left;
+}
+.drawerLink:hover { background: var(--sky); color: var(--blue); }
+.drawerLinkIco {
+  width: 34px; height: 34px; border-radius: 9px; background: var(--sky);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: var(--blue); flex-shrink: 0;
+}
+.drawerLink span { flex: 1; }
+.drawerDivider { height: 1px; background: var(--bdr); margin: 8px 0; flex-shrink: 0; }
+.drawerCta { display: flex; flex-direction: column; gap: 8px; padding: 8px 16px 24px; }
+.drawerBtnIn {
+  background: var(--white); color: var(--navy); border: 1.5px solid var(--bdr2);
+  border-radius: 12px; padding: 13px; font-size: 13px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all .18s;
+}
+.drawerBtnIn:hover { border-color: var(--blue); color: var(--blue); }
+.drawerBtnUp {
+  background: var(--navy); color: #fff; border: none;
+  border-radius: 12px; padding: 13px; font-size: 13px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .18s;
+}
+.drawerBtnUp:hover { background: #112648; }
+
+/* ══════════════════════════════════════════════════════════════
+   BOTTOM NAVIGATION MOBILE
+   Fixe en bas de l'écran — visible uniquement sur mobile
+   Caché sur desktop (display: none par défaut)
+══════════════════════════════════════════════════════════════ */
+.bottomNav {
+  display: none;                /* caché par défaut (desktop) */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 62px;
+  background: rgba(255,255,255,.97);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--bdr);
+  box-shadow: 0 -4px 24px rgba(11,31,58,.1);
+  z-index: 890;                 /* juste sous le header (900) */
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 4px;
+  /* Support de la safe area iPhone (encoche) */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Afficher sur mobile uniquement */
+@media (max-width: 768px) {
+  .bottomNav { display: flex; }
+}
+
+/* ─── Item de la bottom nav ── */
+.bnItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  height: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--t3);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--fb);
+  transition: color .18s;
+  position: relative;
+  padding: 6px 2px 0;
+}
+.bnItem i { font-size: 19px; transition: transform .2s; }
+.bnItem:active i { transform: scale(.88); }
+.bnItem:hover { color: var(--navy); }
+
+/* État actif */
+.bnActive {
+  color: var(--blue) !important;
+}
+.bnActive i {
+  color: var(--blue);
+}
+/* Trait actif en haut du bouton */
+.bnActive::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 20%; right: 20%;
+  height: 2.5px;
+  background: var(--blue);
+  border-radius: 0 0 3px 3px;
+}
+
+/* Badge panier */
+.bnBadge {
+  position: absolute;
+  top: 4px; right: calc(50% - 16px);
+  background: var(--blue); color: #fff;
+  font-size: 8px; font-weight: 800;
+  min-width: 14px; height: 14px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px;
+  border: 2px solid var(--white);
+}
+
+/* ─── Switcher dashboard ↔ home ── */
+.bnSwitcher {
+  color: var(--navy);
+}
+.bnSwitcherIco {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--blue), #5B8EF4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 3px 10px rgba(26,79,196,.35);
+  transition: transform .2s, box-shadow .2s;
+  margin-top: -4px;
+}
+.bnSwitcher:active .bnSwitcherIco {
+  transform: scale(.9);
+  box-shadow: 0 1px 5px rgba(26,79,196,.2);
+}
