@@ -56,65 +56,82 @@ import { LocationModule }   from './modules/location/location.module';
     MessagerieModule,
     LocationModule,
 
-    /* ── 3. ✅ Redis — AVANT SuivisModule ── */
+    /* ── 3. Redis ─────────────────────────────────────────────── */
+    /*
+     * Connexion via REDIS_HOST + REDIS_PORT + REDIS_PASSWORD.
+     * Aucun fallback vers 127.0.0.1 : si les variables sont absentes,
+     * l'application crashe immédiatement avec un message clair.
+     *
+     * Pour Upstash Redis :
+     *   REDIS_HOST=your-db.upstash.io
+     *   REDIS_PORT=6379
+     *   REDIS_PASSWORD=your_password
+     *
+     * TLS automatiquement activé en production (Upstash / Redis Cloud
+     * utilisent TLS sur le port 6379).
+     */
     RedisModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'single',
-        url: config.get<string>('REDIS_URL') ?? 'redis://127.0.0.1:6379',
-        options: {
-          /**
-           * lazyConnect: true
-           * ─────────────────
-           * La connexion n'est établie qu'au PREMIER appel Redis.
-           * Sans cette option, ioredis tente de se connecter
-           * immédiatement au démarrage, ce qui flood la console
-           * si Redis n'est pas encore disponible.
-           */
-          lazyConnect: true,
+      useFactory: (config: ConfigService) => {
+        const host     = config.get<string>('REDIS_HOST');
+        const port     = parseInt(config.get<string>('REDIS_PORT') ?? '6379', 10);
+        const password = config.get<string>('REDIS_PASSWORD');
+        const isProd   = config.get<string>('NODE_ENV') === 'production';
 
-          /**
-           * retryStrategy
-           * ─────────────
-           * Réessaie jusqu'à 5 fois avec un délai croissant.
-           * Retourne null pour arrêter (évite les boucles infinies).
-           */
-          retryStrategy: (times: number) => {
-            if (times > 5) return null;
-            return Math.min(times * 200, 2000);
+        if (!host) {
+          throw new Error(
+            '[Redis] REDIS_HOST is missing. ' +
+            'Set REDIS_HOST, REDIS_PORT, REDIS_PASSWORD in your environment.',
+          );
+        }
+
+        return {
+          type:     'single',
+          host,
+          port,
+          ...(password && { password }),
+          options: {
+            /* TLS requis pour Upstash et Redis Cloud en production */
+            ...(isProd && { tls: {} }),
+            /* lazyConnect: évite ECONNREFUSED au démarrage */
+            lazyConnect: true,
+            retryStrategy: (times: number) => {
+              if (times > 5) return null;        // abandon après 5 tentatives
+              return Math.min(times * 300, 3000); // backoff exponentiel plafonné à 3s
+            },
           },
-        },
-      }),
+        };
+      },
     }),
 
-    /* ── 4. ✅ BullMQ — AVANT SuivisModule ── */
+    /* ── 4. BullMQ ─────────────────────────────────────────────── */
+    /*
+     * Même configuration Redis que ci-dessus pour la cohérence.
+     * maxRetriesPerRequest: null obligatoire pour BullMQ v5+.
+     */
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        /*
-         * Construire la connexion depuis REDIS_URL si disponible,
-         * sinon utiliser REDIS_HOST + REDIS_PORT.
-         *
-         * Cohérence avec RedisModule ci-dessus.
-         */
-        const url  = config.get<string>('REDIS_URL');
-        const host = config.get<string>('REDIS_HOST') ?? '127.0.0.1';
-        const port = parseInt(config.get<string>('REDIS_PORT') ?? '6379', 10);
+        const host     = config.get<string>('REDIS_HOST');
+        const port     = parseInt(config.get<string>('REDIS_PORT') ?? '6379', 10);
+        const password = config.get<string>('REDIS_PASSWORD');
+        const isProd   = config.get<string>('NODE_ENV') === 'production';
+
+        if (!host) {
+          throw new Error(
+            '[BullMQ] REDIS_HOST is missing. ' +
+            'Set REDIS_HOST, REDIS_PORT, REDIS_PASSWORD in your environment.',
+          );
+        }
 
         return {
-          connection: url
-            ? { url }          /* ← si REDIS_URL est défini dans .env */
-            : { host, port,    /* ← sinon utiliser host + port séparés */
-
-                /**
-                 * maxRetriesPerRequest: null
-                 * ──────────────────────────
-                 * OBLIGATOIRE pour BullMQ v5+.
-                 * Sans cette option, BullMQ lève une erreur au démarrage :
-                 * "maxRetriesPerRequest must be null for BullMQ to work"
-                 */
-                maxRetriesPerRequest: null,
-              },
+          connection: {
+            host,
+            port,
+            ...(password && { password }),
+            ...(isProd   && { tls: {} }),
+            maxRetriesPerRequest: null,    // obligatoire BullMQ v5+
+          },
         };
       },
     }),

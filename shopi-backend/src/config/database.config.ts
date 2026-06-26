@@ -78,30 +78,33 @@ export const databaseConfigFactory = {
      * rejectUnauthorized: false → accepte les certificats auto-signés
      * (pratique pour dev/staging ; mettre true + CA en production).
      */
-    const databaseUrl = config.get<string>('DATABASE_URL');
-    const useSSL      = config.get<string>('DB_SSL') === 'true' || !!databaseUrl;
     /*
-     * ── Connexion ──────────────────────────────────────────────────
-     * MODE 1 : DATABASE_URL présente → TypeORM la parse automatiquement.
-     * MODE 2 : Paramètres individuels (fallback local / CI).
+     * ── DATABASE_URL obligatoire ─────────────────────────────────────
+     * On n'autorise AUCUN fallback vers localhost.
+     * Sur Render / Supabase, DATABASE_URL doit TOUJOURS être définie.
+     * Si elle est absente → crash immédiat avec message explicite.
      */
-    const connectionParams: Partial<TypeOrmModuleOptions> = databaseUrl
-      ? { url: databaseUrl }
-      : {
-          host:     config.get<string>('DB_HOST',     'localhost'),
-          port:     config.get<number>('DB_PORT',     5432),
-          username: config.get<string>('DB_USERNAME', 'postgres'),
-          password: config.get<string>('DB_PASSWORD', ''),
-          database: config.get<string>('DB_NAME',     'postgres'),
-        };
+    const databaseUrl = config.get<string>('DATABASE_URL');
+    if (!databaseUrl) {
+      throw new Error(
+        '[DB] DATABASE_URL is missing. ' +
+        'Set it in your environment variables (Render → Settings → Environment). ' +
+        'Example: postgresql://user:pass@host:5432/db',
+      );
+    }
 
-    /* TypeORM utilise un type discriminé (union par driver).
-       Le spread de connectionParams empêche l'inférence statique exacte →
-       on caste uniquement le return pour rester propre. */
+    /*
+     * SSL toujours activé en production (Supabase l'exige).
+     * En développement, DB_SSL=false désactive si besoin.
+     */
+    const isProd  = config.get<string>('NODE_ENV') === 'production';
+    const useSSL  = config.get<string>('DB_SSL') !== 'false' && (isProd || config.get<string>('DB_SSL') === 'true');
+
+    /* TypeORM type discriminé → cast nécessaire avec le spread */
     return {
       type: 'postgres' as const,
-      ...connectionParams,
-      /* ssl: spread conditionnel — TypeORM refuse ssl:false, on omet la clé si inutile */
+      url:  databaseUrl,
+      /* ssl: spread conditionnel — TypeORM refuse ssl:false comme valeur */
       ...(useSSL && { ssl: { rejectUnauthorized: false } }),
 
       entities: [
