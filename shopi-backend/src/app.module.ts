@@ -80,8 +80,9 @@ import { LocationModule }   from './modules/location/location.module';
 
         if (!host) {
           throw new Error(
-            '[Redis] REDIS_HOST is missing. ' +
-            'Set REDIS_HOST, REDIS_PORT, REDIS_PASSWORD in your environment.',
+            '[Redis/ioredis] REDIS_HOST manquant. ' +
+            'Configurez REDIS_HOST, REDIS_PORT et REDIS_PASSWORD dans ' +
+            'Render → Settings → Environment Variables.',
           );
         }
 
@@ -91,24 +92,39 @@ import { LocationModule }   from './modules/location/location.module';
           port,
           ...(password && { password }),
           options: {
-            /* TLS requis pour Upstash et Redis Cloud en production */
+            /*
+             * TLS pour Upstash / Redis Cloud en production.
+             * Upstash utilise TLS sur le port 6379.
+             */
             ...(isProd && { tls: {} }),
-            /* lazyConnect: évite ECONNREFUSED au démarrage */
+
+            /*
+             * lazyConnect: true → ioredis ne tente PAS de connexion
+             * immédiatement au démarrage de NestJS.
+             * Évite les crashs si Redis est momentanément indisponible.
+             */
             lazyConnect: true,
+
+            /*
+             * retryStrategy : réessaie jusqu'à 5 fois avec backoff.
+             * Retourne null → abandonne sans faire crasher l'app.
+             */
             retryStrategy: (times: number) => {
-              if (times > 5) return null;        // abandon après 5 tentatives
-              return Math.min(times * 300, 3000); // backoff exponentiel plafonné à 3s
+              if (times > 5) {
+                console.error(`[Redis] Impossible de se connecter après ${times} tentatives.`);
+                return null;
+              }
+              return Math.min(times * 300, 3000);
             },
+
+            /* Évite les messages d'erreur intempestifs sur les sockets fermés */
+            enableOfflineQueue: false,
           },
         };
       },
     }),
 
     /* ── 4. BullMQ ─────────────────────────────────────────────── */
-    /*
-     * Même configuration Redis que ci-dessus pour la cohérence.
-     * maxRetriesPerRequest: null obligatoire pour BullMQ v5+.
-     */
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
@@ -119,8 +135,9 @@ import { LocationModule }   from './modules/location/location.module';
 
         if (!host) {
           throw new Error(
-            '[BullMQ] REDIS_HOST is missing. ' +
-            'Set REDIS_HOST, REDIS_PORT, REDIS_PASSWORD in your environment.',
+            '[BullMQ] REDIS_HOST manquant. ' +
+            'Configurez REDIS_HOST, REDIS_PORT et REDIS_PASSWORD dans ' +
+            'Render → Settings → Environment Variables.',
           );
         }
 
@@ -131,6 +148,7 @@ import { LocationModule }   from './modules/location/location.module';
             ...(password && { password }),
             ...(isProd   && { tls: {} }),
             maxRetriesPerRequest: null,    // obligatoire BullMQ v5+
+            enableOfflineQueue:   false,   // évite l'accumulation de jobs en attente
           },
         };
       },

@@ -98,14 +98,46 @@ export const databaseConfigFactory = {
      * En développement, DB_SSL=false désactive si besoin.
      */
     const isProd  = config.get<string>('NODE_ENV') === 'production';
-    const useSSL  = config.get<string>('DB_SSL') !== 'false' && (isProd || config.get<string>('DB_SSL') === 'true');
+
+    /*
+     * ── Connexion ─────────────────────────────────────────────────────
+     *
+     * PROBLÈME RENDER (free tier) : IPv6 non supporté.
+     * Supabase pooler (aws-0-eu-west-1.pooler.supabase.com) retourne
+     * une adresse IPv6 en premier → ENETUNREACH → échec.
+     *
+     * FIX : `family: 4` dans `extra` force le driver `pg` à ne résoudre
+     * que les adresses IPv4 (enregistrements DNS A uniquement).
+     *
+     * ERR_SSL_WRONG_VERSION_NUMBER : quand `ssl` est configuré au niveau
+     * TypeORM ET que l'URL ne spécifie pas `sslmode`, pg peut mal
+     * négocier SSL. Solution : passer SSL uniquement via `extra` (natif pg),
+     * ce qui donne le contrôle total sans conflit avec le parser d'URL.
+     */
+    const useSSL = isProd || config.get<string>('DB_SSL') === 'true';
 
     /* TypeORM type discriminé → cast nécessaire avec le spread */
     return {
       type: 'postgres' as const,
       url:  databaseUrl,
-      /* ssl: spread conditionnel — TypeORM refuse ssl:false comme valeur */
-      ...(useSSL && { ssl: { rejectUnauthorized: false } }),
+      extra: {
+        /*
+         * family: 4 → Force IPv4 exclusivement.
+         * Sans ça, sur Render free tier, pg essaie l'IPv6 en premier
+         * et reçoit ENETUNREACH car Render ne route pas IPv6 sortant.
+         */
+        family: 4,
+        /*
+         * SSL via extra (pas au niveau TypeORM) pour éviter la double
+         * configuration qui cause ERR_SSL_WRONG_VERSION_NUMBER.
+         * rejectUnauthorized: false → accepte le certificat Supabase.
+         */
+        ...(useSSL && {
+          ssl: {
+            rejectUnauthorized: false,
+          },
+        }),
+      },
 
       entities: [
       // 1. Aucune dépendance
