@@ -97,46 +97,50 @@ export const databaseConfigFactory = {
      * SSL toujours activé en production (Supabase l'exige).
      * En développement, DB_SSL=false désactive si besoin.
      */
-    const isProd  = config.get<string>('NODE_ENV') === 'production';
+    const isProd = config.get<string>('NODE_ENV') === 'production';
+    const useSSL = isProd || config.get<string>('DB_SSL') === 'true';
 
     /*
-     * ── Connexion ─────────────────────────────────────────────────────
+     * ── SSL : approche URL-first pour Supabase ─────────────────────────
      *
-     * PROBLÈME RENDER (free tier) : IPv6 non supporté.
-     * Supabase pooler (aws-0-eu-west-1.pooler.supabase.com) retourne
-     * une adresse IPv6 en premier → ENETUNREACH → échec.
+     * PROBLÈME PRÉCÉDENT :
+     *   Configurer `ssl: { rejectUnauthorized: false }` dans `extra`
+     *   TypeORM ET avoir une DATABASE_URL sans paramètre `sslmode`
+     *   provoque un double paramétrage SSL qui cause :
+     *   → ERR_SSL_WRONG_VERSION_NUMBER (handshake TLS corrompu)
      *
-     * FIX : `family: 4` dans `extra` force le driver `pg` à ne résoudre
-     * que les adresses IPv4 (enregistrements DNS A uniquement).
+     * SOLUTION — Approche "URL-first" :
+     *   On injecte `?sslmode=require` directement dans la DATABASE_URL.
+     *   Le driver `pg` lit ce paramètre nativement et configure SSL
+     *   de façon propre, sans conflit avec les options TypeORM.
      *
-     * ERR_SSL_WRONG_VERSION_NUMBER : quand `ssl` est configuré au niveau
-     * TypeORM ET que l'URL ne spécifie pas `sslmode`, pg peut mal
-     * négocier SSL. Solution : passer SSL uniquement via `extra` (natif pg),
-     * ce qui donne le contrôle total sans conflit avec le parser d'URL.
+     *   `sslmode=require` = SSL requis SANS vérification de certificat
+     *   → compatible Supabase Session Pooler (PgBouncer)
+     *
+     * DOUBLE PROTECTION :
+     *   `family: 4` dans extra + `dns.setDefaultResultOrder('ipv4first')`
+     *   dans main.ts → deux couches pour garantir IPv4 sur Render.
      */
-    const useSSL = isProd || config.get<string>('DB_SSL') === 'true';
+    const finalUrl = (() => {
+      if (!useSSL) return databaseUrl;
+      if (databaseUrl.includes('sslmode=')) return databaseUrl; // déjà configuré
+      const sep = databaseUrl.includes('?') ? '&' : '?';
+      return `${databaseUrl}${sep}sslmode=require`;
+    })();
 
     /* TypeORM type discriminé → cast nécessaire avec le spread */
     return {
       type: 'postgres' as const,
-      url:  databaseUrl,
+      url:  finalUrl,
       extra: {
         /*
-         * family: 4 → Force IPv4 exclusivement.
-         * Sans ça, sur Render free tier, pg essaie l'IPv6 en premier
-         * et reçoit ENETUNREACH car Render ne route pas IPv6 sortant.
+         * family: 4 : force pg à n'utiliser que les enregistrements
+         * DNS A (IPv4), jamais AAAA (IPv6).
+         * Redondant avec `dns.setDefaultResultOrder('ipv4first')` dans
+         * main.ts, mais on garde les deux couches pour la robustesse.
          */
         family: 4,
-        /*
-         * SSL via extra (pas au niveau TypeORM) pour éviter la double
-         * configuration qui cause ERR_SSL_WRONG_VERSION_NUMBER.
-         * rejectUnauthorized: false → accepte le certificat Supabase.
-         */
-        ...(useSSL && {
-          ssl: {
-            rejectUnauthorized: false,
-          },
-        }),
+        /* Pas de `ssl` ici — géré par sslmode dans l'URL */
       },
 
       entities: [
