@@ -101,46 +101,27 @@ export const databaseConfigFactory = {
     const useSSL = isProd || config.get<string>('DB_SSL') === 'true';
 
     /*
-     * ── SSL : approche URL-first pour Supabase ─────────────────────────
+     * ── SSL via extra uniquement ───────────────────────────────────────
      *
-     * PROBLÈME PRÉCÉDENT :
-     *   Configurer `ssl: { rejectUnauthorized: false }` dans `extra`
-     *   TypeORM ET avoir une DATABASE_URL sans paramètre `sslmode`
-     *   provoque un double paramétrage SSL qui cause :
-     *   → ERR_SSL_WRONG_VERSION_NUMBER (handshake TLS corrompu)
+     * On NE touche PAS à DATABASE_URL (pas de sslmode= injecté).
+     * Raison : pg-connection-string traite sslmode=require comme
+     * verify-full → "self-signed certificate in certificate chain".
      *
-     * SOLUTION — Approche "URL-first" :
-     *   On injecte `?sslmode=require` directement dans la DATABASE_URL.
-     *   Le driver `pg` lit ce paramètre nativement et configure SSL
-     *   de façon propre, sans conflit avec les options TypeORM.
+     * Solution : passer ssl UNIQUEMENT via extra.ssl avec
+     * rejectUnauthorized: false → accepte le certificat Supabase
+     * sans vérifier la chaîne CA.
      *
-     *   `sslmode=require` = SSL requis SANS vérification de certificat
-     *   → compatible Supabase Session Pooler (PgBouncer)
-     *
-     * DOUBLE PROTECTION :
-     *   `family: 4` dans extra + `dns.setDefaultResultOrder('ipv4first')`
-     *   dans main.ts → deux couches pour garantir IPv4 sur Render.
+     * dns.setDefaultResultOrder('ipv4first') dans main.ts gère IPv4.
+     * family: 4 ici renforce au niveau pg driver.
      */
-    const finalUrl = (() => {
-      if (!useSSL) return databaseUrl;
-      if (databaseUrl.includes('sslmode=')) return databaseUrl; // déjà configuré
-      const sep = databaseUrl.includes('?') ? '&' : '?';
-      return `${databaseUrl}${sep}sslmode=require`;
-    })();
-
-    /* TypeORM type discriminé → cast nécessaire avec le spread */
     return {
       type: 'postgres' as const,
-      url:  finalUrl,
+      url:  databaseUrl,
       extra: {
-        /*
-         * family: 4 : force pg à n'utiliser que les enregistrements
-         * DNS A (IPv4), jamais AAAA (IPv6).
-         * Redondant avec `dns.setDefaultResultOrder('ipv4first')` dans
-         * main.ts, mais on garde les deux couches pour la robustesse.
-         */
         family: 4,
-        /* Pas de `ssl` ici — géré par sslmode dans l'URL */
+        ...(useSSL && {
+          ssl: { rejectUnauthorized: false },
+        }),
       },
 
       entities: [
