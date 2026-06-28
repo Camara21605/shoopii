@@ -15,21 +15,17 @@ import { AddClientSettingsFields1700000000000 }
       ...databaseConfigFactory,
 
       dataSourceFactory: async (options) => {
+        /* Log de diagnostic (masque le mot de passe) */
+        const urlForLog = (options as any)?.url
+          ? (options as any).url.replace(/:[^:@]+@/, ':***@')
+          : 'no URL';
+        console.log(`[DB] Connecting to: ${urlForLog}`);
+        console.log(`[DB] SSL enabled  : ${JSON.stringify((options as any)?.extra?.ssl ?? false)}`);
+
         const dataSource = new DataSource({
           ...options!,
-
-          /* ✅ Migrations enregistrées ici */
-          migrations: [
-            AddClientSettingsFields1700000000000,
-            /* Ajoute tes futures migrations ici */
-          ],
-
-          /*
-           * migrationsRun: true  → exécute auto au démarrage
-           * migrationsRun: false → tu lances manuellement avec :
-           *   npx typeorm migration:run -d src/database/data-source.ts
-           */
-          migrationsRun: false, // ⚠️ À mettre à false en production et gérer les migrations manuellement
+          migrations: [AddClientSettingsFields1700000000000],
+          migrationsRun: false,
         });
 
         await dataSource.initialize();
