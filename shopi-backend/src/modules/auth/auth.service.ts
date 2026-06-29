@@ -199,7 +199,14 @@ export class AuthService implements OnModuleInit {
     }
 
     // Vérifier unicité email
-    const emailExists = await this.userRepo.findOne({ where: { email: dto.email } });
+    /* withDeleted: true → inclut les comptes soft-deleted.
+       Sans ça, TypeORM ignore les lignes avec deletedAt IS NOT NULL,
+       mais la contrainte UNIQUE en base s'applique à TOUTES les lignes
+       → INSERT échoue avec QueryFailedError au lieu de ConflictException. */
+    const emailExists = await this.userRepo.findOne({
+      where: { email: dto.email },
+      withDeleted: true,
+    });
     if (emailExists) {
       throw new ConflictException('Cette adresse email est déjà associée à un compte Shopi.');
     }
