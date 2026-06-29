@@ -88,31 +88,27 @@ export class CodeCreationService {
     });
     const saved = await this.codeRepo.save(entry);
 
-    /* Envoi synchrone : on attend la réponse SMTP avant de répondre au client.
-     * Si l'email échoue, on retourne quand même le code (emailSent: false)
-     * pour ne pas bloquer le super admin, mais l'erreur est loguée et visible. */
-    let emailSent = false;
-    try {
-      await this.mailService.sendInvitationEmail({
-        toEmail:    normalizedEmail,
-        code:       saved.code,
-        targetRole: saved.targetRole,
-        expiresAt:  saved.expiresAt,
-        senderName: `${superAdmin.firstName} ${superAdmin.lastName}`,
+    /*
+     * Envoi en arrière-plan (fire-and-forget).
+     * L'API répond immédiatement avec le code — sans attendre le SMTP.
+     * L'email part en background : pas de délai côté client.
+     * Les erreurs SMTP sont loguées mais ne bloquent pas la réponse.
+     */
+    this.mailService.sendInvitationEmail({
+      toEmail:    normalizedEmail,
+      code:       saved.code,
+      targetRole: saved.targetRole,
+      expiresAt:  saved.expiresAt,
+      senderName: `${superAdmin.firstName} ${superAdmin.lastName}`,
+    })
+      .then(() => this.logger.log(`[EMAIL ✅] Invitation envoyée à ${normalizedEmail} | Code: ${saved.code}`))
+      .catch((err: any) => {
+        this.logger.error(`[EMAIL ❌] Échec d'envoi à ${normalizedEmail}`);
+        this.logger.error(`[EMAIL ❌] Code: ${err.code ?? 'UNKNOWN'} | Message: ${err.message}`);
+        this.logger.error(`[EMAIL ❌] Response: ${err.response ?? err.responseCode ?? '–'}`);
       });
-      emailSent = true;
-      this.logger.log(`[EMAIL ✅] Invitation envoyée à ${normalizedEmail} | Code: ${saved.code}`);
-    } catch (err: any) {
-      this.logger.error(`[EMAIL ❌] Échec d'envoi à ${normalizedEmail}`);
-      this.logger.error(`[EMAIL ❌] Code erreur  : ${err.code  ?? 'UNKNOWN'}`);
-      this.logger.error(`[EMAIL ❌] Message     : ${err.message}`);
-      this.logger.error(`[EMAIL ❌] SMTP response: ${err.response ?? '–'}`);
-      this.logger.error(`[EMAIL ❌] ResponseCode : ${err.responseCode ?? '–'}`);
-      /* Ne pas bloquer le super admin — le code est créé et utilisable
-         même si l'email a échoué. Il peut copier le code manuellement. */
-    }
 
-    return this.toCodeResponse(saved, emailSent);
+    return this.toCodeResponse(saved, true);
   }
 
   /* ── 2. GÉNÉRATION EN LOT ── */

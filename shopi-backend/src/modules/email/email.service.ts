@@ -132,15 +132,19 @@ export class MailService implements OnModuleInit {
         pass: smtpPass,
       },
       /*
-       * ⚠️ pool: false (pas de pool de connexions)
-       * Gmail coupe les connexions idle très rapidement.
-       * Avec pool:true, la connexion en cache finit par expirer et les
-       * envois suivants échouent silencieusement (ECONNRESET / ETIMEDOUT).
-       * Chaque email ouvre sa propre connexion → plus fiable pour un
-       * volume faible comme les invitations.
+       * Pool de connexions : réutilise la même connexion TCP+TLS+Auth
+       * entre les emails → supprime le délai de handshake (2-3s) pour
+       * les envois successifs.
+       *
+       * maxMessages: 20  → recycle la connexion après 20 emails
+       *                    (évite que Gmail coupe une connexion trop ancienne)
+       * socketTimeout: 30s → coupe les connexions inactives proprement
+       * maxConnections: 1  → Gmail autorise 1 connexion simultanée
        */
-      pool:          false,
-      socketTimeout: 15_000,
+      pool:           true,
+      maxConnections: 1,
+      maxMessages:    20,
+      socketTimeout:  30_000,
       tls: {
         rejectUnauthorized: false,
       },
