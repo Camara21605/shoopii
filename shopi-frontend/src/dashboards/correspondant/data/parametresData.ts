@@ -193,7 +193,7 @@ export const PRIV_DATA: ToggleRow[] = [
 export type SectionId =
   | 'profil' | 'depot' | 'zone' | 'entites' | 'colis'
   | 'paiement' | 'documents' | 'securite' | 'notifications'
-  | 'confidentialite' | 'danger';
+  | 'confidentialite' | 'langue' | 'danger';
 
 export interface NavItem {
   id:        SectionId;
@@ -220,5 +220,6 @@ export const NAV_ITEMS: NavItem[] = [
   { id:'securite',       icon:'fa-lock',                 label:'Sécurité',               pct:'100%',  group:'Compte'  },
   { id:'notifications',  icon:'fa-bell',                 label:'Notifications',          pct:'100%',  group:'Compte'  },
   { id:'confidentialite',icon:'fa-shield-halved',        label:'Confidentialité',        pct:'60%',   group:'Compte'  },
+  { id:'langue',         icon:'fa-language',             label:'Langue',                              group:'Compte'  },
   { id:'danger',         icon:'fa-triangle-exclamation', label:'Zone sensible',          dotColor:'r', isDanger:true, group:'Compte' },
 ];

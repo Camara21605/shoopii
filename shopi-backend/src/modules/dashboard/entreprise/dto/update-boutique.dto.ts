@@ -92,6 +92,11 @@ export class UpdateContactDto {
   @IsOptional()
   @IsString()
   @MaxLength(100)
+  quartier?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
   ville?: string;
 
   @IsOptional()

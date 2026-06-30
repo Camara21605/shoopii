@@ -8,12 +8,13 @@ import type { LivreurData } from '../../hooks/useLivreurParametres';
 import ps from '../../styles/ParamsShared.module.css';
 
 interface Props {
-  data:        LivreurData | null;
-  saving:      boolean;
-  dirty:       () => void;
-  onPop:       (m: string, t?: string) => void;
-  saveProfil:  (body: Partial<LivreurData>) => Promise<void>;
-  uploadPhoto: (file: File) => Promise<void>;
+  data:             LivreurData | null;
+  saving:           boolean;
+  dirty:            () => void;
+  onPop:            (m: string, t?: string) => void;
+  saveProfil:       (body: Partial<LivreurData>) => Promise<void>;
+  uploadPhoto:      (file: File) => Promise<void>;
+  onAvatarRefresh?: () => void;
 }
 
 const PC_STEPS = [
@@ -25,7 +26,7 @@ const PC_STEPS = [
   { label:'Documents', key:'documentCni' },
 ];
 
-export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uploadPhoto }: Props) {
+export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uploadPhoto, onAvatarRefresh }: Props) {
   const [selEmoji,   setSelEmoji]   = useState(0);
   const [firstName,  setFirstName]  = useState('');
   const [lastName,   setLastName]   = useState('');
@@ -59,11 +60,12 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
   async function handleSave() {
     try {
       await saveProfil({
-      firstName, lastName,
-      bio, phone, email, langues, ville,
-      deliveryEmoji: EMOJIS[selEmoji] ?? '🛵',
-    });
+        firstName, lastName,
+        bio, phone, email, langues, ville,
+        deliveryEmoji: EMOJIS[selEmoji] ?? '🛵',
+      });
       onPop('✅ Profil sauvegardé avec succès', 's');
+      onAvatarRefresh?.();
     } catch (err: any) {
       onPop(err?.message ?? '❌ Erreur lors de la sauvegarde', 'e');
     }
@@ -80,6 +82,7 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
       onPop('⏳ Upload de la photo en cours…', 'i');
       await uploadPhoto(file);
       onPop('✅ Photo de profil mise à jour', 's');
+      onAvatarRefresh?.();
     } catch (err: any) {
       onPop(err?.message ?? "❌ Échec de l'upload", 'e');
     }

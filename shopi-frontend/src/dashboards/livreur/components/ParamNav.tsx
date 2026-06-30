@@ -47,6 +47,7 @@ const GROUPS: { title: string; items: NavItem[] }[] = [
       { id:'securite',        icon:'fa-lock',               label:'Sécurité'           },
       { id:'notifs',          icon:'fa-bell',               label:'Notifications'       },
       { id:'confidentialite', icon:'fa-shield-halved',      label:'Confidentialité'     },
+      { id:'langue',          icon:'fa-language',           label:'Langue'              },
       { id:'danger',          icon:'fa-triangle-exclamation', label:'Zone sensible', warn:'r' },
     ],
   },

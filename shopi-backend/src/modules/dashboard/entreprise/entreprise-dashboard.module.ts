@@ -11,12 +11,15 @@ import { ProduitsModule }       from './produits/produits.module';
 import { PromotionsModule }     from '../../promotions/promotions.module';
 import { CorrespondantsModule } from './correspondants/correspondants.module';
 import { LivreursModule }       from './livreurs/livreurs.module';
-import { ParametresModule }     from './parametres.module'; // ← déjà importé ✅
+import { ParametresModule }     from './parametres.module';
+import { ReturnsModule }       from './returns/returns.module';
+import { ClientsModule }       from './clients/clients.module';
 
 // ── Entités TypeORM ──────────────────────────────────────────
-import { User }           from '../../../database/entities/user.entity';
-import { CompanyType }    from '../../../database/entities/entreprise.table/company-type.entity';
-import { Company }        from '../../../database/entities/profiles/entreprise-profile.entity';
+import { User }             from '../../../database/entities/user.entity';
+import { CompanyType }      from '../../../database/entities/entreprise.table/company-type.entity';
+import { Company }          from '../../../database/entities/profiles/entreprise-profile.entity';
+import { PlatformSettings } from '../../../database/entities/platform-settings.entity';
 import { Product }        from '../../../database/entities/entreprise.table/product.entity';
 import { ProductMedia }   from '../../../database/entities/entreprise.table/product-media.entity';
 import { ProductVariant } from '../../../database/entities/entreprise.table/product-variant.entity';
@@ -50,6 +53,7 @@ import { CategoriesService }          from '../super-admin/categories/categories
       SubCategory,
       CompanyType,
       ProductStory,
+      PlatformSettings,
     ]),
 
     // ── Modules internes ─────────────────────────────────────────
@@ -58,9 +62,9 @@ import { CategoriesService }          from '../super-admin/categories/categories
     PromotionsModule,
     CorrespondantsModule,
     LivreursModule,
-
-    // ✅ CORRIGÉ : ParametresModule est ici dans imports[], c'est sa bonne place
     ParametresModule,
+    ReturnsModule,
+    ClientsModule,
   ],
 
   controllers: [

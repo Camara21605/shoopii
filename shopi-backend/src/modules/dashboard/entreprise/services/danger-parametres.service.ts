@@ -13,7 +13,7 @@
 
 import {
   Injectable, NotFoundException, UnauthorizedException,
-  BadRequestException, Logger,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -67,17 +67,24 @@ export class DangerParametresService {
    * Identique à la pause, mais avec une date de réactivation auto.
    * ────────────────────────────────────────────────────────── */
 
-  async desactiverCompte(userId: string, dto: DangerConfirmDto): Promise<{ message: string }> {
+  async desactiverCompte(userId: string, dto: DangerConfirmDto): Promise<{ message: string; reactivationAt: Date }> {
     await this.verifyPassword(userId, dto.password);
     const company = await this.findCompanyOrFail(userId);
 
-    company.status = CompanyStatus.SUSPENDED;
-    // TODO : stocker la date de réactivation automatique (J+30)
-    // via un champ `reactivationDate` ou un job cron
-    await this.companyRepo.save(company);
+    const reactivationAt = new Date();
+    reactivationAt.setDate(reactivationAt.getDate() + 30);
 
-    this.logger.warn(`[DANGER] Compte désactivé 30j — userId=${userId}`);
-    return { message: 'Compte désactivé. Il sera réactivé automatiquement dans 30 jours.' };
+    company.status         = CompanyStatus.SUSPENDED;
+    company.suspendedUntil = reactivationAt;
+
+    await this.companyRepo.save(company);
+    this.logger.warn(
+      `[DANGER] Boutique désactivée 30j — userId=${userId} | réactivation le ${reactivationAt.toISOString()}`,
+    );
+    return {
+      message:         'Compte désactivé. Il sera réactivé automatiquement dans 30 jours.',
+      reactivationAt,
+    };
   }
 
   /* ──────────────────────────────────────────────────────────

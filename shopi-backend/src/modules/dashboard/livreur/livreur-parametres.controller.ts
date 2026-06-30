@@ -61,6 +61,14 @@ export class LivreurParametresController {
   ) {}
 
   /* ════════════════════════════════════════════════════════
+   * GET LÉGER — photo + nom uniquement (pour topbar/avatar)
+   * ════════════════════════════════════════════════════════ */
+  @Get('me')
+  getMe(@Req() req: any) {
+    return this.profilService.getAvatarInfo(req.user.id);
+  }
+
+  /* ════════════════════════════════════════════════════════
    * GET GLOBAL — toutes les données en 1 appel
    * ════════════════════════════════════════════════════════ */
   @Get()

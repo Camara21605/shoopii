@@ -22,9 +22,11 @@
  *     └── DangerSection             ← section 12 (connectée)
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams }           from 'react-router-dom';
 import { useToast } from '../../../shared/context/ToastContext';
 import { useParametres } from '../hooks/useParametres';
+import SecLangue from '../../../shared/components/params/SecLangue';
 
 // Sections
 import BoutiqueSection    from '../sections/parametres/BoutiqueSection';
@@ -47,7 +49,7 @@ import s from '../styles/parametres/ParametresPage.module.css';
 
 type SectionKey =
   | 'boutique' | 'horaires' | 'catalogue' | 'livraison' | 'paiement'
-  | 'commissions' | 'documents' | 'confidentialiteSecurite' | 'securite' | 'notifs' | 'privacy' | 'danger';
+  | 'commissions' | 'documents' | 'confidentialiteSecurite' | 'securite' | 'notifs' | 'privacy' | 'langue' | 'danger';
 
 const SIDEBAR_ITEMS: { key: SectionKey; icon: string; label: string; danger?: boolean }[] = [
   { key:'boutique',     icon:'fa-store',              label:'Boutique & Identité'      },
@@ -61,6 +63,7 @@ const SIDEBAR_ITEMS: { key: SectionKey; icon: string; label: string; danger?: bo
   { key:'securite',     icon:'fa-shield-halved',      label:'Sécurité'                 },
   { key:'notifs',       icon:'fa-bell',               label:'Notifications'            },
   { key:'privacy',      icon:'fa-eye-slash',          label:'Confidentialité'          },
+  { key:'langue',       icon:'fa-language',           label:'Langue'                   },
   { key:'danger',       icon:'fa-triangle-exclamation',label:'Zone sensible',danger:true},
 ];
 
@@ -85,13 +88,28 @@ export default function ParametresPage() {
     savePrivacy,
   } = useParametres();
 
-  const [activeSection, setActiveSection] = useState<SectionKey>('boutique');
-  const [isDirty,       setIsDirty]       = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sectionFromUrl = searchParams.get('section') as SectionKey | null;
+
+  const [activeSection, setActiveSection] = useState<SectionKey>(
+    sectionFromUrl && SIDEBAR_ITEMS.some(i => i.key === sectionFromUrl)
+      ? sectionFromUrl
+      : 'boutique',
+  );
+  const [isDirty, setIsDirty] = useState(false);
+
+  /* Sync URL → section si l'URL change depuis l'extérieur */
+  useEffect(() => {
+    const s = searchParams.get('section') as SectionKey | null;
+    if (s && SIDEBAR_ITEMS.some(i => i.key === s) && s !== activeSection) {
+      setActiveSection(s);
+    }
+  }, [searchParams]);
 
   /* Signaler modifications non sauvegardées */
   function markDirty() { setIsDirty(true); }
 
-  /* Changer de section avec confirmation si modifications en attente */
+  /* Changer de section + écrire dans l'URL */
   function goTo(key: SectionKey) {
     if (isDirty && key !== activeSection) {
       const ok = window.confirm('Vous avez des modifications non sauvegardées. Quitter quand même ?');
@@ -99,7 +117,7 @@ export default function ParametresPage() {
     }
     setIsDirty(false);
     setActiveSection(key);
-    // Scroll en haut
+    setSearchParams({ section: key }, { replace: true });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -275,6 +293,10 @@ export default function ParametresPage() {
               {...commonProps}
               savePrivacy={savePrivacy}
             />
+          )}
+
+          {activeSection === 'langue' && (
+            <SecLangue onPop={pop} />
           )}
 
           {activeSection === 'danger' && (

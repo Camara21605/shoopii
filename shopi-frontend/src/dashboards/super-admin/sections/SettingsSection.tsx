@@ -12,10 +12,26 @@
 //  5. Tous les types sont chargés au montage du composant
 // ─────────────────────────────────────────────────────────────
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { SuperAdminStore } from '../hooks/useSuperAdminState';
 import { apiFetch, ApiError }  from '../../../shared/services/apiFetch';
 import { IconPicker, ColorPicker, iconGroupsForType } from '../components/EntityPickers';
+
+/* ── Type des paramètres plateforme (miroir du DTO backend, sans id/updatedAt) ── */
+interface PlatformSettings {
+  emailVerifRequired:     boolean;
+  adminTwoFaRequired:     boolean;
+  maxLoginAttempts:       number;
+  openSignup:             boolean;
+  codeRequiredForCompany: boolean;
+  kycRequired:            boolean;
+  maintenanceMode:        boolean;
+  platformCommission:     number;
+  timezone:               string;
+  /* Champs retournés par le GET mais exclus du PATCH */
+  id?:        number;
+  updatedAt?: string;
+}
 
 // ── Interfaces locales ────────────────────────────────────────
 
@@ -78,16 +94,20 @@ interface Props {
 export default function SettingsSection({ store, toast, isActive }: Props) {
   const { state, toggleTheme } = store;
 
-  // ── Settings plateforme ────────────────────────────────────
-  const [emailVerif,   setEmailVerif]   = useState(true);
-  const [twoFA,        setTwoFA]        = useState(true);
-  const [maxAttempts,  setMaxAttempts]  = useState(5);
-  const [openSignup,   setOpenSignup]   = useState(true);
-  const [codeRequired, setCodeRequired] = useState(true);
-  const [kycRequired,  setKycRequired]  = useState(false);
-  const [maintenance,  setMaintenance]  = useState(false);
-  const [commission,   setCommission]   = useState(6);
-  const [timezone,     setTimezone]     = useState('Africa/Conakry');
+  // ── Settings plateforme (chargés depuis l'API) ─────────────
+  const [settings,     setSettings]     = useState<PlatformSettings>({
+    emailVerifRequired:     true,
+    adminTwoFaRequired:     true,
+    maxLoginAttempts:       5,
+    openSignup:             true,
+    codeRequiredForCompany: true,
+    kycRequired:            false,
+    maintenanceMode:        false,
+    platformCommission:     6,
+    timezone:               'Africa/Conakry',
+  });
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsSaving,  setSettingsSaving]  = useState(false);
 
   // ── État types d'entreprise ────────────────────────────────
   const [types,       setTypes]      = useState<TypeLocal[]>([]);
@@ -182,10 +202,52 @@ export default function SettingsSection({ store, toast, isActive }: Props) {
     setSubErreur('');
   };
 
-  // ── Handlers plateforme ────────────────────────────────────
-  const handleSave = () => toast('success', '💾 Paramètres sauvegardés');
+  // ── Chargement des paramètres plateforme au montage ────────
+  useEffect(() => {
+    if (!isActive) return;
+    setSettingsLoading(true);
+    apiFetch<PlatformSettings>('/dashboard/super-admin/settings')
+      .then(data => setSettings(data))
+      .catch(() => toast('error', 'Impossible de charger les paramètres plateforme.'))
+      .finally(() => setSettingsLoading(false));
+  }, [isActive]);
+
+  // ── Helpers pour modifier un champ ─────────────────────────
+  function setSetting<K extends keyof PlatformSettings>(key: K, val: PlatformSettings[K]) {
+    setSettings(prev => ({ ...prev, [key]: val }));
+  }
+
+  // ── Sauvegarde complète vers l'API ─────────────────────────
+  const handleSave = async () => {
+    setSettingsSaving(true);
+    try {
+      /* On n'envoie que les champs attendus par le DTO — on exclut id, updatedAt */
+      const payload: PlatformSettings = {
+        emailVerifRequired:     settings.emailVerifRequired,
+        adminTwoFaRequired:     settings.adminTwoFaRequired,
+        maxLoginAttempts:       settings.maxLoginAttempts,
+        openSignup:             settings.openSignup,
+        codeRequiredForCompany: settings.codeRequiredForCompany,
+        kycRequired:            settings.kycRequired,
+        maintenanceMode:        settings.maintenanceMode,
+        platformCommission:     settings.platformCommission,
+        timezone:               settings.timezone,
+      };
+      const updated = await apiFetch<PlatformSettings>('/dashboard/super-admin/settings', {
+        method: 'PATCH',
+        body:   payload,
+      });
+      setSettings(updated);
+      toast('success', '💾 Paramètres sauvegardés avec succès');
+    } catch (err) {
+      toast('error', err instanceof ApiError ? err.message : 'Erreur lors de la sauvegarde.');
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
   const handleMaintenance = (val: boolean) => {
-    setMaintenance(val);
+    setSetting('maintenanceMode', val);
     if (val) toast('error', '⚠️ MODE MAINTENANCE ACTIVÉ');
     else     toast('success', '✅ Maintenance désactivée');
   };
@@ -345,7 +407,9 @@ export default function SettingsSection({ store, toast, isActive }: Props) {
           <div className="ph-sub">Configuration globale de Shopi Africa</div>
         </div>
         <div className="ph-actions">
-          <button className="btn btn-primary" onClick={handleSave}>💾 Sauvegarder</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={settingsSaving || settingsLoading}>
+          {settingsSaving ? '⏳ Sauvegarde…' : '💾 Sauvegarder'}
+        </button>
         </div>
       </div>
 
@@ -555,16 +619,16 @@ export default function SettingsSection({ store, toast, isActive }: Props) {
 
         <SettingGroup icon="🔐" iconBg="var(--rose-dim)" title="Sécurité & Authentification">
           <SettingRow label="Vérification email obligatoire" desc="Les utilisateurs doivent vérifier leur email">
-            <Toggle checked={emailVerif} onChange={setEmailVerif} />
+            <Toggle checked={settings.emailVerifRequired} onChange={v => setSetting('emailVerifRequired', v)} />
           </SettingRow>
           <SettingRow label="2FA pour les admins" desc="Obligatoire pour les administrateurs">
-            <Toggle checked={twoFA} onChange={setTwoFA} />
+            <Toggle checked={settings.adminTwoFaRequired} onChange={v => setSetting('adminTwoFaRequired', v)} />
           </SettingRow>
           <SettingRow label="Tentatives max avant blocage">
             <input
               className="input-field" type="number"
-              value={maxAttempts} min={1} max={20}
-              onChange={e => setMaxAttempts(parseInt(e.target.value) || 1)}
+              value={settings.maxLoginAttempts} min={1} max={20}
+              onChange={e => setSetting('maxLoginAttempts', parseInt(e.target.value) || 1)}
               style={{ width: 70 }}
             />
           </SettingRow>
@@ -572,13 +636,13 @@ export default function SettingsSection({ store, toast, isActive }: Props) {
 
         <SettingGroup icon="👤" iconBg="var(--acid-dim)" title="Inscriptions & Accès">
           <SettingRow label="Inscription ouverte (Clients)" desc="Inscription libre sans code">
-            <Toggle checked={openSignup} onChange={setOpenSignup} />
+            <Toggle checked={settings.openSignup} onChange={v => setSetting('openSignup', v)} />
           </SettingRow>
           <SettingRow label="Code requis (Entreprises)">
-            <Toggle checked={codeRequired} onChange={setCodeRequired} />
+            <Toggle checked={settings.codeRequiredForCompany} onChange={v => setSetting('codeRequiredForCompany', v)} />
           </SettingRow>
           <SettingRow label="Validation KYC obligatoire">
-            <Toggle checked={kycRequired} onChange={setKycRequired} />
+            <Toggle checked={settings.kycRequired} onChange={v => setSetting('kycRequired', v)} />
           </SettingRow>
         </SettingGroup>
 
@@ -590,22 +654,26 @@ export default function SettingsSection({ store, toast, isActive }: Props) {
 
         <SettingGroup icon="🌍" iconBg="var(--gold-dim)" title="Plateforme">
           <SettingRow label="Mode maintenance" desc="⚠️ Désactive l'accès à tous les utilisateurs">
-            <Toggle checked={maintenance} onChange={handleMaintenance} />
+            <Toggle checked={settings.maintenanceMode} onChange={handleMaintenance} />
           </SettingRow>
           <SettingRow label="Commission plateforme (%)">
             <input
               className="input-field" type="number"
-              value={commission} min={0} max={50}
-              onChange={e => setCommission(parseInt(e.target.value) || 0)}
+              value={settings.platformCommission} min={0} max={50} step={0.5}
+              onChange={e => setSetting('platformCommission', parseFloat(e.target.value) || 0)}
               style={{ width: 70 }}
             />
           </SettingRow>
           <SettingRow label="Fuseau horaire">
-            <select className="sel" value={timezone} onChange={e => setTimezone(e.target.value)}>
-              <option>Africa/Conakry</option>
-              <option>Africa/Dakar</option>
-              <option>Africa/Bamako</option>
-              <option>Africa/Abidjan</option>
+            <select className="sel" value={settings.timezone} onChange={e => setSetting('timezone', e.target.value)}>
+              <option value="Africa/Conakry">Africa/Conakry</option>
+              <option value="Africa/Dakar">Africa/Dakar</option>
+              <option value="Africa/Bamako">Africa/Bamako</option>
+              <option value="Africa/Abidjan">Africa/Abidjan</option>
+              <option value="Africa/Lagos">Africa/Lagos</option>
+              <option value="Africa/Nairobi">Africa/Nairobi</option>
+              <option value="Europe/Paris">Europe/Paris</option>
+              <option value="UTC">UTC</option>
             </select>
           </SettingRow>
         </SettingGroup>

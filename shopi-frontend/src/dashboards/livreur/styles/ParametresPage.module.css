@@ -3,16 +3,19 @@
  * ================================================================ */
 
 .page {
-  padding: 26px;
-  position: relative;
+  padding: 24px 26px;
   min-height: 100vh;
+  /* Espace sous le contenu pour ne pas finir sous le BottomNav (62px) */
+  padding-bottom: 40px;
 }
 
+/* Grille : nav gauche (224px) + contenu */
 .layout {
   display: grid;
   grid-template-columns: 224px 1fr;
   gap: 22px;
   align-items: start;
+  max-width: 1200px;
 }
 
 .content {
@@ -21,10 +24,18 @@
   min-width: 0;
 }
 
+/* ── Tablette (≤960px) — nav en barre horizontale ── */
 @media (max-width: 960px) {
-  .layout { grid-template-columns: 1fr; gap: 16px; }
+  .page   { padding: 18px 18px 32px; }
+  .layout { grid-template-columns: 1fr; gap: 14px; }
 }
+
+/* ── Mobile (≤640px) — plus compact, espace pour BottomNav ── */
 @media (max-width: 640px) {
-  .page   { padding: 14px 12px; }
-  .layout { gap: 12px; }
+  .page   {
+    padding: 12px 10px;
+    /* Espace sous le contenu pour ne pas finir sous la BottomNav (62px) */
+    padding-bottom: 80px;
+  }
+  .layout { gap: 10px; }
 }

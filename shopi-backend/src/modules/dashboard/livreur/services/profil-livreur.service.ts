@@ -37,6 +37,16 @@ export class ProfilLivreurService {
     private readonly uploadService: UploadService,
   ) {}
 
+  /* ── GET léger : photo + nom uniquement ── */
+  async getAvatarInfo(userId: string): Promise<{ photoUrl: string | null; fullName: string }> {
+    const livreur = await this.livreurRepo.findOne({
+      where: { userId },
+      select: ['photoUrl', 'fullName'],
+    });
+    if (!livreur) throw new NotFoundException('Profil livreur introuvable.');
+    return { photoUrl: livreur.photoUrl ?? null, fullName: livreur.fullName ?? '' };
+  }
+
   /* ── GET global ── */
   async getParametres(userId: string): Promise<Delivery> {
     const livreur = await this.livreurRepo.findOne({

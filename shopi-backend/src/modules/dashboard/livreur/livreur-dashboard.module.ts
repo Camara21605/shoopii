@@ -26,6 +26,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Delivery }       from '../../../database/entities/profiles/livreur-profile.entity';
 import { User }           from '../../../database/entities/user.entity';
 import { LivreurHoraire } from '../../../database/entities/livreur.table/livreur-horaire.entity';
+import { Commande }       from '../../../database/entities/commande/commande.entity';
 
 /* ── Module Paramètres (assemble les 8 services + controller) ── */
 import { LivreurParametresModule } from './livreur-parametres.module';
@@ -43,6 +44,7 @@ import { LivreurDashboardService } from './livreur-dashboard.service';
       Delivery,
       User,
       LivreurHoraire,
+      Commande,
     ]),
 
     /*

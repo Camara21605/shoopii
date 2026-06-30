@@ -41,11 +41,21 @@ export class DangerLivreurService {
   async desactiverCompte(userId: string, dto: LivreurDangerConfirmDto) {
     await this.verifyPassword(userId, dto.password);
     const livreur = await this.findOrFail(userId);
-    livreur.status = LivreurStatus.SUSPENDED;
-    // TODO : cron job pour réactivation automatique J+30
+
+    const reactivationAt = new Date();
+    reactivationAt.setDate(reactivationAt.getDate() + 30);
+
+    livreur.status         = LivreurStatus.SUSPENDED;
+    livreur.suspendedUntil = reactivationAt;
+
     await this.livreurRepo.save(livreur);
-    this.logger.warn(`[DANGER] Compte désactivé 30j — userId=${userId}`);
-    return { message: 'Compte désactivé. Réactivation automatique dans 30 jours.' };
+    this.logger.warn(
+      `[DANGER] Compte désactivé 30j — userId=${userId} | réactivation le ${reactivationAt.toISOString()}`,
+    );
+    return {
+      message:         'Compte désactivé. Réactivation automatique dans 30 jours.',
+      reactivationAt,
+    };
   }
 
   async supprimerCompte(userId: string, dto: LivreurDangerConfirmDto) {

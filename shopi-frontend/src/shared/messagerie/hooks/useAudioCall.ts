@@ -31,11 +31,12 @@ const ICE_SERVERS: RTCIceServer[] = [
 // ── Types ─────────────────────────────────────────────────────
 
 export type CallStatus =
-  | 'idle'       // aucun appel
-  | 'calling'    // appel sortant en attente de réponse
-  | 'ringing'    // appel entrant non décroché
-  | 'connected'  // appel en cours
-  | 'ended';     // appel terminé (transition rapide → idle)
+  | 'idle'        // aucun appel
+  | 'calling'     // appel sortant en attente de réponse
+  | 'ringing'     // appel entrant non décroché
+  | 'connecting'  // décroché, négociation WebRTC (ICE) en cours
+  | 'connected'   // appel en cours
+  | 'ended';      // appel terminé (transition rapide → idle)
 
 export interface CallInfo {
   conversationId: string;
@@ -83,6 +84,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const [callInfo,          setCallInfo]          = useState<CallInfo | null>(null);
   const [isMuted,           setIsMuted]           = useState(false);
   const [isVideoOff,        setIsVideoOff]        = useState(false);
+  const [isSpeakerOn,       setIsSpeakerOn]       = useState(true);
   const [duration,          setDuration]          = useState(0);
   /** Streams exposés à CallOverlay pour les éléments <video> */
   const [localMediaStream,  setLocalMediaStream]  = useState<MediaStream | null>(null);
@@ -99,8 +101,37 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const wasConnected   = useRef(false);
   const connectedSince = useRef(0);
   const facingMode     = useRef<'user' | 'environment'>('user'); // flip caméra mobile
+  const isSpeakerOnRef = useRef(true); // miroir de isSpeakerOn, lu dans pc.ontrack (closure stable)
 
   // ── Utilitaires internes ──────────────────────────────────────
+
+  /**
+   * Applique l'état haut-parleur à l'élément <audio> distant.
+   * Le volume change toujours (effet garanti sur tous navigateurs).
+   * setSinkId() (changement de périphérique de sortie) n'est tenté
+   * qu'en best-effort : non supporté sur Firefox/Safari, et inutile
+   * s'il n'y a qu'un seul périphérique audiooutput disponible.
+   */
+  async function applySpeaker(audioEl: HTMLAudioElement, on: boolean): Promise<void> {
+    audioEl.volume = on ? 1 : 0.4;
+
+    const setSinkId = (audioEl as unknown as { setSinkId?: (id: string) => Promise<void> }).setSinkId;
+    if (typeof setSinkId !== 'function') return;
+
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const outputs = devices.filter(d => d.kind === 'audiooutput');
+      if (outputs.length < 2) return;
+
+      const target = on
+        ? outputs.find(d => /speaker|haut.?parleur/i.test(d.label)) ?? outputs[0]
+        : outputs.find(d => /default|earpiece|écouteur/i.test(d.label)) ?? outputs[outputs.length - 1];
+
+      if (target) await setSinkId.call(audioEl, target.deviceId);
+    } catch {
+      /* setSinkId refusé/non supporté — le volume ci-dessus reste le fallback. */
+    }
+  }
 
   function emit(event: string, data: object) {
     getActiveSocket()?.emit(event, data);
@@ -216,18 +247,32 @@ export function useAudioCall(props?: UseAudioCallProps) {
           document.body.appendChild(remoteAudio.current);
         }
         remoteAudio.current.srcObject = stream;
+        void applySpeaker(remoteAudio.current, isSpeakerOnRef.current);
       }
     };
 
     /* Surveille l'état de la connexion */
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === 'connected') {
+      const state = pc.connectionState;
+
+      if (state === 'connected') {
         clearTimers();
         setStatus('connected');
         startDurationTimer();
-      } else if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
+      } else if (state === 'failed') {
+        /* Échec définitif de la négociation ICE (aucun chemin réseau
+           trouvé — STUN seul ne suffit pas toujours derrière certains
+           NAT/pare-feux). On le distingue de 'disconnected' qui peut
+           n'être qu'un flottement transitoire pendant la négociation. */
+        endCall(false);
+      } else if (state === 'disconnected' && wasConnected.current) {
+        /* Coupure réseau après un appel déjà établi → on referme.
+           Avant d'avoir été connecté une fois, 'disconnected' peut être
+           un état transitoire normal pendant l'échange ICE : on l'ignore. */
         endCall(false);
       }
+      /* 'closed' est déclenché par notre propre pc.close() dans cleanup()
+         — déjà géré par l'appelant de cleanup(), on ne refait rien ici. */
     };
 
     pcRef.current = pc;
@@ -308,6 +353,10 @@ export function useAudioCall(props?: UseAudioCallProps) {
     }
     setLocalMediaStream(localStream.current);
 
+    /* Retour visuel immédiat : la carte "Appel entrant" doit disparaître
+       dès le clic sur "Accepter", avant même la fin de la négociation ICE. */
+    setStatus('connecting');
+
     emit('call:accept', {
       conversationId: callInfoRef.current.conversationId,
       callerUserId:   callInfoRef.current.remoteUserId,
@@ -372,6 +421,18 @@ export function useAudioCall(props?: UseAudioCallProps) {
     setIsMuted(m => !m);
   }, []);
 
+  /**
+   * Bascule haut-parleur / sortie discrète.
+   * Change toujours le volume (effet garanti) et tente en plus de
+   * basculer le périphérique de sortie audio si le navigateur le permet.
+   */
+  const toggleSpeaker = useCallback(() => {
+    const next = !isSpeakerOnRef.current;
+    isSpeakerOnRef.current = next;
+    setIsSpeakerOn(next);
+    if (remoteAudio.current) void applySpeaker(remoteAudio.current, next);
+  }, []);
+
   // ── Gestion des événements socket entrants ────────────────────
 
   /* Appel entrant */
@@ -400,6 +461,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const onCallAccepted = useCallback(async () => {
     if (!callInfoRef.current || !localStream.current) return;
     clearTimers();
+    setStatus('connecting');
 
     const pc = createPeerConnection();
     localStream.current.getTracks().forEach(t => pc.addTrack(t, localStream.current!));
@@ -481,18 +543,6 @@ export function useAudioCall(props?: UseAudioCallProps) {
    * sont toujours actifs.
    */
   useEffect(() => {
-    function register(socket: ReturnType<typeof getActiveSocket>) {
-      if (!socket) return;
-      socket.on('call:incoming',      onCallIncoming);
-      socket.on('call:accepted',      onCallAccepted);
-      socket.on('call:rejected',      onCallRejected);
-      socket.on('call:ended',         onCallEnded);
-      socket.on('call:offer',         onCallOffer);
-      socket.on('call:answer',        onCallAnswer);
-      socket.on('call:ice-candidate', onCallIceCandidate);
-      socket.on('call:busy',          onCallBusy);
-    }
-
     function unregister(socket: ReturnType<typeof getActiveSocket>) {
       if (!socket) return;
       socket.off('call:incoming',      onCallIncoming);
@@ -503,6 +553,27 @@ export function useAudioCall(props?: UseAudioCallProps) {
       socket.off('call:answer',        onCallAnswer);
       socket.off('call:ice-candidate', onCallIceCandidate);
       socket.off('call:busy',          onCallBusy);
+    }
+
+    /*
+     * ⚠️ IDEMPOTENT : on désinscrit d'abord (no-op si rien n'était inscrit).
+     * Sans ça, l'essai immédiat ci-dessous PUIS le 1er tick du polling de
+     * retry (qui voit le même socket déjà connecté) enregistraient chacun
+     * leur propre jeu de listeners → chaque event socket (call:offer,
+     * call:answer...) déclenchait le handler 2x, 3x... et créait autant
+     * d'offres/réponses WebRTC dupliquées, cassant la négociation ICE.
+     */
+    function register(socket: ReturnType<typeof getActiveSocket>) {
+      if (!socket) return;
+      unregister(socket);
+      socket.on('call:incoming',      onCallIncoming);
+      socket.on('call:accepted',      onCallAccepted);
+      socket.on('call:rejected',      onCallRejected);
+      socket.on('call:ended',         onCallEnded);
+      socket.on('call:offer',         onCallOffer);
+      socket.on('call:answer',        onCallAnswer);
+      socket.on('call:ice-candidate', onCallIceCandidate);
+      socket.on('call:busy',          onCallBusy);
     }
 
     /* Essai immédiat : si socket déjà disponible, on enregistre tout de suite */
@@ -536,6 +607,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     duration,
     isMuted,
     isVideoOff,
+    isSpeakerOn,
     localMediaStream,  // pour l'élément <video> local dans CallOverlay
     remoteMediaStream, // pour l'élément <video> distant dans CallOverlay
     startCall,
@@ -544,6 +616,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     hangUp,
     toggleMute,
     toggleVideo,
+    toggleSpeaker,
     flipCamera,
   };
 }

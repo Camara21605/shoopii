@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiFetch } from '../../../../../shared/services/apiFetch';
 
@@ -36,6 +36,12 @@ export interface ProduitApi {
   companyId:   string;
   companyName: string;
   companyLogo: string | null;
+  /* Politique de livraison */
+  livraisonStandard:      boolean;
+  livraisonLivreur:       boolean;
+  livraisonCorrespondant: boolean;
+  fraisLivraisonLocal:    number | null;
+  delaiLivraison:         string;
 }
 
 function toProduitInfo(p: ProduitApi): ProduitInfo {
@@ -213,7 +219,17 @@ export default function ProduitPage() {
                 onColorChange={setColorActive}
               >
                 <div ref={livraisonRef}>
-                  <LivraisonSection onChange={handleLivraisonChange} onToast={showToast} />
+                  <LivraisonSection
+                    onChange={handleLivraisonChange}
+                    onToast={showToast}
+                    policy={produitApi ? {
+                      standard:      produitApi.livraisonStandard      ?? true,
+                      livreur:       produitApi.livraisonLivreur        ?? true,
+                      correspondant: produitApi.livraisonCorrespondant  ?? false,
+                      fraisLocal:    produitApi.fraisLivraisonLocal     ?? null,
+                      delai:         produitApi.delaiLivraison          ?? '1-3 jours',
+                    } : undefined}
+                  />
                 </div>
               </ProduitInfoSection>
 

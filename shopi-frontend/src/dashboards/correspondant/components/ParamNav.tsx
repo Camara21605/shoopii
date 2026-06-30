@@ -72,7 +72,7 @@ function computeNavState(
     return {
       profil:'', depot:'', zone:'', entites:'', colis:'',
       paiement:'', documents:'', securite:'', notifications:'',
-      confidentialite:'', danger:'',
+      confidentialite:'', langue:'', danger:'',
     } as any;
   }
 
@@ -195,6 +195,7 @@ function computeNavState(
     securite:        { pct: securitePct },
     notifications:   { pct: notifPct  },
     confidentialite: { pct: confidPct },
+    langue:          {},
     danger:          { dotColor: dangerDot },
   };
 }

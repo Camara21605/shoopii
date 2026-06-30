@@ -284,32 +284,82 @@
 
 /* ── Bas sidebar ── */
 .sbBot {
-  padding: 12px 16px;
-  border-top: 1px solid rgba(255,255,255,.06);
+  padding: 12px 14px;
+  border-top: 1px solid rgba(255,255,255,.07);
   flex-shrink: 0;
   display: flex;
-  gap: 7px;
+  flex-direction: column;
+  gap: 8px;
 }
-.sbBotBtn {
-  flex: 1;
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: var(--r-md);
-  padding: 9px;
+
+/* Bouton Mon espace livreur */
+.btnHome {
+  width: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 11px;
+  gap: 10px;
+  padding: 11px 14px;
+  background: rgba(14,116,144,.18);
+  border: 1px solid rgba(14,116,144,.35);
+  border-radius: var(--r-md);
+  font-size: 12.5px;
   font-weight: 600;
-  color: rgba(200,217,248,.45);
+  color: #67E8F9;
   cursor: pointer;
   transition: all .2s;
+  text-align: left;
 }
-.sbBotBtn:hover {
-  background: rgba(255,255,255,.12);
+.btnHome:hover {
+  background: rgba(14,116,144,.32);
+  border-color: rgba(14,116,144,.6);
   color: #fff;
-  border-color: rgba(255,255,255,.14);
+  transform: translateX(2px);
+}
+.btnHome i:first-child {
+  width: 16px;
+  text-align: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.btnHome span {
+  flex: 1;
+}
+
+/* Bouton Déconnexion */
+.btnLogout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  background: rgba(220,38,38,.10);
+  border: 1px solid rgba(220,38,38,.25);
+  border-radius: var(--r-md);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(252,165,165,.8);
+  cursor: pointer;
+  transition: all .2s;
+  text-align: left;
+}
+.btnLogout:hover {
+  background: rgba(220,38,38,.22);
+  border-color: rgba(220,38,38,.5);
+  color: #FCA5A5;
+  transform: translateX(2px);
+}
+.btnLogout i {
+  width: 16px;
+  text-align: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+/* Responsive : icônes seules */
+@media (max-width: 960px) {
+  .sbBot { padding: 10px 8px; }
+  .btnHome span, .btnLogout span { display: none; }
+  .btnHome, .btnLogout { justify-content: center; padding: 10px; }
 }
 
 /* ── Responsive ── */
@@ -325,7 +375,15 @@
   .sbBotBtn { justify-content: center; }
 }
 @media (max-width: 640px) {
-  .sb { transform: translateX(-100%); width: 280px; z-index: 300; }
+  /* La sidebar s'arrête au-dessus du BottomNav (62px) pour que les boutons
+     déconnexion / mon espace restent visibles et cliquables */
+  .sb {
+    transform: translateX(-100%);
+    width: 280px;
+    z-index: 300;
+    bottom: 62px;           /* ← hauteur exacte du BottomNav */
+    padding-bottom: 0;
+  }
   .open { transform: translateX(0); box-shadow: var(--sh-lg); }
   .open .sbBrand, .open .sbLvNm, .open .sbLvSub,
   .open .nb span, .open .nbBadge, .open .sbSect,
@@ -336,4 +394,7 @@
   .open .sbLogo     { justify-content: flex-start; padding: 0 22px; }
   .open .nb         { justify-content: flex-start; padding: 10px 12px; }
   .open .sbBotBtn   { justify-content: center; }
+  /* Afficher les labels des nouveaux boutons en mode ouvert */
+  .open .btnHome span, .open .btnLogout span { display: inline; }
+  .btnHome, .btnLogout { justify-content: flex-start; padding: 10px 14px; }
 }

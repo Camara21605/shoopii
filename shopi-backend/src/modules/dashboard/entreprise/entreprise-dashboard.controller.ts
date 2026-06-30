@@ -15,13 +15,10 @@
 import {
   Controller,
   Get,
-  Put,
-  Body,
-  Request,
   UseGuards,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository }       from 'typeorm';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -29,21 +26,22 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 
-import { JwtAuthGuard }                  from '../../../common/guards/auth.guard';
-import { RolesGuard }                 from '../../../common/guards/roles.guard';
-import { Roles }                      from '../../../common/decorators/roles.decorator';
-// import { EntrepriseDashboardService } from './entreprise-dashboard.service';
-// import { UpdateEntrepriseProfilDto }  from './dto/update-entreprise-profil.dto';
+import { JwtAuthGuard }      from '../../../common/guards/auth.guard';
+import { RolesGuard }        from '../../../common/guards/roles.guard';
+import { Roles }             from '../../../common/decorators/roles.decorator';
+import { UserRole }          from '../../../common/enums/user-role.enum';
+import { PlatformSettings }  from '../../../database/entities/platform-settings.entity';
 
 @ApiTags('Dashboard Entreprise')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('entreprise')
+@Roles(UserRole.COMPANY)
 @Controller('dashboard/entreprise')
 export class EntrepriseDashboardController {
 
   constructor(
-    // private readonly entrepriseService: EntrepriseDashboardService,
+    @InjectRepository(PlatformSettings)
+    private readonly platformSettingsRepo: Repository<PlatformSettings>,
   ) {}
 
   // ──────────────────────────────────────────────────────────
@@ -105,18 +103,25 @@ export class EntrepriseDashboardController {
 //     return this.entrepriseService.updateProfil(req.user.id, dto);
 //   }
 
-//   // ──────────────────────────────────────────────────────────
-//   // GET /dashboard/entreprise/notifications
-//   // Retourne les notifications non lues de l'entreprise :
-//   //   - nouvelle commande reçue
-//   //   - commande annulée
-//   //   - avis client
-//   //   - alerte stock
-//   // ──────────────────────────────────────────────────────────
-//   @ApiOperation({ summary: 'Notifications de l\'entreprise' })
-//   @ApiResponse({ status: 200, description: 'Notifications retournées avec succès' })
-//   @Get('notifications')
-//   async getNotifications(@Request() req: any) {
-//     return this.entrepriseService.getNotifications(req.user.id);
-//   }
+  // ──────────────────────────────────────────────────────────
+  // GET /dashboard/entreprise/commission-rate
+  // Retourne le taux de commission actuel de la plateforme.
+  // Utilisé par AjouterPage pour l'aperçu du revenu net.
+  // ──────────────────────────────────────────────────────────
+  @Get('commission-rate')
+  async getCommissionRate() {
+    let settings = await this.platformSettingsRepo.findOne({ where: { id: 1 } });
+
+    /* Initialise la ligne avec les valeurs par défaut si elle n'existe pas encore */
+    if (!settings) {
+      settings = this.platformSettingsRepo.create({ id: 1 });
+      settings = await this.platformSettingsRepo.save(settings);
+    }
+
+    const percentage = Number(settings.platformCommission);
+    return {
+      percentage,             // ex: 6  (affiché en %)
+      rate: percentage / 100, // ex: 0.06 (utilisé pour les calculs)
+    };
+  }
 }

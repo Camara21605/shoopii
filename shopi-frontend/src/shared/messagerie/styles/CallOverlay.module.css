@@ -167,7 +167,8 @@
 .btnHangup  .btnIcon { background: #DC2626; box-shadow: 0 8px 24px rgba(220,38,38,.4);  }
 .btnMute    .btnIcon { background: rgba(255,255,255,.12); }
 .btnMuteOn  .btnIcon { background: rgba(220,38,38,.25); color: #f87171; }
-.btnSpeaker .btnIcon { background: rgba(255,255,255,.12); }
+.btnSpeaker   .btnIcon { background: rgba(255,255,255,.12); }
+.btnSpeakerOn .btnIcon { background: rgba(16,185,129,.25); color: #34d399; }
 
 .btnAccept:hover  .btnIcon { background: #059669; }
 .btnReject:hover  .btnIcon { background: #b91c1c; }

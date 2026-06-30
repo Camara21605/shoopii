@@ -1,5 +1,4 @@
 // src/dashboards/livreur/components/Sidebar.tsx
-import React from 'react';
 import type { PageId } from '../data/livreurData';
 import { fmtGNF } from '../data/livreurData';
 import styles from '../styles/Sidebar.module.css';
@@ -12,7 +11,8 @@ interface Props {
   onNavigate:     (p: PageId) => void;
   onClose:        () => void;
   onToggleOnline: () => void;
-  onPop:          (msg: string, type?: string) => void;
+  onLogout:       () => void;
+  onGoHome:       () => void;
 }
 
 type NavItem = { id: PageId; icon: string; label: string; badge?: string | number; bCls?: string };
@@ -40,7 +40,7 @@ const NAV_COMPTE: NavItem[] = [
 
 export default function Sidebar({
   activePage, isOpen, isOnline, todayEarn,
-  onNavigate, onToggleOnline, onPop,
+  onNavigate, onToggleOnline, onLogout, onGoHome,
 }: Props) {
   return (
     <nav className={`${styles.sb} ${isOpen ? styles.open : ''}`}>
@@ -53,7 +53,7 @@ export default function Sidebar({
 
       {/* Carte livreur */}
       <div className={styles.sbLv}>
-        <div className={styles.sbLvCard} onClick={() => onNavigate('profil')}>
+        <div className={styles.sbLvCard} onClick={() => onNavigate('profil' as PageId)}>
           <div className={styles.sbLvTop}>
             <div className={styles.sbAva}>
               🛵
@@ -80,11 +80,7 @@ export default function Sidebar({
               <span>{isOnline ? 'En ligne · disponible' : 'Hors ligne · pause'}</span>
             </div>
             <label className={styles.otSwitch}>
-              <input
-                type="checkbox"
-                checked={isOnline}
-                onChange={onToggleOnline}
-              />
+              <input type="checkbox" checked={isOnline} onChange={onToggleOnline} />
               <span className={`${styles.ots} ${isOnline ? styles.otsOn : ''}`} />
             </label>
           </div>
@@ -114,14 +110,30 @@ export default function Sidebar({
         ))}
       </div>
 
-      {/* Bottom */}
+      {/* Bas sidebar */}
       <div className={styles.sbBot}>
-        <button className={styles.sbBotBtn} onClick={() => onPop('🔔 Alertes', 'i')}>
-          <i className="fas fa-bell" /><span>Alertes</span>
+
+        {/* Bouton Mon espace livreur */}
+        <button
+          className={styles.btnHome}
+          onClick={onGoHome}
+          title="Retour à l'accueil Shopi"
+        >
+          <i className="fas fa-house" />
+          <span>Mon espace</span>
+          <i className="fas fa-arrow-up-right-from-square" style={{ fontSize: 9, opacity: .6 }} />
         </button>
-        <button className={styles.sbBotBtn} onClick={() => onPop('👋 Déconnexion', 'w')}>
-          <i className="fas fa-right-from-bracket" /><span>Quitter</span>
+
+        {/* Bouton Déconnexion */}
+        <button
+          className={styles.btnLogout}
+          onClick={onLogout}
+          title="Se déconnecter"
+        >
+          <i className="fas fa-right-from-bracket" />
+          <span>Déconnexion</span>
         </button>
+
       </div>
     </nav>
   );

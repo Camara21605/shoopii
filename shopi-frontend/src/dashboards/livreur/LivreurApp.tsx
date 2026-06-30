@@ -3,7 +3,9 @@
 // Contrôleur racine du dashboard livreur.
 // Accent : teal (#0E7490) + navy
 
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useNavigate as useRouterNavigate } from 'react-router-dom';
+import { tokenStorage, apiFetch } from '../../shared/services/apiFetch';
 import type { PageId } from './data/livreurData';
 import { PAGE_META } from './data/livreurData';
 
@@ -37,6 +39,7 @@ import styles from './styles/LivreurApp.module.css';
 interface ToastMsg { id: number; msg: string; type: string; }
 
 export default function LivreurApp() {
+  const routerNavigate = useRouterNavigate();
   const [page,        setPage]        = useState<PageId>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen,   setNotifOpen]   = useState(false);
@@ -44,6 +47,28 @@ export default function LivreurApp() {
   const [todayEarn,   setTodayEarn]   = useState(44_000);
   const [toasts,      setToasts]      = useState<ToastMsg[]>([]);
   const [viewedId,    setViewedId]    = useState<string | null>(null);
+  const [avatarUrl,   setAvatarUrl]   = useState<string | null>(null);
+  const [livreurName, setLivreurName] = useState<string>('');
+
+  /* Charge la photo de profil au montage (endpoint léger — 2 colonnes seulement) */
+  const refreshAvatar = useCallback(() => {
+    apiFetch<{ photoUrl: string | null; fullName: string }>('/dashboard/livreur/parametres/me')
+      .then(d => { setAvatarUrl(d.photoUrl); setLivreurName(d.fullName); })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => { refreshAvatar(); }, [refreshAvatar]);
+
+  /* Déconnexion : vide le token et redirige vers /login */
+  const handleLogout = useCallback(() => {
+    tokenStorage.remove();
+    routerNavigate('/login');
+  }, [routerNavigate]);
+
+  /* Retour à l'espace public */
+  const handleGoHome = useCallback(() => {
+    routerNavigate('/home');
+  }, [routerNavigate]);
 
   // Toast system
   const pop = useCallback((msg: string, type = 'i') => {
@@ -114,7 +139,8 @@ export default function LivreurApp() {
             return !v;
           });
         }}
-        onPop={pop}
+        onLogout={handleLogout}
+        onGoHome={handleGoHome}
       />
 
       {/* Topbar */}
@@ -122,6 +148,8 @@ export default function LivreurApp() {
         title={meta.title}
         subtitle={meta.sub}
         isOnline={isOnline}
+        avatarUrl={avatarUrl}
+        livreurName={livreurName}
         onMenuToggle={() => setSidebarOpen(o => !o)}
         onNotif={() => setNotifOpen(o => !o)}
         onNavigate={navigate}
@@ -144,7 +172,7 @@ export default function LivreurApp() {
         {page === 'zone'        && <ZonePage       onPop={pop} />}
         {page === 'evaluation'  && <AjouterCorrespondantPage onPop={pop} />}
         {page === 'parametres'  && (
-          <ParametresPage onBack={() => navigate('overview')} onPop={pop} />
+          <ParametresPage onBack={() => navigate('overview')} onPop={pop} onAvatarRefresh={refreshAvatar} />
         )}
         {page === 'messagerie'  && <MessagesPage />}
         {page === 'reseauCorrespondants' && <ReseauCorrespondantsPage onPop={pop} onView={viewCorrespondant} />}

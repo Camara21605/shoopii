@@ -15,9 +15,9 @@
 
 import {
   Controller,
-  Get,
+  Get, Patch,
   UseGuards,
-  Request,
+  Request, Body,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -30,7 +30,8 @@ import { RolesGuard }   from '../../../common/guards/roles.guard';
 import { Roles }        from '../../../common/decorators/roles.decorator';
 import { UserRole }     from '../../../common/enums/user-role.enum';
 
-import { UtilisateursService } from './services/utilisateurs.service';
+import { UtilisateursService }    from './services/utilisateurs.service';
+import { PlatformSettingsService, UpdatePlatformSettingsDto } from './services/platform-settings.service';
 
 // ─────────────────────────────────────────────────────────────
 // CONTROLLER PRINCIPAL
@@ -47,7 +48,8 @@ import { UtilisateursService } from './services/utilisateurs.service';
 export class SuperAdminController {
 
   constructor(
-    private readonly utilisateursService: UtilisateursService,
+    private readonly utilisateursService:    UtilisateursService,
+    private readonly platformSettingsService: PlatformSettingsService,
   ) {}
 
   // ══════════════════════════════════════════════════════════════
@@ -86,5 +88,28 @@ export class SuperAdminController {
   @Get('overview')
   getOverview(@Request() req: any) {
     return this.utilisateursService.getStats(req.user);
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // GET  /dashboard/super-admin/settings
+  // PATCH /dashboard/super-admin/settings
+  // ══════════════════════════════════════════════════════════════
+
+  @ApiOperation({
+    summary:     'Récupérer la configuration plateforme',
+    description: 'Retourne tous les paramètres globaux de Shopi Africa.',
+  })
+  @Get('settings')
+  getSettings() {
+    return this.platformSettingsService.getSettings();
+  }
+
+  @ApiOperation({
+    summary:     'Modifier la configuration plateforme',
+    description: 'Met à jour un ou plusieurs paramètres globaux. Seuls les champs fournis sont modifiés.',
+  })
+  @Patch('settings')
+  updateSettings(@Body() dto: UpdatePlatformSettingsDto) {
+    return this.platformSettingsService.updateSettings(dto);
   }
 }

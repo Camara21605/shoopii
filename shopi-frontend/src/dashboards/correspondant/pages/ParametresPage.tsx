@@ -18,6 +18,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 
 import ParamNav   from '../components/ParamNav';
 import SaveFloat  from '../components/SaveFloat';
+import SecLangue  from '../../../shared/components/params/SecLangue';
 
 import SecProfil          from '../sections/params/SecProfil';
 import SecDepot           from '../sections/params/SecDepot';
@@ -129,6 +130,8 @@ export default function ParametresPage() {
       case 'confidentialite':
         return <SecConfidentialite {...base} data={data}
           onSave={saveConfidentialite} />;
+      case 'langue':
+        return <SecLangue />;
       case 'danger':
         return <SecDanger data={data}
           onSuspendre={suspendreCompte}

@@ -9,6 +9,8 @@ import React, { useState } from 'react';
 import { useLivreurParametres } from '../hooks/useLivreurParametres';
 import ParamNav from '../components/ParamNav';
 import type { ParamSectionId } from '../data/parametresData';
+import SecLangue from '../../../shared/components/params/SecLangue';
+import styles from '../styles/ParametresPage.module.css';
 
 import SecProfil          from './params/SecProfil';
 import SecDocuments       from './params/SecDocuments';
@@ -21,16 +23,16 @@ import SecNotifications   from './params/SecNotifications';
 import SecConfidentialite from './params/SecConfidentialite';
 import SecDanger          from './params/SecDanger';
 
-interface Props { onBack: () => void; onPop: (m: string, t?: string) => void; }
+interface Props { onBack: () => void; onPop: (m: string, t?: string) => void; onAvatarRefresh?: () => void; }
 
-export default function LivreurParametresPage({ onBack, onPop }: Props) {
+export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh }: Props) {
   const [section, setSection] = useState<ParamSectionId>('profil');
   const [isDirty, setIsDirty] = useState(false);
 
   const {
     data, loading, error, saving,
     saveProfil, uploadPhoto,
-    uploadDocument, deleteDocument,
+    uploadDocument,
     saveZones, saveHoraires,
     saveVitesses, saveVehicule,
     savePaiement,
@@ -77,7 +79,7 @@ export default function LivreurParametresPage({ onBack, onPop }: Props) {
   const common = { data, saving, dirty:markDirty, onPop };
 
   const sections: Record<ParamSectionId, React.ReactNode> = {
-    profil:          <SecProfil          {...common} saveProfil={saveProfil} uploadPhoto={uploadPhoto} />,
+    profil:          <SecProfil          {...common} saveProfil={saveProfil} uploadPhoto={uploadPhoto} onAvatarRefresh={onAvatarRefresh} />,
     docs:            <SecDocuments       {...common} uploadDocument={uploadDocument} />,
     zone:            <SecZone            dirty={markDirty} onPop={onPop} saveZones={saveZones} saveHoraires={saveHoraires} data={data} saving={saving} />,
     vitesses:        <SecVitesses        {...common} saveVitesses={saveVitesses} />,
@@ -86,14 +88,17 @@ export default function LivreurParametresPage({ onBack, onPop }: Props) {
     securite:        <SecSecurite        {...common} savePassword={savePassword} saveTwoFa={saveTwoFa} />,
     notifs:          <SecNotifications   {...common} saveNotifs={saveNotifs} />,
     confidentialite: <SecConfidentialite {...common} savePrivacy={savePrivacy} />,
+    langue:          <SecLangue onPop={onPop} />,
     danger:          <SecDanger          saving={saving} onPop={onPop} pauseCompte={pauseCompte} desactiverCompte={desactiverCompte} supprimerCompte={supprimerCompte} />,
   };
 
   return (
-    <div style={{ display:'flex', gap:20, padding:'20px 24px', alignItems:'flex-start', minHeight:'100vh' }}>
-      <ParamNav active={section} onSelect={goTo} onBack={onBack} />
-      <div style={{ flex:1, minWidth:0 }}>
-        {sections[section]}
+    <div className={styles.page}>
+      <div className={styles.layout}>
+        <ParamNav active={section} onSelect={goTo} onBack={onBack} />
+        <div className={styles.content}>
+          {sections[section]}
+        </div>
       </div>
     </div>
   );

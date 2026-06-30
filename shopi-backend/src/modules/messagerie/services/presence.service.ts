@@ -50,30 +50,36 @@ export class PresenceService implements OnModuleDestroy {
    * Définit la présence comme "en ligne" avec TTL.
    */
   async onConnect(userId: string, socketId: string): Promise<void> {
-    const pipeline = this.redis.pipeline();
+    try {
+      const pipeline = this.redis.pipeline();
 
-    // Ajoute le socketId dans un Set pour tracking multi-appareils
-    pipeline.sadd(KEY_SOCKETS(userId), socketId);
+      // Ajoute le socketId dans un Set pour tracking multi-appareils
+      pipeline.sadd(KEY_SOCKETS(userId), socketId);
 
-    // Définit la présence avec TTL auto-expirante
-    const presence: UserPresence = {
-      online:   true,
-      lastSeen: new Date().toISOString(),
-      sockets:  0,  // mis à jour en dessous
-    };
+      // Définit la présence avec TTL auto-expirante
+      const presence: UserPresence = {
+        online:   true,
+        lastSeen: new Date().toISOString(),
+        sockets:  0,  // mis à jour en dessous
+      };
 
-    pipeline.setex(
-      KEY_PRESENCE(userId),
-      PRESENCE_TTL_S,
-      JSON.stringify(presence),
-    );
+      pipeline.setex(
+        KEY_PRESENCE(userId),
+        PRESENCE_TTL_S,
+        JSON.stringify(presence),
+      );
 
-    await pipeline.exec();
+      await pipeline.exec();
 
-    // Met à jour le compteur sockets dans la clé présence
-    await this.refreshPresence(userId);
+      // Met à jour le compteur sockets dans la clé présence
+      await this.refreshPresence(userId);
 
-    this.logger.debug(`[Presence] ONLINE userId=${userId} socket=${socketId}`);
+      this.logger.debug(`[Presence] ONLINE userId=${userId} socket=${socketId}`);
+    } catch (err) {
+      // Redis indisponible : la connexion socket reste valide, on dégrade
+      // simplement le tracking de présence sans faire planter le gateway.
+      this.logger.warn(`[Presence] Redis indisponible (onConnect userId=${userId}) : ${(err as Error).message}`);
+    }
   }
 
   // ─────────────────────────────────────────────────────────
@@ -88,34 +94,40 @@ export class PresenceService implements OnModuleDestroy {
    * (utile pour broadcaster l'événement offline).
    */
   async onDisconnect(userId: string, socketId: string): Promise<boolean> {
-    // Retire le socket du Set
-    await this.redis.srem(KEY_SOCKETS(userId), socketId);
+    try {
+      // Retire le socket du Set
+      await this.redis.srem(KEY_SOCKETS(userId), socketId);
 
-    // Compte les sockets restants
-    const remaining = await this.redis.scard(KEY_SOCKETS(userId));
+      // Compte les sockets restants
+      const remaining = await this.redis.scard(KEY_SOCKETS(userId));
 
-    if (remaining === 0) {
-      // Plus aucun socket → passe hors ligne
-      const presence: UserPresence = {
-        online:   false,
-        lastSeen: new Date().toISOString(),
-        sockets:  0,
-      };
+      if (remaining === 0) {
+        // Plus aucun socket → passe hors ligne
+        const presence: UserPresence = {
+          online:   false,
+          lastSeen: new Date().toISOString(),
+          sockets:  0,
+        };
 
-      // Garde la clé 24h pour afficher "vu il y a Xh" côté client
-      await this.redis.setex(
-        KEY_PRESENCE(userId),
-        60 * 60 * 24,
-        JSON.stringify(presence),
-      );
+        // Garde la clé 24h pour afficher "vu il y a Xh" côté client
+        await this.redis.setex(
+          KEY_PRESENCE(userId),
+          60 * 60 * 24,
+          JSON.stringify(presence),
+        );
 
-      this.logger.debug(`[Presence] OFFLINE userId=${userId}`);
-      return true;
+        this.logger.debug(`[Presence] OFFLINE userId=${userId}`);
+        return true;
+      }
+
+      // Encore des sockets actifs — rafraîchit le TTL
+      await this.refreshPresence(userId);
+      return false;
+    } catch (err) {
+      // Redis indisponible : on n'empêche jamais la déconnexion du socket.
+      this.logger.warn(`[Presence] Redis indisponible (onDisconnect userId=${userId}) : ${(err as Error).message}`);
+      return false;
     }
-
-    // Encore des sockets actifs — rafraîchit le TTL
-    await this.refreshPresence(userId);
-    return false;
   }
 
   // ─────────────────────────────────────────────────────────
@@ -127,7 +139,11 @@ export class PresenceService implements OnModuleDestroy {
    * la présence en vie (rafraîchit le TTL Redis).
    */
   async heartbeat(userId: string): Promise<void> {
-    await this.refreshPresence(userId);
+    try {
+      await this.refreshPresence(userId);
+    } catch (err) {
+      this.logger.warn(`[Presence] Redis indisponible (heartbeat userId=${userId}) : ${(err as Error).message}`);
+    }
   }
 
   // ─────────────────────────────────────────────────────────

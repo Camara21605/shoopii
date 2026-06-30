@@ -15,11 +15,15 @@ import { Localisation }     from '../../database/entities/localisation.entity';
 import { Delivery }         from '../../database/entities/profiles/livreur-profile.entity';
 import { Company }          from '../../database/entities/profiles/entreprise-profile.entity';
 import { Correspondent }    from '../../database/entities/profiles/correspondant-profile.entity';
+import { Client }           from '../../database/entities/profiles/client-profile.entity';
 import { CompanyBranch }    from '../../database/entities/location/company-branch.entity';
 import { LocationHistory }  from '../../database/entities/location/location-history.entity';
+import { Commande }         from '../../database/entities/commande/commande.entity';
 
 /* ── Services ────────────────────────────────────────────── */
 import { GeoService }                    from './services/geo.service';
+import { RouteService }                  from './services/route.service';
+import { TrackingService }               from './services/tracking.service';
 import { ClientAddressService }          from './services/client-address.service';
 import { DeliveryLocationService }       from './services/delivery-location.service';
 import { CompanyLocationService }        from './services/company-location.service';
@@ -33,6 +37,7 @@ import { ClientAddressController }           from './controllers/client-address.
 import { DeliveryLocationController }        from './controllers/delivery-location.controller';
 import { CompanyLocationController }         from './controllers/company-location.controller';
 import { CorrespondantLocationController }   from './controllers/correspondant-location.controller';
+import { TrackingController }                from './controllers/tracking.controller';
 
 @Module({
   imports: [
@@ -41,8 +46,10 @@ import { CorrespondantLocationController }   from './controllers/correspondant-l
       Delivery,
       Company,
       Correspondent,
+      Client,
       CompanyBranch,
       LocationHistory,
+      Commande,
     ]),
 
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -62,10 +69,13 @@ import { CorrespondantLocationController }   from './controllers/correspondant-l
     DeliveryLocationController,
     CompanyLocationController,
     CorrespondantLocationController,
+    TrackingController,
   ],
 
   providers: [
     GeoService,
+    RouteService,
+    TrackingService,
     ClientAddressService,
     DeliveryLocationService,
     CompanyLocationService,
@@ -75,6 +85,8 @@ import { CorrespondantLocationController }   from './controllers/correspondant-l
 
   exports: [
     GeoService,
+    RouteService,
+    TrackingService,
     ClientAddressService,
     DeliveryLocationService,
     CompanyLocationService,

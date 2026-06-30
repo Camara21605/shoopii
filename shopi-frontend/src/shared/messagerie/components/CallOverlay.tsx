@@ -30,6 +30,7 @@ interface Props {
   duration:          number;
   isMuted:           boolean;
   isVideoOff:        boolean;
+  isSpeakerOn:       boolean;
   localMediaStream:  MediaStream | null;
   remoteMediaStream: MediaStream | null;
   onAccept:          () => void;
@@ -37,6 +38,7 @@ interface Props {
   onHangUp:          () => void;
   onToggleMute:      () => void;
   onToggleVideo:     () => void;
+  onToggleSpeaker:   () => void;
   onFlipCamera:      () => void;
 }
 
@@ -47,9 +49,9 @@ function fmt(sec: number): string {
 }
 
 export default function CallOverlay({
-  status, callInfo, duration, isMuted, isVideoOff,
+  status, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
   localMediaStream, remoteMediaStream,
-  onAccept, onReject, onHangUp, onToggleMute, onToggleVideo, onFlipCamera,
+  onAccept, onReject, onHangUp, onToggleMute, onToggleVideo, onToggleSpeaker, onFlipCamera,
 }: Props) {
   const isVideo    = callInfo.callType === 'video';
   const isImgAva   = callInfo.remoteAvatar?.startsWith('http');
@@ -59,18 +61,26 @@ export default function CallOverlay({
   const localVideoRef  = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
-  /* Attache les streams aux éléments <video> */
+  /*
+   * Attache les streams aux éléments <video>.
+   * ⚠️ Dépend aussi de `status` : les <video> ne sont montés (donc les refs
+   * non-null) qu'en mode plein écran (isVideo && isConnected). Le stream,
+   * lui, existe déjà bien avant (dès 'calling'/'connecting'). Sans `status`
+   * dans les deps, cet effet s'exécute une fois avec une ref encore null
+   * et ne se redéclenche jamais une fois le <video> réellement monté —
+   * la caméra tourne mais rien ne s'affiche jamais à l'écran.
+   */
   useEffect(() => {
     if (localVideoRef.current && localMediaStream) {
       localVideoRef.current.srcObject = localMediaStream;
     }
-  }, [localMediaStream]);
+  }, [localMediaStream, status]);
 
   useEffect(() => {
     if (remoteVideoRef.current && remoteMediaStream) {
       remoteVideoRef.current.srcObject = remoteMediaStream;
     }
-  }, [remoteMediaStream]);
+  }, [remoteMediaStream, status]);
 
   /* Vibration sur appel entrant (mobile) */
   useEffect(() => {
@@ -139,8 +149,13 @@ export default function CallOverlay({
       </button>
 
       {!isVideo && (
-        <button className={`${s.btn} ${s.btnSpeaker}`}>
-          <div className={s.btnIcon}><i className="fas fa-volume-high" /></div>
+        <button
+          className={`${s.btn} ${isSpeakerOn ? s.btnSpeakerOn : s.btnSpeaker}`}
+          onClick={onToggleSpeaker}
+        >
+          <div className={s.btnIcon}>
+            <i className={`fas ${isSpeakerOn ? 'fa-volume-high' : 'fa-volume-low'}`} />
+          </div>
           <span className={s.btnLabel}>Haut-parleur</span>
         </button>
       )}
@@ -247,6 +262,19 @@ export default function CallOverlay({
                   <i className={`fas ${isVideo ? 'fa-video' : 'fa-phone'}`} />
                 </div>
                 <span className={s.btnLabel}>Accepter</span>
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Décroché — négociation WebRTC (ICE) en cours */}
+        {status === 'connecting' && (
+          <>
+            <div className={s.status}><span className={s.statusDot} />Connexion…</div>
+            <div className={s.actions}>
+              <button className={`${s.btn} ${s.btnHangup}`} onClick={onHangUp}>
+                <div className={s.btnIcon}><i className="fas fa-phone-slash" /></div>
+                <span className={s.btnLabel}>Annuler</span>
               </button>
             </div>
           </>

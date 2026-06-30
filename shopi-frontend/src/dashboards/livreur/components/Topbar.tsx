@@ -1,5 +1,4 @@
 // src/dashboards/livreur/components/Topbar.tsx
-import React from 'react';
 import type { PageId } from '../data/livreurData';
 import styles from '../styles/Topbar.module.css';
 
@@ -7,13 +6,31 @@ interface Props {
   title:        string;
   subtitle:     string;
   isOnline:     boolean;
+  avatarUrl?:   string | null;
+  livreurName?: string;
   onMenuToggle: () => void;
   onNotif:      () => void;
   onNavigate:   (p: PageId) => void;
   onPop:        (msg: string, type?: string) => void;
 }
 
-export default function Topbar({ title, subtitle, isOnline, onMenuToggle, onNotif, onNavigate, onPop }: Props) {
+/** Calcule les initiales depuis un nom complet */
+function getInitials(name: string): string {
+  return name
+    .trim()
+    .split(' ')
+    .slice(0, 2)
+    .map(w => w[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
+export default function Topbar({
+  title, subtitle, isOnline,
+  avatarUrl, livreurName,
+  onMenuToggle, onNotif, onNavigate, onPop,
+}: Props) {
+  const initials = livreurName ? getInitials(livreurName) : '🛵';
+
   return (
     <header className={styles.topbar}>
       <button className={styles.hamburger} onClick={onMenuToggle} aria-label="Menu">
@@ -47,7 +64,18 @@ export default function Topbar({ title, subtitle, isOnline, onMenuToggle, onNoti
           <i className="fas fa-bell" /><span className={styles.tbDot} />
         </button>
         <div className={styles.tbSep} />
-        <div className={styles.tbAva} onClick={() => onNavigate('profil')}>MD</div>
+
+        {/* Avatar : photo réelle ou initiales */}
+        <div
+          className={styles.tbAva}
+          onClick={() => onNavigate('profil' as PageId)}
+          title={livreurName || 'Mon profil'}
+        >
+          {avatarUrl
+            ? <img src={avatarUrl} alt={livreurName || 'Profil'} />
+            : initials
+          }
+        </div>
       </div>
     </header>
   );

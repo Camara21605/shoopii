@@ -26,12 +26,13 @@ import { Module }        from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 // ── Entités TypeORM ───────────────────────────────────────────
-import { User }        from '../../../database/entities/user.entity';
-import { Category }    from '../../../database/entities/entreprise.table/category.entity';
-import { SubCategory } from '../../../database/entities/entreprise.table/sub-category.entity';
-import { AuditLog }    from '../../../database/entities/audit-log.entity';
-import { Report }      from '../../../database/entities/report.entity';
-import { Admin }       from '../../../database/entities/profiles/admin-profile.entity';
+import { User }             from '../../../database/entities/user.entity';
+import { Category }         from '../../../database/entities/entreprise.table/category.entity';
+import { SubCategory }      from '../../../database/entities/entreprise.table/sub-category.entity';
+import { AuditLog }         from '../../../database/entities/audit-log.entity';
+import { Report }           from '../../../database/entities/report.entity';
+import { Admin }            from '../../../database/entities/profiles/admin-profile.entity';
+import { PlatformSettings } from '../../../database/entities/platform-settings.entity';
 
 // ── Sous-module catégories ─────────────────────────────────────
 // Fournit GET/POST/PATCH/DELETE /categories et /sub-categories
@@ -44,21 +45,23 @@ import { ModerationController }    from './controllers/moderation.controller';
 import { ReportsController }       from './controllers/reports.controller';
 
 // ── Services ───────────────────────────────────────────────────
-import { UtilisateursService } from './services/utilisateurs.service';
-import { AuditLogService }     from './services/audit-log.service';
-import { ReportsService }      from './services/reports.service';
-import { AdminsService }       from './services/admins.service';
+import { UtilisateursService }     from './services/utilisateurs.service';
+import { AuditLogService }         from './services/audit-log.service';
+import { ReportsService }          from './services/reports.service';
+import { AdminsService }           from './services/admins.service';
+import { PlatformSettingsService } from './services/platform-settings.service';
 
 @Module({
   imports: [
     // ① Entités nécessaires à ce module
     TypeOrmModule.forFeature([
-      User,        // pour UtilisateursService
-      Category,    // pour les stats par catégorie (futur)
-      SubCategory, // idem
-      AuditLog,    // pour AuditLogService
-      Report,      // pour ReportsService
-      Admin,       // pour AdminsService
+      User,             // pour UtilisateursService
+      Category,         // pour les stats par catégorie (futur)
+      SubCategory,      // idem
+      AuditLog,         // pour AuditLogService
+      Report,           // pour ReportsService
+      Admin,            // pour AdminsService
+      PlatformSettings, // pour PlatformSettingsService
     ]),
 
     // ② Module catégories complet
@@ -88,15 +91,11 @@ import { AdminsService }       from './services/admins.service';
   ],
 
   providers: [
-    // UtilisateursService est injecté dans :
-    //   - UtilisateursController
-    //   - SuperAdminController (pour getOverview)
     UtilisateursService,
-
-    // Services de modération
     AuditLogService,
     ReportsService,
     AdminsService,
+    PlatformSettingsService,
   ],
 
   exports: [

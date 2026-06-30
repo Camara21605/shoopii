@@ -33,6 +33,12 @@ export interface PublicProduitResponse {
   companyId:   string;
   companyName: string;
   companyLogo: string | null;
+  /* ── Politique de livraison ── */
+  livraisonStandard:      boolean;
+  livraisonLivreur:       boolean;
+  livraisonCorrespondant: boolean;
+  fraisLivraisonLocal:    number | null;
+  delaiLivraison:         string;
 }
 
 /* ✅ NOUVEAU — format retourné par getSimilaires */
@@ -344,6 +350,12 @@ export class PublicService {
       companyId:   p.companyId,
       companyName: company?.companyName ?? '',
       companyLogo: company?.logo        ?? null,
+      /* Politique de livraison — telle que configurée par la boutique */
+      livraisonStandard:      p.livraisonStandard      ?? true,
+      livraisonLivreur:       p.livraisonLivreur        ?? true,
+      livraisonCorrespondant: p.livraisonCorrespondant  ?? false,
+      fraisLivraisonLocal:    p.fraisLivraisonLocal     ?? null,
+      delaiLivraison:         p.delaiLivraison          ?? '1-3 jours',
     };
   }
 

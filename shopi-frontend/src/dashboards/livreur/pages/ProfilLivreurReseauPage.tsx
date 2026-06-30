@@ -6,11 +6,12 @@ import React from 'react';
 import { useLivreurProfile } from '../../../shared/profils/profil-livreur/hooks/useLivreurProfile';
 import ProfilHeader   from '../../../shared/profils/profil-livreur/components/ProfilHeader';
 import ProfilTabs     from '../../../shared/profils/profil-livreur/components/ProfilTabs';
-import TabInfo        from '../../../shared/profils/profil-livreur/components/TabInfo';
-import TabVehicule    from '../../../shared/profils/profil-livreur/components/TabVehicule';
-import TabZones       from '../../../shared/profils/profil-livreur/components/TabZones';
-import TabTarifs      from '../../../shared/profils/profil-livreur/components/TabTarifs';
-import TabPlaceholder from '../../../shared/profils/profil-livreur/components/TabPlaceholder';
+import TabInfo          from '../../../shared/profils/profil-livreur/components/TabInfo';
+import TabVehicule      from '../../../shared/profils/profil-livreur/components/TabVehicule';
+import TabZones         from '../../../shared/profils/profil-livreur/components/TabZones';
+import TabTarifs        from '../../../shared/profils/profil-livreur/components/TabTarifs';
+import TabPlaceholder   from '../../../shared/profils/profil-livreur/components/TabPlaceholder';
+import TabLocalisation  from '../../../shared/profils/profil-livreur/components/TabLocalisation';
 import ProfilSidebar  from '../../../shared/profils/profil-livreur/components/ProfilSidebar';
 import styles from '../../../shared/profils/profil-livreur/styles/ProfilLivreur.module.css';
 import shared from '../styles/Shared.module.css';
@@ -79,15 +80,16 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel =
           <div>
             <ProfilTabs active={tab} onChange={setTab} avisCount={profile.reviewsCount} />
 
-            {tab === 'info'       && <TabInfo     profile={profile} />}
-            {tab === 'vehicule'   && <TabVehicule profile={profile} />}
-            {tab === 'zones'      && <TabZones    profile={profile} />}
-            {tab === 'tarifs'     && <TabTarifs   profile={profile} />}
-            {tab === 'avis'       && (
+            {tab === 'info'          && <TabInfo          profile={profile} />}
+            {tab === 'vehicule'      && <TabVehicule      profile={profile} />}
+            {tab === 'zones'         && <TabZones         profile={profile} />}
+            {tab === 'localisation'  && <TabLocalisation  profile={profile} />}
+            {tab === 'tarifs'        && <TabTarifs        profile={profile} />}
+            {tab === 'avis'          && (
               <TabPlaceholder icon="fa-star" title={`Avis (${profile.reviewsCount})`}
                 text="Les avis clients seront affichés ici prochainement." />
             )}
-            {tab === 'historique' && (
+            {tab === 'historique'    && (
               <TabPlaceholder icon="fa-clock-rotate-left" title="Historique"
                 text="L'historique des livraisons sera affiché ici prochainement." />
             )}

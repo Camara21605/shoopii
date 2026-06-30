@@ -15,12 +15,13 @@ interface Props {
 }
 
 const TABS: { id: ProfilTab; icon: string; label: string }[] = [
-  { id: 'info',        icon: 'fa-user',               label: 'Infos'      },
-  { id: 'vehicule',    icon: 'fa-motorcycle',         label: 'Véhicule'   },
-  { id: 'zones',       icon: 'fa-map',                label: 'Zones'      },
-  { id: 'tarifs',      icon: 'fa-tag',                label: 'Tarifs'     },
-  { id: 'avis',        icon: 'fa-star',               label: 'Avis'       },
-  { id: 'historique',  icon: 'fa-clock-rotate-left',  label: 'Historique' },
+  { id: 'info',          icon: 'fa-user',               label: 'Infos'         },
+  { id: 'vehicule',      icon: 'fa-motorcycle',         label: 'Véhicule'      },
+  { id: 'zones',         icon: 'fa-map',                label: 'Zones'         },
+  { id: 'localisation',  icon: 'fa-location-dot',       label: 'Localisation'  },
+  { id: 'tarifs',        icon: 'fa-tag',                label: 'Tarifs'        },
+  { id: 'avis',          icon: 'fa-star',               label: 'Avis'          },
+  { id: 'historique',    icon: 'fa-clock-rotate-left',  label: 'Historique'    },
 ];
 
 export default function ProfilTabs({ active, onChange, avisCount }: Props) {

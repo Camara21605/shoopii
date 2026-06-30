@@ -45,4 +45,4 @@ export interface LivreurProfile {
 }
 
 /** Onglets de la page. */
-export type ProfilTab = 'info' | 'vehicule' | 'zones' | 'tarifs' | 'avis' | 'historique';
+export type ProfilTab = 'info' | 'vehicule' | 'zones' | 'tarifs' | 'avis' | 'historique' | 'localisation';

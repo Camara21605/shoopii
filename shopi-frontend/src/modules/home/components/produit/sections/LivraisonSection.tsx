@@ -8,13 +8,14 @@
  *   - Fallback sur données mock si API vide
  * ================================================================ */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   GEO_DATA, SHOP_CONTINENT,
   SPEED_MUL, DIST_MUL, SPEED_ETA,
   type Livreur, type Correspondant,
   LIVREURS_DATA, CORRESPONDANTS as CORRESP_MOCK,
 } from '../data/produitMockData';
+import type { DistZone, SpeedKey } from '../data/produitMockData';
 import { produitApi, type LivreurApi, type CorrespondantApi } from '../api/produit.api';
 import styles from '../styles/LivraisonSection.module.css';
 
@@ -29,14 +30,23 @@ export interface LivraisonState {
   distZone:        'local' | 'near' | 'far';
 }
 
+export interface LivraisonPolicy {
+  standard:      boolean;  // livraisonStandard du produit
+  livreur:       boolean;  // livraisonLivreur du produit
+  correspondant: boolean;  // livraisonCorrespondant du produit
+  fraisLocal?:   number | null;
+  delai?:        string;
+}
+
 interface Props {
   onChange: (state: LivraisonState) => void;
   onToast:  (m: string) => void;
+  policy?:  LivraisonPolicy;  // filtre les modes selon la config produit
 }
 
 /* ── Helpers ── */
 function calcFee(baseFee: number, distZone: string, speed: string): number {
-  return Math.round(baseFee * (DIST_MUL[distZone] || 1) * (SPEED_MUL[speed] || 1) / 1000) * 1000;
+  return Math.round(baseFee * (DIST_MUL[distZone as DistZone] || 1) * (SPEED_MUL[speed as SpeedKey] || 1) / 1000) * 1000;
 }
 function getDistZone(ville: string, pays: string): 'local' | 'near' | 'far' {
   if (pays !== 'GN') return 'far';
@@ -63,14 +73,21 @@ function toCorrespondant(c: CorrespondantApi): Correspondant {
     online: c.online, baseFee: c.baseFee };
 }
 
-const SPEED_OPTIONS = [
-  { key:'eco',      icon:'🐢', label:'Économique', mul:'×1.0' },
-  { key:'standard', icon:'🚴', label:'Standard',   mul:'×1.3' },
-  { key:'express',  icon:'🚀', label:'Express',    mul:'×1.8' },
-  { key:'ultra',    icon:'⚡', label:'Ultra',      mul:'×2.5' },
+const SPEED_OPTIONS: { key: SpeedKey; icon: string; label: string; mul: string }[] = [
+  { key: 'eco',      icon: '🐢', label: 'Économique', mul: '×1.0' },
+  { key: 'standard', icon: '🚴', label: 'Standard',   mul: '×1.3' },
+  { key: 'express',  icon: '🚀', label: 'Express',    mul: '×1.8' },
+  { key: 'ultra',    icon: '⚡', label: 'Ultra',      mul: '×2.5' },
 ];
 
-export default function LivraisonSection({ onChange, onToast }: Props) {
+export default function LivraisonSection({ onChange, onToast, policy }: Props) {
+  /* ── Politique de livraison du produit (défauts permissifs) ── */
+  const allowStandard      = policy?.standard      ?? true;
+  const allowLivreur       = policy?.livreur        ?? true;
+  const allowCorrespondant = policy?.correspondant  ?? false;
+  const fraisStandard      = policy?.fraisLocal     ?? null;
+  const delaiStandard      = policy?.delai          ?? null;
+  const noModeAvailable    = !allowStandard && !allowLivreur && !allowCorrespondant;
   const [cont,      setCont]      = useState('');
   const [pays,      setPays]      = useState('');
   const [ville,     setVille]     = useState('');
@@ -80,7 +97,7 @@ export default function LivraisonSection({ onChange, onToast }: Props) {
   const [selCorr,   setSelCorr]   = useState<Correspondant|null>(null);
   const [delMode,   setDelMode]   = useState<'standard'|'livreur'|null>(null);
   const [selLvr,    setSelLvr]    = useState<Livreur|null>(null);
-  const [speed,     setSpeed]     = useState('standard');
+  const [speed,     setSpeed]     = useState<SpeedKey>('standard');
 
   /* Données API */
   const [livreurs,       setLivreurs]       = useState<Livreur[]>([]);
@@ -160,8 +177,8 @@ export default function LivraisonSection({ onChange, onToast }: Props) {
     onToast(`✅ ${l.name} — ${fee.toLocaleString('fr')} GNF`);
     notify({ selectedLvr:l });
   }
-  function handleSpeed(s: string) {
-    setSpeed(s); notify({ currentSpeed:s });
+  function handleSpeed(s: SpeedKey) {
+    setSpeed(s); notify({ currentSpeed: s });
   }
 
   const distBadge = ville ? getDistBadge(isIntl, distZ) : null;
@@ -210,8 +227,24 @@ export default function LivraisonSection({ onChange, onToast }: Props) {
         )}
       </div>
 
-      {/* ÉTAPE 2 — Correspondant (si international) */}
-      {isIntl && ville && (
+      {/* Message si aucun mode disponible */}
+      {ville && noModeAvailable && (
+        <div style={{
+          margin: '12px 0', padding: '14px 18px',
+          background: 'rgba(220,38,38,.06)', border: '1.5px solid rgba(220,38,38,.2)',
+          borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10,
+          fontSize: 13, color: '#B91C1C', fontWeight: 600,
+        }}>
+          <i className="fas fa-circle-xmark" style={{ fontSize: 16, flexShrink: 0 }} />
+          <span>
+            Aucun mode de livraison disponible pour ce produit.
+            Contactez directement la boutique pour organiser la livraison.
+          </span>
+        </div>
+      )}
+
+      {/* ÉTAPE 2 — Correspondant (si international ET autorisé) */}
+      {isIntl && ville && allowCorrespondant && (
         <div className={styles.step}>
           <div className={styles.stepTitle}>
             <span className={styles.stepNum}>2</span>
@@ -280,19 +313,29 @@ export default function LivraisonSection({ onChange, onToast }: Props) {
           </div>
 
           <div className={styles.modeGrid}>
-            <div className={`${styles.modeOpt} ${delMode === 'standard' ? styles.modeOptSel : ''}`}
-              onClick={() => handleDelMode('standard')}>
-              <div className={styles.modeOptTop}>
-                <div className={`${styles.modeRadio} ${delMode === 'standard' ? styles.modeRadioOn : ''}`} />
-                <div className={styles.modeIco}>🚚</div>
-                <div><div className={styles.modeTitle}>Livraison standard</div><div className={styles.modeSub}>Gérée par la boutique</div></div>
+            {/* Standard — affiché uniquement si la boutique l'autorise */}
+            {allowStandard && (
+              <div className={`${styles.modeOpt} ${delMode === 'standard' ? styles.modeOptSel : ''}`}
+                onClick={() => handleDelMode('standard')}>
+                <div className={styles.modeOptTop}>
+                  <div className={`${styles.modeRadio} ${delMode === 'standard' ? styles.modeRadioOn : ''}`} />
+                  <div className={styles.modeIco}>🚚</div>
+                  <div><div className={styles.modeTitle}>Livraison standard</div><div className={styles.modeSub}>Gérée par la boutique</div></div>
+                </div>
+                <span className={`${styles.modePrix} ${styles.modePrixGreen}`}>
+                  {fraisStandard && fraisStandard > 0
+                    ? `${fraisStandard.toLocaleString('fr-FR')} GNF`
+                    : 'Gratuite'
+                  }
+                </span>
+                <div className={styles.modeDel}>
+                  <i className="fas fa-calendar" /> {delaiStandard ?? 'Délai selon la distance'}
+                </div>
               </div>
-              <span className={`${styles.modePrix} ${styles.modePrixGreen}`}>Gratuite</span>
-              <div className={styles.modeDel}><i className="fas fa-calendar" /> Délai selon la distance</div>
-            </div>
+            )}
 
-            {/* Option livreur — masquée si aucun livreur disponible */}
-            {(livreurs.length > 0 || loadingLvr) && (
+            {/* Livreur — affiché uniquement si la boutique l'autorise ET des livreurs sont dispo */}
+            {allowLivreur && (livreurs.length > 0 || loadingLvr) && (
               <div className={`${styles.modeOpt} ${delMode === 'livreur' ? styles.modeOptSel : ''}`}
                 onClick={() => !loadingLvr && handleDelMode('livreur')}>
                 <div className={styles.modeOptTop}>
@@ -326,7 +369,7 @@ export default function LivraisonSection({ onChange, onToast }: Props) {
               <div className={styles.speedSel}>
                 {SPEED_OPTIONS.map(s => (
                   <button key={s.key} className={`${styles.speedBtn} ${speed === s.key ? styles.speedBtnActive : ''}`}
-                    onClick={() => handleSpeed(s.key)}>
+                    onClick={() => handleSpeed(s.key as SpeedKey)}>
                     <span className={styles.speedIcon}>{s.icon}</span>
                     <span className={styles.speedName}>{s.label}</span>
                     <span className={styles.speedMul}>{s.mul}</span>

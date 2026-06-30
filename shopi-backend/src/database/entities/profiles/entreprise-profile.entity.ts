@@ -186,6 +186,14 @@ export class Company {
   status!: CompanyStatus;
 
   /**
+   * Date de réactivation automatique après une désactivation volontaire (J+30).
+   * NULL = pas de désactivation temporaire en cours.
+   * Le cron ExpiryCronService lit ce champ pour réactiver automatiquement.
+   */
+  @Column({ type: 'timestamp', nullable: true })
+  suspendedUntil!: Date | null;
+
+  /**
    * ✅ NOUVEAU — Slogan court affiché sous le nom.
    * Ex : "Fraîcheur garantie depuis 2019"
    */
@@ -236,6 +244,13 @@ export class Company {
    */
   @Column({ type: 'varchar', length: 100, nullable: true })
   commune!: string | null;
+
+  /**
+   * Quartier au sein de la commune.
+   * Ex : "Almamya", "Coronthie", "Madina"
+   */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  quartier!: string | null;
 
   /**
    * ✅ NOUVEAU — Ville.

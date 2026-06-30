@@ -53,6 +53,7 @@ export default function MessagerieCore() {
     duration,
     isMuted,
     isVideoOff,
+    isSpeakerOn,
     localMediaStream,
     remoteMediaStream,
     startCall,
@@ -61,6 +62,7 @@ export default function MessagerieCore() {
     hangUp,
     toggleMute,
     toggleVideo,
+    toggleSpeaker,
     flipCamera,
   } = useAudioCall({
     onCallEvent: (event) => {
@@ -78,12 +80,15 @@ export default function MessagerieCore() {
    * Démarre un appel audio vers l'utilisateur actif.
    * Résout le userId depuis le token JWT du profil actif.
    */
-  /** Résout le userId du contact depuis les champs dénormalisés de la conv */
+  /**
+   * Résout le userId (JWT) du destinataire pour le signaling WebRTC.
+   * ⚠️ NE PAS utiliser activeUser.id : c'est l'ID du profil (entreprise/
+   * livreur/...), pas l'ID User. Les rooms Socket.IO sont `user:{userId}`
+   * (rempli depuis le JWT côté backend) — seul activeUser.userId matche.
+   */
   const getRemoteUserId = () => {
     if (!activeConv || !activeUser) return null;
-    return (activeConv as any).recipientUserId
-        ?? (activeConv as any).initiatorUserId
-        ?? activeUser.id;
+    return activeUser.userId ?? null;
   };
 
   const handleCall = () => {
@@ -185,6 +190,7 @@ export default function MessagerieCore() {
           duration={duration}
           isMuted={isMuted}
           isVideoOff={isVideoOff}
+          isSpeakerOn={isSpeakerOn}
           localMediaStream={localMediaStream}
           remoteMediaStream={remoteMediaStream}
           onAccept={acceptCall}
@@ -192,6 +198,7 @@ export default function MessagerieCore() {
           onHangUp={hangUp}
           onToggleMute={toggleMute}
           onToggleVideo={toggleVideo}
+          onToggleSpeaker={toggleSpeaker}
           onFlipCamera={flipCamera}
         />
       )}

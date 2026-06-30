@@ -7,7 +7,8 @@
 
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository }       from 'typeorm';
+import { PlatformSettings } from '../../../database/entities/platform-settings.entity';
 
 import { User } from '../../../database/entities/user.entity';
 import { PanierItem } from '../../../database/entities/panier-item.entity';
@@ -36,7 +37,8 @@ export class CommandeCreationService {
     @InjectRepository(Client) private readonly clientRepo: Repository<Client>,
     @InjectRepository(Company) private readonly companyRepo: Repository<Company>,
     @InjectRepository(Delivery) private readonly deliveryRepo: Repository<Delivery>,
-    @InjectRepository(Correspondent) private readonly correspondantRepo: Repository<Correspondent>,
+    @InjectRepository(Correspondent)       private readonly correspondantRepo:     Repository<Correspondent>,
+    @InjectRepository(PlatformSettings)   private readonly platformSettingsRepo:  Repository<PlatformSettings>,
   ) {}
 
   /* ════════════════════════════════════════════════════════
@@ -85,10 +87,16 @@ export class CommandeCreationService {
       if (delivery) modeLivraison = ModeLivraison.LIVREUR;
       else if (correspondant) modeLivraison = ModeLivraison.CORRESPONDANT;
 
-      const sousTotal = items.reduce((s, pi) => s + readPrix(pi.produit) * pi.qty, 0);
+      const sousTotal      = items.reduce((s, pi) => s + readPrix(pi.produit) * pi.qty, 0);
       const fraisLivraison = 0;
-      const commissionShopi = Math.round(sousTotal * 0.03);
-      const total = sousTotal + fraisLivraison;
+
+      /* Taux de commission lu depuis PlatformSettings (défaut 3 % si table vide) */
+      const platformSettings  = await this.platformSettingsRepo.findOne({ where: { id: 1 } });
+      const commissionRate    = platformSettings
+        ? Number(platformSettings.platformCommission) / 100
+        : 0.03;
+      const commissionShopi   = Math.round(sousTotal * commissionRate);
+      const total             = sousTotal + fraisLivraison;
 
       const commande = this.commandeRepo.create({
         numero: await this.genererNumero(),

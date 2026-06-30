@@ -30,9 +30,10 @@ import { PromotionsModule } from './modules/promotions/promotions.module';
 import { PublicModule }     from './modules/public/public.module';
 import { WalletModule }     from './modules/wallet/wallet.module';
 import { CommandeModule }   from './modules/commande/commande.module';
-import { SuivisModule }      from './modules/suivis/suivis.module';
+import { SuivisModule }     from './modules/suivis/suivis.module';
 import { MessagerieModule } from './modules/messagerie/messagerie.module';
 import { LocationModule }   from './modules/location/location.module';
+import { JobsModule }       from './jobs/jobs.module';
 
 @Module({
   imports: [
@@ -154,7 +155,7 @@ import { LocationModule }   from './modules/location/location.module';
       },
     }),
 
-    /* ── 5. ✅ SuivisModule — EN DERNIER ── */
+    /* ── 5. ✅ SuivisModule — APRÈS Redis + BullMQ ── */
     /*
      * SuivisModule dépend de :
      *   - @InjectRedis()        → fourni par RedisModule ci-dessus
@@ -163,6 +164,15 @@ import { LocationModule }   from './modules/location/location.module';
      * Ces providers doivent être enregistrés AVANT ce module.
      */
     SuivisModule,
+
+    /* ── 6. JobsModule — tâches cron ── */
+    /*
+     * Contient ScheduleModule.forRoot() + ExpiryCronService.
+     * Tâches actives :
+     *   - Chaque heure : expire codes d'invitation périmés
+     *   - Chaque jour  : réactive comptes livreur/entreprise (J+30)
+     */
+    JobsModule,
   ],
 })
 export class AppModule {}

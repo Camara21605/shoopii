@@ -17,6 +17,7 @@ import { Company } from '../../database/entities/profiles/entreprise-profile.ent
 import { Delivery } from '../../database/entities/profiles/livreur-profile.entity';
 import { Correspondent } from '../../database/entities/profiles/correspondant-profile.entity';
 import { CompanyAvis }   from '../../database/entities/entreprise.table/company-avis.entity';
+import { PlatformSettings } from '../../database/entities/platform-settings.entity';
 
 import {
   ClientCommandeController, CommandeController, EntrepriseCommandeController,
@@ -41,6 +42,7 @@ import { CommandeFeedbackService } from './services/commande-feedback.service';
       Delivery,
       Correspondent,
       CompanyAvis,
+      PlatformSettings,
     ]),
   ],
   controllers: [

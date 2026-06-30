@@ -3,7 +3,7 @@
 
 export type ParamSectionId =
   | 'profil' | 'docs' | 'zone' | 'vitesses' | 'vehicule'
-  | 'paiement' | 'securite' | 'notifs' | 'confidentialite' | 'danger';
+  | 'paiement' | 'securite' | 'notifs' | 'confidentialite' | 'langue' | 'danger';
 
 export const PARAM_SECTION_META: Record<ParamSectionId, { title: string; sub: string }> = {
   profil:          { title: 'Profil personnel',        sub: 'Informations publiques et photo'            },

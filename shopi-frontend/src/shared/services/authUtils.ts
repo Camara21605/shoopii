@@ -26,7 +26,12 @@ export function getRoleFromToken(): string | null {
   } catch { return null; }
 }
 
-/** Retourne le chemin du dashboard selon le rôle */
+/**
+ * Retourne le chemin du dashboard selon le rôle.
+ * 'client' et les rôles inconnus renvoient '/home' — le dashboard
+ * client (/dashboard/client) n'est qu'un stub technique (portefeuille
+ * autonome), la vraie destination du client est toujours la home.
+ */
 export function getDashboardPath(role: string | null): string {
   switch (role) {
     case 'super_admin':   return '/dashboard/super-admin';
@@ -35,7 +40,6 @@ export function getDashboardPath(role: string | null): string {
     case 'partner':       return '/dashboard/partenaire';
     case 'delivery':      return '/dashboard/livreur';
     case 'correspondent': return '/dashboard/correspondant';
-    case 'client':        return '/dashboard/client';
     default:              return '/home';
   }
 }

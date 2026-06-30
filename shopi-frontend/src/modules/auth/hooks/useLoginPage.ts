@@ -31,11 +31,13 @@ const ROLE_MAP: Record<string, UserRole> = {
   client: 'client',
 };
 
+/* 'client' n'est volontairement pas mappé ici : le dashboard client
+   (/dashboard/client) n'est qu'un stub technique, la vraie destination
+   du client après connexion/inscription est toujours '/home' (fallback ?? ci-dessous). */
 const ROLE_ROUTES: Record<string, string> = {
   super_admin: '/dashboard/super-admin', admin: '/dashboard/admin',
   company: '/dashboard/entreprise',      delivery: '/dashboard/livreur',
   partner: '/dashboard/partenaire',      correspondent: '/dashboard/correspondant',
-  client: '/dashboard/client',
 };
 
 interface UseLoginPageOptions {
@@ -203,7 +205,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
       setUser(res.user);
       setSuccessAction('Connexion');
       setShowSuccess(true);
-      setTimeout(() => navigate(ROLE_ROUTES[res.user.role] ?? '/dashboard'), 1500);
+      setTimeout(() => navigate(ROLE_ROUTES[res.user.role] ?? '/home'), 1500);
     } catch (err) {
       const msg = err instanceof ApiError
         ? err.message
@@ -227,7 +229,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
       setUser(res.user);
       setSuccessAction('Inscription');
       setShowSuccess(true);
-      setTimeout(() => navigate(ROLE_ROUTES[res.user.role] ?? '/dashboard'), 1500);
+      setTimeout(() => navigate(ROLE_ROUTES[res.user.role] ?? '/home'), 1500);
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : "Erreur lors de l'inscription.";
       if (msg.toLowerCase().includes('code'))

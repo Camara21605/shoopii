@@ -152,6 +152,9 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [loadingProd, setLoadingProd] = useState(false); // chargement du produit existant
 
+  // ── Taux de commission plateforme (chargé depuis l'API) ──────────────────
+  const [commissionPct, setCommissionPct] = useState<number>(3); // défaut 3 % en attendant
+
   // ── Catégories ────────────────────────────────────────────────────────────
   const [categoriesApi,   setCategoriesApi]   = useState<CategorieApi[]>([]);
   const [chargementCats,  setChargementCats]  = useState(true);
@@ -177,6 +180,20 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   const [uploadEnCours, setUploadEnCours] = useState(false);
   const [enChargement,  setEnChargement] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ─────────────────────────────────────────────────────────────
+  // useEffect 0 — Charge le taux de commission plateforme
+  // ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    fetch(`${API}/dashboard/entreprise/commission-rate`, {
+      headers: { Authorization: `Bearer ${getToken()}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { percentage: number } | null) => {
+        if (data?.percentage != null) setCommissionPct(data.percentage);
+      })
+      .catch(() => { /* garde la valeur par défaut 3 % */ });
+  }, []);
 
   // ─────────────────────────────────────────────────────────────
   // useEffect 1 — Charge les catégories depuis l'API
@@ -1339,8 +1356,8 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                   {[
                     { l: 'Prix de vente',        v: `${prixNum.toLocaleString('fr-FR')} GNF`, c: 'var(--navy)'    },
-                    { l: 'Commission Shopi (3%)', v: `-${Math.round(prixNum * 0.03).toLocaleString('fr-FR')} GNF`, c: 'var(--rose)'    },
-                    { l: 'Revenu net estimé',     v: `${Math.round(prixNum * 0.97).toLocaleString('fr-FR')} GNF`,  c: 'var(--emerald)' },
+                    { l: `Commission Shopi (${commissionPct}%)`, v: `-${Math.round(prixNum * commissionPct / 100).toLocaleString('fr-FR')} GNF`, c: 'var(--rose)'    },
+                    { l: 'Revenu net estimé',                    v: `${Math.round(prixNum * (1 - commissionPct / 100)).toLocaleString('fr-FR')} GNF`,  c: 'var(--emerald)' },
                   ].map((s, i) => (
                     <div key={i} style={{ padding: '12px 14px', background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-md)', textAlign: 'center' }}>
                       <div style={{ fontSize: 10, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 5 }}>{s.l}</div>

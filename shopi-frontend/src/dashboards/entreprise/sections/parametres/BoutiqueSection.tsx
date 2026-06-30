@@ -6,10 +6,13 @@
  * ✅ Plus de styles inline sur les images
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
+import {
+  VILLES_SORTED, getCommunesByVille, getQuartiersByCommune,
+} from '../../../../shared/location/data/geo-guinee';
 
 // ─────────────────────────────────────────────────────────────
 // PROPS
@@ -53,9 +56,24 @@ export default function BoutiqueSection({
   const [whatsapp,      setWhatsapp]      = useState('');
   const [adresse,       setAdresse]       = useState('');
   const [commune,       setCommune]       = useState('');
+  const [quartier,      setQuartier]      = useState('');
   const [ville,         setVille]         = useState('');
   const [pays,          setPays]          = useState('GN');
   const [repere,        setRepere]        = useState('');
+
+  /* ── Cascades ville → commune → quartier ── */
+  const communes  = useMemo(() => pays === 'GN' ? getCommunesByVille(ville) : [], [ville, pays]);
+  const quartiers = useMemo(() => pays === 'GN' && commune ? getQuartiersByCommune(ville, commune) : [], [ville, commune, pays]);
+
+  const handleVilleChange = (v: string) => {
+    setVille(v);
+    setCommune('');
+    setQuartier('');
+  };
+  const handleCommuneChange = (c: string) => {
+    setCommune(c);
+    setQuartier('');
+  };
 
   // ── Refs inputs file cachés ───────────────────────────────
   const logoInputRef  = useRef<HTMLInputElement>(null);
@@ -76,6 +94,7 @@ export default function BoutiqueSection({
     setWhatsapp(data.whatsapp           ?? '');
     setAdresse(data.adresse             ?? '');
     setCommune(data.commune             ?? '');
+    setQuartier((data as any).quartier  ?? '');
     setVille(data.ville                 ?? '');
     setPays(data.pays                   ?? 'GN');
     setRepere(data.repere               ?? '');
@@ -106,7 +125,7 @@ export default function BoutiqueSection({
 
   async function handleSaveContact() {
     try {
-      await saveContact({ businessPhone, businessEmail, whatsapp, adresse, commune, ville, pays, repere });
+      await saveContact({ businessPhone, businessEmail, whatsapp, adresse, commune, quartier, ville, pays, repere } as any);
       onToast('✅ Contact sauvegardé avec succès', 's');
     } catch {
       onToast('❌ Erreur lors de la sauvegarde', 'e');
@@ -489,44 +508,88 @@ export default function BoutiqueSection({
           </div>
         </div>
 
+        {/* ── VILLE ── */}
         <div className={s.fg}>
-          <div className={s.fl}>Adresse physique</div>
+          <div className={s.fl}>Ville <span style={{ color: 'var(--rose)' }}>*</span></div>
           <div className={s.fw}>
-            <i className={`fas fa-location-dot ${s.fi}`} />
-            <input className={s.fin} value={adresse}
-              onChange={e => { setAdresse(e.target.value); onDirty(); }}
-              placeholder="Ex : Avenue de la République, Kaloum" />
+            <i className={`fas fa-map-location-dot ${s.fi}`} />
+            {pays === 'GN' ? (
+              <select className={`${s.fin} ${s.finSelect}`}
+                value={ville}
+                onChange={e => { handleVilleChange(e.target.value); onDirty(); }}>
+                <option value="">— Choisir une ville —</option>
+                {VILLES_SORTED.map(v => (
+                  <option key={v.slug} value={v.nom}>{v.nom} ({v.region})</option>
+                ))}
+              </select>
+            ) : (
+              <input className={s.fin} value={ville}
+                onChange={e => { setVille(e.target.value); onDirty(); }}
+                placeholder="Ex : Conakry" />
+            )}
           </div>
         </div>
 
-        <div className={s.grid2}>
+        {/* ── COMMUNE (si ville sélectionnée et pays = GN) ── */}
+        {pays === 'GN' && communes.length > 0 && (
           <div className={s.fg}>
-            <div className={s.fl}>Commune</div>
+            <div className={s.fl}>Commune / Arrondissement <span style={{ color: 'var(--rose)' }}>*</span></div>
             <div className={s.fw}>
               <i className={`fas fa-city ${s.fi}`} />
               <select className={`${s.fin} ${s.finSelect}`}
                 value={commune}
-                onChange={e => { setCommune(e.target.value); onDirty(); }}>
-                <option value="">Sélectionner…</option>
-                {['Kaloum','Dixinn','Ratoma','Matam','Matoto'].map(c => (
-                  <option key={c} value={c}>{c}</option>
+                onChange={e => { handleCommuneChange(e.target.value); onDirty(); }}>
+                <option value="">— Choisir une commune —</option>
+                {communes.map(c => (
+                  <option key={c.nom} value={c.nom}>{c.nom}</option>
                 ))}
               </select>
             </div>
           </div>
+        )}
+
+        {/* ── QUARTIER (si commune sélectionnée) ── */}
+        {pays === 'GN' && quartiers.length > 0 && (
           <div className={s.fg}>
-            <div className={s.fl}>Ville</div>
+            <div className={s.fl}>Quartier <span style={{ color: 'var(--rose)' }}>*</span></div>
             <div className={s.fw}>
-              <i className={`fas fa-building ${s.fi}`} />
-              <input className={s.fin} value={ville}
-                onChange={e => { setVille(e.target.value); onDirty(); }}
-                placeholder="Ex : Conakry" />
+              <i className={`fas fa-map-pin ${s.fi}`} />
+              <select className={`${s.fin} ${s.finSelect}`}
+                value={quartier}
+                onChange={e => { setQuartier(e.target.value); onDirty(); }}>
+                <option value="">— Choisir un quartier —</option>
+                {quartiers.map(q => (
+                  <option key={q} value={q}>{q}</option>
+                ))}
+              </select>
             </div>
+          </div>
+        )}
+
+        {/* Résumé localisation */}
+        {ville && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', background: 'rgba(26,79,196,.06)', borderRadius: 9, padding: '7px 12px', marginBottom: 4 }}>
+            <i className="fas fa-map-pin" style={{ color: 'var(--blue)', fontSize: 11 }} />
+            <span style={{ fontSize: 12, color: 'var(--t2)', fontWeight: 600 }}>
+              {[quartier, commune, ville].filter(Boolean).join(' · ')}
+            </span>
+          </div>
+        )}
+
+        {/* ── ADRESSE PHYSIQUE ── */}
+        <div className={s.fg}>
+          <div className={s.fl}>Adresse physique <span style={{ fontWeight: 400, color: 'var(--t3)' }}>(rue, numéro…)</span></div>
+          <div className={s.fw}>
+            <i className={`fas fa-location-dot ${s.fi}`} />
+            <input className={s.fin} value={adresse}
+              onChange={e => { setAdresse(e.target.value); onDirty(); }}
+              placeholder="Ex : Avenue de la République, face au Grand Marché" />
           </div>
         </div>
 
+        {/* ── REPÈRE ── */}
         <div className={s.fg}>
-          <div className={s.fl}>Repère / indication pour les livreurs</div>
+          <div className={s.fl}>Repère pour les livreurs</div>
           <div className={s.fw}>
             <i className={`fas fa-comment-dots ${s.fi}`} />
             <input className={s.fin} value={repere}

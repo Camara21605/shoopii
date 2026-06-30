@@ -192,7 +192,7 @@ export class MailService implements OnModuleInit {
 
     await this.send({
       to:      toEmail,
-      subject: `${senderName} vous a ajouté à l'équipe Shopi (${roleMeta.label})`,
+      subject: `Votre accès Shopi — ${roleMeta.label}`,
       html:    this.buildInvitationHtml({ toEmail, code, roleMeta, registerUrl, expiryFormatted, senderName }),
       text:    this.buildInvitationText({ code, roleMeta, registerUrl, expiryFormatted, senderName }),
     });
@@ -363,18 +363,10 @@ export class MailService implements OnModuleInit {
         html:       opts.html,
         text:       opts.text,
         /*
-         * Headers anti-spam essentiels :
-         * - X-Mailer         : identifie l'expéditeur (réduit le score spam)
-         * - X-Priority       : 3 = normal (1 = urgent → spam trigger)
-         * - Precedence: bulk → indique que c'est un email automatique
-         * - List-Unsubscribe : exigé par Gmail/Yahoo depuis 2024 pour les emails en masse
+         * Pas de headers "bulk" pour les emails transactionnels (invitations).
+         * - Precedence:bulk et X-Priority déclenchent les filtres spam.
+         * - List-Unsubscribe est réservé aux newsletters, pas aux invitations.
          */
-        headers: {
-          'X-Mailer':        'Shopi Mailer 1.0',
-          'X-Priority':      '3',
-          'Precedence':      'bulk',
-          'List-Unsubscribe': `<mailto:${this.fromEmail}?subject=unsubscribe>`,
-        },
       });
       this.logger.debug(`[SMTP] ✉ Envoyé à ${opts.to} | messageId: ${info.messageId} | response: ${info.response}`);
     } catch (err: any) {

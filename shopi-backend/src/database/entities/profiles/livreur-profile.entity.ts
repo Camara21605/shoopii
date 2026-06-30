@@ -226,6 +226,14 @@ export class Delivery {
   @Column({ type: 'enum', enum: DeliveryStatus, default: DeliveryStatus.PENDING })
   status!: DeliveryStatus;
 
+  /**
+   * Date de réactivation automatique après une désactivation volontaire (J+30).
+   * NULL = pas de désactivation temporaire en cours.
+   * Le cron ExpiryCronService lit ce champ pour réactiver automatiquement.
+   */
+  @Column({ type: 'timestamp', nullable: true })
+  suspendedUntil!: Date | null;
+
   @Column({ type: 'enum', enum: DeliveryAvailability, default: DeliveryAvailability.OFFLINE })
   availability!: DeliveryAvailability;
 

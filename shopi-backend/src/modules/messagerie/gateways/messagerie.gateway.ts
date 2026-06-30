@@ -195,21 +195,26 @@ export class MessagerieGateway
     // Retire le throttle
     this.typingThrottle.delete(socket.id);
 
-    // Met à jour la présence — isOffline=true si plus aucun socket
-    const isOffline = await this.presence.onDisconnect(userId, socket.id);
+    try {
+      // Met à jour la présence — isOffline=true si plus aucun socket
+      const isOffline = await this.presence.onDisconnect(userId, socket.id);
 
-    if (isOffline) {
-      const contactUserIds = await this.getContactUserIds(userId);
-      if (contactUserIds.length > 0) {
-        this.broadcast.presenceChanged(contactUserIds, {
-          userId,
-          online:   false,
-          lastSeen: new Date().toISOString(),
-        });
+      if (isOffline) {
+        const contactUserIds = await this.getContactUserIds(userId);
+        if (contactUserIds.length > 0) {
+          this.broadcast.presenceChanged(contactUserIds, {
+            userId,
+            online:   false,
+            lastSeen: new Date().toISOString(),
+          });
+        }
       }
-    }
 
-    this.logger.log(`🔌 Déconnecté user=${userId} socket=${socket.id}`);
+      this.logger.log(`🔌 Déconnecté user=${userId} socket=${socket.id}`);
+    } catch (err) {
+      // Une panne Redis/presence ne doit jamais faire planter le process.
+      this.logger.error(`❌ Erreur déconnexion socket=${socket.id}`, err);
+    }
   }
 
   // ─────────────────────────────────────────────────────────
@@ -333,7 +338,9 @@ export class MessagerieGateway
       callType?:      'audio' | 'video';
     },
   ): void {
-    this.server.to(`user:${body.calleeUserId}`).emit('call:incoming', {
+    const room = `user:${body.calleeUserId}`;
+    this.logger.log(`📞 call:initiate caller=${socket.data.userId} callee=${body.calleeUserId} sockets-in-room=${this.roomSize(room)}`);
+    this.server.to(room).emit('call:incoming', {
       conversationId: body.conversationId,
       callerUserId:   socket.data.userId,
       callerName:     body.callerName,
@@ -348,7 +355,9 @@ export class MessagerieGateway
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: { conversationId: string; callerUserId: string },
   ): void {
-    this.server.to(`user:${body.callerUserId}`).emit('call:accepted', {
+    const room = `user:${body.callerUserId}`;
+    this.logger.log(`✅ call:accept callee=${socket.data.userId} caller=${body.callerUserId} sockets-in-room=${this.roomSize(room)}`);
+    this.server.to(room).emit('call:accepted', {
       conversationId: body.conversationId,
       calleeUserId:   socket.data.userId,
     });
@@ -386,7 +395,9 @@ export class MessagerieGateway
       sdp:            RTCSessionDescriptionInit;
     },
   ): void {
-    this.server.to(`user:${body.targetUserId}`).emit('call:offer', {
+    const room = `user:${body.targetUserId}`;
+    this.logger.log(`🔄 call:offer from=${socket.data.userId} to=${body.targetUserId} sockets-in-room=${this.roomSize(room)}`);
+    this.server.to(room).emit('call:offer', {
       conversationId: body.conversationId,
       fromUserId:     socket.data.userId,
       sdp:            body.sdp,
@@ -403,7 +414,9 @@ export class MessagerieGateway
       sdp:            RTCSessionDescriptionInit;
     },
   ): void {
-    this.server.to(`user:${body.targetUserId}`).emit('call:answer', {
+    const room = `user:${body.targetUserId}`;
+    this.logger.log(`🔄 call:answer from=${socket.data.userId} to=${body.targetUserId} sockets-in-room=${this.roomSize(room)}`);
+    this.server.to(room).emit('call:answer', {
       conversationId: body.conversationId,
       fromUserId:     socket.data.userId,
       sdp:            body.sdp,
@@ -441,6 +454,20 @@ export class MessagerieGateway
   // ─────────────────────────────────────────────────────────
   // UTILITIES PRIVÉES
   // ─────────────────────────────────────────────────────────
+
+  /**
+   * Nombre de sockets actuellement dans une room (ex: 'user:{id}').
+   * 0 → aucun appareil connecté pour ce destinataire, l'emit est silencieux
+   * (Socket.IO n'erreure jamais sur une room vide). Utile pour diagnostiquer
+   * les signaux d'appel qui "partent" mais n'arrivent jamais.
+   */
+  private roomSize(room: string): number {
+    /* `this.server` est typé `Server` par Nest (où .adapter est une
+       surcharge de setter), mais à l'exécution c'est l'instance Namespace
+       du gateway, dont .adapter est bien l'instance avec .rooms. */
+    return (this.server as unknown as { adapter: { rooms: Map<string, Set<string>> } })
+      .adapter.rooms.get(room)?.size ?? 0;
+  }
 
   /** Extrait le token JWT depuis plusieurs sources possibles. */
   private extractToken(socket: AuthenticatedSocket): string | null {

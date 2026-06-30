@@ -1,5 +1,11 @@
-/* src/dashboards/livreur/styles/ParamNav.module.css */
+/* ================================================================
+ * ParamNav.module.css — Navigation secondaire paramètres livreur
+ * Desktop  : barre verticale sticky (224px)
+ * Tablette : barre horizontale wrappée
+ * Mobile   : barre horizontale défilante avec icône + label
+ * ================================================================ */
 
+/* ── Desktop (vertical) ───────────────────────────────────────── */
 .nav {
   background: var(--white);
   border: 1.5px solid var(--bdr);
@@ -13,12 +19,12 @@
 /* Retour dashboard */
 .back {
   display: flex; align-items: center; gap: 9px;
-  padding: 10px 11px; border-radius: var(--r-md);
+  padding: 10px 11px 13px;
+  border-radius: var(--r-md);
   font-size: 12px; font-weight: 600; color: var(--t3);
   cursor: pointer; transition: all .18s;
-  margin-bottom: 6px;
   border-bottom: 1px solid var(--bdr);
-  padding-bottom: 13px; margin-bottom: 8px;
+  margin-bottom: 8px;
 }
 .back:hover { color: var(--teal); }
 .back i { font-size: 11px; }
@@ -40,7 +46,6 @@
 }
 .item:hover { background: var(--sky); color: var(--navy); }
 
-/* Item actif */
 .on {
   background: var(--tl-bg);
   color: var(--teal);
@@ -54,33 +59,96 @@
   border-radius: 0 3px 3px 0;
 }
 
-/* Icônes */
 .icon { width: 15px; text-align: center; font-size: 13px; flex-shrink: 0; color: var(--t4); }
 .iconOn     { color: var(--teal) !important; }
 .iconDanger { color: var(--red, #DC2626) !important; }
 .dangerItem { color: var(--red, #DC2626) !important; }
 .dangerItem:hover { background: rgba(220,38,38,.06); }
 
-/* Point alerte */
 .dot { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .dotR { background: var(--red, #DC2626); }
 .dotA { background: var(--amber, #B45309); }
 
-/* Responsive tablet — nav devient barre horizontale */
+/* ── Tablette (≤960px) — barre horizontale wrappée ──────────── */
 @media (max-width: 960px) {
   .nav {
     position: static;
-    display: flex; flex-wrap: wrap; gap: 4px;
+    /* Scroll horizontal sur tablette/mobile */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
     padding: 8px;
   }
   .sect  { display: none; }
-  .back  { border-bottom: none; padding-bottom: 10px; margin-bottom: 0; }
-  .item  { padding: 7px 10px; font-size: 12px; }
+  .back  {
+    border-bottom: none;
+    padding-bottom: 10px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+  .item  { padding: 7px 11px; font-size: 12px; flex-shrink: 0; }
   .on::before { display: none; }
 }
+
+/* ── Mobile (≤640px) — scroll horizontal, icône + label visible ── */
 @media (max-width: 640px) {
-  .item span { display: none; }
-  .item  { padding: 9px; justify-content: center; }
-  .back span { display: none; }
-  .back  { padding: 9px; }
+  .nav {
+    /* Scroll horizontal avec snap — bien adapté tactile */
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 8px 6px;
+    gap: 5px;
+    border-radius: var(--r-lg);
+  }
+  .nav::-webkit-scrollbar { display: none; }
+
+  /* Retour : icône seule + label court */
+  .back {
+    padding: 7px 10px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    font-size: 11px;
+  }
+
+  /* Items : chips compacts avec icône + label court */
+  .item {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 10px;
+    min-width: 60px;
+    font-size: 10px;
+    text-align: center;
+    border-radius: 12px;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+
+  /* Garde le label visible sur mobile (contrairement à l'ancienne version) */
+  .item span { display: block !important; }
+  .back span { display: block !important; }
+
+  .icon {
+    width: auto;
+    font-size: 15px;
+  }
+
+  /* Icône active plus visible */
+  .on {
+    background: var(--tl-bg);
+    border: 1.5px solid rgba(14,116,144,.25);
+  }
+
+  /* Point d'alerte repositionné en haut à droite */
+  .dot {
+    position: absolute;
+    top: 5px; right: 5px;
+    margin-left: 0;
+    width: 6px; height: 6px;
+  }
 }

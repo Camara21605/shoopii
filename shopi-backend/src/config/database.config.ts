@@ -59,8 +59,14 @@ import { CompanyType }    from '../database/entities/entreprise.table/company-ty
 import { CompanyHoraire } from '../database/entities/entreprise.table/company-horaire.entity';
 import { CompanyAvis }    from '../database/entities/entreprise.table/company-avis.entity';
 // ── Location ───────────────────────────────────────────────────────────────────
-import { CompanyBranch }   from '../database/entities/location/company-branch.entity';
-import { LocationHistory } from '../database/entities/location/location-history.entity';
+import { CompanyBranch }    from '../database/entities/location/company-branch.entity';
+import { LocationHistory }  from '../database/entities/location/location-history.entity';
+import { PlatformSettings } from '../database/entities/platform-settings.entity';
+import { ReturnRequest }    from '../database/entities/returns/return-request.entity';
+import { ReturnEvidence }   from '../database/entities/returns/return-evidence.entity';
+import { ReturnHistory }    from '../database/entities/returns/return-history.entity';
+import { SavTicket }        from '../database/entities/returns/sav-ticket.entity';
+import { SavMessage }       from '../database/entities/returns/sav-message.entity';
 
 
 /*****************************************************
@@ -186,6 +192,14 @@ export const databaseConfigFactory = {
       // ── Location ──────────────────────────────────────────
       CompanyBranch,
       LocationHistory,
+      // ── Config globale ────────────────────────────────────
+      PlatformSettings,
+      // ── Retours & SAV ─────────────────────────────────────
+      ReturnRequest,
+      ReturnEvidence,
+      ReturnHistory,
+      SavTicket,
+      SavMessage,
     ],
 
 
