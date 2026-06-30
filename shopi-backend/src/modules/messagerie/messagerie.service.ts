@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { Inject, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm';
+import { ILike, Not, Repository } from 'typeorm';
 import { BroadcastService } from './services/broadcast.service';
 import { PresenceService }  from './services/presence.service';
 
@@ -588,7 +588,7 @@ export class MessagerieService {
   // ══════════════════════════════════════════════════════════════
 
   async searchUsers(
-    _userId: string, _role: UserRole,
+    userId: string, _role: UserRole,
     q: string,
     type?: string,
   ): Promise<UserSearchItem[]> {
@@ -602,7 +602,7 @@ export class MessagerieService {
     /* ── Entreprises ── */
     if (!type || type === ConversationActorType.COMPANY) {
       const cos = await this.companyRepo.find({
-        where:     term ? { companyName: ILike(`%${term}%`) } : {},
+        where:     { ...(term ? { companyName: ILike(`%${term}%`) } : {}), userId: Not(userId) },
         relations: ['user'],
         take:      15,
       });
@@ -620,8 +620,9 @@ export class MessagerieService {
     if (!type || type === ConversationActorType.DELIVERY) {
       const qb = this.deliveryRepo.createQueryBuilder('d')
         .leftJoinAndSelect('d.user', 'user')
+        .where('d.userId != :userId', { userId })
         .take(15);
-      if (term) qb.where('d.fullName LIKE :t', { t: `%${term}%` });
+      if (term) qb.andWhere('d.fullName LIKE :t', { t: `%${term}%` });
       const livs = await qb.getMany();
       livs.forEach(d => results.push({
         id:       d.id,
@@ -637,8 +638,9 @@ export class MessagerieService {
     if (!type || type === ConversationActorType.CORRESPONDENT) {
       const qb = this.corrRepo.createQueryBuilder('c')
         .leftJoinAndSelect('c.user', 'user')
+        .where('c.userId != :userId', { userId })
         .take(15);
-      if (term) qb.where('c.fullName LIKE :t', { t: `%${term}%` });
+      if (term) qb.andWhere('c.fullName LIKE :t', { t: `%${term}%` });
       const corrs = await qb.getMany();
       corrs.forEach(c => {
         const loc = [(c as any).depotCommune, (c as any).depotVille].filter(Boolean).join(', ');
@@ -657,9 +659,10 @@ export class MessagerieService {
     if (!type || type === ConversationActorType.CLIENT) {
       const clientQb = this.clientRepo.createQueryBuilder('cl')
         .leftJoinAndSelect('cl.user', 'user')
+        .where('cl.userId != :userId', { userId })
         .take(10);
       if (term) {
-        clientQb.where(
+        clientQb.andWhere(
           `CONCAT(user.firstName, ' ', user.lastName) LIKE :t`,
           { t: `%${term}%` },
         );
@@ -682,9 +685,10 @@ export class MessagerieService {
     if (!type || type === ConversationActorType.PARTNER) {
       const partQb = this.partnerRepo.createQueryBuilder('p')
         .leftJoinAndSelect('p.user', 'user')
+        .where('p.userId != :userId', { userId })
         .take(10);
       if (term) {
-        partQb.where(
+        partQb.andWhere(
           `CONCAT(user.firstName, ' ', user.lastName) LIKE :t`,
           { t: `%${term}%` },
         );

@@ -4,10 +4,15 @@ import { fmtGNF } from '../data/livreurData';
 import styles from '../styles/Sidebar.module.css';
 
 interface Props {
-  activePage:     PageId;
-  isOpen:         boolean;
-  isOnline:       boolean;
-  todayEarn:      number;
+  activePage:      PageId;
+  isOpen:          boolean;
+  isOnline:        boolean;
+  todayEarn:       number;
+  avatarUrl?:      string | null;
+  livreurName?:    string;
+  rating?:         number | null;
+  totalDeliveries?: number | null;
+  encoursCount?:   number;
   onNavigate:     (p: PageId) => void;
   onClose:        () => void;
   onToggleOnline: () => void;
@@ -17,15 +22,22 @@ interface Props {
 
 type NavItem = { id: PageId; icon: string; label: string; badge?: string | number; bCls?: string };
 
-const NAV_MON_ESPACE: NavItem[] = [
-  { id:'overview',   icon:'fa-chart-pie',          label:"Vue d'ensemble"                              },
-  { id:'missions',   icon:'fa-motorcycle',          label:'Missions disponibles', badge:8,  bCls:'r'   },
-  { id:'encours',    icon:'fa-route',               label:'En cours',             badge:1,  bCls:'g'   },
-  { id:'historique', icon:'fa-clock-rotate-left',   label:'Historique'                                 },
-  { id:'messagerie', icon:'fa-comment-dots',        label:'Messagerie'                                 },
-];
+/** Calcule les initiales depuis un nom complet */
+function getInitials(name: string): string {
+  return name.trim().split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
+}
+
+function buildNavMonEspace(encoursCount: number): NavItem[] {
+  return [
+    { id:'overview',   icon:'fa-chart-pie',          label:"Vue d'ensemble"                                                       },
+    { id:'missions',   icon:'fa-motorcycle',          label:'Missions disponibles'                                                },
+    { id:'encours',    icon:'fa-route',               label:'En cours', ...(encoursCount > 0 ? { badge: encoursCount, bCls:'g' } : {}) },
+    { id:'historique', icon:'fa-clock-rotate-left',   label:'Historique'                                                          },
+    { id:'messagerie', icon:'fa-comment-dots',        label:'Messagerie'                                                          },
+  ];
+}
 const NAV_RESEAU: NavItem[] = [
-  { id:'boutiques', icon:'fa-store',       label:'Mes boutiques',          badge:3, bCls:'b' },
+  { id:'boutiques', icon:'fa-store',       label:'Mes boutiques'                            },
   { id:'abonner',   icon:'fa-plus-circle', label:"S'abonner à une boutique"                 },
 ];
 const NAV_FINANCES: NavItem[] = [
@@ -40,8 +52,14 @@ const NAV_COMPTE: NavItem[] = [
 
 export default function Sidebar({
   activePage, isOpen, isOnline, todayEarn,
+  avatarUrl, livreurName, rating, totalDeliveries, encoursCount = 0,
   onNavigate, onToggleOnline, onLogout, onGoHome,
 }: Props) {
+  const navMonEspace = buildNavMonEspace(encoursCount);
+  const displayName  = livreurName || 'Mon profil';
+  const ratingLabel  = typeof rating === 'number' && Number.isFinite(rating) ? rating.toFixed(1) : '—';
+  const deliveriesLabel = totalDeliveries != null ? `${totalDeliveries} livraison${totalDeliveries > 1 ? 's' : ''}` : '0 livraison';
+
   return (
     <nav className={`${styles.sb} ${isOpen ? styles.open : ''}`}>
 
@@ -56,13 +74,13 @@ export default function Sidebar({
         <div className={styles.sbLvCard} onClick={() => onNavigate('profil' as PageId)}>
           <div className={styles.sbLvTop}>
             <div className={styles.sbAva}>
-              🛵
+              {avatarUrl ? <img src={avatarUrl} alt={displayName} /> : (livreurName ? getInitials(livreurName) : '🛵')}
               <div className={styles.sbAvaOl} />
             </div>
             <div style={{ flex:1, minWidth:0 }}>
-              <div className={styles.sbLvNm}>Mamadou Diallo</div>
+              <div className={styles.sbLvNm}>{displayName}</div>
               <div className={styles.sbLvSub}>
-                <i className="fas fa-star" /> 4.9 · 1 240 livraisons
+                <i className="fas fa-star" /> {ratingLabel} · {deliveriesLabel}
               </div>
             </div>
           </div>
@@ -90,7 +108,7 @@ export default function Sidebar({
       {/* Nav */}
       <div className={styles.sbNav}>
         <div className={styles.sbSect}>Mon espace</div>
-        {NAV_MON_ESPACE.map(item => (
+        {navMonEspace.map(item => (
           <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={onNavigate} />
         ))}
 

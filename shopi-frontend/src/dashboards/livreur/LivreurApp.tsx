@@ -47,8 +47,11 @@ export default function LivreurApp() {
   const [todayEarn,   setTodayEarn]   = useState(44_000);
   const [toasts,      setToasts]      = useState<ToastMsg[]>([]);
   const [viewedId,    setViewedId]    = useState<string | null>(null);
-  const [avatarUrl,   setAvatarUrl]   = useState<string | null>(null);
-  const [livreurName, setLivreurName] = useState<string>('');
+  const [avatarUrl,    setAvatarUrl]    = useState<string | null>(null);
+  const [livreurName,  setLivreurName]  = useState<string>('');
+  const [rating,       setRating]       = useState<number | null>(null);
+  const [totalDeliveries, setTotalDeliveries] = useState<number | null>(null);
+  const [encoursCount, setEncoursCount] = useState(0);
 
   /* Charge la photo de profil au montage (endpoint léger — 2 colonnes seulement) */
   const refreshAvatar = useCallback(() => {
@@ -58,6 +61,26 @@ export default function LivreurApp() {
   }, []);
 
   useEffect(() => { refreshAvatar(); }, [refreshAvatar]);
+
+  /* Charge les chiffres réels affichés dans la carte profil de la sidebar
+     (note, livraisons, missions en cours, boutiques suivies). */
+  useEffect(() => {
+    apiFetch<{ averageRating: number | string | null; totalDeliveries: number | string }>('/dashboard/livreur/stats')
+      .then(d => {
+        /* Les colonnes decimal TypeORM reviennent en string côté JSON — on force le cast. */
+        setRating(d.averageRating != null ? Number(d.averageRating) : null);
+        setTotalDeliveries(d.totalDeliveries != null ? Number(d.totalDeliveries) : 0);
+      })
+      .catch(() => {});
+
+    apiFetch<{ activeMissions: unknown[] }>('/dashboard/livreur/missions')
+      .then(d => setEncoursCount(d.activeMissions?.length ?? 0))
+      .catch(() => {});
+
+    /* NOTE : pas d'endpoint "boutiques suivies par un livreur" pour l'instant —
+       /suivis/mes-abonnements est réservé aux profils client. Le badge
+       correspondant reste donc masqué côté Sidebar (cf. buildNavReseau). */
+  }, []);
 
   /* Déconnexion : vide le token et redirige vers /login */
   const handleLogout = useCallback(() => {
@@ -131,6 +154,11 @@ export default function LivreurApp() {
         isOpen={sidebarOpen}
         isOnline={isOnline}
         todayEarn={todayEarn}
+        avatarUrl={avatarUrl}
+        livreurName={livreurName}
+        rating={rating}
+        totalDeliveries={totalDeliveries}
+        encoursCount={encoursCount}
         onNavigate={navigate}
         onClose={() => setSidebarOpen(false)}
         onToggleOnline={() => {
@@ -153,7 +181,6 @@ export default function LivreurApp() {
         onMenuToggle={() => setSidebarOpen(o => !o)}
         onNotif={() => setNotifOpen(o => !o)}
         onNavigate={navigate}
-        onPop={pop}
       />
 
       {/* Bottom nav (mobile) : Correspondants · Livreurs · Mon espace */}
