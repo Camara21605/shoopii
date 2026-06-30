@@ -1,10 +1,20 @@
 // src/dashboards/livreur/LivreurApp.tsx
-// Route : /livreur/*
+// Route : /dashboard/livreur/*
 // Contrôleur racine du dashboard livreur.
 // Accent : teal (#0E7490) + navy
+//
+// ✅ NAVIGATION URL-BASED :
+//    La page active est lue depuis l'URL (useParams) et écrite avec
+//    useNavigate. Un rafraîchissement conserve la page courante.
+//
+// Exemples d'URL :
+//   /dashboard/livreur/                       → overview
+//   /dashboard/livreur/missions                → missions
+//   /dashboard/livreur/reseau/correspondants   → reseauCorrespondants
+//   /dashboard/livreur/reseau/livreurs/{id}    → profilLivreur
 
 import { useState, useCallback, useEffect } from 'react';
-import { useNavigate as useRouterNavigate } from 'react-router-dom';
+import { useParams, useNavigate as useRouterNavigate } from 'react-router-dom';
 import { tokenStorage, apiFetch } from '../../shared/services/apiFetch';
 import type { PageId } from './data/livreurData';
 import { PAGE_META } from './data/livreurData';
@@ -38,15 +48,56 @@ import styles from './styles/LivreurApp.module.css';
 // ── Types Toast ───────────────────────────────────────────────
 interface ToastMsg { id: number; msg: string; type: string; }
 
+// ── URL ↔ Page mapping ──────────────────────────────────────────
+
+/** Construit le segment d'URL depuis une page + id optionnel. */
+function buildPath(page: PageId, id?: string): string {
+  switch (page) {
+    case 'overview':             return '';
+    case 'reseauCorrespondants': return 'reseau/correspondants';
+    case 'reseauLivreurs':       return 'reseau/livreurs';
+    case 'profilCorrespondant':  return id ? `reseau/correspondants/${id}` : 'reseau/correspondants';
+    case 'profilLivreur':        return id ? `reseau/livreurs/${id}` : 'reseau/livreurs';
+    default:                     return page; // slug direct pour toutes les autres pages
+  }
+}
+
+/** Déduit la page active depuis le splat URL (* après /dashboard/livreur/). */
+function parseSplat(splat: string): { page: PageId; viewedId?: string } {
+  const parts = splat.split('/').filter(Boolean);
+  const [a, b, c] = parts;
+
+  if (!a) return { page: 'overview' };
+
+  if (a === 'reseau') {
+    if (b === 'correspondants') {
+      return c ? { page: 'profilCorrespondant', viewedId: c } : { page: 'reseauCorrespondants' };
+    }
+    if (b === 'livreurs') {
+      return c ? { page: 'profilLivreur', viewedId: c } : { page: 'reseauLivreurs' };
+    }
+    return { page: 'overview' };
+  }
+
+  const DIRECT_PAGES: PageId[] = [
+    'missions', 'encours', 'historique', 'boutiques', 'abonner',
+    'revenus', 'wallet', 'zone', 'evaluation', 'parametres', 'profil', 'messagerie',
+  ];
+  if (DIRECT_PAGES.includes(a as PageId)) return { page: a as PageId };
+
+  return { page: 'overview' };
+}
+
 export default function LivreurApp() {
   const routerNavigate = useRouterNavigate();
-  const [page,        setPage]        = useState<PageId>('overview');
+  const { '*': splat = '' } = useParams<{ '*': string }>();
+  const { page, viewedId } = parseSplat(splat);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen,   setNotifOpen]   = useState(false);
   const [isOnline,    setIsOnline]    = useState(true);
   const [todayEarn,   setTodayEarn]   = useState(44_000);
   const [toasts,      setToasts]      = useState<ToastMsg[]>([]);
-  const [viewedId,    setViewedId]    = useState<string | null>(null);
   const [avatarUrl,    setAvatarUrl]    = useState<string | null>(null);
   const [livreurName,  setLivreurName]  = useState<string>('');
   const [rating,       setRating]       = useState<number | null>(null);
@@ -100,23 +151,22 @@ export default function LivreurApp() {
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3400);
   }, []);
 
-  // Navigation
-  const navigate = useCallback((p: PageId) => {
-    setPage(p);
+  // Navigation → écrit l'URL (un rafraîchissement conserve donc la page)
+  const navigate = useCallback((p: PageId, id?: string) => {
+    const segment = buildPath(p, id);
+    routerNavigate(`/dashboard/livreur${segment ? `/${segment}` : ''}`);
     setSidebarOpen(false);
     setNotifOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  }, [routerNavigate]);
 
   // Voir le profil d'un correspondant / livreur du réseau
   const viewCorrespondant = useCallback((id: string) => {
-    setViewedId(id);
-    navigate('profilCorrespondant');
+    navigate('profilCorrespondant', id);
   }, [navigate]);
 
   const viewLivreur = useCallback((id: string) => {
-    setViewedId(id);
-    navigate('profilLivreur');
+    navigate('profilLivreur', id);
   }, [navigate]);
 
   // Resize : ferme sidebar

@@ -203,6 +203,12 @@ function EntrepriseLayout() {
 
   const handlePop = (msg: string, type?: string) => pop(msg, type as ToastType | undefined);
 
+  /* La barre réseau mobile (ReseauBottomNav) ne s'affiche que sur ces pages —
+     ailleurs, .main n'a pas besoin du padding-bottom supplémentaire qu'elle réserve. */
+  const isReseauPage =
+    page === 'reseauCorrespondants' || page === 'reseauLivreurs' ||
+    page === 'profilCorrespondantReseau' || page === 'profilLivreurReseau';
+
   /* ── Navigation → URL ── */
   const handleNavigate: NavigateFn = (targetPage, id?) => {
     const segment = buildPath(targetPage, id);
@@ -230,9 +236,15 @@ function EntrepriseLayout() {
         companyPays={profile?.pays ?? undefined}
       />
 
-      <ReseauBottomNav activePage={page} onNavigate={handleNavigate} />
+      {/* ✅ Barre réseau mobile : uniquement sur les pages réseau,
+          sinon elle s'affichait au-dessus de la nav principale sur
+          TOUTES les pages (Commandes, Produits…), rendant le bas
+          de l'écran encombré/confus sur mobile. */}
+      {isReseauPage && (
+        <ReseauBottomNav activePage={page} onNavigate={handleNavigate} />
+      )}
 
-      <main className="main">
+      <main className={`main${isReseauPage ? ' main-reseau' : ''}`}>
         <PageRenderer
           page={page}
           productId={productId}

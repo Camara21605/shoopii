@@ -54,6 +54,9 @@
   .main { margin-left: 68px; }
 }
 @media (max-width: 640px) {
-  .main { margin-left: 0; padding-bottom: 112px; }
+  /* padding-bottom de base : juste assez pour la nav principale (tb-bottomnav, 62px) */
+  .main { margin-left: 0; padding-bottom: 78px; }
+  /* + espace pour la barre réseau (rbn-nav, 50px) quand elle est affichée */
+  .main-reseau { padding-bottom: 128px; }
   .page { padding: 16px; }
 }

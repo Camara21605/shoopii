@@ -884,3 +884,6 @@
   .toolbar   { flex-direction: column; align-items: stretch; }
   .toolbarRight { justify-content: space-between; flex-wrap: wrap; }
 }
+@media (max-width: 420px) {
+  .statsGrid, .kpiGrid { grid-template-columns: 1fr; }
+}

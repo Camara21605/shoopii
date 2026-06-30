@@ -1672,9 +1672,38 @@ select.pf-in {
   .sb     { transform: translateX(-100%); }
   .topbar { left: 0; }
 
-  .kpi-grid  { grid-template-columns: 1fr 1fr; }
-  .prod-grid { grid-template-columns: 1fr 1fr; }
-  .ret-stat  { grid-template-columns: 1fr 1fr; }
+  .kpi-grid       { grid-template-columns: 1fr 1fr; }
+  .prod-grid      { grid-template-columns: 1fr 1fr; }
+  .ret-stat       { grid-template-columns: 1fr 1fr; }
+  /* ✅ Grilles qui restaient bloquées à 2-3-4 colonnes en permanence
+     (aucun palier en dessous de 1300px/1060px) — trop serré sur un
+     vrai téléphone une fois le contenu des cartes pris en compte. */
+  .fin-summary    { grid-template-columns: 1fr 1fr; }
+  .pf-grid        { grid-template-columns: 1fr; }
+  .promo-grid     { grid-template-columns: 1fr 1fr; }
+  .analytics-grid { grid-template-columns: 1fr 1fr; }
+  .g4             { grid-template-columns: 1fr 1fr; }
+
+  /* ✅ Hero overview : les 4 mini-cartes stats (.hs, min-width:105px)
+     en ligne sans wrap dépassaient largement la largeur d'un téléphone
+     (≈510px nécessaires) — cause #1 du scroll horizontal/contenu coupé
+     sur la page d'accueil du dashboard. Passage en grille 2×2 fluide. */
+  .hero-left  { padding: 20px 18px; }
+  .hero-right {
+    display: grid; grid-template-columns: 1fr 1fr;
+    padding: 14px 16px; gap: 8px;
+  }
+  .hs { min-width: 0; padding: 12px 10px; }
+}
+
+/* Petits téléphones (≤420px) : tout en 1 colonne, plus aucune grille
+   à 2 colonnes ne tient confortablement en dessous de cette largeur. */
+@media (max-width: 420px) {
+  .kpi-grid, .prod-grid, .ret-stat, .fin-summary,
+  .promo-grid, .analytics-grid, .g4, .seg-grid {
+    grid-template-columns: 1fr;
+  }
+  .hero-right { grid-template-columns: 1fr; }
 }
 
 

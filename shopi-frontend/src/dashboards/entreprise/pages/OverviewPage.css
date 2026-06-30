@@ -166,3 +166,35 @@
 .act-txt  { font-size: 12px; color: var(--t2); line-height: 1.5; flex: 1; }
 .act-txt strong { color: var(--navy); font-weight: 700; }
 .act-time { font-size: 10px; color: var(--t4); white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ⚠️ Sidebar.css contient une COPIE de ces mêmes règles (.hero,
+   .hero-right, .hs, .kpi-grid…) sans rapport avec ce composant.
+   Ce fichier étant chargé après (importé par OverviewPage.tsx),
+   ses règles gagnent la cascade à spécificité égale — donc TOUT
+   correctif responsive pour cette page doit vivre ICI, sinon il
+   est silencieusement écrasé par la copie de Sidebar.css.
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 1300px) {
+  .hero       { grid-template-columns: 1fr; }
+  .hero-right { padding: 16px 28px; padding-top: 0; }
+  .kpi-grid   { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 1060px) {
+  .g2, .g3, .g3r, .g4 { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .hero-left  { padding: 20px 18px; }
+  .hero-right {
+    display: grid; grid-template-columns: 1fr 1fr;
+    padding: 14px 16px; gap: 8px;
+  }
+  .hs        { min-width: 0; padding: 12px 10px; }
+  .kpi-grid  { grid-template-columns: 1fr 1fr; }
+  .donut-wrap { flex-direction: column; align-items: stretch; }
+}
+@media (max-width: 420px) {
+  .kpi-grid   { grid-template-columns: 1fr; }
+  .hero-right { grid-template-columns: 1fr; }
+}
