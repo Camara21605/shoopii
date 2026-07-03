@@ -131,6 +131,8 @@ export default function Sidebar({
           <NavItem icon="🚨" label="Signalements" active={activeSection==='alerts'}
             badge={pendingAlerts || undefined} badgeClass="nc-red"
             onClick={go(() => navigate('alerts'))} />
+          <NavItem icon="🔔" label="Notifications" active={activeSection==='notifications-admin'}
+            onClick={go(() => navigate('notifications-admin'))} />
           <NavItem icon="📜" label="Journal audit" active={activeSection==='audit'}
             onClick={go(() => navigate('audit'))} />
           <NavItem icon="❤️" label="Santé système" active={activeSection==='system'}

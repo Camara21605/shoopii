@@ -26,7 +26,14 @@ export type SectionId =
   | 'alerts'
   | 'admins'
   | 'audit'
-  | 'health';
+  | 'health'
+  // sections utilisées dans Sidebar + SuperAdminApp
+  | 'invitations'
+  | 'messaging'
+  | 'system'
+  | 'settings'
+  | 'permissions'
+  | 'notifications-admin';
 
 /* ── Utilisateur affiché dans le store (correspond à UserListItem API) ─────── */
 export interface User {

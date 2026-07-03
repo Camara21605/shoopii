@@ -46,6 +46,15 @@ export interface ChatMessage {
     duration?: number;                 // secondes
     callType?: 'audio' | 'video';     // type d'appel
   };
+  /** true si le contenu a été modifié après envoi */
+  isEdited?:   boolean;
+  /** true si le message a été supprimé (soft delete) */
+  deleted?:    boolean;
+  /**
+   * Réactions emoji — clé = emoji, valeur = tableau de userIds ayant réagi.
+   * Ex: { "❤️": ["user-1", "user-2"], "👍": ["user-3"] }
+   */
+  reactions?:  Record<string, string[]>;
 }
 
 export interface Conversation {

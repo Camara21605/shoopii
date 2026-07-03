@@ -12,7 +12,9 @@ import { apiFetch }    from '../../services/apiFetch';
 import { getRoleFromToken } from '../../services/authUtils';
 import type { Conversation, ChatUser, ChatMessage, NewConvUser } from '../data/messagerieTypes';
 import { useSocket } from './useSocket';
-import type { WsNewMessage, WsMessageRead, WsMessageDelivered, WsTyping, WsPresence } from './useSocket';
+import type {
+  WsNewMessage, WsMessageRead, WsMessageDelivered, WsTyping, WsPresence,
+} from './useSocket';
 
 // ── Types réponse API ─────────────────────────────────────────
 
@@ -252,6 +254,48 @@ export function useMessagerie() {
     ));
   }, []);
 
+  const handleMessageEdited = useCallback((payload: import('./useSocket').WsMessageEdited) => {
+    setConversations(prev => prev.map(c => {
+      if (c.id !== payload.conversationId) return c;
+      return {
+        ...c,
+        messages: c.messages.map(m =>
+          m.id === payload.messageId
+            ? { ...m, text: payload.newContent, isEdited: true }
+            : m,
+        ),
+      };
+    }));
+  }, []);
+
+  const handleMessageDeleted = useCallback((payload: import('./useSocket').WsMessageDeleted) => {
+    setConversations(prev => prev.map(c => {
+      if (c.id !== payload.conversationId) return c;
+      return {
+        ...c,
+        messages: c.messages.map(m =>
+          m.id === payload.messageId
+            ? { ...m, deleted: true, text: undefined, mediaUrl: undefined }
+            : m,
+        ),
+      };
+    }));
+  }, []);
+
+  const handleReactionUpdated = useCallback((payload: import('./useSocket').WsReactionUpdated) => {
+    setConversations(prev => prev.map(c => {
+      if (c.id !== payload.conversationId) return c;
+      return {
+        ...c,
+        messages: c.messages.map(m =>
+          m.id === payload.messageId
+            ? { ...m, reactions: payload.reactions }
+            : m,
+        ),
+      };
+    }));
+  }, []);
+
   /* Socket — abonnements temps réel */
   const { joinConv, leaveConv, sendTyping, markRead, socketConnected } = useSocket({
     onNewMessage:       handleNewMessage,
@@ -259,6 +303,9 @@ export function useMessagerie() {
     onMessageRead:      handleMessageRead,
     onTyping:           handleTyping,
     onPresence:         handlePresence,
+    onMessageEdited:    handleMessageEdited,
+    onMessageDeleted:   handleMessageDeleted,
+    onReactionUpdated:  handleReactionUpdated,
   });
 
   const role     = getRoleFromToken();
@@ -439,6 +486,82 @@ export function useMessagerie() {
     } catch { /* garder le message optimiste */ }
   }, []);
 
+  /**
+   * Met à jour LOCALEMENT la liste de messages après un appel.
+   * Utilisé par GlobalCallProvider via registerCallEventHandler :
+   * le provider gère la persistance REST, cette fonction gère l'UI optimiste.
+   */
+  const applyCallEventLocally = useCallback((
+    convId:    string,
+    status:    'completed' | 'missed' | 'rejected' | 'cancelled' | 'busy',
+    direction: 'outgoing' | 'incoming',
+    duration?: number,
+    callType?: 'audio' | 'video',
+  ) => {
+    const meta    = { status, direction, duration, callType: callType ?? 'audio' };
+    const icon    = callType === 'video' ? '📹' : '📞';
+    const preview = status === 'completed'  ? `${icon} Appel ${callType === 'video' ? 'vidéo' : 'audio'}${duration ? ` · ${Math.floor(duration/60)}:${String(duration%60).padStart(2,'0')}` : ''}`
+      : status === 'missed'    ? `${icon} Appel manqué`
+      : status === 'rejected'  ? `${icon} Appel refusé`
+      : status === 'cancelled' ? `${icon} Appel annulé`
+      : `${icon} Appel occupé`;
+
+    setConversations(prev => prev.map(c =>
+      c.id !== convId ? c : {
+        ...c,
+        lastMsg:  preview,
+        lastTime: nowTime(),
+        messages: [...c.messages, {
+          id:       'tmp-call-' + Date.now(),
+          from:     direction === 'outgoing' ? 'me' : convId,
+          type:     'call' as const,
+          time:     nowTime(),
+          read:     false,
+          callMeta: meta,
+        }],
+      },
+    ));
+  }, []);
+
+  // ── Modifier un message (texte, délai 24h) ───────────────
+  const editMessage = useCallback(async (convId: string, msgId: string, newContent: string) => {
+    /* Optimiste : mise à jour immédiate locale */
+    setConversations(prev => prev.map(c => {
+      if (c.id !== convId) return c;
+      return { ...c, messages: c.messages.map(m => m.id === msgId ? { ...m, text: newContent, isEdited: true } : m) };
+    }));
+    try {
+      await apiFetch(`/messagerie/messages/${msgId}`, { method: 'PATCH', body: { content: newContent } });
+    } catch { /* garder l'optimiste */ }
+  }, []);
+
+  // ── Supprimer un message ─────────────────────────────────
+  const deleteMessage = useCallback(async (convId: string, msgId: string, forEveryone = false) => {
+    setConversations(prev => prev.map(c => {
+      if (c.id !== convId) return c;
+      return { ...c, messages: c.messages.map(m => m.id === msgId ? { ...m, deleted: true, text: undefined, mediaUrl: undefined } : m) };
+    }));
+    try {
+      await apiFetch(`/messagerie/messages/${msgId}`, { method: 'DELETE', body: { forEveryone } });
+    } catch { /* garder l'optimiste */ }
+  }, []);
+
+  // ── Toggle réaction emoji ─────────────────────────────────
+  const toggleReaction = useCallback(async (convId: string, msgId: string, emoji: string) => {
+    try {
+      const res = await apiFetch<{ reactions: Record<string, string[]> }>(
+        `/messagerie/messages/${msgId}/reactions`,
+        { method: 'POST', body: { emoji } },
+      );
+      if (res?.reactions) {
+        setConversations(prev => prev.map(c => {
+          if (c.id !== convId) return c;
+          return { ...c, messages: c.messages.map(m => m.id === msgId ? { ...m, reactions: res.reactions } : m) };
+        }));
+      }
+    } catch { /* silencieux */ }
+  }, []);
+
   // ── Démarrer une nouvelle conversation ────────────────────
   const startNewConv = useCallback(async (newUser: NewConvUser) => {
     setNewConvOpen(false);
@@ -475,7 +598,11 @@ export function useMessagerie() {
     socketConnected, // true = Socket.IO connecté au serveur
     selectConv,
     sendMessage,
-    sendCallEvent,   // enregistre un événement d'appel dans la conversation
+    editMessage,
+    deleteMessage,
+    toggleReaction,
+    sendCallEvent,
+    applyCallEventLocally,
     startNewConv,
     setInfoPanelOpen,
     setNewConvOpen,

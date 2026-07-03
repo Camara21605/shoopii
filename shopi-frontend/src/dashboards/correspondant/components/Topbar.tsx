@@ -1,8 +1,10 @@
 // components/Topbar.tsx
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import s from '../styles/Topbar.module.css';
-import { pop } from './Toast';
 import type { PageId } from '../data/correspondantData';
+import NotificationCenter from '../../../shared/notifications/NotificationCenter';
+import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
 
 const TITLES: Record<PageId, { title: string; sub: string }> = {
   overview:   { title: "Vue d'ensemble",        sub: 'Tableau de bord · Région Conakry' },
@@ -20,16 +22,15 @@ const TITLES: Record<PageId, { title: string; sub: string }> = {
 };
 
 interface Props {
-  page:      PageId;
-  onMenu:    () => void;
-  onPage:    (p: PageId) => void;
-  /* ✅ Nouvelles props pour le panneau notifications */
-  onNotif:   () => void;
-  notifOpen: boolean;
+  page:   PageId;
+  onMenu: () => void;
+  onPage: (p: PageId) => void;
 }
 
-export default function Topbar({ page, onMenu, onPage, onNotif, notifOpen }: Props) {
+export default function Topbar({ page, onMenu, onPage }: Props) {
   const { title, sub } = TITLES[page];
+  const navigate = useNavigate();
+  const { msgUnread } = useGlobalCall();
 
   return (
     <header className={s.topbar}>
@@ -52,22 +53,14 @@ export default function Topbar({ page, onMenu, onPage, onNotif, notifOpen }: Pro
         <div className={s.sep} />
 
         {/* Bouton messagerie */}
-        <button className={s.ic} onClick={() => pop('💬 5 messages non lus', 'i')}>
+        <button className={`${s.ic} ${s.icPin}`} onClick={() => navigate('/messagerie')} title="Messagerie">
           <i className="fas fa-comment-dots" />
-          <div className={s.dot} />
+          {msgUnread > 0 && (
+            <span className={s.icBadge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
+          )}
         </button>
 
-        {/* ✅ Bouton notifications — ouvre/ferme le panneau */}
-        <button
-          className={`${s.ic} ${notifOpen ? s.icActive : ''}`}
-          onClick={onNotif}
-          aria-label="Notifications"
-          aria-expanded={notifOpen}
-        >
-          <i className="fas fa-bell" />
-          {/* Point rouge non-lu */}
-          <div className={s.dot} />
-        </button>
+        <NotificationCenter />
 
         <div className={s.sep} />
 

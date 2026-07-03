@@ -101,6 +101,13 @@ export interface WsMessageDeleted {
   deletedForAll:  boolean;
 }
 
+export interface WsReactionUpdated {
+  conversationId: string;
+  messageId:      string;
+  /** emoji → array of userIds ayant réagi */
+  reactions:      Record<string, string[]>;
+}
+
 // ── Types des événements d'appel ─────────────────────────────
 
 export interface WsCallIncoming {
@@ -128,6 +135,7 @@ export interface SocketCallbacks {
   onPresence?:         (payload: WsPresence)         => void;
   onMessageEdited?:    (payload: WsMessageEdited)    => void;
   onMessageDeleted?:   (payload: WsMessageDeleted)   => void;
+  onReactionUpdated?:  (payload: WsReactionUpdated)  => void;
   /* Appels audio */
   onCallIncoming?:     (payload: WsCallIncoming)     => void;
   onCallAccepted?:     (payload: { conversationId: string; calleeUserId: string }) => void;
@@ -226,6 +234,7 @@ export function useSocket(callbacks: SocketCallbacks) {
     const onPresence         = (p: WsPresence)         => cbRef.current.onPresence?.(p);
     const onMessageEdited    = (p: WsMessageEdited)    => cbRef.current.onMessageEdited?.(p);
     const onMessageDeleted   = (p: WsMessageDeleted)   => cbRef.current.onMessageDeleted?.(p);
+    const onReactionUpdated  = (p: WsReactionUpdated)  => cbRef.current.onReactionUpdated?.(p);
     /* Appels */
     const onCallIncoming     = (p: WsCallIncoming)     => cbRef.current.onCallIncoming?.(p);
     const onCallAccepted     = (p: any)                => cbRef.current.onCallAccepted?.(p);
@@ -245,6 +254,7 @@ export function useSocket(callbacks: SocketCallbacks) {
     socket.on('presence',           onPresence);
     socket.on('message_edited',     onMessageEdited);
     socket.on('message_deleted',    onMessageDeleted);
+    socket.on('reaction_updated',   onReactionUpdated);
     socket.on('call:incoming',      onCallIncoming);
     socket.on('call:accepted',      onCallAccepted);
     socket.on('call:rejected',      onCallRejected);
@@ -267,6 +277,7 @@ export function useSocket(callbacks: SocketCallbacks) {
       socket.off('presence',           onPresence);
       socket.off('message_edited',     onMessageEdited);
       socket.off('message_deleted',    onMessageDeleted);
+      socket.off('reaction_updated',   onReactionUpdated);
       socket.off('call:incoming',      onCallIncoming);
       socket.off('call:accepted',      onCallAccepted);
       socket.off('call:rejected',      onCallRejected);
@@ -314,3 +325,14 @@ export function useSocket(callbacks: SocketCallbacks) {
  * passer par un hook React.
  */
 export function getActiveSocket(): Socket | null { return _socket; }
+
+/**
+ * Initialise (ou réutilise) le socket global sans monter le hook React complet.
+ * À appeler depuis GlobalCallProvider pour garantir que le socket est connecté
+ * même quand l'utilisateur n'est pas sur la page messagerie.
+ */
+export function initGlobalSocket(): void {
+  const token = localStorage.getItem('shopi_access_token');
+  if (!token) return;
+  getSocket(token); // crée ou réutilise le singleton
+}

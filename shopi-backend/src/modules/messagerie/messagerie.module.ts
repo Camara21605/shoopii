@@ -1,6 +1,5 @@
-/**
- * ============================================================
- * FICHIER : src/modules/messagerie/messagerie.module.ts
+/* ============================================================
+ * FICHIER : messagerie.module.ts
  *
  * RÔLE : Orchestre tous les composants de la messagerie :
  *   - MessagerieController  (REST API)
@@ -8,12 +7,8 @@
  *   - MessagerieGateway     (Socket.IO temps réel)
  *   - PresenceService       (Redis présence utilisateurs)
  *   - BroadcastService      (émission Socket depuis REST)
- *
- * INJECTION CIRCULAIRE ÉVITÉE :
- *   MessagerieService ← @Optional BroadcastService
- *   BroadcastService.setServer() appelé par gateway.afterInit()
- * ============================================================
- */
+ *   - MessagingPermissionsModule  (moteur de permissions)
+ * ============================================================ */
 
 import { Module }        from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -27,7 +22,10 @@ import { Delivery }     from 'src/database/entities/profiles/livreur-profile.ent
 import { Correspondent } from 'src/database/entities/profiles/correspondant-profile.entity';
 import { Partner }      from 'src/database/entities/profiles/partenaire-profile.entity';
 
-import { AuthModule }             from '../auth/auth.module';
+import { AuthModule }                  from '../auth/auth.module';
+import { NotificationsModule }         from '../notifications/notifications.module';
+import { MessagingPermissionsModule }  from './permissions/messaging-permissions.module';
+
 import { MessagerieController }   from './messagerie.controller';
 import { MessagerieService }      from './messagerie.service';
 import { MessagerieGateway }      from './gateways/messagerie.gateway';
@@ -47,6 +45,8 @@ import { BroadcastService }       from './services/broadcast.service';
       Partner,
     ]),
     AuthModule,
+    NotificationsModule,
+    MessagingPermissionsModule,   // ← Moteur de permissions
   ],
   controllers: [MessagerieController],
   providers: [

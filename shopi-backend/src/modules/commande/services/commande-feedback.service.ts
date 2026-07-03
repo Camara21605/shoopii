@@ -17,6 +17,8 @@ import { Commande, CommandeStatus } from '../../../database/entities/commande/co
 import { Company }     from '../../../database/entities/profiles/entreprise-profile.entity';
 import { Client }      from '../../../database/entities/profiles/client-profile.entity';
 import { CompanyAvis } from '../../../database/entities/entreprise.table/company-avis.entity';
+import { NotificationActorType } from '../../../database/entities/notification/notification.entitiy';
+import { NotificationEventService } from '../../notifications/events/notification-event.service';
 
 import { EnvoyerNotationsDto, LitigeDto } from '../dto/notation.dto';
 
@@ -27,6 +29,7 @@ export class CommandeFeedbackService {
     @InjectRepository(Company)     private readonly companyRepo:  Repository<Company>,
     @InjectRepository(Client)      private readonly clientRepo:   Repository<Client>,
     @InjectRepository(CompanyAvis) private readonly avisRepo:     Repository<CompanyAvis>,
+    private readonly notifEventSvc: NotificationEventService,
   ) {}
 
   /* ════════════════════════════════════════════════════════
@@ -79,6 +82,14 @@ export class CommandeFeedbackService {
           commentaire:     entrepriseNote.commentaire ?? null,
         });
         await this.avisRepo.save(avis);
+
+        void this.notifEventSvc.notifyReviewReceived({
+          companyId:  commande.companyId,
+          clientId:   commande.clientId,
+          clientNom,
+          note:       entrepriseNote.note,
+          commandeId,
+        });
       }
 
       /* 5. Mettre à jour la moyenne glissante sur Company */
@@ -114,6 +125,19 @@ export class CommandeFeedbackService {
     if (!commande) throw new NotFoundException('Commande introuvable.');
     commande.status = CommandeStatus.DISPUTED;
     await this.commandeRepo.save(commande);
+
+    void this.notifEventSvc.notifyOrderStatusChanged({
+      recipientType: NotificationActorType.COMPANY,
+      recipientId:   commande.companyId,
+      actorType:     NotificationActorType.CLIENT,
+      actorId:       commande.clientId,
+      orderRef:      commande.numero,
+      commandeId:    commande.id,
+      newStatus:     CommandeStatus.DISPUTED,
+      title:         'Litige signalé ⚠️',
+      body:          `Un problème a été signalé sur la commande ${commande.numero}.`,
+    });
+
     return { ok: true };
   }
 }

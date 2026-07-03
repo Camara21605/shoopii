@@ -7,8 +7,28 @@
  *  - le CSS @media print masque tout sauf .facture
  * ================================================================ */
 
+import { useState } from 'react';
 import styles from '../styles/Facture.module.css';
 import type { Commande } from '../data/types';
+
+function FactureThumb({ src, emoji }: { src?: string | null; emoji: string }) {
+  const [errored, setErrored] = useState(false);
+  if (src && !errored) {
+    return (
+      <img
+        src={src}
+        alt=""
+        onError={() => setErrored(true)}
+        style={{
+          width: 28, height: 28, objectFit: 'cover',
+          borderRadius: 6, display: 'inline-block',
+          verticalAlign: 'middle', marginRight: 8, flexShrink: 0,
+        }}
+      />
+    );
+  }
+  return <span style={{ marginRight: 6, fontSize: 16 }}>{emoji}</span>;
+}
 
 interface FactureProps {
   commande: Commande;
@@ -83,7 +103,10 @@ export default function Facture({ commande, times, onClose }: FactureProps) {
               {commande.articles.map((a, i) => (
                 <tr key={i}>
                   <td>
-                    <div className={styles.tdNm}>{a.emoji} {a.nom}</div>
+                    <div className={styles.tdNm} style={{ display: 'flex', alignItems: 'center' }}>
+                      <FactureThumb src={a.imageUrl} emoji={a.emoji} />
+                      {a.nom}
+                    </div>
                     <div className={styles.tdSub}>{a.boutique}</div>
                   </td>
                   <td>{fmt(a.prix)}</td>

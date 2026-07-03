@@ -18,6 +18,7 @@ import { ProductLike } from '../../../../database/entities/entreprise.table/prod
 import { Product }      from '../../../../database/entities/entreprise.table/product.entity';
 import { Client }       from '../../../../database/entities/profiles/client-profile.entity';
 import { User }         from '../../../../database/entities/user.entity';
+import { NotificationEventService } from '../../../notifications/events/notification-event.service';
 
 @Injectable()
 export class FavorisService {
@@ -30,6 +31,8 @@ export class FavorisService {
 
     @InjectRepository(Client)
     private readonly clientRepo: Repository<Client>,
+
+    private readonly notifEventSvc: NotificationEventService,
   ) {}
 
   private async getClient(user: User): Promise<Client> {
@@ -64,6 +67,15 @@ export class FavorisService {
 
     await this.produitRepo.save(produit);
     await this.clientRepo.save(client);
+
+    if (liked) {
+      void this.notifEventSvc.notifyProductLiked({
+        companyId:   produit.companyId,
+        productId:   produit.id,
+        productName: produit.nom,
+        clientId:    client.id,
+      });
+    }
 
     return { liked, likesCount: produit.likesCount };
   }

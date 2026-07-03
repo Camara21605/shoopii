@@ -400,11 +400,13 @@
 /* ══════════════════════════════════════════════════════════════
    VUE LISTE — Tableau
    ══════════════════════════════════════════════════════════════ */
+/* ⚠️ overflow-x:auto (pas hidden) : le tableau a plusieurs colonnes
+   et serait tronqué sans recours sur mobile sinon. */
 .listeWrap {
   background: var(--white);
   border: 1.5px solid var(--bdr);
   border-radius: var(--r-lg);
-  overflow: hidden;
+  overflow-x: auto;
 }
 .liste { width: 100%; border-collapse: collapse; }
 .th {
@@ -883,4 +885,7 @@
   .colSide   { grid-template-columns: 1fr; }
   .toolbar   { flex-direction: column; align-items: stretch; }
   .toolbarRight { justify-content: space-between; flex-wrap: wrap; }
+}
+@media (max-width: 420px) {
+  .statsGrid, .kpiGrid { grid-template-columns: 1fr; }
 }

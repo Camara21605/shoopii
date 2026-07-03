@@ -28,6 +28,11 @@ import { UserRole }
 import {
   FilterCorrespondantsDto, UpdateCorrespondantDto, CorrespondantType,
 } from '../dto/correspondant.dto';
+import {
+  NotificationActorType,
+  NotificationType,
+} from 'src/database/entities/notification/notification.entitiy';
+import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 export interface CorrespondantResponse {
   id: string; fullName: string; email: string; phone: string | null;
@@ -67,6 +72,8 @@ export class CorrespondantsService {
 
     @InjectRepository(Company)
     private readonly companyRepo: Repository<Company>,
+
+    private readonly notifEventSvc: NotificationEventService,
   ) {}
 
   /* ── Résoudre companyId ── */
@@ -295,6 +302,15 @@ export class CorrespondantsService {
 
     await this.correspondantRepo.update(id, { status: CorrespondantStatus.SUSPENDED });
     this.logger.log(`[SUSPENDRE ✅] ID=${id} | Raison=${raison ?? 'N/A'}`);
+
+    void this.notifEventSvc.notifyAccountStatusChanged({
+      recipientType: NotificationActorType.CORRESPONDENT,
+      recipientId:   c.id,
+      type:          NotificationType.ACCOUNT_SUSPENDED,
+      title:         'Compte suspendu ⚠️',
+      body:          'Votre compte correspondant a été temporairement suspendu.',
+    });
+
     return this.findOne(id, user);
   }
 
@@ -312,6 +328,15 @@ export class CorrespondantsService {
 
     await this.correspondantRepo.update(id, { status: CorrespondantStatus.ACTIVE });
     this.logger.log(`[REACTIVER ✅] ID=${id}`);
+
+    void this.notifEventSvc.notifyAccountStatusChanged({
+      recipientType: NotificationActorType.CORRESPONDENT,
+      recipientId:   c.id,
+      type:          NotificationType.ACCOUNT_APPROVED,
+      title:         'Compte réactivé ✅',
+      body:          'Votre compte correspondant a été réactivé. Vous pouvez reprendre vos activités.',
+    });
+
     return this.findOne(id, user);
   }
 
@@ -332,6 +357,15 @@ export class CorrespondantsService {
 
     await this.correspondantRepo.update(id, { status: CorrespondantStatus.ACTIVE });
     this.logger.log(`[VALIDER ✅] ID=${id}`);
+
+    void this.notifEventSvc.notifyAccountStatusChanged({
+      recipientType: NotificationActorType.CORRESPONDENT,
+      recipientId:   c.id,
+      type:          NotificationType.ACCOUNT_APPROVED,
+      title:         'Compte approuvé ✅',
+      body:          'Félicitations ! Votre compte correspondant a été validé. Vous pouvez commencer à recevoir des colis.',
+    });
+
     return this.findOne(id, user);
   }
 }

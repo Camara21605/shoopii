@@ -1,0 +1,41 @@
+/* ================================================================
+ * SaveFloat.module.css — Dashboard Partenaire
+ * Barre flottante "Modifications non sauvegardées".
+ * Couleur accent : --blue (thème partenaire).
+ * ================================================================ */
+
+.float {
+  position: fixed; bottom: 22px; left: 50%;
+  transform: translateX(-50%) translateY(120px);
+  background: var(--navy);
+  border-radius: var(--pill); padding: 13px 24px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 16px 50px rgba(11,31,58,.35);
+  z-index: 800; transition: transform .4s var(--spring);
+  white-space: nowrap; pointer-events: none; opacity: 0;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.show { transform: translateX(-50%) translateY(0); pointer-events: all; opacity: 1; }
+.msg  { font-size: 12px; color: rgba(200,217,248,.7); display: flex; align-items: center; gap: 6px; }
+.msg i { color: var(--blue-lt); }
+
+.btnSave {
+  background: var(--blue); color: #fff; border: none;
+  border-radius: var(--pill); padding: 8px 20px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; transition: all .2s;
+}
+.btnSave:hover   { background: var(--blue-2); box-shadow: var(--sh-b); }
+.btnSave:disabled{ opacity: .6; cursor: not-allowed; }
+
+.btnCancel {
+  background: rgba(255,255,255,.08); color: rgba(200,217,248,.6);
+  border: none; border-radius: var(--pill); padding: 8px 15px;
+  font-size: 12px; cursor: pointer; transition: all .2s; font-family: var(--fb);
+}
+.btnCancel:hover { background: rgba(255,255,255,.15); color: rgba(200,217,248,.9); }
+
+@media (max-width: 640px) {
+  .float { left: 12px; right: 12px; transform: translateY(120px); border-radius: var(--r-xl); flex-wrap: wrap; justify-content: center; }
+  .show  { transform: translateY(0); }
+}

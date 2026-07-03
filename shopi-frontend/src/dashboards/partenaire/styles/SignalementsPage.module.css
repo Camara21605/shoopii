@@ -1,0 +1,52 @@
+/* src/dashboards/partenaire/styles/SignalementsPage.module.css */
+.banner { display: flex; align-items: center; gap: 16px; background: linear-gradient(135deg, rgba(190,24,93,.06), rgba(190,24,93,.02)); border: 1px solid rgba(190,24,93,.2); border-radius: var(--r-lg); padding: 18px 22px; margin-bottom: 20px; }
+.bannerIc { width: 48px; height: 48px; border-radius: 14px; background: var(--rs-bg); color: var(--rose); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.bannerT { font-family: var(--fd); font-weight: 700; font-size: 16px; color: var(--navy); }
+.bannerP { font-size: 12.5px; color: var(--t2); margin-top: 3px; line-height: 1.5; max-width: 560px; }
+.bannerBtn { margin-left: auto; background: var(--rose); color: #fff; border-radius: var(--pill); padding: 11px 20px; font-size: 12.5px; font-weight: 700; display: flex; align-items: center; gap: 8px; transition: all .2s; white-space: nowrap; flex-shrink: 0; }
+.bannerBtn:hover { background: #9d1550; transform: translateY(-1px); box-shadow: 0 8px 22px rgba(190,24,93,.3); }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat { background: var(--white); border: 1px solid var(--bdr); border-radius: var(--r-md); padding: 16px; }
+.statV { font-family: var(--fd); font-weight: 800; font-size: 22px; color: var(--navy); }
+.statV.g { color: var(--emerald); }
+.statV.a { color: var(--amber); }
+.statL { font-size: 11px; color: var(--t3); margin-top: 3px; }
+
+.card { background: var(--white); border: 1px solid var(--bdr); border-radius: var(--r-lg); overflow: hidden; }
+.ch { padding: 16px 20px; border-bottom: 1px solid var(--bdr); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.chT { font-family: var(--fd); font-weight: 700; font-size: 15px; color: var(--navy); display: flex; align-items: center; gap: 9px; }
+.chT i { color: var(--blue); font-size: 13px; }
+.chLink { font-size: 12px; font-weight: 700; color: var(--blue); background: none; display: inline-flex; align-items: center; gap: 6px; }
+.cb { padding: 20px; }
+
+.repItem { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--bdr); }
+.repItem:last-child { border-bottom: none; }
+.repAv { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--fd); font-weight: 800; font-size: 14px; flex-shrink: 0; background: linear-gradient(135deg, var(--t2), var(--navy)); }
+.repMain { flex: 1; min-width: 0; }
+.repTop { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 3px; }
+.repNm { font-size: 13.5px; font-weight: 700; color: var(--navy); }
+.repReason { font-size: 12.5px; color: var(--t2); line-height: 1.5; }
+.repMeta { font-size: 11px; color: var(--t3); margin-top: 5px; display: flex; gap: 12px; flex-wrap: wrap; }
+.repMeta span { display: inline-flex; align-items: center; gap: 5px; }
+.repRight { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+
+.sev { font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: var(--pill); text-transform: uppercase; }
+.sev_high { background: rgba(220,38,38,.1); color: var(--red); }
+.sev_med { background: var(--am-bg); color: var(--amber); }
+.sev_low { background: var(--g100); color: var(--t3); }
+
+.typePill { font-size: 10.5px; font-weight: 700; padding: 4px 11px; border-radius: var(--pill); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.t_ent { background: var(--sky-2); color: var(--blue); }
+.t_lvr { background: var(--em-bg); color: var(--emerald); }
+.t_cor { background: var(--vl-bg); color: var(--violet); }
+.t_cli { background: var(--am-bg); color: var(--amber); }
+
+.repSt { font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: var(--pill); text-transform: uppercase; letter-spacing: .3px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.st_review { background: var(--am-bg); color: var(--amber); }
+.st_invest { background: var(--sky-2); color: var(--blue); }
+.st_resolved { background: var(--em-bg); color: var(--emerald); }
+.st_rejected { background: var(--g100); color: var(--t3); }
+
+@media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .stats { grid-template-columns: 1fr; } .banner { flex-wrap: wrap; } .bannerBtn { margin-left: 0; } }

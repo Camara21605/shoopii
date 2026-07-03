@@ -1,6 +1,8 @@
 // src/dashboards/livreur/components/Topbar.tsx
 import type { PageId } from '../data/livreurData';
 import styles from '../styles/Topbar.module.css';
+import NotificationCenter from '../../../shared/notifications/NotificationCenter';
+import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
 
 interface Props {
   title:        string;
@@ -9,7 +11,6 @@ interface Props {
   avatarUrl?:   string | null;
   livreurName?: string;
   onMenuToggle: () => void;
-  onNotif:      () => void;
   onNavigate:   (p: PageId) => void;
 }
 
@@ -26,9 +27,10 @@ function getInitials(name: string): string {
 export default function Topbar({
   title, subtitle, isOnline,
   avatarUrl, livreurName,
-  onMenuToggle, onNotif, onNavigate,
+  onMenuToggle, onNavigate,
 }: Props) {
   const initials = livreurName ? getInitials(livreurName) : '🛵';
+  const { msgUnread } = useGlobalCall();
 
   return (
     <header className={styles.topbar}>
@@ -56,12 +58,13 @@ export default function Topbar({
           </button>
         </div>
         <div className={styles.tbSep} />
-        <button className={styles.tbIc} onClick={() => onNavigate('messagerie')} title="Messagerie">
+        <button className={`${styles.tbIc} ${styles.tbIcPin}`} onClick={() => onNavigate('messagerie')} title="Messagerie">
           <i className="fas fa-comment-dots" />
+          {msgUnread > 0 && (
+            <span className={styles.tbBadge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
+          )}
         </button>
-        <button className={styles.tbIc} onClick={onNotif}>
-          <i className="fas fa-bell" /><span className={styles.tbDot} />
-        </button>
+        <NotificationCenter />
         <div className={styles.tbSep} />
 
         {/* Avatar : photo réelle ou initiales */}

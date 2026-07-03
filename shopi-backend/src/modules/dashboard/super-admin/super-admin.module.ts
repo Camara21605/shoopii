@@ -50,6 +50,7 @@ import { AuditLogService }         from './services/audit-log.service';
 import { ReportsService }          from './services/reports.service';
 import { AdminsService }           from './services/admins.service';
 import { PlatformSettingsService } from './services/platform-settings.service';
+import { NotificationsModule }      from '../../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -64,9 +65,8 @@ import { PlatformSettingsService } from './services/platform-settings.service';
       PlatformSettings, // pour PlatformSettingsService
     ]),
 
-    // ② Module catégories complet
-    // Fournit CategoriesController + CategoriesService
     CategoriesModule,
+    NotificationsModule,
   ],
 
   controllers: [

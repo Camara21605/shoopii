@@ -27,11 +27,13 @@ export interface Acteur {
 
 /* Une ligne d'article de la commande */
 export interface ArticleCommande {
-  emoji:    string;
-  nom:      string;
-  boutique: string;
-  qty:      number;
-  prix:     number;           // prix unitaire en GNF
+  emoji:     string;
+  /** URL Cloudinary snapshot (null si produit supprimé ou non renseigné) */
+  imageUrl?: string | null;
+  nom:       string;
+  boutique:  string;
+  qty:       number;
+  prix:      number;           // prix unitaire en GNF
 }
 
 /* Détail financier de la commande */

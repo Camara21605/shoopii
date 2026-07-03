@@ -26,6 +26,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { JwtService }       from '@nestjs/jwt';
 import { ConfigService }    from '@nestjs/config';
+import { InjectRedis }      from '@nestjs-modules/ioredis';
+import Redis                from 'ioredis';
 import * as bcrypt          from 'bcryptjs';
 import * as crypto          from 'crypto';
 
@@ -49,9 +51,10 @@ import type { JwtPayload }      from './strategies/jwt.strategy';
 /* ── Constantes ── */
 const BCRYPT_ROUNDS         = 12;
 const JWT_TTL_SHORT         = '24h';
-const JWT_TTL_LONG          = '30d';
-const JWT_TTL_SUPER         = '365d';
+const JWT_TTL_LONG          = '7d';   // 30d → 7d : access token long
+const JWT_TTL_SUPER         = '4h';   // 365d → 4h : super admin = TTL le plus court
 const JWT_TTL_RESET         = '15m';
+const OAUTH_CODE_TTL_SEC    = 60;     // code OAuth à usage unique, expire en 60s
 const MAX_FAILED_LOGINS     = 5;
 const LOCKOUT_MINUTES       = 30;
 const OTP_EXPIRY_MINUTES    = 10;
@@ -100,6 +103,7 @@ export interface OtpVerifyResponse {
 export class AuthService implements OnModuleInit {
 
   private readonly logger = new Logger(AuthService.name);
+  private readonly jwtResetSecret: string;
 
   constructor(
     @InjectRepository(User)
@@ -131,7 +135,19 @@ export class AuthService implements OnModuleInit {
     private readonly dataSource:          DataSource,
     private readonly codeCreationService: CodeCreationService,
     private readonly mailService:         MailService,
-  ) {}
+
+    @InjectRedis()
+    private readonly redis: Redis,
+  ) {
+    const secret = config.get<string>('JWT_RESET_SECRET');
+    if (!secret) {
+      throw new Error(
+        '[AuthService] JWT_RESET_SECRET est absent des variables d\'environnement. ' +
+        'Définissez-le avec une valeur aléatoire de 64+ caractères dans votre .env.',
+      );
+    }
+    this.jwtResetSecret = secret;
+  }
 
   // ══════════════════════════════════════════════════════════════════════════
   // LIFECYCLE
@@ -168,18 +184,16 @@ export class AuthService implements OnModuleInit {
       const saved = await this.userRepo.save(superAdmin);
       await this.walletRepo.save(this.walletRepo.create({ userId: saved.id }));
 
-      const token = this.jwtService.sign(
-        { sub: saved.id, email: saved.email, role: saved.role } satisfies JwtPayload,
-        { expiresIn: JWT_TTL_SUPER },
-      );
-
-      this.logger.warn('╔══════════════════════════════════════════════════╗');
-      this.logger.warn('║  🔐 SUPER ADMIN CRÉÉ                             ║');
-      this.logger.warn(`║  Email    : ${email.padEnd(34)}║`);
-      this.logger.warn(`║  Password : ${password.padEnd(34)}║`);
-      this.logger.warn(`║  JWT      : ${token.substring(0, 34)}║`);
-      this.logger.warn('║  ⚠️  Changez le MDP dès la première connexion !  ║');
-      this.logger.warn('╚══════════════════════════════════════════════════╝');
+      /* ⚠️  NE PAS logger le mot de passe ni le JWT — ils appartiennent aux secrets.
+         Récupérez les credentials via votre gestionnaire de secrets (Vault, AWS SSM,
+         Render Secret Files, etc.) en lisant les variables d'environnement définies
+         dans SUPER_ADMIN_EMAIL et SUPER_ADMIN_PASSWORD. */
+      this.logger.warn('╔════════════════════════════════════════════════╗');
+      this.logger.warn('║  SUPER ADMIN CRÉÉ                              ║');
+      this.logger.warn(`║  Email : ${email.padEnd(38)}║`);
+      this.logger.warn('║  Credentials : voir variables d\'environnement  ║');
+      this.logger.warn('║  Changez le MDP dès la première connexion !    ║');
+      this.logger.warn('╚════════════════════════════════════════════════╝');
     } catch (err) {
       this.logger.error(`[SUPER ADMIN SEED ❌] ${(err as Error).message}`);
     }
@@ -322,7 +336,8 @@ export class AuthService implements OnModuleInit {
         this.logger.error(`[WELCOME EMAIL ❌] ${newUser.email} | ${(err as Error).message}`),
       );
 
-    return { accessToken: this.signJwt(newUser, false), user: this.toPublicUser(newUser) };
+    const actorId = await this.findProfileId(newUser.id, newUser.role as UserRole);
+    return { accessToken: this.signJwt(newUser, false, actorId), user: this.toPublicUser(newUser) };
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -495,7 +510,8 @@ export class AuthService implements OnModuleInit {
     });
 
     this.logger.log(`[LOGIN ✅] ${user.email} | ${user.role} | IP=${clientIp}`);
-    return { accessToken: this.signJwt(user, dto.rememberMe ?? false), user: this.toPublicUser(user) };
+    const actorId = await this.findProfileId(user.id, user.role as UserRole);
+    return { accessToken: this.signJwt(user, dto.rememberMe ?? false, actorId), user: this.toPublicUser(user) };
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -625,8 +641,7 @@ export class AuthService implements OnModuleInit {
       { sub: user.id, purpose: 'password-reset', email: user.email },
       {
         expiresIn: JWT_TTL_RESET,
-        secret:    this.config.get<string>('JWT_RESET_SECRET') ??
-                   (this.config.get<string>('JWT_SECRET') + '_reset'),
+        secret:    this.jwtResetSecret,
       },
     );
 
@@ -642,8 +657,7 @@ export class AuthService implements OnModuleInit {
     let payload: any;
     try {
       payload = this.jwtService.verify(resetToken, {
-        secret: this.config.get<string>('JWT_RESET_SECRET') ??
-                (this.config.get<string>('JWT_SECRET') + '_reset'),
+        secret: this.jwtResetSecret,
       });
     } catch {
       throw new BadRequestException(
@@ -780,11 +794,35 @@ export class AuthService implements OnModuleInit {
     await this.userRepo.update(user.id, updates as any);
   }
 
-  private signJwt(user: User, rememberMe: boolean): string {
+  private signJwt(user: User, rememberMe: boolean, actorId?: string): string {
     const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role };
-    return this.jwtService.sign(payload, {
-      expiresIn: rememberMe ? JWT_TTL_LONG : JWT_TTL_SHORT,
-    });
+    if (actorId) payload.actorId = actorId;
+
+    // Le super admin a systématiquement le TTL le plus court (4h),
+    // quel que soit le flag rememberMe — c'est le compte le plus privilégié.
+    const expiresIn =
+      user.role === UserRole.SUPER_ADMIN
+        ? JWT_TTL_SUPER
+        : rememberMe ? JWT_TTL_LONG : JWT_TTL_SHORT;
+
+    return this.jwtService.sign(payload, { expiresIn });
+  }
+
+  /** Retourne le UUID du profil associé à un utilisateur selon son rôle */
+  private async findProfileId(userId: string, role: UserRole): Promise<string | undefined> {
+    try {
+      switch (role) {
+        case UserRole.CLIENT:        return (await this.clientRepo.findOne({ where: { userId } }))?.id;
+        case UserRole.COMPANY:       return (await this.companyRepo.findOne({ where: { userId } }))?.id;
+        case UserRole.DELIVERY:      return (await this.deliveryRepo.findOne({ where: { userId } }))?.id;
+        case UserRole.CORRESPONDENT: return (await this.correspondentRepo.findOne({ where: { userId } }))?.id;
+        case UserRole.PARTNER:       return (await this.partnerRepo.findOne({ where: { userId } }))?.id;
+        case UserRole.ADMIN:         return (await this.adminRepo.findOne({ where: { userId } }))?.id;
+        default:                     return undefined;
+      }
+    } catch {
+      return undefined;
+    }
   }
 
   private toPublicUser(user: User) {
@@ -881,6 +919,55 @@ export class AuthService implements OnModuleInit {
     }
 
     return this.signJwt(user!, true);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 8. GOOGLE OAUTH — CODE À USAGE UNIQUE (anti-JWT-in-URL)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Génère un code aléatoire à usage unique (UUID) et stocke le JWT associé
+   * dans Redis avec une expiration de 60 secondes.
+   *
+   * Pourquoi : éviter de mettre le JWT directement dans l'URL de redirection
+   * (historique navigateur, logs serveur, header Referer).
+   * Le code court est non-sensible (aléatoire, expire en 60s, usage unique).
+   */
+  async createGoogleOAuthCode(jwt: string): Promise<string> {
+    const code = crypto.randomUUID();
+    await this.redis.setex(`oauth_code:${code}`, OAUTH_CODE_TTL_SEC, jwt);
+    return code;
+  }
+
+  /**
+   * Échange le code OAuth contre le JWT, puis détruit le code (usage unique).
+   * Lance UnauthorizedException si le code est expiré ou inexistant.
+   */
+  async exchangeGoogleOAuthCode(code: string): Promise<AuthResponse> {
+    const key = `oauth_code:${code}`;
+    const jwt = await this.redis.get(key);
+
+    if (!jwt) {
+      throw new UnauthorizedException(
+        'Code OAuth invalide ou expiré (60 secondes). Reconnectez-vous via Google.',
+      );
+    }
+
+    await this.redis.del(key);
+
+    let payload: JwtPayload;
+    try {
+      payload = this.jwtService.verify<JwtPayload>(jwt, {
+        secret: this.config.get<string>('JWT_SECRET'),
+      });
+    } catch {
+      throw new UnauthorizedException('Token OAuth invalide. Reconnectez-vous.');
+    }
+
+    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+    if (!user) throw new NotFoundException('Compte introuvable.');
+
+    return { accessToken: jwt, user: this.toPublicUser(user) };
   }
 
   private async generateUniqueUsername(firstName: string, lastName: string): Promise<string> {

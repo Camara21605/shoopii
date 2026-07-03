@@ -1,5 +1,8 @@
 /* ================================================================
- * ParamNav.module.css — Navigation latérale des paramètres
+ * ParamNav.module.css — Navigation paramètres correspondant
+ * Couleur accent : --cor / --cor-lt (thème amber)
+ * Desktop : barre verticale sticky
+ * ≤1100px : onglets horizontaux scrollables (pills)
  * ================================================================ */
 
 .nav {
@@ -10,18 +13,24 @@
   box-shadow: var(--sh-xs);
   position: sticky;
   top: calc(var(--hdr, 64px) + 18px);
-  overflow: hidden;
 }
 
 /* Ligne amber décorative en haut */
 .nav::before {
   content: '';
-  display: block; height: 2px;
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
   background: linear-gradient(90deg, var(--cor, #B45309), var(--cor-lt, #F59E0B), transparent);
-  margin: -10px -10px 10px; opacity: .6;
+  border-radius: var(--r-xl, 26px) var(--r-xl, 26px) 0 0;
+  opacity: .6;
+  pointer-events: none;
 }
 
-/* ── Groupe ── */
+/* ── Groupe wrapper ── */
+.group { }
+
+/* ── Groupe label ── */
 .sect {
   font-size: 9px; font-weight: 800; color: var(--t4);
   text-transform: uppercase; letter-spacing: 1.2px;
@@ -40,11 +49,7 @@
 .item:hover .icon { color: var(--cor) !important; }
 
 /* Item actif */
-.itemOn {
-  background: var(--cor-bg);
-  color: var(--cor, #B45309);
-  font-weight: 700;
-}
+.itemOn { background: var(--cor-bg); color: var(--cor, #B45309); font-weight: 700; }
 .itemOn::before {
   content: '';
   position: absolute; left: 0; top: 50%; transform: translateY(-50%);
@@ -67,19 +72,57 @@
 .dotR { background: var(--red, #DC2626); }
 .dotA { background: var(--cor, #B45309); }
 
-/* ── Responsive : barre horizontale ── */
+/* ── Responsive : onglets scrollables ── */
 @media (max-width: 1100px) {
   .nav {
     position: static;
-    display: flex; flex-wrap: wrap; gap: 4px; padding: 8px;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: var(--r-lg);
   }
   .nav::before { display: none; }
-  .sect     { display: none; }
-  .item     { padding: 7px 11px; font-size: 12px; }
+  .nav::-webkit-scrollbar { display: none; }
+
+  .group { display: contents; }
+  .sect  { display: none; }
+
+  .item {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 8px 13px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--pill);
+    scroll-snap-align: start;
+    width: auto;
+    margin-bottom: 0;
+    background: var(--g50);
+    border: 1.5px solid var(--bdr2);
+  }
+  .item span { display: inline; }
+  .item:hover { background: var(--cor-bg, rgba(180,83,9,.09)); border-color: rgba(180,83,9,.3); color: var(--cor, #B45309); }
+
+  .itemOn {
+    background: var(--cor, #B45309);
+    border-color: var(--cor, #B45309);
+    color: #fff;
+    font-weight: 700;
+  }
   .itemOn::before { display: none; }
+  .itemOn .icon { color: #fff !important; }
+  .itemOn:hover { background: var(--cor); }
+
+  .itemDanger { border-color: rgba(220,38,38,.25); color: var(--red, #DC2626) !important; background: rgba(220,38,38,.05); }
+  .itemDanger.itemOn { background: var(--red, #DC2626); border-color: var(--red, #DC2626); color: #fff !important; }
+  .itemDanger.itemOn .icon { color: #fff !important; }
+
+  .icon { width: auto; }
   .pct, .dot { display: none; }
-}
-@media (max-width: 640px) {
-  .item span { display: none; }
-  .item { padding: 9px; justify-content: center; }
 }

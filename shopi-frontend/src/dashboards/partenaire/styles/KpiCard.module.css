@@ -1,0 +1,44 @@
+/* src/dashboards/partenaire/styles/KpiCard.module.css */
+.kpi {
+  background: var(--white);
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--r-xl);
+  padding: 18px;
+  box-shadow: var(--sh-xs);
+  position: relative;
+  overflow: hidden;
+  transition: all .25s;
+  /* ⚠️ min-width:0 : évite que les montants (espaces insécables) ne
+     forcent la colonne de grille à déborder une fois sur mobile. */
+  min-width: 0;
+}
+.kpi:hover { border-color: var(--bdrb); transform: translateY(-3px); box-shadow: var(--sh-md); }
+
+.stripe { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.k1 .stripe { background: linear-gradient(90deg, var(--blue), var(--blue-lt)); }
+.k2 .stripe { background: linear-gradient(90deg, var(--violet), #9F67E8); }
+.k3 .stripe { background: linear-gradient(90deg, #C8961E, #F0C868); }
+.k4 .stripe { background: linear-gradient(90deg, #059669, #34D399); }
+
+.top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+.ic { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+.k1 .ic { background: var(--sky-2); color: var(--blue); }
+.k2 .ic { background: var(--vl-bg); color: var(--violet); }
+.k3 .ic { background: rgba(200, 150, 30, .12); color: #C8961E; }
+.k4 .ic { background: var(--em-bg); color: var(--emerald); }
+
+.badge { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: var(--pill); display: inline-flex; align-items: center; gap: 4px; }
+.badge.up { background: var(--em-bg); color: var(--emerald); }
+.badge.dn { background: rgba(220, 38, 38, .1); color: var(--red); }
+
+.v {
+  font-family: var(--fd);
+  font-size: clamp(16px, 4vw, 25px);
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: -.5px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.v small { font-size: 12px; font-weight: 600; color: var(--t3); }
+.l { font-size: 11.5px; color: var(--t3); margin-top: 5px; font-weight: 500; }

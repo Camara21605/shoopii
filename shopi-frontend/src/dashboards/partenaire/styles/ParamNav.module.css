@@ -1,0 +1,127 @@
+/* ================================================================
+ * ParamNav.module.css — Dashboard Partenaire
+ * Desktop : barre verticale sticky
+ * ≤1100px : onglets horizontaux scrollables (pills)
+ * ================================================================ */
+
+.nav {
+  background: var(--white);
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--r-xl);
+  padding: 10px;
+  box-shadow: var(--sh-xs);
+  position: sticky;
+  top: calc(var(--hdr, 64px) + 18px);
+}
+
+/* Ligne décorative en haut */
+.nav::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--blue), var(--violet), transparent);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  opacity: .5;
+  pointer-events: none;
+}
+
+/* ── Groupe wrapper ── */
+.group { }
+
+/* ── Groupe label ── */
+.sect {
+  font-size: 9px; font-weight: 800; color: var(--t4);
+  text-transform: uppercase; letter-spacing: 1.2px;
+  padding: 10px 10px 4px;
+}
+
+/* ── Item ── */
+.item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 11px; border-radius: var(--r-md);
+  font-size: 13px; font-weight: 500; color: var(--t2);
+  cursor: pointer; transition: all .18s;
+  position: relative; margin-bottom: 2px;
+  border: none; background: transparent; width: 100%; text-align: left; font-family: var(--fb);
+}
+.item:hover { background: var(--sky); color: var(--blue); }
+.item:hover .icon { color: var(--blue) !important; }
+
+/* Item actif */
+.itemOn { background: var(--sky); color: var(--blue); font-weight: 700; }
+.itemOn::before {
+  content: '';
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px;
+  background: var(--blue); border-radius: 0 3px 3px 0;
+}
+.itemOn .icon { color: var(--blue) !important; }
+
+/* Item danger */
+.itemDanger       { color: var(--red) !important; }
+.itemDanger:hover { background: rgba(220,38,38,.06) !important; color: var(--red) !important; }
+.itemDanger .icon { color: var(--red) !important; }
+
+/* Icône */
+.icon { width: 15px; text-align: center; font-size: 13px; flex-shrink: 0; color: var(--t4); transition: color .18s; }
+
+/* Badges droite */
+.pct { margin-left: auto; font-family: var(--fd); font-size: 10px; font-weight: 800; flex-shrink: 0; }
+.dot { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dotR { background: var(--red); }
+.dotA { background: var(--amber); }
+
+/* ── Responsive : onglets scrollables ── */
+@media (max-width: 1100px) {
+  .nav {
+    position: static;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: var(--r-lg);
+  }
+  .nav::before { display: none; }
+  .nav::-webkit-scrollbar { display: none; }
+
+  .group { display: contents; }
+  .sect  { display: none; }
+
+  .item {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 8px 13px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--pill);
+    scroll-snap-align: start;
+    width: auto;
+    margin-bottom: 0;
+    background: var(--g50);
+    border: 1.5px solid var(--bdr2);
+  }
+  .item span { display: inline; }
+  .item:hover { background: var(--sky); border-color: var(--bdrb); color: var(--blue); }
+
+  .itemOn {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+    font-weight: 700;
+  }
+  .itemOn::before { display: none; }
+  .itemOn .icon { color: #fff !important; }
+  .itemOn:hover { background: var(--blue); }
+
+  .itemDanger { border-color: rgba(220,38,38,.25); color: var(--red) !important; background: rgba(220,38,38,.05); }
+  .itemDanger.itemOn { background: var(--red); border-color: var(--red); color: #fff !important; }
+  .itemDanger.itemOn .icon { color: #fff !important; }
+
+  .pct, .dot { display: none; }
+}

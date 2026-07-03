@@ -29,6 +29,7 @@ import {
   SUIVIS_JOBS,
   type FollowJobPayload,
 } from '../suivis.queue';
+import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 @Processor(SUIVIS_QUEUE)
 export class SuivisProcessor extends WorkerHost {
@@ -38,6 +39,7 @@ export class SuivisProcessor extends WorkerHost {
   constructor(
     @InjectRedis()
     private readonly redis: Redis,
+    private readonly notifEventSvc: NotificationEventService,
   ) {
     super();
   }
@@ -92,17 +94,14 @@ export class SuivisProcessor extends WorkerHost {
         `📬 New follow → ${payload.targetName} suivi par ${payload.followerName}`,
       );
 
-      // ─────────────────────────────────────
-      // INTÉGRATION FUTURE (IMPORTANT)
-      // ─────────────────────────────────────
-      // Injecter un NotificationsService ici :
-      //
-      // await this.notificationsService.create({
-      //   userId: payload.targetUserId,
-      //   type: 'new_follower',
-      //   title: `${payload.followerName} vous suit`,
-      //   entityId: payload.followId,
-      // });
+      await this.notifEventSvc.notifyNewFollower({
+        targetType:   payload.targetType,
+        targetId:     payload.targetId,
+        followerType: payload.followerType,
+        followerId:   payload.followerId,
+        followerName: payload.followerName,
+        followId:     payload.followId,
+      });
 
     } catch (err) {
       this.logger.error(

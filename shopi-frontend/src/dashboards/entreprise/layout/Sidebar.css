@@ -452,7 +452,11 @@ input, select, textarea { font-family: var(--fb); }
   letter-spacing: -.4px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.tb-sub { font-size: 10.5px; color: var(--t3); margin-top: 1px; }
+.tb-sub {
+  font-size: 10.5px; color: var(--t3); margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
+}
 
 /* Barre de recherche */
 .tb-srch {
@@ -737,6 +741,12 @@ input, select, textarea { font-family: var(--fb); }
   box-shadow: var(--sh-xs);
   position: relative; overflow: hidden;
   transition: all .25s; cursor: default;
+  /* ⚠️ min-width:0 nécessaire : les montants (espaces insécables
+     entre les milliers) ne peuvent jamais wrapper. Sans ça, la
+     colonne de grille s'élargit pour les contenir et fait déborder
+     toute la page horizontalement une fois la grille passée en
+     2 puis 1 colonne sur mobile. */
+  min-width: 0;
 }
 .kpi:hover {
   border-color: var(--bdrb);
@@ -786,8 +796,9 @@ input, select, textarea { font-family: var(--fb); }
 /* Valeur principale */
 .kpi-val {
   font-family: var(--fd);
-  font-size: 27px; font-weight: 800;
-  color: var(--navy); letter-spacing: -.5px; line-height: 1;
+  font-size: clamp(16px, 5.5vw, 27px); font-weight: 800;
+  color: var(--navy); letter-spacing: -.5px; line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 .kpi-lbl { font-size: 12px; color: var(--t3); margin-top: 5px; font-weight: 500; }
 .kpi-sub { font-size: 10.5px; color: var(--t4); margin-top: 3px; }
@@ -1704,6 +1715,25 @@ select.pf-in {
     grid-template-columns: 1fr;
   }
   .hero-right { grid-template-columns: 1fr; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   UTILITAIRES GRILLE RESPONSIVE
+   À utiliser à la place de style={{ gridTemplateColumns: '...' }}
+   en JSX : un style inline a une spécificité maximale et ne peut
+   JAMAIS être surchargé par une media query externe, peu importe
+   le CSS écrit ailleurs — d'où plusieurs pages qui restaient
+   bloquées en plusieurs colonnes sur mobile malgré tout le reste.
+   Seules les propriétés qui n'ont pas besoin de changer selon la
+   largeur (gap, margin…) peuvent rester en style inline à côté.
+   ════════════════════════════════════════════════════════════ */
+.gridR2 { display: grid; grid-template-columns: 1fr 1fr; }
+.gridR3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 640px) {
+  .gridR3 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 420px) {
+  .gridR2, .gridR3 { grid-template-columns: 1fr; }
 }
 
 

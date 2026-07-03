@@ -566,3 +566,6 @@
   .overlay    { padding: 10px; align-items: flex-end; }
   .modal      { border-radius: 20px 20px 0 0; max-height: 95vh; width: 100%; max-width: 100%; }
 }
+@media (max-width: 420px) {
+  .kpiGrid, .typeGrid { grid-template-columns: 1fr; }
+}

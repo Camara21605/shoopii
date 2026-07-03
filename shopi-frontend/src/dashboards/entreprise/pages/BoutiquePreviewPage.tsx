@@ -396,7 +396,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
               </div>
 
               {/* GPS */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div className="gridR2" style={{ gap: 8 }}>
                 {[
                   { label: 'Latitude',  val: markerLat.toFixed(5) },
                   { label: 'Longitude', val: markerLng.toFixed(5) },

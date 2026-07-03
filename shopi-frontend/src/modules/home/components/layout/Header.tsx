@@ -15,7 +15,11 @@ import styles                                 from './Header.module.css';
 import { tokenStorage }                       from '../../../../shared/services/apiFetch';
 import { getRoleFromToken, getDashboardPath } from '../../../../shared/services/authUtils';
 import { useCart }                            from '../../../../shared/context/CartContext';
+import { useGlobalCall }                      from '../../../../shared/context/GlobalCallContext';
 import { settingsApi }                        from '../settings/api/settings.api';
+import { NotificationProvider }               from '../../../../shared/notifications/NotificationContext';
+import NotificationToastStack                 from '../../../../shared/notifications/NotificationToastStack';
+import NotificationCenter                     from '../../../../shared/notifications/NotificationCenter';
 
 interface HeaderProps {
   onToast:    (msg: string) => void;
@@ -26,7 +30,6 @@ interface HeaderProps {
 export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
   const [scrolled,     setScrolled]     = useState(false);
   const [mobileOpen,   setMobileOpen]   = useState(false);
-  const [notifOpen,    setNotifOpen]    = useState(false);
   const [searchFocus,  setSearchFocus]  = useState(false);
   const [mobileSearch, setMobileSearch] = useState(false);
   const [avatarOpen,   setAvatarOpen]   = useState(false);
@@ -40,6 +43,9 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
 
   /* ✅ Badge panier depuis le contexte global */
   const { count: cartCount } = useCart();
+
+  /* ✅ Badge messages non lus — temps réel via GlobalCallContext */
+  const { msgUnread } = useGlobalCall();
 
   const role        = getRoleFromToken();
   const isLoggedIn  = !!role;
@@ -121,15 +127,6 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
 
-  const NOTIFS = [
-    { ico:'📦', cls:styles.niO, text:"Commande #SH-4521 expédiée — livraison prévue aujourd'hui.", time:'Il y a 5 min',  unread:true  },
-    { ico:'📢', cls:styles.niP, text:"Flash Sale : −40% sur l'électronique jusqu'à minuit !",      time:'Il y a 24 min', unread:true  },
-    { ico:'🤝', cls:styles.niF, text:'FashionHub GN vous invite à sa nouvelle collection.',          time:'Il y a 1 h',   unread:true  },
-    { ico:'❤️', cls:styles.niL, text:"Votre avis sur iPhone 15 Pro a reçu 12 mentions J'aime.",     time:'Il y a 2 h',   unread:false },
-    { ico:'🛵', cls:styles.niD, text:"Mamadou D. est en route — arrivée dans 18 min.",              time:'Hier',         unread:false },
-  ];
-  const unreadCount = NOTIFS.filter(n => n.unread).length;
-
   const NAV_LINKS = [
   { label:'Explorer',    icon:'fa-compass',
     action:() => { document.querySelector('#blocs')?.scrollIntoView({behavior:'smooth'}); setMobileOpen(false); } },
@@ -156,7 +153,8 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
   }
 
   return (
-    <>
+    <NotificationProvider>
+      <NotificationToastStack />
       <header className={`${styles.hdr} ${scrolled ? styles.hdrScrolled : ''}`}>
         <div className={styles.wrap}>
           <div className={styles.row}>
@@ -218,34 +216,12 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
               <button className={styles.iconBtn}
                 onClick={() => clientAction(() => navigate('/messagerie'))} title="Messagerie">
                 <i className="fas fa-comment-dots" />
-                {isClient && <span className={styles.badge}>3</span>}
+                {isClient && msgUnread > 0 && (
+                  <span className={styles.badge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
+                )}
               </button>
 
-              <div className={styles.notifWrap}>
-                <button className={styles.iconBtn}
-                  onClick={() => clientAction(() => setNotifOpen(o => !o))} title="Notifications">
-                  <i className="fas fa-bell" />
-                  {isClient && unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}
-                </button>
-                {notifOpen && isClient && (
-                  <div className={styles.notifPanel}>
-                    <div className={styles.notifHd}>
-                      <span>Notifications</span>
-                      <button onClick={() => { onToast('✅ Tout marqué'); setNotifOpen(false); }}>Tout lire</button>
-                    </div>
-                    <div className={styles.notifBody}>
-                      {NOTIFS.map((n, i) => (
-                        <div key={i} className={`${styles.notifItem} ${n.unread ? styles.notifUnread : ''}`}
-                          onClick={() => setNotifOpen(false)}>
-                          <div className={`${styles.notifIco} ${n.cls}`}>{n.ico}</div>
-                          <div className={styles.notifTxt}><p>{n.text}</p><time>{n.time}</time></div>
-                          {n.unread && <div className={styles.notifDot} />}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              {isLoggedIn && <NotificationCenter />}
 
               {/* ✅ Badge panier dynamique depuis CartContext */}
               <button className={styles.iconBtn}
@@ -328,14 +304,12 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
               <button className={styles.iconBtn}
                 onClick={() => clientAction(() => navigate('/messagerie'))} title="Messagerie">
                 <i className="fas fa-comment-dots" />
-                {isClient && <span className={styles.badge}>3</span>}
+                {isClient && msgUnread > 0 && (
+                  <span className={styles.badge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
+                )}
               </button>
 
-              <button className={styles.iconBtn}
-                onClick={() => clientAction(() => setNotifOpen(o => !o))} title="Notifications">
-                <i className="fas fa-bell" />
-                {isClient && unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}
-              </button>
+              {isLoggedIn && <NotificationCenter />}
               <button className={styles.iconBtn}
                 onClick={() => clientAction(() => navigate('/parametres'))} title="Paramètres">
                 <i className="fas fa-gear" />
@@ -503,8 +477,8 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
         >
           <i className="fas fa-comment-dots" />
           <span>Messages</span>
-          {isClient && (
-            <span className={styles.bnBadge}>3</span>
+          {isClient && msgUnread > 0 && (
+            <span className={styles.bnBadge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
           )}
         </button>
 
@@ -573,6 +547,6 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
           </div>
         </div>
       )}
-    </>
+    </NotificationProvider>
   );
 }

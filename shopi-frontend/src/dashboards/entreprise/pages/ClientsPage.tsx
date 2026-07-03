@@ -158,7 +158,7 @@ export default function ClientsPage() {
       </div>
 
       {/* ── KPI Cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 13, marginBottom: 20 }}>
+      <div className="kpi-grid">
         {[
           {
             ico: '👥', k: 'k1',

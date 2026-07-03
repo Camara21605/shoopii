@@ -64,6 +64,8 @@ import { PromotionUsage }
   from 'src/database/entities/entreprise.table/promotion-usage.entity';
 
 import { ValidateCodeDto } from '../dto/promotion.dto';
+import { NotificationType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 // ─────────────────────────────────────────────────────────────
 // INTERFACE DE RÉPONSE — POST /promotions/validate-code
@@ -113,6 +115,7 @@ export class PromoCodeService {
     private readonly promoUsageRepo: Repository<PromotionUsage>,
 
     private readonly dataSource: DataSource,
+    private readonly notifEventSvc: NotificationEventService,
   ) {}
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -424,6 +427,22 @@ export class PromoCodeService {
         `[APPLY CODE ✅] PromoID=${promotionId} | ClientID=${clientId} | ` +
         `OrderID=${orderId} | Remise=${montantReduit} GNF`,
       );
+
+      /* Notification COMPANY — fire-and-forget hors transaction */
+      void this.promoRepo
+        .findOne({ where: { id: promotionId }, select: ['id', 'companyId', 'code', 'nom'] })
+        .then(promo => {
+          if (!promo?.companyId) return;
+          void this.notifEventSvc.notifyPromoEvent({
+            companyId: promo.companyId,
+            promoId:   promo.id,
+            promoCode: promo.code,
+            type:      NotificationType.PROMO_USED,
+            title:     'Code promo utilisé 🎉',
+            body:      `Le code "${promo.code}" de votre promotion "${promo.nom}" a été utilisé.`,
+          });
+        })
+        .catch(() => { /* silencieux — ne jamais bloquer applyCode */ });
 
     } catch (err) {
       await qr.rollbackTransaction();

@@ -201,7 +201,7 @@ export default function ClientProfilModal({ clientId, onClose, onPop }: Props) {
 
           {/* KPI strip */}
           {!loading && detail && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 14 }}>
+            <div className="gridR3" style={{ gap: 10, marginBottom: 14 }}>
               {[
                 { ico: '🛒', label: 'Commandes',    val: String(detail.totalOrders),         sub: 'dans cette boutique' },
                 { ico: '💰', label: 'Total dépensé', val: fmtGNF(detail.totalSpent),          sub: 'depuis le début'     },
@@ -261,7 +261,7 @@ export default function ClientProfilModal({ clientId, onClose, onPop }: Props) {
                 <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 10 }}>
                   Relation avec votre boutique
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div className="gridR2" style={{ gap: 10 }}>
                   {[
                     { label: 'Commandes passées',   val: String(detail.totalOrders), color: 'var(--blue)'    },
                     { label: 'Total dépensé',        val: fmtGNF(detail.totalSpent), color: 'var(--navy)'   },

@@ -49,6 +49,11 @@ import {
   FilterLivreursDto,
   UpdateLivreurDto,
 } from '../dto/livreur.dto';
+import {
+  NotificationActorType,
+  NotificationType,
+} from 'src/database/entities/notification/notification.entitiy';
+import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 // ─────────────────────────────────────────────────────────────
 // INTERFACES DE RÉPONSE — alignées sur LivreursPage.tsx
@@ -131,6 +136,8 @@ export class LivreursService {
 
     @InjectRepository(Company)
     private readonly companyRepo: Repository<Company>,
+
+    private readonly notifEventSvc: NotificationEventService,
   ) {}
 
   // ══════════════════════════════════════════════════════════
@@ -377,6 +384,15 @@ export class LivreursService {
       availability: DeliveryAvailability.OFFLINE,
     });
     this.logger.log(`[SUSPENDRE LIVREUR ✅] ID=${id} | Raison=${raison ?? 'N/A'}`);
+
+    void this.notifEventSvc.notifyAccountStatusChanged({
+      recipientType: NotificationActorType.DELIVERY,
+      recipientId:   d.id,
+      type:          NotificationType.ACCOUNT_SUSPENDED,
+      title:         'Compte suspendu ⚠️',
+      body:          'Votre compte livreur a été temporairement suspendu.',
+    });
+
     return this.findOne(id, user);
   }
 
@@ -392,6 +408,15 @@ export class LivreursService {
 
     await this.deliveryRepo.update(id, { status: DeliveryStatus.ACTIVE });
     this.logger.log(`[REACTIVER LIVREUR ✅] ID=${id}`);
+
+    void this.notifEventSvc.notifyAccountStatusChanged({
+      recipientType: NotificationActorType.DELIVERY,
+      recipientId:   d.id,
+      type:          NotificationType.ACCOUNT_APPROVED,
+      title:         'Compte réactivé ✅',
+      body:          'Votre compte livreur a été réactivé. Vous pouvez reprendre vos activités.',
+    });
+
     return this.findOne(id, user);
   }
 
@@ -411,6 +436,15 @@ export class LivreursService {
 
     await this.deliveryRepo.update(id, { status: DeliveryStatus.ACTIVE });
     this.logger.log(`[VALIDER LIVREUR ✅] ID=${id}`);
+
+    void this.notifEventSvc.notifyAccountStatusChanged({
+      recipientType: NotificationActorType.DELIVERY,
+      recipientId:   d.id,
+      type:          NotificationType.ACCOUNT_APPROVED,
+      title:         'Compte approuvé ✅',
+      body:          'Félicitations ! Votre compte livreur a été validé. Vous pouvez commencer à livrer.',
+    });
+
     return this.findOne(id, user);
   }
 }

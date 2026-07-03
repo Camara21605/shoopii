@@ -54,7 +54,7 @@ export default function AnalyticsPage() {
     <div className="page on" id="p-analytics">
 
       {/* ── KPIs ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 13, marginBottom: 20 }}>
+      <div className="kpi-grid">
         {[
           { ic: '👁️',  v: '6 100',     l: 'Visites ce mois',    sub: '+24% vs déc.',  color: 'var(--blue)',    k: 'k1' },
           { ic: '🛒',  v: '3.1%',      l: 'Taux de conversion', sub: '+0.5 pts',      color: 'var(--emerald)', k: 'k2' },

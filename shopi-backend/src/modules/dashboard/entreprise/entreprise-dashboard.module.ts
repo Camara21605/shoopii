@@ -24,6 +24,7 @@ import { Product }        from '../../../database/entities/entreprise.table/prod
 import { ProductMedia }   from '../../../database/entities/entreprise.table/product-media.entity';
 import { ProductVariant } from '../../../database/entities/entreprise.table/product-variant.entity';
 import { ProductSpec }    from '../../../database/entities/entreprise.table/product-spec.entity';
+import { ProductWholesaleTier } from '../../../database/entities/entreprise.table/product-wholesale-tier.entity';
 import { ProductStory }  from '../../../database/entities/entreprise.table/product-story.entity';
 import { Category }       from '../../../database/entities/entreprise.table/category.entity';
 import { SubCategory }    from '../../../database/entities/entreprise.table/sub-category.entity';
@@ -49,6 +50,7 @@ import { CategoriesService }          from '../super-admin/categories/categories
       ProductMedia,
       ProductVariant,
       ProductSpec,
+      ProductWholesaleTier,
       Category,
       SubCategory,
       CompanyType,

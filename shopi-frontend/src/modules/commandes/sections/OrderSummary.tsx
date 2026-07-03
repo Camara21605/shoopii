@@ -3,20 +3,51 @@
  * Récapitulatif du colis (articles + montants). Colonne droite.
  * ================================================================ */
 
+import { useState } from 'react';
 import styles from '../styles/OrderSummary.module.css';
-import type { Commande } from '../data/types';
+import type { ArticleCommande, Commande } from '../data/types';
 
 const fmt = (n: number) => n.toLocaleString('fr-FR');
 
+/* ── Vignette produit ──────────────────────────────────────────── */
+function ArticleThumb({ article }: { article: ArticleCommande }) {
+  const [errored, setErrored] = useState(false);
+  const showImg = !!article.imageUrl && !errored;
+
+  return (
+    <div className={styles.em}>
+      {showImg ? (
+        <img
+          src={article.imageUrl!}
+          alt={article.nom}
+          onError={() => setErrored(true)}
+          style={{
+            width: '100%', height: '100%',
+            objectFit: 'cover', borderRadius: 10, display: 'block',
+          }}
+        />
+      ) : (
+        <span style={{ fontSize: 18 }}>{article.emoji}</span>
+      )}
+    </div>
+  );
+}
+
+/* ── Composant principal ───────────────────────────────────────── */
 export default function OrderSummary({ commande }: { commande: Commande }) {
   const livreur = commande.acteurs.find(a => a.role === 'livreur');
+
   return (
     <div className={styles.card}>
-      <div className={styles.ch}><div className={styles.chT}><i className="fas fa-bag-shopping" /> Détail de la commande</div></div>
+      <div className={styles.ch}>
+        <div className={styles.chT}>
+          <i className="fas fa-bag-shopping" /> Détail de la commande
+        </div>
+      </div>
       <div className={styles.cb}>
         {commande.articles.map((a, i) => (
           <div key={i} className={styles.item}>
-            <div className={styles.em}>{a.emoji}</div>
+            <ArticleThumb article={a} />
             <div className={styles.inf}>
               <div className={styles.nm}>{a.nom}</div>
               <div className={styles.meta}>{a.boutique} · ×{a.qty}</div>
@@ -26,11 +57,23 @@ export default function OrderSummary({ commande }: { commande: Commande }) {
         ))}
 
         <div style={{ marginTop: 12 }} />
-        <div className={styles.row}><span>Sous-total</span><span className={styles.v}>{fmt(commande.montant.sousTotal)} GNF</span></div>
-        <div className={styles.row}><span>Livraison{livreur ? ` (${livreur.nom})` : ''}</span><span className={styles.v}>{fmt(commande.montant.livraison)} GNF</span></div>
-        <div className={styles.row}><span>Frais correspondant</span><span className={styles.v}>{fmt(commande.montant.fraisCorrespondant)} GNF</span></div>
+        <div className={styles.row}>
+          <span>Sous-total</span>
+          <span className={styles.v}>{fmt(commande.montant.sousTotal)} GNF</span>
+        </div>
+        <div className={styles.row}>
+          <span>Livraison{livreur ? ` (${livreur.nom})` : ''}</span>
+          <span className={styles.v}>{fmt(commande.montant.livraison)} GNF</span>
+        </div>
+        <div className={styles.row}>
+          <span>Frais correspondant</span>
+          <span className={styles.v}>{fmt(commande.montant.fraisCorrespondant)} GNF</span>
+        </div>
         <div className={styles.div} />
-        <div className={styles.total}><span className={styles.tl}>Total payé</span><span className={styles.tv}>{fmt(commande.montant.total)} GNF</span></div>
+        <div className={styles.total}>
+          <span className={styles.tl}>Total payé</span>
+          <span className={styles.tv}>{fmt(commande.montant.total)} GNF</span>
+        </div>
       </div>
     </div>
   );

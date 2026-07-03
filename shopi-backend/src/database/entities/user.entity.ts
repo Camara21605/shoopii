@@ -244,6 +244,15 @@ export class User {
   @Column({ type: 'varchar', length: 500, nullable: true })
   profilePicture: string | null;
 
+  /**
+   * Hash SHA-256 du numéro de téléphone en format E.164 (64 hex chars).
+   * Permet la découverte de contacts sans stocker le numéro en clair.
+   * Rempli à l'inscription si l'utilisateur fournit son numéro de téléphone.
+   */
+  @Index({ unique: true, where: '"phoneHash" IS NOT NULL' })
+  @Column({ type: 'varchar', length: 64, nullable: true, select: false })
+  phoneHash: string | null;
+
   /* ==========================================================
    * TIMESTAMPS (inchangés)
    * ========================================================== */

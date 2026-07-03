@@ -1,0 +1,24 @@
+/* ================================================================
+ * ParametresPage.module.css — Dashboard Partenaire
+ * Layout de la page paramètres (nav + contenu).
+ * ================================================================ */
+
+.page { padding: 24px 26px; min-height: 100vh; }
+
+/* Grille 2 colonnes : nav (gauche) + sections (droite) */
+.layout {
+  display: grid;
+  grid-template-columns: 224px 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+.content { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 1fr; gap: 16px; }
+}
+@media (max-width: 640px) {
+  .page { padding: 12px 14px; }
+  .layout { gap: 12px; }
+}

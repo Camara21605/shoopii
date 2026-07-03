@@ -149,6 +149,54 @@ export class Partner {
   })
   status!: PartnerStatus;
 
+  /** Date de réactivation automatique (après désactivation temporaire) */
+  @Column({ type: 'timestamp', nullable: true })
+  suspendedUntil!: Date | null;
+
+  /* ============================================================
+   * PROFIL ÉTENDU
+   * ============================================================ */
+
+  /** Bio / Présentation publique du partenaire */
+  @Column({ type: 'text', nullable: true })
+  bio!: string | null;
+
+  /* ============================================================
+   * SÉCURITÉ — 2FA
+   * ============================================================ */
+
+  @Column({ type: 'boolean', default: false })
+  twoFaEnabled!: boolean;
+
+  /** 'sms' | 'app' | 'email' */
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  twoFaMethod!: string | null;
+
+  /* ============================================================
+   * PRÉFÉRENCES (JSON sérialisé — pas de table séparée)
+   * ============================================================ */
+
+  /**
+   * Préférences de notifications sérialisées en JSON.
+   * Ex : {"notifActeurActive":true,"notifCommission":true,...}
+   */
+  @Column({ type: 'text', nullable: true })
+  notifSettings!: string | null;
+
+  /**
+   * Paramètres de confidentialité sérialisés en JSON.
+   * Ex : {"profilPublic":true,"afficherTelephone":true,...}
+   */
+  @Column({ type: 'text', nullable: true })
+  privacySettings!: string | null;
+
+  /**
+   * Préférences UI sérialisées en JSON.
+   * Ex : {"langue":"fr","apparence":"light"}
+   */
+  @Column({ type: 'text', nullable: true })
+  preferences!: string | null;
+
   /* ============================================================
    * STATS
    * ============================================================ */

@@ -1,0 +1,18 @@
+/* ================================================================
+ * src/dashboards/partenaire/styles/PartenaireApp.module.css
+ * Layout général. Variables globales depuis styles/variables.css.
+ * ================================================================ */
+
+.app { --sb: 268px; --hdr: 64px; }
+
+.main { margin-left: var(--sb); padding-top: var(--hdr); }
+.page { padding: 26px; animation: fade .3s var(--ease); }
+@keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 860px) {
+  .app { --sb: 0px; }
+  .main { margin-left: 0; }
+}
+@media (max-width: 560px) {
+  .page { padding: 16px; }
+}

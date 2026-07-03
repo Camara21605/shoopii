@@ -1,0 +1,343 @@
+/* ============================================================
+ * NotificationsAdminSection.module.css
+ * Dashboard analytique notifications — thème super-admin.
+ * Variables CSS : --void, --surface, --raised, --txt-1/2/3,
+ *   --acid, --sky, --gold, --rose, --violet, --border, etc.
+ * ============================================================ */
+
+/* ── Wrapper section ─────────────────────────────────────────── */
+.section {
+  display: none;
+  flex-direction: column;
+  gap: 24px;
+  padding: 28px 32px;
+  min-height: 100%;
+}
+.section.active { display: flex; }
+
+/* ── En-tête ─────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-family: var(--font-h);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--txt-1);
+  letter-spacing: -0.4px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--txt-2);
+}
+
+/* ── Sélecteur de période ────────────────────────────────────── */
+.periodPicker {
+  display: flex;
+  gap: 6px;
+}
+
+.periodBtn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--txt-2);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.periodBtn:hover  { background: var(--raised); color: var(--txt-1); }
+.periodBtn.active {
+  background: var(--sky);
+  border-color: var(--sky);
+  color: #000;
+}
+
+/* ── Grille KPI ──────────────────────────────────────────────── */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1100px) { .kpiGrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .kpiGrid { grid-template-columns: 1fr; } }
+
+/* ── Carte KPI ───────────────────────────────────────────────── */
+.kpiCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color .15s;
+}
+.kpiCard:hover { border-color: var(--border-hi, #2a3f58); }
+
+.kpiTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kpiLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--txt-2);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.kpiIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.kpiValue {
+  font-family: var(--font-m);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--txt-1);
+  line-height: 1;
+}
+
+.kpiSub {
+  font-size: 11.5px;
+  color: var(--txt-3);
+}
+
+/* ── Grille de charts ────────────────────────────────────────── */
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 900px) { .chartsGrid { grid-template-columns: 1fr; } }
+
+.chartCardFull { grid-column: 1 / -1; }
+
+/* ── Carte chart ─────────────────────────────────────────────── */
+.chartCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chartTitle {
+  font-family: var(--font-h);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--txt-1);
+}
+
+/* ── Bar chart horizontal (volume par type) ──────────────────── */
+.barList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.barRow {
+  display: grid;
+  grid-template-columns: 160px 1fr 60px;
+  align-items: center;
+  gap: 10px;
+}
+
+.barLabel {
+  font-size: 11.5px;
+  color: var(--txt-2);
+  font-family: var(--font-m);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.barTrack {
+  height: 6px;
+  background: var(--raised);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width .4s var(--ease, ease);
+}
+
+.barCount {
+  font-size: 11.5px;
+  font-family: var(--font-m);
+  color: var(--txt-2);
+  text-align: right;
+}
+
+/* ── Channel cards (delivery rates) ─────────────────────────── */
+.channelGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+@media (max-width: 700px) { .channelGrid { grid-template-columns: repeat(2, 1fr); } }
+
+.channelCard {
+  background: var(--raised);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.channelName {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--txt-2);
+}
+
+.channelRate {
+  font-family: var(--font-m);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.channelMeta {
+  font-size: 10.5px;
+  color: var(--txt-3);
+}
+
+.channelBar {
+  height: 4px;
+  background: var(--surface);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.channelBarFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width .4s;
+}
+
+/* ── DLQ table ───────────────────────────────────────────────── */
+.dlqGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 700px) { .dlqGrid { grid-template-columns: 1fr; } }
+
+.dlqStat {
+  background: var(--raised);
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dlqStatLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--txt-2);
+}
+
+.dlqStatValue {
+  font-family: var(--font-m);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--txt-1);
+  line-height: 1;
+}
+
+.dlqStatSub {
+  font-size: 11px;
+  color: var(--txt-3);
+}
+
+.errorTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.errorTable th {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--txt-3);
+  text-align: left;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.errorTable td {
+  font-size: 12px;
+  color: var(--txt-2);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-m);
+}
+
+.errorTable td:last-child {
+  text-align: right;
+  color: var(--rose);
+  font-weight: 700;
+}
+
+/* ── Loader / état vide ──────────────────────────────────────── */
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  color: var(--txt-3);
+  font-size: 28px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.spinIcon { animation: spin .8s linear infinite; display: inline-block; }
+
+/* ── Pill coloré ─────────────────────────────────────────────── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}

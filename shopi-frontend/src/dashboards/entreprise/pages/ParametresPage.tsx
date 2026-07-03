@@ -181,7 +181,7 @@ export default function ParametresPage() {
               >
                 <i className={`fas ${item.icon}`} />
                 <span>{item.label}</span>
-                {activeSection === item.key && <i className="fas fa-chevron-right" style={{ marginLeft:'auto', fontSize:10, opacity:0.5 }} />}
+                {activeSection === item.key && <i className={`fas fa-chevron-right ${s.chevron}`} style={{ marginLeft:'auto', fontSize:10, opacity:0.5 }} />}
               </button>
             ))}
           </nav>

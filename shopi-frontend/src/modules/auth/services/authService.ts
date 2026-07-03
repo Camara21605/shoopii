@@ -95,8 +95,32 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
   return data;
 }
 
-export function logout(): void {
+export async function logout(): Promise<void> {
   tokenStorage.remove();
+  // Efface aussi le cookie httpOnly côté serveur — fire & forget
+  await apiFetch('/auth/logout', { method: 'POST', public: true }).catch(() => {});
+}
+
+export async function verifyOtp(
+  identifier: string,
+  code: string,
+): Promise<{ resetToken: string }> {
+  return apiFetch<{ resetToken: string }>('/auth/verify-otp', {
+    method: 'POST',
+    body:   { identifier, code },
+    public: true,
+  });
+}
+
+export async function resetPassword(
+  resetToken: string,
+  newPassword: string,
+): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>('/auth/reset-password', {
+    method: 'POST',
+    body:   { resetToken, newPassword },
+    public: true,
+  });
 }
 
 export async function forgotPassword(
@@ -122,6 +146,8 @@ export const authService = {
   login,
   logout,
   forgotPassword,
+  verifyOtp,
+  resetPassword,
   getMe,
   isAuthenticated,
 };

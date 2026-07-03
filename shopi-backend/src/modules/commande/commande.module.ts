@@ -5,6 +5,7 @@
 
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 import { Commande } from '../../database/entities/commande/commande.entity';
 import { CommandeItem } from '../../database/entities/commande/commande-item.entity';
@@ -27,9 +28,11 @@ import { CommandeCreationService } from './services/commande-creation.service';
 import { CommandeQueryService } from './services/commande-query.service';
 import { CommandeValidationService } from './services/commande-validation.service';
 import { CommandeFeedbackService } from './services/commande-feedback.service';
+import { CommandeScheduler } from './commande.scheduler';
 
 @Module({
   imports: [
+    NotificationsModule,
     TypeOrmModule.forFeature([
       Commande,
       CommandeItem,
@@ -58,6 +61,7 @@ import { CommandeFeedbackService } from './services/commande-feedback.service';
     CommandeQueryService,
     CommandeValidationService,
     CommandeFeedbackService,
+    CommandeScheduler,
   ],
   exports: [
     CommandeCreationService,

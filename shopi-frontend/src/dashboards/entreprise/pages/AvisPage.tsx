@@ -99,7 +99,7 @@ export default function AvisPage() {
     <div className="page on" id="p-avis">
 
       {/* ── KPIs ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:13, marginBottom:20 }}>
+      <div className="kpi-grid">
         {[
           { ic:'⭐', v: loading ? '…' : moyenne.toFixed(1), l:'Note globale',        sub:'Sur 5 étoiles' },
           { ic:'💬', v: loading ? '…' : String(totalAvis),  l:'Avis au total',        sub:'Clients vérifiés' },

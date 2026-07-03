@@ -53,6 +53,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack, onSucces
   const [otp,         setOtp]         = useState('');
   const [newPwd,      setNewPwd]      = useState('');
   const [confirmPwd,  setConfirmPwd]  = useState('');
+  const [resetToken,  setResetToken]  = useState('');
   const [showPwd,     setShowPwd]     = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -214,10 +215,11 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack, onSucces
 
     setIsLoading(true);
     try {
-      await apiFetch('/auth/verify-otp', {
+      const data = await apiFetch<{ resetToken: string }>('/auth/verify-otp', {
         method: 'POST',
         body: { identifier: identifier.trim(), code: otp },
       });
+      setResetToken(data.resetToken);
       setStep('newPassword');
     } catch (err: any) {
       setError(err?.message ?? "Code incorrect ou expiré. Vérifiez et réessayez.");
@@ -238,7 +240,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack, onSucces
     try {
       await apiFetch('/auth/reset-password', {
         method: 'POST',
-        body: { identifier: identifier.trim(), code: otp, newPassword: newPwd },
+        body: { resetToken, newPassword: newPwd },
       });
       onSuccess();
     } catch (err: any) {

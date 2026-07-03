@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paramètres — Espace Partenaire · Shopi</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+/* ============================================================
+   PARAMÈTRES PARTENAIRE — Shopi
+   Pattern settings : sous-nav (ParamNav) + sections + barre
+   flottante "Enregistrer / Annuler". Design system Shopi.
+   ============================================================ */
+
+:root {
+  --navy:#0B1F3A; --navy-2:#112648; --navy-3:#16335c;
+  --blue:#1A4FC4; --blue-2:#2560DC; --blue-lt:#5B8EF4;
+  --sky:#EEF3FD; --sky-2:#E2EAFB; --sky-3:#C8D9F8;
+  --emerald:#047857; --em-bg:rgba(4,120,87,.08);
+  --violet:#6D28D9;  --vl-bg:rgba(109,40,217,.08);
+  --amber:#B45309;   --am-bg:rgba(180,83,9,.08);
+  --teal:#0E7490;    --tl-bg:rgba(14,116,144,.08);
+  --rose:#BE185D;    --rs-bg:rgba(190,24,93,.08);
+  --green:#16A34A; --red:#DC2626; --gold:#C8961E;
+  --white:#fff; --g50:#F8F9FA; --g100:#F1F3F5; --g200:#E8EAED; --g300:#D1D5DB;
+  --t1:#0B1F3A; --t2:#4B5563; --t3:#9CA3AF; --t4:#C5CAD3;
+  --bdr:rgba(11,31,58,.08); --bdr2:rgba(11,31,58,.13); --bdrb:rgba(26,79,196,.25);
+  --sh-xs:0 1px 3px rgba(11,31,58,.06); --sh-sm:0 2px 8px rgba(11,31,58,.08);
+  --sh-md:0 6px 24px rgba(11,31,58,.1); --sh-lg:0 16px 48px rgba(11,31,58,.13);
+  --sh-xl:0 24px 64px rgba(11,31,58,.16); --sh-b:0 6px 24px rgba(26,79,196,.28);
+  --r-sm:6px; --r-md:12px; --r-lg:18px; --r-xl:26px; --pill:999px;
+  --fd:'Fraunces',Georgia,serif; --fb:'DM Sans',sans-serif;
+  --ease:cubic-bezier(.4,0,.2,1); --spring:cubic-bezier(.34,1.56,.64,1);
+  --sb:268px; --hdr:64px;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--g50); color:var(--t1); font-family:var(--fb); -webkit-font-smoothing:antialiased; }
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-thumb { background:var(--sky-3); border-radius:6px; }
+button { cursor:pointer; font-family:var(--fb); border:none; }
+input,select,textarea { font-family:var(--fb); }
+a { text-decoration:none; color:inherit; }
+
+/* ════════════ SIDEBAR (rappel coquille dashboard) ════════════ */
+.sb { position:fixed; top:0; left:0; bottom:0; width:var(--sb); background:var(--navy); display:flex; flex-direction:column; z-index:200; overflow:hidden; }
+.sb::after { content:''; position:absolute; top:-15%; left:-25%; width:75%; height:60%; background:radial-gradient(ellipse, rgba(37,96,220,.16), transparent 70%); pointer-events:none; }
+.sb-logo { height:var(--hdr); display:flex; align-items:center; gap:11px; padding:0 22px; border-bottom:1px solid rgba(255,255,255,.06); flex-shrink:0; position:relative; z-index:1; }
+.sb-lm { width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg, var(--blue), var(--blue-lt)); display:flex; align-items:center; justify-content:center; font-family:var(--fd); font-weight:800; font-size:14px; color:#fff; }
+.sb-brand { font-family:var(--fd); font-size:19px; font-weight:800; color:#fff; letter-spacing:-.4px; }
+.sb-brand b { color:var(--blue-lt); }
+.sb-tag { margin-left:auto; font-size:8.5px; font-weight:700; background:rgba(109,40,217,.25); color:#C4A8F0; border:1px solid rgba(109,40,217,.4); border-radius:var(--pill); padding:2px 8px; letter-spacing:.5px; }
+.sb-me { padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.06); position:relative; z-index:1; }
+.sb-me-card { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:var(--r-md); padding:13px; display:flex; align-items:center; gap:11px; }
+.sb-me-av { width:38px; height:38px; border-radius:11px; background:linear-gradient(135deg, var(--violet), #9F67E8); display:flex; align-items:center; justify-content:center; color:#fff; font-family:var(--fd); font-weight:800; font-size:14px; }
+.sb-me-nm { font-size:12.5px; font-weight:700; color:#fff; }
+.sb-me-rl { font-size:10px; color:rgba(180,200,255,.5); margin-top:1px; display:flex; align-items:center; gap:4px; }
+.sb-me-rl .dot { width:5px; height:5px; border-radius:50%; background:#34D399; }
+.sb-nav { flex:1; overflow-y:auto; padding:10px; position:relative; z-index:1; }
+.sb-nav::-webkit-scrollbar { width:0; }
+.sb-sect { font-size:9px; font-weight:700; color:rgba(180,200,255,.25); text-transform:uppercase; letter-spacing:1.6px; padding:14px 11px 5px; }
+.nb { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:var(--r-sm); font-size:13px; font-weight:500; color:rgba(200,217,248,.6); cursor:pointer; transition:all .16s; margin-bottom:1px; position:relative; }
+.nb:hover { background:rgba(255,255,255,.06); color:#fff; }
+.nb.on { background:linear-gradient(135deg, rgba(37,96,220,.32), rgba(37,96,220,.16)); color:#fff; font-weight:600; }
+.nb.on::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:3px; height:18px; background:var(--blue-lt); border-radius:0 3px 3px 0; }
+.nb i { width:16px; text-align:center; font-size:13px; opacity:.75; }
+.nb.on i { opacity:1; color:var(--blue-lt); }
+
+/* ════════════ TOPBAR ════════════ */
+.topbar { position:fixed; top:0; left:var(--sb); right:0; height:var(--hdr); background:rgba(255,255,255,.96); backdrop-filter:blur(20px); border-bottom:1px solid var(--bdr); display:flex; align-items:center; padding:0 26px; gap:14px; z-index:150; }
+.tb-title { font-family:var(--fd); font-size:18px; font-weight:700; color:var(--navy); }
+.tb-sub { font-size:11px; color:var(--t3); margin-top:1px; }
+.tb-acts { display:flex; align-items:center; gap:8px; margin-left:auto; }
+.tb-ic { width:38px; height:38px; border-radius:11px; background:var(--g50); border:1px solid var(--bdr); display:flex; align-items:center; justify-content:center; color:var(--t2); font-size:14px; transition:all .2s; }
+.tb-ic:hover { background:var(--sky); color:var(--blue); }
+
+/* ════════════ MAIN ════════════ */
+.main { margin-left:var(--sb); padding-top:var(--hdr); }
+.wrap { max-width:1080px; margin:0 auto; padding:26px; }
+
+/* En-tête de page */
+.phead { margin-bottom:22px; }
+.phead h1 { font-family:var(--fd); font-weight:800; font-size:26px; color:var(--navy); letter-spacing:-.5px; }
+.phead p { font-size:13.5px; color:var(--t3); margin-top:4px; }
+
+/* Layout settings : sous-nav + contenu */
+.settings { display:grid; grid-template-columns:230px 1fr; gap:24px; align-items:start; }
+
+/* ── Sous-navigation (ParamNav) ── */
+.pnav { position:sticky; top:calc(var(--hdr) + 26px); background:var(--white); border:1px solid var(--bdr); border-radius:var(--r-lg); padding:8px; }
+.pnav-item { display:flex; align-items:center; gap:11px; padding:11px 13px; border-radius:var(--r-md); font-size:13px; font-weight:600; color:var(--t2); cursor:pointer; transition:all .15s; margin-bottom:2px; }
+.pnav-item:hover { background:var(--g50); color:var(--navy); }
+.pnav-item.on { background:var(--sky); color:var(--blue); }
+.pnav-item i { width:18px; text-align:center; font-size:13px; }
+.pnav-item .chev { margin-left:auto; font-size:10px; opacity:0; transition:.15s; }
+.pnav-item.on .chev { opacity:1; }
+.pnav-sep { height:1px; background:var(--bdr); margin:8px 6px; }
+
+/* ── Contenu ── */
+.pcontent { min-width:0; }
+.sec { display:none; animation:fade .3s var(--ease); }
+.sec.on { display:block; }
+@keyframes fade { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+
+/* Carte de formulaire */
+.fcard { background:var(--white); border:1px solid var(--bdr); border-radius:var(--r-lg); margin-bottom:18px; overflow:hidden; }
+.fcard-h { padding:18px 22px; border-bottom:1px solid var(--bdr); }
+.fcard-h h3 { font-family:var(--fd); font-weight:700; font-size:16px; color:var(--navy); display:flex; align-items:center; gap:9px; }
+.fcard-h h3 i { color:var(--blue); font-size:14px; }
+.fcard-h p { font-size:12px; color:var(--t3); margin-top:4px; }
+.fcard-b { padding:22px; }
+
+/* Champs */
+.row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.fld { margin-bottom:16px; }
+.fld:last-child { margin-bottom:0; }
+.fld-l { font-size:11px; font-weight:700; color:var(--navy); text-transform:uppercase; letter-spacing:.5px; margin-bottom:7px; display:block; }
+.fld-in { width:100%; background:var(--g50); border:1.5px solid var(--bdr2); border-radius:var(--r-md); padding:12px 14px; font-size:14px; color:var(--t1); outline:none; transition:all .2s; }
+.fld-in:focus { border-color:var(--blue-2); box-shadow:0 0 0 3px rgba(26,79,196,.08); background:var(--white); }
+textarea.fld-in { resize:none; }
+.fld-hint { font-size:11px; color:var(--t3); margin-top:6px; }
+
+/* Avatar */
+.avatar-row { display:flex; align-items:center; gap:20px; }
+.avatar { width:88px; height:88px; border-radius:24px; background:linear-gradient(135deg, var(--violet), #9F67E8); display:flex; align-items:center; justify-content:center; color:#fff; font-family:var(--fd); font-weight:800; font-size:34px; flex-shrink:0; position:relative; cursor:pointer; overflow:hidden; }
+.avatar .cam { position:absolute; inset:0; background:rgba(11,31,58,.55); display:flex; align-items:center; justify-content:center; font-size:20px; opacity:0; transition:.2s; }
+.avatar:hover .cam { opacity:1; }
+.avatar-txt h4 { font-size:14px; font-weight:700; color:var(--navy); }
+.avatar-txt p { font-size:12px; color:var(--t3); margin-top:3px; line-height:1.5; }
+.avatar-btns { display:flex; gap:8px; margin-top:10px; }
+.btn-sm { font-size:12px; font-weight:700; padding:8px 14px; border-radius:var(--pill); transition:.15s; }
+.btn-sm.primary { background:var(--navy); color:#fff; }
+.btn-sm.primary:hover { background:var(--navy-2); }
+.btn-sm.ghost { background:var(--g100); color:var(--t2); }
+.btn-sm.ghost:hover { background:var(--g200); }
+
+/* Badge vérifié */
+.verif-badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; background:var(--em-bg); color:var(--emerald); padding:4px 11px; border-radius:var(--pill); }
+
+/* Toggle rows */
+.trow { display:flex; align-items:center; gap:14px; padding:15px 0; border-bottom:1px solid var(--bdr); }
+.trow:last-child { border-bottom:none; }
+.trow-ic { width:40px; height:40px; border-radius:11px; background:var(--sky); color:var(--blue); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+.trow-main { flex:1; }
+.trow-t { font-size:13.5px; font-weight:700; color:var(--navy); }
+.trow-d { font-size:12px; color:var(--t3); margin-top:2px; line-height:1.5; }
+.toggle { width:44px; height:25px; border-radius:var(--pill); background:var(--g300); position:relative; cursor:pointer; transition:.25s; flex-shrink:0; }
+.toggle::after { content:''; position:absolute; top:3px; left:3px; width:19px; height:19px; border-radius:50%; background:#fff; transition:.25s var(--spring); box-shadow:0 2px 5px rgba(0,0,0,.2); }
+.toggle.on { background:var(--blue); }
+.toggle.on::after { left:22px; }
+
+/* Méthodes de paiement (commissions) */
+.pay-method { display:flex; align-items:center; gap:14px; padding:16px; border:1.5px solid var(--bdr2); border-radius:var(--r-md); margin-bottom:10px; transition:all .15s; cursor:pointer; }
+.pay-method:hover { border-color:var(--bdrb); }
+.pay-method.on { border-color:var(--blue); background:var(--sky); box-shadow:0 0 0 3px rgba(26,79,196,.07); }
+.pay-logo { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; color:#fff; flex-shrink:0; }
+.pay-logo.om { background:linear-gradient(135deg,#FF6600,#FF8C1A); }
+.pay-logo.mtn { background:linear-gradient(135deg,#FFCC00,#FFD633); color:#0B1F3A; }
+.pay-logo.bank { background:linear-gradient(135deg,var(--navy),var(--navy-3)); }
+.pay-main { flex:1; }
+.pay-nm { font-size:13.5px; font-weight:700; color:var(--navy); }
+.pay-num { font-size:12px; color:var(--t3); margin-top:2px; }
+.pay-radio { width:22px; height:22px; border-radius:50%; border:2px solid var(--bdr2); flex-shrink:0; position:relative; transition:.15s; }
+.pay-method.on .pay-radio { border-color:var(--blue); }
+.pay-method.on .pay-radio::after { content:''; position:absolute; inset:4px; border-radius:50%; background:var(--blue); }
+.pay-default { font-size:10px; font-weight:700; color:var(--emerald); background:var(--em-bg); padding:2px 9px; border-radius:var(--pill); }
+.add-method { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; padding:14px; border:1.5px dashed var(--bdr2); border-radius:var(--r-md); font-size:13px; font-weight:700; color:var(--blue); background:var(--g50); transition:.15s; }
+.add-method:hover { border-color:var(--blue); background:var(--sky); }
+
+/* Documents / vérification */
+.doc-item { display:flex; align-items:center; gap:14px; padding:14px 0; border-bottom:1px solid var(--bdr); }
+.doc-item:last-child { border-bottom:none; }
+.doc-ic { width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.doc-ic.ok { background:var(--em-bg); color:var(--emerald); }
+.doc-ic.wait { background:var(--am-bg); color:var(--amber); }
+.doc-ic.todo { background:var(--g100); color:var(--t3); }
+.doc-main { flex:1; }
+.doc-nm { font-size:13.5px; font-weight:700; color:var(--navy); }
+.doc-st { font-size:11.5px; margin-top:2px; }
+.doc-st.ok { color:var(--emerald); }
+.doc-st.wait { color:var(--amber); }
+.doc-st.todo { color:var(--t3); }
+.doc-act { font-size:12px; font-weight:700; color:var(--blue); background:var(--sky); padding:7px 13px; border-radius:var(--pill); transition:.15s; }
+.doc-act:hover { background:var(--sky-2); }
+
+/* Radio options (langue, apparence) */
+.opt-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.opt { display:flex; align-items:center; gap:11px; padding:13px 14px; border:1.5px solid var(--bdr2); border-radius:var(--r-md); cursor:pointer; transition:.15s; }
+.opt:hover { border-color:var(--bdrb); }
+.opt.on { border-color:var(--blue); background:var(--sky); box-shadow:0 0 0 3px rgba(26,79,196,.07); }
+.opt-radio { width:20px; height:20px; border-radius:50%; border:2px solid var(--bdr2); flex-shrink:0; position:relative; }
+.opt.on .opt-radio { border-color:var(--blue); }
+.opt.on .opt-radio::after { content:''; position:absolute; inset:3px; border-radius:50%; background:var(--blue); }
+.opt-l { font-size:13px; font-weight:600; color:var(--navy); }
+
+/* Sessions */
+.sess { display:flex; align-items:center; gap:14px; padding:13px 0; border-bottom:1px solid var(--bdr); }
+.sess:last-child { border-bottom:none; }
+.sess-ic { width:40px; height:40px; border-radius:11px; background:var(--g100); color:var(--t2); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+.sess-main { flex:1; }
+.sess-nm { font-size:13px; font-weight:700; color:var(--navy); display:flex; align-items:center; gap:8px; }
+.sess-cur { font-size:9.5px; font-weight:700; background:var(--em-bg); color:var(--emerald); padding:2px 8px; border-radius:var(--pill); }
+.sess-meta { font-size:11.5px; color:var(--t3); margin-top:2px; }
+.sess-out { font-size:12px; font-weight:700; color:var(--red); background:rgba(220,38,38,.07); padding:7px 13px; border-radius:var(--pill); transition:.15s; }
+.sess-out:hover { background:rgba(220,38,38,.13); }
+
+/* Danger */
+.danger-card { border-color:rgba(220,38,38,.25); }
+.danger-card .fcard-h { background:rgba(220,38,38,.03); border-bottom-color:rgba(220,38,38,.15); }
+.danger-card .fcard-h h3 { color:var(--red); }
+.danger-card .fcard-h h3 i { color:var(--red); }
+.danger-row { display:flex; align-items:center; gap:14px; }
+.danger-row .danger-main { flex:1; }
+.danger-row .danger-t { font-size:13.5px; font-weight:700; color:var(--navy); }
+.danger-row .danger-d { font-size:12px; color:var(--t3); margin-top:2px; }
+.btn-danger { background:var(--red); color:#fff; font-size:12.5px; font-weight:700; padding:10px 18px; border-radius:var(--pill); transition:.15s; white-space:nowrap; }
+.btn-danger:hover { background:#b91c1c; }
+
+/* ════════ Bandeau santé du compte (signature) ════════ */
+.health { background:var(--navy); border-radius:var(--r-xl); padding:24px 26px; position:relative; overflow:hidden; margin-bottom:22px; color:#fff; }
+.health-glow { position:absolute; inset:0; background:radial-gradient(ellipse 50% 90% at 90% 20%, rgba(37,96,220,.3), transparent 58%), radial-gradient(ellipse 40% 70% at 5% 100%, rgba(109,40,217,.2), transparent 55%); }
+.health-in { position:relative; z-index:1; display:flex; align-items:center; gap:28px; flex-wrap:wrap; }
+.health-ring { width:96px; height:96px; border-radius:50%; position:relative; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:conic-gradient(#34D399 0% 85%, rgba(255,255,255,.12) 85% 100%); }
+.health-ring::before { content:''; position:absolute; inset:8px; border-radius:50%; background:var(--navy); }
+.health-ring-v { position:relative; z-index:1; text-align:center; }
+.health-ring-v b { font-family:var(--fd); font-weight:800; font-size:26px; display:block; line-height:1; }
+.health-ring-v span { font-size:9px; color:rgba(180,200,255,.6); text-transform:uppercase; letter-spacing:.5px; }
+.health-txt { flex:1; min-width:200px; }
+.health-txt h2 { font-family:var(--fd); font-weight:700; font-size:19px; }
+.health-txt p { font-size:12.5px; color:rgba(200,217,248,.6); margin-top:5px; line-height:1.5; max-width:380px; }
+.health-stats { display:flex; gap:10px; flex-wrap:wrap; }
+.hs { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:var(--r-md); padding:13px 16px; min-width:120px; }
+.hs-ic { font-size:14px; margin-bottom:7px; }
+.hs-ic.ok { color:#34D399; } .hs-ic.warn { color:#FCD34D; }
+.hs-v { font-size:13px; font-weight:700; color:#fff; }
+.hs-l { font-size:10.5px; color:rgba(180,200,255,.55); margin-top:1px; }
+
+/* Recherche dans la sous-nav */
+.pnav-search { position:relative; margin-bottom:8px; }
+.pnav-search input { width:100%; background:var(--g50); border:1.5px solid var(--bdr2); border-radius:var(--r-md); padding:9px 12px 9px 34px; font-size:12.5px; outline:none; transition:.2s; }
+.pnav-search input:focus { border-color:var(--blue-2); background:var(--white); }
+.pnav-search i { position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:12px; color:var(--t3); }
+
+/* Lien de parrainage */
+.ref-box { background:linear-gradient(135deg, var(--navy), var(--navy-3)); border-radius:var(--r-lg); padding:22px; color:#fff; position:relative; overflow:hidden; }
+.ref-glow { position:absolute; inset:0; background:radial-gradient(ellipse 50% 100% at 88% 50%, rgba(109,40,217,.3), transparent 60%); }
+.ref-in { position:relative; z-index:1; }
+.ref-in h4 { font-family:var(--fd); font-weight:700; font-size:16px; }
+.ref-in p { font-size:12px; color:rgba(200,217,248,.6); margin-top:4px; line-height:1.5; }
+.ref-link-row { display:flex; gap:9px; margin-top:16px; flex-wrap:wrap; }
+.ref-link { flex:1; min-width:200px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); border-radius:var(--r-md); padding:12px 14px; font-size:13px; font-family:var(--fd); color:#fff; display:flex; align-items:center; gap:9px; overflow:hidden; }
+.ref-link i { color:var(--blue-lt); flex-shrink:0; }
+.ref-link span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ref-copy { background:#fff; color:var(--navy); border-radius:var(--r-md); padding:0 18px; font-size:12.5px; font-weight:700; display:flex; align-items:center; gap:8px; transition:.2s; }
+.ref-copy:hover { background:var(--sky-2); }
+.ref-share { display:flex; gap:8px; margin-top:12px; }
+.ref-sbtn { flex:1; border-radius:var(--r-md); padding:10px; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:7px; transition:.2s; }
+.ref-wa { background:#25D366; color:#fff; } .ref-wa:hover { background:#1FA855; }
+.ref-fb { background:#1877F2; color:#fff; } .ref-fb:hover { filter:brightness(1.1); }
+.ref-qr { background:rgba(255,255,255,.12); color:#fff; } .ref-qr:hover { background:rgba(255,255,255,.2); }
+.ref-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px; }
+.ref-stat { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:var(--r-md); padding:12px; text-align:center; }
+.ref-stat b { font-family:var(--fd); font-weight:800; font-size:20px; display:block; }
+.ref-stat span { font-size:10px; color:rgba(180,200,255,.6); }
+
+/* Barre de force mot de passe */
+.pwd-bar { display:flex; gap:5px; margin-top:10px; }
+.pwd-seg { flex:1; height:5px; border-radius:var(--pill); background:var(--g200); transition:.3s; }
+.pwd-seg.w1 { background:var(--red); } .pwd-seg.w2 { background:var(--amber); } .pwd-seg.w3 { background:var(--gold); } .pwd-seg.w4 { background:var(--emerald); }
+.pwd-label { font-size:11px; color:var(--t3); margin-top:6px; }
+
+/* Historique retraits (mini) */
+.wd-item { display:flex; align-items:center; gap:13px; padding:12px 0; border-bottom:1px solid var(--bdr); }
+.wd-item:last-child { border-bottom:none; }
+.wd-ic { width:38px; height:38px; border-radius:11px; background:var(--em-bg); color:var(--emerald); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.wd-main { flex:1; }
+.wd-nm { font-size:13px; font-weight:700; color:var(--navy); }
+.wd-meta { font-size:11px; color:var(--t3); margin-top:1px; }
+.wd-amt { font-family:var(--fd); font-weight:700; font-size:14px; color:var(--emerald); }
+.wd-st { font-size:9.5px; font-weight:700; padding:2px 8px; border-radius:var(--pill); margin-left:8px; }
+.wd-st.done { background:var(--em-bg); color:var(--emerald); }
+.wd-st.pend { background:var(--am-bg); color:var(--amber); }
+
+/* Modale de confirmation */
+.mbg { position:fixed; inset:0; background:rgba(11,31,58,.55); backdrop-filter:blur(5px); z-index:1000; display:none; align-items:center; justify-content:center; padding:16px; }
+.mbg.show { display:flex; }
+.cmodal { background:var(--white); border-radius:var(--r-xl); width:100%; max-width:430px; box-shadow:var(--sh-xl); animation:mIn .3s var(--spring); overflow:hidden; text-align:center; padding:28px 26px 24px; }
+@keyframes mIn { from{transform:scale(.93);opacity:0;} to{transform:scale(1);opacity:1;} }
+.cmodal-ic { width:64px; height:64px; border-radius:50%; background:rgba(220,38,38,.1); color:var(--red); display:flex; align-items:center; justify-content:center; font-size:26px; margin:0 auto 16px; }
+.cmodal h3 { font-family:var(--fd); font-weight:700; font-size:19px; color:var(--navy); }
+.cmodal p { font-size:13px; color:var(--t2); margin-top:8px; line-height:1.6; }
+.cmodal-btns { display:flex; gap:10px; margin-top:22px; }
+.cmodal-btns button { flex:1; padding:12px; border-radius:var(--r-md); font-size:13px; font-weight:700; transition:.15s; }
+.cm-cancel { background:var(--g100); color:var(--t2); } .cm-cancel:hover { background:var(--g200); }
+.cm-confirm { background:var(--red); color:#fff; } .cm-confirm:hover { background:#b91c1c; }
+
+/* Barre flottante d'enregistrement (SaveFloat) */
+.savebar { position:fixed; bottom:22px; left:calc(var(--sb) + 50%); transform:translateX(-50%) translateY(120px); background:var(--navy); border-radius:var(--pill); padding:11px 13px 11px 22px; display:flex; align-items:center; gap:18px; box-shadow:var(--sh-xl); z-index:300; transition:transform .35s var(--spring); }
+.savebar.show { transform:translateX(-50%) translateY(0); }
+.savebar-txt { font-size:13px; color:#fff; font-weight:600; display:flex; align-items:center; gap:9px; }
+.savebar-txt i { color:#FCD34D; }
+.savebar-btns { display:flex; gap:8px; }
+.sv-cancel { background:rgba(255,255,255,.1); color:#fff; font-size:12.5px; font-weight:700; padding:9px 16px; border-radius:var(--pill); transition:.15s; }
+.sv-cancel:hover { background:rgba(255,255,255,.18); }
+.sv-save { background:#fff; color:var(--navy); font-size:12.5px; font-weight:700; padding:9px 18px; border-radius:var(--pill); display:flex; align-items:center; gap:7px; transition:.15s; }
+.sv-save:hover { background:var(--sky-2); }
+
+/* Toast */
+#tct { position:fixed; bottom:90px; right:22px; z-index:9999; display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
+.tmsg { background:var(--navy); color:#fff; border-radius:var(--r-md); padding:12px 17px; font-size:12.5px; display:flex; align-items:center; gap:9px; box-shadow:var(--sh-lg); transform:translateX(120%); opacity:0; transition:all .3s var(--spring); }
+.tmsg.show { transform:translateX(0); opacity:1; }
+.tmsg i { color:#34D399; }
+
+/* Responsive */
+@media (max-width:980px) {
+  .settings { grid-template-columns:1fr; }
+  .pnav { position:static; display:flex; gap:4px; overflow-x:auto; padding:6px; }
+  .pnav-item { white-space:nowrap; }
+  .pnav-item .chev, .pnav-sep { display:none; }
+  .savebar { left:50%; }
+}
+@media (max-width:860px) {
+  :root { --sb:0px; }
+  .sb { transform:translateX(-100%); }
+  .topbar { left:0; }
+  .main { margin-left:0; }
+  .savebar { left:50%; }
+}
+@media (max-width:560px) {
+  .wrap { padding:16px; }
+  .row { grid-template-columns:1fr; }
+  .opt-grid { grid-template-columns:1fr; }
+  .avatar-row { flex-direction:column; align-items:flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════ SIDEBAR ════════ -->
+<nav class="sb">
+  <div class="sb-logo">
+    <div class="sb-lm">Sh</div>
+    <div class="sb-brand">Sho<b>pi</b></div>
+    <span class="sb-tag">PARTENAIRE</span>
+  </div>
+  <div class="sb-me">
+    <div class="sb-me-card">
+      <div class="sb-me-av">MS</div>
+      <div>
+        <div class="sb-me-nm">Mohamed Soumah</div>
+        <div class="sb-me-rl"><span class="dot"></span> Partenaire Or · Conakry</div>
+      </div>
+    </div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-sect">Principal</div>
+    <div class="nb"><i class="fas fa-chart-pie"></i><span>Vue d'ensemble</span></div>
+    <div class="sb-sect">Acquisition</div>
+    <div class="nb"><i class="fas fa-qrcode"></i><span>Codes de création</span></div>
+    <div class="nb"><i class="fas fa-people-group"></i><span>Mes acteurs</span></div>
+    <div class="sb-sect">Revenus</div>
+    <div class="nb"><i class="fas fa-hand-holding-dollar"></i><span>Commissions</span></div>
+    <div class="sb-sect">Sécurité</div>
+    <div class="nb"><i class="fas fa-shield-halved"></i><span>Signalements</span></div>
+    <div class="sb-sect">Compte</div>
+    <div class="nb on"><i class="fas fa-gear"></i><span>Paramètres</span></div>
+  </div>
+</nav>
+
+<!-- ════════ TOPBAR ════════ -->
+<header class="topbar">
+  <div>
+    <div class="tb-title">Paramètres</div>
+    <div class="tb-sub">Configuration de votre compte partenaire</div>
+  </div>
+  <div class="tb-acts">
+    <button class="tb-ic"><i class="fas fa-bell"></i></button>
+    <button class="tb-ic"><i class="fas fa-circle-question"></i></button>
+  </div>
+</header>
+
+<!-- ════════ MAIN ════════ -->
+<main class="main">
+  <div class="wrap">
+
+    <div class="phead">
+      <h1>Paramètres</h1>
+      <p>Gérez votre profil, vos coordonnées de paiement et la sécurité de votre compte.</p>
+    </div>
+
+    <!-- Bandeau santé du compte -->
+    <div class="health">
+      <div class="health-glow"></div>
+      <div class="health-in">
+        <div class="health-ring">
+          <div class="health-ring-v"><b>85%</b><span>Complété</span></div>
+        </div>
+        <div class="health-txt">
+          <h2>Votre compte est presque complet</h2>
+          <p>Ajoutez votre justificatif de domicile pour atteindre 100% et débloquer le palier Platine.</p>
+        </div>
+        <div class="health-stats">
+          <div class="hs"><div class="hs-ic ok"><i class="fas fa-circle-check"></i></div><div class="hs-v">Vérifié</div><div class="hs-l">Identité confirmée</div></div>
+          <div class="hs"><div class="hs-ic ok"><i class="fas fa-shield-halved"></i></div><div class="hs-v">96/100</div><div class="hs-l">Score sécurité</div></div>
+          <div class="hs"><div class="hs-ic warn"><i class="fas fa-clock"></i></div><div class="hs-v">1 en attente</div><div class="hs-l">Document à valider</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings">
+
+      <!-- ── Sous-navigation ── -->
+      <nav class="pnav">
+        <div class="pnav-search">
+          <i class="fas fa-magnifying-glass"></i>
+          <input placeholder="Rechercher un réglage…" oninput="filterNav(this.value)">
+        </div>
+        <div class="pnav-item on" data-label="profil informations personnelles" onclick="goSec(this,'profil')"><i class="fas fa-user"></i> Profil <i class="fas fa-chevron-right chev"></i></div>
+        <div class="pnav-item" data-label="paiement commissions versement orange money mtn" onclick="goSec(this,'paiement')"><i class="fas fa-wallet"></i> Paiement <i class="fas fa-chevron-right chev"></i></div>
+        <div class="pnav-item" data-label="parrainage lien invitation" onclick="goSec(this,'parrainage')"><i class="fas fa-share-nodes"></i> Parrainage <i class="fas fa-chevron-right chev"></i></div>
+        <div class="pnav-item" data-label="documents verification identite" onclick="goSec(this,'documents')"><i class="fas fa-id-card"></i> Vérification <i class="fas fa-chevron-right chev"></i></div>
+        <div class="pnav-item" data-label="zone activite ville commune" onclick="goSec(this,'zone')"><i class="fas fa-location-dot"></i> Zone d'activité <i class="fas fa-chevron-right chev"></i></div>
+        <div class="pnav-item" data-label="notifications email sms whatsapp" onclick="goSec(this,'notifs')"><i class="fas fa-bell"></i> Notifications <i class="fas fa-chevron-right chev"></i></div>
+        <div class="pnav-sep"></div>
+        <div class="pnav-item" data-label="securite mot de passe 2fa sessions" onclick="goSec(this,'securite')"><i class="fas fa-lock"></i> Sécurité <i class="fas fa-chevron-right chev"></i></div>
+        <div class="pnav-item" data-label="confidentialite vie privee donnees" onclick="goSec(this,'confidentialite')"><i class="fas fa-user-shield"></i> Confidentialité <i class="fas fa-chevron-right chev"></i></div>
+        <div class="pnav-item" data-label="preferences langue apparence theme" onclick="goSec(this,'preferences')"><i class="fas fa-sliders"></i> Préférences <i class="fas fa-chevron-right chev"></i></div>
+        <div class="pnav-sep"></div>
+        <div class="pnav-item" data-label="danger supprimer pause" onclick="goSec(this,'danger')" style="color:var(--red)"><i class="fas fa-triangle-exclamation"></i> Zone danger <i class="fas fa-chevron-right chev"></i></div>
+      </nav>
+
+      <!-- ── Contenu ── -->
+      <div class="pcontent">
+
+        <!-- ════ PROFIL ════ -->
+        <section class="sec on" id="profil">
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-user"></i> Informations personnelles</h3><p>Ces informations apparaissent sur votre profil partenaire.</p></div>
+            <div class="fcard-b">
+              <div class="avatar-row" style="margin-bottom:22px">
+                <div class="avatar" onclick="toast('📷 Choisir une photo')">MS<div class="cam"><i class="fas fa-camera"></i></div></div>
+                <div class="avatar-txt">
+                  <h4>Photo de profil</h4>
+                  <p>JPG, PNG ou WebP. Taille max. 2 Mo.</p>
+                  <div class="avatar-btns">
+                    <button class="btn-sm primary" onclick="toast('📷 Téléversement…')">Changer la photo</button>
+                    <button class="btn-sm ghost" onclick="toast('🗑️ Photo supprimée')">Retirer</button>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="fld"><label class="fld-l">Prénom</label><input class="fld-in" value="Mohamed" oninput="dirty()"></div>
+                <div class="fld"><label class="fld-l">Nom</label><input class="fld-in" value="Soumah" oninput="dirty()"></div>
+              </div>
+              <div class="row">
+                <div class="fld"><label class="fld-l">Téléphone</label><input class="fld-in" value="+224 622 00 00 01" oninput="dirty()"></div>
+                <div class="fld"><label class="fld-l">Email</label><input class="fld-in" value="m.soumah@email.gn" oninput="dirty()"></div>
+              </div>
+              <div class="fld"><label class="fld-l">Bio / Présentation</label><textarea class="fld-in" rows="3" oninput="dirty()" placeholder="Présentez-vous en quelques mots…">Partenaire Shopi à Conakry, j'accompagne les entreprises et livreurs à rejoindre la plateforme.</textarea><div class="fld-hint">Visible sur votre profil public partenaire.</div></div>
+            </div>
+          </div>
+
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-award"></i> Statut partenaire</h3></div>
+            <div class="fcard-b">
+              <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                <span class="verif-badge"><i class="fas fa-circle-check"></i> Partenaire vérifié</span>
+                <span class="verif-badge" style="background:rgba(200,150,30,.1);color:var(--gold)"><i class="fas fa-crown"></i> Palier Or · Niveau 3</span>
+                <span style="font-size:12px;color:var(--t3)">Membre depuis mars 2024</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════ PAIEMENT ════ -->
+        <section class="sec" id="paiement">
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-wallet"></i> Coordonnées de versement</h3><p>C'est ici que Shopi verse vos commissions. Choisissez votre méthode par défaut.</p></div>
+            <div class="fcard-b">
+              <div class="pay-method on" onclick="pickPay(this)">
+                <div class="pay-logo om"><i class="fas fa-mobile-screen-button"></i></div>
+                <div class="pay-main"><div class="pay-nm">Orange Money</div><div class="pay-num">+224 622 •• •• 01</div></div>
+                <span class="pay-default">Par défaut</span>
+                <div class="pay-radio"></div>
+              </div>
+              <div class="pay-method" onclick="pickPay(this)">
+                <div class="pay-logo mtn"><i class="fas fa-mobile-screen-button"></i></div>
+                <div class="pay-main"><div class="pay-nm">MTN Mobile Money</div><div class="pay-num">+224 660 •• •• 45</div></div>
+                <div class="pay-radio"></div>
+              </div>
+              <div class="pay-method" onclick="pickPay(this)">
+                <div class="pay-logo bank"><i class="fas fa-building-columns"></i></div>
+                <div class="pay-main"><div class="pay-nm">Virement bancaire — Ecobank</div><div class="pay-num">GN•• •••• •••• 2847</div></div>
+                <div class="pay-radio"></div>
+              </div>
+              <button class="add-method" onclick="toast('➕ Ajouter une méthode de versement')"><i class="fas fa-plus"></i> Ajouter une méthode de versement</button>
+            </div>
+          </div>
+
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-money-bill-transfer"></i> Préférences de retrait</h3></div>
+            <div class="fcard-b">
+              <div class="row">
+                <div class="fld"><label class="fld-l">Seuil de retrait automatique</label><input class="fld-in" value="500 000 GNF" oninput="dirty()"><div class="fld-hint">Versement auto dès que ce solde est atteint.</div></div>
+                <div class="fld"><label class="fld-l">Fréquence</label>
+                  <select class="fld-in" onchange="dirty()"><option>Hebdomadaire</option><option selected>Mensuelle</option><option>Manuelle (à la demande)</option></select>
+                </div>
+              </div>
+              <div class="trow" style="border-top:1px solid var(--bdr);padding-top:16px">
+                <div class="trow-ic"><i class="fas fa-bolt"></i></div>
+                <div class="trow-main"><div class="trow-t">Versement automatique</div><div class="trow-d">Recevez vos commissions sans demande manuelle.</div></div>
+                <div class="toggle on" onclick="tog(this)"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-file-invoice-dollar"></i> Informations fiscales</h3><p>Nécessaires pour la facturation de vos commissions.</p></div>
+            <div class="fcard-b">
+              <div class="row">
+                <div class="fld"><label class="fld-l">NIF (Numéro d'identification fiscale)</label><input class="fld-in" placeholder="Ex. 123456789" oninput="dirty()"><div class="fld-hint">Optionnel — requis au-delà d'un certain volume de commissions.</div></div>
+                <div class="fld"><label class="fld-l">Statut</label>
+                  <select class="fld-in" onchange="dirty()"><option selected>Particulier</option><option>Auto-entrepreneur</option><option>Entreprise</option></select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-clock-rotate-left"></i> Derniers retraits</h3></div>
+            <div class="fcard-b">
+              <div class="wd-item">
+                <div class="wd-ic"><i class="fas fa-arrow-up"></i></div>
+                <div class="wd-main"><div class="wd-nm">Orange Money</div><div class="wd-meta">12 jan. 2025 · 14:32</div></div>
+                <div><span class="wd-amt">1 200 000 GNF</span><span class="wd-st done">Versé</span></div>
+              </div>
+              <div class="wd-item">
+                <div class="wd-ic"><i class="fas fa-arrow-up"></i></div>
+                <div class="wd-main"><div class="wd-nm">Orange Money</div><div class="wd-meta">12 déc. 2024 · 09:10</div></div>
+                <div><span class="wd-amt">980 000 GNF</span><span class="wd-st done">Versé</span></div>
+              </div>
+              <div class="wd-item">
+                <div class="wd-ic" style="background:var(--am-bg);color:var(--amber)"><i class="fas fa-hourglass-half"></i></div>
+                <div class="wd-main"><div class="wd-nm">MTN Mobile Money</div><div class="wd-meta">Aujourd'hui · en traitement</div></div>
+                <div><span class="wd-amt">650 000 GNF</span><span class="wd-st pend">En cours</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════ PARRAINAGE ════ -->
+        <section class="sec" id="parrainage">
+          <div class="fcard" style="overflow:visible">
+            <div class="fcard-h"><h3><i class="fas fa-share-nodes"></i> Votre lien de parrainage</h3><p>Partagez ce lien : toute personne qui s'inscrit via lui vous est rattachée automatiquement.</p></div>
+            <div class="fcard-b">
+              <div class="ref-box">
+                <div class="ref-glow"></div>
+                <div class="ref-in">
+                  <h4>Lien d'invitation personnel</h4>
+                  <p>En plus des codes de création, ce lien permet de recruter sans saisie de code.</p>
+                  <div class="ref-link-row">
+                    <div class="ref-link"><i class="fas fa-link"></i><span>shopi.gn/rejoindre/MOHAMED-S0UMAH</span></div>
+                    <button class="ref-copy" onclick="copyRef()"><i class="fas fa-copy"></i> Copier</button>
+                  </div>
+                  <div class="ref-share">
+                    <button class="ref-sbtn ref-wa" onclick="toast('📱 Partage WhatsApp')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                    <button class="ref-sbtn ref-fb" onclick="toast('📘 Partage Facebook')"><i class="fab fa-facebook-f"></i> Facebook</button>
+                    <button class="ref-sbtn ref-qr" onclick="toast('🔳 QR code généré')"><i class="fas fa-qrcode"></i> QR Code</button>
+                  </div>
+                  <div class="ref-stats">
+                    <div class="ref-stat"><b>248</b><span>Clics</span></div>
+                    <div class="ref-stat"><b>42</b><span>Inscriptions</span></div>
+                    <div class="ref-stat"><b>17%</b><span>Conversion</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════ DOCUMENTS / VÉRIFICATION ════ -->
+        <section class="sec" id="documents">
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-id-card"></i> Documents & vérification</h3><p>La vérification renforce votre indice de confiance et débloque des paliers supérieurs.</p></div>
+            <div class="fcard-b">
+              <div class="doc-item">
+                <div class="doc-ic ok"><i class="fas fa-id-card"></i></div>
+                <div class="doc-main"><div class="doc-nm">Pièce d'identité (CNI / Passeport)</div><div class="doc-st ok"><i class="fas fa-circle-check"></i> Vérifiée le 12 mars 2024</div></div>
+                <button class="doc-act" onclick="toast('👁️ Aperçu du document')">Voir</button>
+              </div>
+              <div class="doc-item">
+                <div class="doc-ic ok"><i class="fas fa-mobile-screen"></i></div>
+                <div class="doc-main"><div class="doc-nm">Numéro de téléphone</div><div class="doc-st ok"><i class="fas fa-circle-check"></i> Confirmé par SMS</div></div>
+                <button class="doc-act" onclick="toast('🔄 Renvoyer le code')">Modifier</button>
+              </div>
+              <div class="doc-item">
+                <div class="doc-ic wait"><i class="fas fa-file-invoice"></i></div>
+                <div class="doc-main"><div class="doc-nm">Justificatif de domicile</div><div class="doc-st wait"><i class="fas fa-clock"></i> En cours de vérification</div></div>
+                <button class="doc-act" onclick="toast('👁️ Aperçu du document')">Voir</button>
+              </div>
+              <div class="doc-item">
+                <div class="doc-ic todo"><i class="fas fa-briefcase"></i></div>
+                <div class="doc-main"><div class="doc-nm">Justificatif d'activité (optionnel)</div><div class="doc-st todo">Non fourni</div></div>
+                <button class="doc-act" onclick="toast('📎 Téléverser un document')">Ajouter</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════ ZONE D'ACTIVITÉ ════ -->
+        <section class="sec" id="zone">
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-location-dot"></i> Zone d'activité</h3><p>Les zones où vous recrutez des acteurs pour Shopi.</p></div>
+            <div class="fcard-b">
+              <div class="row">
+                <div class="fld"><label class="fld-l">Ville principale</label>
+                  <select class="fld-in" onchange="dirty()"><option selected>Conakry</option><option>Kindia</option><option>Kankan</option><option>Labé</option><option>Nzérékoré</option></select>
+                </div>
+                <div class="fld"><label class="fld-l">Commune</label>
+                  <select class="fld-in" onchange="dirty()"><option>Kaloum</option><option selected>Matam</option><option>Dixinn</option><option>Ratoma</option><option>Matoto</option></select>
+                </div>
+              </div>
+              <div class="fld"><label class="fld-l">Quartiers / marchés ciblés</label><input class="fld-in" value="Madina, Cosa, Kaloum centre" oninput="dirty()"><div class="fld-hint">Séparez par des virgules. Aide Shopi à vous proposer des prospects proches.</div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════ NOTIFICATIONS ════ -->
+        <section class="sec" id="notifs">
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-bell"></i> Notifications</h3><p>Choisissez ce dont vous voulez être informé.</p></div>
+            <div class="fcard-b">
+              <div class="trow">
+                <div class="trow-ic"><i class="fas fa-user-plus"></i></div>
+                <div class="trow-main"><div class="trow-t">Nouvel acteur activé</div><div class="trow-d">Quand un acteur que vous avez recruté crée son compte.</div></div>
+                <div class="toggle on" onclick="tog(this)"></div>
+              </div>
+              <div class="trow">
+                <div class="trow-ic"><i class="fas fa-coins"></i></div>
+                <div class="trow-main"><div class="trow-t">Commission créditée</div><div class="trow-d">À chaque commission ajoutée à votre solde.</div></div>
+                <div class="toggle on" onclick="tog(this)"></div>
+              </div>
+              <div class="trow">
+                <div class="trow-ic"><i class="fas fa-shield-halved"></i></div>
+                <div class="trow-main"><div class="trow-t">Suivi des signalements</div><div class="trow-d">Mises à jour sur les signalements que vous avez envoyés.</div></div>
+                <div class="toggle on" onclick="tog(this)"></div>
+              </div>
+              <div class="trow">
+                <div class="trow-ic"><i class="fas fa-award"></i></div>
+                <div class="trow-main"><div class="trow-t">Changement de palier</div><div class="trow-d">Quand vous progressez vers un nouveau niveau partenaire.</div></div>
+                <div class="toggle on" onclick="tog(this)"></div>
+              </div>
+              <div class="trow">
+                <div class="trow-ic"><i class="fas fa-bullhorn"></i></div>
+                <div class="trow-main"><div class="trow-t">Offres & nouveautés Shopi</div><div class="trow-d">Conseils, programmes et actualités partenaires.</div></div>
+                <div class="toggle" onclick="tog(this)"></div>
+              </div>
+            </div>
+          </div>
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-paper-plane"></i> Canaux</h3></div>
+            <div class="fcard-b">
+              <div class="trow"><div class="trow-ic"><i class="fas fa-envelope"></i></div><div class="trow-main"><div class="trow-t">Email</div></div><div class="toggle on" onclick="tog(this)"></div></div>
+              <div class="trow"><div class="trow-ic"><i class="fas fa-comment-sms"></i></div><div class="trow-main"><div class="trow-t">SMS</div></div><div class="toggle on" onclick="tog(this)"></div></div>
+              <div class="trow"><div class="trow-ic"><i class="fab fa-whatsapp"></i></div><div class="trow-main"><div class="trow-t">WhatsApp</div></div><div class="toggle on" onclick="tog(this)"></div></div>
+              <div class="trow"><div class="trow-ic"><i class="fas fa-bell"></i></div><div class="trow-main"><div class="trow-t">Notifications push</div></div><div class="toggle" onclick="tog(this)"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════ SÉCURITÉ ════ -->
+        <section class="sec" id="securite">
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-lock"></i> Mot de passe</h3></div>
+            <div class="fcard-b">
+              <div class="fld"><label class="fld-l">Mot de passe actuel</label><input class="fld-in" type="password" value="••••••••" oninput="dirty()"></div>
+              <div class="row">
+                <div class="fld"><label class="fld-l">Nouveau mot de passe</label><input class="fld-in" type="password" placeholder="••••••••" oninput="dirty(); checkPwd(this.value)"></div>
+                <div class="fld"><label class="fld-l">Confirmer</label><input class="fld-in" type="password" placeholder="••••••••" oninput="dirty()"></div>
+              </div>
+              <div class="pwd-bar">
+                <div class="pwd-seg" id="ps1"></div><div class="pwd-seg" id="ps2"></div>
+                <div class="pwd-seg" id="ps3"></div><div class="pwd-seg" id="ps4"></div>
+              </div>
+              <div class="pwd-label" id="pwdLabel">Utilisez au moins 8 caractères, une majuscule et un chiffre.</div>
+            </div>
+          </div>
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-shield-halved"></i> Double authentification (2FA)</h3></div>
+            <div class="fcard-b">
+              <div class="trow">
+                <div class="trow-ic"><i class="fas fa-mobile-screen"></i></div>
+                <div class="trow-main"><div class="trow-t">2FA par SMS</div><div class="trow-d">Un code vous est envoyé à chaque connexion.</div></div>
+                <div class="toggle on" onclick="tog(this)"></div>
+              </div>
+              <div class="trow">
+                <div class="trow-ic"><i class="fas fa-key"></i></div>
+                <div class="trow-main"><div class="trow-t">Application d'authentification</div><div class="trow-d">Google Authenticator, Authy…</div></div>
+                <div class="toggle" onclick="tog(this)"></div>
+              </div>
+            </div>
+          </div>
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-desktop"></i> Sessions actives</h3></div>
+            <div class="fcard-b">
+              <div class="sess">
+                <div class="sess-ic"><i class="fas fa-mobile-screen"></i></div>
+                <div class="sess-main"><div class="sess-nm">Android · Conakry <span class="sess-cur">Cet appareil</span></div><div class="sess-meta">Chrome Mobile · Actif maintenant</div></div>
+              </div>
+              <div class="sess">
+                <div class="sess-ic"><i class="fas fa-laptop"></i></div>
+                <div class="sess-main"><div class="sess-nm">Windows · Conakry</div><div class="sess-meta">Chrome · Il y a 2 jours</div></div>
+                <button class="sess-out" onclick="toast('🔒 Session déconnectée')">Déconnecter</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════ CONFIDENTIALITÉ ════ -->
+        <section class="sec" id="confidentialite">
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-user-shield"></i> Confidentialité</h3></div>
+            <div class="fcard-b">
+              <div class="trow">
+                <div class="trow-ic"><i class="fas fa-eye"></i></div>
+                <div class="trow-main"><div class="trow-t">Profil partenaire public</div><div class="trow-d">Votre profil est visible par les acteurs que vous recrutez.</div></div>
+                <div class="toggle on" onclick="tog(this)"></div>
+              </div>
+              <div class="trow">
+                <div class="trow-ic"><i class="fas fa-phone"></i></div>
+                <div class="trow-main"><div class="trow-t">Afficher mon téléphone</div><div class="trow-d">Visible par vos acteurs recrutés uniquement.</div></div>
+                <div class="toggle on" onclick="tog(this)"></div>
+              </div>
+              <div class="trow">
+                <div class="trow-ic"><i class="fas fa-ranking-star"></i></div>
+                <div class="trow-main"><div class="trow-t">Apparaître dans le classement</div><div class="trow-d">Votre nom peut figurer au classement des partenaires.</div></div>
+                <div class="toggle" onclick="tog(this)"></div>
+              </div>
+              <div class="trow">
+                <div class="trow-ic"><i class="fas fa-download"></i></div>
+                <div class="trow-main"><div class="trow-t">Télécharger mes données</div><div class="trow-d">Recevez une copie de toutes vos données.</div></div>
+                <button class="doc-act" onclick="toast('📦 Export en préparation')">Demander</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════ PRÉFÉRENCES ════ -->
+        <section class="sec" id="preferences">
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-language"></i> Langue</h3><p>Langue d'affichage de votre espace partenaire.</p></div>
+            <div class="fcard-b">
+              <div class="opt-grid">
+                <div class="opt on" onclick="pickOpt(this)"><div class="opt-radio"></div><div class="opt-l">🇫🇷 Français</div></div>
+                <div class="opt" onclick="pickOpt(this)"><div class="opt-radio"></div><div class="opt-l">Pular</div></div>
+                <div class="opt" onclick="pickOpt(this)"><div class="opt-radio"></div><div class="opt-l">Malinké</div></div>
+                <div class="opt" onclick="pickOpt(this)"><div class="opt-radio"></div><div class="opt-l">Soussou</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="fcard">
+            <div class="fcard-h"><h3><i class="fas fa-palette"></i> Apparence</h3></div>
+            <div class="fcard-b">
+              <div class="opt-grid">
+                <div class="opt on" onclick="pickOpt(this)"><div class="opt-radio"></div><div class="opt-l">☀️ Clair</div></div>
+                <div class="opt" onclick="pickOpt(this)"><div class="opt-radio"></div><div class="opt-l">🌙 Sombre</div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════ DANGER ════ -->
+        <section class="sec" id="danger">
+          <div class="fcard danger-card">
+            <div class="fcard-h"><h3><i class="fas fa-triangle-exclamation"></i> Zone danger</h3><p>Actions irréversibles. Procédez avec prudence.</p></div>
+            <div class="fcard-b">
+              <div class="danger-row" style="padding-bottom:16px;border-bottom:1px solid var(--bdr)">
+                <div class="danger-main"><div class="danger-t">Mettre mon compte en pause</div><div class="danger-d">Suspend temporairement votre activité de partenaire.</div></div>
+                <button class="btn-sm ghost" onclick="toast('⏸️ Compte mis en pause')">Mettre en pause</button>
+              </div>
+              <div class="danger-row" style="padding-top:16px">
+                <div class="danger-main"><div class="danger-t">Supprimer mon compte partenaire</div><div class="danger-d">Toutes vos données seront définitivement effacées.</div></div>
+                <button class="btn-danger" onclick="openConfirm()">Supprimer</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Barre flottante d'enregistrement -->
+<div class="savebar" id="savebar">
+  <div class="savebar-txt"><i class="fas fa-circle-exclamation"></i> Modifications non enregistrées</div>
+  <div class="savebar-btns">
+    <button class="sv-cancel" onclick="resetDirty()">Annuler</button>
+    <button class="sv-save" onclick="save()"><i class="fas fa-check"></i> Enregistrer</button>
+  </div>
+</div>
+
+<!-- Modale de confirmation (zone danger) -->
+<div class="mbg" id="confirmBg" onclick="if(event.target===this)closeConfirm()">
+  <div class="cmodal">
+    <div class="cmodal-ic"><i class="fas fa-triangle-exclamation"></i></div>
+    <h3>Supprimer votre compte ?</h3>
+    <p>Cette action est <b>irréversible</b>. Vos acteurs recrutés, commissions et historique seront définitivement perdus.</p>
+    <div class="cmodal-btns">
+      <button class="cm-cancel" onclick="closeConfirm()">Annuler</button>
+      <button class="cm-confirm" onclick="closeConfirm(); toast('Compte programmé pour suppression')">Supprimer définitivement</button>
+    </div>
+  </div>
+</div>
+
+<div id="tct"></div>
+
+<script>
+/* Toast */
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'tmsg';
+  el.innerHTML = '<i class="fas fa-circle-check"></i><span>' + msg + '</span>';
+  document.getElementById('tct').appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 2500);
+}
+
+/* Navigation entre sections */
+function goSec(btn, id) {
+  document.querySelectorAll('.pnav-item').forEach(n => n.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* Toggles */
+function tog(el) { el.classList.toggle('on'); dirty(); }
+
+/* Méthode de paiement (radio) */
+function pickPay(el) {
+  document.querySelectorAll('.pay-method').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+  dirty();
+}
+
+/* Options radio (langue, apparence) — au sein de la même carte */
+function pickOpt(el) {
+  el.closest('.opt-grid').querySelectorAll('.opt').forEach(o => o.classList.remove('on'));
+  el.classList.add('on');
+  dirty();
+}
+
+/* Barre d'enregistrement avec compteur de modifications */
+let changeCount = 0;
+const savedTxt = document.querySelector('.savebar-txt');
+function dirty() {
+  changeCount++;
+  document.getElementById('savebar').classList.add('show');
+  savedTxt.innerHTML = `<i class="fas fa-circle-exclamation"></i> ${changeCount} modification${changeCount > 1 ? 's' : ''} non enregistrée${changeCount > 1 ? 's' : ''}`;
+}
+function resetDirty() {
+  changeCount = 0;
+  document.getElementById('savebar').classList.remove('show');
+  toast('↩️ Modifications annulées');
+}
+function save() {
+  changeCount = 0;
+  document.getElementById('savebar').classList.remove('show');
+  toast('✅ Paramètres enregistrés');
+}
+
+/* Recherche dans la sous-nav */
+function filterNav(q) {
+  q = q.toLowerCase().trim();
+  document.querySelectorAll('.pnav-item').forEach(item => {
+    const label = (item.dataset.label || '') + ' ' + item.textContent.toLowerCase();
+    item.style.display = !q || label.includes(q) ? '' : 'none';
+  });
+}
+
+/* Force du mot de passe */
+function checkPwd(v) {
+  let score = 0;
+  if (v.length >= 8) score++;
+  if (/[A-Z]/.test(v)) score++;
+  if (/[0-9]/.test(v)) score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+  const labels = ['Trop faible', 'Faible', 'Moyen', 'Bon', 'Excellent'];
+  for (let i = 1; i <= 4; i++) {
+    const seg = document.getElementById('ps' + i);
+    seg.className = 'pwd-seg' + (i <= score ? ' w' + score : '');
+  }
+  document.getElementById('pwdLabel').textContent = v ? 'Force : ' + labels[score] : 'Utilisez au moins 8 caractères, une majuscule et un chiffre.';
+}
+
+/* Copie du lien de parrainage */
+function copyRef() {
+  navigator.clipboard?.writeText('https://shopi.gn/rejoindre/MOHAMED-S0UMAH');
+  toast('🔗 Lien de parrainage copié');
+}
+
+/* Modale de confirmation */
+function openConfirm() { document.getElementById('confirmBg').classList.add('show'); }
+function closeConfirm() { document.getElementById('confirmBg').classList.remove('show'); }
+</script>
+
+</body>
+</html>

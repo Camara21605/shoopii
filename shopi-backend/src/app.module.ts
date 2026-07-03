@@ -30,10 +30,12 @@ import { PromotionsModule } from './modules/promotions/promotions.module';
 import { PublicModule }     from './modules/public/public.module';
 import { WalletModule }     from './modules/wallet/wallet.module';
 import { CommandeModule }   from './modules/commande/commande.module';
-import { SuivisModule }     from './modules/suivis/suivis.module';
-import { MessagerieModule } from './modules/messagerie/messagerie.module';
-import { LocationModule }   from './modules/location/location.module';
-import { JobsModule }       from './jobs/jobs.module';
+import { SuivisModule }        from './modules/suivis/suivis.module';
+import { MessagerieModule }    from './modules/messagerie/messagerie.module';
+import { ContactSyncModule }   from './modules/messagerie/contacts/contact-sync.module';
+import { LocationModule }      from './modules/location/location.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { JobsModule }          from './jobs/jobs.module';
 
 @Module({
   imports: [
@@ -55,6 +57,7 @@ import { JobsModule }       from './jobs/jobs.module';
     WalletModule,
     CommandeModule,
     MessagerieModule,
+    ContactSyncModule,
     LocationModule,
 
     /* ── 3. Redis ─────────────────────────────────────────────── */
@@ -164,6 +167,18 @@ import { JobsModule }       from './jobs/jobs.module';
      * Ces providers doivent être enregistrés AVANT ce module.
      */
     SuivisModule,
+
+    /* ── 5b. ✅ NotificationsModule — APRÈS Redis + BullMQ ── */
+    /*
+     * Dépend de :
+     *   - @InjectRedis()                     → RedisModule
+     *   - @InjectQueue(NOTIFICATION_QUEUE)   → BullModule
+     *   - TypeOrmModule.forFeature(...)      → DatabaseModule
+     *   - JwtModule (config interne)
+     *
+     * Exporte NotificationService pour les modules métier (Phase 2).
+     */
+    NotificationsModule,
 
     /* ── 6. JobsModule — tâches cron ── */
     /*

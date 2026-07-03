@@ -17,6 +17,15 @@ import { User, UserStatus } from 'src/database/entities/user.entity';
 import { UserRole } from 'src/common/enums/user-role.enum';
 import { FilterUsersDto } from '../dto/utilisateurs.dto';
 import { AuditLogService } from './audit-log.service';
+import { Client }       from 'src/database/entities/profiles/client-profile.entity';
+import { Company }      from 'src/database/entities/profiles/entreprise-profile.entity';
+import { Delivery }     from 'src/database/entities/profiles/livreur-profile.entity';
+import { Correspondent} from 'src/database/entities/profiles/correspondant-profile.entity';
+import {
+  NotificationActorType,
+  NotificationType,
+} from 'src/database/entities/notification/notification.entitiy';
+import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 /* ── Interfaces ────────────────────────────────────────────── */
 
@@ -74,6 +83,7 @@ export class UtilisateursService {
     private readonly userRepo: Repository<User>,
 
     private readonly auditLog: AuditLogService,
+    private readonly notifEventSvc: NotificationEventService,
   ) {}
 
   /* ── 1. LISTE ─────────────────────────────────────────────── */
@@ -171,6 +181,11 @@ export class UtilisateursService {
     this.logger.log(`[TOGGLE BLOCK] ${user.email} -> ${newStatus} | PAR: ${caller.email}`);
     await this.auditLog.log(caller, '🔐', `a ${action} le compte ${user.email}`, { type: 'user', id: user.id });
 
+    void this.notifyUserAccount(user, newStatus === UserStatus.BANNED
+      ? { type: NotificationType.ACCOUNT_BANNED, title: 'Compte bloqué 🚫', body: 'Votre compte a été bloqué par l\'administration.' }
+      : { type: NotificationType.ACCOUNT_APPROVED, title: 'Compte débloqué ✅', body: 'Votre compte a été débloqué par l\'administration.' }
+    );
+
     return {
       message: `${user.firstName} ${user.lastName} a été ${action}.`,
       status:  STATUS_TO_FRONTEND[newStatus] ?? newStatus,
@@ -197,6 +212,14 @@ export class UtilisateursService {
       { type: 'user', id: user.id },
     );
 
+    void this.notifyUserAccount(user, {
+      type:  NotificationType.ACCOUNT_SUSPENDED,
+      title: 'Compte suspendu ⚠️',
+      body:  raison
+        ? `Votre compte a été suspendu. Raison : ${raison}`
+        : 'Votre compte a été temporairement suspendu par l\'administration.',
+    });
+
     return { message: `${user.firstName} ${user.lastName} a été suspendu.` };
   }
 
@@ -214,6 +237,12 @@ export class UtilisateursService {
     await this.userRepo.save(user);
     this.logger.log(`[VERIFY] ${user.email} vérifié par ${caller.email}`);
     await this.auditLog.log(caller, '✔', `a vérifié le compte ${user.email}`, { type: 'user', id: user.id });
+
+    void this.notifyUserAccount(user, {
+      type:  NotificationType.ACCOUNT_VERIFIED,
+      title: 'Compte vérifié ✔️',
+      body:  'Votre identité a été vérifiée par l\'administration Shopi.',
+    });
 
     return { message: `${user.firstName} ${user.lastName} a été vérifié.` };
   }
@@ -396,5 +425,43 @@ export class UtilisateursService {
       return `"${value.replace(/"/g, '""')}"`;
     }
     return value;
+  }
+
+  /**
+   * Résout le profileId d'un User selon son rôle, puis envoie
+   * une notification de statut de compte. Fire-and-forget.
+   */
+  private async notifyUserAccount(
+    user: User,
+    notif: { type: NotificationType; title: string; body: string },
+  ): Promise<void> {
+    try {
+      type ProfileEntry = { type: NotificationActorType; entityClass: unknown };
+      const roleMap: Partial<Record<string, ProfileEntry>> = {
+        [UserRole.CLIENT]:        { type: NotificationActorType.CLIENT,       entityClass: Client        },
+        [UserRole.COMPANY]:       { type: NotificationActorType.COMPANY,      entityClass: Company       },
+        [UserRole.DELIVERY]:      { type: NotificationActorType.DELIVERY,     entityClass: Delivery      },
+        [UserRole.CORRESPONDENT]: { type: NotificationActorType.CORRESPONDENT,entityClass: Correspondent },
+      };
+
+      const cfg = roleMap[user.role];
+      if (!cfg) return;
+
+      const profile = await (this.userRepo.manager.findOne as any)(cfg.entityClass, {
+        where:  { userId: user.id },
+        select: ['id'],
+      });
+      if (!profile?.id) return;
+
+      void this.notifEventSvc.notifyAccountStatusChanged({
+        recipientType: cfg.type,
+        recipientId:   profile.id,
+        type:          notif.type,
+        title:         notif.title,
+        body:          notif.body,
+      });
+    } catch (err) {
+      this.logger.error(`notifyUserAccount (${notif.type}) failed`, err);
+    }
   }
 }

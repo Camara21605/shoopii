@@ -106,6 +106,7 @@ export async function apiFetch<T = unknown>(
     response = await fetch(url, {
       method,
       headers,
+      credentials: 'include',
       body:
         body instanceof FormData
           ? body

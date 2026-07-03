@@ -23,8 +23,8 @@ import { InvitationService }        from './services/invitation.service';
 
 import { MailModule }  from 'src/modules/email/email.module';
 
-// ✅ FIX : import de CodesModule pour accéder à CodeCreationService
-import { CodesModule } from 'src/modules/auth/code-creation/code-creation.module';
+import { CodesModule }         from 'src/modules/auth/code-creation/code-creation.module';
+import { NotificationsModule } from 'src/modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -36,10 +36,8 @@ import { CodesModule } from 'src/modules/auth/code-creation/code-creation.module
     ]),
 
     MailModule,
-
-    // ✅ FIX : CodesModule exporte CodeCreationService
-    // → InvitationService peut l'injecter pour generateForCompany()
     CodesModule,
+    NotificationsModule,
   ],
 
   controllers: [

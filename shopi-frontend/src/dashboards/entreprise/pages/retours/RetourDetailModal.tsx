@@ -183,7 +183,7 @@ export default function RetourDetailModal({
 
             /* ── ONGLET INFO ── */
             activeTab === 'info' ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="gridR2" style={{ gap: 16 }}>
 
                 {/* Produit & commande */}
                 <div>

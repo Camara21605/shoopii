@@ -70,3 +70,21 @@ input {
   animation: spin 0.8s linear infinite;
   display: inline-block;
 }
+
+/* ── Classes partagées NotificationCenter (tous dashboards) ── */
+.tb-ic {
+  position: relative;
+  background: transparent;
+  border: none;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t2, #6b7280);
+  font-size: 14px;
+  transition: all .2s;
+  cursor: pointer;
+}
+.tb-ic:hover { background: var(--sky, #f0f4ff); color: var(--navy, #060f1e); }
+.tb-ic-pin   { position: relative; }

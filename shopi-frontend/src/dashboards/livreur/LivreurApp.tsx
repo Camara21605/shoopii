@@ -22,8 +22,9 @@ import { PAGE_META } from './data/livreurData';
 import Sidebar         from './components/Sidebar';
 import Topbar          from './components/Topbar';
 import BottomNav       from './components/BottomNav';
-import NotifPanel      from './components/NotifPanel';
 import Toast           from './components/Toast';
+import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
+import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
 
 import OverviewPage    from './pages/OverviewPage';
 import MissionsPage    from './pages/MissionsPage';
@@ -94,7 +95,6 @@ export default function LivreurApp() {
   const { page, viewedId } = parseSplat(splat);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notifOpen,   setNotifOpen]   = useState(false);
   const [isOnline,    setIsOnline]    = useState(true);
   const [todayEarn,   setTodayEarn]   = useState(44_000);
   const [toasts,      setToasts]      = useState<ToastMsg[]>([]);
@@ -156,7 +156,6 @@ export default function LivreurApp() {
     const segment = buildPath(p, id);
     routerNavigate(`/dashboard/livreur${segment ? `/${segment}` : ''}`);
     setSidebarOpen(false);
-    setNotifOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [routerNavigate]);
 
@@ -179,7 +178,7 @@ export default function LivreurApp() {
   // Escape : ferme sidebar + notifs
   useEffect(() => {
     const fn = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setSidebarOpen(false); setNotifOpen(false); }
+      if (e.key === 'Escape') { setSidebarOpen(false); }
     };
     document.addEventListener('keydown', fn);
     return () => document.removeEventListener('keydown', fn);
@@ -188,15 +187,14 @@ export default function LivreurApp() {
   const meta = PAGE_META[page];
 
   return (
+    <NotificationProvider>
+    <NotificationToastStack />
     <div className={styles.root}>
 
       {/* Overlay mobile */}
       {sidebarOpen && (
         <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />
       )}
-
-      {/* Panel notifications */}
-      <NotifPanel isOpen={notifOpen} onClose={() => setNotifOpen(false)} onPop={pop} />
 
       {/* Sidebar */}
       <Sidebar
@@ -229,7 +227,6 @@ export default function LivreurApp() {
         avatarUrl={avatarUrl}
         livreurName={livreurName}
         onMenuToggle={() => setSidebarOpen(o => !o)}
-        onNotif={() => setNotifOpen(o => !o)}
         onNavigate={navigate}
       />
 
@@ -270,5 +267,6 @@ export default function LivreurApp() {
         {toasts.map(t => <Toast key={t.id} msg={t.msg} type={t.type} />)}
       </div>
     </div>
+    </NotificationProvider>
   );
 }

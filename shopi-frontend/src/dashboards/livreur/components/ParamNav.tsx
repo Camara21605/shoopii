@@ -63,7 +63,7 @@ export default function ParamNav({ active, onSelect, onBack }: Props) {
       </div>
 
       {GROUPS.map(grp => (
-        <div key={grp.title}>
+        <div key={grp.title} className={styles.group}>
           <div className={styles.sect}>{grp.title}</div>
           {grp.items.map(item => (
             <div

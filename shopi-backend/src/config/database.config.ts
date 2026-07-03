@@ -33,6 +33,7 @@ import { SubCategory }    from '../database/entities/entreprise.table/sub-catego
 import { Product }        from '../database/entities/entreprise.table/product.entity';
 import { ProductVariant } from '../database/entities/entreprise.table/product-variant.entity';
 import { ProductSpec }    from '../database/entities/entreprise.table/product-spec.entity';
+import { ProductWholesaleTier } from '../database/entities/entreprise.table/product-wholesale-tier.entity';
 import { ProductMedia }   from '../database/entities/entreprise.table/product-media.entity';
 import { ProductStory } from '../database/entities/entreprise.table/product-story.entity';
 import { ProductLike } from '../database/entities/entreprise.table/product-like.entity';  
@@ -67,6 +68,10 @@ import { ReturnEvidence }   from '../database/entities/returns/return-evidence.e
 import { ReturnHistory }    from '../database/entities/returns/return-history.entity';
 import { SavTicket }        from '../database/entities/returns/sav-ticket.entity';
 import { SavMessage }       from '../database/entities/returns/sav-message.entity';
+// ── Messagerie avancée ─────────────────────────────────────────────────────
+import { MessagingAuditLog }    from '../database/entities/messaging/messaging-audit-log.entity';
+import { UserContact }          from '../database/entities/contacts/user-contact.entity';
+import { ContactSyncSession }   from '../database/entities/contacts/contact-sync-session.entity';
 
 
 /*****************************************************
@@ -161,6 +166,7 @@ export const databaseConfigFactory = {
       Product,
       ProductVariant,
       ProductSpec,
+      ProductWholesaleTier,
       ProductMedia,
       Promotion,
 
@@ -200,6 +206,10 @@ export const databaseConfigFactory = {
       ReturnHistory,
       SavTicket,
       SavMessage,
+      // ── Messagerie avancée ────────────────────────────────────
+      MessagingAuditLog,
+      UserContact,
+      ContactSyncSession,
     ],
 
 

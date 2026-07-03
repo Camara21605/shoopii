@@ -26,6 +26,7 @@ import {
 
 import { CreateCommandeDto } from '../dto/create-commande.dto';
 import { CODE_EXPIRY_MS, genererCode, readPrix } from './commande.helpers';
+import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 @Injectable()
 export class CommandeCreationService {
@@ -39,6 +40,7 @@ export class CommandeCreationService {
     @InjectRepository(Delivery) private readonly deliveryRepo: Repository<Delivery>,
     @InjectRepository(Correspondent)       private readonly correspondantRepo:     Repository<Correspondent>,
     @InjectRepository(PlatformSettings)   private readonly platformSettingsRepo:  Repository<PlatformSettings>,
+    private readonly notifEventSvc: NotificationEventService,
   ) {}
 
   /* ════════════════════════════════════════════════════════
@@ -132,6 +134,16 @@ export class CommandeCreationService {
         sousTotal: readPrix(pi.produit) * pi.qty,
       }));
       await this.itemRepo.save(commandeItems);
+
+      /* Notification → entreprise : nouvelle commande reçue */
+      void this.notifEventSvc.notifyOrderPlaced({
+        companyId:   company.id,
+        clientId:    client.id,
+        clientName:  client.fullName ?? `${user.firstName} ${user.lastName}`.trim(),
+        orderRef:    saved.numero,
+        commandeId:  saved.id,
+        totalAmount: saved.total,
+      });
 
       /* Codes de validation */
       const now = new Date();

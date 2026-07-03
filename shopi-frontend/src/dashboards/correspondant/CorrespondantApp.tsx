@@ -10,7 +10,8 @@ import s from './styles/CorrespondantApp.module.css';
 import Sidebar      from './components/Sidebar';
 import Topbar       from './components/Topbar';
 import Toast        from './components/Toast';
-import NotifPanel   from './components/NotifPanel';
+import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
+import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
 
 import OverviewPage    from './pages/OverviewPage';
 import ColisPage       from './pages/ColisPage';
@@ -30,11 +31,8 @@ import type { PageId } from './data/correspondantData';
 export default function CorrespondantApp() {
   const [page,      setPage]      = useState<PageId>('overview');
   const [sideOpen,  setSideOpen]  = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
 
   const closeSide  = () => setSideOpen(false);
-  const closeNotif = () => setNotifOpen(false);
-  const toggleNotif = () => setNotifOpen(o => !o);
 
   const PAGE_MAP: Record<PageId, React.ReactNode> = {
     overview:   <OverviewPage   setPage={setPage} />,
@@ -52,40 +50,35 @@ export default function CorrespondantApp() {
   };
 
   return (
-    <div className={s.root}>
-      {/* Overlay sidebar mobile */}
-      {sideOpen && <div className={s.overlay} onClick={closeSide} />}
+    <NotificationProvider>
+      <NotificationToastStack />
+      <div className={s.root}>
+        {/* Overlay sidebar mobile */}
+        {sideOpen && <div className={s.overlay} onClick={closeSide} />}
 
-      {/* Overlay notif panel (ferme si on clique à l'extérieur) */}
-      {notifOpen && <div className={s.overlay} onClick={closeNotif} />}
+        {/* Sidebar navigation */}
+        <Sidebar
+          page={page}
+          setPage={setPage}
+          open={sideOpen}
+          onClose={closeSide}
+        />
 
-      {/* Sidebar navigation */}
-      <Sidebar
-        page={page}
-        setPage={setPage}
-        open={sideOpen}
-        onClose={closeSide}
-      />
+        {/* Topbar */}
+        <Topbar
+          page={page}
+          onMenu={() => setSideOpen(o => !o)}
+          onPage={setPage}
+        />
 
-      {/* Topbar — reçoit onNotif pour ouvrir le panneau */}
-      <Topbar
-        page={page}
-        onMenu={() => setSideOpen(o => !o)}
-        onPage={setPage}
-        onNotif={toggleNotif}
-        notifOpen={notifOpen}
-      />
+        {/* Contenu de la page active */}
+        <main className={s.main}>
+          {PAGE_MAP[page]}
+        </main>
 
-      {/* Panneau notifications — slide depuis la droite */}
-      <NotifPanel open={notifOpen} onClose={closeNotif} />
-
-      {/* Contenu de la page active */}
-      <main className={s.main}>
-        {PAGE_MAP[page]}
-      </main>
-
-      {/* Toasts */}
-      <Toast />
-    </div>
+        {/* Toasts */}
+        <Toast />
+      </div>
+    </NotificationProvider>
   );
 }

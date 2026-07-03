@@ -1,0 +1,95 @@
+/* src/dashboards/partenaire/styles/CodesPage.module.css */
+
+/* Bandeau hero */
+.codeHero {
+  background: var(--navy);
+  border-radius: var(--r-xl);
+  padding: 26px 28px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  color: #fff;
+}
+.glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 50% 80% at 90% 20%, rgba(37,96,220,.3), transparent 58%);
+  pointer-events: none;
+}
+.heroIn { position: relative; z-index: 1; max-width: 520px; }
+.heroIn h3 { font-family: var(--fd); font-size: 19px; font-weight: 800; margin-bottom: 6px; }
+.heroIn p { font-size: 12.5px; color: rgba(200,217,248,.65); line-height: 1.6; }
+.heroBtn {
+  position: relative; z-index: 1;
+  background: #fff; color: var(--navy); border-radius: var(--pill);
+  padding: 12px 22px; font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px; transition: all .2s; flex-shrink: 0;
+  white-space: nowrap;
+}
+.heroBtn:hover { background: var(--sky-2); transform: translateY(-2px); }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat { background: var(--white); border: 1px solid var(--bdr); border-radius: var(--r-md); padding: 16px; min-width: 0; }
+.statV { font-family: var(--fd); font-weight: 800; font-size: 22px; color: var(--navy); }
+.statV.g { color: var(--emerald); }
+.statV.a { color: var(--amber); }
+.statL { font-size: 11px; color: var(--t3); margin-top: 3px; }
+
+/* Carte + tableau */
+.card { background: var(--white); border: 1px solid var(--bdr); border-radius: var(--r-lg); overflow: hidden; }
+.ch { padding: 16px 20px; border-bottom: 1px solid var(--bdr); }
+.chT { font-family: var(--fd); font-weight: 700; font-size: 15px; color: var(--navy); display: flex; align-items: center; gap: 9px; }
+.chT i { color: var(--blue); font-size: 13px; }
+
+/* ⚠️ overflow-x:auto (jamais hidden) : le tableau a 6 colonnes et serait
+   tronqué sans recours sur mobile sinon. */
+.tblWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.table th {
+  text-align: left; padding: 11px 16px; font-size: 10.5px; font-weight: 700;
+  color: var(--t3); text-transform: uppercase; letter-spacing: .4px;
+  background: var(--g50); border-bottom: 1px solid var(--bdr); white-space: nowrap;
+}
+.table td { padding: 13px 16px; border-bottom: 1px solid var(--bdr); color: var(--t1); white-space: nowrap; }
+.table tr:last-child td { border-bottom: none; }
+
+.codePill {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--fd); font-weight: 700; font-size: 12px; color: var(--navy);
+  background: var(--g50); border: 1px solid var(--bdr2); border-radius: var(--pill); padding: 5px 12px;
+}
+.codeExp { opacity: .5; text-decoration: line-through; }
+.copy { cursor: pointer; color: var(--t3); font-size: 11px; transition: color .15s; }
+.copy:hover { color: var(--blue); }
+
+.typePill { font-size: 10.5px; font-weight: 700; padding: 4px 11px; border-radius: var(--pill); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.t_ent { background: var(--sky-2); color: var(--blue); }
+.t_lvr { background: var(--em-bg); color: var(--emerald); }
+.t_cor { background: var(--vl-bg); color: var(--violet); }
+.t_cli { background: var(--am-bg); color: var(--amber); }
+
+.stPill { font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: var(--pill); text-transform: uppercase; letter-spacing: .3px; }
+.st_used    { background: var(--em-bg); color: var(--emerald); }
+.st_sent    { background: var(--sky-2); color: var(--blue); }
+.st_expired { background: var(--g100); color: var(--t3); }
+
+.rowAct { display: flex; gap: 6px; }
+.raBtn {
+  width: 30px; height: 30px; border-radius: var(--r-sm); border: 1px solid var(--bdr2);
+  display: flex; align-items: center; justify-content: center; color: var(--t2); font-size: 12px;
+  transition: all .15s;
+}
+.raBtn:hover { border-color: var(--bdrb); background: var(--sky); color: var(--navy); }
+.raBtn.wa:hover { border-color: #25D366; background: rgba(37,211,102,.08); color: #1B9E4F; }
+
+@media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) {
+  .codeHero { flex-direction: column; align-items: flex-start; }
+  .heroBtn { width: 100%; justify-content: center; }
+  .stats { grid-template-columns: 1fr; }
+}

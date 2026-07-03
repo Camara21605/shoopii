@@ -1,11 +1,9 @@
 /* ================================================================
- * ParamNav.module.css — Navigation secondaire paramètres livreur
- * Desktop  : barre verticale sticky (224px)
- * Tablette : barre horizontale wrappée
- * Mobile   : barre horizontale défilante avec icône + label
+ * ParamNav.module.css — Navigation paramètres livreur
+ * Desktop : barre verticale sticky
+ * ≤960px  : onglets horizontaux scrollables (pills)
  * ================================================================ */
 
-/* ── Desktop (vertical) ───────────────────────────────────────── */
 .nav {
   background: var(--white);
   border: 1.5px solid var(--bdr);
@@ -15,6 +13,9 @@
   position: sticky;
   top: calc(var(--hdr, 64px) + 20px);
 }
+
+/* ── Groupe wrapper ── */
+.group { }
 
 /* Retour dashboard */
 .back {
@@ -46,11 +47,7 @@
 }
 .item:hover { background: var(--sky); color: var(--navy); }
 
-.on {
-  background: var(--tl-bg);
-  color: var(--teal);
-  font-weight: 700;
-}
+.on { background: var(--tl-bg); color: var(--teal); font-weight: 700; }
 .on::before {
   content: '';
   position: absolute; left: 0; top: 50%; transform: translateY(-50%);
@@ -69,86 +66,57 @@
 .dotR { background: var(--red, #DC2626); }
 .dotA { background: var(--amber, #B45309); }
 
-/* ── Tablette (≤960px) — barre horizontale wrappée ──────────── */
+/* ── Responsive : onglets scrollables ── */
 @media (max-width: 960px) {
   .nav {
     position: static;
-    /* Scroll horizontal sur tablette/mobile */
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 8px;
-  }
-  .sect  { display: none; }
-  .back  {
-    border-bottom: none;
-    padding-bottom: 10px;
-    margin-bottom: 0;
-    flex-shrink: 0;
-  }
-  .item  { padding: 7px 11px; font-size: 12px; flex-shrink: 0; }
-  .on::before { display: none; }
-}
-
-/* ── Mobile (≤640px) — scroll horizontal, icône + label visible ── */
-@media (max-width: 640px) {
-  .nav {
-    /* Scroll horizontal avec snap — bien adapté tactile */
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding: 8px 6px;
-    gap: 5px;
+    gap: 6px;
+    padding: 6px 8px;
     border-radius: var(--r-lg);
   }
   .nav::-webkit-scrollbar { display: none; }
 
-  /* Retour : icône seule + label court */
-  .back {
-    padding: 7px 10px;
-    flex-shrink: 0;
-    scroll-snap-align: start;
-    font-size: 11px;
-  }
+  /* Back button masqué en mode pill — la topbar gère la navigation */
+  .back { display: none; }
 
-  /* Items : chips compacts avec icône + label court */
+  .group { display: contents; }
+  .sect  { display: none; }
+
   .item {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 8px 10px;
-    min-width: 60px;
-    font-size: 10px;
-    text-align: center;
-    border-radius: 12px;
-    scroll-snap-align: start;
     flex-shrink: 0;
-  }
-
-  /* Garde le label visible sur mobile (contrairement à l'ancienne version) */
-  .item span { display: block !important; }
-  .back span { display: block !important; }
-
-  .icon {
+    white-space: nowrap;
+    padding: 8px 13px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--pill);
+    scroll-snap-align: start;
     width: auto;
-    font-size: 15px;
+    margin-bottom: 0;
+    background: var(--g50);
+    border: 1.5px solid var(--bdr2);
   }
+  .item span { display: inline; }
+  .item:hover { background: var(--sky); border-color: rgba(14,116,144,.3); color: var(--teal); }
 
-  /* Icône active plus visible */
   .on {
-    background: var(--tl-bg);
-    border: 1.5px solid rgba(14,116,144,.25);
+    background: var(--teal, #0E7490);
+    border-color: var(--teal, #0E7490);
+    color: #fff;
+    font-weight: 700;
   }
+  .on::before { display: none; }
+  .on .icon { color: #fff !important; }
+  .on:hover { background: var(--teal); }
 
-  /* Point d'alerte repositionné en haut à droite */
-  .dot {
-    position: absolute;
-    top: 5px; right: 5px;
-    margin-left: 0;
-    width: 6px; height: 6px;
-  }
+  .dangerItem { border-color: rgba(220,38,38,.25); color: var(--red, #DC2626) !important; background: rgba(220,38,38,.05); }
+
+  .icon { width: auto; }
+  .dot  { display: none; }
 }

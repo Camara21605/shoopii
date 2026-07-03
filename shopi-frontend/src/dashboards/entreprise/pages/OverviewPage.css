@@ -76,6 +76,13 @@
   background: var(--white); border: 1.5px solid var(--bdr); border-radius: var(--r-xl);
   padding: 20px; box-shadow: var(--sh-xs); position: relative; overflow: hidden;
   transition: all .25s; cursor: default;
+  /* ⚠️ Les items de grille ont min-width:auto par défaut, c.-à-d. la
+     largeur du contenu non-cassable (les montants utilisent une espace
+     INSÉCABLE comme séparateur de milliers → "145 250 000" ne peut
+     jamais wrapper). Sans min-width:0, ce texte force la colonne de
+     grille à s'élargir et fait déborder toute la page horizontalement
+     une fois la grille passée en 2 puis 1 colonne sur mobile. */
+  min-width: 0;
 }
 .kpi:hover { border-color: var(--bdrb); transform: translateY(-3px); box-shadow: var(--sh-md); }
 .kpi-stripe { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 3px 3px 0 0; }
@@ -97,7 +104,14 @@
 .kpi-badge.up  { background: rgba(5,150,105,.1); color: var(--emerald); }
 .kpi-badge.dn  { background: rgba(220,38,38,.1); color: var(--red); }
 .kpi-badge.neu { background: var(--g100); color: var(--t3); }
-.kpi-val   { font-family: var(--fd); font-size: 27px; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; line-height: 1; }
+.kpi-val   {
+  font-family: var(--fd); font-size: clamp(16px, 5.5vw, 27px); font-weight: 800;
+  color: var(--navy); letter-spacing: -0.5px; line-height: 1.15;
+  /* Filet de sécurité : si le montant (espaces insécables) reste trop
+     large malgré le clamp, on autorise une coupure de secours plutôt
+     que de déborder. */
+  overflow-wrap: anywhere;
+}
 .kpi-lbl   { font-size: 12px; color: var(--t3); margin-top: 5px; font-weight: 500; }
 .kpi-sub   { font-size: 10.5px; color: var(--t4); margin-top: 3px; }
 .kpi-spark { display: flex; align-items: flex-end; gap: 2px; height: 28px; margin-top: 10px; }

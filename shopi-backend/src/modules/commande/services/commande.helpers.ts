@@ -36,7 +36,7 @@ export interface CommandeDetailResponse {
   datePaiement: string;
   destination: string;
   acteurs: Acteur[];
-  articles: { emoji: string; nom: string; boutique: string; qty: number; prix: number }[];
+  articles: { emoji: string; imageUrl: string | null; nom: string; boutique: string; qty: number; prix: number }[];
   montant: { sousTotal: number; livraison: number; fraisCorrespondant: number; total: number };
   commissions: Commission[];
   codes: Record<ActeurRole, string>;
@@ -48,8 +48,12 @@ export interface CommandeListItem {
   id: string;
   uuid: string;
   em: string;
+  /** Image principale (snapshot premier article) */
+  imageUrl: string | null;
   nm: string;
   vt: string;
+  /** Tous les articles de la commande */
+  items: { nm: string; imageUrl: string | null; vt: string | null; qty: number }[];
   client: string;
   price: number;
   status: 'new' | 'prep' | 'ship' | 'del' | 'can';

@@ -4,7 +4,7 @@
 
 import React, { useEffect } from 'react';
 import { useSearchParams, useNavigate }  from 'react-router-dom';
-import { tokenStorage }    from '../../../shared/services/apiFetch';
+import { apiFetch, tokenStorage } from '../../../shared/services/apiFetch';
 import { getRoleFromToken, getDashboardPath } from '../../../shared/services/authUtils';
 
 import { LeftPanel }      from '../components/LeftPanel';
@@ -86,14 +86,25 @@ const Login: React.FC = () => {
      Ce useEffect doit être APRÈS useLoginPage pour avoir accès à showToast.
   ─────────────────────────────────────────────────────────────────────────── */
   useEffect(() => {
-    const token = searchParams.get('token');
+    const code  = searchParams.get('code');
+    const role  = searchParams.get('role');
     const error = searchParams.get('error');
 
-    if (token) {
-      tokenStorage.set(token);
-      const role = getRoleFromToken();
+    // ?code sans ?role → callback Google OAuth (pas un lien d'invitation)
+    if (code && !role) {
       window.history.replaceState({}, '', '/login');
-      navigate(getDashboardPath(role), { replace: true });
+      apiFetch<{ accessToken: string }>('/auth/google/exchange', {
+        method: 'POST',
+        body: { code },
+      })
+        .then(result => {
+          tokenStorage.set(result.accessToken);
+          const userRole = getRoleFromToken();
+          navigate(getDashboardPath(userRole), { replace: true });
+        })
+        .catch(err => {
+          showToast(`❌ ${(err as any)?.message ?? 'Erreur de connexion Google'}`);
+        });
     } else if (error) {
       showToast(`❌ ${decodeURIComponent(error)}`);
       window.history.replaceState({}, '', '/login');

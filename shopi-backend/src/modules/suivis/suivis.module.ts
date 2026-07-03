@@ -61,7 +61,8 @@ import { SuivisLivreurController }       from './controllers/suivis-livreur.cont
 import { SuivisEntrepriseController }    from './controllers/suivis-entreprise.controller';
 
 
-import { ClientModule } from '../dashboard/client/client.module';
+import { ClientModule }        from '../dashboard/client/client.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 /* ── WebSocket Gateway ── */
 import { SuivisGateway } from './gateways/suivis.gateway';
@@ -87,6 +88,7 @@ import { SUIVIS_QUEUE }  from './suivis.queue';
     ]),
 
     ClientModule,
+    NotificationsModule,
 
     /* ── BullMQ : file d'attente Redis ── */
     BullModule.registerQueue({

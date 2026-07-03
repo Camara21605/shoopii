@@ -26,6 +26,8 @@ import ReseauBottomNav  from './layout/ReseauBottomNav';
 import { ToastProvider } from '../../shared/context/ToastContext';
 import ToastContainer    from '../../shared/components/ui/ToastContainer';
 import { apiFetch }      from '../../shared/services/apiFetch';
+import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
+import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
 
 // Pages
 import OverviewPage                   from './pages/OverviewPage';
@@ -255,6 +257,7 @@ function EntrepriseLayout() {
       </main>
 
       <ToastContainer />
+      <NotificationToastStack />
 
       <div className="fab">
         <button
@@ -274,7 +277,9 @@ function EntrepriseLayout() {
 export default function EntrepriseApp() {
   return (
     <ToastProvider>
-      <EntrepriseLayout />
+      <NotificationProvider>
+        <EntrepriseLayout />
+      </NotificationProvider>
     </ToastProvider>
   );
 }

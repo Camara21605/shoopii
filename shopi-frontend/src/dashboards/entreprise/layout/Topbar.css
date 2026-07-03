@@ -18,7 +18,15 @@
 
 .tb-title-wrap { min-width: 0; }
 .tb-title { font-family: var(--fd); font-size: 18px; font-weight: 800; color: var(--navy); letter-spacing: -0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tb-sub   { font-size: 10.5px; color: var(--t3); margin-top: 1px; }
+.tb-sub   {
+  font-size: 10.5px; color: var(--t3); margin-top: 1px;
+  /* ⚠️ Sans ça, un sous-titre un peu long (ex: "Optimisation et
+     campagnes marketing") passe à la ligne sur petit écran et
+     dépasse la hauteur fixe de la topbar (var(--hdr)) → texte
+     visuellement coupé. Comportement aligné sur .tb-title. */
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
+}
 
 .tb-srch {
   flex: 1; max-width: 340px; margin-left: 18px;
@@ -37,6 +45,17 @@
 
 .tb-acts { display: flex; align-items: center; gap: 3px; margin-left: auto; }
 
+/* Bouton menu mobile (masqué sur desktop, affiché ≤640px) */
+.hamburger {
+  display: none;
+  background: transparent; border: none;
+  width: 38px; height: 38px; border-radius: 50%;
+  align-items: center; justify-content: center;
+  color: var(--t2); font-size: 16px; cursor: pointer;
+  flex-shrink: 0; transition: all .2s;
+}
+.hamburger:hover { background: var(--sky); color: var(--navy); }
+
 /* Boutons icône circulaires */
 .tb-ic {
   position: relative; background: transparent; border: none;
@@ -50,6 +69,15 @@
   position: absolute; top: 6px; right: 5px;
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--red); border: 2px solid var(--white);
+}
+.tb-badge {
+  position: absolute; top: 1px; right: 0px;
+  min-width: 16px; height: 16px; border-radius: 8px;
+  background: var(--red, #DC2626); color: #fff;
+  font-size: 9px; font-weight: 700; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px; border: 1.5px solid var(--white, #fff);
+  pointer-events: none;
 }
 
 .tb-sep { width: 1px; height: 20px; background: var(--bdr2); margin: 0 5px; }
@@ -162,18 +190,19 @@
 }
 .bn-fab:hover .bn-fab-ic { transform: scale(1.08); }
 
-/* ════════ DRAWER MOBILE ════════ */
+/* ════════ DRAWER MOBILE ════════
+   Ouvre du même côté que le bouton ☰ (gauche), comme le dashboard livreur. */
 .tb-drawer-overlay {
   position: fixed; inset: 0; background: rgba(6,15,30,.5);
-  backdrop-filter: blur(3px); z-index: 1000; display: flex; justify-content: flex-end;
+  backdrop-filter: blur(3px); z-index: 1000; display: flex; justify-content: flex-start;
   animation: fadeIn .2s var(--ease);
 }
 .tb-drawer {
   width: 84%; max-width: 320px; height: 100%;
   background: var(--white); display: flex; flex-direction: column;
-  box-shadow: var(--sh-xl); animation: drawerIn .25s var(--spring);
+  box-shadow: var(--sh-xl); animation: drawerIn .25s var(--ease);
 }
-@keyframes drawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes drawerIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 
 .tb-drawer-head {
   display: flex; align-items: center; gap: 11px;
@@ -196,7 +225,12 @@
 }
 .tb-drawer-x:hover { background: var(--g200); }
 
-.tb-drawer-nav { flex: 1; overflow-y: auto; padding: 10px; }
+/* ⚠️ min-height:0 indispensable : un enfant flex a min-height:auto par
+   défaut, c.-à-d. refuse de rétrécir sous la hauteur de son contenu.
+   Avec ~18 items de navigation, sans ça c'est .tb-drawer-nav (et donc
+   tout le panneau) qui grandit au lieu que la liste défile toute seule
+   dans son espace alloué (flex:1 + overflow-y:auto). */
+.tb-drawer-nav { flex: 1; min-height: 0; overflow-y: auto; padding: 10px; }
 .tb-drawer-it {
   width: 100%; display: flex; align-items: center; gap: 12px;
   background: none; border: none; padding: 12px 13px; border-radius: var(--r-md);
@@ -227,12 +261,15 @@
 }
 
 @media (max-width: 640px) {
-  .topbar { left: 0; padding: 0 16px; }
+  .topbar { left: 0; padding: 0 14px; gap: 10px; }
+  .hamburger { display: flex; }           /* ✅ bouton menu en haut, comme le dashboard livreur */
+
   /* En mobile : on masque la recherche et les raccourcis desktop,
-     la navigation passe par le bottom nav + drawer */
+     SAUF Messages/Notifications (.tb-ic-pin) qui restent accessibles
+     en haut. La navigation principale passe par le bottom nav + drawer. */
   .tb-srch, .tb-settings, .tb-new, .tb-home,
-  .tb-acts .tb-ic, .tb-acts .tb-sep { display: none; }
-  .tb-acts { gap: 0; }
+  .tb-acts .tb-ic:not(.tb-ic-pin), .tb-acts .tb-sep { display: none; }
+  .tb-acts { gap: 2px; }
   .tb-ava-wrap { display: block; }       /* on garde l'avatar accessible */
 
   .tb-bottomnav { display: flex; }        /* ✅ bottom nav visible */

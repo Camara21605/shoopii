@@ -14,6 +14,7 @@
 
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { NotificationsModule } from '../../notifications/notifications.module';
 
 import { User }           from '../../../database/entities/user.entity';
 import { Client }         from '../../../database/entities/profiles/client-profile.entity';
@@ -67,6 +68,7 @@ import { FavorisService }             from './services/favoris.service';
 
 @Module({
   imports: [
+    NotificationsModule,
     TypeOrmModule.forFeature([
       User,
       Client,

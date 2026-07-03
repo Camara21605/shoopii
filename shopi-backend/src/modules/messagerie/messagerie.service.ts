@@ -8,12 +8,15 @@
 
 import {
   ForbiddenException, Injectable, Logger, NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Inject, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Not, Repository } from 'typeorm';
 import { BroadcastService } from './services/broadcast.service';
 import { PresenceService }  from './services/presence.service';
+import { MessagingPermissionEngine } from './permissions/messaging-permission.engine';
+import type { PermissionContext }    from './permissions/interfaces/permission-context.interface';
 
 import {
   Conversation,
@@ -34,7 +37,12 @@ import { Correspondent } from 'src/database/entities/profiles/correspondant-prof
 import { Partner }       from 'src/database/entities/profiles/partenaire-profile.entity';
 import { UserRole }      from 'src/common/enums/user-role.enum';
 
-import { SendMessageDto, StartConversationDto } from './dto/messagerie.dto';
+import {
+  SendMessageDto, StartConversationDto,
+  EditMessageDto, DeleteMessageDto, ToggleReactionDto,
+  ArchiveConversationDto,
+} from './dto/messagerie.dto';
+import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 // ── Interfaces de réponse ─────────────────────────────────────
 
@@ -104,6 +112,10 @@ export class MessagerieService {
     private readonly presence:    PresenceService,
     @Optional() @Inject(BroadcastService)
     private readonly broadcastSvc?: BroadcastService,
+    @Optional()
+    private readonly notifEventSvc?: NotificationEventService,
+    @Optional()
+    private readonly permissionEngine?: MessagingPermissionEngine,
   ) {}
 
   // ══════════════════════════════════════════════════════════════
@@ -293,12 +305,33 @@ export class MessagerieService {
   async getOrCreateConversation(
     userId: string, role: UserRole,
     dto: StartConversationDto,
+    ipAddress?: string,
   ): Promise<ConvListItem> {
     const myType = this.roleToActorType(role);
     const myId   = await this.resolveProfileId(userId, role);
 
     if (myType === dto.targetType && myId === dto.targetId) {
       throw new ForbiddenException('Vous ne pouvez pas vous écrire à vous-même.');
+    }
+
+    /* ── VÉRIFICATION DE PERMISSION (moteur centralisé) ────────────
+     * Chaque demande de nouvelle conversation passe obligatoirement
+     * par le MessagingPermissionEngine avant tout accès BDD.
+     * Lance ForbiddenException si refusé.
+     * ──────────────────────────────────────────────────────────── */
+    if (this.permissionEngine) {
+      const targetUserId = await this.resolveUserIdFromProfile(dto.targetType, dto.targetId);
+      const ctx: PermissionContext = {
+        requestorType:   myType,
+        requestorId:     myId,
+        requestorUserId: userId,
+        targetType:      dto.targetType,
+        targetId:        dto.targetId,
+        targetUserId:    targetUserId ?? undefined,
+        ipAddress,
+        requestedAt:     new Date(),
+      };
+      await this.permissionEngine.assertCanCreateConversation(ctx);
     }
 
     const { initiatorType, initiatorId, recipientType, recipientId } =
@@ -529,6 +562,27 @@ export class MessagerieService {
       }
     }
 
+    /*
+     * Notification persistante pour le destinataire.
+     * Ignorée pour les messages de type CALL (gérés côté appel).
+     * Fire-and-forget : les erreurs sont absorbées dans le service.
+     */
+    if (this.notifEventSvc && dto.contentType !== MessageContentType.CALL) {
+      const recipientProfileType = amInitiator ? conv.recipientType : conv.initiatorType;
+      const recipientProfileId   = amInitiator ? conv.recipientId   : conv.initiatorId;
+      void this.getContactInfo(myType, myId).then(info =>
+        this.notifEventSvc!.notifyMessageReceived({
+          recipientType:  recipientProfileType,
+          recipientId:    recipientProfileId,
+          actorType:      myType,
+          actorId:        myId,
+          senderName:     info.name,
+          preview,
+          conversationId: convId,
+        }),
+      );
+    }
+
     return result;
   }
 
@@ -756,6 +810,312 @@ export class MessagerieService {
     });
     if (!conv) return false;
     return conv.initiatorUserId === userId || conv.recipientUserId === userId;
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 7. MODIFIER UN MESSAGE
+  // ══════════════════════════════════════════════════════════════
+
+  async editMessage(
+    userId: string, role: UserRole,
+    messageId: string,
+    dto: EditMessageDto,
+  ): Promise<MessageItem> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role);
+
+    const msg = await this.msgRepo.findOne({ where: { id: messageId } });
+    if (!msg) throw new NotFoundException('Message introuvable.');
+
+    /* Vérification : seul l'expéditeur peut modifier son message */
+    const senderType = myType as unknown as MessageActorType;
+    if (msg.senderType !== senderType || msg.senderId !== myId) {
+      throw new ForbiddenException('Vous ne pouvez modifier que vos propres messages.');
+    }
+
+    /* Seuls les messages TEXT peuvent être modifiés */
+    if (msg.contentType !== MessageContentType.TEXT) {
+      throw new BadRequestException('Seuls les messages texte peuvent être modifiés.');
+    }
+
+    /* Délai maximum de modification : 24h (comme Telegram) */
+    const maxEditMs = 24 * 60 * 60 * 1000;
+    if (Date.now() - msg.createdAt.getTime() > maxEditMs) {
+      throw new BadRequestException('Ce message ne peut plus être modifié (délai de 24h dépassé).');
+    }
+
+    /* Sauvegarde du contenu original si c'est la première modification */
+    if (!msg.isEdited) {
+      await this.msgRepo.update(messageId, {
+        originalContent: msg.content,
+      });
+    }
+
+    await this.msgRepo.update(messageId, {
+      content:   dto.content,
+      isEdited:  true,
+      editedAt:  new Date(),
+    });
+
+    /* Broadcast temps réel */
+    if (this.broadcastSvc) {
+      const conv = await this.convRepo.findOne({
+        where:  { id: msg.conversationId },
+        select: ['initiatorUserId', 'recipientUserId'],
+      });
+      const otherUserId = conv?.initiatorUserId === userId
+        ? conv?.recipientUserId
+        : conv?.initiatorUserId;
+
+      if (otherUserId) {
+        this.broadcastSvc.messageEdited([otherUserId], {
+          conversationId: msg.conversationId,
+          messageId,
+          newContent:     dto.content,
+          editedAt:       new Date().toISOString(),
+        });
+      }
+    }
+
+    this.logger.log(`[EDIT] messageId=${messageId} by ${senderType}:${myId}`);
+
+    return {
+      id:            messageId,
+      fromMe:        true,
+      senderId:      myId,
+      senderType:    senderType,
+      contentType:   msg.contentType,
+      content:       dto.content,
+      mediaUrl:      msg.mediaUrl,
+      mediaName:     msg.mediaName,
+      mediaMimeType: msg.mediaMimeType,
+      createdAt:     msg.createdAt.toISOString(),
+      readAt:        msg.readAt?.toISOString() ?? null,
+      replyToId:     msg.replyToId,
+      productId:     msg.productId,
+      orderId:       msg.orderId,
+      isEdited:      true,
+      deletedAt:     null,
+    };
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 8. SUPPRIMER UN MESSAGE
+  // ══════════════════════════════════════════════════════════════
+
+  async deleteMessage(
+    userId: string, role: UserRole,
+    messageId: string,
+    dto: DeleteMessageDto,
+  ): Promise<{ success: boolean; deletedForAll: boolean }> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role);
+
+    const msg = await this.msgRepo.findOne({ where: { id: messageId } });
+    if (!msg) throw new NotFoundException('Message introuvable.');
+
+    const senderType = myType as unknown as MessageActorType;
+    const isOwner    = msg.senderType === senderType && msg.senderId === myId;
+
+    const forEveryone = (dto.forEveryone ?? false) && isOwner;
+
+    if (forEveryone) {
+      /* Suppression pour tout le monde : efface le contenu + soft delete */
+      await this.msgRepo.update(messageId, {
+        content:     null,
+        mediaUrl:    null,
+        mediaName:   null,
+        deletedById: myId,
+      });
+      await this.msgRepo.softDelete(messageId);
+
+      /* Broadcast */
+      if (this.broadcastSvc) {
+        const conv = await this.convRepo.findOne({
+          where:  { id: msg.conversationId },
+          select: ['initiatorUserId', 'recipientUserId'],
+        });
+        const otherUserId = conv?.initiatorUserId === userId
+          ? conv?.recipientUserId
+          : conv?.initiatorUserId;
+
+        if (otherUserId) {
+          this.broadcastSvc.messageDeleted([otherUserId], {
+            conversationId: msg.conversationId,
+            messageId,
+            deletedForAll:  true,
+          });
+        }
+      }
+    }
+    /* else : suppression pour soi uniquement (géré côté frontend) */
+
+    this.logger.log(`[DELETE] messageId=${messageId} forAll=${forEveryone} by ${senderType}:${myId}`);
+
+    return { success: true, deletedForAll: forEveryone };
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 9. RÉACTIONS EMOJI
+  // ══════════════════════════════════════════════════════════════
+
+  async toggleReaction(
+    userId: string, role: UserRole,
+    messageId: string,
+    dto: ToggleReactionDto,
+  ): Promise<{ reactions: Record<string, string[]> }> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role);
+
+    const msg = await this.msgRepo.findOne({ where: { id: messageId } });
+    if (!msg) throw new NotFoundException('Message introuvable.');
+
+    /* Vérifie que l'utilisateur est participant de la conversation */
+    await this.assertConvAccess(msg.conversationId, myType, myId);
+
+    /* Normalise le JSON de réactions */
+    const reactions: Record<string, string[]> = msg.reactions ?? {};
+
+    if (!reactions[dto.emoji]) reactions[dto.emoji] = [];
+
+    const existing = reactions[dto.emoji];
+    const idx      = existing.indexOf(myId);
+
+    if (idx === -1) {
+      /* Ajouter la réaction */
+      existing.push(myId);
+    } else {
+      /* Retirer la réaction (toggle) */
+      existing.splice(idx, 1);
+      if (existing.length === 0) delete reactions[dto.emoji];
+    }
+
+    await this.msgRepo.update(messageId, { reactions });
+
+    /* Broadcast aux deux participants */
+    if (this.broadcastSvc) {
+      const conv = await this.convRepo.findOne({
+        where:  { id: msg.conversationId },
+        select: ['initiatorUserId', 'recipientUserId'],
+      });
+      const others = [conv?.initiatorUserId, conv?.recipientUserId]
+        .filter((id): id is string => !!id && id !== userId);
+
+      if (others.length > 0) {
+        this.broadcastSvc.reactionUpdated(others, {
+          conversationId: msg.conversationId,
+          messageId,
+          emoji:   dto.emoji,
+          actorId: myId,
+          added:   idx === -1,
+        });
+      }
+    }
+
+    return { reactions };
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 10. ARCHIVER UNE CONVERSATION
+  // ══════════════════════════════════════════════════════════════
+
+  async archiveConversation(
+    userId: string, role: UserRole,
+    convId: string,
+    dto: ArchiveConversationDto,
+  ): Promise<void> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role);
+    const conv   = await this.assertConvAccess(convId, myType, myId);
+
+    const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
+
+    await this.convRepo.update(convId, amInitiator
+      ? { archivedByInitiator: dto.archived }
+      : { archivedByRecipient: dto.archived },
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 11. MESSAGES D'UNE CONVERSATION (avec replies résolues)
+  // ══════════════════════════════════════════════════════════════
+
+  /**
+   * Version enrichie de getMessages qui inclut les messages
+   * cités (replyTo) pour affichage dans la bulle.
+   */
+  async getMessagesWithReplies(
+    userId: string, role: UserRole,
+    convId: string,
+    page = 1, limit = 30,
+  ): Promise<(MessageItem & { replyToMessage?: MessageItem | null })[]> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role);
+
+    await this.assertConvAccess(convId, myType, myId);
+
+    const messages = await this.msgRepo.find({
+      where:       { conversationId: convId },
+      order:       { createdAt: 'ASC' },
+      skip:        (page - 1) * limit,
+      take:        limit,
+      withDeleted: false,
+    });
+
+    /* Collecter les replyToIds uniques */
+    const replyIds = [...new Set(messages.map(m => m.replyToId).filter(Boolean))] as string[];
+    let repliesMap = new Map<string, Message>();
+
+    if (replyIds.length > 0) {
+      const replies = await this.msgRepo.findByIds(replyIds);
+      replies.forEach(r => repliesMap.set(r.id, r));
+    }
+
+    const senderMsgType = myType as unknown as MessageActorType;
+
+    return messages.map(m => {
+      const base: MessageItem = {
+        id:            m.id,
+        fromMe:        m.senderType === senderMsgType && m.senderId === myId,
+        senderId:      m.senderId,
+        senderType:    m.senderType,
+        contentType:   m.contentType,
+        content:       m.content,
+        mediaUrl:      m.mediaUrl,
+        mediaName:     m.mediaName,
+        mediaMimeType: m.mediaMimeType,
+        createdAt:     m.createdAt.toISOString(),
+        readAt:        m.readAt?.toISOString() ?? null,
+        replyToId:     m.replyToId,
+        productId:     m.productId,
+        orderId:       m.orderId,
+        isEdited:      m.isEdited,
+        deletedAt:     m.deletedAt?.toISOString() ?? null,
+      };
+
+      const parent = m.replyToId ? repliesMap.get(m.replyToId) : null;
+      return {
+        ...base,
+        replyToMessage: parent ? {
+          id:          parent.id,
+          fromMe:      parent.senderType === senderMsgType && parent.senderId === myId,
+          senderId:    parent.senderId,
+          senderType:  parent.senderType,
+          contentType: parent.contentType,
+          content:     parent.content,
+          mediaUrl:    parent.mediaUrl,
+          mediaName:   parent.mediaName,
+          mediaMimeType: parent.mediaMimeType,
+          createdAt:   parent.createdAt.toISOString(),
+          readAt:      null,
+          replyToId:   null,
+          productId:   null,
+          orderId:     null,
+          isEdited:    parent.isEdited,
+          deletedAt:   parent.deletedAt?.toISOString() ?? null,
+        } : null,
+      };
+    });
   }
 
   // ══════════════════════════════════════════════════════════════

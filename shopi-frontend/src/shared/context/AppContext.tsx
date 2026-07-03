@@ -66,7 +66,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // ── Déconnexion ───────────────────────────────────────────
   const logout = useCallback(() => {
-    authService.logout(); // supprime le token
+    // fire & forget — l'await n'est pas nécessaire ici car
+    // authService.logout() supprime le localStorage en premier (sync),
+    // puis efface le cookie httpOnly côté serveur (async).
+    void authService.logout();
     setUserState(null);
   }, []);
 

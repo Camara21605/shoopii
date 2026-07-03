@@ -142,6 +142,35 @@ export class ProductImageDto {
   alt?: string;
 }
 
+/**
+ * Palier de prix dégressif pour la vente en gros.
+ * Ex : { quantiteMin: 10, quantiteMax: 49, prixUnitaire: 50000 }
+ * quantiteMax absent/null = dernier palier ("et plus").
+ */
+export class ProductWholesaleTierDto {
+  @ApiProperty({ example: 10 })
+  @IsInt()
+  @Min(1, { message: 'La quantité minimum doit être au moins 1.' })
+  quantiteMin: number;
+
+  @ApiPropertyOptional({ example: 49, description: 'Vide = palier final ("et plus")' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  quantiteMax?: number;
+
+  @ApiProperty({ example: 50000 })
+  @IsNumber()
+  @IsPositive({ message: 'Le prix unitaire doit être supérieur à 0.' })
+  prixUnitaire: number;
+
+  @ApiPropertyOptional({ default: 0 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  ordre?: number;
+}
+
 const JOURS_VALIDES = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'] as const;
 
 /**
@@ -273,6 +302,38 @@ categoryId: string;
   @IsInt()
   @Min(0)
   seuil?: number;
+
+  // ── Vente en gros ─────────────────────────────────────────────────────────
+
+  @ApiPropertyOptional({ default: false })
+  @IsOptional()
+  @IsBoolean()
+  venteEnGros?: boolean;
+
+  @ApiPropertyOptional({ example: 10, description: 'Quantité minimum de commande en gros' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  moq?: number;
+
+  @ApiPropertyOptional({ example: 24, description: 'Unités par carton/colis' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  conditionnement?: number;
+
+  @ApiPropertyOptional({ example: '3-5 jours' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  delaiPreparationGros?: string;
+
+  @ApiPropertyOptional({ type: [ProductWholesaleTierDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductWholesaleTierDto)
+  wholesaleTiers?: ProductWholesaleTierDto[];
 
   // ── Classification ────────────────────────────────────────────────────────
 

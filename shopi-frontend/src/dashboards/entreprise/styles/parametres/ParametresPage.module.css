@@ -22,7 +22,6 @@
   box-shadow: var(--sh-xs);
   position: sticky;
   top: calc(var(--hdr, 66px) + 18px);
-  overflow: hidden;
 }
 .sidebarTitle {
   font-family: var(--fd);
@@ -54,6 +53,7 @@
 
 /* Navigation sidebar */
 .sidebarNav { display: flex; flex-direction: column; gap: 2px; }
+.chevron { flex-shrink: 0; }
 .sidebarItem {
   display: flex;
   align-items: center;
@@ -712,24 +712,67 @@
  * ════════════════════════════════════════════════════════════ */
 @media (max-width: 1100px) {
   .parametresLayout { grid-template-columns: 1fr; }
+
+  /* Sidebar → simple conteneur block, la nav gère le scroll */
   .sidebar {
     position: static;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 3px;
-    padding: 8px;
+    padding: 6px 8px;
+    border-radius: var(--r-lg);
   }
   .sidebarTitle, .dirtyBadge, .sidebarBoutiqueCard { display: none; }
-  .sidebarNav { flex-direction: row; flex-wrap: wrap; gap: 2px; }
-  .sidebarItem { padding: 7px 10px; font-size: 12px; }
+
+  /* Nav → barre scrollable horizontale */
+  .sidebarNav {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+  }
+  .sidebarNav::-webkit-scrollbar { display: none; }
+
+  /* Items → pills compacts */
+  .sidebarItem {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 8px 13px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--pill);
+    background: var(--g50);
+    border: 1.5px solid var(--bdr2);
+    scroll-snap-align: start;
+    width: auto;
+    justify-content: center;
+  }
+  .chevron { display: none; }
+  .sidebarItem:hover { background: var(--sky); border-color: rgba(26,79,196,.2); color: var(--blue); }
+  .sidebarItem:hover i { color: var(--blue); }
   .sidebarItem.active::before { display: none; }
+  .sidebarItem.active {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+    font-weight: 700;
+  }
+  .sidebarItem.active i { color: #fff; }
+  .sidebarItem.dangerItem { border-color: rgba(220,38,38,.25); background: rgba(220,38,38,.05); }
+  .sidebarItem.dangerItem.active { background: var(--red, #DC2626); border-color: var(--red, #DC2626); }
+
   .grid2, .grid3 { grid-template-columns: 1fr 1fr; }
   .catGrid { grid-template-columns: 1fr 1fr; }
   .statRow { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 640px) {
-  .parametresLayout { padding: 12px; gap: 14px; }
+  .parametresLayout { padding: 12px; gap: 14px; padding-bottom: 80px; }
   .grid2, .grid3 { grid-template-columns: 1fr; }
   .coverWrap { aspect-ratio: 2 / 1; }
   .statRow { grid-template-columns: 1fr; }
+  .completionInfo { min-width: 0; }
+  .completionHint { max-width: none; }
+  .horDay { min-width: 60px; }
 }

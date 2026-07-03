@@ -65,6 +65,8 @@ import {
   UpdatePromotionDto,
   FilterPromotionsDto,
 } from '../dto/promotion.dto';
+import { NotificationType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 // ─────────────────────────────────────────────────────────────
 // INTERFACE DE RÉPONSE PROMO
@@ -131,6 +133,7 @@ export class PromotionsService {
     private readonly productRepo: Repository<Product>,
 
     private readonly dataSource: DataSource,
+    private readonly notifEventSvc: NotificationEventService,
   ) {}
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -667,6 +670,16 @@ export class PromotionsService {
     await this.promoRepo.update(id, { status: PromoStatus.ACTIVE });
 
     this.logger.log(`[ACTIVATE PROMO ✅] ID=${id} | Company=${company.id}`);
+
+    void this.notifEventSvc.notifyPromoEvent({
+      companyId: company.id,
+      promoId:   id,
+      promoCode: promo.code,
+      type:      NotificationType.PROMO_ACTIVE,
+      title:     'Promotion activée 🎉',
+      body:      `Votre promotion "${promo.nom}" (code : ${promo.code}) est maintenant active.`,
+    });
+
     return this.findOne(id, user);
   }
 
@@ -710,6 +723,16 @@ export class PromotionsService {
     await this.promoRepo.update(id, { status: PromoStatus.ENDED });
 
     this.logger.log(`[END PROMO ✅] ID=${id} | Company=${company.id}`);
+
+    void this.notifEventSvc.notifyPromoEvent({
+      companyId: company.id,
+      promoId:   id,
+      promoCode: promo.code,
+      type:      NotificationType.PROMO_ENDED,
+      title:     'Promotion terminée',
+      body:      `Votre promotion "${promo.nom}" (code : ${promo.code}) est terminée.`,
+    });
+
     return this.findOne(id, user);
   }
 

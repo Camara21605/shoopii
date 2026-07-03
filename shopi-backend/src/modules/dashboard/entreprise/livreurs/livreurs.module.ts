@@ -54,8 +54,9 @@ import { LivreursController }         from './livreurs.controller';
 import { LivreursService }            from './services/livreurs.service';
 import { InvitationLivreurService }   from './services/invitation-livreur.service';
 
-import { MailModule }  from 'src/modules/email/email.module';
-import { CodesModule } from 'src/modules/auth/code-creation/code-creation.module';
+import { MailModule }          from 'src/modules/email/email.module';
+import { CodesModule }         from 'src/modules/auth/code-creation/code-creation.module';
+import { NotificationsModule } from 'src/modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -64,11 +65,9 @@ import { CodesModule } from 'src/modules/auth/code-creation/code-creation.module
       Company,    // Pour résoudre companyId depuis userId JWT
     ]),
 
-    // CodeCreationService → génération code XXXX-XXXX-XX
     CodesModule,
-
-    // MailService → sendInvitationEmail + sendContactEmail
     MailModule,
+    NotificationsModule,
   ],
 
   controllers: [

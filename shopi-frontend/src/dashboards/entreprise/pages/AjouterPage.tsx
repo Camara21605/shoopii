@@ -36,6 +36,7 @@ interface ImageUploaded {
 
 interface Spec     { cle: string; valeur: string; }
 interface Variante { type: string; vals: string; }
+interface WholesaleTier { quantiteMin: string; quantiteMax: string; prixUnitaire: string; }
 
 interface FormErrors {
   nom?:         string;
@@ -136,6 +137,7 @@ const FORM_INITIAL = {
   fraisLivraisonLocal: '', delaiLivraison: '1-3 jours',
   garantiePaiement: true, garantieRetour: true, garantieAuthentic: true, garantieSupport: true,
   langue: 'fr',
+  moq: '', conditionnement: '', delaiPreparationGros: '3-5 jours',
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -170,6 +172,10 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   ]);
   const [variantes,    setVariantes]    = useState<Variante[]>([{ type: 'Couleur', vals: '' }]);
   const [variantesOn,  setVariantesOn]  = useState(false);
+  const [venteEnGrosOn, setVenteEnGrosOn] = useState(false);
+  const [wholesaleTiers, setWholesaleTiers] = useState<WholesaleTier[]>([
+    { quantiteMin: '10', quantiteMax: '49', prixUnitaire: '' },
+  ]);
   const [storiesOn,       setStoriesOn]       = useState(false);
   const [storyIndices,    setStoryIndices]    = useState<Set<number>>(new Set());
   const [storyHeureDebut, setStoryHeureDebut] = useState('08:00');
@@ -293,6 +299,9 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           garantieAuthentic: p.garantieAuthentic  ?? true,
           garantieSupport:   p.garantieSupport    ?? true,
           langue: p.langue ?? 'fr',
+          moq:                  p.moq != null ? String(p.moq) : '',
+          conditionnement:      p.conditionnement != null ? String(p.conditionnement) : '',
+          delaiPreparationGros: p.delaiPreparationGros ?? '3-5 jours',
         });
 
         // ✅ Pré-remplit les images existantes (preview = url Cloudinary)
@@ -314,6 +323,16 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
         if (p.variantes?.length) {
           setVariantesOn(true);
           setVariantes(p.variantes.map((v: any) => ({ type: v.type, vals: v.vals })));
+        }
+
+        // ✅ Pré-remplit la vente en gros
+        if (p.venteEnGros && p.wholesaleTiers?.length) {
+          setVenteEnGrosOn(true);
+          setWholesaleTiers(p.wholesaleTiers.map((t: any) => ({
+            quantiteMin:  String(t.quantiteMin),
+            quantiteMax:  t.quantiteMax != null ? String(t.quantiteMax) : '',
+            prixUnitaire: String(t.prixUnitaire),
+          })));
         }
 
         pop('📝 Données du produit chargées', 'i');
@@ -449,6 +468,9 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   function addSpec()                                         { setSpecs(prev => [...prev, { cle: '', valeur: '' }]); }
   function removeSpec(i: number)                             { setSpecs(prev => prev.filter((_, idx) => idx !== i)); }
   function updateSpec(i: number, k: keyof Spec, v: string)  { setSpecs(prev => prev.map((x, idx) => idx === i ? { ...x, [k]: v } : x)); }
+  function addTier()                                          { setWholesaleTiers(prev => [...prev, { quantiteMin: '', quantiteMax: '', prixUnitaire: '' }]); }
+  function removeTier(i: number)                              { setWholesaleTiers(prev => prev.filter((_, idx) => idx !== i)); }
+  function updateTier(i: number, k: keyof WholesaleTier, v: string) { setWholesaleTiers(prev => prev.map((x, idx) => idx === i ? { ...x, [k]: v } : x)); }
 
   // ─────────────────────────────────────────────────────────────
   // SCORE SEO
@@ -518,6 +540,20 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
         images:    images.map(img => ({ url: img.url, ordre: img.ordre, alt: img.alt })),
         specs:     specs.filter(s => s.cle.trim() && s.valeur.trim()).map((s, idx) => ({ ...s, ordre: idx })),
         variantes: variantesOn ? variantes.filter(v => v.vals.trim()) : [],
+        venteEnGros: venteEnGrosOn,
+        moq:                  venteEnGrosOn && form.moq ? parseInt(form.moq) : undefined,
+        conditionnement:      venteEnGrosOn && form.conditionnement ? parseInt(form.conditionnement) : undefined,
+        delaiPreparationGros: venteEnGrosOn ? form.delaiPreparationGros : undefined,
+        wholesaleTiers: venteEnGrosOn
+          ? wholesaleTiers
+              .filter(t => t.quantiteMin.trim() && t.prixUnitaire.trim())
+              .map((t, idx) => ({
+                quantiteMin:  parseInt(t.quantiteMin),
+                quantiteMax:  t.quantiteMax.trim() ? parseInt(t.quantiteMax) : undefined,
+                prixUnitaire: parseFloat(t.prixUnitaire),
+                ordre:        idx,
+              }))
+          : [],
         stories:   storiesOn
           ? Array.from(storyIndices)
               .filter(i => i < images.length)
@@ -1089,7 +1125,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               <div><label className="pf-lbl">Poids (kg)</label><input className="pf-in" type="number" step="0.01" placeholder="Ex: 0.5" value={form.poids} onChange={e => update('poids', e.target.value)} /></div>
               <div>
                 <label className="pf-lbl">Dimensions physiques (cm)</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                <div className="gridR3" style={{ gap: 8 }}>
                   {(['longueur', 'largeur', 'hauteur'] as const).map(dim => (
                     <div key={dim}>
                       <label style={{ fontSize: 10, color: 'var(--t3)', display: 'block', marginBottom: 3 }}>{dim.charAt(0).toUpperCase() + dim.slice(1)}</label>
@@ -1299,6 +1335,72 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
             )}
           </div>
 
+          {/* Vente en gros */}
+          <div className="card" style={{ marginBottom: 14 }}>
+            <div className="ch">
+              <div className="ch-t"><i className="fas fa-boxes-stacked"></i> Vente en gros</div>
+              <label className="aj-toggle">
+                <input type="checkbox" checked={venteEnGrosOn} onChange={e => setVenteEnGrosOn(e.target.checked)} />
+                <span className="aj-toggle-slider"></span>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: venteEnGrosOn ? 'var(--blue)' : 'var(--t3)', marginLeft: 8 }}>
+                  {venteEnGrosOn ? 'Activée' : 'Désactivée'}
+                </span>
+              </label>
+            </div>
+            {venteEnGrosOn ? (
+              <div className="cb">
+                {/* MOQ, conditionnement, délai */}
+                <div className="gridR3" style={{ gap: 10, marginBottom: 16 }}>
+                  <div>
+                    <label className="pf-lbl">Quantité minimum de commande (MOQ)</label>
+                    <input className="pf-in" type="number" placeholder="Ex: 10" value={form.moq} onChange={e => update('moq', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="pf-lbl">Conditionnement (unités/carton)</label>
+                    <input className="pf-in" type="number" placeholder="Ex: 24" value={form.conditionnement} onChange={e => update('conditionnement', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="pf-lbl">Délai de préparation</label>
+                    <input className="pf-in" placeholder="Ex: 3-5 jours" value={form.delaiPreparationGros} onChange={e => update('delaiPreparationGros', e.target.value)} />
+                  </div>
+                </div>
+
+                {/* Paliers de prix dégressifs */}
+                <label className="pf-lbl">Paliers de prix dégressifs selon la quantité</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6, marginBottom: 12 }}>
+                  {wholesaleTiers.map((t, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                      <div style={{ flex: '0 0 110px' }}>
+                        <label className="pf-lbl">Qté min</label>
+                        <input className="pf-in" type="number" placeholder="10" value={t.quantiteMin} onChange={e => updateTier(i, 'quantiteMin', e.target.value)} />
+                      </div>
+                      <div style={{ flex: '0 0 110px' }}>
+                        <label className="pf-lbl">Qté max</label>
+                        <input className="pf-in" type="number" placeholder="49 (vide = +)" value={t.quantiteMax} onChange={e => updateTier(i, 'quantiteMax', e.target.value)} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label className="pf-lbl">Prix unitaire (GNF)</label>
+                        <input className="pf-in" type="number" placeholder="Ex: 50000" value={t.prixUnitaire} onChange={e => updateTier(i, 'prixUnitaire', e.target.value)} />
+                      </div>
+                      {wholesaleTiers.length > 1 && (
+                        <button onClick={() => removeTier(i)} style={{ background: 'var(--rs-bg)', border: '1px solid rgba(225,29,72,.2)', borderRadius: 'var(--r-md)', width: 36, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--rose)', cursor: 'pointer', flexShrink: 0 }}>
+                          <i className="fas fa-trash" style={{ fontSize: 11 }}></i>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button onClick={addTier} style={{ background: 'var(--sky)', border: '1px solid var(--sky-3)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--blue)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <i className="fas fa-plus"></i> Ajouter un palier
+                </button>
+              </div>
+            ) : (
+              <div className="cb" style={{ color: 'var(--t3)', fontSize: 12.5, fontStyle: 'italic' }}>
+                Activez la vente en gros pour proposer une quantité minimum de commande et des prix dégressifs selon la quantité achetée.
+              </div>
+            )}
+          </div>
+
           {/* SEO */}
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
@@ -1353,7 +1455,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
             <div className="card" style={{ marginBottom: 14 }}>
               <div className="ch"><div className="ch-t"><i className="fas fa-calculator"></i> Aperçu des revenus</div></div>
               <div className="cb">
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                <div className="gridR3" style={{ gap: 10 }}>
                   {[
                     { l: 'Prix de vente',        v: `${prixNum.toLocaleString('fr-FR')} GNF`, c: 'var(--navy)'    },
                     { l: `Commission Shopi (${commissionPct}%)`, v: `-${Math.round(prixNum * commissionPct / 100).toLocaleString('fr-FR')} GNF`, c: 'var(--rose)'    },

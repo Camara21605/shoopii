@@ -38,7 +38,7 @@ export default function FinancesPage() {
     <div className="page on" id="p-finances">
 
       {/* ── KPIs solde ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 13, marginBottom: 20 }}>
+      <div className="kpi-grid">
         {BALANCE_STATS.map((s, i) => (
           <div key={i} className={`kpi ${s.k}`}>
             <div className="kpi-stripe"></div>

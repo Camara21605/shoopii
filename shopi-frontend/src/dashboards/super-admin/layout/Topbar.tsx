@@ -7,6 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import type { SectionId } from '../types/codes.types';
+import NotificationCenter from '../../../shared/notifications/NotificationCenter';
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -88,6 +89,9 @@ export default function Topbar({
         🔔
         {pendingAlerts > 0 && <div className="tb-badge" />}
       </button>
+
+      {/* Notifications temps réel */}
+      <NotificationCenter />
 
       {/* Paramètres */}
       <button className="tb-icon-btn" onClick={() => onNavigate('settings')}>

@@ -19,12 +19,15 @@ import {
 
 import { ValiderEtapeDto } from '../dto/valider-etape.dto';
 import { CODE_EXPIRY_MS } from './commande.helpers';
+import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
+import { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
 
 @Injectable()
 export class CommandeValidationService {
   constructor(
     @InjectRepository(Commande) private readonly commandeRepo: Repository<Commande>,
     @InjectRepository(CommandeCode) private readonly codeRepo: Repository<CommandeCode>,
+    private readonly notifEventSvc: NotificationEventService,
   ) {}
 
   /* ════════════════════════════════════════════════════════
@@ -71,10 +74,64 @@ export class CommandeValidationService {
       commande.status = CommandeStatus.DELIVERED;
       commande.dateLivraisonEffective = now;
       await this.commandeRepo.save(commande);
+
+      /* Notifier l'entreprise : commande réceptionnée par le client */
+      void this.notifEventSvc.notifyOrderStatusChanged({
+        recipientType: NotificationActorType.COMPANY,
+        recipientId:   commande.companyId,
+        actorType:     NotificationActorType.CLIENT,
+        actorId:       commande.clientId,
+        orderRef:      commande.numero,
+        commandeId:    commande.id,
+        newStatus:     CommandeStatus.DELIVERED,
+        title:         'Livraison confirmée ✅',
+        body:          `La commande ${commande.numero} a été réceptionnée par le client.`,
+      });
     } else {
       if (acteurType === CodeActeurType.ENTREPRISE) {
         commande.status = CommandeStatus.IN_PROGRESS;
         await this.commandeRepo.save(commande);
+
+        /* Notifier le client : commande confirmée par l'entreprise */
+        void this.notifEventSvc.notifyOrderStatusChanged({
+          recipientType: NotificationActorType.CLIENT,
+          recipientId:   commande.clientId,
+          actorType:     NotificationActorType.COMPANY,
+          actorId:       commande.companyId,
+          orderRef:      commande.numero,
+          commandeId:    commande.id,
+          newStatus:     CommandeStatus.IN_PROGRESS,
+          title:         'Commande confirmée ✅',
+          body:          `Votre commande ${commande.numero} a été confirmée et est en cours de traitement.`,
+        });
+      }
+
+      if (acteurType === CodeActeurType.LIVREUR) {
+        void this.notifEventSvc.notifyOrderStatusChanged({
+          recipientType: NotificationActorType.CLIENT,
+          recipientId:   commande.clientId,
+          actorType:     NotificationActorType.DELIVERY,
+          actorId:       commande.livreurId,
+          orderRef:      commande.numero,
+          commandeId:    commande.id,
+          newStatus:     commande.status,
+          title:         'Votre commande est en route 🛵',
+          body:          `Le livreur est en route avec votre commande ${commande.numero}.`,
+        });
+      }
+
+      if (acteurType === CodeActeurType.CORRESPONDANT) {
+        void this.notifEventSvc.notifyOrderStatusChanged({
+          recipientType: NotificationActorType.CLIENT,
+          recipientId:   commande.clientId,
+          actorType:     NotificationActorType.CORRESPONDENT,
+          actorId:       commande.correspondantId,
+          orderRef:      commande.numero,
+          commandeId:    commande.id,
+          newStatus:     commande.status,
+          title:         'Votre colis est chez le correspondant 📦',
+          body:          `La commande ${commande.numero} est disponible chez votre correspondant.`,
+        });
       }
 
       const autresValides = commande.codes
@@ -92,6 +149,19 @@ export class CommandeValidationService {
           commande.status = CommandeStatus.AWAITING_CLIENT;
           commande.autoValidationAt = new Date(now.getTime() + commande.autoValidationDelayDays * 24 * 3600 * 1000);
           await this.commandeRepo.save(commande);
+
+          /* Notifier le client : son code de réception est disponible */
+          void this.notifEventSvc.notifyOrderStatusChanged({
+            recipientType: NotificationActorType.CLIENT,
+            recipientId:   commande.clientId,
+            actorType:     null,
+            actorId:       null,
+            orderRef:      commande.numero,
+            commandeId:    commande.id,
+            newStatus:     CommandeStatus.AWAITING_CLIENT,
+            title:         'Votre colis est prêt 📦',
+            body:          `Votre commande ${commande.numero} est prête. Validez avec votre code de réception.`,
+          });
         }
       }
     }

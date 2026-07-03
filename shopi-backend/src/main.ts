@@ -21,6 +21,7 @@ setDefaultResultOrder('ipv4first');
 import { NestFactory }            from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { IoAdapter }              from '@nestjs/platform-socket.io';
+import cookieParser               from 'cookie-parser';
 import { AppModule }              from './app.module';
 
 const logger = new Logger('Bootstrap');
@@ -36,6 +37,9 @@ async function bootstrap() {
 
   /* ── Graceful shutdown (SIGTERM Render) ─────────────────────── */
   app.enableShutdownHooks();
+
+  /* ── Cookie parser (lecture de req.cookies pour JwtStrategy) ── */
+  app.use(cookieParser());
 
   /* ── Validation globale des DTO ─────────────────────────────── */
   app.useGlobalPipes(

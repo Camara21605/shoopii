@@ -1,0 +1,59 @@
+/* src/dashboards/partenaire/styles/CommissionsPage.module.css */
+
+/* Solde disponible */
+.bal {
+  background: var(--navy); border-radius: var(--r-xl); padding: 28px 32px;
+  position: relative; overflow: hidden; margin-bottom: 22px; color: #fff; text-align: center;
+}
+.balGlow {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 100% at 50% 0%, rgba(5,150,105,.25), transparent 60%);
+  pointer-events: none;
+}
+.balIn { position: relative; z-index: 1; }
+.balL { font-size: 11px; font-weight: 700; color: rgba(200,217,248,.55); text-transform: uppercase; letter-spacing: 1px; }
+.balV {
+  font-family: var(--fd); font-size: clamp(26px, 6vw, 38px); font-weight: 800;
+  margin: 10px 0 18px; overflow-wrap: anywhere;
+}
+.balV small { font-size: 16px; font-weight: 600; color: rgba(200,217,248,.6); }
+.balBtns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.cbb {
+  background: rgba(255,255,255,.08); color: #fff; border: 1px solid rgba(255,255,255,.16);
+  border-radius: var(--pill); padding: 11px 20px; font-size: 12.5px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px; transition: all .2s;
+}
+.cbb:hover { background: rgba(255,255,255,.15); }
+.cbb.w { background: #fff; color: var(--navy); }
+.cbb.w:hover { background: var(--sky-2); }
+
+/* KPIs */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+
+/* Tableau */
+.card { background: var(--white); border: 1px solid var(--bdr); border-radius: var(--r-lg); overflow: hidden; }
+.ch { padding: 16px 20px; border-bottom: 1px solid var(--bdr); }
+.chT { font-family: var(--fd); font-weight: 700; font-size: 15px; color: var(--navy); display: flex; align-items: center; gap: 9px; }
+.chT i { color: var(--blue); font-size: 13px; }
+
+/* ⚠️ overflow-x:auto (jamais hidden) pour ne pas tronquer le tableau */
+.tblWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.table th {
+  text-align: left; padding: 11px 16px; font-size: 10.5px; font-weight: 700;
+  color: var(--t3); text-transform: uppercase; letter-spacing: .4px;
+  background: var(--g50); border-bottom: 1px solid var(--bdr); white-space: nowrap;
+}
+.table td { padding: 13px 16px; border-bottom: 1px solid var(--bdr); color: var(--t1); white-space: nowrap; }
+.table tr:last-child td { border-bottom: none; }
+
+.typePill { font-size: 10.5px; font-weight: 700; padding: 4px 11px; border-radius: var(--pill); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.t_ent { background: var(--sky-2); color: var(--blue); }
+.t_lvr { background: var(--em-bg); color: var(--emerald); }
+.t_cor { background: var(--vl-bg); color: var(--violet); }
+.t_cli { background: var(--am-bg); color: var(--amber); }
+
+.amt { font-family: var(--fd); font-weight: 700; color: var(--emerald); }
+
+@media (max-width: 1100px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .kpis { grid-template-columns: 1fr; } }

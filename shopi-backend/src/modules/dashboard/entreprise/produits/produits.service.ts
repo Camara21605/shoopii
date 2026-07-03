@@ -25,6 +25,7 @@ import { Product, ProductVisibility } from 'src/database/entities/entreprise.tab
 import { ProductMedia }   from 'src/database/entities/entreprise.table/product-media.entity';
 import { ProductVariant } from 'src/database/entities/entreprise.table/product-variant.entity';
 import { ProductSpec }    from 'src/database/entities/entreprise.table/product-spec.entity';
+import { ProductWholesaleTier } from 'src/database/entities/entreprise.table/product-wholesale-tier.entity';
 import { ProductStory, StoryMediaType, StoryStatus } from 'src/database/entities/entreprise.table/product-story.entity';
 import { Category }       from 'src/database/entities/entreprise.table/category.entity';
 import { SubCategory }    from 'src/database/entities/entreprise.table/sub-category.entity';
@@ -77,6 +78,11 @@ export interface ProductResponse {
   images:      { id: string; url: string; ordre: number; alt: string | null }[];
   specs:       { id: string; cle: string; valeur: string; ordre: number }[];
   variantes:   { id: string; type: string; vals: string }[];
+  venteEnGros:          boolean;
+  moq:                  number | null;
+  conditionnement:      number | null;
+  delaiPreparationGros: string | null;
+  wholesaleTiers:       { id: string; quantiteMin: number; quantiteMax: number | null; prixUnitaire: number; ordre: number }[];
   companyId:   string;
   createdAt:   string;
   updatedAt:   string;
@@ -114,6 +120,9 @@ export class ProduitsService {
 
     @InjectRepository(ProductSpec)
     private readonly specRepo: Repository<ProductSpec>,
+
+    @InjectRepository(ProductWholesaleTier)
+    private readonly wholesaleTierRepo: Repository<ProductWholesaleTier>,
 
     @InjectRepository(Category)
     private readonly categoryRepo: Repository<Category>,
@@ -282,6 +291,10 @@ export class ProduitsService {
         descriptionSeo: dto.descriptionSeo?.trim() ?? null,
         urlSlug:        slug,
         companyId:      companyProfile.id,
+        venteEnGros:          dto.venteEnGros          ?? false,
+        moq:                  dto.moq                  ?? null,
+        conditionnement:      dto.conditionnement      ?? null,
+        delaiPreparationGros: dto.delaiPreparationGros ?? null,
       });
 
       newProduct = await qr.manager.save(Product, productEntity);
@@ -325,6 +338,19 @@ export class ProduitsService {
           });
           await qr.manager.save(ProductVariant, variantEntities);
         }
+      }
+
+      if (dto.venteEnGros && dto.wholesaleTiers?.length) {
+        const tierEntities = dto.wholesaleTiers.map((t, idx) =>
+          this.wholesaleTierRepo.create({
+            quantiteMin:  t.quantiteMin,
+            quantiteMax:  t.quantiteMax  ?? null,
+            prixUnitaire: t.prixUnitaire,
+            ordre:        t.ordre ?? idx,
+            productId:    newProduct.id,
+          }),
+        );
+        await qr.manager.save(ProductWholesaleTier, tierEntities);
       }
 
       if (dto.stories?.length) {
@@ -417,6 +443,10 @@ export class ProduitsService {
         titreSeo:       dto.titreSeo?.trim()       ?? product.titreSeo,
         descriptionSeo: dto.descriptionSeo?.trim() ?? product.descriptionSeo,
         urlSlug:        dto.urlSlug               ?? product.urlSlug,
+        venteEnGros:          dto.venteEnGros          ?? product.venteEnGros,
+        moq:                  dto.moq                  ?? product.moq,
+        conditionnement:      dto.conditionnement      ?? product.conditionnement,
+        delaiPreparationGros: dto.delaiPreparationGros ?? product.delaiPreparationGros,
       });
 
       await qr.manager.save(Product, product);
@@ -448,6 +478,22 @@ export class ProduitsService {
         if (nonEmpty.length) {
           const vars = nonEmpty.map(v => this.variantRepo.create({ ...v, productId }));
           await qr.manager.save(ProductVariant, vars);
+        }
+      }
+
+      if (dto.wholesaleTiers !== undefined) {
+        await qr.manager.delete(ProductWholesaleTier, { productId });
+        if (dto.venteEnGros !== false && dto.wholesaleTiers.length) {
+          const tiers = dto.wholesaleTiers.map((t, idx) =>
+            this.wholesaleTierRepo.create({
+              quantiteMin:  t.quantiteMin,
+              quantiteMax:  t.quantiteMax ?? null,
+              prixUnitaire: t.prixUnitaire,
+              ordre:        t.ordre ?? idx,
+              productId,
+            }),
+          );
+          await qr.manager.save(ProductWholesaleTier, tiers);
         }
       }
 
@@ -500,11 +546,13 @@ export class ProduitsService {
       .leftJoinAndSelect('p.media',       'images')
       .leftJoinAndSelect('p.specs',       'specs')
       .leftJoinAndSelect('p.variantes',   'variantes')
+      .leftJoinAndSelect('p.wholesaleTiers', 'wholesaleTiers')
       .leftJoinAndSelect('p.category',    'category')
       .leftJoinAndSelect('p.subCategory', 'subCategory')
       .where('p.id = :id', { id: productId })
       .orderBy('images.ordre', 'ASC')
       .addOrderBy('specs.ordre', 'ASC')
+      .addOrderBy('wholesaleTiers.ordre', 'ASC')
       .getOne();
 
     if (!product) throw new NotFoundException(`Produit introuvable (ID: ${productId}).`);
@@ -596,7 +644,7 @@ export class ProduitsService {
   private async findAndVerifyOwnership(productId: string, user: User): Promise<Product> {
     const product = await this.productRepo.findOne({
       where: { id: productId },
-      relations: ['media', 'specs', 'variantes', 'category', 'subCategory'],
+      relations: ['media', 'specs', 'variantes', 'wholesaleTiers', 'category', 'subCategory'],
     });
     if (!product) throw new NotFoundException(`Produit introuvable (ID: ${productId}).`);
     if (user.role === UserRole.SUPER_ADMIN) return product;
@@ -679,6 +727,13 @@ export class ProduitsService {
         .sort((a, b) => a.ordre - b.ordre)
         .map(s => ({ id: s.id, cle: s.cle, valeur: s.valeur, ordre: s.ordre })),
       variantes: (product.variantes ?? []).map(v => ({ id: v.id, type: v.type, vals: v.vals })),
+      venteEnGros:          product.venteEnGros,
+      moq:                  product.moq,
+      conditionnement:      product.conditionnement,
+      delaiPreparationGros: product.delaiPreparationGros,
+      wholesaleTiers: (product.wholesaleTiers ?? [])
+        .sort((a, b) => a.ordre - b.ordre)
+        .map(t => ({ id: t.id, quantiteMin: t.quantiteMin, quantiteMax: t.quantiteMax, prixUnitaire: t.prixUnitaire, ordre: t.ordre })),
       companyId: product.companyId,
       createdAt: product.createdAt?.toISOString() ?? '',
       updatedAt: product.updatedAt?.toISOString() ?? '',

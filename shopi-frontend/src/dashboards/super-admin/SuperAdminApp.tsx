@@ -23,9 +23,12 @@ import AuditSection from './sections/AuditSection';
 import SystemSection from './sections/SystemSection';
 import SettingsSection from './sections/SettingsSection';
 import PermissionsSection from './sections/PermissionsSection';
+import NotificationsAdminSection from './sections/NotificationsAdminSection';
 import UserModal from './components/UserModal';
 import NewMessageModal from './components/NewMessageModal';
 import ToastStack from './components/ToastStack';
+import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
+import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
 import './styles/super-admin.css';
 
 export default function SuperAdminApp() {
@@ -81,6 +84,8 @@ export default function SuperAdminApp() {
   const validCodesCount = store.codes.filter(c => c.status === 'valid').length;
 
   return (
+    <NotificationProvider>
+    <NotificationToastStack />
     <div className="app">
       <Sidebar
         activeSection={state.section}
@@ -131,6 +136,7 @@ export default function SuperAdminApp() {
           <SystemSection      store={store} isActive={state.section === 'system'} />
           <SettingsSection    store={store} toast={toast} isActive={state.section === 'settings'} />
           <PermissionsSection store={store} toast={toast} isActive={state.section === 'permissions'} />
+          <NotificationsAdminSection isActive={state.section === 'notifications-admin'} />
         </main>
       </div>
 
@@ -148,5 +154,6 @@ export default function SuperAdminApp() {
       {/* ── Toasts ── */}
       <ToastStack toasts={toasts} onRemove={removeToast} />
     </div>
+    </NotificationProvider>
   );
 }

@@ -269,12 +269,16 @@
    TABLEAU — Inventaire des produits
    ══════════════════════════════════════════════════════════════ */
 
-/* Conteneur avec scroll horizontal si nécessaire */
+/* Conteneur avec scroll horizontal si nécessaire.
+   ⚠️ overflow:hidden coupait silencieusement les colonnes (Statut,
+   Actions…) qui dépassaient sur mobile — le tableau a 7 colonnes,
+   bien plus large qu'un écran de téléphone. overflow-x:auto permet
+   de scroller pour voir tout le tableau au lieu de le tronquer. */
 .tableWrap {
   background: var(--white);
   border: 1.5px solid var(--bdr);
   border-radius: var(--r-lg);
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 /* Tableau HTML */

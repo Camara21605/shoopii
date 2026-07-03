@@ -1,0 +1,231 @@
+/* ============================================================
+ * FICHIER : src/shared/notifications/NotificationCenter.module.css
+ * Styles du panneau de notifications (dropdown façon Facebook).
+ * ============================================================ */
+
+/* ── Wrapper (relatif pour positionner le dropdown) ─────────── */
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Badge de compteur ───────────────────────────────────────── */
+.badge {
+  position: absolute;
+  top: 3px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: var(--pill);
+  background: var(--red);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  font-family: var(--fd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--white);
+  pointer-events: none;
+  line-height: 1;
+  letter-spacing: 0;
+  z-index: 1;
+}
+
+/* ── Panneau dropdown ────────────────────────────────────────── */
+.panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: -40px;
+  width: 380px;
+  max-width: calc(100vw - 20px);
+  background: var(--white);
+  border: 1px solid var(--bdr2);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-lg);
+  z-index: 600;
+  overflow: hidden;
+  animation: panelIn .18s var(--ease);
+}
+
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(-8px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);   }
+}
+
+/* ── En-tête ─────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.headerTitle {
+  font-family: var(--fd);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--t1);
+  letter-spacing: -0.3px;
+}
+
+.markAll {
+  background: none;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--blue);
+  cursor: pointer;
+  padding: 4px 9px;
+  border-radius: var(--r-sm);
+  transition: background .15s;
+  font-family: var(--fb);
+}
+.markAll:hover { background: var(--sky); }
+
+/* ── Liste ───────────────────────────────────────────────────── */
+.list {
+  max-height: 460px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.list::-webkit-scrollbar        { width: 4px; }
+.list::-webkit-scrollbar-track  { background: transparent; }
+.list::-webkit-scrollbar-thumb  { background: var(--g300); border-radius: 2px; }
+
+/* ── Item de notification ────────────────────────────────────── */
+.item {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 18px 12px 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+  transition: background .15s;
+}
+.item:hover   { background: var(--g50); }
+.item.unread  { background: rgba(22,82,240,.04); }
+.item.unread:hover { background: rgba(22,82,240,.07); }
+
+/* Pastille bleue gauche (non lu) */
+.dot {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+
+/* ── Icône de type ───────────────────────────────────────────── */
+.iconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* ── Textes ──────────────────────────────────────────────────── */
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--t1);
+  line-height: 1.3;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.item:not(.unread) .title {
+  font-weight: 600;
+  color: var(--t2);
+}
+
+.body {
+  font-size: 12px;
+  color: var(--t3);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.time {
+  font-size: 10.5px;
+  color: var(--t4);
+  margin-top: 4px;
+}
+
+/* ── État vide ───────────────────────────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 24px;
+  color: var(--t4);
+}
+.empty i    { font-size: 30px; }
+.empty span { font-size: 13px; font-weight: 600; }
+
+/* ── Chargement ──────────────────────────────────────────────── */
+.loader {
+  display: flex;
+  justify-content: center;
+  padding: 22px;
+  color: var(--t3);
+  font-size: 18px;
+}
+
+/* ── Bouton "Charger plus" ───────────────────────────────────── */
+.loadMore {
+  width: 100%;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--bdr);
+  padding: 13px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--blue);
+  cursor: pointer;
+  transition: background .15s;
+  font-family: var(--fb);
+}
+.loadMore:hover { background: var(--sky); }
+
+/* ── Responsive : panel plein-écran sur mobile ───────────────── */
+@media (max-width: 640px) {
+  .panel {
+    position: fixed;
+    top: 62px; /* var(--hdr) */
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0 0 var(--r-lg) var(--r-lg);
+    max-height: calc(100vh - 62px);
+  }
+  .list {
+    max-height: calc(100vh - 130px);
+  }
+}

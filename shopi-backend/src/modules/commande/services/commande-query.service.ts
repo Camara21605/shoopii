@@ -81,11 +81,12 @@ export class CommandeQueryService {
     }
 
     const articles = commande.items.map(item => ({
-      emoji: '📦',
-      nom: item.nomProduit,
+      emoji:    '📦',
+      imageUrl: item.imageProduit ?? null,
+      nom:      item.nomProduit,
       boutique: company?.companyName ?? 'Boutique',
-      qty: item.quantite,
-      prix: Number(item.prixUnitaire),
+      qty:      item.quantite,
+      prix:     Number(item.prixUnitaire),
     }));
 
     const commissions: Commission[] = [
@@ -157,17 +158,24 @@ export class CommandeQueryService {
     return commandes.map(c => {
       const firstItem = c.items[0];
       return {
-        id: c.numero,
-        uuid: c.id,
-        em: '📦',
-        nm: firstItem?.nomProduit ?? '—',
-        vt: firstItem?.varianteChoisie ?? '',
-        client: clientById.get(c.clientId)?.fullName ?? '—',
-        price: Number(c.total),
-        status: mapOrderStatus(c.status),
-        date: c.createdAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
-        livreur: (c.livreurId && deliveryById.get(c.livreurId)?.fullName) ?? '—',
-        zone: c.villeLivraison ?? '—',
+        id:       c.numero,
+        uuid:     c.id,
+        em:       '📦',
+        imageUrl: firstItem?.imageProduit ?? null,
+        nm:       firstItem?.nomProduit ?? '—',
+        vt:       firstItem?.varianteChoisie ?? '',
+        items:    c.items.map(it => ({
+          nm:       it.nomProduit,
+          imageUrl: it.imageProduit ?? null,
+          vt:       it.varianteChoisie ?? null,
+          qty:      it.quantite,
+        })),
+        client:   clientById.get(c.clientId)?.fullName ?? '—',
+        price:    Number(c.total),
+        status:   mapOrderStatus(c.status),
+        date:     c.createdAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
+        livreur:  (c.livreurId && deliveryById.get(c.livreurId)?.fullName) ?? '—',
+        zone:     c.villeLivraison ?? '—',
       };
     });
   }
@@ -199,17 +207,24 @@ export class CommandeQueryService {
     return commandes.map(c => {
       const firstItem = c.items[0];
       return {
-        id: c.numero,
-        uuid: c.id,
-        em: '📦',
-        nm: firstItem?.nomProduit ?? '—',
-        vt: firstItem?.varianteChoisie ?? '',
-        client: companyById.get(c.companyId)?.companyName ?? '—',
-        price: Number(c.total),
-        status: mapOrderStatus(c.status),
-        date: c.createdAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
-        livreur: (c.livreurId && deliveryById.get(c.livreurId)?.fullName) ?? '—',
-        zone: c.villeLivraison ?? '—',
+        id:       c.numero,
+        uuid:     c.id,
+        em:       '📦',
+        imageUrl: firstItem?.imageProduit ?? null,
+        nm:       firstItem?.nomProduit ?? '—',
+        vt:       firstItem?.varianteChoisie ?? '',
+        items:    c.items.map(it => ({
+          nm:       it.nomProduit,
+          imageUrl: it.imageProduit ?? null,
+          vt:       it.varianteChoisie ?? null,
+          qty:      it.quantite,
+        })),
+        client:   companyById.get(c.companyId)?.companyName ?? '—',
+        price:    Number(c.total),
+        status:   mapOrderStatus(c.status),
+        date:     c.createdAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
+        livreur:  (c.livreurId && deliveryById.get(c.livreurId)?.fullName) ?? '—',
+        zone:     c.villeLivraison ?? '—',
       };
     });
   }

@@ -1,0 +1,7 @@
+/* src/dashboards/partenaire/styles/PlaceholderPage.module.css */
+.card { background: var(--white); border: 1px solid var(--bdr); border-radius: var(--r-lg); overflow: hidden; }
+.ch { padding: 16px 20px; border-bottom: 1px solid var(--bdr); }
+.chT { font-family: var(--fd); font-weight: 700; font-size: 15px; color: var(--navy); display: flex; align-items: center; gap: 9px; }
+.chT i { color: var(--blue); font-size: 13px; }
+.cb { padding: 48px 24px; text-align: center; }
+.txt { font-size: 13px; color: var(--t3); line-height: 1.6; max-width: 420px; margin: 0 auto; }

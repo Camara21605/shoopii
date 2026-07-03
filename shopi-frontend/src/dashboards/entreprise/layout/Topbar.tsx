@@ -20,8 +20,9 @@ import { useNavigate } from 'react-router-dom';
 
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
-/* ⚠️ Vérifie ce chemin selon ton projet (même que le Header home) */
 import { tokenStorage } from '../../../shared/services/apiFetch';
+import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
+import NotificationCenter from '../../../shared/notifications/NotificationCenter';
 import './Topbar.css';
 
 interface TopbarProps {
@@ -102,6 +103,7 @@ export default function Topbar({
 }: TopbarProps) {
   const { pop } = useToast();
   const navigate = useNavigate();
+  const { msgUnread } = useGlobalCall();
 
   const [searchVal,      setSearchVal]      = useState('');
   const [avatarOpen,     setAvatarOpen]     = useState(false);
@@ -153,6 +155,12 @@ export default function Topbar({
   return (
     <>
       <header className="topbar">
+
+        {/* ✅ Bouton menu mobile — en haut comme sur le dashboard livreur.
+            Ouvre le même drawer que le bouton "Menu" du bottom nav. */}
+        <button className="hamburger" onClick={() => setMobileMenuOpen(true)} aria-label="Menu">
+          <i className="fas fa-bars"></i>
+        </button>
 
         {/* Titre de la page */}
         <div className="tb-title-wrap">
@@ -207,16 +215,14 @@ export default function Topbar({
             <i className="fas fa-box"></i>
             <div className="tb-dot"></div>
           </button>
-          <button className="tb-ic" title="Messages"
+          <button className="tb-ic tb-ic-pin" title="Messages"
             onClick={() => onNavigate('messages')}>
             <i className="fas fa-comment-dots"></i>
-            <div className="tb-dot"></div>
+            {msgUnread > 0 && (
+              <span className="tb-badge">{msgUnread > 99 ? '99+' : msgUnread}</span>
+            )}
           </button>
-          <button className="tb-ic" title="Notifications"
-            onClick={() => pop('🔔 3 nouvelles notifications', 'i')}>
-            <i className="fas fa-bell"></i>
-            <div className="tb-dot"></div>
-          </button>
+          <NotificationCenter />
 
           <div className="tb-sep"></div>
 

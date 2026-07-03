@@ -41,8 +41,8 @@ export const COMMANDE_MOCK: Commande = {
   ],
 
   articles: [
-    { emoji: '📱', nom: 'iPhone 15 Pro 256 Go', boutique: 'TechCorp Guinée', qty: 1, prix: 12500000 },
-    { emoji: '🎧', nom: 'AirPods Pro 2',         boutique: 'TechCorp Guinée', qty: 1, prix: 1850000 },
+    { emoji: '📱', imageUrl: null, nom: 'iPhone 15 Pro 256 Go', boutique: 'TechCorp Guinée', qty: 1, prix: 12500000 },
+    { emoji: '🎧', imageUrl: null, nom: 'AirPods Pro 2',         boutique: 'TechCorp Guinée', qty: 1, prix: 1850000  },
   ],
 
   montant: {

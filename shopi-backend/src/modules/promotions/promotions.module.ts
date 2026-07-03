@@ -47,30 +47,34 @@ import { Product }
 import { PromotionsController } from './promotions.controller';
 import { PromotionsService }    from './services/promotions.service';
 import { PromoCodeService }     from './services/promo-code.service';
+import { PromotionsScheduler }  from './promotions.scheduler';
+import { NotificationsModule }  from '../notifications/notifications.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Promotion,        // Table principale des promotions
-      PromotionProduct, // Jointure promo ↔ produits ciblés
-      PromotionUsage,   // Historique des utilisations
-      Company,          // Pour résoudre companyId depuis userId JWT
-      Product,          // Pour valider les produits ciblés
+      Promotion,
+      PromotionProduct,
+      PromotionUsage,
+      Company,
+      Product,
     ]),
+    NotificationsModule,
   ],
 
   controllers: [
-    PromotionsController,   // Un seul controller pour toutes les routes
+    PromotionsController,
   ],
 
   providers: [
-    PromotionsService,      // CRUD des promotions
-    PromoCodeService,       // Validation + application des codes promo
+    PromotionsService,
+    PromoCodeService,
+    PromotionsScheduler,
   ],
 
   exports: [
-    PromoCodeService,       // Exporté pour CommandesModule.applyCode()
-    PromotionsService,      // Exporté si besoin dans d'autres modules
+    PromoCodeService,
+    PromotionsService,
   ],
 })
 export class PromotionsModule {}

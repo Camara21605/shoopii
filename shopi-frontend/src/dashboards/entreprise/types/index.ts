@@ -28,20 +28,31 @@ export type StockLevel = 'ok' | 'low' | 'out';
 /** Segment client */
 export type ClientSegment = 'VIP' | 'Fidèle' | 'Régulier' | 'Nouveau';
 
+/** Un article dans une commande */
+export interface OrderItem {
+  nm:       string;
+  imageUrl: string | null;
+  vt:       string | null;
+  qty:      number;
+}
+
 /** Une commande */
 export interface Order {
   id: string;
+  uuid?: string;
   em: string;
+  /** Image principale du premier article (snapshot Cloudinary) */
+  imageUrl?: string | null;
   nm: string;
   vt: string;
+  /** Tous les articles — permet l'affichage multi-produits */
+  items?: OrderItem[];
   client: string;
   price: number;
   status: OrderStatus;
   date: string;
   livreur: string;
   zone: string;
-  /** UUID réel de la commande (pour la navigation vers la page de suivi) */
-  uuid?: string;
 }
 
 /** Un produit */

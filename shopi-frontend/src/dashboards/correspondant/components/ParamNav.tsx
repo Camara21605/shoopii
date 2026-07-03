@@ -214,7 +214,7 @@ export default function ParamNav({ section, onSection, data }: Props) {
       {GROUPS.map(grp => {
         const items = NAV_ITEMS.filter(i => i.group === grp);
         return (
-          <div key={grp}>
+          <div key={grp} className={s.group}>
             <div className={s.sect}>{grp}</div>
 
             {items.map(item => {

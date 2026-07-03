@@ -37,6 +37,7 @@ import { SubCategory }    from './sub-category.entity';
 import { ProductMedia }   from './product-media.entity';
 import { ProductVariant } from './product-variant.entity';
 import { ProductSpec }    from './product-spec.entity';
+import { ProductWholesaleTier } from './product-wholesale-tier.entity';
 import { ProductLike } from './product-like.entity';
 import { ProductStory } from './product-story.entity';
 import { PromotionProduct } from './promotion-product.entity';
@@ -267,6 +268,28 @@ export class Product {
   @Index({ unique: true })
   @Column({ type: 'varchar', length: 255, nullable: true })
   urlSlug: string | null;
+
+  // ── Vente en gros ──────────────────────────────────────────────────────────
+
+  /** Active la vente en gros pour ce produit (paliers de prix dégressifs) */
+  @Column({ type: 'boolean', default: false })
+  venteEnGros: boolean;
+
+  /** Quantité minimum de commande pour acheter en gros */
+  @Column({ type: 'int', nullable: true })
+  moq: number | null;
+
+  /** Conditionnement — nombre d'unités par carton/colis */
+  @Column({ type: 'int', nullable: true })
+  conditionnement: number | null;
+
+  /** Délai de préparation pour les commandes en gros (ex: "3-5 jours") */
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  delaiPreparationGros: string | null;
+
+  /** Paliers de prix dégressifs selon la quantité commandée */
+  @OneToMany(() => ProductWholesaleTier, t => t.product, { cascade: true, eager: true })
+  wholesaleTiers: ProductWholesaleTier[];
 
   // ── Relations OneToMany ────────────────────────────────────────────────────
 
