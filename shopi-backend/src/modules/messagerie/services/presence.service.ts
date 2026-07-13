@@ -155,10 +155,9 @@ export class PresenceService implements OnModuleDestroy {
    * Null si jamais connecté (aucune clé Redis).
    */
   async getPresence(userId: string): Promise<UserPresence | null> {
-    const raw = await this.redis.get(KEY_PRESENCE(userId));
-    if (!raw) return null;
-
     try {
+      const raw = await this.redis.get(KEY_PRESENCE(userId));
+      if (!raw) return null;
       return JSON.parse(raw) as UserPresence;
     } catch {
       return null;
@@ -167,37 +166,50 @@ export class PresenceService implements OnModuleDestroy {
 
   /**
    * Vérifie si un utilisateur est en ligne (helper rapide).
+   * Retourne false si Redis est indisponible.
    */
   async isOnline(userId: string): Promise<boolean> {
-    const presence = await this.getPresence(userId);
-    return presence?.online === true;
+    try {
+      const presence = await this.getPresence(userId);
+      return presence?.online === true;
+    } catch {
+      return false;
+    }
   }
 
   /**
    * Retourne la présence de plusieurs utilisateurs en un seul
    * appel Redis pipeline (batch) — optimisation N+1.
+   * Retourne tous null si Redis est indisponible.
    */
   async getBulkPresence(
     userIds: string[],
   ): Promise<Map<string, UserPresence | null>> {
     if (userIds.length === 0) return new Map();
 
-    const pipeline = this.redis.pipeline();
-    userIds.forEach(id => pipeline.get(KEY_PRESENCE(id)));
+    try {
+      const pipeline = this.redis.pipeline();
+      userIds.forEach(id => pipeline.get(KEY_PRESENCE(id)));
 
-    const results = await pipeline.exec();
-    const map     = new Map<string, UserPresence | null>();
+      const results = await pipeline.exec();
+      const map     = new Map<string, UserPresence | null>();
 
-    userIds.forEach((id, i) => {
-      const raw = results?.[i]?.[1] as string | null;
-      try {
-        map.set(id, raw ? (JSON.parse(raw) as UserPresence) : null);
-      } catch {
-        map.set(id, null);
-      }
-    });
+      userIds.forEach((id, i) => {
+        const raw = results?.[i]?.[1] as string | null;
+        try {
+          map.set(id, raw ? (JSON.parse(raw) as UserPresence) : null);
+        } catch {
+          map.set(id, null);
+        }
+      });
 
-    return map;
+      return map;
+    } catch {
+      /* Redis indisponible → tous hors-ligne par défaut */
+      const map = new Map<string, UserPresence | null>();
+      userIds.forEach(id => map.set(id, null));
+      return map;
+    }
   }
 
   // ─────────────────────────────────────────────────────────
