@@ -11,6 +11,7 @@ export const UPLOAD_FOLDERS = {
   AVATAR:    'shopi/avatars',     // photos de profil
   DOCUMENT:  'shopi/documents',   // PDFs, documents légaux
   VIDEO:     'shopi/videos',      // vidéos promotionnelles
+  SUPPORT:   'shopi/support',     // pièces jointes tickets support
 } as const;
 
 export type UploadFolder = typeof UPLOAD_FOLDERS[keyof typeof UPLOAD_FOLDERS];
@@ -158,6 +159,28 @@ export class UploadService {
     });
 
     return this.toUploadResult(result);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // UPLOAD GÉNÉRIQUE (pièces jointes support, etc.)
+  // Détermine le resource_type Cloudinary à partir du mimeType.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  async uploadBuffer(
+    buffer:   Buffer,
+    folder:   UploadFolder,
+    mimeType: string,
+  ): Promise<{ url: string; publicId: string }> {
+    const resourceType: 'image' | 'video' | 'raw' =
+      mimeType.startsWith('image/') ? 'image' :
+      mimeType.startsWith('video/') ? 'video' : 'raw';
+
+    const result = await this.uploadToCloudinary(buffer, {
+      folder,
+      resource_type: resourceType,
+    });
+
+    return { url: result.secure_url, publicId: result.public_id };
   }
 
   // ══════════════════════════════════════════════════════════════════════════

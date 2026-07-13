@@ -27,6 +27,16 @@
 .emptySub {
   font-size: 13px; color: var(--t3); max-width: 280px; line-height: 1.6;
 }
+.emptyBtnSecondary {
+  background: var(--sky, #EEF3FD); color: var(--navy); border: 1.5px solid var(--bdr2);
+  border-radius: var(--pill); padding: 10px 22px;
+  font-size: 13px; font-weight: 600; margin-top: 6px;
+  display: none; align-items: center; gap: 8px;
+  cursor: pointer; transition: all 0.2s; font-family: var(--fb);
+}
+.emptyBtnSecondary:hover { background: var(--bdr2); }
+@media (max-width: 640px) { .emptyBtnSecondary { display: flex; } }
+
 .emptyBtn {
   background: var(--navy); color: #fff; border: none;
   border-radius: var(--pill); padding: 12px 26px;
@@ -79,10 +89,24 @@
 .hdBtn:hover { background: var(--sky, #EEF3FD); color: var(--navy); }
 .hdBtn.active { background: rgba(14,116,144,.09); color: var(--teal, #0E7490); }
 
+/* Bouton hamburger — affiché uniquement sur mobile */
+.hdMobileBtn {
+  display: none;
+  width: 34px; height: 34px; border-radius: 50%;
+  align-items: center; justify-content: center;
+  color: var(--t2); font-size: 16px; flex-shrink: 0;
+  border: none; background: none; cursor: pointer;
+  transition: all 0.2s;
+}
+.hdMobileBtn:hover { background: var(--sky, #EEF3FD); color: var(--navy); }
+@media (max-width: 640px) {
+  .hdMobileBtn { display: flex; }
+}
+
 /* ── Zone messages ── */
 .msgsZone {
   flex: 1; overflow-y: auto;
-  padding: 20px 22px;
+  padding: 20px 22px 32px;
   display: flex; flex-direction: column; gap: 2px;
 }
 
@@ -140,6 +164,45 @@
   border: none; background: none; cursor: pointer;
 }
 .baBtn:hover { background: var(--sky, #EEF3FD); color: var(--navy); }
+
+/* ── Menu suppression ─────────────────────────────────────────── */
+.deleteWrap { position: relative; }
+.deleteMenu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  background: var(--white);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r-lg);
+  box-shadow: 0 8px 24px rgba(6,15,30,.14);
+  overflow: hidden;
+  z-index: 200;
+  min-width: 210px;
+  animation: delMenuIn .14s ease;
+}
+@keyframes delMenuIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.msgRow.mine .deleteMenu  { right: 0; }
+.msgRow:not(.mine) .deleteMenu { left: 0; }
+.deleteMenuItem {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  background: none; border: none; padding: 11px 14px;
+  font-size: 12.5px; font-weight: 600; color: var(--t1);
+  cursor: pointer; text-align: left; transition: background .14s;
+}
+.deleteMenuItem i { width: 16px; text-align: center; font-size: 13px; color: var(--t3); }
+.deleteMenuItem:hover { background: var(--g50); }
+.deleteMenuItem + .deleteMenuItem { border-top: 1px solid var(--bdr); }
+.deleteMenuDanger { color: var(--red, #DC2626); }
+.deleteMenuDanger i { color: var(--red, #DC2626); }
+.deleteMenuDanger:hover { background: rgba(220,38,38,.06); }
+
+/* ── Message supprimé ─────────────────────────────────────────── */
+.msgDeleted {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 14px; border-radius: var(--r-xl);
+  background: var(--g100); color: var(--t3);
+  font-size: 12.5px; font-style: italic;
+  border: 1px solid var(--bdr);
+}
 
 /* ── Statut message (3 états) ──────────────────────────────────
    sent      : ✓  gris pâle  — envoyé, pas encore livré

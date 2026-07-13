@@ -3,7 +3,7 @@
  *
  * Recherche réelle d'utilisateurs via GET /api/messagerie/users/search.
  * Tous les acteurs sont inclus : client, vendeur, livreur,
- * correspondant (ajouté), partenaire, admin.
+ * correspondant. Partenaires et admins → Aide & Contact uniquement.
  */
 import { useState, useEffect, useRef } from 'react';
 import { apiFetch }    from '../../services/apiFetch';
@@ -25,10 +25,8 @@ interface ApiUser {
 const TYPE_TO_ROLE: Record<string, string> = {
   company:       'vendeur',
   delivery:      'livreur',
-  partner:       'partenaire',
   correspondent: 'correspondant',
   client:        'client',
-  admin:         'admin',
 };
 
 function toFrontRole(type: string) {

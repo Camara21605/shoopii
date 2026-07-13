@@ -47,51 +47,107 @@ function getTypeMeta(type: string): TypeMeta {
 
 // ─── NotificationItem ─────────────────────────────────────────
 
-interface ItemProps { notif: INotificationDto; onClick: () => void; }
+interface ItemProps {
+  notif:    INotificationDto;
+  onClick:  () => void;
+  onDelete: () => void;
+}
 
-function NotificationItem({ notif, onClick }: ItemProps) {
+function NotificationItem({ notif, onClick, onDelete }: ItemProps) {
   const meta = getTypeMeta(notif.type);
   return (
-    <button
-      className={`${s.item}${notif.isRead ? '' : ` ${s.unread}`}`}
-      onClick={onClick}
-    >
-      {!notif.isRead && <span className={s.dot} aria-hidden />}
-
-      <span
-        className={s.iconWrap}
-        style={{ background: meta.bg, color: meta.color }}
-        aria-hidden
+    <div className={`${s.itemWrap}${notif.isRead ? '' : ` ${s.unread}`}`}>
+      <button
+        className={s.item}
+        onClick={onClick}
       >
-        <i className={`fas ${meta.icon}`} />
-      </span>
+        {!notif.isRead && <span className={s.dot} aria-hidden />}
 
-      <span className={s.content}>
-        <span className={s.title}>
-          {notif.title}
-          {notif.count > 1 && <span style={{ fontWeight: 500, marginLeft: 4, opacity: .7 }}>({notif.count})</span>}
+        <span
+          className={s.iconWrap}
+          style={{ background: meta.bg, color: meta.color }}
+          aria-hidden
+        >
+          <i className={`fas ${meta.icon}`} />
         </span>
-        <span className={s.body}>{notif.body}</span>
-        <span className={s.time}>{relativeTime(notif.createdAt)}</span>
-      </span>
-    </button>
+
+        <span className={s.content}>
+          <span className={s.title}>
+            {notif.title}
+            {notif.count > 1 && <span style={{ fontWeight: 500, marginLeft: 4, opacity: .7 }}>({notif.count})</span>}
+          </span>
+          <span className={s.body}>{notif.body}</span>
+          <span className={s.time}>{relativeTime(notif.createdAt)}</span>
+        </span>
+      </button>
+
+      {/* Bouton supprimer — visible au survol, stopPropagation pour ne pas ouvrir la notif */}
+      <button
+        className={s.deleteBtn}
+        onClick={e => { e.stopPropagation(); onDelete(); }}
+        title="Supprimer"
+        aria-label="Supprimer la notification"
+      >
+        <i className="fas fa-xmark" />
+      </button>
+    </div>
   );
 }
 
 // ─── Résolution de la route interne à partir d'une notification ──
+//
+// Priorité 1 : actionUrl fourni par le backend si c'est un chemin interne valide.
+//   - On corrige les URLs obsolètes /commandes/* (pluriel) vers /commande/* (singulier)
+//   - On corrige /dashboard/commandes/* vers /dashboard/entreprise
+// Priorité 2 : fallback par type de notification si actionUrl est absent/externe.
 
 function resolveNavTarget(notif: INotificationDto): string {
-  // actionUrl fourni par le backend et chemin interne → utilisation directe
-  if (notif.actionUrl?.startsWith('/')) return notif.actionUrl;
-
   const prefix = notif.type.split('.')[0];
-  const id     = notif.resourceId;
+  /* resourceId est le UUID de la commande. Fallback sur payload.commandeId
+   * pour les notifications créées avant que la colonne resourceId existait. */
+  const id = notif.resourceId ?? (notif.payload as Record<string, unknown> | null)?.commandeId as string | undefined ?? null;
 
+  /* Commandes & paiements : toujours aller à la page de suivi de la commande.
+   * La page /commande/:id/suivi lit le rôle depuis le token JWT et adapte
+   * l'affichage (client, entreprise, livreur, correspondant) → tous les rôles
+   * peuvent l'utiliser. On ignore actionUrl ici pour éviter que les entreprises
+   * soient renvoyées vers le dashboard générique au lieu de la commande précise. */
+  if ((prefix === 'order' || prefix === 'payment') && id) {
+    return `/commande/${id}/suivi`;
+  }
+
+  let url = notif.actionUrl ?? '';
+
+  /* Corriger les anciens actionUrl envoyés avant le fix backend :
+   *   /commandes/{id}             → /commande/{id}/suivi
+   *   /dashboard/commandes/{id}   → /dashboard/entreprise  */
+  if (url.startsWith('/commandes/')) {
+    const segId = url.split('/')[2];
+    url = segId ? `/commande/${segId}/suivi` : '/commande';
+  } else if (url.startsWith('/dashboard/commandes/')) {
+    url = '/dashboard/entreprise';
+  }
+
+  /* Chemin interne valide → on l'utilise directement */
+  if (url.startsWith('/')) return url;
+
+  /* URL externe → le caller ouvre un nouvel onglet (géré dans handleItemClick) */
+  if (url.startsWith('http')) return url;
+
+  /* Fallback par préfixe de type quand actionUrl est absent */
   switch (prefix) {
     case 'order':
     case 'payment':
-      return id ? `/commande/${id}/suivi` : '/dashboard/client';
+      return id ? `/commande/${id}/suivi` : '/commande';
+    case 'delivery':
+    case 'colis': {
+      /* Pour delivery/colis : resourceId = ID de livraison (pas de commande).
+       * commandeId se trouve dans le payload pour la redirection correcte. */
+      const cmdId = ((notif.payload as Record<string, unknown> | null)?.commandeId as string | undefined) ?? null;
+      return cmdId ? `/commande/${cmdId}/suivi` : '/home';
+    }
     case 'message':
+    case 'conversation':
       return '/messagerie';
     case 'product':
       return id ? `/produit/${id}` : '/boutiques';
@@ -117,10 +173,36 @@ export default function NotificationCenter() {
     unreadCount, notifications,
     isOpen, toggle, close,
     isLoading, hasMore, loadMore,
-    markAsRead, markAllAsRead,
+    markAsRead, markAllAsRead, deleteOne,
   } = useNotifications();
 
   const wrapRef = useRef<HTMLDivElement>(null);
+
+  /* Ref pour ne marquer qu'une seule fois par session d'ouverture du panneau.
+   * Reset à false quand le panneau se referme, pour que la prochaine ouverture
+   * déclenche à nouveau le marquage. */
+  const markedThisSessionRef = useRef(false);
+
+  /* Quand le panneau s'ouvre et que les données sont prêtes → tout marquer comme lu.
+   * Si les données sont encore en cours de chargement (1ère ouverture), l'effet se
+   * déclenche à nouveau quand isLoading passe à false. */
+  useEffect(() => {
+    if (!isOpen) {
+      markedThisSessionRef.current = false;
+      return;
+    }
+    if (!isLoading && !markedThisSessionRef.current) {
+      markedThisSessionRef.current = true;
+      markAllAsRead();
+    }
+  }, [isOpen, isLoading, markAllAsRead]);
+
+  /* Exclure les notifications de type message.* — leur badge va sur le bouton messagerie */
+  const visibleNotifs = notifications.filter(n => !n.type.startsWith('message'));
+  const displayCount  = visibleNotifs.filter(n => !n.isRead).length;
+  /* Avant le premier chargement de la liste, on tombe sur displayCount=0 même si
+   * unreadCount > 0 (liste vide). On utilise unreadCount comme fallback. */
+  const badgeCount = notifications.length > 0 ? displayCount : unreadCount;
 
   /* Fermer au clic extérieur */
   useEffect(() => {
@@ -144,11 +226,24 @@ export default function NotificationCenter() {
     if (!notif.isRead) markAsRead(notif.id);
     close();
 
-    // URL externe → nouvel onglet, sinon navigation interne
-    if (notif.actionUrl && !notif.actionUrl.startsWith('/')) {
-      window.open(notif.actionUrl, '_blank', 'noopener');
+    /* Log temporaire — à supprimer après diagnostic */
+    console.log('[NotifDebug] clic notification', {
+      id:         notif.id,
+      type:       notif.type,
+      resourceId: notif.resourceId,
+      actionUrl:  notif.actionUrl,
+      payload:    notif.payload,
+    });
+
+    /* Résoudre d'abord l'URL cible (corrections + fallback par type),
+     * puis décider si c'est une navigation interne ou un lien externe. */
+    const target = resolveNavTarget(notif);
+    console.log('[NotifDebug] → navigation vers :', target);
+
+    if (target.startsWith('http')) {
+      window.open(target, '_blank', 'noopener');
     } else {
-      navigate(resolveNavTarget(notif));
+      navigate(target);
     }
   }
 
@@ -158,7 +253,7 @@ export default function NotificationCenter() {
       <button
         className="tb-ic"
         title="Notifications"
-        aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} non lues)` : ''}`}
+        aria-label={`Notifications${badgeCount > 0 ? ` (${badgeCount} non lues)` : ''}`}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         onClick={toggle}
@@ -166,10 +261,10 @@ export default function NotificationCenter() {
         <i className="fas fa-bell" />
       </button>
 
-      {/* ── Badge numérique ── */}
-      {unreadCount > 0 && (
+      {/* ── Badge numérique — masqué quand le panneau est ouvert ── */}
+      {badgeCount > 0 && !isOpen && (
         <span className={s.badge} aria-hidden>
-          {unreadCount > 99 ? '99+' : unreadCount}
+          {badgeCount > 99 ? '99+' : badgeCount}
         </span>
       )}
 
@@ -183,7 +278,7 @@ export default function NotificationCenter() {
           {/* En-tête */}
           <div className={s.header}>
             <span className={s.headerTitle}>Notifications</span>
-            {unreadCount > 0 && (
+            {displayCount > 0 && (
               <button className={s.markAll} onClick={markAllAsRead}>
                 Tout marquer lu
               </button>
@@ -193,14 +288,14 @@ export default function NotificationCenter() {
           {/* Corps */}
           <div className={s.list} role="list">
             {/* Chargement initial */}
-            {isLoading && notifications.length === 0 && (
+            {isLoading && visibleNotifs.length === 0 && (
               <div className={s.loader} aria-live="polite">
                 <i className="fas fa-circle-notch fa-spin" />
               </div>
             )}
 
             {/* État vide */}
-            {!isLoading && notifications.length === 0 && (
+            {!isLoading && visibleNotifs.length === 0 && (
               <div className={s.empty}>
                 <i className="far fa-bell-slash" />
                 <span>Aucune notification</span>
@@ -208,11 +303,12 @@ export default function NotificationCenter() {
             )}
 
             {/* Items */}
-            {notifications.map(n => (
+            {visibleNotifs.map(n => (
               <NotificationItem
                 key={n.id}
                 notif={n}
                 onClick={() => handleItemClick(n)}
+                onDelete={() => deleteOne(n.id)}
               />
             ))}
 

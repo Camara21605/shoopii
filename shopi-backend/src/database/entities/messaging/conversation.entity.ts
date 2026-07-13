@@ -397,6 +397,18 @@ export class Conversation {
   archivedByRecipient: boolean;
 
   /* ==========================================================
+   * SUPPRESSION PAR ACTEUR  (soft delete individuel)
+   * ========================================================== */
+
+  /** true → l'INITIATEUR a supprimé cette conversation pour lui. */
+  @Column({ type: 'boolean', default: false })
+  deletedByInitiator: boolean;
+
+  /** true → le RECEVEUR a supprimé cette conversation pour lui. */
+  @Column({ type: 'boolean', default: false })
+  deletedByRecipient: boolean;
+
+  /* ==========================================================
    * STATISTIQUES
    * ========================================================== */
 

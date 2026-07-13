@@ -2,24 +2,41 @@
  * FICHIER : profil-client/sections/SectionFavs.tsx
  *
  * Onglet "Favoris" : grille de produits.
- *
- * DONNÉES : reçues en prop `favoris` (réel, via /client/favoris).
- * Clic sur un produit → redirige vers sa page (/produit/:id).
+ * Données exclusivement depuis /client/favoris.
  * ================================================================ */
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/ProfilClient.module.css';
-import { FAVORIS as MOCK_FAVORIS, fmtGnf } from '../data/profilClientData';
 import type { Favori } from '../data/profilClientData';
+
+const fmtGnf = (n: number | undefined | null) =>
+  n != null ? n.toLocaleString('fr-FR') + ' GNF' : '—';
 
 interface Props {
   onToast: (m: string) => void;
-  favoris?: Favori[];   // dynamique (fallback mock)
+  favoris: Favori[];
 }
 
-export default function SectionFavs({ onToast, favoris = MOCK_FAVORIS }: Props) {
+export default function SectionFavs({ onToast, favoris }: Props) {
   const navigate = useNavigate();
+
+  if (favoris.length === 0) {
+    return (
+      <div className={styles.card}>
+        <div className={styles.ch}>
+          <div className={styles.ct}><i className="fas fa-heart" /> Produits favoris</div>
+        </div>
+        <div className={styles.cb}>
+          <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--t3)' }}>
+            <i className="fas fa-heart" style={{ fontSize: 28, display: 'block', marginBottom: 10, opacity: 0.3 }} />
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>Aucun favori</div>
+            <div style={{ fontSize: 12 }}>Ajoutez des produits à vos favoris depuis la boutique.</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.card}>

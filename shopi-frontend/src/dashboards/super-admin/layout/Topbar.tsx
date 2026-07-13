@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { SectionId } from '../types/codes.types';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
 
@@ -24,6 +25,7 @@ export default function Topbar({
   theme, onThemeToggle, onNavigate,
 }: TopbarProps) {
   const [clock, setClock] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const tick = () => {
@@ -92,6 +94,16 @@ export default function Topbar({
 
       {/* Notifications temps réel */}
       <NotificationCenter />
+
+      {/* Centre d'aide — accès direct depuis le dashboard super-admin */}
+      <button
+        className="tb-icon-btn"
+        onClick={() => navigate('/aide')}
+        title="Centre d'aide"
+        aria-label="Centre d'aide"
+      >
+        <i className="fas fa-circle-question" style={{ fontSize: 14 }} />
+      </button>
 
       {/* Paramètres */}
       <button className="tb-icon-btn" onClick={() => onNavigate('settings')}>

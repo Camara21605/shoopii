@@ -1,0 +1,395 @@
+/* ============================================================
+ * HelpSearchPage.module.css
+ * Styles de la page de recherche du Centre d'aide.
+ * Supporte le mode sombre via prefers-color-scheme.
+ * ============================================================ */
+
+/* ── Variables de couleurs ── */
+:root {
+  --search-bg:        #F8FAFF;
+  --search-card-bg:   #ffffff;
+  --search-border:    #E5EBF5;
+  --search-border-hov:#B8CAEF;
+  --search-text:      #0B1F3A;
+  --search-muted:     #7A8BA8;
+  --search-faint:     #9AAACB;
+  --search-blue:      #1A4FC4;
+  --search-blue-bg:   #EEF2FF;
+  --search-hl-bg:     #FDE68A;
+  --search-hl-text:   #78350F;
+  --search-sk-from:   #F0F4FF;
+  --search-sk-to:     #E5EDFF;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --search-bg:        #0D1526;
+    --search-card-bg:   #131E35;
+    --search-border:    #1E2D4A;
+    --search-border-hov:#2A4080;
+    --search-text:      #E2E8F6;
+    --search-muted:     #7A8BA8;
+    --search-faint:     #4A5A7A;
+    --search-blue:      #5B8BF0;
+    --search-blue-bg:   #172040;
+    --search-hl-bg:     #78350F;
+    --search-hl-text:   #FDE68A;
+    --search-sk-from:   #131E35;
+    --search-sk-to:     #1A2A45;
+  }
+}
+
+/* ── Layout ── */
+.page {
+  min-height: 100vh;
+  background: var(--search-bg);
+  padding: 32px 20px 100px;
+}
+
+.wrap { max-width: 800px; margin: 0 auto; }
+
+/* ── Fil d'Ariane ── */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 28px;
+}
+.breadcrumb a { color: var(--search-blue); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: var(--search-faint); }
+
+/* ── Hero ── */
+.hero { margin-bottom: 28px; }
+
+.heroTitle {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--search-text);
+  margin-bottom: 6px;
+  text-wrap: balance;
+}
+
+.heroSub {
+  font-size: 14px;
+  color: var(--search-muted);
+  margin-bottom: 20px;
+}
+
+/* ── Barre de recherche ── */
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--search-card-bg);
+  border: 2px solid var(--search-border);
+  border-radius: 16px;
+  padding: 12px 20px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.searchBox:focus-within {
+  border-color: var(--search-blue);
+  box-shadow: 0 0 0 4px rgba(26, 79, 196, .1);
+}
+.searchBox > i:first-child {
+  color: var(--search-faint);
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: var(--search-text);
+  background: transparent;
+}
+.searchInput::placeholder { color: var(--search-faint); }
+
+.clearBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--search-faint);
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: background .12s, color .12s;
+}
+.clearBtn:hover { background: var(--search-border); color: var(--search-text); }
+
+/* ── Compteur de résultats ── */
+.meta {
+  font-size: 13px;
+  color: var(--search-muted);
+  margin-bottom: 16px;
+}
+.meta strong { color: var(--search-text); }
+.meta em { font-style: normal; color: var(--search-text); font-weight: 600; }
+.metaNone { color: #E53E3E; }
+
+/* ── Squelettes animés ── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.skCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--search-card-bg);
+  border: 1px solid var(--search-border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 8px;
+}
+.skIcon {
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  background: linear-gradient(90deg, var(--search-sk-from) 25%, var(--search-sk-to) 50%, var(--search-sk-from) 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite;
+  flex-shrink: 0;
+}
+.skBody { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.skTitle {
+  height: 14px; width: 70%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--search-sk-from) 25%, var(--search-sk-to) 50%, var(--search-sk-from) 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite;
+}
+.skLine {
+  height: 11px; width: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--search-sk-from) 25%, var(--search-sk-to) 50%, var(--search-sk-from) 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite .1s;
+}
+.skCat {
+  height: 10px; width: 30%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--search-sk-from) 25%, var(--search-sk-to) 50%, var(--search-sk-from) 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite .2s;
+}
+
+/* ── Liste des résultats ── */
+.results { display: flex; flex-direction: column; gap: 8px; }
+
+.result {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--search-card-bg);
+  border: 1px solid var(--search-border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .12s, box-shadow .12s, transform .1s;
+}
+.result:hover {
+  border-color: var(--search-border-hov);
+  box-shadow: 0 4px 16px rgba(26, 79, 196, .08);
+  transform: translateY(-1px);
+}
+
+.resultIcon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: var(--search-blue-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--search-blue);
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.resultBody { flex: 1; min-width: 0; }
+.resultTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--search-text);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.resultExcerpt {
+  font-size: 12px;
+  color: var(--search-muted);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.resultCat {
+  font-size: 11px;
+  color: var(--search-faint);
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.chevron { color: var(--search-border); font-size: 12px; flex-shrink: 0; }
+
+/* ── Surlignage ── */
+.hl {
+  background: var(--search-hl-bg);
+  color: var(--search-hl-text);
+  border-radius: 3px;
+  padding: 0 2px;
+  font-style: normal;
+}
+
+/* ── État vide enrichi ── */
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+}
+.emptyIcon {
+  width: 72px; height: 72px;
+  border-radius: 20px;
+  background: var(--search-blue-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--search-blue);
+  font-size: 28px;
+  margin: 0 auto 20px;
+}
+.emptyTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--search-text);
+  margin-bottom: 8px;
+  text-wrap: balance;
+}
+.emptyTitle em { font-style: normal; color: var(--search-blue); }
+.emptySub {
+  font-size: 14px;
+  color: var(--search-muted);
+  margin-bottom: 24px;
+}
+
+.emptyTips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.emptyTip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--search-muted);
+  background: var(--search-card-bg);
+  border: 1px solid var(--search-border);
+  border-radius: 24px;
+  padding: 7px 14px;
+}
+.emptyTip i { color: var(--search-blue); }
+
+.emptyCtas {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ctaPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  background: var(--search-blue);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity .15s;
+}
+.ctaPrimary:hover { opacity: .88; }
+.ctaSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  border: 1.5px solid var(--search-border);
+  background: var(--search-card-bg);
+  color: var(--search-text);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color .15s;
+}
+.ctaSecondary:hover { border-color: var(--search-blue); }
+
+/* ── État initial (aucune recherche) ── */
+.initial {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--search-muted);
+}
+.initial > i { font-size: 36px; display: block; margin-bottom: 12px; }
+.initial > p { font-size: 14px; margin-bottom: 20px; }
+
+.chips {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chipsLabel { font-size: 12px; color: var(--search-faint); }
+.chip {
+  padding: 6px 14px;
+  border-radius: 24px;
+  border: 1.5px solid var(--search-border);
+  background: var(--search-card-bg);
+  color: var(--search-blue);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .12s, background .12s;
+}
+.chip:hover {
+  border-color: var(--search-blue);
+  background: var(--search-blue-bg);
+}
+
+/* ── Pagination ── */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 32px;
+}
+.pgInfo { font-size: 13px; color: var(--search-muted); }
+.pgBtn {
+  background: var(--search-card-bg);
+  border: 1px solid var(--search-border);
+  border-radius: 9px;
+  width: 38px; height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--search-text);
+  transition: border-color .12s, color .12s;
+}
+.pgBtn:hover:not(:disabled) {
+  border-color: var(--search-blue);
+  color: var(--search-blue);
+}
+.pgBtn:disabled { opacity: .4; cursor: default; }

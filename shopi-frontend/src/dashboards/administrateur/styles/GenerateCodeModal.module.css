@@ -1,0 +1,113 @@
+/* ================================================================
+ * FICHIER : src/dashboards/admin/styles/GenerateCodeModal.module.css
+ * Modale 2 étapes — l'admin peut créer des partenaires (t_par).
+ * ================================================================ */
+
+.bg {
+  position: fixed; inset: 0;
+  background: rgba(11,31,58,.55);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+
+.modal {
+  background: var(--white);
+  border-radius: var(--r-xl);
+  width: 100%; max-width: 480px;
+  box-shadow: var(--sh-xl);
+  animation: mIn .3s var(--spring);
+  overflow: hidden; position: relative;
+}
+@keyframes mIn {
+  from { transform: scale(.93); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.head { padding: 22px 24px 0; }
+.title { font-family: var(--fd); font-weight: 700; font-size: 19px; color: var(--navy); }
+.sub { font-size: 12.5px; color: var(--t3); margin-top: 4px; }
+.body { padding: 20px 24px; max-height: 70vh; overflow-y: auto; }
+
+.x {
+  position: absolute; top: 18px; right: 18px;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--g100); border: none;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--t2); font-size: 14px;
+  cursor: pointer; transition: .15s; z-index: 1;
+}
+.x:hover { background: var(--g200); }
+
+.fld { margin-bottom: 16px; }
+.fldL {
+  font-size: 11px; font-weight: 700; color: var(--navy);
+  text-transform: uppercase; letter-spacing: .5px;
+  margin-bottom: 7px; display: block;
+}
+.fldIn {
+  width: 100%;
+  background: var(--g50);
+  border: 1.5px solid var(--bdr2);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  font-size: 14px; color: var(--t1); font-family: var(--fb);
+  outline: none; transition: all .2s;
+}
+.fldIn:focus { border-color: var(--blue-2); box-shadow: 0 0 0 3px rgba(26,79,196,.08); background: var(--white); }
+
+.typeGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.typeOpt {
+  border: 1.5px solid var(--bdr2);
+  border-radius: var(--r-md);
+  padding: 14px;
+  cursor: pointer; transition: all .15s;
+  text-align: center;
+}
+.typeOpt:hover { border-color: var(--bdrb); background: var(--sky); }
+.onOpt { border-color: var(--blue) !important; background: var(--sky); box-shadow: 0 0 0 3px rgba(26,79,196,.08); }
+.typeOpt i { font-size: 22px; margin-bottom: 7px; display: block; }
+.t_par i { color: var(--teal); }
+.t_ent i { color: var(--blue); }
+.t_lvr i { color: var(--emerald); }
+.t_cor i { color: var(--violet); }
+.typeNm { font-size: 12.5px; font-weight: 700; color: var(--navy); }
+
+.result {
+  background: linear-gradient(135deg, var(--navy), #16335c);
+  border-radius: var(--r-lg);
+  padding: 24px; text-align: center; color: #fff;
+  margin-bottom: 16px;
+}
+.resultL { font-size: 11px; color: rgba(200,217,248,.6); text-transform: uppercase; letter-spacing: 1px; }
+.resultV { font-family: var(--fd); font-weight: 800; font-size: 30px; letter-spacing: 3px; margin: 10px 0; }
+.resultExp { font-size: 11px; color: rgba(200,217,248,.5); }
+
+.sendRow { display: flex; gap: 9px; margin-top: 8px; }
+.sendBtn {
+  flex: 1; border: none;
+  border-radius: var(--r-md);
+  padding: 12px;
+  font-size: 12.5px; font-weight: 700; font-family: var(--fb);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; transition: all .2s;
+}
+.sendWa { background: #25D366; color: #fff; }
+.sendWa:hover { background: #1FA855; }
+.sendSms { background: var(--sky); color: var(--blue); }
+.sendSms:hover { background: var(--sky-2); }
+.sendCopy { background: var(--g100); color: var(--t2); }
+.sendCopy:hover { background: var(--g200); }
+
+.mBtn {
+  width: 100%;
+  background: var(--navy); color: #fff;
+  border: none; border-radius: var(--r-md);
+  padding: 13px;
+  font-size: 13.5px; font-weight: 700; font-family: var(--fb);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; transition: all .2s;
+  margin-top: 4px;
+}
+.mBtn:hover { background: #112648; box-shadow: var(--sh-b); }

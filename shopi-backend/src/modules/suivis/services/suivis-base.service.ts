@@ -75,8 +75,10 @@ export abstract class SuivisBaseService {
   async toggleSuivi(userId: string, role: UserRole, targetId: string): Promise<FollowResponse> {
 
     const followerType = this.resolveFollowerType(role);
-    const followerId   = await this.getFollowerProfileId(userId, followerType);
-    const followerName = await this.getFollowerDisplayName(userId);
+    const [followerId, followerName] = await Promise.all([
+      this.getFollowerProfileId(userId, followerType),
+      this.getFollowerDisplayName(userId),
+    ]);
 
     if (this.targetType as unknown as FollowerActorType === followerType && targetId === followerId) {
       throw new BadRequestException('Vous ne pouvez pas vous suivre vous-même.');
@@ -147,13 +149,17 @@ export abstract class SuivisBaseService {
       followId, timestamp:new Date().toISOString(),
     };
 
-    if (isSuivi) {
-      await this.followQueue.add(SUIVIS_JOBS.NOTIFY_FOLLOWED,    jobPayload, { delay:500, attempts:3, backoff:{type:'exponential',delay:2000} });
-      await this.followQueue.add(SUIVIS_JOBS.UPDATE_FEED,        jobPayload, { attempts:3 });
-    } else {
-      await this.followQueue.add(SUIVIS_JOBS.NOTIFY_UNFOLLOWED,  jobPayload, { attempts:2 });
-    }
-    await this.followQueue.add(SUIVIS_JOBS.UPDATE_FOLLOW_COUNT, jobPayload, { attempts:3 });
+    const queueAdds = isSuivi
+      ? [
+          this.followQueue.add(SUIVIS_JOBS.NOTIFY_FOLLOWED,     jobPayload, { delay:500, attempts:3, backoff:{type:'exponential',delay:2000} }),
+          this.followQueue.add(SUIVIS_JOBS.UPDATE_FEED,         jobPayload, { attempts:3 }),
+          this.followQueue.add(SUIVIS_JOBS.UPDATE_FOLLOW_COUNT, jobPayload, { attempts:3 }),
+        ]
+      : [
+          this.followQueue.add(SUIVIS_JOBS.NOTIFY_UNFOLLOWED,   jobPayload, { attempts:2 }),
+          this.followQueue.add(SUIVIS_JOBS.UPDATE_FOLLOW_COUNT, jobPayload, { attempts:3 }),
+        ];
+    Promise.all(queueAdds).catch(err => this.logger.error('Queue add failed', err));
 
     return {
       isSuivi,

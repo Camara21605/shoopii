@@ -350,3 +350,43 @@
   .ch  { padding: 11px 14px; }
   .cb  { padding: 12px 14px; }
 }
+
+/* ── Tiny phones ≤360px ── */
+@media (max-width: 360px) {
+  .ch       { padding: 10px 12px; }
+  .cb       { padding: 11px 12px; }
+  .chT      { font-size: 13px; }
+  .psHd h2  { font-size: 15px; }
+  .srLbl    { font-size: 12px; }
+  .fiInput  { font-size: 12px; padding: 9px 11px 9px 33px; }
+  .fiInput.noIcon { padding-left: 11px; }
+  .horRow   { flex-wrap: wrap; gap: 8px; }
+  .horDay   { min-width: 70px; font-size: 12px; }
+  .horInp   { width: 78px; padding: 6px 8px; font-size: 12px; }
+  .speedGrid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .speedOpt { padding: 12px 8px; }
+  .soEm     { font-size: 22px; }
+  .soNm     { font-size: 11px; }
+  .zoneGrid { gap: 7px; }
+  .zoneOpt  { padding: 10px 8px; }
+  .otpD     { width: 34px; height: 42px; font-size: 17px; }
+  .otpRow   { gap: 5px; }
+  .grid2    { grid-template-columns: 1fr; }
+  .radioOpt { padding: 11px 12px; gap: 10px; }
+  .roEm     { font-size: 19px; }
+}
+
+/* ── Extra tiny ≤280px ── */
+@media (max-width: 280px) {
+  .speedGrid { grid-template-columns: 1fr; }
+  .zoneGrid  { grid-template-columns: 1fr 1fr; }
+  .otpD      { width: 30px; height: 38px; font-size: 15px; }
+  .otpRow    { gap: 4px; }
+  .ch        { padding: 9px 10px; }
+  .cb        { padding: 10px 10px; }
+  .dangerRow { flex-direction: column; gap: 8px; }
+  .drBtn     { width: 100%; text-align: center; justify-content: center; }
+  .pmItem    { gap: 9px; }
+  .pmIc      { width: 36px; height: 36px; }
+  .pmActs    { flex-direction: column; gap: 3px; }
+}

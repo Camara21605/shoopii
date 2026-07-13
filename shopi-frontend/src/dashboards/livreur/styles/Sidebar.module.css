@@ -356,23 +356,100 @@
 }
 
 /* Responsive : icônes seules */
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
   .sbBot { padding: 10px 8px; }
   .btnHome span, .btnLogout span { display: none; }
   .btnHome, .btnLogout { justify-content: center; padding: 10px; }
 }
 
-/* ── Responsive ── */
-@media (max-width: 960px) {
+/* ── Compact rail (≤1100px) ── */
+@media (max-width: 1100px) {
+  /* Masquer textes et libellés */
   .sbBrand, .sbLvNm, .sbLvSub, .nb span, .nbBadge,
-  .sbSect, .sbBotBtn span, .teLabel, .todayEarn { display: none; }
-  .sbLvCard { flex-direction: column; align-items: center; padding: 9px; }
+  .sbBotBtn span, .teLabel, .todayEarn { display: none; }
+
+  /* Remplacer les titres de section par de fines séparations */
+  .sbSect {
+    display: block;
+    text-indent: -9999px;
+    height: 1px;
+    background: rgba(255,255,255,.08);
+    margin: 6px 12px;
+    padding: 0;
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  /* Carte livreur : avatar centré, propre, sans cadre */
+  .sbLvCard {
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 6px;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .sbLvCard:hover {
+    background: rgba(255,255,255,.06);
+    border-color: rgba(255,255,255,.10);
+    transform: none;
+  }
   .sbLvTop  { margin-bottom: 0; }
+
+  /* Avatar plus grand et centré */
+  .sbAva {
+    width: 42px; height: 42px;
+    font-size: 18px;
+  }
+
+  /* Dot de disponibilité : plus visible */
+  .sbAvaOl {
+    width: 13px; height: 13px;
+    border-width: 2.5px;
+    bottom: 0; right: 0;
+  }
+
+  /* Toggle : remplacé par le dot, on masque le switch */
   .onlineToggle { display: none; }
-  .sbLogo   { justify-content: center; padding: 0; }
-  .nb       { justify-content: center; padding: 10px; }
-  .nb i     { width: auto; font-size: 16px; }
+
+  /* Logo : centré */
+  .sbLogo { justify-content: center; padding: 0; }
+
+  /* Boutons nav : icône + mini-label en colonne (style VS Code / GitHub) */
+  .nb {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+    gap: 3px;
+  }
+  .nb i { width: auto; font-size: 16px; }
+
+  /* Mini-label sous l'icône — tronqué si trop long */
+  .nb::after {
+    content: attr(data-label);
+    display: block;
+    font-size: 8.5px;
+    font-weight: 700;
+    color: rgba(200,217,248,.38);
+    letter-spacing: .15px;
+    line-height: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 56px;
+    text-align: center;
+    pointer-events: none;
+  }
+  /* Label teal pour la page active */
+  .on::after { color: rgba(103,232,249,.78); }
+
   .sbBotBtn { justify-content: center; }
+}
+
+/* Masquer les tooltips dans le drawer mobile (les labels sont déjà visibles) */
+@media (max-width: 640px) {
+  .nb::after, .nb::before { display: none; }
 }
 @media (max-width: 640px) {
   /* La sidebar s'arrête au-dessus du BottomNav (62px) pour que les boutons
@@ -386,10 +463,29 @@
   }
   .open { transform: translateX(0); box-shadow: var(--sh-lg); }
   .open .sbBrand, .open .sbLvNm, .open .sbLvSub,
-  .open .nb span, .open .nbBadge, .open .sbSect,
+  .open .nb span, .open .nbBadge,
   .open .sbBotBtn span, .open .todayEarn, .open .teLabel { display: flex; }
+
+  /* Restaurer les titres de section en mode drawer ouvert */
+  .open .sbSect {
+    display: block;
+    text-indent: 0;
+    height: auto;
+    background: transparent;
+    margin: 0;
+    padding: 12px 10px 5px;
+    overflow: visible;
+  }
   .open .onlineToggle { display: flex; }
-  .open .sbLvCard   { flex-direction: row; padding: 13px; }
+  .open .sbLvCard {
+    flex-direction: row;
+    padding: 13px;
+    background: rgba(255,255,255,.06);
+    border-color: rgba(255,255,255,.09);
+    box-shadow: none;
+  }
+  .open .sbAva      { width: 44px; height: 44px; font-size: 20px; }
+  .open .sbAvaOl    { width: 11px; height: 11px; border-width: 2px; }
   .open .sbLvTop    { margin-bottom: 11px; }
   .open .sbLogo     { justify-content: flex-start; padding: 0 22px; }
   .open .nb         { justify-content: flex-start; padding: 10px 12px; }
@@ -397,4 +493,19 @@
   /* Afficher les labels des nouveaux boutons en mode ouvert */
   .open .btnHome span, .open .btnLogout span { display: inline; }
   .btnHome, .btnLogout { justify-content: flex-start; padding: 10px 14px; }
+}
+
+/* ── Tiny screens : sidebar ne dépasse jamais la largeur de l'écran ── */
+@media (max-width: 320px) {
+  .sb { max-width: 100vw; }
+  .open .sbLogo { padding: 0 14px; }
+  .open .sbLvCard { padding: 10px; }
+  .nb { font-size: 12px; }
+}
+
+/* ── Ultra-wide : sidebar suit --sb grandi par les media queries globaux ── */
+@media (min-width: 1920px) {
+  .sbBrand  { font-size: 23px; }
+  .sbLvNm   { font-size: 14px; }
+  .nb       { font-size: 14px; padding: 11px 14px; }
 }

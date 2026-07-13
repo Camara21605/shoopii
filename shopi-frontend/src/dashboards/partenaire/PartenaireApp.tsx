@@ -80,7 +80,6 @@ export default function PartenaireApp() {
         activePage={s.activePage}
         onGenerate={() => s.setGenOpen(true)}
         onReport={() => s.ouvrirSignalement()}
-        onToast={pop}
         onMenuToggle={() => setSidebarOpen(o => !o)}
       />
 

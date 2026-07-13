@@ -35,7 +35,7 @@ import { NotifsLivreurService }   from './services/notifs-livreur.service';
 import { DangerLivreurService }   from './services/danger-livreur.service';
 
 import {
-  UpdateLivreurProfilDto, UpdateZonesDto, UpdateHorairesLivreurDto,
+  UpdateLivreurProfilDto, UpdateZonesDto, UpdateZonesDispoDto, UpdateHorairesLivreurDto,
   HoraireJourDto, UpdateVitessesDto, UpdateVehiculeDto,
   UpdatePaiementLivreurDto, UpdateLivreurPasswordDto, UpdateLivreurTwoFaDto,
   UpdateLivreurNotifsDto, UpdateLivreurPrivacyDto, LivreurDangerConfirmDto,
@@ -139,6 +139,11 @@ export class LivreurParametresController {
   @Patch('zone')
   updateZones(@Req() req: any, @Body() dto: UpdateZonesDto) {
     return this.zoneService.updateZones(req.user.id, dto);
+  }
+
+  @Patch('zones-dispo')
+  updateZonesDisponibles(@Req() req: any, @Body() dto: UpdateZonesDispoDto) {
+    return this.zoneService.updateZonesDisponibles(req.user.id, dto);
   }
 
   @Get('horaires')

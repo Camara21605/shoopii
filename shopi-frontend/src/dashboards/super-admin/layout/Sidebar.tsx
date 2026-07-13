@@ -11,16 +11,22 @@ import React from 'react';
 import type { SectionId, UserRole } from '../types/codes.types';
 
 interface SidebarProps {
-  activeSection: SectionId;
-  navigate: (section: SectionId) => void;
-  navUsers: (role: UserRole | 'all') => void;
-  totalUsers: number;
-  pendingAlerts: number;
-  totalUnread: number;
+  activeSection:   SectionId;
+  navigate:        (section: SectionId) => void;
+  navUsers:        (role: UserRole | 'all') => void;
+  totalUsers:      number;
+  /** Compteurs par rôle issus de /users/stats — clés : company, delivery, customer, partner, correspondent, admin */
+  roleStats:       Record<string, number>;
+  pendingAlerts:   number;
+  totalUnread:     number;
   validCodesCount: number;
-  isOpen: boolean;
-  onClose: () => void;
-  onLogout: () => void;
+  slaViolations:   number;
+  isOpen:          boolean;
+  onClose:         () => void;
+  onLogout:        () => void;
+  /** Profil réel du super-admin connecté (chargé par SuperAdminApp) */
+  profilName?:     string;
+  profilAvatar?:   string | null;
 }
 
 interface NavItemProps {
@@ -57,9 +63,12 @@ function NavGroup({ label, children }: { label: string; children: React.ReactNod
 
 export default function Sidebar({
   activeSection, navigate, navUsers,
-  totalUsers, pendingAlerts, totalUnread, validCodesCount,
-  isOpen, onClose, onLogout
+  totalUsers, roleStats, pendingAlerts, totalUnread, validCodesCount,
+  slaViolations,
+  isOpen, onClose, onLogout,
+  profilName, profilAvatar,
 }: SidebarProps) {
+  const rs = (role: string) => roleStats[role] || undefined;
   // Sur petit écran, refermer le sidebar après avoir choisi une section
   const go = (fn: () => void) => () => { fn(); onClose(); };
 
@@ -85,10 +94,21 @@ export default function Sidebar({
         </div>
 
         {/* ── Profil connecté ── */}
-        <div className="sidebar-profile">
-          <div className="profile-av">SA</div>
+        <div
+          className={`sidebar-profile${activeSection === 'profil' ? ' active' : ''}`}
+          onClick={go(() => navigate('profil'))}
+          style={{ cursor: 'pointer' }}
+          title="Modifier mon profil"
+        >
+          <div className="profile-av" style={{ overflow: 'hidden', padding: 0 }}>
+            {profilAvatar
+              ? <img src={profilAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              : (profilName
+                  ? (profilName.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('') || 'SA')
+                  : 'SA')}
+          </div>
           <div>
-            <div className="profile-name">Super Admin</div>
+            <div className="profile-name">{profilName || 'Super Admin'}</div>
             <div className="profile-role">Contrôle total</div>
           </div>
           <div className="profile-dot" />
@@ -110,14 +130,14 @@ export default function Sidebar({
         {/* ── Groupe : Utilisateurs ── */}
         <NavGroup label="Utilisateurs">
           <NavItem icon="👥" label="Tous les comptes" active={activeSection==='users'}
-            badge={totalUsers} badgeClass="nc-sky"
+            badge={totalUsers || undefined} badgeClass="nc-sky"
             onClick={go(() => navUsers('all'))} />
-          <NavItem icon="🏪" label="Entreprises"    onClick={go(() => navUsers('company'))} />
-          <NavItem icon="🛵" label="Livreurs"       onClick={go(() => navUsers('delivery'))} />
-          <NavItem icon="🛒" label="Clients"        onClick={go(() => navUsers('customer'))} />
-          <NavItem icon="🤝" label="Partenaires"    onClick={go(() => navUsers('partner'))} />
-          <NavItem icon="📦" label="Correspondants" onClick={go(() => navUsers('correspondent'))} />
-          <NavItem icon="🛡" label="Administrateurs" onClick={go(() => navUsers('admin'))} />
+          <NavItem icon="🏪" label="Entreprises"    badge={rs('company')}       badgeClass="nc-sky" onClick={go(() => navUsers('company'))} />
+          <NavItem icon="🛵" label="Livreurs"       badge={rs('delivery')}      badgeClass="nc-sky" onClick={go(() => navUsers('delivery'))} />
+          <NavItem icon="🛒" label="Clients"        badge={rs('client')}        badgeClass="nc-sky" onClick={go(() => navUsers('client'))} />
+          <NavItem icon="🤝" label="Partenaires"    badge={rs('partner')}       badgeClass="nc-sky" onClick={go(() => navUsers('partner'))} />
+          <NavItem icon="📦" label="Correspondants" badge={rs('correspondent')} badgeClass="nc-sky" onClick={go(() => navUsers('correspondent'))} />
+          <NavItem icon="🛡" label="Administrateurs" badge={rs('admin')}        badgeClass="nc-sky" onClick={go(() => navUsers('admin'))} />
         </NavGroup>
 
         {/* ── Groupe : Contrôle ── */}
@@ -125,18 +145,26 @@ export default function Sidebar({
           <NavItem icon="🎫" label="Codes invitation" active={activeSection==='invitations'}
             badge={validCodesCount} badgeClass="nc-green"
             onClick={go(() => navigate('invitations'))} />
-          <NavItem icon="💬" label="Messagerie" active={activeSection==='messaging'}
-            badge={totalUnread || undefined} badgeClass="nc-red"
-            onClick={go(() => navigate('messaging'))} />
           <NavItem icon="🚨" label="Signalements" active={activeSection==='alerts'}
             badge={pendingAlerts || undefined} badgeClass="nc-red"
             onClick={go(() => navigate('alerts'))} />
           <NavItem icon="🔔" label="Notifications" active={activeSection==='notifications-admin'}
             onClick={go(() => navigate('notifications-admin'))} />
+          {/* Support — badge rouge si des tickets SLA sont en retard */}
+          <NavItem icon="🎫" label="Support client" active={activeSection==='support'}
+            badge={slaViolations > 0 ? slaViolations : undefined} badgeClass="nc-red"
+            onClick={go(() => navigate('support'))} />
           <NavItem icon="📜" label="Journal audit" active={activeSection==='audit'}
             onClick={go(() => navigate('audit'))} />
           <NavItem icon="❤️" label="Santé système" active={activeSection==='system'}
             onClick={go(() => navigate('system'))} />
+        </NavGroup>
+
+        {/* ── Groupe : Contenu éditorial ── */}
+        <NavGroup label="Contenu">
+          {/* Centre d'aide — gestion des articles, catégories et FAQ */}
+          <NavItem icon="📚" label="Centre d'aide" active={activeSection==='help-center'}
+            onClick={go(() => navigate('help-center'))} />
         </NavGroup>
 
         {/* ── Groupe : Configuration ── */}
@@ -145,6 +173,12 @@ export default function Sidebar({
             onClick={go(() => navigate('settings'))} />
           <NavItem icon="🔐" label="Permissions" active={activeSection==='permissions'}
             onClick={go(() => navigate('permissions'))} />
+          <NavItem icon="🗺️" label="Référentiel Géo" active={activeSection==='geo-referentiel'}
+            onClick={go(() => navigate('geo-referentiel'))} />
+          <NavItem icon="💸" label="Commissions" active={activeSection==='commissions'}
+            onClick={go(() => navigate('commissions'))} />
+          <NavItem icon="👤" label="Mon profil" active={activeSection==='profil'}
+            onClick={go(() => navigate('profil'))} />
         </NavGroup>
 
         {/* ── Footer : Déconnexion ── */}

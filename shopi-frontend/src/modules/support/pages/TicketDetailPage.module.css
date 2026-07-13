@@ -1,0 +1,386 @@
+/* ============================================================
+ * FICHIER  : src/modules/support/pages/TicketDetailPage.module.css
+ * MODULE   : Support
+ * ROLE     : Styles du fil de conversation ticket de support.
+ *
+ * ARCHITECTURE CSS :
+ *   Variables CSS locales → palette centralisée, permutable dark/light.
+ *   Sections : Page, Breadcrumb, Header, Thread (bulles),
+ *              Pièces jointes, CSAT, Formulaire réponse,
+ *              Upload (attach zone, chip, progress),
+ *              Bannière ticket fermé, Skeletons.
+ *   Dark mode : redéfinition des variables CSS uniquement,
+ *               corrections ponctuelles en dessous.
+ *
+ * AUTEUR : Shopi03
+ * DERNIERE MISE A JOUR : 2026-07-03
+ * ============================================================ */
+
+/* ── Variables (light) ─────────────────────────────────────── */
+.page {
+  --td-bg:          #F8FAFF;
+  --td-card:        #fff;
+  --td-border:      #E5EBF5;
+  --td-t1:          #0B1F3A;
+  --td-t2:          #4A5A7A;
+  --td-t3:          #9AAACB;
+  --td-t4:          #C5D0E8;
+  --td-blue:        #1A4FC4;
+  --td-blue-bg:     #EEF2FF;
+  --td-att-bg:      #F8FAFF;
+  --td-att-hover:   #F0F4FF;
+  --td-chip-bg:     #EEF2FF;
+  --td-chip-border: #C7D7F8;
+  --td-chip-text:   #1A4FC4;
+  --td-sk-a:        #F0F4FF;
+  --td-sk-b:        #E5EDFF;
+
+  min-height: 100vh;
+  background: var(--td-bg);
+  padding: 32px 20px 80px;
+}
+
+.wrap { max-width: 740px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+/* ── États globaux ─────────────────────────────────────────── */
+.state    { text-align: center; padding: 80px 0; color: var(--td-t3); font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.stateErr { text-align: center; padding: 60px 0; color: #E53E3E; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+/* ── Breadcrumb ────────────────────────────────────────────── */
+.breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; flex-wrap: wrap; }
+.breadcrumb a { color: var(--td-blue); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: var(--td-t3); }
+
+/* ── Header du ticket ──────────────────────────────────────── */
+.header { background: var(--td-card); border: 1px solid var(--td-border); border-radius: 16px; padding: 20px 24px; }
+.headerTop { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+
+.ref {
+  font-family: 'Courier New', monospace; font-size: 12px; font-weight: 700;
+  color: var(--td-t3); background: var(--td-blue-bg); border-radius: 6px; padding: 2px 8px;
+}
+.badge {
+  font-size: 11px; font-weight: 700; border-radius: 20px; padding: 3px 10px;
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.priorityBadge {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--td-t3); text-transform: capitalize;
+}
+.title { font-size: 18px; font-weight: 800; color: var(--td-t1); margin-bottom: 10px; line-height: 1.3; }
+.meta { display: flex; align-items: center; gap: 14px; font-size: 12px; color: var(--td-t3); flex-wrap: wrap; }
+.meta i { margin-right: 4px; color: var(--td-t4); }
+
+/* ── Thread de messages ────────────────────────────────────── */
+.thread {
+  background: var(--td-card); border: 1px solid var(--td-border); border-radius: 16px;
+  padding: 20px; display: flex; flex-direction: column; gap: 4px; min-height: 200px;
+}
+
+.dateDivider { display: flex; align-items: center; gap: 10px; margin: 12px 0 8px; }
+.dateDivider::before, .dateDivider::after { content: ''; flex: 1; height: 1px; background: var(--td-border); }
+.dateDivider span { font-size: 11px; color: var(--td-t3); white-space: nowrap; font-weight: 500; }
+
+.systemMsg {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 12px; color: var(--td-t3); font-style: italic; padding: 6px; flex-wrap: wrap;
+}
+.systemMsg i { color: var(--td-t4); }
+.systemTime { font-size: 10px; color: var(--td-t4); }
+
+.msgRow { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 12px; }
+.msgRowLeft  { flex-direction: row; }
+.msgRowRight { flex-direction: row-reverse; }
+
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; background: var(--td-blue-bg); color: var(--td-blue);
+  border: 2px solid var(--td-card); box-shadow: 0 0 0 1px var(--td-border);
+}
+.avatarUser { background: #0B1F3A; color: #fff; }
+
+.msgGroup { display: flex; flex-direction: column; gap: 3px; max-width: 72%; }
+.msgRowRight .msgGroup { align-items: flex-end; }
+.msgRowLeft  .msgGroup { align-items: flex-start; }
+
+.msgMeta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--td-t3); padding: 0 4px; }
+.msgSender { font-weight: 700; color: var(--td-t2); }
+.msgTeam   { color: var(--td-t4); font-size: 10px; }
+.msgTime   { color: var(--td-t4); }
+
+.bubble { border-radius: 16px; padding: 12px 16px; max-width: 100%; }
+.bubbleAgent {
+  background: var(--td-card); border: 1px solid var(--td-border);
+  border-bottom-left-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.bubbleUser {
+  background: linear-gradient(135deg, #1A4FC4, #2560DC); color: #fff;
+  border-bottom-right-radius: 4px; box-shadow: 0 2px 8px rgba(26,79,196,.25);
+}
+.bubbleContent {
+  font-size: 14px; line-height: 1.65; white-space: pre-wrap; word-break: break-word; color: inherit;
+}
+.bubbleAgent .bubbleContent { color: #1E2D45; }
+
+/* ── Pièces jointes dans les bulles ────────────────────────── */
+
+/** Séparation visuelle entre le texte du message et les fichiers joints */
+.attList {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid rgba(0,0,0,.06);
+}
+/** Sur les bulles bleues (user), la ligne de séparation est blanche */
+.bubbleUser .attList { border-top-color: rgba(255,255,255,.2); }
+
+/** Carte cliquable d'une pièce jointe — lien externe Cloudinary */
+.attCard {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--td-att-bg); border: 1px solid var(--td-border);
+  border-radius: 10px; padding: 8px 12px;
+  text-decoration: none; color: var(--td-t2);
+  transition: background .12s, border-color .12s;
+  min-width: 0; /* pour text-overflow sur .attName */
+}
+.attCard:hover { background: var(--td-att-hover); border-color: #B8CAEF; }
+
+/** Cartes dans les bulles utilisateur (fond bleu) → transparence */
+.bubbleUser .attCard {
+  background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.2);
+  color: rgba(255,255,255,.9);
+}
+.bubbleUser .attCard:hover { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.4); }
+
+/** Icône de type fichier */
+.attIconWrap {
+  width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+/** Miniature image (Cloudinary URL) */
+.attThumb {
+  width: 48px; height: 48px; border-radius: 6px; flex-shrink: 0;
+  object-fit: cover; background: var(--td-att-bg);
+}
+.attBody { flex: 1; min-width: 0; }
+.attName {
+  display: block; font-size: 12px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--td-t1);
+}
+.bubbleUser .attName { color: #fff; }
+.attMeta { font-size: 11px; color: var(--td-t3); margin-top: 2px; }
+.bubbleUser .attMeta { color: rgba(255,255,255,.7); }
+
+/* ── CSAT ──────────────────────────────────────────────────── */
+.csat {
+  background: var(--td-card); border: 1px solid var(--td-border); border-radius: 16px;
+  padding: 24px; text-align: center;
+}
+.csatIcon { font-size: 28px; color: #FCD34D; margin-bottom: 8px; }
+.csatTitle { font-size: 15px; font-weight: 700; color: var(--td-t1); margin-bottom: 4px; }
+.csatSub   { font-size: 13px; color: var(--td-t3); margin-bottom: 16px; }
+
+.starWrap { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.star {
+  background: none; border: none; font-size: 30px; color: var(--td-border);
+  cursor: pointer; padding: 4px; line-height: 1; transition: transform .12s, color .12s;
+}
+.star:hover, .starHover { color: #FCD34D; transform: scale(1.15); }
+.starLabel { font-size: 12px; color: var(--td-t3); margin-left: 6px; }
+
+.ratedBox {
+  display: flex; align-items: center; gap: 12px;
+  background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 12px; padding: 14px 18px;
+}
+.ratedBox i { font-size: 22px; color: #059669; flex-shrink: 0; }
+.ratedTitle { font-size: 14px; font-weight: 700; color: #065F46; }
+.ratedSub   { font-size: 12px; color: #059669; }
+
+/* ── Formulaire de réponse ─────────────────────────────────── */
+.replyForm {
+  background: var(--td-card); border: 1px solid var(--td-border); border-radius: 16px; padding: 16px 20px;
+}
+.replyHeader {
+  font-size: 13px; font-weight: 700; color: var(--td-t2); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 7px;
+}
+.replyHeader i { color: var(--td-blue); }
+
+.replyInput {
+  width: 100%; box-sizing: border-box; padding: 12px 14px;
+  border: 1.5px solid var(--td-border); border-radius: 10px;
+  font-size: 14px; color: var(--td-t1); background: var(--td-att-bg); font-family: inherit;
+  resize: vertical; min-height: 100px; line-height: 1.6;
+  transition: border-color .15s, background .15s;
+}
+.replyInput:focus { outline: none; border-color: var(--td-blue); background: var(--td-card); box-shadow: 0 0 0 3px rgba(26,79,196,.08); }
+.replyInput:disabled { opacity: .6; cursor: not-allowed; }
+
+.sendErr { font-size: 13px; color: #E53E3E; display: flex; align-items: center; gap: 6px; margin: 8px 0; }
+.sendErr i { flex-shrink: 0; }
+
+/* ── Zone pièce jointe ─────────────────────────────────────── */
+
+.attachZone {
+  display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; flex-wrap: wrap;
+}
+
+/** Bouton "Joindre un fichier" — style ghost sobre */
+.attachBtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border: 1.5px solid var(--td-border); border-radius: 8px;
+  background: var(--td-card); color: var(--td-t2);
+  font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+  transition: border-color .12s, color .12s, background .12s;
+}
+.attachBtn:hover:not(:disabled) { border-color: var(--td-blue); color: var(--td-blue); background: var(--td-blue-bg); }
+.attachBtn:disabled { opacity: .5; cursor: not-allowed; }
+.attachBtn i { font-size: 13px; }
+
+/** Chip du fichier sélectionné */
+.fileChip {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--td-chip-bg); border: 1px solid var(--td-chip-border); border-radius: 20px;
+  padding: 4px 10px 4px 8px;
+  font-size: 12px; font-weight: 600; color: var(--td-chip-text);
+  max-width: 280px;
+  animation: chipIn .15s ease-out;
+}
+@keyframes chipIn { from { opacity:0; transform:scale(.92); } to { opacity:1; transform:scale(1); } }
+.fileChipName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+.fileChipSize { color: var(--td-t3); font-weight: 400; white-space: nowrap; }
+.fileChipRemove {
+  background: none; border: none; cursor: pointer; padding: 2px;
+  color: var(--td-t3); line-height: 1; font-size: 11px; flex-shrink: 0; transition: color .12s;
+}
+.fileChipRemove:hover { color: #E53E3E; }
+
+/** Upload en cours */
+.uploadingBadge {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12px; color: var(--td-blue); font-weight: 600;
+  animation: fadeIn .2s ease;
+}
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+/** Hint formats acceptés */
+.attachHint { font-size: 11px; color: var(--td-t4); margin: 0 0 8px; display: flex; align-items: center; gap: 5px; }
+.attachHint i { font-size: 10px; }
+
+/** Erreur upload distincte de l'erreur envoi */
+.uploadErrMsg {
+  font-size: 12px; color: #92400E; background: #FFFBEB;
+  border: 1px solid #FDE68A; border-radius: 8px;
+  padding: 8px 12px; margin: 4px 0;
+  display: flex; align-items: flex-start; gap: 7px; line-height: 1.5;
+}
+.uploadErrMsg i { flex-shrink: 0; margin-top: 1px; }
+
+.fileInputHidden { display: none; }
+
+.replyActions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.charCount { font-size: 11px; color: var(--td-t4); margin-right: auto; }
+
+.replyBtn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 10px 20px; border: none; border-radius: 10px;
+  background: linear-gradient(135deg, #0B1F3A, #1A4FC4);
+  color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: opacity .15s; white-space: nowrap;
+}
+.replyBtn:hover:not(:disabled) { opacity: .88; }
+.replyBtn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ── Bannière ticket fermé ─────────────────────────────────── */
+.closedBanner {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: var(--td-att-bg); border: 1.5px dashed var(--td-t4); border-radius: 14px;
+  padding: 16px 20px;
+}
+.closedBanner i { font-size: 18px; color: var(--td-t3); }
+.closedTitle { font-size: 14px; font-weight: 700; color: var(--td-t2); }
+.closedSub   { font-size: 12px; color: var(--td-t3); }
+.closedBtn {
+  margin-left: auto; display: flex; align-items: center; gap: 6px; text-decoration: none;
+  background: #0B1F3A; color: #fff; border-radius: 9px; padding: 9px 16px;
+  font-size: 13px; font-weight: 700; flex-shrink: 0; transition: opacity .15s;
+}
+.closedBtn:hover { opacity: .85; }
+
+/* ── Skeleton loaders ──────────────────────────────────────── */
+@keyframes sk { 0%{background-position:-600px 0} 100%{background-position:600px 0} }
+
+.skeletonHeader {
+  height: 110px; border-radius: 16px;
+  background: linear-gradient(90deg, var(--td-sk-a) 25%, var(--td-sk-b) 50%, var(--td-sk-a) 75%);
+  background-size: 1200px 100%; animation: sk 1.4s infinite;
+}
+.skeletonThread {
+  background: var(--td-card); border: 1px solid var(--td-border); border-radius: 16px;
+  padding: 20px; display: flex; flex-direction: column; gap: 16px; min-height: 200px;
+}
+.skeletonBubble {
+  height: 64px; width: 65%; border-radius: 16px 16px 16px 4px;
+  background: linear-gradient(90deg, var(--td-sk-a) 25%, var(--td-sk-b) 50%, var(--td-sk-a) 75%);
+  background-size: 1200px 100%; animation: sk 1.4s infinite;
+}
+.skeletonBubbleRight {
+  align-self: flex-end; border-radius: 16px 16px 4px 16px;
+  background: linear-gradient(90deg, #DBEAFE 25%, #BFDBFE 50%, #DBEAFE 75%);
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .page { padding: 16px 12px 60px; }
+  .header { padding: 16px; }
+  .thread { padding: 14px; }
+  .replyForm { padding: 14px; }
+  .msgGroup { max-width: 85%; }
+  .fileChipName { max-width: 110px; }
+}
+
+/* ── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .page {
+    --td-bg:          #0D1526;
+    --td-card:        #131E35;
+    --td-border:      #1E2D4A;
+    --td-t1:          #E2E8F6;
+    --td-t2:          #C5D0E8;
+    --td-t3:          #4A5A7A;
+    --td-t4:          #2A3A5A;
+    --td-blue:        #5B8BF0;
+    --td-blue-bg:     #172040;
+    --td-att-bg:      #0D1526;
+    --td-att-hover:   #1A2A45;
+    --td-chip-bg:     #172040;
+    --td-chip-border: #2A4080;
+    --td-chip-text:   #5B8BF0;
+    --td-sk-a:        #131E35;
+    --td-sk-b:        #1A2A45;
+  }
+
+  /* Corrections que les variables ne couvrent pas */
+  .avatarUser    { background: #1A4FC4; }
+  .bubbleAgent   { background: #1A2A45; }
+  .bubbleAgent .bubbleContent { color: #D0DCF0; }
+  .attName       { color: var(--td-t1); }
+  .bubbleUser .attName  { color: rgba(255,255,255,.95); }
+  .bubbleUser .attMeta  { color: rgba(255,255,255,.65); }
+
+  /* CSAT */
+  .star  { color: var(--td-border); }
+  .ratedBox  { background: #0D2518; border-color: #065F46; }
+  .ratedTitle{ color: #6EE7B7; }
+  .ratedSub  { color: #34D399; }
+
+  /* Erreur upload (amber) dark */
+  .uploadErrMsg { background: #1A0F00; border-color: #78350F; color: #FCD34D; }
+
+  /* Skeleton bulle droite */
+  .skeletonBubbleRight {
+    background: linear-gradient(90deg, #172040 25%, #1E2D4A 50%, #172040 75%);
+  }
+}

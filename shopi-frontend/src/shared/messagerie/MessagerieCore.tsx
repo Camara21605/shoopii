@@ -13,10 +13,12 @@
  *   Ce composant enregistre seulement un handler "mise à jour locale"
  *   (applyCallEventLocally) pour l'update optimiste du state React.
  */
-import { useEffect }      from 'react';
-import { useMessagerie }  from './hooks/useMessagerie';
-import { useGlobalCall }  from '../context/GlobalCallContext';
-import { useToast }       from '../context/ToastContext';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useMessagerie }     from './hooks/useMessagerie';
+import { useDeliveryGroups } from './hooks/useDeliveryGroups';
+import { useGlobalCall }     from '../context/GlobalCallContext';
+import { useGroupCallCtx }  from '../context/GroupCallContext';
+import { useToast }          from '../context/ToastContext';
 
 import ConvList     from './components/ConvList';
 import ChatWindow   from './sections/ChatWindow';
@@ -47,18 +49,67 @@ export default function MessagerieCore() {
     socketConnected,
     selectConv,
     sendMessage,
+    deleteMessage,
+    deleteConversation,
+    hideConversation,
+    archivedConvs,
+    loadArchivedConvs,
+    unhideConversation,
+    markConvAsUnread,
+    markConvAsRead,
     applyCallEventLocally,
     startNewConv,
     setInfoPanelOpen,
     setNewConvOpen,
     setMobileOpen,
+    setActiveConvId,
   } = useMessagerie();
 
-  // ── Appel global (socket + overlay persistants cross-routes) ─
+  // ── Groupes de livraison ──────────────────────────────────────
+  const {
+    groups,
+    groupUsersMap,
+    activeGroupId,
+    activeGroup,
+    activeGroupUser,
+    activeGroupMembers,
+    selectGroup,
+    sendGroupMessage,
+    deleteGroupMessage,
+    updateGroupDescription,
+  } = useDeliveryGroups();
+
+  // ── Sélection unifiée (conv ou groupe) ───────────────────────
+  const handleSelect = useCallback((id: string) => {
+    if (groups.some(g => g.id === id)) {
+      selectGroup(id);
+      setActiveConvId(null);
+    } else {
+      selectConv(id);
+      selectGroup(null);
+    }
+    setMobileOpen(false);
+  }, [groups, selectGroup, selectConv, setActiveConvId, setMobileOpen]);
+
+  // ── Données actives (conv ou groupe) ─────────────────────────
+  const currentConv = activeGroupId ? activeGroup : activeConv;
+  const currentUser = activeGroupId ? activeGroupUser : activeUser;
+
+  // ── Map utilisateurs fusionnée pour ConvList ─────────────────
+  const mergedUsersMap = useMemo(() => {
+    if (groupUsersMap.size === 0) return usersMap;
+    return new Map([...usersMap, ...groupUsersMap]);
+  }, [usersMap, groupUsersMap]);
+
+  // ── Appel P2P global (socket + overlay persistants cross-routes) ─
   const {
     startCall,
     registerCallEventHandler,
+    syncMsgUnread,
   } = useGlobalCall();
+
+  // ── Appel de groupe ──────────────────────────────────────────
+  const { initiateCall: initiateGroupCall } = useGroupCallCtx();
 
   /*
    * Enregistre la fonction de mise à jour locale auprès du contexte global.
@@ -79,13 +130,52 @@ export default function MessagerieCore() {
     return () => registerCallEventHandler(null);
   }, [registerCallEventHandler, applyCallEventLocally]);
 
-  // ── Lancer un appel vers le contact actif ───────────────────
-  const getRemoteUserId = () =>
-    (activeConv && activeUser) ? (activeUser.userId ?? null) : null;
+  /* Synchronise le badge du header en temps réel :
+   * quand l'utilisateur lit une conversation, totalUnread décrémente
+   * dans useMessagerie → on l'écrit directement dans GlobalCallContext */
+  useEffect(() => {
+    syncMsgUnread(totalUnread);
+  }, [totalUnread, syncMsgUnread]);
 
+  // ── Supprimer un message ────────────────────────────────────
+  const handleDelete = useCallback((msgId: string, mode: 'me' | 'everyone' | 'other') => {
+    if (activeGroupId) {
+      deleteGroupMessage(activeGroupId, msgId, mode === 'other' ? 'me' : mode);
+    } else if (activeConvId) {
+      deleteMessage(activeConvId, msgId, mode);
+    }
+  }, [activeGroupId, activeConvId, deleteGroupMessage, deleteMessage]);
+
+  // ── Envoyer un message (conv ou groupe) ──────────────────────
+  const handleSend = useCallback((convId: string, text: string, media?: any) => {
+    if (activeGroupId) {
+      if (media) {
+        const grpContentType =
+          media.type === 'image' ? 'image' :
+          media.type === 'video' ? 'video' :
+          media.type === 'audio' ? 'audio' : 'file';
+        sendGroupMessage(activeGroupId, {
+          contentType:   grpContentType,
+          content:       text || null as any,
+          mediaUrl:      media.url,
+          mediaName:     media.name,
+          mediaSize:     media.size,
+          mediaMimeType: media.mime,
+          mediaDuration: media.duration,
+        });
+      } else {
+        sendGroupMessage(activeGroupId, { contentType: 'text', content: text });
+      }
+    } else {
+      sendMessage(convId, text, media);
+    }
+  }, [activeGroupId, sendGroupMessage, sendMessage]);
+
+  // ── Lancer un appel vers le contact actif (conv seulement) ──
   const handleCall = () => {
-    const remoteUserId = getRemoteUserId();
-    if (!remoteUserId || !activeConv || !activeUser) return;
+    if (activeGroupId || !activeConv || !activeUser) return;
+    const remoteUserId = activeUser.userId ?? null;
+    if (!remoteUserId) return;
     startCall({
       conversationId: activeConv.id,
       remoteUserId,
@@ -96,8 +186,9 @@ export default function MessagerieCore() {
   };
 
   const handleVideoCall = () => {
-    const remoteUserId = getRemoteUserId();
-    if (!remoteUserId || !activeConv || !activeUser) return;
+    if (activeGroupId || !activeConv || !activeUser) return;
+    const remoteUserId = activeUser.userId ?? null;
+    if (!remoteUserId) return;
     startCall({
       conversationId: activeConv.id,
       remoteUserId,
@@ -131,33 +222,52 @@ export default function MessagerieCore() {
       {/* Colonne gauche : liste des conversations */}
       <ConvList
         conversations={conversations}
-        usersMap={usersMap}
-        activeId={activeConvId}
+        usersMap={mergedUsersMap}
+        activeId={activeGroupId ?? activeConvId}
         mobileOpen={mobileOpen}
         totalUnread={totalUnread}
-        onSelect={selectConv}
+        onSelect={handleSelect}
+        onNewConv={() => setNewConvOpen(true)}
+        onDeleteConv={deleteConversation}
+        onHideConv={hideConversation}
+        archivedConvs={archivedConvs}
+        onLoadArchived={loadArchivedConvs}
+        onUnhideConv={unhideConversation}
+        onMarkUnread={markConvAsUnread}
+        onMarkRead={markConvAsRead}
+        groupConvs={groups}
+        groupUsersMap={groupUsersMap}
       />
 
       {/* Colonne centrale : fenêtre de chat */}
       <ChatWindow
-        conv={activeConv}
-        user={activeUser}
+        conv={currentConv}
+        user={currentUser}
+        members={activeGroupId ? activeGroupMembers : undefined}
         infoPanelOpen={infoPanelOpen}
         typingActivity={activeConvId ? typingMap.get(activeConvId) : undefined}
-        onSend={sendMessage}
-        onTyping={sendTyping}
+        onSend={handleSend}
+        onTyping={activeGroupId ? undefined : sendTyping}
         onToggleInfo={() => setInfoPanelOpen(p => !p)}
         onNewConv={() => setNewConvOpen(true)}
         onToast={toast}
-        onCall={activeUser ? handleCall : undefined}
-        onVideoCall={activeUser ? handleVideoCall : undefined}
+        onDelete={handleDelete}
+        onUpdateGroup={activeGroupId ? updateGroupDescription : undefined}
+        onCall={activeGroupId
+          ? () => initiateGroupCall(activeGroupId, 'audio')
+          : (activeUser ? handleCall : undefined)}
+        onVideoCall={activeGroupId
+          ? () => initiateGroupCall(activeGroupId, 'video')
+          : (activeUser ? handleVideoCall : undefined)}
+        onMobileMenu={() => setMobileOpen(true)}
       />
 
-      {/* Colonne droite : panneau d'info (conditionnel) */}
+      {/* Colonne droite : panneau d'info (conv directe et groupe) */}
       {infoPanelOpen && (
         <InfoPanel
-          conv={activeConv}
-          user={activeUser}
+          conv={currentConv}
+          user={currentUser}
+          members={activeGroupId ? activeGroupMembers : undefined}
           onClose={() => setInfoPanelOpen(false)}
           onToast={toast}
         />

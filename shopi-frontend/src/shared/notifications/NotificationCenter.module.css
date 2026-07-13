@@ -97,13 +97,47 @@
 .list::-webkit-scrollbar-track  { background: transparent; }
 .list::-webkit-scrollbar-thumb  { background: var(--g300); border-radius: 2px; }
 
+/* ── Wrapper item (position:relative pour le bouton supprimer) ── */
+.itemWrap {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+.itemWrap:hover   { background: var(--g50); }
+.itemWrap.unread  { background: rgba(22,82,240,.04); }
+.itemWrap.unread:hover { background: rgba(22,82,240,.07); }
+
+/* Bouton supprimer — masqué par défaut, visible au survol du wrapper */
+.deleteBtn {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: none;
+  background: var(--g100, #f3f4f6);
+  color: var(--t3);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity .15s, background .15s, color .15s;
+  z-index: 2;
+}
+.itemWrap:hover .deleteBtn { opacity: 1; }
+.deleteBtn:hover { background: var(--red, #DC2626); color: #fff; }
+
 /* ── Item de notification ────────────────────────────────────── */
 .item {
-  width: 100%;
+  flex: 1;
   display: flex;
   align-items: flex-start;
   gap: 11px;
-  padding: 12px 18px 12px 22px;
+  padding: 12px 40px 12px 22px; /* padding-right = place pour le bouton supprimer */
   background: none;
   border: none;
   cursor: pointer;
@@ -111,9 +145,7 @@
   position: relative;
   transition: background .15s;
 }
-.item:hover   { background: var(--g50); }
-.item.unread  { background: rgba(22,82,240,.04); }
-.item.unread:hover { background: rgba(22,82,240,.07); }
+/* Les états hover/unread sont gérés par .itemWrap — pas besoin ici */
 
 /* Pastille bleue gauche (non lu) */
 .dot {
@@ -155,7 +187,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.item:not(.unread) .title {
+.itemWrap:not(.unread) .title {
   font-weight: 600;
   color: var(--t2);
 }

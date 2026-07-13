@@ -18,6 +18,75 @@ export const PARAM_SECTION_META: Record<ParamSectionId, { title: string; sub: st
   danger:          { title: 'Zone sensible',            sub: 'Actions irréversibles'                     },
 };
 
+// ── Coordonnées des zones guinéennes (fallback si non renseignées en DB) ──
+export const GUINEA_ZONE_COORDS: Record<string, [number, number]> = {
+  // Communes de Conakry
+  'Kaloum':       [9.5370, -13.6773],
+  'Dixinn':       [9.5504, -13.6274],
+  'Matam':        [9.5726, -13.6547],
+  'Ratoma':       [9.6130, -13.6310],
+  'Matoto':       [9.5939, -13.5896],
+  // Préfectures / Villes
+  'Conakry':      [9.5370, -13.6773],
+  'Coyah':        [9.7124, -13.3715],
+  'Dubreka':      [9.7905, -13.5215],
+  'Forécariah':   [9.4320, -13.0935],
+  'Kindia':       [10.0549, -12.8663],
+  'Télimélé':     [10.9038, -13.0332],
+  'Mamou':        [10.3764, -12.0972],
+  'Dalaba':       [10.6918, -12.2487],
+  'Pita':         [11.0667, -12.3924],
+  'Labé':         [11.3200, -12.2900],
+  'Lélouma':      [11.3500, -12.5500],
+  'Tougué':       [11.4500, -11.6700],
+  'Mali':         [12.0800, -12.2900],
+  'Kankan':       [10.3800, -9.3030],
+  'Kouroussa':    [10.6500, -9.8830],
+  'Mandiana':     [10.6170, -8.7000],
+  'Siguiri':      [11.4170, -9.1670],
+  'Kissidougou':  [9.1864, -10.1094],
+  'Guékédou':     [8.5667, -10.1333],
+  'Faranah':      [10.0374, -10.7474],
+  'Dabola':       [10.7500, -11.1167],
+  'Dinguiraye':   [11.3000, -10.7167],
+  'Nzérékoré':    [7.7490, -8.8190],
+  'Lola':         [7.8000, -8.5333],
+  'Macenta':      [8.5430, -9.4681],
+  'Yomou':        [7.5666, -9.2569],
+  'Beyla':        [8.6896, -8.6451],
+  'Boké':         [10.9358, -14.2960],
+  'Fria':         [10.3700, -13.5700],
+  'Gaoual':       [11.7500, -13.2000],
+  'Koundara':     [12.4835, -13.3028],
+  'Boffa':        [10.1820, -14.0384],
+  // Régions
+  'Boké (Région)':       [10.9358, -14.2960],
+  'Kindia (Région)':     [10.0549, -12.8663],
+  'Mamou (Région)':      [10.3764, -12.0972],
+  'Labé (Région)':       [11.3200, -12.2900],
+  'Kankan (Région)':     [10.3800, -9.3030],
+  'Faranah (Région)':    [10.0374, -10.7474],
+  'Nzérékoré (Région)':  [7.7490, -8.8190],
+  'Conakry (Région)':    [9.5370, -13.6773],
+};
+
+// ── Type de livraison ──────────────────────────────────────
+export interface DeliveryTypeConfig {
+  key:    string;
+  em:     string;
+  label:  string;
+  sub:    string;
+  niveau: 'pays' | 'region' | 'prefecture' | 'commune' | 'quartier';
+}
+export const DELIVERY_TYPES: DeliveryTypeConfig[] = [
+  { key: 'entre_pays',        em: '🌍', label: 'Entre pays',        sub: 'Livraisons internationales',    niveau: 'pays'       },
+  { key: 'entre_regions',     em: '🗺️', label: 'Entre régions',     sub: "D'une région à l'autre",        niveau: 'region'     },
+  { key: 'entre_prefectures', em: '🏛️', label: 'Entre préfectures', sub: 'Entre zones administratives',   niveau: 'prefecture' },
+  { key: 'entre_villes',      em: '🏙️', label: 'Entre villes',      sub: "D'une ville à l'autre",         niveau: 'prefecture' },
+  { key: 'entre_communes',    em: '🏘️', label: 'Entre communes',    sub: 'Dans la même agglomération',    niveau: 'commune'    },
+  { key: 'entre_quartiers',   em: '📍', label: 'Entre quartiers',   sub: 'Livraisons de proximité',       niveau: 'quartier'   },
+];
+
 // ── Zones ─────────────────────────────────────────────────
 export interface ZoneItem { id: string; em: string; nm: string; stat: string; on: boolean; }
 export const ZONES_DATA: ZoneItem[] = [

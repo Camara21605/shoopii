@@ -1,0 +1,158 @@
+/* src/modules/support/pages/SupportPage.module.css */
+
+.page { min-height: 100vh; background: #F8FAFF; padding: 32px 20px 80px; }
+.wrap { max-width: 860px; margin: 0 auto; }
+
+.breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 28px; }
+.breadcrumb a { color: #1A4FC4; text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: #9AAACB; }
+
+.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.title  { font-size: 22px; font-weight: 800; color: #0B1F3A; margin-bottom: 4px; }
+.sub    { font-size: 13px; color: #9AAACB; }
+.newBtn {
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  font-size: 14px; font-weight: 700; color: #fff;
+  background: linear-gradient(135deg, #0B1F3A, #1A4FC4);
+  border-radius: 10px; padding: 11px 20px; white-space: nowrap;
+  transition: opacity .15s;
+}
+.newBtn:hover { opacity: .88; }
+
+/* ── Filters ── */
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+.filterBtn {
+  padding: 7px 16px; border-radius: 20px; border: 1.5px solid #E5EBF5;
+  background: #fff; font-size: 13px; font-weight: 600; color: #2A3A5A; cursor: pointer;
+  transition: all .12s; font-family: inherit;
+}
+.filterBtn:hover { border-color: #1A4FC4; color: #1A4FC4; }
+.filterBtnActive { background: #EEF2FF !important; border-color: #1A4FC4 !important; color: #1A4FC4 !important; }
+
+/* ── States ── */
+.state    { text-align: center; padding: 60px 0; color: #9AAACB; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.stateErr { text-align: center; padding: 40px 0; color: #E53E3E; font-size: 14px; }
+
+/* ── Empty ── */
+.empty { text-align: center; padding: 60px 20px; }
+.emptyIcon  { width: 72px; height: 72px; border-radius: 18px; background: #EEF2FF; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #1A4FC4; margin: 0 auto 16px; }
+.emptyTitle { font-size: 18px; font-weight: 700; color: #0B1F3A; margin-bottom: 8px; }
+.emptySub   { font-size: 14px; color: #9AAACB; margin-bottom: 20px; }
+.emptyBtn   { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; font-weight: 700; color: #fff; background: #1A4FC4; border-radius: 10px; padding: 11px 24px; }
+.emptyBtn:hover { opacity: .88; }
+
+/* ── Ticket list ── */
+.list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+
+.card {
+  display: flex; align-items: center; gap: 0;
+  background: #fff; border: 1px solid #E5EBF5; border-radius: 14px;
+  text-decoration: none; overflow: hidden;
+  transition: box-shadow .15s, border-color .15s, transform .1s;
+}
+.card:hover { border-color: #B8CAEF; box-shadow: 0 4px 20px rgba(26,79,196,.1); transform: translateY(-1px); }
+
+.cardWaiting { border-color: #FDE68A !important; background: #FFFDF5 !important; }
+.cardWaiting:hover { border-color: #FCD34D !important; }
+
+/* Priority stripe — thin left bar */
+.stripe { width: 4px; flex-shrink: 0; align-self: stretch; }
+
+.cardInner { flex: 1; padding: 16px 18px; min-width: 0; }
+
+.cardTop { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.ref {
+  font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700;
+  color: #9AAACB; background: #F0F4FF; border-radius: 6px; padding: 2px 8px;
+}
+
+.badge {
+  position: relative; display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; border-radius: 20px; padding: 3px 10px;
+  text-transform: uppercase; letter-spacing: .5px;
+}
+
+/* Pulsing dot for waiting_user */
+.pulse {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor; animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .5; transform: scale(.8); }
+}
+
+.unreadBadge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #1A4FC4; color: #fff; font-size: 10px; font-weight: 700;
+  border-radius: 20px; padding: 2px 8px;
+}
+
+.subject { font-size: 15px; font-weight: 600; color: #0B1F3A; margin-bottom: 10px; line-height: 1.4; }
+
+.cardMeta { display: flex; align-items: center; gap: 14px; font-size: 12px; color: #9AAACB; flex-wrap: wrap; }
+.cardMeta i { margin-right: 3px; }
+
+.typeTag {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #F0F4FF; color: #1A4FC4; border-radius: 6px;
+  padding: 2px 8px; font-size: 11px; font-weight: 600;
+}
+.typeTag i { font-size: 9px; }
+
+.metaDate { margin-left: auto; }
+
+/* ── Help link ── */
+.helpLink { display: flex; align-items: center; gap: 8px; justify-content: center; font-size: 13px; color: #9AAACB; padding: 20px 0; flex-wrap: wrap; }
+.helpLink i { color: #1A4FC4; }
+.helpLink a { color: #1A4FC4; font-weight: 600; text-decoration: none; }
+.helpLink a:hover { text-decoration: underline; }
+
+@media (max-width: 560px) {
+  .cardInner { padding: 14px 14px; }
+  .metaDate { margin-left: 0; }
+}
+
+/* ── Dark mode ── */
+@media (prefers-color-scheme: dark) {
+  .page { background: #0D1526; color: #E2E8F6; }
+
+  /* Titre & sous-titre */
+  .title { color: #E2E8F6; }
+  .sub   { color: #4A5A7A; }
+
+  /* Filtres */
+  .filterBtn { background: #131E35; border-color: #1E2D4A; color: #C5D0E8; }
+  .filterBtn:hover { border-color: #5B8BF0; color: #5B8BF0; }
+  .filterBtnActive { background: #172040 !important; border-color: #5B8BF0 !important; color: #5B8BF0 !important; }
+
+  /* États */
+  .state    { color: #4A5A7A; }
+  .stateErr { color: #FCA5A5; }
+
+  /* État vide */
+  .emptyIcon  { background: #172040; color: #5B8BF0; }
+  .emptyTitle { color: #E2E8F6; }
+  .emptySub   { color: #4A5A7A; }
+
+  /* Cartes tickets */
+  .card { background: #131E35; border-color: #1E2D4A; }
+  .card:hover { border-color: #2A4080; box-shadow: 0 4px 20px rgba(26,79,196,.2); }
+  .cardWaiting { border-color: #78350F !important; background: #1A0F00 !important; }
+  .cardWaiting:hover { border-color: #92400E !important; }
+
+  .ref { color: #5B8BF0; background: #172040; }
+  .subject { color: #E2E8F6; }
+  .cardMeta { color: #4A5A7A; }
+  .typeTag { background: #172040; color: #5B8BF0; }
+
+  /* Fil d'Ariane */
+  .breadcrumb a { color: #5B8BF0; }
+  .breadcrumb span { color: #4A5A7A; }
+
+  /* Lien aide */
+  .helpLink { color: #4A5A7A; }
+  .helpLink i { color: #5B8BF0; }
+  .helpLink a { color: #5B8BF0; }
+}

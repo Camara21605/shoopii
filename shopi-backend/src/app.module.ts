@@ -15,8 +15,9 @@
  *              aussi REDIS_URL pour être cohérent avec RedisModule.
  * ============================================================ */
 
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { BullModule }  from '@nestjs/bullmq';
 
@@ -36,6 +37,19 @@ import { ContactSyncModule }   from './modules/messagerie/contacts/contact-sync.
 import { LocationModule }      from './modules/location/location.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { JobsModule }          from './jobs/jobs.module';
+import { HelpModule }     from './modules/help/help.module';
+import { SupportModule } from './modules/support/support.module';
+import { ContactModule } from './modules/contact/contact.module';
+import { HealthModule }          from './common/health/health.module';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { GeoModule }             from './modules/geo/geo.module';
+import { AppearanceModule }      from './modules/appearance/appearance.module';
+import { ZoneAdminModule }          from './modules/zone-admin/zone-admin.module';
+import { ValidationConfigModule }  from './modules/validation-config/validation-config.module';
+import { CompanySettingsModule }   from './modules/company-settings/company-settings.module';
+import { DeliverySettingsModule }  from './modules/delivery-settings/delivery-settings.module';
+import { PartnerSettingsModule }   from './modules/partner-settings/partner-settings.module';
+import { DeliveryGroupModule }     from './modules/delivery-group/delivery-group.module';
 
 @Module({
   imports: [
@@ -45,7 +59,10 @@ import { JobsModule }          from './jobs/jobs.module';
       envFilePath: '.env',
     }),
 
-    /* ── 2. Modules sans dépendances Redis ── */
+    /* ── 2. Rate limiting global ── */
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 60 }]),
+
+    /* ── 3. Modules sans dépendances Redis ── */
     DatabaseModule,
     MailModule,
     AuthModule,
@@ -180,6 +197,22 @@ import { JobsModule }          from './jobs/jobs.module';
      */
     NotificationsModule,
 
+    HelpModule,
+    SupportModule,
+    ContactModule,
+    GeoModule,
+    AppearanceModule,         /* GET/PUT/POST /api/appearance         — préférences visuelles */
+    ZoneAdminModule,          /* GET/PATCH   /api/zones/*             — centre de contrôle territorial */
+    ValidationConfigModule,   /* GET/PUT     /api/validation-config/*  — moteur de validation */
+    CompanySettingsModule,    /* GET/PUT     /api/company-settings/*  — moteur des entreprises */
+    DeliverySettingsModule,   /* GET/PUT     /api/delivery-settings/* — moteur des livreurs    */
+    PartnerSettingsModule,    /* GET/PUT     /api/partner-settings/*  — moteur des partenaires  */
+    DeliveryGroupModule,      /* GET/POST    /api/delivery-groups/*   — groupes de livraison    */
+
+    /* Health check — GET /api/health, public, sans auth.
+     * Utilisé par Render/Kubernetes pour les readiness probes. */
+    HealthModule,
+
     /* ── 6. JobsModule — tâches cron ── */
     /*
      * Contient ScheduleModule.forRoot() + ExpiryCronService.
@@ -190,4 +223,13 @@ import { JobsModule }          from './jobs/jobs.module';
     JobsModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  /**
+   * Applique le Correlation ID middleware sur toutes les routes.
+   * Doit être appliqué en premier pour que chaque log produit
+   * par les handlers en aval porte déjà le X-Request-Id.
+   */
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*path');
+  }
+}

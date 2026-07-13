@@ -54,3 +54,17 @@
 @media (max-width: 640px) {
   .bottomNav { display: flex; }
 }
+
+/* ── Très petits écrans : icônes seules, labels masqués ── */
+@media (max-width: 360px) {
+  .bnItem { font-size: 9.5px; gap: 2px; }
+  .bnItem i { font-size: 15px; }
+  .bnItem span { display: none; }
+  .bnActive::before { left: 30%; right: 30%; }
+}
+
+/* ── Extrême compact ≤280px ── */
+@media (max-width: 280px) {
+  .bottomNav { height: 54px; }
+  .bnItem i  { font-size: 14px; }
+}

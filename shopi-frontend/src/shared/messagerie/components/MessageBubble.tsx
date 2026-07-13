@@ -1,8 +1,8 @@
 /**
  * src/shared/messagerie/components/MessageBubble.tsx
  * Rendu d'une seule bulle de message (tous types).
- * Composant pur — aucun état local sauf VoicePlayer.
  */
+import { useState } from 'react';
 import type { ChatMessage, ChatUser } from '../data/messagerieTypes';
 import { ROLE_CONFIG } from '../data/messagerieTypes';
 import VoicePlayer from './VoicePlayer';
@@ -17,20 +17,42 @@ interface Props {
   isLastRead?: boolean;
   onReply:     (r: { sender: string; text: string }) => void;
   onToast:     (msg: string, type?: string) => void;
+  onDelete:    (msgId: string, mode: 'me' | 'everyone' | 'other') => void;
 }
 
 export default function MessageBubble({
-  msg, idx, msgs, user, isLastRead = false, onReply, onToast,
+  msg, idx, msgs, user, isLastRead = false, onReply, onToast, onDelete,
 }: Props) {
-  const isMe    = msg.from === 'me';
-  const prev    = msgs[idx - 1];
-  const isSame  = prev?.from === msg.from;
-  const isFirst = !isSame;
-  const rc      = ROLE_CONFIG[user.role] ?? ROLE_CONFIG['client'];
+  const [showDeleteMenu, setShowDeleteMenu] = useState(false);
+
+  const isMe     = msg.from === 'me';
+  const prev     = msgs[idx - 1];
+  const isSame   = prev?.from === msg.from;
+  const isFirst  = !isSame;
+  const rc       = ROLE_CONFIG[user.role] ?? ROLE_CONFIG['client'];
   const isImgAva = user.ava?.startsWith('http');
 
+  const rowCls = [s.msgRow, isMe ? s.mine : '', isFirst ? s.firstGroup : '', isSame ? s.noAva : '']
+    .filter(Boolean).join(' ');
+
+  // ── Placeholder message supprimé ──────────────────────────────
+  if (msg.deleted) {
+    return (
+      <div className={rowCls}>
+        {!isMe && <div className={s.msgAva}>{isFirst && <div style={{ width: 30, height: 30 }} />}</div>}
+        <div className={s.msgGroup}>
+          <div className={s.msgDeleted}>
+            <i className="fas fa-ban" />
+            <span>Message supprimé</span>
+          </div>
+        </div>
+        {isMe && <div className={s.msgAva} />}
+      </div>
+    );
+  }
+
   return (
-    <div className={[s.msgRow, isMe ? s.mine : '', isFirst ? s.firstGroup : '', isSame ? s.noAva : ''].filter(Boolean).join(' ')}>
+    <div className={rowCls}>
 
       {/* Avatar gauche (messages reçus) */}
       {!isMe && (
@@ -57,33 +79,14 @@ export default function MessageBubble({
           <div className={s.msgSender} style={{ color: rc.color }}>{user.name}</div>
         )}
 
-        {/* Contenu de la bulle */}
         <div className={s.bubbleWrap}>
 
-          {/* TEXTE */}
+          {/* ── Contenu selon le type ── */}
+
           {msg.type === 'text' && (
-            <>
-              <div className={`${s.bubble} ${isMe ? s.sent : s.recv}`}>{msg.text}</div>
-              <div className={s.bubbleActions}>
-                <button className={s.baBtn} title="Répondre"
-                  onClick={() => onReply({ sender: isMe ? 'Vous' : user.name, text: msg.text ?? '' })}>
-                  <i className="fas fa-reply" />
-                </button>
-                <button className={s.baBtn} title="Copier"
-                  onClick={() => { navigator.clipboard.writeText(msg.text ?? ''); onToast('📋 Copié !', 's'); }}>
-                  <i className="fas fa-copy" />
-                </button>
-                {isMe && (
-                  <button className={s.baBtn} style={{ color: 'var(--red,#DC2626)' }} title="Supprimer"
-                    onClick={() => onToast('🗑️ Supprimé', 'w')}>
-                    <i className="fas fa-trash-can" />
-                  </button>
-                )}
-              </div>
-            </>
+            <div className={`${s.bubble} ${isMe ? s.sent : s.recv}`}>{msg.text}</div>
           )}
 
-          {/* PRODUIT */}
           {msg.type === 'product' && msg.product && (
             <>
               <div className={`${s.bubble} ${isMe ? s.sent : s.recv}`}>{msg.text}</div>
@@ -100,7 +103,6 @@ export default function MessageBubble({
             </>
           )}
 
-          {/* COMMANDE */}
           {msg.type === 'order' && msg.order && (
             <>
               <div className={`${s.bubble} ${isMe ? s.sent : s.recv}`}>{msg.text}</div>
@@ -119,7 +121,6 @@ export default function MessageBubble({
             </>
           )}
 
-          {/* IMAGE */}
           {msg.type === 'image' && (
             <>
               <div className={s.msgImg}>
@@ -133,7 +134,6 @@ export default function MessageBubble({
             </>
           )}
 
-          {/* VIDÉO */}
           {msg.type === 'video' && (
             <>
               <div className={s.msgVideo}>
@@ -146,7 +146,6 @@ export default function MessageBubble({
             </>
           )}
 
-          {/* FICHIER / DOCUMENT */}
           {msg.type === 'file' && (
             <>
               <a href={msg.mediaUrl ?? '#'} target="_blank" rel="noreferrer" download={msg.mediaName}
@@ -162,27 +161,87 @@ export default function MessageBubble({
             </>
           )}
 
-          {/* VOCAL */}
           {msg.type === 'voice' && (
             <VoicePlayer url={msg.mediaUrl} duration={msg.duration} isMe={isMe} />
           )}
 
-          {/* APPEL AUDIO */}
           {msg.type === 'call' && (
             <CallBubble meta={msg.callMeta} isMe={isMe} />
           )}
+
+          {/* ── Actions au survol — communes à tous les types ── */}
+          <div className={s.bubbleActions}>
+            <button className={s.baBtn} title="Répondre"
+              onClick={() => onReply({ sender: isMe ? 'Vous' : user.name, text: msg.text ?? '' })}>
+              <i className="fas fa-reply" />
+            </button>
+            {msg.type === 'text' && (
+              <button className={s.baBtn} title="Copier"
+                onClick={() => { navigator.clipboard.writeText(msg.text ?? ''); onToast('📋 Copié !', 's'); }}>
+                <i className="fas fa-copy" />
+              </button>
+            )}
+
+            {/* Suppression avec choix */}
+            <div className={s.deleteWrap}>
+              <button
+                className={s.baBtn}
+                style={{ color: showDeleteMenu ? 'var(--red, #DC2626)' : undefined }}
+                title="Supprimer"
+                onClick={e => { e.stopPropagation(); setShowDeleteMenu(p => !p); }}
+              >
+                <i className="fas fa-trash-can" />
+              </button>
+
+              {showDeleteMenu && (
+                <>
+                  {/* Fond invisible pour fermer au clic extérieur */}
+                  <div
+                    style={{ position: 'fixed', inset: 0, zIndex: 199 }}
+                    onClick={() => setShowDeleteMenu(false)}
+                  />
+                  <div className={s.deleteMenu}>
+                    {/* Option 1 — toujours disponible */}
+                    <button
+                      className={s.deleteMenuItem}
+                      onClick={() => { onDelete(msg.id, 'me'); setShowDeleteMenu(false); }}
+                    >
+                      <i className="fas fa-eye-slash" />
+                      <span>Supprimer pour moi</span>
+                    </button>
+
+                    {/* Options 2 & 3 — expéditeur uniquement */}
+                    {isMe && (
+                      <>
+                        <button
+                          className={s.deleteMenuItem}
+                          onClick={() => { onDelete(msg.id, 'other'); setShowDeleteMenu(false); }}
+                        >
+                          <i className="fas fa-user-xmark" />
+                          <span>Supprimer pour lui</span>
+                        </button>
+                        <button
+                          className={`${s.deleteMenuItem} ${s.deleteMenuDanger}`}
+                          onClick={() => { onDelete(msg.id, 'everyone'); setShowDeleteMenu(false); }}
+                        >
+                          <i className="fas fa-users-slash" />
+                          <span>Supprimer pour tout le monde</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* ── Statut envoi 3 états : ✓ envoyé / ✓✓ livré / ✓✓ vu ── */}
         {isMe && (
           <div className={s.msgStatus}>
-            {/* Avatar de lecture sur le dernier message vu */}
             {isLastRead && (
               <div className={s.readAvatar} title={`Vu par ${user.name}`}>
-                {isImgAva
-                  ? <img src={user.ava} alt={user.name} />
-                  : user.ava
-                }
+                {isImgAva ? <img src={user.ava} alt={user.name} /> : user.ava}
               </div>
             )}
             {msg.read ? (
@@ -223,13 +282,12 @@ function CallBubble({ meta, isMe }: { meta?: CallMeta; isMe: boolean }) {
 
   const isVideoCall = meta.callType === 'video';
 
-  /* Icône et libellé selon le statut + type d'appel */
   const cfg: Record<string, { icon: string; iconColor: string; textRed?: boolean }> = {
-    completed:  { icon: isVideoCall ? 'fa-video'        : 'fa-phone',        iconColor: 'var(--emerald,#059669)'              },
-    missed:     { icon: isVideoCall ? 'fa-video-slash'  : 'fa-phone-missed', iconColor: 'var(--rose,#DC2626)',  textRed: true },
-    rejected:   { icon: isVideoCall ? 'fa-video-slash'  : 'fa-phone-slash',  iconColor: 'var(--rose,#DC2626)',  textRed: true },
-    cancelled:  { icon: isVideoCall ? 'fa-video-slash'  : 'fa-phone-slash',  iconColor: 'var(--t3,#94A3B8)'                  },
-    busy:       { icon: isVideoCall ? 'fa-video'        : 'fa-phone-volume', iconColor: 'var(--amber,#B45309)'               },
+    completed: { icon: isVideoCall ? 'fa-video'        : 'fa-phone',        iconColor: 'var(--emerald,#059669)'             },
+    missed:    { icon: isVideoCall ? 'fa-video-slash'  : 'fa-phone-missed', iconColor: 'var(--rose,#DC2626)', textRed: true },
+    rejected:  { icon: isVideoCall ? 'fa-video-slash'  : 'fa-phone-slash',  iconColor: 'var(--rose,#DC2626)', textRed: true },
+    cancelled: { icon: isVideoCall ? 'fa-video-slash'  : 'fa-phone-slash',  iconColor: 'var(--t3,#94A3B8)'                 },
+    busy:      { icon: isVideoCall ? 'fa-video'        : 'fa-phone-volume', iconColor: 'var(--amber,#B45309)'              },
   };
 
   const typeLabel = isVideoCall ? 'vidéo' : 'audio';
@@ -241,15 +299,12 @@ function CallBubble({ meta, isMe }: { meta?: CallMeta; isMe: boolean }) {
     busy:      'Correspondant occupé',
   };
   const label = labelMap[meta.status] ?? `Appel ${typeLabel}`;
-
   const { icon, iconColor, textRed } = cfg[meta.status] ?? cfg['completed'];
 
-  /* Durée formatée si appel terminé */
   const dur = meta.duration
     ? ` · ${Math.floor(meta.duration / 60)}:${String(meta.duration % 60).padStart(2, '0')}`
     : '';
 
-  /* Flèche de direction */
   const arrow = meta.direction === 'outgoing'
     ? <i className="fas fa-arrow-up-right" style={{ fontSize: 9 }} />
     : <i className="fas fa-arrow-down-left" style={{ fontSize: 9 }} />;

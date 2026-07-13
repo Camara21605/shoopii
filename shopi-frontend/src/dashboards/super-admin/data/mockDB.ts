@@ -56,7 +56,7 @@ export const MOCK_CONVERSATIONS: Conversation[] = [
 export const ROLE_LABELS: Record<string, string> = {
   company:       '🏪 Entreprise',
   delivery:      '🛵 Livreur',
-  customer:      '🛒 Client',
+  client:        '🛒 Client',
   partner:       '🤝 Partenaire',
   admin:         '🛡 Admin',
   correspondent: '📦 Correspondant',
@@ -73,7 +73,7 @@ export const FLAGS: Record<string, string> = {
 export const AV_COLORS: Record<string, [string, string]> = {
   company:       ['#38BFFF','#07243A'],
   delivery:      ['#F5A623','#301E05'],
-  customer:      ['#00C88A','#052818'],
+  client:        ['#00C88A','#052818'],
   partner:       ['#BF7FFF','#1E0D33'],
   admin:         ['#FF4464','#330B14'],
   correspondent: ['#607898','#0F1824'],

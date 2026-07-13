@@ -19,8 +19,15 @@ interface Props {
   isActive: boolean;
 }
 
+const COUNTRY_NAMES: Record<string, string> = {
+  GN: 'Guinée',
+  SN: 'Sénégal',
+  ML: 'Mali',
+  CI: "Côte d'Ivoire",
+};
+
 const ROLE_PILL: Record<string, string> = {
-  company: 'rp-company', delivery: 'rp-delivery', customer: 'rp-customer',
+  company: 'rp-company', delivery: 'rp-delivery', client: 'rp-customer',
   partner: 'rp-partner', admin: 'rp-admin', correspondent: 'rp-correspondent',
 };
 
@@ -28,7 +35,7 @@ const ROLE_TABS = [
   { key: 'all',           label: '👥 Tous'           },
   { key: 'company',       label: '🏪 Entreprises'    },
   { key: 'delivery',      label: '🛵 Livreurs'       },
-  { key: 'customer',      label: '🛒 Clients'        },
+  { key: 'client',        label: '🛒 Clients'        },
   { key: 'partner',       label: '🤝 Partenaires'    },
   { key: 'correspondent', label: '📦 Correspondants' },
   { key: 'admin',         label: '🛡 Admins'         },
@@ -232,7 +239,12 @@ export default function UsersSection({ store, toast, isActive }: Props) {
                       </span>
                     </td>
 
-                    <td>{FLAGS[u.country] || ''} {u.country}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      {u.country
+                        ? <>{FLAGS[u.country] ?? '🌍'} {COUNTRY_NAMES[u.country] ?? u.country}</>
+                        : <span style={{ color: 'var(--txt-3)', fontSize: 11 }}>—</span>
+                      }
+                    </td>
 
                     <td style={{ fontFamily:'var(--font-m)', fontSize:11 }}>
                       {u.phone}

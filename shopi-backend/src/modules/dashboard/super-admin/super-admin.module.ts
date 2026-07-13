@@ -33,6 +33,8 @@ import { AuditLog }         from '../../../database/entities/audit-log.entity';
 import { Report }           from '../../../database/entities/report.entity';
 import { Admin }            from '../../../database/entities/profiles/admin-profile.entity';
 import { PlatformSettings } from '../../../database/entities/platform-settings.entity';
+import { Product }          from '../../../database/entities/entreprise.table/product.entity';
+import { Commande }         from '../../../database/entities/commande/commande.entity';
 
 // ── Sous-module catégories ─────────────────────────────────────
 // Fournit GET/POST/PATCH/DELETE /categories et /sub-categories
@@ -50,6 +52,7 @@ import { AuditLogService }         from './services/audit-log.service';
 import { ReportsService }          from './services/reports.service';
 import { AdminsService }           from './services/admins.service';
 import { PlatformSettingsService } from './services/platform-settings.service';
+import { SecuriteAdminService }    from './services/securite-admin.service';
 import { NotificationsModule }      from '../../notifications/notifications.module';
 
 @Module({
@@ -63,6 +66,8 @@ import { NotificationsModule }      from '../../notifications/notifications.modu
       Report,           // pour ReportsService
       Admin,            // pour AdminsService
       PlatformSettings, // pour PlatformSettingsService
+      Product,          // pour getPlatformStats → COUNT produits publiés
+      Commande,         // pour getPlatformStats → COUNT commandes
     ]),
 
     CategoriesModule,
@@ -96,6 +101,7 @@ import { NotificationsModule }      from '../../notifications/notifications.modu
     ReportsService,
     AdminsService,
     PlatformSettingsService,
+    SecuriteAdminService,   /* sécurité compte admin : mot de passe + 2FA + score */
   ],
 
   exports: [

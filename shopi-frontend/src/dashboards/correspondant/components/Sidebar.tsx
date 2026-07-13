@@ -9,6 +9,8 @@ interface Props {
   setPage: (p: PageId) => void;
   open: boolean;
   onClose: () => void;
+  nomUtilisateur?: string;
+  photoUrl?: string | null;
 }
 interface NavItem { id: PageId; icon: string; label: string; badge?: string; badgeCls?: string; }
 
@@ -33,7 +35,11 @@ const GROUPS: { title: string; items: NavItem[] }[] = [
   ]},
 ];
 
-export default function Sidebar({ page, setPage, open, onClose }: Props) {
+export default function Sidebar({ page, setPage, open, onClose, nomUtilisateur, photoUrl }: Props) {
+  const displayName = nomUtilisateur ?? '—';
+  const initiales   = nomUtilisateur
+    ? nomUtilisateur.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+    : '?';
   const go = (id: PageId) => { setPage(id); onClose(); };
   return (
     <nav className={`${s.sb} ${open ? s.open : ''}`}>
@@ -48,11 +54,14 @@ export default function Sidebar({ page, setPage, open, onClose }: Props) {
         <div className={s.corInner} onClick={() => go('parametres')}>
           <div className={s.corTop}>
             <div className={s.ava}>
-              📍<div className={s.avaOnline} />
+              {photoUrl
+                ? <img src={photoUrl} alt={displayName} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'inherit' }} />
+                : initiales}
+              <div className={s.avaOnline} />
             </div>
             <div>
-              <div className={s.corName}>Amadou Bah</div>
-              <div className={s.corRole}><i className="fas fa-map-pin" /> Correspondant · Conakry</div>
+              <div className={s.corName}>{displayName}</div>
+              <div className={s.corRole}><i className="fas fa-map-pin" /> Correspondant</div>
             </div>
           </div>
           <div className={s.regionBadge}>

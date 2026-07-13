@@ -1,0 +1,31 @@
+/* ================================================================
+ * FICHIER : src/dashboards/admin/styles/AdminApp.module.css
+ * Coquille : sidebar fixe 268px + topbar 64px + zone de page.
+ * Les variables globales viennent de src/styles/variables.css.
+ * ================================================================ */
+
+.app {
+  --sb: 268px;
+  --hdr: 64px;
+  min-height: 100vh;
+  background: var(--g50);
+  font-family: var(--fb);
+  color: var(--t1);
+}
+
+.main { margin-left: var(--sb); }
+
+.page {
+  padding: calc(var(--hdr) + 26px) 26px 26px;
+  animation: fade .3s var(--ease);
+}
+
+@keyframes fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 860px) {
+  .main { margin-left: 0; }
+  .page { padding: calc(var(--hdr) + 16px) 16px 16px; }
+}

@@ -1,4 +1,5 @@
 // src/dashboards/livreur/components/Topbar.tsx
+import { useNavigate } from 'react-router-dom';
 import type { PageId } from '../data/livreurData';
 import styles from '../styles/Topbar.module.css';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
@@ -31,6 +32,7 @@ export default function Topbar({
 }: Props) {
   const initials = livreurName ? getInitials(livreurName) : '🛵';
   const { msgUnread } = useGlobalCall();
+  const navigate = useNavigate();
 
   return (
     <header className={styles.topbar}>
@@ -66,6 +68,17 @@ export default function Topbar({
         </button>
         <NotificationCenter />
         <div className={styles.tbSep} />
+
+        {/* Centre d'aide — accès direct depuis le dashboard livreur */}
+        <button
+          className={`${styles.tbIc} ${styles.hideXs}`}
+          onClick={() => navigate('/aide')}
+          title="Centre d'aide"
+          aria-label="Centre d'aide"
+        >
+          <i className="fas fa-circle-question" />
+        </button>
+        <div className={`${styles.tbSep} ${styles.hideXs}`} />
 
         {/* Avatar : photo réelle ou initiales */}
         <div

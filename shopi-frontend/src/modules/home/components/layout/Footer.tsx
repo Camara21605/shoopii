@@ -3,15 +3,39 @@
  * RÔLE    : Footer de la page d'accueil
  */
 import React from 'react';
+import { Link } from 'react-router-dom';
 import styles from './Footer.module.css';
+
+type FooterLink = { label: string; to?: string };
 
 interface FooterProps { onToast: (msg: string) => void; }
 
 export default function Footer({ onToast }: FooterProps) {
-  const COLS = [
-    { titre:'Plateforme', liens:['Explorer les produits','Boutiques','Livreurs','Partenaires','Correspondants','Offres & Promos'] },
-    { titre:'Acteurs',    liens:['Espace Client','Espace Entreprise','Espace Livreur','Espace Partenaire','Espace Correspondant','Espace Admin'] },
-    { titre:'Aide',       liens:["Centre d'aide",'Contact','FAQ','Signaler un problème','Remboursements','Politique de retour'] },
+  const COLS: { titre: string; liens: FooterLink[] }[] = [
+    { titre:'Plateforme', liens:[
+      { label:'Explorer les produits' },
+      { label:'Boutiques',     to:'/boutiques' },
+      { label:'Livreurs',      to:'/livreurs' },
+      { label:'Partenaires' },
+      { label:'Correspondants', to:'/correspondants' },
+      { label:'Offres & Promos' },
+    ]},
+    { titre:'Acteurs', liens:[
+      { label:'Espace Client' },
+      { label:'Espace Entreprise' },
+      { label:'Espace Livreur' },
+      { label:'Espace Partenaire' },
+      { label:'Espace Correspondant' },
+      { label:'Espace Admin' },
+    ]},
+    { titre:'Aide', liens:[
+      { label:"Centre d'aide",       to:'/aide' },
+      { label:'Contact',             to:'/contact' },
+      { label:'FAQ',                 to:'/aide#faq' },
+      { label:'Signaler un problème', to:'/contact' },
+      { label:'Remboursements',      to:'/remboursements' },
+      { label:'Politique de retour', to:'/politique-retour' },
+    ]},
   ];
 
   const SOCIALS = [
@@ -89,10 +113,11 @@ export default function Footer({ onToast }: FooterProps) {
                 <h4 className={styles.colTitle}>{col.titre}</h4>
                 <ul className={styles.colLinks}>
                   {col.liens.map(l => (
-                    <li key={l}>
-                      <a href="#" onClick={e => { e.preventDefault(); onToast(`📄 ${l}`); }}>
-                        {l}
-                      </a>
+                    <li key={l.label}>
+                      {l.to
+                        ? <Link to={l.to}>{l.label}</Link>
+                        : <a href="#" onClick={e => { e.preventDefault(); onToast(`📄 ${l.label}`); }}>{l.label}</a>
+                      }
                     </li>
                   ))}
                 </ul>

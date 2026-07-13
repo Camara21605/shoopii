@@ -6,7 +6,7 @@
 import {
   IsEnum, IsNumber, IsOptional, IsString,
   IsUUID, MaxLength, Min, IsBoolean, IsNotEmpty,
-  Length,
+  Length, IsIn,
 } from 'class-validator';
 import { ConversationActorType } from 'src/database/entities/messaging/conversation.entity';
 import { MessageContentType }    from 'src/database/entities/messaging/message.entity';
@@ -85,12 +85,13 @@ export class EditMessageDto {
 
 export class DeleteMessageDto {
   /**
-   * true  → supprime pour tout le monde (seulement si l'expéditeur supprime)
-   * false → supprime uniquement pour soi (soft hide côté client)
+   * 'me'       → caché pour moi seulement (autre participant voit encore)
+   * 'other'    → caché pour l'autre participant (je vois encore) — expéditeur uniquement
+   * 'everyone' → supprimé pour tout le monde — expéditeur uniquement
    */
   @IsOptional()
-  @IsBoolean()
-  forEveryone?: boolean;
+  @IsIn(['me', 'everyone', 'other'])
+  mode?: 'me' | 'everyone' | 'other';
 }
 
 // ── Réaction emoji ────────────────────────────────────────────

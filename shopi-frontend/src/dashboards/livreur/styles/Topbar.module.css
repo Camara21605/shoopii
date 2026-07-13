@@ -174,7 +174,7 @@
 /* ── Groupe Correspondants / Livreurs ── */
 .tbReseauGroup { display: flex; align-items: center; gap: 4px; }
 
-@media (max-width: 960px) { .topbar { left: 68px; } }
+@media (max-width: 1100px) { .topbar { left: 68px; } }
 @media (max-width: 640px) {
   .topbar { left: 0; padding: 0 16px; }
   .hamburger { display: flex; }
@@ -183,4 +183,28 @@
 
   /* Correspondants / Livreurs / Mon espace passent dans la bottom nav */
   .tbReseauGroup, .hideMobile { display: none; }
+}
+
+/* ── Tiny screens ≤360px : hide aide, tighter padding ── */
+@media (max-width: 360px) {
+  .topbar   { padding: 0 10px; gap: 8px; }
+  .tbTtl    { font-size: 14px; }
+  .hideXs   { display: none !important; }
+  .tbIc     { width: 34px; height: 34px; font-size: 14px; }
+  .tbAva    { width: 30px; height: 30px; font-size: 11px; }
+  .tbSep    { margin: 0 2px; }
+}
+
+/* ── Extra tiny ≤280px : shrink further ── */
+@media (max-width: 280px) {
+  .topbar   { padding: 0 6px; gap: 4px; }
+  .tbTtl    { font-size: 13px; }
+  .tbIc     { width: 30px; height: 30px; font-size: 13px; }
+  .tbAva    { width: 28px; height: 28px; font-size: 10px; }
+}
+
+/* ── Ultra-wide : topbar height tracks --hdr var ── */
+@media (min-width: 1920px) {
+  .topbar { padding: 0 36px; gap: 16px; }
+  .tbTtl  { font-size: 20px; }
 }

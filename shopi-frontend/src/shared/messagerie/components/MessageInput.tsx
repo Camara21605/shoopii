@@ -200,8 +200,8 @@ export default function MessageInput({
         const url = await uploadToServer(blob, '/upload/audio', 'voice.webm');
         onSend(convId, '', {
           url, name: 'Message vocal', size: blob.size, mime: mimeType,
-          type: 'audio' as any, duration: fmtDuration(durationSec),
-        } as any);
+          type: 'audio', duration: durationSec,
+        });
       } catch {
         onToast('❌ Impossible d\'envoyer le message vocal', 'e');
       } finally {

@@ -57,10 +57,23 @@ export class MessagerieController {
     return this.svc.getConversations(userId, role);
   }
 
+  @Get('conversations/archived')
+  getArchivedConversations(@Req() req: Request) {
+    const { userId, role } = this.ctx(req);
+    return this.svc.getArchivedConversations(userId, role);
+  }
+
   @Post('conversations')
   startConversation(@Req() req: Request, @Body() dto: StartConversationDto) {
     const { userId, role, ip } = this.ctx(req);
     return this.svc.getOrCreateConversation(userId, role, dto, ip);
+  }
+
+  @Delete('conversations/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteConversation(@Req() req: Request, @Param('id') convId: string): Promise<void> {
+    const { userId, role } = this.ctx(req);
+    return this.svc.deleteConversation(userId, role, convId);
   }
 
   @Patch('conversations/:id/archive')
@@ -103,6 +116,13 @@ export class MessagerieController {
   markAsRead(@Req() req: Request, @Param('id') convId: string): Promise<void> {
     const { userId, role } = this.ctx(req);
     return this.svc.markAsRead(userId, role, convId);
+  }
+
+  @Patch('conversations/:id/unread')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  markAsUnread(@Req() req: Request, @Param('id') convId: string): Promise<void> {
+    const { userId, role } = this.ctx(req);
+    return this.svc.markAsUnread(userId, role, convId);
   }
 
   // ── Actions sur un message ──────────────────────────────────

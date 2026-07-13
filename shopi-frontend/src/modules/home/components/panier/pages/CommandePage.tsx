@@ -21,11 +21,13 @@ import SummaryPanel     from '../sections/SummaryPanel';
 import { CORRESPONDANTS, SPEEDS, lvFeeCalc } from '../data/panierData';
 import { fetchLivreursSuivis }               from '../services/livreursSuivis.api';
 import type { LivreurSuivi }                 from '../services/livreursSuivis.api';
+import { settingsApi }                       from '../../settings/api/settings.api';
+import type { ProfilData, AdresseItem }      from '../../settings/api/settings.api';
 import styles from '../styles/CommandePage.module.css';
 
 export default function CommandePage() {
   const navigate = useNavigate();
-  const { items, count, loading: cartLoading, updateQty, removeItem, clearCart } = useCart();
+  const { items, count, updateQty, removeItem, clearCart } = useCart();
 
   const [delMode,        setDelMode]        = useState<'std' | 'lvr'>('std');
   const [selLvr,         setSelLvr]         = useState<string | null>(null);
@@ -39,6 +41,9 @@ export default function CommandePage() {
   const [etaDest,        setEtaDest]        = useState('Kaloum, Conakry');
   const [livreurs,        setLivreurs]      = useState<LivreurSuivi[]>([]);
   const [loadingLivreurs, setLoadingLivreurs] = useState(true);
+  const [clientProfil,    setClientProfil]  = useState<ProfilData | null>(null);
+  const [clientAddr,      setClientAddr]    = useState<AdresseItem | null>(null);
+  const [loadingClient,   setLoadingClient] = useState(true);
 
   /* ── Toast ── */
   const [toastMsg, setToastMsg]     = useState('');
@@ -56,6 +61,17 @@ export default function CommandePage() {
       .then(setLivreurs)
       .catch(() => setLivreurs([]))
       .finally(() => setLoadingLivreurs(false));
+  }, []);
+
+  useEffect(() => {
+    Promise.all([settingsApi.getProfil(), settingsApi.getAdresses()])
+      .then(([profil, adresses]) => {
+        setClientProfil(profil);
+        const def = adresses?.find(a => a.isDefault) ?? adresses?.[0] ?? null;
+        setClientAddr(def);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingClient(false));
   }, []);
 
   /* ── Calculs ── */
@@ -124,7 +140,7 @@ export default function CommandePage() {
   }));
 
   /* ── Panier vide ── */
-  if (!cartLoading && items.length === 0) {
+  if (items.length === 0) {
     return (
       <div className={styles.root}>
         <Header onToast={showToast} onLogin={() => navigate('/login')} onRegister={() => navigate('/register')} />
@@ -166,7 +182,6 @@ export default function CommandePage() {
                   <div className={styles.cardHeadTitle}>Vos articles</div>
                   <div className={styles.cardHeadSub}>
                     {count} article{count > 1 ? 's' : ''} · Prêt pour la commande
-                    {cartLoading && <i className="fas fa-circle-notch fa-spin" style={{ marginLeft: 8, color: 'var(--cart-blue)' }} />}
                   </div>
                 </div>
               </div>
@@ -270,6 +285,9 @@ export default function CommandePage() {
               delMode={delMode} selLvrObj={lv} selCorr={selCorr}
               curSpd={curSpd} payMode={payMode} promoActif={promoActif}
               total={total} termsOk={termsOk} onTerms={setTermsOk}
+              clientProfil={clientProfil}
+              clientAddr={clientAddr}
+              loadingClient={loadingClient}
             />
           </div>
 

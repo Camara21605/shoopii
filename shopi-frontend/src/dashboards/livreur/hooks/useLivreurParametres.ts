@@ -36,7 +36,10 @@ export interface LivreurData {
   documentAssurance: string | null;
   documentCasier: string | null;
   zone: string | null;
+  deliveryType: string | null;
+  deliveryTypeSetAt: string | null;
   communesActives: string[] | null;
+  zonesDisponibles: string[] | null;
   distanceMax: number;
   autoDispoSettings: Record<string, boolean> | null;
   horaires: HoraireJour[];

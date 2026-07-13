@@ -265,6 +265,8 @@ export class AuthService implements OnModuleInit {
     if (dto.countryCode) userExtras.countryCode = dto.countryCode;
     if (dto.countryName) userExtras.countryName = dto.countryName;
     if (dto.dialCode)    userExtras.dialCode    = dto.dialCode;
+    if (dto.birthDate)   userExtras.birthDate   = new Date(dto.birthDate) as any;
+    if (dto.gender)      userExtras.gender      = dto.gender as any;
 
     let newUser: User;
     const queryRunner = this.dataSource.createQueryRunner();
@@ -402,7 +404,7 @@ export class AuthService implements OnModuleInit {
       case UserRole.COMPANY: {
         const profile = manager.create(Company, {
           userId:        user.id,
-          companyName:   (dto as any).companyName?.trim() || fullName,
+          companyName:   dto.companyName?.trim() || dto.shopName?.trim() || fullName,
           status:        'pending' as any,
           companyTypeId: (dto as any).companyTypeId ?? null,
           adresse:       loc.adresse,
@@ -861,7 +863,8 @@ export class AuthService implements OnModuleInit {
         throw new UnauthorizedException('Votre compte est suspendu. Contactez l\'administrateur.');
       user.lastLoginAt = new Date();
       await this.userRepo.save(user);
-      return this.signJwt(user, true);
+      const actorId = await this.findProfileId(user.id, user.role as UserRole);
+      return this.signJwt(user, true, actorId);
     }
 
     /* ── Nouveau compte CLIENT ── */
@@ -918,7 +921,8 @@ export class AuthService implements OnModuleInit {
       await queryRunner.release();
     }
 
-    return this.signJwt(user!, true);
+    const actorId = await this.findProfileId(user!.id, user!.role as UserRole);
+    return this.signJwt(user!, true, actorId);
   }
 
   // ══════════════════════════════════════════════════════════════════════════

@@ -2,8 +2,8 @@
  * FICHIER : src/modules/messagerie/messagerie.service.ts
  *
  * Gestion complète des conversations et messages.
- * Tous les acteurs (client, company, delivery, correspondent,
- * partner) sont pris en charge, y compris le correspondant.
+ * Acteurs autorisés : client, company, delivery, correspondent.
+ * Partners et admins passent par "Aide & Contact", pas la messagerie.
  * ============================================================ */
 
 import {
@@ -36,6 +36,9 @@ import { Delivery }      from 'src/database/entities/profiles/livreur-profile.en
 import { Correspondent } from 'src/database/entities/profiles/correspondant-profile.entity';
 import { Partner }       from 'src/database/entities/profiles/partenaire-profile.entity';
 import { UserRole }      from 'src/common/enums/user-role.enum';
+import { Follow, FollowerActorType, TargetActorType } from 'src/database/entities/follow/follow.entity';
+import { UserContact }   from 'src/database/entities/contacts/user-contact.entity';
+import { Commande }      from 'src/database/entities/commande/commande.entity';
 
 import {
   SendMessageDto, StartConversationDto,
@@ -70,6 +73,7 @@ export interface MessageItem {
   mediaUrl:      string | null;
   mediaName:     string | null;
   mediaMimeType: string | null;
+  mediaDuration: number | null;
   createdAt:     string;
   readAt:        string | null;
   replyToId:     string | null;
@@ -103,6 +107,9 @@ export class MessagerieService {
     @InjectRepository(Delivery)     private readonly deliveryRepo: Repository<Delivery>,
     @InjectRepository(Correspondent) private readonly corrRepo: Repository<Correspondent>,
     @InjectRepository(Partner)      private readonly partnerRepo: Repository<Partner>,
+    @InjectRepository(Follow)       private readonly followRepo: Repository<Follow>,
+    @InjectRepository(UserContact)  private readonly contactRepo: Repository<UserContact>,
+    @InjectRepository(Commande)     private readonly commandeRepo: Repository<Commande>,
     /*
      * BroadcastService injecté optionnellement (@Optional) :
      * évite la dépendance circulaire MessagerieService ↔ Gateway.
@@ -128,7 +135,6 @@ export class MessagerieService {
       [UserRole.COMPANY]:       ConversationActorType.COMPANY,
       [UserRole.DELIVERY]:      ConversationActorType.DELIVERY,
       [UserRole.CORRESPONDENT]: ConversationActorType.CORRESPONDENT,
-      [UserRole.PARTNER]:       ConversationActorType.PARTNER,
     };
     const type = map[role];
     if (!type) throw new ForbiddenException(`Le rôle "${role}" ne peut pas utiliser la messagerie.`);
@@ -263,8 +269,8 @@ export class MessagerieService {
 
     const conversations = await this.convRepo.find({
       where: [
-        { initiatorType: myType, initiatorId: myId, status: ConversationStatus.ACTIVE },
-        { recipientType: myType, recipientId: myId, status: ConversationStatus.ACTIVE },
+        { initiatorType: myType, initiatorId: myId, status: ConversationStatus.ACTIVE, deletedByInitiator: false, archivedByInitiator: false },
+        { recipientType: myType, recipientId: myId, status: ConversationStatus.ACTIVE, deletedByRecipient: false, archivedByRecipient: false },
       ],
       order: { lastMessageAt: 'DESC', updatedAt: 'DESC' },
       take:  50,
@@ -406,7 +412,12 @@ export class MessagerieService {
       withDeleted: false,
     });
 
-    return messages.map(m => ({
+    // Exclure les messages que cet utilisateur a supprimés pour lui-même
+    const visible = messages.filter(
+      m => !(m.deletedForUserIds ?? []).includes(userId),
+    );
+
+    return visible.map(m => ({
       id:            m.id,
       fromMe:        m.senderType === (myType as unknown as MessageActorType) && m.senderId === myId,
       senderId:      m.senderId,
@@ -416,6 +427,7 @@ export class MessagerieService {
       mediaUrl:      m.mediaUrl,
       mediaName:     m.mediaName,
       mediaMimeType: m.mediaMimeType,
+      mediaDuration: m.mediaDuration ?? null,
       createdAt:     m.createdAt.toISOString(),
       readAt:        m.readAt?.toISOString() ?? null,
       replyToId:     m.replyToId,
@@ -476,6 +488,7 @@ export class MessagerieService {
       mediaName:      dto.mediaName     ?? null,
       mediaSize:      dto.mediaSize     ?? null,
       mediaMimeType:  dto.mediaMimeType ?? null,
+      mediaDuration:  dto.mediaDuration ?? null,
       replyToId:      dto.replyToId     ?? null,
       productId:      dto.productId     ?? null,
       orderId:        dto.orderId       ?? null,
@@ -492,6 +505,10 @@ export class MessagerieService {
       lastMessageId:      saved.id,
       unreadCountInitiator: amInitiator ? conv.unreadCountInitiator : conv.unreadCountInitiator + 1,
       unreadCountRecipient: amInitiator ? conv.unreadCountRecipient + 1 : conv.unreadCountRecipient,
+      /* Réapparition : si le destinataire avait supprimé ou masqué, on remet à zéro */
+      ...(amInitiator
+        ? { deletedByRecipient: false, archivedByRecipient: false }
+        : { deletedByInitiator: false, archivedByInitiator: false }),
     });
 
     this.logger.log(`[MSG] ${senderType}:${myId} → conv:${convId}`);
@@ -506,6 +523,7 @@ export class MessagerieService {
       mediaUrl:      saved.mediaUrl,
       mediaName:     saved.mediaName,
       mediaMimeType: saved.mediaMimeType,
+      mediaDuration: saved.mediaDuration ?? null,
       createdAt:     saved.createdAt.toISOString(),
       readAt:        null,
       replyToId:     saved.replyToId,
@@ -603,7 +621,23 @@ export class MessagerieService {
   }
 
   // ══════════════════════════════════════════════════════════════
-  // 5b. MARQUER LUE VIA USERID (Gateway — sans rôle disponible)
+  // 5b. MARQUER NON LUE (forcer 1 non-lu pour l'appelant)
+  // ══════════════════════════════════════════════════════════════
+
+  async markAsUnread(userId: string, role: UserRole, convId: string): Promise<void> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role);
+    const conv   = await this.assertConvAccess(convId, myType, myId);
+
+    const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
+    await this.convRepo.update(convId, amInitiator
+      ? { unreadCountInitiator: 1 }
+      : { unreadCountRecipient: 1 },
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 5c. MARQUER LUE VIA USERID (Gateway — sans rôle disponible)
   //     Retourne le userId de l'autre participant pour que le
   //     gateway puisse lui envoyer l'accusé de lecture.
   // ══════════════════════════════════════════════════════════════
@@ -642,16 +676,61 @@ export class MessagerieService {
   // ══════════════════════════════════════════════════════════════
 
   async searchUsers(
-    userId: string, _role: UserRole,
+    userId: string, role: UserRole,
     q: string,
     type?: string,
   ): Promise<UserSearchItem[]> {
     const results: UserSearchItem[] = [];
-    const now          = Date.now();
-    const onlineMs     = 15 * 60 * 1000;
-    const isOnline     = (d: Date | null | undefined) =>
+    const now      = Date.now();
+    const onlineMs = 15 * 60 * 1000;
+    const isOnline = (d: Date | null | undefined) =>
       d ? (now - new Date(d).getTime()) < onlineMs : false;
-    const term         = q.trim();
+    const term     = q.trim();
+
+    // ── Restrictions client ───────────────────────────────────
+    const isCallerClient = role === UserRole.CLIENT;
+    let followedCompanyIds   = new Set<string>();
+    let followedDeliveryIds  = new Set<string>();
+    let followedCorrIds      = new Set<string>();
+    let contactUserIds       = new Set<string>();
+
+    if (isCallerClient) {
+      const clientProfile = await this.clientRepo.findOne({ where: { userId }, select: ['id'] });
+      if (clientProfile) {
+        // Entreprises/livreurs/correspondants suivis activement
+        const follows = await this.followRepo.find({
+          where: {
+            followerType: FollowerActorType.CLIENT,
+            followerId:   clientProfile.id,
+            isSubscribed: true,
+          },
+          select: ['targetType', 'targetId'],
+        });
+        for (const f of follows) {
+          if (f.targetType === TargetActorType.COMPANY)       followedCompanyIds.add(f.targetId);
+          if (f.targetType === TargetActorType.DELIVERY)      followedDeliveryIds.add(f.targetId);
+          if (f.targetType === TargetActorType.CORRESPONDENT) followedCorrIds.add(f.targetId);
+        }
+
+        // Entreprises dans lesquelles le client a déjà commandé
+        const orderedRows = await this.commandeRepo
+          .createQueryBuilder('cmd')
+          .select('DISTINCT cmd.companyId', 'companyId')
+          .where('cmd.clientId = :cid', { cid: clientProfile.id })
+          .getRawMany<{ companyId: string }>();
+        for (const row of orderedRows) {
+          if (row.companyId) followedCompanyIds.add(row.companyId);
+        }
+      }
+
+      const contacts = await this.contactRepo.find({
+        where:  { ownerUserId: userId, isBlocked: false },
+        select: ['matchedUserId'],
+      });
+      contactUserIds = new Set(
+        contacts.filter(c => c.matchedUserId).map(c => c.matchedUserId as string),
+      );
+    }
 
     /* ── Entreprises ── */
     if (!type || type === ConversationActorType.COMPANY) {
@@ -660,7 +739,8 @@ export class MessagerieService {
         relations: ['user'],
         take:      15,
       });
-      cos.forEach(co => results.push({
+      const filtered = isCallerClient ? cos.filter(co => followedCompanyIds.has(co.id)) : cos;
+      filtered.forEach(co => results.push({
         id:       co.id,
         type:     ConversationActorType.COMPANY,
         name:     co.companyName,
@@ -678,7 +758,8 @@ export class MessagerieService {
         .take(15);
       if (term) qb.andWhere('d.fullName LIKE :t', { t: `%${term}%` });
       const livs = await qb.getMany();
-      livs.forEach(d => results.push({
+      const filtered = isCallerClient ? livs.filter(d => followedDeliveryIds.has(d.id)) : livs;
+      filtered.forEach(d => results.push({
         id:       d.id,
         type:     ConversationActorType.DELIVERY,
         name:     (d as any).fullName ?? 'Livreur',
@@ -696,7 +777,8 @@ export class MessagerieService {
         .take(15);
       if (term) qb.andWhere('c.fullName LIKE :t', { t: `%${term}%` });
       const corrs = await qb.getMany();
-      corrs.forEach(c => {
+      const filtered = isCallerClient ? corrs.filter(c => followedCorrIds.has(c.id)) : corrs;
+      filtered.forEach(c => {
         const loc = [(c as any).depotCommune, (c as any).depotVille].filter(Boolean).join(', ');
         results.push({
           id:       c.id,
@@ -709,56 +791,36 @@ export class MessagerieService {
       });
     }
 
-    /* ── Clients (recherche par prénom/nom via User join) ── */
+    /* ── Clients (recherche par prénom/nom via User join) ──
+       Client → client : uniquement ceux dans les contacts téléphoniques */
     if (!type || type === ConversationActorType.CLIENT) {
-      const clientQb = this.clientRepo.createQueryBuilder('cl')
-        .leftJoinAndSelect('cl.user', 'user')
-        .where('cl.userId != :userId', { userId })
-        .take(10);
-      if (term) {
-        clientQb.andWhere(
-          `CONCAT(user.firstName, ' ', user.lastName) LIKE :t`,
-          { t: `%${term}%` },
-        );
-      }
-      const clients = await clientQb.getMany();
-      clients.forEach(cl => {
-        const u = (cl as any).user;
-        results.push({
-          id:       cl.id,
-          type:     ConversationActorType.CLIENT,
-          name:     u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Client',
-          logo:     u?.profilePicture ?? null,
-          subtitle: 'Client Shopi',
-          online:   isOnline(u?.lastLoginAt),
+      if (!isCallerClient || contactUserIds.size > 0) {
+        const clientQb = this.clientRepo.createQueryBuilder('cl')
+          .leftJoinAndSelect('cl.user', 'user')
+          .where('cl.userId != :userId', { userId })
+          .take(10);
+        if (term) {
+          clientQb.andWhere(
+            `CONCAT(user.firstName, ' ', user.lastName) LIKE :t`,
+            { t: `%${term}%` },
+          );
+        }
+        if (isCallerClient) {
+          clientQb.andWhere('cl.userId IN (:...cids)', { cids: [...contactUserIds] });
+        }
+        const clients = await clientQb.getMany();
+        clients.forEach(cl => {
+          const u = (cl as any).user;
+          results.push({
+            id:       cl.id,
+            type:     ConversationActorType.CLIENT,
+            name:     u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Client',
+            logo:     u?.profilePicture ?? null,
+            subtitle: 'Client Shopi',
+            online:   isOnline(u?.lastLoginAt),
+          });
         });
-      });
-    }
-
-    /* ── Partenaires ── */
-    if (!type || type === ConversationActorType.PARTNER) {
-      const partQb = this.partnerRepo.createQueryBuilder('p')
-        .leftJoinAndSelect('p.user', 'user')
-        .where('p.userId != :userId', { userId })
-        .take(10);
-      if (term) {
-        partQb.andWhere(
-          `CONCAT(user.firstName, ' ', user.lastName) LIKE :t`,
-          { t: `%${term}%` },
-        );
       }
-      const partners = await partQb.getMany();
-      partners.forEach(p => {
-        const u = (p as any).user;
-        results.push({
-          id:       p.id,
-          type:     ConversationActorType.PARTNER,
-          name:     u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Partenaire',
-          logo:     null,
-          subtitle: 'Partenaire Shopi',
-          online:   isOnline(u?.lastLoginAt),
-        });
-      });
     }
 
     return results;
@@ -889,6 +951,7 @@ export class MessagerieService {
       mediaUrl:      msg.mediaUrl,
       mediaName:     msg.mediaName,
       mediaMimeType: msg.mediaMimeType,
+      mediaDuration: msg.mediaDuration ?? null,
       createdAt:     msg.createdAt.toISOString(),
       readAt:        msg.readAt?.toISOString() ?? null,
       replyToId:     msg.replyToId,
@@ -907,7 +970,7 @@ export class MessagerieService {
     userId: string, role: UserRole,
     messageId: string,
     dto: DeleteMessageDto,
-  ): Promise<{ success: boolean; deletedForAll: boolean }> {
+  ): Promise<{ success: boolean; mode: string }> {
     const myType = this.roleToActorType(role);
     const myId   = await this.resolveProfileId(userId, role);
 
@@ -916,11 +979,10 @@ export class MessagerieService {
 
     const senderType = myType as unknown as MessageActorType;
     const isOwner    = msg.senderType === senderType && msg.senderId === myId;
+    const mode       = dto.mode ?? 'me';
 
-    const forEveryone = (dto.forEveryone ?? false) && isOwner;
-
-    if (forEveryone) {
-      /* Suppression pour tout le monde : efface le contenu + soft delete */
+    if (mode === 'everyone' && isOwner) {
+      /* ── Supprimer pour tout le monde ── */
       await this.msgRepo.update(messageId, {
         content:     null,
         mediaUrl:    null,
@@ -929,7 +991,6 @@ export class MessagerieService {
       });
       await this.msgRepo.softDelete(messageId);
 
-      /* Broadcast */
       if (this.broadcastSvc) {
         const conv = await this.convRepo.findOne({
           where:  { id: msg.conversationId },
@@ -938,7 +999,6 @@ export class MessagerieService {
         const otherUserId = conv?.initiatorUserId === userId
           ? conv?.recipientUserId
           : conv?.initiatorUserId;
-
         if (otherUserId) {
           this.broadcastSvc.messageDeleted([otherUserId], {
             conversationId: msg.conversationId,
@@ -947,12 +1007,43 @@ export class MessagerieService {
           });
         }
       }
+
+    } else if (mode === 'me') {
+      /* ── Supprimer pour moi seulement ── */
+      const current = msg.deletedForUserIds ?? [];
+      if (!current.includes(userId)) {
+        await this.msgRepo.update(messageId, {
+          deletedForUserIds: [...current, userId],
+        });
+      }
+
+    } else if (mode === 'other' && isOwner) {
+      /* ── Supprimer pour lui (l'autre participant) ── */
+      const conv = await this.convRepo.findOne({
+        where:  { id: msg.conversationId },
+        select: ['initiatorUserId', 'recipientUserId'],
+      });
+      const otherUserId = conv?.initiatorUserId === userId
+        ? conv?.recipientUserId
+        : conv?.initiatorUserId;
+
+      if (otherUserId) {
+        const current = msg.deletedForUserIds ?? [];
+        if (!current.includes(otherUserId)) {
+          await this.msgRepo.update(messageId, {
+            deletedForUserIds: [...current, otherUserId],
+          });
+        }
+        this.broadcastSvc?.messageDeleted([otherUserId], {
+          conversationId: msg.conversationId,
+          messageId,
+          deletedForAll:  false,
+        });
+      }
     }
-    /* else : suppression pour soi uniquement (géré côté frontend) */
 
-    this.logger.log(`[DELETE] messageId=${messageId} forAll=${forEveryone} by ${senderType}:${myId}`);
-
-    return { success: true, deletedForAll: forEveryone };
+    this.logger.log(`[DELETE] messageId=${messageId} mode=${mode} by ${senderType}:${myId}`);
+    return { success: true, mode };
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -1037,7 +1128,72 @@ export class MessagerieService {
   }
 
   // ══════════════════════════════════════════════════════════════
-  // 11. MESSAGES D'UNE CONVERSATION (avec replies résolues)
+  // 11. CONVERSATIONS MASQUÉES (archivées par l'acteur)
+  // ══════════════════════════════════════════════════════════════
+
+  async getArchivedConversations(userId: string, role: UserRole): Promise<ConvListItem[]> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role);
+
+    const conversations = await this.convRepo.find({
+      where: [
+        { initiatorType: myType, initiatorId: myId, status: ConversationStatus.ACTIVE, deletedByInitiator: false, archivedByInitiator: true },
+        { recipientType: myType, recipientId: myId, status: ConversationStatus.ACTIVE, deletedByRecipient: false, archivedByRecipient: true },
+      ],
+      order: { lastMessageAt: 'DESC', updatedAt: 'DESC' },
+      take:  50,
+    });
+
+    const results: ConvListItem[] = [];
+    for (const conv of conversations) {
+      const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
+      const contactType = amInitiator ? conv.recipientType : conv.initiatorType;
+      const contactId   = amInitiator ? conv.recipientId   : conv.initiatorId;
+      const unreadCount = amInitiator ? conv.unreadCountInitiator : conv.unreadCountRecipient;
+      const contact     = await this.getContactInfo(contactType, contactId);
+
+      results.push({
+        id:              conv.id,
+        contactId,
+        contactType,
+        contactName:     contact.name,
+        contactLogo:     contact.logo,
+        contactOnline:   contact.online,
+        contactUserId:   contact.userId,
+        contactSubtitle: contact.subtitle,
+        unreadCount,
+        lastMessage:     conv.lastMessagePreview,
+        lastMessageAt:   conv.lastMessageAt?.toISOString() ?? null,
+      });
+    }
+    return results;
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 12. SUPPRIMER UNE CONVERSATION (soft delete par acteur)
+  // ══════════════════════════════════════════════════════════════
+
+  async deleteConversation(userId: string, role: UserRole, convId: string): Promise<void> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role);
+    const conv   = await this.assertConvAccess(convId, myType, myId);
+
+    const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
+
+    await this.convRepo.update(convId, amInitiator
+      ? { deletedByInitiator: true }
+      : { deletedByRecipient: true },
+    );
+
+    /* Suppression physique quand les deux côtés ont supprimé */
+    const updated = await this.convRepo.findOneBy({ id: convId });
+    if (updated?.deletedByInitiator && updated?.deletedByRecipient) {
+      await this.convRepo.delete(convId);
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 12. MESSAGES D'UNE CONVERSATION (avec replies résolues)
   // ══════════════════════════════════════════════════════════════
 
   /**
@@ -1084,6 +1240,7 @@ export class MessagerieService {
         mediaUrl:      m.mediaUrl,
         mediaName:     m.mediaName,
         mediaMimeType: m.mediaMimeType,
+        mediaDuration: m.mediaDuration ?? null,
         createdAt:     m.createdAt.toISOString(),
         readAt:        m.readAt?.toISOString() ?? null,
         replyToId:     m.replyToId,
@@ -1103,16 +1260,17 @@ export class MessagerieService {
           senderType:  parent.senderType,
           contentType: parent.contentType,
           content:     parent.content,
-          mediaUrl:    parent.mediaUrl,
-          mediaName:   parent.mediaName,
+          mediaUrl:      parent.mediaUrl,
+          mediaName:     parent.mediaName,
           mediaMimeType: parent.mediaMimeType,
-          createdAt:   parent.createdAt.toISOString(),
-          readAt:      null,
-          replyToId:   null,
-          productId:   null,
-          orderId:     null,
-          isEdited:    parent.isEdited,
-          deletedAt:   parent.deletedAt?.toISOString() ?? null,
+          mediaDuration: parent.mediaDuration ?? null,
+          createdAt:     parent.createdAt.toISOString(),
+          readAt:        null,
+          replyToId:     null,
+          productId:     null,
+          orderId:       null,
+          isEdited:      parent.isEdited,
+          deletedAt:     parent.deletedAt?.toISOString() ?? null,
         } : null,
       };
     });

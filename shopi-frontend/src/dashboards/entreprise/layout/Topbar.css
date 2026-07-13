@@ -254,23 +254,32 @@
 .tb-drawer-out  { background: rgba(220,38,38,.08); color: var(--red); border: 1.5px solid rgba(220,38,38,.18); }
 .tb-drawer-out:hover { background: rgba(220,38,38,.14); }
 
+/* ════════ PLEIN-ÉCRAN (messagerie) ════════ */
+
+/* Topbar sans sidebar : couvre toute la largeur */
+.topbar.topbar-fullscreen { left: 0; }
+
+/* Bouton retour (plein-écran mobile) : toujours visible */
+.hamburger-back { display: flex !important; }
+
+/* Bottom nav cachée sur page messagerie */
+.tb-bottomnav.tb-bottomnav-hidden { display: none !important; }
+
 /* ════════ RESPONSIVE ════════ */
 @media (max-width: 920px) {
   .topbar { left: 68px; }
-  .tb-home { display: none; }            /* gardé dans le menu avatar + drawer */
+  .topbar.topbar-fullscreen { left: 0; }
+  .tb-home { display: none; }
 }
 
 @media (max-width: 640px) {
   .topbar { left: 0; padding: 0 14px; gap: 10px; }
-  .hamburger { display: flex; }           /* ✅ bouton menu en haut, comme le dashboard livreur */
+  .hamburger { display: flex; }
 
-  /* En mobile : on masque la recherche et les raccourcis desktop,
-     SAUF Messages/Notifications (.tb-ic-pin) qui restent accessibles
-     en haut. La navigation principale passe par le bottom nav + drawer. */
   .tb-srch, .tb-settings, .tb-new, .tb-home,
   .tb-acts .tb-ic:not(.tb-ic-pin), .tb-acts .tb-sep { display: none; }
   .tb-acts { gap: 2px; }
-  .tb-ava-wrap { display: block; }       /* on garde l'avatar accessible */
+  .tb-ava-wrap { display: block; }
 
-  .tb-bottomnav { display: flex; }        /* ✅ bottom nav visible */
+  .tb-bottomnav { display: flex; }
 }

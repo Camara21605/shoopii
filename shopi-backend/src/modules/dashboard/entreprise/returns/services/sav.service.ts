@@ -330,6 +330,106 @@ export class SavService {
     };
   }
 
+  /* ══════════════════════════════════════════════════════════
+   * LISTE TICKETS — côté client
+   ══════════════════════════════════════════════════════════ */
+  async findAllByClient(clientUserId: string, filters: FilterSavDto) {
+    const client = await this.clientRepo.findOne({ where: { userId: clientUserId } });
+    if (!client) throw new NotFoundException('Profil client introuvable.');
+
+    const { page = 1, limit = 20, status, priority, search } = filters;
+
+    const qb = this.ticketRepo
+      .createQueryBuilder('t')
+      .where('t.clientId = :clientId', { clientId: client.id })
+      .orderBy('t.updatedAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    if (status)   qb.andWhere('t.status = :status',     { status });
+    if (priority) qb.andWhere('t.priority = :priority', { priority });
+    if (search?.trim()) {
+      const q = `%${search.trim().toLowerCase()}%`;
+      qb.andWhere('(LOWER(t.reference) LIKE :q OR LOWER(t.subject) LIKE :q)', { q });
+    }
+
+    const [tickets, total] = await qb.getManyAndCount();
+    return { data: tickets, total, page, pages: Math.ceil(total / limit) };
+  }
+
+  /* ══════════════════════════════════════════════════════════
+   * DÉTAIL TICKET — côté client
+   ══════════════════════════════════════════════════════════ */
+  async findOneByClient(clientUserId: string, ticketId: string) {
+    const client = await this.clientRepo.findOne({ where: { userId: clientUserId } });
+    if (!client) throw new NotFoundException('Profil client introuvable.');
+
+    const ticket = await this.ticketRepo.findOne({
+      where: { id: ticketId, clientId: client.id },
+      relations: ['messages'],
+    });
+    if (!ticket) throw new NotFoundException('Ticket SAV introuvable.');
+
+    const unreadIds = (ticket.messages ?? [])
+      .filter(m => !m.isRead && m.senderRole !== 'client')
+      .map(m => m.id);
+
+    if (unreadIds.length > 0) {
+      await this.messageRepo.createQueryBuilder()
+        .update(SavMessage)
+        .set({ isRead: true })
+        .whereInIds(unreadIds)
+        .execute();
+    }
+
+    const messages = [...(ticket.messages ?? [])].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+
+    return { ...ticket, messages };
+  }
+
+  /* ══════════════════════════════════════════════════════════
+   * RÉPONDRE À UN TICKET — côté client
+   ══════════════════════════════════════════════════════════ */
+  async replyByClient(clientUserId: string, ticketId: string, dto: ReplySavDto) {
+    const client = await this.clientRepo.findOne({ where: { userId: clientUserId } });
+    if (!client) throw new NotFoundException('Profil client introuvable.');
+
+    const ticket = await this.ticketRepo.findOne({
+      where: { id: ticketId, clientId: client.id },
+    });
+    if (!ticket) throw new NotFoundException('Ticket SAV introuvable.');
+    if (ticket.status === SavStatus.CLOSED) {
+      throw new BadRequestException('Le ticket est fermé. Impossible de répondre.');
+    }
+
+    const user = await this.userRepo.findOne({
+      where: { id: clientUserId }, select: ['id', 'firstName', 'lastName', 'profilePicture'],
+    });
+
+    return this.dataSource.transaction(async em => {
+      const m = em.create(SavMessage, {
+        ticketId,
+        content:     dto.content,
+        senderRole:  'client',
+        senderId:    clientUserId,
+        senderName:  user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() : 'Client',
+        senderAvatar: user?.profilePicture ?? null,
+        isRead:      false,
+      });
+      const saved = await em.save(m);
+
+      await em.update(SavTicket, { id: ticketId }, {
+        status:       SavStatus.WAITING_CLIENT,
+        messageCount: (ticket.messageCount ?? 0) + 1,
+        unreadCount:  (ticket.unreadCount ?? 0) + 1,
+      });
+
+      return saved;
+    });
+  }
+
   /* ── Helpers ── */
 
   private async resolveCompany(userId: string): Promise<Company> {

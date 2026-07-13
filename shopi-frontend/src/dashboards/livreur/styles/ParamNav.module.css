@@ -67,7 +67,7 @@
 .dotA { background: var(--amber, #B45309); }
 
 /* ── Responsive : onglets scrollables ── */
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
   .nav {
     position: static;
     display: flex;

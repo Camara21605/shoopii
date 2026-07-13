@@ -21,6 +21,12 @@ import { Company }      from 'src/database/entities/profiles/entreprise-profile.
 import { Delivery }     from 'src/database/entities/profiles/livreur-profile.entity';
 import { Correspondent } from 'src/database/entities/profiles/correspondant-profile.entity';
 import { Partner }      from 'src/database/entities/profiles/partenaire-profile.entity';
+import { Follow }       from 'src/database/entities/follow/follow.entity';
+import { UserContact }  from 'src/database/entities/contacts/user-contact.entity';
+import { Commande }     from 'src/database/entities/commande/commande.entity';
+import { DeliveryGroup }       from 'src/database/entities/delivery-group/delivery-group.entity';
+import { DeliveryGroupMember } from 'src/database/entities/delivery-group/delivery-group-member.entity';
+import { GroupMessage }        from 'src/database/entities/delivery-group/group-message.entity';
 
 import { AuthModule }                  from '../auth/auth.module';
 import { NotificationsModule }         from '../notifications/notifications.module';
@@ -29,6 +35,7 @@ import { MessagingPermissionsModule }  from './permissions/messaging-permissions
 import { MessagerieController }   from './messagerie.controller';
 import { MessagerieService }      from './messagerie.service';
 import { MessagerieGateway }      from './gateways/messagerie.gateway';
+import { GroupCallGateway }       from './gateways/group-call.gateway';
 import { PresenceService }        from './services/presence.service';
 import { BroadcastService }       from './services/broadcast.service';
 
@@ -43,6 +50,12 @@ import { BroadcastService }       from './services/broadcast.service';
       Delivery,
       Correspondent,
       Partner,
+      Follow,
+      UserContact,
+      Commande,
+      DeliveryGroup,
+      DeliveryGroupMember,
+      GroupMessage,
     ]),
     AuthModule,
     NotificationsModule,
@@ -52,6 +65,7 @@ import { BroadcastService }       from './services/broadcast.service';
   providers: [
     MessagerieService,
     MessagerieGateway,
+    GroupCallGateway,
     PresenceService,
     BroadcastService,
   ],

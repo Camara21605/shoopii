@@ -3,7 +3,7 @@
  * Types TypeScript et config rôles partagés par toute la messagerie Shopi.
  */
 
-export type UserRole = 'client' | 'vendeur' | 'livreur' | 'partenaire' | 'correspondant' | 'admin';
+export type UserRole = 'client' | 'vendeur' | 'livreur' | 'partenaire' | 'correspondant' | 'admin' | 'groupe';
 
 export interface ChatUser {
   id:       string;   // profile ID (contactId)
@@ -66,6 +66,51 @@ export interface Conversation {
   lastTime: string;
   muted:    boolean;
   messages: ChatMessage[];
+  /** Groupe de livraison automatique */
+  isGroup?:        boolean;
+  groupStatus?:    'active' | 'completed' | 'expired' | 'cancelled';
+  commandeNumero?: string;
+  memberCount?:    number;
+  expiresAt?:      string;
+  description?:    string;
+}
+
+export interface GroupMember {
+  id:          string;
+  actorType:   'client' | 'company' | 'delivery' | 'correspondent';
+  actorId:     string;
+  userId:      string;
+  displayName: string;
+  joinedAt:    string;
+}
+
+// ── Types appels de groupe ─────────────────────────────────────
+
+/** Invitation d'appel entrant pour un groupe. */
+export interface GroupCallInvite {
+  callId:        string;
+  groupId:       string;
+  initiatorId:   string;
+  initiatorName: string;
+  callType:      'audio' | 'video';
+}
+
+/** État d'un pair WebRTC dans un appel de groupe. */
+export interface GroupCallPeer {
+  userId:       string;
+  displayName:  string;
+  stream:       MediaStream | null;
+  audioEnabled: boolean;
+  videoEnabled: boolean;
+}
+
+/** État complet de l'appel de groupe actif. */
+export interface GroupCallState {
+  callId:   string;
+  groupId:  string;
+  callType: 'audio' | 'video';
+  /** 'joining' = on a rejoint mais les PeerConnections ne sont pas encore établies */
+  status:   'joining' | 'connected';
 }
 
 export interface NewConvUser {
@@ -78,6 +123,7 @@ export interface NewConvUser {
 
 // ── Config rôles (couleurs + icônes) ──────────────────────────
 export const ROLE_CONFIG: Record<UserRole, { label: string; icon: string; color: string; bg: string }> = {
+  groupe:        { label: 'Livraison',      icon: '📦', color: '#0E7490',  bg: 'rgba(14,116,144,.1)'  },
   client:        { label: 'Client',        icon: '🛍️', color: '#1A4FC4',  bg: 'rgba(26,79,196,.1)'   },
   vendeur:       { label: 'Vendeur',       icon: '🏪', color: '#047857',  bg: 'rgba(4,120,87,.1)'    },
   livreur:       { label: 'Livreur',       icon: '🛵', color: '#0E7490',  bg: 'rgba(14,116,144,.1)'  },

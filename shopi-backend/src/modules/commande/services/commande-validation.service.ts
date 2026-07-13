@@ -21,6 +21,7 @@ import { ValiderEtapeDto } from '../dto/valider-etape.dto';
 import { CODE_EXPIRY_MS } from './commande.helpers';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 import { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import { DeliveryGroupService } from 'src/modules/delivery-group/delivery-group.service';
 
 @Injectable()
 export class CommandeValidationService {
@@ -28,6 +29,7 @@ export class CommandeValidationService {
     @InjectRepository(Commande) private readonly commandeRepo: Repository<Commande>,
     @InjectRepository(CommandeCode) private readonly codeRepo: Repository<CommandeCode>,
     private readonly notifEventSvc: NotificationEventService,
+    private readonly deliveryGroupSvc: DeliveryGroupService,
   ) {}
 
   /* ════════════════════════════════════════════════════════
@@ -74,6 +76,9 @@ export class CommandeValidationService {
       commande.status = CommandeStatus.DELIVERED;
       commande.dateLivraisonEffective = now;
       await this.commandeRepo.save(commande);
+
+      /* Groupe de livraison : démarrer le compte à rebours 72h */
+      void this.deliveryGroupSvc.handleOrderStatusChange(commande.id, CommandeStatus.DELIVERED);
 
       /* Notifier l'entreprise : commande réceptionnée par le client */
       void this.notifEventSvc.notifyOrderStatusChanged({

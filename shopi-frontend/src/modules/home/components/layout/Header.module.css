@@ -43,6 +43,8 @@
 .navLink i { font-size: 12px; color: var(--t3); transition: color .18s; }
 .navLink:hover { color: var(--navy); background: var(--sky); }
 .navLink:hover i { color: var(--blue); }
+.navLinkActive { color: var(--blue) !important; background: var(--sky) !important; }
+.navLinkActive i { color: var(--blue) !important; }
 @media (max-width: 1024px) { .navDesktop { display: none; } }
 
 /* ─── Recherche desktop ────────────────────────────────────── */
@@ -226,6 +228,8 @@
   cursor: pointer; transition: background .15s; text-align: left;
 }
 .drawerLink:hover { background: var(--sky); color: var(--blue); }
+.drawerLinkActive { background: var(--sky) !important; color: var(--blue) !important; }
+.drawerLinkActive .drawerLinkIco { background: rgba(26,79,196,.18); }
 .drawerLinkIco {
   width: 34px; height: 34px; border-radius: 9px; background: var(--sky);
   display: flex; align-items: center; justify-content: center;

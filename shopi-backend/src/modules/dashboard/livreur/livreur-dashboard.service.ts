@@ -11,6 +11,7 @@ import { In, Repository }   from 'typeorm';
 
 import { Delivery }  from 'src/database/entities/profiles/livreur-profile.entity';
 import { Commande, CommandeStatus } from 'src/database/entities/commande/commande.entity';
+import { Notification, NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
 
 /** Statuts d'une mission en cours */
 const ACTIVE_STATUSES: CommandeStatus[] = [
@@ -36,6 +37,9 @@ export class LivreurDashboardService {
 
     @InjectRepository(Commande)
     private readonly commandeRepo: Repository<Commande>,
+
+    @InjectRepository(Notification)
+    private readonly notifRepo: Repository<Notification>,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -118,5 +122,35 @@ export class LivreurDashboardService {
       dateLivraison: c.dateLivraisonEffective ?? null,
       createdAt:     c.createdAt,
     };
+  }
+
+  /* ──────────────────────────────────────────────────────────
+   * GET ACTIVITE — 15 notifications récentes du livreur
+   * ────────────────────────────────────────────────────────── */
+  async getActivite(userId: string) {
+    const livreur = await this.livreurRepo.findOne({
+      where:  { userId },
+      select: ['id'],
+    });
+    if (!livreur) throw new NotFoundException('Profil livreur introuvable.');
+
+    const notifs = await this.notifRepo.find({
+      where: {
+        recipientType: NotificationActorType.DELIVERY,
+        recipientId:   livreur.id,
+      },
+      select: ['id', 'type', 'title', 'body', 'isRead', 'createdAt'],
+      order:  { createdAt: 'DESC' },
+      take:   15,
+    });
+
+    return notifs.map(n => ({
+      id:        n.id,
+      type:      n.type,
+      title:     n.title,
+      body:      n.body,
+      isRead:    n.isRead,
+      createdAt: n.createdAt,
+    }));
   }
 }

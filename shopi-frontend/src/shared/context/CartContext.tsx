@@ -46,17 +46,23 @@ const CartContext = createContext<CartContextValue>({
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items,   setItems]   = useState<CartItemApi[]>([]);
   const [loading, setLoading] = useState(false);
-  const isClient = getRoleFromToken() === 'client';
 
   const refresh = useCallback(async () => {
-    if (!isClient) return;
+    if (getRoleFromToken() !== 'client') return;
     try {
       const data = await apiFetch<CartItemApi[]>('/client/panier');
       setItems(data ?? []);
     } catch { /* silencieux */ }
-  }, [isClient]);
+  }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  /* Recharge le panier quand l'utilisateur se connecte dans le même onglet */
+  useEffect(() => {
+    const handleAuth = () => { void refresh(); };
+    window.addEventListener('auth:login', handleAuth);
+    return () => window.removeEventListener('auth:login', handleAuth);
+  }, [refresh]);
 
   /* ✅ Vérifie si un produit est déjà dans le panier */
   const isInCart = useCallback((produitId: string): CartItemApi | null => {
@@ -64,47 +70,48 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items]);
 
   const addToCart = useCallback(async (produitId: string, qty = 1, variante?: string) => {
-    if (!isClient) return;
+    if (getRoleFromToken() !== 'client') return;
     if (!produitId) return;
-    setLoading(true);
-    try {
-      const data = await apiFetch<CartItemApi[]>('/client/panier', {
-        method: 'POST',
-        body: { produitId, qty, variante },
-      });
-      setItems(data ?? []);
-    } finally { setLoading(false); }
-  }, [isClient]);
+    const data = await apiFetch<CartItemApi[]>('/client/panier', {
+      method: 'POST',
+      body: { produitId, qty, variante },
+    });
+    setItems(data ?? []);
+  }, []);
 
   const updateQty = useCallback(async (itemId: string, qty: number) => {
-    if (!isClient) return;
-    setLoading(true);
+    if (getRoleFromToken() !== 'client') return;
+    /* Mise à jour optimiste — l'UI réagit immédiatement sans attendre l'API */
+    setItems(prev => prev.map(i => i.id === itemId ? { ...i, qty } : i));
     try {
       const data = await apiFetch<CartItemApi[]>(`/client/panier/${itemId}`, {
         method: 'PATCH',
         body: { qty },
       });
       setItems(data ?? []);
-    } finally { setLoading(false); }
-  }, [isClient]);
+    } catch {
+      /* Rollback : resynchronise depuis le serveur */
+      void refresh();
+    }
+  }, [refresh]);
 
   const removeItem = useCallback(async (itemId: string) => {
-    if (!isClient) return;
+    if (getRoleFromToken() !== 'client') return;
     setItems(prev => prev.filter(i => i.id !== itemId));
     try {
       const data = await apiFetch<CartItemApi[]>(`/client/panier/${itemId}`, { method: 'DELETE' });
       setItems(data ?? []);
-    } catch { refresh(); }
-  }, [isClient, refresh]);
+    } catch { void refresh(); }
+  }, [refresh]);
 
   const clearCart = useCallback(async () => {
-    if (!isClient) return;
+    if (getRoleFromToken() !== 'client') return;
     setLoading(true);
     try {
       await apiFetch('/client/panier', { method: 'DELETE' });
       setItems([]);
     } finally { setLoading(false); }
-  }, [isClient]);
+  }, []);
 
   const count = items.reduce((sum, i) => sum + i.qty, 0);
 

@@ -1,29 +1,18 @@
 ﻿/* ================================================================
  * FICHIER : profil-client/components/ProfilSidebarClient.tsx
  *
- * Colonne latérale : Wallet, transactions, points Gold,
+ * Colonne latérale : Wallet, points Gold,
  * méthodes de paiement, infos personnelles.
- *
- * DONNÉES :
- *   ✅ props (dynamiques) : pays (paiement), infos, points, wallet
- *   🟡 mock : transactions wallet (pas encore d'endpoint dédié)
- *
- * Les props ont des valeurs par défaut (mock) → le composant
- * fonctionne même si la page ne les fournit pas encore.
+ * Toutes les données viennent de /client/profil via useProfilClient.
  * ================================================================ */
 
 import { useState } from 'react';
 import styles from '../styles/ProfilClient.module.css';
-import {
-  WALLET as MOCK_WALLET,
-  TRANSACTIONS,
-  POINTS as MOCK_POINTS,
-  PAY_METHODS as MOCK_PAY,
-  INFOS as MOCK_INFOS,
-  fmtGnf,
-} from '../data/profilClientData';
 import type { PayMethod, InfoRow } from '../data/profilClientData';
 import PortefeuilleStandalone from '../../../components/portefeuille/PortefeuilleStandalone';
+
+const fmtGnf = (n: number | undefined | null) =>
+  n != null ? n.toLocaleString('fr-FR') + ' GNF' : '—';
 
 /* Points simplifiés venant du hook (sous-ensemble de PointsData) */
 interface PointsLite {
@@ -33,7 +22,6 @@ interface WalletLite { solde: number; }
 
 interface Props {
   onToast: (m: string, t?: 's' | 'i' | 'w' | 'e') => void;
-  /* Dynamiques (optionnels → fallback mock) */
   pays?:   PayMethod[];
   infos?:  InfoRow[];
   points?: PointsLite;
@@ -42,24 +30,17 @@ interface Props {
 
 export default function ProfilSidebarClient({
   onToast,
-  pays   = MOCK_PAY,
-  infos  = MOCK_INFOS,
+  pays   = [],
+  infos  = [],
   points,
   wallet,
 }: Props) {
 
-  /* Modal de gestion complète du portefeuille */
   const [walletOpen, setWalletOpen] = useState(false);
 
-  /* Solde wallet : dynamique si fourni, sinon mock */
-  const soldeWallet = wallet?.solde ?? MOCK_WALLET.solde;
-
-  /* Points : dynamiques si fournis, sinon mock.
-     prochainSeuil reste mock (logique de paliers non encore en base). */
-  const ptsSolde      = points?.solde      ?? MOCK_POINTS.solde;
-  const ptsGagnes     = points?.gagnesMois ?? MOCK_POINTS.gagnesMois;
-  const prochainSeuil = MOCK_POINTS.prochainSeuil;
-  const pct           = Math.min(100, Math.round((ptsSolde / prochainSeuil) * 100));
+  const soldeWallet   = wallet?.solde      ?? 0;
+  const ptsSolde      = points?.solde      ?? 0;
+  const ptsGagnes     = points?.gagnesMois ?? 0;
 
   return (
     <aside className={styles.sidebar}>
@@ -81,51 +62,35 @@ export default function ProfilSidebarClient({
             </button>
           ))}
         </div>
-        <div className={styles.walletFlux}>
-          <div><div className={styles.wfLbl}>Entrées ce mois</div><div className={`${styles.wfVal} ${styles.wfIn}`}>+ {fmtGnf(MOCK_WALLET.entreesMois)}</div></div>
-          <div><div className={styles.wfLbl}>Sorties ce mois</div><div className={`${styles.wfVal} ${styles.wfOut}`}>− {fmtGnf(MOCK_WALLET.sortiesMois)}</div></div>
-        </div>
-
         <button className={styles.walletManageBtn} onClick={() => setWalletOpen(true)}>
           <i className="fas fa-wallet" /> Gérer mon portefeuille
         </button>
       </div>
 
-      {/* ── DERNIÈRES TRANSACTIONS (mock) ── */}
+      {/* ── DERNIÈRES TRANSACTIONS ── */}
       <div className={styles.card}>
         <div className={styles.ch}>
           <div className={styles.ct}><i className="fas fa-receipt" /> Dernières transactions</div>
         </div>
         <div className={styles.cb}>
-          {TRANSACTIONS.map(t => (
-            <div key={t.id} className={styles.txRow}>
-              <div>
-                <div className={styles.txLbl}>{t.label}</div>
-                <div className={styles.txDate}>{t.date}</div>
-              </div>
-              <div className={`${styles.txMontant} ${t.montant >= 0 ? styles.txIn : styles.txOut}`}>
-                {t.montant >= 0 ? '+' : '−'} {fmtGnf(Math.abs(t.montant))}
-              </div>
-            </div>
-          ))}
+          <div style={{ textAlign: 'center', padding: '20px 8px', color: 'var(--t3)', fontSize: 12 }}>
+            <i className="fas fa-receipt" style={{ display: 'block', fontSize: 22, marginBottom: 8, opacity: 0.3 }} />
+            Gérez votre portefeuille pour voir l'historique des transactions.
+          </div>
         </div>
       </div>
 
-      {/* ── POINTS GOLD (dynamique) ── */}
+      {/* ── POINTS GOLD ── */}
       <div className={styles.pointsCard}>
         <div className={styles.walletLabel} style={{ opacity: .85 }}>
           <i className="fas fa-crown" /> Points ShopiGold
         </div>
         <div className={styles.pointsSolde}>{ptsSolde.toLocaleString('fr-FR')} pts</div>
-        <div className={styles.pointsSub}>
-          +{ptsGagnes} pts ce mois{points?.expiration ? ` · Expire ${points.expiration}` : ''}
-        </div>
-        <div className={styles.pointsBar}>
-          <div className={styles.pointsBarFill} style={{ width: `${pct}%` }} />
-        </div>
-        <div className={styles.pointsNiveau}>
-          Niveau {MOCK_POINTS.niveau} · {MOCK_POINTS.prochainNiveau} à {prochainSeuil.toLocaleString('fr-FR')} pts
-        </div>
+        {ptsGagnes > 0 && (
+          <div className={styles.pointsSub}>
+            +{ptsGagnes} pts ce mois{points?.expiration ? ` · Expire ${points.expiration}` : ''}
+          </div>
+        )}
       </div>
 
       {/* ── MÉTHODES DE PAIEMENT (dynamique) ── */}

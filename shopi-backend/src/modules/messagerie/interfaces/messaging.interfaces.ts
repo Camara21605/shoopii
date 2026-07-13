@@ -149,3 +149,48 @@ export interface WsReactionPayload {
   actorId:        string;
   added:          boolean;   // true = ajout, false = suppression
 }
+
+// ─────────────────────────────────────────────────────────────
+// GROUPES DE LIVRAISON (delivery-group)
+// ─────────────────────────────────────────────────────────────
+
+/** Nouveau message dans un groupe de livraison */
+export interface WsGroupNewMessagePayload {
+  groupId:        string;
+  commandeNumero: string;
+  message:        object;
+}
+
+/** Message édité dans un groupe */
+export interface WsGroupMessageEditedPayload {
+  groupId:    string;
+  messageId:  string;
+  newContent: string;
+  editedAt:   string;
+}
+
+/** Message supprimé dans un groupe */
+export interface WsGroupMessageDeletedPayload {
+  groupId:      string;
+  messageId:    string;
+  deletedForAll: boolean;
+}
+
+/** Réaction dans un groupe */
+export interface WsGroupReactionPayload {
+  groupId:   string;
+  messageId: string;
+  reactions: Record<string, string[]>;
+}
+
+/** Changement de statut du groupe (créé / complété / expiré / annulé / membre changé) */
+export interface WsGroupStatusPayload {
+  event:          string;
+  groupId:        string;
+  commandeNumero?: string;
+  companyName?:   string;
+  memberCount?:   number;
+  expiresAt?:     string;
+  description?:   string;
+  newMember?:     { type: string; name: string };
+}

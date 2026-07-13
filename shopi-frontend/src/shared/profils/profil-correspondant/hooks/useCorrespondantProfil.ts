@@ -1,45 +1,58 @@
 /* ================================================================
  * FICHIER : profil-correspondant/hooks/useCorrespondantProfil.ts
  *
- * RÔLE : Charge le profil correspondant et gère le suivi (optimistic).
+ * RÔLE : Charge le profil public d'un correspondant via l'API.
  *
- * ✅ RÉEL (API GET /client/correspondants/:id) :
- *    identité, KPI, badges, bio, infos pratiques, horaires, contacts, suivi.
- * 🟡 MOCK (pas encore de tables backend) :
- *    services, zones, tarifs, avis, galerie, vérifications, similaires.
+ * Source unique : GET /client/correspondants/:id
+ *
+ * Sections sans endpoint backend (services, zones, tarifs, avis,
+ * galerie, similaires) → tableaux vides. Les composants affichent
+ * un état "Bientôt disponible" lorsqu'ils reçoivent un tableau vide.
  * ================================================================ */
 
 import { useState, useEffect, useCallback } from 'react';
 import { fetchCorrespondantProfil, toggleSuiviCorrespondant } from '../services/correspondantProfil.api';
-import {
-  CORR_MOCK, ABOUT_TAGS, INFOS_PRATIQUES, SCHEDULE, SERVICES, ZONES,
-  PAYS_PARTENAIRES, TARIFS, AVIS_SCORE, AVIS, GALERIE, CONTACTS,
-  STATS_SIDEBAR, VERIFICATIONS, SIMILAIRES,
-} from '../data/correspondantMock';
-import type { CorrProfil, InfoPratique, ScheduleRow, ContactRow } from '../data/types';
+import type {
+  CorrProfil, InfoPratique, ScheduleRow, ContactRow,
+  Service, ZoneCard, PaysPartenaire, TarifRow,
+  AvisScore, AvisItem, GalerieItem, VerifRow, SimilaireItem,
+} from '../data/types';
+
+const AVIS_SCORE_VIDE: AvisScore = {
+  moyenne: 0, total: 0,
+  repartition: [
+    { etoiles: 5, count: 0, pct: 0 },
+    { etoiles: 4, count: 0, pct: 0 },
+    { etoiles: 3, count: 0, pct: 0 },
+    { etoiles: 2, count: 0, pct: 0 },
+    { etoiles: 1, count: 0, pct: 0 },
+  ],
+  keywords: [],
+};
 
 export function useCorrespondantProfil(id: string | undefined) {
-  const [profil,  setProfil]  = useState<CorrProfil>(CORR_MOCK);
+  const [profil,  setProfil]  = useState<CorrProfil | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
   const [suivi,   setSuivi]   = useState(false);
 
-  /* Détails issus de l'API (avec fallback mock) */
-  const [infosPratiques, setInfosPratiques] = useState<InfoPratique[]>(INFOS_PRATIQUES);
-  const [schedule,       setSchedule]       = useState<ScheduleRow[]>(SCHEDULE);
-  const [aboutTags,      setAboutTags]      = useState<string[]>(ABOUT_TAGS);
-  const [contacts,       setContacts]       = useState<ContactRow[]>(CONTACTS);
+  const [infosPratiques, setInfosPratiques] = useState<InfoPratique[]>([]);
+  const [schedule,       setSchedule]       = useState<ScheduleRow[]>([]);
+  const [aboutTags,      setAboutTags]      = useState<string[]>([]);
+  const [contacts,       setContacts]       = useState<ContactRow[]>([]);
 
   const load = useCallback(() => {
-    if (!id) { setProfil(CORR_MOCK); setLoading(false); return; }
+    if (!id) {
+      setError('Identifiant correspondant manquant.');
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
 
     fetchCorrespondantProfil(id)
       .then(api => {
-        /* Identité + KPI réels */
         setProfil({
-          ...CORR_MOCK,                       // garde missionsMois/zonesCount par défaut si 0
           id:           api.id,
           nom:          api.nom,
           initiales:    api.initiales,
@@ -49,34 +62,30 @@ export function useCorrespondantProfil(id: string | undefined) {
           enLigne:      api.enLigne,
           membreDepuis: api.membreDepuis,
           abonnes:      api.abonnes,
-          badges:       api.badges?.length ? api.badges : CORR_MOCK.badges,
-          bio:          api.bio?.length ? api.bio : CORR_MOCK.bio,
-          missions:     api.missions,
-          missionsMois: api.missionsMois || CORR_MOCK.missionsMois,
-          note:         api.note,
-          nbAvis:       api.nbAvis || CORR_MOCK.nbAvis,
-          fiabilite:    api.fiabilite,
-          experience:   api.experience,
-          zonesCount:   api.zonesCount || CORR_MOCK.zonesCount,
-          delaiMoyen:   api.delaiMoyen || CORR_MOCK.delaiMoyen,
+          badges:       api.badges ?? [],
+          bio:          api.bio?.length ? api.bio : [],
+          missions:     api.missions     ?? 0,
+          missionsMois: api.missionsMois ?? 0,
+          note:         api.note         ?? 0,
+          nbAvis:       api.nbAvis       ?? 0,
+          fiabilite:    api.fiabilite    ?? 0,
+          experience:   api.experience   ?? '—',
+          zonesCount:   api.zonesCount   ?? 0,
+          delaiMoyen:   api.delaiMoyen   ?? '—',
         });
-
-        /* Détails réels (avec repli mock si l'API renvoie vide) */
-        setInfosPratiques(api.infosPratiques?.length ? api.infosPratiques : INFOS_PRATIQUES);
-        setSchedule(api.horaires?.length ? api.horaires : SCHEDULE);
-        setAboutTags(api.aboutTags?.length ? api.aboutTags : ABOUT_TAGS);
-        setContacts(api.contacts?.length ? api.contacts : CONTACTS);
-
+        setInfosPratiques(api.infosPratiques ?? []);
+        setSchedule(api.horaires ?? []);
+        setAboutTags(api.aboutTags ?? []);
+        setContacts(api.contacts ?? []);
         setSuivi(!!api.suivi);
       })
       .catch(e => {
-        /* 404 ou réseau → on garde le mock pour ne pas casser l'affichage */
-        setError(e?.message ?? 'Profil indisponible — données de démonstration.');
-        setProfil(CORR_MOCK);
-        setInfosPratiques(INFOS_PRATIQUES);
-        setSchedule(SCHEDULE);
-        setAboutTags(ABOUT_TAGS);
-        setContacts(CONTACTS);
+        setError(e?.message ?? 'Profil introuvable ou indisponible.');
+        setProfil(null);
+        setInfosPratiques([]);
+        setSchedule([]);
+        setAboutTags([]);
+        setContacts([]);
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -95,13 +104,34 @@ export function useCorrespondantProfil(id: string | undefined) {
     }
   }, [id]);
 
+  /* Statistiques sidebar dérivées des données API réelles */
+  const statsSidebar = profil ? [
+    { v: profil.missions > 0 ? profil.missions.toLocaleString('fr-FR') : '—', l: 'Missions totales'  },
+    { v: profil.note     > 0 ? `${profil.note.toFixed(1)}★`            : '—', l: 'Note moyenne'      },
+    { v: profil.fiabilite > 0 ? `${profil.fiabilite}%`                 : '—', l: 'Taux fiabilité'    },
+    { v: profil.delaiMoyen !== '—' ? profil.delaiMoyen                 : '—', l: 'Délai remise'      },
+    { v: profil.missionsMois > 0 ? String(profil.missionsMois)         : '—', l: 'Missions ce mois'  },
+    { v: '0',                                                                  l: 'Litiges résolus'   },
+  ] : [];
+
+  /* Vérifications dérivées des badges API (pas de données fictives) */
+  const verifications: VerifRow[] = (profil?.badges ?? []).map(b => ({
+    label: b.label,
+    sub:   '✓ Vérifié par Shopi',
+  }));
+
   return {
     profil, loading, error, suivi, toggleSuivi, reload: load,
-    /* Réel (API) */
-    aboutTags, infosPratiques, schedule, contacts,
-    /* Mock (en attendant les tables) */
-    services: SERVICES, zones: ZONES, paysPartenaires: PAYS_PARTENAIRES,
-    tarifs: TARIFS, avisScore: AVIS_SCORE, avis: AVIS, galerie: GALERIE,
-    statsSidebar: STATS_SIDEBAR, verifications: VERIFICATIONS, similaires: SIMILAIRES,
+    /* Données réelles (API) */
+    aboutTags, infosPratiques, schedule, contacts, statsSidebar, verifications,
+    /* Sections sans endpoint backend → tableaux vides */
+    services:        [] as Service[],
+    zones:           [] as ZoneCard[],
+    paysPartenaires: [] as PaysPartenaire[],
+    tarifs:          [] as TarifRow[],
+    avisScore:       AVIS_SCORE_VIDE,
+    avis:            [] as AvisItem[],
+    galerie:         [] as GalerieItem[],
+    similaires:      [] as SimilaireItem[],
   };
 }

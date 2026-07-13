@@ -33,7 +33,17 @@ export type SectionId =
   | 'system'
   | 'settings'
   | 'permissions'
-  | 'notifications-admin';
+  | 'notifications-admin'
+  /* Phase 5 — Intégration Support */
+  | 'support'
+  /* Phase 6 — Gestion du Centre d'aide (articles, catégories, FAQ) */
+  | 'help-center'
+  /* Phase 7 — Référentiel Géographique (pays/régions/préfectures/communes/quartiers/zones) */
+  | 'geo-referentiel'
+  /* Phase 8 — Centre de Gestion des Commissions (entreprises, partenaires, livreurs, plateforme) */
+  | 'commissions'
+  /* Profil personnel du super-admin connecté */
+  | 'profil';
 
 /* ── Utilisateur affiché dans le store (correspond à UserListItem API) ─────── */
 export interface User {
@@ -61,17 +71,23 @@ export interface Alert {
 
 /* ── Journal d'audit ──────────────────────────────────────────────────────── */
 export interface AuditEntry {
-  icon:   string;
-  user:   string;
-  action: string;
-  time:   string;
+  id?:         string;
+  icon:        string;
+  user:        string;
+  email?:      string | null;
+  action:      string;
+  time:        string;
+  createdAt?:  string;        // ISO 8601 — disponible depuis la v2 du backend
+  targetType?: string | null;
+  targetId?:   string | null;
 }
 
 /* ── Administrateurs secondaires & permissions ───────────────────────────── */
 export interface Admin {
-  name:  string;
-  email: string;
-  perms: Record<string, boolean>;
+  name:        string;
+  email:       string;
+  perms:       Record<string, boolean>;
+  paysAssigne: string | null;
 }
 
 /* ── Santé des services (mock — non branché sur une API réelle) ────────────── */

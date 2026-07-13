@@ -76,9 +76,14 @@ export class UpdateLivreurProfilDto {
  * SECTION 3 — ZONES & HORAIRES
  * ───────────────────────────────────────────────────────────── */
 export class UpdateZonesDto {
+  @IsOptional() @IsString() @MaxLength(30) deliveryType?: string;
   @IsOptional() @IsArray() @IsString({ each: true }) communesActives?: string[];
   @IsOptional() @Transform(toNum) @IsNumber() @Min(1) @Max(100) distanceMax?: number;
   @IsOptional() autoDispoSettings?: Record<string, boolean>;
+}
+
+export class UpdateZonesDispoDto {
+  @IsArray() @IsString({ each: true }) zonesDisponibles!: string[];
 }
 
 export class HoraireJourDto {

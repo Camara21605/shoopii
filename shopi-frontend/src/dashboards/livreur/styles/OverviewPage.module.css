@@ -177,3 +177,37 @@
   .insightGrid { grid-template-columns:1fr 1fr; gap:9px; }
 }
 @media (max-width: 380px) { .insightGrid { grid-template-columns:1fr; } }
+
+/* ── Tiny phones ≤360px ── */
+@media (max-width: 360px) {
+  .maBanner { padding:14px; gap:10px; }
+  .maPulse  { width:42px; height:42px; font-size:18px; }
+  .maTitle  { font-size:15px; }
+  .maTimerVal { font-size:20px; letter-spacing:-1px; }
+  .maTimer  { padding:9px 12px; min-width:72px; }
+  .maBtnOk  { padding:9px 14px; font-size:12px; }
+  .maBtnIssue{ padding:7px 12px; font-size:11px; }
+  .smartBanner { padding:12px 14px; gap:10px; }
+  .sbIcon  { width:36px; height:36px; font-size:17px; border-radius:11px; }
+  .sbMsg   { font-size:12px; }
+  .kpiGrid { gap:8px; }
+  .insightGrid { gap:7px; }
+  .insightCard { padding:12px; }
+  .icEm    { font-size:18px; margin-bottom:5px; }
+  .revBars { height:90px; }
+}
+
+/* ── Extra tiny ≤280px ── */
+@media (max-width: 280px) {
+  .maBanner  { padding:12px; gap:8px; }
+  .maPulse   { width:36px; height:36px; font-size:16px; }
+  .maTitle   { font-size:14px; }
+  .maLabel   { font-size:9px; }
+  .maMeta span { font-size:10px; }
+  .maRoute   { display:none; }
+  .maTimerVal{ font-size:18px; }
+  .maTimer   { padding:7px 10px; min-width:60px; }
+  .kpiGrid   { grid-template-columns:1fr; gap:8px; }
+  .insightGrid{ grid-template-columns:1fr; }
+  .smartBanner{ display:none; }  /* trop d'espace sur écran 240px */
+}

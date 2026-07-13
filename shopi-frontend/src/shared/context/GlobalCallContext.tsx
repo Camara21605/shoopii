@@ -33,8 +33,12 @@ import type { CallStatus, CallInfo, CallEventPayload } from '../messagerie/hooks
 import { initGlobalSocket, getActiveSocket } from '../messagerie/hooks/useSocket';
 import type { WsNewMessage }    from '../messagerie/hooks/useSocket';
 import { apiFetch }             from '../services/apiFetch';
+import { getRoleFromToken }     from '../services/authUtils';
 import { useToast }             from './ToastContext';
 import CallOverlay              from '../messagerie/components/CallOverlay';
+
+/* Rôles autorisés à utiliser la messagerie Shopi */
+const MESSAGING_ROLES = new Set(['client', 'company', 'delivery', 'correspondent', 'partner']);
 
 // ── Interface du contexte ──────────────────────────────────────
 
@@ -59,6 +63,9 @@ export interface GlobalCallContextValue {
 
   /** Nombre total de messages non lus — mis à jour en temps réel via socket */
   msgUnread: number;
+
+  /** Synchronise le compteur depuis MessagerieCore (totalUnread temps réel) */
+  syncMsgUnread: (count: number) => void;
 
   /**
    * Permet à MessagerieCore de brancher une fonction qui met à jour
@@ -85,16 +92,19 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
 
   const [msgUnread, setMsgUnread] = useState(0);
 
-  /* Charge le total initial depuis l'API au montage */
+  /* Charge le total initial depuis l'API au montage — uniquement pour les rôles autorisés */
   useEffect(() => {
     const token = localStorage.getItem('shopi_access_token');
     if (!token) return;
-    apiFetch<{ unreadCount: number }[]>('/messagerie/conversations')
-      .then(convs => {
-        if (!Array.isArray(convs)) return;
-        setMsgUnread(convs.reduce((s, c) => s + (c.unreadCount ?? 0), 0));
-      })
-      .catch(() => {});
+    if (!MESSAGING_ROLES.has(getRoleFromToken() ?? '')) return;
+    Promise.all([
+      apiFetch<{ unreadCount: number }[]>('/messagerie/conversations').catch(() => []),
+      apiFetch<{ unreadCount: number }[]>('/delivery-groups').catch(() => []),
+    ]).then(([convs, groups]) => {
+      const convTotal  = Array.isArray(convs)  ? convs.reduce((s, c)  => s + (c.unreadCount ?? 0), 0) : 0;
+      const groupTotal = Array.isArray(groups) ? groups.reduce((s, g) => s + (g.unreadCount ?? 0), 0) : 0;
+      setMsgUnread(convTotal + groupTotal);
+    });
   }, []);
 
   /* Remet à 0 quand l'utilisateur ouvre la messagerie */
@@ -143,28 +153,38 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
     },
   });
 
-  // ── Initialisation du socket ─────────────────────────────────
+  // ── Initialisation du socket messaging ──────────────────────
+  /* Uniquement pour les rôles qui peuvent utiliser la messagerie.
+   * super_admin et admin sont bloqués côté backend → ne pas tenter
+   * la connexion pour éviter les erreurs WebSocket en console.
+   *
+   * NOTE : dépend de location.pathname pour se ré-exécuter après une
+   * navigation SPA post-login. Sans ça, si l'utilisateur se connecte
+   * depuis /login (token absent au montage), le socket n'est jamais
+   * initialisé pour cette session.
+   */
 
   useEffect(() => {
-    /* Connecte dès le montage du provider (si l'utilisateur est authentifié) */
+    if (!MESSAGING_ROLES.has(getRoleFromToken() ?? '')) return;
+
     initGlobalSocket();
 
-    /* Reconnecte si le token change (login / logout dans un autre onglet) */
     const onStorage = (e: StorageEvent) => {
-      if (e.key === 'shopi_access_token') initGlobalSocket();
+      if (e.key === 'shopi_access_token' && MESSAGING_ROLES.has(getRoleFromToken() ?? '')) {
+        initGlobalSocket();
+      }
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   // ── Notifications de nouveaux messages (hors messagerie) ────
 
   useEffect(() => {
-    /*
-     * On s'abonne au socket avec un léger délai pour laisser
-     * initGlobalSocket() + useAudioCall() établir la connexion d'abord.
-     * Retry léger si le socket n'est pas encore prêt.
-     */
+    /* Uniquement pour les rôles avec accès messagerie */
+    if (!MESSAGING_ROLES.has(getRoleFromToken() ?? '')) return;
+
     let cleanup: (() => void) | null = null;
     let retries = 0;
 
@@ -192,8 +212,32 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
         showToast(`💬 ${sender} : ${preview}`, 'i');
       };
 
-      socket.on('new_message', onNewMessage);
-      cleanup = () => socket.off('new_message', onNewMessage);
+      const onGroupMessage = (p: {
+        groupId: string;
+        commandeNumero: string;
+        message: { senderName: string | null; content: string | null; contentType: string };
+      }) => {
+        if (pathnameRef.current.startsWith('/messagerie')) return;
+
+        const sender  = p.message.senderName || 'Groupe livraison';
+        const preview = p.message.content
+          ? p.message.content.slice(0, 60) + (p.message.content.length > 60 ? '…' : '')
+          : p.message.contentType === 'image' ? '📷 Photo'
+          : p.message.contentType === 'video' ? '🎥 Vidéo'
+          : p.message.contentType === 'audio' ? '🎙️ Vocal'
+          : p.message.contentType === 'file'  ? '📄 Document'
+          : 'Message reçu';
+
+        setMsgUnread(prev => prev + 1);
+        showToast(`📦 ${p.commandeNumero} · ${sender} : ${preview}`, 'i');
+      };
+
+      socket.on('new_message',       onNewMessage);
+      socket.on('group_new_message', onGroupMessage);
+      cleanup = () => {
+        socket.off('new_message',       onNewMessage);
+        socket.off('group_new_message', onGroupMessage);
+      };
     }
 
     subscribe();
@@ -218,6 +262,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
       startCall, acceptCall, rejectCall, hangUp,
       toggleMute, toggleVideo, toggleSpeaker, flipCamera,
       msgUnread,
+      syncMsgUnread: setMsgUnread,
       registerCallEventHandler,
     }}>
       {children}

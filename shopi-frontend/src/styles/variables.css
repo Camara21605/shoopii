@@ -73,4 +73,16 @@
   /* ── Typographie ── */
   --fd:      'Fraunces', Georgia, serif;
   --fb:      'DM Sans', sans-serif;
+
+  /* ── Variables adaptables (surchargées en dark mode via appearanceService) ──
+   * Ces variables permettent de séparer les usages de --navy :
+   *   • fond sidebar → reste dark via --navy direct (inchangé)
+   *   • texte titres → passe par --heading-color (s'éclaircit)
+   *   • bouton primary → passe par --btn-primary-bg (devient accent)
+   *   • topbar → passe par --topbar-bg (devient dark)
+   */
+  --heading-color:  var(--navy);             /* couleur des titres/labels */
+  --btn-primary-bg: var(--navy);             /* fond du bouton primary    */
+  --topbar-bg:      rgba(255,255,255,.96);   /* fond de la topbar         */
+  --topbar-border:  var(--bdr);              /* bordure bottom topbar      */
 }

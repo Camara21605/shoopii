@@ -453,6 +453,16 @@ export class Message {
   @Column({ type: 'uuid', nullable: true })
   deletedById: string | null;
 
+  /**
+   * Liste des users.id pour lesquels ce message est caché
+   * (suppression individuelle sans soft-delete global).
+   *
+   * null / [] = visible par tous les participants.
+   * ['userId1'] = caché pour userId1 seulement.
+   */
+  @Column({ type: 'json', nullable: true })
+  deletedForUserIds: string[] | null;
+
   /* ==========================================================
    * RÉACTIONS EMOJI
    * ========================================================== */

@@ -1,0 +1,72 @@
+/* ── Conteneur principal ── */
+.page { min-height: 100vh; background: #F8FAFF; padding: 32px 20px 80px; }
+.wrap { max-width: 1000px; margin: 0 auto; }
+
+/* ── États chargement/erreur ── */
+.state    { text-align: center; padding: 80px 0; color: #9AAACB; font-size: 14px; }
+.stateErr { text-align: center; padding: 60px 0; color: #E53E3E; font-size: 14px; }
+
+/* ── Fil d'Ariane ── */
+.breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 28px; }
+.breadcrumb a { color: #1A4FC4; text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: #9AAACB; }
+
+/* ── En-tête ── */
+.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+.title  { font-size: 22px; font-weight: 800; color: #0B1F3A; margin-bottom: 4px; }
+.sub    { font-size: 13px; color: #9AAACB; }
+.exportBtn { display: flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 10px; border: 1.5px solid #1A4FC4; background: #EEF2FF; color: #1A4FC4; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.exportBtn:hover { background: #DBEAFE; }
+
+/* ── KPI Cards ── */
+.kpiGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-bottom: 24px; }
+
+.kpi { background: #fff; border: 1px solid #E5EBF5; border-radius: 14px; padding: 18px 16px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+.kpiIcon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.kpiVal  { font-size: 28px; font-weight: 900; color: #0B1F3A; line-height: 1; }
+.kpiLabel{ font-size: 12px; color: #9AAACB; font-weight: 600; }
+
+/* ── Grille graphiques ── */
+.charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+@media (max-width: 720px) { .charts { grid-template-columns: 1fr; } }
+
+.chartCard { background: #fff; border: 1px solid #E5EBF5; border-radius: 14px; padding: 22px; }
+.chartTitle { font-size: 14px; font-weight: 700; color: #0B1F3A; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+.chartTitle i { color: #1A4FC4; }
+
+/* ── Barres horizontales (by type) ── */
+.barList { display: flex; flex-direction: column; gap: 12px; }
+.barItem { display: grid; grid-template-columns: 1fr 120px 32px; align-items: center; gap: 10px; }
+.barLabel { font-size: 12px; color: #2A3A5A; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.barTrack { height: 8px; background: #F0F4FF; border-radius: 4px; overflow: hidden; }
+.barFill  { height: 100%; background: linear-gradient(90deg,#1A4FC4,#4F83E7); border-radius: 4px; min-width: 4px; transition: width .5s ease; }
+.barCount { font-size: 12px; font-weight: 700; color: #1A4FC4; text-align: right; }
+.noData   { font-size: 13px; color: #9AAACB; text-align: center; padding: 20px 0; }
+
+/* ── Graphique tendance 7 jours ── */
+.legend { display: flex; gap: 16px; margin-bottom: 16px; }
+.legendItem { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #475569; }
+.legendDot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+.barChart { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; height: 140px; padding-bottom: 36px; position: relative; }
+
+.barGroup { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; height: 100%; }
+
+/* Zone des barres — disposition côte-à-côte */
+.bars { display: flex; align-items: flex-end; gap: 3px; flex: 1; width: 100%; justify-content: center; }
+
+/* Barres individuelles */
+.barCreated  { width: 10px; border-radius: 3px 3px 0 0; background: #1A4FC4; min-height: 2px; transition: height .4s ease; }
+.barResolved { width: 10px; border-radius: 3px 3px 0 0; background: #059669; min-height: 2px; transition: height .4s ease; }
+
+/* Valeurs numériques sous les barres */
+.barValues { display: flex; gap: 4px; font-size: 10px; font-weight: 700; }
+
+/* Libellé du jour */
+.barDayLabel { font-size: 11px; color: #9AAACB; font-weight: 600; position: absolute; bottom: 0; }
+
+/* ── Liens rapides ── */
+.quickLinks { display: flex; gap: 10px; flex-wrap: wrap; }
+.quickLink  { display: flex; align-items: center; gap: 8px; text-decoration: none; font-size: 13px; font-weight: 600; color: #1A4FC4; background: #EEF2FF; border: 1px solid #C7D7F8; border-radius: 9px; padding: 10px 18px; }
+.quickLink:hover { background: #DBEAFE; }

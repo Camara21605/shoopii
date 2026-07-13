@@ -12,6 +12,7 @@ import React from 'react';
 import { CORRESPONDANTS, SPEEDS, fmt } from '../data/panierData';
 import type { CartItem } from '../data/panierData';
 import type { LivreurSuivi } from '../services/livreursSuivis.api';
+import type { ProfilData, AdresseItem } from '../../settings/api/settings.api';
 import styles from '../styles/RecapSection.module.css';
 
 const PAY_LBL: Record<string,string> = {
@@ -20,21 +21,25 @@ const PAY_LBL: Record<string,string> = {
 };
 
 interface Props {
-  items:      CartItem[];
-  delMode:    'std' | 'lvr';
-  selLvrObj:  LivreurSuivi | null;   /* ✅ objet livreur (au lieu de selLvr id) */
-  selCorr:    number | null;
-  curSpd:     string;
-  payMode:    string;
-  promoActif: boolean;
-  total:      number;
-  termsOk:    boolean;
-  onTerms:    (v: boolean) => void;
+  items:         CartItem[];
+  delMode:       'std' | 'lvr';
+  selLvrObj:     LivreurSuivi | null;
+  selCorr:       number | null;
+  curSpd:        string;
+  payMode:       string;
+  promoActif:    boolean;
+  total:         number;
+  termsOk:       boolean;
+  onTerms:       (v: boolean) => void;
+  clientProfil:  ProfilData | null;
+  clientAddr:    AdresseItem | null;
+  loadingClient: boolean;
 }
 
 export default function RecapSection({
   items, delMode, selLvrObj, selCorr, curSpd,
   payMode, promoActif, total, termsOk, onTerms,
+  clientProfil, clientAddr, loadingClient,
 }: Props) {
   const lv = selLvrObj;
   const co = selCorr ? CORRESPONDANTS.find(c => c.id === selCorr) : null;
@@ -57,8 +62,26 @@ export default function RecapSection({
           {/* Destinataire */}
           <div className={styles.box}>
             <div className={`${styles.boxTitle} ${styles.blue}`}><i className="fas fa-user" /> Destinataire</div>
-            <div className={styles.boxVal}>Mamadou Kouyaté</div>
-            <div className={styles.boxSub}>+224 620 123 456<br />Kaloum — Quartier Almamya, Rue KA-012</div>
+            {loadingClient ? (
+              <>
+                <div className={styles.skelLine} style={{ width: '70%', height: 16, marginBottom: 6 }} />
+                <div className={styles.skelLine} style={{ width: '90%', height: 13 }} />
+              </>
+            ) : clientProfil ? (
+              <>
+                <div className={styles.boxVal}>
+                  {clientProfil.firstName} {clientProfil.lastName}
+                </div>
+                <div className={styles.boxSub}>
+                  {clientProfil.phone}
+                  {clientAddr && (
+                    <><br />{clientAddr.commune ? `${clientAddr.commune} — ` : ''}{clientAddr.adresse}</>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className={styles.boxSub}>Informations non disponibles</div>
+            )}
           </div>
           {/* Livraison */}
           <div className={styles.box}>

@@ -180,3 +180,29 @@
 }
 
 @media (max-width: 640px) { .mcRoute { display: none; } }
+
+/* ── Tiny phones ≤360px ── */
+@media (max-width: 360px) {
+  .mc      { padding: 12px; }
+  .mcBadge { top: 10px; right: 10px; font-size: 8px; padding: 2px 8px; }
+  .mcIcon  { width: 36px; height: 36px; font-size: 16px; }
+  .mcBody  { padding-right: 64px; }
+  .mcNm    { font-size: 13px; }
+  .mcShop  { font-size: 10px; }
+  .mcFee   { font-size: 14px; }
+  .mcActions { flex-wrap: wrap; gap: 6px; }
+  .btnAccept { padding: 9px 12px; font-size: 11px; }
+  .btnMap    { padding: 9px 10px; font-size: 11px; }
+  .btnX      { padding: 9px 8px; }
+}
+
+/* ── Extra tiny ≤280px : actions empilées ── */
+@media (max-width: 280px) {
+  .mc      { padding: 10px; }
+  .mcTop   { gap: 8px; }
+  .mcIcon  { width: 32px; height: 32px; font-size: 14px; }
+  .mcBody  { padding-right: 56px; }
+  .mcMeta  { gap: 6px; }
+  .btnAccept, .btnMap { flex: 1 1 100%; justify-content: center; }
+  .mcFee   { margin-left: 0; font-size: 13px; }
+}

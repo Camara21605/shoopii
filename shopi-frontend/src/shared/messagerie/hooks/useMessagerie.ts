@@ -41,6 +41,7 @@ interface ApiMessage {
   mediaUrl:      string | null;
   mediaName:     string | null;
   mediaMimeType: string | null;
+  mediaDuration: number | null;
   createdAt:     string;
   readAt:        string | null;
   replyToId:     string | null;
@@ -51,11 +52,13 @@ interface ApiMessage {
 }
 
 export interface MediaAttachment {
-  url:  string;
-  name: string;
-  size: number;
-  mime: string;
-  type: 'image' | 'video' | 'file';
+  url:       string;
+  name:      string;
+  size:      number;
+  mime:      string;
+  type:      'image' | 'video' | 'file' | 'audio';
+  /** Durée en secondes — uniquement pour les messages vocaux */
+  duration?: number;
 }
 
 // ── Mapping actorType → UserRole frontend ─────────────────────
@@ -63,10 +66,8 @@ export interface MediaAttachment {
 const TYPE_TO_ROLE: Record<string, string> = {
   company:       'vendeur',
   delivery:      'livreur',
-  partner:       'partenaire',
   correspondent: 'correspondant',
   client:        'client',
-  admin:         'admin',
 };
 
 function toFrontRole(type: string): string {
@@ -85,6 +86,12 @@ function fmtTime(iso: string | null | undefined): string {
 
 function nowTime(): string {
   return fmtTime(new Date().toISOString());
+}
+
+function fmtDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
 }
 
 function apiConvToState(api: ApiConv, messages: ChatMessage[] = []): { conv: Conversation; user: ChatUser } {
@@ -133,6 +140,7 @@ function apiMsgToChat(m: ApiMessage): ChatMessage {
     mediaUrl:  m.mediaUrl  ?? undefined,
     mediaName: m.mediaName ?? undefined,
     mediaMime: m.mediaMimeType ?? undefined,
+    duration:  m.mediaDuration ? fmtDuration(m.mediaDuration) : undefined,
   };
 
   /* Désérialise les métadonnées d'appel */
@@ -148,13 +156,15 @@ function apiMsgToChat(m: ApiMessage): ChatMessage {
 // ═════════════════════════════════════════════════════════════
 
 export function useMessagerie() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [users,         setUsers]         = useState<ChatUser[]>([]);
-  const [activeConvId,  setActiveConvId]  = useState<string | null>(null);
-  const [infoPanelOpen, setInfoPanelOpen] = useState(false);
-  const [newConvOpen,   setNewConvOpen]   = useState(false);
-  const [mobileOpen,    setMobileOpen]    = useState(false);
-  const [loadingConvs,  setLoadingConvs]  = useState(true);
+  const [conversations,     setConversations]     = useState<Conversation[]>([]);
+  const [archivedConvs,     setArchivedConvs]     = useState<Conversation[]>([]);
+  const [archivedLoaded,    setArchivedLoaded]    = useState(false);
+  const [users,             setUsers]             = useState<ChatUser[]>([]);
+  const [activeConvId,      setActiveConvId]      = useState<string | null>(null);
+  const [infoPanelOpen,     setInfoPanelOpen]     = useState(false);
+  const [newConvOpen,       setNewConvOpen]       = useState(false);
+  const [mobileOpen,        setMobileOpen]        = useState(() => window.innerWidth <= 640);
+  const [loadingConvs,      setLoadingConvs]      = useState(true);
 
   /** Map<convId, {senderId, senderName, activity}> — indicateurs typing temps réel */
   const [typingMap, setTypingMap] = useState<Map<string, WsTyping>>(new Map());
@@ -389,7 +399,8 @@ export function useMessagerie() {
     text:   string,
     media?: MediaAttachment,
   ) => {
-    const msgType: ChatMessage['type'] = media?.type ?? 'text';
+    const rawType  = media?.type ?? 'text';
+    const msgType: ChatMessage['type'] = rawType === 'audio' ? 'voice' : rawType as ChatMessage['type'];
     const optimistic: ChatMessage = {
       id:        'tmp-' + Date.now(),
       from:      'me',
@@ -400,11 +411,13 @@ export function useMessagerie() {
       mediaUrl:  media?.url,
       mediaName: media?.name,
       mediaMime: media?.mime,
+      duration:  media?.duration ? fmtDuration(media.duration) : undefined,
     };
     const previewText = text || (
       msgType === 'image' ? '📷 Photo' :
       msgType === 'video' ? '🎥 Vidéo' :
-      msgType === 'file'  ? `📄 ${media?.name ?? 'Document'}` : ''
+      msgType === 'file'  ? `📄 ${media?.name ?? 'Document'}` :
+      msgType === 'voice' ? '🎙️ Message vocal' : ''
     );
 
     setConversations(prev => prev.map(c =>
@@ -423,6 +436,7 @@ export function useMessagerie() {
         body.mediaName     = media.name;
         body.mediaSize     = media.size;
         body.mediaMimeType = media.mime;
+        if (media.duration) body.mediaDuration = media.duration;
       }
 
       const saved = await apiFetch<ApiMessage>(
@@ -536,14 +550,106 @@ export function useMessagerie() {
   }, []);
 
   // ── Supprimer un message ─────────────────────────────────
-  const deleteMessage = useCallback(async (convId: string, msgId: string, forEveryone = false) => {
-    setConversations(prev => prev.map(c => {
-      if (c.id !== convId) return c;
-      return { ...c, messages: c.messages.map(m => m.id === msgId ? { ...m, deleted: true, text: undefined, mediaUrl: undefined } : m) };
-    }));
+  const deleteMessage = useCallback(async (
+    convId: string,
+    msgId: string,
+    mode: 'me' | 'everyone' | 'other' = 'me',
+  ) => {
+    // 'me' et 'everyone' : je ne vois plus le message → update optimiste local
+    // 'other' : je le vois encore, c'est l'autre qui ne le verra plus
+    if (mode === 'me' || mode === 'everyone') {
+      setConversations(prev => prev.map(c => {
+        if (c.id !== convId) return c;
+        return {
+          ...c,
+          messages: c.messages.map(m =>
+            m.id === msgId ? { ...m, deleted: true, text: undefined, mediaUrl: undefined } : m,
+          ),
+        };
+      }));
+    }
     try {
-      await apiFetch(`/messagerie/messages/${msgId}`, { method: 'DELETE', body: { forEveryone } });
+      await apiFetch(`/messagerie/messages/${msgId}`, { method: 'DELETE', body: { mode } });
     } catch { /* garder l'optimiste */ }
+  }, []);
+
+  // ── Supprimer une conversation ───────────────────────────
+  const deleteConversation = useCallback(async (convId: string) => {
+    /* Optimiste : retrait immédiat de la liste */
+    setConversations(prev => prev.filter(c => c.id !== convId));
+    if (activeConvRef.current === convId) {
+      setActiveConvId(null);
+      activeConvRef.current = null;
+    }
+    try {
+      await apiFetch(`/messagerie/conversations/${convId}`, { method: 'DELETE' });
+    } catch { /* silencieux — la liste a déjà été mise à jour */ }
+  }, []);
+
+  // ── Masquer une conversation (archive) ───────────────────
+  const hideConversation = useCallback(async (convId: string) => {
+    setConversations(prev => prev.filter(c => c.id !== convId));
+    if (activeConvRef.current === convId) {
+      setActiveConvId(null);
+      activeConvRef.current = null;
+    }
+    try {
+      await apiFetch(`/messagerie/conversations/${convId}/archive`, { method: 'PATCH', body: { archived: true } });
+    } catch { /* silencieux */ }
+  }, []);
+
+  // ── Charger les conversations masquées ───────────────────
+  const loadArchivedConvs = useCallback(async () => {
+    if (archivedLoaded) return;
+    try {
+      const list = await apiFetch<ApiConv[]>('/messagerie/conversations/archived');
+      if (Array.isArray(list)) {
+        const convs: Conversation[] = [];
+        const newUsers: ChatUser[]  = [];
+        list.forEach(api => {
+          const { conv, user } = apiConvToState(api);
+          convs.push(conv);
+          newUsers.push(user);
+        });
+        setArchivedConvs(convs);
+        setUsers(prev => {
+          const ids = new Set(prev.map(u => u.id));
+          return [...prev, ...newUsers.filter(u => !ids.has(u.id))];
+        });
+        setArchivedLoaded(true);
+      }
+    } catch { /* silencieux */ }
+  }, [archivedLoaded]);
+
+  // ── Démasquer une conversation (unarchive) ────────────────
+  const unhideConversation = useCallback(async (convId: string) => {
+    /* Retire des masquées, remet dans la liste principale */
+    const conv = archivedConvs.find(c => c.id === convId);
+    setArchivedConvs(prev => prev.filter(c => c.id !== convId));
+    if (conv) {
+      setConversations(prev =>
+        prev.some(c => c.id === convId) ? prev : [conv, ...prev],
+      );
+    }
+    try {
+      await apiFetch(`/messagerie/conversations/${convId}/archive`, { method: 'PATCH', body: { archived: false } });
+    } catch { /* silencieux */ }
+  }, [archivedConvs]);
+
+  // ── Marquer une conversation comme non lue ────────────────
+  const markConvAsUnread = useCallback(async (convId: string) => {
+    setConversations(prev => prev.map(c => c.id === convId ? { ...c, unread: 1 } : c));
+    try {
+      await apiFetch(`/messagerie/conversations/${convId}/unread`, { method: 'PATCH' });
+    } catch { /* silencieux */ }
+  }, []);
+
+  // ── Marquer toute une conversation comme lue ─────────────
+  const markConvAsRead = useCallback(async (convId: string) => {
+    setConversations(prev => prev.map(c => c.id === convId ? { ...c, unread: 0 } : c));
+    try {
+      await apiFetch(`/messagerie/conversations/${convId}/read`, { method: 'PATCH' });
+    } catch { /* silencieux */ }
   }, []);
 
   // ── Toggle réaction emoji ─────────────────────────────────
@@ -600,6 +706,13 @@ export function useMessagerie() {
     sendMessage,
     editMessage,
     deleteMessage,
+    deleteConversation,
+    hideConversation,
+    archivedConvs,
+    loadArchivedConvs,
+    unhideConversation,
+    markConvAsUnread,
+    markConvAsRead,
     toggleReaction,
     sendCallEvent,
     applyCallEventLocally,
@@ -607,5 +720,6 @@ export function useMessagerie() {
     setInfoPanelOpen,
     setNewConvOpen,
     setMobileOpen,
+    setActiveConvId,
   };
 }

@@ -12,10 +12,15 @@ import { AuditLog } from '../../../../database/entities/audit-log.entity';
 import { User } from '../../../../database/entities/user.entity';
 
 export interface AuditEntryDto {
-  icon:   string;
-  user:   string;
-  action: string;
-  time:   string;
+  id:         string;
+  icon:       string;
+  user:       string;
+  email:      string | null;
+  action:     string;
+  time:       string;        // "14:32:05" pour l'affichage
+  createdAt:  string;        // ISO 8601 — pour tri et filtrage côté frontend
+  targetType: string | null;
+  targetId:   string | null;
 }
 
 @Injectable()
@@ -57,10 +62,15 @@ export class AuditLogService {
     });
 
     return entries.map(e => ({
-      icon:   e.icon,
-      user:   e.actorName,
-      action: e.action,
-      time:   e.createdAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      id:         e.id,
+      icon:       e.icon,
+      user:       e.actorName,
+      email:      e.actorEmail,
+      action:     e.action,
+      time:       e.createdAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      createdAt:  e.createdAt.toISOString(),
+      targetType: e.targetType,
+      targetId:   e.targetId,
     }));
   }
 }

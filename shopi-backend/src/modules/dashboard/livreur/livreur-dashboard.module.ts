@@ -27,6 +27,7 @@ import { Delivery }       from '../../../database/entities/profiles/livreur-prof
 import { User }           from '../../../database/entities/user.entity';
 import { LivreurHoraire } from '../../../database/entities/livreur.table/livreur-horaire.entity';
 import { Commande }       from '../../../database/entities/commande/commande.entity';
+import { Notification }   from '../../../database/entities/notification/notification.entitiy';
 
 /* ── Module Paramètres (assemble les 8 services + controller) ── */
 import { LivreurParametresModule } from './livreur-parametres.module';
@@ -45,6 +46,7 @@ import { LivreurDashboardService } from './livreur-dashboard.service';
       User,
       LivreurHoraire,
       Commande,
+      Notification,
     ]),
 
     /*

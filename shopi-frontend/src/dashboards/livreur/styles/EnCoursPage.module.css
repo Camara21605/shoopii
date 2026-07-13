@@ -109,4 +109,37 @@
 }
 .btnMsg:hover { background:rgba(14,116,144,.16); }
 
-@media (max-width:640px) { .maBanner{flex-direction:column;padding:18px;gap:14px;} .maRight{flex-direction:row;width:100%;} .maTimer{flex:1;} .maActions{flex:1;flex-direction:column;} }
+@media (max-width:640px) {
+  .maBanner { flex-direction:column; padding:18px; gap:14px; }
+  .maRight  { flex-direction:row; width:100%; }
+  .maTimer  { flex:1; }
+  .maActions{ flex:1; flex-direction:column; }
+  .maBtnOk, .maBtnIssue { justify-content:center; }
+}
+
+/* ── Tiny phones ≤360px ── */
+@media (max-width: 360px) {
+  .maBanner   { padding:14px; gap:10px; }
+  .maPulse    { width:42px; height:42px; font-size:18px; }
+  .maTitle    { font-size:15px; }
+  .maTimerVal { font-size:20px; letter-spacing:-1px; }
+  .maTimer    { padding:9px 12px; min-width:72px; }
+  .maBtnOk   { padding:9px 14px; font-size:12px; }
+  .maBtnIssue{ padding:7px 12px; font-size:11px; }
+  .stepLbl   { font-size:12px; }
+  .stepSub   { font-size:10px; }
+  .clientNm  { font-size:14px; }
+  .clientBtns{ gap:7px; }
+  .btnCall, .btnMsg { padding:10px; font-size:12px; }
+}
+
+/* ── Extra tiny ≤280px ── */
+@media (max-width: 280px) {
+  .maBanner   { padding:11px; gap:8px; }
+  .maPulse    { width:34px; height:34px; font-size:15px; }
+  .maTitle    { font-size:13px; }
+  .maTimerVal { font-size:17px; }
+  .maTimer    { min-width:56px; padding:7px 9px; }
+  .clientAva  { width:42px; height:42px; font-size:18px; }
+  .btnCall, .btnMsg { flex-direction:column; gap:3px; font-size:11px; }
+}

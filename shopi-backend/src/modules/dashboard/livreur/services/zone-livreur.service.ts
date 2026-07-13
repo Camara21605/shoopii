@@ -8,7 +8,7 @@
  *   PATCH /parametres/horaires/:jour → modifier un seul jour
  * ============================================================ */
 
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -17,7 +17,7 @@ import {
   LivreurHoraire, JourSemaine,
   JOURS_ORDER, DEFAULT_HORAIRES_LIVREUR,
 } from 'src/database/entities/livreur.table/livreur-horaire.entity';
-import { UpdateZonesDto, UpdateHorairesLivreurDto, HoraireJourDto } from '../dto/livreur-parametres.dto';
+import { UpdateZonesDto, UpdateZonesDispoDto, UpdateHorairesLivreurDto, HoraireJourDto } from '../dto/livreur-parametres.dto';
 
 @Injectable()
 export class ZoneLivreurService {
@@ -32,8 +32,25 @@ export class ZoneLivreurService {
   /* ── PATCH — Zones & disponibilité ── */
   async updateZones(userId: string, dto: UpdateZonesDto): Promise<Delivery> {
     const livreur = await this.findOrFail(userId);
-    if (dto.communesActives  !== undefined) livreur.communesActives  = dto.communesActives;
-    if (dto.distanceMax      !== undefined) livreur.distanceMax      = dto.distanceMax;
+
+    if (dto.deliveryType !== undefined && dto.deliveryType !== livreur.deliveryType) {
+      /* Vérification du verrouillage 6 mois */
+      if (livreur.deliveryType && livreur.deliveryTypeSetAt) {
+        const unlock = new Date(livreur.deliveryTypeSetAt);
+        unlock.setMonth(unlock.getMonth() + 6);
+        if (new Date() < unlock) {
+          const date = unlock.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+          throw new BadRequestException(
+            `Le type de livraison est verrouillé jusqu'au ${date}. Vous ne pouvez modifier que vos zones actives.`,
+          );
+        }
+      }
+      livreur.deliveryType      = dto.deliveryType;
+      livreur.deliveryTypeSetAt = new Date();
+    }
+
+    if (dto.communesActives   !== undefined) livreur.communesActives   = dto.communesActives;
+    if (dto.distanceMax       !== undefined) livreur.distanceMax       = dto.distanceMax;
     if (dto.autoDispoSettings !== undefined) livreur.autoDispoSettings = dto.autoDispoSettings;
     const updated = await this.livreurRepo.save(livreur);
     this.logger.log(`[ZONE] Mis à jour — userId=${userId}`);
@@ -89,6 +106,17 @@ export class ZoneLivreurService {
 
   private sortByWeek(horaires: LivreurHoraire[]): LivreurHoraire[] {
     return [...horaires].sort((a, b) => JOURS_ORDER.indexOf(a.jour) - JOURS_ORDER.indexOf(b.jour));
+  }
+
+  /* ── PATCH — Disponibilité par zone ── */
+  async updateZonesDisponibles(userId: string, dto: UpdateZonesDispoDto): Promise<Delivery> {
+    const livreur = await this.findOrFail(userId);
+    /* Filtre : seules les zones déjà configurées peuvent être activées */
+    const configured = livreur.communesActives ?? [];
+    livreur.zonesDisponibles = dto.zonesDisponibles.filter(z => configured.includes(z));
+    const updated = await this.livreurRepo.save(livreur);
+    this.logger.log(`[DISPO] ${livreur.zonesDisponibles.length} zone(s) disponible(s) — userId=${userId}`);
+    return updated;
   }
 
   async findOrFail(userId: string): Promise<Delivery> {

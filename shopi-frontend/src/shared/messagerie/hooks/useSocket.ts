@@ -145,6 +145,17 @@ export interface SocketCallbacks {
   onCallAnswer?:       (payload: WsCallSignal)       => void;
   onCallIceCandidate?: (payload: WsCallSignal)       => void;
   onCallBusy?:         (payload: { conversationId: string }) => void;
+  /* Appels de groupe */
+  onGroupCallIncoming?:        (payload: any) => void;
+  onGroupCallJoined?:          (payload: any) => void;
+  onGroupCallParticipantJoined?(payload: any): void;
+  onGroupCallParticipantLeft?  (payload: any): void;
+  onGroupCallDeclined?         (payload: any): void;
+  onGroupCallEnded?            (payload: any): void;
+  onGroupCallOffer?            (payload: any): void;
+  onGroupCallAnswer?           (payload: any): void;
+  onGroupCallIceCandidate?     (payload: any): void;
+  onGroupCallMediaToggled?     (payload: any): void;
   onConnected?:        () => void;
   onDisconnected?:     () => void;
 }
@@ -171,7 +182,15 @@ function getSocket(token: string): Socket {
    */
   if (_socket && token === _token && !_socket.disconnected) return _socket;
 
-  // Déconnecte l'ancien socket si le token a changé ou socket mort
+  /* Même token mais socket en état "disconnected" (connect_error ou StrictMode) :
+   * on relance la connexion SANS recréer le socket pour éviter
+   * "WebSocket closed before connection established". */
+  if (_socket && token === _token) {
+    _socket.connect();
+    return _socket;
+  }
+
+  // Token différent → déconnecte proprement et recrée
   if (_socket) { _socket.disconnect(); _socket = null; }
 
   _token  = token;
@@ -243,7 +262,18 @@ export function useSocket(callbacks: SocketCallbacks) {
     const onCallOffer        = (p: WsCallSignal)       => cbRef.current.onCallOffer?.(p);
     const onCallAnswer       = (p: WsCallSignal)       => cbRef.current.onCallAnswer?.(p);
     const onCallIce          = (p: WsCallSignal)       => cbRef.current.onCallIceCandidate?.(p);
-    const onCallBusy         = (p: any)                => cbRef.current.onCallBusy?.(p);
+    const onCallBusy                = (p: any) => cbRef.current.onCallBusy?.(p);
+    /* Groupe */
+    const onGrpIncoming             = (p: any) => cbRef.current.onGroupCallIncoming?.(p);
+    const onGrpJoined               = (p: any) => cbRef.current.onGroupCallJoined?.(p);
+    const onGrpParticipantJoined    = (p: any) => cbRef.current.onGroupCallParticipantJoined?.(p);
+    const onGrpParticipantLeft      = (p: any) => cbRef.current.onGroupCallParticipantLeft?.(p);
+    const onGrpDeclined             = (p: any) => cbRef.current.onGroupCallDeclined?.(p);
+    const onGrpEnded                = (p: any) => cbRef.current.onGroupCallEnded?.(p);
+    const onGrpOffer                = (p: any) => cbRef.current.onGroupCallOffer?.(p);
+    const onGrpAnswer               = (p: any) => cbRef.current.onGroupCallAnswer?.(p);
+    const onGrpIce                  = (p: any) => cbRef.current.onGroupCallIceCandidate?.(p);
+    const onGrpMediaToggled         = (p: any) => cbRef.current.onGroupCallMediaToggled?.(p);
 
     socket.on('connect',            onConnect);
     socket.on('disconnect',         onDisconnect);
@@ -262,7 +292,17 @@ export function useSocket(callbacks: SocketCallbacks) {
     socket.on('call:offer',         onCallOffer);
     socket.on('call:answer',        onCallAnswer);
     socket.on('call:ice-candidate', onCallIce);
-    socket.on('call:busy',          onCallBusy);
+    socket.on('call:busy',                   onCallBusy);
+    socket.on('group_call:incoming',          onGrpIncoming);
+    socket.on('group_call:joined',            onGrpJoined);
+    socket.on('group_call:participant_joined',onGrpParticipantJoined);
+    socket.on('group_call:participant_left',  onGrpParticipantLeft);
+    socket.on('group_call:participant_declined', onGrpDeclined);
+    socket.on('group_call:ended',             onGrpEnded);
+    socket.on('group_call:offer',             onGrpOffer);
+    socket.on('group_call:answer',            onGrpAnswer);
+    socket.on('group_call:ice_candidate',     onGrpIce);
+    socket.on('group_call:media_toggled',     onGrpMediaToggled);
 
     if (!socket.connected) socket.connect();
 
@@ -285,7 +325,17 @@ export function useSocket(callbacks: SocketCallbacks) {
       socket.off('call:offer',         onCallOffer);
       socket.off('call:answer',        onCallAnswer);
       socket.off('call:ice-candidate', onCallIce);
-      socket.off('call:busy',          onCallBusy);
+      socket.off('call:busy',                    onCallBusy);
+      socket.off('group_call:incoming',           onGrpIncoming);
+      socket.off('group_call:joined',             onGrpJoined);
+      socket.off('group_call:participant_joined', onGrpParticipantJoined);
+      socket.off('group_call:participant_left',   onGrpParticipantLeft);
+      socket.off('group_call:participant_declined', onGrpDeclined);
+      socket.off('group_call:ended',              onGrpEnded);
+      socket.off('group_call:offer',              onGrpOffer);
+      socket.off('group_call:answer',             onGrpAnswer);
+      socket.off('group_call:ice_candidate',      onGrpIce);
+      socket.off('group_call:media_toggled',      onGrpMediaToggled);
       if (heartbeatId.current) clearInterval(heartbeatId.current);
     };
   }, []); // Socket singleton — ne se recréé pas à chaque render

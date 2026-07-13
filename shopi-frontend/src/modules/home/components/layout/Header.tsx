@@ -21,6 +21,8 @@ import { NotificationProvider }               from '../../../../shared/notificat
 import NotificationToastStack                 from '../../../../shared/notifications/NotificationToastStack';
 import NotificationCenter                     from '../../../../shared/notifications/NotificationCenter';
 
+type NavKey = 'explorer' | 'boutiques' | 'livreurs' | 'relais' | 'offres';
+
 interface HeaderProps {
   onToast:    (msg: string) => void;
   onLogin:    () => void;
@@ -35,6 +37,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
   const [avatarOpen,   setAvatarOpen]   = useState(false);
   const [clientModal,  setClientModal]  = useState(false);
   const [avatarUrl,    setAvatarUrl]    = useState<string | null>(null);
+  const [activeNav,    setActiveNav]    = useState<NavKey | null>(null);
   const avatarRefDesktop = useRef<HTMLDivElement>(null);
   const avatarRefMobile  = useRef<HTMLDivElement>(null);
 
@@ -52,6 +55,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
   const isClient    = role === 'client';
   const isNonClient = isLoggedIn && !isClient;
   const isAnonymous = !isLoggedIn;
+  const canMessage  = isLoggedIn && ['client', 'company', 'delivery', 'correspondent'].includes(role ?? '');
   const isHome      = location.pathname === '/home';
   const inDashboard = location.pathname.startsWith('/dashboard');
 
@@ -60,6 +64,8 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
   const isCorrespondants = location.pathname === '/correspondants';
   const isBoutiques      = location.pathname === '/boutiques';
   const isMessagerie     = location.pathname === '/messagerie';
+  const isCommande       = location.pathname.startsWith('/commande');
+  const isAide           = location.pathname.startsWith('/aide');
 
   const userInitial = (() => {
     try {
@@ -127,18 +133,38 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
 
-  const NAV_LINKS = [
-  { label:'Explorer',    icon:'fa-compass',
-    action:() => { document.querySelector('#blocs')?.scrollIntoView({behavior:'smooth'}); setMobileOpen(false); } },
-  { label:'Boutiques',   icon:'fa-store',
-    action:() => { navigate('/boutiques'); setMobileOpen(false); } },
-  { label:'Livreurs',    icon:'fa-motorcycle',
-    action:() => { navigate('/livreurs'); setMobileOpen(false); } },
-  { label:'Relais',      icon:'fa-map-pin',
-    action:() => { navigate('/correspondants'); setMobileOpen(false); } },
-  { label:'Offres',      icon:'fa-tag',
-    action:() => { onToast('🏷️ Offres'); setMobileOpen(false); } },
-];
+  /* Onglet actif dérivé de la route courante (source de vérité principale) */
+  const routeKey: NavKey | null = (() => {
+    const p = location.pathname;
+    if (p === '/livreurs')      return 'livreurs';
+    if (p === '/correspondants') return 'relais';
+    return null;
+  })();
+
+  /* Quand on arrive sur une route connue, effacer l'état des onglets sans route */
+  useEffect(() => {
+    if (routeKey) setActiveNav(null);
+  }, [routeKey]);
+
+  const NAV_LINKS: { key: NavKey; label: string; icon: string; action: () => void }[] = [
+    { key: 'explorer', label:'Explorer', icon:'fa-compass',
+      action:() => { setActiveNav('explorer'); document.querySelector('#blocs')?.scrollIntoView({behavior:'smooth'}); setMobileOpen(false); } },
+    { key: 'boutiques', label:'Boutiques', icon:'fa-store',
+      action:() => { setActiveNav('boutiques'); navigate('/boutiques'); setMobileOpen(false); } },
+    { key: 'livreurs', label:'Livreurs', icon:'fa-motorcycle',
+      action:() => { navigate('/livreurs'); setMobileOpen(false); } },
+    { key: 'relais', label:'Relais', icon:'fa-map-pin',
+      action:() => { navigate('/correspondants'); setMobileOpen(false); } },
+    { key: 'offres', label:'Offres', icon:'fa-tag',
+      action:() => { setActiveNav('offres'); onToast('🏷️ Offres'); setMobileOpen(false); } },
+  ];
+
+  function isNavActive(l: { key: NavKey }): boolean {
+    /* Route dérivée prioritaire (Livreurs, Relais) */
+    if (routeKey === l.key) return true;
+    /* État local (Explorer, Offres, Boutiques) */
+    return activeNav === l.key;
+  }
 
   function handleSwitchDashboard() {
     if (!isLoggedIn) { navigate('/login'); return; }
@@ -169,7 +195,9 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
             {/* Nav Desktop */}
             <nav className={styles.navDesktop}>
               {NAV_LINKS.map(l => (
-                <button key={l.label} className={styles.navLink} onClick={l.action}>
+                <button key={l.label}
+                  className={`${styles.navLink} ${isNavActive(l) ? styles.navLinkActive : ''}`}
+                  onClick={l.action}>
                   <i className={`fas ${l.icon}`} />{l.label}
                 </button>
               ))}
@@ -213,18 +241,17 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
                 <i className="fas fa-house" />
               </button>
 
-              <button className={styles.iconBtn}
-                onClick={() => clientAction(() => navigate('/messagerie'))} title="Messagerie">
+              <button className={`${styles.iconBtn} ${isMessagerie ? styles.iconBtnActive : ''}`}
+                onClick={() => isLoggedIn ? navigate('/messagerie') : navigate('/login')} title="Messagerie">
                 <i className="fas fa-comment-dots" />
-                {isClient && msgUnread > 0 && (
+                {canMessage && msgUnread > 0 && !isMessagerie && (
                   <span className={styles.badge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
                 )}
               </button>
 
               {isLoggedIn && <NotificationCenter />}
 
-              {/* ✅ Badge panier dynamique depuis CartContext */}
-              <button className={styles.iconBtn}
+              <button className={`${styles.iconBtn} ${isCommande ? styles.iconBtnActive : ''}`}
                 onClick={() => clientAction(() => navigate('/commande'))} title="Panier">
                 <i className="fas fa-bag-shopping" />
                 {isClient && cartCount > 0 && (
@@ -234,7 +261,8 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
 
               <span className={styles.sep} />
 
-              <button className={styles.iconBtn} onClick={() => onToast("❓ Centre d'aide")} title="Centre d'aide">
+              <button className={`${styles.iconBtn} ${isAide ? styles.iconBtnActive : ''}`}
+                onClick={() => navigate('/aide')} title="Centre d'aide">
                 <i className="fas fa-circle-question" />
               </button>
               <span className={styles.sep} />
@@ -301,10 +329,10 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
               </button>
 
               {/* ✅ Messagerie — ajouté en mobile */}
-              <button className={styles.iconBtn}
-                onClick={() => clientAction(() => navigate('/messagerie'))} title="Messagerie">
+              <button className={`${styles.iconBtn} ${isMessagerie ? styles.iconBtnActive : ''}`}
+                onClick={() => isLoggedIn ? navigate('/messagerie') : navigate('/login')} title="Messagerie">
                 <i className="fas fa-comment-dots" />
-                {isClient && msgUnread > 0 && (
+                {canMessage && msgUnread > 0 && !isMessagerie && (
                   <span className={styles.badge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
                 )}
               </button>
@@ -390,7 +418,9 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
             </div>
             <nav className={styles.drawerNav}>
               {NAV_LINKS.map(l => (
-                <button key={l.label} className={styles.drawerLink} onClick={l.action}>
+                <button key={l.label}
+                  className={`${styles.drawerLink} ${isNavActive(l) ? styles.drawerLinkActive : ''}`}
+                  onClick={l.action}>
                   <div className={styles.drawerLinkIco}><i className={`fas ${l.icon}`} /></div>
                   <span>{l.label}</span>
                   <i className="fas fa-chevron-right" style={{ color:'var(--t4)', fontSize:11 }} />
@@ -467,19 +497,6 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
           title="Boutiques"
         >
           <i className="fas fa-store" /><span>Boutiques</span>
-        </button>
-
-        {/* ✅ Messagerie — actif sur /messagerie */}
-        <button
-          className={`${styles.bnItem} ${isMessagerie ? styles.bnActive : ''}`}
-          onClick={() => clientAction(() => navigate('/messagerie'))}
-          title="Messagerie"
-        >
-          <i className="fas fa-comment-dots" />
-          <span>Messages</span>
-          {isClient && msgUnread > 0 && (
-            <span className={styles.bnBadge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
-          )}
         </button>
 
         {/* ✅ Livreurs — actif sur /livreurs */}

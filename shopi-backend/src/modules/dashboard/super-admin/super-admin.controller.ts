@@ -15,7 +15,7 @@
 
 import {
   Controller,
-  Get, Patch,
+  Get, Patch, Post,
   UseGuards,
   Request, Body,
 } from '@nestjs/common';
@@ -111,5 +111,38 @@ export class SuperAdminController {
   @Patch('settings')
   updateSettings(@Body() dto: UpdatePlatformSettingsDto) {
     return this.platformSettingsService.updateSettings(dto);
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // GET /dashboard/super-admin/platform-stats
+  // KPIs plateforme : produits, commandes, inscriptions 14j
+  // ══════════════════════════════════════════════════════════════
+
+  @ApiOperation({
+    summary:     'Stats plateforme (produits, commandes, inscriptions)',
+    description: 'Retourne les KPIs produits/commandes et la courbe des inscriptions 14j.',
+  })
+  @Get('platform-stats')
+  async getPlatformStats(@Request() req: any) {
+    const [stats, settings] = await Promise.all([
+      this.utilisateursService.getPlatformStats(req.user),
+      this.platformSettingsService.getSettings(),
+    ]);
+    return {
+      ...stats,
+      commission:     settings.platformCommission,
+      maintenanceMode: settings.maintenanceMode,
+    };
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // POST /dashboard/super-admin/maintenance/cache-purge
+  // ══════════════════════════════════════════════════════════════
+
+  @ApiOperation({ summary: 'Purger le cache applicatif' })
+  @Roles(UserRole.SUPER_ADMIN)
+  @Post('maintenance/cache-purge')
+  purgeCache() {
+    return this.platformSettingsService.purgeCache();
   }
 }

@@ -60,6 +60,11 @@ export interface IOrderPlacedParams {
   orderRef:    string;
   commandeId:  string;
   totalAmount: number;
+  /* Acteurs optionnels — présents uniquement si sélectionnés à la commande */
+  livreurId?:        string;
+  livreurName?:      string;
+  correspondantId?:  string;
+  correspondantName?: string;
 }
 
 export interface IOrderStatusParams {
@@ -184,7 +189,12 @@ export class NotificationEventService {
    * actorId     = Client.id  (profileId)
    */
   async notifyOrderPlaced(params: IOrderPlacedParams): Promise<void> {
+    /* URL de redirection commune : la page de suivi gère tous les rôles
+     * (client, entreprise, livreur, correspondant) via le token JWT. */
+    const suiviUrl = `/commande/${params.commandeId}/suivi`;
+
     try {
+      /* ── Notification entreprise : nouvelle commande reçue ── */
       await this.notifService.create({
         recipientType: NotificationActorType.COMPANY,
         recipientId:   params.companyId,
@@ -194,7 +204,7 @@ export class NotificationEventService {
         priority:      NotificationPriority.HIGH,
         title:         'Nouvelle commande reçue 💰',
         body:          `${params.clientName} a passé une commande · ${params.orderRef}`,
-        actionUrl:     `/dashboard/commandes/${params.commandeId}`,
+        actionUrl:     suiviUrl,
         resourceType:  'order',
         resourceId:    params.commandeId,
         payload: {
@@ -204,6 +214,70 @@ export class NotificationEventService {
           totalAmount: params.totalAmount,
         },
       });
+
+      /* ── Notification client : confirmation de la commande passée ── */
+      await this.notifService.create({
+        recipientType: NotificationActorType.CLIENT,
+        recipientId:   params.clientId,
+        actorType:     NotificationActorType.COMPANY,
+        actorId:       params.companyId,
+        type:          NotificationType.ORDER_PLACED,
+        priority:      NotificationPriority.HIGH,
+        title:         'Commande confirmée ✅',
+        body:          `Votre commande ${params.orderRef} a bien été enregistrée.`,
+        actionUrl:     suiviUrl,
+        resourceType:  'order',
+        resourceId:    params.commandeId,
+        payload: {
+          commandeId:  params.commandeId,
+          orderRef:    params.orderRef,
+          totalAmount: params.totalAmount,
+        },
+      });
+
+      /* ── Notification livreur (si sélectionné à la commande) ── */
+      if (params.livreurId) {
+        await this.notifService.create({
+          recipientType: NotificationActorType.DELIVERY,
+          recipientId:   params.livreurId,
+          actorType:     NotificationActorType.CLIENT,
+          actorId:       params.clientId,
+          type:          NotificationType.ORDER_PLACED,
+          priority:      NotificationPriority.HIGH,
+          title:         'Nouvelle mission de livraison 🛵',
+          body:          `Commande ${params.orderRef} à livrer pour ${params.clientName}`,
+          actionUrl:     suiviUrl,
+          resourceType:  'order',
+          resourceId:    params.commandeId,
+          payload: {
+            commandeId:  params.commandeId,
+            orderRef:    params.orderRef,
+            clientName:  params.clientName,
+          },
+        });
+      }
+
+      /* ── Notification correspondant (si sélectionné à la commande) ── */
+      if (params.correspondantId) {
+        await this.notifService.create({
+          recipientType: NotificationActorType.CORRESPONDENT,
+          recipientId:   params.correspondantId,
+          actorType:     NotificationActorType.CLIENT,
+          actorId:       params.clientId,
+          type:          NotificationType.ORDER_PLACED,
+          priority:      NotificationPriority.HIGH,
+          title:         'Nouvelle commande à traiter 📦',
+          body:          `Commande ${params.orderRef} implique votre point de retrait`,
+          actionUrl:     suiviUrl,
+          resourceType:  'order',
+          resourceId:    params.commandeId,
+          payload: {
+            commandeId:  params.commandeId,
+            orderRef:    params.orderRef,
+            clientName:  params.clientName,
+          },
+        });
+      }
     } catch (err) {
       this.logger.error('notifyOrderPlaced failed', err);
     }
@@ -402,11 +476,26 @@ export class NotificationEventService {
    * Notifie un acteur d'un changement de statut de commande.
    *
    * Cas d'usage :
-   *   - ENTREPRISE valide → IN_PROGRESS   → notifier CLIENT (ORDER_CONFIRMED)
-   *   - Tous valident     → AWAITING_CLIENT→ notifier CLIENT
-   *   - CLIENT valide     → DELIVERED      → notifier COMPANY
+   *   - ENTREPRISE valide → IN_PROGRESS    → notifier CLIENT  (ORDER_CONFIRMED)
+   *   - Tous valident     → AWAITING_CLIENT → notifier CLIENT
+   *   - CLIENT valide     → DELIVERED       → notifier COMPANY
+   *
+   * L'actionUrl est adapté au rôle du destinataire :
+   *   CLIENT        → /commande/:id/suivi   (page de suivi public)
+   *   COMPANY       → /dashboard/entreprise
+   *   DELIVERY      → /dashboard/livreur
+   *   CORRESPONDENT → /dashboard/correspondant
    */
   async notifyOrderStatusChanged(params: IOrderStatusParams): Promise<void> {
+    /* Chaque rôle a son propre dashboard — on redirige vers la bonne page. */
+    const actionUrlByRole: Record<string, string> = {
+      [NotificationActorType.CLIENT]:        `/commande/${params.commandeId}/suivi`,
+      [NotificationActorType.COMPANY]:       '/dashboard/entreprise',
+      [NotificationActorType.DELIVERY]:      '/dashboard/livreur',
+      [NotificationActorType.CORRESPONDENT]: '/dashboard/correspondant',
+    };
+    const actionUrl = actionUrlByRole[params.recipientType] ?? `/commande/${params.commandeId}/suivi`;
+
     try {
       await this.notifService.create({
         recipientType: params.recipientType,
@@ -417,7 +506,7 @@ export class NotificationEventService {
         priority:      NotificationPriority.HIGH,
         title:         params.title,
         body:          params.body,
-        actionUrl:     `/commandes/${params.commandeId}`,
+        actionUrl,
         resourceType:  'order',
         resourceId:    params.commandeId,
         payload: {
@@ -428,6 +517,64 @@ export class NotificationEventService {
       });
     } catch (err) {
       this.logger.error(`notifyOrderStatusChanged (${params.newStatus}) failed`, err);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // SUPPORT TICKETS (Phase 5)
+  // ─────────────────────────────────────────────────────────
+
+  /**
+   * Notifie l'utilisateur qu'un agent a répondu à son ticket de support.
+   *
+   * IMPORTANT — règle profileId :
+   *   recipientId doit être le profileId (Client.id, Company.id, etc.)
+   *   et NON le userId. L'appelant (SupportService) doit résoudre
+   *   le profileId avant d'appeler cette méthode.
+   *
+   * PARAMÈTRES :
+   *   recipientType  — type d'acteur du créateur du ticket ('client', 'company'…)
+   *   recipientId    — profileId du créateur du ticket
+   *   agentName      — nom de l'agent qui a répondu (affiché dans la notif)
+   *   ticketId       — UUID du ticket (pour le lien deep-link)
+   *   ticketRef      — référence lisible ex: 'SUP-2026-00001'
+   *   ticketSubject  — sujet du ticket (affiché dans le corps de la notif)
+   */
+  async notifySupportTicketReply(params: {
+    recipientType:  string;
+    recipientId:    string;
+    agentName:      string;
+    ticketId:       string;
+    ticketRef:      string;
+    ticketSubject:  string;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType as NotificationActorType,
+        recipientId:   params.recipientId,
+        /* actorType SYSTEM car la réponse est initiée par un agent interne
+         * et non par un profil public de l'application. */
+        actorType:     NotificationActorType.SYSTEM,
+        actorId:       null,
+        type:          NotificationType.SUPPORT_TICKET_REPLY,
+        priority:      NotificationPriority.HIGH,
+        title:         'Réponse à votre ticket de support',
+        body:          `${params.agentName} a répondu à "${params.ticketSubject}"`,
+        /* Deep-link : l'utilisateur est redirigé directement vers le ticket */
+        actionUrl:     `/support/tickets/${params.ticketId}`,
+        /* groupKey : une seule notif de "réponse" par ticket à la fois.
+         * Si l'agent envoie 2 réponses rapides, elles sont agrégées. */
+        groupKey:      `support.reply:${params.ticketId}`,
+        resourceType:  'support_ticket',
+        resourceId:    params.ticketId,
+        payload: {
+          ticketId:     params.ticketId,
+          ticketRef:    params.ticketRef,
+          agentName:    params.agentName,
+        },
+      });
+    } catch (err) {
+      this.logger.error(`notifySupportTicketReply (${params.ticketRef}) failed`, err);
     }
   }
 }

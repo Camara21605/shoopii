@@ -26,6 +26,8 @@ import {
   NotificationType,
 } from 'src/database/entities/notification/notification.entitiy';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
+import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
+import { Commande, CommandeStatus }   from 'src/database/entities/commande/commande.entity';
 
 /* ── Interfaces ────────────────────────────────────────────── */
 
@@ -52,12 +54,20 @@ export interface UserStats {
   nouveaux30j: number;
 }
 
+export interface PlatformStats {
+  totalProduits:    number;
+  totalCommandes:   number;
+  commandesCeMois:  number;
+  commandesEnCours: number;
+  inscriptions14j:  { date: string; count: number }[];
+}
+
 /* ── Mappings ──────────────────────────────────────────────── */
 
 const ROLE_TO_FRONTEND: Record<string, string> = {
   [UserRole.COMPANY]:      'company',
   [UserRole.DELIVERY]:     'delivery',
-  [UserRole.CLIENT]:       'customer',
+  [UserRole.CLIENT]:       'client',
   [UserRole.PARTNER]:      'partner',
   [UserRole.ADMIN]:        'admin',
   [UserRole.SUPER_ADMIN]:  'admin',
@@ -81,6 +91,12 @@ export class UtilisateursService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+
+    @InjectRepository(Product)
+    private readonly produitRepo: Repository<Product>,
+
+    @InjectRepository(Commande)
+    private readonly commandeRepo: Repository<Commande>,
 
     private readonly auditLog: AuditLogService,
     private readonly notifEventSvc: NotificationEventService,
@@ -140,13 +156,17 @@ export class UtilisateursService {
       if (dbStatus) qb.andWhere('u.status = :status', { status: dbStatus });
     }
 
-    /*
-     * ✅ FIX — Filtre pays sur loc.pays (et non u.country inexistant)
-     * La colonne "country" n'existe pas sur la table users.
-     * Le pays est dans la table localisations → champ "pays".
-     */
+    /* Filtre pays : vérifie countryCode (détecté à l'inscription via tél.)
+     * OU loc.pays (adresse renseignée par l'utilisateur).
+     * countryCode est la source la plus fiable car toujours rempli à la création. */
     if (dto.country && dto.country !== 'all') {
-      qb.andWhere('loc.pays = :pays', { pays: dto.country });
+      qb.andWhere(
+        new Brackets(sub => {
+          sub
+            .where('u.countryCode = :country', { country: dto.country })
+            .orWhere('loc.pays = :country', { country: dto.country });
+        }),
+      );
     }
 
     const [users, total] = await qb.getManyAndCount();
@@ -372,12 +392,64 @@ export class UtilisateursService {
     const map: Record<string, string | string[]> = {
       company:       UserRole.COMPANY,
       delivery:      UserRole.DELIVERY,
-      customer:      UserRole.CLIENT,
+      client:        UserRole.CLIENT,
       partner:       UserRole.PARTNER,
       correspondent: UserRole.CORRESPONDENT,
       admin:         [UserRole.ADMIN, UserRole.SUPER_ADMIN],
     };
     return map[role] ?? null;
+  }
+
+  /* ── 8. STATS PLATEFORME ──────────────────────────────────── */
+
+  async getPlatformStats(caller: User): Promise<PlatformStats> {
+    this.assertIsAdminOrSuperAdmin(caller);
+
+    const debut30j = new Date();
+    debut30j.setDate(debut30j.getDate() - 30);
+
+    const debut14j = new Date();
+    debut14j.setDate(debut14j.getDate() - 13);
+    debut14j.setHours(0, 0, 0, 0);
+
+    const [totalProduits, totalCommandes, commandesCeMois, commandesEnCours] = await Promise.all([
+      this.produitRepo.count({ where: { visibilite: ProductVisibility.PUBLIC } }),
+      this.commandeRepo.count(),
+      this.commandeRepo
+        .createQueryBuilder('c')
+        .where('c.createdAt >= :debut30j', { debut30j })
+        .getCount(),
+      this.commandeRepo
+        .createQueryBuilder('c')
+        .where('c.status IN (:...statuses)', {
+          statuses: [CommandeStatus.IN_PROGRESS, CommandeStatus.AWAITING_CLIENT, CommandeStatus.PAID],
+        })
+        .getCount(),
+    ]);
+
+    const rawInscrits = await this.userRepo
+      .createQueryBuilder('u')
+      .select("DATE(u.createdAt)", 'day')
+      .addSelect('COUNT(*)', 'count')
+      .where('u.createdAt >= :debut14j', { debut14j })
+      .groupBy("DATE(u.createdAt)")
+      .orderBy("DATE(u.createdAt)", 'ASC')
+      .getRawMany<{ day: string; count: string }>();
+
+    const byDay: Record<string, number> = {};
+    for (const row of rawInscrits) {
+      byDay[row.day] = Number(row.count);
+    }
+
+    const inscriptions14j: { date: string; count: number }[] = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      inscriptions14j.push({ date: key, count: byDay[key] ?? 0 });
+    }
+
+    return { totalProduits, totalCommandes, commandesCeMois, commandesEnCours, inscriptions14j };
   }
 
   private frontendStatusToDbStatus(status: string): string | null {
@@ -395,7 +467,9 @@ export class UtilisateursService {
       email:    user.email,
       role:     ROLE_TO_FRONTEND[user.role]    ?? user.role,
       status:   STATUS_TO_FRONTEND[user.status] ?? user.status,
-      country:  user.localisations?.[0]?.pays ?? 'GN',
+      /* countryCode (ISO-2) est renseigné à l'inscription via l'indicatif tél.
+       * loc.pays sert de fallback pour les utilisateurs sans numéro. */
+      country:  user.countryCode ?? user.localisations?.[0]?.pays ?? '',
       phone:    user.phone ?? '',
       date:     user.createdAt?.toISOString() ?? new Date().toISOString(),
       verified: Boolean(user.emailVerified),

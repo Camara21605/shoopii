@@ -1,0 +1,44 @@
+/* ================================================================
+ * FICHIER : src/dashboards/admin/styles/KpiCard.module.css
+ * Variantes : k1 teal (admin), k2 blue, k3 emerald, k4 amber.
+ * ================================================================ */
+
+.kpi {
+  background: var(--white);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  position: relative; overflow: hidden;
+  transition: all .22s;
+}
+.kpi:hover { transform: translateY(-3px); box-shadow: var(--sh-md); border-color: var(--bdrb); }
+
+.stripe { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.k1 .stripe { background: linear-gradient(90deg, #0E7490, #22D3EE); }
+.k2 .stripe { background: linear-gradient(90deg, #1A4FC4, #5B8EF4); }
+.k3 .stripe { background: linear-gradient(90deg, #047857, #34D399); }
+.k4 .stripe { background: linear-gradient(90deg, #B45309, #FCD34D); }
+
+.top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+
+.ic {
+  width: 44px; height: 44px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.k1 .ic { background: var(--tl-bg); color: var(--teal); }
+.k2 .ic { background: var(--sky-2); color: var(--blue); }
+.k3 .ic { background: var(--em-bg); color: var(--emerald); }
+.k4 .ic { background: var(--am-bg); color: var(--amber); }
+
+.badge {
+  font-size: 10px; font-weight: 700;
+  padding: 3px 9px; border-radius: var(--pill);
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.up { background: var(--em-bg); color: var(--emerald); }
+.dn { background: rgba(220,38,38,.1); color: #DC2626; }
+
+.v { font-family: var(--fd); font-weight: 800; font-size: 28px; color: var(--navy); letter-spacing: -.5px; line-height: 1; }
+.v small { font-size: 14px; color: var(--t3); font-weight: 600; }
+.l { font-size: 12.5px; color: var(--t3); margin-top: 6px; }

@@ -52,3 +52,16 @@
 .termsLabel a:hover { text-decoration:underline; }
 
 @media (max-width:640px) { .grid { grid-template-columns:1fr; } }
+
+/* ── Skeleton loading ──────────────────────────────────── */
+.skelLine {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+  background-size: 200% 100%;
+  animation: skelShimmer 1.4s infinite;
+  display: block;
+}
+@keyframes skelShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

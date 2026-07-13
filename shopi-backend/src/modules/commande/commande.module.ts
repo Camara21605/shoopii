@@ -5,7 +5,8 @@
 
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { NotificationsModule } from '../notifications/notifications.module';
+import { NotificationsModule }  from '../notifications/notifications.module';
+import { DeliveryGroupModule }  from '../delivery-group/delivery-group.module';
 
 import { Commande } from '../../database/entities/commande/commande.entity';
 import { CommandeItem } from '../../database/entities/commande/commande-item.entity';
@@ -33,6 +34,7 @@ import { CommandeScheduler } from './commande.scheduler';
 @Module({
   imports: [
     NotificationsModule,
+    DeliveryGroupModule,
     TypeOrmModule.forFeature([
       Commande,
       CommandeItem,

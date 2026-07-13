@@ -72,6 +72,38 @@ import { SavMessage }       from '../database/entities/returns/sav-message.entit
 import { MessagingAuditLog }    from '../database/entities/messaging/messaging-audit-log.entity';
 import { UserContact }          from '../database/entities/contacts/user-contact.entity';
 import { ContactSyncSession }   from '../database/entities/contacts/contact-sync-session.entity';
+// ── Centre d'aide ──────────────────────────────────────────────────────────
+import { HelpCategory }    from '../database/entities/help/help-category.entity';
+import { HelpArticle }     from '../database/entities/help/help-article.entity';
+import { HelpFaqItem }     from '../database/entities/help/help-faq-item.entity';
+import { HelpSearchQuery } from '../database/entities/help/help-search-query.entity';
+// ── Support tickets ────────────────────────────────────────────────────────
+import { SupportTicket }  from '../database/entities/support/support-ticket.entity';
+import { SupportMessage } from '../database/entities/support/support-message.entity';
+import { Attachment }     from '../database/entities/support/attachment.entity';
+// ── Formulaire de contact ──────────────────────────────────────────────────
+import { ContactMessage } from '../database/entities/contact/contact-message.entity';
+// ── Référentiel géographique ───────────────────────────────────
+import { GeoPays }       from '../database/entities/geo/geo-pays.entity';
+import { GeoRegion }     from '../database/entities/geo/geo-region.entity';
+import { GeoPrefecture } from '../database/entities/geo/geo-prefecture.entity';
+import { GeoCommune }    from '../database/entities/geo/geo-commune.entity';
+import { GeoQuartier }   from '../database/entities/geo/geo-quartier.entity';
+import { GeoZone }       from '../database/entities/geo/geo-zone.entity';
+// ── Préférences d'apparence ────────────────────────────────────
+import { AppearancePreference } from '../database/entities/appearance-preference.entity';
+// ── Moteur de validation ───────────────────────────────────────
+import { ValidationConfig }     from '../modules/validation-config/validation-config.entity';
+// ── Configuration entreprises ──────────────────────────────────
+import { CompanySetting }       from '../modules/company-settings/company-settings.entity';
+// ── Configuration livreurs ─────────────────────────────────────
+import { DeliverySetting }      from '../modules/delivery-settings/delivery-settings.entity';
+// ── Configuration partenaires ──────────────────────────────────
+import { PartnerSetting }       from '../modules/partner-settings/partner-settings.entity';
+// ── Groupes de livraison automatiques ──────────────────────────
+import { DeliveryGroup }        from '../database/entities/delivery-group/delivery-group.entity';
+import { DeliveryGroupMember }  from '../database/entities/delivery-group/delivery-group-member.entity';
+import { GroupMessage }         from '../database/entities/delivery-group/group-message.entity';
 
 
 /*****************************************************
@@ -130,6 +162,10 @@ export const databaseConfigFactory = {
       url:  databaseUrl,
       extra: {
         family: 4,
+        max: 20,
+        min: 2,
+        idleTimeoutMillis: 30_000,
+        connectionTimeoutMillis: 5_000,
         ...(useSSL && {
           ssl: { rejectUnauthorized: false },
         }),
@@ -210,23 +246,51 @@ export const databaseConfigFactory = {
       MessagingAuditLog,
       UserContact,
       ContactSyncSession,
+      // ── Centre d'aide ─────────────────────────────────────────
+      HelpCategory,
+      HelpArticle,
+      HelpFaqItem,
+      HelpSearchQuery,
+      // ── Support tickets ───────────────────────────────────────
+      SupportTicket,
+      SupportMessage,
+      Attachment,
+      // ── Formulaire de contact ─────────────────────────────────
+      ContactMessage,
+      // ── Référentiel géographique ──────────────────────────────
+      GeoPays,
+      GeoRegion,
+      GeoPrefecture,
+      GeoCommune,
+      GeoQuartier,
+      GeoZone,
+      // ── Préférences d'apparence ───────────────────────────────
+      AppearancePreference,
+      // ── Moteur de validation ──────────────────────────────────
+      ValidationConfig,
+      // ── Configuration entreprises ─────────────────────────────
+      CompanySetting,
+      // ── Configuration livreurs ────────────────────────────────
+      DeliverySetting,
+      // ── Configuration partenaires ─────────────────────────────
+      PartnerSetting,
+      // ── Groupes de livraison automatiques ─────────────────────
+      // Ces trois tables sont créées par TypeORM uniquement si elles
+      // apparaissent ici ET que DB_SYNC=true est dans le .env.
+      DeliveryGroup,
+      DeliveryGroupMember,
+      GroupMessage,
     ],
 
 
-    /*
-     * synchronize: true  → TypeORM crée/modifie les tables automatiquement.
-     * ⚠️ DANGEREUX en production (peut supprimer des colonnes !).
-     * En production, utiliser les migrations TypeORM.
-     * DB_SYNC=true permet de forcer le sync en staging si nécessaire.
-     */
-    synchronize:
-      config.get<string>('NODE_ENV') !== 'production' ||
-      config.get<string>('DB_SYNC') === 'true',
+    /* synchronize — activé uniquement si DB_SYNC=true dans le .env.
+     * En développement : mettez DB_SYNC=true pour laisser TypeORM
+     * créer/mettre à jour les tables automatiquement.
+     * En production  : ne jamais activer (risque de perte de données). */
+    synchronize: config.get<string>('DB_SYNC') === 'true',
 
-    // Logs SQL uniquement en développement
-    logging: config.get<string>('NODE_ENV') === 'development'
-      ? ['query', 'error']
-      : ['error'],
+    /* Logs SQL : erreurs uniquement — ['query'] est trop verbeux et ralentit le dev */
+    logging: ['error'],
 
     } as TypeOrmModuleOptions;
   },

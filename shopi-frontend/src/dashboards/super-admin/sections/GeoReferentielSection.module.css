@@ -1,0 +1,430 @@
+/* ================================================================
+ * FICHIER : sections/GeoReferentielSection.module.css
+ * Centre de Gestion du Référentiel Géographique Shopi.
+ * S'appuie sur les variables CSS de super-admin.css.
+ * ================================================================ */
+
+/* ── Layout : sidebar interne + contenu ── */
+.wrap { display: flex; gap: 0; height: calc(100vh - 128px); overflow: hidden; }
+
+.sb {
+  width: 224px; flex-shrink: 0;
+  background: var(--deep);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+.sbHead {
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sbTitle { font-family: var(--font-h); font-size: 13px; font-weight: 700; color: var(--txt-1); display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.sbTitle i { color: var(--acid); }
+.sbSearch {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 7px 10px;
+}
+.sbSearch i { color: var(--txt-3); font-size: 11px; flex-shrink: 0; }
+.sbSearch input { background: none; border: none; outline: none; color: var(--txt-1); font-size: 11.5px; width: 100%; font-family: var(--font-b); }
+.sbSearch input::placeholder { color: var(--txt-3); }
+
+.sbNav { flex: 1; overflow-y: auto; padding: 6px 0; }
+.sbNav::-webkit-scrollbar { width: 0; }
+
+.sbGroup { margin-bottom: 4px; }
+.sbGroupLabel { font-size: 9px; font-weight: 700; color: var(--txt-3); text-transform: uppercase; letter-spacing: 1.4px; padding: 10px 14px 4px; }
+
+.sbItem {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; padding: 8px 14px;
+  font-size: 12px; font-weight: 500; color: var(--txt-2);
+  background: none; border: none; cursor: pointer;
+  transition: all .13s; text-align: left; position: relative;
+  font-family: var(--font-b);
+}
+.sbItem:hover { background: var(--hover); color: var(--txt-1); }
+.sbItem.on { background: rgba(0,200,138,.1); color: var(--acid); font-weight: 600; }
+.sbItem.on::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 16px; background: var(--acid); border-radius: 0 3px 3px 0; }
+.sbItem i { width: 14px; text-align: center; font-size: 11px; flex-shrink: 0; }
+.sbBadge { margin-left: auto; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 99px; background: var(--acid-dim); color: var(--acid); }
+
+/* ── Contenu ── */
+.content { flex: 1; overflow-y: auto; background: var(--void); }
+
+.pageHead {
+  padding: 20px 24px 0;
+  background: var(--deep);
+  border-bottom: 1px solid var(--border);
+}
+.crumb { font-size: 10px; color: var(--txt-3); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+.crumb i { font-size: 8px; }
+.headRow { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding-bottom: 16px; }
+.headL {}
+.pageTitle { font-family: var(--font-h); font-size: 19px; font-weight: 800; color: var(--txt-1); display: flex; align-items: center; gap: 10px; }
+.pageTitle i { font-size: 16px; }
+.pageSub { font-size: 12px; color: var(--txt-2); margin-top: 4px; }
+.headActions { display: flex; gap: 8px; padding-top: 4px; flex-shrink: 0; }
+
+.body { padding: 20px 24px 60px; display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Cards ── */
+.card {
+  background: var(--deep); border: 1px solid var(--border);
+  border-radius: var(--r-md); overflow: hidden;
+}
+.cardHead {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.cardTitle {
+  font-family: var(--font-h); font-weight: 700; font-size: 13.5px;
+  color: var(--txt-1); display: flex; align-items: center; gap: 8px;
+}
+.cardTitle i { font-size: 12px; }
+.cardSub { font-size: 11px; color: var(--txt-2); margin-top: 2px; }
+.cardActions { display: flex; gap: 7px; }
+.cardBody { padding: 18px; }
+
+/* ── KPI stats ── */
+.statsGrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+.statCard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 14px; text-align: center;
+  transition: transform .15s, border-color .15s; cursor: pointer;
+}
+.statCard:hover { transform: translateY(-2px); }
+.statStripe { height: 3px; border-radius: 99px; margin-bottom: 10px; }
+.statIc { font-size: 16px; margin-bottom: 6px; }
+.statV { font-family: var(--font-h); font-size: 20px; font-weight: 800; color: var(--txt-1); }
+.statL { font-size: 10.5px; color: var(--txt-2); margin-top: 3px; }
+
+/* ── Tableaux ── */
+.tableWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; }
+.table th { padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 700; color: var(--txt-3); text-transform: uppercase; letter-spacing: .8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.table td { padding: 13px 14px; font-size: 12.5px; color: var(--txt-1); border-bottom: 1px solid var(--border); vertical-align: middle; }
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: var(--hover); }
+.codePill { font-family: var(--font-m); font-size: 11px; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 3px 8px; color: var(--txt-2); }
+.enfantsBadge { font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 99px; }
+
+/* ── Filtres / searchbar ── */
+.filterBar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.searchBox { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 9px 14px; }
+.searchBox i { color: var(--txt-3); font-size: 12px; flex-shrink: 0; }
+.searchBox input { background: none; border: none; outline: none; color: var(--txt-1); font-size: 12.5px; width: 100%; font-family: var(--font-b); }
+.searchBox input::placeholder { color: var(--txt-3); }
+.filterSel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 9px 14px; font-size: 12px; color: var(--txt-1); font-family: var(--font-b); outline: none; cursor: pointer; }
+
+/* ── Pagination ── */
+.pagination { display: flex; align-items: center; gap: 6px; justify-content: flex-end; padding: 12px 18px; border-top: 1px solid var(--border); }
+.pageBtn { width: 30px; height: 30px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--surface); color: var(--txt-2); font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .13s; font-family: var(--font-b); }
+.pageBtn:hover { background: var(--hover); color: var(--txt-1); }
+.pageBtn.active { background: var(--acid); border-color: var(--acid); color: #000; font-weight: 700; }
+.pageInfo { font-size: 11.5px; color: var(--txt-2); margin-right: auto; }
+
+/* ── Badges statut ── */
+.bdg { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 99px; }
+.bdgOn  { background: var(--acid-dim); color: var(--acid); }
+.bdgOff { background: var(--rose-dim); color: var(--rose); }
+.bdgGold { background: var(--gold-dim); color: var(--gold); }
+.bdgSky  { background: var(--sky-dim);  color: var(--sky); }
+
+/* ── Buttons ── */
+.btnPrimary { background: var(--acid); color: #000; border: none; border-radius: var(--r-sm); padding: 9px 16px; font-size: 12px; font-weight: 700; font-family: var(--font-b); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: all .13s; }
+.btnPrimary:hover { filter: brightness(1.1); }
+.btnSecondary { background: var(--surface); color: var(--txt-1); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 9px 16px; font-size: 12px; font-weight: 600; font-family: var(--font-b); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: all .13s; }
+.btnSecondary:hover { background: var(--hover); }
+.btnDanger { background: var(--rose-dim); color: var(--rose); border: 1px solid rgba(255,68,100,.2); border-radius: var(--r-sm); padding: 9px 16px; font-size: 12px; font-weight: 600; font-family: var(--font-b); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+.btnDanger:hover { background: rgba(255,68,100,.18); }
+.btnSm { padding: 6px 12px; font-size: 11px; }
+.btnIc { width: 30px; height: 30px; padding: 0; justify-content: center; border-radius: var(--r-sm); }
+.btnGhost { background: transparent; color: var(--txt-2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 7px 12px; font-size: 11.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-b); }
+.btnGhost:hover { background: var(--hover); color: var(--txt-1); }
+
+/* ── Action row pour chaque ligne table ── */
+.rowActions { display: flex; gap: 5px; opacity: 0; transition: opacity .15s; }
+.table tr:hover .rowActions { opacity: 1; }
+
+/* ── Modal ── */
+.modalOverlay {
+  position: fixed; inset: 0; background: var(--modal-bg); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; animation: fadeIn .2s;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  background: var(--raised); border: 1px solid var(--border);
+  border-radius: var(--r-xl); width: 100%; max-width: 560px;
+  max-height: 90vh; overflow-y: auto;
+  overscroll-behavior: contain;  /* empêche le scroll de la page en arrière-plan */
+  animation: slideUp .2s;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes slideFromBottom { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.modalHead {
+  padding: 18px 22px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  position: sticky; top: 0; background: var(--raised); z-index: 1; /* reste visible au scroll */
+}
+.modalTitle {
+  font-family: var(--font-h); font-size: 15px; font-weight: 800; color: var(--txt-1);
+  display: flex; align-items: center; gap: 10px;
+  flex: 1; min-width: 0;  /* permet le wrap du texte */
+}
+.modalTitle i { flex-shrink: 0; }
+.modalClose {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+  width: 30px; height: 30px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--txt-2); font-size: 14px;
+}
+.modalClose:hover { color: var(--txt-1); }
+.modalBody { padding: 22px; display: flex; flex-direction: column; gap: 16px; }
+.modalFoot {
+  padding: 16px 22px; border-top: 1px solid var(--border);
+  display: flex; justify-content: flex-end; gap: 8px;
+  flex-wrap: wrap;  /* les boutons passent à la ligne si nécessaire */
+  position: sticky; bottom: 0; background: var(--raised); z-index: 1;
+}
+
+/* ── Formulaire ── */
+.fldGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.fld { display: flex; flex-direction: column; gap: 6px; }
+.fldFull { grid-column: 1 / -1; }
+.fldL { font-size: 10px; font-weight: 700; color: var(--txt-2); text-transform: uppercase; letter-spacing: .7px; }
+.fldIn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 12px; font-size: 13px; color: var(--txt-1); font-family: var(--font-b); outline: none; transition: border-color .15s; width: 100%; }
+.fldIn:focus { border-color: var(--acid); }
+.fldSel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 12px; font-size: 13px; color: var(--txt-1); font-family: var(--font-b); outline: none; cursor: pointer; width: 100%; }
+.fldArea { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 12px; font-size: 13px; color: var(--txt-1); font-family: var(--font-b); outline: none; resize: vertical; min-height: 70px; width: 100%; }
+.fldHint { font-size: 10.5px; color: var(--txt-3); }
+.required { color: var(--rose); }
+
+/* ── Tree view ── */
+.tree { display: flex; flex-direction: column; gap: 0; }
+.tNode { display: flex; align-items: flex-start; gap: 0; position: relative; }
+.tToggle { width: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 11px; cursor: pointer; }
+.tToggle i { font-size: 9px; color: var(--txt-3); transition: transform .15s; }
+.tToggle.open i { transform: rotate(90deg); }
+.tContent { flex: 1; }
+.tItem { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r-sm); cursor: pointer; transition: background .13s; }
+.tItem:hover { background: var(--hover); }
+.tItem.active { background: var(--acid-dim); }
+.tIc { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+.tName { font-size: 12.5px; font-weight: 600; color: var(--txt-1); flex: 1; }
+.tCode { font-family: var(--font-m); font-size: 10px; color: var(--txt-3); }
+.tChildren { padding-left: 20px; border-left: 1px dashed var(--border); margin-left: 10px; }
+
+/* ── Import zone ── */
+.dropZone {
+  border: 2px dashed var(--border); border-radius: var(--r-lg);
+  padding: 40px; text-align: center; cursor: pointer; transition: all .2s;
+}
+.dropZone:hover, .dropZone.over { border-color: var(--acid); background: var(--acid-dim); }
+.dropZone i { font-size: 36px; color: var(--txt-3); margin-bottom: 12px; }
+.dropZone.over i { color: var(--acid); }
+.dropTitle { font-family: var(--font-h); font-size: 15px; font-weight: 700; color: var(--txt-1); margin-bottom: 6px; }
+.dropSub { font-size: 12px; color: var(--txt-2); }
+
+/* ── Colonnes masquables dans les tableaux ── */
+.colHide   {}   /* masqué à ≤768px */
+.colHideXs {}   /* masqué à ≤480px */
+
+/* ── Sous-header niveau géographique (GeoLevel) ── */
+.subHeader {
+  display: flex; gap: 12px; padding: 16px 24px;
+  background: var(--deep); border-bottom: 1px solid var(--border);
+  align-items: center; flex-wrap: wrap;
+}
+.subHeaderActions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+.filterWrap { padding: 14px 24px; background: var(--void); }
+
+/* ── Grille 2 colonnes (GeoOverview) ── */
+.twoColGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ── Bannière erreur API ── */
+.apiBanner {
+  margin: 0 24px 16px;
+  padding: 12px 16px;
+  background: rgba(229,62,62,.1);
+  border: 1px solid rgba(229,62,62,.3);
+  border-radius: var(--r-md);
+  display: flex; align-items: center; gap: 10px; font-size: 13px;
+}
+
+/* ── Audit timeline ── */
+.auditItem { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.auditItem:last-child { border-bottom: none; }
+.auditIc { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+.auditInfo { flex: 1; }
+.auditAction { font-size: 12.5px; font-weight: 700; color: var(--txt-1); }
+.auditMeta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 5px; }
+.auditMetaItem { font-size: 11px; color: var(--txt-3); display: flex; align-items: center; gap: 5px; }
+
+/* ================================================================
+ * RESPONSIVE
+ * ================================================================ */
+
+/* ── Bouton hamburger (masqué sur desktop) ── */
+.sbMenuBtn {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 34px; height: 34px; flex-shrink: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-sm); cursor: pointer;
+  color: var(--txt-2); font-size: 13px;
+  transition: background .13s;
+}
+.sbMenuBtn:hover { background: var(--hover); color: var(--txt-1); }
+
+/* ── Overlay de fond quand le drawer est ouvert ── */
+.sbOverlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 590;
+  background: rgba(0,0,0,.55);
+  animation: fadeIn .2s;
+}
+
+/* ── Tablette & mobile : sidebar en drawer ── */
+@media (max-width: 960px) {
+  /* Layout principal passe en colonne, hauteur naturelle */
+  .wrap { flex-direction: column; height: auto; overflow: visible; }
+  .content { overflow-y: visible; min-height: calc(100dvh - 128px); }
+
+  /* Sidebar : drawer fixe qui glisse depuis la gauche */
+  .sb {
+    position: fixed; top: 0; left: 0;
+    height: 100dvh; z-index: 600;
+    width: 260px;
+    transform: translateX(-100%);
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+    box-shadow: 4px 0 32px rgba(0,0,0,.45);
+  }
+  .sb.sbOpen { transform: translateX(0); }
+
+  /* Bouton hamburger visible */
+  .sbMenuBtn { display: inline-flex; }
+
+  /* Overlay visible quand drawer ouvert */
+  .sbOverlay { display: block; }
+
+  /* headRow : flex-wrap pour que les actions puissent passer à la ligne */
+  .headRow     { flex-wrap: wrap; justify-content: flex-start; gap: 8px; }
+  .headL       { flex: 1 1 0; min-width: 0; }
+  .headActions { flex: 0 0 100%; flex-wrap: wrap; gap: 6px; }
+}
+
+/* ── Tablette ── */
+@media (max-width: 1100px) {
+  .statsGrid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ── Tablette étroite ── */
+@media (max-width: 768px) {
+  .statsGrid        { grid-template-columns: repeat(2, 1fr); }
+  /* headRow : wrap — hamburger reste à gauche du titre, actions à la ligne suivante */
+  .headRow          { flex-wrap: wrap; justify-content: flex-start; gap: 8px; }
+  .headL            { flex: 1 1 0; min-width: 0; }
+  .headActions      { flex: 0 0 100%; flex-wrap: wrap; gap: 6px; }
+  .pageTitle        { font-size: 16px; }
+  .pageSub          { font-size: 11px; }
+  .pageHead         { padding: 14px 16px 0; }
+  .body             { padding: 14px 16px 60px; }
+  .crumb            { display: none; }
+  .cardHead         { flex-wrap: wrap; gap: 8px; }
+  .filterBar        { flex-direction: column; }
+  .searchBox        { min-width: unset; width: 100%; }
+  .filterSel        { width: 100%; }
+  /* GeoLevel / GeoOverview */
+  .subHeader        { padding: 12px 16px; }
+  .filterWrap       { padding: 10px 16px; }
+  .twoColGrid       { grid-template-columns: 1fr; }
+  .apiBanner        { margin: 0 16px 12px; }
+  /* Hover inaccessible sur tactile → actions toujours visibles */
+  .rowActions       { opacity: 1; }
+  /* Masquer colonnes secondaires du tableau */
+  .colHide          { display: none; }
+  /* Empêcher scroll horizontal sur le body principal */
+  .body             { overflow-x: hidden; }
+  /* GeoAudit : bouton Export en pleine largeur quand filterBar est en colonne */
+  .filterBar > button { width: 100%; justify-content: center; }
+}
+
+/* ── Mobile ── */
+@media (max-width: 480px) {
+  .statsGrid        { grid-template-columns: repeat(2, 1fr); }
+  .statCard         { padding: 10px; }
+  .statV            { font-size: 17px; }
+  .pageTitle        { font-size: 15px; }
+  .pageHead         { padding: 12px 12px 0; }
+  .body             { padding: 12px 12px 60px; }
+  .table th         { padding: 8px 10px; font-size: 9px; }
+  .table td         { padding: 10px 10px; font-size: 11.5px; }
+  .fldGrid          { grid-template-columns: 1fr; }
+  .pagination       { gap: 4px; }
+  .pageBtn          { width: 28px; height: 28px; font-size: 11px; }
+  /* Actions de ligne : toujours visibles sur mobile (pas de hover) */
+  .rowActions       { opacity: 1; }
+  /* GeoLevel / GeoOverview */
+  .subHeader        { padding: 10px 12px; }
+  .filterWrap       { padding: 10px 12px; }
+  .apiBanner        { margin: 0 12px 12px; font-size: 12px; }
+  .cardBody         { padding: 12px; }
+  .cardHead         { padding: 10px 12px; }
+  /* Masquer colonne Enfants sur très petits écrans */
+  .colHideXs        { display: none; }
+  /* Arbre hiérarchique : réduire l'indentation sur mobile */
+  .tChildren        { padding-left: 10px; margin-left: 6px; }
+}
+
+/* ── Modal : tablette étroite / paysage ── */
+@media (max-width: 768px) {
+  /* Réduire le padding du body pour gagner de la place */
+  .modalBody { padding: 16px 18px; gap: 14px; }
+  .modalHead { padding: 14px 18px; }
+  .modalFoot { padding: 12px 18px; }
+  /* Formulaire : passer à 1 colonne */
+  .fldGrid   { grid-template-columns: 1fr; }
+}
+
+/* ── Modal en bottom-sheet sur mobile (<600px) ── */
+@media (max-width: 600px) {
+  /* Overlay : aligner en bas, sans padding */
+  .modalOverlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  /* Modal : prend toute la largeur, s'élève depuis le bas */
+  .modal {
+    max-width: 100%;
+    width: 100%;
+    border-radius: var(--r-xl) var(--r-xl) 0 0;
+    max-height: 90vh;          /* fallback */
+    max-height: 92dvh;         /* modern browsers */
+    animation: slideFromBottom .28s cubic-bezier(.4,0,.2,1);
+  }
+  /* En-tête compact */
+  .modalHead  { padding: 14px 16px; }
+  .modalTitle { font-size: 13px; }
+  /* Corps compact */
+  .modalBody  { padding: 14px 16px; gap: 12px; }
+  /* Pied : boutons pleine largeur et empilés */
+  .modalFoot  {
+    padding: 12px 16px;
+    flex-direction: column-reverse;  /* Annuler en dessous, Valider en haut */
+  }
+  .modalFoot > * { width: 100%; justify-content: center; }
+  /* Formulaire 1 colonne (déjà à 768px mais on garantit) */
+  .fldGrid    { grid-template-columns: 1fr; }
+}
+
+/* ── Scrollbar invisible sur mobile ── */
+@media (max-width: 960px) {
+  .content::-webkit-scrollbar { width: 0; }
+  .sbNav::-webkit-scrollbar   { width: 0; }
+  .modal::-webkit-scrollbar   { width: 4px; }
+  .modal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+}

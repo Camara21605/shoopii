@@ -35,6 +35,7 @@ interface NotificationContextValue {
   close:         () => void;
   markAsRead:    (id: string) => void;
   markAllAsRead: () => void;
+  deleteOne:     (id: string) => void;
   loadMore:      () => void;
   dismissToast:  (id: string) => void;
 }
@@ -155,6 +156,17 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     notificationService.markAllAsRead().catch(() => {});
   }, [socketMarkAllRead]);
 
+  const deleteOne = useCallback((id: string) => {
+    setNotifications(prev => {
+      const target = prev.find(n => n.id === id);
+      if (target && !target.isRead) {
+        setUnreadCount(c => Math.max(0, c - 1));
+      }
+      return prev.filter(n => n.id !== id);
+    });
+    notificationService.deleteOne(id).catch(() => {});
+  }, []);
+
   const dismissToast = useCallback((id: string) => {
     setToastQueue(prev => prev.filter(t => t.id !== id));
   }, []);
@@ -164,7 +176,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   return (
     <NotificationContext.Provider value={{
       unreadCount, notifications, isOpen, isLoading, hasMore, toastQueue,
-      toggle, close, markAsRead, markAllAsRead, loadMore, dismissToast,
+      toggle, close, markAsRead, markAllAsRead, deleteOne, loadMore, dismissToast,
     }}>
       {children}
     </NotificationContext.Provider>

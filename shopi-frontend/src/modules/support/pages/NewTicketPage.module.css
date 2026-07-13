@@ -1,0 +1,457 @@
+/* ============================================================
+ * NewTicketPage.module.css
+ * Styles du formulaire de création de ticket.
+ * Inclut un stepper 3 étapes, des cartes de type avec descriptions,
+ * validation visuelle et dark mode.
+ * ============================================================ */
+
+:root {
+  --nt-bg:         #F8FAFF;
+  --nt-card:       #ffffff;
+  --nt-border:     #E5EBF5;
+  --nt-text:       #0B1F3A;
+  --nt-muted:      #7A8BA8;
+  --nt-faint:      #9AAACB;
+  --nt-blue:       #1A4FC4;
+  --nt-blue-bg:    #EEF2FF;
+  --nt-blue-bd:    #C7D7F8;
+  --nt-green:      #A7F3D0;
+  --nt-red:        #FCA5A5;
+  --nt-red-text:   #E53E3E;
+  --nt-warn-bg:    #FFFBEB;
+  --nt-warn-bd:    #FDE68A;
+  --nt-warn-text:  #92400E;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --nt-bg:         #0D1526;
+    --nt-card:       #131E35;
+    --nt-border:     #1E2D4A;
+    --nt-text:       #E2E8F6;
+    --nt-muted:      #7A8BA8;
+    --nt-faint:      #4A5A7A;
+    --nt-blue:       #5B8BF0;
+    --nt-blue-bg:    #172040;
+    --nt-blue-bd:    #2A4080;
+    --nt-green:      #065F46;
+    --nt-red:        #7F1D1D;
+    --nt-red-text:   #FCA5A5;
+    --nt-warn-bg:    #2D1F00;
+    --nt-warn-bd:    #78350F;
+    --nt-warn-text:  #FDE68A;
+  }
+}
+
+/* ── Layout ── */
+.page {
+  min-height: 100vh;
+  background: var(--nt-bg);
+  padding: 32px 20px 100px;
+}
+.wrap { max-width: 720px; margin: 0 auto; }
+
+/* ── Fil d'Ariane ── */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 28px;
+}
+.breadcrumb a { color: var(--nt-blue); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: var(--nt-faint); }
+
+/* ── En-tête ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 24px;
+  background: var(--nt-card);
+  border: 1px solid var(--nt-border);
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+.headerIcon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--nt-blue-bg), #DBEAFE);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: var(--nt-blue);
+  flex-shrink: 0;
+}
+.title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--nt-text);
+  margin-bottom: 3px;
+}
+.sub { font-size: 13px; color: var(--nt-faint); }
+
+/* ── Stepper ── */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  background: var(--nt-card);
+  border: 1px solid var(--nt-border);
+  border-radius: 14px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.stepNum {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--nt-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--nt-faint);
+  background: var(--nt-card);
+  flex-shrink: 0;
+  transition: all .2s;
+}
+
+.stepLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--nt-faint);
+  white-space: nowrap;
+  transition: color .2s;
+}
+
+.stepLine {
+  flex: 1;
+  height: 2px;
+  background: var(--nt-border);
+  margin: 0 8px;
+  border-radius: 1px;
+  transition: background .3s;
+}
+
+/* Étape active */
+.stepActive .stepNum {
+  border-color: var(--nt-blue);
+  background: var(--nt-blue);
+  color: #fff;
+}
+.stepActive .stepLabel { color: var(--nt-blue); }
+
+/* Étape terminée */
+.stepDone .stepNum {
+  border-color: #10B981;
+  background: #10B981;
+  color: #fff;
+}
+.stepDone .stepLabel { color: #10B981; }
+.stepLineDone { background: #10B981; }
+
+/* ── Astuce Centre d'aide ── */
+.tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--nt-warn-text);
+  background: var(--nt-warn-bg);
+  border: 1px solid var(--nt-warn-bd);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.tip i { color: #D97706; flex-shrink: 0; }
+.tip a { color: var(--nt-blue); font-weight: 600; text-decoration: none; }
+.tip a:hover { text-decoration: underline; }
+
+/* ── Formulaire ── */
+.form { display: flex; flex-direction: column; gap: 0; }
+
+.section {
+  background: var(--nt-card);
+  border: 1px solid var(--nt-border);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.sectionNum {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--nt-blue-bg);
+  color: var(--nt-blue);
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sectionLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--nt-text);
+}
+.req { color: var(--nt-red-text); }
+
+/* ── Grille des types de demande ── */
+.typeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .typeGrid { grid-template-columns: 1fr; }
+}
+
+.typeCard {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--nt-bg);
+  border: 1.5px solid var(--nt-border);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.typeCard:hover {
+  border-color: var(--nt-blue-bd);
+  background: var(--nt-blue-bg);
+}
+
+/* Carte sélectionnée */
+.typeCardActive {
+  border-color: var(--nt-blue);
+  background: var(--nt-blue-bg);
+  box-shadow: 0 0 0 3px rgba(26, 79, 196, .1);
+}
+
+.typeCardIcon {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  background: var(--nt-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--nt-blue);
+  font-size: 14px;
+  flex-shrink: 0;
+  border: 1px solid var(--nt-border);
+}
+.typeCardActive .typeCardIcon {
+  background: var(--nt-blue);
+  color: #fff;
+  border-color: var(--nt-blue);
+}
+
+.typeCardBody { flex: 1; }
+
+.typeCardLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--nt-text);
+  margin-bottom: 2px;
+}
+
+.typeCardDesc {
+  font-size: 11px;
+  color: var(--nt-muted);
+  line-height: 1.4;
+}
+
+.typeCardCheck {
+  position: absolute;
+  top: 8px; right: 8px;
+  font-size: 14px;
+  color: var(--nt-blue);
+}
+
+/* ── Champs texte ── */
+.inputWrap { position: relative; }
+
+.input, .textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1.5px solid var(--nt-border);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--nt-text);
+  background: var(--nt-bg);
+  font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+.input:focus, .textarea:focus {
+  outline: none;
+  border-color: var(--nt-blue);
+  box-shadow: 0 0 0 3px rgba(26, 79, 196, .1);
+}
+.textarea { resize: vertical; min-height: 180px; line-height: 1.6; }
+
+.inputErr:not(:focus) { border-color: var(--nt-red); }
+.inputOk:not(:focus)  { border-color: var(--nt-green); }
+
+.suggestSpinner {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--nt-blue);
+  font-size: 14px;
+}
+
+.inputMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 5px;
+}
+.errHint { font-size: 11px; color: var(--nt-red-text); }
+.counter { font-size: 11px; color: var(--nt-faint); }
+.counterWarn { color: #D97706; font-weight: 600; }
+
+/* ── Suggestions d'articles ── */
+.suggestions {
+  background: var(--nt-warn-bg);
+  border: 1.5px solid var(--nt-warn-bd);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 10px;
+}
+.suggestHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--nt-warn-text);
+  margin-bottom: 10px;
+}
+.suggestHeader i:first-child { color: #D97706; flex-shrink: 0; }
+.suggestClose {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--nt-warn-text);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.suggestClose:hover { background: var(--nt-warn-bd); }
+
+.suggestList { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+
+.suggestItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-decoration: none;
+  background: var(--nt-card);
+  border: 1px solid var(--nt-warn-bd);
+  border-radius: 10px;
+  padding: 10px 12px;
+  transition: border-color .12s;
+}
+.suggestItem:hover { border-color: #D97706; }
+
+.suggestItemIcon {
+  width: 30px; height: 30px;
+  border-radius: 7px;
+  background: #FEF3C7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #D97706;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.suggestItemTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--nt-text);
+  margin-bottom: 3px;
+}
+.suggestItemExcerpt { font-size: 12px; color: var(--nt-muted); line-height: 1.4; }
+.suggestFooter { font-size: 12px; color: var(--nt-warn-text); margin: 0; font-style: italic; }
+
+/* ── Erreur soumission ── */
+.submitError {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #FFF5F5;
+  border: 1px solid #FED7D7;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--nt-red-text);
+  margin-bottom: 16px;
+}
+
+/* ── Actions ── */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.cancelBtn {
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: 1.5px solid var(--nt-border);
+  background: var(--nt-card);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--nt-text);
+  text-decoration: none;
+  transition: border-color .12s;
+}
+.cancelBtn:hover { border-color: var(--nt-blue-bd); }
+
+.submitBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: 10px;
+  border: none;
+  background: var(--nt-blue);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.submitBtn:hover:not(:disabled) { opacity: .88; }
+.submitBtn:disabled { opacity: .5; cursor: not-allowed; }

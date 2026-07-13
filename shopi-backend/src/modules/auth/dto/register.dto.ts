@@ -4,9 +4,11 @@
 
 import {
   IsBoolean,
+  IsDateString,
   IsEmail,
   IsEnum,
   IsUUID,
+  IsIn,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -71,13 +73,33 @@ export class RegisterDto {
   @Transform(({ value }) => (value as string | undefined)?.trim().toUpperCase())
   activationCode?: string;
 
-  // ✅ AJOUTÉ — Nom de la boutique (Entreprise uniquement)
+  // Nom de la boutique — accepté sous les deux clés (shopName = clé frontend)
   @IsOptional()
   @IsString()
   @MinLength(2,   { message: 'Le nom de la boutique doit contenir au moins 2 caractères.' })
   @MaxLength(100, { message: 'Le nom de la boutique ne peut pas dépasser 100 caractères.' })
   @Transform(({ value }) => (value as string | undefined)?.trim())
   companyName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(2,   { message: 'Le nom de la boutique doit contenir au moins 2 caractères.' })
+  @MaxLength(100, { message: 'Le nom de la boutique ne peut pas dépasser 100 caractères.' })
+  @Transform(({ value }) => (value as string | undefined)?.trim())
+  shopName?: string;
+
+  // Date de naissance (format YYYY-MM-DD)
+  @IsOptional()
+  @IsDateString({}, { message: 'La date de naissance doit être au format YYYY-MM-DD.' })
+  birthDate?: string;
+
+  // Genre
+  @IsOptional()
+  @IsString()
+  @IsIn(['male', 'female', 'other', 'prefer_not'], {
+    message: "Le genre doit être 'male', 'female', 'other' ou 'prefer_not'.",
+  })
+  gender?: string;
 
   @IsOptional()
   @IsString()

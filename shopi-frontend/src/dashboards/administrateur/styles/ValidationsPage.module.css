@@ -1,0 +1,73 @@
+/* ================================================================
+ * FICHIER : src/dashboards/admin/styles/ValidationsPage.module.css
+ * Stats + liste des comptes à valider (documents/valider/refuser).
+ * ================================================================ */
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.cstat { background: var(--white); border: 1px solid var(--bdr); border-radius: var(--r-md); padding: 16px; }
+.cstatV { font-family: var(--fd); font-weight: 800; font-size: 22px; color: var(--navy); }
+.cstatL { font-size: 11px; color: var(--t3); margin-top: 3px; }
+.vg { color: var(--emerald); }
+.va { color: var(--amber); }
+.vr { color: #DC2626; }
+
+.card { background: var(--white); border: 1px solid var(--bdr); border-radius: var(--r-lg); overflow: hidden; }
+.ch { padding: 16px 20px; border-bottom: 1px solid var(--bdr); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.chT { font-family: var(--fd); font-weight: 700; font-size: 15px; color: var(--navy); display: flex; align-items: center; gap: 9px; }
+.chT i { color: var(--blue); font-size: 13px; }
+.cb { padding: 20px; }
+
+.item {
+  display: flex; gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--bdr);
+  align-items: center; flex-wrap: wrap;
+}
+.item:last-child { border-bottom: none; }
+
+.av {
+  width: 40px; height: 40px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-family: var(--fd); font-weight: 800; font-size: 13px;
+  flex-shrink: 0;
+}
+.av_par { background: linear-gradient(135deg, #0E7490, #22D3EE); }
+.av_ent { background: linear-gradient(135deg, #1A4FC4, #5B8EF4); }
+.av_lvr { background: linear-gradient(135deg, #047857, #34D399); }
+.av_cor { background: linear-gradient(135deg, #6D28D9, #9F67E8); }
+
+.main { flex: 1; min-width: 200px; }
+.top { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 3px; }
+.nm { font-size: 13.5px; font-weight: 700; color: var(--navy); }
+.d { font-size: 12px; color: var(--t2); line-height: 1.5; }
+.meta { font-size: 11px; color: var(--t3); margin-top: 4px; display: flex; gap: 12px; flex-wrap: wrap; }
+.meta span { display: inline-flex; align-items: center; gap: 5px; }
+
+.typePill {
+  font-size: 10.5px; font-weight: 700;
+  padding: 4px 11px; border-radius: var(--pill);
+  display: inline-flex; align-items: center; gap: 6px;
+  white-space: nowrap;
+}
+.t_par { background: var(--tl-bg); color: var(--teal); }
+.t_ent { background: var(--sky-2); color: var(--blue); }
+.t_lvr { background: var(--em-bg); color: var(--emerald); }
+.t_cor { background: var(--vl-bg); color: var(--violet); }
+
+.acts { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+.vbtn {
+  font-size: 12px; font-weight: 700; font-family: var(--fb);
+  padding: 9px 16px;
+  border: none; border-radius: var(--pill);
+  display: inline-flex; align-items: center; gap: 7px;
+  cursor: pointer; transition: .15s;
+}
+.doc { background: var(--sky); color: var(--blue); }
+.doc:hover { background: var(--sky-2); }
+.ok { background: var(--emerald); color: #fff; }
+.ok:hover { background: #03604a; }
+.no { background: rgba(220,38,38,.08); color: #DC2626; }
+.no:hover { background: rgba(220,38,38,.15); }
+
+@media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .stats { grid-template-columns: 1fr; } }

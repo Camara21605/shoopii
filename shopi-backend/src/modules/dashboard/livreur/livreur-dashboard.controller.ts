@@ -27,4 +27,10 @@ export class LivreurDashboardController {
   getMissions(@Req() req: any) {
     return this.dashboardService.getMissions(req.user.id);
   }
+
+  /** 15 notifications récentes (activité du jour) */
+  @Get('activite')
+  getActivite(@Req() req: any) {
+    return this.dashboardService.getActivite(req.user.id);
+  }
 }

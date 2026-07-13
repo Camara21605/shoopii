@@ -13,7 +13,7 @@ interface Props {
   onNavigate: (p: PageId) => void;
 }
 
-const POLL_MS = 5000;
+const POLL_MS = 30_000;
 
 export default function EnCoursPage({ onPop, onNavigate }: Props) {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ export default function EnCoursPage({ onPop, onNavigate }: Props) {
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(Date.now());
 
-  /* ── Chargement + rafraîchissement en temps réel ── */
+  /* ── Chargement + rafraîchissement (pause quand onglet masqué) ── */
   const load = useCallback(() => {
     fetchEnCours()
       .then(setMission)
@@ -31,8 +31,17 @@ export default function EnCoursPage({ onPop, onNavigate }: Props) {
 
   useEffect(() => {
     load();
-    const id = setInterval(load, POLL_MS);
-    return () => clearInterval(id);
+    let id = setInterval(load, POLL_MS);
+    const onVisibility = () => {
+      if (document.hidden) {
+        clearInterval(id);
+      } else {
+        load();
+        id = setInterval(load, POLL_MS);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisibility); };
   }, [load]);
 
   /* ── Tic-tac du chronomètre ── */

@@ -5,14 +5,19 @@
  *
  * Positionnement : fixed top-right, sous la topbar.
  * Durée de vie   : 5 s (géré par NotificationContext, pas ici).
+ *
+ * CORRECTION :
+ *   Cliquer sur un toast navigue désormais vers la page concernée
+ *   (avant : clic ne faisait que fermer le toast sans naviguer).
  * ============================================================ */
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useNotifications } from './NotificationContext';
 import type { INotificationDto } from './types';
 import s from './NotificationToast.module.css';
 
-// ─── Même table de mapping que NotificationCenter ─────────────
+// ─── Mapping type → icône FA + couleur ───────────────────────
 
 interface TypeMeta { icon: string; bg: string; color: string; }
 
@@ -32,23 +37,95 @@ function getTypeMeta(type: string): TypeMeta {
   return map[prefix] ?? { icon: 'fa-bell', bg: 'rgba(100,100,100,.1)', color: '#6B7280' };
 }
 
+// ─── Résolution de l'URL cible (miroir de NotificationCenter) ─
+//
+// Priorité 1 : actionUrl du backend si chemin interne valide.
+//   Corrections automatiques des anciens formats :
+//   /commandes/{id}           → /commande/{id}/suivi
+//   /dashboard/commandes/{id} → /dashboard/entreprise
+// Priorité 2 : fallback par type si actionUrl absent ou externe.
+
+function resolveNavTarget(notif: INotificationDto): string {
+  const prefix = notif.type.split('.')[0];
+  /* resourceId est le UUID de la commande. Fallback sur payload.commandeId
+   * pour les notifications créées avant que la colonne resourceId existait. */
+  const id = notif.resourceId ?? (notif.payload as Record<string, unknown> | null)?.commandeId as string | undefined ?? null;
+
+  /* Commandes & paiements : toujours aller à la page de suivi de la commande.
+   * La page /commande/:id/suivi adapte l'affichage selon le rôle JWT
+   * (client, entreprise, livreur, correspondant). On n'utilise pas actionUrl
+   * pour éviter les redirections vers des dashboards génériques. */
+  if ((prefix === 'order' || prefix === 'payment') && id) {
+    return `/commande/${id}/suivi`;
+  }
+
+  let url = notif.actionUrl ?? '';
+
+  if (url.startsWith('/commandes/')) {
+    const segId = url.split('/')[2];
+    url = segId ? `/commande/${segId}/suivi` : '/commande';
+  } else if (url.startsWith('/dashboard/commandes/')) {
+    url = '/dashboard/entreprise';
+  }
+
+  if (url.startsWith('/'))    return url;
+  if (url.startsWith('http')) return url;
+
+  switch (prefix) {
+    case 'order':
+    case 'payment':
+      return id ? `/commande/${id}/suivi` : '/commande';
+    case 'delivery':
+    case 'colis': {
+      /* Pour delivery/colis : resourceId = ID de livraison (pas de commande).
+       * commandeId se trouve dans le payload pour la redirection correcte. */
+      const cmdId = ((notif.payload as Record<string, unknown> | null)?.commandeId as string | undefined) ?? null;
+      return cmdId ? `/commande/${cmdId}/suivi` : '/home';
+    }
+    case 'message':
+    case 'conversation':
+      return '/messagerie';
+    case 'product':
+      return id ? `/produit/${id}` : '/boutiques';
+    case 'promo':
+      return '/boutiques';
+    case 'review':
+      return id ? `/produit/${id}` : '/home';
+    case 'stock':
+      return '/dashboard/entreprise';
+    case 'account':
+    case 'follow':
+      return '/mon-profil';
+    default:
+      return '/home';
+  }
+}
+
 // ─── Toast individuel ─────────────────────────────────────────
 
 interface ToastProps {
-  notif:     INotificationDto;
-  onDismiss: () => void;
+  notif:      INotificationDto;
+  onDismiss:  () => void;
+  /** Callback de navigation — fourni par NotificationToastStack */
+  onNavigate: (notif: INotificationDto) => void;
 }
 
-function Toast({ notif, onDismiss }: ToastProps) {
+function Toast({ notif, onDismiss, onNavigate }: ToastProps) {
   const meta = getTypeMeta(notif.type);
+
+  /* Clic sur le corps du toast : fermer + naviguer vers la ressource */
+  function handleBodyClick() {
+    onDismiss();
+    onNavigate(notif);
+  }
 
   return (
     <div
       className={s.toast}
       role="alert"
       aria-live="assertive"
-      onClick={onDismiss}
-      style={{ position: 'relative', overflow: 'hidden' }}
+      onClick={handleBodyClick}
+      style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
     >
       <span
         className={s.icon}
@@ -63,6 +140,7 @@ function Toast({ notif, onDismiss }: ToastProps) {
         <span className={s.msg}>{notif.body}</span>
       </span>
 
+      {/* Bouton ✕ : ferme le toast SANS naviguer */}
       <button
         className={s.close}
         onClick={e => { e.stopPropagation(); onDismiss(); }}
@@ -84,9 +162,20 @@ function Toast({ notif, onDismiss }: ToastProps) {
 // ─── Stack ────────────────────────────────────────────────────
 
 export default function NotificationToastStack() {
+  const navigate = useNavigate();
   const { toastQueue, dismissToast } = useNotifications();
 
   if (toastQueue.length === 0) return null;
+
+  /* URL externe → nouvel onglet ; chemin interne → navigation SPA */
+  function handleNavigate(notif: INotificationDto) {
+    const target = resolveNavTarget(notif);
+    if (target.startsWith('http')) {
+      window.open(target, '_blank', 'noopener');
+    } else {
+      navigate(target);
+    }
+  }
 
   return (
     <div className={s.stack} aria-label="Nouvelles notifications">
@@ -95,6 +184,7 @@ export default function NotificationToastStack() {
           key={n.id}
           notif={n}
           onDismiss={() => dismissToast(n.id)}
+          onNavigate={handleNavigate}
         />
       ))}
     </div>

@@ -35,6 +35,7 @@ interface TopbarProps {
   companyEmail?:  string;
   companyVille?:  string;
   companyPays?:   string;
+  isFullscreen?:  boolean;
 }
 
 /* Titre + sous-titre par page */
@@ -74,7 +75,6 @@ const DRAWER_NAV: { id: EntreprisePage; icon: string; label: string }[] = [
   { id: 'inventaire',     icon: 'fa-warehouse',     label: 'Inventaire' },
   { id: 'promotions',     icon: 'fa-percent',       label: 'Promotions' },
   { id: 'analytics',      icon: 'fa-chart-line',    label: 'Analytics' },
-  { id: 'messages',       icon: 'fa-comment-dots',  label: 'Messages' },
   { id: 'seo',            icon: 'fa-magnifying-glass-chart', label: 'SEO & Marketing' },
   { id: 'livreurs',       icon: 'fa-motorcycle',    label: 'Mes livreurs' },
   { id: 'correspondants', icon: 'fa-map-pin',       label: 'Correspondants' },
@@ -100,6 +100,7 @@ export default function Topbar({
   companyId,
   companyLogo, companyName,
   companyStatus, companyEmail, companyVille, companyPays,
+  isFullscreen = false,
 }: TopbarProps) {
   const { pop } = useToast();
   const navigate = useNavigate();
@@ -154,13 +155,18 @@ export default function Topbar({
 
   return (
     <>
-      <header className="topbar">
+      <header className={`topbar${isFullscreen ? ' topbar-fullscreen' : ''}`}>
 
-        {/* ✅ Bouton menu mobile — en haut comme sur le dashboard livreur.
-            Ouvre le même drawer que le bouton "Menu" du bottom nav. */}
-        <button className="hamburger" onClick={() => setMobileMenuOpen(true)} aria-label="Menu">
-          <i className="fas fa-bars"></i>
-        </button>
+        {/* Plein-écran (messagerie) : bouton retour. Normal : bouton menu. */}
+        {isFullscreen ? (
+          <button className="hamburger hamburger-back" onClick={() => onNavigate('overview')} aria-label="Retour">
+            <i className="fas fa-arrow-left"></i>
+          </button>
+        ) : (
+          <button className="hamburger" onClick={() => setMobileMenuOpen(true)} aria-label="Menu">
+            <i className="fas fa-bars"></i>
+          </button>
+        )}
 
         {/* Titre de la page */}
         <div className="tb-title-wrap">
@@ -225,6 +231,12 @@ export default function Topbar({
           <NotificationCenter />
 
           <div className="tb-sep"></div>
+
+          {/* Centre d'aide — accès direct depuis le dashboard entreprise */}
+          <button className="tb-ic" title="Centre d'aide" onClick={() => navigate('/aide')}
+            aria-label="Centre d'aide">
+            <i className="fas fa-circle-question"></i>
+          </button>
 
           {/* ✅ Bascule vers l'accueil client */}
           <button className="tb-home" title="Aller à l'accueil Shopi"
@@ -298,7 +310,7 @@ export default function Topbar({
       </header>
 
       {/* ════════ BOTTOM NAV MOBILE ════════ */}
-      <nav className="tb-bottomnav" aria-label="Navigation mobile">
+      <nav className={`tb-bottomnav${isFullscreen ? ' tb-bottomnav-hidden' : ''}`} aria-label="Navigation mobile">
         <button className={`bn-it${activePage === 'overview' ? ' on' : ''}`}
           onClick={() => onNavigate('overview')}>
           <i className="fas fa-chart-pie"></i><span>Accueil</span>
@@ -367,6 +379,10 @@ export default function Topbar({
                   <i className="fas fa-store"></i> Voir ma boutique
                 </button>
               )}
+              {/* Centre d'aide accessible depuis le drawer mobile */}
+              <button className="tb-drawer-home" onClick={() => { setMobileMenuOpen(false); navigate('/aide'); }}>
+                <i className="fas fa-circle-question"></i> Centre d'aide
+              </button>
               <button className="tb-drawer-home" onClick={handleSwitchHome}>
                 <i className="fas fa-house"></i> Basculer vers l'accueil
               </button>

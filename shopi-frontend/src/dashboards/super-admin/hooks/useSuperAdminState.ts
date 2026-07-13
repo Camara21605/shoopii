@@ -60,16 +60,28 @@ export function useSuperAdminState() {
   const [state, setState] = useState<SuperAdminState>(INITIAL_STATE);
 
   /* ── États API utilisateurs ── */
-  const [users,        setUsers]        = useState<UserListItem[]>([]);
-  const [usersLoading, setUsersLoading] = useState(false);
-  const [usersError,   setUsersError]   = useState<string | null>(null);
-  const [usersTotal,   setUsersTotal]   = useState(0);
-  const [usersPages,   setUsersPages]   = useState(1);
+  const [users,           setUsers]           = useState<UserListItem[]>([]);
+  const [usersLoading,    setUsersLoading]    = useState(false);
+  const [usersError,      setUsersError]      = useState<string | null>(null);
+  const [usersTotal,      setUsersTotal]      = useState(0);
+  const [usersPages,      setUsersPages]      = useState(1);
+  /* Search debouncé — l'input met à jour state.search immédiatement (UX fluide),
+   * mais l'appel API attend 350 ms sans frappe pour éviter un appel par caractère. */
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  /* Débounce : met à jour debouncedSearch 350 ms après la dernière frappe */
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(state.search), 350);
+    return () => clearTimeout(t);
+  }, [state.search]);
 
   /* ── Données encore en mock ── */
   const [codes,         setCodes]         = useState(MOCK_CODES);
   const [conversations, setConversations] = useState(MOCK_CONVERSATIONS);
   const healthData = MOCK_HEALTH;
+
+  /* ── Stats par rôle (badge sidebar) ── */
+  const [roleStats, setRoleStats] = useState<Record<string, number>>({});
 
   /* ── États API signalements (alertes) ── */
   const [alerts,      setAlerts]      = useState<Alert[]>([]);
@@ -128,6 +140,13 @@ export function useSuperAdminState() {
     }
   }, []);
 
+  /* Charge les stats par rôle une seule fois au montage du dashboard */
+  useEffect(() => {
+    apiFetch<{ parRole: Record<string, number> }>('/dashboard/super-admin/users/stats')
+      .then(data => setRoleStats(data?.parRole ?? {}))
+      .catch(() => {/* silencieux — badges restent vides */});
+  }, []);
+
   useEffect(() => { loadAlerts(); }, [loadAlerts]);
   useEffect(() => { loadAudit(); }, [loadAudit]);
   useEffect(() => { loadAdmins(); }, [loadAdmins]);
@@ -147,7 +166,7 @@ export function useSuperAdminState() {
             role:    state.roleFilter    !== 'all' ? state.roleFilter    : undefined,
             status:  state.statusFilter  !== 'all' ? state.statusFilter  : undefined,
             country: state.countryFilter !== 'all' ? state.countryFilter : undefined,
-            search:  state.search        || undefined,
+            search:  debouncedSearch     || undefined,
           },
         },
       );
@@ -164,7 +183,7 @@ export function useSuperAdminState() {
   }, [
     state.page, state.perPage,
     state.roleFilter, state.statusFilter,
-    state.countryFilter, state.search,
+    state.countryFilter, debouncedSearch,
   ]);
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
@@ -347,12 +366,21 @@ export function useSuperAdminState() {
     setAdmins(prev => prev.map(a => a.email === email ? { ...a, perms: { ...a.perms, [perm]: val } } : a));
   }, []);
 
+  const setAdminPaysAssigne = useCallback(async (email: string, paysId: string | null) => {
+    await apiFetch<{ message: string; paysAssigne: string | null }>(
+      `/dashboard/super-admin/admins/${encodeURIComponent(email)}/pays-assigne`,
+      { method: 'PATCH', body: { paysId } },
+    );
+    setAdmins(prev => prev.map(a => a.email === email ? { ...a, paysAssigne: paysId } : a));
+  }, []);
+
   const totalUnread   = conversations.reduce((sum, c) => sum + c.unread, 0);
   const pendingAlerts = alerts.filter(a => !a.resolved).length;
 
   return {
     state,
     users, usersTotal, usersPages, usersLoading, usersError,
+    roleStats,
     reloadUsers: loadUsers,
     admins, adminsLoading, adminsError, reloadAdmins: loadAdmins,
     codes,
@@ -369,7 +397,7 @@ export function useSuperAdminState() {
     generateCodes, revokeCode,
     resolveAlert,
     setActiveConv, setConvSearch, sendMessage,
-    toggleAdminPerm,
+    toggleAdminPerm, setAdminPaysAssigne,
   };
 }
 

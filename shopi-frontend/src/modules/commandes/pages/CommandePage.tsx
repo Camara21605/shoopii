@@ -16,7 +16,7 @@
  * ================================================================ */
 
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import styles from '../styles/CommandePage.module.css';
 
 import { useCommande } from '../hooks/useCommande';
@@ -42,6 +42,7 @@ interface CommandePageProps {
 
 export default function CommandePage({ role = 'client', useApi = false, onToast }: CommandePageProps) {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const c = useCommande({ id, currentRole: role, useApi });
 
@@ -99,7 +100,17 @@ export default function CommandePage({ role = 'client', useApi = false, onToast 
     toast(ok ? '📨 Signalement envoyé. Le support vous contactera sous 24 h.' : 'Échec de l\'envoi.', ok ? 's' : 'e');
   }
 
-  if (c.loading) return <div className={styles.loading}>Chargement de la commande…</div>;
+  if (c.loading) return (
+    <div className={styles.loading} style={{ flexDirection:'column', gap:16 }}>
+      <i className="fas fa-circle-notch fa-spin" style={{ fontSize:24, color:'rgba(200,217,248,.5)' }} />
+      <span>Chargement de la commande…</span>
+      <button onClick={() => navigate(-1)}
+        style={{ marginTop:4, background:'rgba(255,255,255,.08)', border:'none', borderRadius:8,
+          color:'rgba(200,217,248,.6)', padding:'7px 18px', fontSize:13, cursor:'pointer' }}>
+        ← Retour
+      </button>
+    </div>
+  );
 
   if (c.error) return (
     <div className={styles.loading} style={{ flexDirection:'column', gap:12, color:'#DC2626' }}>
@@ -127,11 +138,20 @@ export default function CommandePage({ role = 'client', useApi = false, onToast 
 
       {/* En-tête */}
       <div className={styles.head}>
-        <div>
-          <div className={styles.title}>
-            <i className="fas fa-box-open" /> Commande <span className={styles.id}>#{c.commande.id}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={() => navigate(-1)}
+            style={{ background: 'rgba(255,255,255,.08)', border: 'none', borderRadius: 8, color: 'rgba(200,217,248,.8)', cursor: 'pointer', padding: '6px 10px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
+            title="Retour"
+          >
+            <i className="fas fa-arrow-left" />
+          </button>
+          <div>
+            <div className={styles.title}>
+              <i className="fas fa-box-open" /> Commande <span className={styles.id}>#{c.commande.id}</span>
+            </div>
+            <div className={styles.sub}>Payée le {c.commande.datePaiement} · Livraison à {c.commande.destination}</div>
           </div>
-          <div className={styles.sub}>Payée le {c.commande.datePaiement} · Livraison à {c.commande.destination}</div>
         </div>
         <div className={`${styles.status} ${c.done ? styles.statusDone : ''}`}>
           <span /> {c.done ? 'Livrée' : 'En cours'}

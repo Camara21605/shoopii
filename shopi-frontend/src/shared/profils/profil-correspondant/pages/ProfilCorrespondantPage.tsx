@@ -1,15 +1,8 @@
-﻿/* ================================================================
- * FICHIER : src/modules/home/components/profil-correspondant/pages/ProfilCorrespondantPage.tsx
+/* ================================================================
+ * FICHIER : profil-correspondant/pages/ProfilCorrespondantPage.tsx
  *
- * RÔLE : Page profil public d'UN correspondant (route /correspondants/:id).
- *        Header global + cover + identité + KPI + 6 onglets + sidebar
- *        + barre d'action mobile fixe.
- *
- * DONNÉES (hybride) :
- *   - Identité/KPI/bio/suivi → API /suivis/correspondants (filtré par :id)
- *   - Détails riches → mock (en attendant un endpoint profil dédié)
- *
- * AUTONOME : toasts via 'shopi-toast'.
+ * Page profil public d'UN correspondant (/correspondants/:id).
+ * Toutes les données proviennent de l'API (GET /client/correspondants/:id).
  * ================================================================ */
 
 import React, { useState, useCallback } from 'react';
@@ -44,7 +37,6 @@ export default function ProfilCorrespondantPage() {
 
   const [tab, setTab] = useState<ProfilTab>('info');
 
-  /* Toast global */
   const onToast = useCallback((msg: string) => {
     window.dispatchEvent(new CustomEvent('shopi-toast', { detail: msg }));
   }, []);
@@ -57,11 +49,15 @@ export default function ProfilCorrespondantPage() {
     }
     startConv('correspondent', id!, (msg: string) => onToast(`❌ ${msg}`));
   }, [suivi, startConv, id, onToast]);
-  const onShare   = useCallback(() => onToast('🔗 Lien du profil copié'), [onToast]);
+
+  const onShare = useCallback(() => onToast('🔗 Lien du profil copié'), [onToast]);
+
   const handleToggle = useCallback(() => {
     toggleSuivi();
-    onToast(suivi ? `👋 Désabonné de ${profil.nom}` : `✅ Abonné à ${profil.nom}`);
-  }, [toggleSuivi, suivi, profil.nom, onToast]);
+    if (profil) {
+      onToast(suivi ? `👋 Désabonné de ${profil.nom}` : `✅ Abonné à ${profil.nom}`);
+    }
+  }, [toggleSuivi, suivi, profil, onToast]);
 
   const header = (
     <Header
@@ -71,7 +67,7 @@ export default function ProfilCorrespondantPage() {
     />
   );
 
-  /* Chargement */
+  /* ── Chargement ── */
   if (loading) {
     return (
       <>
@@ -83,12 +79,34 @@ export default function ProfilCorrespondantPage() {
     );
   }
 
+  /* ── Erreur / profil introuvable ── */
+  if (!profil) {
+    return (
+      <>
+        {header}
+        <div className={styles.page}>
+          <div className={styles.state}>
+            <i className="fas fa-triangle-exclamation" style={{ color: '#B45309' }} />
+            <div style={{ marginTop: 12, fontWeight: 700, fontSize: 16 }}>Profil introuvable</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted, #6B7280)', marginTop: 6, maxWidth: 320, textAlign: 'center' }}>
+              {error ?? "Ce correspondant n'existe pas ou n'est plus disponible."}
+            </div>
+            <button
+              onClick={() => navigate(-1)}
+              style={{ marginTop: 20, background: 'var(--teal, #0E7490)', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+              <i className="fas fa-arrow-left" /> Retour
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       {header}
       <div className={styles.page}>
 
-        {/* Cover + identité + KPI */}
         <ProfilHeader
           profil={profil}
           suivi={suivi}
@@ -97,23 +115,11 @@ export default function ProfilCorrespondantPage() {
           onShare={onShare}
         />
 
-        {/* Erreur non bloquante */}
-        {error && (
-          <div style={{ maxWidth: 1160, margin: '14px auto 0', padding: '0 28px' }}>
-            <div style={{ padding: '10px 14px', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 10, fontSize: 12.5, color: '#78350F' }}>
-              <i className="fas fa-triangle-exclamation" /> {error}
-            </div>
-          </div>
-        )}
-
-        {/* Corps : contenu + sidebar */}
         <div className={styles.pw}>
           <main>
             <ProfilTabs actif={tab} nbAvis={profil.nbAvis} onTab={setTab} />
 
-            {tab === 'info' && (
-              <TabInfo bio={profil.bio} tags={aboutTags} infosPratiques={infosPratiques} schedule={schedule} />
-            )}
+            {tab === 'info'     && <TabInfo bio={profil.bio} tags={aboutTags} infosPratiques={infosPratiques} schedule={schedule} />}
             {tab === 'services' && <TabServices services={services} />}
             {tab === 'zones'    && <TabZones zones={zones} paysPartenaires={paysPartenaires} onToast={onToast} />}
             {tab === 'tarifs'   && <TabTarifs tarifs={tarifs} />}

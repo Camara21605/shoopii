@@ -2,6 +2,7 @@
  * FICHIER : src/dashboards/partenaire/components/Topbar.tsx
  * ================================================================ */
 
+import { useNavigate } from 'react-router-dom';
 import styles from '../styles/Topbar.module.css';
 import type { PartenairePage } from '../data/types';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
@@ -10,7 +11,6 @@ interface TopbarProps {
   activePage:    PartenairePage;
   onGenerate:    () => void;
   onReport:      () => void;
-  onToast:       (msg: string, type?: 's' | 'i' | 'w') => void;
   onMenuToggle?: () => void;
 }
 
@@ -26,7 +26,8 @@ const TITLES: Record<PartenairePage, [string, string]> = {
   parametres:   ['Paramètres',              'Configuration de votre compte partenaire'],
 };
 
-export default function Topbar({ activePage, onGenerate, onReport, onToast, onMenuToggle }: TopbarProps) {
+export default function Topbar({ activePage, onGenerate, onReport, onMenuToggle }: TopbarProps) {
+  const navigate = useNavigate();
   const [title, sub] = TITLES[activePage] ?? ['', ''];
 
   return (
@@ -48,7 +49,7 @@ export default function Topbar({ activePage, onGenerate, onReport, onToast, onMe
           <i className="fas fa-flag" />
         </button>
         <NotificationCenter />
-        <button className={styles.ic} onClick={() => onToast("❓ Centre d'aide partenaire", 'i')}>
+        <button className={styles.ic} onClick={() => navigate('/aide')} title="Centre d'aide">
           <i className="fas fa-circle-question" />
         </button>
         <button className={styles.new} onClick={onGenerate}>

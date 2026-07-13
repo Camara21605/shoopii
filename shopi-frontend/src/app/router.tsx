@@ -11,6 +11,7 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GlobalCallProvider } from '../shared/context/GlobalCallContext';
+import { GroupCallProvider }  from '../shared/context/GroupCallContext';
 import { tokenStorage }    from '../shared/services/apiFetch';
 import { isTokenValid, getRoleFromToken, getDashboardPath } from '../shared/services/authUtils';
 
@@ -24,6 +25,22 @@ import ProfilLivreurPage from '../shared/profils/profil-livreur/ProfilLivreurPag
 import ProfilClientPage  from '../shared/profils/profil-client/ProfilClientPage';
 import CorrespondantsPage from '../modules/home/components/correspondants/pages/CorrespondantsPage';
 import ProfilCorrespondantPage from '../shared/profils/profil-correspondant/pages/ProfilCorrespondantPage';
+
+/* ── Help Center ── */
+import HelpHomePage        from '../modules/help/pages/HelpHomePage';
+import HelpCategoryPage    from '../modules/help/pages/HelpCategoryPage';
+import HelpArticlePage     from '../modules/help/pages/HelpArticlePage';
+import HelpSearchPage      from '../modules/help/pages/HelpSearchPage';
+import RemboursementsPage  from '../modules/help/pages/RemboursementsPage';
+import PolitiqueRetourPage from '../modules/help/pages/PolitiqueRetourPage';
+import ContactPage         from '../modules/help/pages/ContactPage';
+
+/* ── Support ── */
+import HelpFab          from '../shared/components/HelpFab';
+import SupportPage      from '../modules/support/pages/SupportPage';
+import NewTicketPage    from '../modules/support/pages/NewTicketPage';
+import TicketDetailPage from '../modules/support/pages/TicketDetailPage';
+import SupportStatsPage from '../modules/support/pages/SupportStatsPage';
 
 /* ── Pages / apps lazy-loadées ── */
 const Login          = lazy(() => import('../modules/auth/pages/Login'));
@@ -110,6 +127,7 @@ function showToast(msg: string) {
 export const AppRouter: React.FC = () => (
   <BrowserRouter>
     <GlobalCallProvider>
+      <GroupCallProvider>
       <Suspense fallback={<Loader />}>
         <Routes>
           <Route path="/"         element={<SmartRedirect />} />
@@ -122,6 +140,22 @@ export const AppRouter: React.FC = () => (
           {/* Pages produits — publiques */}
           <Route path="/boutique/:id" element={<BoutiquePage />} />
           <Route path="/produit/:id"  element={<ProduitPage />} />
+
+          {/* Help Center — publiques */}
+          <Route path="/aide"                        element={<HelpHomePage />} />
+          <Route path="/aide/categories/:slug"       element={<HelpCategoryPage />} />
+          <Route path="/aide/articles/:slug"         element={<HelpArticlePage />} />
+          <Route path="/aide/recherche"              element={<HelpSearchPage />} />
+          <Route path="/remboursements"              element={<RemboursementsPage />} />
+          <Route path="/politique-retour"            element={<PolitiqueRetourPage />} />
+          <Route path="/contact"                     element={<ContactPage />} />
+
+          {/* Support tickets — protégées */}
+          <Route path="/support"              element={<PrivateRoute><SupportPage /></PrivateRoute>} />
+          <Route path="/support/nouveau"      element={<PrivateRoute><NewTicketPage /></PrivateRoute>} />
+          <Route path="/support/tickets/:id"  element={<PrivateRoute><TicketDetailPage /></PrivateRoute>} />
+          {/* Analytics support — admin/super_admin uniquement */}
+          <Route path="/support/stats"        element={<PrivateRoute><SupportStatsPage /></PrivateRoute>} />
 
           {/* Livreurs — publiques */}
           <Route path="/livreurs"           element={<LivreursPage />} />
@@ -156,7 +190,17 @@ export const AppRouter: React.FC = () => (
 
           <Route path="*" element={<SmartRedirect />} />
         </Routes>
+
+        {/*
+         * HelpFab — bouton flottant "?" d'aide.
+         * Placé APRÈS <Routes> pour qu'il s'affiche par-dessus le contenu.
+         * Se cache automatiquement sur les routes dashboard/support/aide.
+         * Requiert d'être à l'intérieur de <BrowserRouter> pour useLocation.
+         */}
+        <HelpFab />
+
       </Suspense>
+      </GroupCallProvider>
     </GlobalCallProvider>
   </BrowserRouter>
 );

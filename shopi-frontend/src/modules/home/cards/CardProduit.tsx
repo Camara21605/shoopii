@@ -105,34 +105,35 @@ function emoji(p: ProductApi): string {
 // ─────────────────────────────────────────────────────────────
 
 function useAddToCart(p: ProductApi, onToast: (m: string) => void) {
-  const { addToCart, isInCart, loading } = useCart();
-  const navigate = useNavigate();
-  const isClient = getRoleFromToken() === 'client';
+  const { addToCart, isInCart } = useCart();
+  const [adding, setAdding]     = useState(false); /* état LOCAL — chaque carte indépendante */
+  const navigate  = useNavigate();
+  const isClient  = getRoleFromToken() === 'client';
 
   const dejaAuPanier = !!isInCart(p.id);
 
   const handleAdd = async (onDone?: () => void) => {
-    /* Réservé aux clients */
     if (!getRoleFromToken()) { navigate('/login'); return; }
     if (!isClient) { onToast('🛒 Réservé aux comptes clients Shopi'); return; }
 
-    /* ✅ Déjà au panier → on n'ajoute PAS une 2e fois.
-       Le client doit aller dans le panier pour le retirer. */
     if (dejaAuPanier) {
       onToast(`✓ ${p.nom} est déjà dans votre panier`);
       return;
     }
 
+    setAdding(true);
     try {
       await addToCart(p.id, 1);
       onToast(`🛒 ${p.nom} ajouté au panier !`);
       onDone?.();
     } catch (e: any) {
       onToast(`❌ ${e?.message ?? 'Impossible d\'ajouter au panier'}`);
+    } finally {
+      setAdding(false);
     }
   };
 
-  return { handleAdd, dejaAuPanier, loading, isClient };
+  return { handleAdd, dejaAuPanier, loading: adding, isClient };
 }
 
 // ─────────────────────────────────────────────────────────────

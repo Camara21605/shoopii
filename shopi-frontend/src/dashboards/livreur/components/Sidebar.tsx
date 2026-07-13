@@ -33,7 +33,6 @@ function buildNavMonEspace(encoursCount: number): NavItem[] {
     { id:'missions',   icon:'fa-motorcycle',          label:'Missions disponibles'                                                },
     { id:'encours',    icon:'fa-route',               label:'En cours', ...(encoursCount > 0 ? { badge: encoursCount, bCls:'g' } : {}) },
     { id:'historique', icon:'fa-clock-rotate-left',   label:'Historique'                                                          },
-    { id:'messagerie', icon:'fa-comment-dots',        label:'Messagerie'                                                          },
   ];
 }
 const NAV_RESEAU: NavItem[] = [
@@ -130,19 +129,6 @@ export default function Sidebar({
 
       {/* Bas sidebar */}
       <div className={styles.sbBot}>
-
-        {/* Bouton Mon espace livreur */}
-        <button
-          className={styles.btnHome}
-          onClick={onGoHome}
-          title="Retour à l'accueil Shopi"
-        >
-          <i className="fas fa-house" />
-          <span>Mon espace</span>
-          <i className="fas fa-arrow-up-right-from-square" style={{ fontSize: 9, opacity: .6 }} />
-        </button>
-
-        {/* Bouton Déconnexion */}
         <button
           className={styles.btnLogout}
           onClick={onLogout}
@@ -151,7 +137,6 @@ export default function Sidebar({
           <i className="fas fa-right-from-bracket" />
           <span>Déconnexion</span>
         </button>
-
       </div>
     </nav>
   );
@@ -160,7 +145,11 @@ export default function Sidebar({
 function NavBtn({ item, active, onNavigate }: { item: NavItem; active: boolean; onNavigate: (p: PageId) => void }) {
   const badgeCls = item.bCls ? `${styles.nbBadge} ${styles[`badge_${item.bCls}`] ?? ''}` : styles.nbBadge;
   return (
-    <div className={`${styles.nb} ${active ? styles.on : ''}`} onClick={() => onNavigate(item.id)}>
+    <div
+      className={`${styles.nb} ${active ? styles.on : ''}`}
+      onClick={() => onNavigate(item.id)}
+      data-label={item.label}
+    >
       <i className={`fas ${item.icon}`} />
       <span>{item.label}</span>
       {item.badge !== undefined && (

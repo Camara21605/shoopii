@@ -35,7 +35,10 @@ export class ApiError extends Error {
  * ───────────────────────────────────────────── */
 export const tokenStorage = {
   get:    () => localStorage.getItem(TOKEN_KEY),
-  set:    (token: string) => localStorage.setItem(TOKEN_KEY, token),
+  set:    (token: string) => {
+    localStorage.setItem(TOKEN_KEY, token);
+    window.dispatchEvent(new CustomEvent('auth:login'));
+  },
   remove: () => localStorage.removeItem(TOKEN_KEY),
 };
 
@@ -106,7 +109,7 @@ export async function apiFetch<T = unknown>(
     response = await fetch(url, {
       method,
       headers,
-      credentials: 'include',
+      signal: AbortSignal.timeout(20_000),
       body:
         body instanceof FormData
           ? body

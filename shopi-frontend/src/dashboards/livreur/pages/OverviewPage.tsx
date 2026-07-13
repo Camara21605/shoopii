@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { PageId } from '../data/livreurData';
 import { MISSIONS, REV_WEEK, REV_MONTH, fmtGNF, fmtMini } from '../data/livreurData';
+import { apiFetch } from '@/shared/services/apiFetch';
 
 import MissionCard from '../components/MissionCard';
 import shared from '../styles/Shared.module.css';
@@ -36,13 +37,39 @@ const INSIGHTS = [
   { em:'⚠️', ttl:'Assurance expire dans 12 jours',sub:"Renouvelez votre attestation pour maintenir votre statut vérifié.", badge:'warn', badgeTxt:'Action requise', badgeIc:'fa-triangle-exclamation' },
 ];
 
-// ── ACTIVITÉ ──────────────────────────────────────────────
-const ACT_DATA = [
-  { ic:'fa-check-circle', c:'var(--emerald)', msg:'Mission <strong>MIS-0124</strong> acceptée — iPhone 15 Pro', t:'Il y a 8 min'  },
-  { ic:'fa-coins',        c:'var(--teal)',    msg:'+26 000 GNF encaissés — Livraison Express confirmée',         t:'Il y a 2h'    },
-  { ic:'fa-star',         c:'var(--amber)',   msg:'Mamadou K. vous a noté <strong>5⭐</strong>',                 t:'Il y a 3h'    },
-  { ic:'fa-motorcycle',   c:'var(--blue)',    msg:'3 nouvelles missions depuis TechStore Conakry',               t:'Il y a 4h'    },
-];
+// ── ACTIVITÉ — mapping type notification → icône + couleur ──
+interface ActivityItem {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+function activityIcon(type: string): { ic: string; c: string } {
+  if (type.startsWith('delivery.'))  return { ic: 'fa-motorcycle',   c: 'var(--teal)'    };
+  if (type.startsWith('payment.'))   return { ic: 'fa-coins',        c: 'var(--emerald)' };
+  if (type.startsWith('review.'))    return { ic: 'fa-star',         c: 'var(--amber)'   };
+  if (type.startsWith('order.'))     return { ic: 'fa-box',          c: 'var(--blue)'    };
+  if (type.startsWith('message.'))   return { ic: 'fa-message',      c: 'var(--blue)'    };
+  if (type.startsWith('account.'))   return { ic: 'fa-user-check',   c: 'var(--teal)'    };
+  if (type.startsWith('follow.'))    return { ic: 'fa-user-plus',    c: 'var(--blue)'    };
+  if (type.startsWith('colis.'))     return { ic: 'fa-box-open',     c: 'var(--amber)'   };
+  if (type.startsWith('system.'))    return { ic: 'fa-bell',         c: 'var(--t3)'      };
+  return { ic: 'fa-circle-info', c: 'var(--t3)' };
+}
+
+function relativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins  = Math.floor(diff / 60_000);
+  const hours = Math.floor(diff / 3_600_000);
+  const days  = Math.floor(diff / 86_400_000);
+  if (mins  < 1)  return 'À l\'instant';
+  if (mins  < 60) return `Il y a ${mins} min`;
+  if (hours < 24) return `Il y a ${hours}h`;
+  return `Il y a ${days}j`;
+}
 
 // ── OBJECTIFS ─────────────────────────────────────────────
 const OBJS = [
@@ -56,6 +83,13 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
   const [showSmart,    setShowSmart]    = useState(true);
   const [chartMode,    setChartMode]    = useState<'sem'|'mois'>('sem');
   const [missionCount, setMissionCount] = useState(MISSIONS.length);
+  const [activite,     setActivite]     = useState<ActivityItem[]>([]);
+
+  useEffect(() => {
+    apiFetch<ActivityItem[]>('/dashboard/livreur/activite')
+      .then(data => { if (data) setActivite(data); })
+      .catch(() => {});
+  }, []);
 
   // Compte à rebours mission active
   const [timerSecs, setTimerSecs] = useState(18 * 60 + 42);
@@ -316,19 +350,28 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
           </div>
 
           <div className={`${shared.card} ${shared.cardLast}`}>
-            <div className={shared.ch}><div className={shared.chT}><i className="fas fa-timeline" /> Activité du jour</div></div>
+            <div className={shared.ch}><div className={shared.chT}><i className="fas fa-timeline" /> Activité récente</div></div>
             <div className={shared.cb}>
-              {ACT_DATA.map((a, i) => (
-                <div key={i} className={styles.actItem}>
-                  <div className={styles.actIc} style={{ background:'var(--tl-bg)' }}>
-                    <i className={`fas ${a.ic}`} style={{ color:a.c, fontSize:11 }} />
-                  </div>
-                  <div>
-                    <div className={styles.actMsg} dangerouslySetInnerHTML={{ __html: a.msg }} />
-                    <div className={styles.actTime}>{a.t}</div>
-                  </div>
+              {activite.length === 0 ? (
+                <div style={{ color:'var(--t3)', fontSize:13, padding:'12px 0', textAlign:'center' }}>
+                  Aucune activité récente
                 </div>
-              ))}
+              ) : (
+                activite.slice(0, 5).map(a => {
+                  const { ic, c } = activityIcon(a.type);
+                  return (
+                    <div key={a.id} className={styles.actItem} style={{ opacity: a.isRead ? 0.7 : 1 }}>
+                      <div className={styles.actIc} style={{ background:'var(--tl-bg)' }}>
+                        <i className={`fas ${ic}`} style={{ color: c, fontSize:11 }} />
+                      </div>
+                      <div>
+                        <div className={styles.actMsg}>{a.title}</div>
+                        <div className={styles.actTime}>{relativeTime(a.createdAt)}</div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>

@@ -85,6 +85,22 @@ export interface SendContactEmailParams {
   message:  string;
 }
 
+export interface SendSupportTicketConfirmationParams {
+  toEmail:   string;
+  firstName: string;
+  reference: string;
+  subject:   string;
+  ticketUrl: string;
+}
+
+export interface SendSupportTicketReplyParams {
+  toEmail:   string;
+  agentName: string;
+  reference: string;
+  subject:   string;
+  ticketUrl: string;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // LABELS PAR RÔLE
 // ─────────────────────────────────────────────────────────────────────────────
@@ -337,6 +353,138 @@ export class MailService implements OnModuleInit {
     });
 
     this.logger.log(`[CONTACT EMAIL] Email envoyé à ${toEmail} | Sujet: ${sujet}`);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 7. EMAIL CONFIRMATION TICKET DE SUPPORT (NOUVEAU)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  async sendSupportTicketConfirmation(params: SendSupportTicketConfirmationParams): Promise<void> {
+    const { toEmail, firstName, reference, subject, ticketUrl } = params;
+    await this.send({
+      to:      toEmail,
+      subject: `Shopi Support — Ticket ${reference} créé`,
+      html: `
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/></head>
+<body style="margin:0;padding:0;background:#f0f4ff;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:20px;padding:40px 36px;box-shadow:0 4px 24px rgba(30,64,175,.08);">
+        <tr><td align="center" style="padding-bottom:20px;">
+          <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:16px;padding:10px 20px;color:#fff;font-size:22px;font-weight:900;display:inline-block;">Shopi Support</div>
+        </td></tr>
+        <tr><td>
+          <div style="text-align:center;margin-bottom:20px;">
+            <div style="width:64px;height:64px;background:#eff6ff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:28px;">🎫</div>
+          </div>
+          <h1 style="margin:0 0 8px;font-size:20px;font-weight:800;color:#0f172a;text-align:center;">Ticket créé avec succès</h1>
+          <p style="margin:0 0 20px;font-size:14px;color:#475569;text-align:center;">Bonjour <strong>${firstName}</strong>, votre demande d'assistance a bien été reçue.</p>
+          <div style="background:#f8faff;border:1.5px solid #bfdbfe;border-radius:12px;padding:16px 20px;margin-bottom:24px;">
+            <div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Référence</div>
+            <div style="font-family:'Courier New',monospace;font-size:20px;font-weight:900;color:#1e40af;">${reference}</div>
+            <div style="font-size:13px;color:#475569;margin-top:8px;">${subject}</div>
+          </div>
+          <p style="font-size:13.5px;color:#475569;line-height:1.7;margin:0 0 24px;">Notre équipe va examiner votre demande et vous répondra dans les <strong>24 heures ouvrées</strong>. Vous recevrez une notification par email dès qu'un agent vous répond.</p>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr><td align="center">
+              <a href="${ticketUrl}" style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;font-size:14px;font-weight:700;text-decoration:none;padding:13px 32px;border-radius:12px;display:inline-block;">
+                Suivre mon ticket →
+              </a>
+            </td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="padding:20px 0;text-align:center;">
+          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi Africa · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`,
+      text: `Bonjour ${firstName},\n\nVotre ticket de support ${reference} a été créé.\nSujet : ${subject}\n\nSuivre : ${ticketUrl}\n\nShopi Africa`,
+    });
+    this.logger.log(`[SUPPORT] Email confirmation envoyé à ${toEmail} | ${reference}`);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 8. EMAIL NOTIFICATION RÉPONSE AGENT (NOUVEAU)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  async sendSupportTicketReply(params: SendSupportTicketReplyParams): Promise<void> {
+    const { toEmail, agentName, reference, subject, ticketUrl } = params;
+    await this.send({
+      to:      toEmail,
+      subject: `Shopi Support — Nouvelle réponse [${reference}]`,
+      html: `
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/></head>
+<body style="margin:0;padding:0;background:#f0f4ff;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:20px;padding:40px 36px;box-shadow:0 4px 24px rgba(30,64,175,.08);">
+        <tr><td align="center" style="padding-bottom:20px;">
+          <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:16px;padding:10px 20px;color:#fff;font-size:22px;font-weight:900;display:inline-block;">Shopi Support</div>
+        </td></tr>
+        <tr><td>
+          <div style="text-align:center;margin-bottom:20px;">
+            <div style="width:64px;height:64px;background:#ecfdf5;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:28px;">💬</div>
+          </div>
+          <h1 style="margin:0 0 8px;font-size:20px;font-weight:800;color:#0f172a;text-align:center;">Nouvelle réponse à votre ticket</h1>
+          <p style="font-size:14px;color:#475569;text-align:center;margin:0 0 20px;"><strong>${agentName}</strong> a répondu à votre demande <strong>${reference}</strong>.</p>
+          <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px 20px;margin-bottom:24px;">
+            <div style="font-size:13px;color:#166534;">${subject}</div>
+          </div>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr><td align="center">
+              <a href="${ticketUrl}" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:14px;font-weight:700;text-decoration:none;padding:13px 32px;border-radius:12px;display:inline-block;">
+                Voir la réponse →
+              </a>
+            </td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="padding:20px 0;text-align:center;">
+          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi Africa · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`,
+      text: `${agentName} a répondu à votre ticket ${reference}.\nSujet : ${subject}\n\nVoir : ${ticketUrl}\n\nShopi Africa`,
+    });
+    this.logger.log(`[SUPPORT] Email réponse envoyé à ${toEmail} | ${reference}`);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 9. EMAIL CONFIRMATION FORMULAIRE DE CONTACT (NOUVEAU)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  async sendContactConfirmation(params: { toEmail: string; firstName: string; subject: string }): Promise<void> {
+    const { toEmail, firstName, subject } = params;
+    await this.send({
+      to:      toEmail,
+      subject: 'Shopi — Nous avons bien reçu votre message',
+      html: `
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/></head>
+<body style="margin:0;padding:0;background:#f0f4ff;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:20px;padding:40px 36px;box-shadow:0 4px 24px rgba(30,64,175,.08);">
+        <tr><td align="center">
+          <div style="font-size:48px;margin-bottom:16px;">✅</div>
+          <h1 style="margin:0 0 12px;font-size:20px;font-weight:800;color:#0f172a;">Message bien reçu !</h1>
+          <p style="font-size:14px;color:#475569;line-height:1.7;margin:0 0 20px;">
+            Bonjour <strong>${firstName}</strong>,<br/>nous avons bien reçu votre message concernant :<br/>
+            <strong style="color:#1e40af;">${subject}</strong>
+          </p>
+          <p style="font-size:13.5px;color:#64748b;line-height:1.7;">Notre équipe vous répondra dans les <strong>48 heures ouvrées</strong>.<br/>Pour un suivi plus rapide, créez un ticket de support.</p>
+        </td></tr>
+        <tr><td style="padding:20px 0;text-align:center;">
+          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi Africa · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`,
+      text: `Bonjour ${firstName},\n\nNous avons bien reçu votre message : ${subject}\n\nShopi Africa`,
+    });
   }
 
   // ══════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,50 @@
+/* ================================================================
+ * FICHIER : src/dashboards/admin/styles/SanctionModal.module.css
+ * Confirmation de suspension (rouge, centrée).
+ * ================================================================ */
+
+.bg {
+  position: fixed; inset: 0;
+  background: rgba(11,31,58,.55);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+
+.cmodal {
+  background: var(--white);
+  border-radius: var(--r-xl);
+  width: 100%; max-width: 430px;
+  box-shadow: var(--sh-xl);
+  animation: mIn .3s var(--spring);
+  text-align: center;
+  padding: 28px 26px 24px;
+}
+@keyframes mIn {
+  from { transform: scale(.93); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.ic {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: rgba(220,38,38,.1); color: #DC2626;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  margin: 0 auto 16px;
+}
+
+.cmodal h3 { font-family: var(--fd); font-weight: 700; font-size: 19px; color: var(--navy); }
+.cmodal p { font-size: 13px; color: var(--t2); margin-top: 8px; line-height: 1.6; }
+
+.btns { display: flex; gap: 10px; margin-top: 22px; }
+.btns button {
+  flex: 1; padding: 12px;
+  border: none; border-radius: var(--r-md);
+  font-size: 13px; font-weight: 700; font-family: var(--fb);
+  cursor: pointer; transition: .15s;
+}
+.cancel { background: var(--g100); color: var(--t2); }
+.cancel:hover { background: var(--g200); }
+.confirm { background: #DC2626; color: #fff; }
+.confirm:hover { background: #b91c1c; }

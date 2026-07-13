@@ -13,9 +13,9 @@
  *   - le rendu de l'état vide si aucune conversation n'est sélectionnée
  */
 import { useState } from 'react';
-import type { Conversation, ChatUser } from '../data/messagerieTypes';
-import type { MediaAttachment }        from '../hooks/useMessagerie';
-import type { WsTyping }               from '../hooks/useSocket';
+import type { Conversation, ChatUser, GroupMember } from '../data/messagerieTypes';
+import type { MediaAttachment }                     from '../hooks/useMessagerie';
+import type { WsTyping }                            from '../hooks/useSocket';
 
 import ChatHeader    from '../components/ChatHeader';
 import MessagesZone  from '../components/MessagesZone';
@@ -27,6 +27,7 @@ import s from '../styles/ChatWindow.module.css';
 interface Props {
   conv:            Conversation | null;
   user:            ChatUser | null;
+  members?:        GroupMember[];
   infoPanelOpen:   boolean;
   typingActivity?: WsTyping;
   onSend:          (convId: string, text: string, media?: MediaAttachment) => void;
@@ -34,15 +35,18 @@ interface Props {
   onToggleInfo:    () => void;
   onNewConv:       () => void;
   onToast:         (msg: string, type?: string) => void;
-  onCall?:         () => void;       // appel audio
-  onVideoCall?:    () => void;       // appel vidéo
+  onDelete:        (msgId: string, mode: 'me' | 'everyone' | 'other') => void;
+  onUpdateGroup?:  (groupId: string, description: string) => void;
+  onCall?:         () => void;
+  onVideoCall?:    () => void;
+  onMobileMenu?:   () => void;
 }
 
 // ─────────────────────────────────────────────────────────────
 
 export default function ChatWindow({
-  conv, user, infoPanelOpen, typingActivity,
-  onSend, onTyping, onToggleInfo, onNewConv, onToast, onCall, onVideoCall,
+  conv, user, members, infoPanelOpen, typingActivity,
+  onSend, onTyping, onToggleInfo, onNewConv, onToast, onDelete, onUpdateGroup, onCall, onVideoCall, onMobileMenu,
 }: Props) {
   /** Message cité (réponse) — partagé entre MessagesZone (set) et MessageInput (affichage) */
   const [replyTo, setReplyTo] = useState<{ sender: string; text: string } | null>(null);
@@ -57,6 +61,11 @@ export default function ChatWindow({
           <div className={s.emptySub}>
             Sélectionnez une conversation pour échanger avec boutiques, clients et livreurs.
           </div>
+          {onMobileMenu && (
+            <button className={s.emptyBtnSecondary} onClick={onMobileMenu}>
+              <i className="fas fa-list" /> Voir mes conversations
+            </button>
+          )}
           <button className={s.emptyBtn} onClick={onNewConv}>
             <i className="fas fa-pen-to-square" /> Démarrer une conversation
           </button>
@@ -71,20 +80,25 @@ export default function ChatWindow({
       {/* ── En-tête ── */}
       <ChatHeader
         user={user}
+        members={members}
         infoPanelOpen={infoPanelOpen}
         onToggleInfo={onToggleInfo}
         onToast={onToast}
         onCall={onCall}
         onVideoCall={onVideoCall}
+        onMobileMenu={onMobileMenu}
       />
 
       {/* ── Messages + indicateur typing ── */}
       <MessagesZone
         conv={conv}
         user={user}
+        members={members}
         typingActivity={typingActivity}
         onReply={setReplyTo}
         onToast={onToast}
+        onDelete={onDelete}
+        onUpdateGroup={onUpdateGroup}
       />
 
       {/* ── Zone de saisie ── */}

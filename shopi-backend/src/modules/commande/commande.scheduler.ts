@@ -17,6 +17,7 @@ import { LessThanOrEqual, Repository } from 'typeorm';
 import { Commande, CommandeStatus } from '../../database/entities/commande/commande.entity';
 import { NotificationActorType } from '../../database/entities/notification/notification.entitiy';
 import { NotificationEventService } from '../notifications/events/notification-event.service';
+import { DeliveryGroupService } from '../delivery-group/delivery-group.service';
 
 @Injectable()
 export class CommandeScheduler {
@@ -26,6 +27,7 @@ export class CommandeScheduler {
   constructor(
     @InjectRepository(Commande) private readonly commandeRepo: Repository<Commande>,
     private readonly notifEventSvc: NotificationEventService,
+    private readonly deliveryGroupSvc: DeliveryGroupService,
   ) {}
 
   /* ════════════════════════════════════════════════════════
@@ -75,6 +77,9 @@ export class CommandeScheduler {
           title:         'Livraison auto-validée ✅',
           body:          `La commande ${commande.numero} a été automatiquement confirmée comme livrée.`,
         });
+
+        /* Groupe de livraison : démarrer compte à rebours 72h */
+        void this.deliveryGroupSvc.handleOrderStatusChange(commande.id, CommandeStatus.AUTO_DELIVERED);
       } catch (err) {
         this.logger.error(`AUTO_DELIVERED échoué pour la commande ${commande.id}`, err);
       }

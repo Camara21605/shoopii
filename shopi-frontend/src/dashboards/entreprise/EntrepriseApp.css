@@ -15,6 +15,15 @@
   padding-top: var(--hdr);
 }
 
+/* Messagerie plein-écran : pas de sidebar, pas de padding latéral */
+.main.main-fullscreen {
+  margin-left: 0;
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
 /* Chaque page a une animation d'apparition */
 .page {
   padding: 24px;

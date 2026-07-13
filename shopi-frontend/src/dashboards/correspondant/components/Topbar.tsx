@@ -64,6 +64,18 @@ export default function Topbar({ page, onMenu, onPage }: Props) {
 
         <div className={s.sep} />
 
+        {/* Centre d'aide — accès direct depuis le dashboard correspondant */}
+        <button
+          className={s.ic}
+          onClick={() => navigate('/aide')}
+          title="Centre d'aide"
+          aria-label="Centre d'aide"
+        >
+          <i className="fas fa-circle-question" />
+        </button>
+
+        <div className={s.sep} />
+
         {/* Avatar → paramètres */}
         <div className={s.ava} onClick={() => onPage('parametres')}>AB</div>
       </div>

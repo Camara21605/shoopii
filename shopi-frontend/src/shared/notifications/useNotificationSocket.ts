@@ -49,6 +49,15 @@ let _token:  string | null = null;
 
 function getSocket(token: string): Socket {
   if (_socket && token === _token && !_socket.disconnected) return _socket;
+
+  /* Même token mais socket en état "disconnected" (connect_error ou StrictMode) :
+   * relancer la connexion sans recréer pour éviter "WebSocket closed before established". */
+  if (_socket && token === _token) {
+    _socket.connect();
+    return _socket;
+  }
+
+  // Token différent → déconnecte proprement et recrée
   if (_socket) { _socket.disconnect(); _socket = null; }
 
   _token  = token;

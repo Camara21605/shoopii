@@ -21,6 +21,7 @@ const INITIAL_LOGIN_DATA: LoginFormData = {
 const INITIAL_REGISTER_DATA: RegisterFormData = {
   firstName: '', lastName: '', email: '', phone: '',
   password: '', confirmPassword: '', activationCode: '', terms: false,
+  birthDate: '', gender: '',
 };
 
 const ROLE_MAP: Record<string, UserRole> = {
@@ -145,6 +146,25 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     }
   }, []);
 
+  // Validation partielle d'un sous-ensemble de champs (navigation wizard)
+  const validateRegisterStep = useCallback((fields: (keyof RegisterFormData)[]): boolean => {
+    const errs: FormErrors = {};
+    fields.forEach(field => {
+      const error = validateRegisterField(field, registerData, registerRole);
+      if (error) (errs as Record<string, string>)[field] = error;
+    });
+    setRegisterErrors(prev => {
+      const next = { ...prev };
+      fields.forEach(field => {
+        const error = validateRegisterField(field, registerData, registerRole);
+        if (error) (next as Record<string, string>)[field] = error;
+        else delete (next as Record<string, string | undefined>)[field];
+      });
+      return next;
+    });
+    return Object.keys(errs).length === 0;
+  }, [registerData, registerRole, validateRegisterField]);
+
   // Validation Register (soumission) — vérifie tous les champs
   const validateRegister = (): boolean => {
     const fields: (keyof RegisterFormData)[] = [
@@ -263,6 +283,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     setRegisterRole,
     handleLogin,
     handleRegister,
+    validateRegisterStep,
     showToast,
   };
 }

@@ -15,6 +15,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationsModule } from '../../notifications/notifications.module';
+import { ReturnsModule }       from '../entreprise/returns/returns.module';
+import { ClientSavController } from './sav/client-sav.controller';
 
 import { User }           from '../../../database/entities/user.entity';
 import { Client }         from '../../../database/entities/profiles/client-profile.entity';
@@ -69,6 +71,7 @@ import { FavorisService }             from './services/favoris.service';
 @Module({
   imports: [
     NotificationsModule,
+    ReturnsModule,
     TypeOrmModule.forFeature([
       User,
       Client,
@@ -86,9 +89,10 @@ import { FavorisService }             from './services/favoris.service';
     ClientParametresController,
     PanierController,
     LivreursClientController,      /* GET /client/livreurs/* */
-    ClientProfilController,        /* ✅ GET /client/profil */
-    CorrespondantProfilController, /* ✅ GET /client/correspondants/:id */
-    FavorisController,             /* ✅ GET/POST /client/favoris */
+    ClientProfilController,        /* GET /client/profil */
+    CorrespondantProfilController, /* GET /client/correspondants/:id */
+    FavorisController,             /* GET/POST /client/favoris */
+    ClientSavController,           /* POST/GET /client/sav */
   ],
 
   providers: [

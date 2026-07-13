@@ -1,0 +1,97 @@
+/* ================================================================
+ * FICHIER : src/dashboards/admin/styles/CommandesPage.module.css
+ * Commandes : stats + tableau + mini-progression de la chaîne
+ * de validation + statuts ord_* + arbitrage des litiges.
+ * ================================================================ */
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.cstat { background: var(--white); border: 1px solid var(--bdr); border-radius: var(--r-md); padding: 16px; }
+.cstatV { font-family: var(--fd); font-weight: 800; font-size: 22px; color: var(--navy); }
+.cstatL { font-size: 11px; color: var(--t3); margin-top: 3px; }
+.vg { color: var(--emerald); }
+.va { color: var(--amber); }
+.vr { color: #DC2626; }
+
+.card { background: var(--white); border: 1px solid var(--bdr); border-radius: var(--r-lg); overflow: hidden; }
+.ch { padding: 16px 20px; border-bottom: 1px solid var(--bdr); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.chT { font-family: var(--fd); font-weight: 700; font-size: 15px; color: var(--navy); display: flex; align-items: center; gap: 9px; }
+.chT i { color: var(--blue); font-size: 13px; }
+.chRight { display: flex; gap: 8px; align-items: center; }
+.chTabs { display: flex; gap: 3px; background: var(--g100); border-radius: var(--r-sm); padding: 3px; }
+.chTab {
+  background: none; border: none;
+  border-radius: 5px; padding: 5px 12px;
+  font-size: 11px; font-weight: 600; font-family: var(--fb);
+  color: var(--t2); cursor: pointer; transition: all .15s;
+}
+.chTabOn { background: var(--white); color: var(--navy); box-shadow: var(--sh-xs); }
+.exportBtn {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12px; font-weight: 700; font-family: var(--fb);
+  color: var(--t2);
+  background: var(--white);
+  border: 1.5px solid var(--bdr2);
+  border-radius: var(--pill);
+  padding: 8px 12px;
+  cursor: pointer; transition: .15s;
+}
+.exportBtn:hover { border-color: var(--bdrb); color: var(--blue); }
+
+.tblWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; }
+.table thead th {
+  text-align: left;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .6px;
+  color: var(--t3);
+  padding: 11px 14px;
+  background: var(--g50);
+  border-bottom: 1px solid var(--g200);
+  white-space: nowrap;
+}
+.table tbody td { padding: 13px 14px; font-size: 13px; color: var(--t1); border-bottom: 1px solid var(--bdr); vertical-align: middle; }
+.table tbody tr:hover { background: var(--sky); }
+.table tbody tr:last-child td { border-bottom: none; }
+.uMeta { font-size: 11px; color: var(--t3); margin-top: 1px; }
+
+/* Mini progression : 4 étapes de la chaîne de validation */
+.miniProg { display: flex; gap: 3px; }
+.miniProg span { width: 16px; height: 5px; border-radius: var(--pill); background: var(--g200); }
+.miniProg .done { background: var(--emerald); }
+
+.ordSt {
+  font-size: 10px; font-weight: 800;
+  padding: 3px 10px; border-radius: var(--pill);
+  text-transform: uppercase; letter-spacing: .3px;
+  white-space: nowrap;
+}
+.ord_paid    { background: var(--sky-2); color: var(--blue); }
+.ord_prep    { background: var(--vl-bg); color: var(--violet); }
+.ord_ship    { background: var(--tl-bg); color: var(--teal); }
+.ord_relay   { background: var(--am-bg); color: var(--amber); }
+.ord_done    { background: var(--em-bg); color: var(--emerald); }
+.ord_dispute { background: rgba(220,38,38,.1); color: #DC2626; }
+
+.raBtn {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: var(--g50);
+  border: 1px solid var(--bdr2);
+  color: var(--t2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  cursor: pointer; transition: all .15s;
+}
+.raBtn:hover { background: var(--sky); border-color: var(--bdrb); color: var(--blue); }
+.arbBtn {
+  font-size: 11.5px; font-weight: 700; font-family: var(--fb);
+  padding: 8px 14px;
+  border: none; border-radius: var(--pill);
+  background: var(--sky); color: var(--blue);
+  display: inline-flex; align-items: center; gap: 6px;
+  cursor: pointer; transition: .15s;
+  white-space: nowrap;
+}
+.arbBtn:hover { background: var(--sky-2); }
+
+@media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .stats { grid-template-columns: 1fr; } }

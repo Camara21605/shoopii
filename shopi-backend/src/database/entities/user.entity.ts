@@ -94,6 +94,14 @@ export class User {
   @Column({ type: 'varchar', length: 10, nullable: true })
   dialCode: string | null;
 
+  /** Date de naissance (YYYY-MM-DD) */
+  @Column({ type: 'date', nullable: true })
+  birthDate: Date | null;
+
+  /** Genre : male | female | other | prefer_not */
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  gender: string | null;
+
   @Index({ unique: true })
   @Column({ type: 'varchar', length: 100 })
   username: string;

@@ -209,9 +209,21 @@ export class Delivery {
   @Column({ type: 'decimal', precision: 9, scale: 6, nullable: true })
   lastLongitude!: number | null;
 
-  /** Communes desservies (JSON array). Ex : ["Kaloum", "Dixinn", "Matam"] */
+  /** Type de livraison : entre_pays | entre_villes | entre_prefectures | entre_regions | entre_communes | entre_quartiers */
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  deliveryType!: string | null;
+
+  /** Date à laquelle le type de livraison a été choisi — verrouillage 6 mois */
+  @Column({ type: 'timestamp', nullable: true })
+  deliveryTypeSetAt!: Date | null;
+
+  /** Zones desservies (noms du niveau choisi). Ex : ["Kaloum", "Dixinn"] */
   @Column({ type: 'json', nullable: true })
   communesActives!: string[] | null;
+
+  /** Sous-ensemble de communesActives où le livreur est disponible en ce moment */
+  @Column({ type: 'json', nullable: true })
+  zonesDisponibles!: string[] | null;
 
   @Column({ type: 'int', default: 25 })
   distanceMax!: number;

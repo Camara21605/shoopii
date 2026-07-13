@@ -2,15 +2,11 @@
  * FICHIER : profil-client/sections/SectionActivity.tsx
  *
  * Onglet "Activité" : journal groupé par jour, icônes colorées.
- *
- * DONNÉES : reçues en prop `jours` (par défaut = mock).
- *   → La page passe les VRAIES activités venant de /client/profil
- *     (champ activityLog). Si vide, fallback mock automatique.
+ * Données exclusivement depuis /client/profil (champ activityLog).
  * ================================================================ */
 
 import React from 'react';
 import styles from '../styles/ProfilClient.module.css';
-import { ACTIVITES as MOCK_ACTIVITES } from '../data/profilClientData';
 import type { ActiviteItem, ActiviteJour } from '../data/profilClientData';
 
 /* Mapping couleur → classe CSS de l'icône */
@@ -21,12 +17,26 @@ const COULEUR_CLASS: Record<ActiviteItem['couleur'], string> = {
 
 interface Props {
   onToast: (m: string) => void;
-  jours?:  ActiviteJour[];   // dynamique (fallback mock)
+  jours:   ActiviteJour[];
 }
 
-export default function SectionActivity({ onToast, jours = MOCK_ACTIVITES }: Props) {
-  /* Si aucune activité réelle → on garde le mock pour ne pas afficher du vide */
-  const data = jours.length > 0 ? jours : MOCK_ACTIVITES;
+export default function SectionActivity({ onToast, jours }: Props) {
+  if (jours.length === 0) {
+    return (
+      <div className={styles.card}>
+        <div className={styles.ch}>
+          <div className={styles.ct}><i className="fas fa-clock-rotate-left" /> Journal d'activité</div>
+        </div>
+        <div className={styles.cb}>
+          <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--t3)' }}>
+            <i className="fas fa-clock-rotate-left" style={{ fontSize: 28, display: 'block', marginBottom: 10, opacity: 0.3 }} />
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>Aucune activité récente</div>
+            <div style={{ fontSize: 12 }}>Vos actions sur Shopi apparaîtront ici.</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.card}>
@@ -35,7 +45,7 @@ export default function SectionActivity({ onToast, jours = MOCK_ACTIVITES }: Pro
         <button className={styles.chLink} onClick={() => onToast("📤 Export de l'activité")}>Exporter</button>
       </div>
 
-      {data.map(jour => (
+      {jours.map(jour => (
         <div key={jour.jour}>
           <div className={styles.actDay}>{jour.jour}</div>
           {jour.items.map(item => (

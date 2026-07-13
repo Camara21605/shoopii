@@ -4,8 +4,9 @@
  * Accent : amber/orange (--cor:#B45309)
  * ================================================================ */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import s from './styles/CorrespondantApp.module.css';
+import { apiFetch } from '../../shared/services/apiFetch';
 
 import Sidebar      from './components/Sidebar';
 import Topbar       from './components/Topbar';
@@ -31,6 +32,18 @@ import type { PageId } from './data/correspondantData';
 export default function CorrespondantApp() {
   const [page,      setPage]      = useState<PageId>('overview');
   const [sideOpen,  setSideOpen]  = useState(false);
+  const [nomUtilisateur, setNomUtilisateur] = useState<string | undefined>(undefined);
+  const [photoUrl,       setPhotoUrl]       = useState<string | null>(null);
+
+  useEffect(() => {
+    apiFetch<{ firstName?: string; lastName?: string; profilePicture?: string | null }>(
+      '/correspondant/parametres',
+    ).then(data => {
+      const nom = [data?.firstName, data?.lastName].filter(Boolean).join(' ');
+      if (nom) setNomUtilisateur(nom);
+      if (data?.profilePicture) setPhotoUrl(data.profilePicture);
+    }).catch(() => { /* silently ignore — sidebar shows "—" */ });
+  }, []);
 
   const closeSide  = () => setSideOpen(false);
 
@@ -62,6 +75,8 @@ export default function CorrespondantApp() {
           setPage={setPage}
           open={sideOpen}
           onClose={closeSide}
+          nomUtilisateur={nomUtilisateur}
+          photoUrl={photoUrl}
         />
 
         {/* Topbar */}

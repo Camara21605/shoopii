@@ -75,6 +75,7 @@ const Login: React.FC = () => {
     selectRegisterRole,
     handleLogin,
     handleRegister,
+    validateRegisterStep,
     showToast,
     // ✅ Nouveau : forcer le rôle depuis l'invitation
     setRegisterRole,
@@ -249,6 +250,7 @@ const Login: React.FC = () => {
                 lockedRole={lockedRole}
                 prefilledCode={prefilledCode}
                 onlyClientRole={!isInvited}
+                onValidateStep={validateRegisterStep}
               />
             )}
 

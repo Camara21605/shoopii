@@ -27,6 +27,7 @@ import {
 import { CreateCommandeDto } from '../dto/create-commande.dto';
 import { CODE_EXPIRY_MS, genererCode, readPrix } from './commande.helpers';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
+import { DeliveryGroupService } from 'src/modules/delivery-group/delivery-group.service';
 
 @Injectable()
 export class CommandeCreationService {
@@ -41,6 +42,7 @@ export class CommandeCreationService {
     @InjectRepository(Correspondent)       private readonly correspondantRepo:     Repository<Correspondent>,
     @InjectRepository(PlatformSettings)   private readonly platformSettingsRepo:  Repository<PlatformSettings>,
     private readonly notifEventSvc: NotificationEventService,
+    private readonly deliveryGroupSvc: DeliveryGroupService,
   ) {}
 
   /* ════════════════════════════════════════════════════════
@@ -135,15 +137,30 @@ export class CommandeCreationService {
       }));
       await this.itemRepo.save(commandeItems);
 
-      /* Notification → entreprise : nouvelle commande reçue */
+      /* Notification → tous les acteurs de la commande */
       void this.notifEventSvc.notifyOrderPlaced({
-        companyId:   company.id,
-        clientId:    client.id,
-        clientName:  client.fullName ?? `${user.firstName} ${user.lastName}`.trim(),
-        orderRef:    saved.numero,
-        commandeId:  saved.id,
-        totalAmount: saved.total,
+        companyId:         company.id,
+        clientId:          client.id,
+        clientName:        client.fullName ?? `${user.firstName} ${user.lastName}`.trim(),
+        orderRef:          saved.numero,
+        commandeId:        saved.id,
+        totalAmount:       saved.total,
+        /* Livreur et correspondant sont optionnels selon le mode de livraison choisi */
+        ...(delivery      && { livreurId:        delivery.id,       livreurName:        delivery.fullName       ?? '' }),
+        ...(correspondant && { correspondantId:  correspondant.id,  correspondantName:  correspondant.fullName  ?? '' }),
       });
+
+      /* Groupe de livraison automatique */
+      void this.deliveryGroupSvc.createGroupForCommande(
+        saved.id,
+        saved.numero,
+        {
+          client:  { id: client.id, userId: user.id, name: client.fullName ?? `${user.firstName} ${user.lastName}`.trim() },
+          company: { id: company.id, userId: company.userId, name: company.companyName },
+          ...(delivery ? { livreur: { id: delivery.id, userId: delivery.userId, name: delivery.fullName ?? '' } } : {}),
+          ...(correspondant ? { correspondant: { id: correspondant.id, userId: correspondant.userId, name: correspondant.fullName ?? '' } } : {}),
+        },
+      );
 
       /* Codes de validation */
       const now = new Date();

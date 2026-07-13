@@ -9,9 +9,10 @@
   height: calc(100vh - var(--hdr, 66px));
   overflow: hidden;
   background: var(--g50);
+  position: relative;
 }
 
-/* Overlay mobile */
+/* Overlay mobile (fond semi-transparent quand liste ouverte) */
 .overlay {
   position: fixed; inset: 0;
   background: rgba(11,31,58,.45);
@@ -19,9 +20,35 @@
   z-index: 199;
 }
 
-@media (max-width: 1100px) {
-  /* Info panel disparaît */
-}
-@media (max-width: 640px) {
+/* ── 1280px : InfoPanel rétrécit ── */
+@media (max-width: 1280px) {
   .layout { height: calc(100vh - var(--hdr, 66px)); }
+}
+
+/* ── 1100px : InfoPanel masqué par overflow ── */
+@media (max-width: 1100px) {
+  .layout { height: calc(100vh - var(--hdr, 66px)); }
+}
+
+/* ── 820px : sidebar liste réduite ── */
+@media (max-width: 820px) {
+  .layout { height: calc(100vh - var(--hdr, 66px)); }
+}
+
+/* ── 768px : bottom nav fixe (home + dashboards) ──
+   La barre de navigation mobile (62px) est positionnée fixed en bas.
+   On soustrait sa hauteur pour que le layout s'arrête au-dessus d'elle. */
+@media (max-width: 768px) {
+  .layout { height: calc(100vh - var(--hdr, 66px) - 62px); }
+}
+
+/* ── 640px : mode mobile ──
+   ConvList devient un panneau fixe (défini dans ConvList.module.css).
+   Le chat prend 100% de la largeur. */
+@media (max-width: 640px) {
+  .layout {
+    height: calc(100vh - var(--hdr, 66px) - 62px);
+    width: 100vw;
+    overflow-x: hidden;
+  }
 }

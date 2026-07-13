@@ -105,6 +105,8 @@ export interface RegisterFormData {
   shopName?:       string;
   terms?:          boolean;
   companyTypeId?:  string;
+  birthDate?:      string;
+  gender?:         string;
   // Pays détecté via indicatif téléphonique
   countryCode?:    string;
   countryName?:    string;

@@ -8,7 +8,6 @@
 import React from 'react';
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
-import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -40,7 +39,6 @@ const NAV_SECTIONS = [
     title: 'Marketing',
     items: [
       { id: 'analytics' as EntreprisePage, icon: 'fa-chart-line',             label: 'Analytics' },
-      { id: 'messages'  as EntreprisePage, icon: 'fa-comment-dots',           label: 'Messages',       badge: '5', badgeClass: 'new' },
       { id: 'seo'       as EntreprisePage, icon: 'fa-magnifying-glass-chart', label: 'SEO & Marketing' },
     ],
   },
@@ -64,7 +62,6 @@ const NAV_SECTIONS = [
 
 export default function Sidebar({ activePage, onNavigate, companyLogo, companyName }: SidebarProps) {
   const { pop } = useToast();
-  const { msgUnread } = useGlobalCall();
 
   /* Initiales de la boutique si pas de logo */
   const initiales = (companyName ?? 'TC')
@@ -129,27 +126,21 @@ export default function Sidebar({ activePage, onNavigate, companyLogo, companyNa
         {NAV_SECTIONS.map(section => (
           <React.Fragment key={section.title}>
             <div className="sb-sect">{section.title}</div>
-            {section.items.map(item => {
-              const isMessages = item.id === 'messages';
-              const badgeVal   = isMessages
-                ? (msgUnread > 0 ? (msgUnread > 99 ? '99+' : String(msgUnread)) : null)
-                : (item.badge ?? null);
-              return (
-                <div
-                  key={item.id}
-                  className={`nb${activePage === item.id ? ' on' : ''}`}
-                  onClick={() => onNavigate(item.id)}
-                >
-                  <i className={`fas ${item.icon}`}></i>
-                  <span>{item.label}</span>
-                  {badgeVal && (
-                    <span className={`nb-badge${isMessages ? ' new' : (item.badgeClass ? ` ${item.badgeClass}` : '')}`}>
-                      {badgeVal}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
+            {section.items.map(item => (
+              <div
+                key={item.id}
+                className={`nb${activePage === item.id ? ' on' : ''}`}
+                onClick={() => onNavigate(item.id)}
+              >
+                <i className={`fas ${item.icon}`}></i>
+                <span>{item.label}</span>
+                {item.badge && (
+                  <span className={`nb-badge${item.badgeClass ? ` ${item.badgeClass}` : ''}`}>
+                    {item.badge}
+                  </span>
+                )}
+              </div>
+            ))}
           </React.Fragment>
         ))}
 

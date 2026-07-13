@@ -1,0 +1,233 @@
+/* ================================================================
+ * FICHIER : styles/GeoReferentielPage.module.css
+ * Page Référentiel Géographique — dashboard administrateur.
+ * Design navy/white cohérent avec le reste du dashboard admin.
+ * Inclut .geoScope qui remet les variables super-admin aux
+ * valeurs du thème light admin, pour que GeoLevel_Cmp s'affiche
+ * correctement sans importer super-admin.css.
+ * ================================================================ */
+
+/* ── Héro ── */
+.hero {
+  background: var(--navy);
+  border-radius: var(--r-xl);
+  padding: 26px 30px;
+  position: relative; overflow: hidden;
+  margin-bottom: 18px;
+}
+.heroGlow {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 90% at 95% 10%, rgba(14,116,144,.45), transparent 55%),
+    radial-gradient(ellipse 40% 60% at 5%  90%, rgba(37,96,220,.28), transparent 52%);
+}
+.heroGrid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 85% 80% at 50% 50%, #000, transparent 78%);
+}
+.heroIn {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; flex-wrap: wrap;
+}
+.heroL { display: flex; align-items: center; gap: 18px; }
+.heroIco {
+  width: 52px; height: 52px; border-radius: 16px;
+  background: rgba(14,116,144,.25);
+  border: 1px solid rgba(14,116,144,.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: #67E8F9;
+  flex-shrink: 0;
+}
+.heroTitle {
+  font-family: var(--fd);
+  font-size: clamp(18px, 2.5vw, 24px);
+  font-weight: 800; color: #fff;
+  letter-spacing: -.4px;
+}
+.heroSub { font-size: 12px; color: rgba(200,217,248,.55); margin-top: 4px; }
+.heroBadges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.heroBadge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 700;
+  padding: 5px 12px;
+  border-radius: var(--pill);
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(200,217,248,.8);
+}
+.heroBadge i { font-size: 9px; }
+.heroBadge.perm {
+  background: rgba(14,116,144,.22);
+  border-color: rgba(14,116,144,.45);
+  color: #67E8F9;
+}
+.heroR { text-align: right; }
+.heroStat { font-family: var(--fd); font-size: 32px; font-weight: 800; color: #fff; line-height: 1; }
+.heroStatL { font-size: 11px; color: rgba(200,217,248,.5); margin-top: 4px; }
+
+/* ── KPI niveaux autorisés ── */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.kpi {
+  background: var(--white);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  transition: box-shadow .15s, transform .15s;
+  cursor: default;
+}
+.kpi:hover { box-shadow: var(--sh-md); transform: translateY(-2px); }
+.kpiIco {
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.kpiV { font-family: var(--fd); font-size: 19px; font-weight: 800; color: var(--navy); line-height: 1; }
+.kpiL { font-size: 10.5px; color: var(--t3); margin-top: 2px; }
+.kpiSub { font-size: 10px; color: var(--t3); margin-top: 4px; display: flex; gap: 8px; }
+.kpiOn  { color: var(--emerald); font-weight: 700; }
+.kpiOff { color: var(--amber); font-weight: 700; }
+
+/* ── Card principale ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+/* ── Barre de tabs ── */
+.tabBar {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--bdr);
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap;
+}
+.tabBarTitle {
+  font-family: var(--fd); font-weight: 700; font-size: 15px;
+  color: var(--navy);
+  display: flex; align-items: center; gap: 8px;
+  margin-right: 10px;
+}
+.tabBarTitle i { color: var(--blue); font-size: 13px; }
+.tabSep { width: 1px; height: 22px; background: var(--bdr2); margin: 0 4px; }
+.tab {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px;
+  border-radius: var(--pill);
+  font-size: 12px; font-weight: 700; font-family: var(--fb);
+  border: 1.5px solid var(--bdr2);
+  background: transparent; color: var(--t2);
+  cursor: pointer; transition: all .15s;
+}
+.tab:hover { border-color: var(--bdrb); color: var(--blue); background: var(--sky); }
+.tabOn {
+  background: var(--navy); color: #fff;
+  border-color: var(--navy);
+}
+.tabOn:hover { background: var(--navy-2); border-color: var(--navy-2); }
+.tab i { font-size: 11px; }
+.tabCount {
+  font-size: 10px; font-weight: 800;
+  padding: 1px 6px; border-radius: 99px;
+  background: rgba(255,255,255,.18);
+}
+.tabOn .tabCount { background: rgba(255,255,255,.25); }
+.tab:not(.tabOn) .tabCount { background: var(--g200); color: var(--t2); }
+
+/* ── Spinner / vide ── */
+.spin {
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; padding: 80px 24px;
+  color: var(--t3); font-size: 13px;
+}
+.spin i { font-size: 22px; }
+
+.empty {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 14px; padding: 80px 24px;
+  color: var(--t3); text-align: center;
+}
+.empty i { font-size: 40px; opacity: .3; }
+.emptyT { font-size: 15px; font-weight: 700; color: var(--t2); }
+.emptyS { font-size: 13px; max-width: 380px; }
+
+/* ── Bandeau erreur ── */
+.errBanner {
+  margin: 0 0 14px;
+  padding: 11px 16px;
+  background: rgba(190,24,93,.07);
+  border: 1px solid rgba(190,24,93,.2);
+  border-radius: var(--r-md);
+  color: var(--rose); font-size: 13px;
+  display: flex; align-items: center; gap: 9px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+ * SCOPE — Redefines super-admin CSS variables so GeoLevel_Cmp
+ * renders correctly in the admin (light) context.
+ * Only affects children of this wrapper.
+ * ══════════════════════════════════════════════════════════════ */
+.geoScope {
+  /* Surfaces */
+  --deep:       #FFFFFF;
+  --surface:    #F8F9FA;
+  --raised:     #FFFFFF;
+  --hover:      #EEF3FD;
+  --void:       #F1F3F5;
+  --border:     rgba(11,31,58,.08);
+  --border-hi:  rgba(26,79,196,.3);
+  --border-red: rgba(220,38,38,.18);
+
+  /* Texte */
+  --txt-1:      #0B1F3A;
+  --txt-2:      #4B5563;
+  --txt-3:      #9CA3AF;
+
+  /* Primaire (acid vert → blue admin) */
+  --acid:       #2560DC;
+  --acid-dim:   rgba(37,96,220,.08);
+  --acid-glow:  rgba(37,96,220,.22);
+
+  /* Couleurs sémantiques */
+  --rose:       #BE185D;
+  --rose-dim:   rgba(190,24,93,.08);
+  --gold:       #B45309;
+  --gold-dim:   rgba(180,83,9,.09);
+  --sky:        #0E7490;
+  --sky-dim:    rgba(14,116,144,.09);
+  --violet:     #6D28D9;
+  --violet-dim: rgba(109,40,217,.09);
+  --coral:      #FF7043;
+  --coral-dim:  rgba(255,112,67,.09);
+
+  /* Typographie */
+  --font-h:     'Fraunces', Georgia, serif;
+  --font-b:     'DM Sans', sans-serif;
+  --font-m:     'Courier New', monospace;
+
+  /* Misc */
+  --modal-bg:   rgba(11,31,58,.55);
+  --shadow:     0 6px 24px rgba(11,31,58,.1);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .hero { padding: 20px; }
+  .heroIn { flex-direction: column; align-items: flex-start; }
+  .heroR { display: none; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .tabBar { gap: 6px; }
+  .tab { padding: 6px 11px; font-size: 11px; }
+}

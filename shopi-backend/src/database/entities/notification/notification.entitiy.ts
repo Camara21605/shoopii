@@ -248,6 +248,15 @@ export enum NotificationType {
   ACCOUNT_VERIFIED      = 'account.verified',       // vérification identité OK
   INVITATION_CODE_USED  = 'invitation.code_used',   // code d'invitation utilisé
 
+  // ── SUPPORT TICKETS ────────────────────────────────────────
+  // Ajoutées en Phase 5 du Help Center.
+  // En production, exécuter avant déploiement :
+  //   ALTER TYPE notification_type_enum ADD VALUE 'support.ticket_created';
+  //   ALTER TYPE notification_type_enum ADD VALUE 'support.ticket_reply';
+  // En développement (synchronize:true), TypeORM gère l'ajout automatiquement.
+  SUPPORT_TICKET_CREATED = 'support.ticket_created', // accusé de réception ticket créé
+  SUPPORT_TICKET_REPLY   = 'support.ticket_reply',   // agent a répondu au ticket
+
   // ── SYSTÈME ────────────────────────────────────────────────
   SYSTEM_MAINTENANCE    = 'system.maintenance',     // maintenance planifiée
   SYSTEM_ANNOUNCEMENT   = 'system.announcement',    // annonce globale Shopi

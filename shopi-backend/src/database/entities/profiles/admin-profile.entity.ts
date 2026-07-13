@@ -109,6 +109,27 @@ export class Admin {
   @Column({ type: 'varchar', length: 20, nullable: true })
   phone: string | null;
 
+  @Column({ type: 'varchar', length: 200, nullable: true })
+  bio: string | null;
+
+  // ── AUTHENTIFICATION À DEUX FACTEURS (2FA) ─────────────────
+
+  /** 2FA activée ou non pour ce compte admin */
+  @Column({ type: 'boolean', default: false })
+  twoFaEnabled: boolean;
+
+  /** Méthode : 'app' (TOTP) | 'sms' | 'email' */
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  twoFaMethod: string | null;
+
+  /**
+   * Secret TOTP Base32 (20 octets).
+   * select: false → jamais retourné dans les SELECT *.
+   * Utilisé uniquement pour vérifier les codes OTP côté backend.
+   */
+  @Column({ type: 'varchar', length: 200, nullable: true, select: false })
+  twoFaSecret: string | null;
+
   @Column({
     type: 'enum',
     enum: AdminStatus,
@@ -123,6 +144,30 @@ export class Admin {
    */
   @Column({ type: 'json', nullable: true })
   permissions: Record<string, boolean> | null;
+
+  /**
+   * UUID du pays assigné à cet admin.
+   * L'admin ne peut gérer que les éléments géographiques appartenant
+   * à ce pays. Null = aucun pays assigné (accès géo refusé).
+   */
+  @Column({ type: 'uuid', nullable: true, name: 'paysAssigne' })
+  paysAssigne: string | null;
+
+  /**
+   * UUID de la zone de livraison assignée (référence geo_zones.id).
+   * Pas de FK formelle pour éviter les dépendances circulaires.
+   * Null = zone assignée via le champ texte `zone` uniquement.
+   */
+  @Column({ type: 'uuid', nullable: true, name: 'zoneAssigneId' })
+  zoneId: string | null;
+
+  /**
+   * Préférences d'alertes de cet admin (JSON).
+   * Clés : grave, validation, litige, nouvelleEntreprise, etc.
+   * Null = préférences par défaut appliquées par le service.
+   */
+  @Column({ type: 'json', nullable: true, name: 'alertPreferences' })
+  alertPreferences: Record<string, boolean> | null;
 
   // ── STATISTIQUES ───────────────────────────────────────────
 

@@ -1,0 +1,87 @@
+/* ================================================================
+ * FICHIER : src/dashboards/admin/styles/FinancesPage.module.css
+ * Héro emerald + graphe volume + derniers flux (montants colorés).
+ * ================================================================ */
+
+.finHero {
+  background: linear-gradient(135deg, var(--emerald), #0a9d6f);
+  border-radius: var(--r-lg);
+  padding: 26px; color: #fff;
+  position: relative; overflow: hidden;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+}
+.glow { position: absolute; inset: 0; background: radial-gradient(ellipse 50% 90% at 88% 30%, rgba(255,255,255,.18), transparent 55%); }
+.finIn { position: relative; z-index: 1; flex: 1; min-width: 220px; }
+.finL { font-size: 12px; color: rgba(255,255,255,.75); }
+.finV { font-family: var(--fd); font-weight: 800; font-size: 38px; letter-spacing: -1px; margin-top: 5px; }
+.finV small { font-size: 17px; opacity: .8; }
+.finSide { position: relative; z-index: 1; display: flex; gap: 12px; flex-wrap: wrap; }
+.finMini {
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: var(--r-md);
+  padding: 13px 16px; min-width: 130px;
+}
+.finMini b { font-family: var(--fd); font-weight: 800; font-size: 17px; display: block; }
+.finMini span { font-size: 10.5px; opacity: .8; }
+
+.g2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 18px; }
+
+.card { background: var(--white); border: 1px solid var(--bdr); border-radius: var(--r-lg); overflow: hidden; }
+.ch { padding: 16px 20px; border-bottom: 1px solid var(--bdr); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.chT { font-family: var(--fd); font-weight: 700; font-size: 15px; color: var(--navy); display: flex; align-items: center; gap: 9px; }
+.chT i { color: var(--blue); font-size: 13px; }
+.chLink {
+  font-size: 12px; font-weight: 700; color: var(--blue);
+  background: none; border: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--fb);
+}
+.cb { padding: 20px; }
+
+/* Graphe (même mécanique que l'overview) */
+.chart { display: flex; align-items: flex-end; gap: 10px; height: 170px; padding-top: 10px; }
+.cbarWrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.cbarPair { display: flex; gap: 4px; align-items: flex-end; width: 100%; justify-content: center; height: 130px; }
+.cbar {
+  width: 100%; max-width: 16px;
+  border-radius: 7px 7px 0 0;
+  background: linear-gradient(180deg, var(--blue-lt), var(--blue));
+  transition: all .7s var(--ease);
+  min-height: 8px; position: relative; cursor: pointer;
+}
+.cbarAlt { background: linear-gradient(180deg, #22D3EE, var(--teal)); }
+.cbar:hover { filter: brightness(1.1); }
+.cbarV {
+  position: absolute; top: -22px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px; font-weight: 700; color: var(--navy);
+  opacity: 0; transition: .2s; white-space: nowrap;
+}
+.cbar:hover .cbarV { opacity: 1; }
+.cbarL { font-size: 10.5px; color: var(--t3); }
+.legend { display: flex; gap: 18px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--bdr); }
+.cleg { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--t2); }
+.clegD { width: 9px; height: 9px; border-radius: 3px; }
+
+/* Flux */
+.act { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--bdr); align-items: center; }
+.act:last-child { border-bottom: none; }
+.actIc {
+  width: 38px; height: 38px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+.act_ok   { background: var(--em-bg); color: var(--emerald); }
+.act_code { background: var(--sky-2); color: var(--blue); }
+.act_warn { background: var(--am-bg); color: var(--amber); }
+.actT { font-size: 13px; color: var(--t1); line-height: 1.4; }
+.actT b { font-weight: 700; color: var(--navy); }
+.actW { font-size: 11px; color: var(--t3); margin-top: 2px; }
+.montant { margin-left: auto; font-family: var(--fd); font-weight: 700; white-space: nowrap; }
+.mIn  { color: var(--emerald); }
+.mOut { color: var(--blue); }
+.mRef { color: var(--amber); }
+
+@media (max-width: 1100px) { .g2 { grid-template-columns: 1fr; } }

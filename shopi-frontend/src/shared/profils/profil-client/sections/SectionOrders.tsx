@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/ProfilClient.module.css';
-import { fmtGnf } from '../data/profilClientData';
+const fmtGnf = (n: number | undefined | null) =>
+  n != null ? n.toLocaleString('fr-FR') + ' GNF' : '—';
 import type { Commande } from '../data/profilClientData';
 
 const STATUT_CFG: Record<Commande['statut'], { label: string; icon: string; color: string }> = {

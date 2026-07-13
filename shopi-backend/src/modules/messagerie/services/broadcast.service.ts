@@ -31,6 +31,11 @@ import type {
   WsMessageEditedPayload,
   WsMessageDeletedPayload,
   WsReactionPayload,
+  WsGroupNewMessagePayload,
+  WsGroupMessageEditedPayload,
+  WsGroupMessageDeletedPayload,
+  WsGroupReactionPayload,
+  WsGroupStatusPayload,
 } from '../interfaces/messaging.interfaces';
 
 /** Nom de la room privée d'un utilisateur. */
@@ -52,6 +57,19 @@ export class BroadcastService {
   setServer(server: Server): void {
     this.server = server;
     this.logger.log('[Broadcast] Server Socket.IO enregistré.');
+  }
+
+  /**
+   * Émet un événement arbitraire vers la room privée d'un utilisateur.
+   * Utilisé par GroupCallGateway pour garantir d'utiliser le bon server
+   * (celui initialisé par MessagerieGateway.afterInit).
+   */
+  emitToUser(userId: string, event: string, payload: object): void {
+    if (!this.server) {
+      this.logger.warn(`[Broadcast] emitToUser ignoré (server null) — ${event} → user:${userId}`);
+      return;
+    }
+    this.server.to(userRoom(userId)).emit(event, payload);
   }
 
   // ─────────────────────────────────────────────────────────
@@ -185,5 +203,40 @@ export class BroadcastService {
     contactUserIds.forEach(uid => {
       this.server!.to(userRoom(uid)).emit('presence', payload);
     });
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // GROUPES DE LIVRAISON
+  // ─────────────────────────────────────────────────────────
+
+  async groupNewMessage(
+    memberUserIds: string[],
+    senderUserId:  string,
+    payload:       WsGroupNewMessagePayload,
+  ): Promise<void> {
+    if (!this.server) return;
+    for (const uid of memberUserIds) {
+      this.server.to(userRoom(uid)).emit('group_new_message', payload);
+    }
+  }
+
+  groupMessageEdited(memberUserIds: string[], payload: WsGroupMessageEditedPayload): void {
+    if (!this.server) return;
+    memberUserIds.forEach(uid => this.server!.to(userRoom(uid)).emit('group_message_edited', payload));
+  }
+
+  groupMessageDeleted(memberUserIds: string[], payload: WsGroupMessageDeletedPayload): void {
+    if (!this.server) return;
+    memberUserIds.forEach(uid => this.server!.to(userRoom(uid)).emit('group_message_deleted', payload));
+  }
+
+  groupReactionUpdated(memberUserIds: string[], payload: WsGroupReactionPayload): void {
+    if (!this.server) return;
+    memberUserIds.forEach(uid => this.server!.to(userRoom(uid)).emit('group_reaction_updated', payload));
+  }
+
+  groupStatusChanged(memberUserIds: string[], payload: WsGroupStatusPayload): void {
+    if (!this.server) return;
+    memberUserIds.forEach(uid => this.server!.to(userRoom(uid)).emit('group_status_changed', payload));
   }
 }

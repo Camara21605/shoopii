@@ -1,0 +1,131 @@
+/* ============================================================
+ * HelpFab.module.css
+ *
+ * Bouton flottant "?" (Floating Action Button) d'aide.
+ * Visible sur toutes les pages publiques sauf :
+ *   /dashboard/*, /support/*, /login, /register, /aide/*
+ *
+ * Position : coin inférieur droit de l'écran.
+ * Comportement :
+ *   - Survol     → affiche un menu rapide (aide + contact)
+ *   - Clic croix → ferme le menu
+ * ============================================================ */
+
+/* ── Conteneur positionné en bas à droite ─────────────────── */
+.fab {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9000;     /* Au-dessus de tout le contenu */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+/* ── Bouton principal (rond bleu "?") ─────────────────────── */
+.btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #1A4FC4;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(26, 79, 196, 0.45);
+  transition: transform .2s, box-shadow .2s;
+  /* Empêche la sélection du texte au clic */
+  user-select: none;
+}
+.btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 28px rgba(26, 79, 196, 0.55);
+}
+
+/* ── Menu déroulant (affiché quand ouvert) ────────────────── */
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* Animation d'entrée : glisse vers le haut */
+  animation: slideUp .2s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* ── Item du menu ─────────────────────────────────────────── */
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  background: #fff;
+  border: 1px solid #E5EBF5;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #0B1F3A;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s;
+  font-family: DM Sans, sans-serif;
+}
+.item:hover {
+  background: #F0F4FF;
+}
+
+/* Icône de chaque item */
+.itemIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* ── Mobile : au-dessus de la bottom nav (62px) + safe area ─ */
+@media (max-width: 768px) {
+  .fab {
+    bottom: calc(62px + env(safe-area-inset-bottom, 0px) + 14px);
+    right: 16px;
+  }
+  .btn {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+    box-shadow: 0 3px 14px rgba(26, 79, 196, 0.40);
+  }
+  .item {
+    font-size: 13px;
+    padding: 9px 13px;
+  }
+}
+
+/* ── Thème sombre ─────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .item {
+    background: #1A2A4A;
+    border-color: #2A3A5A;
+    color: #E8EFFF;
+  }
+  .item:hover { background: #243355; }
+}
+:root[data-theme="dark"] .item {
+  background: #1A2A4A;
+  border-color: #2A3A5A;
+  color: #E8EFFF;
+}
+:root[data-theme="dark"] .item:hover { background: #243355; }

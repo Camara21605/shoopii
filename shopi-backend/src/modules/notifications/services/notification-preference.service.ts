@@ -112,6 +112,9 @@ const DEFAULT_CHANNEL_PREFERENCES: Record<
   // Système
   [NotificationType.SYSTEM_MAINTENANCE]:    { in_app: true, push: true,  email: true,  sms: false },
   [NotificationType.SYSTEM_ANNOUNCEMENT]:   { in_app: true, push: false, email: false, sms: false },
+  // Support tickets (Phase 6) — notification haute priorité par défaut
+  [NotificationType.SUPPORT_TICKET_CREATED]: { in_app: true, push: true,  email: true,  sms: false },
+  [NotificationType.SUPPORT_TICKET_REPLY]:   { in_app: true, push: true,  email: true,  sms: false },
 };
 
 // ─────────────────────────────────────────────────────────────

@@ -1,0 +1,207 @@
+/* ================================================================
+ * FICHIER : src/dashboards/admin/styles/OverviewPage.module.css
+ * Héro zone + file d'attente + KPI + graphe + activité +
+ * communes + répartition par rôle.
+ * ================================================================ */
+
+/* ── Héro ── */
+.hero {
+  background: var(--navy);
+  border-radius: var(--r-xl);
+  padding: 28px 32px;
+  position: relative; overflow: hidden;
+  margin-bottom: 22px; color: #fff;
+}
+.heroGlow {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 50% 80% at 88% 25%, rgba(14,116,144,.4), transparent 58%),
+    radial-gradient(ellipse 40% 60% at 8% 100%, rgba(37,96,220,.25), transparent 55%);
+}
+.heroGrid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 90% 90% at 50% 40%, #000, transparent 78%);
+}
+.heroIn {
+  position: relative; z-index: 1;
+  display: flex; justify-content: space-between;
+  gap: 24px; flex-wrap: wrap; align-items: center;
+}
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.2px;
+  color: #67E8F9;
+  background: rgba(14,116,144,.25);
+  border: 1px solid rgba(14,116,144,.45);
+  border-radius: var(--pill);
+  padding: 5px 13px; margin-bottom: 14px;
+}
+.heroH { font-family: var(--fd); font-size: clamp(22px, 3vw, 30px); font-weight: 800; letter-spacing: -.5px; line-height: 1.15; }
+.heroH em { font-style: italic; color: #67E8F9; }
+.heroP { font-size: 13.5px; color: rgba(200,217,248,.6); margin-top: 10px; max-width: 440px; line-height: 1.6; }
+.heroBtns { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+.hbtn1 {
+  background: #fff; color: var(--navy);
+  border: none; border-radius: var(--pill);
+  padding: 11px 20px;
+  font-size: 12.5px; font-weight: 700; font-family: var(--fb);
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer; transition: all .2s;
+}
+.hbtn1:hover { background: var(--sky-2); transform: translateY(-2px); }
+.hbtn2 {
+  background: rgba(255,255,255,.08); color: #fff;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: var(--pill);
+  padding: 11px 20px;
+  font-size: 12.5px; font-weight: 600; font-family: var(--fb);
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer; transition: all .2s;
+}
+.hbtn2:hover { background: rgba(255,255,255,.15); }
+
+/* Santé de la zone */
+.zoneHealth {
+  display: flex; align-items: center; gap: 16px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--r-lg);
+  padding: 18px 22px;
+}
+.zhRing {
+  width: 88px; height: 88px; border-radius: 50%;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.zhRing::before { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: var(--navy); }
+.zhRingV { position: relative; z-index: 1; text-align: center; }
+.zhRingV b { font-family: var(--fd); font-weight: 800; font-size: 22px; display: block; line-height: 1; }
+.zhRingV span { font-size: 8.5px; color: rgba(180,200,255,.6); text-transform: uppercase; }
+.zhNm { font-family: var(--fd); font-weight: 700; font-size: 16px; color: #fff; }
+.zhSub { font-size: 11px; color: rgba(200,217,248,.55); margin-top: 2px; }
+.zhAlerts { font-size: 11px; color: #FCD34D; font-weight: 700; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+
+/* ── File d'attente ── */
+.queue { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
+.qItem {
+  background: var(--white);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r-md);
+  padding: 16px;
+  display: flex; align-items: center; gap: 13px;
+  cursor: pointer; transition: all .2s;
+}
+.qItem:hover { transform: translateY(-2px); box-shadow: var(--sh-md); border-color: var(--bdrb); }
+.qIc {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; flex-shrink: 0;
+}
+.q_warn  { background: var(--am-bg); color: var(--amber); }
+.q_alert { background: rgba(220,38,38,.08); color: #DC2626; }
+.q_info  { background: var(--sky-2); color: var(--blue); }
+.q_ok    { background: var(--em-bg); color: var(--emerald); }
+.qV { font-family: var(--fd); font-weight: 800; font-size: 20px; color: var(--navy); line-height: 1; }
+.qL { font-size: 11px; color: var(--t3); margin-top: 3px; }
+
+/* ── KPI + grilles ── */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+.g2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 18px; margin-bottom: 22px; }
+
+.card { background: var(--white); border: 1px solid var(--bdr); border-radius: var(--r-lg); overflow: hidden; }
+.ch {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--bdr);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+.chT { font-family: var(--fd); font-weight: 700; font-size: 15px; color: var(--navy); display: flex; align-items: center; gap: 9px; }
+.chT i { color: var(--blue); font-size: 13px; }
+.chLink {
+  font-size: 12px; font-weight: 700; color: var(--blue);
+  background: none; border: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--fb); transition: gap .15s;
+}
+.chLink:hover { gap: 9px; }
+.chTabs { display: flex; gap: 3px; background: var(--g100); border-radius: var(--r-sm); padding: 3px; }
+.chTab {
+  background: none; border: none;
+  border-radius: 5px; padding: 5px 12px;
+  font-size: 11px; font-weight: 600; font-family: var(--fb);
+  color: var(--t2); cursor: pointer; transition: all .15s;
+}
+.chTabOn { background: var(--white); color: var(--navy); box-shadow: var(--sh-xs); }
+.cb { padding: 20px; }
+
+/* ── Graphe ── */
+.chart { display: flex; align-items: flex-end; gap: 10px; height: 170px; padding-top: 10px; }
+.cbarWrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.cbarPair { display: flex; gap: 4px; align-items: flex-end; width: 100%; justify-content: center; height: 130px; }
+.cbar {
+  width: 100%; max-width: 16px;
+  border-radius: 7px 7px 0 0;
+  background: linear-gradient(180deg, var(--blue-lt), var(--blue));
+  transition: all .7s var(--ease);
+  min-height: 8px; position: relative; cursor: pointer;
+}
+.cbarAlt { background: linear-gradient(180deg, #22D3EE, var(--teal)); }
+.cbar:hover { filter: brightness(1.1); }
+.cbarV {
+  position: absolute; top: -22px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px; font-weight: 700; color: var(--navy);
+  opacity: 0; transition: .2s; white-space: nowrap;
+}
+.cbar:hover .cbarV { opacity: 1; }
+.cbarL { font-size: 10.5px; color: var(--t3); }
+.legend { display: flex; gap: 18px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--bdr); }
+.cleg { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--t2); }
+.clegD { width: 9px; height: 9px; border-radius: 3px; }
+
+/* ── Activité ── */
+.act { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--bdr); }
+.act:last-child { border-bottom: none; }
+.actIc {
+  width: 38px; height: 38px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+.act_new   { background: var(--vl-bg); color: var(--violet); }
+.act_ok    { background: var(--em-bg); color: var(--emerald); }
+.act_code  { background: var(--sky-2); color: var(--blue); }
+.act_warn  { background: var(--am-bg); color: var(--amber); }
+.act_alert { background: rgba(220,38,38,.08); color: #DC2626; }
+.actT { font-size: 13px; color: var(--t1); line-height: 1.4; }
+.actT b { font-weight: 700; color: var(--navy); }
+.actW { font-size: 11px; color: var(--t3); margin-top: 2px; }
+
+/* ── Communes ── */
+.commune { margin-bottom: 14px; }
+.commune:last-child { margin-bottom: 0; }
+.communeTop { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+.communeTop b { color: var(--navy); font-weight: 700; }
+.communeTop span { color: var(--t3); }
+.communeBar { height: 8px; background: var(--g200); border-radius: var(--pill); overflow: hidden; }
+.communeBar span { display: block; height: 100%; border-radius: var(--pill); background: linear-gradient(90deg, var(--teal), #22D3EE); }
+
+/* ── Répartition par rôle ── */
+.roles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.roleStat { background: var(--g50); border: 1px solid var(--bdr); border-radius: var(--r-md); padding: 16px; }
+.roleV { font-family: var(--fd); font-weight: 800; font-size: 22px; color: var(--navy); }
+.roleL { font-size: 11px; color: var(--t3); margin-top: 3px; display: flex; align-items: center; gap: 6px; }
+
+@media (max-width: 1100px) {
+  .kpis, .queue { grid-template-columns: repeat(2, 1fr); }
+  .g2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .kpis, .queue { grid-template-columns: 1fr; }
+  .heroIn { flex-direction: column; align-items: flex-start; }
+}

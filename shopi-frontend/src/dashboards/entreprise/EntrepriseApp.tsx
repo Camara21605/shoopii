@@ -15,9 +15,9 @@
  *   /dashboard/entreprise/reseau/livreurs/{id}   → profilLivreurReseau
  */
 
-import { useEffect }                         from 'react';
-import { useParams, useNavigate }            from 'react-router-dom';
-import { useState }                          from 'react';
+import { lazy, Suspense, useEffect } from 'react';
+import { useParams, useNavigate }    from 'react-router-dom';
+import { useState }                  from 'react';
 
 import Sidebar          from './layout/Sidebar';
 import Topbar           from './layout/Topbar';
@@ -29,30 +29,30 @@ import { apiFetch }      from '../../shared/services/apiFetch';
 import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
 import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
 
-// Pages
-import OverviewPage                   from './pages/OverviewPage';
-import CommandesPage                  from './pages/CommandesPage';
-import RetoursPage                    from './pages/RetoursPage';
-import ProduitsPage                   from './pages/ProduitsPage';
-import AjouterProduitPage             from './pages/AjouterPage';
-import InventairePage                 from './pages/InventairePage';
-import PromotionsPage                 from './pages/PromotionsPage';
-import AnalyticsPage                  from './pages/AnalyticsPage';
-import MessagesPage                   from './pages/MessagesPage';
-import SEOPage                        from './pages/SEOPage';
-import LivreursPage                   from './pages/LivreursPage';
-import CorrespondantsPage             from './pages/CorrespondantsPage';
-import FinancesPage                   from './pages/FinancesPage';
-import PortefeuillePage               from './pages/PortefeuillePage';
-import ClientsPage                    from './pages/ClientsPage';
-import AvisPage                       from './pages/AvisPage';
-import ParametresPage                 from './pages/ParametresPage';
-import ReseauCorrespondantsPage       from './pages/ReseauCorrespondantsPage';
-import ReseauLivreursPage             from './pages/ReseauLivreursPage';
-import ProfilCorrespondantReseauPage  from './pages/ProfilCorrespondantReseauPage';
-import ProfilLivreurReseauPage        from './pages/ProfilLivreurReseauPage';
-import ProfilEntreprisePage           from '../../shared/profils/profil-entreprise/ProfilEntreprisePage';
-import BoutiquePreviewPage            from './pages/BoutiquePreviewPage';
+/* ── Pages chargées à la demande ── */
+const OverviewPage                  = lazy(() => import('./pages/OverviewPage'));
+const CommandesPage                 = lazy(() => import('./pages/CommandesPage'));
+const RetoursPage                   = lazy(() => import('./pages/RetoursPage'));
+const ProduitsPage                  = lazy(() => import('./pages/ProduitsPage'));
+const AjouterProduitPage            = lazy(() => import('./pages/AjouterPage'));
+const InventairePage                = lazy(() => import('./pages/InventairePage'));
+const PromotionsPage                = lazy(() => import('./pages/PromotionsPage'));
+const AnalyticsPage                 = lazy(() => import('./pages/AnalyticsPage'));
+const MessagesPage                  = lazy(() => import('./pages/MessagesPage'));
+const SEOPage                       = lazy(() => import('./pages/SEOPage'));
+const LivreursPage                  = lazy(() => import('./pages/LivreursPage'));
+const CorrespondantsPage            = lazy(() => import('./pages/CorrespondantsPage'));
+const FinancesPage                  = lazy(() => import('./pages/FinancesPage'));
+const PortefeuillePage              = lazy(() => import('./pages/PortefeuillePage'));
+const ClientsPage                   = lazy(() => import('./pages/ClientsPage'));
+const AvisPage                      = lazy(() => import('./pages/AvisPage'));
+const ParametresPage                = lazy(() => import('./pages/ParametresPage'));
+const ReseauCorrespondantsPage      = lazy(() => import('./pages/ReseauCorrespondantsPage'));
+const ReseauLivreursPage            = lazy(() => import('./pages/ReseauLivreursPage'));
+const ProfilCorrespondantReseauPage = lazy(() => import('./pages/ProfilCorrespondantReseauPage'));
+const ProfilLivreurReseauPage       = lazy(() => import('./pages/ProfilLivreurReseauPage'));
+const ProfilEntreprisePage          = lazy(() => import('../../shared/profils/profil-entreprise/ProfilEntreprisePage'));
+const BoutiquePreviewPage           = lazy(() => import('./pages/BoutiquePreviewPage'));
 
 import type { EntreprisePage, ToastType } from './types';
 import { useToast } from '../../shared/context/ToastContext';
@@ -211,6 +211,8 @@ function EntrepriseLayout() {
     page === 'reseauCorrespondants' || page === 'reseauLivreurs' ||
     page === 'profilCorrespondantReseau' || page === 'profilLivreurReseau';
 
+  const isMessagesPage = page === 'messages';
+
   /* ── Navigation → URL ── */
   const handleNavigate: NavigateFn = (targetPage, id?) => {
     const segment = buildPath(targetPage, id);
@@ -220,12 +222,14 @@ function EntrepriseLayout() {
 
   return (
     <div className="entreprise-app">
-      <Sidebar
-        activePage={page}
-        onNavigate={handleNavigate}
-        companyLogo={profile?.logo}
-        companyName={profile?.companyName}
-      />
+      {!isMessagesPage && (
+        <Sidebar
+          activePage={page}
+          onNavigate={handleNavigate}
+          companyLogo={profile?.logo}
+          companyName={profile?.companyName}
+        />
+      )}
       <Topbar
         activePage={page}
         onNavigate={handleNavigate}
@@ -236,38 +240,43 @@ function EntrepriseLayout() {
         companyEmail={profile?.businessEmail ?? undefined}
         companyVille={profile?.ville ?? undefined}
         companyPays={profile?.pays ?? undefined}
+        isFullscreen={isMessagesPage}
       />
 
-      {/* ✅ Barre réseau mobile : uniquement sur les pages réseau,
-          sinon elle s'affichait au-dessus de la nav principale sur
-          TOUTES les pages (Commandes, Produits…), rendant le bas
-          de l'écran encombré/confus sur mobile. */}
       {isReseauPage && (
         <ReseauBottomNav activePage={page} onNavigate={handleNavigate} />
       )}
 
-      <main className={`main${isReseauPage ? ' main-reseau' : ''}`}>
-        <PageRenderer
-          page={page}
-          productId={productId}
-          viewedId={viewedId}
-          onNavigate={handleNavigate}
-          onPop={handlePop}
-        />
+      <main className={[
+        'main',
+        isReseauPage    ? 'main-reseau'    : '',
+        isMessagesPage  ? 'main-fullscreen' : '',
+      ].filter(Boolean).join(' ')}>
+        <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}><i className="fas fa-circle-notch fa-spin" style={{ fontSize: 24, color: 'var(--primary, #2563eb)', opacity: 0.7 }} /></div>}>
+          <PageRenderer
+            page={page}
+            productId={productId}
+            viewedId={viewedId}
+            onNavigate={handleNavigate}
+            onPop={handlePop}
+          />
+        </Suspense>
       </main>
 
       <ToastContainer />
       <NotificationToastStack />
 
-      <div className="fab">
-        <button
-          className="fab-main"
-          onClick={() => handleNavigate('ajouter')}
-          title="Ajouter un produit"
-        >
-          <i className="fas fa-plus" />
-        </button>
-      </div>
+      {!isMessagesPage && (
+        <div className="fab">
+          <button
+            className="fab-main"
+            onClick={() => handleNavigate('ajouter')}
+            title="Ajouter un produit"
+          >
+            <i className="fas fa-plus" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
