@@ -97,7 +97,8 @@ import { DeliveryGroupModule }     from './modules/delivery-group/delivery-group
         const host     = config.get<string>('REDIS_HOST');
         const port     = parseInt(config.get<string>('REDIS_PORT') ?? '6379', 10);
         const password = config.get<string>('REDIS_PASSWORD');
-        const isProd   = config.get<string>('NODE_ENV') === 'production';
+        /* TLS uniquement si REDIS_TLS=true (opt-in explicite) */
+        const useTls   = config.get<string>('REDIS_TLS') === 'true';
 
         if (!host) {
           throw new Error(
@@ -113,11 +114,7 @@ import { DeliveryGroupModule }     from './modules/delivery-group/delivery-group
           port,
           ...(password && { password }),
           options: {
-            /*
-             * TLS pour Upstash / Redis Cloud en production.
-             * Upstash utilise TLS sur le port 6379.
-             */
-            ...(isProd && { tls: {} }),
+            ...(useTls && { tls: {} }),
 
             /*
              * lazyConnect: true → ioredis ne tente PAS de connexion
@@ -152,7 +149,7 @@ import { DeliveryGroupModule }     from './modules/delivery-group/delivery-group
         const host     = config.get<string>('REDIS_HOST');
         const port     = parseInt(config.get<string>('REDIS_PORT') ?? '6379', 10);
         const password = config.get<string>('REDIS_PASSWORD');
-        const isProd   = config.get<string>('NODE_ENV') === 'production';
+        const useTls   = config.get<string>('REDIS_TLS') === 'true';
 
         if (!host) {
           throw new Error(
@@ -167,7 +164,7 @@ import { DeliveryGroupModule }     from './modules/delivery-group/delivery-group
             host,
             port,
             ...(password && { password }),
-            ...(isProd   && { tls: {} }),
+            ...(useTls && { tls: {} }),
             maxRetriesPerRequest: null,    // obligatoire BullMQ v5+
             enableOfflineQueue:   false,   // évite l'accumulation de jobs en attente
           },

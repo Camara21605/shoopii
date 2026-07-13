@@ -22,10 +22,26 @@ import type { WsCallIncoming, WsCallSignal } from './useSocket';
 
 // ── Serveurs ICE ──────────────────────────────────────────────
 
+const _TURN_HOST = (import.meta as any).env?.VITE_TURN_HOST       as string | undefined;
+const _TURN_USER = (import.meta as any).env?.VITE_TURN_USERNAME    as string | undefined;
+const _TURN_CRED = (import.meta as any).env?.VITE_TURN_CREDENTIAL  as string | undefined;
+
 const ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302'  },
   { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun2.l.google.com:19302' },
+  /* TURN relay — obligatoire en production derrière un NAT symétrique/CGNAT.
+     Configurez VITE_TURN_HOST, VITE_TURN_USERNAME, VITE_TURN_CREDENTIAL
+     dans Vercel → Environment Variables (ex: Metered.ca free tier). */
+  ...(_TURN_HOST && _TURN_USER && _TURN_CRED ? [{
+    urls: [
+      `turn:${_TURN_HOST}:80`,
+      `turn:${_TURN_HOST}:443`,
+      `turns:${_TURN_HOST}:443`,
+      `turn:${_TURN_HOST}:80?transport=tcp`,
+    ],
+    username:   _TURN_USER,
+    credential: _TURN_CRED,
+  }] : []),
 ];
 
 // ── Types ─────────────────────────────────────────────────────

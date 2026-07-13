@@ -198,20 +198,32 @@ export abstract class SuivisBaseService {
    * ✅ FIX : filtre sur isSubscribed: true ET status: ACTIVE
    ══════════════════════════════════════════════════════════ */
   async getFollowersCount(targetId: string): Promise<number> {
-    const cacheKey = `followers:${this.targetType}:${targetId}`;
-    const cached   = await this.redis.get(cacheKey);
-    if (cached !== null) return parseInt(cached, 10);
+    try {
+      const cacheKey = `followers:${this.targetType}:${targetId}`;
+      const cached   = await this.redis.get(cacheKey);
+      if (cached !== null) return parseInt(cached, 10);
 
-    const count = await this.followRepo.count({
-      where: {
-        targetType:   this.targetType,
-        targetId,
-        isSubscribed: true,      /* ✅ ajout */
-        status:       FollowStatus.ACTIVE,
-      },
-    });
-    await this.redis.setex(cacheKey, 3600, String(count));
-    return count;
+      const count = await this.followRepo.count({
+        where: {
+          targetType:   this.targetType,
+          targetId,
+          isSubscribed: true,
+          status:       FollowStatus.ACTIVE,
+        },
+      });
+      await this.redis.setex(cacheKey, 3600, String(count)).catch(() => {});
+      return count;
+    } catch {
+      /* Redis indisponible → fallback DB direct */
+      return this.followRepo.count({
+        where: {
+          targetType:   this.targetType,
+          targetId,
+          isSubscribed: true,
+          status:       FollowStatus.ACTIVE,
+        },
+      });
+    }
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -282,17 +294,25 @@ export abstract class SuivisBaseService {
   }
 
   private async incrementFollowersCache(targetId: string): Promise<void> {
-    const key = `followers:${this.targetType}:${targetId}`;
-    await this.redis.incr(key);
-    await this.redis.expire(key, 3600);
+    try {
+      const key = `followers:${this.targetType}:${targetId}`;
+      await this.redis.incr(key);
+      await this.redis.expire(key, 3600);
+    } catch (e) {
+      this.logger.warn(`[Cache] incr followers failed (Redis indisponible): ${(e as Error).message}`);
+    }
   }
 
   private async decrementFollowersCache(targetId: string): Promise<void> {
-    const key   = `followers:${this.targetType}:${targetId}`;
-    const value = await this.redis.get(key);
-    if (value !== null && parseInt(value) > 0) {
-      await this.redis.decr(key);
-      await this.redis.expire(key, 3600);
+    try {
+      const key   = `followers:${this.targetType}:${targetId}`;
+      const value = await this.redis.get(key);
+      if (value !== null && parseInt(value) > 0) {
+        await this.redis.decr(key);
+        await this.redis.expire(key, 3600);
+      }
+    } catch (e) {
+      this.logger.warn(`[Cache] decr followers failed (Redis indisponible): ${(e as Error).message}`);
     }
   }
 }
