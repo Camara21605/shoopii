@@ -44,7 +44,7 @@ export default function CardEntreprise({ e, onToast }: Props) {
   const avis   = e.totalRatings > 0 ? e.totalRatings.toString() : '—';
 
   return (
-    <div className={styles.coCard}>
+    <div className={styles.coCard} onClick={() => navigate(`/boutique/${e.id}`)} style={{ cursor: 'pointer' }}>
 
       {/* ── Bannière colorée ── */}
       <div
@@ -112,33 +112,31 @@ export default function CardEntreprise({ e, onToast }: Props) {
           </div>
         </div>
 
-        {/* Boutons */}
-        <div className={`${styles.coBtns} ${!isLoggedIn || canFollow ? '' : styles.coBtns1}`}>
-          <button className={styles.coV} onClick={() => navigate(`/boutique/${e.id}`)}>
-            <i className="fas fa-store" /> Voir boutique
-          </button>
+        {/* Bouton */}
+        {(!isLoggedIn || canFollow) && (
+          <div className={`${styles.coBtns} ${styles.coBtns1}`}>
+            {!isLoggedIn && (
+              <button className={styles.coF} onClick={e => { e.stopPropagation(); requestFollowLogin(); }}>
+                <i className="fas fa-plus" /> S'abonner
+              </button>
+            )}
 
-          {!isLoggedIn && (
-            <button className={styles.coF} onClick={requestFollowLogin}>
-              <i className="fas fa-plus" /> S'abonner
-            </button>
-          )}
-
-          {canFollow && (
-            <button
-              className={`${styles.coF} ${suivi ? styles.coFOn : ''}`}
-              disabled={pending}
-              onClick={toggleFollow}
-            >
-              {pending
-                ? <><i className="fas fa-spinner fa-spin" /> …</>
-                : suivi
-                  ? <><i className="fas fa-check" /> Abonné</>
-                  : <><i className="fas fa-plus" /> S'abonner</>
-              }
-            </button>
-          )}
-        </div>
+            {canFollow && (
+              <button
+                className={`${styles.coF} ${suivi ? styles.coFOn : ''}`}
+                disabled={pending}
+                onClick={e => { e.stopPropagation(); toggleFollow(); }}
+              >
+                {pending
+                  ? <><i className="fas fa-spinner fa-spin" /> …</>
+                  : suivi
+                    ? <><i className="fas fa-check" /> Abonné</>
+                    : <><i className="fas fa-plus" /> S'abonner</>
+                }
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -4,7 +4,7 @@
  * (Les variables --navy, --blue… viennent de styles/variables.css)
  * ================================================================ */
 
-.order { max-width: 1180px; margin: 0 auto; padding: 24px; }
+.order { max-width: 1180px; margin: 0 auto; padding: 24px; min-height: 100vh; background: var(--g50); }
 
 .loading { text-align: center; padding: 60px; color: var(--t3); font-size: 14px; }
 
@@ -16,14 +16,13 @@
 .sub { font-size: 12.5px; color: var(--t3); margin-top: 3px; }
 
 .status { display: inline-flex; align-items: center; gap: 7px; background: var(--am-bg); color: var(--amber); border: 1px solid rgba(180,83,9,.2); border-radius: var(--pill); padding: 8px 16px; font-size: 12px; font-weight: 800; }
-.status span { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 2s ease infinite; }
+.status span { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .statusDone { background: var(--em-bg); color: var(--emerald); border-color: rgba(4,120,87,.25); }
-@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(180,83,9,.4);} 50%{box-shadow:0 0 0 5px rgba(180,83,9,0);} }
 
 /* Code de validation de l'acteur courant */
 .myCode {
   display: flex; align-items: center; gap: 14px;
-  background: linear-gradient(135deg, var(--blue), var(--blue-lt));
+  background: linear-gradient(135deg, var(--btn,#111113), var(--g300,#2D2D30));
   color: #fff; border-radius: var(--r-lg);
   padding: 16px 22px; margin-bottom: 18px;
 }

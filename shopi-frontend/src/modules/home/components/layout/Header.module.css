@@ -356,3 +356,25 @@
   transform: scale(.9);
   box-shadow: 0 1px 5px rgba(26,79,196,.2);
 }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .hdr          { background: rgba(17,17,19,.97); }
+  .bottomNav    { background: rgba(17,17,19,.97); }
+  .lm           { background: #1A4FC4; }
+  .srchGo       { background: #1A4FC4; }
+  .btnUp        { background: #1A4FC4; }
+  .btnUp:hover  { background: #1544A8; }
+  .drawerBtnUp       { background: #1A4FC4; }
+  .drawerBtnUp:hover { background: #1544A8; }
+}
+:root[data-theme="dark"] .hdr          { background: rgba(17,17,19,.97); }
+:root[data-theme="dark"] .bottomNav    { background: rgba(17,17,19,.97); }
+:root[data-theme="dark"] .lm           { background: #1A4FC4; }
+:root[data-theme="dark"] .srchGo       { background: #1A4FC4; }
+:root[data-theme="dark"] .btnUp        { background: #1A4FC4; }
+:root[data-theme="dark"] .btnUp:hover  { background: #1544A8; }
+:root[data-theme="dark"] .drawerBtnUp       { background: #1A4FC4; }
+:root[data-theme="dark"] .drawerBtnUp:hover { background: #1544A8; }
+:root[data-theme="light"] .hdr       { background: rgba(255,255,255,.97); }
+:root[data-theme="light"] .bottomNav { background: rgba(255,255,255,.97); }

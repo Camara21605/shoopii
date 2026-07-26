@@ -140,6 +140,12 @@ export class ProductImageDto {
   @IsString()
   @MaxLength(255)
   alt?: string;
+
+  /** Nature du média — max 4 images + 1 vidéo par produit (voir ProduitsService) */
+  @ApiPropertyOptional({ enum: ['image', 'video'], default: 'image' })
+  @IsOptional()
+  @IsIn(['image', 'video'])
+  type?: 'image' | 'video';
 }
 
 /**

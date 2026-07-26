@@ -9,20 +9,18 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { SectionId } from '../types/codes.types';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
+import ThemeToggle from '../../../shared/components/ThemeToggle';
 
 interface TopbarProps {
   onMenuClick: () => void;
   onSearchGlobal: (v: string) => void;
   totalUnread: number;
   pendingAlerts: number;
-  theme: 'dark' | 'light';
-  onThemeToggle: () => void;
   onNavigate: (section: SectionId) => void;
 }
 
 export default function Topbar({
-  onMenuClick, onSearchGlobal, totalUnread, pendingAlerts,
-  theme, onThemeToggle, onNavigate,
+  onMenuClick, onSearchGlobal, totalUnread, pendingAlerts, onNavigate,
 }: TopbarProps) {
   const [clock, setClock] = useState('');
   const navigate = useNavigate();
@@ -67,11 +65,7 @@ export default function Topbar({
       <div className="tb-clock">{clock}</div>
 
       {/* Theme toggle */}
-      <div className="theme-toggle" onClick={onThemeToggle} title="Basculer thème clair/sombre">
-        <div className="theme-toggle-thumb">
-          {theme === 'dark' ? '🌙' : '☀️'}
-        </div>
-      </div>
+      <ThemeToggle />
 
       {/* Messagerie */}
       <button

@@ -18,3 +18,11 @@
 .lienUrl { flex:1; font-size:11.5px; color:var(--t3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:22px; }
 .lienBtn { background:var(--navy); color:#fff; border:none; border-radius:6px; padding:5px 12px; font-size:11.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; white-space:nowrap; transition:background .18s; }
 .lienBtn:hover { background:#112648; }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .lienBtn      { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
+  .lienBtn:hover{ background: #2D2D30; }
+}
+:root[data-theme="dark"] .lienBtn      { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
+:root[data-theme="dark"] .lienBtn:hover{ background: #2D2D30; }

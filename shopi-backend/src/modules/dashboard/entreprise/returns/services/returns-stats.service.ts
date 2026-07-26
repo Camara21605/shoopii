@@ -22,10 +22,9 @@ export class ReturnsStatsService {
     @InjectRepository(Company)       private readonly companyRepo: Repository<Company>,
   ) {}
 
-  async getStats(userId: string) {
-    const company = await this.companyRepo.findOne({
-      where: { userId }, select: ['id'],
-    });
+  async getStats(userIdOrCompanyId: string) {
+    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id'] });
+    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId }, select: ['id'] });
     if (!company) return this.emptyStats();
 
     const companyId = company.id;

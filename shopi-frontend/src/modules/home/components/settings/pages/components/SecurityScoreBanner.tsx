@@ -64,10 +64,10 @@ export default function SecurityScoreBanner({ onSwitch }: Props) {
       {/* ── Jauge SVG ── */}
       <div className={s.secGauge}>
         <svg viewBox="0 0 80 80" width="80" height="80">
-          <circle cx="40" cy="40" r={r} fill="none" stroke="rgba(255,255,255,.1)" strokeWidth="6" />
+          <circle cx="40" cy="40" r={r} fill="none" stroke="var(--bdr2)" strokeWidth="6" />
           <circle
             cx="40" cy="40" r={r} fill="none"
-            stroke={loading ? 'rgba(255,255,255,.15)' : color}
+            stroke={loading ? 'var(--bdr2)' : color}
             strokeWidth="6"
             strokeDasharray={circ}
             strokeDashoffset={offset}
@@ -88,7 +88,7 @@ export default function SecurityScoreBanner({ onSwitch }: Props) {
       <div className={s.secInfo}>
         <div className={s.secTitle}>
           Score de sécurité —{' '}
-          <em style={{ fontStyle:'italic', color: loading ? 'rgba(255,255,255,.4)' : color }}>
+          <em style={{ fontStyle:'italic', color: loading ? 'var(--t3)' : color }}>
             {niveau}
           </em>
         </div>

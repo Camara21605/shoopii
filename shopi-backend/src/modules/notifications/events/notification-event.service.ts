@@ -18,6 +18,7 @@
  * ============================================================ */
 
 import { Injectable, Logger } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import {
   NotificationActorType,
   NotificationType,
@@ -107,7 +108,63 @@ export class NotificationEventService {
 
   constructor(
     private readonly notifService: NotificationService,
+    private readonly dataSource:   DataSource,
   ) {}
+
+  // ─────────────────────────────────────────────────────────
+  // HELPER — photo de l'acteur déclencheur
+  // ─────────────────────────────────────────────────────────
+
+  /**
+   * Résout l'URL de la photo de profil de l'acteur (profileId).
+   * Retourne null si l'acteur n'a pas de photo ou en cas d'erreur.
+   */
+  private async resolveActorPhoto(
+    actorType: NotificationActorType | string | null,
+    actorId:   string | null,
+  ): Promise<string | null> {
+    if (!actorType || !actorId) return null;
+    try {
+      switch (actorType) {
+        case NotificationActorType.CLIENT: {
+          const rows = await this.dataSource.query(
+            `SELECT u."profilePicture" FROM users u
+             JOIN clients c ON c."userId" = u.id
+             WHERE c.id = $1 LIMIT 1`,
+            [actorId],
+          );
+          return rows?.[0]?.profilePicture ?? null;
+        }
+        case NotificationActorType.COMPANY: {
+          const rows = await this.dataSource.query(
+            `SELECT logo FROM entreprises WHERE id = $1 LIMIT 1`,
+            [actorId],
+          );
+          return rows?.[0]?.logo ?? null;
+        }
+        case NotificationActorType.DELIVERY: {
+          const rows = await this.dataSource.query(
+            `SELECT "photoUrl" FROM livreurs WHERE id = $1 LIMIT 1`,
+            [actorId],
+          );
+          return rows?.[0]?.photoUrl ?? null;
+        }
+        case NotificationActorType.CORRESPONDENT: {
+          const rows = await this.dataSource.query(
+            `SELECT u."profilePicture" FROM users u
+             JOIN correspondants c ON c."userId" = u.id
+             WHERE c.id = $1 LIMIT 1`,
+            [actorId],
+          );
+          return rows?.[0]?.profilePicture ?? null;
+        }
+        default:
+          return null;
+      }
+    } catch {
+      return null;
+    }
+  }
 
   // ─────────────────────────────────────────────────────────
   // FOLLOW
@@ -121,6 +178,9 @@ export class NotificationEventService {
    */
   async notifyNewFollower(params: IFollowParams): Promise<void> {
     try {
+      const imageUrl = await this.resolveActorPhoto(
+        params.followerType as NotificationActorType, params.followerId,
+      );
       await this.notifService.create({
         recipientType: params.targetType   as NotificationActorType,
         recipientId:   params.targetId,
@@ -130,6 +190,7 @@ export class NotificationEventService {
         priority:      NotificationPriority.NORMAL,
         title:         'Nouvel abonné',
         body:          `${params.followerName} s'est abonné à votre profil`,
+        imageUrl,
         actionUrl:     `/profil/${params.followerType}/${params.followerId}`,
         groupKey:      `follow.new:${params.targetType}:${params.targetId}`,
         resourceType:  'follow',
@@ -154,6 +215,9 @@ export class NotificationEventService {
    */
   async notifyMessageReceived(params: IMessageNotificationParams): Promise<void> {
     try {
+      const imageUrl = await this.resolveActorPhoto(
+        params.actorType as NotificationActorType, params.actorId,
+      );
       await this.notifService.create({
         recipientType: params.recipientType as NotificationActorType,
         recipientId:   params.recipientId,
@@ -163,6 +227,7 @@ export class NotificationEventService {
         priority:      NotificationPriority.NORMAL,
         title:         'Nouveau message',
         body:          `${params.senderName} : ${params.preview.slice(0, 80)}`,
+        imageUrl,
         actionUrl:     `/chat/${params.conversationId}`,
         groupKey:      `message.received:conversation:${params.conversationId}`,
         resourceType:  'conversation',
@@ -189,11 +254,15 @@ export class NotificationEventService {
    * actorId     = Client.id  (profileId)
    */
   async notifyOrderPlaced(params: IOrderPlacedParams): Promise<void> {
-    /* URL de redirection commune : la page de suivi gère tous les rôles
-     * (client, entreprise, livreur, correspondant) via le token JWT. */
     const suiviUrl = `/commande/${params.commandeId}/suivi`;
 
     try {
+      /* Résoudre les photos des acteurs impliqués */
+      const [clientPhoto, companyLogo] = await Promise.all([
+        this.resolveActorPhoto(NotificationActorType.CLIENT,  params.clientId),
+        this.resolveActorPhoto(NotificationActorType.COMPANY, params.companyId),
+      ]);
+
       /* ── Notification entreprise : nouvelle commande reçue ── */
       await this.notifService.create({
         recipientType: NotificationActorType.COMPANY,
@@ -204,6 +273,7 @@ export class NotificationEventService {
         priority:      NotificationPriority.HIGH,
         title:         'Nouvelle commande reçue 💰',
         body:          `${params.clientName} a passé une commande · ${params.orderRef}`,
+        imageUrl:      clientPhoto,
         actionUrl:     suiviUrl,
         resourceType:  'order',
         resourceId:    params.commandeId,
@@ -225,6 +295,7 @@ export class NotificationEventService {
         priority:      NotificationPriority.HIGH,
         title:         'Commande confirmée ✅',
         body:          `Votre commande ${params.orderRef} a bien été enregistrée.`,
+        imageUrl:      companyLogo,
         actionUrl:     suiviUrl,
         resourceType:  'order',
         resourceId:    params.commandeId,
@@ -246,6 +317,7 @@ export class NotificationEventService {
           priority:      NotificationPriority.HIGH,
           title:         'Nouvelle mission de livraison 🛵',
           body:          `Commande ${params.orderRef} à livrer pour ${params.clientName}`,
+          imageUrl:      clientPhoto,
           actionUrl:     suiviUrl,
           resourceType:  'order',
           resourceId:    params.commandeId,
@@ -268,6 +340,7 @@ export class NotificationEventService {
           priority:      NotificationPriority.HIGH,
           title:         'Nouvelle commande à traiter 📦',
           body:          `Commande ${params.orderRef} implique votre point de retrait`,
+          imageUrl:      clientPhoto,
           actionUrl:     suiviUrl,
           resourceType:  'order',
           resourceId:    params.commandeId,
@@ -416,6 +489,7 @@ export class NotificationEventService {
     commandeId: string;
   }): Promise<void> {
     try {
+      const imageUrl = await this.resolveActorPhoto(NotificationActorType.CLIENT, params.clientId);
       await this.notifService.create({
         recipientType: NotificationActorType.COMPANY,
         recipientId:   params.companyId,
@@ -425,6 +499,7 @@ export class NotificationEventService {
         priority:      NotificationPriority.NORMAL,
         title:         'Nouvel avis reçu ⭐',
         body:          `${params.clientNom} a laissé un avis ${params.note}/5 sur votre boutique.`,
+        imageUrl,
         actionUrl:     '/dashboard/avis',
         groupKey:      `review.received:${params.companyId}`,
         resourceType:  'review',
@@ -453,6 +528,7 @@ export class NotificationEventService {
     clientId:    string;
   }): Promise<void> {
     try {
+      const imageUrl = await this.resolveActorPhoto(NotificationActorType.CLIENT, params.clientId);
       await this.notifService.create({
         recipientType: NotificationActorType.COMPANY,
         recipientId:   params.companyId,
@@ -462,6 +538,7 @@ export class NotificationEventService {
         priority:      NotificationPriority.LOW,
         title:         'Produit ajouté aux favoris ❤️',
         body:          `"${params.productName}" a été ajouté aux favoris.`,
+        imageUrl,
         actionUrl:     `/dashboard/produits/${params.productId}`,
         groupKey:      `product.liked:${params.productId}`,
         resourceType:  'product',
@@ -487,7 +564,6 @@ export class NotificationEventService {
    *   CORRESPONDENT → /dashboard/correspondant
    */
   async notifyOrderStatusChanged(params: IOrderStatusParams): Promise<void> {
-    /* Chaque rôle a son propre dashboard — on redirige vers la bonne page. */
     const actionUrlByRole: Record<string, string> = {
       [NotificationActorType.CLIENT]:        `/commande/${params.commandeId}/suivi`,
       [NotificationActorType.COMPANY]:       '/dashboard/entreprise',
@@ -497,6 +573,7 @@ export class NotificationEventService {
     const actionUrl = actionUrlByRole[params.recipientType] ?? `/commande/${params.commandeId}/suivi`;
 
     try {
+      const imageUrl = await this.resolveActorPhoto(params.actorType, params.actorId);
       await this.notifService.create({
         recipientType: params.recipientType,
         recipientId:   params.recipientId,
@@ -506,6 +583,7 @@ export class NotificationEventService {
         priority:      NotificationPriority.HIGH,
         title:         params.title,
         body:          params.body,
+        imageUrl,
         actionUrl,
         resourceType:  'order',
         resourceId:    params.commandeId,
@@ -540,6 +618,303 @@ export class NotificationEventService {
    *   ticketRef      — référence lisible ex: 'SUP-2026-00001'
    *   ticketSubject  — sujet du ticket (affiché dans le corps de la notif)
    */
+  // ─────────────────────────────────────────────────────────
+  // PAIEMENTS & ESCROW  (ajoutés pour EventOrchestrationEngine)
+  // ─────────────────────────────────────────────────────────
+
+  async notifyPaymentConfirmed(params: {
+    recipientType: NotificationActorType;
+    recipientId:   string;
+    commandeId:    string;
+    commandeRef:   string;
+    montant:       number;
+    devise:        string;
+    sessionId:     string;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.SYSTEM,
+        actorId:       null,
+        type:          NotificationType.PAYMENT_RECEIVED,
+        priority:      NotificationPriority.HIGH,
+        title:         'Paiement confirmé',
+        body:          `Paiement de ${params.montant} ${params.devise} confirmé pour la commande ${params.commandeRef}.`,
+        actionUrl:     `/commande/${params.commandeId}/suivi`,
+        resourceType:  'payment',
+        resourceId:    params.sessionId,
+        payload:       { commandeId: params.commandeId, commandeRef: params.commandeRef, montant: params.montant },
+      });
+    } catch (err) {
+      this.logger.error('notifyPaymentConfirmed failed', err);
+    }
+  }
+
+  async notifyPaymentFailed(params: {
+    recipientType: NotificationActorType;
+    recipientId:   string;
+    commandeId:    string;
+    commandeRef:   string;
+    reason:        string;
+    sessionId:     string;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.SYSTEM,
+        actorId:       null,
+        type:          NotificationType.PAYMENT_FAILED,
+        priority:      NotificationPriority.URGENT,
+        title:         'Paiement échoué',
+        body:          params.reason,
+        actionUrl:     `/commande/${params.commandeId}/paiement`,
+        resourceType:  'payment',
+        resourceId:    params.sessionId,
+      });
+    } catch (err) {
+      this.logger.error('notifyPaymentFailed failed', err);
+    }
+  }
+
+  async notifyEscrowEvent(params: {
+    recipientType: NotificationActorType;
+    recipientId:   string;
+    commandeId:    string;
+    commandeRef:   string;
+    title:         string;
+    body:          string;
+    montant:       number;
+    devise:        string;
+    escrowId:      string;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.SYSTEM,
+        actorId:       null,
+        type:          NotificationType.ORDER_STATUS_CHANGED,
+        priority:      NotificationPriority.HIGH,
+        title:         params.title,
+        body:          params.body,
+        actionUrl:     `/commande/${params.commandeId}/suivi`,
+        resourceType:  'escrow',
+        resourceId:    params.escrowId,
+        payload:       { commandeRef: params.commandeRef, montant: params.montant, devise: params.devise },
+      });
+    } catch (err) {
+      this.logger.error(`notifyEscrowEvent (${params.title}) failed`, err);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // WALLET & RETRAITS
+  // ─────────────────────────────────────────────────────────
+
+  async notifyWalletOperation(params: {
+    recipientType: NotificationActorType;
+    recipientId:   string;
+    walletId:      string;
+    operationType: 'CREDIT' | 'DEBIT';
+    montant:       number;
+    devise:        string;
+    newBalance:    number;
+    title:         string;
+    body:          string;
+    reference?:    string;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.SYSTEM,
+        actorId:       null,
+        type:          params.operationType === 'CREDIT'
+          ? NotificationType.PAYMENT_RECEIVED
+          : NotificationType.PAYMENT_SENT,
+        priority:      NotificationPriority.NORMAL,
+        title:         params.title,
+        body:          params.body,
+        actionUrl:     '/dashboard/wallet',
+        resourceType:  'wallet',
+        resourceId:    params.walletId,
+        payload:       { montant: params.montant, devise: params.devise, newBalance: params.newBalance },
+      });
+    } catch (err) {
+      this.logger.error(`notifyWalletOperation (${params.operationType}) failed`, err);
+    }
+  }
+
+  async notifyWalletFrozen(params: {
+    recipientType: NotificationActorType;
+    recipientId:   string;
+    walletId:      string;
+    reason:        string;
+    frozenBy:      string;
+    title:         string;
+    body:          string;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.ADMIN,
+        actorId:       null,
+        type:          NotificationType.ACCOUNT_SUSPENDED,
+        priority:      NotificationPriority.URGENT,
+        title:         params.title,
+        body:          params.body,
+        actionUrl:     '/support',
+        resourceType:  'wallet',
+        resourceId:    params.walletId,
+      });
+    } catch (err) {
+      this.logger.error('notifyWalletFrozen failed', err);
+    }
+  }
+
+  async notifyWithdrawalStatus(params: {
+    recipientType:   NotificationActorType;
+    recipientId:     string;
+    retraitId:       string;
+    montant:         number;
+    devise:          string;
+    status:          'PENDING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+    title:           string;
+    body:            string;
+    transactionRef?: string;
+  }): Promise<void> {
+    const type = params.status === 'COMPLETED'
+      ? NotificationType.PAYMENT_SENT
+      : params.status === 'FAILED'
+        ? NotificationType.PAYMENT_FAILED
+        : NotificationType.ORDER_STATUS_CHANGED;
+
+    const priority = params.status === 'FAILED'
+      ? NotificationPriority.URGENT
+      : NotificationPriority.HIGH;
+
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.SYSTEM,
+        actorId:       null,
+        type,
+        priority,
+        title:         params.title,
+        body:          params.body,
+        actionUrl:     '/dashboard/wallet',
+        resourceType:  'retrait',
+        resourceId:    params.retraitId,
+        payload:       { montant: params.montant, devise: params.devise, status: params.status },
+      });
+    } catch (err) {
+      this.logger.error(`notifyWithdrawalStatus (${params.status}) failed`, err);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // LITIGES & COMMISSIONS
+  // ─────────────────────────────────────────────────────────
+
+  async notifyDisputeEvent(params: {
+    recipientType: NotificationActorType;
+    recipientId:   string;
+    disputeId:     string;
+    disputeRef:    string;
+    commandeId:    string;
+    commandeRef:   string;
+    title:         string;
+    body:          string;
+    status:        string;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.ADMIN,
+        actorId:       null,
+        type:          NotificationType.ORDER_STATUS_CHANGED,
+        priority:      NotificationPriority.HIGH,
+        title:         params.title,
+        body:          params.body,
+        actionUrl:     `/commande/${params.commandeId}/litige`,
+        resourceType:  'dispute',
+        resourceId:    params.disputeId,
+        payload:       { disputeRef: params.disputeRef, commandeRef: params.commandeRef, status: params.status },
+      });
+    } catch (err) {
+      this.logger.error(`notifyDisputeEvent (${params.status}) failed`, err);
+    }
+  }
+
+  async notifyCommissionReceived(params: {
+    recipientType: NotificationActorType;
+    recipientId:   string;
+    commandeId:    string;
+    commandeRef:   string;
+    montant:       number;
+    devise:        string;
+    title:         string;
+    body:          string;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.SYSTEM,
+        actorId:       null,
+        type:          NotificationType.PAYMENT_SENT,
+        priority:      NotificationPriority.NORMAL,
+        title:         params.title,
+        body:          params.body,
+        actionUrl:     '/dashboard/wallet',
+        resourceType:  'commission',
+        resourceId:    params.commandeId,
+        payload:       { commandeRef: params.commandeRef, montant: params.montant, devise: params.devise },
+      });
+    } catch (err) {
+      this.logger.error('notifyCommissionReceived failed', err);
+    }
+  }
+
+  async notifyAdminAlert(params: {
+    recipientType: NotificationActorType;
+    recipientId:   string | undefined;
+    severity:      string;
+    alertType:     string;
+    title:         string;
+    body:          string;
+    metadata?:     Record<string, unknown>;
+  }): Promise<void> {
+    if (!params.recipientId) return;
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.SYSTEM,
+        actorId:       null,
+        type:          NotificationType.SYSTEM_ANNOUNCEMENT,
+        priority:      params.severity === 'CRITICAL' ? NotificationPriority.URGENT : NotificationPriority.HIGH,
+        title:         params.title,
+        body:          params.body,
+        actionUrl:     '/admin/dashboard',
+        resourceType:  'system_alert',
+        resourceId:    params.alertType,
+        payload:       params.metadata,
+      });
+    } catch (err) {
+      this.logger.error(`notifyAdminAlert (${params.alertType}) failed`, err);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // SUPPORT TICKETS (Phase 5)
+  // ─────────────────────────────────────────────────────────
+
   async notifySupportTicketReply(params: {
     recipientType:  string;
     recipientId:    string;

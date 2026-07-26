@@ -53,7 +53,7 @@ export default function SEOPage() {
                   </span>
                   {(c.status === 'warn' || c.status === 'bad') && (
                     <button
-                      style={{ marginLeft:'auto', background:'var(--sky)', color:'var(--blue)', border:'1px solid var(--sky-3)', borderRadius:'var(--pill)', padding:'3px 10px', fontSize:10, fontWeight:700, cursor:'pointer', flexShrink:0 }}
+                      style={{ marginLeft:'auto', background:'var(--g100)', color:'var(--t2)', border:'1px solid var(--bdr2)', borderRadius:'var(--pill)', padding:'3px 10px', fontSize:10, fontWeight:700, cursor:'pointer', flexShrink:0 }}
                       onClick={() => pop('🔧 Correction lancée', 's')}
                     >
                       Corriger

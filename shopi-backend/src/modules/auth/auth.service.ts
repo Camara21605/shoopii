@@ -33,6 +33,7 @@ import * as crypto          from 'crypto';
 
 import { UserRole }             from 'src/common/enums/user-role.enum';
 import { User, UserStatus }     from '../../database/entities/user.entity';
+import { CompanyTeamMember, TeamMemberStatus } from '../../database/entities/company-team/company-team-member.entity';
 import { Admin }                from '../../database/entities/profiles/admin-profile.entity';
 import { Partner }              from '../../database/entities/profiles/partenaire-profile.entity';
 import { Company }              from '../../database/entities/profiles/entreprise-profile.entity';
@@ -129,6 +130,9 @@ export class AuthService implements OnModuleInit {
 
     @InjectRepository(Wallet)
     private readonly walletRepo: Repository<Wallet>,
+
+    @InjectRepository(CompanyTeamMember)
+    private readonly teamMemberRepo: Repository<CompanyTeamMember>,
 
     private readonly jwtService:          JwtService,
     private readonly config:              ConfigService,
@@ -815,7 +819,20 @@ export class AuthService implements OnModuleInit {
     try {
       switch (role) {
         case UserRole.CLIENT:        return (await this.clientRepo.findOne({ where: { userId } }))?.id;
-        case UserRole.COMPANY:       return (await this.companyRepo.findOne({ where: { userId } }))?.id;
+        case UserRole.COMPANY: {
+          /* Propriétaire : possède une entité Company propre */
+          const ownCompany = await this.companyRepo.findOne({ where: { userId } });
+          if (ownCompany) return ownCompany.id;
+          /* Collaborateur : lié à une entreprise via CompanyTeamMember
+           * → actorId = companyId de l'entreprise pour laquelle il travaille
+           * → cela permet aux endpoints /dashboard/entreprise/* de fonctionner
+           *   identiquement pour le propriétaire et ses collaborateurs */
+          const membership = await this.teamMemberRepo.findOne({
+            where: { userId, status: TeamMemberStatus.ACTIVE },
+            select: ['companyId'],
+          });
+          return membership?.companyId;
+        }
         case UserRole.DELIVERY:      return (await this.deliveryRepo.findOne({ where: { userId } }))?.id;
         case UserRole.CORRESPONDENT: return (await this.correspondentRepo.findOne({ where: { userId } }))?.id;
         case UserRole.PARTNER:       return (await this.partnerRepo.findOne({ where: { userId } }))?.id;

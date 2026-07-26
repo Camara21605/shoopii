@@ -3,10 +3,11 @@
  * RÔLE    : Module de la chaîne de validation des commandes.
  * ============================================================ */
 
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationsModule }  from '../notifications/notifications.module';
 import { DeliveryGroupModule }  from '../delivery-group/delivery-group.module';
+import { PaiementModule }       from '../paiement/paiement.module';
 
 import { Commande } from '../../database/entities/commande/commande.entity';
 import { CommandeItem } from '../../database/entities/commande/commande-item.entity';
@@ -35,6 +36,7 @@ import { CommandeScheduler } from './commande.scheduler';
   imports: [
     NotificationsModule,
     DeliveryGroupModule,
+    forwardRef(() => PaiementModule),
     TypeOrmModule.forFeature([
       Commande,
       CommandeItem,

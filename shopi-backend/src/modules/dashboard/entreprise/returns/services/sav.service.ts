@@ -236,7 +236,7 @@ export class SavService {
           (new Date().getTime() - new Date(ticket.createdAt).getTime()) / 60000,
         );
       }
-      await em.update(SavTicket, { id: ticketId }, updates);
+      await em.update(SavTicket, { id: ticketId }, updates as any);
 
       return saved;
     });
@@ -432,8 +432,9 @@ export class SavService {
 
   /* ── Helpers ── */
 
-  private async resolveCompany(userId: string): Promise<Company> {
-    const c = await this.companyRepo.findOne({ where: { userId }, select: ['id', 'companyName'] });
+  private async resolveCompany(userIdOrCompanyId: string): Promise<Company> {
+    let c = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id', 'companyName'] });
+    if (!c) c = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId }, select: ['id', 'companyName'] });
     if (!c) throw new NotFoundException('Profil entreprise introuvable.');
     return c;
   }

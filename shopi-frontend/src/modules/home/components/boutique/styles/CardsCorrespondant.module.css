@@ -90,12 +90,8 @@
   border: 2.5px solid var(--white);
   box-shadow: 0 1px 4px rgba(0,0,0,.15);
 }
-.dotOn  { background: #10B981; animation: pulse 2s ease infinite; }
+.dotOn  { background: #10B981; }
 .dotOff { background: #9CA3AF; }
-@keyframes pulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,.5); }
-  50%      { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
-}
 
 /* ── Nom ── */
 .nom {

@@ -26,7 +26,7 @@ export default function ColisPage() {
         <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
           {FILTERS.map(f => (
             <button key={f.value} onClick={() => setFilter(f.value)} style={{
-              background: filter===f.value ? 'var(--cor,#B45309)' : '#fff',
+              background: filter===f.value ? 'var(--cor,#B45309)' : 'var(--white)',
               color:      filter===f.value ? '#fff' : 'var(--t2)',
               border:     filter===f.value ? '1.5px solid var(--cor)' : '1.5px solid var(--bdr2)',
               borderRadius:'var(--pill)', padding:'7px 14px', fontSize:12, fontWeight:filter===f.value?700:600,

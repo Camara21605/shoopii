@@ -14,7 +14,7 @@
 .newBtn {
   display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
   font-size: 14px; font-weight: 700; color: #fff;
-  background: linear-gradient(135deg, #0B1F3A, #1A4FC4);
+  background: linear-gradient(135deg, #111113, #1C1C1F);
   border-radius: 10px; padding: 11px 20px; white-space: nowrap;
   transition: opacity .15s;
 }
@@ -27,8 +27,8 @@
   background: #fff; font-size: 13px; font-weight: 600; color: #2A3A5A; cursor: pointer;
   transition: all .12s; font-family: inherit;
 }
-.filterBtn:hover { border-color: #1A4FC4; color: #1A4FC4; }
-.filterBtnActive { background: #EEF2FF !important; border-color: #1A4FC4 !important; color: #1A4FC4 !important; }
+.filterBtn:hover { border-color: var(--bdr2); color: var(--navy); }
+.filterBtnActive { background: var(--g100) !important; border-color: var(--bdr2) !important; color: var(--navy) !important; }
 
 /* ── States ── */
 .state    { text-align: center; padding: 60px 0; color: #9AAACB; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; }
@@ -36,10 +36,10 @@
 
 /* ── Empty ── */
 .empty { text-align: center; padding: 60px 20px; }
-.emptyIcon  { width: 72px; height: 72px; border-radius: 18px; background: #EEF2FF; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #1A4FC4; margin: 0 auto 16px; }
+.emptyIcon  { width: 72px; height: 72px; border-radius: 18px; background: var(--g100); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--t2); margin: 0 auto 16px; }
 .emptyTitle { font-size: 18px; font-weight: 700; color: #0B1F3A; margin-bottom: 8px; }
 .emptySub   { font-size: 14px; color: #9AAACB; margin-bottom: 20px; }
-.emptyBtn   { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; font-weight: 700; color: #fff; background: #1A4FC4; border-radius: 10px; padding: 11px 24px; }
+.emptyBtn   { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; font-weight: 700; color: #fff; background: var(--btn,#111113); border-radius: 10px; padding: 11px 24px; }
 .emptyBtn:hover { opacity: .88; }
 
 /* ── Ticket list ── */
@@ -73,14 +73,9 @@
   text-transform: uppercase; letter-spacing: .5px;
 }
 
-/* Pulsing dot for waiting_user */
 .pulse {
   display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-  background: currentColor; animation: pulse 1.5s infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: .5; transform: scale(.8); }
+  background: currentColor;
 }
 
 .unreadBadge {

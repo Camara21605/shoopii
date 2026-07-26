@@ -16,7 +16,7 @@
 .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
 .title  { font-size: 22px; font-weight: 800; color: #0B1F3A; margin-bottom: 4px; }
 .sub    { font-size: 13px; color: #9AAACB; }
-.exportBtn { display: flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 10px; border: 1.5px solid #1A4FC4; background: #EEF2FF; color: #1A4FC4; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.exportBtn { display: flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 10px; border: 1.5px solid var(--bdr2); background: var(--g100); color: var(--t1); font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .exportBtn:hover { background: #DBEAFE; }
 
 /* ── KPI Cards ── */
@@ -40,8 +40,8 @@
 .barItem { display: grid; grid-template-columns: 1fr 120px 32px; align-items: center; gap: 10px; }
 .barLabel { font-size: 12px; color: #2A3A5A; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .barTrack { height: 8px; background: #F0F4FF; border-radius: 4px; overflow: hidden; }
-.barFill  { height: 100%; background: linear-gradient(90deg,#1A4FC4,#4F83E7); border-radius: 4px; min-width: 4px; transition: width .5s ease; }
-.barCount { font-size: 12px; font-weight: 700; color: #1A4FC4; text-align: right; }
+.barFill  { height: 100%; background: linear-gradient(90deg,#2D2D30,#3A3A3D); border-radius: 4px; min-width: 4px; transition: width .5s ease; }
+.barCount { font-size: 12px; font-weight: 700; color: var(--t2); text-align: right; }
 .noData   { font-size: 13px; color: #9AAACB; text-align: center; padding: 20px 0; }
 
 /* ── Graphique tendance 7 jours ── */
@@ -57,7 +57,7 @@
 .bars { display: flex; align-items: flex-end; gap: 3px; flex: 1; width: 100%; justify-content: center; }
 
 /* Barres individuelles */
-.barCreated  { width: 10px; border-radius: 3px 3px 0 0; background: #1A4FC4; min-height: 2px; transition: height .4s ease; }
+.barCreated  { width: 10px; border-radius: 3px 3px 0 0; background: #2D2D30; min-height: 2px; transition: height .4s ease; }
 .barResolved { width: 10px; border-radius: 3px 3px 0 0; background: #059669; min-height: 2px; transition: height .4s ease; }
 
 /* Valeurs numériques sous les barres */

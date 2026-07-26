@@ -32,7 +32,13 @@ interface ImageUploaded {
   ordre:   number;
   alt:     string | null;
   preview: string; // URL.createObjectURL pour nouvelles, url Cloudinary pour existantes
+  type:    'image' | 'video';
 }
+
+/* Quota médias d'une fiche produit : 4 images + 1 vidéo max (5 au total) — voir produits.service.ts */
+const MAX_MEDIA_TOTAL  = 5;
+const MAX_MEDIA_IMAGES = 4;
+const MAX_MEDIA_VIDEOS = 1;
 
 interface Spec     { cle: string; valeur: string; }
 interface Variante { type: string; vals: string; }
@@ -310,7 +316,8 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
             url:     img.url,
             ordre:   img.ordre,
             alt:     img.alt ?? null,
-            preview: img.url, // ← affiche l'image Cloudinary directement
+            preview: img.url, // ← affiche le média Cloudinary directement
+            type:    img.type === 'video' ? 'video' : 'image',
           })));
         }
 
@@ -394,22 +401,46 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   // ─────────────────────────────────────────────────────────────
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files    = Array.from(e.target.files ?? []);
+    const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
-    const aUploader = files.slice(0, 10 - images.length);
-    if (!aUploader.length) { pop('⚠️ Maximum 10 images atteint', 'w'); return; }
+
+    /* ── Quotas : 4 images + 1 vidéo max, 5 médias au total ── */
+    let videoCount = images.filter(i => i.type === 'video').length;
+    let imageCount = images.length - videoCount;
+    const placesRestantes = MAX_MEDIA_TOTAL - images.length;
+    if (placesRestantes <= 0) { pop(`⚠️ Maximum ${MAX_MEDIA_TOTAL} médias atteint`, 'w'); return; }
+
+    const aUploader: File[] = [];
+    for (const file of files) {
+      if (aUploader.length >= placesRestantes) { pop(`⚠️ Maximum ${MAX_MEDIA_TOTAL} médias — le reste a été ignoré.`, 'w'); break; }
+      const estVideo = file.type.startsWith('video/');
+      if (estVideo) {
+        if (videoCount >= MAX_MEDIA_VIDEOS) { pop(`⚠️ Maximum ${MAX_MEDIA_VIDEOS} vidéo par produit — "${file.name}" ignorée.`, 'w'); continue; }
+        videoCount++;
+      } else {
+        if (imageCount >= MAX_MEDIA_IMAGES) { pop(`⚠️ Maximum ${MAX_MEDIA_IMAGES} images par produit — "${file.name}" ignorée.`, 'w'); continue; }
+        imageCount++;
+      }
+      aUploader.push(file);
+    }
+    if (!aUploader.length) return;
 
     setUploadEnCours(true);
     try {
       const nouvelles: ImageUploaded[] = [];
       for (const file of aUploader) {
-        if (file.size > 5 * 1024 * 1024) { pop(`⚠️ "${file.name}" dépasse 5 MB — ignoré.`, 'w'); continue; }
+        const estVideo = file.type.startsWith('video/');
+        const maxSize  = estVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+          pop(`⚠️ "${file.name}" dépasse ${estVideo ? '50 MB' : '5 MB'} — ignoré.`, 'w');
+          continue;
+        }
         const preview  = URL.createObjectURL(file);
         const formData = new FormData();
         formData.append('file', file);
         let res: Response;
         try {
-          res = await fetch(`${API}/upload/image/product`, {
+          res = await fetch(`${API}/upload/${estVideo ? 'video' : 'image/product'}`, {
             method: 'POST', headers: { Authorization: `Bearer ${getToken()}` }, body: formData,
           });
         } catch { throw new Error('Impossible de joindre le serveur. Vérifiez que votre backend est démarré.'); }
@@ -418,11 +449,17 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           throw new Error(res.status === 401 ? 'Session expirée.' : errData.message ?? `Erreur ${res.status}`);
         }
         const data: { url: string } = await res.json();
-        nouvelles.push({ url: data.url, ordre: images.length + nouvelles.length, alt: null, preview });
+        nouvelles.push({
+          url:    data.url,
+          ordre:  images.length + nouvelles.length,
+          alt:    null,
+          preview,
+          type:   estVideo ? 'video' : 'image',
+        });
       }
       if (nouvelles.length) {
         setImages(prev => [...prev, ...nouvelles]);
-        pop(`✅ ${nouvelles.length} image(s) uploadée(s)`, 's');
+        pop(`✅ ${nouvelles.length} média(s) uploadé(s)`, 's');
       }
     } catch (err: any) {
       setErrorBanner(err.message);
@@ -537,7 +574,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
         titreSeo:       form.titreSeo.trim()       || undefined,
         descriptionSeo: form.descriptionSeo.trim() || undefined,
         urlSlug:        form.urlSlug.trim()         || undefined,
-        images:    images.map(img => ({ url: img.url, ordre: img.ordre, alt: img.alt })),
+        images:    images.map(img => ({ url: img.url, ordre: img.ordre, alt: img.alt, type: img.type })),
         specs:     specs.filter(s => s.cle.trim() && s.valeur.trim()).map((s, idx) => ({ ...s, ordre: idx })),
         variantes: variantesOn ? variantes.filter(v => v.vals.trim()) : [],
         venteEnGros: venteEnGrosOn,
@@ -556,7 +593,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           : [],
         stories:   storiesOn
           ? Array.from(storyIndices)
-              .filter(i => i < images.length)
+              .filter(i => i < images.length && images[i].type === 'image')
               .map(i => ({
                 mediaUrl:   images[i].url,
                 heureDebut: storyHeureDebut,
@@ -687,9 +724,9 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
       {isEditMode && (
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,
-          background: 'var(--sky)', border: '1px solid var(--sky-3)',
+          background: 'var(--g100)', border: '1px solid var(--bdr2)',
           borderRadius: 'var(--pill)', padding: '6px 14px',
-          fontSize: 12, fontWeight: 700, color: 'var(--blue)', marginBottom: 16,
+          fontSize: 12, fontWeight: 700, color: 'var(--t2)', marginBottom: 16,
         }}>
           <i className="fas fa-pen-to-square" />
           Mode édition — vous modifiez un produit existant
@@ -709,7 +746,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
               <div className="ch-t"><i className="fas fa-image"></i> Médias produit</div>
-              <span className="ch-badge">{images.length}/10</span>
+              <span className="ch-badge">{images.length}/{MAX_MEDIA_TOTAL}</span>
             </div>
             <div className="cb">
               <div
@@ -722,9 +759,9 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                 ) : (
                   <>
                     <i className="fas fa-cloud-arrow-up"></i>
-                    <p><strong>Glissez vos images ici</strong><br />ou cliquez pour sélectionner</p>
+                    <p><strong>Glissez vos médias ici</strong><br />ou cliquez pour sélectionner</p>
                     <p style={{ fontSize: 11, marginTop: 6, color: 'var(--t4)' }}>
-                      JPG, PNG, WebP · Min. 800×800px · Max. 5 MB/image
+                      {MAX_MEDIA_IMAGES} images (JPG, PNG, WebP · Max. 5 MB) + {MAX_MEDIA_VIDEOS} vidéo (MP4, WebM, MOV · Max. 50 MB)
                     </p>
                   </>
                 )}
@@ -732,7 +769,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
                 multiple
                 style={{ display: 'none' }}
                 onChange={handleFileChange}
@@ -741,7 +778,16 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                 <div className="aj-img-grid">
                   {images.map((img, i) => (
                     <div key={i} className="aj-img-thumb">
-                      <img src={img.preview} alt={img.alt ?? `Image ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+                      {img.type === 'video' ? (
+                        <video src={img.preview} muted style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+                      ) : (
+                        <img src={img.preview} alt={img.alt ?? `Image ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+                      )}
+                      {img.type === 'video' && (
+                        <div className="aj-img-main" style={{ left: 6, right: 'auto' }}>
+                          <i className="fas fa-video"></i>
+                        </div>
+                      )}
                       <button className="aj-img-del" onClick={() => supprimerImage(i)}>
                         <i className="fas fa-xmark"></i>
                       </button>
@@ -782,6 +828,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 8 }}>
                       {images.map((img, i) => {
+                        if (img.type === 'video') return null; // stories = images uniquement
                         const selected = storyIndices.has(i);
                         return (
                           <div
@@ -807,12 +854,12 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                             {selected && (
                               <div style={{
                                 position: 'absolute', inset: 0,
-                                background: 'rgba(59,130,246,.18)',
+                                background: 'rgba(0,0,0,.35)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                               }}>
                                 <div style={{
                                   width: 24, height: 24, borderRadius: '50%',
-                                  background: 'var(--blue)',
+                                  background: 'var(--btn, #111113)',
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 }}>
                                   <i className="fas fa-check" style={{ color: '#fff', fontSize: 11 }} />
@@ -838,8 +885,8 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                         {/* Récapitulatif */}
                         <div style={{
                           padding: '8px 12px',
-                          background: 'var(--sky)', borderRadius: 'var(--r-md)',
-                          fontSize: 12, color: 'var(--blue)', fontWeight: 600,
+                          background: 'var(--g100)', borderRadius: 'var(--r-md)',
+                          fontSize: 12, color: 'var(--t2)', fontWeight: 600,
                           display: 'flex', alignItems: 'center', gap: 6,
                         }}>
                           <i className="fas fa-circle-play" />
@@ -1283,7 +1330,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                   </div>
                 ))}
               </div>
-              <button onClick={addSpec} style={{ background: 'var(--sky)', border: '1px solid var(--sky-3)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--blue)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button onClick={addSpec} style={{ background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--t2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <i className="fas fa-plus"></i> Ajouter une caractéristique
               </button>
             </div>
@@ -1324,7 +1371,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                     </div>
                   ))}
                 </div>
-                <button onClick={addVariante} style={{ background: 'var(--sky)', border: '1px solid var(--sky-3)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--blue)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button onClick={addVariante} style={{ background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--t2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <i className="fas fa-plus"></i> Ajouter un type de variante
                 </button>
               </div>
@@ -1390,7 +1437,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                     </div>
                   ))}
                 </div>
-                <button onClick={addTier} style={{ background: 'var(--sky)', border: '1px solid var(--sky-3)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--blue)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button onClick={addTier} style={{ background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--t2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <i className="fas fa-plus"></i> Ajouter un palier
                 </button>
               </div>

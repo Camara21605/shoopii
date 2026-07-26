@@ -83,7 +83,7 @@
 }
 
 .new {
-  background: linear-gradient(135deg, var(--blue), var(--blue-2));
+  background: var(--btn, #111113);
   color: #fff;
   border-radius: var(--pill);
   padding: 0 18px;
@@ -98,6 +98,14 @@
   flex-shrink: 0;
 }
 .new:hover { transform: translateY(-1px); box-shadow: var(--sh-b); }
+
+/* ─── Dark mode ──────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .topbar { background: rgba(0,0,0,.97); border-bottom-color: rgba(255,255,255,.08); }
+  .dot { border-color: #000000; }
+}
+:root[data-theme="dark"] .topbar { background: rgba(0,0,0,.97); border-bottom-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .dot { border-color: #000000; }
 
 @media (max-width: 860px) {
   .topbar { left: 0; padding: 0 16px; }

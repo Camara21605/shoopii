@@ -68,7 +68,7 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh }
         {error}
         <br />
         <button onClick={() => window.location.reload()}
-          style={{ marginTop:16, background:'var(--navy)', color:'#fff', border:'none',
+          style={{ marginTop:16, background:'var(--btn)', color:'#fff', border:'none',
             borderRadius:'var(--pill)', padding:'10px 24px', cursor:'pointer', fontSize:13 }}>
           Réessayer
         </button>

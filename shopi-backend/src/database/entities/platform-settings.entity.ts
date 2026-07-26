@@ -138,6 +138,13 @@ export class PlatformSettings {
   @Column({ type: 'decimal', precision: 15, scale: 2, default: 5000000 })
   maxTransactionAmount!: number;
 
+  /**
+   * Limite de retrait journalière globale (par acteur).
+   * 0 = aucune limite globale (chaque wallet peut avoir sa propre limite).
+   */
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 5000000 })
+  dailyWithdrawalLimit!: number;
+
   /** Délai de règlement en jours ouvrés */
   @Column({ type: 'int', default: 2 })
   settlementDelayDays!: number;
@@ -153,6 +160,165 @@ export class PlatformSettings {
 
   @Column({ type: 'boolean', default: false })
   moovMoneyEnabled!: boolean;
+
+  /* ══════════════════════════════════════════════════════════
+   * COMMISSIONS — PRODUIT
+   * ══════════════════════════════════════════════════════════
+   *
+   * Règle : commissionProduit = sousTotal × tauxCommissionProduit × planMultiplier
+   *
+   * La commission est ensuite répartie entre 3 bénéficiaires :
+   *   Shopi (ratioShopiProduit %) + Partenaire (ratioPartenaireProduit %) + Admin (ratioAdminProduit %)
+   *   Invariant : les 3 ratios doivent toujours sommer à 100.
+   * ══════════════════════════════════════════════════════════ */
+
+  /**
+   * Taux brut de commission sur le prix des produits (%).
+   * Appliqué sur sousTotal avant réduction par plan.
+   * Défaut : 6 % (six pour cent).
+   */
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 6 })
+  tauxCommissionProduit!: number;
+
+  /**
+   * Multiplicateur du taux pour les entreprises au plan PRO.
+   * commission_effective = tauxCommissionProduit × planMultiplierPro
+   * Exemple : 6 % × 0.75 = 4.5 %
+   */
+  @Column({ type: 'decimal', precision: 4, scale: 3, default: 0.75 })
+  planMultiplierPro!: number;
+
+  /**
+   * Multiplicateur du taux pour les entreprises au plan PREMIUM.
+   * Exemple : 6 % × 0.50 = 3 %
+   */
+  @Column({ type: 'decimal', precision: 4, scale: 3, default: 0.5 })
+  planMultiplierPremium!: number;
+
+  /**
+   * Part de la commission produit allant à Shopi (%).
+   * Doit vérifier : ratioShopiProduit + ratioPartenaireProduit + ratioAdminProduit = 100
+   */
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 70 })
+  ratioShopiProduit!: number;
+
+  /**
+   * Part de la commission produit allant au Partenaire qui a créé l'entreprise (%).
+   * Si l'entreprise n'a pas de partenaire → cette part va à Shopi.
+   */
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 20 })
+  ratioPartenaireProduit!: number;
+
+  /**
+   * Part de la commission produit allant à l'Admin qui a créé le Partenaire (%).
+   * Si l'entreprise n'a pas d'admin → cette part va à Shopi.
+   */
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 10 })
+  ratioAdminProduit!: number;
+
+  /* ══════════════════════════════════════════════════════════
+   * COMMISSIONS — LIVRAISON
+   * ══════════════════════════════════════════════════════════
+   *
+   * Indépendant de la commission produit.
+   * Règle : commissionLivraison = fraisLivraison × tauxCommissionLivraison
+   * ══════════════════════════════════════════════════════════ */
+
+  /**
+   * Taux brut de commission sur les frais de livraison (%).
+   * Défaut : 10 % (dix pour cent).
+   */
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 10 })
+  tauxCommissionLivraison!: number;
+
+  /** Part Shopi de la commission livraison (%). */
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 60 })
+  ratioShopiLivraison!: number;
+
+  /**
+   * Part Partenaire de la commission livraison (%).
+   * Partenaire = celui qui a créé le compte du livreur/correspondant.
+   */
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 25 })
+  ratioPartenaireLivraison!: number;
+
+  /** Part Admin de la commission livraison (%). */
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 15 })
+  ratioAdminLivraison!: number;
+
+  /* ══════════════════════════════════════════════════════════
+   * DÉLAIS MÉTIER (tous configurables)
+   * ══════════════════════════════════════════════════════════ */
+
+  /**
+   * Durée maximale pour payer après création d'une commande (heures).
+   * Passé ce délai → commande EXPIRED, codes invalidés.
+   */
+  @Column({ type: 'int', default: 24 })
+  maxPaymentDelayHours!: number;
+
+  /**
+   * Durée de vie d'une session de paiement (minutes).
+   * Passé ce délai → session EXPIRED.
+   */
+  @Column({ type: 'int', default: 60 })
+  sessionTtlMinutes!: number;
+
+  /**
+   * Délai maximal pour qu'une entreprise valide ou refuse une commande PAID (heures).
+   * Passé ce délai → annulation automatique + remboursement client.
+   */
+  @Column({ type: 'int', default: 48 })
+  maxEnterpriseValidationHours!: number;
+
+  /**
+   * Fenêtre de contestation (jours) après DELIVERED / AUTO_DELIVERED.
+   * Passé ce délai → litige impossible.
+   */
+  @Column({ type: 'int', default: 7 })
+  disputeWindowDays!: number;
+
+  /**
+   * Délai maximal pour qu'un admin rende sa décision sur un litige (heures).
+   * Passé ce délai → escalade au SuperAdmin.
+   */
+  @Column({ type: 'int', default: 48 })
+  disputeResolutionHours!: number;
+
+  /**
+   * Délai de traitement des remboursements (jours ouvrés).
+   * Correspond au délai côté provider (FedaPay Refund).
+   */
+  @Column({ type: 'int', default: 3 })
+  refundProcessingDays!: number;
+
+  /**
+   * Délai de traitement des retraits (heures).
+   * Si dépassé → alerte admin + client.
+   */
+  @Column({ type: 'int', default: 24 })
+  withdrawalProcessingHours!: number;
+
+  /**
+   * Durée de conservation des données financières (années).
+   * Obligation légale. Après expiration → anonymisation partielle.
+   */
+  @Column({ type: 'int', default: 5 })
+  dataRetentionYears!: number;
+
+  /**
+   * Délai d'inactivité d'un wallet avant gel préventif (jours).
+   * Protège les fonds des comptes abandonnés.
+   */
+  @Column({ type: 'int', default: 365 })
+  walletInactivityDays!: number;
+
+  /**
+   * Nombre maximal de tentatives de paiement par heure et par utilisateur.
+   * Anti-fraude : bloque temporairement si dépassé.
+   */
+  @Column({ type: 'int', default: 5 })
+  maxDailyPaymentAttempts!: number;
 
   /* ══════════════════════════════════════════════════════════
    * NOTIFICATIONS
@@ -201,6 +367,49 @@ export class PlatformSettings {
 
   @Column({ type: 'varchar', length: 500, nullable: true, default: null })
   faviconUrl!: string | null;
+
+  /* ══════════════════════════════════════════════════════════
+   * LITIGES (Resolution Engine)
+   * ══════════════════════════════════════════════════════════
+   * Note : disputeWindowDays est déclaré dans la section DÉLAIS MÉTIER.
+   * ══════════════════════════════════════════════════════════ */
+
+  /** Nombre maximum de pièces justificatives par litige. */
+  @Column({ type: 'int', default: 10 })
+  maxEvidencesPerDispute!: number;
+
+  /** SLA d'instruction admin en heures (alerte si dépassé). */
+  @Column({ type: 'int', default: 48 })
+  disputeInstructionSlaHours!: number;
+
+  /* ══════════════════════════════════════════════════════════
+   * SETTLEMENT ENGINE
+   * ══════════════════════════════════════════════════════════ */
+
+  /** Seuil au-delà duquel un retrait nécessite une validation manuelle (GNF). */
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 500000 })
+  autoValidationThreshold!: number;
+
+  /** Nombre maximal de tentatives de payout avant blocage définitif. */
+  @Column({ type: 'int', default: 3 })
+  maxWithdrawalAttempts!: number;
+
+  /** Activation du provider Djomy. */
+  @Column({ type: 'boolean', default: false })
+  djomyEnabled!: boolean;
+
+  /* ══════════════════════════════════════════════════════════
+   * COMPANY TEAM MANAGEMENT
+   * ══════════════════════════════════════════════════════════ */
+
+  /**
+   * Nombre maximum de collaborateurs actifs par entreprise.
+   * Le propriétaire de l'entreprise ne compte pas dans cette limite.
+   * Configurable par le Super Admin pour évoluer dans le futur.
+   * Défaut : 5 collaborateurs.
+   */
+  @Column({ type: 'int', default: 5 })
+  maxTeamMembersPerCompany!: number;
 
   /* ══════════════════════════════════════════════════════════
    * AUDIT

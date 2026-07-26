@@ -265,8 +265,8 @@ export default function BoutiqueSection({
               onClick={() => logoInputRef.current?.click()}
               disabled={saving}
               style={{
-                background:'rgba(26,79,196,.09)', color:'var(--blue)',
-                border:'1px solid var(--bdrb)', borderRadius:'var(--pill)',
+                background:'rgba(0,0,0,.06)', color:'var(--t2)',
+                border:'1px solid var(--bdr2)', borderRadius:'var(--pill)',
                 padding:'6px 14px', fontSize:11, fontWeight:700,
                 display:'block', width:'100%', cursor:'pointer',
                 marginTop:10, opacity:saving ? 0.5 : 1,
@@ -568,7 +568,7 @@ export default function BoutiqueSection({
 
         {/* Résumé localisation */}
         {ville && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', background: 'rgba(26,79,196,.06)', borderRadius: 9, padding: '7px 12px', marginBottom: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', background: 'rgba(0,0,0,.06)', borderRadius: 9, padding: '7px 12px', marginBottom: 4 }}>
             <i className="fas fa-map-pin" style={{ color: 'var(--blue)', fontSize: 11 }} />
             <span style={{ fontSize: 12, color: 'var(--t2)', fontWeight: 600 }}>
               {[quartier, commune, ville].filter(Boolean).join(' · ')}

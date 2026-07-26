@@ -29,3 +29,19 @@
 @media(max-width:1100px){ .grid{grid-template-columns:repeat(4,1fr)} }
 @media(max-width:768px) { .grid{grid-template-columns:repeat(2,1fr);gap:10px} }
 @media(max-width:400px) { .grid{grid-template-columns:repeat(2,1fr)} }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .card { background: var(--white,#111113); border-color: rgba(255,255,255,.08); }
+  .fav  { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.1); }
+  .img  { background: linear-gradient(135deg,#1C1C1F,#2D2D30); }
+}
+:root[data-theme="dark"] .card { background: var(--white,#111113); border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .fav  { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.1); }
+:root[data-theme="dark"] .img  { background: linear-gradient(135deg,#1C1C1F,#2D2D30); }
+:root[data-theme="dark"] .btnAdd      { background: #1A4FC4; }
+:root[data-theme="dark"] .btnAdd:hover{ background: #1544A8; }
+@media (prefers-color-scheme: dark) {
+  .btnAdd      { background: #1A4FC4; }
+  .btnAdd:hover{ background: #1544A8; }
+}

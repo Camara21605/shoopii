@@ -22,7 +22,7 @@
   display: flex; align-items: center; justify-content: center;
   font-family: var(--fd); font-size: 13px; font-weight: 800;
 }
-.av_entreprise    { background: var(--sky-2); color: var(--blue); }
+.av_entreprise    { background: var(--sky-2); color: var(--t2); }
 .av_livreur       { background: var(--em-bg); color: var(--emerald); }
 .av_correspondant { background: var(--vl-bg); color: var(--violet); }
 .av_client        { background: var(--am-bg); color: var(--amber); }
@@ -36,11 +36,11 @@
 .stars      { display: flex; gap: 2px; }
 .star       { font-size: 14px; color: #D1D5DB; line-height: 1; }
 .starOn     { color: #FBBF24; }
-.ratingVal  { font-size: 10px; font-weight: 700; color: var(--blue); margin-top: 2px; display: block; }
+.ratingVal  { font-size: 10px; font-weight: 700; color: var(--t3); margin-top: 2px; display: block; }
 .comment    {
   font-size: 11px; color: var(--t2); margin-top: 4px;
   font-style: italic; line-height: 1.5;
-  background: var(--g50); border-left: 2px solid var(--blue);
+  background: var(--g50); border-left: 2px solid var(--bdr2);
   padding: 4px 8px; border-radius: 0 6px 6px 0;
 }
 

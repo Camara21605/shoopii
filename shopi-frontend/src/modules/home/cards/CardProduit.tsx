@@ -36,6 +36,9 @@ export interface ProductApi {
   companyName: string;
   companyLogo: string | null;
   badge?:      'hot' | 'new' | 'promo' | null;
+  venteEnGros?:    boolean;
+  moq?:            number | null;
+  wholesaleTiers?: { quantiteMin: number; quantiteMax: number | null; prixUnitaire: number; ordre: number }[];
 }
 
 interface BoutiqueApi {
@@ -167,137 +170,6 @@ function useFavorite(p: ProductApi, onToast: (m: string) => void) {
   };
 
   return { liked, handleToggle, loading };
-}
-
-// ─────────────────────────────────────────────────────────────
-// MODALE — Détail rapide avec galerie de miniatures
-// ─────────────────────────────────────────────────────────────
-
-function ModalVoir({ p, onClose, onToast }: { p: ProductApi; onClose: () => void; onToast: (m: string) => void }) {
-  const [activeIdx, setActiveIdx] = useState(0);
-  const navigate    = useNavigate();
-  const images      = getImages(p);
-  const hasImages   = images.length > 0;
-  const activeImg   = hasImages ? images[activeIdx]?.url : null;
-
-  const { handleAdd, dejaAuPanier, loading } = useAddToCart(p, onToast);
-  const { liked: fav, handleToggle: handleToggleFav } = useFavorite(p, onToast);
-
-  return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={e => e.stopPropagation()}>
-
-        <div className={styles.mHeader}>
-          <div className={styles.mTitle}><i className="fas fa-box" /> Détail du produit</div>
-          <button className={styles.closeBtn} onClick={onClose}><i className="fas fa-xmark" /></button>
-        </div>
-
-        <div className={styles.mBody}>
-
-          {/* ── Zone image principale ── */}
-          <div className={styles.mGallerie}>
-            <div className={styles.mImg}>
-              {activeImg
-                ? <img src={activeImg} alt={images[activeIdx]?.alt ?? p.nom}
-                    style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:12 }} />
-                : <span style={{ fontSize:80 }}>{emoji(p)}</span>
-              }
-
-              {images.length > 1 && (
-                <>
-                  <button className={styles.mGalNav} style={{ left: 10 }}
-                    onClick={e => { e.stopPropagation(); setActiveIdx(i => (i - 1 + images.length) % images.length); }}>
-                    <i className="fas fa-chevron-left" />
-                  </button>
-                  <button className={styles.mGalNav} style={{ right: 10 }}
-                    onClick={e => { e.stopPropagation(); setActiveIdx(i => (i + 1) % images.length); }}>
-                    <i className="fas fa-chevron-right" />
-                  </button>
-                  <div className={styles.mGalCount}>{activeIdx + 1} / {images.length}</div>
-                </>
-              )}
-            </div>
-
-            {images.length > 1 && (
-              <div className={styles.mThumbs}>
-                {images.map((img, i) => (
-                  <button key={img.id}
-                    className={`${styles.mThumb} ${i === activeIdx ? styles.mThumbActive : ''}`}
-                    onClick={() => setActiveIdx(i)}>
-                    <img src={img.url} alt={img.alt ?? `Image ${i + 1}`}
-                      style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* ── Infos produit ── */}
-          <div className={styles.mInfos}>
-            <div className={styles.mBoutique}>
-              {p.companyLogo
-                ? <img src={p.companyLogo} alt={p.companyName} style={{ width:16, height:16, borderRadius:4, objectFit:'cover' }} />
-                : <i className="fas fa-store" />}
-              {' '}{p.companyName}
-            </div>
-
-            <h3 className={styles.mNom}>{p.nom}</h3>
-            <p className={styles.mDesc}>{p.description ?? ''}</p>
-
-            <div className={styles.mPrices}>
-              <span className={styles.mPrix}>{fmt(p.prix)} GNF</span>
-              {p.prixAncien && (
-                <>
-                  <span className={styles.mAncien}>{fmt(p.prixAncien)} GNF</span>
-                  <span className={styles.mRemise}>-{remise(p.prix, p.prixAncien)}%</span>
-                </>
-              )}
-            </div>
-
-            <div className={styles.mGaranties}>
-              {[
-                { ico:'🔒', label:'Paiement sécurisé' },
-                { ico:'🔄', label:'Retour 7 jours'    },
-                { ico:'✅', label:'Produit authentique'},
-                { ico:'📞', label:'Support 24/7'       },
-              ].map(g => (
-                <div key={g.label} className={styles.mGarantie}>
-                  <span>{g.ico}</span><span>{g.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.mFooter}>
-          <button className={`${styles.mFavBtn} ${fav ? styles.mFavBtnOn : ''}`}
-            onClick={handleToggleFav}>
-            <i className={fav ? 'fas fa-heart' : 'far fa-heart'} />
-          </button>
-
-          {/* ✅ Ajout réel au panier — déjà au panier : redirige vers le panier */}
-          {dejaAuPanier ? (
-            <button className={`${styles.mCartBtn} ${styles.mCartBtnDone}`}
-              onClick={() => { onClose(); navigate('/commande'); }}>
-              <i className="fas fa-check" /> Déjà au panier — voir le panier
-            </button>
-          ) : (
-            <button className={styles.mCartBtn} disabled={loading}
-              onClick={() => handleAdd(onClose)}>
-              {loading
-                ? <><i className="fas fa-spinner fa-spin" /> Ajout…</>
-                : <><i className="fas fa-cart-plus" /> Ajouter au panier</>}
-            </button>
-          )}
-
-          <button className={styles.mDetailBtn}
-            onClick={() => { onClose(); navigate(`/produit/${p.id}`); }}>
-            <i className="fas fa-arrow-up-right-from-square" /><span>Voir détail</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -479,13 +351,87 @@ function ModalPartage({ p, onClose, onToast }: { p: ProductApi; onClose: () => v
 }
 
 // ─────────────────────────────────────────────────────────────
+// MODALE — Prix en gros (paliers dégressifs)
+// ─────────────────────────────────────────────────────────────
+
+function ModalGros({ p, onClose }: { p: ProductApi; onClose: () => void }) {
+  const tiers = [...(p.wholesaleTiers ?? [])].sort((a, b) => a.ordre - b.ordre);
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={`${styles.modal} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
+
+        <div className={styles.mHeader}>
+          <div className={styles.mTitle}><i className="fas fa-layer-group" /> Prix en gros</div>
+          <button className={styles.closeBtn} onClick={onClose}><i className="fas fa-xmark" /></button>
+        </div>
+
+        <div className={styles.mBody}>
+          <div className={styles.grossApercu}>
+            <span className={styles.grossImgWrap}>
+              {mainImage(p)
+                ? <img src={mainImage(p)!} alt={p.nom} style={{ width:44, height:44, objectFit:'cover', borderRadius:8 }} />
+                : <span style={{ fontSize:32 }}>{emoji(p)}</span>}
+            </span>
+            <div>
+              <div className={styles.grossNom}>{p.nom}</div>
+              <div className={styles.grossSub}>Prix standard : {fmt(p.prix)} GNF / unité</div>
+              {p.moq && (
+                <div className={styles.grossMoq}><i className="fas fa-boxes-stacked" /> Min. {p.moq} unités</div>
+              )}
+            </div>
+          </div>
+
+          {tiers.length === 0 ? (
+            <div style={{ textAlign:'center', padding:'24px 0', color:'var(--t3)', fontSize:13 }}>
+              Aucun palier de prix configuré pour ce produit.
+            </div>
+          ) : (
+            <>
+              <div className={styles.grossLabel}>Paliers de prix dégressifs</div>
+              <div className={styles.grossTable}>
+                <div className={styles.grossHead}>
+                  <span>Quantité</span>
+                  <span>Prix / unité</span>
+                  <span>Économie</span>
+                </div>
+                {tiers.map((t, i) => {
+                  const eco = p.prix > t.prixUnitaire ? Math.round((1 - t.prixUnitaire / p.prix) * 100) : 0;
+                  return (
+                    <div key={i} className={`${styles.grossRow} ${i === 0 ? styles.grossRowFirst : ''}`}>
+                      <span className={styles.grossQte}>
+                        {t.quantiteMin}{t.quantiteMax != null ? ` – ${t.quantiteMax}` : '+'} unités
+                      </span>
+                      <span className={styles.grossPrix}>{fmt(t.prixUnitaire)} GNF</span>
+                      <span className={styles.grossEco}>
+                        {eco > 0 ? <span className={styles.grossEcoTag}>-{eco}%</span> : '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          <div className={styles.grossNote}>
+            <i className="fas fa-circle-info" />
+            <span>Ajoutez le produit au panier avec la quantité souhaitée. Le prix dégressif s'applique automatiquement à la commande.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // COMPOSANT PRINCIPAL
 // ─────────────────────────────────────────────────────────────
 
 export default function CardProduit({ p, onToast }: Props) {
-  const [modalVoir,       setModalVoir]       = useState(false);
+  const navigate = useNavigate();
   const [modalEntreprise, setModalEntreprise] = useState(false);
   const [modalPartage,    setModalPartage]    = useState(false);
+  const [modalGros,       setModalGros]       = useState(false);
 
   const img = mainImage(p);
   const em  = emoji(p);
@@ -499,16 +445,16 @@ export default function CardProduit({ p, onToast }: Props) {
 
   return (
     <>
-      <div className={styles.pcard}>
+      <div className={styles.pcard} onClick={() => navigate(`/produit/${p.id}`)} style={{ cursor: 'pointer' }}>
 
         {b && <span className={`${styles.pbadge} ${styles[b.cls]}`}>{b.label}</span>}
 
         <button className={`${styles.pfav} ${fav ? styles.pfavOn : ''}`}
-          onClick={handleToggleFav}>
+          onClick={e => { e.stopPropagation(); handleToggleFav(); }}>
           <i className={fav ? 'fas fa-heart' : 'far fa-heart'} />
         </button>
 
-        <div className={styles.pimg} onClick={() => setModalVoir(true)}>
+        <div className={styles.pimg}>
           {img
             ? <img src={img} alt={p.nom} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
             : <span className={styles.pimgEmoji}>{em}</span>}
@@ -516,7 +462,7 @@ export default function CardProduit({ p, onToast }: Props) {
         </div>
 
         <div className={styles.pbody}>
-          <div className={styles.pshop} onClick={() => setModalEntreprise(true)}>
+          <div className={styles.pshop} onClick={e => { e.stopPropagation(); setModalEntreprise(true); }}>
             {p.companyLogo
               ? <img src={p.companyLogo} alt={p.companyName} style={{ width:14, height:14, borderRadius:3, objectFit:'cover', verticalAlign:'middle', marginRight:4 }} />
               : <i className="fas fa-store" />}
@@ -536,37 +482,41 @@ export default function CardProduit({ p, onToast }: Props) {
             )}
           </div>
 
-          {/* ✅ Ajout réel au panier — déjà au panier : bouton "validé" non ré-ajoutable */}
-          {dejaAuPanier ? (
-            <button className={`${styles.pcart} ${styles.pcartDone}`}
-              onClick={() => onToast('✓ Déjà dans votre panier — retirez-le depuis le panier')}>
-              <i className="fas fa-check" /> Déjà au panier
-            </button>
-          ) : (
-            <button className={styles.pcart} disabled={loading} onClick={() => handleAdd()}>
-              {loading
-                ? <><i className="fas fa-spinner fa-spin" /> Ajout…</>
-                : <><i className="fas fa-cart-plus" /> Ajouter au panier</>}
-            </button>
-          )}
+          {/* ✅ Panier + actions secondaires sur la même ligne */}
+          <div className={styles.pbottomRow}>
+            {dejaAuPanier ? (
+              <button className={`${styles.pcart} ${styles.pcartDone}`}
+                onClick={e => { e.stopPropagation(); onToast('✓ Déjà dans votre panier — retirez-le depuis le panier'); }}>
+                <i className="fas fa-check" /> Déjà au panier
+              </button>
+            ) : (
+              <button className={styles.pcart} disabled={loading} onClick={e => { e.stopPropagation(); handleAdd(); }}>
+                {loading
+                  ? <><i className="fas fa-spinner fa-spin" /> Ajout…</>
+                  : <><i className="fas fa-cart-plus" /> Ajouter au panier</>}
+              </button>
+            )}
 
-          <div className={styles.pactions}>
-            <button className={`${styles.paction} ${styles.pactionVoir}`} onClick={() => setModalVoir(true)}>
-              <i className="fas fa-eye" /><span>Voir</span>
-            </button>
-            <button className={`${styles.paction} ${styles.pactionEntreprise}`} onClick={() => setModalEntreprise(true)}>
-              <i className="fas fa-store" /><span>Boutique</span>
-            </button>
-            <button className={`${styles.paction} ${styles.pactionPartage}`} onClick={() => setModalPartage(true)}>
-              <i className="fas fa-share-nodes" /><span>Partager</span>
-            </button>
+            <div className={styles.pactions}>
+              <button className={`${styles.paction} ${styles.pactionEntreprise}`} onClick={e => { e.stopPropagation(); setModalEntreprise(true); }} title="Boutique" aria-label="Boutique">
+                <i className="fas fa-store" /><span>Boutique</span>
+              </button>
+              <button className={`${styles.paction} ${styles.pactionPartage}`} onClick={e => { e.stopPropagation(); setModalPartage(true); }} title="Partager" aria-label="Partager">
+                <i className="fas fa-share-nodes" /><span>Partager</span>
+              </button>
+              {p.venteEnGros && (
+                <button className={`${styles.paction} ${styles.pactionGros}`} onClick={e => { e.stopPropagation(); setModalGros(true); }} title="Prix gros" aria-label="Prix gros">
+                  <i className="fas fa-tags" /><span>Prix gros</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {modalVoir       && <ModalVoir       p={p} onClose={() => setModalVoir(false)}       onToast={onToast} />}
       {modalEntreprise && <ModalEntreprise p={p} onClose={() => setModalEntreprise(false)} onToast={onToast} />}
       {modalPartage    && <ModalPartage    p={p} onClose={() => setModalPartage(false)}    onToast={onToast} />}
+      {modalGros       && <ModalGros       p={p} onClose={() => setModalGros(false)} />}
     </>
   );
 }

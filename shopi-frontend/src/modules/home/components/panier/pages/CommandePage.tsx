@@ -12,15 +12,10 @@ import { apiFetch }     from '../../../../../shared/services/apiFetch';
 
 import ProgressBar      from '../components/ProgressBar';
 import ConfirmModal     from '../components/ConfirmModal';
-import AdresseSection   from '../sections/AdresseSection';
-import LivraisonSection from '../sections/LivraisonSection';
-import PaiementSection  from '../sections/PaiementSection';
+import AdresseSection, { type AdresseFormData } from '../sections/AdresseSection';
 import RecapSection     from '../sections/RecapSection';
 import SummaryPanel     from '../sections/SummaryPanel';
 
-import { CORRESPONDANTS, SPEEDS, lvFeeCalc } from '../data/panierData';
-import { fetchLivreursSuivis }               from '../services/livreursSuivis.api';
-import type { LivreurSuivi }                 from '../services/livreursSuivis.api';
 import { settingsApi }                       from '../../settings/api/settings.api';
 import type { ProfilData, AdresseItem }      from '../../settings/api/settings.api';
 import styles from '../styles/CommandePage.module.css';
@@ -29,21 +24,21 @@ export default function CommandePage() {
   const navigate = useNavigate();
   const { items, count, updateQty, removeItem, clearCart } = useCart();
 
-  const [delMode,        setDelMode]        = useState<'std' | 'lvr'>('std');
-  const [selLvr,         setSelLvr]         = useState<string | null>(null);
-  const [selCorr,        setSelCorr]        = useState<number | null>(null);
-  const [curSpd,         setCurSpd]         = useState('std');
-  const [payMode,        setPayMode]        = useState('omo');
-  const [promoActif,     setPromoActif]     = useState(false);
+  const delMode = 'std' as const;
+  const selLvr  = null;
+  const selCorr = null;
+  const curSpd  = 'std';
+  const payMode   = 'omo';
+  const promoActif = false;
   const [termsOk,        setTermsOk]        = useState(false);
   const [loading,        setLoading]        = useState(false);
   const [showConfirmAsk, setShowConfirmAsk] = useState(false);
   const [etaDest,        setEtaDest]        = useState('Kaloum, Conakry');
-  const [livreurs,        setLivreurs]      = useState<LivreurSuivi[]>([]);
-  const [loadingLivreurs, setLoadingLivreurs] = useState(true);
-  const [clientProfil,    setClientProfil]  = useState<ProfilData | null>(null);
-  const [clientAddr,      setClientAddr]    = useState<AdresseItem | null>(null);
-  const [loadingClient,   setLoadingClient] = useState(true);
+  const [clientProfil,    setClientProfil]   = useState<ProfilData | null>(null);
+  const [clientAddr,      setClientAddr]     = useState<AdresseItem | null>(null);
+  const [savedAddresses,  setSavedAddresses] = useState<AdresseItem[]>([]);
+  const [loadingClient,   setLoadingClient]  = useState(true);
+  const [adresseLivraison, setAdresseLivraison] = useState<AdresseFormData | null>(null);
 
   /* ── Toast ── */
   const [toastMsg, setToastMsg]     = useState('');
@@ -57,17 +52,12 @@ export default function CommandePage() {
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
   useEffect(() => {
-    fetchLivreursSuivis()
-      .then(setLivreurs)
-      .catch(() => setLivreurs([]))
-      .finally(() => setLoadingLivreurs(false));
-  }, []);
-
-  useEffect(() => {
     Promise.all([settingsApi.getProfil(), settingsApi.getAdresses()])
       .then(([profil, adresses]) => {
         setClientProfil(profil);
-        const def = adresses?.find(a => a.isDefault) ?? adresses?.[0] ?? null;
+        const all = adresses ?? [];
+        setSavedAddresses(all);
+        const def = all.find(a => a.isDefault) ?? all[0] ?? null;
         setClientAddr(def);
       })
       .catch(() => {})
@@ -75,11 +65,10 @@ export default function CommandePage() {
   }, []);
 
   /* ── Calculs ── */
-  const co      = selCorr ? CORRESPONDANTS.find(c => c.id === selCorr) : null;
-  const corrFee = co?.fee || 0;
-  const lv      = selLvr ? livreurs.find(l => l.id === selLvr) : null;
-  const spd     = SPEEDS[curSpd];
-  const lvFee   = lv ? lvFeeCalc(lv.base, spd.m) : 0;
+  const co      = null;
+  const corrFee = 0;
+  const lv      = null;
+  const lvFee   = 0;
   const sub     = items.reduce((s, i) => s + i.prix * i.qty, 0);
   const disc    = promoActif ? Math.round(sub * 0.2) : 0;
   const total   = sub + corrFee + lvFee - disc;
@@ -97,31 +86,35 @@ export default function CommandePage() {
     catch { showToast('❌ Impossible de supprimer'); }
   }
 
-  function handleDelMode(m: 'std' | 'lvr') {
-    setDelMode(m);
-    if (m === 'std') setSelLvr(null);
-  }
-
   function askConfirm() {
-    if (!termsOk)                     { showToast('⚠️ Acceptez les conditions générales'); return; }
-    if (delMode === 'lvr' && !selLvr) { showToast('⚠️ Sélectionnez un livreur');           return; }
-    if (items.length === 0)           { showToast('⚠️ Votre panier est vide');              return; }
+    if (!termsOk)           { showToast('⚠️ Acceptez les conditions générales'); return; }
+    if (items.length === 0) { showToast('⚠️ Votre panier est vide');              return; }
+    const a = adresseLivraison;
+    if (!a?.prenom || !a?.nom)        { showToast('⚠️ Indiquez votre prénom et nom');     return; }
+    if (!a?.telephone)                { showToast('⚠️ Indiquez votre numéro de téléphone'); return; }
+    if (!a?.adressePrecise)           { showToast('⚠️ Indiquez votre adresse précise');    return; }
     setShowConfirmAsk(true);
   }
 
   async function handleConfirm() {
     setLoading(true);
     try {
+      const a = adresseLivraison;
       const res = await apiFetch<{ id: string }>('/client/commandes', {
         method: 'POST',
         body: {
           items:           items.map(i => ({ panierItemId: i.id })),
           delMode,
-          livreurId:       selLvr  ?? undefined,
-          correspondantId: selCorr ?? undefined,
           payMode,
           destination:     etaDest,
-          promoCode:       promoActif ? 'SHOPI20' : undefined,
+          /* ── Adresse de livraison ── */
+          prenomLivraison:   a?.prenom            ?? undefined,
+          nomLivraison:      a?.nom               ?? undefined,
+          telephoneLivraison:`+224${a?.telephone ?? ''}`,
+          villeLivraison:    a?.ville             ?? undefined,
+          communeLivraison:  a?.commune           ?? undefined,
+          adressePrecise:    a?.adressePrecise    ?? undefined,
+          instructions:      a?.instructions || undefined,
         },
       });
       await clearCart();
@@ -268,17 +261,13 @@ export default function CommandePage() {
             </div>
 
             {/* Sections suivantes */}
-            <AdresseSection   onVilleChange={setEtaDest} onToast={showToast} />
-            <LivraisonSection
-              delMode={delMode} selLvr={selLvr} selCorr={selCorr}
-              curSpd={curSpd} showCorr={false}
-              livreurs={livreurs} loadingLivreurs={loadingLivreurs}
-              onDel={handleDelMode} onSelLvr={setSelLvr}
-              onSelCorr={setSelCorr} onSpeed={setCurSpd} onToast={showToast}
-            />
-            <PaiementSection
-              payMode={payMode} promoActif={promoActif}
-              onPayMode={setPayMode} onPromo={setPromoActif} onToast={showToast}
+            <AdresseSection
+              clientProfil={clientProfil}
+              savedAddresses={savedAddresses}
+              loadingClient={loadingClient}
+              onVilleChange={setEtaDest}
+              onAdresseChange={setAdresseLivraison}
+              onToast={showToast}
             />
             <RecapSection
               items={cartItemsForSections}

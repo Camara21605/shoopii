@@ -63,7 +63,7 @@ export default function CardLivreur({ l, onToast, onFollow }: Props) {
           <div className={styles.dlAva} style={{
             display: photo ? 'none' : 'flex',
             alignItems: 'center', justifyContent: 'center',
-            background: 'linear-gradient(135deg,var(--navy),var(--blue))',
+            background: 'linear-gradient(135deg,var(--navy),var(--g300))',
             color: '#fff', fontFamily: 'var(--fd)', fontWeight: 800,
             fontSize: l?.emoji ? 26 : 20,
           }}>

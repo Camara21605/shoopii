@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
  * FICHIER : src/modules/dashboard/entreprise/services/commissions-parametres.service.ts
  *
  * RÔLE : Gère le plan de commissions (section 7)
@@ -73,8 +73,9 @@ export class CommissionsParametresService {
   }
 
   /* ── HELPER ── */
-  private async findCompanyOrFail(userId: string): Promise<Company> {
-    const company = await this.companyRepo.findOne({ where: { userId } });
+  private async findCompanyOrFail(userIdOrCompanyId: string): Promise<Company> {
+    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId } });
+    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }

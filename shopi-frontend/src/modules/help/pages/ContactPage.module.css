@@ -1,6 +1,6 @@
 /* src/modules/help/pages/ContactPage.module.css */
 
-.page { min-height: 100vh; background: #F8FAFF; padding: 32px 20px 80px; }
+.page { min-height: 100vh; background: var(--g50); padding: 32px 20px 80px; }
 .wrap { max-width: 1000px; margin: 0 auto; }
 
 .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 28px; }
@@ -126,55 +126,119 @@
 
 /* ── Dark mode ── */
 @media (prefers-color-scheme: dark) {
-  .page { background: #0D1526; color: #E2E8F6; }
+  .page { background: #000000; color: #F4F4F5; }
 
   /* Breadcrumb */
-  .breadcrumb a { color: #5B8BF0; }
-  .breadcrumb span { color: #4A5A7A; }
+  .breadcrumb a { color: #60A5FA; }
+  .breadcrumb span { color: #71717A; }
 
   /* Sidebar */
-  .sideHeader { background: #131E35; border-color: #1E2D4A; }
-  .sideTitle  { color: #E2E8F6; }
-  .sideSub    { color: #4A5A7A; }
+  .sideHeader { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  .sideTitle  { color: #F4F4F5; }
+  .sideSub    { color: #71717A; }
 
-  .channel { background: #131E35; border-color: #1E2D4A; }
-  .channel:hover { border-color: #5B8BF0; box-shadow: 0 2px 12px rgba(26,79,196,.2); }
-  .chanIcon  { background: #172040; color: #5B8BF0; }
-  .chanLabel { color: #4A5A7A; }
-  .chanValue { color: #E2E8F6; }
+  .channel { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  .channel:hover { border-color: #60A5FA; box-shadow: 0 2px 12px rgba(26,79,196,.2); }
+  .chanIcon  { background: rgba(96,165,250,.12); color: #60A5FA; }
+  .chanLabel { color: #71717A; }
+  .chanValue { color: #F4F4F5; }
 
-  .slaInfo { background: #131E35; border-color: #1E2D4A; }
-  .slaLabel { color: #4A5A7A; }
-  .slaValue { color: #E2E8F6; }
+  .slaInfo { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  .slaLabel { color: #71717A; }
+  .slaValue { color: #F4F4F5; }
 
   /* Formulaire */
-  .formWrap  { background: #131E35; border-color: #1E2D4A; }
-  .formTitle { color: #E2E8F6; }
+  .formWrap  { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  .formTitle { color: #F4F4F5; }
   .label     { color: #C5D0E8; }
 
   /* Cartes type */
-  .typeCard { background: #0D1526; border-color: #1E2D4A; }
-  .typeCard i:first-child { color: #4A5A7A; }
-  .typeCard:hover { border-color: #2A4080; background: #172040; }
-  .typeCard:hover i:first-child { color: #5B8BF0; }
-  .typeCardActive { border-color: #5B8BF0 !important; background: #172040 !important; }
-  .typeCardActive i:first-child { color: #5B8BF0 !important; }
+  .typeCard { background: #000000; border-color: rgba(255,255,255,.08); }
+  .typeCard i:first-child { color: #71717A; }
+  .typeCard:hover { border-color: rgba(255,255,255,.18); background: rgba(96,165,250,.12); }
+  .typeCard:hover i:first-child { color: #60A5FA; }
+  .typeCardActive { border-color: #60A5FA !important; background: rgba(96,165,250,.12) !important; }
+  .typeCardActive i:first-child { color: #60A5FA !important; }
   .typeLabel { color: #C5D0E8; }
 
   /* Inputs */
   .input, .textarea {
-    background: #0D1526;
-    border-color: #1E2D4A;
-    color: #E2E8F6;
+    background: #000000;
+    border-color: rgba(255,255,255,.08);
+    color: #F4F4F5;
   }
-  .input:focus, .textarea:focus { border-color: #5B8BF0; box-shadow: 0 0 0 3px rgba(91,139,240,.15); }
+  .input:focus, .textarea:focus { border-color: #60A5FA; box-shadow: 0 0 0 3px rgba(91,139,240,.15); }
 
   /* Succès */
-  .successTitle { color: #E2E8F6; }
-  .successText  { color: #7A8BA8; }
-  .newBtn { background: #131E35; border-color: #1E2D4A; color: #C5D0E8; }
-  .newBtn:hover { background: #1A2A45; }
+  .successTitle { color: #F4F4F5; }
+  .successText  { color: #A1A1AA; }
+  .newBtn { background: #0A0A0A; border-color: rgba(255,255,255,.08); color: #C5D0E8; }
+  .newBtn:hover { background: #1C1C1F; }
 
   /* Formulaire note */
-  .formNote { color: #4A5A7A; }
+  .formNote { color: #71717A; }
 }
+
+/* ── Toggle explicite (data-theme) — généré, miroir du bloc OS ci-dessus ── */
+:root[data-theme="dark"] .breadcrumb a { color: #60A5FA; }
+:root[data-theme="dark"] .breadcrumb span { color: #71717A; }
+:root[data-theme="dark"] .sideHeader { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .sideTitle { color: #F4F4F5; }
+:root[data-theme="dark"] .sideSub { color: #71717A; }
+:root[data-theme="dark"] .channel { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .channel:hover { border-color: #60A5FA; box-shadow: 0 2px 12px rgba(26,79,196,.2); }
+:root[data-theme="dark"] .chanIcon { background: rgba(96,165,250,.12); color: #60A5FA; }
+:root[data-theme="dark"] .chanLabel { color: #71717A; }
+:root[data-theme="dark"] .chanValue { color: #F4F4F5; }
+:root[data-theme="dark"] .slaInfo { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .slaLabel { color: #71717A; }
+:root[data-theme="dark"] .slaValue { color: #F4F4F5; }
+:root[data-theme="dark"] .formWrap { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .formTitle { color: #F4F4F5; }
+:root[data-theme="dark"] .label { color: #C5D0E8; }
+:root[data-theme="dark"] .typeCard { background: #000000; border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .typeCard i:first-child { color: #71717A; }
+:root[data-theme="dark"] .typeCard:hover { border-color: rgba(255,255,255,.18); background: rgba(96,165,250,.12); }
+:root[data-theme="dark"] .typeCard:hover i:first-child { color: #60A5FA; }
+:root[data-theme="dark"] .typeCardActive { border-color: #60A5FA !important; background: rgba(96,165,250,.12) !important; }
+:root[data-theme="dark"] .typeCardActive i:first-child { color: #60A5FA !important; }
+:root[data-theme="dark"] .typeLabel { color: #C5D0E8; }
+:root[data-theme="dark"] .input, :root[data-theme="dark"] .textarea { background: #000000; border-color: rgba(255,255,255,.08); color: #F4F4F5; }
+:root[data-theme="dark"] .input:focus, :root[data-theme="dark"] .textarea:focus { border-color: #60A5FA; box-shadow: 0 0 0 3px rgba(91,139,240,.15); }
+:root[data-theme="dark"] .successTitle { color: #F4F4F5; }
+:root[data-theme="dark"] .successText { color: #A1A1AA; }
+:root[data-theme="dark"] .newBtn { background: #0A0A0A; border-color: rgba(255,255,255,.08); color: #C5D0E8; }
+:root[data-theme="dark"] .newBtn:hover { background: #1C1C1F; }
+:root[data-theme="dark"] .formNote { color: #71717A; }
+
+:root[data-theme="light"] .breadcrumb a { color: #1A4FC4; }
+:root[data-theme="light"] .breadcrumb span { color: #9AAACB; }
+:root[data-theme="light"] .sideHeader { background: #fff; border-color: #E5EBF5; }
+:root[data-theme="light"] .sideTitle { color: #0B1F3A; }
+:root[data-theme="light"] .sideSub { color: #9AAACB; }
+:root[data-theme="light"] .channel { background: #fff; border-color: #E5EBF5; }
+:root[data-theme="light"] .channel:hover { border-color: #1A4FC4; box-shadow: 0 2px 12px rgba(26,79,196,.08); }
+:root[data-theme="light"] .chanIcon { background: #EEF2FF; color: #1A4FC4; }
+:root[data-theme="light"] .chanLabel { color: #9AAACB; }
+:root[data-theme="light"] .chanValue { color: #0B1F3A; }
+:root[data-theme="light"] .slaInfo { background: #fff; border-color: #E5EBF5; }
+:root[data-theme="light"] .slaLabel { color: #9AAACB; }
+:root[data-theme="light"] .slaValue { color: #0B1F3A; }
+:root[data-theme="light"] .formWrap { background: #fff; border-color: #E5EBF5; }
+:root[data-theme="light"] .formTitle { color: #0B1F3A; }
+:root[data-theme="light"] .label { color: #0B1F3A; }
+:root[data-theme="light"] .typeCard { background: #F8FAFF; border-color: #E5EBF5; }
+:root[data-theme="light"] .typeCard i:first-child { color: #9AAACB; }
+:root[data-theme="light"] .typeCard:hover { border-color: #B8CAEF; background: #F0F4FF; }
+:root[data-theme="light"] .typeCard:hover i:first-child { color: #1A4FC4; }
+:root[data-theme="light"] .typeCardActive { border-color: #1A4FC4 !important; background: #EEF2FF !important; }
+:root[data-theme="light"] .typeCardActive i:first-child { color: #1A4FC4 !important; }
+:root[data-theme="light"] .typeLabel { color: #2A3A5A; }
+:root[data-theme="light"] .input, :root[data-theme="light"] .textarea { background: #fff; color: #0B1F3A; border-color: #E5EBF5; }
+:root[data-theme="light"] .input:focus, :root[data-theme="light"] .textarea:focus { border-color: #1A4FC4; box-shadow: 0 0 0 3px rgba(26,79,196,.08); }
+:root[data-theme="light"] .successTitle { color: #0B1F3A; }
+:root[data-theme="light"] .successText { color: #475569; }
+:root[data-theme="light"] .newBtn { background: #fff; color: #2A3A5A; border-color: #E5EBF5; }
+:root[data-theme="light"] .newBtn:hover { background: #F8FAFF; }
+:root[data-theme="light"] .formNote { color: #9AAACB; }
+

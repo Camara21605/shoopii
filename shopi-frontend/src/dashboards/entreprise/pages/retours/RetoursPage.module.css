@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
  * RetoursPage.module.css — Retours & SAV Dashboard
  * ============================================================ */
 
@@ -17,20 +17,20 @@
   border-radius: var(--pill);
   border: 1.5px solid var(--bdr2);
   background: var(--white);
-  font-size: 13px; font-weight: 700;
+  font-size: 13px; font-weight: 800;
   color: var(--t2); cursor: pointer;
   display: flex; align-items: center; gap: 7px;
   transition: all .18s;
 }
 .tab:hover { border-color: var(--blue); color: var(--blue); background: var(--sky); }
 .tabActive {
-  background: var(--navy); color: #fff;
-  border-color: var(--navy);
+  background: var(--btn, #111113); color: #fff;
+  border-color: var(--btn, #111113);
 }
 .tabBadge {
   background: rgba(255,255,255,.2);
   color: #fff; border-radius: 999px;
-  padding: 1px 7px; font-size: 10.5px; font-weight: 800;
+  padding: 1px 7px; font-size: 10.5px; font-weight: 900;
 }
 .tabActiveBadge { background: rgba(255,255,255,.2); }
 .tabInactiveBadge { background: var(--sky-3); color: var(--blue); }
@@ -61,13 +61,13 @@
 .kpiIcon { font-size: 22px; margin-bottom: 6px; }
 .kpiVal {
   font-family: var(--fd,'Fraunces',serif);
-  font-size: 26px; font-weight: 800; color: var(--navy);
+  font-size: 26px; font-weight: 900; color: var(--navy);
   line-height: 1;
 }
 .kpiLbl { font-size: 11px; color: var(--t3); text-transform: uppercase; letter-spacing: .5px; }
 .kpiBadge {
   position: absolute; top: 14px; right: 14px;
-  font-size: 9.5px; font-weight: 800; padding: 2px 8px;
+  font-size: 9.5px; font-weight: 900; padding: 2px 8px;
   border-radius: 999px;
 }
 
@@ -88,8 +88,8 @@
 .searchInput {
   width: 100%; padding: 9px 12px 9px 36px;
   border: 1.5px solid var(--bdr2); border-radius: var(--pill);
-  background: var(--white); color: var(--navy);
-  font-size: 13px; font-family: var(--fb,'DM Sans',sans-serif);
+  background: var(--white); color: var(--t1);
+  font-size: 13px; font-family: var(--fb,'Instrument Sans',sans-serif);
   outline: none; transition: border-color .18s;
 }
 .searchInput:focus { border-color: var(--blue); }
@@ -115,7 +115,7 @@
 .table thead tr { background: var(--g50); border-bottom: 1.5px solid var(--bdr); }
 .table th {
   padding: 11px 14px;
-  font-size: 10.5px; font-weight: 800; color: var(--t3);
+  font-size: 10.5px; font-weight: 900; color: var(--t3);
   text-transform: uppercase; letter-spacing: .5px;
   text-align: left; white-space: nowrap;
 }
@@ -132,7 +132,7 @@
 .pill {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 10px; border-radius: 999px;
-  font-size: 10.5px; font-weight: 700; white-space: nowrap;
+  font-size: 10.5px; font-weight: 800; white-space: nowrap;
 }
 .pillPending  { background: rgba(245,158,11,.12);  color: #B45309; }
 .pillAccepted { background: rgba(5,150,105,.12);   color: #047857; }
@@ -152,7 +152,7 @@
 .actions { display: flex; gap: 6px; align-items: center; }
 .btnSm {
   padding: 5px 12px; border-radius: 7px;
-  font-size: 11.5px; font-weight: 700; cursor: pointer;
+  font-size: 11.5px; font-weight: 800; cursor: pointer;
   border: 1.5px solid transparent; transition: all .15s;
   display: inline-flex; align-items: center; gap: 5px;
 }
@@ -160,8 +160,8 @@
 .btnAccept:hover { background: var(--emerald); color: #fff; }
 .btnRefuse  { background: rgba(220,38,38,.08); color: #DC2626; border-color: rgba(220,38,38,.2); }
 .btnRefuse:hover { background: #DC2626; color: #fff; }
-.btnDetail  { background: var(--sky); color: var(--blue); border-color: var(--sky-3); }
-.btnDetail:hover { background: var(--blue); color: #fff; }
+.btnDetail  { background: var(--g100); color: var(--t2); border-color: var(--bdr2); }
+.btnDetail:hover { background: var(--btn, #111113); color: #fff; }
 .btnRefund  { background: rgba(109,40,217,.1); color: #6D28D9; border-color: rgba(109,40,217,.2); }
 .btnRefund:hover { background: #6D28D9; color: #fff; }
 .btnClose   { background: var(--g100); color: var(--t3); border-color: var(--bdr2); }
@@ -173,7 +173,7 @@
   justify-content: center; padding: 64px 20px; text-align: center;
 }
 .emptyIco { font-size: 48px; margin-bottom: 14px; }
-.emptyTitle { font-family: var(--fd,'Fraunces',serif); font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+.emptyTitle { font-family: var(--fd,'Fraunces',serif); font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
 .emptySub   { font-size: 13px; color: var(--t3); }
 
 /* ── Skeleton ── */
@@ -220,7 +220,7 @@
   padding: 18px 22px; border-bottom: 1.5px solid var(--bdr);
   flex-shrink: 0;
 }
-.modalTitle { font-family: var(--fd,'Fraunces',serif); font-size: 16px; font-weight: 800; color: var(--navy); }
+.modalTitle { font-family: var(--fd,'Fraunces',serif); font-size: 16px; font-weight: 900; color: var(--navy); }
 .modalSub   { font-size: 12px; color: var(--t3); margin-top: 2px; }
 .modalClose {
   width: 32px; height: 32px; border-radius: 9px;
@@ -240,12 +240,12 @@
 
 /* ── Form ── */
 .field { display: flex; flex-direction: column; gap: 6px; }
-.label { font-size: 12.5px; font-weight: 700; color: var(--navy); }
+.label { font-size: 12.5px; font-weight: 800; color: var(--navy); }
 .input, .textarea, .select {
   padding: 10px 14px;
   border: 1.5px solid var(--bdr2); border-radius: var(--r-md);
-  background: var(--white); color: var(--navy);
-  font-size: 13px; font-family: var(--fb,'DM Sans',sans-serif);
+  background: var(--white); color: var(--t1);
+  font-size: 13px; font-family: var(--fb,'Instrument Sans',sans-serif);
   outline: none; transition: border-color .18s;
 }
 .input:focus, .textarea:focus, .select:focus { border-color: var(--blue); }
@@ -254,12 +254,12 @@
 /* ── Boutons principaux ── */
 .btn {
   padding: 10px 20px; border-radius: var(--pill);
-  font-size: 13px; font-weight: 700; cursor: pointer;
+  font-size: 13px; font-weight: 800; cursor: pointer;
   display: flex; align-items: center; gap: 7px;
   border: none; transition: all .18s;
 }
-.btnPrimary { background: var(--navy); color: #fff; }
-.btnPrimary:hover { background: #112648; transform: translateY(-1px); }
+.btnPrimary { background: var(--btn, #111113); color: #fff; }
+.btnPrimary:hover { background: var(--btn-h, #1C1C1F); transform: translateY(-1px); box-shadow: var(--sh-md); }
 .btnSuccess { background: var(--emerald); color: #fff; }
 .btnSuccess:hover { filter: brightness(1.1); }
 .btnDanger  { background: #DC2626; color: #fff; }
@@ -290,7 +290,7 @@
   border: 2px solid var(--white); box-shadow: 0 0 0 2px var(--bdr);
 }
 .timelineContent { flex: 1; padding-top: 4px; }
-.timelineAction { font-size: 12.5px; font-weight: 700; color: var(--navy); }
+.timelineAction { font-size: 12.5px; font-weight: 800; color: var(--navy); }
 .timelineMeta   { font-size: 11px; color: var(--t3); margin-top: 2px; }
 
 /* ── SAV conversation ── */
@@ -300,17 +300,17 @@
 .msgAvatar {
   width: 32px; height: 32px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 800; flex-shrink: 0;
+  font-size: 13px; font-weight: 900; flex-shrink: 0;
   overflow: hidden;
 }
-.msgAvatarCli { background: var(--sky); color: var(--blue); }
-.msgAvatarEnt { background: var(--navy); color: #fff; }
+.msgAvatarCli { background: var(--g100); color: var(--t2); }
+.msgAvatarEnt { background: var(--g300); color: #fff; }
 .msgBubble {
   max-width: 70%; padding: 10px 14px;
   border-radius: 14px; font-size: 13px; line-height: 1.55;
 }
-.msgBubbleCli { background: var(--g50); color: var(--navy); border: 1px solid var(--bdr); border-bottom-left-radius: 4px; }
-.msgBubbleEnt { background: var(--navy); color: #fff; border-bottom-right-radius: 4px; }
+.msgBubbleCli { background: var(--g50); color: var(--t1); border: 1px solid var(--bdr); border-bottom-left-radius: 4px; }
+.msgBubbleEnt { background: var(--btn, #111113); color: #fff; border-bottom-right-radius: 4px; }
 .msgTime { font-size: 10.5px; color: var(--t4); margin-top: 4px; }
 .msgTimeCli { text-align: left; }
 .msgTimeEnt { text-align: right; }
@@ -325,12 +325,12 @@
 .pgBtn {
   width: 32px; height: 32px; border-radius: 8px;
   border: 1.5px solid var(--bdr2); background: var(--white);
-  color: var(--t2); font-size: 12px; font-weight: 700;
+  color: var(--t2); font-size: 12px; font-weight: 800;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: all .15s;
 }
 .pgBtn:hover { background: var(--sky); color: var(--blue); border-color: var(--blue); }
-.pgBtnActive { background: var(--navy); color: #fff; border-color: var(--navy); }
+.pgBtnActive { background: var(--btn, #111113); color: #fff; border-color: var(--btn, #111113); }
 .pgBtnDisabled { opacity: .4; cursor: not-allowed; }
 
 /* ── Evidence gallery ── */
@@ -351,7 +351,7 @@
 .barItem  { display: flex; flex-direction: column; gap: 4px; }
 .barLabel { display: flex; justify-content: space-between; font-size: 12px; }
 .barLabelName  { color: var(--t2); }
-.barLabelValue { font-weight: 700; }
+.barLabelValue { font-weight: 800; }
 .barBg   { background: var(--g100); border-radius: var(--pill); height: 8px; overflow: hidden; }
 .barFill { height: 100%; border-radius: var(--pill); transition: width .5s ease; }
 

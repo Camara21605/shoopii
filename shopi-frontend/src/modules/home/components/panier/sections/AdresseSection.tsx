@@ -1,38 +1,132 @@
 /*
- * ============================================================
  * FICHIER : src/modules/home/components/panier/sections/AdresseSection.tsx
- *
- * RÔLE    : Section "Adresse de livraison" — étape 2.
- *           - Chips d'adresses enregistrées (Domicile / Bureau / + Nouvelle)
- *           - Formulaire complet : Prénom, Nom, Téléphone (🇬🇳 +224)
- *           - Sélecteurs Ville + Commune (liés dynamiquement)
- *           - Adresse précise + Instructions optionnelles
- * ============================================================
+ * Connectée au profil client réel et aux adresses enregistrées.
+ * Formulaire entièrement contrôlé — remonte les données via onAdresseChange.
  */
-import React, { useState } from 'react';
-import { ADRESSES, VILLES, COMMUNES } from '../data/panierData';
+import React, { useState, useEffect, useRef } from 'react';
+import type { ProfilData, AdresseItem } from '../../settings/api/settings.api';
+import { VILLES, COMMUNES } from '../data/panierData';
 import styles from '../styles/AdresseSection.module.css';
 
-interface Props {
-  onVilleChange: (v: string) => void;
-  onToast:       (m: string) => void;
+export interface AdresseFormData {
+  prenom:         string;
+  nom:            string;
+  telephone:      string;
+  ville:          string;
+  commune:        string;
+  adressePrecise: string;
+  instructions:   string;
 }
 
-export default function AdresseSection({ onVilleChange, onToast }: Props) {
-  const [activeAddr, setActiveAddr] = useState('home');
-  const [ville,      setVille]      = useState('conakry');
+interface Props {
+  clientProfil:    ProfilData | null;
+  savedAddresses:  AdresseItem[];
+  loadingClient:   boolean;
+  onVilleChange:   (v: string) => void;
+  onAdresseChange: (addr: AdresseFormData) => void;
+  onToast:         (m: string) => void;
+}
 
-  function handleAddr(id: string, villeLabel: string) {
-    setActiveAddr(id);
-    onVilleChange(villeLabel);
-    onToast(`📍 Adresse sélectionnée : ${villeLabel}`);
+const EMPTY: AdresseFormData = {
+  prenom:'', nom:'', telephone:'', ville:'conakry',
+  commune:'kaloum', adressePrecise:'', instructions:'',
+};
+
+function villeToVal(label: string): string {
+  return VILLES.find(v => v.label.toLowerCase() === label.toLowerCase())?.value ?? 'conakry';
+}
+
+function communeToVal(villeVal: string, raw?: string): string {
+  if (!raw) return COMMUNES[villeVal]?.[0]?.value ?? '';
+  const r = raw.toLowerCase();
+  return COMMUNES[villeVal]?.find(c => c.value === r || c.label.toLowerCase() === r)?.value
+    ?? COMMUNES[villeVal]?.[0]?.value ?? '';
+}
+
+function etaDest(form: AdresseFormData): string {
+  const vl = VILLES.find(v => v.value === form.ville)?.label ?? form.ville;
+  const cl = COMMUNES[form.ville]?.find(c => c.value === form.commune)?.label ?? '';
+  return cl ? `${cl}, ${vl}` : vl;
+}
+
+export default function AdresseSection({
+  clientProfil, savedAddresses, loadingClient,
+  onVilleChange, onAdresseChange, onToast,
+}: Props) {
+  const [activeAddr, setActiveAddr] = useState('');
+  const [form, setForm]             = useState<AdresseFormData>(EMPTY);
+  const didInit = useRef(false);
+
+  /* ── Pré-remplissage initial quand les données client arrivent ── */
+  useEffect(() => {
+    if (didInit.current || !clientProfil) return;
+    didInit.current = true;
+
+    const def      = savedAddresses.find(a => a.isDefault) ?? savedAddresses[0] ?? null;
+    const villeVal = def ? villeToVal(def.ville) : 'conakry';
+    const commVal  = def ? communeToVal(villeVal, def.commune) : (COMMUNES['conakry']?.[0]?.value ?? 'kaloum');
+    const rawPhone = (def?.phone || clientProfil.phone || '').replace(/^\+?224\s*/, '').trim();
+
+    const next: AdresseFormData = {
+      prenom:         clientProfil.firstName,
+      nom:            clientProfil.lastName,
+      telephone:      rawPhone,
+      ville:          villeVal,
+      commune:        commVal,
+      adressePrecise: def?.adresse ?? '',
+      instructions:   '',
+    };
+    setForm(next);
+    setActiveAddr(def?.id ?? 'new');
+    onVilleChange(etaDest(next));
+    onAdresseChange(next);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientProfil, savedAddresses]);
+
+  /* ── Mise à jour d'un ou plusieurs champs ── */
+  function update(patch: Partial<AdresseFormData>) {
+    const next = { ...form, ...patch };
+    if (patch.ville && patch.ville !== form.ville) {
+      next.commune = COMMUNES[patch.ville]?.[0]?.value ?? '';
+    }
+    setForm(next);
+    onAdresseChange(next);
+    if ('ville' in patch || 'commune' in patch) onVilleChange(etaDest(next));
   }
 
-  function handleVille(v: string) {
-    setVille(v);
-    const label = VILLES.find(x => x.value === v)?.label || v;
-    onVilleChange(label);
+  /* ── Sélection d'une adresse enregistrée ── */
+  function selectAddr(a: AdresseItem) {
+    const villeVal = villeToVal(a.ville);
+    const commVal  = communeToVal(villeVal, a.commune);
+    const next: AdresseFormData = {
+      prenom:         form.prenom,
+      nom:            form.nom,
+      telephone:      form.telephone,
+      ville:          villeVal,
+      commune:        commVal,
+      adressePrecise: a.adresse,
+      instructions:   '',
+    };
+    setForm(next);
+    setActiveAddr(a.id);
+    onVilleChange(etaDest(next));
+    onAdresseChange(next);
+    onToast(`📍 ${a.nom}`);
   }
+
+  /* ── Nouvelle adresse (vider les champs d'adresse) ── */
+  function newAddr() {
+    const next: AdresseFormData = {
+      ...form,
+      ville: 'conakry', commune: COMMUNES['conakry']?.[0]?.value ?? 'kaloum',
+      adressePrecise: '', instructions: '',
+    };
+    setForm(next);
+    setActiveAddr('new');
+    onAdresseChange(next);
+  }
+
+  const communes = COMMUNES[form.ville] ?? [];
 
   return (
     <div className={`${styles.sc} ${styles.lit}`}>
@@ -49,25 +143,35 @@ export default function AdresseSection({ onVilleChange, onToast }: Props) {
       <div className={styles.scBody}>
 
         {/* ── Chips adresses enregistrées ── */}
-        <div className={styles.addrChips}>
-          {ADRESSES.map(a => (
-            <div
-              key={a.id}
-              className={`${styles.addrChip} ${activeAddr === a.id ? styles.addrChipSel : ''}`}
-              onClick={() => handleAddr(a.id, a.ville)}
-            >
-              <div className={styles.chipLabel}>
-                <i className={`fas ${a.icon}`} /> {a.label}
-              </div>
-              <div className={styles.chipVille}>{a.ville}</div>
-              <div className={styles.chipDetail}>{a.detail}</div>
-            </div>
-          ))}
-          {/* Nouvelle adresse */}
-          <div className={styles.addrNew} onClick={() => onToast('➕ Nouvelle adresse')}>
-            <i className="fas fa-plus" /> Nouvelle
+        {loadingClient ? (
+          <div style={{ height:52, display:'flex', alignItems:'center', gap:8, color:'var(--t3)', fontSize:13 }}>
+            <i className="fas fa-spinner fa-spin" /> Chargement de vos adresses…
           </div>
-        </div>
+        ) : (
+          <div className={styles.addrChips}>
+            {savedAddresses.map(a => (
+              <div
+                key={a.id}
+                className={`${styles.addrChip} ${activeAddr === a.id ? styles.addrChipSel : ''}`}
+                onClick={() => selectAddr(a)}
+              >
+                <div className={styles.chipLabel}>
+                  <i className={`fas ${a.isDefault ? 'fa-house' : 'fa-briefcase'}`} /> {a.nom}
+                </div>
+                <div className={styles.chipVille}>{a.ville}</div>
+                <div className={styles.chipDetail}>
+                  {a.adresse?.length > 32 ? a.adresse.substring(0, 32) + '…' : (a.adresse ?? '')}
+                </div>
+              </div>
+            ))}
+            <div
+              className={`${styles.addrNew} ${activeAddr === 'new' ? styles.addrChipSel : ''}`}
+              onClick={newAddr}
+            >
+              <i className="fas fa-plus" /> Nouvelle
+            </div>
+          </div>
+        )}
 
         {/* ── Prénom + Nom ── */}
         <div className={styles.fr}>
@@ -75,14 +179,22 @@ export default function AdresseSection({ onVilleChange, onToast }: Props) {
             <div className={styles.fl}>Prénom <span>*</span></div>
             <div className={styles.fw}>
               <i className={`fas fa-user ${styles.fi}`} />
-              <input className={`${styles.fin} ${styles.finOk}`} type="text" defaultValue="Mamadou" />
+              <input
+                className={`${styles.fin} ${form.prenom ? styles.finOk : ''}`}
+                type="text" value={form.prenom} placeholder="Votre prénom"
+                onChange={e => update({ prenom: e.target.value })}
+              />
             </div>
           </div>
           <div className={styles.fg}>
             <div className={styles.fl}>Nom <span>*</span></div>
             <div className={styles.fw}>
               <i className={`fas fa-user ${styles.fi}`} />
-              <input className={`${styles.fin} ${styles.finOk}`} type="text" defaultValue="Kouyaté" />
+              <input
+                className={`${styles.fin} ${form.nom ? styles.finOk : ''}`}
+                type="text" value={form.nom} placeholder="Votre nom"
+                onChange={e => update({ nom: e.target.value })}
+              />
             </div>
           </div>
         </div>
@@ -94,9 +206,9 @@ export default function AdresseSection({ onVilleChange, onToast }: Props) {
             <div className={styles.fw}>
               <div className={styles.dialCode}>🇬🇳 +224</div>
               <input
-                className={`${styles.fin} ${styles.finTel} ${styles.finOk}`}
-                type="tel"
-                defaultValue="620 123 456"
+                className={`${styles.fin} ${styles.finTel} ${form.telephone ? styles.finOk : ''}`}
+                type="tel" value={form.telephone} placeholder="6XX XXX XXX"
+                onChange={e => update({ telephone: e.target.value })}
               />
             </div>
           </div>
@@ -110,12 +222,10 @@ export default function AdresseSection({ onVilleChange, onToast }: Props) {
               <i className={`fas fa-city ${styles.fi}`} />
               <select
                 className={styles.fin}
-                value={ville}
-                onChange={e => handleVille(e.target.value)}
+                value={form.ville}
+                onChange={e => update({ ville: e.target.value })}
               >
-                {VILLES.map(v => (
-                  <option key={v.value} value={v.value}>{v.label}</option>
-                ))}
+                {VILLES.map(v => <option key={v.value} value={v.value}>{v.label}</option>)}
               </select>
             </div>
           </div>
@@ -123,10 +233,12 @@ export default function AdresseSection({ onVilleChange, onToast }: Props) {
             <div className={styles.fl}>Commune <span>*</span></div>
             <div className={styles.fw}>
               <i className={`fas fa-map-pin ${styles.fi}`} />
-              <select className={styles.fin}>
-                {(COMMUNES[ville] || []).map(c => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
+              <select
+                className={styles.fin}
+                value={form.commune}
+                onChange={e => update({ commune: e.target.value })}
+              >
+                {communes.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             </div>
           </div>
@@ -139,9 +251,9 @@ export default function AdresseSection({ onVilleChange, onToast }: Props) {
             <div className={styles.fw}>
               <i className={`fas fa-location-dot ${styles.fi}`} />
               <input
-                className={`${styles.fin} ${styles.finOk}`}
-                type="text"
-                defaultValue="Quartier Almamya, Rue KA-012, près de la pharmacie"
+                className={`${styles.fin} ${form.adressePrecise ? styles.finOk : ''}`}
+                type="text" value={form.adressePrecise} placeholder="Quartier, rue, repère…"
+                onChange={e => update({ adressePrecise: e.target.value })}
               />
             </div>
           </div>
@@ -158,8 +270,8 @@ export default function AdresseSection({ onVilleChange, onToast }: Props) {
               <i className={`fas fa-comment ${styles.fi}`} />
               <input
                 className={styles.fin}
-                type="text"
-                placeholder="Ex : Appeler avant d'arriver…"
+                type="text" value={form.instructions} placeholder="Ex : Appeler avant d'arriver…"
+                onChange={e => update({ instructions: e.target.value })}
               />
             </div>
           </div>

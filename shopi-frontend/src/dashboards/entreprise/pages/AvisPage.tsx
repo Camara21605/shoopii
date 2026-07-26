@@ -222,10 +222,10 @@ export default function AvisPage() {
                   {/* Réponse existante */}
                   {r.reponse && (
                     <div style={{
-                      padding:'10px 14px', background:'var(--sky)',
-                      border:'1px solid var(--sky-3)', borderRadius:'var(--r-md)', marginBottom:10,
+                      padding:'10px 14px', background:'var(--g100)',
+                      border:'1px solid var(--bdr2)', borderRadius:'var(--r-md)', marginBottom:10,
                     }}>
-                      <div style={{ fontSize:10.5, fontWeight:700, color:'var(--blue)', marginBottom:4 }}>
+                      <div style={{ fontSize:10.5, fontWeight:700, color:'var(--t2)', marginBottom:4 }}>
                         <i className="fas fa-store" /> Votre réponse
                       </div>
                       <div style={{ fontSize:12, color:'var(--t2)', lineHeight:1.55 }}>{r.reponse}</div>
@@ -345,7 +345,7 @@ export default function AvisPage() {
               ].map((c, i) => (
                 <div key={i} style={{
                   display:'flex', gap:9, padding:'10px 12px',
-                  background:'var(--sky)', border:'1px solid var(--sky-3)',
+                  background:'var(--g100)', border:'1px solid var(--bdr2)',
                   borderRadius:'var(--r-md)', fontSize:11.5, color:'var(--t2)', lineHeight:1.5,
                 }}>
                   <span style={{ flexShrink:0, fontSize:14 }}>{c.ic}</span>

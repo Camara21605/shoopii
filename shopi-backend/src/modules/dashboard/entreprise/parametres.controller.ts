@@ -20,7 +20,7 @@
  *   Section 12   — PATCH pause, desactiver, DELETE supprimer
  *
  * SÉCURITÉ : Toutes les routes nécessitent un JWT valide.
- * L'userId est extrait du token via @Req() req.user.id
+ * L'userId est extrait du token via @Req() req.user.actorId ?? req.user.id
  * ============================================================ */
 
 import {
@@ -86,19 +86,19 @@ export class ParametresController {
   /** Charger toutes les données paramètres d'un coup */
   @Get()
   getAll(@Req() req: any) {
-    return this.boutiqueService.getParametres(req.user.id);
+    return this.boutiqueService.getParametres(req.user.actorId ?? req.user.id);
   }
 
   /** Mettre à jour Boutique & Identité */
   @Patch('boutique')
   updateBoutique(@Req() req: any, @Body() dto: UpdateBoutiqueDto) {
-    return this.boutiqueService.updateBoutique(req.user.id, dto);
+    return this.boutiqueService.updateBoutique(req.user.actorId ?? req.user.id, dto);
   }
 
   /** Mettre à jour Contact & Localisation */
   @Patch('contact')
   updateContact(@Req() req: any, @Body() dto: UpdateContactDto) {
-    return this.boutiqueService.updateContact(req.user.id, dto);
+    return this.boutiqueService.updateContact(req.user.actorId ?? req.user.id, dto);
   }
 
   /** Uploader le logo (multipart/form-data, champ "file") */
@@ -114,7 +114,7 @@ export class ParametresController {
     }))
     file: Express.Multer.File,
   ) {
-    return this.boutiqueService.uploadLogo(req.user.id, file);
+    return this.boutiqueService.uploadLogo(req.user.actorId ?? req.user.id, file);
   }
 
   /** Uploader l'image de couverture */
@@ -130,13 +130,13 @@ export class ParametresController {
     }))
     file: Express.Multer.File,
   ) {
-    return this.boutiqueService.uploadCover(req.user.id, file);
+    return this.boutiqueService.uploadCover(req.user.actorId ?? req.user.id, file);
   }
 
   /** Supprimer le logo */
   @Delete('logo')
   deleteLogo(@Req() req: any) {
-    return this.boutiqueService.deleteLogo(req.user.id);
+    return this.boutiqueService.deleteLogo(req.user.actorId ?? req.user.id);
   }
 
   /* ════════════════════════════════════════════════════════
@@ -146,13 +146,13 @@ export class ParametresController {
   /** Lire les 7 horaires triés lundi→dimanche */
   @Get('horaires')
   getHoraires(@Req() req: any) {
-    return this.horairesService.getHoraires(req.user.id);
+    return this.horairesService.getHoraires(req.user.actorId ?? req.user.id);
   }
 
   /** Remplacer les horaires de tous les jours d'un coup */
   @Patch('horaires')
   updateHoraires(@Req() req: any, @Body() dto: UpdateHorairesDto) {
-    return this.horairesService.updateHoraires(req.user.id, dto);
+    return this.horairesService.updateHoraires(req.user.actorId ?? req.user.id, dto);
   }
 
   /** Modifier un seul jour → PATCH /parametres/horaires/lundi */
@@ -162,7 +162,7 @@ export class ParametresController {
     @Param('jour') jour: JourSemaine,
     @Body() dto: HoraireJourDto,
   ) {
-    return this.horairesService.updateJour(req.user.id, jour, dto);
+    return this.horairesService.updateJour(req.user.actorId ?? req.user.id, jour, dto);
   }
 
   /* ════════════════════════════════════════════════════════
@@ -171,7 +171,7 @@ export class ParametresController {
 
   @Patch('catalogue')
   updateCatalogue(@Req() req: any, @Body() dto: UpdateCatalogueDto) {
-    return this.catalogueService.updateCatalogue(req.user.id, dto);
+    return this.catalogueService.updateCatalogue(req.user.actorId ?? req.user.id, dto);
   }
 
   /* ════════════════════════════════════════════════════════
@@ -180,7 +180,7 @@ export class ParametresController {
 
   @Patch('livraison')
   updateLivraison(@Req() req: any, @Body() dto: UpdateLivraisonDto) {
-    return this.livraisonService.updateLivraison(req.user.id, dto);
+    return this.livraisonService.updateLivraison(req.user.actorId ?? req.user.id, dto);
   }
 
   /* ════════════════════════════════════════════════════════
@@ -189,7 +189,7 @@ export class ParametresController {
 
   @Patch('paiement')
   updatePaiement(@Req() req: any, @Body() dto: UpdatePaiementDto) {
-    return this.paiementService.updatePaiement(req.user.id, dto);
+    return this.paiementService.updatePaiement(req.user.actorId ?? req.user.id, dto);
   }
 
   /* ════════════════════════════════════════════════════════
@@ -198,12 +198,12 @@ export class ParametresController {
 
   @Get('commissions')
   getCommissions(@Req() req: any) {
-    return this.commissionsService.getCommissions(req.user.id);
+    return this.commissionsService.getCommissions(req.user.actorId ?? req.user.id);
   }
 
   @Patch('commissions')
   updatePlan(@Req() req: any, @Body() dto: UpdatePlanDto) {
-    return this.commissionsService.updatePlan(req.user.id, dto);
+    return this.commissionsService.updatePlan(req.user.actorId ?? req.user.id, dto);
   }
 
   /* ════════════════════════════════════════════════════════
@@ -213,7 +213,7 @@ export class ParametresController {
   /** Statut de tous les documents */
   @Get('documents')
   getDocuments(@Req() req: any) {
-    return this.documentsService.getDocuments(req.user.id);
+    return this.documentsService.getDocuments(req.user.actorId ?? req.user.id);
   }
 
   /**
@@ -232,13 +232,13 @@ export class ParametresController {
     }))
     file: Express.Multer.File,
   ) {
-    return this.documentsService.uploadDocument(req.user.id, type, file);
+    return this.documentsService.uploadDocument(req.user.actorId ?? req.user.id, type, file);
   }
 
   /** Supprimer un document → DELETE /parametres/documents/cni */
   @Delete('documents/:type')
   deleteDocument(@Req() req: any, @Param('type') type: any) {
-    return this.documentsService.deleteDocument(req.user.id, type);
+    return this.documentsService.deleteDocument(req.user.actorId ?? req.user.id, type);
   }
 
   /* ════════════════════════════════════════════════════════
@@ -247,17 +247,17 @@ export class ParametresController {
 
   @Get('securite')
   getSecurite(@Req() req: any) {
-    return this.securiteService.getSecurite(req.user.id);
+    return this.securiteService.getSecurite(req.user.actorId ?? req.user.id);
   }
 
   @Patch('securite/password')
   updatePassword(@Req() req: any, @Body() dto: UpdatePasswordDto) {
-    return this.securiteService.updatePassword(req.user.id, dto);
+    return this.securiteService.updatePassword(req.user.actorId ?? req.user.id, dto);
   }
 
   @Patch('securite/2fa')
   updateTwoFa(@Req() req: any, @Body() dto: UpdateTwoFaDto) {
-    return this.securiteService.updateTwoFa(req.user.id, dto);
+    return this.securiteService.updateTwoFa(req.user.actorId ?? req.user.id, dto);
   }
 
   /* ════════════════════════════════════════════════════════
@@ -266,12 +266,12 @@ export class ParametresController {
 
   @Get('notifications')
   getNotifs(@Req() req: any) {
-    return this.notifsService.getNotifs(req.user.id);
+    return this.notifsService.getNotifs(req.user.actorId ?? req.user.id);
   }
 
   @Patch('notifications')
   updateNotifs(@Req() req: any, @Body() dto: UpdateNotifsDto) {
-    return this.notifsService.updateNotifs(req.user.id, dto);
+    return this.notifsService.updateNotifs(req.user.actorId ?? req.user.id, dto);
   }
 
   /* ════════════════════════════════════════════════════════
@@ -280,12 +280,12 @@ export class ParametresController {
 
   @Get('confidentialite')
   getPrivacy(@Req() req: any) {
-    return this.privacyService.getPrivacy(req.user.id);
+    return this.privacyService.getPrivacy(req.user.actorId ?? req.user.id);
   }
 
   @Patch('confidentialite')
   updatePrivacy(@Req() req: any, @Body() dto: UpdatePrivacyDto) {
-    return this.privacyService.updatePrivacy(req.user.id, dto);
+    return this.privacyService.updatePrivacy(req.user.actorId ?? req.user.id, dto);
   }
 
   /* ════════════════════════════════════════════════════════
@@ -295,18 +295,18 @@ export class ParametresController {
   /** Mettre en pause — mot de passe requis */
   @Patch('danger/pause')
   pauseBoutique(@Req() req: any, @Body() dto: DangerConfirmDto) {
-    return this.dangerService.pauseBoutique(req.user.id, dto);
+    return this.dangerService.pauseBoutique(req.user.actorId ?? req.user.id, dto);
   }
 
   /** Désactiver 30 jours — mot de passe requis */
   @Patch('danger/desactiver')
   desactiverCompte(@Req() req: any, @Body() dto: DangerConfirmDto) {
-    return this.dangerService.desactiverCompte(req.user.id, dto);
+    return this.dangerService.desactiverCompte(req.user.actorId ?? req.user.id, dto);
   }
 
   /** Supprimer définitivement — mot de passe requis */
   @Delete('danger/supprimer')
   supprimerBoutique(@Req() req: any, @Body() dto: DangerConfirmDto) {
-    return this.dangerService.supprimerBoutique(req.user.id, dto);
+    return this.dangerService.supprimerBoutique(req.user.actorId ?? req.user.id, dto);
   }
 }

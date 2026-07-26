@@ -225,8 +225,8 @@ export default function SecuriteSection({ onToast }: Props) {
 
           {/* Affichage des codes générés */}
           {codes && (
-            <div style={{ margin:'0 24px 16px', background:'var(--navy)', borderRadius:'var(--r-md)', padding:16 }}>
-              <div style={{ fontSize:11, fontWeight:700, color:'rgba(200,217,248,.55)', marginBottom:12, textTransform:'uppercase', letterSpacing:'1px' }}>
+            <div style={{ margin:'0 24px 16px', background:'var(--btn)', borderRadius:'var(--r-md)', padding:16 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,.55)', marginBottom:12, textTransform:'uppercase', letterSpacing:'1px' }}>
                 ⚠️ Sauvegardez ces codes — ils ne s'afficheront qu'une fois
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
@@ -237,7 +237,7 @@ export default function SecuriteSection({ onToast }: Props) {
                 ))}
               </div>
               <button
-                style={{ marginTop:12, background:'none', border:'1px solid rgba(255,255,255,.2)', borderRadius:8, padding:'6px 14px', color:'rgba(200,217,248,.7)', fontSize:11, fontWeight:600, cursor:'pointer' }}
+                style={{ marginTop:12, background:'none', border:'1px solid rgba(255,255,255,.2)', borderRadius:8, padding:'6px 14px', color:'rgba(255,255,255,.7)', fontSize:11, fontWeight:600, cursor:'pointer' }}
                 onClick={() => { navigator.clipboard.writeText(codes.join('\n')); onToast('📋 Codes copiés !'); }}
               >
                 <i className="fas fa-copy" /> Tout copier

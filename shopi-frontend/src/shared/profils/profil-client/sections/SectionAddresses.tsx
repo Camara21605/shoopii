@@ -197,7 +197,7 @@ export default function SectionAddresses({ onToast }: Props) {
             <span style={{ fontWeight:400, color:'var(--t3)' }}>— cliquez ou glissez le marqueur</span>
           </div>
           <Suspense fallback={
-            <div style={{ height:300, display:'flex', alignItems:'center', justifyContent:'center', background:'#f0f4ff', borderRadius:12 }}>
+            <div style={{ height:300, display:'flex', alignItems:'center', justifyContent:'center', background:'var(--g100)', borderRadius:12 }}>
               <i className="fas fa-circle-notch fa-spin" style={{ fontSize:24, color:'var(--b2)' }} />
             </div>
           }>
@@ -354,7 +354,7 @@ export default function SectionAddresses({ onToast }: Props) {
 
         {/* Coordonnées GPS */}
         {form.latitude && form.longitude && (
-          <div style={{ marginTop:10, padding:'8px 12px', background:'#f0f4ff', borderRadius:8, fontSize:11.5, color:'var(--t3)', display:'flex', gap:16 }}>
+          <div style={{ marginTop:10, padding:'8px 12px', background:'var(--g100)', borderRadius:8, fontSize:11.5, color:'var(--t3)', display:'flex', gap:16 }}>
             <span><i className="fas fa-map-pin" style={{ marginRight:5, color:'var(--b2)' }} />Lat : {form.latitude.toFixed(6)}</span>
             <span>Lng : {form.longitude.toFixed(6)}</span>
           </div>

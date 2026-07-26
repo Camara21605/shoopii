@@ -79,7 +79,9 @@ export class CorrespondantsService {
   /* ── Résoudre companyId ── */
   private async resolveCompanyId(user: User): Promise<string | null> {
     if (user.role === UserRole.SUPER_ADMIN || user.role === UserRole.ADMIN) return null;
-    const company = await this.companyRepo.findOne({ where: { userId: user.id } });
+    const actorId = (user as any).actorId as string | undefined;
+    let company = await this.companyRepo.findOne({ where: { userId: user.id } });
+    if (!company && actorId) company = await this.companyRepo.findOne({ where: { id: actorId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company.id;
   }

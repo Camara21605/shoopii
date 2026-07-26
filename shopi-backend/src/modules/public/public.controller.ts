@@ -21,16 +21,18 @@ export class PublicController {
   @ApiQuery({ name: 'limit',      required: false })
   @ApiQuery({ name: 'categoryId', required: false })
   @ApiQuery({ name: 'search',     required: false })
+  @ApiQuery({ name: 'type',       required: false, description: 'detail | gros' })
   listProduits(
     @Query('page')       page?:       string,
     @Query('limit')      limit?:      string,
     @Query('categoryId') categoryId?: string,
     @Query('search')     search?:     string,
+    @Query('type')       type?:       string,
   ) {
     return this.publicService.listProduits({
       page:  page  ? parseInt(page)  : 1,
       limit: limit ? parseInt(limit) : 20,
-      categoryId, search,
+      categoryId, search, type,
     });
   }
 

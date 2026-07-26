@@ -157,7 +157,7 @@ export default function SavPanel({
                     </td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--sky)', color: 'var(--blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>
+                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--g300)', color: 'var(--t2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>
                           {t.clientName.charAt(0).toUpperCase()}
                         </div>
                         <span style={{ fontSize: 12.5 }}>{t.clientName}</span>

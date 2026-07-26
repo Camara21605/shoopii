@@ -50,3 +50,9 @@
 
 @media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .stats { grid-template-columns: 1fr; } .banner { flex-wrap: wrap; } .bannerBtn { margin-left: 0; } }
+
+/* ─── Dark mode ──────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .repAv { background: linear-gradient(135deg, #2D2D30, #1A2B4A); }
+}
+:root[data-theme="dark"] .repAv { background: linear-gradient(135deg, #2D2D30, #1A2B4A); }

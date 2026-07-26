@@ -9,6 +9,7 @@ import s from '../styles/SettingsCard.module.css';
 import p from '../styles/SettingsPage.module.css';
 import { Toggle } from '../components/Toggle';
 import { settingsApi, type AppareilConfiance } from '../../api/settings.api';
+import { useTheme } from '../../../../../../shared/context/ThemeContext';
 
 interface Props { onToast: (msg: string) => void; }
 
@@ -252,15 +253,31 @@ export function ConfidentialiteSection({ onToast }: Props) {
  * APPARENCE — GET + PATCH /client/parametres/apparence
  * ════════════════════════════════════════════════════════════ */
 export function ApparenceSection({ onToast }: Props) {
-  const [form,    setForm]    = useState({ theme:'clair', textSize:'normal', imageQuality:'haute' });
+  const { theme: liveTheme, setTheme: setLiveTheme } = useTheme();
+  const [form,    setForm]    = useState({ theme: liveTheme === 'dark' ? 'sombre' : 'clair', textSize:'normal', imageQuality:'haute' });
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
 
+  /* Applique immédiatement le thème choisi au site entier (noir pur / blanc pur) */
+  function applyLiveTheme(value: string) {
+    if (value === 'sombre') setLiveTheme('dark');
+    else if (value === 'clair') setLiveTheme('light');
+    else setLiveTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  }
+
   useEffect(() => {
+    /* Le thème affiché/actif reste celui déjà appliqué au site (localStorage via
+       ThemeContext) — on ne l'écrase PAS avec la valeur enregistrée en base, sinon
+       chaque visite de /parametres réinitialiserait le site en clair par défaut. */
     settingsApi.getApparence()
-      .then(res => setForm(res))
+      .then(res => setForm(f => ({ ...res, theme: f.theme })))
       .finally(() => setLoading(false));
   }, []);
+
+  function handleThemeChange(value: string) {
+    setForm(f => ({ ...f, theme: value }));
+    applyLiveTheme(value);
+  }
 
   async function save() {
     setSaving(true);
@@ -287,7 +304,7 @@ export function ApparenceSection({ onToast }: Props) {
           ? <div style={{ padding:'32px', textAlign:'center', color:'var(--t3)' }}><i className="fas fa-circle-notch fa-spin" /></div>
           : <>
             <div className={s.privRow}><div className={s.privLeft}><div className={`${s.privIco} ${s.icoNavy}`}><i className="fas fa-moon" /></div><div><div className={s.privTitle}>Thème</div><div className={s.privDesc}>Clair, sombre ou automatique</div></div></div>
-              <select className={s.privSelect} value={form.theme} onChange={e => setForm(f => ({...f, theme: e.target.value}))}>
+              <select className={s.privSelect} value={form.theme} onChange={e => handleThemeChange(e.target.value)}>
                 <option value="clair">Clair</option><option value="sombre">Sombre</option><option value="auto">Automatique</option>
               </select>
             </div>

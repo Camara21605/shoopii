@@ -22,7 +22,7 @@ import { DataSource, Repository } from 'typeorm';
 
 import { CompanyType } from 'src/database/entities/entreprise.table/company-type.entity';
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
-import { ProductMedia }   from 'src/database/entities/entreprise.table/product-media.entity';
+import { ProductMedia, MediaType } from 'src/database/entities/entreprise.table/product-media.entity';
 import { ProductVariant } from 'src/database/entities/entreprise.table/product-variant.entity';
 import { ProductSpec }    from 'src/database/entities/entreprise.table/product-spec.entity';
 import { ProductWholesaleTier } from 'src/database/entities/entreprise.table/product-wholesale-tier.entity';
@@ -75,7 +75,7 @@ export interface ProductResponse {
   urlSlug:        string | null;
   category:    { id: string; nom: string; icone: string | null };
   subCategory: { id: string; nom: string } | null;
-  images:      { id: string; url: string; ordre: number; alt: string | null }[];
+  images:      { id: string; url: string; ordre: number; alt: string | null; type: string }[];
   specs:       { id: string; cle: string; valeur: string; ordre: number }[];
   variantes:   { id: string; type: string; vals: string }[];
   venteEnGros:          boolean;
@@ -102,6 +102,11 @@ export interface CategorieDisponible {
   icone:         string | null;
   subCategories: { id: string; nom: string }[];
 }
+
+/** Quota de médias par fiche produit : 4 images + 1 vidéo max (5 au total). */
+const MAX_MEDIA_TOTAL  = 5;
+const MAX_MEDIA_IMAGES = 4;
+const MAX_MEDIA_VIDEOS = 1;
 
 @Injectable()
 export class ProduitsService {
@@ -157,7 +162,9 @@ export class ProduitsService {
   // ══════════════════════════════════════════════════════════════════════════
 
   async getCategoriesPourEntreprise(user: User): Promise<CategorieDisponible[]> {
-    const company = await this.companyRepo.findOne({ where: { userId: user.id } });
+    const actorId = (user as any).actorId as string | undefined;
+    let company = await this.companyRepo.findOne({ where: { userId: user.id } });
+    if (!company && actorId) company = await this.companyRepo.findOne({ where: { id: actorId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
 
     const qb = this.categoryRepo
@@ -213,10 +220,14 @@ export class ProduitsService {
     }
 
     // ── Résolution profil Company ──────────────────────────────────────────
-    const companyProfile = await this.companyRepo
+    const actorId = (user as any).actorId as string | undefined;
+    let companyProfile = await this.companyRepo
       .createQueryBuilder('c')
       .where('c.userId = :userId', { userId: user.id })
       .getOne();
+    if (!companyProfile && actorId) {
+      companyProfile = await this.companyRepo.findOne({ where: { id: actorId } });
+    }
 
     if (!companyProfile) {
       throw new NotFoundException(
@@ -246,6 +257,8 @@ export class ProduitsService {
     if (slugExists) {
       throw new ConflictException(`L'URL slug "${slug}" est déjà utilisé par un autre produit.`);
     }
+
+    this.validateMediaQuota(dto.images);
 
     // ── Transaction atomique ──────────────────────────────────────────────
     let newProduct: Product;
@@ -305,6 +318,7 @@ export class ProduitsService {
             url:       img.url,
             ordre:     img.ordre ?? idx,
             alt:       img.alt   ?? null,
+            type:      img.type === 'video' ? MediaType.VIDEO : MediaType.IMAGE,
             productId: newProduct.id,
           }),
         );
@@ -403,6 +417,8 @@ export class ProduitsService {
       dto.urlSlug = normalized;
     }
 
+    if (dto.images !== undefined) this.validateMediaQuota(dto.images);
+
     const qr = this.dataSource.createQueryRunner();
     await qr.connect();
     await qr.startTransaction();
@@ -455,7 +471,13 @@ export class ProduitsService {
         await qr.manager.delete(ProductMedia, { product: { id: productId } });
         if (dto.images.length) {
           const imgs = dto.images.map((img, idx) =>
-            this.imageRepo.create({ ...img, ordre: img.ordre ?? idx, productId }),
+            this.imageRepo.create({
+              url:   img.url,
+              ordre: img.ordre ?? idx,
+              alt:   img.alt   ?? null,
+              type:  img.type === 'video' ? MediaType.VIDEO : MediaType.IMAGE,
+              productId,
+            }),
           );
           await qr.manager.save(ProductMedia, imgs);
         }
@@ -558,7 +580,9 @@ export class ProduitsService {
     if (!product) throw new NotFoundException(`Produit introuvable (ID: ${productId}).`);
 
     if (user && user.role !== UserRole.SUPER_ADMIN) {
-      const companyProfile = await this.companyRepo.findOne({ where: { userId: user.id } });
+      const actorId2 = (user as any).actorId as string | undefined;
+      let companyProfile = await this.companyRepo.findOne({ where: { userId: user.id } });
+      if (!companyProfile && actorId2) companyProfile = await this.companyRepo.findOne({ where: { id: actorId2 } });
       if (companyProfile && product.companyId !== companyProfile.id) {
         if (product.visibilite !== ProductVisibility.PUBLIC)
           throw new ForbiddenException('Ce produit n\'est pas accessible.');
@@ -582,12 +606,11 @@ export class ProduitsService {
       .take(limit);
 
     if (user.role !== UserRole.SUPER_ADMIN) {
+      const actorId3 = (user as any).actorId as string | undefined;
       const companyProfile = await this.companyRepo.findOne({ where: { userId: user.id } });
-      if (companyProfile) {
-        qb.andWhere('p.companyId = :companyId', { companyId: companyProfile.id });
-      } else {
-        return { data: [], total: 0, page, pages: 0 };
-      }
+      const companyId = companyProfile?.id ?? actorId3;
+      if (!companyId) return { data: [], total: 0, page, pages: 0 };
+      qb.andWhere('p.companyId = :companyId', { companyId });
     }
 
     if (dto.visibilite)    qb.andWhere('p.visibilite = :vis',        { vis:      dto.visibilite });
@@ -649,11 +672,37 @@ export class ProduitsService {
     if (!product) throw new NotFoundException(`Produit introuvable (ID: ${productId}).`);
     if (user.role === UserRole.SUPER_ADMIN) return product;
 
-    const companyProfile = await this.companyRepo.findOne({ where: { userId: user.id } });
+    const actorId4 = (user as any).actorId as string | undefined;
+    const cp = await this.companyRepo.findOne({ where: { userId: user.id } });
+    const companyProfile = cp ?? (actorId4 ? await this.companyRepo.findOne({ where: { id: actorId4 } }) : null);
     if (!companyProfile || product.companyId !== companyProfile.id)
       throw new ForbiddenException('Accès refusé');
 
     return product;
+  }
+
+  /**
+   * Quota médias d'une fiche produit : 4 images + 1 vidéo max (5 au total).
+   * Appelée à la création ET à la mise à jour (dto.images !== undefined).
+   */
+  private validateMediaQuota(images: CreateProductDto['images']): void {
+    if (!images?.length) return;
+
+    if (images.length > MAX_MEDIA_TOTAL) {
+      throw new BadRequestException(
+        `Maximum ${MAX_MEDIA_TOTAL} médias par produit (${MAX_MEDIA_IMAGES} images + ${MAX_MEDIA_VIDEOS} vidéo).`,
+      );
+    }
+
+    const videoCount = images.filter(img => img.type === 'video').length;
+    const imageCount = images.length - videoCount;
+
+    if (videoCount > MAX_MEDIA_VIDEOS) {
+      throw new BadRequestException(`Maximum ${MAX_MEDIA_VIDEOS} vidéo par produit.`);
+    }
+    if (imageCount > MAX_MEDIA_IMAGES) {
+      throw new BadRequestException(`Maximum ${MAX_MEDIA_IMAGES} images par produit.`);
+    }
   }
 
   private async generateUniqueSlug(nom: string): Promise<string> {
@@ -722,7 +771,7 @@ export class ProduitsService {
         : null,
       images: (product.media ?? [])
         .sort((a, b) => a.ordre - b.ordre)
-        .map(img => ({ id: img.id, url: img.url, ordre: img.ordre, alt: img.alt })),
+        .map(img => ({ id: img.id, url: img.url, ordre: img.ordre, alt: img.alt, type: img.type })),
       specs: (product.specs ?? [])
         .sort((a, b) => a.ordre - b.ordre)
         .map(s => ({ id: s.id, cle: s.cle, valeur: s.valeur, ordre: s.ordre })),

@@ -1,4 +1,4 @@
-/* ================================================================
+﻿/* ================================================================
  * ReseauShared.module.css — Styles partagés pour les pages
  * "Suivre des correspondants / livreurs" du dashboard Entreprise
  * (distinct des pages de gestion "Mes livreurs" / "Correspondants")
@@ -29,7 +29,7 @@
 .chT {
   font-family: var(--fd);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--navy);
   display: flex;
   align-items: center;

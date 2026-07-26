@@ -27,3 +27,13 @@
 @media (max-width: 1024px) { .layout { grid-template-columns: 1fr; } .big { min-height: 260px; } }
 @media (max-width: 640px)  { .wrap { padding: 0 16px; } .smGrid { grid-template-rows: auto; grid-template-columns: 1fr 1fr; } }
 @media (max-width: 480px)  { .smGrid { grid-template-columns: 1fr; } }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .big    { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
+  .bigBtn { color: #0B1F3A; }
+  .bigBtn:hover { background: rgba(255,255,255,.9); }
+}
+:root[data-theme="dark"] .big    { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
+:root[data-theme="dark"] .bigBtn { color: #0B1F3A; }
+:root[data-theme="dark"] .bigBtn:hover { background: rgba(255,255,255,.9); }

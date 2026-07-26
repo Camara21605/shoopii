@@ -104,11 +104,57 @@ import { PartnerSetting }       from '../modules/partner-settings/partner-settin
 import { DeliveryGroup }        from '../database/entities/delivery-group/delivery-group.entity';
 import { DeliveryGroupMember }  from '../database/entities/delivery-group/delivery-group-member.entity';
 import { GroupMessage }         from '../database/entities/delivery-group/group-message.entity';
+// ── Company Team Management — Phase 1 ───────────────────────
+import { CompanyTeamMember }      from '../database/entities/company-team/company-team-member.entity';
+import { CompanyTeamPermission }  from '../database/entities/company-team/company-team-permission.entity';
+import { CompanyTeamActivityLog } from '../database/entities/company-team/company-team-activity-log.entity';
+import { CompanyTeamAuditLog }    from '../database/entities/company-team/company-team-audit-log.entity';
+// ── Company Team Management — Phase 2 (Extensions) ──────────
+import { TeamPlanConfig }            from '../database/entities/company-team/team-plan-config.entity';
+import { CompanyPlanAssignment }     from '../database/entities/company-team/company-plan-assignment.entity';
+import { CompanyTeamInvitation }     from '../database/entities/company-team/company-team-invitation.entity';
+import { TeamPermissionCategory }    from '../database/entities/company-team/team-permission-category.entity';
+import { TeamPermissionDefinition }  from '../database/entities/company-team/team-permission-definition.entity';
+import { TeamPermissionTemplate }    from '../database/entities/company-team/team-permission-template.entity';
+// ── Sécurité plateforme ──────────────────────────────────────
+import { SystemMetric }       from '../database/entities/security/system-metric.entity';
+import { SecurityEventLog }   from '../database/entities/security/security-event-log.entity';
+import { PlatformIncident }   from '../database/entities/security/platform-incident.entity';
 
 
-/*****************************************************
- * FICHIER : src/config/database.config.ts
- * RÔLE    : Configuration de la connexion à la base de données PostgreSQL via TypeORM. */
+/* ============================================================
+ * FICHIER      : src/config/database.config.ts
+ * MODULE       : Config
+ * ROLE         : Configuration de la connexion PostgreSQL via TypeORM.
+ *
+ * RESPONSABILITES :
+ *   - Lire DATABASE_URL depuis les variables d'environnement (crash si absente).
+ *   - Configurer SSL (obligatoire en production / Supabase).
+ *   - Déclarer les 60+ entités TypeORM (source de vérité pour le schéma DB).
+ *   - Configurer le pool de connexions (min 2, max 10) via le
+ *     Transaction pooler Supabase (port 6543).
+ *
+ * DEPENDANCES  :
+ *   - @nestjs/typeorm (TypeOrmModuleOptions)
+ *   - @nestjs/config (ConfigService)
+ *   - Toutes les entités de src/database/entities/**
+ *
+ * CONSOMME PAR :
+ *   - AppModule — TypeOrmModule.forRootAsync(databaseConfigFactory)
+ *
+ * VARIABLES D'ENVIRONNEMENT :
+ *   DATABASE_URL  — URL PostgreSQL complète (OBLIGATOIRE)
+ *   NODE_ENV      — 'production' active SSL automatiquement
+ *   DB_SSL        — 'true' force SSL même en dev
+ *   DB_SYNC       — 'true' active TypeORM synchronize (JAMAIS en prod)
+ *
+ * PRECAUTION :
+ *   DB_SYNC=true en production peut modifier/supprimer des colonnes sans avertissement.
+ *   Toujours utiliser des migrations en production.
+ *
+ * AUTEUR       : Shopi03
+ * DERNIERE MISE A JOUR : 2026-07-18
+ * ============================================================ */
 
 
 export const databaseConfigFactory = {
@@ -162,7 +208,12 @@ export const databaseConfigFactory = {
       url:  databaseUrl,
       extra: {
         family: 4,
-        max: 20,
+        /* max: 10 — valeur prudente côté app. DATABASE_URL pointe désormais
+         * vers le Transaction pooler Supabase (port 6543), qui supporte
+         * bien plus de connexions concurrentes que le Session pooler
+         * (port 5432, plafonné à pool_size=15 → erreurs EMAXCONNSESSION
+         * observées avec max:20). */
+        max: 10,
         min: 2,
         idleTimeoutMillis: 30_000,
         connectionTimeoutMillis: 5_000,
@@ -280,14 +331,30 @@ export const databaseConfigFactory = {
       DeliveryGroup,
       DeliveryGroupMember,
       GroupMessage,
+      // ── Company Team Management — Phase 1 ─────────────────
+      CompanyTeamMember,
+      CompanyTeamPermission,
+      CompanyTeamActivityLog,
+      CompanyTeamAuditLog,
+      // ── Company Team Management — Phase 2 (Extensions) ────
+      TeamPlanConfig,
+      CompanyPlanAssignment,
+      CompanyTeamInvitation,
+      TeamPermissionCategory,
+      TeamPermissionDefinition,
+      TeamPermissionTemplate,
+      // ── Sécurité plateforme ────────────────────────────────
+      SystemMetric,
+      SecurityEventLog,
+      PlatformIncident,
     ],
 
 
-    /* synchronize — activé uniquement si DB_SYNC=true dans le .env.
-     * En développement : mettez DB_SYNC=true pour laisser TypeORM
-     * créer/mettre à jour les tables automatiquement.
-     * En production  : ne jamais activer (risque de perte de données). */
-    synchronize: config.get<string>('DB_SYNC') === 'true',
+    /* synchronize — activé uniquement si DB_SYNC=true ET hors production.
+     * En développement : DB_SYNC=true pour laisser TypeORM créer/mettre à jour les tables.
+     * En production  : JAMAIS activer — TypeORM peut modifier/supprimer des colonnes.
+     * Utiliser les migrations (src/database/migrations/) à la place. */
+    synchronize: config.get<string>('NODE_ENV') !== 'production' && config.get<string>('DB_SYNC') === 'true',
 
     /* Logs SQL : erreurs uniquement — ['query'] est trop verbeux et ralentit le dev */
     logging: ['error'],

@@ -84,3 +84,13 @@
   .kpis { grid-template-columns: 1fr; }
   .heroIn { flex-direction: column; align-items: flex-start; }
 }
+
+/* ─── Dark mode ──────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .hero { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
+  .tierRing::before { background: #0A0F1E; }
+  .b1 { color: #0B1F3A; }
+}
+:root[data-theme="dark"] .hero { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
+:root[data-theme="dark"] .tierRing::before { background: #0A0F1E; }
+:root[data-theme="dark"] .b1 { color: #0B1F3A; }

@@ -23,3 +23,13 @@
 .btnShare:hover { background:var(--sky); border-color:var(--bdrb); color:var(--blue); }
 @media(max-width:900px){ .inner{padding-left:calc(16px + 88px + 16px);min-height:68px} .stats{display:none} }
 @media(max-width:480px){ .inner{padding-left:calc(12px + 72px + 12px)} .title{font-size:17px} }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .btnSub      { background: #1A4FC4; }
+  .btnSub:hover{ background: #1544A8; }
+}
+:root[data-theme="dark"] .btnSub      { background: #1A4FC4; }
+:root[data-theme="dark"] .btnSub:hover{ background: #1544A8; }
+:root[data-theme="light"] .btnSub      { background: var(--navy); }
+:root[data-theme="light"] .btnSub:hover{ background: #112648; }

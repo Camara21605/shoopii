@@ -8,7 +8,7 @@
   position: fixed;
   bottom: 0; left: 0; right: 0;
   height: 62px;
-  background: rgba(255,255,255,.97);
+  background: var(--surface-btm, rgba(255,255,255,.97));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--bdr, rgba(11,31,58,.09));

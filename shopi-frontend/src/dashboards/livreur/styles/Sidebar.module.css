@@ -7,7 +7,7 @@
   position: fixed;
   top: 0; left: 0; bottom: 0;
   width: var(--sb, 268px);
-  background: linear-gradient(180deg, var(--navy) 0%, var(--navy-3) 100%);
+  background: linear-gradient(180deg, #0B1F3A 0%, #0d1e35 100%);
   display: flex;
   flex-direction: column;
   z-index: 200;
@@ -81,7 +81,7 @@
 .sbAva {
   width: 44px; height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--teal), var(--navy-2));
+  background: linear-gradient(135deg, var(--teal), #112648);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -103,7 +103,7 @@
   width: 11px; height: 11px;
   border-radius: 50%;
   background: #10B981;
-  border: 2px solid var(--navy);
+  border: 2px solid #0B1F3A;
 }
 
 .sbLvNm {
@@ -174,9 +174,8 @@
 .onlineOff .otTxt { color: var(--t4); }
 
 .otDot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.dotGreen { background: #10B981; animation: pulse 2s ease infinite; }
+.dotGreen { background: #10B981; }
 .dotGray  { background: var(--g300); }
-@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)} 50%{box-shadow:0 0 0 6px rgba(16,185,129,0)} }
 
 .otSwitch {
   position: relative;

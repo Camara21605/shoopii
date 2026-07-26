@@ -13,3 +13,9 @@
 }
 .visible { transform: translateX(-50%) translateY(0); opacity: 1; }
 .toast i { color: #5B8EF4; font-size: 15px; }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .toast { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #D4D4D8; }
+}
+:root[data-theme="dark"] .toast { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #D4D4D8; }

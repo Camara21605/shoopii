@@ -13,6 +13,7 @@ import NewMessageModal from './components/NewMessageModal';
 import ToastStack from './components/ToastStack';
 import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
 import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
+import LoadingScreen from '../../shared/components/LoadingScreen';
 import './styles/super-admin.css';
 
 /* ── Sections chargées à la demande — une seule active à la fois ── */
@@ -35,16 +36,12 @@ const CommissionsSection      = React.lazy(() => import('./sections/CommissionsS
 const ProfilSection           = React.lazy(() => import('./sections/ProfilSection'));
 
 function SectionLoader() {
-  return (
-    <div className="section active" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
-      <i className="fas fa-circle-notch fa-spin" style={{ fontSize: 26, color: 'var(--acid)', opacity: 0.7 }} />
-    </div>
-  );
+  return <LoadingScreen mini />;
 }
 
 export default function SuperAdminApp() {
   const store = useSuperAdminState();
-  const { state, navigate, toggleTheme } = store;
+  const { state, navigate } = store;
   const routerNavigate = useNavigate();
 
   const [sidebarOpen,   setSidebarOpen]  = useState(false);
@@ -110,10 +107,6 @@ export default function SuperAdminApp() {
   }, []);
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', state.theme);
-  }, [state.theme]);
-
-  useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { store.closeUserModal(); setNewMsgOpen(false); }
     };
@@ -157,8 +150,6 @@ export default function SuperAdminApp() {
           }}
           totalUnread={store.totalUnread}
           pendingAlerts={store.pendingAlerts}
-          theme={state.theme}
-          onThemeToggle={toggleTheme}
           onNavigate={navigate}
         />
 

@@ -229,18 +229,18 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
             {TOP_PRODS.map((p, i) => {
               const mx = Math.max(...TOP_PRODS.map(x => x.ventes));
               return (
-                <div key={i} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
-                  <div style={{ fontSize:10, fontWeight:700, color:'var(--t4)', width:14, textAlign:'right' }}>{i+1}</div>
-                  <div style={{ width:30, height:30, borderRadius:8, background:'linear-gradient(135deg,#EEF3FD,#DAE4FF)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>{p.em}</div>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:12, fontWeight:700, color:'var(--navy)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p.nm}</div>
-                    <div style={{ background:'var(--g200)', borderRadius:'var(--pill)', height:4, marginTop:4, overflow:'hidden' }}>
-                      <div style={{ width:`${(p.ventes/mx)*100}%`, height:'100%', background:'var(--blue-3)', borderRadius:'var(--pill)' }} />
+                <div key={i} className="tp-row">
+                  <div className="tp-rank">{i+1}</div>
+                  <div className="tp-em">{p.em}</div>
+                  <div className="tp-info">
+                    <div className="tp-nm">{p.nm}</div>
+                    <div className="tp-bar">
+                      <div className="tp-bar-fill" style={{ width:`${(p.ventes/mx)*100}%` }} />
                     </div>
                   </div>
-                  <div style={{ textAlign:'right', flexShrink:0 }}>
-                    <div style={{ fontSize:11.5, fontWeight:700, color:'var(--navy)', fontFamily:'var(--fd)' }}>{p.ventes} ventes</div>
-                    <div style={{ fontSize:10, color: p.trend==='up'?'var(--green)':p.trend==='dn'?'var(--red)':'var(--t3)' }}>
+                  <div className="tp-stats">
+                    <div className="tp-ventes">{p.ventes} ventes</div>
+                    <div className={`tp-trend ${p.trend==='up'?'up':p.trend==='dn'?'dn':'neu'}`}>
                       {p.trend==='up'?'↑':p.trend==='dn'?'↓':'—'} {p.ca}
                     </div>
                   </div>

@@ -5,26 +5,22 @@
 
 .card {
   position: relative; border-radius: var(--r-xl); overflow: hidden;
-  background: var(--navy); color: #fff; margin-bottom: 18px;
-  box-shadow: var(--sh-md);
-}
-.bg {
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse 60% 80% at 88% 20%, rgba(91,142,244,.35), transparent 55%);
+  background: var(--white); color: var(--t1); margin-bottom: 18px;
+  border: 1.5px solid var(--bdr); box-shadow: var(--sh-md);
 }
 .in { position: relative; padding: 22px 26px; }
 
-.lbl { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: rgba(255,255,255,.6); margin-bottom: 8px; }
+.lbl { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--t3); margin-bottom: 8px; }
 
 .stepTxt { font-family: var(--fd); font-size: 16px; font-weight: 800; margin-bottom: 16px; }
-.stepTxt em { color: var(--blue-lt); font-style: normal; }
+.stepTxt em { color: var(--blue); font-style: normal; }
 
-.track { height: 8px; border-radius: var(--pill); background: rgba(255,255,255,.14); overflow: hidden; }
+.track { height: 8px; border-radius: var(--pill); background: var(--g200); overflow: hidden; }
 .fill {
   height: 100%; border-radius: var(--pill);
-  background: linear-gradient(90deg, var(--blue), var(--blue-lt));
+  background: linear-gradient(90deg, var(--btn,#111113), var(--g300,#2D2D30));
   transition: width .4s var(--ease);
 }
 
-.pct { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: rgba(255,255,255,.7); }
-.pct span:nth-child(2) { font-weight: 800; color: #fff; }
+.pct { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--t2); }
+.pct span:nth-child(2) { font-weight: 800; color: var(--t1); }

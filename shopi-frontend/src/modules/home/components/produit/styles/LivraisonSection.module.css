@@ -149,3 +149,9 @@ input.field { background-image:none; padding-right:14px; }
 .summValTeal   { color:var(--teal,#0E7490); }
 .summSep       { width:1px; height:14px; background:var(--bdr2); }
 @media(max-width:768px) { .modeGrid{grid-template-columns:1fr} .modeOpt:first-child{border-right:none;border-bottom:1px solid var(--bdr)} .addrRow{flex-direction:column} .speedSel{flex-wrap:wrap} .panelHd{padding:14px 14px 0} .livreurList{padding:0 14px 0 12px} }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .lvAva { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
+}
+:root[data-theme="dark"] .lvAva { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }

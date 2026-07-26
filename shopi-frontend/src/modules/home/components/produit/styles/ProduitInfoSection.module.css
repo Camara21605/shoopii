@@ -74,3 +74,11 @@
 .socFb:hover  { background:rgba(24,119,242,.1); border-color:rgba(24,119,242,.3); color:#1877F2; }
 .vues { margin-left:auto; font-size:11px; color:var(--t3); display:flex; align-items:center; gap:5px; }
 @media(max-width:768px) { .garanties{grid-template-columns:1fr} .titre{font-size:20px} .btnCart,.btnBuy{font-size:14px;padding:13px 18px} }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .btnCart      { background: #1A4FC4; }
+  .btnCart:hover{ background: #1544A8; box-shadow: 0 6px 24px rgba(26,79,196,.4); }
+}
+:root[data-theme="dark"] .btnCart      { background: #1A4FC4; }
+:root[data-theme="dark"] .btnCart:hover{ background: #1544A8; box-shadow: 0 6px 24px rgba(26,79,196,.4); }

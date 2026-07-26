@@ -86,8 +86,8 @@ function ProductThumb({ items, mainImage }: { items?: OrderItem[]; mainImage?: s
           width:          SIZE,
           height:         SIZE,
           borderRadius:   8,
-          border:         '2px solid #fff',
-          background:     'var(--navy, #0B1F3A)',
+          border:         '2px solid var(--white)',
+          background:     'var(--btn, #111113)',
           display:        'flex',
           alignItems:     'center',
           justifyContent: 'center',
@@ -165,7 +165,7 @@ function ProductNames({ items, nm, vt }: { items?: OrderItem[]; nm: string; vt: 
         alignItems: 'center',
         gap:        4,
         padding:    '1px 7px',
-        background: 'var(--navy-dim, rgba(11,31,58,.08))',
+        background: 'var(--sky)',
         borderRadius: 999,
         fontSize:   11,
         fontWeight: 600,
@@ -213,9 +213,9 @@ export default function CommandesPage() {
               key={f.value}
               onClick={() => setActiveFilter(f.value)}
               style={{
-                background:  activeFilter === f.value ? 'var(--navy)' : 'var(--white)',
-                color:       activeFilter === f.value ? '#fff'        : 'var(--t2)',
-                borderColor: activeFilter === f.value ? 'var(--navy)' : 'var(--bdr2)',
+                background:  activeFilter === f.value ? 'var(--btn)' : 'var(--white)',
+                color:       activeFilter === f.value ? '#fff'       : 'var(--t2)',
+                borderColor: activeFilter === f.value ? 'var(--btn)' : 'var(--bdr2)',
                 border: '1.5px solid', borderRadius: 'var(--pill)',
                 padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 transition: 'all .2s',

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * FICHIER : src/modules/dashboard/entreprise/services/catalogue-parametres.service.ts
  * ✅ CORRIGÉ : devise peut être null (venant du DTO) — on l'ignore si null
  */
@@ -39,8 +39,9 @@ export class CatalogueParametresService {
     return updated;
   }
 
-  private async findCompanyOrFail(userId: string): Promise<Company> {
-    const company = await this.companyRepo.findOne({ where: { userId } });
+  private async findCompanyOrFail(userIdOrCompanyId: string): Promise<Company> {
+    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId } });
+    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }

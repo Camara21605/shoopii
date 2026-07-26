@@ -65,3 +65,37 @@
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.12); }
+  .scBody  { color: var(--t1,#F4F4F5); }
+  .box     { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  .box:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+  .boxVal  { color: var(--t1,#F4F4F5); }
+  .boxSub  { color: var(--t2,#A1A1AA); }
+  .terms   { border-color: rgba(255,255,255,.08); }
+  .termsLabel { background: #0A0A0A; border-color: rgba(255,255,255,.08); color: #A1A1AA; }
+  .termsLabel:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+  .skelLine { background: linear-gradient(90deg,#1C1C1F 25%,#2D2D30 50%,#1C1C1F 75%); }
+}
+:root[data-theme="dark"] .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.12); }
+:root[data-theme="dark"] .scBody  { color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .box     { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .box:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+:root[data-theme="dark"] .boxVal  { color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .boxSub  { color: var(--t2,#A1A1AA); }
+:root[data-theme="dark"] .terms   { border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .termsLabel { background: #0A0A0A; border-color: rgba(255,255,255,.08); color: #A1A1AA; }
+:root[data-theme="dark"] .termsLabel:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+:root[data-theme="dark"] .skelLine { background: linear-gradient(90deg,#1C1C1F 25%,#2D2D30 50%,#1C1C1F 75%); }
+
+/* Annule la préférence sombre de l'OS quand "Clair" est choisi explicitement (généré) */
+:root[data-theme="light"] .sc { background: #fff; border-color: #0B1F3A; }
+:root[data-theme="light"] .box { background: #F8FAFF; border-color: #E2E8F0; }
+:root[data-theme="light"] .box:hover { background: #EFF6FF; border-color: #BFDBFE; }
+:root[data-theme="light"] .boxVal { color: #0B1F3A; }
+:root[data-theme="light"] .boxSub { color: #64748B; }
+:root[data-theme="light"] .termsLabel { background: #F8FAFF; border-color: #E2E8F0; color: #475569; }
+:root[data-theme="light"] .termsLabel:hover { background: #EFF6FF; border-color: #93C5FD; }
+:root[data-theme="light"] .skelLine { background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%); }

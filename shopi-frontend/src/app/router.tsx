@@ -36,6 +36,7 @@ import PolitiqueRetourPage from '../modules/help/pages/PolitiqueRetourPage';
 import ContactPage         from '../modules/help/pages/ContactPage';
 
 /* ── Support ── */
+import LoadingScreen    from '../shared/components/LoadingScreen';
 import HelpFab          from '../shared/components/HelpFab';
 import SupportPage      from '../modules/support/pages/SupportPage';
 import NewTicketPage    from '../modules/support/pages/NewTicketPage';
@@ -65,16 +66,7 @@ function getActeurRole(): 'entreprise' | 'livreur' | 'correspondant' | 'client' 
   }
 }
 
-const Loader = () => (
-  <div style={{
-    minHeight: '100vh', background: '#0B1F3A',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    color: 'rgba(200,217,248,.6)', fontFamily: 'DM Sans,sans-serif', fontSize: 14, gap: 10,
-  }}>
-    <i className="fas fa-circle-notch" style={{ animation: 'spin .8s linear infinite', display: 'inline-block' }} />
-    Chargement…
-  </div>
-);
+const Loader = () => <LoadingScreen />;
 
 /* ── Guards ── */
 

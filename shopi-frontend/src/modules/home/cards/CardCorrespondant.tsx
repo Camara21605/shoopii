@@ -99,7 +99,7 @@ export default function CardCorrespondant({ c, onToast, onToggle }: Props) {
           <div className={styles.crAva} style={{
             display: photo ? 'none' : 'flex',
             alignItems: 'center', justifyContent: 'center',
-            background: 'linear-gradient(135deg,#1A4FC4,#5B8EF4)',
+            background: 'linear-gradient(135deg,#1C1C1F,#2D2D30)',
             color: '#fff', fontFamily: 'var(--fd)', fontWeight: 800,
             fontSize: c?.emoji ? 28 : 20,
           }}>

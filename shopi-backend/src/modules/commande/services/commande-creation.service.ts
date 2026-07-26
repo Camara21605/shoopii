@@ -12,6 +12,7 @@ import { PlatformSettings } from '../../../database/entities/platform-settings.e
 
 import { User } from '../../../database/entities/user.entity';
 import { PanierItem } from '../../../database/entities/panier-item.entity';
+import { Product } from '../../../database/entities/entreprise.table/product.entity';
 import { Client } from '../../../database/entities/profiles/client-profile.entity';
 import { Company } from '../../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery } from '../../../database/entities/profiles/livreur-profile.entity';
@@ -36,6 +37,7 @@ export class CommandeCreationService {
     @InjectRepository(CommandeItem) private readonly itemRepo: Repository<CommandeItem>,
     @InjectRepository(CommandeCode) private readonly codeRepo: Repository<CommandeCode>,
     @InjectRepository(PanierItem) private readonly panierRepo: Repository<PanierItem>,
+    @InjectRepository(Product)    private readonly productRepo: Repository<Product>,
     @InjectRepository(Client) private readonly clientRepo: Repository<Client>,
     @InjectRepository(Company) private readonly companyRepo: Repository<Company>,
     @InjectRepository(Delivery) private readonly deliveryRepo: Repository<Delivery>,
@@ -81,6 +83,20 @@ export class CommandeCreationService {
     }
     if (groups.size === 0) throw new BadRequestException('Articles invalides.');
 
+    /* ── Vérification de stock avant toute création ─────────────
+     * Fail-fast : on vérifie TOUS les articles avant de créer
+     * la moindre commande, pour éviter un état partiel.         */
+    for (const pi of selected) {
+      const produit = pi.produit as any;
+      const stockActuel = produit?.stock ?? 0;
+      if (pi.qty > stockActuel) {
+        const nom = produit?.nom ?? 'Produit inconnu';
+        throw new BadRequestException(
+          `Stock insuffisant pour "${nom}" (disponible : ${stockActuel}, demandé : ${pi.qty}).`,
+        );
+      }
+    }
+
     let firstCommandeId: string | null = null;
 
     for (const [companyId, items] of groups) {
@@ -115,9 +131,14 @@ export class CommandeCreationService {
         fraisLivraison,
         commissionShopi,
         total,
-        adresseLivraison: dto.destination ?? null,
-        villeLivraison: dto.destination ?? null,
-        methodePaiement: dto.payMode ?? null,
+        prenomLivraison:   dto.prenomLivraison   ?? null,
+        nomLivraison:      dto.nomLivraison       ?? null,
+        telephoneLivraison:dto.telephoneLivraison ?? null,
+        villeLivraison:    dto.villeLivraison     ?? dto.destination ?? null,
+        communeLivraison:  dto.communeLivraison   ?? null,
+        adresseLivraison:  dto.adressePrecise     ?? dto.destination ?? null,
+        notesClient:       dto.instructions       ?? null,
+        methodePaiement:   dto.payMode            ?? null,
         datePaiement: new Date(),
       });
       const saved = await this.commandeRepo.save(commande);
@@ -136,6 +157,18 @@ export class CommandeCreationService {
         sousTotal: readPrix(pi.produit) * pi.qty,
       }));
       await this.itemRepo.save(commandeItems);
+
+      /* ── Décrémentation atomique du stock ───────────────────
+       * Une seule requête UPDATE par produit avec GREATEST pour
+       * éviter les valeurs négatives en cas de race condition.  */
+      for (const pi of items) {
+        await this.productRepo
+          .createQueryBuilder()
+          .update(Product)
+          .set({ stock: () => `GREATEST(stock - ${pi.qty}, 0)` })
+          .where('id = :id', { id: pi.produitId })
+          .execute();
+      }
 
       /* Notification → tous les acteurs de la commande */
       void this.notifEventSvc.notifyOrderPlaced({

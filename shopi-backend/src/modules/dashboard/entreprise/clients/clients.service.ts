@@ -115,12 +115,10 @@ export class ClientsService {
   /* ══════════════════════════════════════════════════════════════
    * MÉTHODE PRINCIPALE — liste paginée + statistiques
    * ════════════════════════════════════════════════════════════ */
-  async getClients(userId: string, filters: ClientsFilters): Promise<ClientsResult> {
+  async getClients(userIdOrCompanyId: string, filters: ClientsFilters): Promise<ClientsResult> {
     /* ── 1. Résoudre le profil entreprise ── */
-    const company = await this.companyRepo.findOne({
-      where: { userId },
-      select: ['id', 'companyName'],
-    });
+    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id', 'companyName'] });
+    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId }, select: ['id', 'companyName'] });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
 
     /* ── 2. Charger acheteurs et abonnés en parallèle ── */
@@ -324,11 +322,10 @@ export class ClientsService {
    *   - isSuivi (abonnement à la boutique)
    *   - 10 dernières commandes passées dans cette boutique
    * ════════════════════════════════════════════════════════════ */
-  async getClientDetail(userId: string, clientId: string) {
+  async getClientDetail(userIdOrCompanyId: string, clientId: string) {
     /* Résoudre l'entreprise */
-    const company = await this.companyRepo.findOne({
-      where: { userId }, select: ['id', 'companyName'],
-    });
+    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id', 'companyName'] });
+    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId }, select: ['id', 'companyName'] });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
 
     /* Charger le profil client */

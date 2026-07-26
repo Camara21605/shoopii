@@ -18,3 +18,9 @@
 .btnSuivre { width:36px; background:var(--g100); color:var(--t2); border:1px solid var(--bdr2); border-radius:9px; font-size:13px; cursor:pointer; transition:all .18s; display:flex; align-items:center; justify-content:center; }
 .btnSuivre:hover { border-color:var(--blue); color:var(--blue); background:var(--sky); }
 .btnSuivreOn { background:var(--em-bg) !important; color:var(--emerald,#047857) !important; border-color:rgba(4,120,87,.2) !important; }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .ava { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }
+}
+:root[data-theme="dark"] .ava { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); border-color: rgba(255,255,255,.1); }

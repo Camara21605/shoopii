@@ -342,13 +342,29 @@ export class Commande {
   // LIVRAISON
   // ─────────────────────────────────────────────────────────────
 
-  /** Adresse de livraison (snapshot au moment de la commande) */
-  @Column({ type: 'text', nullable: true })
-  adresseLivraison: string | null;
+  /** Prénom du destinataire (snapshot commande) */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  prenomLivraison: string | null;
+
+  /** Nom du destinataire (snapshot commande) */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  nomLivraison: string | null;
+
+  /** Téléphone du destinataire au format international (ex: +224XXXXXXXXX) */
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  telephoneLivraison: string | null;
 
   /** Ville de livraison */
   @Column({ type: 'varchar', length: 100, nullable: true })
   villeLivraison: string | null;
+
+  /** Commune / quartier de livraison */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  communeLivraison: string | null;
+
+  /** Adresse de livraison précise (rue, repère) */
+  @Column({ type: 'text', nullable: true })
+  adresseLivraison: string | null;
 
   /** Instructions du client (ex: "Appeler en arrivant, bâtiment B") */
   @Column({ type: 'text', nullable: true })

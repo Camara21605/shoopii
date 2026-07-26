@@ -29,19 +29,19 @@ export class SavController {
   /* ── Stats SAV — AVANT :id ── */
   @Get('stats')
   getStats(@Req() req: any) {
-    return this.savService.getStats(req.user.id);
+    return this.savService.getStats(req.user.actorId ?? req.user.id);
   }
 
   /* ── Liste tickets ── */
   @Get()
   findAll(@Req() req: any, @Query() filters: FilterSavDto) {
-    return this.savService.findAll(req.user.id, filters);
+    return this.savService.findAll(req.user.actorId ?? req.user.id, filters);
   }
 
   /* ── Détail ticket + messages ── */
   @Get(':id')
   findOne(@Req() req: any, @Param('id', ParseUUIDPipe) id: string) {
-    return this.savService.findOne(req.user.id, id);
+    return this.savService.findOne(req.user.actorId ?? req.user.id, id);
   }
 
   /* ── Répondre à un ticket ── */
@@ -51,19 +51,19 @@ export class SavController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReplySavDto,
   ) {
-    return this.savService.reply(req.user.id, id, dto);
+    return this.savService.reply(req.user.actorId ?? req.user.id, id, dto);
   }
 
   /* ── Fermer un ticket ── */
   @Patch(':id/close')
   close(@Req() req: any, @Param('id', ParseUUIDPipe) id: string) {
-    return this.savService.close(req.user.id, id);
+    return this.savService.close(req.user.actorId ?? req.user.id, id);
   }
 
   /* ── Résoudre un ticket ── */
   @Patch(':id/resolve')
   resolve(@Req() req: any, @Param('id', ParseUUIDPipe) id: string) {
-    return this.savService.resolve(req.user.id, id);
+    return this.savService.resolve(req.user.actorId ?? req.user.id, id);
   }
 
   /* ── Assigner un ticket ── */
@@ -73,7 +73,7 @@ export class SavController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AssignSavDto,
   ) {
-    return this.savService.assign(req.user.id, id, dto);
+    return this.savService.assign(req.user.actorId ?? req.user.id, id, dto);
   }
 
   /* ── Changer priorité ── */
@@ -83,6 +83,6 @@ export class SavController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateSavPriorityDto,
   ) {
-    return this.savService.updatePriority(req.user.id, id, dto);
+    return this.savService.updatePriority(req.user.actorId ?? req.user.id, id, dto);
   }
 }

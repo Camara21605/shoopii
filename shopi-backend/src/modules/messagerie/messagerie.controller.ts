@@ -41,39 +41,39 @@ export class MessagerieController {
 
   constructor(private readonly svc: MessagerieService) {}
 
-  private ctx(req: Request): { userId: string; role: UserRole; ip: string } {
+  private ctx(req: Request): { userId: string; actorId?: string; role: UserRole; ip: string } {
     const u  = (req as any).user;
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
             ?? req.socket?.remoteAddress
             ?? 'unknown';
-    return { userId: u.userId ?? u.id, role: u.role as UserRole, ip };
+    return { userId: u.userId ?? u.id, actorId: u.actorId as string | undefined, role: u.role as UserRole, ip };
   }
 
   // ── Conversations ────────────────────────────────────────────
 
   @Get('conversations')
   getConversations(@Req() req: Request) {
-    const { userId, role } = this.ctx(req);
-    return this.svc.getConversations(userId, role);
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.getConversations(userId, role, actorId);
   }
 
   @Get('conversations/archived')
   getArchivedConversations(@Req() req: Request) {
-    const { userId, role } = this.ctx(req);
-    return this.svc.getArchivedConversations(userId, role);
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.getArchivedConversations(userId, role, actorId);
   }
 
   @Post('conversations')
   startConversation(@Req() req: Request, @Body() dto: StartConversationDto) {
-    const { userId, role, ip } = this.ctx(req);
-    return this.svc.getOrCreateConversation(userId, role, dto, ip);
+    const { userId, actorId, role, ip } = this.ctx(req);
+    return this.svc.getOrCreateConversation(userId, role, dto, ip, actorId);
   }
 
   @Delete('conversations/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteConversation(@Req() req: Request, @Param('id') convId: string): Promise<void> {
-    const { userId, role } = this.ctx(req);
-    return this.svc.deleteConversation(userId, role, convId);
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.deleteConversation(userId, role, convId, actorId);
   }
 
   @Patch('conversations/:id/archive')
@@ -83,8 +83,8 @@ export class MessagerieController {
     @Param('id') convId: string,
     @Body() dto: ArchiveConversationDto,
   ): Promise<void> {
-    const { userId, role } = this.ctx(req);
-    return this.svc.archiveConversation(userId, role, convId, dto);
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.archiveConversation(userId, role, convId, dto, actorId);
   }
 
   // ── Messages ────────────────────────────────────────────────
@@ -96,9 +96,8 @@ export class MessagerieController {
     @Query('page',  new ParseIntPipe({ optional: true })) page  = 1,
     @Query('limit', new ParseIntPipe({ optional: true })) limit = 30,
   ) {
-    const { userId, role } = this.ctx(req);
-    /* Utilise la version enrichie avec les messages cités inclus */
-    return this.svc.getMessagesWithReplies(userId, role, convId, page, limit);
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.getMessagesWithReplies(userId, role, convId, page, limit, actorId);
   }
 
   @Post('conversations/:id/messages')
@@ -107,44 +106,36 @@ export class MessagerieController {
     @Param('id') convId: string,
     @Body() dto: SendMessageDto,
   ) {
-    const { userId, role } = this.ctx(req);
-    return this.svc.sendMessage(userId, role, convId, dto);
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.sendMessage(userId, role, convId, dto, actorId);
   }
 
   @Patch('conversations/:id/read')
   @HttpCode(HttpStatus.NO_CONTENT)
   markAsRead(@Req() req: Request, @Param('id') convId: string): Promise<void> {
-    const { userId, role } = this.ctx(req);
-    return this.svc.markAsRead(userId, role, convId);
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.markAsRead(userId, role, convId, actorId);
   }
 
   @Patch('conversations/:id/unread')
   @HttpCode(HttpStatus.NO_CONTENT)
   markAsUnread(@Req() req: Request, @Param('id') convId: string): Promise<void> {
-    const { userId, role } = this.ctx(req);
-    return this.svc.markAsUnread(userId, role, convId);
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.markAsUnread(userId, role, convId, actorId);
   }
 
   // ── Actions sur un message ──────────────────────────────────
 
-  /**
-   * PATCH /messagerie/messages/:msgId
-   * Modifie le contenu d'un message (texte uniquement, délai 24h).
-   */
   @Patch('messages/:msgId')
   editMessage(
     @Req() req: Request,
     @Param('msgId') msgId: string,
     @Body() dto: EditMessageDto,
   ) {
-    const { userId, role } = this.ctx(req);
-    return this.svc.editMessage(userId, role, msgId, dto);
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.editMessage(userId, role, msgId, dto, actorId);
   }
 
-  /**
-   * DELETE /messagerie/messages/:msgId
-   * Supprime un message (pour soi ou pour tout le monde).
-   */
   @Delete('messages/:msgId')
   @HttpCode(HttpStatus.OK)
   deleteMessage(
@@ -152,14 +143,10 @@ export class MessagerieController {
     @Param('msgId') msgId: string,
     @Body() dto: DeleteMessageDto,
   ) {
-    const { userId, role } = this.ctx(req);
-    return this.svc.deleteMessage(userId, role, msgId, dto);
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.deleteMessage(userId, role, msgId, dto, actorId);
   }
 
-  /**
-   * POST /messagerie/messages/:msgId/reactions
-   * Ajoute ou retire une réaction emoji (toggle).
-   */
   @Post('messages/:msgId/reactions')
   @HttpCode(HttpStatus.OK)
   toggleReaction(
@@ -167,8 +154,8 @@ export class MessagerieController {
     @Param('msgId') msgId: string,
     @Body() dto: ToggleReactionDto,
   ) {
-    const { userId, role } = this.ctx(req);
-    return this.svc.toggleReaction(userId, role, msgId, dto);
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.toggleReaction(userId, role, msgId, dto, actorId);
   }
 
   // ── Recherche ────────────────────────────────────────────────

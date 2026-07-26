@@ -118,3 +118,75 @@
 
 @media (max-width:900px) { .payGrid{ grid-template-columns:repeat(2,1fr) } }
 @media (max-width:480px) { .fr3{ grid-template-columns:1fr 1fr } .span2{ grid-column:span 2 } }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
+  .scHd    { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
+  .scTitre { color: var(--t1,#F4F4F5); }
+  .scSub   { color: var(--t3,#71717A); }
+  .payOpt  { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  .payOpt:hover { background: #1C1C1F; border-color: rgba(255,255,255,.18); }
+  .payNm   { color: var(--t1,#F4F4F5); }
+  .fin     { background: #0A0A0A; border-color: rgba(255,255,255,.1); color: var(--t1,#F4F4F5); }
+  .fin::placeholder { color: #52525B; }
+  .fin:focus { border-color: rgba(96,165,250,.5); background: #111113; }
+  .dialCode { background: #1C1C1F; border-color: rgba(255,255,255,.1); color: #A1A1AA; }
+  .fl      { color: #A1A1AA; }
+  .fi      { color: #52525B; }
+  .saveCard { background: #0A0A0A; border-color: rgba(255,255,255,.1); color: #A1A1AA; }
+  .saveCard:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); }
+  .promoIn { background: #0A0A0A; border-color: rgba(255,255,255,.1); color: var(--t1,#F4F4F5); }
+  .promoIn:focus { border-color: rgba(96,165,250,.5); background: #111113; }
+}
+:root[data-theme="dark"] .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .scHd    { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .scTitre { color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .scSub   { color: var(--t3,#71717A); }
+:root[data-theme="dark"] .payOpt  { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .payOpt:hover { background: #1C1C1F; border-color: rgba(255,255,255,.18); }
+:root[data-theme="dark"] .payNm   { color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .fin     { background: #0A0A0A; border-color: rgba(255,255,255,.1); color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .fin::placeholder { color: #52525B; }
+:root[data-theme="dark"] .fin:focus { border-color: rgba(96,165,250,.5); background: #111113; }
+:root[data-theme="dark"] .dialCode { background: #1C1C1F; border-color: rgba(255,255,255,.1); color: #A1A1AA; }
+:root[data-theme="dark"] .fl      { color: #A1A1AA; }
+:root[data-theme="dark"] .fi      { color: #52525B; }
+:root[data-theme="dark"] .saveCard { background: #0A0A0A; border-color: rgba(255,255,255,.1); color: #A1A1AA; }
+:root[data-theme="dark"] .saveCard:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); }
+:root[data-theme="dark"] .promoIn { background: #0A0A0A; border-color: rgba(255,255,255,.1); color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .promoIn:focus { border-color: rgba(96,165,250,.5); background: #111113; }
+/* — selected payment, info box, promo success — */
+@media (prefers-color-scheme: dark) {
+  .payOptSel { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.4); }
+  .infoBox   { background: rgba(26,79,196,.08); border-color: rgba(96,165,250,.2); color: #A1A1AA; }
+  .infoBox i { color: #60A5FA; }
+  .promoOk   { background: rgba(4,120,87,.15); border-color: rgba(4,120,87,.3); color: #34D399; }
+}
+:root[data-theme="dark"] .payOptSel { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.4); }
+:root[data-theme="dark"] .infoBox   { background: rgba(26,79,196,.08); border-color: rgba(96,165,250,.2); color: #A1A1AA; }
+:root[data-theme="dark"] .infoBox i { color: #60A5FA; }
+:root[data-theme="dark"] .promoOk   { background: rgba(4,120,87,.15); border-color: rgba(4,120,87,.3); color: #34D399; }
+
+/* Annule la préférence sombre de l'OS quand "Clair" est choisi explicitement (généré) */
+:root[data-theme="light"] .sc { background: #fff; border-color: #E2E8F0; }
+:root[data-theme="light"] .scHd { background: #FAFBFC; border-bottom-color: #F1F5F9; }
+:root[data-theme="light"] .scTitre { color: #0B1F3A; }
+:root[data-theme="light"] .scSub { color: #94A3B8; }
+:root[data-theme="light"] .payOpt { background: #F8FAFF; border-color: #E2E8F0; }
+:root[data-theme="light"] .payOpt:hover { background: #EFF6FF; border-color: #93C5FD; }
+:root[data-theme="light"] .payNm { color: #0B1F3A; }
+:root[data-theme="light"] .fin { background: #F8FAFF; border-color: #E2E8F0; color: #0B1F3A; }
+:root[data-theme="light"] .fin::placeholder { color: #CBD5E1; }
+:root[data-theme="light"] .fin:focus { border-color: #1A4FC4; background: #fff; }
+:root[data-theme="light"] .dialCode { background: #F1F5F9; color: #334155; }
+:root[data-theme="light"] .fl { color: #334155; }
+:root[data-theme="light"] .fi { color: #94A3B8; }
+:root[data-theme="light"] .saveCard { background: #F8FAFF; border-color: #E2E8F0; color: #475569; }
+:root[data-theme="light"] .saveCard:hover { background: #EFF6FF; border-color: #93C5FD; }
+:root[data-theme="light"] .promoIn { background: #F8FAFF; border-color: #E2E8F0; color: #0B1F3A; }
+:root[data-theme="light"] .promoIn:focus { border-color: #1A4FC4; background: #fff; }
+:root[data-theme="light"] .payOptSel { background: #EFF6FF; border-color: #1A4FC4; }
+:root[data-theme="light"] .infoBox { background: #EFF6FF; border-color: #BFDBFE; color: #334155; }
+:root[data-theme="light"] .infoBox i { color: #1A4FC4; }
+:root[data-theme="light"] .promoOk { background: #ECFDF5; border-color: #A7F3D0; color: #047857; }

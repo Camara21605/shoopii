@@ -7,6 +7,7 @@
  * ================================================================ */
 
 import { lazy, Suspense, useEffect } from 'react';
+import LoadingScreen from '../../shared/components/LoadingScreen';
 import styles from './styles/AdminApp.module.css';
 import { useAdminState } from './hooks/useAdminState';
 import { useToasts, ToastStack } from './components/Toast';
@@ -92,7 +93,7 @@ export default function AdministrateurApp() {
           onToast={pop}
         />
         <main className={styles.page}>
-          <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}><i className="fas fa-circle-notch fa-spin" style={{ fontSize: 24, opacity: 0.5 }} /></div>}>
+          <Suspense fallback={<LoadingScreen mini />}>
             {renderPage()}
           </Suspense>
         </main>

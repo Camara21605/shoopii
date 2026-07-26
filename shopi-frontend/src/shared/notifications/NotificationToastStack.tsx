@@ -119,6 +119,8 @@ function Toast({ notif, onDismiss, onNavigate }: ToastProps) {
     onNavigate(notif);
   }
 
+  const initial = notif.title.charAt(0).toUpperCase();
+
   return (
     <div
       className={s.toast}
@@ -127,12 +129,17 @@ function Toast({ notif, onDismiss, onNavigate }: ToastProps) {
       onClick={handleBodyClick}
       style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
     >
-      <span
-        className={s.icon}
-        style={{ background: meta.bg, color: meta.color }}
-        aria-hidden
-      >
-        <i className={`fas ${meta.icon}`} />
+      {/* ── Avatar acteur + badge type (style Facebook) ── */}
+      <span className={s.avatarWrap} aria-hidden>
+        {notif.imageUrl
+          ? <img src={notif.imageUrl} alt="" className={s.avatarImg} />
+          : <span className={s.avatarInitial} style={{ background: meta.bg, color: meta.color }}>
+              {initial}
+            </span>
+        }
+        <span className={s.typeBadge} style={{ background: meta.color }}>
+          <i className={`fas ${meta.icon}`} />
+        </span>
       </span>
 
       <span className={s.body}>

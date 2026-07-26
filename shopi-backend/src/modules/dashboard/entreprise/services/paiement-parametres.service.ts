@@ -1,4 +1,4 @@
-/*
+﻿/*
  * FICHIER : src/modules/dashboard/entreprise/services/paiement-parametres.service.ts
  * ✅ CORRIGÉ : payoutFrequency et receptionMethod peuvent être null — on les ignore si null
  */
@@ -44,8 +44,9 @@ export class PaiementParametresService {
     return updated;
   }
 
-  private async findCompanyOrFail(userId: string): Promise<Company> {
-    const company = await this.companyRepo.findOne({ where: { userId } });
+  private async findCompanyOrFail(userIdOrCompanyId: string): Promise<Company> {
+    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId } });
+    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }

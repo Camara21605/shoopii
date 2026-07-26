@@ -7,7 +7,7 @@ import type { ReactNode } from 'react'
 
 import { AppProvider } from '../../shared/context/AppContext'
 import { ToastProvider } from '../../shared/context/ToastContext'
-// import { AuthProvider } from '../modules/auth/context/AuthContext' (si tu l’as plus tard)
+import { ThemeProvider } from '../../shared/context/ThemeContext'
 
 interface Props {
   children: ReactNode
@@ -19,10 +19,12 @@ interface Props {
  */
 export function AppProviders({ children }: Props) {
   return (
-    <AppProvider>
-      <ToastProvider>
-        {children}
-      </ToastProvider>
-    </AppProvider>
+    <ThemeProvider>
+      <AppProvider>
+        <ToastProvider>
+          {children}
+        </ToastProvider>
+      </AppProvider>
+    </ThemeProvider>
   )
 }

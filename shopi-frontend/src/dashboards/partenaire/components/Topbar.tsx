@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from '../styles/Topbar.module.css';
 import type { PartenairePage } from '../data/types';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
+import ThemeToggle from '../../../shared/components/ThemeToggle';
 
 interface TopbarProps {
   activePage:    PartenairePage;
@@ -52,6 +53,7 @@ export default function Topbar({ activePage, onGenerate, onReport, onMenuToggle 
         <button className={styles.ic} onClick={() => navigate('/aide')} title="Centre d'aide">
           <i className="fas fa-circle-question" />
         </button>
+        <ThemeToggle />
         <button className={styles.new} onClick={onGenerate}>
           <i className="fas fa-plus" /> Générer un code
         </button>

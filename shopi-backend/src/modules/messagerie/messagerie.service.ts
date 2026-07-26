@@ -166,12 +166,17 @@ export class MessagerieService {
     return profile?.userId ?? null;
   }
 
-  /** Résout le profile ID à partir du userId et du rôle JWT */
-  private async resolveProfileId(userId: string, role: UserRole): Promise<string> {
+  /** Résout le profile ID à partir du userId et du rôle JWT.
+   *  Pour le rôle COMPANY, actorId (= companyId) est utilisé en fallback
+   *  pour les membres d'équipe qui n'ont pas de Company avec userId=user.id. */
+  private async resolveProfileId(userId: string, role: UserRole, actorId?: string): Promise<string> {
     let profile: { id: string } | null = null;
     switch (role) {
       case UserRole.CLIENT:        profile = await this.clientRepo.findOne({ where: { userId }, select: ['id'] }); break;
-      case UserRole.COMPANY:       profile = await this.companyRepo.findOne({ where: { userId }, select: ['id'] }); break;
+      case UserRole.COMPANY:
+        profile = await this.companyRepo.findOne({ where: { userId }, select: ['id'] });
+        if (!profile && actorId) profile = await this.companyRepo.findOne({ where: { id: actorId }, select: ['id'] });
+        break;
       case UserRole.DELIVERY:      profile = await this.deliveryRepo.findOne({ where: { userId }, select: ['id'] }); break;
       case UserRole.CORRESPONDENT: profile = await this.corrRepo.findOne({ where: { userId }, select: ['id'] }); break;
       case UserRole.PARTNER:       profile = await this.partnerRepo.findOne({ where: { userId }, select: ['id'] }); break;
@@ -263,9 +268,9 @@ export class MessagerieService {
   // 1. LISTE DES CONVERSATIONS
   // ══════════════════════════════════════════════════════════════
 
-  async getConversations(userId: string, role: UserRole): Promise<ConvListItem[]> {
+  async getConversations(userId: string, role: UserRole, actorId?: string): Promise<ConvListItem[]> {
     const myType = this.roleToActorType(role);
-    const myId   = await this.resolveProfileId(userId, role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
 
     const conversations = await this.convRepo.find({
       where: [
@@ -312,9 +317,10 @@ export class MessagerieService {
     userId: string, role: UserRole,
     dto: StartConversationDto,
     ipAddress?: string,
+    actorId?: string,
   ): Promise<ConvListItem> {
     const myType = this.roleToActorType(role);
-    const myId   = await this.resolveProfileId(userId, role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
 
     if (myType === dto.targetType && myId === dto.targetId) {
       throw new ForbiddenException('Vous ne pouvez pas vous écrire à vous-même.');
@@ -446,9 +452,10 @@ export class MessagerieService {
     userId: string, role: UserRole,
     convId: string,
     dto: SendMessageDto,
+    actorId?: string,
   ): Promise<MessageItem> {
     const myType = this.roleToActorType(role);
-    const myId   = await this.resolveProfileId(userId, role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
 
     const conv = await this.assertConvAccess(convId, myType, myId);
 
@@ -608,9 +615,9 @@ export class MessagerieService {
   // 5. MARQUER UNE CONVERSATION COMME LUE (REST — avec rôle)
   // ══════════════════════════════════════════════════════════════
 
-  async markAsRead(userId: string, role: UserRole, convId: string): Promise<void> {
+  async markAsRead(userId: string, role: UserRole, convId: string, actorId?: string): Promise<void> {
     const myType = this.roleToActorType(role);
-    const myId   = await this.resolveProfileId(userId, role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
     const conv   = await this.assertConvAccess(convId, myType, myId);
 
     const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
@@ -624,9 +631,9 @@ export class MessagerieService {
   // 5b. MARQUER NON LUE (forcer 1 non-lu pour l'appelant)
   // ══════════════════════════════════════════════════════════════
 
-  async markAsUnread(userId: string, role: UserRole, convId: string): Promise<void> {
+  async markAsUnread(userId: string, role: UserRole, convId: string, actorId?: string): Promise<void> {
     const myType = this.roleToActorType(role);
-    const myId   = await this.resolveProfileId(userId, role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
     const conv   = await this.assertConvAccess(convId, myType, myId);
 
     const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
@@ -882,9 +889,10 @@ export class MessagerieService {
     userId: string, role: UserRole,
     messageId: string,
     dto: EditMessageDto,
+    actorId?: string,
   ): Promise<MessageItem> {
     const myType = this.roleToActorType(role);
-    const myId   = await this.resolveProfileId(userId, role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
 
     const msg = await this.msgRepo.findOne({ where: { id: messageId } });
     if (!msg) throw new NotFoundException('Message introuvable.');
@@ -970,9 +978,10 @@ export class MessagerieService {
     userId: string, role: UserRole,
     messageId: string,
     dto: DeleteMessageDto,
+    actorId?: string,
   ): Promise<{ success: boolean; mode: string }> {
     const myType = this.roleToActorType(role);
-    const myId   = await this.resolveProfileId(userId, role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
 
     const msg = await this.msgRepo.findOne({ where: { id: messageId } });
     if (!msg) throw new NotFoundException('Message introuvable.');
@@ -1054,9 +1063,10 @@ export class MessagerieService {
     userId: string, role: UserRole,
     messageId: string,
     dto: ToggleReactionDto,
+    actorId?: string,
   ): Promise<{ reactions: Record<string, string[]> }> {
     const myType = this.roleToActorType(role);
-    const myId   = await this.resolveProfileId(userId, role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
 
     const msg = await this.msgRepo.findOne({ where: { id: messageId } });
     if (!msg) throw new NotFoundException('Message introuvable.');
@@ -1114,9 +1124,10 @@ export class MessagerieService {
     userId: string, role: UserRole,
     convId: string,
     dto: ArchiveConversationDto,
+    actorId?: string,
   ): Promise<void> {
     const myType = this.roleToActorType(role);
-    const myId   = await this.resolveProfileId(userId, role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
     const conv   = await this.assertConvAccess(convId, myType, myId);
 
     const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
@@ -1131,9 +1142,9 @@ export class MessagerieService {
   // 11. CONVERSATIONS MASQUÉES (archivées par l'acteur)
   // ══════════════════════════════════════════════════════════════
 
-  async getArchivedConversations(userId: string, role: UserRole): Promise<ConvListItem[]> {
+  async getArchivedConversations(userId: string, role: UserRole, actorId?: string): Promise<ConvListItem[]> {
     const myType = this.roleToActorType(role);
-    const myId   = await this.resolveProfileId(userId, role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
 
     const conversations = await this.convRepo.find({
       where: [
@@ -1173,9 +1184,9 @@ export class MessagerieService {
   // 12. SUPPRIMER UNE CONVERSATION (soft delete par acteur)
   // ══════════════════════════════════════════════════════════════
 
-  async deleteConversation(userId: string, role: UserRole, convId: string): Promise<void> {
+  async deleteConversation(userId: string, role: UserRole, convId: string, actorId?: string): Promise<void> {
     const myType = this.roleToActorType(role);
-    const myId   = await this.resolveProfileId(userId, role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
     const conv   = await this.assertConvAccess(convId, myType, myId);
 
     const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
@@ -1204,9 +1215,10 @@ export class MessagerieService {
     userId: string, role: UserRole,
     convId: string,
     page = 1, limit = 30,
+    actorId?: string,
   ): Promise<(MessageItem & { replyToMessage?: MessageItem | null })[]> {
     const myType = this.roleToActorType(role);
-    const myId   = await this.resolveProfileId(userId, role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
 
     await this.assertConvAccess(convId, myType, myId);
 

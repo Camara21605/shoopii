@@ -209,16 +209,30 @@ export class AdminsService {
     status: string; profilePicture: string | null;
   }> {
     const admin = await this.adminRepo.findOne({ where: { userId }, relations: ['user'] });
-    if (!admin) throw new NotFoundException('Profil administrateur introuvable.');
+    if (admin) {
+      return {
+        firstName:      admin.user.firstName        ?? '',
+        lastName:       admin.user.lastName         ?? '',
+        email:          admin.user.email            ?? '',
+        phone:          admin.user.phone ?? admin.phone ?? '',
+        zone:           admin.zone                  ?? '',
+        bio:            admin.bio                   ?? '',
+        status:         admin.status,
+        profilePicture: admin.user.profilePicture   ?? null,
+      };
+    }
+    /* Fallback : super_admin n'a pas d'entité Admin — on lit directement le User */
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Profil introuvable.');
     return {
-      firstName:      admin.user.firstName        ?? '',
-      lastName:       admin.user.lastName         ?? '',
-      email:          admin.user.email            ?? '',
-      phone:          admin.user.phone ?? admin.phone ?? '',
-      zone:           admin.zone                  ?? '',
-      bio:            admin.bio                   ?? '',
-      status:         admin.status,
-      profilePicture: admin.user.profilePicture   ?? null,
+      firstName:      user.firstName      ?? '',
+      lastName:       user.lastName       ?? '',
+      email:          user.email          ?? '',
+      phone:          user.phone          ?? '',
+      zone:           '',
+      bio:            '',
+      status:         'active',
+      profilePicture: user.profilePicture ?? null,
     };
   }
 

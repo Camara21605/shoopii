@@ -22,6 +22,7 @@ import { CODE_EXPIRY_MS } from './commande.helpers';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 import { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
 import { DeliveryGroupService } from 'src/modules/delivery-group/delivery-group.service';
+import { PaiementDistributionService } from 'src/modules/paiement/services/paiement-distribution.service';
 
 @Injectable()
 export class CommandeValidationService {
@@ -30,6 +31,7 @@ export class CommandeValidationService {
     @InjectRepository(CommandeCode) private readonly codeRepo: Repository<CommandeCode>,
     private readonly notifEventSvc: NotificationEventService,
     private readonly deliveryGroupSvc: DeliveryGroupService,
+    private readonly distributionSvc: PaiementDistributionService,
   ) {}
 
   /* ════════════════════════════════════════════════════════
@@ -79,6 +81,11 @@ export class CommandeValidationService {
 
       /* Groupe de livraison : démarrer le compte à rebours 72h */
       void this.deliveryGroupSvc.handleOrderStatusChange(commande.id, CommandeStatus.DELIVERED);
+
+      /* Libérer les fonds escrow vers les wallets des acteurs */
+      void this.distributionSvc.distribute(commande.id, 'client').catch(err =>
+        console.error(`[Validation] Échec distribution fonds commande ${commande.id}:`, err),
+      );
 
       /* Notifier l'entreprise : commande réceptionnée par le client */
       void this.notifEventSvc.notifyOrderStatusChanged({

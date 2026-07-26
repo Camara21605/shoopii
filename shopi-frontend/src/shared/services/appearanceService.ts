@@ -220,18 +220,18 @@ body, button, input, select, textarea {
   --topbar-border:  var(--bdr);
 }
 
-/* Mode sombre — inversion des surfaces + tokens accent adaptés */
+/* Mode sombre — noir pur (cohérent avec le reste du site) + tokens accent adaptés */
 :root[data-theme="dark"] {
-  --white:  #1C2B3A;
-  --g50:    #0F1923;
-  --g100:   #172333;
-  --g200:   #1F3044;
-  --g300:   #2B3E54;
-  --g400:   #5E7A93;
-  --t1:     #DEE9F7;
-  --t2:     #86A0BC;
-  --t3:     #4E6D88;
-  --t4:     #344F68;
+  --white:  #000000;
+  --g50:    #000000;
+  --g100:   #0A0A0A;
+  --g200:   #1C1C1F;
+  --g300:   #2D2D30;
+  --g400:   #71717A;
+  --t1:     #F4F4F5;
+  --t2:     #A1A1AA;
+  --t3:     #71717A;
+  --t4:     #52525B;
   --bdr:    rgba(255,255,255,.06);
   --bdr2:   rgba(255,255,255,.10);
   --sky:    rgba(${rgb},.14);
@@ -242,9 +242,9 @@ body, button, input, select, textarea {
   --em-bg:  rgba(4,120,87,.18);
   --vl-bg:  rgba(109,40,217,.18);
   --am-bg:  rgba(180,83,9,.18);
-  --heading-color:  #DEE9F7;
+  --heading-color:  #F4F4F5;
   --btn-primary-bg: ${ACCENT_DARK_BTN[accent]};
-  --topbar-bg:      rgba(15,25,35,.96);
+  --topbar-bg:      rgba(0,0,0,.96);
   --topbar-border:  rgba(255,255,255,.06);
 }
 

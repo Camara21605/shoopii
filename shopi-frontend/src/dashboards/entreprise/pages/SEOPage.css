@@ -1,4 +1,4 @@
-/*
+﻿/*
  * FICHIER: src/dashboards/entreprise/pages/SEOPage.css
  */
 
@@ -19,9 +19,9 @@
 }
 .seo-ring span {
   position: relative; z-index: 1;
-  font-family: var(--fd); font-size: 15px; font-weight: 800; color: var(--navy);
+  font-family: var(--fd); font-size: 15px; font-weight: 900; color: var(--navy);
 }
-.seo-inf h4 { font-family: var(--fd); font-size: 15px; font-weight: 700; color: var(--navy); }
+.seo-inf h4 { font-family: var(--fd); font-size: 15px; font-weight: 800; color: var(--navy); }
 .seo-inf p  { font-size: 11.5px; color: var(--t2); margin-top: 3px; }
 
 .seo-items { display: flex; flex-direction: column; gap: 8px; }

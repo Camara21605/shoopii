@@ -20,11 +20,7 @@
 .cover { height:200px; position:relative; overflow:hidden; }
 .coverBg { position:absolute; inset:0; background:linear-gradient(118deg,#022B1A 0%,#064E3B 30%,#047857 65%,#0B4060 100%); }
 .coverDots { position:absolute; inset:0; background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px); background-size:28px 28px; }
-.speedLine { position:absolute; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent); animation:speedLine 2.5s infinite linear; }
-.speedLine:nth-child(4){ width:180px; top:40%; left:-180px; animation-delay:0s; }
-.speedLine:nth-child(5){ width:120px; top:55%; left:-120px; animation-delay:.8s; }
-.speedLine:nth-child(6){ width:240px; top:70%; left:-240px; animation-delay:1.4s; }
-@keyframes speedLine { to { transform:translateX(calc(100vw + 300px)); } }
+.speedLine { display: none; }
 
 /* IDENTITY */
 .idBar { background:var(--wh); border-bottom:1px solid var(--bdr); }

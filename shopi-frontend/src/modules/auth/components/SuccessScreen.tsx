@@ -1,10 +1,13 @@
 /* ============================================================
  * FICHIER : src/modules/auth/components/SuccessScreen.tsx
  * RÔLE    : Écran de succès affiché après connexion ou
- *           inscription réussie — animation scale-in + message
+ *           inscription réussie — logo Shopi animé + message
+ * AUTEUR  : Shopi03
+ * DERNIERE MISE A JOUR : 2026-07-19
  * ============================================================ */
 
 import React from 'react';
+import ShopiLogo from '../../../shared/components/ShopiLogo';
 import { ROLE_DASHBOARD } from '../roleConfigs';
 import type { Role } from '../types';
 
@@ -13,18 +16,16 @@ interface SuccessScreenProps {
   role: Role;
 }
 
-/**
- * SuccessScreen
- * Remplace le formulaire après une authentification réussie.
- * Affiche une animation de validation et redirige vers le dashboard.
- */
 export const SuccessScreen: React.FC<SuccessScreenProps> = ({ action, role }) => {
   const isLogin = action === 'Connexion';
 
   return (
     <div id="successScreen" className="success-screen show">
-      {/* Cercle animé ✓ */}
-      <div className="success-circle">✅</div>
+
+      {/* Logo Shopi animé — remplace le cercle ✅ */}
+      <div className="success-logo">
+        <ShopiLogo size={100} />
+      </div>
 
       {/* Titre */}
       <h3 className="success-title" id="successTitle">

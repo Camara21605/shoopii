@@ -147,3 +147,11 @@
 /* Responsive */
 @media (max-width: 1100px) { .grid { grid-template-columns: repeat(2,1fr); } }
 @media (max-width: 640px)  { .grid { grid-template-columns: repeat(2,1fr); gap: 9px; } }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .pgActive       { background: #1A4FC4; border-color: #1A4FC4; }
+  .pgActive:hover { background: #1A4FC4; }
+}
+:root[data-theme="dark"] .pgActive       { background: #1A4FC4; border-color: #1A4FC4; }
+:root[data-theme="dark"] .pgActive:hover { background: #1A4FC4; }

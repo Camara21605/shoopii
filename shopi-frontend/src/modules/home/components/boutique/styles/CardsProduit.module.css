@@ -69,3 +69,15 @@
 .btnRow  { display: flex; gap: 6px; }
 .btnSm   { flex: 1; background: var(--sky); border: 1px solid var(--sky-3,#C8D9F8); border-radius: 8px; padding: 7px; font-size: 11px; color: var(--blue); cursor: pointer; transition: all .18s; display: flex; align-items: center; justify-content: center; gap: 5px; }
 .btnSm:hover { background: var(--sky-2,#E2EAFB); border-color: var(--blue); }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .fav         { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
+  .img         { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
+  .btnCart     { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
+  .btnCart:hover { background: #2D2D30; }
+}
+:root[data-theme="dark"] .fav         { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
+:root[data-theme="dark"] .img         { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
+:root[data-theme="dark"] .btnCart     { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
+:root[data-theme="dark"] .btnCart:hover { background: #2D2D30; }

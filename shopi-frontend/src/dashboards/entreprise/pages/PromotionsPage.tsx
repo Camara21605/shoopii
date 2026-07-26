@@ -759,7 +759,7 @@ export default function PromotionsPage() {
                       <div className={styles.scopeOptTitle}>Toute l'entreprise</div>
                       <div className={styles.scopeOptSub}>La promo s'applique à tous vos produits</div>
                     </div>
-                    <span className={styles.scopeOptTag} style={{ background:'var(--sky-2,#E2EAFB)', color:'var(--blue,#1A4FC4)' }}>
+                    <span className={styles.scopeOptTag} style={{ background:'var(--g100)', color:'var(--t2)' }}>
                       {products.length} produits
                     </span>
                   </div>

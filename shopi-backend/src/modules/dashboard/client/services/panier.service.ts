@@ -1,9 +1,9 @@
 /* ============================================================
  * FICHIER : src/modules/dashboard/client/services/panier.service.ts
  *
- * FIX 500 : on charge UNIQUEMENT le produit de base,
- * sans relations imbriquées qui peuvent varier selon ton entité.
- * Les images/category sont chargées séparément si elles existent.
+ * PanierItem.produit est eager (@ManyToOne eager:true) : chaque
+ * lecture du panier ramène le produit (+ media/category/specs,
+ * eux-mêmes eager côté Product) en une seule requête via JOIN.
  * ============================================================ */
 
 import {
@@ -74,44 +74,25 @@ export class PanierService {
 
   /* ════════════════════════════════════════════════════════
    * GET /client/panier
-   * ✅ Charge le produit seul, sans relations imbriquées
+   *
+   * 1 seule requête : PanierItem.produit est @ManyToOne(eager:true),
+   * donc panierRepo.find() ramène déjà chaque produit (avec ses
+   * propres relations eager : media/category/specs) via LEFT JOIN.
+   * Avant : jusqu'à 3 requêtes DB supplémentaires PAR article
+   * (retry sur des noms de relation 'medias'/'images' inexistants
+   * sur Product — la vraie relation s'appelle 'media').
    ════════════════════════════════════════════════════════ */
   async getAll(user: User) {
-    /* 1. Récupérer les lignes du panier */
     const items = await this.panierRepo.find({
       where: { userId: user.id },
       order: { createdAt: 'ASC' },
     });
 
-    if (items.length === 0) return [];
+    return items
+      .map(item => {
+        if (!item.produit) return null;
 
-    /* 2. Charger chaque produit séparément avec ses relations disponibles */
-    const result = await Promise.all(
-      items.map(async item => {
-        let p: any = null;
-
-        /* Tentative avec relations — on attrape si ça échoue */
-        try {
-          p = await this.produitRepo.findOne({
-            where:     { id: item.produitId },
-            relations: ['medias', 'category', 'company'],
-          });
-        } catch {
-          /* Relations non disponibles → essai sans */
-          try {
-            p = await this.produitRepo.findOne({
-              where:     { id: item.produitId },
-              relations: ['images', 'category'],
-            });
-          } catch {
-            /* Dernier recours : produit seul */
-            p = await this.produitRepo.findOne({ where: { id: item.produitId } });
-          }
-        }
-
-        if (!p) return null;
-
-        const info = readProduct(p);
+        const info = readProduct(item.produit);
         return {
           id:         item.id,
           produitId:  item.produitId,
@@ -127,9 +108,7 @@ export class PanierService {
           stock:      info.stock,
         };
       })
-    );
-
-    return result.filter(Boolean);
+      .filter(Boolean);
   }
 
   /* ════════════════════════════════════════════════════════

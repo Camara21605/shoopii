@@ -92,7 +92,9 @@ export class InvitationLivreurService {
     if (user.role === UserRole.SUPER_ADMIN || user.role === UserRole.ADMIN) {
       return { id: 'admin', companyName: 'Shopi Admin' } as Company;
     }
-    const company = await this.companyRepo.findOne({ where: { userId: user.id } });
+    const actorId = (user as any).actorId as string | undefined;
+    let company = await this.companyRepo.findOne({ where: { userId: user.id } });
+    if (!company && actorId) company = await this.companyRepo.findOne({ where: { id: actorId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }
@@ -190,9 +192,13 @@ export class InvitationLivreurService {
       throw new NotFoundException('Email du livreur introuvable.');
     }
 
-    const company = user.role === UserRole.COMPANY
+    const actorId2 = (user as any).actorId as string | undefined;
+    let company = user.role === UserRole.COMPANY
       ? await this.companyRepo.findOne({ where: { userId: user.id } })
       : null;
+    if (!company && actorId2 && user.role === UserRole.COMPANY) {
+      company = await this.companyRepo.findOne({ where: { id: actorId2 } });
+    }
 
     try {
       await this.mailService.sendContactEmail({

@@ -292,6 +292,22 @@
 .cmConfirm { background: var(--red); color: #fff; }
 .cmConfirm:hover { background: #b91c1c; }
 
+/* ─── Dark mode ──────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .btnPrimary { background: #1A4FC4; }
+  .payLogoBank { background: linear-gradient(135deg, #1A2B4A, #0B1F3A); }
+  .refBox { background: linear-gradient(135deg, #0B1F3A, #102A5A); }
+  .refCopy { color: #0B1F3A; }
+  .health { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
+  .healthRing::before { background: #0A0F1E; }
+}
+:root[data-theme="dark"] .btnPrimary { background: #1A4FC4; }
+:root[data-theme="dark"] .payLogoBank { background: linear-gradient(135deg, #1A2B4A, #0B1F3A); }
+:root[data-theme="dark"] .refBox { background: linear-gradient(135deg, #0B1F3A, #102A5A); }
+:root[data-theme="dark"] .refCopy { color: #0B1F3A; }
+:root[data-theme="dark"] .health { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
+:root[data-theme="dark"] .healthRing::before { background: #0A0F1E; }
+
 /* ── Responsive ── */
 @media (max-width: 700px) {
   .grid2, .grid3 { grid-template-columns: 1fr; }

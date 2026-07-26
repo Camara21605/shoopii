@@ -1,7 +1,7 @@
 /* Toast.module.css */
 .tmsg {
-  background: var(--navy);
-  color: rgba(200,217,248,.95);
+  background: var(--btn);
+  color: rgba(255,255,255,.9);
   border: 1px solid rgba(255,255,255,.09);
   border-radius: var(--r-lg);
   padding: 12px 18px;

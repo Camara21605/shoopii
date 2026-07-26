@@ -47,6 +47,10 @@
   --or-bg:   rgba(234,88,12,.09);
   --violet:  #7C3AED;
   --vl-bg:   rgba(124,58,237,.09);
+  --btn:     #111113;
+  --btn-h:   #1C1C1F;
+  --surface-bar: rgba(255,255,255,.92);
+  --surface-btm: rgba(255,255,255,.97);
 
   /* ── Ombres ── */
   --sh-xs:  0 1px 3px rgba(11,31,58,.07), 0 1px 2px rgba(11,31,58,.05);
@@ -76,6 +80,97 @@
   --spring: cubic-bezier(.34,1.56,.64,1);
 }
 
+/* ════════════════════════════════════════════════════════════
+   MODE SOMBRE — noir pur, cohérent avec le reste du site
+   • @media (prefers-color-scheme: dark) → réaction à l'OS
+   • :global(:root[data-theme="dark"])   → toggle explicite sombre
+   • :global(:root[data-theme="light"])  → toggle explicite clair
+     (annule la préférence OS quand le mode sombre est actif)
+   ════════════════════════════════════════════════════════════ */
+@media (prefers-color-scheme: dark) {
+  :global(:root) {
+    --teal:    #2DD4BF; --teal-2: #14B8A6; --teal-3: #0D9488;
+    --tl-bg:   rgba(45,212,191,.14); --tl-lt: #67E8F9;
+    --bdrb:    rgba(45,212,191,.35); --sh-teal: 0 8px 28px rgba(0,0,0,.5);
+
+    --navy:    #F4F4F5; --navy-2: #E4E4E7; --navy-3: #D4D4D8;
+    --white:   #000000;
+    --g50:     #000000; --g100: #0A0A0A; --g200: #1C1C1F; --g300: #2D2D30; --g400: #71717A;
+    --t1:      #F4F4F5; --t2: #A1A1AA; --t3: #71717A; --t4: #52525B;
+
+    --em-bg:   rgba(5,150,105,.18);
+    --am-bg:   rgba(180,83,9,.18);
+    --rs-bg:   rgba(220,38,38,.15);
+    --blue:    #60A5FA; --blue-lt: #BFDBFE; --blue-2: #3B82F6;
+    --sky:     rgba(255,255,255,.04); --sky-2: rgba(255,255,255,.06); --sky-3: rgba(255,255,255,.10);
+    --or-bg:   rgba(234,88,12,.18);
+    --vl-bg:   rgba(124,58,237,.18);
+    --btn:     #1C1C1F; --btn-h: #2D2D30;
+    --surface-bar: rgba(0,0,0,.92);
+    --surface-btm: rgba(0,0,0,.97);
+
+    --sh-xs:  0 2px 8px rgba(0,0,0,.45);
+    --sh-sm:  0 4px 16px rgba(0,0,0,.55);
+    --sh-md:  0 8px 28px rgba(0,0,0,.65);
+    --sh-lg:  0 16px 48px rgba(0,0,0,.72);
+    --sh-b:   0 -2px 20px rgba(0,0,0,.5);
+  }
+}
+:global(:root[data-theme="dark"]) {
+  --teal:    #2DD4BF; --teal-2: #14B8A6; --teal-3: #0D9488;
+  --tl-bg:   rgba(45,212,191,.14); --tl-lt: #67E8F9;
+  --bdrb:    rgba(45,212,191,.35); --sh-teal: 0 8px 28px rgba(0,0,0,.5);
+
+  --navy:    #F4F4F5; --navy-2: #E4E4E7; --navy-3: #D4D4D8;
+  --white:   #000000;
+  --g50:     #000000; --g100: #0A0A0A; --g200: #1C1C1F; --g300: #2D2D30; --g400: #71717A;
+  --t1:      #F4F4F5; --t2: #A1A1AA; --t3: #71717A; --t4: #52525B;
+
+  --em-bg:   rgba(5,150,105,.18);
+  --am-bg:   rgba(180,83,9,.18);
+  --rs-bg:   rgba(220,38,38,.15);
+  --blue:    #60A5FA; --blue-lt: #BFDBFE; --blue-2: #3B82F6;
+  --sky:     rgba(255,255,255,.04); --sky-2: rgba(255,255,255,.06); --sky-3: rgba(255,255,255,.10);
+  --or-bg:   rgba(234,88,12,.18);
+  --vl-bg:   rgba(124,58,237,.18);
+  --btn:     #1C1C1F; --btn-h: #2D2D30;
+  --surface-bar: rgba(0,0,0,.92);
+  --surface-btm: rgba(0,0,0,.97);
+
+  --sh-xs:  0 2px 8px rgba(0,0,0,.45);
+  --sh-sm:  0 4px 16px rgba(0,0,0,.55);
+  --sh-md:  0 8px 28px rgba(0,0,0,.65);
+  --sh-lg:  0 16px 48px rgba(0,0,0,.72);
+  --sh-b:   0 -2px 20px rgba(0,0,0,.5);
+}
+:global(:root[data-theme="light"]) {
+  --teal:    #0E7490; --teal-2: #0c6480; --teal-3: #0a5570;
+  --tl-bg:   rgba(14,116,144,.10); --tl-lt: #67E8F9;
+  --bdrb:    rgba(14,116,144,.25); --sh-teal: 0 8px 28px rgba(14,116,144,.32);
+
+  --navy:    #0B1F3A; --navy-2: #112648; --navy-3: #0d1e35;
+  --white:   #ffffff;
+  --g50:     #F7F9FB; --g100: #EEF2F6; --g200: #DDE4ED; --g300: #C8D4E3; --g400: #9EB0C7;
+  --t1:      #0B1F3A; --t2: #3A5068; --t3: #6B849E; --t4: #9EB0C7;
+
+  --em-bg:   rgba(4,120,87,.10);
+  --am-bg:   rgba(180,83,9,.10);
+  --rs-bg:   rgba(220,38,38,.09);
+  --blue:    #1A4FC4; --blue-lt: #93C5FD; --blue-2: #1d40ae;
+  --sky:     #EEF6FF; --sky-2: #DBEAFE; --sky-3: #BFDBFE;
+  --or-bg:   rgba(234,88,12,.09);
+  --vl-bg:   rgba(124,58,237,.09);
+  --btn:     #111113; --btn-h: #1C1C1F;
+  --surface-bar: rgba(255,255,255,.92);
+  --surface-btm: rgba(255,255,255,.97);
+
+  --sh-xs:  0 1px 3px rgba(11,31,58,.07), 0 1px 2px rgba(11,31,58,.05);
+  --sh-sm:  0 3px 10px rgba(11,31,58,.09), 0 1px 3px rgba(11,31,58,.06);
+  --sh-md:  0 8px 24px rgba(11,31,58,.12), 0 3px 8px rgba(11,31,58,.07);
+  --sh-lg:  0 18px 48px rgba(11,31,58,.18), 0 6px 16px rgba(11,31,58,.10);
+  --sh-b:   0 -2px 16px rgba(11,31,58,.08);
+}
+
 /* ── Root ── */
 .root {
   min-height: 100vh;
@@ -88,7 +183,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(11,31,58,.55);
+  background: rgba(0,0,0,.55);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   z-index: 199;

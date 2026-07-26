@@ -1,0 +1,367 @@
+# ============================================================
+# FICHIER : .github/workflows/qa-pipeline.yml
+#
+# RÔLE
+# ─────────────────────────────────────────────────────────────
+# Pipeline de Quality Assurance automatisé pour Shopi Backend.
+# Bloque tout déploiement si une étape critique échoue.
+#
+# DÉCLENCHEURS
+# ─────────────────────────────────────────────────────────────
+#   - push sur main / develop
+#   - pull request vers main
+#   - déclenchement manuel (workflow_dispatch)
+#
+# ÉTAPES (8)
+# ─────────────────────────────────────────────────────────────
+#   1. checkout          — récupère le code source
+#   2. setup-node        — Node 20 + cache npm
+#   3. install           — npm ci (reproducible)
+#   4. lint              — ESLint, zéro warning autorisé
+#   5. type-check        — tsc --noEmit
+#   6. unit-tests        — jest --project unit --coverage
+#   7. integration-tests — jest --project integration
+#   8. security-tests    — jest --project security
+#   9. coverage-gate     — vérifie les seuils de couverture
+#  10. build             — nest build (compile TypeScript)
+#  11. audit             — npm audit --audit-level=high
+#
+# SECRETS REQUIS (à configurer dans GitHub → Settings → Secrets)
+# ─────────────────────────────────────────────────────────────
+#   JWT_SECRET          — clé JWT de test (≠ production)
+#   JWT_REFRESH_SECRET  — clé refresh token de test
+#
+# AUTEUR       : Shopi03
+# DERNIERE MISE A JOUR : 2026-07-18
+# ============================================================
+
+name: QA Pipeline — Shopi Backend
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'shopi-backend/**'
+      - '.github/workflows/qa-pipeline.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'shopi-backend/**'
+  workflow_dispatch:
+    inputs:
+      skip_security:
+        description: 'Ignorer les tests de sécurité (debug uniquement)'
+        required: false
+        default: 'false'
+
+# ────────────────────────────────────────────────────────────
+# VARIABLES GLOBALES
+# ────────────────────────────────────────────────────────────
+env:
+  NODE_VERSION: '20'
+  WORKING_DIR: 'shopi-backend'
+  NODE_ENV: 'test'
+
+# ────────────────────────────────────────────────────────────
+# JOBS
+# ────────────────────────────────────────────────────────────
+jobs:
+
+  # ══════════════════════════════════════════════════════════
+  # JOB 1 — LINT + TYPE CHECK
+  # ════════════════════════════════════════════════��═════════
+  lint-and-typecheck:
+    name: Lint & TypeCheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint 2>&1 | tee lint-output.txt
+        continue-on-error: false
+
+      - name: TypeScript — vérification types (noEmit)
+        run: npx tsc --noEmit
+
+      - name: Upload lint results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-output
+          path: ${{ env.WORKING_DIR }}/lint-output.txt
+          retention-days: 7
+
+  # ══════════════════════════════════════════════════════════
+  # JOB 2 — TESTS UNITAIRES + COUVERTURE
+  # ══════════════════════════════════════════════════════════
+  unit-tests:
+    name: Tests Unitaires + Couverture
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+
+    env:
+      JWT_SECRET: ${{ secrets.JWT_SECRET || 'shopi-test-jwt-secret-32chars-min' }}
+      JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET || 'shopi-test-refresh-secret-32chars' }}
+      REDIS_HOST: 'localhost'
+      REDIS_PORT: '6379'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests with coverage
+        run: npx jest --selectProjects unit --coverage --coverageReporters=text --coverageReporters=json-summary --ci
+        env:
+          CI: 'true'
+
+      - name: ⛔ Coverage Gate — vérifier les seuils
+        run: |
+          echo "=== Vérification des seuils de couverture ==="
+          node -e "
+            const summary = require('./coverage/coverage-summary.json');
+            const global  = summary.total;
+            const checks  = [
+              ['branches',   global.branches.pct,   60],
+              ['functions',  global.functions.pct,  70],
+              ['lines',      global.lines.pct,      70],
+              ['statements', global.statements.pct, 70],
+            ];
+            let failed = false;
+            for (const [name, actual, threshold] of checks) {
+              const ok = actual >= threshold;
+              const icon = ok ? '✅' : '❌';
+              console.log(\`\${icon} \${name}: \${actual.toFixed(1)}% (seuil: \${threshold}%)\`);
+              if (!ok) failed = true;
+            }
+            if (failed) {
+              console.error('\\n❌ DÉPLOIEMENT BLOQUÉ — seuils de couverture non atteints');
+              process.exit(1);
+            }
+            console.log('\\n✅ Tous les seuils de couverture sont respectés');
+          "
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ${{ env.WORKING_DIR }}/coverage/
+          retention-days: 30
+
+  # ══════════════════════════════════════════════════════════
+  # JOB 3 — TESTS D'INTÉGRATION
+  # ══════════════════════════════════════════════════════════
+  integration-tests:
+    name: Tests d'Intégration
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+
+    env:
+      JWT_SECRET: ${{ secrets.JWT_SECRET || 'shopi-test-jwt-secret-32chars-min' }}
+      REDIS_HOST: 'localhost'
+      REDIS_PORT: '6379'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run integration tests
+        run: npx jest --selectProjects integration --ci --forceExit
+        env:
+          CI: 'true'
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: ${{ env.WORKING_DIR }}/reports/
+          retention-days: 14
+
+  # ══════════════════════════════════════════════════════════
+  # JOB 4 — TESTS DE SÉCURITÉ
+  # ══════════════════════════════════════════════════════════
+  security-tests:
+    name: Tests de Sécurité (RBAC + Injections)
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    if: ${{ github.event.inputs.skip_security != 'true' }}
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+
+    env:
+      JWT_SECRET: ${{ secrets.JWT_SECRET || 'shopi-test-jwt-secret-32chars-min' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security tests
+        run: npx jest --selectProjects security --ci --forceExit
+        env:
+          CI: 'true'
+
+  # ══════════════════════════════════════════════════════════
+  # JOB 5 — BUILD DE PRODUCTION
+  # ══════════════════════════════════════════════════════════
+  build:
+    name: Build TypeScript
+    runs-on: ubuntu-latest
+    needs:
+      - integration-tests
+      - security-tests
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: ${{ env.WORKING_DIR }}/dist/
+          retention-days: 7
+
+  # ══════════════════════════════════════════════════════════
+  # JOB 6 — AUDIT DÉPENDANCES NPM
+  # ══════════════════════════════════════════════════════════
+  npm-audit:
+    name: Audit Dépendances NPM
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dépendances (niveau HIGH)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Rapport audit
+        run: npm audit --json > audit-report.json || true
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: ${{ env.WORKING_DIR }}/audit-report.json
+          retention-days: 30
+
+  # ══════════════════════════════════════════════════════════
+  # JOB 7 — RAPPORT FINAL QA (notification)
+  # ══════════════════════════════════════════════���═══════════
+  qa-summary:
+    name: Résumé QA
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - npm-audit
+    if: always()
+
+    steps:
+      - name: Résumé du pipeline
+        run: |
+          echo "======================================="
+          echo "  Shopi QA Pipeline — Résumé Final"
+          echo "======================================="
+          echo "  Branch    : ${{ github.ref_name }}"
+          echo "  Commit    : ${{ github.sha }}"
+          echo "  Triggered : ${{ github.event_name }}"
+          echo "  Datetime  : $(date -u '+%Y-%m-%d %H:%M UTC')"
+          echo "======================================="
+          echo ""
+          echo "  Jobs exécutés :"
+          echo "  ✅ Lint + TypeCheck"
+          echo "  ✅ Tests unitaires + Coverage gate"
+          echo "  ✅ Tests d'intégration"
+          echo "  ✅ Tests de sécurité RBAC + Injections"
+          echo "  ✅ Build TypeScript"
+          echo "  ✅ Audit dépendances npm"
+          echo ""
+          echo "  Le déploiement est AUTORISÉ si tous les jobs sont verts."

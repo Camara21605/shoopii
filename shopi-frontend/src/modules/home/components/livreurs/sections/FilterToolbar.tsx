@@ -84,7 +84,7 @@ const FilterToolbar: React.FC<FilterToolbarProps> = ({
             >
               <i
                 className={`fas ${f.icon}`}
-                style={f.greenDot ? { color: '#10B981', fontSize: 8 } : undefined}
+                style={f.greenDot ? { fontSize: 8 } : undefined}
                 aria-hidden="true"
               />
               {f.label}

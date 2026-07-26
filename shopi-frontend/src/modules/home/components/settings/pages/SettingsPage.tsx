@@ -10,6 +10,7 @@ import { useNavigate }    from 'react-router-dom';
 
 /* ✅ Même Header que toutes les pages home */
 import Header from '../../layout/Header';
+import { useTheme } from '../../../../../shared/context/ThemeContext';
 
 import p from './styles/SettingsPage.module.css';
 
@@ -54,6 +55,7 @@ function useLocalToast() {
 
 export default function SettingsPage() {
   const navigate            = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const { msg, visible, showToast } = useLocalToast();
   const [activePanel, setActivePanel] = useState<PanelId>('profil');
   const mainRef = useRef<HTMLDivElement>(null);
@@ -90,9 +92,19 @@ export default function SettingsPage() {
 
         {/* ── Entête page ── */}
         <div className={`${p.pageTop} ${p.rv}`}>
-          <button className={p.pageBack} onClick={() => navigate('/home')}>
-            <i className="fas fa-arrow-left" /> Retour à l'accueil
-          </button>
+          <div className={p.pageTopRow}>
+            <button className={p.pageBack} onClick={() => navigate('/home')}>
+              <i className="fas fa-arrow-left" /> Retour à l'accueil
+            </button>
+            <button
+              className={p.themeBtn}
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
+            >
+              <i className={theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'} />
+              {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+            </button>
+          </div>
           <h1 className={p.pageTitle}>Paramètres <em>du compte</em></h1>
           <p className={p.pageSub}>Gérez vos informations, sécurité et préférences Shopi</p>
         </div>
@@ -140,7 +152,7 @@ export default function SettingsPage() {
       {visible && (
         <div style={{
           position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-          background: 'var(--navy)', color: '#fff',
+          background: 'var(--btn)', color: '#fff',
           padding: '10px 20px', borderRadius: 'var(--pill)',
           fontSize: 13, fontWeight: 600, zIndex: 9999,
           boxShadow: '0 8px 32px rgba(11,31,58,.3)',

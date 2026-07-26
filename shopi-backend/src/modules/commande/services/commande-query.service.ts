@@ -135,7 +135,9 @@ export class CommandeQueryService {
    * GET /entreprise/commandes — liste des commandes de la boutique
    ════════════════════════════════════════════════════════ */
   async listEntreprise(user: User): Promise<CommandeListItem[]> {
-    const company = await this.companyRepo.findOne({ where: { userId: user.id } });
+    const actorId = (user as any).actorId as string | undefined;
+    let company = await this.companyRepo.findOne({ where: { userId: user.id } });
+    if (!company && actorId) company = await this.companyRepo.findOne({ where: { id: actorId } });
     if (!company) return [];
 
     const commandes = await this.commandeRepo.find({

@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
  * FICHIER : src/modules/dashboard/entreprise/services/securite-parametres.service.ts
  *
  * RÔLE : Gère la sécurité du compte (section 9)
@@ -108,8 +108,9 @@ export class SecuriteParametresService {
   }
 
   /* ── HELPER ── */
-  private async findCompanyOrFail(userId: string): Promise<Company> {
-    const company = await this.companyRepo.findOne({ where: { userId } });
+  private async findCompanyOrFail(userIdOrCompanyId: string): Promise<Company> {
+    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId } });
+    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }

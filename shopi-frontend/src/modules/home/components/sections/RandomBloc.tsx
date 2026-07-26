@@ -8,7 +8,6 @@
  */
 import { useEffect, useState, useCallback, useMemo } from 'react';
 
-import { PARTENAIRES } from '../../data/mockData';
 import type { BoutiqueCardData } from '../../data/types';
 import { getRoleFromToken } from '../../../../shared/services/authUtils';
 import { tokenStorage }    from '../../../../shared/services/apiFetch';
@@ -21,14 +20,13 @@ import type { LivreurCardData }       from '../../cards/CardLivreur';
 
 import CardProduit       from '../../cards/CardProduit';
 import CardEntreprise    from '../../cards/CardEntreprise';
-import CardPartenaire    from '../../cards/CardPartenaire';
 import CardCorrespondant from '../../cards/CardCorrespondant';
 import CardLivreur       from '../../cards/CardLivreur';
 import HScrollSection    from '../ui/HScrollSection';
 import SectionHeader     from '../ui/SectionHeader';
 import styles from './RandomBloc.module.css';
 
-export type BlocKind = 'produits' | 'entreprises' | 'partenaires' | 'correspondants' | 'livreurs';
+export type BlocKind = 'produits' | 'produits-gros' | 'entreprises' | 'correspondants' | 'livreurs';
 
 interface Props {
   kind:    BlocKind;
@@ -38,8 +36,8 @@ interface Props {
 
 const CONFIG: Record<BlocKind, { kick: string; title: string; sub: string; link: string }> = {
   produits:       { kick:'Catalogue',    title:'Produits <em>recommandés</em>',  sub:'Sélectionnés pour vous',                  link:'Voir tout le catalogue'  },
+  'produits-gros':{ kick:'Vente en gros',title:'Acheter en <em>gros</em>',       sub:'Prix dégressifs · commande minimum',      link:'Voir tous les produits en gros' },
   entreprises:    { kick:'Boutiques',    title:'Boutiques <em>à la une</em>',     sub:'Abonnez-vous à vos boutiques favorites', link:'Toutes les boutiques'    },
-  partenaires:    { kick:'Partenaires',  title:'Services <em>certifiés</em>',     sub:'Des partenaires de confiance',           link:'Tous les partenaires'    },
   correspondants: { kick:'Réseau local', title:'Nos <em>Correspondants</em>',     sub:'Des relais locaux dans chaque région',   link:'Tous les correspondants' },
   livreurs:       { kick:'Logistique',   title:'Livreurs <em>disponibles</em>',   sub:'Professionnels vérifiés près de vous',   link:'Tous les livreurs'       },
 };
@@ -121,7 +119,7 @@ function ProduitsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>voi
   const [error,    setError]    = useState(false);
 
   useEffect(() => {
-    apiFetch<{ data: ProductApi[] }>('/public/produits', { public:true, params:{ limit:12 } })
+    apiFetch<{ data: ProductApi[] }>('/public/produits', { public:true, params:{ limit:12, type:'detail' } })
       .then(res => setProduits(Array.isArray(res?.data) ? res.data : []))
       .catch(() => setError(true))
       .finally(() => setLoading(false));
@@ -146,6 +144,58 @@ function ProduitsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>voi
   return (
     <div className={styles.pgrid}>
       {produits.map(p => <CardProduit key={p.id} p={p} onToast={onToast} />)}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * BLOC PRODUITS EN GROS
+ ───────────────────────────────────────────────────────────── */
+function ProduitsGrosBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>void }) {
+  const [produits, setProduits] = useState<ProductApi[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState(false);
+
+  useEffect(() => {
+    apiFetch<{ data: ProductApi[] }>('/public/produits', { public:true, params:{ limit:12, type:'gros' } })
+      .then(res => setProduits(Array.isArray(res?.data) ? res.data : []))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return (
+    <div className={styles.pgrid}>
+      {[...Array(8)].map((_,i) => (
+        <div key={i} style={{ height:320, borderRadius:16,
+          background:'linear-gradient(90deg,#f1f5f9 25%,#f8fafc 50%,#f1f5f9 75%)',
+          backgroundSize:'200% 100%', animation:'shimmer 1.4s infinite' }} />
+      ))}
+    </div>
+  );
+
+  if (error || produits.length === 0) return (
+    <div style={{ padding:'40px 0', textAlign:'center', color:'var(--t3)', fontSize:14 }}>
+      {error ? '⚠️ Impossible de charger les produits en gros.' : 'Aucun produit en gros disponible pour le moment.'}
+    </div>
+  );
+
+  return (
+    <div className={styles.pgrid}>
+      {produits.map(p => (
+        <div key={p.id} style={{ position:'relative' }}>
+          {p.moq && (
+            <div style={{
+              position:'absolute', top:10, left:10, zIndex:2,
+              background:'#0B1F3A', color:'#fff',
+              fontSize:10, fontWeight:800, padding:'3px 9px',
+              borderRadius:99, letterSpacing:.4, lineHeight:1.4,
+            }}>
+              MOQ {p.moq} unités
+            </div>
+          )}
+          <CardProduit p={p} onToast={onToast} />
+        </div>
+      ))}
     </div>
   );
 }
@@ -222,7 +272,6 @@ function CorrespondantsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e'
         const cards = Array.isArray(res) ? res
                     : Array.isArray(res?.data) ? res.data
                     : [];
-        console.log('API RESPONSE correspondants:', cards);
         setListe(cards);
       })
       .catch(e  => setError(e?.message ?? 'Erreur réseau'))
@@ -230,25 +279,25 @@ function CorrespondantsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e'
   }, []);
 
   if (loading) return (
-    <HScrollSection dark>
+    <HScrollSection>
       {[...Array(4)].map((_,i) => <SkeletonCard key={i} height={280} />)}
     </HScrollSection>
   );
 
   if (error) return (
-    <div style={{ padding:'40px 0', textAlign:'center', color:'rgba(255,255,255,.6)', fontSize:14 }}>
+    <div style={{ padding:'40px 0', textAlign:'center', color:'var(--t3)', fontSize:14 }}>
       ⚠️ {error}
     </div>
   );
 
   if (liste.length === 0) return (
-    <div style={{ padding:'40px 0', textAlign:'center', color:'rgba(255,255,255,.6)', fontSize:14 }}>
+    <div style={{ padding:'40px 0', textAlign:'center', color:'var(--t3)', fontSize:14 }}>
       Aucun correspondant disponible.
     </div>
   );
 
   return (
-    <HScrollSection dark>
+    <HScrollSection>
       {liste.map(c => (
         <CardCorrespondant key={c.id} c={c} onToast={onToast} />
       ))}
@@ -260,9 +309,8 @@ function CorrespondantsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e'
  * COMPOSANT PRINCIPAL
  ───────────────────────────────────────────────────────────── */
 export default function RandomBloc({ kind, index, onToast }: Props) {
-  const cfg    = CONFIG[kind];
-  const isDark = kind === 'correspondants';
-  const bgCls  = isDark ? styles.bgDark : index % 2 === 0 ? styles.bgWhite : styles.bgGray;
+  const cfg   = CONFIG[kind];
+  const bgCls = index % 2 === 0 ? styles.bgWhite : styles.bgGray;
 
   return (
     <section className={`${styles.sec} ${bgCls}`} id={index === 0 ? 'blocs' : undefined}>
@@ -270,17 +318,12 @@ export default function RandomBloc({ kind, index, onToast }: Props) {
         <SectionHeader
           kick={cfg.kick} title={cfg.title} sub={cfg.sub}
           linkText={cfg.link} onLink={() => onToast(`📄 ${cfg.link}`)}
-          dark={isDark}
         />
         {kind === 'produits'       && <ProduitsBloc       onToast={onToast} />}
+        {kind === 'produits-gros'  && <ProduitsGrosBloc   onToast={onToast} />}
         {kind === 'correspondants' && <CorrespondantsBloc onToast={onToast} />}
         {kind === 'livreurs'       && <LivreursBloc       onToast={onToast} />}
-        {kind === 'entreprises' && <EntreprisesBloc onToast={onToast} />}
-        {kind === 'partenaires' && (
-          <HScrollSection>
-            {PARTENAIRES.map(p => <CardPartenaire key={p.id} p={p} onToast={onToast} />)}
-          </HScrollSection>
-        )}
+        {kind === 'entreprises'    && <EntreprisesBloc    onToast={onToast} />}
       </div>
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
     </section>

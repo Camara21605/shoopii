@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
  * FormCard.module.css
  * Carte de formulaire réutilisable dans les paramètres
  * ============================================================ */
@@ -11,7 +11,7 @@
   overflow: hidden;
   transition: border-color 0.25s;
 }
-.card:hover { border-color: rgba(26,79,196,.12); }
+.card:hover { border-color: var(--bdr2); }
 
 .hd {
   padding: 16px 22px;
@@ -26,22 +26,22 @@
 .title {
   font-family: var(--fd);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--navy);
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.title i { color: var(--blue); font-size: 13px; }
+.title i { color: var(--t2); font-size: 13px; }
 .sub { font-size: 11px; color: var(--t3); }
 .action {
-  background: rgba(26,79,196,.09);
-  color: var(--blue);
-  border: 1px solid var(--bdrb);
+  background: rgba(0,0,0,.06);
+  color: var(--t2);
+  border: 1px solid var(--bdr2);
   border-radius: var(--pill);
   padding: 5px 13px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -50,7 +50,7 @@
   font-family: var(--fb);
   flex-shrink: 0;
 }
-.action:hover { background: rgba(26,79,196,.14); }
+.action:hover { background: rgba(0,0,0,.09); }
 
 .body { padding: 22px; }
 

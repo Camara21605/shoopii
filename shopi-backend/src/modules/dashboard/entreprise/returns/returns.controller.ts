@@ -43,19 +43,19 @@ export class ReturnsController {
   /* ── Statistiques globales — AVANT :id ── */
   @Get('stats')
   getStats(@Req() req: any) {
-    return this.returnsStatsService.getStats(req.user.id);
+    return this.returnsStatsService.getStats(req.user.actorId ?? req.user.id);
   }
 
   /* ── Liste paginée avec filtres ── */
   @Get()
   findAll(@Req() req: any, @Query() filters: FilterReturnsDto) {
-    return this.returnsService.findAll(req.user.id, filters);
+    return this.returnsService.findAll(req.user.actorId ?? req.user.id, filters);
   }
 
   /* ── Détail d'un retour ── */
   @Get(':id')
   findOne(@Req() req: any, @Param('id', ParseUUIDPipe) id: string) {
-    return this.returnsService.findOne(req.user.id, id);
+    return this.returnsService.findOne(req.user.actorId ?? req.user.id, id);
   }
 
   /* ── Accepter un retour ── */
@@ -65,7 +65,7 @@ export class ReturnsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AcceptReturnDto,
   ) {
-    return this.returnsService.accept(req.user.id, id, dto);
+    return this.returnsService.accept(req.user.actorId ?? req.user.id, id, dto);
   }
 
   /* ── Refuser un retour ── */
@@ -75,7 +75,7 @@ export class ReturnsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: RefuseReturnDto,
   ) {
-    return this.returnsService.refuse(req.user.id, id, dto);
+    return this.returnsService.refuse(req.user.actorId ?? req.user.id, id, dto);
   }
 
   /* ── Marquer comme reçu ── */
@@ -84,7 +84,7 @@ export class ReturnsController {
     @Req() req: any,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.returnsService.markReceived(req.user.id, id);
+    return this.returnsService.markReceived(req.user.actorId ?? req.user.id, id);
   }
 
   /* ── Rembourser ── */
@@ -94,7 +94,7 @@ export class ReturnsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: RefundReturnDto,
   ) {
-    return this.returnsService.refund(req.user.id, id, dto);
+    return this.returnsService.refund(req.user.actorId ?? req.user.id, id, dto);
   }
 
   /* ── Ajouter note interne ── */
@@ -104,7 +104,7 @@ export class ReturnsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AddReturnNoteDto,
   ) {
-    return this.returnsService.addNote(req.user.id, id, dto);
+    return this.returnsService.addNote(req.user.actorId ?? req.user.id, id, dto);
   }
 
   /* ── Changer priorité ── */
@@ -114,7 +114,7 @@ export class ReturnsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateReturnPriorityDto,
   ) {
-    return this.returnsService.updatePriority(req.user.id, id, dto);
+    return this.returnsService.updatePriority(req.user.actorId ?? req.user.id, id, dto);
   }
 
   /* ── Upload preuve (image/video/document) ── */
@@ -136,6 +136,6 @@ export class ReturnsController {
     if (!['image', 'video', 'document'].includes(evidenceType)) {
       throw new BadRequestException('Type de fichier invalide. Utilisez image, video ou document.');
     }
-    return this.returnsService.uploadEvidence(req.user.id, id, file, evidenceType);
+    return this.returnsService.uploadEvidence(req.user.actorId ?? req.user.id, id, file, evidenceType);
   }
 }

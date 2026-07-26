@@ -294,11 +294,6 @@
   display: flex; align-items: center; justify-content: center;
   position: relative; z-index: 1;
   filter: drop-shadow(0 8px 20px rgba(0,0,0,.3));
-  animation: floatEmoji 3s ease infinite;
-}
-@keyframes floatEmoji {
-  0%,100% { transform: translateY(0); }
-  50%      { transform: translateY(-8px); }
 }
 .viewerRing {
   position: absolute;
@@ -306,11 +301,6 @@
   border-radius: 50%;
   border: 2px solid currentColor;
   opacity: .3;
-  animation: ringPulse 2s ease infinite;
-}
-@keyframes ringPulse {
-  0%,100% { transform: scale(1); opacity:.3; }
-  50%      { transform: scale(1.06); opacity:.12; }
 }
 
 /* ── Prix en overlay bas de l'image ── */
@@ -323,11 +313,6 @@
   box-shadow: 0 6px 24px rgba(0,0,0,.4);
   backdrop-filter: blur(8px);
   white-space: nowrap;
-  animation: prixPop .35s var(--spring, cubic-bezier(.34,1.56,.64,1)) both;
-}
-@keyframes prixPop {
-  from { opacity:0; transform: translateX(-50%) scale(.8) translateY(8px); }
-  to   { opacity:1; transform: translateX(-50%) scale(1)  translateY(0);   }
 }
 .viewerPrixTagVal {
   font-family: var(--fd, 'Fraunces', serif);
@@ -449,4 +434,18 @@
   .viewerEmoji { font-size: 64px; }
   .vNavL { left: 4px; }
   .vNavR { right: 4px; }
+}
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .storyCircle { background: var(--white,#111113); border-color: var(--white,#111113); }
+  .vaBtn        { color: #111113; }
+  .vaBtn:hover  { background: rgba(255,255,255,1); color: #111113; }
+}
+:root[data-theme="dark"] .storyCircle { background: var(--white,#111113); border-color: var(--white,#111113); }
+:root[data-theme="dark"] .vaBtn        { color: #111113; }
+:root[data-theme="dark"] .vaBtn:hover  { background: rgba(255,255,255,1); color: #111113; }
+:root[data-theme="dark"] .navArrow:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); color: #F4F4F5; }
+@media (prefers-color-scheme: dark) {
+  .navArrow:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); color: #F4F4F5; }
 }

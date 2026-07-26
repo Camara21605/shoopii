@@ -42,4 +42,33 @@ export class CreateCommandeDto {
   @IsOptional()
   @IsString()
   promoCode?: string;
+
+  // ── Adresse de livraison complète ──────────────────────────
+  @IsOptional()
+  @IsString()
+  prenomLivraison?: string;
+
+  @IsOptional()
+  @IsString()
+  nomLivraison?: string;
+
+  @IsOptional()
+  @IsString()
+  telephoneLivraison?: string;
+
+  @IsOptional()
+  @IsString()
+  villeLivraison?: string;
+
+  @IsOptional()
+  @IsString()
+  communeLivraison?: string;
+
+  @IsOptional()
+  @IsString()
+  adressePrecise?: string;
+
+  @IsOptional()
+  @IsString()
+  instructions?: string;
 }

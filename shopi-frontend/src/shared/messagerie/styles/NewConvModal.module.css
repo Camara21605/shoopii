@@ -18,8 +18,8 @@
 .search input::placeholder { color: var(--t4); }
 .userList { display: flex; flex-direction: column; gap: 4px; max-height: 280px; overflow-y: auto; }
 .userItem { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: var(--r-lg); cursor: pointer; transition: background 0.18s; }
-.userItem:hover { background: var(--sky,#EEF3FD); }
-.userAva { width: 40px; height: 40px; border-radius: 50%; background: var(--sky-2,#E2EAFB); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; color: var(--navy); }
+.userItem:hover { background: var(--sky,#F1F3F5); }
+.userAva { width: 40px; height: 40px; border-radius: 50%; background: var(--sky-2,#E8EAED); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; color: var(--navy); }
 .userName { font-size: 13px; font-weight: 700; color: var(--navy); }
 .userSub { font-size: 11px; color: var(--t3); margin-top: 1px; }
 .rolePill { font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: var(--pill); margin-left: auto; flex-shrink: 0; }

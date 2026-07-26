@@ -29,6 +29,8 @@ import { Client }            from '../../database/entities/profiles/client-profi
 
 // ── Wallet ✅ AJOUTÉ ──────────────────────────────────────────
 import { Wallet }            from '../../database/entities/wallet.entity';
+// ── Company Team Member (détection collaborateurs au login) ──
+import { CompanyTeamMember } from '../../database/entities/company-team/company-team-member.entity';
 
 @Module({
   imports: [
@@ -43,6 +45,7 @@ import { Wallet }            from '../../database/entities/wallet.entity';
       Correspondent,
       Client,
       Wallet,
+      CompanyTeamMember,
     ]),
 
     PassportModule.register({ defaultStrategy: 'jwt' }),

@@ -14,7 +14,7 @@
  *   - handleClientAction pour les actions protégées depuis la page
  * ================================================================ */
 
-import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { shuffleArray }         from '../data/mockData';
 import { getRoleFromToken }     from '../../../shared/services/authUtils';
@@ -24,11 +24,9 @@ import Header  from '../components/layout/Header';
 import Footer  from '../components/layout/Footer';
 
 /* ── Sections ── */
-import HeroSection            from '../components/sections/HeroSection';
 import TrustSection           from '../components/sections/TrustSection';
 import TypeEntrepriseSection  from '../components/sections/TypeEntrepriseSection';
 import CategoriesSection      from '../components/sections/CategoriesSection';
-import EcosystemeSection      from '../components/sections/EcosystemeSection';
 import PromotionsSection      from '../components/sections/PromotionsSection';
 import HomeStoriesStrip       from '../components/sections/HomeStoriesStrip';
 import RandomBloc, { type BlocKind } from '../components/sections/RandomBloc';
@@ -65,25 +63,20 @@ export default function HomePage() {
   }, []);
 
   /* ── Blocs aléatoires pondérés ── */
-  const blocsAleatoires = useMemo<BlocKind[]>(() => {
-    const source: BlocKind[] = [
-      'produits',
-      'produits',
-      'entreprises',
-      'produits',
-      'partenaires',
-      'produits',
-      'correspondants',
-      'produits',
-      'livreurs',
-    ];
-    return shuffleArray(source);
-  }, []);
+  const [blocsAleatoires] = useState<BlocKind[]>(() => shuffleArray([
+    'produits',
+    'produits',
+    'entreprises',
+    'produits',
+    'produits-gros',
+    'correspondants',
+    'produits',
+    'livreurs',
+  ]));
 
   /* ── Navigation ── */
   const handleLogin    = () => navigate('/login');
   const handleRegister = () => navigate('/register');
-  const handleExplore  = () => document.querySelector('#blocs')?.scrollIntoView({ behavior: 'smooth' });
 
   return (
     <>
@@ -99,13 +92,6 @@ export default function HomePage() {
         paddingBottom: 0,
       }}>
 
-        {/* 1 — Hero */}
-        <HeroSection
-          onToast={showToast}
-          onExplore={handleExplore}
-          onRegister={handleRegister}
-        />
-
         {/* 2 — Piliers de confiance */}
         <TrustSection onToast={showToast} />
 
@@ -114,9 +100,6 @@ export default function HomePage() {
 
         {/* 4 — Catégories populaires */}
         <CategoriesSection onToast={showToast} />
-
-        {/* 5 — Écosystème */}
-        <EcosystemeSection onToast={showToast} onRegister={handleRegister} />
 
         {/* 6 — Flash sale + promotions */}
         <PromotionsSection onToast={showToast} />

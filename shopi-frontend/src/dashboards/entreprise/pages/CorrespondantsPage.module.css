@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
  * CorrespondantsPage.module.css
  *
  * CSS Modules → pas de collision avec d'autres composants.
@@ -22,7 +22,7 @@
 .titre {
   font-family: var(--fd);
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 900;
   color: var(--navy);
   margin: 0 0 3px;
 }
@@ -34,18 +34,18 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--navy);
+  background: var(--btn, #111113);
   color: #fff;
   border: none;
   border-radius: var(--pill);
   padding: 10px 20px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  transition: background .18s, transform .15s;
-  box-shadow: 0 2px 12px rgba(6,15,30,.2);
+  transition: all .18s;
+  box-shadow: 0 2px 12px rgba(0,0,0,.25);
 }
-.btnAjouter:hover { background: #0D1B2E; transform: translateY(-1px); }
+.btnAjouter:hover { background: var(--btn-h, #1C1C1F); transform: translateY(-1px); box-shadow: var(--sh-md); }
 
 /* ══════════════════════════════════════════════════════════════
    STATS — 4 KPI cards
@@ -82,30 +82,25 @@
 .statVal {
   font-family: var(--fd);
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 900;
   line-height: 1;
   margin-bottom: 2px;
 }
-.statLabel { font-size: 12px; font-weight: 600; color: var(--t2); }
+.statLabel { font-size: 12px; font-weight: 700; color: var(--t2); }
 .statSub   { font-size: 10.5px; color: var(--t3); margin-top: 2px; }
 
-/* Point pulsant */
+/* Point d'alerte */
 .pulseDot {
   position: absolute;
   top: 12px; right: 12px;
   width: 10px; height: 10px;
   border-radius: 50%;
   background: var(--amber);
-  animation: pulse 2s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%       { transform: scale(1.5); opacity: .5; }
 }
 
 /* Couleurs stats */
 .statBlue   { background: var(--sky);   border-color: var(--sky-3); }
-.statBlue   .statIcon { background: rgba(22,82,240,.1); color: var(--blue); }
+.statBlue   .statIcon { background: rgba(59,130,246,.10); color: var(--blue); }
 .statBlue   .statVal  { color: var(--blue); }
 
 .statGreen  { background: var(--em-bg); border-color: rgba(5,150,105,.2); }
@@ -156,13 +151,13 @@
   border-radius: var(--pill);
   padding: 6px 12px;
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--t2);
   cursor: pointer;
   transition: all .18s;
 }
 .filtreBtn:hover { border-color: var(--blue); color: var(--blue); }
-.filtreBtnActive { background: var(--navy); border-color: var(--navy); color: #fff; }
+.filtreBtnActive { background: var(--btn, #111113); border-color: var(--btn, #111113); color: #fff; }
 
 .toolbarRight {
   display: flex;
@@ -228,8 +223,8 @@
   transition: all .18s;
 }
 .vueBtn + .vueBtn { border-left: 1.5px solid var(--bdr2); }
-.vueBtn:hover { background: var(--g50); color: var(--navy); }
-.vueBtnActive { background: var(--navy); color: #fff; }
+.vueBtn:hover { background: var(--g100); color: var(--t2); }
+.vueBtnActive { background: var(--btn, #111113); color: #fff; }
 
 /* Compteur résultats */
 .compteur { font-size: 12px; color: var(--t3); margin-bottom: 12px; }
@@ -300,7 +295,7 @@
 .cardName {
   font-family: var(--fd);
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 900;
   color: var(--navy);
   margin-bottom: 5px;
 }
@@ -332,7 +327,7 @@
 }
 .cardStat:last-child { border-right: none; }
 .cardStat strong {
-  font-family: var(--fd); font-size: 14px; font-weight: 800;
+  font-family: var(--fd); font-size: 14px; font-weight: 900;
   color: var(--navy); line-height: 1;
 }
 .cardStat span { font-size: 9.5px; color: var(--t3); text-transform: uppercase; letter-spacing: .3px; }
@@ -354,9 +349,7 @@
   border-radius: 50%;
   background: var(--emerald);
   flex-shrink: 0;
-  animation: blink 2s ease infinite;
 }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
 .cardActivity span:first-of-type {
   flex: 1; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap;
@@ -378,12 +371,12 @@
 .cardBtnPrimary {
   flex: 1;
   display: flex; align-items: center; justify-content: center; gap: 6px;
-  background: var(--sky); border: 1.5px solid var(--sky-3);
+  background: var(--g100); border: 1.5px solid var(--bdr2);
   border-radius: 8px; padding: 7px 12px;
-  font-size: 12px; font-weight: 600; color: var(--blue);
+  font-size: 12px; font-weight: 700; color: var(--t2);
   cursor: pointer; transition: all .18s;
 }
-.cardBtnPrimary:hover { background: var(--blue); border-color: var(--blue); color: #fff; }
+.cardBtnPrimary:hover { background: var(--btn, #111113); border-color: var(--btn, #111113); color: #fff; }
 
 .cardBtnIcon {
   width: 34px; height: 34px;
@@ -411,7 +404,7 @@
 .liste { width: 100%; border-collapse: collapse; }
 .th {
   padding: 11px 14px;
-  font-size: 10.5px; font-weight: 700; color: var(--t3);
+  font-size: 10.5px; font-weight: 800; color: var(--t3);
   text-transform: uppercase; letter-spacing: .5px;
   text-align: left; background: var(--g50);
   border-bottom: 1.5px solid var(--bdr); white-space: nowrap;
@@ -431,7 +424,7 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; flex-shrink: 0;
 }
-.listNom { font-size: 13px; font-weight: 700; color: var(--navy); }
+.listNom { font-size: 13px; font-weight: 800; color: var(--navy); }
 .listEmail { font-size: 11px; color: var(--t3); margin-top: 2px; }
 
 .listVille {
@@ -440,7 +433,7 @@
 }
 .listVille i { color: var(--blue); font-size: 10px; }
 
-.listRating { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--navy); }
+.listRating { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; color: var(--navy); }
 
 .listActions { display: flex; gap: 5px; }
 .listeBtn {
@@ -457,17 +450,17 @@
    ══════════════════════════════════════════════════════════════ */
 .typeBadge {
   display: inline-flex; align-items: center; gap: 4px;
-  font-size: 9.5px; font-weight: 800; padding: 3px 9px;
+  font-size: 9.5px; font-weight: 900; padding: 3px 9px;
   border-radius: var(--pill); white-space: nowrap; border: 1px solid transparent;
 }
-.badgePrincipal { background: var(--sky);   color: var(--blue);    border-color: var(--sky-3); }
+.badgePrincipal { background: var(--g100);  color: var(--t2);      border-color: var(--bdr2); }
 .badgeEntrepot  { background: var(--am-bg); color: var(--amber);   border-color: rgba(217,119,6,.2); }
 .badgeExport    { background: var(--vl-bg); color: var(--violet);  border-color: rgba(124,58,237,.2); }
 .badgeRelais    { background: var(--em-bg); color: var(--emerald); border-color: rgba(5,150,105,.2); }
 
 .statutBadge {
   display: inline-flex; align-items: center;
-  font-size: 9.5px; font-weight: 700; padding: 2px 8px;
+  font-size: 9.5px; font-weight: 800; padding: 2px 8px;
   border-radius: var(--pill); white-space: nowrap;
 }
 .statutActive    { background: var(--em-bg);  color: var(--emerald); border: 1px solid rgba(5,150,105,.15); }
@@ -489,7 +482,7 @@
   background: var(--g50);
 }
 .sideCardTitle {
-  font-size: 12.5px; font-weight: 700; color: var(--navy);
+  font-size: 12.5px; font-weight: 800; color: var(--navy);
   display: flex; align-items: center; gap: 7px;
 }
 .sideCardTitle i { color: var(--blue); }
@@ -499,7 +492,7 @@
 .zoneRow { margin-bottom: 12px; }
 .zoneRow:last-child { margin-bottom: 0; }
 .zoneTop { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
-.zoneNom { color: var(--t2); font-weight: 600; }
+.zoneNom { color: var(--t2); font-weight: 700; }
 .zoneNums { display: flex; gap: 7px; align-items: center; }
 .zonePct { font-size: 10px; color: var(--t3); }
 .zoneBar { background: var(--g200); border-radius: var(--pill); height: 6px; overflow: hidden; }
@@ -510,7 +503,7 @@
 .actItemBorder { border-bottom: 1px solid var(--bdr); }
 .actEmoji { font-size: 18px; flex-shrink: 0; }
 .actContent { flex: 1; min-width: 0; }
-.actNom { font-size: 11.5px; font-weight: 700; color: var(--navy); }
+.actNom { font-size: 11.5px; font-weight: 800; color: var(--navy); }
 .actAction { font-size: 11px; color: var(--t3); margin-top: 1px; }
 .actTime2 { font-size: 10px; color: var(--t4); margin-top: 2px; }
 .actIndicator {
@@ -531,26 +524,26 @@
 .quickAction:last-child { margin-bottom: 0; }
 .quickAction:hover { background: var(--sky); border-color: var(--bdrb); }
 .quickIco { font-size: 17px; flex-shrink: 0; }
-.quickLabel { flex: 1; font-size: 12px; font-weight: 700; color: var(--navy); }
+.quickLabel { flex: 1; font-size: 12px; font-weight: 800; color: var(--navy); }
 
 /* ══════════════════════════════════════════════════════════════
    BOUTONS GLOBAUX
    ══════════════════════════════════════════════════════════════ */
 .btnPrimary {
   display: inline-flex; align-items: center; gap: 7px;
-  background: var(--navy); color: #fff; border: none;
+  background: var(--btn, #111113); color: #fff; border: none;
   border-radius: 8px; padding: 9px 18px;
-  font-size: 13px; font-weight: 700; cursor: pointer;
-  transition: background .18s;
+  font-size: 13px; font-weight: 800; cursor: pointer;
+  transition: all .18s;
 }
-.btnPrimary:hover:not(:disabled) { background: #0D1B2E; }
+.btnPrimary:hover:not(:disabled) { background: var(--btn-h, #1C1C1F); box-shadow: var(--sh-md); }
 .btnPrimary:disabled { opacity: .6; cursor: not-allowed; }
 
 .btnSecondary {
   display: inline-flex; align-items: center; gap: 7px;
   background: var(--g50); color: var(--t2);
   border: 1.5px solid var(--bdr2); border-radius: 8px;
-  padding: 9px 18px; font-size: 13px; font-weight: 600;
+  padding: 9px 18px; font-size: 13px; font-weight: 700;
   cursor: pointer; text-decoration: none; transition: all .18s;
 }
 .btnSecondary:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
@@ -560,7 +553,7 @@
   display: inline-flex; align-items: center; gap: 7px;
   background: var(--rs-bg); color: var(--rose);
   border: 1.5px solid rgba(225,29,72,.25); border-radius: 8px;
-  padding: 9px 18px; font-size: 13px; font-weight: 700;
+  padding: 9px 18px; font-size: 13px; font-weight: 800;
   cursor: pointer; transition: all .18s;
 }
 .btnDanger:hover { background: var(--rose); color: #fff; border-color: var(--rose); }
@@ -615,7 +608,7 @@
 }
 
 .mName {
-  font-family: var(--fd); font-size: 17px; font-weight: 800;
+  font-family: var(--fd); font-size: 17px; font-weight: 900;
   color: var(--navy); margin-bottom: 4px;
 }
 .mMeta {
@@ -626,7 +619,7 @@
 .mBadges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
 .mTitle {
-  font-family: var(--fd); font-size: 15px; font-weight: 800;
+  font-family: var(--fd); font-size: 15px; font-weight: 900;
   color: var(--navy); display: flex; align-items: center; gap: 8px;
 }
 .mTitle i { color: var(--blue); }
@@ -667,12 +660,12 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 16px; margin-bottom: 3px;
 }
-.kpiVal   { font-family: var(--fd); font-size: 18px; font-weight: 800; line-height: 1; }
-.kpiLabel { font-size: 11px; font-weight: 600; color: var(--t2); }
+.kpiVal   { font-family: var(--fd); font-size: 18px; font-weight: 900; line-height: 1; }
+.kpiLabel { font-size: 11px; font-weight: 700; color: var(--t2); }
 .kpiSub   { font-size: 9.5px; color: var(--t3); }
 
 .kpiBlue   { background: var(--sky);   border-color: var(--sky-3); }
-.kpiBlue   .kpiIcon { background: rgba(22,82,240,.1); color: var(--blue); }
+.kpiBlue   .kpiIcon { background: rgba(59,130,246,.10); color: var(--blue); }
 .kpiBlue   .kpiVal  { color: var(--blue); }
 .kpiGreen  { background: var(--em-bg); border-color: rgba(5,150,105,.15); }
 .kpiGreen  .kpiIcon { background: rgba(5,150,105,.1); color: var(--emerald); }
@@ -686,11 +679,11 @@
 
 /* Notation */
 .ratingBox { background: var(--g50); border-radius: var(--r-md); padding: 13px; border: 1px solid var(--bdr); }
-.ratingBoxTitle { font-size: 11px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.ratingBoxTitle { font-size: 11px; font-weight: 800; color: var(--t3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
 .stars { display: flex; align-items: center; gap: 3px; }
 .starOn  { color: var(--amber); font-size: 14px; }
 .starOff { color: var(--g200); font-size: 14px; }
-.starVal { font-family: var(--fd); font-size: 15px; font-weight: 800; color: var(--navy); margin-left: 6px; }
+.starVal { font-family: var(--fd); font-size: 15px; font-weight: 900; color: var(--navy); margin-left: 6px; }
 
 /* Grille détails */
 .detGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
@@ -701,19 +694,19 @@
 }
 .detIcon {
   width: 28px; height: 28px; border-radius: 7px;
-  background: var(--sky); color: var(--blue);
+  background: var(--g100); color: var(--t2);
   display: flex; align-items: center; justify-content: center;
   font-size: 11px; flex-shrink: 0;
 }
-.detLabel { font-size: 10px; color: var(--t3); font-weight: 600; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 2px; }
-.detValue { font-size: 12.5px; color: var(--navy); font-weight: 600; }
+.detLabel { font-size: 10px; color: var(--t3); font-weight: 700; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 2px; }
+.detValue { font-size: 12.5px; color: var(--navy); font-weight: 700; }
 
 /* ── Formulaire modale invitation ── */
 .formCols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .formCol  { display: flex; flex-direction: column; gap: 13px; }
 .formGroup { display: flex; flex-direction: column; gap: 6px; }
 .formLabel {
-  font-size: 12px; font-weight: 600; color: var(--t2);
+  font-size: 12px; font-weight: 700; color: var(--t2);
   display: flex; align-items: center; gap: 5px;
 }
 .formLabel i { color: var(--blue); font-size: 11px; }
@@ -744,7 +737,7 @@
 }
 .etape {
   display: flex; align-items: center; gap: 6px;
-  font-size: 11px; color: var(--t4); font-weight: 600;
+  font-size: 11px; color: var(--t4); font-weight: 700;
 }
 .etapeActive { color: var(--blue); }
 .etapeDone   { color: var(--emerald); }
@@ -752,10 +745,10 @@
   width: 22px; height: 22px; border-radius: 50%;
   background: var(--g200); color: var(--t3);
   display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 800; flex-shrink: 0;
+  font-size: 11px; font-weight: 900; flex-shrink: 0;
   transition: all .2s;
 }
-.etapeActive .etapeNum { background: var(--blue); color: #fff; }
+.etapeActive .etapeNum { background: var(--btn, #111113); color: #fff; }
 .etapeDone   .etapeNum { background: var(--emerald); color: #fff; }
 .etapeLabel { white-space: nowrap; }
 .etapeLine {
@@ -766,7 +759,7 @@
 /* ── Aperçu email ── */
 .apercu { display: flex; flex-direction: column; gap: 14px; }
 .apercuLabel {
-  font-size: 11.5px; font-weight: 700; color: var(--t3);
+  font-size: 11.5px; font-weight: 800; color: var(--t3);
   text-transform: uppercase; letter-spacing: .5px;
   display: flex; align-items: center; gap: 6px;
 }
@@ -776,15 +769,15 @@
 }
 .emailHeader {
   display: flex; align-items: center; gap: 12px;
-  padding: 14px 16px; background: var(--navy); 
+  padding: 14px 16px; background: var(--btn, #111113);
 }
 .emailLogo {
   width: 36px; height: 36px; border-radius: 10px;
-  background: var(--blue); color: #fff;
+  background: var(--g300); color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--fd); font-size: 16px; font-weight: 900; flex-shrink: 0;
 }
-.emailSujet { font-size: 13px; font-weight: 700; color: #fff; }
+.emailSujet { font-size: 13px; font-weight: 800; color: #fff; }
 .emailDest  { font-size: 11px; color: rgba(180,200,255,.5); margin-top: 2px; }
 .emailDest strong { color: rgba(180,200,255,.9); }
 
@@ -793,10 +786,11 @@
 
 /* Mise en évidence du code dans l'email */
 .emailCode {
-  background: var(--navy); border-radius: var(--r-md);
+  background: var(--g300);
+  border-radius: var(--r-md);
   padding: 14px 16px; text-align: center;
 }
-.emailCodeLabel { font-size: 10px; color: rgba(180,200,255,.5); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.emailCodeLabel { font-size: 10px; color: rgba(180,200,255,.5); font-weight: 800; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
 .emailCodeValue {
   font-family: var(--fd); font-size: 28px; font-weight: 900;
   color: #fff; letter-spacing: 4px;
@@ -826,7 +820,7 @@
   gap: 10px; padding: 10px 0; text-align: center;
 }
 .successIcon  { font-size: 44px; }
-.successTitle { font-family: var(--fd); font-size: 17px; font-weight: 800; color: var(--navy); }
+.successTitle { font-family: var(--fd); font-size: 17px; font-weight: 900; color: var(--navy); }
 .successSub   { font-size: 13px; color: var(--t3); }
 
 .successRecap {
@@ -843,11 +837,11 @@
 
 /* Boîte code généré */
 .codeBox {
-  width: 100%; background: var(--navy);
+  width: 100%; background: var(--g300);
   border-radius: var(--r-md); padding: 14px 16px;
   text-align: center; display: flex; flex-direction: column; gap: 8px;
 }
-.codeBoxLabel { font-size: 10px; color: rgba(180,200,255,.4); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.codeBoxLabel { font-size: 10px; color: rgba(255,255,255,.65); font-weight: 800; text-transform: uppercase; letter-spacing: .5px; }
 .codeRow { display: flex; align-items: center; justify-content: center; gap: 12px; }
 .codeVal {
   font-family: var(--fd); font-size: 26px; font-weight: 900;
@@ -857,11 +851,11 @@
   display: inline-flex; align-items: center; gap: 5px;
   background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
   border-radius: 7px; padding: 6px 12px;
-  color: #fff; font-size: 12px; font-weight: 600; cursor: pointer;
+  color: #fff; font-size: 12px; font-weight: 700; cursor: pointer;
   transition: background .18s;
 }
 .copyBtn:hover { background: rgba(255,255,255,.2); }
-.codeExpiry { font-size: 11px; color: rgba(180,200,255,.4); display: flex; align-items: center; justify-content: center; gap: 5px; }
+.codeExpiry { font-size: 11px; color: rgba(255,255,255,.55); display: flex; align-items: center; justify-content: center; gap: 5px; }
 
 /* ── Suspension ── */
 .suspendBox { text-align: center; padding: 10px 0; }

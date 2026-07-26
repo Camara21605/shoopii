@@ -28,6 +28,8 @@ import ToastContainer    from '../../shared/components/ui/ToastContainer';
 import { apiFetch }      from '../../shared/services/apiFetch';
 import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
 import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
+import LoadingScreen    from '../../shared/components/LoadingScreen';
+import { useTeamPermissions } from './hooks/useTeamPermissions';
 
 /* ── Pages chargées à la demande ── */
 const OverviewPage                  = lazy(() => import('./pages/OverviewPage'));
@@ -53,6 +55,7 @@ const ProfilCorrespondantReseauPage = lazy(() => import('./pages/ProfilCorrespon
 const ProfilLivreurReseauPage       = lazy(() => import('./pages/ProfilLivreurReseauPage'));
 const ProfilEntreprisePage          = lazy(() => import('../../shared/profils/profil-entreprise/ProfilEntreprisePage'));
 const BoutiquePreviewPage           = lazy(() => import('./pages/BoutiquePreviewPage'));
+const EquipePage                    = lazy(() => import('./pages/EquipePage'));
 
 import type { EntreprisePage, ToastType } from './types';
 import { useToast } from '../../shared/context/ToastContext';
@@ -115,7 +118,7 @@ function parseSplat(splat: string): { page: EntreprisePage; productId?: string; 
     'commandes', 'retours', 'produits', 'inventaire',
     'promotions', 'analytics', 'messages', 'seo',
     'livreurs', 'correspondants', 'finances', 'portefeuille',
-    'clients', 'avis', 'parametres', 'profil', 'boutique-preview',
+    'clients', 'avis', 'parametres', 'profil', 'boutique-preview', 'equipe',
   ];
   if (DIRECT_PAGES.includes(a as EntreprisePage)) {
     return { page: a as EntreprisePage };
@@ -169,6 +172,7 @@ function PageRenderer({
         : <ReseauLivreursPage onPop={onPop} onView={id => onNavigate('profilLivreurReseau', id)} />;
     case 'profil':           return <ProfilEntreprisePage onNavigate={onNavigate} />;
     case 'boutique-preview': return <BoutiquePreviewPage onNavigate={onNavigate} />;
+    case 'equipe':           return <EquipePage />;
     default:                 return <OverviewPage onNavigate={onNavigate} />;
   }
 }
@@ -192,6 +196,9 @@ function EntrepriseLayout() {
   const { '*': splat = '' }  = useParams<{ '*': string }>();
   const navigate             = useNavigate();
   const { page, productId, viewedId } = parseSplat(splat);
+
+  /* ── Permissions du user courant (propriétaire ou membre) ── */
+  const { can, isOwner } = useTeamPermissions();
 
   /* ── Profil boutique (logo + nom) ── */
   const [profile, setProfile] = useState<BoutiqueProfile | null>(null);
@@ -228,6 +235,8 @@ function EntrepriseLayout() {
           onNavigate={handleNavigate}
           companyLogo={profile?.logo}
           companyName={profile?.companyName}
+          can={can}
+          isOwner={isOwner}
         />
       )}
       <Topbar
@@ -241,6 +250,8 @@ function EntrepriseLayout() {
         companyVille={profile?.ville ?? undefined}
         companyPays={profile?.pays ?? undefined}
         isFullscreen={isMessagesPage}
+        can={can}
+        isOwner={isOwner}
       />
 
       {isReseauPage && (
@@ -252,7 +263,7 @@ function EntrepriseLayout() {
         isReseauPage    ? 'main-reseau'    : '',
         isMessagesPage  ? 'main-fullscreen' : '',
       ].filter(Boolean).join(' ')}>
-        <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}><i className="fas fa-circle-notch fa-spin" style={{ fontSize: 24, color: 'var(--primary, #2563eb)', opacity: 0.7 }} /></div>}>
+        <Suspense fallback={<LoadingScreen mini />}>
           <PageRenderer
             page={page}
             productId={productId}

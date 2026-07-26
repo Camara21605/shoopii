@@ -114,3 +114,21 @@
   .main { font-size: 64px; border-radius: 16px; }
   .thumb { width: 48px; height: 48px; font-size: 18px; }
 }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .main     { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
+  .thumb    { background: linear-gradient(135deg,#1C1C1F,#2D2D30); }
+  .favBtn   { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.1); }
+  .favBtn:hover  { background: rgba(190,24,93,.2); border-color: rgba(190,24,93,.3); }
+  .favBtnOn      { background: rgba(190,24,93,.2) !important; border-color: rgba(190,24,93,.3) !important; }
+  .shareBtn { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.1); }
+  .shareBtn:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.18); }
+}
+:root[data-theme="dark"] .main     { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
+:root[data-theme="dark"] .thumb    { background: linear-gradient(135deg,#1C1C1F,#2D2D30); }
+:root[data-theme="dark"] .favBtn   { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.1); }
+:root[data-theme="dark"] .favBtn:hover  { background: rgba(190,24,93,.2); border-color: rgba(190,24,93,.3); }
+:root[data-theme="dark"] .favBtnOn      { background: rgba(190,24,93,.2) !important; border-color: rgba(190,24,93,.3) !important; }
+:root[data-theme="dark"] .shareBtn { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.1); }
+:root[data-theme="dark"] .shareBtn:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.18); }

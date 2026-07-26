@@ -49,14 +49,36 @@ export function FavorisProvider({ children }: { children: React.ReactNode }) {
   const isLiked = useCallback((productId: string) => ids.has(productId), [ids]);
 
   const toggle = useCallback(async (productId: string): Promise<boolean> => {
-    const res = await toggleFavori(productId);
+    /* Mise à jour optimiste : le cœur réagit instantanément au clic,
+     * sans attendre l'aller-retour réseau. Rollback si l'appel échoue. */
+    const wasLiked = ids.has(productId);
+    const nowLiked = !wasLiked;
+
     setIds(prev => {
       const next = new Set(prev);
-      if (res.liked) next.add(productId); else next.delete(productId);
+      if (nowLiked) next.add(productId); else next.delete(productId);
       return next;
     });
-    return res.liked;
-  }, []);
+
+    try {
+      const res = await toggleFavori(productId);
+      if (res.liked !== nowLiked) {
+        setIds(prev => {
+          const next = new Set(prev);
+          if (res.liked) next.add(productId); else next.delete(productId);
+          return next;
+        });
+      }
+      return res.liked;
+    } catch (err) {
+      setIds(prev => {
+        const next = new Set(prev);
+        if (wasLiked) next.add(productId); else next.delete(productId);
+        return next;
+      });
+      throw err;
+    }
+  }, [ids]);
 
   return (
     <FavorisContext.Provider value={{ loading, isLiked, toggle, refresh }}>

@@ -17,6 +17,13 @@ import { ProductStory, StoryStatus } from 'src/database/entities/entreprise.tabl
 
 // ── Interfaces de réponse ─────────────────────────────────────
 
+export interface WholesaleTierDto {
+  quantiteMin:  number;
+  quantiteMax:  number | null;
+  prixUnitaire: number;
+  ordre:        number;
+}
+
 export interface PublicProduitResponse {
   id:          string;
   nom:         string;
@@ -33,6 +40,10 @@ export interface PublicProduitResponse {
   companyId:   string;
   companyName: string;
   companyLogo: string | null;
+  /* ── Vente en gros ── */
+  venteEnGros:    boolean;
+  moq:            number | null;
+  wholesaleTiers: WholesaleTierDto[];
   /* ── Politique de livraison ── */
   livraisonStandard:      boolean;
   livraisonLivreur:       boolean;
@@ -157,20 +168,26 @@ export class PublicService {
   async listProduits(params: {
     page: number; limit: number;
     categoryId?: string; search?: string;
+    type?: string;
   }): Promise<{ data: PublicProduitResponse[]; total: number; page: number; pages: number }> {
 
-    const { page, limit, categoryId, search } = params;
+    const { page, limit, categoryId, search, type } = params;
 
     const qb = this.productRepo
       .createQueryBuilder('p')
-      .leftJoinAndSelect('p.media',       'images')
-      .leftJoinAndSelect('p.category',    'category')
-      .leftJoinAndSelect('p.subCategory', 'subCategory')
-      .leftJoinAndSelect('p.company',     'company')
+      .leftJoinAndSelect('p.media',          'images')
+      .leftJoinAndSelect('p.category',       'category')
+      .leftJoinAndSelect('p.subCategory',    'subCategory')
+      .leftJoinAndSelect('p.company',        'company')
+      .leftJoinAndSelect('p.wholesaleTiers', 'tiers')
       .where('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
       .orderBy('p.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
+
+    /* Filtre par type : 'gros' → venteEnGros=true, 'detail' → venteEnGros=false */
+    if (type === 'gros')   qb.andWhere('p.venteEnGros = :vg', { vg: true });
+    if (type === 'detail') qb.andWhere('p.venteEnGros = :vg', { vg: false });
 
     if (categoryId) qb.andWhere('p.categoryId = :catId', { catId: categoryId });
     if (search?.trim()) {
@@ -190,10 +207,11 @@ export class PublicService {
   async getProduit(id: string): Promise<PublicProduitResponse> {
     const product = await this.productRepo
       .createQueryBuilder('p')
-      .leftJoinAndSelect('p.media',       'images')
-      .leftJoinAndSelect('p.category',    'category')
-      .leftJoinAndSelect('p.subCategory', 'subCategory')
-      .leftJoinAndSelect('p.company',     'company')
+      .leftJoinAndSelect('p.media',          'images')
+      .leftJoinAndSelect('p.category',       'category')
+      .leftJoinAndSelect('p.subCategory',    'subCategory')
+      .leftJoinAndSelect('p.company',        'company')
+      .leftJoinAndSelect('p.wholesaleTiers', 'tiers')
       .where('p.id = :id', { id })
       .andWhere('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
       .orderBy('images.ordre', 'ASC')
@@ -286,10 +304,11 @@ export class PublicService {
 
     const qb = this.productRepo
       .createQueryBuilder('p')
-      .leftJoinAndSelect('p.media',       'images')
-      .leftJoinAndSelect('p.category',    'category')
-      .leftJoinAndSelect('p.subCategory', 'subCategory')
-      .leftJoinAndSelect('p.company',     'company')
+      .leftJoinAndSelect('p.media',          'images')
+      .leftJoinAndSelect('p.category',       'category')
+      .leftJoinAndSelect('p.subCategory',    'subCategory')
+      .leftJoinAndSelect('p.company',        'company')
+      .leftJoinAndSelect('p.wholesaleTiers', 'tiers')
       .where('p.companyId = :companyId', { companyId })
       .andWhere('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
       .orderBy('p.createdAt', 'DESC')
@@ -354,6 +373,16 @@ export class PublicService {
       livraisonStandard:      p.livraisonStandard      ?? true,
       livraisonLivreur:       p.livraisonLivreur        ?? true,
       livraisonCorrespondant: p.livraisonCorrespondant  ?? false,
+      venteEnGros:    p.venteEnGros ?? false,
+      moq:            p.moq         ?? null,
+      wholesaleTiers: (p.wholesaleTiers ?? [])
+        .sort((a, b) => a.ordre - b.ordre)
+        .map(t => ({
+          quantiteMin:  t.quantiteMin,
+          quantiteMax:  t.quantiteMax ?? null,
+          prixUnitaire: Number(t.prixUnitaire),
+          ordre:        t.ordre,
+        })),
       fraisLivraisonLocal:    p.fraisLivraisonLocal     ?? null,
       delaiLivraison:         p.delaiLivraison          ?? '1-3 jours',
     };

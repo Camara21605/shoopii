@@ -480,13 +480,13 @@
 }
 
 .adm-btn--primary {
-  background:  var(--blue);
+  background:  #111113;
   color:       #fff;
   box-shadow:  var(--adm-shadow-sm);
 }
 
 .adm-btn--primary:hover {
-  background: #1d4fd8;
+  background: #1C1C1F;
 }
 
 .adm-btn--ghost {
@@ -880,7 +880,7 @@
 }
 
 .adm-pager button:hover     { background: var(--adm-bg); }
-.adm-pager .pager--active   { background: var(--blue); border-color: var(--blue); color: #fff; }
+.adm-pager .pager--active   { background: #111113; border-color: #111113; color: #fff; }
 
 /* ------------------------------------------------------------
    6. ASIDE — activités, logs, notifications

@@ -12,3 +12,13 @@
 .btn  { background: #fff; color: var(--navy); border: none; border-radius: 999px; padding: 10px 20px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; width: fit-content; transition: background .18s; }
 .btn:hover { background: var(--sky); }
 @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .card      { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
+  .btn       { color: #0B1F3A; }
+  .btn:hover { background: rgba(255,255,255,.9); }
+}
+:root[data-theme="dark"] .card      { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
+:root[data-theme="dark"] .btn       { color: #0B1F3A; }
+:root[data-theme="dark"] .btn:hover { background: rgba(255,255,255,.9); }

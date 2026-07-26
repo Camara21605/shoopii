@@ -6,7 +6,7 @@
 
 /* ── Variables de couleurs ── */
 :root {
-  --search-bg:        #F8FAFF;
+  --search-bg:        #FFFFFF;
   --search-card-bg:   #ffffff;
   --search-border:    #E5EBF5;
   --search-border-hov:#B8CAEF;
@@ -23,20 +23,52 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --search-bg:        #0D1526;
-    --search-card-bg:   #131E35;
-    --search-border:    #1E2D4A;
-    --search-border-hov:#2A4080;
-    --search-text:      #E2E8F6;
-    --search-muted:     #7A8BA8;
-    --search-faint:     #4A5A7A;
-    --search-blue:      #5B8BF0;
-    --search-blue-bg:   #172040;
+    --search-bg:        #000000;
+    --search-card-bg:   #0A0A0A;
+    --search-border:    rgba(255,255,255,.08);
+    --search-border-hov:rgba(255,255,255,.18);
+    --search-text:      #F4F4F5;
+    --search-muted:     #A1A1AA;
+    --search-faint:     #71717A;
+    --search-blue:      #60A5FA;
+    --search-blue-bg:   rgba(96,165,250,.12);
     --search-hl-bg:     #78350F;
     --search-hl-text:   #FDE68A;
-    --search-sk-from:   #131E35;
-    --search-sk-to:     #1A2A45;
+    --search-sk-from:   #0A0A0A;
+    --search-sk-to:     #1C1C1F;
   }
+}
+
+:root[data-theme="dark"] {
+  --search-bg:        #000000;
+  --search-card-bg:   #0A0A0A;
+  --search-border:    rgba(255,255,255,.08);
+  --search-border-hov:rgba(255,255,255,.18);
+  --search-text:      #F4F4F5;
+  --search-muted:     #A1A1AA;
+  --search-faint:     #71717A;
+  --search-blue:      #60A5FA;
+  --search-blue-bg:   rgba(96,165,250,.12);
+  --search-hl-bg:     #78350F;
+  --search-hl-text:   #FDE68A;
+  --search-sk-from:   #0A0A0A;
+  --search-sk-to:     #1C1C1F;
+}
+
+:root[data-theme="light"] {
+  --search-bg:        #FFFFFF;
+  --search-card-bg:   #ffffff;
+  --search-border:    #E5EBF5;
+  --search-border-hov:#B8CAEF;
+  --search-text:      #0B1F3A;
+  --search-muted:     #7A8BA8;
+  --search-faint:     #9AAACB;
+  --search-blue:      #1A4FC4;
+  --search-blue-bg:   #EEF2FF;
+  --search-hl-bg:     #FDE68A;
+  --search-hl-text:   #78350F;
+  --search-sk-from:   #F0F4FF;
+  --search-sk-to:     #E5EDFF;
 }
 
 /* ── Layout ── */

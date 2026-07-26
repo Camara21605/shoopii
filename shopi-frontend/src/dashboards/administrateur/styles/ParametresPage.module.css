@@ -324,8 +324,7 @@
   transition: all .2s;
 }
 .floatSaveBtn:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(11,31,58,.35); }
-.saveDot { width: 7px; height: 7px; border-radius: 50%; background: #34D399; animation: pulse 2s infinite; }
-@keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: .65; } }
+.saveDot { width: 7px; height: 7px; border-radius: 50%; background: #34D399; }
 
 /* ── Misc ── */
 .chipRow { display: flex; gap: 8px; flex-wrap: wrap; }

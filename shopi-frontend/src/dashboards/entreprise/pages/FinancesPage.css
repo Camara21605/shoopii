@@ -1,4 +1,4 @@
-/*
+﻿/*
  * FICHIER: src/dashboards/entreprise/pages/FinancesPage.css
  * Styles de la page Finances
  */
@@ -19,12 +19,12 @@
   flex-shrink: 0;
 }
 .tx-inf { flex: 1; min-width: 0; }
-.tx-nm  { font-size: 13px; font-weight: 700; color: var(--navy); }
+.tx-nm  { font-size: 13px; font-weight: 800; color: var(--navy); }
 .tx-sub { font-size: 10.5px; color: var(--t3); margin-top: 1px; }
-.tx-amt { font-family: var(--fd); font-size: 14px; font-weight: 800; white-space: nowrap; }
+.tx-amt { font-family: var(--fd); font-size: 14px; font-weight: 900; white-space: nowrap; }
 .tx-amt.in  { color: var(--emerald); }
 .tx-amt.out { color: var(--rose); }
-.tx-unit { font-size: 10px; font-weight: 600; opacity: .7; }
+.tx-unit { font-size: 10px; font-weight: 700; opacity: .7; }
 
 .vir-item {
   display: flex; align-items: center; gap: 10px;

@@ -187,7 +187,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
                   {/* Indicateur statut */}
                   <div
                     className={styles.followedDot}
-                    style={{ background: l.disponible ? '#10B981' : '#D1D5DB' }}
+                    style={{ background: l.disponible ? 'var(--t1)' : 'var(--t4)' }}
                     title={l.disponible ? 'Disponible' : 'En course'}
                   />
                 </div>

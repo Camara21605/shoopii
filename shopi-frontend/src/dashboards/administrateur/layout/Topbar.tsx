@@ -11,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate }                 from 'react-router-dom';
 import { tokenStorage }                from '../../../shared/services/apiFetch';
 import { getRoleFromToken }            from '../../../shared/services/authUtils';
+import ThemeToggle                     from '../../../shared/components/ThemeToggle';
 
 /* ─────────────────────────────────────────────────────────────
  * PROPS
@@ -98,6 +99,8 @@ export default function Topbar({ onMenuClick, onSearch, pendingCount }: TopbarPr
       <button className="topbar__icon-btn" title="Notifications">
         🔔
       </button>
+
+      <ThemeToggle />
 
       {/* Profil admin */}
       <div className="topbar__profile">

@@ -14,7 +14,7 @@ export const CODE_EXPIRY_MS = 72 * 3600 * 1000;
 export type ActeurRole = 'entreprise' | 'livreur' | 'correspondant' | 'client';
 
 export interface Acteur {
-  role: ActeurRole;
+  role: ActeurRole;      
   nom: string;
   sousTitre: string;
   initiales: string;

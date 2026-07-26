@@ -16,16 +16,45 @@
   font-family:'Plus Jakarta Sans',sans-serif;
 }
 
-/* ── COVER ── */
-.cover { height:180px; position:relative; overflow:hidden; }
-.coverBg { position:absolute; inset:0; background:linear-gradient(118deg,#06122A 0%,#0B2A5E 40%,#1549B8 100%); }
-.coverDots { position:absolute; inset:0; background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px); background-size:26px 26px; }
+/* ── Mode sombre — noir pur, texte clair ── */
+@media (prefers-color-scheme: dark) {
+  .page {
+    --n:#F4F4F5; --b:#60A5FA; --b2:#3B82F6; --blt:rgba(96,165,250,.14);
+    --gold:#F2C14E; --goldBg:rgba(184,134,11,.18); --goldBd:rgba(242,193,78,.3);
+    --g50:#000000; --g100:#0A0A0A; --bdr:rgba(255,255,255,.08); --bdr2:rgba(255,255,255,.14);
+    --t1:#F4F4F5; --t2:#A1A1AA; --t3:#71717A; --t4:#52525B; --wh:#000000;
+    --ok:#34D399; --okBg:rgba(4,120,87,.18); --err:#F87171; --errBg:rgba(220,38,38,.15);
+    --sh:0 2px 12px rgba(0,0,0,.45); --sh2:0 6px 28px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"] .page {
+  --n:#F4F4F5; --b:#60A5FA; --b2:#3B82F6; --blt:rgba(96,165,250,.14);
+  --gold:#F2C14E; --goldBg:rgba(184,134,11,.18); --goldBd:rgba(242,193,78,.3);
+  --g50:#000000; --g100:#0A0A0A; --bdr:rgba(255,255,255,.08); --bdr2:rgba(255,255,255,.14);
+  --t1:#F4F4F5; --t2:#A1A1AA; --t3:#71717A; --t4:#52525B; --wh:#000000;
+  --ok:#34D399; --okBg:rgba(4,120,87,.18); --err:#F87171; --errBg:rgba(220,38,38,.15);
+  --sh:0 2px 12px rgba(0,0,0,.45); --sh2:0 6px 28px rgba(0,0,0,.6);
+}
+/* Annule la préférence sombre de l'OS quand l'utilisateur choisit explicitement "Clair" */
+:root[data-theme="light"] .page {
+  --n:#06122A; --b:#1549B8; --b2:#1A4FC4; --blt:#EDF2FF;
+  --gold:#B8860B; --goldBg:#FEF9E7; --goldBd:#F5E6B8;
+  --g50:#F5F8FF; --g100:#EBF0FB; --bdr:#DCE6F2; --bdr2:#C4D4E8;
+  --t1:#06122A; --t2:#2B4268; --t3:#5A7A9E; --t4:#96B2CC; --wh:#fff;
+  --ok:#047857; --okBg:#ECFDF5; --err:#DC2626; --errBg:#FEF2F2;
+  --sh:0 2px 12px rgba(6,18,42,.08); --sh2:0 6px 28px rgba(6,18,42,.12);
+}
+
+/* ── COVER — suit le thème (noir pur / blanc pur) ── */
+.cover { height:180px; position:relative; overflow:hidden; border-bottom:1px solid var(--bdr); }
+.coverBg { position:absolute; inset:0; background:var(--wh); }
+.coverDots { position:absolute; inset:0; background-image:radial-gradient(rgba(128,128,128,.12) 1px,transparent 1px); background-size:26px 26px; }
 
 /* ── IDENTITÉ ── */
 .idBar { background:var(--wh); border-bottom:1px solid var(--bdr); }
 .idWrap { max-width:1160px; margin:0 auto; padding:0 28px; position:relative; }
 .avaZone { position:absolute; top:-48px; left:28px; }
-.ava { width:96px; height:96px; border-radius:50%; background:linear-gradient(135deg,var(--b),#5B8EF4); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:30px; font-weight:700; color:#fff; border:4px solid var(--wh); box-shadow:var(--sh2); position:relative; }
+.ava { width:96px; height:96px; border-radius:50%; background:linear-gradient(135deg,#1C1C1F,#2D2D30); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:30px; font-weight:700; color:#fff; border:4px solid var(--wh); box-shadow:var(--sh2); position:relative; }
 .avaOn { position:absolute; bottom:4px; right:4px; width:17px; height:17px; background:#10B981; border-radius:50%; border:3px solid var(--wh); }
 .idRow { padding-top:58px; padding-bottom:16px; display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:12px; }
 .idName { font-family:'Fraunces',serif; font-size:23px; font-weight:800; color:var(--n); margin-bottom:5px; }
@@ -41,7 +70,7 @@
 .idActs { display:flex; gap:8px; align-self:flex-start; padding-top:2px; }
 .btn { border-radius:9px; padding:9px 15px; font-size:12.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; font-family:inherit; transition:all .15s; border:1.5px solid var(--bdr2); background:var(--wh); color:var(--n); }
 .btn:hover { background:var(--g100); }
-.btnPrimary { background:linear-gradient(135deg,var(--n),var(--b2)); color:#fff; border:none; }
+.btnPrimary { background:var(--b); color:#fff; border:none; }
 .btnPrimary:hover { opacity:.9; }
 
 /* ── KPI ── */
@@ -172,13 +201,13 @@
 /* Modal Portefeuille */
 .walletModalBg {
   position: fixed; inset: 0; z-index: 1000;
-  background: rgba(6,18,42,.55);
+  background: rgba(0,0,0,.55);
   backdrop-filter: blur(3px);
   display: flex; align-items: center; justify-content: center;
   padding: 24px;
 }
 .walletModalBox {
-  background: var(--surface, #fff);
+  background: var(--wh);
   border-radius: 18px;
   width: min(1100px, 100%);
   max-height: 92vh;
@@ -191,15 +220,15 @@
   position: absolute; top: 14px; right: 14px;
   width: 36px; height: 36px;
   border-radius: 50%;
-  border: 1px solid var(--line, #E5E9F2);
-  background: var(--surface, #fff);
-  color: var(--t2, #5B6B85);
+  border: 1px solid var(--bdr);
+  background: var(--wh);
+  color: var(--t2);
   font-size: 15px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   z-index: 1;
 }
-.walletModalClose:hover { background: var(--bg-soft, #F4F6FB); }
+.walletModalClose:hover { background: var(--g100); }
 
 /* Transactions */
 .txRow { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--bdr); }
@@ -236,7 +265,7 @@
 /* ── BARRE ACTIONS MOBILE ── */
 .actionBar { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--wh); border-top:1px solid var(--bdr); padding:12px 20px; z-index:200; gap:10px; }
 .actionBar button { flex:1; border-radius:10px; padding:12px; font-size:13px; font-weight:700; cursor:pointer; border:none; display:flex; align-items:center; justify-content:center; gap:7px; }
-.abEdit { background:linear-gradient(135deg,var(--n),var(--b2)); color:#fff; }
+.abEdit { background:var(--b); color:#fff; }
 .abShare { background:var(--g100); color:var(--n); }
 
 /* ── RESPONSIVE ── */

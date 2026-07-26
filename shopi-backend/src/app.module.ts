@@ -50,6 +50,18 @@ import { CompanySettingsModule }   from './modules/company-settings/company-sett
 import { DeliverySettingsModule }  from './modules/delivery-settings/delivery-settings.module';
 import { PartnerSettingsModule }   from './modules/partner-settings/partner-settings.module';
 import { DeliveryGroupModule }     from './modules/delivery-group/delivery-group.module';
+import { PaiementModule }          from './modules/paiement/paiement.module';
+import { CompanyTeamModule }       from './modules/company-team/company-team.module';
+import { WalletEngineModule }      from './modules/wallet-engine/wallet-engine.module';
+import { EscrowEngineModule }      from './modules/escrow-engine/escrow-engine.module';
+import { PaymentEngineModule }     from './modules/payment-engine/payment-engine.module';
+import { ResolutionEngineModule }  from './modules/resolution-engine/resolution-engine.module';
+import { SettlementEngineModule }    from './modules/settlement-engine/settlement-engine.module';
+import { FinancialConfigModule }    from './modules/financial-config-engine/financial-config.module';
+import { ReportingModule }              from './modules/reporting-engine/reporting.module';
+import { EventOrchestrationModule }    from './modules/event-orchestration/event-orchestration.module';
+import { PlatformSecurityModule }      from './modules/platform-security/platform-security.module';
+import { PerformanceModule }           from './modules/performance-engine/performance.module';
 
 @Module({
   imports: [
@@ -72,7 +84,17 @@ import { DeliveryGroupModule }     from './modules/delivery-group/delivery-group
     PromotionsModule,
     PublicModule,
     WalletModule,
+    WalletEngineModule,
+    EscrowEngineModule,
+    PaymentEngineModule,
+    ResolutionEngineModule,
+    SettlementEngineModule,
+    FinancialConfigModule,
+    ReportingModule,
     CommandeModule,
+    EventOrchestrationModule,
+    PlatformSecurityModule,
+    PaiementModule,
     MessagerieModule,
     ContactSyncModule,
     LocationModule,
@@ -194,6 +216,14 @@ import { DeliveryGroupModule }     from './modules/delivery-group/delivery-group
      */
     NotificationsModule,
 
+    /* ── 5c. ✅ PerformanceModule — APRÈS Redis ── */
+    /*
+     * RedisCacheService injecte @InjectRedis() → RedisModule requis.
+     * Enregistre aussi APP_INTERCEPTOR (PerformanceInterceptor) qui
+     * mesure la latence de toutes les routes HTTP.
+     */
+    PerformanceModule,
+
     HelpModule,
     SupportModule,
     ContactModule,
@@ -205,6 +235,7 @@ import { DeliveryGroupModule }     from './modules/delivery-group/delivery-group
     DeliverySettingsModule,   /* GET/PUT     /api/delivery-settings/* — moteur des livreurs    */
     PartnerSettingsModule,    /* GET/PUT     /api/partner-settings/*  — moteur des partenaires  */
     DeliveryGroupModule,      /* GET/POST    /api/delivery-groups/*   — groupes de livraison    */
+    CompanyTeamModule,        /* GET/POST    /api/company-team/*      — gestion équipe entreprise */
 
     /* Health check — GET /api/health, public, sans auth.
      * Utilisé par Render/Kubernetes pour les readiness probes. */

@@ -6,7 +6,7 @@
 /* ── Backdrop ── */
 .backdrop {
   position: fixed; inset: 0;
-  background: rgba(11,31,58,.55);
+  background: rgba(0,0,0,.55);
   backdrop-filter: blur(4px);
   z-index: 1100;
   display: flex;
@@ -56,8 +56,8 @@
   transition: all .18s; cursor: pointer; white-space: nowrap;
 }
 .act:hover { border-color: var(--bdrb); color: var(--blue); }
-.pri { background: var(--navy); color: #fff; border-color: var(--navy); }
-.pri:hover { background: var(--navy-2); color: #fff; }
+.pri { background: var(--btn); color: #fff; border-color: var(--btn); }
+.pri:hover { background: var(--btn-h); color: #fff; }
 
 /* ── Contenu facture (scrollable) ── */
 .facture {
@@ -75,7 +75,7 @@
 .brand { display: flex; align-items: center; gap: 12px; }
 .logo {
   width: 46px; height: 46px; border-radius: 12px;
-  background: linear-gradient(135deg, var(--blue), var(--blue-lt));
+  background: linear-gradient(135deg, var(--btn,#111113), var(--g300,#2D2D30));
   display: flex; align-items: center; justify-content: center;
   font-family: var(--fd); font-weight: 800; color: #fff; font-size: 16px;
 }

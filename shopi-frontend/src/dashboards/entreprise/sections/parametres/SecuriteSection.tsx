@@ -94,11 +94,11 @@ export default function SecuriteSection({ onDirty, onToast }: Props) {
       </FormCard>
 
       <FormCard title="Sessions actives" icon="fa-desktop" subtitle="Appareils connectés à votre compte boutique"
-        action={<button style={{ background:'rgba(26,79,196,.09)', color:'var(--blue)', border:'1px solid var(--bdrb)', borderRadius:'var(--pill)', padding:'5px 13px', fontSize:11, fontWeight:700, cursor:'pointer' }} onClick={() => onToast('🔐 Toutes les sessions terminées', 'w')}><i className="fas fa-right-from-bracket" /> Déconnecter tout</button>}
+        action={<button style={{ background:'rgba(0,0,0,.06)', color:'var(--t2)', border:'1px solid var(--bdr2)', borderRadius:'var(--pill)', padding:'5px 13px', fontSize:11, fontWeight:700, cursor:'pointer' }} onClick={() => onToast('🔐 Toutes les sessions terminées', 'w')}><i className="fas fa-right-from-bracket" /> Déconnecter tout</button>}
       >
         {SESSIONS.map(session => (
           <div key={session.nm} className={s.item} style={{ border:'none', borderBottom:'1px solid var(--bdr)', borderRadius:0, padding:'12px 0' }}>
-            <div className={s.itemIco} style={{ background:'rgba(26,79,196,.09)', borderRadius:10 }}><i className={`fas ${session.ic}`} style={{ color:'var(--blue)' }} /></div>
+            <div className={s.itemIco} style={{ background:'rgba(0,0,0,.06)', borderRadius:10 }}><i className={`fas ${session.ic}`} style={{ color:'var(--t2)' }} /></div>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:13, fontWeight:600, color:'var(--navy)' }}>
                 {session.nm}

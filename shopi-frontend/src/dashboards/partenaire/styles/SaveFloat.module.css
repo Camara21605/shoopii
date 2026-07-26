@@ -20,12 +20,12 @@
 .msg i { color: var(--blue-lt); }
 
 .btnSave {
-  background: var(--blue); color: #fff; border: none;
+  background: var(--btn, #111113); color: #fff; border: none;
   border-radius: var(--pill); padding: 8px 20px;
   font-size: 12px; font-weight: 700; cursor: pointer;
   display: flex; align-items: center; gap: 6px; transition: all .2s;
 }
-.btnSave:hover   { background: var(--blue-2); box-shadow: var(--sh-b); }
+.btnSave:hover   { background: var(--btn-h, #1C1C1F); box-shadow: var(--sh-b); }
 .btnSave:disabled{ opacity: .6; cursor: not-allowed; }
 
 .btnCancel {
@@ -39,3 +39,9 @@
   .float { left: 12px; right: 12px; transform: translateY(120px); border-radius: var(--r-xl); flex-wrap: wrap; justify-content: center; }
   .show  { transform: translateY(0); }
 }
+
+/* ─── Dark mode ──────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .float { background: #000000; }
+}
+:root[data-theme="dark"] .float { background: #000000; }

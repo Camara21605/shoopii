@@ -41,3 +41,9 @@
   .stack { top: auto; bottom: 16px; right: 16px; left: 16px; }
   .toast { max-width: none; }
 }
+
+/* ─── Dark mode ──────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .toast { background: #000000; border-color: rgba(255,255,255,.12); }
+}
+:root[data-theme="dark"] .toast { background: #000000; border-color: rgba(255,255,255,.12); }

@@ -19,7 +19,7 @@ html {
 }
 
 body {
-  background: var(--navy);
+  background: var(--g50);
   color: var(--t1);
   font-family: var(--fb);
   min-height: 100vh;
@@ -42,22 +42,6 @@ input {
 }
 
 /* ── Animations globales ── */
-@keyframes atm-move-1 {
-  0%   { transform: translate(0, 0) }
-  100% { transform: translate(-40px, 30px) }
-}
-@keyframes atm-move-2 {
-  0%   { transform: translate(0, 0) }
-  100% { transform: translate(30px, -30px) }
-}
-@keyframes ping {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(91,142,244,.7) }
-  50%       { box-shadow: 0 0 0 6px rgba(91,142,244,0) }
-}
-@keyframes fc-float {
-  0%, 100% { transform: translateX(0) }
-  50%       { transform: translateX(-8px) }
-}
 @keyframes scale-in {
   0%   { transform: scale(0); opacity: 0 }
   100% { transform: scale(1); opacity: 1 }
@@ -88,3 +72,11 @@ input {
 }
 .tb-ic:hover { background: var(--sky, #f0f4ff); color: var(--navy, #060f1e); }
 .tb-ic-pin   { position: relative; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

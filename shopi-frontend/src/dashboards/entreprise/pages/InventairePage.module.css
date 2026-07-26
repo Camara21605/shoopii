@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
  * InventairePage.module.css
  *
  * Toutes les classes sont préfixées automatiquement par
@@ -31,7 +31,7 @@
 .titre {
   font-family: var(--fd);
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 900;
   color: var(--navy);
   margin: 0 0 3px;
 }
@@ -91,7 +91,7 @@
 .statVal {
   font-family: var(--fd);
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 900;
   line-height: 1;
   margin-bottom: 2px;
 }
@@ -99,7 +99,7 @@
 /* Label principal de la stat */
 .statLabel {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--t2);
 }
 
@@ -110,7 +110,7 @@
   margin-top: 2px;
 }
 
-/* Point pulsant pour attirer l'attention sur une alerte */
+/* Point d'alerte */
 .pulseDot {
   position: absolute;
   top: 12px;
@@ -119,11 +119,6 @@
   height: 10px;
   border-radius: 50%;
   background: var(--rose);
-  animation: pulse 1.5s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%       { transform: scale(1.4); opacity: .6; }
 }
 
 /* Variantes de couleur des cartes stats */
@@ -193,7 +188,7 @@
   border-radius: var(--pill);
   padding: 7px 12px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--t2);
   cursor: pointer;
   transition: all .18s;
@@ -205,8 +200,8 @@
 
 /* Bouton filtre actif */
 .filtreBtnActive {
-  background: var(--navy);
-  border-color: var(--navy);
+  background: var(--btn, #111113);
+  border-color: var(--btn, #111113);
   color: #fff;
 }
 
@@ -216,7 +211,7 @@
   border-radius: 10px;
   padding: 1px 7px;
   font-size: 10.5px;
-  font-weight: 700;
+  font-weight: 800;
 }
 .filtreBtnActive .filtreCount { background: rgba(255,255,255,.25); }
 .filtreBtn:not(.filtreBtnActive) .filtreCount {
@@ -291,7 +286,7 @@
 .th {
   padding: 11px 14px;
   font-size: 10.5px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--t3);
   text-transform: uppercase;
   letter-spacing: .5px;
@@ -350,7 +345,7 @@
 /* Nom du produit dans le tableau */
 .prodNomTable {
   font-size: 12.5px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--navy);
   line-height: 1.3;
   max-width: 180px;
@@ -379,7 +374,7 @@
 /* ── Cellule Catégorie ── */
 .catTag {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--blue);
   background: var(--sky);
   border-radius: var(--pill);
@@ -396,7 +391,7 @@
 .prixCell {
   font-family: var(--fd);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--navy);
   white-space: nowrap;
 }
@@ -418,7 +413,7 @@
 .stockNum {
   font-family: var(--fd);
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 900;
   line-height: 1;
 }
 
@@ -453,7 +448,7 @@
   font-size: 10px;
   color: var(--t3);
   margin-bottom: 3px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* Conteneur de la barre */
@@ -480,7 +475,7 @@
   align-items: center;
   gap: 5px;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: .3px;
   padding: 4px 9px;
@@ -508,15 +503,15 @@
   border-radius: 7px;
   padding: 6px 11px;
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--blue);
   cursor: pointer;
   transition: all .18s;
   white-space: nowrap;
 }
 .btnModif:hover {
-  background: var(--blue);
-  border-color: var(--blue);
+  background: var(--btn, #111113);
+  border-color: var(--btn, #111113);
   color: #fff;
 }
 
@@ -590,7 +585,7 @@
 /* Titre de la carte latérale */
 .sideCardTitle {
   font-size: 12.5px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--navy);
   display: flex;
   align-items: center;
@@ -610,7 +605,7 @@
   border-radius: var(--pill);
   padding: 2px 8px;
   font-size: 10.5px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 /* Message "aucune alerte" */
@@ -667,7 +662,7 @@
 .alerteInfo { flex: 1; min-width: 0; }
 .alerteNom  {
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--navy);
   white-space: nowrap;
   overflow: hidden;
@@ -733,7 +728,7 @@
 .quickActionText { flex: 1; min-width: 0; }
 .quickActionLabel {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--navy);
   white-space: nowrap;
   overflow: hidden;
@@ -749,22 +744,22 @@
    BOUTONS GLOBAUX
    ══════════════════════════════════════════════════════════════ */
 
-/* Bouton primaire (bleu foncé) */
+/* Bouton primaire (bleu) */
 .btnPrimary {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: var(--navy);
+  background: var(--btn, #111113);
   color: #fff;
   border: none;
   border-radius: 8px;
   padding: 9px 18px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  transition: background .18s;
+  transition: all .18s;
 }
-.btnPrimary:hover:not(:disabled) { background: var(--navy-2); }
+.btnPrimary:hover:not(:disabled) { background: var(--btn-h, #1C1C1F); box-shadow: var(--sh-md); }
 .btnPrimary:disabled { opacity: .6; cursor: not-allowed; }
 
 /* Bouton secondaire (neutre) */
@@ -778,7 +773,7 @@
   border-radius: 8px;
   padding: 9px 18px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all .18s;
 }
@@ -799,7 +794,7 @@
   border-radius: var(--pill);
   padding: 8px 16px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all .18s;
 }
@@ -810,19 +805,19 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: var(--sky);
-  color: var(--blue);
-  border: 1.5px solid var(--sky-3);
+  background: var(--g100);
+  color: var(--t2);
+  border: 1.5px solid var(--bdr2);
   border-radius: var(--pill);
   padding: 8px 16px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all .18s;
 }
 .btnRecharger:hover:not(:disabled) {
-  background: var(--blue);
-  border-color: var(--blue);
+  background: var(--btn, #111113);
+  border-color: var(--btn, #111113);
   color: #fff;
 }
 .btnRecharger:disabled { opacity: .6; cursor: not-allowed; }
@@ -882,7 +877,7 @@
 .modalTitle {
   font-family: var(--fd);
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 900;
   color: var(--navy);
   display: flex;
   align-items: center;
@@ -980,7 +975,7 @@
 /* Nom du produit dans la modale */
 .prodNom {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--navy);
   white-space: nowrap;
   overflow: hidden;
@@ -1009,7 +1004,7 @@
 /* Label du champ */
 .formLabel {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--t2);
   display: flex;
   align-items: center;
@@ -1048,7 +1043,7 @@
   border-left: 1px solid var(--bdr2);
   font-size: 11.5px;
   color: var(--t3);
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -1060,7 +1055,7 @@
   padding: 7px 10px;
   border-radius: 7px;
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 700;
   border: 1px solid transparent;
 }
 
@@ -1108,7 +1103,7 @@
   margin-bottom: 8px;
 }
 
-.stockBarPct { font-weight: 700; color: var(--navy); }
+.stockBarPct { font-weight: 800; color: var(--navy); }
 
 /* Conteneur de la barre */
 .stockBar {

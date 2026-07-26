@@ -9,7 +9,7 @@
   left: var(--sb, 268px);
   right: 0;
   height: var(--hdr, 64px);
-  background: rgba(255,255,255,.92);
+  background: var(--surface-bar, rgba(255,255,255,.92));
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-bottom: 1px solid var(--bdr, rgba(11,31,58,.09));
@@ -131,15 +131,14 @@
 .statusOff:hover { background: rgba(156,163,175,.14); }
 
 .spDot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.spGreen { background: #10B981; animation: pulse 2s ease infinite; }
+.spGreen { background: #10B981; }
 .spGray  { background: var(--g300); }
-@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)} }
 
 /* ── Avatar ── */
 .tbAva {
   width: 34px; height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--teal), var(--navy-2));
+  background: linear-gradient(135deg, var(--teal), #112648);
   display: flex;
   align-items: center;
   justify-content: center;

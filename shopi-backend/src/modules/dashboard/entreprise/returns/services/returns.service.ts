@@ -438,11 +438,9 @@ export class ReturnsService {
    * HELPERS PRIVÉS
    ══════════════════════════════════════════════════════════ */
 
-  private async resolveCompany(userId: string): Promise<Company> {
-    const company = await this.companyRepo.findOne({
-      where: { userId },
-      select: ['id', 'companyName'],
-    });
+  private async resolveCompany(userIdOrCompanyId: string): Promise<Company> {
+    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id', 'companyName'] });
+    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId }, select: ['id', 'companyName'] });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }

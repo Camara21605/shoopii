@@ -4,6 +4,7 @@ import type { PageId } from '../data/livreurData';
 import styles from '../styles/Topbar.module.css';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
 import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
+import ThemeToggle from '../../../shared/components/ThemeToggle';
 
 interface Props {
   title:        string;
@@ -79,6 +80,7 @@ export default function Topbar({
           <i className="fas fa-circle-question" />
         </button>
         <div className={`${styles.tbSep} ${styles.hideXs}`} />
+        <ThemeToggle />
 
         {/* Avatar : photo réelle ou initiales */}
         <div

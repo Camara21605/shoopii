@@ -89,3 +89,66 @@
 }
 
 @media (max-width: 640px) { .fr { grid-template-columns: 1fr; } }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
+  .scHd    { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
+  .scTitre { color: var(--t1,#F4F4F5); }
+  .scSub   { color: var(--t3,#71717A); }
+  .addrChip { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  .addrChip:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+  .addrNew  { background: #0A0A0A; border-color: rgba(255,255,255,.1); color: #A1A1AA; }
+  .addrNew:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); color: #F4F4F5; }
+  .chipVille { color: var(--t1,#F4F4F5); }
+  .fin     { background: #0A0A0A; border-color: rgba(255,255,255,.1); color: var(--t1,#F4F4F5); }
+  .fin::placeholder { color: #52525B; }
+  .fin:focus { border-color: rgba(96,165,250,.5); background: #111113; }
+  .dialCode { background: #1C1C1F; border-color: rgba(255,255,255,.1); color: #A1A1AA; }
+  .fl      { color: #A1A1AA; }
+  .fi      { color: #52525B; }
+}
+:root[data-theme="dark"] .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .scHd    { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .scTitre { color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .scSub   { color: var(--t3,#71717A); }
+:root[data-theme="dark"] .addrChip { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .addrChip:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+:root[data-theme="dark"] .addrNew  { background: #0A0A0A; border-color: rgba(255,255,255,.1); color: #A1A1AA; }
+:root[data-theme="dark"] .addrNew:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); color: #F4F4F5; }
+:root[data-theme="dark"] .chipVille { color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .fin     { background: #0A0A0A; border-color: rgba(255,255,255,.1); color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .fin::placeholder { color: #52525B; }
+:root[data-theme="dark"] .fin:focus { border-color: rgba(96,165,250,.5); background: #111113; }
+:root[data-theme="dark"] .dialCode { background: #1C1C1F; border-color: rgba(255,255,255,.1); color: #A1A1AA; }
+:root[data-theme="dark"] .fl      { color: #A1A1AA; }
+:root[data-theme="dark"] .fi      { color: #52525B; }
+/* — selected chip, edit hover, validated input — */
+@media (prefers-color-scheme: dark) {
+  .addrChipSel { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.35); }
+  .editBtn:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #60A5FA; }
+  .finOk { background: rgba(4,120,87,.1); border-color: rgba(4,120,87,.4); }
+}
+:root[data-theme="dark"] .addrChipSel { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.35); }
+:root[data-theme="dark"] .editBtn:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #60A5FA; }
+:root[data-theme="dark"] .finOk { background: rgba(4,120,87,.1); border-color: rgba(4,120,87,.4); }
+
+/* Annule la préférence sombre de l'OS quand "Clair" est choisi explicitement (généré) */
+:root[data-theme="light"] .sc { background: #fff; border-color: #E2E8F0; }
+:root[data-theme="light"] .scHd { background: #FAFBFC; border-bottom-color: #F1F5F9; }
+:root[data-theme="light"] .scTitre { color: #0B1F3A; }
+:root[data-theme="light"] .scSub { color: #94A3B8; }
+:root[data-theme="light"] .addrChip { background: #F8FAFF; border-color: #E2E8F0; }
+:root[data-theme="light"] .addrChip:hover { background: #EFF6FF; border-color: #93C5FD; }
+:root[data-theme="light"] .addrNew { background: #F8FAFF; border-color: #CBD5E1; color: #64748B; }
+:root[data-theme="light"] .addrNew:hover { background: #EFF6FF; border-color: #93C5FD; color: #1A4FC4; }
+:root[data-theme="light"] .chipVille { color: #0B1F3A; }
+:root[data-theme="light"] .fin { background: #F8FAFF; border-color: #E2E8F0; color: #0B1F3A; }
+:root[data-theme="light"] .fin::placeholder { color: #CBD5E1; }
+:root[data-theme="light"] .fin:focus { border-color: #1A4FC4; background: #fff; }
+:root[data-theme="light"] .dialCode { background: #F1F5F9; color: #334155; }
+:root[data-theme="light"] .fl { color: #334155; }
+:root[data-theme="light"] .fi { color: #94A3B8; }
+:root[data-theme="light"] .addrChipSel { background: #EFF6FF; border-color: #1A4FC4; }
+:root[data-theme="light"] .editBtn:hover { background: #F8FAFF; border-color: #BFDBFE; color: #1A4FC4; }
+:root[data-theme="light"] .finOk { background: #F0FDF4; border-color: #10B981; }

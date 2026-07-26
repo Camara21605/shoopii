@@ -174,7 +174,7 @@ export default function SupportStatsPage() {
 
           {/* Total tickets */}
           <div className={styles.kpi}>
-            <div className={styles.kpiIcon} style={{ background: '#EEF2FF', color: '#1A4FC4' }}>
+            <div className={styles.kpiIcon} style={{ background: 'var(--g100)', color: 'var(--t2)' }}>
               <i className="fas fa-ticket-alt" />
             </div>
             <div className={styles.kpiVal}>{stats.total}</div>
@@ -221,7 +221,7 @@ export default function SupportStatsPage() {
 
           {/* Délai moyen de première réponse */}
           <div className={styles.kpi}>
-            <div className={styles.kpiIcon} style={{ background: '#EEF2FF', color: '#1A4FC4' }}>
+            <div className={styles.kpiIcon} style={{ background: 'var(--g100)', color: 'var(--t2)' }}>
               <i className="fas fa-clock" />
             </div>
             <div className={styles.kpiVal}>
@@ -270,7 +270,7 @@ export default function SupportStatsPage() {
             {/* Légende */}
             <div className={styles.legend}>
               <span className={styles.legendItem}>
-                <span className={styles.legendDot} style={{ background: '#1A4FC4' }} />
+                <span className={styles.legendDot} style={{ background: '#2D2D30' }} />
                 Créés
               </span>
               <span className={styles.legendItem}>
@@ -300,7 +300,7 @@ export default function SupportStatsPage() {
                   </div>
                   {/* Valeurs numériques sous les barres */}
                   <div className={styles.barValues}>
-                    <span style={{ color: '#1A4FC4' }}>{day.created}</span>
+                    <span style={{ color: 'var(--t2)' }}>{day.created}</span>
                     <span style={{ color: '#059669' }}>{day.resolved}</span>
                   </div>
                   {/* Libellé du jour */}

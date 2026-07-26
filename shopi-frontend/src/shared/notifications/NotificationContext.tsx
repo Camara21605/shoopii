@@ -164,7 +164,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       }
       return prev.filter(n => n.id !== id);
     });
-    notificationService.deleteOne(id).catch(() => {});
+    notificationService.deleteOne(id).catch(() => {
+      // Suppression backend échouée : forcer un re-fetch à la prochaine ouverture
+      // pour que la notification réapparaisse (cohérence avec la DB).
+      hasFetchedRef.current = false;
+    });
   }, []);
 
   const dismissToast = useCallback((id: string) => {

@@ -1,4 +1,26 @@
-// src/common/guards/roles.guard.ts
+/* ============================================================
+ * FICHIER      : src/common/guards/roles.guard.ts
+ * MODULE       : Common / Guards
+ * ROLE         : Contrôle d'accès basé sur les rôles (RBAC).
+ *
+ * RESPONSABILITES :
+ *   - Lire les métadonnées @Roles() définies sur la route.
+ *   - Vérifier que req.user.role correspond à l'un des rôles requis.
+ *   - Lever ForbiddenException si l'accès est refusé.
+ *
+ * DEPENDANCES  :
+ *   - @nestjs/common (CanActivate, ForbiddenException)
+ *   - @nestjs/core (Reflector)
+ *   - ../decorators/roles.decorator (ROLES_KEY)
+ *
+ * PRECAUTION :
+ *   Ce guard DOIT être utilisé APRÈS JwtAuthGuard qui peuple req.user.
+ *   Sans JwtAuthGuard, req.user serait undefined → ForbiddenException systématique.
+ *   Usage correct : @UseGuards(JwtAuthGuard, RolesGuard)
+ *
+ * AUTEUR       : Shopi03
+ * DERNIERE MISE A JOUR : 2026-07-18
+ * ============================================================ */
 
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';

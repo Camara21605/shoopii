@@ -1,0 +1,176 @@
+/* ============================================================
+ * FICHIER  : src/styles/tokens.css
+ * RÔLE     : Source unique de vérité — design system Shopi.
+ *            Toutes les custom properties CSS : couleurs,
+ *            tailles, ombres, rayons, typographie, dark mode.
+ *            Importé par variables.css, variables.home.css et
+ *            variables_correspondant.css.
+ * ============================================================ */
+
+:root {
+
+  /* ── Palette principale ──────────────────────────────────── */
+  --navy:    #0B1F3A;
+  --navy-2:  #112648;
+  --navy-3:  #183358;
+  --blue:    #1A4FC4;
+  --blue-2:  #2560DC;
+  --blue-3:  #3B72F0;
+  --blue-lt: #5B8EF4;
+
+  /* ── Neutrals (ex-"ciel") ────────────────────────────────── */
+  --sky:     #F1F3F5;
+  --sky-2:   #E8EAED;
+  --sky-3:   #D1D5DB;
+
+  /* ── Sémantiques ─────────────────────────────────────────── */
+  --emerald: #047857; --em-bg:  rgba(4,120,87,.09);
+  --violet:  #6D28D9; --vl-bg:  rgba(109,40,217,.09);
+  --rose:    #BE185D; --rs-bg:  rgba(190,24,93,.08);
+  --amber:   #B45309; --am-bg:  rgba(180,83,9,.09);
+  --teal:    #0E7490; --tl-bg:  rgba(14,116,144,.09);
+  --slate:   #475569; --sl-bg:  rgba(71,85,105,.08);
+  --red:     #DC2626;
+  --green:   #16A34A;
+  --orange:  #EA580C;
+
+  /* ── Accent correspondant ────────────────────────────────── */
+  --cor:     #B45309;
+  --cor-2:   #92400E;
+  --cor-lt:  #F59E0B;
+  --cor-bg:  rgba(180,83,9,.09);
+  --cor-bg2: rgba(245,158,11,.12);
+  --bdr-cor: rgba(180,83,9,.22);
+  --sh-cor:  0 6px 22px rgba(180,83,9,.30);
+
+  /* ── Blancs & gris (scale complète) ─────────────────────── */
+  --white:   #FFFFFF;
+  --g50:     #FFFFFF;
+  --g100:    #F1F3F5;
+  --g200:    #E8EAED;
+  --g300:    #D1D5DB;
+  --g400:    #9CA3AF;
+  --g500:    #6B7280;
+  --g700:    #374151;
+  --g900:    #111827;
+
+  /* ── Texte ───────────────────────────────────────────────── */
+  --t1:      #0B1F3A;
+  --t2:      #4B5563;
+  --t3:      #9CA3AF;
+  --t4:      #C5CAD3;
+
+  /* ── Bordures ────────────────────────────────────────────── */
+  --bdr:     rgba(11,31,58,.08);
+  --bdr2:    rgba(11,31,58,.13);
+  --bdrb:    rgba(11,31,58,.13);
+
+  /* ── Ombres ──────────────────────────────────────────────── */
+  --sh-xs:   0 1px 3px rgba(11,31,58,.06), 0 1px 2px rgba(11,31,58,.04);
+  --sh-sm:   0 2px 8px rgba(11,31,58,.08);
+  --sh-md:   0 6px 24px rgba(11,31,58,.10);
+  --sh-lg:   0 16px 48px rgba(11,31,58,.13);
+  --sh-xl:   0 24px 64px rgba(11,31,58,.15);
+  --sh-b:    0 8px 32px rgba(0,0,0,.25);
+
+  /* ── Rayons ──────────────────────────────────────────────── */
+  --r-sm:    4px;
+  --r-md:    12px;
+  --r-lg:    18px;
+  --r-xl:    26px;
+  --pill:    999px;
+
+  /* ── Layout ──────────────────────────────────────────────── */
+  --hdr:     66px;
+  --sb:      268px;
+
+  /* ── Transitions ─────────────────────────────────────────── */
+  --ease:    cubic-bezier(.4,0,.2,1);
+  --spring:  cubic-bezier(.34,1.56,.64,1);
+
+  /* ── Typographie ─────────────────────────────────────────── */
+  --fd:      'Fraunces', Georgia, serif;
+  --fb:      'DM Sans', sans-serif;
+
+  /* ── Boutons (neutralisés — pas de fond bleu) ────────────── */
+  --btn:            #111113;
+  --btn-h:          #1C1C1F;
+
+  /* ── Tokens adaptatifs dashboard ─────────────────────────── */
+  --heading-color:  var(--navy);
+  --btn-primary-bg: var(--navy);
+  --topbar-bg:      rgba(255,255,255,.97);
+  --topbar-border:  rgba(11,31,58,.08);
+}
+
+/* ── Dark mode — préférence OS ──────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --navy:    #F4F4F5; --navy-2: #E4E4E7; --navy-3: #D4D4D8;
+    --blue:    #60A5FA; --blue-2: #3B82F6; --blue-3: #93C5FD; --blue-lt: #BFDBFE;
+    --sky:     rgba(255,255,255,.04); --sky-2: rgba(255,255,255,.06); --sky-3: rgba(255,255,255,.10);
+    --em-bg:   rgba(5,150,105,.18); --vl-bg: rgba(109,40,217,.18); --am-bg: rgba(180,83,9,.18);
+    --rs-bg:   rgba(190,24,93,.15); --tl-bg: rgba(14,116,144,.18); --sl-bg: rgba(71,85,105,.15);
+    --cor-bg:  rgba(180,83,9,.18); --cor-bg2: rgba(245,158,11,.18);
+    --white:   #000000;
+    --g50:     #000000; --g100: #0A0A0A; --g200: #1C1C1F; --g300: #2D2D30;
+    --g400:    #71717A; --g500: #52525B; --g700: #3F3F46; --g900: #27272A;
+    --t1:      #F4F4F5; --t2: #A1A1AA; --t3: #71717A; --t4: #52525B;
+    --bdr:     rgba(255,255,255,.08); --bdr2: rgba(255,255,255,.12); --bdrb: rgba(255,255,255,.12);
+    --sh-xs:   0 2px 8px rgba(0,0,0,.45); --sh-sm: 0 4px 16px rgba(0,0,0,.55);
+    --sh-md:   0 8px 28px rgba(0,0,0,.65); --sh-lg: 0 16px 48px rgba(0,0,0,.72);
+    --sh-xl:   0 24px 64px rgba(0,0,0,.78); --sh-b: 0 6px 20px rgba(0,0,0,.45);
+    --btn:     #1C1C1F; --btn-h: #2D2D30;
+    --heading-color:  #F4F4F5;
+    --btn-primary-bg: #000000;
+    --topbar-bg:      rgba(0,0,0,.97);
+    --topbar-border:  rgba(255,255,255,.08);
+  }
+}
+
+/* ── Dark mode — toggle explicite ───────────────────────────── */
+:root[data-theme="dark"] {
+  --navy:    #F4F4F5; --navy-2: #E4E4E7; --navy-3: #D4D4D8;
+  --blue:    #60A5FA; --blue-2: #3B82F6; --blue-3: #93C5FD; --blue-lt: #BFDBFE;
+  --sky:     rgba(255,255,255,.04); --sky-2: rgba(255,255,255,.06); --sky-3: rgba(255,255,255,.10);
+  --em-bg:   rgba(5,150,105,.18); --vl-bg: rgba(109,40,217,.18); --am-bg: rgba(180,83,9,.18);
+  --rs-bg:   rgba(190,24,93,.15); --tl-bg: rgba(14,116,144,.18); --sl-bg: rgba(71,85,105,.15);
+  --cor-bg:  rgba(180,83,9,.18); --cor-bg2: rgba(245,158,11,.18);
+  --white:   #000000;
+  --g50:     #000000; --g100: #0A0A0A; --g200: #1C1C1F; --g300: #2D2D30;
+  --g400:    #71717A; --g500: #52525B; --g700: #3F3F46; --g900: #27272A;
+  --t1:      #F4F4F5; --t2: #A1A1AA; --t3: #71717A; --t4: #52525B;
+  --bdr:     rgba(255,255,255,.08); --bdr2: rgba(255,255,255,.12); --bdrb: rgba(255,255,255,.12);
+  --sh-xs:   0 2px 8px rgba(0,0,0,.45); --sh-sm: 0 4px 16px rgba(0,0,0,.55);
+  --sh-md:   0 8px 28px rgba(0,0,0,.65); --sh-lg: 0 16px 48px rgba(0,0,0,.72);
+  --sh-xl:   0 24px 64px rgba(0,0,0,.78); --sh-b: 0 6px 20px rgba(0,0,0,.45);
+  --btn:     #1C1C1F; --btn-h: #2D2D30;
+  --heading-color:  #F4F4F5;
+  --btn-primary-bg: #000000;
+  --topbar-bg:      rgba(0,0,0,.97);
+  --topbar-border:  rgba(255,255,255,.08);
+}
+
+/* ── Light mode — toggle explicite ─────────────────────────── */
+:root[data-theme="light"] {
+  --navy:    #0B1F3A; --navy-2: #112648; --navy-3: #183358;
+  --blue:    #1A4FC4; --blue-2: #2560DC; --blue-3: #3B72F0; --blue-lt: #5B8EF4;
+  --sky:     #F1F3F5; --sky-2: #E8EAED; --sky-3: #D1D5DB;
+  --em-bg:   rgba(4,120,87,.09); --vl-bg: rgba(109,40,217,.09); --am-bg: rgba(180,83,9,.09);
+  --rs-bg:   rgba(190,24,93,.08); --tl-bg: rgba(14,116,144,.09); --sl-bg: rgba(71,85,105,.08);
+  --cor-bg:  rgba(180,83,9,.09); --cor-bg2: rgba(245,158,11,.12);
+  --white:   #FFFFFF;
+  --g50:     #FFFFFF; --g100: #F1F3F5; --g200: #E8EAED; --g300: #D1D5DB;
+  --g400:    #9CA3AF; --g500: #6B7280; --g700: #374151; --g900: #111827;
+  --t1:      #0B1F3A; --t2: #4B5563; --t3: #9CA3AF; --t4: #C5CAD3;
+  --bdr:     rgba(11,31,58,.08); --bdr2: rgba(11,31,58,.13); --bdrb: rgba(11,31,58,.13);
+  --sh-xs:   0 1px 3px rgba(11,31,58,.06), 0 1px 2px rgba(11,31,58,.04);
+  --sh-sm:   0 2px 8px rgba(11,31,58,.08); --sh-md: 0 6px 24px rgba(11,31,58,.10);
+  --sh-lg:   0 16px 48px rgba(11,31,58,.13); --sh-xl: 0 24px 64px rgba(11,31,58,.15);
+  --sh-b:    0 8px 32px rgba(0,0,0,.25);
+  --btn:     #111113; --btn-h: #1C1C1F;
+  --heading-color:  var(--navy);
+  --btn-primary-bg: var(--navy);
+  --topbar-bg:      rgba(255,255,255,.97);
+  --topbar-border:  rgba(11,31,58,.08);
+}

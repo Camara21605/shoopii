@@ -64,3 +64,9 @@
   display: flex; align-items: center; justify-content: center; color: var(--t3); font-size: 12px; transition: all .15s;
 }
 .flag:hover { border-color: var(--rose); background: var(--rs-bg); color: var(--rose); }
+
+/* ─── Dark mode ──────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .fchip.on { background: #1A4FC4; border-color: #1A4FC4; }
+}
+:root[data-theme="dark"] .fchip.on { background: #1A4FC4; border-color: #1A4FC4; }

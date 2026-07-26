@@ -71,3 +71,9 @@
   .sendRow { flex-direction: column; }
   .sendBtn { flex-direction: row; justify-content: center; }
 }
+
+/* ─── Dark mode ──────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .result { background: linear-gradient(135deg, #0A0F1E, #111827); }
+}
+:root[data-theme="dark"] .result { background: linear-gradient(135deg, #0A0F1E, #111827); }

@@ -69,3 +69,51 @@
 /* Supprimer */
 .delBtn { background:none; border:none; color:#C5CAD3; font-size:13px; cursor:pointer; transition:color .2s; padding:2px; }
 .delBtn:hover { color:#DC2626; }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .sc     { background: var(--white,#111113); border-color: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
+  .scHd   { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
+  .scTitre { color: var(--t1,#F4F4F5); }
+  .scSub  { color: var(--t3,#71717A); }
+  .ci     { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
+  .ciImg  { background: linear-gradient(135deg,#1C1C1F,#2D2D30); }
+  .ciName { color: var(--t1,#F4F4F5); }
+  .ciVt span { background: #2D2D30; color: #A1A1AA; }
+  .ciQty  { background: var(--white,#111113); border-color: rgba(255,255,255,.12); }
+  .cqBtn  { color: var(--t2,#A1A1AA); }
+  .cqBtn:hover { background: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
+  .cqNum  { color: var(--t1,#F4F4F5); }
+  .ciOld  { color: #52525B; }
+  .scNum  { background: #F4F4F5; color: #111113; }
+}
+:root[data-theme="dark"] .sc     { background: var(--white,#111113); border-color: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .scHd   { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .scTitre { color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .scSub  { color: var(--t3,#71717A); }
+:root[data-theme="dark"] .ci     { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .ciImg  { background: linear-gradient(135deg,#1C1C1F,#2D2D30); }
+:root[data-theme="dark"] .ciName { color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .ciVt span { background: #2D2D30; color: #A1A1AA; }
+:root[data-theme="dark"] .ciQty  { background: var(--white,#111113); border-color: rgba(255,255,255,.12); }
+:root[data-theme="dark"] .cqBtn  { color: var(--t2,#A1A1AA); }
+:root[data-theme="dark"] .cqBtn:hover { background: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .cqNum  { color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .ciOld  { color: #52525B; }
+:root[data-theme="dark"] .scNum  { background: #F4F4F5; color: #111113; }
+
+/* Annule la préférence sombre de l'OS quand "Clair" est choisi explicitement (généré) */
+:root[data-theme="light"] .sc { background: #fff; border-color: rgba(11,31,58,.08); }
+:root[data-theme="light"] .scHd { background: #F8F9FA; border-bottom-color: rgba(11,31,58,.08); }
+:root[data-theme="light"] .scTitre { color: #0B1F3A; }
+:root[data-theme="light"] .scSub { color: #9CA3AF; }
+:root[data-theme="light"] .ci { background: #F8F9FA; border-color: rgba(11,31,58,.08); }
+:root[data-theme="light"] .ciImg { background: linear-gradient(135deg,#EEF3FD,#E2EAFB); }
+:root[data-theme="light"] .ciName { color: #0B1F3A; }
+:root[data-theme="light"] .ciVt span { background: #E8EAED; color: #4B5563; }
+:root[data-theme="light"] .ciQty { background: #fff; border-color: rgba(11,31,58,.13); }
+:root[data-theme="light"] .cqBtn { color: #4B5563; }
+:root[data-theme="light"] .cqBtn:hover { background: #EEF3FD; color: #0B1F3A; }
+:root[data-theme="light"] .cqNum { color: #0B1F3A; }
+:root[data-theme="light"] .ciOld { color: #C5CAD3; }
+:root[data-theme="light"] .scNum { background: #0B1F3A; color: #fff; }

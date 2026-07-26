@@ -73,6 +73,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
+  VersionColumn,
 } from 'typeorm';
 
 import { User } from './user.entity';
@@ -121,6 +122,21 @@ export enum WalletStatus {
    * Wallet définitivement fermé.
    */
   CLOSED = 'closed',
+}
+
+/**
+ * Type de wallet — détermine le rôle de son propriétaire.
+ * Prévu pour l'affichage, les droits et les rapports.
+ */
+export enum WalletType {
+  CLIENT        = 'client',
+  ENTREPRISE    = 'entreprise',
+  LIVREUR       = 'livreur',
+  CORRESPONDANT = 'correspondant',
+  PARTENAIRE    = 'partenaire',
+  ADMINISTRATEUR= 'administrateur',
+  PLATEFORME    = 'plateforme',
+  SYSTEM        = 'system',
 }
 
 /**
@@ -189,6 +205,22 @@ export class Wallet {
   id: string;
 
   /* ==========================================================
+   * TYPE DE WALLET
+   * ========================================================== */
+
+  /**
+   * Type de portefeuille — détermine le rôle du propriétaire.
+   * Renseigné à la création, immuable ensuite.
+   * Défaut : CLIENT (créé automatiquement lors de l'inscription).
+   */
+  @Column({
+    type: 'enum',
+    enum: WalletType,
+    default: WalletType.CLIENT,
+  })
+  walletType: WalletType;
+
+  /* ==========================================================
    * PROPRIÉTAIRE
    * ========================================================== */
 
@@ -244,15 +276,16 @@ export class Wallet {
 
   /**
    * ----------------------------------------------------------
-   * SOLDE EN ATTENTE
+   * SOLDE EN ATTENTE (ESCROW)
    * ----------------------------------------------------------
    *
-   * Argent temporairement bloqué :
+   * Argent mis en séquestre lors d'une commande confirmée.
+   * Libéré vers `balance` à la livraison confirmée (DELIVERED).
+   * Remboursé vers le client si litige résolu en sa faveur.
    *
-   *   - paiement en cours
-   *   - vérification anti-fraude
-   *   - commande non validée
-   *   - litige
+   * Cycle : CREDIT escrow → pendingBalance++
+   *         RELEASE      → pendingBalance-- | balance++
+   *         CANCEL       → pendingBalance-- (remboursement)
    */
   @Column({
     type: 'decimal',
@@ -262,6 +295,72 @@ export class Wallet {
     transformer: new ColumnNumericTransformer(),
   })
   pendingBalance: number;
+
+  /**
+   * ----------------------------------------------------------
+   * SOLDE BLOQUÉ
+   * ----------------------------------------------------------
+   *
+   * Fonds gelés par décision administrative.
+   * Causes : fraude suspectée, litige, enquête, gel judiciaire.
+   * Seul un Super Admin peut débloquer.
+   *
+   * Cycle : BLOCK → balance-- | blockedBalance++
+   *         UNBLOCK → blockedBalance-- | balance++
+   */
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    default: 0,
+    transformer: new ColumnNumericTransformer(),
+  })
+  blockedBalance: number;
+
+  /**
+   * ----------------------------------------------------------
+   * SOLDE RÉSERVÉ
+   * ----------------------------------------------------------
+   *
+   * Fonds pré-alloués pour une opération en cours d'autorisation
+   * (ex : retrait initié mais pas encore confirmé par le provider).
+   * Évite la double dépense pendant la fenêtre d'autorisation.
+   *
+   * Cycle : RESERVE → balance-- | reservedBalance++
+   *         CONFIRM  → reservedBalance-- (fonds transférés)
+   *         CANCEL   → reservedBalance-- | balance++ (rollback)
+   */
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    default: 0,
+    transformer: new ColumnNumericTransformer(),
+  })
+  reservedBalance: number;
+
+  /**
+   * ----------------------------------------------------------
+   * SOLDE EN COURS DE RETRAIT
+   * ----------------------------------------------------------
+   *
+   * Fonds dont le retrait est initié et en attente de traitement
+   * par le provider de paiement externe (Orange Money, MTN, etc.).
+   * Distinct de `reservedBalance` : ici les fonds ont quitté
+   * le système interne et sont en transit vers l'externe.
+   *
+   * Cycle : WITHDRAWAL_INIT → reservedBalance-- | withdrawingBalance++
+   *         WITHDRAWAL_OK   → withdrawingBalance-- (fonds envoyés)
+   *         WITHDRAWAL_FAIL → withdrawingBalance-- | balance++ (retour)
+   */
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    default: 0,
+    transformer: new ColumnNumericTransformer(),
+  })
+  withdrawingBalance: number;
 
   /* ==========================================================
    * DEVISE
@@ -423,6 +522,31 @@ export class Wallet {
   /** Référence l'`id` d'une entrée de `paymentMethods`. */
   @Column({ type: 'uuid', nullable: true })
   autoTransferMethodId: string | null;
+
+  /* ==========================================================
+   * VERSIONNAGE (verrouillage optimiste)
+   * ========================================================== */
+
+  /**
+   * Compteur de version pour le verrouillage optimiste TypeORM.
+   * Incrémenté automatiquement à chaque UPDATE.
+   *
+   * Si deux opérations concurrent lisent la même version et
+   * tentent de sauvegarder, la seconde lèvera une OptimisticLockVersionMismatchError.
+   *
+   * Utilisé EN COMPLÉMENT du SELECT FOR UPDATE (pessimiste) dans le
+   * WalletLockService pour une protection à deux niveaux.
+   */
+  @VersionColumn({ default: 1 })
+  version: number;
+
+  /**
+   * Date de la dernière transaction sur ce wallet.
+   * Mise à jour par le WalletMovementService après chaque opération.
+   * NULL si aucune transaction n'a encore eu lieu.
+   */
+  @Column({ type: 'timestamp', nullable: true })
+  lastTransactionAt: Date | null;
 
   /* ==========================================================
    * DATES

@@ -47,15 +47,15 @@
 }
 .fab-main {
   width: 48px; height: 48px; border-radius: 50%;
-  background: var(--blue); color: #fff; border: none;
+  background: var(--btn, #111113); color: #fff; border: none;
   display: flex; align-items: center; justify-content: center;
   font-size: 18px;
-  box-shadow: 0 6px 20px rgba(22, 82, 240, 0.4);
-  cursor: pointer; transition: all 0.25s;
+  box-shadow: 0 6px 20px rgba(59,130,246,.35);
+  cursor: pointer; transition: all .25s;
 }
 .fab-main:hover {
   transform: scale(1.08);
-  box-shadow: 0 8px 28px rgba(22, 82, 240, 0.5);
+  box-shadow: 0 8px 28px rgba(59,130,246,.45);
 }
 
 /* ══ RESPONSIVE ══ */

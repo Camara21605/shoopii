@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
  * ParametresNav.module.css
  * Navigation latérale (sidebar) standalone si utilisé séparément
  * ============================================================ */
@@ -14,7 +14,7 @@
 }
 .sect {
   font-size: 9px;
-  font-weight: 800;
+  font-weight: 900;
   color: var(--t4);
   text-transform: uppercase;
   letter-spacing: 1.2px;
@@ -27,7 +27,7 @@
   padding: 10px 11px;
   border-radius: var(--r-md);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--t2);
   cursor: pointer;
   transition: all 0.18s;
@@ -39,8 +39,8 @@
   text-align: left;
   font-family: var(--fb);
 }
-.item:hover { background: rgba(26,79,196,.09); color: var(--blue); }
-.item.active { background: rgba(26,79,196,.09); color: var(--blue); font-weight: 700; }
+.item:hover { background: rgba(0,0,0,.06); color: var(--t1); }
+.item.active { background: rgba(0,0,0,.06); color: var(--t1); font-weight: 800; }
 .item.active::before {
   content: '';
   position: absolute;
@@ -55,7 +55,7 @@
 .item.danger { color: #DC2626; }
 .item.danger i { color: #DC2626; }
 .item.danger:hover { background: rgba(220,38,38,.08); }
-.pct { font-family: var(--fd); font-size: 10px; font-weight: 800; color: var(--blue); margin-left: auto; }
+.pct { font-family: var(--fd); font-size: 10px; font-weight: 900; color: var(--blue); margin-left: auto; }
 .dot { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .dot.red   { background: #DC2626; }
 .dot.amber { background: #B45309; }

@@ -51,7 +51,7 @@ export class ClientsController {
     @Req() req: any,
     @Param('id', ParseUUIDPipe) clientId: string,
   ) {
-    return this.clientsService.getClientDetail(req.user.id, clientId);
+    return this.clientsService.getClientDetail(req.user.actorId ?? req.user.id, clientId);
   }
 
   @Get()
@@ -74,6 +74,6 @@ export class ClientsController {
       sortBy:    sortBy  as ClientsFilters['sortBy'],
       sortOrder: sortOrder === 'ASC' ? 'ASC' : 'DESC',
     };
-    return this.clientsService.getClients(req.user.id, filters);
+    return this.clientsService.getClients(req.user.actorId ?? req.user.id, filters);
   }
 }

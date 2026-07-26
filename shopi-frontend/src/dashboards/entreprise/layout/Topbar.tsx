@@ -23,7 +23,11 @@ import { useToast } from '../../../shared/context/ToastContext';
 import { tokenStorage } from '../../../shared/services/apiFetch';
 import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
+import { useNotifications } from '../../../shared/notifications/NotificationContext';
+import ThemeToggle from '../../../shared/components/ThemeToggle';
 import './Topbar.css';
+
+type CanFn = (group: string, action: string) => boolean;
 
 interface TopbarProps {
   activePage:     EntreprisePage;
@@ -36,6 +40,8 @@ interface TopbarProps {
   companyVille?:  string;
   companyPays?:   string;
   isFullscreen?:  boolean;
+  can?:           CanFn;
+  isOwner?:       boolean;
 }
 
 /* Titre + sous-titre par page */
@@ -66,25 +72,24 @@ const TITLES: Record<EntreprisePage, [string, string]> = {
 };
 
 /* Items du drawer mobile (navigation complète) */
-const DRAWER_NAV: { id: EntreprisePage; icon: string; label: string }[] = [
+const DRAWER_NAV: { id: EntreprisePage; icon: string; label: string; perm?: [string, string] }[] = [
   { id: 'overview',       icon: 'fa-chart-pie',    label: "Vue d'ensemble" },
-  { id: 'commandes',      icon: 'fa-box',           label: 'Commandes' },
-  { id: 'retours',        icon: 'fa-rotate-left',   label: 'Retours & SAV' },
-  { id: 'produits',       icon: 'fa-tag',           label: 'Produits' },
-  { id: 'ajouter',        icon: 'fa-plus-circle',   label: 'Ajouter produit' },
-  { id: 'inventaire',     icon: 'fa-warehouse',     label: 'Inventaire' },
-  { id: 'promotions',     icon: 'fa-percent',       label: 'Promotions' },
-  { id: 'analytics',      icon: 'fa-chart-line',    label: 'Analytics' },
-  { id: 'seo',            icon: 'fa-magnifying-glass-chart', label: 'SEO & Marketing' },
-  { id: 'livreurs',       icon: 'fa-motorcycle',    label: 'Mes livreurs' },
-  { id: 'correspondants', icon: 'fa-map-pin',       label: 'Correspondants' },
-  { id: 'reseauLivreurs',       icon: 'fa-user-group',   label: 'Suivre des livreurs' },
-  { id: 'reseauCorrespondants', icon: 'fa-circle-nodes', label: 'Suivre des correspondants' },
-  { id: 'finances',       icon: 'fa-coins',         label: 'Finances' },
-  { id: 'portefeuille',   icon: 'fa-wallet',        label: 'Portefeuille' },
-  { id: 'clients',        icon: 'fa-users',         label: 'Clients' },
-  { id: 'avis',           icon: 'fa-star',          label: 'Avis clients' },
-  { id: 'parametres',     icon: 'fa-gear',          label: 'Paramètres' },
+  { id: 'commandes',      icon: 'fa-box',           label: 'Commandes',          perm: ['orders',    'view'] },
+  { id: 'retours',        icon: 'fa-rotate-left',   label: 'Retours & SAV',      perm: ['returns',   'view'] },
+  { id: 'produits',       icon: 'fa-tag',           label: 'Produits',           perm: ['products',  'view'] },
+  { id: 'ajouter',        icon: 'fa-plus-circle',   label: 'Ajouter produit',    perm: ['products',  'create'] },
+  { id: 'inventaire',     icon: 'fa-warehouse',     label: 'Inventaire',         perm: ['products',  'view'] },
+  { id: 'promotions',     icon: 'fa-percent',       label: 'Promotions',         perm: ['promotions','view'] },
+  { id: 'analytics',      icon: 'fa-chart-line',    label: 'Analytics',          perm: ['statistics','view'] },
+  { id: 'seo',            icon: 'fa-magnifying-glass-chart', label: 'SEO & Marketing', perm: ['statistics','view'] },
+  { id: 'messages',       icon: 'fa-comment-dots',  label: 'Messages',           perm: ['messaging', 'view'] },
+  { id: 'livreurs',       icon: 'fa-motorcycle',    label: 'Mes livreurs',       perm: ['deliveries','view'] },
+  { id: 'correspondants', icon: 'fa-map-pin',       label: 'Correspondants',     perm: ['deliveries','view'] },
+  { id: 'finances',       icon: 'fa-coins',         label: 'Finances',           perm: ['payments',  'view'] },
+  { id: 'portefeuille',   icon: 'fa-wallet',        label: 'Portefeuille',       perm: ['payments',  'viewTransactions'] },
+  { id: 'clients',        icon: 'fa-users',         label: 'Clients',            perm: ['orders',    'view'] },
+  { id: 'avis',           icon: 'fa-star',          label: 'Avis clients',       perm: ['orders',    'view'] },
+  { id: 'parametres',     icon: 'fa-gear',          label: 'Paramètres',         perm: ['settings',  'view'] },
 ];
 
 /* Libellé statut boutique */
@@ -101,10 +106,13 @@ export default function Topbar({
   companyLogo, companyName,
   companyStatus, companyEmail, companyVille, companyPays,
   isFullscreen = false,
+  can, isOwner = false,
 }: TopbarProps) {
   const { pop } = useToast();
   const navigate = useNavigate();
   const { msgUnread } = useGlobalCall();
+  const { notifications } = useNotifications();
+  const orderUnread = notifications.filter(n => n.type.startsWith('order') && !n.isRead).length;
 
   const [searchVal,      setSearchVal]      = useState('');
   const [avatarOpen,     setAvatarOpen]     = useState(false);
@@ -192,26 +200,16 @@ export default function Topbar({
         <div className="tb-acts">
 
           {/* ✅ Raccourcis réseau : Livreurs / Correspondants (gestion) */}
-          <button className={`tb-ic${activePage === 'livreurs' ? ' active' : ''}`} title="Mes livreurs"
-            onClick={() => onNavigate('livreurs')}>
-            <i className="fas fa-motorcycle"></i>
-          </button>
-          <button className={`tb-ic${activePage === 'correspondants' ? ' active' : ''}`} title="Correspondants"
-            onClick={() => onNavigate('correspondants')}>
-            <i className="fas fa-map-pin"></i>
-          </button>
-
-          <div className="tb-sep"></div>
-
-          {/* ✅ Suivre des livreurs / correspondants du réseau (différent de la gestion) */}
-          <button className={`tb-ic${activePage === 'reseauLivreurs' || activePage === 'profilLivreurReseau' ? ' active' : ''}`} title="Suivre des livreurs"
-            onClick={() => onNavigate('reseauLivreurs')}>
-            <i className="fas fa-user-group"></i>
-          </button>
-          <button className={`tb-ic${activePage === 'reseauCorrespondants' || activePage === 'profilCorrespondantReseau' ? ' active' : ''}`} title="Suivre des correspondants"
-            onClick={() => onNavigate('reseauCorrespondants')}>
-            <i className="fas fa-circle-nodes"></i>
-          </button>
+          {(isOwner || !can || can('deliveries', 'view')) && (<>
+            <button className={`tb-ic${activePage === 'livreurs' ? ' active' : ''}`} title="Mes livreurs"
+              onClick={() => onNavigate('livreurs')}>
+              <i className="fas fa-motorcycle"></i>
+            </button>
+            <button className={`tb-ic${activePage === 'correspondants' ? ' active' : ''}`} title="Correspondants"
+              onClick={() => onNavigate('correspondants')}>
+              <i className="fas fa-map-pin"></i>
+            </button>
+          </>)}
 
           <div className="tb-sep"></div>
 
@@ -219,15 +217,19 @@ export default function Topbar({
           <button className="tb-ic" title="Commandes"
             onClick={() => onNavigate('commandes')}>
             <i className="fas fa-box"></i>
-            <div className="tb-dot"></div>
-          </button>
-          <button className="tb-ic tb-ic-pin" title="Messages"
-            onClick={() => onNavigate('messages')}>
-            <i className="fas fa-comment-dots"></i>
-            {msgUnread > 0 && (
-              <span className="tb-badge">{msgUnread > 99 ? '99+' : msgUnread}</span>
+            {orderUnread > 0 && (
+              <span className="tb-badge">{orderUnread > 99 ? '99+' : orderUnread}</span>
             )}
           </button>
+          {(isOwner || !can || can('messaging', 'view')) && (
+            <button className="tb-ic tb-ic-pin" title="Messages"
+              onClick={() => onNavigate('messages')}>
+              <i className="fas fa-comment-dots"></i>
+              {msgUnread > 0 && (
+                <span className="tb-badge">{msgUnread > 99 ? '99+' : msgUnread}</span>
+              )}
+            </button>
+          )}
           <NotificationCenter />
 
           <div className="tb-sep"></div>
@@ -238,22 +240,8 @@ export default function Topbar({
             <i className="fas fa-circle-question"></i>
           </button>
 
-          {/* ✅ Bascule vers l'accueil client */}
-          <button className="tb-home" title="Aller à l'accueil Shopi"
-            onClick={handleSwitchHome}>
-            <i className="fas fa-house"></i> Accueil
-          </button>
-
-          {/* Paramètres */}
-          <button className={`tb-settings${activePage === 'parametres' ? ' active' : ''}`}
-            onClick={() => onNavigate('parametres')}>
-            <i className="fas fa-gear"></i> Paramètres
-          </button>
-
-          {/* Nouveau produit */}
-          <button className="tb-new" onClick={() => onNavigate('ajouter')}>
-            <i className="fas fa-plus"></i> Nouveau produit
-          </button>
+          {/* Basculer thème clair/sombre */}
+          <ThemeToggle />
 
           {/* ✅ Avatar + dropdown */}
           <div className="tb-ava-wrap" ref={avatarRef}>
@@ -317,12 +305,11 @@ export default function Topbar({
         </button>
         <button className={`bn-it${activePage === 'commandes' ? ' on' : ''}`}
           onClick={() => onNavigate('commandes')}>
-          <i className="fas fa-box"></i><span>Commandes</span>
-        </button>
-
-        {/* Bouton central : Nouveau produit */}
-        <button className="bn-it bn-fab" onClick={() => onNavigate('ajouter')} title="Nouveau produit">
-          <div className="bn-fab-ic"><i className="fas fa-plus"></i></div>
+          <i className="fas fa-box"></i>
+          <span>Commandes</span>
+          {orderUnread > 0 && (
+            <span className="tb-badge">{orderUnread > 99 ? '99+' : orderUnread}</span>
+          )}
         </button>
 
         <button className={`bn-it${activePage === 'produits' ? ' on' : ''}`}
@@ -361,7 +348,12 @@ export default function Topbar({
 
             {/* Navigation complète */}
             <div className="tb-drawer-nav">
-              {DRAWER_NAV.map(item => (
+              {DRAWER_NAV.filter(item => {
+                if (!item.perm) return true;
+                if (isOwner) return true;
+                if (!can) return true;
+                return can(item.perm[0], item.perm[1]);
+              }).map(item => (
                 <button key={item.id}
                   className={`tb-drawer-it${activePage === item.id ? ' on' : ''}`}
                   onClick={() => go(item.id)}>

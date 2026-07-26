@@ -7,6 +7,7 @@
 
 import styles from '../styles/Topbar.module.css';
 import type { AdminPage } from '../data/types';
+import ThemeToggle from '../../../shared/components/ThemeToggle';
 
 interface TopbarProps {
   activePage: AdminPage;
@@ -52,6 +53,7 @@ export default function Topbar({ activePage, onBurger, onGenerate, onNavigate, o
         <button className={styles.ic} onClick={() => onToast('🔔 6 notifications', 'i')}>
           <i className="fas fa-bell" /><span className={styles.dot} />
         </button>
+        <ThemeToggle />
         <button className={styles.new} onClick={onGenerate}>
           <i className="fas fa-plus" /> <span>Générer un code</span>
         </button>

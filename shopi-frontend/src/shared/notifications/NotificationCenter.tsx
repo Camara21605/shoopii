@@ -54,21 +54,25 @@ interface ItemProps {
 }
 
 function NotificationItem({ notif, onClick, onDelete }: ItemProps) {
-  const meta = getTypeMeta(notif.type);
+  const meta    = getTypeMeta(notif.type);
+  const initial = notif.title.charAt(0).toUpperCase();
+
   return (
     <div className={`${s.itemWrap}${notif.isRead ? '' : ` ${s.unread}`}`}>
-      <button
-        className={s.item}
-        onClick={onClick}
-      >
+      <button className={s.item} onClick={onClick}>
         {!notif.isRead && <span className={s.dot} aria-hidden />}
 
-        <span
-          className={s.iconWrap}
-          style={{ background: meta.bg, color: meta.color }}
-          aria-hidden
-        >
-          <i className={`fas ${meta.icon}`} />
+        {/* ── Avatar acteur + badge type (style Facebook) ── */}
+        <span className={s.avatarWrap} aria-hidden>
+          {notif.imageUrl
+            ? <img src={notif.imageUrl} alt="" className={s.avatarImg} />
+            : <span className={s.avatarInitial} style={{ background: meta.bg, color: meta.color }}>
+                {initial}
+              </span>
+          }
+          <span className={s.typeBadge} style={{ background: meta.color }}>
+            <i className={`fas ${meta.icon}`} />
+          </span>
         </span>
 
         <span className={s.content}>
@@ -77,11 +81,12 @@ function NotificationItem({ notif, onClick, onDelete }: ItemProps) {
             {notif.count > 1 && <span style={{ fontWeight: 500, marginLeft: 4, opacity: .7 }}>({notif.count})</span>}
           </span>
           <span className={s.body}>{notif.body}</span>
-          <span className={s.time}>{relativeTime(notif.createdAt)}</span>
+          <span className={s.time} style={notif.isRead ? undefined : { color: meta.color }}>
+            {relativeTime(notif.createdAt)}
+          </span>
         </span>
       </button>
 
-      {/* Bouton supprimer — visible au survol, stopPropagation pour ne pas ouvrir la notif */}
       <button
         className={s.deleteBtn}
         onClick={e => { e.stopPropagation(); onDelete(); }}

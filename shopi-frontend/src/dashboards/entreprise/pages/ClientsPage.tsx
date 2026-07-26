@@ -68,7 +68,7 @@ function SourceBadge({ isSuivi, totalOrders }: { isSuivi: boolean; totalOrders: 
     </span>
   );
   if (totalOrders > 0) return (
-    <span style={{ fontSize: 9.5, color: 'var(--blue)', background: 'var(--sky)', border: '1px solid var(--sky-3)', borderRadius: 999, padding: '2px 8px', fontWeight: 600 }}>
+    <span style={{ fontSize: 9.5, color: 'var(--t2)', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 999, padding: '2px 8px', fontWeight: 600 }}>
       🛒 Acheteur
     </span>
   );
@@ -239,7 +239,7 @@ export default function ClientsPage() {
                 <button
                   key={f.value}
                   onClick={() => applyFilter({ segment: f.value })}
-                  style={{ background: filters.segment === f.value ? 'var(--blue)' : 'var(--white)', color: filters.segment === f.value ? '#fff' : 'var(--t2)', border: `1.5px solid ${filters.segment === f.value ? 'var(--blue)' : 'var(--bdr2)'}`, borderRadius: 'var(--pill)', padding: '7px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all .15s' }}
+                  style={{ background: filters.segment === f.value ? 'var(--btn, #111113)' : 'var(--white)', color: filters.segment === f.value ? '#fff' : 'var(--t2)', border: `1.5px solid ${filters.segment === f.value ? 'var(--btn, #111113)' : 'var(--bdr2)'}`, borderRadius: 'var(--pill)', padding: '7px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all .15s' }}
                 >
                   {f.label}
                 </button>
@@ -434,7 +434,7 @@ export default function ClientsPage() {
                     if (pg < 1 || pg > pages) return null;
                     return (
                       <button key={pg} onClick={() => setPage(pg)}
-                        style={{ padding: '5px 11px', border: `1.5px solid ${pg === (filters.page ?? 1) ? 'var(--blue)' : 'var(--bdr2)'}`, borderRadius: 7, background: pg === (filters.page ?? 1) ? 'var(--blue)' : 'var(--white)', color: pg === (filters.page ?? 1) ? '#fff' : 'var(--t2)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                        style={{ padding: '5px 11px', border: `1.5px solid ${pg === (filters.page ?? 1) ? 'var(--btn, #111113)' : 'var(--bdr2)'}`, borderRadius: 7, background: pg === (filters.page ?? 1) ? 'var(--btn, #111113)' : 'var(--white)', color: pg === (filters.page ?? 1) ? '#fff' : 'var(--t2)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
                         {pg}
                       </button>
                     );

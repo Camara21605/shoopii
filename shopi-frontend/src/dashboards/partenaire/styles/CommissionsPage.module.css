@@ -57,3 +57,11 @@
 
 @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .kpis { grid-template-columns: 1fr; } }
+
+/* ─── Dark mode ──────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .bal { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
+  .cbb.w { color: #0B1F3A; }
+}
+:root[data-theme="dark"] .bal { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
+:root[data-theme="dark"] .cbb.w { color: #0B1F3A; }

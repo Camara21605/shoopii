@@ -4,7 +4,7 @@
  * ============================================================ */
 
 :root {
-  --cat-bg:         #F8FAFF;
+  --cat-bg:         #FFFFFF;
   --cat-card-bg:    #ffffff;
   --cat-border:     #E5EBF5;
   --cat-border-hov: #B8CAEF;
@@ -20,19 +20,49 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --cat-bg:         #0D1526;
-    --cat-card-bg:    #131E35;
-    --cat-border:     #1E2D4A;
-    --cat-border-hov: #2A4080;
-    --cat-text:       #E2E8F6;
-    --cat-muted:      #7A8BA8;
-    --cat-faint:      #4A5A7A;
-    --cat-blue:       #5B8BF0;
-    --cat-blue-bg:    #172040;
+    --cat-bg:         #000000;
+    --cat-card-bg:    #0A0A0A;
+    --cat-border:     rgba(255,255,255,.08);
+    --cat-border-hov: rgba(255,255,255,.18);
+    --cat-text:       #F4F4F5;
+    --cat-muted:      #A1A1AA;
+    --cat-faint:      #71717A;
+    --cat-blue:       #60A5FA;
+    --cat-blue-bg:    rgba(96,165,250,.12);
     --cat-feat-bg:    linear-gradient(135deg, #0A1830 0%, #0F2B6E 100%);
-    --cat-sk-from:    #131E35;
-    --cat-sk-to:      #1A2A45;
+    --cat-sk-from:    #0A0A0A;
+    --cat-sk-to:      #1C1C1F;
   }
+}
+
+:root[data-theme="dark"] {
+  --cat-bg:         #000000;
+  --cat-card-bg:    #0A0A0A;
+  --cat-border:     rgba(255,255,255,.08);
+  --cat-border-hov: rgba(255,255,255,.18);
+  --cat-text:       #F4F4F5;
+  --cat-muted:      #A1A1AA;
+  --cat-faint:      #71717A;
+  --cat-blue:       #60A5FA;
+  --cat-blue-bg:    rgba(96,165,250,.12);
+  --cat-feat-bg:    linear-gradient(135deg, #0A1830 0%, #0F2B6E 100%);
+  --cat-sk-from:    #0A0A0A;
+  --cat-sk-to:      #1C1C1F;
+}
+
+:root[data-theme="light"] {
+  --cat-bg:         #FFFFFF;
+  --cat-card-bg:    #ffffff;
+  --cat-border:     #E5EBF5;
+  --cat-border-hov: #B8CAEF;
+  --cat-text:       #0B1F3A;
+  --cat-muted:      #7A8BA8;
+  --cat-faint:      #9AAACB;
+  --cat-blue:       #1A4FC4;
+  --cat-blue-bg:    #EEF2FF;
+  --cat-feat-bg:    linear-gradient(135deg, #0F2B6E 0%, #1A4FC4 100%);
+  --cat-sk-from:    #F0F4FF;
+  --cat-sk-to:      #E5EDFF;
 }
 
 /* ── Layout ── */

@@ -111,3 +111,102 @@
 .corrRdOn::after { content:''; width:6px; height:6px; border-radius:50%; background:#fff; }
 
 @media (max-width:640px) { .delGrid { grid-template-columns:1fr; } }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
+  .scHd    { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
+  .scTitre { color: var(--t1,#F4F4F5); }
+  .scSub   { color: var(--t3,#71717A); }
+  .delOpt  { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  .delOpt:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+  .delTitre { color: var(--t1,#F4F4F5); }
+  .spdRow   { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  .spdBtn:hover, .spdBtnOn { background: var(--white,#111113); }
+  .panelHd  { color: var(--t1,#F4F4F5); }
+  .lvCard   { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+  .lvCard:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+  .lvNm    { color: var(--t1,#F4F4F5); }
+  .corrCard { background: var(--white,#111113); border-color: rgba(255,255,255,.08); }
+  .corrCard:hover { border-color: rgba(167,139,250,.4); background: rgba(124,58,237,.08); }
+  .corrNm  { color: var(--t1,#F4F4F5); }
+  .lvOl    { border-color: var(--white,#111113); }
+}
+:root[data-theme="dark"] .sc      { background: var(--white,#111113); border-color: rgba(255,255,255,.08); color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .scHd    { background: var(--g100,#0A0A0A); border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .scTitre { color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .scSub   { color: var(--t3,#71717A); }
+:root[data-theme="dark"] .delOpt  { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .delOpt:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+:root[data-theme="dark"] .delTitre { color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .spdRow   { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .spdBtn:hover,
+:root[data-theme="dark"] .spdBtnOn  { background: var(--white,#111113); }
+:root[data-theme="dark"] .panelHd  { color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .lvCard   { background: #0A0A0A; border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .lvCard:hover { background: #1C1C1F; border-color: rgba(255,255,255,.16); }
+:root[data-theme="dark"] .lvNm    { color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .corrCard { background: var(--white,#111113); border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .corrCard:hover { border-color: rgba(167,139,250,.4); background: rgba(124,58,237,.08); }
+:root[data-theme="dark"] .corrNm  { color: var(--t1,#F4F4F5); }
+:root[data-theme="dark"] .lvOl    { border-color: var(--white,#111113); }
+/* — selected states, colored tags, correspondant block — */
+@media (prefers-color-scheme: dark) {
+  .delOptSel  { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.4); }
+  .lvCardSel  { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.4); }
+  .srcC, .lvSrcC { background: rgba(26,79,196,.15); color: #60A5FA; }
+  .srcB, .lvSrcB { background: rgba(4,120,87,.15);  color: #34D399; }
+  .delPriceFree  { background: rgba(4,120,87,.15);  color: #34D399; }
+  .delPriceTeal  { background: rgba(14,116,144,.15); color: #22D3EE; }
+  .corrBlk   { background: rgba(109,40,217,.1);  border-color: rgba(124,58,237,.25); }
+  .infoInd   { background: rgba(109,40,217,.08); border-color: rgba(124,58,237,.2);  color: #A1A1AA; }
+  .infoInd i { color: #A78BFA; }
+  .corrCardSel { background: rgba(109,40,217,.12); border-color: rgba(124,58,237,.4); }
+  .corrTag   { background: rgba(109,40,217,.15); color: #A78BFA; }
+}
+:root[data-theme="dark"] .delOptSel  { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.4); }
+:root[data-theme="dark"] .lvCardSel  { background: rgba(26,79,196,.12); border-color: rgba(96,165,250,.4); }
+:root[data-theme="dark"] .srcC,
+:root[data-theme="dark"] .lvSrcC { background: rgba(26,79,196,.15); color: #60A5FA; }
+:root[data-theme="dark"] .srcB,
+:root[data-theme="dark"] .lvSrcB { background: rgba(4,120,87,.15);  color: #34D399; }
+:root[data-theme="dark"] .delPriceFree  { background: rgba(4,120,87,.15);  color: #34D399; }
+:root[data-theme="dark"] .delPriceTeal  { background: rgba(14,116,144,.15); color: #22D3EE; }
+:root[data-theme="dark"] .corrBlk   { background: rgba(109,40,217,.1);  border-color: rgba(124,58,237,.25); }
+:root[data-theme="dark"] .infoInd   { background: rgba(109,40,217,.08); border-color: rgba(124,58,237,.2);  color: #A1A1AA; }
+:root[data-theme="dark"] .infoInd i { color: #A78BFA; }
+:root[data-theme="dark"] .corrCardSel { background: rgba(109,40,217,.12); border-color: rgba(124,58,237,.4); }
+:root[data-theme="dark"] .corrTag   { background: rgba(109,40,217,.15); color: #A78BFA; }
+
+/* Annule la préférence sombre de l'OS quand "Clair" est choisi explicitement (généré) */
+:root[data-theme="light"] .sc { background: #fff; border-color: #E2E8F0; }
+:root[data-theme="light"] .scHd { background: #FAFBFC; border-bottom-color: #F1F5F9; }
+:root[data-theme="light"] .scTitre { color: #0B1F3A; }
+:root[data-theme="light"] .scSub { color: #94A3B8; }
+:root[data-theme="light"] .delOpt { background: #F8FAFF; border-color: #E2E8F0; }
+:root[data-theme="light"] .delOpt:hover { background: #EFF6FF; border-color: #93C5FD; }
+:root[data-theme="light"] .delTitre { color: #0B1F3A; }
+:root[data-theme="light"] .spdRow { background: #F1F5F9; border-color: #E2E8F0; }
+:root[data-theme="light"] .spdBtn:hover { background: #fff; }
+:root[data-theme="light"] .spdBtnOn { background: #fff; }
+:root[data-theme="light"] .panelHd { color: #0B1F3A; }
+:root[data-theme="light"] .lvCard { background: #F8FAFF; border-color: #E2E8F0; }
+:root[data-theme="light"] .lvCard:hover { background: #EFF6FF; border-color: #93C5FD; }
+:root[data-theme="light"] .lvNm { color: #0B1F3A; }
+:root[data-theme="light"] .corrCard { background: #fff; border-color: #E2E8F0; }
+:root[data-theme="light"] .corrCard:hover { border-color: #A78BFA; background: #F5F3FF; }
+:root[data-theme="light"] .corrNm { color: #0B1F3A; }
+:root[data-theme="light"] .lvOl { border-color: #fff; }
+:root[data-theme="light"] .delOptSel { background: #EFF6FF; border-color: #1A4FC4; }
+:root[data-theme="light"] .lvCardSel { background: #EFF6FF; border-color: #1A4FC4; }
+:root[data-theme="light"] .srcC { background: #DBEAFE; color: #1E3A8A; }
+:root[data-theme="light"] .lvSrcC { background: #DBEAFE; color: #1E3A8A; }
+:root[data-theme="light"] .srcB { background: #D1FAE5; color: #065F46; }
+:root[data-theme="light"] .lvSrcB { background: #D1FAE5; color: #065F46; }
+:root[data-theme="light"] .delPriceFree { background: #D1FAE5; color: #065F46; }
+:root[data-theme="light"] .delPriceTeal { background: #CFFAFE; color: #155E75; }
+:root[data-theme="light"] .corrBlk { background: #F5F3FF; border-color: #DDD6FE; }
+:root[data-theme="light"] .infoInd { background: #EDE9FE; border-color: #DDD6FE; color: #374151; }
+:root[data-theme="light"] .infoInd i { color: #7C3AED; }
+:root[data-theme="light"] .corrCardSel { background: #F5F3FF; border-color: #7C3AED; }
+:root[data-theme="light"] .corrTag { background: #EDE9FE; color: #7C3AED; }

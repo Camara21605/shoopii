@@ -102,11 +102,11 @@ export default function CommandePage({ role = 'client', useApi = false, onToast 
 
   if (c.loading) return (
     <div className={styles.loading} style={{ flexDirection:'column', gap:16 }}>
-      <i className="fas fa-circle-notch fa-spin" style={{ fontSize:24, color:'rgba(200,217,248,.5)' }} />
+      <i className="fas fa-circle-notch fa-spin" style={{ fontSize:24, color:'var(--t3)' }} />
       <span>Chargement de la commande…</span>
       <button onClick={() => navigate(-1)}
-        style={{ marginTop:4, background:'rgba(255,255,255,.08)', border:'none', borderRadius:8,
-          color:'rgba(200,217,248,.6)', padding:'7px 18px', fontSize:13, cursor:'pointer' }}>
+        style={{ marginTop:4, background:'var(--g100)', border:'none', borderRadius:8,
+          color:'var(--t2)', padding:'7px 18px', fontSize:13, cursor:'pointer' }}>
         ← Retour
       </button>
     </div>
@@ -116,12 +116,12 @@ export default function CommandePage({ role = 'client', useApi = false, onToast 
     <div className={styles.loading} style={{ flexDirection:'column', gap:12, color:'#DC2626' }}>
       <i className="fas fa-triangle-exclamation" style={{ fontSize:32 }} />
       <div style={{ fontWeight:700 }}>Commande introuvable</div>
-      <div style={{ fontSize:13, color:'rgba(255,255,255,.5)', maxWidth:340, textAlign:'center' }}>
+      <div style={{ fontSize:13, color:'var(--t3)', maxWidth:340, textAlign:'center' }}>
         {c.error}
       </div>
       <button onClick={() => window.history.back()}
-        style={{ marginTop:8, background:'rgba(255,255,255,.12)', border:'none', borderRadius:8,
-          color:'#fff', padding:'8px 20px', fontSize:13, cursor:'pointer' }}>
+        style={{ marginTop:8, background:'var(--g100)', border:'none', borderRadius:8,
+          color:'var(--t1)', padding:'8px 20px', fontSize:13, cursor:'pointer' }}>
         ← Retour
       </button>
     </div>
@@ -141,7 +141,7 @@ export default function CommandePage({ role = 'client', useApi = false, onToast 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
             onClick={() => navigate(-1)}
-            style={{ background: 'rgba(255,255,255,.08)', border: 'none', borderRadius: 8, color: 'rgba(200,217,248,.8)', cursor: 'pointer', padding: '6px 10px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
+            style={{ background: 'var(--g100)', border: 'none', borderRadius: 8, color: 'var(--t2)', cursor: 'pointer', padding: '6px 10px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
             title="Retour"
           >
             <i className="fas fa-arrow-left" />

@@ -85,6 +85,17 @@ export interface SendContactEmailParams {
   message:  string;
 }
 
+export interface SendTeamMemberCredentialsParams {
+  toEmail:      string;
+  firstName:    string;
+  lastName:     string;
+  /** Mot de passe temporaire en clair — jamais stocké, affiché une seule fois */
+  password:     string;
+  companyName?: string;
+  /** true = réinitialisation, false = première création */
+  isReset?:     boolean;
+}
+
 export interface SendSupportTicketConfirmationParams {
   toEmail:   string;
   firstName: string;
@@ -488,6 +499,47 @@ export class MailService implements OnModuleInit {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
+  // 10. EMAIL CREDENTIALS MEMBRE D'ÉQUIPE (NOUVEAU)
+  //
+  //  sendTeamMemberCredentialsEmail()
+  //  Envoyé au nouveau collaborateur après création directe de son compte
+  //  par le propriétaire de l'entreprise, ou après réinitialisation MDP.
+  //  Contient : email + mot de passe temporaire + lien de connexion.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  async sendTeamMemberCredentialsEmail(params: SendTeamMemberCredentialsParams): Promise<void> {
+    const { toEmail, firstName, lastName, password, companyName, isReset = false } = params;
+    const loginUrl = `${this.frontendUrl}/login`;
+
+    const subject = isReset
+      ? `Shopi — Votre nouveau mot de passe temporaire`
+      : `Shopi — Bienvenue dans l'équipe${companyName ? ` ${companyName}` : ''} !`;
+
+    await this.send({
+      to:      toEmail,
+      subject,
+      html:    this.buildTeamMemberCredentialsHtml({ firstName, lastName, toEmail, password, loginUrl, companyName, isReset }),
+      text: [
+        isReset
+          ? `Bonjour ${firstName},\n\nVotre mot de passe a été réinitialisé par votre administrateur.`
+          : `Bonjour ${firstName},\n\nVotre compte collaborateur Shopi${companyName ? ` (${companyName})` : ''} a été créé.`,
+        '',
+        `Email        : ${toEmail}`,
+        `Mot de passe : ${password}`,
+        '',
+        `Connectez-vous sur : ${loginUrl}`,
+        `Vous devrez changer ce mot de passe lors de votre première connexion.`,
+        '',
+        '---',
+        'Shopi Africa — shopi.gn',
+        'Ne partagez jamais ce mot de passe.',
+      ].join('\n'),
+    });
+
+    this.logger.log(`[TEAM CREDENTIALS] Email envoyé à ${toEmail} | reset=${isReset}`);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
   // HELPER D'ENVOI CENTRALISÉ
   // Gère automatiquement ECONNRESET : si la connexion poolée est morte,
   // nodemailer (pool:true) la recrée — on laisse l'erreur remonter
@@ -805,6 +857,124 @@ export class MailService implements OnModuleInit {
     </td></tr>
   </table>
 </body></html>`;
+  }
+
+  private buildTeamMemberCredentialsHtml(p: {
+    firstName:    string;
+    lastName:     string;
+    toEmail:      string;
+    password:     string;
+    loginUrl:     string;
+    companyName?: string;
+    isReset:      boolean;
+  }): string {
+    const headline = p.isReset
+      ? 'Votre mot de passe a été réinitialisé'
+      : `Bienvenue dans l'équipe${p.companyName ? ` <strong style="color:#1e40af">${p.companyName}</strong>` : ''} !`;
+
+    const intro = p.isReset
+      ? `Votre administrateur a réinitialisé votre mot de passe Shopi. Utilisez les identifiants ci-dessous pour vous reconnecter.`
+      : `Votre compte collaborateur Shopi vient d'être créé. Voici vos identifiants de connexion.`;
+
+    return `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#f0f4ff;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4ff;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <!-- Logo Shopi -->
+        <tr><td align="center" style="padding-bottom:24px;">
+          <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:16px;padding:10px 24px;color:#fff;font-size:22px;font-weight:900;letter-spacing:-.5px;display:inline-block;">
+            Shopi
+          </div>
+        </td></tr>
+
+        <!-- Carte principale -->
+        <tr><td style="background:#fff;border-radius:20px;padding:40px 36px;box-shadow:0 4px 24px rgba(30,64,175,.08);">
+
+          <!-- Icône -->
+          <div style="text-align:center;margin-bottom:20px;">
+            <div style="width:64px;height:64px;background:#eff6ff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:28px;">
+              ${p.isReset ? '🔑' : '👋'}
+            </div>
+          </div>
+
+          <!-- Titre -->
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0f172a;text-align:center;">
+            ${headline}
+          </h1>
+          <p style="margin:0 0 28px;font-size:14px;color:#475569;text-align:center;line-height:1.6;">
+            Bonjour <strong>${p.firstName} ${p.lastName}</strong>, ${intro}
+          </p>
+
+          <!-- Bloc identifiants -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            <tr><td style="background:#f8faff;border:2px solid #bfdbfe;border-radius:16px;padding:24px 28px;">
+              <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:18px;">
+                🔐 Vos identifiants de connexion
+              </div>
+
+              <!-- Email -->
+              <div style="margin-bottom:14px;">
+                <div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Email</div>
+                <div style="font-family:'Courier New',monospace;font-size:15px;font-weight:700;color:#1e40af;background:#eff6ff;border-radius:8px;padding:8px 12px;display:inline-block;">
+                  ${p.toEmail}
+                </div>
+              </div>
+
+              <!-- Mot de passe -->
+              <div>
+                <div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Mot de passe temporaire</div>
+                <div style="font-family:'Courier New',monospace;font-size:18px;font-weight:900;color:#0f172a;background:#f1f5f9;border:2px dashed #94a3b8;border-radius:8px;padding:10px 16px;display:inline-block;letter-spacing:2px;">
+                  ${p.password}
+                </div>
+              </div>
+            </td></tr>
+          </table>
+
+          <!-- Avertissement changement obligatoire -->
+          <div style="background:#fff8ed;border-left:3px solid #f59e0b;border-radius:0 10px 10px 0;padding:14px 18px;margin-bottom:24px;">
+            <p style="margin:0;font-size:13px;color:#92400e;line-height:1.6;">
+              ⚠️ <strong>Ce mot de passe est temporaire.</strong>
+              Vous devrez le modifier lors de votre première connexion. Ne le partagez avec personne.
+            </p>
+          </div>
+
+          <!-- Bouton connexion -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            <tr><td align="center">
+              <a href="${p.loginUrl}" style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;font-size:14px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:12px;display:inline-block;">
+                Se connecter à Shopi →
+              </a>
+            </td></tr>
+          </table>
+
+          <!-- Sécurité -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;">
+            <p style="margin:0;font-size:12.5px;color:#64748b;line-height:1.7;">
+              🛡️ <strong>Shopi ne vous demandera jamais ce mot de passe par téléphone ou email.</strong>
+              Si vous n'attendiez pas ce message, contactez immédiatement votre administrateur.
+            </p>
+          </div>
+
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="padding:24px 0;text-align:center;">
+          <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.8;">
+            Shopi Africa — La marketplace africaine de référence<br/>
+            <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a>
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
   }
 
   private buildContactHtml(p: {

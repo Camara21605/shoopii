@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
  * FICHIER : src/modules/dashboard/entreprise/services/boutique-parametres.service.ts
  *
  * RÔLE : Gère les sections Boutique & Identité + Contact & Localisation
@@ -42,13 +42,29 @@ export class BoutiqueParametresService {
    * ────────────────────────────────────────────────────────── */
 
   async getParametres(userId: string): Promise<Company> {
-    const company = await this.companyRepo.findOne({
+    let company = await this.companyRepo.findOne({
       where: { userId },
       relations: ['companyType', 'horaires'],
     });
 
     if (!company) {
-      throw new NotFoundException('Profil entreprise introuvable.');
+      // Compte company sans profil (ex : insertion manuelle en BDD).
+      // On crée un profil vide pour éviter le 404 répété côté client.
+      const user = await this.userRepo.findOne({ where: { id: userId } });
+      const defaultName = user
+        ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email.split('@')[0]
+        : 'Ma Boutique';
+
+      const stub = this.companyRepo.create({ userId, companyName: defaultName });
+      await this.companyRepo.save(stub);
+      this.logger.warn(`[PARAMETRES] Profil auto-créé pour userId=${userId}`);
+
+      company = await this.companyRepo.findOne({
+        where: { userId },
+        relations: ['companyType', 'horaires'],
+      });
+
+      if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     }
 
     return company;
@@ -160,8 +176,9 @@ export class BoutiqueParametresService {
    * HELPERS PRIVÉS
    * ────────────────────────────────────────────────────────── */
 
-  private async findCompanyOrFail(userId: string): Promise<Company> {
-    const company = await this.companyRepo.findOne({ where: { userId } });
+  private async findCompanyOrFail(userIdOrCompanyId: string): Promise<Company> {
+    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId } });
+    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }
