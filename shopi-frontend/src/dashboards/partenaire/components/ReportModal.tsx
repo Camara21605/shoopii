@@ -9,10 +9,12 @@ import { useState } from 'react';
 import styles from '../styles/ReportModal.module.css';
 import type { MotifSignalement, Gravite } from '../data/types';
 
+type TargetType = 'ent' | 'lvr' | 'cor';
+
 interface Props {
   defaultTarget?: string;
   onClose:  () => void;
-  onSubmit: (cible: string, motif: MotifSignalement, gravite: Gravite, desc: string) => string;
+  onSubmit: (cible: string, motif: MotifSignalement, gravite: Gravite, desc: string, motifLabel: string, targetType: TargetType) => Promise<string>;
   onToast:  (msg: string, type?: 's' | 'i' | 'w') => void;
 }
 
@@ -27,19 +29,35 @@ const SEVS: { id: Gravite; label: string }[] = [
   { id: 'low', label: 'Mineur' }, { id: 'med', label: 'Modéré' }, { id: 'high', label: 'Grave' },
 ];
 
-export default function ReportModal({ defaultTarget = '', onClose, onSubmit, onToast }: Props) {
-  const [cible, setCible]   = useState(defaultTarget);
-  const [motif, setMotif]   = useState<MotifSignalement>('fraude');
-  const [sev, setSev]       = useState<Gravite>('med');
-  const [desc, setDesc]     = useState('');
+const TARGET_TYPES: { id: TargetType; icon: string; label: string }[] = [
+  { id: 'ent', icon: 'fa-store',      label: 'Entreprise' },
+  { id: 'lvr', icon: 'fa-motorcycle', label: 'Livreur' },
+  { id: 'cor', icon: 'fa-map-pin',    label: 'Correspondant' },
+];
 
-  function submit() {
-    if (!cible.trim()) { onToast("⚠️ Indiquez l'utilisateur concerné", 'w'); return; }
-    if (!desc.trim())  { onToast('⚠️ Ajoutez une description', 'w'); return; }
-    const ref = onSubmit(cible, motif, sev, desc);
-    onClose();
-    onToast("🛡️ Signalement envoyé à l'équipe sécurité Shopi", 's');
-    setTimeout(() => onToast('📋 Référence : ' + ref, 'i'), 700);
+export default function ReportModal({ defaultTarget = '', onClose, onSubmit, onToast }: Props) {
+  const [cible, setCible]         = useState(defaultTarget);
+  const [motif, setMotif]         = useState<MotifSignalement>('fraude');
+  const [sev, setSev]             = useState<Gravite>('med');
+  const [desc, setDesc]           = useState('');
+  const [targetType, setTargetType] = useState<TargetType>('ent');
+  const [busy, setBusy]           = useState(false);
+
+  async function submit() {
+    if (!cible.trim()) { onToast("Indiquez l'utilisateur concerné", 'w'); return; }
+    if (!desc.trim())  { onToast('Ajoutez une description', 'w'); return; }
+    const motifLabel = REASONS.find(r => r.id === motif)?.nm ?? motif;
+    setBusy(true);
+    try {
+      const ref = await onSubmit(cible, motif, sev, desc, motifLabel, targetType);
+      onClose();
+      onToast("Signalement envoyé à l'équipe sécurité Shopi", 's');
+      setTimeout(() => onToast('Référence : ' + ref, 'i'), 700);
+    } catch {
+      onToast('Erreur lors de l\'envoi du signalement', 'w');
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -100,7 +118,31 @@ export default function ReportModal({ defaultTarget = '', onClose, onSubmit, onT
             </div>
           </div>
 
-          <button className={styles.btn} onClick={submit}><i className="fas fa-paper-plane" /> Envoyer le signalement</button>
+          <div className={styles.fld}>
+            <label className={styles.lbl}>Type de compte signalé</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {TARGET_TYPES.map(t => (
+                <div key={t.id}
+                  onClick={() => setTargetType(t.id)}
+                  style={{
+                    flex: 1, padding: '8px 4px', borderRadius: 8, textAlign: 'center', cursor: 'pointer', fontSize: 13,
+                    border: `1.5px solid ${targetType === t.id ? 'var(--blue)' : 'var(--border)'}`,
+                    background: targetType === t.id ? 'var(--blue-light, rgba(59,130,246,.12))' : 'transparent',
+                    color: targetType === t.id ? 'var(--blue)' : 'var(--muted)',
+                  }}>
+                  <i className={`fas ${t.icon}`} style={{ display: 'block', marginBottom: 4 }} />
+                  {t.label}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button className={styles.btn} onClick={submit} disabled={busy}>
+            {busy
+              ? <><i className="fas fa-spinner fa-spin" /> Envoi…</>
+              : <><i className="fas fa-paper-plane" /> Envoyer le signalement</>
+            }
+          </button>
           <p className={styles.note}><i className="fas fa-lock" /> Les signalements abusifs ou répétés sans fondement peuvent affecter votre statut de partenaire.</p>
         </div>
       </div>

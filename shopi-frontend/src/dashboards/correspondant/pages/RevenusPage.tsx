@@ -1,13 +1,39 @@
 // pages/RevenusPage.tsx
-import React, { useState } from 'react';
-import { REV_WEEK, REV_MONTH, fmtGNF, fmtMini } from '../data/correspondantData';
+import React, { useState, useEffect } from 'react';
+import { REV_WEEK, REV_MONTH, fmtGNF } from '../data/correspondantData';
 import sh from '../styles/Shared.module.css';
+import { apiFetch } from '@/shared/services/apiFetch';
+
+interface Transaction {
+  id:      string;
+  source:  string;
+  montant: number;
+  date:    string;
+  statut:  string;
+}
+interface RevenusData {
+  tauxCommission:   number;
+  totalRevenus:     number;
+  revenusThisMonth: number;
+  transactions:     Transaction[];
+}
 
 export default function RevenusPage() {
-  const [mode, setMode] = useState<'sem'|'mois'>('mois');
-  const data = mode === 'sem' ? REV_WEEK : REV_MONTH;
-  const max  = Math.max(...data.map(d => d.v));
-  const total = data.reduce((a,d)=>a+d.v,0);
+  const [mode,   setMode]   = useState<'sem'|'mois'>('mois');
+  const [data,   setData]   = useState<RevenusData | null>(null);
+
+  const chartData = mode === 'sem' ? REV_WEEK : REV_MONTH;
+  const max       = Math.max(...chartData.map(d => d.v));
+  const total     = chartData.reduce((a, d) => a + d.v, 0);
+
+  useEffect(() => {
+    apiFetch<RevenusData>('/dashboard/correspondant/revenus').then(setData).catch(() => {});
+  }, []);
+
+  const tauxCommission   = data?.tauxCommission   ?? 0;
+  const totalRevenus     = data?.totalRevenus     ?? 0;
+  const revenusThisMonth = data?.revenusThisMonth ?? 0;
+
   return (
     <div className={sh.page}>
       <div className={sh.g2}>
@@ -27,7 +53,7 @@ export default function RevenusPage() {
           </div>
           <div className={sh.cb}>
             <div style={{ display:'flex', alignItems:'flex-end', gap:6, height:130, marginBottom:12 }}>
-              {data.map((d,i) => (
+              {chartData.map((d,i) => (
                 <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
                   <div style={{ width:'100%', borderRadius:'5px 5px 0 0', minHeight:4, position:'relative', cursor:'pointer',
                     height: Math.max(4, Math.round((d.v/max)*120)),
@@ -39,15 +65,16 @@ export default function RevenusPage() {
             </div>
             <div style={{ padding:'10px 0', borderTop:'1px solid var(--bdr)', display:'flex', justifyContent:'space-between', fontSize:12 }}>
               <span>Total : <strong style={{ fontFamily:'var(--fd)', color:'var(--navy)' }}>{fmtGNF(total)}</strong></span>
-              <span style={{ color:'#B45309', fontWeight:700 }}>Moy. : {fmtGNF(Math.round(total/data.length))}</span>
+              <span style={{ color:'#B45309', fontWeight:700 }}>Moy. : {fmtGNF(Math.round(total/chartData.length))}</span>
             </div>
           </div>
         </div>
 
         <div>
-          {[{lbl:'Revenus ce mois',val:'730 000 GNF',sub:'+18% vs mois dernier',ic:'fa-coins',c:'#B45309'},
-            {lbl:'Revenus cette semaine',val:'364 000 GNF',sub:'+38 000 GNF aujourd\'hui',ic:'fa-chart-line',c:'#047857'},
-            {lbl:'Commission Shopi (5%)',val:'36 500 GNF',sub:'Déduit automatiquement',ic:'fa-percent',c:'#0E7490'},
+          {[
+            { lbl:'Revenus ce mois',                         val: fmtGNF(revenusThisMonth), sub:'+vs mois dernier',          ic:'fa-coins',     c:'#B45309' },
+            { lbl:'Total revenus',                           val: fmtGNF(totalRevenus),     sub:'Depuis le début',            ic:'fa-chart-line', c:'#047857' },
+            { lbl:`Commission Shopi (${tauxCommission}%)`,   val: fmtGNF(Math.round(revenusThisMonth * tauxCommission / 100)), sub:'Déduit automatiquement', ic:'fa-percent', c:'#0E7490' },
           ].map(item => (
             <div key={item.lbl} className={sh.card} style={{ padding:18, marginBottom:12 }}>
               <div style={{ display:'flex', alignItems:'center', gap:12 }}>

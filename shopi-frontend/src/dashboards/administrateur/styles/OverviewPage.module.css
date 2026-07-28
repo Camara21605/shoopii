@@ -6,7 +6,7 @@
 
 /* ── Héro ── */
 .hero {
-  background: var(--navy);
+  background: var(--adm-btn);
   border-radius: var(--r-xl);
   padding: 28px 32px;
   position: relative; overflow: hidden;
@@ -46,7 +46,7 @@
 .heroP { font-size: 13.5px; color: rgba(200,217,248,.6); margin-top: 10px; max-width: 440px; line-height: 1.6; }
 .heroBtns { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
 .hbtn1 {
-  background: #fff; color: var(--navy);
+  background: #fff; color: var(--adm-btn);
   border: none; border-radius: var(--pill);
   padding: 11px 20px;
   font-size: 12.5px; font-weight: 700; font-family: var(--fb);
@@ -79,7 +79,7 @@
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.zhRing::before { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: var(--navy); }
+.zhRing::before { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: var(--adm-btn); }
 .zhRingV { position: relative; z-index: 1; text-align: center; }
 .zhRingV b { font-family: var(--fd); font-weight: 800; font-size: 22px; display: block; line-height: 1; }
 .zhRingV span { font-size: 8.5px; color: rgba(180,200,255,.6); text-transform: uppercase; }

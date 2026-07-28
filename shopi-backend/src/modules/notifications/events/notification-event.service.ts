@@ -423,7 +423,7 @@ export class NotificationEventService {
         body:          isCritical
           ? `"${params.productName}" est en rupture de stock.`
           : `"${params.productName}" — stock restant : ${params.stock} unité(s).`,
-        actionUrl:     `/dashboard/produits/${params.productId}`,
+        actionUrl:     `/dashboard/entreprise/inventaire`,
         groupKey:      `${params.type}:${params.productId}`,
         resourceType:  'product',
         resourceId:    params.productId,
@@ -539,7 +539,8 @@ export class NotificationEventService {
         title:         'Produit ajouté aux favoris ❤️',
         body:          `"${params.productName}" a été ajouté aux favoris.`,
         imageUrl,
-        actionUrl:     `/dashboard/produits/${params.productId}`,
+        /* Redirige vers la page "Mes Produits" du dashboard entreprise */
+        actionUrl:     `/dashboard/entreprise/produits`,
         groupKey:      `product.liked:${params.productId}`,
         resourceType:  'product',
         resourceId:    params.productId,
@@ -564,13 +565,9 @@ export class NotificationEventService {
    *   CORRESPONDENT → /dashboard/correspondant
    */
   async notifyOrderStatusChanged(params: IOrderStatusParams): Promise<void> {
-    const actionUrlByRole: Record<string, string> = {
-      [NotificationActorType.CLIENT]:        `/commande/${params.commandeId}/suivi`,
-      [NotificationActorType.COMPANY]:       '/dashboard/entreprise',
-      [NotificationActorType.DELIVERY]:      '/dashboard/livreur',
-      [NotificationActorType.CORRESPONDENT]: '/dashboard/correspondant',
-    };
-    const actionUrl = actionUrlByRole[params.recipientType] ?? `/commande/${params.commandeId}/suivi`;
+    /* Tous les rôles sont redirigés vers la page de suivi de la commande.
+     * Cette page lit le rôle depuis le JWT et adapte l'affichage. */
+    const actionUrl = `/commande/${params.commandeId}/suivi`;
 
     try {
       const imageUrl = await this.resolveActorPhoto(params.actorType, params.actorId);
@@ -737,7 +734,13 @@ export class NotificationEventService {
         priority:      NotificationPriority.NORMAL,
         title:         params.title,
         body:          params.body,
-        actionUrl:     '/dashboard/wallet',
+        actionUrl:     params.recipientType === NotificationActorType.COMPANY
+          ? '/dashboard/entreprise/finances'
+          : params.recipientType === NotificationActorType.DELIVERY
+          ? '/dashboard/livreur/revenus'
+          : params.recipientType === NotificationActorType.CORRESPONDENT
+          ? '/dashboard/correspondant'
+          : '/home',
         resourceType:  'wallet',
         resourceId:    params.walletId,
         payload:       { montant: params.montant, devise: params.devise, newBalance: params.newBalance },
@@ -806,7 +809,13 @@ export class NotificationEventService {
         priority,
         title:         params.title,
         body:          params.body,
-        actionUrl:     '/dashboard/wallet',
+        actionUrl:     params.recipientType === NotificationActorType.COMPANY
+          ? '/dashboard/entreprise/finances'
+          : params.recipientType === NotificationActorType.DELIVERY
+          ? '/dashboard/livreur/revenus'
+          : params.recipientType === NotificationActorType.CORRESPONDENT
+          ? '/dashboard/correspondant'
+          : '/home',
         resourceType:  'retrait',
         resourceId:    params.retraitId,
         payload:       { montant: params.montant, devise: params.devise, status: params.status },
@@ -871,7 +880,11 @@ export class NotificationEventService {
         priority:      NotificationPriority.NORMAL,
         title:         params.title,
         body:          params.body,
-        actionUrl:     '/dashboard/wallet',
+        actionUrl:     params.recipientType === NotificationActorType.DELIVERY
+          ? '/dashboard/livreur/revenus'
+          : params.recipientType === NotificationActorType.CORRESPONDENT
+          ? '/dashboard/correspondant'
+          : '/home',
         resourceType:  'commission',
         resourceId:    params.commandeId,
         payload:       { commandeRef: params.commandeRef, montant: params.montant, devise: params.devise },
@@ -914,6 +927,144 @@ export class NotificationEventService {
   // ─────────────────────────────────────────────────────────
   // SUPPORT TICKETS (Phase 5)
   // ─────────────────────────────────────────────────────────
+
+  // ─────────────────────────────────────────────────────────
+  // NOTIFICATIONS ADMIN DE ZONE
+  // ─────────────────────────────────────────────────────────
+
+  /**
+   * Notifie un administrateur de zone qu'un nouveau compte est en attente
+   * de validation dans sa zone (partenaire, entreprise ou livreur).
+   *
+   * Appelé depuis le service d'inscription quand un User PENDING est créé
+   * et rattaché à un admin.
+   *
+   * adminProfileId = Admin.id (profileId, PAS le userId)
+   */
+  async notifyAdminValidationRequest(params: {
+    adminProfileId: string;
+    acteurNom:      string;
+    acteurType:     'par' | 'ent' | 'lvr' | 'cor';
+    userId:         string;
+  }): Promise<void> {
+    const labelType = {
+      par: 'partenaire',
+      ent: 'entreprise',
+      lvr: 'livreur',
+      cor: 'correspondant',
+    }[params.acteurType] ?? params.acteurType;
+
+    try {
+      await this.notifService.create({
+        recipientType: NotificationActorType.ADMIN,
+        recipientId:   params.adminProfileId,
+        actorType:     NotificationActorType.SYSTEM,
+        actorId:       null,
+        type:          NotificationType.ACCOUNT_VERIFIED,
+        priority:      NotificationPriority.HIGH,
+        title:         'Nouvelle demande de validation',
+        body:          `${params.acteurNom} demande la validation de son compte ${labelType}.`,
+        actionUrl:     '/dashboard/administrateur',
+        groupKey:      `admin.validation.request:${params.adminProfileId}`,
+        resourceType:  'validation',
+        resourceId:    params.userId,
+        payload:       { acteurNom: params.acteurNom, acteurType: params.acteurType },
+      });
+    } catch (err) {
+      this.logger.error('notifyAdminValidationRequest failed', err);
+    }
+  }
+
+  /**
+   * Notifie un administrateur de zone qu'un nouveau signalement
+   * a été créé et attend traitement.
+   *
+   * adminProfileId = Admin.id (profileId)
+   */
+  async notifyAdminNewSignalement(params: {
+    adminProfileId: string;
+    title:          string;
+    severity:       'CRITICAL' | 'WARNING' | 'INFO';
+    reportId:       string;
+  }): Promise<void> {
+    const isCritical = params.severity === 'CRITICAL';
+    try {
+      await this.notifService.create({
+        recipientType: NotificationActorType.ADMIN,
+        recipientId:   params.adminProfileId,
+        actorType:     NotificationActorType.SYSTEM,
+        actorId:       null,
+        type:          NotificationType.SYSTEM_ANNOUNCEMENT,
+        priority:      isCritical ? NotificationPriority.URGENT : NotificationPriority.HIGH,
+        title:         isCritical ? `Signalement critique ⚠️` : `Nouveau signalement`,
+        body:          `"${params.title}" requiert votre attention.`,
+        actionUrl:     '/dashboard/administrateur',
+        groupKey:      `admin.signalement.new:${params.adminProfileId}`,
+        resourceType:  'report',
+        resourceId:    params.reportId,
+        payload:       { severity: params.severity, title: params.title },
+      });
+    } catch (err) {
+      this.logger.error('notifyAdminNewSignalement failed', err);
+    }
+  }
+
+  /**
+   * Notifie l'acteur que son compte vient d'être validé par l'administrateur.
+   *
+   * recipientId = profileId de l'acteur (Partner.id / Company.id / Delivery.id)
+   */
+  async notifyActeurAccountApproved(params: {
+    recipientType: NotificationActorType;
+    recipientId:   string;
+    acteurNom:     string;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.ADMIN,
+        actorId:       null,
+        type:          NotificationType.ACCOUNT_APPROVED,
+        priority:      NotificationPriority.HIGH,
+        title:         'Compte validé ✅',
+        body:          `Votre compte a été validé par l'administrateur. Bienvenue sur Shopi !`,
+        actionUrl:     '/dashboard',
+        resourceType:  'account',
+        resourceId:    params.recipientId,
+      });
+    } catch (err) {
+      this.logger.error('notifyActeurAccountApproved failed', err);
+    }
+  }
+
+  /**
+   * Notifie l'acteur que son compte a été refusé par l'administrateur.
+   *
+   * recipientId = profileId de l'acteur
+   */
+  async notifyActeurAccountRejected(params: {
+    recipientType: NotificationActorType;
+    recipientId:   string;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.ADMIN,
+        actorId:       null,
+        type:          NotificationType.ACCOUNT_SUSPENDED,
+        priority:      NotificationPriority.HIGH,
+        title:         'Demande refusée ❌',
+        body:          `Votre demande de compte n'a pas été acceptée. Contactez le support pour plus d'informations.`,
+        actionUrl:     '/support',
+        resourceType:  'account',
+        resourceId:    params.recipientId,
+      });
+    } catch (err) {
+      this.logger.error('notifyActeurAccountRejected failed', err);
+    }
+  }
 
   async notifySupportTicketReply(params: {
     recipientType:  string;

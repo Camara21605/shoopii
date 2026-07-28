@@ -233,8 +233,7 @@ const LivreursPage: React.FC = () => {
       {toast && (
         <div style={{
           position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
-          background: toast.type === 's' ? '#065F46'
-                    : toast.type === 'e' ? '#991B1B' : '#0B1F3A',
+          background: 'var(--btn, #111113)',
           color: '#fff', padding: '10px 20px', borderRadius: 10,
           fontSize: 13, fontWeight: 600, zIndex: 9999,
           boxShadow: '0 4px 16px rgba(0,0,0,.2)',

@@ -2,15 +2,16 @@
  * FICHIER : src/modules/auth/auth.controller.ts
  *
  * ROUTES :
- *   POST /auth/register            → Inscription
- *   POST /auth/login               → Connexion (cookie httpOnly)
- *   POST /auth/logout              → Déconnexion (efface cookie)
- *   POST /auth/forgot-password     → Étape 1 — envoie OTP
- *   POST /auth/verify-otp          → Étape 2 — vérifie OTP → resetToken
- *   POST /auth/reset-password      → Étape 3 — nouveau mot de passe
+ *   POST /auth/register            → Inscription (5 req/min)
+ *   POST /auth/login               → Connexion (10 req/min)
+ *   POST /auth/logout              → Déconnexion — révoque refresh tokens + efface cookies
+ *   POST /auth/refresh             → Rotation du refresh token (cookie httpOnly)
+ *   POST /auth/forgot-password     → Étape 1 — envoie OTP (5 req/min)
+ *   POST /auth/verify-otp          → Étape 2 — vérifie OTP → resetToken (10 req/min)
+ *   POST /auth/reset-password      → Étape 3 — nouveau mot de passe (5 req/min)
  *   GET  /auth/google              → Lance le flux OAuth2 Google
  *   GET  /auth/google/callback     → Callback Google → code one-time → redirect
- *   POST /auth/google/exchange     → Échange code one-time → JWT + cookie
+ *   POST /auth/google/exchange     → Échange code one-time → JWT + cookies
  *   GET  /auth/me                  → Profil connecté (JWT)
  * ============================================================ */
 
@@ -24,11 +25,13 @@ import {
   Post,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard }     from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
-import type { Response } from 'express';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
+import type { Request, Response } from 'express';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -37,7 +40,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
-import { AuthService, AuthResponse, OtpVerifyResponse } from './auth.service';
+import { AuthService, AuthResponse, AuthServiceResult, OtpVerifyResponse } from './auth.service';
 import { RegisterDto }          from './dto/register.dto';
 import { LoginDto }             from './dto/login.dto';
 import {
@@ -50,11 +53,14 @@ import { JwtAuthGuard }         from '../../common/guards/auth.guard';
 import { CurrentUser }          from 'src/common/decorators/roles.decorator';
 import { User }                 from '../../database/entities/user.entity';
 
-// ── Helpers cookie ────────────────────────────────────────────────────────────
+// ── Noms des cookies ──────────────────────────────────────────────────────────
 
-const COOKIE_NAME = 'access_token';
+const ACCESS_COOKIE   = 'access_token';
+const REFRESH_COOKIE  = 'refresh_token';
 
-function buildCookieOptions(isProd: boolean, maxAgeMs: number) {
+// ── Helpers cookies ───────────────────────────────────────────────────────────
+
+function buildAccessCookieOptions(isProd: boolean, maxAgeMs: number) {
   return {
     httpOnly: true,
     secure:   isProd,
@@ -62,6 +68,41 @@ function buildCookieOptions(isProd: boolean, maxAgeMs: number) {
     maxAge:   maxAgeMs,
     path:     '/',
   };
+}
+
+function buildRefreshCookieOptions(isProd: boolean, maxAgeMs: number) {
+  return {
+    httpOnly: true,
+    secure:   isProd,
+    sameSite: 'strict' as const,
+    maxAge:   maxAgeMs,
+    /* Restreint aux seules routes /api/auth pour limiter l'exposition
+     * du refresh token aux endpoints qui en ont réellement besoin. */
+    path:     '/api/auth',
+  };
+}
+
+function clearAccessCookie(res: Response, isProd: boolean) {
+  res.clearCookie(ACCESS_COOKIE, {
+    httpOnly: true, secure: isProd, sameSite: 'strict', path: '/',
+  });
+}
+
+function clearRefreshCookie(res: Response, isProd: boolean) {
+  res.clearCookie(REFRESH_COOKIE, {
+    httpOnly: true, secure: isProd, sameSite: 'strict', path: '/api/auth',
+  });
+}
+
+function setAuthCookies(
+  res: Response, isProd: boolean,
+  accessToken: string, accessMaxAgeMs: number,
+  refreshToken: string | null, refreshMaxAgeMs: number,
+) {
+  res.cookie(ACCESS_COOKIE, accessToken, buildAccessCookieOptions(isProd, accessMaxAgeMs));
+  if (refreshToken) {
+    res.cookie(REFRESH_COOKIE, refreshToken, buildRefreshCookieOptions(isProd, refreshMaxAgeMs));
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -85,6 +126,8 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Créer un nouveau compte Shopi',
     description:
@@ -96,20 +139,30 @@ export class AuthController {
   @ApiResponse({ status: 409, description: 'Email déjà utilisé.' })
   @ApiResponse({ status: 400, description: 'Données invalides ou code manquant.' })
   @ApiResponse({ status: 403, description: "Email ne correspond pas au code d'invitation." })
+  @ApiResponse({ status: 429, description: 'Trop de tentatives.' })
   async register(
     @Body() dto: RegisterDto,
     @Ip()   clientIp: string,
+    @Req()  req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
-    const result = await this.authService.register(dto, clientIp);
-    res.cookie(COOKIE_NAME, result.accessToken, buildCookieOptions(this.isProd, 7 * 24 * 60 * 60 * 1000));
-    return result;
+    const userAgent = req.headers['user-agent'] ?? null;
+    const result = await this.authService.register(dto, clientIp, userAgent);
+    setAuthCookies(
+      res, this.isProd,
+      result.accessToken, 60 * 60 * 1000,          // accès : 1h
+      result.refreshToken, result.refreshTtlMs,
+    );
+    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
+    return publicResult;
   }
 
   // ── POST /auth/login ──────────────────────────────────────────────────────
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Se connecter à Shopi',
     description:
@@ -119,36 +172,81 @@ export class AuthController {
   @ApiBody({ type: LoginDto })
   @ApiResponse({ status: 200, description: 'Connexion réussie.' })
   @ApiResponse({ status: 401, description: 'Identifiants incorrects ou compte verrouillé.' })
+  @ApiResponse({ status: 429, description: 'Trop de tentatives.' })
   async login(
     @Body() dto: LoginDto,
     @Ip()   clientIp: string,
+    @Req()  req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
-    const result = await this.authService.login(dto, clientIp);
-    // Le cookie vit aussi longtemps que le JWT : 7j si rememberMe, 1h sinon.
-    const maxAge = dto.rememberMe ? 7 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000;
-    res.cookie(COOKIE_NAME, result.accessToken, buildCookieOptions(this.isProd, maxAge));
-    return result;
+    const userAgent = req.headers['user-agent'] ?? null;
+    const result = await this.authService.login(dto, clientIp, userAgent);
+    /* Access token : TTL identique au JWT (1h pour tous, 4h pour SUPER_ADMIN).
+     * Refresh token : 24h session normale, 7j si rememberMe. */
+    const accessMaxAge = dto.rememberMe ? 7 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000;
+    setAuthCookies(
+      res, this.isProd,
+      result.accessToken, accessMaxAge,
+      result.refreshToken, result.refreshTtlMs,
+    );
+    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
+    return publicResult;
+  }
+
+  // ── POST /auth/refresh ────────────────────────────────────────────────────
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  @ApiOperation({
+    summary: 'Renouveler les tokens via le refresh token',
+    description:
+      'Lit le cookie httpOnly « refresh_token », émet un nouvel access token ' +
+      'et un nouveau refresh token (Refresh Token Rotation). ' +
+      'Chaque refresh token est à usage unique — la réutilisation déclenche une révocation globale.',
+  })
+  @ApiResponse({ status: 200, description: 'Tokens renouvelés avec succès.' })
+  @ApiResponse({ status: 401, description: 'Refresh token absent, expiré ou révoqué.' })
+  async refresh(
+    @Req()  req: Request,
+    @Ip()   clientIp: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponse> {
+    const rawRefreshToken = (req.cookies as Record<string, string>)?.[REFRESH_COOKIE];
+    if (!rawRefreshToken) {
+      throw new UnauthorizedException('Session expirée. Veuillez vous reconnecter.');
+    }
+    const userAgent = req.headers['user-agent'] ?? null;
+    const result = await this.authService.refreshTokens(rawRefreshToken, clientIp, userAgent);
+    setAuthCookies(
+      res, this.isProd,
+      result.accessToken, 60 * 60 * 1000,
+      result.refreshToken, result.refreshTtlMs,
+    );
+    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
+    return publicResult;
   }
 
   // ── POST /auth/logout ─────────────────────────────────────────────────────
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Se déconnecter',
-    description: 'Efface le cookie httpOnly access_token côté serveur.',
+    description:
+      'Révoque tous les refresh tokens actifs de l\'utilisateur et efface les cookies httpOnly.',
   })
   @ApiResponse({ status: 200, description: 'Déconnecté avec succès.' })
   async logout(
+    @CurrentUser() user: User,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ message: string }> {
-    res.clearCookie(COOKIE_NAME, {
-      httpOnly: true,
-      secure:   this.isProd,
-      sameSite: 'strict',
-      path:     '/',
-    });
+    await this.authService.revokeAllRefreshTokens(user.id);
+    clearAccessCookie(res, this.isProd);
+    clearRefreshCookie(res, this.isProd);
     return { message: 'Déconnexion réussie.' };
   }
 
@@ -156,6 +254,8 @@ export class AuthController {
 
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Étape 1 — Demander un code OTP',
     description:
@@ -165,16 +265,22 @@ export class AuthController {
   })
   @ApiBody({ type: ForgotPasswordDto })
   @ApiResponse({ status: 200, description: 'Réponse générique (sécurité anti-énumération).' })
+  @ApiResponse({ status: 429, description: 'Trop de tentatives.' })
   async forgotPassword(
     @Body() dto: ForgotPasswordDto,
+    @Ip()   clientIp: string,
+    @Req()  req: Request,
   ): Promise<{ message: string }> {
-    return this.authService.forgotPassword(dto);
+    const userAgent = req.headers['user-agent'] ?? null;
+    return this.authService.forgotPassword(dto, clientIp, userAgent);
   }
 
   // ── POST /auth/verify-otp ─────────────────────────────────────────────────
 
   @Post('verify-otp')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Étape 2 — Vérifier le code OTP',
     description:
@@ -185,6 +291,7 @@ export class AuthController {
   @ApiBody({ type: VerifyOtpDto })
   @ApiResponse({ status: 200, description: 'Code valide — resetToken retourné.' })
   @ApiResponse({ status: 400, description: 'Code incorrect, expiré ou trop de tentatives.' })
+  @ApiResponse({ status: 429, description: 'Trop de tentatives.' })
   async verifyOtp(
     @Body() dto: VerifyOtpDto,
   ): Promise<OtpVerifyResponse> {
@@ -195,22 +302,29 @@ export class AuthController {
 
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Étape 3 — Définir le nouveau mot de passe',
     description:
       "Réinitialise le mot de passe en utilisant le resetToken obtenu à l'étape 2. " +
       'Le resetToken expire après 15 minutes. ' +
-      "Le nouveau mot de passe doit être différent de l'ancien.",
+      "Le nouveau mot de passe doit être différent de l'ancien. " +
+      'Tous les refresh tokens actifs sont révoqués après le reset.',
   })
   @ApiBody({ type: ResetPasswordDto })
   @ApiResponse({ status: 200, description: 'Mot de passe réinitialisé avec succès.' })
   @ApiResponse({ status: 400, description: 'Token expiré, MDP trop faible ou identique.' })
   @ApiResponse({ status: 403, description: 'Token invalide.' })
   @ApiResponse({ status: 404, description: 'Compte introuvable.' })
+  @ApiResponse({ status: 429, description: 'Trop de tentatives.' })
   async resetPassword(
     @Body() dto: ResetPasswordDto,
+    @Ip()   clientIp: string,
+    @Req()  req: Request,
   ): Promise<{ message: string }> {
-    return this.authService.resetPassword(dto.resetToken, dto.newPassword);
+    const userAgent = req.headers['user-agent'] ?? null;
+    return this.authService.resetPassword(dto.resetToken, dto.newPassword, clientIp, userAgent);
   }
 
   // ── GET /auth/google ──────────────────────────────────────────────────────
@@ -222,11 +336,6 @@ export class AuthController {
   }
 
   // ── GET /auth/google/callback ─────────────────────────────────────────────
-  // Google redirige ici après consentement.
-  // On génère un code one-time (UUID, TTL 60s) stocké dans Redis,
-  // et on redirige le navigateur vers /login?code=<uuid>.
-  // Le frontend échange ensuite le code via POST /auth/google/exchange.
-  // Cela évite d'exposer le JWT dans l'URL (historique, logs, Referer).
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
@@ -245,8 +354,6 @@ export class AuthController {
   }
 
   // ── POST /auth/google/exchange ────────────────────────────────────────────
-  // Échange le code one-time (UUID v4) contre un AuthResponse complet.
-  // Le code est usage unique et expire après 60 secondes.
 
   @Post('google/exchange')
   @HttpCode(HttpStatus.OK)
@@ -261,11 +368,19 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Code expiré ou invalide.' })
   async googleExchange(
     @Body() dto: ExchangeOAuthCodeDto,
+    @Ip()   clientIp: string,
+    @Req()  req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
-    const result = await this.authService.exchangeGoogleOAuthCode(dto.code);
-    res.cookie(COOKIE_NAME, result.accessToken, buildCookieOptions(this.isProd, 7 * 24 * 60 * 60 * 1000));
-    return result;
+    const userAgent = req.headers['user-agent'] ?? null;
+    const result = await this.authService.exchangeGoogleOAuthCode(dto.code, clientIp, userAgent);
+    setAuthCookies(
+      res, this.isProd,
+      result.accessToken, 7 * 24 * 60 * 60 * 1000,
+      result.refreshToken, result.refreshTtlMs,
+    );
+    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
+    return publicResult;
   }
 
   // ── GET /auth/me ──────────────────────────────────────────────────────────

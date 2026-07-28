@@ -101,70 +101,89 @@ function NotificationItem({ notif, onClick, onDelete }: ItemProps) {
 
 // ─── Résolution de la route interne à partir d'une notification ──
 //
-// Priorité 1 : actionUrl fourni par le backend si c'est un chemin interne valide.
-//   - On corrige les URLs obsolètes /commandes/* (pluriel) vers /commande/* (singulier)
-//   - On corrige /dashboard/commandes/* vers /dashboard/entreprise
-// Priorité 2 : fallback par type de notification si actionUrl est absent/externe.
+// Logique par priorité :
+//   1. Types "ordre" et "livraison" → toujours /commande/{id}/suivi
+//   2. Messages/conversations → toujours /messagerie
+//   3. product.liked → toujours /dashboard/entreprise/produits
+//   4. Paiements liés à une commande → /commande/{id}/suivi
+//   5. Tous les autres → actionUrl fourni par le backend (déjà correct par rôle)
+//   6. Fallback si actionUrl absent/invalide
 
 function resolveNavTarget(notif: INotificationDto): string {
-  const prefix = notif.type.split('.')[0];
-  /* resourceId est le UUID de la commande. Fallback sur payload.commandeId
-   * pour les notifications créées avant que la colonne resourceId existait. */
-  const id = notif.resourceId ?? (notif.payload as Record<string, unknown> | null)?.commandeId as string | undefined ?? null;
+  const type    = notif.type;
+  const prefix  = type.split('.')[0];
+  const payload = notif.payload as Record<string, unknown> | null;
+  /* resourceId = UUID de la ressource principale (commande, produit, livraison…) */
+  const resId   = notif.resourceId ?? null;
+  /* commandeId peut être dans payload quand resourceId pointe vers autre chose */
+  const cmdId   = (payload?.commandeId as string | undefined) ?? null;
+  const url     = notif.actionUrl ?? '';
 
-  /* Commandes & paiements : toujours aller à la page de suivi de la commande.
-   * La page /commande/:id/suivi lit le rôle depuis le token JWT et adapte
-   * l'affichage (client, entreprise, livreur, correspondant) → tous les rôles
-   * peuvent l'utiliser. On ignore actionUrl ici pour éviter que les entreprises
-   * soient renvoyées vers le dashboard générique au lieu de la commande précise. */
-  if ((prefix === 'order' || prefix === 'payment') && id) {
-    return `/commande/${id}/suivi`;
+  // ── 1. Commandes → suivi (resourceId = commandeId) ─────────────
+  if (prefix === 'order') {
+    return resId ? `/commande/${resId}/suivi` : '/home';
   }
 
-  let url = notif.actionUrl ?? '';
-
-  /* Corriger les anciens actionUrl envoyés avant le fix backend :
-   *   /commandes/{id}             → /commande/{id}/suivi
-   *   /dashboard/commandes/{id}   → /dashboard/entreprise  */
-  if (url.startsWith('/commandes/')) {
-    const segId = url.split('/')[2];
-    url = segId ? `/commande/${segId}/suivi` : '/commande';
-  } else if (url.startsWith('/dashboard/commandes/')) {
-    url = '/dashboard/entreprise';
+  // ── 2. Livraisons → suivi (commandeId dans payload) ────────────
+  if (prefix === 'delivery' || prefix === 'colis') {
+    return cmdId
+      ? `/commande/${cmdId}/suivi`
+      : resId ? `/commande/${resId}/suivi` : '/home';
   }
 
-  /* Chemin interne valide → on l'utilise directement */
-  if (url.startsWith('/')) return url;
+  // ── 3. Messages / conversations → messagerie ────────────────────
+  if (prefix === 'message' || prefix === 'conversation') {
+    return '/messagerie';
+  }
+
+  // ── 4. Produit liké → dashboard entreprise (récepteur = entreprise) ─
+  if (type === 'product.liked' || type === 'product.liked_agg') {
+    return '/dashboard/entreprise/produits';
+  }
+
+  // ── 5. Paiements → suivi si lié à une commande, sinon actionUrl ─
+  if (prefix === 'payment') {
+    if (cmdId) return `/commande/${cmdId}/suivi`;
+    // Sinon on laisse tomber vers l'étape 6 (actionUrl du backend)
+  }
+
+  // ── 6. Tous les autres types → on suit l'actionUrl du backend ───
+  //    Le backend envoie maintenant des URLs correctes par rôle.
+  if (url.startsWith('/')) {
+    /* Corriger les vieilles URLs envoyées avant le fix backend */
+    if (url.startsWith('/commandes/')) {
+      const seg = url.split('/')[2];
+      return seg ? `/commande/${seg}/suivi` : '/home';
+    }
+    if (url.startsWith('/dashboard/commandes/')) {
+      return '/dashboard/entreprise/commandes';
+    }
+    return url;
+  }
 
   /* URL externe → le caller ouvre un nouvel onglet (géré dans handleItemClick) */
   if (url.startsWith('http')) return url;
 
-  /* Fallback par préfixe de type quand actionUrl est absent */
+  // ── 7. Fallback quand actionUrl est absent ──────────────────────
   switch (prefix) {
-    case 'order':
     case 'payment':
-      return id ? `/commande/${id}/suivi` : '/commande';
-    case 'delivery':
-    case 'colis': {
-      /* Pour delivery/colis : resourceId = ID de livraison (pas de commande).
-       * commandeId se trouve dans le payload pour la redirection correcte. */
-      const cmdId = ((notif.payload as Record<string, unknown> | null)?.commandeId as string | undefined) ?? null;
-      return cmdId ? `/commande/${cmdId}/suivi` : '/home';
-    }
-    case 'message':
-    case 'conversation':
-      return '/messagerie';
+      return resId ? `/commande/${resId}/suivi` : '/home';
     case 'product':
-      return id ? `/produit/${id}` : '/boutiques';
+      return resId ? `/produit/${resId}` : '/boutiques';
+    case 'follow':
+      return '/home';
     case 'promo':
       return '/boutiques';
     case 'review':
-      return id ? `/produit/${id}` : '/home';
+      return '/home';
     case 'stock':
-      return '/dashboard/entreprise';
+      return '/dashboard/entreprise/inventaire';
     case 'account':
-    case 'follow':
-      return '/mon-profil';
+      return '/home';
+    case 'support':
+      return '/aide';
+    case 'system':
+      return '/home';
     default:
       return '/home';
   }

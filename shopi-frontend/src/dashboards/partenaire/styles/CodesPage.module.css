@@ -101,3 +101,17 @@
 }
 :root[data-theme="dark"] .codeHero { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
 :root[data-theme="dark"] .heroBtn { color: #0B1F3A; }
+
+/* ─── Light mode (OS light OR toggle light) ─────────────────── */
+@media (prefers-color-scheme: light) {
+  .chT i { color: var(--navy); }
+  .t_ent { background: var(--g100); color: var(--navy); }
+  .st_sent { background: var(--g100); color: var(--navy); }
+  .copy:hover { color: var(--navy); }
+}
+:root[data-theme="light"] .codeHero { background: #0B1F3A; }
+:root[data-theme="light"] .heroBtn { color: #0B1F3A; }
+:root[data-theme="light"] .chT i { color: var(--navy); }
+:root[data-theme="light"] .t_ent { background: var(--g100); color: var(--navy); }
+:root[data-theme="light"] .st_sent { background: var(--g100); color: var(--navy); }
+:root[data-theme="light"] .copy:hover { color: var(--navy); }

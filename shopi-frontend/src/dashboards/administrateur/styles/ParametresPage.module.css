@@ -8,7 +8,7 @@
 
 .sb {
   width: 230px; flex-shrink: 0;
-  background: var(--navy);
+  background: var(--adm-btn);
   display: flex; flex-direction: column;
   border-right: 1px solid rgba(255,255,255,.05);
 }
@@ -302,8 +302,8 @@
 .btn { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 700; font-family: var(--fb); padding: 9px 16px; border-radius: var(--r-md); cursor: pointer; border: none; transition: all .15s; white-space: nowrap; }
 .btnPrimary  { background: var(--btn-primary-bg); color: #fff; }
 .btnPrimary:hover { background: var(--btn-primary-bg); box-shadow: var(--sh-b); filter: brightness(1.15); }
-.btnBlue     { background: var(--blue); color: #fff; }
-.btnBlue:hover { background: #1d4fd8; }
+.btnBlue     { background: var(--adm-btn); color: #fff; }
+.btnBlue:hover { background: var(--adm-btn-h); }
 .btnSecondary { background: var(--g50); color: var(--t1); border: 1.5px solid var(--bdr2); }
 .btnSecondary:hover { background: var(--g100); }
 .btnGhost    { background: transparent; color: var(--t2); border: 1.5px solid var(--bdr2); }
@@ -317,7 +317,7 @@
 @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 .floatSaveBtn {
   display: flex; align-items: center; gap: 9px;
-  background: linear-gradient(135deg, var(--navy), #112648);
+  background: linear-gradient(135deg, var(--adm-btn), var(--adm-btn-h));
   color: #fff; border: none; border-radius: var(--r-lg);
   padding: 13px 22px; font-size: 13.5px; font-weight: 700; font-family: var(--fb);
   cursor: pointer; box-shadow: 0 8px 28px rgba(11,31,58,.28);
@@ -365,8 +365,8 @@
 .chT { font-family: var(--fd); font-weight: 700; font-size: 15px; color: var(--heading-color); display: flex; align-items: center; gap: 9px; }
 .cb { padding: 20px; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.mBtn { width: 100%; background: var(--navy); color: #fff; border: none; border-radius: var(--r-md); padding: 13px; font-size: 13.5px; font-weight: 700; font-family: var(--fb); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all .2s; margin-top: 4px; }
-.mBtn:hover { background: #112648; box-shadow: var(--sh-b); }
+.mBtn { width: 100%; background: var(--adm-btn); color: #fff; border: none; border-radius: var(--r-md); padding: 13px; font-size: 13.5px; font-weight: 700; font-family: var(--fb); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all .2s; margin-top: 4px; }
+.mBtn:hover { background: var(--adm-btn-h); box-shadow: var(--sh-b); }
 .trow { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--bdr); }
 .trow:last-child { border-bottom: none; }
 .trowIc { width: 40px; height: 40px; border-radius: 11px; background: var(--sky); color: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }

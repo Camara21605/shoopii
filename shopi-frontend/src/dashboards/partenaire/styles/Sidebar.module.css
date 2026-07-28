@@ -45,6 +45,22 @@
 }
 :root[data-theme="dark"] .sb { background: #000000; }
 
+/* ─── Light mode (OS light OR toggle light) ─────────────────── */
+@media (prefers-color-scheme: light) {
+  .lm { background: rgba(255,255,255,.18); box-shadow: 0 4px 12px rgba(0,0,0,.25); }
+  .brand b { color: #fff; }
+  .nb.on { background: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.07)); }
+  .nb.on::before { background: #fff; }
+  .nb.on i, .nb:hover i { color: #fff; }
+}
+:root[data-theme="light"] .sb { background: #0B1F3A; }
+:root[data-theme="light"] .lm { background: rgba(255,255,255,.18); box-shadow: 0 4px 12px rgba(0,0,0,.25); }
+:root[data-theme="light"] .brand b { color: #fff; }
+:root[data-theme="light"] .nb.on { background: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.07)); }
+:root[data-theme="light"] .nb.on::before { background: #fff; }
+:root[data-theme="light"] .nb.on i,
+:root[data-theme="light"] .nb:hover i { color: #fff; }
+
 /* Backdrop overlay */
 .overlay {
   position: fixed;

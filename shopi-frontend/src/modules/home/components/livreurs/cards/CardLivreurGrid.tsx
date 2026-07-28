@@ -62,11 +62,9 @@ const CardLivreurGrid: React.FC<CardLivreurGridProps> = ({
 
   /* Style dynamique du bouton selon l'état */
   const followStyle: React.CSSProperties = suivi ? {
-    background:  hovered
-      ? 'linear-gradient(135deg,#B91C1C,#DC2626)'
-      : 'linear-gradient(135deg,#047857,#059669)',
+    background:  'var(--btn)',
     color:       '#fff',
-    borderColor: hovered ? '#B91C1C' : '#047857',
+    borderColor: 'var(--btn)',
     transition:  'all .2s',
   } : {};
 

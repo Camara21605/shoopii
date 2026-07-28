@@ -77,3 +77,18 @@
   .result { background: linear-gradient(135deg, #0A0F1E, #111827); }
 }
 :root[data-theme="dark"] .result { background: linear-gradient(135deg, #0A0F1E, #111827); }
+
+/* ─── Light mode (OS light OR toggle light) ─────────────────── */
+@media (prefers-color-scheme: light) {
+  .in:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(11,31,58,.08); }
+  .t_ent.on { border-color: var(--navy); background: var(--g100); }
+  .t_ent.on i { color: var(--navy); }
+  .btn { background: var(--navy); }
+  .sendBtn.sms:hover { border-color: var(--navy); background: var(--g50); color: var(--navy); }
+}
+:root[data-theme="light"] .result { background: #0B1F3A; }
+:root[data-theme="light"] .in:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(11,31,58,.08); }
+:root[data-theme="light"] .t_ent.on { border-color: var(--navy); background: var(--g100); }
+:root[data-theme="light"] .t_ent.on i { color: var(--navy); }
+:root[data-theme="light"] .btn { background: var(--navy); }
+:root[data-theme="light"] .sendBtn.sms:hover { border-color: var(--navy); background: var(--g50); color: var(--navy); }

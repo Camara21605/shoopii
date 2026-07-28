@@ -1,20 +1,19 @@
 /* ================================================================
  * FICHIER : src/dashboards/administrateur/pages/CommandesPage.tsx
- *
- * Commandes de la zone avec mini barre de progression de la
- * chaîne de validation Shopi (4 étapes) et arbitrage des litiges.
  * ================================================================ */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from '../styles/CommandesPage.module.css';
-import { COMMANDES, fmtGnf } from '../data/adminData';
+import { apiFetch } from '../../../shared/services/apiFetch';
 import type { CommandeStatut } from '../data/types';
 
 interface CommandesPageProps {
   onToast: (msg: string, type?: 's' | 'i' | 'w') => void;
 }
 
-const ST_LABEL: Record<CommandeStatut, string> = {
+const fmtGnf = (n: number) => n.toLocaleString('fr-FR') + ' GNF';
+
+const ST_LABEL: Record<string, string> = {
   paid: 'Payée', prep: 'Préparation', ship: 'En livraison',
   relay: 'Au relais', done: 'Livrée', dispute: 'Litige',
 };
@@ -22,85 +21,103 @@ const ST_LABEL: Record<CommandeStatut, string> = {
 type Onglet = 'toutes' | 'encours' | 'litiges';
 
 export default function CommandesPage({ onToast }: CommandesPageProps) {
-  const [onglet, setOnglet] = useState<Onglet>('toutes');
+  const [onglet,  setOnglet]  = useState<Onglet>('toutes');
+  const [data,    setData]    = useState<{ list: any[]; stats: any } | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const visibles = COMMANDES.filter(c =>
-    onglet === 'toutes'  ? true
-    : onglet === 'litiges' ? c.statut === 'dispute'
+  useEffect(() => {
+    apiFetch('/dashboard/admin/commandes')
+      .then(d => setData(d as any))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const stats    = data?.stats ?? { total: 0, reussies: 0, tauxReussite: 0, enCours: 0, litiges: 0 };
+  const commandes = (data?.list ?? []).filter((c: any) =>
+    onglet === 'toutes'   ? true
+    : onglet === 'litiges'  ? c.statut === 'dispute'
     : c.statut !== 'done' && c.statut !== 'dispute'
   );
 
   return (
     <div>
-      {/* ── Statistiques ── */}
+      {/* ── Stats ── */}
       <div className={styles.stats}>
-        <div className={styles.cstat}><div className={styles.cstatV}>1 240</div><div className={styles.cstatL}>Commandes (semaine)</div></div>
-        <div className={styles.cstat}><div className={`${styles.cstatV} ${styles.vg}`}>96%</div><div className={styles.cstatL}>Livrées avec succès</div></div>
-        <div className={styles.cstat}><div className={`${styles.cstatV} ${styles.va}`}>38</div><div className={styles.cstatL}>En cours de livraison</div></div>
-        <div className={styles.cstat}><div className={`${styles.cstatV} ${styles.vr}`}>2</div><div className={styles.cstatL}>Litiges ouverts</div></div>
+        <div className={styles.cstat}><div className={styles.cstatV}>{stats.total.toLocaleString('fr-FR')}</div><div className={styles.cstatL}>Commandes (total)</div></div>
+        <div className={styles.cstat}><div className={`${styles.cstatV} ${styles.vg}`}>{stats.tauxReussite}%</div><div className={styles.cstatL}>Livrées avec succès</div></div>
+        <div className={styles.cstat}><div className={`${styles.cstatV} ${styles.va}`}>{stats.enCours}</div><div className={styles.cstatL}>En cours de livraison</div></div>
+        <div className={styles.cstat}><div className={`${styles.cstatV} ${styles.vr}`}>{stats.litiges}</div><div className={styles.cstatL}>Litiges ouverts</div></div>
       </div>
 
-      {/* ── Tableau des commandes ── */}
+      {/* ── Tableau ── */}
       <div className={styles.card}>
         <div className={styles.ch}>
           <div className={styles.chT}><i className="fas fa-box" /> Commandes récentes de la zone</div>
           <div className={styles.chRight}>
             <div className={styles.chTabs}>
-              <button className={`${styles.chTab} ${onglet === 'toutes' ? styles.chTabOn : ''}`}
-                onClick={() => setOnglet('toutes')}>Toutes</button>
-              <button className={`${styles.chTab} ${onglet === 'encours' ? styles.chTabOn : ''}`}
-                onClick={() => setOnglet('encours')}>En cours</button>
-              <button className={`${styles.chTab} ${onglet === 'litiges' ? styles.chTabOn : ''}`}
-                onClick={() => setOnglet('litiges')}>Litiges</button>
+              {(['toutes', 'encours', 'litiges'] as Onglet[]).map(o => (
+                <button key={o} className={`${styles.chTab} ${onglet === o ? styles.chTabOn : ''}`}
+                  onClick={() => setOnglet(o)}>
+                  {o === 'toutes' ? 'Toutes' : o === 'encours' ? 'En cours' : 'Litiges'}
+                </button>
+              ))}
             </div>
             <button className={styles.exportBtn} onClick={() => onToast('📄 Export CSV des commandes', 'i')}>
               <i className="fas fa-download" />
             </button>
           </div>
         </div>
-        <div className={styles.tblWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr><th>Commande</th><th>Client</th><th>Entreprise</th><th>Montant</th><th>Chaîne de validation</th><th>Statut</th><th></th></tr>
-            </thead>
-            <tbody>
-              {visibles.map(c => (
-                <tr key={c.id}>
-                  <td><b>{c.id}</b><div className={styles.uMeta}>{c.quand}</div></td>
-                  <td>{c.client}</td>
-                  <td>{c.entreprise}</td>
-                  <td>{fmtGnf(c.montant)}</td>
-                  <td>
-                    {/* 4 étapes : entreprise → livreur → correspondant → client */}
-                    <div className={styles.miniProg}>
-                      {[0, 1, 2, 3].map(i => (
-                        <span key={i} className={i < c.progression ? styles.done : ''} />
-                      ))}
-                    </div>
-                  </td>
-                  <td><span className={`${styles.ordSt} ${styles['ord_' + c.statut]}`}>{ST_LABEL[c.statut]}</span></td>
-                  <td>
-                    {c.statut === 'dispute' ? (
-                      <button className={styles.arbBtn} onClick={() => onToast('⚖️ Arbitrage du litige ouvert', 'i')}>
-                        <i className="fas fa-scale-balanced" /> Arbitrer
-                      </button>
-                    ) : c.statut === 'done' ? (
-                      <button className={styles.raBtn} title="Facture"
-                        onClick={() => onToast('🧾 Facture ' + c.id, 'i')}>
-                        <i className="fas fa-file-invoice" />
-                      </button>
-                    ) : (
-                      <button className={styles.raBtn} title="Suivre"
-                        onClick={() => onToast('📦 Chaîne de validation ' + c.id, 'i')}>
-                        <i className="fas fa-eye" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '3rem', opacity: .4 }}>
+            <i className="fas fa-spinner fa-spin fa-2x" />
+          </div>
+        ) : (
+          <div className={styles.tblWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr><th>Commande</th><th>Client</th><th>Entreprise</th><th>Montant</th><th>Chaîne de validation</th><th>Statut</th><th></th></tr>
+              </thead>
+              <tbody>
+                {commandes.length === 0 && (
+                  <tr><td colSpan={7} style={{ textAlign: 'center', opacity: .5, padding: '2rem' }}>Aucune commande.</td></tr>
+                )}
+                {commandes.map((c: any) => (
+                  <tr key={c.id}>
+                    <td><b>{c.id}</b><div className={styles.uMeta}>{c.quand}</div></td>
+                    <td>{c.client}</td>
+                    <td>{c.entreprise}</td>
+                    <td>{fmtGnf(c.montant)}</td>
+                    <td>
+                      <div className={styles.miniProg}>
+                        {[0, 1, 2, 3].map(i => (
+                          <span key={i} className={i < c.progression ? styles.done : ''} />
+                        ))}
+                      </div>
+                    </td>
+                    <td><span className={`${styles.ordSt} ${styles['ord_' + c.statut]}`}>{ST_LABEL[c.statut] ?? c.statut}</span></td>
+                    <td>
+                      {c.statut === 'dispute' ? (
+                        <button className={styles.arbBtn} onClick={() => onToast('⚖️ Arbitrage du litige ouvert', 'i')}>
+                          <i className="fas fa-scale-balanced" /> Arbitrer
+                        </button>
+                      ) : c.statut === 'done' ? (
+                        <button className={styles.raBtn} title="Facture"
+                          onClick={() => onToast('🧾 Facture ' + c.id, 'i')}>
+                          <i className="fas fa-file-invoice" />
+                        </button>
+                      ) : (
+                        <button className={styles.raBtn} title="Suivre"
+                          onClick={() => onToast('📦 Chaîne de validation ' + c.id, 'i')}>
+                          <i className="fas fa-eye" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

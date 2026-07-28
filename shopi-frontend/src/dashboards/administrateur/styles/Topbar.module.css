@@ -48,15 +48,32 @@
   border: 2px solid var(--white);
 }
 
+/* Badge numérique sur la cloche */
+.badge {
+  position: absolute; top: 5px; right: 4px;
+  min-width: 16px; height: 16px;
+  background: #DC2626;
+  color: #fff;
+  font-size: 9px; font-weight: 700;
+  border-radius: 99px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 4px;
+  border: 1.5px solid var(--white);
+  line-height: 1;
+}
+
+/* Cloche active (au moins 1 non lu) */
+.icActive { color: #60A5FA !important; }
+
 .new {
-  background: var(--navy); color: #fff;
+  background: var(--adm-btn); color: #fff;
   border: none; border-radius: var(--pill);
   padding: 0 18px; height: 38px;
   font-size: 12.5px; font-weight: 700; font-family: var(--fb);
   display: flex; align-items: center; gap: 7px;
   cursor: pointer; transition: all .2s;
 }
-.new:hover { background: #112648; transform: translateY(-1px); box-shadow: var(--sh-b); }
+.new:hover { background: var(--adm-btn-h); transform: translateY(-1px); box-shadow: var(--sh-b); }
 
 @media (max-width: 860px) {
   .topbar { left: 0; }

@@ -116,10 +116,29 @@ import { CompanyTeamInvitation }     from '../database/entities/company-team/com
 import { TeamPermissionCategory }    from '../database/entities/company-team/team-permission-category.entity';
 import { TeamPermissionDefinition }  from '../database/entities/company-team/team-permission-definition.entity';
 import { TeamPermissionTemplate }    from '../database/entities/company-team/team-permission-template.entity';
+// ── Auth — journalisation et refresh tokens ───────────────────
+import { AuthLog }      from '../database/entities/auth-log.entity';
+import { RefreshToken } from '../database/entities/refresh-token.entity';
 // ── Sécurité plateforme ──────────────────────────────────────
 import { SystemMetric }       from '../database/entities/security/system-metric.entity';
 import { SecurityEventLog }   from '../database/entities/security/security-event-log.entity';
 import { PlatformIncident }   from '../database/entities/security/platform-incident.entity';
+// ── Moteur de paiement / reporting financier ──────────────────
+import { PaiementSession }      from '../database/entities/paiement/paiement-session.entity';
+import { PaiementDistribution } from '../database/entities/paiement/paiement-distribution.entity';
+import { Retrait }              from '../database/entities/paiement/retrait.entity';
+import { Dispute }              from '../database/entities/paiement/dispute.entity';
+import { DisputeEvidence }      from '../database/entities/paiement/dispute-evidence.entity';
+import { DisputeHistory }       from '../database/entities/paiement/dispute-history.entity';
+import { FinancialAuditLog }    from '../database/entities/paiement/financial-audit-log.entity';
+import { CommissionRule }       from '../database/entities/paiement/commission-rule.entity';
+import { ConfigurationSnapshot } from '../database/entities/paiement/configuration-snapshot.entity';
+import { Escrow }                from '../database/entities/paiement/escrow.entity';
+import { EscrowHistory }         from '../database/entities/paiement/escrow-history.entity';
+import { ProviderConfig }        from '../database/entities/paiement/provider-config.entity';
+import { SettlementBatch }       from '../database/entities/paiement/settlement-batch.entity';
+import { WebhookEvent }          from '../database/entities/paiement/webhook-event.entity';
+import { WalletLedgerEntry }     from '../database/entities/wallet-ledger-entry.entity';
 
 
 /* ============================================================
@@ -343,10 +362,29 @@ export const databaseConfigFactory = {
       TeamPermissionCategory,
       TeamPermissionDefinition,
       TeamPermissionTemplate,
+      // ── Auth — journalisation et refresh tokens ──────────────
+      AuthLog,
+      RefreshToken,
       // ── Sécurité plateforme ────────────────────────────────
       SystemMetric,
       SecurityEventLog,
       PlatformIncident,
+      // ── Moteur de paiement / reporting financier ────────────
+      PaiementSession,
+      PaiementDistribution,
+      Retrait,
+      Dispute,
+      DisputeEvidence,
+      DisputeHistory,
+      FinancialAuditLog,
+      CommissionRule,
+      ConfigurationSnapshot,
+      Escrow,
+      EscrowHistory,
+      ProviderConfig,
+      SettlementBatch,
+      WebhookEvent,
+      WalletLedgerEntry,
     ],
 
 

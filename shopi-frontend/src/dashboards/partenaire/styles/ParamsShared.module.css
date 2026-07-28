@@ -308,6 +308,49 @@
 :root[data-theme="dark"] .health { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
 :root[data-theme="dark"] .healthRing::before { background: #0A0F1E; }
 
+/* ─── Light mode (OS light OR toggle light) ─────────────────── */
+@media (prefers-color-scheme: light) {
+  .psHd h1 i { color: var(--navy); }
+  .fc:hover { border-color: rgba(11,31,58,.15); }
+  .fcTtl i { color: var(--navy); }
+  .fcAction { background: var(--g100); color: var(--navy); border-color: var(--bdr2); }
+  .fcAction:hover { background: var(--g200); }
+  .trowIc { background: var(--g100); color: var(--navy); }
+  .toggleOn { background: var(--navy); }
+  .payMethodOn { border-color: var(--navy); background: var(--g50); box-shadow: 0 0 0 3px rgba(11,31,58,.07); }
+  .payMethodOn .payRadio { border-color: var(--navy); }
+  .payMethodOn .payRadio::after { background: var(--navy); }
+  .addMethod { color: var(--navy); }
+  .addMethod:hover { border-color: var(--navy); background: var(--g50); }
+  .optOn { border-color: var(--navy); background: var(--g50); box-shadow: 0 0 0 3px rgba(11,31,58,.07); }
+  .optOn .optRadio { border-color: var(--navy); }
+  .optOn .optRadio::after { background: var(--navy); }
+  .docAct { color: var(--navy); background: var(--g100); }
+  .docAct:hover { background: var(--g200); }
+  .fin:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(11,31,58,.08); }
+}
+/* ─── Light mode ────────────────────────────────────────────── */
+:root[data-theme="light"] .psHd h1 i { color: var(--navy); }
+:root[data-theme="light"] .fc:hover { border-color: rgba(11,31,58,.15); }
+:root[data-theme="light"] .fcTtl i { color: var(--navy); }
+:root[data-theme="light"] .fcAction { background: var(--g100); color: var(--navy); border-color: var(--bdr2); }
+:root[data-theme="light"] .fcAction:hover { background: var(--g200); }
+:root[data-theme="light"] .trowIc { background: var(--g100); color: var(--navy); }
+:root[data-theme="light"] .toggleOn { background: var(--navy); }
+:root[data-theme="light"] .payMethodOn { border-color: var(--navy); background: var(--g50); box-shadow: 0 0 0 3px rgba(11,31,58,.07); }
+:root[data-theme="light"] .payMethodOn .payRadio { border-color: var(--navy); }
+:root[data-theme="light"] .payMethodOn .payRadio::after { background: var(--navy); }
+:root[data-theme="light"] .addMethod { color: var(--navy); }
+:root[data-theme="light"] .addMethod:hover { border-color: var(--navy); background: var(--g50); }
+:root[data-theme="light"] .optOn { border-color: var(--navy); background: var(--g50); box-shadow: 0 0 0 3px rgba(11,31,58,.07); }
+:root[data-theme="light"] .optOn .optRadio { border-color: var(--navy); }
+:root[data-theme="light"] .optOn .optRadio::after { background: var(--navy); }
+:root[data-theme="light"] .docAct { color: var(--navy); background: var(--g100); }
+:root[data-theme="light"] .docAct:hover { background: var(--g200); }
+:root[data-theme="light"] .fin:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(11,31,58,.08); }
+:root[data-theme="light"] .refLink i { color: rgba(255,255,255,.65); }
+:root[data-theme="light"] .healthGlow { background: radial-gradient(ellipse 50% 90% at 90% 20%, rgba(11,31,58,.2), transparent 58%), radial-gradient(ellipse 40% 70% at 5% 100%, rgba(109,40,217,.2), transparent 55%); }
+
 /* ── Responsive ── */
 @media (max-width: 700px) {
   .grid2, .grid3 { grid-template-columns: 1fr; }

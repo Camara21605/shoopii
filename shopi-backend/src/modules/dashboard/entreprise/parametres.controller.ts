@@ -31,6 +31,9 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard }      from 'src/common/guards/auth.guard';
+import { RolesGuard }        from 'src/common/guards/roles.guard';
+import { Roles }             from 'src/common/decorators/roles.decorator';
+import { UserRole }          from 'src/common/enums/user-role.enum';
 
 /* ── Imports des 12 services ── */
 import { BoutiqueParametresService }    from './services/boutique-parametres.service';
@@ -61,7 +64,11 @@ import { JourSemaine }          from 'src/database/entities/entreprise.table/com
 const MAX_IMAGE_SIZE = 5  * 1024 * 1024; // 5 MB
 const MAX_DOC_SIZE   = 10 * 1024 * 1024; // 10 MB
 
-@UseGuards(JwtAuthGuard)
+/* FIX C1 — Ajout RolesGuard + restriction COMPANY uniquement.
+ * Sans ce correctif, tout utilisateur JWT (CLIENT, LIVREUR…)
+ * pouvait appeler tous les endpoints paramètres. */
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.COMPANY)
 @Controller('dashboard/entreprise/parametres')
 export class ParametresController {
 
@@ -220,6 +227,9 @@ export class ParametresController {
    * Uploader un document → POST /parametres/documents/cni
    * Types : cni | rccm | bancaire | photo | nif
    */
+  /* FIX I5 — Ajout FileTypeValidator sur les documents légaux.
+   * Avant : n'importe quel fichier (exe, script…) était accepté.
+   * Après : seuls PDF et images JPEG/PNG/WebP sont autorisés. */
   @Post('documents/:type')
   @UseInterceptors(FileInterceptor('file'))
   uploadDocument(
@@ -228,6 +238,7 @@ export class ParametresController {
     @UploadedFile(new ParseFilePipe({
       validators: [
         new MaxFileSizeValidator({ maxSize: MAX_DOC_SIZE }),
+        new FileTypeValidator({ fileType: /application\/pdf|image\/(jpeg|png|webp)/ }),
       ],
     }))
     file: Express.Multer.File,

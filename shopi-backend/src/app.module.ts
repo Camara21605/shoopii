@@ -41,7 +41,8 @@ import { HelpModule }     from './modules/help/help.module';
 import { SupportModule } from './modules/support/support.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { HealthModule }          from './common/health/health.module';
-import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { CorrelationIdMiddleware }   from './common/middleware/correlation-id.middleware';
+import { SecurityHeadersMiddleware } from './common/middleware/security-headers.middleware';
 import { GeoModule }             from './modules/geo/geo.module';
 import { AppearanceModule }      from './modules/appearance/appearance.module';
 import { ZoneAdminModule }          from './modules/zone-admin/zone-admin.module';
@@ -188,7 +189,17 @@ import { PerformanceModule }           from './modules/performance-engine/perfor
             ...(password && { password }),
             ...(useTls && { tls: {} }),
             maxRetriesPerRequest: null,    // obligatoire BullMQ v5+
-            enableOfflineQueue:   false,   // évite l'accumulation de jobs en attente
+            enableOfflineQueue:   false,
+            /* Backoff entre tentatives de reconnexion Redis.
+             * Sans ça, BullMQ Workers bouclent à plein régime
+             * et inondent les logs quand Redis est indisponible. */
+            retryStrategy: (times: number) => {
+              if (times > 10) {
+                console.error(`[BullMQ/Redis] Abandon après ${times} tentatives.`);
+                return null;
+              }
+              return Math.min(times * 500, 5000);
+            },
           },
         };
       },
@@ -258,6 +269,11 @@ export class AppModule implements NestModule {
    * par les handlers en aval porte déjà le X-Request-Id.
    */
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(CorrelationIdMiddleware).forRoutes('*path');
+    /* FIX C3 — SecurityHeadersMiddleware appliqué EN PREMIER sur toutes les routes.
+     * Positionne CSP, HSTS, X-Frame-Options, X-Content-Type-Options, etc.
+     * Equivalent à Helmet sans dépendance npm supplémentaire. */
+    consumer
+      .apply(SecurityHeadersMiddleware, CorrelationIdMiddleware)
+      .forRoutes('*path');
   }
 }

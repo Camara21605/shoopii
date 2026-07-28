@@ -18,19 +18,13 @@ import {
   Company,
   CompanyPlan,
 } from 'src/database/entities/profiles/entreprise-profile.entity';
+import { PlatformSettings } from 'src/database/entities/platform-settings.entity';
 
 /* ── DTO inline (simple) ── */
 export class UpdatePlanDto {
   @IsEnum(CompanyPlan)
   plan!: CompanyPlan;
 }
-
-/* ── Grille de commissions par plan ── */
-const COMMISSIONS_GRILLE: Record<CompanyPlan, { taux: number; label: string }> = {
-  [CompanyPlan.STANDARD]: { taux: 3,   label: 'Standard — 3% / vente'   },
-  [CompanyPlan.PRO]:      { taux: 2,   label: 'Pro      — 2% / vente'   },
-  [CompanyPlan.PREMIUM]:  { taux: 1.5, label: 'Premium  — 1,5% / vente' },
-};
 
 @Injectable()
 export class CommissionsParametresService {
@@ -40,6 +34,9 @@ export class CommissionsParametresService {
   constructor(
     @InjectRepository(Company)
     private readonly companyRepo: Repository<Company>,
+
+    @InjectRepository(PlatformSettings)
+    private readonly platformRepo: Repository<PlatformSettings>,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -47,13 +44,29 @@ export class CommissionsParametresService {
    * ────────────────────────────────────────────────────────── */
 
   async getCommissions(userId: string) {
-    const company = await this.findCompanyOrFail(userId);
+    const [company, platform] = await Promise.all([
+      this.findCompanyOrFail(userId),
+      this.platformRepo.findOne({ where: { id: 1 } }),
+    ]);
+
+    const base     = +(platform?.tauxCommissionProduit ?? 6);
+    const multPro  = +(platform?.planMultiplierPro     ?? 0.75);
+    const multPrem = +(platform?.planMultiplierPremium ?? 0.5);
+
+    const tauxPro  = +(base * multPro).toFixed(2);
+    const tauxPrem = +(base * multPrem).toFixed(2);
+
+    const grille = {
+      [CompanyPlan.STANDARD]: { taux: base,     label: `Standard — ${base}% / vente`     },
+      [CompanyPlan.PRO]:      { taux: tauxPro,  label: `Pro — ${tauxPro}% / vente`       },
+      [CompanyPlan.PREMIUM]:  { taux: tauxPrem, label: `Premium — ${tauxPrem}% / vente`  },
+    };
 
     return {
-      planActuel:  company.plan,
-      tauxActuel:  COMMISSIONS_GRILLE[company.plan],
-      grille:      COMMISSIONS_GRILLE,
-      plans:       Object.values(CompanyPlan),
+      planActuel: company.plan,
+      tauxActuel: grille[company.plan],
+      grille,
+      plans: Object.values(CompanyPlan),
     };
   }
 
@@ -73,9 +86,10 @@ export class CommissionsParametresService {
   }
 
   /* ── HELPER ── */
-  private async findCompanyOrFail(userIdOrCompanyId: string): Promise<Company> {
-    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId } });
-    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId } });
+  /* FIX m4 — Lookup strict par userId uniquement; le fallback par companyId
+   * permettait l'accès cross-tenant si un UUID de boutique était connu. */
+  private async findCompanyOrFail(userId: string): Promise<Company> {
+    const company = await this.companyRepo.findOne({ where: { userId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }

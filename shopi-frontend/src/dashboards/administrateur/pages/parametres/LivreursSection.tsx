@@ -176,7 +176,7 @@ export default function LivreursSection({ onToast }: SectionProps) {
 
   if (loading) return (
     <div className={base.secBody}>
-      <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-muted,#6b7280)', fontSize: 14 }}>
+      <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--adm-text-3)', fontSize: 14 }}>
         <i className="fas fa-rotate-right fa-spin" style={{ fontSize: 22, marginBottom: 10, display: 'block', color: '#0284C7' }} />
         Chargement de la configuration…
       </div>
@@ -187,12 +187,12 @@ export default function LivreursSection({ onToast }: SectionProps) {
     <div className={base.secBody}>
       <div style={{
         textAlign: 'center', padding: '40px 24px',
-        background: 'var(--bg-card,#fff)', border: '1px solid var(--border,#e5e7eb)',
+        background: 'var(--adm-surface)', border: '1px solid var(--adm-border)',
         borderRadius: 12, margin: 0,
       }}>
         <i className="fas fa-triangle-exclamation" style={{ fontSize: 28, color: '#dc2626', marginBottom: 10, display: 'block' }} />
-        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary,#111827)', marginBottom: 6 }}>Chargement impossible</div>
-        <div style={{ fontSize: 13, color: 'var(--text-muted,#6b7280)', marginBottom: 18 }}>{error}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--adm-text)', marginBottom: 6 }}>Chargement impossible</div>
+        <div style={{ fontSize: 13, color: 'var(--adm-text-3)', marginBottom: 18 }}>{error}</div>
         <button className={`${base.btn} ${base.btnBlue} ${base.btnSm}`} onClick={load}>
           <i className="fas fa-rotate-right" /> Réessayer
         </button>
@@ -214,9 +214,9 @@ export default function LivreursSection({ onToast }: SectionProps) {
               display: 'flex', alignItems: 'center', gap: 6,
               padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
               fontSize: 13, fontWeight: 600,
-              background: tab === t.id ? '#0284C7' : 'var(--bg-card,#fff)',
-              color:      tab === t.id ? '#fff'    : 'var(--text-muted,#6b7280)',
-              boxShadow:  tab === t.id ? '0 2px 8px rgba(2,132,199,.25)' : 'inset 0 0 0 1px var(--border,#e5e7eb)',
+              background: tab === t.id ? '#0284C7' : 'var(--adm-surface)',
+              color:      tab === t.id ? '#fff'    : 'var(--adm-text-3)',
+              boxShadow:  tab === t.id ? '0 2px 8px rgba(2,132,199,.25)' : 'inset 0 0 0 1px var(--adm-border)',
               transition: 'all .15s',
             }}
             onClick={() => setTab(t.id)}>
@@ -267,7 +267,7 @@ export default function LivreursSection({ onToast }: SectionProps) {
             </div>
             <div className={base.cardBody}>
               {!stats ? (
-                <div style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted,#6b7280)', fontSize: 13 }}>
+                <div style={{ textAlign: 'center', padding: 32, color: 'var(--adm-text-3)', fontSize: 13 }}>
                   <i className="fas fa-chart-bar" style={{ fontSize: 24, marginBottom: 8, display: 'block' }} />
                   Statistiques non disponibles
                 </div>
@@ -333,12 +333,12 @@ export default function LivreursSection({ onToast }: SectionProps) {
                   { label: 'Fréq. paiement', value: d.paymentFrequency === 'daily' ? 'Quotidien' : d.paymentFrequency === 'weekly' ? 'Hebdo' : 'Mensuel' },
                 ].map(r => (
                   <div key={r.label} style={{
-                    background: 'var(--bg-input,#f9fafb)',
+                    background: 'var(--adm-bg)',
                     borderRadius: 9, padding: '12px 14px',
                     display: 'flex', flexDirection: 'column', gap: 4,
                   }}>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted,#6b7280)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em' }}>{r.label}</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary,#111827)' }}>{r.value}</div>
+                    <div style={{ fontSize: 11, color: 'var(--adm-text-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em' }}>{r.label}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--adm-text)' }}>{r.value}</div>
                   </div>
                 ))}
               </div>
@@ -369,7 +369,7 @@ export default function LivreursSection({ onToast }: SectionProps) {
                   <input type="number" min={1} max={200} value={d.maxRadiusKm}
                     onChange={e => set('maxRadiusKm', +e.target.value)} />
                 </div>
-                <p style={{ fontSize: 12, color: 'var(--text-muted,#6b7280)', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 12, color: 'var(--adm-text-3)', margin: 0, lineHeight: 1.5 }}>
                   Distance maximale entre le livreur et le point de départ d'une commande.
                   Au-delà, la commande ne lui est pas proposée.
                 </p>
@@ -383,7 +383,7 @@ export default function LivreursSection({ onToast }: SectionProps) {
                   <input type="number" min={1} max={500} value={d.maxDeliveryDistanceKm}
                     onChange={e => set('maxDeliveryDistanceKm', +e.target.value)} />
                 </div>
-                <p style={{ fontSize: 12, color: 'var(--text-muted,#6b7280)', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 12, color: 'var(--adm-text-3)', margin: 0, lineHeight: 1.5 }}>
                   Au-delà de cette distance par course, la livraison nécessite
                   une approbation manuelle de votre équipe.
                 </p>
@@ -397,7 +397,7 @@ export default function LivreursSection({ onToast }: SectionProps) {
                   <input type="number" min={1} max={60} value={d.reassignTimeoutMin}
                     onChange={e => set('reassignTimeoutMin', +e.target.value)} />
                 </div>
-                <p style={{ fontSize: 12, color: 'var(--text-muted,#6b7280)', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 12, color: 'var(--adm-text-3)', margin: 0, lineHeight: 1.5 }}>
                   Si un livreur n'accepte pas dans ce délai, la commande est
                   automatiquement réassignée à un autre livreur disponible.
                 </p>
@@ -411,7 +411,7 @@ export default function LivreursSection({ onToast }: SectionProps) {
                   <input type="number" min={1} max={30} value={d.acceptDeadlineMin}
                     onChange={e => set('acceptDeadlineMin', +e.target.value)} />
                 </div>
-                <p style={{ fontSize: 12, color: 'var(--text-muted,#6b7280)', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 12, color: 'var(--adm-text-3)', margin: 0, lineHeight: 1.5 }}>
                   Durée maximale pour accepter ou refuser une commande assignée.
                   Passé ce délai, un refus automatique est enregistré.
                 </p>
@@ -443,9 +443,9 @@ export default function LivreursSection({ onToast }: SectionProps) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                       <div style={{
                         width: 30, height: 30, borderRadius: 8,
-                        background: d.assignmentStrategy === s.id ? 'rgba(2,132,199,.12)' : 'var(--bg-input,#f9fafb)',
+                        background: d.assignmentStrategy === s.id ? 'rgba(2,132,199,.12)' : 'var(--adm-bg)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: d.assignmentStrategy === s.id ? '#0284C7' : 'var(--text-muted,#6b7280)',
+                        color: d.assignmentStrategy === s.id ? '#0284C7' : 'var(--adm-text-3)',
                         fontSize: 12,
                       }}>
                         <i className={`fas ${s.icon}`} />
@@ -533,7 +533,7 @@ export default function LivreursSection({ onToast }: SectionProps) {
                       <input type="number" min={0} max={100} value={d[r.key] as number}
                         onChange={e => set(r.key, +e.target.value)} />
                     </div>
-                    <p style={{ fontSize: 12, color: 'var(--text-muted,#6b7280)', margin: 0, lineHeight: 1.5 }}>{r.hint}</p>
+                    <p style={{ fontSize: 12, color: 'var(--adm-text-3)', margin: 0, lineHeight: 1.5 }}>{r.hint}</p>
                   </div>
                 ))}
               </div>
@@ -652,7 +652,7 @@ export default function LivreursSection({ onToast }: SectionProps) {
                         <div className={styles.penaltyTrigger}>{rule.trigger}</div>
                         <div className={styles.penaltyAction}>
                           <span className={styles.actionBadge}>{ACTION_LABELS[rule.action] ?? rule.action}</span>
-                          {rule.value > 0 && <span style={{ marginLeft: 6, fontSize: 11, color: 'var(--text-muted,#6b7280)' }}>
+                          {rule.value > 0 && <span style={{ marginLeft: 6, fontSize: 11, color: 'var(--adm-text-3)' }}>
                             {rule.action === 'score_reduction' ? `−${rule.value} pts` : `${rule.value} j`}
                           </span>}
                         </div>
@@ -703,7 +703,7 @@ export default function LivreursSection({ onToast }: SectionProps) {
                         <div className={styles.notifCardDesc}>{ev.desc}</div>
                       </div>
                       <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: on ? '#0284C7' : 'var(--text-muted,#6b7280)' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: on ? '#0284C7' : 'var(--adm-text-3)' }}>
                           {on ? 'Activé' : 'Désactivé'}
                         </span>
                         <i className={`fas ${on ? 'fa-toggle-on' : 'fa-toggle-off'}`}
@@ -781,7 +781,7 @@ export default function LivreursSection({ onToast }: SectionProps) {
             </div>
             <div className={base.cardBody}>
               {!stats ? (
-                <div style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted,#6b7280)', fontSize: 13 }}>
+                <div style={{ textAlign: 'center', padding: 32, color: 'var(--adm-text-3)', fontSize: 13 }}>
                   <i className="fas fa-chart-bar" style={{ fontSize: 24, marginBottom: 8, display: 'block' }} />
                   Statistiques non disponibles
                 </div>

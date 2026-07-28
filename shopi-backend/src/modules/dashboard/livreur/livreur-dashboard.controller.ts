@@ -33,4 +33,10 @@ export class LivreurDashboardController {
   getActivite(@Req() req: any) {
     return this.dashboardService.getActivite(req.user.id);
   }
+
+  /** Taux de commission + revenus réels depuis les distributions */
+  @Get('revenus')
+  getRevenus(@Req() req: any) {
+    return this.dashboardService.getRevenus(req.user.id);
+  }
 }

@@ -8,42 +8,46 @@
 
 import styles from '../styles/Sidebar.module.css';
 import type { AdminPage } from '../data/types';
-import { ZONE } from '../data/adminData';
 
 interface SidebarProps {
-  activePage: AdminPage;
-  open:       boolean;
-  onClose:    () => void;
-  onNavigate: (page: AdminPage) => void;
-  onGenerate: () => void;
-  geoPerms?:  Record<string, boolean | string | null>;
+  activePage:     AdminPage;
+  open:           boolean;
+  onClose:        () => void;
+  onNavigate:     (page: AdminPage) => void;
+  onGenerate:     () => void;
+  geoPerms?:      Record<string, boolean | string | null>;
+  zoneName?:      string;
+  adminName?:     string;
+  communesCount?: number;
+  unreadCount?:   number;
 }
 
-/* Sections de navigation avec leurs items */
+/* Sections de navigation avec leurs items (badges statiques hors notifications) */
 const NAV = [
   { title: 'Principal', items: [
     { id: 'overview' as AdminPage, icon: 'fa-chart-pie', label: "Vue d'ensemble" },
   ]},
   { title: 'Acquisition', items: [
-    { id: 'codes'       as AdminPage, icon: 'fa-qrcode',    label: 'Codes de création', badge: '5',  badgeCls: 'a' },
-    { id: 'partenaires' as AdminPage, icon: 'fa-handshake', label: 'Partenaires',       badge: '12', badgeCls: 'g' },
+    { id: 'codes'       as AdminPage, icon: 'fa-qrcode',    label: 'Codes de création' },
+    { id: 'partenaires' as AdminPage, icon: 'fa-handshake', label: 'Partenaires' },
   ]},
   { title: 'Supervision', items: [
     { id: 'acteurs'      as AdminPage, icon: 'fa-people-group',  label: 'Acteurs de la zone' },
-    { id: 'validations'  as AdminPage, icon: 'fa-user-check',    label: 'Validations',  badge: '7', badgeCls: 'a' },
-    { id: 'signalements' as AdminPage, icon: 'fa-shield-halved', label: 'Signalements', badge: '4', badgeCls: 'r' },
+    { id: 'validations'  as AdminPage, icon: 'fa-user-check',    label: 'Validations' },
+    { id: 'signalements' as AdminPage, icon: 'fa-shield-halved', label: 'Signalements' },
   ]},
   { title: 'Activité', items: [
-    { id: 'commandes' as AdminPage, icon: 'fa-box',            label: 'Commandes', badge: '2', badgeCls: 'r' },
-    { id: 'finances'  as AdminPage, icon: 'fa-coins',          label: 'Finances' },
-    { id: 'audit'     as AdminPage, icon: 'fa-clipboard-list', label: "Journal d'audit" },
+    { id: 'commandes'     as AdminPage, icon: 'fa-box',            label: 'Commandes' },
+    { id: 'finances'      as AdminPage, icon: 'fa-coins',          label: 'Finances' },
+    { id: 'audit'         as AdminPage, icon: 'fa-clipboard-list', label: "Journal d'audit" },
+    { id: 'notifications' as AdminPage, icon: 'fa-bell',           label: 'Notifications' },
   ]},
   { title: 'Compte', items: [
     { id: 'parametres' as AdminPage, icon: 'fa-gear', label: 'Paramètres' },
   ]},
 ];
 
-export default function Sidebar({ activePage, open, onClose, onNavigate, onGenerate, geoPerms }: SidebarProps) {
+export default function Sidebar({ activePage, open, onClose, onNavigate, onGenerate, geoPerms, zoneName, adminName, communesCount, unreadCount }: SidebarProps) {
   const hasGeoAccess = Object.entries(geoPerms ?? {}).some(([k, v]) => k.startsWith('geo_') && v);
 
   return (
@@ -66,16 +70,16 @@ export default function Sidebar({ activePage, open, onClose, onNavigate, onGener
           <div className={styles.meCard} onClick={() => onNavigate('parametres')}>
             <div className={styles.meAv}>AC</div>
             <div>
-              <div className={styles.meNm}>{ZONE.admin}</div>
-              <div className={styles.meRl}><span className={styles.dot} /> Administratrice</div>
+              <div className={styles.meNm}>{adminName ?? 'Admin'}</div>
+              <div className={styles.meRl}><span className={styles.dot} /> Administrateur·rice</div>
             </div>
           </div>
           {/* Infos de la zone */}
           <div className={styles.zone}>
             <i className="fas fa-map-location-dot" />
             <div>
-              <div className={styles.zoneNm}>{ZONE.nom}</div>
-              <div className={styles.zoneSub}>{ZONE.communes.length} communes · 486 acteurs</div>
+              <div className={styles.zoneNm}>{zoneName ?? 'Zone'}</div>
+              <div className={styles.zoneSub}>{communesCount ?? 0} communes</div>
             </div>
           </div>
         </div>
@@ -91,9 +95,10 @@ export default function Sidebar({ activePage, open, onClose, onNavigate, onGener
                   onClick={() => onNavigate(item.id)}>
                   <i className={`fas ${item.icon}`} />
                   <span>{item.label}</span>
-                  {item.badge && (
-                    <span className={`${styles.badge} ${styles['badge_' + item.badgeCls]}`}>
-                      {item.badge}
+                  {/* Badge temps réel pour les notifications */}
+                  {item.id === 'notifications' && (unreadCount ?? 0) > 0 && (
+                    <span className={`${styles.badge} ${styles.badge_r}`}>
+                      {(unreadCount ?? 0) > 99 ? '99+' : unreadCount}
                     </span>
                   )}
                 </button>

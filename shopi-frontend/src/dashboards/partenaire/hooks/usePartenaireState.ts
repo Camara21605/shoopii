@@ -1,68 +1,58 @@
 /* ================================================================
  * FICHIER : src/dashboards/partenaire/hooks/usePartenaireState.ts
- *
  * État global du dashboard partenaire (pattern activePage).
- * - activePage : page affichée par le PageRenderer
- * - modales : génération de code, signalement
- * - génération d'un code de création (mock local, prêt API)
- * - envoi d'un signalement (mock local, prêt API)
+ * - genererCode  → POST /dashboard/partenaire/codes (async)
+ * - envoyerSignalement → POST /dashboard/partenaire/signalements (async)
  * ================================================================ */
 
 import { useState, useCallback } from 'react';
-import type {
-  PartenairePage, ActeurType, MotifSignalement, Gravite,
-} from '../data/types';
-
-const TYPE_PREFIX: Record<ActeurType, string> = {
-  ent: 'ENT', lvr: 'LVR', cor: 'COR', cli: 'CLI',
-};
-
-/* Génère un suffixe alphanumérique lisible (sans 0/O/1/I) */
-function randCode(len = 5): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let s = '';
-  for (let i = 0; i < len; i++) s += chars[Math.floor(Math.random() * chars.length)];
-  return s;
-}
+import { apiFetch } from '@/shared/services/apiFetch';
+import type { PartenairePage, ActeurType, MotifSignalement, Gravite } from '../data/types';
 
 export function usePartenaireState() {
   const [activePage, setActivePage] = useState<PartenairePage>('overview');
 
-  /* Modale de génération de code */
-  const [genOpen, setGenOpen]       = useState(false);
-  const [lastCode, setLastCode]     = useState<string>('');
+  const [genOpen, setGenOpen]   = useState(false);
+  const [lastCode, setLastCode] = useState<string>('');
 
-  /* Modale de signalement (peut être pré-remplie avec un acteur) */
-  const [reportOpen, setReportOpen] = useState(false);
+  const [reportOpen, setReportOpen]     = useState(false);
   const [reportTarget, setReportTarget] = useState<string>('');
 
-  /* Navigation entre pages */
   const navigate = useCallback((page: PartenairePage) => {
     setActivePage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  /* Génération d'un code de création.
-     En prod : POST /partenaire/codes { type, destinataire } → { code } */
-  const genererCode = useCallback((type: ActeurType): string => {
-    const code = `SHOPI-${TYPE_PREFIX[type]}-${randCode()}`;
-    setLastCode(code);
-    return code;
+  /* Génération d'un code via l'API backend */
+  const genererCode = useCallback(async (type: ActeurType, targetEmail?: string): Promise<string> => {
+    const res = await apiFetch<{ code: string }>('/dashboard/partenaire/codes', {
+      method: 'POST',
+      body:   { type, targetEmail: targetEmail ?? undefined },
+    });
+    setLastCode(res.code);
+    return res.code;
   }, []);
 
-  /* Ouvre la modale de signalement (optionnellement pré-remplie) */
   const ouvrirSignalement = useCallback((cible = '') => {
     setReportTarget(cible);
     setReportOpen(true);
   }, []);
 
-  /* Envoi d'un signalement.
-     En prod : POST /partenaire/signalements { cible, motif, gravite, description } */
-  const envoyerSignalement = useCallback(
-    (_cible: string, _motif: MotifSignalement, _gravite: Gravite, _desc: string): string => {
-      const ref = 'RPT-' + String(Math.floor(Math.random() * 900) + 413);
-      return ref;
-    }, []);
+  /* Envoi d'un signalement via l'API backend */
+  const envoyerSignalement = useCallback(async (
+    cible:      string,
+    motif:      MotifSignalement,
+    gravite:    Gravite,
+    raison:     string,
+    motifLabel: string,
+    type:       string,
+  ): Promise<string> => {
+    const res = await apiFetch<{ ref: string }>('/dashboard/partenaire/signalements', {
+      method: 'POST',
+      body:   { cible, motif, motifLabel, gravite, raison, type },
+    });
+    return res.ref;
+  }, []);
 
   return {
     activePage, navigate,

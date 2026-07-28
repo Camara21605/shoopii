@@ -357,7 +357,7 @@ const SparkLine = memo(({ data, color, H = 32 }: { data: number[]; color: string
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
-      <path d={`M${area}`} fill={`url(#sg-${color.replace(/[^a-z0-9]/gi, '')})`} />
+      <path d={area} fill={`url(#sg-${color.replace(/[^a-z0-9]/gi, '')})`} />
       <path d={`M${pts}`} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
     </svg>
   );

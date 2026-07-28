@@ -4,7 +4,7 @@
 .item{background:var(--white);border:1px solid var(--bdr);border-radius:12px;display:flex;align-items:center;gap:14px;padding:14px 18px;margin-bottom:9px;cursor:pointer;transition:all .15s}
 .item:hover{border-color:var(--bdr2);box-shadow:var(--sh-sm,0 2px 8px rgba(11,31,58,.08))}
 .ava{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:16px;font-weight:700;color:#fff;position:relative;flex-shrink:0}
-.avaDot{width:13px;height:13px;background:#10B981;border-radius:50%;border:2.5px solid var(--white);position:absolute;bottom:1px;right:1px}
+.avaDot{width:13px;height:13px;background:#fff;border-radius:50%;border:2.5px solid var(--btn-h);position:absolute;bottom:1px;right:1px}
 .info{flex:1;min-width:0}
 .name{font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:2px}
 .meta{font-size:12px;color:var(--t3);display:flex;gap:12px;flex-wrap:wrap}
@@ -14,13 +14,5 @@
 .ratingVal{font-size:13px;font-weight:800;color:var(--navy)}
 .ratingLivs{font-size:11px;color:var(--t4)}
 .followBtn{border-radius:8px;padding:7px 14px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:var(--fb);display:flex;align-items:center;gap:5px;transition:all .2s;border:1.5px solid;white-space:nowrap}
-.followBtnOff{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border-color:transparent}
-.followBtnOn{background:#F0FDF4;border-color:#047857;color:#065F46}
-
-/* ─── Dark mode ─────────────────────────────────────────────── */
-@media (prefers-color-scheme: dark) {
-  .followBtnOff { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); }
-  .followBtnOn  { background: rgba(4,120,87,.15); border-color: rgba(4,120,87,.35); color: #34D399; }
-}
-:root[data-theme="dark"] .followBtnOff { background: linear-gradient(135deg, #1A2B4A, #1A4FC4); }
-:root[data-theme="dark"] .followBtnOn  { background: rgba(4,120,87,.15); border-color: rgba(4,120,87,.35); color: #34D399; }
+.followBtnOff{background:var(--btn);color:#fff;border-color:var(--btn)}
+.followBtnOn{background:var(--g100);border-color:var(--bdr2);color:var(--t1)}

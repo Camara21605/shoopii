@@ -1,39 +1,61 @@
 /* ================================================================
  * FICHIER : src/dashboards/administrateur/pages/OverviewPage.tsx
- *
- * Vue d'ensemble de la zone : héro (santé de la zone),
- * file d'attente du jour (cliquable), KPI, graphe de croissance,
- * activité, couverture par commune, répartition par rôle.
  * ================================================================ */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from '../styles/OverviewPage.module.css';
 import KpiCard from '../components/KpiCard';
 import type { AdminPage } from '../data/types';
-import {
-  ZONE, KPIS, QUEUE, CHART_DATA, COMMUNES, ROLES_REPARTITION,
-  ACTIVITE, TYPE_LABEL, TYPE_ICON,
-} from '../data/adminData';
+import { apiFetch } from '../../../shared/services/apiFetch';
 
 interface OverviewPageProps {
   onNavigate: (page: AdminPage) => void;
 }
 
-type ChartKey = keyof typeof CHART_DATA;
+type ChartKey = 'semaine' | 'mois' | 'annee';
 
+const TYPE_LABEL: Record<string, string> = { par: 'Partenaire', ent: 'Entreprise', lvr: 'Livreur', cor: 'Correspondant' };
+const TYPE_ICON:  Record<string, string> = { par: 'fa-handshake', ent: 'fa-store', lvr: 'fa-motorcycle', cor: 'fa-map-pin' };
 const KPI_VARIANT = ['k1', 'k2', 'k3', 'k4'] as const;
 const KPI_ICON    = ['fa-users', 'fa-box', 'fa-sack-dollar', 'fa-triangle-exclamation'];
-
-/* Couleur d'icône par rôle dans la répartition */
-const ROLE_COLOR: Record<string, string> = {
-  par: 'var(--teal)', ent: 'var(--blue)', lvr: 'var(--emerald)', cor: 'var(--violet)',
-};
+const ROLE_COLOR: Record<string, string> = { par: 'var(--teal)', ent: 'var(--blue)', lvr: 'var(--emerald)', cor: 'var(--violet)' };
 
 export default function OverviewPage({ onNavigate }: OverviewPageProps) {
   const [chartKey, setChartKey] = useState<ChartKey>('mois');
+  const [overview, setOverview] = useState<any>(null);
+  const [loading,  setLoading]  = useState(true);
 
-  const data = CHART_DATA[chartKey];
-  const max  = Math.max(...data.map(d => Math.max(d.a, d.c)), 1);
+  useEffect(() => {
+    apiFetch('/dashboard/admin/overview')
+      .then(d => setOverview(d as any))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
+      <i className="fas fa-spinner fa-spin" style={{ fontSize: '2rem', opacity: .4 }} />
+    </div>
+  );
+
+  if (!overview) return null;
+
+  const zone   = overview.zone   ?? {};
+  const kpis   = overview.kpis   ?? [];
+  const queue  = overview.queue  ?? [];
+  const chart  = overview.chart  ?? { semaine: [], mois: [], annee: [] };
+  const communes = overview.communes ?? [];
+  const roles  = overview.rolesRepartition ?? [];
+  const activite = overview.activite ?? [];
+
+  const data = chart[chartKey] ?? [];
+  const max  = Math.max(...data.map((d: any) => Math.max(d.a, d.c)), 1);
+
+  const adminPrenom = (zone.adminName ?? 'Administrateur').split(' ')[0];
+  const totalActeurs = kpis[0]?.valeur ?? '—';
+  const pendingV = queue[0]?.v ?? 0;
+  const pendingS = queue[1]?.v ?? 0;
+  const cmdSem   = kpis[1]?.valeur ?? '—';
 
   return (
     <div>
@@ -43,13 +65,14 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
         <div className={styles.heroGrid} />
         <div className={styles.heroIn}>
           <div>
-            <div className={styles.eyebrow}><i className="fas fa-map-location-dot" /> {ZONE.nom}</div>
+            <div className={styles.eyebrow}><i className="fas fa-map-location-dot" /> {zone.nom}</div>
             <div className={styles.heroH}>
-              Bonjour Aïssatou,<br />votre zone compte <em>486 acteurs actifs</em>
+              Bonjour {adminPrenom},<br />votre zone compte <em>{totalActeurs} acteurs actifs</em>
             </div>
             <p className={styles.heroP}>
-              7 comptes attendent votre validation et 4 signalements sont à traiter.
-              La zone a enregistré 1 240 commandes cette semaine.
+              {pendingV} compte{pendingV !== 1 ? 's' : ''} attend{pendingV !== 1 ? 'ent' : ''} votre validation
+              et {pendingS} signalement{pendingS !== 1 ? 's' : ''} {pendingS !== 1 ? 'sont' : 'est'} à traiter.
+              La zone a enregistré {cmdSem} commandes cette semaine.
             </p>
             <div className={styles.heroBtns}>
               <button className={styles.hbtn1} onClick={() => onNavigate('validations')}>
@@ -61,23 +84,23 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
             </div>
           </div>
 
-          {/* Anneau de santé de la zone */}
+          {/* Anneau santé */}
           <div className={styles.zoneHealth}>
-            <div className={styles.zhRing} style={{ background: `conic-gradient(#34D399 0% ${ZONE.sante}%, rgba(255,255,255,.1) ${ZONE.sante}% 100%)` }}>
-              <div className={styles.zhRingV}><b>{ZONE.sante}%</b><span>Santé</span></div>
+            <div className={styles.zhRing} style={{ background: `conic-gradient(#34D399 0% ${zone.sante ?? 95}%, rgba(255,255,255,.1) ${zone.sante ?? 95}% 100%)` }}>
+              <div className={styles.zhRingV}><b>{zone.sante ?? 95}%</b><span>Santé</span></div>
             </div>
             <div>
               <div className={styles.zhNm}>Santé de la zone</div>
               <div className={styles.zhSub}>Fiabilité livraisons · litiges · fraude</div>
-              <div className={styles.zhAlerts}><i className="fas fa-triangle-exclamation" /> 4 signalements en attente</div>
+              <div className={styles.zhAlerts}><i className="fas fa-triangle-exclamation" /> {pendingS} signalement{pendingS !== 1 ? 's' : ''} en attente</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── File d'attente du jour (chaque item mène à la page correspondante) ── */}
+      {/* ── File d'attente ── */}
       <div className={styles.queue}>
-        {QUEUE.map(q => (
+        {queue.map((q: any) => (
           <div key={q.label} className={styles.qItem} onClick={() => onNavigate(q.nav as AdminPage)}>
             <div className={`${styles.qIc} ${styles['q_' + q.kind]}`}><i className={`fas ${q.icone}`} /></div>
             <div>
@@ -88,15 +111,15 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
         ))}
       </div>
 
-      {/* ── Grille KPI ── */}
+      {/* ── KPIs ── */}
       <div className={styles.kpis}>
-        {KPIS.map((k, i) => (
+        {kpis.map((k: any, i: number) => (
           <KpiCard key={k.cle} variant={KPI_VARIANT[i]} icon={KPI_ICON[i]}
             value={k.valeur} unit={k.unite} label={k.label} delta={k.delta} trend={k.trend} />
         ))}
       </div>
 
-      {/* ── Graphe de croissance + activité récente ── */}
+      {/* ── Graphe + activité ── */}
       <div className={styles.g2}>
         <div className={styles.card}>
           <div className={styles.ch}>
@@ -113,7 +136,7 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
           </div>
           <div className={styles.cb}>
             <div className={styles.chart}>
-              {data.map(d => (
+              {data.map((d: any) => (
                 <div key={d.x} className={styles.cbarWrap}>
                   <div className={styles.cbarPair}>
                     <div className={styles.cbar} style={{ height: `${(d.a / max) * 100}%` }}>
@@ -139,11 +162,11 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
             <div className={styles.chT}><i className="fas fa-clock-rotate-left" /> Activité de la zone</div>
           </div>
           <div className={styles.cb}>
-            {ACTIVITE.map((a, i) => (
+            {activite.length === 0 && <p style={{ opacity: .5, padding: '1rem' }}>Aucune activité récente.</p>}
+            {activite.map((a: any, i: number) => (
               <div key={i} className={styles.act}>
                 <div className={`${styles.actIc} ${styles['act_' + a.kind]}`}><i className={`fas ${a.icone}`} /></div>
                 <div>
-                  {/* Texte avec balises <b> — données internes controlées */}
                   <div className={styles.actT} dangerouslySetInnerHTML={{ __html: a.texte }} />
                   <div className={styles.actW}>{a.when}</div>
                 </div>
@@ -153,14 +176,15 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
         </div>
       </div>
 
-      {/* ── Communes + répartition par rôle ── */}
+      {/* ── Communes + répartition ── */}
       <div className={styles.g2}>
         <div className={styles.card}>
           <div className={styles.ch}>
             <div className={styles.chT}><i className="fas fa-map" /> Couverture par commune</div>
           </div>
           <div className={styles.cb}>
-            {COMMUNES.map(c => (
+            {communes.length === 0 && <p style={{ opacity: .5, padding: '1rem' }}>Aucune donnée de commune.</p>}
+            {communes.map((c: any) => (
               <div key={c.nom} className={styles.commune}>
                 <div className={styles.communeTop}>
                   <b>{c.nom}</b><span>{c.acteurs} acteurs · {c.pct}%</span>
@@ -180,7 +204,7 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
           </div>
           <div className={styles.cb}>
             <div className={styles.roles}>
-              {ROLES_REPARTITION.map(r => (
+              {roles.map((r: any) => (
                 <div key={r.type} className={styles.roleStat}>
                   <div className={styles.roleV}>{r.n}</div>
                   <div className={styles.roleL}>

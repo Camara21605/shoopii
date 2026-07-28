@@ -6,10 +6,12 @@
  * Route : /dashboard/administrateur/*
  * ================================================================ */
 
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import LoadingScreen from '../../shared/components/LoadingScreen';
 import styles from './styles/AdminApp.module.css';
 import { useAdminState } from './hooks/useAdminState';
+import { useNotifications } from './hooks/useNotifications';
+import { apiFetch } from '../../shared/services/apiFetch';
 import { useToasts, ToastStack } from './components/Toast';
 import {
   fetchPrefs,
@@ -17,10 +19,11 @@ import {
   watchAutoTheme,
 } from '../../shared/services/appearanceService';
 
-import Sidebar from './components/Sidebar';
-import Topbar from './components/Topbar';
+import Sidebar    from './components/Sidebar';
+import Topbar     from './components/Topbar';
+import NotifPanel from './components/NotifPanel';
 import GenerateCodeModal from './components/GenerateCodeModal';
-import SanctionModal from './components/SanctionModal';
+import SanctionModal     from './components/SanctionModal';
 
 /* ── Pages chargées à la demande ── */
 const OverviewPage       = lazy(() => import('./pages/OverviewPage'));
@@ -32,6 +35,7 @@ const SignalementsPage   = lazy(() => import('./pages/SignalementsPage'));
 const CommandesPage      = lazy(() => import('./pages/CommandesPage'));
 const FinancesPage       = lazy(() => import('./pages/FinancesPage'));
 const AuditPage          = lazy(() => import('./pages/AuditPage'));
+const NotificationsPage  = lazy(() => import('./pages/NotificationsPage'));
 const ParametresPage     = lazy(() => import('./pages/ParametresPage'));
 const GeoReferentielPage = lazy(() => import('./pages/GeoReferentielPage'));
 
@@ -39,35 +43,42 @@ export default function AdministrateurApp() {
   const { toasts, pop } = useToasts();
   const s = useAdminState();
 
-  /**
-   * Appliquer les préférences d'apparence dès le montage du dashboard,
-   * avant même que l'utilisateur ouvre la section Paramètres.
-   * En cas d'erreur réseau, le dashboard s'affiche avec les valeurs par défaut.
-   */
+  /* ── Profil admin (sidebar) ── */
+  const [adminProfile, setAdminProfile] = useState<{
+    adminName: string; zoneName: string; communesCount: number;
+  } | null>(null);
+
+  /* ── Notifications temps réel ── */
+  const notifs = useNotifications();
+
+  /* ── Panel de notifications (dropdown topbar) ── */
+  const [notifOpen, setNotifOpen] = useState(false);
+
   useEffect(() => {
     fetchPrefs()
-      .then(prefs => {
-        applyPrefs(prefs);
-        watchAutoTheme(prefs);
-      })
-      .catch(() => { /* silencieux — defaults déjà appliqués par le service */ });
+      .then(prefs => { applyPrefs(prefs); watchAutoTheme(prefs); })
+      .catch(() => {});
+    apiFetch('/dashboard/admin/me')
+      .then(d => setAdminProfile(d as any))
+      .catch(() => {});
   }, []);
 
-  /* PageRenderer : rend la page active en fonction de s.activePage */
+  /* ── PageRenderer ── */
   const renderPage = () => {
     switch (s.activePage) {
-      case 'overview':     return <OverviewPage onNavigate={s.navigate} />;
-      case 'codes':        return <CodesPage onGenerate={() => s.setGenOpen(true)} onToast={pop} />;
-      case 'partenaires':  return <PartenairesPage onSanction={s.ouvrirSanction} onToast={pop} />;
-      case 'acteurs':      return <ActeursPage onSanction={s.ouvrirSanction} onToast={pop} />;
-      case 'validations':  return <ValidationsPage onToast={pop} />;
-      case 'signalements': return <SignalementsPage onSanction={s.ouvrirSanction} onToast={pop} />;
-      case 'commandes':    return <CommandesPage onToast={pop} />;
-      case 'finances':     return <FinancesPage onToast={pop} />;
-      case 'audit':        return <AuditPage onToast={pop} />;
-      case 'parametres':   return <ParametresPage onToast={pop} />;
-      case 'geo':          return <GeoReferentielPage geoPerms={s.geoPerms} onToast={pop} />;
-      default:             return <OverviewPage onNavigate={s.navigate} />;
+      case 'overview':       return <OverviewPage onNavigate={s.navigate} />;
+      case 'codes':          return <CodesPage onGenerate={() => s.setGenOpen(true)} onToast={pop} />;
+      case 'partenaires':    return <PartenairesPage onSanction={s.ouvrirSanction} onToast={pop} />;
+      case 'acteurs':        return <ActeursPage onSanction={s.ouvrirSanction} onToast={pop} />;
+      case 'validations':    return <ValidationsPage onToast={pop} />;
+      case 'signalements':   return <SignalementsPage onSanction={s.ouvrirSanction} onToast={pop} />;
+      case 'commandes':      return <CommandesPage onToast={pop} />;
+      case 'finances':       return <FinancesPage onToast={pop} />;
+      case 'audit':          return <AuditPage onToast={pop} />;
+      case 'notifications':  return <NotificationsPage onToast={pop} onNavigate={s.navigate} />;
+      case 'parametres':     return <ParametresPage onToast={pop} />;
+      case 'geo':            return <GeoReferentielPage geoPerms={s.geoPerms} onToast={pop} />;
+      default:               return <OverviewPage onNavigate={s.navigate} />;
     }
   };
 
@@ -81,6 +92,10 @@ export default function AdministrateurApp() {
         onNavigate={s.navigate}
         onGenerate={() => s.setGenOpen(true)}
         geoPerms={s.geoPerms}
+        zoneName={adminProfile?.zoneName}
+        adminName={adminProfile?.adminName}
+        communesCount={adminProfile?.communesCount}
+        unreadCount={notifs.unreadCount}
       />
 
       {/* ── Corps principal (topbar + page) ── */}
@@ -91,13 +106,31 @@ export default function AdministrateurApp() {
           onGenerate={() => s.setGenOpen(true)}
           onNavigate={s.navigate}
           onToast={pop}
+          unreadCount={notifs.unreadCount}
+          onBell={() => setNotifOpen(o => !o)}
         />
+
         <main className={styles.page}>
           <Suspense fallback={<LoadingScreen mini />}>
             {renderPage()}
           </Suspense>
         </main>
       </div>
+
+      {/* ── Dropdown notifications ── */}
+      {notifOpen && (
+        <NotifPanel
+          items={notifs.items}
+          unreadCount={notifs.unreadCount}
+          loading={notifs.loading}
+          onMarkRead={notifs.markRead}
+          onMarkAll={notifs.markAll}
+          onDismiss={notifs.dismiss}
+          onClose={() => setNotifOpen(false)}
+          onSeeAll={() => { s.navigate('notifications'); setNotifOpen(false); }}
+          onNavigate={s.navigate}
+        />
+      )}
 
       {/* ── Modales globales ── */}
       {s.genOpen && (

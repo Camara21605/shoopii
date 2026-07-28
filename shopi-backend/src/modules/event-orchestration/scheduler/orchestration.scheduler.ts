@@ -24,8 +24,8 @@ import { Repository, LessThan } from 'typeorm';
 import { EventPublisherService } from '../services/event-publisher.service';
 import { EventAuditService }     from '../services/event-audit.service';
 
-import { PaiementSession }  from '../../../database/entities/paiement/paiement-session.entity';
-import { Retrait }          from '../../../database/entities/paiement/retrait.entity';
+import { PaiementSession, PaiementSessionStatus } from '../../../database/entities/paiement/paiement-session.entity';
+import { Retrait, RetraitStatus }                 from '../../../database/entities/paiement/retrait.entity';
 
 import {
   SYSTEM_EVENTS,
@@ -79,7 +79,7 @@ export class OrchestrationScheduler {
     try {
       sessions = await this.sessionRepo.find({
         where: {
-          status:    'PENDING' as any,
+          status:    PaiementSessionStatus.PENDING,
           createdAt: LessThan(expiryThreshold),
         },
         take: 100,
@@ -96,17 +96,17 @@ export class OrchestrationScheduler {
 
     for (const session of sessions) {
       try {
-        await this.sessionRepo.update(session.id, { status: 'EXPIRED' as any });
+        await this.sessionRepo.update(session.id, { status: PaiementSessionStatus.EXPIRED });
 
         this.publisher.publish(
           PAYMENT_EVENTS.EXPIRED,
           {
             sessionId:   session.id,
-            clientId:    (session as any).clientId ?? 'unknown',
-            commandeId:  (session as any).commandeId ?? 'unknown',
-            commandeRef: (session as any).commandeRef ?? '',
-            montant:     (session as any).montant ?? 0,
-            devise:      (session as any).devise ?? 'XOF',
+            clientId:    session.clientUserId ?? 'unknown',
+            commandeId:  session.commandeId ?? 'unknown',
+            commandeRef: session.commandeNumero ?? '',
+            montant:     session.montant ?? 0,
+            devise:      session.devise ?? 'XOF',
             reason:      `Session expirée après ${SESSION_EXPIRY_MINUTES} minutes sans paiement.`,
           },
           EventSource.SCHEDULER,
@@ -133,7 +133,7 @@ export class OrchestrationScheduler {
     try {
       stuck = await this.retraitRepo.find({
         where: {
-          status:    'PENDING' as any,
+          status:    RetraitStatus.PENDING,
           createdAt: LessThan(threshold),
         },
         take: 50,

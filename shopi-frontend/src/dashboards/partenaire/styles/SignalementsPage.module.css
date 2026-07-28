@@ -56,3 +56,16 @@
   .repAv { background: linear-gradient(135deg, #2D2D30, #1A2B4A); }
 }
 :root[data-theme="dark"] .repAv { background: linear-gradient(135deg, #2D2D30, #1A2B4A); }
+
+/* ─── Light mode (OS light OR toggle light) ─────────────────── */
+@media (prefers-color-scheme: light) {
+  .chT i { color: var(--navy); }
+  .chLink { color: var(--navy); }
+  .t_ent { background: var(--g100); color: var(--navy); }
+  .st_invest { background: var(--g100); color: var(--navy); }
+}
+:root[data-theme="light"] .repAv { background: linear-gradient(135deg, #4B5563, #0B1F3A); }
+:root[data-theme="light"] .chT i { color: var(--navy); }
+:root[data-theme="light"] .chLink { color: var(--navy); }
+:root[data-theme="light"] .t_ent { background: var(--g100); color: var(--navy); }
+:root[data-theme="light"] .st_invest { background: var(--g100); color: var(--navy); }

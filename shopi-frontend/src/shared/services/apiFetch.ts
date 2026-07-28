@@ -1,13 +1,19 @@
 /* =========================================================
  * FICHIER : src/shared/services/apiFetch.ts
  *
- * CORRECTIONS :
- *   1. Log console.error pour chaque erreur API → debug facile
- *   2. NestJS retourne message[] pour les erreurs de validation
- *      → jointure en string lisible (au lieu de "[object Object]")
- *   3. 401 : ne redirige pas si on est déjà sur /login ou /register
- *      (évite la boucle de redirection pendant l'inscription)
- *   4. Erreur réseau : message plus clair
+ * Sécurité — Phase 6 (auth hardening) :
+ *   - credentials: 'include' → les cookies httpOnly sont envoyés
+ *     automatiquement (access_token, refresh_token).
+ *   - Plus d'Authorization: Bearer header dans apiFetch → auth
+ *     via cookie uniquement pour toutes les routes HTTP.
+ *   - Silent refresh : 401 → POST /auth/refresh → retry automatique.
+ *     Si le refresh échoue, redirect /login.
+ *
+ * Note : tokenStorage (localStorage) est conservé pour compatibilité
+ *   avec les composants UI qui lisent le rôle/état de connexion
+ *   (CardProduit, Header, CartContext, etc.). Ces composants ne l'utilisent
+ *   pas pour l'authentification — uniquement pour du rendu conditionnel.
+ *   Migration progressive vers useAppContext() à faire sur chaque composant.
  * ========================================================= */
 
 const BASE_URL =
@@ -15,6 +21,19 @@ const BASE_URL =
   'http://localhost:3001/api';
 
 const TOKEN_KEY = 'shopi_access_token';
+
+/* ─────────────────────────────────────────────
+ * Gestion localStorage — conservé pour UI compat
+ * L'authentification API passe par httpOnly cookies.
+ * ───────────────────────────────────────────── */
+export const tokenStorage = {
+  get:    () => localStorage.getItem(TOKEN_KEY),
+  set:    (token: string) => {
+    localStorage.setItem(TOKEN_KEY, token);
+    window.dispatchEvent(new CustomEvent('auth:login'));
+  },
+  remove: () => localStorage.removeItem(TOKEN_KEY),
+};
 
 /* ─────────────────────────────────────────────
  * Erreur API typée
@@ -31,32 +50,34 @@ export class ApiError extends Error {
 }
 
 /* ─────────────────────────────────────────────
- * Gestion JWT
- * ───────────────────────────────────────────── */
-export const tokenStorage = {
-  get:    () => localStorage.getItem(TOKEN_KEY),
-  set:    (token: string) => {
-    localStorage.setItem(TOKEN_KEY, token);
-    window.dispatchEvent(new CustomEvent('auth:login'));
-  },
-  remove: () => localStorage.removeItem(TOKEN_KEY),
-};
-
-/* ─────────────────────────────────────────────
  * Extraire un message lisible depuis la réponse
- * NestJS peut retourner :
- *   { message: "string" }
- *   { message: ["champ ne doit pas être vide", "email invalide"] }
- *   { message: "string", error: "Bad Request" }
  * ───────────────────────────────────────────── */
 function extractMessage(data: any, fallback: string): string {
   if (!data) return fallback;
   const msg = data.message;
   if (!msg) return data.error ?? fallback;
-  // NestJS validation → tableau de messages
   if (Array.isArray(msg)) return msg.join(' • ');
   if (typeof msg === 'string') return msg;
   return fallback;
+}
+
+/* ─────────────────────────────────────────────
+ * Silent refresh — Rotation du refresh token
+ * Un seul appel en cours même si plusieurs 401 arrivent en parallèle.
+ * ───────────────────────────────────────────── */
+let _refreshPromise: Promise<boolean> | null = null;
+
+function silentRefresh(): Promise<boolean> {
+  if (!_refreshPromise) {
+    _refreshPromise = fetch(`${BASE_URL}/auth/refresh`, {
+      method:      'POST',
+      credentials: 'include',
+    })
+      .then(r => r.ok)
+      .catch(() => false)
+      .finally(() => { _refreshPromise = null; });
+  }
+  return _refreshPromise;
 }
 
 /* ─────────────────────────────────────────────
@@ -69,6 +90,8 @@ export async function apiFetch<T = unknown>(
     body?:    unknown;
     params?:  Record<string, string | number | boolean | null | undefined>;
     public?:  boolean;
+    /** Interne — empêche une 2e tentative de silent refresh en boucle */
+    _retry?:  boolean;
   } = {},
 ): Promise<T> {
 
@@ -77,6 +100,7 @@ export async function apiFetch<T = unknown>(
     body,
     params,
     public: isPublic = false,
+    _retry = false,
   } = options;
 
   /* ── Construction URL ── */
@@ -97,10 +121,9 @@ export async function apiFetch<T = unknown>(
     headers['Content-Type'] = 'application/json';
   }
 
-  if (!isPublic) {
-    const token = tokenStorage.get();
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-  }
+  /* Pas d'Authorization: Bearer — auth via cookie httpOnly uniquement.
+   * Le cookie access_token est envoyé automatiquement grâce à credentials:'include'. */
+  void isPublic; // gardé pour compatibilité API mais sans effet sur les headers
 
   /* ── Requête HTTP ── */
   let response: Response;
@@ -109,7 +132,8 @@ export async function apiFetch<T = unknown>(
     response = await fetch(url, {
       method,
       headers,
-      signal: AbortSignal.timeout(20_000),
+      credentials: 'include', // cookie httpOnly envoyé automatiquement
+      signal: AbortSignal.timeout(60_000),
       body:
         body instanceof FormData
           ? body
@@ -118,9 +142,25 @@ export async function apiFetch<T = unknown>(
             : undefined,
     });
   } catch (networkError) {
-    // ✅ Log réseau pour debug
     console.error(`[apiFetch] Réseau inaccessible → ${method} ${url}`, networkError);
     throw new ApiError(0, 'Impossible de contacter le serveur. Vérifiez que le backend est démarré.', networkError);
+  }
+
+  /* ── 401 → Silent refresh → retry ── */
+  if (response.status === 401 && !_retry && endpoint !== '/auth/refresh') {
+    const currentPath = window.location.pathname;
+    const isAuthPage  = ['/login', '/register'].some(p => currentPath.startsWith(p));
+
+    if (!isAuthPage) {
+      const refreshed = await silentRefresh();
+      if (refreshed) {
+        return apiFetch<T>(endpoint, { ...options, _retry: true });
+      }
+      /* Refresh échoué → session expirée → redirect login */
+      tokenStorage.remove();
+      window.location.href = '/login';
+      throw new ApiError(401, 'Session expirée. Veuillez vous reconnecter.');
+    }
   }
 
   /* ── Gestion erreurs HTTP ── */
@@ -131,26 +171,11 @@ export async function apiFetch<T = unknown>(
 
     const message = extractMessage(errorData, `Erreur ${response.status}`);
 
-    // ✅ Log console pour debug — affiche l'erreur exacte du backend
     console.error(
       `[apiFetch] ${response.status} ${method} ${endpoint}`,
       '\nMessage :', message,
       '\nDétails  :', errorData,
     );
-
-    /*
-     * ✅ FIX 401 — ne pas rediriger si on est déjà sur une page auth.
-     * AVANT : redirigait même pendant /register → boucle infinie
-     * APRÈS : seulement si hors des pages publiques auth
-     */
-    if (response.status === 401) {
-      tokenStorage.remove();
-      const currentPath = window.location.pathname;
-      const isAuthPage  = ['/login', '/register'].includes(currentPath);
-      if (!isAuthPage) {
-        window.location.href = '/login';
-      }
-    }
 
     throw new ApiError(response.status, message, errorData);
   }

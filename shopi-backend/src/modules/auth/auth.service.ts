@@ -33,6 +33,8 @@ import * as crypto          from 'crypto';
 
 import { UserRole }             from 'src/common/enums/user-role.enum';
 import { User, UserStatus }     from '../../database/entities/user.entity';
+import { AuthLog }              from '../../database/entities/auth-log.entity';
+import { RefreshToken }         from '../../database/entities/refresh-token.entity';
 import { CompanyTeamMember, TeamMemberStatus } from '../../database/entities/company-team/company-team-member.entity';
 import { Admin }                from '../../database/entities/profiles/admin-profile.entity';
 import { Partner }              from '../../database/entities/profiles/partenaire-profile.entity';
@@ -51,17 +53,24 @@ import type { JwtPayload }      from './strategies/jwt.strategy';
 
 /* ── Constantes ── */
 const BCRYPT_ROUNDS         = 12;
-const JWT_TTL_SHORT         = '24h';
-const JWT_TTL_LONG          = '7d';   // 30d → 7d : access token long
-const JWT_TTL_SUPER         = '4h';   // 365d → 4h : super admin = TTL le plus court
+const JWT_TTL_ACCESS        = '1h';   // Access token court — refresh tokens prennent le relais
+const JWT_TTL_SUPER         = '4h';   // Super admin : TTL max 4h, pas de refresh token
 const JWT_TTL_RESET         = '15m';
-const OAUTH_CODE_TTL_SEC    = 60;     // code OAuth à usage unique, expire en 60s
+const OAUTH_CODE_TTL_SEC    = 60;     // Code OAuth à usage unique, expire en 60s
 const MAX_FAILED_LOGINS     = 5;
 const LOCKOUT_MINUTES       = 30;
 const OTP_EXPIRY_MINUTES    = 10;
 const OTP_MAX_ATTEMPTS      = 3;
 const OTP_RATE_LIMIT_WINDOW = 15;
 const OTP_RATE_LIMIT_MAX    = 3;
+const REFRESH_TTL_NORMAL_MS = 24 * 60 * 60 * 1000;       // 24h
+const REFRESH_TTL_LONG_MS   = 7  * 24 * 60 * 60 * 1000;  // 7j (rememberMe)
+const MAX_REFRESH_TOKENS    = 5;  // Révoque les plus anciens au-delà de ce seuil
+
+/* Hash factice pour neutraliser les timing attacks sur login (user introuvable).
+ * Bcrypt.compare() prend ~300ms quel que soit le résultat.
+ * Ce hash pré-calculé évite de générer un hash aléatoire à chaque requête. */
+const DUMMY_HASH = '$2b$12$X9ZTfV6vO2UXXY8O1rZ.0OUSQ1wAaJaVvqrBp5DUk8GHe4l6xXGq';
 
 const ROLES_REQUIRING_CODE: UserRole[] = [
   UserRole.ADMIN,
@@ -94,6 +103,13 @@ export interface AuthResponse {
     role:      UserRole;
     status:    UserStatus;
   };
+}
+
+/** Type interne : refreshToken n'est PAS retourné dans le corps de la réponse HTTP.
+ *  Le contrôleur l'extrait et le pose en cookie httpOnly. */
+export interface AuthServiceResult extends AuthResponse {
+  refreshToken: string | null;  // null pour SUPER_ADMIN
+  refreshTtlMs: number;
 }
 
 export interface OtpVerifyResponse {
@@ -134,6 +150,12 @@ export class AuthService implements OnModuleInit {
     @InjectRepository(CompanyTeamMember)
     private readonly teamMemberRepo: Repository<CompanyTeamMember>,
 
+    @InjectRepository(RefreshToken)
+    private readonly refreshTokenRepo: Repository<RefreshToken>,
+
+    @InjectRepository(AuthLog)
+    private readonly authLogRepo: Repository<AuthLog>,
+
     private readonly jwtService:          JwtService,
     private readonly config:              ConfigService,
     private readonly dataSource:          DataSource,
@@ -172,7 +194,20 @@ export class AuthService implements OnModuleInit {
       }
 
       const email     = this.config.get<string>('SUPER_ADMIN_EMAIL')    ?? 'superadmin@shopi.com';
-      const password  = this.config.get<string>('SUPER_ADMIN_PASSWORD') ?? 'Shopi@SuperAdmin2025!';
+      const rawPwd    = this.config.get<string>('SUPER_ADMIN_PASSWORD');
+      const DEFAULT_PWD = 'Shopi@SuperAdmin2025!';
+
+      /* FIX m2 — Interdire le démarrage en production avec le mot de passe par défaut.
+       * Si SUPER_ADMIN_PASSWORD n'est pas défini en prod, les credentials publics
+       * du code source seraient utilisés → compte super-admin immédiatement compromis. */
+      if (process.env.NODE_ENV === 'production' && !rawPwd) {
+        this.logger.error(
+          'SUPER_ADMIN_PASSWORD non défini en production. Démarrage annulé pour sécurité.',
+        );
+        process.exit(1);
+      }
+
+      const password = rawPwd ?? DEFAULT_PWD;
       const firstName = this.config.get<string>('SUPER_ADMIN_FIRSTNAME')  ?? 'Super';
       const lastName  = this.config.get<string>('SUPER_ADMIN_LASTNAME')   ?? 'Admin';
 
@@ -207,7 +242,7 @@ export class AuthService implements OnModuleInit {
   // 1. INSCRIPTION
   // ══════════════════════════════════════════════════════════════════════════
 
-  async register(dto: RegisterDto, clientIp: string): Promise<AuthResponse> {
+  async register(dto: RegisterDto, clientIp: string, userAgent: string | null = null): Promise<AuthServiceResult> {
 
     // Sécurité : empêcher la création d'un compte SUPER_ADMIN (ou de tout
     // futur rôle privilégié non listé) via l'inscription publique.
@@ -342,8 +377,20 @@ export class AuthService implements OnModuleInit {
         this.logger.error(`[WELCOME EMAIL ❌] ${newUser.email} | ${(err as Error).message}`),
       );
 
-    const actorId = await this.findProfileId(newUser.id, newUser.role as UserRole);
-    return { accessToken: this.signJwt(newUser, false, actorId), user: this.toPublicUser(newUser) };
+    const actorId     = await this.findProfileId(newUser.id, newUser.role as UserRole);
+    const accessToken  = this.signJwt(newUser, false, actorId);
+    const ttlMs        = REFRESH_TTL_NORMAL_MS;
+    const expiresAt    = new Date(Date.now() + ttlMs);
+    const { rawToken: refreshToken } = await this.issueRefreshToken(
+      newUser.id, clientIp, userAgent, expiresAt,
+    );
+
+    this.logEvent('register_success', {
+      userId: newUser.id, email: newUser.email, role: newUser.role,
+      ipAddress: clientIp, userAgent, success: true,
+    });
+
+    return { accessToken, refreshToken, refreshTtlMs: ttlMs, user: this.toPublicUser(newUser) };
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -481,21 +528,49 @@ export class AuthService implements OnModuleInit {
   // 2. CONNEXION
   // ══════════════════════════════════════════════════════════════════════════
 
-  async login(dto: LoginDto, clientIp: string): Promise<AuthResponse> {
+  async login(
+    dto:       LoginDto,
+    clientIp:  string,
+    userAgent: string | null = null,
+  ): Promise<AuthServiceResult> {
     const INVALID_MSG = 'Identifiants incorrects. Vérifiez votre email et mot de passe.';
     const user = await this.findByIdentifier(dto.identifier);
-    if (!user) throw new UnauthorizedException(INVALID_MSG);
+
+    /* FIX timing attack — on exécute TOUJOURS bcrypt, que l'utilisateur existe ou non.
+     * Sans ça, un attaquant mesure la différence de temps pour énumérer les emails. */
+    if (!user) {
+      await bcrypt.compare(dto.password, DUMMY_HASH);
+      this.logEvent('login_failed', {
+        email: dto.identifier, ipAddress: clientIp, userAgent, success: false,
+        failureReason: 'Utilisateur introuvable',
+      });
+      throw new UnauthorizedException(INVALID_MSG);
+    }
 
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       const min = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60_000);
+      this.logEvent('login_locked', {
+        userId: user.id, email: user.email, role: user.role,
+        ipAddress: clientIp, userAgent, success: false,
+        failureReason: `Verrouillé encore ${min} min`,
+      });
       throw new UnauthorizedException(`Compte verrouillé. Réessayez dans ${min} minute(s).`);
     }
-    if (user.status === UserStatus.BANNED)
+    if (user.status === UserStatus.BANNED) {
+      this.logEvent('login_failed', {
+        userId: user.id, email: user.email, role: user.role,
+        ipAddress: clientIp, userAgent, success: false, failureReason: 'Compte banni',
+      });
       throw new UnauthorizedException('Votre compte a été banni. Contactez le support Shopi.');
-    if (user.status === UserStatus.SUSPENDED)
+    }
+    if (user.status === UserStatus.SUSPENDED) {
+      this.logEvent('login_failed', {
+        userId: user.id, email: user.email, role: user.role,
+        ipAddress: clientIp, userAgent, success: false, failureReason: 'Compte suspendu',
+      });
       throw new UnauthorizedException("Votre compte est suspendu. Contactez l'administrateur.");
+    }
 
-    // Récupérer le mot de passe (select: false sur le champ)
     const userWithPwd = await this.userRepo
       .createQueryBuilder('u')
       .select(['u.id', 'u.password', 'u.failedLoginAttempts'])
@@ -505,6 +580,10 @@ export class AuthService implements OnModuleInit {
     const passwordValid = await bcrypt.compare(dto.password, userWithPwd!.password);
     if (!passwordValid) {
       await this.handleFailedLogin(user);
+      this.logEvent('login_failed', {
+        userId: user.id, email: user.email, role: user.role,
+        ipAddress: clientIp, userAgent, success: false, failureReason: 'Mot de passe incorrect',
+      });
       throw new UnauthorizedException(INVALID_MSG);
     }
 
@@ -515,16 +594,34 @@ export class AuthService implements OnModuleInit {
       lastLoginIp:         clientIp,
     });
 
+    const actorId    = await this.findProfileId(user.id, user.role as UserRole);
+    const accessToken = this.signJwt(user, false, actorId);
+
+    /* SUPER_ADMIN n'a pas de refresh token — il doit se reconnecter manuellement après 4h */
+    let refreshToken: string | null = null;
+    let refreshTtlMs = 0;
+    if (user.role !== UserRole.SUPER_ADMIN) {
+      const ttlMs = dto.rememberMe ? REFRESH_TTL_LONG_MS : REFRESH_TTL_NORMAL_MS;
+      const expiresAt = new Date(Date.now() + ttlMs);
+      const { rawToken } = await this.issueRefreshToken(user.id, clientIp, userAgent, expiresAt);
+      refreshToken = rawToken;
+      refreshTtlMs = ttlMs;
+    }
+
+    this.logEvent('login_success', {
+      userId: user.id, email: user.email, role: user.role,
+      ipAddress: clientIp, userAgent, success: true,
+    });
     this.logger.log(`[LOGIN ✅] ${user.email} | ${user.role} | IP=${clientIp}`);
-    const actorId = await this.findProfileId(user.id, user.role as UserRole);
-    return { accessToken: this.signJwt(user, dto.rememberMe ?? false, actorId), user: this.toPublicUser(user) };
+
+    return { accessToken, refreshToken, refreshTtlMs, user: this.toPublicUser(user) };
   }
 
   // ══════════════════════════════════════════════════════════════════════════
   // 3. MOT DE PASSE OUBLIÉ — Génération OTP
   // ══════════════════════════════════════════════════════════════════════════
 
-  async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
+  async forgotPassword(dto: ForgotPasswordDto, clientIp: string | null = null, userAgent: string | null = null): Promise<{ message: string }> {
     const GENERIC_MSG =
       'Si un compte actif correspond à cet identifiant, ' +
       'vous recevrez un code de vérification dans quelques minutes.';
@@ -573,6 +670,11 @@ export class AuthService implements OnModuleInit {
           this.logger.error(`[OTP EMAIL ❌] ${user.email} | ${(err as Error).message}`),
         );
 
+      this.logEvent('otp_sent', {
+        userId: user.id, email: user.email,
+        ipAddress: clientIp, userAgent, success: true,
+      });
+
       this.logger.log(
         `[OTP ENVOYÉ] ${user.email} | Expiration=${otpExpiry.toISOString()} | Demandes=${newRequestCount}`,
       );
@@ -600,10 +702,16 @@ export class AuthService implements OnModuleInit {
       .getOne();
 
     if (!user || user.status !== UserStatus.ACTIVE) {
+      this.logEvent('otp_failed', {
+        email: identifier, success: false, failureReason: 'Utilisateur introuvable ou inactif',
+      });
       throw new BadRequestException(INVALID_OTP);
     }
 
     if (!user.resetOtpHash || !user.resetOtpExpiry || user.resetOtpExpiry < new Date()) {
+      this.logEvent('otp_failed', {
+        userId: user.id, email: user.email, success: false, failureReason: 'OTP absent ou expiré',
+      });
       throw new BadRequestException(
         'Ce code a expiré. Demandez un nouveau code depuis la page de connexion.',
       );
@@ -613,6 +721,9 @@ export class AuthService implements OnModuleInit {
     if (attempts >= OTP_MAX_ATTEMPTS) {
       await this.userRepo.update(user.id, {
         resetOtpHash: null, resetOtpExpiry: null, resetOtpAttempts: 0,
+      });
+      this.logEvent('otp_failed', {
+        userId: user.id, email: user.email, success: false, failureReason: 'Trop de tentatives',
       });
       throw new BadRequestException(
         'Trop de tentatives incorrectes. Votre code a été invalidé. Demandez-en un nouveau.',
@@ -627,11 +738,19 @@ export class AuthService implements OnModuleInit {
         await this.userRepo.update(user.id, {
           resetOtpHash: null, resetOtpExpiry: null, resetOtpAttempts: 0,
         });
+        this.logEvent('otp_failed', {
+          userId: user.id, email: user.email, success: false,
+          failureReason: 'Code invalide — limite de tentatives atteinte',
+        });
         throw new BadRequestException(
           'Code incorrect. Votre code a été invalidé. Demandez-en un nouveau.',
         );
       }
       await this.userRepo.update(user.id, { resetOtpAttempts: attempts + 1 });
+      this.logEvent('otp_failed', {
+        userId: user.id, email: user.email, success: false,
+        failureReason: `Code invalide — ${remaining} tentative(s) restante(s)`,
+      });
       throw new BadRequestException(
         `Code incorrect. Il vous reste ${remaining} tentative(s).`,
       );
@@ -651,6 +770,7 @@ export class AuthService implements OnModuleInit {
       },
     );
 
+    this.logEvent('otp_success', { userId: user.id, email: user.email, success: true });
     this.logger.log(`[OTP ✅] ${user.email}`);
     return { resetToken };
   }
@@ -659,7 +779,7 @@ export class AuthService implements OnModuleInit {
   // 5. RÉINITIALISATION DU MOT DE PASSE
   // ══════════════════════════════════════════════════════════════════════════
 
-  async resetPassword(resetToken: string, newPassword: string): Promise<{ message: string }> {
+  async resetPassword(resetToken: string, newPassword: string, clientIp: string | null = null, userAgent: string | null = null): Promise<{ message: string }> {
     let payload: any;
     try {
       payload = this.jwtService.verify(resetToken, {
@@ -707,6 +827,15 @@ export class AuthService implements OnModuleInit {
       lastPasswordChangedAt: new Date(),
       failedLoginAttempts:   0,
       lockedUntil:           null,
+    });
+
+    /* Révoquer tous les refresh tokens actifs — invalide toutes les sessions
+     * existantes après un reset de mot de passe (bonne pratique OWASP). */
+    await this.revokeAllRefreshTokens(user.id);
+
+    this.logEvent('password_reset_success', {
+      userId: user.id, email: user.email, role: user.role,
+      ipAddress: clientIp, userAgent, success: true,
     });
 
     this.mailService
@@ -800,16 +929,14 @@ export class AuthService implements OnModuleInit {
     await this.userRepo.update(user.id, updates as any);
   }
 
-  private signJwt(user: User, rememberMe: boolean, actorId?: string): string {
+  private signJwt(user: User, _rememberMe: boolean, actorId?: string): string {
     const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role };
     if (actorId) payload.actorId = actorId;
 
-    // Le super admin a systématiquement le TTL le plus court (4h),
-    // quel que soit le flag rememberMe — c'est le compte le plus privilégié.
-    const expiresIn =
-      user.role === UserRole.SUPER_ADMIN
-        ? JWT_TTL_SUPER
-        : rememberMe ? JWT_TTL_LONG : JWT_TTL_SHORT;
+    /* Access token court (1h) pour tous les rôles non-super-admin.
+     * La persistance de session est assurée par le refresh token (24h ou 7j).
+     * SUPER_ADMIN n'a pas de refresh token — il doit se reconnecter après 4h. */
+    const expiresIn = user.role === UserRole.SUPER_ADMIN ? JWT_TTL_SUPER : JWT_TTL_ACCESS;
 
     return this.jwtService.sign(payload, { expiresIn });
   }
@@ -964,7 +1091,11 @@ export class AuthService implements OnModuleInit {
    * Échange le code OAuth contre le JWT, puis détruit le code (usage unique).
    * Lance UnauthorizedException si le code est expiré ou inexistant.
    */
-  async exchangeGoogleOAuthCode(code: string): Promise<AuthResponse> {
+  async exchangeGoogleOAuthCode(
+    code:      string,
+    ipAddress: string | null = null,
+    userAgent: string | null = null,
+  ): Promise<AuthServiceResult> {
     const key = `oauth_code:${code}`;
     const jwt = await this.redis.get(key);
 
@@ -988,7 +1119,152 @@ export class AuthService implements OnModuleInit {
     const user = await this.userRepo.findOne({ where: { id: payload.sub } });
     if (!user) throw new NotFoundException('Compte introuvable.');
 
-    return { accessToken: jwt, user: this.toPublicUser(user) };
+    const ttlMs    = REFRESH_TTL_NORMAL_MS;
+    const expiresAt = new Date(Date.now() + ttlMs);
+    const { rawToken: refreshToken } = await this.issueRefreshToken(
+      user.id, ipAddress, userAgent, expiresAt,
+    );
+
+    this.logEvent('login_success', {
+      userId: user.id, email: user.email, role: user.role,
+      ipAddress, userAgent, success: true,
+    });
+
+    return { accessToken: jwt, refreshToken, refreshTtlMs: ttlMs, user: this.toPublicUser(user) };
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // AUDIT LOG — journalisation des événements de sécurité (fire-and-forget)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  private logEvent(
+    event: string,
+    data: {
+      userId?:        string | null;
+      email?:         string | null;
+      role?:          string | null;
+      ipAddress?:     string | null;
+      userAgent?:     string | null;
+      success?:       boolean;
+      failureReason?: string | null;
+    },
+  ): void {
+    this.authLogRepo.save(
+      this.authLogRepo.create({
+        event,
+        userId:        data.userId        ?? null,
+        email:         data.email         ?? null,
+        role:          data.role          ?? null,
+        ipAddress:     data.ipAddress     ?? null,
+        userAgent:     data.userAgent     ?? null,
+        success:       data.success       ?? true,
+        failureReason: data.failureReason ?? null,
+      }),
+    ).catch(err =>
+      this.logger.error(`[AUTH LOG ❌] ${event} | ${(err as Error).message}`),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // REFRESH TOKENS — émission, rotation, révocation
+  // ══════════════════════════════════════════════════════════════════════════
+
+  private async issueRefreshToken(
+    userId:     string,
+    ipAddress:  string | null,
+    userAgent:  string | null,
+    expiresAt:  Date,
+  ): Promise<{ rawToken: string; record: RefreshToken }> {
+    /* Plafonner à MAX_REFRESH_TOKENS tokens actifs par utilisateur.
+     * Révoque les plus anciens si le seuil est dépassé (ex : multi-appareils). */
+    const active = await this.refreshTokenRepo.find({
+      where: { userId, revoked: false },
+      order: { createdAt: 'ASC' },
+    });
+    if (active.length >= MAX_REFRESH_TOKENS) {
+      const toRevoke = active.slice(0, active.length - MAX_REFRESH_TOKENS + 1);
+      for (const old of toRevoke) {
+        await this.refreshTokenRepo.update(old.id, { revoked: true });
+      }
+    }
+
+    /* Token brut = deux UUID v4 concaténés (288 bits d'entropie).
+     * Seul le hash SHA-256 (64 hex) est stocké en base. */
+    const rawToken  = crypto.randomUUID() + crypto.randomUUID();
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    const record = this.refreshTokenRepo.create({ tokenHash, userId, ipAddress, userAgent, expiresAt });
+    await this.refreshTokenRepo.save(record);
+
+    return { rawToken, record };
+  }
+
+  private async revokeRefreshToken(id: string): Promise<void> {
+    await this.refreshTokenRepo.update(id, { revoked: true });
+  }
+
+  async revokeAllRefreshTokens(userId: string): Promise<void> {
+    await this.refreshTokenRepo.update({ userId, revoked: false }, { revoked: true });
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // REFRESH — rotation du refresh token + nouvel access token
+  // ══════════════════════════════════════════════════════════════════════════
+
+  async refreshTokens(
+    rawRefreshToken: string,
+    ipAddress:       string | null,
+    userAgent:       string | null,
+  ): Promise<AuthServiceResult> {
+    const tokenHash = crypto.createHash('sha256').update(rawRefreshToken).digest('hex');
+
+    /* tokenHash a select:false → on doit l'expliciter dans le queryBuilder */
+    const record = await this.refreshTokenRepo
+      .createQueryBuilder('rt')
+      .addSelect('rt.tokenHash')
+      .where('rt.tokenHash = :hash',   { hash: tokenHash })
+      .andWhere('rt.revoked = false')
+      .andWhere('rt.expiresAt > :now', { now: new Date() })
+      .getOne();
+
+    if (!record) {
+      this.logEvent('token_refresh_failed', {
+        ipAddress, userAgent, success: false,
+        failureReason: 'Token introuvable, révoqué ou expiré',
+      });
+      throw new UnauthorizedException('Session expirée. Veuillez vous reconnecter.');
+    }
+
+    const user = await this.userRepo.findOne({ where: { id: record.userId } });
+    if (!user || user.status === UserStatus.BANNED || user.status === UserStatus.SUSPENDED) {
+      await this.revokeAllRefreshTokens(record.userId);
+      this.logEvent('token_refresh_failed', {
+        userId: record.userId, ipAddress, userAgent, success: false,
+        failureReason: 'Compte inactif ou banni',
+      });
+      throw new UnauthorizedException('Compte inactif. Reconnectez-vous.');
+    }
+
+    /* Rotation : révocation de l'ancien + émission d'un nouveau avec la même expiration.
+     * Si le même token est utilisé deux fois → détection de vol → révocation totale. */
+    const newExpiresAt = record.expiresAt;
+    await this.revokeRefreshToken(record.id);
+    const { rawToken: newRawToken, record: newRecord } = await this.issueRefreshToken(
+      user.id, ipAddress, userAgent, newExpiresAt,
+    );
+    await this.refreshTokenRepo.update(record.id, { replacedByTokenId: newRecord.id });
+
+    const actorId    = await this.findProfileId(user.id, user.role as UserRole);
+    const accessToken = this.signJwt(user, false, actorId);
+    const refreshTtlMs = newExpiresAt.getTime() - Date.now();
+
+    this.logEvent('token_refreshed', {
+      userId: user.id, email: user.email, role: user.role,
+      ipAddress, userAgent, success: true,
+    });
+
+    this.logger.log(`[REFRESH ✅] ${user.email} | IP=${ipAddress}`);
+    return { accessToken, refreshToken: newRawToken, refreshTtlMs, user: this.toPublicUser(user) };
   }
 
   private async generateUniqueUsername(firstName: string, lastName: string): Promise<string> {

@@ -31,10 +31,12 @@ import { Client }            from '../../database/entities/profiles/client-profi
 import { Wallet }            from '../../database/entities/wallet.entity';
 // ── Company Team Member (détection collaborateurs au login) ──
 import { CompanyTeamMember } from '../../database/entities/company-team/company-team-member.entity';
+// ── Auth — journalisation et refresh tokens ───────────────────
+import { AuthLog }      from '../../database/entities/auth-log.entity';
+import { RefreshToken } from '../../database/entities/refresh-token.entity';
 
 @Module({
   imports: [
-    // ✅ Tous les repositories nécessaires pour AuthService.createProfile()
     TypeOrmModule.forFeature([
       User,
       CreationCode,
@@ -46,6 +48,8 @@ import { CompanyTeamMember } from '../../database/entities/company-team/company-
       Client,
       Wallet,
       CompanyTeamMember,
+      AuthLog,
+      RefreshToken,
     ]),
 
     PassportModule.register({ defaultStrategy: 'jwt' }),

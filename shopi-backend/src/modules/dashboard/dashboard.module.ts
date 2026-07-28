@@ -9,9 +9,8 @@ import { EntrepriseDashboardModule }     from './entreprise/entreprise-dashboard
 import { LivreurDashboardModule }        from './livreur/livreur-dashboard.module';
 import { CorrespondantParametresModule } from './correspondant/correspondant-parametres.module';
 import { ClientModule }                  from './client/client.module';
-import { PartenaireDashboardModule }     from './partenaire/partenaire-dashboard.module';
-
-// import { AdministrateurDashboardModule } from './administrateur/administrateur-dashboard.module';
+import { PartenaireDashboardModule }        from './partenaire/partenaire-dashboard.module';
+import { AdministrateurDashboardModule }    from './administrateur/administrateur-dashboard.module';
 
 import { DashboardController } from './dashboard.controller';
 
@@ -23,6 +22,7 @@ import { DashboardController } from './dashboard.controller';
     CorrespondantParametresModule,
     ClientModule,
     PartenaireDashboardModule,
+    AdministrateurDashboardModule,
   ],
 
   controllers: [
@@ -38,6 +38,7 @@ import { DashboardController } from './dashboard.controller';
     CorrespondantParametresModule,
     ClientModule,
     PartenaireDashboardModule,
+    AdministrateurDashboardModule,
   ],
 })
 export class DashboardModule {}

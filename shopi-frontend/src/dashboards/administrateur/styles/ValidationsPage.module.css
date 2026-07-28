@@ -64,7 +64,7 @@
 }
 .doc { background: var(--sky); color: var(--blue); }
 .doc:hover { background: var(--sky-2); }
-.ok { background: var(--emerald); color: #fff; }
+.ok { background: #059669; color: #fff; }
 .ok:hover { background: #03604a; }
 .no { background: rgba(220,38,38,.08); color: #DC2626; }
 .no:hover { background: rgba(220,38,38,.15); }

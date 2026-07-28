@@ -440,7 +440,7 @@ export default function GeoReferentielSection({ toast, isActive }: Props) {
           )}
 
           {/* ── Skeleton de chargement (premier chargement uniquement) ── */}
-          {loading && all.length === 0 ? (
+          {loading && pays.length === 0 && regions.length === 0 ? (
             <div className={s.body}>
               <div className={s.card} style={{ padding: 40, textAlign: 'center' }}>
                 <i className="fas fa-circle-notch fa-spin" style={{ fontSize: 32, color: 'var(--acid)', marginBottom: 16, display: 'block' }} />

@@ -31,6 +31,7 @@ import {
   NotificationType,
 } from 'src/database/entities/notification/notification.entitiy';
 import type { INotificationListResult, INotificationDto } from '../interfaces/notification.interfaces';
+import { NotificationActorProfileService, IActorProfile } from '../services/notification-actor-profile.service';
 
 // ─── Paramètres de recherche ──────────────────────────────────
 
@@ -54,6 +55,8 @@ export class NotificationRepository {
   constructor(
     @InjectRepository(Notification)
     private readonly repo: Repository<Notification>,
+
+    private readonly actorProfiles: NotificationActorProfileService,
   ) {}
 
   // ─────────────────────────────────────────────────────────
@@ -128,8 +131,15 @@ export class NotificationRepository {
     // Compteur non lues (utilise IDX_notif_recipient)
     const unread = await this.countUnread(recipientType, recipientId);
 
+    // Résolution en lot des profils acteurs (1 requête par type présent)
+    const actorMap = await this.actorProfiles.resolveMany(
+      data.map(n => ({ type: n.actorType, id: n.actorId })),
+    );
+
     return {
-      data:    data.map(n => this.toDto(n)),
+      data:    data.map(n => this.toDto(n, n.actorType && n.actorId
+        ? actorMap.get(`${n.actorType}:${n.actorId}`)
+        : undefined)),
       total,
       unread,
       hasMore,
@@ -335,9 +345,10 @@ export class NotificationRepository {
 
   /**
    * Convertit une entité Notification en INotificationDto public.
-   * N'expose jamais les champs internes (actorType, channel, isSent…).
+   * N'expose jamais les champs internes (actorType, channel, isSent…)
+   * — seul le profil résolu de l'acteur (nom + avatar) est exposé.
    */
-  toDto(n: Notification): INotificationDto {
+  toDto(n: Notification, actorProfile?: IActorProfile): INotificationDto {
     return {
       id:           n.id,
       type:         n.type,
@@ -353,7 +364,14 @@ export class NotificationRepository {
       readAt:       n.readAt?.toISOString() ?? null,
       count:        n.count,
       createdAt:    n.createdAt.toISOString(),
-      actor:        null, // enrichi par NotificationService si besoin
+      actor: n.actorType && n.actorId
+        ? {
+            id:     n.actorId,
+            type:   n.actorType,
+            name:   actorProfile?.name   ?? 'Utilisateur',
+            avatar: actorProfile?.avatar ?? null,
+          }
+        : null,
     };
   }
 }

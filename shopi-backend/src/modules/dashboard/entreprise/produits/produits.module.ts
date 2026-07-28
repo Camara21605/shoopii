@@ -11,8 +11,9 @@ import { ProductSpec }    from 'src/database/entities/entreprise.table/product-s
 import { ProductWholesaleTier } from 'src/database/entities/entreprise.table/product-wholesale-tier.entity';
 import { Category }       from 'src/database/entities/entreprise.table/category.entity';
 import { SubCategory }    from 'src/database/entities/entreprise.table/sub-category.entity';
-import { Company }        from 'src/database/entities/profiles/entreprise-profile.entity'; // ✅ AJOUTÉ
-import { ProductStory }  from 'src/database/entities/entreprise.table/product-story.entity';
+import { Company }          from 'src/database/entities/profiles/entreprise-profile.entity';
+import { ProductStory }    from 'src/database/entities/entreprise.table/product-story.entity';
+import { PlatformSettings } from 'src/database/entities/platform-settings.entity';
 
 import { AuthModule }        from '../../../auth/auth.module';
 import { UploadModule }      from 'src/modules/upload/upload.module';
@@ -32,7 +33,8 @@ import { ProductsScheduler } from './products.scheduler';
       SubCategory,
       Company,       // ✅ AJOUTÉ — nécessaire pour companyRepo dans ProduitsService
       CompanyType,   // ✅ AJOUTÉ — nécessaire pour companyTypeRepo dans ProduitsService
-      ProductStory,  // stories produit
+      ProductStory,
+      PlatformSettings, // FIX M1 — commission dynamique par plan
     ]),
     AuthModule,
     UploadModule,

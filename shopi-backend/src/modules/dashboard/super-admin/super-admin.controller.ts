@@ -18,6 +18,8 @@ import {
   Get, Patch, Post,
   UseGuards,
   Request, Body,
+  InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -32,6 +34,7 @@ import { UserRole }     from '../../../common/enums/user-role.enum';
 
 import { UtilisateursService }    from './services/utilisateurs.service';
 import { PlatformSettingsService, UpdatePlatformSettingsDto } from './services/platform-settings.service';
+import { ReportingEngine }        from '../../../modules/reporting-engine/reporting.engine';
 
 // ─────────────────────────────────────────────────────────────
 // CONTROLLER PRINCIPAL
@@ -47,9 +50,12 @@ import { PlatformSettingsService, UpdatePlatformSettingsDto } from './services/p
 @Controller('dashboard/super-admin')
 export class SuperAdminController {
 
+  private readonly logger = new Logger(SuperAdminController.name);
+
   constructor(
     private readonly utilisateursService:    UtilisateursService,
     private readonly platformSettingsService: PlatformSettingsService,
+    private readonly reportingEngine:        ReportingEngine,
   ) {}
 
   // ══════════════════════════════════════════════════════════════
@@ -138,6 +144,25 @@ export class SuperAdminController {
   // ══════════════════════════════════════════════════════════════
   // POST /dashboard/super-admin/maintenance/cache-purge
   // ══════════════════════════════════════════════════════════════
+
+  // ══════════════════════════════════════════════════════════════
+  // GET /dashboard/super-admin/finances
+  // Dashboard financier global : KPIs, tendances, top acteurs
+  // ══════════════════════════════════════════════════════════════
+
+  @ApiOperation({
+    summary:     'Dashboard financier super-admin',
+    description: 'KPIs paiements/commissions/retraits/litiges + séries temporelles + top acteurs (30 derniers jours par défaut).',
+  })
+  @Get('finances')
+  async getFinances() {
+    try {
+      return await this.reportingEngine.getSuperAdminDashboard();
+    } catch (err) {
+      this.logger.error('getSuperAdminDashboard failed', err instanceof Error ? err.stack : String(err));
+      throw new InternalServerErrorException('Erreur lors du chargement du tableau de bord financier');
+    }
+  }
 
   @ApiOperation({ summary: 'Purger le cache applicatif' })
   @Roles(UserRole.SUPER_ADMIN)

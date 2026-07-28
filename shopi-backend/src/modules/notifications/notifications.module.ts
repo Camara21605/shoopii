@@ -32,6 +32,12 @@ import { NotificationPreference }
   from 'src/database/entities/notification/notification-preference.entity';
 import { NotificationDeliveryLog }
   from 'src/database/entities/notification/notification-delivery-log.entity';
+import { Client }        from 'src/database/entities/profiles/client-profile.entity';
+import { Company }       from 'src/database/entities/profiles/entreprise-profile.entity';
+import { Delivery }      from 'src/database/entities/profiles/livreur-profile.entity';
+import { Correspondent } from 'src/database/entities/profiles/correspondant-profile.entity';
+import { Partner }       from 'src/database/entities/profiles/partenaire-profile.entity';
+import { Admin }         from 'src/database/entities/profiles/admin-profile.entity';
 
 // ── Queue ──────────────────────────────────────────────────
 import { NOTIFICATION_QUEUE }           from './queue/notification.queue';
@@ -54,6 +60,7 @@ import { NotificationPreferenceService } from './services/notification-preferenc
 import { NotificationDispatchService }  from './services/notification-dispatch.service';
 import { NotificationService }          from './services/notification.service';
 import { NotificationReminderService }  from './services/notification-reminder.service';
+import { NotificationActorProfileService } from './services/notification-actor-profile.service';
 
 // ── Gateway ────────────────────────────────────────────────
 import { NotificationGateway }          from './gateway/notification.gateway';
@@ -76,6 +83,8 @@ import { NotificationStatsService }     from './services/notification-stats.serv
       Notification,
       NotificationPreference,
       NotificationDeliveryLog,
+      // Profils acteurs — résolution nom + avatar du déclencheur
+      Client, Company, Delivery, Correspondent, Partner, Admin,
     ]),
 
     // ── BullMQ : queue notifications ─────────────────────────
@@ -146,6 +155,7 @@ import { NotificationStatsService }     from './services/notification-stats.serv
     NotificationService,
     NotificationReminderService,
     NotificationStatsService,
+    NotificationActorProfileService,
 
     // ── Gateway + Processor + Scheduler ──────────────────────
     NotificationGateway,

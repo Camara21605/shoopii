@@ -107,6 +107,10 @@
 :root[data-theme="dark"] .topbar { background: rgba(0,0,0,.97); border-bottom-color: rgba(255,255,255,.08); }
 :root[data-theme="dark"] .dot { border-color: #000000; }
 
+/* ─── Light mode (OS dark + toggle light) ───────────────────── */
+:root[data-theme="light"] .topbar { background: rgba(255,255,255,.97); border-bottom-color: rgba(11,31,58,.08); }
+:root[data-theme="light"] .dot { border-color: #fff; }
+
 @media (max-width: 860px) {
   .topbar { left: 0; padding: 0 16px; }
   .menuBtn { display: flex; }

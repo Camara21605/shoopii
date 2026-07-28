@@ -228,7 +228,7 @@ export default function PartenairesSection({ onToast }: SectionProps) {
 
   if (loading) return (
     <div className={base.secBody}>
-      <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-muted,#6b7280)', fontSize: 14 }}>
+      <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--adm-text-3)', fontSize: 14 }}>
         <i className="fas fa-rotate-right fa-spin" style={{ fontSize: 22, marginBottom: 10, display: 'block', color: '#0284C7' }} />
         Chargement de la configuration…
       </div>
@@ -239,12 +239,12 @@ export default function PartenairesSection({ onToast }: SectionProps) {
     <div className={base.secBody}>
       <div style={{
         textAlign: 'center', padding: '40px 24px',
-        background: 'var(--bg-card,#fff)', border: '1px solid var(--border,#e5e7eb)',
+        background: 'var(--adm-surface)', border: '1px solid var(--adm-border)',
         borderRadius: 12,
       }}>
         <i className="fas fa-triangle-exclamation" style={{ fontSize: 28, color: '#dc2626', marginBottom: 10, display: 'block' }} />
-        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary,#111827)', marginBottom: 6 }}>Chargement impossible</div>
-        <div style={{ fontSize: 13, color: 'var(--text-muted,#6b7280)', marginBottom: 18 }}>{error}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--adm-text)', marginBottom: 6 }}>Chargement impossible</div>
+        <div style={{ fontSize: 13, color: 'var(--adm-text-3)', marginBottom: 18 }}>{error}</div>
         <button className={`${base.btn} ${base.btnBlue} ${base.btnSm}`} onClick={load}>
           <i className="fas fa-rotate-right" /> Réessayer
         </button>
@@ -265,9 +265,9 @@ export default function PartenairesSection({ onToast }: SectionProps) {
               display: 'flex', alignItems: 'center', gap: 6,
               padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
               fontSize: 13, fontWeight: 600,
-              background: tab === t.id ? '#0284C7' : 'var(--bg-card,#fff)',
-              color:      tab === t.id ? '#fff'    : 'var(--text-muted,#6b7280)',
-              boxShadow:  tab === t.id ? '0 2px 8px rgba(2,132,199,.25)' : 'inset 0 0 0 1px var(--border,#e5e7eb)',
+              background: tab === t.id ? '#0284C7' : 'var(--adm-surface)',
+              color:      tab === t.id ? '#fff'    : 'var(--adm-text-3)',
+              boxShadow:  tab === t.id ? '0 2px 8px rgba(2,132,199,.25)' : 'inset 0 0 0 1px var(--adm-border)',
               transition: 'all .15s',
             }}
             onClick={() => setTab(t.id)}>
@@ -318,7 +318,7 @@ export default function PartenairesSection({ onToast }: SectionProps) {
             </div>
             <div className={base.cardBody}>
               {!stats ? (
-                <div style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted,#6b7280)', fontSize: 13 }}>
+                <div style={{ textAlign: 'center', padding: 32, color: 'var(--adm-text-3)', fontSize: 13 }}>
                   <i className="fas fa-chart-bar" style={{ fontSize: 24, marginBottom: 8, display: 'block' }} />
                   Statistiques non disponibles
                 </div>
@@ -378,11 +378,11 @@ export default function PartenairesSection({ onToast }: SectionProps) {
                   { label: 'Upgrade tier auto',    value: d.autoTierUpgrade ? 'Activé' : 'Désactivé' },
                 ].map(r => (
                   <div key={r.label} style={{
-                    background: 'var(--bg-input,#f9fafb)', borderRadius: 9, padding: '12px 14px',
+                    background: 'var(--adm-bg)', borderRadius: 9, padding: '12px 14px',
                     display: 'flex', flexDirection: 'column', gap: 4,
                   }}>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted,#6b7280)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em' }}>{r.label}</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary,#111827)' }}>{r.value}</div>
+                    <div style={{ fontSize: 11, color: 'var(--adm-text-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em' }}>{r.label}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--adm-text)' }}>{r.value}</div>
                   </div>
                 ))}
               </div>
@@ -404,7 +404,7 @@ export default function PartenairesSection({ onToast }: SectionProps) {
               </div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <div className={styles.toggleRow} style={{ padding: 0, border: 'none', gap: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted,#6b7280)' }}>Upgrade auto</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--adm-text-3)' }}>Upgrade auto</span>
                   <label className={styles.toggle}>
                     <input type="checkbox" checked={d.autoTierUpgrade}
                       onChange={e => set('autoTierUpgrade', e.target.checked)} />
@@ -714,7 +714,7 @@ export default function PartenairesSection({ onToast }: SectionProps) {
                   <input className={styles.fieldInput} type="number" min={1} max={720}
                     value={d.validationDelayH}
                     onChange={e => set('validationDelayH', +e.target.value)} />
-                  <div style={{ fontSize: 11, color: 'var(--text-muted,#6b7280)', marginTop: 5 }}>
+                  <div style={{ fontSize: 11, color: 'var(--adm-text-3)', marginTop: 5 }}>
                     Durée maximale avant expiration du dossier.
                   </div>
                 </div>
@@ -803,7 +803,7 @@ export default function PartenairesSection({ onToast }: SectionProps) {
             </div>
             <div className={base.cardBody}>
               {!stats ? (
-                <div style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted,#6b7280)', fontSize: 13 }}>
+                <div style={{ textAlign: 'center', padding: 32, color: 'var(--adm-text-3)', fontSize: 13 }}>
                   <i className="fas fa-chart-bar" style={{ fontSize: 24, marginBottom: 8, display: 'block' }} />
                   Statistiques non disponibles
                 </div>

@@ -15,9 +15,10 @@ import { Module }         from '@nestjs/common';
 import { TypeOrmModule }  from '@nestjs/typeorm';
 
 /* ── Entités TypeORM nécessaires ── */
-import { Company }        from 'src/database/entities/profiles/entreprise-profile.entity';
-import { User }           from 'src/database/entities/user.entity';
-import { CompanyHoraire } from 'src/database/entities/entreprise.table/company-horaire.entity';
+import { Company }          from 'src/database/entities/profiles/entreprise-profile.entity';
+import { User }             from 'src/database/entities/user.entity';
+import { CompanyHoraire }   from 'src/database/entities/entreprise.table/company-horaire.entity';
+import { PlatformSettings } from 'src/database/entities/platform-settings.entity';
 
 /* ── Module Upload (Cloudinary) ── */
 import { UploadModule }   from 'src/modules/upload/upload.module';
@@ -45,6 +46,7 @@ import { DangerParametresService }     from './services/danger-parametres.servic
       Company,
       User,
       CompanyHoraire,
+      PlatformSettings,
     ]),
 
     /* Module upload Cloudinary (logo, cover, documents) */

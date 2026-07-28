@@ -8,28 +8,33 @@
 /* ------------------------------------------------------------
    1. VARIABLES GLOBALES (design tokens)
    ------------------------------------------------------------ */
+/* ------------------------------------------------------------
+   Le dashboard Administrateur est verrouillé en mode sombre
+   (noir) en permanence, quel que soit le thème choisi ailleurs
+   sur le site — pas de bascule clair/sombre ici.
+   ------------------------------------------------------------ */
 .admin-app {
-  --navy:          #0e1b33;
-  --navy-soft:     #16264a;
-  --blue:          #2563eb;
-  --blue-soft:     #e8efff;
-  --emerald:       #10b981;
-  --emerald-soft:  #e7f8f1;
-  --violet:        #7c3aed;
-  --violet-soft:   #f1eafd;
-  --amber:         #f59e0b;
-  --amber-soft:    #fdf3e0;
-  --red:           #ef4444;
-  --red-soft:      #fdeaea;
+  --navy:          #F4F4F5;
+  --navy-soft:     rgba(255,255,255,.08);
+  --blue:          #60A5FA;
+  --blue-soft:     rgba(96,165,250,.14);
+  --emerald:       #34D399;
+  --emerald-soft:  rgba(16,185,129,.16);
+  --violet:        #A78BFA;
+  --violet-soft:   rgba(124,58,237,.16);
+  --amber:         #FBBF24;
+  --amber-soft:    rgba(245,158,11,.16);
+  --red:           #F87171;
+  --red-soft:      rgba(239,68,68,.16);
 
   /* Neutres */
-  --adm-bg:        #f4f6fb;
-  --adm-surface:   #ffffff;
-  --adm-border:    #e6eaf2;
-  --adm-text:      #1c2437;
-  --adm-text-2:    #5b6478;
-  --adm-text-3:    #8b93a7;
-  --adm-text-inv:  #f4f6fb;
+  --adm-bg:        #000000;
+  --adm-surface:   #0A0A0A;
+  --adm-border:    rgba(255,255,255,.08);
+  --adm-text:      #F4F4F5;
+  --adm-text-2:    #A1A1AA;
+  --adm-text-3:    #71717A;
+  --adm-text-inv:  #F4F4F5;
 
   /* Typographie */
   --font-display: "Fraunces", Georgia, serif;
@@ -39,13 +44,53 @@
   --adm-r-sm:      8px;
   --adm-r:         12px;
   --adm-r-lg:      16px;
-  --adm-shadow-sm: 0 1px 2px rgba(14, 27, 51, 0.06);
-  --adm-shadow:    0 4px 16px rgba(14, 27, 51, 0.07);
+  --adm-shadow-sm: 0 1px 2px rgba(0,0,0,.45);
+  --adm-shadow:    0 4px 16px rgba(0,0,0,.55);
 
   /* Dimensions structure */
   --adm-sidebar-w: 256px;
   --adm-aside-w:   300px;
   --adm-topbar-h:  64px;
+
+  /* Neutre — chrome toujours sombre (sidebar, boutons pleins) */
+  --adm-btn:       #1C1C1F;
+  --adm-btn-h:     #2D2D30;
+
+  /* Verrouillage des tokens globaux (tokens.css) empruntés par les
+     pages admin, pour qu'ils ne suivent PAS le thème site (clair/sombre)
+     mais restent toujours en noir ici. */
+  --white:          #000000;
+  --g50:            #000000;
+  --g100:           #0A0A0A;
+  --g200:           #1C1C1F;
+  --g300:           #2D2D30;
+  --t1:             #F4F4F5;
+  --t2:             #A1A1AA;
+  --t3:             #71717A;
+  --t4:             #52525B;
+  --bdr:            rgba(255,255,255,.08);
+  --bdr2:           rgba(255,255,255,.12);
+  --bdrb:           rgba(255,255,255,.12);
+  --sky:            rgba(255,255,255,.04);
+  --sky-2:          rgba(255,255,255,.06);
+  --sky-3:          rgba(255,255,255,.10);
+  --sh-xs:          0 2px 8px rgba(0,0,0,.45);
+  --sh-sm:          0 4px 16px rgba(0,0,0,.55);
+  --sh-md:          0 8px 28px rgba(0,0,0,.65);
+  --sh-lg:          0 16px 48px rgba(0,0,0,.72);
+  --sh-xl:          0 24px 64px rgba(0,0,0,.78);
+  --sh-b:           0 6px 20px rgba(0,0,0,.45);
+  --blue-2:         #3B82F6;
+  --blue-lt:        #BFDBFE;
+  --heading-color:  #F4F4F5;
+  --btn-primary-bg: #000000;
+  --topbar-bg:      rgba(0,0,0,.97);
+  --topbar-border:  rgba(255,255,255,.08);
+  --em-bg:          rgba(5,150,105,.18);
+  --vl-bg:          rgba(109,40,217,.18);
+  --am-bg:          rgba(180,83,9,.18);
+  --rs-bg:          rgba(190,24,93,.15);
+  --tl-bg:          rgba(14,116,144,.18);
 
   font-family: var(--font-ui);
   background:  var(--adm-bg);
@@ -103,7 +148,7 @@
    3. SIDEBAR
    ------------------------------------------------------------ */
 .admin-sidebar {
-  background:      var(--navy);
+  background:      var(--adm-btn);
   color:           var(--adm-text-inv);
   display:         flex;
   flex-direction:  column;
@@ -336,7 +381,7 @@
   gap:             8px;
   margin-left:     auto;
   background:      var(--emerald-soft);
-  color:           #067a5b;
+  color:           var(--emerald);
   font-size:       0.8rem;
   font-weight:     600;
   padding:         6px 12px;
@@ -480,13 +525,13 @@
 }
 
 .adm-btn--primary {
-  background:  #111113;
+  background:  var(--adm-btn);
   color:       #fff;
   box-shadow:  var(--adm-shadow-sm);
 }
 
 .adm-btn--primary:hover {
-  background: #1C1C1F;
+  background: var(--adm-btn-h);
 }
 
 .adm-btn--ghost {
@@ -767,7 +812,7 @@
   font-weight:    600;
   padding:        12px 24px;
   border-bottom:  1px solid var(--adm-border);
-  background:     #fafbfe;
+  background:     var(--adm-bg);
 }
 
 .adm-table td {
@@ -782,7 +827,7 @@
   transition: background 0.12s ease;
 }
 
-.adm-table tbody tr:hover { background: #fafbfe; }
+.adm-table tbody tr:hover { background: var(--adm-bg); }
 
 /* Cellule utilisateur */
 .user-cell {
@@ -805,9 +850,9 @@
 }
 
 .adm-tag--entreprise   { background: var(--blue-soft);    color: var(--blue); }
-.adm-tag--livreur      { background: var(--emerald-soft); color: #067a5b; }
+.adm-tag--livreur      { background: var(--emerald-soft); color: var(--emerald); }
 .adm-tag--partenaire   { background: var(--violet-soft);  color: var(--violet); }
-.adm-tag--correspondant { background: var(--amber-soft);  color: #b45309; }
+.adm-tag--correspondant { background: var(--amber-soft);  color: var(--amber); }
 
 /* Badges statut */
 .adm-status {
@@ -818,9 +863,9 @@
   font-weight: 600;
 }
 
-.adm-status--actif   { color: #067a5b; }
-.adm-status--attente { color: #b45309; }
-.adm-status--bloque  { color: #b91c1c; }
+.adm-status--actif   { color: var(--emerald); }
+.adm-status--attente { color: var(--amber); }
+.adm-status--bloque  { color: var(--red); }
 
 .adm-status--actif .adm-dot   { background: var(--emerald); }
 .adm-status--attente .adm-dot { background: var(--amber); }
@@ -846,9 +891,9 @@
 }
 
 .row-actions .action:hover               { background: var(--adm-bg); }
-.row-actions .action--valider            { color: #067a5b; border-color: #bfe9da; }
+.row-actions .action--valider            { color: var(--emerald); border-color: var(--emerald-soft); }
 .row-actions .action--valider:hover      { background: var(--emerald-soft); }
-.row-actions .action--bloquer            { color: #b91c1c; border-color: #f3c6c6; }
+.row-actions .action--bloquer            { color: var(--red); border-color: var(--red-soft); }
 .row-actions .action--bloquer:hover      { background: var(--red-soft); }
 
 /* Pied tableau (pagination) */
@@ -880,7 +925,7 @@
 }
 
 .adm-pager button:hover     { background: var(--adm-bg); }
-.adm-pager .pager--active   { background: #111113; border-color: #111113; color: #fff; }
+.adm-pager .pager--active   { background: var(--adm-btn); border-color: var(--adm-btn); color: #fff; }
 
 /* ------------------------------------------------------------
    6. ASIDE — activités, logs, notifications
@@ -980,8 +1025,8 @@
 
 .sys-note + .sys-note { margin-top: 8px; }
 
-.sys-note--info    { background: var(--blue-soft);  color: #1e429f; }
-.sys-note--warning { background: var(--amber-soft); color: #92400e; }
+.sys-note--info    { background: var(--blue-soft);  color: var(--blue); }
+.sys-note--warning { background: var(--amber-soft); color: var(--amber); }
 
 /* Placeholder page vide */
 .adm-placeholder {

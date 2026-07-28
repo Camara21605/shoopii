@@ -38,31 +38,35 @@ export class SecuriteParametresService {
    * ────────────────────────────────────────────────────────── */
 
   async updatePassword(userId: string, dto: UpdatePasswordDto): Promise<{ message: string }> {
-    // Validation : les deux nouveaux mots de passe doivent correspondre
     if (dto.newPassword !== dto.confirmPassword) {
       throw new BadRequestException('Les mots de passe ne correspondent pas.');
     }
 
-    // Récupérer l'utilisateur avec le hash du mot de passe
+    /* FIX I1 — Sélectionner aussi lastPasswordChangedAt pour pouvoir le mettre à jour. */
     const user = await this.userRepo.findOne({
       where: { id: userId },
-      select: ['id', 'password'],
+      select: ['id', 'password', 'lastPasswordChangedAt'],
     });
 
     if (!user) throw new NotFoundException('Utilisateur introuvable.');
 
-    // Vérifier l'ancien mot de passe
     const isValid = await bcrypt.compare(dto.currentPassword, user.password);
     if (!isValid) {
       throw new UnauthorizedException('Mot de passe actuel incorrect.');
     }
 
-    // Hasher et sauvegarder le nouveau mot de passe
     const SALT_ROUNDS = 12;
     user.password = await bcrypt.hash(dto.newPassword, SALT_ROUNDS);
+
+    /* FIX I1 — Invalider les tokens JWT émis AVANT ce changement.
+     * jwt.strategy.ts vérifie que iat >= lastPasswordChangedAt :
+     * tous les anciens tokens (jusqu'à 7 jours en rememberMe) sont
+     * révoqués instantanément, même s'ils n'ont pas encore expiré. */
+    user.lastPasswordChangedAt = new Date();
+
     await this.userRepo.save(user);
 
-    this.logger.log(`[MOT DE PASSE] Changé — userId=${userId}`);
+    this.logger.log(`[MOT DE PASSE] Changé + tokens révoqués — userId=${userId}`);
     return { message: 'Mot de passe mis à jour avec succès.' };
   }
 
@@ -108,9 +112,10 @@ export class SecuriteParametresService {
   }
 
   /* ── HELPER ── */
-  private async findCompanyOrFail(userIdOrCompanyId: string): Promise<Company> {
-    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId } });
-    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId } });
+  /* FIX m4 — Lookup strict par userId uniquement; le fallback par companyId
+   * permettait l'accès cross-tenant si un UUID de boutique était connu. */
+  private async findCompanyOrFail(userId: string): Promise<Company> {
+    const company = await this.companyRepo.findOne({ where: { userId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }

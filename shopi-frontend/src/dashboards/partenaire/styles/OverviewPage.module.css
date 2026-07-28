@@ -94,3 +94,20 @@
 :root[data-theme="dark"] .hero { background: linear-gradient(135deg, #0A0F1E, #111827, #162240); }
 :root[data-theme="dark"] .tierRing::before { background: #0A0F1E; }
 :root[data-theme="dark"] .b1 { color: #0B1F3A; }
+
+/* ─── Light mode (OS light OR toggle light) ─────────────────── */
+@media (prefers-color-scheme: light) {
+  .h em { color: rgba(255,255,255,.85); }
+  .chT i { color: var(--navy); }
+  .chLink { color: var(--navy); }
+  .cbar { background: linear-gradient(180deg, #1A3D6E, #0B1F3A); }
+  .act_code { background: var(--g100); color: var(--navy); }
+}
+:root[data-theme="light"] .hero { background: #0B1F3A; }
+:root[data-theme="light"] .tierRing::before { background: #0B1F3A; }
+:root[data-theme="light"] .b1 { color: #0B1F3A; }
+:root[data-theme="light"] .h em { color: rgba(255,255,255,.85); }
+:root[data-theme="light"] .chT i { color: var(--navy); }
+:root[data-theme="light"] .chLink { color: var(--navy); }
+:root[data-theme="light"] .cbar { background: linear-gradient(180deg, #1A3D6E, #0B1F3A); }
+:root[data-theme="light"] .act_code { background: var(--g100); color: var(--navy); }

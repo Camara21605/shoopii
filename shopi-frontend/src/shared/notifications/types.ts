@@ -20,7 +20,7 @@ export interface INotificationDto {
   readAt:       string | null;
   count:        number;           // > 1 = notification agrégée
   createdAt:    string;           // ISO
-  actor?:       { type: string; id: string } | null;
+  actor?:       { type: string; id: string; name: string; avatar: string | null } | null;
 }
 
 export interface INotificationListResult {

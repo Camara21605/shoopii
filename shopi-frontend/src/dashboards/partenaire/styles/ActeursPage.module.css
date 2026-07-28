@@ -70,3 +70,14 @@
   .fchip.on { background: #1A4FC4; border-color: #1A4FC4; }
 }
 :root[data-theme="dark"] .fchip.on { background: #1A4FC4; border-color: #1A4FC4; }
+
+/* ─── Light mode (OS light OR toggle light) ─────────────────── */
+@media (prefers-color-scheme: light) {
+  .av_ent { background: linear-gradient(135deg, #0B1F3A, #1A3D6E); }
+  .gerer { background: var(--g100); border-color: var(--bdr2); color: var(--navy); }
+  .gerer:hover { background: var(--g200); }
+}
+:root[data-theme="light"] .fchip.on { background: #0B1F3A; border-color: #0B1F3A; color: #fff; }
+:root[data-theme="light"] .av_ent { background: linear-gradient(135deg, #0B1F3A, #1A3D6E); }
+:root[data-theme="light"] .gerer { background: var(--g100); border-color: var(--bdr2); color: var(--navy); }
+:root[data-theme="light"] .gerer:hover { background: var(--g200); }

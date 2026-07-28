@@ -23,11 +23,13 @@ import { Module }        from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 /* ── Entités TypeORM directement utilisées par ce module ── */
-import { Delivery }       from '../../../database/entities/profiles/livreur-profile.entity';
-import { User }           from '../../../database/entities/user.entity';
-import { LivreurHoraire } from '../../../database/entities/livreur.table/livreur-horaire.entity';
-import { Commande }       from '../../../database/entities/commande/commande.entity';
-import { Notification }   from '../../../database/entities/notification/notification.entitiy';
+import { Delivery }              from '../../../database/entities/profiles/livreur-profile.entity';
+import { User }                  from '../../../database/entities/user.entity';
+import { LivreurHoraire }        from '../../../database/entities/livreur.table/livreur-horaire.entity';
+import { Commande }              from '../../../database/entities/commande/commande.entity';
+import { Notification }          from '../../../database/entities/notification/notification.entitiy';
+import { PlatformSettings }      from '../../../database/entities/platform-settings.entity';
+import { PaiementDistribution }  from '../../../database/entities/paiement/paiement-distribution.entity';
 
 /* ── Module Paramètres (assemble les 8 services + controller) ── */
 import { LivreurParametresModule } from './livreur-parametres.module';
@@ -47,6 +49,8 @@ import { LivreurDashboardService } from './livreur-dashboard.service';
       LivreurHoraire,
       Commande,
       Notification,
+      PlatformSettings,
+      PaiementDistribution,
     ]),
 
     /*

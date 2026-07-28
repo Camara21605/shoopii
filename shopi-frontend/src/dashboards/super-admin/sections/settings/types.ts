@@ -93,6 +93,8 @@ export interface PlatformSettings {
   minWithdrawalAmount:  number;
   /** Plafond maximum par transaction */
   maxTransactionAmount: number;
+  /** Limite journalière de retrait par acteur (0 = pas de limite globale) */
+  dailyWithdrawalLimit: number;
   /** Délai avant versement aux vendeurs (en jours ouvrés) */
   settlementDelayDays:  number;
   /** Fournisseurs mobile money actifs */
@@ -100,6 +102,45 @@ export interface PlatformSettings {
   orangeMoneyEnabled:   boolean;
   waveEnabled:          boolean;
   moovMoneyEnabled:     boolean;
+  djomyEnabled:         boolean;
+
+  // ── Délais métier ──────────────────────────────────────────
+  /** Délai max pour payer après création commande (heures) */
+  maxPaymentDelayHours:         number;
+  /** TTL d'une session de paiement (minutes) */
+  sessionTtlMinutes:            number;
+  /** Délai max pour validation entreprise après paiement (heures) */
+  maxEnterpriseValidationHours: number;
+  /** Fenêtre de contestation après livraison (jours) */
+  disputeWindowDays:            number;
+  /** Délai max de décision admin sur un litige (heures) */
+  disputeResolutionHours:       number;
+  /** Délai de traitement des remboursements (jours ouvrés) */
+  refundProcessingDays:         number;
+  /** Délai de traitement des retraits (heures) */
+  withdrawalProcessingHours:    number;
+  /** Conservation des données financières (années) */
+  dataRetentionYears:           number;
+  /** Inactivité avant gel du wallet (jours) */
+  walletInactivityDays:         number;
+  /** Tentatives de paiement max par heure par utilisateur */
+  maxDailyPaymentAttempts:      number;
+
+  // ── Litiges ────────────────────────────────────────────────
+  /** Nombre max de pièces jointes par litige */
+  maxEvidencesPerDispute:      number;
+  /** SLA d'instruction admin (heures) */
+  disputeInstructionSlaHours:  number;
+
+  // ── Settlement Engine ──────────────────────────────────────
+  /** Seuil de validation manuelle (GNF) */
+  autoValidationThreshold:  number;
+  /** Tentatives de payout max avant blocage */
+  maxWithdrawalAttempts:    number;
+
+  // ── Équipes entreprise ─────────────────────────────────────
+  /** Collaborateurs actifs max par entreprise */
+  maxTeamMembersPerCompany: number;
 
   // ── Notifications ──────────────────────────────────────────
   emailNotifEnabled:    boolean;

@@ -1,29 +1,23 @@
 /* ================================================================
  * FICHIER : src/dashboards/administrateur/pages/AuditPage.tsx
- *
- * Journal d'audit : toutes les actions de l'administrateur
- * sont consignées avec une référence unique (AUD-XXXXX).
- * En prod : GET /admin/audit?filtre=…
  * ================================================================ */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from '../styles/AuditPage.module.css';
-import { AUDIT } from '../data/adminData';
+import { apiFetch } from '../../../shared/services/apiFetch';
 import type { AuditKind } from '../data/types';
 
 interface AuditPageProps {
   onToast: (msg: string, type?: 's' | 'i' | 'w') => void;
 }
 
-/* Icône par type d'action d'audit */
-const KIND_ICON: Record<AuditKind, string> = {
+const KIND_ICON: Record<string, string> = {
   code: 'fa-qrcode',
   ok:   'fa-user-check',
   warn: 'fa-triangle-exclamation',
   ban:  'fa-ban',
 };
 
-/* Filtres disponibles */
 const FILTRES: { id: 'all' | AuditKind; label: string }[] = [
   { id: 'all',  label: 'Toutes' },
   { id: 'ok',   label: 'Validations' },
@@ -32,10 +26,20 @@ const FILTRES: { id: 'all' | AuditKind; label: string }[] = [
 ];
 
 export default function AuditPage({ onToast }: AuditPageProps) {
-  const [filtre, setFiltre]       = useState<'all' | AuditKind>('all');
+  const [filtre,    setFiltre]    = useState<'all' | AuditKind>('all');
   const [recherche, setRecherche] = useState('');
+  const [data,      setData]      = useState<{ list: any[]; total: number } | null>(null);
+  const [loading,   setLoading]   = useState(true);
 
-  const visibles = AUDIT.filter(a =>
+  useEffect(() => {
+    apiFetch('/dashboard/admin/audit')
+      .then(d => setData(d as any))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const total   = data?.total ?? 0;
+  const visibles = (data?.list ?? []).filter((a: any) =>
     (filtre === 'all' || a.kind === filtre) &&
     a.texte.toLowerCase().includes(recherche.toLowerCase())
   );
@@ -47,7 +51,7 @@ export default function AuditPage({ onToast }: AuditPageProps) {
         {FILTRES.map(f => (
           <button key={f.id} className={`${styles.fchip} ${filtre === f.id ? styles.fon : ''}`}
             onClick={() => setFiltre(f.id)}>
-            {f.label} {f.id === 'all' && <span className={styles.n}>248</span>}
+            {f.label} {f.id === 'all' && <span className={styles.n}>{total}</span>}
           </button>
         ))}
         <div className={styles.searchIn}>
@@ -57,7 +61,7 @@ export default function AuditPage({ onToast }: AuditPageProps) {
         </div>
       </div>
 
-      {/* ── Journal d'audit ── */}
+      {/* ── Journal ── */}
       <div className={styles.card}>
         <div className={styles.ch}>
           <div className={styles.chT}>
@@ -67,24 +71,32 @@ export default function AuditPage({ onToast }: AuditPageProps) {
             <i className="fas fa-download" /> Exporter
           </button>
         </div>
-        <div className={styles.cb}>
-          {visibles.map(a => (
-            <div key={a.id} className={styles.aud}>
-              <div className={`${styles.audIc} ${styles['aud_' + a.kind]}`}>
-                <i className={`fas ${KIND_ICON[a.kind]}`} />
-              </div>
-              <div>
-                {/* Texte avec balises <b> — données internes contrôlées */}
-                <div className={styles.audT} dangerouslySetInnerHTML={{ __html: a.texte }} />
-                <div className={styles.audMeta}>
-                  <span><i className="fas fa-user" /> {a.auteur}</span>
-                  <span><i className="fas fa-clock" /> {a.quand}</span>
-                  <span><i className="fas fa-fingerprint" /> {a.id}</span>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '3rem', opacity: .4 }}>
+            <i className="fas fa-spinner fa-spin fa-2x" />
+          </div>
+        ) : (
+          <div className={styles.cb}>
+            {visibles.length === 0 && (
+              <p style={{ textAlign: 'center', opacity: .5, padding: '2rem' }}>Aucune entrée dans le journal.</p>
+            )}
+            {visibles.map((a: any) => (
+              <div key={a.id} className={styles.aud}>
+                <div className={`${styles.audIc} ${styles['aud_' + a.kind]}`}>
+                  <i className={`fas ${KIND_ICON[a.kind] ?? 'fa-circle-info'}`} />
+                </div>
+                <div>
+                  <div className={styles.audT} dangerouslySetInnerHTML={{ __html: a.texte }} />
+                  <div className={styles.audMeta}>
+                    <span><i className="fas fa-user" /> {a.auteur}</span>
+                    <span><i className="fas fa-clock" /> {a.quand}</span>
+                    <span><i className="fas fa-fingerprint" /> {a.id}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

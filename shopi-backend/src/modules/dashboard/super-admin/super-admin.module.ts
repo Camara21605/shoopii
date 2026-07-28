@@ -54,6 +54,7 @@ import { AdminsService }           from './services/admins.service';
 import { PlatformSettingsService } from './services/platform-settings.service';
 import { SecuriteAdminService }    from './services/securite-admin.service';
 import { NotificationsModule }      from '../../notifications/notifications.module';
+import { ReportingModule }          from '../../reporting-engine/reporting.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { NotificationsModule }      from '../../notifications/notifications.modu
 
     CategoriesModule,
     NotificationsModule,
+    ReportingModule,
   ],
 
   controllers: [

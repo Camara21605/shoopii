@@ -63,7 +63,7 @@ const CardLivreurList: React.FC<CardLivreurListProps> = ({
           <span>{livreur.vehicule}</span>
           <span>
             <i className="fas fa-circle"
-              style={{ color: livreur.disponible ? '#10B981' : '#D1D5DB', fontSize: 8 }}
+              style={{ color: livreur.disponible ? 'var(--t1)' : 'var(--t4)', fontSize: 8 }}
               aria-hidden="true" />
             {livreur.disponible ? 'Disponible' : 'En course'}
           </span>

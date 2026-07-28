@@ -432,9 +432,10 @@ export class SavService {
 
   /* ── Helpers ── */
 
-  private async resolveCompany(userIdOrCompanyId: string): Promise<Company> {
-    let c = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id', 'companyName'] });
-    if (!c) c = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId }, select: ['id', 'companyName'] });
+  /* FIX m4 — Lookup strict par userId uniquement; le fallback par companyId
+   * permettait l'accès cross-tenant si un UUID de boutique était connu. */
+  private async resolveCompany(userId: string): Promise<Company> {
+    const c = await this.companyRepo.findOne({ where: { userId }, select: ['id', 'companyName'] });
     if (!c) throw new NotFoundException('Profil entreprise introuvable.');
     return c;
   }

@@ -51,7 +51,7 @@
   display: flex; align-items: center; justify-content: center;
   color: #fff; font-family: var(--fd); font-weight: 800; font-size: 14px;
   flex-shrink: 0;
-  background: linear-gradient(135deg, var(--t2), var(--navy));
+  background: linear-gradient(135deg, var(--adm-btn), var(--adm-btn-h));
 }
 .main { flex: 1; min-width: 0; }
 .top { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 3px; }

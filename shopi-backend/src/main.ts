@@ -59,8 +59,17 @@ async function bootstrap() {
   const prodOrigins = rawFrontend.split(',').map(s => s.trim()).filter(Boolean);
   const isProd      = process.env.NODE_ENV === 'production';
 
+  /* FIX C4 — Interdire le wildcard CORS en production.
+   * Avant : si FRONTEND_URL était vide, allowedOrigins = ['*'] ce qui
+   * autorisait toutes les origines même avec credentials:true.
+   * Après : crash immédiat si la variable est absente en production. */
+  if (isProd && prodOrigins.length === 0) {
+    logger.error('FRONTEND_URL non défini en production — démarrage annulé.');
+    process.exit(1);
+  }
+
   const allowedOrigins: string[] = isProd
-    ? (prodOrigins.length > 0 ? prodOrigins : ['*'])
+    ? prodOrigins
     : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000',
        ...prodOrigins];
 

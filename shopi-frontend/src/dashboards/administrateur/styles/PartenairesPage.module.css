@@ -44,7 +44,7 @@
   display: inline-flex; align-items: center; gap: 7px;
 }
 .fchip:hover { border-color: var(--bdrb); color: var(--blue); }
-.fon { background: var(--navy) !important; color: #fff !important; border-color: var(--navy) !important; }
+.fon { background: var(--adm-btn) !important; color: #fff !important; border-color: var(--adm-btn) !important; }
 .n { font-size: 10px; opacity: .7; }
 .searchIn { position: relative; margin-left: auto; }
 .searchIn input {

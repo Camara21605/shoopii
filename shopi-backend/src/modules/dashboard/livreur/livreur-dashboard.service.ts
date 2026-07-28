@@ -12,6 +12,8 @@ import { In, Repository }   from 'typeorm';
 import { Delivery }  from 'src/database/entities/profiles/livreur-profile.entity';
 import { Commande, CommandeStatus } from 'src/database/entities/commande/commande.entity';
 import { Notification, NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import { PlatformSettings }    from 'src/database/entities/platform-settings.entity';
+import { PaiementDistribution, DistributionActeurType, DistributionStatus } from 'src/database/entities/paiement/paiement-distribution.entity';
 
 /** Statuts d'une mission en cours */
 const ACTIVE_STATUSES: CommandeStatus[] = [
@@ -40,6 +42,12 @@ export class LivreurDashboardService {
 
     @InjectRepository(Notification)
     private readonly notifRepo: Repository<Notification>,
+
+    @InjectRepository(PlatformSettings)
+    private readonly platformRepo: Repository<PlatformSettings>,
+
+    @InjectRepository(PaiementDistribution)
+    private readonly distRepo: Repository<PaiementDistribution>,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -121,6 +129,57 @@ export class LivreurDashboardService {
       dateEstimee:   c.datelivraisonEstimee ?? null,
       dateLivraison: c.dateLivraisonEffective ?? null,
       createdAt:     c.createdAt,
+    };
+  }
+
+  /* ──────────────────────────────────────────────────────────
+   * GET REVENUS — taux plateforme + gains réels depuis distributions
+   * ────────────────────────────────────────────────────────── */
+  async getRevenus(userId: string) {
+    const now        = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [platform, totalRow, monthRow, recentDist] = await Promise.all([
+      this.platformRepo.findOne({ where: { id: 1 } }),
+
+      this.distRepo
+        .createQueryBuilder('pd')
+        .select('COALESCE(SUM(CAST(pd.montant AS DECIMAL)), 0)', 'total')
+        .where('pd.acteurUserId = :uid',   { uid: userId })
+        .andWhere('pd.acteurType = :type', { type: DistributionActeurType.LIVREUR })
+        .andWhere('pd.status = :s',        { s: DistributionStatus.RELEASED })
+        .getRawOne(),
+
+      this.distRepo
+        .createQueryBuilder('pd')
+        .select('COALESCE(SUM(CAST(pd.montant AS DECIMAL)), 0)', 'total')
+        .where('pd.acteurUserId = :uid',   { uid: userId })
+        .andWhere('pd.acteurType = :type', { type: DistributionActeurType.LIVREUR })
+        .andWhere('pd.status = :s',        { s: DistributionStatus.RELEASED })
+        .andWhere('pd.createdAt >= :from', { from: monthStart })
+        .getRawOne(),
+
+      this.distRepo.find({
+        where: {
+          acteurUserId: userId,
+          acteurType:   DistributionActeurType.LIVREUR,
+        },
+        order: { createdAt: 'DESC' },
+        take:  20,
+      }),
+    ]);
+
+    return {
+      tauxCommission:   +(platform?.tauxCommissionLivraison ?? 10),
+      totalRevenus:     +totalRow?.total  || 0,
+      revenusThisMonth: +monthRow?.total  || 0,
+      transactions: recentDist.map(tx => ({
+        id:      tx.id,
+        source:  tx.commandeNumero ?? 'Livraison',
+        montant: +tx.montant,
+        date:    tx.createdAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
+        statut:  tx.status,
+      })),
     };
   }
 

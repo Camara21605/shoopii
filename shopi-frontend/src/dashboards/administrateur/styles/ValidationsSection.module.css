@@ -389,7 +389,7 @@
   padding: 0 12px;
   height: 32px;
   border-radius: var(--r-sm);
-  background: var(--blue);
+  background: var(--adm-btn);
   color: #fff;
   border: none;
   font-size: 12px;
@@ -645,7 +645,7 @@
   gap: 7px;
   padding: 9px 20px;
   border-radius: var(--r-md);
-  background: var(--blue);
+  background: var(--adm-btn);
   color: #fff;
   border: none;
   font-size: 13px;

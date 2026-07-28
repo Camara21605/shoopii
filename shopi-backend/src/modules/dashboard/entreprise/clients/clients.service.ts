@@ -16,7 +16,7 @@
  *   Abonné    → isSuivi = true, totalOrders = 0 (jamais acheté)
  * ============================================================ */
 
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository }   from '@nestjs/typeorm';
 import { Repository, In }     from 'typeorm';
 
@@ -117,8 +117,8 @@ export class ClientsService {
    * ════════════════════════════════════════════════════════════ */
   async getClients(userIdOrCompanyId: string, filters: ClientsFilters): Promise<ClientsResult> {
     /* ── 1. Résoudre le profil entreprise ── */
-    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id', 'companyName'] });
-    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId }, select: ['id', 'companyName'] });
+    /* FIX m4 — Lookup strict par userId; le fallback par companyId est supprimé. */
+    const company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id', 'companyName'] });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
 
     /* ── 2. Charger acheteurs et abonnés en parallèle ── */
@@ -323,12 +323,35 @@ export class ClientsService {
    *   - 10 dernières commandes passées dans cette boutique
    * ════════════════════════════════════════════════════════════ */
   async getClientDetail(userIdOrCompanyId: string, clientId: string) {
-    /* Résoudre l'entreprise */
-    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id', 'companyName'] });
-    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId }, select: ['id', 'companyName'] });
+    /* Résoudre l'entreprise — FIX m4 : lookup strict par userId uniquement. */
+    const company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id', 'companyName'] });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
 
-    /* Charger le profil client */
+    /* FIX I2 — IDOR : vérifier que le client a au moins une commande dans
+     * CETTE boutique avant d'exposer ses données personnelles.
+     * Sans ce contrôle, toute boutique pouvait lire le profil (nom, email,
+     * téléphone) de n'importe quel client de la plateforme en connaissant
+     * son UUID. */
+    const hasRelation = await this.commandeRepo.findOne({
+      where: { clientId, companyId: company.id },
+      select: ['id'],
+    }) ?? await this.followRepo.findOne({
+      where: {
+        targetType:   TargetActorType.COMPANY,
+        targetId:     company.id,
+        followerType: FollowerActorType.CLIENT,
+        followerId:   clientId,
+      },
+      select: ['id'],
+    });
+
+    if (!hasRelation) {
+      throw new ForbiddenException(
+        'Ce client n\'est pas associé à votre boutique.',
+      );
+    }
+
+    /* Charger le profil client (seulement si la relation est confirmée) */
     const client = await this.clientRepo.findOne({
       where: { id: clientId },
       select: ['id', 'userId', 'createdAt'],

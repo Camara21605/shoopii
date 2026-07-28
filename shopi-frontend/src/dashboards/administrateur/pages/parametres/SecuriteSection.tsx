@@ -184,7 +184,7 @@ export default function SecuriteSection({ onToast }: SectionProps) {
     return (
       <div className={styles.secBody}>
         <div className={styles.card}>
-          <div className={styles.cardBody} style={{ textAlign: 'center', padding: '2rem', color: 'var(--muted)' }}>
+          <div className={styles.cardBody} style={{ textAlign: 'center', padding: '2rem', color: 'var(--adm-text-3)' }}>
             <i className="fas fa-spinner fa-spin" /> Chargement des données de sécurité…
           </div>
         </div>

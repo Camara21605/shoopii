@@ -7,6 +7,74 @@
 .app {
   --sb: 268px;
   --hdr: 64px;
+
+  /* --------------------------------------------------------------
+     Le dashboard Administrateur est verrouillé en mode sombre
+     (noir) en permanence, quel que soit le thème choisi ailleurs
+     sur le site — pas de bascule clair/sombre ici.
+     -------------------------------------------------------------- */
+  --navy:          #F4F4F5;
+  --navy-soft:     rgba(255,255,255,.08);
+  --blue:          #60A5FA;
+  --blue-soft:     rgba(96,165,250,.14);
+  --emerald:       #34D399;
+  --emerald-soft:  rgba(16,185,129,.16);
+  --violet:        #A78BFA;
+  --violet-soft:   rgba(124,58,237,.16);
+  --amber:         #FBBF24;
+  --amber-soft:    rgba(245,158,11,.16);
+  --red:           #F87171;
+  --red-soft:      rgba(239,68,68,.16);
+
+  /* Neutres locaux admin */
+  --adm-bg:        #000000;
+  --adm-surface:   #0A0A0A;
+  --adm-border:    rgba(255,255,255,.08);
+  --adm-text:      #F4F4F5;
+  --adm-text-2:    #A1A1AA;
+  --adm-text-3:    #71717A;
+  --adm-text-inv:  #F4F4F5;
+  --adm-shadow-sm: 0 1px 2px rgba(0,0,0,.45);
+  --adm-shadow:    0 4px 16px rgba(0,0,0,.55);
+  --adm-btn:       #1C1C1F;
+  --adm-btn-h:     #2D2D30;
+
+  /* Verrouillage des tokens globaux (tokens.css) empruntés par les
+     pages admin, pour qu'ils ne suivent PAS le thème site (clair/sombre)
+     mais restent toujours en noir ici. */
+  --white:          #000000;
+  --g50:            #000000;
+  --g100:           #0A0A0A;
+  --g200:           #1C1C1F;
+  --g300:           #2D2D30;
+  --t1:             #F4F4F5;
+  --t2:             #A1A1AA;
+  --t3:             #71717A;
+  --t4:             #52525B;
+  --bdr:            rgba(255,255,255,.08);
+  --bdr2:           rgba(255,255,255,.12);
+  --bdrb:           rgba(255,255,255,.12);
+  --sky:            rgba(255,255,255,.04);
+  --sky-2:          rgba(255,255,255,.06);
+  --sky-3:          rgba(255,255,255,.10);
+  --sh-xs:          0 2px 8px rgba(0,0,0,.45);
+  --sh-sm:          0 4px 16px rgba(0,0,0,.55);
+  --sh-md:          0 8px 28px rgba(0,0,0,.65);
+  --sh-lg:          0 16px 48px rgba(0,0,0,.72);
+  --sh-xl:          0 24px 64px rgba(0,0,0,.78);
+  --sh-b:           0 6px 20px rgba(0,0,0,.45);
+  --blue-2:         #3B82F6;
+  --blue-lt:        #BFDBFE;
+  --heading-color:  #F4F4F5;
+  --btn-primary-bg: #000000;
+  --topbar-bg:      rgba(0,0,0,.97);
+  --topbar-border:  rgba(255,255,255,.08);
+  --em-bg:          rgba(5,150,105,.18);
+  --vl-bg:          rgba(109,40,217,.18);
+  --am-bg:          rgba(180,83,9,.18);
+  --rs-bg:          rgba(190,24,93,.15);
+  --tl-bg:          rgba(14,116,144,.18);
+
   min-height: 100vh;
   background: var(--g50);
   font-family: var(--fb);

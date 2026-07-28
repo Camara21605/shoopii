@@ -31,9 +31,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Correspondent }        from '../../../database/entities/profiles/correspondant-profile.entity';
 import { CorrespondantHoraire } from '../../../database/entities/profiles/correspondant-horaire.entity';
 import { User }                 from '../../../database/entities/user.entity';
+import { PlatformSettings }     from '../../../database/entities/platform-settings.entity';
+import { PaiementDistribution } from '../../../database/entities/paiement/paiement-distribution.entity';
 
-/* ── Controller ── */
+/* ── Controllers ── */
 import { CorrespondantParametresController } from './correspondant-parametres.controller';
+import { CorrespondantDashboardController }  from './correspondant-dashboard.controller';
+
+/* ── Service dashboard ── */
+import { CorrespondantDashboardService }     from './correspondant-dashboard.service';
 
 /* ── 11 Services ── */
 import { ProfilService }          from './services/profil.service';
@@ -63,6 +69,8 @@ import { UploadModule } from '../../upload/upload.module';
       Correspondent,
       CorrespondantHoraire,
       User,
+      PlatformSettings,
+      PaiementDistribution,
     ]),
 
     /* Module Cloudinary pour les uploads photo et documents */
@@ -71,9 +79,12 @@ import { UploadModule } from '../../upload/upload.module';
 
   controllers: [
     CorrespondantParametresController,
+    CorrespondantDashboardController,
   ],
 
   providers: [
+    CorrespondantDashboardService,
+
     /* ── Les 11 services, 1 par section ── */
     ProfilService,          // §1  — Profil & Identité
     DepotService,           // §2  — Point de dépôt

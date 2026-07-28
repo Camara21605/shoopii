@@ -16,6 +16,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage }   from 'multer';
 
 import { JwtAuthGuard }   from '../../common/guards/auth.guard';
+import { RolesGuard }     from '../../common/guards/roles.guard';
+import { Roles }          from '../../common/decorators/roles.decorator';
+import { UserRole }       from '../../common/enums/user-role.enum';
 import { UploadService, UPLOAD_FOLDERS } from './upload.service';
 
 /* ── Config multer en mémoire (pas de disque) ── */
@@ -77,14 +80,24 @@ export class UploadController {
    * POST /upload/company/:type
    * :type = logo | cover
    * Upload logo ou bannière boutique → dossier companies
+   *
+   * FIX I3 — Restreindre au rôle COMPANY uniquement.
+   * Avant : tout utilisateur JWT (CLIENT, LIVREUR…) pouvait
+   * uploader dans le dossier companies sur Cloudinary.
+   * Après : seul un COMPANY authentifié peut appeler cet endpoint.
    ────────────────────────────────────────────────────────── */
   @Post('company/:type')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.COMPANY)
   @UseInterceptors(FileInterceptor('file', memoryMulter))
   async uploadCompanyImage(
     @UploadedFile() file: Express.Multer.File,
     @Param('type')  type: string,
   ) {
     if (!file) throw new BadRequestException('Aucun fichier reçu.');
+    if (!['logo', 'cover'].includes(type)) {
+      throw new BadRequestException('Type invalide. Valeurs acceptées : logo, cover.');
+    }
     const opts = type === 'cover'
       ? { width: 1200, height: 400 }
       : { width: 400,  height: 400 };

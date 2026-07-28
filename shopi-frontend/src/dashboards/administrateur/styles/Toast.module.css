@@ -10,7 +10,7 @@
 }
 
 .toast {
-  background: var(--navy); color: #fff;
+  background: var(--adm-btn); color: #fff;
   border-radius: var(--r-md);
   padding: 12px 17px;
   font-size: 12.5px;

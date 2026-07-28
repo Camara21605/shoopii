@@ -153,9 +153,12 @@ export class CorrespondantsController {
   // Rôles : COMPANY, ADMIN, SUPER_ADMIN
   // ════════════════════════════════════════════════════════════
 
+  /* FIX M5 — Suppression du rôle DELIVERY.
+   * Un livreur n'a aucune raison de gérer le réseau de correspondants.
+   * Ce privilège involontaire permettait à un livreur de créer des comptes parasites. */
   @Post('inviter')
   @HttpCode(HttpStatus.CREATED)
-  @Roles(UserRole.COMPANY, UserRole.DELIVERY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   async inviter(
     @Body() dto: InviterCorrespondantDto,
     @Req()  req: any,

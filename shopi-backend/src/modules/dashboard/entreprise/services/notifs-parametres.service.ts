@@ -75,9 +75,10 @@ export class NotifsParametresService {
   }
 
   /* ── HELPER ── */
-  private async findCompanyOrFail(userIdOrCompanyId: string): Promise<Company> {
-    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId } });
-    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId } });
+  /* FIX m4 — Lookup strict par userId uniquement; le fallback par companyId
+   * permettait l'accès cross-tenant si un UUID de boutique était connu. */
+  private async findCompanyOrFail(userId: string): Promise<Company> {
+    const company = await this.companyRepo.findOne({ where: { userId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }

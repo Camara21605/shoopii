@@ -6,7 +6,7 @@
 .sb {
   position: fixed; top: 0; left: 0; bottom: 0;
   width: 268px;
-  background: var(--navy);
+  background: var(--adm-btn);
   display: flex; flex-direction: column;
   z-index: 400;
   overflow: hidden;

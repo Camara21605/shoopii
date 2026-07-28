@@ -2,7 +2,7 @@
  * FICHIER : src/dashboards/partenaire/components/GenerateCodeModal.tsx
  *
  * Modale de génération d'un code de création de compte.
- * Étape 1 : choix du type d'acteur + destinataire.
+ * Étape 1 : choix du type d'acteur + destinataire (optionnel).
  * Étape 2 : code généré + boutons d'envoi (WhatsApp/SMS/Copier).
  * ================================================================ */
 
@@ -12,7 +12,7 @@ import type { ActeurType } from '../data/types';
 
 interface Props {
   onClose:    () => void;
-  onGenerate: (type: ActeurType) => string;   // renvoie le code généré
+  onGenerate: (type: ActeurType, targetEmail?: string) => Promise<string>;
   onToast:    (msg: string, type?: 's' | 'i' | 'w') => void;
 }
 
@@ -24,19 +24,27 @@ const TYPES: { id: ActeurType; icon: string; label: string }[] = [
 ];
 
 export default function GenerateCodeModal({ onClose, onGenerate, onToast }: Props) {
-  const [step, setStep]   = useState<1 | 2>(1);
-  const [type, setType]   = useState<ActeurType>('ent');
-  const [name, setName]   = useState('');
-  const [phone, setPhone] = useState('');
-  const [code, setCode]   = useState('');
+  const [step, setStep]     = useState<1 | 2>(1);
+  const [type, setType]     = useState<ActeurType>('ent');
+  const [email, setEmail]   = useState('');
+  const [code, setCode]     = useState('');
+  const [busy, setBusy]     = useState(false);
 
-  function generate() {
-    const c = onGenerate(type);
-    setCode(c);
-    setStep(2);
-    onToast(`✅ Code généré${name ? ' pour ' + name : ''}`, 's');
+  async function generate() {
+    setBusy(true);
+    try {
+      const c = await onGenerate(type, email.trim() || undefined);
+      setCode(c);
+      setStep(2);
+      onToast(`Code généré${email ? ' pour ' + email : ''}`, 's');
+    } catch {
+      onToast('Erreur lors de la génération du code', 'w');
+    } finally {
+      setBusy(false);
+    }
   }
-  function copy() { navigator.clipboard?.writeText(code); onToast('📋 Code copié : ' + code, 's'); }
+
+  function copy() { navigator.clipboard?.writeText(code); onToast('Code copié : ' + code, 's'); }
 
   return (
     <div className={styles.bg} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
@@ -64,14 +72,21 @@ export default function GenerateCodeModal({ onClose, onGenerate, onToast }: Prop
                 </div>
               </div>
               <div className={styles.fld}>
-                <label className={styles.lbl}>Nom du destinataire (optionnel)</label>
-                <input className={styles.in} value={name} onChange={e => setName(e.target.value)} placeholder="Ex. TechCorp Guinée" />
+                <label className={styles.lbl}>Email du destinataire (optionnel)</label>
+                <input
+                  className={styles.in}
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="Ex. contact@techcorp.gn"
+                />
               </div>
-              <div className={styles.fld}>
-                <label className={styles.lbl}>Téléphone (optionnel)</label>
-                <input className={styles.in} value={phone} onChange={e => setPhone(e.target.value)} placeholder="+224 6•• •• •• ••" inputMode="tel" />
-              </div>
-              <button className={styles.btn} onClick={generate}><i className="fas fa-bolt" /> Générer le code</button>
+              <button className={styles.btn} onClick={generate} disabled={busy}>
+                {busy
+                  ? <><i className="fas fa-spinner fa-spin" /> Génération…</>
+                  : <><i className="fas fa-bolt" /> Générer le code</>
+                }
+              </button>
             </div>
           </>
         ) : (
@@ -87,8 +102,8 @@ export default function GenerateCodeModal({ onClose, onGenerate, onToast }: Prop
                 <div className={styles.resultExp}><i className="fas fa-clock" /> Valable 7 jours · usage unique</div>
               </div>
               <div className={styles.sendRow}>
-                <button className={`${styles.sendBtn} ${styles.wa}`} onClick={() => onToast('📱 Ouverture de WhatsApp…', 's')}><i className="fab fa-whatsapp" /> WhatsApp</button>
-                <button className={`${styles.sendBtn} ${styles.sms}`} onClick={() => onToast('✉️ SMS préparé', 's')}><i className="fas fa-comment-sms" /> SMS</button>
+                <button className={`${styles.sendBtn} ${styles.wa}`} onClick={() => onToast('Ouverture de WhatsApp…', 's')}><i className="fab fa-whatsapp" /> WhatsApp</button>
+                <button className={`${styles.sendBtn} ${styles.sms}`} onClick={() => onToast('SMS préparé', 's')}><i className="fas fa-comment-sms" /> SMS</button>
                 <button className={`${styles.sendBtn} ${styles.copy}`} onClick={copy}><i className="fas fa-copy" /> Copier</button>
               </div>
               <button className={styles.btn} style={{ marginTop: 16 }} onClick={onClose}><i className="fas fa-check" /> Terminé</button>

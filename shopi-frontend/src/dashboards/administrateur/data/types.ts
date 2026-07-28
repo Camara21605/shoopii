@@ -18,6 +18,7 @@ export type AdminPage =
   | 'commandes'
   | 'finances'
   | 'audit'
+  | 'notifications'
   | 'geo'
   | 'parametres';
 

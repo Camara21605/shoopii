@@ -8,7 +8,11 @@
 
 import { tokenStorage } from './apiFetch';
 
-/** Vérifie que le token JWT n'est pas expiré */
+/**
+ * @deprecated Depuis la migration cookie-based (Phase 6).
+ * Utiliser `useAppContext().isAuthenticated` à la place.
+ * Conservé pour compatibilité avec les composants non encore migrés.
+ */
 export function isTokenValid(token: string | null): boolean {
   if (!token) return false;
   try {
@@ -17,7 +21,11 @@ export function isTokenValid(token: string | null): boolean {
   } catch { return false; }
 }
 
-/** Extrait le rôle depuis le token JWT */
+/**
+ * @deprecated Depuis la migration cookie-based (Phase 6).
+ * Utiliser `useAppContext().user?.role` à la place.
+ * Conservé pour compatibilité avec les composants non encore migrés.
+ */
 export function getRoleFromToken(): string | null {
   const token = tokenStorage.get();
   if (!isTokenValid(token)) return null;

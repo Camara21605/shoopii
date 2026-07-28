@@ -9,7 +9,7 @@
 
 /* ── Héro ── */
 .hero {
-  background: var(--navy);
+  background: var(--adm-btn);
   border-radius: var(--r-xl);
   padding: 26px 30px;
   position: relative; overflow: hidden;
@@ -133,10 +133,10 @@
 }
 .tab:hover { border-color: var(--bdrb); color: var(--blue); background: var(--sky); }
 .tabOn {
-  background: var(--navy); color: #fff;
-  border-color: var(--navy);
+  background: var(--adm-btn); color: #fff;
+  border-color: var(--adm-btn);
 }
-.tabOn:hover { background: var(--navy-2); border-color: var(--navy-2); }
+.tabOn:hover { background: var(--adm-btn-h); border-color: var(--adm-btn-h); }
 .tab i { font-size: 11px; }
 .tabCount {
   font-size: 10px; font-weight: 800;
@@ -179,38 +179,39 @@
  * renders correctly in the admin (light) context.
  * Only affects children of this wrapper.
  * ══════════════════════════════════════════════════════════════ */
+/* Verrouillé en noir en permanence (dashboard administrateur = mode sombre seul) */
 .geoScope {
   /* Surfaces */
-  --deep:       #FFFFFF;
-  --surface:    #F8F9FA;
-  --raised:     #FFFFFF;
-  --hover:      #EEF3FD;
-  --void:       #F1F3F5;
-  --border:     rgba(11,31,58,.08);
-  --border-hi:  rgba(26,79,196,.3);
-  --border-red: rgba(220,38,38,.18);
+  --deep:       #000000;
+  --surface:    #0A0A0A;
+  --raised:     #111113;
+  --hover:      rgba(255,255,255,.06);
+  --void:       #1C1C1F;
+  --border:     rgba(255,255,255,.08);
+  --border-hi:  rgba(96,165,250,.35);
+  --border-red: rgba(239,68,68,.3);
 
   /* Texte */
-  --txt-1:      #0B1F3A;
-  --txt-2:      #4B5563;
-  --txt-3:      #9CA3AF;
+  --txt-1:      #F4F4F5;
+  --txt-2:      #A1A1AA;
+  --txt-3:      #71717A;
 
   /* Primaire (acid vert → blue admin) */
-  --acid:       #2560DC;
-  --acid-dim:   rgba(37,96,220,.08);
-  --acid-glow:  rgba(37,96,220,.22);
+  --acid:       #60A5FA;
+  --acid-dim:   rgba(96,165,250,.14);
+  --acid-glow:  rgba(96,165,250,.3);
 
   /* Couleurs sémantiques */
-  --rose:       #BE185D;
-  --rose-dim:   rgba(190,24,93,.08);
-  --gold:       #B45309;
-  --gold-dim:   rgba(180,83,9,.09);
-  --sky:        #0E7490;
-  --sky-dim:    rgba(14,116,144,.09);
-  --violet:     #6D28D9;
-  --violet-dim: rgba(109,40,217,.09);
-  --coral:      #FF7043;
-  --coral-dim:  rgba(255,112,67,.09);
+  --rose:       #FB7185;
+  --rose-dim:   rgba(251,113,133,.15);
+  --gold:       #FBBF24;
+  --gold-dim:   rgba(251,191,36,.15);
+  --sky:        #22D3EE;
+  --sky-dim:    rgba(34,211,238,.15);
+  --violet:     #A78BFA;
+  --violet-dim: rgba(167,139,250,.15);
+  --coral:      #FF8A65;
+  --coral-dim:  rgba(255,138,101,.15);
 
   /* Typographie */
   --font-h:     'Fraunces', Georgia, serif;
@@ -218,8 +219,8 @@
   --font-m:     'Courier New', monospace;
 
   /* Misc */
-  --modal-bg:   rgba(11,31,58,.55);
-  --shadow:     0 6px 24px rgba(11,31,58,.1);
+  --modal-bg:   rgba(0,0,0,.7);
+  --shadow:     0 6px 24px rgba(0,0,0,.5);
 }
 
 /* ── Responsive ── */

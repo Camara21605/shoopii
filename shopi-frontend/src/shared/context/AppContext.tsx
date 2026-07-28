@@ -6,8 +6,7 @@ import React, {
   createContext, useContext, useState, useEffect, useCallback,
   type ReactNode,
 } from 'react';
-import { tokenStorage } from '../services/apiFetch';
-import { authService }  from '../../modules/auth/services/authService';
+import { authService } from '../../modules/auth/services/authService';
 import type { PublicUser } from '../../modules/auth/types';
 
 // ─────────────────────────────────────────────────────────────
@@ -32,22 +31,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [user,      setUserState] = useState<PublicUser | null>(null);
   const [isLoading, setIsLoading] = useState(true); // true le temps de vérifier le JWT
 
-  // ── Au démarrage : restaure la session depuis le JWT ──────
-  // ✅ AJOUTÉ : sans ça, rafraîchir la page déconnecte l'utilisateur
+  // ── Au démarrage : restaure la session via le cookie httpOnly ──────
+  // Auth cookie-based : on appelle toujours getMe() pour vérifier la session.
+  // Plus de short-circuit sur le localStorage — la source de vérité est le serveur.
   useEffect(() => {
     const restore = async () => {
-      const token = tokenStorage.get();
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
       try {
-        // Vérifie que le JWT est encore valide côté serveur
         const me = await authService.getMe();
         setUserState(me);
       } catch {
-        // Token expiré ou invalide → on nettoie
-        tokenStorage.remove();
+        // Pas de session active (cookie absent ou expiré et refresh échoué)
         setUserState(null);
       } finally {
         setIsLoading(false);
@@ -57,20 +50,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     restore();
   }, []);
 
-  // ── Stocker l'utilisateur ─────────────────────────────────
-  // ✅ CORRIGÉ : token géré par tokenStorage (apiFetch), pas en double ici
   const setUser = useCallback((u: PublicUser | null) => {
     setUserState(u);
-    if (!u) tokenStorage.remove(); // logout → supprime le JWT
   }, []);
 
   // ── Déconnexion ───────────────────────────────────────────
   const logout = useCallback(() => {
-    // fire & forget — l'await n'est pas nécessaire ici car
-    // authService.logout() supprime le localStorage en premier (sync),
-    // puis efface le cookie httpOnly côté serveur (async).
-    void authService.logout();
+    // UI mise à jour immédiatement; authService.logout() révoque les refresh
+    // tokens côté serveur et efface les cookies httpOnly (fire & forget).
     setUserState(null);
+    void authService.logout();
   }, []);
 
   return (

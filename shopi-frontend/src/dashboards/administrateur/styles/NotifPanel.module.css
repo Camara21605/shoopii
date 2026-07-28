@@ -1,0 +1,298 @@
+/* ================================================================
+ * NotifPanel.module.css — Dropdown notifications admin
+ * Thème : toujours sombre (cohérent avec le dashboard admin)
+ * ================================================================ */
+
+/* ── Overlay cliquable pour fermer le panel ── */
+.overlay {
+  position: fixed; inset: 0;
+  z-index: 300;
+}
+
+/* ── Panel dropdown ── */
+.panel {
+  position: fixed;
+  top: 68px;
+  right: 16px;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  max-height: 540px;
+  background: #111113;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.7), 0 2px 8px rgba(0,0,0,.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 301;
+  animation: slideDown .18s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── En-tête ── */
+.head {
+  padding: 14px 16px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  flex-shrink: 0;
+}
+
+.headTitle {
+  font-family: var(--font-ui, system-ui);
+  font-size: 14px;
+  font-weight: 700;
+  color: #F4F4F5;
+  flex: 1;
+}
+
+.badge {
+  background: #DC2626;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 99px;
+  padding: 1px 7px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.markAllBtn {
+  background: none;
+  border: none;
+  color: #60A5FA;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background .15s;
+}
+.markAllBtn:hover { background: rgba(96,165,250,.12); }
+
+/* ── Tabs de filtre ── */
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px 0;
+  flex-shrink: 0;
+}
+
+.tab {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  color: #71717A;
+  transition: all .15s;
+}
+.tab:hover { color: #A1A1AA; background: rgba(255,255,255,.05); }
+.tab.active { background: rgba(96,165,250,.15); color: #60A5FA; }
+
+/* ── Liste des notifications ── */
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+.list::-webkit-scrollbar { width: 4px; }
+.list::-webkit-scrollbar-track { background: transparent; }
+.list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 4px; }
+
+/* ── Item de notification ── */
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background .12s;
+  position: relative;
+}
+.item:hover { background: rgba(255,255,255,.04); }
+.item.unread { background: rgba(96,165,250,.05); }
+.item.unread:hover { background: rgba(96,165,250,.09); }
+
+/* ── Icône / priorité ── */
+.iconWrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.iconWrap.urgent { background: rgba(239,68,68,.16);   color: #F87171; }
+.iconWrap.high   { background: rgba(245,158,11,.16);  color: #FBBF24; }
+.iconWrap.normal { background: rgba(96,165,250,.14);  color: #60A5FA; }
+.iconWrap.low    { background: rgba(161,161,170,.10); color: #71717A; }
+
+/* ── Avatar de l'acteur déclencheur ── */
+.avatarWrap {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+.avatarImg, .avatarInitial {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #60A5FA;
+  background: rgba(96,165,250,.14);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.avatarBadge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  border: 2px solid #111113;
+}
+.avatarBadge.urgent { background: #DC2626; color: #fff; }
+.avatarBadge.high   { background: #D97706; color: #fff; }
+.avatarBadge.normal { background: #60A5FA; color: #111113; }
+.avatarBadge.low    { background: #71717A; color: #111113; }
+
+.itemActor {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #A1A1AA;
+  margin: 0 0 1px;
+}
+
+/* Pastille "non-lu" */
+.unreadDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #60A5FA;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+/* ── Corps du texte ── */
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemTitle {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #F4F4F5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemBody {
+  font-size: 11.5px;
+  color: #A1A1AA;
+  margin-top: 2px;
+  line-height: 1.4;
+  /* 2 lignes max */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.itemMeta {
+  font-size: 10.5px;
+  color: #52525B;
+  margin-top: 4px;
+}
+
+/* ── Bouton dismiss ── */
+.dismiss {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: none;
+  background: none;
+  color: #52525B;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all .12s;
+}
+.item:hover .dismiss { opacity: 1; }
+.dismiss:hover { background: rgba(239,68,68,.15); color: #F87171; }
+
+/* ── État vide ── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 10px;
+  color: #52525B;
+  font-size: 13px;
+}
+.emptyIcon { font-size: 32px; opacity: .4; }
+
+/* ── Chargement ── */
+.loader {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(255,255,255,.08);
+  border-top-color: #60A5FA;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Pied de panel ── */
+.foot {
+  border-top: 1px solid rgba(255,255,255,.07);
+  padding: 10px 16px;
+  flex-shrink: 0;
+}
+.footBtn {
+  width: 100%;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px;
+  color: #A1A1AA;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.footBtn:hover { background: rgba(255,255,255,.08); color: #F4F4F5; }

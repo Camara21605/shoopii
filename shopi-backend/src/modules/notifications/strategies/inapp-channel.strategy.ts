@@ -24,6 +24,7 @@ import type { NotificationPreference } from 'src/database/entities/notification/
 import type { IChannelStrategy }       from '../interfaces/channel-strategy.interface';
 import type { IDeliveryResult }        from '../interfaces/notification.interfaces';
 import { NotificationBroadcastService } from '../services/notification-broadcast.service';
+import { NotificationActorProfileService } from '../services/notification-actor-profile.service';
 
 @Injectable()
 export class InAppChannelStrategy implements IChannelStrategy {
@@ -33,7 +34,8 @@ export class InAppChannelStrategy implements IChannelStrategy {
   private readonly logger = new Logger(InAppChannelStrategy.name);
 
   constructor(
-    private readonly broadcast: NotificationBroadcastService,
+    private readonly broadcast:     NotificationBroadcastService,
+    private readonly actorProfiles: NotificationActorProfileService,
   ) {}
 
   /**
@@ -68,6 +70,9 @@ export class InAppChannelStrategy implements IChannelStrategy {
     pref:  NotificationPreference,
   ): Promise<IDeliveryResult> {
     try {
+      // Profil de l'acteur déclencheur — affiché dans le centre de notifications
+      const actorProfile = await this.actorProfiles.resolveOne(notif.actorType, notif.actorId);
+
       // Cherche l'userId associé à cet acteur via le broadcast service
       const emitted = await this.broadcast.emitToActor(
         pref.actorType,
@@ -89,7 +94,14 @@ export class InAppChannelStrategy implements IChannelStrategy {
             readAt:       null,
             count:        notif.count,
             createdAt:    notif.createdAt.toISOString(),
-            actor:        null,
+            actor: notif.actorType && notif.actorId
+              ? {
+                  id:     notif.actorId,
+                  type:   notif.actorType,
+                  name:   actorProfile?.name   ?? 'Utilisateur',
+                  avatar: actorProfile?.avatar ?? null,
+                }
+              : null,
           },
           unreadCount: (pref.unreadCount ?? 0) + 1,
         },

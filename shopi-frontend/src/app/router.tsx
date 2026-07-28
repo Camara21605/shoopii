@@ -1,4 +1,4 @@
-﻿/* ================================================================
+/* ================================================================
  * src/app/router.tsx
  *
  * MODIFICATIONS :
@@ -6,14 +6,15 @@
  *   ✅ Route /livreurs/:id    → ProfilLivreurPage (publique, profil complet)
  *   ✅ Route /mon-profil      → ProfilClientPage  (protégée, client connecté)
  *   ✅ Pages profil autonomes → aucune prop à passer
+ *   ✅ Guards migrés vers useAppContext() — plus de tokenStorage dans les guards
  * ================================================================ */
 
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GlobalCallProvider } from '../shared/context/GlobalCallContext';
 import { GroupCallProvider }  from '../shared/context/GroupCallContext';
-import { tokenStorage }    from '../shared/services/apiFetch';
-import { isTokenValid, getRoleFromToken, getDashboardPath } from '../shared/services/authUtils';
+import { useAppContext }      from '../shared/context/AppContext';
+import { getDashboardPath }   from '../shared/services/authUtils';
 
 /* ── Pages publiques (import direct) ── */
 import BoutiquePage      from '../modules/home/components/boutique/pages/BoutiquePage';
@@ -56,38 +57,35 @@ const CorrespApp     = lazy(() => import('../dashboards/correspondant/Correspond
 const ClientApp      = lazy(() => import('../dashboards/client/ClientApp'));
 const CommandeSuiviPage = lazy(() => import('../modules/commandes/pages/CommandePage'));
 
-/* Mappe le rôle backend (token JWT) vers le rôle acteur de la page de suivi */
-function getActeurRole(): 'entreprise' | 'livreur' | 'correspondant' | 'client' {
-  switch (getRoleFromToken()) {
-    case 'company':       return 'entreprise';
-    case 'delivery':      return 'livreur';
-    case 'correspondent': return 'correspondant';
-    default:              return 'client';
-  }
-}
-
 const Loader = () => <LoadingScreen />;
 
-/* ── Guards ── */
+/* ── Guards — auth via AppContext (source de vérité = serveur) ── */
 
+/**
+ * Protège une route contre les utilisateurs non connectés.
+ * AppProvider a déjà résolu la session (getMe) avant de rendre ses enfants,
+ * donc isAuthenticated est définitif quand ces guards s'exécutent.
+ */
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const token = tokenStorage.get();
-  if (!isTokenValid(token)) { tokenStorage.remove(); return <Navigate to="/login" replace />; }
+  const { isAuthenticated } = useAppContext();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
 
+/** Redirige les utilisateurs déjà connectés vers leur dashboard. */
 const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const token = tokenStorage.get();
-  if (!isTokenValid(token)) return <>{children}</>;
-  const role = getRoleFromToken();
+  const { isAuthenticated, user } = useAppContext();
+  if (!isAuthenticated) return <>{children}</>;
+  const role = user?.role ?? null;
   if (role === 'client') return <Navigate to="/home" replace />;
   return <Navigate to={getDashboardPath(role)} replace />;
 };
 
+/** Home — accessible aux clients et aux non-connectés ; redirige les autres rôles. */
 const HomeRoute: React.FC = () => {
-  const token = tokenStorage.get();
-  if (isTokenValid(token)) {
-    const role = getRoleFromToken();
+  const { isAuthenticated, user } = useAppContext();
+  if (isAuthenticated) {
+    const role = user?.role ?? null;
     if (role && role !== 'client') return <Navigate to={getDashboardPath(role)} replace />;
   }
   return (
@@ -97,18 +95,31 @@ const HomeRoute: React.FC = () => {
   );
 };
 
-const CommandeSuiviRoute: React.FC = () => (
-  <Suspense fallback={<Loader />}>
-    <CommandeSuiviPage role={getActeurRole()} useApi onToast={showToast} />
-  </Suspense>
-);
-
+/** Redirige / et les routes inconnues vers home ou le dashboard selon le rôle. */
 const SmartRedirect: React.FC = () => {
-  const token = tokenStorage.get();
-  if (!isTokenValid(token)) return <Navigate to="/home" replace />;
-  const role = getRoleFromToken();
+  const { isAuthenticated, user } = useAppContext();
+  if (!isAuthenticated) return <Navigate to="/home" replace />;
+  const role = user?.role ?? null;
   if (role === 'client' || !role) return <Navigate to="/home" replace />;
   return <Navigate to={getDashboardPath(role)} replace />;
+};
+
+/** Route de suivi de commande — détermine le rôle acteur depuis le contexte. */
+const CommandeSuiviRoute: React.FC = () => {
+  const { user } = useAppContext();
+  const role = user?.role ?? null;
+  let acteurRole: 'entreprise' | 'livreur' | 'correspondant' | 'client';
+  switch (role) {
+    case 'company':       acteurRole = 'entreprise';    break;
+    case 'delivery':      acteurRole = 'livreur';       break;
+    case 'correspondent': acteurRole = 'correspondant'; break;
+    default:              acteurRole = 'client';
+  }
+  return (
+    <Suspense fallback={<Loader />}>
+      <CommandeSuiviPage role={acteurRole} useApi onToast={showToast} />
+    </Suspense>
+  );
 };
 
 function showToast(msg: string) {

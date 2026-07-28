@@ -29,7 +29,8 @@ import { ProductWholesaleTier } from 'src/database/entities/entreprise.table/pro
 import { ProductStory, StoryMediaType, StoryStatus } from 'src/database/entities/entreprise.table/product-story.entity';
 import { Category }       from 'src/database/entities/entreprise.table/category.entity';
 import { SubCategory }    from 'src/database/entities/entreprise.table/sub-category.entity';
-import { Company }        from 'src/database/entities/profiles/entreprise-profile.entity';
+import { Company, CompanyPlan } from 'src/database/entities/profiles/entreprise-profile.entity';
+import { PlatformSettings }    from 'src/database/entities/platform-settings.entity';
 import { User }           from 'src/database/entities/user.entity';
 import { UserRole }       from 'src/common/enums/user-role.enum';
 
@@ -137,6 +138,9 @@ export class ProduitsService {
 
     @InjectRepository(Company)
     private readonly companyRepo: Repository<Company>,
+
+    @InjectRepository(PlatformSettings)
+    private readonly platformRepo: Repository<PlatformSettings>,
 
     // ✅ CORRECTION : CompanyType injecté (était importé mais pas injecté)
     @InjectRepository(CompanyType)
@@ -633,8 +637,27 @@ export class ProduitsService {
 
   async getProductStats(productId: string, user: User) {
     const product = await this.findAndVerifyOwnership(productId, user);
-    const prix            = product.prix;
-    const commissionShopi = Math.round(prix * 0.03);
+    const prix = product.prix;
+
+    /* FIX M1 — Commission dynamique selon le plan de l'entreprise.
+     * Avant : toujours 3% hardcodé, quelle que soit le plan (PRO/PREMIUM).
+     * Après : lit le plan de la boutique + les multiplicateurs de PlatformSettings. */
+    const [company, platform] = await Promise.all([
+      this.companyRepo.findOne({ where: { id: product.companyId }, select: ['plan'] }),
+      this.platformRepo.findOne({ where: { id: 1 } }),
+    ]);
+
+    const base     = +(platform?.tauxCommissionProduit ?? 6) / 100;
+    const multPro  = +(platform?.planMultiplierPro     ?? 0.75);
+    const multPrem = +(platform?.planMultiplierPremium ?? 0.5);
+
+    const tauxMap: Record<CompanyPlan, number> = {
+      [CompanyPlan.STANDARD]: base,
+      [CompanyPlan.PRO]:      base * multPro,
+      [CompanyPlan.PREMIUM]:  base * multPrem,
+    };
+    const taux            = tauxMap[company?.plan ?? CompanyPlan.STANDARD];
+    const commissionShopi = Math.round(prix * taux);
     const revenuNet       = prix - commissionShopi;
     const enRupture       = product.stock === 0;
     const seuilAtteint    = product.seuil !== null && product.stock <= product.seuil;

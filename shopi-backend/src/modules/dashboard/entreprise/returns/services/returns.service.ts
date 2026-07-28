@@ -438,9 +438,10 @@ export class ReturnsService {
    * HELPERS PRIVÉS
    ══════════════════════════════════════════════════════════ */
 
-  private async resolveCompany(userIdOrCompanyId: string): Promise<Company> {
-    let company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id', 'companyName'] });
-    if (!company) company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId }, select: ['id', 'companyName'] });
+  /* FIX m4 — Lookup strict par userId uniquement; le fallback par companyId
+   * permettait l'accès cross-tenant si un UUID de boutique était connu. */
+  private async resolveCompany(userId: string): Promise<Company> {
+    const company = await this.companyRepo.findOne({ where: { userId }, select: ['id', 'companyName'] });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }
@@ -464,9 +465,13 @@ export class ReturnsService {
   }
 
   private async generateReference(prefix: 'RET' | 'SAV'): Promise<string> {
-    const year  = new Date().getFullYear();
-    const count = await this.returnRepo.count();
-    return `${prefix}-${year}-${padRef(count + 1)}`;
+    /* FIX M2 — Remplace le COUNT() non atomique par un UUID partiel + timestamp.
+     * Avant : deux requêtes concurrentes lisaient le même count → même référence.
+     * Après : timestamp ms + 6 chars aléatoires garantit l'unicité sans séquence SQL. */
+    const year = new Date().getFullYear();
+    const ts   = Date.now().toString(36).toUpperCase();          // ex: "LRNJZQK4"
+    const rand = Math.random().toString(36).slice(2, 6).toUpperCase(); // ex: "A3F2"
+    return `${prefix}-${year}-${ts}-${rand}`;
   }
 
   private async addHistory(

@@ -42,3 +42,11 @@
 }
 .v small { font-size: 12px; font-weight: 600; color: var(--t3); }
 .l { font-size: 11.5px; color: var(--t3); margin-top: 5px; font-weight: 500; }
+
+/* ─── Light mode ────────────────────────────────────────────── */
+@media (prefers-color-scheme: light) {
+  .k1 .stripe { background: linear-gradient(90deg, #0B1F3A, #1A3D6E); }
+  .k1 .ic { background: var(--g100); color: var(--navy); }
+}
+:root[data-theme="light"] .k1 .stripe { background: linear-gradient(90deg, #0B1F3A, #1A3D6E); }
+:root[data-theme="light"] .k1 .ic { background: var(--g100); color: var(--navy); }
