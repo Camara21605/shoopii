@@ -15,32 +15,32 @@ interface Notif {
 
 const INITIAL_NOTIFS: Notif[] = [
   {
-    id: 1, ic: 'fa-box', bg: 'rgba(180,83,9,.10)', c: '#B45309',
+    id: 1, ic: 'fa-box', bg: 'var(--g100)', c: 'var(--t2)',
     msg: '3 nouveaux colis TechStore enregistrés en dépôt',
     time: 'Il y a 30 min', unread: true, type: 'colis',
   },
   {
-    id: 2, ic: 'fa-arrows-rotate', bg: 'rgba(14,116,144,.10)', c: '#0E7490',
+    id: 2, ic: 'fa-arrows-rotate', bg: 'var(--g100)', c: 'var(--t2)',
     msg: 'Transfert TR-0041 confirmé — MacBook à Mamadou Diallo',
     time: 'Il y a 2h', unread: true, type: 'transfert',
   },
   {
-    id: 3, ic: 'fa-star', bg: 'rgba(245,158,11,.12)', c: '#F59E0B',
+    id: 3, ic: 'fa-star', bg: 'var(--g100)', c: 'var(--t2)',
     msg: 'AppleZone GN vous a noté 5 ⭐',
     time: 'Hier', unread: false, type: 'evaluation',
   },
   {
-    id: 4, ic: 'fa-triangle-exclamation', bg: 'rgba(220,38,38,.09)', c: '#DC2626',
+    id: 4, ic: 'fa-triangle-exclamation', bg: 'var(--g100)', c: 'var(--t1)',
     msg: 'Retour RET-0012 — litige FashionHub GN en attente',
     time: 'Ven.', unread: false, type: 'retour',
   },
   {
-    id: 5, ic: 'fa-phone', bg: 'rgba(4,120,87,.10)', c: '#047857',
+    id: 5, ic: 'fa-phone', bg: 'var(--g100)', c: 'var(--t2)',
     msg: 'Fatoumata D. a récupéré son colis avec succès',
     time: 'Ven.', unread: false, type: 'client',
   },
   {
-    id: 6, ic: 'fa-box', bg: 'rgba(180,83,9,.10)', c: '#B45309',
+    id: 6, ic: 'fa-box', bg: 'var(--g100)', c: 'var(--t2)',
     msg: 'Apple Watch Ultra 2 — délai dépassé, action requise',
     time: 'Jeu.', unread: false, type: 'colis',
   },

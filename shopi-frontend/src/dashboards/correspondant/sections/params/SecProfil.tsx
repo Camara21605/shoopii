@@ -131,7 +131,7 @@ export default function SecProfil({ data, saving, dirty, markClean, saveTrigger,
             </div>
           </div>
           <div style={{ fontSize:11, color:'rgba(255,255,255,.45)', maxWidth:150, lineHeight:1.5, flexShrink:0 }}>
-            Un profil complet attire <strong style={{ color:'var(--cor-lt,#F59E0B)' }}>2× plus</strong> de boutiques partenaires
+            Un profil complet attire <strong style={{ color:'var(--t2)' }}>2× plus</strong> de boutiques partenaires
           </div>
         </div>
       </div>
@@ -154,19 +154,19 @@ export default function SecProfil({ data, saving, dirty, markClean, saveTrigger,
               {/* Avatar : photo réelle ou emoji par défaut */}
               {data?.profilePicture
                 ? <img src={data.profilePicture} alt="profil"
-                    style={{ width:90, height:90, borderRadius:24, objectFit:'cover', border:'3px solid var(--cor-bg2)', display:'block', marginBottom:10, boxShadow:'var(--sh-md)' }} />
-                : <div onClick={() => fileRef.current?.click()} style={{ width:90, height:90, borderRadius:24, background:'linear-gradient(135deg,var(--cor,#B45309),var(--navy-2,#112648))', display:'flex', alignItems:'center', justifyContent:'center', fontSize:42, border:'3px solid var(--cor-bg2)', marginBottom:10, cursor:'pointer', boxShadow:'var(--sh-md)' }}>📍</div>
+                    style={{ width:90, height:90, borderRadius:24, objectFit:'cover', border:'3px solid var(--g200)', display:'block', marginBottom:10, boxShadow:'var(--sh-md)' }} />
+                : <div onClick={() => fileRef.current?.click()} style={{ width:90, height:90, borderRadius:24, background:'linear-gradient(135deg,var(--t2),var(--navy-2,#112648))', display:'flex', alignItems:'center', justifyContent:'center', fontSize:42, border:'3px solid var(--g200)', marginBottom:10, cursor:'pointer', boxShadow:'var(--sh-md)' }}>📍</div>
               }
               <button onClick={() => fileRef.current?.click()} disabled={uploading}
-                style={{ background:'var(--cor-bg)', color:'var(--cor,#B45309)', border:'1px solid var(--bdr-cor)', borderRadius:'var(--pill)', padding:'6px 14px', fontSize:11, fontWeight:700, display:'block', width:'100%', cursor:'pointer', marginBottom:4 }}>
+                style={{ background:'var(--g100)', color:'var(--t2)', border:'1px solid var(--bdr2)', borderRadius:'var(--pill)', padding:'6px 14px', fontSize:11, fontWeight:700, display:'block', width:'100%', cursor:'pointer', marginBottom:4 }}>
                 {uploading ? <><i className="fas fa-spinner fa-spin" /> Upload…</> : 'Changer'}
               </button>
             </div>
             <div style={{ flex:1, minWidth:200 }}>
-              <div onClick={() => fileRef.current?.click()} style={{ border:'2px dashed var(--bdr-cor)', borderRadius:'var(--r-xl)', padding:24, textAlign:'center', cursor:'pointer', background:'var(--g50)' }}>
+              <div onClick={() => fileRef.current?.click()} style={{ border:'2px dashed var(--bdr2)', borderRadius:'var(--r-xl)', padding:24, textAlign:'center', cursor:'pointer', background:'var(--g50)' }}>
                 <i className="fas fa-cloud-arrow-up" style={{ fontSize:28, color:'var(--t4)', display:'block', marginBottom:9 }} />
                 <div style={{ fontSize:13, fontWeight:700, color:'var(--navy)', marginBottom:4 }}>Glissez votre photo ici</div>
-                <div style={{ fontSize:11, color:'var(--t3)' }}>ou <span style={{ color:'var(--cor)', fontWeight:600 }}>parcourir</span> · JPG, PNG · max 5 MB</div>
+                <div style={{ fontSize:11, color:'var(--t3)' }}>ou <span style={{ color:'var(--t2)', fontWeight:600 }}>parcourir</span> · JPG, PNG · max 5 MB</div>
               </div>
             </div>
           </div>

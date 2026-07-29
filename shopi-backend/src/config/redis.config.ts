@@ -42,16 +42,20 @@ export const redisConfig = {
 
   /**
    * Stratégie de reconnexion automatique.
-   * Réessaie toutes les 3 secondes, max 20 fois.
-   * Retourne null pour arrêter les retry.
+   * Réessaie indéfiniment (backoff jusqu'à 3s) — ne JAMAIS abandonner.
+   *
+   * Un `return null` ici tue la connexion pour de bon : les workers
+   * BullMQ restent bloqués sur un stream mort et spamment
+   * "Stream isn't writeable" à l'infini jusqu'au redémarrage manuel
+   * du process, même après le retour de Redis. Une coupure réseau
+   * transitoire (veille machine, Wi-Fi) ne doit jamais nécessiter
+   * un restart manuel.
    */
   retryStrategy: (times: number) => {
-    if (times > 20) {
-      logger.error(`Redis : impossible de se connecter après ${times} tentatives. Vérifiez que Redis est démarré.`);
-      return null; // arrêter les tentatives
-    }
     const delay = Math.min(times * 500, 3000); // max 3s entre les tentatives
-    logger.warn(`Redis : tentative ${times} — reconnexion dans ${delay}ms`);
+    if (times % 10 === 0) {
+      logger.warn(`Redis : tentative ${times} — reconnexion dans ${delay}ms`);
+    }
     return delay;
   },
 

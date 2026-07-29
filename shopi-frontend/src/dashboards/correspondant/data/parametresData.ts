@@ -49,9 +49,9 @@ export interface Paiement {
 }
 
 export const PAIEMENTS_INIT: Paiement[] = [
-  { em:'🏦', bg:'rgba(255,165,0,.10)',  nm:'Orange Money',   sub:'+224 622 345 678',          def:true  },
-  { em:'💛', bg:'rgba(255,200,0,.08)',  nm:'MTN Money',      sub:'+224 628 456 789',          def:false },
-  { em:'🏛️', bg:'var(--sky-2,#E2EAFB)', nm:'Virement BICIGUI', sub:'Compte professionnel',   def:false },
+  { em:'🏦', bg:'var(--g100)',  nm:'Orange Money',   sub:'+224 622 345 678',          def:true  },
+  { em:'💛', bg:'var(--g100)',  nm:'MTN Money',      sub:'+224 628 456 789',          def:false },
+  { em:'🏛️', bg:'var(--g100)', nm:'Virement BICIGUI', sub:'Compte professionnel',   def:false },
 ];
 
 /* ── Documents ── */
@@ -67,12 +67,12 @@ export interface Document {
 }
 
 export const DOCUMENTS: Document[] = [
-  { ic:'fa-id-card',    bg:'var(--em-bg)',  c:'var(--emerald)', nm:"Carte nationale d'identité",                  sub:'Recto-verso requis',                              st:'ok'   },
-  { ic:'fa-building',   bg:'var(--em-bg)',  c:'var(--emerald)', nm:'Bail commercial / Attestation de local',       sub:'Document du point de dépôt',                      st:'ok'   },
-  { ic:'fa-umbrella',   bg:'var(--cor-bg)', c:'var(--cor)',     nm:"Attestation d'assurance responsabilité",       sub:'Document requis pour les colis de valeur',        st:'pend' },
-  { ic:'fa-file-shield',bg:'var(--em-bg)',  c:'var(--emerald)', nm:'Casier judiciaire (B3)',                       sub:'Moins de 3 mois',                                 st:'ok'   },
-  { ic:'fa-camera',     bg:'var(--sky-2)',  c:'var(--blue)',    nm:'Photos du point de dépôt',                    sub:'3 photos minimum — intérieur + extérieur',        st:'ok'   },
-  { ic:'fa-receipt',    bg:'var(--cor-bg)', c:'var(--cor)',     nm:'Registre de commerce / NIF',                  sub:'Pour facturation et commissions officielles',      st:'pend' },
+  { ic:'fa-id-card',    bg:'var(--g100)', c:'var(--t2)', nm:"Carte nationale d'identité",                  sub:'Recto-verso requis',                              st:'ok'   },
+  { ic:'fa-building',   bg:'var(--g100)', c:'var(--t2)', nm:'Bail commercial / Attestation de local',       sub:'Document du point de dépôt',                      st:'ok'   },
+  { ic:'fa-umbrella',   bg:'var(--g100)', c:'var(--t2)', nm:"Attestation d'assurance responsabilité",       sub:'Document requis pour les colis de valeur',        st:'pend' },
+  { ic:'fa-file-shield',bg:'var(--g100)', c:'var(--t2)', nm:'Casier judiciaire (B3)',                       sub:'Moins de 3 mois',                                 st:'ok'   },
+  { ic:'fa-camera',     bg:'var(--g100)', c:'var(--t2)', nm:'Photos du point de dépôt',                    sub:'3 photos minimum — intérieur + extérieur',        st:'ok'   },
+  { ic:'fa-receipt',    bg:'var(--g100)', c:'var(--t2)', nm:'Registre de commerce / NIF',                  sub:'Pour facturation et commissions officielles',      st:'pend' },
 ];
 
 /* ── Sessions ── */
@@ -105,9 +105,9 @@ export interface VirFreq {
 }
 
 export const VIR_FREQ: VirFreq[] = [
-  { em:'📅', nm:'Virement quotidien',     sub:'Chaque matin — commissions de la veille',         prix:'Gratuit',   sel:false, color:'var(--emerald)' },
-  { em:'📆', nm:'Virement hebdomadaire',  sub:'Chaque lundi — commissions de la semaine',        prix:'Gratuit',   sel:true,  color:'var(--emerald)' },
-  { em:'⚡', nm:'Retrait instantané',     sub:'À la demande via Wallet Shopi',                   prix:'−1.5%',     sel:false, color:'var(--cor)'     },
+  { em:'📅', nm:'Virement quotidien',     sub:'Chaque matin — commissions de la veille',         prix:'Gratuit',   sel:false, color:'var(--t2)' },
+  { em:'📆', nm:'Virement hebdomadaire',  sub:'Chaque lundi — commissions de la semaine',        prix:'Gratuit',   sel:true,  color:'var(--t2)' },
+  { em:'⚡', nm:'Retrait instantané',     sub:'À la demande via Wallet Shopi',                   prix:'−1.5%',     sel:false, color:'var(--t2)'     },
 ];
 
 /* ── Toggles partagés (label, sub, checked, badge) ── */

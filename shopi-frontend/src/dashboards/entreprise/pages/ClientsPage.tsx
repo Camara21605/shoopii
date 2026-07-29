@@ -31,15 +31,15 @@ const SEGMENT_META: Record<ClientSegment, {
   label: string; emoji: string;
   bg: string; color: string; border: string;
 }> = {
-  VIP:      { label: 'VIP',       emoji: '👑', bg: 'var(--am-bg)',  color: 'var(--amber)',   border: 'rgba(217,119,6,.22)'  },
-  Fidèle:   { label: 'Fidèle',    emoji: '⭐', bg: 'var(--em-bg)', color: 'var(--emerald)', border: 'rgba(5,150,105,.22)'  },
-  Régulier: { label: 'Régulier',  emoji: '🔄', bg: 'var(--sky-2)', color: 'var(--blue)',    border: 'var(--sky-3)'         },
-  Nouveau:  { label: 'Nouveau',   emoji: '🆕', bg: 'var(--vl-bg)', color: 'var(--violet)',  border: 'rgba(124,58,237,.22)' },
-  Abonné:   { label: 'Abonné',   emoji: '👁️', bg: 'var(--g100)',   color: 'var(--t2)',      border: 'var(--bdr2)'          },
+  VIP:      { label: 'VIP',       emoji: '👑', bg: 'var(--vl-bg)', color: 'var(--violet)', border: 'var(--vl-bg)'  },
+  Fidèle:   { label: 'Fidèle',    emoji: '⭐', bg: 'var(--am-bg)', color: 'var(--amber)',  border: 'var(--am-bg)'  },
+  Régulier: { label: 'Régulier',  emoji: '🔄', bg: 'var(--sky-2)', color: 'var(--blue)',   border: 'var(--sky-3)' },
+  Nouveau:  { label: 'Nouveau',   emoji: '🆕', bg: 'var(--em-bg)', color: 'var(--emerald)',border: 'var(--em-bg)' },
+  Abonné:   { label: 'Abonné',   emoji: '👁️', bg: 'var(--tl-bg)', color: 'var(--teal)', border: 'var(--tl-bg)' },
 };
 
 /** Couleurs d'avatar cycliques */
-const AVATAR_COLORS = ['#1652F0','#059669','#7C3AED','#E11D48','#D97706','#0891B2','#BE185D','#0F766E'];
+const AVATAR_COLORS = ['var(--btn)','var(--btn)','var(--btn)','var(--btn)','var(--t2)','var(--btn)','var(--btn)','var(--btn)'];
 
 /* ════════════════════════════════════════════════════════════
  * SOUS-COMPOSANTS
@@ -296,7 +296,7 @@ export default function ClientsPage() {
             {!loading && error && (
               <div style={{ padding: '32px 20px', textAlign: 'center' }}>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>⚠️</div>
-                <div style={{ fontWeight: 700, color: 'var(--rose)', marginBottom: 6 }}>Erreur de chargement</div>
+                <div style={{ fontWeight: 700, color: 'var(--t2)', marginBottom: 6 }}>Erreur de chargement</div>
                 <div style={{ fontSize: 12.5, color: 'var(--t3)', marginBottom: 14 }}>{error}</div>
                 <button onClick={reload} style={{ background: 'var(--navy)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                   <i className="fas fa-rotate-right" /> Réessayer
@@ -347,7 +347,7 @@ export default function ClientsPage() {
                             <div>
                               <div style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--navy)' }}>{c.fullName}</div>
                               {c.isSuivi && (
-                                <div style={{ fontSize: 10, color: 'var(--emerald)', fontWeight: 600 }}>
+                                <div style={{ fontSize: 10, color: 'var(--t2)', fontWeight: 600 }}>
                                   <i className="fas fa-check-circle" style={{ marginRight: 3 }} />Abonné
                                 </div>
                               )}
@@ -464,11 +464,11 @@ export default function ClientsPage() {
             <div className="cb">
               {stats ? (
                 [
-                  { label: '👑 VIP',       count: stats.vip,       color: 'var(--amber)' },
-                  { label: '⭐ Fidèles',   count: stats.fideles,   color: 'var(--emerald)' },
-                  { label: '🔄 Réguliers', count: stats.reguliers, color: 'var(--blue)' },
-                  { label: '🆕 Nouveaux',  count: stats.nouveaux,  color: 'var(--violet)' },
-                  { label: '👁️ Abonnés',  count: stats.abonnes - (stats.vip + stats.fideles + stats.reguliers + stats.nouveaux > 0 ? 0 : 0), color: 'var(--t3)' },
+                  { label: '👑 VIP',       count: stats.vip,       color: 'var(--violet)'  },
+                  { label: '⭐ Fidèles',   count: stats.fideles,   color: 'var(--amber)'   },
+                  { label: '🔄 Réguliers', count: stats.reguliers, color: 'var(--blue)'    },
+                  { label: '🆕 Nouveaux',  count: stats.nouveaux,  color: 'var(--emerald)' },
+                  { label: '👁️ Abonnés',  count: stats.abonnes - (stats.vip + stats.fideles + stats.reguliers + stats.nouveaux > 0 ? 0 : 0), color: 'var(--teal)' },
                 ].map(({ label, count, color }) => {
                   const pct = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
                   return (

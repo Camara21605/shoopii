@@ -54,7 +54,7 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
 
   const backBtn = (
     <div className={shared.page} style={{ paddingBottom: 0 }}>
-      <button onClick={onBack} style={{ background: 'var(--white)', border: '1px solid var(--bdr)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--blue)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+      <button onClick={onBack} style={{ background: 'var(--white)', border: '1px solid var(--bdr)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--t2)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
         <i className="fas fa-arrow-left" /> Retour aux correspondants
       </button>
     </div>
@@ -85,7 +85,7 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
 
         {error && (
           <div style={{ maxWidth: 1160, margin: '14px auto 0', padding: '0 28px' }}>
-            <div style={{ padding: '10px 14px', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 10, fontSize: 12.5, color: '#78350F' }}>
+            <div style={{ padding: '10px 14px', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 10, fontSize: 12.5, color: 'var(--t2)' }}>
               <i className="fas fa-triangle-exclamation" /> {error}
             </div>
           </div>

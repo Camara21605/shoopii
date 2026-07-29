@@ -24,7 +24,7 @@ export default function ContactSection({ onDirty, onToast }: Props) {
           </div>
           <div className={s.fg}>
             <div className={s.fl}>WhatsApp boutique</div>
-            <div className={s.fw}><i className="fab fa-whatsapp" style={{ position:'absolute', left:13, color:'#25D366', fontSize:13, zIndex:1 }} /><input className={s.fin} placeholder="620 00 00 00" onChange={onDirty} /></div>
+            <div className={s.fw}><i className="fab fa-whatsapp" style={{ position:'absolute', left:13, color:'var(--t2)', fontSize:13, zIndex:1 }} /><input className={s.fin} placeholder="620 00 00 00" onChange={onDirty} /></div>
             <div className={s.hint}><i className="fas fa-circle-info" /> Les clients vous contacteront directement via WhatsApp</div>
           </div>
         </div>
@@ -40,7 +40,7 @@ export default function ContactSection({ onDirty, onToast }: Props) {
         </div>
         <div className={s.fg}><div className={s.fl}>Repère / Indication</div><div className={s.fw}><i className={`fas fa-sign-hanging ${s.fi}`} /><input className={s.fin} defaultValue="Bâtiment rouge à côté de la pharmacie centrale, panneau Shopi visible" onChange={onDirty} /></div><div className={s.hint}><i className="fas fa-circle-info" /> Aide les livreurs et clients à vous trouver facilement</div></div>
         <div className={s.hint} style={{ background:'var(--sky-2,#f0f4ff)', padding:'10px 12px', borderRadius:8, border:'1px solid var(--sky-3,#c7d9f8)' }}>
-          <i className="fas fa-map-location-dot" style={{ color:'var(--blue)', marginRight:7 }} />
+          <i className="fas fa-map-location-dot" style={{ color:'var(--t2)', marginRight:7 }} />
           Pour épingler votre position exacte sur la carte, utilisez <strong>Voir ma boutique → Localisation</strong>.
         </div>
         <ToggleRow label="Afficher l'adresse complète" sub="L'adresse exacte est visible sur votre page boutique publique" checked={toggles.address} onChange={set('address')} />

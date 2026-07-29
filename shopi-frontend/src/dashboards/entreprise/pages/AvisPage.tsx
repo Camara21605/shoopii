@@ -9,7 +9,7 @@ function Stars({ n }: { n: number }) {
     <span>
       {[1,2,3,4,5].map(v => (
         <span key={v} style={{
-          color: v <= Math.round(n) ? '#F59E0B' : '#D1D5DB',
+          color: v <= Math.round(n) ? 'var(--amber)' : 'var(--g300)',
           fontSize: 13, letterSpacing: 1,
         }}>★</span>
       ))}
@@ -24,11 +24,11 @@ function initiales(nom: string): string {
 
 /* ── Couleurs avatar par initiale ── */
 const AVA_COLORS = [
-  'linear-gradient(135deg,#EEF3FD,#D6E4F8)',
-  'linear-gradient(135deg,#ECFDF5,#D1FAE5)',
-  'linear-gradient(135deg,#FAF5FF,#EDE9FE)',
-  'linear-gradient(135deg,#FFF7ED,#FED7AA)',
-  'linear-gradient(135deg,#FDF2F8,#FBCFE8)',
+  'linear-gradient(135deg,var(--g100),var(--g200))',
+  'linear-gradient(135deg,var(--g100),var(--g100))',
+  'linear-gradient(135deg,var(--g100),var(--g100))',
+  'linear-gradient(135deg,var(--g100),var(--g200))',
+  'linear-gradient(135deg,var(--g100),var(--g200))',
 ];
 function avatarBg(nom: string): string {
   const code = nom.charCodeAt(0) ?? 0;
@@ -196,7 +196,7 @@ export default function AvisPage() {
                             {r.clientNom}
                           </div>
                           <div style={{ fontSize:11, color:'var(--t3)', marginTop:1 }}>
-                            Sur : <span style={{ color:'var(--blue)', fontWeight:600 }}>{r.produitNom}</span>
+                            Sur : <span style={{ color:'var(--t2)', fontWeight:600 }}>{r.produitNom}</span>
                           </div>
                         </div>
                         <div style={{ textAlign:'right' }}>
@@ -306,7 +306,7 @@ export default function AvisPage() {
                 </div>
                 <div style={{ display:'flex', gap:3, justifyContent:'center', margin:'6px 0' }}>
                   {[1,2,3,4,5].map(v => (
-                    <span key={v} style={{ fontSize:20, color: v <= Math.round(moyenne) ? '#F59E0B' : '#D1D5DB' }}>★</span>
+                    <span key={v} style={{ fontSize:20, color: v <= Math.round(moyenne) ? 'var(--amber)' : 'var(--g300)' }}>★</span>
                   ))}
                 </div>
                 <div style={{ fontSize:11, color:'var(--t3)', marginTop:4 }}>
@@ -317,7 +317,7 @@ export default function AvisPage() {
               {/* Barres par étoile */}
               {dist.map(([stars, pct, color]) => (
                 <div key={stars} style={{ display:'flex', alignItems:'center', gap:9, marginBottom:8 }}>
-                  <span style={{ fontSize:11, color:'var(--amber)', width:16, flexShrink:0 }}>
+                  <span style={{ fontSize:11, color:'var(--t2)', width:16, flexShrink:0 }}>
                     {'★'.repeat(stars as number)}
                   </span>
                   <div style={{ flex:1, background:'var(--g200)', borderRadius:'var(--pill)', height:8, overflow:'hidden' }}>

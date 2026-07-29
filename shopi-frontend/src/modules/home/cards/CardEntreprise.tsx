@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from './Cards.module.css';
 import type { BoutiqueCardData } from '../data/types';
 import { useBoutiqueFollow } from '../hooks/useBoutiqueFollow';
+import { useAuthGate } from '../../../shared/hooks/useAuthGate';
 
 const DOMAIN_COLORS: Record<string, { bg: string; bg2: string; color: string }> = {
   'Électronique': { bg:'rgba(37,99,235,.18)',   bg2:'rgba(37,99,235,.08)',  color:'#1D4ED8' },
@@ -29,14 +30,13 @@ interface Props {
 export default function CardEntreprise({ e, onToast }: Props) {
   const navigate = useNavigate();
   const ds = domainStyle(e.domaine);
-  const {
-    suivi, pending, isLoggedIn, canFollow,
-    requestFollowLogin, toggleFollow,
-  } = useBoutiqueFollow({
+  const { openAuthModal, authModal } = useAuthGate();
+  const { suivi, pending, toggleFollow } = useBoutiqueFollow({
     boutiqueId: e.id,
     companyName: e.companyName,
     initialIsSuivi: e.isSuivi,
     onToast,
+    onRequireAuth: openAuthModal,
   });
 
   const rating = e.averageRating > 0 ? e.averageRating.toFixed(1) : '—';
@@ -113,31 +113,23 @@ export default function CardEntreprise({ e, onToast }: Props) {
         </div>
 
         {/* Bouton */}
-        {(!isLoggedIn || canFollow) && (
-          <div className={`${styles.coBtns} ${styles.coBtns1}`}>
-            {!isLoggedIn && (
-              <button className={styles.coF} onClick={e => { e.stopPropagation(); requestFollowLogin(); }}>
-                <i className="fas fa-plus" /> S'abonner
-              </button>
-            )}
-
-            {canFollow && (
-              <button
-                className={`${styles.coF} ${suivi ? styles.coFOn : ''}`}
-                disabled={pending}
-                onClick={e => { e.stopPropagation(); toggleFollow(); }}
-              >
-                {pending
-                  ? <><i className="fas fa-spinner fa-spin" /> …</>
-                  : suivi
-                    ? <><i className="fas fa-check" /> Abonné</>
-                    : <><i className="fas fa-plus" /> S'abonner</>
-                }
-              </button>
-            )}
-          </div>
-        )}
+        <div className={`${styles.coBtns} ${styles.coBtns1}`}>
+          <button
+            className={`${styles.coF} ${suivi ? styles.coFOn : ''}`}
+            disabled={pending}
+            onClick={e => { e.stopPropagation(); toggleFollow(); }}
+          >
+            {pending
+              ? <><i className="fas fa-spinner fa-spin" /> …</>
+              : suivi
+                ? <><i className="fas fa-check" /> Abonné</>
+                : <><i className="fas fa-plus" /> S'abonner</>
+            }
+          </button>
+        </div>
       </div>
+
+      {authModal}
     </div>
   );
 }

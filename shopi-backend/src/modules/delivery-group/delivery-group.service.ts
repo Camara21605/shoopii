@@ -557,7 +557,7 @@ export class DeliveryGroupService {
       actorId:     m.actorId,
       userId:      m.userId,
       displayName: m.displayName,
-      joinedAt:    m.joinedAt.toISOString(),
+      joinedAt:    m.joinedAt?.toISOString() ?? null,
     }));
   }
 

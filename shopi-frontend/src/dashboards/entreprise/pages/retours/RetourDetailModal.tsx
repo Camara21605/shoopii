@@ -19,15 +19,15 @@ const STATUS_LABELS: Record<ReturnStatus, { label: string; cls: string }> = {
 };
 
 const ACTION_ICONS: Record<string, { ico: string; color: string; bg: string }> = {
-  created:          { ico: 'fa-plus', color: '#1A4FC4', bg: '#DBEAFE' },
-  accepted:         { ico: 'fa-check', color: '#047857', bg: '#D1FAE5' },
-  refused:          { ico: 'fa-xmark', color: '#DC2626', bg: '#FEE2E2' },
-  refunded:         { ico: 'fa-coins', color: '#7C3AED', bg: '#EDE9FE' },
-  received:         { ico: 'fa-box-open', color: '#0E7490', bg: '#CFFAFE' },
-  note_added:       { ico: 'fa-note-sticky', color: '#B45309', bg: '#FEF3C7' },
-  evidence_uploaded:{ ico: 'fa-image', color: '#047857', bg: '#D1FAE5' },
-  priority_changed: { ico: 'fa-flag', color: '#6D28D9', bg: '#EDE9FE' },
-  default:          { ico: 'fa-circle-dot', color: '#64748B', bg: '#F1F5F9' },
+  created:          { ico: 'fa-plus', color: 'var(--t2)', bg: 'var(--g100)' },
+  accepted:         { ico: 'fa-check', color: 'var(--emerald)', bg: 'var(--em-bg)' },
+  refused:          { ico: 'fa-xmark', color: 'var(--red)', bg: 'var(--rs-bg)' },
+  refunded:         { ico: 'fa-coins', color: 'var(--emerald)', bg: 'var(--em-bg)' },
+  received:         { ico: 'fa-box-open', color: 'var(--blue)', bg: 'var(--sky-2)' },
+  note_added:       { ico: 'fa-note-sticky', color: 'var(--t2)', bg: 'var(--g100)' },
+  evidence_uploaded:{ ico: 'fa-image', color: 'var(--violet)', bg: 'var(--vl-bg)' },
+  priority_changed: { ico: 'fa-flag', color: 'var(--amber)', bg: 'var(--am-bg)' },
+  default:          { ico: 'fa-circle-dot', color: 'var(--t2)', bg: 'var(--g100)' },
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -152,8 +152,8 @@ export default function RetourDetailModal({
               style={{
                 padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer',
                 fontSize: 12.5, fontWeight: 700,
-                color: activeTab === t ? 'var(--blue)' : 'var(--t3)',
-                borderBottom: `2px solid ${activeTab === t ? 'var(--blue)' : 'transparent'}`,
+                color: activeTab === t ? 'var(--t2)' : 'var(--t3)',
+                borderBottom: `2px solid ${activeTab === t ? 'var(--t2)' : 'transparent'}`,
                 marginBottom: -1,
               }}
             >
@@ -168,7 +168,7 @@ export default function RetourDetailModal({
         <div className={s.modalBody}>
           {loading && (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
-              <i className="fas fa-circle-notch fa-spin" style={{ fontSize: 28, color: 'var(--blue)' }} />
+              <i className="fas fa-circle-notch fa-spin" style={{ fontSize: 28, color: 'var(--t2)' }} />
             </div>
           )}
 
@@ -196,7 +196,7 @@ export default function RetourDetailModal({
                     <div style={{ fontSize: 12, color: 'var(--t2)' }}>Qté : <strong>{detail.quantity}</strong></div>
                     {detail.commande && (
                       <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 4 }}>
-                        Commande : <span style={{ fontWeight: 700, color: 'var(--blue)' }}>{detail.commande.numero}</span>
+                        Commande : <span style={{ fontWeight: 700, color: 'var(--t2)' }}>{detail.commande.numero}</span>
                       </div>
                     )}
                   </div>
@@ -217,7 +217,7 @@ export default function RetourDetailModal({
                     {detail.montantAccorde !== null && (
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ fontSize: 12, color: 'var(--t2)' }}>Accordé :</span>
-                        <span style={{ fontFamily: 'var(--fd,"Fraunces",serif)', fontSize: 15, fontWeight: 800, color: 'var(--emerald)' }}>
+                        <span style={{ fontFamily: 'var(--fd,"Fraunces",serif)', fontSize: 15, fontWeight: 800, color: 'var(--t2)' }}>
                           {fmt(detail.montantAccorde)} GNF
                         </span>
                       </div>
@@ -238,10 +238,10 @@ export default function RetourDetailModal({
                 {/* Note interne */}
                 {detail.noteInterne && (
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--amber)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--t2)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>
                       <i className="fas fa-note-sticky" /> NOTE INTERNE
                     </div>
-                    <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 12, padding: 14, fontSize: 12.5, color: '#92400E', lineHeight: 1.6 }}>
+                    <div style={{ background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 12, padding: 14, fontSize: 12.5, color: 'var(--t2)', lineHeight: 1.6 }}>
                       {detail.noteInterne}
                     </div>
                   </div>
@@ -250,7 +250,7 @@ export default function RetourDetailModal({
                 {/* Note client */}
                 {detail.noteClient && (
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--blue)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--t2)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>
                       <i className="fas fa-message" /> MESSAGE CLIENT
                     </div>
                     <div style={{ background: 'var(--sky)', border: '1px solid var(--sky-3)', borderRadius: 12, padding: 14, fontSize: 12.5, color: 'var(--navy)', lineHeight: 1.6 }}>
@@ -261,8 +261,8 @@ export default function RetourDetailModal({
 
                 {/* Formulaires conditionnels */}
                 {showAccept && (
-                  <div style={{ gridColumn: '1 / -1', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 12, padding: 16 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: '#047857', marginBottom: 12 }}>
+                  <div style={{ gridColumn: '1 / -1', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 12, padding: 16 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--t2)', marginBottom: 12 }}>
                       <i className="fas fa-check-circle" /> Accepter le retour
                     </div>
                     <div className={s.field} style={{ marginBottom: 10 }}>
@@ -295,8 +295,8 @@ export default function RetourDetailModal({
                 )}
 
                 {showRefuse && (
-                  <div style={{ gridColumn: '1 / -1', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 12, padding: 16 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: '#DC2626', marginBottom: 12 }}>
+                  <div style={{ gridColumn: '1 / -1', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 12, padding: 16 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--t1)', marginBottom: 12 }}>
                       <i className="fas fa-xmark-circle" /> Refuser le retour
                     </div>
                     <div className={s.field} style={{ marginBottom: 12 }}>
@@ -320,8 +320,8 @@ export default function RetourDetailModal({
                 )}
 
                 {showNote && (
-                  <div style={{ gridColumn: '1 / -1', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 12, padding: 16 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: '#B45309', marginBottom: 12 }}>
+                  <div style={{ gridColumn: '1 / -1', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 12, padding: 16 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--t2)', marginBottom: 12 }}>
                       <i className="fas fa-note-sticky" /> Note interne
                     </div>
                     <div className={s.field} style={{ marginBottom: 12 }}>

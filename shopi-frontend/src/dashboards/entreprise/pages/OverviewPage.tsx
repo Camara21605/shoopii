@@ -2,32 +2,69 @@
  * FICHIER: src/dashboards/entreprise/pages/OverviewPage.tsx
  * Page principale "Vue d'ensemble" du dashboard Entreprise
  * Contient: Hero, KPIs, Graphiques CA, Top produits, Alertes, Activité
+ * Toutes les données viennent de GET /dashboard/entreprise/overview (réel).
  */
 
-import React from 'react';
+import { useState, useEffect } from 'react';
+import type { ReactElement } from 'react';
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
-import { CA_DATA, TOP_PRODS, ORDERS, STOCK_ALERTS, ACTIVITY } from '../data/mockData';
+import { apiFetch } from '../../../shared/services/apiFetch';
 import './OverviewPage.css';
 
 interface OverviewPageProps {
   onNavigate: (page: EntreprisePage) => void;
 }
 
-/** Formate un nombre avec espaces insécables (ex: 12500000 → 12 500 000) */
-function fmt(n: number) {
-  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u202F');
+interface OverviewData {
+  zoneNom: string;
+  kpis: {
+    caCeMois: number; croissanceCA: number;
+    commandesCeMois: number; commandesCroissance: number;
+    enAttente: number; enCours: number; livrees: number;
+    noteMoyenne: number; totalAvis: number;
+    abonnes: number;
+    retoursCeMois: number; retoursEnTraitement: number; retoursRembourses: number;
+    beneficeNet: number; margePct: number; commissionCeMois: number;
+  };
+  caData: { m: string; v: number }[];
+  topProduits: { em: string; nm: string; ventes: number; ca: string; trend: 'up' | 'dn' | 'neu' }[];
+  categoryBreakdown: { label: string; pct: number }[];
+  dernieresCommandes: { id: string; em: string; nm: string; vt: string; client: string; price: number; status: string; date: string }[];
+  stockAlertes: { em: string; nm: string; qty: number; min: number; type: 'red' | 'amber' }[];
+  activite: { icon: string; txt: string; time: string }[];
 }
 
-/** KPI card individuelle */
+const EMPTY: OverviewData = {
+  zoneNom: 'Boutique',
+  kpis: {
+    caCeMois: 0, croissanceCA: 0, commandesCeMois: 0, commandesCroissance: 0,
+    enAttente: 0, enCours: 0, livrees: 0, noteMoyenne: 0, totalAvis: 0,
+    abonnes: 0, retoursCeMois: 0, retoursEnTraitement: 0, retoursRembourses: 0,
+    beneficeNet: 0, margePct: 0, commissionCeMois: 0,
+  },
+  caData: [], topProduits: [], categoryBreakdown: [], dernieresCommandes: [],
+  stockAlertes: [], activite: [],
+};
+
+/** Formate un nombre avec espaces insécables (ex: 12500000 → 12 500 000) */
+function fmt(n: number) {
+  return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+function trendBadge(pct: number) {
+  if (pct > 0) return { type: 'up' as const, label: `↑ +${pct}%` };
+  if (pct < 0) return { type: 'dn' as const, label: `↓ ${pct}%` };
+  return { type: 'neu' as const, label: 'Stable' };
+}
+
+/** KPI card individuelle (sans sparkline — pas de série journalière réelle disponible) */
 function KpiCard({
-  variant, icon, badge, badgeType, value, label, sub, sparkData, sparkColor
+  variant, icon, badge, badgeType, value, label, sub,
 }: {
-  variant: string; icon: string; badge: string; badgeType: 'up'|'dn'|'neu';
+  variant: string; icon: string; badge: string; badgeType: 'up' | 'dn' | 'neu';
   value: string; label: string; sub: string;
-  sparkData?: number[]; sparkColor?: string;
 }) {
-  const max = sparkData ? Math.max(...sparkData) : 1;
   return (
     <div className={`kpi ${variant}`}>
       <div className="kpi-stripe"></div>
@@ -38,48 +75,35 @@ function KpiCard({
       <div className="kpi-val">{value}</div>
       <div className="kpi-lbl">{label}</div>
       <div className="kpi-sub">{sub}</div>
-      {sparkData && (
-        <div className="kpi-spark">
-          {sparkData.map((v, i) => (
-            <div
-              key={i}
-              className="kpi-sp-b"
-              style={{ height: `${(v / max) * 100}%`, background: sparkColor }}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
 
 export default function OverviewPage({ onNavigate }: OverviewPageProps) {
   const { pop } = useToast();
+  const [data, setData]       = useState<OverviewData>(EMPTY);
+  const [loading, setLoading] = useState(true);
 
-  // Données sparklines KPIs
-  const SPARK1 = [60,72,65,90,82,89,98,112,89,135,118,145];
-  const SPARK2 = [180,210,195,240,220,260,245,270,255,290,280,287];
-  const SPARK3 = [8000,9200,8800,10200,9800,10900,11100,11400,11000,11800,11900,12429];
-  const SPARK4 = [4.6,4.7,4.7,4.8,4.7,4.8,4.8,4.9,4.8,4.9,4.9,4.9];
+  useEffect(() => {
+    apiFetch<OverviewData>('/dashboard/entreprise/overview')
+      .then(d => { if (d) setData(d); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
-  // Calcul des barres CA
-  const maxCA = Math.max(...CA_DATA.map(d => d.v));
+  const { kpis, caData, topProduits, categoryBreakdown, dernieresCommandes, stockAlertes, activite } = data;
 
-  // Répartition des ventes (donut)
-  const CATS: [string, number, string][] = [
-    ['Smartphones', 38, 'var(--blue)'],
-    ['Ordinateurs',  27, 'var(--violet)'],
-    ['Audio & Vidéo',18, 'var(--teal)'],
-    ['Gaming',       10, 'var(--amber)'],
-    ['Accessoires',   7, 'var(--rose)'],
-  ];
+  const maxCA = Math.max(1, ...caData.map(d => d.v));
+  const caTrend = trendBadge(kpis.croissanceCA);
+  const cmdTrend = trendBadge(kpis.commandesCroissance);
+
   let deg = 0;
-  const segments = CATS.map(([, p, c]) => {
-    const start = deg; deg += p * 3.6;
-    return `${c} ${start}deg ${deg}deg`;
+  const segments = categoryBreakdown.map(c => {
+    const start = deg; deg += c.pct * 3.6;
+    return `var(--t2) ${start}deg ${deg}deg`;
   });
 
-  const STATUS_LABELS: Record<string, JSX.Element> = {
+  const STATUS_LABELS: Record<string, ReactElement> = {
     new:  <span className="s-pill s-new">● Nouveau</span>,
     prep: <span className="s-pill s-prep">⚙ En prépa</span>,
     ship: <span className="s-pill s-ship">🚚 Livraison</span>,
@@ -97,14 +121,14 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
         <div className="hero-left">
           <div className="hero-badge">
             <span></span>
-            Boutique active · 12 429 abonnés · Rang #3 Électronique
+            Boutique active · {fmt(kpis.abonnes)} abonnés
           </div>
           <div className="hero-title">
-            Bonjour, <em>TechStore</em> 👋<br />
-            Performances excellentes ce mois.
+            Bonjour, <em>{data.zoneNom}</em> 👋<br />
+            {loading ? 'Chargement de vos données…' : 'Voici votre activité récente.'}
           </div>
           <div className="hero-sub">
-            +23% de chiffre d'affaires · 14 commandes à traiter · 3 retours en attente · Score SEO 78/100
+            {caTrend.label} de chiffre d'affaires · {kpis.enAttente} commande{kpis.enAttente !== 1 ? 's' : ''} à traiter · {kpis.retoursEnTraitement} retour{kpis.retoursEnTraitement !== 1 ? 's' : ''} en attente
           </div>
           <div className="hero-btns">
             <button className="hb1" onClick={() => onNavigate('commandes')}>
@@ -120,21 +144,18 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
         </div>
         <div className="hero-right">
           {[
-            { v: '145', u: 'GNF', l: 'CA ce mois', trend: '+23%', up: true, suffix: 'M' },
-            { v: '287', u: 'cmds', l: 'Commandes',  trend: '+18%', up: true },
-            { v: '4.9', u: '⭐',  l: 'Note moy.',  trend: 'Stable', up: true },
-            { v: '78',  u: 'SEO', l: 'Score santé', trend: '+5pts', up: true, suffix: '%' },
+            { v: fmt(kpis.caCeMois / 1_000_000), u: 'M GNF', l: 'CA ce mois',   trend: caTrend },
+            { v: String(kpis.commandesCeMois),    u: 'cmds', l: 'Commandes',    trend: cmdTrend },
+            { v: kpis.noteMoyenne.toFixed(1),      u: '⭐',   l: 'Note moy.',   trend: { type: 'neu' as const, label: `${kpis.totalAvis} avis` } },
+            { v: String(kpis.abonnes),             u: '',     l: 'Abonnés',     trend: { type: 'neu' as const, label: 'Total' } },
           ].map((s, i) => (
             <div className="hs" key={i}>
-              <div className="hs-v">
-                {s.v}
-                {s.suffix && <span style={{ fontSize: 14 }}>{s.suffix}</span>}
-              </div>
+              <div className="hs-v">{s.v}</div>
               <div className="hs-u">{s.u}</div>
               <div className="hs-l">{s.l}</div>
-              <div className={`hs-trend ${s.up ? 'up' : 'dn'}`}>
-                <i className={`fas ${s.up ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}`}></i>
-                {s.trend}
+              <div className={`hs-trend ${s.trend.type === 'dn' ? 'dn' : 'up'}`}>
+                <i className={`fas ${s.trend.type === 'dn' ? 'fa-arrow-trend-down' : 'fa-arrow-trend-up'}`}></i>
+                {s.trend.label}
               </div>
             </div>
           ))}
@@ -144,66 +165,52 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
       {/* ── KPI GRID ── */}
       <div className="kpi-grid">
         <KpiCard
-          variant="k1" icon="💰" badge="↑ +23%" badgeType="up"
-          value="145 250 000" label="Chiffre d'affaires — Janvier 2025" sub="GNF · vs 118M en décembre"
-          sparkData={SPARK1} sparkColor="var(--blue)"
+          variant="k1" icon="💰" badge={caTrend.label} badgeType={caTrend.type}
+          value={fmt(kpis.caCeMois)} label="Chiffre d'affaires — ce mois" sub="GNF"
         />
         <KpiCard
-          variant="k2" icon="📦" badge="↑ +18%" badgeType="up"
-          value="287" label="Commandes ce mois" sub="14 en attente · 243 livrées · 30 en cours"
-          sparkData={SPARK2} sparkColor="var(--emerald)"
+          variant="k2" icon="📦" badge={cmdTrend.label} badgeType={cmdTrend.type}
+          value={String(kpis.commandesCeMois)} label="Commandes ce mois"
+          sub={`${kpis.enAttente} en attente · ${kpis.livrees} livrées · ${kpis.enCours} en cours`}
         />
         <KpiCard
-          variant="k3" icon="🛍️" badge="↑ +11%" badgeType="up"
-          value="12 429" label="Abonnés boutique" sub="+1 240 nouveaux ce mois"
-          sparkData={SPARK3} sparkColor="var(--amber)"
+          variant="k3" icon="🛍️" badge="Total" badgeType="neu"
+          value={fmt(kpis.abonnes)} label="Abonnés boutique" sub="Nombre total réel"
         />
         <KpiCard
-          variant="k4" icon="⭐" badge="+0.1 pts" badgeType="up"
-          value="4.9" label="Note moyenne clients" sub="248 avis · 97% satisfaction"
-          sparkData={SPARK4} sparkColor="var(--violet)"
+          variant="k4" icon="⭐" badge={`${kpis.totalAvis} avis`} badgeType="neu"
+          value={kpis.noteMoyenne.toFixed(1)} label="Note moyenne clients" sub={`${kpis.totalAvis} avis au total`}
         />
         <KpiCard
-          variant="k5" icon="🔄" badge="2.1%" badgeType="neu"
-          value="6" label="Retours ce mois" sub="3 en traitement · 3 remboursés"
+          variant="k5" icon="🔄" badge={String(kpis.retoursCeMois)} badgeType="neu"
+          value={String(kpis.retoursCeMois)} label="Retours ce mois"
+          sub={`${kpis.retoursEnTraitement} en traitement · ${kpis.retoursRembourses} remboursés`}
         />
         <KpiCard
-          variant="k6" icon="💸" badge="↑ +31%" badgeType="up"
-          value="58 200 000" label="Bénéfice net estimé" sub="Marge: 40% · Commissions: 4 350 000 GNF"
+          variant="k6" icon="💸" badge={`${kpis.margePct}% marge`} badgeType="neu"
+          value={fmt(kpis.beneficeNet)} label="Bénéfice net (ce mois)"
+          sub={`Marge: ${kpis.margePct}% · Commissions: ${fmt(kpis.commissionCeMois)} GNF`}
         />
       </div>
 
       {/* ── CA + TOP PRODUITS ── */}
       <div className="g3">
-        {/* Graphique CA mensuel */}
         <div className="card">
           <div className="ch">
             <div className="ch-t"><i className="fas fa-chart-line"></i> Chiffre d'affaires mensuel</div>
-            <div className="sh-tabs">
-              {['6 mois','12 mois','Tout'].map(t => (
-                <button
-                  key={t}
-                  className={`sh-tab${t === '6 mois' ? ' on' : ''}`}
-                  onClick={e => {
-                    document.querySelectorAll('.sh-tabs .sh-tab').forEach(b => b.classList.remove('on'));
-                    (e.target as HTMLButtonElement).classList.add('on');
-                    pop('📊 Période mise à jour', 'i');
-                  }}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
           </div>
           <div className="cb">
+            {caData.length === 0 && !loading && (
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)' }}>Aucune vente livrée pour l'instant.</div>
+            )}
             <div className="chart-bars">
-              {CA_DATA.map((d, i) => (
+              {caData.map((d, i) => (
                 <div className="c-bar-wrap" key={i}>
                   <div
                     className="c-bar"
                     style={{
                       height: `${(d.v / maxCA) * 100}%`,
-                      background: i === CA_DATA.length - 1 ? 'var(--blue)' : 'var(--sky-3)',
+                      background: i === caData.length - 1 ? 'var(--t2)' : 'var(--sky-3)',
                     }}
                   >
                     <div className="c-bar-v">{d.v}M</div>
@@ -213,35 +220,36 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
               ))}
             </div>
             <div className="chart-legend">
-              <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--blue)' }}></div>CA mensuel (Millions GNF)</div>
+              <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--t2)' }}></div>CA mensuel (Millions GNF)</div>
               <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--sky-3)' }}></div>Périodes précédentes</div>
             </div>
           </div>
         </div>
 
-        {/* Top produits */}
         <div className="card">
           <div className="ch">
             <div className="ch-t"><i className="fas fa-trophy"></i> Top produits</div>
-            <span className="ch-badge">Jan 2025</span>
           </div>
           <div className="cb">
-            {TOP_PRODS.map((p, i) => {
-              const mx = Math.max(...TOP_PRODS.map(x => x.ventes));
+            {topProduits.length === 0 && !loading && (
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)' }}>Aucune vente pour l'instant.</div>
+            )}
+            {topProduits.map((p, i) => {
+              const mx = Math.max(1, ...topProduits.map(x => x.ventes));
               return (
                 <div key={i} className="tp-row">
-                  <div className="tp-rank">{i+1}</div>
+                  <div className="tp-rank">{i + 1}</div>
                   <div className="tp-em">{p.em}</div>
                   <div className="tp-info">
                     <div className="tp-nm">{p.nm}</div>
                     <div className="tp-bar">
-                      <div className="tp-bar-fill" style={{ width:`${(p.ventes/mx)*100}%` }} />
+                      <div className="tp-bar-fill" style={{ width: `${(p.ventes / mx) * 100}%` }} />
                     </div>
                   </div>
                   <div className="tp-stats">
                     <div className="tp-ventes">{p.ventes} ventes</div>
-                    <div className={`tp-trend ${p.trend==='up'?'up':p.trend==='dn'?'dn':'neu'}`}>
-                      {p.trend==='up'?'↑':p.trend==='dn'?'↓':'—'} {p.ca}
+                    <div className={`tp-trend ${p.trend === 'up' ? 'up' : p.trend === 'dn' ? 'dn' : 'neu'}`}>
+                      {p.trend === 'up' ? '↑' : p.trend === 'dn' ? '↓' : '—'} {p.ca}
                     </div>
                   </div>
                 </div>
@@ -254,24 +262,26 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
       {/* ── ALERTES + DONUT + COMMANDES + ACTIVITÉ ── */}
       <div className="g3r">
         <div>
-          {/* Alertes de stock */}
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
               <div className="ch-t"><i className="fas fa-triangle-exclamation"></i> Alertes prioritaires</div>
-              <span className="ch-badge" style={{ background:'var(--rs-bg)', color:'var(--rose)', borderColor:'rgba(225,29,72,.2)' }}>
-                9 alertes
+              <span className="ch-badge" style={{ background: 'var(--g100)', color: 'var(--t2)', borderColor: 'rgba(128,128,128,.2)' }}>
+                {stockAlertes.length} alerte{stockAlertes.length !== 1 ? 's' : ''}
               </span>
             </div>
             <div className="cb">
+              {stockAlertes.length === 0 && !loading && (
+                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>Aucune alerte de stock.</div>
+              )}
               <div className="alert-list">
-                {STOCK_ALERTS.slice(0, 5).map((a, i) => (
+                {stockAlertes.slice(0, 5).map((a, i) => (
                   <div key={i} className={`alert-item ${a.type}`}>
-                    <div className="alert-ic"><i className={`fas ${a.type==='red'?'fa-circle-xmark':'fa-triangle-exclamation'}`}></i></div>
+                    <div className="alert-ic"><i className={`fas ${a.type === 'red' ? 'fa-circle-xmark' : 'fa-triangle-exclamation'}`}></i></div>
                     <div>
                       <div className="alert-nm">{a.em} {a.nm}</div>
                       <div className="alert-sub">Stock: {a.qty} · Min requis: {a.min}</div>
                     </div>
-                    <button className="alert-fix" onClick={() => pop('📦 Réappro lancée', 's')}>
+                    <button className="alert-fix" onClick={() => onNavigate('produits')}>
                       Réappro
                     </button>
                   </div>
@@ -280,30 +290,29 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
             </div>
           </div>
 
-          {/* Donut répartition */}
           <div className="card">
             <div className="ch"><div className="ch-t"><i className="fas fa-chart-pie"></i> Répartition des ventes</div></div>
             <div className="cb">
-              <div className="donut-wrap">
-                <div
-                  className="donut"
-                  style={{ background: `conic-gradient(${segments.join(',')})` }}
-                ></div>
-                <div className="donut-legend">
-                  {CATS.map(([l, p, c]) => (
-                    <div className="dl-item" key={l}>
-                      <div className="dl-left"><div className="dl-dot" style={{ background: c }}></div>{l}</div>
-                      <div className="dl-pct">{p}%</div>
-                    </div>
-                  ))}
+              {categoryBreakdown.length === 0 && !loading ? (
+                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>Aucune vente pour l'instant.</div>
+              ) : (
+                <div className="donut-wrap">
+                  <div className="donut" style={{ background: `conic-gradient(${segments.join(',')})` }}></div>
+                  <div className="donut-legend">
+                    {categoryBreakdown.map(c => (
+                      <div className="dl-item" key={c.label}>
+                        <div className="dl-left"><div className="dl-dot" style={{ background: 'var(--t2)' }}></div>{c.label}</div>
+                        <div className="dl-pct">{c.pct}%</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
 
         <div>
-          {/* Dernières commandes */}
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
               <div className="ch-t"><i className="fas fa-box"></i> Dernières commandes</div>
@@ -314,7 +323,7 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
             <div className="tbl-wrap">
               <table>
                 <tbody>
-                  {ORDERS.slice(0, 4).map(o => (
+                  {dernieresCommandes.map(o => (
                     <tr key={o.id} onClick={() => pop(`📦 Commande ${o.id}`, 'i')}>
                       <td>
                         <div className="td-prod">
@@ -327,22 +336,27 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
                       </td>
                       <td><div className="td-client">{o.client}</div></td>
                       <td><div className="td-price">{fmt(o.price)} GNF</div></td>
-                      <td>{STATUS_LABELS[o.status]}</td>
+                      <td>{STATUS_LABELS[o.status] ?? o.status}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              {dernieresCommandes.length === 0 && !loading && (
+                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>Aucune commande pour l'instant.</div>
+              )}
             </div>
           </div>
 
-          {/* Activité récente */}
           <div className="card">
             <div className="ch"><div className="ch-t"><i className="fas fa-timeline"></i> Activité récente</div></div>
             <div className="cb">
+              {activite.length === 0 && !loading && (
+                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>Aucune activité récente.</div>
+              )}
               <div className="act-list">
-                {ACTIVITY.map((a, i) => (
+                {activite.map((a, i) => (
                   <div key={i} className="act-item">
-                    <div className={`act-dot ${a.type}`}><i className={`fas ${a.icon}`}></i></div>
+                    <div className="act-dot order"><i className={`fas ${a.icon}`}></i></div>
                     <div className="act-txt" dangerouslySetInnerHTML={{ __html: a.txt }} />
                     <div className="act-time">{a.time}</div>
                   </div>

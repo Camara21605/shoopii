@@ -107,13 +107,13 @@ export default function BoutiqueIdentity({ boutique, suivi, suiviPending, msgLoa
             <span>{suiviPending ? '…' : suivi ? 'Abonné' : "S'abonner"}</span>
           </button>
 
-          {/* Message — actif uniquement si abonné */}
+          {/* Message — le parent gère l'auth/abonnement requis au clic */}
           <button
             className={styles.btnMsg}
             onClick={onMessage}
-            disabled={!suivi || msgLoading}
+            disabled={msgLoading}
             title={!suivi ? 'Abonnez-vous pour envoyer un message' : 'Envoyer un message'}
-            style={{ opacity: !suivi ? 0.45 : msgLoading ? 0.65 : 1, cursor: !suivi ? 'not-allowed' : 'pointer' }}
+            style={{ opacity: !suivi ? 0.65 : msgLoading ? 0.65 : 1, cursor: msgLoading ? 'not-allowed' : 'pointer' }}
           >
             <i className={`fas ${msgLoading ? 'fa-spinner fa-spin' : 'fa-comment-dots'}`} />
             {msgLoading ? '…' : 'Message'}

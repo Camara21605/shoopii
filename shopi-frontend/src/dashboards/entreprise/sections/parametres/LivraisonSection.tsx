@@ -68,7 +68,7 @@ export default function LivraisonSection({ data, saving, onDirty, onToast, saveL
               <div style={{ fontSize:11, color:'var(--t3)', marginTop:2 }}>{m.sub}</div>
             </div>
             <div onClick={() => { m.set(!m.value); onDirty(); }}
-              style={{ width:44, height:24, borderRadius:12, cursor:'pointer', background: m.value ? 'var(--teal,#0E7490)' : 'var(--g300)', position:'relative', transition:'background .2s', flexShrink:0 }}>
+              style={{ width:44, height:24, borderRadius:12, cursor:'pointer', background: m.value ? 'var(--t2)' : 'var(--g300)', position:'relative', transition:'background .2s', flexShrink:0 }}>
               <div style={{ position:'absolute', top:3, width:18, height:18, borderRadius:'50%', background:'#fff', transition:'left .2s', boxShadow:'0 1px 3px rgba(0,0,0,.2)', left: m.value ? 22 : 3 }} />
             </div>
           </div>
@@ -81,9 +81,9 @@ export default function LivraisonSection({ data, saving, onDirty, onToast, saveL
             <button key={zone} onClick={() => toggleZone(zone)}
               style={{
                 padding:'7px 16px', borderRadius:'var(--pill)', cursor:'pointer', fontSize:12, fontWeight:600,
-                background: zones.includes(zone) ? 'var(--teal,#0E7490)' : 'var(--g50)',
+                background: zones.includes(zone) ? 'var(--t2)' : 'var(--g50)',
                 color: zones.includes(zone) ? '#fff' : 'var(--t2)',
-                border: zones.includes(zone) ? '1.5px solid var(--teal,#0E7490)' : '1.5px solid var(--bdr2)',
+                border: zones.includes(zone) ? '1.5px solid var(--t2)' : '1.5px solid var(--bdr2)',
                 transition:'all .2s',
               }}
             >

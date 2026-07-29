@@ -151,3 +151,57 @@
   .helpLink i { color: #5B8BF0; }
   .helpLink a { color: #5B8BF0; }
 }
+
+/* ✅ Bascule EXPLICITE du thème via le site (ThemeContext → <html data-theme>) —
+   `prefers-color-scheme` seul ignore le choix fait dans l'app. Même contenu
+   que le bloc @media ci-dessus, ré-appliqué sur l'attribut explicite. */
+:root[data-theme="dark"] .page { background: #0D1526; color: #E2E8F6; }
+:root[data-theme="dark"] .title { color: #E2E8F6; }
+:root[data-theme="dark"] .sub   { color: #4A5A7A; }
+:root[data-theme="dark"] .filterBtn { background: #131E35; border-color: #1E2D4A; color: #C5D0E8; }
+:root[data-theme="dark"] .filterBtn:hover { border-color: #5B8BF0; color: #5B8BF0; }
+:root[data-theme="dark"] .filterBtnActive { background: #172040 !important; border-color: #5B8BF0 !important; color: #5B8BF0 !important; }
+:root[data-theme="dark"] .state    { color: #4A5A7A; }
+:root[data-theme="dark"] .stateErr { color: #FCA5A5; }
+:root[data-theme="dark"] .emptyIcon  { background: #172040; color: #5B8BF0; }
+:root[data-theme="dark"] .emptyTitle { color: #E2E8F6; }
+:root[data-theme="dark"] .emptySub   { color: #4A5A7A; }
+:root[data-theme="dark"] .card { background: #131E35; border-color: #1E2D4A; }
+:root[data-theme="dark"] .card:hover { border-color: #2A4080; box-shadow: 0 4px 20px rgba(26,79,196,.2); }
+:root[data-theme="dark"] .cardWaiting { border-color: #78350F !important; background: #1A0F00 !important; }
+:root[data-theme="dark"] .cardWaiting:hover { border-color: #92400E !important; }
+:root[data-theme="dark"] .ref { color: #5B8BF0; background: #172040; }
+:root[data-theme="dark"] .subject { color: #E2E8F6; }
+:root[data-theme="dark"] .cardMeta { color: #4A5A7A; }
+:root[data-theme="dark"] .typeTag { background: #172040; color: #5B8BF0; }
+:root[data-theme="dark"] .breadcrumb a { color: #5B8BF0; }
+:root[data-theme="dark"] .breadcrumb span { color: #4A5A7A; }
+:root[data-theme="dark"] .helpLink { color: #4A5A7A; }
+:root[data-theme="dark"] .helpLink i { color: #5B8BF0; }
+:root[data-theme="dark"] .helpLink a { color: #5B8BF0; }
+
+/* Annule la préférence sombre de l'OS quand "Clair" est choisi explicitement */
+:root[data-theme="light"] .page { background: #F8FAFF; color: var(--t1, #0B1F3A); }
+:root[data-theme="light"] .title { color: #0B1F3A; }
+:root[data-theme="light"] .sub   { color: #9AAACB; }
+:root[data-theme="light"] .filterBtn { background: #fff; border-color: #E5EBF5; color: #2A3A5A; }
+:root[data-theme="light"] .filterBtn:hover { border-color: var(--bdr2); color: var(--navy); }
+:root[data-theme="light"] .filterBtnActive { background: var(--g100) !important; border-color: var(--bdr2) !important; color: var(--navy) !important; }
+:root[data-theme="light"] .state    { color: #9AAACB; }
+:root[data-theme="light"] .stateErr { color: #E53E3E; }
+:root[data-theme="light"] .emptyIcon  { background: var(--g100); color: var(--t2); }
+:root[data-theme="light"] .emptyTitle { color: #0B1F3A; }
+:root[data-theme="light"] .emptySub   { color: #9AAACB; }
+:root[data-theme="light"] .card { background: #fff; border-color: #E5EBF5; }
+:root[data-theme="light"] .card:hover { border-color: #B8CAEF; box-shadow: 0 4px 20px rgba(26,79,196,.1); }
+:root[data-theme="light"] .cardWaiting { border-color: #FDE68A !important; background: #FFFDF5 !important; }
+:root[data-theme="light"] .cardWaiting:hover { border-color: #FCD34D !important; }
+:root[data-theme="light"] .ref { color: #9AAACB; background: #F0F4FF; }
+:root[data-theme="light"] .subject { color: #0B1F3A; }
+:root[data-theme="light"] .cardMeta { color: #9AAACB; }
+:root[data-theme="light"] .typeTag { background: #F0F4FF; color: #1A4FC4; }
+:root[data-theme="light"] .breadcrumb a { color: #1A4FC4; }
+:root[data-theme="light"] .breadcrumb span { color: #9AAACB; }
+:root[data-theme="light"] .helpLink { color: #9AAACB; }
+:root[data-theme="light"] .helpLink i { color: #1A4FC4; }
+:root[data-theme="light"] .helpLink a { color: #1A4FC4; }

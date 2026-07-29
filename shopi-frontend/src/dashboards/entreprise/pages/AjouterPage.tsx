@@ -99,20 +99,20 @@ function isNetworkError(err: unknown): boolean {
 function ErrorBanner({ message, onClose }: { message: string; onClose: () => void }) {
   return (
     <div style={{
-      background: 'rgba(225,29,72,.08)', border: '1.5px solid rgba(225,29,72,.3)',
+      background: 'var(--rs-bg)', border: '1.5px solid rgba(220,38,38,.3)',
       borderRadius: 'var(--r-md)', padding: '14px 16px', marginBottom: 20,
       display: 'flex', alignItems: 'flex-start', gap: 12,
     }}>
       <span style={{ fontSize: 20, flexShrink: 0 }}>❌</span>
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--rose)', marginBottom: 3 }}>
+        <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--red)', marginBottom: 3 }}>
           Une erreur est survenue
         </div>
-        <div style={{ fontSize: 12, color: 'var(--rose)', opacity: 0.85, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 12, color: 'var(--red)', opacity: 0.85, lineHeight: 1.5 }}>
           {message}
         </div>
       </div>
-      <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--rose)', fontSize: 16, padding: 0, flexShrink: 0 }}>
+      <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: 16, padding: 0, flexShrink: 0 }}>
         <i className="fas fa-xmark" />
       </button>
     </div>
@@ -122,7 +122,7 @@ function ErrorBanner({ message, onClose }: { message: string; onClose: () => voi
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--rose)', fontSize: 11.5, marginTop: 5, fontWeight: 600 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--red)', fontSize: 11.5, marginTop: 5, fontWeight: 600 }}>
       <i className="fas fa-circle-exclamation" style={{ fontSize: 11 }} />
       {message}
     </div>
@@ -674,7 +674,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   if (loadingProd) {
     return (
       <div className="page on" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400, flexDirection: 'column', gap: 16 }}>
-        <i className="fas fa-spinner fa-spin" style={{ fontSize: 28, color: 'var(--blue)' }} />
+        <i className="fas fa-spinner fa-spin" style={{ fontSize: 28, color: 'var(--t2)' }} />
         <div style={{ fontSize: 14, color: 'var(--t3)' }}>Chargement du produit…</div>
       </div>
     );
@@ -806,7 +806,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               <label className="aj-toggle" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input type="checkbox" checked={storiesOn} onChange={e => { setStoriesOn(e.target.checked); if (!e.target.checked) setStoryIndices(new Set()); }} />
                 <span className="aj-toggle-slider"></span>
-                <span style={{ fontSize: 11.5, fontWeight: 600, color: storiesOn ? 'var(--blue)' : 'var(--t3)', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: storiesOn ? 'var(--t2)' : 'var(--t3)', whiteSpace: 'nowrap' }}>
                   {storiesOn ? 'Activées' : 'Désactivées'}
                 </span>
               </label>
@@ -822,7 +822,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                 ) : (
                   <>
                     <p style={{ fontSize: 12, color: 'var(--t2)', marginBottom: 12, lineHeight: 1.5 }}>
-                      <i className="fas fa-circle-info" style={{ color: 'var(--blue)', marginRight: 6 }} />
+                      <i className="fas fa-circle-info" style={{ color: 'var(--t2)', marginRight: 6 }} />
                       Sélectionnez les images à publier en story (<strong>expire après 24h</strong>). Cliquez sur une image pour la sélectionner.
                     </p>
 
@@ -840,8 +840,8 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                               borderRadius: 10,
                               overflow: 'hidden',
                               cursor: 'pointer',
-                              border: selected ? '2.5px solid var(--blue)' : '2.5px solid transparent',
-                              boxShadow: selected ? '0 0 0 3px rgba(59,130,246,.2)' : 'none',
+                              border: selected ? '2.5px solid var(--t2)' : '2.5px solid transparent',
+                              boxShadow: selected ? '0 0 0 3px rgba(128,128,128,.2)' : 'none',
                               transition: 'border-color .15s, box-shadow .15s',
                             }}
                           >
@@ -900,7 +900,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                           borderRadius: 'var(--r-md)',
                         }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 7 }}>
-                            <i className="fas fa-clock" style={{ color: 'var(--blue)', fontSize: 13 }} />
+                            <i className="fas fa-clock" style={{ color: 'var(--t2)', fontSize: 13 }} />
                             Plage horaire d'affichage (par jour)
                           </div>
 
@@ -942,10 +942,10 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                               marginTop: 10, fontSize: 11.5, color: 'var(--t2)',
                               display: 'flex', alignItems: 'center', gap: 5,
                             }}>
-                              <i className="fas fa-circle-info" style={{ color: 'var(--blue)', fontSize: 11 }} />
+                              <i className="fas fa-circle-info" style={{ color: 'var(--t2)', fontSize: 11 }} />
                               {storyHeureFin > storyHeureDebut
                                 ? <>De <strong>{storyHeureDebut}</strong> à <strong>{storyHeureFin}</strong></>
-                                : <span style={{ color: 'var(--rose)', fontWeight: 600 }}>
+                                : <span style={{ color: 'var(--t2)', fontWeight: 600 }}>
                                     <i className="fas fa-triangle-exclamation" style={{ marginRight: 4 }} />
                                     L'heure de fin doit être après l'heure de début.
                                   </span>
@@ -979,7 +979,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                             }}>
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 7 }}>
-                                  <i className="fas fa-calendar-days" style={{ color: 'var(--blue)', fontSize: 13 }} />
+                                  <i className="fas fa-calendar-days" style={{ color: 'var(--t2)', fontSize: 13 }} />
                                   Jours d'affichage
                                 </div>
                                 <button
@@ -989,7 +989,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                                   style={{
                                     background: 'none', border: 'none', cursor: 'pointer',
                                     fontSize: 11, fontWeight: 700,
-                                    color: tousSelectionnes ? 'var(--rose)' : 'var(--blue)',
+                                    color: tousSelectionnes ? 'var(--t2)' : 'var(--t2)',
                                     padding: '2px 6px',
                                   }}
                                 >
@@ -1011,13 +1011,13 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                                         padding: '7px 4px',
                                         borderRadius: 'var(--r-md)',
                                         border: actif
-                                          ? `2px solid ${isWeekend ? 'var(--indigo, #4F46E5)' : 'var(--blue)'}`
+                                          ? `2px solid ${isWeekend ? 'var(--t2)' : 'var(--t2)'}`
                                           : '2px solid var(--bdr2)',
                                         background: actif
-                                          ? isWeekend ? 'rgba(79,70,229,.1)' : 'var(--sky)'
+                                          ? isWeekend ? 'rgba(128,128,128,.1)' : 'var(--sky)'
                                           : 'var(--white)',
                                         color: actif
-                                          ? isWeekend ? 'var(--indigo, #4F46E5)' : 'var(--blue)'
+                                          ? isWeekend ? 'var(--t2)' : 'var(--t2)'
                                           : 'var(--t3)',
                                         fontSize: 11.5,
                                         fontWeight: 700,
@@ -1034,7 +1034,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
 
                               {/* Récapitulatif jours */}
                               {storyJours.size === 0 ? (
-                                <div style={{ marginTop: 8, fontSize: 11.5, color: 'var(--rose)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <div style={{ marginTop: 8, fontSize: 11.5, color: 'var(--t2)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
                                   <i className="fas fa-triangle-exclamation" />
                                   Sélectionnez au moins un jour.
                                 </div>
@@ -1074,10 +1074,10 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               <div>
                 <label className="pf-lbl">Catégorie *</label>
                 {erreurCats ? (
-                  <div style={{ padding: '10px 12px', background: 'rgba(225,29,72,.06)', border: '1.5px solid rgba(225,29,72,.25)', borderRadius: 'var(--r-md)', fontSize: 12, color: 'var(--rose)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ padding: '10px 12px', background: 'rgba(128,128,128,.06)', border: '1.5px solid rgba(128,128,128,.25)', borderRadius: 'var(--r-md)', fontSize: 12, color: 'var(--t2)', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <i className="fas fa-triangle-exclamation" />
                     {erreurCats}
-                    <button onClick={() => { setErreurCats(null); setChargementCats(true); window.location.reload(); }} style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--rose)', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: 'var(--rose)', cursor: 'pointer' }}>
+                    <button onClick={() => { setErreurCats(null); setChargementCats(true); window.location.reload(); }} style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--t2)', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: 'var(--t2)', cursor: 'pointer' }}>
                       Réessayer
                     </button>
                   </div>
@@ -1087,7 +1087,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                     value={form.categorieId}
                     disabled={chargementCats}
                     onChange={e => handleChangerCategorie(e.target.value)}
-                    style={{ borderColor: errors.categorieId ? 'var(--rose)' : undefined }}
+                    style={{ borderColor: errors.categorieId ? 'var(--red)' : undefined }}
                   >
                     {chargementCats ? (
                       <option>Chargement…</option>
@@ -1163,7 +1163,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                   <div className="aj-origin-banner">
                     <span style={{ fontSize: 18 }}>🌍</span>
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--indigo)', marginBottom: 2 }}>Produit international détecté</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--t2)', marginBottom: 2 }}>Produit international détecté</div>
                       <div style={{ fontSize: 11, color: 'var(--t2)', lineHeight: 1.5 }}>La fiche affichera automatiquement le bandeau international.</div>
                     </div>
                   </div>
@@ -1181,7 +1181,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                   ))}
                 </div>
                 {form.longueur && form.largeur && form.hauteur && (
-                  <p style={{ fontSize: 10.5, color: 'var(--emerald)', marginTop: 5 }}>
+                  <p style={{ fontSize: 10.5, color: 'var(--t2)', marginTop: 5 }}>
                     📦 Volume : {(parseFloat(form.longueur) * parseFloat(form.largeur) * parseFloat(form.hauteur) / 1000).toFixed(2)} L
                   </p>
                 )}
@@ -1258,7 +1258,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               <div className="pf-grid">
                 <div className="pf-full">
                   <label className="pf-lbl">Nom du produit *</label>
-                  <input className="pf-in" placeholder="Ex: iPhone 15 Pro 256GB Titanium" value={form.nom} onChange={e => update('nom', e.target.value)} style={{ borderColor: errors.nom ? 'var(--rose)' : undefined }} />
+                  <input className="pf-in" placeholder="Ex: iPhone 15 Pro 256GB Titanium" value={form.nom} onChange={e => update('nom', e.target.value)} style={{ borderColor: errors.nom ? 'var(--red)' : undefined }} />
                   <FieldError message={errors.nom} />
                 </div>
 
@@ -1277,7 +1277,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
 
                 <div>
                   <label className="pf-lbl">Prix de vente (GNF) *</label>
-                  <input className="pf-in" type="number" placeholder="Ex: 12500000" value={form.prix} onChange={e => update('prix', e.target.value)} style={{ borderColor: errors.prix ? 'var(--rose)' : undefined }} />
+                  <input className="pf-in" type="number" placeholder="Ex: 12500000" value={form.prix} onChange={e => update('prix', e.target.value)} style={{ borderColor: errors.prix ? 'var(--red)' : undefined }} />
                   <FieldError message={errors.prix} />
                 </div>
 
@@ -1285,7 +1285,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                   <label className="pf-lbl">Prix barré (GNF)</label>
                   <input className="pf-in" type="number" placeholder="Ex: 14000000" value={form.prixAncien} onChange={e => update('prixAncien', e.target.value)} />
                   {form.prixAncien && form.prix && parseInt(form.prixAncien) > parseInt(form.prix) && (
-                    <p style={{ fontSize: 10.5, color: 'var(--emerald)', marginTop: 3 }}>
+                    <p style={{ fontSize: 10.5, color: 'var(--t2)', marginTop: 3 }}>
                       ✓ Réduction de {Math.round((1 - parseInt(form.prix) / parseInt(form.prixAncien)) * 100)}% affichée
                     </p>
                   )}
@@ -1295,7 +1295,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
 
                 <div>
                   <label className="pf-lbl">Quantité en stock *</label>
-                  <input className="pf-in" type="number" placeholder="Ex: 10" value={form.stock} onChange={e => update('stock', e.target.value)} style={{ borderColor: errors.stock ? 'var(--rose)' : undefined }} />
+                  <input className="pf-in" type="number" placeholder="Ex: 10" value={form.stock} onChange={e => update('stock', e.target.value)} style={{ borderColor: errors.stock ? 'var(--red)' : undefined }} />
                   <FieldError message={errors.stock} />
                 </div>
 
@@ -1323,7 +1323,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                       <input className="pf-in" placeholder="Ex: A17 Pro (3 nm)" value={spec.valeur} onChange={e => updateSpec(i, 'valeur', e.target.value)} />
                     </div>
                     {specs.length > 1 && (
-                      <button onClick={() => removeSpec(i)} style={{ background: 'var(--rs-bg)', border: '1px solid rgba(225,29,72,.2)', borderRadius: 'var(--r-md)', width: 36, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--rose)', cursor: 'pointer', flexShrink: 0 }}>
+                      <button onClick={() => removeSpec(i)} style={{ background: 'var(--g100)', border: '1px solid rgba(128,128,128,.2)', borderRadius: 'var(--r-md)', width: 36, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t2)', cursor: 'pointer', flexShrink: 0 }}>
                         <i className="fas fa-trash" style={{ fontSize: 11 }}></i>
                       </button>
                     )}
@@ -1343,7 +1343,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               <label className="aj-toggle">
                 <input type="checkbox" checked={variantesOn} onChange={e => setVariantesOn(e.target.checked)} />
                 <span className="aj-toggle-slider"></span>
-                <span style={{ fontSize: 11.5, fontWeight: 600, color: variantesOn ? 'var(--blue)' : 'var(--t3)', marginLeft: 8 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: variantesOn ? 'var(--t2)' : 'var(--t3)', marginLeft: 8 }}>
                   {variantesOn ? 'Activées' : 'Désactivées'}
                 </span>
               </label>
@@ -1364,7 +1364,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                         <input className="pf-in" placeholder="Ex: Noir, Blanc, Bleu…" value={v.vals} onChange={e => updateVariante(i, 'vals', e.target.value)} />
                       </div>
                       {variantes.length > 1 && (
-                        <button onClick={() => removeVariante(i)} style={{ background: 'var(--rs-bg)', border: '1px solid rgba(225,29,72,.2)', borderRadius: 'var(--r-md)', width: 36, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--rose)', cursor: 'pointer', flexShrink: 0 }}>
+                        <button onClick={() => removeVariante(i)} style={{ background: 'var(--g100)', border: '1px solid rgba(128,128,128,.2)', borderRadius: 'var(--r-md)', width: 36, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t2)', cursor: 'pointer', flexShrink: 0 }}>
                           <i className="fas fa-trash" style={{ fontSize: 11 }}></i>
                         </button>
                       )}
@@ -1389,7 +1389,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               <label className="aj-toggle">
                 <input type="checkbox" checked={venteEnGrosOn} onChange={e => setVenteEnGrosOn(e.target.checked)} />
                 <span className="aj-toggle-slider"></span>
-                <span style={{ fontSize: 11.5, fontWeight: 600, color: venteEnGrosOn ? 'var(--blue)' : 'var(--t3)', marginLeft: 8 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: venteEnGrosOn ? 'var(--t2)' : 'var(--t3)', marginLeft: 8 }}>
                   {venteEnGrosOn ? 'Activée' : 'Désactivée'}
                 </span>
               </label>
@@ -1430,7 +1430,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                         <input className="pf-in" type="number" placeholder="Ex: 50000" value={t.prixUnitaire} onChange={e => updateTier(i, 'prixUnitaire', e.target.value)} />
                       </div>
                       {wholesaleTiers.length > 1 && (
-                        <button onClick={() => removeTier(i)} style={{ background: 'var(--rs-bg)', border: '1px solid rgba(225,29,72,.2)', borderRadius: 'var(--r-md)', width: 36, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--rose)', cursor: 'pointer', flexShrink: 0 }}>
+                        <button onClick={() => removeTier(i)} style={{ background: 'var(--g100)', border: '1px solid rgba(128,128,128,.2)', borderRadius: 'var(--r-md)', width: 36, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t2)', cursor: 'pointer', flexShrink: 0 }}>
                           <i className="fas fa-trash" style={{ fontSize: 11 }}></i>
                         </button>
                       )}
@@ -1453,10 +1453,10 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
             <div className="ch">
               <div className="ch-t"><i className="fas fa-magnifying-glass-chart"></i> SEO & Référencement</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div className="aj-seo-ring" style={{ background: `conic-gradient(${seoScore.score >= 80 ? 'var(--emerald)' : seoScore.score >= 50 ? 'var(--amber)' : 'var(--rose)'} 0% ${seoScore.score}%, var(--g200) ${seoScore.score}% 100%)` }}>
+                <div className="aj-seo-ring" style={{ background: `conic-gradient(${seoScore.score >= 80 ? 'var(--t2)' : seoScore.score >= 50 ? 'var(--t2)' : 'var(--t2)'} 0% ${seoScore.score}%, var(--g200) ${seoScore.score}% 100%)` }}>
                   <span>{seoScore.score}</span>
                 </div>
-                <span style={{ fontSize: 10.5, fontWeight: 700, color: seoScore.score >= 80 ? 'var(--emerald)' : seoScore.score >= 50 ? 'var(--amber)' : 'var(--rose)' }}>Score SEO</span>
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: seoScore.score >= 80 ? 'var(--t2)' : seoScore.score >= 50 ? 'var(--t2)' : 'var(--t2)' }}>Score SEO</span>
               </div>
             </div>
             <div className="cb" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1505,8 +1505,8 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                 <div className="gridR3" style={{ gap: 10 }}>
                   {[
                     { l: 'Prix de vente',        v: `${prixNum.toLocaleString('fr-FR')} GNF`, c: 'var(--navy)'    },
-                    { l: `Commission Shopi (${commissionPct}%)`, v: `-${Math.round(prixNum * commissionPct / 100).toLocaleString('fr-FR')} GNF`, c: 'var(--rose)'    },
-                    { l: 'Revenu net estimé',                    v: `${Math.round(prixNum * (1 - commissionPct / 100)).toLocaleString('fr-FR')} GNF`,  c: 'var(--emerald)' },
+                    { l: `Commission Shopi (${commissionPct}%)`, v: `-${Math.round(prixNum * commissionPct / 100).toLocaleString('fr-FR')} GNF`, c: 'var(--t2)'    },
+                    { l: 'Revenu net estimé',                    v: `${Math.round(prixNum * (1 - commissionPct / 100)).toLocaleString('fr-FR')} GNF`,  c: 'var(--t2)' },
                   ].map((s, i) => (
                     <div key={i} style={{ padding: '12px 14px', background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-md)', textAlign: 'center' }}>
                       <div style={{ fontSize: 10, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 5 }}>{s.l}</div>
@@ -1522,12 +1522,12 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           <div className="card" style={{ background: 'var(--g50)', border: '1.5px solid var(--bdr)' }}>
             <div className="cb">
               {Object.keys(errors).filter(k => k !== 'general').length > 0 && (
-                <div style={{ marginBottom: 14, padding: '12px 14px', background: 'rgba(225,29,72,.06)', border: '1.5px solid rgba(225,29,72,.25)', borderRadius: 'var(--r-md)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--rose)', marginBottom: 6 }}>
+                <div style={{ marginBottom: 14, padding: '12px 14px', background: 'rgba(128,128,128,.06)', border: '1.5px solid rgba(128,128,128,.25)', borderRadius: 'var(--r-md)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--t2)', marginBottom: 6 }}>
                     <i className="fas fa-triangle-exclamation" style={{ marginRight: 6 }} />
                     Corrigez les erreurs suivantes :
                   </div>
-                  <ul style={{ margin: 0, padding: '0 0 0 16px', fontSize: 12, color: 'var(--rose)', lineHeight: 1.8 }}>
+                  <ul style={{ margin: 0, padding: '0 0 0 16px', fontSize: 12, color: 'var(--t2)', lineHeight: 1.8 }}>
                     {errors.nom         && <li>{errors.nom}</li>}
                     {errors.prix        && <li>{errors.prix}</li>}
                     {errors.stock       && <li>{errors.stock}</li>}

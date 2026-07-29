@@ -694,42 +694,88 @@ export class MessagerieService {
       d ? (now - new Date(d).getTime()) < onlineMs : false;
     const term     = q.trim();
 
-    // ── Restrictions client ───────────────────────────────────
-    const isCallerClient = role === UserRole.CLIENT;
-    let followedCompanyIds   = new Set<string>();
-    let followedDeliveryIds  = new Set<string>();
-    let followedCorrIds      = new Set<string>();
-    let contactUserIds       = new Set<string>();
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role);
 
-    if (isCallerClient) {
-      const clientProfile = await this.clientRepo.findOne({ where: { userId }, select: ['id'] });
-      if (clientProfile) {
-        // Entreprises/livreurs/correspondants suivis activement
-        const follows = await this.followRepo.find({
-          where: {
-            followerType: FollowerActorType.CLIENT,
-            followerId:   clientProfile.id,
-            isSubscribed: true,
-          },
-          select: ['targetType', 'targetId'],
-        });
-        for (const f of follows) {
-          if (f.targetType === TargetActorType.COMPANY)       followedCompanyIds.add(f.targetId);
-          if (f.targetType === TargetActorType.DELIVERY)      followedDeliveryIds.add(f.targetId);
-          if (f.targetType === TargetActorType.CORRESPONDENT) followedCorrIds.add(f.targetId);
-        }
+    // ── Relations réelles de l'appelant ─────────────────────────
+    // Quel que soit son rôle, un acteur n'apparaît dans les résultats
+    // que s'il existe un lien avec l'appelant : commande partagée,
+    // abonnement (Follow) actif dans un sens ou l'autre, hiérarchie
+    // de supervision (correspondant ↔ entreprise/livreur), ou —
+    // pour client↔client uniquement — un contact téléphonique.
+    const relatedCompanyIds  = new Set<string>();
+    const relatedDeliveryIds = new Set<string>();
+    const relatedCorrIds     = new Set<string>();
+    const relatedClientIds   = new Set<string>();
 
-        // Entreprises dans lesquelles le client a déjà commandé
-        const orderedRows = await this.commandeRepo
-          .createQueryBuilder('cmd')
-          .select('DISTINCT cmd.companyId', 'companyId')
-          .where('cmd.clientId = :cid', { cid: clientProfile.id })
-          .getRawMany<{ companyId: string }>();
-        for (const row of orderedRows) {
-          if (row.companyId) followedCompanyIds.add(row.companyId);
-        }
+    // 1. Commandes partagées avec l'appelant
+    const cmdColByType: Partial<Record<ConversationActorType, string>> = {
+      [ConversationActorType.CLIENT]:        'clientId',
+      [ConversationActorType.COMPANY]:       'companyId',
+      [ConversationActorType.DELIVERY]:      'livreurId',
+      [ConversationActorType.CORRESPONDENT]: 'correspondantId',
+    };
+    const myCmdCol = cmdColByType[myType];
+    if (myCmdCol) {
+      const cmdRows = await this.commandeRepo
+        .createQueryBuilder('cmd')
+        .select('cmd.clientId',        'clientId')
+        .addSelect('cmd.companyId',              'companyId')
+        .addSelect('cmd.livreurId',               'livreurId')
+        .addSelect('cmd.correspondantId',         'correspondantId')
+        .where(`cmd.${myCmdCol} = :id`, { id: myId })
+        .getRawMany<{ clientId: string; companyId: string; livreurId: string | null; correspondantId: string | null }>();
+      for (const row of cmdRows) {
+        if (row.clientId && row.clientId !== myId)               relatedClientIds.add(row.clientId);
+        if (row.companyId && row.companyId !== myId)             relatedCompanyIds.add(row.companyId);
+        if (row.livreurId && row.livreurId !== myId)             relatedDeliveryIds.add(row.livreurId);
+        if (row.correspondantId && row.correspondantId !== myId) relatedCorrIds.add(row.correspondantId);
       }
+    }
 
+    // 2. Abonnements (Follow) actifs, dans les deux sens
+    const myFollowerType = myType as unknown as FollowerActorType;
+    const myTargetType   = myType as unknown as TargetActorType;
+    const follows = await this.followRepo.find({
+      where: [
+        { followerType: myFollowerType, followerId: myId, isSubscribed: true },
+        { targetType: myTargetType, targetId: myId, isSubscribed: true },
+      ],
+      select: ['followerType', 'followerId', 'targetType', 'targetId'],
+    });
+    for (const f of follows) {
+      const iAmFollower = f.followerType === myFollowerType && f.followerId === myId;
+      const otherType   = String(iAmFollower ? f.targetType : f.followerType);
+      const otherId     = iAmFollower ? f.targetId : f.followerId;
+      if (otherId === myId) continue;
+      if      (otherType === TargetActorType.COMPANY)       relatedCompanyIds.add(otherId);
+      else if (otherType === TargetActorType.DELIVERY)      relatedDeliveryIds.add(otherId);
+      else if (otherType === TargetActorType.CORRESPONDENT) relatedCorrIds.add(otherId);
+      else if (otherType === TargetActorType.CLIENT)        relatedClientIds.add(otherId);
+    }
+
+    // 3. Hiérarchie de supervision (correspondant ↔ entreprise/livreur)
+    if (myType === ConversationActorType.CORRESPONDENT) {
+      const me = await this.corrRepo.findOne({ where: { id: myId }, select: ['companyId', 'deliveryId'] });
+      if (me?.companyId)  relatedCompanyIds.add(me.companyId);
+      if (me?.deliveryId) relatedDeliveryIds.add(me.deliveryId);
+    }
+    if (myType === ConversationActorType.COMPANY) {
+      const myCorrs = await this.corrRepo.find({ where: { companyId: myId }, select: ['id'] });
+      myCorrs.forEach(c => relatedCorrIds.add(c.id));
+      const myDeliveries = await this.deliveryRepo.find({ where: { companyId: myId }, select: ['id'] });
+      myDeliveries.forEach(d => relatedDeliveryIds.add(d.id));
+    }
+    if (myType === ConversationActorType.DELIVERY) {
+      const me = await this.deliveryRepo.findOne({ where: { id: myId }, select: ['companyId'] });
+      if (me?.companyId) relatedCompanyIds.add(me.companyId);
+      const myCorrs = await this.corrRepo.find({ where: { deliveryId: myId }, select: ['id'] });
+      myCorrs.forEach(c => relatedCorrIds.add(c.id));
+    }
+
+    // 4. Client ↔ client : uniquement via contacts téléphoniques synchronisés
+    let contactUserIds = new Set<string>();
+    if (myType === ConversationActorType.CLIENT) {
       const contacts = await this.contactRepo.find({
         where:  { ownerUserId: userId, isBlocked: false },
         select: ['matchedUserId'],
@@ -746,7 +792,7 @@ export class MessagerieService {
         relations: ['user'],
         take:      15,
       });
-      const filtered = isCallerClient ? cos.filter(co => followedCompanyIds.has(co.id)) : cos;
+      const filtered = cos.filter(co => relatedCompanyIds.has(co.id));
       filtered.forEach(co => results.push({
         id:       co.id,
         type:     ConversationActorType.COMPANY,
@@ -765,7 +811,7 @@ export class MessagerieService {
         .take(15);
       if (term) qb.andWhere('d.fullName LIKE :t', { t: `%${term}%` });
       const livs = await qb.getMany();
-      const filtered = isCallerClient ? livs.filter(d => followedDeliveryIds.has(d.id)) : livs;
+      const filtered = livs.filter(d => relatedDeliveryIds.has(d.id));
       filtered.forEach(d => results.push({
         id:       d.id,
         type:     ConversationActorType.DELIVERY,
@@ -784,7 +830,7 @@ export class MessagerieService {
         .take(15);
       if (term) qb.andWhere('c.fullName LIKE :t', { t: `%${term}%` });
       const corrs = await qb.getMany();
-      const filtered = isCallerClient ? corrs.filter(c => followedCorrIds.has(c.id)) : corrs;
+      const filtered = corrs.filter(c => relatedCorrIds.has(c.id));
       filtered.forEach(c => {
         const loc = [(c as any).depotCommune, (c as any).depotVille].filter(Boolean).join(', ');
         results.push({
@@ -799,9 +845,12 @@ export class MessagerieService {
     }
 
     /* ── Clients (recherche par prénom/nom via User join) ──
-       Client → client : uniquement ceux dans les contacts téléphoniques */
+       Client → client : uniquement contacts téléphoniques.
+       Autres rôles → clientId::relatedClientIds (commande/follow). */
     if (!type || type === ConversationActorType.CLIENT) {
-      if (!isCallerClient || contactUserIds.size > 0) {
+      const allowedByProfile = relatedClientIds;
+      const allowedByUserId  = contactUserIds;
+      if (allowedByProfile.size > 0 || allowedByUserId.size > 0) {
         const clientQb = this.clientRepo.createQueryBuilder('cl')
           .leftJoinAndSelect('cl.user', 'user')
           .where('cl.userId != :userId', { userId })
@@ -812,11 +861,9 @@ export class MessagerieService {
             { t: `%${term}%` },
           );
         }
-        if (isCallerClient) {
-          clientQb.andWhere('cl.userId IN (:...cids)', { cids: [...contactUserIds] });
-        }
         const clients = await clientQb.getMany();
-        clients.forEach(cl => {
+        const filtered = clients.filter(cl => allowedByProfile.has(cl.id) || allowedByUserId.has(cl.userId));
+        filtered.forEach(cl => {
           const u = (cl as any).user;
           results.push({
             id:       cl.id,

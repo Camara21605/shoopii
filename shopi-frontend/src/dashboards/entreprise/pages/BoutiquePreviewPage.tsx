@@ -27,8 +27,8 @@ const BLUE_ICON = L.divIcon({
   html: `<div style="
     width:36px;height:36px;border-radius:50% 50% 50% 0;
     transform:rotate(-45deg);
-    background:#1A4FC4;border:3px solid #fff;
-    box-shadow:0 3px 10px rgba(26,79,196,.5);
+    background:var(--t2);border:3px solid #fff;
+    box-shadow:0 3px 10px rgba(128,128,128,.5);
     display:flex;align-items:center;justify-content:center;">
     <span style="transform:rotate(45deg);font-size:16px">🏪</span>
   </div>`,
@@ -293,7 +293,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
             </>
           ) : (
             <button onClick={handleSave} disabled={saving || !ville}
-              style={{ display: 'flex', alignItems: 'center', gap: 7, background: saved ? '#047857' : 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 18px', fontSize: 12.5, fontWeight: 700, cursor: saving || !ville ? 'not-allowed' : 'pointer', opacity: !ville ? 0.5 : 1, transition: 'background .3s' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 7, background: saved ? 'var(--btn-h, #1C1C1F)' : 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 18px', fontSize: 12.5, fontWeight: 700, cursor: saving || !ville ? 'not-allowed' : 'pointer', opacity: !ville ? 0.5 : 1, transition: 'background .3s' }}>
               {saving ? <><i className="fas fa-circle-notch fa-spin" /> Enregistrement…</>
                 : saved ? <><i className="fas fa-check" /> Enregistré !</>
                   : <><i className="fas fa-cloud-arrow-up" /> Sauvegarder la localisation</>}
@@ -332,13 +332,13 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
                 </div>
                 <div>
                   <div style={{ fontSize: 13.5, fontWeight: 800, color: '#fff', marginBottom: 2 }}>Localisation</div>
-                  <div style={{ fontSize: 11, color: 'rgba(200,217,248,.7)' }}>Le marqueur 🏪 suit votre sélection</div>
+                  <div style={{ fontSize: 11, color: 'rgba(160,160,160,.7)' }}>Le marqueur 🏪 suit votre sélection</div>
                 </div>
               </div>
               {(data.ville || data.commune) && (
-                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 7, padding: '7px 10px', background: 'rgba(16,185,129,.18)', borderRadius: 8 }}>
-                  <i className="fas fa-circle-check" style={{ color: '#34D399', fontSize: 11 }} />
-                  <span style={{ fontSize: 11.5, color: '#D1FAE5', fontWeight: 600 }}>
+                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 7, padding: '7px 10px', background: 'rgba(128,128,128,.18)', borderRadius: 8 }}>
+                  <i className="fas fa-circle-check" style={{ color: 'var(--emerald)', fontSize: 11 }} />
+                  <span style={{ fontSize: 11.5, color: 'var(--g100)', fontWeight: 600 }}>
                     {[(data as any).quartier, data.commune, data.ville].filter(Boolean).join(' · ')}
                   </span>
                 </div>
@@ -351,7 +351,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
               {/* Pays */}
               <div style={fg}>
                 <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <i className="fas fa-globe" style={{ color: 'var(--blue)', fontSize: 10 }} /> Pays
+                  <i className="fas fa-globe" style={{ color: 'var(--t2)', fontSize: 10 }} /> Pays
                 </label>
                 <div style={{ position: 'relative' }}>
                   <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 16, pointerEvents: 'none' }}>{paysInfo.emoji}</span>
@@ -364,7 +364,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
               {/* Ville */}
               <div style={fg}>
                 <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <i className="fas fa-city" style={{ color: 'var(--blue)', fontSize: 10 }} /> Ville <span style={{ color: '#E11D48' }}>*</span>
+                  <i className="fas fa-city" style={{ color: 'var(--t2)', fontSize: 10 }} /> Ville <span style={{ color: 'var(--t1)' }}>*</span>
                 </label>
                 {estGuinee ? (
                   <select style={sel(!!ville)} value={ville} onChange={e => handleVilleChange(e.target.value)}>
@@ -380,7 +380,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
               {estGuinee && communes.length > 0 && (
                 <div style={fg}>
                   <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <i className="fas fa-map" style={{ color: 'var(--blue)', fontSize: 10 }} /> Commune <span style={{ color: '#E11D48' }}>*</span>
+                    <i className="fas fa-map" style={{ color: 'var(--t2)', fontSize: 10 }} /> Commune <span style={{ color: 'var(--t1)' }}>*</span>
                   </label>
                   <select style={sel(!!commune)} value={commune} onChange={e => handleCommuneChange(e.target.value)}>
                     <option value="">— Choisir une commune —</option>
@@ -393,7 +393,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
               {estGuinee && quartiers.length > 0 && (
                 <div style={fg}>
                   <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <i className="fas fa-map-pin" style={{ color: 'var(--blue)', fontSize: 10 }} /> Quartier <span style={{ color: '#E11D48' }}>*</span>
+                    <i className="fas fa-map-pin" style={{ color: 'var(--t2)', fontSize: 10 }} /> Quartier <span style={{ color: 'var(--t1)' }}>*</span>
                   </label>
                   <select style={sel(!!quartier)} value={quartier} onChange={e => handleQuartierChange(e.target.value)}>
                     <option value="">— Choisir un quartier —</option>
@@ -406,8 +406,8 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
               {ville && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', background: 'rgba(0,0,0,.05)', borderRadius: 9, border: '1px solid var(--bdr2)' }}>
                   {geocoding
-                    ? <i className="fas fa-circle-notch fa-spin" style={{ color: 'var(--blue)', fontSize: 12, flexShrink: 0 }} />
-                    : <i className="fas fa-map-pin" style={{ color: 'var(--blue)', fontSize: 12, flexShrink: 0 }} />
+                    ? <i className="fas fa-circle-notch fa-spin" style={{ color: 'var(--t2)', fontSize: 12, flexShrink: 0 }} />
+                    : <i className="fas fa-map-pin" style={{ color: 'var(--t2)', fontSize: 12, flexShrink: 0 }} />
                   }
                   <span style={{ fontSize: 12.5, color: 'var(--navy)', fontWeight: 700 }}>
                     {geocoding ? 'Localisation en cours…' : [quartier, commune, ville, paysInfo.nom].filter(Boolean).join(' · ')}
@@ -447,7 +447,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
               </div>
 
               {error && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 9, fontSize: 12.5, color: '#B91C1C' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 9, fontSize: 12.5, color: 'var(--t1)' }}>
                   <i className="fas fa-circle-exclamation" /> {error}
                 </div>
               )}
@@ -456,7 +456,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
             {/* Bouton sticky bas */}
             <div style={{ padding: '14px 20px', borderTop: '1px solid var(--bdr)', flexShrink: 0 }}>
               <button onClick={handleSave} disabled={saving || !ville}
-                style={{ width: '100%', padding: '12px', background: saved ? '#047857' : 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13.5, fontWeight: 700, cursor: saving || !ville ? 'not-allowed' : 'pointer', opacity: !ville ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background .3s' }}>
+                style={{ width: '100%', padding: '12px', background: saved ? 'var(--btn-h, #1C1C1F)' : 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13.5, fontWeight: 700, cursor: saving || !ville ? 'not-allowed' : 'pointer', opacity: !ville ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background .3s' }}>
                 {saving ? <><i className="fas fa-circle-notch fa-spin" /> Enregistrement…</>
                   : saved ? <><i className="fas fa-check" /> Localisation enregistrée !</>
                     : <><i className="fas fa-cloud-arrow-up" /> Enregistrer la localisation</>}
@@ -490,7 +490,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
 
             {/* Hint bas */}
             <div style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 400, background: isDark ? 'rgba(17,17,19,.92)' : 'rgba(255,255,255,.92)', backdropFilter: 'blur(8px)', padding: '6px 14px', borderRadius: 999, fontSize: 12, color: 'var(--t2)', fontWeight: 600, border: isDark ? '1px solid var(--bdr2)' : '1px solid rgba(0,0,0,.08)', whiteSpace: 'nowrap', pointerEvents: 'none', boxShadow: '0 2px 8px rgba(0,0,0,.10)' }}>
-              <i className="fas fa-hand-pointer" style={{ marginRight: 6, color: 'var(--blue)' }} />
+              <i className="fas fa-hand-pointer" style={{ marginRight: 6, color: 'var(--t2)' }} />
               Cliquez ou glissez le marqueur pour affiner
             </div>
           </div>

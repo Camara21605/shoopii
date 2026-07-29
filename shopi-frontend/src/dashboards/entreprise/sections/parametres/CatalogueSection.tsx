@@ -26,7 +26,7 @@ function Toggle({ label, sub, value, onChange }: { label: string; sub?: string; 
         onClick={() => onChange(!value)}
         style={{
           width:44, height:24, borderRadius:12, flexShrink:0, cursor:'pointer',
-          background: value ? 'var(--teal,#0E7490)' : 'var(--g300)',
+          background: value ? 'var(--t2)' : 'var(--g300)',
           position:'relative', transition:'background .2s',
         }}
       >

@@ -1,22 +1,17 @@
 // ============================================================
 // FICHIER  : src/modules/dashboard/entreprise/entreprise-dashboard.controller.ts
-// RÔLE     : Controller principal de l'espace entreprise.
-//            Gère les routes de stats et d'aperçu général
-//            de la boutique de l'entreprise connectée.
+// RÔLE     : Endpoints du dashboard entreprise — toutes les
+//            données renvoyées sont scopées à CETTE entreprise
+//            (req.user.id), jamais aux autres boutiques.
 //
 // ROUTES :
-//   GET  /dashboard/entreprise/stats        → stats globales boutique
-//   GET  /dashboard/entreprise/overview     → aperçu rapide (commandes, produits, revenus)
-//   GET  /dashboard/entreprise/profil       → profil entreprise complet
-//   PUT  /dashboard/entreprise/profil       → mise à jour du profil
-//   GET  /dashboard/entreprise/notifications → notifications de l'entreprise
+//   GET  /dashboard/entreprise/overview        → KPIs, CA, top produits, alertes
+//   GET  /dashboard/entreprise/analytics       → CA, top produits, perf catégories
+//   GET  /dashboard/entreprise/finances        → solde, transactions, virements
+//   GET  /dashboard/entreprise/commission-rate → taux de commission plateforme
 // ============================================================
 
-import {
-  Controller,
-  Get,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Request, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository }       from 'typeorm';
 import {
@@ -31,6 +26,7 @@ import { RolesGuard }        from '../../../common/guards/roles.guard';
 import { Roles }             from '../../../common/decorators/roles.decorator';
 import { UserRole }          from '../../../common/enums/user-role.enum';
 import { PlatformSettings }  from '../../../database/entities/platform-settings.entity';
+import { EntrepriseDashboardService } from './entreprise-dashboard.service';
 
 @ApiTags('Dashboard Entreprise')
 @ApiBearerAuth()
@@ -42,66 +38,33 @@ export class EntrepriseDashboardController {
   constructor(
     @InjectRepository(PlatformSettings)
     private readonly platformSettingsRepo: Repository<PlatformSettings>,
+
+    private readonly dashboardService: EntrepriseDashboardService,
   ) {}
 
-  // ──────────────────────────────────────────────────────────
-  // GET /dashboard/entreprise/stats
-  // Retourne les métriques clés de la boutique :
-  //   - nombre de produits actifs
-  //   - commandes du jour / du mois
-  //   - revenu total / du mois
-  //   - taux de livraison réussie
-  // ──────────────────────────────────────────────────────────
-//   @ApiOperation({ summary: 'Stats globales de la boutique entreprise' })
-//   @ApiResponse({ status: 200, description: 'Métriques retournées avec succès' })
-//   @Get('stats')
-//   async getStats(@Request() req: any) {
-//     return this.entrepriseService.getStats(req.user.id);
-//   }
+  /** Vue d'ensemble : KPIs, CA mensuel, top produits, alertes stock, activité */
+  @ApiOperation({ summary: "Vue d'ensemble réelle du dashboard entreprise" })
+  @ApiResponse({ status: 200, description: 'Aperçu retourné avec succès' })
+  @Get('overview')
+  async getOverview(@Request() req: any) {
+    return this.dashboardService.getOverview(req.user.id);
+  }
 
-  // ──────────────────────────────────────────────────────────
-  // GET /dashboard/entreprise/overview
-  // Aperçu rapide pour la page d'accueil du dashboard :
-  //   - dernières commandes (5)
-  //   - produits en rupture de stock
-  //   - revenu de la semaine (graphe)
-  //   - alertes (commandes en attente, avis clients)
-  // ──────────────────────────────────────────────────────────
-//   @ApiOperation({ summary: 'Aperçu rapide du dashboard entreprise' })
-//   @ApiResponse({ status: 200, description: 'Aperçu retourné avec succès' })
-//   @Get('overview')
-//   async getOverview(@Request() req: any) {
-//     return this.entrepriseService.getOverview(req.user.id);
-//   }
+  /** Analytics : CA, top produits, performances par catégorie (données réelles uniquement) */
+  @ApiOperation({ summary: 'Analytics réelles du dashboard entreprise' })
+  @ApiResponse({ status: 200, description: 'Analytics retournées avec succès' })
+  @Get('analytics')
+  async getAnalytics(@Request() req: any) {
+    return this.dashboardService.getAnalytics(req.user.id);
+  }
 
-  // ──────────────────────────────────────────────────────────
-  // GET /dashboard/entreprise/profil
-  // Retourne le profil complet de l'entreprise connectée :
-  //   - infos légales (nom, RCCM, NIF, adresse)
-  //   - logo, bannière
-  //   - abonnement actif
-  // ──────────────────────────────────────────────────────────
-//   @ApiOperation({ summary: 'Profil complet de l\'entreprise connectée' })
-//   @ApiResponse({ status: 200, description: 'Profil retourné avec succès' })
-//   @Get('profil')
-//   async getProfil(@Request() req: any) {
-//     return this.entrepriseService.getProfil(req.user.id);
-//   }
-
-//   // ──────────────────────────────────────────────────────────
-//   // PUT /dashboard/entreprise/profil
-//   // Met à jour les informations du profil entreprise
-//   // ──────────────────────────────────────────────────────────
-//   @ApiOperation({ summary: 'Mise à jour du profil entreprise' })
-//   @ApiResponse({ status: 200, description: 'Profil mis à jour avec succès' })
-//   @HttpCode(HttpStatus.OK)
-//   @Put('profil')
-//   async updateProfil(
-//     @Request() req: any,
-//     @Body() dto: UpdateEntrepriseProfilDto,
-//   ) {
-//     return this.entrepriseService.updateProfil(req.user.id, dto);
-//   }
+  /** Finances : solde wallet, revenus/dépenses, transactions, virements */
+  @ApiOperation({ summary: 'Finances réelles du dashboard entreprise' })
+  @ApiResponse({ status: 200, description: 'Finances retournées avec succès' })
+  @Get('finances')
+  async getFinances(@Request() req: any) {
+    return this.dashboardService.getFinances(req.user.id);
+  }
 
   // ──────────────────────────────────────────────────────────
   // GET /dashboard/entreprise/commission-rate

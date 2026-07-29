@@ -22,7 +22,7 @@
   display: flex; align-items: center; gap: 7px;
   transition: all .18s;
 }
-.tab:hover { border-color: var(--blue); color: var(--blue); background: var(--sky); }
+.tab:hover { border-color: var(--t2); color: var(--t2); background: var(--sky); }
 .tabActive {
   background: var(--btn, #111113); color: #fff;
   border-color: var(--btn, #111113);
@@ -33,7 +33,7 @@
   padding: 1px 7px; font-size: 10.5px; font-weight: 900;
 }
 .tabActiveBadge { background: rgba(255,255,255,.2); }
-.tabInactiveBadge { background: var(--sky-3); color: var(--blue); }
+.tabInactiveBadge { background: var(--sky-3); color: var(--t2); }
 
 /* ── KPI strip ── */
 .kpiStrip {
@@ -92,7 +92,7 @@
   font-size: 13px; font-family: var(--fb,'Instrument Sans',sans-serif);
   outline: none; transition: border-color .18s;
 }
-.searchInput:focus { border-color: var(--blue); }
+.searchInput:focus { border-color: var(--t2); }
 .filterSel {
   padding: 9px 14px; border: 1.5px solid var(--bdr2);
   border-radius: var(--pill); background: var(--white);
@@ -100,8 +100,8 @@
   color: var(--t2); cursor: pointer; outline: none;
   transition: border-color .18s;
 }
-.filterSel:focus { border-color: var(--blue); }
-.filterActive { border-color: var(--blue); color: var(--blue); background: var(--sky); }
+.filterSel:focus { border-color: var(--t2); }
+.filterActive { border-color: var(--t2); color: var(--t2); background: var(--sky); }
 
 /* ── Table ── */
 .tableWrap {
@@ -134,19 +134,19 @@
   padding: 3px 10px; border-radius: 999px;
   font-size: 10.5px; font-weight: 800; white-space: nowrap;
 }
-.pillPending  { background: rgba(245,158,11,.12);  color: #B45309; }
-.pillAccepted { background: rgba(5,150,105,.12);   color: #047857; }
-.pillRefused  { background: rgba(220,38,38,.10);   color: #DC2626; }
-.pillTransit  { background: rgba(26,79,196,.10);   color: #1A4FC4; }
-.pillReceived { background: rgba(109,40,217,.10);  color: #6D28D9; }
-.pillRefunded { background: rgba(5,150,105,.15);   color: #047857; }
-.pillExchanged{ background: rgba(14,116,144,.12);  color: #0E7490; }
+.pillPending  { background: var(--am-bg);  color: var(--amber); }
+.pillAccepted { background: var(--em-bg);   color: var(--emerald); }
+.pillRefused  { background: var(--rs-bg);   color: var(--red); }
+.pillTransit  { background: var(--sky-2);   color: var(--blue); }
+.pillReceived { background: var(--tl-bg);  color: var(--teal); }
+.pillRefunded { background: var(--em-bg);   color: var(--emerald); }
+.pillExchanged{ background: var(--vl-bg);  color: var(--violet); }
 .pillClosed   { background: var(--g100);           color: var(--t3);}
 
 .prioLow    { background: var(--g100);            color: var(--t3); }
-.prioNormal { background: rgba(26,79,196,.10);    color: var(--blue); }
-.prioHigh   { background: rgba(245,158,11,.12);   color: #B45309; }
-.prioUrgent { background: rgba(220,38,38,.12);    color: #DC2626; }
+.prioNormal { background: rgba(128,128,128,.10);    color: var(--t2); }
+.prioHigh   { background: rgba(128,128,128,.12);   color: var(--t2); }
+.prioUrgent { background: rgba(128,128,128,.12);    color: var(--t1); }
 
 /* ── Actions ── */
 .actions { display: flex; gap: 6px; align-items: center; }
@@ -156,14 +156,14 @@
   border: 1.5px solid transparent; transition: all .15s;
   display: inline-flex; align-items: center; gap: 5px;
 }
-.btnAccept  { background: var(--em-bg); color: var(--emerald); border-color: rgba(4,120,87,.2); }
-.btnAccept:hover { background: var(--emerald); color: #fff; }
-.btnRefuse  { background: rgba(220,38,38,.08); color: #DC2626; border-color: rgba(220,38,38,.2); }
-.btnRefuse:hover { background: #DC2626; color: #fff; }
+.btnAccept  { background: var(--g100); color: var(--t2); border-color: rgba(128,128,128,.2); }
+.btnAccept:hover { background: var(--t2); color: #fff; }
+.btnRefuse  { background: rgba(128,128,128,.08); color: var(--t1); border-color: rgba(128,128,128,.2); }
+.btnRefuse:hover { background: var(--t1); color: #fff; }
 .btnDetail  { background: var(--g100); color: var(--t2); border-color: var(--bdr2); }
 .btnDetail:hover { background: var(--btn, #111113); color: #fff; }
-.btnRefund  { background: rgba(109,40,217,.1); color: #6D28D9; border-color: rgba(109,40,217,.2); }
-.btnRefund:hover { background: #6D28D9; color: #fff; }
+.btnRefund  { background: rgba(128,128,128,.1); color: var(--t2); border-color: rgba(128,128,128,.2); }
+.btnRefund:hover { background: var(--t2); color: #fff; }
 .btnClose   { background: var(--g100); color: var(--t3); border-color: var(--bdr2); }
 .btnClose:hover { background: var(--g200); }
 
@@ -229,7 +229,7 @@
   display: flex; align-items: center; justify-content: center;
   transition: all .18s;
 }
-.modalClose:hover { background: rgba(220,38,38,.1); color: #DC2626; border-color: rgba(220,38,38,.3); }
+.modalClose:hover { background: rgba(128,128,128,.1); color: var(--t1); border-color: rgba(128,128,128,.3); }
 
 .modalBody { flex: 1; overflow-y: auto; padding: 22px; display: flex; flex-direction: column; gap: 18px; }
 .modalFoot {
@@ -248,7 +248,7 @@
   font-size: 13px; font-family: var(--fb,'Instrument Sans',sans-serif);
   outline: none; transition: border-color .18s;
 }
-.input:focus, .textarea:focus, .select:focus { border-color: var(--blue); }
+.input:focus, .textarea:focus, .select:focus { border-color: var(--t2); }
 .textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 
 /* ── Boutons principaux ── */
@@ -260,10 +260,10 @@
 }
 .btnPrimary { background: var(--btn, #111113); color: #fff; }
 .btnPrimary:hover { background: var(--btn-h, #1C1C1F); transform: translateY(-1px); box-shadow: var(--sh-md); }
-.btnSuccess { background: var(--emerald); color: #fff; }
+.btnSuccess { background: var(--t2); color: #fff; }
 .btnSuccess:hover { filter: brightness(1.1); }
-.btnDanger  { background: #DC2626; color: #fff; }
-.btnDanger:hover { background: #B91C1C; }
+.btnDanger  { background: var(--t1); color: #fff; }
+.btnDanger:hover { background: var(--t1); }
 .btnGhost {
   background: var(--g50); color: var(--t2);
   border: 1.5px solid var(--bdr2);
@@ -329,7 +329,7 @@
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: all .15s;
 }
-.pgBtn:hover { background: var(--sky); color: var(--blue); border-color: var(--blue); }
+.pgBtn:hover { background: var(--sky); color: var(--t2); border-color: var(--t2); }
 .pgBtnActive { background: var(--btn, #111113); color: #fff; border-color: var(--btn, #111113); }
 .pgBtnDisabled { opacity: .4; cursor: not-allowed; }
 

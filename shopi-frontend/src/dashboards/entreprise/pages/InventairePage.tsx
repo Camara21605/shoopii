@@ -549,14 +549,14 @@ export default function InventairePage() {
           {loading ? (
             // État de chargement
             <div className={styles.stateBox}>
-              <i className="fas fa-spinner fa-spin" style={{ fontSize: 24, color: 'var(--blue)' }} />
+              <i className="fas fa-spinner fa-spin" style={{ fontSize: 24, color: 'var(--t2)' }} />
               <span>Chargement de l'inventaire…</span>
             </div>
           ) : erreur ? (
             // État d'erreur
             <div className={styles.stateBox}>
-              <i className="fas fa-triangle-exclamation" style={{ fontSize: 24, color: 'var(--rose)' }} />
-              <span style={{ color: 'var(--rose)' }}>{erreur}</span>
+              <i className="fas fa-triangle-exclamation" style={{ fontSize: 24, color: 'var(--t2)' }} />
+              <span style={{ color: 'var(--t2)' }}>{erreur}</span>
               <button className={styles.btnRecharger} onClick={charger}>
                 <i className="fas fa-rotate-right" /> Réessayer
               </button>

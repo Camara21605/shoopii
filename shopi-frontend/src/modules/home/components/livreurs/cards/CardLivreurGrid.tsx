@@ -15,6 +15,7 @@ import { useNavigate }      from 'react-router-dom';
 import styles               from '../styles/CardLivreurGrid.module.css';
 import { tokenStorage }     from '../../../../../shared/services/apiFetch';
 import { useFollowToggle }  from '../../../../../shared/hooks/useFollowToggle';
+import { useAuthGate }      from '../../../../../shared/hooks/useAuthGate';
 import type { LivreurItem } from '../data/livreursMockData';
 
 /* ── Mapping variante de bande → classe CSS ── */
@@ -50,12 +51,14 @@ const CardLivreurGrid: React.FC<CardLivreurGridProps> = ({
 
   /* ✅ État contrôlé par le parent + logique commune */
   const suivi = livreur.isSuivi;
+  const { openAuthModal, authModal } = useAuthGate();
   const { loading, toggle } = useFollowToggle({
     id:      livreur.id,
     name:    livreur.fullName,
     isSuivi: suivi,
     onFollow,
     onToast,
+    onRequireAuth: openAuthModal,
   });
 
   const handleViewProfile = () => navigate(`/livreurs/${livreur.id}`);
@@ -159,6 +162,8 @@ const CardLivreurGrid: React.FC<CardLivreurGridProps> = ({
           Voir le profil complet →
         </button>
       </div>
+
+      {authModal}
     </article>
   );
 };

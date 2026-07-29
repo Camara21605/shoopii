@@ -15,6 +15,7 @@ import { useTheme } from '../../../../../shared/context/ThemeContext';
 import p from './styles/SettingsPage.module.css';
 
 import SettingsSidebar,    { type PanelId } from './components/SettingsSidebar';
+import SettingsTabs                         from './components/SettingsTabs';
 import SecurityScoreBanner                  from './components/SecurityScoreBanner';
 
 /* ── Sections connectées au backend ── */
@@ -90,6 +91,11 @@ export default function SettingsPage() {
 
       <div className={p.pageWrap}>
 
+        {/* ── Barre d'onglets — toujours en premier : épinglée sous le
+             header dès le chargement, ne chevauche jamais rien d'autre
+             puisqu'elle réserve elle-même sa place dans le flux. ── */}
+        <SettingsTabs active={activePanel} onSwitch={handleSwitch} />
+
         {/* ── Entête page ── */}
         <div className={`${p.pageTop} ${p.rv}`}>
           <div className={p.pageTopRow}>
@@ -117,12 +123,8 @@ export default function SettingsPage() {
         {/* ── Layout principal ── */}
         <div className={`${p.layout} ${p.rv} ${p.d2}`}>
 
-          {/* Sidebar */}
-          <SettingsSidebar
-            active={activePanel}
-            onSwitch={handleSwitch}
-            onToast={showToast}
-          />
+          {/* Carte profil */}
+          <SettingsSidebar onToast={showToast} />
 
           {/* Panels */}
           <div ref={mainRef}>

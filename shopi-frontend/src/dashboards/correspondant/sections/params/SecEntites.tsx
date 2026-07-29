@@ -72,7 +72,7 @@ export default function SecEntites({ data, saving, dirty, markClean, saveTrigger
         <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'.5px', marginBottom:9, opacity:.8 }}>{label}</div>
         <div style={{ display:'flex', alignItems:'center', gap:10, background:'var(--white)', border:'1px solid rgba(0,0,0,.08)', borderRadius:'var(--r-md)', padding:'13px 15px', marginBottom:10 }}>
           <div style={{ fontFamily:'var(--fd)', fontSize:22, fontWeight:800, color:'var(--navy)', letterSpacing:5, flex:1 }}>{code}</div>
-          <button onClick={() => { navigator.clipboard.writeText(code); pop(`📋 Code ${code} copié !`, 's'); }} style={{ background:'var(--cor,#B45309)', color:'#fff', border:'none', borderRadius:'var(--r-sm)', padding:'7px 16px', fontSize:11, fontWeight:700, cursor:'pointer' }}>Copier</button>
+          <button onClick={() => { navigator.clipboard.writeText(code); pop(`📋 Code ${code} copié !`, 's'); }} style={{ background:'var(--t2)', color:'#fff', border:'none', borderRadius:'var(--r-sm)', padding:'7px 16px', fontSize:11, fontWeight:700, cursor:'pointer' }}>Copier</button>
           <button onClick={() => handleRegen(type)} disabled={regen === type} style={{ background:'var(--g50)', color:'var(--t2)', border:'1px solid var(--bdr2)', borderRadius:'var(--r-sm)', padding:'7px 14px', fontSize:11, cursor:'pointer' }}>
             {regen === type ? <><i className="fas fa-spinner fa-spin" /> …</> : 'Renouveler'}
           </button>
@@ -95,7 +95,7 @@ export default function SecEntites({ data, saving, dirty, markClean, saveTrigger
       <div className={s.fc}>
         <div className={s.fcHd}><div><div className={s.fcTtl}><i className="fas fa-store" /> Code boutique</div></div></div>
         <div className={s.fcBody}>
-          <CodeBox code={codeBoutique} color="var(--cor-bg)" label="Code actif — boutique" type="boutique"
+          <CodeBox code={codeBoutique} color="var(--g100)" label="Code actif — boutique" type="boutique"
             info="La boutique entre ce code lors de son inscription."
             expiry={boutiqueInfo.expiry} usages={boutiqueInfo.usages} max={boutiqueInfo.max} />
         </div>
@@ -103,7 +103,7 @@ export default function SecEntites({ data, saving, dirty, markClean, saveTrigger
       <div className={s.fc}>
         <div className={s.fcHd}><div><div className={s.fcTtl}><i className="fas fa-motorcycle" /> Code livreur</div></div></div>
         <div className={s.fcBody}>
-          <CodeBox code={codeLivreur} color="var(--tl-bg,rgba(14,116,144,.09))" label="Code actif — livreur" type="livreur"
+          <CodeBox code={codeLivreur} color="var(--g100)" label="Code actif — livreur" type="livreur"
             info="Le livreur entre ce code lors de son inscription."
             expiry={livreurInfo.expiry} usages={livreurInfo.usages} max={livreurInfo.max} />
         </div>

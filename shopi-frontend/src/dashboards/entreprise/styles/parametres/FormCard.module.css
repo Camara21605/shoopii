@@ -55,5 +55,6 @@
 .body { padding: 22px; }
 
 /* Variante danger (zone sensible) */
-.dangerCard { border-color: rgba(220,38,38,.2); }
-.dangerHd { background: rgba(220,38,38,.04); }
+.dangerCard { border-color: var(--rs-bg, rgba(220,38,38,.25)); }
+.dangerHd { background: var(--rs-bg, rgba(220,38,38,.05)); }
+.dangerHd .title, .dangerHd .title i { color: var(--red); }

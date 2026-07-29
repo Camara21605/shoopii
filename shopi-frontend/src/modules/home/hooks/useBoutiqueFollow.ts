@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import { getRoleFromToken } from '../../../shared/services/authUtils';
-import { tokenStorage } from '../../../shared/services/apiFetch';
 import { toggleFollowEntreprise } from '../../../shared/services/follow';
 
 interface UseBoutiqueFollowOptions {
@@ -8,6 +7,8 @@ interface UseBoutiqueFollowOptions {
   companyName:     string;
   initialIsSuivi?: boolean;
   onToast:         (message: string) => void;
+  /** Ouvre le modal "connectez-vous / créez un compte client" */
+  onRequireAuth:   () => void;
 }
 
 export function useBoutiqueFollow({
@@ -15,30 +16,19 @@ export function useBoutiqueFollow({
   companyName,
   initialIsSuivi = false,
   onToast,
+  onRequireAuth,
 }: UseBoutiqueFollowOptions) {
   const [suiviOverride, setSuiviOverride] = useState<boolean | null>(null);
   const [pending, setPending] = useState(false);
   const suivi = suiviOverride ?? initialIsSuivi;
 
-  const token = tokenStorage.get();
-  const isLoggedIn = !!token;
   const isClient = getRoleFromToken() === 'client';
-  const canFollow = isClient;
-
-  const requestFollowLogin = useCallback(() => {
-    onToast('Connectez-vous pour suivre cette boutique');
-  }, [onToast]);
 
   const toggleFollow = useCallback(async () => {
     if (pending) return;
 
-    if (!isLoggedIn) {
-      requestFollowLogin();
-      return;
-    }
-
     if (!isClient) {
-      onToast('Seuls les clients peuvent suivre des boutiques');
+      onRequireAuth();
       return;
     }
 
@@ -66,19 +56,16 @@ export function useBoutiqueFollow({
     boutiqueId,
     companyName,
     isClient,
-    isLoggedIn,
+    onRequireAuth,
     onToast,
     pending,
-    requestFollowLogin,
     suivi,
   ]);
 
   return {
     suivi,
     pending,
-    isLoggedIn,
-    canFollow,
-    requestFollowLogin,
+    isClient,
     toggleFollow,
   };
 }

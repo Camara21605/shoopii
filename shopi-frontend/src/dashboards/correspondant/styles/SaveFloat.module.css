@@ -11,15 +11,15 @@
   border: 1px solid rgba(255,255,255,.08);
 }
 .show { transform: translateX(-50%) translateY(0); pointer-events: all; opacity: 1; }
-.msg  { font-size: 12px; color: rgba(200,217,248,.7); display: flex; align-items: center; gap: 6px; }
-.msg i { color: var(--cor-lt, #F59E0B); }
+.msg  { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 6px; }
+.msg i { color: rgba(255,255,255,.6); }
 .btnSave {
-  background: var(--cor, #B45309); color: #fff; border: none;
+  background: #fff; color: var(--btn, #111113); border: none;
   border-radius: var(--pill); padding: 8px 20px;
   font-size: 12px; font-weight: 700; cursor: pointer;
   display: flex; align-items: center; gap: 6px; transition: all .2s;
 }
-.btnSave:hover   { background: var(--cor-2, #92400E); }
+.btnSave:hover   { background: rgba(255,255,255,.85); }
 .btnSave:disabled{ opacity: .6; cursor: not-allowed; }
 .btnCancel {
   background: rgba(255,255,255,.08); color: rgba(200,217,248,.6);

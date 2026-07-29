@@ -15,7 +15,7 @@ interface Props {
 
 const SEC_KEYS: Record<number, string> = { 0:'sms', 1:'authenticator', 2:'alerteConnexion' };
 function strength(pwd: string) { let n=0; if(pwd.length>=8)n++; if(/[A-Z]/.test(pwd))n++; if(/[0-9]/.test(pwd))n++; if(/[^A-Za-z0-9]/.test(pwd))n++; return n; }
-const STR_COLOR = ['#DC2626','#F59E0B','#84CC16','#16A34A'];
+const STR_COLOR = ['var(--red)','var(--amber)','var(--teal)','var(--emerald)'];
 const STR_LABEL = ['Trop faible','Faible','Bon','Fort'];
 
 export default function SecSecurite({ data, saving, dirty, markClean, saveTrigger, onSave, onChangePassword }: Props) {
@@ -103,7 +103,7 @@ export default function SecSecurite({ data, saving, dirty, markClean, saveTrigge
               <div className={s.fw}>
                 <i className="fas fa-lock" style={{ position:'absolute', left:13, color:'var(--t3)', fontSize:13, pointerEvents:'none', zIndex:1 }} />
                 <input className={s.fin} type={showPwd[2]?'text':'password'} value={pwdConf} placeholder="Répétez"
-                  style={{ borderColor: pwdConf?(pwdConf===pwdNew?'var(--green,#16A34A)':'var(--red,#DC2626)'):undefined }}
+                  style={{ borderColor: pwdConf?(pwdConf===pwdNew?'var(--emerald)':'var(--red)'):undefined }}
                   onChange={e => { setPwdConf(e.target.value); dirty(); }} />
                 <button onClick={() => setShowPwd(p => p.map((v,j)=>j===2?!v:v))} style={{ position:'absolute', right:12, background:'none', border:'none', color:'var(--t3)', cursor:'pointer', fontSize:13 }}><i className={`fas ${showPwd[2]?'fa-eye-slash':'fa-eye'}`}/></button>
               </div>
@@ -121,7 +121,7 @@ export default function SecSecurite({ data, saving, dirty, markClean, saveTrigge
       <div className={s.fc}>
         <div className={s.fcHd}>
           <div><div className={s.fcTtl}><i className="fas fa-mobile-screen" /> Double authentification (2FA)</div></div>
-          <div style={{ background: data?.twoFaEnabled ? 'var(--em-bg)' : 'var(--g50)', color: data?.twoFaEnabled ? 'var(--emerald,#047857)' : 'var(--t3)', fontSize:11, fontWeight:700, padding:'4px 11px', borderRadius:'var(--pill)', border:`1px solid ${data?.twoFaEnabled ? 'rgba(4,120,87,.2)' : 'var(--bdr)'}` }}>
+          <div style={{ background: data?.twoFaEnabled ? 'var(--em-bg)' : 'var(--g50)', color: data?.twoFaEnabled ? 'var(--emerald)' : 'var(--t3)', fontSize:11, fontWeight:700, padding:'4px 11px', borderRadius:'var(--pill)', border:`1px solid ${data?.twoFaEnabled ? 'rgba(4,120,87,.2)' : 'var(--bdr)'}` }}>
             <i className={`fas ${data?.twoFaEnabled ? 'fa-shield-check' : 'fa-shield'}`} /> {data?.twoFaEnabled ? 'Activé' : 'Désactivé'}
           </div>
         </div>
@@ -139,7 +139,7 @@ export default function SecSecurite({ data, saving, dirty, markClean, saveTrigge
                   onKeyDown={e => e.key==='Backspace' && !otp[i] && i>0 && otpRefs[i-1].current?.focus()} />
               ))}
             </div>
-            <button onClick={() => pop('✅ Code 2FA vérifié avec succès','s')} style={{ marginTop:11, background:'var(--cor,#B45309)', color:'#fff', border:'none', borderRadius:'var(--pill)', padding:'9px 20px', fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+            <button onClick={() => pop('✅ Code 2FA vérifié avec succès','s')} style={{ marginTop:11, background:'var(--emerald)', color:'#fff', border:'none', borderRadius:'var(--pill)', padding:'9px 20px', fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
               <i className="fas fa-check" /> Vérifier
             </button>
           </div>
@@ -161,12 +161,12 @@ export default function SecSecurite({ data, saving, dirty, markClean, saveTrigge
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:13, fontWeight:700, color:'var(--navy)', display:'flex', alignItems:'center', gap:7 }}>
                   {sess.nm}
-                  {sess.active && <span style={{ background:'#10B981', color:'#fff', fontSize:9, fontWeight:800, padding:'2px 8px', borderRadius:'var(--pill)' }}>Session actuelle</span>}
+                  {sess.active && <span style={{ background:'var(--btn,#111113)', color:'#fff', fontSize:9, fontWeight:800, padding:'2px 8px', borderRadius:'var(--pill)' }}>Session actuelle</span>}
                 </div>
                 <div style={{ fontSize:11, color:'var(--t3)', marginTop:2 }}>{sess.detail}</div>
               </div>
               {!sess.active && (
-                <button onClick={() => pop('⚠️ Session déconnectée','w')} style={{ background:'rgba(220,38,38,.08)', color:'var(--red,#DC2626)', border:'1px solid rgba(220,38,38,.2)', borderRadius:'var(--pill)', padding:'5px 13px', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                <button onClick={() => pop('⚠️ Session déconnectée','w')} style={{ background:'var(--g100)', color:'var(--t1)', border:'1px solid var(--bdr2)', borderRadius:'var(--pill)', padding:'5px 13px', fontSize:11, fontWeight:700, cursor:'pointer' }}>
                   Déconnecter
                 </button>
               )}

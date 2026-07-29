@@ -15,15 +15,13 @@ export type PanelId =
   | 'donnees' | 'danger';
 
 interface Props {
-  active:   PanelId;
-  onSwitch: (id: PanelId) => void;
-  onToast:  (msg: string) => void;
+  onToast: (msg: string) => void;
 }
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
 const TOKEN_KEY = 'shopi_access_token';
 
-export default function SettingsSidebar({ active, onSwitch, onToast }: Props) {
+export default function SettingsSidebar({ onToast }: Props) {
   const [profil,    setProfil]    = useState<ProfilData | null>(null);
   const [securite,  setSecurite]  = useState<SecuriteData | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -94,27 +92,9 @@ export default function SettingsSidebar({ active, onSwitch, onToast }: Props) {
     }
   }
 
-  /* Badge sécurité */
-  const secBadge = securite
-    ? [!securite.twoFaEnabled, securite.questionsConfigurees < 2, securite.codesSecours === 0]
-        .filter(Boolean).length
-    : 0;
-
   const initial = profil
     ? (profil.firstName?.[0] ?? profil.email?.[0] ?? 'U').toUpperCase()
     : '…';
-
-  const item = (id: PanelId, icon: string, label: string, badge?: number, danger?: boolean) => (
-    <button
-      key={id}
-      className={[s.item, active === id ? s.active : '', danger ? s.danger : ''].filter(Boolean).join(' ')}
-      onClick={() => onSwitch(id)}
-    >
-      <i className={`fas ${icon}`} />
-      {label}
-      {badge ? <span className={s.notif}>{badge}</span> : null}
-    </button>
-  );
 
   return (
     <aside className={s.nav}>
@@ -128,7 +108,7 @@ export default function SettingsSidebar({ active, onSwitch, onToast }: Props) {
         onChange={handleFileChange}
       />
 
-      {/* ── Profil header ── */}
+      {/* ── Profil header — bandeau horizontal ── */}
       <div className={s.profile}>
         <div className={s.avatarWrap}>
 
@@ -159,7 +139,7 @@ export default function SettingsSidebar({ active, onSwitch, onToast }: Props) {
           </button>
         </div>
 
-        <div>
+        <div className={s.profileInfo}>
           <div className={s.profileName}>
             {profil
               ? `${profil.firstName} ${profil.lastName}`
@@ -167,54 +147,20 @@ export default function SettingsSidebar({ active, onSwitch, onToast }: Props) {
             }
           </div>
           <div className={s.profileEmail}>{profil?.email ?? ''}</div>
-          <div className={s.profileBadges}>
-            {profil?.emailVerified && (
-              <span className={`${s.badge} ${s.badgeGreen}`}>
-                <i className="fas fa-circle-check" /> Vérifié
-              </span>
-            )}
-            {securite?.twoFaEnabled && (
-              <span className={`${s.badge} ${s.badgeBlue}`}>
-                <i className="fas fa-shield-halved" /> 2FA
-              </span>
-            )}
-          </div>
         </div>
-      </div>
 
-      {/* ── Nav body ── */}
-      <div className={s.body}>
-        <div className={s.section}>
-          <div className={s.label}>Mon compte</div>
-          {item('profil',   'fa-user',         'Profil personnel')}
-          {item('adresses', 'fa-location-dot', 'Adresses')}
-          {item('paiement', 'fa-credit-card',  'Paiement')}
-          {item('points',   'fa-star',         'Points Shopi')}
+        <div className={s.profileBadges}>
+          {profil?.emailVerified && (
+            <span className={`${s.badge} ${s.badgeGreen}`}>
+              <i className="fas fa-circle-check" /> Vérifié
+            </span>
+          )}
+          {securite?.twoFaEnabled && (
+            <span className={`${s.badge} ${s.badgeBlue}`}>
+              <i className="fas fa-shield-halved" /> 2FA
+            </span>
+          )}
         </div>
-        <div className={s.divider} />
-        <div className={s.section}>
-          <div className={s.label}>Sécurité</div>
-          {item('confidentialiteSecurite', 'fa-shield-halved', 'Confidentialité et sécurité', secBadge || undefined)}
-          {item('securite',     'fa-lock',              'Sécurité du compte')}
-          {item('sessions',     'fa-desktop',           'Appareils connectés')}
-          {item('activite',     'fa-clock-rotate-left', "Journal d'activité")}
-          {item('approbations', 'fa-shield-check',      'Appareils de confiance')}
-        </div>
-        <div className={s.divider} />
-        <div className={s.section}>
-          <div className={s.label}>Préférences</div>
-          {item('notifs',          'fa-bell',          'Notifications')}
-          {item('confidentialite', 'fa-shield-halved', 'Confidentialité')}
-          {item('apparence',       'fa-palette',       'Apparence')}
-          {item('langue',          'fa-globe',         'Langue & région')}
-        </div>
-        <div className={s.divider} />
-        <div className={s.section}>
-          <div className={s.label}>Données</div>
-          {item('donnees', 'fa-database', 'Mes données')}
-        </div>
-        <div className={s.divider} />
-        {item('danger', 'fa-triangle-exclamation', 'Zone de danger', undefined, true)}
       </div>
     </aside>
   );

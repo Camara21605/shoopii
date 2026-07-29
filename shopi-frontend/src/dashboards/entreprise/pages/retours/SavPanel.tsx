@@ -56,10 +56,10 @@ export default function SavPanel({
       {stats && (
         <div className={s.kpiStrip} style={{ marginBottom: 16 }}>
           {[
-            { ico: '📬', label: 'Tickets ouverts',    val: stats.open,       color: '#047857', bg: '#D1FAE5' },
-            { ico: '🔵', label: 'En cours',           val: stats.inProgress, color: '#1A4FC4', bg: '#DBEAFE' },
-            { ico: '✅', label: 'Résolus',            val: stats.resolved,   color: '#7C3AED', bg: '#EDE9FE' },
-            { ico: '⏱️', label: 'Délai réponse moy.', val: `${stats.avgResponseMinutes}m`, color: '#B45309', bg: '#FEF3C7' },
+            { ico: '📬', label: 'Tickets ouverts',    val: stats.open,       color: 'var(--t2)', bg: 'var(--g100)' },
+            { ico: '🔵', label: 'En cours',           val: stats.inProgress, color: 'var(--t2)', bg: 'var(--g100)' },
+            { ico: '✅', label: 'Résolus',            val: stats.resolved,   color: 'var(--t2)', bg: 'var(--g100)' },
+            { ico: '⏱️', label: 'Délai réponse moy.', val: `${stats.avgResponseMinutes}m`, color: 'var(--t2)', bg: 'var(--g100)' },
           ].map((k, i) => (
             <div key={i} className={s.kpiCard}>
               <div className={s.kpiStripe} style={{ background: k.color }} />
@@ -146,7 +146,7 @@ export default function SavPanel({
                 return (
                   <tr key={t.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedId(t.id)}>
                     <td>
-                      <span style={{ fontFamily: 'monospace', fontSize: 11.5, fontWeight: 700, color: 'var(--blue)' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: 11.5, fontWeight: 700, color: 'var(--t2)' }}>
                         {t.reference}
                       </span>
                     </td>
@@ -173,7 +173,7 @@ export default function SavPanel({
                         <i className="fas fa-comment-dots" style={{ fontSize: 11, color: 'var(--t3)' }} />
                         <span style={{ fontSize: 12.5 }}>{t.messageCount}</span>
                         {t.unreadCount > 0 && (
-                          <span style={{ background: '#DC2626', color: '#fff', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 800 }}>
+                          <span style={{ background: 'var(--btn)', color: '#fff', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 800 }}>
                             {t.unreadCount}
                           </span>
                         )}
@@ -289,7 +289,7 @@ function SavConversationModal({
         <div className={s.modalBody} style={{ flex: 1, overflowY: 'auto' }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: 40 }}>
-              <i className="fas fa-circle-notch fa-spin" style={{ fontSize: 24, color: 'var(--blue)' }} />
+              <i className="fas fa-circle-notch fa-spin" style={{ fontSize: 24, color: 'var(--t2)' }} />
             </div>
           ) : (
             <div className={s.conversation}>

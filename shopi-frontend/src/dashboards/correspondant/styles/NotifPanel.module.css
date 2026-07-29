@@ -31,13 +31,13 @@
   background: var(--g50, #F8F9FA);
   position: relative;
 }
-/* Ligne amber déco */
+/* Ligne déco */
 .hd::after {
   content: '';
   position: absolute;
   bottom: 0; left: 0; right: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--cor, #B45309), transparent 70%);
+  background: linear-gradient(90deg, var(--t3), transparent 70%);
   opacity: .5;
 }
 
@@ -53,10 +53,10 @@
   align-items: center;
   gap: 8px;
 }
-.hdTitle i { color: var(--cor, #B45309); }
+.hdTitle i { color: var(--t2); }
 
 .badge {
-  background: var(--red, #DC2626);
+  background: var(--btn, #111113);
   color: #fff;
   font-size: 9px;
   font-weight: 800;
@@ -96,20 +96,20 @@
 
 /* Boutons header */
 .markAll {
-  background: var(--cor-bg, rgba(180,83,9,.09));
-  border: 1px solid var(--bdr-cor, rgba(180,83,9,.22));
+  background: var(--g100, #F1F3F5);
+  border: 1px solid var(--bdr2, rgba(11,31,58,.12));
   border-radius: var(--r-sm, 8px);
   width: 30px;
   height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--cor, #B45309);
+  color: var(--t2);
   font-size: 12px;
   cursor: pointer;
   transition: all .2s;
 }
-.markAll:hover { background: var(--cor-bg2, rgba(245,158,11,.13)); }
+.markAll:hover { background: var(--g200, #E8EAED); }
 
 .close {
   background: transparent;
@@ -152,16 +152,16 @@
 .item:hover { background: var(--g50); }
 
 .unread {
-  background: linear-gradient(90deg, rgba(180,83,9,.04), transparent);
+  background: var(--g50);
 }
-.unread:hover { background: rgba(180,83,9,.07); }
+.unread:hover { background: var(--g100); }
 /* Barre gauche pour non-lus */
 .unread::before {
   content: '';
   position: absolute;
   left: 0; top: 0; bottom: 0;
   width: 3px;
-  background: var(--cor, #B45309);
+  background: var(--t2);
   border-radius: 0 2px 2px 0;
 }
 
@@ -206,8 +206,8 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--cor, #B45309);
-  box-shadow: 0 0 0 2px rgba(180,83,9,.15);
+  background: var(--t2);
+  box-shadow: 0 0 0 2px rgba(128,128,128,.15);
 }
 .dismiss {
   background: transparent;
@@ -225,7 +225,7 @@
   transition: all .18s;
 }
 .item:hover .dismiss { opacity: 1; }
-.dismiss:hover { background: var(--g100); color: var(--red, #DC2626); }
+.dismiss:hover { background: var(--g100); color: var(--t1); }
 
 /* ── État vide ── */
 .empty {
@@ -269,7 +269,7 @@
   justify-content: center;
   gap: 5px;
 }
-.footerBtn:hover { background: var(--g100); color: var(--navy); border-color: var(--bdr-cor, rgba(180,83,9,.22)); }
+.footerBtn:hover { background: var(--g100); color: var(--navy); border-color: var(--bdr2); }
 
 /* Responsive */
 @media (max-width: 640px) { .panel { width: 100%; } }

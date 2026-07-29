@@ -249,9 +249,9 @@ export default function ParamNav({ section, onSection, data }: Props) {
                       style={{
                         /* Couleur adaptée au % : rouge < 50%, amber < 80%, vert ≥ 80% */
                         color:
-                          parseInt(indicator.pct) < 50 ? 'var(--red,#DC2626)' :
-                          parseInt(indicator.pct) < 80 ? 'var(--cor,#B45309)' :
-                          'var(--emerald,#047857)',
+                          parseInt(indicator.pct) < 50 ? 'var(--t1)' :
+                          parseInt(indicator.pct) < 80 ? 'var(--t2)' :
+                          'var(--t2)',
                       }}
                     >
                       {data ? indicator.pct : '—'}

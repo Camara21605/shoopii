@@ -35,8 +35,8 @@
   border-radius: var(--pill); overflow: hidden; transition: all .2s;
 }
 .tb-srch:focus-within {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 4px rgba(59,130,246,.12);
+  border-color: var(--t2);
+  box-shadow: 0 0 0 4px rgba(128,128,128,.12);
   background: var(--white);
 }
 .tb-srch input  { flex: 1; background: transparent; border: none; outline: none; padding: 8px 14px; font-size: 12.5px; color: var(--t1); }
@@ -64,7 +64,7 @@
   color: var(--t2); font-size: 14px; transition: all .2s; cursor: pointer;
 }
 .tb-ic:hover { background: var(--sky); color: var(--navy); }
-.tb-ic.active { background: var(--sky-2); color: var(--blue); }   /* ✅ page active */
+.tb-ic.active { background: var(--sky-2); color: var(--t2); }   /* ✅ page active */
 .tb-dot {
   position: absolute; top: 6px; right: 5px;
   width: 7px; height: 7px; border-radius: 50%;
@@ -73,7 +73,7 @@
 .tb-badge {
   position: absolute; top: 1px; right: 0px;
   min-width: 16px; height: 16px; border-radius: 8px;
-  background: var(--red, #DC2626); color: #fff;
+  background: var(--red, var(--t1)); color: #fff;
   font-size: 9px; font-weight: 800; line-height: 1;
   display: flex; align-items: center; justify-content: center;
   padding: 0 3px; border: 1.5px solid var(--white, #fff);
@@ -129,7 +129,7 @@
   border: 2px solid var(--bdr2); transition: all .2s; font-family: var(--fd);
   overflow: hidden;
 }
-.tb-ava:hover { transform: scale(1.08); box-shadow: 0 4px 12px rgba(59,130,246,.30); }
+.tb-ava:hover { transform: scale(1.08); box-shadow: 0 4px 12px rgba(128,128,128,.30); }
 .tb-ava-img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
 
 .tb-menu {
@@ -158,11 +158,11 @@
   font-size: 13px; font-weight: 600; color: var(--t1); cursor: pointer;
   text-align: left; transition: background .15s;
 }
-.tb-menu-it i { width: 15px; text-align: center; color: var(--blue); font-size: 13px; }
+.tb-menu-it i { width: 15px; text-align: center; color: var(--t2); font-size: 13px; }
 .tb-menu-it:hover { background: var(--sky); }
 .tb-menu-it.danger { color: var(--red); }
 .tb-menu-it.danger i { color: var(--red); }
-.tb-menu-it.danger:hover { background: rgba(220,38,38,.08); }
+.tb-menu-it.danger:hover { background: var(--rs-bg, rgba(220,38,38,.08)); }
 .tb-menu-sep { height: 1px; background: var(--bdr); margin: 5px 0; }
 
 /* ════════ BOTTOM NAV MOBILE ════════ */
@@ -183,8 +183,8 @@
   transition: color .15s; position: relative;
 }
 .bn-it i { font-size: 16px; }
-.bn-it.on { color: var(--blue); }
-.bn-it.on i { color: var(--blue); }
+.bn-it.on { color: var(--t2); }
+.bn-it.on i { color: var(--t2); }
 
 /* Bouton central FAB (Nouveau produit) */
 .bn-fab { flex: 0 0 auto; }
@@ -259,8 +259,8 @@
 }
 .tb-drawer-home { background: var(--g100); color: var(--t1); border: 1.5px solid var(--bdr2); }
 .tb-drawer-home:hover { background: var(--g200); }
-.tb-drawer-out  { background: rgba(220,38,38,.08); color: var(--red); border: 1.5px solid rgba(220,38,38,.18); }
-.tb-drawer-out:hover { background: rgba(220,38,38,.14); }
+.tb-drawer-out  { background: rgba(128,128,128,.08); color: var(--t1); border: 1.5px solid rgba(128,128,128,.18); }
+.tb-drawer-out:hover { background: rgba(128,128,128,.14); }
 
 /* ════════ PLEIN-ÉCRAN (messagerie) ════════ */
 
@@ -290,4 +290,8 @@
   .tb-ava-wrap { display: block; }
 
   .tb-bottomnav { display: flex; }
+
+  /* Cibles tactiles ≥44×44px (WCAG 2.2 AA) : les cercles 36-38px
+     conviennent au survol souris mais sont trop petits au doigt. */
+  .hamburger, .tb-acts .tb-ic-pin, .tb-ava { width: 44px; height: 44px; }
 }

@@ -28,7 +28,7 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel =
 
   const backBtn = (
     <div className={shared.page} style={{ paddingBottom: 0 }}>
-      <button onClick={onBack} style={{ background: 'var(--white)', border: '1px solid var(--bdr)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--blue)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+      <button onClick={onBack} style={{ background: 'var(--white)', border: '1px solid var(--bdr)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--t2)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
         <i className="fas fa-arrow-left" /> {backLabel}
       </button>
     </div>

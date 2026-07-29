@@ -7,7 +7,11 @@
   max-width: 1360px;
   margin: 0 auto;
   padding: 40px 28px 80px;
-  padding-top: calc(var(--hdr) + 40px);
+  /* ✅ Coïncide exactement avec le `top` sticky de SettingsTabs (voir
+     SettingsTabs.module.css) : la barre d'onglets, 1er enfant de ce
+     conteneur, est donc déjà "accrochée" dès le chargement — aucun
+     saut visuel au premier scroll. */
+  padding-top: calc(var(--hdr) + 12px);
   background: var(--white);
 }
 
@@ -81,12 +85,14 @@
 }
 .secBannerBtn:hover { background: var(--btn-h); transform: translateY(-1px); }
 
-/* ── Main layout ── */
+/* ── Main layout ──
+   ✅ Navigation horizontale toujours (petit comme grand écran) :
+   la colonne latérale 268px a été remplacée par une barre d'onglets
+   pleine largeur (SettingsSidebar) empilée au-dessus du contenu. */
 .layout {
-  display: grid;
-  grid-template-columns: 268px 1fr;
-  gap: 28px;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 /* ── Reveal animation ── */
@@ -121,9 +127,16 @@
 
 /* ── Responsive ── */
 @media (max-width: 960px) {
-  .layout { grid-template-columns: 1fr; }
   .secBanner { flex-direction: column; gap: 16px; }
 }
 @media (max-width: 768px) {
-  .pageWrap { padding: 80px 16px 60px; }
+  .pageWrap {
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: 60px;
+  }
+}
+/* Coïncide avec le palier mobile de SettingsTabs (top: hdr + 8px). */
+@media (max-width: 640px) {
+  .pageWrap { padding-top: calc(var(--hdr) + 8px); }
 }

@@ -34,10 +34,10 @@ const FIELD_MAP: Record<string, keyof ParametresData> = {
 
 // Badge statut vérification
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  pending:   { label:'Non soumis',          color:'#B45309', bg:'rgba(180,83,9,.1)'   },
-  reviewing: { label:'En cours d\'examen',  color:'#1A4FC4', bg:'rgba(26,79,196,.1)'  },
-  verified:  { label:'✅ Vérifié',          color:'#047857', bg:'rgba(4,120,87,.1)'   },
-  rejected:  { label:'❌ Refusé',           color:'#DC2626', bg:'rgba(220,38,38,.1)'  },
+  pending:   { label:'Non soumis',          color:'var(--t2)',      bg:'rgba(128,128,128,.1)' },
+  reviewing: { label:'En cours d\'examen',  color:'var(--blue)',    bg:'var(--sky-2)'         },
+  verified:  { label:'✅ Vérifié',          color:'var(--emerald)', bg:'var(--em-bg)'         },
+  rejected:  { label:'❌ Refusé',           color:'var(--red)',     bg:'var(--rs-bg)'         },
 };
 
 export default function DocumentsSection({ data, saving, onToast, uploadDocument }: Props) {
@@ -90,15 +90,15 @@ export default function DocumentsSection({ data, saving, onToast, uploadDocument
               <div key={doc.type} style={{
                 display:'flex', alignItems:'center', gap:14,
                 padding:'14px 16px', borderRadius:'var(--r-lg)',
-                background: isPresent ? 'rgba(4,120,87,.06)' : 'var(--g50)',
-                border:`1.5px solid ${isPresent ? 'rgba(4,120,87,.25)' : 'var(--bdr)'}`,
+                background: isPresent ? 'rgba(128,128,128,.06)' : 'var(--g50)',
+                border:`1.5px solid ${isPresent ? 'rgba(128,128,128,.25)' : 'var(--bdr)'}`,
               }}>
                 {/* Icône */}
                 <div style={{
                   width:40, height:40, borderRadius:11, flexShrink:0,
-                  background: isPresent ? 'rgba(4,120,87,.1)' : 'var(--sky,#EEF3FD)',
+                  background: isPresent ? 'rgba(128,128,128,.1)' : 'var(--sky,var(--g100))',
                   display:'flex', alignItems:'center', justifyContent:'center',
-                  color: isPresent ? '#047857' : 'var(--t3)',
+                  color: isPresent ? 'var(--t2)' : 'var(--t3)',
                 }}>
                   <i className={`fas ${doc.icon}`} />
                 </div>
@@ -108,7 +108,7 @@ export default function DocumentsSection({ data, saving, onToast, uploadDocument
                   <div style={{ fontSize:13, fontWeight:700, color:'var(--navy)' }}>{doc.label}</div>
                   <div style={{ fontSize:11, color:'var(--t3)', marginTop:2 }}>
                     {isPresent
-                      ? <><i className="fas fa-check-circle" style={{ color:'#047857' }} /> Document uploadé</>
+                      ? <><i className="fas fa-check-circle" style={{ color:'var(--t2)' }} /> Document uploadé</>
                       : doc.hint
                     }
                   </div>
@@ -126,8 +126,8 @@ export default function DocumentsSection({ data, saving, onToast, uploadDocument
                   onClick={() => refs.current[doc.type]?.click()}
                   disabled={saving}
                   style={{
-                    background: isPresent ? 'var(--sky,#EEF3FD)' : 'var(--navy)',
-                    color: isPresent ? 'var(--blue)' : '#fff',
+                    background: isPresent ? 'var(--sky,var(--g100))' : 'var(--navy)',
+                    color: isPresent ? 'var(--t2)' : '#fff',
                     border: isPresent ? '1px solid var(--sky-3,#C8D9F8)' : 'none',
                     borderRadius:'var(--pill)', padding:'7px 16px',
                     fontSize:11, fontWeight:700, cursor:'pointer',

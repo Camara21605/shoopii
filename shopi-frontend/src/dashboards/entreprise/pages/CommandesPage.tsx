@@ -121,7 +121,7 @@ function ImgBox({
       height:         size,
       borderRadius:   noBorder ? 0 : 8,
       overflow:       'hidden',
-      background:     showPlaceholder ? 'var(--g100, #F1F5F9)' : undefined,
+      background:     showPlaceholder ? 'var(--g100, var(--g100))' : undefined,
       display:        'flex',
       alignItems:     'center',
       justifyContent: 'center',

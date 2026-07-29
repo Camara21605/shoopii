@@ -384,3 +384,69 @@
     background: linear-gradient(90deg, #172040 25%, #1E2D4A 50%, #172040 75%);
   }
 }
+
+/* ✅ Bascule EXPLICITE du thème via le site (ThemeContext → <html data-theme>) —
+   `prefers-color-scheme` seul ignore le choix fait dans l'app. Même contenu
+   que le bloc @media ci-dessus, ré-appliqué sur l'attribut explicite. */
+:root[data-theme="dark"] .page {
+  --td-bg:          #0D1526;
+  --td-card:        #131E35;
+  --td-border:      #1E2D4A;
+  --td-t1:          #E2E8F6;
+  --td-t2:          #C5D0E8;
+  --td-t3:          #4A5A7A;
+  --td-t4:          #2A3A5A;
+  --td-blue:        #5B8BF0;
+  --td-blue-bg:     #172040;
+  --td-att-bg:      #0D1526;
+  --td-att-hover:   #1A2A45;
+  --td-chip-bg:     #172040;
+  --td-chip-border: #2A4080;
+  --td-chip-text:   #5B8BF0;
+  --td-sk-a:        #131E35;
+  --td-sk-b:        #1A2A45;
+}
+:root[data-theme="dark"] .avatarUser    { background: #2D2D30; }
+:root[data-theme="dark"] .bubbleAgent   { background: #1A2A45; }
+:root[data-theme="dark"] .bubbleAgent .bubbleContent { color: #D0DCF0; }
+:root[data-theme="dark"] .bubbleUser .attName  { color: rgba(255,255,255,.95); }
+:root[data-theme="dark"] .bubbleUser .attMeta  { color: rgba(255,255,255,.65); }
+:root[data-theme="dark"] .ratedBox   { background: #0D2518; border-color: #065F46; }
+:root[data-theme="dark"] .ratedTitle { color: #6EE7B7; }
+:root[data-theme="dark"] .ratedSub   { color: #34D399; }
+:root[data-theme="dark"] .uploadErrMsg { background: #1A0F00; border-color: #78350F; color: #FCD34D; }
+:root[data-theme="dark"] .skeletonBubbleRight {
+  background: linear-gradient(90deg, #172040 25%, #1E2D4A 50%, #172040 75%);
+}
+
+/* Annule la préférence sombre de l'OS quand "Clair" est choisi explicitement */
+:root[data-theme="light"] .page {
+  --td-bg:          #F8FAFF;
+  --td-card:        #fff;
+  --td-border:      #E5EBF5;
+  --td-t1:          #0B1F3A;
+  --td-t2:          #4A5A7A;
+  --td-t3:          #9AAACB;
+  --td-t4:          #C5D0E8;
+  --td-blue:        #1A4FC4;
+  --td-blue-bg:     #EEF2FF;
+  --td-att-bg:      #F8FAFF;
+  --td-att-hover:   #F0F4FF;
+  --td-chip-bg:     #EEF2FF;
+  --td-chip-border: #C7D7F8;
+  --td-chip-text:   #1A4FC4;
+  --td-sk-a:        #F0F4FF;
+  --td-sk-b:        #E5EDFF;
+}
+:root[data-theme="light"] .avatarUser    { background: #0B1F3A; }
+:root[data-theme="light"] .bubbleAgent   { background: var(--td-card); }
+:root[data-theme="light"] .bubbleAgent .bubbleContent { color: #1E2D45; }
+:root[data-theme="light"] .bubbleUser .attName  { color: #fff; }
+:root[data-theme="light"] .bubbleUser .attMeta  { color: rgba(255,255,255,.7); }
+:root[data-theme="light"] .ratedBox   { background: #F0FDF4; border-color: #BBF7D0; }
+:root[data-theme="light"] .ratedTitle { color: #065F46; }
+:root[data-theme="light"] .ratedSub   { color: #059669; }
+:root[data-theme="light"] .uploadErrMsg { background: #FFFBEB; border-color: #FDE68A; color: #92400E; }
+:root[data-theme="light"] .skeletonBubbleRight {
+  background: linear-gradient(90deg, #DBEAFE 25%, #BFDBFE 50%, #DBEAFE 75%);
+}

@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import type { ProduitInfo } from '../data/produitMockData';
 import { VARIANTES_STOCKAGE, VARIANTES_COLORIS, GARANTIES } from '../data/produitMockData';
 import { useCart } from '../../../../../shared/context/CartContext';
-import { getRoleFromToken } from '../../../../../shared/services/authUtils';
+import { useAuthGate } from '../../../../../shared/hooks/useAuthGate';
 import styles from '../styles/ProduitInfoSection.module.css';
 
 interface Props {
@@ -43,7 +43,7 @@ export default function ProduitInfoSection({
 }: Props) {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const isClient = getRoleFromToken() === 'client';
+  const { requireClient, authModal } = useAuthGate();
 
   /* État local si ProduitPage ne contrôle pas encore les variantes */
   const [storLocal,  setStorLocal]  = useState('256 GB');
@@ -82,34 +82,36 @@ export default function ProduitInfoSection({
   const isOutOfStock = produit.stockStatus === 'out';
 
   /* ── Ajouter au panier ── */
-  async function handleAddToCart() {
-    if (!isClient)    { navigate('/login'); return; }
-    if (!produitId)   { onToast('❌ ID produit manquant'); return; }
-    if (isOutOfStock) { onToast('❌ Produit en rupture de stock'); return; }
-    setAddingCart(true);
-    try {
-      await addToCart(produitId, qty, varianteCombinee);
-      onToast('🛒 Ajouté au panier !');
-    } catch (err: any) {
-      onToast(`❌ ${err.message}`);
-    } finally {
-      setAddingCart(false);
-    }
+  function handleAddToCart() {
+    requireClient(async () => {
+      if (!produitId)   { onToast('❌ ID produit manquant'); return; }
+      if (isOutOfStock) { onToast('❌ Produit en rupture de stock'); return; }
+      setAddingCart(true);
+      try {
+        await addToCart(produitId, qty, varianteCombinee);
+        onToast('🛒 Ajouté au panier !');
+      } catch (err: any) {
+        onToast(`❌ ${err.message}`);
+      } finally {
+        setAddingCart(false);
+      }
+    });
   }
 
   /* ── Acheter maintenant ── */
-  async function handleBuyNow() {
-    if (!isClient)    { navigate('/login'); return; }
-    if (!produitId)   { onToast('❌ ID produit manquant'); return; }
-    if (isOutOfStock) { onToast('❌ Produit en rupture de stock'); return; }
-    setAddingBuy(true);
-    try {
-      await addToCart(produitId, qty, varianteCombinee);
-      navigate('/commande');
-    } catch (err: any) {
-      onToast(`❌ ${err.message}`);
-      setAddingBuy(false);
-    }
+  function handleBuyNow() {
+    requireClient(async () => {
+      if (!produitId)   { onToast('❌ ID produit manquant'); return; }
+      if (isOutOfStock) { onToast('❌ Produit en rupture de stock'); return; }
+      setAddingBuy(true);
+      try {
+        await addToCart(produitId, qty, varianteCombinee);
+        navigate('/commande');
+      } catch (err: any) {
+        onToast(`❌ ${err.message}`);
+        setAddingBuy(false);
+      }
+    });
   }
 
   return (
@@ -351,6 +353,8 @@ export default function ProduitInfoSection({
           </span>
         )}
       </div>
+
+      {authModal}
     </div>
   );
 }

@@ -116,7 +116,7 @@ export default function SecZone({ data, saving, dirty, markClean, saveTrigger, o
       <div className={s.fc}>
         <div className={s.fcHd}>
           <div><div className={s.fcTtl}><i className="fas fa-location-dot" /> Zones de couverture</div></div>
-          <span style={{ fontSize:12, color:'var(--cor,#B45309)', fontWeight:700 }}>
+          <span style={{ fontSize:12, color:'var(--t2)', fontWeight:700 }}>
             {activeCount} zone{activeCount > 1 ? 's' : ''} active{activeCount > 1 ? 's' : ''}
           </span>
         </div>
@@ -140,7 +140,7 @@ export default function SecZone({ data, saving, dirty, markClean, saveTrigger, o
         <div className={s.fcHd}>
           <div><div className={s.fcTtl}><i className="fas fa-clock" /> Horaires d'ouverture</div></div>
           <div style={{ display:'flex', gap:6 }}>
-            <button onClick={() => setAll(true)} style={{ background:'var(--cor-bg)', color:'var(--cor,#B45309)', border:'1px solid var(--bdr-cor)', borderRadius:'var(--pill)', padding:'5px 13px', fontSize:11, fontWeight:700, cursor:'pointer' }}>Tout activer</button>
+            <button onClick={() => setAll(true)} style={{ background:'var(--g100)', color:'var(--t2)', border:'1px solid var(--bdr2)', borderRadius:'var(--pill)', padding:'5px 13px', fontSize:11, fontWeight:700, cursor:'pointer' }}>Tout activer</button>
             <button onClick={() => setAll(false)} style={{ background:'var(--g50)', color:'var(--t2)', border:'1px solid var(--bdr2)', borderRadius:'var(--pill)', padding:'5px 13px', fontSize:11, cursor:'pointer' }}>Effacer</button>
           </div>
         </div>

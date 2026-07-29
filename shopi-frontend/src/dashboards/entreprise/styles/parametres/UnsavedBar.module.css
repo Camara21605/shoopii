@@ -30,7 +30,7 @@
   align-items: center;
   gap: 6px;
 }
-.msg i { color: var(--blue); }
+.msg i { color: var(--t2); }
 
 .save {
   background: var(--btn, #111113);

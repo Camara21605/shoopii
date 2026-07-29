@@ -16,7 +16,6 @@
  * ================================================================ */
 
 import { useState, useCallback } from 'react';
-import { useNavigate }           from 'react-router-dom';
 import { tokenStorage }          from '../services/apiFetch';
 
 type ToastFn = (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
@@ -27,6 +26,8 @@ interface UseFollowToggleParams {
   isSuivi:  boolean;                                   // ← contrôlé par le parent
   onFollow: (id: string, next: boolean) => Promise<void>;
   onToast:  ToastFn;
+  /** Ouvre le modal "connectez-vous / créez un compte client" */
+  onRequireAuth: () => void;
 }
 
 interface UseFollowToggleReturn {
@@ -35,10 +36,9 @@ interface UseFollowToggleReturn {
 }
 
 export function useFollowToggle({
-  id, name, isSuivi, onFollow, onToast,
+  id, name, isSuivi, onFollow, onToast, onRequireAuth,
 }: UseFollowToggleParams): UseFollowToggleReturn {
 
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const toggle = useCallback(async (e?: React.MouseEvent) => {
@@ -46,7 +46,7 @@ export function useFollowToggle({
 
     /* 1. Auth obligatoire pour suivre */
     if (!tokenStorage.get()) {
-      navigate('/login');
+      onRequireAuth();
       return;
     }
 
@@ -65,7 +65,7 @@ export function useFollowToggle({
     } finally {
       setLoading(false);
     }
-  }, [id, name, isSuivi, onFollow, onToast, navigate]);
+  }, [id, name, isSuivi, onFollow, onToast, onRequireAuth]);
 
   return { loading, toggle };
 }

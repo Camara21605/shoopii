@@ -90,8 +90,8 @@ export default function SecColis({ data, saving, dirty, markClean, saveTrigger, 
             <div className={s.fl}>Types de colis acceptés</div>
             <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginTop:6 }}>
               {COLIS_TYPES.map((ct, i) => (
-                <label key={ct} style={{ display:'flex', alignItems:'center', gap:6, background:'var(--g50)', border:`1.5px solid ${types[i]?'var(--cor,#B45309)':'var(--bdr2)'}`, borderRadius:'var(--pill)', padding:'6px 13px', cursor:'pointer', fontSize:12, fontWeight:600, color:types[i]?'var(--cor,#B45309)':'var(--t2)', userSelect:'none' }}>
-                  <input type="checkbox" checked={types[i]} style={{ accentColor:'var(--cor,#B45309)', width:13, height:13 }}
+                <label key={ct} style={{ display:'flex', alignItems:'center', gap:6, background:'var(--g50)', border:`1.5px solid ${types[i]?'var(--t2)':'var(--bdr2)'}`, borderRadius:'var(--pill)', padding:'6px 13px', cursor:'pointer', fontSize:12, fontWeight:600, color:types[i]?'var(--t2)':'var(--t2)', userSelect:'none' }}>
+                  <input type="checkbox" checked={types[i]} style={{ accentColor:'var(--t2)', width:13, height:13 }}
                     onChange={e => { setTypes(prev => prev.map((v, j) => j === i ? e.target.checked : v)); dirty(); }} />
                   {ct}
                 </label>

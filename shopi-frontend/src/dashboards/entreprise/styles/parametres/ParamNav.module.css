@@ -47,18 +47,18 @@
   left: 0; top: 50%;
   transform: translateY(-50%);
   width: 3px; height: 18px;
-  background: var(--blue);
+  background: var(--t2);
   border-radius: 0 3px 3px 0;
 }
 .item i { width: 15px; text-align: center; font-size: 13px; flex-shrink: 0; color: var(--t4); }
-.item.active i, .item:hover i { color: var(--blue); }
-.item.danger { color: #DC2626; }
-.item.danger i { color: #DC2626; }
-.item.danger:hover { background: rgba(220,38,38,.08); }
-.pct { font-family: var(--fd); font-size: 10px; font-weight: 900; color: var(--blue); margin-left: auto; }
+.item.active i, .item:hover i { color: var(--t2); }
+.item.danger { color: var(--red); }
+.item.danger i { color: var(--red); }
+.item.danger:hover { background: var(--rs-bg, rgba(220,38,38,.08)); }
+.pct { font-family: var(--fd); font-size: 10px; font-weight: 900; color: var(--t2); margin-left: auto; }
 .dot { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.dot.red   { background: #DC2626; }
-.dot.amber { background: #B45309; }
+.dot.red   { background: var(--red); }
+.dot.amber { background: var(--amber); }
 .dot.blue  { background: var(--blue); }
 
 @media (max-width: 1100px) {

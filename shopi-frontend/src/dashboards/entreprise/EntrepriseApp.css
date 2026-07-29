@@ -50,12 +50,12 @@
   background: var(--btn, #111113); color: #fff; border: none;
   display: flex; align-items: center; justify-content: center;
   font-size: 18px;
-  box-shadow: 0 6px 20px rgba(59,130,246,.35);
+  box-shadow: 0 6px 20px rgba(128,128,128,.35);
   cursor: pointer; transition: all .25s;
 }
 .fab-main:hover {
   transform: scale(1.08);
-  box-shadow: 0 8px 28px rgba(59,130,246,.45);
+  box-shadow: 0 8px 28px rgba(128,128,128,.45);
 }
 
 /* ══ RESPONSIVE ══ */

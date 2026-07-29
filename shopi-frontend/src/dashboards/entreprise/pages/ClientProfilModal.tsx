@@ -47,23 +47,23 @@ interface ClientDetail {
 /* ── Constantes ── */
 
 const SEGMENT_META: Record<ClientSegment, { emoji: string; bg: string; color: string; border: string }> = {
-  VIP:      { emoji: '👑', bg: 'var(--am-bg)',  color: 'var(--amber)',   border: 'rgba(217,119,6,.22)'  },
-  Fidèle:   { emoji: '⭐', bg: 'var(--em-bg)', color: 'var(--emerald)', border: 'rgba(5,150,105,.22)'  },
-  Régulier: { emoji: '🔄', bg: 'var(--sky-2)', color: 'var(--blue)',    border: 'var(--sky-3)'         },
-  Nouveau:  { emoji: '🆕', bg: 'var(--vl-bg)', color: 'var(--violet)',  border: 'rgba(124,58,237,.22)' },
+  VIP:      { emoji: '👑', bg: 'var(--g100)',  color: 'var(--t2)',   border: 'rgba(128,128,128,.22)'  },
+  Fidèle:   { emoji: '⭐', bg: 'var(--g100)', color: 'var(--t2)', border: 'rgba(128,128,128,.22)'  },
+  Régulier: { emoji: '🔄', bg: 'var(--sky-2)', color: 'var(--t2)',    border: 'var(--sky-3)'         },
+  Nouveau:  { emoji: '🆕', bg: 'var(--g100)', color: 'var(--t2)',  border: 'rgba(128,128,128,.22)' },
   Abonné:   { emoji: '👁️', bg: 'var(--g100)',  color: 'var(--t2)',      border: 'var(--bdr2)'          },
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  pending:         { label: 'En attente',    color: '#B45309', bg: '#FEF3C7' },
-  paid:            { label: 'Payée',         color: '#0E7490', bg: '#CFFAFE' },
-  in_progress:     { label: 'En cours',      color: '#1A4FC4', bg: '#DBEAFE' },
-  awaiting_client: { label: 'À confirmer',   color: '#7C3AED', bg: '#EDE9FE' },
-  delivered:       { label: 'Livrée',        color: '#047857', bg: '#D1FAE5' },
-  auto_delivered:  { label: 'Livrée (auto)', color: '#047857', bg: '#D1FAE5' },
-  cancelled:       { label: 'Annulée',       color: '#DC2626', bg: '#FEE2E2' },
-  refunded:        { label: 'Remboursée',    color: '#6D28D9', bg: '#EDE9FE' },
-  disputed:        { label: 'Litige',        color: '#DC2626', bg: '#FEE2E2' },
+  pending:         { label: 'En attente',    color: 'var(--t2)', bg: 'var(--g100)' },
+  paid:            { label: 'Payée',         color: 'var(--t2)', bg: 'var(--g100)' },
+  in_progress:     { label: 'En cours',      color: 'var(--t2)', bg: 'var(--g100)' },
+  awaiting_client: { label: 'À confirmer',   color: 'var(--t2)', bg: 'var(--g100)' },
+  delivered:       { label: 'Livrée',        color: 'var(--t2)', bg: 'var(--g100)' },
+  auto_delivered:  { label: 'Livrée (auto)', color: 'var(--t2)', bg: 'var(--g100)' },
+  cancelled:       { label: 'Annulée',       color: 'var(--t1)', bg: 'var(--g100)' },
+  refunded:        { label: 'Remboursée',    color: 'var(--t2)', bg: 'var(--g100)' },
+  disputed:        { label: 'Litige',        color: 'var(--t1)', bg: 'var(--g100)' },
 };
 
 const MODE_LABELS: Record<string, string> = {
@@ -151,7 +151,7 @@ export default function ClientProfilModal({ clientId, onClose, onPop }: Props) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
 
               {/* Avatar */}
-              <div style={{ width: 56, height: 56, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: loading ? 'var(--g100)' : '#1A4FC4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#fff', border: '2.5px solid var(--sky-3)' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: loading ? 'var(--g100)' : 'var(--t2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#fff', border: '2.5px solid var(--sky-3)' }}>
                 {detail?.profilePicture
                   ? <img src={detail.profilePicture} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : loading ? null : getInitials(detail?.fullName ?? '?')
@@ -174,7 +174,7 @@ export default function ClientProfilModal({ clientId, onClose, onPop }: Props) {
                         </span>
                       )}
                       {detail?.isSuivi && (
-                        <span style={{ background: 'var(--em-bg)', color: 'var(--emerald)', border: '1px solid rgba(5,150,105,.22)', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>
+                        <span style={{ background: 'var(--g100)', color: 'var(--t2)', border: '1px solid rgba(128,128,128,.22)', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>
                           <i className="fas fa-check-circle" style={{ marginRight: 4 }} />Abonné
                         </span>
                       )}
@@ -225,7 +225,7 @@ export default function ClientProfilModal({ clientId, onClose, onPop }: Props) {
               { key: 'commandes',  label: `Commandes (${detail?.commandes.length ?? '…'})`, icon: 'fa-box' },
             ] as { key: 'apercu' | 'commandes'; label: string; icon: string }[]).map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                style={{ padding: '8px 16px', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', borderBottom: `2px solid ${tab === t.key ? 'var(--blue)' : 'transparent'}`, color: tab === t.key ? 'var(--blue)' : 'var(--t3)', transition: 'all .15s', display: 'flex', alignItems: 'center', gap: 6 }}>
+                style={{ padding: '8px 16px', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', borderBottom: `2px solid ${tab === t.key ? 'var(--t2)' : 'transparent'}`, color: tab === t.key ? 'var(--t2)' : 'var(--t3)', transition: 'all .15s', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <i className={`fas ${t.icon}`} style={{ fontSize: 11 }} />{t.label}
               </button>
             ))}
@@ -247,7 +247,7 @@ export default function ClientProfilModal({ clientId, onClose, onPop }: Props) {
           {!loading && error && (
             <div style={{ textAlign: 'center', padding: '40px 0' }}>
               <div style={{ fontSize: 36, marginBottom: 8 }}>⚠️</div>
-              <div style={{ fontWeight: 700, color: 'var(--rose)', marginBottom: 6 }}>Erreur de chargement</div>
+              <div style={{ fontWeight: 700, color: 'var(--t2)', marginBottom: 6 }}>Erreur de chargement</div>
               <div style={{ fontSize: 12.5, color: 'var(--t3)' }}>{error}</div>
             </div>
           )}
@@ -263,9 +263,9 @@ export default function ClientProfilModal({ clientId, onClose, onPop }: Props) {
                 </div>
                 <div className="gridR2" style={{ gap: 10 }}>
                   {[
-                    { label: 'Commandes passées',   val: String(detail.totalOrders), color: 'var(--blue)'    },
+                    { label: 'Commandes passées',   val: String(detail.totalOrders), color: 'var(--t2)'    },
                     { label: 'Total dépensé',        val: fmtGNF(detail.totalSpent), color: 'var(--navy)'   },
-                    { label: 'Abonné à la boutique', val: detail.isSuivi ? '✅ Oui' : '❌ Non', color: detail.isSuivi ? 'var(--emerald)' : 'var(--t3)' },
+                    { label: 'Abonné à la boutique', val: detail.isSuivi ? '✅ Oui' : '❌ Non', color: detail.isSuivi ? 'var(--t2)' : 'var(--t3)' },
                     { label: 'Segment',              val: `${seg?.emoji} ${detail.segment}`, color: seg?.color ?? 'var(--t2)' },
                   ].map(item => (
                     <div key={item.label} style={{ padding: '10px 12px', background: 'var(--white)', border: '1px solid var(--bdr)', borderRadius: 10 }}>
@@ -292,7 +292,7 @@ export default function ClientProfilModal({ clientId, onClose, onPop }: Props) {
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontFamily: 'monospace', fontSize: 12.5, fontWeight: 700, color: 'var(--blue)' }}>{c.numero}</span>
+                            <span style={{ fontFamily: 'monospace', fontSize: 12.5, fontWeight: 700, color: 'var(--t2)' }}>{c.numero}</span>
                             <span style={{ background: st.bg, color: st.color, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>{st.label}</span>
                           </div>
                           <div style={{ fontSize: 11.5, color: 'var(--t3)', marginTop: 2 }}>
@@ -337,7 +337,7 @@ export default function ClientProfilModal({ clientId, onClose, onPop }: Props) {
                         {/* Numéro + date */}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-                            <span style={{ fontFamily: 'monospace', fontSize: 12.5, fontWeight: 700, color: 'var(--blue)' }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: 12.5, fontWeight: 700, color: 'var(--t2)' }}>
                               {c.numero}
                             </span>
                             <span style={{ background: st.bg, color: st.color, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>
@@ -351,7 +351,7 @@ export default function ClientProfilModal({ clientId, onClose, onPop }: Props) {
                             {c.livraisonEffective && (
                               <>
                                 <span>·</span>
-                                <span style={{ color: 'var(--emerald)' }}>
+                                <span style={{ color: 'var(--t2)' }}>
                                   <i className="fas fa-check" style={{ marginRight: 3 }} />
                                   Livré le {fmtDate(c.livraisonEffective)}
                                 </span>

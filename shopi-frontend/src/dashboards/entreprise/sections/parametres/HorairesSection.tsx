@@ -72,9 +72,9 @@ export default function HorairesSection({ data, saving, onDirty, onToast, saveHo
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           {horaires.map(h => (
             <div key={h.jour} style={{
-              display:'flex', alignItems:'center', gap:14,
+              display:'flex', alignItems:'center', flexWrap:'wrap', gap:'10px 14px',
               padding:'12px 16px', borderRadius:'var(--r-lg)',
-              background: h.actif ? 'var(--sky,#EEF3FD)' : 'var(--g50)',
+              background: h.actif ? 'var(--sky,var(--g100))' : 'var(--g50)',
               border:`1.5px solid ${h.actif ? 'var(--sky-3,#C8D9F8)' : 'var(--bdr)'}`,
               transition:'all .2s',
             }}>
@@ -84,7 +84,7 @@ export default function HorairesSection({ data, saving, onDirty, onToast, saveHo
                   onClick={() => updateJour(h.jour, 'actif', !h.actif)}
                   style={{
                     width:40, height:22, borderRadius:11,
-                    background: h.actif ? 'var(--teal,#0E7490)' : 'var(--g300)',
+                    background: h.actif ? 'var(--t2)' : 'var(--g300)',
                     position:'relative', cursor:'pointer', transition:'background .2s',
                     flexShrink:0,
                   }}
@@ -104,19 +104,19 @@ export default function HorairesSection({ data, saving, onDirty, onToast, saveHo
 
               {/* Plages horaires */}
               {h.actif ? (
-                <div style={{ display:'flex', alignItems:'center', gap:8, flex:1 }}>
+                <div style={{ display:'flex', alignItems:'center', flexWrap:'wrap', gap:8, flex:'1 1 220px', minWidth:0 }}>
                   <input
                     type="time"
                     value={h.ouverture ?? '08:00'}
                     onChange={e => updateJour(h.jour, 'ouverture', e.target.value)}
-                    style={{ padding:'6px 10px', border:'1.5px solid var(--bdr2)', borderRadius:'var(--r-md)', fontSize:13, color:'var(--navy)', background:'var(--white)', cursor:'pointer' }}
+                    style={{ width:110, maxWidth:'100%', padding:'6px 10px', border:'1.5px solid var(--bdr2)', borderRadius:'var(--r-md)', fontSize:13, color:'var(--navy)', background:'var(--white)', cursor:'pointer' }}
                   />
                   <span style={{ color:'var(--t3)', fontSize:13 }}>→</span>
                   <input
                     type="time"
                     value={h.fermeture ?? '20:00'}
                     onChange={e => updateJour(h.jour, 'fermeture', e.target.value)}
-                    style={{ padding:'6px 10px', border:'1.5px solid var(--bdr2)', borderRadius:'var(--r-md)', fontSize:13, color:'var(--navy)', background:'var(--white)', cursor:'pointer' }}
+                    style={{ width:110, maxWidth:'100%', padding:'6px 10px', border:'1.5px solid var(--bdr2)', borderRadius:'var(--r-md)', fontSize:13, color:'var(--navy)', background:'var(--white)', cursor:'pointer' }}
                   />
                 </div>
               ) : (

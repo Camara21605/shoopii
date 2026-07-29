@@ -94,7 +94,7 @@ export default function NotifsSection({ data, saving, onDirty, onToast, saveNoti
               <span style={{ fontSize:13, color:'var(--t1)' }}>{item.label}</span>
               <div onClick={() => toggle(item.key)}
                 style={{ width:44, height:24, borderRadius:12, cursor:'pointer', flexShrink:0,
-                  background: notifs[item.key] ? 'var(--teal,#0E7490)' : 'var(--g300)',
+                  background: notifs[item.key] ? 'var(--t2)' : 'var(--g300)',
                   position:'relative', transition:'background .2s' }}>
                 <div style={{ position:'absolute', top:3, width:18, height:18, borderRadius:'50%',
                   background:'#fff', transition:'left .2s', boxShadow:'0 1px 3px rgba(0,0,0,.2)',

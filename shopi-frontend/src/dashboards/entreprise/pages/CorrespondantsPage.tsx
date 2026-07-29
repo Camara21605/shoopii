@@ -731,7 +731,7 @@ export default function CorrespondantsPage() {
                     <div className={styles.cardStat}><strong>{c.thisMonth}</strong><span>ce mois</span></div>
                     <div className={styles.cardStat}><strong>{c.totalMissions}</strong><span>total</span></div>
                     <div className={styles.cardStat}>
-                      <i className="fas fa-star" style={{ color:'var(--amber)', fontSize:11 }} />
+                      <i className="fas fa-star" style={{ color:'var(--t2)', fontSize:11 }} />
                       <strong>{c.averageRating === 0 ? 'N/A' : c.averageRating.toFixed(1)}</strong>
                       <span>note</span>
                     </div>
@@ -772,7 +772,7 @@ export default function CorrespondantsPage() {
                       <td className={styles.td}><span className={`${styles.typeBadge} ${typeCls(c.type, styles)}`}>{typeLabel(c.type)}</span></td>
                       <td className={styles.td}><strong style={{ color:'var(--navy)', fontFamily:'var(--fd)' }}>{c.thisMonth}</strong></td>
                       <td className={styles.td}><strong style={{ color:'var(--navy)' }}>{c.totalMissions}</strong></td>
-                      <td className={styles.td}><div className={styles.listRating}><i className="fas fa-star" style={{ color:'var(--amber)', fontSize:11 }} /><strong>{c.averageRating === 0 ? 'N/A' : c.averageRating.toFixed(1)}</strong></div></td>
+                      <td className={styles.td}><div className={styles.listRating}><i className="fas fa-star" style={{ color:'var(--t2)', fontSize:11 }} /><strong>{c.averageRating === 0 ? 'N/A' : c.averageRating.toFixed(1)}</strong></div></td>
                       <td className={styles.td}><span className={`${styles.statutBadge} ${statutCls(c.status, styles)}`}>{statutLabel(c.status)}</span></td>
                       <td className={styles.td}>
                         <div className={styles.listActions}>

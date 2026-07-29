@@ -33,7 +33,7 @@ export default function ReseauLivreursPage({ onPop, onView }: Props) {
           )}
 
           {error && !loading && (
-            <div style={{ marginBottom: 14, padding: '10px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, fontSize: 12.5, color: '#991B1B' }}>
+            <div style={{ marginBottom: 14, padding: '10px 14px', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 10, fontSize: 12.5, color: 'var(--t1)' }}>
               <i className="fas fa-triangle-exclamation" /> {error} — données de démonstration affichées.
             </div>
           )}
@@ -57,17 +57,17 @@ export default function ReseauLivreursPage({ onPop, onView }: Props) {
                     <div style={{ fontFamily: 'var(--fd)', fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{l.fullName}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 10, color: 'var(--t3)', marginTop: 2, flexWrap: 'wrap' }}>
                       <span>{l.zone}</span>
-                      <span><i className="fas fa-star" style={{ color: 'var(--amber)' }} /> {l.averageRating}</span>
+                      <span><i className="fas fa-star" style={{ color: 'var(--t2)' }} /> {l.averageRating}</span>
                       <span>{l.totalLivraisons} livraisons</span>
-                      {l.disponible && <span style={{ background: 'var(--em-bg)', color: 'var(--emerald)', fontWeight: 700, padding: '1px 7px', borderRadius: 'var(--pill)' }}>Disponible</span>}
+                      {l.disponible && <span style={{ background: 'var(--g100)', color: 'var(--t2)', fontWeight: 700, padding: '1px 7px', borderRadius: 'var(--pill)' }}>Disponible</span>}
                     </div>
                   </div>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleFollow(l.id, l.fullName, l.isSuivi); }}
                     style={{
-                      background:   l.isSuivi ? 'var(--white)' : 'var(--blue)',
-                      color:        l.isSuivi ? 'var(--blue)'  : '#fff',
-                      border:       '1px solid var(--blue)',
+                      background:   l.isSuivi ? 'var(--white)' : 'var(--t2)',
+                      color:        l.isSuivi ? 'var(--t2)'  : '#fff',
+                      border:       '1px solid var(--t2)',
                       borderRadius: 'var(--pill)',
                       padding:      '6px 14px',
                       fontSize:     11,

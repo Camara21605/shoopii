@@ -30,8 +30,8 @@
   vertical-align: middle;
 }
 .badge.new  { background: rgba(0,0,0,.06); color: var(--t2); }
-.badge.rec  { background: var(--em-bg); color: #047857; }
-.badge.attn { background: rgba(220,38,38,.09); color: #DC2626; }
+.badge.rec  { background: var(--g100); color: var(--t2); }
+.badge.attn { background: rgba(128,128,128,.09); color: var(--t1); }
 
 /* Toggle switch */
 .toggle { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
@@ -54,5 +54,5 @@
   transition: transform 0.22s;
   box-shadow: 0 1px 4px rgba(0,0,0,.2);
 }
-.toggle input:checked + .slider { background: var(--teal, #0E7490); }
+.toggle input:checked + .slider { background: var(--teal, var(--t2)); }
 .toggle input:checked + .slider::before { transform: translateX(18px); }

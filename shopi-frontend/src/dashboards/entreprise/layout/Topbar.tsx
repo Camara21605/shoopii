@@ -142,6 +142,14 @@ export default function Topbar({
     return () => { document.body.style.overflow = ''; };
   }, [mobileMenuOpen]);
 
+  /* Fermer le drawer mobile avec Escape */
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const fn = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileMenuOpen(false); };
+    document.addEventListener('keydown', fn);
+    return () => document.removeEventListener('keydown', fn);
+  }, [mobileMenuOpen]);
+
   /* ── Actions ── */
   function handleSwitchHome() {
     setAvatarOpen(false);
@@ -325,7 +333,8 @@ export default function Topbar({
       {/* ════════ DRAWER MOBILE (menu complet) ════════ */}
       {mobileMenuOpen && (
         <div className="tb-drawer-overlay" onClick={() => setMobileMenuOpen(false)}>
-          <div className="tb-drawer" onClick={e => e.stopPropagation()}>
+          <div className="tb-drawer" role="dialog" aria-modal="true" aria-label="Menu de navigation"
+            onClick={e => e.stopPropagation()}>
 
             {/* En-tête boutique */}
             <div className="tb-drawer-head">

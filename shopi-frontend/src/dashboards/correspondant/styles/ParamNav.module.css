@@ -1,6 +1,6 @@
 /* ================================================================
  * ParamNav.module.css — Navigation paramètres correspondant
- * Couleur accent : --cor / --cor-lt (thème amber)
+ * Noir pur en mode sombre, blanc pur en mode clair, aucune autre couleur
  * Desktop : barre verticale sticky
  * ≤1100px : onglets horizontaux scrollables (pills)
  * ================================================================ */
@@ -15,13 +15,13 @@
   top: calc(var(--hdr, 64px) + 18px);
 }
 
-/* Ligne amber décorative en haut */
+/* Ligne décorative en haut */
 .nav::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--cor, #B45309), var(--cor-lt, #F59E0B), transparent);
+  background: linear-gradient(90deg, var(--t3), transparent);
   border-radius: var(--r-xl, 26px) var(--r-xl, 26px) 0 0;
   opacity: .6;
   pointer-events: none;
@@ -45,32 +45,32 @@
   cursor: pointer; transition: all .18s;
   position: relative; margin-bottom: 2px;
 }
-.item:hover { background: var(--cor-bg, rgba(180,83,9,.09)); color: var(--cor, #B45309); }
-.item:hover .icon { color: var(--cor) !important; }
+.item:hover { background: var(--g100); color: var(--t1); }
+.item:hover .icon { color: var(--t1) !important; }
 
 /* Item actif */
-.itemOn { background: var(--cor-bg); color: var(--cor, #B45309); font-weight: 700; }
+.itemOn { background: var(--g100); color: var(--t1); font-weight: 700; }
 .itemOn::before {
   content: '';
   position: absolute; left: 0; top: 50%; transform: translateY(-50%);
   width: 3px; height: 18px;
-  background: var(--cor); border-radius: 0 3px 3px 0;
+  background: var(--t1); border-radius: 0 3px 3px 0;
 }
-.itemOn .icon { color: var(--cor) !important; }
+.itemOn .icon { color: var(--t1) !important; }
 
-/* Item danger */
-.itemDanger       { color: var(--red, #DC2626) !important; }
-.itemDanger:hover { background: rgba(220,38,38,.06) !important; color: var(--red) !important; }
-.itemDanger .icon { color: var(--red) !important; }
+/* Item danger (distinction par le poids, pas la couleur) */
+.itemDanger       { font-weight: 700 !important; }
+.itemDanger:hover { background: var(--g100) !important; color: var(--t1) !important; }
+.itemDanger .icon { color: var(--t2) !important; }
 
 /* Icône */
 .icon { width: 15px; text-align: center; font-size: 13px; flex-shrink: 0; color: var(--t4); transition: color .18s; }
 
 /* Badges droite */
-.pct { margin-left: auto; font-family: var(--fd); font-size: 10px; font-weight: 800; color: var(--cor); flex-shrink: 0; }
-.dot { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.dotR { background: var(--red, #DC2626); }
-.dotA { background: var(--cor, #B45309); }
+.pct { margin-left: auto; font-family: var(--fd); font-size: 10px; font-weight: 800; color: var(--t2); flex-shrink: 0; }
+.dot { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--t3); }
+.dotR { background: var(--t2); }
+.dotA { background: var(--t2); }
 
 /* ── Responsive : onglets scrollables ── */
 @media (max-width: 1100px) {
@@ -107,20 +107,20 @@
     border: 1.5px solid var(--bdr2);
   }
   .item span { display: inline; }
-  .item:hover { background: var(--cor-bg, rgba(180,83,9,.09)); border-color: rgba(180,83,9,.3); color: var(--cor, #B45309); }
+  .item:hover { background: var(--g100); border-color: var(--bdr2); color: var(--t1); }
 
   .itemOn {
-    background: var(--cor, #B45309);
-    border-color: var(--cor, #B45309);
+    background: var(--btn, #111113);
+    border-color: var(--btn, #111113);
     color: #fff;
     font-weight: 700;
   }
   .itemOn::before { display: none; }
   .itemOn .icon { color: #fff !important; }
-  .itemOn:hover { background: var(--cor); }
+  .itemOn:hover { background: var(--btn-h, #1C1C1F); }
 
-  .itemDanger { border-color: rgba(220,38,38,.25); color: var(--red, #DC2626) !important; background: rgba(220,38,38,.05); }
-  .itemDanger.itemOn { background: var(--red, #DC2626); border-color: var(--red, #DC2626); color: #fff !important; }
+  .itemDanger { font-weight: 700 !important; background: var(--g50); }
+  .itemDanger.itemOn { background: var(--btn, #111113); border-color: var(--btn, #111113); color: #fff !important; }
   .itemDanger.itemOn .icon { color: #fff !important; }
 
   .icon { width: auto; }

@@ -137,7 +137,7 @@ export default function ParametresPage() {
   if (error) {
     return (
       <div className="page on" style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'60vh' }}>
-        <div style={{ textAlign:'center', color:'var(--red,#DC2626)' }}>
+        <div style={{ textAlign:'center', color:'var(--t1)' }}>
           <i className="fas fa-triangle-exclamation" style={{ fontSize:28, marginBottom:12, display:'block' }} />
           {error}
           <br />

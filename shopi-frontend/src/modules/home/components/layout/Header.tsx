@@ -20,6 +20,7 @@ import { settingsApi }                        from '../settings/api/settings.api
 import { NotificationProvider }               from '../../../../shared/notifications/NotificationContext';
 import NotificationToastStack                 from '../../../../shared/notifications/NotificationToastStack';
 import NotificationCenter                     from '../../../../shared/notifications/NotificationCenter';
+import { useAuthGate }                        from '../../../../shared/hooks/useAuthGate';
 
 type NavKey = 'explorer' | 'boutiques' | 'livreurs' | 'relais' | 'offres';
 
@@ -35,7 +36,6 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
   const [searchFocus,  setSearchFocus]  = useState(false);
   const [mobileSearch, setMobileSearch] = useState(false);
   const [avatarOpen,   setAvatarOpen]   = useState(false);
-  const [clientModal,  setClientModal]  = useState(false);
   const [avatarUrl,    setAvatarUrl]    = useState<string | null>(null);
   const [activeNav,    setActiveNav]    = useState<NavKey | null>(null);
   const avatarRefDesktop = useRef<HTMLDivElement>(null);
@@ -76,10 +76,11 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
     } catch { return 'U'; }
   })();
 
+  const { openAuthModal, authModal } = useAuthGate();
+
   function clientAction(action: () => void) {
-    if (isClient)    { action(); return; }
-    if (isAnonymous) { navigate('/login'); return; }
-    setClientModal(true);
+    if (isClient) { action(); return; }
+    openAuthModal();
   }
 
   useEffect(() => {
@@ -534,36 +535,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
 
       </nav>
 
-      {/* Modal non-client */}
-      {clientModal && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(11,31,58,.6)', zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(4px)' }}
-          onClick={() => setClientModal(false)}>
-          <div style={{ background:'var(--white)', borderRadius:22, padding:32, maxWidth:420, width:'100%', boxShadow:'0 24px 64px rgba(11,31,58,.3)', textAlign:'center' }}
-            onClick={e => e.stopPropagation()}>
-            <div style={{ width:68, height:68, borderRadius:'50%', background:'linear-gradient(135deg,var(--blue,#1A4FC4),#5B8EF4)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:28, margin:'0 auto 18px' }}>🛒</div>
-            <div style={{ fontFamily:'var(--fd)', fontWeight:800, fontSize:20, color:'var(--navy,#0B1F3A)', marginBottom:10 }}>Fonctionnalité réservée aux clients</div>
-            <p style={{ fontSize:14, color:'var(--t2)', lineHeight:1.7, marginBottom:24 }}>
-              Cette fonctionnalité est réservée aux <strong>comptes clients Shopi</strong>.<br />
-              Créez un compte client gratuit pour accéder à votre panier, vos commandes et vos messages.
-            </p>
-            {isNonClient && (
-              <div style={{ background:'rgba(26,79,196,.08)', border:'1px solid rgba(26,79,196,.2)', borderRadius:10, padding:'10px 14px', fontSize:12, color:'var(--blue,#1A4FC4)', marginBottom:20, textAlign:'left' }}>
-                💡 Vous avez un compte <strong>{role}</strong>. Vous pouvez créer un compte client séparé avec une autre adresse email.
-              </div>
-            )}
-            <div style={{ display:'flex', gap:10, justifyContent:'center', flexDirection:'column' }}>
-              <button onClick={() => { setClientModal(false); navigate('/register'); }}
-                style={{ background:'linear-gradient(135deg,var(--navy,#0B1F3A),var(--blue,#1A4FC4))', color:'#fff', border:'none', borderRadius:12, padding:'14px 24px', fontSize:14, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-                <i className="fas fa-user-plus" /> Créer mon compte client
-              </button>
-              <button onClick={() => setClientModal(false)}
-                style={{ background:'none', color:'var(--t3)', border:'1px solid var(--bdr2)', borderRadius:12, padding:'12px 24px', fontSize:13, fontWeight:600, cursor:'pointer' }}>
-                Plus tard
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {authModal}
     </NotificationProvider>
   );
 }

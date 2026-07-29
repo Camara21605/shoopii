@@ -53,35 +53,37 @@ export default function CommissionsSection({ onDirty, onToast }: Props) {
       <FormCard title="Grille de commissions" icon="fa-table-list" subtitle={`Votre plan actuel : ${current}`}
         action={<span className={`${s.badge} ${s.blue}`} style={{ fontSize:11, padding:'4px 12px' }}>{current}</span>}
       >
-        <table className={s.commTable}>
-          <thead><tr><th>Type de transaction</th><th>Commission Shopi</th><th>Frais livreur/corresp.</th><th>Retrait immédiat</th></tr></thead>
-          <tbody>
-            <tr>
-              <td style={{ fontWeight:600 }}>Vente directe via Shopi</td>
-              <td><span className={`${s.badge} ${s.green}`}>{tauxActuel}%</span></td>
-              <td><span className={`${s.badge} ${s.blue}`}>0</span></td>
-              <td><i className="fas fa-check-circle" style={{ color:'#047857' }} /></td>
-            </tr>
-            <tr>
-              <td style={{ fontWeight:600 }}>Vente avec livreur Shopi</td>
-              <td><span className={`${s.badge} ${s.green}`}>{tauxActuel}%</span></td>
-              <td><span className={`${s.badge} ${s.blue}`}>selon livreur</span></td>
-              <td><i className="fas fa-check-circle" style={{ color:'#047857' }} /></td>
-            </tr>
-            <tr>
-              <td style={{ fontWeight:600 }}>Vente via correspondant</td>
-              <td><span className={`${s.badge} ${s.green}`}>{tauxActuel}%</span></td>
-              <td><span className={`${s.badge} ${s.blue}`}>selon corresp.</span></td>
-              <td><i className="fas fa-check-circle" style={{ color:'#047857' }} /></td>
-            </tr>
-            <tr>
-              <td style={{ fontWeight:600 }}>Abonnement mensuel boutique</td>
-              <td><span className={`${s.badge} ${s.blue}`}>— (inclus)</span></td>
-              <td><span className={`${s.badge} ${s.blue}`}>—</span></td>
-              <td><i className="fas fa-xmark" style={{ color:'var(--t4)' }} /></td>
-            </tr>
-          </tbody>
-        </table>
+        <div className="tbl-wrap">
+          <table className={s.commTable}>
+            <thead><tr><th>Type de transaction</th><th>Commission Shopi</th><th>Frais livreur/corresp.</th><th>Retrait immédiat</th></tr></thead>
+            <tbody>
+              <tr>
+                <td style={{ fontWeight:600 }}>Vente directe via Shopi</td>
+                <td><span className={`${s.badge} ${s.green}`}>{tauxActuel}%</span></td>
+                <td><span className={`${s.badge} ${s.blue}`}>0</span></td>
+                <td><i className="fas fa-check-circle" style={{ color:'var(--emerald)' }} /></td>
+              </tr>
+              <tr>
+                <td style={{ fontWeight:600 }}>Vente avec livreur Shopi</td>
+                <td><span className={`${s.badge} ${s.green}`}>{tauxActuel}%</span></td>
+                <td><span className={`${s.badge} ${s.blue}`}>selon livreur</span></td>
+                <td><i className="fas fa-check-circle" style={{ color:'var(--emerald)' }} /></td>
+              </tr>
+              <tr>
+                <td style={{ fontWeight:600 }}>Vente via correspondant</td>
+                <td><span className={`${s.badge} ${s.green}`}>{tauxActuel}%</span></td>
+                <td><span className={`${s.badge} ${s.blue}`}>selon corresp.</span></td>
+                <td><i className="fas fa-check-circle" style={{ color:'var(--emerald)' }} /></td>
+              </tr>
+              <tr>
+                <td style={{ fontWeight:600 }}>Abonnement mensuel boutique</td>
+                <td><span className={`${s.badge} ${s.blue}`}>— (inclus)</span></td>
+                <td><span className={`${s.badge} ${s.blue}`}>—</span></td>
+                <td><i className="fas fa-xmark" style={{ color:'var(--t4)' }} /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </FormCard>
       <FormCard title="Passer à un plan supérieur" icon="fa-crown" subtitle="Réduisez vos commissions et accédez à des fonctionnalités avancées">
         <div className={s.radioGroup}>

@@ -21,6 +21,8 @@
   --nt-warn-bg:    #FFFBEB;
   --nt-warn-bd:    #FDE68A;
   --nt-warn-text:  #92400E;
+  --nt-err-bg:     #FFF5F5;
+  --nt-err-bd:     #FED7D7;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -40,7 +42,52 @@
     --nt-warn-bg:    #2D1F00;
     --nt-warn-bd:    #78350F;
     --nt-warn-text:  #FDE68A;
+    --nt-err-bg:     #2D1414;
+    --nt-err-bd:     #5C2323;
   }
+}
+
+/* ✅ Bascule EXPLICITE du thème via le site (ThemeContext → <html data-theme>) —
+   `prefers-color-scheme` seul ne réagit qu'à la préférence de l'OS et ignore
+   le choix fait dans l'app (ex: OS clair + "Mode sombre" cliqué dans Shopi). */
+:root[data-theme="dark"] {
+  --nt-bg:         #0D1526;
+  --nt-card:       #131E35;
+  --nt-border:     #1E2D4A;
+  --nt-text:       #E2E8F6;
+  --nt-muted:      #7A8BA8;
+  --nt-faint:      #4A5A7A;
+  --nt-blue:       #5B8BF0;
+  --nt-blue-bg:    #172040;
+  --nt-blue-bd:    #2A4080;
+  --nt-green:      #065F46;
+  --nt-red:        #7F1D1D;
+  --nt-red-text:   #FCA5A5;
+  --nt-warn-bg:    #2D1F00;
+  --nt-warn-bd:    #78350F;
+  --nt-warn-text:  #FDE68A;
+  --nt-err-bg:     #2D1414;
+  --nt-err-bd:     #5C2323;
+}
+/* Annule la préférence sombre de l'OS quand "Clair" est choisi explicitement */
+:root[data-theme="light"] {
+  --nt-bg:         #F8FAFF;
+  --nt-card:       #ffffff;
+  --nt-border:     #E5EBF5;
+  --nt-text:       #0B1F3A;
+  --nt-muted:      #7A8BA8;
+  --nt-faint:      #9AAACB;
+  --nt-blue:       #1A4FC4;
+  --nt-blue-bg:    #EEF2FF;
+  --nt-blue-bd:    #C7D7F8;
+  --nt-green:      #A7F3D0;
+  --nt-red:        #FCA5A5;
+  --nt-red-text:   #E53E3E;
+  --nt-warn-bg:    #FFFBEB;
+  --nt-warn-bd:    #FDE68A;
+  --nt-warn-text:  #92400E;
+  --nt-err-bg:     #FFF5F5;
+  --nt-err-bd:     #FED7D7;
 }
 
 /* ── Layout ── */
@@ -385,7 +432,7 @@
 .suggestItemIcon {
   width: 30px; height: 30px;
   border-radius: 7px;
-  background: #FEF3C7;
+  background: var(--nt-warn-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -408,8 +455,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #FFF5F5;
-  border: 1px solid #FED7D7;
+  background: var(--nt-err-bg);
+  border: 1px solid var(--nt-err-bd);
   border-radius: 10px;
   padding: 12px 16px;
   font-size: 13px;

@@ -67,8 +67,8 @@ function randomChars(n: number): string {
 // ─────────────────────────────────────────────────────────────
 
 const AVAIL_DOT: Record<Availability, string> = {
-  available:   '#10B981',
-  on_delivery: '#1A4FC4',
+  available:   'var(--t2)',
+  on_delivery: 'var(--t2)',
   offline:     '#9CA3AF',
 };
 
@@ -224,7 +224,7 @@ function ModalProfil({ l, onClose, onContact, onSuspend }: {
             href={`https://wa.me/${(l.phone ?? '').replace(/\s+/g, '')}`}
             target="_blank" rel="noreferrer"
             className={styles.btnSecondary}
-            style={{ color: '#25D366', borderColor: 'rgba(37,211,102,.3)' }}
+            style={{ color: 'var(--t2)', borderColor: 'rgba(128,128,128,.3)' }}
           >
             <i className="fab fa-whatsapp" /> WhatsApp
           </a>
@@ -777,17 +777,17 @@ export default function LivreursPage() {
 
                   <div className={styles.cardStats}>
                     <div className={styles.cardStat}>
-                      <i className="fas fa-star" style={{ color:'var(--amber)', fontSize:11 }} />
+                      <i className="fas fa-star" style={{ color:'var(--t2)', fontSize:11 }} />
                       <strong>{l.averageRating === 0 ? 'N/A' : l.averageRating.toFixed(1)}</strong>
                       <span>note</span>
                     </div>
                     <div className={styles.cardStat}>
-                      <i className="fas fa-box" style={{ color:'var(--blue)', fontSize:11 }} />
+                      <i className="fas fa-box" style={{ color:'var(--t2)', fontSize:11 }} />
                       <strong>{l.totalDeliveries}</strong>
                       <span>courses</span>
                     </div>
                     <div className={styles.cardStat}>
-                      <i className="fas fa-calendar-day" style={{ color:'var(--emerald)', fontSize:11 }} />
+                      <i className="fas fa-calendar-day" style={{ color:'var(--t2)', fontSize:11 }} />
                       <strong>{l.todayDeliveries}</strong>
                       <span>auj.</span>
                     </div>
@@ -811,7 +811,7 @@ export default function LivreursPage() {
                       target="_blank" rel="noreferrer"
                       className={styles.cardBtnIcon} title="WhatsApp"
                     >
-                      <i className="fab fa-whatsapp" style={{ color: '#25D366', fontSize: 14 }} />
+                      <i className="fab fa-whatsapp" style={{ color: 'var(--t2)', fontSize: 14 }} />
                     </a>
                     <a href={`tel:${l.phone}`} className={styles.cardBtnIcon} title="Appeler">
                       <i className="fas fa-phone" />
@@ -852,9 +852,9 @@ export default function LivreursPage() {
                       </td>
                       <td className={styles.td}><div className={styles.listVille}><i className="fas fa-map-pin" /> {l.zone ?? '–'}</div></td>
                       <td className={styles.td}><span style={{ fontSize:12, color:'var(--t2)', fontWeight:600 }}>{l.vehicleEmoji} {vehicleLabel(l.vehicleType as VehicleType)}</span></td>
-                      <td className={styles.td}><div className={styles.listRating}><i className="fas fa-star" style={{ color:'var(--amber)', fontSize:11 }} /><strong>{l.averageRating === 0 ? 'N/A' : l.averageRating.toFixed(1)}</strong></div></td>
+                      <td className={styles.td}><div className={styles.listRating}><i className="fas fa-star" style={{ color:'var(--t2)', fontSize:11 }} /><strong>{l.averageRating === 0 ? 'N/A' : l.averageRating.toFixed(1)}</strong></div></td>
                       <td className={styles.td}><strong style={{ color:'var(--navy)', fontFamily:'var(--fd)' }}>{l.totalDeliveries}</strong></td>
-                      <td className={styles.td}><strong style={{ color:'var(--emerald)', fontFamily:'var(--fd)' }}>{l.todayDeliveries}</strong></td>
+                      <td className={styles.td}><strong style={{ color:'var(--t2)', fontFamily:'var(--fd)' }}>{l.todayDeliveries}</strong></td>
                       <td className={styles.td}><BadgeAvail availability={l.availability as Availability} /></td>
                       <td className={styles.td}><span className={`${styles.statutBadge} ${STATUS_CLS[l.status as LivreurStatus]}`}>{STATUS_LABEL[l.status as LivreurStatus]}</span></td>
                       <td className={styles.td}>

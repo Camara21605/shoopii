@@ -31,7 +31,7 @@ export default function SecuriteSection({ onDirty, onToast }: Props) {
     onDirty();
   }
 
-  const PWD_COLORS = ['#DC2626', '#F59E0B', '#84CC16', '#16A34A'];
+  const PWD_COLORS = ['var(--t1)', 'var(--t2)', 'var(--t2)', 'var(--t1)'];
   const PWD_LABELS = ['Trop faible', 'Faible', 'Bon', 'Fort'];
 
   return (

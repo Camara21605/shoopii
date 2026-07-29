@@ -79,9 +79,9 @@ export default function SecPaiement({ data, saving, dirty, markClean, saveTrigge
       <div className={s.fc}>
         <div className={s.fcHd}><div><div className={s.fcTtl}><i className="fas fa-receipt" /> Taux de commission</div></div></div>
         <div className={s.fcBody}>
-          <div style={{ background:'var(--cor-bg)', border:'1px solid var(--bdr-cor)', borderRadius:'var(--r-lg)', padding:16, marginBottom:14 }}>
+          <div style={{ background:'var(--g100)', border:'1px solid var(--bdr2)', borderRadius:'var(--r-lg)', padding:16, marginBottom:14 }}>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
-              {COMMISSIONS.map(([l, v]) => (<div key={l} style={{ background:'var(--white)', borderRadius:'var(--r-md)', padding:11, textAlign:'center', border:'1px solid var(--bdr-cor)' }}><div style={{ fontSize:10, color:'var(--t3)', marginBottom:5 }}>{l}</div><div style={{ fontFamily:'var(--fd)', fontSize:14, fontWeight:800, color:'var(--cor,#B45309)' }}>{v}</div></div>))}
+              {COMMISSIONS.map(([l, v]) => (<div key={l} style={{ background:'var(--white)', borderRadius:'var(--r-md)', padding:11, textAlign:'center', border:'1px solid var(--bdr2)' }}><div style={{ fontSize:10, color:'var(--t3)', marginBottom:5 }}>{l}</div><div style={{ fontFamily:'var(--fd)', fontSize:14, fontWeight:800, color:'var(--t2)' }}>{v}</div></div>))}
             </div>
           </div>
           <div className={s.fg}>

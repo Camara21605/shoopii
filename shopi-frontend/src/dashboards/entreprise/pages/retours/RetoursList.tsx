@@ -176,7 +176,7 @@ export default function RetoursList({
                   return (
                     <tr key={r.id} onClick={() => onSelect(r.id)} style={{ cursor: 'pointer' }}>
                       <td>
-                        <div style={{ fontFamily: 'monospace', fontSize: 11.5, fontWeight: 700, color: 'var(--blue)' }}>
+                        <div style={{ fontFamily: 'monospace', fontSize: 11.5, fontWeight: 700, color: 'var(--t2)' }}>
                           {r.reference}
                         </div>
                       </td>
@@ -200,7 +200,7 @@ export default function RetoursList({
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <div style={{
                             width: 26, height: 26, borderRadius: '50%',
-                            background: 'var(--sky)', color: 'var(--blue)',
+                            background: 'var(--sky)', color: 'var(--t2)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: 11, fontWeight: 800, overflow: 'hidden', flexShrink: 0,
                           }}>
@@ -225,7 +225,7 @@ export default function RetoursList({
                           {fmt(r.montantDemande)} GNF
                         </div>
                         {r.montantAccorde !== null && r.montantAccorde !== r.montantDemande && (
-                          <div style={{ fontSize: 11, color: 'var(--emerald)' }}>
+                          <div style={{ fontSize: 11, color: 'var(--t2)' }}>
                             Accordé: {fmt(r.montantAccorde)} GNF
                           </div>
                         )}

@@ -3,6 +3,7 @@ import { useNavigate }  from 'react-router-dom';
 import styles           from './Cards.module.css';
 import { tokenStorage } from '../../../shared/services/apiFetch';
 import { useFollowToggle } from '../../../shared/hooks/useFollowToggle';
+import { useAuthGate }  from '../../../shared/hooks/useAuthGate';
 
 export interface LivreurCardData {
   id: string; fullName: string; profilePicture: string | null;
@@ -31,7 +32,8 @@ export default function CardLivreur({ l, onToast, onFollow }: Props) {
   const dispo      = l?.disponible ?? false;
 
   const suivi = l?.isSuivi ?? false;
-  const { loading, toggle } = useFollowToggle({ id, name, isSuivi: suivi, onFollow, onToast });
+  const { openAuthModal, authModal } = useAuthGate();
+  const { loading, toggle } = useFollowToggle({ id, name, isSuivi: suivi, onFollow, onToast, onRequireAuth: openAuthModal });
 
   const initials = name.trim().split(/\s+/).slice(0, 2)
     .map((w: string) => w[0]?.toUpperCase() ?? '').join('') || '?';
@@ -130,6 +132,8 @@ export default function CardLivreur({ l, onToast, onFollow }: Props) {
           </button>
         </div>
       </div>
+
+      {authModal}
     </div>
   );
 }

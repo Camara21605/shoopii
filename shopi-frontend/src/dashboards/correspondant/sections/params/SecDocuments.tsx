@@ -67,12 +67,12 @@ export default function SecDocuments({ data, onUpload, onDelete }: Props) {
         <div className={s.fcHd}>
           <div><div className={s.fcTtl}><i className="fas fa-shield-check" /> Statut de vérification</div></div>
           {data?.verificationStatus === 'verified' && (
-            <div style={{ background:'var(--em-bg)', color:'var(--emerald,#047857)', fontSize:11, fontWeight:700, padding:'5px 13px', borderRadius:'var(--pill)', border:'1px solid rgba(4,120,87,.2)', display:'flex', alignItems:'center', gap:5 }}>
+            <div style={{ background:'var(--g100)', color:'var(--t2)', fontSize:11, fontWeight:700, padding:'5px 13px', borderRadius:'var(--pill)', border:'1px solid var(--bdr2)', display:'flex', alignItems:'center', gap:5 }}>
               <i className="fas fa-shield-check" /> Correspondant vérifié
             </div>
           )}
           {data?.verificationStatus === 'reviewing' && (
-            <div style={{ background:'var(--cor-bg)', color:'var(--cor,#B45309)', fontSize:11, fontWeight:700, padding:'5px 13px', borderRadius:'var(--pill)', border:'1px solid var(--bdr-cor)', display:'flex', alignItems:'center', gap:5 }}>
+            <div style={{ background:'var(--g100)', color:'var(--t2)', fontSize:11, fontWeight:700, padding:'5px 13px', borderRadius:'var(--pill)', border:'1px solid var(--bdr2)', display:'flex', alignItems:'center', gap:5 }}>
               <i className="fas fa-clock" /> Vérification en cours
             </div>
           )}
@@ -100,7 +100,7 @@ export default function SecDocuments({ data, onUpload, onDelete }: Props) {
                     {/* Lien vers le document uploadé */}
                     {hasFile && (
                       <a href={data![fieldKey] as string} target="_blank" rel="noreferrer"
-                        style={{ fontSize:10, color:'var(--cli,#1A4FC4)', marginTop:2, display:'inline-flex', alignItems:'center', gap:4 }}>
+                        style={{ fontSize:10, color:'var(--t2)', marginTop:2, display:'inline-flex', alignItems:'center', gap:4 }}>
                         <i className="fas fa-link" /> Voir le document
                       </a>
                     )}
@@ -112,7 +112,7 @@ export default function SecDocuments({ data, onUpload, onDelete }: Props) {
                     </button>
                     {hasFile && (
                       <button onClick={() => onDelete(docType).then(() => pop('🗑️ Document supprimé', 'w'))}
-                        style={{ background:'rgba(220,38,38,.07)', color:'var(--red)', border:'1px solid rgba(220,38,38,.2)', borderRadius:'var(--r-sm)', padding:'6px 10px', fontSize:11, cursor:'pointer' }}>
+                        style={{ background:'var(--g100)', color:'var(--t1)', border:'1px solid var(--bdr2)', borderRadius:'var(--r-sm)', padding:'6px 10px', fontSize:11, cursor:'pointer' }}>
                         <i className="fas fa-trash-can" />
                       </button>
                     )}

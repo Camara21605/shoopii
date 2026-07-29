@@ -16,6 +16,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { apiFetch, tokenStorage } from '../../../../../shared/services/apiFetch';
 import { useStartConversation }   from '../../../../../shared/hooks/useStartConversation';
+import { useAuthGate }            from '../../../../../shared/hooks/useAuthGate';
 
 /* ── Layout global ── */
 import Header from '../../layout/Header';
@@ -240,6 +241,7 @@ export default function BoutiquePage() {
   const [promos,         setPromos]         = useState<PromoPublic[]>([]);
   const [promosLoading,  setPromosLoading]  = useState(false);
   const isLoggedIn = !!tokenStorage.get();
+  const { openAuthModal, authModal } = useAuthGate();
 
   // ── Toast ────────────────────────────────────────────────────
   const [toastMsg,     setToastMsg]     = useState('');
@@ -256,7 +258,7 @@ export default function BoutiquePage() {
   // ── Toggle suivi boutique (appel API réel) ───────────────────
   const handleToggleSuivi = useCallback(async () => {
     if (!companyId || suiviPending) return;
-    if (!isLoggedIn) { showToast('Connectez-vous pour suivre cette boutique'); return; }
+    if (!isLoggedIn) { openAuthModal(); return; }
 
     setSuiviPending(true);
     const wasFollowing = suivi;
@@ -459,7 +461,11 @@ export default function BoutiquePage() {
           suiviPending={suiviPending}
           msgLoading={msgLoading}
           onToggleSuivi={handleToggleSuivi}
-          onMessage={() => startConv('company', companyId ?? '', msg => showToast(`❌ ${msg}`))}
+          onMessage={() => {
+            if (!isLoggedIn) { openAuthModal(); return; }
+            if (!suivi)      { showToast('Abonnez-vous à la boutique pour lui envoyer un message'); return; }
+            startConv('company', companyId ?? '', msg => showToast(`❌ ${msg}`));
+          }}
           onPartage={() => setPartageOpen(true)}
         />
 
@@ -539,6 +545,8 @@ export default function BoutiquePage() {
         <i className="fas fa-circle-check" />
         <span>{toastMsg}</span>
       </div>
+
+      {authModal}
     </div>
   );
 }

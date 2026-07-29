@@ -38,7 +38,7 @@
 @media (max-width: 640px) { .emptyBtnSecondary { display: flex; } }
 
 .emptyBtn {
-  background: var(--navy); color: #fff; border: none;
+  background: var(--btn, #111113); color: #fff; border: none;
   border-radius: var(--pill); padding: 12px 26px;
   font-size: 13px; font-weight: 700; margin-top: 6px;
   display: flex; align-items: center; gap: 8px;
@@ -142,7 +142,7 @@
   border-radius: var(--r-xl) var(--r-xl) var(--r-xl) 4px; box-shadow: var(--sh-xs);
 }
 .msgRow.firstGroup .bubble.recv { border-radius: 4px var(--r-xl) var(--r-xl) var(--r-xl); }
-.bubble.sent { background: var(--navy); color: rgba(255,255,255,.95); border-radius: var(--r-xl) var(--r-xl) 4px var(--r-xl); }
+.bubble.sent { background: var(--btn, #111113); color: rgba(255,255,255,.95); border-radius: var(--r-xl) var(--r-xl) 4px var(--r-xl); }
 .msgRow.firstGroup .bubble.sent { border-radius: var(--r-xl) 4px var(--r-xl) var(--r-xl); }
 
 /* Hover actions bulle */
@@ -252,12 +252,12 @@
 .mpBody { padding: 10px 12px; }
 .mpNm { font-family: var(--fd); font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
 .mpPrice { font-family: var(--fd); font-size: 14px; font-weight: 800; color: var(--teal, #0E7490); }
-.mpBtn { width: 100%; background: var(--navy); color: #fff; border: none; border-radius: var(--r-sm); padding: 8px; font-size: 11px; font-weight: 700; margin-top: 8px; cursor: pointer; transition: background 0.2s; font-family: var(--fb); }
+.mpBtn { width: 100%; background: var(--btn, #111113); color: #fff; border: none; border-radius: var(--r-sm); padding: 8px; font-size: 11px; font-weight: 700; margin-top: 8px; cursor: pointer; transition: background 0.2s; font-family: var(--fb); }
 .mpBtn:hover { background: #112648; }
 
 /* Carte commande */
 .msgOrder { background: var(--g50); border: 1px solid var(--bdr); border-radius: var(--r-lg); overflow: hidden; margin-top: 6px; max-width: 280px; }
-.moHd { padding: 10px 12px; background: var(--navy); display: flex; align-items: center; gap: 8px; }
+.moHd { padding: 10px 12px; background: var(--btn, #111113); display: flex; align-items: center; gap: 8px; }
 .moId { font-family: var(--fd); font-size: 11px; font-weight: 800; color: rgba(200,217,248,.7); }
 .moStatus { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: var(--pill); margin-left: auto; background: rgba(14,116,144,.2); color: #67E8F9; }
 .moBody { padding: 10px 12px; }
@@ -320,7 +320,7 @@
   transition: transform .15s, background .2s;
 }
 .mvBtn:hover { background: #0c6480; transform: scale(1.08); }
-.msgVoiceMe .mvBtn { background: rgba(255,255,255,.9); color: var(--navy); }
+.msgVoiceMe .mvBtn { background: rgba(255,255,255,.9); color: var(--btn, #111113); }
 .msgVoiceMe .mvBtn:hover { background: #fff; }
 .mvBar {
   flex: 1; height: 28px;
@@ -465,7 +465,7 @@
 .msgInp::-webkit-scrollbar { display: none; }
 .emojiBtn { color: var(--t3); font-size: 16px; transition: color 0.2s; flex-shrink: 0; align-self: flex-end; border: none; background: none; cursor: pointer; }
 .emojiBtn:hover { color: var(--amber,#B45309); }
-.sendBtn { width: 44px; height: 44px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.25s; flex-shrink: 0; border: none; cursor: pointer; }
+.sendBtn { width: 44px; height: 44px; border-radius: 50%; background: var(--btn, #111113); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.25s; flex-shrink: 0; border: none; cursor: pointer; }
 .sendBtn:hover { background: var(--teal,#0E7490); transform: scale(1.08); box-shadow: 0 6px 20px rgba(14,116,144,.28); }
 .sendBtn.active { background: var(--teal,#0E7490); }
 
@@ -481,7 +481,7 @@
 
 /* ── Panneau prévisualisation média ── */
 .mediaPrev {
-  background: var(--navy);
+  background: var(--btn, #111113);
   border-radius: var(--r-xl);
   overflow: hidden;
   margin-bottom: 12px;

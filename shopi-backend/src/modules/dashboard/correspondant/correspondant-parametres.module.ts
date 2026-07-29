@@ -33,6 +33,11 @@ import { CorrespondantHoraire } from '../../../database/entities/profiles/corres
 import { User }                 from '../../../database/entities/user.entity';
 import { PlatformSettings }     from '../../../database/entities/platform-settings.entity';
 import { PaiementDistribution } from '../../../database/entities/paiement/paiement-distribution.entity';
+import { Commande }             from '../../../database/entities/commande/commande.entity';
+import { CommandeCode }         from '../../../database/entities/commande/commande-code.entity';
+import { Company }              from '../../../database/entities/profiles/entreprise-profile.entity';
+import { Client }               from '../../../database/entities/profiles/client-profile.entity';
+import { Delivery }             from '../../../database/entities/profiles/livreur-profile.entity';
 
 /* ── Controllers ── */
 import { CorrespondantParametresController } from './correspondant-parametres.controller';
@@ -53,9 +58,16 @@ import { SecuriteService }        from './services/securite.service';
 import { NotificationsService }   from './services/notifications.service';
 import { ConfidentialiteService } from './services/confidentialite.service';
 import { DangerService }          from './services/danger.service';
+import { ColisManagementService }      from './services/colis-management.service';
+import { BoutiquesManagementService }  from './services/boutiques-management.service';
+import { LivreursManagementService }   from './services/livreurs-management.service';
+import { ClientsManagementService }    from './services/clients-management.service';
+import { ZoneManagementService }       from './services/zone-management.service';
+import { OverviewAggregateService }    from './services/overview-aggregate.service';
 
 /* ── Module upload Cloudinary ── */
-import { UploadModule } from '../../upload/upload.module';
+import { UploadModule }     from '../../upload/upload.module';
+import { MessagerieModule } from '../../messagerie/messagerie.module';
 
 @Module({
   imports: [
@@ -71,10 +83,18 @@ import { UploadModule } from '../../upload/upload.module';
       User,
       PlatformSettings,
       PaiementDistribution,
+      Commande,
+      CommandeCode,
+      Company,
+      Client,
+      Delivery,
     ]),
 
     /* Module Cloudinary pour les uploads photo et documents */
     UploadModule,
+
+    /* PresenceService (statut en ligne des livreurs) */
+    MessagerieModule,
   ],
 
   controllers: [
@@ -97,6 +117,13 @@ import { UploadModule } from '../../upload/upload.module';
     NotificationsService,   // §9  — Notifications
     ConfidentialiteService, // §10 — Confidentialité
     DangerService,          // §11 — Zone sensible
+
+    ColisManagementService,     // Liste des colis (commandes) du correspondant
+    BoutiquesManagementService, // Boutiques réellement traitées par ce correspondant
+    LivreursManagementService,  // Livreurs réellement approvisionnés par ce correspondant
+    ClientsManagementService,   // Clients servis via ce correspondant
+    ZoneManagementService,      // Statistiques par commune
+    OverviewAggregateService,   // Vue d'ensemble (compose les services ci-dessus)
   ],
 
   /*

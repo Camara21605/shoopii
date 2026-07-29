@@ -1,87 +1,57 @@
 /* ================================================================
  * src/modules/home/components/settings/styles/SettingsSidebar.module.css
+ *
+ * ✅ Ne contient plus que la carte profil (avatar · identité · badges).
+ *    La navigation par onglets a été extraite dans SettingsTabs —
+ *    voir SettingsTabs.module.css — pour qu'elle puisse être épinglée
+ *    tout en haut de page sans jamais chevaucher cette carte.
  * ================================================================ */
 
-.nav {
-  background: var(--white); border: 1px solid var(--bdr);
-  border-radius: var(--r-xl); overflow: hidden;
-  box-shadow: var(--sh-xs); position: sticky;
-  top: calc(var(--hdr) + 24px);
-}
+.nav { display: flex; flex-direction: column; }
 
-/* ── Profile header — suit le thème (noir pur / blanc pur) ── */
+/* ── Bandeau profil — ligne horizontale : avatar · identité · badges ── */
 .profile {
-  padding: 22px 20px;
   background: var(--white);
-  border-bottom: 1px solid var(--bdr);
-  display: flex; flex-direction: column;
-  align-items: center; text-align: center; gap: 10px;
-  position: relative; overflow: hidden;
+  border: 1px solid var(--bdr);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-xs);
+  padding: 16px 20px;
+  display: flex; align-items: center; gap: 16px;
+  flex-wrap: wrap;
 }
-.avatarWrap { position: relative; z-index: 1; }
+.avatarWrap { position: relative; flex-shrink: 0; }
 .avatar {
-  width: 68px; height: 68px; border-radius: 50%;
+  width: 56px; height: 56px; border-radius: 50%;
   background: linear-gradient(135deg, #1C1C1F, #2D2D30);
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--fd); font-size: 26px; font-weight: 700; color: #fff;
+  font-family: var(--fd); font-size: 21px; font-weight: 700; color: #fff;
   border: 3px solid var(--white);
 }
 .avatarEdit {
   position: absolute; bottom: -2px; right: -2px;
-  width: 22px; height: 22px; border-radius: 50%;
+  width: 20px; height: 20px; border-radius: 50%;
   background: var(--btn); border: 2px solid var(--white);
   display: flex; align-items: center; justify-content: center;
-  color: #fff; font-size: 9px; cursor: pointer;
+  color: #fff; font-size: 8px; cursor: pointer;
   transition: background .2s;
 }
 .avatarEdit:hover { background: var(--btn-h); }
+
+.profileInfo { min-width: 0; flex: 1 1 160px; }
 .profileName {
   font-family: var(--fd); font-size: 15px; font-weight: 700;
-  color: var(--t1); position: relative; z-index: 1;
+  color: var(--t1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.profileEmail { font-size: 11px; color: var(--t2); position: relative; z-index: 1; }
-.profileBadges {
-  display: flex; flex-wrap: wrap; gap: 5px;
-  justify-content: center; position: relative; z-index: 1; margin-top: 2px;
-}
+.profileEmail { font-size: 11.5px; color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.profileBadges { display: flex; flex-wrap: wrap; gap: 6px; flex-shrink: 0; margin-left: auto; }
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
-  border-radius: var(--pill); padding: 3px 10px;
-  font-size: 10px; font-weight: 700;
+  border-radius: var(--pill); padding: 4px 11px;
+  font-size: 10.5px; font-weight: 700; white-space: nowrap;
 }
 .badgeGreen { background: rgba(4,120,87,.09); border: 1px solid rgba(4,120,87,.2); color: #059669; }
 .badgeBlue  { background: rgba(26,79,196,.09); border: 1px solid rgba(26,79,196,.2); color: #1A4FC4; }
-
-/* ── Nav body ── */
-.body { padding: 8px; }
-.section { margin-bottom: 4px; }
-.label {
-  font-size: 9px; font-weight: 800; text-transform: uppercase;
-  letter-spacing: 1.2px; color: var(--t4); padding: 10px 12px 4px;
-}
-.item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 12px; border-radius: var(--r-md);
-  font-size: 13px; font-weight: 500; color: var(--t2);
-  cursor: pointer; transition: all .18s; border: 1.5px solid transparent;
-  position: relative; background: none; border-color: transparent; width: 100%;
-  text-align: left;
-}
-.item i { width: 16px; text-align: center; font-size: 14px; color: var(--t4); transition: color .18s; flex-shrink: 0; }
-.item:hover { background: var(--sky); color: var(--navy); }
-.item:hover i { color: var(--blue); }
-.item.active { background: var(--sky); color: var(--blue); border-color: var(--sky-3); font-weight: 600; }
-.item.active i { color: var(--blue); }
-.item.danger { color: var(--red); }
-.item.danger i { color: var(--red); }
-.item.danger:hover { background: rgba(220,38,38,.08); border-color: rgba(220,38,38,.15); }
-.notif {
-  margin-left: auto; background: var(--red); color: #fff;
-  font-size: 9px; font-weight: 800; min-width: 16px; height: 16px;
-  border-radius: 16px; display: flex; align-items: center;
-  justify-content: center; padding: 0 4px;
-}
-.divider { height: 1px; background: var(--bdr); margin: 6px 0; }
 
 /* ─── Dark mode — badges plus lisibles sur fond noir ── */
 @media (prefers-color-scheme: dark) {
@@ -95,11 +65,8 @@
 :root[data-theme="light"] .badgeBlue  { background: rgba(26,79,196,.09); border-color: rgba(26,79,196,.2); color: #1A4FC4; }
 
 /* ── Responsive ── */
-@media (max-width: 960px) {
-  .nav { position: static; }
-  .profile { flex-direction: row; text-align: left; gap: 14px; }
-  .body { display: flex; flex-wrap: wrap; gap: 4px; padding: 12px; }
-  .section { margin: 0; }
-  .label { display: none; }
-  .item { padding: 7px 12px; font-size: 12px; }
+@media (max-width: 640px) {
+  .profile { padding: 13px 14px; gap: 12px; }
+  .avatar { width: 48px; height: 48px; font-size: 18px; }
+  .profileBadges { margin-left: 0; }
 }

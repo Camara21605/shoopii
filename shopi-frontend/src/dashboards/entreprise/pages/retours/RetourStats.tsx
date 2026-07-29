@@ -16,13 +16,13 @@ const REASON_LABELS: Record<string, string> = {
 };
 
 const REASON_COLORS: Record<string, string> = {
-  defective:      '#DC2626',
-  not_matching:   '#7C3AED',
-  change_of_mind: '#F59E0B',
-  wrong_item:     '#1A4FC4',
-  damaged:        '#0E7490',
-  expired:        '#B45309',
-  other:          '#64748B',
+  defective:      'var(--t1)',
+  not_matching:   'var(--btn)',
+  change_of_mind: 'var(--t2)',
+  wrong_item:     'var(--t2)',
+  damaged:        'var(--t2)',
+  expired:        'var(--t2)',
+  other:          'var(--t2)',
 };
 
 interface Props {
@@ -40,24 +40,24 @@ function fmtGNF(n: number) {
 export default function RetourStats({ stats, loading }: Props) {
   const kpis = [
     {
-      ico: '🔄', label: 'Total ce mois', color: '#1A4FC4',
+      ico: '🔄', label: 'Total ce mois', color: 'var(--t2)',
       val: loading ? '—' : fmt(stats?.thisMonth ?? 0),
-      badge: stats ? `+${stats.today} auj.` : null, badgeBg: '#DBEAFE', badgeColor: '#1A4FC4',
+      badge: stats ? `+${stats.today} auj.` : null, badgeBg: 'var(--g100)', badgeColor: 'var(--t2)',
     },
     {
-      ico: '⏳', label: 'En attente', color: '#F59E0B',
+      ico: '⏳', label: 'En attente', color: 'var(--amber)',
       val: loading ? '—' : fmt(stats?.pending ?? 0),
-      badge: stats && stats.pending > 0 ? 'Urgents' : null, badgeBg: '#FEF3C7', badgeColor: '#B45309',
+      badge: stats && stats.pending > 0 ? 'Urgents' : null, badgeBg: 'var(--rs-bg)', badgeColor: 'var(--red)',
     },
     {
-      ico: '✅', label: 'Acceptés', color: '#047857',
+      ico: '✅', label: 'Acceptés', color: 'var(--emerald)',
       val: loading ? '—' : `${stats?.tauxAcceptation ?? 0}%`,
-      badge: stats ? `${fmt(stats.accepted)} retours` : null, badgeBg: '#D1FAE5', badgeColor: '#047857',
+      badge: stats ? `${fmt(stats.accepted)} retours` : null, badgeBg: 'var(--em-bg)', badgeColor: 'var(--emerald)',
     },
     {
-      ico: '💸', label: 'Remboursé (GNF)', color: '#7C3AED',
+      ico: '💸', label: 'Remboursé (GNF)', color: 'var(--teal)',
       val: loading ? '—' : fmtGNF(stats?.totalMontantRembourse ?? 0),
-      badge: stats ? `${fmt(stats.refunded)} remb.` : null, badgeBg: '#EDE9FE', badgeColor: '#6D28D9',
+      badge: stats ? `${fmt(stats.refunded)} remb.` : null, badgeBg: 'var(--tl-bg)', badgeColor: 'var(--teal)',
     },
   ];
 
@@ -99,14 +99,14 @@ export default function RetourStats({ stats, loading }: Props) {
                   <div key={m.reason} className={s.barItem}>
                     <div className={s.barLabel}>
                       <span className={s.barLabelName}>{REASON_LABELS[m.reason] ?? m.reason}</span>
-                      <span className={s.barLabelValue} style={{ color: REASON_COLORS[m.reason] ?? '#64748B' }}>
+                      <span className={s.barLabelValue} style={{ color: REASON_COLORS[m.reason] ?? 'var(--t2)' }}>
                         {m.count} ({m.percentage}%)
                       </span>
                     </div>
                     <div className={s.barBg}>
                       <div
                         className={s.barFill}
-                        style={{ width: `${m.percentage}%`, background: REASON_COLORS[m.reason] ?? '#64748B' }}
+                        style={{ width: `${m.percentage}%`, background: REASON_COLORS[m.reason] ?? 'var(--t2)' }}
                       />
                     </div>
                   </div>
@@ -123,10 +123,10 @@ export default function RetourStats({ stats, loading }: Props) {
             <div className="cb">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {[
-                  { label: 'Taux d\'acceptation', val: `${stats.tauxAcceptation}%`, color: '#047857', bg: '#D1FAE5' },
-                  { label: 'Délai moyen traitement', val: `${stats.delaiMoyenHeures}h`, color: '#1A4FC4', bg: '#DBEAFE' },
-                  { label: 'Retours refusés', val: `${fmt(stats.refused)}`, color: '#DC2626', bg: '#FEE2E2' },
-                  { label: 'Remboursements effectués', val: `${fmt(stats.refunded)}`, color: '#7C3AED', bg: '#EDE9FE' },
+                  { label: 'Taux d\'acceptation', val: `${stats.tauxAcceptation}%`, color: 'var(--t2)', bg: 'var(--g100)' },
+                  { label: 'Délai moyen traitement', val: `${stats.delaiMoyenHeures}h`, color: 'var(--t2)', bg: 'var(--g100)' },
+                  { label: 'Retours refusés', val: `${fmt(stats.refused)}`, color: 'var(--t1)', bg: 'var(--g100)' },
+                  { label: 'Remboursements effectués', val: `${fmt(stats.refunded)}`, color: 'var(--t2)', bg: 'var(--g100)' },
                 ].map(item => (
                   <div key={item.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 12.5, color: 'var(--t2)' }}>{item.label}</span>

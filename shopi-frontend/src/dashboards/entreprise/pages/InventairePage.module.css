@@ -118,25 +118,25 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--rose);
+  background: var(--t2);
 }
 
 /* Variantes de couleur des cartes stats */
 .statBlue  { background: var(--sky);   border-color: var(--sky-3); }
-.statBlue  .statIcon { background: rgba(59,130,246,.12); color: var(--blue); }
-.statBlue  .statVal  { color: var(--blue); }
+.statBlue  .statIcon { background: rgba(128,128,128,.12); color: var(--t2); }
+.statBlue  .statVal  { color: var(--t2); }
 
-.statRose  { background: var(--rs-bg); border-color: rgba(225,29,72,.2); }
-.statRose  .statIcon { background: rgba(225,29,72,.12); color: var(--rose); }
-.statRose  .statVal  { color: var(--rose); }
+.statRose  { background: var(--g100); border-color: rgba(128,128,128,.2); }
+.statRose  .statIcon { background: rgba(128,128,128,.12); color: var(--t2); }
+.statRose  .statVal  { color: var(--t2); }
 
-.statAmber { background: var(--am-bg); border-color: rgba(217,119,6,.2); }
-.statAmber .statIcon { background: rgba(217,119,6,.12); color: var(--amber); }
-.statAmber .statVal  { color: var(--amber); }
+.statAmber { background: var(--g100); border-color: rgba(128,128,128,.2); }
+.statAmber .statIcon { background: rgba(128,128,128,.12); color: var(--t2); }
+.statAmber .statVal  { color: var(--t2); }
 
-.statGreen { background: var(--em-bg); border-color: rgba(5,150,105,.2); }
-.statGreen .statIcon { background: rgba(5,150,105,.12); color: var(--emerald); }
-.statGreen .statVal  { color: var(--emerald); }
+.statGreen { background: var(--g100); border-color: rgba(128,128,128,.2); }
+.statGreen .statIcon { background: rgba(128,128,128,.12); color: var(--t2); }
+.statGreen .statVal  { color: var(--t2); }
 
 /* ══════════════════════════════════════════════════════════════
    LAYOUT — Tableau principal + Panneau latéral
@@ -194,8 +194,8 @@
   transition: all .18s;
 }
 .filtreBtn:hover {
-  border-color: var(--blue);
-  color: var(--blue);
+  border-color: var(--t2);
+  color: var(--t2);
 }
 
 /* Bouton filtre actif */
@@ -244,7 +244,7 @@
   transition: border-color .18s;
   box-sizing: border-box;
 }
-.searchInput:focus { border-color: var(--blue); }
+.searchInput:focus { border-color: var(--t2); }
 
 /* Bouton effacer la recherche */
 .clearBtn {
@@ -375,7 +375,7 @@
 .catTag {
   font-size: 11px;
   font-weight: 700;
-  color: var(--blue);
+  color: var(--t2);
   background: var(--sky);
   border-radius: var(--pill);
   padding: 3px 8px;
@@ -420,7 +420,7 @@
 /* Couleurs selon le statut */
 .stockNum_ok  { color: var(--emerald); }
 .stockNum_low { color: var(--amber); }
-.stockNum_out { color: var(--rose); }
+.stockNum_out { color: var(--red); }
 
 /* "unités" en petit à côté du chiffre */
 .stockUnit {
@@ -465,9 +465,9 @@
   border-radius: var(--pill);
   transition: width .4s ease;
 }
-.barFill_ok  { background: var(--emerald); }
-.barFill_low { background: var(--amber); }
-.barFill_out { background: var(--rose); }
+.barFill_ok  { background: var(--t2); }
+.barFill_low { background: var(--t2); }
+.barFill_out { background: var(--t2); }
 
 /* ── Cellule Badge statut ── */
 .badge {
@@ -482,9 +482,9 @@
   border-radius: var(--pill);
   white-space: nowrap;
 }
-.badge_ok  { background: var(--em-bg);  color: var(--emerald); border: 1px solid rgba(5,150,105,.2); }
-.badge_low { background: var(--am-bg);  color: var(--amber);   border: 1px solid rgba(217,119,6,.2); }
-.badge_out { background: var(--rs-bg);  color: var(--rose);    border: 1px solid rgba(225,29,72,.2); }
+.badge_ok  { background: var(--g100);  color: var(--t2); border: 1px solid rgba(128,128,128,.2); }
+.badge_low { background: var(--g100);  color: var(--t2);   border: 1px solid rgba(128,128,128,.2); }
+.badge_out { background: var(--g100);  color: var(--t2);    border: 1px solid rgba(128,128,128,.2); }
 
 /* ── Cellule Actions ── */
 .actions {
@@ -504,7 +504,7 @@
   padding: 6px 11px;
   font-size: 11.5px;
   font-weight: 700;
-  color: var(--blue);
+  color: var(--t2);
   cursor: pointer;
   transition: all .18s;
   white-space: nowrap;
@@ -531,9 +531,9 @@
   transition: all .18s;
 }
 .btnReappro:hover {
-  border-color: var(--emerald);
-  color: var(--emerald);
-  background: var(--em-bg);
+  border-color: var(--t2);
+  color: var(--t2);
+  background: var(--g100);
 }
 
 /* Pied de tableau */
@@ -591,7 +591,7 @@
   align-items: center;
   gap: 7px;
 }
-.sideCardTitle i { color: var(--blue); }
+.sideCardTitle i { color: var(--t2); }
 
 /* Corps de la carte latérale */
 .sideCardBody {
@@ -600,7 +600,7 @@
 
 /* Badge nombre d'alertes */
 .alerteBadge {
-  background: var(--rose);
+  background: var(--t2);
   color: #fff;
   border-radius: var(--pill);
   padding: 2px 8px;
@@ -614,13 +614,13 @@
   align-items: center;
   gap: 10px;
   padding: 10px;
-  background: var(--em-bg);
+  background: var(--g100);
   border-radius: var(--r-md);
-  border: 1px solid rgba(5,150,105,.15);
+  border: 1px solid rgba(128,128,128,.15);
   font-size: 13px;
 }
 .noAlerte span { font-size: 20px; }
-.noAlerte strong { display: block; color: var(--emerald); font-size: 12px; }
+.noAlerte strong { display: block; color: var(--t2); font-size: 12px; }
 .noAlerte p { margin: 2px 0 0; font-size: 11px; color: var(--t3); }
 
 /* Liste des alertes */
@@ -642,12 +642,12 @@
 
 /* Couleurs selon le statut */
 .alerte_out {
-  background: rgba(225,29,72,.05);
-  border-color: rgba(225,29,72,.15);
+  background: var(--rs-bg);
+  border-color: rgba(220,38,38,.18);
 }
 .alerte_low {
-  background: rgba(217,119,6,.05);
-  border-color: rgba(217,119,6,.15);
+  background: var(--am-bg);
+  border-color: rgba(180,83,9,.18);
 }
 
 /* Icône de l'alerte */
@@ -655,7 +655,7 @@
   font-size: 14px;
   flex-shrink: 0;
 }
-.alerte_out .alerteIco { color: var(--rose); }
+.alerte_out .alerteIco { color: var(--red); }
 .alerte_low .alerteIco { color: var(--amber); }
 
 /* Infos texte de l'alerte */
@@ -687,8 +687,8 @@
   flex-shrink: 0;
 }
 .alerteAction:hover {
-  border-color: var(--blue);
-  color: var(--blue);
+  border-color: var(--t2);
+  color: var(--t2);
   background: var(--sky);
 }
 
@@ -778,8 +778,8 @@
   transition: all .18s;
 }
 .btnSecondary:hover:not(:disabled) {
-  border-color: var(--blue);
-  color: var(--blue);
+  border-color: var(--t2);
+  color: var(--t2);
 }
 .btnSecondary:disabled { opacity: .6; cursor: not-allowed; }
 
@@ -798,7 +798,7 @@
   cursor: pointer;
   transition: all .18s;
 }
-.btnSecondaryOutline:hover { border-color: var(--blue); color: var(--blue); }
+.btnSecondaryOutline:hover { border-color: var(--t2); color: var(--t2); }
 
 /* Bouton "Actualiser" */
 .btnRecharger {
@@ -883,7 +883,7 @@
   align-items: center;
   gap: 8px;
 }
-.modalTitle i { color: var(--blue); }
+.modalTitle i { color: var(--t2); }
 
 /* Sous-titre de la modale */
 .modalSub {
@@ -909,9 +909,9 @@
   transition: all .18s;
 }
 .closeBtn:hover {
-  background: var(--rs-bg);
-  border-color: var(--rose);
-  color: var(--rose);
+  background: var(--g100);
+  border-color: var(--t2);
+  color: var(--t2);
 }
 
 /* Corps de la modale — scrollable */
@@ -1010,7 +1010,7 @@
   align-items: center;
   gap: 5px;
 }
-.formLabel i { color: var(--blue); font-size: 11px; }
+.formLabel i { color: var(--t2); font-size: 11px; }
 
 /* Input avec unité à droite */
 .inputWithUnit {
@@ -1020,7 +1020,7 @@
   overflow: hidden;
   transition: border-color .18s;
 }
-.inputWithUnit:focus-within { border-color: var(--blue); }
+.inputWithUnit:focus-within { border-color: var(--t2); }
 
 /* Champ input dans le groupe */
 .formInput {
@@ -1068,12 +1068,12 @@
 }
 
 /* Couleurs des prévisualisations */
-.status_ok  { background: var(--em-bg); color: var(--emerald); border-color: rgba(5,150,105,.2); }
-.status_ok  .statusDot { background: var(--emerald); }
-.status_low { background: var(--am-bg); color: var(--amber);   border-color: rgba(217,119,6,.2); }
-.status_low .statusDot { background: var(--amber); }
-.status_out { background: var(--rs-bg); color: var(--rose);    border-color: rgba(225,29,72,.2); }
-.status_out .statusDot { background: var(--rose); }
+.status_ok  { background: var(--g100); color: var(--t2); border-color: rgba(128,128,128,.2); }
+.status_ok  .statusDot { background: var(--t2); }
+.status_low { background: var(--g100); color: var(--t2);   border-color: rgba(128,128,128,.2); }
+.status_low .statusDot { background: var(--t2); }
+.status_out { background: var(--g100); color: var(--t2);    border-color: rgba(128,128,128,.2); }
+.status_out .statusDot { background: var(--t2); }
 
 /* Note/aide sous le champ */
 .formHint {
@@ -1119,9 +1119,9 @@
   border-radius: var(--pill);
   transition: width .4s ease;
 }
-.fill_ok  { background: var(--emerald); }
-.fill_low { background: var(--amber); }
-.fill_out { background: var(--rose); }
+.fill_ok  { background: var(--t2); }
+.fill_low { background: var(--t2); }
+.fill_out { background: var(--t2); }
 
 /* ══════════════════════════════════════════════════════════════
    RESPONSIVE

@@ -16,7 +16,7 @@ export default function DangerSection({ onDirty, onToast }: Props) {
   return (
     <>
       <div className={s.sectionHd}>
-        <h1><i className="fas fa-triangle-exclamation" style={{ color:'#DC2626' }} /> Zone sensible</h1>
+        <h1><i className="fas fa-triangle-exclamation" style={{ color:'var(--red)' }} /> Zone sensible</h1>
         <p>Ces actions sont irréversibles ou ont un impact majeur sur votre boutique. Procédez avec précaution.</p>
       </div>
       <FormCard title="Actions irréversibles" icon="fa-skull-crossbones" subtitle="Ces opérations ne peuvent pas être annulées" danger>

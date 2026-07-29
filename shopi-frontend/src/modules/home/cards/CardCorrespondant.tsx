@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate }         from 'react-router-dom';
 import styles                  from './Cards.module.css';
 import { apiFetch }            from '../../../shared/services/apiFetch';
+import { useAuthGate }         from '../../../shared/hooks/useAuthGate';
 
 export interface CorrespondantCardData {
   id: string; fullName: string; profilePicture: string | null;
@@ -35,6 +36,7 @@ export default function CardCorrespondant({ c, onToast, onToggle }: Props) {
   const [suivi,   setSuivi]   = useState<boolean>(c?.isSuivi ?? false);
   const [loading, setLoading] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const { openAuthModal, authModal } = useAuthGate();
 
   useEffect(() => { setSuivi(c?.isSuivi ?? false); }, [c?.isSuivi]);
 
@@ -42,7 +44,7 @@ export default function CardCorrespondant({ c, onToast, onToggle }: Props) {
     .map((w: string) => w[0]?.toUpperCase() ?? '').join('') || '?';
 
   async function handleToggle() {
-    if (!localStorage.getItem(TOKEN_KEY)) { navigate('/login'); return; }
+    if (!localStorage.getItem(TOKEN_KEY)) { openAuthModal(); return; }
     if (!id) { onToast('❌ ID manquant', 'e'); return; }
     setLoading(true);
     const optimistic = !suivi;
@@ -164,6 +166,8 @@ export default function CardCorrespondant({ c, onToast, onToggle }: Props) {
           </button>
         </div>
       </div>
+
+      {authModal}
     </div>
   );
 }

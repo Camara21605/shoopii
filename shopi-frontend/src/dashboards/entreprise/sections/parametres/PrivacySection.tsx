@@ -61,7 +61,7 @@ export default function PrivacySection({ data, saving, onDirty, onToast, savePri
             </div>
             <div onClick={() => toggle(item.key)}
               style={{ width:44, height:24, borderRadius:12, cursor:'pointer', flexShrink:0,
-                background: privacy[item.key] ? 'var(--teal,#0E7490)' : 'var(--g300)',
+                background: privacy[item.key] ? 'var(--t2)' : 'var(--g300)',
                 position:'relative', transition:'background .2s' }}>
               <div style={{ position:'absolute', top:3, width:18, height:18, borderRadius:'50%',
                 background:'#fff', transition:'left .2s', boxShadow:'0 1px 3px rgba(0,0,0,.2)',

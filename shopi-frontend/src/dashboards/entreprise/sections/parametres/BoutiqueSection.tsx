@@ -501,7 +501,7 @@ export default function BoutiqueSection({
         <div className={s.fg}>
           <div className={s.fl}>WhatsApp</div>
           <div className={s.fw}>
-            <i className={`fab fa-whatsapp ${s.fi}`} style={{ color:'#25D366' }} />
+            <i className={`fab fa-whatsapp ${s.fi}`} style={{ color:'var(--t2)' }} />
             <input className={s.fin} type="tel" value={whatsapp}
               onChange={e => { setWhatsapp(e.target.value); onDirty(); }}
               placeholder="620 00 00 00 (sans +224)" />
@@ -510,7 +510,7 @@ export default function BoutiqueSection({
 
         {/* ── VILLE ── */}
         <div className={s.fg}>
-          <div className={s.fl}>Ville <span style={{ color: 'var(--rose)' }}>*</span></div>
+          <div className={s.fl}>Ville <span style={{ color: 'var(--t2)' }}>*</span></div>
           <div className={s.fw}>
             <i className={`fas fa-map-location-dot ${s.fi}`} />
             {pays === 'GN' ? (
@@ -533,7 +533,7 @@ export default function BoutiqueSection({
         {/* ── COMMUNE (si ville sélectionnée et pays = GN) ── */}
         {pays === 'GN' && communes.length > 0 && (
           <div className={s.fg}>
-            <div className={s.fl}>Commune / Arrondissement <span style={{ color: 'var(--rose)' }}>*</span></div>
+            <div className={s.fl}>Commune / Arrondissement <span style={{ color: 'var(--t2)' }}>*</span></div>
             <div className={s.fw}>
               <i className={`fas fa-city ${s.fi}`} />
               <select className={`${s.fin} ${s.finSelect}`}
@@ -551,7 +551,7 @@ export default function BoutiqueSection({
         {/* ── QUARTIER (si commune sélectionnée) ── */}
         {pays === 'GN' && quartiers.length > 0 && (
           <div className={s.fg}>
-            <div className={s.fl}>Quartier <span style={{ color: 'var(--rose)' }}>*</span></div>
+            <div className={s.fl}>Quartier <span style={{ color: 'var(--t2)' }}>*</span></div>
             <div className={s.fw}>
               <i className={`fas fa-map-pin ${s.fi}`} />
               <select className={`${s.fin} ${s.finSelect}`}
@@ -569,7 +569,7 @@ export default function BoutiqueSection({
         {/* Résumé localisation */}
         {ville && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', background: 'rgba(0,0,0,.06)', borderRadius: 9, padding: '7px 12px', marginBottom: 4 }}>
-            <i className="fas fa-map-pin" style={{ color: 'var(--blue)', fontSize: 11 }} />
+            <i className="fas fa-map-pin" style={{ color: 'var(--t2)', fontSize: 11 }} />
             <span style={{ fontSize: 12, color: 'var(--t2)', fontWeight: 600 }}>
               {[quartier, commune, ville].filter(Boolean).join(' · ')}
             </span>

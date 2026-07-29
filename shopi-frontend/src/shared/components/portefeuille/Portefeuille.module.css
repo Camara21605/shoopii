@@ -214,6 +214,9 @@
 @media (max-width: 1000px) {
   .wlGrid { grid-template-columns: 1fr; }
 }
+@media (max-width: 780px) {
+  .wlKpis { grid-template-columns: repeat(2, 1fr); }
+}
 @media (max-width: 560px) {
   .wlKpis { grid-template-columns: 1fr; }
   .balAmount { font-size: 34px; }

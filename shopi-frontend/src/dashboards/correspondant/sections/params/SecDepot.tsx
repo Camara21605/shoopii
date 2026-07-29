@@ -153,13 +153,13 @@ export default function SecDepot({ data, saving, dirty, markClean, saveTrigger, 
           {/* ── Carte GPS du dépôt ── */}
           <div className={s.fg}>
             <div className={s.fl}>
-              <i className="fas fa-map-location-dot" style={{ marginRight:6, color:'var(--blue)' }} />
+              <i className="fas fa-map-location-dot" style={{ marginRight:6, color:'var(--t2)' }} />
               Position GPS du dépôt
               <span className={s.flOpt} style={{ marginLeft:8 }}>Cliquez ou glissez le marqueur</span>
             </div>
             <Suspense fallback={
-              <div style={{ height:260, display:'flex', alignItems:'center', justifyContent:'center', background:'var(--sky-2,#f0f4ff)', borderRadius:12 }}>
-                <i className="fas fa-circle-notch fa-spin" style={{ color:'var(--blue)', fontSize:22 }} />
+              <div style={{ height:260, display:'flex', alignItems:'center', justifyContent:'center', background:'var(--g100)', borderRadius:12 }}>
+                <i className="fas fa-circle-notch fa-spin" style={{ color:'var(--t2)', fontSize:22 }} />
               </div>
             }>
               <LocationPicker
@@ -171,7 +171,7 @@ export default function SecDepot({ data, saving, dirty, markClean, saveTrigger, 
             </Suspense>
             {locationVal?.coordinates && (
               <div className={s.fiHint} style={{ marginTop:6 }}>
-                <i className="fas fa-check-circle" style={{ color:'var(--emerald)', marginRight:5 }} />
+                <i className="fas fa-check-circle" style={{ color:'var(--t2)', marginRight:5 }} />
                 GPS enregistré : {locationVal.coordinates.latitude.toFixed(5)}, {locationVal.coordinates.longitude.toFixed(5)}
               </div>
             )}

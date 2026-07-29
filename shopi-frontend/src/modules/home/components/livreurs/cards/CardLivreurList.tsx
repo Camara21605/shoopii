@@ -13,6 +13,7 @@ import React            from 'react';
 import { useNavigate }  from 'react-router-dom';
 import styles           from '../styles/CardLivreurList.module.css';
 import { useFollowToggle } from '../../../../../shared/hooks/useFollowToggle';
+import { useAuthGate }     from '../../../../../shared/hooks/useAuthGate';
 import type { LivreurItem } from '../data/livreursMockData';
 
 /* ── Props ── */
@@ -32,12 +33,14 @@ const CardLivreurList: React.FC<CardLivreurListProps> = ({
 
   /* ✅ État contrôlé par le parent + logique commune */
   const suivi = livreur.isSuivi;
+  const { openAuthModal, authModal } = useAuthGate();
   const { loading, toggle } = useFollowToggle({
     id:      livreur.id,
     name:    livreur.fullName,
     isSuivi: suivi,
     onFollow,
     onToast,
+    onRequireAuth: openAuthModal,
   });
 
   const handleViewProfile = () => navigate(`/livreurs/${livreur.id}`);
@@ -92,6 +95,8 @@ const CardLivreurList: React.FC<CardLivreurListProps> = ({
           )}
         </button>
       </div>
+
+      {authModal}
     </div>
   );
 };

@@ -14,7 +14,7 @@ import { useNavigate }  from 'react-router-dom';
 import { apiFetch }     from '../../../shared/services/apiFetch';
 import { useCart }      from '../../../shared/context/CartContext';
 import { useFavoris }   from '../../../shared/context/FavorisContext';
-import { getRoleFromToken } from '../../../shared/services/authUtils';
+import { useAuthGate }  from '../../../shared/hooks/useAuthGate';
 import styles           from './CardProduit.module.css';
 
 // ─────────────────────────────────────────────────────────────
@@ -107,36 +107,33 @@ function emoji(p: ProductApi): string {
 // comportement sans duplication.
 // ─────────────────────────────────────────────────────────────
 
-function useAddToCart(p: ProductApi, onToast: (m: string) => void) {
+function useAddToCart(p: ProductApi, onToast: (m: string) => void, requireClient: (action: () => void) => void) {
   const { addToCart, isInCart } = useCart();
   const [adding, setAdding]     = useState(false); /* état LOCAL — chaque carte indépendante */
-  const navigate  = useNavigate();
-  const isClient  = getRoleFromToken() === 'client';
 
   const dejaAuPanier = !!isInCart(p.id);
 
-  const handleAdd = async (onDone?: () => void) => {
-    if (!getRoleFromToken()) { navigate('/login'); return; }
-    if (!isClient) { onToast('🛒 Réservé aux comptes clients Shopi'); return; }
+  const handleAdd = (onDone?: () => void) => {
+    requireClient(async () => {
+      if (dejaAuPanier) {
+        onToast(`✓ ${p.nom} est déjà dans votre panier`);
+        return;
+      }
 
-    if (dejaAuPanier) {
-      onToast(`✓ ${p.nom} est déjà dans votre panier`);
-      return;
-    }
-
-    setAdding(true);
-    try {
-      await addToCart(p.id, 1);
-      onToast(`🛒 ${p.nom} ajouté au panier !`);
-      onDone?.();
-    } catch (e: any) {
-      onToast(`❌ ${e?.message ?? 'Impossible d\'ajouter au panier'}`);
-    } finally {
-      setAdding(false);
-    }
+      setAdding(true);
+      try {
+        await addToCart(p.id, 1);
+        onToast(`🛒 ${p.nom} ajouté au panier !`);
+        onDone?.();
+      } catch (e: any) {
+        onToast(`❌ ${e?.message ?? 'Impossible d\'ajouter au panier'}`);
+      } finally {
+        setAdding(false);
+      }
+    });
   };
 
-  return { handleAdd, dejaAuPanier, loading: adding, isClient };
+  return { handleAdd, dejaAuPanier, loading: adding };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -146,27 +143,25 @@ function useAddToCart(p: ProductApi, onToast: (m: string) => void) {
 // que le produit apparaisse dans l'onglet Favoris du profil.
 // ─────────────────────────────────────────────────────────────
 
-function useFavorite(p: ProductApi, onToast: (m: string) => void) {
+function useFavorite(p: ProductApi, onToast: (m: string) => void, requireClient: (action: () => void) => void) {
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { isLiked, toggle } = useFavoris();
 
   const liked = isLiked(p.id);
 
-  const handleToggle = async () => {
-    if (!getRoleFromToken())              { navigate('/login'); return; }
-    if (getRoleFromToken() !== 'client')  { onToast('❤️ Réservé aux comptes clients Shopi'); return; }
+  const handleToggle = () => {
     if (loading) return;
-
-    setLoading(true);
-    try {
-      const nowLiked = await toggle(p.id);
-      onToast(nowLiked ? '❤️ Ajouté aux favoris' : '💔 Retiré des favoris');
-    } catch (e: any) {
-      onToast(`❌ ${e?.message ?? 'Action impossible'}`);
-    } finally {
-      setLoading(false);
-    }
+    requireClient(async () => {
+      setLoading(true);
+      try {
+        const nowLiked = await toggle(p.id);
+        onToast(nowLiked ? '❤️ Ajouté aux favoris' : '💔 Retiré des favoris');
+      } catch (e: any) {
+        onToast(`❌ ${e?.message ?? 'Action impossible'}`);
+      } finally {
+        setLoading(false);
+      }
+    });
   };
 
   return { liked, handleToggle, loading };
@@ -437,11 +432,14 @@ export default function CardProduit({ p, onToast }: Props) {
   const em  = emoji(p);
   const b   = p.badge ? BADGE_CONFIG[p.badge] : null;
 
+  /* ✅ Garde d'authentification partagée (panier + favoris) */
+  const { requireClient, authModal } = useAuthGate();
+
   /* ✅ Logique d'ajout au panier partagée */
-  const { handleAdd, dejaAuPanier, loading } = useAddToCart(p, onToast);
+  const { handleAdd, dejaAuPanier, loading } = useAddToCart(p, onToast, requireClient);
 
   /* ✅ Logique du bouton favori partagée */
-  const { liked: fav, handleToggle: handleToggleFav } = useFavorite(p, onToast);
+  const { liked: fav, handleToggle: handleToggleFav } = useFavorite(p, onToast, requireClient);
 
   return (
     <>
@@ -517,6 +515,7 @@ export default function CardProduit({ p, onToast }: Props) {
       {modalEntreprise && <ModalEntreprise p={p} onClose={() => setModalEntreprise(false)} onToast={onToast} />}
       {modalPartage    && <ModalPartage    p={p} onClose={() => setModalPartage(false)}    onToast={onToast} />}
       {modalGros       && <ModalGros       p={p} onClose={() => setModalGros(false)} />}
+      {authModal}
     </>
   );
 }

@@ -22,8 +22,8 @@
 .tx-nm  { font-size: 13px; font-weight: 800; color: var(--navy); }
 .tx-sub { font-size: 10.5px; color: var(--t3); margin-top: 1px; }
 .tx-amt { font-family: var(--fd); font-size: 14px; font-weight: 900; white-space: nowrap; }
-.tx-amt.in  { color: var(--emerald); }
-.tx-amt.out { color: var(--rose); }
+.tx-amt.in  { color: var(--green); }
+.tx-amt.out { color: var(--red); }
 .tx-unit { font-size: 10px; font-weight: 700; opacity: .7; }
 
 .vir-item {

@@ -35,6 +35,6 @@
   align-items: center;
   gap: 8px;
 }
-.chT i { color: var(--blue); font-size: 13px; }
+.chT i { color: var(--t2); font-size: 13px; }
 
 .cb { padding: 18px 20px; }

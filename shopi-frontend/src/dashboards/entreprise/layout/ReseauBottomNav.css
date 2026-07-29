@@ -28,7 +28,7 @@
   transition: color .15s;
 }
 .rbn-it i { font-size: 14px; }
-.rbn-it.on { color: var(--blue); }
+.rbn-it.on { color: var(--t2); }
 
 @media (max-width: 640px) {
   .rbn-nav { display: flex; }

@@ -75,7 +75,7 @@ export default function ParametresPage() {
     return (
       <div className={p.page} style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'60vh' }}>
         <div style={{ textAlign:'center' }}>
-          <i className="fas fa-spinner fa-spin" style={{ fontSize:32, color:'var(--cor,#B45309)', marginBottom:16, display:'block' }} />
+          <i className="fas fa-spinner fa-spin" style={{ fontSize:32, color:'var(--t2)', marginBottom:16, display:'block' }} />
           <div style={{ fontFamily:'var(--fd)', fontSize:16, fontWeight:700, color:'var(--navy)' }}>Chargement de vos paramètres…</div>
         </div>
       </div>
@@ -86,10 +86,10 @@ export default function ParametresPage() {
     return (
       <div className={p.page} style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'60vh' }}>
         <div style={{ textAlign:'center' }}>
-          <i className="fas fa-circle-exclamation" style={{ fontSize:32, color:'var(--red,#DC2626)', marginBottom:12, display:'block' }} />
-          <div style={{ fontFamily:'var(--fd)', fontSize:16, fontWeight:700, color:'var(--red)' }}>Erreur de chargement</div>
+          <i className="fas fa-circle-exclamation" style={{ fontSize:32, color:'var(--t1)', marginBottom:12, display:'block' }} />
+          <div style={{ fontFamily:'var(--fd)', fontSize:16, fontWeight:700, color:'var(--t1)' }}>Erreur de chargement</div>
           <div style={{ fontSize:13, color:'var(--t3)', margin:'8px 0 16px' }}>{error}</div>
-          <button onClick={refresh} style={{ background:'var(--cor,#B45309)', color:'#fff', border:'none', borderRadius:'var(--pill)', padding:'10px 22px', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+          <button onClick={refresh} style={{ background:'var(--btn,#111113)', color:'#fff', border:'none', borderRadius:'var(--pill)', padding:'10px 22px', fontSize:12, fontWeight:700, cursor:'pointer' }}>
             <i className="fas fa-rotate-right" /> Réessayer
           </button>
         </div>

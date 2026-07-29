@@ -32,26 +32,26 @@ type FilterKey = 'all' | PromoStatus;
 
 // ── Config type promo (inchangé — purement visuel) ─────────────
 const TYPE_CFG: Record<string, { ic:string; bg:string; color:string; label:string }> = {
-  discount:   { ic:'🏷️', bg:'rgba(190,24,93,.08)',  color:'var(--rose,#BE185D)',   label:'Réduction %'       },
-  'free-ship':{ ic:'🚚', bg:'rgba(14,116,144,.09)', color:'var(--teal,#0E7490)',   label:'Livraison offerte' },
-  bundle:     { ic:'🎁', bg:'rgba(109,40,217,.08)', color:'var(--violet,#6D28D9)', label:'Bundle'            },
-  flash:      { ic:'⚡', bg:'rgba(180,83,9,.09)',   color:'var(--amber,#B45309)',  label:'Vente flash'       },
+  discount:   { ic:'🏷️', bg:'rgba(128,128,128,.08)',  color:'var(--t2)',   label:'Réduction %'       },
+  'free-ship':{ ic:'🚚', bg:'rgba(128,128,128,.09)', color:'var(--t2)',   label:'Livraison offerte' },
+  bundle:     { ic:'🎁', bg:'rgba(128,128,128,.08)', color:'var(--t2)', label:'Bundle'            },
+  flash:      { ic:'⚡', bg:'rgba(128,128,128,.09)',   color:'var(--t2)',  label:'Vente flash'       },
 };
 
 const STATUS_CFG: Record<PromoStatus, { label:string; bg:string; color:string; border:string; dot:string }> = {
-  active:    { label:'Actif',      bg:'rgba(4,120,87,.09)',  color:'var(--emerald,#047857)', border:'rgba(5,150,105,.2)',  dot:'#10B981' },
-  scheduled: { label:'Planifié',  bg:'rgba(217,119,6,.08)', color:'var(--amber,#B45309)',   border:'rgba(217,119,6,.2)',  dot:'#D97706' },
+  active:    { label:'Actif',      bg:'var(--em-bg)',  color:'var(--emerald)', border:'rgba(5,150,105,.2)',  dot:'var(--emerald)' },
+  scheduled: { label:'Planifié',  bg:'var(--sky-2)', color:'var(--blue)',   border:'var(--sky-3)',  dot:'var(--blue)' },
   draft:     { label:'Brouillon', bg:'var(--g100,#F1F3F5)', color:'var(--t3,#9CA3AF)',      border:'rgba(11,31,58,.13)',  dot:'#9CA3AF' },
-  paused:    { label:'En pause',  bg:'rgba(109,40,217,.08)',color:'var(--violet,#6D28D9)',  border:'rgba(109,40,217,.2)', dot:'#7C3AED' },
+  paused:    { label:'En pause',  bg:'var(--am-bg)',color:'var(--amber)',  border:'rgba(180,83,9,.2)', dot:'var(--amber)' },
   ended:     { label:'Terminé',   bg:'rgba(11,31,58,.06)',  color:'var(--t3,#9CA3AF)',      border:'rgba(11,31,58,.13)',  dot:'#9CA3AF' },
 };
 
 const TEMPLATES = [
-  { ic:'🏷️', label:'Réduction en %',      sub:'Ex: -10% sur tout',    color:'var(--rose,#BE185D)',    key:'discount'  as const },
-  { ic:'💰', label:'Réduction fixe (GNF)', sub:'Ex: -5 000 GNF',       color:'var(--emerald,#047857)', key:'discount'  as const },
-  { ic:'🚚', label:'Livraison gratuite',   sub:'Pour commandes > X',   color:'var(--teal,#0E7490)',    key:'free-ship' as const },
-  { ic:'🎁', label:'Bundle / Lot',         sub:'2 achetés = 1 offert', color:'var(--violet,#6D28D9)',  key:'bundle'    as const },
-  { ic:'⚡', label:'Vente flash',          sub:'Durée & stock limités', color:'var(--amber,#B45309)',   key:'flash'     as const },
+  { ic:'🏷️', label:'Réduction en %',      sub:'Ex: -10% sur tout',    color:'var(--t2)',    key:'discount'  as const },
+  { ic:'💰', label:'Réduction fixe (GNF)', sub:'Ex: -5 000 GNF',       color:'var(--t2)', key:'discount'  as const },
+  { ic:'🚚', label:'Livraison gratuite',   sub:'Pour commandes > X',   color:'var(--t2)',    key:'free-ship' as const },
+  { ic:'🎁', label:'Bundle / Lot',         sub:'2 achetés = 1 offert', color:'var(--t2)',  key:'bundle'    as const },
+  { ic:'⚡', label:'Vente flash',          sub:'Durée & stock limités', color:'var(--t2)',   key:'flash'     as const },
 ];
 
 // ─── Type produit pour le sélecteur ───────────────────────────
@@ -110,7 +110,7 @@ function PromoCard({
 
   const tc      = TYPE_CFG[p.type] ?? TYPE_CFG.discount;
   const pct     = p.max > 0 ? Math.min((p.uses / p.max) * 100, 100) : 0;
-  const barClr  = pct > 80 ? 'var(--rose,#BE185D)' : 'var(--blue,#1A4FC4)';
+  const barClr  = pct > 80 ? 'var(--t2)' : 'var(--t2)';
 
   // Produits ciblés depuis la liste réelle
   const targeted = useMemo(
@@ -187,7 +187,7 @@ function PromoCard({
 
       <div className={styles.codeWrap}>
         <div className={styles.codeBox}>
-          <i className="fas fa-ticket" style={{ color:'var(--blue,#1A4FC4)', fontSize:11 }} />
+          <i className="fas fa-ticket" style={{ color:'var(--t2)', fontSize:11 }} />
           <span>{p.code}</span>
         </div>
         <button className={`${styles.copyBtn} ${copied ? styles.copyBtnCopied : ''}`} onClick={copy} title="Copier">
@@ -210,12 +210,12 @@ function PromoCard({
 
       <div className={styles.statsRow}>
         <div className={styles.stat}>
-          <div className={styles.statVal} style={{ color:'var(--blue,#1A4FC4)' }}>{p.uses}</div>
+          <div className={styles.statVal} style={{ color:'var(--t2)' }}>{p.uses}</div>
           <div className={styles.statLbl}>Utilisations</div>
         </div>
         <div className={styles.statDiv} />
         <div className={styles.stat}>
-          <div className={styles.statVal} style={{ color:'var(--emerald,#047857)' }}>{p.revenue}</div>
+          <div className={styles.statVal} style={{ color:'var(--t2)' }}>{p.revenue}</div>
           <div className={styles.statLbl}>CA généré</div>
         </div>
         <div className={styles.statDiv} />
@@ -290,7 +290,7 @@ function ProductSelector({
 
       {selected.length > 0 && (
         <div className={styles.prodCount}>
-          <i className="fas fa-check-circle" style={{ color:'var(--emerald,#047857)' }} />
+          <i className="fas fa-check-circle" style={{ color:'var(--t2)' }} />
           <span>{selected.length} produit{selected.length > 1 ? 's' : ''} sélectionné{selected.length > 1 ? 's' : ''}</span>
           <button className={styles.prodCountClear} onClick={() => onChange([])}>
             Tout désélectionner
@@ -614,7 +614,7 @@ export default function PromotionsPage() {
                     <div key={i} className={styles.perfRow}>
                       <div className={styles.perfLabel}>{p.nom}</div>
                       <div className={styles.perfTrack}>
-                        <div className={styles.perfFill} style={{ width:`${pct}%`, background:'var(--blue,#1A4FC4)' }}>
+                        <div className={styles.perfFill} style={{ width:`${pct}%`, background:'var(--t2)' }}>
                           {p.uses > 0 && <span>{p.uses}</span>}
                         </div>
                       </div>
@@ -753,7 +753,7 @@ export default function PromotionsPage() {
                     onClick={() => { setScope('global'); setProdIds([]); }}>
                     <div className={`${styles.scopeRadio} ${scope==='global' ? styles.scopeRadioOn : ''}`} />
                     <div className={styles.scopeOptIco} style={{ background:'var(--sky-2,#E2EAFB)' }}>
-                      <i className="fas fa-store" style={{ color:'var(--blue,#1A4FC4)' }} />
+                      <i className="fas fa-store" style={{ color:'var(--t2)' }} />
                     </div>
                     <div className={styles.scopeOptBody}>
                       <div className={styles.scopeOptTitle}>Toute l'entreprise</div>
@@ -767,15 +767,15 @@ export default function PromotionsPage() {
                   <div className={`${styles.scopeOpt} ${scope==='products' ? styles.scopeOptOn : ''}`}
                     onClick={() => setScope('products')}>
                     <div className={`${styles.scopeRadio} ${scope==='products' ? styles.scopeRadioOn : ''}`} />
-                    <div className={styles.scopeOptIco} style={{ background:'rgba(4,120,87,.09)' }}>
-                      <i className="fas fa-box" style={{ color:'var(--emerald,#047857)' }} />
+                    <div className={styles.scopeOptIco} style={{ background:'rgba(128,128,128,.09)' }}>
+                      <i className="fas fa-box" style={{ color:'var(--t2)' }} />
                     </div>
                     <div className={styles.scopeOptBody}>
                       <div className={styles.scopeOptTitle}>Produit(s) spécifique(s)</div>
                       <div className={styles.scopeOptSub}>Cibler un ou plusieurs produits précis</div>
                     </div>
                     {prodIds.length > 0 && (
-                      <span className={styles.scopeOptTag} style={{ background:'rgba(4,120,87,.09)', color:'var(--emerald,#047857)' }}>
+                      <span className={styles.scopeOptTag} style={{ background:'rgba(128,128,128,.09)', color:'var(--t2)' }}>
                         {prodIds.length} sélectionné{prodIds.length > 1 ? 's' : ''}
                       </span>
                     )}

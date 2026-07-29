@@ -9,7 +9,7 @@
 }
 .seo-ring {
   width: 64px; height: 64px; border-radius: 50%;
-  background: conic-gradient(var(--emerald) 0% 78%, var(--g200) 78% 100%);
+  background: conic-gradient(var(--t2) 0% 78%, var(--g200) 78% 100%);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; position: relative;
 }

@@ -72,18 +72,18 @@ export default function SecDanger({ data, onSuspendre, onDesactiver, onSupprimer
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
       <div className={s.psHd}>
         <h1>
-          <i className="fas fa-triangle-exclamation" style={{ color:'var(--red,#DC2626)' }} />
-          <span style={{ color:'var(--red,#DC2626)' }}>Zone sensible</span>
+          <i className="fas fa-triangle-exclamation" style={{ color:'var(--red)' }} />
+          <span style={{ color:'var(--red)' }}>Zone sensible</span>
         </h1>
         <p>Actions irréversibles concernant votre compte correspondant Shopi. Procédez avec précaution.</p>
       </div>
 
       {/* Statut actuel */}
       {data?.status && data.status !== 'active' && (
-        <div style={{ background:'rgba(220,38,38,.06)', border:'1.5px solid rgba(220,38,38,.2)', borderRadius:'var(--r-xl)', padding:'14px 18px', display:'flex', alignItems:'center', gap:10 }}>
-          <i className="fas fa-circle-exclamation" style={{ color:'var(--red,#DC2626)', fontSize:18 }} />
+        <div style={{ background:'var(--rs-bg)', border:'1.5px solid rgba(220,38,38,.25)', borderRadius:'var(--r-xl)', padding:'14px 18px', display:'flex', alignItems:'center', gap:10 }}>
+          <i className="fas fa-circle-exclamation" style={{ color:'var(--red)', fontSize:18 }} />
           <div>
-            <div style={{ fontSize:13, fontWeight:700, color:'var(--red,#DC2626)' }}>Statut actuel : {data.status}</div>
+            <div style={{ fontSize:13, fontWeight:700, color:'var(--red)' }}>Statut actuel : {data.status}</div>
             <div style={{ fontSize:11, color:'var(--t3)', marginTop:2 }}>Votre compte est dans un état non-actif. Contactez le support pour le réactiver.</div>
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function SecDanger({ data, onSuspendre, onDesactiver, onSupprimer
       <div className={`${s.fc} ${s.fcDanger}`}>
         <div className={`${s.fcHd} ${s.fcHdDanger}`}>
           <div className={`${s.fcTtl} ${s.fcTtlDanger}`}>
-            <i className="fas fa-triangle-exclamation" style={{ color:'var(--red,#DC2626)' }} /> Actions sensibles
+            <i className="fas fa-triangle-exclamation" style={{ color:'var(--red)' }} /> Actions sensibles
           </div>
         </div>
         <div className={s.fcBody}>
@@ -107,8 +107,9 @@ export default function SecDanger({ data, onSuspendre, onDesactiver, onSupprimer
                 disabled={action.disabled || loading === action.title}
                 onClick={() => handle(action.title, action.fn)}
                 style={{
-                  borderColor: confirm === action.title ? 'var(--red,#DC2626)' : undefined,
-                  background:  confirm === action.title ? 'rgba(220,38,38,.18)' : undefined,
+                  borderColor: confirm === action.title ? 'var(--red)' : undefined,
+                  background:  confirm === action.title ? 'var(--red)' : undefined,
+                  color:       confirm === action.title ? '#fff' : undefined,
                   opacity: action.disabled ? .4 : 1,
                 }}
               >

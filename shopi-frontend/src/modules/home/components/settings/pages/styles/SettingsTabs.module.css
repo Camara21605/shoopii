@@ -1,0 +1,77 @@
+/* ================================================================
+ * src/modules/home/components/settings/pages/styles/SettingsTabs.module.css
+ *
+ * ✅ position: sticky, PREMIER élément affiché sur la page (avant le
+ *    titre, le bandeau sécurité et la carte profil) : sa position de
+ *    repos dans le flux coïncide exactement avec `top`, donc elle est
+ *    déjà "accrochée" sous le header dès le chargement — et comme un
+ *    élément sticky réserve lui-même sa hauteur dans le flux, il ne
+ *    peut jamais chevaucher un autre bloc (contrairement à un
+ *    position:fixed qui exige un padding réservé calculé à la main).
+ * ================================================================ */
+
+.tabs {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  background: var(--white);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-md, 0 8px 24px rgba(11,31,58,.1));
+  padding: 8px;
+  position: sticky;
+  top: calc(var(--hdr, 64px) + 12px);
+  z-index: 50;
+  margin-bottom: 20px;
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+.tabDivider {
+  flex-shrink: 0;
+  width: 1px; height: 22px;
+  background: var(--bdr);
+  margin: 0 4px;
+}
+
+.item {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 15px; border-radius: var(--pill);
+  font-size: 12.5px; font-weight: 600; color: var(--t2);
+  cursor: pointer; transition: all .18s; border: 1.5px solid transparent;
+  position: relative; background: none;
+  white-space: nowrap; flex-shrink: 0;
+  scroll-snap-align: start;
+}
+.item i { font-size: 13px; color: var(--t4); transition: color .18s; flex-shrink: 0; }
+.item:hover { background: var(--sky); color: var(--navy); }
+.item:hover i { color: var(--blue); }
+.item.active { background: var(--btn, #111113); color: #fff; border-color: var(--btn, #111113); font-weight: 700; }
+.item.active i { color: #fff; }
+.item.danger { color: var(--red); }
+.item.danger i { color: var(--red); }
+.item.danger:hover { background: rgba(220,38,38,.08); border-color: rgba(220,38,38,.15); }
+.item.danger.active { background: var(--red); border-color: var(--red); color: #fff; }
+.item.danger.active i { color: #fff; }
+
+.notif {
+  background: var(--red); color: #fff;
+  font-size: 9px; font-weight: 800; min-width: 16px; height: 16px;
+  border-radius: 16px; display: flex; align-items: center;
+  justify-content: center; padding: 0 4px; flex-shrink: 0;
+}
+.item.active .notif { background: #fff; color: var(--red); }
+
+/* ── Responsive — la barre reste horizontale, seuls les espacements réduisent ── */
+@media (max-width: 640px) {
+  .tabs { padding: 6px; gap: 4px; top: calc(var(--hdr, 60px) + 8px); margin-bottom: 16px; }
+  .item { padding: 8px 12px; font-size: 12px; }
+}
+@media (max-width: 380px) {
+  .item { padding: 8px 10px; font-size: 11.5px; gap: 6px; }
+}
