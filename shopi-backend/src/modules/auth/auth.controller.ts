@@ -75,7 +75,7 @@ function buildAccessCookieOptions(isProd: boolean, maxAgeMs: number) {
   return {
     httpOnly: true,
     secure:   isProd,
-    sameSite: (isProd ? 'none' : 'lax') as const,
+    sameSite: isProd ? ('none' as const) : ('lax' as const),
     maxAge:   maxAgeMs,
     path:     '/',
   };
@@ -85,7 +85,7 @@ function buildRefreshCookieOptions(isProd: boolean, maxAgeMs: number) {
   return {
     httpOnly: true,
     secure:   isProd,
-    sameSite: (isProd ? 'none' : 'lax') as const,
+    sameSite: isProd ? ('none' as const) : ('lax' as const),
     maxAge:   maxAgeMs,
     /* Restreint aux seules routes /api/auth pour limiter l'exposition
      * du refresh token aux endpoints qui en ont réellement besoin. */
