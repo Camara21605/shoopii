@@ -12,6 +12,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch }            from '../../../services/apiFetch';
 import { toggleFollowLivreur } from '../../../services/follow';
+import { getRoleFromToken }    from '../../../services/authUtils';
 import type { LivreurProfile, ProfilTab } from '../types';
 
 interface UseLivreurProfileReturn {
@@ -27,6 +28,7 @@ interface UseLivreurProfileReturn {
 export function useLivreurProfile(
   id: string | undefined,
   onToast?: (msg: string, type?: 's' | 'i' | 'w' | 'e') => void,
+  onRequireAuth?: () => void,
 ): UseLivreurProfileReturn {
 
   const [profile, setProfile] = useState<LivreurProfile | null>(null);
@@ -53,6 +55,7 @@ export function useLivreurProfile(
   /* ── Toggle abonnement (optimistic + rollback) ── */
   const follow = useCallback(async () => {
     if (!profile) return;
+    if (!getRoleFromToken()) { onRequireAuth?.(); return; }
     setFollowLoading(true);
     const next = !profile.isSuivi;
     setProfile(p => p ? { ...p, isSuivi: next } : p);
@@ -70,7 +73,7 @@ export function useLivreurProfile(
     } finally {
       setFollowLoading(false);
     }
-  }, [profile, onToast]);
+  }, [profile, onToast, onRequireAuth]);
 
   return { profile, loading, error, tab, setTab, follow, followLoading };
 }

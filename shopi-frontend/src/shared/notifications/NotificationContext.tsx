@@ -20,6 +20,7 @@ import React, {
 } from 'react';
 import { useNotificationSocket } from './useNotificationSocket';
 import { notificationService }   from './notificationService';
+import { getRoleFromToken }      from '../services/authUtils';
 import type { INotificationDto } from './types';
 
 // ─── Types ────────────────────────────────────────────────────
@@ -60,7 +61,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const hasFetchedRef = useRef(false);
 
   // ── Chargement initial du badge ───────────────────────────
+  // ⚠️ Uniquement si connecté : /notifications/* exige un JWT côté backend.
+  //    Sans cette garde, un visiteur anonyme sur une page publique (accueil,
+  //    produit, boutique...) déclenche un 401 → apiFetch tente un silent
+  //    refresh, échoue, et fait un hard redirect vers /login — coupant
+  //    l'affichage des données publiques avant même qu'elles ne chargent.
   useEffect(() => {
+    if (!getRoleFromToken()) return;
     notificationService.getUnreadCount()
       .then(setUnreadCount)
       .catch(() => {}); // silencieux si le backend n'est pas encore prêt

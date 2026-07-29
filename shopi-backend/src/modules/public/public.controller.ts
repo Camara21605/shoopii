@@ -57,18 +57,24 @@ export class PublicController {
 
   @Get('boutiques')
   @ApiOperation({ summary: 'Liste des boutiques actives' })
-  @ApiQuery({ name: 'page',   required: false })
-  @ApiQuery({ name: 'limit',  required: false })
-  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'page',          required: false })
+  @ApiQuery({ name: 'limit',         required: false })
+  @ApiQuery({ name: 'search',        required: false })
+  @ApiQuery({ name: 'categoryId',    required: false })
+  @ApiQuery({ name: 'subCategoryId', required: false })
+  @ApiQuery({ name: 'companyTypeId', required: false })
   listBoutiques(
-    @Query('page')   page?:   string,
-    @Query('limit')  limit?:  string,
-    @Query('search') search?: string,
+    @Query('page')          page?:          string,
+    @Query('limit')         limit?:         string,
+    @Query('search')        search?:        string,
+    @Query('categoryId')    categoryId?:    string,
+    @Query('subCategoryId') subCategoryId?: string,
+    @Query('companyTypeId') companyTypeId?: string,
   ) {
     return this.publicService.listBoutiques({
       page:  page  ? parseInt(page)  : 1,
       limit: limit ? parseInt(limit) : 12,
-      search,
+      search, categoryId, subCategoryId, companyTypeId,
     });
   }
 

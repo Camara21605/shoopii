@@ -14,6 +14,8 @@ import { CompanyAvis } from 'src/database/entities/entreprise.table/company-avis
 import { Promotion, PromoStatus } from 'src/database/entities/entreprise.table/promotion.entity';
 import { Follow, FollowStatus, TargetActorType } from 'src/database/entities/follow/follow.entity';
 import { ProductStory, StoryStatus } from 'src/database/entities/entreprise.table/product-story.entity';
+import { Category }    from 'src/database/entities/entreprise.table/category.entity';
+import { SubCategory } from 'src/database/entities/entreprise.table/sub-category.entity';
 
 // ── Interfaces de réponse ─────────────────────────────────────
 
@@ -161,6 +163,12 @@ export class PublicService {
 
     @InjectRepository(ProductStory)
     private readonly storyRepo: Repository<ProductStory>,
+
+    @InjectRepository(Category)
+    private readonly categoryRepo: Repository<Category>,
+
+    @InjectRepository(SubCategory)
+    private readonly subCategoryRepo: Repository<SubCategory>,
   ) {}
 
   // ── Produits publics paginés ──────────────────────────────────
@@ -459,8 +467,16 @@ export class PublicService {
    ════════════════════════════════════════════════════════ */
   async listBoutiques(params: {
     page: number; limit: number; search?: string;
+    categoryId?: string; subCategoryId?: string; companyTypeId?: string;
   }): Promise<{ data: PublicBoutiqueResponse[]; total: number; page: number }> {
-    const { page, limit, search } = params;
+    const { page, limit, search, categoryId, subCategoryId, companyTypeId } = params;
+
+    if (categoryId && !(await this.categoryRepo.existsBy({ id: categoryId }))) {
+      throw new NotFoundException('Catégorie introuvable.');
+    }
+    if (subCategoryId && !(await this.subCategoryRepo.existsBy({ id: subCategoryId }))) {
+      throw new NotFoundException('Sous-catégorie introuvable.');
+    }
 
     const qb = this.companyRepo
       .createQueryBuilder('c')
@@ -472,6 +488,35 @@ export class PublicService {
 
     if (search) {
       qb.andWhere('c.companyName LIKE :s', { s: `%${search}%` });
+    }
+
+    if (companyTypeId) {
+      qb.andWhere('c.companyTypeId = :companyTypeId', { companyTypeId });
+    }
+
+    /* Sous-requêtes EXISTS/IN plutôt que des JOIN : évite les doublons
+     * d'entreprise sans recourir à SELECT DISTINCT, qui échoue ici car
+     * Company a des colonnes `json` (notifSettings, tags...) sans opérateur
+     * d'égalité pour Postgres.
+     *
+     * Catégorie ET sous-catégorie sont dérivées du catalogue réel (produits
+     * publiés de l'entreprise) plutôt que de la relation Company↔Category
+     * (`company_categories`) : cette relation M2M existe dans le schéma mais
+     * n'est alimentée par AUCUN endroit du code (ni dashboard entreprise, ni
+     * super-admin) — filtrer dessus renvoyait toujours 0 résultat même pour
+     * des entreprises actives avec un vrai catalogue. */
+    if (categoryId) {
+      qb.andWhere(
+        'c.id IN (SELECT "companyId" FROM products WHERE "categoryId" = :categoryId AND "visibilite" = :vis)',
+        { categoryId, vis: ProductVisibility.PUBLIC },
+      );
+    }
+
+    if (subCategoryId) {
+      qb.andWhere(
+        'c.id IN (SELECT "companyId" FROM products WHERE "subCategoryId" = :subCategoryId AND "visibilite" = :vis)',
+        { subCategoryId, vis: ProductVisibility.PUBLIC },
+      );
     }
 
     const [rows, total] = await qb.getManyAndCount();

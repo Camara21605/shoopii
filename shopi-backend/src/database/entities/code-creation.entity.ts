@@ -14,7 +14,7 @@ import {
 } from 'typeorm';
 
 import { User } from './user.entity';
-import { UserRole } from 'src/common/enums/user-role.enum';
+import { UserRole } from '../../common/enums/user-role.enum';
 
 import { Admin } from './profiles/admin-profile.entity';
 import { Partner } from './profiles/partenaire-profile.entity';

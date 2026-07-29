@@ -16,13 +16,10 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch }   from '../../../../shared/services/apiFetch';
 import SectionHeader  from '../ui/SectionHeader';
 import styles         from './TypeEntrepriseSection.module.css';
-
-interface Props {
-  onToast: (m: string) => void;
-}
 
 interface CompanyTypeApi {
   id:            string;
@@ -45,7 +42,8 @@ function makeBg(color: string): string {
 /* Fallback si aucune couleur n'est définie */
 const DEFAULT_COLOR = 'var(--blue)';
 
-export default function TypeEntrepriseSection({ onToast }: Props) {
+export default function TypeEntrepriseSection() {
+  const navigate = useNavigate();
   const [types,   setTypes]   = useState<CompanyTypeApi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
@@ -65,7 +63,7 @@ export default function TypeEntrepriseSection({ onToast }: Props) {
           title="Toutes les <em>catégories d'entreprises</em>"
           sub="Trouvez l'entreprise qui vous correspond"
           linkText="Toutes les boutiques"
-          onLink={() => onToast('🏪 Toutes les boutiques')}
+          onLink={() => navigate('/boutiques')}
         />
 
         {/* ── Chargement ── */}
@@ -98,7 +96,7 @@ export default function TypeEntrepriseSection({ onToast }: Props) {
                 <div
                   key={t.id}
                   className={styles.card}
-                  onClick={() => onToast(`${t.icone ?? '🏢'} ${t.nom}`)}
+                  onClick={() => navigate(`/boutiques?type=${t.id}`)}
                   style={{
                     '--card-color': color,
                     '--card-bg':    bg,

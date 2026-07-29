@@ -12,13 +12,15 @@ import { CompanyAvis } from 'src/database/entities/entreprise.table/company-avis
 import { Promotion }   from 'src/database/entities/entreprise.table/promotion.entity';
 import { Follow }        from 'src/database/entities/follow/follow.entity';
 import { ProductStory }  from 'src/database/entities/entreprise.table/product-story.entity';
+import { Category }      from 'src/database/entities/entreprise.table/category.entity';
+import { SubCategory }   from 'src/database/entities/entreprise.table/sub-category.entity';
 
 import { PublicController } from './public.controller';
 import { PublicService }    from './public.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product, Company, Delivery, CompanyAvis, Promotion, Follow, ProductStory]),
+    TypeOrmModule.forFeature([Product, Company, Delivery, CompanyAvis, Promotion, Follow, ProductStory, Category, SubCategory]),
   ],
   controllers: [PublicController],
   providers:   [PublicService],

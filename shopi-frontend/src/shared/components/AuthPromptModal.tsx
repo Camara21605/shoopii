@@ -26,6 +26,10 @@ interface AuthPromptModalProps {
   currentRole?: string | null;
   icon?:        string;
   title?:       string;
+  /** Remplace la navigation par défaut vers /login (sinon navigate('/login')) */
+  onLoginClick?:    () => void;
+  /** Remplace la navigation par défaut vers /register (sinon navigate('/register')) */
+  onRegisterClick?: () => void;
 }
 
 export default function AuthPromptModal({
@@ -35,9 +39,14 @@ export default function AuthPromptModal({
   currentRole,
   icon = '🔒',
   title,
+  onLoginClick,
+  onRegisterClick,
 }: AuthPromptModalProps) {
   const navigate = useNavigate();
   if (!open) return null;
+
+  const goToLogin    = () => { onClose(); (onLoginClick ?? (() => navigate('/login')))(); };
+  const goToRegister = () => { onClose(); (onRegisterClick ?? (() => navigate('/register')))(); };
 
   const isWrongRole = variant === 'wrong-role';
 
@@ -74,14 +83,14 @@ export default function AuthPromptModal({
         <div style={{ display:'flex', gap:10, justifyContent:'center', flexDirection:'column' }}>
           {!isWrongRole && (
             <button
-              onClick={() => { onClose(); navigate('/login'); }}
+              onClick={goToLogin}
               style={{ background:'none', color:'var(--navy,#0B1F3A)', border:'1.5px solid var(--bdr2)', borderRadius:12, padding:'13px 24px', fontSize:14, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}
             >
               <i className="fas fa-right-to-bracket" /> Se connecter
             </button>
           )}
           <button
-            onClick={() => { onClose(); navigate('/register'); }}
+            onClick={goToRegister}
             style={{ background:'linear-gradient(135deg,var(--navy,#0B1F3A),var(--blue,#1A4FC4))', color:'#fff', border:'none', borderRadius:12, padding:'14px 24px', fontSize:14, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}
           >
             <i className="fas fa-user-plus" /> Créer mon compte client

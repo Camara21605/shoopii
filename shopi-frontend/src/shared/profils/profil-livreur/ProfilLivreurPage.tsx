@@ -11,6 +11,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStartConversation } from '../../../shared/hooks/useStartConversation';
+import { useAuthGate } from '../../hooks/useAuthGate';
 
 /* ── Header global partagé (même que HomePage) ── */
 import Header from '../../../modules/home/components/layout/Header';
@@ -35,8 +36,9 @@ export default function ProfilLivreurPage({ onToast }: Props) {
   const { id }   = useParams<{ id: string }>();
   const navigate = useNavigate();
 
+  const { openAuthModal, authModal } = useAuthGate();
   const { profile, loading, error, tab, setTab, follow, followLoading } =
-    useLivreurProfile(id, onToast);
+    useLivreurProfile(id, onToast, openAuthModal);
   const { start: startConv } = useStartConversation();
 
   /* ── Header global — mêmes handlers que HomePage ── */
@@ -59,6 +61,7 @@ export default function ProfilLivreurPage({ onToast }: Props) {
             Chargement du profil…
           </div>
         </div>
+        {authModal}
       </>
     );
   }
@@ -78,6 +81,7 @@ export default function ProfilLivreurPage({ onToast }: Props) {
             </div>
           </div>
         </div>
+        {authModal}
       </>
     );
   }
@@ -138,6 +142,8 @@ export default function ProfilLivreurPage({ onToast }: Props) {
           </button>
         </div>
       </div>
+
+      {authModal}
     </>
   );
 }

@@ -8,6 +8,7 @@
 import React, { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStartConversation } from '../../../hooks/useStartConversation';
+import { useAuthGate } from '../../../hooks/useAuthGate';
 
 import Header from '../../../../modules/home/components/layout/Header';
 import { useCorrespondantProfil } from '../hooks/useCorrespondantProfil';
@@ -29,11 +30,13 @@ export default function ProfilCorrespondantPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
+  const { openAuthModal, authModal } = useAuthGate();
+
   const {
     profil, loading, error, suivi, toggleSuivi,
     aboutTags, infosPratiques, schedule, services, zones, paysPartenaires,
     tarifs, avisScore, avis, galerie, contacts, statsSidebar, verifications, similaires,
-  } = useCorrespondantProfil(id);
+  } = useCorrespondantProfil(id, openAuthModal);
 
   const [tab, setTab] = useState<ProfilTab>('info');
 
@@ -75,6 +78,7 @@ export default function ProfilCorrespondantPage() {
         <div className={styles.page}>
           <div className={styles.state}><i className="fas fa-spinner fa-spin" /> Chargement du profil…</div>
         </div>
+        {authModal}
       </>
     );
   }
@@ -98,6 +102,7 @@ export default function ProfilCorrespondantPage() {
             </button>
           </div>
         </div>
+        {authModal}
       </>
     );
   }
@@ -151,6 +156,8 @@ export default function ProfilCorrespondantPage() {
           </button>
         </div>
       </div>
+
+      {authModal}
     </>
   );
 }

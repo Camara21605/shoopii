@@ -96,10 +96,10 @@ export default function HomePage() {
         <TrustSection onToast={showToast} />
 
         {/* 3 — Types d'entreprises */}
-        <TypeEntrepriseSection onToast={showToast} />
+        <TypeEntrepriseSection />
 
         {/* 4 — Catégories populaires */}
-        <CategoriesSection onToast={showToast} />
+        <CategoriesSection />
 
         {/* 6 — Flash sale + promotions */}
         <PromotionsSection onToast={showToast} />

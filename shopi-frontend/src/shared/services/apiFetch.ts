@@ -90,6 +90,8 @@ export async function apiFetch<T = unknown>(
     body?:    unknown;
     params?:  Record<string, string | number | boolean | null | undefined>;
     public?:  boolean;
+    /** Annule la requête (ex. filtre changé avant la fin du fetch précédent) */
+    signal?:  AbortSignal;
     /** Interne — empêche une 2e tentative de silent refresh en boucle */
     _retry?:  boolean;
   } = {},
@@ -100,6 +102,7 @@ export async function apiFetch<T = unknown>(
     body,
     params,
     public: isPublic = false,
+    signal,
     _retry = false,
   } = options;
 
@@ -133,7 +136,7 @@ export async function apiFetch<T = unknown>(
       method,
       headers,
       credentials: 'include', // cookie httpOnly envoyé automatiquement
-      signal: AbortSignal.timeout(60_000),
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(60_000)]) : AbortSignal.timeout(60_000),
       body:
         body instanceof FormData
           ? body
@@ -142,6 +145,12 @@ export async function apiFetch<T = unknown>(
             : undefined,
     });
   } catch (networkError) {
+    /* Requête annulée volontairement par l'appelant (ex. filtre changé) —
+     * on laisse remonter tel quel pour que l'appelant l'ignore silencieusement,
+     * plutôt que de l'afficher comme une erreur réseau. */
+    if (networkError instanceof DOMException && networkError.name === 'AbortError') {
+      throw networkError;
+    }
     console.error(`[apiFetch] Réseau inaccessible → ${method} ${url}`, networkError);
     throw new ApiError(0, 'Impossible de contacter le serveur. Vérifiez que le backend est démarré.', networkError);
   }
@@ -156,6 +165,18 @@ export async function apiFetch<T = unknown>(
       if (refreshed) {
         return apiFetch<T>(endpoint, { ...options, _retry: true });
       }
+
+      /* '/auth/me' est la sonde de session initiale (appelée par AppProvider
+       * sur CHAQUE page, y compris les pages publiques /home, /produit,
+       * /boutique... pour un visiteur anonyme). Un 401 ici, après échec du
+       * refresh, signifie simplement "pas connecté" — un état normal pour
+       * un visiteur anonyme, pas une session expirée à forcer vers /login.
+       * Sans cette exception, tout visiteur non connecté était redirigé
+       * hors de la page publique avant même son affichage. */
+      if (endpoint === '/auth/me') {
+        throw new ApiError(401, 'Non connecté.');
+      }
+
       /* Refresh échoué → session expirée → redirect login */
       tokenStorage.remove();
       window.location.href = '/login';

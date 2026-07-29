@@ -21,6 +21,7 @@ import { NotificationProvider }               from '../../../../shared/notificat
 import NotificationToastStack                 from '../../../../shared/notifications/NotificationToastStack';
 import NotificationCenter                     from '../../../../shared/notifications/NotificationCenter';
 import { useAuthGate }                        from '../../../../shared/hooks/useAuthGate';
+import AuthPromptModal                        from '../../../../shared/components/AuthPromptModal';
 
 type NavKey = 'explorer' | 'boutiques' | 'livreurs' | 'relais' | 'offres';
 
@@ -36,6 +37,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
   const [searchFocus,  setSearchFocus]  = useState(false);
   const [mobileSearch, setMobileSearch] = useState(false);
   const [avatarOpen,   setAvatarOpen]   = useState(false);
+  const [loginGateOpen, setLoginGateOpen] = useState(false);
   const [avatarUrl,    setAvatarUrl]    = useState<string | null>(null);
   const [activeNav,    setActiveNav]    = useState<NavKey | null>(null);
   const avatarRefDesktop = useRef<HTMLDivElement>(null);
@@ -81,6 +83,12 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
   function clientAction(action: () => void) {
     if (isClient) { action(); return; }
     openAuthModal();
+  }
+
+  /* ✅ "Se connecter" n'ouvre plus /login directement — on demande d'abord
+   *    si le visiteur préfère créer un compte client. */
+  function handleLoginClick() {
+    setLoginGateOpen(true);
   }
 
   useEffect(() => {
@@ -168,7 +176,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
   }
 
   function handleSwitchDashboard() {
-    if (!isLoggedIn) { navigate('/login'); return; }
+    if (!isLoggedIn) { openAuthModal(); return; }
     if (inDashboard)  navigate('/home');
     else              navigate(getDashboardPath(role));
   }
@@ -243,7 +251,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
               </button>
 
               <button className={`${styles.iconBtn} ${isMessagerie ? styles.iconBtnActive : ''}`}
-                onClick={() => isLoggedIn ? navigate('/messagerie') : navigate('/login')} title="Messagerie">
+                onClick={() => isLoggedIn ? navigate('/messagerie') : openAuthModal()} title="Messagerie">
                 <i className="fas fa-comment-dots" />
                 {canMessage && msgUnread > 0 && !isMessagerie && (
                   <span className={styles.badge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
@@ -270,7 +278,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
 
               {isAnonymous && (
                 <>
-                  <button className={styles.btnIn} onClick={onLogin}>
+                  <button className={styles.btnIn} onClick={handleLoginClick}>
                     <i className="fas fa-right-to-bracket" /> Connexion
                   </button>
                   <button className={styles.btnUp} onClick={onRegister}>
@@ -331,7 +339,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
 
               {/* ✅ Messagerie — ajouté en mobile */}
               <button className={`${styles.iconBtn} ${isMessagerie ? styles.iconBtnActive : ''}`}
-                onClick={() => isLoggedIn ? navigate('/messagerie') : navigate('/login')} title="Messagerie">
+                onClick={() => isLoggedIn ? navigate('/messagerie') : openAuthModal()} title="Messagerie">
                 <i className="fas fa-comment-dots" />
                 {canMessage && msgUnread > 0 && !isMessagerie && (
                   <span className={styles.badge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
@@ -349,7 +357,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
               </button>
 
               {isAnonymous && (
-                <button className={styles.avatar} onClick={onLogin} title="Connexion" style={{ fontSize:11, fontWeight:700 }}>
+                <button className={styles.avatar} onClick={handleLoginClick} title="Connexion" style={{ fontSize:11, fontWeight:700 }}>
                   <i className="fas fa-right-to-bracket" />
                 </button>
               )}
@@ -452,7 +460,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
             <div className={styles.drawerCta}>
               {isAnonymous ? (
                 <>
-                  <button className={styles.drawerBtnIn} onClick={() => { onLogin(); setMobileOpen(false); }}>
+                  <button className={styles.drawerBtnIn} onClick={() => { setMobileOpen(false); handleLoginClick(); }}>
                     <i className="fas fa-right-to-bracket" /> Connexion
                   </button>
                   <button className={styles.drawerBtnUp} onClick={() => { onRegister(); setMobileOpen(false); }}>
@@ -536,6 +544,15 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
       </nav>
 
       {authModal}
+
+      <AuthPromptModal
+        open={loginGateOpen}
+        onClose={() => setLoginGateOpen(false)}
+        variant="anonymous"
+        title="Avant de vous connecter…"
+        onLoginClick={onLogin}
+        onRegisterClick={onRegister}
+      />
     </NotificationProvider>
   );
 }

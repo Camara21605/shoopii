@@ -12,13 +12,10 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch }  from '../../../../shared/services/apiFetch';
 import SectionHeader from '../ui/SectionHeader';
 import styles        from './CategoriesSection.module.css';
-
-interface Props {
-  onToast: (m: string) => void;
-}
 
 interface CategoryApi {
   id:            string;
@@ -33,7 +30,8 @@ interface CategoryApi {
 /* Carte "Tout" toujours présente en premier */
 const CAT_TOUT = { id: 'tout', nom: 'Tout', icone: '✦', count: null };
 
-export default function CategoriesSection({ onToast }: Props) {
+export default function CategoriesSection() {
+  const navigate = useNavigate();
   const [active,  setActive]  = useState('Tout');
   const [cats,    setCats]    = useState<CategoryApi[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,9 +44,14 @@ export default function CategoriesSection({ onToast }: Props) {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleClick = (nom: string) => {
-    setActive(nom);
-    onToast(`📂 ${nom}`);
+  const handleClickTout = () => {
+    setActive(CAT_TOUT.nom);
+    navigate('/boutiques');
+  };
+
+  const handleClickCategory = (c: CategoryApi) => {
+    setActive(c.nom);
+    navigate(`/boutiques?category=${c.id}`);
   };
 
   return (
@@ -59,7 +62,7 @@ export default function CategoriesSection({ onToast }: Props) {
           title="Catégories <em>populaires</em>"
           sub="Naviguez dans nos univers produits"
           linkText="Tout parcourir"
-          onLink={() => onToast('📂 Toutes les catégories')}
+          onLink={() => navigate('/boutiques')}
         />
 
         {/* ── Skeleton ── */}
@@ -83,7 +86,7 @@ export default function CategoriesSection({ onToast }: Props) {
             {/* Carte "Tout" toujours en premier */}
             <div
               className={`${styles.cat} ${active === CAT_TOUT.nom ? styles.catOn : ''}`}
-              onClick={() => handleClick(CAT_TOUT.nom)}
+              onClick={handleClickTout}
             >
               <div className={styles.catEm}>{CAT_TOUT.icone}</div>
               <div className={styles.catNm}>{CAT_TOUT.nom}</div>
@@ -95,7 +98,7 @@ export default function CategoriesSection({ onToast }: Props) {
               <div
                 key={c.id}
                 className={`${styles.cat} ${active === c.nom ? styles.catOn : ''}`}
-                onClick={() => handleClick(c.nom)}
+                onClick={() => handleClickCategory(c)}
               >
                 <div className={styles.catEm}>{c.icone ?? '📁'}</div>
                 <div className={styles.catNm}>{c.nom}</div>

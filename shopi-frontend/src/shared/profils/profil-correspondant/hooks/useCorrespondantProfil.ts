@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { fetchCorrespondantProfil, toggleSuiviCorrespondant } from '../services/correspondantProfil.api';
+import { getRoleFromToken } from '../../../services/authUtils';
 import type {
   CorrProfil, InfoPratique, ScheduleRow, ContactRow,
   Service, ZoneCard, PaysPartenaire, TarifRow,
@@ -30,7 +31,7 @@ const AVIS_SCORE_VIDE: AvisScore = {
   keywords: [],
 };
 
-export function useCorrespondantProfil(id: string | undefined) {
+export function useCorrespondantProfil(id: string | undefined, onRequireAuth?: () => void) {
   const [profil,  setProfil]  = useState<CorrProfil | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
@@ -95,6 +96,7 @@ export function useCorrespondantProfil(id: string | undefined) {
   /* Suivi optimiste + rollback */
   const toggleSuivi = useCallback(async () => {
     if (!id) return;
+    if (!getRoleFromToken()) { onRequireAuth?.(); return; }
     setSuivi(s => !s);
     try {
       const { isSuivi } = await toggleSuiviCorrespondant(id);
@@ -102,7 +104,7 @@ export function useCorrespondantProfil(id: string | undefined) {
     } catch {
       setSuivi(s => !s);
     }
-  }, [id]);
+  }, [id, onRequireAuth]);
 
   /* Statistiques sidebar dérivées des données API réelles */
   const statsSidebar = profil ? [
