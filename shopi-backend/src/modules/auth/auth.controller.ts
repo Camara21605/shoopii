@@ -60,11 +60,22 @@ const REFRESH_COOKIE  = 'refresh_token';
 
 // ── Helpers cookies ───────────────────────────────────────────────────────────
 
+/* SameSite=Strict bloque le cookie sur TOUTE requête cross-site — pas
+ * seulement les navigations, mais aussi les fetch/XHR envoyés par le SPA.
+ * En prod, le frontend (Vercel) et le backend (Render) sont sur des domaines
+ * différents (cross-site), donc Strict empêchait le cookie de partir sur le
+ * moindre appel API après le login : la connexion "réussissait" (cookies
+ * posés par la réponse de /auth/login), puis le tout premier appel du
+ * dashboard partait sans cookie → 401 → refresh échoue (lui aussi sans
+ * cookie) → apiFetch.ts redirige en dur vers /login. En dev, frontend et
+ * backend sont sur des ports différents mais le MÊME site (localhost), donc
+ * Lax/Strict ne changent rien localement — seul le comportement en prod
+ * était cassé. */
 function buildAccessCookieOptions(isProd: boolean, maxAgeMs: number) {
   return {
     httpOnly: true,
     secure:   isProd,
-    sameSite: 'strict' as const,
+    sameSite: (isProd ? 'none' : 'lax') as const,
     maxAge:   maxAgeMs,
     path:     '/',
   };
@@ -74,7 +85,7 @@ function buildRefreshCookieOptions(isProd: boolean, maxAgeMs: number) {
   return {
     httpOnly: true,
     secure:   isProd,
-    sameSite: 'strict' as const,
+    sameSite: (isProd ? 'none' : 'lax') as const,
     maxAge:   maxAgeMs,
     /* Restreint aux seules routes /api/auth pour limiter l'exposition
      * du refresh token aux endpoints qui en ont réellement besoin. */
@@ -84,13 +95,13 @@ function buildRefreshCookieOptions(isProd: boolean, maxAgeMs: number) {
 
 function clearAccessCookie(res: Response, isProd: boolean) {
   res.clearCookie(ACCESS_COOKIE, {
-    httpOnly: true, secure: isProd, sameSite: 'strict', path: '/',
+    httpOnly: true, secure: isProd, sameSite: isProd ? 'none' : 'lax', path: '/',
   });
 }
 
 function clearRefreshCookie(res: Response, isProd: boolean) {
   res.clearCookie(REFRESH_COOKIE, {
-    httpOnly: true, secure: isProd, sameSite: 'strict', path: '/api/auth',
+    httpOnly: true, secure: isProd, sameSite: isProd ? 'none' : 'lax', path: '/api/auth',
   });
 }
 
