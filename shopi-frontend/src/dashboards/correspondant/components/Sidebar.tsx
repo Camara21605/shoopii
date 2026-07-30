@@ -1,7 +1,9 @@
 // components/Sidebar.tsx
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import s from '../styles/Sidebar.module.css';
 import { pop } from './Toast';
+import { useAppContext } from '../../../shared/context/AppContext';
 import type { PageId } from '../data/correspondantData';
 
 interface Props {
@@ -36,6 +38,8 @@ const GROUPS: { title: string; items: NavItem[] }[] = [
 ];
 
 export default function Sidebar({ page, setPage, open, onClose, nomUtilisateur, photoUrl }: Props) {
+  const navigate = useNavigate();
+  const { logout } = useAppContext();
   const displayName = nomUtilisateur ?? '—';
   const initiales   = nomUtilisateur
     ? nomUtilisateur.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
@@ -98,7 +102,7 @@ export default function Sidebar({ page, setPage, open, onClose, nomUtilisateur, 
         <button className={s.botBtn} onClick={() => pop('🔔 Notifications', 'i')}>
           <i className="fas fa-bell" /><span>Alertes</span>
         </button>
-        <button className={s.botBtn} onClick={() => pop('👋 À bientôt !', 'w')}>
+        <button className={s.botBtn} onClick={() => { logout(); navigate('/login'); }}>
           <i className="fas fa-right-from-bracket" /><span>Quitter</span>
         </button>
       </div>

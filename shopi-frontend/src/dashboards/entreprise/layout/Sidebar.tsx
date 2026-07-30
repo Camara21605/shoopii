@@ -7,8 +7,10 @@
  */
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
+import { useAppContext } from '../../../shared/context/AppContext';
 import './Sidebar.css';
 
 type CanFn = (group: string, action: string) => boolean;
@@ -94,6 +96,8 @@ export default function Sidebar({
   can, isOwner = false,
 }: SidebarProps) {
   const { pop } = useToast();
+  const navigate = useNavigate();
+  const { logout } = useAppContext();
 
   const initiales = (companyName ?? 'TC')
     .split(' ')
@@ -198,7 +202,7 @@ export default function Sidebar({
         <button className="sb-bot-btn" onClick={() => pop('🔔 Notifications', 'i')}>
           <i className="fas fa-bell"></i><span>Alertes</span>
         </button>
-        <button className="sb-bot-btn" onClick={() => pop('👋 Déconnexion en cours…', 'w')}>
+        <button className="sb-bot-btn" onClick={() => { logout(); navigate('/login'); }}>
           <i className="fas fa-right-from-bracket"></i><span>Quitter</span>
         </button>
       </div>
