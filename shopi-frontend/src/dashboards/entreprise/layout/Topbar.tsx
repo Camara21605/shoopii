@@ -20,7 +20,7 @@ import { useNavigate } from 'react-router-dom';
 
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
-import { tokenStorage } from '../../../shared/services/apiFetch';
+import { useAppContext } from '../../../shared/context/AppContext';
 import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
 import { useNotifications } from '../../../shared/notifications/NotificationContext';
@@ -110,6 +110,7 @@ export default function Topbar({
 }: TopbarProps) {
   const { pop } = useToast();
   const navigate = useNavigate();
+  const { logout } = useAppContext();
   const { msgUnread } = useGlobalCall();
   const { notifications } = useNotifications();
   const orderUnread = notifications.filter(n => n.type.startsWith('order') && !n.isRead).length;
@@ -158,7 +159,7 @@ export default function Topbar({
   }
 
   function handleLogout() {
-    tokenStorage.remove();
+    logout();
     setAvatarOpen(false);
     setMobileMenuOpen(false);
     navigate('/login');

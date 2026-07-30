@@ -4,7 +4,8 @@
 
 import React, { Suspense, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiFetch, tokenStorage } from '../../shared/services/apiFetch';
+import { apiFetch } from '../../shared/services/apiFetch';
+import { useAppContext } from '../../shared/context/AppContext';
 import { useSuperAdminState } from './hooks/useSuperAdminState';
 import Sidebar   from './layout/Sidebar';
 import Topbar    from './layout/Topbar';
@@ -43,6 +44,7 @@ export default function SuperAdminApp() {
   const store = useSuperAdminState();
   const { state, navigate } = store;
   const routerNavigate = useNavigate();
+  const { logout } = useAppContext();
 
   const [sidebarOpen,   setSidebarOpen]  = useState(false);
   const [newMsgOpen,    setNewMsgOpen]   = useState(false);
@@ -62,9 +64,9 @@ export default function SuperAdminApp() {
   }, []);
 
   const handleLogout = useCallback(() => {
-    tokenStorage.remove();
+    logout();
     routerNavigate('/login');
-  }, [routerNavigate]);
+  }, [routerNavigate, logout]);
 
   useEffect(() => {
     const handleResize = () => { if (window.innerWidth > 960) setSidebarOpen(false); };

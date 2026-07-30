@@ -11,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate }                 from 'react-router-dom';
 import { tokenStorage }                from '../../../shared/services/apiFetch';
 import { getRoleFromToken }            from '../../../shared/services/authUtils';
+import { useAppContext }               from '../../../shared/context/AppContext';
 import ThemeToggle                     from '../../../shared/components/ThemeToggle';
 
 /* ─────────────────────────────────────────────────────────────
@@ -30,6 +31,7 @@ interface TopbarProps {
 export default function Topbar({ onMenuClick, onSearch, pendingCount }: TopbarProps) {
   const [clock, setClock] = useState('');
   const routerNavigate = useNavigate();
+  const { logout } = useAppContext();
 
   // Horloge en temps réel (mise à jour chaque seconde)
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function Topbar({ onMenuClick, onSearch, pendingCount }: TopbarPr
   const role  = token ? getRoleFromToken(token) : null;
 
   const handleLogout = () => {
-    tokenStorage.remove();
+    logout();
     routerNavigate('/login');
   };
 

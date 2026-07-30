@@ -15,7 +15,8 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate as useRouterNavigate } from 'react-router-dom';
-import { tokenStorage, apiFetch } from '../../shared/services/apiFetch';
+import { apiFetch } from '../../shared/services/apiFetch';
+import { useAppContext } from '../../shared/context/AppContext';
 import type { PageId } from './data/livreurData';
 import { PAGE_META } from './data/livreurData';
 
@@ -91,6 +92,7 @@ function parseSplat(splat: string): { page: PageId; viewedId?: string } {
 
 export default function LivreurApp() {
   const routerNavigate = useRouterNavigate();
+  const { logout } = useAppContext();
   const { '*': splat = '' } = useParams<{ '*': string }>();
   const { page, viewedId } = parseSplat(splat);
 
@@ -135,9 +137,9 @@ export default function LivreurApp() {
 
   /* Déconnexion : vide le token et redirige vers /login */
   const handleLogout = useCallback(() => {
-    tokenStorage.remove();
+    logout();
     routerNavigate('/login');
-  }, [routerNavigate]);
+  }, [routerNavigate, logout]);
 
   /* Retour à l'espace public */
   const handleGoHome = useCallback(() => {
