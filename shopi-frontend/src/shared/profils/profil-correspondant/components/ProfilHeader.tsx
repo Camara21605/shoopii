@@ -18,14 +18,16 @@ const CHIP_ICON: Record<string, string> = {
 };
 
 interface Props {
-  profil:    CorrProfil;
-  suivi:     boolean;
-  onToggle:  () => void;
-  onMessage: () => void;
-  onShare:   () => void;
+  profil:       CorrProfil;
+  suivi:        boolean;
+  callLoading?: boolean;
+  onToggle:     () => void;
+  onMessage:    () => void;
+  onShare:      () => void;
+  onCall?:      () => void;
 }
 
-export default function ProfilHeader({ profil, suivi, onToggle, onMessage, onShare }: Props) {
+export default function ProfilHeader({ profil, suivi, callLoading, onToggle, onMessage, onShare, onCall }: Props) {
   /* Les 8 KPI dérivés du profil */
   const KPIS = [
     { v: profil.missions.toLocaleString('fr-FR'), l: 'Missions',        badge: `+${profil.missionsMois}`, badgeCls: styles.kbG },
@@ -84,6 +86,13 @@ export default function ProfilHeader({ profil, suivi, onToggle, onMessage, onSha
               <button className={styles.btnShare} onClick={onShare} title="Partager">
                 <i className="fas fa-share-nodes" />
               </button>
+              {onCall && (
+                <button className={styles.btnMsg} onClick={onCall} disabled={callLoading}>
+                  {callLoading
+                    ? <><i className="fas fa-spinner fa-spin" /> …</>
+                    : <><i className="fas fa-phone" /> Appeler</>}
+                </button>
+              )}
               <button className={styles.btnMsg} onClick={onMessage}>
                 <i className="fas fa-comment-dots" /> Contacter
               </button>

@@ -33,6 +33,7 @@ import { WalletModule }     from './modules/wallet/wallet.module';
 import { CommandeModule }   from './modules/commande/commande.module';
 import { SuivisModule }        from './modules/suivis/suivis.module';
 import { MessagerieModule }    from './modules/messagerie/messagerie.module';
+import { CallModule }          from './modules/call/call.module';
 import { ContactSyncModule }   from './modules/messagerie/contacts/contact-sync.module';
 import { LocationModule }      from './modules/location/location.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -97,6 +98,7 @@ import { PerformanceModule }           from './modules/performance-engine/perfor
     PlatformSecurityModule,
     PaiementModule,
     MessagerieModule,
+    CallModule,
     ContactSyncModule,
     LocationModule,
 

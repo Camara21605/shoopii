@@ -46,7 +46,6 @@
 
 import {
   WebSocketGateway,
-  WebSocketServer,
   SubscribeMessage,
   OnGatewayInit,
   OnGatewayConnection,
@@ -96,9 +95,6 @@ const TYPING_THROTTLE_MS = 1500;
 export class MessagerieGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
-  @WebSocketServer()
-  private readonly server: Server;
-
   private readonly logger = new Logger(MessagerieGateway.name);
 
   /**
@@ -321,153 +317,8 @@ export class MessagerieGateway
   }
 
   // ─────────────────────────────────────────────────────────
-  // SIGNALING APPELS (WebRTC)
-  // Chaque handler relaie simplement l'événement à l'autre
-  // participant via sa room privée user:{userId}.
-  // ─────────────────────────────────────────────────────────
-
-  /** Appelant démarre un appel → notifie l'appelé. */
-  @SubscribeMessage('call:initiate')
-  handleCallInitiate(
-    @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: {
-      conversationId: string;
-      calleeUserId:   string;
-      callerName:     string;
-      callerAvatar?:  string;
-      callType?:      'audio' | 'video';
-    },
-  ): void {
-    const room = `user:${body.calleeUserId}`;
-    this.logger.log(`📞 call:initiate caller=${socket.data.userId} callee=${body.calleeUserId} sockets-in-room=${this.roomSize(room)}`);
-    this.server.to(room).emit('call:incoming', {
-      conversationId: body.conversationId,
-      callerUserId:   socket.data.userId,
-      callerName:     body.callerName,
-      callerAvatar:   body.callerAvatar,
-      callType:       body.callType ?? 'audio',
-    });
-  }
-
-  /** Appelé accepte → notifie l'appelant. */
-  @SubscribeMessage('call:accept')
-  handleCallAccept(
-    @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: { conversationId: string; callerUserId: string },
-  ): void {
-    const room = `user:${body.callerUserId}`;
-    this.logger.log(`✅ call:accept callee=${socket.data.userId} caller=${body.callerUserId} sockets-in-room=${this.roomSize(room)}`);
-    this.server.to(room).emit('call:accepted', {
-      conversationId: body.conversationId,
-      calleeUserId:   socket.data.userId,
-    });
-  }
-
-  /** Appelé refuse → notifie l'appelant. */
-  @SubscribeMessage('call:reject')
-  handleCallReject(
-    @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: { conversationId: string; callerUserId: string },
-  ): void {
-    this.server.to(`user:${body.callerUserId}`).emit('call:rejected', {
-      conversationId: body.conversationId,
-    });
-  }
-
-  /** Un participant raccroche → notifie l'autre. */
-  @SubscribeMessage('call:end')
-  handleCallEnd(
-    @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: { conversationId: string; targetUserId: string },
-  ): void {
-    this.server.to(`user:${body.targetUserId}`).emit('call:ended', {
-      conversationId: body.conversationId,
-    });
-  }
-
-  /** Offer SDP (appelant → appelé). */
-  @SubscribeMessage('call:offer')
-  handleCallOffer(
-    @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: {
-      conversationId: string;
-      targetUserId:   string;
-      sdp:            RTCSessionDescriptionInit;
-    },
-  ): void {
-    const room = `user:${body.targetUserId}`;
-    this.logger.log(`🔄 call:offer from=${socket.data.userId} to=${body.targetUserId} sockets-in-room=${this.roomSize(room)}`);
-    this.server.to(room).emit('call:offer', {
-      conversationId: body.conversationId,
-      fromUserId:     socket.data.userId,
-      sdp:            body.sdp,
-    });
-  }
-
-  /** Answer SDP (appelé → appelant). */
-  @SubscribeMessage('call:answer')
-  handleCallAnswer(
-    @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: {
-      conversationId: string;
-      targetUserId:   string;
-      sdp:            RTCSessionDescriptionInit;
-    },
-  ): void {
-    const room = `user:${body.targetUserId}`;
-    this.logger.log(`🔄 call:answer from=${socket.data.userId} to=${body.targetUserId} sockets-in-room=${this.roomSize(room)}`);
-    this.server.to(room).emit('call:answer', {
-      conversationId: body.conversationId,
-      fromUserId:     socket.data.userId,
-      sdp:            body.sdp,
-    });
-  }
-
-  /** Candidat ICE (dans les deux sens). */
-  @SubscribeMessage('call:ice-candidate')
-  handleCallIceCandidate(
-    @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: {
-      conversationId: string;
-      targetUserId:   string;
-      candidate:      RTCIceCandidateInit;
-    },
-  ): void {
-    this.server.to(`user:${body.targetUserId}`).emit('call:ice-candidate', {
-      conversationId: body.conversationId,
-      fromUserId:     socket.data.userId,
-      candidate:      body.candidate,
-    });
-  }
-
-  /** Appelé occupé → notifie l'appelant. */
-  @SubscribeMessage('call:busy')
-  handleCallBusy(
-    @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: { conversationId: string; callerUserId: string },
-  ): void {
-    this.server.to(`user:${body.callerUserId}`).emit('call:busy', {
-      conversationId: body.conversationId,
-    });
-  }
-
-  // ─────────────────────────────────────────────────────────
   // UTILITIES PRIVÉES
   // ─────────────────────────────────────────────────────────
-
-  /**
-   * Nombre de sockets actuellement dans une room (ex: 'user:{id}').
-   * 0 → aucun appareil connecté pour ce destinataire, l'emit est silencieux
-   * (Socket.IO n'erreure jamais sur une room vide). Utile pour diagnostiquer
-   * les signaux d'appel qui "partent" mais n'arrivent jamais.
-   */
-  private roomSize(room: string): number {
-    /* `this.server` est typé `Server` par Nest (où .adapter est une
-       surcharge de setter), mais à l'exécution c'est l'instance Namespace
-       du gateway, dont .adapter est bien l'instance avec .rooms. */
-    return (this.server as unknown as { adapter: { rooms: Map<string, Set<string>> } })
-      .adapter.rooms.get(room)?.size ?? 0;
-  }
 
   /** Extrait le token JWT depuis plusieurs sources possibles. */
   private extractToken(socket: AuthenticatedSocket): string | null {

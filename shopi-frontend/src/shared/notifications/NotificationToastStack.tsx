@@ -33,6 +33,7 @@ function getTypeMeta(type: string): TypeMeta {
     review:  { icon: 'fa-star',         bg: 'rgba(245,158,11,.12)',  color: '#D97706' },
     stock:   { icon: 'fa-warehouse',    bg: 'rgba(239,68,68,.12)',   color: '#DC2626' },
     account: { icon: 'fa-user-check',   bg: 'rgba(16,185,129,.12)',  color: '#059669' },
+    call:    { icon: 'fa-phone',        bg: 'rgba(22,82,240,.12)',   color: '#1652F0' },
   };
   return map[prefix] ?? { icon: 'fa-bell', bg: 'rgba(100,100,100,.1)', color: '#6B7280' };
 }
@@ -84,6 +85,7 @@ function resolveNavTarget(notif: INotificationDto): string {
     }
     case 'message':
     case 'conversation':
+    case 'call':
       return '/messagerie';
     case 'product':
       return id ? `/produit/${id}` : '/boutiques';

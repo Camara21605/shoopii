@@ -139,6 +139,9 @@ import { ProviderConfig }        from '../database/entities/paiement/provider-co
 import { SettlementBatch }       from '../database/entities/paiement/settlement-batch.entity';
 import { WebhookEvent }          from '../database/entities/paiement/webhook-event.entity';
 import { WalletLedgerEntry }     from '../database/entities/wallet-ledger-entry.entity';
+// ── Appels audio/vidéo ─────────────────────────────────────────
+import { Call }        from '../database/entities/call/call.entity';
+import { CallHistory } from '../database/entities/call/call-history.entity';
 
 
 /* ============================================================
@@ -385,6 +388,9 @@ export const databaseConfigFactory = {
       SettlementBatch,
       WebhookEvent,
       WalletLedgerEntry,
+      // ── Appels audio/vidéo ───────────────────────────────────
+      Call,
+      CallHistory,
     ],
 
 

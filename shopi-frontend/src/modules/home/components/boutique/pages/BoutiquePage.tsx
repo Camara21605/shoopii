@@ -16,6 +16,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { apiFetch, tokenStorage } from '../../../../../shared/services/apiFetch';
 import { useStartConversation }   from '../../../../../shared/hooks/useStartConversation';
+import { useProfileCall }         from '../../../../../shared/hooks/useProfileCall';
 import { useAuthGate }            from '../../../../../shared/hooks/useAuthGate';
 
 /* ── Layout global ── */
@@ -235,6 +236,7 @@ export default function BoutiquePage() {
   const [suivi,        setSuivi]        = useState(false);
   const [suiviPending,   setSuiviPending]   = useState(false);
   const { start: startConv, loading: msgLoading } = useStartConversation();
+  const { call: callProfile, loading: callLoading } = useProfileCall();
   const [partageOpen,    setPartageOpen]    = useState(false);
   const [avisData,       setAvisData]       = useState<AvisResponse | null>(null);
   const [avisLoading,    setAvisLoading]    = useState(false);
@@ -460,11 +462,17 @@ export default function BoutiquePage() {
           suivi={suivi}
           suiviPending={suiviPending}
           msgLoading={msgLoading}
+          callLoading={callLoading}
           onToggleSuivi={handleToggleSuivi}
           onMessage={() => {
             if (!isLoggedIn) { openAuthModal(); return; }
             if (!suivi)      { showToast('Abonnez-vous à la boutique pour lui envoyer un message'); return; }
             startConv('company', companyId ?? '', msg => showToast(`❌ ${msg}`));
+          }}
+          onCall={() => {
+            if (!isLoggedIn) { openAuthModal(); return; }
+            if (!suivi)      { showToast('Abonnez-vous à la boutique pour l\'appeler'); return; }
+            callProfile('company', companyId ?? '', boutiqueInfo.nom, boutique?.logo, msg => showToast(`❌ ${msg}`));
           }}
           onPartage={() => setPartageOpen(true)}
         />

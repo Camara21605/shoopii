@@ -232,17 +232,29 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
         showToast(`📦 ${p.commandeNumero} · ${sender} : ${preview}`, 'i');
       };
 
+      /* Appel impossible à établir (hors ligne / permission refusée) —
+       * détecté côté serveur AVANT même que ça sonne (voir CallGateway).
+       * useAudioCall n'écoute pas cet événement (il n'existait pas avant),
+       * donc on le gère ici : toast explicite + on referme l'overlay
+       * "calling…" resté ouvert côté appelant. */
+      const onCallUnavailable = (p: { conversationId: string; reason: 'offline' | 'denied'; message: string }) => {
+        showToast(`📵 ${p.message}`, 'w');
+        hangUp();
+      };
+
       socket.on('new_message',       onNewMessage);
       socket.on('group_new_message', onGroupMessage);
+      socket.on('call:unavailable',  onCallUnavailable);
       cleanup = () => {
         socket.off('new_message',       onNewMessage);
         socket.off('group_new_message', onGroupMessage);
+        socket.off('call:unavailable',  onCallUnavailable);
       };
     }
 
     subscribe();
     return () => cleanup?.();
-  }, [showToast]);
+  }, [showToast, hangUp]);
 
   // ── Enregistrement du handler MessagerieCore ─────────────────
 

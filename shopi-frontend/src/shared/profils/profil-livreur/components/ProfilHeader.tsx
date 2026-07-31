@@ -11,11 +11,13 @@ import type { LivreurProfile } from '../types';
 interface Props {
   profile:       LivreurProfile;
   followLoading: boolean;
+  callLoading?:  boolean;
   onFollow:      () => void;
   onContact:     () => void;
+  onCall?:       () => void;
 }
 
-export default function ProfilHeader({ profile, followLoading, onFollow, onContact }: Props) {
+export default function ProfilHeader({ profile, followLoading, callLoading, onFollow, onContact, onCall }: Props) {
   const initials = profile.fullName.trim().split(/\s+/).slice(0, 2)
     .map(w => w[0]?.toUpperCase() ?? '').join('') || '?';
 
@@ -64,6 +66,13 @@ export default function ProfilHeader({ profile, followLoading, onFollow, onConta
             </div>
 
             <div className={styles.idActs}>
+              {onCall && (
+                <button className={`${styles.btn} ${styles.btnMsg}`} onClick={onCall} disabled={callLoading}>
+                  {callLoading
+                    ? <><i className="fas fa-spinner fa-spin" /> …</>
+                    : <><i className="fas fa-phone" /> Appeler</>}
+                </button>
+              )}
               <button className={`${styles.btn} ${styles.btnMsg}`} onClick={onContact}>
                 <i className="fas fa-message" /> Contacter
               </button>

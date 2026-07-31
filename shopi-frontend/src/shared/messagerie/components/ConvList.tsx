@@ -8,9 +8,10 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { Conversation, ChatUser } from '../data/messagerieTypes';
 import { ROLE_CONFIG } from '../data/messagerieTypes';
 import { getRoleFromToken } from '../../services/authUtils';
+import type { CallHistoryItem } from '../hooks/useCallHistory';
 import s from '../styles/ConvList.module.css';
 
-type Tab = 'all' | 'unread' | 'boutiques' | 'livreurs' | 'clients' | 'correspondants' | 'masquees' | 'groupes';
+type Tab = 'all' | 'unread' | 'boutiques' | 'livreurs' | 'clients' | 'correspondants' | 'masquees' | 'groupes' | 'appels';
 
 interface Props {
   conversations:   Conversation[];
@@ -30,6 +31,10 @@ interface Props {
   /** Groupes de livraison automatiques */
   groupConvs?:     Conversation[];
   groupUsersMap?:  Map<string, ChatUser>;
+  /** Historique des appels (onglet "Appels") */
+  callHistory?:        CallHistoryItem[];
+  callHistoryLoading?: boolean;
+  onLoadCallHistory?:  () => void;
 }
 
 /* Toutes les définitions d'onglets disponibles */
@@ -37,6 +42,7 @@ const ALL_TABS: { key: Tab; label: string; icon?: string }[] = [
   { key: 'all',            label: 'Tous'           },
   { key: 'unread',         label: 'Non lus'        },
   { key: 'groupes',        label: 'Livraisons',    icon: 'fas fa-box'       },
+  { key: 'appels',         label: 'Appels',        icon: 'fas fa-phone'     },
   { key: 'boutiques',      label: 'Boutiques'      },
   { key: 'livreurs',       label: 'Livreurs'       },
   { key: 'clients',        label: 'Clients'        },
@@ -54,7 +60,7 @@ const ALL_TABS: { key: Tab; label: string; icon?: string }[] = [
  *   correspondent → parle à boutiques, clients, livreurs
  *   admin / super_admin → tous les types */
 function getVisibleTabs(role: string | null): Tab[] {
-  const base: Tab[] = ['all', 'unread', 'groupes'];
+  const base: Tab[] = ['all', 'unread', 'groupes', 'appels'];
   const end:  Tab[] = ['masquees'];
   switch (role) {
     case 'client':        return [...base, 'boutiques', 'livreurs',  'correspondants',           ...end];
@@ -65,7 +71,11 @@ function getVisibleTabs(role: string | null): Tab[] {
   }
 }
 
-export default function ConvList({ conversations, usersMap, activeId, mobileOpen, totalUnread, onSelect, onNewConv, onDeleteConv, onHideConv, archivedConvs, onLoadArchived, onUnhideConv, onMarkUnread, onMarkRead, groupConvs = [], groupUsersMap = new Map() }: Props) {
+export default function ConvList({
+  conversations, usersMap, activeId, mobileOpen, totalUnread, onSelect, onNewConv, onDeleteConv, onHideConv,
+  archivedConvs, onLoadArchived, onUnhideConv, onMarkUnread, onMarkRead, groupConvs = [], groupUsersMap = new Map(),
+  callHistory = [], callHistoryLoading = false, onLoadCallHistory,
+}: Props) {
   const [search, setSearch] = useState('');
   const [tab,    setTab]    = useState<Tab>('all');
 
@@ -80,8 +90,8 @@ export default function ConvList({ conversations, usersMap, activeId, mobileOpen
   }, [visibleSet, tab]);
 
   const filtered = useMemo(() => {
-    /* Les onglets Livraisons et Masquées sont gérés séparément */
-    if (tab === 'groupes' || tab === 'masquees') return [];
+    /* Les onglets Livraisons, Appels et Masquées sont gérés séparément */
+    if (tab === 'groupes' || tab === 'masquees' || tab === 'appels') return [];
 
     /* Base : conversations P2P uniquement (pas les groupes isGroup) */
     let list = conversations.filter(c => !c.isGroup);
@@ -123,6 +133,7 @@ export default function ConvList({ conversations, usersMap, activeId, mobileOpen
   const switchTab = (key: Tab) => {
     setTab(key);
     if (key === 'masquees') onLoadArchived();
+    if (key === 'appels')   onLoadCallHistory?.();
   };
 
   /* Conversations masquées filtrées par la recherche */
@@ -196,6 +207,22 @@ export default function ConvList({ conversations, usersMap, activeId, mobileOpen
                   />
                 ))}
               </>
+            )}
+          </>
+        ) : tab === 'appels' ? (
+          <>
+            {callHistoryLoading ? (
+              <div className={s.empty}>
+                <i className="fas fa-spinner fa-spin" />
+                Chargement…
+              </div>
+            ) : callHistory.length === 0 ? (
+              <div className={s.empty}>
+                <i className="fas fa-phone-slash" />
+                Aucun appel pour le moment
+              </div>
+            ) : (
+              callHistory.map(h => <CallHistoryItemRow key={h.id} item={h} />)
             )}
           </>
         ) : tab === 'masquees' ? (
@@ -483,6 +510,78 @@ function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, 
             </button>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Item historique d'appel (onglet "Appels") ─────────────────
+ * Lecture seule — pas de clic pour rappeler ici (à la différence
+ * de WhatsApp) car on ne connaît pas toujours le contexte
+ * conversation/relation d'origine ; l'utilisateur rappelle depuis
+ * la conversation ou le profil du contact. */
+const CALL_STATUS_LABEL: Record<CallHistoryItem['status'], string> = {
+  completed: 'Terminé',
+  missed:    'Manqué',
+  rejected:  'Refusé',
+  busy:      'Occupé',
+};
+const CALL_STATUS_COLOR: Record<CallHistoryItem['status'], string> = {
+  completed: 'var(--t3)',
+  missed:    '#DC2626',
+  rejected:  '#DC2626',
+  busy:      '#D97706',
+};
+
+function fmtDuration(sec: number): string {
+  if (sec <= 0) return '';
+  const m = Math.floor(sec / 60);
+  const s2 = sec % 60;
+  return m > 0 ? `${m} min ${s2}s` : `${s2}s`;
+}
+
+function fmtCallTime(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  return sameDay
+    ? d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+}
+
+function CallHistoryItemRow({ item }: { item: CallHistoryItem }) {
+  const isImgAva = item.contactAvatar?.startsWith('http');
+  const initials = item.contactName.trim().split(/\s+/).slice(0, 2)
+    .map(w => w[0]?.toUpperCase() ?? '').join('') || '?';
+
+  return (
+    <div className={s.item} style={{ cursor: 'default' }}>
+      <div className={s.avaWrap}>
+        <div className={s.ava} style={{ overflow: 'hidden', padding: 0, background: isImgAva ? undefined : 'var(--sky,#EEF3FF)' }}>
+          {isImgAva
+            ? <img src={item.contactAvatar!} alt={item.contactName} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'inherit' }} />
+            : initials}
+        </div>
+      </div>
+
+      <div className={s.info}>
+        <div className={s.name}>
+          <span className={s.nameText}>{item.contactName}</span>
+        </div>
+        <div className={s.context} style={{ color: CALL_STATUS_COLOR[item.status] }}>
+          <i className={`fas ${item.direction === 'outgoing' ? 'fa-arrow-up-right' : 'fa-arrow-down-left'}`} style={{ fontSize: 10, marginRight: 4 }} />
+          {CALL_STATUS_LABEL[item.status]}
+          {item.callType === 'video' && <i className="fas fa-video" style={{ fontSize: 10, marginLeft: 6 }} />}
+        </div>
+        <div className={s.lastMsg}>
+          {item.duration > 0 ? fmtDuration(item.duration) : <span style={{ fontStyle: 'italic' }}>—</span>}
+        </div>
+      </div>
+
+      <div className={s.meta}>
+        <div className={s.metaTop}>
+          <div className={s.time}>{fmtCallTime(item.endedAt)}</div>
+        </div>
       </div>
     </div>
   );

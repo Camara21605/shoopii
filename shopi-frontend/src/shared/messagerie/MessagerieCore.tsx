@@ -16,6 +16,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useMessagerie }     from './hooks/useMessagerie';
 import { useDeliveryGroups } from './hooks/useDeliveryGroups';
+import { useCallHistory }    from './hooks/useCallHistory';
 import { useGlobalCall }     from '../context/GlobalCallContext';
 import { useGroupCallCtx }  from '../context/GroupCallContext';
 import { useToast }          from '../context/ToastContext';
@@ -110,6 +111,9 @@ export default function MessagerieCore() {
 
   // ── Appel de groupe ──────────────────────────────────────────
   const { initiateCall: initiateGroupCall } = useGroupCallCtx();
+
+  // ── Historique des appels (onglet "Appels") ──────────────────
+  const { data: callHistory, loading: callHistoryLoading, load: loadCallHistory } = useCallHistory();
 
   /*
    * Enregistre la fonction de mise à jour locale auprès du contexte global.
@@ -237,6 +241,9 @@ export default function MessagerieCore() {
         onMarkRead={markConvAsRead}
         groupConvs={groups}
         groupUsersMap={groupUsersMap}
+        callHistory={callHistory}
+        callHistoryLoading={callHistoryLoading}
+        onLoadCallHistory={loadCallHistory}
       />
 
       {/* Colonne centrale : fenêtre de chat */}

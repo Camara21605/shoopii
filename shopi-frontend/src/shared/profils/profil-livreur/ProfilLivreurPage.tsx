@@ -11,6 +11,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStartConversation } from '../../../shared/hooks/useStartConversation';
+import { useProfileCall } from '../../../shared/hooks/useProfileCall';
 import { useAuthGate } from '../../hooks/useAuthGate';
 
 /* ── Header global partagé (même que HomePage) ── */
@@ -40,6 +41,7 @@ export default function ProfilLivreurPage({ onToast }: Props) {
   const { profile, loading, error, tab, setTab, follow, followLoading } =
     useLivreurProfile(id, onToast, openAuthModal);
   const { start: startConv } = useStartConversation();
+  const { call: callProfile, loading: callLoading } = useProfileCall();
 
   /* ── Header global — mêmes handlers que HomePage ── */
   const header = (
@@ -94,6 +96,14 @@ export default function ProfilLivreurPage({ onToast }: Props) {
     startConv('delivery', id!, msg => onToast(`❌ ${msg}`, 'e'));
   };
 
+  const onCall = () => {
+    if (!profile.isSuivi) {
+      onToast('Abonnez-vous à ce livreur pour l\'appeler.', 'w');
+      return;
+    }
+    callProfile('delivery', id!, profile.fullName, profile.profilePicture, msg => onToast(`❌ ${msg}`, 'e'));
+  };
+
   return (
     <>
       {/* Header global partagé */}
@@ -103,8 +113,10 @@ export default function ProfilLivreurPage({ onToast }: Props) {
         <ProfilHeader
           profile={profile}
           followLoading={followLoading}
+          callLoading={callLoading}
           onFollow={follow}
           onContact={onContact}
+          onCall={onCall}
         />
 
         <div className={styles.pw}>

@@ -16,6 +16,12 @@ import { apiFetch, tokenStorage } from '../services/apiFetch';
 
 type ActorType = 'company' | 'delivery' | 'correspondent' | 'partner' | 'client';
 
+interface ConversationLookup {
+  id:            string;
+  contactUserId: string | null;
+  contactOnline: boolean;
+}
+
 export function useStartConversation() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -47,5 +53,33 @@ export function useStartConversation() {
     }
   }, [navigate]);
 
-  return { start, loading };
+  /**
+   * Résout conversationId/contactUserId/contactOnline sans naviguer —
+   * utilisé par les boutons "Appeler" (même endpoint, donc mêmes
+   * vérifications de permission que "Contacter", mais on reste sur
+   * la page courante pour démarrer un appel plutôt que d'ouvrir la messagerie).
+   */
+  const resolveContact = useCallback(async (
+    targetType: ActorType,
+    targetId:   string,
+    onError?:   (msg: string) => void,
+  ): Promise<ConversationLookup | null> => {
+    if (!tokenStorage.get()) {
+      navigate('/login');
+      return null;
+    }
+    if (!targetId) return null;
+
+    try {
+      return await apiFetch<ConversationLookup>(
+        '/messagerie/conversations',
+        { method: 'POST', body: { targetType, targetId } },
+      );
+    } catch (err: any) {
+      onError?.(err?.message ?? 'Impossible de contacter cette personne.');
+      return null;
+    }
+  }, [navigate]);
+
+  return { start, resolveContact, loading };
 }

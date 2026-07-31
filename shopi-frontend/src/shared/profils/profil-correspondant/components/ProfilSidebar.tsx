@@ -15,14 +15,16 @@ interface Props {
   verifications: VerifRow[];
   similaires:    SimilaireItem[];
   suivi:         boolean;
+  callLoading?:  boolean;
   onToggle:      () => void;
   onMessage:     () => void;
+  onCall?:       () => void;
   onToast:       (m: string) => void;
 }
 
 export default function ProfilSidebar({
   nom, contacts, stats, abonnes, verifications, similaires,
-  suivi, onToggle, onMessage, onToast,
+  suivi, callLoading, onToggle, onMessage, onCall, onToast,
 }: Props) {
   const navigate = useNavigate();
   const prenom = nom.split(' ')[0];
@@ -40,8 +42,14 @@ export default function ProfilSidebar({
             <button className={`${styles.sideBtn} ${styles.sbWa}`} onClick={() => onToast('📱 WhatsApp')}>
               <i className="fab fa-whatsapp" /> WhatsApp
             </button>
-            <button className={`${styles.sideBtn} ${styles.sbCall}`} onClick={() => onToast('📞 Appel')}>
-              <i className="fas fa-phone" /> Appeler
+            <button
+              className={`${styles.sideBtn} ${styles.sbCall}`}
+              onClick={onCall ?? (() => onToast('📞 Appel'))}
+              disabled={callLoading}
+            >
+              {callLoading
+                ? <><i className="fas fa-spinner fa-spin" /> …</>
+                : <><i className="fas fa-phone" /> Appeler</>}
             </button>
           </div>
         </div>

@@ -22,12 +22,14 @@ interface Props {
   suivi:          boolean;
   suiviPending?:  boolean;
   msgLoading?:    boolean;
+  callLoading?:   boolean;
   onToggleSuivi:  () => void;
   onMessage:      () => void;
+  onCall?:        () => void;
   onPartage:      () => void;
 }
 
-export default function BoutiqueIdentity({ boutique, suivi, suiviPending, msgLoading, onToggleSuivi, onMessage, onPartage }: Props) {
+export default function BoutiqueIdentity({ boutique, suivi, suiviPending, msgLoading, callLoading, onToggleSuivi, onMessage, onCall, onPartage }: Props) {
   return (
     <div className={styles.bar}>
       <div className={styles.inner}>
@@ -118,6 +120,20 @@ export default function BoutiqueIdentity({ boutique, suivi, suiviPending, msgLoa
             <i className={`fas ${msgLoading ? 'fa-spinner fa-spin' : 'fa-comment-dots'}`} />
             {msgLoading ? '…' : 'Message'}
           </button>
+
+          {/* Appeler — le parent gère l'auth/abonnement requis au clic */}
+          {onCall && (
+            <button
+              className={styles.btnMsg}
+              onClick={onCall}
+              disabled={callLoading}
+              title={!suivi ? 'Abonnez-vous pour appeler' : 'Appeler'}
+              style={{ opacity: !suivi ? 0.65 : callLoading ? 0.65 : 1, cursor: callLoading ? 'not-allowed' : 'pointer' }}
+            >
+              <i className={`fas ${callLoading ? 'fa-spinner fa-spin' : 'fa-phone'}`} />
+              {callLoading ? '…' : 'Appeler'}
+            </button>
+          )}
 
           {/* Partager */}
           <button className={styles.btnShare} onClick={onPartage} title="Partager la boutique">

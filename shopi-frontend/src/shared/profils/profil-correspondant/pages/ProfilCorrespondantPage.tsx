@@ -8,6 +8,7 @@
 import React, { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStartConversation } from '../../../hooks/useStartConversation';
+import { useProfileCall } from '../../../hooks/useProfileCall';
 import { useAuthGate } from '../../../hooks/useAuthGate';
 
 import Header from '../../../../modules/home/components/layout/Header';
@@ -45,6 +46,7 @@ export default function ProfilCorrespondantPage() {
   }, []);
 
   const { start: startConv } = useStartConversation();
+  const { call: callProfile, loading: callLoading } = useProfileCall();
   const onMessage = useCallback(() => {
     if (!suivi) {
       onToast('Abonnez-vous à ce correspondant pour lui envoyer un message.');
@@ -52,6 +54,14 @@ export default function ProfilCorrespondantPage() {
     }
     startConv('correspondent', id!, (msg: string) => onToast(`❌ ${msg}`));
   }, [suivi, startConv, id, onToast]);
+
+  const onCall = useCallback(() => {
+    if (!suivi) {
+      onToast('Abonnez-vous à ce correspondant pour l\'appeler.');
+      return;
+    }
+    callProfile('correspondent', id!, profil?.nom ?? 'Correspondant', null, (msg: string) => onToast(`❌ ${msg}`));
+  }, [suivi, callProfile, id, profil, onToast]);
 
   const onShare = useCallback(() => onToast('🔗 Lien du profil copié'), [onToast]);
 
@@ -115,9 +125,11 @@ export default function ProfilCorrespondantPage() {
         <ProfilHeader
           profil={profil}
           suivi={suivi}
+          callLoading={callLoading}
           onToggle={handleToggle}
           onMessage={onMessage}
           onShare={onShare}
+          onCall={onCall}
         />
 
         <div className={styles.pw}>
@@ -140,8 +152,10 @@ export default function ProfilCorrespondantPage() {
             verifications={verifications}
             similaires={similaires}
             suivi={suivi}
+            callLoading={callLoading}
             onToggle={handleToggle}
             onMessage={onMessage}
+            onCall={onCall}
             onToast={onToast}
           />
         </div>

@@ -170,6 +170,7 @@ export enum NotificationActorType {
  *   STORY_*       → stories éphémères
  *   COLIS_*       → relais correspondant
  *   ACCOUNT_*     → gestion de compte
+ *   CALL_*        → appels audio/vidéo
  *   SYSTEM_*      → notifications système
  */
 export enum NotificationType {
@@ -256,6 +257,18 @@ export enum NotificationType {
   // En développement (synchronize:true), TypeORM gère l'ajout automatiquement.
   SUPPORT_TICKET_CREATED = 'support.ticket_created', // accusé de réception ticket créé
   SUPPORT_TICKET_REPLY   = 'support.ticket_reply',   // agent a répondu au ticket
+
+  // ── APPELS AUDIO/VIDÉO ─────────────────────────────────────
+  // En production, exécuter avant déploiement :
+  //   ALTER TYPE notification_type_enum ADD VALUE 'call.missed';
+  //   ALTER TYPE notification_type_enum ADD VALUE 'call.rejected';
+  //   ALTER TYPE notification_type_enum ADD VALUE 'call.busy';
+  //   ALTER TYPE notification_type_enum ADD VALUE 'call.offline';
+  // En développement (synchronize:true), TypeORM gère l'ajout automatiquement.
+  CALL_MISSED           = 'call.missed',            // appel manqué (pour le destinataire)
+  CALL_REJECTED         = 'call.rejected',          // appel refusé (pour l'appelant)
+  CALL_BUSY             = 'call.busy',              // destinataire déjà en appel (pour l'appelant)
+  CALL_OFFLINE          = 'call.offline',           // destinataire hors ligne (pour l'appelant)
 
   // ── SYSTÈME ────────────────────────────────────────────────
   SYSTEM_MAINTENANCE    = 'system.maintenance',     // maintenance planifiée
