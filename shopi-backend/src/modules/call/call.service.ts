@@ -111,12 +111,16 @@ export class CallService {
       return CallService.STATIC_STUN;
     }
 
+    /* Pas de "stun:${host}" ici — le sous-domaine STUN de Metered
+       (stun.relay.metered.ca) est différent du host TURN
+       (global.relay.metered.ca) : les 2 entrées Google STATIC_STUN
+       ci-dessus suffisent, pas besoin de deviner le bon sous-domaine. */
     return [
-      { urls: `stun:${host}:80` },
-      { urls: `turn:${host}:80`,                     username, credential },
-      { urls: `turn:${host}:80?transport=tcp`,        username, credential },
-      { urls: `turn:${host}:443`,                     username, credential },
-      { urls: `turns:${host}:443?transport=tcp`,       username, credential },
+      ...CallService.STATIC_STUN,
+      { urls: `turn:${host}:80`,               username, credential },
+      { urls: `turn:${host}:80?transport=tcp`, username, credential },
+      { urls: `turn:${host}:443`,              username, credential },
+      { urls: `turns:${host}:443?transport=tcp`, username, credential },
     ];
   }
 

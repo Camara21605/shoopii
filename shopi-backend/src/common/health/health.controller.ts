@@ -32,6 +32,8 @@
 
 import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import type { Redis } from 'ioredis';
 import { Public } from '../decorators/public.decorator';
 
 /** Forme de la réponse — contractuelle, ne pas réduire sans dépréciation. */
@@ -46,7 +48,10 @@ export interface HealthStatus {
 @Controller('health')
 export class HealthController {
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    @InjectRedis() private readonly redis: Redis,
+  ) {}
 
   @Get()
   @Public()
@@ -60,5 +65,27 @@ export class HealthController {
        * Défaut 'dev' en local pour ne pas bloquer si la variable est absente. */
       version:     this.config.get<string>('APP_VERSION', 'dev'),
     };
+  }
+
+  /**
+   * Diagnostic Redis à la demande — pas de secrets exposés (ni host, ni
+   * password), juste le résultat brut d'un PING depuis le runtime Render
+   * lui-même, pour trancher entre "IP non autorisée" / "TLS mal configuré" /
+   * "connexion refusée" sans avoir à interpréter le bruit des logs de démarrage.
+   * TEMPORAIRE — à retirer une fois le problème Redis résolu.
+   */
+  @Get('redis')
+  @Public()
+  async checkRedis(): Promise<{ status: 'ok' | 'error'; latencyMs?: number; error?: string }> {
+    const start = Date.now();
+    try {
+      const pong = await Promise.race([
+        this.redis.ping(),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout après 5s')), 5_000)),
+      ]);
+      return { status: pong === 'PONG' ? 'ok' : 'error', latencyMs: Date.now() - start };
+    } catch (e) {
+      return { status: 'error', latencyMs: Date.now() - start, error: (e as Error).message };
+    }
   }
 }
