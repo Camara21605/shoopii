@@ -37,8 +37,18 @@ async function fetchIceServers(): Promise<RTCIceServer[]> {
   }
 }
 
-/** Renvoie les serveurs ICE à utiliser, en réutilisant le cache tant qu'il est frais. */
+/**
+ * Renvoie les serveurs ICE à utiliser, en réutilisant le cache tant qu'il est frais.
+ *
+ * GARDE-FOU : /calls/ice-servers est protégé par JwtAuthGuard. Sans vérifier
+ * la présence d'un token ici, un visiteur anonyme (GlobalCallProvider monte
+ * useAudioCall pour TOUTE l'appli, connecté ou non) déclencherait un 401 →
+ * apiFetch traite tout 401 hors /login-/register comme "session expirée"
+ * et fait un window.location.href = '/login' — un redirect forcé pour
+ * n'importe quel visiteur non connecté, juste au chargement de la page.
+ */
 export function getIceServers(): Promise<RTCIceServer[]> {
+  if (!localStorage.getItem('shopi_access_token')) return Promise.resolve(cache?.servers ?? FALLBACK_STUN);
   if (cache && Date.now() - cache.fetchedAt < CACHE_MS) return Promise.resolve(cache.servers);
   if (!inFlight) inFlight = fetchIceServers();
   return inFlight;
