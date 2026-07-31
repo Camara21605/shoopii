@@ -199,6 +199,18 @@
   transition: margin-left .3s var(--ease);
 }
 
+/* Messagerie plein-écran : ni sidebar, ni topbar, ni bottom nav.
+ * --hdr est remis à 0 : MessagerieCore calcule sa hauteur en
+ * calc(100vh - var(--hdr)) en supposant un header au-dessus de lui —
+ * comme il n'y en a plus du tout ici, sinon un espace vide reste en bas. */
+.main.mainFullscreen {
+  --hdr: 0px;
+  margin-left: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
 /* ── Toast container ── */
 .toastContainer {
   position: fixed;

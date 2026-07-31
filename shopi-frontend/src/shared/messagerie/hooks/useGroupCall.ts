@@ -19,29 +19,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getActiveSocket }                           from './useSocket';
+import { getIceServers, prefetchIceServers }         from './iceServers';
 import type { GroupCallInvite, GroupCallPeer, GroupCallState } from '../data/messagerieTypes';
-
-// ── Serveurs ICE ──────────────────────────────────────────────
-
-const _TURN_HOST = (import.meta as any).env?.VITE_TURN_HOST       as string | undefined;
-const _TURN_USER = (import.meta as any).env?.VITE_TURN_USERNAME    as string | undefined;
-const _TURN_CRED = (import.meta as any).env?.VITE_TURN_CREDENTIAL  as string | undefined;
-
-const ICE_SERVERS: RTCIceServer[] = [
-  { urls: 'stun:stun.l.google.com:19302'  },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:cloudflare.com:3478'      },
-  ...(_TURN_HOST && _TURN_USER && _TURN_CRED ? [{
-    urls: [
-      `turn:${_TURN_HOST}:80`,
-      `turn:${_TURN_HOST}:443`,
-      `turns:${_TURN_HOST}:443`,
-      `turn:${_TURN_HOST}:80?transport=tcp`,
-    ],
-    username:   _TURN_USER,
-    credential: _TURN_CRED,
-  }] : []),
-];
 
 // ── Types internes ────────────────────────────────────────────
 
@@ -98,6 +77,9 @@ export function useGroupCall() {
   /** Mirror de peers pour éviter la stale-closure dans les callbacks socket */
   const peersRef       = useRef<Map<string, GroupCallPeer>>(new Map());
 
+  /* Préchauffe le cache des serveurs ICE dès le montage. */
+  useEffect(() => { prefetchIceServers(); }, []);
+
   // ── Helpers ───────────────────────────────────────────────────
 
   function emit(event: string, data: object) {
@@ -148,11 +130,12 @@ export function useGroupCall() {
   const createPeerConnection = useCallback((
     userId: string,
     displayName: string,
+    iceServers: RTCIceServer[],
   ): RTCPeerConnection => {
     const existing = pcMapRef.current.get(userId);
     if (existing) return existing;
 
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    const pc = new RTCPeerConnection({ iceServers });
 
     pc.onicecandidate = ({ candidate }) => {
       if (!candidate || !callStateRef.current) return;
@@ -217,8 +200,9 @@ export function useGroupCall() {
     setIncomingCall(null);
 
     /* Les participants déjà présents nous enverront des offers — on attend. */
+    const iceServers = await getIceServers();
     for (const p of payload.participants) {
-      createPeerConnection(p.userId, p.displayName);
+      createPeerConnection(p.userId, p.displayName, iceServers);
     }
   }, [createPeerConnection]);
 
@@ -228,7 +212,8 @@ export function useGroupCall() {
     if (!cs || cs.callId !== payload.callId) return;
     if (!localStreamRef.current) return;
 
-    const pc = createPeerConnection(payload.userId, payload.displayName);
+    const iceServers = await getIceServers();
+    const pc = createPeerConnection(payload.userId, payload.displayName, iceServers);
     localStreamRef.current.getTracks().forEach(t => pc.addTrack(t, localStreamRef.current!));
 
     const offer = await pc.createOffer();

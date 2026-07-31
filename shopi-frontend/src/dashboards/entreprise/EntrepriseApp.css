@@ -15,9 +15,15 @@
   padding-top: var(--hdr);
 }
 
-/* Messagerie plein-écran : pas de sidebar, pas de padding latéral */
+/* Messagerie plein-écran : ni sidebar ni topbar — occupe tout le viewport.
+ * --hdr est remis à 0 ici : MessagerieCore calcule sa propre hauteur en
+ * `calc(100vh - var(--hdr))` en supposant un header au-dessus de lui —
+ * comme il n'y en a plus du tout dans ce cas, la variable doit refléter ça,
+ * sinon un espace vide de la hauteur du header manquant reste en bas. */
 .main.main-fullscreen {
+  --hdr: 0px;
   margin-left: 0;
+  padding-top: 0;
   padding-left: 0;
   padding-right: 0;
   padding-bottom: 0;

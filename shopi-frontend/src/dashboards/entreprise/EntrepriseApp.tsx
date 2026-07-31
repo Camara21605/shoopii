@@ -239,20 +239,21 @@ function EntrepriseLayout() {
           isOwner={isOwner}
         />
       )}
-      <Topbar
-        activePage={page}
-        onNavigate={handleNavigate}
-        companyLogo={profile?.logo}
-        companyName={profile?.companyName}
-        companyId={profile?.id}
-        companyStatus={profile?.status ?? undefined}
-        companyEmail={profile?.businessEmail ?? undefined}
-        companyVille={profile?.ville ?? undefined}
-        companyPays={profile?.pays ?? undefined}
-        isFullscreen={isMessagesPage}
-        can={can}
-        isOwner={isOwner}
-      />
+      {!isMessagesPage && (
+        <Topbar
+          activePage={page}
+          onNavigate={handleNavigate}
+          companyLogo={profile?.logo}
+          companyName={profile?.companyName}
+          companyId={profile?.id}
+          companyStatus={profile?.status ?? undefined}
+          companyEmail={profile?.businessEmail ?? undefined}
+          companyVille={profile?.ville ?? undefined}
+          companyPays={profile?.pays ?? undefined}
+          can={can}
+          isOwner={isOwner}
+        />
+      )}
 
       {isReseauPage && (
         <ReseauBottomNav activePage={page} onNavigate={handleNavigate} />

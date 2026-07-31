@@ -39,7 +39,6 @@ interface TopbarProps {
   companyEmail?:  string;
   companyVille?:  string;
   companyPays?:   string;
-  isFullscreen?:  boolean;
   can?:           CanFn;
   isOwner?:       boolean;
 }
@@ -105,7 +104,6 @@ export default function Topbar({
   companyId,
   companyLogo, companyName,
   companyStatus, companyEmail, companyVille, companyPays,
-  isFullscreen = false,
   can, isOwner = false,
 }: TopbarProps) {
   const { pop } = useToast();
@@ -172,18 +170,11 @@ export default function Topbar({
 
   return (
     <>
-      <header className={`topbar${isFullscreen ? ' topbar-fullscreen' : ''}`}>
+      <header className="topbar">
 
-        {/* Plein-écran (messagerie) : bouton retour. Normal : bouton menu. */}
-        {isFullscreen ? (
-          <button className="hamburger hamburger-back" onClick={() => onNavigate('overview')} aria-label="Retour">
-            <i className="fas fa-arrow-left"></i>
-          </button>
-        ) : (
-          <button className="hamburger" onClick={() => setMobileMenuOpen(true)} aria-label="Menu">
-            <i className="fas fa-bars"></i>
-          </button>
-        )}
+        <button className="hamburger" onClick={() => setMobileMenuOpen(true)} aria-label="Menu">
+          <i className="fas fa-bars"></i>
+        </button>
 
         {/* Titre de la page */}
         <div className="tb-title-wrap">
@@ -307,7 +298,7 @@ export default function Topbar({
       </header>
 
       {/* ════════ BOTTOM NAV MOBILE ════════ */}
-      <nav className={`tb-bottomnav${isFullscreen ? ' tb-bottomnav-hidden' : ''}`} aria-label="Navigation mobile">
+      <nav className="tb-bottomnav" aria-label="Navigation mobile">
         <button className={`bn-it${activePage === 'overview' ? ' on' : ''}`}
           onClick={() => onNavigate('overview')}>
           <i className="fas fa-chart-pie"></i><span>Accueil</span>

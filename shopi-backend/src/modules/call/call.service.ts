@@ -16,6 +16,7 @@
 import {
   ConflictException, ForbiddenException, Injectable, Logger, NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InjectRedis } from '@nestjs-modules/ioredis';
@@ -47,6 +48,13 @@ import type { StartCallDto } from './dto/call.dto';
 const RATE_LIMIT_MAX    = 10;
 const RATE_LIMIT_TTL_S  = 60;
 
+/** Forme attendue par RTCPeerConnection côté frontend (pas de lib DOM ici). */
+export interface IceServerConfig {
+  urls:        string | string[];
+  username?:   string;
+  credential?: string;
+}
+
 export type StartCallOutcome =
   | { outcome: 'ringing'; call: Call }
   | { outcome: 'busy' }
@@ -74,9 +82,43 @@ export class CallService {
     private readonly permissionEngine: MessagingPermissionEngine,
     private readonly presence:         PresenceService,
     private readonly notifications:    NotificationService,
+    private readonly config:           ConfigService,
 
     @InjectRedis() private readonly redis: Redis,
   ) {}
+
+  // ── Serveurs ICE (STUN + TURN Metered.ca) ─────────────────────
+
+  private static readonly STATIC_STUN: IceServerConfig[] = [
+    { urls: 'stun:stun.l.google.com:19302'  },
+    { urls: 'stun:stun1.l.google.com:19302' },
+  ];
+
+  /**
+   * Identifiants TURN statiques Metered.ca (host + username/credential fixes,
+   * générés une fois dans le dashboard Metered — pas d'appel API externe,
+   * pas d'expiration à gérer). Restent côté serveur, jamais exposés au bundle
+   * frontend. Fallback STUN seul si mal configuré — les appels pourront
+   * échouer derrière un NAT mobile strict, mais ne seront jamais bloqués.
+   */
+  async getIceServers(): Promise<IceServerConfig[]> {
+    const host       = this.config.get<string>('METERED_TURN_HOST');
+    const username   = this.config.get<string>('METERED_TURN_USERNAME');
+    const credential = this.config.get<string>('METERED_TURN_CREDENTIAL');
+
+    if (!host || !username || !credential) {
+      this.logger.warn('[Call] METERED_TURN_HOST/USERNAME/CREDENTIAL manquants — appels en STUN seul (échoueront souvent derrière un NAT mobile)');
+      return CallService.STATIC_STUN;
+    }
+
+    return [
+      { urls: `stun:${host}:80` },
+      { urls: `turn:${host}:80`,                     username, credential },
+      { urls: `turn:${host}:80?transport=tcp`,        username, credential },
+      { urls: `turn:${host}:443`,                     username, credential },
+      { urls: `turns:${host}:443?transport=tcp`,       username, credential },
+    ];
+  }
 
   // ── Résolution acteur (users.id → type + profil UUID) ────────
 

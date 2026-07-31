@@ -59,4 +59,10 @@ export class CallController {
   async busy(@Param('userId') userId: string) {
     return { busy: await this.callService.isUserBusy(userId) };
   }
+
+  /** Identifiants TURN/STUN pour RTCPeerConnection — la clé API Metered reste côté serveur. */
+  @Get('ice-servers')
+  async iceServers() {
+    return { iceServers: await this.callService.getIceServers() };
+  }
 }

@@ -264,19 +264,9 @@
 
 /* ════════ PLEIN-ÉCRAN (messagerie) ════════ */
 
-/* Topbar sans sidebar : couvre toute la largeur */
-.topbar.topbar-fullscreen { left: 0; }
-
-/* Bouton retour (plein-écran mobile) : toujours visible */
-.hamburger-back { display: flex !important; }
-
-/* Bottom nav cachée sur page messagerie */
-.tb-bottomnav.tb-bottomnav-hidden { display: none !important; }
-
 /* ════════ RESPONSIVE ════════ */
 @media (max-width: 920px) {
   .topbar { left: 68px; }
-  .topbar.topbar-fullscreen { left: 0; }
   .tb-home { display: none; }
 }
 

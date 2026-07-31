@@ -64,3 +64,9 @@ services:
         sync: false
       - key: GOOGLE_CALLBACK_URL
         sync: false
+      - key: METERED_TURN_HOST
+        sync: false             # Host TURN Metered.ca (ex: global.relay.metered.ca) — appels audio/vidéo
+      - key: METERED_TURN_USERNAME
+        sync: false             # Username TURN statique généré dans le dashboard Metered.ca
+      - key: METERED_TURN_CREDENTIAL
+        sync: false             # Credential TURN statique — reste côté serveur, jamais exposé au frontend

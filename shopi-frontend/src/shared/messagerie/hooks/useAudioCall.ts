@@ -12,37 +12,16 @@
  *   ICE candidates échangés des deux côtés
  *   Raccrocher → call:end → l'autre reçoit call:ended
  *
- * STUN : serveurs Google publics (gratuits, suffisants pour les tests)
- * TURN : à ajouter en production pour les NAT stricts
+ * STUN : serveurs Google publics (fallback)
+ * TURN : identifiants dynamiques Metered.ca récupérés via GET /calls/ice-servers
+ *        (voir shared/messagerie/hooks/iceServers.ts) — obligatoire en
+ *        production pour les NAT mobiles stricts/CGNAT.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getActiveSocket } from './useSocket';
 import type { WsCallIncoming, WsCallSignal } from './useSocket';
-
-// ── Serveurs ICE ──────────────────────────────────────────────
-
-const _TURN_HOST = (import.meta as any).env?.VITE_TURN_HOST       as string | undefined;
-const _TURN_USER = (import.meta as any).env?.VITE_TURN_USERNAME    as string | undefined;
-const _TURN_CRED = (import.meta as any).env?.VITE_TURN_CREDENTIAL  as string | undefined;
-
-const ICE_SERVERS: RTCIceServer[] = [
-  { urls: 'stun:stun.l.google.com:19302'  },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  /* TURN relay — obligatoire en production derrière un NAT symétrique/CGNAT.
-     Configurez VITE_TURN_HOST, VITE_TURN_USERNAME, VITE_TURN_CREDENTIAL
-     dans Vercel → Environment Variables (ex: Metered.ca free tier). */
-  ...(_TURN_HOST && _TURN_USER && _TURN_CRED ? [{
-    urls: [
-      `turn:${_TURN_HOST}:80`,
-      `turn:${_TURN_HOST}:443`,
-      `turns:${_TURN_HOST}:443`,
-      `turn:${_TURN_HOST}:80?transport=tcp`,
-    ],
-    username:   _TURN_USER,
-    credential: _TURN_CRED,
-  }] : []),
-];
+import { getIceServers, prefetchIceServers } from './iceServers';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -95,6 +74,10 @@ interface UseAudioCallProps {
 export function useAudioCall(props?: UseAudioCallProps) {
   const onCallEventRef = useRef(props?.onCallEvent);
   useEffect(() => { onCallEventRef.current = props?.onCallEvent; });
+
+  /* Préchauffe le cache des serveurs ICE dès le montage — évite d'attendre
+     l'aller-retour réseau au moment précis où l'appel démarre. */
+  useEffect(() => { prefetchIceServers(); }, []);
 
   const [status,            setStatus]            = useState<CallStatus>('idle');
   const [callInfo,          setCallInfo]          = useState<CallInfo | null>(null);
@@ -236,8 +219,8 @@ export function useAudioCall(props?: UseAudioCallProps) {
 
   // ── Création du RTCPeerConnection ─────────────────────────────
 
-  const createPeerConnection = useCallback((): RTCPeerConnection => {
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+  const createPeerConnection = useCallback((iceServers: RTCIceServer[]): RTCPeerConnection => {
+    const pc = new RTCPeerConnection({ iceServers });
 
     /* Envoie les candidats ICE au fur et à mesure */
     pc.onicecandidate = ({ candidate }) => {
@@ -479,7 +462,8 @@ export function useAudioCall(props?: UseAudioCallProps) {
     clearTimers();
     setStatus('connecting');
 
-    const pc = createPeerConnection();
+    const iceServers = await getIceServers();
+    const pc = createPeerConnection(iceServers);
     localStream.current.getTracks().forEach(t => pc.addTrack(t, localStream.current!));
 
     const offer = await pc.createOffer();
@@ -506,7 +490,8 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const onCallOffer = useCallback(async (payload: WsCallSignal) => {
     if (!callInfoRef.current || !localStream.current) return;
 
-    const pc = createPeerConnection();
+    const iceServers = await getIceServers();
+    const pc = createPeerConnection(iceServers);
     localStream.current.getTracks().forEach(t => pc.addTrack(t, localStream.current!));
 
     await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp!));

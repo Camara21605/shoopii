@@ -95,6 +95,7 @@ export default function LivreurApp() {
   const { logout } = useAppContext();
   const { '*': splat = '' } = useParams<{ '*': string }>();
   const { page, viewedId } = parseSplat(splat);
+  const isMessagesPage = page === 'messagerie';
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isOnline,    setIsOnline]    = useState(true);
@@ -198,45 +199,49 @@ export default function LivreurApp() {
         <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
-      <Sidebar
-        activePage={page}
-        isOpen={sidebarOpen}
-        isOnline={isOnline}
-        todayEarn={todayEarn}
-        avatarUrl={avatarUrl}
-        livreurName={livreurName}
-        rating={rating}
-        totalDeliveries={totalDeliveries}
-        encoursCount={encoursCount}
-        onNavigate={navigate}
-        onClose={() => setSidebarOpen(false)}
-        onToggleOnline={() => {
-          setIsOnline(v => {
-            pop(v ? '⏸️ Hors ligne — Aucune nouvelle mission' : '✅ Vous êtes maintenant en ligne', v ? 'w' : 's');
-            return !v;
-          });
-        }}
-        onLogout={handleLogout}
-        onGoHome={handleGoHome}
-      />
+      {!isMessagesPage && (
+        <>
+          {/* Sidebar */}
+          <Sidebar
+            activePage={page}
+            isOpen={sidebarOpen}
+            isOnline={isOnline}
+            todayEarn={todayEarn}
+            avatarUrl={avatarUrl}
+            livreurName={livreurName}
+            rating={rating}
+            totalDeliveries={totalDeliveries}
+            encoursCount={encoursCount}
+            onNavigate={navigate}
+            onClose={() => setSidebarOpen(false)}
+            onToggleOnline={() => {
+              setIsOnline(v => {
+                pop(v ? '⏸️ Hors ligne — Aucune nouvelle mission' : '✅ Vous êtes maintenant en ligne', v ? 'w' : 's');
+                return !v;
+              });
+            }}
+            onLogout={handleLogout}
+            onGoHome={handleGoHome}
+          />
 
-      {/* Topbar */}
-      <Topbar
-        title={meta.title}
-        subtitle={meta.sub}
-        isOnline={isOnline}
-        avatarUrl={avatarUrl}
-        livreurName={livreurName}
-        onMenuToggle={() => setSidebarOpen(o => !o)}
-        onNavigate={navigate}
-      />
+          {/* Topbar */}
+          <Topbar
+            title={meta.title}
+            subtitle={meta.sub}
+            isOnline={isOnline}
+            avatarUrl={avatarUrl}
+            livreurName={livreurName}
+            onMenuToggle={() => setSidebarOpen(o => !o)}
+            onNavigate={navigate}
+          />
 
-      {/* Bottom nav (mobile) : Correspondants · Livreurs · Mon espace */}
-      <BottomNav activePage={page} onNavigate={navigate} />
+          {/* Bottom nav (mobile) : Correspondants · Livreurs · Mon espace */}
+          <BottomNav activePage={page} onNavigate={navigate} />
+        </>
+      )}
 
       {/* Pages */}
-      <main className={styles.main}>
+      <main className={`${styles.main} ${isMessagesPage ? styles.mainFullscreen : ''}`}>
         {page === 'overview'    && <OverviewPage   onNavigate={navigate} onPop={pop} setTodayEarn={setTodayEarn} />}
         {page === 'missions'    && <MissionsPage   onPop={pop} />}
         {page === 'encours'     && <EnCoursPage    onPop={pop} onNavigate={navigate} />}
