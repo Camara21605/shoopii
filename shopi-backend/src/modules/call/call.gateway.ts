@@ -60,6 +60,7 @@ export class CallGateway {
     },
   ): Promise<void> {
     const callerUserId = socket.data.userId;
+    this.logger.log(`📞 call:initiate REÇU caller=${callerUserId} callee=${body.calleeUserId}`);
 
     try {
       const result = await this.callService.startCall(callerUserId, {
@@ -69,10 +70,12 @@ export class CallGateway {
       });
 
       if (result.outcome === 'busy') {
+        this.logger.log(`📞 call:initiate → busy caller=${callerUserId} callee=${body.calleeUserId}`);
         socket.emit('call:busy', { conversationId: body.conversationId });
         return;
       }
       if (result.outcome === 'offline') {
+        this.logger.log(`📞 call:initiate → callee hors ligne caller=${callerUserId} callee=${body.calleeUserId}`);
         socket.emit('call:unavailable', {
           conversationId: body.conversationId,
           reason:  'offline',

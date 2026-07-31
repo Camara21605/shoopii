@@ -180,12 +180,7 @@ export function useMessagerie() {
     const chatMsg: ChatMessage = {
       id:          message.id,
       from:        message.senderId,
-      type:        (message.contentType as any) === 'text' ? 'text'
-                 : (message.contentType as any) === 'image' ? 'image'
-                 : (message.contentType as any) === 'video' ? 'video'
-                 : (message.contentType as any) === 'file'  ? 'file'
-                 : (message.contentType as any) === 'audio' ? 'voice'
-                 : 'text',
+      type:        CONTENT_TYPE_MAP[message.contentType] ?? 'text',
       text:        message.content ?? undefined,
       mediaUrl:    message.mediaUrl  ?? undefined,
       mediaName:   message.mediaName ?? undefined,
@@ -194,6 +189,13 @@ export function useMessagerie() {
       read:        false,
       replyToId:   message.replyToId ?? undefined,
     };
+
+    /* Désérialise les métadonnées d'appel — sinon la bulle "call" retombe
+       en texte brut affichant le JSON du content (bug observé en prod : la
+       bulle "Appel annulé" apparaissait sous forme de JSON non formaté). */
+    if (message.contentType === 'call' && message.content) {
+      try { chatMsg.callMeta = JSON.parse(message.content); } catch { /* ignoré */ }
+    }
 
     setConversations(prev => prev.map(c => {
       if (c.id !== conversationId) return c;

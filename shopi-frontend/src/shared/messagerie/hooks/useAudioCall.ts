@@ -133,7 +133,16 @@ export function useAudioCall(props?: UseAudioCallProps) {
   }
 
   function emit(event: string, data: object) {
-    getActiveSocket()?.emit(event, data);
+    const socket = getActiveSocket();
+    if (!socket || !socket.connected) {
+      /* Diagnostic — un socket absent/pas-encore-connecté échouait
+         silencieusement jusqu'ici : rien côté appelé, rien côté serveur,
+         aucune erreur visible nulle part. On garde le comportement existant
+         (socket.io bufferise l'emit tant que non connecté) mais on le
+         signale désormais dans la console. */
+      console.warn(`[Call] emit('${event}') sur un socket ${socket ? 'non connecté (mis en file par socket.io)' : 'absent'}.`, data);
+    }
+    socket?.emit(event, data);
   }
 
   function startDurationTimer() {
