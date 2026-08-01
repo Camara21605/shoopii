@@ -30,6 +30,9 @@ export const tokenStorage = {
   get:    () => localStorage.getItem(TOKEN_KEY),
   set:    (token: string) => {
     localStorage.setItem(TOKEN_KEY, token);
+    // Un token frais et valide vient d'être écrit (login ou refresh réussi)
+    // → lève le cooldown anti-martèlement de silentRefresh() ci-dessous.
+    _refreshDeadUntil = 0;
     window.dispatchEvent(new CustomEvent('auth:login'));
   },
   remove: () => localStorage.removeItem(TOKEN_KEY),
@@ -68,6 +71,21 @@ function extractMessage(data: any, fallback: string): string {
 let _refreshPromise: Promise<boolean> | null = null;
 
 /**
+ * Tant que Date.now() < ce seuil, on n'appelle même pas /auth/refresh.
+ *
+ * POURQUOI : /auth/refresh fait de la rotation à usage unique (voir
+ * auth.controller.ts) — un refresh token déjà consommé qui est réutilisé
+ * déclenche une révocation GLOBALE de la session côté serveur. Une fois
+ * qu'un refresh a échoué, il échouera à nouveau à chaque tentative tant
+ * qu'il n'y a pas de nouvelle connexion — sans ce frein, chaque socket
+ * (messagerie, notifications) qui se déconnecte relance son propre essai
+ * indéfiniment, jusqu'à marteler /auth/refresh assez fort pour se faire
+ * bloquer par son propre rate-limit (429), en boucle, pour rien.
+ */
+let _refreshDeadUntil = 0;
+const REFRESH_COOLDOWN_MS = 30_000;
+
+/**
  * Exporté pour useSocket.ts : le socket Socket.IO n'appelle jamais aucune
  * route REST, donc il ne bénéficie jamais du silent refresh automatique
  * déclenché par un 401 ci-dessous. Quand le serveur rejette la connexion
@@ -75,13 +93,15 @@ let _refreshPromise: Promise<boolean> | null = null;
  * pour obtenir un token frais avant de reconnecter manuellement.
  */
 export function silentRefresh(): Promise<boolean> {
+  if (Date.now() < _refreshDeadUntil) return Promise.resolve(false);
+
   if (!_refreshPromise) {
     _refreshPromise = fetch(`${BASE_URL}/auth/refresh`, {
       method:      'POST',
       credentials: 'include',
     })
       .then(async r => {
-        if (!r.ok) return false;
+        if (!r.ok) { _refreshDeadUntil = Date.now() + REFRESH_COOLDOWN_MS; return false; }
         /* Le cookie httpOnly est déjà renouvelé par le serveur, mais
          * localStorage (shopi_access_token) ne l'était jamais — resté
          * figé sur le tout premier token de connexion. Tout ce qui en
@@ -94,7 +114,7 @@ export function silentRefresh(): Promise<boolean> {
         } catch { /* réponse sans corps JSON exploitable — cookie déjà à jour, on continue */ }
         return true;
       })
-      .catch(() => false)
+      .catch(() => { _refreshDeadUntil = Date.now() + REFRESH_COOLDOWN_MS; return false; })
       .finally(() => { _refreshPromise = null; });
   }
   return _refreshPromise;
