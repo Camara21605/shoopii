@@ -261,7 +261,9 @@ export class CallService {
       return { outcome: 'busy' };
     }
 
-    const online = await this.presence.isOnline(dto.calleeUserId);
+    /* isOnlineOrUnknown (pas isOnline) : une panne Redis ne doit jamais
+       bloquer silencieusement tous les appels 1:1 — voir presence.service.ts. */
+    const online = await this.presence.isOnlineOrUnknown(dto.calleeUserId);
     if (!online) {
       await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.MISSED);
       await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_OFFLINE,

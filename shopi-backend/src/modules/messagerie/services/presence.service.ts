@@ -178,6 +178,32 @@ export class PresenceService implements OnModuleDestroy {
   }
 
   /**
+   * Variante utilisée UNIQUEMENT par la porte d'appel 1:1 (CallService).
+   *
+   * isOnline() (ci-dessus) traite "Redis indisponible" exactement comme
+   * "confirmé hors ligne" — les deux renvoient false. Pour un simple point
+   * vert dans la messagerie, cette confusion est un dégât mineur (badge
+   * imprécis). Mais utilisée pour bloquer un appel 1:1, elle a pour effet
+   * qu'UNE panne Redis bloque silencieusement TOUS les appels de la
+   * plateforme — constaté en prod (les appels de groupe, eux, n'ont jamais
+   * eu cette dépendance et continuaient de fonctionner normalement).
+   *
+   * Ici, une panne Redis renvoie true ("on ne sait pas, donc on laisse
+   * sonner" — au pire l'appel ne sera pas décroché, comme un appel
+   * téléphonique normal) plutôt que false ("hors ligne confirmé, on bloque").
+   */
+  async isOnlineOrUnknown(userId: string): Promise<boolean> {
+    try {
+      const raw = await this.redis.get(KEY_PRESENCE(userId));
+      if (!raw) return false; // Redis a répondu : clé absente = vraiment hors ligne
+      const presence = JSON.parse(raw) as UserPresence;
+      return presence.online === true;
+    } catch {
+      return true; // Redis injoignable — on ne sait pas, donc on ne bloque pas l'appel
+    }
+  }
+
+  /**
    * Retourne la présence de plusieurs utilisateurs en un seul
    * appel Redis pipeline (batch) — optimisation N+1.
    * Retourne tous null si Redis est indisponible.
