@@ -19,6 +19,7 @@
 import React, { useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useHelpSearch } from '../hooks/useHelpSearch';
+import { useForceDarkTheme } from '../../../shared/context/ThemeContext';
 import styles from './HelpSearchPage.module.css';
 
 /**
@@ -69,6 +70,9 @@ const POPULAR_SEARCHES = [
 ];
 
 export default function HelpSearchPage() {
+  // ✅ Le Centre d'aide n'a plus de mode clair — voir useForceDarkTheme.
+  useForceDarkTheme();
+
   const [params, setParams] = useSearchParams();
   const {
     query, setQuery,

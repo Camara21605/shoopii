@@ -22,6 +22,7 @@ import NotificationToastStack                 from '../../../../shared/notificat
 import NotificationCenter                     from '../../../../shared/notifications/NotificationCenter';
 import { useAuthGate }                        from '../../../../shared/hooks/useAuthGate';
 import AuthPromptModal                        from '../../../../shared/components/AuthPromptModal';
+import { useForceDarkTheme }                  from '../../../../shared/context/ThemeContext';
 
 type NavKey = 'explorer' | 'boutiques' | 'livreurs' | 'relais' | 'offres';
 
@@ -32,6 +33,13 @@ interface HeaderProps {
 }
 
 export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
+  // ✅ Le site public (pages "home" côté client) n'a plus de mode clair :
+  // Header étant rendu par la quasi-totalité de ces pages (accueil,
+  // boutique, produit, panier, paramètres, livreurs, correspondants…),
+  // forcer le thème sombre ici suffit à couvrir toutes ces pages d'un
+  // seul coup, sans avoir à répéter ce hook page par page.
+  useForceDarkTheme();
+
   const [scrolled,     setScrolled]     = useState(false);
   const [mobileOpen,   setMobileOpen]   = useState(false);
   const [searchFocus,  setSearchFocus]  = useState(false);

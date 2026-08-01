@@ -21,6 +21,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useHelpCategory } from '../hooks/useHelp';
+import { useForceDarkTheme } from '../../../shared/context/ThemeContext';
 import styles from './HelpCategoryPage.module.css';
 
 /** Formate un compteur de vues de façon compacte (1234 → "1,2k") */
@@ -42,6 +43,9 @@ function ArticleSkeleton() {
 }
 
 export default function HelpCategoryPage() {
+  // ✅ Le Centre d'aide n'a plus de mode clair — voir useForceDarkTheme.
+  useForceDarkTheme();
+
   const { slug = '' } = useParams<{ slug: string }>();
   const { data, loading, error } = useHelpCategory(slug);
 

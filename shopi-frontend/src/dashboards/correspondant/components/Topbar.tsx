@@ -5,7 +5,6 @@ import s from '../styles/Topbar.module.css';
 import type { PageId } from '../data/correspondantData';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
 import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
-import ThemeToggle from '../../../shared/components/ThemeToggle';
 
 const TITLES: Record<PageId, { title: string; sub: string }> = {
   overview:   { title: "Vue d'ensemble",        sub: 'Tableau de bord · Région Conakry' },
@@ -76,7 +75,6 @@ export default function Topbar({ page, onMenu, onPage }: Props) {
         </button>
 
         <div className={s.sep} />
-        <ThemeToggle />
 
         {/* Avatar → paramètres */}
         <div className={s.ava} onClick={() => onPage('parametres')}>AB</div>

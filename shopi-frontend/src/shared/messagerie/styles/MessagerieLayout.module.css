@@ -36,10 +36,15 @@
 }
 
 /* ── 768px : bottom nav fixe (home + dashboards) ──
-   La barre de navigation mobile (62px) est positionnée fixed en bas.
-   On soustrait sa hauteur pour que le layout s'arrête au-dessus d'elle. */
+   La barre de navigation mobile est positionnée fixed en bas sur les
+   pages qui EN ONT une (dashboards, home). On soustrait sa hauteur
+   pour que le layout s'arrête au-dessus d'elle.
+   --msg-bnav vaut 62px par défaut, mais DOIT être remis à 0px par toute
+   page qui n'a pas cette barre (ex: MessageriePage.tsx du site public)
+   — sinon un espace vide de 62px reste sous la zone de saisie, exactement
+   comme le bug --hdr corrigé plus haut. */
 @media (max-width: 768px) {
-  .layout { height: calc(100vh - var(--hdr, 66px) - 62px); }
+  .layout { height: calc(100vh - var(--hdr, 66px) - var(--msg-bnav, 62px)); }
 }
 
 /* ── 640px : mode mobile ──
@@ -47,7 +52,7 @@
    Le chat prend 100% de la largeur. */
 @media (max-width: 640px) {
   .layout {
-    height: calc(100vh - var(--hdr, 66px) - 62px);
+    height: calc(100vh - var(--hdr, 66px) - var(--msg-bnav, 62px));
     width: 100vw;
     overflow-x: hidden;
   }

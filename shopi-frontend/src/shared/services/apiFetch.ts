@@ -67,13 +67,33 @@ function extractMessage(data: any, fallback: string): string {
  * ───────────────────────────────────────────── */
 let _refreshPromise: Promise<boolean> | null = null;
 
-function silentRefresh(): Promise<boolean> {
+/**
+ * Exporté pour useSocket.ts : le socket Socket.IO n'appelle jamais aucune
+ * route REST, donc il ne bénéficie jamais du silent refresh automatique
+ * déclenché par un 401 ci-dessous. Quand le serveur rejette la connexion
+ * socket pour token invalide/expiré, useSocket appelle ceci directement
+ * pour obtenir un token frais avant de reconnecter manuellement.
+ */
+export function silentRefresh(): Promise<boolean> {
   if (!_refreshPromise) {
     _refreshPromise = fetch(`${BASE_URL}/auth/refresh`, {
       method:      'POST',
       credentials: 'include',
     })
-      .then(r => r.ok)
+      .then(async r => {
+        if (!r.ok) return false;
+        /* Le cookie httpOnly est déjà renouvelé par le serveur, mais
+         * localStorage (shopi_access_token) ne l'était jamais — resté
+         * figé sur le tout premier token de connexion. Tout ce qui en
+         * dépend (Socket.IO, dont l'auth n'utilise PAS le cookie) restait
+         * donc bloqué avec un token expiré une fois le premier expiré,
+         * même après un refresh REST réussi. */
+        try {
+          const data = await r.json() as { accessToken?: string };
+          if (data.accessToken) tokenStorage.set(data.accessToken);
+        } catch { /* réponse sans corps JSON exploitable — cookie déjà à jour, on continue */ }
+        return true;
+      })
       .catch(() => false)
       .finally(() => { _refreshPromise = null; });
   }

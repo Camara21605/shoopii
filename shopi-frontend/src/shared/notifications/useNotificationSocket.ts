@@ -22,6 +22,7 @@
 import { useEffect, useRef } from 'react';
 import { io, Socket }        from 'socket.io-client';
 import type { INotificationDto } from './types';
+import { tokenStorage, silentRefresh } from '../services/apiFetch';
 
 const SOCKET_URL =
   ((import.meta as any).env?.VITE_API_URL as string | undefined)?.replace('/api', '') ??
@@ -44,25 +45,28 @@ export interface NotificationSocketCallbacks {
 
 // ── Singleton ─────────────────────────────────────────────────
 
+/*
+ * Même design que useSocket.ts (messagerie) — voir les commentaires
+ * détaillés là-bas. Résumé : objet Socket unique et jamais recréé
+ * (sinon les listeners posés par useNotificationSocket restent liés à
+ * l'ancien objet abandonné après un changement de token) ; `auth` en
+ * fonction pour toujours relire le token le plus frais ; reconnexion
+ * manuelle forcée après un rejet serveur (TOKEN_INVALID), car Socket.IO
+ * ne reconnecte jamais tout seul quand la déconnexion est initiée par
+ * le serveur (reason === 'io server disconnect').
+ */
 let _socket: Socket | null = null;
-let _token:  string | null = null;
+let _recovering = false;
 
 function getSocket(token: string): Socket {
-  if (_socket && token === _token && !_socket.disconnected) return _socket;
-
-  /* Même token mais socket en état "disconnected" (connect_error ou StrictMode) :
-   * relancer la connexion sans recréer pour éviter "WebSocket closed before established". */
-  if (_socket && token === _token) {
-    _socket.connect();
+  if (_socket) {
+    if (_socket.disconnected) _socket.connect();
     return _socket;
   }
 
-  // Token différent → déconnecte proprement et recrée
-  if (_socket) { _socket.disconnect(); _socket = null; }
-
-  _token  = token;
   _socket = io(`${SOCKET_URL}/notifications`, {
-    auth:              { token },
+    auth: (cb: (data: { token: string }) => void) =>
+      cb({ token: tokenStorage.get() ?? token }),
     transports:        ['websocket', 'polling'],
     reconnection:      true,
     reconnectionDelay: 2_000,
@@ -70,6 +74,32 @@ function getSocket(token: string): Socket {
   });
 
   return _socket;
+}
+
+async function recoverFromServerDisconnect(): Promise<void> {
+  if (_recovering) return;
+  _recovering = true;
+  try {
+    const refreshed = await silentRefresh();
+    if (refreshed) {
+      const freshToken = tokenStorage.get();
+      if (freshToken) getSocket(freshToken);
+    }
+    /* Refresh échoué : pas de redirect /login ici (contrairement à
+     * useSocket.ts) — plusieurs hooks socket tournent en parallèle,
+     * seul l'échec du refresh sur la messagerie doit décider de la
+     * redirection pour éviter des redirects concurrents en double. */
+  } finally {
+    _recovering = false;
+  }
+}
+
+/** Ferme et efface le socket singleton — à appeler au logout. */
+export function disconnectNotificationSocket(): void {
+  if (_socket) {
+    _socket.disconnect();
+    _socket = null;
+  }
 }
 
 // ── Hook ──────────────────────────────────────────────────────
@@ -96,12 +126,21 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
     const onConnectError = (err: Error) =>
       console.warn('[NotifSocket] Connexion échouée:', err.message);
 
+    const onDisconnect = (reason: string) => {
+      // Rejet serveur (token invalide/expiré) → pas de reconnexion auto
+      // par Socket.IO dans ce cas précis. Voir recoverFromServerDisconnect.
+      if (reason === 'io server disconnect') {
+        void recoverFromServerDisconnect();
+      }
+    };
+
     // ⚠️ Noms exacts des événements backend (notification.gateway.ts)
     socket.on('connected',          onConnected);   // gateway émet 'connected' (pas 'notif:connected')
     socket.on('notif:new',          onNew);
     socket.on('notif:unread_count', onUnreadCount);
     socket.on('notif:updated',      onUpdated);
     socket.on('connect_error',      onConnectError);
+    socket.on('disconnect',         onDisconnect);
 
     if (!socket.connected) socket.connect();
 
@@ -111,6 +150,7 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
       socket.off('notif:unread_count', onUnreadCount);
       socket.off('notif:updated',      onUpdated);
       socket.off('connect_error',      onConnectError);
+      socket.off('disconnect',         onDisconnect);
     };
   }, []); // Singleton — jamais recréé
 

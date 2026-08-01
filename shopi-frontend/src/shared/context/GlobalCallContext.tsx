@@ -174,8 +174,23 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
         initGlobalSocket();
       }
     };
+    /* 'storage' ne se déclenche JAMAIS dans l'onglet qui a fait le
+     * changement (limitation native de l'API) — seulement dans les
+     * AUTRES onglets. Or c'est justement DANS cet onglet que le token
+     * localStorage vient d'être renouvelé après un silent refresh
+     * (apiFetch.ts). Sans 'auth:login' (déclenché par tokenStorage.set()
+     * dans le même onglet), le socket restait bloqué avec l'ancien token
+     * jusqu'à expiration complète — d'où le bandeau "Déconnecté du
+     * serveur temps réel" après une session assez longue. */
+    const onAuthLogin = () => {
+      if (MESSAGING_ROLES.has(getRoleFromToken() ?? '')) initGlobalSocket();
+    };
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    window.addEventListener('auth:login', onAuthLogin);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('auth:login', onAuthLogin);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 

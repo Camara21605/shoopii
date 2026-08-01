@@ -8,6 +8,8 @@ import React, {
 } from 'react';
 import { authService } from '../../modules/auth/services/authService';
 import type { PublicUser } from '../../modules/auth/types';
+import { disconnectGlobalSocket } from '../messagerie/hooks/useSocket';
+import { disconnectNotificationSocket } from '../notifications/useNotificationSocket';
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -59,6 +61,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // UI mise à jour immédiatement; authService.logout() révoque les refresh
     // tokens côté serveur et efface les cookies httpOnly (fire & forget).
     setUserState(null);
+    // Sans ça, le socket restait connecté sous l'identité de l'utilisateur
+    // déconnecté jusqu'à l'expiration naturelle du token en storage.
+    disconnectGlobalSocket();
+    disconnectNotificationSocket();
     void authService.logout();
   }, []);
 

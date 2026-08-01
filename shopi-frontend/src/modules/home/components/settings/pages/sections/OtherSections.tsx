@@ -9,7 +9,6 @@ import s from '../styles/SettingsCard.module.css';
 import p from '../styles/SettingsPage.module.css';
 import { Toggle } from '../components/Toggle';
 import { settingsApi, type AppareilConfiance } from '../../api/settings.api';
-import { useTheme } from '../../../../../../shared/context/ThemeContext';
 
 interface Props { onToast: (msg: string) => void; }
 
@@ -253,31 +252,24 @@ export function ConfidentialiteSection({ onToast }: Props) {
  * APPARENCE — GET + PATCH /client/parametres/apparence
  * ════════════════════════════════════════════════════════════ */
 export function ApparenceSection({ onToast }: Props) {
-  const { theme: liveTheme, setTheme: setLiveTheme } = useTheme();
-  const [form,    setForm]    = useState({ theme: liveTheme === 'dark' ? 'sombre' : 'clair', textSize:'normal', imageQuality:'haute' });
+  // ✅ Le site n'a plus de mode clair : le champ "theme" reste fixé à
+  // 'sombre' (envoyé tel quel à l'API pour compatibilité), et le
+  // sélecteur Clair/Sombre/Automatique a été retiré de l'interface —
+  // il n'existe donc plus aucun moyen, depuis cette page, de repasser
+  // le site en mode clair. Le mode sombre est appliqué globalement
+  // par useForceDarkTheme() (voir Header.tsx).
+  const [form,    setForm]    = useState({ theme: 'sombre', textSize:'normal', imageQuality:'haute' });
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
 
-  /* Applique immédiatement le thème choisi au site entier (noir pur / blanc pur) */
-  function applyLiveTheme(value: string) {
-    if (value === 'sombre') setLiveTheme('dark');
-    else if (value === 'clair') setLiveTheme('light');
-    else setLiveTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  }
-
   useEffect(() => {
-    /* Le thème affiché/actif reste celui déjà appliqué au site (localStorage via
-       ThemeContext) — on ne l'écrase PAS avec la valeur enregistrée en base, sinon
-       chaque visite de /parametres réinitialiserait le site en clair par défaut. */
+    /* On récupère les préférences enregistrées (taille de texte, qualité
+       image…) mais on ignore volontairement le "theme" renvoyé par l'API :
+       il reste toujours 'sombre' côté interface. */
     settingsApi.getApparence()
-      .then(res => setForm(f => ({ ...res, theme: f.theme })))
+      .then(res => setForm({ ...res, theme: 'sombre' }))
       .finally(() => setLoading(false));
   }, []);
-
-  function handleThemeChange(value: string) {
-    setForm(f => ({ ...f, theme: value }));
-    applyLiveTheme(value);
-  }
 
   async function save() {
     setSaving(true);
@@ -303,11 +295,6 @@ export function ApparenceSection({ onToast }: Props) {
         {loading
           ? <div style={{ padding:'32px', textAlign:'center', color:'var(--t3)' }}><i className="fas fa-circle-notch fa-spin" /></div>
           : <>
-            <div className={s.privRow}><div className={s.privLeft}><div className={`${s.privIco} ${s.icoNavy}`}><i className="fas fa-moon" /></div><div><div className={s.privTitle}>Thème</div><div className={s.privDesc}>Clair, sombre ou automatique</div></div></div>
-              <select className={s.privSelect} value={form.theme} onChange={e => handleThemeChange(e.target.value)}>
-                <option value="clair">Clair</option><option value="sombre">Sombre</option><option value="auto">Automatique</option>
-              </select>
-            </div>
             <div className={s.privRow}><div className={s.privLeft}><div className={`${s.privIco} ${s.icoBlue}`}><i className="fas fa-text-height" /></div><div><div className={s.privTitle}>Taille du texte</div><div className={s.privDesc}>Ajustez pour une meilleure lisibilité</div></div></div>
               <select className={s.privSelect} value={form.textSize} onChange={e => setForm(f => ({...f, textSize: e.target.value}))}>
                 <option value="normal">Normal</option><option value="grand">Grand</option><option value="tres_grand">Très grand</option>

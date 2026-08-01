@@ -32,7 +32,11 @@ function getLocationSocket(): Socket {
 
   _locToken  = token;
   _locSocket = io(`${SOCKET_URL}/location`, {
-    auth:              { token },
+    /* Fonction (pas un objet statique) : relit le token le plus frais à
+     * chaque tentative de reconnexion — même correctif que useSocket.ts
+     * (messagerie), voir les commentaires détaillés là-bas. */
+    auth: (cb: (data: { token: string }) => void) =>
+      cb({ token: tokenStorage.get() ?? token }),
     transports:        ['websocket', 'polling'],
     reconnection:      true,
     reconnectionDelay: 2_000,

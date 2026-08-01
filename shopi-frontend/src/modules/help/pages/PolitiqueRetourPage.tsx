@@ -1,8 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import styles from './LegalPage.module.css';
+import { useForceDarkTheme } from '../../../shared/context/ThemeContext';
 
 export default function PolitiqueRetourPage() {
+  // ✅ Cette page n'a plus de mode clair — voir useForceDarkTheme.
+  useForceDarkTheme();
+
   return (
     <div className={styles.page}>
       <div className={styles.wrap}>

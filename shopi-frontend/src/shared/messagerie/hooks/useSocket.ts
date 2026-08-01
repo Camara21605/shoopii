@@ -30,6 +30,7 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { io, Socket }                     from 'socket.io-client';
+import { tokenStorage, silentRefresh }    from '../../services/apiFetch';
 
 // ── Constantes ────────────────────────────────────────────────
 
@@ -163,39 +164,54 @@ export interface SocketCallbacks {
 // ── Singleton socket (une connexion globale par session) ──────
 
 let _socket: Socket | null = null;
-let _token:  string | null = null;
 
+/**
+ * Renvoie le socket singleton, créé UNE SEULE FOIS pour toute la durée de
+ * l'onglet — l'objet Socket n'est plus jamais recréé après coup, y compris
+ * quand le token change (silent refresh).
+ *
+ * ⚠️ Ancien design (retiré) : un token différent de celui capturé à la
+ * création déclenchait `_socket.disconnect(); _socket = null` puis
+ * recréait un tout nouvel objet `io(...)`. Problème : tout ce qui avait
+ * capturé la RÉFÉRENCE de l'ancien objet à son montage — le closure interne
+ * de useSocket() (deps `[]`, ne se remonte jamais) ET les listeners
+ * call:* de useAudioCall (ré-enregistrés seulement quand `status` change,
+ * pas à chaque reconnexion) — continuait à écouter un socket mort et
+ * abandonné. Résultat : après un silent refresh, le bandeau restait
+ * bloqué et/ou les appels entrants cessaient d'arriver, alors même que le
+ * NOUVEAU socket, lui, se connectait correctement en coulisses.
+ *
+ * Avec un objet unique et persistant, tous les listeners posés une fois
+ * restent valides pour toute la session — un simple `.connect()` suffit
+ * pour relancer la connexion, et `auth` (fonction, voir plus bas) relit de
+ * toute façon le token le plus frais à chaque tentative.
+ */
 function getSocket(token: string): Socket {
-  /*
-   * Réutiliser le socket existant si :
-   *   - même token ET
-   *   - socket non explicitement déconnecté
-   *
-   * POURQUOI !_socket.disconnected plutôt que _socket.connected :
-   *   _socket.connected = true  seulement APRÈS l'établissement complet
-   *   _socket.disconnected = false pendant TOUTE la phase de connexion
-   *
-   *   React 19 Strict Mode double-invoque les effects.
-   *   Sans ce fix : le 2ème appel voit connected=false (connexion en cours),
-   *   déconnecte le socket → "WebSocket closed before established".
-   *   Avec !disconnected : on réutilise le socket en cours de connexion.
-   */
-  if (_socket && token === _token && !_socket.disconnected) return _socket;
-
-  /* Même token mais socket en état "disconnected" (connect_error ou StrictMode) :
-   * on relance la connexion SANS recréer le socket pour éviter
-   * "WebSocket closed before connection established". */
-  if (_socket && token === _token) {
-    _socket.connect();
+  if (_socket) {
+    /* Toujours le même objet : on s'assure juste qu'il est bien en train
+     * de se (re)connecter. `.connect()` est un no-op sûr si déjà connecté
+     * ou déjà en cours de connexion (y compris double-invoke React
+     * StrictMode) — pas de risque de "WebSocket closed before established". */
+    if (_socket.disconnected) _socket.connect();
     return _socket;
   }
 
-  // Token différent → déconnecte proprement et recrée
-  if (_socket) { _socket.disconnect(); _socket = null; }
-
-  _token  = token;
   _socket = io(`${SOCKET_URL}/messaging`, {
-    auth:             { token },
+    /*
+     * ⚠️ `auth` en FONCTION (pas un objet statique) : socket.io-client
+     * l'appelle à CHAQUE tentative de (re)connexion, donc à chaque coupure
+     * puis reconnexion automatique il relit le token le plus frais possible
+     * dans le storage — au lieu de renvoyer pour toujours l'instantané pris
+     * au tout premier appel de getSocket().
+     *
+     * Pourquoi c'est nécessaire : apiFetch.ts rafraîchit le access token en
+     * silence (silentRefresh) à chaque 401 sur un appel REST classique, et
+     * réécrit le nouveau token dans le storage (tokenStorage.set). Mais le
+     * socket, lui, n'appelle jamais aucune route REST — sans ce correctif il
+     * gardait pour toujours le token capturé au montage.
+     */
+    auth: (cb: (data: { token: string }) => void) =>
+      cb({ token: tokenStorage.get() ?? token }),
     transports:       ['websocket', 'polling'],
     reconnection:     true,
     reconnectionDelay: RECONNECT_DELAY,
@@ -203,6 +219,67 @@ function getSocket(token: string): Socket {
   });
 
   return _socket;
+}
+
+/**
+ * Ferme et efface définitivement le socket singleton — à appeler au
+ * logout. Sans ça, le socket restait connecté sous l'identité de
+ * l'utilisateur déconnecté jusqu'à l'expiration naturelle du token
+ * (le logout ne le coupait jamais explicitement).
+ */
+export function disconnectGlobalSocket(): void {
+  if (_socket) {
+    _socket.disconnect();
+    _socket = null;
+  }
+}
+
+/*
+ * ── Récupération après rejet serveur (token invalide/expiré) ──────
+ *
+ * Quand le serveur rejette la connexion (TOKEN_MISSING/TOKEN_INVALID,
+ * voir messagerie.gateway.ts → rejectSocket), il appelle lui-même
+ * `socket.disconnect()`. Or Socket.IO NE relance PAS automatiquement la
+ * reconnexion quand la déconnexion est initiée par le SERVEUR — c'est le
+ * comportement documenté de la lib (reason === 'io server disconnect'),
+ * volontaire pour éviter de spammer un serveur qui vient de nous rejeter
+ * explicitement. `reconnection: true` ne couvre donc QUE les coupures
+ * réseau/serveur down, pas les rejets d'authentification.
+ *
+ * Sans ce correctif : le socket reste déconnecté pour toujours après un
+ * rejet, le bandeau "Déconnecté du serveur temps réel" ne disparaît
+ * jamais tout seul — il fallait recharger la page pour s'en sortir.
+ *
+ * Avec ce correctif : on tente un silent refresh (comme apiFetch le fait
+ * déjà pour les 401 REST) puis on reconnecte via getSocket(). Si le refresh
+ * échoue aussi, la session est réellement terminée → on redirige vers
+ * /login, exactement comme apiFetch le fait pour un 401.
+ *
+ * ⚠️ On passe PAR getSocket() (et non par un `.connect()` direct sur
+ * l'ancien objet socket capturé à la fermeture) : silentRefresh() réussi
+ * déclenche tokenStorage.set() → event 'auth:login' → GlobalCallContext
+ * appelle initGlobalSocket() en parallèle. Comme getSocket() est idempotent
+ * (réutilise l'instance si le token n'a pas changé depuis), les deux
+ * chemins convergent vers UN SEUL socket au lieu de risquer deux
+ * connexions simultanées (doublons de messages/appels entrants).
+ */
+let _recovering = false;
+
+async function recoverFromServerDisconnect(): Promise<void> {
+  if (_recovering) return;
+  _recovering = true;
+  try {
+    const refreshed = await silentRefresh();
+    if (refreshed) {
+      const freshToken = tokenStorage.get();
+      if (freshToken) getSocket(freshToken);
+    } else {
+      tokenStorage.remove();
+      window.location.href = '/login';
+    }
+  } finally {
+    _recovering = false;
+  }
 }
 
 // ── Hook ──────────────────────────────────────────────────────
@@ -231,10 +308,15 @@ export function useSocket(callbacks: SocketCallbacks) {
       heartbeatId.current = setInterval(() => socket.emit('heartbeat'), HEARTBEAT_MS);
     };
 
-    const onDisconnect = () => {
+    const onDisconnect = (reason: string) => {
       setConnected(false);
       cbRef.current.onDisconnected?.();
       if (heartbeatId.current) { clearInterval(heartbeatId.current); heartbeatId.current = null; }
+      // Rejet serveur (token invalide/expiré) → pas de reconnexion auto par
+      // Socket.IO dans ce cas précis. Voir recoverFromServerDisconnect ci-dessus.
+      if (reason === 'io server disconnect') {
+        void recoverFromServerDisconnect();
+      }
     };
 
     const onConnectError = (err: Error) => {

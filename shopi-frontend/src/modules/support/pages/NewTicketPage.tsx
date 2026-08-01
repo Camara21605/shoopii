@@ -22,6 +22,7 @@ import React, { useState, FormEvent, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './NewTicketPage.module.css';
 import { supportApi } from '../services/support.api';
+import { useForceDarkTheme } from '../../../shared/context/ThemeContext';
 
 /* ── Types de demande avec icône ET description ── */
 const TICKET_TYPES = [
@@ -75,6 +76,9 @@ const MIN_MSG = 20;
 const SUGGEST_DEBOUNCE = 500;
 
 export default function NewTicketPage() {
+  // ✅ Cette page n'a plus de mode clair — voir useForceDarkTheme.
+  useForceDarkTheme();
+
   const navigate = useNavigate();
 
   /* ── État formulaire ── */

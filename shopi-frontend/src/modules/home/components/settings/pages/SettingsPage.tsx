@@ -10,7 +10,6 @@ import { useNavigate }    from 'react-router-dom';
 
 /* ✅ Même Header que toutes les pages home */
 import Header from '../../layout/Header';
-import { useTheme } from '../../../../../shared/context/ThemeContext';
 
 import p from './styles/SettingsPage.module.css';
 
@@ -56,7 +55,6 @@ function useLocalToast() {
 
 export default function SettingsPage() {
   const navigate            = useNavigate();
-  const { theme, toggleTheme } = useTheme();
   const { msg, visible, showToast } = useLocalToast();
   const [activePanel, setActivePanel] = useState<PanelId>('profil');
   const mainRef = useRef<HTMLDivElement>(null);
@@ -102,14 +100,8 @@ export default function SettingsPage() {
             <button className={p.pageBack} onClick={() => navigate('/home')}>
               <i className="fas fa-arrow-left" /> Retour à l'accueil
             </button>
-            <button
-              className={p.themeBtn}
-              onClick={toggleTheme}
-              title={theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
-            >
-              <i className={theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'} />
-              {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
-            </button>
+            {/* ✅ Bouton clair/sombre retiré : le site n'a plus de mode
+                clair (voir useForceDarkTheme dans Header.tsx). */}
           </div>
           <h1 className={p.pageTitle}>Paramètres <em>du compte</em></h1>
           <p className={p.pageSub}>Gérez vos informations, sécurité et préférences Shopi</p>

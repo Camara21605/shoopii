@@ -20,6 +20,7 @@ import React, { useState, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './ContactPage.module.css';
 import { contactApi } from '../../contact/services/contact.api';
+import { useForceDarkTheme } from '../../../shared/context/ThemeContext';
 
 const TYPES = [
   { value: 'general',     label: 'Question générale', icon: 'fa-circle-question',  desc: 'Toute autre demande' },
@@ -37,6 +38,9 @@ const CONTACTS = [
 ];
 
 export default function ContactPage() {
+  // ✅ Cette page n'a plus de mode clair — voir useForceDarkTheme.
+  useForceDarkTheme();
+
   const [form, setForm]       = useState({ name: '', email: '', subject: '', body: '', type: 'general' });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);

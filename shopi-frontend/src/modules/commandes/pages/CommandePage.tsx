@@ -30,6 +30,7 @@ import DoneBanner from '../sections/DoneBanner';
 import RatingModal from '../sections/RatingModal';
 import IssueModal from '../sections/IssueModal';
 import type { ActeurRole, TypeProbleme } from '../data/types';
+import { useForceDarkTheme } from '../../../shared/context/ThemeContext';
 
 interface CommandePageProps {
   /* rôle de l'utilisateur qui consulte (sinon 'client' par défaut) */
@@ -41,6 +42,12 @@ interface CommandePageProps {
 }
 
 export default function CommandePage({ role = 'client', useApi = false, onToast }: CommandePageProps) {
+  // ✅ Cette page n'a plus de mode clair — voir useForceDarkTheme.
+  // Sûr même si ce composant est monté depuis un dashboard qui a son
+  // propre thème (livreur…) : le thème précédent est restauré au
+  // démontage, donc aucun effet de bord en la quittant.
+  useForceDarkTheme();
+
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 

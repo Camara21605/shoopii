@@ -273,10 +273,15 @@ export default function NotificationCenter() {
   }
 
   return (
-    <div className={`${s.wrap} tb-ic-pin`} ref={wrapRef}>
-      {/* ── Bouton cloche ── */}
+    <div className={s.wrap} ref={wrapRef}>
+      {/* ── Bouton cloche ──
+          `tb-ic-pin` doit être sur le bouton lui-même (pas sur ce wrapper) :
+          en mobile, Topbar.css cache tout `.tb-ic` sans `.tb-ic-pin` et
+          dimensionne `.tb-ic-pin` en 44×44px pour la cible tactile — mis
+          sur le wrapper, ces règles ratent la cloche (cachée) et
+          redimensionnent une boîte vide, décalant le badge. */}
       <button
-        className="tb-ic"
+        className="tb-ic tb-ic-pin"
         title="Notifications"
         aria-label={`Notifications${badgeCount > 0 ? ` (${badgeCount} non lues)` : ''}`}
         aria-expanded={isOpen}

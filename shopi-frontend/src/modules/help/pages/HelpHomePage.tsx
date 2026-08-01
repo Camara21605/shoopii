@@ -22,6 +22,7 @@ import { useNavigate, Link }  from 'react-router-dom';
 import { useHelpHome, useHelpFaq } from '../hooks/useHelp';
 import { helpApi } from '../services/help.api';
 import type { SearchResult } from '../services/help.api';
+import { useForceDarkTheme } from '../../../shared/context/ThemeContext';
 import styles from './HelpHomePage.module.css';
 
 const FAQ_LABELS: Record<string, string> = {
@@ -34,6 +35,9 @@ const FAQ_LABELS: Record<string, string> = {
 };
 
 export default function HelpHomePage() {
+  // ✅ Le Centre d'aide n'a plus de mode clair — voir useForceDarkTheme.
+  useForceDarkTheme();
+
   const navigate = useNavigate();
   const { categories, popular, loading, error } = useHelpHome();
   const { faq } = useHelpFaq();

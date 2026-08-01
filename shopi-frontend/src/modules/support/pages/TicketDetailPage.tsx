@@ -46,6 +46,7 @@ import styles from './TicketDetailPage.module.css';
 import { useTicketDetail }  from '../hooks/useSupport';
 import { supportApi }       from '../services/support.api';
 import type { SupportAttachment } from '../services/support.api';
+import { useForceDarkTheme } from '../../../shared/context/ThemeContext';
 
 /* ════════════════════════════════════════════════════════════════
  * CONSTANTES MÉTIER
@@ -59,12 +60,15 @@ const STATUS_LABELS: Record<string, string> = {
   closed:        'Fermé',
 };
 
+// ✅ Couleurs fixées pour un fond TOUJOURS sombre (le site n'a plus de
+// mode clair) : des badges pastel clairs comme avant seraient devenus
+// illisibles/incohérents sur une page qui reste désormais noire.
 const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
-  open:         { bg: '#EEF2FF', color: '#1A4FC4' },
-  in_progress:  { bg: '#FFF7ED', color: '#C05621' },
-  waiting_user: { bg: '#FFFBEB', color: '#92400E' },
-  resolved:     { bg: '#F0FDF4', color: '#065F46' },
-  closed:       { bg: '#F1F5F9', color: '#475569' },
+  open:         { bg: 'rgba(91,139,240,.16)',  color: '#5B8BF0' },
+  in_progress:  { bg: 'rgba(217,119,6,.16)',   color: '#F59E0B' },
+  waiting_user: { bg: 'rgba(180,83,9,.20)',    color: '#FDE68A' },
+  resolved:     { bg: 'rgba(6,95,70,.20)',     color: '#34D399' },
+  closed:       { bg: 'rgba(71,85,105,.24)',   color: '#94A3B8' },
 };
 
 const PRIORITY_COLOR: Record<string, { icon: string; color: string }> = {
@@ -232,6 +236,9 @@ function StarRating({ onRate }: { onRate: (score: number) => void }) {
  * ════════════════════════════════════════════════════════════════ */
 
 export default function TicketDetailPage() {
+  // ✅ Cette page n'a plus de mode clair — voir useForceDarkTheme.
+  useForceDarkTheme();
+
   const { id }                              = useParams<{ id: string }>();
   const { detail, loading, error, refresh } = useTicketDetail(id);
 

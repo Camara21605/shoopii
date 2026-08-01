@@ -20,9 +20,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useHelpArticle }  from '../hooks/useHelp';
 import MarkdownRenderer, { extractToc } from '../components/MarkdownRenderer';
+import { useForceDarkTheme } from '../../../shared/context/ThemeContext';
 import styles from './HelpArticlePage.module.css';
 
 export default function HelpArticlePage() {
+  // ✅ Le Centre d'aide n'a plus de mode clair — voir useForceDarkTheme.
+  useForceDarkTheme();
+
   const { slug = '' } = useParams<{ slug: string }>();
   const { article, loading, error, feedback, submitFeedback } = useHelpArticle(slug);
 

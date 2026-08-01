@@ -30,6 +30,7 @@ import { NotificationProvider }   from '../../shared/notifications/NotificationC
 import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
 import LoadingScreen    from '../../shared/components/LoadingScreen';
 import { useTeamPermissions } from './hooks/useTeamPermissions';
+import { useForceDarkTheme } from '../../shared/context/ThemeContext';
 
 /* ── Pages chargées à la demande ── */
 const OverviewPage                  = lazy(() => import('./pages/OverviewPage'));
@@ -209,6 +210,12 @@ function EntrepriseLayout() {
       .then(data => setProfile(data))
       .catch(() => {});
   }, []);
+
+  /* ✅ Le dashboard entreprise n'a pas de mode clair : on force le
+     thème sombre tant qu'on y est, et on restaure le thème choisi
+     par l'utilisateur en quittant (pour ne pas affecter le reste du
+     site — home, autres dashboards…). */
+  useForceDarkTheme();
 
   const handlePop = (msg: string, type?: string) => pop(msg, type as ToastType | undefined);
 

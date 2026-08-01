@@ -24,7 +24,6 @@ import { useAppContext } from '../../../shared/context/AppContext';
 import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
 import { useNotifications } from '../../../shared/notifications/NotificationContext';
-import ThemeToggle from '../../../shared/components/ThemeToggle';
 import './Topbar.css';
 
 type CanFn = (group: string, action: string) => boolean;
@@ -240,9 +239,6 @@ export default function Topbar({
             <i className="fas fa-circle-question"></i>
           </button>
 
-          {/* Basculer thème clair/sombre */}
-          <ThemeToggle />
-
           {/* ✅ Avatar + dropdown */}
           <div className="tb-ava-wrap" ref={avatarRef}>
             <div
@@ -316,9 +312,12 @@ export default function Topbar({
           onClick={() => onNavigate('produits')}>
           <i className="fas fa-tag"></i><span>Produits</span>
         </button>
-        <button className={`bn-it${mobileMenuOpen ? ' on' : ''}`}
-          onClick={() => setMobileMenuOpen(true)}>
-          <i className="fas fa-bars"></i><span>Menu</span>
+        {/* ✅ Un seul menu de navigation complet : celui du hamburger en haut.
+            Ce 4e emplacement était un doublon (ouvrait le même drawer) —
+            remplacé par un accès direct à l'espace personnel. */}
+        <button className={`bn-it${activePage === 'profil' ? ' on' : ''}`}
+          onClick={() => onNavigate('profil')}>
+          <i className="fas fa-user"></i><span>Mon espace</span>
         </button>
       </nav>
 

@@ -26,11 +26,11 @@
 
 /* Status pills */
 .sPill{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:800;padding:3px 8px;border-radius:var(--pill,999px);text-transform:uppercase;letter-spacing:.3px}
-.sAtt{background:var(--g100);color:var(--t2)}
-.sStock{background:var(--g100);color:var(--t2)}
-.sDep{background:var(--g100);color:var(--t2)}
-.sRet{background:var(--g100);color:var(--t2)}
-.sLivr{background:var(--g100);color:var(--t2)}
+.sAtt{background:var(--am-bg);color:var(--amber)}
+.sStock{background:var(--sky-2);color:var(--blue)}
+.sDep{background:var(--tl-bg);color:var(--teal)}
+.sRet{background:var(--rs-bg);color:var(--red)}
+.sLivr{background:var(--em-bg);color:var(--emerald)}
 
 /* Entity list */
 .entityList{display:flex;flex-direction:column;gap:10px}

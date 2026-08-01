@@ -165,8 +165,15 @@
 }
 .baBtn:hover { background: var(--sky, #EEF3FD); color: var(--navy); }
 
-/* ── Menu suppression ─────────────────────────────────────────── */
+/* ── Menu suppression ─────────────────────────────────────────────────
+   .deleteWrap contient le bouton "poubelle" ET le menu déroulant qui
+   s'affiche à côté. position:relative sert de point de repère pour
+   positionner .deleteMenu en position:absolute par rapport à lui. */
 .deleteWrap { position: relative; }
+
+/* Comportement PAR DÉFAUT : le menu s'ouvre VERS LE HAUT.
+   `bottom: calc(100% + 6px)` = le bas du menu est collé 6px au-dessus
+   du haut de .deleteWrap (donc au-dessus du bouton poubelle). */
 .deleteMenu {
   position: absolute;
   bottom: calc(100% + 6px);
@@ -179,9 +186,33 @@
   min-width: 210px;
   animation: delMenuIn .14s ease;
 }
+/* Petite animation d'apparition quand le menu s'ouvre vers le haut :
+   il glisse légèrement du bas vers le haut en apparaissant. */
 @keyframes delMenuIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Aligne le menu à droite pour mes propres messages (bulle à droite),
+   à gauche pour les messages reçus (bulle à gauche) — pour qu'il reste
+   toujours du bon côté et ne déborde pas de l'écran horizontalement. */
 .msgRow.mine .deleteMenu  { right: 0; }
 .msgRow:not(.mine) .deleteMenu { left: 0; }
+
+/* Variante "vers le bas" : appliquée par MessageBubble.tsx (classe
+   ajoutée en plus de .deleteMenu, pas à la place) quand le calcul en
+   JavaScript détecte qu'il n'y a pas assez de place AU-DESSUS du bouton,
+   à l'intérieur de la zone de messages qui défile (.msgsZone). Dans ce
+   cas, on annule le `bottom` du dessus (`bottom: auto`) et on positionne
+   le menu par rapport au `top` à la place, pour qu'il s'ouvre en dessous
+   du bouton et que toutes les options restent visibles à l'écran. */
+.deleteMenuDown {
+  bottom: auto;
+  top: calc(100% + 6px);
+}
+/* Anime le menu depuis le bouton VERS LE BAS cette fois (au lieu du
+   glissement vers le haut de .deleteMenu ci-dessus). Cette règle est
+   placée après .deleteMenu dans le fichier : à spécificité CSS égale,
+   c'est donc elle qui l'emporte pour la propriété `animation`. */
+.deleteMenuDown { animation: delMenuInDown .14s ease; }
+@keyframes delMenuInDown { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 .deleteMenuItem {
   width: 100%; display: flex; align-items: center; gap: 10px;
   background: none; border: none; padding: 11px 14px;

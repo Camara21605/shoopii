@@ -202,9 +202,12 @@
 /* Messagerie plein-écran : ni sidebar, ni topbar, ni bottom nav.
  * --hdr est remis à 0 : MessagerieCore calcule sa hauteur en
  * calc(100vh - var(--hdr)) en supposant un header au-dessus de lui —
- * comme il n'y en a plus du tout ici, sinon un espace vide reste en bas. */
+ * comme il n'y en a plus du tout ici, sinon un espace vide reste en bas.
+ * --msg-bnav est remis à 0 pour la même raison, côté bottom-nav mobile
+ * (62px réservés par défaut sous 768px, mais elle est masquée ici aussi). */
 .main.mainFullscreen {
   --hdr: 0px;
+  --msg-bnav: 0px;
   margin-left: 0;
   padding-top: 0;
   padding-bottom: 0;

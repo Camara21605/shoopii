@@ -2,7 +2,7 @@
  * src/shared/messagerie/components/MessageBubble.tsx
  * Rendu d'une seule bulle de message (tous types).
  */
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { ChatMessage, ChatUser } from '../data/messagerieTypes';
 import { ROLE_CONFIG } from '../data/messagerieTypes';
 import VoicePlayer from './VoicePlayer';
@@ -23,7 +23,22 @@ interface Props {
 export default function MessageBubble({
   msg, idx, msgs, user, isLastRead = false, onReply, onToast, onDelete,
 }: Props) {
+  // Affiche ou masque le petit menu "Supprimer pour moi / lui / tout le monde"
   const [showDeleteMenu, setShowDeleteMenu] = useState(false);
+
+  // Par défaut, le menu de suppression s'ouvre VERS LE HAUT (au-dessus de
+  // l'icône poubelle). Problème : la liste des messages (.msgsZone) est une
+  // zone qui défile (overflow-y: auto) — si le message cliqué est tout en
+  // haut de cette zone visible, le menu qui s'ouvre vers le haut sort de la
+  // zone de défilement et se retrouve donc invisible (coupé), même s'il
+  // reste de la place plus haut dans la fenêtre du navigateur.
+  // Ce booléen dit si, pour CE message précis, il faut plutôt ouvrir le
+  // menu VERS LE BAS pour que toutes les options restent visibles.
+  const [deleteMenuDown, setDeleteMenuDown] = useState(false);
+
+  // Référence vers le bouton "poubelle" : sert à mesurer sa position à
+  // l'écran au moment du clic, pour décider dans quel sens ouvrir le menu.
+  const deleteBtnRef = useRef<HTMLButtonElement>(null);
 
   const isMe     = msg.from === 'me';
   const prev     = msgs[idx - 1];
@@ -185,10 +200,53 @@ export default function MessageBubble({
             {/* Suppression avec choix */}
             <div className={s.deleteWrap}>
               <button
+                ref={deleteBtnRef}
                 className={s.baBtn}
                 style={{ color: showDeleteMenu ? 'var(--red, #DC2626)' : undefined }}
                 title="Supprimer"
-                onClick={e => { e.stopPropagation(); setShowDeleteMenu(p => !p); }}
+                onClick={e => {
+                  e.stopPropagation();
+
+                  // On ne calcule le sens d'ouverture qu'au moment où on
+                  // OUVRE le menu (pas quand on le ferme) : ça évite un
+                  // calcul inutile et un éventuel "flash" visuel.
+                  if (!showDeleteMenu) {
+                    const btn = deleteBtnRef.current;
+
+                    // .msgsZone est la zone qui défile (overflow-y: auto)
+                    // contenant tous les messages. C'est SA limite haute,
+                    // pas celle de la fenêtre du navigateur, qui coupe le
+                    // menu s'il s'ouvre vers le haut. `closest()` remonte
+                    // le DOM depuis le bouton jusqu'à trouver cette zone.
+                    const scrollZone = btn?.closest(`.${s.msgsZone}`);
+
+                    // Nombre d'options dans le menu : 3 si c'est mon propre
+                    // message (pour moi / pour lui / pour tout le monde),
+                    // sinon 1 seule option (pour moi uniquement).
+                    const itemCount = isMe ? 3 : 1;
+                    // Hauteur approximative du menu : ~40px par option,
+                    // + un peu de marge pour les bordures et l'ombre.
+                    const estimatedMenuHeight = itemCount * 40 + 10;
+
+                    if (btn && scrollZone) {
+                      const btnRect  = btn.getBoundingClientRect();
+                      const zoneRect = scrollZone.getBoundingClientRect();
+                      // Espace réellement disponible AU-DESSUS du bouton,
+                      // à l'intérieur de la zone visible qui défile —
+                      // et non par rapport au haut de l'écran.
+                      const espaceDisponibleAuDessus = btnRect.top - zoneRect.top;
+
+                      setDeleteMenuDown(espaceDisponibleAuDessus < estimatedMenuHeight + 12);
+                    } else {
+                      // Filet de sécurité si .msgsZone est introuvable
+                      // (ne devrait pas arriver) : on retombe sur la
+                      // position par rapport à la fenêtre du navigateur.
+                      const rect = btn?.getBoundingClientRect();
+                      setDeleteMenuDown(!!rect && rect.top < estimatedMenuHeight + 12);
+                    }
+                  }
+                  setShowDeleteMenu(p => !p);
+                }}
               >
                 <i className="fas fa-trash-can" />
               </button>
@@ -200,8 +258,12 @@ export default function MessageBubble({
                     style={{ position: 'fixed', inset: 0, zIndex: 199 }}
                     onClick={() => setShowDeleteMenu(false)}
                   />
-                  <div className={s.deleteMenu}>
-                    {/* Option 1 — toujours disponible */}
+                  {/* On ajoute la classe s.deleteMenuDown seulement si le calcul
+                      ci-dessus a détecté qu'il n'y avait pas assez de place
+                      au-dessus : cette classe (définie dans ChatWindow.module.css)
+                      inverse le positionnement CSS pour ouvrir vers le bas. */}
+                  <div className={`${s.deleteMenu}${deleteMenuDown ? ` ${s.deleteMenuDown}` : ''}`}>
+                    {/* Option 1 — toujours disponible, pour tout le monde */}
                     <button
                       className={s.deleteMenuItem}
                       onClick={() => { onDelete(msg.id, 'me'); setShowDeleteMenu(false); }}
@@ -210,7 +272,9 @@ export default function MessageBubble({
                       <span>Supprimer pour moi</span>
                     </button>
 
-                    {/* Options 2 & 3 — expéditeur uniquement */}
+                    {/* Options 2 & 3 — visibles uniquement si c'est MOI qui ai
+                        envoyé ce message (on ne peut pas supprimer "pour tout
+                        le monde" un message reçu d'un autre utilisateur) */}
                     {isMe && (
                       <>
                         <button
