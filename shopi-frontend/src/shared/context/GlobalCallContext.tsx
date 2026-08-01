@@ -142,7 +142,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
   const {
     callStatus, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
     localMediaStream, remoteMediaStream,
-    startCall, acceptCall, rejectCall, hangUp,
+    startCall, acceptCall, rejectCall, hangUp, cancelUnavailable,
     toggleMute, toggleVideo, toggleSpeaker, flipCamera,
   } = useAudioCall({
     onCallEvent: (event) => {
@@ -254,7 +254,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
        * "calling…" resté ouvert côté appelant. */
       const onCallUnavailable = (p: { conversationId: string; reason: 'offline' | 'denied'; message: string }) => {
         showToast(`📵 ${p.message}`, 'w');
-        hangUp();
+        cancelUnavailable(p.reason);
       };
 
       socket.on('new_message',       onNewMessage);
@@ -269,7 +269,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
 
     subscribe();
     return () => cleanup?.();
-  }, [showToast, hangUp]);
+  }, [showToast, cancelUnavailable]);
 
   // ── Enregistrement du handler MessagerieCore ─────────────────
 

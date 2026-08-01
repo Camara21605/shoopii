@@ -390,6 +390,31 @@ export function useAudioCall(props?: UseAudioCallProps) {
     endCall(true, s);
   }, [endCall]);
 
+  /**
+   * Appel bloqué par le serveur AVANT même d'avoir sonné (occupé / hors ligne /
+   * permission refusée — voir CallGateway 'call:unavailable'). À ne JAMAIS
+   * faire passer par hangUp() : celui-ci écrit toujours 'cancelled', quelle
+   * que soit la vraie raison, ce qui masquait le vrai diagnostic (Redis/
+   * présence indisponible finissait enregistré comme un simple "annulé").
+   */
+  const cancelUnavailable = useCallback((reason: 'offline' | 'denied') => {
+    if (reason === 'offline') {
+      /* Correspond à CallHistoryStatus.MISSED déjà écrit côté serveur
+         (recordShortCircuit) — on aligne la bulle locale sur la même valeur. */
+      endCall(false, 'missed');
+      return;
+    }
+    /* 'denied' : permission refusée — assertCanCall a rejeté AVANT toute
+       création de ligne Call/CallHistory côté serveur. Ne rien persister
+       ici créerait une bulle sans contrepartie dans l'historique réel. */
+    cleanup();
+    setCallInfo(null);
+    setDuration(0);
+    setIsMuted(false);
+    setStatus('ended');
+    setTimeout(() => setStatus('idle'), 1500);
+  }, [endCall, cleanup]);
+
   /** Active / coupe la caméra (appel vidéo uniquement). */
   const toggleVideo = useCallback(() => {
     localStream.current?.getVideoTracks().forEach(t => {
@@ -624,6 +649,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     acceptCall,
     rejectCall,
     hangUp,
+    cancelUnavailable,
     toggleMute,
     toggleVideo,
     toggleSpeaker,
