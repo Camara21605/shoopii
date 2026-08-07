@@ -7,6 +7,8 @@
  */
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
@@ -40,6 +42,7 @@ export default function BoutiqueSection({
   saveBoutique, saveContact,
   uploadLogo, uploadCover, deleteLogo,
 }: Props) {
+  const { t } = useTranslation();
 
   // ── État formulaire boutique (section 1) ─────────────────
   const [nomBoutique,   setNomBoutique]   = useState('');
@@ -117,34 +120,34 @@ export default function BoutiqueSection({
         status:        status as any,
         companyTypeId: companyTypeId || undefined,
       });
-      onToast('✅ Boutique sauvegardée avec succès', 's');
+      onToast(t('parametres.boutique.savedToast'), 's');
     } catch {
-      onToast('❌ Erreur lors de la sauvegarde', 'e');
+      onToast(t('parametres.boutique.errorToast'), 'e');
     }
   }
 
   async function handleSaveContact() {
     try {
       await saveContact({ businessPhone, businessEmail, whatsapp, adresse, commune, quartier, ville, pays, repere } as any);
-      onToast('✅ Contact sauvegardé avec succès', 's');
+      onToast(t('parametres.boutique.contactSavedToast'), 's');
     } catch {
-      onToast('❌ Erreur lors de la sauvegarde', 'e');
+      onToast(t('parametres.boutique.errorToast'), 'e');
     }
   }
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { onToast('❌ Logo trop lourd (max 5 MB)', 'e'); return; }
+    if (file.size > 5 * 1024 * 1024) { onToast(t('parametres.boutique.logoTropLourd'), 'e'); return; }
     if (!['image/jpeg','image/png','image/webp'].includes(file.type)) {
-      onToast('❌ Format invalide (JPG, PNG, WebP)', 'e'); return;
+      onToast(t('parametres.boutique.formatInvalide'), 'e'); return;
     }
     try {
-      onToast('⏳ Upload en cours…', 'i');
+      onToast(t('parametres.boutique.uploadEnCours'), 'i');
       await uploadLogo(file);
-      onToast('✅ Logo mis à jour', 's');
+      onToast(t('parametres.boutique.logoMisAJour'), 's');
     } catch {
-      onToast("❌ Échec de l'upload du logo", 'e');
+      onToast(t('parametres.boutique.echecUploadLogo'), 'e');
     }
     e.target.value = ''; // reset pour permettre re-sélection du même fichier
   }
@@ -152,13 +155,13 @@ export default function BoutiqueSection({
   async function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 8 * 1024 * 1024) { onToast('❌ Image trop lourde (max 8 MB)', 'e'); return; }
+    if (file.size > 8 * 1024 * 1024) { onToast(t('parametres.boutique.imageTropLourde'), 'e'); return; }
     try {
-      onToast('⏳ Upload en cours…', 'i');
+      onToast(t('parametres.boutique.uploadEnCours'), 'i');
       await uploadCover(file);
-      onToast('✅ Image de couverture mise à jour', 's');
+      onToast(t('parametres.boutique.coverMiseAJour'), 's');
     } catch {
-      onToast("❌ Échec de l'upload de la couverture", 'e');
+      onToast(t('parametres.boutique.echecUploadCover'), 'e');
     }
     e.target.value = '';
   }
@@ -167,9 +170,9 @@ export default function BoutiqueSection({
     if (!data?.logo) return;
     try {
       await deleteLogo();
-      onToast('🗑️ Logo supprimé', 'w');
+      onToast(t('parametres.boutique.logoSupprime'), 'w');
     } catch {
-      onToast('❌ Impossible de supprimer le logo', 'e');
+      onToast(t('parametres.boutique.logoSuppressionImpossible'), 'e');
     }
   }
 
@@ -181,8 +184,8 @@ export default function BoutiqueSection({
     <>
       {/* ── En-tête ── */}
       <div className={s.sectionHd}>
-        <h1><i className="fas fa-store" /> Boutique &amp; Identité</h1>
-        <p>Informations publiques de votre boutique. Elles sont visibles par tous les clients sur la plateforme Shopi.</p>
+        <h1><i className="fas fa-store" /> {t('parametres.boutique.title')}</h1>
+        <p>{t('parametres.boutique.subtitle')}</p>
       </div>
 
       {/* ── Barre de complétion ── */}
@@ -191,23 +194,23 @@ export default function BoutiqueSection({
         <div className={s.completionInner}>
           <div className={s.completionRing}>
             <div className={s.completionPct}>{pct}%</div>
-            <div className={s.completionLbl}>Profil</div>
+            <div className={s.completionLbl}>{t('parametres.boutique.profilLbl')}</div>
           </div>
           <div className={s.completionInfo}>
             <div className={s.completionTitle}>
-              Boutique complétée à {pct}%
-              {pct < 100 && ' — Quelques éléments manquants'}
+              {t('parametres.boutique.completedAt', { pct })}
+              {pct < 100 && ` ${t('parametres.boutique.elementsManquants')}`}
             </div>
             <div className={s.completionBarBg}>
               <div className={s.completionBarFill} style={{ width:`${pct}%` }} />
             </div>
             <div className={s.completionSteps}>
-              {getStepsDone(data).map(l => (
+              {getStepsDone(data, t).map(l => (
                 <span key={l} className={`${s.completionStep} ${s.done}`}>
                   <i className="fas fa-check-circle" /> {l}
                 </span>
               ))}
-              {getStepsMissing(data).map(l => (
+              {getStepsMissing(data, t).map(l => (
                 <span key={l} className={`${s.completionStep} ${s.miss}`}>
                   <i className="fas fa-circle" /> {l}
                 </span>
@@ -215,7 +218,7 @@ export default function BoutiqueSection({
             </div>
           </div>
           <div className={s.completionHint}>
-            Un profil complet génère <strong>3× plus</strong> de ventes
+            {t('parametres.boutique.profilCompletPart1')} <strong>{t('parametres.boutique.profilCompletBold')}</strong> {t('parametres.boutique.profilCompletPart2')}
           </div>
         </div>
       </div>
@@ -224,16 +227,16 @@ export default function BoutiqueSection({
        * LOGO & COUVERTURE
        * ══════════════════════════════════════════════════════ */}
       <FormCard
-        title="Logo & Image de couverture"
+        title={t('parametres.boutique.logoCoverTitle')}
         icon="fa-image"
-        subtitle="Identité visuelle de votre boutique sur Shopi"
+        subtitle={t('parametres.boutique.logoCoverSubtitle')}
       >
         <div style={{ display:'flex', alignItems:'flex-start', gap:22, flexWrap:'wrap' }}>
 
           {/* ── Logo ─────────────────────────────────────── */}
           <div style={{ textAlign:'center', flexShrink:0 }}>
             <div style={{ fontSize:10, fontWeight:800, color:'var(--t3)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>
-              Logo boutique
+              {t('parametres.boutique.logoBoutique')}
             </div>
 
             {/*
@@ -244,7 +247,7 @@ export default function BoutiqueSection({
             <div
               className={s.logoWrap}
               onClick={() => logoInputRef.current?.click()}
-              title="Cliquer pour changer le logo"
+              title={t('parametres.boutique.cliquerChangerLogo')}
             >
               {data?.logo
                 ? <img src={data.logo} alt="Logo boutique" className={s.logoImg} />
@@ -274,7 +277,7 @@ export default function BoutiqueSection({
               }}
             >
               {saving ? <><i className="fas fa-spinner fa-spin" /> </> : null}
-              Changer
+              {t('parametres.boutique.changer')}
             </button>
 
             {data?.logo && (
@@ -287,7 +290,7 @@ export default function BoutiqueSection({
                   cursor:'pointer', display:'block', width:'100%',
                 }}
               >
-                Supprimer
+                {t('parametres.boutique.supprimer')}
               </button>
             )}
           </div>
@@ -295,7 +298,7 @@ export default function BoutiqueSection({
           {/* ── Cover ────────────────────────────────────── */}
           <div style={{ flex:1, minWidth:200 }}>
             <div style={{ fontSize:10, fontWeight:800, color:'var(--t3)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>
-              Image de couverture
+              {t('parametres.boutique.imageCouverture')}
             </div>
 
             {/* Input file caché */}
@@ -328,15 +331,15 @@ export default function BoutiqueSection({
               {/* Overlay hover — visible uniquement quand image présente */}
               <div className={s.coverOverlay}>
                 <i className="fas fa-camera" style={{ fontSize:22 }} />
-                <span style={{ fontSize:12, fontWeight:700 }}>Changer la couverture</span>
+                <span style={{ fontSize:12, fontWeight:700 }}>{t('parametres.boutique.changerCouverture')}</span>
               </div>
 
               {/* Placeholder — visible quand pas d'image */}
               {!data?.coverImage && (
                 <div className={s.coverPlaceholder}>
                   <i className="fas fa-panorama" />
-                  <strong>Image de couverture de la boutique</strong>
-                  <span>1200×400px · JPG, PNG · max 8 MB</span>
+                  <strong>{t('parametres.boutique.couvertureBoutique')}</strong>
+                  <span>{t('parametres.boutique.couvertureDims')}</span>
                 </div>
               )}
             </div>
@@ -352,7 +355,7 @@ export default function BoutiqueSection({
                 }}
               >
                 <i className="fas fa-arrows-rotate" style={{ fontSize:10 }} />
-                Changer l'image de couverture
+                {t('parametres.boutique.changerImageCouverture')}
               </button>
             )}
           </div>
@@ -364,25 +367,25 @@ export default function BoutiqueSection({
        * INFORMATIONS DE LA BOUTIQUE
        * ══════════════════════════════════════════════════════ */}
       <FormCard
-        title="Informations de la boutique"
+        title={t('parametres.boutique.infosTitle')}
         icon="fa-id-badge"
-        subtitle="Données affichées sur votre page boutique publique"
+        subtitle={t('parametres.boutique.infosSubtitle')}
       >
         <div className={s.fg}>
-          <div className={s.fl}>Nom de la boutique <span className={s.flOpt}>*</span></div>
+          <div className={s.fl}>{t('parametres.boutique.nomBoutique')} <span className={s.flOpt}>*</span></div>
           <div className={s.fw}>
             <i className={`fas fa-store ${s.fi}`} />
             <input className={s.fin} value={nomBoutique}
               onChange={e => { setNomBoutique(e.target.value); onDirty(); }}
-              placeholder="Ex : TechStore Conakry" />
+              placeholder={t('parametres.boutique.nomBoutiquePlaceholder')} />
           </div>
           <div className={s.hint}>
-            <i className="fas fa-circle-info" /> Ce nom apparaît dans la recherche et sur votre URL publique shopi.gn/boutique/...
+            <i className="fas fa-circle-info" /> {t('parametres.boutique.nomBoutiqueHint')}
           </div>
         </div>
 
         <div className={s.fg}>
-          <div className={s.fl}>Description <span className={s.flOpt}>visible publiquement</span></div>
+          <div className={s.fl}>{t('parametres.boutique.description')} <span className={s.flOpt}>{t('parametres.boutique.descriptionVisiblePublique')}</span></div>
           <div className={s.fw}>
             <i className={`fas fa-pen-to-square ${s.fi}`} style={{ top:13, bottom:'auto' }} />
             <textarea
@@ -390,22 +393,22 @@ export default function BoutiqueSection({
               style={{ paddingLeft:38 }}
               value={description}
               onChange={e => { setDescription(e.target.value); onDirty(); }}
-              placeholder="Décrivez votre boutique en quelques lignes…"
+              placeholder={t('parametres.boutique.descriptionPlaceholder')}
               maxLength={1000}
             />
           </div>
-          <div className={s.hint}><i className="fas fa-circle-info" /> 500 caractères max</div>
+          <div className={s.hint}><i className="fas fa-circle-info" /> {t('parametres.boutique.descriptionHint')}</div>
         </div>
 
         <div className={s.grid2}>
           <div className={s.fg}>
-            <div className={s.fl}>Type d'entreprise</div>
+            <div className={s.fl}>{t('parametres.boutique.typeEntreprise')}</div>
             <div className={s.fw}>
               <i className={`fas fa-tag ${s.fi}`} />
               <select className={`${s.fin} ${s.finSelect}`}
                 value={companyTypeId}
                 onChange={e => { setCompanyTypeId(e.target.value); onDirty(); }}>
-                <option value="">Sélectionner un type…</option>
+                <option value="">{t('parametres.boutique.selectionnerType')}</option>
                 {data?.companyType && (
                   <option value={data.companyType.id}>{data.companyType.nom}</option>
                 )}
@@ -413,15 +416,15 @@ export default function BoutiqueSection({
             </div>
           </div>
           <div className={s.fg}>
-            <div className={s.fl}>Statut</div>
+            <div className={s.fl}>{t('parametres.boutique.statutLabel')}</div>
             <div className={s.fw}>
               <i className={`fas fa-circle-dot ${s.fi}`} />
               <select className={`${s.fin} ${s.finSelect}`}
                 value={status}
                 onChange={e => { setStatus(e.target.value); onDirty(); }}>
-                <option value="active">🟢 Active — Visible</option>
-                <option value="suspended">🟡 En pause</option>
-                <option value="pending">🔴 Privée</option>
+                <option value="active">{t('parametres.boutique.statutActive')}</option>
+                <option value="suspended">{t('parametres.boutique.statutPause')}</option>
+                <option value="pending">{t('parametres.boutique.statutPrivee')}</option>
               </select>
             </div>
           </div>
@@ -429,41 +432,41 @@ export default function BoutiqueSection({
 
         <div className={s.grid2}>
           <div className={s.fg}>
-            <div className={s.fl}>Slogan <span className={s.flOpt}>optionnel</span></div>
+            <div className={s.fl}>{t('parametres.boutique.slogan')} <span className={s.flOpt}>{t('parametres.boutique.optionnel')}</span></div>
             <div className={s.fw}>
               <i className={`fas fa-quote-left ${s.fi}`} />
               <input className={s.fin} value={slogan}
                 onChange={e => { setSlogan(e.target.value); onDirty(); }}
-                placeholder="Ex : Fraîcheur garantie depuis 2019" />
+                placeholder={t('parametres.boutique.sloganPlaceholder')} />
             </div>
           </div>
           <div className={s.fg}>
-            <div className={s.fl}>Site web</div>
+            <div className={s.fl}>{t('parametres.boutique.siteWeb')}</div>
             <div className={s.fw}>
               <i className={`fas fa-globe ${s.fi}`} />
               <input className={s.fin} type="url" value={website}
                 onChange={e => { setWebsite(e.target.value); onDirty(); }}
-                placeholder="https://votre-site.com" />
+                placeholder={t('parametres.boutique.siteWebPlaceholder')} />
             </div>
           </div>
         </div>
 
         <div className={s.fg}>
-          <div className={s.fl}>Tags & Mots-clés</div>
+          <div className={s.fl}>{t('parametres.boutique.tagsMotsCles')}</div>
           <div className={s.fw}>
             <i className={`fas fa-hashtag ${s.fi}`} />
             <input className={s.fin} value={tags}
               onChange={e => { setTags(e.target.value); onDirty(); }}
-              placeholder="restaurant, livraison rapide, Conakry…" />
+              placeholder={t('parametres.boutique.tagsPlaceholder')} />
           </div>
-          <div className={s.hint}><i className="fas fa-circle-info" /> Séparés par des virgules</div>
+          <div className={s.hint}><i className="fas fa-circle-info" /> {t('parametres.boutique.tagsHint')}</div>
         </div>
 
         <div className={s.saveRow}>
           <button className={s.saveBtn} onClick={handleSaveBoutique} disabled={saving}>
             {saving
-              ? <><i className="fas fa-spinner fa-spin" /> Sauvegarde en cours…</>
-              : <><i className="fas fa-cloud-arrow-up" /> Sauvegarder la boutique</>
+              ? <><i className="fas fa-spinner fa-spin" /> {t('parametres.boutique.sauvegardeEnCours')}</>
+              : <><i className="fas fa-cloud-arrow-up" /> {t('parametres.boutique.sauvegarderBoutique')}</>
             }
           </button>
         </div>
@@ -473,13 +476,13 @@ export default function BoutiqueSection({
        * CONTACT & LOCALISATION
        * ══════════════════════════════════════════════════════ */}
       <FormCard
-        title="Contact & Localisation"
+        title={t('parametres.boutique.contactTitle')}
         icon="fa-map-location-dot"
-        subtitle="Coordonnées affichées sur votre page publique"
+        subtitle={t('parametres.boutique.contactSubtitle')}
       >
         <div className={s.grid2}>
           <div className={s.fg}>
-            <div className={s.fl}>Téléphone principal</div>
+            <div className={s.fl}>{t('parametres.boutique.telephonePrincipal')}</div>
             <div className={s.fw}>
               <div className={s.phonePfx}>🇬🇳 +224</div>
               <input className={s.fin} type="tel" value={businessPhone}
@@ -488,7 +491,7 @@ export default function BoutiqueSection({
             </div>
           </div>
           <div className={s.fg}>
-            <div className={s.fl}>Email boutique</div>
+            <div className={s.fl}>{t('parametres.boutique.emailBoutique')}</div>
             <div className={s.fw}>
               <i className={`fas fa-envelope ${s.fi}`} />
               <input className={s.fin} type="email" value={businessEmail}
@@ -499,25 +502,25 @@ export default function BoutiqueSection({
         </div>
 
         <div className={s.fg}>
-          <div className={s.fl}>WhatsApp</div>
+          <div className={s.fl}>{t('parametres.boutique.whatsappLabel')}</div>
           <div className={s.fw}>
             <i className={`fab fa-whatsapp ${s.fi}`} style={{ color:'var(--t2)' }} />
             <input className={s.fin} type="tel" value={whatsapp}
               onChange={e => { setWhatsapp(e.target.value); onDirty(); }}
-              placeholder="620 00 00 00 (sans +224)" />
+              placeholder={t('parametres.boutique.whatsappPlaceholder')} />
           </div>
         </div>
 
         {/* ── VILLE ── */}
         <div className={s.fg}>
-          <div className={s.fl}>Ville <span style={{ color: 'var(--t2)' }}>*</span></div>
+          <div className={s.fl}>{t('parametres.boutique.ville')} <span style={{ color: 'var(--t2)' }}>*</span></div>
           <div className={s.fw}>
             <i className={`fas fa-map-location-dot ${s.fi}`} />
             {pays === 'GN' ? (
               <select className={`${s.fin} ${s.finSelect}`}
                 value={ville}
                 onChange={e => { handleVilleChange(e.target.value); onDirty(); }}>
-                <option value="">— Choisir une ville —</option>
+                <option value="">{t('parametres.boutique.choisirVille')}</option>
                 {VILLES_SORTED.map(v => (
                   <option key={v.slug} value={v.nom}>{v.nom} ({v.region})</option>
                 ))}
@@ -525,7 +528,7 @@ export default function BoutiqueSection({
             ) : (
               <input className={s.fin} value={ville}
                 onChange={e => { setVille(e.target.value); onDirty(); }}
-                placeholder="Ex : Conakry" />
+                placeholder={t('parametres.boutique.villePlaceholder')} />
             )}
           </div>
         </div>
@@ -533,13 +536,13 @@ export default function BoutiqueSection({
         {/* ── COMMUNE (si ville sélectionnée et pays = GN) ── */}
         {pays === 'GN' && communes.length > 0 && (
           <div className={s.fg}>
-            <div className={s.fl}>Commune / Arrondissement <span style={{ color: 'var(--t2)' }}>*</span></div>
+            <div className={s.fl}>{t('parametres.boutique.commune')} <span style={{ color: 'var(--t2)' }}>*</span></div>
             <div className={s.fw}>
               <i className={`fas fa-city ${s.fi}`} />
               <select className={`${s.fin} ${s.finSelect}`}
                 value={commune}
                 onChange={e => { handleCommuneChange(e.target.value); onDirty(); }}>
-                <option value="">— Choisir une commune —</option>
+                <option value="">{t('parametres.boutique.choisirCommune')}</option>
                 {communes.map(c => (
                   <option key={c.nom} value={c.nom}>{c.nom}</option>
                 ))}
@@ -551,13 +554,13 @@ export default function BoutiqueSection({
         {/* ── QUARTIER (si commune sélectionnée) ── */}
         {pays === 'GN' && quartiers.length > 0 && (
           <div className={s.fg}>
-            <div className={s.fl}>Quartier <span style={{ color: 'var(--t2)' }}>*</span></div>
+            <div className={s.fl}>{t('parametres.boutique.quartier')} <span style={{ color: 'var(--t2)' }}>*</span></div>
             <div className={s.fw}>
               <i className={`fas fa-map-pin ${s.fi}`} />
               <select className={`${s.fin} ${s.finSelect}`}
                 value={quartier}
                 onChange={e => { setQuartier(e.target.value); onDirty(); }}>
-                <option value="">— Choisir un quartier —</option>
+                <option value="">{t('parametres.boutique.choisirQuartier')}</option>
                 {quartiers.map(q => (
                   <option key={q} value={q}>{q}</option>
                 ))}
@@ -578,31 +581,31 @@ export default function BoutiqueSection({
 
         {/* ── ADRESSE PHYSIQUE ── */}
         <div className={s.fg}>
-          <div className={s.fl}>Adresse physique <span style={{ fontWeight: 400, color: 'var(--t3)' }}>(rue, numéro…)</span></div>
+          <div className={s.fl}>{t('parametres.boutique.adressePhysique')} <span style={{ fontWeight: 400, color: 'var(--t3)' }}>{t('parametres.boutique.adresseHintRue')}</span></div>
           <div className={s.fw}>
             <i className={`fas fa-location-dot ${s.fi}`} />
             <input className={s.fin} value={adresse}
               onChange={e => { setAdresse(e.target.value); onDirty(); }}
-              placeholder="Ex : Avenue de la République, face au Grand Marché" />
+              placeholder={t('parametres.boutique.adressePlaceholder')} />
           </div>
         </div>
 
         {/* ── REPÈRE ── */}
         <div className={s.fg}>
-          <div className={s.fl}>Repère pour les livreurs</div>
+          <div className={s.fl}>{t('parametres.boutique.repereLivreurs')}</div>
           <div className={s.fw}>
             <i className={`fas fa-comment-dots ${s.fi}`} />
             <input className={s.fin} value={repere}
               onChange={e => { setRepere(e.target.value); onDirty(); }}
-              placeholder="Ex : Bâtiment rouge à côté de la pharmacie" />
+              placeholder={t('parametres.boutique.repereLivreursPlaceholder')} />
           </div>
         </div>
 
         <div className={s.saveRow}>
           <button className={s.saveBtn} onClick={handleSaveContact} disabled={saving}>
             {saving
-              ? <><i className="fas fa-spinner fa-spin" /> Sauvegarde…</>
-              : <><i className="fas fa-cloud-arrow-up" /> Sauvegarder le contact</>
+              ? <><i className="fas fa-spinner fa-spin" /> {t('parametres.boutique.sauvegardeContactEnCours')}</>
+              : <><i className="fas fa-cloud-arrow-up" /> {t('parametres.boutique.sauvegarderContact')}</>
             }
           </button>
         </div>
@@ -612,30 +615,30 @@ export default function BoutiqueSection({
        * RESPONSABLE & PROPRIÉTAIRE
        * ══════════════════════════════════════════════════════ */}
       <FormCard
-        title="Responsable & Propriétaire"
+        title={t('parametres.boutique.responsableTitle')}
         icon="fa-user-tie"
-        subtitle="Informations du gérant principal"
+        subtitle={t('parametres.boutique.responsableSubtitle')}
       >
         <div className={s.grid2}>
           <div className={s.fg}>
-            <div className={s.fl}>Prénom <span className={s.flOpt}>*</span></div>
+            <div className={s.fl}>{t('parametres.boutique.prenom')} <span className={s.flOpt}>*</span></div>
             <div className={s.fw}>
               <i className={`fas fa-user ${s.fi}`} />
               <input className={s.fin}
                 defaultValue={data ? '' : ''}
-                placeholder="Prénom du responsable"
+                placeholder={t('parametres.boutique.prenomPlaceholder')}
                 readOnly
                 style={{ background:'var(--g100)', cursor:'not-allowed', color:'var(--t3)' }}
               />
             </div>
           </div>
           <div className={s.fg}>
-            <div className={s.fl}>Nom <span className={s.flOpt}>*</span></div>
+            <div className={s.fl}>{t('parametres.boutique.nom')} <span className={s.flOpt}>*</span></div>
             <div className={s.fw}>
               <i className={`fas fa-user ${s.fi}`} />
               <input className={s.fin}
                 defaultValue={data ? '' : ''}
-                placeholder="Nom du responsable"
+                placeholder={t('parametres.boutique.nomPlaceholder')}
                 readOnly
                 style={{ background:'var(--g100)', cursor:'not-allowed', color:'var(--t3)' }}
               />
@@ -643,7 +646,7 @@ export default function BoutiqueSection({
           </div>
         </div>
         <div className={s.hint}>
-          <i className="fas fa-circle-info" /> Le prénom et le nom se modifient dans les <strong>paramètres de votre compte</strong>.
+          <i className="fas fa-circle-info" /> {t('parametres.boutique.responsableHintPart1')} <strong>{t('parametres.boutique.responsableHintBold')}</strong>{t('parametres.boutique.responsableHintPart2')}
         </div>
       </FormCard>
     </>
@@ -654,30 +657,34 @@ export default function BoutiqueSection({
 // HELPERS — calcul du % de complétion du profil
 // ─────────────────────────────────────────────────────────────
 
-const STEPS_LABELS: Record<string, string> = {
-  logo:         'Logo',
-  companyName:  'Nom & description',
-  contact:      'Contact',
-  products:     'Produits',
-  coverImage:   'Photo de couverture',
-  returnPolicy: 'Politique retour',
-};
+function getStepsLabels(t: TFunction): Record<string, string> {
+  return {
+    logo:         t('parametres.boutique.steps.logo'),
+    companyName:  t('parametres.boutique.steps.companyName'),
+    contact:      t('parametres.boutique.steps.contact'),
+    products:     t('parametres.boutique.steps.products'),
+    coverImage:   t('parametres.boutique.steps.coverImage'),
+    returnPolicy: t('parametres.boutique.steps.returnPolicy'),
+  };
+}
 
-function getStepsDone(data: ParametresData | null): string[] {
+function getStepsDone(data: ParametresData | null, t: TFunction): string[] {
   if (!data) return [];
+  const labels = getStepsLabels(t);
   const done: string[] = [];
-  if (data.logo)                                    done.push(STEPS_LABELS.logo);
-  if (data.companyName)                             done.push(STEPS_LABELS.companyName);
-  if (data.businessPhone || data.businessEmail)     done.push(STEPS_LABELS.contact);
-  if ((data.totalOrders ?? 0) > 0)                  done.push(STEPS_LABELS.products);
+  if (data.logo)                                    done.push(labels.logo);
+  if (data.companyName)                             done.push(labels.companyName);
+  if (data.businessPhone || data.businessEmail)     done.push(labels.contact);
+  if ((data.totalOrders ?? 0) > 0)                  done.push(labels.products);
   return done;
 }
 
-function getStepsMissing(data: ParametresData | null): string[] {
+function getStepsMissing(data: ParametresData | null, t: TFunction): string[] {
   if (!data) return [];
+  const labels = getStepsLabels(t);
   const miss: string[] = [];
-  if (!data.coverImage)   miss.push(STEPS_LABELS.coverImage);
-  if (!data.returnPolicy) miss.push(STEPS_LABELS.returnPolicy);
+  if (!data.coverImage)   miss.push(labels.coverImage);
+  if (!data.returnPolicy) miss.push(labels.returnPolicy);
   return miss;
 }
 

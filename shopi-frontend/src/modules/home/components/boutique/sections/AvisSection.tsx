@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/AvisSection.module.css';
 import type { AvisItem, RatingDistribution, RatingStar } from '../data/types';
 
@@ -20,12 +21,13 @@ const AVATAR_TONES = [
 ] as const;
 
 function Stars({ n, large = false }: { n: number; large?: boolean }) {
+  const { t } = useTranslation();
   const rounded = Math.round(n);
 
   return (
     <span
       className={`${styles.stars} ${large ? styles.starsLarge : ''}`}
-      aria-label={`${n.toFixed(1)} sur 5`}
+      aria-label={t('boutiqueDetail.avis.sur5', { n: n.toFixed(1) })}
       title={`${n.toFixed(1)} / 5`}
     >
       {STAR_VALUES.map(v => (
@@ -60,6 +62,7 @@ export default function AvisSection({
   distribution,
   loading,
 }: Props) {
+  const { t } = useTranslation();
   const hasRatings = totalRatings > 0 && note > 0;
   const hasAvis = avis.length > 0;
   const ratingDistribution = distribution ?? buildDistribution(avis);
@@ -70,7 +73,7 @@ export default function AvisSection({
   if (loading) return (
     <div className={styles.loading}>
       <i className={`fas fa-spinner fa-spin ${styles.loadingIcon}`} />
-      Chargement des avis…
+      {t('boutiqueDetail.avis.chargement')}
     </div>
   );
 
@@ -86,14 +89,14 @@ export default function AvisSection({
             : (
               <span
                 className={`${styles.stars} ${styles.starsLarge} ${styles.starsMuted}`}
-                aria-label="Aucune note"
+                aria-label={t('boutiqueDetail.avis.aucuneNote')}
               >
                 ★★★★★
               </span>
             )
           }
           <div className={styles.noteTotal}>
-            {hasRatings ? `${totalRatings} avis vérifiés` : 'Aucun avis pour le moment'}
+            {hasRatings ? t('boutiqueDetail.avis.avisVerifies', { count: totalRatings }) : t('boutiqueDetail.avis.aucunAvis')}
           </div>
         </div>
 
@@ -126,12 +129,12 @@ export default function AvisSection({
           <div className={styles.empty}>
             <i className={`fas fa-star ${styles.emptyIcon}`} />
             <div className={styles.emptyTitle}>
-              {hasRatings ? 'Aucun avis détaillé disponible' : 'Aucun avis pour le moment'}
+              {hasRatings ? t('boutiqueDetail.avis.aucunAvisDetaille') : t('boutiqueDetail.avis.aucunAvis')}
             </div>
             <div className={styles.emptyText}>
               {hasRatings
-                ? 'La note globale existe déjà, mais les commentaires ne sont pas encore disponibles.'
-                : 'Les avis apparaissent après que les clients ont validé la réception de leur commande.'}
+                ? t('boutiqueDetail.avis.noteExisteDeja')
+                : t('boutiqueDetail.avis.avisApparaissent')}
             </div>
           </div>
         )}
@@ -160,7 +163,7 @@ export default function AvisSection({
 
             {/* Badge achat vérifié */}
             <div className={styles.verifiedBadge}>
-              <i className="fas fa-shield-check" /> Achat vérifié
+              <i className="fas fa-shield-check" /> {t('boutiqueDetail.avis.achatVerifie')}
             </div>
           </div>
         ))}

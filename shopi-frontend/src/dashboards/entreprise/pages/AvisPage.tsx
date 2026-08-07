@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
 import { fetchEntrepriseAvis, repondreAvis } from '../services/avisApi';
 import type { AvisApi, AvisStatsApi } from '../services/avisApi';
@@ -38,6 +39,7 @@ function avatarBg(nom: string): string {
 type Filtre = 'all' | 'replied' | 'pending';
 
 export default function AvisPage() {
+  const { t } = useTranslation();
   const { pop } = useToast();
 
   const [avis,    setAvis]    = useState<AvisApi[]>([]);
@@ -54,7 +56,7 @@ export default function AvisPage() {
     setLoading(true);
     fetchEntrepriseAvis()
       .then(res => { setAvis(res.avis); setStats(res.stats); })
-      .catch(() => pop('Impossible de charger les avis', 'e'))
+      .catch(() => pop(t('avis.loadError'), 'e'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -74,9 +76,9 @@ export default function AvisPage() {
       setAvis(prev => prev.map(a =>
         a.id === avisId ? { ...a, reponse: replyText.trim() } : a
       ));
-      pop('✅ Réponse publiée', 's');
+      pop(t('avis.reponsePublieeToast'), 's');
     } catch {
-      pop('❌ Erreur lors de la publication', 'e');
+      pop(t('avis.reponseErrorToast'), 'e');
     } finally {
       setReplySaving(false);
       setReplyBoxId(null);
@@ -101,14 +103,14 @@ export default function AvisPage() {
       {/* ── KPIs ── */}
       <div className="kpi-grid">
         {[
-          { ic:'⭐', v: loading ? '…' : moyenne.toFixed(1), l:'Note globale',        sub:'Sur 5 étoiles' },
-          { ic:'💬', v: loading ? '…' : String(totalAvis),  l:'Avis au total',        sub:'Clients vérifiés' },
+          { ic:'⭐', v: loading ? '…' : moyenne.toFixed(1), l:t('avis.kpi.noteGlobale'),        sub:t('avis.kpi.sur5Etoiles') },
+          { ic:'💬', v: loading ? '…' : String(totalAvis),  l:t('avis.kpi.avisAuTotal'),        sub:t('avis.kpi.clientsVerifies') },
           { ic:'✅', v: loading ? '…' : (
               totalAvis > 0
                 ? `${Math.round(((stats?.distribution?.['4'] ?? 0) + (stats?.distribution?.['5'] ?? 0)) / (totalAvis || 1) * 100)}%`
                 : '—'
-            ),                                               l:'Satisfaction',          sub:'4 et 5 étoiles' },
-          { ic:'⏳', v: loading ? '…' : String(nbSansReponse), l:'Sans réponse',      sub:'À traiter' },
+            ),                                               l:t('avis.kpi.satisfaction'),          sub:t('avis.kpi.quatreEtCinqEtoiles') },
+          { ic:'⏳', v: loading ? '…' : String(nbSansReponse), l:t('avis.kpi.sansReponse'),      sub:t('avis.kpi.aTraiter') },
         ].map((s, i) => (
           <div key={i} className={`kpi k${i+1}`}>
             <div className="kpi-stripe" />
@@ -129,9 +131,9 @@ export default function AvisPage() {
           {/* Filtres */}
           <div style={{ display:'flex', gap:7, marginBottom:14, flexWrap:'wrap' }}>
             {([
-              { label:'Tous les avis', value:'all'     as Filtre },
-              { label:'✅ Avec réponse', value:'replied' as Filtre },
-              { label:'⏳ Sans réponse', value:'pending' as Filtre },
+              { label:t('avis.filters.tous'), value:'all'     as Filtre },
+              { label:t('avis.filters.avecReponse'), value:'replied' as Filtre },
+              { label:t('avis.filters.sansReponse'), value:'pending' as Filtre },
             ]).map(f => (
               <button key={f.value} onClick={() => setFiltre(f.value)} style={{
                 background:  filtre === f.value ? 'var(--navy)' : 'var(--white)',
@@ -154,7 +156,7 @@ export default function AvisPage() {
           {loading && (
             <div style={{ padding:'48px 0', textAlign:'center', color:'var(--t3)' }}>
               <i className="fas fa-spinner fa-spin" style={{ fontSize:24, display:'block', marginBottom:10 }} />
-              Chargement des avis…
+              {t('avis.loading')}
             </div>
           )}
 
@@ -162,11 +164,11 @@ export default function AvisPage() {
           {!loading && filtered.length === 0 && (
             <div style={{ padding:'48px 0', textAlign:'center', color:'var(--t3)' }}>
               <i className="fas fa-star" style={{ fontSize:32, display:'block', marginBottom:12, color:'var(--t4)' }} />
-              <div style={{ fontWeight:700, marginBottom:6 }}>Aucun avis</div>
+              <div style={{ fontWeight:700, marginBottom:6 }}>{t('avis.empty.title')}</div>
               <div style={{ fontSize:12 }}>
-                {filtre === 'pending' ? 'Tous les avis ont reçu une réponse.' :
-                 filtre === 'replied' ? 'Aucun avis n\'a encore été répondu.' :
-                 'Aucun avis client pour le moment.'}
+                {filtre === 'pending' ? t('avis.empty.subPending') :
+                 filtre === 'replied' ? t('avis.empty.subReplied') :
+                 t('avis.empty.subDefault')}
               </div>
             </div>
           )}
@@ -196,7 +198,7 @@ export default function AvisPage() {
                             {r.clientNom}
                           </div>
                           <div style={{ fontSize:11, color:'var(--t3)', marginTop:1 }}>
-                            Sur : <span style={{ color:'var(--t2)', fontWeight:600 }}>{r.produitNom}</span>
+                            {t('avis.sur')} <span style={{ color:'var(--t2)', fontWeight:600 }}>{r.produitNom}</span>
                           </div>
                         </div>
                         <div style={{ textAlign:'right' }}>
@@ -226,7 +228,7 @@ export default function AvisPage() {
                       border:'1px solid var(--bdr2)', borderRadius:'var(--r-md)', marginBottom:10,
                     }}>
                       <div style={{ fontSize:10.5, fontWeight:700, color:'var(--t2)', marginBottom:4 }}>
-                        <i className="fas fa-store" /> Votre réponse
+                        <i className="fas fa-store" /> {t('avis.votreReponse')}
                       </div>
                       <div style={{ fontSize:12, color:'var(--t2)', lineHeight:1.55 }}>{r.reponse}</div>
                     </div>
@@ -238,7 +240,7 @@ export default function AvisPage() {
                       <textarea
                         value={replyText}
                         onChange={e => setReplyText(e.target.value)}
-                        placeholder="Répondre à cet avis…"
+                        placeholder={t('avis.replyPlaceholder')}
                         rows={3}
                         style={{
                           width:'100%', border:'1.5px solid var(--bdrb)',
@@ -257,14 +259,14 @@ export default function AvisPage() {
                             fontSize:12, fontWeight:700, cursor:'pointer',
                             opacity: replySaving ? .6 : 1,
                           }}>
-                          {replySaving ? <><i className="fas fa-spinner fa-spin" /> Envoi…</> : 'Publier'}
+                          {replySaving ? <><i className="fas fa-spinner fa-spin" /> {t('avis.envoiEnCours')}</> : t('avis.publier')}
                         </button>
                         <button onClick={() => { setReplyBoxId(null); setReplyText(''); }} style={{
                           background:'var(--white)', color:'var(--t2)',
                           border:'1px solid var(--bdr2)', borderRadius:'var(--pill)',
                           padding:'7px 14px', fontSize:12, fontWeight:600, cursor:'pointer',
                         }}>
-                          Annuler
+                          {t('avis.annuler')}
                         </button>
                       </div>
                     </div>
@@ -275,17 +277,17 @@ export default function AvisPage() {
                     {!r.reponse ? (
                       <button className="ta-btn primary"
                         onClick={() => { setReplyBoxId(r.id); setReplyText(''); }}>
-                        <i className="fas fa-reply" /> Répondre
+                        <i className="fas fa-reply" /> {t('avis.repondre')}
                       </button>
                     ) : (
                       <button className="ta-btn"
-                        onClick={() => pop('✏️ Modification de réponse', 'i')}>
-                        <i className="fas fa-pen" /> Modifier réponse
+                        onClick={() => pop(t('avis.modifierReponseToast'), 'i')}>
+                        <i className="fas fa-pen" /> {t('avis.modifierReponse')}
                       </button>
                     )}
                     <button className="ta-btn"
-                      onClick={() => pop('🚩 Avis signalé pour modération', 'w')}>
-                      <i className="fas fa-flag" /> Signaler
+                      onClick={() => pop(t('avis.signalerToast'), 'w')}>
+                      <i className="fas fa-flag" /> {t('avis.signaler')}
                     </button>
                   </div>
                 </div>
@@ -297,7 +299,7 @@ export default function AvisPage() {
         {/* ── Panneau latéral stats ── */}
         <div>
           <div className="card" style={{ marginBottom:14 }}>
-            <div className="ch"><div className="ch-t"><i className="fas fa-star" /> Distribution des notes</div></div>
+            <div className="ch"><div className="ch-t"><i className="fas fa-star" /> {t('avis.sidePanel.distributionNotes')}</div></div>
             <div className="cb">
               {/* Score global */}
               <div style={{ textAlign:'center', marginBottom:18 }}>
@@ -310,7 +312,7 @@ export default function AvisPage() {
                   ))}
                 </div>
                 <div style={{ fontSize:11, color:'var(--t3)', marginTop:4 }}>
-                  {loading ? '…' : `${totalAvis} avis vérifiés`}
+                  {loading ? '…' : t('avis.sidePanel.avisVerifies', { count: totalAvis })}
                 </div>
               </div>
 
@@ -336,12 +338,12 @@ export default function AvisPage() {
 
           {/* Conseils */}
           <div className="card">
-            <div className="ch"><div className="ch-t"><i className="fas fa-lightbulb" /> Conseils Shopi</div></div>
+            <div className="ch"><div className="ch-t"><i className="fas fa-lightbulb" /> {t('avis.sidePanel.conseilsShopi')}</div></div>
             <div className="cb" style={{ display:'flex', flexDirection:'column', gap:10 }}>
               {[
-                { ic:'⚡', txt:'Répondez en moins de 24h pour +12% de satisfaction.' },
-                { ic:'🎯', txt:'Un vendeur qui répond obtient 2× plus de nouveaux avis.' },
-                { ic:'💬', txt:'Remerciez toujours les avis positifs — même brièvement.' },
+                { ic:'⚡', txt:t('avis.sidePanel.tip1') },
+                { ic:'🎯', txt:t('avis.sidePanel.tip2') },
+                { ic:'💬', txt:t('avis.sidePanel.tip3') },
               ].map((c, i) => (
                 <div key={i} style={{
                   display:'flex', gap:9, padding:'10px 12px',

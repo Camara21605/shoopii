@@ -9,8 +9,10 @@
  */
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate }                  from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { ChatUser, GroupMember }  from '../data/messagerieTypes';
-import { ROLE_CONFIG }                  from '../data/messagerieTypes';
+import { getRoleConfig }                from '../data/messagerieTypes';
 import s from '../styles/ChatWindow.module.css';
 
 // ── Route profil selon le type d'acteur ──────────────────────
@@ -26,12 +28,14 @@ function getProfileUrl(member: GroupMember): string | null {
 
 // ── Config visuelle par type d'acteur ─────────────────────────
 
-const ACTOR_CONFIG: Record<string, { label: string; icon: string; color: string; bg: string; initBg: string }> = {
-  client:        { label: 'Client',        icon: '🛍️', color: '#1A4FC4', bg: 'rgba(26,79,196,.1)',   initBg: 'rgba(26,79,196,.82)'   },
-  company:       { label: 'Entreprise',    icon: '🏪', color: '#047857', bg: 'rgba(4,120,87,.1)',    initBg: 'rgba(4,120,87,.82)'    },
-  delivery:      { label: 'Livreur',       icon: '🛵', color: '#0E7490', bg: 'rgba(14,116,144,.1)',  initBg: 'rgba(14,116,144,.82)'  },
-  correspondent: { label: 'Correspondant', icon: '📍', color: '#B45309', bg: 'rgba(180,83,9,.1)',    initBg: 'rgba(180,83,9,.82)'    },
-};
+function getActorConfig(t: TFunction): Record<string, { label: string; icon: string; color: string; bg: string; initBg: string }> {
+  return {
+    client:        { label: t('messagerie.actorConfig.client'),        icon: '🛍️', color: '#1A4FC4', bg: 'rgba(26,79,196,.1)',   initBg: 'rgba(26,79,196,.82)'   },
+    company:       { label: t('messagerie.actorConfig.company'),       icon: '🏪', color: '#047857', bg: 'rgba(4,120,87,.1)',    initBg: 'rgba(4,120,87,.82)'    },
+    delivery:      { label: t('messagerie.actorConfig.delivery'),      icon: '🛵', color: '#0E7490', bg: 'rgba(14,116,144,.1)',  initBg: 'rgba(14,116,144,.82)'  },
+    correspondent: { label: t('messagerie.actorConfig.correspondent'), icon: '📍', color: '#B45309', bg: 'rgba(180,83,9,.1)',    initBg: 'rgba(180,83,9,.82)'    },
+  };
+}
 
 // ── Props ──────────────────────────────────────────────────────
 
@@ -51,7 +55,9 @@ interface Props {
 export default function ChatHeader({
   user, members, infoPanelOpen, onToggleInfo, onToast, onCall, onVideoCall, onMobileMenu,
 }: Props) {
-  const rc       = ROLE_CONFIG[user.role] ?? ROLE_CONFIG['client'];
+  const { t } = useTranslation();
+  const roleConfig = getRoleConfig(t);
+  const rc       = roleConfig[user.role] ?? roleConfig['client'];
   const isImgAva = user.ava?.startsWith('http');
   const isGroupe = user.role === 'groupe';
 
@@ -98,7 +104,7 @@ export default function ChatHeader({
     <div className={s.header}>
       {/* Bouton retour liste — mobile uniquement */}
       {onMobileMenu && (
-        <button className={s.hdMobileBtn} onClick={onMobileMenu} title="Conversations">
+        <button className={s.hdMobileBtn} onClick={onMobileMenu} title={t('messagerie.chatHeader.conversationsTitle')}>
           <i className="fas fa-bars" />
         </button>
       )}
@@ -114,13 +120,13 @@ export default function ChatHeader({
             cursor:     showGroupAva ? 'pointer' : 'default',
           }}
           onClick={togglePopup}
-          title={showGroupAva ? 'Voir les membres du groupe' : undefined}
+          title={showGroupAva ? t('messagerie.chatHeader.voirMembres') : undefined}
         >
           {showGroupAva ? (
             /* Initiales empilées des membres */
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {visibleMembers.map((m, i) => {
-                const ac = ACTOR_CONFIG[m.actorType];
+                const ac = getActorConfig(t)[m.actorType];
                 return (
                   <div key={m.id} style={{
                     width: 21, height: 21, borderRadius: 6,
@@ -182,7 +188,7 @@ export default function ChatHeader({
         {user.context && <div className={s.hdCtxLine}>{user.context}</div>}
         <div className={`${s.hdSub} ${user.online ? s.online : ''}`}>
           <i className="fas fa-circle" style={{ fontSize: 6 }} />
-          {user.online ? 'En ligne maintenant' : 'Hors ligne'}
+          {user.online ? t('messagerie.chatHeader.enLigne') : t('messagerie.chatHeader.horsLigne')}
         </div>
       </div>
 
@@ -190,25 +196,25 @@ export default function ChatHeader({
       <div className={s.hdActs}>
         <button
           className={s.hdBtn}
-          onClick={onCall ?? (() => onToast('📞 Appel audio', 'i'))}
-          title="Appel audio"
+          onClick={onCall ?? (() => onToast(`📞 ${t('messagerie.chatHeader.appelAudio')}`, 'i'))}
+          title={t('messagerie.chatHeader.appelAudio')}
         >
           <i className="fas fa-phone" />
         </button>
         <button
           className={s.hdBtn}
-          onClick={onVideoCall ?? (() => onToast('📹 Appel vidéo', 'i'))}
-          title="Appel vidéo"
+          onClick={onVideoCall ?? (() => onToast(`📹 ${t('messagerie.chatHeader.appelVideo')}`, 'i'))}
+          title={t('messagerie.chatHeader.appelVideo')}
         >
           <i className="fas fa-video" />
         </button>
-        <button className={s.hdBtn} onClick={() => onToast('🔍 Recherche dans la conversation', 'i')} title="Rechercher">
+        <button className={s.hdBtn} onClick={() => onToast(t('messagerie.chatHeader.rechercherToast'), 'i')} title={t('messagerie.chatHeader.rechercher')}>
           <i className="fas fa-magnifying-glass" />
         </button>
-        <button className={`${s.hdBtn} ${infoPanelOpen ? s.active : ''}`} onClick={onToggleInfo} title="Informations">
+        <button className={`${s.hdBtn} ${infoPanelOpen ? s.active : ''}`} onClick={onToggleInfo} title={t('messagerie.chatHeader.informations')}>
           <i className="fas fa-circle-info" />
         </button>
-        <button className={s.hdBtn} onClick={() => onToast('⚙️ Options', 'i')} title="Plus">
+        <button className={s.hdBtn} onClick={() => onToast(t('messagerie.chatHeader.optionsToast'), 'i')} title={t('messagerie.chatHeader.plus')}>
           <i className="fas fa-ellipsis-vertical" />
         </button>
       </div>
@@ -227,6 +233,7 @@ interface PopupProps {
 }
 
 function MembersPopup({ members, detailMember, onSelectMember, onBack, onClose }: PopupProps) {
+  const { t } = useTranslation();
   return (
     <div style={{
       position:  'absolute',
@@ -266,13 +273,13 @@ function MembersPopup({ members, detailMember, onSelectMember, onBack, onClose }
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'background .15s',
               }}
-              title="Retour"
+              title={t('messagerie.chatHeader.retour')}
             >
               <i className="fas fa-arrow-left" />
             </button>
           )}
           <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--navy)', fontFamily: 'var(--fd)' }}>
-            {detailMember ? 'Profil du membre' : `${members.length} membre${members.length > 1 ? 's' : ''}`}
+            {detailMember ? t('messagerie.chatHeader.profilMembre') : t('messagerie.chatHeader.membre', { count: members.length })}
           </span>
         </div>
         <button
@@ -300,10 +307,12 @@ function MembersPopup({ members, detailMember, onSelectMember, onBack, onClose }
 // ── Vue liste des membres ─────────────────────────────────────
 
 function MemberListView({ members, onSelect }: { members: GroupMember[]; onSelect: (m: GroupMember) => void }) {
+  const { t } = useTranslation();
   return (
     <div style={{ padding: '6px 0' }}>
       {members.map(m => {
-        const ac = ACTOR_CONFIG[m.actorType] ?? ACTOR_CONFIG['client'];
+        const actorConfig = getActorConfig(t);
+        const ac = actorConfig[m.actorType] ?? actorConfig['client'];
         return (
           <button
             key={m.id}
@@ -357,8 +366,10 @@ function MemberListView({ members, onSelect }: { members: GroupMember[]; onSelec
 // ── Vue détail d'un membre ────────────────────────────────────
 
 function MemberDetailView({ member, onClose }: { member: GroupMember; onClose: () => void }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  const ac       = ACTOR_CONFIG[member.actorType] ?? ACTOR_CONFIG['client'];
+  const actorConfig = getActorConfig(t);
+  const ac       = actorConfig[member.actorType] ?? actorConfig['client'];
   const profileUrl = getProfileUrl(member);
   const joinDate = new Date(member.joinedAt).toLocaleDateString('fr-FR', {
     day: 'numeric', month: 'long', year: 'numeric',
@@ -406,8 +417,8 @@ function MemberDetailView({ member, onClose }: { member: GroupMember; onClose: (
         display: 'flex', flexDirection: 'column', gap: 7,
         marginBottom: 12,
       }}>
-        <InfoRow icon="fa-tag"           label="Rôle"       value={ac.label} />
-        <InfoRow icon="fa-calendar-plus" label="Rejoint le" value={joinDate} />
+        <InfoRow icon="fa-tag"           label={t('messagerie.chatHeader.role')}     value={ac.label} />
+        <InfoRow icon="fa-calendar-plus" label={t('messagerie.chatHeader.rejointLe')} value={joinDate} />
       </div>
 
       {/* Bouton Voir profil */}
@@ -426,14 +437,14 @@ function MemberDetailView({ member, onClose }: { member: GroupMember; onClose: (
           onMouseLeave={e => (e.currentTarget.style.background = 'var(--navy)')}
         >
           <i className="fas fa-user" style={{ fontSize: 11 }} />
-          Voir le profil
+          {t('messagerie.chatHeader.voirProfil')}
         </button>
       ) : (
         <div style={{
           textAlign: 'center', fontSize: 11, color: 'var(--t4)',
           padding: '6px 0',
         }}>
-          Profil non disponible
+          {t('messagerie.chatHeader.profilNonDisponible')}
         </div>
       )}
     </div>

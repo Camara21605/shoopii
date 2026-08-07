@@ -13,7 +13,8 @@
  *   - Boutons : Voir profil | Suivre (toggle abonnement)
  * ============================================================
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { LivreurBoutique } from '../data/boutiqueMockData';
 import styles from '../styles/CardsLivreur.module.css';
 
@@ -27,6 +28,7 @@ function Stars({ n }: { n: number }) {
 }
 
 export default function CardLivreurBoutique({ l, onToast }: Props) {
+  const { t } = useTranslation();
   const [suivi, setSuivi] = useState(false);
 
   return (
@@ -50,25 +52,25 @@ export default function CardLivreurBoutique({ l, onToast }: Props) {
       {/* ── Stats : note + livraisons ── */}
       <div className={styles.stats}>
         <span><Stars n={l.note} /> {l.note.toFixed(1)}</span>
-        <span>{l.trips} livraisons</span>
+        <span>{t('boutiqueDetail.cardLivreur.livraisonsCount', { count: l.trips })}</span>
       </div>
 
       {/* ── Badge statut ── */}
       <span className={l.dispo ? styles.dispoBadge : styles.occupeBadge}>
-        {l.dispo ? '● Disponible' : '⚙ En course'}
+        {l.dispo ? t('boutiqueDetail.cardLivreur.disponible') : t('boutiqueDetail.cardLivreur.enCourseBadge')}
       </span>
 
       {/* ── Boutons d'action ── */}
       <div className={styles.btns}>
         <button
           className={styles.btnProfil}
-          onClick={() => onToast(`🛵 Profil de ${l.nom}`)}
+          onClick={() => onToast(t('boutiqueDetail.cardLivreur.profilToast', { nom: l.nom }))}
         >
-          <i className="fas fa-user" /> Voir profil
+          <i className="fas fa-user" /> {t('boutiqueDetail.cardLivreur.voirProfil')}
         </button>
         <button
           className={`${styles.btnSuivre} ${suivi ? styles.btnSuivreOn : ''}`}
-          onClick={() => { setSuivi(s => !s); onToast(suivi ? `👋 Désabonné de ${l.nom}` : `✅ Abonné à ${l.nom}`); }}
+          onClick={() => { setSuivi(s => !s); onToast(suivi ? t('boutiqueDetail.cardLivreur.desabonneToast', { nom: l.nom }) : t('boutiqueDetail.cardLivreur.abonneToast', { nom: l.nom })); }}
         >
           {suivi ? <><i className="fas fa-check" /></> : <><i className="fas fa-plus" /></>}
         </button>

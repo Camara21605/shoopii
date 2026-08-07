@@ -44,12 +44,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, ILike } from 'typeorm';
+import { DataSource, Repository, ILike, In } from 'typeorm';
 
 import {
   Promotion,
   PromoStatus,
   PromoScope,
+  PromoValueType,
 } from 'src/database/entities/entreprise.table/promotion.entity';
 import { PromotionProduct }
   from 'src/database/entities/entreprise.table/promotion-product.entity';
@@ -104,6 +105,35 @@ export interface PromoResponse {
   produits:     { id: string; productId: string; nom?: string }[];
   createdAt:    string;
   updatedAt:    string;
+}
+
+/**
+ * Réponse allégée pour la route PUBLIQUE GET /promotions/public
+ * (section "Flash Sales" de la home + page /offres) — ne contient
+ * que ce qui est nécessaire à l'affichage, aucune donnée interne
+ * (stats, description, historique d'usage) contrairement à PromoResponse.
+ */
+export interface PublicPromoResponse {
+  id:        string;
+  nom:       string;
+  type:      string;
+  typeL:     string;
+  valueType: string;
+  valeur:    number | null;
+  scope:     string;
+  endDate:   string | null;
+  expire:    string;
+  /**
+   * IDs des produits ciblés — uniquement peuplé si scope=products.
+   * Permet au frontend de renvoyer directement vers la fiche du
+   * produit concerné au lieu de la page /offres générique.
+   */
+  productIds: string[];
+  company: {
+    id:   string;
+    nom:  string;
+    logo: string | null;
+  };
 }
 
 // Labels lisibles pour le frontend
@@ -492,6 +522,59 @@ export class PromotionsService {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
+  // 2bis. FIND PUBLIC ACTIVE — GET /promotions/public (route publique, sans JWT)
+  //
+  // Liste les promotions ACTIVES et actuellement valides (startDate/endDate),
+  // toutes entreprises confondues, pour l'affichage sur le site public
+  // (section "Flash Sales" de la home + page /offres).
+  //
+  // Triées pour mettre en avant les plus gros pourcentages en premier
+  // (demande explicite : "les promotions de grand pourcentage s'affichent
+  // ici"), puis les autres valeurs de réduction.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  async findPublicActive(limit = 20): Promise<PublicPromoResponse[]> {
+    const now = new Date();
+
+    const promos = await this.promoRepo
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.company',  'company')
+      .leftJoinAndSelect('p.produits', 'produits')
+      .where('p.status = :status', { status: PromoStatus.ACTIVE })
+      .andWhere('(p.startDate IS NULL OR p.startDate <= :now)', { now })
+      .andWhere('(p.endDate IS NULL OR p.endDate >= :now)', { now })
+      .take(200) // pool raisonnable — le tri fin (% d'abord) se fait ensuite en mémoire
+      .getMany();
+
+    const sorted = promos.sort((a, b) => {
+      const aPct = a.valueType === 'percent' ? 1 : 0;
+      const bPct = b.valueType === 'percent' ? 1 : 0;
+      if (aPct !== bPct) return bPct - aPct;
+      return (Number(b.valeur) || 0) - (Number(a.valeur) || 0);
+    });
+
+    return sorted.slice(0, limit).map(p => ({
+      id:        p.id,
+      nom:       p.nom,
+      type:      p.type,
+      typeL:     TYPE_LABELS[p.type] ?? p.type,
+      valueType: p.valueType,
+      valeur:    p.valeur,
+      scope:     p.scope,
+      endDate:   p.endDate ? p.endDate.toISOString() : null,
+      expire:    this.formatExpire(p.endDate),
+      productIds: p.scope === PromoScope.PRODUCTS
+        ? (p.produits ?? []).map(pp => pp.productId)
+        : [],
+      company: {
+        id:   p.companyId,
+        nom:  (p.company as Company)?.companyName ?? 'Boutique Shopi',
+        logo: (p.company as Company)?.logo ?? null,
+      },
+    }));
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
   // 3. FIND ONE — GET /promotions/:id
   //
   // Retourne le détail complet d'une promotion.
@@ -594,6 +677,12 @@ export class PromotionsService {
       await qr.release();
     }
 
+    // Si la promo modifiée est ACTIVE, le prix affiché des produits ciblés
+    // peut avoir changé (nouvelle valeur, nouveau scope, nouveaux produits…)
+    if (promo.status === PromoStatus.ACTIVE) {
+      await this.syncCompanyProductPromoPrices(company.id);
+    }
+
     this.logger.log(`[UPDATE PROMO ✅] ID=${id} | Company=${company.id}`);
     return this.findOne(id, user);
   }
@@ -669,6 +758,12 @@ export class PromotionsService {
 
     await this.promoRepo.update(id, { status: PromoStatus.ACTIVE });
 
+    // Répercute IMMÉDIATEMENT la réduction sur le(s) produit(s) ciblé(s)
+    // (ou tout le catalogue si scope=GLOBAL) — c'est ce qui fait apparaître
+    // le prix barré / prix réduit sur la fiche produit, les cartes produit
+    // et la boutique, sans attendre le prochain passage du scheduler.
+    await this.syncCompanyProductPromoPrices(company.id);
+
     this.logger.log(`[ACTIVATE PROMO ✅] ID=${id} | Company=${company.id}`);
 
     void this.notifEventSvc.notifyPromoEvent({
@@ -702,6 +797,9 @@ export class PromotionsService {
 
     await this.promoRepo.update(id, { status: PromoStatus.PAUSED });
 
+    // Retire immédiatement la réduction affichée sur les produits concernés
+    await this.syncCompanyProductPromoPrices(company.id);
+
     this.logger.log(`[PAUSE PROMO ✅] ID=${id} | Company=${company.id}`);
     return this.findOne(id, user);
   }
@@ -722,6 +820,9 @@ export class PromotionsService {
 
     await this.promoRepo.update(id, { status: PromoStatus.ENDED });
 
+    // Retire immédiatement la réduction affichée sur les produits concernés
+    await this.syncCompanyProductPromoPrices(company.id);
+
     this.logger.log(`[END PROMO ✅] ID=${id} | Company=${company.id}`);
 
     void this.notifEventSvc.notifyPromoEvent({
@@ -734,6 +835,122 @@ export class PromotionsService {
     });
 
     return this.findOne(id, user);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SYNC — Répercute les promos ACTIVE sur Product.prixPromo/activePromoId
+  //
+  // Appelée immédiatement après activate/pause/end/update d'une promo, et
+  // périodiquement en filet de sécurité par PromotionsScheduler (rattrape
+  // les transitions basées sur startDate/endDate, ex: une promo activée à
+  // l'avance dont la date de début vient d'être atteinte).
+  //
+  // Dénormalise le résultat dans Product.prixPromo / Product.activePromoId
+  // (colonnes lues par PublicService pour afficher le prix réduit sans
+  // rejoindre promotions/promotion_products à chaque requête publique).
+  //
+  // scope=GLOBAL   → s'applique à TOUS les produits de l'entreprise
+  // scope=PRODUCTS → seulement aux produits listés dans PromotionProduct
+  //
+  // Si plusieurs promos ACTIVE s'appliquent au même produit, on retient
+  // celle qui donne le prix le plus bas pour le client.
+  // Seuls les types dont la valeur réduit un prix unitaire (valueType
+  // percent/fixed) sont pris en compte — FREE_SHIP (livraison) et BUNDLE
+  // (lot offert) ne modifient pas le prix catalogue affiché.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  async syncCompanyProductPromoPrices(companyId: string): Promise<void> {
+    const products = await this.productRepo.find({
+      where:  { companyId },
+      select: ['id', 'prix', 'prixPromo', 'activePromoId'],
+    });
+    if (products.length === 0) return;
+
+    const now = new Date();
+
+    const candidatePromos = await this.promoRepo.find({
+      where: {
+        companyId,
+        status:    PromoStatus.ACTIVE,
+        valueType: In([PromoValueType.PERCENT, PromoValueType.FIXED]),
+      },
+    });
+
+    const validPromos = candidatePromos.filter(promo =>
+      promo.valeur != null &&
+      (!promo.startDate || new Date(promo.startDate) <= now) &&
+      (!promo.endDate   || new Date(promo.endDate)   >= now),
+    );
+
+    const globalPromos = validPromos.filter(p => p.scope === PromoScope.GLOBAL);
+    const scopedPromos = validPromos.filter(p => p.scope === PromoScope.PRODUCTS);
+
+    // productId → liste des promos "produits spécifiques" qui le ciblent
+    const productPromoIds = new Map<string, string[]>();
+    if (scopedPromos.length > 0) {
+      const links = await this.promoProdRepo.find({
+        where: { promotionId: In(scopedPromos.map(p => p.id)) },
+      });
+      for (const link of links) {
+        const list = productPromoIds.get(link.productId) ?? [];
+        list.push(link.promotionId);
+        productPromoIds.set(link.productId, list);
+      }
+    }
+
+    const promoById = new Map(validPromos.map(p => [p.id, p]));
+
+    const discountedPrice = (prix: number, promo: Promotion): number => {
+      const valeur = Number(promo.valeur) || 0;
+      if (promo.valueType === PromoValueType.PERCENT) {
+        const plafond   = Number(promo.plafondReduction) || Infinity;
+        const reduction = Math.min(Math.round(prix * valeur / 100), plafond);
+        return Math.max(0, prix - reduction);
+      }
+      return Math.max(0, prix - valeur); // FIXED
+    };
+
+    const updates: Array<{ id: string; prixPromo: number | null; activePromoId: string | null }> = [];
+
+    for (const product of products) {
+      const applicableIds = [
+        ...globalPromos.map(p => p.id),
+        ...(productPromoIds.get(product.id) ?? []),
+      ];
+
+      let bestPrice:   number | null = null;
+      let bestPromoId: string | null = null;
+
+      for (const promoId of applicableIds) {
+        const promo = promoById.get(promoId);
+        if (!promo) continue;
+        const price = discountedPrice(Number(product.prix), promo);
+        if (bestPrice === null || price < bestPrice) {
+          bestPrice   = price;
+          bestPromoId = promoId;
+        }
+      }
+
+      const nextPrixPromo     = bestPrice !== null && bestPrice < Number(product.prix) ? bestPrice : null;
+      const nextActivePromoId = nextPrixPromo !== null ? bestPromoId : null;
+
+      if (nextPrixPromo !== product.prixPromo || nextActivePromoId !== product.activePromoId) {
+        updates.push({ id: product.id, prixPromo: nextPrixPromo, activePromoId: nextActivePromoId });
+      }
+    }
+
+    if (updates.length === 0) return;
+
+    await Promise.all(
+      updates.map(u => this.productRepo.update(u.id, {
+        prixPromo:     u.prixPromo,
+        activePromoId: u.activePromoId,
+      })),
+    );
+
+    this.logger.log(
+      `[SYNC PROMO PRICES ✅] Company=${companyId} | ${updates.length} produit(s) mis à jour`,
+    );
   }
 
   // ══════════════════════════════════════════════════════════════════════════

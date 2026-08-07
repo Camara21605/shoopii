@@ -1,0 +1,174 @@
+{
+  "sidebar": {
+    "sections": {
+      "principal": "主要",
+      "catalogue": "目录",
+      "marketing": "营销",
+      "reseauLogistique": "网络与物流",
+      "financesClients": "财务与客户",
+      "equipe": "团队",
+      "boutique": "店铺"
+    },
+    "items": {
+      "overview": "概览",
+      "commandes": "订单",
+      "retours": "退货与售后",
+      "produits": "产品",
+      "ajouter": "添加产品",
+      "inventaire": "库存",
+      "promotions": "促销活动",
+      "analytics": "数据分析",
+      "seo": "SEO与营销",
+      "messages": "消息",
+      "livreurs": "我的配送员",
+      "correspondants": "代理商",
+      "finances": "财务",
+      "portefeuille": "钱包",
+      "clients": "客户",
+      "avis": "客户评价",
+      "equipeGestion": "团队管理",
+      "parametres": "设置",
+      "voirBoutique": "查看我的店铺",
+      "alertes": "提醒",
+      "quitter": "退出"
+    }
+  },
+  "topbar": {
+    "titles": {
+      "overview": {
+        "title": "概览",
+        "subtitle": "您的店铺仪表板"
+      },
+      "commandes": {
+        "title": "订单",
+        "subtitle": "管理您的所有订单"
+      },
+      "retours": {
+        "title": "退货与售后",
+        "subtitle": "管理退货和售后服务"
+      },
+      "produits": {
+        "title": "产品目录",
+        "subtitle": "124 个产品 · 8 个类别"
+      },
+      "ajouter": {
+        "title": "添加产品",
+        "subtitle": "创建并发布新产品"
+      },
+      "inventaire": {
+        "title": "库存与存货",
+        "subtitle": "管理您的库存水平"
+      },
+      "promotions": {
+        "title": "促销与优惠码",
+        "subtitle": "通过优惠活动提升销量"
+      },
+      "analytics": {
+        "title": "高级数据分析",
+        "subtitle": "您店铺的统计和表现"
+      },
+      "messages": {
+        "title": "客户消息",
+        "subtitle": "对话和客户支持"
+      },
+      "seo": {
+        "title": "SEO与营销",
+        "subtitle": "优化和营销活动"
+      },
+      "livreurs": {
+        "title": "我的配送员",
+        "subtitle": "配送网络 · 4 名活跃"
+      },
+      "correspondants": {
+        "title": "代理商",
+        "subtitle": "您的本地和国际中转站"
+      },
+      "finances": {
+        "title": "财务",
+        "subtitle": "收入、支出和交易"
+      },
+      "portefeuille": {
+        "title": "钱包",
+        "subtitle": "余额、提现和交易"
+      },
+      "clients": {
+        "title": "客户",
+        "subtitle": "客户群 · 2,414 名买家"
+      },
+      "avis": {
+        "title": "客户评价",
+        "subtitle": "248 条评价 · 平均评分 4.9 ⭐"
+      },
+      "parametres": {
+        "title": "设置",
+        "subtitle": "配置您的店铺"
+      },
+      "profil": {
+        "title": "我的资料",
+        "subtitle": "您店铺的公开资料"
+      },
+      "boutiquePreview": {
+        "title": "查看我的店铺",
+        "subtitle": "预览客户看到的店铺"
+      },
+      "reseauCorrespondants": {
+        "title": "代理商",
+        "subtitle": "关注 Shopi 网络中的代理商"
+      },
+      "reseauLivreurs": {
+        "title": "配送员",
+        "subtitle": "关注 Shopi 网络中的其他配送员"
+      },
+      "profilCorrespondantReseau": {
+        "title": "代理商资料",
+        "subtitle": "详情和跟踪"
+      },
+      "profilLivreurReseau": {
+        "title": "配送员资料",
+        "subtitle": "详情和跟踪"
+      }
+    },
+    "searchPlaceholder": "搜索订单、产品、客户…",
+    "tooltips": {
+      "livreurs": "我的配送员",
+      "correspondants": "代理商",
+      "commandes": "订单",
+      "messages": "消息",
+      "aide": "帮助中心"
+    },
+    "menu": {
+      "profil": "我的资料",
+      "voirBoutique": "查看我的店铺",
+      "basculerAccueil": "切换到首页",
+      "deconnexion": "退出登录"
+    },
+    "status": {
+      "active": "店铺活跃",
+      "suspended": "已暂停",
+      "private": "私有",
+      "pending": "待验证",
+      "default": "专业卖家"
+    },
+    "bottomNav": {
+      "accueil": "首页",
+      "commandes": "订单",
+      "produits": "产品",
+      "monEspace": "我的空间"
+    },
+    "drawer": {
+      "menuAria": "导航菜单",
+      "voirBoutique": "查看我的店铺",
+      "aide": "帮助中心",
+      "basculerAccueil": "切换到首页",
+      "deconnexion": "退出登录"
+    },
+    "hamburgerAria": "菜单"
+  },
+  "reseauBottomNav": {
+    "ariaLabel": "移动网络导航",
+    "correspondants": "代理商",
+    "livreurs": "配送员",
+    "basculerEspaceClient": "切换到客户空间",
+    "monEspace": "我的空间"
+  }
+}

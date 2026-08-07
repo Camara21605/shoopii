@@ -1,0 +1,240 @@
+{
+  "commandes": {
+    "filters": {
+      "attente": "En attente",
+      "preparation": "En préparation",
+      "livraison": "En livraison",
+      "livre": "Livré",
+      "annule": "Annulé",
+      "tous": "Tous"
+    },
+    "table": {
+      "commande": "Commande",
+      "produits": "Produit(s)",
+      "client": "Client",
+      "montant": "Montant",
+      "statut": "Statut",
+      "date": "Date",
+      "livreur": "Livreur",
+      "actions": "Actions"
+    },
+    "loading": "Chargement…",
+    "empty": "Aucune commande",
+    "exportCsv": "Exporter CSV",
+    "exportExcel": "Excel",
+    "voir": "Voir",
+    "preparer": "Préparer",
+    "envoyer": "Envoyer",
+    "autresArticles_one": "+{{count}} autre article",
+    "autresArticles_other": "+{{count}} autres articles",
+    "toasts": {
+      "exportCsv": "📥 Export CSV généré",
+      "exportExcel": "📊 Export Excel généré",
+      "accepted": "✅ Commande acceptée",
+      "shipping": "🚚 Envoi en livraison",
+      "orderRef": "📋 Commande {{id}}"
+    }
+  },
+  "retours": {
+    "title": "Retours & SAV",
+    "subtitle": "Gestion des demandes de retour et du service après-vente",
+    "refresh": "Actualiser",
+    "tabRetours": "Retours",
+    "tabSav": "SAV",
+    "toasts": {
+      "accepted": "✅ Retour accepté — client notifié",
+      "refused": "Retour refusé — client notifié",
+      "refunded": "💸 Remboursement enregistré",
+      "noteAdded": "📝 Note ajoutée",
+      "genericError": "Erreur",
+      "acceptError": "Erreur lors de l'acceptation"
+    },
+    "reasons": {
+      "defective": "Produit défectueux",
+      "not_matching": "Ne correspond pas",
+      "change_of_mind": "Changement d'avis",
+      "wrong_item": "Mauvais article",
+      "damaged": "Endommagé",
+      "expired": "Produit périmé",
+      "other": "Autre"
+    },
+    "stats": {
+      "totalMois": "Total ce mois",
+      "badgeAuj": "+{{count}} auj.",
+      "enAttente": "En attente",
+      "urgents": "Urgents",
+      "acceptes": "Acceptés",
+      "badgeRetours": "{{count}} retours",
+      "rembourseGnf": "Remboursé (GNF)",
+      "badgeRemb": "{{count}} remb.",
+      "topMotifs": "Top motifs de retour",
+      "aucuneDonnee": "Aucune donnée",
+      "performance": "Performance",
+      "tauxAcceptation": "Taux d'acceptation",
+      "delaiMoyen": "Délai moyen traitement",
+      "retoursRefuses": "Retours refusés",
+      "remboursementsEffectues": "Remboursements effectués"
+    },
+    "list": {
+      "status": {
+        "pending": "⏳ En attente",
+        "accepted": "✓ Accepté",
+        "refused": "✕ Refusé",
+        "in_transit": "🚚 En transit",
+        "received": "📦 Reçu",
+        "refunded": "💸 Remboursé",
+        "exchanged": "🔁 Échangé",
+        "closed": "Fermé"
+      },
+      "reasons": {
+        "defective": "Produit défectueux",
+        "not_matching": "Ne correspond pas",
+        "change_of_mind": "Changement d'avis",
+        "wrong_item": "Mauvais article reçu",
+        "damaged": "Endommagé",
+        "expired": "Produit périmé",
+        "other": "Autre motif"
+      },
+      "priority": {
+        "low": "Basse",
+        "normal": "Normal",
+        "high": "Haute",
+        "urgent": "🔴 Urgent"
+      },
+      "returnType": {
+        "refund": "Remboursement",
+        "exchange": "Échange",
+        "repair": "Réparation",
+        "credit": "Avoir"
+      },
+      "search": "Rechercher par référence ou produit…",
+      "allStatus": "Tous les statuts",
+      "allReasons": "Tous les motifs",
+      "allPriorities": "Toutes les priorités",
+      "sort": {
+        "recent": "Plus récents",
+        "oldest": "Plus anciens",
+        "amountDesc": "Montant ↓",
+        "amountAsc": "Montant ↑",
+        "statusAz": "Statut A→Z"
+      },
+      "loadError": "Erreur de chargement",
+      "emptyTitle": "Aucun retour trouvé",
+      "emptySub": "Aucune demande de retour ne correspond à vos filtres.",
+      "table": {
+        "reference": "Référence",
+        "produit": "Produit",
+        "client": "Client",
+        "motif": "Motif",
+        "type": "Type",
+        "montant": "Montant",
+        "priorite": "Priorité",
+        "statut": "Statut",
+        "date": "Date",
+        "actions": "Actions"
+      },
+      "accorde": "Accordé: {{montant}} GNF",
+      "voir": "Voir",
+      "results_one": "{{count}} résultat",
+      "results_other": "{{count}} résultats",
+      "page": "Page {{page}}/{{pages}}"
+    },
+    "detail": {
+      "tabInfo": "Détails",
+      "tabHistory": "Historique",
+      "tabEvidence": "Preuves ({{count}})",
+      "produitRetourne": "PRODUIT RETOURNÉ",
+      "qte": "Qté :",
+      "commande": "Commande :",
+      "montants": "MONTANTS",
+      "demande": "Demandé :",
+      "accorde": "Accordé :",
+      "descriptionProbleme": "DESCRIPTION DU PROBLÈME",
+      "noteInterne": "NOTE INTERNE",
+      "messageClient": "MESSAGE CLIENT",
+      "accept": {
+        "title": "Accepter le retour",
+        "montant": "Montant accordé (GNF)",
+        "message": "Message au client (optionnel)",
+        "placeholder": "Ex : Votre retour a été accepté. Le remboursement sera effectué sous 3-5 jours.",
+        "confirm": "Confirmer l'acceptation",
+        "annuler": "Annuler"
+      },
+      "refuse": {
+        "title": "Refuser le retour",
+        "raison": "Raison du refus (envoyée au client)",
+        "placeholder": "Ex : Votre demande ne respecte pas la politique de retour (délai dépassé).",
+        "confirm": "Confirmer le refus",
+        "annuler": "Annuler"
+      },
+      "note": {
+        "title": "Note interne",
+        "placeholder": "Note visible uniquement par votre équipe…",
+        "save": "Enregistrer",
+        "annuler": "Annuler"
+      },
+      "historyEmptyTitle": "Aucun historique",
+      "historyEmptySub": "L'historique des actions apparaîtra ici.",
+      "actions": {
+        "created": "Demande de retour créée",
+        "accepted": "Retour accepté",
+        "refused": "Retour refusé",
+        "refunded": "Remboursement effectué",
+        "received": "Retour reçu",
+        "note_added": "Note interne ajoutée",
+        "evidence_uploaded": "Preuve ajoutée",
+        "priority_changed": "Priorité modifiée"
+      },
+      "evidenceEmptyTitle": "Aucune preuve",
+      "evidenceEmptySub": "Le client n'a pas encore joint de photos ou documents.",
+      "footerNote": "Note",
+      "footerRefuser": "Refuser",
+      "footerAccepter": "Accepter",
+      "footerRembourser": "Rembourser",
+      "footerFermer": "Fermer",
+      "confirmRefund": "Confirmer le remboursement ?",
+      "invalidAmount": "⚠️ Montant invalide"
+    },
+    "sav": {
+      "stats": {
+        "ouverts": "Tickets ouverts",
+        "enCours": "En cours",
+        "resolus": "Résolus",
+        "delaiMoy": "Délai réponse moy."
+      },
+      "status": {
+        "open": "🟢 Ouvert",
+        "in_progress": "🔵 En cours",
+        "waiting_client": "🟡 Attente client",
+        "resolved": "✓ Résolu",
+        "closed": "Fermé"
+      },
+      "search": "Rechercher un ticket (réf., sujet)…",
+      "allStatus": "Tous les statuts",
+      "allPriorities": "Toutes les priorités",
+      "table": {
+        "reference": "Référence",
+        "sujet": "Sujet",
+        "client": "Client",
+        "produit": "Produit",
+        "priorite": "Priorité",
+        "statut": "Statut",
+        "messages": "Messages",
+        "date": "Date",
+        "actions": "Actions"
+      },
+      "emptyTitle": "Aucun ticket SAV",
+      "emptySub": "Les tickets client apparaîtront ici.",
+      "repondre": "Répondre",
+      "resoudre": "Résoudre",
+      "fermer": "Fermer",
+      "confirmClose": "Fermer ce ticket ?",
+      "ticketClosed": "Ticket fermé",
+      "ticketResolved": "✅ Ticket résolu",
+      "genericError": "❌ Erreur",
+      "sendError": "Erreur envoi",
+      "replyPlaceholder": "Répondre au client…",
+      "envoyer": "Envoyer"
+    }
+  }
+}

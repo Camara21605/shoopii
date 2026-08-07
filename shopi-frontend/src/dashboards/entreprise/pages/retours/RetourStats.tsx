@@ -1,19 +1,9 @@
 /*
  * RetourStats.tsx — KPI strip + graphiques des retours.
  */
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ReturnStats } from '../../hooks/useRetours';
 import s from './RetoursPage.module.css';
-
-const REASON_LABELS: Record<string, string> = {
-  defective:      'Produit défectueux',
-  not_matching:   'Ne correspond pas',
-  change_of_mind: 'Changement d\'avis',
-  wrong_item:     'Mauvais article',
-  damaged:        'Endommagé',
-  expired:        'Produit périmé',
-  other:          'Autre',
-};
 
 const REASON_COLORS: Record<string, string> = {
   defective:      'var(--t1)',
@@ -38,26 +28,37 @@ function fmtGNF(n: number) {
 }
 
 export default function RetourStats({ stats, loading }: Props) {
+  const { t } = useTranslation();
+  const REASON_LABELS: Record<string, string> = {
+    defective:      t('retours.reasons.defective'),
+    not_matching:   t('retours.reasons.not_matching'),
+    change_of_mind: t('retours.reasons.change_of_mind'),
+    wrong_item:     t('retours.reasons.wrong_item'),
+    damaged:        t('retours.reasons.damaged'),
+    expired:        t('retours.reasons.expired'),
+    other:          t('retours.reasons.other'),
+  };
+
   const kpis = [
     {
-      ico: '🔄', label: 'Total ce mois', color: 'var(--t2)',
+      ico: '🔄', label: t('retours.stats.totalMois'), color: 'var(--t2)',
       val: loading ? '—' : fmt(stats?.thisMonth ?? 0),
-      badge: stats ? `+${stats.today} auj.` : null, badgeBg: 'var(--g100)', badgeColor: 'var(--t2)',
+      badge: stats ? t('retours.stats.badgeAuj', { count: stats.today }) : null, badgeBg: 'var(--g100)', badgeColor: 'var(--t2)',
     },
     {
-      ico: '⏳', label: 'En attente', color: 'var(--amber)',
+      ico: '⏳', label: t('retours.stats.enAttente'), color: 'var(--amber)',
       val: loading ? '—' : fmt(stats?.pending ?? 0),
-      badge: stats && stats.pending > 0 ? 'Urgents' : null, badgeBg: 'var(--rs-bg)', badgeColor: 'var(--red)',
+      badge: stats && stats.pending > 0 ? t('retours.stats.urgents') : null, badgeBg: 'var(--rs-bg)', badgeColor: 'var(--red)',
     },
     {
-      ico: '✅', label: 'Acceptés', color: 'var(--emerald)',
+      ico: '✅', label: t('retours.stats.acceptes'), color: 'var(--emerald)',
       val: loading ? '—' : `${stats?.tauxAcceptation ?? 0}%`,
-      badge: stats ? `${fmt(stats.accepted)} retours` : null, badgeBg: 'var(--em-bg)', badgeColor: 'var(--emerald)',
+      badge: stats ? t('retours.stats.badgeRetours', { count: stats.accepted }) : null, badgeBg: 'var(--em-bg)', badgeColor: 'var(--emerald)',
     },
     {
-      ico: '💸', label: 'Remboursé (GNF)', color: 'var(--teal)',
+      ico: '💸', label: t('retours.stats.rembourseGnf'), color: 'var(--teal)',
       val: loading ? '—' : fmtGNF(stats?.totalMontantRembourse ?? 0),
-      badge: stats ? `${fmt(stats.refunded)} remb.` : null, badgeBg: 'var(--tl-bg)', badgeColor: 'var(--teal)',
+      badge: stats ? t('retours.stats.badgeRemb', { count: stats.refunded }) : null, badgeBg: 'var(--tl-bg)', badgeColor: 'var(--teal)',
     },
   ];
 
@@ -87,13 +88,13 @@ export default function RetourStats({ stats, loading }: Props) {
           {/* Top motifs */}
           <div className="card">
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-chart-pie" /> Top motifs de retour</div>
+              <div className="ch-t"><i className="fas fa-chart-pie" /> {t('retours.stats.topMotifs')}</div>
             </div>
             <div className="cb">
               <div className={s.barChart}>
                 {stats.topMotifs.length === 0 ? (
                   <div style={{ textAlign: 'center', color: 'var(--t3)', padding: '20px 0', fontSize: 13 }}>
-                    Aucune donnée
+                    {t('retours.stats.aucuneDonnee')}
                   </div>
                 ) : stats.topMotifs.map(m => (
                   <div key={m.reason} className={s.barItem}>
@@ -118,15 +119,15 @@ export default function RetourStats({ stats, loading }: Props) {
           {/* Stats rapides */}
           <div className="card">
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-gauge-high" /> Performance</div>
+              <div className="ch-t"><i className="fas fa-gauge-high" /> {t('retours.stats.performance')}</div>
             </div>
             <div className="cb">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {[
-                  { label: 'Taux d\'acceptation', val: `${stats.tauxAcceptation}%`, color: 'var(--t2)', bg: 'var(--g100)' },
-                  { label: 'Délai moyen traitement', val: `${stats.delaiMoyenHeures}h`, color: 'var(--t2)', bg: 'var(--g100)' },
-                  { label: 'Retours refusés', val: `${fmt(stats.refused)}`, color: 'var(--t1)', bg: 'var(--g100)' },
-                  { label: 'Remboursements effectués', val: `${fmt(stats.refunded)}`, color: 'var(--t2)', bg: 'var(--g100)' },
+                  { label: t('retours.stats.tauxAcceptation'), val: `${stats.tauxAcceptation}%`, color: 'var(--t2)', bg: 'var(--g100)' },
+                  { label: t('retours.stats.delaiMoyen'), val: `${stats.delaiMoyenHeures}h`, color: 'var(--t2)', bg: 'var(--g100)' },
+                  { label: t('retours.stats.retoursRefuses'), val: `${fmt(stats.refused)}`, color: 'var(--t1)', bg: 'var(--g100)' },
+                  { label: t('retours.stats.remboursementsEffectues'), val: `${fmt(stats.refunded)}`, color: 'var(--t2)', bg: 'var(--g100)' },
                 ].map(item => (
                   <div key={item.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 12.5, color: 'var(--t2)' }}>{item.label}</span>

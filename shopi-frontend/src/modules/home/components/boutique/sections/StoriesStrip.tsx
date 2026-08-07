@@ -10,6 +10,8 @@
  */
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { apiFetch }    from '../../../../../shared/services/apiFetch';
 import styles from '../styles/StoriesStrip.module.css';
 
@@ -45,12 +47,14 @@ interface Props {
 }
 
 // ─── Badge configs ──────────────────────────────────────────────
-const BADGE_CFG: Record<string, { label: string; bg: string; c: string }> = {
-  promo: { label: '🔥 Promo',     bg: '#FF3B3B', c: '#fff' },
-  new:   { label: '✨ Nouveau',   bg: '#1A4FC4', c: '#fff' },
-  top:   { label: '⭐ Top Vente', bg: '#B45309', c: '#fff' },
-  flash: { label: '⚡ Flash',     bg: '#7C3AED', c: '#fff' },
-};
+function getBadgeCfg(t: TFunction): Record<string, { label: string; bg: string; c: string }> {
+  return {
+    promo: { label: t('boutiqueDetail.stories.badges.promo'), bg: '#FF3B3B', c: '#fff' },
+    new:   { label: t('boutiqueDetail.stories.badges.new'),   bg: '#1A4FC4', c: '#fff' },
+    top:   { label: t('boutiqueDetail.stories.badges.top'),   bg: '#B45309', c: '#fff' },
+    flash: { label: t('boutiqueDetail.stories.badges.flash'), bg: '#7C3AED', c: '#fff' },
+  };
+}
 
 // ─── Skeleton unique ───────────────────────────────────────────
 function StorySkeleton() {
@@ -71,6 +75,8 @@ function StorySkeleton() {
 // COMPOSANT PRINCIPAL
 // ═══════════════════════════════════════════════════════════════
 export default function StoriesStrip({ companyId, companyName, companyLogo, onToast }: Props) {
+  const { t } = useTranslation();
+  const BADGE_CFG = getBadgeCfg(t);
   const [stories,  setStories]  = useState<Story[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [openIdx,  setOpenIdx]  = useState<number | null>(null);
@@ -192,11 +198,11 @@ export default function StoriesStrip({ companyId, companyName, companyLogo, onTo
 
         {/* Flèches desktop */}
         <button className={`${styles.navArrow} ${styles.navLeft}`}
-          onClick={() => stripRef.current?.scrollBy({ left: -320, behavior: 'smooth' })} aria-label="Précédent">
+          onClick={() => stripRef.current?.scrollBy({ left: -320, behavior: 'smooth' })} aria-label={t('boutiqueDetail.stories.precedent')}>
           <i className="fas fa-chevron-left" />
         </button>
         <button className={`${styles.navArrow} ${styles.navRight}`}
-          onClick={() => stripRef.current?.scrollBy({ left: 320, behavior: 'smooth' })} aria-label="Suivant">
+          onClick={() => stripRef.current?.scrollBy({ left: 320, behavior: 'smooth' })} aria-label={t('boutiqueDetail.stories.suivant')}>
           <i className="fas fa-chevron-right" />
         </button>
       </div>
@@ -233,6 +239,8 @@ interface ViewerProps {
 }
 
 function StoryViewer({ stories, currentIdx, companyName, companyLogo, onNext, onPrev, onClose, onToast }: ViewerProps) {
+  const { t } = useTranslation();
+  const BADGE_CFG = getBadgeCfg(t);
   const navigate = useNavigate();
   const story    = stories[currentIdx];
   const [progress, setProgress] = useState(0);
@@ -244,10 +252,10 @@ function StoryViewer({ stories, currentIdx, companyName, companyLogo, onNext, on
     const diff = Date.now() - new Date(story.createdAt).getTime();
     const h    = Math.floor(diff / 3_600_000);
     const m    = Math.floor((diff % 3_600_000) / 60_000);
-    if (h >= 24) return 'il y a 1j';
-    if (h > 0)   return `il y a ${h}h`;
-    if (m > 0)   return `il y a ${m}min`;
-    return 'à l\'instant';
+    if (h >= 24) return t('boutiqueDetail.stories.ilYA1j');
+    if (h > 0)   return t('boutiqueDetail.stories.ilYAHeures', { h });
+    if (m > 0)   return t('boutiqueDetail.stories.ilYAMinutes', { m });
+    return t('boutiqueDetail.stories.aLInstant');
   })();
 
   // ── Barre de progression ──────────────────────────────────
@@ -355,18 +363,18 @@ function StoryViewer({ stories, currentIdx, companyName, companyLogo, onNext, on
             className={styles.vaBtn}
             onClick={() => { onClose(); navigate(`/produit/${story.productId}`); }}
           >
-            <i className="fas fa-eye" /> Voir le produit
+            <i className="fas fa-eye" /> {t('boutiqueDetail.stories.voirLeProduit')}
           </button>
           <button
             className={styles.vaBtn2}
-            onClick={() => onToast(`🛒 Ajouté au panier : ${story.produit}`)}
+            onClick={() => onToast(t('boutiqueDetail.stories.ajouteAuPanierToast', { produit: story.produit }))}
           >
-            <i className="fas fa-bag-shopping" /> Ajouter au panier
+            <i className="fas fa-bag-shopping" /> {t('boutiqueDetail.stories.ajouterPanier')}
           </button>
           <button
             className={styles.vaShare}
-            onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/produit/${story.productId}`); onToast('🔗 Lien copié !'); }}
-            title="Partager"
+            onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/produit/${story.productId}`); onToast(t('boutiqueDetail.stories.lienCopieToast')); }}
+            title={t('boutiqueDetail.stories.partager')}
           >
             <i className="fas fa-share-nodes" />
           </button>
@@ -375,14 +383,14 @@ function StoryViewer({ stories, currentIdx, companyName, companyLogo, onNext, on
 
       {/* Flèche gauche */}
       {currentIdx > 0 && (
-        <button className={`${styles.vNav} ${styles.vNavL}`} onClick={e => { e.stopPropagation(); onPrev(); }} aria-label="Précédente">
+        <button className={`${styles.vNav} ${styles.vNavL}`} onClick={e => { e.stopPropagation(); onPrev(); }} aria-label={t('boutiqueDetail.stories.precedente')}>
           <i className="fas fa-chevron-left" />
         </button>
       )}
 
       {/* Flèche droite */}
       {currentIdx < stories.length - 1 && (
-        <button className={`${styles.vNav} ${styles.vNavR}`} onClick={e => { e.stopPropagation(); onNext(); }} aria-label="Suivante">
+        <button className={`${styles.vNav} ${styles.vNavR}`} onClick={e => { e.stopPropagation(); onNext(); }} aria-label={t('boutiqueDetail.stories.suivante')}>
           <i className="fas fa-chevron-right" />
         </button>
       )}

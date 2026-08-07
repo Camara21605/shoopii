@@ -12,6 +12,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate }      from 'react-router-dom';
+import { useTranslation }   from 'react-i18next';
 import styles               from '../styles/CardLivreurGrid.module.css';
 import { tokenStorage }     from '../../../../../shared/services/apiFetch';
 import { useFollowToggle }  from '../../../../../shared/hooks/useFollowToggle';
@@ -46,6 +47,7 @@ interface CardLivreurGridProps {
 const CardLivreurGrid: React.FC<CardLivreurGridProps> = ({
   livreur, onToast, onFollow,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
 
@@ -75,7 +77,7 @@ const CardLivreurGrid: React.FC<CardLivreurGridProps> = ({
     <article
       className={styles.card}
       onClick={handleViewProfile}
-      aria-label={`Profil de ${livreur.fullName}`}
+      aria-label={t('livreursPage.card.profilDe', { nom: livreur.fullName })}
     >
       {/* ── Bande colorée ── */}
       <div className={`${styles.band} ${BAND_CLASS[livreur.bandVariant] ?? styles.bandGreen}`}>
@@ -89,12 +91,12 @@ const CardLivreurGrid: React.FC<CardLivreurGridProps> = ({
       <div className={styles.avaWrap}>
         <div className={styles.ava} style={{ background: livreur.avatarBg }}>
           {livreur.initials}
-          {livreur.disponible && <span className={styles.avaDot} aria-label="Disponible" />}
+          {livreur.disponible && <span className={styles.avaDot} aria-label={t('livreursPage.card.disponible')} />}
         </div>
         <div className={`${styles.availBadge} ${livreur.disponible ? styles.availOn : styles.availOff}`}>
           {livreur.disponible
-            ? <><i className="fas fa-circle" style={{ fontSize: 6 }} aria-hidden="true" /> Disponible</>
-            : <><i className="fas fa-gear"   style={{ fontSize: 8 }} aria-hidden="true" /> En course</>
+            ? <><i className="fas fa-circle" style={{ fontSize: 6 }} aria-hidden="true" /> {t('livreursPage.card.disponible')}</>
+            : <><i className="fas fa-gear"   style={{ fontSize: 8 }} aria-hidden="true" /> {t('livreursPage.card.enCourse')}</>
           }
         </div>
       </div>
@@ -112,21 +114,21 @@ const CardLivreurGrid: React.FC<CardLivreurGridProps> = ({
             {renderStars(livreur.averageRating)}
           </span>
           <span className={styles.ratingVal}>{livreur.averageRating}</span>
-          <span className={styles.reviewsCnt}>({livreur.reviewsCount} avis)</span>
+          <span className={styles.reviewsCnt}>{t('livreursPage.card.avisCount', { count: livreur.reviewsCount })}</span>
         </div>
 
         <div className={styles.stats}>
           <div className={styles.stat}>
             <div className={styles.statVal}>{livreur.totalLivraisons.toLocaleString('fr-FR')}</div>
-            <div className={styles.statLbl}>Livraisons</div>
+            <div className={styles.statLbl}>{t('livreursPage.card.livraisons')}</div>
           </div>
           <div className={styles.stat}>
             <div className={styles.statVal}>{livreur.ponctualite}%</div>
-            <div className={styles.statLbl}>Ponctualité</div>
+            <div className={styles.statLbl}>{t('livreursPage.card.ponctualite')}</div>
           </div>
           <div className={styles.stat}>
             <div className={styles.statVal}>{livreur.experience}</div>
-            <div className={styles.statLbl}>Expérience</div>
+            <div className={styles.statLbl}>{t('livreursPage.card.experience')}</div>
           </div>
         </div>
 
@@ -139,27 +141,27 @@ const CardLivreurGrid: React.FC<CardLivreurGridProps> = ({
           onMouseEnter={() => suivi && setHovered(true)}
           onMouseLeave={() => setHovered(false)}
           aria-label={
-            !tokenStorage.get() ? 'Connexion requise pour suivre'
-            : suivi ? `Se désabonner de ${livreur.fullName}`
-            : `Suivre ${livreur.fullName}`
+            !tokenStorage.get() ? t('livreursPage.card.connexionRequisePourSuivre')
+            : suivi ? t('livreursPage.card.seDesabonnerDe', { nom: livreur.fullName })
+            : t('livreursPage.card.suivreNom', { nom: livreur.fullName })
           }
         >
           {loading ? (
             <><i className="fas fa-spinner fa-spin" aria-hidden="true" /> …</>
           ) : !tokenStorage.get() ? (
-            <><i className="fas fa-right-to-bracket" aria-hidden="true" /> Connexion requise</>
+            <><i className="fas fa-right-to-bracket" aria-hidden="true" /> {t('livreursPage.card.connexionRequise')}</>
           ) : suivi && hovered ? (
-            <><i className="fas fa-user-minus" aria-hidden="true" /> Se désabonner</>
+            <><i className="fas fa-user-minus" aria-hidden="true" /> {t('livreursPage.card.seDesabonner')}</>
           ) : suivi ? (
-            <><i className="fas fa-user-check" aria-hidden="true" /> Abonné(e)</>
+            <><i className="fas fa-user-check" aria-hidden="true" /> {t('livreursPage.card.abonneFem')}</>
           ) : (
-            <><i className="fas fa-plus" aria-hidden="true" /> Suivre</>
+            <><i className="fas fa-plus" aria-hidden="true" /> {t('livreursPage.card.suivre')}</>
           )}
         </button>
 
         <button className={styles.profileLink} onClick={handleViewProfile}
-          aria-label={`Voir le profil complet de ${livreur.fullName}`}>
-          Voir le profil complet →
+          aria-label={t('livreursPage.card.profilCompletAria', { nom: livreur.fullName })}>
+          {t('livreursPage.card.voirProfilComplet')}
         </button>
       </div>
 

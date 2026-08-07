@@ -15,6 +15,7 @@
 
     "types": ["vite/client"],
     "skipLibCheck": true,
+    "resolveJsonModule": true,
 
     /* Bundler mode */
     "allowImportingTsExtensions": true,

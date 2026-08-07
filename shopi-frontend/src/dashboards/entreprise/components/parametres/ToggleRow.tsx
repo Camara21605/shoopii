@@ -1,5 +1,5 @@
 // src/dashboards/entreprise/components/parametres/ToggleRow.tsx
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../../styles/parametres/ToggleRow.module.css';
 
 interface Props {
@@ -7,9 +7,9 @@ interface Props {
   badge?: 'new' | 'rec' | 'attn'; onChange: (v: boolean) => void;
 }
 
-const BADGE_LABELS = { new: 'Nouveau', rec: 'Recommandé', attn: 'Attention' };
-
 export default function ToggleRow({ label, sub, checked, badge, onChange }: Props) {
+  const { t } = useTranslation();
+  const BADGE_LABELS = { new: t('parametres.toggleRow.badgeNew'), rec: t('parametres.toggleRow.badgeRec'), attn: t('parametres.toggleRow.badgeAttn') };
   return (
     <div className={styles.row}>
       <div>

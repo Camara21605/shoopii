@@ -2,7 +2,8 @@
  * FICHIER : src/dashboards/entreprise/sections/parametres/NotifsSection.tsx
  * Section 10 — Notifications (14 toggles)
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
@@ -13,43 +14,6 @@ interface Props {
   saveNotifs: (b: Record<string, boolean>) => Promise<void>;
 }
 
-const NOTIF_GROUPS = [
-  {
-    title: '📦 Commandes',
-    items: [
-      { key:'newOrder',        label:'Nouvelle commande reçue'        },
-      { key:'orderCancelled',  label:'Commande annulée par le client'  },
-      { key:'orderDelivered',  label:'Commande livrée avec succès'     },
-      { key:'paymentReceived', label:'Paiement reçu'                  },
-    ],
-  },
-  {
-    title: '📊 Stock & Catalogue',
-    items: [
-      { key:'outOfStock',       label:'Produit en rupture de stock'         },
-      { key:'nearThreshold',    label:'Stock proche du seuil minimum'       },
-      { key:'productPublished', label:'Confirmation de publication produit' },
-      { key:'catalogRequest',   label:'Demande de mise à jour catalogue'    },
-    ],
-  },
-  {
-    title: '⭐ Avis & Réputation',
-    items: [
-      { key:'newReview',      label:'Nouvel avis client'             },
-      { key:'negativeReview', label:'Avis négatif (< 3 étoiles)'    },
-      { key:'weeklyReport',   label:'Rapport hebdo réputation'      },
-    ],
-  },
-  {
-    title: '📣 Marketing & Rapports',
-    items: [
-      { key:'promoInvitations', label:'Invitations aux promotions Shopi' },
-      { key:'monthlyReport',    label:'Rapport de performance mensuel'  },
-      { key:'shopNews',         label:'Nouveautés de la plateforme'     },
-    ],
-  },
-];
-
 const DEFAULTS: Record<string, boolean> = {
   newOrder:true, orderCancelled:true, orderDelivered:true, paymentReceived:true,
   outOfStock:true, nearThreshold:true, productPublished:false, catalogRequest:true,
@@ -58,6 +22,43 @@ const DEFAULTS: Record<string, boolean> = {
 };
 
 export default function NotifsSection({ data, saving, onDirty, onToast, saveNotifs }: Props) {
+  const { t } = useTranslation();
+  const NOTIF_GROUPS = [
+    {
+      title: t('parametres.notifs.groups.commandes'),
+      items: [
+        { key:'newOrder',        label:t('parametres.notifs.items.newOrder')        },
+        { key:'orderCancelled',  label:t('parametres.notifs.items.orderCancelled')  },
+        { key:'orderDelivered',  label:t('parametres.notifs.items.orderDelivered')     },
+        { key:'paymentReceived', label:t('parametres.notifs.items.paymentReceived')                  },
+      ],
+    },
+    {
+      title: t('parametres.notifs.groups.stockCatalogue'),
+      items: [
+        { key:'outOfStock',       label:t('parametres.notifs.items.outOfStock')         },
+        { key:'nearThreshold',    label:t('parametres.notifs.items.nearThreshold')       },
+        { key:'productPublished', label:t('parametres.notifs.items.productPublished') },
+        { key:'catalogRequest',   label:t('parametres.notifs.items.catalogRequest')    },
+      ],
+    },
+    {
+      title: t('parametres.notifs.groups.avisReputation'),
+      items: [
+        { key:'newReview',      label:t('parametres.notifs.items.newReview')             },
+        { key:'negativeReview', label:t('parametres.notifs.items.negativeReview')    },
+        { key:'weeklyReport',   label:t('parametres.notifs.items.weeklyReport')      },
+      ],
+    },
+    {
+      title: t('parametres.notifs.groups.marketingRapports'),
+      items: [
+        { key:'promoInvitations', label:t('parametres.notifs.items.promoInvitations') },
+        { key:'monthlyReport',    label:t('parametres.notifs.items.monthlyReport')  },
+        { key:'shopNews',         label:t('parametres.notifs.items.shopNews')     },
+      ],
+    },
+  ];
   const [notifs, setNotifs] = useState<Record<string, boolean>>(DEFAULTS);
 
   useEffect(() => {
@@ -72,15 +73,15 @@ export default function NotifsSection({ data, saving, onDirty, onToast, saveNoti
   async function handleSave() {
     try {
       await saveNotifs(notifs);
-      onToast('✅ Notifications sauvegardées', 's');
-    } catch { onToast('❌ Erreur lors de la sauvegarde', 'e'); }
+      onToast(t('parametres.notifs.savedToast'), 's');
+    } catch { onToast(t('parametres.notifs.errorToast'), 'e'); }
   }
 
   return (
     <>
       <div className={s.sectionHd}>
-        <h1><i className="fas fa-bell" /> Notifications</h1>
-        <p>Choisissez les événements pour lesquels vous souhaitez recevoir des notifications.</p>
+        <h1><i className="fas fa-bell" /> {t('parametres.notifs.title')}</h1>
+        <p>{t('parametres.notifs.subtitle')}</p>
       </div>
 
       {NOTIF_GROUPS.map(group => (
@@ -107,7 +108,7 @@ export default function NotifsSection({ data, saving, onDirty, onToast, saveNoti
 
       <div className={s.saveRow}>
         <button className={s.saveBtn} onClick={handleSave} disabled={saving}>
-          {saving ? <><i className="fas fa-spinner fa-spin" /> Sauvegarde…</> : <><i className="fas fa-cloud-arrow-up" /> Sauvegarder les notifications</>}
+          {saving ? <><i className="fas fa-spinner fa-spin" /> {t('parametres.notifs.sauvegardeEnCours')}</> : <><i className="fas fa-cloud-arrow-up" /> {t('parametres.notifs.sauvegarderNotifs')}</>}
         </button>
       </div>
     </>

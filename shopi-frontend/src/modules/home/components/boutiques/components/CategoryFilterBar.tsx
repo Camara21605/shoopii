@@ -8,6 +8,7 @@
  * ================================================================ */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../../../../../shared/services/apiFetch';
 import styles from './CategoryFilterBar.module.css';
 
@@ -34,6 +35,7 @@ interface Props {
 export default function CategoryFilterBar({
   activeCategoryId, activeSubCategoryId, onSelectCategory, onSelectSubCategory,
 }: Props) {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState<CategoryApi[]>([]);
   const [loading,    setLoading]    = useState(true);
 
@@ -61,7 +63,7 @@ export default function CategoryFilterBar({
           className={`${styles.chip} ${!activeCategoryId ? styles.chipOn : ''}`}
           onClick={() => { onSelectCategory(undefined); onSelectSubCategory(undefined); }}
         >
-          ✦ Toutes catégories
+          {t('boutiquesPage.filterBar.toutesCategories')}
         </button>
         {categories.map(c => (
           <button
@@ -83,7 +85,7 @@ export default function CategoryFilterBar({
             className={`${styles.chip} ${styles.chipSub} ${!activeSubCategoryId ? styles.chipOn : ''}`}
             onClick={() => onSelectSubCategory(undefined)}
           >
-            Toutes les sous-catégories
+            {t('boutiquesPage.filterBar.toutesSousCategories')}
           </button>
           {activeCategory.subCategories.map(s => (
             <button

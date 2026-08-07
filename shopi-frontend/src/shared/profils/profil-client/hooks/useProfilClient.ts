@@ -239,7 +239,6 @@ function mapAbonnements(api: MesAbonnementsApi | null): Abonnement[] {
 }
 
 interface PointsLite { solde: number; gagnesMois: number; utilises: number; expiration: string | null; }
-interface WalletLite { solde: number; }
 
 interface UseProfilClientReturn {
   profile: ClientProfil | null;
@@ -247,7 +246,6 @@ interface UseProfilClientReturn {
   pays:    PayMethod[];
   infos:   InfoRow[];
   points:  PointsLite;
-  wallet:  WalletLite;
   commandes:   Commande[];
   abonnements: Abonnement[];
   favoris:     Favori[];
@@ -376,14 +374,12 @@ export function useProfilClient(): UseProfilClientReturn {
     expiration: api?.pointsExpiration ?? null,
   };
 
-  const wallet: WalletLite = { solde: api?.walletSolde ?? 0 };
-
   /* ── Datasets des onglets ── */
   const activites:   ActiviteJour[] = api ? mapActivityLog(api.activityLog) : [];
   const abonnements: Abonnement[]   = mapAbonnements(abos);   /* ✅ API réelle */
 
   return {
-    profile, kpis, pays, infos, points, wallet,
+    profile, kpis, pays, infos, points,
     commandes,                 // ✅ API réelle (/client/commandes)
     abonnements,               // ✅ API réelle (/suivis/mes-abonnements)
     favoris,                   // ✅ API réelle (/client/favoris)

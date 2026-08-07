@@ -244,6 +244,40 @@ export interface PromoListResponse {
   pages: number;
 }
 
+/**
+ * Version allégée d'une promo pour l'affichage PUBLIC (home + page /offres) —
+ * pas d'authentification requise, aucune donnée interne (stats, description).
+ */
+export interface PublicPromo {
+
+  id: string;
+
+  nom: string;
+
+  type: PromoType;
+
+  typeL: string;
+
+  valueType: string;
+
+  valeur: number | null;
+
+  scope: PromoScope;
+
+  endDate: string | null;
+
+  expire: string;
+
+  /** IDs des produits ciblés — peuplé uniquement si scope='products'. */
+  productIds: string[];
+
+  company: {
+    id: string;
+    nom: string;
+    logo: string | null;
+  };
+}
+
 /* ============================================================
  * API PROMOTIONS
  * ============================================================
@@ -259,6 +293,22 @@ export const promotionsApi = {
 
     return apiFetch<PromoStats>(
       '/promotions/stats',
+    );
+  },
+
+  /* ==========================================================
+   * GET /promotions/public
+   * Route publique — promotions actives de toutes les entreprises,
+   * pour la section "Flash Sales" de la home et la page /offres.
+   * ========================================================== */
+  getPublicActive(limit = 20): Promise<PublicPromo[]> {
+
+    return apiFetch<PublicPromo[]>(
+      '/promotions/public',
+      {
+        params: { limit },
+        public: true,
+      },
     );
   },
 

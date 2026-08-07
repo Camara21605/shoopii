@@ -1,38 +1,9 @@
 /*
  * RetoursList.tsx — Table paginée avec filtres et actions rapides.
  */
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ReturnSummary, ReturnStatus, ReturnReason, ReturnPriority, ReturnsFilters } from '../../hooks/useRetours';
 import s from './RetoursPage.module.css';
-
-/* ── Labels ── */
-const STATUS_LABELS: Record<ReturnStatus, { label: string; cls: string }> = {
-  pending:    { label: '⏳ En attente',  cls: s.pillPending  },
-  accepted:   { label: '✓ Accepté',     cls: s.pillAccepted },
-  refused:    { label: '✕ Refusé',      cls: s.pillRefused  },
-  in_transit: { label: '🚚 En transit', cls: s.pillTransit  },
-  received:   { label: '📦 Reçu',       cls: s.pillReceived },
-  refunded:   { label: '💸 Remboursé',  cls: s.pillRefunded },
-  exchanged:  { label: '🔁 Échangé',    cls: s.pillExchanged},
-  closed:     { label: 'Fermé',          cls: s.pillClosed   },
-};
-
-const REASON_LABELS: Record<string, string> = {
-  defective:      'Produit défectueux',
-  not_matching:   'Ne correspond pas',
-  change_of_mind: 'Changement d\'avis',
-  wrong_item:     'Mauvais article reçu',
-  damaged:        'Endommagé',
-  expired:        'Produit périmé',
-  other:          'Autre motif',
-};
-
-const PRIORITY_LABELS: Record<ReturnPriority, { label: string; cls: string }> = {
-  low:    { label: 'Basse',  cls: s.prioLow    },
-  normal: { label: 'Normal', cls: s.prioNormal },
-  high:   { label: 'Haute',  cls: s.prioHigh   },
-  urgent: { label: '🔴 Urgent', cls: s.prioUrgent },
-};
 
 function fmt(n: number) {
   return n.toLocaleString('fr-FR');
@@ -58,8 +29,44 @@ export default function RetoursList({
   returns, total, loading, error, filters,
   onFilterChange, onPageChange, onSelect,
 }: Props) {
+  const { t } = useTranslation();
   const page  = filters.page  ?? 1;
   const pages = Math.ceil(total / LIMIT);
+
+  const STATUS_LABELS: Record<ReturnStatus, { label: string; cls: string }> = {
+    pending:    { label: t('retours.list.status.pending'),    cls: s.pillPending  },
+    accepted:   { label: t('retours.list.status.accepted'),   cls: s.pillAccepted },
+    refused:    { label: t('retours.list.status.refused'),    cls: s.pillRefused  },
+    in_transit: { label: t('retours.list.status.in_transit'), cls: s.pillTransit  },
+    received:   { label: t('retours.list.status.received'),   cls: s.pillReceived },
+    refunded:   { label: t('retours.list.status.refunded'),   cls: s.pillRefunded },
+    exchanged:  { label: t('retours.list.status.exchanged'),  cls: s.pillExchanged},
+    closed:     { label: t('retours.list.status.closed'),     cls: s.pillClosed   },
+  };
+
+  const REASON_LABELS: Record<string, string> = {
+    defective:      t('retours.list.reasons.defective'),
+    not_matching:   t('retours.list.reasons.not_matching'),
+    change_of_mind: t('retours.list.reasons.change_of_mind'),
+    wrong_item:     t('retours.list.reasons.wrong_item'),
+    damaged:        t('retours.list.reasons.damaged'),
+    expired:        t('retours.list.reasons.expired'),
+    other:          t('retours.list.reasons.other'),
+  };
+
+  const PRIORITY_LABELS: Record<ReturnPriority, { label: string; cls: string }> = {
+    low:    { label: t('retours.list.priority.low'),    cls: s.prioLow    },
+    normal: { label: t('retours.list.priority.normal'), cls: s.prioNormal },
+    high:   { label: t('retours.list.priority.high'),   cls: s.prioHigh   },
+    urgent: { label: t('retours.list.priority.urgent'), cls: s.prioUrgent },
+  };
+
+  const RETURN_TYPE_LABELS: Record<string, string> = {
+    refund: t('retours.list.returnType.refund'),
+    exchange: t('retours.list.returnType.exchange'),
+    repair: t('retours.list.returnType.repair'),
+    credit: t('retours.list.returnType.credit'),
+  };
 
   return (
     <div>
@@ -69,7 +76,7 @@ export default function RetoursList({
           <i className={`fas fa-magnifying-glass ${s.searchIco}`} />
           <input
             className={s.searchInput}
-            placeholder="Rechercher par référence ou produit…"
+            placeholder={t('retours.list.search')}
             value={filters.search ?? ''}
             onChange={e => onFilterChange({ search: e.target.value })}
           />
@@ -80,7 +87,7 @@ export default function RetoursList({
           value={filters.status ?? ''}
           onChange={e => onFilterChange({ status: e.target.value as ReturnStatus || undefined })}
         >
-          <option value="">Tous les statuts</option>
+          <option value="">{t('retours.list.allStatus')}</option>
           {(Object.keys(STATUS_LABELS) as ReturnStatus[]).map(k => (
             <option key={k} value={k}>{STATUS_LABELS[k].label}</option>
           ))}
@@ -91,7 +98,7 @@ export default function RetoursList({
           value={filters.reason ?? ''}
           onChange={e => onFilterChange({ reason: e.target.value as ReturnReason || undefined })}
         >
-          <option value="">Tous les motifs</option>
+          <option value="">{t('retours.list.allReasons')}</option>
           {Object.entries(REASON_LABELS).map(([k, v]) => (
             <option key={k} value={k}>{v}</option>
           ))}
@@ -102,7 +109,7 @@ export default function RetoursList({
           value={filters.priority ?? ''}
           onChange={e => onFilterChange({ priority: e.target.value as ReturnPriority || undefined })}
         >
-          <option value="">Toutes les priorités</option>
+          <option value="">{t('retours.list.allPriorities')}</option>
           {(Object.keys(PRIORITY_LABELS) as ReturnPriority[]).map(k => (
             <option key={k} value={k}>{PRIORITY_LABELS[k].label}</option>
           ))}
@@ -116,11 +123,11 @@ export default function RetoursList({
             onFilterChange({ sortBy, sortOrder: sortOrder as 'ASC' | 'DESC' });
           }}
         >
-          <option value="createdAt_DESC">Plus récents</option>
-          <option value="createdAt_ASC">Plus anciens</option>
-          <option value="montantDemande_DESC">Montant ↓</option>
-          <option value="montantDemande_ASC">Montant ↑</option>
-          <option value="status_ASC">Statut A→Z</option>
+          <option value="createdAt_DESC">{t('retours.list.sort.recent')}</option>
+          <option value="createdAt_ASC">{t('retours.list.sort.oldest')}</option>
+          <option value="montantDemande_DESC">{t('retours.list.sort.amountDesc')}</option>
+          <option value="montantDemande_ASC">{t('retours.list.sort.amountAsc')}</option>
+          <option value="status_ASC">{t('retours.list.sort.statusAz')}</option>
         </select>
       </div>
 
@@ -129,7 +136,7 @@ export default function RetoursList({
         {error ? (
           <div className={s.empty}>
             <div className={s.emptyIco}>⚠️</div>
-            <div className={s.emptyTitle}>Erreur de chargement</div>
+            <div className={s.emptyTitle}>{t('retours.list.loadError')}</div>
             <div className={s.emptySub}>{error}</div>
           </div>
         ) : (
@@ -137,16 +144,16 @@ export default function RetoursList({
             <table className={s.table}>
               <thead>
                 <tr>
-                  <th>Référence</th>
-                  <th>Produit</th>
-                  <th>Client</th>
-                  <th>Motif</th>
-                  <th>Type</th>
-                  <th>Montant</th>
-                  <th>Priorité</th>
-                  <th>Statut</th>
-                  <th>Date</th>
-                  <th>Actions</th>
+                  <th>{t('retours.list.table.reference')}</th>
+                  <th>{t('retours.list.table.produit')}</th>
+                  <th>{t('retours.list.table.client')}</th>
+                  <th>{t('retours.list.table.motif')}</th>
+                  <th>{t('retours.list.table.type')}</th>
+                  <th>{t('retours.list.table.montant')}</th>
+                  <th>{t('retours.list.table.priorite')}</th>
+                  <th>{t('retours.list.table.statut')}</th>
+                  <th>{t('retours.list.table.date')}</th>
+                  <th>{t('retours.list.table.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -165,8 +172,8 @@ export default function RetoursList({
                     <td colSpan={10}>
                       <div className={s.empty}>
                         <div className={s.emptyIco}>📭</div>
-                        <div className={s.emptyTitle}>Aucun retour trouvé</div>
-                        <div className={s.emptySub}>Aucune demande de retour ne correspond à vos filtres.</div>
+                        <div className={s.emptyTitle}>{t('retours.list.emptyTitle')}</div>
+                        <div className={s.emptySub}>{t('retours.list.emptySub')}</div>
                       </div>
                     </td>
                   </tr>
@@ -217,7 +224,7 @@ export default function RetoursList({
                       </td>
                       <td>
                         <span style={{ fontSize: 11.5, background: 'var(--g100)', padding: '2px 8px', borderRadius: 999, color: 'var(--t2)', fontWeight: 600 }}>
-                          {{ refund: 'Remboursement', exchange: 'Échange', repair: 'Réparation', credit: 'Avoir' }[r.returnType] ?? r.returnType}
+                          {RETURN_TYPE_LABELS[r.returnType] ?? r.returnType}
                         </span>
                       </td>
                       <td>
@@ -226,7 +233,7 @@ export default function RetoursList({
                         </div>
                         {r.montantAccorde !== null && r.montantAccorde !== r.montantDemande && (
                           <div style={{ fontSize: 11, color: 'var(--t2)' }}>
-                            Accordé: {fmt(r.montantAccorde)} GNF
+                            {t('retours.list.accorde', { montant: fmt(r.montantAccorde) })}
                           </div>
                         )}
                       </td>
@@ -242,7 +249,7 @@ export default function RetoursList({
                       <td>
                         <div className={s.actions} onClick={e => e.stopPropagation()}>
                           <button className={`${s.btnSm} ${s.btnDetail}`} onClick={() => onSelect(r.id)}>
-                            <i className="fas fa-eye" /> Voir
+                            <i className="fas fa-eye" /> {t('retours.list.voir')}
                           </button>
                         </div>
                       </td>
@@ -257,7 +264,7 @@ export default function RetoursList({
         {/* ── Pagination ── */}
         {!loading && !error && total > 0 && (
           <div className={s.pagination}>
-            <span>{total} résultat{total > 1 ? 's' : ''} · Page {page}/{pages}</span>
+            <span>{t('retours.list.results', { count: total })} · {t('retours.list.page', { page, pages })}</span>
             <div className={s.pgBtns}>
               <button
                 className={`${s.pgBtn} ${page <= 1 ? s.pgBtnDisabled : ''}`}

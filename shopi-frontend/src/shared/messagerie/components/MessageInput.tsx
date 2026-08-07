@@ -7,6 +7,7 @@
  * que des callbacks onSend, onTyping et onToast.
  */
 import React, { useState, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { MediaAttachment } from '../hooks/useMessagerie';
 import type { WsTyping }        from '../hooks/useSocket';
 import { EMOJIS }               from '../data/messagerieTypes';
@@ -27,6 +28,7 @@ type VoiceState = 'idle' | 'recording';
 export default function MessageInput({
   convId, replyTo, onSend, onTyping, onToast, onClearReply,
 }: Props) {
+  const { t } = useTranslation();
   /* ── Texte & Emoji ── */
   const [text,      setText]      = useState('');
   const [attOpen,   setAttOpen]   = useState(false);
@@ -132,7 +134,7 @@ export default function MessageInput({
       const url = await uploadToServer(file, endpointMap[mediaType] ?? '/upload/document');
       onSend(convId, caption, { url, name: file.name, size: file.size, mime: file.type, type: mediaType });
     } catch (err: any) {
-      onToast(`❌ ${err.message ?? 'Upload échoué'}`, 'e');
+      onToast(`❌ ${err.message ?? t('messagerie.messageInput.uploadEchoue')}`, 'e');
     } finally {
       setUploading(false);
       if (imageInputRef.current) imageInputRef.current.value = '';
@@ -166,7 +168,7 @@ export default function MessageInput({
 
       onTyping?.(convId, 'recording');
     } catch {
-      onToast('🎙️ Accès au microphone refusé', 'e');
+      onToast(t('messagerie.messageInput.micRefuse'), 'e');
     }
   }, [convId, onTyping, onToast]);
 
@@ -199,11 +201,11 @@ export default function MessageInput({
         setUploading(true);
         const url = await uploadToServer(blob, '/upload/audio', 'voice.webm');
         onSend(convId, '', {
-          url, name: 'Message vocal', size: blob.size, mime: mimeType,
+          url, name: t('messagerie.messageInput.messageVocal'), size: blob.size, mime: mimeType,
           type: 'audio', duration: durationSec,
         });
       } catch {
-        onToast('❌ Impossible d\'envoyer le message vocal', 'e');
+        onToast(t('messagerie.messageInput.envoiVocalEchoue'), 'e');
       } finally {
         setUploading(false);
       }
@@ -221,11 +223,11 @@ export default function MessageInput({
   // ── Items du menu pièces jointes ──────────────────────────────
 
   const ATT_ITEMS = [
-    { ico: '📷', label: 'Photo / Vidéo',        bg: 'rgba(190,24,93,.08)',   action: () => imageInputRef.current?.click() },
-    { ico: '📄', label: 'Document (PDF)',        bg: 'var(--sky-2,#E2EAFB)',  action: () => docInputRef.current?.click()   },
-    { ico: '📦', label: 'Partager un produit',   bg: 'rgba(4,120,87,.09)',    action: () => onToast('📦 Bientôt disponible', 'i') },
-    { ico: '🛒', label: 'Partager une commande', bg: 'rgba(180,83,9,.09)',    action: () => onToast('🛒 Bientôt disponible', 'i') },
-    { ico: '📍', label: 'Ma localisation',       bg: 'rgba(109,40,217,.09)',  action: () => onToast('📍 Bientôt disponible', 'i') },
+    { ico: '📷', label: t('messagerie.messageInput.attPhoto'),      bg: 'rgba(190,24,93,.08)',   action: () => imageInputRef.current?.click() },
+    { ico: '📄', label: t('messagerie.messageInput.attDocument'),   bg: 'var(--sky-2,#E2EAFB)',  action: () => docInputRef.current?.click()   },
+    { ico: '📦', label: t('messagerie.messageInput.attProduit'),    bg: 'rgba(4,120,87,.09)',    action: () => onToast(`📦 ${t('messagerie.messageInput.bientotDisponible')}`, 'i') },
+    { ico: '🛒', label: t('messagerie.messageInput.attCommande'),   bg: 'rgba(180,83,9,.09)',    action: () => onToast(`🛒 ${t('messagerie.messageInput.bientotDisponible')}`, 'i') },
+    { ico: '📍', label: t('messagerie.messageInput.attLocalisation'), bg: 'rgba(109,40,217,.09)',  action: () => onToast(`📍 ${t('messagerie.messageInput.bientotDisponible')}`, 'i') },
   ];
 
   // ── Rendu ──────────────────────────────────────────────────────
@@ -237,34 +239,34 @@ export default function MessageInput({
       {mediaPreview && (
         <div className={s.mediaPrev}>
           <div className={s.mpBar}>
-            <button className={s.mpCloseBtn} onClick={cancelMedia} title="Annuler">
+            <button className={s.mpCloseBtn} onClick={cancelMedia} title={t('messagerie.messageInput.annuler')}>
               <i className="fas fa-xmark" />
             </button>
             <span className={s.mpBarTitle}>
-              {mediaPreview.mediaType === 'image' ? '📷 Photo'
-                : mediaPreview.mediaType === 'video' ? '🎥 Vidéo' : '📄 Document'}
+              {mediaPreview.mediaType === 'image' ? t('messagerie.messageInput.previewPhoto')
+                : mediaPreview.mediaType === 'video' ? t('messagerie.messageInput.previewVideo') : t('messagerie.messageInput.previewDocument')}
             </span>
           </div>
           <div className={s.mpContent}>
-            {mediaPreview.mediaType === 'image' && <img src={mediaPreview.previewUrl} alt="Aperçu" className={s.mpImgEl} />}
+            {mediaPreview.mediaType === 'image' && <img src={mediaPreview.previewUrl} alt={t('messagerie.messageInput.apercu')} className={s.mpImgEl} />}
             {mediaPreview.mediaType === 'video' && <video src={mediaPreview.previewUrl} controls className={s.mpVideoEl} />}
             {mediaPreview.mediaType === 'file'  && (
               <div className={s.mpDocBox}>
                 <div className={s.mpDocIco}><i className="fas fa-file-pdf" /></div>
                 <div className={s.mpDocName}>{mediaPreview.file.name}</div>
-                <div className={s.mpDocMeta}>{(mediaPreview.file.size / 1024).toFixed(0)} Ko</div>
+                <div className={s.mpDocMeta}>{(mediaPreview.file.size / 1024).toFixed(0)} {t('messagerie.messageInput.ko')}</div>
               </div>
             )}
           </div>
           <div className={s.mpCaptionRow}>
             <textarea
               ref={captionRef} className={s.mpCaptionInp} rows={1}
-              placeholder="Ajouter un message… (facultatif)"
+              placeholder={t('messagerie.messageInput.ajouterMessagePlaceholder')}
               value={captionText}
               onChange={e => setCaptionText(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); confirmSendMedia(); } }}
             />
-            <button className={`${s.sendBtn} ${s.active}`} onClick={confirmSendMedia} disabled={uploading} title="Envoyer">
+            <button className={`${s.sendBtn} ${s.active}`} onClick={confirmSendMedia} disabled={uploading} title={t('messagerie.messageInput.envoyer')}>
               {uploading ? <i className="fas fa-circle-notch fa-spin" /> : <i className="fas fa-paper-plane" />}
             </button>
           </div>
@@ -291,7 +293,7 @@ export default function MessageInput({
       {/* ── Barre d'enregistrement vocal ── */}
       {voiceState === 'recording' && (
         <div className={s.voiceBar}>
-          <button className={s.voiceCancelBtn} onClick={cancelRecording} title="Annuler">
+          <button className={s.voiceCancelBtn} onClick={cancelRecording} title={t('messagerie.messageInput.annuler')}>
             <i className="fas fa-xmark" />
           </button>
           <div className={s.voiceWave}>
@@ -299,7 +301,7 @@ export default function MessageInput({
             {recWave.map((h, i) => <div key={i} className={s.voiceWaveTick} style={{ height: h }} />)}
           </div>
           <span className={s.voiceTimer}>{fmtDuration(recSeconds)}</span>
-          <button className={`${s.sendBtn} ${s.active}`} onClick={sendRecording} disabled={uploading} title="Envoyer">
+          <button className={`${s.sendBtn} ${s.active}`} onClick={sendRecording} disabled={uploading} title={t('messagerie.messageInput.envoyer')}>
             {uploading ? <i className="fas fa-circle-notch fa-spin" /> : <i className="fas fa-paper-plane" />}
           </button>
         </div>
@@ -311,7 +313,7 @@ export default function MessageInput({
           {/* Menu pièces jointes */}
           <div className={s.inputAttach} data-att>
             <button className={s.attBtn} onClick={() => setAttOpen(p => !p)}
-              title="Joindre" disabled={uploading} style={{ opacity: uploading ? 0.55 : 1 }}>
+              title={t('messagerie.messageInput.joindre')} disabled={uploading} style={{ opacity: uploading ? 0.55 : 1 }}>
               <i className={`fas ${uploading ? 'fa-circle-notch fa-spin' : 'fa-paperclip'}`} />
             </button>
             <div className={`${s.attMenu} ${attOpen ? s.open : ''}`}>
@@ -327,23 +329,23 @@ export default function MessageInput({
 
           {/* Textarea + emoji */}
           <div className={s.msgInpWrap}>
-            <textarea ref={inputRef} className={s.msgInp} placeholder="Écrire un message…" rows={1}
+            <textarea ref={inputRef} className={s.msgInp} placeholder={t('messagerie.messageInput.ecrireMessagePlaceholder')} rows={1}
               value={text}
               onChange={handleTextChange}
               onKeyDown={handleKey}
             />
-            <button className={s.emojiBtn} onClick={() => setEmojiOpen(p => !p)} title="Émojis" data-emoji>
+            <button className={s.emojiBtn} onClick={() => setEmojiOpen(p => !p)} title={t('messagerie.messageInput.emojis')} data-emoji>
               <i className="fas fa-face-smile" />
             </button>
           </div>
 
           {/* Envoyer ou Micro */}
           {text.trim() ? (
-            <button className={`${s.sendBtn} ${s.active}`} onClick={send} title="Envoyer">
+            <button className={`${s.sendBtn} ${s.active}`} onClick={send} title={t('messagerie.messageInput.envoyer')}>
               <i className="fas fa-paper-plane" />
             </button>
           ) : (
-            <button className={`${s.sendBtn} ${s.micBtn}`} onClick={startRecording} title="Message vocal">
+            <button className={`${s.sendBtn} ${s.micBtn}`} onClick={startRecording} title={t('messagerie.messageInput.messageVocalTitle')}>
               <i className="fas fa-microphone" />
             </button>
           )}

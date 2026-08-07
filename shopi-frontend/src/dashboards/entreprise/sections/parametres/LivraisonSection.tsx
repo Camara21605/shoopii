@@ -2,7 +2,8 @@
  * FICHIER : src/dashboards/entreprise/sections/parametres/LivraisonSection.tsx
  * Section 5 — Livraison
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
@@ -16,6 +17,7 @@ interface Props {
 const ZONES_GN = ['Kaloum','Dixinn','Ratoma','Matam','Matoto','Coyah','Dubréka','Kindia'];
 
 export default function LivraisonSection({ data, saving, onDirty, onToast, saveLivraison }: Props) {
+  const { t } = useTranslation();
   const [livraisonStandard, setLivraisonStandard] = useState(true);
   const [livraisonShopi,    setLivraisonShopi]    = useState(true);
   const [livraisonCorresp,  setLivraisonCorresp]  = useState(false);
@@ -41,26 +43,26 @@ export default function LivraisonSection({ data, saving, onDirty, onToast, saveL
   async function handleSave() {
     try {
       await saveLivraison({ livraisonStandard, livraisonShopi, livraisonCorresp, clickCollect, livraisonExpress, zonesLivraison: zones });
-      onToast('✅ Livraison sauvegardée', 's');
-    } catch { onToast('❌ Erreur lors de la sauvegarde', 'e'); }
+      onToast(t('parametres.livraison.savedToast'), 's');
+    } catch { onToast(t('parametres.livraison.errorToast'), 'e'); }
   }
 
   const METHODES = [
-    { label:'Livraison standard', sub:'Géré par votre équipe boutique',           value:livraisonStandard, set:setLivraisonStandard },
-    { label:'Livreurs Shopi',     sub:'Réseau de livreurs partenaires Shopi',      value:livraisonShopi,    set:setLivraisonShopi    },
-    { label:'Correspondants',     sub:'Réseau de relais locaux et internationaux', value:livraisonCorresp,  set:setLivraisonCorresp  },
-    { label:'Click & Collect',    sub:'Le client récupère en boutique',            value:clickCollect,      set:setClickCollect      },
-    { label:'Livraison express',  sub:'Livraison < 2h avec supplément tarifaire',  value:livraisonExpress,  set:setLivraisonExpress  },
+    { label:t('parametres.livraison.standard'), sub:t('parametres.livraison.standardSub'),           value:livraisonStandard, set:setLivraisonStandard },
+    { label:t('parametres.livraison.livreursShopi'),     sub:t('parametres.livraison.livreursShopiSub'),      value:livraisonShopi,    set:setLivraisonShopi    },
+    { label:t('parametres.livraison.correspondants'),     sub:t('parametres.livraison.correspondantsSub'), value:livraisonCorresp,  set:setLivraisonCorresp  },
+    { label:t('parametres.livraison.clickCollect'),    sub:t('parametres.livraison.clickCollectSub'),            value:clickCollect,      set:setClickCollect      },
+    { label:t('parametres.livraison.express'),  sub:t('parametres.livraison.expressSub'),  value:livraisonExpress,  set:setLivraisonExpress  },
   ];
 
   return (
     <>
       <div className={s.sectionHd}>
-        <h1><i className="fas fa-motorcycle" /> Livraison</h1>
-        <p>Choisissez vos méthodes de livraison et les zones que vous desservez.</p>
+        <h1><i className="fas fa-motorcycle" /> {t('parametres.livraison.title')}</h1>
+        <p>{t('parametres.livraison.subtitle')}</p>
       </div>
 
-      <FormCard title="Méthodes de livraison" icon="fa-truck" subtitle="Activez les modes de livraison disponibles pour vos clients">
+      <FormCard title={t('parametres.livraison.methodesTitle')} icon="fa-truck" subtitle={t('parametres.livraison.methodesSubtitle')}>
         {METHODES.map(m => (
           <div key={m.label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid var(--bdr)' }}>
             <div>
@@ -75,7 +77,7 @@ export default function LivraisonSection({ data, saving, onDirty, onToast, saveL
         ))}
       </FormCard>
 
-      <FormCard title="Zones de livraison" icon="fa-map-location-dot" subtitle="Sélectionnez les communes que vous desservez">
+      <FormCard title={t('parametres.livraison.zonesTitle')} icon="fa-map-location-dot" subtitle={t('parametres.livraison.zonesSubtitle')}>
         <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
           {ZONES_GN.map(zone => (
             <button key={zone} onClick={() => toggleZone(zone)}
@@ -93,12 +95,12 @@ export default function LivraisonSection({ data, saving, onDirty, onToast, saveL
           ))}
         </div>
         <div className={s.hint} style={{ marginTop:10 }}>
-          <i className="fas fa-circle-info" /> {zones.length} zone{zones.length > 1 ? 's' : ''} sélectionnée{zones.length > 1 ? 's' : ''}
+          <i className="fas fa-circle-info" /> {t('parametres.livraison.zonesSelectionnees', { count: zones.length })}
         </div>
 
         <div className={s.saveRow}>
           <button className={s.saveBtn} onClick={handleSave} disabled={saving}>
-            {saving ? <><i className="fas fa-spinner fa-spin" /> Sauvegarde…</> : <><i className="fas fa-cloud-arrow-up" /> Sauvegarder la livraison</>}
+            {saving ? <><i className="fas fa-spinner fa-spin" /> {t('parametres.livraison.sauvegardeEnCours')}</> : <><i className="fas fa-cloud-arrow-up" /> {t('parametres.livraison.sauvegarderLivraison')}</>}
           </button>
         </div>
       </FormCard>

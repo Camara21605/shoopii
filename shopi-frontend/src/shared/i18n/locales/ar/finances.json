@@ -1,0 +1,189 @@
+{
+  "finances": {
+    "gnf": "فرنك",
+    "kpi": {
+      "soldeDisponible": "الرصيد المتاح",
+      "walletEntreprise": "محفظة الشركة",
+      "revenusCeMois": "إيرادات هذا الشهر",
+      "vsMoisDernier": "{{sign}}{{pct}}% مقارنة بالشهر الماضي",
+      "depensesCeMois": "مصاريف هذا الشهر",
+      "commissionsLivraison": "العمولات + التوصيل",
+      "enAttenteEscrow": "قيد الانتظار (ضمان)",
+      "libereALaLivraison": "يُحرر عند التوصيل"
+    },
+    "evolutionRevenus": "تطور الإيرادات",
+    "legendRevenus": "الإيرادات (ملايين فرنك)",
+    "legendMoisPrecedents": "الأشهر السابقة",
+    "transactionsRecentes": "المعاملات الأخيرة",
+    "emptyTransactions": "لا توجد معاملات بعد.",
+    "repartition": "التوزيع",
+    "emptyRepartition": "لا توجد بيانات هذا الشهر.",
+    "virementsShopi": "تحويلات Shopi",
+    "emptyVirements": "لا توجد تحويلات بعد.",
+    "statutRecu": "✓ مستلم",
+    "statutAttente": "⏳ بانتظار",
+    "actions": "الإجراءات",
+    "quickActions": {
+      "telechargerBilan": "تنزيل الكشف الشهري",
+      "demanderVirement": "طلب تحويل مبكر",
+      "modifierInfosBancaires": "تعديل المعلومات البنكية",
+      "voirFactures": "عرض فواتير Shopi"
+    }
+  },
+  "wallet": {
+    "methodMeta": {
+      "orangeMoney": "أورنج موني",
+      "mtnMoney": "MTN موني",
+      "kulu": "كولو",
+      "paycard": "بطاقة الدفع",
+      "card": "بطاقة بنكية",
+      "bank": "تحويل بنكي",
+      "cash": "نقدًا"
+    },
+    "formFields": {
+      "orangeMoneyLabel": "رقم أورنج موني",
+      "mtnMoneyLabel": "رقم MTN موني",
+      "kuluLabel": "رقم كولو",
+      "paycardNumberLabel": "رقم بطاقة الدفع",
+      "titulaireLabel": "المالك",
+      "nomCompletPlaceholder": "الاسم الكامل",
+      "cardNumberLabel": "رقم البطاقة",
+      "nomSurCarteLabel": "الاسم على البطاقة",
+      "exPrefix": "مثال:",
+      "dateExpirationLabel": "تاريخ الانتهاء",
+      "nomBanqueLabel": "اسم البنك",
+      "titulaireCompteLabel": "صاحب الحساب",
+      "numeroCompteIbanLabel": "رقم الحساب / IBAN"
+    },
+    "errors": {
+      "loadWalletFailed": "تعذر تحميل المحفظة",
+      "loadTransactionsFailed": "تعذر تحميل المعاملات",
+      "loadChartFailed": "تعذر تحميل الرسم البياني",
+      "loadBalanceFailed": "تعذر تحميل الرصيد",
+      "champsRequis": "املأ جميع الحقول المطلوبة",
+      "ajoutImpossible": "تعذر الإضافة",
+      "montantInvalide": "أدخل مبلغًا صحيحًا",
+      "choisirMoyenPaiement": "اختر وسيلة دفع",
+      "operationImpossible": "فشلت العملية",
+      "suppressionImpossible": "تعذر الحذف",
+      "actionImpossible": "فشل الإجراء",
+      "activerAutoTransferRequisMethode": "أضف وسيلة دفع قبل تفعيل التحويل التلقائي"
+    },
+    "toasts": {
+      "operationEffectuee": "✅ تم تنفيذ {{label}} بمبلغ {{montant}} فرنك",
+      "methodeAjoutee": "✅ تمت إضافة وسيلة الدفع",
+      "methodeParDefautMaj": "✅ تم تحديث الوسيلة الافتراضية",
+      "methodeSupprimee": "🗑️ تم حذف وسيلة الدفع",
+      "virementAutoActive": "✅ تم تفعيل التحويل التلقائي",
+      "virementAutoDesactive": "⏸️ تم إيقاف التحويل التلقائي"
+    },
+    "opLabels": {
+      "deposit": "إيداع",
+      "withdraw": "سحب",
+      "transfer": "تحويل"
+    },
+    "modalTitles": {
+      "deposit": "إيداع أموال",
+      "withdraw": "سحب أموال",
+      "transfer": "تحويل أموال"
+    },
+    "modalBtns": {
+      "deposit": "تأكيد الإيداع",
+      "withdraw": "تأكيد السحب",
+      "transfer": "تأكيد التحويل"
+    },
+    "loadingWallet": "جارٍ تحميل المحفظة…",
+    "header": {
+      "title": "المحفظة",
+      "subtitle": "إدارة رصيدك وسحوباتك ومعاملات Shopi",
+      "exporter": "تصدير",
+      "exportToast": "📄 جارٍ تصدير الكشف…",
+      "retirerDesFonds": "سحب أموال"
+    },
+    "balance": {
+      "soldeDisponible": "الرصيد المتاح",
+      "masquerSolde": "إخفاء الرصيد",
+      "totalPortefeuille": "الإجمالي في محفظة Shopi الخاصة بك",
+      "ceMois": "+{{pct}}% هذا الشهر",
+      "entreesCeMois": "الدخل هذا الشهر",
+      "sortiesCeMois": "المصاريف هذا الشهر",
+      "enAttente": "قيد الانتظار",
+      "deposer": "إيداع",
+      "retirer": "سحب",
+      "transferer": "تحويل"
+    },
+    "kpi": {
+      "totalEncaisse": "إجمالي المحصّل",
+      "totalRetire": "إجمالي المسحوب",
+      "commissionsShopi": "عمولات Shopi"
+    },
+    "chart": {
+      "title": "تطور الإيرادات",
+      "semaine": "أسبوع",
+      "mois": "شهر",
+      "annee": "سنة"
+    },
+    "transactions": {
+      "title": "المعاملات الأخيرة",
+      "tout": "الكل",
+      "entrees": "الدخل",
+      "sorties": "المصاريف",
+      "aucune": "لا توجد معاملات",
+      "credit": "ائتمان",
+      "debit": "خصم",
+      "statutValide": "مكتمل",
+      "statutEnAttente": "قيد الانتظار",
+      "statutEchoue": "فشل",
+      "statutAnnule": "ملغي"
+    },
+    "methodes": {
+      "title": "وسائل الدفع",
+      "aucune": "لا توجد وسيلة مسجلة",
+      "defaut": "الافتراضي",
+      "supprimer": "حذف",
+      "ajouter": "إضافة وسيلة"
+    },
+    "autoTransfer": {
+      "title": "التحويل التلقائي",
+      "hebdomadaire": "تحويل أسبوعي",
+      "chaqueVersMethode": "كل يوم اثنين · إلى {{label}}",
+      "versMethodeParDefaut": "إلى وسيلتك الافتراضية"
+    },
+    "commission": {
+      "title": "عمولات Shopi",
+      "textPart1": "تفرض Shopi عمولة قدرها",
+      "textPct": "3%",
+      "textPart2": "على كل معاملة محصلة. التحويلات إلى المحفظة المتنقلة",
+      "textGratuits": "مجانية",
+      "textPart3": ". التحويل البنكي:",
+      "textMontant": "1,500 فرنك",
+      "textPart4": "لكل عملية."
+    },
+    "opPage": {
+      "chooseMethodFrom": "اختر وسيلة دفع إلكترونية للتحويل منها بحسابك في Shopi.",
+      "chooseMethodTo": "اختر وسيلة دفع إلكترونية للتحويل إليها بحسابك في Shopi.",
+      "ajouterType": "إضافة {{type}}",
+      "ajouter": "إضافة",
+      "ajouterEtContinuer": "إضافة والمتابعة",
+      "ajoutEnCours": "جارٍ الإضافة…",
+      "changer": "تغيير",
+      "montantGnf": "المبلغ (فرنك)",
+      "traitementEnCours": "جارٍ المعالجة…"
+    },
+    "addMethodModal": {
+      "title": "إضافة وسيلة دفع",
+      "typeLabel": "النوع"
+    },
+    "quickBar": {
+      "soldeShopi": "رصيد Shopi",
+      "actionsTitle": "إجراءات المحفظة",
+      "depot": "إيداع",
+      "retrait": "سحب",
+      "actualiser": "تحديث",
+      "actualiserSolde": "تحديث الرصيد",
+      "gererPortefeuille": "إدارة محفظتي",
+      "chooseMethodDeposit": "اختر وسيلة دفع إلكترونية لتحويل الأموال إلى حسابك في Shopi.",
+      "chooseMethodWithdraw": "اختر وسيلة دفع إلكترونية لاستلام الأموال من حسابك في Shopi."
+    }
+  }
+}

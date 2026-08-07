@@ -19,6 +19,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { apiFetch } from '../../../shared/services/apiFetch';
 import { useToast } from '../../../shared/context/ToastContext';
 import './EquipePage.css';
@@ -100,30 +102,32 @@ interface ActivityEntry {
  * cette liste sans modifier ce fichier.
  * ══════════════════════════════════════════════════════════════ */
 
-const PERMISSION_GROUPS = [
-  { key: 'products',   label: 'Produits',      icon: 'fa-tag',
-    actions: [{ key: 'view', label: 'Voir' }, { key: 'create', label: 'Créer' },
-              { key: 'edit', label: 'Modifier' }, { key: 'delete', label: 'Supprimer' }] },
-  { key: 'orders',     label: 'Commandes',     icon: 'fa-box',
-    actions: [{ key: 'view', label: 'Voir' }, { key: 'validate', label: 'Valider' },
-              { key: 'cancel', label: 'Annuler' }, { key: 'edit', label: 'Modifier' }] },
-  { key: 'deliveries', label: 'Livraisons',    icon: 'fa-motorcycle',
-    actions: [{ key: 'view', label: 'Voir' }, { key: 'assign', label: 'Affecter' },
-              { key: 'edit', label: 'Modifier' }] },
-  { key: 'payments',   label: 'Paiements',     icon: 'fa-coins',
-    actions: [{ key: 'view', label: 'Voir' }, { key: 'viewTransactions', label: 'Transactions' },
-              { key: 'manageRefunds', label: 'Remboursements' }] },
-  { key: 'messaging',  label: 'Messagerie',    icon: 'fa-comment',
-    actions: [{ key: 'read', label: 'Lire' }, { key: 'send', label: 'Envoyer' }] },
-  { key: 'statistics', label: 'Statistiques',  icon: 'fa-chart-line',
-    actions: [{ key: 'view', label: 'Voir' }] },
-  { key: 'settings',   label: 'Paramètres',    icon: 'fa-gear',
-    actions: [{ key: 'view', label: 'Voir' }, { key: 'edit', label: 'Modifier' }] },
-  { key: 'returns',    label: 'Retours & SAV', icon: 'fa-rotate-left',
-    actions: [{ key: 'view', label: 'Voir' }, { key: 'process', label: 'Traiter' }] },
-  { key: 'wallet',     label: 'Portefeuille',  icon: 'fa-wallet',
-    actions: [{ key: 'view', label: 'Voir' }, { key: 'withdraw', label: 'Retrait' }] },
-] as const;
+function getPermissionGroups(t: TFunction) {
+  return [
+    { key: 'products',   label: t('equipe.permGroups.products.label'),   icon: 'fa-tag',
+      actions: [{ key: 'view', label: t('equipe.permGroups.products.view') }, { key: 'create', label: t('equipe.permGroups.products.create') },
+                { key: 'edit', label: t('equipe.permGroups.products.edit') }, { key: 'delete', label: t('equipe.permGroups.products.delete') }] },
+    { key: 'orders',     label: t('equipe.permGroups.orders.label'),     icon: 'fa-box',
+      actions: [{ key: 'view', label: t('equipe.permGroups.orders.view') }, { key: 'validate', label: t('equipe.permGroups.orders.validate') },
+                { key: 'cancel', label: t('equipe.permGroups.orders.cancel') }, { key: 'edit', label: t('equipe.permGroups.orders.edit') }] },
+    { key: 'deliveries', label: t('equipe.permGroups.deliveries.label'), icon: 'fa-motorcycle',
+      actions: [{ key: 'view', label: t('equipe.permGroups.deliveries.view') }, { key: 'assign', label: t('equipe.permGroups.deliveries.assign') },
+                { key: 'edit', label: t('equipe.permGroups.deliveries.edit') }] },
+    { key: 'payments',   label: t('equipe.permGroups.payments.label'),   icon: 'fa-coins',
+      actions: [{ key: 'view', label: t('equipe.permGroups.payments.view') }, { key: 'viewTransactions', label: t('equipe.permGroups.payments.viewTransactions') },
+                { key: 'manageRefunds', label: t('equipe.permGroups.payments.manageRefunds') }] },
+    { key: 'messaging',  label: t('equipe.permGroups.messaging.label'),  icon: 'fa-comment',
+      actions: [{ key: 'read', label: t('equipe.permGroups.messaging.read') }, { key: 'send', label: t('equipe.permGroups.messaging.send') }] },
+    { key: 'statistics', label: t('equipe.permGroups.statistics.label'), icon: 'fa-chart-line',
+      actions: [{ key: 'view', label: t('equipe.permGroups.statistics.view') }] },
+    { key: 'settings',   label: t('equipe.permGroups.settings.label'),   icon: 'fa-gear',
+      actions: [{ key: 'view', label: t('equipe.permGroups.settings.view') }, { key: 'edit', label: t('equipe.permGroups.settings.edit') }] },
+    { key: 'returns',    label: t('equipe.permGroups.returns.label'),    icon: 'fa-rotate-left',
+      actions: [{ key: 'view', label: t('equipe.permGroups.returns.view') }, { key: 'process', label: t('equipe.permGroups.returns.process') }] },
+    { key: 'wallet',     label: t('equipe.permGroups.wallet.label'),    icon: 'fa-wallet',
+      actions: [{ key: 'view', label: t('equipe.permGroups.wallet.view') }, { key: 'withdraw', label: t('equipe.permGroups.wallet.withdraw') }] },
+  ] as const;
+}
 
 /* ══════════════════════════════════════════════════════════════
  * HELPERS
@@ -140,12 +144,12 @@ function formatDate(iso: string | null | undefined) {
   });
 }
 
-function statusLabel(s: TeamMember['status']) {
+function statusLabel(s: TeamMember['status'], t: TFunction) {
   const map = {
-    active:    { label: 'Actif',       cls: 'st-active'    },
-    suspended: { label: 'Suspendu',    cls: 'st-suspended' },
-    pending:   { label: 'En attente',  cls: 'st-pending'   },
-    revoked:   { label: 'Révoqué',     cls: 'st-revoked'   },
+    active:    { label: t('equipe.status.active'),    cls: 'st-active'    },
+    suspended: { label: t('equipe.status.suspended'), cls: 'st-suspended' },
+    pending:   { label: t('equipe.status.pending'),   cls: 'st-pending'   },
+    revoked:   { label: t('equipe.status.revoked'),   cls: 'st-revoked'   },
   };
   return map[s] ?? map.revoked;
 }
@@ -156,6 +160,8 @@ function statusLabel(s: TeamMember['status']) {
 
 export default function EquipePage() {
   const { pop } = useToast();
+  const { t } = useTranslation();
+  const PERMISSION_GROUPS = getPermissionGroups(t);
 
   /* ── Onglets ── */
   const [activeTab, setActiveTab] = useState<'members' | 'invitations'>('members');
@@ -204,7 +210,7 @@ export default function EquipePage() {
       setMembers(res.items);
       setTotal(res.total);
     } catch {
-      pop('Impossible de charger les membres.', 'e');
+      pop(t('equipe.toast.loadMembersError'), 'e');
     } finally {
       setLoading(false);
     }
@@ -225,11 +231,11 @@ export default function EquipePage() {
 
   const handleSuspend = (m: TeamMember) => {
     setConfirmAction({
-      title:   `Suspendre ${m.firstName} ${m.lastName}`,
-      message: `${m.firstName} ne pourra plus se connecter. Vous pouvez réactiver son accès à tout moment.`,
+      title:   t('equipe.confirm.suspendTitle', { name: `${m.firstName} ${m.lastName}` }),
+      message: t('equipe.confirm.suspendMessage', { firstName: m.firstName }),
       action:  async () => {
         await apiFetch(`/company-team/members/${m.id}/suspend`, { method: 'POST', body: {} });
-        pop(`${m.firstName} a été suspendu(e).`, 's');
+        pop(t('equipe.toast.suspended', { name: m.firstName }), 's');
         loadStats(); loadMembers();
       },
     });
@@ -238,20 +244,20 @@ export default function EquipePage() {
   const handleReactivate = async (m: TeamMember) => {
     try {
       await apiFetch(`/company-team/members/${m.id}/reactivate`, { method: 'POST' });
-      pop(`${m.firstName} a été réactivé(e).`, 's');
+      pop(t('equipe.toast.reactivated', { name: m.firstName }), 's');
       loadStats(); loadMembers();
     } catch (err: any) {
-      pop(err.message ?? 'Erreur lors de la réactivation.', 'e');
+      pop(err.message ?? t('equipe.toast.reactivateError'), 'e');
     }
   };
 
   const handleDelete = (m: TeamMember) => {
     setConfirmAction({
-      title:   `Supprimer l'accès de ${m.firstName} ${m.lastName}`,
-      message: `L'accès de ${m.firstName} sera définitivement révoqué. Cette action est irréversible.`,
+      title:   t('equipe.confirm.deleteTitle', { name: `${m.firstName} ${m.lastName}` }),
+      message: t('equipe.confirm.deleteMessage', { firstName: m.firstName }),
       action:  async () => {
         await apiFetch(`/company-team/members/${m.id}`, { method: 'DELETE' });
-        pop(`Accès de ${m.firstName} révoqué.`, 's');
+        pop(t('equipe.toast.deleted', { name: m.firstName }), 's');
         loadStats(); loadMembers();
       },
     });
@@ -264,7 +270,7 @@ export default function EquipePage() {
       );
       setTempPwd({ name: `${m.firstName} ${m.lastName}`, pwd: res.temporaryPassword });
     } catch (err: any) {
-      pop(err.message ?? 'Erreur lors de la réinitialisation.', 'e');
+      pop(err.message ?? t('equipe.toast.resetPasswordError'), 'e');
     }
   };
 
@@ -281,11 +287,11 @@ export default function EquipePage() {
         method: 'PATCH',
         body:   { permissions: permState },
       });
-      pop('Permissions mises à jour.', 's');
+      pop(t('equipe.toast.permissionsUpdated'), 's');
       setPermTarget(null);
       loadMembers();
     } catch (err: any) {
-      pop(err.message ?? 'Erreur lors de la mise à jour.', 'e');
+      pop(err.message ?? t('equipe.toast.permissionsUpdateError'), 'e');
     } finally {
       setSavingPerm(false);
     }
@@ -308,20 +314,20 @@ export default function EquipePage() {
   const handleResendInvitation = async (inv: InvitationEntry) => {
     try {
       await apiFetch(`/company-team/invitations/${inv.id}/resend`, { method: 'POST' });
-      pop('Invitation renvoyée.', 's');
+      pop(t('equipe.toast.invitationResent'), 's');
       loadInvitations();
     } catch (err: any) {
-      pop(err.message ?? 'Erreur.', 'e');
+      pop(err.message ?? t('equipe.toast.genericError'), 'e');
     }
   };
 
   const handleCancelInvitation = (inv: InvitationEntry) => {
     setConfirmAction({
-      title:   `Annuler l'invitation pour ${inv.email}`,
-      message: `L'invitation envoyée à ${inv.email} sera annulée. Le lien ne sera plus valide.`,
+      title:   t('equipe.confirm.cancelInviteTitle', { email: inv.email }),
+      message: t('equipe.confirm.cancelInviteMessage', { email: inv.email }),
       action:  async () => {
         await apiFetch(`/company-team/invitations/${inv.id}`, { method: 'DELETE' });
-        pop('Invitation annulée.', 's');
+        pop(t('equipe.toast.invitationCancelled'), 's');
         loadInvitations();
       },
     });
@@ -338,13 +344,13 @@ export default function EquipePage() {
       <div className="eq-header">
         <div>
           <h1 className="eq-title">
-            <i className="fas fa-users-gear" /> Gestion de l'équipe
+            <i className="fas fa-users-gear" /> {t('equipe.title')}
           </h1>
-          <p className="eq-sub">Gérez les accès et permissions de vos collaborateurs.</p>
+          <p className="eq-sub">{t('equipe.subtitle')}</p>
         </div>
         {stats?.canAddMore && (
           <button className="eq-btn-add" onClick={() => setShowAdd(true)}>
-            <i className="fas fa-user-plus" /> Ajouter un membre
+            <i className="fas fa-user-plus" /> {t('equipe.addMember')}
           </button>
         )}
       </div>
@@ -354,14 +360,14 @@ export default function EquipePage() {
         <div className="eq-stats">
           <div className="eq-stat">
             <div className="eq-stat-val">{stats.activeCount}</div>
-            <div className="eq-stat-lbl">Membres actifs</div>
+            <div className="eq-stat-lbl">{t('equipe.stats.activeMembers')}</div>
           </div>
           <div className="eq-stat eq-stat-max">
             <div className="eq-stat-val">
               {stats.activeCount}
               <span>/{stats.maxAllowed === Infinity ? '∞' : stats.maxAllowed}</span>
             </div>
-            <div className="eq-stat-lbl">Slots utilisés</div>
+            <div className="eq-stat-lbl">{t('equipe.stats.slotsUsed')}</div>
             <div className="eq-stat-bar">
               <div
                 className="eq-stat-fill"
@@ -375,18 +381,18 @@ export default function EquipePage() {
           </div>
           <div className="eq-stat">
             <div className="eq-stat-val eq-suspended">{stats.suspendedCount}</div>
-            <div className="eq-stat-lbl">Suspendus</div>
+            <div className="eq-stat-lbl">{t('equipe.stats.suspended')}</div>
           </div>
           <div className="eq-stat">
             <div className="eq-stat-val eq-green">
               {stats.maxAllowed === Infinity ? '∞' : stats.remainingSlots}
             </div>
-            <div className="eq-stat-lbl">Places restantes</div>
+            <div className="eq-stat-lbl">{t('equipe.stats.remainingSlots')}</div>
           </div>
           {planInfo && (
             <div className="eq-stat eq-stat-plan">
               <div className="eq-plan-badge">{planInfo.name}</div>
-              <div className="eq-stat-lbl">Plan actif</div>
+              <div className="eq-stat-lbl">{t('equipe.stats.activePlan')}</div>
             </div>
           )}
         </div>
@@ -398,7 +404,7 @@ export default function EquipePage() {
           className={`eq-tab${activeTab === 'members' ? ' eq-tab-on' : ''}`}
           onClick={() => setActiveTab('members')}
         >
-          <i className="fas fa-users" /> Membres
+          <i className="fas fa-users" /> {t('equipe.tabs.members')}
           {stats && stats.activeCount > 0 && (
             <span className="eq-tab-badge">{stats.activeCount}</span>
           )}
@@ -407,7 +413,7 @@ export default function EquipePage() {
           className={`eq-tab${activeTab === 'invitations' ? ' eq-tab-on' : ''}`}
           onClick={() => setActiveTab('invitations')}
         >
-          <i className="fas fa-envelope-open-text" /> Invitations
+          <i className="fas fa-envelope-open-text" /> {t('equipe.tabs.invitations')}
           {invitations.length > 0 && (
             <span className="eq-tab-badge eq-tab-badge-warn">{invitations.length}</span>
           )}
@@ -425,42 +431,42 @@ export default function EquipePage() {
               <i className="fas fa-search" />
               <input
                 type="text"
-                placeholder="Rechercher par nom, email, poste…"
+                placeholder={t('equipe.toolbar.searchPlaceholder')}
                 value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1); }}
               />
             </div>
-            <span className="eq-count">{total} membre{total > 1 ? 's' : ''}</span>
+            <span className="eq-count">{t('equipe.toolbar.count', { count: total })}</span>
           </div>
 
           {/* Tableau */}
           <div className="eq-table-wrap">
             {loading ? (
               <div className="eq-loading">
-                <i className="fas fa-circle-notch fa-spin" /> Chargement…
+                <i className="fas fa-circle-notch fa-spin" /> {t('equipe.loading')}
               </div>
             ) : members.length === 0 ? (
               <div className="eq-empty">
                 <i className="fas fa-users-slash" />
-                <p>Aucun collaborateur pour le moment.</p>
+                <p>{t('equipe.empty.membersTitle')}</p>
                 <p className="eq-empty-sub">
-                  Cliquez sur "Ajouter un membre" pour inviter votre première équipe.
+                  {t('equipe.empty.membersSub')}
                 </p>
               </div>
             ) : (
               <table className="eq-table">
                 <thead>
                   <tr>
-                    <th>Membre</th>
-                    <th>Poste / Rôle</th>
-                    <th>Statut</th>
-                    <th>Dernière connexion</th>
-                    <th>Actions</th>
+                    <th>{t('equipe.table.member')}</th>
+                    <th>{t('equipe.table.jobRole')}</th>
+                    <th>{t('equipe.table.status')}</th>
+                    <th>{t('equipe.table.lastLogin')}</th>
+                    <th>{t('equipe.table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {members.map(m => {
-                    const st = statusLabel(m.status);
+                    const st = statusLabel(m.status, t);
                     return (
                       <tr key={m.id}>
                         <td>
@@ -476,7 +482,7 @@ export default function EquipePage() {
                               <div className="eq-nm">{m.firstName} {m.lastName}</div>
                               <div className="eq-email">{m.email}</div>
                               {m.mustChangePassword && (
-                                <span className="eq-tag-pwd">⚠ MDP à changer</span>
+                                <span className="eq-tag-pwd">{t('equipe.mustChangePassword')}</span>
                               )}
                             </div>
                           </div>
@@ -501,21 +507,21 @@ export default function EquipePage() {
                           <div className="eq-actions">
                             <button
                               className="eq-act eq-act-perm"
-                              title="Modifier les permissions"
+                              title={t('equipe.actions.editPermissions')}
                               onClick={() => openPermissions(m)}
                             >
                               <i className="fas fa-shield-halved" />
                             </button>
                             <button
                               className="eq-act"
-                              title="Journal d'activité"
+                              title={t('equipe.actions.activityLog')}
                               onClick={() => openActivity(m)}
                             >
                               <i className="fas fa-clock-rotate-left" />
                             </button>
                             <button
                               className="eq-act"
-                              title="Réinitialiser le mot de passe"
+                              title={t('equipe.actions.resetPassword')}
                               onClick={() => handleResetPassword(m)}
                             >
                               <i className="fas fa-key" />
@@ -523,7 +529,7 @@ export default function EquipePage() {
                             {m.status === 'active' ? (
                               <button
                                 className="eq-act eq-act-warn"
-                                title="Suspendre"
+                                title={t('equipe.actions.suspend')}
                                 onClick={() => handleSuspend(m)}
                               >
                                 <i className="fas fa-ban" />
@@ -531,7 +537,7 @@ export default function EquipePage() {
                             ) : m.status === 'suspended' ? (
                               <button
                                 className="eq-act eq-act-ok"
-                                title="Réactiver"
+                                title={t('equipe.actions.reactivate')}
                                 onClick={() => handleReactivate(m)}
                               >
                                 <i className="fas fa-circle-check" />
@@ -539,7 +545,7 @@ export default function EquipePage() {
                             ) : null}
                             <button
                               className="eq-act eq-act-danger"
-                              title="Supprimer l'accès"
+                              title={t('equipe.actions.deleteAccess')}
                               onClick={() => handleDelete(m)}
                             >
                               <i className="fas fa-trash" />
@@ -560,7 +566,7 @@ export default function EquipePage() {
               <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
                 <i className="fas fa-chevron-left" />
               </button>
-              <span>Page {page} / {Math.ceil(total / 20)}</span>
+              <span>{t('equipe.pagination.pageOf', { page, total: Math.ceil(total / 20) })}</span>
               <button
                 disabled={page >= Math.ceil(total / 20)}
                 onClick={() => setPage(p => p + 1)}
@@ -578,17 +584,17 @@ export default function EquipePage() {
       {activeTab === 'invitations' && (
         <div className="eq-inv-section">
           <div className="eq-inv-header">
-            <span className="eq-inv-title">Invitations en attente</span>
+            <span className="eq-inv-title">{t('equipe.invitations.pendingTitle')}</span>
             <button className="eq-btn-add" onClick={() => setShowAdd(true)}>
-              <i className="fas fa-envelope" /> Envoyer une invitation
+              <i className="fas fa-envelope" /> {t('equipe.invitations.send')}
             </button>
           </div>
           {invitations.length === 0 ? (
             <div className="eq-empty">
               <i className="fas fa-envelope-open" />
-              <p>Aucune invitation en attente.</p>
+              <p>{t('equipe.empty.invitationsTitle')}</p>
               <p className="eq-empty-sub">
-                Utilisez "Ajouter un membre" pour inviter un collaborateur par email.
+                {t('equipe.empty.invitationsSub')}
               </p>
             </div>
           ) : (
@@ -607,20 +613,20 @@ export default function EquipePage() {
                     <div className="eq-inv-email">{inv.email}</div>
                     {inv.jobTitle && <div className="eq-inv-job">{inv.jobTitle}</div>}
                     <div className="eq-inv-expires">
-                      Expire le {formatDate(inv.expiresAt)}
+                      {t('equipe.invitations.expiresOn', { date: formatDate(inv.expiresAt) })}
                     </div>
                   </div>
                   <div className="eq-inv-actions">
                     <button
                       className="eq-act"
-                      title="Renvoyer l'invitation"
+                      title={t('equipe.invitations.resend')}
                       onClick={() => handleResendInvitation(inv)}
                     >
                       <i className="fas fa-paper-plane" />
                     </button>
                     <button
                       className="eq-act eq-act-danger"
-                      title="Annuler l'invitation"
+                      title={t('equipe.invitations.cancel')}
                       onClick={() => handleCancelInvitation(inv)}
                     >
                       <i className="fas fa-trash" />
@@ -658,7 +664,7 @@ export default function EquipePage() {
             <div className="eq-panel-header">
               <div>
                 <div className="eq-panel-title">
-                  <i className="fas fa-shield-halved" /> Permissions
+                  <i className="fas fa-shield-halved" /> {t('equipe.permPanel.title')}
                 </div>
                 <div className="eq-panel-sub">
                   {permTarget.firstName} {permTarget.lastName}
@@ -703,7 +709,7 @@ export default function EquipePage() {
             </div>
             <div className="eq-panel-footer">
               <button className="eq-btn-cancel" onClick={() => setPermTarget(null)}>
-                Annuler
+                {t('equipe.permPanel.cancel')}
               </button>
               <button
                 className="eq-btn-save"
@@ -712,7 +718,7 @@ export default function EquipePage() {
               >
                 {savingPerm
                   ? <i className="fas fa-circle-notch fa-spin" />
-                  : 'Enregistrer'}
+                  : t('equipe.permPanel.save')}
               </button>
             </div>
           </div>
@@ -728,7 +734,7 @@ export default function EquipePage() {
             <div className="eq-panel-header">
               <div>
                 <div className="eq-panel-title">
-                  <i className="fas fa-clock-rotate-left" /> Activité récente
+                  <i className="fas fa-clock-rotate-left" /> {t('equipe.activityPanel.title')}
                 </div>
                 <div className="eq-panel-sub">
                   {activityTarget.firstName} {activityTarget.lastName}
@@ -741,7 +747,7 @@ export default function EquipePage() {
             <div className="eq-panel-body">
               {activity.length === 0 ? (
                 <div className="eq-empty-activity">
-                  Aucune activité enregistrée.
+                  {t('equipe.activityPanel.empty')}
                 </div>
               ) : (
                 <ul className="eq-activity-list">
@@ -770,10 +776,10 @@ export default function EquipePage() {
             <div className="eq-modal-icon eq-modal-icon-key">
               <i className="fas fa-key" />
             </div>
-            <h3>Mot de passe temporaire</h3>
+            <h3>{t('equipe.tempPwdModal.title')}</h3>
             <p>
-              Transmettez ce mot de passe à <strong>{tempPwd.name}</strong>.<br />
-              Il devra le changer à la prochaine connexion.
+              {t('equipe.tempPwdModal.transmitPrefix')} <strong>{tempPwd.name}</strong>.<br />
+              {t('equipe.tempPwdModal.mustChange')}
             </p>
             <div className="eq-pwd-box">
               <span className="eq-pwd-val">{tempPwd.pwd}</span>
@@ -781,7 +787,7 @@ export default function EquipePage() {
                 className="eq-pwd-copy"
                 onClick={() => {
                   navigator.clipboard.writeText(tempPwd.pwd);
-                  pop('Mot de passe copié !', 's');
+                  pop(t('equipe.toast.passwordCopied'), 's');
                 }}
               >
                 <i className="fas fa-copy" />
@@ -789,10 +795,10 @@ export default function EquipePage() {
             </div>
             <p className="eq-pwd-warn">
               <i className="fas fa-triangle-exclamation" />
-              Ce mot de passe ne sera affiché qu'une seule fois.
+              {t('equipe.tempPwdModal.warn')}
             </p>
             <button className="eq-btn-save" onClick={() => setTempPwd(null)}>
-              J'ai noté le mot de passe
+              {t('equipe.tempPwdModal.gotIt')}
             </button>
           </div>
         </div>
@@ -811,17 +817,17 @@ export default function EquipePage() {
             <p>{confirmAction.message}</p>
             <div className="eq-modal-actions">
               <button className="eq-btn-cancel" onClick={() => setConfirmAction(null)}>
-                Annuler
+                {t('equipe.confirm.cancel')}
               </button>
               <button
                 className="eq-btn-danger"
                 onClick={async () => {
                   try { await confirmAction.action(); }
-                  catch (err: any) { pop(err.message ?? 'Erreur.', 'e'); }
+                  catch (err: any) { pop(err.message ?? t('equipe.toast.genericError'), 'e'); }
                   setConfirmAction(null);
                 }}
               >
-                Confirmer
+                {t('equipe.confirm.confirmBtn')}
               </button>
             </div>
           </div>
@@ -843,6 +849,7 @@ interface AddMemberModalProps {
 
 function AddMemberModal({ onClose, onSuccess }: AddMemberModalProps) {
   const { pop } = useToast();
+  const { t } = useTranslation();
 
   /* Mode : 'direct' = création immédiate | 'invite' = invitation par email */
   const [mode, setMode] = useState<'direct' | 'invite'>('direct');
@@ -865,10 +872,10 @@ function AddMemberModal({ onClose, onSuccess }: AddMemberModalProps) {
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!form.firstName.trim()) e.firstName = 'Prénom requis';
-    if (!form.lastName.trim())  e.lastName  = 'Nom requis';
+    if (!form.firstName.trim()) e.firstName = t('equipe.addModal.errors.firstName');
+    if (!form.lastName.trim())  e.lastName  = t('equipe.addModal.errors.lastName');
     if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) {
-      e.email = 'Email invalide';
+      e.email = t('equipe.addModal.errors.email');
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -892,7 +899,7 @@ function AddMemberModal({ onClose, onSuccess }: AddMemberModalProps) {
       if (mode === 'invite') {
         /* Invitation par email — phone n'est pas dans CreateInvitationDto */
         await apiFetch('/company-team/invitations', { method: 'POST', body: basePayload });
-        pop(`Invitation envoyée à ${form.email}.`, 's');
+        pop(t('equipe.addModal.invitationSentToast', { email: form.email }), 's');
         onSuccess(`${form.firstName} ${form.lastName}`, '');
       } else {
         /* Création directe avec MDP temporaire */
@@ -905,7 +912,7 @@ function AddMemberModal({ onClose, onSuccess }: AddMemberModalProps) {
         onSuccess(`${form.firstName} ${form.lastName}`, res.temporaryPassword);
       }
     } catch (err: any) {
-      pop(err.message ?? 'Erreur lors de la création.', 'e');
+      pop(err.message ?? t('equipe.addModal.createError'), 'e');
     } finally {
       setSaving(false);
     }
@@ -915,7 +922,7 @@ function AddMemberModal({ onClose, onSuccess }: AddMemberModalProps) {
     <div className="eq-overlay" onClick={onClose}>
       <div className="eq-modal eq-modal-add" onClick={e => e.stopPropagation()}>
         <div className="eq-modal-header">
-          <h3><i className="fas fa-user-plus" /> Ajouter un collaborateur</h3>
+          <h3><i className="fas fa-user-plus" /> {t('equipe.addModal.title')}</h3>
           <button className="eq-close" onClick={onClose}>
             <i className="fas fa-xmark" />
           </button>
@@ -928,37 +935,37 @@ function AddMemberModal({ onClose, onSuccess }: AddMemberModalProps) {
             className={`eq-mode-tab${mode === 'direct' ? ' eq-mode-on' : ''}`}
             onClick={() => setMode('direct')}
           >
-            <i className="fas fa-user-check" /> Création directe
+            <i className="fas fa-user-check" /> {t('equipe.addModal.modeDirect')}
           </button>
           <button
             type="button"
             className={`eq-mode-tab${mode === 'invite' ? ' eq-mode-on' : ''}`}
             onClick={() => setMode('invite')}
           >
-            <i className="fas fa-envelope" /> Invitation par email
+            <i className="fas fa-envelope" /> {t('equipe.addModal.modeInvite')}
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="eq-form">
           <div className="eq-form-row">
             <div className="eq-field">
-              <label>Prénom *</label>
+              <label>{t('equipe.addModal.firstName')}</label>
               <input
                 type="text"
                 value={form.firstName}
                 onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
-                placeholder="Marie"
+                placeholder={t('equipe.addModal.firstNamePlaceholder')}
                 className={errors.firstName ? 'err' : ''}
               />
               {errors.firstName && <span className="eq-err">{errors.firstName}</span>}
             </div>
             <div className="eq-field">
-              <label>Nom *</label>
+              <label>{t('equipe.addModal.lastName')}</label>
               <input
                 type="text"
                 value={form.lastName}
                 onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
-                placeholder="Diallo"
+                placeholder={t('equipe.addModal.lastNamePlaceholder')}
                 className={errors.lastName ? 'err' : ''}
               />
               {errors.lastName && <span className="eq-err">{errors.lastName}</span>}
@@ -966,12 +973,12 @@ function AddMemberModal({ onClose, onSuccess }: AddMemberModalProps) {
           </div>
 
           <div className="eq-field">
-            <label>Email professionnel *</label>
+            <label>{t('equipe.addModal.email')}</label>
             <input
               type="email"
               value={form.email}
               onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              placeholder="marie.diallo@boutique.com"
+              placeholder={t('equipe.addModal.emailPlaceholder')}
               className={errors.email ? 'err' : ''}
             />
             {errors.email && <span className="eq-err">{errors.email}</span>}
@@ -979,52 +986,52 @@ function AddMemberModal({ onClose, onSuccess }: AddMemberModalProps) {
 
           <div className="eq-form-row">
             <div className="eq-field">
-              <label>Téléphone</label>
+              <label>{t('equipe.addModal.phone')}</label>
               <input
                 type="tel"
                 value={form.phone}
                 onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                placeholder="+224 620 000 000"
+                placeholder={t('equipe.addModal.phonePlaceholder')}
               />
             </div>
             <div className="eq-field">
-              <label>Poste</label>
+              <label>{t('equipe.addModal.jobTitle')}</label>
               <input
                 type="text"
                 value={form.jobTitle}
                 onChange={e => setForm(f => ({ ...f, jobTitle: e.target.value }))}
-                placeholder="Responsable des ventes"
+                placeholder={t('equipe.addModal.jobTitlePlaceholder')}
               />
             </div>
           </div>
 
           <div className="eq-form-row">
             <div className="eq-field">
-              <label>Rôle interne</label>
+              <label>{t('equipe.addModal.internalRole')}</label>
               <select
                 value={form.internalRole}
                 onChange={e => setForm(f => ({ ...f, internalRole: e.target.value }))}
               >
-                <option value="">— Sélectionner —</option>
-                <option value="manager">Manager</option>
-                <option value="commercial">Commercial</option>
-                <option value="order_manager">Gestionnaire des commandes</option>
-                <option value="logistics_manager">Responsable logistique</option>
-                <option value="customer_service">Service client</option>
-                <option value="accountant">Comptable</option>
+                <option value="">{t('equipe.addModal.selectPlaceholder')}</option>
+                <option value="manager">{t('equipe.addModal.roles.manager')}</option>
+                <option value="commercial">{t('equipe.addModal.roles.commercial')}</option>
+                <option value="order_manager">{t('equipe.addModal.roles.orderManager')}</option>
+                <option value="logistics_manager">{t('equipe.addModal.roles.logisticsManager')}</option>
+                <option value="customer_service">{t('equipe.addModal.roles.customerService')}</option>
+                <option value="accountant">{t('equipe.addModal.roles.accountant')}</option>
               </select>
             </div>
             {templates.length > 0 && (
               <div className="eq-field">
-                <label>Modèle de permissions</label>
+                <label>{t('equipe.addModal.permTemplate')}</label>
                 <select
                   value={templateId}
                   onChange={e => setTemplateId(e.target.value)}
                 >
-                  <option value="">— Aucun modèle —</option>
-                  {templates.map(t => (
-                    <option key={t.id} value={t.id}>
-                      {t.isSystem ? '⭐ ' : ''}{t.name}
+                  <option value="">{t('equipe.addModal.noTemplate')}</option>
+                  {templates.map(tpl => (
+                    <option key={tpl.id} value={tpl.id}>
+                      {tpl.isSystem ? '⭐ ' : ''}{tpl.name}
                     </option>
                   ))}
                 </select>
@@ -1035,18 +1042,18 @@ function AddMemberModal({ onClose, onSuccess }: AddMemberModalProps) {
           <p className="eq-form-note">
             <i className="fas fa-circle-info" />
             {mode === 'invite'
-              ? 'Un email d\'invitation sera envoyé. Le collaborateur choisira son propre mot de passe.'
-              : 'Un mot de passe temporaire sera généré et affiché une seule fois.'}
+              ? t('equipe.addModal.noteInvite')
+              : t('equipe.addModal.noteDirect')}
           </p>
 
           <div className="eq-form-actions">
             <button type="button" className="eq-btn-cancel" onClick={onClose}>
-              Annuler
+              {t('equipe.addModal.cancel')}
             </button>
             <button type="submit" className="eq-btn-save" disabled={saving}>
               {saving
                 ? <i className="fas fa-circle-notch fa-spin" />
-                : mode === 'invite' ? 'Envoyer l\'invitation' : 'Créer le compte'}
+                : mode === 'invite' ? t('equipe.addModal.sendInvitation') : t('equipe.addModal.createAccount')}
             </button>
           </div>
         </form>

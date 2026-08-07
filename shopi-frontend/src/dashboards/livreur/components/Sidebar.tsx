@@ -1,6 +1,7 @@
 // src/dashboards/livreur/components/Sidebar.tsx
 import type { PageId } from '../data/livreurData';
 import { fmtGNF } from '../data/livreurData';
+import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
 import styles from '../styles/Sidebar.module.css';
 
 interface Props {
@@ -102,6 +103,11 @@ export default function Sidebar({
             </label>
           </div>
         </div>
+      </div>
+
+      {/* Solde du portefeuille Shopi — sous la carte livreur */}
+      <div style={{ padding: '0 22px 12px' }}>
+        <WalletQuickBar compact mini onManage={() => onNavigate('wallet' as PageId)} />
       </div>
 
       {/* Nav */}

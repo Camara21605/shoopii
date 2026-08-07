@@ -4,9 +4,11 @@
  * Colonne gauche : recherche + onglets filtre + liste des conversations.
  * Reçoit les données depuis MessagerieCore via props.
  */
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { Conversation, ChatUser } from '../data/messagerieTypes';
-import { ROLE_CONFIG } from '../data/messagerieTypes';
+import { getRoleConfig } from '../data/messagerieTypes';
 import { getRoleFromToken } from '../../services/authUtils';
 import type { CallHistoryItem } from '../hooks/useCallHistory';
 import s from '../styles/ConvList.module.css';
@@ -38,17 +40,19 @@ interface Props {
 }
 
 /* Toutes les définitions d'onglets disponibles */
-const ALL_TABS: { key: Tab; label: string; icon?: string }[] = [
-  { key: 'all',            label: 'Tous'           },
-  { key: 'unread',         label: 'Non lus'        },
-  { key: 'groupes',        label: 'Livraisons',    icon: 'fas fa-box'       },
-  { key: 'appels',         label: 'Appels',        icon: 'fas fa-phone'     },
-  { key: 'boutiques',      label: 'Boutiques'      },
-  { key: 'livreurs',       label: 'Livreurs'       },
-  { key: 'clients',        label: 'Clients'        },
-  { key: 'correspondants', label: 'Correspondants' },
-  { key: 'masquees',       label: 'Masquées',      icon: 'fas fa-eye-slash' },
-];
+function getAllTabs(t: TFunction): { key: Tab; label: string; icon?: string }[] {
+  return [
+    { key: 'all',            label: t('messagerie.convList.tabs.all')            },
+    { key: 'unread',         label: t('messagerie.convList.tabs.unread')         },
+    { key: 'groupes',        label: t('messagerie.convList.tabs.groupes'),        icon: 'fas fa-box'       },
+    { key: 'appels',         label: t('messagerie.convList.tabs.appels'),         icon: 'fas fa-phone'     },
+    { key: 'boutiques',      label: t('messagerie.convList.tabs.boutiques')      },
+    { key: 'livreurs',       label: t('messagerie.convList.tabs.livreurs')       },
+    { key: 'clients',        label: t('messagerie.convList.tabs.clients')        },
+    { key: 'correspondants', label: t('messagerie.convList.tabs.correspondants') },
+    { key: 'masquees',       label: t('messagerie.convList.tabs.masquees'),       icon: 'fas fa-eye-slash' },
+  ];
+}
 
 /* Onglets visibles selon le rôle JWT de l'utilisateur connecté.
  * Chaque onglet de filtre correspond aux interlocuteurs possibles
@@ -76,13 +80,14 @@ export default function ConvList({
   archivedConvs, onLoadArchived, onUnhideConv, onMarkUnread, onMarkRead, groupConvs = [], groupUsersMap = new Map(),
   callHistory = [], callHistoryLoading = false, onLoadCallHistory,
 }: Props) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [tab,    setTab]    = useState<Tab>('all');
 
   /* Onglets pertinents pour le rôle de l'utilisateur connecté */
   const myRole     = getRoleFromToken();
   const visibleSet = useMemo(() => new Set(getVisibleTabs(myRole)), [myRole]);
-  const TABS       = useMemo(() => ALL_TABS.filter(t => visibleSet.has(t.key)), [visibleSet]);
+  const TABS       = useMemo(() => getAllTabs(t).filter(tb => visibleSet.has(tb.key)), [visibleSet, t]);
 
   /* Si l'onglet actif n'est plus dans la liste visible, revenir à "Tous" */
   useEffect(() => {
@@ -151,7 +156,7 @@ export default function ConvList({
         <div className={s.searchRow}>
           <div className={s.searchInner}>
             <i className="fas fa-magnifying-glass" />
-            <input className={s.searchInput} type="text" placeholder="Rechercher une conversation…"
+            <input className={s.searchInput} type="text" placeholder={t('messagerie.convList.searchPlaceholder')}
               value={search} onChange={e => setSearch(e.target.value)} />
             {search && (
               <button onClick={() => setSearch('')}
@@ -160,7 +165,7 @@ export default function ConvList({
               </button>
             )}
           </div>
-          <button className={s.newConvBtn} onClick={onNewConv} title="Nouveau message">
+          <button className={s.newConvBtn} onClick={onNewConv} title={t('messagerie.convList.nouveauMessage')}>
             <i className="fas fa-pen-to-square" />
           </button>
         </div>
@@ -168,17 +173,17 @@ export default function ConvList({
 
       {/* Onglets */}
       <div className={s.tabs}>
-        {TABS.map(t => (
-          <button key={t.key} className={`${s.tab} ${tab === t.key ? s.active : ''}`} onClick={() => switchTab(t.key)}>
-            {t.icon && <i className={t.icon} style={{ fontSize: 10 }} />}
-            {t.label}
-            {(t.key === 'all' || t.key === 'unread') && totalUnread > 0 && (
+        {TABS.map(tb => (
+          <button key={tb.key} className={`${s.tab} ${tab === tb.key ? s.active : ''}`} onClick={() => switchTab(tb.key)}>
+            {tb.icon && <i className={tb.icon} style={{ fontSize: 10 }} />}
+            {tb.label}
+            {(tb.key === 'all' || tb.key === 'unread') && totalUnread > 0 && (
               <span className={s.tabCount}>{totalUnread}</span>
             )}
-            {t.key === 'groupes' && groupConvs.filter(g => g.unread > 0).length > 0 && (
+            {tb.key === 'groupes' && groupConvs.filter(g => g.unread > 0).length > 0 && (
               <span className={s.tabCount}>{groupConvs.filter(g => g.unread > 0).length}</span>
             )}
-            {t.key === 'masquees' && archivedConvs.length > 0 && (
+            {tb.key === 'masquees' && archivedConvs.length > 0 && (
               <span className={s.tabCount}>{archivedConvs.length}</span>
             )}
           </button>
@@ -192,11 +197,11 @@ export default function ConvList({
             {filteredGroups.length === 0 ? (
               <div className={s.empty}>
                 <i className="fas fa-box-open" />
-                Aucun groupe de livraison
+                {t('messagerie.convList.emptyGroupes')}
               </div>
             ) : (
               <>
-                <div className={s.section}>Groupes de livraison</div>
+                <div className={s.section}>{t('messagerie.convList.groupesDeLivraison')}</div>
                 {filteredGroups.map(g => (
                   <GroupConvItem
                     key={`grp-${g.id}`}
@@ -214,12 +219,12 @@ export default function ConvList({
             {callHistoryLoading ? (
               <div className={s.empty}>
                 <i className="fas fa-spinner fa-spin" />
-                Chargement…
+                {t('messagerie.convList.loading')}
               </div>
             ) : callHistory.length === 0 ? (
               <div className={s.empty}>
                 <i className="fas fa-phone-slash" />
-                Aucun appel pour le moment
+                {t('messagerie.convList.emptyAppels')}
               </div>
             ) : (
               callHistory.map(h => <CallHistoryItemRow key={h.id} item={h} />)
@@ -230,11 +235,11 @@ export default function ConvList({
             {filteredArchived.length === 0 ? (
               <div className={s.empty}>
                 <i className="fas fa-eye-slash" />
-                Aucune conversation masquée
+                {t('messagerie.convList.emptyMasquees')}
               </div>
             ) : (
               <>
-                <div className={s.section}>Conversations masquées</div>
+                <div className={s.section}>{t('messagerie.convList.conversationsMasquees')}</div>
                 {filteredArchived.map(c => (
                   <ConvItem key={`arch-${c.id}`} conv={c} user={usersMap.get(c.userId)}
                     active={false} isArchived
@@ -256,7 +261,7 @@ export default function ConvList({
                 : filteredGroups;
               return visibleGroups.length > 0 ? (
                 <>
-                  <div className={s.section}>📦 Groupes de livraison</div>
+                  <div className={s.section}>📦 {t('messagerie.convList.groupesDeLivraison')}</div>
                   {visibleGroups.map(g => (
                     <GroupConvItem
                       key={`grp-${g.id}`}
@@ -272,7 +277,7 @@ export default function ConvList({
 
             {pinned.length > 0 && (
               <>
-                <div className={s.section}>📌 Épinglées</div>
+                <div className={s.section}>{t('messagerie.convList.epinglees')}</div>
                 {pinned.map(c => (
                   <ConvItem key={`conv-${c.id}`} conv={c} user={usersMap.get(c.userId)}
                     active={activeId === c.id} isArchived={false}
@@ -284,7 +289,7 @@ export default function ConvList({
             )}
             {regular.length > 0 && (
               <>
-                {pinned.length > 0 && <div className={s.section}>Récentes</div>}
+                {pinned.length > 0 && <div className={s.section}>{t('messagerie.convList.recentes')}</div>}
                 {regular.map(c => (
                   <ConvItem key={`conv-${c.id}`} conv={c} user={usersMap.get(c.userId)}
                     active={activeId === c.id} isArchived={false}
@@ -304,7 +309,7 @@ export default function ConvList({
             ) && (
               <div className={s.empty}>
                 <i className="fas fa-comment-slash" />
-                Aucune conversation trouvée
+                {t('messagerie.convList.emptyConversations')}
               </div>
             )}
           </>
@@ -337,6 +342,7 @@ interface GroupItemProps {
 }
 
 function GroupConvItem({ conv, user, active, onSelect }: GroupItemProps) {
+  const { t } = useTranslation();
   if (!user) return null;
 
   const statusColor =
@@ -345,9 +351,9 @@ function GroupConvItem({ conv, user, active, onSelect }: GroupItemProps) {
     conv.groupStatus === 'expired'   ? '#6B7280' : '#DC2626';
 
   const statusLabel =
-    conv.groupStatus === 'active'    ? 'En cours' :
-    conv.groupStatus === 'completed' ? 'Livré' :
-    conv.groupStatus === 'expired'   ? 'Archivé' : 'Annulé';
+    conv.groupStatus === 'active'    ? t('messagerie.convList.groupStatus.active') :
+    conv.groupStatus === 'completed' ? t('messagerie.convList.groupStatus.completed') :
+    conv.groupStatus === 'expired'   ? t('messagerie.convList.groupStatus.expired') : t('messagerie.convList.groupStatus.cancelled');
 
   return (
     <div
@@ -376,7 +382,7 @@ function GroupConvItem({ conv, user, active, onSelect }: GroupItemProps) {
           {user.context ?? statusLabel}
         </div>
         <div className={s.lastMsg}>
-          {conv.lastMsg || <span style={{ color: 'var(--t4)', fontStyle: 'italic' }}>Groupe de livraison</span>}
+          {conv.lastMsg || <span style={{ color: 'var(--t4)', fontStyle: 'italic' }}>{t('messagerie.convList.groupeDeLivraison')}</span>}
         </div>
       </div>
 
@@ -392,8 +398,10 @@ function GroupConvItem({ conv, user, active, onSelect }: GroupItemProps) {
 }
 
 function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, onUnhide, onMarkUnread, onMarkRead }: ItemProps) {
+  const { t } = useTranslation();
   if (!user) return null;
-  const rc       = ROLE_CONFIG[user.role] ?? ROLE_CONFIG['client'];
+  const roleConfig = getRoleConfig(t);
+  const rc       = roleConfig[user.role] ?? roleConfig['client'];
   const isImgAva = user.ava.startsWith('http');
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -443,7 +451,7 @@ function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, 
         <div className={s.context} style={{ color: rc.color }}>
           {user.context ?? rc.label}
         </div>
-        <div className={s.lastMsg}>{conv.lastMsg || <span style={{ color:'var(--t4)', fontStyle:'italic' }}>Nouvelle conversation</span>}</div>
+        <div className={s.lastMsg}>{conv.lastMsg || <span style={{ color:'var(--t4)', fontStyle:'italic' }}>{t('messagerie.convList.nouvelleConversation')}</span>}</div>
       </div>
 
       {/* Meta + menu contextuel */}
@@ -452,7 +460,7 @@ function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, 
           <div className={s.time}>{conv.lastTime}</div>
           <button
             className={s.itemMenuBtn}
-            title="Options"
+            title={t('messagerie.convList.optionsTitle')}
             onClick={e => { e.stopPropagation(); setMenuOpen(p => !p); }}
           >
             <i className="fas fa-ellipsis-vertical" />
@@ -470,7 +478,7 @@ function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, 
                 onClick={e => { e.stopPropagation(); onUnhide(conv.id); setMenuOpen(false); }}
               >
                 <i className="fas fa-eye" />
-                <span>Démasquer la conversation</span>
+                <span>{t('messagerie.convList.demasquer')}</span>
               </button>
             ) : (
               /* ── Conversation normale : Masquer + Lu/Non lu ── */
@@ -480,7 +488,7 @@ function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, 
                   onClick={e => { e.stopPropagation(); onHide(conv.id); setMenuOpen(false); }}
                 >
                   <i className="fas fa-eye-slash" />
-                  <span>Masquer la conversation</span>
+                  <span>{t('messagerie.convList.masquer')}</span>
                 </button>
                 {conv.unread === 0 ? (
                   <button
@@ -488,7 +496,7 @@ function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, 
                     onClick={e => { e.stopPropagation(); onMarkUnread(conv.id); setMenuOpen(false); }}
                   >
                     <i className="fas fa-circle-dot" />
-                    <span>Marquer comme non lu</span>
+                    <span>{t('messagerie.convList.marquerNonLu')}</span>
                   </button>
                 ) : (
                   <button
@@ -496,7 +504,7 @@ function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, 
                     onClick={e => { e.stopPropagation(); onMarkRead(conv.id); setMenuOpen(false); }}
                   >
                     <i className="fas fa-check-double" />
-                    <span>Tout marquer comme lu</span>
+                    <span>{t('messagerie.convList.marquerToutLu')}</span>
                   </button>
                 )}
               </>
@@ -506,7 +514,7 @@ function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, 
               onClick={e => { e.stopPropagation(); onDelete(conv.id); setMenuOpen(false); }}
             >
               <i className="fas fa-trash-can" />
-              <span>Supprimer la conversation</span>
+              <span>{t('messagerie.convList.supprimer')}</span>
             </button>
           </div>
         )}
@@ -520,12 +528,14 @@ function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, 
  * de WhatsApp) car on ne connaît pas toujours le contexte
  * conversation/relation d'origine ; l'utilisateur rappelle depuis
  * la conversation ou le profil du contact. */
-const CALL_STATUS_LABEL: Record<CallHistoryItem['status'], string> = {
-  completed: 'Terminé',
-  missed:    'Manqué',
-  rejected:  'Refusé',
-  busy:      'Occupé',
-};
+function getCallStatusLabel(t: TFunction): Record<CallHistoryItem['status'], string> {
+  return {
+    completed: t('messagerie.convList.callStatus.completed'),
+    missed:    t('messagerie.convList.callStatus.missed'),
+    rejected:  t('messagerie.convList.callStatus.rejected'),
+    busy:      t('messagerie.convList.callStatus.busy'),
+  };
+}
 const CALL_STATUS_COLOR: Record<CallHistoryItem['status'], string> = {
   completed: 'var(--t3)',
   missed:    '#DC2626',
@@ -550,6 +560,7 @@ function fmtCallTime(iso: string): string {
 }
 
 function CallHistoryItemRow({ item }: { item: CallHistoryItem }) {
+  const { t } = useTranslation();
   const isImgAva = item.contactAvatar?.startsWith('http');
   const initials = item.contactName.trim().split(/\s+/).slice(0, 2)
     .map(w => w[0]?.toUpperCase() ?? '').join('') || '?';
@@ -570,7 +581,7 @@ function CallHistoryItemRow({ item }: { item: CallHistoryItem }) {
         </div>
         <div className={s.context} style={{ color: CALL_STATUS_COLOR[item.status] }}>
           <i className={`fas ${item.direction === 'outgoing' ? 'fa-arrow-up-right' : 'fa-arrow-down-left'}`} style={{ fontSize: 10, marginRight: 4 }} />
-          {CALL_STATUS_LABEL[item.status]}
+          {getCallStatusLabel(t)[item.status]}
           {item.callType === 'video' && <i className="fas fa-video" style={{ fontSize: 10, marginLeft: 6 }} />}
         </div>
         <div className={s.lastMsg}>

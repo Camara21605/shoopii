@@ -1,0 +1,240 @@
+{
+  "commandes": {
+    "filters": {
+      "attente": "قيد الانتظار",
+      "preparation": "قيد التحضير",
+      "livraison": "قيد التوصيل",
+      "livre": "تم التوصيل",
+      "annule": "ملغي",
+      "tous": "الكل"
+    },
+    "table": {
+      "commande": "الطلب",
+      "produits": "المنتج (ات)",
+      "client": "العميل",
+      "montant": "المبلغ",
+      "statut": "الحالة",
+      "date": "التاريخ",
+      "livreur": "عامل التوصيل",
+      "actions": "الإجراءات"
+    },
+    "loading": "جارٍ التحميل…",
+    "empty": "لا توجد طلبات",
+    "exportCsv": "تصدير CSV",
+    "exportExcel": "Excel",
+    "voir": "عرض",
+    "preparer": "تحضير",
+    "envoyer": "إرسال",
+    "autresArticles_one": "+{{count}} عنصر آخر",
+    "autresArticles_other": "+{{count}} عناصر أخرى",
+    "toasts": {
+      "exportCsv": "📥 تم إنشاء تصدير CSV",
+      "exportExcel": "📊 تم إنشاء تصدير Excel",
+      "accepted": "✅ تم قبول الطلب",
+      "shipping": "🚚 تم إرساله للتوصيل",
+      "orderRef": "📋 الطلب {{id}}"
+    }
+  },
+  "retours": {
+    "title": "المرتجعات والدعم",
+    "subtitle": "إدارة طلبات الإرجاع وخدمة ما بعد البيع",
+    "refresh": "تحديث",
+    "tabRetours": "المرتجعات",
+    "tabSav": "الدعم",
+    "toasts": {
+      "accepted": "✅ تم قبول الإرجاع — تم إشعار العميل",
+      "refused": "تم رفض الإرجاع — تم إشعار العميل",
+      "refunded": "💸 تم تسجيل الاسترداد",
+      "noteAdded": "📝 تمت إضافة ملاحظة",
+      "genericError": "خطأ",
+      "acceptError": "خطأ أثناء القبول"
+    },
+    "reasons": {
+      "defective": "منتج معيب",
+      "not_matching": "لا يطابق الوصف",
+      "change_of_mind": "تغيير الرأي",
+      "wrong_item": "عنصر خاطئ",
+      "damaged": "تالف",
+      "expired": "منتج منتهي الصلاحية",
+      "other": "أخرى"
+    },
+    "stats": {
+      "totalMois": "الإجمالي هذا الشهر",
+      "badgeAuj": "+{{count}} اليوم",
+      "enAttente": "قيد الانتظار",
+      "urgents": "عاجلة",
+      "acceptes": "مقبولة",
+      "badgeRetours": "{{count}} إرجاعًا",
+      "rembourseGnf": "المسترجع (فرنك)",
+      "badgeRemb": "{{count}} استرداد",
+      "topMotifs": "أسباب الإرجاع الأكثر شيوعًا",
+      "aucuneDonnee": "لا توجد بيانات",
+      "performance": "الأداء",
+      "tauxAcceptation": "معدل القبول",
+      "delaiMoyen": "متوسط وقت المعالجة",
+      "retoursRefuses": "الإرجاعات المرفوضة",
+      "remboursementsEffectues": "الاستردادات المنفذة"
+    },
+    "list": {
+      "status": {
+        "pending": "⏳ قيد الانتظار",
+        "accepted": "✓ مقبول",
+        "refused": "✕ مرفوض",
+        "in_transit": "🚚 قيد النقل",
+        "received": "📦 تم الاستلام",
+        "refunded": "💸 تم الاسترداد",
+        "exchanged": "🔁 تم الاستبدال",
+        "closed": "مغلق"
+      },
+      "reasons": {
+        "defective": "منتج معيب",
+        "not_matching": "لا يطابق الوصف",
+        "change_of_mind": "تغيير الرأي",
+        "wrong_item": "عنصر خاطئ مستلم",
+        "damaged": "تالف",
+        "expired": "منتج منتهي الصلاحية",
+        "other": "سبب آخر"
+      },
+      "priority": {
+        "low": "منخفضة",
+        "normal": "عادية",
+        "high": "عالية",
+        "urgent": "🔴 عاجلة"
+      },
+      "returnType": {
+        "refund": "استرداد",
+        "exchange": "استبدال",
+        "repair": "إصلاح",
+        "credit": "رصيد"
+      },
+      "search": "ابحث بالمرجع أو المنتج…",
+      "allStatus": "كل الحالات",
+      "allReasons": "كل الأسباب",
+      "allPriorities": "كل الأولويات",
+      "sort": {
+        "recent": "الأحدث",
+        "oldest": "الأقدم",
+        "amountDesc": "المبلغ ↓",
+        "amountAsc": "المبلغ ↑",
+        "statusAz": "الحالة أ→ي"
+      },
+      "loadError": "خطأ في التحميل",
+      "emptyTitle": "لا توجد إرجاعات",
+      "emptySub": "لا يوجد طلب إرجاع يطابق عوامل التصفية.",
+      "table": {
+        "reference": "المرجع",
+        "produit": "المنتج",
+        "client": "العميل",
+        "motif": "السبب",
+        "type": "النوع",
+        "montant": "المبلغ",
+        "priorite": "الأولوية",
+        "statut": "الحالة",
+        "date": "التاريخ",
+        "actions": "الإجراءات"
+      },
+      "accorde": "الممنوح: {{montant}} فرنك",
+      "voir": "عرض",
+      "results_one": "{{count}} نتيجة",
+      "results_other": "{{count}} نتائج",
+      "page": "الصفحة {{page}}/{{pages}}"
+    },
+    "detail": {
+      "tabInfo": "التفاصيل",
+      "tabHistory": "السجل",
+      "tabEvidence": "الأدلة ({{count}})",
+      "produitRetourne": "المنتج المرتجع",
+      "qte": "الكمية:",
+      "commande": "الطلب:",
+      "montants": "المبالغ",
+      "demande": "المطلوب:",
+      "accorde": "الممنوح:",
+      "descriptionProbleme": "وصف المشكلة",
+      "noteInterne": "ملاحظة داخلية",
+      "messageClient": "رسالة العميل",
+      "accept": {
+        "title": "قبول الإرجاع",
+        "montant": "المبلغ الممنوح (فرنك)",
+        "message": "رسالة إلى العميل (اختياري)",
+        "placeholder": "مثال: تم قبول إرجاعك. سيتم الاسترداد خلال 3-5 أيام.",
+        "confirm": "تأكيد القبول",
+        "annuler": "إلغاء"
+      },
+      "refuse": {
+        "title": "رفض الإرجاع",
+        "raison": "سبب الرفض (يُرسل إلى العميل)",
+        "placeholder": "مثال: طلبك لا يتوافق مع سياسة الإرجاع (تجاوز المهلة).",
+        "confirm": "تأكيد الرفض",
+        "annuler": "إلغاء"
+      },
+      "note": {
+        "title": "ملاحظة داخلية",
+        "placeholder": "ملاحظة مرئية لفريقك فقط…",
+        "save": "حفظ",
+        "annuler": "إلغاء"
+      },
+      "historyEmptyTitle": "لا يوجد سجل",
+      "historyEmptySub": "سيظهر سجل الإجراءات هنا.",
+      "actions": {
+        "created": "تم إنشاء طلب الإرجاع",
+        "accepted": "تم قبول الإرجاع",
+        "refused": "تم رفض الإرجاع",
+        "refunded": "تم تنفيذ الاسترداد",
+        "received": "تم استلام الإرجاع",
+        "note_added": "تمت إضافة ملاحظة داخلية",
+        "evidence_uploaded": "تمت إضافة دليل",
+        "priority_changed": "تم تغيير الأولوية"
+      },
+      "evidenceEmptyTitle": "لا توجد أدلة",
+      "evidenceEmptySub": "لم يقم العميل بإرفاق صور أو مستندات بعد.",
+      "footerNote": "ملاحظة",
+      "footerRefuser": "رفض",
+      "footerAccepter": "قبول",
+      "footerRembourser": "استرداد",
+      "footerFermer": "إغلاق",
+      "confirmRefund": "تأكيد الاسترداد؟",
+      "invalidAmount": "⚠️ مبلغ غير صالح"
+    },
+    "sav": {
+      "stats": {
+        "ouverts": "تذاكر مفتوحة",
+        "enCours": "قيد التنفيذ",
+        "resolus": "محلولة",
+        "delaiMoy": "متوسط وقت الرد"
+      },
+      "status": {
+        "open": "🟢 مفتوح",
+        "in_progress": "🔵 قيد التنفيذ",
+        "waiting_client": "🟡 بانتظار العميل",
+        "resolved": "✓ محلول",
+        "closed": "مغلق"
+      },
+      "search": "ابحث عن تذكرة (مرجع، موضوع)…",
+      "allStatus": "كل الحالات",
+      "allPriorities": "كل الأولويات",
+      "table": {
+        "reference": "المرجع",
+        "sujet": "الموضوع",
+        "client": "العميل",
+        "produit": "المنتج",
+        "priorite": "الأولوية",
+        "statut": "الحالة",
+        "messages": "الرسائل",
+        "date": "التاريخ",
+        "actions": "الإجراءات"
+      },
+      "emptyTitle": "لا توجد تذاكر دعم",
+      "emptySub": "ستظهر تذاكر العملاء هنا.",
+      "repondre": "الرد",
+      "resoudre": "حل",
+      "fermer": "إغلاق",
+      "confirmClose": "إغلاق هذه التذكرة؟",
+      "ticketClosed": "تم إغلاق التذكرة",
+      "ticketResolved": "✅ تم حل التذكرة",
+      "genericError": "❌ خطأ",
+      "sendError": "خطأ في الإرسال",
+      "replyPlaceholder": "الرد على العميل…",
+      "envoyer": "إرسال"
+    }
+  }
+}

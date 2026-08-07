@@ -13,6 +13,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiFetch }  from '../../../../shared/services/apiFetch';
 import SectionHeader from '../ui/SectionHeader';
 import styles        from './CategoriesSection.module.css';
@@ -28,11 +29,13 @@ interface CategoryApi {
 }
 
 /* Carte "Tout" toujours présente en premier */
-const CAT_TOUT = { id: 'tout', nom: 'Tout', icone: '✦', count: null };
+const CAT_TOUT_ID = 'tout';
+const CAT_TOUT_ICONE = '✦';
 
 export default function CategoriesSection() {
   const navigate = useNavigate();
-  const [active,  setActive]  = useState('Tout');
+  const { t } = useTranslation();
+  const [active,  setActive]  = useState(CAT_TOUT_ID);
   const [cats,    setCats]    = useState<CategoryApi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
@@ -40,12 +43,12 @@ export default function CategoriesSection() {
   useEffect(() => {
     apiFetch<CategoryApi[]>('/categories', { public: true })
       .then(data => setCats((data ?? []).filter(c => c.actif)))
-      .catch(() => setError('Impossible de charger les catégories.'))
+      .catch(() => setError(t('home.categories.loadError')))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   const handleClickTout = () => {
-    setActive(CAT_TOUT.nom);
+    setActive(CAT_TOUT_ID);
     navigate('/boutiques');
   };
 
@@ -58,10 +61,10 @@ export default function CategoriesSection() {
     <section className={styles.sec}>
       <div className={styles.wrap}>
         <SectionHeader
-          kick="Explorer"
-          title="Catégories <em>populaires</em>"
-          sub="Naviguez dans nos univers produits"
-          linkText="Tout parcourir"
+          kick={t('home.categories.kick')}
+          title={t('home.categories.title')}
+          sub={t('home.categories.sub')}
+          linkText={t('home.categories.linkText')}
           onLink={() => navigate('/boutiques')}
         />
 
@@ -85,11 +88,11 @@ export default function CategoriesSection() {
 
             {/* Carte "Tout" toujours en premier */}
             <div
-              className={`${styles.cat} ${active === CAT_TOUT.nom ? styles.catOn : ''}`}
+              className={`${styles.cat} ${active === CAT_TOUT_ID ? styles.catOn : ''}`}
               onClick={handleClickTout}
             >
-              <div className={styles.catEm}>{CAT_TOUT.icone}</div>
-              <div className={styles.catNm}>{CAT_TOUT.nom}</div>
+              <div className={styles.catEm}>{CAT_TOUT_ICONE}</div>
+              <div className={styles.catNm}>{t('home.categories.tout')}</div>
               <div className={styles.catCt}>25 000+</div>
             </div>
 
@@ -104,7 +107,7 @@ export default function CategoriesSection() {
                 <div className={styles.catNm}>{c.nom}</div>
                 <div className={styles.catCt}>
                   {c.subCategories?.length > 0
-                    ? `${c.subCategories.length} sous-cat${c.subCategories.length > 1 ? 's' : ''}`
+                    ? t('home.categories.sousCat', { count: c.subCategories.length })
                     : '—'}
                 </div>
               </div>

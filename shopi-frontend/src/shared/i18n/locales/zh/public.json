@@ -1,0 +1,1662 @@
+{
+  "home": {
+    "trustSection": {
+      "paiement": {
+        "titre": "安全支付",
+        "sub": "Orange Money、Visa、Mastercard — SSL"
+      },
+      "livraison": {
+        "titre": "加急配送",
+        "sub": "640+ 名已验证配送员，7 天/周"
+      },
+      "protection": {
+        "titre": "买家保护",
+        "sub": "如有问题保证退款"
+      },
+      "support": {
+        "titre": "24/7 支持",
+        "sub": "聊天、WhatsApp、电话"
+      }
+    },
+    "typeEntreprise": {
+      "kick": "店铺类型",
+      "title": "所有<em>企业类别</em>",
+      "sub": "找到适合您的企业",
+      "linkText": "所有店铺",
+      "loadError": "无法加载企业类型。",
+      "empty": "暂无可用企业类型。",
+      "boutiqueCount_one": "{{count}} 家店铺",
+      "boutiqueCount_other": "{{count}} 家店铺",
+      "categorieCount_one": "{{count}} 个类别",
+      "categorieCount_other": "{{count}} 个类别"
+    },
+    "categories": {
+      "kick": "探索",
+      "title": "热门<em>类别</em>",
+      "sub": "浏览我们的产品世界",
+      "linkText": "浏览全部",
+      "loadError": "无法加载类别。",
+      "tout": "全部",
+      "sousCat_one": "{{count}} 个子类别",
+      "sousCat_other": "{{count}} 个子类别"
+    },
+    "promotions": {
+      "kick": "限时优惠",
+      "title": "限时抢购 &amp; <em>促销</em>",
+      "sub": "超值价格，限时供应",
+      "linkText": "查看所有优惠",
+      "livraison": "配送",
+      "promo": "促销",
+      "surBoutique": "全店",
+      "surSelection": "部分产品",
+      "voirOffre": "查看优惠"
+    },
+    "storiesStrip": {
+      "title": "店铺故事",
+      "sub": "合作伙伴重点展示的热门产品",
+      "voirTout": "查看全部",
+      "toastVoirTout": "📖 所有故事",
+      "storiesDe": "{{nom}} 的故事",
+      "produitCount_one": "{{count}} 个产品",
+      "produitCount_other": "{{count}} 个产品",
+      "enLigneMaintenant": "现在在线",
+      "vuRecemment": "最近查看",
+      "badgePromo": "🔥 促销",
+      "badgeNouveau": "✨ 新品",
+      "badgeFlash": "⚡ 限时",
+      "badgeTop": "⭐ 热卖",
+      "voirProduit": "查看产品",
+      "laBoutique": "店铺",
+      "partager": "分享",
+      "lienCopieToast": "🔗 链接已复制！"
+    },
+    "randomBloc": {
+      "produits": {
+        "kick": "目录",
+        "title": "推荐<em>产品</em>",
+        "sub": "为您精选",
+        "link": "查看全部目录"
+      },
+      "produitsGros": {
+        "kick": "批发",
+        "title": "批量<em>购买</em>",
+        "sub": "递减价格 · 最低订购",
+        "link": "查看所有批发产品"
+      },
+      "entreprises": {
+        "kick": "店铺",
+        "title": "精选<em>店铺</em>",
+        "sub": "关注您最喜欢的店铺",
+        "link": "所有店铺"
+      },
+      "correspondants": {
+        "kick": "本地网络",
+        "title": "我们的<em>代理商</em>",
+        "sub": "每个地区的本地中转站",
+        "link": "所有代理商"
+      },
+      "livreurs": {
+        "kick": "物流",
+        "title": "可用的<em>配送员</em>",
+        "sub": "您附近经过验证的专业人士",
+        "link": "所有配送员"
+      },
+      "toastLink": "📄 {{link}}",
+      "moqUnites": "MOQ {{moq}} 件",
+      "errorReseau": "网络错误",
+      "emptyBoutiques": "暂无可用店铺。",
+      "emptyProduits": "暂无可用产品。",
+      "emptyProduitsGros": "暂无可用批发产品。",
+      "emptyLivreurs": "暂无可用配送员。",
+      "emptyCorrespondants": "暂无可用代理商。",
+      "errorProduits": "无法加载产品。",
+      "errorProduitsGros": "无法加载批发产品。"
+    }
+  },
+  "publicHeader": {
+    "accueilTitle": "Shopi 首页",
+    "nav": {
+      "explorer": "探索",
+      "boutiques": "店铺",
+      "livreurs": "配送员",
+      "relais": "中转站",
+      "offres": "优惠"
+    },
+    "searchAll": "全部",
+    "searchPlaceholder": "产品、店铺、配送员…",
+    "searchAria": "搜索",
+    "searchSuggestions": {
+      "tendances": "当前趋势",
+      "smartphones": "智能手机 — 4,200 个结果",
+      "boutiquesPopulaires": "热门店铺",
+      "livreursDispo": "您附近可用的配送员",
+      "offresDuJour": "今日优惠"
+    },
+    "searchToast": "🔍 {{text}}",
+    "accueil": "首页",
+    "messagerie": "消息",
+    "panier": "购物车",
+    "aide": "帮助中心",
+    "connexion": "登录",
+    "inscription": "注册",
+    "monCompte": "我的账户",
+    "monProfil": "我的资料",
+    "monEspace": "我的空间",
+    "monEspacePro": "我的专业空间",
+    "monEspaceProShort": "我的专业空间",
+    "seDeconnecter": "退出登录",
+    "deconnexion": "退出登录",
+    "menu": "菜单",
+    "parametres": "设置",
+    "retourAccueil": "返回首页",
+    "avantDeVousConnecter": "登录前…",
+    "navMobileAria": "移动主导航"
+  },
+  "publicFooter": {
+    "brandTagline": "非洲领先的电商平台。在统一的数字生态系统中连接西非的经济参与者。",
+    "socialToast": "📲 {{label}}",
+    "appStoreToast": "📱 App Store 即将推出",
+    "googlePlayToast": "🤖 Google Play 即将推出",
+    "disponibleSur": "可在以下平台使用",
+    "linkToast": "📄 {{label}}",
+    "cols": {
+      "plateforme": {
+        "titre": "平台",
+        "explorerProduits": "探索产品",
+        "boutiques": "店铺",
+        "livreurs": "配送员",
+        "partenaires": "合作伙伴",
+        "correspondants": "代理商",
+        "offresPromos": "优惠与促销"
+      },
+      "acteurs": {
+        "titre": "参与者",
+        "espaceClient": "客户空间",
+        "espaceEntreprise": "企业空间",
+        "espaceLivreur": "配送员空间",
+        "espacePartenaire": "合作伙伴空间",
+        "espaceCorrespondant": "代理商空间",
+        "espaceAdmin": "管理空间"
+      },
+      "aide": {
+        "titre": "帮助",
+        "centreAide": "帮助中心",
+        "contact": "联系",
+        "faq": "常见问题",
+        "signalerProbleme": "报告问题",
+        "remboursements": "退款",
+        "politiqueRetour": "退货政策"
+      }
+    },
+    "trust": {
+      "paiementSecurise": "SSL 安全支付",
+      "livraisonExpress": "7 天/周加急配送",
+      "protectionAcheteur": "买家保护",
+      "support247": "24/7 支持",
+      "retourFacile": "7 天轻松退货"
+    },
+    "copyright": "© 2025 Shopi Africa. 保留所有权利。在几内亚用爱心制作 🇬🇳",
+    "bottomLinks": {
+      "mentionsLegales": "法律声明",
+      "confidentialite": "隐私",
+      "cookies": "Cookies",
+      "cgu": "服务条款",
+      "accessibilite": "无障碍"
+    }
+  },
+  "boutiquesPage": {
+    "title": "所有店铺",
+    "subtitleCount_one": "{{count}} 家可用企业",
+    "subtitleCount_other": "{{count}} 家可用企业",
+    "subtitleDefault": "发现我们的合作伙伴企业",
+    "searchPlaceholder": "搜索店铺...",
+    "resultats": "结果",
+    "loading": "加载中…",
+    "resultCount_one": "{{count}} 家店铺",
+    "resultCount_other": "{{count}} 家店铺",
+    "errorTitle": "无法加载店铺",
+    "retry": "重试",
+    "emptyTitle": "未找到企业",
+    "emptyText": "此类别中没有可用企业。",
+    "loadMore": "加载更多店铺",
+    "filterBar": {
+      "toutesCategories": "✦ 所有类别",
+      "toutesSousCategories": "所有子类别"
+    }
+  },
+  "boutiqueDetail": {
+    "nav": {
+      "produits": "产品",
+      "promotions": "促销",
+      "livreurs": "配送员",
+      "correspondants": "代理商",
+      "avis": "评价",
+      "apropos": "关于"
+    },
+    "cover": {
+      "verifiee": "Shopi 已验证店铺",
+      "active": "活跃"
+    },
+    "identity": {
+      "verifie": "Shopi 已验证",
+      "note": "评分",
+      "abonnes": "关注者",
+      "satisfaction": "满意度",
+      "ventes": "销售",
+      "abonner": "关注",
+      "abonneLabel": "已关注",
+      "messageBtn": "消息",
+      "appelerBtn": "打电话",
+      "abonnezVousMessage": "关注后才能发送消息",
+      "envoyerMessageTitle": "发送消息",
+      "abonnezVousAppel": "关注后才能打电话",
+      "appelerTitle": "打电话",
+      "partagerTitle": "分享店铺"
+    },
+    "livreursSection": {
+      "disponibleCount_one": "可用",
+      "disponibleCount_other": "可用",
+      "enCourse": "配送中",
+      "totalCount": "配送员总数"
+    },
+    "cardLivreur": {
+      "livraisonsCount": "{{count}} 次配送",
+      "disponible": "● 可用",
+      "enCourseBadge": "⚙ 配送中",
+      "voirProfil": "查看资料",
+      "profilToast": "🛵 {{nom}} 的资料",
+      "desabonneToast": "👋 已取消关注 {{nom}}",
+      "abonneToast": "✅ 已关注 {{nom}}"
+    },
+    "correspondantsSection": {
+      "disponibleCount_one": "可用",
+      "disponibleCount_other": "可用",
+      "completCount_one": "已满",
+      "completCount_other": "已满",
+      "totalCount": "代理商总数",
+      "infoBannerTitle": "什么是 Shopi 代理商？",
+      "infoBannerDesc": "代理商是您所在城市的 Shopi 代表。他接收您的包裹、检查并安全存放。您可以直接取回或交给配送员送货上门。",
+      "steps": {
+        "colisRecu": "包裹已接收并检查",
+        "stockageSecurise": "安全存放",
+        "remiseDirecte": "直接交付或通过配送员",
+        "noteCertifie": "Shopi 评分和认证"
+      },
+      "fermer": "关闭"
+    },
+    "cardCorrespondant": {
+      "verifie": "已验证",
+      "colisMois": "{{count}} 个包裹/月",
+      "disponible": "● 可用",
+      "complet": "◌ 已满",
+      "contacter": "联系",
+      "choisir": "选择",
+      "choisi": "已选择",
+      "messageToast": "💬 给{{nom}}发消息",
+      "retireToast": "↩️ 已移除代理商 {{nom}}",
+      "selectionneToast": "✅ {{nom}} 已选为代理商"
+    },
+    "modalPartage": {
+      "titre": "分享此店铺",
+      "fermer": "关闭",
+      "copier": "复制",
+      "lienCopiePresseToast": "🔗 链接已复制到剪贴板！",
+      "instagramCopieToast": "📸 链接已复制 — 粘贴到 Instagram",
+      "partageVia": "📲 通过 {{label}} 分享",
+      "lienCopieToast": "🔗 链接已复制！",
+      "emailSujet": "发现这家 Shopi 店铺"
+    },
+    "aPropos": {
+      "titre": "关于店铺",
+      "anneesExperience": "经验年限",
+      "commandesLivrees": "已送达订单",
+      "satisfactionClient": "客户满意度",
+      "noteMoyenne": "平均评分",
+      "infosPratiques": "实用信息",
+      "horaires": "营业时间",
+      "adresse": "地址",
+      "telephone": "电话",
+      "email": "邮箱",
+      "siteWeb": "网站",
+      "livreursBoutique": "店铺配送员",
+      "voirProfil": "查看资料",
+      "profilToast": "🛵 {{nom}} 的资料"
+    },
+    "cardProduit": {
+      "voir": "查看",
+      "ajouterPanier": "加入购物车",
+      "partager": "分享",
+      "retireFavorisToast": "💔 已从收藏中移除",
+      "ajouteFavorisToast": "❤️ 已加入收藏",
+      "detailToast": "👁️ 详情：{{nom}}",
+      "ajouteAuPanierToast": "🛒 已加入购物车！",
+      "partagerToast": "📤 分享：{{nom}}",
+      "badges": {
+        "hot": "🔥 热门",
+        "new": "✨ 新品",
+        "promo": "🏷️ 促销",
+        "sol": "🔴 打折"
+      },
+      "stock": {
+        "ok": "✓ 有货",
+        "low": "⚠ 库存有限",
+        "out": "✗ 缺货"
+      }
+    },
+    "promotions": {
+      "reduction": "折扣",
+      "livraisonOfferte": "免费配送",
+      "bundle": "捆绑",
+      "venteFlash": "限时抢购",
+      "offerte": "免费",
+      "des": "起 {{montant}} GNF",
+      "jusquau": "至 {{date}}",
+      "restants": "剩余 {{count}}",
+      "utilisationsRestantes_one": "剩余 {{count}} 次使用",
+      "utilisationsRestantes_other": "剩余 {{count}} 次使用",
+      "codePromoToast": "🏷️ 优惠码：{{code}}",
+      "copierLeCode": "复制代码",
+      "codeCopieToast": "✅ 代码已复制：{{code}}",
+      "chargement": "正在加载促销…",
+      "aucunePromo": "暂无活跃促销",
+      "aucunePromoDesc": "此店铺目前暂无促销活动。",
+      "activeCount_one": "{{count}} 个活跃促销",
+      "activeCount_other": "{{count}} 个活跃促销"
+    },
+    "produitsSection": {
+      "filtresActifs": "活跃筛选：",
+      "supprimerFiltre": "移除此筛选",
+      "toutEffacer": "全部清除",
+      "trouveCount_one": "找到的产品",
+      "trouveCount_other": "找到的产品",
+      "vueGrille": "网格视图",
+      "vueListe": "列表视图",
+      "aucunProduit": "没有符合筛选条件的产品",
+      "essayezModifier": "请尝试修改或移除某些筛选条件。",
+      "reinitialiser": "重置筛选",
+      "pageToast": "📄 第 {{n}} 页",
+      "pageSuivanteToast": "📄 下一页"
+    },
+    "sidebar": {
+      "trierPar": "排序方式",
+      "triOptions": {
+        "pertinence": "相关度",
+        "prixCroissant": "价格升序",
+        "prixDecroissant": "价格降序",
+        "mieuxNotes": "评分最高",
+        "nouveautes": "新品",
+        "meilleuresVentes": "畅销"
+      },
+      "triToast": "🔃 排序：{{value}}",
+      "categories": "类别",
+      "tout": "全部",
+      "prix": "价格（GNF）",
+      "noteMinimale": "最低评分",
+      "tousLesAvis": "所有评价",
+      "filtreEtoilesToast": "⭐ 筛选 {{n}}+ 星",
+      "disponibilite": "可用性",
+      "enStockUniquement": "仅限有货",
+      "enPromotion": "促销中",
+      "nouveautesSeulement": "仅限新品",
+      "infosBoutique": "店铺信息",
+      "horaires": "营业时间",
+      "adresse": "地址",
+      "telephone": "电话",
+      "email": "邮箱"
+    },
+    "avis": {
+      "chargement": "正在加载评价…",
+      "sur5": "{{n}} 分（满分 5）",
+      "aucuneNote": "暂无评分",
+      "avisVerifies_one": "{{count}} 条已验证评价",
+      "avisVerifies_other": "{{count}} 条已验证评价",
+      "aucunAvis": "暂无评价",
+      "aucunAvisDetaille": "暂无详细评价",
+      "noteExisteDeja": "总体评分已存在，但评论尚不可用。",
+      "avisApparaissent": "客户确认收到订单后评价才会显示。",
+      "achatVerifie": "已验证购买"
+    },
+    "stories": {
+      "precedent": "上一个",
+      "suivant": "下一个",
+      "ilYA1j": "1 天前",
+      "ilYAHeures": "{{h}} 小时前",
+      "ilYAMinutes": "{{m}} 分钟前",
+      "aLInstant": "刚刚",
+      "voirLeProduit": "查看产品",
+      "ajouterPanier": "加入购物车",
+      "ajouteAuPanierToast": "🛒 已加入购物车：{{produit}}",
+      "partager": "分享",
+      "lienCopieToast": "🔗 链接已复制！",
+      "precedente": "上一个",
+      "suivante": "下一个",
+      "badges": {
+        "promo": "🔥 促销",
+        "new": "✨ 新品",
+        "top": "⭐ 热卖",
+        "flash": "⚡ 限时"
+      }
+    },
+    "page": {
+      "boutiqueIntrouvable": "店铺未找到",
+      "boutiqueIntrouvableDesc": "此店铺不存在或已停用。",
+      "retourAccueil": "← 返回首页",
+      "idBoutiqueManquant": "缺少店铺 ID。",
+      "erreurChargement": "无法加载店铺数据。",
+      "accueil": "首页",
+      "boutiques": "店铺",
+      "abonneToast": "✅ 已关注 {{nom}}",
+      "abonneDefaultToast": "✅ 已关注此店铺",
+      "desabonneToast": "👋 已取消关注",
+      "erreurSuivi": "关注时出错 — 请重试",
+      "abonnezVousMessage": "关注店铺后才能发送消息",
+      "abonnezVousAppel": "关注店铺后才能打电话",
+      "erreurToast": "❌ {{msg}}",
+      "filtreEnStock": "有货",
+      "filtreEnPromotion": "促销中",
+      "filtreNouveautes": "新品",
+      "partagerTitre": "分享此店铺",
+      "boutiqueShopiDefault": "Shopi 店铺",
+      "membreDepuis": "自 {{date}} 起成为会员",
+      "membreShopi": "Shopi 会员",
+      "horairesNonRenseignes": "未填写营业时间"
+    }
+  },
+  "produitDetail": {
+    "modalPartage": {
+      "copier": "复制",
+      "lienCopieToast": "🔗 链接已复制！",
+      "instagramCopieToast": "📸 链接已复制 — 粘贴到 Instagram",
+      "partageVia": "📲 通过 {{label}} 分享",
+      "titrePartager": "分享此产品"
+    },
+    "gallery": {
+      "populaire": "⭐ 热门",
+      "importe": "🌍 进口",
+      "retireFavorisToast": "🤍 已从收藏中移除",
+      "ajouteFavorisToast": "❤️ 已加入收藏",
+      "retirerFavoris": "从收藏中移除",
+      "ajouterFavoris": "加入收藏",
+      "partagerCeProduit": "分享此产品",
+      "image": "图片 {{n}}"
+    },
+    "tabs": {
+      "description": "描述",
+      "caracteristiques": "特点",
+      "livraisonCorrespondants": "配送与代理商",
+      "avisCount": "评价（{{count}}）",
+      "aProposTitre": "关于 iPhone 15 Pro",
+      "performances": "性能",
+      "performancesList": {
+        "puce": "A17 Pro 芯片采用 3nm 工艺 — 有史以来最快",
+        "gpu": "6 核 GPU，提供主机级图形",
+        "autonomie": "视频播放续航最长 29 小时"
+      },
+      "cameraProRes": "ProRes 相机",
+      "cameraList": {
+        "triple": "三摄：48MP 主摄、12MP 超广角、12MP 3 倍长焦",
+        "enregistrement": "4K/60fps ProRes 录制",
+        "smartHdr": "智能 HDR 5"
+      },
+      "livraisonTitre": "国际配送与代理商",
+      "livraisonDesc": "此店铺位于法国。Shopi 提供本地代理商系统，方便您在非洲收货。",
+      "commentTitre": "Shopi 代理商如何运作？",
+      "commentList": {
+        "representant": "代理商是您所在城市或地区的 Shopi 代表",
+        "receptionne": "他接收您的包裹、检查状况并通知您",
+        "conserve": "他安全存放并交付给您或交给当地配送员",
+        "facilite": "他促进您与国际店铺之间的沟通"
+      },
+      "tarifTitre": "配送员按距离定价",
+      "tarifList": {
+        "memeVille": "同城：基础价格（例如 15,000 – 25,000 GNF）",
+        "villeProche": "附近城市（50 公里内）：基础价格 +30%",
+        "autreRegion": "其他地区/省：基础价格 +80%",
+        "international": "国际：由店铺与代理商约定的价格"
+      },
+      "multiplicateursTitre": "速度倍率",
+      "multiplicateursList": {
+        "eco": "🐢 经济：×1.0 — 常规时间",
+        "standard": "🚴 标准：×1.3 — 推荐常规时间",
+        "express": "🚀 加急：×1.8 — 优先配送",
+        "ultra": "⚡ 极速：×2.5 — 立即配送"
+      },
+      "achatVerifie": "已验证购买"
+    },
+    "similaires": {
+      "kick": "您可能还喜欢",
+      "titrePart1": "类似",
+      "titreEm": "产品",
+      "voirTout": "查看全部",
+      "retireFavorisToast": "🤍 已从收藏中移除",
+      "ajouteFavorisToast": "❤️ 已加入收藏",
+      "dejaAuPanierToast": "🛒 已在您的购物车中 — 前往购物车修改数量",
+      "ajouteToast": "✅ {{nom}} 已加入购物车！",
+      "erreurToast": "❌ {{msg}}",
+      "voirLePanier": "查看购物车",
+      "ajouter": "添加",
+      "badges": {
+        "hot": "⭐ 热门",
+        "new": "✨ 新品",
+        "promo": "🏷️ 促销"
+      }
+    },
+    "panier": {
+      "economisez": "您节省 {{pct}}%",
+      "livraisonNonConfiguree": "未配置配送",
+      "configurer": "配置",
+      "livraisonStandardGratuite": "标准配送 — 免费",
+      "modifier": "修改",
+      "destination": "目的地",
+      "fraisLivraison": "配送费用",
+      "gratuit": "免费",
+      "correspondant": "代理商",
+      "choisissezLivreur": "选择配送员",
+      "voir": "查看",
+      "quantite": "数量",
+      "produitFois": "产品 × {{qty}}",
+      "fraisDeLivraison": "配送费用",
+      "fraisCorrespondant": "代理商费用",
+      "totalEstime": "预计总计",
+      "ruptureDeStock": "缺货",
+      "dejaAuPanier": "已在购物车中 — 查看购物车",
+      "ajoutEnCours": "添加中…",
+      "ajouterAuPanier": "加入购物车",
+      "redirection": "跳转中…",
+      "allerAuPanier": "前往购物车",
+      "acheterMaintenant": "立即购买",
+      "paiementSecurise": "100% 安全支付",
+      "boutiqueVerifiee": "已验证店铺 ·",
+      "note": "评分",
+      "satisf": "满意",
+      "ventes": "销售",
+      "voirBoutique": "查看店铺",
+      "contacter": "联系",
+      "messagerieOuverteToast": "💬 消息已打开",
+      "dejaAuPanierToast": "🛒 已在您的购物车中 — 前往购物车修改数量",
+      "ajouteToast": "✅ 已加入购物车！",
+      "erreurToast": "❌ {{msg}}"
+    },
+    "infoSection": {
+      "sku": "SKU：{{sku}}",
+      "intlTitre": "检测到国际店铺",
+      "intlDesc": "此店铺位于您所在大陆之外。Shopi 代理商可以接收您的订单并负责本地联系。",
+      "voirLaBoutique": "查看店铺 {{nom}}",
+      "boutiqueVerifieeShopi": "Shopi 已验证店铺",
+      "abonnesCount": "{{count}} 名关注者",
+      "avisCount": "{{count}} 条评价",
+      "acheteursConfirmes": "{{count}} 名已确认买家",
+      "economieDe": "节省 {{montant}} GNF（−{{pct}}%）",
+      "prixNote": "价格保证 · 安全支付 · 不含配送费",
+      "stock": {
+        "ok": "有货",
+        "okNote": "— {{count}} 件可用",
+        "low": "库存有限",
+        "lowNote": "— 仅剩 {{count}} 件",
+        "out": "缺货"
+      },
+      "stockage": "存储",
+      "coloris": "颜色",
+      "titanium": "钛金属",
+      "stockageToast": "✅ 存储：{{v}}",
+      "colorisToast": "✅ 颜色：{{v}} 钛金属",
+      "quantite": "数量",
+      "maxParCommande": "每单最多 5 件",
+      "ruptureDeStock": "缺货",
+      "ajoutEnCours": "添加中…",
+      "ajouterAuPanier": "加入购物车",
+      "redirection": "跳转中…",
+      "acheterMaintenant": "立即购买",
+      "retireFavorisToast": "🤍 已从收藏中移除",
+      "favorisToast": "❤️ 收藏",
+      "favoris": "收藏",
+      "comparer": "比较",
+      "comparaisonToast": "⚖️ 已加入比较",
+      "partager": "分享：",
+      "vuesAujourdhui": "今日 {{count}} 次浏览",
+      "idManquantToast": "❌ 缺少产品 ID",
+      "ruptureToast": "❌ 产品缺货",
+      "ajouteToast": "🛒 已加入购物车！",
+      "erreurToast": "❌ {{msg}}",
+      "garanties": {
+        "paiementTitre": "安全支付",
+        "paiementSub": "SSL · Orange Money · Visa",
+        "retourTitre": "7 天退货",
+        "retourSub": "接受有缺陷产品",
+        "authentiqueTitre": "正品",
+        "authentiqueSub": "Shopi 认证卖家",
+        "supportTitre": "24/7 支持",
+        "supportSub": "聊天 · WhatsApp · 电话"
+      }
+    },
+    "livraison": {
+      "titre": "配送与收货",
+      "requis": "下单前必填",
+      "etape1Titre": "您的目的地地址",
+      "renseigne": "已填写",
+      "choisirContinent": "-- 您的大陆 --",
+      "choisirPays": "-- 您的国家 --",
+      "choisirVille": "-- 您的城市 --",
+      "quartierPlaceholder": "街区 / 街道（可选）",
+      "distBadge": {
+        "intlLabel": "🌍 国际 — 其他大陆",
+        "intlNote": "推荐代理商",
+        "localLabel": "📍 同一区域 — 科纳克里",
+        "localNote": "配送员基础价格",
+        "nearLabel": "🗺️ 附近城市 — ~120 公里",
+        "nearNote": "基础价格 +30%",
+        "farLabel": "📦 其他地区 — +200 公里",
+        "farNote": "基础价格 +80%"
+      },
+      "aucunMode": "此产品没有可用配送方式。请直接联系店铺安排配送。",
+      "correspondantTitre": "Shopi 代理商",
+      "selectionne": "已选择",
+      "boutiqueHorsContinent": "您所在大陆之外的店铺",
+      "pourquoiCorrespondant": "为什么需要代理商？",
+      "pourquoiDesc": "店铺在国际。Shopi 代理商可以接收您的包裹、检查状况并交付给您。",
+      "livraisonDirecteTitre": "直接配送",
+      "livraisonDirecteSub": "店铺直接发货（时间较长）",
+      "viaCorrespondantTitre": "通过代理商",
+      "viaCorrespondantSub": "推荐 — 本地中转站，更安全更快",
+      "correspondantsDisponibles": "可用代理商",
+      "fraisCorresp": "代理商费用",
+      "correspondantToast": "✅ 代理商：{{name}}",
+      "modeFinaleTitre": "最终配送方式",
+      "livraisonStandardTitre": "标准配送",
+      "livraisonStandardSub": "由店铺管理",
+      "gratuite": "免费",
+      "delaiSelonDistance": "时间视距离而定",
+      "choisirLivreurTitre": "选择配送员",
+      "choisirLivreurSub": "您网络的配送员",
+      "aPartirDe": "起 {{montant}} GNF",
+      "prixSelonDistance": "价格视距离和速度而定",
+      "livreurToast": "✅ {{name}} — {{fee}} GNF",
+      "choisissezVotreLivreur": "选择您的配送员",
+      "livreursAbonnes": "关注您和店铺的配送员",
+      "mesAbonnes": "我的关注者",
+      "boutique": "店铺",
+      "vitesseLivraison": "配送速度",
+      "speedOptions": {
+        "eco": "经济",
+        "standard": "标准",
+        "express": "加急",
+        "ultra": "极速"
+      },
+      "votreAbonne": "👤 您的关注者",
+      "distLabels": {
+        "local": "同城",
+        "near": "附近",
+        "far": "其他地区"
+      },
+      "summary": {
+        "livreur": "配送员：",
+        "vitesse": "速度：",
+        "frais": "费用：",
+        "delai": "时间："
+      }
+    },
+    "page": {
+      "idManquant": "缺少产品 ID。",
+      "introuvable": "产品未找到或未发布。",
+      "produitIntrouvableTitre": "产品未找到",
+      "produitIntrouvableDesc": "此产品不存在或尚未发布。",
+      "retourAccueil": "返回首页",
+      "accueil": "首页",
+      "partagerTitre": "分享此产品"
+    }
+  },
+  "panierCommande": {
+    "progressBar": {
+      "panier": "购物车",
+      "vide": "空",
+      "articleCount_one": "{{count}} 件商品",
+      "articleCount_other": "{{count}} 件商品",
+      "livraison": "配送",
+      "adresseLivreur": "地址与配送员",
+      "confirmation": "确认",
+      "verification": "验证",
+      "paiementSecuriseSsl": "SSL 安全支付"
+    },
+    "confirmModal": {
+      "titre": "确认订单？",
+      "desc": "请仔细检查商品、配送地址和支付方式。确认后，订单将立即发送给卖家。",
+      "avertissement": "请确保您的电话号码正确，以便配送员联系您。",
+      "annuler": "取消",
+      "enCours": "处理中…",
+      "confirmer": "确认"
+    },
+    "modalSuccess": {
+      "titre": "订单已确认！",
+      "desc": "您的订单已成功记录，正在处理中。配送员接单后您会收到通知。",
+      "commande": "订单",
+      "suiviTempsReel": "实时跟踪",
+      "commandeConfirmee": "订单已确认",
+      "aLInstant": "刚刚",
+      "preparationEnCours": "准备中",
+      "boutiqueVendeur": "卖家店铺",
+      "remiseAuLivreur": "交给配送员",
+      "livreurNomPart": "—",
+      "enAttente": "— 等待中",
+      "livraisonAVotreAdresse": "配送到您的地址",
+      "redirectionToast": "📦 跳转到订单跟踪…",
+      "suivre": "跟踪",
+      "continuer": "继续"
+    },
+    "recapSection": {
+      "titre": "汇总与确认",
+      "sub": "确认前请检查所有细节",
+      "destinataire": "收件人",
+      "infosNonDisponibles": "信息不可用",
+      "livraison": "配送",
+      "standard": "🚚 标准",
+      "nonSelectionne": "⚠️ 未选择",
+      "gratuiteDelai": "免费 · 24–48 小时",
+      "correspondantLabel": "📍 代理商：{{nom}}",
+      "paiement": "支付",
+      "termsPart1": "我接受",
+      "cgv": "销售通用条款",
+      "termsPart2": "和",
+      "politiqueRetour": "退货政策",
+      "termsPart3": "，并授权 Shopi 处理我的支付。",
+      "payLabels": {
+        "omo": "Orange Money 🏦",
+        "mtn": "MTN Money 💛",
+        "card": "银行卡 💳",
+        "cash": "货到付款 💵",
+        "wire": "转账 🏛️",
+        "wallet": "Shopi 钱包 👛"
+      }
+    },
+    "summaryPanel": {
+      "recapitulatif": "汇总",
+      "modifier": "修改",
+      "sousTotal_one": "小计（{{count}} 件商品）",
+      "sousTotal_other": "小计（{{count}} 件商品）",
+      "livraison": "配送",
+      "gratuite": "✓ 免费",
+      "correspondant": "代理商",
+      "promoShopi20": "SHOPI20 促销",
+      "totalAPayer": "应付总额",
+      "soldePortefeuille": "钱包余额",
+      "chargement": "加载中…",
+      "soldeInsuffisant": "余额不足 — 请充值钱包以继续。",
+      "traitementEnCours": "处理中…",
+      "confirmerLaCommande": "确认订单",
+      "paiementSecuriseSsl": "SSL 256 位安全支付",
+      "retourGratuit": "7 天内免费退货",
+      "protectionAcheteur": "Shopi 买家保护",
+      "estimationLivraison": "配送预估",
+      "mode": "方式",
+      "destination": "目的地",
+      "delaiEstime": "预计时间",
+      "livraisonStandardLabel": "标准配送",
+      "nonSelectionne": "未选择"
+    },
+    "livraisonSection": {
+      "titre": "配送方式",
+      "sub": "选择如何接收您的订单",
+      "livraisonStandard": "标准配送",
+      "gereeParBoutique": "由店铺管理",
+      "gratuite": "免费",
+      "delai2448h": "24 – 48 小时",
+      "choisirLivreur": "选择配送员",
+      "vosLivreursAbonnes": "您关注的配送员",
+      "desPrix": "起 {{montant}}",
+      "aucunLivreur": "无配送员",
+      "prixSelonDistance": "价格视距离和速度而定",
+      "vosLivreursSuivis": "您关注的配送员",
+      "vosAbonnes": "👤 您的关注者",
+      "vitesse": "速度",
+      "chargementLivreurs": "正在加载您的配送员…",
+      "aucunLivreurSuiviPart1": "您目前没有关注任何配送员。",
+      "aucunLivreurSuiviPart2": "从",
+      "livreursPage": "配送员",
+      "aucunLivreurSuiviPart3": "页面关注配送员，以便在这里找到他们。",
+      "livreurToast": "✅ 配送员：{{nom}}",
+      "votreAbonne": "👤 您的关注者",
+      "correspondantIntl": "Shopi 代理商（国际店铺）",
+      "boutiqueEtranger": "店铺在国外。当地代理商接收并转交您的包裹。",
+      "correspondantToast": "📍 代理商：{{nom}}",
+      "speeds": {
+        "eco": "经济",
+        "std": "标准",
+        "exp": "加急",
+        "ult": "极速"
+      },
+      "recommande": "推荐"
+    },
+    "adresseSection": {
+      "titre": "配送地址",
+      "sub": "您希望配送到哪里？",
+      "chargementAdresses": "正在加载您的地址…",
+      "nouvelle": "新建",
+      "prenom": "名字",
+      "prenomPlaceholder": "您的名字",
+      "nom": "姓氏",
+      "nomPlaceholder": "您的姓氏",
+      "telephone": "电话",
+      "villeLabel": "城市",
+      "commune": "区域",
+      "adressePrecise": "精确地址",
+      "adressePreciseOpt": "*（街道、参考点）",
+      "adressePrecisePlaceholder": "街区、街道、参考点…",
+      "instructions": "配送说明",
+      "optionnel": "可选",
+      "instructionsPlaceholder": "例如：到达前请打电话…",
+      "adresseSelectionneeToast": "📍 {{nom}}"
+    },
+    "page": {
+      "cardHeadTitle": "您的商品",
+      "cardHeadSub_one": "{{count}} 件商品 · 可以下单",
+      "cardHeadSub_other": "{{count}} 件商品 · 可以下单",
+      "plusQueEnStock": "仅剩 {{count}} 件",
+      "retirerDuPanier": "从购物车移除",
+      "panierVideTitre": "您的购物车是空的",
+      "panierVideDesc": "浏览店铺并添加您喜欢的产品以完成下单。",
+      "explorerBoutiques": "探索店铺",
+      "erreurQtyToast": "❌ 无法修改数量",
+      "articleRetireToast": "🗑️ 商品已从购物车移除",
+      "erreurSuppressionToast": "❌ 无法删除",
+      "acceptezCguToast": "⚠️ 请接受通用条款",
+      "panierVideToast": "⚠️ 您的购物车是空的",
+      "prenomNomToast": "⚠️ 请填写您的名字和姓氏",
+      "telephoneToast": "⚠️ 请填写您的电话号码",
+      "adresseToast": "⚠️ 请填写您的精确地址",
+      "choisirLivreurToast": "⚠️ 请选择配送员",
+      "verificationSoldeToast": "⏳ 正在验证您的余额…",
+      "soldeInsuffisantToast": "⚠️ 钱包余额不足，无法完成此支付",
+      "erreurCommandeToast": "❌ {{msg}}",
+      "impossibleConfirmer": "无法确认订单"
+    }
+  },
+  "followToggle": {
+    "abonneToast": "✅ 已关注 {{name}}",
+    "desabonneToast": "👋 已取消关注 {{name}}",
+    "erreurToast": "❌ {{msg}}",
+    "erreurReseau": "网络错误"
+  },
+  "livreursPage": {
+    "card": {
+      "livreurAriaLabel": "配送员 {{nom}}",
+      "disponible": "可用",
+      "enCourse": "配送中",
+      "livraisonsCount": "{{count}} 次配送",
+      "abonneFem": "已关注",
+      "suivre": "关注",
+      "seDesabonnerDe": "取消关注 {{nom}}",
+      "suivreNom": "关注 {{nom}}",
+      "connexionRequise": "需要登录",
+      "connexionRequisePourSuivre": "关注需要登录",
+      "seDesabonner": "取消关注",
+      "avisCount": "（{{count}} 条评价）",
+      "livraisons": "配送",
+      "ponctualite": "准时率",
+      "experience": "经验",
+      "voirProfilComplet": "查看完整资料 →",
+      "profilCompletAria": "查看 {{nom}} 的完整资料",
+      "profilDe": "{{nom}} 的资料"
+    },
+    "suggestions": {
+      "ariaLabel": "您附近的推荐配送员",
+      "titre": "推荐",
+      "sousTitre": "在您附近",
+      "abonne": "✓ 已关注",
+      "suivre": "+ 关注"
+    },
+    "hero": {
+      "ariaLabel": "Shopi 配送员介绍",
+      "supTitle": "Shopi 网络 · 科纳克里",
+      "titrePart1": "找到您",
+      "titreEm": "信赖的",
+      "titrePart2": "配送员",
+      "sub": "经过验证的专业配送员，遍布整个几内亚。关注您喜欢的配送员，放心下单。",
+      "livreursSuggeres": "推荐配送员",
+      "abonne": "已关注",
+      "suivre": "关注",
+      "stats": {
+        "livreursActifs": "活跃配送员",
+        "noteMoyenne": "平均评分",
+        "livraisonsMois": "配送/月",
+        "communesCouvertes": "覆盖区域"
+      }
+    },
+    "toolbar": {
+      "searchPlaceholder": "姓名、区域、交通工具…",
+      "rechercherLivreurAria": "搜索配送员",
+      "effacerRechercheAria": "清除搜索",
+      "trierLivreursAria": "排序配送员",
+      "modeAffichageAria": "显示模式",
+      "vueGrille": "网格视图",
+      "vueListe": "列表视图",
+      "livreurCount_one": "{{count}} 名配送员",
+      "livreurCount_other": "{{count}} 名配送员",
+      "filters": {
+        "tous": "全部",
+        "disponibles": "可用",
+        "abonnements": "关注",
+        "motos": "摩托车",
+        "voitures": "汽车"
+      },
+      "sorts": {
+        "mieuxNotes": "评分最高",
+        "plusDeLivraisons": "配送最多",
+        "disponiblesDabord": "优先可用",
+        "lesPlusProches": "最近"
+      }
+    },
+    "sidebar": {
+      "ariaLabel": "配送员筛选",
+      "zoneDeLivraison": "配送区域",
+      "reinit": "重置",
+      "toutesLesZones": "所有区域",
+      "typeDeVehicule": "交通工具类型",
+      "noteMinimale": "最低评分",
+      "ratingOpts": {
+        "cinqEtoiles": "仅 5 星",
+        "quatrePlus": "4+ 星",
+        "troisPlus": "3+ 星",
+        "toutesLesNotes": "所有评分"
+      },
+      "disponibilite": "可用性",
+      "disponible": "可用",
+      "enCourse": "配送中",
+      "mesAbonnements": "我的关注",
+      "vehicules": {
+        "moto": "摩托车",
+        "voiture": "汽车",
+        "pickup": "皮卡",
+        "camion": "卡车"
+      }
+    },
+    "page": {
+      "tousLesLivreurs": "所有配送员",
+      "livreurDansRegion_one": "您所在地区有 {{count}} 名配送员",
+      "livreurDansRegion_other": "您所在地区有 {{count}} 名配送员",
+      "vueGrille": "网格视图",
+      "vueListe": "列表视图",
+      "impossibleDeCharger": "无法加载配送员",
+      "aucunLivreurTrouve": "未找到配送员",
+      "essayezModifier": "尝试修改筛选条件或搜索。",
+      "chargementToast": "📄 加载中...",
+      "chargerPlus": "加载更多配送员"
+    }
+  },
+  "correspondantsPage": {
+    "typeLabel": {
+      "regional": "🏠 区域",
+      "zonal": "🗺️ 地区",
+      "national": "🌍 全国"
+    },
+    "listItem": {
+      "missionsCount": "{{count}} 个任务",
+      "abonne": "已关注",
+      "suivre": "关注"
+    },
+    "hero": {
+      "sup": "Shopi 网络 · 几内亚与海外",
+      "titrePart1": "您",
+      "titreEm": "信赖的代理商",
+      "titrePart2": "遍布各地",
+      "sub": "经过验证的本地中转站，促进几内亚与海外之间的商业往来。安全地接收、发送和转运您的包裹。",
+      "correspondantsActifs": "活跃代理商",
+      "noteMoyenne": "平均评分",
+      "missionsAuTotal": "总任务数",
+      "communesCouvertes": "覆盖区域",
+      "abonne": "✓ 已关注",
+      "suivre": "+ 关注"
+    },
+    "toolbar": {
+      "searchPlaceholder": "搜索代理商、区域…",
+      "filters": {
+        "tous": "全部",
+        "enLigne": "在线",
+        "mesAbonnements": "我的关注",
+        "regionaux": "区域",
+        "zonaux": "地区",
+        "nationaux": "全国"
+      },
+      "sorts": {
+        "pertinence": "相关度",
+        "mieuxNotes": "评分最高",
+        "plusDeMissions": "任务最多",
+        "nomAZ": "姓名（A-Z）"
+      },
+      "correspondantCount_one": "{{count}} 名代理商",
+      "correspondantCount_other": "{{count}} 名代理商"
+    },
+    "card": {
+      "enLigne": "在线",
+      "horsLigne": "离线",
+      "avisCount": "（{{count}} 条评价）",
+      "missions": "任务",
+      "fiabilite": "可靠性",
+      "experience": "经验",
+      "abonne": "已关注",
+      "suivre": "关注",
+      "voirProfilComplet": "查看完整资料 →"
+    },
+    "sidebar": {
+      "typeDeCorrespondant": "代理商类型",
+      "types": {
+        "regional": {
+          "nm": "区域",
+          "desc": "覆盖一座城市"
+        },
+        "zonal": {
+          "nm": "地区",
+          "desc": "覆盖一个地区"
+        },
+        "national": {
+          "nm": "全国",
+          "desc": "覆盖整个国家"
+        }
+      },
+      "commune": "区域",
+      "toutes": "全部",
+      "noteMinimale": "最低评分",
+      "ratingOpts": {
+        "cinqEtoiles": "仅 5 星",
+        "quatrePlus": "4+ 星",
+        "troisPlus": "3+ 星",
+        "toutesLesNotes": "所有评分"
+      },
+      "disponibilite": "可用性",
+      "reinitialiser": "重置",
+      "enLigne": "在线",
+      "horsLigne": "离线"
+    },
+    "page": {
+      "chargement": "正在加载代理商…",
+      "correspondantsDisponibles": "可用代理商",
+      "resultatCount_one": "{{count}} 个结果",
+      "resultatCount_other": "{{count}} 个结果",
+      "errorSuffix": "— 显示演示数据。",
+      "aucunCorrespondant": "没有符合筛选条件的代理商。",
+      "desabonneToast": "👋 已取消关注 {{nom}}",
+      "abonneToast": "✅ 已关注 {{nom}}"
+    }
+  },
+  "offresPage": {
+    "typeLabel": {
+      "discount": "折扣",
+      "freeShip": "免费配送",
+      "bundle": "捆绑",
+      "flash": "限时抢购"
+    },
+    "hero": {
+      "offreSuffix_one": "个活跃优惠",
+      "offreSuffix_other": "个活跃优惠",
+      "titrePart1": "所有",
+      "titreEm": "优惠",
+      "titrePart2": "当前",
+      "sub": "所有 Shopi 店铺的折扣、限时抢购和免费配送 — 集中在一个地方。",
+      "flashSuffix_one": "个进行中的限时抢购 — 不要错过",
+      "flashSuffix_other": "个进行中的限时抢购 — 不要错过"
+    },
+    "sidebar": {
+      "categories": "类别",
+      "toutes": "全部",
+      "recherche": "搜索",
+      "searchPlaceholder": "优惠或店铺…",
+      "trierPar": "排序方式",
+      "sortBest": "最佳折扣",
+      "sortEnding": "即将过期"
+    },
+    "card": {
+      "touteLaBoutique": "全店",
+      "produitCible": "目标产品",
+      "voirOffre": "查看优惠",
+      "offerte": "免费",
+      "promo": "促销"
+    },
+    "states": {
+      "loadErrorTitle": "无法加载优惠",
+      "loadErrorFallback": "无法加载优惠。",
+      "reessayer": "重试",
+      "aucuneOffreTitre": "暂无活跃优惠",
+      "aucuneOffreText": "请稍后再来，新促销会定期推出。",
+      "aucunResultatTitre": "没有匹配的优惠",
+      "aucunResultatText": "尝试其他筛选或搜索。",
+      "reinitialiser": "重置"
+    }
+  },
+  "settingsPage": {
+    "tabs": {
+      "ariaLabel": "设置部分",
+      "profil": "资料",
+      "adresses": "地址",
+      "paiement": "支付",
+      "points": "Shopi 积分",
+      "confidentialiteSecurite": "隐私与安全",
+      "securite": "安全",
+      "sessions": "已连接设备",
+      "activite": "活动日志",
+      "approbations": "信任设备",
+      "notifs": "通知",
+      "confidentialite": "隐私",
+      "apparence": "外观",
+      "langue": "语言与地区",
+      "donnees": "我的数据",
+      "danger": "危险区域"
+    },
+    "page": {
+      "retourAccueil": "返回首页",
+      "titrePart1": "账户",
+      "titreEm": "设置",
+      "sub": "管理您的信息、安全和 Shopi 偏好"
+    },
+    "sidebar": {
+      "photoAlt": "资料照片",
+      "chargement": "加载中…",
+      "changerPhoto": "更改资料照片",
+      "uploadEnCours": "上传中…",
+      "verifie": "已验证",
+      "invalidFormat": "❌ 格式无效 — 请选择图片（JPG、PNG、WebP）",
+      "tropGrande": "❌ 图片过大 — 最大 5 MB",
+      "uploadEnCoursToast": "📤 上传中…",
+      "photoMiseAJour": "✅ 资料照片已更新！",
+      "uploadErrorFallback": "上传时出错"
+    },
+    "securityBanner": {
+      "items": {
+        "motDePasseFort": "强密码",
+        "emailVerifie": "已验证邮箱",
+        "telephoneVerifie": "已验证电话",
+        "twoFaActive": "已启用 2FA",
+        "questionsSecurite": "安全问题",
+        "codesSecours": "已生成备用码"
+      },
+      "niveaux": {
+        "excellent": "优秀",
+        "bien": "良好",
+        "moyen": "中等",
+        "faible": "较弱"
+      },
+      "titre": "安全评分",
+      "chargementDesc": "正在加载安全评分…",
+      "descExcellent": "您的账户已得到完美保护。继续保持！",
+      "descBien": "您的账户保护良好。仍有一些改进空间。",
+      "descFaible": "通过完成以下操作加强您的安全。",
+      "ameliorer": "改进"
+    },
+    "points": {
+      "titre": "我的 Shopi 积分",
+      "pts": "分",
+      "niveauLabel": "等级",
+      "prochainA": "到",
+      "prochainPts": "分",
+      "pointsGagnes": "本月获得积分",
+      "pointsUtilises": "已使用积分",
+      "expirationProchaine": "下次过期"
+    },
+    "activite": {
+      "titre": "活动日志",
+      "subtitle": "您账户上所有操作的完整追踪",
+      "exportEnCours": "导出…",
+      "exporter": "导出",
+      "aucuneActivite": "无已记录的活动",
+      "loadError": "❌ 无法加载日志",
+      "types": {
+        "login": "登录",
+        "order": "订单",
+        "security": "安全",
+        "alert": "提醒",
+        "profile": "资料"
+      }
+    },
+    "adresses": {
+      "titre": "配送地址",
+      "subtitleSuffix_one": "个已保存地址",
+      "subtitleSuffix_other": "个已保存地址",
+      "ajouter": "添加",
+      "aucuneAdresse": "无已保存地址",
+      "parDefaut": "默认",
+      "ajouterNouvelle": "添加新地址",
+      "loadError": "❌ 无法加载地址",
+      "toastSupprimee": "🗑️ 地址已删除",
+      "toastDefiniParDefaut": "⭐ 地址已设为默认",
+      "toastFormulaireTodo": "➕ 添加表单 — 待实现",
+      "toastModificationTodo": "✏️ 修改 — 待实现",
+      "toastAjouterNouvelle": "➕ 添加新地址"
+    },
+    "paiement": {
+      "titre": "支付方式",
+      "subtitle": "银行卡、Mobile Money 和钱包",
+      "ajouter": "添加",
+      "aucunMoyen": "无已保存的支付方式",
+      "parDefaut": "默认",
+      "ajouteLe": "添加于",
+      "definirParDefautTitle": "设为默认",
+      "loadError": "❌ 无法加载支付方式",
+      "toastSupprime": "🗑️ 支付方式已删除",
+      "toastDefiniParDefaut": "⭐ 支付方式已设为默认",
+      "toastAjouter": "➕ 添加支付方式",
+      "ajouterNouveau": "添加支付方式",
+      "labels": {
+        "carte": "银行卡",
+        "especes": "现金",
+        "virement": "银行转账",
+        "wallet": "Shopi 钱包"
+      }
+    },
+    "sessions": {
+      "titre": "已连接设备",
+      "subtitleSuffix_one": "个活跃会话",
+      "subtitleSuffix_other": "个活跃会话",
+      "suspectSuffix_one": "次可疑连接",
+      "suspectSuffix_other": "次可疑连接",
+      "deconnecterTout": "全部断开",
+      "enCours": "处理中…",
+      "aucuneSession": "无活跃会话",
+      "sessionActuelle": "当前会话",
+      "suspect": "可疑",
+      "revoquer": "撤销",
+      "conseilTitre": "安全建议",
+      "conseilTexteSuffix_one": "次可疑连接检测到。请立即撤销并更改密码。",
+      "conseilTexteSuffix_other": "次可疑连接检测到。请立即撤销并更改密码。",
+      "loadError": "❌ 无法加载会话",
+      "toastRevoked": "🔒 会话已撤销",
+      "toastRevokedAll": "🔒 所有其他会话已撤销"
+    },
+    "approbations": {
+      "titre": "信任设备",
+      "subtitle": "这些设备无需额外 2FA 代码即可连接",
+      "approuve": "已批准",
+      "retirer": "移除",
+      "derniereUtilisation": "最近使用",
+      "ajouteLe": "添加于",
+      "aujourdhui": "今天",
+      "hier": "昨天",
+      "commentTitre": "工作原理",
+      "commentTexte": "信任设备在 2FA 验证成功后会被记住。如果无法识别或丢失设备，请将其移除。",
+      "toastRetire": "🔒 设备已从信任列表移除",
+      "toastRetireMac": "🔒 MacBook 已从信任列表移除",
+      "aucunAppareil": "无已保存的信任设备",
+      "loadError": "❌ 无法加载设备"
+    },
+    "notifs": {
+      "titre": "通知",
+      "subtitle": "选择何时以及如何通知您",
+      "enregistrer": "保存",
+      "enregistrement": "保存中…",
+      "toastSaved": "✅ 通知偏好已保存",
+      "sms": "短信",
+      "email": "邮箱",
+      "push": "推送",
+      "rows": {
+        "commandes": {
+          "title": "订单状态",
+          "desc": "确认、发货、配送"
+        },
+        "promos": {
+          "title": "促销与优惠",
+          "desc": "折扣、优惠码、专属优惠"
+        },
+        "messages": {
+          "title": "消息",
+          "desc": "来自卖家或支持的新消息"
+        },
+        "points": {
+          "title": "积分与奖励",
+          "desc": "获得积分、达到等级"
+        }
+      }
+    },
+    "confidentialite": {
+      "titre": "资料隐私",
+      "subtitle": "控制谁能查看您的信息",
+      "enregistrer": "保存",
+      "enregistrement": "保存中…",
+      "toastSaved": "✅ 隐私设置已保存",
+      "visibiliteTitle": "资料可见性",
+      "visibiliteDesc": "谁能查看您的公开资料",
+      "visibiliteOptions": {
+        "toutLeMonde": "所有人",
+        "membresShopi": "Shopi 会员",
+        "personne": "无人"
+      },
+      "rows": {
+        "historique": {
+          "title": "订单历史",
+          "desc": "在您的资料上显示最近的购买"
+        },
+        "wishlist": {
+          "title": "愿望清单",
+          "desc": "让他人可见您的愿望清单"
+        },
+        "perso": {
+          "title": "个性化数据",
+          "desc": "使用您的行为改进推荐"
+        },
+        "localisation": {
+          "title": "大致位置",
+          "desc": "分享您的城市以获取本地优惠"
+        },
+        "pubs": {
+          "title": "个性化广告",
+          "desc": "接收基于您兴趣的广告"
+        }
+      }
+    },
+    "apparence": {
+      "titre": "外观",
+      "subtitle": "主题、文本大小和显示",
+      "enregistrer": "保存",
+      "enregistrement": "保存中…",
+      "toastSaved": "✅ 外观已更新",
+      "themeTitle": "主题",
+      "themeDesc": "浅色、深色或自动",
+      "themeOptions": {
+        "clair": "浅色",
+        "sombre": "深色",
+        "auto": "自动"
+      },
+      "tailleTitle": "文本大小",
+      "tailleDesc": "调整以获得更好的可读性",
+      "tailleOptions": {
+        "normal": "正常",
+        "grand": "大",
+        "tresGrand": "很大"
+      },
+      "qualiteTitle": "图片质量",
+      "qualiteDesc": "降低以节省移动数据",
+      "qualiteOptions": {
+        "haute": "高质量",
+        "eco": "省流量"
+      }
+    },
+    "langue": {
+      "titre": "语言与地区",
+      "subtitle": "语言、货币和时区",
+      "enregistrer": "保存",
+      "enregistrement": "保存中…",
+      "toastSaved": "✅ 地区偏好已保存",
+      "langueTitle": "显示语言",
+      "langueDesc": "Shopi 界面语言",
+      "deviseTitle": "显示货币",
+      "deviseDesc": "用于价格和交易",
+      "fuseauTitle": "时区",
+      "fuseauDesc": "用于配送时间和日期"
+    },
+    "donnees": {
+      "titre": "我的个人数据",
+      "subtitle": "访问、导出或删除您的数据 — GDPR 合规",
+      "droitsTitre": "您的权利",
+      "droitsTexteSuffix": "您有权随时访问、更正、导出和删除您的数据。如有任何请求，请联系我们的数据保护官",
+      "items": {
+        "export": {
+          "title": "导出我所有数据",
+          "desc": "包含资料、订单、消息、积分的 ZIP 文件",
+          "btnLabel": "导出",
+          "msg": "📦 导出准备中 — 24 小时内发送邮件"
+        },
+        "historique": {
+          "title": "订单历史",
+          "desc": "自账户创建以来的所有订单 — CSV 或 PDF",
+          "btnLabel": "CSV",
+          "msg": "📋 历史已导出"
+        },
+        "factures": {
+          "title": "我的发票和收据",
+          "desc": "自注册以来所有发票的 PDF",
+          "btnLabel": "PDF",
+          "msg": "🧾 发票已下载"
+        },
+        "rapport": {
+          "title": "隐私报告",
+          "desc": "收集哪些数据、如何使用",
+          "btnLabel": "查看",
+          "msg": "📄 报告已打开"
+        },
+        "portabilite": {
+          "title": "数据可携带性请求（GDPR）",
+          "desc": "将数据转移到另一个平台 — 法定期限 30 天",
+          "btnLabel": "请求",
+          "msg": "📨 数据可携带性请求已发送"
+        }
+      },
+      "rowsLive": {
+        "export": {
+          "title": "导出我所有数据",
+          "desc": "ZIP 文件 — 资料、订单、消息、积分",
+          "label": "导出"
+        },
+        "commandes": {
+          "title": "订单历史",
+          "desc": "您所有订单 — CSV 或 PDF",
+          "label": "CSV"
+        },
+        "factures": {
+          "title": "我的发票和收据",
+          "desc": "您所有发票的 PDF",
+          "label": "PDF"
+        },
+        "rapport": {
+          "title": "隐私报告",
+          "desc": "收集哪些数据以及如何",
+          "label": "查看"
+        },
+        "portabilite2": {
+          "title": "GDPR 可携带性",
+          "desc": "转移您的数据 — 法定期限 30 天",
+          "label": "请求"
+        }
+      },
+      "droitsTexteShort": "您有权访问、更正、导出和删除您的数据。请联系我们的数据保护官"
+    },
+    "danger": {
+      "titre": "危险区域",
+      "subtitle": "这些操作不可逆 — 行动前请三思",
+      "rows": {
+        "desactiver": {
+          "title": "临时停用账户",
+          "desc": "您的资料将被隐藏，进行中的订单将被处理。可随时重新激活。",
+          "btn": "停用",
+          "msg": "⚠️ 需要确认 — 请检查您的邮箱"
+        },
+        "revoquerAcces": {
+          "title": "撤销所有第三方访问",
+          "desc": "断开链接到您账户的所有应用程序和服务。",
+          "btn": "撤销访问",
+          "msg": "🔌 所有第三方访问已撤销"
+        },
+        "reinitialiser": {
+          "title": "重置我所有偏好",
+          "desc": "将通知、外观、语言和隐私重置为 Shopi 默认值。",
+          "btn": "重置",
+          "msg": "🔄 偏好已重置"
+        },
+        "supprimer": {
+          "title": "永久删除账户",
+          "descPart1": "您所有数据、订单、积分和历史将在",
+          "descStrong": "30 天内永久删除",
+          "descPart2": "。此操作",
+          "descStrong2": "不可逆",
+          "descPart3": "。",
+          "btn": "删除我的账户",
+          "msg": "⛔ 请求已发送 — 请检查您的邮箱"
+        }
+      },
+      "rowsLive": {
+        "desactiver": {
+          "title": "临时停用账户",
+          "desc": "您的资料将被隐藏。可随时重新激活。",
+          "btn": "停用"
+        },
+        "revoquer": {
+          "title": "撤销所有第三方访问",
+          "desc": "断开链接到您账户的所有应用程序和服务。",
+          "btn": "撤销访问"
+        },
+        "reinitialiser": {
+          "title": "重置我所有偏好",
+          "desc": "将通知、外观、语言重置为默认值。",
+          "btn": "重置"
+        },
+        "supprimer": {
+          "titre": "永久删除账户",
+          "descPart1": "您所有数据将在",
+          "descStrong1": "30 天内",
+          "descPart2": "被删除。此操作",
+          "descStrong2": "不可逆",
+          "descPart3": "。",
+          "btn": "删除我的账户"
+        }
+      },
+      "clicAgain": "再次点击以确认",
+      "confirmerBtn": "确认",
+      "annulerBtn": "取消"
+    },
+    "profil": {
+      "photoTitle": "资料照片",
+      "photoSubtitle": "其他 Shopi 用户可见的您的照片",
+      "photoAlt": "资料照片",
+      "uploadEnCoursTitle": "上传中…",
+      "changerPhotoTitle": "更改照片",
+      "aucunUsername": "无用户名",
+      "uploadEnCoursBtn": "上传…",
+      "changerPhotoBtn": "更改照片",
+      "supprimer": "删除",
+      "photoHint": "JPG、PNG 或 WebP · 最大 5 MB",
+      "invalidFormat": "❌ 格式无效 — 请选择图片（JPG、PNG、WebP）",
+      "tropGrande": "❌ 图片过大 — 最大 5 MB",
+      "uploadEnCoursToast": "📤 上传中…",
+      "photoMiseAJour": "✅ 资料照片已更新！",
+      "photoSupprimee": "✅ 照片已删除",
+      "photoSuppressionError": "❌ 无法删除照片",
+      "uploadErrorFallback": "上传时出错",
+      "loadError": "❌ 无法加载资料",
+      "infosTitle": "个人信息",
+      "infosSubtitle": "您在 Shopi 平台上的身份",
+      "modifier": "修改",
+      "prenomNom": "名字与姓氏",
+      "nomUtilisateur": "用户名",
+      "nonDefini": "未定义",
+      "dateNaissance": "出生日期",
+      "nonRenseignee": "未填写",
+      "genre": "性别",
+      "nonRenseigne": "未填写",
+      "bio": "简介",
+      "aucuneBio": "无简介",
+      "fields": {
+        "prenom": "名字",
+        "nom": "姓氏",
+        "nomUtilisateur": "用户名",
+        "dateNaissance": "出生日期",
+        "genre": "性别",
+        "genreOptions": {
+          "nonPrecise": "未说明",
+          "homme": "男",
+          "femme": "女",
+          "autre": "其他"
+        },
+        "languePreferee": "首选语言",
+        "bio": "简介",
+        "bioPlaceholder": "用几句话介绍自己…",
+        "caracteres": "个字符"
+      },
+      "enregistrer": "保存",
+      "enregistrement": "保存中…",
+      "annuler": "取消",
+      "savedToast": "✅ 更改已保存！",
+      "coordonneesTitle": "联系方式",
+      "coordonneesSubtitle": "邮箱和电话 — 用于登录和提醒",
+      "adresseEmail": "邮箱地址",
+      "telephone": "电话",
+      "verifie": "已验证",
+      "nonVerifie": "未验证",
+      "nonRenseigneTel": "未填写",
+      "emailHint": "确认邮件将发送到新地址",
+      "numeroTelephone": "电话号码",
+      "telHint": "将发送短信验证码",
+      "enregistrerChangements": "保存更改",
+      "coordonneesSavedToast": "✅ 联系方式已更新 — 验证已发送"
+    },
+    "securite": {
+      "authTitle": "身份验证与访问",
+      "authSubtitle": "为您的账户提供多层保护",
+      "mdpTitle": "密码",
+      "dernierModifSuffix_one": "上次修改于 {{count}} 天前",
+      "dernierModifSuffix_other": "上次修改于 {{count}} 天前",
+      "jamaisModifie": "从未修改",
+      "actif": "活跃",
+      "modifier": "修改",
+      "mdpActuel": "当前密码",
+      "nouveauMdp": "新密码",
+      "mdpHint": "最少 8 个字符，1 个大写字母，1 个数字",
+      "confirmer": "确认",
+      "changerMdp": "更改密码",
+      "enregistrement": "保存中…",
+      "annuler": "取消",
+      "mismatchToast": "❌ 密码不匹配",
+      "loadError": "❌ 无法加载安全数据",
+      "twofaTitle": "双重身份验证（2FA）",
+      "twofaDesc": "即使密码泄露也能保护您的账户",
+      "active": "已启用",
+      "desactive": "已禁用",
+      "desactiver": "禁用",
+      "activer": "启用",
+      "twofaActiveToast": "🔐 2FA 已成功启用",
+      "twofaDesactiveToast": "⚠️ 2FA 已禁用",
+      "codesTitle": "备用码",
+      "codesDescAvailable_one": "{{count}} 个可用一次性码",
+      "codesDescAvailable_other": "{{count}} 个可用一次性码",
+      "codesDescDefault": "8 个一次性码 — 如果无法访问 2FA 请保留",
+      "generes": "已生成",
+      "nonGeneres": "未生成",
+      "regenerer": "重新生成",
+      "generer": "生成",
+      "codesGeneresToast": "📋 代码已生成 — 请立即保存！",
+      "sauvegardezCodes": "⚠️ 请保存这些代码 — 只显示一次",
+      "toutCopier": "全部复制",
+      "codesCopiesToast": "📋 代码已复制！",
+      "questionsTitle": "安全问题",
+      "questionsSuffix": "个已配置问题",
+      "modifierBtn": "修改",
+      "configurerBtn": "配置",
+      "questionLabel": "问题",
+      "configureeSuffix": "已配置 · 答案已隐藏",
+      "nonConfiguree": "未配置",
+      "ok": "好",
+      "manquante": "缺失",
+      "choisirQuestion": "选择问题…",
+      "questionOptions": {
+        "animal": "您第一只宠物的名字是什么？",
+        "ecole": "您小学的名字是什么？",
+        "ville": "您出生在哪个城市？",
+        "ami": "您童年最好的朋友叫什么名字？",
+        "mere": "您外婆的名字是什么？"
+      },
+      "reponseLabel": "答案",
+      "reponsePlaceholder": "您的秘密答案…",
+      "atLeastOneQuestionToast": "⚠️ 至少填写一个问题",
+      "alertesTitle": "安全提醒",
+      "alertesSubtitle": "检测到可疑活动时立即通知您",
+      "sms": "短信",
+      "email": "邮箱",
+      "push": "推送",
+      "alertRows": {
+        "connex": {
+          "title": "检测到新登录",
+          "desc": "从未知设备或国家登录时提醒"
+        },
+        "mdp": {
+          "title": "密码更改",
+          "desc": "密码修改时立即提醒"
+        },
+        "tentatives": {
+          "title": "登录尝试失败",
+          "desc": "连续 3 次错误尝试后提醒"
+        },
+        "transaction": {
+          "title": "可疑或拒绝的交易",
+          "desc": "异常高额支付时提醒"
+        },
+        "pays": {
+          "title": "从未知国家访问",
+          "desc": "账户从未知国家使用时提醒"
+        }
+      }
+    }
+  }
+}

@@ -6,7 +6,8 @@
  *   - Miniatures cliquables
  *   - Fallback emoji si pas d'image
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ProduitInfo } from '../data/produitMockData';
 import type { ProduitApi }  from '../pages/ProduitPage';
 import styles from '../styles/ProduitGallerie.module.css';
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export default function ProduitGallerie({ produit, produitApi, onToast, onPartage }: Props) {
+  const { t } = useTranslation();
   const [thumbActive, setThumbActive] = useState(0);
   const [fav,         setFav]         = useState(false);
 
@@ -38,14 +40,14 @@ export default function ProduitGallerie({ produit, produitApi, onToast, onPartag
 
         {/* Badges */}
         <div className={styles.badges}>
-          <span className={`${styles.badge} ${styles.badgeHot}`}>⭐ Populaire</span>
+          <span className={`${styles.badge} ${styles.badgeHot}`}>{t('produitDetail.gallery.populaire')}</span>
           {produit.ancien > produit.prix && (
             <span className={`${styles.badge} ${styles.badgePromo}`}>
               🏷️ −{Math.round((1 - produit.prix / produit.ancien) * 100)}%
             </span>
           )}
           {produit.boutique.continent !== 'africa' && (
-            <span className={`${styles.badge} ${styles.badgeIntl}`}>🌍 Importé</span>
+            <span className={`${styles.badge} ${styles.badgeIntl}`}>{t('produitDetail.gallery.importe')}</span>
           )}
         </div>
 
@@ -109,14 +111,14 @@ export default function ProduitGallerie({ produit, produitApi, onToast, onPartag
         {/* Bouton favori */}
         <button
           className={`${styles.favBtn} ${fav ? styles.favBtnOn : ''}`}
-          onClick={() => { setFav(f => !f); onToast(fav ? '🤍 Retiré des favoris' : '❤️ Ajouté aux favoris'); }}
-          title={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+          onClick={() => { setFav(f => !f); onToast(fav ? t('produitDetail.gallery.retireFavorisToast') : t('produitDetail.gallery.ajouteFavorisToast')); }}
+          title={fav ? t('produitDetail.gallery.retirerFavoris') : t('produitDetail.gallery.ajouterFavoris')}
         >
           <i className={fav ? 'fas fa-heart' : 'far fa-heart'} />
         </button>
 
         {/* Bouton partage */}
-        <button className={styles.shareBtn} onClick={onPartage} title="Partager ce produit">
+        <button className={styles.shareBtn} onClick={onPartage} title={t('produitDetail.gallery.partagerCeProduit')}>
           <i className="fas fa-share-nodes" />
         </button>
       </div>
@@ -129,12 +131,12 @@ export default function ProduitGallerie({ produit, produitApi, onToast, onPartag
               key={img.id}
               className={`${styles.thumb} ${thumbActive === i ? styles.thumbActive : ''}`}
               onClick={() => setThumbActive(i)}
-              title={img.alt ?? `Image ${i + 1}`}
+              title={img.alt ?? t('produitDetail.gallery.image', { n: i + 1 })}
               style={{ overflow: 'hidden', padding: 0 }}
             >
               <img
                 src={img.url}
-                alt={img.alt ?? `Image ${i + 1}`}
+                alt={img.alt ?? t('produitDetail.gallery.image', { n: i + 1 })}
                 style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />
             </div>

@@ -2,7 +2,7 @@
 // Liste des livreurs à suivre, intégrée dans le dashboard entreprise.
 // ⚠️ Distinct de LivreursPage.tsx (gestion du réseau de livraison de l'entreprise).
 
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLivreurs } from '../../../modules/home/components/livreurs/hooks/useLivreurs';
 import shared from './ReseauShared.module.css';
 
@@ -12,35 +12,36 @@ interface Props {
 }
 
 export default function ReseauLivreursPage({ onPop, onView }: Props) {
+  const { t } = useTranslation();
   const { filtered, loading, error, onFollow } = useLivreurs((msg, type) => onPop(msg, type));
 
   const handleFollow = (id: string, fullName: string, isSuivi: boolean) => {
     onFollow(id, !isSuivi);
-    onPop(isSuivi ? `👋 Désabonné de ${fullName}` : `✅ Abonné à ${fullName}`, isSuivi ? 'i' : 's');
+    onPop(isSuivi ? t('profilLivreur.reseauPage.desabonneToast', { nom: fullName }) : t('profilLivreur.reseauPage.abonneToast', { nom: fullName }), isSuivi ? 'i' : 's');
   };
 
   return (
     <div className={shared.page}>
       <div className={`${shared.card} ${shared.cardLast}`}>
         <div className={shared.ch}>
-          <div className={shared.chT}><i className="fas fa-motorcycle" /> Suivre des livreurs</div>
+          <div className={shared.chT}><i className="fas fa-motorcycle" /> {t('profilLivreur.reseauPage.title')}</div>
         </div>
         <div className={shared.cb}>
           {loading && (
             <div style={{ textAlign: 'center', padding: 30, color: 'var(--t3)', fontSize: 13 }}>
-              <i className="fas fa-spinner fa-spin" /> Chargement…
+              <i className="fas fa-spinner fa-spin" /> {t('profilLivreur.reseauPage.loading')}
             </div>
           )}
 
           {error && !loading && (
             <div style={{ marginBottom: 14, padding: '10px 14px', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 10, fontSize: 12.5, color: 'var(--t1)' }}>
-              <i className="fas fa-triangle-exclamation" /> {error} — données de démonstration affichées.
+              <i className="fas fa-triangle-exclamation" /> {error} {t('profilLivreur.reseauPage.errorSuffix')}
             </div>
           )}
 
           {!loading && filtered.length === 0 && (
             <div style={{ textAlign: 'center', padding: 30, color: 'var(--t3)', fontSize: 13 }}>
-              Aucun livreur disponible.
+              {t('profilLivreur.reseauPage.empty')}
             </div>
           )}
 
@@ -58,8 +59,8 @@ export default function ReseauLivreursPage({ onPop, onView }: Props) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 10, color: 'var(--t3)', marginTop: 2, flexWrap: 'wrap' }}>
                       <span>{l.zone}</span>
                       <span><i className="fas fa-star" style={{ color: 'var(--t2)' }} /> {l.averageRating}</span>
-                      <span>{l.totalLivraisons} livraisons</span>
-                      {l.disponible && <span style={{ background: 'var(--g100)', color: 'var(--t2)', fontWeight: 700, padding: '1px 7px', borderRadius: 'var(--pill)' }}>Disponible</span>}
+                      <span>{t('profilLivreur.reseauPage.livraisonsCount', { count: l.totalLivraisons })}</span>
+                      {l.disponible && <span style={{ background: 'var(--g100)', color: 'var(--t2)', fontWeight: 700, padding: '1px 7px', borderRadius: 'var(--pill)' }}>{t('profilLivreur.reseauPage.disponible')}</span>}
                     </div>
                   </div>
                   <button
@@ -76,7 +77,7 @@ export default function ReseauLivreursPage({ onPop, onView }: Props) {
                       flexShrink:   0,
                     }}
                   >
-                    {l.isSuivi ? 'Suivi ✓' : 'Suivre'}
+                    {l.isSuivi ? t('profilLivreur.reseauPage.suiviCheck') : t('profilLivreur.reseauPage.suivre')}
                   </button>
                 </div>
               ))}

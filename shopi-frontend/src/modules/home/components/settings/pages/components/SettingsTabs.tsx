@@ -9,6 +9,7 @@
  * ================================================================ */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsTabs.module.css';
 import { settingsApi, type SecuriteData } from '../../api/settings.api';
 import type { PanelId } from './SettingsSidebar';
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export default function SettingsTabs({ active, onSwitch }: Props) {
+  const { t } = useTranslation();
   const [securite, setSecurite] = useState<SecuriteData | null>(null);
 
   useEffect(() => {
@@ -45,34 +47,34 @@ export default function SettingsTabs({ active, onSwitch }: Props) {
   );
 
   return (
-    <nav className={s.tabs} aria-label="Sections des paramètres">
-      {item('profil',   'fa-user',         'Profil')}
-      {item('adresses', 'fa-location-dot', 'Adresses')}
-      {item('paiement', 'fa-credit-card',  'Paiement')}
-      {item('points',   'fa-star',         'Points Shopi')}
+    <nav className={s.tabs} aria-label={t('settingsPage.tabs.ariaLabel')}>
+      {item('profil',   'fa-user',         t('settingsPage.tabs.profil'))}
+      {item('adresses', 'fa-location-dot', t('settingsPage.tabs.adresses'))}
+      {item('paiement', 'fa-credit-card',  t('settingsPage.tabs.paiement'))}
+      {item('points',   'fa-star',         t('settingsPage.tabs.points'))}
 
       <span className={s.tabDivider} />
 
-      {item('confidentialiteSecurite', 'fa-shield-halved', 'Confidentialité & sécurité', secBadge || undefined)}
-      {item('securite',     'fa-lock',              'Sécurité')}
-      {item('sessions',     'fa-desktop',           'Appareils connectés')}
-      {item('activite',     'fa-clock-rotate-left', "Journal d'activité")}
-      {item('approbations', 'fa-shield-check',      'Appareils de confiance')}
+      {item('confidentialiteSecurite', 'fa-shield-halved', t('settingsPage.tabs.confidentialiteSecurite'), secBadge || undefined)}
+      {item('securite',     'fa-lock',              t('settingsPage.tabs.securite'))}
+      {item('sessions',     'fa-desktop',           t('settingsPage.tabs.sessions'))}
+      {item('activite',     'fa-clock-rotate-left', t('settingsPage.tabs.activite'))}
+      {item('approbations', 'fa-shield-check',      t('settingsPage.tabs.approbations'))}
 
       <span className={s.tabDivider} />
 
-      {item('notifs',          'fa-bell',          'Notifications')}
-      {item('confidentialite', 'fa-shield-halved', 'Confidentialité')}
-      {item('apparence',       'fa-palette',       'Apparence')}
-      {item('langue',          'fa-globe',         'Langue & région')}
+      {item('notifs',          'fa-bell',          t('settingsPage.tabs.notifs'))}
+      {item('confidentialite', 'fa-shield-halved', t('settingsPage.tabs.confidentialite'))}
+      {item('apparence',       'fa-palette',       t('settingsPage.tabs.apparence'))}
+      {item('langue',          'fa-globe',         t('settingsPage.tabs.langue'))}
 
       <span className={s.tabDivider} />
 
-      {item('donnees', 'fa-database', 'Mes données')}
+      {item('donnees', 'fa-database', t('settingsPage.tabs.donnees'))}
 
       <span className={s.tabDivider} />
 
-      {item('danger', 'fa-triangle-exclamation', 'Zone de danger', undefined, true)}
+      {item('danger', 'fa-triangle-exclamation', t('settingsPage.tabs.danger'), undefined, true)}
     </nav>
   );
 }

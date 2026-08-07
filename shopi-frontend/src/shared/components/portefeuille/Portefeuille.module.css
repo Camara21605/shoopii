@@ -150,11 +150,13 @@
 .pm:hover { border-color: var(--bdrb); background: var(--sky); }
 .pm.def { border-color: var(--blue); background: var(--sky); }
 .pmLogo { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #fff; flex-shrink: 0; font-weight: 800; }
-.pmOm   { background: linear-gradient(135deg,#FF6600,#FF8533); }
-.pmMtn  { background: linear-gradient(135deg,#FFCC00,#FFD633); color: #1a1a1a; }
-.pmCard { background: linear-gradient(135deg,#1652F0,#4A82FF); }
-.pmCash { background: linear-gradient(135deg,#059669,#34D399); }
-.pmBank { background: linear-gradient(135deg,#162340,#3D4663); }
+.pmOm      { background: linear-gradient(135deg,#FF6600,#FF8533); }
+.pmMtn     { background: linear-gradient(135deg,#FFCC00,#FFD633); color: #1a1a1a; }
+.pmKulu    { background: linear-gradient(135deg,#7C3AED,#A78BFA); }
+.pmPaycard { background: linear-gradient(135deg,#0EA5E9,#38BDF8); }
+.pmCard    { background: linear-gradient(135deg,#1652F0,#4A82FF); }
+.pmCash    { background: linear-gradient(135deg,#059669,#34D399); }
+.pmBank    { background: linear-gradient(135deg,#162340,#3D4663); }
 .pmInf { flex: 1; min-width: 0; }
 .pmNm { font-size: 12.5px; font-weight: 700; color: var(--navy); }
 .pmNo { font-size: 11px; color: var(--t3); margin-top: 1px; }
@@ -199,12 +201,86 @@
 .fldL { font-size: 10.5px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; display: block; }
 .fldIn { width: 100%; background: var(--g50); border: 1.5px solid var(--bdr2); border-radius: var(--r-md); padding: 12px 14px; font-size: 14px; color: var(--t1); outline: none; transition: all .2s; box-sizing: border-box; font-family: var(--fb); }
 .fldIn:focus { border-color: var(--blue-2); box-shadow: 0 0 0 3px rgba(22,82,240,.08); background: var(--white); }
+.fldPrefixWrap { position: relative; display: flex; align-items: center; }
+.fldPrefixTag {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 13px; font-weight: 800; color: var(--t3); pointer-events: none; z-index: 1;
+}
+.fldPrefixIn { padding-left: 54px; }
 .amtChips { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 8px; }
 .amtChip { background: var(--g100); border: 1px solid var(--bdr2); border-radius: var(--pill); padding: 5px 13px; font-size: 11.5px; font-weight: 700; color: var(--t2); transition: all .15s; cursor: pointer; }
 .amtChip:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
 .mdlBtn { width: 100%; background: var(--navy); color: #fff; border: none; border-radius: var(--r-md); padding: 13px; font-size: 13.5px; font-weight: 700; margin-top: 6px; transition: all .2s; cursor: pointer; }
 .mdlBtn:hover:not(:disabled) { background: var(--navy-2); box-shadow: var(--sh-b); }
 .mdlBtn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ── Page "choisir un moyen de paiement" (dépôt/retrait/transfert) —
+   pas une petite modale : un écran plein qui couvre tout l'écran ── */
+.pageOverlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--white); display: flex; flex-direction: column;
+  overflow-y: auto; animation: wlFadeIn .18s ease;
+}
+.pageHeader {
+  position: sticky; top: 0; z-index: 1;
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px; background: var(--white); border-bottom: 1px solid var(--bdr);
+  flex-shrink: 0;
+}
+.pageBack, .pageClose {
+  width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--bdr2); background: var(--g50);
+  color: var(--navy); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background .18s;
+}
+.pageBack:hover, .pageClose:hover { background: var(--sky); }
+.pageTitle { flex: 1; font-family: var(--fd); font-size: 17px; font-weight: 800; color: var(--navy); }
+.pageBody { flex: 1; padding: 22px 20px 48px; max-width: 480px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+
+.mdlIntro { font-size: 12.5px; color: var(--t3); line-height: 1.5; margin: 0 0 16px; }
+
+.pmGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.pmTile {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: var(--g50); border: 1.5px solid var(--bdr); border-radius: var(--r-lg);
+  padding: 18px 10px 14px; cursor: pointer; text-align: center; transition: all .18s;
+  font-family: var(--fb);
+}
+.pmTile:hover { border-color: var(--blue); background: var(--sky); }
+
+.pmTileIcon {
+  width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 17px; font-weight: 800;
+}
+.pmTileNm { font-size: 12.5px; font-weight: 700; color: var(--navy); }
+.pmTileNo { font-size: 10.5px; color: var(--t3); }
+.pmTileAdd { font-size: 10.5px; font-weight: 700; color: var(--blue); display: flex; align-items: center; gap: 4px; }
+.pmTileAdd i { font-size: 8px; }
+.pmTileDef {
+  position: absolute; top: 8px; right: 8px;
+  font-size: 8px; font-weight: 800; background: var(--btn, #111113); color: #fff;
+  padding: 2px 7px; border-radius: var(--pill); text-transform: uppercase;
+}
+
+.pmPickInfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.pmPickNm { font-size: 12.5px; font-weight: 700; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pmPickNo { font-size: 11px; color: var(--t3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.pmAddBox {
+  background: var(--g50); border: 1.5px dashed var(--bdr2); border-radius: var(--r-md);
+  padding: 13px; display: flex; flex-direction: column; gap: 9px;
+}
+.pmAddTtl { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: var(--navy); }
+.pmAddTtl i { font-size: 10px; color: var(--blue); }
+.pmAddBox .mdlBtn { margin-top: 2px; }
+
+.pmSelected {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  background: var(--g50); border: 1.5px solid var(--bdr); border-radius: var(--r-md);
+  padding: 11px 12px; cursor: pointer; text-align: left; margin-bottom: 14px;
+  font-family: var(--fb);
+}
+.pmChange { font-size: 11px; font-weight: 800; color: var(--blue); flex-shrink: 0; }
 
 /* ════════ ÉTATS ════════ */
 .loading { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 60px 20px; color: var(--t3); font-size: 14px; }

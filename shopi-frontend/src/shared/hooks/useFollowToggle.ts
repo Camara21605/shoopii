@@ -16,6 +16,7 @@
  * ================================================================ */
 
 import { useState, useCallback } from 'react';
+import { useTranslation }        from 'react-i18next';
 import { tokenStorage }          from '../services/apiFetch';
 
 type ToastFn = (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
@@ -38,7 +39,7 @@ interface UseFollowToggleReturn {
 export function useFollowToggle({
   id, name, isSuivi, onFollow, onToast, onRequireAuth,
 }: UseFollowToggleParams): UseFollowToggleReturn {
-
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   const toggle = useCallback(async (e?: React.MouseEvent) => {
@@ -56,16 +57,16 @@ export function useFollowToggle({
     try {
       await onFollow(id, next);
       onToast(
-        next ? `✅ Abonné à ${name}` : `👋 Désabonné de ${name}`,
+        next ? t('followToggle.abonneToast', { name }) : t('followToggle.desabonneToast', { name }),
         next ? 's' : 'i',
       );
     } catch (err: any) {
       /* Le parent a déjà rollback son état ; on informe juste l'utilisateur */
-      onToast(`❌ ${err?.message ?? 'Erreur réseau'}`, 'e');
+      onToast(t('followToggle.erreurToast', { msg: err?.message ?? t('followToggle.erreurReseau') }), 'e');
     } finally {
       setLoading(false);
     }
-  }, [id, name, isSuivi, onFollow, onToast, onRequireAuth]);
+  }, [id, name, isSuivi, onFollow, onToast, onRequireAuth, t]);
 
   return { loading, toggle };
 }

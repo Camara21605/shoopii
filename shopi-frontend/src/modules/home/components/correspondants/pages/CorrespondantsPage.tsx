@@ -12,8 +12,9 @@
  * AUTONOME : aucune prop. Toasts via 'shopi-toast'.
  * ================================================================ */
 
-import React, { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import Header from '../../layout/Header';
 import LivreurViewerBanner from '../../../../../shared/components/LivreurViewerBanner';
@@ -26,12 +27,13 @@ import CardCorrespondant     from '../components/CardCorrespondant';
 import ListItemCorrespondant from '../components/ListItemCorrespondant';
 
 import type {
-  Correspondant, CorrType, FiltreRapide, VueMode, TriOption,
+  CorrType, FiltreRapide, VueMode, TriOption,
 } from '../data/types';
 import styles from '../styles/Correspondants.module.css';
 
 export default function CorrespondantsPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { correspondants, loading, error, toggleSuivi } = useCorrespondants();
 
   /* ── États de filtrage/affichage (côté client) ── */
@@ -53,7 +55,7 @@ export default function CorrespondantsPage() {
   const handleToggle = useCallback((id: string) => {
     const c = correspondants.find(x => x.id === id);
     toggleSuivi(id);
-    if (c) onToast(c.suivi ? `👋 Désabonné de ${c.nom}` : `✅ Abonné à ${c.nom}`);
+    if (c) onToast(c.suivi ? t('correspondantsPage.page.desabonneToast', { nom: c.nom }) : t('correspondantsPage.page.abonneToast', { nom: c.nom }));
   }, [correspondants, toggleSuivi, onToast]);
 
   const handleView = useCallback((id: string) => {
@@ -67,12 +69,12 @@ export default function CorrespondantsPage() {
       const key = c.commune || 'autre';
       map.set(key, (map.get(key) ?? 0) + 1);
     });
-    const list = [{ id: 'all', label: 'Toutes', count: correspondants.length }];
+    const list = [{ id: 'all', label: t('correspondantsPage.sidebar.toutes'), count: correspondants.length }];
     map.forEach((count, id) => {
       list.push({ id, label: id.charAt(0).toUpperCase() + id.slice(1), count });
     });
     return list;
-  }, [correspondants]);
+  }, [correspondants, t]);
 
   /* Compteur par type */
   const countType = useCallback(
@@ -158,7 +160,7 @@ export default function CorrespondantsPage() {
         <LivreurViewerBanner cible="correspondants" />
         <div className={styles.page}>
           <div className={styles.state}>
-            <i className="fas fa-spinner fa-spin" /> Chargement des correspondants…
+            <i className="fas fa-spinner fa-spin" /> {t('correspondantsPage.page.chargement')}
           </div>
         </div>
       </>
@@ -202,15 +204,15 @@ export default function CorrespondantsPage() {
           <main>
             <div className={styles.secH}>
               <div>
-                <div className={styles.secTtl}>Correspondants disponibles</div>
-                <div className={styles.secSub}>{visibles.length} résultat{visibles.length > 1 ? 's' : ''}</div>
+                <div className={styles.secTtl}>{t('correspondantsPage.page.correspondantsDisponibles')}</div>
+                <div className={styles.secSub}>{t('correspondantsPage.page.resultatCount', { count: visibles.length })}</div>
               </div>
             </div>
 
             {/* État erreur (non bloquant : mock affiché) */}
             {error && (
               <div style={{ marginBottom: 14, padding: '10px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, fontSize: 12.5, color: '#991B1B' }}>
-                <i className="fas fa-triangle-exclamation" /> {error} — données de démonstration affichées.
+                <i className="fas fa-triangle-exclamation" /> {error} {t('correspondantsPage.page.errorSuffix')}
               </div>
             )}
 
@@ -218,7 +220,7 @@ export default function CorrespondantsPage() {
             {visibles.length === 0 ? (
               <div className={styles.state}>
                 <i className="fas fa-user-slash" />
-                Aucun correspondant ne correspond à vos filtres.
+                {t('correspondantsPage.page.aucunCorrespondant')}
               </div>
             ) : vue === 'grid' ? (
               <div className={styles.grid}>

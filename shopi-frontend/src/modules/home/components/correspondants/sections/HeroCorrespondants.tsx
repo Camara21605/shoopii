@@ -5,7 +5,7 @@
  * en avant (correspondants suggérés).
  * ================================================================ */
 
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/Correspondants.module.css';
 import type { Correspondant } from '../data/types';
 
@@ -25,11 +25,14 @@ const AVA_BG: Record<string, string> = {
   zonal:    'linear-gradient(135deg,#1e3a8a,#1549B8)',
   national: 'linear-gradient(135deg,#78350F,#B45309)',
 };
-const TYPE_LABEL: Record<string, string> = {
-  regional: '🏠 Régional', zonal: '🗺️ Zonal', national: '🌍 National',
-};
 
 export default function HeroCorrespondants({ total, noteMoy, missions, communes, vedettes, onToggle }: Props) {
+  const { t } = useTranslation();
+  const TYPE_LABEL: Record<string, string> = {
+    regional: t('correspondantsPage.typeLabel.regional'),
+    zonal: t('correspondantsPage.typeLabel.zonal'),
+    national: t('correspondantsPage.typeLabel.national'),
+  };
   return (
     <div className={styles.hero}>
       <div className={styles.heroBg} />
@@ -41,20 +44,19 @@ export default function HeroCorrespondants({ total, noteMoy, missions, communes,
         {/* Texte + KPI */}
         <div>
           <div className={styles.heroSup}>
-            <i className="fas fa-handshake" /> Réseau Shopi · Guinée &amp; Diaspora
+            <i className="fas fa-handshake" /> {t('correspondantsPage.hero.sup')}
           </div>
           <div className={styles.heroTitle}>
-            Vos <em>correspondants</em><br />de confiance partout
+            {t('correspondantsPage.hero.titrePart1')} <em>{t('correspondantsPage.hero.titreEm')}</em><br />{t('correspondantsPage.hero.titrePart2')}
           </div>
           <div className={styles.heroSub}>
-            Des relais locaux vérifiés qui facilitent vos échanges commerciaux entre la Guinée
-            et la diaspora. Réceptionnez, expédiez et faites transiter vos colis en toute sécurité.
+            {t('correspondantsPage.hero.sub')}
           </div>
           <div className={styles.heroKpis}>
-            <div className={styles.hk}><div className={styles.hkVal}>{total}</div><div className={styles.hkLbl}>Correspondants actifs</div></div>
-            <div className={styles.hk}><div className={styles.hkVal}>{noteMoy}★</div><div className={styles.hkLbl}>Note moyenne</div></div>
-            <div className={styles.hk}><div className={styles.hkVal}>{missions}</div><div className={styles.hkLbl}>Missions au total</div></div>
-            <div className={styles.hk}><div className={styles.hkVal}>{communes}</div><div className={styles.hkLbl}>Communes couvertes</div></div>
+            <div className={styles.hk}><div className={styles.hkVal}>{total}</div><div className={styles.hkLbl}>{t('correspondantsPage.hero.correspondantsActifs')}</div></div>
+            <div className={styles.hk}><div className={styles.hkVal}>{noteMoy}★</div><div className={styles.hkLbl}>{t('correspondantsPage.hero.noteMoyenne')}</div></div>
+            <div className={styles.hk}><div className={styles.hkVal}>{missions}</div><div className={styles.hkLbl}>{t('correspondantsPage.hero.missionsAuTotal')}</div></div>
+            <div className={styles.hk}><div className={styles.hkVal}>{communes}</div><div className={styles.hkLbl}>{t('correspondantsPage.hero.communesCouvertes')}</div></div>
           </div>
         </div>
 
@@ -69,7 +71,7 @@ export default function HeroCorrespondants({ total, noteMoy, missions, communes,
               <div className={styles.hcardNm}>{v.nom}</div>
               <div className={styles.hcardType}>{TYPE_LABEL[v.type]} · {v.zone.split(',')[0]}</div>
               <button className={styles.hcardBtn} onClick={() => onToggle(v.id)}>
-                {v.suivi ? '✓ Abonné' : '+ Suivre'}
+                {v.suivi ? t('correspondantsPage.hero.abonne') : t('correspondantsPage.hero.suivre')}
               </button>
             </div>
           ))}

@@ -1,5 +1,6 @@
 // src/dashboards/entreprise/sections/parametres/CommissionsSection.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import s from '../../styles/parametres/ParametresPage.module.css';
 import { apiFetch } from '@/shared/services/apiFetch';
@@ -15,13 +16,14 @@ interface CommissionsData {
 }
 
 const PLAN_EM:  Record<string, string> = { standard: '🟢', pro: '⭐', premium: '🏆' };
-const PLAN_SUB: Record<string, string> = {
-  standard: 'Plan de base · Inclus dans votre inscription',
-  pro:      'Pour les boutiques à fort volume de ventes',
-  premium:  'Commissions réduites + outils marketing avancés',
-};
 
 export default function CommissionsSection({ onDirty, onToast }: Props) {
+  const { t } = useTranslation();
+  const PLAN_SUB: Record<string, string> = {
+    standard: t('parametres.commissions.planStandardSub'),
+    pro:      t('parametres.commissions.planProSub'),
+    premium:  t('parametres.commissions.planPremiumSub'),
+  };
   const [data,    setData]    = useState<CommissionsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
@@ -29,7 +31,7 @@ export default function CommissionsSection({ onDirty, onToast }: Props) {
   useEffect(() => {
     apiFetch<CommissionsData>('/parametres/commissions')
       .then(d => { setData(d); setSelected(d.planActuel); })
-      .catch(() => onToast('Erreur chargement commissions', 'w'))
+      .catch(() => onToast(t('parametres.commissions.loadErrorToast'), 'w'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -47,37 +49,37 @@ export default function CommissionsSection({ onDirty, onToast }: Props) {
   return (
     <>
       <div className={s.sectionHd}>
-        <h1><i className="fas fa-percent" /> Commissions Shopi</h1>
-        <p>Détail des commissions appliquées sur vos ventes selon le type de transaction.</p>
+        <h1><i className="fas fa-percent" /> {t('parametres.commissions.title')}</h1>
+        <p>{t('parametres.commissions.subtitle')}</p>
       </div>
-      <FormCard title="Grille de commissions" icon="fa-table-list" subtitle={`Votre plan actuel : ${current}`}
+      <FormCard title={t('parametres.commissions.grilleTitle')} icon="fa-table-list" subtitle={t('parametres.commissions.grilleSubtitle', { plan: current })}
         action={<span className={`${s.badge} ${s.blue}`} style={{ fontSize:11, padding:'4px 12px' }}>{current}</span>}
       >
         <div className="tbl-wrap">
           <table className={s.commTable}>
-            <thead><tr><th>Type de transaction</th><th>Commission Shopi</th><th>Frais livreur/corresp.</th><th>Retrait immédiat</th></tr></thead>
+            <thead><tr><th>{t('parametres.commissions.typeTransaction')}</th><th>{t('parametres.commissions.commissionShopi')}</th><th>{t('parametres.commissions.fraisLivreurCorresp')}</th><th>{t('parametres.commissions.retraitImmediat')}</th></tr></thead>
             <tbody>
               <tr>
-                <td style={{ fontWeight:600 }}>Vente directe via Shopi</td>
+                <td style={{ fontWeight:600 }}>{t('parametres.commissions.venteDirecte')}</td>
                 <td><span className={`${s.badge} ${s.green}`}>{tauxActuel}%</span></td>
                 <td><span className={`${s.badge} ${s.blue}`}>0</span></td>
                 <td><i className="fas fa-check-circle" style={{ color:'var(--emerald)' }} /></td>
               </tr>
               <tr>
-                <td style={{ fontWeight:600 }}>Vente avec livreur Shopi</td>
+                <td style={{ fontWeight:600 }}>{t('parametres.commissions.venteLivreurShopi')}</td>
                 <td><span className={`${s.badge} ${s.green}`}>{tauxActuel}%</span></td>
-                <td><span className={`${s.badge} ${s.blue}`}>selon livreur</span></td>
+                <td><span className={`${s.badge} ${s.blue}`}>{t('parametres.commissions.selonLivreur')}</span></td>
                 <td><i className="fas fa-check-circle" style={{ color:'var(--emerald)' }} /></td>
               </tr>
               <tr>
-                <td style={{ fontWeight:600 }}>Vente via correspondant</td>
+                <td style={{ fontWeight:600 }}>{t('parametres.commissions.venteCorrespondant')}</td>
                 <td><span className={`${s.badge} ${s.green}`}>{tauxActuel}%</span></td>
-                <td><span className={`${s.badge} ${s.blue}`}>selon corresp.</span></td>
+                <td><span className={`${s.badge} ${s.blue}`}>{t('parametres.commissions.selonCorresp')}</span></td>
                 <td><i className="fas fa-check-circle" style={{ color:'var(--emerald)' }} /></td>
               </tr>
               <tr>
-                <td style={{ fontWeight:600 }}>Abonnement mensuel boutique</td>
-                <td><span className={`${s.badge} ${s.blue}`}>— (inclus)</span></td>
+                <td style={{ fontWeight:600 }}>{t('parametres.commissions.abonnementMensuel')}</td>
+                <td><span className={`${s.badge} ${s.blue}`}>{t('parametres.commissions.inclus')}</span></td>
                 <td><span className={`${s.badge} ${s.blue}`}>—</span></td>
                 <td><i className="fas fa-xmark" style={{ color:'var(--t4)' }} /></td>
               </tr>
@@ -85,7 +87,7 @@ export default function CommissionsSection({ onDirty, onToast }: Props) {
           </table>
         </div>
       </FormCard>
-      <FormCard title="Passer à un plan supérieur" icon="fa-crown" subtitle="Réduisez vos commissions et accédez à des fonctionnalités avancées">
+      <FormCard title={t('parametres.commissions.upgradeTitle')} icon="fa-crown" subtitle={t('parametres.commissions.upgradeSubtitle')}>
         <div className={s.radioGroup}>
           {plans.map(plan => {
             const entry = grille[plan];
@@ -101,7 +103,7 @@ export default function CommissionsSection({ onDirty, onToast }: Props) {
                   <div className={s.roTtl}>{plan.charAt(0).toUpperCase() + plan.slice(1)}</div>
                   <div className={s.roSub}>{PLAN_SUB[plan] ?? plan}</div>
                 </div>
-                <div className={s.roBadge}>{entry ? `${entry.taux}% / vente` : '—'}</div>
+                <div className={s.roBadge}>{entry ? t('parametres.commissions.tauxParVente', { taux: entry.taux }) : '—'}</div>
               </div>
             );
           })}

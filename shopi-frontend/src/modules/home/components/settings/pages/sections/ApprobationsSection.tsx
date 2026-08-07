@@ -1,40 +1,41 @@
 /* ================================================================
  * src/modules/home/components/settings/sections/ApprobationsSection.tsx
  * ================================================================ */
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import p from '../styles/SettingsPage.module.css';
 interface Props { onToast: (msg: string) => void; }
 export function ApprobationsSection({ onToast }: Props) {
+  const { t } = useTranslation();
   return (
     <div className={s.card}>
       <div className={s.cardHd}>
         <div className={s.cardTitle}>
           <div className={`${s.cardIco} ${s.icoEmerald}`}><i className="fas fa-shield-check" /></div>
-          <div><div className={s.cardH}>Appareils de confiance</div><div className={s.cardSub}>Ces appareils peuvent se connecter sans code 2FA supplémentaire</div></div>
+          <div><div className={s.cardH}>{t('settingsPage.approbations.titre')}</div><div className={s.cardSub}>{t('settingsPage.approbations.subtitle')}</div></div>
         </div>
       </div>
       <div className={s.cardBody} style={{ paddingBottom: 4 }}>
         <div className={s.trustedCard}>
           <div className={`${s.trustedIco} ${s.icoBlue}`}><i className="fas fa-mobile-screen" /></div>
           <div className={s.trustedInfo}>
-            <div className={s.trustedName}>iPhone 15 Pro <span className={s.trustedVerified}><i className="fas fa-check" /> Approuvé</span></div>
-            <div className={s.trustedMeta}>App Shopi · Conakry, Guinée · Dernière utilisation : aujourd'hui · Ajouté le 14 jan. 2025</div>
+            <div className={s.trustedName}>iPhone 15 Pro <span className={s.trustedVerified}><i className="fas fa-check" /> {t('settingsPage.approbations.approuve')}</span></div>
+            <div className={s.trustedMeta}>App Shopi · Conakry, Guinée · {t('settingsPage.approbations.derniereUtilisation')} : {t('settingsPage.approbations.aujourdhui')} · {t('settingsPage.approbations.ajouteLe')} 14 jan. 2025</div>
           </div>
-          <button className={s.sessionRevoke} onClick={() => onToast('🔒 Appareil retiré de la liste de confiance')}>Retirer</button>
+          <button className={s.sessionRevoke} onClick={() => onToast(t('settingsPage.approbations.toastRetire'))}>{t('settingsPage.approbations.retirer')}</button>
         </div>
         <div className={s.trustedCard}>
           <div className={`${s.trustedIco} ${s.icoEmerald}`}><i className="fas fa-laptop" /></div>
           <div className={s.trustedInfo}>
-            <div className={s.trustedName}>MacBook Pro M3 <span className={s.trustedVerified}><i className="fas fa-check" /> Approuvé</span></div>
-            <div className={s.trustedMeta}>Chrome 124 · Conakry, Guinée · Dernière utilisation : hier · Ajouté le 20 fév. 2025</div>
+            <div className={s.trustedName}>MacBook Pro M3 <span className={s.trustedVerified}><i className="fas fa-check" /> {t('settingsPage.approbations.approuve')}</span></div>
+            <div className={s.trustedMeta}>Chrome 124 · Conakry, Guinée · {t('settingsPage.approbations.derniereUtilisation')} : {t('settingsPage.approbations.hier')} · {t('settingsPage.approbations.ajouteLe')} 20 fév. 2025</div>
           </div>
-          <button className={s.sessionRevoke} onClick={() => onToast('🔒 MacBook retiré de la liste de confiance')}>Retirer</button>
+          <button className={s.sessionRevoke} onClick={() => onToast(t('settingsPage.approbations.toastRetireMac'))}>{t('settingsPage.approbations.retirer')}</button>
         </div>
         <div style={{ padding: '16px 24px 20px' }}>
           <div className={p.infoBanner} style={{ margin: 0 }}>
             <i className="fas fa-circle-info" />
-            <div><strong>Comment ça fonctionne</strong> — Les appareils de confiance sont mémorisés après une vérification 2FA réussie. Retirez un appareil si vous ne le reconnaissez pas ou si vous l'avez perdu.</div>
+            <div><strong>{t('settingsPage.approbations.commentTitre')}</strong> — {t('settingsPage.approbations.commentTexte')}</div>
           </div>
         </div>
       </div>

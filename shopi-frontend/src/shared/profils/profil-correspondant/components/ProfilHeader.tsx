@@ -5,7 +5,7 @@
  * actions) + barre des 8 KPI.
  * ================================================================ */
 
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/ProfilCorrespondant.module.css';
 import type { CorrProfil } from '../data/types';
 
@@ -28,16 +28,17 @@ interface Props {
 }
 
 export default function ProfilHeader({ profil, suivi, callLoading, onToggle, onMessage, onShare, onCall }: Props) {
+  const { t } = useTranslation();
   /* Les 8 KPI dérivés du profil */
   const KPIS = [
-    { v: profil.missions.toLocaleString('fr-FR'), l: 'Missions',        badge: `+${profil.missionsMois}`, badgeCls: styles.kbG },
-    { v: `${profil.note.toFixed(1)} ★`,           l: 'Note',            badge: 'Top 5%',                  badgeCls: styles.kbP },
-    { v: `${profil.fiabilite}%`,                  l: 'Fiabilité' },
-    { v: profil.abonnes.toLocaleString('fr-FR'),  l: 'Abonnés' },
-    { v: String(profil.nbAvis),                   l: 'Avis clients' },
-    { v: profil.experience,                       l: 'Expérience' },
-    { v: String(profil.zonesCount),               l: 'Zones couvertes' },
-    { v: profil.delaiMoyen,                       l: 'Délai moyen' },
+    { v: profil.missions.toLocaleString('fr-FR'), l: t('profilCorrespondant.kpi.missions'),        badge: `+${profil.missionsMois}`, badgeCls: styles.kbG },
+    { v: `${profil.note.toFixed(1)} ★`,           l: t('profilCorrespondant.kpi.note'),            badge: t('profilCorrespondant.kpi.top5'),  badgeCls: styles.kbP },
+    { v: `${profil.fiabilite}%`,                  l: t('profilCorrespondant.kpi.fiabilite') },
+    { v: profil.abonnes.toLocaleString('fr-FR'),  l: t('profilCorrespondant.kpi.abonnes') },
+    { v: String(profil.nbAvis),                   l: t('profilCorrespondant.kpi.avisClients') },
+    { v: profil.experience,                       l: t('profilCorrespondant.kpi.experience') },
+    { v: String(profil.zonesCount),               l: t('profilCorrespondant.kpi.zonesCouvertes') },
+    { v: profil.delaiMoyen,                       l: t('profilCorrespondant.kpi.delaiMoyen') },
   ];
 
   return (
@@ -69,9 +70,9 @@ export default function ProfilHeader({ profil, suivi, callLoading, onToggle, onM
               </div>
               <div className={styles.idMeta}>
                 <span><i className="fas fa-location-dot" /> {profil.localisation}</span>
-                {profil.enLigne && <span><i className="fas fa-circle" style={{ color: '#10B981', fontSize: 8 }} /> En ligne maintenant</span>}
+                {profil.enLigne && <span><i className="fas fa-circle" style={{ color: '#10B981', fontSize: 8 }} /> {t('profilCorrespondant.enLigneMaintenant')}</span>}
                 <span><i className="fas fa-calendar-check" /> {profil.membreDepuis}</span>
-                <span><i className="fas fa-users" /> {profil.abonnes.toLocaleString('fr-FR')} abonnés</span>
+                <span><i className="fas fa-users" /> {profil.abonnes.toLocaleString('fr-FR')} {t('profilCorrespondant.abonnesSuffix')}</span>
               </div>
               <div className={styles.idChips}>
                 {profil.badges.map(b => (
@@ -83,24 +84,24 @@ export default function ProfilHeader({ profil, suivi, callLoading, onToggle, onM
             </div>
 
             <div className={styles.idActs}>
-              <button className={styles.btnShare} onClick={onShare} title="Partager">
+              <button className={styles.btnShare} onClick={onShare} title={t('profilCorrespondant.partager')}>
                 <i className="fas fa-share-nodes" />
               </button>
               {onCall && (
                 <button className={styles.btnMsg} onClick={onCall} disabled={callLoading}>
                   {callLoading
                     ? <><i className="fas fa-spinner fa-spin" /> …</>
-                    : <><i className="fas fa-phone" /> Appeler</>}
+                    : <><i className="fas fa-phone" /> {t('profilCorrespondant.appeler')}</>}
                 </button>
               )}
               <button className={styles.btnMsg} onClick={onMessage}>
-                <i className="fas fa-comment-dots" /> Contacter
+                <i className="fas fa-comment-dots" /> {t('profilCorrespondant.contacter')}
               </button>
               <button
                 className={`${styles.btn} ${suivi ? styles.btnFollowOn : styles.btnFollow}`}
                 onClick={onToggle}
               >
-                {suivi ? <><i className="fas fa-user-check" /> Abonné</> : <><i className="fas fa-plus" /> Suivre</>}
+                {suivi ? <><i className="fas fa-user-check" /> {t('profilCorrespondant.abonne')}</> : <><i className="fas fa-plus" /> {t('profilCorrespondant.suivre')}</>}
               </button>
             </div>
           </div>

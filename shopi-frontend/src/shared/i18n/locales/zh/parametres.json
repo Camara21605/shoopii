@@ -1,0 +1,688 @@
+{
+  "parametres": {
+    "sidebar": {
+      "title": "设置",
+      "dirtyBadge": "待保存的更改",
+      "items": {
+        "boutique": "店铺与身份",
+        "horaires": "营业时间",
+        "catalogue": "目录与产品",
+        "livraison": "配送",
+        "paiement": "支付与开票",
+        "commissions": "Shopi 佣金",
+        "documents": "文件与验证",
+        "confidentialiteSecurite": "隐私与安全",
+        "securite": "安全",
+        "notifs": "通知",
+        "privacy": "隐私",
+        "langue": "语言",
+        "danger": "敏感区域"
+      },
+      "statusActive": "🟢 活跃",
+      "statusPaused": "🟡 已暂停",
+      "statusPrivate": "🔴 私有"
+    },
+    "confirmQuitterModifs": "您有未保存的更改。仍然退出吗？",
+    "loading": "正在加载设置…",
+    "reessayer": "重试",
+    "saveFloat": {
+      "modifsNonSauvegardees": "未保存的更改",
+      "annuler": "取消",
+      "sauvegarder": "保存"
+    },
+    "toggleRow": {
+      "badgeNew": "新",
+      "badgeRec": "推荐",
+      "badgeAttn": "注意"
+    },
+    "horaires": {
+      "savedToast": "✅ 营业时间已保存",
+      "errorToast": "❌ 保存时出错",
+      "title": "营业时间",
+      "subtitle": "设置您的营业日和营业时间。这些信息会显示在您的店铺页面。",
+      "cardTitle": "每日营业时间",
+      "cardSubtitle": "启用营业日并设置时间",
+      "jours": {
+        "lundi": "星期一",
+        "mardi": "星期二",
+        "mercredi": "星期三",
+        "jeudi": "星期四",
+        "vendredi": "星期五",
+        "samedi": "星期六",
+        "dimanche": "星期日"
+      },
+      "fermeCeJour": "当天关闭",
+      "sauvegardeEnCours": "保存中…",
+      "sauvegarderHoraires": "保存营业时间"
+    },
+    "catalogue": {
+      "savedToast": "✅ 目录已保存",
+      "errorToast": "❌ 保存时出错",
+      "title": "目录与发布规则",
+      "subtitle": "控制产品在 Shopi 上的显示和发布方式。",
+      "reglesTitle": "显示规则",
+      "reglesSubtitle": "公开目录的行为",
+      "afficherRupture": "显示缺货产品",
+      "afficherRuptureSub": "如果禁用，缺货产品将自动隐藏",
+      "publicationAuto": "自动发布",
+      "publicationAutoSub": "新产品无需手动验证即可立即发布",
+      "afficherPrixBarres": "显示划线价",
+      "afficherPrixBarresSub": "促销时显示旧划线价",
+      "autoriserAvis": "允许客户评价",
+      "autoriserAvisSub": "只有已确认的买家才能留下评价",
+      "deviseAffichage": "显示货币",
+      "deviseGnf": "GNF — 几内亚法郎",
+      "deviseEur": "EUR — 欧元",
+      "deviseUsd": "USD — 美元",
+      "politiqueRetourTitle": "退货政策",
+      "politiqueRetourSubtitle": "每个产品页面显示的文本",
+      "politiquePlaceholder": "例如：收货后 7 天内接受退货，产品未开封且使用原包装。",
+      "politiqueHint": "此文本让买家放心并减少争议。",
+      "sauvegardeEnCours": "保存中…",
+      "sauvegarderCatalogue": "保存目录"
+    },
+    "livraison": {
+      "savedToast": "✅ 配送已保存",
+      "errorToast": "❌ 保存时出错",
+      "title": "配送",
+      "subtitle": "选择您的配送方式和您覆盖的区域。",
+      "methodesTitle": "配送方式",
+      "methodesSubtitle": "为客户启用可用的配送模式",
+      "standard": "标准配送",
+      "standardSub": "由您的店铺团队管理",
+      "livreursShopi": "Shopi 配送员",
+      "livreursShopiSub": "Shopi 合作伙伴配送员网络",
+      "correspondants": "代理商",
+      "correspondantsSub": "本地和国际中转站网络",
+      "clickCollect": "到店自取",
+      "clickCollectSub": "客户在店铺取货",
+      "express": "加急配送",
+      "expressSub": "2 小时内配送，收取额外费用",
+      "zonesTitle": "配送区域",
+      "zonesSubtitle": "选择您服务的区域",
+      "zonesSelectionnees_one": "已选择 {{count}} 个区域",
+      "zonesSelectionnees_other": "已选择 {{count}} 个区域",
+      "sauvegardeEnCours": "保存中…",
+      "sauvegarderLivraison": "保存配送"
+    },
+    "paiement": {
+      "savedToast": "✅ 支付已保存",
+      "errorToast": "❌ 保存时出错",
+      "title": "支付与开票",
+      "subtitle": "配置您的收款方式和税务信息。",
+      "receptionTitle": "Shopi 收款",
+      "receptionSubtitle": "您如何接收 Shopi 的转账",
+      "canalReception": "收款渠道",
+      "waveOption": "Wave",
+      "virementBancaireOption": "银行转账",
+      "numeroReception": "收款号码",
+      "frequenceVirements": "转账频率",
+      "quotidien": "每日",
+      "hebdomadaire": "每周",
+      "bimensuel": "每半月",
+      "mensuel": "每月",
+      "montantMinimum": "最低金额（GNF）",
+      "fiscalesTitle": "税务信息",
+      "fiscalesSubtitle": "您企业的官方号码",
+      "nifLabel": "税号",
+      "nifPlaceholder": "税务识别号",
+      "rccmLabel": "商业注册号",
+      "raisonSocialeLabel": "公司名称",
+      "raisonSocialePlaceholder": "例如：TechStore Conakry SARL",
+      "sauvegardeEnCours": "保存中…",
+      "sauvegarderPaiement": "保存支付"
+    },
+    "commissions": {
+      "loadErrorToast": "加载佣金错误",
+      "title": "Shopi 佣金",
+      "subtitle": "根据交易类型对您销售收取的佣金明细。",
+      "grilleTitle": "佣金表",
+      "grilleSubtitle": "您当前的套餐：{{plan}}",
+      "typeTransaction": "交易类型",
+      "commissionShopi": "Shopi 佣金",
+      "fraisLivreurCorresp": "配送员/代理商费用",
+      "retraitImmediat": "立即提现",
+      "venteDirecte": "通过 Shopi 直接销售",
+      "venteLivreurShopi": "使用 Shopi 配送员销售",
+      "selonLivreur": "视配送员而定",
+      "venteCorrespondant": "通过代理商销售",
+      "selonCorresp": "视代理商而定",
+      "abonnementMensuel": "月度店铺订阅",
+      "inclus": "—（包含）",
+      "upgradeTitle": "升级到更高套餐",
+      "upgradeSubtitle": "降低佣金并访问高级功能",
+      "planStandardSub": "基础套餐 · 包含在注册中",
+      "planProSub": "适用于高销量店铺",
+      "planPremiumSub": "降低佣金 + 高级营销工具",
+      "tauxParVente": "{{taux}}% / 销售"
+    },
+    "documents": {
+      "docs": {
+        "cni": {
+          "label": "身份证 / 护照",
+          "hint": "JPG、PNG 或 PDF · 最大 10 MB"
+        },
+        "rccm": {
+          "label": "商业注册证（RCCM）",
+          "hint": "仅 PDF · 最大 10 MB"
+        },
+        "bancaire": {
+          "label": "银行证明",
+          "hint": "对账单或 PDF 证明"
+        },
+        "photo": {
+          "label": "实体店铺照片",
+          "hint": "JPG、PNG · 最大 10 MB"
+        },
+        "nif": {
+          "label": "税务证明（税号）",
+          "hint": "仅 PDF · 最大 10 MB"
+        }
+      },
+      "status": {
+        "pending": "未提交",
+        "reviewing": "审核中",
+        "verified": "✅ 已验证",
+        "rejected": "❌ 已拒绝"
+      },
+      "toasts": {
+        "tropLourd": "❌ 文件过大（最大 10 MB）",
+        "uploadEnCours": "⏳ 上传中…",
+        "uploaded": "✅ 文档“{{type}}”已上传",
+        "echecUpload": "❌ 上传失败"
+      },
+      "title": "文件与验证",
+      "subtitle": "提交您的法律文件以获取“Shopi 已验证店铺”徽章。",
+      "statutVerification": "验证状态：",
+      "requisTitle": "必需文件",
+      "requisSubtitle": "3 个必需文件：身份证 + 商业注册证 + 银行证明",
+      "documentUploade": "文档已上传",
+      "remplacer": "替换",
+      "uploader": "上传",
+      "hint": "提交 3 个必需文件后，您的档案将自动进入审核。Shopi 团队将在 48 小时内联系您。"
+    },
+    "securite": {
+      "title": "安全与登录",
+      "subtitle": "使用强密码和双重身份验证保护您的店铺账户。",
+      "changerMdpTitle": "更改密码",
+      "mdpActuel": "当前密码",
+      "nouveauMdp": "新密码",
+      "nouveauMdpPlaceholder": "最少 8 个字符",
+      "confirmerMdp": "确认新密码",
+      "confirmerMdpPlaceholder": "重复新密码",
+      "force": "强度：",
+      "pwdLabels": {
+        "tropFaible": "太弱",
+        "faible": "弱",
+        "bon": "良好",
+        "fort": "强"
+      },
+      "mdpMisAJourToast": "🔐 密码已更新",
+      "mettreAJourMdp": "更新密码",
+      "twoFaTitle": "双重身份验证（2FA）",
+      "twoFaSubtitle": "添加额外的安全层",
+      "nonActive": "未启用",
+      "twoFa": {
+        "appTitle": "身份验证应用程序",
+        "appSub": "Google Authenticator 或 Authy · 推荐",
+        "appBadge": "最安全",
+        "smsTitle": "短信 / WhatsApp",
+        "smsSub": "每次登录时通过消息发送代码",
+        "smsBadge": "方便",
+        "emailTitle": "仅邮箱",
+        "emailSub": "通过邮箱向您的主地址发送代码",
+        "emailBadge": "基础"
+      },
+      "sessionsTitle": "活跃会话",
+      "sessionsSubtitle": "连接到您店铺账户的设备",
+      "deconnecterTout": "全部断开",
+      "toutesSessionsToast": "🔐 所有会话已结束",
+      "sessionActuelle": "当前会话",
+      "revoquer": "撤销",
+      "sessionTermineeToast": "🔐 会话已结束",
+      "sessions": {
+        "chromeWindows": "Chrome · Windows 11",
+        "chromeWindowsSub": "科纳克里，几内亚 · 现在",
+        "safariIphone": "Safari · iPhone 14",
+        "safariIphoneSub": "科纳克里，几内亚 · 2 小时前",
+        "chromeAndroid": "Chrome · Android",
+        "chromeAndroidSub": "Coyah，几内亚 · 昨天 18:34"
+      }
+    },
+    "notifs": {
+      "savedToast": "✅ 通知已保存",
+      "errorToast": "❌ 保存时出错",
+      "title": "通知",
+      "subtitle": "选择您希望收到通知的事件。",
+      "sauvegardeEnCours": "保存中…",
+      "sauvegarderNotifs": "保存通知",
+      "groups": {
+        "commandes": "📦 订单",
+        "stockCatalogue": "📊 库存与目录",
+        "avisReputation": "⭐ 评价与声誉",
+        "marketingRapports": "📣 营销与报告"
+      },
+      "items": {
+        "newOrder": "收到新订单",
+        "orderCancelled": "客户取消订单",
+        "orderDelivered": "订单成功送达",
+        "paymentReceived": "已收到付款",
+        "outOfStock": "产品缺货",
+        "nearThreshold": "库存接近最低阈值",
+        "productPublished": "产品发布确认",
+        "catalogRequest": "目录更新请求",
+        "newReview": "新客户评价",
+        "negativeReview": "负面评价（< 3 星）",
+        "weeklyReport": "每周声誉报告",
+        "promoInvitations": "Shopi 促销邀请",
+        "monthlyReport": "月度表现报告",
+        "shopNews": "平台新功能"
+      }
+    },
+    "privacy": {
+      "savedToast": "✅ 隐私已保存",
+      "errorToast": "❌ 保存时出错",
+      "title": "隐私",
+      "subtitle": "控制您店铺的哪些信息可见和共享。",
+      "prefsTitle": "隐私偏好",
+      "prefsSubtitle": "这些设置适用于您公开的店铺页面",
+      "sauvegardeEnCours": "保存中…",
+      "sauvegarderConfidentialite": "保存隐私",
+      "items": {
+        "showInSearch": {
+          "label": "出现在搜索中",
+          "sub": "您的店铺在 Shopi 搜索结果中可见"
+        },
+        "showSalesStats": {
+          "label": "显示销售统计",
+          "sub": "客户可以看到订单数量和评分"
+        },
+        "allowFollow": {
+          "label": "允许关注",
+          "sub": "用户可以关注您的店铺"
+        },
+        "shareExactLocation": {
+          "label": "分享精确地址",
+          "sub": "否则只显示所在区域"
+        },
+        "improveAlgorithm": {
+          "label": "改进 Shopi 推荐",
+          "sub": "您的数据有助于个性化搜索结果"
+        },
+        "anonymizedStats": {
+          "label": "分享匿名统计",
+          "sub": "有助于平台改进"
+        },
+        "advancedReports": {
+          "label": "高级个性化报告",
+          "sub": "获取您店铺的详细分析"
+        }
+      }
+    },
+    "danger": {
+      "title": "敏感区域",
+      "subtitle": "这些操作不可逆或对您的店铺有重大影响。请谨慎操作。",
+      "irreversiblesTitle": "不可逆操作",
+      "irreversiblesSubtitle": "这些操作无法撤销",
+      "confirmationRequise": "⚠️ 需要确认：{{action}}",
+      "actions": {
+        "pause": {
+          "ttl": "暂停店铺",
+          "sub": "暂时隐藏您的店铺。您的数据和进行中的订单会保留。",
+          "btn": "暂停"
+        },
+        "disable": {
+          "ttl": "停用账户（30 天）",
+          "sub": "您的资料将被隐藏 30 天。所有数据都会保留。",
+          "btn": "停用"
+        },
+        "transfer": {
+          "ttl": "转移管理权",
+          "sub": "在离开前将店铺管理权转移给另一位负责人。",
+          "btn": "转移"
+        },
+        "delete": {
+          "ttl": "永久删除店铺",
+          "sub": "不可逆操作 — 您所有产品、订单和销售历史将被删除。",
+          "btn": "删除店铺"
+        }
+      }
+    },
+    "boutique": {
+      "savedToast": "✅ 店铺保存成功",
+      "errorToast": "❌ 保存时出错",
+      "contactSavedToast": "✅ 联系方式保存成功",
+      "logoTropLourd": "❌ 徽标过大（最大 5 MB）",
+      "formatInvalide": "❌ 格式无效（JPG、PNG、WebP）",
+      "uploadEnCours": "⏳ 上传中…",
+      "logoMisAJour": "✅ 徽标已更新",
+      "echecUploadLogo": "❌ 徽标上传失败",
+      "imageTropLourde": "❌ 图片过大（最大 8 MB）",
+      "coverMiseAJour": "✅ 封面图片已更新",
+      "echecUploadCover": "❌ 封面上传失败",
+      "logoSupprime": "🗑️ 徽标已删除",
+      "logoSuppressionImpossible": "❌ 无法删除徽标",
+      "title": "店铺与身份",
+      "subtitle": "您店铺的公开信息。所有客户在 Shopi 平台上都可见。",
+      "profilLbl": "资料",
+      "completedAt": "店铺完成度 {{pct}}%",
+      "elementsManquants": "— 一些缺失元素",
+      "profilCompletPart1": "完整的资料能产生",
+      "profilCompletBold": "3 倍",
+      "profilCompletPart2": "的销售额",
+      "logoCoverTitle": "徽标与封面图片",
+      "logoCoverSubtitle": "您店铺在 Shopi 上的视觉形象",
+      "logoBoutique": "店铺徽标",
+      "cliquerChangerLogo": "点击更改徽标",
+      "changer": "更改",
+      "supprimer": "删除",
+      "imageCouverture": "封面图片",
+      "changerCouverture": "更改封面",
+      "couvertureBoutique": "店铺封面图片",
+      "couvertureDims": "1200×400px · JPG、PNG · 最大 8 MB",
+      "changerImageCouverture": "更改封面图片",
+      "infosTitle": "店铺信息",
+      "infosSubtitle": "公开店铺页面上显示的数据",
+      "nomBoutique": "店铺名称",
+      "nomBoutiquePlaceholder": "例如：TechStore Conakry",
+      "nomBoutiqueHint": "此名称会出现在搜索中和您的公开 URL shopi.gn/boutique/...",
+      "description": "描述",
+      "descriptionVisiblePublique": "公开可见",
+      "descriptionPlaceholder": "用几句话描述您的店铺…",
+      "descriptionHint": "最多 500 个字符",
+      "typeEntreprise": "企业类型",
+      "selectionnerType": "选择类型…",
+      "statutLabel": "状态",
+      "statutActive": "🟢 活跃 — 可见",
+      "statutPause": "🟡 已暂停",
+      "statutPrivee": "🔴 私有",
+      "slogan": "标语",
+      "optionnel": "可选",
+      "sloganPlaceholder": "例如：自 2019 年保证新鲜",
+      "siteWeb": "网站",
+      "siteWebPlaceholder": "https://votre-site.com",
+      "tagsMotsCles": "标签与关键词",
+      "tagsPlaceholder": "餐厅、快速配送、科纳克里…",
+      "tagsHint": "用逗号分隔",
+      "sauvegardeEnCours": "保存中…",
+      "sauvegarderBoutique": "保存店铺",
+      "contactTitle": "联系与位置",
+      "contactSubtitle": "公开页面上显示的联系方式",
+      "telephonePrincipal": "主电话",
+      "emailBoutique": "店铺邮箱",
+      "whatsappLabel": "WhatsApp",
+      "whatsappPlaceholder": "620 00 00 00（不含 +224）",
+      "ville": "城市",
+      "choisirVille": "— 选择城市 —",
+      "villePlaceholder": "例如：科纳克里",
+      "commune": "区 / 街道",
+      "choisirCommune": "— 选择区域 —",
+      "quartier": "街区",
+      "choisirQuartier": "— 选择街区 —",
+      "adressePhysique": "物理地址",
+      "adresseHintRue": "（街道、门牌号…）",
+      "adressePlaceholder": "例如：共和国大道，面对大市场",
+      "repereLivreurs": "配送员参考点",
+      "repereLivreursPlaceholder": "例如：药房旁边的红色建筑",
+      "sauvegardeContactEnCours": "保存中…",
+      "sauvegarderContact": "保存联系方式",
+      "responsableTitle": "负责人与所有者",
+      "responsableSubtitle": "主要经理的信息",
+      "prenom": "名字",
+      "prenomPlaceholder": "负责人的名字",
+      "nom": "姓氏",
+      "nomPlaceholder": "负责人的姓氏",
+      "responsableHintPart1": "名字和姓氏可在",
+      "responsableHintBold": "您的账户设置",
+      "responsableHintPart2": "中修改。",
+      "steps": {
+        "logo": "徽标",
+        "companyName": "名称与描述",
+        "contact": "联系方式",
+        "products": "产品",
+        "coverImage": "封面照片",
+        "returnPolicy": "退货政策"
+      }
+    }
+  },
+  "equipe": {
+    "title": "团队管理",
+    "subtitle": "管理您的协作者的访问和权限。",
+    "addMember": "添加成员",
+    "stats": {
+      "activeMembers": "活跃成员",
+      "slotsUsed": "已用名额",
+      "suspended": "已暂停",
+      "remainingSlots": "剩余名额",
+      "activePlan": "当前套餐"
+    },
+    "tabs": {
+      "members": "成员",
+      "invitations": "邀请"
+    },
+    "toolbar": {
+      "searchPlaceholder": "按姓名、邮箱、职位搜索…",
+      "count_one": "{{count}} 名成员",
+      "count_other": "{{count}} 名成员"
+    },
+    "table": {
+      "member": "成员",
+      "jobRole": "职位 / 角色",
+      "status": "状态",
+      "lastLogin": "最近登录",
+      "actions": "操作"
+    },
+    "loading": "加载中…",
+    "empty": {
+      "membersTitle": "暂无协作者。",
+      "membersSub": "点击“添加成员”邀请您的第一个团队成员。",
+      "invitationsTitle": "暂无待处理邀请。",
+      "invitationsSub": "使用“添加成员”通过邮箱邀请协作者。"
+    },
+    "mustChangePassword": "⚠ 需要更改密码",
+    "status": {
+      "active": "活跃",
+      "suspended": "已暂停",
+      "pending": "待处理",
+      "revoked": "已撤销"
+    },
+    "actions": {
+      "editPermissions": "修改权限",
+      "activityLog": "活动日志",
+      "resetPassword": "重置密码",
+      "suspend": "暂停",
+      "reactivate": "重新激活",
+      "deleteAccess": "删除访问权"
+    },
+    "pagination": {
+      "pageOf": "第 {{page}} / {{total}} 页"
+    },
+    "invitations": {
+      "pendingTitle": "待处理邀请",
+      "send": "发送邀请",
+      "expiresOn": "于 {{date}} 过期",
+      "resend": "重新发送邀请",
+      "cancel": "取消邀请"
+    },
+    "confirm": {
+      "suspendTitle": "暂停 {{name}}",
+      "suspendMessage": "{{firstName}} 将无法登录。您可以随时重新激活其访问权。",
+      "deleteTitle": "删除 {{name}} 的访问权",
+      "deleteMessage": "{{firstName}} 的访问权将被永久撤销。此操作不可逆。",
+      "cancelInviteTitle": "取消发给 {{email}} 的邀请",
+      "cancelInviteMessage": "发送给 {{email}} 的邀请将被取消。链接将不再有效。",
+      "cancel": "取消",
+      "confirmBtn": "确认"
+    },
+    "toast": {
+      "loadMembersError": "无法加载成员。",
+      "suspended": "{{name}} 已被暂停。",
+      "reactivated": "{{name}} 已被重新激活。",
+      "reactivateError": "重新激活时出错。",
+      "deleted": "{{name}} 的访问权已撤销。",
+      "resetPasswordError": "重置时出错。",
+      "permissionsUpdated": "权限已更新。",
+      "permissionsUpdateError": "更新时出错。",
+      "invitationResent": "邀请已重新发送。",
+      "genericError": "错误。",
+      "invitationCancelled": "邀请已取消。",
+      "passwordCopied": "密码已复制！"
+    },
+    "permGroups": {
+      "products": {
+        "label": "产品",
+        "view": "查看",
+        "create": "创建",
+        "edit": "修改",
+        "delete": "删除"
+      },
+      "orders": {
+        "label": "订单",
+        "view": "查看",
+        "validate": "验证",
+        "cancel": "取消",
+        "edit": "修改"
+      },
+      "deliveries": {
+        "label": "配送",
+        "view": "查看",
+        "assign": "分配",
+        "edit": "修改"
+      },
+      "payments": {
+        "label": "支付",
+        "view": "查看",
+        "viewTransactions": "交易",
+        "manageRefunds": "退款"
+      },
+      "messaging": {
+        "label": "消息",
+        "read": "阅读",
+        "send": "发送"
+      },
+      "statistics": {
+        "label": "统计",
+        "view": "查看"
+      },
+      "settings": {
+        "label": "设置",
+        "view": "查看",
+        "edit": "修改"
+      },
+      "returns": {
+        "label": "退货与售后",
+        "view": "查看",
+        "process": "处理"
+      },
+      "wallet": {
+        "label": "钱包",
+        "view": "查看",
+        "withdraw": "提现"
+      }
+    },
+    "permPanel": {
+      "title": "权限",
+      "cancel": "取消",
+      "save": "保存"
+    },
+    "activityPanel": {
+      "title": "最近活动",
+      "empty": "无已记录的活动。"
+    },
+    "tempPwdModal": {
+      "title": "临时密码",
+      "transmitPrefix": "将此密码交给",
+      "mustChange": "他下次登录时必须更改。",
+      "warn": "此密码只显示一次。",
+      "gotIt": "我已记下密码"
+    },
+    "addModal": {
+      "title": "添加协作者",
+      "modeDirect": "直接创建",
+      "modeInvite": "通过邮箱邀请",
+      "firstName": "名字 *",
+      "firstNamePlaceholder": "玛丽",
+      "lastName": "姓氏 *",
+      "lastNamePlaceholder": "迪亚洛",
+      "email": "工作邮箱 *",
+      "emailPlaceholder": "marie.diallo@boutique.com",
+      "phone": "电话",
+      "phonePlaceholder": "+224 620 000 000",
+      "jobTitle": "职位",
+      "jobTitlePlaceholder": "销售负责人",
+      "internalRole": "内部角色",
+      "selectPlaceholder": "— 选择 —",
+      "roles": {
+        "manager": "经理",
+        "commercial": "销售",
+        "orderManager": "订单管理员",
+        "logisticsManager": "物流负责人",
+        "customerService": "客服",
+        "accountant": "会计"
+      },
+      "permTemplate": "权限模板",
+      "noTemplate": "— 无模板 —",
+      "noteInvite": "将发送邀请邮件。协作者将选择自己的密码。",
+      "noteDirect": "将生成一个临时密码并只显示一次。",
+      "cancel": "取消",
+      "createAccount": "创建账户",
+      "sendInvitation": "发送邀请",
+      "errors": {
+        "firstName": "名字为必填项",
+        "lastName": "姓氏为必填项",
+        "email": "邮箱无效"
+      },
+      "invitationSentToast": "邀请已发送到 {{email}}。",
+      "createError": "创建时出错。"
+    }
+  },
+  "boutiquePreview": {
+    "loading": "加载中…",
+    "back": "返回",
+    "tabs": {
+      "apercu": "预览",
+      "localisation": "定位"
+    },
+    "subtitleApercu": "店铺公开预览",
+    "subtitleLocalisation": "在地图上标注您的店铺",
+    "ouvrir": "打开",
+    "enregistrement": "保存中…",
+    "enregistre": "已保存！",
+    "sauvegarderLocalisation": "保存定位",
+    "iframeTitle": "预览",
+    "panelTitle": "定位",
+    "panelSub": "标记 🏪 跟随您的选择",
+    "pays": "国家",
+    "ville": "城市",
+    "choisirVille": "— 选择城市 —",
+    "villePlaceholder": "城市名称",
+    "commune": "区域",
+    "choisirCommune": "— 选择区域 —",
+    "quartier": "街区",
+    "choisirQuartier": "— 选择街区 —",
+    "localisationEnCours": "定位中…",
+    "adresse": "地址",
+    "optionnel": "（可选）",
+    "adressePlaceholder": "街道、门牌号…",
+    "repere": "配送员参考点",
+    "reperePlaceholder": "面对蓝色药房…",
+    "latitude": "纬度",
+    "longitude": "经度",
+    "villeObligatoire": "城市是必填项。",
+    "errorSauvegarde": "保存时出错。",
+    "localisationEnregistree": "定位已保存！",
+    "enregistrerLocalisation": "保存定位",
+    "recherchePosition": "正在搜索位置…",
+    "hintCarte": "点击或拖动标记以调整",
+    "pays_list": {
+      "GN": "几内亚",
+      "SN": "塞内加尔",
+      "ML": "马里",
+      "CI": "科特迪瓦",
+      "GW": "几内亚比绍",
+      "LR": "利比里亚",
+      "SL": "塞拉利昂",
+      "FR": "法国"
+    }
+  }
+}

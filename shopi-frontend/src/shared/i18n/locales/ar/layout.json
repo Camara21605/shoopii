@@ -1,0 +1,173 @@
+{
+  "sidebar": {
+    "sections": {
+      "principal": "الرئيسية",
+      "catalogue": "الكتالوج",
+      "marketing": "التسويق",
+      "reseauLogistique": "الشبكة والخدمات اللوجستية",
+      "financesClients": "المالية والعملاء",
+      "equipe": "الفريق",
+      "boutique": "المتجر"
+    },
+    "items": {
+      "overview": "نظرة عامة",
+      "commandes": "الطلبات",
+      "retours": "المرتجعات والدعم",
+      "produits": "المنتجات",
+      "ajouter": "إضافة منتج",
+      "inventaire": "المخزون",
+      "promotions": "العروض",
+      "analytics": "التحليلات",
+      "seo": "تحسين محركات البحث",
+      "messages": "الرسائل",
+      "livreurs": "عمال التوصيل",
+      "correspondants": "المراسلون",
+      "finances": "المالية",
+      "portefeuille": "المحفظة",
+      "clients": "العملاء",
+      "avis": "تقييمات العملاء",
+      "equipeGestion": "إدارة الفريق",
+      "parametres": "الإعدادات",
+      "voirBoutique": "عرض متجري",
+      "alertes": "التنبيهات",
+      "quitter": "تسجيل الخروج"
+    }
+  },
+  "topbar": {
+    "titles": {
+      "overview": {
+        "title": "نظرة عامة",
+        "subtitle": "لوحة تحكم متجرك"
+      },
+      "commandes": {
+        "title": "الطلبات",
+        "subtitle": "إدارة جميع طلباتك"
+      },
+      "retours": {
+        "title": "المرتجعات والدعم",
+        "subtitle": "إدارة طلبات الإرجاع وخدمة ما بعد البيع"
+      },
+      "produits": {
+        "title": "كتالوج المنتجات",
+        "subtitle": "124 منتجًا · 8 فئات"
+      },
+      "ajouter": {
+        "title": "إضافة منتج",
+        "subtitle": "أنشئ وانشر منتجًا جديدًا"
+      },
+      "inventaire": {
+        "title": "المخزون والكميات",
+        "subtitle": "إدارة مستويات المخزون"
+      },
+      "promotions": {
+        "title": "العروض وأكواد الخصم",
+        "subtitle": "عزز مبيعاتك بالعروض"
+      },
+      "analytics": {
+        "title": "التحليلات المتقدمة",
+        "subtitle": "إحصائيات وأداء متجرك"
+      },
+      "messages": {
+        "title": "رسائل العملاء",
+        "subtitle": "المحادثات ودعم العملاء"
+      },
+      "seo": {
+        "title": "تحسين محركات البحث",
+        "subtitle": "التحسين والحملات التسويقية"
+      },
+      "livreurs": {
+        "title": "عمال التوصيل",
+        "subtitle": "شبكة التوصيل · 4 نشط"
+      },
+      "correspondants": {
+        "title": "المراسلون",
+        "subtitle": "نقاط الخدمة المحلية والدولية"
+      },
+      "finances": {
+        "title": "المالية",
+        "subtitle": "الإيرادات والمصاريف والمعاملات"
+      },
+      "portefeuille": {
+        "title": "المحفظة",
+        "subtitle": "الرصيد والسحوبات والمعاملات"
+      },
+      "clients": {
+        "title": "العملاء",
+        "subtitle": "قاعدة العملاء · 2,414 مشتريًا"
+      },
+      "avis": {
+        "title": "تقييمات العملاء",
+        "subtitle": "248 تقييمًا · متوسط التقييم 4.9 ⭐"
+      },
+      "parametres": {
+        "title": "الإعدادات",
+        "subtitle": "إعداد متجرك"
+      },
+      "profil": {
+        "title": "ملفي الشخصي",
+        "subtitle": "الملف العام لمتجرك"
+      },
+      "boutiquePreview": {
+        "title": "عرض متجري",
+        "subtitle": "معاينة متجرك كما يراه العملاء"
+      },
+      "reseauCorrespondants": {
+        "title": "المراسلون",
+        "subtitle": "تابع المراسلين في شبكة Shopi"
+      },
+      "reseauLivreurs": {
+        "title": "عمال التوصيل",
+        "subtitle": "تابع عمال التوصيل الآخرين في شبكة Shopi"
+      },
+      "profilCorrespondantReseau": {
+        "title": "ملف المراسل",
+        "subtitle": "التفاصيل والمتابعة"
+      },
+      "profilLivreurReseau": {
+        "title": "ملف عامل التوصيل",
+        "subtitle": "التفاصيل والمتابعة"
+      }
+    },
+    "searchPlaceholder": "ابحث عن الطلبات والمنتجات والعملاء…",
+    "tooltips": {
+      "livreurs": "عمال التوصيل",
+      "correspondants": "المراسلون",
+      "commandes": "الطلبات",
+      "messages": "الرسائل",
+      "aide": "مركز المساعدة"
+    },
+    "menu": {
+      "profil": "ملفي الشخصي",
+      "voirBoutique": "عرض متجري",
+      "basculerAccueil": "الانتقال إلى الصفحة الرئيسية",
+      "deconnexion": "تسجيل الخروج"
+    },
+    "status": {
+      "active": "المتجر نشط",
+      "suspended": "مؤقت",
+      "private": "خاص",
+      "pending": "بانتظار التحقق",
+      "default": "بائع محترف"
+    },
+    "bottomNav": {
+      "accueil": "الرئيسية",
+      "commandes": "الطلبات",
+      "produits": "المنتجات",
+      "monEspace": "مساحتي"
+    },
+    "drawer": {
+      "menuAria": "قائمة التنقل",
+      "voirBoutique": "عرض متجري",
+      "aide": "مركز المساعدة",
+      "basculerAccueil": "الانتقال إلى الصفحة الرئيسية",
+      "deconnexion": "تسجيل الخروج"
+    },
+    "hamburgerAria": "القائمة"
+  },
+  "reseauBottomNav": {
+    "accueil": "الرئيسية",
+    "correspondants": "المراسلون",
+    "livreurs": "عمال التوصيل",
+    "monEspace": "مساحتي"
+  }
+}

@@ -14,6 +14,7 @@
  *   (applyCallEventLocally) pour l'update optimiste du state React.
  */
 import { useCallback, useEffect, useMemo } from 'react';
+import { useTranslation }    from 'react-i18next';
 import { useMessagerie }     from './hooks/useMessagerie';
 import { useDeliveryGroups } from './hooks/useDeliveryGroups';
 import { useCallHistory }    from './hooks/useCallHistory';
@@ -31,6 +32,7 @@ import s from './styles/MessagerieLayout.module.css';
 // ─────────────────────────────────────────────────────────────
 
 export default function MessagerieCore() {
+  const { t } = useTranslation();
   const { pop } = useToast();
   const toast = (msg: string, type?: string) => pop(msg, type as any);
 
@@ -219,7 +221,7 @@ export default function MessagerieCore() {
           pointerEvents: 'none',
         }}>
           <i className="fas fa-circle-exclamation" />
-          Déconnecté du serveur temps réel — messages et appels non disponibles
+          {t('messagerie.core.disconnected')}
         </div>
       )}
 

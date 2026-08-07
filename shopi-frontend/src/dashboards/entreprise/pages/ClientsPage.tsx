@@ -18,6 +18,8 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useToast }        from '../../../shared/context/ToastContext';
 import { useClients, type ClientSegment, type ClientRow } from '../hooks/useClients';
 import ClientProfilModal   from './ClientProfilModal';
@@ -27,16 +29,18 @@ import ClientProfilModal   from './ClientProfilModal';
  * ════════════════════════════════════════════════════════════ */
 
 /** Couleur et libellé par segment */
-const SEGMENT_META: Record<ClientSegment, {
+function getSegmentMeta(t: TFunction): Record<ClientSegment, {
   label: string; emoji: string;
   bg: string; color: string; border: string;
-}> = {
-  VIP:      { label: 'VIP',       emoji: '👑', bg: 'var(--vl-bg)', color: 'var(--violet)', border: 'var(--vl-bg)'  },
-  Fidèle:   { label: 'Fidèle',    emoji: '⭐', bg: 'var(--am-bg)', color: 'var(--amber)',  border: 'var(--am-bg)'  },
-  Régulier: { label: 'Régulier',  emoji: '🔄', bg: 'var(--sky-2)', color: 'var(--blue)',   border: 'var(--sky-3)' },
-  Nouveau:  { label: 'Nouveau',   emoji: '🆕', bg: 'var(--em-bg)', color: 'var(--emerald)',border: 'var(--em-bg)' },
-  Abonné:   { label: 'Abonné',   emoji: '👁️', bg: 'var(--tl-bg)', color: 'var(--teal)', border: 'var(--tl-bg)' },
-};
+}> {
+  return {
+    VIP:      { label: t('clients.segment.VIP'),      emoji: '👑', bg: 'var(--vl-bg)', color: 'var(--violet)', border: 'var(--vl-bg)'  },
+    Fidèle:   { label: t('clients.segment.Fidèle'),   emoji: '⭐', bg: 'var(--am-bg)', color: 'var(--amber)',  border: 'var(--am-bg)'  },
+    Régulier: { label: t('clients.segment.Régulier'), emoji: '🔄', bg: 'var(--sky-2)', color: 'var(--blue)',   border: 'var(--sky-3)' },
+    Nouveau:  { label: t('clients.segment.Nouveau'),  emoji: '🆕', bg: 'var(--em-bg)', color: 'var(--emerald)',border: 'var(--em-bg)' },
+    Abonné:   { label: t('clients.segment.Abonné'),   emoji: '👁️', bg: 'var(--tl-bg)', color: 'var(--teal)', border: 'var(--tl-bg)' },
+  };
+}
 
 /** Couleurs d'avatar cycliques */
 const AVATAR_COLORS = ['var(--btn)','var(--btn)','var(--btn)','var(--btn)','var(--t2)','var(--btn)','var(--btn)','var(--btn)'];
@@ -47,7 +51,8 @@ const AVATAR_COLORS = ['var(--btn)','var(--btn)','var(--btn)','var(--btn)','var(
 
 /** Badge de segment */
 function SegBadge({ seg }: { seg: ClientSegment }) {
-  const m = SEGMENT_META[seg];
+  const { t } = useTranslation();
+  const m = getSegmentMeta(t)[seg];
   return (
     <span style={{
       background: m.bg, color: m.color, border: `1px solid ${m.border}`,
@@ -62,19 +67,20 @@ function SegBadge({ seg }: { seg: ClientSegment }) {
 
 /** Badge source */
 function SourceBadge({ isSuivi, totalOrders }: { isSuivi: boolean; totalOrders: number }) {
+  const { t } = useTranslation();
   if (totalOrders > 0 && isSuivi) return (
     <span style={{ fontSize: 9.5, color: 'var(--t3)', background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 999, padding: '2px 8px', fontWeight: 600 }}>
-      🛒 + 👁️
+      {t('clients.sourceBadge.acheteurEtAbonne')}
     </span>
   );
   if (totalOrders > 0) return (
     <span style={{ fontSize: 9.5, color: 'var(--t2)', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 999, padding: '2px 8px', fontWeight: 600 }}>
-      🛒 Acheteur
+      {t('clients.sourceBadge.acheteur')}
     </span>
   );
   return (
     <span style={{ fontSize: 9.5, color: 'var(--t2)', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 999, padding: '2px 8px', fontWeight: 600 }}>
-      👁️ Abonné
+      {t('clients.sourceBadge.abonne')}
     </span>
   );
 }
@@ -105,17 +111,17 @@ function fmtGNF(n: number): string {
 }
 
 /** Formate une date relative */
-function fmtDate(d: string | null): string {
+function fmtDate(d: string | null, t: TFunction): string {
   if (!d) return '—';
   const date = new Date(d);
   const now  = Date.now();
   const diff = now - date.getTime();
   const days = Math.floor(diff / 86_400_000);
-  if (days === 0) return "Auj.";
-  if (days === 1) return "Hier";
-  if (days < 7)   return `Il y a ${days}j`;
-  if (days < 31)  return `Il y a ${Math.floor(days / 7)}sem`;
-  if (days < 365) return `Il y a ${Math.floor(days / 30)}mois`;
+  if (days === 0) return t('clients.date.auj');
+  if (days === 1) return t('clients.date.hier');
+  if (days < 7)   return t('clients.date.ilYaJours', { count: days });
+  if (days < 31)  return t('clients.date.ilYaSemaines', { count: Math.floor(days / 7) });
+  if (days < 365) return t('clients.date.ilYaMois', { count: Math.floor(days / 30) });
   return date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
 }
 
@@ -124,6 +130,7 @@ function fmtDate(d: string | null): string {
  * ════════════════════════════════════════════════════════════ */
 
 export default function ClientsPage() {
+  const { t } = useTranslation();
   const { pop } = useToast();
   const {
     clients, stats, total, pages,
@@ -145,14 +152,14 @@ export default function ClientsPage() {
       {/* ── En-tête ── */}
       <div className="page-header" style={{ marginBottom: 20 }}>
         <div>
-          <div className="ph-title">Clients <mark>& Abonnés</mark></div>
+          <div className="ph-title">{t('clients.header.titlePart1')} <mark>{t('clients.header.titleMark')}</mark></div>
           <div className="ph-sub">
-            Acheteurs + abonnés de votre boutique — données temps réel
+            {t('clients.header.subtitle')}
           </div>
         </div>
         <div className="ph-actions">
           <button className="btn btn-ghost btn-sm" onClick={reload}>
-            <i className="fas fa-rotate-right" /> Actualiser
+            <i className="fas fa-rotate-right" /> {t('clients.header.actualiser')}
           </button>
         </div>
       </div>
@@ -163,26 +170,26 @@ export default function ClientsPage() {
           {
             ico: '👥', k: 'k1',
             val:  loading ? '—' : String(stats?.total   ?? 0),
-            lbl:  'Total clients',
-            sub:  stats ? `${stats.buyers} acheteurs · ${stats.abonnes} abonnés` : '…',
+            lbl:  t('clients.kpi.totalClients'),
+            sub:  stats ? t('clients.kpi.totalClientsSub', { buyers: stats.buyers, abonnes: stats.abonnes }) : '…',
           },
           {
             ico: '👑', k: 'k3',
             val:  loading ? '—' : String(stats?.vip      ?? 0),
-            lbl:  'Clients VIP',
-            sub:  '≥ 10M GNF ou 10+ cmds',
+            lbl:  t('clients.kpi.clientsVip'),
+            sub:  t('clients.kpi.clientsVipSub'),
           },
           {
             ico: '💰', k: 'k2',
             val:  loading ? '—' : `${fmtGNF(stats?.caTotal ?? 0)} GNF`,
-            lbl:  'CA total clients',
-            sub:  stats ? `Panier moy. : ${fmtGNF(stats.panierMoyen)} GNF` : '…',
+            lbl:  t('clients.kpi.caTotalClients'),
+            sub:  stats ? t('clients.kpi.panierMoySub', { montant: fmtGNF(stats.panierMoyen) }) : '…',
           },
           {
             ico: '🆕', k: 'k4',
             val:  loading ? '—' : String(stats?.nouveaux ?? 0),
-            lbl:  'Nouveaux acheteurs',
-            sub:  'Première commande',
+            lbl:  t('clients.kpi.nouveauxAcheteurs'),
+            sub:  t('clients.kpi.premiereCommande'),
           },
         ].map((s, i) => (
           <div key={i} className={`kpi ${s.k}`}>
@@ -212,9 +219,9 @@ export default function ClientsPage() {
 
               {/* Source */}
               {([
-                { label: 'Tous',       value: 'all'     },
-                { label: '🛒 Acheteurs', value: 'buyers'  },
-                { label: '👁️ Abonnés',  value: 'abonnes' },
+                { label: t('clients.filters.tous'),       value: 'all'     },
+                { label: t('clients.filters.acheteurs'), value: 'buyers'  },
+                { label: t('clients.filters.abonnes'),  value: 'abonnes' },
               ] as { label: string; value: 'all' | 'buyers' | 'abonnes' }[]).map(f => (
                 <button
                   key={f.value}
@@ -229,12 +236,12 @@ export default function ClientsPage() {
 
               {/* Segment */}
               {([
-                { label: 'Tous segments', value: 'all'      },
-                { label: '👑 VIP',        value: 'VIP'      },
-                { label: '⭐ Fidèles',    value: 'Fidèle'   },
-                { label: '🔄 Réguliers',  value: 'Régulier' },
-                { label: '🆕 Nouveaux',   value: 'Nouveau'  },
-                { label: '👁️ Abonnés',   value: 'Abonné'   },
+                { label: t('clients.filters.tousSegments'), value: 'all'      },
+                { label: t('clients.filters.vip'),        value: 'VIP'      },
+                { label: t('clients.filters.fideles'),    value: 'Fidèle'   },
+                { label: t('clients.filters.reguliers'),  value: 'Régulier' },
+                { label: t('clients.filters.nouveaux'),   value: 'Nouveau'  },
+                { label: t('clients.filters.abonnes'),   value: 'Abonné'   },
               ] as { label: string; value: 'all' | 'VIP' | 'Fidèle' | 'Régulier' | 'Nouveau' | 'Abonné' }[]).map(f => (
                 <button
                   key={f.value}
@@ -251,7 +258,7 @@ export default function ClientsPage() {
               <i className="fas fa-magnifying-glass" style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: 'var(--t4)', fontSize: 12, pointerEvents: 'none' }} />
               <input
                 type="text"
-                placeholder="Nom ou email…"
+                placeholder={t('clients.search')}
                 value={filters.search ?? ''}
                 onChange={e => applyFilter({ search: e.target.value })}
                 style={{ border: '1.5px solid var(--bdr2)', borderRadius: 'var(--pill)', padding: '8px 14px 8px 32px', fontSize: 12.5, color: 'var(--navy)', background: 'var(--white)', outline: 'none', width: 200, transition: 'border-color .2s' }}
@@ -264,7 +271,7 @@ export default function ClientsPage() {
             <div className="ch">
               <div className="ch-t">
                 <i className="fas fa-users" />
-                Base clients
+                {t('clients.baseClients')}
                 {!loading && <span style={{ marginLeft: 6, fontSize: 11.5, fontWeight: 400, color: 'var(--t3)' }}>({total})</span>}
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -277,10 +284,10 @@ export default function ClientsPage() {
                     applyFilter({ sortBy: by as any, sortOrder: order as any });
                   }}
                 >
-                  <option value="totalSpent_DESC">Plus dépensé</option>
-                  <option value="totalOrders_DESC">Plus de commandes</option>
-                  <option value="lastOrderAt_DESC">Dernière commande</option>
-                  <option value="createdAt_DESC">Plus récents</option>
+                  <option value="totalSpent_DESC">{t('clients.sort.plusDepense')}</option>
+                  <option value="totalOrders_DESC">{t('clients.sort.plusCommandes')}</option>
+                  <option value="lastOrderAt_DESC">{t('clients.sort.derniereCommande')}</option>
+                  <option value="createdAt_DESC">{t('clients.sort.plusRecents')}</option>
                 </select>
               </div>
             </div>
@@ -289,17 +296,17 @@ export default function ClientsPage() {
             {loading && (
               <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--t3)' }}>
                 <i className="fas fa-circle-notch fa-spin" style={{ fontSize: 24, display: 'block', marginBottom: 10 }} />
-                Chargement des clients…
+                {t('clients.loading')}
               </div>
             )}
 
             {!loading && error && (
               <div style={{ padding: '32px 20px', textAlign: 'center' }}>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>⚠️</div>
-                <div style={{ fontWeight: 700, color: 'var(--t2)', marginBottom: 6 }}>Erreur de chargement</div>
+                <div style={{ fontWeight: 700, color: 'var(--t2)', marginBottom: 6 }}>{t('clients.error.title')}</div>
                 <div style={{ fontSize: 12.5, color: 'var(--t3)', marginBottom: 14 }}>{error}</div>
                 <button onClick={reload} style={{ background: 'var(--navy)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                  <i className="fas fa-rotate-right" /> Réessayer
+                  <i className="fas fa-rotate-right" /> {t('clients.error.reessayer')}
                 </button>
               </div>
             )}
@@ -308,12 +315,12 @@ export default function ClientsPage() {
               <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--t3)' }}>
                 <div style={{ fontSize: 40, marginBottom: 10 }}>👥</div>
                 <div style={{ fontFamily: 'var(--fd)', fontSize: 15, fontWeight: 700, color: 'var(--navy)', marginBottom: 6 }}>
-                  {filters.search ? 'Aucun résultat' : 'Aucun client pour le moment'}
+                  {filters.search ? t('clients.empty.aucunResultat') : t('clients.empty.aucunClient')}
                 </div>
                 <div style={{ fontSize: 12.5 }}>
                   {filters.search
-                    ? 'Aucun client ne correspond à votre recherche.'
-                    : 'Vos premiers clients apparaîtront ici dès leur première commande ou abonnement.'}
+                    ? t('clients.empty.subRecherche')
+                    : t('clients.empty.subDefaut')}
                 </div>
               </div>
             )}
@@ -323,14 +330,14 @@ export default function ClientsPage() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Client</th>
-                      <th>Contact</th>
-                      <th>Source</th>
-                      <th>Commandes</th>
-                      <th>Total dépensé</th>
-                      <th>Segment</th>
-                      <th>Dernière cmd</th>
-                      <th>Actions</th>
+                      <th>{t('clients.table.client')}</th>
+                      <th>{t('clients.table.contact')}</th>
+                      <th>{t('clients.table.source')}</th>
+                      <th>{t('clients.table.commandes')}</th>
+                      <th>{t('clients.table.totalDepense')}</th>
+                      <th>{t('clients.table.segment')}</th>
+                      <th>{t('clients.table.derniereCmd')}</th>
+                      <th>{t('clients.table.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -348,7 +355,7 @@ export default function ClientsPage() {
                               <div style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--navy)' }}>{c.fullName}</div>
                               {c.isSuivi && (
                                 <div style={{ fontSize: 10, color: 'var(--t2)', fontWeight: 600 }}>
-                                  <i className="fas fa-check-circle" style={{ marginRight: 3 }} />Abonné
+                                  <i className="fas fa-check-circle" style={{ marginRight: 3 }} />{t('clients.table.abonne')}
                                 </div>
                               )}
                             </div>
@@ -372,7 +379,7 @@ export default function ClientsPage() {
                               <span style={{ fontFamily: 'var(--fd)', fontWeight: 800, fontSize: 15, color: 'var(--navy)' }}>
                                 {c.totalOrders}
                               </span>
-                              <span style={{ fontSize: 10, color: 'var(--t3)' }}>cmds</span>
+                              <span style={{ fontSize: 10, color: 'var(--t3)' }}>{t('clients.table.cmds')}</span>
                             </div>
                           ) : (
                             <span style={{ fontSize: 11, color: 'var(--t4)' }}>—</span>
@@ -395,7 +402,7 @@ export default function ClientsPage() {
 
                         {/* Dernière commande */}
                         <td style={{ fontSize: 12, color: 'var(--t3)', whiteSpace: 'nowrap' }}>
-                          {fmtDate(c.lastOrderAt)}
+                          {fmtDate(c.lastOrderAt, t)}
                         </td>
 
                         {/* Actions */}
@@ -403,11 +410,11 @@ export default function ClientsPage() {
                           <div className="td-action" onClick={e => e.stopPropagation()}>
                             <button className="ta-btn primary"
                               onClick={() => setSelectedId(c.id)}>
-                              <i className="fas fa-user" style={{ marginRight: 4 }} />Profil
+                              <i className="fas fa-user" style={{ marginRight: 4 }} />{t('clients.table.profil')}
                             </button>
                             <button className="ta-btn"
-                              onClick={() => pop(`📧 Message envoyé à ${c.fullName}`, 's')}>
-                              Message
+                              onClick={() => pop(t('clients.table.messageToast', { name: c.fullName }), 's')}>
+                              {t('clients.table.message')}
                             </button>
                           </div>
                         </td>
@@ -421,7 +428,7 @@ export default function ClientsPage() {
             {/* ── Pagination ── */}
             {!loading && !error && pages > 1 && (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px', borderTop: '1px solid var(--bdr)', fontSize: 12.5, color: 'var(--t3)' }}>
-                <span>{total} client{total > 1 ? 's' : ''} · Page {filters.page}/{pages}</span>
+                <span>{t('clients.pagination', { count: total, page: filters.page, pages })}</span>
                 <div style={{ display: 'flex', gap: 4 }}>
                   <button
                     disabled={(filters.page ?? 1) <= 1}
@@ -459,16 +466,16 @@ export default function ClientsPage() {
           {/* Répartition segments */}
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-chart-pie" /> Répartition</div>
+              <div className="ch-t"><i className="fas fa-chart-pie" /> {t('clients.sidePanel.repartition')}</div>
             </div>
             <div className="cb">
               {stats ? (
                 [
-                  { label: '👑 VIP',       count: stats.vip,       color: 'var(--violet)'  },
-                  { label: '⭐ Fidèles',   count: stats.fideles,   color: 'var(--amber)'   },
-                  { label: '🔄 Réguliers', count: stats.reguliers, color: 'var(--blue)'    },
-                  { label: '🆕 Nouveaux',  count: stats.nouveaux,  color: 'var(--emerald)' },
-                  { label: '👁️ Abonnés',  count: stats.abonnes - (stats.vip + stats.fideles + stats.reguliers + stats.nouveaux > 0 ? 0 : 0), color: 'var(--teal)' },
+                  { label: t('clients.filters.vip'),       count: stats.vip,       color: 'var(--violet)'  },
+                  { label: t('clients.filters.fideles'),   count: stats.fideles,   color: 'var(--amber)'   },
+                  { label: t('clients.filters.reguliers'), count: stats.reguliers, color: 'var(--blue)'    },
+                  { label: t('clients.filters.nouveaux'),  count: stats.nouveaux,  color: 'var(--emerald)' },
+                  { label: t('clients.filters.abonnes'),  count: stats.abonnes - (stats.vip + stats.fideles + stats.reguliers + stats.nouveaux > 0 ? 0 : 0), color: 'var(--teal)' },
                 ].map(({ label, count, color }) => {
                   const pct = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
                   return (
@@ -489,7 +496,7 @@ export default function ClientsPage() {
               ) : (
                 <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--t3)', fontSize: 12 }}>
                   <i className="fas fa-circle-notch fa-spin" style={{ marginRight: 6 }} />
-                  Chargement…
+                  {t('clients.sidePanel.chargement')}
                 </div>
               )}
             </div>
@@ -498,15 +505,15 @@ export default function ClientsPage() {
           {/* Stats globales */}
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-chart-bar" /> Métriques clés</div>
+              <div className="ch-t"><i className="fas fa-chart-bar" /> {t('clients.sidePanel.metriquesCles')}</div>
             </div>
             <div className="cb">
               {[
-                { ico: '👥', l: 'Total clients',    v: loading ? '…' : String(stats?.total ?? 0)                     },
-                { ico: '🛒', l: 'Acheteurs',        v: loading ? '…' : String(stats?.buyers ?? 0)                    },
-                { ico: '👁️',  l: 'Abonnés boutique', v: loading ? '…' : String(stats?.abonnes ?? 0)                   },
-                { ico: '💰', l: 'CA total',         v: loading ? '…' : `${fmtGNF(stats?.caTotal ?? 0)} GNF`          },
-                { ico: '🛍️', l: 'Panier moyen',     v: loading ? '…' : `${fmtGNF(stats?.panierMoyen ?? 0)} GNF`      },
+                { ico: '👥', l: t('clients.kpi.totalClients'),    v: loading ? '…' : String(stats?.total ?? 0)                     },
+                { ico: '🛒', l: t('clients.sidePanel.acheteurs'),        v: loading ? '…' : String(stats?.buyers ?? 0)                    },
+                { ico: '👁️',  l: t('clients.sidePanel.abonnesBoutique'), v: loading ? '…' : String(stats?.abonnes ?? 0)                   },
+                { ico: '💰', l: t('clients.sidePanel.caTotal'),         v: loading ? '…' : `${fmtGNF(stats?.caTotal ?? 0)} GNF`          },
+                { ico: '🛍️', l: t('clients.sidePanel.panierMoyen'),     v: loading ? '…' : `${fmtGNF(stats?.panierMoyen ?? 0)} GNF`      },
               ].map((s, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '9px 12px', background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-md)', marginBottom: 8 }}>
                   <span style={{ fontSize: 17 }}>{s.ico}</span>
@@ -521,13 +528,13 @@ export default function ClientsPage() {
 
           {/* Actions CRM */}
           <div className="card">
-            <div className="ch"><div className="ch-t"><i className="fas fa-bolt" /> Actions CRM</div></div>
+            <div className="ch"><div className="ch-t"><i className="fas fa-bolt" /> {t('clients.sidePanel.actionsCrm')}</div></div>
             <div className="cb" style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
               {[
-                { ico: '📧', l: 'Envoyer newsletter VIP',     action: 'newsletter' },
-                { ico: '🎁', l: 'Offre fidélité automatique', action: 'fidelite'   },
-                { ico: '📊', l: 'Rapport segments PDF',        action: 'rapport'    },
-                { ico: '🔔', l: 'Relance clients inactifs',    action: 'relance'    },
+                { ico: '📧', l: t('clients.quickActions.newsletterVip'),     action: 'newsletter' },
+                { ico: '🎁', l: t('clients.quickActions.offreFidelite'), action: 'fidelite'   },
+                { ico: '📊', l: t('clients.quickActions.rapportSegments'),        action: 'rapport'    },
+                { ico: '🔔', l: t('clients.quickActions.relanceInactifs'),    action: 'relance'    },
               ].map((a, i) => (
                 <button key={i}
                   onClick={() => pop(`⚙️ ${a.l}`, 'i')}

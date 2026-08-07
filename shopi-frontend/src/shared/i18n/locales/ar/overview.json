@@ -1,0 +1,79 @@
+{
+  "overview": {
+    "hero": {
+      "greeting": "مرحبًا،",
+      "loading": "جارٍ تحميل بياناتك…",
+      "ready": "إليك نشاطك الأخير.",
+      "badgeActive_one": "المتجر نشط · {{count}} متابع",
+      "badgeActive_other": "المتجر نشط · {{count}} متابعين",
+      "subCA": "من الإيرادات",
+      "subCommandes_one": "{{count}} طلب للمعالجة",
+      "subCommandes_other": "{{count}} طلبات للمعالجة",
+      "subRetours_one": "{{count}} إرجاع قيد الانتظار",
+      "subRetours_other": "{{count}} إرجاعات قيد الانتظار",
+      "btnCommandes": "معالجة الطلبات",
+      "btnAnalytics": "عرض التحليلات",
+      "btnPromotions": "العروض",
+      "statCA": "إيرادات هذا الشهر",
+      "statCommandes": "الطلبات",
+      "statNote": "متوسط التقييم",
+      "statAbonnes": "المتابعون",
+      "total": "الإجمالي",
+      "avis_one": "{{count}} تقييم",
+      "avis_other": "{{count}} تقييمات",
+      "stable": "مستقر"
+    },
+    "kpi": {
+      "ca": "الإيرادات — هذا الشهر",
+      "commandes": "طلبات هذا الشهر",
+      "commandesSub": "{{enAttente}} قيد الانتظار · {{livrees}} تم توصيلها · {{enCours}} قيد التنفيذ",
+      "abonnes": "متابعو المتجر",
+      "abonnesSub": "إجمالي العدد الحقيقي",
+      "note": "متوسط تقييم العملاء",
+      "noteSub_one": "{{count}} تقييم إجمالاً",
+      "noteSub_other": "{{count}} تقييمات إجمالاً",
+      "retours": "إرجاعات هذا الشهر",
+      "retoursSub": "{{enTraitement}} قيد المعالجة · {{rembourses}} تم استردادها",
+      "benefice": "صافي الربح (هذا الشهر)",
+      "beneficeSub": "الهامش: {{marge}}% · العمولات: {{commission}} فرنك",
+      "margeBadge": "هامش {{marge}}%"
+    },
+    "charts": {
+      "caMensuel": "الإيرادات الشهرية",
+      "noSalesDelivered": "لا يوجد مبيعات مسلّمة بعد.",
+      "legendCurrent": "الإيرادات الشهرية (ملايين فرنك)",
+      "legendPrevious": "الفترات السابقة",
+      "topProduits": "أفضل المنتجات",
+      "noSales": "لا توجد مبيعات بعد.",
+      "ventes_one": "{{count}} عملية بيع",
+      "ventes_other": "{{count}} عمليات بيع"
+    },
+    "alerts": {
+      "title": "تنبيهات ذات أولوية",
+      "count_one": "{{count}} تنبيه",
+      "count_other": "{{count}} تنبيهات",
+      "empty": "لا توجد تنبيهات مخزون.",
+      "stockInfo": "المخزون: {{qty}} · الحد الأدنى: {{min}}",
+      "fix": "إعادة تزويد"
+    },
+    "donut": {
+      "title": "توزيع المبيعات"
+    },
+    "orders": {
+      "title": "أحدث الطلبات",
+      "seeAll": "عرض الكل",
+      "empty": "لا توجد طلبات بعد.",
+      "status": {
+        "new": "جديد",
+        "prep": "قيد التحضير",
+        "ship": "قيد التوصيل",
+        "del": "تم التوصيل",
+        "can": "ملغي"
+      }
+    },
+    "activity": {
+      "title": "النشاط الأخير",
+      "empty": "لا يوجد نشاط حديث."
+    }
+  }
+}

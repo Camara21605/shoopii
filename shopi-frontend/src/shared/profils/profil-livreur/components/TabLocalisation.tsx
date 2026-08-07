@@ -6,6 +6,7 @@
  * Si le livreur ne partage pas sa position, un état vide explicatif.
  * ================================================================ */
 import { lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTrackDelivery } from '../../../../shared/location/hooks/useLocationSocket';
 import type { LivreurProfile }  from '../types';
 import styles from '../styles/ProfilLivreur.module.css';
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export default function TabLocalisation({ profile }: Props) {
+  const { t } = useTranslation();
   const { position, sharing } = useTrackDelivery(profile.id);
 
   return (
@@ -29,7 +31,7 @@ export default function TabLocalisation({ profile }: Props) {
       <div className={styles.ch}>
         <div className={styles.ct}>
           <i className="fas fa-location-dot" />
-          Position en temps réel
+          {t('profilLivreur.tabLocalisation.title')}
         </div>
 
         {/* Badge statut partage */}
@@ -51,7 +53,7 @@ export default function TabLocalisation({ profile }: Props) {
             display:      'inline-block',
             animation:    sharing ? 'locPulse 2s ease infinite' : 'none',
           }} />
-          {sharing ? 'Partage actif' : 'Hors ligne'}
+          {sharing ? t('profilLivreur.tabLocalisation.partageActif') : t('profilLivreur.horsLigne')}
         </div>
       </div>
 
@@ -82,8 +84,8 @@ export default function TabLocalisation({ profile }: Props) {
           }}>
             <i className="fas fa-circle-info" style={{ color: '#D97706', marginTop: 2, flexShrink: 0 }} />
             <div style={{ fontSize: 12.5, color: '#92400E', lineHeight: 1.6 }}>
-              <strong>{profile.fullName}</strong> ne partage pas sa position pour le moment.
-              La position s'affiche automatiquement lorsqu'une livraison est en cours.
+              <strong>{profile.fullName}</strong> {t('profilLivreur.tabLocalisation.noticeNonPartagePart1')}
+              {' '}{t('profilLivreur.tabLocalisation.noticeNonPartagePart2')}
             </div>
           </div>
         )}
@@ -100,10 +102,10 @@ export default function TabLocalisation({ profile }: Props) {
             background:     '#F8FAFF',
           }}>
             <span><i className="fas fa-arrows-up-down" style={{ marginRight: 5, color: '#047857' }} />
-              Lat : {position.latitude.toFixed(5)}
+              {t('profilLivreur.tabLocalisation.lat', { value: position.latitude.toFixed(5) })}
             </span>
             <span><i className="fas fa-arrows-left-right" style={{ marginRight: 5, color: '#047857' }} />
-              Lng : {position.longitude.toFixed(5)}
+              {t('profilLivreur.tabLocalisation.lng', { value: position.longitude.toFixed(5) })}
             </span>
             {position.vitesseKmh && (
               <span><i className="fas fa-gauge-high" style={{ marginRight: 5, color: '#047857' }} />

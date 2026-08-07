@@ -68,10 +68,7 @@ export default function SectionOrders({ commandes, loading }: Props) {
 
         {/* ── Résumé des commandes ── */}
         {!loading && commandes.length > 0 && (
-          <div style={{
-            display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10,
-            marginBottom:16, padding:'14px 0', borderBottom:'1px solid var(--bdr)',
-          }}>
+          <div className={styles.ordersSummary}>
             {[
               { label:'Total',      val: commandes.length,                                                                       color:'var(--navy)',   bg:'var(--sky)'                },
               { label:'En cours',   val: commandes.filter(c => c.statut === 'transit' || c.statut === 'preparation').length,     color:'#2563EB',       bg:'rgba(37,99,235,.08)'       },

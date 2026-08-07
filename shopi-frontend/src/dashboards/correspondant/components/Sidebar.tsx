@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import s from '../styles/Sidebar.module.css';
 import { pop } from './Toast';
 import { useAppContext } from '../../../shared/context/AppContext';
+import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
 import type { PageId } from '../data/correspondantData';
 
 interface Props {
@@ -73,6 +74,11 @@ export default function Sidebar({ page, setPage, open, onClose, nomUtilisateur, 
             <div className={s.regionScope}>Type Régional</div>
           </div>
         </div>
+      </div>
+
+      {/* Solde du portefeuille Shopi — sous la carte correspondant */}
+      <div style={{ padding: '0 22px 12px' }}>
+        <WalletQuickBar compact mini onManage={() => go('portefeuille')} />
       </div>
 
       {/* Navigation */}

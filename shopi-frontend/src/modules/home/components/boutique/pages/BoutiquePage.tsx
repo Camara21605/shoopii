@@ -14,6 +14,8 @@
  */
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { apiFetch, tokenStorage } from '../../../../../shared/services/apiFetch';
 import { useStartConversation }   from '../../../../../shared/hooks/useStartConversation';
 import { useProfileCall }         from '../../../../../shared/hooks/useProfileCall';
@@ -104,7 +106,7 @@ interface LivreurApi {
 // Convertit BoutiqueApi → BoutiqueInfo (pour BoutiqueCover / Identity)
 // ─────────────────────────────────────────────────────────────
 
-function toBoutiqueInfo(raw: any): BoutiqueInfo {
+function toBoutiqueInfo(raw: any, t: TFunction): BoutiqueInfo {
   const r = raw as any;
 
   /* Noms de champs : le backend peut utiliser différentes conventions */
@@ -132,21 +134,21 @@ function toBoutiqueInfo(raw: any): BoutiqueInfo {
     ?? r.type?.nom
     ?? r.category?.nom
     ?? r.categorie
-    ?? 'Boutique Shopi';
+    ?? t('boutiqueDetail.page.boutiqueShopiDefault');
 
   /* Date membre */
   const membreBrut = r.membre ?? r.memberSince ?? r.createdAt ?? r.dateCreation ?? '';
   const membre = membreBrut
     ? (membreBrut.includes('Membre') ? membreBrut
-        : `Membre depuis ${new Date(membreBrut).toLocaleDateString('fr-FR', { month:'long', year:'numeric' })}`)
-    : 'Membre Shopi';
+        : t('boutiqueDetail.page.membreDepuis', { date: new Date(membreBrut).toLocaleDateString('fr-FR', { month:'long', year:'numeric' }) }))
+    : t('boutiqueDetail.page.membreShopi');
 
   /* Horaires */
   const openTime  = r.openTime  ?? r.heureOuverture ?? '';
   const closeTime = r.closeTime ?? r.heureFermeture ?? '';
   const horaires  = openTime && closeTime
     ? `${openTime} – ${closeTime}`
-    : 'Horaires non renseignés';
+    : t('boutiqueDetail.page.horairesNonRenseignes');
 
   return {
     nom,
@@ -220,6 +222,7 @@ export interface PromoPublic {
 
 export default function BoutiquePage() {
   const navigate       = useNavigate();
+  const { t } = useTranslation();
   const { id: companyId } = useParams<{ id: string }>();
   const [searchParams]    = useSearchParams();
   const isPreview         = searchParams.get('preview') === '1';
@@ -272,14 +275,16 @@ export default function BoutiquePage() {
       );
       const confirmed = res?.isSuivi ?? !wasFollowing;
       setSuivi(confirmed);
-      showToast(confirmed ? `✅ Abonné à ${boutiqueInfo?.nom ?? 'cette boutique'}` : '👋 Désabonné');
+      showToast(confirmed
+        ? (boutiqueInfo?.nom ? t('boutiqueDetail.page.abonneToast', { nom: boutiqueInfo.nom }) : t('boutiqueDetail.page.abonneDefaultToast'))
+        : t('boutiqueDetail.page.desabonneToast'));
     } catch {
       setSuivi(wasFollowing); /* rollback */
-      showToast('Erreur lors du suivi — réessayez');
+      showToast(t('boutiqueDetail.page.erreurSuivi'));
     } finally {
       setSuiviPending(false);
     }
-  }, [companyId, suivi, suiviPending, isLoggedIn]);
+  }, [companyId, suivi, suiviPending, isLoggedIn, t]);
 
   // ── Chargement des promotions (rechargé à chaque clic sur l'onglet) ──
   useEffect(() => {
@@ -303,7 +308,7 @@ export default function BoutiquePage() {
 
   // ── Chargement des données ───────────────────────────────────
   useEffect(() => {
-    if (!companyId) { setError('ID boutique manquant.'); setLoading(false); return; }
+    if (!companyId) { setError(t('boutiqueDetail.page.idBoutiqueManquant')); setLoading(false); return; }
 
     setLoading(true);
     setError(null);
@@ -330,9 +335,9 @@ export default function BoutiquePage() {
         setProduits(prodList);
         setLivreurs(Array.isArray(l) ? l : (l?.data ?? []));
       })
-      .catch(() => setError('Impossible de charger les données de la boutique.'))
+      .catch(() => setError(t('boutiqueDetail.page.erreurChargement')))
       .finally(() => setLoading(false));
-  }, [companyId, isLoggedIn]);
+  }, [companyId, isLoggedIn, t]);
 
   // ── Filtres produits ─────────────────────────────────────────
   const [catActive,  setCatActive]  = useState('Tout');
@@ -367,18 +372,22 @@ export default function BoutiquePage() {
       }));
   }, [produits, catActive, filtrStock, filtrPromo, filtrNew]);
 
+  const filtreEnStockLabel     = t('boutiqueDetail.page.filtreEnStock');
+  const filtreEnPromotionLabel = t('boutiqueDetail.page.filtreEnPromotion');
+  const filtreNouveautesLabel  = t('boutiqueDetail.page.filtreNouveautes');
+
   const filtresActifs = [
     catActive !== 'Tout' && catActive,
-    filtrStock && 'En stock',
-    filtrPromo && 'En promotion',
-    filtrNew   && 'Nouveautés',
+    filtrStock && filtreEnStockLabel,
+    filtrPromo && filtreEnPromotionLabel,
+    filtrNew   && filtreNouveautesLabel,
   ].filter(Boolean) as string[];
 
   function handleRemoveFiltreActif(f: string) {
-    if (f === catActive)      setCatActive('Tout');
-    if (f === 'En stock')     setFiltrStock(false);
-    if (f === 'En promotion') setFiltrPromo(false);
-    if (f === 'Nouveautés')   setFiltrNew(false);
+    if (f === catActive)              setCatActive('Tout');
+    if (f === filtreEnStockLabel)     setFiltrStock(false);
+    if (f === filtreEnPromotionLabel) setFiltrPromo(false);
+    if (f === filtreNouveautesLabel)  setFiltrNew(false);
   }
 
   // ── Counts ──────────────────────────────────────────────────
@@ -391,7 +400,7 @@ export default function BoutiquePage() {
   };
 
   // ── Infos boutique converties ────────────────────────────────
-  const boutiqueInfo: BoutiqueInfo | null = boutique ? toBoutiqueInfo(boutique) : null;
+  const boutiqueInfo: BoutiqueInfo | null = boutique ? toBoutiqueInfo(boutique, t) : null;
 
   // ── Rendu loading / erreur ───────────────────────────────────
   if (loading) return (
@@ -408,16 +417,16 @@ export default function BoutiquePage() {
       <div style={{ padding:'80px 20px', textAlign:'center', color:'var(--t3)' }}>
         <div style={{ fontSize:48, marginBottom:16 }}>🏪</div>
         <div style={{ fontSize:16, fontWeight:700, color:'var(--navy)', marginBottom:8 }}>
-          Boutique introuvable
+          {t('boutiqueDetail.page.boutiqueIntrouvable')}
         </div>
         <div style={{ fontSize:14, marginBottom:24 }}>
-          {error ?? 'Cette boutique n\'existe pas ou a été désactivée.'}
+          {error ?? t('boutiqueDetail.page.boutiqueIntrouvableDesc')}
         </div>
         <button
           onClick={() => navigate('/home')}
           style={{ background:'var(--navy)', color:'#fff', border:'none', borderRadius:10, padding:'10px 24px', fontWeight:700, cursor:'pointer' }}
         >
-          ← Retour à l'accueil
+          {t('boutiqueDetail.page.retourAccueil')}
         </button>
       </div>
       <Footer onToast={showToast} />
@@ -444,9 +453,9 @@ export default function BoutiquePage() {
         {!isPreview && (
           <div className={styles.breadcrumbWrap}>
             <nav className={styles.breadcrumb}>
-              <a href="/home">Accueil</a>
+              <a href="/home">{t('boutiqueDetail.page.accueil')}</a>
               <i className="fas fa-chevron-right" />
-              <a href="/boutiques">Boutiques</a>
+              <a href="/boutiques">{t('boutiqueDetail.page.boutiques')}</a>
               <i className="fas fa-chevron-right" />
               <span className={styles.bcCurrent}>{boutiqueInfo.nom}</span>
             </nav>
@@ -466,13 +475,13 @@ export default function BoutiquePage() {
           onToggleSuivi={handleToggleSuivi}
           onMessage={() => {
             if (!isLoggedIn) { openAuthModal(); return; }
-            if (!suivi)      { showToast('Abonnez-vous à la boutique pour lui envoyer un message'); return; }
-            startConv('company', companyId ?? '', msg => showToast(`❌ ${msg}`));
+            if (!suivi)      { showToast(t('boutiqueDetail.page.abonnezVousMessage')); return; }
+            startConv('company', companyId ?? '', msg => showToast(t('boutiqueDetail.page.erreurToast', { msg })));
           }}
           onCall={() => {
             if (!isLoggedIn) { openAuthModal(); return; }
-            if (!suivi)      { showToast('Abonnez-vous à la boutique pour l\'appeler'); return; }
-            callProfile('company', companyId ?? '', boutiqueInfo.nom, boutique?.logo, msg => showToast(`❌ ${msg}`));
+            if (!suivi)      { showToast(t('boutiqueDetail.page.abonnezVousAppel')); return; }
+            callProfile('company', companyId ?? '', boutiqueInfo.nom, boutique?.logo, msg => showToast(t('boutiqueDetail.page.erreurToast', { msg })));
           }}
           onPartage={() => setPartageOpen(true)}
         />
@@ -543,7 +552,7 @@ export default function BoutiquePage() {
       {partageOpen && (
         <ModalPartage
           url={shareUrl}
-          titre="Partager cette boutique"
+          titre={t('boutiqueDetail.page.partagerTitre')}
           onClose={() => setPartageOpen(false)}
           onToast={showToast}
         />

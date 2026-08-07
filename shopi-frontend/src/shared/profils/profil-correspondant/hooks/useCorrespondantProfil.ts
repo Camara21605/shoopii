@@ -11,6 +11,7 @@
  * ================================================================ */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { fetchCorrespondantProfil, toggleSuiviCorrespondant } from '../services/correspondantProfil.api';
 import { getRoleFromToken } from '../../../services/authUtils';
 import type {
@@ -32,6 +33,7 @@ const AVIS_SCORE_VIDE: AvisScore = {
 };
 
 export function useCorrespondantProfil(id: string | undefined, onRequireAuth?: () => void) {
+  const { t } = useTranslation();
   const [profil,  setProfil]  = useState<CorrProfil | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
@@ -44,7 +46,7 @@ export function useCorrespondantProfil(id: string | undefined, onRequireAuth?: (
 
   const load = useCallback(() => {
     if (!id) {
-      setError('Identifiant correspondant manquant.');
+      setError(t('profilCorrespondant.idMissingError'));
       setLoading(false);
       return;
     }
@@ -81,7 +83,7 @@ export function useCorrespondantProfil(id: string | undefined, onRequireAuth?: (
         setSuivi(!!api.suivi);
       })
       .catch(e => {
-        setError(e?.message ?? 'Profil introuvable ou indisponible.');
+        setError(e?.message ?? t('profilCorrespondant.loadError'));
         setProfil(null);
         setInfosPratiques([]);
         setSchedule([]);
@@ -89,7 +91,7 @@ export function useCorrespondantProfil(id: string | undefined, onRequireAuth?: (
         setContacts([]);
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -108,18 +110,18 @@ export function useCorrespondantProfil(id: string | undefined, onRequireAuth?: (
 
   /* Statistiques sidebar dérivées des données API réelles */
   const statsSidebar = profil ? [
-    { v: profil.missions > 0 ? profil.missions.toLocaleString('fr-FR') : '—', l: 'Missions totales'  },
-    { v: profil.note     > 0 ? `${profil.note.toFixed(1)}★`            : '—', l: 'Note moyenne'      },
-    { v: profil.fiabilite > 0 ? `${profil.fiabilite}%`                 : '—', l: 'Taux fiabilité'    },
-    { v: profil.delaiMoyen !== '—' ? profil.delaiMoyen                 : '—', l: 'Délai remise'      },
-    { v: profil.missionsMois > 0 ? String(profil.missionsMois)         : '—', l: 'Missions ce mois'  },
-    { v: '0',                                                                  l: 'Litiges résolus'   },
+    { v: profil.missions > 0 ? profil.missions.toLocaleString('fr-FR') : '—', l: t('profilCorrespondant.statsSidebar.missionsTotales')  },
+    { v: profil.note     > 0 ? `${profil.note.toFixed(1)}★`            : '—', l: t('profilCorrespondant.statsSidebar.noteMoyenne')      },
+    { v: profil.fiabilite > 0 ? `${profil.fiabilite}%`                 : '—', l: t('profilCorrespondant.statsSidebar.tauxFiabilite')    },
+    { v: profil.delaiMoyen !== '—' ? profil.delaiMoyen                 : '—', l: t('profilCorrespondant.statsSidebar.delaiRemise')      },
+    { v: profil.missionsMois > 0 ? String(profil.missionsMois)         : '—', l: t('profilCorrespondant.statsSidebar.missionsCeMois')  },
+    { v: '0',                                                                  l: t('profilCorrespondant.statsSidebar.litigesResolus')   },
   ] : [];
 
   /* Vérifications dérivées des badges API (pas de données fictives) */
   const verifications: VerifRow[] = (profil?.badges ?? []).map(b => ({
     label: b.label,
-    sub:   '✓ Vérifié par Shopi',
+    sub:   t('profilCorrespondant.verifieParShopi'),
   }));
 
   return {

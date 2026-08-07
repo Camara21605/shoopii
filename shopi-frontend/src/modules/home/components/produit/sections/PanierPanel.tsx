@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { ProduitInfo } from '../data/produitMockData';
 import type { LivraisonState } from './LivraisonSection';
 import { SPEED_MUL, DIST_MUL } from '../data/produitMockData';
@@ -23,6 +24,7 @@ export default function PanierPanel({
   produit, produitId, variante, qty, onChangeQty,
   livraison, onToast, onBoutique, onScrollLivr,
 }: Props) {
+  const { t } = useTranslation();
   const [addingCart, setAddingCart] = useState(false);
   const [addingBuy,  setAddingBuy]  = useState(false);
 
@@ -55,16 +57,16 @@ export default function PanierPanel({
 
     /* ✅ Déjà dans le panier → ne pas ajouter, informer l'utilisateur */
     if (dejaAuPanier) {
-      onToast('🛒 Déjà dans votre panier — rendez-vous dans le panier pour modifier la quantité');
+      onToast(t('produitDetail.panier.dejaAuPanierToast'));
       return;
     }
 
     setAddingCart(true);
     try {
       await addToCart(produitId, qty, variante);
-      onToast('✅ Ajouté au panier !');
+      onToast(t('produitDetail.panier.ajouteToast'));
     } catch (err: any) {
-      onToast(`❌ ${err.message}`);
+      onToast(t('produitDetail.panier.erreurToast', { msg: err.message }));
     } finally { setAddingCart(false); }
   }
 
@@ -80,7 +82,7 @@ export default function PanierPanel({
       await addToCart(produitId, qty, variante);
       navigate('/commande');
     } catch (err: any) {
-      onToast(`❌ ${err.message}`);
+      onToast(t('produitDetail.panier.erreurToast', { msg: err.message }));
       setAddingBuy(false);
     }
   }
@@ -91,8 +93,8 @@ export default function PanierPanel({
         <div className={styles.delBox}>
           <div className={styles.delTop}>
             <span className={styles.delIco}>❓</span>
-            <span className={styles.delTitleGray}>Livraison non configurée</span>
-            <button className={styles.delConfigure} onClick={onScrollLivr}>Configurer</button>
+            <span className={styles.delTitleGray}>{t('produitDetail.panier.livraisonNonConfiguree')}</span>
+            <button className={styles.delConfigure} onClick={onScrollLivr}>{t('produitDetail.panier.configurer')}</button>
           </div>
         </div>
       );
@@ -102,13 +104,13 @@ export default function PanierPanel({
         <div className={`${styles.delBox} ${styles.delBoxStd}`}>
           <div className={styles.delTop}>
             <span className={styles.delIco}>🚚</span>
-            <span className={styles.delTitle}>Livraison standard — Gratuite</span>
-            <button className={styles.delConfigure} onClick={onScrollLivr}>Modifier</button>
+            <span className={styles.delTitle}>{t('produitDetail.panier.livraisonStandardGratuite')}</span>
+            <button className={styles.delConfigure} onClick={onScrollLivr}>{t('produitDetail.panier.modifier')}</button>
           </div>
           <div className={styles.delRows}>
-            <div className={styles.delRow}><span>Destination</span><span className={styles.delVal}>{livraison.selectedVille}, {livraison.selectedPays}</span></div>
-            <div className={styles.delRow}><span>Frais livraison</span><span className={`${styles.delVal} ${styles.delValGreen}`}>Gratuit</span></div>
-            {livraison.selectedCorr && <div className={styles.delRow}><span>Correspondant</span><span className={`${styles.delVal} ${styles.delValIndigo}`}>{livraison.selectedCorr.name} — {corrFee.toLocaleString('fr')} GNF</span></div>}
+            <div className={styles.delRow}><span>{t('produitDetail.panier.destination')}</span><span className={styles.delVal}>{livraison.selectedVille}, {livraison.selectedPays}</span></div>
+            <div className={styles.delRow}><span>{t('produitDetail.panier.fraisLivraison')}</span><span className={`${styles.delVal} ${styles.delValGreen}`}>{t('produitDetail.panier.gratuit')}</span></div>
+            {livraison.selectedCorr && <div className={styles.delRow}><span>{t('produitDetail.panier.correspondant')}</span><span className={`${styles.delVal} ${styles.delValIndigo}`}>{livraison.selectedCorr.name} — {corrFee.toLocaleString('fr')} GNF</span></div>}
           </div>
         </div>
       );
@@ -119,8 +121,8 @@ export default function PanierPanel({
           <div className={`${styles.delBox} ${styles.delBoxLvr}`}>
             <div className={styles.delTop}>
               <span className={styles.delIco}>🛵</span>
-              <span className={styles.delTitle} style={{ color:'var(--teal)' }}>Choisissez un livreur</span>
-              <button className={styles.delConfigure} onClick={onScrollLivr}>Voir</button>
+              <span className={styles.delTitle} style={{ color:'var(--teal)' }}>{t('produitDetail.panier.choisissezLivreur')}</span>
+              <button className={styles.delConfigure} onClick={onScrollLivr}>{t('produitDetail.panier.voir')}</button>
             </div>
           </div>
         );
@@ -130,12 +132,12 @@ export default function PanierPanel({
           <div className={styles.delTop}>
             <span className={styles.delIco}>{livraison.selectedLvr.em}</span>
             <span className={styles.delTitle}>{livraison.selectedLvr.name}</span>
-            <button className={styles.delConfigure} onClick={onScrollLivr}>Modifier</button>
+            <button className={styles.delConfigure} onClick={onScrollLivr}>{t('produitDetail.panier.modifier')}</button>
           </div>
           <div className={styles.delRows}>
-            <div className={styles.delRow}><span>Destination</span><span className={styles.delVal}>{livraison.selectedVille}, {livraison.selectedPays}</span></div>
-            <div className={styles.delRow}><span>Frais livraison</span><span className={`${styles.delVal} ${styles.delValTeal}`}>{lvFee.toLocaleString('fr')} GNF</span></div>
-            {livraison.selectedCorr && <div className={styles.delRow}><span>Correspondant</span><span className={`${styles.delVal} ${styles.delValIndigo}`}>{livraison.selectedCorr.name} — {corrFee.toLocaleString('fr')} GNF</span></div>}
+            <div className={styles.delRow}><span>{t('produitDetail.panier.destination')}</span><span className={styles.delVal}>{livraison.selectedVille}, {livraison.selectedPays}</span></div>
+            <div className={styles.delRow}><span>{t('produitDetail.panier.fraisLivraison')}</span><span className={`${styles.delVal} ${styles.delValTeal}`}>{lvFee.toLocaleString('fr')} GNF</span></div>
+            {livraison.selectedCorr && <div className={styles.delRow}><span>{t('produitDetail.panier.correspondant')}</span><span className={`${styles.delVal} ${styles.delValIndigo}`}>{livraison.selectedCorr.name} — {corrFee.toLocaleString('fr')} GNF</span></div>}
           </div>
         </div>
       );
@@ -150,7 +152,7 @@ export default function PanierPanel({
         {produit.ancien > produit.prix && (
           <>
             <div className={styles.prixAncien}>{produit.ancien.toLocaleString('fr')} GNF</div>
-            <div className={styles.economie}><i className="fas fa-tag" /> Vous économisez {remisePct}%</div>
+            <div className={styles.economie}><i className="fas fa-tag" /> {t('produitDetail.panier.economisez', { pct: remisePct })}</div>
           </>
         )}
 
@@ -158,7 +160,7 @@ export default function PanierPanel({
         <div className={styles.divider} />
 
         <div className={styles.qtyRow}>
-          <span className={styles.qtyLbl}><i className="fas fa-cube" /> Quantité</span>
+          <span className={styles.qtyLbl}><i className="fas fa-cube" /> {t('produitDetail.panier.quantite')}</span>
           <div className={styles.qtyCtrl}>
             <button className={styles.qtyBtn} onClick={() => onChangeQty(-1)} disabled={qty <= 1}><i className="fas fa-minus" /></button>
             <span className={styles.qtyNum}>{qty}</span>
@@ -167,18 +169,18 @@ export default function PanierPanel({
         </div>
 
         <div className={styles.breakdown}>
-          <div className={styles.bkrRow}><span>Produit × {qty}</span><span className={styles.bkrVal}>{(produit.prix * qty).toLocaleString('fr')} GNF</span></div>
+          <div className={styles.bkrRow}><span>{t('produitDetail.panier.produitFois', { qty })}</span><span className={styles.bkrVal}>{(produit.prix * qty).toLocaleString('fr')} GNF</span></div>
           <div className={styles.bkrRow}>
-            <span>Frais de livraison</span>
+            <span>{t('produitDetail.panier.fraisDeLivraison')}</span>
             <span className={styles.bkrVal} style={{ color: lvFee === 0 && livraison.delivMode === 'standard' ? 'var(--green,#16A34A)' : 'var(--t2)' }}>
-              {livraison.delivMode === 'standard' ? 'Gratuit' : lvFee > 0 ? `${lvFee.toLocaleString('fr')} GNF` : '—'}
+              {livraison.delivMode === 'standard' ? t('produitDetail.panier.gratuit') : lvFee > 0 ? `${lvFee.toLocaleString('fr')} GNF` : '—'}
             </span>
           </div>
           {corrFee > 0 && (
-            <div className={styles.bkrRow}><span>Frais correspondant</span><span className={styles.bkrVal} style={{ color:'#4338CA' }}>{corrFee.toLocaleString('fr')} GNF</span></div>
+            <div className={styles.bkrRow}><span>{t('produitDetail.panier.fraisCorrespondant')}</span><span className={styles.bkrVal} style={{ color:'#4338CA' }}>{corrFee.toLocaleString('fr')} GNF</span></div>
           )}
           <div className={`${styles.bkrRow} ${styles.bkrTotal}`}>
-            <span>Total estimé</span>
+            <span>{t('produitDetail.panier.totalEstime')}</span>
             <span className={styles.bkrValTotal}>{total.toLocaleString('fr')} GNF</span>
           </div>
         </div>
@@ -186,7 +188,7 @@ export default function PanierPanel({
         {/* ✅ Bouton Ajouter — change selon l'état */}
         {isOutOfStock ? (
           <button className={styles.btnCart} disabled style={{ opacity:.5, cursor:'not-allowed' }}>
-            <i className="fas fa-ban" /> Rupture de stock
+            <i className="fas fa-ban" /> {t('produitDetail.panier.ruptureDeStock')}
           </button>
         ) : dejaAuPanier ? (
           /* Déjà dans le panier → bouton "Voir le panier" */
@@ -195,7 +197,7 @@ export default function PanierPanel({
             onClick={() => navigate('/commande')}
             style={{ background:'var(--emerald,#059669)' }}
           >
-            <i className="fas fa-check" /> Déjà au panier — Voir le panier
+            <i className="fas fa-check" /> {t('produitDetail.panier.dejaAuPanier')}
           </button>
         ) : (
           <button
@@ -204,8 +206,8 @@ export default function PanierPanel({
             disabled={addingCart || addingBuy}
           >
             {addingCart
-              ? <><i className="fas fa-circle-notch fa-spin" /> Ajout…</>
-              : <><i className="fas fa-cart-plus" /> Ajouter au panier</>
+              ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.panier.ajoutEnCours')}</>
+              : <><i className="fas fa-cart-plus" /> {t('produitDetail.panier.ajouterAuPanier')}</>
             }
           </button>
         )}
@@ -217,14 +219,14 @@ export default function PanierPanel({
           disabled={addingCart || addingBuy || isOutOfStock}
         >
           {addingBuy
-            ? <><i className="fas fa-circle-notch fa-spin" /> Redirection…</>
+            ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.panier.redirection')}</>
             : dejaAuPanier
-              ? <><i className="fas fa-bolt" /> Aller au panier</>
-              : <><i className="fas fa-bolt" /> Acheter maintenant</>
+              ? <><i className="fas fa-bolt" /> {t('produitDetail.panier.allerAuPanier')}</>
+              : <><i className="fas fa-bolt" /> {t('produitDetail.panier.acheterMaintenant')}</>
           }
         </button>
 
-        <div className={styles.secure}><i className="fas fa-lock" /> Paiement 100% sécurisé</div>
+        <div className={styles.secure}><i className="fas fa-lock" /> {t('produitDetail.panier.paiementSecurise')}</div>
       </div>
 
       <div className={styles.vendeurCard}>
@@ -233,20 +235,20 @@ export default function PanierPanel({
           <div>
             <div className={styles.vcNom}>{produit.boutique.nom}</div>
             <div className={styles.vcVer}>
-              <i className="fas fa-shield-check" /> Boutique vérifiée ·
+              <i className="fas fa-shield-check" /> {t('produitDetail.panier.boutiqueVerifiee')}
               <span style={{ color:'#4338CA' }}> {produit.boutique.drapeau} {produit.boutique.pays}</span>
             </div>
           </div>
         </div>
         <div className={styles.vcStats}>
-          <div className={styles.vcStat}><div className={styles.vcStatV}>4.9</div><div className={styles.vcStatL}>Note</div></div>
-          <div className={styles.vcStat}><div className={styles.vcStatV}>97%</div><div className={styles.vcStatL}>Satisf.</div></div>
-          <div className={styles.vcStat}><div className={styles.vcStatV}>8K+</div><div className={styles.vcStatL}>Ventes</div></div>
+          <div className={styles.vcStat}><div className={styles.vcStatV}>4.9</div><div className={styles.vcStatL}>{t('produitDetail.panier.note')}</div></div>
+          <div className={styles.vcStat}><div className={styles.vcStatV}>97%</div><div className={styles.vcStatL}>{t('produitDetail.panier.satisf')}</div></div>
+          <div className={styles.vcStat}><div className={styles.vcStatV}>8K+</div><div className={styles.vcStatL}>{t('produitDetail.panier.ventes')}</div></div>
         </div>
         <div className={styles.vcBtns}>
-          <button className={styles.vcBtnV} onClick={onBoutique}>Voir boutique</button>
-          <button className={styles.vcBtnM} onClick={() => onToast('💬 Messagerie ouverte')}>
-            <i className="fas fa-comment" /> Contacter
+          <button className={styles.vcBtnV} onClick={onBoutique}>{t('produitDetail.panier.voirBoutique')}</button>
+          <button className={styles.vcBtnM} onClick={() => onToast(t('produitDetail.panier.messagerieOuverteToast'))}>
+            <i className="fas fa-comment" /> {t('produitDetail.panier.contacter')}
           </button>
         </div>
       </div>

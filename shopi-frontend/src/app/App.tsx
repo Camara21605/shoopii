@@ -7,6 +7,7 @@ import React from 'react'
 import { AppProviders } from './providers/AppProviders'
 import { AppRouter } from './router'
 
+import '../shared/i18n/i18n'
 import '../styles/global.css'
 
 /**

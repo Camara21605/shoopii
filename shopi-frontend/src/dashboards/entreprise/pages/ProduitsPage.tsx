@@ -3,7 +3,8 @@
  * Page catalogue produits — données réelles API, modales Voir/Modifier
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
 import type { EntreprisePage } from '../types';
 import styles from './ProduitsPage.module.css';
@@ -52,10 +53,10 @@ function fmt(n: number) {
   return n.toLocaleString('fr-FR');
 }
 
-function visibiliteLabel(v: string) {
-  if (v === 'public')  return { label: 'Public',    cls: styles.badgePublic  };
-  if (v === 'draft')   return { label: 'Brouillon', cls: styles.badgeDraft   };
-  return                      { label: 'Privé',     cls: styles.badgePrivate };
+function visibiliteLabel(v: string, t: (k: string) => string) {
+  if (v === 'public')  return { label: t('produits.visibilite.public'), cls: styles.badgePublic  };
+  if (v === 'draft')   return { label: t('produits.visibilite.draft'),  cls: styles.badgeDraft   };
+  return                      { label: t('produits.visibilite.private'), cls: styles.badgePrivate };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -69,8 +70,9 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
   onArchive: () => void;
   onDelete:  () => void;
 }) {
+  const { t } = useTranslation();
   const [imgIdx, setImgIdx] = useState(0);
-  const vis = visibiliteLabel(produit.visibilite);
+  const vis = visibiliteLabel(produit.visibilite, t);
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -127,7 +129,7 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
           ) : (
             <div className={styles.noImage}>
               <i className="fas fa-image" />
-              <span>Aucune image</span>
+              <span>{t('produits.modalVoir.noImage')}</span>
             </div>
           )}
 
@@ -136,7 +138,7 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
 
             {/* Prix */}
             <div className={styles.infoCard}>
-              <div className={styles.infoCardTitle}><i className="fas fa-tag" /> Prix</div>
+              <div className={styles.infoCardTitle}><i className="fas fa-tag" /> {t('produits.modalVoir.prix')}</div>
               <div className={styles.prixMain}>{fmt(produit.prix)} <span>GNF</span></div>
               {produit.prixAncien && (
                 <div className={styles.prixAncien}>
@@ -147,28 +149,28 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
                 </div>
               )}
               <div className={styles.commission}>
-                <span>Commission Shopi (3%)</span>
+                <span>{t('produits.modalVoir.commission')}</span>
                 <span>-{fmt(Math.round(produit.prix * 0.03))} GNF</span>
               </div>
               <div className={styles.revenuNet}>
-                <span>Revenu net</span>
+                <span>{t('produits.modalVoir.revenuNet')}</span>
                 <strong>{fmt(Math.round(produit.prix * 0.97))} GNF</strong>
               </div>
             </div>
 
             {/* Stock */}
             <div className={styles.infoCard}>
-              <div className={styles.infoCardTitle}><i className="fas fa-boxes-stacked" /> Stock</div>
+              <div className={styles.infoCardTitle}><i className="fas fa-boxes-stacked" /> {t('produits.modalVoir.stock')}</div>
               <div className={`${styles.stockVal} ${
                 produit.stock === 0 ? styles.stockOut :
                 produit.seuil && produit.stock <= produit.seuil ? styles.stockLow : styles.stockOk
               }`}>
                 {produit.stock}
-                <span>unités</span>
+                <span>{t('produits.modalVoir.unites')}</span>
               </div>
               {produit.seuil && (
                 <div className={styles.seuilInfo}>
-                  Seuil d'alerte : {produit.seuil} unités
+                  {t('produits.modalVoir.seuilInfo', { count: produit.seuil })}
                 </div>
               )}
               <div className={styles.stockBar}>
@@ -181,24 +183,24 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
 
             {/* Détails */}
             <div className={styles.infoCard}>
-              <div className={styles.infoCardTitle}><i className="fas fa-circle-info" /> Détails</div>
+              <div className={styles.infoCardTitle}><i className="fas fa-circle-info" /> {t('produits.modalVoir.details')}</div>
               <div className={styles.detailsList}>
                 {produit.marque && (
                   <div className={styles.detailRow}>
-                    <span>Marque</span><strong>{produit.marque}</strong>
+                    <span>{t('produits.modalVoir.marque')}</span><strong>{produit.marque}</strong>
                   </div>
                 )}
                 <div className={styles.detailRow}>
-                  <span>Condition</span><strong>{produit.condition}</strong>
+                  <span>{t('produits.modalVoir.condition')}</span><strong>{produit.condition}</strong>
                 </div>
                 <div className={styles.detailRow}>
-                  <span>Garantie</span><strong>{produit.garantie}</strong>
+                  <span>{t('produits.modalVoir.garantie')}</span><strong>{produit.garantie}</strong>
                 </div>
                 <div className={styles.detailRow}>
-                  <span>Origine</span><strong>{produit.paysOrigine}</strong>
+                  <span>{t('produits.modalVoir.origine')}</span><strong>{produit.paysOrigine}</strong>
                 </div>
                 <div className={styles.detailRow}>
-                  <span>Ajouté le</span>
+                  <span>{t('produits.modalVoir.ajouteLe')}</span>
                   <strong>{new Date(produit.createdAt).toLocaleDateString('fr-FR')}</strong>
                 </div>
               </div>
@@ -208,7 +210,7 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
           {/* Description */}
           {produit.description && (
             <div className={styles.section}>
-              <div className={styles.sectionTitle}><i className="fas fa-align-left" /> Description</div>
+              <div className={styles.sectionTitle}><i className="fas fa-align-left" /> {t('produits.modalVoir.description')}</div>
               <p className={styles.description}>{produit.description}</p>
             </div>
           )}
@@ -216,7 +218,7 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
           {/* Specs */}
           {produit.specs.length > 0 && (
             <div className={styles.section}>
-              <div className={styles.sectionTitle}><i className="fas fa-list-check" /> Caractéristiques</div>
+              <div className={styles.sectionTitle}><i className="fas fa-list-check" /> {t('produits.modalVoir.caracteristiques')}</div>
               <div className={styles.specsTable}>
                 {produit.specs.map(s => (
                   <div key={s.id} className={styles.specRow}>
@@ -231,7 +233,7 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
           {/* Variantes */}
           {produit.variantes.length > 0 && (
             <div className={styles.section}>
-              <div className={styles.sectionTitle}><i className="fas fa-layer-group" /> Variantes</div>
+              <div className={styles.sectionTitle}><i className="fas fa-layer-group" /> {t('produits.modalVoir.variantes')}</div>
               <div className={styles.variantesList}>
                 {produit.variantes.map(v => (
                   <div key={v.id} className={styles.varianteItem}>
@@ -250,10 +252,10 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
           {/* Tags */}
           {produit.tags && (
             <div className={styles.section}>
-              <div className={styles.sectionTitle}><i className="fas fa-hashtag" /> Tags</div>
+              <div className={styles.sectionTitle}><i className="fas fa-hashtag" /> {t('produits.modalVoir.tags')}</div>
               <div className={styles.tagsList}>
-                {produit.tags.split(',').map(t => (
-                  <span key={t.trim()} className={styles.tag}>{t.trim()}</span>
+                {produit.tags.split(',').map(tag => (
+                  <span key={tag.trim()} className={styles.tag}>{tag.trim()}</span>
                 ))}
               </div>
             </div>
@@ -263,13 +265,13 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
         {/* Footer actions */}
         <div className={styles.modalFooter}>
           <button className={styles.btnDanger} onClick={onDelete}>
-            <i className="fas fa-trash" /> Supprimer
+            <i className="fas fa-trash" /> {t('produits.modalVoir.supprimer')}
           </button>
           <button className={styles.btnSecondary} onClick={onArchive}>
-            <i className="fas fa-archive" /> Archiver
+            <i className="fas fa-archive" /> {t('produits.modalVoir.archiver')}
           </button>
           <button className={styles.btnPrimary} onClick={onEdit}>
-            <i className="fas fa-pen" /> Modifier
+            <i className="fas fa-pen" /> {t('produits.modalVoir.modifier')}
           </button>
         </div>
       </div>
@@ -286,6 +288,7 @@ function ModalModifier({ produit, onClose, onSaved }: {
   onClose:  () => void;
   onSaved:  (p: Produit) => void;
 }) {
+  const { t } = useTranslation();
   const { pop } = useToast();
   const [stock,      setStock]      = useState(String(produit.stock));
   const [seuil,      setSeuil]      = useState(String(produit.seuil ?? ''));
@@ -304,10 +307,10 @@ function ModalModifier({ produit, onClose, onSaved }: {
           visibilite,
         }),
       });
-      if (!res.ok) throw new Error((await res.json()).message ?? 'Erreur');
+      if (!res.ok) throw new Error((await res.json()).message ?? t('retours.toasts.genericError'));
       const updated = await res.json();
       onSaved(updated);
-      pop('✅ Produit mis à jour', 's');
+      pop(t('produits.toasts.updated'), 's');
       onClose();
     } catch (e: any) {
       pop(`❌ ${e.message}`, 'e');
@@ -321,7 +324,7 @@ function ModalModifier({ produit, onClose, onSaved }: {
       <div className={`${styles.modal} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <div className={styles.modalTitle}>
-            <i className="fas fa-pen" /> Modification rapide
+            <i className="fas fa-pen" /> {t('produits.modalModifier.title')}
           </div>
           <button className={styles.closeBtn} onClick={onClose}>
             <i className="fas fa-xmark" />
@@ -340,21 +343,21 @@ function ModalModifier({ produit, onClose, onSaved }: {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Visibilité</label>
+            <label className={styles.formLabel}>{t('produits.modalModifier.visibilite')}</label>
             <select
               className={styles.formSelect}
               value={visibilite}
               onChange={e => setVisibilite(e.target.value as any)}
             >
-              <option value="public">🟢 Public — Visible sur la boutique</option>
-              <option value="draft">🟡 Brouillon — Non publié</option>
-              <option value="private">🔴 Privé — Lien direct uniquement</option>
+              <option value="public">{t('produits.modalModifier.optPublic')}</option>
+              <option value="draft">{t('produits.modalModifier.optDraft')}</option>
+              <option value="private">{t('produits.modalModifier.optPrivate')}</option>
             </select>
           </div>
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Stock actuel</label>
+              <label className={styles.formLabel}>{t('produits.modalModifier.stockActuel')}</label>
               <input
                 type="number"
                 className={styles.formInput}
@@ -364,13 +367,13 @@ function ModalModifier({ produit, onClose, onSaved }: {
               />
             </div>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Seuil d'alerte</label>
+              <label className={styles.formLabel}>{t('produits.modalModifier.seuilAlerte')}</label>
               <input
                 type="number"
                 className={styles.formInput}
                 value={seuil}
                 min={0}
-                placeholder="Ex: 5"
+                placeholder={t('produits.modalModifier.seuilPlaceholder')}
                 onChange={e => setSeuil(e.target.value)}
               />
             </div>
@@ -378,16 +381,16 @@ function ModalModifier({ produit, onClose, onSaved }: {
 
           <div className={styles.infoBox}>
             <i className="fas fa-circle-info" />
-            Pour modifier le nom, le prix ou les images, utilisez le formulaire complet.
+            {t('produits.modalModifier.info')}
           </div>
         </div>
 
         <div className={styles.modalFooter}>
           <button className={styles.btnSecondary} onClick={onClose} disabled={loading}>
-            Annuler
+            {t('produits.modalModifier.annuler')}
           </button>
           <button className={styles.btnPrimary} onClick={handleSave} disabled={loading}>
-            {loading ? <><i className="fas fa-spinner fa-spin" /> Sauvegarde…</> : <><i className="fas fa-check" /> Sauvegarder</>}
+            {loading ? <><i className="fas fa-spinner fa-spin" /> {t('produits.modalModifier.saving')}</> : <><i className="fas fa-check" /> {t('produits.modalModifier.save')}</>}
           </button>
         </div>
       </div>
@@ -404,6 +407,7 @@ function ModalDelete({ produit, onClose, onDeleted }: {
   onClose:   () => void;
   onDeleted: () => void;
 }) {
+  const { t } = useTranslation();
   const { pop } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -414,9 +418,9 @@ function ModalDelete({ produit, onClose, onDeleted }: {
         method:  'DELETE',
         headers: { Authorization: `Bearer ${token()}` },
       });
-      if (!res.ok) throw new Error((await res.json()).message ?? 'Erreur');
+      if (!res.ok) throw new Error((await res.json()).message ?? t('retours.toasts.genericError'));
       onDeleted();
-      pop('🗑️ Produit supprimé', 's');
+      pop(t('produits.toasts.deleted'), 's');
       onClose();
     } catch (e: any) {
       pop(`❌ ${e.message}`, 'e');
@@ -430,7 +434,7 @@ function ModalDelete({ produit, onClose, onDeleted }: {
       <div className={`${styles.modal} ${styles.modalXs}`} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <div className={`${styles.modalTitle} ${styles.dangerTitle}`}>
-            <i className="fas fa-triangle-exclamation" /> Confirmer la suppression
+            <i className="fas fa-triangle-exclamation" /> {t('produits.modalDelete.title')}
           </div>
           <button className={styles.closeBtn} onClick={onClose}>
             <i className="fas fa-xmark" />
@@ -439,16 +443,16 @@ function ModalDelete({ produit, onClose, onDeleted }: {
         <div className={styles.modalBody}>
           <div className={styles.deleteWarning}>
             <div className={styles.deleteIcon}>🗑️</div>
-            <p>Voulez-vous vraiment supprimer <strong>"{produit.nom}"</strong> ?</p>
-            <p className={styles.deleteNote}>Cette action est irréversible. Le produit sera définitivement effacé.</p>
+            <p>{t('produits.modalDelete.confirm', { nom: produit.nom })}</p>
+            <p className={styles.deleteNote}>{t('produits.modalDelete.irreversible')}</p>
           </div>
         </div>
         <div className={styles.modalFooter}>
           <button className={styles.btnSecondary} onClick={onClose} disabled={loading}>
-            Annuler
+            {t('produits.modalDelete.annuler')}
           </button>
           <button className={styles.btnDanger} onClick={handleDelete} disabled={loading}>
-            {loading ? <><i className="fas fa-spinner fa-spin" /> Suppression…</> : <><i className="fas fa-trash" /> Supprimer définitivement</>}
+            {loading ? <><i className="fas fa-spinner fa-spin" /> {t('produits.modalDelete.deleting')}</> : <><i className="fas fa-trash" /> {t('produits.modalDelete.confirmBtn')}</>}
           </button>
         </div>
       </div>
@@ -461,6 +465,7 @@ function ModalDelete({ produit, onClose, onDeleted }: {
 // ─────────────────────────────────────────────────────────────
 
 export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
+  const { t } = useTranslation();
   const { pop } = useToast();
 
   const [produits,   setProduits]   = useState<Produit[]>([]);
@@ -520,10 +525,10 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
       setProduits(prev => prev.map(p =>
         p.id === produit.id ? { ...p, visibilite: 'private' } : p
       ));
-      pop('📦 Produit archivé', 's');
+      pop(t('produits.toasts.archived'), 's');
       setModalVoir(null);
     } catch {
-      pop('❌ Erreur lors de l\'archivage', 'e');
+      pop(`❌ ${t('produits.toasts.archiveError')}`, 'e');
     }
   }
 
@@ -545,21 +550,21 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
       {/* ── Header ── */}
       <div className={styles.header}>
         <div>
-          <h1 className={styles.titre}>Mes Produits</h1>
-          <p className={styles.sousTitre}>Gérez votre catalogue et votre inventaire</p>
+          <h1 className={styles.titre}>{t('produits.header.title')}</h1>
+          <p className={styles.sousTitre}>{t('produits.header.subtitle')}</p>
         </div>
         <button className={styles.btnAjouter} onClick={() => onNavigate('ajouter')}>
-          <i className="fas fa-plus" /> Nouveau produit
+          <i className="fas fa-plus" /> {t('produits.header.nouveau')}
         </button>
       </div>
 
       {/* ── Stats ── */}
       <div className={styles.statsRow}>
         {[
-          { label: 'Total',      val: stats.total,      icon: 'fa-box',            cls: styles.statBlue    },
-          { label: 'Publiés',    val: stats.publics,    icon: 'fa-globe',          cls: styles.statGreen   },
-          { label: 'Brouillons', val: stats.brouillons, icon: 'fa-file-pen',       cls: styles.statAmber   },
-          { label: 'Rupture',    val: stats.rupture,    icon: 'fa-triangle-exclamation', cls: styles.statRose },
+          { label: t('produits.stats.total'),      val: stats.total,      icon: 'fa-box',            cls: styles.statBlue    },
+          { label: t('produits.stats.publies'),     val: stats.publics,    icon: 'fa-globe',          cls: styles.statGreen   },
+          { label: t('produits.stats.brouillons'),  val: stats.brouillons, icon: 'fa-file-pen',       cls: styles.statAmber   },
+          { label: t('produits.stats.rupture'),     val: stats.rupture,    icon: 'fa-triangle-exclamation', cls: styles.statRose },
         ].map(s => (
           <div key={s.label} className={`${styles.statCard} ${s.cls}`}>
             <div className={styles.statIcon}><i className={`fas ${s.icon}`} /></div>
@@ -575,7 +580,7 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
           <i className="fas fa-magnifying-glass" />
           <input
             className={styles.searchInput}
-            placeholder="Rechercher par nom, marque, référence…"
+            placeholder={t('produits.search')}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -587,10 +592,10 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
         </div>
         <div className={styles.filtresBtns}>
           {[
-            { val: 'tous',    label: 'Tous' },
-            { val: 'public',  label: '🟢 Publiés' },
-            { val: 'draft',   label: '🟡 Brouillons' },
-            { val: 'private', label: '🔴 Privés' },
+            { val: 'tous',    label: t('produits.filters.tous') },
+            { val: 'public',  label: t('produits.filters.publics') },
+            { val: 'draft',   label: t('produits.filters.brouillons') },
+            { val: 'private', label: t('produits.filters.prives') },
           ].map(f => (
             <button
               key={f.val}
@@ -607,40 +612,40 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
       {loading ? (
         <div className={styles.loading}>
           <i className="fas fa-spinner fa-spin" />
-          <span>Chargement des produits…</span>
+          <span>{t('produits.loading')}</span>
         </div>
       ) : erreur ? (
         <div className={styles.erreur}>
           <i className="fas fa-triangle-exclamation" />
           <span>{erreur}</span>
-          <button onClick={charger} className={styles.btnReessayer}>Réessayer</button>
+          <button onClick={charger} className={styles.btnReessayer}>{t('produits.retry')}</button>
         </div>
       ) : produitsFiltres.length === 0 ? (
         <div className={styles.vide}>
           <div className={styles.videIco}>📦</div>
           <div className={styles.videTitle}>
-            {produits.length === 0 ? 'Aucun produit encore' : 'Aucun résultat'}
+            {produits.length === 0 ? t('produits.empty.noneTitle') : t('produits.empty.noResultsTitle')}
           </div>
           <div className={styles.videSub}>
             {produits.length === 0
-              ? 'Commencez par ajouter votre premier produit.'
-              : 'Essayez de modifier vos filtres.'}
+              ? t('produits.empty.noneSub')
+              : t('produits.empty.noResultsSub')}
           </div>
           {produits.length === 0 && (
             <button className={styles.btnAjouter} onClick={() => onNavigate('ajouter')}>
-              <i className="fas fa-plus" /> Ajouter un produit
+              <i className="fas fa-plus" /> {t('produits.empty.addFirst')}
             </button>
           )}
         </div>
       ) : (
         <>
           <div className={styles.compteur}>
-            {produitsFiltres.length} produit{produitsFiltres.length > 1 ? 's' : ''}
-            {search && ` pour "${search}"`}
+            {t('produits.count', { count: produitsFiltres.length })}
+            {search && ` ${t('produits.countFor', { search })}`}
           </div>
           <div className={styles.grid}>
             {produitsFiltres.map(p => {
-              const vis = visibiliteLabel(p.visibilite);
+              const vis = visibiliteLabel(p.visibilite, t);
               const stockCls = p.stock === 0 ? styles.stockOut :
                 (p.seuil && p.stock <= p.seuil) ? styles.stockLow : styles.stockOk;
 
@@ -658,10 +663,10 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
                     )}
                     <div className={styles.cardBadges}>
                       <span className={`${styles.badge} ${vis.cls}`}>{vis.label}</span>
-                      {p.stock === 0 && <span className={`${styles.badge} ${styles.badgeRupture}`}>Rupture</span>}
+                      {p.stock === 0 && <span className={`${styles.badge} ${styles.badgeRupture}`}>{t('produits.card.rupture')}</span>}
                     </div>
                     <div className={styles.cardOverlay}>
-                      <span><i className="fas fa-eye" /> Voir</span>
+                      <span><i className="fas fa-eye" /> {t('produits.card.voir')}</span>
                     </div>
                   </div>
 
@@ -686,9 +691,9 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
                     <div className={styles.cardStock}>
                       <span className={`${styles.stockDot} ${stockCls}`} />
                       <span className={styles.stockTxt}>
-                        {p.stock === 0 ? 'Rupture de stock' :
-                         (p.seuil && p.stock <= p.seuil) ? `Stock faible — ${p.stock} restants` :
-                         `${p.stock} en stock`}
+                        {p.stock === 0 ? t('produits.card.outOfStock') :
+                         (p.seuil && p.stock <= p.seuil) ? t('produits.card.lowStock', { count: p.stock }) :
+                         t('produits.card.inStock', { count: p.stock })}
                       </span>
                     </div>
                   </div>
@@ -698,28 +703,28 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
                     <button
                       className={styles.actionBtn}
                       onClick={() => setModalVoir(p)}
-                      title="Voir le détail"
+                      title={t('produits.card.voirDetail')}
                     >
                       <i className="fas fa-eye" />
                     </button>
                     <button
                       className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
                       onClick={() => setModalModif(p)}
-                      title="Modification rapide"
+                      title={t('produits.card.modifRapide')}
                     >
                       <i className="fas fa-pen" />
                     </button>
                     <button
                       className={`${styles.actionBtn} ${styles.actionBtnFull}`}
                       onClick={() => onNavigate('ajouter', p.id)}
-                      title="Modifier complet"
+                      title={t('produits.card.modifComplet')}
                     >
-                      <i className="fas fa-sliders" /> Modifier
+                      <i className="fas fa-sliders" /> {t('produits.card.modifier')}
                     </button>
                     <button
                       className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
                       onClick={() => setModalDelete(p)}
-                      title="Supprimer"
+                      title={t('produits.card.supprimer')}
                     >
                       <i className="fas fa-trash" />
                     </button>

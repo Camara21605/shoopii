@@ -9,6 +9,7 @@
  */
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiFetch }    from '../../../../shared/services/apiFetch';
 import styles from '../../styles/HomeStoriesStrip.module.css';
 
@@ -86,6 +87,7 @@ function StorySkeleton() {
 // COMPOSANT PRINCIPAL
 // ═════════════════════════════════════════════════════════════
 export default function HomeStoriesStrip({ onToast }: { onToast: (m: string) => void }) {
+  const { t } = useTranslation();
   const [stories,  setStories]  = useState<BoutiqueStory[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [openShop, setOpenShop] = useState<number | null>(null);
@@ -191,12 +193,12 @@ export default function HomeStoriesStrip({ onToast }: { onToast: (m: string) => 
           <div className={styles.secLeft}>
             <div className={styles.secIc}>✨</div>
             <div>
-              <div className={styles.secTitle}>Stories des boutiques</div>
-              <div className={styles.secSub}>Produits phares mis en avant par nos partenaires</div>
+              <div className={styles.secTitle}>{t('home.storiesStrip.title')}</div>
+              <div className={styles.secSub}>{t('home.storiesStrip.sub')}</div>
             </div>
           </div>
-          <button className={styles.secLink} onClick={() => onToast('📖 Toutes les stories')}>
-            Voir tout <i className="fas fa-arrow-right" />
+          <button className={styles.secLink} onClick={() => onToast(t('home.storiesStrip.toastVoirTout'))}>
+            {t('home.storiesStrip.voirTout')} <i className="fas fa-arrow-right" />
           </button>
         </div>
 
@@ -220,7 +222,7 @@ export default function HomeStoriesStrip({ onToast }: { onToast: (m: string) => 
                 key={boutique.id}
                 className={`${styles.storyBtn} ${boutique.lu ? styles.storyLu : ''}`}
                 onClick={() => openStory(i)}
-                title={`Stories de ${boutique.shopNom}`}
+                title={t('home.storiesStrip.storiesDe', { nom: boutique.shopNom })}
               >
                 <div
                   className={styles.storyRing}
@@ -253,7 +255,7 @@ export default function HomeStoriesStrip({ onToast }: { onToast: (m: string) => 
 
                 <span className={styles.shopLabel}>{boutique.shopNom}</span>
                 <span className={styles.slidesCnt}>
-                  {boutique.slides.length} produit{boutique.slides.length > 1 ? 's' : ''}
+                  {t('home.storiesStrip.produitCount', { count: boutique.slides.length })}
                 </span>
               </button>
             ))}
@@ -307,6 +309,7 @@ function HomeStoryViewer({
   onNextSlide, onPrevSlide, onClose, onToast,
 }: ViewerProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const slide    = boutique.slides[slideIdx];
   const [prog,   setProg]   = useState(0);
   const animRef  = useRef<number | null>(null);
@@ -331,10 +334,10 @@ function HomeStoryViewer({
   const touchStart = useRef(0);
 
   const BADGE_CFG: Record<string, { label: string; bg: string }> = {
-    promo: { label:'🔥 Promo',     bg:'#FF3B3B' },
-    new:   { label:'✨ Nouveau',   bg:'#1A4FC4' },
-    flash: { label:'⚡ Flash',     bg:'#7C3AED' },
-    top:   { label:'⭐ Top Vente', bg:'#B45309' },
+    promo: { label: t('home.storiesStrip.badgePromo'),   bg:'#FF3B3B' },
+    new:   { label: t('home.storiesStrip.badgeNouveau'), bg:'#1A4FC4' },
+    flash: { label: t('home.storiesStrip.badgeFlash'),   bg:'#7C3AED' },
+    top:   { label: t('home.storiesStrip.badgeTop'),     bg:'#B45309' },
   };
   const badge = slide.badge ? BADGE_CFG[slide.badge] : null;
 
@@ -400,7 +403,7 @@ function HomeStoryViewer({
             <div className={styles.viewerShopSub}>
               <span className={styles.viewerDot}
                 style={{ background: boutique.online ? '#10B981' : '#9CA3AF' }} />
-              {boutique.online ? 'En ligne maintenant' : 'Vu récemment'}
+              {boutique.online ? t('home.storiesStrip.enLigneMaintenant') : t('home.storiesStrip.vuRecemment')}
               <span className={styles.viewerSep}>·</span>
               {slideIdx + 1}/{boutique.slides.length}
             </div>
@@ -447,21 +450,21 @@ function HomeStoryViewer({
             className={styles.vaMain}
             onClick={() => { onClose(); navigate(`/produit/${slide.productId}`); }}
           >
-            <i className="fas fa-eye" /> Voir le produit
+            <i className="fas fa-eye" /> {t('home.storiesStrip.voirProduit')}
           </button>
           <button
             className={styles.vaSecond}
             onClick={() => { onClose(); navigate(`/boutique/${boutique.id}`); }}
           >
-            <i className="fas fa-store" /> La boutique
+            <i className="fas fa-store" /> {t('home.storiesStrip.laBoutique')}
           </button>
           <button
             className={styles.vaShare}
             onClick={() => {
               navigator.clipboard?.writeText(`${window.location.origin}/produit/${slide.productId}`);
-              onToast('🔗 Lien copié !');
+              onToast(t('home.storiesStrip.lienCopieToast'));
             }}
-            title="Partager"
+            title={t('home.storiesStrip.partager')}
           >
             <i className="fas fa-share-nodes" />
           </button>

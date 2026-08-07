@@ -1,0 +1,704 @@
+{
+  "produits": {
+    "visibilite": {
+      "public": "Public",
+      "draft": "Brouillon",
+      "private": "Privé"
+    },
+    "header": {
+      "title": "Mes Produits",
+      "subtitle": "Gérez votre catalogue et votre inventaire",
+      "nouveau": "Nouveau produit"
+    },
+    "stats": {
+      "total": "Total",
+      "publies": "Publiés",
+      "brouillons": "Brouillons",
+      "rupture": "Rupture"
+    },
+    "search": "Rechercher par nom, marque, référence…",
+    "filters": {
+      "tous": "Tous",
+      "publics": "🟢 Publiés",
+      "brouillons": "🟡 Brouillons",
+      "prives": "🔴 Privés"
+    },
+    "loading": "Chargement des produits…",
+    "retry": "Réessayer",
+    "empty": {
+      "noneTitle": "Aucun produit encore",
+      "noResultsTitle": "Aucun résultat",
+      "noneSub": "Commencez par ajouter votre premier produit.",
+      "noResultsSub": "Essayez de modifier vos filtres.",
+      "addFirst": "Ajouter un produit"
+    },
+    "count_one": "{{count}} produit",
+    "count_other": "{{count}} produits",
+    "countFor": "pour \"{{search}}\"",
+    "card": {
+      "voir": "Voir",
+      "rupture": "Rupture",
+      "outOfStock": "Rupture de stock",
+      "lowStock": "Stock faible — {{count}} restants",
+      "inStock": "{{count}} en stock",
+      "voirDetail": "Voir le détail",
+      "modifRapide": "Modification rapide",
+      "modifComplet": "Modifier complet",
+      "modifier": "Modifier",
+      "supprimer": "Supprimer"
+    },
+    "toasts": {
+      "archived": "📦 Produit archivé",
+      "archiveError": "Erreur lors de l'archivage",
+      "updated": "✅ Produit mis à jour",
+      "deleted": "🗑️ Produit supprimé"
+    },
+    "modalVoir": {
+      "noImage": "Aucune image",
+      "prix": "Prix",
+      "commission": "Commission Shopi (3%)",
+      "revenuNet": "Revenu net",
+      "stock": "Stock",
+      "unites": "unités",
+      "seuilInfo": "Seuil d'alerte : {{count}} unités",
+      "details": "Détails",
+      "marque": "Marque",
+      "condition": "Condition",
+      "garantie": "Garantie",
+      "origine": "Origine",
+      "ajouteLe": "Ajouté le",
+      "description": "Description",
+      "caracteristiques": "Caractéristiques",
+      "variantes": "Variantes",
+      "tags": "Tags",
+      "supprimer": "Supprimer",
+      "archiver": "Archiver",
+      "modifier": "Modifier"
+    },
+    "modalModifier": {
+      "title": "Modification rapide",
+      "visibilite": "Visibilité",
+      "optPublic": "🟢 Public — Visible sur la boutique",
+      "optDraft": "🟡 Brouillon — Non publié",
+      "optPrivate": "🔴 Privé — Lien direct uniquement",
+      "stockActuel": "Stock actuel",
+      "seuilAlerte": "Seuil d'alerte",
+      "seuilPlaceholder": "Ex: 5",
+      "info": "Pour modifier le nom, le prix ou les images, utilisez le formulaire complet.",
+      "annuler": "Annuler",
+      "saving": "Sauvegarde…",
+      "save": "Sauvegarder"
+    },
+    "modalDelete": {
+      "title": "Confirmer la suppression",
+      "confirm": "Voulez-vous vraiment supprimer \"{{nom}}\" ?",
+      "irreversible": "Cette action est irréversible. Le produit sera définitivement effacé.",
+      "annuler": "Annuler",
+      "deleting": "Suppression…",
+      "confirmBtn": "Supprimer définitivement"
+    }
+  },
+  "ajouter": {
+    "constants": {
+      "varianteTypes": {
+        "Couleur": "Couleur",
+        "Stockage": "Stockage",
+        "RAM": "RAM",
+        "Taille": "Taille",
+        "Résolution": "Résolution",
+        "Matière": "Matière"
+      },
+      "paysOrigine": {
+        "GN": "🇬🇳 Guinée (local)",
+        "SN": "🇸🇳 Sénégal",
+        "CI": "🇨🇮 Côte d'Ivoire",
+        "ML": "🇲🇱 Mali",
+        "CM": "🇨🇲 Cameroun",
+        "FR": "🇫🇷 France",
+        "CN": "🇨🇳 Chine",
+        "US": "🇺🇸 États-Unis",
+        "DE": "🇩🇪 Allemagne",
+        "GB": "🇬🇧 Royaume-Uni",
+        "JP": "🇯🇵 Japon",
+        "AE": "🇦🇪 Émirats Arabes Unis"
+      },
+      "retourOptions": {
+        "7j": "7 jours — Remboursement complet",
+        "14j": "14 jours — Remboursement ou échange",
+        "30j": "30 jours — Échange uniquement",
+        "defect": "Retour uniquement si défectueux",
+        "none": "Aucun retour accepté"
+      }
+    },
+    "errorBanner": {
+      "title": "Une erreur est survenue"
+    },
+    "validation": {
+      "nomRequired": "Le nom du produit est obligatoire.",
+      "nomMinLength": "Le nom doit contenir au moins 3 caractères.",
+      "prixRequired": "Le prix de vente est obligatoire.",
+      "prixPositive": "Le prix doit être un nombre positif.",
+      "stockRequired": "La quantité en stock est obligatoire.",
+      "stockPositive": "Le stock doit être un nombre positif ou zéro.",
+      "categorieRequired": "Veuillez sélectionner une catégorie.",
+      "fixErrors": "⚠️ Veuillez corriger les erreurs dans le formulaire."
+    },
+    "toasts": {
+      "maxMedia": "⚠️ Maximum {{count}} médias atteint",
+      "maxMediaRestIgnored": "⚠️ Maximum {{count}} médias — le reste a été ignoré.",
+      "maxVideo": "⚠️ Maximum {{count}} vidéo par produit — \"{{name}}\" ignorée.",
+      "maxImages": "⚠️ Maximum {{count}} images par produit — \"{{name}}\" ignorée.",
+      "fileTooLarge": "⚠️ \"{{name}}\" dépasse {{max}} — ignoré.",
+      "networkError": "Impossible de joindre le serveur. Vérifiez que votre backend est démarré.",
+      "sessionExpired": "Session expirée.",
+      "mediaUploaded_one": "✅ {{count}} média uploadé",
+      "mediaUploaded_other": "✅ {{count}} médias uploadés",
+      "sessionExpiredReconnect": "Session expirée. Veuillez vous reconnecter.",
+      "categoriesServerError": "Erreur serveur ({{status}}) lors du chargement des catégories.",
+      "unexpectedFormat": "Format inattendu.",
+      "networkErrorBackend": "Impossible de joindre le serveur. Vérifiez que votre backend est démarré sur le port 3001.",
+      "productDataLoaded": "📝 Données du produit chargées",
+      "productLoadError": "❌ Impossible de charger le produit : {{message}}",
+      "productLoadServerError": "Erreur {{status}} lors du chargement du produit.",
+      "networkErrorNest": "Impossible de joindre le serveur. Vérifiez que votre backend NestJS est démarré sur le port 3001.",
+      "sessionExpiredFull": "Votre session a expiré. Veuillez vous reconnecter.",
+      "forbidden": "Vous n'avez pas les droits nécessaires.",
+      "slugTaken": "URL slug déjà utilisé. Changez le slug.",
+      "serverError500": "Erreur interne du serveur. Consultez les logs.",
+      "serverErrorGeneric": "Erreur serveur ({{status}}).",
+      "updateSuccess": "✅ Produit mis à jour avec succès !",
+      "draftSaved": "💾 Brouillon sauvegardé !",
+      "publishSuccess": "✅ Produit publié avec succès !",
+      "unexpectedError": "Une erreur inattendue est survenue.",
+      "publishFailed": "❌ Échec"
+    },
+    "header": {
+      "editTitle": "Modifier le produit",
+      "createTitle": "Ajouter un produit",
+      "editSubtitle": "Modifiez les informations de votre produit et sauvegardez les changements.",
+      "createSubtitle": "Remplissez les informations pour publier votre produit sur la boutique.",
+      "cancel": "Annuler",
+      "saving": "Sauvegarde…",
+      "draft": "Brouillon",
+      "updating": "Mise à jour…",
+      "publishing": "Publication…",
+      "update": "Mettre à jour",
+      "publish": "Publier le produit",
+      "editModeBadge": "Mode édition — vous modifiez un produit existant"
+    },
+    "loadingProduct": "Chargement du produit…",
+    "medias": {
+      "title": "Médias produit",
+      "loading": "Upload en cours…",
+      "dropTitle": "Glissez vos médias ici",
+      "dropSub": "ou cliquez pour sélectionner",
+      "quota": "{{images}} images (JPG, PNG, WebP · Max. 5 MB) + {{videos}} vidéo (MP4, WebM, MOV · Max. 50 MB)",
+      "principale": "Principale"
+    },
+    "stories": {
+      "title": "Stories produit",
+      "activees": "Activées",
+      "desactivees": "Désactivées",
+      "addImagesFirst": "Ajoutez d'abord des images produit pour les sélectionner comme stories.",
+      "selectHint": "Sélectionnez les images à publier en story (expire après 24h). Cliquez sur une image pour la sélectionner.",
+      "selected_one": "{{count}} image sélectionnée comme story",
+      "selected_other": "{{count}} images sélectionnées comme story",
+      "plageHoraire": "Plage horaire d'affichage (par jour)",
+      "aPartirDe": "À partir de",
+      "jusquA": "Jusqu'à",
+      "deA": "De {{debut}} à {{fin}}",
+      "heureInvalide": "L'heure de fin doit être après l'heure de début.",
+      "joursAffichage": "Jours d'affichage",
+      "toutDeselectionner": "Tout désélectionner",
+      "tousLesJours": "Tous les jours",
+      "jours": {
+        "lun": "Lun",
+        "mar": "Mar",
+        "mer": "Mer",
+        "jeu": "Jeu",
+        "ven": "Ven",
+        "sam": "Sam",
+        "dim": "Dim"
+      },
+      "selectAuMoinsUnJour": "Sélectionnez au moins un jour.",
+      "visibleTousLesJours": "Visible tous les jours",
+      "visibleLunVen": "Visible du lundi au vendredi",
+      "visibleWeekend": "Visible le week-end uniquement",
+      "visibleNJours_one": "Visible {{count}} jour par semaine",
+      "visibleNJours_other": "Visible {{count}} jours par semaine",
+      "disabledHint": "Activez les stories pour mettre en avant ce produit pendant 24h dans le fil stories de votre boutique."
+    },
+    "organisation": {
+      "title": "Organisation",
+      "categorie": "Catégorie *",
+      "retry": "Réessayer",
+      "loadingCats": "Chargement…",
+      "noCategorie": "Aucune catégorie disponible",
+      "sousCategorie": "Sous-catégorie",
+      "choisir": "Choisir…",
+      "marque": "Marque",
+      "marquePlaceholder": "Ex: Apple, Samsung…",
+      "tagsSeo": "Tags SEO (séparés par virgule)",
+      "tagsPlaceholder": "smartphone, iphone, apple…",
+      "langue": "Langue",
+      "langueFr": "🇫🇷 Français",
+      "langueEn": "🇬🇧 Anglais",
+      "langueAr": "🇸🇦 Arabe",
+      "visibilite": "Visibilité",
+      "optPublic": "Public · Visible sur la boutique",
+      "optDraft": "Brouillon · Non publié",
+      "optPrivate": "Privé · Lien direct uniquement"
+    },
+    "infosComplementaires": {
+      "title": "Infos complémentaires",
+      "etat": "État du produit",
+      "etatNeuf": "Neuf — jamais utilisé",
+      "etatReconditionne": "Reconditionné certifié",
+      "etatOccasion": "Occasion — Très bon état",
+      "garantie": "Garantie",
+      "garantieOptions": {
+        "3m": "3 mois",
+        "6m": "6 mois",
+        "12m": "12 mois",
+        "24m": "24 mois",
+        "aucune": "Sans garantie"
+      },
+      "politiqueRetour": "Politique de retour",
+      "paysOrigine": "Pays d'origine",
+      "internationalTitle": "Produit international détecté",
+      "internationalSub": "La fiche affichera automatiquement le bandeau international.",
+      "poids": "Poids (kg)",
+      "dimensions": "Dimensions physiques (cm)",
+      "longueur": "Longueur",
+      "largeur": "Largeur",
+      "hauteur": "Hauteur",
+      "volume": "📦 Volume : {{volume}} L"
+    },
+    "livraison": {
+      "title": "Politique de livraison",
+      "standard": "Livraison standard",
+      "standardSub": "Gérée par votre boutique",
+      "choisirLivreur": "Choisir un livreur",
+      "choisirLivreurSub": "L'acheteur sélectionne son livreur",
+      "correspondant": "Via un correspondant Shopi",
+      "correspondantSub": "Pour les produits venant de l'étranger",
+      "fraisLocal": "Frais de livraison locale (GNF)",
+      "fraisPlaceholder": "0 = Livraison gratuite",
+      "delai": "Délai de livraison estimé",
+      "delaiOptions": {
+        "jour": "Même jour",
+        "d1_3": "1-3 jours",
+        "d3_7": "3-7 jours",
+        "d7_14": "7-14 jours",
+        "d14_30": "14-30 jours",
+        "surCommande": "Sur commande"
+      }
+    },
+    "garanties": {
+      "title": "Garanties affichées sur la fiche",
+      "paiement": "Paiement sécurisé",
+      "paiementSub": "SSL · Orange Money · Visa",
+      "retour": "Retour garanti",
+      "retourSub": "Remboursement ou échange",
+      "authentique": "Produit authentique",
+      "authentiqueSub": "Vendeur Shopi certifié",
+      "support": "Support 24/7",
+      "supportSub": "Chat · WhatsApp · Tél."
+    },
+    "infosProduit": {
+      "title": "Informations produit",
+      "nom": "Nom du produit *",
+      "nomPlaceholder": "Ex: iPhone 15 Pro 256GB Titanium",
+      "description": "Description",
+      "descriptionPlaceholder": "Décrivez votre produit en détail…",
+      "descCounter": "{{count}} car. {{status}}",
+      "descMinRecommande": "(min. 100 recommandé)",
+      "contenuBoite": "Contenu de la boîte",
+      "contenuBoitePlaceholder": "Ex: 1× iPhone 15 Pro, 1× câble USB-C…",
+      "prixVente": "Prix de vente (GNF) *",
+      "prixPlaceholder": "Ex: 12500000",
+      "prixBarre": "Prix barré (GNF)",
+      "prixBarrePlaceholder": "Ex: 14000000",
+      "reduction": "✓ Réduction de {{pct}}% affichée",
+      "reference": "Référence / SKU",
+      "referencePlaceholder": "Ex: APPL-IP15P-256-TIT",
+      "stock": "Quantité en stock *",
+      "stockPlaceholder": "Ex: 10",
+      "seuil": "Seuil d'alerte stock",
+      "seuilPlaceholder": "Ex: 5 unités"
+    },
+    "specs": {
+      "title": "Caractéristiques techniques",
+      "critereCount_one": "{{count}} critère",
+      "critereCount_other": "{{count}} critères",
+      "critere": "Critère",
+      "criterePlaceholder": "Ex: Puce",
+      "valeur": "Valeur",
+      "valeurPlaceholder": "Ex: A17 Pro (3 nm)",
+      "add": "Ajouter une caractéristique",
+      "defaultMarque": "Marque",
+      "defaultPuce": "Puce / Processeur",
+      "defaultConnectivite": "Connectivité"
+    },
+    "variantes": {
+      "title": "Variantes produit",
+      "activees": "Activées",
+      "desactivees": "Désactivées",
+      "type": "Type",
+      "valeurs": "Valeurs (séparées par virgule)",
+      "valeursPlaceholder": "Ex: Noir, Blanc, Bleu…",
+      "add": "Ajouter un type de variante",
+      "disabledHint": "Activez les variantes pour définir des options comme la couleur, le stockage ou la taille."
+    },
+    "venteEnGros": {
+      "title": "Vente en gros",
+      "activee": "Activée",
+      "desactivee": "Désactivée",
+      "moq": "Quantité minimum de commande (MOQ)",
+      "moqPlaceholder": "Ex: 10",
+      "conditionnement": "Conditionnement (unités/carton)",
+      "conditionnementPlaceholder": "Ex: 24",
+      "delaiPreparation": "Délai de préparation",
+      "delaiPlaceholder": "Ex: 3-5 jours",
+      "paliers": "Paliers de prix dégressifs selon la quantité",
+      "qteMin": "Qté min",
+      "qteMax": "Qté max",
+      "qteMaxPlaceholder": "49 (vide = +)",
+      "prixUnitaire": "Prix unitaire (GNF)",
+      "prixUnitairePlaceholder": "Ex: 50000",
+      "add": "Ajouter un palier",
+      "disabledHint": "Activez la vente en gros pour proposer une quantité minimum de commande et des prix dégressifs selon la quantité achetée."
+    },
+    "seo": {
+      "title": "SEO & Référencement",
+      "score": "Score SEO",
+      "titreSeo": "Titre SEO",
+      "titrePlaceholder": "Ex: iPhone 15 Pro 256GB — Shopi Guinée",
+      "titreIdeal": "Idéal : 50–70 car.",
+      "descriptionSeo": "Description SEO",
+      "descriptionPlaceholder": "120-160 caractères…",
+      "descriptionIdeal": "Idéal : 120–160 car.",
+      "urlSlug": "URL Slug",
+      "qualite": "Critères de qualité",
+      "criteres": {
+        "nom": "Nom du produit renseigné",
+        "description": "Description > 100 caractères",
+        "titreSeo": "Titre SEO défini",
+        "descriptionSeo": "Description SEO définie",
+        "urlSlug": "URL Slug personnalisée",
+        "tags": "Tags SEO renseignés",
+        "marque": "Marque définie",
+        "image": "Au moins 1 image uploadée",
+        "prix": "Prix de vente saisi",
+        "reference": "Référence SKU définie"
+      }
+    },
+    "revenus": {
+      "title": "Aperçu des revenus",
+      "prixVente": "Prix de vente",
+      "commission": "Commission Shopi ({{pct}}%)",
+      "revenuNet": "Revenu net estimé"
+    },
+    "actions": {
+      "fixErrorsTitle": "Corrigez les erreurs suivantes :",
+      "retour": "Retour"
+    }
+  },
+  "inventaire": {
+    "status": {
+      "rupture": "Rupture",
+      "faible": "Stock faible",
+      "critique": "Critique",
+      "enStock": "En stock"
+    },
+    "modal": {
+      "title": "Modifier le stock",
+      "subtitle": "Mise à jour rapide sans quitter l'inventaire",
+      "quantite": "Quantité en stock *",
+      "unites": "unités",
+      "placeholder1": "Ex: 25",
+      "nouveauStatut": "Nouveau statut :",
+      "seuilAlerte": "Seuil d'alerte (optionnel)",
+      "seuilPlaceholder": "Ex: 5",
+      "seuilHint": "Une alerte apparaîtra quand le stock descend sous ce seuil.",
+      "niveauStock": "Niveau de stock",
+      "annuler": "Annuler",
+      "saving": "Sauvegarde…",
+      "update": "Mettre à jour le stock",
+      "invalidStock": "⚠️ Le stock doit être un nombre positif",
+      "updated": "✅ Stock mis à jour"
+    },
+    "header": {
+      "title": "Inventaire & Stock",
+      "subtitle": "Suivez vos niveaux de stock en temps réel et gérez les alertes",
+      "exportCsv": "Exporter CSV",
+      "exportToast": "📥 Export CSV généré",
+      "refresh": "Actualiser",
+      "loading": "Chargement…"
+    },
+    "stats": {
+      "produitsCatalogues": "Produits catalogués",
+      "unitesTotal": "{{count}} unités au total",
+      "rupturesStock": "Ruptures de stock",
+      "aucuneRupture": "Aucune rupture ✓",
+      "actionRequise": "Action requise !",
+      "stocksFaibles": "Stocks faibles",
+      "sousLeSeuil": "Sous le seuil d'alerte",
+      "valeurStock": "Valeur du stock (GNF)",
+      "prixParQuantite": "Prix × quantité en stock"
+    },
+    "filters": {
+      "tous": "Tous",
+      "rupture": "🔴 Rupture",
+      "faibles": "🟡 Faibles",
+      "enStock": "✅ En stock"
+    },
+    "search": "Rechercher un produit…",
+    "loadingInventaire": "Chargement de l'inventaire…",
+    "retry": "Réessayer",
+    "empty": {
+      "noneTitle": "Aucun produit",
+      "noResultsTitle": "Aucun résultat",
+      "noneSub": "Ajoutez des produits pour voir l'inventaire.",
+      "noResultsSub": "Essayez de modifier vos filtres."
+    },
+    "table": {
+      "produit": "Produit",
+      "categorie": "Catégorie",
+      "prixUnitaire": "Prix unitaire",
+      "stockActuel": "Stock actuel",
+      "niveauVisuel": "Niveau visuel",
+      "statut": "Statut",
+      "actions": "Actions",
+      "valeurStockLigne": "= {{montant}} GNF en stock",
+      "seuil": "Seuil : {{count}}",
+      "modifierTitle": "Modifier le stock",
+      "modifier": "Modifier",
+      "reapproTitle": "Lancer une réapprovisionnement",
+      "reapproToast": "📦 Réappro lancée pour \"{{nom}}\""
+    },
+    "footer": {
+      "count_one": "{{count}} produit",
+      "count_other": "{{count}} produits",
+      "filtres": "filtrés",
+      "pourRecherche": "pour \"{{search}}\""
+    },
+    "alertes": {
+      "title": "Alertes critiques",
+      "allGood": "Tout est en ordre !",
+      "noneDetected": "Aucun stock critique détecté.",
+      "stock": "Stock :",
+      "min": "· Min : {{count}}"
+    },
+    "quickActions": {
+      "title": "Actions rapides",
+      "reapproAll": "Réappro. tous les critiques",
+      "reapproAllSub": "{{count}} produits concernés",
+      "reapproAllToast": "📦 Réapprovisionnement groupé lancé",
+      "exportInventaire": "Exporter l'inventaire (CSV)",
+      "exportInventaireSub": "{{count}} produits · {{units}} unités",
+      "exportInventaireToast": "📥 Export CSV en cours de génération…",
+      "configAlertes": "Configurer les alertes",
+      "configAlertesSub": "Définir des seuils automatiques",
+      "configAlertesToast": "⚙️ Configuration des alertes ouverte",
+      "syncStock": "Synchroniser le stock",
+      "syncStockSub": "Avec votre fournisseur",
+      "syncStockToast": "🔄 Synchronisation en cours…"
+    }
+  },
+  "promotions": {
+    "typeCfg": {
+      "discount": "Réduction %",
+      "freeShip": "Livraison offerte",
+      "bundle": "Bundle",
+      "flash": "Vente flash"
+    },
+    "statusCfg": {
+      "active": "Actif",
+      "scheduled": "Planifié",
+      "draft": "Brouillon",
+      "paused": "En pause",
+      "ended": "Terminé"
+    },
+    "templates": {
+      "pctDiscount": {
+        "label": "Réduction en %",
+        "sub": "Ex: -10% sur tout"
+      },
+      "fixedDiscount": {
+        "label": "Réduction fixe (GNF)",
+        "sub": "Ex: -5 000 GNF"
+      },
+      "freeShip": {
+        "label": "Livraison gratuite",
+        "sub": "Pour commandes > X"
+      },
+      "bundle": {
+        "label": "Bundle / Lot",
+        "sub": "2 achetés = 1 offert"
+      },
+      "flash": {
+        "label": "Vente flash",
+        "sub": "Durée & stock limités"
+      }
+    },
+    "scope": {
+      "global": "Toute l'entreprise",
+      "produits_one": "{{count}} produit",
+      "produits_other": "{{count}} produits"
+    },
+    "card": {
+      "copierTitle": "Copier",
+      "codeCopied": "📋 Code \"{{code}}\" copié !",
+      "copyError": "❌ Impossible de copier le code (permission presse-papiers refusée).",
+      "activated": "🚀 Promotion activée !",
+      "paused": "⏸️ Promotion suspendue",
+      "utilisations": "Utilisations",
+      "caGenere": "CA généré",
+      "tauxUsage": "Taux usage",
+      "modifier": "Modifier",
+      "stats": "Stats",
+      "statsToast": "📊 Stats détaillées",
+      "activer": "Activer"
+    },
+    "selector": {
+      "search": "Rechercher un produit…",
+      "selected_one": "{{count}} produit sélectionné",
+      "selected_other": "{{count}} produits sélectionnés",
+      "clearAll": "Tout désélectionner",
+      "empty": "Aucun produit trouvé"
+    },
+    "hero": {
+      "badge": "Promotions actives",
+      "titlePart1": "Boostez vos ventes avec des",
+      "titleEm": "offres ciblées",
+      "sub": "Créez des codes promo, planifiez des ventes flash et suivez leurs performances en temps réel.",
+      "create": "Créer une promotion",
+      "exportBtn": "Exporter",
+      "exportToast": "📤 Export en cours…",
+      "statsActives": "actives",
+      "statsTotal": "total",
+      "statsGnf": "GNF",
+      "lblPromotions": "Promotions",
+      "lblUtilisations": "Utilisations",
+      "lblCaGenere": "CA généré"
+    },
+    "kpi": {
+      "totales": "Promotions totales",
+      "actives": "Actives maintenant",
+      "activesSub": "{{count}} planifiées",
+      "utilisationsTotales": "Utilisations totales",
+      "caGenereGnf": "CA généré (GNF)"
+    },
+    "filters": {
+      "toutes": "Toutes",
+      "actives": "● Actives",
+      "planifiees": "⏰ Planifiées",
+      "brouillons": "✎ Brouillons",
+      "search": "Rechercher une promo…"
+    },
+    "loading": "Chargement des promotions…",
+    "empty": {
+      "title": "Aucune promotion trouvée",
+      "sub": "Créez votre première promotion pour booster vos ventes"
+    },
+    "performance": {
+      "title": "Performance des promotions",
+      "badge": "Ce mois",
+      "uses": "uses"
+    },
+    "sidebar": {
+      "creerRapide": "Créer rapidement",
+      "templateToast": "➕ Template \"{{label}}\" sélectionné",
+      "meilleuresPromos": "Meilleures promos",
+      "uses": "uses",
+      "tipsTitle": "Conseils Shopi",
+      "tip1": "Les promos flash génèrent 3× plus d'urgence d'achat.",
+      "tip2": "Livraison gratuite = +28% de conversion.",
+      "tip3": "Cibler un produit spécifique booste le taux usage +40%."
+    },
+    "modal": {
+      "editTitle": "✏️ Modifier la promotion",
+      "createTitle": "✨ Nouvelle promotion",
+      "editSub": "Mettez à jour les informations de cette promotion",
+      "createSub": "Créez une offre pour booster vos ventes",
+      "typeLabel": "Type de promotion",
+      "nomLabel": "Nom de la promotion *",
+      "nomPlaceholder": "Ex: Soldes Janvier",
+      "codeLabel": "Code promo *",
+      "codePlaceholder": "Ex: SOLDES20",
+      "discountLabel": "Valeur de la réduction",
+      "discountPlaceholderPct": "Ex: 20",
+      "discountPlaceholderFree": "Livraison offerte",
+      "discountPlaceholderFixed": "Ex: 5000",
+      "maxLabel": "Utilisations maximum",
+      "maxPlaceholder": "Ex: 500 (vide = illimité)",
+      "expireLabel": "Date d'expiration",
+      "scopeTitle": "Portée de la promotion",
+      "scopeGlobalTitle": "Toute l'entreprise",
+      "scopeGlobalSub": "La promo s'applique à tous vos produits",
+      "scopeProduits": "{{count}} produits",
+      "scopeProductsTitle": "Produit(s) spécifique(s)",
+      "scopeProductsSub": "Cibler un ou plusieurs produits précis",
+      "scopeSelected_one": "{{count}} sélectionné",
+      "scopeSelected_other": "{{count}} sélectionnés",
+      "scopeWarn": "Sélectionnez au moins un produit pour pouvoir créer cette promotion.",
+      "previewLabel": "Aperçu",
+      "previewDefaultNom": "Nom de la promo",
+      "previewDefaultCode": "CODE",
+      "annuler": "Annuler",
+      "brouillon": "Brouillon",
+      "saveEdit": "Enregistrer les modifications",
+      "createBtn": "Créer la promotion"
+    },
+    "validation": {
+      "nomRequired": "Le nom de la promotion est obligatoire.",
+      "codeRequired": "Le code promo est obligatoire.",
+      "codeMaxLength": "Le code promo ne doit pas dépasser 50 caractères.",
+      "codeFormat": "Le code promo ne peut contenir que des lettres, chiffres, tirets ou underscores.",
+      "scopeRequired": "Sélectionnez au moins un produit pour cette promotion.",
+      "discountRequired": "Indiquez une valeur de réduction.",
+      "discountPositive": "La valeur de la réduction doit être un nombre positif.",
+      "discountMaxPct": "Une réduction en pourcentage ne peut pas dépasser 100.",
+      "maxUsesInteger": "Le nombre maximum d'utilisations doit être un entier positif.",
+      "expireInPast": "La date d'expiration ne peut pas être dans le passé."
+    },
+    "toasts": {
+      "updateSuccess": "✅ Promo \"{{nom}}\" mise à jour !",
+      "activateFailedAfterCreate": "⚠️ Promo \"{{nom}}\" créée mais l'activation automatique a échoué ({{err}}) — activez-la manuellement depuis la liste.",
+      "createSuccess": "✅ Promo \"{{nom}}\" créée et activée pour {{who}} !",
+      "whoGlobal": "toute l'entreprise",
+      "whoProduits_one": "{{count}} produit",
+      "whoProduits_other": "{{count}} produits",
+      "draftSaved": "💾 Brouillon sauvegardé",
+      "draftMissingFields": "Le nom et le code sont obligatoires même pour un brouillon.",
+      "loadError": "❌ Erreur de chargement : {{message}}",
+      "loadErrorDefault": "Impossible de charger les promotions."
+    }
+  },
+  "analytics": {
+    "ca": {
+      "title": "Chiffre d'affaires",
+      "empty": "Aucune vente livrée pour l'instant.",
+      "legendCurrent": "CA mensuel (M GNF)",
+      "legendPrevious": "Périodes passées"
+    },
+    "categoryPerf": {
+      "title": "Performances par catégorie",
+      "categorie": "Catégorie",
+      "caMillions": "CA (M GNF)",
+      "commandes": "Commandes",
+      "empty": "Aucune vente pour l'instant."
+    },
+    "topProduits": {
+      "title": "Top produits — Ventes",
+      "empty": "Aucune vente pour l'instant.",
+      "ventes_one": "{{count}} vente",
+      "ventes_other": "{{count}} ventes"
+    },
+    "trafic": {
+      "title": "Analytics de trafic",
+      "sub": "Visites, sources de trafic, taux de conversion et entonnoir de vente — bientôt disponible."
+    }
+  }
+}

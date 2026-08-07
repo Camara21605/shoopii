@@ -6,6 +6,7 @@
  * ================================================================ */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/Correspondants.module.css';
 import type { FiltreRapide, VueMode, TriOption } from '../data/types';
 
@@ -21,19 +22,19 @@ interface Props {
   onVue:       (v: VueMode) => void;
 }
 
-const FILTRES: { id: FiltreRapide; icon: string; label: string }[] = [
-  { id: 'all',       icon: 'fa-border-all',     label: 'Tous'          },
-  { id: 'available', icon: 'fa-circle',         label: 'En ligne'      },
-  { id: 'followed',  icon: 'fa-check',          label: 'Mes abonnements' },
-  { id: 'regional',  icon: 'fa-map-marked-alt', label: 'Régionaux'     },
-  { id: 'zonal',     icon: 'fa-map',            label: 'Zonaux'        },
-  { id: 'national',  icon: 'fa-globe-africa',   label: 'Nationaux'     },
-];
-
 export default function ToolbarCorrespondants({
   recherche, filtre, tri, vue, count,
   onRecherche, onFiltre, onTri, onVue,
 }: Props) {
+  const { t } = useTranslation();
+  const FILTRES: { id: FiltreRapide; icon: string; label: string }[] = [
+    { id: 'all',       icon: 'fa-border-all',     label: t('correspondantsPage.toolbar.filters.tous')          },
+    { id: 'available', icon: 'fa-circle',         label: t('correspondantsPage.toolbar.filters.enLigne')      },
+    { id: 'followed',  icon: 'fa-check',          label: t('correspondantsPage.toolbar.filters.mesAbonnements') },
+    { id: 'regional',  icon: 'fa-map-marked-alt', label: t('correspondantsPage.toolbar.filters.regionaux')     },
+    { id: 'zonal',     icon: 'fa-map',            label: t('correspondantsPage.toolbar.filters.zonaux')        },
+    { id: 'national',  icon: 'fa-globe-africa',   label: t('correspondantsPage.toolbar.filters.nationaux')     },
+  ];
   return (
     <div className={styles.toolbar}>
       <div className={styles.toolbarIn}>
@@ -42,7 +43,7 @@ export default function ToolbarCorrespondants({
           <i className="fas fa-search" />
           <input
             type="text"
-            placeholder="Rechercher un correspondant, une zone…"
+            placeholder={t('correspondantsPage.toolbar.searchPlaceholder')}
             value={recherche}
             onChange={e => onRecherche(e.target.value)}
           />
@@ -65,14 +66,14 @@ export default function ToolbarCorrespondants({
 
         {/* Tri */}
         <select className={styles.srt} value={tri} onChange={e => onTri(e.target.value as TriOption)}>
-          <option value="pertinence">Pertinence</option>
-          <option value="note">Mieux notés</option>
-          <option value="missions">Plus de missions</option>
-          <option value="nom">Nom (A-Z)</option>
+          <option value="pertinence">{t('correspondantsPage.toolbar.sorts.pertinence')}</option>
+          <option value="note">{t('correspondantsPage.toolbar.sorts.mieuxNotes')}</option>
+          <option value="missions">{t('correspondantsPage.toolbar.sorts.plusDeMissions')}</option>
+          <option value="nom">{t('correspondantsPage.toolbar.sorts.nomAZ')}</option>
         </select>
 
         {/* Compteur */}
-        <span className={styles.cntPill}>{count} correspondant{count > 1 ? 's' : ''}</span>
+        <span className={styles.cntPill}>{t('correspondantsPage.toolbar.correspondantCount', { count })}</span>
 
         {/* Vue */}
         <div className={styles.vwBtns}>

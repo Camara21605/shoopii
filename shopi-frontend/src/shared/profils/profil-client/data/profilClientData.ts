@@ -18,15 +18,6 @@ export interface ClientProfil {
 /* ── KPI affichés sous l'identité ── */
 export interface ClientKpi { valeur: string; label: string; sub?: string; tag?: 'g' | 'y'; }
 
-/* ── Portefeuille ── */
-export interface WalletData { solde: number; entreesMois: number; sortiesMois: number; }
-
-/* ── Transaction wallet ── */
-export interface Transaction {
-  id: string; label: string; date: string; montant: number;
-  type: 'in' | 'out' | 'pending';      // entrée / sortie / en attente
-  icone: string;                        // classe FontAwesome
-}
 
 /* ── Points fidélité ── */
 export interface PointsData {

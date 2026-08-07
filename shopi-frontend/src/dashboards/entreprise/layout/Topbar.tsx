@@ -17,6 +17,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
@@ -24,6 +25,7 @@ import { useAppContext } from '../../../shared/context/AppContext';
 import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
 import { useNotifications } from '../../../shared/notifications/NotificationContext';
+import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
 import './Topbar.css';
 
 type CanFn = (group: string, action: string) => boolean;
@@ -42,60 +44,64 @@ interface TopbarProps {
   isOwner?:       boolean;
 }
 
-/* Titre + sous-titre par page */
+/* Titre + sous-titre par page — [clé titre, clé sous-titre] dans le
+   namespace "common" (src/shared/i18n/locales/{fr,en}/common.json,
+   sous topbar.titles.*), résolues via t() au rendu. */
 const TITLES: Record<EntreprisePage, [string, string]> = {
-  overview:       ["Vue d'ensemble",          'Tableau de bord de votre boutique'],
-  commandes:      ['Commandes',               'Gérez toutes vos commandes'],
-  retours:        ['Retours & SAV',           'Gestion des retours et service après-vente'],
-  produits:       ['Catalogue produits',      '124 produits · 8 catégories'],
-  ajouter:        ['Ajouter un produit',      'Créez et publiez un nouveau produit'],
-  inventaire:     ['Inventaire & Stock',      'Gérez vos niveaux de stock'],
-  promotions:     ['Promotions & Codes promo','Boostez vos ventes avec des offres'],
-  analytics:      ['Analytics avancées',      'Statistiques et performances de votre boutique'],
-  messages:       ['Messages clients',        'Conversations et support client'],
-  seo:            ['SEO & Marketing',         'Optimisation et campagnes marketing'],
-  livreurs:       ['Mes livreurs',            'Réseau de livraison · 4 actifs'],
-  correspondants: ['Correspondants',          'Vos relais locaux et internationaux'],
-  finances:       ['Finances',                'Revenus, dépenses et transactions'],
-  portefeuille:   ['Portefeuille',            'Solde, retraits et transactions'],
-  clients:        ['Clients',                 'Base clients · 2 414 acheteurs'],
-  avis:           ['Avis clients',            '248 avis · Note moyenne 4.9 ⭐'],
-  parametres:     ['Paramètres',              'Configuration de votre boutique'],
-  profil:             ['Mon profil',              'Profil public de votre boutique'],
-  'boutique-preview': ['Voir ma boutique',        'Aperçu de votre boutique telle que vos clients la voient'],
-  reseauCorrespondants:     ['Correspondants',     'Suivez des correspondants du réseau Shopi'],
-  reseauLivreurs:           ['Livreurs',           "Suivez d'autres livreurs du réseau Shopi"],
-  profilCorrespondantReseau:['Profil correspondant', 'Détails et suivi'],
-  profilLivreurReseau:      ['Profil livreur',       'Détails et suivi'],
+  overview:       ['topbar.titles.overview.title',       'topbar.titles.overview.subtitle'],
+  commandes:      ['topbar.titles.commandes.title',      'topbar.titles.commandes.subtitle'],
+  retours:        ['topbar.titles.retours.title',        'topbar.titles.retours.subtitle'],
+  produits:       ['topbar.titles.produits.title',       'topbar.titles.produits.subtitle'],
+  ajouter:        ['topbar.titles.ajouter.title',        'topbar.titles.ajouter.subtitle'],
+  inventaire:     ['topbar.titles.inventaire.title',     'topbar.titles.inventaire.subtitle'],
+  promotions:     ['topbar.titles.promotions.title',     'topbar.titles.promotions.subtitle'],
+  analytics:      ['topbar.titles.analytics.title',      'topbar.titles.analytics.subtitle'],
+  messages:       ['topbar.titles.messages.title',       'topbar.titles.messages.subtitle'],
+  seo:            ['topbar.titles.seo.title',            'topbar.titles.seo.subtitle'],
+  livreurs:       ['topbar.titles.livreurs.title',       'topbar.titles.livreurs.subtitle'],
+  correspondants: ['topbar.titles.correspondants.title', 'topbar.titles.correspondants.subtitle'],
+  finances:       ['topbar.titles.finances.title',       'topbar.titles.finances.subtitle'],
+  portefeuille:   ['topbar.titles.portefeuille.title',   'topbar.titles.portefeuille.subtitle'],
+  clients:        ['topbar.titles.clients.title',        'topbar.titles.clients.subtitle'],
+  avis:           ['topbar.titles.avis.title',           'topbar.titles.avis.subtitle'],
+  parametres:     ['topbar.titles.parametres.title',     'topbar.titles.parametres.subtitle'],
+  profil:             ['topbar.titles.profil.title',              'topbar.titles.profil.subtitle'],
+  'boutique-preview': ['topbar.titles.boutiquePreview.title',     'topbar.titles.boutiquePreview.subtitle'],
+  reseauCorrespondants:      ['topbar.titles.reseauCorrespondants.title',      'topbar.titles.reseauCorrespondants.subtitle'],
+  reseauLivreurs:            ['topbar.titles.reseauLivreurs.title',            'topbar.titles.reseauLivreurs.subtitle'],
+  profilCorrespondantReseau: ['topbar.titles.profilCorrespondantReseau.title', 'topbar.titles.profilCorrespondantReseau.subtitle'],
+  profilLivreurReseau:       ['topbar.titles.profilLivreurReseau.title',      'topbar.titles.profilLivreurReseau.subtitle'],
 };
 
-/* Items du drawer mobile (navigation complète) */
+/* Items du drawer mobile (navigation complète) — réutilise les mêmes clés
+   que Sidebar.tsx (sidebar.items.*) puisque les libellés sont identiques. */
 const DRAWER_NAV: { id: EntreprisePage; icon: string; label: string; perm?: [string, string] }[] = [
-  { id: 'overview',       icon: 'fa-chart-pie',    label: "Vue d'ensemble" },
-  { id: 'commandes',      icon: 'fa-box',           label: 'Commandes',          perm: ['orders',    'view'] },
-  { id: 'retours',        icon: 'fa-rotate-left',   label: 'Retours & SAV',      perm: ['returns',   'view'] },
-  { id: 'produits',       icon: 'fa-tag',           label: 'Produits',           perm: ['products',  'view'] },
-  { id: 'ajouter',        icon: 'fa-plus-circle',   label: 'Ajouter produit',    perm: ['products',  'create'] },
-  { id: 'inventaire',     icon: 'fa-warehouse',     label: 'Inventaire',         perm: ['products',  'view'] },
-  { id: 'promotions',     icon: 'fa-percent',       label: 'Promotions',         perm: ['promotions','view'] },
-  { id: 'analytics',      icon: 'fa-chart-line',    label: 'Analytics',          perm: ['statistics','view'] },
-  { id: 'seo',            icon: 'fa-magnifying-glass-chart', label: 'SEO & Marketing', perm: ['statistics','view'] },
-  { id: 'messages',       icon: 'fa-comment-dots',  label: 'Messages',           perm: ['messaging', 'view'] },
-  { id: 'livreurs',       icon: 'fa-motorcycle',    label: 'Mes livreurs',       perm: ['deliveries','view'] },
-  { id: 'correspondants', icon: 'fa-map-pin',       label: 'Correspondants',     perm: ['deliveries','view'] },
-  { id: 'finances',       icon: 'fa-coins',         label: 'Finances',           perm: ['payments',  'view'] },
-  { id: 'portefeuille',   icon: 'fa-wallet',        label: 'Portefeuille',       perm: ['payments',  'viewTransactions'] },
-  { id: 'clients',        icon: 'fa-users',         label: 'Clients',            perm: ['orders',    'view'] },
-  { id: 'avis',           icon: 'fa-star',          label: 'Avis clients',       perm: ['orders',    'view'] },
-  { id: 'parametres',     icon: 'fa-gear',          label: 'Paramètres',         perm: ['settings',  'view'] },
+  { id: 'overview',       icon: 'fa-chart-pie',    label: 'sidebar.items.overview' },
+  { id: 'commandes',      icon: 'fa-box',           label: 'sidebar.items.commandes',  perm: ['orders',    'view'] },
+  { id: 'retours',        icon: 'fa-rotate-left',   label: 'sidebar.items.retours',     perm: ['returns',   'view'] },
+  { id: 'produits',       icon: 'fa-tag',           label: 'sidebar.items.produits',    perm: ['products',  'view'] },
+  { id: 'ajouter',        icon: 'fa-plus-circle',   label: 'sidebar.items.ajouter',     perm: ['products',  'create'] },
+  { id: 'inventaire',     icon: 'fa-warehouse',     label: 'sidebar.items.inventaire',  perm: ['products',  'view'] },
+  { id: 'promotions',     icon: 'fa-percent',       label: 'sidebar.items.promotions', perm: ['promotions','view'] },
+  { id: 'analytics',      icon: 'fa-chart-line',    label: 'sidebar.items.analytics',  perm: ['statistics','view'] },
+  { id: 'seo',            icon: 'fa-magnifying-glass-chart', label: 'sidebar.items.seo', perm: ['statistics','view'] },
+  { id: 'messages',       icon: 'fa-comment-dots',  label: 'sidebar.items.messages',    perm: ['messaging', 'view'] },
+  { id: 'livreurs',       icon: 'fa-motorcycle',    label: 'sidebar.items.livreurs',       perm: ['deliveries','view'] },
+  { id: 'correspondants', icon: 'fa-map-pin',       label: 'sidebar.items.correspondants', perm: ['deliveries','view'] },
+  { id: 'finances',       icon: 'fa-coins',         label: 'sidebar.items.finances',       perm: ['payments',  'view'] },
+  { id: 'portefeuille',   icon: 'fa-wallet',        label: 'sidebar.items.portefeuille',   perm: ['payments',  'viewTransactions'] },
+  { id: 'clients',        icon: 'fa-users',         label: 'sidebar.items.clients',        perm: ['orders',    'view'] },
+  { id: 'avis',           icon: 'fa-star',          label: 'sidebar.items.avis',           perm: ['orders',    'view'] },
+  { id: 'parametres',     icon: 'fa-gear',          label: 'sidebar.items.parametres',     perm: ['settings',  'view'] },
 ];
 
-/* Libellé statut boutique */
-const STATUS_LABEL: Record<string, string> = {
-  active:    'Boutique active',
-  suspended: 'En pause',
-  private:   'Privée',
-  pending:   'En attente de validation',
+/* Libellé statut boutique — clés dans topbar.status.*, 'default' pour le
+   fallback "Vendeur Pro" utilisé quand companyStatus ne correspond à rien. */
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  active:    'topbar.status.active',
+  suspended: 'topbar.status.suspended',
+  private:   'topbar.status.private',
+  pending:   'topbar.status.pending',
 };
 
 export default function Topbar({
@@ -105,6 +111,7 @@ export default function Topbar({
   companyStatus, companyEmail, companyVille, companyPays,
   can, isOwner = false,
 }: TopbarProps) {
+  const { t } = useTranslation();
   const { pop } = useToast();
   const navigate = useNavigate();
   const { logout } = useAppContext();
@@ -117,7 +124,7 @@ export default function Topbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const avatarRef = useRef<HTMLDivElement>(null);
 
-  const [title, subtitle] = TITLES[activePage] ?? ['', ''];
+  const [titleKey, subtitleKey] = TITLES[activePage] ?? ['', ''];
 
   /* Initiales si pas de logo */
   const initiales = (companyName ?? 'TC')
@@ -171,21 +178,21 @@ export default function Topbar({
     <>
       <header className="topbar">
 
-        <button className="hamburger" onClick={() => setMobileMenuOpen(true)} aria-label="Menu">
+        <button className="hamburger" onClick={() => setMobileMenuOpen(true)} aria-label={t('topbar.hamburgerAria')}>
           <i className="fas fa-bars"></i>
         </button>
 
         {/* Titre de la page */}
         <div className="tb-title-wrap">
-          <div className="tb-title">{title}</div>
-          <div className="tb-sub">{subtitle}</div>
+          <div className="tb-title">{t(titleKey)}</div>
+          <div className="tb-sub">{t(subtitleKey)}</div>
         </div>
 
         {/* Barre de recherche */}
         <div className="tb-srch">
           <input
             type="text"
-            placeholder="Rechercher commandes, produits, clients…"
+            placeholder={t('topbar.searchPlaceholder')}
             value={searchVal}
             onChange={e => {
               setSearchVal(e.target.value);
@@ -200,11 +207,11 @@ export default function Topbar({
 
           {/* ✅ Raccourcis réseau : Livreurs / Correspondants (gestion) */}
           {(isOwner || !can || can('deliveries', 'view')) && (<>
-            <button className={`tb-ic${activePage === 'livreurs' ? ' active' : ''}`} title="Mes livreurs"
+            <button className={`tb-ic${activePage === 'livreurs' ? ' active' : ''}`} title={t('topbar.tooltips.livreurs')}
               onClick={() => onNavigate('livreurs')}>
               <i className="fas fa-motorcycle"></i>
             </button>
-            <button className={`tb-ic${activePage === 'correspondants' ? ' active' : ''}`} title="Correspondants"
+            <button className={`tb-ic${activePage === 'correspondants' ? ' active' : ''}`} title={t('topbar.tooltips.correspondants')}
               onClick={() => onNavigate('correspondants')}>
               <i className="fas fa-map-pin"></i>
             </button>
@@ -213,7 +220,7 @@ export default function Topbar({
           <div className="tb-sep"></div>
 
           {/* Commandes / Messages / Notifications */}
-          <button className="tb-ic" title="Commandes"
+          <button className="tb-ic" title={t('topbar.tooltips.commandes')}
             onClick={() => onNavigate('commandes')}>
             <i className="fas fa-box"></i>
             {orderUnread > 0 && (
@@ -221,7 +228,7 @@ export default function Topbar({
             )}
           </button>
           {(isOwner || !can || can('messaging', 'view')) && (
-            <button className="tb-ic tb-ic-pin" title="Messages"
+            <button className="tb-ic tb-ic-pin" title={t('topbar.tooltips.messages')}
               onClick={() => onNavigate('messages')}>
               <i className="fas fa-comment-dots"></i>
               {msgUnread > 0 && (
@@ -234,8 +241,8 @@ export default function Topbar({
           <div className="tb-sep"></div>
 
           {/* Centre d'aide — accès direct depuis le dashboard entreprise */}
-          <button className="tb-ic" title="Centre d'aide" onClick={() => navigate('/aide')}
-            aria-label="Centre d'aide">
+          <button className="tb-ic" title={t('topbar.tooltips.aide')} onClick={() => navigate('/aide')}
+            aria-label={t('topbar.tooltips.aide')}>
             <i className="fas fa-circle-question"></i>
           </button>
 
@@ -263,7 +270,7 @@ export default function Topbar({
                   <div>
                     <div className="tb-menu-nm">{companyName ?? 'Ma boutique'}</div>
                     <div className="tb-menu-sub">
-                      {STATUS_LABEL[companyStatus ?? ''] ?? 'Vendeur Pro'}
+                      {t(STATUS_LABEL_KEYS[companyStatus ?? ''] ?? 'topbar.status.default')}
                       {(companyVille || companyPays) && ` · ${[companyVille, companyPays].filter(Boolean).join(', ')}`}
                     </div>
                     {companyEmail && (
@@ -273,19 +280,19 @@ export default function Topbar({
                 </div>
 
                 <button className="tb-menu-it" onClick={() => { onNavigate('profil'); setAvatarOpen(false); }}>
-                  <i className="fas fa-user"></i> Mon profil
+                  <i className="fas fa-user"></i> {t('topbar.menu.profil')}
                 </button>
                 <button className="tb-menu-it" onClick={() => { onNavigate('boutique-preview'); setAvatarOpen(false); }}>
-                  <i className="fas fa-store"></i> Voir ma boutique
+                  <i className="fas fa-store"></i> {t('topbar.menu.voirBoutique')}
                 </button>
                 <button className="tb-menu-it" onClick={handleSwitchHome}>
-                  <i className="fas fa-house"></i> Basculer vers l'accueil
+                  <i className="fas fa-house"></i> {t('topbar.menu.basculerAccueil')}
                 </button>
 
                 <div className="tb-menu-sep"></div>
 
                 <button className="tb-menu-it danger" onClick={handleLogout}>
-                  <i className="fas fa-right-from-bracket"></i> Se déconnecter
+                  <i className="fas fa-right-from-bracket"></i> {t('topbar.menu.deconnexion')}
                 </button>
               </div>
             )}
@@ -297,12 +304,12 @@ export default function Topbar({
       <nav className="tb-bottomnav" aria-label="Navigation mobile">
         <button className={`bn-it${activePage === 'overview' ? ' on' : ''}`}
           onClick={() => onNavigate('overview')}>
-          <i className="fas fa-chart-pie"></i><span>Accueil</span>
+          <i className="fas fa-chart-pie"></i><span>{t('topbar.bottomNav.accueil')}</span>
         </button>
         <button className={`bn-it${activePage === 'commandes' ? ' on' : ''}`}
           onClick={() => onNavigate('commandes')}>
           <i className="fas fa-box"></i>
-          <span>Commandes</span>
+          <span>{t('topbar.bottomNav.commandes')}</span>
           {orderUnread > 0 && (
             <span className="tb-badge">{orderUnread > 99 ? '99+' : orderUnread}</span>
           )}
@@ -310,21 +317,21 @@ export default function Topbar({
 
         <button className={`bn-it${activePage === 'produits' ? ' on' : ''}`}
           onClick={() => onNavigate('produits')}>
-          <i className="fas fa-tag"></i><span>Produits</span>
+          <i className="fas fa-tag"></i><span>{t('topbar.bottomNav.produits')}</span>
         </button>
         {/* ✅ Un seul menu de navigation complet : celui du hamburger en haut.
             Ce 4e emplacement était un doublon (ouvrait le même drawer) —
             remplacé par un accès direct à l'espace personnel. */}
         <button className={`bn-it${activePage === 'profil' ? ' on' : ''}`}
           onClick={() => onNavigate('profil')}>
-          <i className="fas fa-user"></i><span>Mon espace</span>
+          <i className="fas fa-user"></i><span>{t('topbar.bottomNav.monEspace')}</span>
         </button>
       </nav>
 
       {/* ════════ DRAWER MOBILE (menu complet) ════════ */}
       {mobileMenuOpen && (
         <div className="tb-drawer-overlay" onClick={() => setMobileMenuOpen(false)}>
-          <div className="tb-drawer" role="dialog" aria-modal="true" aria-label="Menu de navigation"
+          <div className="tb-drawer" role="dialog" aria-modal="true" aria-label={t('topbar.drawer.menuAria')}
             onClick={e => e.stopPropagation()}>
 
             {/* En-tête boutique */}
@@ -337,13 +344,18 @@ export default function Topbar({
               <div className="tb-drawer-inf">
                 <div className="tb-drawer-nm">{companyName ?? 'Ma boutique'}</div>
                 <div className="tb-drawer-sub">
-                  {STATUS_LABEL[companyStatus ?? ''] ?? 'Vendeur Pro'}
+                  {t(STATUS_LABEL_KEYS[companyStatus ?? ''] ?? 'topbar.status.default')}
                   {(companyVille || companyPays) && ` · ${[companyVille, companyPays].filter(Boolean).join(', ')}`}
                 </div>
               </div>
               <button className="tb-drawer-x" onClick={() => setMobileMenuOpen(false)}>
                 <i className="fas fa-xmark"></i>
               </button>
+            </div>
+
+            {/* Solde du portefeuille Shopi — accès rapide dans le drawer mobile */}
+            <div style={{ padding: '0 20px 14px' }}>
+              <WalletQuickBar compact mini onManage={() => go('portefeuille')} />
             </div>
 
             {/* Navigation complète */}
@@ -358,7 +370,7 @@ export default function Topbar({
                   className={`tb-drawer-it${activePage === item.id ? ' on' : ''}`}
                   onClick={() => go(item.id)}>
                   <i className={`fas ${item.icon}`}></i>
-                  <span>{item.label}</span>
+                  <span>{t(item.label)}</span>
                   {activePage === item.id && <i className="fas fa-check tb-drawer-chk"></i>}
                 </button>
               ))}
@@ -368,18 +380,18 @@ export default function Topbar({
             <div className="tb-drawer-foot">
               {companyId && (
                 <button className="tb-drawer-home" onClick={() => { setMobileMenuOpen(false); onNavigate('boutique-preview'); }}>
-                  <i className="fas fa-store"></i> Voir ma boutique
+                  <i className="fas fa-store"></i> {t('topbar.drawer.voirBoutique')}
                 </button>
               )}
               {/* Centre d'aide accessible depuis le drawer mobile */}
               <button className="tb-drawer-home" onClick={() => { setMobileMenuOpen(false); navigate('/aide'); }}>
-                <i className="fas fa-circle-question"></i> Centre d'aide
+                <i className="fas fa-circle-question"></i> {t('topbar.drawer.aide')}
               </button>
               <button className="tb-drawer-home" onClick={handleSwitchHome}>
-                <i className="fas fa-house"></i> Basculer vers l'accueil
+                <i className="fas fa-house"></i> {t('topbar.drawer.basculerAccueil')}
               </button>
               <button className="tb-drawer-out" onClick={handleLogout}>
-                <i className="fas fa-right-from-bracket"></i> Se déconnecter
+                <i className="fas fa-right-from-bracket"></i> {t('topbar.drawer.deconnexion')}
               </button>
             </div>
           </div>

@@ -5,7 +5,7 @@
  * pratiques (grille), Disponibilité hebdomadaire (horaires).
  * ================================================================ */
 
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/ProfilCorrespondant.module.css';
 import type { InfoPratique, ScheduleRow } from '../data/types';
 
@@ -21,16 +21,17 @@ interface Props {
 }
 
 export default function TabInfo({ bio, tags, infosPratiques, schedule }: Props) {
+  const { t } = useTranslation();
   return (
     <>
       {/* À propos */}
       <div className={styles.card}>
-        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-circle-info" /> À propos</div></div>
+        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-circle-info" /> {t('profilCorrespondant.tabInfo.aPropos')}</div></div>
         <div className={styles.cb}>
           {bio.map((p, i) => <p key={i} className={styles.aboutText}>{p}</p>)}
           <div className={styles.aboutTags}>
-            {tags.map(t => (
-              <span key={t} className={styles.atag}><i className="fas fa-check" /> {t}</span>
+            {tags.map(tag => (
+              <span key={tag} className={styles.atag}><i className="fas fa-check" /> {tag}</span>
             ))}
           </div>
         </div>
@@ -38,7 +39,7 @@ export default function TabInfo({ bio, tags, infosPratiques, schedule }: Props) 
 
       {/* Informations pratiques */}
       <div className={styles.card}>
-        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-clipboard-list" /> Informations pratiques</div></div>
+        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-clipboard-list" /> {t('profilCorrespondant.tabInfo.informationsPratiques')}</div></div>
         <div className={styles.cb}>
           <div className={styles.infoGrid}>
             {infosPratiques.map(info => (
@@ -59,13 +60,13 @@ export default function TabInfo({ bio, tags, infosPratiques, schedule }: Props) 
 
       {/* Disponibilité hebdomadaire */}
       <div className={styles.card}>
-        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-calendar-week" /> Disponibilité hebdomadaire</div></div>
+        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-calendar-week" /> {t('profilCorrespondant.tabInfo.disponibiliteHebdo')}</div></div>
         <div className={styles.cb}>
           <div className={styles.schedule}>
             {schedule.map(s => (
               <div key={s.jour} className={`${styles.schRow} ${s.aujourdhui ? styles.schRowToday : ''}`}>
                 <span className={styles.schDay}>
-                  {s.jour}{s.aujourdhui && <span style={{ fontSize: 10, color: 'var(--co)' }}> (auj.)</span>}
+                  {s.jour}{s.aujourdhui && <span style={{ fontSize: 10, color: 'var(--co)' }}> {t('profilCorrespondant.tabInfo.aujourdhui')}</span>}
                 </span>
                 <span className={styles.schHours}>{s.heures}</span>
                 <span className={`${styles.schStatus} ${STATUT_CLASS[s.statut]}`}>{s.statutLabel}</span>

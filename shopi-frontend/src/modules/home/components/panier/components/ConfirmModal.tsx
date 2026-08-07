@@ -1,6 +1,7 @@
 /*
  * ConfirmModal.tsx — Modale de confirmation commande professionnelle
  */
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/ConfirmModal.module.css';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function ConfirmModal({ loading, onCancel, onConfirm }: Props) {
+  const { t } = useTranslation();
   return (
     <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget && !loading) onCancel(); }}>
       <div className={styles.modal}>
@@ -20,28 +22,27 @@ export default function ConfirmModal({ loading, onCancel, onConfirm }: Props) {
         </div>
 
         {/* Texte */}
-        <h2 className={styles.titre}>Confirmer la commande ?</h2>
+        <h2 className={styles.titre}>{t('panierCommande.confirmModal.titre')}</h2>
         <p className={styles.sub}>
-          Vérifiez bien vos articles, l'adresse de livraison et le mode de paiement.
-          Une fois confirmée, votre commande sera transmise immédiatement au vendeur.
+          {t('panierCommande.confirmModal.desc')}
         </p>
 
         {/* Avertissement */}
         <div className={styles.warning}>
           <i className="fas fa-circle-info" />
-          <span>Assurez-vous que votre numéro de téléphone est correct pour que le livreur puisse vous contacter.</span>
+          <span>{t('panierCommande.confirmModal.avertissement')}</span>
         </div>
 
         {/* Boutons */}
         <div className={styles.btns}>
           <button className={styles.btn2} onClick={onCancel} disabled={loading}>
-            <i className="fas fa-xmark" /> Annuler
+            <i className="fas fa-xmark" /> {t('panierCommande.confirmModal.annuler')}
           </button>
           <button className={styles.btn1} onClick={onConfirm} disabled={loading}>
             {loading ? (
-              <><i className={`fas fa-circle-notch ${styles.spin}`} /> En cours…</>
+              <><i className={`fas fa-circle-notch ${styles.spin}`} /> {t('panierCommande.confirmModal.enCours')}</>
             ) : (
-              <><i className="fas fa-check" /> Confirmer</>
+              <><i className="fas fa-check" /> {t('panierCommande.confirmModal.confirmer')}</>
             )}
           </button>
         </div>

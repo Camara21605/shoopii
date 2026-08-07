@@ -122,15 +122,17 @@ export interface NewConvUser {
 }
 
 // ── Config rôles (couleurs + icônes) ──────────────────────────
-export const ROLE_CONFIG: Record<UserRole, { label: string; icon: string; color: string; bg: string }> = {
-  groupe:        { label: 'Livraison',      icon: '📦', color: '#0E7490',  bg: 'rgba(14,116,144,.1)'  },
-  client:        { label: 'Client',        icon: '🛍️', color: '#1A4FC4',  bg: 'rgba(26,79,196,.1)'   },
-  vendeur:       { label: 'Vendeur',       icon: '🏪', color: '#047857',  bg: 'rgba(4,120,87,.1)'    },
-  livreur:       { label: 'Livreur',       icon: '🛵', color: '#0E7490',  bg: 'rgba(14,116,144,.1)'  },
-  partenaire:    { label: 'Partenaire',    icon: '🤝', color: '#6D28D9',  bg: 'rgba(109,40,217,.1)'  },
-  correspondant: { label: 'Correspondant', icon: '📍', color: '#B45309',  bg: 'rgba(180,83,9,.1)'    },
-  admin:         { label: 'Admin',         icon: '🛡️', color: '#DC2626',  bg: 'rgba(220,38,38,.1)'   },
-};
+export function getRoleConfig(t: (key: string) => string): Record<UserRole, { label: string; icon: string; color: string; bg: string }> {
+  return {
+    groupe:        { label: t('messagerie.roles.groupe'),        icon: '📦', color: '#0E7490',  bg: 'rgba(14,116,144,.1)'  },
+    client:        { label: t('messagerie.roles.client'),        icon: '🛍️', color: '#1A4FC4',  bg: 'rgba(26,79,196,.1)'   },
+    vendeur:       { label: t('messagerie.roles.vendeur'),       icon: '🏪', color: '#047857',  bg: 'rgba(4,120,87,.1)'    },
+    livreur:       { label: t('messagerie.roles.livreur'),       icon: '🛵', color: '#0E7490',  bg: 'rgba(14,116,144,.1)'  },
+    partenaire:    { label: t('messagerie.roles.partenaire'),    icon: '🤝', color: '#6D28D9',  bg: 'rgba(109,40,217,.1)'  },
+    correspondant: { label: t('messagerie.roles.correspondant'), icon: '📍', color: '#B45309',  bg: 'rgba(180,83,9,.1)'    },
+    admin:         { label: t('messagerie.roles.admin'),         icon: '🛡️', color: '#DC2626',  bg: 'rgba(220,38,38,.1)'   },
+  };
+}
 
 // ── Emojis picker ──────────────────────────────────────────────
 export const EMOJIS: Record<string, string[]> = {

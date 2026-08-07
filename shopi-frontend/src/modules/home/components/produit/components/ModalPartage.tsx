@@ -2,7 +2,7 @@
  * FICHIER : src/modules/home/components/produit/components/ModalPartage.tsx
  * RÔLE    : Modale de partage du produit sur les réseaux sociaux.
  */
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/ModalPartage.module.css';
 
 interface Props { url: string; titre: string; onClose: () => void; onToast: (m: string) => void; }
@@ -17,13 +17,19 @@ const RESEAUX = [
 ];
 
 export default function ModalPartage({ url, titre, onClose, onToast }: Props) {
+  const { t } = useTranslation();
+
+  function displayLabel(label: string): string {
+    return label === 'Copier' ? t('produitDetail.modalPartage.copier') : label;
+  }
+
   function handle(label: string, href: string) {
     if (label === 'Copier' || label === 'Instagram') {
       navigator.clipboard.writeText(url).catch(()=>{});
-      onToast(label === 'Copier' ? '🔗 Lien copié !' : '📸 Lien copié — collez dans Instagram');
+      onToast(label === 'Copier' ? t('produitDetail.modalPartage.lienCopieToast') : t('produitDetail.modalPartage.instagramCopieToast'));
     } else {
       if (href) window.open(href, '_blank', 'noopener,noreferrer');
-      onToast(`📲 Partage via ${label}`);
+      onToast(t('produitDetail.modalPartage.partageVia', { label }));
     }
   }
   return (
@@ -41,15 +47,15 @@ export default function ModalPartage({ url, titre, onClose, onToast }: Props) {
                 <div className={styles.ico} style={{ background:`${r.color}18`, border:`1.5px solid ${r.color}35` }}>
                   <i className={r.icon} style={{ color: r.color }} />
                 </div>
-                <span>{r.label}</span>
+                <span>{displayLabel(r.label)}</span>
               </button>
             );
           })}
         </div>
         <div className={styles.lien}>
           <span className={styles.url}>{url}</span>
-          <button className={styles.copy} onClick={() => { navigator.clipboard.writeText(url).catch(()=>{}); onToast('🔗 Lien copié !'); }}>
-            <i className="fas fa-copy" /> Copier
+          <button className={styles.copy} onClick={() => { navigator.clipboard.writeText(url).catch(()=>{}); onToast(t('produitDetail.modalPartage.lienCopieToast')); }}>
+            <i className="fas fa-copy" /> {t('produitDetail.modalPartage.copier')}
           </button>
         </div>
       </div>

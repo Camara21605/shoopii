@@ -2,7 +2,8 @@
 // Affiche le profil complet d'un correspondant du réseau, sans le Header
 // public, intégré dans le dashboard entreprise.
 
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCorrespondantProfil } from '../../../shared/profils/profil-correspondant/hooks/useCorrespondantProfil';
 
 import ProfilHeader  from '../../../shared/profils/profil-correspondant/components/ProfilHeader';
@@ -26,6 +27,7 @@ interface Props {
 }
 
 export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Props) {
+  const { t } = useTranslation();
   const {
     profil, loading, error, suivi, toggleSuivi,
     aboutTags, infosPratiques, schedule, services, zones, paysPartenaires,
@@ -45,17 +47,17 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
   }, [onPop]);
 
   const onToast = useCallback((msg: string) => onPop(msg, 'i'), [onPop]);
-  const onMessage = useCallback(() => onPop(`💬 Message à ${profil.nom}`, 'i'), [profil.nom, onPop]);
-  const onShare   = useCallback(() => onPop('🔗 Lien du profil copié', 'i'), [onPop]);
+  const onMessage = useCallback(() => onPop(`💬 Message à ${profil?.nom}`, 'i'), [profil?.nom, onPop]);
+  const onShare   = useCallback(() => onPop(t('profilCorrespondant.publicPage.lienCopieToast'), 'i'), [onPop, t]);
   const handleToggle = useCallback(() => {
     toggleSuivi();
-    onPop(suivi ? `👋 Désabonné de ${profil.nom}` : `✅ Abonné à ${profil.nom}`, suivi ? 'i' : 's');
-  }, [toggleSuivi, suivi, profil.nom, onPop]);
+    onPop(suivi ? t('profilCorrespondant.publicPage.desabonneToast', { nom: profil?.nom }) : t('profilCorrespondant.publicPage.abonneToast', { nom: profil?.nom }), suivi ? 'i' : 's');
+  }, [toggleSuivi, suivi, profil?.nom, onPop, t]);
 
   const backBtn = (
     <div className={shared.page} style={{ paddingBottom: 0 }}>
       <button onClick={onBack} style={{ background: 'var(--white)', border: '1px solid var(--bdr)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--t2)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-        <i className="fas fa-arrow-left" /> Retour aux correspondants
+        <i className="fas fa-arrow-left" /> {t('profilCorrespondant.retourCorrespondants')}
       </button>
     </div>
   );
@@ -65,7 +67,21 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
       <>
         {backBtn}
         <div className={styles.page}>
-          <div className={styles.state}><i className="fas fa-spinner fa-spin" /> Chargement du profil…</div>
+          <div className={styles.state}><i className="fas fa-spinner fa-spin" /> {t('profilCorrespondant.loading')}</div>
+        </div>
+      </>
+    );
+  }
+
+  if (!profil) {
+    return (
+      <>
+        {backBtn}
+        <div className={styles.page}>
+          <div className={styles.state}>
+            <i className="fas fa-triangle-exclamation" />
+            {error ?? t('profilCorrespondant.notFoundFallback')}
+          </div>
         </div>
       </>
     );

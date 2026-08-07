@@ -6,6 +6,8 @@
  * en tête de la zone, avant les messages.
  */
 import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { Conversation, ChatUser, GroupMember } from '../data/messagerieTypes';
 import type { WsTyping } from '../hooks/useSocket';
 import MessageBubble from './MessageBubble';
@@ -20,12 +22,14 @@ const ACTOR_INIT_BG: Record<string, string> = {
   correspondent: 'rgba(180,83,9,.82)',
 };
 
-const GROUP_STATUS_LABEL: Record<string, string> = {
-  active:    '🚀 En cours',
-  completed: '✅ Livré',
-  expired:   '🔒 Expiré',
-  cancelled: '❌ Annulé',
-};
+function getGroupStatusLabel(t: TFunction): Record<string, string> {
+  return {
+    active:    t('messagerie.messagesZone.groupStatus.active'),
+    completed: t('messagerie.messagesZone.groupStatus.completed'),
+    expired:   t('messagerie.messagesZone.groupStatus.expired'),
+    cancelled: t('messagerie.messagesZone.groupStatus.cancelled'),
+  };
+}
 
 // ── Bannière profil groupe ────────────────────────────────────
 
@@ -43,6 +47,7 @@ function progressColor(len: number): string {
 }
 
 function GroupProfileBanner({ conv, members, onSaveDesc }: BannerProps) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft,   setDraft]   = useState(conv.description ?? '');
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -73,7 +78,7 @@ function GroupProfileBanner({ conv, members, onSaveDesc }: BannerProps) {
     setEditing(false);
   }
 
-  const statusLabel    = GROUP_STATUS_LABEL[conv.groupStatus ?? 'active'] ?? '🚀 En cours';
+  const statusLabel    = getGroupStatusLabel(t)[conv.groupStatus ?? 'active'] ?? getGroupStatusLabel(t).active;
   const visibleMembers = members.slice(0, 3);
   const extraCount     = Math.max(0, members.length - 3);
   const pct            = Math.round((draft.length / 500) * 100);
@@ -150,7 +155,7 @@ function GroupProfileBanner({ conv, members, onSaveDesc }: BannerProps) {
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               marginBottom: 5,
             }}>
-              {conv.commandeNumero ? `Livraison · ${conv.commandeNumero}` : 'Groupe de livraison'}
+              {conv.commandeNumero ? `${t('messagerie.messagesZone.livraisonPrefix')} · ${conv.commandeNumero}` : t('messagerie.convList.groupeDeLivraison')}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               <span style={{
@@ -168,7 +173,7 @@ function GroupProfileBanner({ conv, members, onSaveDesc }: BannerProps) {
                   display: 'flex', alignItems: 'center', gap: 4,
                 }}>
                   <i className="fas fa-users" style={{ fontSize: 9 }} />
-                  {members.length} membre{members.length > 1 ? 's' : ''}
+                  {t('messagerie.chatHeader.membre', { count: members.length })}
                 </span>
               )}
             </div>
@@ -177,7 +182,7 @@ function GroupProfileBanner({ conv, members, onSaveDesc }: BannerProps) {
           {/* Bouton éditer */}
           <button
             onClick={() => setEditing(true)}
-            title="Modifier la description"
+            title={t('messagerie.messagesZone.modifierDescription')}
             style={{
               width: 34, height: 34, borderRadius: 10, flexShrink: 0,
               background: 'var(--white)', border: '1.5px solid var(--bdr2)',
@@ -206,7 +211,7 @@ function GroupProfileBanner({ conv, members, onSaveDesc }: BannerProps) {
         {/* ── Zone description (affichage seul) ── */}
         <div
           onClick={() => setEditing(true)}
-          title="Cliquer pour modifier"
+          title={t('messagerie.messagesZone.cliquerPourModifier')}
           style={{
             display: 'flex', alignItems: 'flex-start', gap: 10,
             padding: '13px 16px 14px',
@@ -228,14 +233,14 @@ function GroupProfileBanner({ conv, members, onSaveDesc }: BannerProps) {
               fontSize: 10, fontWeight: 800, color: 'var(--t3)',
               textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4,
             }}>
-              Description
+              {t('messagerie.messagesZone.description')}
             </div>
             <div style={{
               fontSize: 13, lineHeight: 1.65,
               color: conv.description ? 'var(--t1)' : 'var(--t4)',
               fontStyle: conv.description ? 'normal' : 'italic',
             }}>
-              {conv.description || 'Ajoutez une description au groupe…'}
+              {conv.description || t('messagerie.messagesZone.ajouterDescription')}
             </div>
           </div>
         </div>
@@ -284,7 +289,7 @@ function GroupProfileBanner({ conv, members, onSaveDesc }: BannerProps) {
                 }}>
                   <i className="fas fa-pen-to-square" style={{ fontSize: 11, color: 'var(--teal,#0E7490)' }} />
                 </div>
-                Modifier la description
+                {t('messagerie.messagesZone.modifierDescription')}
               </div>
               <button
                 onClick={handleCancel}
@@ -306,7 +311,7 @@ function GroupProfileBanner({ conv, members, onSaveDesc }: BannerProps) {
                 value={draft}
                 onChange={e => setDraft(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Adresse précise, instructions de livraison…"
+                placeholder={t('messagerie.messagesZone.adressePlaceholder')}
                 maxLength={500}
                 rows={4}
                 style={{
@@ -357,7 +362,7 @@ function GroupProfileBanner({ conv, members, onSaveDesc }: BannerProps) {
                 }}
               >
                 <i className="fas fa-xmark" style={{ fontSize: 12 }} />
-                Annuler
+                {t('messagerie.messagesZone.annuler')}
               </button>
               <button
                 onClick={handleSave}
@@ -372,7 +377,7 @@ function GroupProfileBanner({ conv, members, onSaveDesc }: BannerProps) {
                 }}
               >
                 <i className="fas fa-check" style={{ fontSize: 12 }} />
-                Enregistrer
+                {t('messagerie.messagesZone.enregistrer')}
               </button>
             </div>
           </div>
@@ -398,6 +403,7 @@ interface Props {
 export default function MessagesZone({
   conv, user, members, typingActivity, onReply, onToast, onDelete, onUpdateGroup,
 }: Props) {
+  const { t } = useTranslation();
   const msgsRef  = useRef<HTMLDivElement>(null);
   const isImgAva = user.ava?.startsWith('http');
 
@@ -415,9 +421,9 @@ export default function MessagesZone({
   /* Libellé indicateur d'activité */
   const isTyping = !!typingActivity && typingActivity.activity !== 'stopped';
   const typingLabel = !typingActivity ? '' :
-    typingActivity.activity === 'recording' ? `${typingActivity.senderName.split(' ')[0]} enregistre…` :
-    typingActivity.activity === 'uploading' ? `${typingActivity.senderName.split(' ')[0]} envoie un fichier…` :
-    `${typingActivity.senderName.split(' ')[0]} écrit…`;
+    typingActivity.activity === 'recording' ? t('messagerie.messagesZone.typingRecording', { name: typingActivity.senderName.split(' ')[0] }) :
+    typingActivity.activity === 'uploading' ? t('messagerie.messagesZone.typingUploading', { name: typingActivity.senderName.split(' ')[0] }) :
+    t('messagerie.messagesZone.typingWriting', { name: typingActivity.senderName.split(' ')[0] });
 
   const handleSaveDesc = useCallback((desc: string) => {
     if (onUpdateGroup) onUpdateGroup(conv.id, desc);
@@ -438,7 +444,7 @@ export default function MessagesZone({
         )}
 
         {conv.messages.length === 0 && !conv.isGroup && (
-          <div className={s.sysMsg}><span>Nouvelle conversation avec {user.name}</span></div>
+          <div className={s.sysMsg}><span>{t('messagerie.messagesZone.nouvelleConversationAvec', { name: user.name })}</span></div>
         )}
         {conv.messages.map((msg, idx) => (
           <MessageBubble

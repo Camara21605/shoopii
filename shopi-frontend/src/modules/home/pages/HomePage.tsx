@@ -102,7 +102,7 @@ export default function HomePage() {
         <CategoriesSection />
 
         {/* 6 — Flash sale + promotions */}
-        <PromotionsSection onToast={showToast} />
+        <PromotionsSection />
 
         {/* 6.5 — Stories des boutiques */}
         <HomeStoriesStrip onToast={showToast} />

@@ -10,8 +10,9 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { ProduitInfo } from '../data/produitMockData';
-import { VARIANTES_STOCKAGE, VARIANTES_COLORIS, GARANTIES } from '../data/produitMockData';
+import { VARIANTES_STOCKAGE, VARIANTES_COLORIS } from '../data/produitMockData';
 import { useCart } from '../../../../../shared/context/CartContext';
 import { useAuthGate } from '../../../../../shared/hooks/useAuthGate';
 import styles from '../styles/ProduitInfoSection.module.css';
@@ -42,8 +43,16 @@ export default function ProduitInfoSection({
   onColorChange,
 }: Props) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { addToCart } = useCart();
   const { requireClient, authModal } = useAuthGate();
+
+  const GARANTIES = [
+    { ico:'🔒', titre:t('produitDetail.infoSection.garanties.paiementTitre'),   sub:t('produitDetail.infoSection.garanties.paiementSub')   },
+    { ico:'↩️', titre:t('produitDetail.infoSection.garanties.retourTitre'),      sub:t('produitDetail.infoSection.garanties.retourSub') },
+    { ico:'✅', titre:t('produitDetail.infoSection.garanties.authentiqueTitre'),  sub:t('produitDetail.infoSection.garanties.authentiqueSub')     },
+    { ico:'📞', titre:t('produitDetail.infoSection.garanties.supportTitre'),         sub:t('produitDetail.infoSection.garanties.supportSub')     },
+  ];
 
   /* État local si ProduitPage ne contrôle pas encore les variantes */
   const [storLocal,  setStorLocal]  = useState('256 GB');
@@ -74,9 +83,9 @@ export default function ProduitInfoSection({
 
   /* ── Stock ── */
   const STOCK_CFG = {
-    ok:  { cls:styles.stockOk,  dot:styles.dotOk,  label:'En stock',       note:`— ${produit.stock} unités disponibles`   },
-    low: { cls:styles.stockLow, dot:styles.dotLow, label:'Stock limité',   note:`— Seulement ${produit.stock} restantes`  },
-    out: { cls:styles.stockOut, dot:styles.dotOut, label:'Rupture de stock', note:''                                       },
+    ok:  { cls:styles.stockOk,  dot:styles.dotOk,  label:t('produitDetail.infoSection.stock.ok'),       note:t('produitDetail.infoSection.stock.okNote', { count: produit.stock })   },
+    low: { cls:styles.stockLow, dot:styles.dotLow, label:t('produitDetail.infoSection.stock.low'),   note:t('produitDetail.infoSection.stock.lowNote', { count: produit.stock })  },
+    out: { cls:styles.stockOut, dot:styles.dotOut, label:t('produitDetail.infoSection.stock.out'), note:''                                       },
   };
   const stock = STOCK_CFG[produit.stockStatus];
   const isOutOfStock = produit.stockStatus === 'out';
@@ -84,14 +93,14 @@ export default function ProduitInfoSection({
   /* ── Ajouter au panier ── */
   function handleAddToCart() {
     requireClient(async () => {
-      if (!produitId)   { onToast('❌ ID produit manquant'); return; }
-      if (isOutOfStock) { onToast('❌ Produit en rupture de stock'); return; }
+      if (!produitId)   { onToast(t('produitDetail.infoSection.idManquantToast')); return; }
+      if (isOutOfStock) { onToast(t('produitDetail.infoSection.ruptureToast')); return; }
       setAddingCart(true);
       try {
         await addToCart(produitId, qty, varianteCombinee);
-        onToast('🛒 Ajouté au panier !');
+        onToast(t('produitDetail.infoSection.ajouteToast'));
       } catch (err: any) {
-        onToast(`❌ ${err.message}`);
+        onToast(t('produitDetail.infoSection.erreurToast', { msg: err.message }));
       } finally {
         setAddingCart(false);
       }
@@ -101,14 +110,14 @@ export default function ProduitInfoSection({
   /* ── Acheter maintenant ── */
   function handleBuyNow() {
     requireClient(async () => {
-      if (!produitId)   { onToast('❌ ID produit manquant'); return; }
-      if (isOutOfStock) { onToast('❌ Produit en rupture de stock'); return; }
+      if (!produitId)   { onToast(t('produitDetail.infoSection.idManquantToast')); return; }
+      if (isOutOfStock) { onToast(t('produitDetail.infoSection.ruptureToast')); return; }
       setAddingBuy(true);
       try {
         await addToCart(produitId, qty, varianteCombinee);
         navigate('/commande');
       } catch (err: any) {
-        onToast(`❌ ${err.message}`);
+        onToast(t('produitDetail.infoSection.erreurToast', { msg: err.message }));
         setAddingBuy(false);
       }
     });
@@ -120,7 +129,7 @@ export default function ProduitInfoSection({
       {/* ── Catégorie + SKU ── */}
       <div className={styles.metaTop}>
         <span className={styles.cat}>{produit.categorie}</span>
-        <span className={styles.sku}>SKU : {produit.sku}</span>
+        <span className={styles.sku}>{t('produitDetail.infoSection.sku', { sku: produit.sku })}</span>
       </div>
 
       {/* ── Bannière internationale ── */}
@@ -128,10 +137,9 @@ export default function ProduitInfoSection({
         <div className={styles.intlBanner}>
           <div className={styles.intlIco}>🌍</div>
           <div>
-            <div className={styles.intlTitle}>Boutique internationale détectée</div>
+            <div className={styles.intlTitle}>{t('produitDetail.infoSection.intlTitre')}</div>
             <div className={styles.intlDesc}>
-              Cette boutique est localisée en dehors de votre continent. Un correspondant Shopi
-              peut réceptionner votre commande et assurer la liaison locale.
+              {t('produitDetail.infoSection.intlDesc')}
             </div>
             <div style={{ marginTop:6 }}>
               <span className={styles.intlCountry}>
@@ -146,13 +154,13 @@ export default function ProduitInfoSection({
       <h1 className={styles.titre}>{produit.nom}</h1>
 
       {/* ── Boutique ── */}
-      <div className={styles.shopRow} onClick={onBoutique} title={`Voir la boutique ${produit.boutique.nom}`}>
+      <div className={styles.shopRow} onClick={onBoutique} title={t('produitDetail.infoSection.voirLaBoutique', { nom: produit.boutique.nom })}>
         <div className={styles.shopLogo}>{produit.boutique.emoji}</div>
         <div>
           <div className={styles.shopNom}>{produit.boutique.nom}</div>
           <div className={styles.shopBadges}>
             {produit.boutique.verified && (
-              <span className={styles.shopVer}><i className="fas fa-shield-check" /> Boutique vérifiée Shopi</span>
+              <span className={styles.shopVer}><i className="fas fa-shield-check" /> {t('produitDetail.infoSection.boutiqueVerifieeShopi')}</span>
             )}
             <span className={styles.shopPays}>
               {produit.boutique.drapeau} {produit.boutique.pays} · {produit.boutique.region}
@@ -161,7 +169,7 @@ export default function ProduitInfoSection({
         </div>
         {produit.boutique.abonnes !== '—' && (
           <span className={styles.shopAbonnes}>
-            <i className="fas fa-users" style={{ color:'var(--blue)' }} /> {produit.boutique.abonnes} abonnés
+            <i className="fas fa-users" style={{ color:'var(--blue)' }} /> {t('produitDetail.infoSection.abonnesCount', { count: produit.boutique.abonnes })}
           </span>
         )}
       </div>
@@ -173,12 +181,12 @@ export default function ProduitInfoSection({
             {'★'.repeat(Math.round(produit.note))}{'☆'.repeat(5 - Math.round(produit.note))}
           </span>
           <span className={styles.ratingNum}>{produit.note.toFixed(1)}</span>
-          {produit.avis > 0 && <span className={styles.ratingCnt}>{produit.avis} avis</span>}
+          {produit.avis > 0 && <span className={styles.ratingCnt}>{t('produitDetail.infoSection.avisCount', { count: produit.avis })}</span>}
           {produit.acheteurs > 0 && (
             <>
               <span className={styles.sep} />
               <span className={styles.acheteurs}>
-                <i className="fas fa-check-circle" /> {produit.acheteurs} acheteurs confirmés
+                <i className="fas fa-check-circle" /> {t('produitDetail.infoSection.acheteursConfirmes', { count: produit.acheteurs })}
               </span>
             </>
           )}
@@ -197,12 +205,12 @@ export default function ProduitInfoSection({
         {/* ✅ Économie masquée si pas de remise */}
         {hasRemise && (
           <div className={styles.prixSave}>
-            <i className="fas fa-tag" /> Économie de {economie.toLocaleString('fr')} GNF (−{remisePct}%)
+            <i className="fas fa-tag" /> {t('produitDetail.infoSection.economieDe', { montant: economie.toLocaleString('fr'), pct: remisePct })}
           </div>
         )}
         <div className={styles.prixNote}>
           <i className="fas fa-lock" style={{ color:'var(--emerald)' }} />
-          Prix garanti · Paiement sécurisé · Hors frais de livraison
+          {t('produitDetail.infoSection.prixNote')}
         </div>
       </div>
 
@@ -216,7 +224,7 @@ export default function ProduitInfoSection({
       {/* ── Variantes stockage ── */}
       <div className={styles.varSec}>
         <div className={styles.varLbl}>
-          Stockage <span className={styles.varVal}>· {storActive}</span>
+          {t('produitDetail.infoSection.stockage')} <span className={styles.varVal}>· {storActive}</span>
         </div>
         <div className={styles.varChips}>
           {VARIANTES_STOCKAGE.map(v => (
@@ -226,7 +234,7 @@ export default function ProduitInfoSection({
               onClick={() => {
                 if (v.disabled) return;
                 setStorActive(v.label);
-                onToast(`✅ Stockage : ${v.label}`);
+                onToast(t('produitDetail.infoSection.stockageToast', { v: v.label }));
               }}
             >
               {v.label}
@@ -238,14 +246,14 @@ export default function ProduitInfoSection({
       {/* ── Variantes coloris ── */}
       <div className={styles.varSec}>
         <div className={styles.varLbl}>
-          Coloris <span className={styles.varVal}>· {colorActive} Titanium</span>
+          {t('produitDetail.infoSection.coloris')} <span className={styles.varVal}>· {colorActive} {t('produitDetail.infoSection.titanium')}</span>
         </div>
         <div className={styles.varChips}>
           {VARIANTES_COLORIS.map(v => (
             <div
               key={v.label}
               className={`${styles.chip} ${colorActive === v.label ? styles.chipActive : ''}`}
-              onClick={() => { setColorActive(v.label); onToast(`✅ Coloris : ${v.label} Titanium`); }}
+              onClick={() => { setColorActive(v.label); onToast(t('produitDetail.infoSection.colorisToast', { v: v.label })); }}
             >
               <span
                 className={styles.colorDot}
@@ -259,7 +267,7 @@ export default function ProduitInfoSection({
 
       {/* ── Quantité ── */}
       <div className={styles.qtyRow}>
-        <span className={styles.qtyLbl}>Quantité</span>
+        <span className={styles.qtyLbl}>{t('produitDetail.infoSection.quantite')}</span>
         <div className={styles.qtyCtrl}>
           <button className={styles.qtyBtn} onClick={() => onChangeQty(-1)} disabled={qty <= 1}>
             <i className="fas fa-minus" />
@@ -269,7 +277,7 @@ export default function ProduitInfoSection({
             <i className="fas fa-plus" />
           </button>
         </div>
-        <span className={styles.qtyMax}>Max. 5 par commande</span>
+        <span className={styles.qtyMax}>{t('produitDetail.infoSection.maxParCommande')}</span>
       </div>
 
       {/* ── Slot LivraisonSection ── */}
@@ -280,7 +288,7 @@ export default function ProduitInfoSection({
 
         {isOutOfStock ? (
           <button className={styles.btnCart} disabled style={{ opacity:.5, cursor:'not-allowed' }}>
-            <i className="fas fa-ban" /> Rupture de stock
+            <i className="fas fa-ban" /> {t('produitDetail.infoSection.ruptureDeStock')}
           </button>
         ) : (
           <button
@@ -289,8 +297,8 @@ export default function ProduitInfoSection({
             disabled={addingCart || addingBuy}
           >
             {addingCart
-              ? <><i className="fas fa-circle-notch fa-spin" /> Ajout en cours…</>
-              : <><i className="fas fa-cart-plus" /> Ajouter au panier</>
+              ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.infoSection.ajoutEnCours')}</>
+              : <><i className="fas fa-cart-plus" /> {t('produitDetail.infoSection.ajouterAuPanier')}</>
             }
           </button>
         )}
@@ -301,20 +309,20 @@ export default function ProduitInfoSection({
           disabled={addingCart || addingBuy || isOutOfStock}
         >
           {addingBuy
-            ? <><i className="fas fa-circle-notch fa-spin" /> Redirection…</>
-            : <><i className="fas fa-bolt" /> Acheter maintenant</>
+            ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.infoSection.redirection')}</>
+            : <><i className="fas fa-bolt" /> {t('produitDetail.infoSection.acheterMaintenant')}</>
           }
         </button>
 
         <div className={styles.btnRow2}>
           <button
             className={`${styles.btnWish} ${wish ? styles.btnWishOn : ''}`}
-            onClick={() => { setWish(w => !w); onToast(wish ? '🤍 Retiré des favoris' : '❤️ Favoris'); }}
+            onClick={() => { setWish(w => !w); onToast(wish ? t('produitDetail.infoSection.retireFavorisToast') : t('produitDetail.infoSection.favorisToast')); }}
           >
-            <i className={wish ? 'fas fa-heart' : 'far fa-heart'} /> Favoris
+            <i className={wish ? 'fas fa-heart' : 'far fa-heart'} /> {t('produitDetail.infoSection.favoris')}
           </button>
-          <button className={styles.btnCompare} onClick={() => onToast('⚖️ Ajouté à la comparaison')}>
-            <i className="fas fa-code-compare" /> Comparer
+          <button className={styles.btnCompare} onClick={() => onToast(t('produitDetail.infoSection.comparaisonToast'))}>
+            <i className="fas fa-code-compare" /> {t('produitDetail.infoSection.comparer')}
           </button>
         </div>
       </div>
@@ -334,7 +342,7 @@ export default function ProduitInfoSection({
 
       {/* ── Partage social ── */}
       <div className={styles.socialRow}>
-        <span className={styles.socialLbl}>Partager :</span>
+        <span className={styles.socialLbl}>{t('produitDetail.infoSection.partager')}</span>
         <button className={`${styles.socBtn} ${styles.socWa}`} onClick={() => onToast('📲 WhatsApp')}>
           <i className="fab fa-whatsapp" />
         </button>
@@ -349,7 +357,7 @@ export default function ProduitInfoSection({
         </button>
         {produit.vues > 0 && (
           <span className={styles.vues}>
-            <i className="fas fa-eye" /> {produit.vues.toLocaleString('fr')} vues aujourd'hui
+            <i className="fas fa-eye" /> {t('produitDetail.infoSection.vuesAujourdhui', { count: produit.vues.toLocaleString('fr') })}
           </span>
         )}
       </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { BoutiqueInfo } from '../data/boutiqueMockData';
 import styles from '../styles/BoutiqueCover.module.css';
 
@@ -14,6 +15,7 @@ function getInitials(nom: string): string {
 }
 
 export default function BoutiqueCover({ boutique }: Props) {
+  const { t } = useTranslation();
   const initials = getInitials(boutique.nom);
   const hasCover = !!boutique.coverImage;
 
@@ -42,7 +44,7 @@ export default function BoutiqueCover({ boutique }: Props) {
           )}
           {boutique.verified && (
             <div className={styles.infoVerif}>
-              <i className="fas fa-shield-check" /> Boutique vérifiée Shopi
+              <i className="fas fa-shield-check" /> {t('boutiqueDetail.cover.verifiee')}
             </div>
           )}
         </div>
@@ -64,7 +66,7 @@ export default function BoutiqueCover({ boutique }: Props) {
         {/* Badge statut boutique */}
         {boutique.verified && (
           <div className={styles.statusBadge}>
-            <i className="fas fa-circle" style={{ fontSize: 5 }} /> Active
+            <i className="fas fa-circle" style={{ fontSize: 5 }} /> {t('boutiqueDetail.cover.active')}
           </div>
         )}
       </div>

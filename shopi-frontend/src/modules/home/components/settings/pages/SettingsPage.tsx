@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate }    from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 /* ✅ Même Header que toutes les pages home */
 import Header from '../../layout/Header';
@@ -55,6 +56,7 @@ function useLocalToast() {
 
 export default function SettingsPage() {
   const navigate            = useNavigate();
+  const { t } = useTranslation();
   const { msg, visible, showToast } = useLocalToast();
   const [activePanel, setActivePanel] = useState<PanelId>('profil');
   const mainRef = useRef<HTMLDivElement>(null);
@@ -98,13 +100,13 @@ export default function SettingsPage() {
         <div className={`${p.pageTop} ${p.rv}`}>
           <div className={p.pageTopRow}>
             <button className={p.pageBack} onClick={() => navigate('/home')}>
-              <i className="fas fa-arrow-left" /> Retour à l'accueil
+              <i className="fas fa-arrow-left" /> {t('settingsPage.page.retourAccueil')}
             </button>
             {/* ✅ Bouton clair/sombre retiré : le site n'a plus de mode
                 clair (voir useForceDarkTheme dans Header.tsx). */}
           </div>
-          <h1 className={p.pageTitle}>Paramètres <em>du compte</em></h1>
-          <p className={p.pageSub}>Gérez vos informations, sécurité et préférences Shopi</p>
+          <h1 className={p.pageTitle}>{t('settingsPage.page.titrePart1')} <em>{t('settingsPage.page.titreEm')}</em></h1>
+          <p className={p.pageSub}>{t('settingsPage.page.sub')}</p>
         </div>
 
         {/* ── Security score banner ── */}

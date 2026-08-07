@@ -250,10 +250,31 @@
   margin: 10px auto 4px;
 }
 
+/* ── Barre de bascule (plier/déplier) — invisible sur desktop ── */
+.toggleBar { display: none; }
+.toggleRow { display: flex; align-items: center; justify-content: space-between; }
+.toggleLabel { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: #0B1F3A; }
+.toggleLabel i { color: #1A4FC4; font-size: 13px; }
+.toggleTotal { font-family: var(--fd, 'Fraunces', serif); font-size: 14.5px; margin-left: 4px; }
+.toggleChevron { color: #94A3B8; font-size: 13px; transition: transform .2s; }
+
 @media (max-width: 768px) {
   .card { border-radius: 0; border: none; box-shadow: none; }
   .etaCard { border-radius: 0; border: none; border-top: 1px solid #E2E8F0; box-shadow: none; }
   .items { max-height: 80px; }
+
+  /* Barre de bascule — seul élément visible quand la feuille est repliée */
+  .toggleBar {
+    display: flex; flex-direction: column; align-items: center;
+    width: 100%; background: none; border: none; cursor: pointer;
+    padding: 0 20px 10px; font-family: inherit;
+  }
+  .toggleRow { width: 100%; padding-top: 2px; }
+
+  /* Repliée par défaut : seule .toggleBar reste visible */
+  .sheetClosed .sheetBody { display: none; }
+  .sheetOpen   .sheetBody { display: block; }
+  .sheetOpen   .toggleChevron { transform: rotate(180deg); }
 }
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
@@ -273,7 +294,11 @@
   .guarantees { border-color: rgba(255,255,255,.08); }
   .etaRow     { border-color: rgba(255,255,255,.08); color: var(--t1, #F4F4F5); }
   .drawerHandle { background: rgba(255,255,255,.15); }
+  .toggleLabel  { color: var(--t1, #F4F4F5); }
+  .toggleChevron { color: var(--t3, #71717A); }
 }
+:root[data-theme="dark"] .toggleLabel  { color: var(--t1, #F4F4F5); }
+:root[data-theme="dark"] .toggleChevron { color: var(--t3, #71717A); }
 :root[data-theme="dark"] .card,
 :root[data-theme="dark"] .etaCard  { background: var(--white, #111113); border-color: rgba(255,255,255,.08); }
 :root[data-theme="dark"] .titre    { color: var(--t1, #F4F4F5); border-color: rgba(255,255,255,.08); }
@@ -329,6 +354,8 @@
 :root[data-theme="light"] .totalRow { background: linear-gradient(135deg, #F8FAFF, #EFF6FF); border-top-color: #DBEAFE; }
 :root[data-theme="light"] .totalL { color: #475569; }
 :root[data-theme="light"] .drawerHandle { background: #CBD5E1; }
+:root[data-theme="light"] .toggleLabel { color: #0B1F3A; }
+:root[data-theme="light"] .toggleChevron { color: #94A3B8; }
 :root[data-theme="light"] .titre span:hover { background: #EFF6FF; }
 :root[data-theme="light"] .gGreen { background: #ECFDF5; color: #065F46; }
 :root[data-theme="light"] .gBlue { background: #EFF6FF; color: #1E3A8A; }

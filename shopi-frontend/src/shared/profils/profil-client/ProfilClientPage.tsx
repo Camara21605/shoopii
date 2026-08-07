@@ -50,7 +50,7 @@ export default function ProfilClientPage() {
 
   /* ── Données dynamiques du profil ── */
   const {
-    profile, kpis, pays, infos, points, wallet,
+    profile, kpis, pays, infos, points,
     commandes, abonnements, favoris, avis, avisScore, activites,
     loading, error,
   } = useProfilClient();
@@ -132,7 +132,6 @@ export default function ProfilClientPage() {
             pays={pays}
             infos={infos}
             points={points}
-            wallet={wallet}
           />
         </div>
 

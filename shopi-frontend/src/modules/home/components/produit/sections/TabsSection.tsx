@@ -6,7 +6,8 @@
  *           - Livraison & Correspondants : guide explicatif
  *           - Avis (248) : liste avis clients vérifiés
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ProduitInfo, AvisClient } from '../data/produitMockData';
 import styles from '../styles/TabsSection.module.css';
 
@@ -19,26 +20,27 @@ interface Props {
 }
 
 export default function TabsSection({ produit, avis, onToast }: Props) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<TabId>('desc');
 
   const TABS: { id: TabId; label: string }[] = [
-    { id:'desc',     label:'Description'                   },
-    { id:'specs',    label:'Caractéristiques'              },
-    { id:'delivery', label:'Livraison & Correspondants'    },
-    { id:'reviews',  label:`Avis (${produit.avis})`        },
+    { id:'desc',     label:t('produitDetail.tabs.description')             },
+    { id:'specs',    label:t('produitDetail.tabs.caracteristiques')        },
+    { id:'delivery', label:t('produitDetail.tabs.livraisonCorrespondants') },
+    { id:'reviews',  label:t('produitDetail.tabs.avisCount', { count: produit.avis }) },
   ];
 
   return (
     <div className={styles.wrap}>
       {/* ── Navigation onglets ── */}
       <div className={styles.nav}>
-        {TABS.map(t => (
+        {TABS.map(tabItem => (
           <button
-            key={t.id}
-            className={`${styles.tabBtn} ${tab === t.id ? styles.tabBtnActive : ''}`}
-            onClick={() => setTab(t.id)}
+            key={tabItem.id}
+            className={`${styles.tabBtn} ${tab === tabItem.id ? styles.tabBtnActive : ''}`}
+            onClick={() => setTab(tabItem.id)}
           >
-            {t.label}
+            {tabItem.label}
           </button>
         ))}
       </div>
@@ -48,15 +50,23 @@ export default function TabsSection({ produit, avis, onToast }: Props) {
         {/* ── Description ── */}
         {tab === 'desc' && (
           <div className={styles.descContent}>
-            <h3>À propos de l'iPhone 15 Pro</h3>
+            <h3>{t('produitDetail.tabs.aProposTitre')}</h3>
             <p>{produit.description}</p>
-            <h3>Performances</h3>
+            <h3>{t('produitDetail.tabs.performances')}</h3>
             <ul>
-              {['Puce A17 Pro gravée en 3 nm — la plus rapide jamais intégrée','GPU 6 cœurs pour des graphismes de niveau console',"Jusqu'à 29h d'autonomie vidéo"].map(l => <li key={l}>{l}</li>)}
+              {[
+                t('produitDetail.tabs.performancesList.puce'),
+                t('produitDetail.tabs.performancesList.gpu'),
+                t('produitDetail.tabs.performancesList.autonomie'),
+              ].map(l => <li key={l}>{l}</li>)}
             </ul>
-            <h3>Caméra ProRes</h3>
+            <h3>{t('produitDetail.tabs.cameraProRes')}</h3>
             <ul>
-              {['Triple caméra 48MP principal, 12MP ultrawide, 12MP téléphoto 3x','Enregistrement 4K/60fps ProRes','Smart HDR 5'].map(l => <li key={l}>{l}</li>)}
+              {[
+                t('produitDetail.tabs.cameraList.triple'),
+                t('produitDetail.tabs.cameraList.enregistrement'),
+                t('produitDetail.tabs.cameraList.smartHdr'),
+              ].map(l => <li key={l}>{l}</li>)}
             </ul>
           </div>
         )}
@@ -78,19 +88,34 @@ export default function TabsSection({ produit, avis, onToast }: Props) {
         {/* ── Livraison & Correspondants ── */}
         {tab === 'delivery' && (
           <div className={styles.descContent}>
-            <h3>Livraison internationale et correspondants</h3>
-            <p>Cette boutique est basée en France. Shopi propose un système de correspondants locaux pour faciliter la réception de vos commandes en Afrique.</p>
-            <h3>Comment fonctionne le correspondant Shopi ?</h3>
+            <h3>{t('produitDetail.tabs.livraisonTitre')}</h3>
+            <p>{t('produitDetail.tabs.livraisonDesc')}</p>
+            <h3>{t('produitDetail.tabs.commentTitre')}</h3>
             <ul>
-              {["Le correspondant est un représentant Shopi dans votre ville ou région","Il réceptionne votre colis, vérifie son état et vous notifie","Il le conserve en lieu sûr et vous le remet ou le confie à un livreur local","Il facilite la communication entre vous et la boutique internationale"].map(l => <li key={l}>{l}</li>)}
+              {[
+                t('produitDetail.tabs.commentList.representant'),
+                t('produitDetail.tabs.commentList.receptionne'),
+                t('produitDetail.tabs.commentList.conserve'),
+                t('produitDetail.tabs.commentList.facilite'),
+              ].map(l => <li key={l}>{l}</li>)}
             </ul>
-            <h3>Tarification des livreurs selon la distance</h3>
+            <h3>{t('produitDetail.tabs.tarifTitre')}</h3>
             <ul>
-              {["Même ville : tarif de base (ex. 15 000 – 25 000 GNF)","Ville proche (rayon 50 km) : +30% du tarif de base","Autre région / préfecture : +80% du tarif de base","International : tarif fixé par accord entre boutique et correspondant"].map(l => <li key={l}>{l}</li>)}
+              {[
+                t('produitDetail.tabs.tarifList.memeVille'),
+                t('produitDetail.tabs.tarifList.villeProche'),
+                t('produitDetail.tabs.tarifList.autreRegion'),
+                t('produitDetail.tabs.tarifList.international'),
+              ].map(l => <li key={l}>{l}</li>)}
             </ul>
-            <h3>Multiplicateurs de vitesse</h3>
+            <h3>{t('produitDetail.tabs.multiplicateursTitre')}</h3>
             <ul>
-              {["🐢 Économique : ×1.0 — délai classique","🚴 Standard : ×1.3 — délai normal recommandé","🚀 Express : ×1.8 — livraison prioritaire","⚡ Ultra : ×2.5 — livraison immédiate"].map(l => <li key={l}>{l}</li>)}
+              {[
+                t('produitDetail.tabs.multiplicateursList.eco'),
+                t('produitDetail.tabs.multiplicateursList.standard'),
+                t('produitDetail.tabs.multiplicateursList.express'),
+                t('produitDetail.tabs.multiplicateursList.ultra'),
+              ].map(l => <li key={l}>{l}</li>)}
             </ul>
           </div>
         )}
@@ -108,7 +133,7 @@ export default function TabsSection({ produit, avis, onToast }: Props) {
                   </div>
                   {a.verified && (
                     <span className={styles.avisVerif}>
-                      <i className="fas fa-check-circle" /> Achat vérifié
+                      <i className="fas fa-check-circle" /> {t('produitDetail.tabs.achatVerifie')}
                     </span>
                   )}
                 </div>

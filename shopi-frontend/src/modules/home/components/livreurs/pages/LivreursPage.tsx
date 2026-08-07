@@ -23,6 +23,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate }      from 'react-router-dom';
+import { useTranslation }   from 'react-i18next';
 
 /* ── Layout partagé du module home ── */
 import Header from '../../layout/Header';
@@ -55,6 +56,18 @@ interface ToastState { msg: string; type: 's' | 'i' | 'w' | 'e' }
  * ================================================================ */
 const LivreursPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  /* ── Stats hero traduites ── */
+  const heroStats = HERO_STATS.map((s, i) => ({
+    ...s,
+    label: [
+      t('livreursPage.hero.stats.livreursActifs'),
+      t('livreursPage.hero.stats.noteMoyenne'),
+      t('livreursPage.hero.stats.livraisonsMois'),
+      t('livreursPage.hero.stats.communesCouvertes'),
+    ][i] ?? s.label,
+  }));
 
   /* ── Toast local ── */
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -91,7 +104,7 @@ const LivreursPage: React.FC = () => {
 
       {/* ── Hero banner ── */}
       <HeroBanner
-        stats={HERO_STATS}
+        stats={heroStats}
         featured={featuredLivreurs}
         onFollow={onFollow}
       />
@@ -133,23 +146,23 @@ const LivreursPage: React.FC = () => {
           {/* En-tête de section */}
           <div className={styles.secRow}>
             <div>
-              <div className={styles.secTitle}>Tous les livreurs</div>
+              <div className={styles.secTitle}>{t('livreursPage.page.tousLesLivreurs')}</div>
               <div className={styles.secSub}>
-                {filtered.length} livreur{filtered.length > 1 ? 's' : ''} dans votre région
+                {t('livreursPage.page.livreurDansRegion', { count: filtered.length })}
               </div>
             </div>
             <div className={styles.viewBtns}>
               <button
                 className={`${styles.vBtn} ${viewMode === 'grid' ? styles.vBtnOn : ''}`}
                 onClick={() => onViewChange('grid')}
-                title="Vue grille"
+                title={t('livreursPage.page.vueGrille')}
               >
                 <i className="fas fa-th-large" />
               </button>
               <button
                 className={`${styles.vBtn} ${viewMode === 'list' ? styles.vBtnOn : ''}`}
                 onClick={() => onViewChange('list')}
-                title="Vue liste"
+                title={t('livreursPage.page.vueListe')}
               >
                 <i className="fas fa-list" />
               </button>
@@ -169,7 +182,7 @@ const LivreursPage: React.FC = () => {
           {error && !loading && (
             <div className={styles.empty}>
               <i className="fas fa-triangle-exclamation" />
-              <div className={styles.emptyTitle}>Impossible de charger les livreurs</div>
+              <div className={styles.emptyTitle}>{t('livreursPage.page.impossibleDeCharger')}</div>
               <div className={styles.emptyText}>{error}</div>
             </div>
           )}
@@ -178,9 +191,9 @@ const LivreursPage: React.FC = () => {
           {!loading && !error && filtered.length === 0 && (
             <div className={styles.empty}>
               <i className="fas fa-motorcycle" />
-              <div className={styles.emptyTitle}>Aucun livreur trouvé</div>
+              <div className={styles.emptyTitle}>{t('livreursPage.page.aucunLivreurTrouve')}</div>
               <div className={styles.emptyText}>
-                Essayez de modifier vos filtres ou votre recherche.
+                {t('livreursPage.page.essayezModifier')}
               </div>
             </div>
           )}
@@ -218,10 +231,10 @@ const LivreursPage: React.FC = () => {
             <div className={styles.loadMore}>
               <button
                 className={styles.loadMoreBtn}
-                onClick={() => onToast('📄 Chargement...', 'i')}
+                onClick={() => onToast(t('livreursPage.page.chargementToast'), 'i')}
               >
                 <i className="fas fa-arrow-down" />
-                Charger plus de livreurs
+                {t('livreursPage.page.chargerPlus')}
               </button>
             </div>
           )}

@@ -3,8 +3,9 @@
  * Rendu d'une seule bulle de message (tous types).
  */
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ChatMessage, ChatUser } from '../data/messagerieTypes';
-import { ROLE_CONFIG } from '../data/messagerieTypes';
+import { getRoleConfig } from '../data/messagerieTypes';
 import VoicePlayer from './VoicePlayer';
 import s from '../styles/ChatWindow.module.css';
 
@@ -23,6 +24,7 @@ interface Props {
 export default function MessageBubble({
   msg, idx, msgs, user, isLastRead = false, onReply, onToast, onDelete,
 }: Props) {
+  const { t } = useTranslation();
   // Affiche ou masque le petit menu "Supprimer pour moi / lui / tout le monde"
   const [showDeleteMenu, setShowDeleteMenu] = useState(false);
 
@@ -44,7 +46,8 @@ export default function MessageBubble({
   const prev     = msgs[idx - 1];
   const isSame   = prev?.from === msg.from;
   const isFirst  = !isSame;
-  const rc       = ROLE_CONFIG[user.role] ?? ROLE_CONFIG['client'];
+  const roleConfig = getRoleConfig(t);
+  const rc       = roleConfig[user.role] ?? roleConfig['client'];
   const isImgAva = user.ava?.startsWith('http');
 
   const rowCls = [s.msgRow, isMe ? s.mine : '', isFirst ? s.firstGroup : '', isSame ? s.noAva : '']
@@ -58,7 +61,7 @@ export default function MessageBubble({
         <div className={s.msgGroup}>
           <div className={s.msgDeleted}>
             <i className="fas fa-ban" />
-            <span>Message supprimé</span>
+            <span>{t('messagerie.messageBubble.messageSupprime')}</span>
           </div>
         </div>
         {isMe && <div className={s.msgAva} />}
@@ -105,13 +108,13 @@ export default function MessageBubble({
           {msg.type === 'product' && msg.product && (
             <>
               <div className={`${s.bubble} ${isMe ? s.sent : s.recv}`}>{msg.text}</div>
-              <div className={s.msgProduct} onClick={() => onToast('📦 Voir le produit', 'i')}>
+              <div className={s.msgProduct} onClick={() => onToast(t('messagerie.messageBubble.voirProduit'), 'i')}>
                 <div className={s.mpImg}>{msg.product.em}</div>
                 <div className={s.mpBody}>
                   <div className={s.mpNm}>{msg.product.nm}</div>
                   <div className={s.mpPrice}>{msg.product.price}</div>
-                  <button className={s.mpBtn} onClick={e => { e.stopPropagation(); onToast('🛒 Ajouté au panier', 's'); }}>
-                    Ajouter au panier
+                  <button className={s.mpBtn} onClick={e => { e.stopPropagation(); onToast(t('messagerie.messageBubble.ajouteAuPanierToast'), 's'); }}>
+                    {t('messagerie.messageBubble.ajouterAuPanier')}
                   </button>
                 </div>
               </div>
@@ -128,8 +131,8 @@ export default function MessageBubble({
                 </div>
                 <div className={s.moBody}>
                   <div className={s.moNm}>{msg.order.nm}</div>
-                  <button className={s.moTrack} onClick={() => onToast('📍 Suivi de commande', 'i')}>
-                    <i className="fas fa-map-location-dot" /> Suivre la commande
+                  <button className={s.moTrack} onClick={() => onToast(t('messagerie.messageBubble.suiviCommandeToast'), 'i')}>
+                    <i className="fas fa-map-location-dot" /> {t('messagerie.messageBubble.suivreCommande')}
                   </button>
                 </div>
               </div>
@@ -167,8 +170,8 @@ export default function MessageBubble({
                 className={s.msgFile} onClick={e => { if (!msg.mediaUrl) e.preventDefault(); }}>
                 <div className={s.mfIcon}><i className="fas fa-file-pdf" /></div>
                 <div className={s.mfBody}>
-                  <div className={s.mfName}>{msg.mediaName ?? 'Document'}</div>
-                  <div className={s.mfMeta}>PDF · Cliquer pour ouvrir</div>
+                  <div className={s.mfName}>{msg.mediaName ?? t('messagerie.messageBubble.document')}</div>
+                  <div className={s.mfMeta}>{t('messagerie.messageBubble.pdfCliquerPourOuvrir')}</div>
                 </div>
                 <i className="fas fa-arrow-up-right-from-square" style={{ color: 'var(--t3)', fontSize: 13 }} />
               </a>
@@ -186,13 +189,13 @@ export default function MessageBubble({
 
           {/* ── Actions au survol — communes à tous les types ── */}
           <div className={s.bubbleActions}>
-            <button className={s.baBtn} title="Répondre"
-              onClick={() => onReply({ sender: isMe ? 'Vous' : user.name, text: msg.text ?? '' })}>
+            <button className={s.baBtn} title={t('messagerie.messageBubble.repondre')}
+              onClick={() => onReply({ sender: isMe ? t('messagerie.messageBubble.vous') : user.name, text: msg.text ?? '' })}>
               <i className="fas fa-reply" />
             </button>
             {msg.type === 'text' && (
-              <button className={s.baBtn} title="Copier"
-                onClick={() => { navigator.clipboard.writeText(msg.text ?? ''); onToast('📋 Copié !', 's'); }}>
+              <button className={s.baBtn} title={t('messagerie.messageBubble.copier')}
+                onClick={() => { navigator.clipboard.writeText(msg.text ?? ''); onToast(t('messagerie.messageBubble.copieToast'), 's'); }}>
                 <i className="fas fa-copy" />
               </button>
             )}
@@ -203,7 +206,7 @@ export default function MessageBubble({
                 ref={deleteBtnRef}
                 className={s.baBtn}
                 style={{ color: showDeleteMenu ? 'var(--red, #DC2626)' : undefined }}
-                title="Supprimer"
+                title={t('messagerie.messageBubble.supprimer')}
                 onClick={e => {
                   e.stopPropagation();
 
@@ -269,7 +272,7 @@ export default function MessageBubble({
                       onClick={() => { onDelete(msg.id, 'me'); setShowDeleteMenu(false); }}
                     >
                       <i className="fas fa-eye-slash" />
-                      <span>Supprimer pour moi</span>
+                      <span>{t('messagerie.messageBubble.supprimerPourMoi')}</span>
                     </button>
 
                     {/* Options 2 & 3 — visibles uniquement si c'est MOI qui ai
@@ -282,14 +285,14 @@ export default function MessageBubble({
                           onClick={() => { onDelete(msg.id, 'other'); setShowDeleteMenu(false); }}
                         >
                           <i className="fas fa-user-xmark" />
-                          <span>Supprimer pour lui</span>
+                          <span>{t('messagerie.messageBubble.supprimerPourLui')}</span>
                         </button>
                         <button
                           className={`${s.deleteMenuItem} ${s.deleteMenuDanger}`}
                           onClick={() => { onDelete(msg.id, 'everyone'); setShowDeleteMenu(false); }}
                         >
                           <i className="fas fa-users-slash" />
-                          <span>Supprimer pour tout le monde</span>
+                          <span>{t('messagerie.messageBubble.supprimerPourTous')}</span>
                         </button>
                       </>
                     )}
@@ -304,16 +307,16 @@ export default function MessageBubble({
         {isMe && (
           <div className={s.msgStatus}>
             {isLastRead && (
-              <div className={s.readAvatar} title={`Vu par ${user.name}`}>
+              <div className={s.readAvatar} title={t('messagerie.messageBubble.vuPar', { name: user.name })}>
                 {isImgAva ? <img src={user.ava} alt={user.name} /> : user.ava}
               </div>
             )}
             {msg.read ? (
-              <span className={s.tickRead} title="Vu"><i className="fas fa-check-double" /></span>
+              <span className={s.tickRead} title={t('messagerie.messageBubble.vu')}><i className="fas fa-check-double" /></span>
             ) : msg.delivered ? (
-              <span className={s.tickDelivered} title="Livré"><i className="fas fa-check-double" /></span>
+              <span className={s.tickDelivered} title={t('messagerie.messageBubble.livre')}><i className="fas fa-check-double" /></span>
             ) : (
-              <span className={s.tickSent} title="Envoyé"><i className="fas fa-check" /></span>
+              <span className={s.tickSent} title={t('messagerie.messageBubble.envoye')}><i className="fas fa-check" /></span>
             )}
           </div>
         )}
@@ -335,11 +338,12 @@ export default function MessageBubble({
 type CallMeta = ChatMessage['callMeta'];
 
 function CallBubble({ meta, isMe }: { meta?: CallMeta; isMe: boolean }) {
+  const { t } = useTranslation();
   if (!meta) {
     return (
       <div className={`${s.callBubble} ${isMe ? s.callBubbleMe : ''}`}>
         <span className={s.callIcon}><i className="fas fa-phone" /></span>
-        <span className={s.callLabel}>Appel audio</span>
+        <span className={s.callLabel}>{t('messagerie.messageBubble.appelAudioFallback')}</span>
       </div>
     );
   }
@@ -354,15 +358,15 @@ function CallBubble({ meta, isMe }: { meta?: CallMeta; isMe: boolean }) {
     busy:      { icon: isVideoCall ? 'fa-video'        : 'fa-phone-volume', iconColor: 'var(--amber,#B45309)'              },
   };
 
-  const typeLabel = isVideoCall ? 'vidéo' : 'audio';
+  const typeLabel = isVideoCall ? t('messagerie.messageBubble.typeVideo') : t('messagerie.messageBubble.typeAudio');
   const labelMap: Record<string, string> = {
-    completed: `Appel ${typeLabel}`,
-    missed:    'Appel manqué',
-    rejected:  'Appel refusé',
-    cancelled: 'Appel annulé',
-    busy:      'Correspondant occupé',
+    completed: t('messagerie.messageBubble.appelType', { type: typeLabel }),
+    missed:    t('messagerie.messageBubble.appelManque'),
+    rejected:  t('messagerie.messageBubble.appelRefuse'),
+    cancelled: t('messagerie.messageBubble.appelAnnule'),
+    busy:      t('messagerie.messageBubble.correspondantOccupe'),
   };
-  const label = labelMap[meta.status] ?? `Appel ${typeLabel}`;
+  const label = labelMap[meta.status] ?? t('messagerie.messageBubble.appelType', { type: typeLabel });
   const { icon, iconColor, textRed } = cfg[meta.status] ?? cfg['completed'];
 
   const dur = meta.duration

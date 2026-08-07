@@ -14,6 +14,7 @@
  * ============================================================
  */
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { BoutiqueInfo } from '../data/boutiqueMockData';
 import styles from '../styles/BoutiqueIdentity.module.css';
 
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export default function BoutiqueIdentity({ boutique, suivi, suiviPending, msgLoading, callLoading, onToggleSuivi, onMessage, onCall, onPartage }: Props) {
+  const { t } = useTranslation();
   return (
     <div className={styles.bar}>
       <div className={styles.inner}>
@@ -40,7 +42,7 @@ export default function BoutiqueIdentity({ boutique, suivi, suiviPending, msgLoa
             {boutique.nom}
             {boutique.verified && (
               <span className={styles.verifBadge}>
-                <i className="fas fa-shield-check" /> Vérifié Shopi
+                <i className="fas fa-shield-check" /> {t('boutiqueDetail.identity.verifie')}
               </span>
             )}
           </div>
@@ -76,15 +78,15 @@ export default function BoutiqueIdentity({ boutique, suivi, suiviPending, msgLoa
                   );
                 })}
               </div>
-              <div className={styles.statL}>Note</div>
+              <div className={styles.statL}>{t('boutiqueDetail.identity.note')}</div>
             </div>
             <div className={styles.sep} />
           </React.Fragment>
 
           {[
-            { val: boutique.abonnes, lbl:'Abonnés'      },
-            { val: boutique.satisf,  lbl:'Satisfaction' },
-            { val: boutique.ventes,  lbl:'Ventes'       },
+            { val: boutique.abonnes, lbl:t('boutiqueDetail.identity.abonnes')      },
+            { val: boutique.satisf,  lbl:t('boutiqueDetail.identity.satisfaction') },
+            { val: boutique.ventes,  lbl:t('boutiqueDetail.identity.ventes')       },
           ].map((s, i) => (
             <React.Fragment key={i}>
               <div className={styles.stat}>
@@ -106,7 +108,7 @@ export default function BoutiqueIdentity({ boutique, suivi, suiviPending, msgLoa
             style={{ opacity: suiviPending ? 0.65 : 1 }}
           >
             <i className={`fas ${suiviPending ? 'fa-spinner fa-spin' : suivi ? 'fa-check' : 'fa-plus'}`} />
-            <span>{suiviPending ? '…' : suivi ? 'Abonné' : "S'abonner"}</span>
+            <span>{suiviPending ? '…' : suivi ? t('boutiqueDetail.identity.abonneLabel') : t('boutiqueDetail.identity.abonner')}</span>
           </button>
 
           {/* Message — le parent gère l'auth/abonnement requis au clic */}
@@ -114,11 +116,11 @@ export default function BoutiqueIdentity({ boutique, suivi, suiviPending, msgLoa
             className={styles.btnMsg}
             onClick={onMessage}
             disabled={msgLoading}
-            title={!suivi ? 'Abonnez-vous pour envoyer un message' : 'Envoyer un message'}
+            title={!suivi ? t('boutiqueDetail.identity.abonnezVousMessage') : t('boutiqueDetail.identity.envoyerMessageTitle')}
             style={{ opacity: !suivi ? 0.65 : msgLoading ? 0.65 : 1, cursor: msgLoading ? 'not-allowed' : 'pointer' }}
           >
             <i className={`fas ${msgLoading ? 'fa-spinner fa-spin' : 'fa-comment-dots'}`} />
-            {msgLoading ? '…' : 'Message'}
+            {msgLoading ? '…' : t('boutiqueDetail.identity.messageBtn')}
           </button>
 
           {/* Appeler — le parent gère l'auth/abonnement requis au clic */}
@@ -127,16 +129,16 @@ export default function BoutiqueIdentity({ boutique, suivi, suiviPending, msgLoa
               className={styles.btnMsg}
               onClick={onCall}
               disabled={callLoading}
-              title={!suivi ? 'Abonnez-vous pour appeler' : 'Appeler'}
+              title={!suivi ? t('boutiqueDetail.identity.abonnezVousAppel') : t('boutiqueDetail.identity.appelerTitle')}
               style={{ opacity: !suivi ? 0.65 : callLoading ? 0.65 : 1, cursor: callLoading ? 'not-allowed' : 'pointer' }}
             >
               <i className={`fas ${callLoading ? 'fa-spinner fa-spin' : 'fa-phone'}`} />
-              {callLoading ? '…' : 'Appeler'}
+              {callLoading ? '…' : t('boutiqueDetail.identity.appelerBtn')}
             </button>
           )}
 
           {/* Partager */}
-          <button className={styles.btnShare} onClick={onPartage} title="Partager la boutique">
+          <button className={styles.btnShare} onClick={onPartage} title={t('boutiqueDetail.identity.partagerTitle')}>
             <i className="fas fa-share-nodes" />
           </button>
         </div>

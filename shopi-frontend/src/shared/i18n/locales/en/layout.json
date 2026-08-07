@@ -1,0 +1,174 @@
+{
+  "sidebar": {
+    "sections": {
+      "principal": "Main",
+      "catalogue": "Catalog",
+      "marketing": "Marketing",
+      "reseauLogistique": "Network & Logistics",
+      "financesClients": "Finance & Customers",
+      "equipe": "Team",
+      "boutique": "Store"
+    },
+    "items": {
+      "overview": "Overview",
+      "commandes": "Orders",
+      "retours": "Returns & Support",
+      "produits": "Products",
+      "ajouter": "Add product",
+      "inventaire": "Inventory",
+      "promotions": "Promotions",
+      "analytics": "Analytics",
+      "seo": "SEO & Marketing",
+      "messages": "Messages",
+      "livreurs": "My couriers",
+      "correspondants": "Correspondents",
+      "finances": "Finance",
+      "portefeuille": "Wallet",
+      "clients": "Customers",
+      "avis": "Customer reviews",
+      "equipeGestion": "Team management",
+      "parametres": "Settings",
+      "voirBoutique": "View my store",
+      "alertes": "Alerts",
+      "quitter": "Log out"
+    }
+  },
+  "topbar": {
+    "titles": {
+      "overview": {
+        "title": "Overview",
+        "subtitle": "Your store's dashboard"
+      },
+      "commandes": {
+        "title": "Orders",
+        "subtitle": "Manage all your orders"
+      },
+      "retours": {
+        "title": "Returns & Support",
+        "subtitle": "Manage returns and after-sales support"
+      },
+      "produits": {
+        "title": "Product catalog",
+        "subtitle": "124 products · 8 categories"
+      },
+      "ajouter": {
+        "title": "Add a product",
+        "subtitle": "Create and publish a new product"
+      },
+      "inventaire": {
+        "title": "Inventory & Stock",
+        "subtitle": "Manage your stock levels"
+      },
+      "promotions": {
+        "title": "Promotions & Promo codes",
+        "subtitle": "Boost your sales with offers"
+      },
+      "analytics": {
+        "title": "Advanced analytics",
+        "subtitle": "Your store's statistics and performance"
+      },
+      "messages": {
+        "title": "Customer messages",
+        "subtitle": "Conversations and customer support"
+      },
+      "seo": {
+        "title": "SEO & Marketing",
+        "subtitle": "Optimization and marketing campaigns"
+      },
+      "livreurs": {
+        "title": "My couriers",
+        "subtitle": "Delivery network · 4 active"
+      },
+      "correspondants": {
+        "title": "Correspondents",
+        "subtitle": "Your local and international relays"
+      },
+      "finances": {
+        "title": "Finance",
+        "subtitle": "Revenue, expenses and transactions"
+      },
+      "portefeuille": {
+        "title": "Wallet",
+        "subtitle": "Balance, withdrawals and transactions"
+      },
+      "clients": {
+        "title": "Customers",
+        "subtitle": "Customer base · 2,414 buyers"
+      },
+      "avis": {
+        "title": "Customer reviews",
+        "subtitle": "248 reviews · Average rating 4.9 ⭐"
+      },
+      "parametres": {
+        "title": "Settings",
+        "subtitle": "Configure your store"
+      },
+      "profil": {
+        "title": "My profile",
+        "subtitle": "Your store's public profile"
+      },
+      "boutiquePreview": {
+        "title": "View my store",
+        "subtitle": "Preview your store as your customers see it"
+      },
+      "reseauCorrespondants": {
+        "title": "Correspondents",
+        "subtitle": "Follow correspondents in the Shopi network"
+      },
+      "reseauLivreurs": {
+        "title": "Couriers",
+        "subtitle": "Follow other couriers in the Shopi network"
+      },
+      "profilCorrespondantReseau": {
+        "title": "Correspondent profile",
+        "subtitle": "Details and tracking"
+      },
+      "profilLivreurReseau": {
+        "title": "Courier profile",
+        "subtitle": "Details and tracking"
+      }
+    },
+    "searchPlaceholder": "Search orders, products, customers…",
+    "tooltips": {
+      "livreurs": "My couriers",
+      "correspondants": "Correspondents",
+      "commandes": "Orders",
+      "messages": "Messages",
+      "aide": "Help Center"
+    },
+    "menu": {
+      "profil": "My profile",
+      "voirBoutique": "View my store",
+      "basculerAccueil": "Switch to home",
+      "deconnexion": "Log out"
+    },
+    "status": {
+      "active": "Store active",
+      "suspended": "Paused",
+      "private": "Private",
+      "pending": "Pending validation",
+      "default": "Pro seller"
+    },
+    "bottomNav": {
+      "accueil": "Home",
+      "commandes": "Orders",
+      "produits": "Products",
+      "monEspace": "My account"
+    },
+    "drawer": {
+      "menuAria": "Navigation menu",
+      "voirBoutique": "View my store",
+      "aide": "Help Center",
+      "basculerAccueil": "Switch to home",
+      "deconnexion": "Log out"
+    },
+    "hamburgerAria": "Menu"
+  },
+  "reseauBottomNav": {
+    "ariaLabel": "Mobile network navigation",
+    "correspondants": "Correspondents",
+    "livreurs": "Delivery agents",
+    "basculerEspaceClient": "Switch to the client space",
+    "monEspace": "My space"
+  }
+}

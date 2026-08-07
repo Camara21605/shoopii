@@ -33,6 +33,8 @@
  */
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useToast } from '../../../shared/context/ToastContext';
 import styles from './CorrespondantsPage.module.css';
 import {
@@ -49,12 +51,12 @@ import {
 // HELPERS — inchangés (purement visuels)
 // ─────────────────────────────────────────────────────────────
 
-function typeLabel(type: CorrespondantType): string {
+function typeLabel(type: CorrespondantType, t: TFunction): string {
   return {
-    principal: '⭐ Principal',
-    entrepot:  '🏭 Entrepôt',
-    export:    '✈️ Export',
-    relais:    '📍 Relais',
+    principal: t('correspondants.type.principal'),
+    entrepot:  t('correspondants.type.entrepot'),
+    export:    t('correspondants.type.export'),
+    relais:    t('correspondants.type.relais'),
   }[type];
 }
 
@@ -75,8 +77,8 @@ function statutCls(status: CorrespondantStatus, s: any): string {
   }[status];
 }
 
-function statutLabel(status: CorrespondantStatus): string {
-  return { active: 'Actif', pending: 'En attente', suspended: 'Suspendu' }[status];
+function statutLabel(status: CorrespondantStatus, t: TFunction): string {
+  return { active: t('correspondants.status.active'), pending: t('correspondants.status.pending'), suspended: t('correspondants.status.suspended') }[status];
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -102,6 +104,7 @@ function ModalProfil({ c, onClose, onContact, onSuspend }: {
   onContact: () => void;
   onSuspend: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
@@ -116,10 +119,10 @@ function ModalProfil({ c, onClose, onContact, onSuspend }: {
               </div>
               <div className={styles.mBadges}>
                 <span className={`${styles.typeBadge} ${typeCls(c.type, styles)}`}>
-                  {typeLabel(c.type)}
+                  {typeLabel(c.type, t)}
                 </span>
                 <span className={`${styles.statutBadge} ${statutCls(c.status, styles)}`}>
-                  {statutLabel(c.status)}
+                  {statutLabel(c.status, t)}
                 </span>
               </div>
             </div>
@@ -131,10 +134,10 @@ function ModalProfil({ c, onClose, onContact, onSuspend }: {
         <div className={styles.mBody}>
           <div className={styles.kpiGrid}>
             {[
-              { icon:'fa-box',      label:'Total missions',  value: String(c.totalMissions), sub: 'Commandes traitées', cls: styles.kpiBlue   },
-              { icon:'fa-calendar', label:'Ce mois-ci',      value: String(c.thisMonth),     sub: 'Commandes',          cls: styles.kpiGreen  },
-              { icon:'fa-star',     label:'Note moyenne',    value: c.averageRating === 0 ? 'N/A' : c.averageRating.toFixed(1), sub: 'Sur 5 étoiles', cls: styles.kpiAmber  },
-              { icon:'fa-map',      label:'Zone couverte',   value: c.ville,                 sub: c.zone ?? '',         cls: styles.kpiViolet },
+              { icon:'fa-box',      label:t('correspondants.modalProfil.kpiTotalMissions'),  value: String(c.totalMissions), sub: t('correspondants.modalProfil.kpiCommandesTraitees'), cls: styles.kpiBlue   },
+              { icon:'fa-calendar', label:t('correspondants.modalProfil.kpiCeMois'),      value: String(c.thisMonth),     sub: t('correspondants.modalProfil.kpiCommandes'),          cls: styles.kpiGreen  },
+              { icon:'fa-star',     label:t('correspondants.modalProfil.kpiNoteMoyenne'),    value: c.averageRating === 0 ? t('correspondants.na') : c.averageRating.toFixed(1), sub: t('correspondants.modalProfil.kpiSur5Etoiles'), cls: styles.kpiAmber  },
+              { icon:'fa-map',      label:t('correspondants.modalProfil.kpiZoneCouverte'),   value: c.ville,                 sub: c.zone ?? '',         cls: styles.kpiViolet },
             ].map((k, i) => (
               <div key={i} className={`${styles.kpiCard} ${k.cls}`}>
                 <div className={styles.kpiIcon}><i className={`fas ${k.icon}`} /></div>
@@ -145,17 +148,17 @@ function ModalProfil({ c, onClose, onContact, onSuspend }: {
             ))}
           </div>
           <div className={styles.ratingBox}>
-            <div className={styles.ratingBoxTitle}>Évaluation clients</div>
+            <div className={styles.ratingBoxTitle}>{t('correspondants.modalProfil.evaluationClients')}</div>
             <Stars value={c.averageRating} />
           </div>
           <div className={styles.detGrid}>
             {[
-              { icon:'fa-phone',     label:'Téléphone',       value: c.phone ?? 'N/A'      },
-              { icon:'fa-envelope',  label:'Email',           value: c.email               },
-              { icon:'fa-map-pin',   label:'Adresse',         value: c.adresse ?? 'N/A'    },
-              { icon:'fa-map',       label:'Zone',            value: c.zone ?? 'N/A'       },
-              { icon:'fa-clock-rotate-left', label:'Dernière activité', value: `${c.lastActivity} (${c.lastActivityAt})` },
-              { icon:'fa-calendar',  label:'Membre depuis',   value: new Date(c.joinedAt).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) },
+              { icon:'fa-phone',     label:t('correspondants.modalProfil.telephone'),       value: c.phone ?? t('correspondants.na')      },
+              { icon:'fa-envelope',  label:t('correspondants.modalProfil.email'),           value: c.email               },
+              { icon:'fa-map-pin',   label:t('correspondants.modalProfil.adresse'),         value: c.adresse ?? t('correspondants.na')    },
+              { icon:'fa-map',       label:t('correspondants.modalProfil.zone'),            value: c.zone ?? t('correspondants.na')       },
+              { icon:'fa-clock-rotate-left', label:t('correspondants.modalProfil.derniereActivite'), value: `${c.lastActivity} (${c.lastActivityAt})` },
+              { icon:'fa-calendar',  label:t('correspondants.modalProfil.membreDepuis'),   value: new Date(c.joinedAt).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) },
             ].map((d, i) => (
               <div key={i} className={styles.detItem}>
                 <div className={styles.detIcon}><i className={`fas ${d.icon}`} /></div>
@@ -170,14 +173,14 @@ function ModalProfil({ c, onClose, onContact, onSuspend }: {
         <div className={styles.mFooter}>
           {c.status === 'active' && (
             <button className={styles.btnDanger} onClick={() => { onSuspend(); onClose(); }}>
-              <i className="fas fa-ban" /> Suspendre
+              <i className="fas fa-ban" /> {t('correspondants.modalProfil.suspendre')}
             </button>
           )}
           <button className={styles.btnSecondary} onClick={() => { onContact(); onClose(); }}>
-            <i className="fas fa-envelope" /> Contacter
+            <i className="fas fa-envelope" /> {t('correspondants.modalProfil.contacter')}
           </button>
           <a href={`tel:${c.phone}`} className={styles.btnSecondary}>
-            <i className="fas fa-phone" /> Appeler
+            <i className="fas fa-phone" /> {t('correspondants.modalProfil.appeler')}
           </a>
         </div>
       </div>
@@ -194,6 +197,7 @@ function ModalProfil({ c, onClose, onContact, onSuspend }: {
 //   ✅ Le code affiché à l'étape 3 vient de la réponse API
 // ─────────────────────────────────────────────────────────────
 function ModalInviter({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   const { pop } = useToast();
   const [etape,    setEtape]    = useState<1 | 2 | 3>(1);
   const [nom,      setNom]      = useState('');
@@ -201,18 +205,16 @@ function ModalInviter({ onClose }: { onClose: () => void }) {
   const [ville,    setVille]    = useState('');
   const [quartier, setQuartier] = useState('');
   const [type,     setType]     = useState<CorrespondantType>('relais');
-  const [message,  setMessage]  = useState(
-    'Bonjour,\n\nVous avez été sélectionné pour rejoindre le réseau de correspondants Shopi.\n\nVeuillez utiliser le code ci-joint pour créer votre compte.'
-  );
+  const [message,  setMessage]  = useState(() => t('correspondants.modalInviter.defaultMessage'));
   const [loading,  setLoading]  = useState(false);
 
   // ✅ Le code vient maintenant de la réponse API (pas genererCode())
   const [invitationResult, setInvitationResult] = useState<InvitationResponse | null>(null);
 
   function validerEtape1() {
-    if (!nom.trim())   { pop('⚠️ Le nom est requis', 'w');   return; }
-    if (!email.trim()) { pop('⚠️ L\'email est requis', 'w'); return; }
-    if (!email.includes('@') || !email.includes('.')) { pop('⚠️ Email invalide', 'w'); return; }
+    if (!nom.trim())   { pop(t('correspondants.modalInviter.nomRequis'), 'w');   return; }
+    if (!email.trim()) { pop(t('correspondants.modalInviter.emailRequis'), 'w'); return; }
+    if (!email.includes('@') || !email.includes('.')) { pop(t('correspondants.modalInviter.emailInvalide'), 'w'); return; }
     setEtape(2);
   }
 
@@ -230,7 +232,7 @@ function ModalInviter({ onClose }: { onClose: () => void }) {
       });
       setInvitationResult(result);
       setEtape(3);
-      pop(`✅ Invitation envoyée à ${email}`, 's');
+      pop(t('correspondants.modalInviter.invitationEnvoyee', { email }), 's');
     } catch (err: any) {
       pop(`❌ ${err.message}`, 'e');
     } finally {
@@ -248,9 +250,9 @@ function ModalInviter({ onClose }: { onClose: () => void }) {
       <div className={`${styles.modal} ${styles.modalMd}`} onClick={e => e.stopPropagation()}>
         <div className={styles.mHeader}>
           <div>
-            <div className={styles.mTitle}><i className="fas fa-user-plus" /> Inviter un correspondant</div>
+            <div className={styles.mTitle}><i className="fas fa-user-plus" /> {t('correspondants.modalInviter.title')}</div>
             <div className={styles.etapes}>
-              {['Informations', 'Aperçu', 'Confirmé'].map((e, i) => (
+              {[t('correspondants.modalInviter.etapeInformations'), t('correspondants.modalInviter.etapeApercu'), t('correspondants.modalInviter.etapeConfirme')].map((e, i) => (
                 <React.Fragment key={i}>
                   <div className={`${styles.etape} ${etape === i+1 ? styles.etapeActive : etape > i+1 ? styles.etapeDone : ''}`}>
                     <span className={styles.etapeNum}>
@@ -272,35 +274,35 @@ function ModalInviter({ onClose }: { onClose: () => void }) {
             <div className={styles.formCols}>
               <div className={styles.formCol}>
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-store" /> Nom du point relais *</label>
-                  <input className={styles.formInput} placeholder="Ex: RelaisPlus Kaloum" value={nom} onChange={e => setNom(e.target.value)} />
+                  <label className={styles.formLabel}><i className="fas fa-store" /> {t('correspondants.modalInviter.nomPointRelais')}</label>
+                  <input className={styles.formInput} placeholder={t('correspondants.modalInviter.nomPlaceholder')} value={nom} onChange={e => setNom(e.target.value)} />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-envelope" /> Email de contact *</label>
-                  <input type="email" className={styles.formInput} placeholder="Ex: relais@gmail.com" value={email} onChange={e => setEmail(e.target.value)} />
-                  <p className={styles.formHint}><i className="fas fa-circle-info" /> Le code d'invitation sera envoyé à cet email.</p>
+                  <label className={styles.formLabel}><i className="fas fa-envelope" /> {t('correspondants.modalInviter.emailContact')}</label>
+                  <input type="email" className={styles.formInput} placeholder={t('correspondants.modalInviter.emailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} />
+                  <p className={styles.formHint}><i className="fas fa-circle-info" /> {t('correspondants.modalInviter.codeEmailHint')}</p>
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-tag" /> Type de correspondant</label>
+                  <label className={styles.formLabel}><i className="fas fa-tag" /> {t('correspondants.modalInviter.typeCorrespondant')}</label>
                   <select className={styles.formSelect} value={type} onChange={e => setType(e.target.value as CorrespondantType)}>
-                    <option value="relais">📍 Point relais — Dépôt/retrait colis</option>
-                    <option value="entrepot">🏭 Entrepôt — Stockage régional</option>
-                    <option value="export">✈️ Export — International</option>
-                    <option value="principal">⭐ Principal — Hub central</option>
+                    <option value="relais">{t('correspondants.modalInviter.optRelais')}</option>
+                    <option value="entrepot">{t('correspondants.modalInviter.optEntrepot')}</option>
+                    <option value="export">{t('correspondants.modalInviter.optExport')}</option>
+                    <option value="principal">{t('correspondants.modalInviter.optPrincipal')}</option>
                   </select>
                 </div>
               </div>
               <div className={styles.formCol}>
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-city" /> Ville</label>
-                  <input className={styles.formInput} placeholder="Ex: Conakry" value={ville} onChange={e => setVille(e.target.value)} />
+                  <label className={styles.formLabel}><i className="fas fa-city" /> {t('correspondants.modalInviter.ville')}</label>
+                  <input className={styles.formInput} placeholder={t('correspondants.modalInviter.villePlaceholder')} value={ville} onChange={e => setVille(e.target.value)} />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-map-pin" /> Quartier / Zone</label>
-                  <input className={styles.formInput} placeholder="Ex: Kaloum, Matam…" value={quartier} onChange={e => setQuartier(e.target.value)} />
+                  <label className={styles.formLabel}><i className="fas fa-map-pin" /> {t('correspondants.modalInviter.quartierZone')}</label>
+                  <input className={styles.formInput} placeholder={t('correspondants.modalInviter.quartierPlaceholder')} value={quartier} onChange={e => setQuartier(e.target.value)} />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-message" /> Message personnalisé</label>
+                  <label className={styles.formLabel}><i className="fas fa-message" /> {t('correspondants.modalInviter.messagePersonnalise')}</label>
                   <textarea className={styles.formTextarea} rows={5} value={message} onChange={e => setMessage(e.target.value)} />
                 </div>
               </div>
@@ -310,34 +312,34 @@ function ModalInviter({ onClose }: { onClose: () => void }) {
           {/* ÉTAPE 2 — preview (code masqué car généré par le backend à l'envoi) */}
           {etape === 2 && (
             <div className={styles.apercu}>
-              <div className={styles.apercuLabel}><i className="fas fa-eye" /> Aperçu de l'email qui sera envoyé</div>
+              <div className={styles.apercuLabel}><i className="fas fa-eye" /> {t('correspondants.modalInviter.apercuTitle')}</div>
               <div className={styles.emailPreview}>
                 <div className={styles.emailHeader}>
                   <div className={styles.emailLogo}>S</div>
                   <div>
-                    <div className={styles.emailSujet}>Invitation Shopi — Rejoignez notre réseau</div>
-                    <div className={styles.emailDest}>À : <strong>{email}</strong></div>
+                    <div className={styles.emailSujet}>{t('correspondants.modalInviter.emailSujetFixe')}</div>
+                    <div className={styles.emailDest}>{t('correspondants.modalInviter.emailDestA')} <strong>{email}</strong></div>
                   </div>
                 </div>
                 <div className={styles.emailBody}>
-                  <p>Bonjour <strong>{nom}</strong>,</p>
+                  <p>{t('correspondants.modalInviter.bonjour')} <strong>{nom}</strong>,</p>
                   <p style={{ whiteSpace: 'pre-line', fontSize: 13, color: 'var(--t2)', lineHeight: 1.6 }}>{message}</p>
                   <div className={styles.emailCode}>
-                    <div className={styles.emailCodeLabel}>Votre code d'invitation (10 chiffres)</div>
+                    <div className={styles.emailCodeLabel}>{t('correspondants.modalInviter.codeInvitationLabel')}</div>
                     {/* ✅ Code généré par le backend — affiché seulement à l'étape 3 */}
                     <div className={styles.emailCodeValue} style={{ letterSpacing: '0.3em', color: 'var(--t3)' }}>{previewCode}</div>
-                    <div className={styles.emailCodeNote}>Valable 7 jours · Usage unique · Généré à l'envoi</div>
+                    <div className={styles.emailCodeNote}>{t('correspondants.modalInviter.codeInvitationNote')}</div>
                   </div>
                   <div className={styles.emailInfo}>
-                    {ville && <div><i className="fas fa-city" /> Ville : <strong>{ville}</strong></div>}
-                    {quartier && <div><i className="fas fa-map-pin" /> Zone : <strong>{quartier}</strong></div>}
-                    <div><i className="fas fa-tag" /> Type : <strong>{typeLabel(type)}</strong></div>
+                    {ville && <div><i className="fas fa-city" /> {t('correspondants.modalInviter.villeLabelInline')} <strong>{ville}</strong></div>}
+                    {quartier && <div><i className="fas fa-map-pin" /> {t('correspondants.modalInviter.zoneLabelInline')} <strong>{quartier}</strong></div>}
+                    <div><i className="fas fa-tag" /> {t('correspondants.modalInviter.typeLabelInline')} <strong>{typeLabel(type, t)}</strong></div>
                   </div>
                 </div>
               </div>
               <div className={styles.infoBox}>
                 <i className="fas fa-circle-info" />
-                <span>Ce code expire dans <strong>7 jours</strong>. Il peut être utilisé une seule fois. L'email sera envoyé depuis <strong>noreply@shopi.gn</strong>.</span>
+                <span>{t('correspondants.modalInviter.infoBoxExpire')}</span>
               </div>
             </div>
           )}
@@ -346,25 +348,25 @@ function ModalInviter({ onClose }: { onClose: () => void }) {
           {etape === 3 && invitationResult && (
             <div className={styles.success}>
               <div className={styles.successIcon}>✅</div>
-              <div className={styles.successTitle}>Invitation envoyée !</div>
-              <div className={styles.successSub}>Code envoyé à <strong>{invitationResult.email}</strong></div>
+              <div className={styles.successTitle}>{t('correspondants.modalInviter.invitationEnvoyeeTitle')}</div>
+              <div className={styles.successSub}>{t('correspondants.modalInviter.codeEnvoyeA', { email: invitationResult.email })}</div>
               <div className={styles.successRecap}>
-                <div className={styles.recapRow}><span>Nom</span><strong>{invitationResult.fullName}</strong></div>
-                <div className={styles.recapRow}><span>Email</span><strong>{invitationResult.email}</strong></div>
-                {ville && <div className={styles.recapRow}><span>Ville</span><strong>{ville}</strong></div>}
-                <div className={styles.recapRow}><span>Type</span><strong>{typeLabel(type)}</strong></div>
+                <div className={styles.recapRow}><span>{t('correspondants.modalInviter.recapNom')}</span><strong>{invitationResult.fullName}</strong></div>
+                <div className={styles.recapRow}><span>{t('correspondants.modalInviter.recapEmail')}</span><strong>{invitationResult.email}</strong></div>
+                {ville && <div className={styles.recapRow}><span>{t('correspondants.modalInviter.recapVille')}</span><strong>{ville}</strong></div>}
+                <div className={styles.recapRow}><span>{t('correspondants.modalInviter.recapType')}</span><strong>{typeLabel(type, t)}</strong></div>
               </div>
               {/* ✅ Code réel venant du backend */}
               <div className={styles.codeBox}>
-                <div className={styles.codeBoxLabel}>Code d'invitation généré</div>
+                <div className={styles.codeBoxLabel}>{t('correspondants.modalInviter.codeGenereLabel')}</div>
                 <div className={styles.codeRow}>
                   <span className={styles.codeVal}>{realCode}</span>
-                  <button className={styles.copyBtn} onClick={() => { navigator.clipboard.writeText(realCode); pop('📋 Code copié !', 's'); }}>
-                    <i className="fas fa-copy" /> Copier
+                  <button className={styles.copyBtn} onClick={() => { navigator.clipboard.writeText(realCode); pop(t('correspondants.modalInviter.codeCopieToast'), 's'); }}>
+                    <i className="fas fa-copy" /> {t('correspondants.modalInviter.copier')}
                   </button>
                 </div>
                 <div className={styles.codeExpiry}>
-                  <i className="fas fa-clock" /> Expire le {new Date(invitationResult.expiresAt).toLocaleDateString('fr-FR')} · Usage unique
+                  <i className="fas fa-clock" /> {t('correspondants.modalInviter.expireLe', { date: new Date(invitationResult.expiresAt).toLocaleDateString('fr-FR') })}
                 </div>
               </div>
             </div>
@@ -374,19 +376,19 @@ function ModalInviter({ onClose }: { onClose: () => void }) {
         <div className={styles.mFooter}>
           {etape === 1 && (
             <>
-              <button className={styles.btnSecondary} onClick={onClose}>Annuler</button>
-              <button className={styles.btnPrimary} onClick={validerEtape1}>Suivant <i className="fas fa-arrow-right" /></button>
+              <button className={styles.btnSecondary} onClick={onClose}>{t('correspondants.modalInviter.annuler')}</button>
+              <button className={styles.btnPrimary} onClick={validerEtape1}>{t('correspondants.modalInviter.suivant')} <i className="fas fa-arrow-right" /></button>
             </>
           )}
           {etape === 2 && (
             <>
-              <button className={styles.btnSecondary} onClick={() => setEtape(1)} disabled={loading}><i className="fas fa-arrow-left" /> Retour</button>
+              <button className={styles.btnSecondary} onClick={() => setEtape(1)} disabled={loading}><i className="fas fa-arrow-left" /> {t('correspondants.modalInviter.retour')}</button>
               <button className={styles.btnPrimary} onClick={handleEnvoyer} disabled={loading}>
-                {loading ? <><i className="fas fa-spinner fa-spin" /> Envoi…</> : <><i className="fas fa-paper-plane" /> Envoyer l'invitation</>}
+                {loading ? <><i className="fas fa-spinner fa-spin" /> {t('correspondants.modalInviter.envoiEnCours')}</> : <><i className="fas fa-paper-plane" /> {t('correspondants.modalInviter.envoyerInvitation')}</>}
               </button>
             </>
           )}
-          {etape === 3 && <button className={styles.btnSecondary} onClick={onClose}>Fermer</button>}
+          {etape === 3 && <button className={styles.btnSecondary} onClick={onClose}>{t('correspondants.modalInviter.fermer')}</button>}
         </div>
       </div>
     </div>
@@ -404,6 +406,7 @@ function ModalContacter({ c, onClose }: {
   c:       CorrespondantResponse;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const { pop } = useToast();
   const [sujet,   setSujet]   = useState('');
   const [message, setMessage] = useState('');
@@ -412,13 +415,13 @@ function ModalContacter({ c, onClose }: {
   // ✅ CONNECTÉ : appelle POST /correspondants/:id/contacter
   async function handleEnvoyer() {
     if (!sujet.trim() || !message.trim()) {
-      pop('⚠️ Sujet et message requis', 'w');
+      pop(t('correspondants.modalContacter.sujetMessageRequis'), 'w');
       return;
     }
     setLoading(true);
     try {
       await correspondantsApi.contacter(c.id, { sujet: sujet.trim(), message: message.trim() });
-      pop(`✅ Message envoyé à ${c.fullName}`, 's');
+      pop(t('correspondants.modalContacter.messageEnvoye', { name: c.fullName }), 's');
       onClose();
     } catch (err: any) {
       pop(`❌ ${err.message}`, 'e');
@@ -432,29 +435,29 @@ function ModalContacter({ c, onClose }: {
       <div className={`${styles.modal} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
         <div className={styles.mHeader}>
           <div>
-            <div className={styles.mTitle}><i className="fas fa-envelope" /> Contacter</div>
-            <div className={styles.mSub}>Envoyer un message à <strong>{c.fullName}</strong> ({c.email})</div>
+            <div className={styles.mTitle}><i className="fas fa-envelope" /> {t('correspondants.modalContacter.title')}</div>
+            <div className={styles.mSub}>{t('correspondants.modalContacter.sub', { name: c.fullName, email: c.email })}</div>
           </div>
           <button className={styles.closeBtn} onClick={onClose}><i className="fas fa-xmark" /></button>
         </div>
         <div className={styles.mBody}>
           <div className={styles.formGroup}>
-            <label className={styles.formLabel}><i className="fas fa-heading" /> Sujet *</label>
-            <input className={styles.formInput} placeholder="Ex: Mise à jour stock disponible" value={sujet} onChange={e => setSujet(e.target.value)} />
+            <label className={styles.formLabel}><i className="fas fa-heading" /> {t('correspondants.modalContacter.sujetLabel')}</label>
+            <input className={styles.formInput} placeholder={t('correspondants.modalContacter.sujetPlaceholder')} value={sujet} onChange={e => setSujet(e.target.value)} />
           </div>
           <div className={styles.formGroup}>
-            <label className={styles.formLabel}><i className="fas fa-message" /> Message *</label>
-            <textarea className={styles.formTextarea} rows={5} placeholder="Rédigez votre message…" value={message} onChange={e => setMessage(e.target.value)} />
+            <label className={styles.formLabel}><i className="fas fa-message" /> {t('correspondants.modalContacter.messageLabel')}</label>
+            <textarea className={styles.formTextarea} rows={5} placeholder={t('correspondants.modalContacter.messagePlaceholder')} value={message} onChange={e => setMessage(e.target.value)} />
           </div>
           <div className={styles.infoBox}>
             <i className="fas fa-circle-info" />
-            <span>Le message sera envoyé à <strong>{c.email}</strong> depuis <strong>noreply@shopi.gn</strong>.</span>
+            <span>{t('correspondants.modalContacter.infoBox', { email: c.email })}</span>
           </div>
         </div>
         <div className={styles.mFooter}>
-          <button className={styles.btnSecondary} onClick={onClose} disabled={loading}>Annuler</button>
+          <button className={styles.btnSecondary} onClick={onClose} disabled={loading}>{t('correspondants.modalContacter.annuler')}</button>
           <button className={styles.btnPrimary} onClick={handleEnvoyer} disabled={loading}>
-            {loading ? <><i className="fas fa-spinner fa-spin" /> Envoi…</> : <><i className="fas fa-paper-plane" /> Envoyer</>}
+            {loading ? <><i className="fas fa-spinner fa-spin" /> {t('correspondants.modalContacter.envoiEnCours')}</> : <><i className="fas fa-paper-plane" /> {t('correspondants.modalContacter.envoyer')}</>}
           </button>
         </div>
       </div>
@@ -471,26 +474,27 @@ function ModalSuspendre({ c, onClose, onConfirm, loading }: {
   onConfirm: () => void;
   loading:   boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={`${styles.modal} ${styles.modalXs}`} onClick={e => e.stopPropagation()}>
         <div className={styles.mHeader}>
           <div className={`${styles.mTitle} ${styles.dangerTitle}`}>
-            <i className="fas fa-triangle-exclamation" /> Suspendre le correspondant
+            <i className="fas fa-triangle-exclamation" /> {t('correspondants.modalSuspendre.title')}
           </div>
           <button className={styles.closeBtn} onClick={onClose}><i className="fas fa-xmark" /></button>
         </div>
         <div className={styles.mBody}>
           <div className={styles.suspendBox}>
             <div className={styles.suspendIco}>⚠️</div>
-            <p>Suspendre <strong>{c.fullName}</strong> ?</p>
-            <p className={styles.suspendNote}>Ce point relais ne pourra plus recevoir ni expédier de colis jusqu'à la levée de la suspension.</p>
+            <p>{t('correspondants.modalSuspendre.confirmText', { name: c.fullName })}</p>
+            <p className={styles.suspendNote}>{t('correspondants.modalSuspendre.note')}</p>
           </div>
         </div>
         <div className={styles.mFooter}>
-          <button className={styles.btnSecondary} onClick={onClose} disabled={loading}>Annuler</button>
+          <button className={styles.btnSecondary} onClick={onClose} disabled={loading}>{t('correspondants.modalSuspendre.annuler')}</button>
           <button className={styles.btnDanger} onClick={onConfirm} disabled={loading}>
-            {loading ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-ban" />} Confirmer
+            {loading ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-ban" />} {t('correspondants.modalSuspendre.confirmer')}
           </button>
         </div>
       </div>
@@ -502,6 +506,7 @@ function ModalSuspendre({ c, onClose, onConfirm, loading }: {
 // COMPOSANT PRINCIPAL — 100% connecté au backend
 // ─────────────────────────────────────────────────────────────
 export default function CorrespondantsPage() {
+  const { t } = useTranslation();
   const { pop } = useToast();
 
   // ── État données — tout vient de l'API ─────────────────────
@@ -555,11 +560,11 @@ export default function CorrespondantsPage() {
       setActivite(activiteData);
       setCorrespondants(listData.data);
     } catch (err: any) {
-      pop(`❌ Erreur de chargement : ${err.message}`, 'e');
+      pop(t('correspondants.toasts.loadError', { message: err.message }), 'e');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pop, t]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -573,7 +578,7 @@ export default function CorrespondantsPage() {
     setSuspendLoading(true);
     try {
       await correspondantsApi.suspendre(c.id);
-      pop(`🚫 ${c.fullName} suspendu`, 'w');
+      pop(t('correspondants.toasts.suspendu', { name: c.fullName }), 'w');
       setModalSuspend(null);
       loadData(); // Recharge la liste depuis l'API
     } catch (err: any) {
@@ -586,10 +591,10 @@ export default function CorrespondantsPage() {
   // ── Valider tous les "en attente" (action rapide) ───────────
   async function handleValiderTous() {
     const enAttente = correspondants.filter(c => c.status === 'pending');
-    if (enAttente.length === 0) { pop('Aucun compte en attente', 'w'); return; }
+    if (enAttente.length === 0) { pop(t('correspondants.quickActions.aucunEnAttente'), 'w'); return; }
     try {
       await Promise.all(enAttente.map(c => correspondantsApi.valider(c.id)));
-      pop(`✅ ${enAttente.length} comptes validés`, 's');
+      pop(t('correspondants.quickActions.validesToast', { count: enAttente.length }), 's');
       loadData();
     } catch (err: any) {
       pop(`❌ ${err.message}`, 'e');
@@ -610,11 +615,11 @@ export default function CorrespondantsPage() {
       {/* HEADER */}
       <div className={styles.header}>
         <div>
-          <h1 className={styles.titre}>Réseau Correspondants</h1>
-          <p className={styles.sousTitre}>Gérez vos points relais, entrepôts et partenaires export</p>
+          <h1 className={styles.titre}>{t('correspondants.header.title')}</h1>
+          <p className={styles.sousTitre}>{t('correspondants.header.subtitle')}</p>
         </div>
         <button className={styles.btnAjouter} onClick={() => setModalInviter(true)}>
-          <i className="fas fa-user-plus" /> Inviter un correspondant
+          <i className="fas fa-user-plus" /> {t('correspondants.header.inviter')}
         </button>
       </div>
 
@@ -624,24 +629,24 @@ export default function CorrespondantsPage() {
           <div className={styles.statIcon}><i className="fas fa-network-wired" /></div>
           <div>
             <div className={styles.statVal}>{loading ? '…' : statsDisplay.actifs}</div>
-            <div className={styles.statLabel}>Correspondants actifs</div>
-            <div className={styles.statSub}>{statsDisplay.total} au total</div>
+            <div className={styles.statLabel}>{t('correspondants.stats.actifs')}</div>
+            <div className={styles.statSub}>{t('correspondants.stats.auTotal', { count: statsDisplay.total })}</div>
           </div>
         </div>
         <div className={`${styles.statCard} ${styles.statGreen}`}>
           <div className={styles.statIcon}><i className="fas fa-box" /></div>
           <div>
             <div className={styles.statVal}>{loading ? '…' : statsDisplay.thisMonth}</div>
-            <div className={styles.statLabel}>Commandes ce mois</div>
-            <div className={styles.statSub}>Traitées par le réseau</div>
+            <div className={styles.statLabel}>{t('correspondants.stats.commandesCeMois')}</div>
+            <div className={styles.statSub}>{t('correspondants.stats.traiteesParReseau')}</div>
           </div>
         </div>
         <div className={`${styles.statCard} ${styles.statAmber}`}>
           <div className={styles.statIcon}><i className="fas fa-city" /></div>
           <div>
             <div className={styles.statVal}>{loading ? '…' : statsDisplay.villes}</div>
-            <div className={styles.statLabel}>Villes couvertes</div>
-            <div className={styles.statSub}>+ International</div>
+            <div className={styles.statLabel}>{t('correspondants.stats.villesCouvertes')}</div>
+            <div className={styles.statSub}>{t('correspondants.stats.plusInternational')}</div>
           </div>
         </div>
         <div className={`${styles.statCard} ${styles.statViolet}`}>
@@ -649,8 +654,8 @@ export default function CorrespondantsPage() {
           <div className={styles.statIcon}><i className="fas fa-clock" /></div>
           <div>
             <div className={styles.statVal}>{loading ? '…' : statsDisplay.enAttente}</div>
-            <div className={styles.statLabel}>En attente</div>
-            <div className={styles.statSub}>Validation requise</div>
+            <div className={styles.statLabel}>{t('correspondants.stats.enAttente')}</div>
+            <div className={styles.statSub}>{t('correspondants.stats.validationRequise')}</div>
           </div>
         </div>
       </div>
@@ -666,20 +671,20 @@ export default function CorrespondantsPage() {
                 <button key={f}
                   className={`${styles.filtreBtn} ${filtreType === f ? styles.filtreBtnActive : ''}`}
                   onClick={() => setFiltreType(f)}>
-                  {{ tous:'Tous', principal:'⭐ Principal', relais:'📍 Relais', entrepot:'🏭 Entrepôt', export:'✈️ Export' }[f]}
+                  {f === 'tous' ? t('correspondants.filters.tous') : typeLabel(f as CorrespondantType, t)}
                 </button>
               ))}
             </div>
             <div className={styles.toolbarRight}>
               <select className={styles.filtreSelect} value={filtreStatut} onChange={e => setFiltreStatut(e.target.value as any)}>
-                <option value="tous">Tous les statuts</option>
-                <option value="active">Actifs</option>
-                <option value="pending">En attente</option>
-                <option value="suspended">Suspendus</option>
+                <option value="tous">{t('correspondants.statutSelect.tousStatuts')}</option>
+                <option value="active">{t('correspondants.statutSelect.actifs')}</option>
+                <option value="pending">{t('correspondants.statutSelect.enAttente')}</option>
+                <option value="suspended">{t('correspondants.statutSelect.suspendus')}</option>
               </select>
               <div className={styles.searchWrap}>
                 <i className="fas fa-magnifying-glass" />
-                <input className={styles.searchInput} placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)} />
+                <input className={styles.searchInput} placeholder={t('correspondants.search')} value={search} onChange={e => setSearch(e.target.value)} />
                 {search && <button className={styles.clearBtn} onClick={() => setSearch('')}><i className="fas fa-xmark" /></button>}
               </div>
               <div className={styles.vueBtns}>
@@ -691,8 +696,8 @@ export default function CorrespondantsPage() {
 
           {filtres.length > 0 && (
             <div className={styles.compteur}>
-              {filtres.length} correspondant{filtres.length > 1 ? 's' : ''}
-              {filtreType !== 'tous' && ` · type : ${filtreType}`}
+              {t('correspondants.compteur', { count: filtres.length })}
+              {filtreType !== 'tous' && t('correspondants.compteurType', { type: filtreType })}
             </div>
           )}
 
@@ -700,14 +705,14 @@ export default function CorrespondantsPage() {
           {loading ? (
             <div style={{ textAlign:'center', padding:'48px 0', color:'var(--t3)' }}>
               <i className="fas fa-spinner fa-spin" style={{ fontSize:28, display:'block', marginBottom:12 }} />
-              Chargement des correspondants…
+              {t('correspondants.loading')}
             </div>
           ) : filtres.length === 0 ? (
             <div className={styles.vide}>
               <span className={styles.videIco}>🗺️</span>
-              <strong>Aucun correspondant trouvé</strong>
-              <span>Modifiez vos filtres ou invitez un nouveau correspondant.</span>
-              <button className={styles.btnAjouter} onClick={() => setModalInviter(true)}><i className="fas fa-user-plus" /> Inviter</button>
+              <strong>{t('correspondants.empty.title')}</strong>
+              <span>{t('correspondants.empty.sub')}</span>
+              <button className={styles.btnAjouter} onClick={() => setModalInviter(true)}><i className="fas fa-user-plus" /> {t('correspondants.empty.inviter')}</button>
             </div>
           ) : vue === 'grille' ? (
             <div className={styles.grille}>
@@ -716,9 +721,9 @@ export default function CorrespondantsPage() {
                   <div className={styles.cardHead}>
                     <div className={styles.cardAvatar}>{c.avatarEmoji}</div>
                     <div className={styles.cardBadges}>
-                      <span className={`${styles.typeBadge} ${typeCls(c.type, styles)}`}>{typeLabel(c.type)}</span>
+                      <span className={`${styles.typeBadge} ${typeCls(c.type, styles)}`}>{typeLabel(c.type, t)}</span>
                       {c.status !== 'active' && (
-                        <span className={`${styles.statutBadge} ${statutCls(c.status, styles)}`}>{statutLabel(c.status)}</span>
+                        <span className={`${styles.statutBadge} ${statutCls(c.status, styles)}`}>{statutLabel(c.status, t)}</span>
                       )}
                     </div>
                   </div>
@@ -728,12 +733,12 @@ export default function CorrespondantsPage() {
                     <div className={styles.cardZone}><i className="fas fa-map" /> {c.zone}</div>
                   </div>
                   <div className={styles.cardStats}>
-                    <div className={styles.cardStat}><strong>{c.thisMonth}</strong><span>ce mois</span></div>
-                    <div className={styles.cardStat}><strong>{c.totalMissions}</strong><span>total</span></div>
+                    <div className={styles.cardStat}><strong>{c.thisMonth}</strong><span>{t('correspondants.card.ceMois')}</span></div>
+                    <div className={styles.cardStat}><strong>{c.totalMissions}</strong><span>{t('correspondants.card.total')}</span></div>
                     <div className={styles.cardStat}>
                       <i className="fas fa-star" style={{ color:'var(--t2)', fontSize:11 }} />
-                      <strong>{c.averageRating === 0 ? 'N/A' : c.averageRating.toFixed(1)}</strong>
-                      <span>note</span>
+                      <strong>{c.averageRating === 0 ? t('correspondants.na') : c.averageRating.toFixed(1)}</strong>
+                      <span>{t('correspondants.card.note')}</span>
                     </div>
                   </div>
                   <div className={styles.cardActivity}>
@@ -742,9 +747,9 @@ export default function CorrespondantsPage() {
                     <span className={styles.actTime}>{c.lastActivityAt}</span>
                   </div>
                   <div className={styles.cardActions}>
-                    <button className={styles.cardBtnPrimary} onClick={() => setModalProfil(c)}><i className="fas fa-eye" /> Voir</button>
-                    <button className={styles.cardBtnIcon} onClick={() => setModalContact(c)} title="Contacter"><i className="fas fa-envelope" /></button>
-                    <a href={`tel:${c.phone}`} className={styles.cardBtnIcon} title="Appeler"><i className="fas fa-phone" /></a>
+                    <button className={styles.cardBtnPrimary} onClick={() => setModalProfil(c)}><i className="fas fa-eye" /> {t('correspondants.card.voir')}</button>
+                    <button className={styles.cardBtnIcon} onClick={() => setModalContact(c)} title={t('correspondants.card.contacter')}><i className="fas fa-envelope" /></button>
+                    <a href={`tel:${c.phone}`} className={styles.cardBtnIcon} title={t('correspondants.card.appeler')}><i className="fas fa-phone" /></a>
                   </div>
                 </div>
               ))}
@@ -754,7 +759,7 @@ export default function CorrespondantsPage() {
               <table className={styles.liste}>
                 <thead>
                   <tr>
-                    {['Correspondant','Ville','Type','Ce mois','Total','Note','Statut','Actions'].map(h => (
+                    {[t('correspondants.table.correspondant'),t('correspondants.table.ville'),t('correspondants.table.type'),t('correspondants.table.ceMois'),t('correspondants.table.total'),t('correspondants.table.note'),t('correspondants.table.statut'),t('correspondants.table.actions')].map(h => (
                       <th key={h} className={styles.th}>{h}</th>
                     ))}
                   </tr>
@@ -769,15 +774,15 @@ export default function CorrespondantsPage() {
                         </div>
                       </td>
                       <td className={styles.td}><div className={styles.listVille}><i className="fas fa-map-pin" /> {c.ville}</div></td>
-                      <td className={styles.td}><span className={`${styles.typeBadge} ${typeCls(c.type, styles)}`}>{typeLabel(c.type)}</span></td>
+                      <td className={styles.td}><span className={`${styles.typeBadge} ${typeCls(c.type, styles)}`}>{typeLabel(c.type, t)}</span></td>
                       <td className={styles.td}><strong style={{ color:'var(--navy)', fontFamily:'var(--fd)' }}>{c.thisMonth}</strong></td>
                       <td className={styles.td}><strong style={{ color:'var(--navy)' }}>{c.totalMissions}</strong></td>
-                      <td className={styles.td}><div className={styles.listRating}><i className="fas fa-star" style={{ color:'var(--t2)', fontSize:11 }} /><strong>{c.averageRating === 0 ? 'N/A' : c.averageRating.toFixed(1)}</strong></div></td>
-                      <td className={styles.td}><span className={`${styles.statutBadge} ${statutCls(c.status, styles)}`}>{statutLabel(c.status)}</span></td>
+                      <td className={styles.td}><div className={styles.listRating}><i className="fas fa-star" style={{ color:'var(--t2)', fontSize:11 }} /><strong>{c.averageRating === 0 ? t('correspondants.na') : c.averageRating.toFixed(1)}</strong></div></td>
+                      <td className={styles.td}><span className={`${styles.statutBadge} ${statutCls(c.status, styles)}`}>{statutLabel(c.status, t)}</span></td>
                       <td className={styles.td}>
                         <div className={styles.listActions}>
-                          <button className={styles.listeBtn} onClick={() => setModalProfil(c)} title="Voir"><i className="fas fa-eye" /></button>
-                          <button className={styles.listeBtn} onClick={() => setModalContact(c)} title="Contacter"><i className="fas fa-envelope" /></button>
+                          <button className={styles.listeBtn} onClick={() => setModalProfil(c)} title={t('correspondants.card.voir')}><i className="fas fa-eye" /></button>
+                          <button className={styles.listeBtn} onClick={() => setModalContact(c)} title={t('correspondants.card.contacter')}><i className="fas fa-envelope" /></button>
                         </div>
                       </td>
                     </tr>
@@ -793,9 +798,9 @@ export default function CorrespondantsPage() {
 
           {/* Zones — depuis GET /correspondants/zones */}
           <div className={styles.sideCard}>
-            <div className={styles.sideCardHeader}><div className={styles.sideCardTitle}><i className="fas fa-map" /> Couverture par zone</div></div>
+            <div className={styles.sideCardHeader}><div className={styles.sideCardTitle}><i className="fas fa-map" /> {t('correspondants.sidePanel.couvertureZone')}</div></div>
             <div className={styles.sideCardBody}>
-              {zones.length === 0 && !loading && <div style={{ color:'var(--t3)', fontSize:13 }}>Aucune donnée de zone</div>}
+              {zones.length === 0 && !loading && <div style={{ color:'var(--t3)', fontSize:13 }}>{t('correspondants.sidePanel.aucuneZone')}</div>}
               {zones.map((z, i) => (
                 <div key={i} className={styles.zoneRow}>
                   <div className={styles.zoneTop}>
@@ -813,7 +818,7 @@ export default function CorrespondantsPage() {
 
           {/* Activités récentes — depuis GET /correspondants/activite-recente */}
           <div className={styles.sideCard}>
-            <div className={styles.sideCardHeader}><div className={styles.sideCardTitle}><i className="fas fa-clock-rotate-left" /> Activité récente</div></div>
+            <div className={styles.sideCardHeader}><div className={styles.sideCardTitle}><i className="fas fa-clock-rotate-left" /> {t('correspondants.sidePanel.activiteRecente')}</div></div>
             <div className={styles.sideCardBody}>
               {activite.map((c, i) => (
                 <div key={i} className={`${styles.actItem} ${i < 4 ? styles.actItemBorder : ''}`}>
@@ -831,14 +836,14 @@ export default function CorrespondantsPage() {
 
           {/* Actions rapides */}
           <div className={styles.sideCard}>
-            <div className={styles.sideCardHeader}><div className={styles.sideCardTitle}><i className="fas fa-bolt" /> Actions rapides</div></div>
+            <div className={styles.sideCardHeader}><div className={styles.sideCardTitle}><i className="fas fa-bolt" /> {t('correspondants.sidePanel.actionsRapides')}</div></div>
             <div className={styles.sideCardBody}>
               {[
-                { ico:'📧', l:'Envoyer circular à tous',   action: () => pop('📧 Envoi en masse…', 's')     },
-                { ico:'📊', l:'Rapport réseau mensuel',    action: () => pop('📊 Rapport en génération…', 's') },
-                { ico:'🗺️', l:'Voir carte des relais',     action: () => pop('🗺️ Carte des relais ouverte', 's') },
+                { ico:'📧', l:t('correspondants.quickActions.envoyerCirculaire'),   action: () => pop(t('correspondants.quickActions.envoiToast'), 's')     },
+                { ico:'📊', l:t('correspondants.quickActions.rapportReseau'),    action: () => pop(t('correspondants.quickActions.rapportToast'), 's') },
+                { ico:'🗺️', l:t('correspondants.quickActions.voirCarte'),     action: () => pop(t('correspondants.quickActions.carteToast'), 's') },
                 // ✅ CONNECTÉ : appelle correspondantsApi.valider() pour tous les pending
-                { ico:'✅', l:`Valider les en attente (${statsDisplay.enAttente})`, action: handleValiderTous },
+                { ico:'✅', l:t('correspondants.quickActions.validerEnAttente', { count: statsDisplay.enAttente }), action: handleValiderTous },
               ].map((a, i) => (
                 <button key={i} className={styles.quickAction} onClick={a.action}>
                   <span className={styles.quickIco}>{a.ico}</span>

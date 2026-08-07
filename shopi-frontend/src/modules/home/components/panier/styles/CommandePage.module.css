@@ -12,6 +12,7 @@
   --cart-bdr2:   #CBD5E1;
   --cart-t2:     #475569;
   --cart-t3:     #94A3B8;
+  --cart-head-bg:#FAFBFC;
   --cart-sh:     0 1px 3px rgba(11,31,58,.08), 0 4px 16px rgba(11,31,58,.06);
   --cart-sh-lg:  0 4px 24px rgba(11,31,58,.12);
   --cart-r:      14px;
@@ -72,29 +73,33 @@
   overflow: hidden;
 }
 
-/* ── En-tête section card ────────────────────────────── */
+/* ── En-tête section card ── aligné visuellement sur .scHd/.scNum
+   des autres étapes (Adresse/Livraison/Paiement/Récapitulatif) :
+   même taille de badge (28px), même fond légèrement teinté. ────── */
 .cardHead {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 20px 24px 18px;
+  gap: 12px;
+  padding: 18px 22px;
   border-bottom: 1px solid var(--cart-bdr);
+  background: var(--cart-head-bg, #FAFBFC);
 }
 
 .cardHeadIcon {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 12px;
   flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(4,120,87,.3);
 }
-.iconGreen { background: #D1FAE5; color: #065F46; }
-.iconBlue  { background: #DBEAFE; color: #1E3A8A; }
-.iconPurple{ background: #EDE9FE; color: #4C1D95; }
-.iconAmber { background: #FEF3C7; color: #92400E; }
+.iconGreen { background: linear-gradient(135deg,#059669,#10B981); color: #fff; }
+.iconBlue  { background: linear-gradient(135deg,#1A4FC4,#3B82F6); color: #fff; box-shadow: 0 3px 10px rgba(26,79,196,.3); }
+.iconPurple{ background: linear-gradient(135deg,#6D28D9,#8B5CF6); color: #fff; box-shadow: 0 3px 10px rgba(109,40,217,.3); }
+.iconAmber { background: linear-gradient(135deg,#B45309,#F59E0B); color: #fff; box-shadow: 0 3px 10px rgba(180,83,9,.3); }
 
 .cardHeadText { flex: 1; min-width: 0; }
 .cardHeadTitle {
@@ -373,7 +378,11 @@
   }
   .rightCol {
     position: fixed;
-    bottom: 0; left: 0; right: 0;
+    /* La bottom-nav globale du site (voir Header.module.css) est fixe
+       elle aussi, 62px, z-index plus élevé — sans cet offset elle
+       recouvre (cache) notre barre repliée au lieu de s'empiler dessus. */
+    bottom: calc(62px + env(safe-area-inset-bottom,0px));
+    left: 0; right: 0;
     top: auto;
     max-height: 55vh;
     border-radius: 24px 24px 0 0;
@@ -406,6 +415,7 @@
     --cart-t2:    #A1A1AA;
     --cart-t3:    #71717A;
     --cart-sh:    0 2px 8px rgba(0,0,0,.45), 0 4px 18px rgba(0,0,0,.35);
+    --cart-head-bg: #0A0A0A;
   }
   .articleItem:hover { background: rgba(255,255,255,.04); }
   .articleThumb      { background: #1C1C1F; }
@@ -421,6 +431,7 @@
   --cart-t2:    #A1A1AA;
   --cart-t3:    #71717A;
   --cart-sh:    0 2px 8px rgba(0,0,0,.45), 0 4px 18px rgba(0,0,0,.35);
+  --cart-head-bg: #0A0A0A;
 }
 /* Annule la préférence sombre de l'OS quand "Clair" est choisi explicitement */
 :root[data-theme="light"] .root {
@@ -432,17 +443,15 @@
   --cart-t2:    #475569;
   --cart-t3:    #94A3B8;
   --cart-sh:    0 1px 3px rgba(11,31,58,.08), 0 4px 16px rgba(11,31,58,.06);
+  --cart-head-bg: #FAFBFC;
 }
 :root[data-theme="dark"] .articleItem:hover { background: rgba(255,255,255,.04); }
 :root[data-theme="dark"] .articleThumb      { background: #1C1C1F; }
 :root[data-theme="dark"] .articleVariant    { background: #1C1C1F; border-color: rgba(255,255,255,.08); color: #A1A1AA; }
 :root[data-theme="dark"] .emptyIcon         { background: linear-gradient(135deg,#1C1C1F,#2D2D30); }
-/* — icon badges, article states, buttons — */
+/* — article states, buttons — (badges .icon* sont des dégradés pleins,
+   identiques en clair/sombre, donc pas d'override ici) */
 @media (prefers-color-scheme: dark) {
-  .iconGreen  { background: rgba(4,120,87,.15);   color: #34D399; }
-  .iconBlue   { background: rgba(26,79,196,.15);  color: #60A5FA; }
-  .iconPurple { background: rgba(109,40,217,.15); color: #A78BFA; }
-  .iconAmber  { background: rgba(180,83,9,.15);   color: #FBBF24; }
   .articleStockWarn { background: rgba(180,83,9,.12); border-color: rgba(180,83,9,.25); color: #FBBF24; }
   .qtyBtn:hover:not(:disabled) { background: rgba(26,79,196,.1); }
   .articleDiscount { background: rgba(4,120,87,.15); color: #34D399; }
@@ -450,10 +459,6 @@
   .emptyBtn   { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
   .toast      { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #D4D4D8; }
 }
-:root[data-theme="dark"] .iconGreen  { background: rgba(4,120,87,.15);   color: #34D399; }
-:root[data-theme="dark"] .iconBlue   { background: rgba(26,79,196,.15);  color: #60A5FA; }
-:root[data-theme="dark"] .iconPurple { background: rgba(109,40,217,.15); color: #A78BFA; }
-:root[data-theme="dark"] .iconAmber  { background: rgba(180,83,9,.15);   color: #FBBF24; }
 :root[data-theme="dark"] .articleStockWarn { background: rgba(180,83,9,.12); border-color: rgba(180,83,9,.25); color: #FBBF24; }
 :root[data-theme="dark"] .qtyBtn:hover:not(:disabled) { background: rgba(26,79,196,.1); }
 :root[data-theme="dark"] .articleDiscount { background: rgba(4,120,87,.15); color: #34D399; }
@@ -466,10 +471,6 @@
 :root[data-theme="light"] .articleThumb { background: #F1F5F9; }
 :root[data-theme="light"] .articleVariant { background: #F1F5F9; border-color: var(--cart-bdr); color: var(--cart-t2); }
 :root[data-theme="light"] .emptyIcon { background: linear-gradient(135deg, #EFF6FF, #DBEAFE); }
-:root[data-theme="light"] .iconGreen { background: #D1FAE5; color: #065F46; }
-:root[data-theme="light"] .iconBlue { background: #DBEAFE; color: #1E3A8A; }
-:root[data-theme="light"] .iconPurple { background: #EDE9FE; color: #4C1D95; }
-:root[data-theme="light"] .iconAmber { background: #FEF3C7; color: #92400E; }
 :root[data-theme="light"] .articleStockWarn { background: #FFFBEB; border-color: #FDE68A; color: #D97706; }
 :root[data-theme="light"] .qtyBtn:hover:not(:disabled) { background: #EFF6FF; }
 :root[data-theme="light"] .articleDiscount { background: #ECFDF5; color: var(--cart-green); }

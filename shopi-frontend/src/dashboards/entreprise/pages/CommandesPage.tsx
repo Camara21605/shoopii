@@ -5,27 +5,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
 import { fetchEntrepriseCommandes } from '../services/commandesApi';
 import type { Order, OrderItem, OrderStatus } from '../types';
-
-/* ── Filtres ─────────────────────────────────────────────────────────────── */
-const FILTERS: { label: string; value: string }[] = [
-  { label: '🔴 En attente',  value: 'new'  },
-  { label: '⚙️ En préparation', value: 'prep' },
-  { label: '🚚 En livraison',   value: 'ship' },
-  { label: '✅ Livré',         value: 'del'  },
-  { label: '✕ Annulé',         value: 'can'  },
-  { label: 'Tous',              value: 'all'  },
-];
-
-const STATUS_LABELS: Record<OrderStatus, JSX.Element> = {
-  new:  <span className="s-pill s-new">● Nouveau</span>,
-  prep: <span className="s-pill s-prep">⚙ En prépa</span>,
-  ship: <span className="s-pill s-ship">🚚 Livraison</span>,
-  del:  <span className="s-pill s-del">✓ Livré</span>,
-  can:  <span className="s-pill s-can">✕ Annulé</span>,
-};
 
 function fmt(n: number) {
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -143,6 +126,8 @@ function ImgBox({
 
 /* ── Tooltip noms produits (multi-commande) ──────────────────────────────── */
 function ProductNames({ items, nm, vt }: { items?: OrderItem[]; nm: string; vt: string }) {
+  const { t } = useTranslation();
+
   if (!items || items.length <= 1) {
     return (
       <>
@@ -172,7 +157,7 @@ function ProductNames({ items, nm, vt }: { items?: OrderItem[]; nm: string; vt: 
         color:      'var(--navy)',
         marginTop:  2,
       }}>
-        +{items.length - 1} autre{items.length > 2 ? 's' : ''} article{items.length > 2 ? 's' : ''}
+        {t('commandes.autresArticles', { count: items.length - 1 })}
       </div>
     </div>
   );
@@ -180,11 +165,29 @@ function ProductNames({ items, nm, vt }: { items?: OrderItem[]; nm: string; vt: 
 
 /* ── Page principale ─────────────────────────────────────────────────────── */
 export default function CommandesPage() {
+  const { t }      = useTranslation();
   const { pop }    = useToast();
   const navigate   = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
   const [orders,       setOrders]       = useState<Order[]>([]);
   const [loading,      setLoading]      = useState(true);
+
+  const FILTERS: { label: string; value: string }[] = [
+    { label: `🔴 ${t('commandes.filters.attente')}`,     value: 'new'  },
+    { label: `⚙️ ${t('commandes.filters.preparation')}`, value: 'prep' },
+    { label: `🚚 ${t('commandes.filters.livraison')}`,   value: 'ship' },
+    { label: `✅ ${t('commandes.filters.livre')}`,        value: 'del'  },
+    { label: `✕ ${t('commandes.filters.annule')}`,        value: 'can'  },
+    { label: t('commandes.filters.tous'),                 value: 'all'  },
+  ];
+
+  const STATUS_LABELS: Record<OrderStatus, React.JSX.Element> = {
+    new:  <span className="s-pill s-new">● {t('overview.orders.status.new')}</span>,
+    prep: <span className="s-pill s-prep">⚙ {t('overview.orders.status.prep')}</span>,
+    ship: <span className="s-pill s-ship">🚚 {t('overview.orders.status.ship')}</span>,
+    del:  <span className="s-pill s-del">✓ {t('overview.orders.status.del')}</span>,
+    can:  <span className="s-pill s-can">✕ {t('overview.orders.status.can')}</span>,
+  };
 
   useEffect(() => {
     fetchEntrepriseCommandes()
@@ -199,7 +202,7 @@ export default function CommandesPage() {
 
   function voirCommande(o: Order) {
     if (o.uuid) navigate(`/commande/${o.uuid}/suivi`);
-    else pop(`📋 Commande ${o.id}`, 'i');
+    else pop(t('commandes.toasts.orderRef', { id: o.id }), 'i');
   }
 
   return (
@@ -227,16 +230,16 @@ export default function CommandesPage() {
         </div>
         <div style={{ display:'flex', gap:8 }}>
           <button
-            onClick={() => pop('📥 Export CSV généré', 's')}
+            onClick={() => pop(t('commandes.toasts.exportCsv'), 's')}
             style={{ background:'var(--white)', border:'1.5px solid var(--bdr2)', borderRadius:'var(--pill)', padding:'8px 15px', fontSize:12, fontWeight:600, color:'var(--t2)', cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}
           >
-            <i className="fas fa-download" /> Exporter CSV
+            <i className="fas fa-download" /> {t('commandes.exportCsv')}
           </button>
           <button
-            onClick={() => pop('📊 Export Excel généré', 's')}
+            onClick={() => pop(t('commandes.toasts.exportExcel'), 's')}
             style={{ background:'var(--white)', border:'1.5px solid var(--bdr2)', borderRadius:'var(--pill)', padding:'8px 15px', fontSize:12, fontWeight:600, color:'var(--t2)', cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}
           >
-            <i className="fas fa-file-excel" /> Excel
+            <i className="fas fa-file-excel" /> {t('commandes.exportExcel')}
           </button>
         </div>
       </div>
@@ -247,14 +250,14 @@ export default function CommandesPage() {
           <table>
             <thead>
               <tr>
-                <th>Commande</th>
-                <th>Produit(s)</th>
-                <th>Client</th>
-                <th>Montant</th>
-                <th>Statut</th>
-                <th>Date</th>
-                <th>Livreur</th>
-                <th>Actions</th>
+                <th>{t('commandes.table.commande')}</th>
+                <th>{t('commandes.table.produits')}</th>
+                <th>{t('commandes.table.client')}</th>
+                <th>{t('commandes.table.montant')}</th>
+                <th>{t('commandes.table.statut')}</th>
+                <th>{t('commandes.table.date')}</th>
+                <th>{t('commandes.table.livreur')}</th>
+                <th>{t('commandes.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -262,14 +265,14 @@ export default function CommandesPage() {
                 <tr>
                   <td colSpan={8} style={{ textAlign:'center', padding:32, color:'var(--t3)' }}>
                     <i className="fas fa-circle-notch" style={{ animation:'spin .8s linear infinite', marginRight:8 }} />
-                    Chargement…
+                    {t('commandes.loading')}
                   </td>
                 </tr>
               )}
               {!loading && filtered.length === 0 && (
                 <tr>
                   <td colSpan={8} style={{ textAlign:'center', padding:32, color:'var(--t3)' }}>
-                    Aucune commande
+                    {t('commandes.empty')}
                   </td>
                 </tr>
               )}
@@ -299,22 +302,22 @@ export default function CommandesPage() {
                         className="ta-btn primary"
                         onClick={e => { e.stopPropagation(); voirCommande(o); }}
                       >
-                        Voir
+                        {t('commandes.voir')}
                       </button>
                       {o.status === 'new' && (
                         <button
                           className="ta-btn"
-                          onClick={e => { e.stopPropagation(); pop('✅ Commande acceptée', 's'); }}
+                          onClick={e => { e.stopPropagation(); pop(t('commandes.toasts.accepted'), 's'); }}
                         >
-                          Préparer
+                          {t('commandes.preparer')}
                         </button>
                       )}
                       {o.status === 'prep' && (
                         <button
                           className="ta-btn"
-                          onClick={e => { e.stopPropagation(); pop('🚚 Envoi en livraison', 's'); }}
+                          onClick={e => { e.stopPropagation(); pop(t('commandes.toasts.shipping'), 's'); }}
                         >
-                          Envoyer
+                          {t('commandes.envoyer')}
                         </button>
                       )}
                     </div>

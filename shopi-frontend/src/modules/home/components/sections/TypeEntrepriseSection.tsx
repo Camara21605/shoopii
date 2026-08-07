@@ -17,6 +17,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiFetch }   from '../../../../shared/services/apiFetch';
 import SectionHeader  from '../ui/SectionHeader';
 import styles         from './TypeEntrepriseSection.module.css';
@@ -44,6 +45,7 @@ const DEFAULT_COLOR = 'var(--blue)';
 
 export default function TypeEntrepriseSection() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [types,   setTypes]   = useState<CompanyTypeApi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
@@ -51,18 +53,18 @@ export default function TypeEntrepriseSection() {
   useEffect(() => {
     apiFetch<CompanyTypeApi[]>('/company-types', { public: true })
       .then(data => setTypes((data ?? []).filter(t => t.actif)))
-      .catch(() => setError('Impossible de charger les types d\'entreprise.'))
+      .catch(() => setError(t('home.typeEntreprise.loadError')))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   return (
     <section className={styles.sec}>
       <div className={styles.wrap}>
         <SectionHeader
-          kick="Types de boutiques"
-          title="Toutes les <em>catégories d'entreprises</em>"
-          sub="Trouvez l'entreprise qui vous correspond"
-          linkText="Toutes les boutiques"
+          kick={t('home.typeEntreprise.kick')}
+          title={t('home.typeEntreprise.title')}
+          sub={t('home.typeEntreprise.sub')}
+          linkText={t('home.typeEntreprise.linkText')}
           onLink={() => navigate('/boutiques')}
         />
 
@@ -87,16 +89,16 @@ export default function TypeEntrepriseSection() {
           <div className={styles.grid}>
             {types.length === 0 ? (
               <div className={styles.empty}>
-                Aucun type d'entreprise disponible pour le moment.
+                {t('home.typeEntreprise.empty')}
               </div>
-            ) : types.map(t => {
-              const color = t.couleur ?? DEFAULT_COLOR;
+            ) : types.map(ct => {
+              const color = ct.couleur ?? DEFAULT_COLOR;
               const bg    = makeBg(color);
               return (
                 <div
-                  key={t.id}
+                  key={ct.id}
                   className={styles.card}
-                  onClick={() => navigate(`/boutiques?type=${t.id}`)}
+                  onClick={() => navigate(`/boutiques?type=${ct.id}`)}
                   style={{
                     '--card-color': color,
                     '--card-bg':    bg,
@@ -109,14 +111,14 @@ export default function TypeEntrepriseSection() {
                       border: `1.5px solid color-mix(in srgb, ${color} 20%, transparent)`,
                     }}
                   >
-                    {t.icone ?? '🏢'}
+                    {ct.icone ?? '🏢'}
                   </div>
-                  <div className={styles.label}>{t.nom}</div>
+                  <div className={styles.label}>{ct.nom}</div>
                   <div className={styles.count}>
-                    {t.nbEntreprises > 0
-                      ? `${t.nbEntreprises.toLocaleString('fr-FR')} boutique${t.nbEntreprises > 1 ? 's' : ''}`
-                      : t.nbCategories > 0
-                        ? `${t.nbCategories} catégorie${t.nbCategories > 1 ? 's' : ''}`
+                    {ct.nbEntreprises > 0
+                      ? t('home.typeEntreprise.boutiqueCount', { count: ct.nbEntreprises })
+                      : ct.nbCategories > 0
+                        ? t('home.typeEntreprise.categorieCount', { count: ct.nbCategories })
                         : '—'}
                   </div>
                   <div className={styles.arrow}>

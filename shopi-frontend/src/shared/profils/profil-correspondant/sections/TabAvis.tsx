@@ -2,7 +2,7 @@
  * FICHIER : profil-correspondant/sections/TabAvis.tsx
  * ================================================================ */
 
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/ProfilCorrespondant.module.css';
 import type { AvisScore, AvisItem } from '../data/types';
 
@@ -13,16 +13,17 @@ interface Props {
 }
 
 export default function TabAvis({ score, avis, onToast }: Props) {
+  const { t } = useTranslation();
   /* Aucun avis disponible */
   if (score.total === 0 && avis.length === 0) {
     return (
       <div className={styles.card}>
-        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-star" /> Avis clients</div></div>
+        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-star" /> {t('profilCorrespondant.tabAvis.title')}</div></div>
         <div className={styles.cb}>
           <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--text-muted, #6B7280)' }}>
             <i className="fas fa-star" style={{ fontSize: 28, marginBottom: 10, display: 'block', opacity: 0.3 }} />
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>Aucun avis pour le moment</div>
-            <div style={{ fontSize: 12 }}>Les avis clients apparaîtront ici après chaque mission complétée.</div>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>{t('profilCorrespondant.tabAvis.emptyTitle')}</div>
+            <div style={{ fontSize: 12 }}>{t('profilCorrespondant.tabAvis.emptyDesc')}</div>
           </div>
         </div>
       </div>
@@ -31,14 +32,14 @@ export default function TabAvis({ score, avis, onToast }: Props) {
 
   return (
     <div className={styles.card}>
-      <div className={styles.ch}><div className={styles.ct}><i className="fas fa-star" /> Avis clients</div></div>
+      <div className={styles.ch}><div className={styles.ct}><i className="fas fa-star" /> {t('profilCorrespondant.tabAvis.title')}</div></div>
 
       {/* Score global + barres */}
       <div className={styles.ratingOverview}>
         <div className={styles.roScore}>
           <div className={styles.roNum}>{score.moyenne.toFixed(1)}</div>
           <div className={styles.roStars}>{'★'.repeat(Math.round(score.moyenne))}</div>
-          <div className={styles.roCnt}>{score.total} avis</div>
+          <div className={styles.roCnt}>{t('profilCorrespondant.tabAvis.avisCount', { count: score.total })}</div>
         </div>
         <div className={styles.roBars}>
           {score.repartition.map(r => (
@@ -74,21 +75,21 @@ export default function TabAvis({ score, avis, onToast }: Props) {
             </div>
             {a.verifie && (
               <span className={`${styles.pill} ${styles.pillG} ${styles.revBadge}`}>
-                <i className="fas fa-circle-check" /> Achat vérifié
+                <i className="fas fa-circle-check" /> {t('profilCorrespondant.tabAvis.achatVerifie')}
               </span>
             )}
           </div>
           <div className={styles.revTxt}>{a.texte}</div>
           {a.reponse && (
             <div className={styles.revReply}>
-              <div className={styles.revReplyLbl}><i className="fas fa-reply" /> Réponse de {a.reponse.auteur}</div>
+              <div className={styles.revReplyLbl}><i className="fas fa-reply" /> {t('profilCorrespondant.tabAvis.reponseDe', { auteur: a.reponse.auteur })}</div>
               <div className={styles.revReplyTxt}>{a.reponse.texte}</div>
             </div>
           )}
           <div className={styles.revActions}>
-            <span className={styles.revAct} onClick={() => onToast('👍 Merci pour votre retour')}><i className="fas fa-thumbs-up" /> {a.utile} utile</span>
+            <span className={styles.revAct} onClick={() => onToast(t('profilCorrespondant.tabAvis.merciRetourToast'))}><i className="fas fa-thumbs-up" /> {t('profilCorrespondant.tabAvis.utileCount', { count: a.utile })}</span>
             <span>·</span>
-            <span className={styles.revAct} onClick={() => onToast('🚩 Signalé')}>Signaler</span>
+            <span className={styles.revAct} onClick={() => onToast(t('profilCorrespondant.tabAvis.signaleToast'))}>{t('profilCorrespondant.tabAvis.signaler')}</span>
           </div>
         </div>
       ))}

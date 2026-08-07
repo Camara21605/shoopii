@@ -7,10 +7,9 @@
  *        langues du monde, sauvegarde dans localStorage.
  * ============================================================ */
 
-import { useState, useMemo, useEffect } from 'react';
-
-/* ── Clé localStorage ── */
-const LANG_KEY = 'shopi_lang';
+import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { isSupportedLangCode } from '../../i18n/supportedLangs';
 
 /* ── Types ── */
 export interface WorldLang {
@@ -173,17 +172,25 @@ interface Props {
 
 /* ── Composant ── */
 export default function SecLangue({ onPop }: Props) {
+  const { i18n } = useTranslation();
+
   const [search,   setSearch]   = useState('');
-  const [selected, setSelected] = useState<string>(() => localStorage.getItem(LANG_KEY) ?? '');
+  const [selected, setSelected] = useState<string>(() => i18n.language);
   const [saved,    setSaved]    = useState(false);
   const [groupBy,  setGroupBy]  = useState<'region' | 'alpha'>('region');
 
   const deviceLang = useMemo(() => detectDeviceLang(), []);
 
-  /* Langue courante (objet complet) */
+  /* Langue courante (objet complet) — sélection en cours, pas encore forcément appliquée */
   const currentLang = useMemo(
     () => WORLD_LANGS.find(l => l.code === selected) ?? null,
     [selected],
+  );
+
+  /* Langue réellement active dans i18next en ce moment (indicateur d'en-tête) */
+  const activeLang = useMemo(
+    () => WORLD_LANGS.find(l => l.code === i18n.language) ?? null,
+    [i18n.language],
   );
 
   /* Filtrage par recherche */
@@ -197,13 +204,21 @@ export default function SecLangue({ onPop }: Props) {
     );
   }, [search]);
 
-  /* Groupement */
+  /* Langues traduites — mises en avant tout en haut, avant les groupes */
+  const topLangs = useMemo(
+    () => filtered.filter(l => isSupportedLangCode(l.code)),
+    [filtered],
+  );
+
+  /* Groupement — les langues déjà remontées dans topLangs ne sont pas
+     répétées plus bas parmi les groupes région/alpha. */
   const groups = useMemo(() => {
+    const rest = filtered.filter(l => !isSupportedLangCode(l.code));
     if (groupBy === 'alpha') {
-      return [{ region: 'Toutes les langues', langs: [...filtered].sort((a, b) => a.fr.localeCompare(b.fr, 'fr')) }];
+      return [{ region: 'Toutes les langues', langs: [...rest].sort((a, b) => a.fr.localeCompare(b.fr, 'fr')) }];
     }
     const map = new Map<string, WorldLang[]>();
-    for (const l of filtered) {
+    for (const l of rest) {
       const key = l.region;
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(l);
@@ -219,11 +234,56 @@ export default function SecLangue({ onPop }: Props) {
   }
 
   function handleSave() {
-    if (!selected) return;
-    localStorage.setItem(LANG_KEY, selected);
+    if (!selected || !isSupportedLangCode(selected)) return;
+    i18n.changeLanguage(selected);
     setSaved(true);
-    onPop?.(`✅ Langue "${currentLang?.fr}" enregistrée`, 's');
+    onPop?.(`✅ Langue "${currentLang?.fr}" appliquée`, 's');
     setTimeout(() => setSaved(false), 3000);
+  }
+
+  /** Bouton "Utiliser" (langue de l'appareil) — action directe en un clic,
+   *  contrairement aux cartes de la grille qui passent par Enregistrer. */
+  function handleUseDeviceLang(code: string) {
+    if (!isSupportedLangCode(code)) return;
+    setSelected(code);
+    i18n.changeLanguage(code);
+    setSaved(true);
+    const lang = WORLD_LANGS.find(l => l.code === code);
+    onPop?.(`✅ Langue "${lang?.fr}" appliquée`, 's');
+    setTimeout(() => setSaved(false), 3000);
+  }
+
+  /* Carte de langue — partagée entre la section "Langues disponibles"
+     et les groupes région/alpha, pour ne pas dupliquer le rendu. */
+  function renderLangCard(lang: WorldLang) {
+    const isSelected = selected === lang.code;
+    const supported = isSupportedLangCode(lang.code);
+    return (
+      <button
+        key={lang.code}
+        style={{
+          ...styles.langCard,
+          ...(isSelected ? styles.langCardSelected : {}),
+          ...(!supported ? styles.langCardDisabled : {}),
+        }}
+        onClick={() => handleSelect(lang.code)}
+        disabled={!supported}
+        title={supported ? `${lang.fr} — ${lang.native}` : `${lang.fr} — Bientôt disponible`}
+      >
+        <span style={{ ...styles.langFlag, ...(!supported ? styles.langFlagDisabled : {}) }}>{lang.flag}</span>
+        <div style={styles.langInfo}>
+          <div style={{ ...styles.langFr, ...(isSelected ? { color: 'var(--blue)' } : {}) }}>
+            {lang.fr}
+          </div>
+          <div style={styles.langNative}>{lang.native}</div>
+        </div>
+        {!supported ? (
+          <span style={styles.comingSoonTag}>Bientôt disponible</span>
+        ) : isSelected ? (
+          <i className="fas fa-circle-check" style={styles.langCheck} />
+        ) : null}
+      </button>
+    );
   }
 
   return (
@@ -235,6 +295,11 @@ export default function SecLangue({ onPop }: Props) {
           <h2 style={styles.title}><i className="fas fa-language" /> Langue de l'interface</h2>
           <p style={styles.sub}>Choisissez la langue d'affichage de Shopi. Toutes les langues du monde sont disponibles.</p>
         </div>
+        {activeLang && (
+          <div style={styles.activeBadge} title="Langue actuellement appliquée à l'interface">
+            <span style={{ fontSize: 16 }}>{activeLang.flag}</span> {activeLang.fr}
+          </div>
+        )}
       </div>
 
       {/* ── Langue de l'appareil ── */}
@@ -248,18 +313,24 @@ export default function SecLangue({ onPop }: Props) {
               <div style={styles.deviceNative}>{deviceLang.native}</div>
             </div>
           </div>
-          <button
-            style={{
-              ...styles.deviceBtn,
-              ...(selected === deviceLang.code ? styles.deviceBtnActive : {}),
-            }}
-            onClick={() => handleSelect(deviceLang.code)}
-          >
-            {selected === deviceLang.code
-              ? <><i className="fas fa-check" /> Sélectionnée</>
-              : <><i className="fas fa-mobile-screen" /> Utiliser</>
-            }
-          </button>
+          {isSupportedLangCode(deviceLang.code) ? (
+            <button
+              style={{
+                ...styles.deviceBtn,
+                ...(i18n.language === deviceLang.code ? styles.deviceBtnActive : {}),
+              }}
+              onClick={() => handleUseDeviceLang(deviceLang.code)}
+            >
+              {i18n.language === deviceLang.code
+                ? <><i className="fas fa-check" /> Langue active</>
+                : <><i className="fas fa-mobile-screen" /> Utiliser</>
+              }
+            </button>
+          ) : (
+            <span style={styles.deviceBtnDisabled} title="Cette langue n'est pas encore traduite">
+              <i className="fas fa-clock" /> Bientôt disponible
+            </span>
+          )}
         </div>
       )}
 
@@ -323,8 +394,22 @@ export default function SecLangue({ onPop }: Props) {
         </div>
       )}
 
+      {/* ── Langues disponibles (traduites) — toujours en haut ── */}
+      {topLangs.length > 0 && (
+        <div>
+          <div style={styles.regionLabel}>
+            <i className="fas fa-circle-check" style={{ color: 'var(--emerald, #10B981)', fontSize: 10 }} />
+            Langues disponibles
+            <span style={styles.regionCount}>{topLangs.length}</span>
+          </div>
+          <div style={styles.langGrid}>
+            {topLangs.map(renderLangCard)}
+          </div>
+        </div>
+      )}
+
       {/* ── Groupes ── */}
-      {groups.length === 0 ? (
+      {groups.length === 0 && topLangs.length === 0 ? (
         <div style={styles.emptyState}>
           <i className="fas fa-face-frown" style={{ fontSize: 28, color: 'var(--t4)', marginBottom: 8 }} />
           <div style={{ fontSize: 13, color: 'var(--t3)', fontWeight: 600 }}>Aucune langue correspondante</div>
@@ -338,28 +423,7 @@ export default function SecLangue({ onPop }: Props) {
               <span style={styles.regionCount}>{group.langs.length}</span>
             </div>
             <div style={styles.langGrid}>
-              {group.langs.map(lang => {
-                const isSelected = selected === lang.code;
-                return (
-                  <button
-                    key={lang.code}
-                    style={{ ...styles.langCard, ...(isSelected ? styles.langCardSelected : {}) }}
-                    onClick={() => handleSelect(lang.code)}
-                    title={`${lang.fr} — ${lang.native}`}
-                  >
-                    <span style={styles.langFlag}>{lang.flag}</span>
-                    <div style={styles.langInfo}>
-                      <div style={{ ...styles.langFr, ...(isSelected ? { color: 'var(--blue)' } : {}) }}>
-                        {lang.fr}
-                      </div>
-                      <div style={styles.langNative}>{lang.native}</div>
-                    </div>
-                    {isSelected && (
-                      <i className="fas fa-circle-check" style={styles.langCheck} />
-                    )}
-                  </button>
-                );
-              })}
+              {group.langs.map(renderLangCard)}
             </div>
           </div>
         ))
@@ -387,6 +451,14 @@ const styles = {
     background:   'linear-gradient(135deg, #0B1F3A, #1A3A6B)',
     borderRadius: 16,
     padding:      '20px 24px',
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    gap: 16, flexWrap: 'wrap' as const,
+  } as React.CSSProperties,
+  activeBadge: {
+    display: 'flex', alignItems: 'center', gap: 7,
+    background: 'rgba(255,255,255,.12)', borderRadius: 999,
+    padding: '7px 14px', fontSize: 12.5, fontWeight: 800, color: '#fff',
+    whiteSpace: 'nowrap' as const, flexShrink: 0,
   } as React.CSSProperties,
   title: {
     fontFamily: 'var(--fd,"Fraunces",serif)',
@@ -425,7 +497,8 @@ const styles = {
     fontSize: 11.5, color: 'var(--t3)',
   } as React.CSSProperties,
   deviceBtn: {
-    padding: '8px 16px', borderRadius: 10, border: '1.5px solid var(--bdr2)',
+    padding: '8px 16px', borderRadius: 10,
+    borderWidth: 1.5, borderStyle: 'solid', borderColor: 'var(--bdr2)',
     background: 'var(--g50)', color: 'var(--t2)', fontSize: 12, fontWeight: 700,
     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
     transition: 'all .18s',
@@ -434,6 +507,12 @@ const styles = {
   deviceBtnActive: {
     background: 'var(--em-bg)', color: 'var(--emerald)',
     borderColor: 'rgba(4,120,87,.2)',
+  } as React.CSSProperties,
+  deviceBtnDisabled: {
+    padding: '8px 16px', borderRadius: 10, border: '1.5px solid var(--bdr2)',
+    background: 'var(--g50)', color: 'var(--t4)', fontSize: 12, fontWeight: 700,
+    display: 'flex', alignItems: 'center', gap: 6,
+    flexShrink: 0, whiteSpace: 'nowrap' as const,
   } as React.CSSProperties,
 
   currentCard: {
@@ -483,7 +562,7 @@ const styles = {
   } as React.CSSProperties,
   groupBtn: {
     padding: '8px 14px', borderRadius: 10,
-    border: '1.5px solid var(--bdr2)', background: 'var(--g50)',
+    borderWidth: 1.5, borderStyle: 'solid', borderColor: 'var(--bdr2)', background: 'var(--g50)',
     color: 'var(--t2)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
     display: 'flex', alignItems: 'center', gap: 5, transition: 'all .18s',
     whiteSpace: 'nowrap' as const,
@@ -520,7 +599,8 @@ const styles = {
   langCard: {
     display: 'flex', alignItems: 'center', gap: 10,
     padding: '10px 12px',
-    background: 'var(--white)', border: '1.5px solid var(--bdr)',
+    background: 'var(--white)',
+    borderWidth: 1.5, borderStyle: 'solid', borderColor: 'var(--bdr)',
     borderRadius: 12, cursor: 'pointer',
     transition: 'all .18s', textAlign: 'left' as const,
     position: 'relative' as const,
@@ -529,8 +609,20 @@ const styles = {
     background: 'var(--sky)', borderColor: 'var(--blue)',
     boxShadow: '0 0 0 3px rgba(26,79,196,.12)',
   } as React.CSSProperties,
+  langCardDisabled: {
+    opacity: 0.5, cursor: 'not-allowed', background: 'var(--g50)',
+  } as React.CSSProperties,
   langFlag: {
     fontSize: 22, lineHeight: 1, flexShrink: 0,
+  } as React.CSSProperties,
+  langFlagDisabled: {
+    filter: 'grayscale(1)',
+  } as React.CSSProperties,
+  comingSoonTag: {
+    fontSize: 9, fontWeight: 800, color: 'var(--t4)',
+    background: 'var(--g100)', border: '1px solid var(--bdr2)',
+    borderRadius: 999, padding: '3px 8px',
+    whiteSpace: 'nowrap' as const, flexShrink: 0,
   } as React.CSSProperties,
   langInfo: {
     flex: 1, minWidth: 0,

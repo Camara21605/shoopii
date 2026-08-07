@@ -6,8 +6,9 @@
  * correspondant. Partenaires et admins → Aide & Contact uniquement.
  */
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { apiFetch }    from '../../services/apiFetch';
-import { ROLE_CONFIG } from '../data/messagerieTypes';
+import { getRoleConfig } from '../data/messagerieTypes';
 import type { NewConvUser } from '../data/messagerieTypes';
 import s from '../styles/NewConvModal.module.css';
 
@@ -60,6 +61,7 @@ interface Props {
 }
 
 export default function NewConvModal({ open, onClose, onStart }: Props) {
+  const { t } = useTranslation();
   const [search,  setSearch]  = useState('');
   const [results, setResults] = useState<ApiUser[]>([]);
   const [loading, setLoading] = useState(false);
@@ -88,7 +90,7 @@ export default function NewConvModal({ open, onClose, onStart }: Props) {
 
   function handleStart(api: ApiUser) {
     const role = toFrontRole(api.type) as any;
-    const rc   = ROLE_CONFIG[role as keyof typeof ROLE_CONFIG];
+    const rc   = getRoleConfig(t)[role as keyof ReturnType<typeof getRoleConfig>];
 
     const user: NewConvUser = {
       /* On encode type:id pour que startNewConv sache les deux */
@@ -114,7 +116,7 @@ export default function NewConvModal({ open, onClose, onStart }: Props) {
         <div className={s.hd}>
           <h3>
             <i className="fas fa-comment-dots" style={{ color:'var(--teal,#0E7490)', marginRight:8 }} />
-            Nouvelle conversation
+            {t('messagerie.newConvModal.title')}
           </h3>
           <button className={s.close} onClick={onClose}>
             <i className="fas fa-xmark" />
@@ -127,7 +129,7 @@ export default function NewConvModal({ open, onClose, onStart }: Props) {
             <i className={`fas ${loading ? 'fa-circle-notch fa-spin' : 'fa-magnifying-glass'}`} />
             <input
               type="text"
-              placeholder="Rechercher un utilisateur…"
+              placeholder={t('messagerie.newConvModal.searchPlaceholder')}
               value={search}
               onChange={e => setSearch(e.target.value)}
               autoFocus
@@ -143,7 +145,7 @@ export default function NewConvModal({ open, onClose, onStart }: Props) {
             {/* Résultats réels */}
             {!loading && results.map(api => {
               const role = toFrontRole(api.type) as any;
-              const rc   = ROLE_CONFIG[role as keyof typeof ROLE_CONFIG];
+              const rc   = getRoleConfig(t)[role as keyof ReturnType<typeof getRoleConfig>];
               return (
                 <div key={`${api.type}:${api.id}`} className={s.userItem} onClick={() => handleStart(api)}>
                   {/* Avatar */}
@@ -181,7 +183,7 @@ export default function NewConvModal({ open, onClose, onStart }: Props) {
             {/* État vide */}
             {!loading && results.length === 0 && (
               <div className={s.emptySearch}>
-                {search ? 'Aucun utilisateur trouvé' : 'Saisissez un nom pour rechercher'}
+                {search ? t('messagerie.newConvModal.aucunUtilisateur') : t('messagerie.newConvModal.saisirNom')}
               </div>
             )}
           </div>

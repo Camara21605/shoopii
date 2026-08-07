@@ -13,6 +13,7 @@
  *   - le rendu de l'état vide si aucune conversation n'est sélectionnée
  */
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Conversation, ChatUser, GroupMember } from '../data/messagerieTypes';
 import type { MediaAttachment }                     from '../hooks/useMessagerie';
 import type { WsTyping }                            from '../hooks/useSocket';
@@ -48,6 +49,7 @@ export default function ChatWindow({
   conv, user, members, infoPanelOpen, typingActivity,
   onSend, onTyping, onToggleInfo, onNewConv, onToast, onDelete, onUpdateGroup, onCall, onVideoCall, onMobileMenu,
 }: Props) {
+  const { t } = useTranslation();
   /** Message cité (réponse) — partagé entre MessagesZone (set) et MessageInput (affichage) */
   const [replyTo, setReplyTo] = useState<{ sender: string; text: string } | null>(null);
 
@@ -57,17 +59,17 @@ export default function ChatWindow({
       <div className={s.window}>
         <div className={s.empty}>
           <div className={s.emptyIcon}>💬</div>
-          <div className={s.emptyTitle}>Votre messagerie Shopi</div>
+          <div className={s.emptyTitle}>{t('messagerie.chatWindow.emptyTitle')}</div>
           <div className={s.emptySub}>
-            Sélectionnez une conversation pour échanger avec boutiques, clients et livreurs.
+            {t('messagerie.chatWindow.emptySub')}
           </div>
           {onMobileMenu && (
             <button className={s.emptyBtnSecondary} onClick={onMobileMenu}>
-              <i className="fas fa-list" /> Voir mes conversations
+              <i className="fas fa-list" /> {t('messagerie.chatWindow.voirConversations')}
             </button>
           )}
           <button className={s.emptyBtn} onClick={onNewConv}>
-            <i className="fas fa-pen-to-square" /> Démarrer une conversation
+            <i className="fas fa-pen-to-square" /> {t('messagerie.chatWindow.demarrerConversation')}
           </button>
         </div>
       </div>

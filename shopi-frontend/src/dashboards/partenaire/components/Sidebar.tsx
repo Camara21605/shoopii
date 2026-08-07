@@ -6,6 +6,7 @@
 
 import styles from '../styles/Sidebar.module.css';
 import type { PartenairePage } from '../data/types';
+import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
 
 interface SidebarProps {
   activePage:   PartenairePage;
@@ -72,6 +73,11 @@ export default function Sidebar({
               <div className={styles.meRl}><span className={styles.dot} /> {partnerTier}</div>
             </div>
           </div>
+        </div>
+
+        {/* Solde du portefeuille Shopi — sous la carte partenaire */}
+        <div style={{ padding: '0 22px 12px' }}>
+          <WalletQuickBar compact mini onManage={() => onNavigate('paiements')} />
         </div>
 
         {/* Navigation */}

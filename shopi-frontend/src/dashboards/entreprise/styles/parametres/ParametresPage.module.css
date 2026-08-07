@@ -675,6 +675,12 @@
 }
 .radioOpt:hover { border-color: var(--bdr2); background: rgba(0,0,0,.04); }
 .radioOpt.selected { border-color: var(--bdr2); background: rgba(0,0,0,.06); box-shadow: 0 0 0 3px rgba(0,0,0,.08); }
+/* Conteneur titre+sous-titre (div sans classe entre .roEm et .roBadge dans
+   SecuriteSection/CommissionsSection) : sans flex:1 + min-width:0, ce bloc
+   garde sa largeur de contenu et pousse .roBadge (margin-left:auto) hors de
+   la carte sur petits écrans — la carte l'écrête silencieusement (.card a
+   overflow:hidden) au lieu de laisser le texte revenir à la ligne. */
+.radioOpt > div:not([class]) { flex: 1; min-width: 0; }
 .roDot {
   width: 20px; height: 20px;
   border-radius: 50%;
@@ -711,13 +717,27 @@
  * RESPONSIVE
  * ════════════════════════════════════════════════════════════ */
 @media (max-width: 1100px) {
-  .parametresLayout { grid-template-columns: 1fr; }
+  /* minmax(0, 1fr) et non 1fr seul : sans le "0" explicite, une colonne de
+     grille flexible reste bornée par le min-content de ses items (min-width:
+     auto par défaut sur un grid item). Ici .sidebar contient la nav pills
+     (.sidebarNav, flex-wrap:nowrap + overflow-x:auto) dont le min-content
+     dépasse 1900px cumulés (13 items non-wrappables) — sans ce fix, cette
+     largeur remonte à la colonne 1fr entière et fait déborder toute la page
+     horizontalement à TOUTES les largeurs sous 1100px, du desktop au mobile. */
+  .parametresLayout { grid-template-columns: minmax(0, 1fr); }
 
-  /* Sidebar → simple conteneur block, la nav gère le scroll */
+  /* Sidebar → barre de pills compacte, épinglée sous la topbar.
+     La topbar (Sidebar.css/Topbar.css) reste position:fixed avec une
+     hauteur constante (var(--hdr)) à TOUTES les largeurs, y compris
+     mobile (seul son offset gauche change à 920px/640px) — le même
+     offset de sticky reste donc valable du desktop au téléphone. */
   .sidebar {
-    position: static;
+    position: sticky;
+    top: calc(var(--hdr, 66px) + 10px);
+    z-index: 20;
     padding: 6px 8px;
     border-radius: var(--r-lg);
+    min-width: 0;
   }
   .sidebarTitle, .dirtyBadge, .sidebarBoutiqueCard { display: none; }
 

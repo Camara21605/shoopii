@@ -16,7 +16,8 @@
  *   - Boutons : Contacter | Choisir ce correspondant
  * ============================================================
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { CorrespondantBoutique } from '../data/boutiqueMockData';
 import styles from '../styles/CardsCorrespondant.module.css';
 
@@ -34,6 +35,7 @@ function Stars({ n }: { n: number }) {
 }
 
 export default function CardCorrespondantBoutique({ c, onToast }: Props) {
+  const { t } = useTranslation();
   const [choisi, setChoisi] = useState(false);
 
   return (
@@ -42,7 +44,7 @@ export default function CardCorrespondantBoutique({ c, onToast }: Props) {
       {/* ── Badge Vérifié (coin haut droit) ── */}
       {c.verified && (
         <span className={styles.verifBadge}>
-          <i className="fas fa-shield-check" /> Vérifié
+          <i className="fas fa-shield-check" /> {t('boutiqueDetail.cardCorrespondant.verifie')}
         </span>
       )}
 
@@ -70,7 +72,7 @@ export default function CardCorrespondantBoutique({ c, onToast }: Props) {
         <div className={styles.statSep} />
         <div className={styles.stat}>
           <i className="fas fa-box" style={{ color:'var(--blue)', fontSize:11 }} />
-          <span className={styles.statVal}>{c.colis} colis/mois</span>
+          <span className={styles.statVal}>{t('boutiqueDetail.cardCorrespondant.colisMois', { count: c.colis })}</span>
         </div>
         <div className={styles.statSep} />
         <div className={styles.stat}>
@@ -81,7 +83,7 @@ export default function CardCorrespondantBoutique({ c, onToast }: Props) {
 
       {/* ── Badge statut disponibilité ── */}
       <span className={c.dispo ? styles.dispoBadge : styles.occupeBadge}>
-        {c.dispo ? '● Disponible' : '◌ Complet'}
+        {c.dispo ? t('boutiqueDetail.cardCorrespondant.disponible') : t('boutiqueDetail.cardCorrespondant.complet')}
       </span>
 
       {/* ── Infos pratiques ── */}
@@ -107,9 +109,9 @@ export default function CardCorrespondantBoutique({ c, onToast }: Props) {
       <div className={styles.btns}>
         <button
           className={styles.btnContact}
-          onClick={() => onToast(`💬 Message à ${c.nom}`)}
+          onClick={() => onToast(t('boutiqueDetail.cardCorrespondant.messageToast', { nom: c.nom }))}
         >
-          <i className="fas fa-comment-dots" /> Contacter
+          <i className="fas fa-comment-dots" /> {t('boutiqueDetail.cardCorrespondant.contacter')}
         </button>
         <button
           className={`${styles.btnChoisir} ${choisi ? styles.btnChoisirOn : ''} ${!c.dispo ? styles.btnChoisirOff : ''}`}
@@ -118,13 +120,13 @@ export default function CardCorrespondantBoutique({ c, onToast }: Props) {
             if (!c.dispo) return;
             setChoisi(v => !v);
             onToast(choisi
-              ? `↩️ Correspondant ${c.nom} retiré`
-              : `✅ ${c.nom} sélectionné comme correspondant`
+              ? t('boutiqueDetail.cardCorrespondant.retireToast', { nom: c.nom })
+              : t('boutiqueDetail.cardCorrespondant.selectionneToast', { nom: c.nom })
             );
           }}
         >
           <i className={`fas ${choisi ? 'fa-check' : 'fa-plus'}`} />
-          {choisi ? 'Choisi' : 'Choisir'}
+          {choisi ? t('boutiqueDetail.cardCorrespondant.choisi') : t('boutiqueDetail.cardCorrespondant.choisir')}
         </button>
       </div>
     </div>

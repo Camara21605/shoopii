@@ -1,0 +1,204 @@
+{
+  "clients": {
+    "segment": {
+      "VIP": "VIP",
+      "Fidèle": "مخلص",
+      "Régulier": "منتظم",
+      "Nouveau": "جديد",
+      "Abonné": "متابع"
+    },
+    "sourceBadge": {
+      "acheteurEtAbonne": "🛒 + 👁️",
+      "acheteur": "🛒 مشتري",
+      "abonne": "👁️ متابع"
+    },
+    "date": {
+      "auj": "اليوم",
+      "hier": "أمس",
+      "ilYaJours": "منذ {{count}}أ",
+      "ilYaSemaines": "منذ {{count}}أسبوع",
+      "ilYaMois": "منذ {{count}}شهر"
+    },
+    "header": {
+      "titlePart1": "العملاء",
+      "titleMark": "والمتابعون",
+      "subtitle": "المشترون + متابعو متجرك — بيانات في الوقت الفعلي",
+      "actualiser": "تحديث"
+    },
+    "kpi": {
+      "totalClients": "إجمالي العملاء",
+      "totalClientsSub": "{{buyers}} مشترين · {{abonnes}} متابعين",
+      "clientsVip": "عملاء VIP",
+      "clientsVipSub": "≥ 10 مليون فرنك أو 10+ طلبات",
+      "caTotalClients": "إجمالي إيرادات العملاء",
+      "panierMoySub": "متوسط السلة: {{montant}} فرنك",
+      "nouveauxAcheteurs": "مشترين جدد",
+      "premiereCommande": "الطلب الأول"
+    },
+    "filters": {
+      "tous": "الكل",
+      "acheteurs": "🛒 مشترون",
+      "abonnes": "👁️ متابعون",
+      "tousSegments": "كل الشرائح",
+      "vip": "👑 VIP",
+      "fideles": "⭐ مخلصون",
+      "reguliers": "🔄 منتظمون",
+      "nouveaux": "🆕 جدد"
+    },
+    "search": "الاسم أو البريد الإلكتروني…",
+    "baseClients": "قاعدة العملاء",
+    "sort": {
+      "plusDepense": "الأكثر إنفاقًا",
+      "plusCommandes": "الأكثر طلبات",
+      "derniereCommande": "آخر طلب",
+      "plusRecents": "الأحدث"
+    },
+    "loading": "جارٍ تحميل العملاء…",
+    "error": {
+      "title": "خطأ في التحميل",
+      "reessayer": "إعادة المحاولة"
+    },
+    "empty": {
+      "aucunResultat": "لا توجد نتائج",
+      "aucunClient": "لا يوجد عملاء بعد",
+      "subRecherche": "لا يوجد عميل يطابق بحثك.",
+      "subDefaut": "سيظهر عملاؤك الأوائل هنا بمجرد إجراء طلب أو متابعة متجرك."
+    },
+    "table": {
+      "client": "العميل",
+      "contact": "الاتصال",
+      "source": "المصدر",
+      "commandes": "الطلبات",
+      "totalDepense": "إجمالي الإنفاق",
+      "segment": "الشريحة",
+      "derniereCmd": "آخر طلب",
+      "actions": "الإجراءات",
+      "abonne": "متابع",
+      "cmds": "طلبات",
+      "profil": "الملف",
+      "message": "رسالة",
+      "messageToast": "📧 تم إرسال الرسالة إلى {{name}}"
+    },
+    "pagination_one": "{{count}} عميل · الصفحة {{page}}/{{pages}}",
+    "pagination_other": "{{count}} عملاء · الصفحة {{page}}/{{pages}}",
+    "sidePanel": {
+      "repartition": "التوزيع",
+      "chargement": "جارٍ التحميل…",
+      "metriquesCles": "المؤشرات الرئيسية",
+      "acheteurs": "المشترون",
+      "abonnesBoutique": "متابعو المتجر",
+      "caTotal": "إجمالي الإيرادات",
+      "panierMoyen": "متوسط السلة",
+      "actionsCrm": "إجراءات CRM"
+    },
+    "quickActions": {
+      "newsletterVip": "إرسال نشرة VIP",
+      "offreFidelite": "عرض ولاء تلقائي",
+      "rapportSegments": "تقرير الشرائح PDF",
+      "relanceInactifs": "إعادة إشراك العملاء غير النشطين"
+    }
+  },
+  "clientProfil": {
+    "status": {
+      "pending": "قيد الانتظار",
+      "paid": "مدفوع",
+      "in_progress": "قيد التنفيذ",
+      "awaiting_client": "بانتظار التأكيد",
+      "delivered": "تم التوصيل",
+      "auto_delivered": "تم التوصيل (تلقائي)",
+      "cancelled": "ملغي",
+      "refunded": "تم الاسترداد",
+      "disputed": "نزاع"
+    },
+    "mode": {
+      "livreur": "🛵 عامل توصيل",
+      "correspondant": "🤝 مراسل",
+      "partenaire": "🤝 شريك",
+      "pickup": "🏪 استلام من المتجر",
+      "mixte": "🔀 مختلط"
+    },
+    "clientDepuis": "عميل منذ {{date}}",
+    "kpi": {
+      "commandes": "الطلبات",
+      "dansCetteBoutique": "في هذا المتجر",
+      "totalDepense": "إجمالي الإنفاق",
+      "depuisLeDebut": "منذ البداية",
+      "derniereCmd": "آخر طلب"
+    },
+    "tabs": {
+      "apercu": "نظرة عامة",
+      "commandes": "الطلبات ({{count}})"
+    },
+    "loadingProfil": "جارٍ تحميل الملف…",
+    "aperçu": {
+      "relationTitle": "العلاقة مع متجرك",
+      "commandesPassees": "الطلبات المقدمة",
+      "totalDepense": "إجمالي الإنفاق",
+      "abonneBoutique": "يتبع المتجر",
+      "oui": "✅ نعم",
+      "non": "❌ لا",
+      "segment": "الشريحة",
+      "derniereCommandeTitle": "آخر طلب",
+      "aucuneCommandeTitle": "لا توجد طلبات بعد",
+      "aucuneCommandeSub": "يتبع هذا العميل متجرك لكنه لم يشترِ بعد."
+    },
+    "commandesTab": {
+      "aucune": "لا توجد طلبات",
+      "livreLe": "تم التوصيل في {{date}}",
+      "produits": "المنتجات: {{montant}}",
+      "affichageLimite": "عرض آخر 10 طلبات من {{total}} إجمالاً."
+    },
+    "footer": {
+      "messageToast": "📧 تم إرسال الرسالة إلى {{name}}",
+      "envoyerMessage": "إرسال رسالة",
+      "fermer": "إغلاق"
+    }
+  },
+  "avis": {
+    "loadError": "تعذر تحميل التقييمات",
+    "reponsePublieeToast": "✅ تم نشر الرد",
+    "reponseErrorToast": "❌ خطأ أثناء النشر",
+    "kpi": {
+      "noteGlobale": "التقييم العام",
+      "sur5Etoiles": "من 5 نجوم",
+      "avisAuTotal": "إجمالي التقييمات",
+      "clientsVerifies": "عملاء موثقون",
+      "satisfaction": "الرضا",
+      "quatreEtCinqEtoiles": "4 و5 نجوم",
+      "sansReponse": "بدون رد",
+      "aTraiter": "للمعالجة"
+    },
+    "filters": {
+      "tous": "كل التقييمات",
+      "avecReponse": "✅ مع رد",
+      "sansReponse": "⏳ بدون رد"
+    },
+    "loading": "جارٍ تحميل التقييمات…",
+    "empty": {
+      "title": "لا توجد تقييمات",
+      "subPending": "تلقى كل التقييمات ردًا.",
+      "subReplied": "لم يتم الرد على أي تقييم بعد.",
+      "subDefault": "لا توجد تقييمات عملاء بعد."
+    },
+    "sur": "على:",
+    "votreReponse": "ردك",
+    "replyPlaceholder": "الرد على هذا التقييم…",
+    "envoiEnCours": "جارٍ الإرسال…",
+    "publier": "نشر",
+    "annuler": "إلغاء",
+    "repondre": "رد",
+    "modifierReponse": "تعديل الرد",
+    "modifierReponseToast": "✏️ تعديل الرد",
+    "signaler": "إبلاغ",
+    "signalerToast": "🚩 تم إبلاغ التقييم للمراجعة",
+    "sidePanel": {
+      "distributionNotes": "توزيع التقييمات",
+      "avisVerifies_one": "{{count}} تقييم موثق",
+      "avisVerifies_other": "{{count}} تقييمات موثقة",
+      "conseilsShopi": "نصائح Shopi",
+      "tip1": "رد خلال 24 ساعة لزيادة الرضا بنسبة 12%.",
+      "tip2": "البائع الذي يرد يحصل على ضعف التقييمات الجديدة.",
+      "tip3": "اشكر دائمًا التقييمات الإيجابية — حتى باقتضاب."
+    }
+  }
+}

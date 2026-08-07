@@ -4,6 +4,7 @@
  * ================================================================ */
 
 import React, { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsSidebar.module.css';
 import { settingsApi, type ProfilData, type SecuriteData } from '../../api/settings.api';
 
@@ -22,6 +23,7 @@ const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
 const TOKEN_KEY = 'shopi_access_token';
 
 export default function SettingsSidebar({ onToast }: Props) {
+  const { t } = useTranslation();
   const [profil,    setProfil]    = useState<ProfilData | null>(null);
   const [securite,  setSecurite]  = useState<SecuriteData | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -46,16 +48,16 @@ export default function SettingsSidebar({ onToast }: Props) {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      onToast('❌ Format invalide — choisissez une image (JPG, PNG, WebP)');
+      onToast(t('settingsPage.sidebar.invalidFormat'));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      onToast('❌ Image trop grande — maximum 5 Mo');
+      onToast(t('settingsPage.sidebar.tropGrande'));
       return;
     }
 
     setUploading(true);
-    onToast('📤 Upload en cours…');
+    onToast(t('settingsPage.sidebar.uploadEnCoursToast'));
 
     try {
       /* ✅ Upload vers le bon endpoint /upload/avatar */
@@ -72,7 +74,7 @@ export default function SettingsSidebar({ onToast }: Props) {
 
       if (!uploadRes.ok) {
         const err = await uploadRes.json().catch(() => ({}));
-        throw new Error(err.message ?? "Erreur lors de l'upload");
+        throw new Error(err.message ?? t('settingsPage.sidebar.uploadErrorFallback'));
       }
 
       const { url } = await uploadRes.json();
@@ -82,10 +84,10 @@ export default function SettingsSidebar({ onToast }: Props) {
       setAvatarUrl(url);
       setProfil(prev => prev ? { ...prev, profilePicture: url } : prev);
       window.dispatchEvent(new CustomEvent('avatar-updated', { detail: url }));
-      onToast('✅ Photo de profil mise à jour !');
+      onToast(t('settingsPage.sidebar.photoMiseAJour'));
 
     } catch (err: any) {
-      onToast(`❌ ${err.message ?? "Erreur lors de l'upload"}`);
+      onToast(`❌ ${err.message ?? t('settingsPage.sidebar.uploadErrorFallback')}`);
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -116,7 +118,7 @@ export default function SettingsSidebar({ onToast }: Props) {
           {avatarUrl ? (
             <img
               src={avatarUrl}
-              alt="Photo de profil"
+              alt={t('settingsPage.sidebar.photoAlt')}
               className={s.avatar}
               style={{ objectFit:'cover', width:'100%', height:'100%', borderRadius:'50%' }}
             />
@@ -129,7 +131,7 @@ export default function SettingsSidebar({ onToast }: Props) {
             className={s.avatarEdit}
             onClick={handleCameraClick}
             disabled={uploading}
-            title={uploading ? 'Upload en cours…' : 'Changer la photo de profil'}
+            title={uploading ? t('settingsPage.sidebar.uploadEnCours') : t('settingsPage.sidebar.changerPhoto')}
             style={{ cursor: uploading ? 'wait' : 'pointer', opacity: uploading ? .6 : 1 }}
           >
             {uploading
@@ -143,7 +145,7 @@ export default function SettingsSidebar({ onToast }: Props) {
           <div className={s.profileName}>
             {profil
               ? `${profil.firstName} ${profil.lastName}`
-              : <span style={{ opacity:.4 }}>Chargement…</span>
+              : <span style={{ opacity:.4 }}>{t('settingsPage.sidebar.chargement')}</span>
             }
           </div>
           <div className={s.profileEmail}>{profil?.email ?? ''}</div>
@@ -152,7 +154,7 @@ export default function SettingsSidebar({ onToast }: Props) {
         <div className={s.profileBadges}>
           {profil?.emailVerified && (
             <span className={`${s.badge} ${s.badgeGreen}`}>
-              <i className="fas fa-circle-check" /> Vérifié
+              <i className="fas fa-circle-check" /> {t('settingsPage.sidebar.verifie')}
             </span>
           )}
           {securite?.twoFaEnabled && (

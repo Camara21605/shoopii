@@ -10,6 +10,7 @@
  * ================================================================ */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import styles               from '../styles/HeroBanner.module.css';
 import type { LivreurItem, HeroStat } from '../data/livreursMockData';
 
@@ -24,8 +25,9 @@ interface HeroBannerProps {
  * COMPOSANT PRINCIPAL
  * ================================================================ */
 const HeroBanner: React.FC<HeroBannerProps> = ({ stats, featured, onFollow }) => {
+  const { t } = useTranslation();
   return (
-    <section className={styles.hero} aria-label="Présentation des livreurs Shopi">
+    <section className={styles.hero} aria-label={t('livreursPage.hero.ariaLabel')}>
 
       {/* Arrière-plans décoratifs */}
       <div className={styles.bg}   aria-hidden="true" />
@@ -38,16 +40,15 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ stats, featured, onFollow }) =>
         <div className={styles.left}>
           <div className={styles.sup}>
             <i className="fas fa-motorcycle" aria-hidden="true" />
-            Réseau Shopi · Conakry
+            {t('livreursPage.hero.supTitle')}
           </div>
 
           <h1 className={styles.title}>
-            Trouvez votre <em>livreur</em><br />de confiance
+            {t('livreursPage.hero.titrePart1')} <em>{t('livreursPage.hero.titreEm')}</em><br />{t('livreursPage.hero.titrePart2')}
           </h1>
 
           <p className={styles.sub}>
-            Des livreurs professionnels vérifiés, disponibles dans toute la Guinée.
-            Suivez vos livreurs préférés et commandez en toute confiance.
+            {t('livreursPage.hero.sub')}
           </p>
 
           <div className={styles.stats}>
@@ -61,7 +62,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ stats, featured, onFollow }) =>
         </div>
 
         {/* ── Colonne droite : mini-cartes livreurs ── */}
-        <div className={styles.right} aria-label="Livreurs suggérés">
+        <div className={styles.right} aria-label={t('livreursPage.hero.livreursSuggeres')}>
           {featured.slice(0, 2).map(l => (
             <HeroMiniCard key={l.id} livreur={l} onFollow={onFollow} />
           ))}
@@ -81,6 +82,7 @@ interface HeroMiniCardProps {
 }
 
 const HeroMiniCard: React.FC<HeroMiniCardProps> = ({ livreur, onFollow }) => {
+  const { t } = useTranslation();
   const [followed, setFollowed] = useState(livreur.isSuivi);
 
   const handleFollow = () => {
@@ -111,11 +113,11 @@ const HeroMiniCard: React.FC<HeroMiniCardProps> = ({ livreur, onFollow }) => {
       <button
         className={`${styles.miniBtn} ${followed ? styles.miniBtnOn : ''}`}
         onClick={handleFollow}
-        aria-label={followed ? `Se désabonner de ${livreur.fullName}` : `Suivre ${livreur.fullName}`}
+        aria-label={followed ? t('livreursPage.card.seDesabonnerDe', { nom: livreur.fullName }) : t('livreursPage.card.suivreNom', { nom: livreur.fullName })}
       >
         {followed
-          ? <><i className="fas fa-check" aria-hidden="true" /> Abonné</>
-          : <><i className="fas fa-plus"  aria-hidden="true" /> Suivre</>
+          ? <><i className="fas fa-check" aria-hidden="true" /> {t('livreursPage.hero.abonne')}</>
+          : <><i className="fas fa-plus"  aria-hidden="true" /> {t('livreursPage.hero.suivre')}</>
         }
       </button>
     </div>

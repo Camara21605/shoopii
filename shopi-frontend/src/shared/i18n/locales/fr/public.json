@@ -1,0 +1,1662 @@
+{
+  "home": {
+    "trustSection": {
+      "paiement": {
+        "titre": "Paiement sécurisé",
+        "sub": "Orange Money, Visa, Mastercard — SSL"
+      },
+      "livraison": {
+        "titre": "Livraison express",
+        "sub": "640+ livreurs vérifiés, 7j/7"
+      },
+      "protection": {
+        "titre": "Protection acheteur",
+        "sub": "Remboursement garanti si problème"
+      },
+      "support": {
+        "titre": "Support 24/7",
+        "sub": "Chat, WhatsApp, téléphone"
+      }
+    },
+    "typeEntreprise": {
+      "kick": "Types de boutiques",
+      "title": "Toutes les <em>catégories d'entreprises</em>",
+      "sub": "Trouvez l'entreprise qui vous correspond",
+      "linkText": "Toutes les boutiques",
+      "loadError": "Impossible de charger les types d'entreprise.",
+      "empty": "Aucun type d'entreprise disponible pour le moment.",
+      "boutiqueCount_one": "{{count}} boutique",
+      "boutiqueCount_other": "{{count}} boutiques",
+      "categorieCount_one": "{{count}} catégorie",
+      "categorieCount_other": "{{count}} catégories"
+    },
+    "categories": {
+      "kick": "Explorer",
+      "title": "Catégories <em>populaires</em>",
+      "sub": "Naviguez dans nos univers produits",
+      "linkText": "Tout parcourir",
+      "loadError": "Impossible de charger les catégories.",
+      "tout": "Tout",
+      "sousCat_one": "{{count}} sous-cat",
+      "sousCat_other": "{{count}} sous-cats"
+    },
+    "promotions": {
+      "kick": "Offres limitées",
+      "title": "Flash Sales &amp; <em>Promotions</em>",
+      "sub": "Des prix exceptionnels, pour un temps limité",
+      "linkText": "Voir toutes les offres",
+      "livraison": "Livraison",
+      "promo": "Promo",
+      "surBoutique": "Sur toute la boutique",
+      "surSelection": "Sur une sélection de produits",
+      "voirOffre": "Voir l'offre"
+    },
+    "storiesStrip": {
+      "title": "Stories des boutiques",
+      "sub": "Produits phares mis en avant par nos partenaires",
+      "voirTout": "Voir tout",
+      "toastVoirTout": "📖 Toutes les stories",
+      "storiesDe": "Stories de {{nom}}",
+      "produitCount_one": "{{count}} produit",
+      "produitCount_other": "{{count}} produits",
+      "enLigneMaintenant": "En ligne maintenant",
+      "vuRecemment": "Vu récemment",
+      "badgePromo": "🔥 Promo",
+      "badgeNouveau": "✨ Nouveau",
+      "badgeFlash": "⚡ Flash",
+      "badgeTop": "⭐ Top Vente",
+      "voirProduit": "Voir le produit",
+      "laBoutique": "La boutique",
+      "partager": "Partager",
+      "lienCopieToast": "🔗 Lien copié !"
+    },
+    "randomBloc": {
+      "produits": {
+        "kick": "Catalogue",
+        "title": "Produits <em>recommandés</em>",
+        "sub": "Sélectionnés pour vous",
+        "link": "Voir tout le catalogue"
+      },
+      "produitsGros": {
+        "kick": "Vente en gros",
+        "title": "Acheter en <em>gros</em>",
+        "sub": "Prix dégressifs · commande minimum",
+        "link": "Voir tous les produits en gros"
+      },
+      "entreprises": {
+        "kick": "Boutiques",
+        "title": "Boutiques <em>à la une</em>",
+        "sub": "Abonnez-vous à vos boutiques favorites",
+        "link": "Toutes les boutiques"
+      },
+      "correspondants": {
+        "kick": "Réseau local",
+        "title": "Nos <em>Correspondants</em>",
+        "sub": "Des relais locaux dans chaque région",
+        "link": "Tous les correspondants"
+      },
+      "livreurs": {
+        "kick": "Logistique",
+        "title": "Livreurs <em>disponibles</em>",
+        "sub": "Professionnels vérifiés près de vous",
+        "link": "Tous les livreurs"
+      },
+      "toastLink": "📄 {{link}}",
+      "moqUnites": "MOQ {{moq}} unités",
+      "errorReseau": "Erreur réseau",
+      "emptyBoutiques": "Aucune boutique disponible pour le moment.",
+      "emptyProduits": "Aucun produit disponible.",
+      "emptyProduitsGros": "Aucun produit en gros disponible pour le moment.",
+      "emptyLivreurs": "Aucun livreur disponible.",
+      "emptyCorrespondants": "Aucun correspondant disponible.",
+      "errorProduits": "Impossible de charger les produits.",
+      "errorProduitsGros": "Impossible de charger les produits en gros."
+    }
+  },
+  "publicHeader": {
+    "accueilTitle": "Accueil Shopi",
+    "nav": {
+      "explorer": "Explorer",
+      "boutiques": "Boutiques",
+      "livreurs": "Livreurs",
+      "relais": "Relais",
+      "offres": "Offres"
+    },
+    "searchAll": "Tout",
+    "searchPlaceholder": "Produits, boutiques, livreurs…",
+    "searchAria": "Rechercher",
+    "searchSuggestions": {
+      "tendances": "Tendances du moment",
+      "smartphones": "Smartphones — 4 200 résultats",
+      "boutiquesPopulaires": "Boutiques populaires",
+      "livreursDispo": "Livreurs disponibles près de vous",
+      "offresDuJour": "Offres du jour"
+    },
+    "searchToast": "🔍 {{text}}",
+    "accueil": "Accueil",
+    "messagerie": "Messagerie",
+    "panier": "Panier",
+    "aide": "Centre d'aide",
+    "connexion": "Connexion",
+    "inscription": "S'inscrire",
+    "monCompte": "Mon compte",
+    "monProfil": "Mon profil",
+    "monEspace": "Mon espace",
+    "monEspacePro": "Mon espace professionnel",
+    "monEspaceProShort": "Mon espace pro",
+    "seDeconnecter": "Se déconnecter",
+    "deconnexion": "Déconnexion",
+    "menu": "Menu",
+    "parametres": "Paramètres",
+    "retourAccueil": "Retour à l'accueil",
+    "avantDeVousConnecter": "Avant de vous connecter…",
+    "navMobileAria": "Navigation principale mobile"
+  },
+  "publicFooter": {
+    "brandTagline": "La marketplace africaine de référence. Connectons les acteurs économiques de l'Afrique de l'Ouest dans un écosystème digital unifié.",
+    "socialToast": "📲 {{label}}",
+    "appStoreToast": "📱 App Store bientôt disponible",
+    "googlePlayToast": "🤖 Google Play bientôt disponible",
+    "disponibleSur": "Disponible sur",
+    "linkToast": "📄 {{label}}",
+    "cols": {
+      "plateforme": {
+        "titre": "Plateforme",
+        "explorerProduits": "Explorer les produits",
+        "boutiques": "Boutiques",
+        "livreurs": "Livreurs",
+        "partenaires": "Partenaires",
+        "correspondants": "Correspondants",
+        "offresPromos": "Offres & Promos"
+      },
+      "acteurs": {
+        "titre": "Acteurs",
+        "espaceClient": "Espace Client",
+        "espaceEntreprise": "Espace Entreprise",
+        "espaceLivreur": "Espace Livreur",
+        "espacePartenaire": "Espace Partenaire",
+        "espaceCorrespondant": "Espace Correspondant",
+        "espaceAdmin": "Espace Admin"
+      },
+      "aide": {
+        "titre": "Aide",
+        "centreAide": "Centre d'aide",
+        "contact": "Contact",
+        "faq": "FAQ",
+        "signalerProbleme": "Signaler un problème",
+        "remboursements": "Remboursements",
+        "politiqueRetour": "Politique de retour"
+      }
+    },
+    "trust": {
+      "paiementSecurise": "Paiement sécurisé SSL",
+      "livraisonExpress": "Livraison express 7j/7",
+      "protectionAcheteur": "Protection acheteur",
+      "support247": "Support 24/7",
+      "retourFacile": "Retour facile 7 jours"
+    },
+    "copyright": "© 2025 Shopi Africa. Tous droits réservés. Fait avec ❤️ en Guinée 🇬🇳",
+    "bottomLinks": {
+      "mentionsLegales": "Mentions légales",
+      "confidentialite": "Confidentialité",
+      "cookies": "Cookies",
+      "cgu": "CGU",
+      "accessibilite": "Accessibilité"
+    }
+  },
+  "boutiquesPage": {
+    "title": "Toutes les boutiques",
+    "subtitleCount_one": "{{count}} entreprise disponible",
+    "subtitleCount_other": "{{count}} entreprises disponibles",
+    "subtitleDefault": "Découvrez nos entreprises partenaires",
+    "searchPlaceholder": "Rechercher une boutique...",
+    "resultats": "Résultats",
+    "loading": "Chargement…",
+    "resultCount_one": "{{count}} boutique",
+    "resultCount_other": "{{count}} boutiques",
+    "errorTitle": "Impossible de charger les boutiques",
+    "retry": "Réessayer",
+    "emptyTitle": "Aucune entreprise trouvée",
+    "emptyText": "Aucune entreprise n'est disponible dans cette catégorie.",
+    "loadMore": "Charger plus de boutiques",
+    "filterBar": {
+      "toutesCategories": "✦ Toutes catégories",
+      "toutesSousCategories": "Toutes les sous-catégories"
+    }
+  },
+  "boutiqueDetail": {
+    "nav": {
+      "produits": "Produits",
+      "promotions": "Promotions",
+      "livreurs": "Livreurs",
+      "correspondants": "Correspondants",
+      "avis": "Avis",
+      "apropos": "À propos"
+    },
+    "cover": {
+      "verifiee": "Boutique vérifiée Shopi",
+      "active": "Active"
+    },
+    "identity": {
+      "verifie": "Vérifié Shopi",
+      "note": "Note",
+      "abonnes": "Abonnés",
+      "satisfaction": "Satisfaction",
+      "ventes": "Ventes",
+      "abonner": "S'abonner",
+      "abonneLabel": "Abonné",
+      "messageBtn": "Message",
+      "appelerBtn": "Appeler",
+      "abonnezVousMessage": "Abonnez-vous pour envoyer un message",
+      "envoyerMessageTitle": "Envoyer un message",
+      "abonnezVousAppel": "Abonnez-vous pour appeler",
+      "appelerTitle": "Appeler",
+      "partagerTitle": "Partager la boutique"
+    },
+    "livreursSection": {
+      "disponibleCount_one": "disponible",
+      "disponibleCount_other": "disponibles",
+      "enCourse": "en course",
+      "totalCount": "livreurs au total"
+    },
+    "cardLivreur": {
+      "livraisonsCount": "{{count}} livraisons",
+      "disponible": "● Disponible",
+      "enCourseBadge": "⚙ En course",
+      "voirProfil": "Voir profil",
+      "profilToast": "🛵 Profil de {{nom}}",
+      "desabonneToast": "👋 Désabonné de {{nom}}",
+      "abonneToast": "✅ Abonné à {{nom}}"
+    },
+    "correspondantsSection": {
+      "disponibleCount_one": "disponible",
+      "disponibleCount_other": "disponibles",
+      "completCount_one": "complet",
+      "completCount_other": "complets",
+      "totalCount": "correspondants au total",
+      "infoBannerTitle": "Qu'est-ce qu'un correspondant Shopi ?",
+      "infoBannerDesc": "Un correspondant est un représentant Shopi dans votre ville. Il réceptionne votre colis, le vérifie et le garde en lieu sûr. Vous pouvez le récupérer directement ou le confier à un livreur pour une livraison à domicile.",
+      "steps": {
+        "colisRecu": "Colis reçu et vérifié",
+        "stockageSecurise": "Stockage sécurisé",
+        "remiseDirecte": "Remise directe ou via livreur",
+        "noteCertifie": "Noté et certifié Shopi"
+      },
+      "fermer": "Fermer"
+    },
+    "cardCorrespondant": {
+      "verifie": "Vérifié",
+      "colisMois": "{{count}} colis/mois",
+      "disponible": "● Disponible",
+      "complet": "◌ Complet",
+      "contacter": "Contacter",
+      "choisir": "Choisir",
+      "choisi": "Choisi",
+      "messageToast": "💬 Message à {{nom}}",
+      "retireToast": "↩️ Correspondant {{nom}} retiré",
+      "selectionneToast": "✅ {{nom}} sélectionné comme correspondant"
+    },
+    "modalPartage": {
+      "titre": "Partager cette boutique",
+      "fermer": "Fermer",
+      "copier": "Copier",
+      "lienCopiePresseToast": "🔗 Lien copié dans le presse-papier !",
+      "instagramCopieToast": "📸 Lien copié — collez-le dans Instagram",
+      "partageVia": "📲 Partage via {{label}}",
+      "lienCopieToast": "🔗 Lien copié !",
+      "emailSujet": "Découvrez cette boutique Shopi"
+    },
+    "aPropos": {
+      "titre": "À propos de la boutique",
+      "anneesExperience": "Années d'expérience",
+      "commandesLivrees": "Commandes livrées",
+      "satisfactionClient": "Satisfaction client",
+      "noteMoyenne": "Note moyenne",
+      "infosPratiques": "Infos pratiques",
+      "horaires": "Horaires",
+      "adresse": "Adresse",
+      "telephone": "Téléphone",
+      "email": "Email",
+      "siteWeb": "Site web",
+      "livreursBoutique": "Livreurs de la boutique",
+      "voirProfil": "Voir profil",
+      "profilToast": "🛵 Profil de {{nom}}"
+    },
+    "cardProduit": {
+      "voir": "Voir",
+      "ajouterPanier": "Ajouter au panier",
+      "partager": "Partager",
+      "retireFavorisToast": "💔 Retiré des favoris",
+      "ajouteFavorisToast": "❤️ Ajouté aux favoris",
+      "detailToast": "👁️ Détail : {{nom}}",
+      "ajouteAuPanierToast": "🛒 Ajouté au panier !",
+      "partagerToast": "📤 Partager : {{nom}}",
+      "badges": {
+        "hot": "🔥 Hot",
+        "new": "✨ Nouveau",
+        "promo": "🏷️ Promo",
+        "sol": "🔴 Soldé"
+      },
+      "stock": {
+        "ok": "✓ En stock",
+        "low": "⚠ Stock limité",
+        "out": "✗ Rupture"
+      }
+    },
+    "promotions": {
+      "reduction": "Réduction",
+      "livraisonOfferte": "Livraison offerte",
+      "bundle": "Bundle",
+      "venteFlash": "Vente flash",
+      "offerte": "Offerte",
+      "des": "Dès {{montant}} GNF",
+      "jusquau": "Jusqu'au {{date}}",
+      "restants": "{{count}} restants",
+      "utilisationsRestantes_one": "{{count}} utilisation restante",
+      "utilisationsRestantes_other": "{{count}} utilisations restantes",
+      "codePromoToast": "🏷️ Code promo : {{code}}",
+      "copierLeCode": "Copier le code",
+      "codeCopieToast": "✅ Code copié : {{code}}",
+      "chargement": "Chargement des promotions…",
+      "aucunePromo": "Aucune promotion active",
+      "aucunePromoDesc": "Cette boutique n'a pas de promotion en cours pour le moment.",
+      "activeCount_one": "{{count}} promotion active",
+      "activeCount_other": "{{count}} promotions actives"
+    },
+    "produitsSection": {
+      "filtresActifs": "Filtres actifs :",
+      "supprimerFiltre": "Supprimer ce filtre",
+      "toutEffacer": "Tout effacer",
+      "trouveCount_one": "produit trouvé",
+      "trouveCount_other": "produits trouvés",
+      "vueGrille": "Vue grille",
+      "vueListe": "Vue liste",
+      "aucunProduit": "Aucun produit ne correspond à vos filtres",
+      "essayezModifier": "Essayez de modifier ou supprimer certains filtres.",
+      "reinitialiser": "Réinitialiser les filtres",
+      "pageToast": "📄 Page {{n}}",
+      "pageSuivanteToast": "📄 Page suivante"
+    },
+    "sidebar": {
+      "trierPar": "Trier par",
+      "triOptions": {
+        "pertinence": "Pertinence",
+        "prixCroissant": "Prix croissant",
+        "prixDecroissant": "Prix décroissant",
+        "mieuxNotes": "Mieux notés",
+        "nouveautes": "Nouveautés",
+        "meilleuresVentes": "Meilleures ventes"
+      },
+      "triToast": "🔃 Tri : {{value}}",
+      "categories": "Catégories",
+      "tout": "Tout",
+      "prix": "Prix (GNF)",
+      "noteMinimale": "Note minimale",
+      "tousLesAvis": "Tous les avis",
+      "filtreEtoilesToast": "⭐ Filtre {{n}}+ étoiles",
+      "disponibilite": "Disponibilité",
+      "enStockUniquement": "En stock uniquement",
+      "enPromotion": "En promotion",
+      "nouveautesSeulement": "Nouveautés seulement",
+      "infosBoutique": "Infos boutique",
+      "horaires": "Horaires",
+      "adresse": "Adresse",
+      "telephone": "Téléphone",
+      "email": "Email"
+    },
+    "avis": {
+      "chargement": "Chargement des avis…",
+      "sur5": "{{n}} sur 5",
+      "aucuneNote": "Aucune note",
+      "avisVerifies_one": "{{count}} avis vérifié",
+      "avisVerifies_other": "{{count}} avis vérifiés",
+      "aucunAvis": "Aucun avis pour le moment",
+      "aucunAvisDetaille": "Aucun avis détaillé disponible",
+      "noteExisteDeja": "La note globale existe déjà, mais les commentaires ne sont pas encore disponibles.",
+      "avisApparaissent": "Les avis apparaissent après que les clients ont validé la réception de leur commande.",
+      "achatVerifie": "Achat vérifié"
+    },
+    "stories": {
+      "precedent": "Précédent",
+      "suivant": "Suivant",
+      "ilYA1j": "il y a 1j",
+      "ilYAHeures": "il y a {{h}}h",
+      "ilYAMinutes": "il y a {{m}}min",
+      "aLInstant": "à l'instant",
+      "voirLeProduit": "Voir le produit",
+      "ajouterPanier": "Ajouter au panier",
+      "ajouteAuPanierToast": "🛒 Ajouté au panier : {{produit}}",
+      "partager": "Partager",
+      "lienCopieToast": "🔗 Lien copié !",
+      "precedente": "Précédente",
+      "suivante": "Suivante",
+      "badges": {
+        "promo": "🔥 Promo",
+        "new": "✨ Nouveau",
+        "top": "⭐ Top Vente",
+        "flash": "⚡ Flash"
+      }
+    },
+    "page": {
+      "boutiqueIntrouvable": "Boutique introuvable",
+      "boutiqueIntrouvableDesc": "Cette boutique n'existe pas ou a été désactivée.",
+      "retourAccueil": "← Retour à l'accueil",
+      "idBoutiqueManquant": "ID boutique manquant.",
+      "erreurChargement": "Impossible de charger les données de la boutique.",
+      "accueil": "Accueil",
+      "boutiques": "Boutiques",
+      "abonneToast": "✅ Abonné à {{nom}}",
+      "abonneDefaultToast": "✅ Abonné à cette boutique",
+      "desabonneToast": "👋 Désabonné",
+      "erreurSuivi": "Erreur lors du suivi — réessayez",
+      "abonnezVousMessage": "Abonnez-vous à la boutique pour lui envoyer un message",
+      "abonnezVousAppel": "Abonnez-vous à la boutique pour l'appeler",
+      "erreurToast": "❌ {{msg}}",
+      "filtreEnStock": "En stock",
+      "filtreEnPromotion": "En promotion",
+      "filtreNouveautes": "Nouveautés",
+      "partagerTitre": "Partager cette boutique",
+      "boutiqueShopiDefault": "Boutique Shopi",
+      "membreDepuis": "Membre depuis {{date}}",
+      "membreShopi": "Membre Shopi",
+      "horairesNonRenseignes": "Horaires non renseignés"
+    }
+  },
+  "produitDetail": {
+    "modalPartage": {
+      "copier": "Copier",
+      "lienCopieToast": "🔗 Lien copié !",
+      "instagramCopieToast": "📸 Lien copié — collez dans Instagram",
+      "partageVia": "📲 Partage via {{label}}",
+      "titrePartager": "Partager ce produit"
+    },
+    "gallery": {
+      "populaire": "⭐ Populaire",
+      "importe": "🌍 Importé",
+      "retireFavorisToast": "🤍 Retiré des favoris",
+      "ajouteFavorisToast": "❤️ Ajouté aux favoris",
+      "retirerFavoris": "Retirer des favoris",
+      "ajouterFavoris": "Ajouter aux favoris",
+      "partagerCeProduit": "Partager ce produit",
+      "image": "Image {{n}}"
+    },
+    "tabs": {
+      "description": "Description",
+      "caracteristiques": "Caractéristiques",
+      "livraisonCorrespondants": "Livraison & Correspondants",
+      "avisCount": "Avis ({{count}})",
+      "aProposTitre": "À propos de l'iPhone 15 Pro",
+      "performances": "Performances",
+      "performancesList": {
+        "puce": "Puce A17 Pro gravée en 3 nm — la plus rapide jamais intégrée",
+        "gpu": "GPU 6 cœurs pour des graphismes de niveau console",
+        "autonomie": "Jusqu'à 29h d'autonomie vidéo"
+      },
+      "cameraProRes": "Caméra ProRes",
+      "cameraList": {
+        "triple": "Triple caméra 48MP principal, 12MP ultrawide, 12MP téléphoto 3x",
+        "enregistrement": "Enregistrement 4K/60fps ProRes",
+        "smartHdr": "Smart HDR 5"
+      },
+      "livraisonTitre": "Livraison internationale et correspondants",
+      "livraisonDesc": "Cette boutique est basée en France. Shopi propose un système de correspondants locaux pour faciliter la réception de vos commandes en Afrique.",
+      "commentTitre": "Comment fonctionne le correspondant Shopi ?",
+      "commentList": {
+        "representant": "Le correspondant est un représentant Shopi dans votre ville ou région",
+        "receptionne": "Il réceptionne votre colis, vérifie son état et vous notifie",
+        "conserve": "Il le conserve en lieu sûr et vous le remet ou le confie à un livreur local",
+        "facilite": "Il facilite la communication entre vous et la boutique internationale"
+      },
+      "tarifTitre": "Tarification des livreurs selon la distance",
+      "tarifList": {
+        "memeVille": "Même ville : tarif de base (ex. 15 000 – 25 000 GNF)",
+        "villeProche": "Ville proche (rayon 50 km) : +30% du tarif de base",
+        "autreRegion": "Autre région / préfecture : +80% du tarif de base",
+        "international": "International : tarif fixé par accord entre boutique et correspondant"
+      },
+      "multiplicateursTitre": "Multiplicateurs de vitesse",
+      "multiplicateursList": {
+        "eco": "🐢 Économique : ×1.0 — délai classique",
+        "standard": "🚴 Standard : ×1.3 — délai normal recommandé",
+        "express": "🚀 Express : ×1.8 — livraison prioritaire",
+        "ultra": "⚡ Ultra : ×2.5 — livraison immédiate"
+      },
+      "achatVerifie": "Achat vérifié"
+    },
+    "similaires": {
+      "kick": "Vous aimerez aussi",
+      "titrePart1": "Produits",
+      "titreEm": "similaires",
+      "voirTout": "Voir tout",
+      "retireFavorisToast": "🤍 Retiré des favoris",
+      "ajouteFavorisToast": "❤️ Ajouté aux favoris",
+      "dejaAuPanierToast": "🛒 Déjà dans votre panier — allez dans le panier pour modifier la quantité",
+      "ajouteToast": "✅ {{nom}} ajouté au panier !",
+      "erreurToast": "❌ {{msg}}",
+      "voirLePanier": "Voir le panier",
+      "ajouter": "Ajouter",
+      "badges": {
+        "hot": "⭐ Pop.",
+        "new": "✨ Nouveau",
+        "promo": "🏷️ Promo"
+      }
+    },
+    "panier": {
+      "economisez": "Vous économisez {{pct}}%",
+      "livraisonNonConfiguree": "Livraison non configurée",
+      "configurer": "Configurer",
+      "livraisonStandardGratuite": "Livraison standard — Gratuite",
+      "modifier": "Modifier",
+      "destination": "Destination",
+      "fraisLivraison": "Frais livraison",
+      "gratuit": "Gratuit",
+      "correspondant": "Correspondant",
+      "choisissezLivreur": "Choisissez un livreur",
+      "voir": "Voir",
+      "quantite": "Quantité",
+      "produitFois": "Produit × {{qty}}",
+      "fraisDeLivraison": "Frais de livraison",
+      "fraisCorrespondant": "Frais correspondant",
+      "totalEstime": "Total estimé",
+      "ruptureDeStock": "Rupture de stock",
+      "dejaAuPanier": "Déjà au panier — Voir le panier",
+      "ajoutEnCours": "Ajout…",
+      "ajouterAuPanier": "Ajouter au panier",
+      "redirection": "Redirection…",
+      "allerAuPanier": "Aller au panier",
+      "acheterMaintenant": "Acheter maintenant",
+      "paiementSecurise": "Paiement 100% sécurisé",
+      "boutiqueVerifiee": "Boutique vérifiée ·",
+      "note": "Note",
+      "satisf": "Satisf.",
+      "ventes": "Ventes",
+      "voirBoutique": "Voir boutique",
+      "contacter": "Contacter",
+      "messagerieOuverteToast": "💬 Messagerie ouverte",
+      "dejaAuPanierToast": "🛒 Déjà dans votre panier — rendez-vous dans le panier pour modifier la quantité",
+      "ajouteToast": "✅ Ajouté au panier !",
+      "erreurToast": "❌ {{msg}}"
+    },
+    "infoSection": {
+      "sku": "SKU : {{sku}}",
+      "intlTitre": "Boutique internationale détectée",
+      "intlDesc": "Cette boutique est localisée en dehors de votre continent. Un correspondant Shopi peut réceptionner votre commande et assurer la liaison locale.",
+      "voirLaBoutique": "Voir la boutique {{nom}}",
+      "boutiqueVerifieeShopi": "Boutique vérifiée Shopi",
+      "abonnesCount": "{{count}} abonnés",
+      "avisCount": "{{count}} avis",
+      "acheteursConfirmes": "{{count}} acheteurs confirmés",
+      "economieDe": "Économie de {{montant}} GNF (−{{pct}}%)",
+      "prixNote": "Prix garanti · Paiement sécurisé · Hors frais de livraison",
+      "stock": {
+        "ok": "En stock",
+        "okNote": "— {{count}} unités disponibles",
+        "low": "Stock limité",
+        "lowNote": "— Seulement {{count}} restantes",
+        "out": "Rupture de stock"
+      },
+      "stockage": "Stockage",
+      "coloris": "Coloris",
+      "titanium": "Titanium",
+      "stockageToast": "✅ Stockage : {{v}}",
+      "colorisToast": "✅ Coloris : {{v}} Titanium",
+      "quantite": "Quantité",
+      "maxParCommande": "Max. 5 par commande",
+      "ruptureDeStock": "Rupture de stock",
+      "ajoutEnCours": "Ajout en cours…",
+      "ajouterAuPanier": "Ajouter au panier",
+      "redirection": "Redirection…",
+      "acheterMaintenant": "Acheter maintenant",
+      "retireFavorisToast": "🤍 Retiré des favoris",
+      "favorisToast": "❤️ Favoris",
+      "favoris": "Favoris",
+      "comparer": "Comparer",
+      "comparaisonToast": "⚖️ Ajouté à la comparaison",
+      "partager": "Partager :",
+      "vuesAujourdhui": "{{count}} vues aujourd'hui",
+      "idManquantToast": "❌ ID produit manquant",
+      "ruptureToast": "❌ Produit en rupture de stock",
+      "ajouteToast": "🛒 Ajouté au panier !",
+      "erreurToast": "❌ {{msg}}",
+      "garanties": {
+        "paiementTitre": "Paiement sécurisé",
+        "paiementSub": "SSL · Orange Money · Visa",
+        "retourTitre": "Retour 7 jours",
+        "retourSub": "Produit défectueux accepté",
+        "authentiqueTitre": "Produit authentique",
+        "authentiqueSub": "Vendeur Shopi certifié",
+        "supportTitre": "Support 24/7",
+        "supportSub": "Chat · WhatsApp · Tél."
+      }
+    },
+    "livraison": {
+      "titre": "Livraison & Réception",
+      "requis": "Requis avant commande",
+      "etape1Titre": "Votre adresse de destination",
+      "renseigne": "Renseigné",
+      "choisirContinent": "-- Votre continent --",
+      "choisirPays": "-- Votre pays --",
+      "choisirVille": "-- Votre ville --",
+      "quartierPlaceholder": "Quartier / Rue (optionnel)",
+      "distBadge": {
+        "intlLabel": "🌍 International — Autre continent",
+        "intlNote": "Correspondant recommandé",
+        "localLabel": "📍 Même zone — Conakry",
+        "localNote": "Tarif de base livreur",
+        "nearLabel": "🗺️ Ville proche — ~120 km",
+        "nearNote": "+30% sur le tarif de base",
+        "farLabel": "📦 Autre région — +200 km",
+        "farNote": "+80% sur le tarif de base"
+      },
+      "aucunMode": "Aucun mode de livraison disponible pour ce produit. Contactez directement la boutique pour organiser la livraison.",
+      "correspondantTitre": "Correspondant Shopi",
+      "selectionne": "Sélectionné",
+      "boutiqueHorsContinent": "Boutique en dehors de votre continent",
+      "pourquoiCorrespondant": "Pourquoi un correspondant ?",
+      "pourquoiDesc": "La boutique est à l'international. Un correspondant Shopi peut réceptionner votre colis, vérifier son état et vous le remettre.",
+      "livraisonDirecteTitre": "Livraison directe",
+      "livraisonDirecteSub": "La boutique expédie directement (délai plus long)",
+      "viaCorrespondantTitre": "Via un correspondant",
+      "viaCorrespondantSub": "Recommandé — relais local, plus sûr et plus rapide",
+      "correspondantsDisponibles": "Correspondants disponibles",
+      "fraisCorresp": "frais corresp.",
+      "correspondantToast": "✅ Correspondant : {{name}}",
+      "modeFinaleTitre": "Mode de livraison finale",
+      "livraisonStandardTitre": "Livraison standard",
+      "livraisonStandardSub": "Gérée par la boutique",
+      "gratuite": "Gratuite",
+      "delaiSelonDistance": "Délai selon la distance",
+      "choisirLivreurTitre": "Choisir un livreur",
+      "choisirLivreurSub": "Livreurs de votre réseau",
+      "aPartirDe": "À partir de {{montant}} GNF",
+      "prixSelonDistance": "Prix selon distance + vitesse",
+      "livreurToast": "✅ {{name}} — {{fee}} GNF",
+      "choisissezVotreLivreur": "Choisissez votre livreur",
+      "livreursAbonnes": "Livreurs abonnés à vous et à la boutique",
+      "mesAbonnes": "Mes abonnés",
+      "boutique": "Boutique",
+      "vitesseLivraison": "Vitesse de livraison",
+      "speedOptions": {
+        "eco": "Économique",
+        "standard": "Standard",
+        "express": "Express",
+        "ultra": "Ultra"
+      },
+      "votreAbonne": "👤 Votre abonné",
+      "distLabels": {
+        "local": "Même ville",
+        "near": "Proche",
+        "far": "Autre région"
+      },
+      "summary": {
+        "livreur": "Livreur :",
+        "vitesse": "Vitesse :",
+        "frais": "Frais :",
+        "delai": "Délai :"
+      }
+    },
+    "page": {
+      "idManquant": "ID produit manquant.",
+      "introuvable": "Produit introuvable ou non publié.",
+      "produitIntrouvableTitre": "Produit introuvable",
+      "produitIntrouvableDesc": "Ce produit n'existe pas ou n'est pas encore publié.",
+      "retourAccueil": "Retour à l'accueil",
+      "accueil": "Accueil",
+      "partagerTitre": "Partager ce produit"
+    }
+  },
+  "panierCommande": {
+    "progressBar": {
+      "panier": "Panier",
+      "vide": "Vide",
+      "articleCount_one": "{{count}} article",
+      "articleCount_other": "{{count}} articles",
+      "livraison": "Livraison",
+      "adresseLivreur": "Adresse & livreur",
+      "confirmation": "Confirmation",
+      "verification": "Vérification",
+      "paiementSecuriseSsl": "Paiement sécurisé SSL"
+    },
+    "confirmModal": {
+      "titre": "Confirmer la commande ?",
+      "desc": "Vérifiez bien vos articles, l'adresse de livraison et le mode de paiement. Une fois confirmée, votre commande sera transmise immédiatement au vendeur.",
+      "avertissement": "Assurez-vous que votre numéro de téléphone est correct pour que le livreur puisse vous contacter.",
+      "annuler": "Annuler",
+      "enCours": "En cours…",
+      "confirmer": "Confirmer"
+    },
+    "modalSuccess": {
+      "titre": "Commande confirmée !",
+      "desc": "Votre commande a été enregistrée avec succès et est en cours de traitement. Vous recevrez une notification dès la prise en charge par le livreur.",
+      "commande": "Commande",
+      "suiviTempsReel": "Suivi en temps réel",
+      "commandeConfirmee": "Commande confirmée",
+      "aLInstant": "À l'instant",
+      "preparationEnCours": "Préparation en cours",
+      "boutiqueVendeur": "Boutique vendeur",
+      "remiseAuLivreur": "Remise au livreur",
+      "livreurNomPart": "—",
+      "enAttente": "— En attente",
+      "livraisonAVotreAdresse": "Livraison à votre adresse",
+      "redirectionToast": "📦 Redirection suivi commande…",
+      "suivre": "Suivre",
+      "continuer": "Continuer"
+    },
+    "recapSection": {
+      "titre": "Récapitulatif & Confirmation",
+      "sub": "Vérifiez tous les détails avant de confirmer",
+      "destinataire": "Destinataire",
+      "infosNonDisponibles": "Informations non disponibles",
+      "livraison": "Livraison",
+      "standard": "🚚 Standard",
+      "nonSelectionne": "⚠️ Non sélectionné",
+      "gratuiteDelai": "Gratuite · 24–48h",
+      "correspondantLabel": "📍 Correspondant : {{nom}}",
+      "paiement": "Paiement",
+      "termsPart1": "J'accepte les",
+      "cgv": "conditions générales de vente",
+      "termsPart2": "la",
+      "politiqueRetour": "politique de retour",
+      "termsPart3": "et j'autorise Shopi à traiter mon paiement.",
+      "payLabels": {
+        "omo": "Orange Money 🏦",
+        "mtn": "MTN Money 💛",
+        "card": "Carte bancaire 💳",
+        "cash": "À la livraison 💵",
+        "wire": "Virement 🏛️",
+        "wallet": "Wallet Shopi 👛"
+      }
+    },
+    "summaryPanel": {
+      "recapitulatif": "Récapitulatif",
+      "modifier": "Modifier",
+      "sousTotal_one": "Sous-total ({{count}} article)",
+      "sousTotal_other": "Sous-total ({{count}} articles)",
+      "livraison": "Livraison",
+      "gratuite": "✓ Gratuite",
+      "correspondant": "Correspondant",
+      "promoShopi20": "Promo SHOPI20",
+      "totalAPayer": "Total à payer",
+      "soldePortefeuille": "Solde du portefeuille",
+      "chargement": "Chargement…",
+      "soldeInsuffisant": "Solde insuffisant — rechargez votre portefeuille pour continuer.",
+      "traitementEnCours": "Traitement en cours…",
+      "confirmerLaCommande": "Confirmer la commande",
+      "paiementSecuriseSsl": "Paiement sécurisé SSL 256-bit",
+      "retourGratuit": "Retour gratuit sous 7 jours",
+      "protectionAcheteur": "Protection acheteur Shopi",
+      "estimationLivraison": "Estimation de livraison",
+      "mode": "Mode",
+      "destination": "Destination",
+      "delaiEstime": "Délai estimé",
+      "livraisonStandardLabel": "Livraison standard",
+      "nonSelectionne": "Non sélectionné"
+    },
+    "livraisonSection": {
+      "titre": "Mode de livraison",
+      "sub": "Choisissez comment recevoir votre commande",
+      "livraisonStandard": "Livraison standard",
+      "gereeParBoutique": "Gérée par la boutique",
+      "gratuite": "Gratuite",
+      "delai2448h": "24 – 48 heures",
+      "choisirLivreur": "Choisir un livreur",
+      "vosLivreursAbonnes": "Vos livreurs abonnés",
+      "desPrix": "Dès {{montant}}",
+      "aucunLivreur": "Aucun livreur",
+      "prixSelonDistance": "Prix selon distance & vitesse",
+      "vosLivreursSuivis": "Vos livreurs suivis",
+      "vosAbonnes": "👤 Vos abonnés",
+      "vitesse": "Vitesse",
+      "chargementLivreurs": "Chargement de vos livreurs…",
+      "aucunLivreurSuiviPart1": "Vous ne suivez aucun livreur pour le moment.",
+      "aucunLivreurSuiviPart2": "Abonnez-vous à des livreurs depuis la page",
+      "livreursPage": "Livreurs",
+      "aucunLivreurSuiviPart3": "pour les retrouver ici.",
+      "livreurToast": "✅ Livreur : {{nom}}",
+      "votreAbonne": "👤 Votre abonné",
+      "correspondantIntl": "Correspondant Shopi (boutique internationale)",
+      "boutiqueEtranger": "La boutique est à l'étranger. Un correspondant local réceptionne et relaie votre colis.",
+      "correspondantToast": "📍 Correspondant : {{nom}}",
+      "speeds": {
+        "eco": "Éco",
+        "std": "Standard",
+        "exp": "Express",
+        "ult": "Ultra"
+      },
+      "recommande": "Rec."
+    },
+    "adresseSection": {
+      "titre": "Adresse de livraison",
+      "sub": "Où souhaitez-vous être livré ?",
+      "chargementAdresses": "Chargement de vos adresses…",
+      "nouvelle": "Nouvelle",
+      "prenom": "Prénom",
+      "prenomPlaceholder": "Votre prénom",
+      "nom": "Nom",
+      "nomPlaceholder": "Votre nom",
+      "telephone": "Téléphone",
+      "villeLabel": "Ville",
+      "commune": "Commune",
+      "adressePrecise": "Adresse précise",
+      "adressePreciseOpt": "* (rue, repère)",
+      "adressePrecisePlaceholder": "Quartier, rue, repère…",
+      "instructions": "Instructions de livraison",
+      "optionnel": "optionnel",
+      "instructionsPlaceholder": "Ex : Appeler avant d'arriver…",
+      "adresseSelectionneeToast": "📍 {{nom}}"
+    },
+    "page": {
+      "cardHeadTitle": "Vos articles",
+      "cardHeadSub_one": "{{count}} article · Prêt pour la commande",
+      "cardHeadSub_other": "{{count}} articles · Prêt pour la commande",
+      "plusQueEnStock": "Plus que {{count}} en stock",
+      "retirerDuPanier": "Retirer du panier",
+      "panierVideTitre": "Votre panier est vide",
+      "panierVideDesc": "Parcourez les boutiques et ajoutez vos produits préférés pour passer commande.",
+      "explorerBoutiques": "Explorer les boutiques",
+      "erreurQtyToast": "❌ Impossible de modifier la quantité",
+      "articleRetireToast": "🗑️ Article retiré du panier",
+      "erreurSuppressionToast": "❌ Impossible de supprimer",
+      "acceptezCguToast": "⚠️ Acceptez les conditions générales",
+      "panierVideToast": "⚠️ Votre panier est vide",
+      "prenomNomToast": "⚠️ Indiquez votre prénom et nom",
+      "telephoneToast": "⚠️ Indiquez votre numéro de téléphone",
+      "adresseToast": "⚠️ Indiquez votre adresse précise",
+      "choisirLivreurToast": "⚠️ Choisissez un livreur",
+      "verificationSoldeToast": "⏳ Vérification de votre solde en cours…",
+      "soldeInsuffisantToast": "⚠️ Solde du portefeuille insuffisant pour ce paiement",
+      "erreurCommandeToast": "❌ {{msg}}",
+      "impossibleConfirmer": "Impossible de confirmer la commande"
+    }
+  },
+  "followToggle": {
+    "abonneToast": "✅ Abonné à {{name}}",
+    "desabonneToast": "👋 Désabonné de {{name}}",
+    "erreurToast": "❌ {{msg}}",
+    "erreurReseau": "Erreur réseau"
+  },
+  "livreursPage": {
+    "card": {
+      "livreurAriaLabel": "Livreur {{nom}}",
+      "disponible": "Disponible",
+      "enCourse": "En course",
+      "livraisonsCount": "{{count}} livraisons",
+      "abonneFem": "Abonné(e)",
+      "suivre": "Suivre",
+      "seDesabonnerDe": "Se désabonner de {{nom}}",
+      "suivreNom": "Suivre {{nom}}",
+      "connexionRequise": "Connexion requise",
+      "connexionRequisePourSuivre": "Connexion requise pour suivre",
+      "seDesabonner": "Se désabonner",
+      "avisCount": "({{count}} avis)",
+      "livraisons": "Livraisons",
+      "ponctualite": "Ponctualité",
+      "experience": "Expérience",
+      "voirProfilComplet": "Voir le profil complet →",
+      "profilCompletAria": "Voir le profil complet de {{nom}}",
+      "profilDe": "Profil de {{nom}}"
+    },
+    "suggestions": {
+      "ariaLabel": "Livreurs suggérés près de vous",
+      "titre": "Suggestions",
+      "sousTitre": "Près de vous",
+      "abonne": "✓ Abonné",
+      "suivre": "+ Suivre"
+    },
+    "hero": {
+      "ariaLabel": "Présentation des livreurs Shopi",
+      "supTitle": "Réseau Shopi · Conakry",
+      "titrePart1": "Trouvez votre",
+      "titreEm": "livreur",
+      "titrePart2": "de confiance",
+      "sub": "Des livreurs professionnels vérifiés, disponibles dans toute la Guinée. Suivez vos livreurs préférés et commandez en toute confiance.",
+      "livreursSuggeres": "Livreurs suggérés",
+      "abonne": "Abonné",
+      "suivre": "Suivre",
+      "stats": {
+        "livreursActifs": "Livreurs actifs",
+        "noteMoyenne": "Note moyenne",
+        "livraisonsMois": "Livraisons/mois",
+        "communesCouvertes": "Communes couvertes"
+      }
+    },
+    "toolbar": {
+      "searchPlaceholder": "Nom, zone, véhicule…",
+      "rechercherLivreurAria": "Rechercher un livreur",
+      "effacerRechercheAria": "Effacer la recherche",
+      "trierLivreursAria": "Trier les livreurs",
+      "modeAffichageAria": "Mode d'affichage",
+      "vueGrille": "Vue grille",
+      "vueListe": "Vue liste",
+      "livreurCount_one": "{{count}} livreur",
+      "livreurCount_other": "{{count}} livreurs",
+      "filters": {
+        "tous": "Tous",
+        "disponibles": "Disponibles",
+        "abonnements": "Abonnements",
+        "motos": "Motos",
+        "voitures": "Voitures"
+      },
+      "sorts": {
+        "mieuxNotes": "Mieux notés",
+        "plusDeLivraisons": "Plus de livraisons",
+        "disponiblesDabord": "Disponibles d'abord",
+        "lesPlusProches": "Les plus proches"
+      }
+    },
+    "sidebar": {
+      "ariaLabel": "Filtres livreurs",
+      "zoneDeLivraison": "Zone de livraison",
+      "reinit": "Réinit.",
+      "toutesLesZones": "Toutes les zones",
+      "typeDeVehicule": "Type de véhicule",
+      "noteMinimale": "Note minimale",
+      "ratingOpts": {
+        "cinqEtoiles": "5 étoiles seulement",
+        "quatrePlus": "4+ étoiles",
+        "troisPlus": "3+ étoiles",
+        "toutesLesNotes": "Toutes les notes"
+      },
+      "disponibilite": "Disponibilité",
+      "disponible": "Disponible",
+      "enCourse": "En course",
+      "mesAbonnements": "Mes abonnements",
+      "vehicules": {
+        "moto": "Moto",
+        "voiture": "Voiture",
+        "pickup": "Pickup",
+        "camion": "Camion"
+      }
+    },
+    "page": {
+      "tousLesLivreurs": "Tous les livreurs",
+      "livreurDansRegion_one": "{{count}} livreur dans votre région",
+      "livreurDansRegion_other": "{{count}} livreurs dans votre région",
+      "vueGrille": "Vue grille",
+      "vueListe": "Vue liste",
+      "impossibleDeCharger": "Impossible de charger les livreurs",
+      "aucunLivreurTrouve": "Aucun livreur trouvé",
+      "essayezModifier": "Essayez de modifier vos filtres ou votre recherche.",
+      "chargementToast": "📄 Chargement...",
+      "chargerPlus": "Charger plus de livreurs"
+    }
+  },
+  "correspondantsPage": {
+    "typeLabel": {
+      "regional": "🏠 Régional",
+      "zonal": "🗺️ Zonal",
+      "national": "🌍 National"
+    },
+    "listItem": {
+      "missionsCount": "{{count}} missions",
+      "abonne": "Abonné",
+      "suivre": "Suivre"
+    },
+    "hero": {
+      "sup": "Réseau Shopi · Guinée & Diaspora",
+      "titrePart1": "Vos",
+      "titreEm": "correspondants",
+      "titrePart2": "de confiance partout",
+      "sub": "Des relais locaux vérifiés qui facilitent vos échanges commerciaux entre la Guinée et la diaspora. Réceptionnez, expédiez et faites transiter vos colis en toute sécurité.",
+      "correspondantsActifs": "Correspondants actifs",
+      "noteMoyenne": "Note moyenne",
+      "missionsAuTotal": "Missions au total",
+      "communesCouvertes": "Communes couvertes",
+      "abonne": "✓ Abonné",
+      "suivre": "+ Suivre"
+    },
+    "toolbar": {
+      "searchPlaceholder": "Rechercher un correspondant, une zone…",
+      "filters": {
+        "tous": "Tous",
+        "enLigne": "En ligne",
+        "mesAbonnements": "Mes abonnements",
+        "regionaux": "Régionaux",
+        "zonaux": "Zonaux",
+        "nationaux": "Nationaux"
+      },
+      "sorts": {
+        "pertinence": "Pertinence",
+        "mieuxNotes": "Mieux notés",
+        "plusDeMissions": "Plus de missions",
+        "nomAZ": "Nom (A-Z)"
+      },
+      "correspondantCount_one": "{{count}} correspondant",
+      "correspondantCount_other": "{{count}} correspondants"
+    },
+    "card": {
+      "enLigne": "En ligne",
+      "horsLigne": "Hors ligne",
+      "avisCount": "({{count}} avis)",
+      "missions": "Missions",
+      "fiabilite": "Fiabilité",
+      "experience": "Expérience",
+      "abonne": "Abonné",
+      "suivre": "Suivre",
+      "voirProfilComplet": "Voir le profil complet →"
+    },
+    "sidebar": {
+      "typeDeCorrespondant": "Type de correspondant",
+      "types": {
+        "regional": {
+          "nm": "Régional",
+          "desc": "Couvre une ville"
+        },
+        "zonal": {
+          "nm": "Zonal",
+          "desc": "Couvre une région"
+        },
+        "national": {
+          "nm": "National",
+          "desc": "Couvre tout le pays"
+        }
+      },
+      "commune": "Commune",
+      "toutes": "Toutes",
+      "noteMinimale": "Note minimale",
+      "ratingOpts": {
+        "cinqEtoiles": "5 étoiles seulement",
+        "quatrePlus": "4+ étoiles",
+        "troisPlus": "3+ étoiles",
+        "toutesLesNotes": "Toutes les notes"
+      },
+      "disponibilite": "Disponibilité",
+      "reinitialiser": "Réinitialiser",
+      "enLigne": "En ligne",
+      "horsLigne": "Hors ligne"
+    },
+    "page": {
+      "chargement": "Chargement des correspondants…",
+      "correspondantsDisponibles": "Correspondants disponibles",
+      "resultatCount_one": "{{count}} résultat",
+      "resultatCount_other": "{{count}} résultats",
+      "errorSuffix": "— données de démonstration affichées.",
+      "aucunCorrespondant": "Aucun correspondant ne correspond à vos filtres.",
+      "desabonneToast": "👋 Désabonné de {{nom}}",
+      "abonneToast": "✅ Abonné à {{nom}}"
+    }
+  },
+  "offresPage": {
+    "typeLabel": {
+      "discount": "Réductions",
+      "freeShip": "Livraison offerte",
+      "bundle": "Bundles",
+      "flash": "Ventes flash"
+    },
+    "hero": {
+      "offreSuffix_one": "offre active",
+      "offreSuffix_other": "offres actives",
+      "titrePart1": "Toutes les",
+      "titreEm": "offres",
+      "titrePart2": "du moment",
+      "sub": "Réductions, ventes flash et livraisons offertes de toutes les boutiques Shopi — au même endroit.",
+      "flashSuffix_one": "vente flash en cours — ne les manquez pas",
+      "flashSuffix_other": "ventes flash en cours — ne les manquez pas"
+    },
+    "sidebar": {
+      "categories": "Catégories",
+      "toutes": "Toutes",
+      "recherche": "Recherche",
+      "searchPlaceholder": "Offre ou boutique…",
+      "trierPar": "Trier par",
+      "sortBest": "Meilleures réductions",
+      "sortEnding": "Expire bientôt"
+    },
+    "card": {
+      "touteLaBoutique": "Toute la boutique",
+      "produitCible": "Produit ciblé",
+      "voirOffre": "Voir l'offre",
+      "offerte": "Offerte",
+      "promo": "Promo"
+    },
+    "states": {
+      "loadErrorTitle": "Impossible de charger les offres",
+      "loadErrorFallback": "Impossible de charger les offres.",
+      "reessayer": "Réessayer",
+      "aucuneOffreTitre": "Aucune offre active pour le moment",
+      "aucuneOffreText": "Revenez bientôt, de nouvelles promotions arrivent régulièrement.",
+      "aucunResultatTitre": "Aucune offre ne correspond",
+      "aucunResultatText": "Essayez un autre filtre ou une autre recherche.",
+      "reinitialiser": "Réinitialiser"
+    }
+  },
+  "settingsPage": {
+    "tabs": {
+      "ariaLabel": "Sections des paramètres",
+      "profil": "Profil",
+      "adresses": "Adresses",
+      "paiement": "Paiement",
+      "points": "Points Shopi",
+      "confidentialiteSecurite": "Confidentialité & sécurité",
+      "securite": "Sécurité",
+      "sessions": "Appareils connectés",
+      "activite": "Journal d'activité",
+      "approbations": "Appareils de confiance",
+      "notifs": "Notifications",
+      "confidentialite": "Confidentialité",
+      "apparence": "Apparence",
+      "langue": "Langue & région",
+      "donnees": "Mes données",
+      "danger": "Zone de danger"
+    },
+    "page": {
+      "retourAccueil": "Retour à l'accueil",
+      "titrePart1": "Paramètres",
+      "titreEm": "du compte",
+      "sub": "Gérez vos informations, sécurité et préférences Shopi"
+    },
+    "sidebar": {
+      "photoAlt": "Photo de profil",
+      "chargement": "Chargement…",
+      "changerPhoto": "Changer la photo de profil",
+      "uploadEnCours": "Upload en cours…",
+      "verifie": "Vérifié",
+      "invalidFormat": "❌ Format invalide — choisissez une image (JPG, PNG, WebP)",
+      "tropGrande": "❌ Image trop grande — maximum 5 Mo",
+      "uploadEnCoursToast": "📤 Upload en cours…",
+      "photoMiseAJour": "✅ Photo de profil mise à jour !",
+      "uploadErrorFallback": "Erreur lors de l'upload"
+    },
+    "securityBanner": {
+      "items": {
+        "motDePasseFort": "Mot de passe fort",
+        "emailVerifie": "Email vérifié",
+        "telephoneVerifie": "Téléphone vérifié",
+        "twoFaActive": "2FA activé",
+        "questionsSecurite": "Questions de sécurité",
+        "codesSecours": "Codes de secours générés"
+      },
+      "niveaux": {
+        "excellent": "Excellent",
+        "bien": "Bien",
+        "moyen": "Moyen",
+        "faible": "Faible"
+      },
+      "titre": "Score de sécurité",
+      "chargementDesc": "Chargement du score de sécurité…",
+      "descExcellent": "Votre compte est parfaitement sécurisé. Continuez comme ça !",
+      "descBien": "Votre compte est bien protégé. Quelques améliorations restent possibles.",
+      "descFaible": "Renforcez votre sécurité en complétant les actions ci-dessous.",
+      "ameliorer": "Améliorer"
+    },
+    "points": {
+      "titre": "Mes Shopi Points",
+      "pts": "pts",
+      "niveauLabel": "Niveau",
+      "prochainA": "à",
+      "prochainPts": "pts",
+      "pointsGagnes": "Points gagnés ce mois",
+      "pointsUtilises": "Points utilisés",
+      "expirationProchaine": "Expiration prochaine"
+    },
+    "activite": {
+      "titre": "Journal d'activité",
+      "subtitle": "Traçabilité complète de toutes les actions sur votre compte",
+      "exportEnCours": "Export…",
+      "exporter": "Exporter",
+      "aucuneActivite": "Aucune activité enregistrée",
+      "loadError": "❌ Impossible de charger le journal",
+      "types": {
+        "login": "Connexion",
+        "order": "Commande",
+        "security": "Sécurité",
+        "alert": "Alerte",
+        "profile": "Profil"
+      }
+    },
+    "adresses": {
+      "titre": "Adresses de livraison",
+      "subtitleSuffix_one": "adresse enregistrée",
+      "subtitleSuffix_other": "adresses enregistrées",
+      "ajouter": "Ajouter",
+      "aucuneAdresse": "Aucune adresse enregistrée",
+      "parDefaut": "Par défaut",
+      "ajouterNouvelle": "Ajouter une nouvelle adresse",
+      "loadError": "❌ Impossible de charger les adresses",
+      "toastSupprimee": "🗑️ Adresse supprimée",
+      "toastDefiniParDefaut": "⭐ Adresse définie par défaut",
+      "toastFormulaireTodo": "➕ Formulaire d'ajout — à implémenter",
+      "toastModificationTodo": "✏️ Modification — à implémenter",
+      "toastAjouterNouvelle": "➕ Ajouter une nouvelle adresse"
+    },
+    "paiement": {
+      "titre": "Moyens de paiement",
+      "subtitle": "Cartes, Mobile Money et portefeuilles",
+      "ajouter": "Ajouter",
+      "aucunMoyen": "Aucun moyen de paiement enregistré",
+      "parDefaut": "Par défaut",
+      "ajouteLe": "Ajouté le",
+      "definirParDefautTitle": "Définir par défaut",
+      "loadError": "❌ Impossible de charger les moyens de paiement",
+      "toastSupprime": "🗑️ Moyen de paiement supprimé",
+      "toastDefiniParDefaut": "⭐ Moyen de paiement défini par défaut",
+      "toastAjouter": "➕ Ajouter un moyen de paiement",
+      "ajouterNouveau": "Ajouter un moyen de paiement",
+      "labels": {
+        "carte": "Carte bancaire",
+        "especes": "Espèces",
+        "virement": "Virement bancaire",
+        "wallet": "Portefeuille Shopi"
+      }
+    },
+    "sessions": {
+      "titre": "Appareils connectés",
+      "subtitleSuffix_one": "session active",
+      "subtitleSuffix_other": "sessions actives",
+      "suspectSuffix_one": "connexion suspecte",
+      "suspectSuffix_other": "connexions suspectes",
+      "deconnecterTout": "Déconnecter tout",
+      "enCours": "En cours…",
+      "aucuneSession": "Aucune session active",
+      "sessionActuelle": "Session actuelle",
+      "suspect": "Suspect",
+      "revoquer": "Révoquer",
+      "conseilTitre": "Conseil de sécurité",
+      "conseilTexteSuffix_one": "connexion suspecte détectée. Révoquez-la et changez votre mot de passe immédiatement.",
+      "conseilTexteSuffix_other": "connexions suspectes détectées. Révoquez-les et changez votre mot de passe immédiatement.",
+      "loadError": "❌ Impossible de charger les sessions",
+      "toastRevoked": "🔒 Session révoquée",
+      "toastRevokedAll": "🔒 Toutes les autres sessions révoquées"
+    },
+    "approbations": {
+      "titre": "Appareils de confiance",
+      "subtitle": "Ces appareils peuvent se connecter sans code 2FA supplémentaire",
+      "approuve": "Approuvé",
+      "retirer": "Retirer",
+      "derniereUtilisation": "Dernière utilisation",
+      "ajouteLe": "Ajouté le",
+      "aujourdhui": "aujourd'hui",
+      "hier": "hier",
+      "commentTitre": "Comment ça fonctionne",
+      "commentTexte": "Les appareils de confiance sont mémorisés après une vérification 2FA réussie. Retirez un appareil si vous ne le reconnaissez pas ou si vous l'avez perdu.",
+      "toastRetire": "🔒 Appareil retiré de la liste de confiance",
+      "toastRetireMac": "🔒 MacBook retiré de la liste de confiance",
+      "aucunAppareil": "Aucun appareil de confiance enregistré",
+      "loadError": "❌ Impossible de charger les appareils"
+    },
+    "notifs": {
+      "titre": "Notifications",
+      "subtitle": "Choisissez quand et comment être notifié",
+      "enregistrer": "Enregistrer",
+      "enregistrement": "Enregistrement…",
+      "toastSaved": "✅ Préférences de notifications enregistrées",
+      "sms": "SMS",
+      "email": "Email",
+      "push": "Push",
+      "rows": {
+        "commandes": {
+          "title": "Statut de commande",
+          "desc": "Confirmation, expédition, livraison"
+        },
+        "promos": {
+          "title": "Promotions & offres",
+          "desc": "Soldes, codes promo, offres exclusives"
+        },
+        "messages": {
+          "title": "Messages",
+          "desc": "Nouveaux messages des vendeurs ou du support"
+        },
+        "points": {
+          "title": "Points & récompenses",
+          "desc": "Gains de points, paliers atteints"
+        }
+      }
+    },
+    "confidentialite": {
+      "titre": "Confidentialité du profil",
+      "subtitle": "Contrôlez qui peut voir vos informations",
+      "enregistrer": "Enregistrer",
+      "enregistrement": "Enregistrement…",
+      "toastSaved": "✅ Paramètres de confidentialité enregistrés",
+      "visibiliteTitle": "Visibilité du profil",
+      "visibiliteDesc": "Qui peut voir votre profil public",
+      "visibiliteOptions": {
+        "toutLeMonde": "Tout le monde",
+        "membresShopi": "Membres Shopi",
+        "personne": "Personne"
+      },
+      "rows": {
+        "historique": {
+          "title": "Historique des commandes",
+          "desc": "Afficher vos achats récents sur votre profil"
+        },
+        "wishlist": {
+          "title": "Liste de souhaits",
+          "desc": "Rendre votre liste de souhaits visible aux autres"
+        },
+        "perso": {
+          "title": "Données de personnalisation",
+          "desc": "Utiliser votre comportement pour améliorer les recommandations"
+        },
+        "localisation": {
+          "title": "Localisation approximative",
+          "desc": "Partager votre ville pour des offres locales"
+        },
+        "pubs": {
+          "title": "Publicités personnalisées",
+          "desc": "Recevoir des publicités basées sur vos intérêts"
+        }
+      }
+    },
+    "apparence": {
+      "titre": "Apparence",
+      "subtitle": "Thème, taille de texte et affichage",
+      "enregistrer": "Enregistrer",
+      "enregistrement": "Enregistrement…",
+      "toastSaved": "✅ Apparence mise à jour",
+      "themeTitle": "Thème",
+      "themeDesc": "Clair, sombre ou automatique",
+      "themeOptions": {
+        "clair": "Clair",
+        "sombre": "Sombre",
+        "auto": "Automatique"
+      },
+      "tailleTitle": "Taille du texte",
+      "tailleDesc": "Ajustez pour une meilleure lisibilité",
+      "tailleOptions": {
+        "normal": "Normal",
+        "grand": "Grand",
+        "tresGrand": "Très grand"
+      },
+      "qualiteTitle": "Qualité des images",
+      "qualiteDesc": "Réduire pour économiser les données mobiles",
+      "qualiteOptions": {
+        "haute": "Haute qualité",
+        "eco": "Économique"
+      }
+    },
+    "langue": {
+      "titre": "Langue & région",
+      "subtitle": "Langue, devise et fuseau horaire",
+      "enregistrer": "Enregistrer",
+      "enregistrement": "Enregistrement…",
+      "toastSaved": "✅ Préférences régionales enregistrées",
+      "langueTitle": "Langue d'affichage",
+      "langueDesc": "Langue de l'interface Shopi",
+      "deviseTitle": "Devise d'affichage",
+      "deviseDesc": "Pour les prix et les transactions",
+      "fuseauTitle": "Fuseau horaire",
+      "fuseauDesc": "Pour les délais de livraison et les dates"
+    },
+    "donnees": {
+      "titre": "Mes données personnelles",
+      "subtitle": "Accédez, exportez ou supprimez vos données — conformité RGPD",
+      "droitsTitre": "Vos droits",
+      "droitsTexteSuffix": "Vous avez le droit d'accéder, de corriger, d'exporter et de supprimer vos données à tout moment. Pour toute demande, contactez notre DPO à",
+      "items": {
+        "export": {
+          "title": "Exporter toutes mes données",
+          "desc": "Fichier ZIP avec profil, commandes, messages, points",
+          "btnLabel": "Exporter",
+          "msg": "📦 Export en préparation — email dans 24h"
+        },
+        "historique": {
+          "title": "Historique des commandes",
+          "desc": "Toutes vos commandes depuis la création du compte — CSV ou PDF",
+          "btnLabel": "CSV",
+          "msg": "📋 Historique exporté"
+        },
+        "factures": {
+          "title": "Mes factures et reçus",
+          "desc": "PDF de toutes vos factures depuis l'inscription",
+          "btnLabel": "PDF",
+          "msg": "🧾 Factures téléchargées"
+        },
+        "rapport": {
+          "title": "Rapport de confidentialité",
+          "desc": "Quelles données sont collectées, comment elles sont utilisées",
+          "btnLabel": "Voir",
+          "msg": "📄 Rapport ouvert"
+        },
+        "portabilite": {
+          "title": "Demande de portabilité (RGPD)",
+          "desc": "Transférer vos données vers une autre plateforme — délai légal 30 jours",
+          "btnLabel": "Demander",
+          "msg": "📨 Demande de portabilité envoyée"
+        }
+      },
+      "rowsLive": {
+        "export": {
+          "title": "Exporter toutes mes données",
+          "desc": "Fichier ZIP — profil, commandes, messages, points",
+          "label": "Exporter"
+        },
+        "commandes": {
+          "title": "Historique des commandes",
+          "desc": "Toutes vos commandes — CSV ou PDF",
+          "label": "CSV"
+        },
+        "factures": {
+          "title": "Mes factures et reçus",
+          "desc": "PDF de toutes vos factures",
+          "label": "PDF"
+        },
+        "rapport": {
+          "title": "Rapport de confidentialité",
+          "desc": "Quelles données sont collectées et comment",
+          "label": "Voir"
+        },
+        "portabilite2": {
+          "title": "Portabilité RGPD",
+          "desc": "Transférer vos données — délai légal 30 jours",
+          "label": "Demander"
+        }
+      },
+      "droitsTexteShort": "Vous avez le droit d'accéder, de corriger, d'exporter et de supprimer vos données. Contactez notre DPO à"
+    },
+    "danger": {
+      "titre": "Zone de danger",
+      "subtitle": "Ces actions sont irréversibles — réfléchissez avant d'agir",
+      "rows": {
+        "desactiver": {
+          "title": "Désactiver temporairement le compte",
+          "desc": "Votre profil sera masqué et vos commandes en cours seront traitées. Réactivation possible à tout moment.",
+          "btn": "Désactiver",
+          "msg": "⚠️ Confirmation requise — vérifiez votre email"
+        },
+        "revoquerAcces": {
+          "title": "Révoquer tous les accès tiers",
+          "desc": "Déconnecte toutes les applications et services liés à votre compte.",
+          "btn": "Révoquer les accès",
+          "msg": "🔌 Tous les accès tiers révoqués"
+        },
+        "reinitialiser": {
+          "title": "Réinitialiser toutes mes préférences",
+          "desc": "Réinitialise notifications, apparence, langue et confidentialité aux valeurs par défaut Shopi.",
+          "btn": "Réinitialiser",
+          "msg": "🔄 Préférences réinitialisées"
+        },
+        "supprimer": {
+          "title": "Supprimer définitivement le compte",
+          "descPart1": "Toutes vos données, commandes, points et historique seront",
+          "descStrong": "définitivement supprimés",
+          "descPart2": "dans un délai de 30 jours. Cette action est",
+          "descStrong2": "irréversible",
+          "descPart3": ".",
+          "btn": "Supprimer mon compte",
+          "msg": "⛔ Demande envoyée — vérifiez votre email"
+        }
+      },
+      "rowsLive": {
+        "desactiver": {
+          "title": "Désactiver temporairement le compte",
+          "desc": "Votre profil sera masqué. Réactivation possible à tout moment.",
+          "btn": "Désactiver"
+        },
+        "revoquer": {
+          "title": "Révoquer tous les accès tiers",
+          "desc": "Déconnecte toutes les applications et services liés à votre compte.",
+          "btn": "Révoquer les accès"
+        },
+        "reinitialiser": {
+          "title": "Réinitialiser toutes mes préférences",
+          "desc": "Réinitialise notifications, apparence, langue aux valeurs par défaut.",
+          "btn": "Réinitialiser"
+        },
+        "supprimer": {
+          "titre": "Supprimer définitivement le compte",
+          "descPart1": "Toutes vos données seront supprimées dans",
+          "descStrong1": "30 jours",
+          "descPart2": ". Action",
+          "descStrong2": "irréversible",
+          "descPart3": ".",
+          "btn": "Supprimer mon compte"
+        }
+      },
+      "clicAgain": "Cliquer à nouveau pour confirmer",
+      "confirmerBtn": "Confirmer",
+      "annulerBtn": "Annuler"
+    },
+    "profil": {
+      "photoTitle": "Photo de profil",
+      "photoSubtitle": "Votre photo visible par les autres utilisateurs Shopi",
+      "photoAlt": "Photo de profil",
+      "uploadEnCoursTitle": "Upload en cours…",
+      "changerPhotoTitle": "Changer la photo",
+      "aucunUsername": "Aucun nom d'utilisateur",
+      "uploadEnCoursBtn": "Upload…",
+      "changerPhotoBtn": "Changer la photo",
+      "supprimer": "Supprimer",
+      "photoHint": "JPG, PNG ou WebP · max 5 Mo",
+      "invalidFormat": "❌ Format invalide — choisissez une image (JPG, PNG, WebP)",
+      "tropGrande": "❌ Image trop grande — maximum 5 Mo",
+      "uploadEnCoursToast": "📤 Upload en cours…",
+      "photoMiseAJour": "✅ Photo de profil mise à jour !",
+      "photoSupprimee": "✅ Photo supprimée",
+      "photoSuppressionError": "❌ Impossible de supprimer la photo",
+      "uploadErrorFallback": "Erreur lors de l'upload",
+      "loadError": "❌ Impossible de charger le profil",
+      "infosTitle": "Informations personnelles",
+      "infosSubtitle": "Votre identité sur la plateforme Shopi",
+      "modifier": "Modifier",
+      "prenomNom": "Prénom & Nom",
+      "nomUtilisateur": "Nom d'utilisateur",
+      "nonDefini": "Non défini",
+      "dateNaissance": "Date de naissance",
+      "nonRenseignee": "Non renseignée",
+      "genre": "Genre",
+      "nonRenseigne": "Non renseigné",
+      "bio": "Bio",
+      "aucuneBio": "Aucune bio renseignée",
+      "fields": {
+        "prenom": "Prénom",
+        "nom": "Nom",
+        "nomUtilisateur": "Nom d'utilisateur",
+        "dateNaissance": "Date de naissance",
+        "genre": "Genre",
+        "genreOptions": {
+          "nonPrecise": "Non précisé",
+          "homme": "Homme",
+          "femme": "Femme",
+          "autre": "Autre"
+        },
+        "languePreferee": "Langue préférée",
+        "bio": "Bio",
+        "bioPlaceholder": "Présentez-vous en quelques mots…",
+        "caracteres": "caractères"
+      },
+      "enregistrer": "Enregistrer",
+      "enregistrement": "Enregistrement…",
+      "annuler": "Annuler",
+      "savedToast": "✅ Modifications enregistrées !",
+      "coordonneesTitle": "Coordonnées",
+      "coordonneesSubtitle": "Email et téléphone — utilisés pour la connexion et les alertes",
+      "adresseEmail": "Adresse e-mail",
+      "telephone": "Téléphone",
+      "verifie": "Vérifié",
+      "nonVerifie": "Non vérifié",
+      "nonRenseigneTel": "Non renseigné",
+      "emailHint": "Un e-mail de confirmation sera envoyé à la nouvelle adresse",
+      "numeroTelephone": "Numéro de téléphone",
+      "telHint": "Un code de vérification SMS sera envoyé",
+      "enregistrerChangements": "Enregistrer les changements",
+      "coordonneesSavedToast": "✅ Coordonnées mises à jour — vérification envoyée"
+    },
+    "securite": {
+      "authTitle": "Authentification & Accès",
+      "authSubtitle": "Plusieurs couches de protection pour votre compte",
+      "mdpTitle": "Mot de passe",
+      "dernierModifSuffix_one": "Dernière modification il y a {{count}} jour",
+      "dernierModifSuffix_other": "Dernière modification il y a {{count}} jours",
+      "jamaisModifie": "Jamais modifié",
+      "actif": "Actif",
+      "modifier": "Modifier",
+      "mdpActuel": "Mot de passe actuel",
+      "nouveauMdp": "Nouveau mot de passe",
+      "mdpHint": "Min. 8 caractères, 1 majuscule, 1 chiffre",
+      "confirmer": "Confirmer",
+      "changerMdp": "Changer le mot de passe",
+      "enregistrement": "Enregistrement…",
+      "annuler": "Annuler",
+      "mismatchToast": "❌ Les mots de passe ne correspondent pas",
+      "loadError": "❌ Impossible de charger les données de sécurité",
+      "twofaTitle": "Authentification à deux facteurs (2FA)",
+      "twofaDesc": "Protège votre compte même si votre mot de passe est compromis",
+      "active": "Activé",
+      "desactive": "Désactivé",
+      "desactiver": "Désactiver",
+      "activer": "Activer",
+      "twofaActiveToast": "🔐 2FA activé avec succès",
+      "twofaDesactiveToast": "⚠️ 2FA désactivé",
+      "codesTitle": "Codes de secours",
+      "codesDescAvailable_one": "{{count}} code à usage unique disponible",
+      "codesDescAvailable_other": "{{count}} codes à usage unique disponibles",
+      "codesDescDefault": "8 codes à usage unique — à conserver si vous perdez accès à votre 2FA",
+      "generes": "Générés",
+      "nonGeneres": "Non générés",
+      "regenerer": "Regénérer",
+      "generer": "Générer",
+      "codesGeneresToast": "📋 Codes générés — sauvegardez-les maintenant !",
+      "sauvegardezCodes": "⚠️ Sauvegardez ces codes — ils ne s'afficheront qu'une fois",
+      "toutCopier": "Tout copier",
+      "codesCopiesToast": "📋 Codes copiés !",
+      "questionsTitle": "Questions de sécurité",
+      "questionsSuffix": "questions configurées",
+      "modifierBtn": "Modifier",
+      "configurerBtn": "Configurer",
+      "questionLabel": "Question",
+      "configureeSuffix": "Configurée · Réponse masquée",
+      "nonConfiguree": "Non configurée",
+      "ok": "OK",
+      "manquante": "Manquante",
+      "choisirQuestion": "Choisir une question…",
+      "questionOptions": {
+        "animal": "Quel est le nom de votre premier animal de compagnie ?",
+        "ecole": "Quel était le nom de votre école primaire ?",
+        "ville": "Quelle est la ville où vous êtes né ?",
+        "ami": "Quel était le nom de votre meilleur ami d'enfance ?",
+        "mere": "Quel est le prénom de votre grand-mère maternelle ?"
+      },
+      "reponseLabel": "Réponse",
+      "reponsePlaceholder": "Votre réponse secrète…",
+      "atLeastOneQuestionToast": "⚠️ Renseignez au moins une question",
+      "alertesTitle": "Alertes de sécurité",
+      "alertesSubtitle": "Soyez notifié immédiatement en cas d'activité suspecte",
+      "sms": "SMS",
+      "email": "Email",
+      "push": "Push",
+      "alertRows": {
+        "connex": {
+          "title": "Nouvelle connexion détectée",
+          "desc": "Alerte si connexion depuis un appareil ou pays inconnu"
+        },
+        "mdp": {
+          "title": "Changement de mot de passe",
+          "desc": "Alerte immédiate si votre mot de passe est modifié"
+        },
+        "tentatives": {
+          "title": "Tentatives de connexion échouées",
+          "desc": "Alerte après 3 tentatives incorrectes consécutives"
+        },
+        "transaction": {
+          "title": "Transaction suspecte ou refusée",
+          "desc": "Alerte en cas de paiement inhabituellement élevé"
+        },
+        "pays": {
+          "title": "Accès depuis un pays inhabituel",
+          "desc": "Alerte si votre compte est utilisé depuis un pays inconnu"
+        }
+      }
+    }
+  }
+}

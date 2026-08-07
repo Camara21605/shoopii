@@ -1873,6 +1873,11 @@ select.pf-in {
   .sb-brand, .sb-shop-nm, .sb-shop-sub, .sb-verified,
   .nb span, .nb-badge, .sb-sect, .sb-bot span { display: none; }
 
+  /* La carte "Solde Shopi" (icône + montant + menu ⋮) ne tient pas
+     dans un rail de 68px — la masquer plutôt que la laisser déborder/
+     être coupée par le overflow:hidden du .sb. */
+  .sb-wallet { display: none; }
+
   /* Recentre les éléments maintenant que le texte est masqué */
   .sb-shop-card { justify-content: center; padding: 10px; }
   .sb-logo      { justify-content: center; padding: 0; }

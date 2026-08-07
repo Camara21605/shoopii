@@ -4,20 +4,21 @@
  * ================================================================ */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import { settingsApi, type ActiviteItem } from '../../api/settings.api';
 
 interface Props { onToast: (msg: string) => void; }
 
-const TYPE_CONFIG = {
-  login:    { dot: s.actDotOk,   badge: 'badgeLogin' as const,    icon: 'fa-right-to-bracket', label: 'Connexion'   },
-  order:    { dot: s.actDotInfo, badge: 'badgeOrder' as const,    icon: 'fa-bag-shopping',     label: 'Commande'    },
-  security: { dot: s.actDotWarn, badge: 'badgeSecurity' as const, icon: 'fa-key',              label: 'Sécurité'    },
-  alert:    { dot: s.actDotBad,  badge: 'badgeAlert' as const,    icon: 'fa-triangle-exclamation', label: 'Alerte' },
-  profile:  { dot: s.actDotOk,   badge: 'badgeOrder' as const,    icon: 'fa-user',             label: 'Profil'      },
-};
-
 export default function ActiviteSection({ onToast }: Props) {
+  const { t } = useTranslation();
+  const TYPE_CONFIG = {
+    login:    { dot: s.actDotOk,   badge: 'badgeLogin' as const,    icon: 'fa-right-to-bracket', label: t('settingsPage.activite.types.login')   },
+    order:    { dot: s.actDotInfo, badge: 'badgeOrder' as const,    icon: 'fa-bag-shopping',     label: t('settingsPage.activite.types.order')    },
+    security: { dot: s.actDotWarn, badge: 'badgeSecurity' as const, icon: 'fa-key',              label: t('settingsPage.activite.types.security') },
+    alert:    { dot: s.actDotBad,  badge: 'badgeAlert' as const,    icon: 'fa-triangle-exclamation', label: t('settingsPage.activite.types.alert') },
+    profile:  { dot: s.actDotOk,   badge: 'badgeOrder' as const,    icon: 'fa-user',             label: t('settingsPage.activite.types.profile') },
+  };
   const [entries,  setEntries]  = useState<ActiviteItem[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [exporting,setExporting]= useState(false);
@@ -25,7 +26,7 @@ export default function ActiviteSection({ onToast }: Props) {
   useEffect(() => {
     settingsApi.getActivite()
       .then(setEntries)
-      .catch(() => onToast('❌ Impossible de charger le journal'))
+      .catch(() => onToast(t('settingsPage.activite.loadError')))
       .finally(() => setLoading(false));
   }, []);
 
@@ -44,12 +45,12 @@ export default function ActiviteSection({ onToast }: Props) {
         <div className={s.cardTitle}>
           <div className={`${s.cardIco} ${s.icoNavy}`}><i className="fas fa-clock-rotate-left" /></div>
           <div>
-            <div className={s.cardH}>Journal d'activité</div>
-            <div className={s.cardSub}>Traçabilité complète de toutes les actions sur votre compte</div>
+            <div className={s.cardH}>{t('settingsPage.activite.titre')}</div>
+            <div className={s.cardSub}>{t('settingsPage.activite.subtitle')}</div>
           </div>
         </div>
         <button className={`${s.cardAction} ${s.cardActionOutline}`} onClick={handleExport} disabled={exporting}>
-          {exporting ? <><i className="fas fa-circle-notch fa-spin" /> Export…</> : <><i className="fas fa-download" /> Exporter</>}
+          {exporting ? <><i className="fas fa-circle-notch fa-spin" /> {t('settingsPage.activite.exportEnCours')}</> : <><i className="fas fa-download" /> {t('settingsPage.activite.exporter')}</>}
         </button>
       </div>
       <div className={s.cardBody}>
@@ -60,7 +61,7 @@ export default function ActiviteSection({ onToast }: Props) {
         )}
         {!loading && entries.length === 0 && (
           <div style={{ padding:'24px', textAlign:'center', color:'var(--t3)', fontSize:13 }}>
-            Aucune activité enregistrée
+            {t('settingsPage.activite.aucuneActivite')}
           </div>
         )}
         {entries.map((e, i) => {

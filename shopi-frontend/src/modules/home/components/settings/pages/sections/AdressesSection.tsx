@@ -4,12 +4,14 @@
  * ================================================================ */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import { settingsApi, type AdresseItem } from '../../api/settings.api';
 
 interface Props { onToast: (msg: string) => void; }
 
 export default function AdressesSection({ onToast }: Props) {
+  const { t } = useTranslation();
   const [adresses,  setAdresses]  = useState<AdresseItem[]>([]);
   const [loading,   setLoading]   = useState(true);
   const [actionId,  setActionId]  = useState<string | null>(null);
@@ -17,7 +19,7 @@ export default function AdressesSection({ onToast }: Props) {
   useEffect(() => {
     settingsApi.getAdresses()
       .then(setAdresses)
-      .catch(() => onToast('❌ Impossible de charger les adresses'))
+      .catch(() => onToast(t('settingsPage.adresses.loadError')))
       .finally(() => setLoading(false));
   }, []);
 
@@ -26,7 +28,7 @@ export default function AdressesSection({ onToast }: Props) {
     try {
       const updated = await settingsApi.deleteAdresse(id);
       setAdresses(updated);
-      onToast('🗑️ Adresse supprimée');
+      onToast(t('settingsPage.adresses.toastSupprimee'));
     } catch (err: any) { onToast(`❌ ${err.message}`); }
     finally { setActionId(null); }
   }
@@ -36,7 +38,7 @@ export default function AdressesSection({ onToast }: Props) {
     try {
       const updated = await settingsApi.setDefaultAddr(id);
       setAdresses(updated);
-      onToast('⭐ Adresse définie par défaut');
+      onToast(t('settingsPage.adresses.toastDefiniParDefaut'));
     } catch (err: any) { onToast(`❌ ${err.message}`); }
     finally { setActionId(null); }
   }
@@ -49,18 +51,18 @@ export default function AdressesSection({ onToast }: Props) {
         <div className={s.cardTitle}>
           <div className={`${s.cardIco} ${s.icoBlue}`}><i className="fas fa-location-dot" /></div>
           <div>
-            <div className={s.cardH}>Adresses de livraison</div>
-            <div className={s.cardSub}>{adresses.length} adresse{adresses.length !== 1 ? 's' : ''} enregistrée{adresses.length !== 1 ? 's' : ''}</div>
+            <div className={s.cardH}>{t('settingsPage.adresses.titre')}</div>
+            <div className={s.cardSub}>{adresses.length} {t('settingsPage.adresses.subtitleSuffix', { count: adresses.length })}</div>
           </div>
         </div>
-        <button className={s.cardAction} onClick={() => onToast('➕ Formulaire d\'ajout — à implémenter')}>
-          <i className="fas fa-plus" /> Ajouter
+        <button className={s.cardAction} onClick={() => onToast(t('settingsPage.adresses.toastFormulaireTodo'))}>
+          <i className="fas fa-plus" /> {t('settingsPage.adresses.ajouter')}
         </button>
       </div>
       <div className={s.cardBody} style={{ paddingBottom: 4 }}>
         {adresses.length === 0 && (
           <div style={{ padding:'24px', textAlign:'center', color:'var(--t3)', fontSize:13 }}>
-            Aucune adresse enregistrée
+            {t('settingsPage.adresses.aucuneAdresse')}
           </div>
         )}
         {adresses.map(a => (
@@ -70,10 +72,10 @@ export default function AdressesSection({ onToast }: Props) {
                 <span className={`${s.addrBadge} ${a.isDefault ? s.addrBadgeDef : ''}`}>
                   <i className={`fas ${a.nom === 'Domicile' ? 'fa-house' : 'fa-briefcase'}`} /> {a.nom}
                 </span>
-                {a.isDefault && <span className={s.addrDefaultBadge}><i className="fas fa-star" /> Par défaut</span>}
+                {a.isDefault && <span className={s.addrDefaultBadge}><i className="fas fa-star" /> {t('settingsPage.adresses.parDefaut')}</span>}
               </div>
               <div className={s.addrActions}>
-                <button className={s.addrAct} onClick={() => onToast('✏️ Modification — à implémenter')}><i className="fas fa-pen" /></button>
+                <button className={s.addrAct} onClick={() => onToast(t('settingsPage.adresses.toastModificationTodo'))}><i className="fas fa-pen" /></button>
                 {!a.isDefault && (
                   <button className={s.addrAct} onClick={() => handleSetDefault(a.id)} disabled={actionId === a.id}>
                     {actionId === a.id ? <i className="fas fa-circle-notch fa-spin" /> : <i className="fas fa-star" />}
@@ -89,8 +91,8 @@ export default function AdressesSection({ onToast }: Props) {
             {a.phone && <div className={s.addrLine} style={{ marginTop:3 }}><i className="fas fa-phone" /> {a.phone}</div>}
           </div>
         ))}
-        <button className={s.addrAdd} onClick={() => onToast('➕ Ajouter une nouvelle adresse')}>
-          <i className="fas fa-plus" /> Ajouter une nouvelle adresse
+        <button className={s.addrAdd} onClick={() => onToast(t('settingsPage.adresses.toastAjouterNouvelle'))}>
+          <i className="fas fa-plus" /> {t('settingsPage.adresses.ajouterNouvelle')}
         </button>
       </div>
     </div>

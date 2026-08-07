@@ -8,8 +8,8 @@
  * DONNÉES : hook useLivreurProfile (GET /client/livreurs/:id)
  * ================================================================ */
 
-import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useStartConversation } from '../../../shared/hooks/useStartConversation';
 import { useProfileCall } from '../../../shared/hooks/useProfileCall';
 import { useAuthGate } from '../../hooks/useAuthGate';
@@ -30,12 +30,13 @@ import styles from './styles/ProfilLivreur.module.css';
 
 interface Props {
   /* Fournis par le parent (comme HomePage) pour alimenter le Header */
-  onToast: (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  onToast?: (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
 }
 
-export default function ProfilLivreurPage({ onToast }: Props) {
+export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
   const { id }   = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const { openAuthModal, authModal } = useAuthGate();
   const { profile, loading, error, tab, setTab, follow, followLoading } =
@@ -60,7 +61,7 @@ export default function ProfilLivreurPage({ onToast }: Props) {
         <div className={styles.page}>
           <div className={styles.state}>
             <i className="fas fa-spinner fa-spin" />
-            Chargement du profil…
+            {t('profilLivreur.loading')}
           </div>
         </div>
         {authModal}
@@ -75,10 +76,10 @@ export default function ProfilLivreurPage({ onToast }: Props) {
         <div className={styles.page}>
           <div className={styles.state}>
             <i className="fas fa-triangle-exclamation" />
-            {error ?? 'Livreur introuvable.'}
+            {error ?? t('profilLivreur.notFound')}
             <div style={{ marginTop: 16 }}>
               <button className={`${styles.btn} ${styles.btnMsg}`} onClick={() => navigate('/livreurs')}>
-                <i className="fas fa-arrow-left" /> Retour aux livreurs
+                <i className="fas fa-arrow-left" /> {t('profilLivreur.retourLivreurs')}
               </button>
             </div>
           </div>
@@ -90,18 +91,18 @@ export default function ProfilLivreurPage({ onToast }: Props) {
 
   const onContact = () => {
     if (!profile.isSuivi) {
-      onToast('Abonnez-vous à ce livreur pour lui envoyer un message.', 'w');
+      onToast(t('profilLivreur.publicPage.abonnezVousMessage'), 'w');
       return;
     }
-    startConv('delivery', id!, msg => onToast(`❌ ${msg}`, 'e'));
+    startConv('delivery', id!, msg => onToast(t('profilLivreur.publicPage.erreurToast', { msg }), 'e'));
   };
 
   const onCall = () => {
     if (!profile.isSuivi) {
-      onToast('Abonnez-vous à ce livreur pour l\'appeler.', 'w');
+      onToast(t('profilLivreur.publicPage.abonnezVousAppel'), 'w');
       return;
     }
-    callProfile('delivery', id!, profile.fullName, profile.profilePicture, msg => onToast(`❌ ${msg}`, 'e'));
+    callProfile('delivery', id!, profile.fullName, profile.profilePicture, msg => onToast(t('profilLivreur.publicPage.erreurToast', { msg }), 'e'));
   };
 
   return (
@@ -129,12 +130,12 @@ export default function ProfilLivreurPage({ onToast }: Props) {
             {tab === 'zones'      && <TabZones    profile={profile} />}
             {tab === 'tarifs'     && <TabTarifs   profile={profile} />}
             {tab === 'avis'       && (
-              <TabPlaceholder icon="fa-star" title={`Avis (${profile.reviewsCount})`}
-                text="Les avis clients seront affichés ici prochainement." />
+              <TabPlaceholder icon="fa-star" title={t('profilLivreur.placeholders.avisTitle', { count: profile.reviewsCount })}
+                text={t('profilLivreur.placeholders.avisText')} />
             )}
             {tab === 'historique' && (
-              <TabPlaceholder icon="fa-clock-rotate-left" title="Historique"
-                text="L'historique des livraisons sera affiché ici prochainement." />
+              <TabPlaceholder icon="fa-clock-rotate-left" title={t('profilLivreur.placeholders.historiqueTitle')}
+                text={t('profilLivreur.placeholders.historiqueText')} />
             )}
           </div>
 
@@ -145,12 +146,12 @@ export default function ProfilLivreurPage({ onToast }: Props) {
         {/* BARRE D'ACTIONS MOBILE */}
         <div className={styles.actionBar}>
           <button className={styles.abMsg} onClick={onContact}>
-            <i className="fas fa-message" /> Contacter
+            <i className="fas fa-message" /> {t('profilLivreur.contacter')}
           </button>
           <button className={styles.abFollow} onClick={follow} disabled={followLoading}>
             {profile.isSuivi
-              ? <><i className="fas fa-user-check" /> Abonné(e)</>
-              : <><i className="fas fa-plus" /> Suivre</>}
+              ? <><i className="fas fa-user-check" /> {t('profilLivreur.abonneFem')}</>
+              : <><i className="fas fa-plus" /> {t('profilLivreur.suivre')}</>}
           </button>
         </div>
       </div>

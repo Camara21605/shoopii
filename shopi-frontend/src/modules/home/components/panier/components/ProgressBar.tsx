@@ -1,21 +1,22 @@
 /*
  * ProgressBar.tsx — Barre d'étapes professionnelle
  */
+import { useTranslation } from 'react-i18next';
 import { useCart } from '../../../../../shared/context/CartContext';
 import styles from '../styles/ProgressBar.module.css';
 
 export default function ProgressBar() {
+  const { t } = useTranslation();
   const { count } = useCart();
 
   const STEPS = [
     {
-      label: 'Panier',
-      sub:   count > 0 ? `${count} article${count > 1 ? 's' : ''}` : 'Vide',
+      label: t('panierCommande.progressBar.panier'),
+      sub:   count > 0 ? t('panierCommande.progressBar.articleCount', { count }) : t('panierCommande.progressBar.vide'),
       state: 'done' as const,
     },
-    { label: 'Livraison',    sub: 'Adresse & livreur', state: 'active' as const, num: 2 },
-    { label: 'Paiement',     sub: 'Mode de paiement',  state: 'idle'   as const, num: 3 },
-    { label: 'Confirmation', sub: 'Vérification',      state: 'idle'   as const, num: 4 },
+    { label: t('panierCommande.progressBar.livraison'),    sub: t('panierCommande.progressBar.adresseLivreur'), state: 'active' as const, num: 2 },
+    { label: t('panierCommande.progressBar.confirmation'), sub: t('panierCommande.progressBar.verification'),   state: 'idle'   as const, num: 3 },
   ];
 
   return (
@@ -40,7 +41,7 @@ export default function ProgressBar() {
         ))}
 
         <div className={styles.secBadge}>
-          <i className="fas fa-lock" /> Paiement sécurisé SSL
+          <i className="fas fa-lock" /> {t('panierCommande.progressBar.paiementSecuriseSsl')}
         </div>
       </div>
     </div>

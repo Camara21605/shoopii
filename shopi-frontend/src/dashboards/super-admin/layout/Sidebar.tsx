@@ -9,6 +9,7 @@
 
 import React from 'react';
 import type { SectionId, UserRole } from '../types/codes.types';
+import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
 
 interface SidebarProps {
   activeSection:   SectionId;
@@ -112,6 +113,11 @@ export default function Sidebar({
             <div className="profile-role">Contrôle total</div>
           </div>
           <div className="profile-dot" />
+        </div>
+
+        {/* Solde du portefeuille Shopi — sous le profil connecté */}
+        <div style={{ padding: '0 22px 12px' }}>
+          <WalletQuickBar compact mini onManage={go(() => navigate('portefeuille'))} />
         </div>
 
         {/* ── Groupe : Tableau de bord ── */}

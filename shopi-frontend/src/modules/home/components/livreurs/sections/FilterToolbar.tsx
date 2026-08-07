@@ -9,6 +9,7 @@
  * ================================================================ */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/FilterToolbar.module.css';
 import type { FilterType, SortOption, ViewMode, FilterState } from '../hooks/useLivreurs';
 
@@ -23,23 +24,6 @@ interface FilterToolbarProps {
   onViewChange:   (v: ViewMode) => void;
 }
 
-/* ── Filtres rapides ── */
-const FILTERS: { key: FilterType; label: string; icon: string; greenDot?: boolean }[] = [
-  { key: 'all',       label: 'Tous',           icon: 'fa-border-all'  },
-  { key: 'available', label: 'Disponibles',    icon: 'fa-circle',  greenDot: true },
-  { key: 'followed',  label: 'Abonnements',    icon: 'fa-check'       },
-  { key: 'moto',      label: 'Motos',          icon: 'fa-motorcycle'  },
-  { key: 'voiture',   label: 'Voitures',       icon: 'fa-car'         },
-];
-
-/* ── Options de tri ── */
-const SORTS: { value: SortOption; label: string }[] = [
-  { value: 'note',       label: 'Mieux notés'          },
-  { value: 'livraisons', label: 'Plus de livraisons'   },
-  { value: 'disponible', label: "Disponibles d'abord"  },
-  { value: 'proches',    label: 'Les plus proches'     },
-];
-
 /* ================================================================
  * COMPOSANT PRINCIPAL
  * ================================================================ */
@@ -47,6 +31,25 @@ const FilterToolbar: React.FC<FilterToolbarProps> = ({
   filters, totalCount, viewMode,
   onSearch, onFilter, onSort, onViewChange,
 }) => {
+  const { t } = useTranslation();
+
+  /* ── Filtres rapides ── */
+  const FILTERS: { key: FilterType; label: string; icon: string; greenDot?: boolean }[] = [
+    { key: 'all',       label: t('livreursPage.toolbar.filters.tous'),         icon: 'fa-border-all'  },
+    { key: 'available', label: t('livreursPage.toolbar.filters.disponibles'),  icon: 'fa-circle',  greenDot: true },
+    { key: 'followed',  label: t('livreursPage.toolbar.filters.abonnements'),  icon: 'fa-check'       },
+    { key: 'moto',      label: t('livreursPage.toolbar.filters.motos'),        icon: 'fa-motorcycle'  },
+    { key: 'voiture',   label: t('livreursPage.toolbar.filters.voitures'),     icon: 'fa-car'         },
+  ];
+
+  /* ── Options de tri ── */
+  const SORTS: { value: SortOption; label: string }[] = [
+    { value: 'note',       label: t('livreursPage.toolbar.sorts.mieuxNotes')          },
+    { value: 'livraisons', label: t('livreursPage.toolbar.sorts.plusDeLivraisons')    },
+    { value: 'disponible', label: t('livreursPage.toolbar.sorts.disponiblesDabord')   },
+    { value: 'proches',    label: t('livreursPage.toolbar.sorts.lesPlusProches')      },
+  ];
+
   return (
     <div className={styles.toolbar}>
       <div className={styles.inner}>
@@ -56,16 +59,16 @@ const FilterToolbar: React.FC<FilterToolbarProps> = ({
           <i className="fas fa-search" aria-hidden="true" />
           <input
             type="text"
-            placeholder="Nom, zone, véhicule…"
+            placeholder={t('livreursPage.toolbar.searchPlaceholder')}
             value={filters.searchQuery}
             onChange={e => onSearch(e.target.value)}
-            aria-label="Rechercher un livreur"
+            aria-label={t('livreursPage.toolbar.rechercherLivreurAria')}
           />
           {filters.searchQuery && (
             <button
               className={styles.clearBtn}
               onClick={() => onSearch('')}
-              aria-label="Effacer la recherche"
+              aria-label={t('livreursPage.toolbar.effacerRechercheAria')}
             >
               <i className="fas fa-xmark" />
             </button>
@@ -100,7 +103,7 @@ const FilterToolbar: React.FC<FilterToolbarProps> = ({
           className={styles.sortSelect}
           value={filters.sortBy}
           onChange={e => onSort(e.target.value as SortOption)}
-          aria-label="Trier les livreurs"
+          aria-label={t('livreursPage.toolbar.trierLivreursAria')}
         >
           {SORTS.map(s => (
             <option key={s.value} value={s.value}>{s.label}</option>
@@ -109,15 +112,15 @@ const FilterToolbar: React.FC<FilterToolbarProps> = ({
 
         {/* ── Compteur résultats ── */}
         <div className={styles.countPill} aria-live="polite">
-          {totalCount} livreur{totalCount > 1 ? 's' : ''}
+          {t('livreursPage.toolbar.livreurCount', { count: totalCount })}
         </div>
 
         {/* ── Toggle vue grille / liste ── */}
-        <div className={styles.viewBtns} role="group" aria-label="Mode d'affichage">
+        <div className={styles.viewBtns} role="group" aria-label={t('livreursPage.toolbar.modeAffichageAria')}>
           <button
             className={`${styles.vBtn} ${viewMode === 'grid' ? styles.vBtnOn : ''}`}
             onClick={() => onViewChange('grid')}
-            title="Vue grille"
+            title={t('livreursPage.toolbar.vueGrille')}
             aria-pressed={viewMode === 'grid'}
           >
             <i className="fas fa-th-large" aria-hidden="true" />
@@ -125,7 +128,7 @@ const FilterToolbar: React.FC<FilterToolbarProps> = ({
           <button
             className={`${styles.vBtn} ${viewMode === 'list' ? styles.vBtnOn : ''}`}
             onClick={() => onViewChange('list')}
-            title="Vue liste"
+            title={t('livreursPage.toolbar.vueListe')}
             aria-pressed={viewMode === 'list'}
           >
             <i className="fas fa-list" aria-hidden="true" />

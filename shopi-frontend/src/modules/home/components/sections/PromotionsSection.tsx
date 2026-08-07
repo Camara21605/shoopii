@@ -1,55 +1,122 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import SectionHeader from '../ui/SectionHeader';
+import { promotionsApi, type PublicPromo } from '../../../../shared/services/api/promotions.api';
+import { useCountdown } from '../../hooks/useCountdown';
 import styles from './PromotionsSection.module.css';
-interface Props { onToast: (m: string) => void; }
-export default function PromotionsSection({ onToast }: Props) {
-  const [timer, setTimer] = useState({ h:8, m:42, s:17 });
+
+
+const TYPE_ICON: Record<string, string> = {
+  discount:    '🏷️',
+  'free-ship': '🚚',
+  bundle:      '🎁',
+  flash:       '⚡',
+};
+
+const TYPE_COLOR: Record<string, string> = {
+  discount:    'var(--rose)',
+  'free-ship': 'var(--blue)',
+  bundle:      'var(--violet)',
+  flash:       'var(--amber)',
+};
+
+const TYPE_BG: Record<string, string> = {
+  discount:    'var(--rs-bg)',
+  'free-ship': 'var(--sky-2)',
+  bundle:      'var(--vl-bg)',
+  flash:       'var(--am-bg)',
+};
+
+/** Formate la valeur d'une promo pour l'affichage (−20%, −5 000 GNF, Livraison…). */
+function formatPct(p: PublicPromo, t: TFunction): string {
+  if (p.valueType === 'percent' && p.valeur != null) return `−${p.valeur}%`;
+  if (p.valueType === 'fixed'   && p.valeur != null) return `−${Number(p.valeur).toLocaleString('fr-FR')} GNF`;
+  if (p.type === 'free-ship') return t('home.promotions.livraison');
+  return t('home.promotions.promo');
+}
+
+export default function PromotionsSection() {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const [promos,  setPromos]  = useState<PublicPromo[]>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const id = setInterval(() => setTimer(p => {
-      let { h, m, s } = p; s--; if(s<0){s=59;m--;} if(m<0){m=59;h--;} if(h<0) h=23; return {h,m,s};
-    }), 1000);
-    return () => clearInterval(id);
+    let cancelled = false;
+    promotionsApi.getPublicActive(5)
+      .then(data => { if (!cancelled) setPromos(data); })
+      .catch(() => { /* section masquée silencieusement si l'API échoue — pas critique pour la home */ })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
-  const SMALL = [
-    { ico:'👗', bg:'var(--rs-bg)', titre:'Mode & Beauté',    sub:'Nouvelles collections 2025', pct:'−25%', color:'var(--rose)'    },
-    { ico:'🏆', bg:'var(--em-bg)', titre:'Meilleures Ventes', sub:'Les plus plébiscités',       pct:'Top',  color:'var(--emerald)' },
-    { ico:'🏠', bg:'var(--am-bg)', titre:'Maison & Déco',    sub:'Styles contemporains',        pct:'−15%', color:'var(--amber)'   },
-    { ico:'🎮', bg:'var(--vl-bg)', titre:'Gaming',           sub:'Dernières sorties',           pct:'−20%', color:'var(--violet)'  },
-  ];
+
+  const [big, ...small] = promos;
+  const timer = useCountdown(big?.endDate ?? null);
+
+  const goToOffres = () => navigate('/offres');
+
+  /**
+   * Clic sur une promo précise : va DIRECTEMENT sur la fiche du produit
+   * ciblé si la promo est liée à un produit spécifique (scope='products'),
+   * ou sur la boutique de l'entreprise si la promo s'applique à tout son
+   * catalogue (scope='global') — plutôt que la liste générique /offres.
+   */
+  const goToPromo = (p: PublicPromo) => {
+    if (p.scope === 'products' && p.productIds.length > 0) {
+      navigate(`/produit/${p.productIds[0]}`);
+    } else {
+      navigate(`/boutique/${p.company.id}`);
+    }
+  };
+
+  /* Rien à afficher (chargement terminé, aucune promo active nulle part) —
+     mieux vaut masquer la section qu'afficher une "Flash Sale" vide. */
+  if (!loading && promos.length === 0) return null;
+  if (loading) return null;
+
   return (
     <section className={styles.sec}>
       <div className={styles.wrap}>
-        <SectionHeader kick="Offres limitées" title="Flash Sales &amp; <em>Promotions</em>" sub="Des prix exceptionnels, pour un temps limité" />
+        <SectionHeader kick={t('home.promotions.kick')} title={t('home.promotions.title')} sub={t('home.promotions.sub')}
+          linkText={t('home.promotions.linkText')} onLink={goToOffres} />
         <div className={styles.layout}>
-          {/* Grande promo */}
-          <div className={styles.big} onClick={() => onToast('🔥 Offres électronique !')}>
-            <div className={styles.bigBg}/><div className={styles.bigEm}>📱</div>
-            <div className={styles.tag}><i className="fas fa-bolt" /> Flash Sale — Aujourd'hui</div>
-            <div className={styles.pct}>−40%</div>
-            <div className={styles.bigTitle}>Électronique & High-Tech</div>
-            <p className={styles.bigSub}>Smartphones, ordinateurs, accessoires à prix cassés</p>
-            <div className={styles.timer}>
-              {[{v:timer.h,l:'H'},{v:timer.m,l:'M'},{v:timer.s,l:'S'}].map((t,i) => (
-                <React.Fragment key={i}>
-                  {i>0 && <span className={styles.tsep}>:</span>}
-                  <div className={styles.tblk}><div className={styles.tnum}>{String(t.v).padStart(2,'0')}</div><div className={styles.tlbl}>{t.l}</div></div>
-                </React.Fragment>
+          {/* Grande promo — le plus gros pourcentage actif */}
+          {big && (
+            <div className={styles.big} onClick={() => goToPromo(big)}>
+              <div className={styles.bigBg}/><div className={styles.bigEm}>{TYPE_ICON[big.type] ?? '🏷️'}</div>
+              <div className={styles.tag}><i className="fas fa-bolt" /> {big.company.nom}</div>
+              <div className={styles.pct}>{formatPct(big, t)}</div>
+              <div className={styles.bigTitle}>{big.nom}</div>
+              <p className={styles.bigSub}>{big.scope === 'global' ? t('home.promotions.surBoutique') : t('home.promotions.surSelection')}</p>
+              {timer && (
+                <div className={styles.timer}>
+                  {[{v:timer.h,l:'H'},{v:timer.m,l:'M'},{v:timer.s,l:'S'}].map((tb,i) => (
+                    <React.Fragment key={i}>
+                      {i>0 && <span className={styles.tsep}>:</span>}
+                      <div className={styles.tblk}><div className={styles.tnum}>{String(tb.v).padStart(2,'0')}</div><div className={styles.tlbl}>{tb.l}</div></div>
+                    </React.Fragment>
+                  ))}
+                </div>
+              )}
+              <button className={styles.bigBtn} onClick={e => { e.stopPropagation(); goToPromo(big); }}>
+                <i className="fas fa-bolt" /> {t('home.promotions.voirOffre')}
+              </button>
+            </div>
+          )}
+          {/* Petites promos — le reste des offres actives */}
+          {small.length > 0 && (
+            <div className={styles.smGrid}>
+              {small.map(p => (
+                <div key={p.id} className={styles.sm} onClick={() => goToPromo(p)}>
+                  <div className={styles.smIco} style={{ background: TYPE_BG[p.type] ?? 'var(--rs-bg)' }}>{TYPE_ICON[p.type] ?? '🏷️'}</div>
+                  <div className={styles.smText}><div className={styles.smTitle}>{p.nom}</div><div className={styles.smSub}>{p.company.nom}</div></div>
+                  <div className={styles.smPct} style={{ color: TYPE_COLOR[p.type] ?? 'var(--rose)' }}>{formatPct(p, t)}</div>
+                </div>
               ))}
             </div>
-            <button className={styles.bigBtn} onClick={e => { e.stopPropagation(); onToast('🛒 Voir les offres'); }}>
-              <i className="fas fa-bolt" /> Voir les offres
-            </button>
-          </div>
-          {/* Petites promos */}
-          <div className={styles.smGrid}>
-            {SMALL.map(s => (
-              <div key={s.titre} className={styles.sm} onClick={() => onToast(`${s.ico} ${s.titre}`)}>
-                <div className={styles.smIco} style={{ background: s.bg }}>{s.ico}</div>
-                <div className={styles.smText}><div className={styles.smTitle}>{s.titre}</div><div className={styles.smSub}>{s.sub}</div></div>
-                <div className={styles.smPct} style={{ color: s.color }}>{s.pct}</div>
-              </div>
-            ))}
-          </div>
+          )}
         </div>
       </div>
     </section>

@@ -9,6 +9,7 @@
  */
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
 import type { EntreprisePage } from '../types';
 
@@ -56,29 +57,33 @@ interface FormErrors {
 // CONSTANTES
 // ─────────────────────────────────────────────────────────────
 
+/* Les valeurs elles-mêmes (VARIANTE_TYPES) restent en français : ce sont
+   des données métier stockées telles quelles (v.type === 'Couleur'...),
+   seul leur AFFICHAGE est traduit via ajouter.constants.varianteTypes.* */
 const VARIANTE_TYPES = ['Couleur', 'Stockage', 'RAM', 'Taille', 'Résolution', 'Matière'];
 
+/* label = clé de traduction (ajouter.constants.paysOrigine.<val> / retourOptions.<val>) */
 const PAYS_ORIGINE = [
-  { val: 'GN', label: '🇬🇳 Guinée (local)' },
-  { val: 'SN', label: '🇸🇳 Sénégal' },
-  { val: 'CI', label: "🇨🇮 Côte d'Ivoire" },
-  { val: 'ML', label: '🇲🇱 Mali' },
-  { val: 'CM', label: '🇨🇲 Cameroun' },
-  { val: 'FR', label: '🇫🇷 France' },
-  { val: 'CN', label: '🇨🇳 Chine' },
-  { val: 'US', label: '🇺🇸 États-Unis' },
-  { val: 'DE', label: '🇩🇪 Allemagne' },
-  { val: 'GB', label: '🇬🇧 Royaume-Uni' },
-  { val: 'JP', label: '🇯🇵 Japon' },
-  { val: 'AE', label: '🇦🇪 Émirats Arabes Unis' },
+  { val: 'GN', label: 'ajouter.constants.paysOrigine.GN' },
+  { val: 'SN', label: 'ajouter.constants.paysOrigine.SN' },
+  { val: 'CI', label: 'ajouter.constants.paysOrigine.CI' },
+  { val: 'ML', label: 'ajouter.constants.paysOrigine.ML' },
+  { val: 'CM', label: 'ajouter.constants.paysOrigine.CM' },
+  { val: 'FR', label: 'ajouter.constants.paysOrigine.FR' },
+  { val: 'CN', label: 'ajouter.constants.paysOrigine.CN' },
+  { val: 'US', label: 'ajouter.constants.paysOrigine.US' },
+  { val: 'DE', label: 'ajouter.constants.paysOrigine.DE' },
+  { val: 'GB', label: 'ajouter.constants.paysOrigine.GB' },
+  { val: 'JP', label: 'ajouter.constants.paysOrigine.JP' },
+  { val: 'AE', label: 'ajouter.constants.paysOrigine.AE' },
 ];
 
 const RETOUR_OPTIONS = [
-  { val: '7j',     label: '7 jours — Remboursement complet' },
-  { val: '14j',    label: '14 jours — Remboursement ou échange' },
-  { val: '30j',    label: '30 jours — Échange uniquement' },
-  { val: 'defect', label: 'Retour uniquement si défectueux' },
-  { val: 'none',   label: 'Aucun retour accepté' },
+  { val: '7j',     label: 'ajouter.constants.retourOptions.7j' },
+  { val: '14j',    label: 'ajouter.constants.retourOptions.14j' },
+  { val: '30j',    label: 'ajouter.constants.retourOptions.30j' },
+  { val: 'defect', label: 'ajouter.constants.retourOptions.defect' },
+  { val: 'none',   label: 'ajouter.constants.retourOptions.none' },
 ];
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
@@ -97,6 +102,7 @@ function isNetworkError(err: unknown): boolean {
 // ─────────────────────────────────────────────────────────────
 
 function ErrorBanner({ message, onClose }: { message: string; onClose: () => void }) {
+  const { t } = useTranslation();
   return (
     <div style={{
       background: 'var(--rs-bg)', border: '1.5px solid rgba(220,38,38,.3)',
@@ -106,7 +112,7 @@ function ErrorBanner({ message, onClose }: { message: string; onClose: () => voi
       <span style={{ fontSize: 20, flexShrink: 0 }}>❌</span>
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--red)', marginBottom: 3 }}>
-          Une erreur est survenue
+          {t('ajouter.errorBanner.title')}
         </div>
         <div style={{ fontSize: 12, color: 'var(--red)', opacity: 0.85, lineHeight: 1.5 }}>
           {message}
@@ -151,6 +157,7 @@ const FORM_INITIAL = {
 // ─────────────────────────────────────────────────────────────
 
 export default function AjouterPage({ onNavigate, productId }: AjouterPageProps) {
+  const { t } = useTranslation();
   const { pop } = useToast();
 
   // ✅ Mode édition si productId est défini
@@ -172,9 +179,9 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   const [form,       setForm]       = useState({ ...FORM_INITIAL });
   const [images,     setImages]     = useState<ImageUploaded[]>([]);
   const [specs,      setSpecs]      = useState<Spec[]>([
-    { cle: 'Marque', valeur: '' },
-    { cle: 'Puce / Processeur', valeur: '' },
-    { cle: 'Connectivité', valeur: '' },
+    { cle: t('ajouter.specs.defaultMarque'), valeur: '' },
+    { cle: t('ajouter.specs.defaultPuce'), valeur: '' },
+    { cle: t('ajouter.specs.defaultConnectivite'), valeur: '' },
   ]);
   const [variantes,    setVariantes]    = useState<Variante[]>([{ type: 'Couleur', vals: '' }]);
   const [variantesOn,  setVariantesOn]  = useState(false);
@@ -216,13 +223,13 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   })
     .then(r => {
       if (!r.ok) {
-        if (r.status === 401) throw new Error('Session expirée. Veuillez vous reconnecter.');
-        throw new Error(`Erreur serveur (${r.status}) lors du chargement des catégories.`);
+        if (r.status === 401) throw new Error(t('ajouter.toasts.sessionExpiredReconnect'));
+        throw new Error(t('ajouter.toasts.categoriesServerError', { status: r.status }));
       }
       return r.json();
     })
     .then((data: CategorieApi[]) => {
-      if (!Array.isArray(data)) throw new Error('Format inattendu.');
+      if (!Array.isArray(data)) throw new Error(t('ajouter.toasts.unexpectedFormat'));
       setCategoriesApi(data);
       if (!isEditMode && data.length > 0) {
         setForm(prev => ({ ...prev, categorieId: data[0].id, categorie: data[0].nom }));
@@ -230,7 +237,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
     })
     .catch(err => {
       const msg = isNetworkError(err)
-        ? 'Impossible de joindre le serveur. Vérifiez que votre backend est démarré sur le port 3001.'
+        ? t('ajouter.toasts.networkErrorBackend')
         : err.message;
       setErreurCats(msg);
       pop(`⚠️ ${msg}`, 'e');
@@ -248,9 +255,9 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
       setForm({ ...FORM_INITIAL });
       setImages([]);
       setSpecs([
-        { cle: 'Marque', valeur: '' },
-        { cle: 'Puce / Processeur', valeur: '' },
-        { cle: 'Connectivité', valeur: '' },
+        { cle: t('ajouter.specs.defaultMarque'), valeur: '' },
+        { cle: t('ajouter.specs.defaultPuce'), valeur: '' },
+        { cle: t('ajouter.specs.defaultConnectivite'), valeur: '' },
       ]);
       setVariantes([{ type: 'Couleur', vals: '' }]);
       setVariantesOn(false);
@@ -263,7 +270,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
       headers: { Authorization: `Bearer ${getToken()}` },
     })
       .then(r => {
-        if (!r.ok) throw new Error(`Erreur ${r.status} lors du chargement du produit.`);
+        if (!r.ok) throw new Error(t('ajouter.toasts.productLoadServerError', { status: r.status }));
         return r.json();
       })
       .then(p => {
@@ -342,10 +349,10 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           })));
         }
 
-        pop('📝 Données du produit chargées', 'i');
+        pop(t('ajouter.toasts.productDataLoaded'), 'i');
       })
       .catch(err => {
-        pop(`❌ Impossible de charger le produit : ${err.message}`, 'e');
+        pop(t('ajouter.toasts.productLoadError', { message: err.message }), 'e');
         setErrorBanner(err.message);
       })
       .finally(() => setLoadingProd(false));
@@ -380,16 +387,16 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
 
   function validateForm(): boolean {
     const e: FormErrors = {};
-    if (!form.nom.trim())                                              e.nom         = 'Le nom du produit est obligatoire.';
-    else if (form.nom.trim().length < 3)                               e.nom         = 'Le nom doit contenir au moins 3 caractères.';
-    if (!form.prix.trim())                                             e.prix        = 'Le prix de vente est obligatoire.';
-    else if (isNaN(parseFloat(form.prix)) || parseFloat(form.prix) <= 0) e.prix     = 'Le prix doit être un nombre positif.';
-    if (!form.stock.trim())                                            e.stock       = 'La quantité en stock est obligatoire.';
-    else if (isNaN(parseInt(form.stock)) || parseInt(form.stock) < 0) e.stock       = 'Le stock doit être un nombre positif ou zéro.';
-    if (!form.categorieId)                                             e.categorieId = 'Veuillez sélectionner une catégorie.';
+    if (!form.nom.trim())                                              e.nom         = t('ajouter.validation.nomRequired');
+    else if (form.nom.trim().length < 3)                               e.nom         = t('ajouter.validation.nomMinLength');
+    if (!form.prix.trim())                                             e.prix        = t('ajouter.validation.prixRequired');
+    else if (isNaN(parseFloat(form.prix)) || parseFloat(form.prix) <= 0) e.prix     = t('ajouter.validation.prixPositive');
+    if (!form.stock.trim())                                            e.stock       = t('ajouter.validation.stockRequired');
+    else if (isNaN(parseInt(form.stock)) || parseInt(form.stock) < 0) e.stock       = t('ajouter.validation.stockPositive');
+    if (!form.categorieId)                                             e.categorieId = t('ajouter.validation.categorieRequired');
     setErrors(e);
     if (Object.keys(e).length > 0) {
-      pop('⚠️ Veuillez corriger les erreurs dans le formulaire.', 'w');
+      pop(t('ajouter.validation.fixErrors'), 'w');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return false;
     }
@@ -408,17 +415,17 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
     let videoCount = images.filter(i => i.type === 'video').length;
     let imageCount = images.length - videoCount;
     const placesRestantes = MAX_MEDIA_TOTAL - images.length;
-    if (placesRestantes <= 0) { pop(`⚠️ Maximum ${MAX_MEDIA_TOTAL} médias atteint`, 'w'); return; }
+    if (placesRestantes <= 0) { pop(t('ajouter.toasts.maxMedia', { count: MAX_MEDIA_TOTAL }), 'w'); return; }
 
     const aUploader: File[] = [];
     for (const file of files) {
-      if (aUploader.length >= placesRestantes) { pop(`⚠️ Maximum ${MAX_MEDIA_TOTAL} médias — le reste a été ignoré.`, 'w'); break; }
+      if (aUploader.length >= placesRestantes) { pop(t('ajouter.toasts.maxMediaRestIgnored', { count: MAX_MEDIA_TOTAL }), 'w'); break; }
       const estVideo = file.type.startsWith('video/');
       if (estVideo) {
-        if (videoCount >= MAX_MEDIA_VIDEOS) { pop(`⚠️ Maximum ${MAX_MEDIA_VIDEOS} vidéo par produit — "${file.name}" ignorée.`, 'w'); continue; }
+        if (videoCount >= MAX_MEDIA_VIDEOS) { pop(t('ajouter.toasts.maxVideo', { count: MAX_MEDIA_VIDEOS, name: file.name }), 'w'); continue; }
         videoCount++;
       } else {
-        if (imageCount >= MAX_MEDIA_IMAGES) { pop(`⚠️ Maximum ${MAX_MEDIA_IMAGES} images par produit — "${file.name}" ignorée.`, 'w'); continue; }
+        if (imageCount >= MAX_MEDIA_IMAGES) { pop(t('ajouter.toasts.maxImages', { count: MAX_MEDIA_IMAGES, name: file.name }), 'w'); continue; }
         imageCount++;
       }
       aUploader.push(file);
@@ -432,7 +439,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
         const estVideo = file.type.startsWith('video/');
         const maxSize  = estVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
         if (file.size > maxSize) {
-          pop(`⚠️ "${file.name}" dépasse ${estVideo ? '50 MB' : '5 MB'} — ignoré.`, 'w');
+          pop(t('ajouter.toasts.fileTooLarge', { name: file.name, max: estVideo ? '50 MB' : '5 MB' }), 'w');
           continue;
         }
         const preview  = URL.createObjectURL(file);
@@ -443,10 +450,10 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           res = await fetch(`${API}/upload/${estVideo ? 'video' : 'image/product'}`, {
             method: 'POST', headers: { Authorization: `Bearer ${getToken()}` }, body: formData,
           });
-        } catch { throw new Error('Impossible de joindre le serveur. Vérifiez que votre backend est démarré.'); }
+        } catch { throw new Error(t('ajouter.toasts.networkError')); }
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          throw new Error(res.status === 401 ? 'Session expirée.' : errData.message ?? `Erreur ${res.status}`);
+          throw new Error(res.status === 401 ? t('ajouter.toasts.sessionExpired') : errData.message ?? `Erreur ${res.status}`);
         }
         const data: { url: string } = await res.json();
         nouvelles.push({
@@ -459,7 +466,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
       }
       if (nouvelles.length) {
         setImages(prev => [...prev, ...nouvelles]);
-        pop(`✅ ${nouvelles.length} média(s) uploadé(s)`, 's');
+        pop(t('ajouter.toasts.mediaUploaded', { count: nouvelles.length }), 's');
       }
     } catch (err: any) {
       setErrorBanner(err.message);
@@ -515,19 +522,19 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
 
   const seoScore = useMemo(() => {
     const criteres = [
-      { label: 'Nom du produit renseigné',     ok: form.nom.trim().length > 5 },
-      { label: 'Description > 100 caractères', ok: form.description.trim().length > 100 },
-      { label: 'Titre SEO défini',             ok: form.titreSeo.trim().length > 0 },
-      { label: 'Description SEO définie',      ok: form.descriptionSeo.trim().length > 0 },
-      { label: 'URL Slug personnalisée',        ok: form.urlSlug.trim().length > 0 },
-      { label: 'Tags SEO renseignés',           ok: form.tags.trim().length > 0 },
-      { label: 'Marque définie',               ok: form.marque.trim().length > 0 },
-      { label: 'Au moins 1 image uploadée',    ok: images.length > 0 },
-      { label: 'Prix de vente saisi',          ok: form.prix.trim().length > 0 },
-      { label: 'Référence SKU définie',        ok: form.reference.trim().length > 0 },
+      { label: t('ajouter.seo.criteres.nom'),           ok: form.nom.trim().length > 5 },
+      { label: t('ajouter.seo.criteres.description'),   ok: form.description.trim().length > 100 },
+      { label: t('ajouter.seo.criteres.titreSeo'),      ok: form.titreSeo.trim().length > 0 },
+      { label: t('ajouter.seo.criteres.descriptionSeo'), ok: form.descriptionSeo.trim().length > 0 },
+      { label: t('ajouter.seo.criteres.urlSlug'),       ok: form.urlSlug.trim().length > 0 },
+      { label: t('ajouter.seo.criteres.tags'),          ok: form.tags.trim().length > 0 },
+      { label: t('ajouter.seo.criteres.marque'),        ok: form.marque.trim().length > 0 },
+      { label: t('ajouter.seo.criteres.image'),         ok: images.length > 0 },
+      { label: t('ajouter.seo.criteres.prix'),          ok: form.prix.trim().length > 0 },
+      { label: t('ajouter.seo.criteres.reference'),     ok: form.reference.trim().length > 0 },
     ];
     return { score: Math.round((criteres.filter(c => c.ok).length / criteres.length) * 100), criteres };
-  }, [form, images]);
+  }, [form, images, t]);
 
   // ─────────────────────────────────────────────────────────────
   // ✅ SOUMISSION — POST (création) ou PATCH (édition)
@@ -615,22 +622,22 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           }
         );
       } catch {
-        throw new Error('Impossible de joindre le serveur. Vérifiez que votre backend NestJS est démarré sur le port 3001.');
+        throw new Error(t('ajouter.toasts.networkErrorNest'));
       }
 
       if (!res.ok) {
-        let errorMessage = `Erreur serveur (${res.status}).`;
+        let errorMessage = t('ajouter.toasts.serverErrorGeneric', { status: res.status });
         try {
           const errData = await res.json();
-          if      (res.status === 401) errorMessage = 'Votre session a expiré. Veuillez vous reconnecter.';
-          else if (res.status === 403) errorMessage = "Vous n'avez pas les droits nécessaires.";
+          if      (res.status === 401) errorMessage = t('ajouter.toasts.sessionExpiredFull');
+          else if (res.status === 403) errorMessage = t('ajouter.toasts.forbidden');
           else if (res.status === 400) {
             errorMessage = Array.isArray(errData.message)
               ? '• ' + errData.message.join('\n• ')
               : errData.message ?? errorMessage;
           }
-          else if (res.status === 409) errorMessage = errData.message ?? 'URL slug déjà utilisé. Changez le slug.';
-          else if (res.status === 500) errorMessage = 'Erreur interne du serveur. Consultez les logs.';
+          else if (res.status === 409) errorMessage = errData.message ?? t('ajouter.toasts.slugTaken');
+          else if (res.status === 500) errorMessage = t('ajouter.toasts.serverError500');
           else                         errorMessage = errData.message ?? errorMessage;
         } catch { /* body non JSON */ }
         throw new Error(errorMessage);
@@ -641,18 +648,18 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
       setErrors({});
       pop(
         isEditMode
-          ? '✅ Produit mis à jour avec succès !'
-          : (draft ? '💾 Brouillon sauvegardé !' : '✅ Produit publié avec succès !'),
+          ? t('ajouter.toasts.updateSuccess')
+          : (draft ? t('ajouter.toasts.draftSaved') : t('ajouter.toasts.publishSuccess')),
         's'
       );
       // Retour à la liste après succès
       setTimeout(() => onNavigate('produits'), 800);
 
     } catch (err: any) {
-      const message = err.message ?? 'Une erreur inattendue est survenue.';
+      const message = err.message ?? t('ajouter.toasts.unexpectedError');
       setErrorBanner(message);
       setErrors(prev => ({ ...prev, general: message }));
-      pop(`❌ Échec`, 'e');
+      pop(t('ajouter.toasts.publishFailed'), 'e');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setEnChargement(false);
@@ -675,7 +682,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
     return (
       <div className="page on" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400, flexDirection: 'column', gap: 16 }}>
         <i className="fas fa-spinner fa-spin" style={{ fontSize: 28, color: 'var(--t2)' }} />
-        <div style={{ fontSize: 14, color: 'var(--t3)' }}>Chargement du produit…</div>
+        <div style={{ fontSize: 14, color: 'var(--t3)' }}>{t('ajouter.loadingProduct')}</div>
       </div>
     );
   }
@@ -693,29 +700,29 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           {/* ✅ Titre dynamique selon le mode */}
           <div className="aj-title">
             <i className={`fas ${isEditMode ? 'fa-pen' : 'fa-plus-circle'}`}></i>
-            {isEditMode ? 'Modifier le produit' : 'Ajouter un produit'}
+            {isEditMode ? t('ajouter.header.editTitle') : t('ajouter.header.createTitle')}
           </div>
           <div className="aj-sub">
             {isEditMode
-              ? 'Modifiez les informations de votre produit et sauvegardez les changements.'
-              : 'Remplissez les informations pour publier votre produit sur la boutique.'}
+              ? t('ajouter.header.editSubtitle')
+              : t('ajouter.header.createSubtitle')}
           </div>
         </div>
         <div className="pf-actions">
           <button className="btn-draft" onClick={() => onNavigate('produits')} disabled={enChargement}>
-            <i className="fas fa-arrow-left"></i> Annuler
+            <i className="fas fa-arrow-left"></i> {t('ajouter.header.cancel')}
           </button>
           {/* En mode édition le brouillon garde le même produit */}
           {!isEditMode && (
             <button className="btn-draft" onClick={() => handlePublish(true)} disabled={enChargement}>
-              <i className="fas fa-save"></i> {enChargement ? 'Sauvegarde…' : 'Brouillon'}
+              <i className="fas fa-save"></i> {enChargement ? t('ajouter.header.saving') : t('ajouter.header.draft')}
             </button>
           )}
           <button className="btn-pub" onClick={() => handlePublish(false)} disabled={enChargement}>
             <i className={`fas ${isEditMode ? 'fa-check' : 'fa-cloud-arrow-up'}`}></i>
             {enChargement
-              ? (isEditMode ? 'Mise à jour…' : 'Publication…')
-              : (isEditMode ? 'Mettre à jour' : 'Publier le produit')}
+              ? (isEditMode ? t('ajouter.header.updating') : t('ajouter.header.publishing'))
+              : (isEditMode ? t('ajouter.header.update') : t('ajouter.header.publish'))}
           </button>
         </div>
       </div>
@@ -729,7 +736,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           fontSize: 12, fontWeight: 700, color: 'var(--t2)', marginBottom: 16,
         }}>
           <i className="fas fa-pen-to-square" />
-          Mode édition — vous modifiez un produit existant
+          {t('ajouter.header.editModeBadge')}
         </div>
       )}
 
@@ -745,7 +752,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           {/* Médias produit */}
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-image"></i> Médias produit</div>
+              <div className="ch-t"><i className="fas fa-image"></i> {t('ajouter.medias.title')}</div>
               <span className="ch-badge">{images.length}/{MAX_MEDIA_TOTAL}</span>
             </div>
             <div className="cb">
@@ -755,13 +762,13 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                 style={{ cursor: uploadEnCours ? 'wait' : 'pointer' }}
               >
                 {uploadEnCours ? (
-                  <><i className="fas fa-spinner fa-spin"></i><p><strong>Upload en cours…</strong></p></>
+                  <><i className="fas fa-spinner fa-spin"></i><p><strong>{t('ajouter.medias.loading')}</strong></p></>
                 ) : (
                   <>
                     <i className="fas fa-cloud-arrow-up"></i>
-                    <p><strong>Glissez vos médias ici</strong><br />ou cliquez pour sélectionner</p>
+                    <p><strong>{t('ajouter.medias.dropTitle')}</strong><br />{t('ajouter.medias.dropSub')}</p>
                     <p style={{ fontSize: 11, marginTop: 6, color: 'var(--t4)' }}>
-                      {MAX_MEDIA_IMAGES} images (JPG, PNG, WebP · Max. 5 MB) + {MAX_MEDIA_VIDEOS} vidéo (MP4, WebM, MOV · Max. 50 MB)
+                      {t('ajouter.medias.quota', { images: MAX_MEDIA_IMAGES, videos: MAX_MEDIA_VIDEOS })}
                     </p>
                   </>
                 )}
@@ -791,7 +798,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                       <button className="aj-img-del" onClick={() => supprimerImage(i)}>
                         <i className="fas fa-xmark"></i>
                       </button>
-                      {i === 0 && <div className="aj-img-main">Principale</div>}
+                      {i === 0 && <div className="aj-img-main">{t('ajouter.medias.principale')}</div>}
                     </div>
                   ))}
                 </div>
@@ -802,12 +809,12 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           {/* ── Stories produit ── */}
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-circle-play"></i> Stories produit</div>
+              <div className="ch-t"><i className="fas fa-circle-play"></i> {t('ajouter.stories.title')}</div>
               <label className="aj-toggle" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input type="checkbox" checked={storiesOn} onChange={e => { setStoriesOn(e.target.checked); if (!e.target.checked) setStoryIndices(new Set()); }} />
                 <span className="aj-toggle-slider"></span>
                 <span style={{ fontSize: 11.5, fontWeight: 600, color: storiesOn ? 'var(--t2)' : 'var(--t3)', whiteSpace: 'nowrap' }}>
-                  {storiesOn ? 'Activées' : 'Désactivées'}
+                  {storiesOn ? t('ajouter.stories.activees') : t('ajouter.stories.desactivees')}
                 </span>
               </label>
             </div>
@@ -817,13 +824,13 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                 {images.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--t3)', fontSize: 12.5 }}>
                     <i className="fas fa-images" style={{ fontSize: 24, display: 'block', marginBottom: 8, opacity: 0.4 }} />
-                    Ajoutez d'abord des images produit pour les sélectionner comme stories.
+                    {t('ajouter.stories.addImagesFirst')}
                   </div>
                 ) : (
                   <>
                     <p style={{ fontSize: 12, color: 'var(--t2)', marginBottom: 12, lineHeight: 1.5 }}>
                       <i className="fas fa-circle-info" style={{ color: 'var(--t2)', marginRight: 6 }} />
-                      Sélectionnez les images à publier en story (<strong>expire après 24h</strong>). Cliquez sur une image pour la sélectionner.
+                      {t('ajouter.stories.selectHint')}
                     </p>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 8 }}>
@@ -890,7 +897,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                           display: 'flex', alignItems: 'center', gap: 6,
                         }}>
                           <i className="fas fa-circle-play" />
-                          {storyIndices.size} image{storyIndices.size > 1 ? 's' : ''} sélectionnée{storyIndices.size > 1 ? 's' : ''} comme story
+                          {t('ajouter.stories.selected', { count: storyIndices.size })}
                         </div>
 
                         {/* Plage horaire */}
@@ -901,14 +908,14 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                         }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 7 }}>
                             <i className="fas fa-clock" style={{ color: 'var(--t2)', fontSize: 13 }} />
-                            Plage horaire d'affichage (par jour)
+                            {t('ajouter.stories.plageHoraire')}
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             {/* Heure de début */}
                             <div style={{ flex: 1 }}>
                               <label style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--t3)', display: 'block', marginBottom: 4 }}>
-                                À partir de
+                                {t('ajouter.stories.aPartirDe')}
                               </label>
                               <input
                                 type="time"
@@ -924,7 +931,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                             {/* Heure de fin */}
                             <div style={{ flex: 1 }}>
                               <label style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--t3)', display: 'block', marginBottom: 4 }}>
-                                Jusqu'à
+                                {t('ajouter.stories.jusquA')}
                               </label>
                               <input
                                 type="time"
@@ -944,10 +951,10 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                             }}>
                               <i className="fas fa-circle-info" style={{ color: 'var(--t2)', fontSize: 11 }} />
                               {storyHeureFin > storyHeureDebut
-                                ? <>De <strong>{storyHeureDebut}</strong> à <strong>{storyHeureFin}</strong></>
+                                ? t('ajouter.stories.deA', { debut: storyHeureDebut, fin: storyHeureFin })
                                 : <span style={{ color: 'var(--t2)', fontWeight: 600 }}>
                                     <i className="fas fa-triangle-exclamation" style={{ marginRight: 4 }} />
-                                    L'heure de fin doit être après l'heure de début.
+                                    {t('ajouter.stories.heureInvalide')}
                                   </span>
                               }
                             </div>
@@ -957,13 +964,13 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                         {/* Jours d'affichage */}
                         {(() => {
                           const JOURS = [
-                            { key: 'lun', label: 'Lun' },
-                            { key: 'mar', label: 'Mar' },
-                            { key: 'mer', label: 'Mer' },
-                            { key: 'jeu', label: 'Jeu' },
-                            { key: 'ven', label: 'Ven' },
-                            { key: 'sam', label: 'Sam' },
-                            { key: 'dim', label: 'Dim' },
+                            { key: 'lun', label: t('ajouter.stories.jours.lun') },
+                            { key: 'mar', label: t('ajouter.stories.jours.mar') },
+                            { key: 'mer', label: t('ajouter.stories.jours.mer') },
+                            { key: 'jeu', label: t('ajouter.stories.jours.jeu') },
+                            { key: 'ven', label: t('ajouter.stories.jours.ven') },
+                            { key: 'sam', label: t('ajouter.stories.jours.sam') },
+                            { key: 'dim', label: t('ajouter.stories.jours.dim') },
                           ];
                           const tousSelectionnes = storyJours.size === JOURS.length;
                           const toggleJour = (key: string) => setStoryJours(prev => {
@@ -980,7 +987,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 7 }}>
                                   <i className="fas fa-calendar-days" style={{ color: 'var(--t2)', fontSize: 13 }} />
-                                  Jours d'affichage
+                                  {t('ajouter.stories.joursAffichage')}
                                 </div>
                                 <button
                                   onClick={() => setStoryJours(
@@ -993,7 +1000,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                                     padding: '2px 6px',
                                   }}
                                 >
-                                  {tousSelectionnes ? 'Tout désélectionner' : 'Tous les jours'}
+                                  {tousSelectionnes ? t('ajouter.stories.toutDeselectionner') : t('ajouter.stories.tousLesJours')}
                                 </button>
                               </div>
 
@@ -1036,18 +1043,18 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                               {storyJours.size === 0 ? (
                                 <div style={{ marginTop: 8, fontSize: 11.5, color: 'var(--t2)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
                                   <i className="fas fa-triangle-exclamation" />
-                                  Sélectionnez au moins un jour.
+                                  {t('ajouter.stories.selectAuMoinsUnJour')}
                                 </div>
                               ) : (
                                 <div style={{ marginTop: 8, fontSize: 11.5, color: 'var(--t2)', display: 'flex', alignItems: 'center', gap: 5 }}>
                                   <i className="fas fa-circle-check" style={{ color: 'var(--emerald)' }} />
                                   {storyJours.size === 7
-                                    ? 'Visible tous les jours'
+                                    ? t('ajouter.stories.visibleTousLesJours')
                                     : storyJours.size === 5 && !storyJours.has('sam') && !storyJours.has('dim')
-                                    ? 'Visible du lundi au vendredi'
+                                    ? t('ajouter.stories.visibleLunVen')
                                     : storyJours.size === 2 && storyJours.has('sam') && storyJours.has('dim')
-                                    ? 'Visible le week-end uniquement'
-                                    : `Visible ${storyJours.size} jour${storyJours.size > 1 ? 's' : ''} par semaine`
+                                    ? t('ajouter.stories.visibleWeekend')
+                                    : t('ajouter.stories.visibleNJours', { count: storyJours.size })
                                   }
                                 </div>
                               )}
@@ -1062,23 +1069,23 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               </div>
             ) : (
               <div className="cb" style={{ color: 'var(--t3)', fontSize: 12.5, fontStyle: 'italic' }}>
-                Activez les stories pour mettre en avant ce produit pendant 24h dans le fil stories de votre boutique.
+                {t('ajouter.stories.disabledHint')}
               </div>
             )}
           </div>
 
           {/* Organisation */}
           <div className="card" style={{ marginBottom: 14 }}>
-            <div className="ch"><div className="ch-t"><i className="fas fa-tags"></i> Organisation</div></div>
+            <div className="ch"><div className="ch-t"><i className="fas fa-tags"></i> {t('ajouter.organisation.title')}</div></div>
             <div className="cb" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label className="pf-lbl">Catégorie *</label>
+                <label className="pf-lbl">{t('ajouter.organisation.categorie')}</label>
                 {erreurCats ? (
                   <div style={{ padding: '10px 12px', background: 'rgba(128,128,128,.06)', border: '1.5px solid rgba(128,128,128,.25)', borderRadius: 'var(--r-md)', fontSize: 12, color: 'var(--t2)', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <i className="fas fa-triangle-exclamation" />
                     {erreurCats}
                     <button onClick={() => { setErreurCats(null); setChargementCats(true); window.location.reload(); }} style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--t2)', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: 'var(--t2)', cursor: 'pointer' }}>
-                      Réessayer
+                      {t('ajouter.organisation.retry')}
                     </button>
                   </div>
                 ) : (
@@ -1090,9 +1097,9 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                     style={{ borderColor: errors.categorieId ? 'var(--red)' : undefined }}
                   >
                     {chargementCats ? (
-                      <option>Chargement…</option>
+                      <option>{t('ajouter.organisation.loadingCats')}</option>
                     ) : categoriesApi.length === 0 ? (
-                      <option value="">Aucune catégorie disponible</option>
+                      <option value="">{t('ajouter.organisation.noCategorie')}</option>
                     ) : (
                       categoriesApi.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)
                     )}
@@ -1102,29 +1109,29 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               </div>
 
               <div>
-                <label className="pf-lbl">Sous-catégorie</label>
+                <label className="pf-lbl">{t('ajouter.organisation.sousCategorie')}</label>
                 <select className="pf-in" value={form.sousCatId} onChange={e => handleChangerSousCat(e.target.value)}>
-                  <option value="">Choisir…</option>
+                  <option value="">{t('ajouter.organisation.choisir')}</option>
                   {sousCatsOptions.map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
                 </select>
               </div>
 
-              <div><label className="pf-lbl">Marque</label><input className="pf-in" placeholder="Ex: Apple, Samsung…" value={form.marque} onChange={e => update('marque', e.target.value)} /></div>
-              <div><label className="pf-lbl">Tags SEO (séparés par virgule)</label><input className="pf-in" placeholder="smartphone, iphone, apple…" value={form.tags} onChange={e => update('tags', e.target.value)} /></div>
+              <div><label className="pf-lbl">{t('ajouter.organisation.marque')}</label><input className="pf-in" placeholder={t('ajouter.organisation.marquePlaceholder')} value={form.marque} onChange={e => update('marque', e.target.value)} /></div>
+              <div><label className="pf-lbl">{t('ajouter.organisation.tagsSeo')}</label><input className="pf-in" placeholder={t('ajouter.organisation.tagsPlaceholder')} value={form.tags} onChange={e => update('tags', e.target.value)} /></div>
               <div>
-                <label className="pf-lbl">Langue</label>
+                <label className="pf-lbl">{t('ajouter.organisation.langue')}</label>
                 <select className="pf-in" value={form.langue} onChange={e => update('langue', e.target.value)}>
-                  <option value="fr">🇫🇷 Français</option>
-                  <option value="en">🇬🇧 Anglais</option>
-                  <option value="ar">🇸🇦 Arabe</option>
+                  <option value="fr">{t('ajouter.organisation.langueFr')}</option>
+                  <option value="en">{t('ajouter.organisation.langueEn')}</option>
+                  <option value="ar">{t('ajouter.organisation.langueAr')}</option>
                 </select>
               </div>
               <div>
-                <label className="pf-lbl">Visibilité</label>
+                <label className="pf-lbl">{t('ajouter.organisation.visibilite')}</label>
                 <select className="pf-in" value={form.visibilite} onChange={e => update('visibilite', e.target.value)}>
-                  <option value="public">Public · Visible sur la boutique</option>
-                  <option value="draft">Brouillon · Non publié</option>
-                  <option value="private">Privé · Lien direct uniquement</option>
+                  <option value="public">{t('ajouter.organisation.optPublic')}</option>
+                  <option value="draft">{t('ajouter.organisation.optDraft')}</option>
+                  <option value="private">{t('ajouter.organisation.optPrivate')}</option>
                 </select>
               </div>
             </div>
@@ -1132,57 +1139,61 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
 
           {/* Infos complémentaires */}
           <div className="card" style={{ marginBottom: 14 }}>
-            <div className="ch"><div className="ch-t"><i className="fas fa-circle-info"></i> Infos complémentaires</div></div>
+            <div className="ch"><div className="ch-t"><i className="fas fa-circle-info"></i> {t('ajouter.infosComplementaires.title')}</div></div>
             <div className="cb" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label className="pf-lbl">État du produit</label>
+                <label className="pf-lbl">{t('ajouter.infosComplementaires.etat')}</label>
                 <select className="pf-in" value={form.condition} onChange={e => update('condition', e.target.value)}>
-                  <option value="neuf">Neuf — jamais utilisé</option>
-                  <option value="reconditionne">Reconditionné certifié</option>
-                  <option value="occasion">Occasion — Très bon état</option>
+                  <option value="neuf">{t('ajouter.infosComplementaires.etatNeuf')}</option>
+                  <option value="reconditionne">{t('ajouter.infosComplementaires.etatReconditionne')}</option>
+                  <option value="occasion">{t('ajouter.infosComplementaires.etatOccasion')}</option>
                 </select>
               </div>
               <div>
-                <label className="pf-lbl">Garantie</label>
+                <label className="pf-lbl">{t('ajouter.infosComplementaires.garantie')}</label>
                 <select className="pf-in" value={form.garantie} onChange={e => update('garantie', e.target.value)}>
-                  <option>3 mois</option><option>6 mois</option><option>12 mois</option><option>24 mois</option><option>Sans garantie</option>
+                  <option value="3 mois">{t('ajouter.infosComplementaires.garantieOptions.3m')}</option>
+                  <option value="6 mois">{t('ajouter.infosComplementaires.garantieOptions.6m')}</option>
+                  <option value="12 mois">{t('ajouter.infosComplementaires.garantieOptions.12m')}</option>
+                  <option value="24 mois">{t('ajouter.infosComplementaires.garantieOptions.24m')}</option>
+                  <option value="Sans garantie">{t('ajouter.infosComplementaires.garantieOptions.aucune')}</option>
                 </select>
               </div>
               <div>
-                <label className="pf-lbl">Politique de retour</label>
+                <label className="pf-lbl">{t('ajouter.infosComplementaires.politiqueRetour')}</label>
                 <select className="pf-in" value={form.politiqueRetour} onChange={e => update('politiqueRetour', e.target.value)}>
-                  {RETOUR_OPTIONS.map(r => <option key={r.val} value={r.val}>{r.label}</option>)}
+                  {RETOUR_OPTIONS.map(r => <option key={r.val} value={r.val}>{t(r.label)}</option>)}
                 </select>
               </div>
               <div>
-                <label className="pf-lbl">Pays d'origine</label>
+                <label className="pf-lbl">{t('ajouter.infosComplementaires.paysOrigine')}</label>
                 <select className="pf-in" value={form.paysOrigine} onChange={e => update('paysOrigine', e.target.value)}>
-                  {PAYS_ORIGINE.map(p => <option key={p.val} value={p.val}>{p.label}</option>)}
+                  {PAYS_ORIGINE.map(p => <option key={p.val} value={p.val}>{t(p.label)}</option>)}
                 </select>
                 {isInternational && (
                   <div className="aj-origin-banner">
                     <span style={{ fontSize: 18 }}>🌍</span>
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--t2)', marginBottom: 2 }}>Produit international détecté</div>
-                      <div style={{ fontSize: 11, color: 'var(--t2)', lineHeight: 1.5 }}>La fiche affichera automatiquement le bandeau international.</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--t2)', marginBottom: 2 }}>{t('ajouter.infosComplementaires.internationalTitle')}</div>
+                      <div style={{ fontSize: 11, color: 'var(--t2)', lineHeight: 1.5 }}>{t('ajouter.infosComplementaires.internationalSub')}</div>
                     </div>
                   </div>
                 )}
               </div>
-              <div><label className="pf-lbl">Poids (kg)</label><input className="pf-in" type="number" step="0.01" placeholder="Ex: 0.5" value={form.poids} onChange={e => update('poids', e.target.value)} /></div>
+              <div><label className="pf-lbl">{t('ajouter.infosComplementaires.poids')}</label><input className="pf-in" type="number" step="0.01" placeholder="Ex: 0.5" value={form.poids} onChange={e => update('poids', e.target.value)} /></div>
               <div>
-                <label className="pf-lbl">Dimensions physiques (cm)</label>
+                <label className="pf-lbl">{t('ajouter.infosComplementaires.dimensions')}</label>
                 <div className="gridR3" style={{ gap: 8 }}>
                   {(['longueur', 'largeur', 'hauteur'] as const).map(dim => (
                     <div key={dim}>
-                      <label style={{ fontSize: 10, color: 'var(--t3)', display: 'block', marginBottom: 3 }}>{dim.charAt(0).toUpperCase() + dim.slice(1)}</label>
+                      <label style={{ fontSize: 10, color: 'var(--t3)', display: 'block', marginBottom: 3 }}>{t(`ajouter.infosComplementaires.${dim}`)}</label>
                       <input className="pf-in" type="number" placeholder={dim[0].toUpperCase()} value={form[dim]} onChange={e => update(dim, e.target.value)} />
                     </div>
                   ))}
                 </div>
                 {form.longueur && form.largeur && form.hauteur && (
                   <p style={{ fontSize: 10.5, color: 'var(--t2)', marginTop: 5 }}>
-                    📦 Volume : {(parseFloat(form.longueur) * parseFloat(form.largeur) * parseFloat(form.hauteur) / 1000).toFixed(2)} L
+                    {t('ajouter.infosComplementaires.volume', { volume: (parseFloat(form.longueur) * parseFloat(form.largeur) * parseFloat(form.hauteur) / 1000).toFixed(2) })}
                   </p>
                 )}
               </div>
@@ -1191,12 +1202,12 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
 
           {/* Livraison */}
           <div className="card" style={{ marginBottom: 14 }}>
-            <div className="ch"><div className="ch-t"><i className="fas fa-truck-fast"></i> Politique de livraison</div></div>
+            <div className="ch"><div className="ch-t"><i className="fas fa-truck-fast"></i> {t('ajouter.livraison.title')}</div></div>
             <div className="cb" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
-                { key: 'livraisonStandard'      as const, icon: '🚚', label: 'Livraison standard',        sub: 'Gérée par votre boutique' },
-                { key: 'livraisonLivreur'       as const, icon: '🛵', label: 'Choisir un livreur',         sub: "L'acheteur sélectionne son livreur" },
-                { key: 'livraisonCorrespondant' as const, icon: '🤝', label: 'Via un correspondant Shopi', sub: "Pour les produits venant de l'étranger" },
+                { key: 'livraisonStandard'      as const, icon: '🚚', label: t('ajouter.livraison.standard'),      sub: t('ajouter.livraison.standardSub') },
+                { key: 'livraisonLivreur'       as const, icon: '🛵', label: t('ajouter.livraison.choisirLivreur'), sub: t('ajouter.livraison.choisirLivreurSub') },
+                { key: 'livraisonCorrespondant' as const, icon: '🤝', label: t('ajouter.livraison.correspondant'), sub: t('ajouter.livraison.correspondantSub') },
               ].map(item => (
                 <label key={item.key} className="aj-toggle-row">
                   <div>
@@ -1209,11 +1220,16 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                   </label>
                 </label>
               ))}
-              <div><label className="pf-lbl">Frais de livraison locale (GNF)</label><input className="pf-in" type="number" placeholder="0 = Livraison gratuite" value={form.fraisLivraisonLocal} onChange={e => update('fraisLivraisonLocal', e.target.value)} /></div>
+              <div><label className="pf-lbl">{t('ajouter.livraison.fraisLocal')}</label><input className="pf-in" type="number" placeholder={t('ajouter.livraison.fraisPlaceholder')} value={form.fraisLivraisonLocal} onChange={e => update('fraisLivraisonLocal', e.target.value)} /></div>
               <div>
-                <label className="pf-lbl">Délai de livraison estimé</label>
+                <label className="pf-lbl">{t('ajouter.livraison.delai')}</label>
                 <select className="pf-in" value={form.delaiLivraison} onChange={e => update('delaiLivraison', e.target.value)}>
-                  <option>Même jour</option><option>1-3 jours</option><option>3-7 jours</option><option>7-14 jours</option><option>14-30 jours</option><option>Sur commande</option>
+                  <option value="Même jour">{t('ajouter.livraison.delaiOptions.jour')}</option>
+                  <option value="1-3 jours">{t('ajouter.livraison.delaiOptions.d1_3')}</option>
+                  <option value="3-7 jours">{t('ajouter.livraison.delaiOptions.d3_7')}</option>
+                  <option value="7-14 jours">{t('ajouter.livraison.delaiOptions.d7_14')}</option>
+                  <option value="14-30 jours">{t('ajouter.livraison.delaiOptions.d14_30')}</option>
+                  <option value="Sur commande">{t('ajouter.livraison.delaiOptions.surCommande')}</option>
                 </select>
               </div>
             </div>
@@ -1221,13 +1237,13 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
 
           {/* Garanties */}
           <div className="card" style={{ marginBottom: 14 }}>
-            <div className="ch"><div className="ch-t"><i className="fas fa-shield-check"></i> Garanties affichées sur la fiche</div></div>
+            <div className="ch"><div className="ch-t"><i className="fas fa-shield-check"></i> {t('ajouter.garanties.title')}</div></div>
             <div className="cb" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { key: 'garantiePaiement'  as const, icon: '🔒', label: 'Paiement sécurisé',   sub: 'SSL · Orange Money · Visa' },
-                { key: 'garantieRetour'    as const, icon: '↩️', label: 'Retour garanti',        sub: 'Remboursement ou échange' },
-                { key: 'garantieAuthentic' as const, icon: '✅', label: 'Produit authentique',  sub: 'Vendeur Shopi certifié' },
-                { key: 'garantieSupport'   as const, icon: '📞', label: 'Support 24/7',          sub: 'Chat · WhatsApp · Tél.' },
+                { key: 'garantiePaiement'  as const, icon: '🔒', label: t('ajouter.garanties.paiement'),    sub: t('ajouter.garanties.paiementSub') },
+                { key: 'garantieRetour'    as const, icon: '↩️', label: t('ajouter.garanties.retour'),      sub: t('ajouter.garanties.retourSub') },
+                { key: 'garantieAuthentic' as const, icon: '✅', label: t('ajouter.garanties.authentique'), sub: t('ajouter.garanties.authentiqueSub') },
+                { key: 'garantieSupport'   as const, icon: '📞', label: t('ajouter.garanties.support'),     sub: t('ajouter.garanties.supportSub') },
               ].map(g => (
                 <label key={g.key} className="aj-toggle-row" style={{ padding: '10px 12px', background: 'var(--g50)', borderRadius: 'var(--r-md)', border: '1px solid var(--bdr)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1253,53 +1269,53 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
 
           {/* Informations produit */}
           <div className="card" style={{ marginBottom: 14 }}>
-            <div className="ch"><div className="ch-t"><i className="fas fa-file-alt"></i> Informations produit</div></div>
+            <div className="ch"><div className="ch-t"><i className="fas fa-file-alt"></i> {t('ajouter.infosProduit.title')}</div></div>
             <div className="cb">
               <div className="pf-grid">
                 <div className="pf-full">
-                  <label className="pf-lbl">Nom du produit *</label>
-                  <input className="pf-in" placeholder="Ex: iPhone 15 Pro 256GB Titanium" value={form.nom} onChange={e => update('nom', e.target.value)} style={{ borderColor: errors.nom ? 'var(--red)' : undefined }} />
+                  <label className="pf-lbl">{t('ajouter.infosProduit.nom')}</label>
+                  <input className="pf-in" placeholder={t('ajouter.infosProduit.nomPlaceholder')} value={form.nom} onChange={e => update('nom', e.target.value)} style={{ borderColor: errors.nom ? 'var(--red)' : undefined }} />
                   <FieldError message={errors.nom} />
                 </div>
 
                 <div className="pf-full">
-                  <label className="pf-lbl">Description</label>
-                  <textarea className="pf-in" rows={4} placeholder="Décrivez votre produit en détail…" value={form.description} onChange={e => update('description', e.target.value)} style={{ resize: 'vertical' }} />
+                  <label className="pf-lbl">{t('ajouter.infosProduit.description')}</label>
+                  <textarea className="pf-in" rows={4} placeholder={t('ajouter.infosProduit.descriptionPlaceholder')} value={form.description} onChange={e => update('description', e.target.value)} style={{ resize: 'vertical' }} />
                   <p style={{ fontSize: 10.5, color: form.description.length > 100 ? 'var(--emerald)' : 'var(--t4)', marginTop: 3, textAlign: 'right' }}>
-                    {form.description.length} car. {form.description.length < 100 ? '(min. 100 recommandé)' : '✓'}
+                    {t('ajouter.infosProduit.descCounter', { count: form.description.length, status: form.description.length < 100 ? t('ajouter.infosProduit.descMinRecommande') : '✓' })}
                   </p>
                 </div>
 
                 <div className="pf-full">
-                  <label className="pf-lbl">Contenu de la boîte</label>
-                  <textarea className="pf-in" rows={3} placeholder="Ex: 1× iPhone 15 Pro, 1× câble USB-C…" value={form.contenuBoite} onChange={e => update('contenuBoite', e.target.value)} style={{ resize: 'vertical' }} />
+                  <label className="pf-lbl">{t('ajouter.infosProduit.contenuBoite')}</label>
+                  <textarea className="pf-in" rows={3} placeholder={t('ajouter.infosProduit.contenuBoitePlaceholder')} value={form.contenuBoite} onChange={e => update('contenuBoite', e.target.value)} style={{ resize: 'vertical' }} />
                 </div>
 
                 <div>
-                  <label className="pf-lbl">Prix de vente (GNF) *</label>
-                  <input className="pf-in" type="number" placeholder="Ex: 12500000" value={form.prix} onChange={e => update('prix', e.target.value)} style={{ borderColor: errors.prix ? 'var(--red)' : undefined }} />
+                  <label className="pf-lbl">{t('ajouter.infosProduit.prixVente')}</label>
+                  <input className="pf-in" type="number" placeholder={t('ajouter.infosProduit.prixPlaceholder')} value={form.prix} onChange={e => update('prix', e.target.value)} style={{ borderColor: errors.prix ? 'var(--red)' : undefined }} />
                   <FieldError message={errors.prix} />
                 </div>
 
                 <div>
-                  <label className="pf-lbl">Prix barré (GNF)</label>
-                  <input className="pf-in" type="number" placeholder="Ex: 14000000" value={form.prixAncien} onChange={e => update('prixAncien', e.target.value)} />
+                  <label className="pf-lbl">{t('ajouter.infosProduit.prixBarre')}</label>
+                  <input className="pf-in" type="number" placeholder={t('ajouter.infosProduit.prixBarrePlaceholder')} value={form.prixAncien} onChange={e => update('prixAncien', e.target.value)} />
                   {form.prixAncien && form.prix && parseInt(form.prixAncien) > parseInt(form.prix) && (
                     <p style={{ fontSize: 10.5, color: 'var(--t2)', marginTop: 3 }}>
-                      ✓ Réduction de {Math.round((1 - parseInt(form.prix) / parseInt(form.prixAncien)) * 100)}% affichée
+                      {t('ajouter.infosProduit.reduction', { pct: Math.round((1 - parseInt(form.prix) / parseInt(form.prixAncien)) * 100) })}
                     </p>
                   )}
                 </div>
 
-                <div><label className="pf-lbl">Référence / SKU</label><input className="pf-in" placeholder="Ex: APPL-IP15P-256-TIT" value={form.reference} onChange={e => update('reference', e.target.value)} /></div>
+                <div><label className="pf-lbl">{t('ajouter.infosProduit.reference')}</label><input className="pf-in" placeholder={t('ajouter.infosProduit.referencePlaceholder')} value={form.reference} onChange={e => update('reference', e.target.value)} /></div>
 
                 <div>
-                  <label className="pf-lbl">Quantité en stock *</label>
-                  <input className="pf-in" type="number" placeholder="Ex: 10" value={form.stock} onChange={e => update('stock', e.target.value)} style={{ borderColor: errors.stock ? 'var(--red)' : undefined }} />
+                  <label className="pf-lbl">{t('ajouter.infosProduit.stock')}</label>
+                  <input className="pf-in" type="number" placeholder={t('ajouter.infosProduit.stockPlaceholder')} value={form.stock} onChange={e => update('stock', e.target.value)} style={{ borderColor: errors.stock ? 'var(--red)' : undefined }} />
                   <FieldError message={errors.stock} />
                 </div>
 
-                <div><label className="pf-lbl">Seuil d'alerte stock</label><input className="pf-in" type="number" placeholder="Ex: 5 unités" value={form.seuil} onChange={e => update('seuil', e.target.value)} /></div>
+                <div><label className="pf-lbl">{t('ajouter.infosProduit.seuil')}</label><input className="pf-in" type="number" placeholder={t('ajouter.infosProduit.seuilPlaceholder')} value={form.seuil} onChange={e => update('seuil', e.target.value)} /></div>
               </div>
             </div>
           </div>
@@ -1307,20 +1323,20 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           {/* Caractéristiques techniques */}
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-list-check"></i> Caractéristiques techniques</div>
-              <span className="ch-badge">{specs.length} critères</span>
+              <div className="ch-t"><i className="fas fa-list-check"></i> {t('ajouter.specs.title')}</div>
+              <span className="ch-badge">{t('ajouter.specs.critereCount', { count: specs.length })}</span>
             </div>
             <div className="cb">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
                 {specs.map((spec, i) => (
                   <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                     <div style={{ flex: '0 0 160px' }}>
-                      <label className="pf-lbl">Critère</label>
-                      <input className="pf-in" placeholder="Ex: Puce" value={spec.cle} onChange={e => updateSpec(i, 'cle', e.target.value)} />
+                      <label className="pf-lbl">{t('ajouter.specs.critere')}</label>
+                      <input className="pf-in" placeholder={t('ajouter.specs.criterePlaceholder')} value={spec.cle} onChange={e => updateSpec(i, 'cle', e.target.value)} />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <label className="pf-lbl">Valeur</label>
-                      <input className="pf-in" placeholder="Ex: A17 Pro (3 nm)" value={spec.valeur} onChange={e => updateSpec(i, 'valeur', e.target.value)} />
+                      <label className="pf-lbl">{t('ajouter.specs.valeur')}</label>
+                      <input className="pf-in" placeholder={t('ajouter.specs.valeurPlaceholder')} value={spec.valeur} onChange={e => updateSpec(i, 'valeur', e.target.value)} />
                     </div>
                     {specs.length > 1 && (
                       <button onClick={() => removeSpec(i)} style={{ background: 'var(--g100)', border: '1px solid rgba(128,128,128,.2)', borderRadius: 'var(--r-md)', width: 36, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t2)', cursor: 'pointer', flexShrink: 0 }}>
@@ -1331,7 +1347,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                 ))}
               </div>
               <button onClick={addSpec} style={{ background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--t2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <i className="fas fa-plus"></i> Ajouter une caractéristique
+                <i className="fas fa-plus"></i> {t('ajouter.specs.add')}
               </button>
             </div>
           </div>
@@ -1339,12 +1355,12 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           {/* Variantes */}
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-layer-group"></i> Variantes produit</div>
+              <div className="ch-t"><i className="fas fa-layer-group"></i> {t('ajouter.variantes.title')}</div>
               <label className="aj-toggle">
                 <input type="checkbox" checked={variantesOn} onChange={e => setVariantesOn(e.target.checked)} />
                 <span className="aj-toggle-slider"></span>
                 <span style={{ fontSize: 11.5, fontWeight: 600, color: variantesOn ? 'var(--t2)' : 'var(--t3)', marginLeft: 8 }}>
-                  {variantesOn ? 'Activées' : 'Désactivées'}
+                  {variantesOn ? t('ajouter.variantes.activees') : t('ajouter.variantes.desactivees')}
                 </span>
               </label>
             </div>
@@ -1354,14 +1370,14 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                   {variantes.map((v, i) => (
                     <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'flex-end' }}>
                       <div style={{ flex: '0 0 140px' }}>
-                        <label className="pf-lbl">Type</label>
+                        <label className="pf-lbl">{t('ajouter.variantes.type')}</label>
                         <select className="pf-in" value={v.type} onChange={e => updateVariante(i, 'type', e.target.value)}>
-                          {VARIANTE_TYPES.map(t => <option key={t}>{t}</option>)}
+                          {VARIANTE_TYPES.map(vt => <option key={vt} value={vt}>{t(`ajouter.constants.varianteTypes.${vt}`)}</option>)}
                         </select>
                       </div>
                       <div style={{ flex: 1 }}>
-                        <label className="pf-lbl">Valeurs (séparées par virgule)</label>
-                        <input className="pf-in" placeholder="Ex: Noir, Blanc, Bleu…" value={v.vals} onChange={e => updateVariante(i, 'vals', e.target.value)} />
+                        <label className="pf-lbl">{t('ajouter.variantes.valeurs')}</label>
+                        <input className="pf-in" placeholder={t('ajouter.variantes.valeursPlaceholder')} value={v.vals} onChange={e => updateVariante(i, 'vals', e.target.value)} />
                       </div>
                       {variantes.length > 1 && (
                         <button onClick={() => removeVariante(i)} style={{ background: 'var(--g100)', border: '1px solid rgba(128,128,128,.2)', borderRadius: 'var(--r-md)', width: 36, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t2)', cursor: 'pointer', flexShrink: 0 }}>
@@ -1372,12 +1388,12 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                   ))}
                 </div>
                 <button onClick={addVariante} style={{ background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--t2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <i className="fas fa-plus"></i> Ajouter un type de variante
+                  <i className="fas fa-plus"></i> {t('ajouter.variantes.add')}
                 </button>
               </div>
             ) : (
               <div className="cb" style={{ color: 'var(--t3)', fontSize: 12.5, fontStyle: 'italic' }}>
-                Activez les variantes pour définir des options comme la couleur, le stockage ou la taille.
+                {t('ajouter.variantes.disabledHint')}
               </div>
             )}
           </div>
@@ -1385,12 +1401,12 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           {/* Vente en gros */}
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-boxes-stacked"></i> Vente en gros</div>
+              <div className="ch-t"><i className="fas fa-boxes-stacked"></i> {t('ajouter.venteEnGros.title')}</div>
               <label className="aj-toggle">
                 <input type="checkbox" checked={venteEnGrosOn} onChange={e => setVenteEnGrosOn(e.target.checked)} />
                 <span className="aj-toggle-slider"></span>
                 <span style={{ fontSize: 11.5, fontWeight: 600, color: venteEnGrosOn ? 'var(--t2)' : 'var(--t3)', marginLeft: 8 }}>
-                  {venteEnGrosOn ? 'Activée' : 'Désactivée'}
+                  {venteEnGrosOn ? t('ajouter.venteEnGros.activee') : t('ajouter.venteEnGros.desactivee')}
                 </span>
               </label>
             </div>
@@ -1399,35 +1415,35 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                 {/* MOQ, conditionnement, délai */}
                 <div className="gridR3" style={{ gap: 10, marginBottom: 16 }}>
                   <div>
-                    <label className="pf-lbl">Quantité minimum de commande (MOQ)</label>
-                    <input className="pf-in" type="number" placeholder="Ex: 10" value={form.moq} onChange={e => update('moq', e.target.value)} />
+                    <label className="pf-lbl">{t('ajouter.venteEnGros.moq')}</label>
+                    <input className="pf-in" type="number" placeholder={t('ajouter.venteEnGros.moqPlaceholder')} value={form.moq} onChange={e => update('moq', e.target.value)} />
                   </div>
                   <div>
-                    <label className="pf-lbl">Conditionnement (unités/carton)</label>
-                    <input className="pf-in" type="number" placeholder="Ex: 24" value={form.conditionnement} onChange={e => update('conditionnement', e.target.value)} />
+                    <label className="pf-lbl">{t('ajouter.venteEnGros.conditionnement')}</label>
+                    <input className="pf-in" type="number" placeholder={t('ajouter.venteEnGros.conditionnementPlaceholder')} value={form.conditionnement} onChange={e => update('conditionnement', e.target.value)} />
                   </div>
                   <div>
-                    <label className="pf-lbl">Délai de préparation</label>
-                    <input className="pf-in" placeholder="Ex: 3-5 jours" value={form.delaiPreparationGros} onChange={e => update('delaiPreparationGros', e.target.value)} />
+                    <label className="pf-lbl">{t('ajouter.venteEnGros.delaiPreparation')}</label>
+                    <input className="pf-in" placeholder={t('ajouter.venteEnGros.delaiPlaceholder')} value={form.delaiPreparationGros} onChange={e => update('delaiPreparationGros', e.target.value)} />
                   </div>
                 </div>
 
                 {/* Paliers de prix dégressifs */}
-                <label className="pf-lbl">Paliers de prix dégressifs selon la quantité</label>
+                <label className="pf-lbl">{t('ajouter.venteEnGros.paliers')}</label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6, marginBottom: 12 }}>
-                  {wholesaleTiers.map((t, i) => (
+                  {wholesaleTiers.map((tier, i) => (
                     <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                       <div style={{ flex: '0 0 110px' }}>
-                        <label className="pf-lbl">Qté min</label>
-                        <input className="pf-in" type="number" placeholder="10" value={t.quantiteMin} onChange={e => updateTier(i, 'quantiteMin', e.target.value)} />
+                        <label className="pf-lbl">{t('ajouter.venteEnGros.qteMin')}</label>
+                        <input className="pf-in" type="number" placeholder="10" value={tier.quantiteMin} onChange={e => updateTier(i, 'quantiteMin', e.target.value)} />
                       </div>
                       <div style={{ flex: '0 0 110px' }}>
-                        <label className="pf-lbl">Qté max</label>
-                        <input className="pf-in" type="number" placeholder="49 (vide = +)" value={t.quantiteMax} onChange={e => updateTier(i, 'quantiteMax', e.target.value)} />
+                        <label className="pf-lbl">{t('ajouter.venteEnGros.qteMax')}</label>
+                        <input className="pf-in" type="number" placeholder={t('ajouter.venteEnGros.qteMaxPlaceholder')} value={tier.quantiteMax} onChange={e => updateTier(i, 'quantiteMax', e.target.value)} />
                       </div>
                       <div style={{ flex: 1 }}>
-                        <label className="pf-lbl">Prix unitaire (GNF)</label>
-                        <input className="pf-in" type="number" placeholder="Ex: 50000" value={t.prixUnitaire} onChange={e => updateTier(i, 'prixUnitaire', e.target.value)} />
+                        <label className="pf-lbl">{t('ajouter.venteEnGros.prixUnitaire')}</label>
+                        <input className="pf-in" type="number" placeholder={t('ajouter.venteEnGros.prixUnitairePlaceholder')} value={tier.prixUnitaire} onChange={e => updateTier(i, 'prixUnitaire', e.target.value)} />
                       </div>
                       {wholesaleTiers.length > 1 && (
                         <button onClick={() => removeTier(i)} style={{ background: 'var(--g100)', border: '1px solid rgba(128,128,128,.2)', borderRadius: 'var(--r-md)', width: 36, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t2)', cursor: 'pointer', flexShrink: 0 }}>
@@ -1438,12 +1454,12 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                   ))}
                 </div>
                 <button onClick={addTier} style={{ background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--t2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <i className="fas fa-plus"></i> Ajouter un palier
+                  <i className="fas fa-plus"></i> {t('ajouter.venteEnGros.add')}
                 </button>
               </div>
             ) : (
               <div className="cb" style={{ color: 'var(--t3)', fontSize: 12.5, fontStyle: 'italic' }}>
-                Activez la vente en gros pour proposer une quantité minimum de commande et des prix dégressifs selon la quantité achetée.
+                {t('ajouter.venteEnGros.disabledHint')}
               </div>
             )}
           </div>
@@ -1451,40 +1467,40 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           {/* SEO */}
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-magnifying-glass-chart"></i> SEO & Référencement</div>
+              <div className="ch-t"><i className="fas fa-magnifying-glass-chart"></i> {t('ajouter.seo.title')}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div className="aj-seo-ring" style={{ background: `conic-gradient(${seoScore.score >= 80 ? 'var(--t2)' : seoScore.score >= 50 ? 'var(--t2)' : 'var(--t2)'} 0% ${seoScore.score}%, var(--g200) ${seoScore.score}% 100%)` }}>
                   <span>{seoScore.score}</span>
                 </div>
-                <span style={{ fontSize: 10.5, fontWeight: 700, color: seoScore.score >= 80 ? 'var(--t2)' : seoScore.score >= 50 ? 'var(--t2)' : 'var(--t2)' }}>Score SEO</span>
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: seoScore.score >= 80 ? 'var(--t2)' : seoScore.score >= 50 ? 'var(--t2)' : 'var(--t2)' }}>{t('ajouter.seo.score')}</span>
               </div>
             </div>
             <div className="cb" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label className="pf-lbl">Titre SEO</label>
-                <input className="pf-in" placeholder="Ex: iPhone 15 Pro 256GB — Shopi Guinée" value={form.titreSeo} onChange={e => update('titreSeo', e.target.value)} maxLength={70} />
+                <label className="pf-lbl">{t('ajouter.seo.titreSeo')}</label>
+                <input className="pf-in" placeholder={t('ajouter.seo.titrePlaceholder')} value={form.titreSeo} onChange={e => update('titreSeo', e.target.value)} maxLength={70} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
-                  <p style={{ fontSize: 10, color: 'var(--t3)' }}>Idéal : 50–70 car.</p>
+                  <p style={{ fontSize: 10, color: 'var(--t3)' }}>{t('ajouter.seo.titreIdeal')}</p>
                   <p style={{ fontSize: 10, color: form.titreSeo.length > 50 && form.titreSeo.length <= 70 ? 'var(--emerald)' : 'var(--t3)' }}>{form.titreSeo.length}/70</p>
                 </div>
               </div>
               <div>
-                <label className="pf-lbl">Description SEO</label>
-                <textarea className="pf-in" rows={3} placeholder="120-160 caractères…" value={form.descriptionSeo} onChange={e => update('descriptionSeo', e.target.value)} maxLength={160} style={{ resize: 'vertical' }} />
+                <label className="pf-lbl">{t('ajouter.seo.descriptionSeo')}</label>
+                <textarea className="pf-in" rows={3} placeholder={t('ajouter.seo.descriptionPlaceholder')} value={form.descriptionSeo} onChange={e => update('descriptionSeo', e.target.value)} maxLength={160} style={{ resize: 'vertical' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
-                  <p style={{ fontSize: 10, color: 'var(--t3)' }}>Idéal : 120–160 car.</p>
+                  <p style={{ fontSize: 10, color: 'var(--t3)' }}>{t('ajouter.seo.descriptionIdeal')}</p>
                   <p style={{ fontSize: 10, color: form.descriptionSeo.length >= 120 && form.descriptionSeo.length <= 160 ? 'var(--emerald)' : 'var(--t3)' }}>{form.descriptionSeo.length}/160</p>
                 </div>
               </div>
               <div>
-                <label className="pf-lbl">URL Slug</label>
+                <label className="pf-lbl">{t('ajouter.seo.urlSlug')}</label>
                 <div style={{ display: 'flex', border: '1.5px solid var(--bdr2)', borderRadius: 'var(--r-md)', overflow: 'hidden', background: 'var(--g50)' }}>
                   <span style={{ padding: '10px 10px 10px 13px', fontSize: 12, color: 'var(--t3)', borderRight: '1px solid var(--bdr2)', whiteSpace: 'nowrap', background: 'var(--g100)' }}>shopi.gn/p/</span>
                   <input style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', padding: '10px 13px', fontSize: 13, color: 'var(--t1)' }} placeholder="iphone-15-pro-256gb" value={form.urlSlug} onChange={e => update('urlSlug', e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''))} />
                 </div>
               </div>
               <div style={{ background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-md)', padding: 12 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 8 }}>Critères de qualité</p>
+                <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 8 }}>{t('ajouter.seo.qualite')}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                   {seoScore.criteres.map((c, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, color: 'var(--t2)' }}>
@@ -1500,13 +1516,13 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           {/* Aperçu revenus */}
           {form.prix && (
             <div className="card" style={{ marginBottom: 14 }}>
-              <div className="ch"><div className="ch-t"><i className="fas fa-calculator"></i> Aperçu des revenus</div></div>
+              <div className="ch"><div className="ch-t"><i className="fas fa-calculator"></i> {t('ajouter.revenus.title')}</div></div>
               <div className="cb">
                 <div className="gridR3" style={{ gap: 10 }}>
                   {[
-                    { l: 'Prix de vente',        v: `${prixNum.toLocaleString('fr-FR')} GNF`, c: 'var(--navy)'    },
-                    { l: `Commission Shopi (${commissionPct}%)`, v: `-${Math.round(prixNum * commissionPct / 100).toLocaleString('fr-FR')} GNF`, c: 'var(--t2)'    },
-                    { l: 'Revenu net estimé',                    v: `${Math.round(prixNum * (1 - commissionPct / 100)).toLocaleString('fr-FR')} GNF`,  c: 'var(--t2)' },
+                    { l: t('ajouter.revenus.prixVente'),        v: `${prixNum.toLocaleString('fr-FR')} GNF`, c: 'var(--navy)'    },
+                    { l: t('ajouter.revenus.commission', { pct: commissionPct }), v: `-${Math.round(prixNum * commissionPct / 100).toLocaleString('fr-FR')} GNF`, c: 'var(--t2)'    },
+                    { l: t('ajouter.revenus.revenuNet'),                    v: `${Math.round(prixNum * (1 - commissionPct / 100)).toLocaleString('fr-FR')} GNF`,  c: 'var(--t2)' },
                   ].map((s, i) => (
                     <div key={i} style={{ padding: '12px 14px', background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-md)', textAlign: 'center' }}>
                       <div style={{ fontSize: 10, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 5 }}>{s.l}</div>
@@ -1525,7 +1541,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                 <div style={{ marginBottom: 14, padding: '12px 14px', background: 'rgba(128,128,128,.06)', border: '1.5px solid rgba(128,128,128,.25)', borderRadius: 'var(--r-md)' }}>
                   <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--t2)', marginBottom: 6 }}>
                     <i className="fas fa-triangle-exclamation" style={{ marginRight: 6 }} />
-                    Corrigez les erreurs suivantes :
+                    {t('ajouter.actions.fixErrorsTitle')}
                   </div>
                   <ul style={{ margin: 0, padding: '0 0 0 16px', fontSize: 12, color: 'var(--t2)', lineHeight: 1.8 }}>
                     {errors.nom         && <li>{errors.nom}</li>}
@@ -1537,18 +1553,18 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               )}
               <div className="pf-actions">
                 <button className="btn-draft" onClick={() => onNavigate('produits')} disabled={enChargement}>
-                  <i className="fas fa-arrow-left"></i> Retour
+                  <i className="fas fa-arrow-left"></i> {t('ajouter.actions.retour')}
                 </button>
                 {!isEditMode && (
                   <button className="btn-draft" onClick={() => handlePublish(true)} disabled={enChargement}>
-                    <i className="fas fa-save"></i> {enChargement ? 'Sauvegarde…' : 'Brouillon'}
+                    <i className="fas fa-save"></i> {enChargement ? t('ajouter.header.saving') : t('ajouter.header.draft')}
                   </button>
                 )}
                 <button className="btn-pub" style={{ flex: 1, justifyContent: 'center' }} onClick={() => handlePublish(false)} disabled={enChargement}>
                   <i className={`fas ${isEditMode ? 'fa-check' : 'fa-cloud-arrow-up'}`}></i>
                   {enChargement
-                    ? (isEditMode ? 'Mise à jour…' : 'Publication en cours…')
-                    : (isEditMode ? 'Mettre à jour' : 'Publier le produit')}
+                    ? (isEditMode ? t('ajouter.header.updating') : t('ajouter.header.publishing'))
+                    : (isEditMode ? t('ajouter.header.update') : t('ajouter.header.publish'))}
                 </button>
               </div>
             </div>

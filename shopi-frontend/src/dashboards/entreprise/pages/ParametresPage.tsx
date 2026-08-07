@@ -22,7 +22,9 @@
  *     └── DangerSection             ← section 12 (connectée)
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useTranslation }            from 'react-i18next';
+import type { TFunction }            from 'i18next';
 import { useSearchParams }           from 'react-router-dom';
 import { useToast } from '../../../shared/context/ToastContext';
 import { useParametres } from '../hooks/useParametres';
@@ -51,27 +53,30 @@ type SectionKey =
   | 'boutique' | 'horaires' | 'catalogue' | 'livraison' | 'paiement'
   | 'commissions' | 'documents' | 'confidentialiteSecurite' | 'securite' | 'notifs' | 'privacy' | 'langue' | 'danger';
 
-const SIDEBAR_ITEMS: { key: SectionKey; icon: string; label: string; danger?: boolean }[] = [
-  { key:'boutique',     icon:'fa-store',              label:'Boutique & Identité'      },
-  { key:'horaires',     icon:'fa-clock',              label:'Horaires'                 },
-  { key:'catalogue',    icon:'fa-tags',               label:'Catalogue & Produits'     },
-  { key:'livraison',    icon:'fa-motorcycle',         label:'Livraison'                },
-  { key:'paiement',     icon:'fa-credit-card',        label:'Paiement & Facturation'   },
-  { key:'commissions',  icon:'fa-percent',            label:'Commissions Shopi'        },
-  { key:'documents',    icon:'fa-file-shield',        label:'Documents & Vérification' },
-  { key:'confidentialiteSecurite', icon:'fa-shield-halved', label:'Confidentialité et sécurité' },
-  { key:'securite',     icon:'fa-shield-halved',      label:'Sécurité'                 },
-  { key:'notifs',       icon:'fa-bell',               label:'Notifications'            },
-  { key:'privacy',      icon:'fa-eye-slash',          label:'Confidentialité'          },
-  { key:'langue',       icon:'fa-language',           label:'Langue'                   },
-  { key:'danger',       icon:'fa-triangle-exclamation',label:'Zone sensible',danger:true},
-];
+function getSidebarItems(t: TFunction): { key: SectionKey; icon: string; label: string; danger?: boolean }[] {
+  return [
+    { key:'boutique',     icon:'fa-store',              label:t('parametres.sidebar.items.boutique')      },
+    { key:'horaires',     icon:'fa-clock',              label:t('parametres.sidebar.items.horaires')                 },
+    { key:'catalogue',    icon:'fa-tags',               label:t('parametres.sidebar.items.catalogue')     },
+    { key:'livraison',    icon:'fa-motorcycle',         label:t('parametres.sidebar.items.livraison')                },
+    { key:'paiement',     icon:'fa-credit-card',        label:t('parametres.sidebar.items.paiement')   },
+    { key:'commissions',  icon:'fa-percent',            label:t('parametres.sidebar.items.commissions')        },
+    { key:'documents',    icon:'fa-file-shield',        label:t('parametres.sidebar.items.documents') },
+    { key:'confidentialiteSecurite', icon:'fa-shield-halved', label:t('parametres.sidebar.items.confidentialiteSecurite') },
+    { key:'securite',     icon:'fa-shield-halved',      label:t('parametres.sidebar.items.securite')                 },
+    { key:'notifs',       icon:'fa-bell',               label:t('parametres.sidebar.items.notifs')            },
+    { key:'privacy',      icon:'fa-eye-slash',          label:t('parametres.sidebar.items.privacy')          },
+    { key:'langue',       icon:'fa-language',           label:t('parametres.sidebar.items.langue')                   },
+    { key:'danger',       icon:'fa-triangle-exclamation',label:t('parametres.sidebar.items.danger'),danger:true},
+  ];
+}
 
 // ─────────────────────────────────────────────────────────────
 // PAGE
 // ─────────────────────────────────────────────────────────────
 
 export default function ParametresPage() {
+  const { t } = useTranslation();
   const { pop } = useToast();
 
   // Hook central — 1 seul appel API pour toute la page
@@ -92,7 +97,7 @@ export default function ParametresPage() {
   const sectionFromUrl = searchParams.get('section') as SectionKey | null;
 
   const [activeSection, setActiveSection] = useState<SectionKey>(
-    sectionFromUrl && SIDEBAR_ITEMS.some(i => i.key === sectionFromUrl)
+    sectionFromUrl && getSidebarItems(t).some(i => i.key === sectionFromUrl)
       ? sectionFromUrl
       : 'boutique',
   );
@@ -101,7 +106,7 @@ export default function ParametresPage() {
   /* Sync URL → section si l'URL change depuis l'extérieur */
   useEffect(() => {
     const s = searchParams.get('section') as SectionKey | null;
-    if (s && SIDEBAR_ITEMS.some(i => i.key === s) && s !== activeSection) {
+    if (s && getSidebarItems(t).some(i => i.key === s) && s !== activeSection) {
       setActiveSection(s);
     }
   }, [searchParams]);
@@ -112,7 +117,7 @@ export default function ParametresPage() {
   /* Changer de section + écrire dans l'URL */
   function goTo(key: SectionKey) {
     if (isDirty && key !== activeSection) {
-      const ok = window.confirm('Vous avez des modifications non sauvegardées. Quitter quand même ?');
+      const ok = window.confirm(t('parametres.confirmQuitterModifs'));
       if (!ok) return;
     }
     setIsDirty(false);
@@ -127,7 +132,7 @@ export default function ParametresPage() {
       <div className="page on" style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'60vh' }}>
         <div style={{ textAlign:'center', color:'var(--t3)' }}>
           <i className="fas fa-spinner fa-spin" style={{ fontSize:28, marginBottom:12, display:'block' }} />
-          Chargement des paramètres…
+          {t('parametres.loading')}
         </div>
       </div>
     );
@@ -145,7 +150,7 @@ export default function ParametresPage() {
             onClick={() => window.location.reload()}
             style={{ marginTop:16, background:'var(--navy)', color:'#fff', border:'none', borderRadius:'var(--pill)', padding:'10px 24px', cursor:'pointer', fontSize:13 }}
           >
-            Réessayer
+            {t('parametres.reessayer')}
           </button>
         </div>
       </div>
@@ -162,18 +167,18 @@ export default function ParametresPage() {
         {/* ── Sidebar navigation ── */}
         <aside className={s.sidebar}>
           <div className={s.sidebarTitle}>
-            <i className="fas fa-gear" /> Paramètres
+            <i className="fas fa-gear" /> {t('parametres.sidebar.title')}
           </div>
 
           {/* Indicateur modifications non sauvegardées */}
           {isDirty && (
             <div className={s.dirtyBadge}>
-              <i className="fas fa-circle-dot" /> Modifications en attente
+              <i className="fas fa-circle-dot" /> {t('parametres.sidebar.dirtyBadge')}
             </div>
           )}
 
           <nav className={s.sidebarNav}>
-            {SIDEBAR_ITEMS.map(item => (
+            {getSidebarItems(t).map(item => (
               <button
                 key={item.key}
                 className={`${s.sidebarItem} ${activeSection === item.key ? s.active : ''} ${item.danger ? s.dangerItem : ''}`}
@@ -198,8 +203,8 @@ export default function ParametresPage() {
               <div className={s.sbcInfo}>
                 <div className={s.sbcName}>{data.companyName}</div>
                 <div className={s.sbcStatus}>
-                  {data.status === 'active'    ? '🟢 Active'    :
-                   data.status === 'suspended' ? '🟡 En pause'  : '🔴 Privée'}
+                  {data.status === 'active'    ? t('parametres.sidebar.statusActive')    :
+                   data.status === 'suspended' ? t('parametres.sidebar.statusPaused')  : t('parametres.sidebar.statusPrivate')}
                 </div>
               </div>
             </div>

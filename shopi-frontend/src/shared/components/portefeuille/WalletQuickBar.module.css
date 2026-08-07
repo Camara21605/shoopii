@@ -1,0 +1,271 @@
+/* ============================================================
+ * WalletQuickBar.module.css — barre solde + actions rapides
+ *
+ * Fond toujours noir, volontairement indépendant du thème clair/
+ * sombre du site — cohérent avec les cartes noires déjà utilisées
+ * dans les sidebars/pages des dashboards (ex. --g50/--g100 en
+ * entreprise), style "1xbet" (solde bien visible, boutons rapides).
+ * ============================================================ */
+
+.bar {
+  position: relative;
+  display: flex; flex-direction: column; gap: 10px;
+  background: linear-gradient(135deg, #000000 0%, #0A0A0A 55%, #000000 100%);
+  border-radius: 18px;
+  padding: 14px 20px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.35);
+  overflow: visible;
+}
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+.manageBtn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 10px 14px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06);
+  color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer;
+  font-family: var(--fb,'DM Sans',sans-serif); transition: background .15s;
+}
+.manageBtn:hover { background: rgba(255,255,255,.14); }
+
+.left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.icon {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.14);
+  display: flex; align-items: center; justify-content: center;
+  color: #FBBF24; font-size: 16px;
+}
+.label { font-size: 10.5px; font-weight: 700; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .5px; }
+.amount { font-family: var(--fd,'Fraunces',serif); font-size: 19px; font-weight: 800; color: #fff; margin-top: 1px; white-space: nowrap; }
+.cur { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.55); }
+.skeleton { display: inline-block; width: 100px; height: 16px; border-radius: 6px; background: rgba(255,255,255,.12); animation: pulse 1.3s infinite; }
+@keyframes pulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
+
+.actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: none; border-radius: 999px; padding: 9px 15px;
+  font-size: 12.5px; font-weight: 800; cursor: pointer;
+  font-family: var(--fb,'DM Sans',sans-serif); transition: all .18s; white-space: nowrap;
+}
+.btnDeposit  { background: #10B981; color: #fff; }
+.btnDeposit:hover  { background: #059669; transform: translateY(-1px); }
+.btnWithdraw { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.18); }
+.btnWithdraw:hover { background: rgba(255,255,255,.2); }
+.btnIcon {
+  width: 34px; height: 34px; border-radius: 999px; flex-shrink: 0;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.14);
+  color: #fff; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all .18s;
+}
+.btnIcon:hover:not(:disabled) { background: rgba(255,255,255,.18); }
+.btnIcon:disabled { opacity: .5; cursor: not-allowed; }
+.spin { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Petit message de retour (succès/erreur/avertissement) ── */
+.toast {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 20;
+  background: #111113; color: #fff; border-radius: 10px; padding: 9px 14px;
+  font-size: 12.5px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  max-width: 320px; animation: toastIn .2s ease;
+}
+.t_s { border-left: 3px solid #10B981; }
+.t_e { border-left: 3px solid #EF4444; }
+.t_w { border-left: 3px solid #F59E0B; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Page plein écran dépôt/retrait (pas une petite modale : un vrai
+   écran dédié, cohérent quel que soit l'endroit où le widget est monté) ── */
+.pageOverlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: #fff; display: flex; flex-direction: column;
+  overflow-y: auto; animation: pageIn .18s ease;
+}
+@keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.pageHeader {
+  position: sticky; top: 0; z-index: 1;
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px; background: #fff; border-bottom: 1px solid #E2E8F0;
+  flex-shrink: 0;
+}
+.pageBack, .pageClose {
+  width: 34px; height: 34px; border-radius: 10px; border: 1px solid #E2E8F0; background: #F8FAFC;
+  color: #0B1F3A; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background .15s;
+}
+.pageBack:hover, .pageClose:hover { background: #EEF2FF; }
+.pageTitle { flex: 1; font-family: var(--fd,'Fraunces',serif); font-size: 17px; font-weight: 800; color: #0B1F3A; }
+.pageBody { flex: 1; padding: 20px 18px 40px; max-width: 460px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+
+.fldL { display: block; font-size: 11px; font-weight: 800; color: #0B1F3A; text-transform: uppercase; letter-spacing: .4px; margin: 12px 0 6px; }
+.fldL:first-of-type { margin-top: 0; }
+.fldIn {
+  width: 100%; background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 10px;
+  padding: 10px 13px; font-size: 14px; color: #0B1F3A; font-family: var(--fb,'DM Sans',sans-serif);
+  outline: none; transition: border-color .15s;
+}
+.fldIn:focus { border-color: #1A4FC4; }
+.fldPrefixWrap { position: relative; display: flex; align-items: center; }
+.fldPrefixTag {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  font-size: 13px; font-weight: 800; color: #64748B; pointer-events: none; z-index: 1;
+}
+.fldPrefixIn { padding-left: 52px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.chip {
+  background: #EEF2FF; border: 1px solid #C7D7F8; color: #1A4FC4; border-radius: 999px;
+  padding: 5px 11px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all .15s;
+}
+.chip:hover { background: #1A4FC4; color: #fff; }
+.mdlBtn {
+  width: 100%; margin-top: 18px; background: #0B1F3A; color: #fff; border: none;
+  border-radius: 12px; padding: 12px; font-size: 14px; font-weight: 800; cursor: pointer;
+  transition: opacity .15s; font-family: var(--fb,'DM Sans',sans-serif);
+}
+.mdlBtn:hover:not(:disabled) { opacity: .9; }
+.mdlBtn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── Étape "choisir un moyen de paiement" (dépôt/retrait) — grille
+   d'icônes, une tuile par moyen électronique (existant ou à ajouter) ── */
+.mdlIntro { font-size: 12.5px; color: #64748B; line-height: 1.5; margin: 0 0 16px; }
+
+.pmGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.pmTile {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 14px;
+  padding: 18px 10px 14px; cursor: pointer; text-align: center; transition: all .15s;
+  font-family: var(--fb,'DM Sans',sans-serif);
+}
+.pmTile:hover { border-color: #1A4FC4; background: #EEF2FF; }
+
+.pmTileIcon {
+  width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 17px; font-weight: 800;
+}
+.pmTileNm { font-size: 12.5px; font-weight: 800; color: #0B1F3A; }
+.pmTileNo { font-size: 10.5px; color: #64748B; }
+.pmTileAdd { font-size: 10.5px; font-weight: 700; color: #1A4FC4; display: flex; align-items: center; gap: 4px; }
+.pmTileAdd i { font-size: 8px; }
+.pmTileDef {
+  position: absolute; top: 8px; right: 8px;
+  font-size: 8px; font-weight: 900; color: #1A4FC4; background: #EEF2FF;
+  border: 1px solid #C7D7F8; padding: 2px 6px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: .3px;
+}
+
+.pmPickInfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.pmPickNm { font-size: 13px; font-weight: 800; color: #0B1F3A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pmPickNo { font-size: 11px; color: #64748B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.pmAddBox {
+  background: #F8FAFC; border: 1.5px dashed #E2E8F0; border-radius: 12px;
+  padding: 12px; display: flex; flex-direction: column; gap: 8px;
+}
+.pmAddTtl { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; color: #0B1F3A; }
+.pmAddTtl i { font-size: 10px; color: #1A4FC4; }
+.pmAddBox .mdlBtn { margin-top: 2px; }
+
+.pmSelected {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 12px;
+  padding: 10px 12px; cursor: pointer; text-align: left; margin-bottom: 14px;
+  font-family: var(--fb,'DM Sans',sans-serif);
+}
+.pmChange { font-size: 11px; font-weight: 800; color: #1A4FC4; flex-shrink: 0; }
+
+/* ── Variante compacte : solde au-dessus, boutons pleine largeur en
+   dessous — pour les emplacements étroits (tiroir de menu, ~300px).
+   Ne dépend pas de la largeur de la fenêtre (via une prop, pas un
+   media query), donc correcte même dans un panneau étroit sur desktop. ── */
+.compact { padding: 16px; }
+.compact .top { flex-direction: column; align-items: stretch; }
+.compact .left { width: 100%; }
+.compact .amount { font-size: 20px; }
+.compact .actions { width: 100%; }
+.compact .btn { flex: 1; justify-content: center; }
+.compact .toast { left: 0; right: 0; max-width: none; }
+
+/* ── Variante réduite : carte plus petite, tout sur une seule ligne
+   (icône + solde + menu d'actions) — pour les sidebars de dashboard
+   où la carte doit rester discrète sous la carte profil/boutique.
+   Prime sur l'empilement de .compact (déclarée après, même spécificité). ── */
+.mini { padding: 10px 12px; gap: 6px; border-radius: 12px; }
+.mini .top { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: nowrap; }
+.mini .left { width: auto; }
+.mini .icon { width: 28px; height: 28px; border-radius: 8px; font-size: 12px; }
+.mini .label { font-size: 8.5px; }
+.mini .amount { font-size: 14px; }
+.mini .manageBtn { padding: 6px 10px; font-size: 10.5px; }
+
+/* Menu d'actions (⋮) — regroupe Dépôt / Retrait / Actualiser en variante mini */
+.menuWrap { position: relative; flex-shrink: 0; }
+.menuBtn {
+  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
+  color: #fff; font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.menuBtn:hover { background: rgba(255,255,255,.18); }
+.menuPop {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 30;
+  background: #111113; border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px; padding: 6px; min-width: 152px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.45);
+  display: flex; flex-direction: column; gap: 2px;
+  animation: toastIn .15s ease;
+}
+.menuItem {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  background: transparent; border: none; border-radius: 8px;
+  padding: 8px 10px; color: #fff; font-size: 12.5px; font-weight: 700;
+  cursor: pointer; text-align: left;
+  font-family: var(--fb,'DM Sans',sans-serif); transition: background .15s;
+}
+.menuItem:hover { background: rgba(255,255,255,.1); }
+.menuItem:disabled { opacity: .5; cursor: not-allowed; }
+.menuItem i { width: 14px; text-align: center; color: rgba(255,255,255,.75); }
+
+/* ── Responsive (viewport étroit — pour l'usage non-compact) ── */
+@media (max-width: 560px) {
+  .bar { padding: 12px 14px; gap: 12px; }
+  .amount { font-size: 16px; }
+  .actions { width: 100%; justify-content: space-between; }
+  .btn { flex: 1; justify-content: center; padding: 9px 8px; }
+  .toast { left: 0; right: 0; max-width: none; }
+}
+
+/* ── Dark mode : le fond reste volontairement le même dégradé sombre pour
+   la carte compacte ; la page dépôt/retrait (surface claire) s'adapte ── */
+@media (prefers-color-scheme: dark) {
+  .pageOverlay { background: #111113; }
+  .pageHeader  { background: #111113; border-color: rgba(255,255,255,.12); }
+  .pageBack, .pageClose { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #A1A1AA; }
+  .pageTitle   { color: #F4F4F5; }
+  .fldL   { color: #F4F4F5; }
+  .fldIn  { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #F4F4F5; }
+  .fldPrefixTag { color: #A1A1AA; }
+  .chip   { background: rgba(26,79,196,.18); border-color: rgba(26,79,196,.35); color: #93C5FD; }
+}
+:root[data-theme="dark"] .pageOverlay { background: #111113; }
+:root[data-theme="dark"] .pageHeader  { background: #111113; border-color: rgba(255,255,255,.12); }
+:root[data-theme="dark"] .pageBack,
+:root[data-theme="dark"] .pageClose   { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #A1A1AA; }
+:root[data-theme="dark"] .pageTitle   { color: #F4F4F5; }
+:root[data-theme="dark"] .fldL   { color: #F4F4F5; }
+:root[data-theme="dark"] .fldIn  { background: #1C1C1F; border-color: rgba(255,255,255,.12); color: #F4F4F5; }
+:root[data-theme="dark"] .fldPrefixTag { color: #A1A1AA; }
+:root[data-theme="dark"] .chip   { background: rgba(26,79,196,.18); border-color: rgba(26,79,196,.35); color: #93C5FD; }
+:root[data-theme="dark"] .mdlIntro,
+:root[data-theme="dark"] .pmTileNo,
+:root[data-theme="dark"] .pmPickNo { color: #A1A1AA; }
+:root[data-theme="dark"] .pmTile,
+:root[data-theme="dark"] .pmAddBox,
+:root[data-theme="dark"] .pmSelected { background: #1C1C1F; border-color: rgba(255,255,255,.12); }
+:root[data-theme="dark"] .pmTile:hover { background: #232326; border-color: #3B82F6; }
+:root[data-theme="dark"] .pmTileNm,
+:root[data-theme="dark"] .pmPickNm,
+:root[data-theme="dark"] .pmAddTtl { color: #F4F4F5; }
+:root[data-theme="dark"] .pmTileDef { background: rgba(26,79,196,.18); border-color: rgba(26,79,196,.35); color: #93C5FD; }

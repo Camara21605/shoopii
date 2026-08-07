@@ -160,6 +160,8 @@ export enum WalletCurrency {
 export enum WalletPaymentMethodType {
   ORANGE_MONEY = 'orange_money',
   MTN_MONEY    = 'mtn_money',
+  KULU         = 'kulu',
+  PAYCARD      = 'paycard',
   CARD         = 'card',
   BANK         = 'bank',
   CASH         = 'cash',

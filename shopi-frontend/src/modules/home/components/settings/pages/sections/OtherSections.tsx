@@ -5,6 +5,7 @@
  * ================================================================ */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import p from '../styles/SettingsPage.module.css';
 import { Toggle } from '../components/Toggle';
@@ -16,6 +17,7 @@ interface Props { onToast: (msg: string) => void; }
  * APPROBATIONS — GET + DELETE /client/parametres/approbations
  * ════════════════════════════════════════════════════════════ */
 export function ApprobationsSection({ onToast }: Props) {
+  const { t } = useTranslation();
   const [appareils, setAppareils] = useState<AppareilConfiance[]>([]);
   const [loading,   setLoading]   = useState(true);
   const [actionId,  setActionId]  = useState<string | null>(null);
@@ -23,7 +25,7 @@ export function ApprobationsSection({ onToast }: Props) {
   useEffect(() => {
     settingsApi.getApprobations()
       .then(setAppareils)
-      .catch(() => onToast('❌ Impossible de charger les appareils'))
+      .catch(() => onToast(t('settingsPage.approbations.loadError')))
       .finally(() => setLoading(false));
   }, []);
 
@@ -32,7 +34,7 @@ export function ApprobationsSection({ onToast }: Props) {
     try {
       await settingsApi.removeAppareil(id);
       setAppareils(prev => prev.filter(a => a.id !== id));
-      onToast('🔒 Appareil retiré de la liste de confiance');
+      onToast(t('settingsPage.approbations.toastRetire'));
     } catch (err: any) { onToast(`❌ ${err.message}`); }
     finally { setActionId(null); }
   }
@@ -51,8 +53,8 @@ export function ApprobationsSection({ onToast }: Props) {
         <div className={s.cardTitle}>
           <div className={`${s.cardIco} ${s.icoEmerald}`}><i className="fas fa-shield-check" /></div>
           <div>
-            <div className={s.cardH}>Appareils de confiance</div>
-            <div className={s.cardSub}>Ces appareils peuvent se connecter sans code 2FA supplémentaire</div>
+            <div className={s.cardH}>{t('settingsPage.approbations.titre')}</div>
+            <div className={s.cardSub}>{t('settingsPage.approbations.subtitle')}</div>
           </div>
         </div>
       </div>
@@ -64,7 +66,7 @@ export function ApprobationsSection({ onToast }: Props) {
         )}
         {!loading && appareils.length === 0 && (
           <div style={{ padding:'24px', textAlign:'center', color:'var(--t3)', fontSize:13 }}>
-            Aucun appareil de confiance enregistré
+            {t('settingsPage.approbations.aucunAppareil')}
           </div>
         )}
         {appareils.map(a => (
@@ -75,10 +77,10 @@ export function ApprobationsSection({ onToast }: Props) {
             <div className={s.trustedInfo}>
               <div className={s.trustedName}>
                 {a.name}
-                <span className={s.trustedVerified}><i className="fas fa-check" /> Approuvé</span>
+                <span className={s.trustedVerified}><i className="fas fa-check" /> {t('settingsPage.approbations.approuve')}</span>
               </div>
               <div className={s.trustedMeta}>
-                {a.location} · Dernière utilisation : {a.lastUsed} · Ajouté le {a.addedAt}
+                {a.location} · {t('settingsPage.approbations.derniereUtilisation')} : {a.lastUsed} · {t('settingsPage.approbations.ajouteLe')} {a.addedAt}
               </div>
             </div>
             <button
@@ -88,7 +90,7 @@ export function ApprobationsSection({ onToast }: Props) {
             >
               {actionId === a.id
                 ? <i className="fas fa-circle-notch fa-spin" />
-                : 'Retirer'
+                : t('settingsPage.approbations.retirer')
               }
             </button>
           </div>
@@ -97,9 +99,7 @@ export function ApprobationsSection({ onToast }: Props) {
           <div className={p.infoBanner} style={{ margin: 0 }}>
             <i className="fas fa-circle-info" />
             <div>
-              <strong>Comment ça fonctionne</strong> — Les appareils de confiance sont mémorisés
-              après une vérification 2FA réussie. Retirez un appareil si vous ne le reconnaissez
-              pas ou si vous l'avez perdu.
+              <strong>{t('settingsPage.approbations.commentTitre')}</strong> — {t('settingsPage.approbations.commentTexte')}
             </div>
           </div>
         </div>
@@ -114,6 +114,7 @@ interface Props { onToast: (msg: string) => void; }
  * NOTIFS — GET + PATCH /client/parametres/notifs
  * ════════════════════════════════════════════════════════════ */
 export function NotifsSection({ onToast }: Props) {
+  const { t } = useTranslation();
   const defaultNotifs = {
     commandes: { sms:true,  email:true,  push:true  },
     promos:    { sms:false, email:true,  push:true  },
@@ -138,16 +139,16 @@ export function NotifsSection({ onToast }: Props) {
     setSaving(true);
     try {
       await settingsApi.updateNotifs({ notifSettings: JSON.stringify(notifs) });
-      onToast('✅ Préférences de notifications enregistrées');
+      onToast(t('settingsPage.notifs.toastSaved'));
     } catch (err: any) { onToast(`❌ ${err.message}`); }
     finally { setSaving(false); }
   }
 
   const rows: { key: keyof typeof notifs; ico: string; icon: string; title: string; desc: string }[] = [
-    { key:'commandes', ico:'icoEmerald', icon:'fa-bag-shopping', title:'Statut de commande',   desc:'Confirmation, expédition, livraison' },
-    { key:'promos',    ico:'icoViolet',  icon:'fa-tag',          title:'Promotions & offres',  desc:'Soldes, codes promo, offres exclusives' },
-    { key:'messages',  ico:'icoRose',    icon:'fa-comment-dots', title:'Messages',             desc:'Nouveaux messages des vendeurs ou du support' },
-    { key:'points',    ico:'icoTeal',    icon:'fa-star',         title:'Points & récompenses', desc:'Gains de points, paliers atteints' },
+    { key:'commandes', ico:'icoEmerald', icon:'fa-bag-shopping', title: t('settingsPage.notifs.rows.commandes.title'), desc: t('settingsPage.notifs.rows.commandes.desc') },
+    { key:'promos',    ico:'icoViolet',  icon:'fa-tag',          title: t('settingsPage.notifs.rows.promos.title'),    desc: t('settingsPage.notifs.rows.promos.desc') },
+    { key:'messages',  ico:'icoRose',    icon:'fa-comment-dots', title: t('settingsPage.notifs.rows.messages.title'),  desc: t('settingsPage.notifs.rows.messages.desc') },
+    { key:'points',    ico:'icoTeal',    icon:'fa-star',         title: t('settingsPage.notifs.rows.points.title'),    desc: t('settingsPage.notifs.rows.points.desc') },
   ];
 
   return (
@@ -155,10 +156,10 @@ export function NotifsSection({ onToast }: Props) {
       <div className={s.cardHd}>
         <div className={s.cardTitle}>
           <div className={`${s.cardIco} ${s.icoAmber}`}><i className="fas fa-bell" /></div>
-          <div><div className={s.cardH}>Notifications</div><div className={s.cardSub}>Choisissez quand et comment être notifié</div></div>
+          <div><div className={s.cardH}>{t('settingsPage.notifs.titre')}</div><div className={s.cardSub}>{t('settingsPage.notifs.subtitle')}</div></div>
         </div>
         <button className={s.cardAction} onClick={save} disabled={saving || loading}>
-          {saving ? <><i className="fas fa-circle-notch fa-spin" /> Enregistrement…</> : 'Enregistrer'}
+          {saving ? <><i className="fas fa-circle-notch fa-spin" /> {t('settingsPage.notifs.enregistrement')}</> : t('settingsPage.notifs.enregistrer')}
         </button>
       </div>
       <div className={s.cardBody}>
@@ -174,7 +175,7 @@ export function NotifsSection({ onToast }: Props) {
                 {(['sms','email','push'] as const).map(ch => (
                   <div key={ch} className={s.notifCh}>
                     <Toggle checked={notifs[key][ch]} onChange={() => toggle(key, ch)} />
-                    <span>{ch === 'sms' ? 'SMS' : ch === 'email' ? 'Email' : 'Push'}</span>
+                    <span>{ch === 'sms' ? t('settingsPage.notifs.sms') : ch === 'email' ? t('settingsPage.notifs.email') : t('settingsPage.notifs.push')}</span>
                   </div>
                 ))}
               </div>
@@ -190,6 +191,7 @@ export function NotifsSection({ onToast }: Props) {
  * CONFIDENTIALITÉ — GET + PATCH /client/parametres/privacy
  * ════════════════════════════════════════════════════════════ */
 export function ConfidentialiteSection({ onToast }: Props) {
+  const { t } = useTranslation();
   const defaultPrivacy = { historique:false, wishlist:true, perso:true, localisation:true, pubs:false };
   const [prefs,   setPrefs]   = useState(defaultPrivacy);
   const [loading, setLoading] = useState(true);
@@ -205,7 +207,7 @@ export function ConfidentialiteSection({ onToast }: Props) {
     setSaving(true);
     try {
       await settingsApi.updatePrivacy({ privacySettings: JSON.stringify(prefs) });
-      onToast('✅ Paramètres de confidentialité enregistrés');
+      onToast(t('settingsPage.confidentialite.toastSaved'));
     } catch (err: any) { onToast(`❌ ${err.message}`); }
     finally { setSaving(false); }
   }
@@ -215,10 +217,10 @@ export function ConfidentialiteSection({ onToast }: Props) {
       <div className={s.cardHd}>
         <div className={s.cardTitle}>
           <div className={`${s.cardIco} ${s.icoViolet}`}><i className="fas fa-eye-slash" /></div>
-          <div><div className={s.cardH}>Confidentialité du profil</div><div className={s.cardSub}>Contrôlez qui peut voir vos informations</div></div>
+          <div><div className={s.cardH}>{t('settingsPage.confidentialite.titre')}</div><div className={s.cardSub}>{t('settingsPage.confidentialite.subtitle')}</div></div>
         </div>
         <button className={s.cardAction} onClick={save} disabled={saving || loading}>
-          {saving ? <><i className="fas fa-circle-notch fa-spin" /> Enregistrement…</> : 'Enregistrer'}
+          {saving ? <><i className="fas fa-circle-notch fa-spin" /> {t('settingsPage.confidentialite.enregistrement')}</> : t('settingsPage.confidentialite.enregistrer')}
         </button>
       </div>
       <div className={s.cardBody}>
@@ -226,15 +228,15 @@ export function ConfidentialiteSection({ onToast }: Props) {
           ? <div style={{ padding:'32px', textAlign:'center', color:'var(--t3)' }}><i className="fas fa-circle-notch fa-spin" /></div>
           : <>
             <div className={s.privRow}>
-              <div className={s.privLeft}><div className={`${s.privIco} ${s.icoBlue}`}><i className="fas fa-user" /></div><div><div className={s.privTitle}>Visibilité du profil</div><div className={s.privDesc}>Qui peut voir votre profil public</div></div></div>
-              <select className={s.privSelect} defaultValue="public"><option value="public">Tout le monde</option><option value="members">Membres Shopi</option><option value="nobody">Personne</option></select>
+              <div className={s.privLeft}><div className={`${s.privIco} ${s.icoBlue}`}><i className="fas fa-user" /></div><div><div className={s.privTitle}>{t('settingsPage.confidentialite.visibiliteTitle')}</div><div className={s.privDesc}>{t('settingsPage.confidentialite.visibiliteDesc')}</div></div></div>
+              <select className={s.privSelect} defaultValue="public"><option value="public">{t('settingsPage.confidentialite.visibiliteOptions.toutLeMonde')}</option><option value="members">{t('settingsPage.confidentialite.visibiliteOptions.membresShopi')}</option><option value="nobody">{t('settingsPage.confidentialite.visibiliteOptions.personne')}</option></select>
             </div>
             {([
-              { key:'historique' as const, ico:'icoTeal',    icon:'fa-bag-shopping',    title:'Historique des commandes',     desc:'Afficher vos achats récents sur votre profil' },
-              { key:'wishlist' as const,   ico:'icoRose',    icon:'fa-heart',           title:'Liste de souhaits',            desc:'Rendre votre liste de souhaits visible aux autres' },
-              { key:'perso' as const,      ico:'icoAmber',   icon:'fa-chart-simple',    title:'Données de personnalisation',  desc:'Utiliser votre comportement pour améliorer les recommandations' },
-              { key:'localisation' as const,ico:'icoEmerald',icon:'fa-map-location-dot',title:'Localisation approximative',   desc:'Partager votre ville pour des offres locales' },
-              { key:'pubs' as const,       ico:'icoViolet',  icon:'fa-bullhorn',        title:'Publicités personnalisées',    desc:'Recevoir des publicités basées sur vos intérêts' },
+              { key:'historique' as const, ico:'icoTeal',    icon:'fa-bag-shopping',    title: t('settingsPage.confidentialite.rows.historique.title'),   desc: t('settingsPage.confidentialite.rows.historique.desc') },
+              { key:'wishlist' as const,   ico:'icoRose',    icon:'fa-heart',           title: t('settingsPage.confidentialite.rows.wishlist.title'),     desc: t('settingsPage.confidentialite.rows.wishlist.desc') },
+              { key:'perso' as const,      ico:'icoAmber',   icon:'fa-chart-simple',    title: t('settingsPage.confidentialite.rows.perso.title'),        desc: t('settingsPage.confidentialite.rows.perso.desc') },
+              { key:'localisation' as const,ico:'icoEmerald',icon:'fa-map-location-dot',title: t('settingsPage.confidentialite.rows.localisation.title'), desc: t('settingsPage.confidentialite.rows.localisation.desc') },
+              { key:'pubs' as const,       ico:'icoViolet',  icon:'fa-bullhorn',        title: t('settingsPage.confidentialite.rows.pubs.title'),         desc: t('settingsPage.confidentialite.rows.pubs.desc') },
             ] as const).map(({ key, ico, icon, title, desc }) => (
               <div key={key} className={s.privRow}>
                 <div className={s.privLeft}><div className={`${s.privIco} ${(s as any)[ico]}`}><i className={`fas ${icon}`} /></div><div><div className={s.privTitle}>{title}</div><div className={s.privDesc}>{desc}</div></div></div>
@@ -252,6 +254,7 @@ export function ConfidentialiteSection({ onToast }: Props) {
  * APPARENCE — GET + PATCH /client/parametres/apparence
  * ════════════════════════════════════════════════════════════ */
 export function ApparenceSection({ onToast }: Props) {
+  const { t } = useTranslation();
   // ✅ Le site n'a plus de mode clair : le champ "theme" reste fixé à
   // 'sombre' (envoyé tel quel à l'API pour compatibilité), et le
   // sélecteur Clair/Sombre/Automatique a été retiré de l'interface —

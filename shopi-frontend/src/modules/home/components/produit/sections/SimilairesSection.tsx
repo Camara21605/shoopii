@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { produitApi, type SimilaireApi } from '../api/produit.api';
 import { useCart } from '../../../../../shared/context/CartContext';
 import { getRoleFromToken } from '../../../../../shared/services/authUtils';
@@ -10,10 +11,15 @@ interface Props {
   onToast:   (m: string) => void;
 }
 
-const BADGE_CFG: Record<string, string> = { hot:'⭐ Pop.', new:'✨ Nouveau', promo:'🏷️ Promo' };
 const BADGE_CLS: Record<string, string> = { hot:styles.badgeHot, new:styles.badgeNew, promo:styles.badgePromo };
 
 export default function SimilairesSection({ produitId, onToast }: Props) {
+  const { t } = useTranslation();
+  const BADGE_CFG: Record<string, string> = {
+    hot: t('produitDetail.similaires.badges.hot'),
+    new: t('produitDetail.similaires.badges.new'),
+    promo: t('produitDetail.similaires.badges.promo'),
+  };
   const [produits, setProduits] = useState<SimilaireApi[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [favs,     setFavs]     = useState<Set<string>>(new Set());
@@ -45,8 +51,8 @@ export default function SimilairesSection({ produitId, onToast }: Props) {
   const toggleFav = (id: string) => {
     setFavs(prev => {
       const next = new Set(prev);
-      if (next.has(id)) { next.delete(id); onToast('🤍 Retiré des favoris'); }
-      else              { next.add(id);    onToast('❤️ Ajouté aux favoris'); }
+      if (next.has(id)) { next.delete(id); onToast(t('produitDetail.similaires.retireFavorisToast')); }
+      else              { next.add(id);    onToast(t('produitDetail.similaires.ajouteFavorisToast')); }
       return next;
     });
   };
@@ -56,16 +62,16 @@ export default function SimilairesSection({ produitId, onToast }: Props) {
 
     /* ✅ Déjà dans le panier → rediriger vers le panier */
     if (isInCart(p.id)) {
-      onToast('🛒 Déjà dans votre panier — allez dans le panier pour modifier la quantité');
+      onToast(t('produitDetail.similaires.dejaAuPanierToast'));
       return;
     }
 
     setAdding(p.id);
     try {
       await addToCart(p.id, 1);
-      onToast(`✅ ${p.nom} ajouté au panier !`);
+      onToast(t('produitDetail.similaires.ajouteToast', { nom: p.nom }));
     } catch (err: any) {
-      onToast(`❌ ${err.message}`);
+      onToast(t('produitDetail.similaires.erreurToast', { msg: err.message }));
     } finally {
       setAdding(null);
     }
@@ -80,11 +86,11 @@ export default function SimilairesSection({ produitId, onToast }: Props) {
     <section className={styles.sec}>
       <div className={styles.hd}>
         <div>
-          <div className={styles.kick}>Vous aimerez aussi</div>
-          <h2 className={styles.titre}>Produits <em>similaires</em></h2>
+          <div className={styles.kick}>{t('produitDetail.similaires.kick')}</div>
+          <h2 className={styles.titre}>{t('produitDetail.similaires.titrePart1')} <em>{t('produitDetail.similaires.titreEm')}</em></h2>
         </div>
         <a href="#" className={styles.lkAll} onClick={e => e.preventDefault()}>
-          Voir tout <i className="fas fa-arrow-right" />
+          {t('produitDetail.similaires.voirTout')} <i className="fas fa-arrow-right" />
         </a>
       </div>
 
@@ -143,7 +149,7 @@ export default function SimilairesSection({ produitId, onToast }: Props) {
                     onClick={e => { e.stopPropagation(); navigate('/commande'); }}
                     style={{ background:'var(--emerald,#059669)', borderColor:'var(--emerald,#059669)' }}
                   >
-                    <i className="fas fa-check" /> Voir le panier
+                    <i className="fas fa-check" /> {t('produitDetail.similaires.voirLePanier')}
                   </button>
                 ) : (
                   <button
@@ -153,7 +159,7 @@ export default function SimilairesSection({ produitId, onToast }: Props) {
                   >
                     {adding === p.id
                       ? <i className="fas fa-circle-notch fa-spin" />
-                      : <><i className="fas fa-cart-plus" /> Ajouter</>
+                      : <><i className="fas fa-cart-plus" /> {t('produitDetail.similaires.ajouter')}</>
                     }
                   </button>
                 )}

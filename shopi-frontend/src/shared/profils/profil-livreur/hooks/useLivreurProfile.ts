@@ -10,6 +10,7 @@
  * ================================================================ */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { apiFetch }            from '../../../services/apiFetch';
 import { toggleFollowLivreur } from '../../../services/follow';
 import { getRoleFromToken }    from '../../../services/authUtils';
@@ -31,6 +32,7 @@ export function useLivreurProfile(
   onRequireAuth?: () => void,
 ): UseLivreurProfileReturn {
 
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<LivreurProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
@@ -39,18 +41,18 @@ export function useLivreurProfile(
 
   /* ── Chargement du profil ── */
   useEffect(() => {
-    if (!id) { setError('Identifiant manquant'); setLoading(false); return; }
+    if (!id) { setError(t('profilLivreur.idMissingError')); setLoading(false); return; }
 
     let cancelled = false;
     setLoading(true);
 
     apiFetch<LivreurProfile>(`/client/livreurs/${id}`)
       .then(data => { if (!cancelled) setProfile(data); })
-      .catch(e   => { if (!cancelled) setError(e?.message ?? 'Erreur réseau'); })
+      .catch(e   => { if (!cancelled) setError(e?.message ?? t('profilLivreur.networkError')); })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, t]);
 
   /* ── Toggle abonnement (optimistic + rollback) ── */
   const follow = useCallback(async () => {
@@ -64,16 +66,16 @@ export function useLivreurProfile(
       const confirmed = await toggleFollowLivreur(profile.id);
       setProfile(p => p ? { ...p, isSuivi: confirmed } : p);
       onToast?.(
-        confirmed ? `✅ Abonné à ${profile.fullName}` : `👋 Désabonné de ${profile.fullName}`,
+        confirmed ? t('profilLivreur.reseauPage.abonneToast', { nom: profile.fullName }) : t('profilLivreur.reseauPage.desabonneToast', { nom: profile.fullName }),
         confirmed ? 's' : 'i',
       );
     } catch (e: any) {
       setProfile(p => p ? { ...p, isSuivi: !next } : p);
-      onToast?.(`❌ ${e?.message ?? 'Erreur réseau'}`, 'e');
+      onToast?.(t('profilLivreur.publicPage.erreurToast', { msg: e?.message ?? t('profilLivreur.networkError') }), 'e');
     } finally {
       setFollowLoading(false);
     }
-  }, [profile, onToast, onRequireAuth]);
+  }, [profile, onToast, onRequireAuth, t]);
 
   return { profile, loading, error, tab, setTab, follow, followLoading };
 }

@@ -3,6 +3,8 @@
  * ============================================================ */
 
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { MapContainer, TileLayer, Marker, ZoomControl, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -40,16 +42,18 @@ const BLUE_ICON = L.divIcon({
 interface Props { onNavigate: (page: EntreprisePage) => void; }
 type Tab = 'apercu' | 'localisation';
 
-const PAYS_LIST = [
-  { code: 'GN', nom: 'Guinée',        emoji: '🇬🇳' },
-  { code: 'SN', nom: 'Sénégal',       emoji: '🇸🇳' },
-  { code: 'ML', nom: 'Mali',           emoji: '🇲🇱' },
-  { code: 'CI', nom: "Côte d'Ivoire", emoji: '🇨🇮' },
-  { code: 'GW', nom: 'Guinée-Bissau', emoji: '🇬🇼' },
-  { code: 'LR', nom: 'Libéria',       emoji: '🇱🇷' },
-  { code: 'SL', nom: 'Sierra Leone',  emoji: '🇸🇱' },
-  { code: 'FR', nom: 'France',         emoji: '🇫🇷' },
-];
+function getPaysList(t: TFunction) {
+  return [
+    { code: 'GN', nom: t('boutiquePreview.pays_list.GN'), emoji: '🇬🇳' },
+    { code: 'SN', nom: t('boutiquePreview.pays_list.SN'), emoji: '🇸🇳' },
+    { code: 'ML', nom: t('boutiquePreview.pays_list.ML'), emoji: '🇲🇱' },
+    { code: 'CI', nom: t('boutiquePreview.pays_list.CI'), emoji: '🇨🇮' },
+    { code: 'GW', nom: t('boutiquePreview.pays_list.GW'), emoji: '🇬🇼' },
+    { code: 'LR', nom: t('boutiquePreview.pays_list.LR'), emoji: '🇱🇷' },
+    { code: 'SL', nom: t('boutiquePreview.pays_list.SL'), emoji: '🇸🇱' },
+    { code: 'FR', nom: t('boutiquePreview.pays_list.FR'), emoji: '🇫🇷' },
+  ];
+}
 
 const OSM_URL   = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const DARK_URL  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
@@ -120,6 +124,8 @@ const fg: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap:
 /* ══════════════════════════════════════════════════════════════ */
 
 export default function BoutiquePreviewPage({ onNavigate }: Props) {
+  const { t } = useTranslation();
+  const PAYS_LIST = useMemo(() => getPaysList(t), [t]);
   const { data, loading, saveContact } = useParametres();
   const [iframeKey,  setIframeKey]  = useState(0);
   const [activeTab,  setActiveTab]  = useState<Tab>('apercu');
@@ -151,9 +157,9 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
     const onMQ = (e: MediaQueryListEvent) => setIsDark(e.matches);
     mq.addEventListener('change', onMQ);
     const obs = new MutationObserver(() => {
-      const t = document.documentElement.getAttribute('data-theme');
-      if (t === 'dark') setIsDark(true);
-      else if (t === 'light') setIsDark(false);
+      const theme = document.documentElement.getAttribute('data-theme');
+      if (theme === 'dark') setIsDark(true);
+      else if (theme === 'light') setIsDark(false);
     });
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => { mq.removeEventListener('change', onMQ); obs.disconnect(); };
@@ -217,7 +223,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
 
   /* ── Sauvegarde ── */
   const handleSave = async () => {
-    if (!ville.trim()) { setError('La ville est obligatoire.'); return; }
+    if (!ville.trim()) { setError(t('boutiquePreview.villeObligatoire')); return; }
     setSaving(true); setError(null);
     try {
       await (saveContact as any)({ adresse, commune, quartier, ville, pays, repere });
@@ -231,7 +237,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (e: any) {
-      setError(e?.message ?? 'Erreur lors de la sauvegarde.');
+      setError(e?.message ?? t('boutiquePreview.errorSauvegarde'));
     } finally { setSaving(false); }
   };
 
@@ -239,7 +245,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--t3)' }}>
       <div style={{ textAlign: 'center' }}>
         <i className="fas fa-spinner fa-spin" style={{ fontSize: 30, display: 'block', marginBottom: 12 }} />
-        Chargement…
+        {t('boutiquePreview.loading')}
       </div>
     </div>
   );
@@ -256,25 +262,25 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick={() => onNavigate('profil')}
             style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--g100)', border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--t2)' }}>
-            <i className="fas fa-arrow-left" /> Retour
+            <i className="fas fa-arrow-left" /> {t('boutiquePreview.back')}
           </button>
           <div style={{ width: 1, height: 20, background: 'var(--bdr2)' }} />
           <div>
             <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--navy)' }}>{data.companyName}</div>
             <div style={{ fontSize: 11, color: 'var(--t3)' }}>
-              {activeTab === 'apercu' ? 'Aperçu public de la boutique' : 'Épinglez votre boutique sur la carte'}
+              {activeTab === 'apercu' ? t('boutiquePreview.subtitleApercu') : t('boutiquePreview.subtitleLocalisation')}
             </div>
           </div>
         </div>
 
         <div style={{ display: 'flex', background: 'var(--g100)', borderRadius: 9, padding: 3, gap: 2 }}>
           {([
-            { key: 'apercu',       label: 'Aperçu',       icon: 'fa-eye' },
-            { key: 'localisation', label: 'Localisation', icon: 'fa-map-location-dot' },
-          ] as { key: Tab; label: string; icon: string }[]).map(t => (
-            <button key={t.key} onClick={() => setActiveTab(t.key)}
-              style={{ padding: '6px 14px', borderRadius: 7, border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .15s', background: activeTab === t.key ? 'var(--white)' : 'transparent', color: activeTab === t.key ? 'var(--navy)' : 'var(--t3)', boxShadow: activeTab === t.key ? '0 1px 4px rgba(0,0,0,.10)' : 'none' }}>
-              <i className={`fas ${t.icon}`} style={{ fontSize: 11 }} />{t.label}
+            { key: 'apercu',       label: t('boutiquePreview.tabs.apercu'),       icon: 'fa-eye' },
+            { key: 'localisation', label: t('boutiquePreview.tabs.localisation'), icon: 'fa-map-location-dot' },
+          ] as { key: Tab; label: string; icon: string }[]).map(tabItem => (
+            <button key={tabItem.key} onClick={() => setActiveTab(tabItem.key)}
+              style={{ padding: '6px 14px', borderRadius: 7, border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .15s', background: activeTab === tabItem.key ? 'var(--white)' : 'transparent', color: activeTab === tabItem.key ? 'var(--navy)' : 'var(--t3)', boxShadow: activeTab === tabItem.key ? '0 1px 4px rgba(0,0,0,.10)' : 'none' }}>
+              <i className={`fas ${tabItem.icon}`} style={{ fontSize: 11 }} />{tabItem.label}
             </button>
           ))}
         </div>
@@ -288,15 +294,15 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
               </button>
               <button onClick={() => window.open(`/boutique/${data.id}`, '_blank')}
                 style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                <i className="fas fa-arrow-up-right-from-square" /> Ouvrir
+                <i className="fas fa-arrow-up-right-from-square" /> {t('boutiquePreview.ouvrir')}
               </button>
             </>
           ) : (
             <button onClick={handleSave} disabled={saving || !ville}
               style={{ display: 'flex', alignItems: 'center', gap: 7, background: saved ? 'var(--btn-h, #1C1C1F)' : 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 18px', fontSize: 12.5, fontWeight: 700, cursor: saving || !ville ? 'not-allowed' : 'pointer', opacity: !ville ? 0.5 : 1, transition: 'background .3s' }}>
-              {saving ? <><i className="fas fa-circle-notch fa-spin" /> Enregistrement…</>
-                : saved ? <><i className="fas fa-check" /> Enregistré !</>
-                  : <><i className="fas fa-cloud-arrow-up" /> Sauvegarder la localisation</>}
+              {saving ? <><i className="fas fa-circle-notch fa-spin" /> {t('boutiquePreview.enregistrement')}</>
+                : saved ? <><i className="fas fa-check" /> {t('boutiquePreview.enregistre')}</>
+                  : <><i className="fas fa-cloud-arrow-up" /> {t('boutiquePreview.sauvegarderLocalisation')}</>}
             </button>
           )}
         </div>
@@ -304,7 +310,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
 
       {/* ═══════════════ APERÇU ═══════════════ */}
       {activeTab === 'apercu' && (
-        <iframe key={iframeKey} ref={iframeRef} src={boutiqueUrl} title="Aperçu"
+        <iframe key={iframeKey} ref={iframeRef} src={boutiqueUrl} title={t('boutiquePreview.iframeTitle')}
           style={{ flex: 1, border: 'none', width: '100%' }}
           onLoad={() => {
             try {
@@ -331,8 +337,8 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
                   <i className="fas fa-map-location-dot" style={{ color: '#fff', fontSize: 14 }} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 800, color: '#fff', marginBottom: 2 }}>Localisation</div>
-                  <div style={{ fontSize: 11, color: 'rgba(160,160,160,.7)' }}>Le marqueur 🏪 suit votre sélection</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: '#fff', marginBottom: 2 }}>{t('boutiquePreview.panelTitle')}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(160,160,160,.7)' }}>{t('boutiquePreview.panelSub')}</div>
                 </div>
               </div>
               {(data.ville || data.commune) && (
@@ -351,7 +357,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
               {/* Pays */}
               <div style={fg}>
                 <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <i className="fas fa-globe" style={{ color: 'var(--t2)', fontSize: 10 }} /> Pays
+                  <i className="fas fa-globe" style={{ color: 'var(--t2)', fontSize: 10 }} /> {t('boutiquePreview.pays')}
                 </label>
                 <div style={{ position: 'relative' }}>
                   <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 16, pointerEvents: 'none' }}>{paysInfo.emoji}</span>
@@ -364,15 +370,15 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
               {/* Ville */}
               <div style={fg}>
                 <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <i className="fas fa-city" style={{ color: 'var(--t2)', fontSize: 10 }} /> Ville <span style={{ color: 'var(--t1)' }}>*</span>
+                  <i className="fas fa-city" style={{ color: 'var(--t2)', fontSize: 10 }} /> {t('boutiquePreview.ville')} <span style={{ color: 'var(--t1)' }}>*</span>
                 </label>
                 {estGuinee ? (
                   <select style={sel(!!ville)} value={ville} onChange={e => handleVilleChange(e.target.value)}>
-                    <option value="">— Choisir une ville —</option>
+                    <option value="">{t('boutiquePreview.choisirVille')}</option>
                     {VILLES_SORTED.map(v => <option key={v.slug} value={v.nom}>{v.nom} ({v.region})</option>)}
                   </select>
                 ) : (
-                  <input style={inp} value={ville} onChange={e => setVille(e.target.value)} placeholder="Nom de la ville" />
+                  <input style={inp} value={ville} onChange={e => setVille(e.target.value)} placeholder={t('boutiquePreview.villePlaceholder')} />
                 )}
               </div>
 
@@ -380,10 +386,10 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
               {estGuinee && communes.length > 0 && (
                 <div style={fg}>
                   <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <i className="fas fa-map" style={{ color: 'var(--t2)', fontSize: 10 }} /> Commune <span style={{ color: 'var(--t1)' }}>*</span>
+                    <i className="fas fa-map" style={{ color: 'var(--t2)', fontSize: 10 }} /> {t('boutiquePreview.commune')} <span style={{ color: 'var(--t1)' }}>*</span>
                   </label>
                   <select style={sel(!!commune)} value={commune} onChange={e => handleCommuneChange(e.target.value)}>
-                    <option value="">— Choisir une commune —</option>
+                    <option value="">{t('boutiquePreview.choisirCommune')}</option>
                     {communes.map(c => <option key={c.nom} value={c.nom}>{c.nom}</option>)}
                   </select>
                 </div>
@@ -393,10 +399,10 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
               {estGuinee && quartiers.length > 0 && (
                 <div style={fg}>
                   <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <i className="fas fa-map-pin" style={{ color: 'var(--t2)', fontSize: 10 }} /> Quartier <span style={{ color: 'var(--t1)' }}>*</span>
+                    <i className="fas fa-map-pin" style={{ color: 'var(--t2)', fontSize: 10 }} /> {t('boutiquePreview.quartier')} <span style={{ color: 'var(--t1)' }}>*</span>
                   </label>
                   <select style={sel(!!quartier)} value={quartier} onChange={e => handleQuartierChange(e.target.value)}>
-                    <option value="">— Choisir un quartier —</option>
+                    <option value="">{t('boutiquePreview.choisirQuartier')}</option>
                     {quartiers.map(q => <option key={q} value={q}>{q}</option>)}
                   </select>
                 </div>
@@ -410,7 +416,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
                     : <i className="fas fa-map-pin" style={{ color: 'var(--t2)', fontSize: 12, flexShrink: 0 }} />
                   }
                   <span style={{ fontSize: 12.5, color: 'var(--navy)', fontWeight: 700 }}>
-                    {geocoding ? 'Localisation en cours…' : [quartier, commune, ville, paysInfo.nom].filter(Boolean).join(' · ')}
+                    {geocoding ? t('boutiquePreview.localisationEnCours') : [quartier, commune, ville, paysInfo.nom].filter(Boolean).join(' · ')}
                   </span>
                 </div>
               )}
@@ -418,26 +424,26 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
               {/* Adresse */}
               <div style={fg}>
                 <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <i className="fas fa-location-dot" style={{ color: 'var(--t3)', fontSize: 10 }} /> Adresse
-                  <span style={{ fontWeight: 400, color: 'var(--t3)', fontSize: 11 }}>(optionnel)</span>
+                  <i className="fas fa-location-dot" style={{ color: 'var(--t3)', fontSize: 10 }} /> {t('boutiquePreview.adresse')}
+                  <span style={{ fontWeight: 400, color: 'var(--t3)', fontSize: 11 }}>{t('boutiquePreview.optionnel')}</span>
                 </label>
-                <input style={inp} value={adresse} onChange={e => setAdresse(e.target.value)} placeholder="Rue, numéro…" />
+                <input style={inp} value={adresse} onChange={e => setAdresse(e.target.value)} placeholder={t('boutiquePreview.adressePlaceholder')} />
               </div>
 
               {/* Repère */}
               <div style={fg}>
                 <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <i className="fas fa-comment-dots" style={{ color: 'var(--t3)', fontSize: 10 }} /> Repère livreurs
-                  <span style={{ fontWeight: 400, color: 'var(--t3)', fontSize: 11 }}>(optionnel)</span>
+                  <i className="fas fa-comment-dots" style={{ color: 'var(--t3)', fontSize: 10 }} /> {t('boutiquePreview.repere')}
+                  <span style={{ fontWeight: 400, color: 'var(--t3)', fontSize: 11 }}>{t('boutiquePreview.optionnel')}</span>
                 </label>
-                <input style={inp} value={repere} onChange={e => setRepere(e.target.value)} placeholder="Face à la pharmacie bleue…" />
+                <input style={inp} value={repere} onChange={e => setRepere(e.target.value)} placeholder={t('boutiquePreview.reperePlaceholder')} />
               </div>
 
               {/* GPS */}
               <div className="gridR2" style={{ gap: 8 }}>
                 {[
-                  { label: 'Latitude',  val: markerLat.toFixed(5) },
-                  { label: 'Longitude', val: markerLng.toFixed(5) },
+                  { label: t('boutiquePreview.latitude'),  val: markerLat.toFixed(5) },
+                  { label: t('boutiquePreview.longitude'), val: markerLng.toFixed(5) },
                 ].map(item => (
                   <div key={item.label} style={{ padding: '8px 11px', background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 9 }}>
                     <div style={{ fontSize: 10, color: 'var(--t3)', marginBottom: 2 }}>{item.label}</div>
@@ -457,9 +463,9 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
             <div style={{ padding: '14px 20px', borderTop: '1px solid var(--bdr)', flexShrink: 0 }}>
               <button onClick={handleSave} disabled={saving || !ville}
                 style={{ width: '100%', padding: '12px', background: saved ? 'var(--btn-h, #1C1C1F)' : 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13.5, fontWeight: 700, cursor: saving || !ville ? 'not-allowed' : 'pointer', opacity: !ville ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background .3s' }}>
-                {saving ? <><i className="fas fa-circle-notch fa-spin" /> Enregistrement…</>
-                  : saved ? <><i className="fas fa-check" /> Localisation enregistrée !</>
-                    : <><i className="fas fa-cloud-arrow-up" /> Enregistrer la localisation</>}
+                {saving ? <><i className="fas fa-circle-notch fa-spin" /> {t('boutiquePreview.enregistrement')}</>
+                  : saved ? <><i className="fas fa-check" /> {t('boutiquePreview.localisationEnregistree')}</>
+                    : <><i className="fas fa-cloud-arrow-up" /> {t('boutiquePreview.enregistrerLocalisation')}</>}
               </button>
             </div>
           </div>
@@ -470,7 +476,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
             {/* Badge géocodage */}
             {geocoding && (
               <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 600, background: 'rgba(11,31,58,.88)', color: '#fff', padding: '7px 16px', borderRadius: 999, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 7, backdropFilter: 'blur(6px)', pointerEvents: 'none' }}>
-                <i className="fas fa-circle-notch fa-spin" /> Recherche de la position…
+                <i className="fas fa-circle-notch fa-spin" /> {t('boutiquePreview.recherchePosition')}
               </div>
             )}
 
@@ -491,7 +497,7 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
             {/* Hint bas */}
             <div style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 400, background: isDark ? 'rgba(17,17,19,.92)' : 'rgba(255,255,255,.92)', backdropFilter: 'blur(8px)', padding: '6px 14px', borderRadius: 999, fontSize: 12, color: 'var(--t2)', fontWeight: 600, border: isDark ? '1px solid var(--bdr2)' : '1px solid rgba(0,0,0,.08)', whiteSpace: 'nowrap', pointerEvents: 'none', boxShadow: '0 2px 8px rgba(0,0,0,.10)' }}>
               <i className="fas fa-hand-pointer" style={{ marginRight: 6, color: 'var(--t2)' }} />
-              Cliquez ou glissez le marqueur pour affiner
+              {t('boutiquePreview.hintCarte')}
             </div>
           </div>
 

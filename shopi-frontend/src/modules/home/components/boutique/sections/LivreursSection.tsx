@@ -6,7 +6,7 @@
  *           à la boutique avec leurs statuts de disponibilité.
  * ============================================================
  */
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { LIVREURS_MOCK } from '../data/boutiqueMockData';
 import CardLivreurBoutique from '../components/CardLivreurBoutique';
 import styles from '../styles/LivreursSection.module.css';
@@ -14,6 +14,7 @@ import styles from '../styles/LivreursSection.module.css';
 interface Props { onToast: (m: string) => void; }
 
 export default function LivreursSection({ onToast }: Props) {
+  const { t } = useTranslation();
   /* Compteurs pour le résumé en haut */
   const disponibles = LIVREURS_MOCK.filter(l => l.dispo).length;
   const enCourse    = LIVREURS_MOCK.filter(l => !l.dispo).length;
@@ -24,15 +25,15 @@ export default function LivreursSection({ onToast }: Props) {
       <div className={styles.resume}>
         <div className={`${styles.resumeItem} ${styles.resumeGreen}`}>
           <span className={styles.resumeDot} />
-          <strong>{disponibles}</strong> disponible{disponibles > 1 ? 's' : ''}
+          <strong>{disponibles}</strong> {t('boutiqueDetail.livreursSection.disponibleCount', { count: disponibles })}
         </div>
         <div className={`${styles.resumeItem} ${styles.resumeAmber}`}>
           <span className={`${styles.resumeDot} ${styles.resumeDotAmber}`} />
-          <strong>{enCourse}</strong> en course
+          <strong>{enCourse}</strong> {t('boutiqueDetail.livreursSection.enCourse')}
         </div>
         <div className={styles.resumeItem}>
           <i className="fas fa-users" style={{ color:'var(--t3)', fontSize:12 }} />
-          <strong>{LIVREURS_MOCK.length}</strong> livreurs au total
+          <strong>{LIVREURS_MOCK.length}</strong> {t('boutiqueDetail.livreursSection.totalCount')}
         </div>
       </div>
 

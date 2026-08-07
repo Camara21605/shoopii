@@ -10,6 +10,7 @@
 
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import Header from '../../layout/Header';
 import CardEntreprise from '../../../cards/CardEntreprise';
@@ -22,6 +23,7 @@ interface ToastState { msg: string; type: 's' | 'i' | 'w' | 'e' }
 
 export default function BoutiquesPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -57,16 +59,16 @@ export default function BoutiquesPage() {
 
       <div className={styles.body}>
         <div className={styles.hero}>
-          <div className={styles.heroTitle}>Toutes les boutiques</div>
+          <div className={styles.heroTitle}>{t('boutiquesPage.title')}</div>
           <div className={styles.heroSub}>
-            {total > 0 ? `${total} entreprise${total > 1 ? 's' : ''} disponible${total > 1 ? 's' : ''}` : 'Découvrez nos entreprises partenaires'}
+            {total > 0 ? t('boutiquesPage.subtitleCount', { count: total }) : t('boutiquesPage.subtitleDefault')}
           </div>
         </div>
 
         <div className={styles.searchBox}>
           <i className="fas fa-magnifying-glass" />
           <input
-            placeholder="Rechercher une boutique..."
+            placeholder={t('boutiquesPage.searchPlaceholder')}
             value={searchInput}
             onChange={e => {
               setSearchInput(e.target.value);
@@ -86,9 +88,9 @@ export default function BoutiquesPage() {
 
         <div className={styles.secRow}>
           <div>
-            <div className={styles.secTitle}>Résultats</div>
+            <div className={styles.secTitle}>{t('boutiquesPage.resultats')}</div>
             <div className={styles.secSub}>
-              {loading && boutiques.length === 0 ? 'Chargement…' : `${total} boutique${total > 1 ? 's' : ''}`}
+              {loading && boutiques.length === 0 ? t('boutiquesPage.loading') : t('boutiquesPage.resultCount', { count: total })}
             </div>
           </div>
         </div>
@@ -104,10 +106,10 @@ export default function BoutiquesPage() {
         {error && !loading && boutiques.length === 0 && (
           <div className={styles.empty}>
             <i className="fas fa-triangle-exclamation" />
-            <div className={styles.emptyTitle}>Impossible de charger les boutiques</div>
+            <div className={styles.emptyTitle}>{t('boutiquesPage.errorTitle')}</div>
             <div className={styles.emptyText}>{error}</div>
             <button className={styles.retryBtn} onClick={reload}>
-              <i className="fas fa-rotate-right" /> Réessayer
+              <i className="fas fa-rotate-right" /> {t('boutiquesPage.retry')}
             </button>
           </div>
         )}
@@ -116,9 +118,9 @@ export default function BoutiquesPage() {
         {!loading && !error && boutiques.length === 0 && (
           <div className={styles.empty}>
             <i className="fas fa-store-slash" />
-            <div className={styles.emptyTitle}>Aucune entreprise trouvée</div>
+            <div className={styles.emptyTitle}>{t('boutiquesPage.emptyTitle')}</div>
             <div className={styles.emptyText}>
-              Aucune entreprise n'est disponible dans cette catégorie.
+              {t('boutiquesPage.emptyText')}
             </div>
           </div>
         )}
@@ -137,8 +139,8 @@ export default function BoutiquesPage() {
           <div className={styles.loadMore}>
             <button className={styles.loadMoreBtn} onClick={loadMore} disabled={loading}>
               {loading
-                ? <><i className="fas fa-spinner fa-spin" /> Chargement…</>
-                : <><i className="fas fa-arrow-down" /> Charger plus de boutiques</>}
+                ? <><i className="fas fa-spinner fa-spin" /> {t('boutiquesPage.loading')}</>
+                : <><i className="fas fa-arrow-down" /> {t('boutiquesPage.loadMore')}</>}
             </button>
           </div>
         )}

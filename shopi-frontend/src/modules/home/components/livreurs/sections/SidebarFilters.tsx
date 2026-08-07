@@ -10,6 +10,7 @@
  * ================================================================ */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import styles                from '../styles/SidebarFilters.module.css';
 import type { LivreurItem }  from '../data/livreursMockData';
 import { ZONES_OPTIONS, VEHICULE_OPTIONS } from '../data/livreursMockData';
@@ -26,14 +27,6 @@ interface SidebarFiltersProps {
   onReset:          () => void;
 }
 
-/* ── Options note minimale ── */
-const RATING_OPTS = [
-  { value: 5,    label: '5 étoiles seulement', stars: 5 },
-  { value: 4,    label: '4+ étoiles',          stars: 4 },
-  { value: 3,    label: '3+ étoiles',          stars: 3 },
-  { value: null, label: 'Toutes les notes',    stars: 0 },
-];
-
 /* ================================================================
  * COMPOSANT PRINCIPAL
  * ================================================================ */
@@ -41,16 +34,37 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
   filters, myFollowed,
   onZone, onVehicleToggle, onRating, onAvailability, onReset,
 }) => {
+  const { t } = useTranslation();
+
+  /* Labels traduits pour la zone "Toutes" et les véhicules (les noms
+     de communes restent en français, ce sont des noms propres) */
+  const zoneLabel = (z: typeof ZONES_OPTIONS[number]) =>
+    z.value === 'all' ? t('livreursPage.sidebar.toutesLesZones') : z.label;
+  const VEHICULE_LABELS: Record<string, string> = {
+    moto: t('livreursPage.sidebar.vehicules.moto'),
+    voiture: t('livreursPage.sidebar.vehicules.voiture'),
+    pickup: t('livreursPage.sidebar.vehicules.pickup'),
+    camion: t('livreursPage.sidebar.vehicules.camion'),
+  };
+
+  /* ── Options note minimale ── */
+  const RATING_OPTS = [
+    { value: 5,    label: t('livreursPage.sidebar.ratingOpts.cinqEtoiles'), stars: 5 },
+    { value: 4,    label: t('livreursPage.sidebar.ratingOpts.quatrePlus'),  stars: 4 },
+    { value: 3,    label: t('livreursPage.sidebar.ratingOpts.troisPlus'),   stars: 3 },
+    { value: null, label: t('livreursPage.sidebar.ratingOpts.toutesLesNotes'), stars: 0 },
+  ];
+
   return (
-    <aside className={styles.sidebar} aria-label="Filtres livreurs">
+    <aside className={styles.sidebar} aria-label={t('livreursPage.sidebar.ariaLabel')}>
 
       {/* ── Zone de livraison ── */}
       <div className={styles.card}>
         <div className={styles.cardHead}>
           <div className={styles.cardTitle}>
-            <i className="fas fa-map-pin" aria-hidden="true" /> Zone de livraison
+            <i className="fas fa-map-pin" aria-hidden="true" /> {t('livreursPage.sidebar.zoneDeLivraison')}
           </div>
-          <button className={styles.resetBtn} onClick={onReset}>Réinit.</button>
+          <button className={styles.resetBtn} onClick={onReset}>{t('livreursPage.sidebar.reinit')}</button>
         </div>
         <div className={styles.cardBody}>
           <div className={styles.zoneList}>
@@ -63,7 +77,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
                 aria-pressed={filters.selectedZone === z.value}
               >
                 <i className="fas fa-map-pin" aria-hidden="true" />
-                {z.label}
+                {zoneLabel(z)}
                 <span className={styles.zoneCnt}>{z.count}</span>
               </div>
             ))}
@@ -75,7 +89,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
       <div className={styles.card}>
         <div className={styles.cardHead}>
           <div className={styles.cardTitle}>
-            <i className="fas fa-motorcycle" aria-hidden="true" /> Type de véhicule
+            <i className="fas fa-motorcycle" aria-hidden="true" /> {t('livreursPage.sidebar.typeDeVehicule')}
           </div>
         </div>
         <div className={styles.cardBody}>
@@ -89,7 +103,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
                 aria-pressed={filters.selectedVehicles.includes(v.value)}
               >
                 <div className={styles.vehIco}>{v.icon}</div>
-                <div className={styles.vehLbl}>{v.label}</div>
+                <div className={styles.vehLbl}>{VEHICULE_LABELS[v.value] ?? v.label}</div>
               </div>
             ))}
           </div>
@@ -100,7 +114,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
       <div className={styles.card}>
         <div className={styles.cardHead}>
           <div className={styles.cardTitle}>
-            <i className="fas fa-star" aria-hidden="true" /> Note minimale
+            <i className="fas fa-star" aria-hidden="true" /> {t('livreursPage.sidebar.noteMinimale')}
           </div>
         </div>
         <div className={styles.cardBody}>
@@ -130,7 +144,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
       <div className={styles.card}>
         <div className={styles.cardHead}>
           <div className={styles.cardTitle}>
-            <i className="fas fa-circle-dot" aria-hidden="true" /> Disponibilité
+            <i className="fas fa-circle-dot" aria-hidden="true" /> {t('livreursPage.sidebar.disponibilite')}
           </div>
         </div>
         <div className={styles.cardBody}>
@@ -143,7 +157,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
               role="button"
             >
               <i className="fas fa-circle" aria-hidden="true" />
-              Disponible
+              {t('livreursPage.sidebar.disponible')}
             </div>
             <div
               className={`${styles.togBtn} ${filters.availabilityFilter === 'busy' ? styles.togBtnBusy : ''}`}
@@ -153,7 +167,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
               role="button"
             >
               <i className="fas fa-gear" aria-hidden="true" />
-              En course
+              {t('livreursPage.sidebar.enCourse')}
             </div>
           </div>
         </div>
@@ -164,7 +178,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
         <div className={styles.card}>
           <div className={styles.cardHead}>
             <div className={styles.cardTitle}>
-              <i className="fas fa-users" aria-hidden="true" /> Mes abonnements
+              <i className="fas fa-users" aria-hidden="true" /> {t('livreursPage.sidebar.mesAbonnements')}
             </div>
             <span className={styles.followedCount}>{myFollowed.length}</span>
           </div>
@@ -188,7 +202,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
                   <div
                     className={styles.followedDot}
                     style={{ background: l.disponible ? 'var(--t1)' : 'var(--t4)' }}
-                    title={l.disponible ? 'Disponible' : 'En course'}
+                    title={l.disponible ? t('livreursPage.sidebar.disponible') : t('livreursPage.sidebar.enCourse')}
                   />
                 </div>
               ))}

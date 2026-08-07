@@ -1,0 +1,79 @@
+{
+  "overview": {
+    "hero": {
+      "greeting": "Hello,",
+      "loading": "Loading your data…",
+      "ready": "Here's your recent activity.",
+      "badgeActive_one": "Store active · {{count}} follower",
+      "badgeActive_other": "Store active · {{count}} followers",
+      "subCA": "in revenue",
+      "subCommandes_one": "{{count}} order to process",
+      "subCommandes_other": "{{count}} orders to process",
+      "subRetours_one": "{{count}} return pending",
+      "subRetours_other": "{{count}} returns pending",
+      "btnCommandes": "Process orders",
+      "btnAnalytics": "View analytics",
+      "btnPromotions": "Promotions",
+      "statCA": "Revenue this month",
+      "statCommandes": "Orders",
+      "statNote": "Avg. rating",
+      "statAbonnes": "Followers",
+      "total": "Total",
+      "avis_one": "{{count}} review",
+      "avis_other": "{{count}} reviews",
+      "stable": "Stable"
+    },
+    "kpi": {
+      "ca": "Revenue — this month",
+      "commandes": "Orders this month",
+      "commandesSub": "{{enAttente}} pending · {{livrees}} delivered · {{enCours}} in progress",
+      "abonnes": "Store followers",
+      "abonnesSub": "Real total count",
+      "note": "Average customer rating",
+      "noteSub_one": "{{count}} review total",
+      "noteSub_other": "{{count}} reviews total",
+      "retours": "Returns this month",
+      "retoursSub": "{{enTraitement}} in progress · {{rembourses}} refunded",
+      "benefice": "Net profit (this month)",
+      "beneficeSub": "Margin: {{marge}}% · Commissions: {{commission}} GNF",
+      "margeBadge": "{{marge}}% margin"
+    },
+    "charts": {
+      "caMensuel": "Monthly revenue",
+      "noSalesDelivered": "No sales delivered yet.",
+      "legendCurrent": "Monthly revenue (Millions GNF)",
+      "legendPrevious": "Previous periods",
+      "topProduits": "Top products",
+      "noSales": "No sales yet.",
+      "ventes_one": "{{count}} sale",
+      "ventes_other": "{{count}} sales"
+    },
+    "alerts": {
+      "title": "Priority alerts",
+      "count_one": "{{count}} alert",
+      "count_other": "{{count}} alerts",
+      "empty": "No stock alerts.",
+      "stockInfo": "Stock: {{qty}} · Min required: {{min}}",
+      "fix": "Restock"
+    },
+    "donut": {
+      "title": "Sales breakdown"
+    },
+    "orders": {
+      "title": "Latest orders",
+      "seeAll": "See all",
+      "empty": "No orders yet.",
+      "status": {
+        "new": "New",
+        "prep": "Preparing",
+        "ship": "Shipping",
+        "del": "Delivered",
+        "can": "Cancelled"
+      }
+    },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "No recent activity."
+    }
+  }
+}

@@ -63,6 +63,7 @@ import { JwtAuthGuard }    from 'src/common/guards/auth.guard';
 import { RolesGuard }      from 'src/common/guards/roles.guard';
 import { Roles }           from 'src/common/decorators/roles.decorator';
 import { UserRole }        from 'src/common/enums/user-role.enum';
+import { Public }          from 'src/common/decorators/public.decorator';
 
 import { PromotionsService }  from './services/promotions.service';
 import { PromoCodeService }   from './services/promo-code.service';
@@ -105,6 +106,28 @@ export class PromotionsController {
   @Roles(UserRole.COMPANY)
   async getStats(@Req() req: any) {
     return this.promotionsService.getStats(req.user);
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // PUBLIC ACTIVE — GET /promotions/public
+  //
+  // ⚠️ IMPORTANT : cette route DOIT être AVANT /:id, même raison
+  //    que "stats" et "validate-code" ci-dessous.
+  //
+  // Route PUBLIQUE (@Public() bypass JwtAuthGuard — pas de @Roles()
+  // donc RolesGuard laisse passer aussi) : liste les promotions
+  // actives de TOUTES les entreprises, pour la section "Flash Sales"
+  // de la home et la page /offres. Triée pour mettre les plus gros
+  // pourcentages en premier.
+  // ════════════════════════════════════════════════════════════
+
+  @Get('public')
+  @Public()
+  async findPublicActive(@Query('limit') limit?: string) {
+    const parsed = limit ? parseInt(limit, 10) : 20;
+    return this.promotionsService.findPublicActive(
+      Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 100) : 20,
+    );
   }
 
   // ════════════════════════════════════════════════════════════

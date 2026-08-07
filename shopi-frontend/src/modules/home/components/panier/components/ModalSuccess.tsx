@@ -1,6 +1,7 @@
 /*
  * ModalSuccess.tsx — Modale de succès commande professionnelle
  */
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/ModalSuccess.module.css';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function ModalSuccess({ orderId, livreurNom, onClose, onToast }: Props) {
+  const { t } = useTranslation();
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
@@ -19,41 +21,40 @@ export default function ModalSuccess({ orderId, livreurNom, onClose, onToast }: 
         <div className={styles.ico}>✅</div>
 
         {/* Titre */}
-        <h2 className={styles.titre}>Commande confirmée !</h2>
+        <h2 className={styles.titre}>{t('panierCommande.modalSuccess.titre')}</h2>
         <p className={styles.sub}>
-          Votre commande a été enregistrée avec succès et est en cours de traitement.
-          Vous recevrez une notification dès la prise en charge par le livreur.
+          {t('panierCommande.modalSuccess.desc')}
         </p>
 
         {/* ID commande */}
         <div className={styles.orderId}>
           <i className="fas fa-hashtag" />
-          Commande <span>#{orderId.slice(0, 8).toUpperCase()}</span>
+          {t('panierCommande.modalSuccess.commande')} <span>#{orderId.slice(0, 8).toUpperCase()}</span>
         </div>
 
         {/* Timeline */}
         <div className={styles.timeline}>
-          <div className={styles.tlTitle}>Suivi en temps réel</div>
+          <div className={styles.tlTitle}>{t('panierCommande.modalSuccess.suiviTempsReel')}</div>
           {[
-            { dot: 'done',   text: <><strong>Commande confirmée</strong> — À l'instant</> },
-            { dot: 'active', text: <><strong>Préparation en cours</strong> — Boutique vendeur</> },
-            { dot: 'wait',   text: <>Remise au livreur {livreurNom ? <strong>— {livreurNom}</strong> : '— En attente'}</> },
-            { dot: 'wait',   text: <>Livraison à votre adresse</> },
-          ].map((t, i) => (
+            { dot: 'done',   text: <><strong>{t('panierCommande.modalSuccess.commandeConfirmee')}</strong> — {t('panierCommande.modalSuccess.aLInstant')}</> },
+            { dot: 'active', text: <><strong>{t('panierCommande.modalSuccess.preparationEnCours')}</strong> — {t('panierCommande.modalSuccess.boutiqueVendeur')}</> },
+            { dot: 'wait',   text: <>{t('panierCommande.modalSuccess.remiseAuLivreur')} {livreurNom ? <strong>— {livreurNom}</strong> : t('panierCommande.modalSuccess.enAttente')}</> },
+            { dot: 'wait',   text: <>{t('panierCommande.modalSuccess.livraisonAVotreAdresse')}</> },
+          ].map((step, i) => (
             <div key={i} className={styles.tlRow}>
-              <div className={`${styles.tlDot} ${styles[t.dot as keyof typeof styles]}`} />
-              <span>{t.text}</span>
+              <div className={`${styles.tlDot} ${styles[step.dot as keyof typeof styles]}`} />
+              <span>{step.text}</span>
             </div>
           ))}
         </div>
 
         {/* Boutons */}
         <div className={styles.btns}>
-          <button className={styles.btn1} onClick={() => onToast('📦 Redirection suivi commande…')}>
-            <i className="fas fa-map-location-dot" /> Suivre
+          <button className={styles.btn1} onClick={() => onToast(t('panierCommande.modalSuccess.redirectionToast'))}>
+            <i className="fas fa-map-location-dot" /> {t('panierCommande.modalSuccess.suivre')}
           </button>
           <button className={styles.btn2} onClick={onClose}>
-            <i className="fas fa-store" /> Continuer
+            <i className="fas fa-store" /> {t('panierCommande.modalSuccess.continuer')}
           </button>
         </div>
       </div>

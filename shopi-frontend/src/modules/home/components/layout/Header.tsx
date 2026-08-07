@@ -9,8 +9,9 @@
  *   ✅ Menu avatar "Mon profil" → /mon-profil (page profil client)
  * ================================================================ */
 
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation }           from 'react-router-dom';
+import { useTranslation }                     from 'react-i18next';
 import styles                                 from './Header.module.css';
 import { tokenStorage }                       from '../../../../shared/services/apiFetch';
 import { getRoleFromToken, getDashboardPath } from '../../../../shared/services/authUtils';
@@ -23,6 +24,7 @@ import NotificationCenter                     from '../../../../shared/notificat
 import { useAuthGate }                        from '../../../../shared/hooks/useAuthGate';
 import AuthPromptModal                        from '../../../../shared/components/AuthPromptModal';
 import { useForceDarkTheme }                  from '../../../../shared/context/ThemeContext';
+import WalletQuickBar                         from '../../../../shared/components/portefeuille/WalletQuickBar';
 
 type NavKey = 'explorer' | 'boutiques' | 'livreurs' | 'relais' | 'offres';
 
@@ -39,6 +41,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
   // forcer le thème sombre ici suffit à couvrir toutes ces pages d'un
   // seul coup, sans avoir à répéter ce hook page par page.
   useForceDarkTheme();
+  const { t } = useTranslation();
 
   const [scrolled,     setScrolled]     = useState(false);
   const [mobileOpen,   setMobileOpen]   = useState(false);
@@ -155,6 +158,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
     const p = location.pathname;
     if (p === '/livreurs')      return 'livreurs';
     if (p === '/correspondants') return 'relais';
+    if (p === '/offres')        return 'offres';
     return null;
   })();
 
@@ -164,16 +168,16 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
   }, [routeKey]);
 
   const NAV_LINKS: { key: NavKey; label: string; icon: string; action: () => void }[] = [
-    { key: 'explorer', label:'Explorer', icon:'fa-compass',
+    { key: 'explorer', label:t('publicHeader.nav.explorer'), icon:'fa-compass',
       action:() => { setActiveNav('explorer'); document.querySelector('#blocs')?.scrollIntoView({behavior:'smooth'}); setMobileOpen(false); } },
-    { key: 'boutiques', label:'Boutiques', icon:'fa-store',
+    { key: 'boutiques', label:t('publicHeader.nav.boutiques'), icon:'fa-store',
       action:() => { setActiveNav('boutiques'); navigate('/boutiques'); setMobileOpen(false); } },
-    { key: 'livreurs', label:'Livreurs', icon:'fa-motorcycle',
+    { key: 'livreurs', label:t('publicHeader.nav.livreurs'), icon:'fa-motorcycle',
       action:() => { navigate('/livreurs'); setMobileOpen(false); } },
-    { key: 'relais', label:'Relais', icon:'fa-map-pin',
+    { key: 'relais', label:t('publicHeader.nav.relais'), icon:'fa-map-pin',
       action:() => { navigate('/correspondants'); setMobileOpen(false); } },
-    { key: 'offres', label:'Offres', icon:'fa-tag',
-      action:() => { setActiveNav('offres'); onToast('🏷️ Offres'); setMobileOpen(false); } },
+    { key: 'offres', label:t('publicHeader.nav.offres'), icon:'fa-tag',
+      action:() => { navigate('/offres'); setMobileOpen(false); } },
   ];
 
   function isNavActive(l: { key: NavKey }): boolean {
@@ -204,7 +208,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
 
             {/* Logo */}
             <button className={styles.logo}
-              onClick={() => navigate(isLoggedIn ? '/home' : '/')} title="Accueil Shopi">
+              onClick={() => navigate(isLoggedIn ? '/home' : '/')} title={t('publicHeader.accueilTitle')}>
               <div className={styles.lm}>Sh</div>
               <div className={styles.lw}>Sho<b>pi</b></div>
             </button>
@@ -223,27 +227,27 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
             {/* Recherche */}
             <div className={`${styles.srch} ${searchFocus ? styles.srchFocus : ''}`}>
               <div className={styles.srchBox}>
-                <span className={styles.srchCat}><i className="fas fa-th-large" /> Tout</span>
+                <span className={styles.srchCat}><i className="fas fa-th-large" /> {t('publicHeader.searchAll')}</span>
                 <input className={styles.srchIn} type="text"
-                  placeholder="Produits, boutiques, livreurs…" autoComplete="off"
+                  placeholder={t('publicHeader.searchPlaceholder')} autoComplete="off"
                   onFocus={() => setSearchFocus(true)}
                   onBlur={() => setTimeout(() => setSearchFocus(false), 200)}
                 />
-                <button className={styles.srchGo} aria-label="Rechercher">
+                <button className={styles.srchGo} aria-label={t('publicHeader.searchAria')}>
                   <i className="fas fa-magnifying-glass" />
                 </button>
               </div>
               {searchFocus && (
                 <div className={styles.srchSugg}>
                   {[
-                    { icon:'fa-arrow-trend-up', text:'Tendances du moment'              },
-                    { icon:'fa-mobile-screen',  text:'Smartphones — 4 200 résultats'   },
-                    { icon:'fa-store',          text:'Boutiques populaires'             },
-                    { icon:'fa-motorcycle',     text:'Livreurs disponibles près de vous'},
-                    { icon:'fa-tag',            text:'Offres du jour'                   },
+                    { icon:'fa-arrow-trend-up', text:t('publicHeader.searchSuggestions.tendances')          },
+                    { icon:'fa-mobile-screen',  text:t('publicHeader.searchSuggestions.smartphones')        },
+                    { icon:'fa-store',          text:t('publicHeader.searchSuggestions.boutiquesPopulaires')},
+                    { icon:'fa-motorcycle',     text:t('publicHeader.searchSuggestions.livreursDispo')      },
+                    { icon:'fa-tag',            text:t('publicHeader.searchSuggestions.offresDuJour')       },
                   ].map((s, i) => (
                     <div key={i} className={styles.ssIt}
-                      onClick={() => { onToast(`🔍 ${s.text}`); setSearchFocus(false); }}>
+                      onClick={() => { onToast(t('publicHeader.searchToast', { text: s.text })); setSearchFocus(false); }}>
                       <i className={`fas ${s.icon}`} />{s.text}
                     </div>
                   ))}
@@ -254,12 +258,12 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
             {/* Actions Desktop */}
             <div className={styles.actions}>
               <button className={`${styles.iconBtn} ${isHome ? styles.iconBtnActive : ''}`}
-                onClick={() => navigate(isLoggedIn ? '/home' : '/')} title="Accueil">
+                onClick={() => navigate(isLoggedIn ? '/home' : '/')} title={t('publicHeader.accueil')}>
                 <i className="fas fa-house" />
               </button>
 
               <button className={`${styles.iconBtn} ${isMessagerie ? styles.iconBtnActive : ''}`}
-                onClick={() => isLoggedIn ? navigate('/messagerie') : openAuthModal()} title="Messagerie">
+                onClick={() => isLoggedIn ? navigate('/messagerie') : openAuthModal()} title={t('publicHeader.messagerie')}>
                 <i className="fas fa-comment-dots" />
                 {canMessage && msgUnread > 0 && !isMessagerie && (
                   <span className={styles.badge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
@@ -269,7 +273,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
               {isLoggedIn && <NotificationCenter />}
 
               <button className={`${styles.iconBtn} ${isCommande ? styles.iconBtnActive : ''}`}
-                onClick={() => clientAction(() => navigate('/commande'))} title="Panier">
+                onClick={() => clientAction(() => navigate('/commande'))} title={t('publicHeader.panier')}>
                 <i className="fas fa-bag-shopping" />
                 {isClient && cartCount > 0 && (
                   <span className={styles.badge}>{cartCount > 99 ? '99+' : cartCount}</span>
@@ -279,7 +283,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
               <span className={styles.sep} />
 
               <button className={`${styles.iconBtn} ${isAide ? styles.iconBtnActive : ''}`}
-                onClick={() => navigate('/aide')} title="Centre d'aide">
+                onClick={() => navigate('/aide')} title={t('publicHeader.aide')}>
                 <i className="fas fa-circle-question" />
               </button>
               <span className={styles.sep} />
@@ -287,17 +291,17 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
               {isAnonymous && (
                 <>
                   <button className={styles.btnIn} onClick={handleLoginClick}>
-                    <i className="fas fa-right-to-bracket" /> Connexion
+                    <i className="fas fa-right-to-bracket" /> {t('publicHeader.connexion')}
                   </button>
                   <button className={styles.btnUp} onClick={onRegister}>
-                    S'inscrire <i className="fas fa-arrow-right" />
+                    {t('publicHeader.inscription')} <i className="fas fa-arrow-right" />
                   </button>
                 </>
               )}
 
               {isClient && (
                 <div ref={avatarRefDesktop} style={{ position:'relative' }}>
-                  <button className={styles.avatar} onClick={() => setAvatarOpen(o => !o)} title="Mon compte">
+                  <button className={styles.avatar} onClick={() => setAvatarOpen(o => !o)} title={t('publicHeader.monCompte')}>
                     {avatarUrl
                       ? <img src={avatarUrl} alt="profil" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
                       : userInitial}
@@ -307,16 +311,16 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
                       {/* ✅ Mon profil → /mon-profil */}
                       <button onClick={() => { navigate('/mon-profil'); setAvatarOpen(false); }}
                         style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer', textAlign:'left' }}>
-                        <i className="fas fa-user" style={{ color:'var(--blue)', width:14 }} /> Mon profil
+                        <i className="fas fa-user" style={{ color:'var(--blue)', width:14 }} /> {t('publicHeader.monProfil')}
                       </button>
                       <button onClick={() => { navigate(getDashboardPath(role)); setAvatarOpen(false); }}
                         style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer', textAlign:'left' }}>
-                        <i className="fas fa-layer-group" style={{ color:'var(--blue)', width:14 }} /> Mon espace
+                        <i className="fas fa-layer-group" style={{ color:'var(--blue)', width:14 }} /> {t('publicHeader.monEspace')}
                       </button>
                       <div style={{ height:1, background:'var(--bdr)', margin:'4px 0' }} />
                       <button onClick={handleLogout}
                         style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--red,#DC2626)', cursor:'pointer', textAlign:'left' }}>
-                        <i className="fas fa-right-from-bracket" style={{ width:14 }} /> Se déconnecter
+                        <i className="fas fa-right-from-bracket" style={{ width:14 }} /> {t('publicHeader.seDeconnecter')}
                       </button>
                     </div>
                   )}
@@ -325,8 +329,8 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
 
               {isNonClient && (
                 <button className={styles.btnUp}
-                  onClick={() => navigate(getDashboardPath(role))} title="Mon espace professionnel">
-                  <i className="fas fa-layer-group" /> Mon espace
+                  onClick={() => navigate(getDashboardPath(role))} title={t('publicHeader.monEspacePro')}>
+                  <i className="fas fa-layer-group" /> {t('publicHeader.monEspace')}
                 </button>
               )}
 
@@ -334,20 +338,20 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
 
               {/* ✅ Menu trois lignes — aussi visible en grand écran */}
               <button className={styles.iconBtn} data-mobile-menu
-                onClick={() => setMobileOpen(o => !o)} aria-label="Menu" title="Menu">
+                onClick={() => setMobileOpen(o => !o)} aria-label={t('publicHeader.menu')} title={t('publicHeader.menu')}>
                 <i className={`fas ${mobileOpen ? 'fa-xmark' : 'fa-bars'}`} />
               </button>
             </div>
 
             {/* Actions Mobile Top Bar */}
             <div className={styles.mobileTopActions}>
-              <button className={styles.iconBtn} onClick={() => setMobileSearch(s => !s)} title="Rechercher">
+              <button className={styles.iconBtn} onClick={() => setMobileSearch(s => !s)} title={t('publicHeader.searchAria')}>
                 <i className={`fas ${mobileSearch ? 'fa-xmark' : 'fa-magnifying-glass'}`} />
               </button>
 
               {/* ✅ Messagerie — ajouté en mobile */}
               <button className={`${styles.iconBtn} ${isMessagerie ? styles.iconBtnActive : ''}`}
-                onClick={() => isLoggedIn ? navigate('/messagerie') : openAuthModal()} title="Messagerie">
+                onClick={() => isLoggedIn ? navigate('/messagerie') : openAuthModal()} title={t('publicHeader.messagerie')}>
                 <i className="fas fa-comment-dots" />
                 {canMessage && msgUnread > 0 && !isMessagerie && (
                   <span className={styles.badge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
@@ -356,22 +360,22 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
 
               {isLoggedIn && <NotificationCenter />}
               <button className={styles.iconBtn}
-                onClick={() => clientAction(() => navigate('/parametres'))} title="Paramètres">
+                onClick={() => clientAction(() => navigate('/parametres'))} title={t('publicHeader.parametres')}>
                 <i className="fas fa-gear" />
               </button>
               <button className={styles.iconBtn} data-mobile-menu
-                onClick={() => setMobileOpen(o => !o)} aria-label="Menu">
+                onClick={() => setMobileOpen(o => !o)} aria-label={t('publicHeader.menu')}>
                 <i className={`fas ${mobileOpen ? 'fa-xmark' : 'fa-bars'}`} />
               </button>
 
               {isAnonymous && (
-                <button className={styles.avatar} onClick={handleLoginClick} title="Connexion" style={{ fontSize:11, fontWeight:700 }}>
+                <button className={styles.avatar} onClick={handleLoginClick} title={t('publicHeader.connexion')} style={{ fontSize:11, fontWeight:700 }}>
                   <i className="fas fa-right-to-bracket" />
                 </button>
               )}
               {isClient && (
                 <div ref={avatarRefMobile} style={{ position:'relative' }}>
-                  <button className={styles.avatar} onClick={() => setAvatarOpen(o => !o)} title="Mon compte">
+                  <button className={styles.avatar} onClick={() => setAvatarOpen(o => !o)} title={t('publicHeader.monCompte')}>
                     {avatarUrl
                       ? <img src={avatarUrl} alt="profil" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
                       : userInitial}
@@ -381,16 +385,16 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
                       {/* ✅ Mon profil → /mon-profil (mobile) */}
                       <button onClick={() => { navigate('/mon-profil'); setAvatarOpen(false); }}
                         style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer' }}>
-                        <i className="fas fa-user" style={{ color:'var(--blue)', width:14 }} /> Mon profil
+                        <i className="fas fa-user" style={{ color:'var(--blue)', width:14 }} /> {t('publicHeader.monProfil')}
                       </button>
                       <button onClick={() => { navigate(getDashboardPath(role)); setAvatarOpen(false); }}
                         style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer' }}>
-                        <i className="fas fa-layer-group" style={{ color:'var(--blue)', width:14 }} /> Mon espace
+                        <i className="fas fa-layer-group" style={{ color:'var(--blue)', width:14 }} /> {t('publicHeader.monEspace')}
                       </button>
                       <div style={{ height:1, background:'var(--bdr)', margin:'4px 0' }} />
                       <button onClick={handleLogout}
                         style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--red,#DC2626)', cursor:'pointer' }}>
-                        <i className="fas fa-right-from-bracket" style={{ width:14 }} /> Déconnexion
+                        <i className="fas fa-right-from-bracket" style={{ width:14 }} /> {t('publicHeader.deconnexion')}
                       </button>
                     </div>
                   )}
@@ -399,7 +403,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
               {isNonClient && (
                 <button className={styles.avatar}
                   onClick={() => navigate(getDashboardPath(role))}
-                  title="Mon espace" style={{ fontSize:11 }}>
+                  title={t('publicHeader.monEspace')} style={{ fontSize:11 }}>
                   <i className="fas fa-layer-group" />
                 </button>
               )}
@@ -410,9 +414,9 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
             <div className={styles.mobileSearchBar}>
               <div className={styles.srchBox} style={{ borderRadius:12 }}>
                 <input className={styles.srchIn} type="text"
-                  placeholder="Produits, boutiques, livreurs…"
+                  placeholder={t('publicHeader.searchPlaceholder')}
                   autoComplete="off" autoFocus />
-                <button className={styles.srchGo} aria-label="Rechercher">
+                <button className={styles.srchGo} aria-label={t('publicHeader.searchAria')}>
                   <i className="fas fa-magnifying-glass" />
                 </button>
               </div>
@@ -433,6 +437,14 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
                 <i className="fas fa-xmark" />
               </button>
             </div>
+
+            {/* ✅ Solde du portefeuille Shopi — toujours visible en ouvrant le menu */}
+            {isClient && (
+              <div style={{ padding: '14px 16px 0' }}>
+                <WalletQuickBar compact mini onManage={() => { setMobileOpen(false); navigate('/dashboard/client'); }} />
+              </div>
+            )}
+
             <nav className={styles.drawerNav}>
               {NAV_LINKS.map(l => (
                 <button key={l.label}
@@ -450,7 +462,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
               <button className={styles.drawerLink}
                 onClick={() => { setMobileOpen(false); clientAction(() => navigate('/parametres')); }}>
                 <div className={styles.drawerLinkIco}><i className="fas fa-gear" /></div>
-                <span>Paramètres</span>
+                <span>{t('publicHeader.parametres')}</span>
                 <i className="fas fa-chevron-right" style={{ color:'var(--t4)', fontSize:11 }} />
               </button>
 
@@ -460,7 +472,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
                 <div className={styles.drawerLinkIco}>
                   <i className={`fas ${inDashboard ? 'fa-house' : 'fa-layer-group'}`} />
                 </div>
-                <span>{inDashboard ? "Retour à l'accueil" : 'Mon espace'}</span>
+                <span>{inDashboard ? t('publicHeader.retourAccueil') : t('publicHeader.monEspace')}</span>
                 <i className="fas fa-chevron-right" style={{ color:'var(--t4)', fontSize:11 }} />
               </button>
             </nav>
@@ -469,25 +481,25 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
               {isAnonymous ? (
                 <>
                   <button className={styles.drawerBtnIn} onClick={() => { setMobileOpen(false); handleLoginClick(); }}>
-                    <i className="fas fa-right-to-bracket" /> Connexion
+                    <i className="fas fa-right-to-bracket" /> {t('publicHeader.connexion')}
                   </button>
                   <button className={styles.drawerBtnUp} onClick={() => { onRegister(); setMobileOpen(false); }}>
-                    S'inscrire <i className="fas fa-arrow-right" />
+                    {t('publicHeader.inscription')} <i className="fas fa-arrow-right" />
                   </button>
                 </>
               ) : isNonClient ? (
                 <>
                   <button className={styles.drawerBtnUp}
                     onClick={() => { navigate(getDashboardPath(role)); setMobileOpen(false); }}>
-                    <i className="fas fa-layer-group" /> Mon espace pro
+                    <i className="fas fa-layer-group" /> {t('publicHeader.monEspaceProShort')}
                   </button>
                   <button className={styles.drawerBtnIn} onClick={handleLogout}>
-                    <i className="fas fa-right-from-bracket" /> Déconnexion
+                    <i className="fas fa-right-from-bracket" /> {t('publicHeader.deconnexion')}
                   </button>
                 </>
               ) : (
                 <button className={styles.drawerBtnIn} onClick={handleLogout}>
-                  <i className="fas fa-right-from-bracket" /> Se déconnecter
+                  <i className="fas fa-right-from-bracket" /> {t('publicHeader.seDeconnecter')}
                 </button>
               )}
             </div>
@@ -496,42 +508,42 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
       )}
 
       {/* ✅ Bottom Nav Mobile — états actifs sur /livreurs, /correspondants, /boutiques */}
-      <nav className={styles.bottomNav} aria-label="Navigation principale mobile">
+      <nav className={styles.bottomNav} aria-label={t('publicHeader.navMobileAria')}>
 
         {/* Accueil */}
         <button
           className={`${styles.bnItem} ${isHome ? styles.bnActive : ''}`}
           onClick={() => navigate(isLoggedIn ? '/home' : '/')}
-          title="Accueil"
+          title={t('publicHeader.accueil')}
         >
-          <i className="fas fa-house" /><span>Accueil</span>
+          <i className="fas fa-house" /><span>{t('publicHeader.accueil')}</span>
         </button>
 
         {/* ✅ Boutiques — actif sur /boutiques */}
         <button
           className={`${styles.bnItem} ${isBoutiques ? styles.bnActive : ''}`}
           onClick={() => navigate('/boutiques')}
-          title="Boutiques"
+          title={t('publicHeader.nav.boutiques')}
         >
-          <i className="fas fa-store" /><span>Boutiques</span>
+          <i className="fas fa-store" /><span>{t('publicHeader.nav.boutiques')}</span>
         </button>
 
         {/* ✅ Livreurs — actif sur /livreurs */}
         <button
           className={`${styles.bnItem} ${isLivreurs ? styles.bnActive : ''}`}
           onClick={() => navigate('/livreurs')}
-          title="Livreurs"
+          title={t('publicHeader.nav.livreurs')}
         >
-          <i className="fas fa-motorcycle" /><span>Livreurs</span>
+          <i className="fas fa-motorcycle" /><span>{t('publicHeader.nav.livreurs')}</span>
         </button>
 
         {/* Panier — badge dynamique CartContext */}
         <button
           className={styles.bnItem}
           onClick={() => clientAction(() => navigate('/commande'))}
-          title="Panier"
+          title={t('publicHeader.panier')}
         >
-          <i className="fas fa-bag-shopping" /><span>Panier</span>
+          <i className="fas fa-bag-shopping" /><span>{t('publicHeader.panier')}</span>
           {isClient && cartCount > 0 && (
             <span className={styles.bnBadge}>{cartCount > 99 ? '99+' : cartCount}</span>
           )}
@@ -541,12 +553,12 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
         <button
           className={`${styles.bnItem} ${styles.bnSwitcher}`}
           onClick={handleSwitchDashboard}
-          title={inDashboard ? "Retour à l'accueil" : 'Mon espace'}
+          title={inDashboard ? t('publicHeader.retourAccueil') : t('publicHeader.monEspace')}
         >
           <div className={styles.bnSwitcherIco}>
             <i className={`fas ${inDashboard ? 'fa-house' : 'fa-layer-group'}`} />
           </div>
-          <span>{inDashboard ? 'Accueil' : 'Mon espace'}</span>
+          <span>{inDashboard ? t('publicHeader.accueil') : t('publicHeader.monEspace')}</span>
         </button>
 
       </nav>
@@ -557,7 +569,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
         open={loginGateOpen}
         onClose={() => setLoginGateOpen(false)}
         variant="anonymous"
-        title="Avant de vous connecter…"
+        title={t('publicHeader.avantDeVousConnecter')}
         onLoginClick={onLogin}
         onRegisterClick={onRegister}
       />

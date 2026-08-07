@@ -5,8 +5,9 @@
  * Toutes les données proviennent de l'API (GET /client/correspondants/:id).
  * ================================================================ */
 
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useStartConversation } from '../../../hooks/useStartConversation';
 import { useProfileCall } from '../../../hooks/useProfileCall';
 import { useAuthGate } from '../../../hooks/useAuthGate';
@@ -30,6 +31,7 @@ import styles from '../styles/ProfilCorrespondant.module.css';
 export default function ProfilCorrespondantPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const { openAuthModal, authModal } = useAuthGate();
 
@@ -49,28 +51,28 @@ export default function ProfilCorrespondantPage() {
   const { call: callProfile, loading: callLoading } = useProfileCall();
   const onMessage = useCallback(() => {
     if (!suivi) {
-      onToast('Abonnez-vous à ce correspondant pour lui envoyer un message.');
+      onToast(t('profilCorrespondant.publicPage.abonnezVousMessage'));
       return;
     }
-    startConv('correspondent', id!, (msg: string) => onToast(`❌ ${msg}`));
-  }, [suivi, startConv, id, onToast]);
+    startConv('correspondent', id!, (msg: string) => onToast(t('profilCorrespondant.publicPage.erreurToast', { msg })));
+  }, [suivi, startConv, id, onToast, t]);
 
   const onCall = useCallback(() => {
     if (!suivi) {
-      onToast('Abonnez-vous à ce correspondant pour l\'appeler.');
+      onToast(t('profilCorrespondant.publicPage.abonnezVousAppel'));
       return;
     }
-    callProfile('correspondent', id!, profil?.nom ?? 'Correspondant', null, (msg: string) => onToast(`❌ ${msg}`));
-  }, [suivi, callProfile, id, profil, onToast]);
+    callProfile('correspondent', id!, profil?.nom ?? 'Correspondant', null, (msg: string) => onToast(t('profilCorrespondant.publicPage.erreurToast', { msg })));
+  }, [suivi, callProfile, id, profil, onToast, t]);
 
-  const onShare = useCallback(() => onToast('🔗 Lien du profil copié'), [onToast]);
+  const onShare = useCallback(() => onToast(t('profilCorrespondant.publicPage.lienCopieToast')), [onToast, t]);
 
   const handleToggle = useCallback(() => {
     toggleSuivi();
     if (profil) {
-      onToast(suivi ? `👋 Désabonné de ${profil.nom}` : `✅ Abonné à ${profil.nom}`);
+      onToast(suivi ? t('profilCorrespondant.publicPage.desabonneToast', { nom: profil.nom }) : t('profilCorrespondant.publicPage.abonneToast', { nom: profil.nom }));
     }
-  }, [toggleSuivi, suivi, profil, onToast]);
+  }, [toggleSuivi, suivi, profil, onToast, t]);
 
   const header = (
     <Header
@@ -86,7 +88,7 @@ export default function ProfilCorrespondantPage() {
       <>
         {header}
         <div className={styles.page}>
-          <div className={styles.state}><i className="fas fa-spinner fa-spin" /> Chargement du profil…</div>
+          <div className={styles.state}><i className="fas fa-spinner fa-spin" /> {t('profilCorrespondant.loading')}</div>
         </div>
         {authModal}
       </>
@@ -101,14 +103,14 @@ export default function ProfilCorrespondantPage() {
         <div className={styles.page}>
           <div className={styles.state}>
             <i className="fas fa-triangle-exclamation" style={{ color: '#B45309' }} />
-            <div style={{ marginTop: 12, fontWeight: 700, fontSize: 16 }}>Profil introuvable</div>
+            <div style={{ marginTop: 12, fontWeight: 700, fontSize: 16 }}>{t('profilCorrespondant.notFoundTitle')}</div>
             <div style={{ fontSize: 13, color: 'var(--text-muted, #6B7280)', marginTop: 6, maxWidth: 320, textAlign: 'center' }}>
-              {error ?? "Ce correspondant n'existe pas ou n'est plus disponible."}
+              {error ?? t('profilCorrespondant.notFoundFallback')}
             </div>
             <button
               onClick={() => navigate(-1)}
               style={{ marginTop: 20, background: 'var(--teal, #0E7490)', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-              <i className="fas fa-arrow-left" /> Retour
+              <i className="fas fa-arrow-left" /> {t('profilCorrespondant.retour')}
             </button>
           </div>
         </div>
@@ -163,10 +165,10 @@ export default function ProfilCorrespondantPage() {
         {/* Barre d'action mobile fixe */}
         <div className={styles.actionBar}>
           <button className={styles.abMsg} onClick={onMessage}>
-            <i className="fas fa-comment-dots" /> Contacter
+            <i className="fas fa-comment-dots" /> {t('profilCorrespondant.contacter')}
           </button>
           <button className={styles.abFollow} onClick={handleToggle}>
-            {suivi ? <><i className="fas fa-user-check" /> Abonné</> : <><i className="fas fa-plus" /> Suivre</>}
+            {suivi ? <><i className="fas fa-user-check" /> {t('profilCorrespondant.abonne')}</> : <><i className="fas fa-plus" /> {t('profilCorrespondant.suivre')}</>}
           </button>
         </div>
       </div>

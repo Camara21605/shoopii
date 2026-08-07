@@ -3,7 +3,8 @@
  * Section 3 — Horaires d'ouverture par jour de la semaine
  * PATCH /dashboard/entreprise/parametres/horaires
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData, HoraireJour } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
@@ -17,10 +18,6 @@ interface Props {
 }
 
 const JOURS = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
-const JOURS_FR: Record<string, string> = {
-  lundi:'Lundi', mardi:'Mardi', mercredi:'Mercredi', jeudi:'Jeudi',
-  vendredi:'Vendredi', samedi:'Samedi', dimanche:'Dimanche',
-};
 
 /* Horaires par défaut si la BDD n'en a pas encore */
 function defaultHoraires(): HoraireJour[] {
@@ -34,6 +31,13 @@ function defaultHoraires(): HoraireJour[] {
 }
 
 export default function HorairesSection({ data, saving, onDirty, onToast, saveHoraires }: Props) {
+  const { t } = useTranslation();
+  const JOURS_FR: Record<string, string> = {
+    lundi: t('parametres.horaires.jours.lundi'), mardi: t('parametres.horaires.jours.mardi'),
+    mercredi: t('parametres.horaires.jours.mercredi'), jeudi: t('parametres.horaires.jours.jeudi'),
+    vendredi: t('parametres.horaires.jours.vendredi'), samedi: t('parametres.horaires.jours.samedi'),
+    dimanche: t('parametres.horaires.jours.dimanche'),
+  };
   const [horaires, setHoraires] = useState<HoraireJour[]>(defaultHoraires());
 
   /* Pré-remplir depuis les données API */
@@ -55,20 +59,20 @@ export default function HorairesSection({ data, saving, onDirty, onToast, saveHo
   async function handleSave() {
     try {
       await saveHoraires(horaires);
-      onToast('✅ Horaires sauvegardés', 's');
+      onToast(t('parametres.horaires.savedToast'), 's');
     } catch {
-      onToast('❌ Erreur lors de la sauvegarde', 'e');
+      onToast(t('parametres.horaires.errorToast'), 'e');
     }
   }
 
   return (
     <>
       <div className={s.sectionHd}>
-        <h1><i className="fas fa-clock" /> Horaires d'ouverture</h1>
-        <p>Définissez vos jours et heures d'ouverture. Ces informations sont affichées sur votre page boutique.</p>
+        <h1><i className="fas fa-clock" /> {t('parametres.horaires.title')}</h1>
+        <p>{t('parametres.horaires.subtitle')}</p>
       </div>
 
-      <FormCard title="Horaires par jour" icon="fa-calendar-week" subtitle="Activez les jours d'ouverture et définissez les horaires">
+      <FormCard title={t('parametres.horaires.cardTitle')} icon="fa-calendar-week" subtitle={t('parametres.horaires.cardSubtitle')}>
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           {horaires.map(h => (
             <div key={h.jour} style={{
@@ -120,7 +124,7 @@ export default function HorairesSection({ data, saving, onDirty, onToast, saveHo
                   />
                 </div>
               ) : (
-                <span style={{ fontSize:12, color:'var(--t4)', fontStyle:'italic' }}>Fermé ce jour</span>
+                <span style={{ fontSize:12, color:'var(--t4)', fontStyle:'italic' }}>{t('parametres.horaires.fermeCeJour')}</span>
               )}
             </div>
           ))}
@@ -128,7 +132,7 @@ export default function HorairesSection({ data, saving, onDirty, onToast, saveHo
 
         <div className={s.saveRow} style={{ marginTop:20 }}>
           <button className={s.saveBtn} onClick={handleSave} disabled={saving}>
-            {saving ? <><i className="fas fa-spinner fa-spin" /> Sauvegarde…</> : <><i className="fas fa-cloud-arrow-up" /> Sauvegarder les horaires</>}
+            {saving ? <><i className="fas fa-spinner fa-spin" /> {t('parametres.horaires.sauvegardeEnCours')}</> : <><i className="fas fa-cloud-arrow-up" /> {t('parametres.horaires.sauvegarderHoraires')}</>}
           </button>
         </div>
       </FormCard>

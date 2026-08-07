@@ -2,21 +2,11 @@
  * RetourDetailModal.tsx — Modale détail complet d'un retour.
  * Affiche : infos, historique timeline, photos, notes, actions.
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useRetourDetail } from '../../hooks/useRetours';
 import type { ReturnStatus } from '../../hooks/useRetours';
 import s from './RetoursPage.module.css';
-
-const STATUS_LABELS: Record<ReturnStatus, { label: string; cls: string }> = {
-  pending:    { label: '⏳ En attente',  cls: s.pillPending  },
-  accepted:   { label: '✓ Accepté',     cls: s.pillAccepted },
-  refused:    { label: '✕ Refusé',      cls: s.pillRefused  },
-  in_transit: { label: '🚚 En transit', cls: s.pillTransit  },
-  received:   { label: '📦 Reçu',       cls: s.pillReceived },
-  refunded:   { label: '💸 Remboursé',  cls: s.pillRefunded },
-  exchanged:  { label: '🔁 Échangé',    cls: s.pillExchanged},
-  closed:     { label: 'Fermé',          cls: s.pillClosed   },
-};
 
 const ACTION_ICONS: Record<string, { ico: string; color: string; bg: string }> = {
   created:          { ico: 'fa-plus', color: 'var(--t2)', bg: 'var(--g100)' },
@@ -28,17 +18,6 @@ const ACTION_ICONS: Record<string, { ico: string; color: string; bg: string }> =
   evidence_uploaded:{ ico: 'fa-image', color: 'var(--violet)', bg: 'var(--vl-bg)' },
   priority_changed: { ico: 'fa-flag', color: 'var(--amber)', bg: 'var(--am-bg)' },
   default:          { ico: 'fa-circle-dot', color: 'var(--t2)', bg: 'var(--g100)' },
-};
-
-const ACTION_LABELS: Record<string, string> = {
-  created:           'Demande de retour créée',
-  accepted:          'Retour accepté',
-  refused:           'Retour refusé',
-  refunded:          'Remboursement effectué',
-  received:          'Retour reçu',
-  note_added:        'Note interne ajoutée',
-  evidence_uploaded: 'Preuve ajoutée',
-  priority_changed:  'Priorité modifiée',
 };
 
 function fmt(n: number)  { return n.toLocaleString('fr-FR'); }
@@ -57,9 +36,32 @@ interface Props {
 export default function RetourDetailModal({
   returnId, onClose, onAccept, onRefuse, onRefund, onAddNote, onPop,
 }: Props) {
+  const { t } = useTranslation();
   const { detail, loading, error, reload } = useRetourDetail(returnId);
   const [activeTab, setActiveTab] = useState<'info' | 'history' | 'evidence'>('info');
   const [saving, setSaving]       = useState(false);
+
+  const STATUS_LABELS: Record<ReturnStatus, { label: string; cls: string }> = {
+    pending:    { label: t('retours.list.status.pending'),    cls: s.pillPending  },
+    accepted:   { label: t('retours.list.status.accepted'),   cls: s.pillAccepted },
+    refused:    { label: t('retours.list.status.refused'),    cls: s.pillRefused  },
+    in_transit: { label: t('retours.list.status.in_transit'), cls: s.pillTransit  },
+    received:   { label: t('retours.list.status.received'),   cls: s.pillReceived },
+    refunded:   { label: t('retours.list.status.refunded'),   cls: s.pillRefunded },
+    exchanged:  { label: t('retours.list.status.exchanged'),  cls: s.pillExchanged},
+    closed:     { label: t('retours.list.status.closed'),     cls: s.pillClosed   },
+  };
+
+  const ACTION_LABELS: Record<string, string> = {
+    created:           t('retours.detail.actions.created'),
+    accepted:          t('retours.detail.actions.accepted'),
+    refused:           t('retours.detail.actions.refused'),
+    refunded:          t('retours.detail.actions.refunded'),
+    received:          t('retours.detail.actions.received'),
+    note_added:        t('retours.detail.actions.note_added'),
+    evidence_uploaded: t('retours.detail.actions.evidence_uploaded'),
+    priority_changed:  t('retours.detail.actions.priority_changed'),
+  };
 
   /* ── Formulaires d'action ── */
   const [acceptMontant, setAcceptMontant] = useState('');
@@ -86,7 +88,7 @@ export default function RetourDetailModal({
 
   const handleAccept = async () => {
     const montant = parseInt(acceptMontant) || 0;
-    if (montant <= 0) { onPop('⚠️ Montant invalide', 'w'); return; }
+    if (montant <= 0) { onPop(t('retours.detail.invalidAmount'), 'w'); return; }
     setSaving(true);
     try {
       await onAccept(returnId, montant, acceptNote || undefined);
@@ -111,7 +113,7 @@ export default function RetourDetailModal({
   };
 
   const handleRefund = async () => {
-    if (!window.confirm('Confirmer le remboursement ?')) return;
+    if (!window.confirm(t('retours.detail.confirmRefund'))) return;
     setSaving(true);
     try { await onRefund(returnId, undefined); }
     finally { setSaving(false); }
@@ -145,21 +147,21 @@ export default function RetourDetailModal({
 
         {/* ── Onglets ── */}
         <div style={{ display: 'flex', gap: 4, padding: '0 22px', borderBottom: '1px solid var(--bdr)', background: 'var(--g50)' }}>
-          {(['info', 'history', 'evidence'] as const).map(t => (
+          {(['info', 'history', 'evidence'] as const).map(tabKey => (
             <button
-              key={t}
-              onClick={() => setActiveTab(t)}
+              key={tabKey}
+              onClick={() => setActiveTab(tabKey)}
               style={{
                 padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer',
                 fontSize: 12.5, fontWeight: 700,
-                color: activeTab === t ? 'var(--t2)' : 'var(--t3)',
-                borderBottom: `2px solid ${activeTab === t ? 'var(--t2)' : 'transparent'}`,
+                color: activeTab === tabKey ? 'var(--t2)' : 'var(--t3)',
+                borderBottom: `2px solid ${activeTab === tabKey ? 'var(--t2)' : 'transparent'}`,
                 marginBottom: -1,
               }}
             >
-              {t === 'info' && <><i className="fas fa-circle-info" /> Détails</>}
-              {t === 'history' && <><i className="fas fa-clock-rotate-left" /> Historique</>}
-              {t === 'evidence' && <><i className="fas fa-images" /> Preuves {detail ? `(${detail.evidences.length})` : ''}</>}
+              {tabKey === 'info' && <><i className="fas fa-circle-info" /> {t('retours.detail.tabInfo')}</>}
+              {tabKey === 'history' && <><i className="fas fa-clock-rotate-left" /> {t('retours.detail.tabHistory')}</>}
+              {tabKey === 'evidence' && <><i className="fas fa-images" /> {t('retours.detail.tabEvidence', { count: detail ? detail.evidences.length : 0 })}</>}
             </button>
           ))}
         </div>
@@ -188,15 +190,15 @@ export default function RetourDetailModal({
                 {/* Produit & commande */}
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>
-                    PRODUIT RETOURNÉ
+                    {t('retours.detail.produitRetourne')}
                   </div>
                   <div style={{ background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 12, padding: 14 }}>
                     <div style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--navy)', marginBottom: 4 }}>{detail.productName}</div>
                     {detail.productVariant && <div style={{ fontSize: 12, color: 'var(--t3)', marginBottom: 4 }}>{detail.productVariant}</div>}
-                    <div style={{ fontSize: 12, color: 'var(--t2)' }}>Qté : <strong>{detail.quantity}</strong></div>
+                    <div style={{ fontSize: 12, color: 'var(--t2)' }}>{t('retours.detail.qte')} <strong>{detail.quantity}</strong></div>
                     {detail.commande && (
                       <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 4 }}>
-                        Commande : <span style={{ fontWeight: 700, color: 'var(--t2)' }}>{detail.commande.numero}</span>
+                        {t('retours.detail.commande')} <span style={{ fontWeight: 700, color: 'var(--t2)' }}>{detail.commande.numero}</span>
                       </div>
                     )}
                   </div>
@@ -205,18 +207,18 @@ export default function RetourDetailModal({
                 {/* Montants */}
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>
-                    MONTANTS
+                    {t('retours.detail.montants')}
                   </div>
                   <div style={{ background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 12, padding: 14 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <span style={{ fontSize: 12, color: 'var(--t2)' }}>Demandé :</span>
+                      <span style={{ fontSize: 12, color: 'var(--t2)' }}>{t('retours.detail.demande')}</span>
                       <span style={{ fontFamily: 'var(--fd,"Fraunces",serif)', fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>
                         {fmt(detail.montantDemande)} GNF
                       </span>
                     </div>
                     {detail.montantAccorde !== null && (
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: 12, color: 'var(--t2)' }}>Accordé :</span>
+                        <span style={{ fontSize: 12, color: 'var(--t2)' }}>{t('retours.detail.accorde')}</span>
                         <span style={{ fontFamily: 'var(--fd,"Fraunces",serif)', fontSize: 15, fontWeight: 800, color: 'var(--t2)' }}>
                           {fmt(detail.montantAccorde)} GNF
                         </span>
@@ -228,7 +230,7 @@ export default function RetourDetailModal({
                 {/* Description */}
                 <div style={{ gridColumn: '1 / -1' }}>
                   <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>
-                    DESCRIPTION DU PROBLÈME
+                    {t('retours.detail.descriptionProbleme')}
                   </div>
                   <div style={{ background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 12, padding: 14, fontSize: 13, color: 'var(--t1)', lineHeight: 1.6 }}>
                     {detail.description}
@@ -239,7 +241,7 @@ export default function RetourDetailModal({
                 {detail.noteInterne && (
                   <div style={{ gridColumn: '1 / -1' }}>
                     <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--t2)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>
-                      <i className="fas fa-note-sticky" /> NOTE INTERNE
+                      <i className="fas fa-note-sticky" /> {t('retours.detail.noteInterne')}
                     </div>
                     <div style={{ background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 12, padding: 14, fontSize: 12.5, color: 'var(--t2)', lineHeight: 1.6 }}>
                       {detail.noteInterne}
@@ -251,7 +253,7 @@ export default function RetourDetailModal({
                 {detail.noteClient && (
                   <div style={{ gridColumn: '1 / -1' }}>
                     <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--t2)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>
-                      <i className="fas fa-message" /> MESSAGE CLIENT
+                      <i className="fas fa-message" /> {t('retours.detail.messageClient')}
                     </div>
                     <div style={{ background: 'var(--sky)', border: '1px solid var(--sky-3)', borderRadius: 12, padding: 14, fontSize: 12.5, color: 'var(--navy)', lineHeight: 1.6 }}>
                       {detail.noteClient}
@@ -263,10 +265,10 @@ export default function RetourDetailModal({
                 {showAccept && (
                   <div style={{ gridColumn: '1 / -1', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 12, padding: 16 }}>
                     <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--t2)', marginBottom: 12 }}>
-                      <i className="fas fa-check-circle" /> Accepter le retour
+                      <i className="fas fa-check-circle" /> {t('retours.detail.accept.title')}
                     </div>
                     <div className={s.field} style={{ marginBottom: 10 }}>
-                      <label className={s.label}>Montant accordé (GNF)</label>
+                      <label className={s.label}>{t('retours.detail.accept.montant')}</label>
                       <input
                         type="number" className={s.input}
                         value={acceptMontant}
@@ -275,21 +277,21 @@ export default function RetourDetailModal({
                       />
                     </div>
                     <div className={s.field} style={{ marginBottom: 12 }}>
-                      <label className={s.label}>Message au client (optionnel)</label>
+                      <label className={s.label}>{t('retours.detail.accept.message')}</label>
                       <textarea
                         className={s.textarea}
                         value={acceptNote}
                         onChange={e => setAcceptNote(e.target.value)}
-                        placeholder="Ex : Votre retour a été accepté. Le remboursement sera effectué sous 3-5 jours."
+                        placeholder={t('retours.detail.accept.placeholder')}
                         rows={3}
                       />
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button className={`${s.btn} ${s.btnSuccess}`} onClick={handleAccept} disabled={saving}>
                         {saving ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-check" />}
-                        Confirmer l'acceptation
+                        {t('retours.detail.accept.confirm')}
                       </button>
-                      <button className={`${s.btn} ${s.btnGhost}`} onClick={() => setShowAccept(false)}>Annuler</button>
+                      <button className={`${s.btn} ${s.btnGhost}`} onClick={() => setShowAccept(false)}>{t('retours.detail.accept.annuler')}</button>
                     </div>
                   </div>
                 )}
@@ -297,24 +299,24 @@ export default function RetourDetailModal({
                 {showRefuse && (
                   <div style={{ gridColumn: '1 / -1', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 12, padding: 16 }}>
                     <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--t1)', marginBottom: 12 }}>
-                      <i className="fas fa-xmark-circle" /> Refuser le retour
+                      <i className="fas fa-xmark-circle" /> {t('retours.detail.refuse.title')}
                     </div>
                     <div className={s.field} style={{ marginBottom: 12 }}>
-                      <label className={s.label}>Raison du refus (envoyée au client)</label>
+                      <label className={s.label}>{t('retours.detail.refuse.raison')}</label>
                       <textarea
                         className={s.textarea}
                         value={refuseNote}
                         onChange={e => setRefuseNote(e.target.value)}
-                        placeholder="Ex : Votre demande ne respecte pas la politique de retour (délai dépassé)."
+                        placeholder={t('retours.detail.refuse.placeholder')}
                         rows={3}
                       />
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button className={`${s.btn} ${s.btnDanger}`} onClick={handleRefuse} disabled={saving}>
                         {saving ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-xmark" />}
-                        Confirmer le refus
+                        {t('retours.detail.refuse.confirm')}
                       </button>
-                      <button className={`${s.btn} ${s.btnGhost}`} onClick={() => setShowRefuse(false)}>Annuler</button>
+                      <button className={`${s.btn} ${s.btnGhost}`} onClick={() => setShowRefuse(false)}>{t('retours.detail.refuse.annuler')}</button>
                     </div>
                   </div>
                 )}
@@ -322,23 +324,23 @@ export default function RetourDetailModal({
                 {showNote && (
                   <div style={{ gridColumn: '1 / -1', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 12, padding: 16 }}>
                     <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--t2)', marginBottom: 12 }}>
-                      <i className="fas fa-note-sticky" /> Note interne
+                      <i className="fas fa-note-sticky" /> {t('retours.detail.note.title')}
                     </div>
                     <div className={s.field} style={{ marginBottom: 12 }}>
                       <textarea
                         className={s.textarea}
                         value={noteContent}
                         onChange={e => setNoteContent(e.target.value)}
-                        placeholder="Note visible uniquement par votre équipe…"
+                        placeholder={t('retours.detail.note.placeholder')}
                         rows={3}
                       />
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button className={`${s.btn} ${s.btnPrimary}`} onClick={handleNote} disabled={saving || !noteContent.trim()}>
                         {saving ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-save" />}
-                        Enregistrer
+                        {t('retours.detail.note.save')}
                       </button>
-                      <button className={`${s.btn} ${s.btnGhost}`} onClick={() => setShowNote(false)}>Annuler</button>
+                      <button className={`${s.btn} ${s.btnGhost}`} onClick={() => setShowNote(false)}>{t('retours.detail.note.annuler')}</button>
                     </div>
                   </div>
                 )}
@@ -350,8 +352,8 @@ export default function RetourDetailModal({
                 {detail.history.length === 0 ? (
                   <div className={s.empty}>
                     <div className={s.emptyIco}>📋</div>
-                    <div className={s.emptyTitle}>Aucun historique</div>
-                    <div className={s.emptySub}>L'historique des actions apparaîtra ici.</div>
+                    <div className={s.emptyTitle}>{t('retours.detail.historyEmptyTitle')}</div>
+                    <div className={s.emptySub}>{t('retours.detail.historyEmptySub')}</div>
                   </div>
                 ) : detail.history.map((h, i) => {
                   const icon = ACTION_ICONS[h.action] ?? ACTION_ICONS.default;
@@ -387,8 +389,8 @@ export default function RetourDetailModal({
                 {detail.evidences.length === 0 ? (
                   <div className={s.empty}>
                     <div className={s.emptyIco}>🖼️</div>
-                    <div className={s.emptyTitle}>Aucune preuve</div>
-                    <div className={s.emptySub}>Le client n'a pas encore joint de photos ou documents.</div>
+                    <div className={s.emptyTitle}>{t('retours.detail.evidenceEmptyTitle')}</div>
+                    <div className={s.emptySub}>{t('retours.detail.evidenceEmptySub')}</div>
                   </div>
                 ) : (
                   <div className={s.gallery}>
@@ -414,17 +416,17 @@ export default function RetourDetailModal({
           <div className={s.modalFoot}>
             <div style={{ display: 'flex', gap: 8, flex: 1 }}>
               <button className={`${s.btn} ${s.btnGhost}`} style={{ fontSize: 12 }} onClick={() => { setShowNote(true); setShowAccept(false); setShowRefuse(false); }}>
-                <i className="fas fa-note-sticky" /> Note
+                <i className="fas fa-note-sticky" /> {t('retours.detail.footerNote')}
               </button>
             </div>
 
             {detail.status === 'pending' && (
               <>
                 <button className={`${s.btn} ${s.btnDanger}`} onClick={() => { setShowRefuse(true); setShowAccept(false); setShowNote(false); }} disabled={saving}>
-                  <i className="fas fa-xmark" /> Refuser
+                  <i className="fas fa-xmark" /> {t('retours.detail.footerRefuser')}
                 </button>
                 <button className={`${s.btn} ${s.btnSuccess}`} onClick={() => { setShowAccept(true); setShowRefuse(false); setShowNote(false); }} disabled={saving}>
-                  <i className="fas fa-check" /> Accepter
+                  <i className="fas fa-check" /> {t('retours.detail.footerAccepter')}
                 </button>
               </>
             )}
@@ -432,11 +434,11 @@ export default function RetourDetailModal({
             {(detail.status === 'accepted' || detail.status === 'received') && (
               <button className={`${s.btn} ${s.btnPrimary}`} onClick={handleRefund} disabled={saving}>
                 {saving ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-coins" />}
-                Rembourser
+                {t('retours.detail.footerRembourser')}
               </button>
             )}
 
-            <button className={`${s.btn} ${s.btnGhost}`} onClick={onClose}>Fermer</button>
+            <button className={`${s.btn} ${s.btnGhost}`} onClick={onClose}>{t('retours.detail.footerFermer')}</button>
           </div>
         )}
       </div>

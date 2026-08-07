@@ -2,8 +2,8 @@
  * FICHIER : src/modules/home/components/layout/Footer.tsx
  * RÔLE    : Footer de la page d'accueil
  */
-import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import styles from './Footer.module.css';
 
 type FooterLink = { label: string; to?: string };
@@ -11,30 +11,31 @@ type FooterLink = { label: string; to?: string };
 interface FooterProps { onToast: (msg: string) => void; }
 
 export default function Footer({ onToast }: FooterProps) {
+  const { t } = useTranslation();
   const COLS: { titre: string; liens: FooterLink[] }[] = [
-    { titre:'Plateforme', liens:[
-      { label:'Explorer les produits' },
-      { label:'Boutiques',     to:'/boutiques' },
-      { label:'Livreurs',      to:'/livreurs' },
-      { label:'Partenaires' },
-      { label:'Correspondants', to:'/correspondants' },
-      { label:'Offres & Promos' },
+    { titre:t('publicFooter.cols.plateforme.titre'), liens:[
+      { label:t('publicFooter.cols.plateforme.explorerProduits') },
+      { label:t('publicFooter.cols.plateforme.boutiques'),     to:'/boutiques' },
+      { label:t('publicFooter.cols.plateforme.livreurs'),      to:'/livreurs' },
+      { label:t('publicFooter.cols.plateforme.partenaires') },
+      { label:t('publicFooter.cols.plateforme.correspondants'), to:'/correspondants' },
+      { label:t('publicFooter.cols.plateforme.offresPromos') },
     ]},
-    { titre:'Acteurs', liens:[
-      { label:'Espace Client' },
-      { label:'Espace Entreprise' },
-      { label:'Espace Livreur' },
-      { label:'Espace Partenaire' },
-      { label:'Espace Correspondant' },
-      { label:'Espace Admin' },
+    { titre:t('publicFooter.cols.acteurs.titre'), liens:[
+      { label:t('publicFooter.cols.acteurs.espaceClient') },
+      { label:t('publicFooter.cols.acteurs.espaceEntreprise') },
+      { label:t('publicFooter.cols.acteurs.espaceLivreur') },
+      { label:t('publicFooter.cols.acteurs.espacePartenaire') },
+      { label:t('publicFooter.cols.acteurs.espaceCorrespondant') },
+      { label:t('publicFooter.cols.acteurs.espaceAdmin') },
     ]},
-    { titre:'Aide', liens:[
-      { label:"Centre d'aide",       to:'/aide' },
-      { label:'Contact',             to:'/contact' },
-      { label:'FAQ',                 to:'/aide#faq' },
-      { label:'Signaler un problème', to:'/contact' },
-      { label:'Remboursements',      to:'/remboursements' },
-      { label:'Politique de retour', to:'/politique-retour' },
+    { titre:t('publicFooter.cols.aide.titre'), liens:[
+      { label:t('publicFooter.cols.aide.centreAide'),       to:'/aide' },
+      { label:t('publicFooter.cols.aide.contact'),             to:'/contact' },
+      { label:t('publicFooter.cols.aide.faq'),                 to:'/aide#faq' },
+      { label:t('publicFooter.cols.aide.signalerProbleme'), to:'/contact' },
+      { label:t('publicFooter.cols.aide.remboursements'),      to:'/remboursements' },
+      { label:t('publicFooter.cols.aide.politiqueRetour'), to:'/politique-retour' },
     ]},
   ];
 
@@ -50,25 +51,6 @@ export default function Footer({ onToast }: FooterProps) {
   return (
     <footer className={styles.footer}>
 
-      {/* ── Bande newsletter ── */}
-      <div className={styles.newsletter}>
-        <div className={styles.nlWrap}>
-          <div className={styles.nlLeft}>
-            <div className={styles.nlIcon}>📧</div>
-            <div>
-              <div className={styles.nlTitle}>Restez informé des meilleures offres</div>
-              <div className={styles.nlSub}>Recevez les flash sales et nouveautés Shopi</div>
-            </div>
-          </div>
-          <div className={styles.nlForm}>
-            <input className={styles.nlInput} placeholder="Votre adresse email…" type="email" />
-            <button className={styles.nlBtn} onClick={() => onToast('✅ Inscrit à la newsletter !')}>
-              <i className="fas fa-paper-plane" /> S'abonner
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* ── Corps du footer ── */}
       <div className={styles.body}>
         <div className={styles.wrap}>
@@ -81,14 +63,13 @@ export default function Footer({ onToast }: FooterProps) {
                 <div className={styles.lw}>Sho<b>pi</b></div>
               </div>
               <p className={styles.brandP}>
-                La marketplace africaine de référence. Connectons les acteurs économiques
-                de l'Afrique de l'Ouest dans un écosystème digital unifié.
+                {t('publicFooter.brandTagline')}
               </p>
               {/* Réseaux sociaux */}
               <div className={styles.socials}>
                 {SOCIALS.map(s => (
                   <a key={s.label} href="#" className={styles.social}
-                    onClick={e => { e.preventDefault(); onToast(`📲 ${s.label}`); }}
+                    onClick={e => { e.preventDefault(); onToast(t('publicFooter.socialToast', { label: s.label })); }}
                     title={s.label} aria-label={s.label}>
                     <i className={s.icon} />
                   </a>
@@ -96,13 +77,13 @@ export default function Footer({ onToast }: FooterProps) {
               </div>
               {/* Badges stores */}
               <div className={styles.stores}>
-                <button className={styles.storeBtn} onClick={() => onToast('📱 App Store bientôt disponible')}>
+                <button className={styles.storeBtn} onClick={() => onToast(t('publicFooter.appStoreToast'))}>
                   <i className="fab fa-apple" />
-                  <div><span>Disponible sur</span><strong>App Store</strong></div>
+                  <div><span>{t('publicFooter.disponibleSur')}</span><strong>App Store</strong></div>
                 </button>
-                <button className={styles.storeBtn} onClick={() => onToast('🤖 Google Play bientôt disponible')}>
+                <button className={styles.storeBtn} onClick={() => onToast(t('publicFooter.googlePlayToast'))}>
                   <i className="fab fa-google-play" />
-                  <div><span>Disponible sur</span><strong>Google Play</strong></div>
+                  <div><span>{t('publicFooter.disponibleSur')}</span><strong>Google Play</strong></div>
                 </button>
               </div>
             </div>
@@ -116,7 +97,7 @@ export default function Footer({ onToast }: FooterProps) {
                     <li key={l.label}>
                       {l.to
                         ? <Link to={l.to}>{l.label}</Link>
-                        : <a href="#" onClick={e => { e.preventDefault(); onToast(`📄 ${l.label}`); }}>{l.label}</a>
+                        : <a href="#" onClick={e => { e.preventDefault(); onToast(t('publicFooter.linkToast', { label: l.label })); }}>{l.label}</a>
                       }
                     </li>
                   ))}
@@ -128,15 +109,15 @@ export default function Footer({ onToast }: FooterProps) {
           {/* Badges confiance */}
           <div className={styles.trustRow}>
             {[
-              { ico:'🔒', label:'Paiement sécurisé SSL' },
-              { ico:'⚡', label:'Livraison express 7j/7' },
-              { ico:'🛡️', label:'Protection acheteur' },
-              { ico:'💬', label:'Support 24/7' },
-              { ico:'📦', label:'Retour facile 7 jours' },
-            ].map(t => (
-              <div key={t.label} className={styles.trustItem}>
-                <span>{t.ico}</span>
-                <span>{t.label}</span>
+              { ico:'🔒', label:t('publicFooter.trust.paiementSecurise') },
+              { ico:'⚡', label:t('publicFooter.trust.livraisonExpress') },
+              { ico:'🛡️', label:t('publicFooter.trust.protectionAcheteur') },
+              { ico:'💬', label:t('publicFooter.trust.support247') },
+              { ico:'📦', label:t('publicFooter.trust.retourFacile') },
+            ].map(trustItem => (
+              <div key={trustItem.label} className={styles.trustItem}>
+                <span>{trustItem.ico}</span>
+                <span>{trustItem.label}</span>
               </div>
             ))}
           </div>
@@ -148,10 +129,16 @@ export default function Footer({ onToast }: FooterProps) {
         <div className={styles.wrap}>
           <div className={styles.btmRow}>
             <p className={styles.copyright}>
-              © 2025 Shopi Africa. Tous droits réservés. Fait avec ❤️ en Guinée 🇬🇳
+              {t('publicFooter.copyright')}
             </p>
             <div className={styles.btmLinks}>
-              {['Mentions légales','Confidentialité','Cookies','CGU','Accessibilité'].map(l => (
+              {[
+                t('publicFooter.bottomLinks.mentionsLegales'),
+                t('publicFooter.bottomLinks.confidentialite'),
+                t('publicFooter.bottomLinks.cookies'),
+                t('publicFooter.bottomLinks.cgu'),
+                t('publicFooter.bottomLinks.accessibilite'),
+              ].map(l => (
                 <a key={l} href="#" onClick={e => e.preventDefault()}>{l}</a>
               ))}
             </div>

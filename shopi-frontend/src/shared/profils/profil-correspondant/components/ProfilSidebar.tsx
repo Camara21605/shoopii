@@ -2,8 +2,8 @@
  * FICHIER : profil-correspondant/components/ProfilSidebar.tsx
  * ================================================================ */
 
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/ProfilCorrespondant.module.css';
 import type { ContactRow, VerifRow, SimilaireItem } from '../data/types';
 
@@ -27,29 +27,30 @@ export default function ProfilSidebar({
   suivi, callLoading, onToggle, onMessage, onCall, onToast,
 }: Props) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const prenom = nom.split(' ')[0];
 
   return (
     <aside>
       {/* Contacter */}
       <div className={styles.card}>
-        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-headset" /> Contacter {prenom}</div></div>
+        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-headset" /> {t('profilCorrespondant.sidebar.contacterPrenom', { prenom })}</div></div>
         <div className={styles.cb}>
           <div className={styles.sideBtns}>
             <button className={`${styles.sideBtn} ${styles.sbPrimary}`} onClick={onMessage}>
-              <i className="fas fa-comment-dots" /> Envoyer un message
+              <i className="fas fa-comment-dots" /> {t('profilCorrespondant.sidebar.envoyerMessage')}
             </button>
-            <button className={`${styles.sideBtn} ${styles.sbWa}`} onClick={() => onToast('📱 WhatsApp')}>
+            <button className={`${styles.sideBtn} ${styles.sbWa}`} onClick={() => onToast(t('profilCorrespondant.sidebar.whatsappToast'))}>
               <i className="fab fa-whatsapp" /> WhatsApp
             </button>
             <button
               className={`${styles.sideBtn} ${styles.sbCall}`}
-              onClick={onCall ?? (() => onToast('📞 Appel'))}
+              onClick={onCall ?? (() => onToast(t('profilCorrespondant.sidebar.appelToast')))}
               disabled={callLoading}
             >
               {callLoading
                 ? <><i className="fas fa-spinner fa-spin" /> …</>
-                : <><i className="fas fa-phone" /> Appeler</>}
+                : <><i className="fas fa-phone" /> {t('profilCorrespondant.appeler')}</>}
             </button>
           </div>
         </div>
@@ -58,7 +59,7 @@ export default function ProfilSidebar({
       {/* Contacts détaillés */}
       {contacts.length > 0 && (
         <div className={styles.card}>
-          <div className={styles.ch}><div className={styles.ct}><i className="fas fa-address-book" /> Contacts détaillés</div></div>
+          <div className={styles.ch}><div className={styles.ct}><i className="fas fa-address-book" /> {t('profilCorrespondant.sidebar.contactsDetailles')}</div></div>
           <div className={styles.cb}>
             <div className={styles.contactList}>
               {contacts.map(c => (
@@ -68,7 +69,7 @@ export default function ProfilSidebar({
                     <div className={styles.clLbl}>{c.label}</div>
                     <div className={styles.clVal}>{c.valeur}</div>
                   </div>
-                  <div className={styles.clAction} onClick={() => onToast(`📋 ${c.valeur}`)}>
+                  <div className={styles.clAction} onClick={() => onToast(t('profilCorrespondant.sidebar.copieToast', { valeur: c.valeur }))}>
                     <i className="fas fa-copy" />
                   </div>
                 </div>
@@ -81,7 +82,7 @@ export default function ProfilSidebar({
       {/* Statistiques */}
       {stats.length > 0 && (
         <div className={styles.card}>
-          <div className={styles.ch}><div className={styles.ct}><i className="fas fa-chart-simple" /> Statistiques</div></div>
+          <div className={styles.ch}><div className={styles.ct}><i className="fas fa-chart-simple" /> {t('profilCorrespondant.sidebar.statistiques')}</div></div>
           <div className={styles.cb}>
             <div className={styles.sbStats}>
               {stats.map(s => (
@@ -97,13 +98,13 @@ export default function ProfilSidebar({
 
       {/* Abonnés */}
       <div className={styles.card}>
-        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-users" /> Abonnés</div></div>
+        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-users" /> {t('profilCorrespondant.sidebar.abonnesTitle')}</div></div>
         <div className={styles.cb}>
           <div className={styles.folWrap}>
             <span className={styles.folCnt} style={{ marginRight: 8 }}>
               {abonnes > 0
-                ? `${abonnes.toLocaleString('fr-FR')} abonné${abonnes > 1 ? 's' : ''}`
-                : 'Aucun abonné pour le moment'}
+                ? t('profilCorrespondant.sidebar.abonneCount', { count: abonnes })
+                : t('profilCorrespondant.sidebar.aucunAbonne')}
             </span>
           </div>
           <button
@@ -111,8 +112,8 @@ export default function ProfilSidebar({
             onClick={onToggle}
           >
             {suivi
-              ? <><i className="fas fa-user-check" /> Abonné</>
-              : <><i className="fas fa-plus" /> Suivre ce correspondant</>}
+              ? <><i className="fas fa-user-check" /> {t('profilCorrespondant.abonne')}</>
+              : <><i className="fas fa-plus" /> {t('profilCorrespondant.sidebar.suivreCeCorrespondant')}</>}
           </button>
         </div>
       </div>
@@ -120,7 +121,7 @@ export default function ProfilSidebar({
       {/* Vérifications Shopi */}
       {verifications.length > 0 && (
         <div className={styles.card}>
-          <div className={styles.ch}><div className={styles.ct}><i className="fas fa-shield-halved" /> Vérifications Shopi</div></div>
+          <div className={styles.ch}><div className={styles.ct}><i className="fas fa-shield-halved" /> {t('profilCorrespondant.sidebar.verificationsShopi')}</div></div>
           <div className={styles.cb}>
             <div className={styles.verifList}>
               {verifications.map(v => (
@@ -141,8 +142,8 @@ export default function ProfilSidebar({
       {similaires.length > 0 && (
         <div className={styles.card}>
           <div className={styles.ch}>
-            <div className={styles.ct}><i className="fas fa-user-group" /> Correspondants similaires</div>
-            <button className={styles.chLink} onClick={() => navigate('/correspondants')}>Voir tout</button>
+            <div className={styles.ct}><i className="fas fa-user-group" /> {t('profilCorrespondant.sidebar.correspondantsSimilaires')}</div>
+            <button className={styles.chLink} onClick={() => navigate('/correspondants')}>{t('profilCorrespondant.sidebar.voirTout')}</button>
           </div>
           <div className={styles.similarList}>
             {similaires.map(s => (
@@ -156,9 +157,9 @@ export default function ProfilSidebar({
                   <div className={styles.simNote}>{s.note.toFixed(1)}★</div>
                   <button
                     className={styles.simFbtn}
-                    onClick={e => { e.stopPropagation(); onToast(`✅ Abonné à ${s.nom}`); }}
+                    onClick={e => { e.stopPropagation(); onToast(t('profilCorrespondant.sidebar.abonneToast', { nom: s.nom })); }}
                   >
-                    + Suivre
+                    {t('profilCorrespondant.sidebar.suivreShort')}
                   </button>
                 </div>
               </div>

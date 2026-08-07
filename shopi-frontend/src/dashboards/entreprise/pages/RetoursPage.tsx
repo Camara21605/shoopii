@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast }       from '../../../shared/context/ToastContext';
 import { useRetours }     from '../hooks/useRetours';
 import { useSav }         from '../hooks/useSav';
@@ -20,6 +21,7 @@ import s from './retours/RetoursPage.module.css';
 type MainTab = 'retours' | 'sav';
 
 export default function RetoursPage() {
+  const { t } = useTranslation();
   const { pop } = useToast();
   const [tab, setTab] = useState<MainTab>('retours');
 
@@ -45,30 +47,30 @@ export default function RetoursPage() {
   const handleAccept = async (id: string, montant: number, note?: string) => {
     try {
       await accept(id, montant, note);
-      pop('✅ Retour accepté — client notifié', 's');
+      pop(t('retours.toasts.accepted'), 's');
       setSelectedReturnId(null);
     } catch (e: any) {
-      pop(`❌ ${e?.message ?? 'Erreur lors de l\'acceptation'}`, 'e');
+      pop(`❌ ${e?.message ?? t('retours.toasts.acceptError')}`, 'e');
     }
   };
 
   const handleRefuse = async (id: string, note?: string) => {
     try {
       await refuse(id, note);
-      pop('Retour refusé — client notifié', 'i');
+      pop(t('retours.toasts.refused'), 'i');
       setSelectedReturnId(null);
     } catch (e: any) {
-      pop(`❌ ${e?.message ?? 'Erreur'}`, 'e');
+      pop(`❌ ${e?.message ?? t('retours.toasts.genericError')}`, 'e');
     }
   };
 
   const handleRefund = async (id: string, montant?: number) => {
     try {
       await refund(id, montant);
-      pop('💸 Remboursement enregistré', 's');
+      pop(t('retours.toasts.refunded'), 's');
       setSelectedReturnId(null);
     } catch (e: any) {
-      pop(`❌ ${e?.message ?? 'Erreur'}`, 'e');
+      pop(`❌ ${e?.message ?? t('retours.toasts.genericError')}`, 'e');
     }
   };
 
@@ -78,12 +80,12 @@ export default function RetoursPage() {
       {/* ── En-tête ── */}
       <div className="page-header" style={{ marginBottom: 20 }}>
         <div>
-          <div className="ph-title">Retours &amp; <mark>SAV</mark></div>
-          <div className="ph-sub">Gestion des demandes de retour et du service après-vente</div>
+          <div className="ph-title">{t('retours.title')}</div>
+          <div className="ph-sub">{t('retours.subtitle')}</div>
         </div>
         <div className="ph-actions">
           <button className="btn btn-ghost btn-sm" onClick={() => { reload(); reloadSav(); }}>
-            <i className="fas fa-rotate-right" /> Actualiser
+            <i className="fas fa-rotate-right" /> {t('retours.refresh')}
           </button>
         </div>
       </div>
@@ -95,7 +97,7 @@ export default function RetoursPage() {
           onClick={() => setTab('retours')}
         >
           <i className="fas fa-rotate-left" />
-          Retours
+          {t('retours.tabRetours')}
           {stats && stats.pending > 0 && (
             <span className={`${s.tabBadge} ${tab === 'retours' ? s.tabActiveBadge : s.tabInactiveBadge}`}>
               {stats.pending}
@@ -107,7 +109,7 @@ export default function RetoursPage() {
           onClick={() => setTab('sav')}
         >
           <i className="fas fa-headset" />
-          SAV
+          {t('retours.tabSav')}
           {savStats && savStats.open > 0 && (
             <span className={`${s.tabBadge} ${tab === 'sav' ? s.tabActiveBadge : s.tabInactiveBadge}`}>
               {savStats.open}

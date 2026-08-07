@@ -3,7 +3,8 @@
  * Section 4 — Catalogue & Règles de publication
  * PATCH /dashboard/entreprise/parametres/catalogue
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
@@ -41,6 +42,7 @@ function Toggle({ label, sub, value, onChange }: { label: string; sub?: string; 
 }
 
 export default function CatalogueSection({ data, saving, onDirty, onToast, saveCatalogue }: Props) {
+  const { t } = useTranslation();
   const [showOutOfStock,  setShowOutOfStock]  = useState(true);
   const [autoPublish,     setAutoPublish]     = useState(false);
   const [showStrikePrice, setShowStrikePrice] = useState(true);
@@ -63,53 +65,53 @@ export default function CatalogueSection({ data, saving, onDirty, onToast, saveC
   async function handleSave() {
     try {
       await saveCatalogue({ showOutOfStock, autoPublish, showStrikePrice, allowReviews, devise, returnPolicy });
-      onToast('✅ Catalogue sauvegardé', 's');
-    } catch { onToast('❌ Erreur lors de la sauvegarde', 'e'); }
+      onToast(t('parametres.catalogue.savedToast'), 's');
+    } catch { onToast(t('parametres.catalogue.errorToast'), 'e'); }
   }
 
   return (
     <>
       <div className={s.sectionHd}>
-        <h1><i className="fas fa-tags" /> Catalogue & Règles de publication</h1>
-        <p>Contrôlez comment vos produits sont affichés et publiés sur Shopi.</p>
+        <h1><i className="fas fa-tags" /> {t('parametres.catalogue.title')}</h1>
+        <p>{t('parametres.catalogue.subtitle')}</p>
       </div>
 
-      <FormCard title="Règles d'affichage" icon="fa-eye" subtitle="Comportement de votre catalogue public">
-        <Toggle label="Afficher les produits en rupture de stock" sub="Si désactivé, les produits épuisés sont masqués automatiquement" value={showOutOfStock} onChange={v => mark(() => setShowOutOfStock(v))} />
-        <Toggle label="Publication automatique" sub="Les nouveaux produits sont publiés immédiatement sans validation manuelle" value={autoPublish} onChange={v => mark(() => setAutoPublish(v))} />
-        <Toggle label="Afficher les prix barrés" sub="Montre l'ancien prix barré lors des promotions" value={showStrikePrice} onChange={v => mark(() => setShowStrikePrice(v))} />
-        <Toggle label="Autoriser les avis clients" sub="Seuls les acheteurs confirmés peuvent laisser un avis" value={allowReviews} onChange={v => mark(() => setAllowReviews(v))} />
+      <FormCard title={t('parametres.catalogue.reglesTitle')} icon="fa-eye" subtitle={t('parametres.catalogue.reglesSubtitle')}>
+        <Toggle label={t('parametres.catalogue.afficherRupture')} sub={t('parametres.catalogue.afficherRuptureSub')} value={showOutOfStock} onChange={v => mark(() => setShowOutOfStock(v))} />
+        <Toggle label={t('parametres.catalogue.publicationAuto')} sub={t('parametres.catalogue.publicationAutoSub')} value={autoPublish} onChange={v => mark(() => setAutoPublish(v))} />
+        <Toggle label={t('parametres.catalogue.afficherPrixBarres')} sub={t('parametres.catalogue.afficherPrixBarresSub')} value={showStrikePrice} onChange={v => mark(() => setShowStrikePrice(v))} />
+        <Toggle label={t('parametres.catalogue.autoriserAvis')} sub={t('parametres.catalogue.autoriserAvisSub')} value={allowReviews} onChange={v => mark(() => setAllowReviews(v))} />
 
         <div className={s.fg} style={{ marginTop:16 }}>
-          <div className={s.fl}>Devise d'affichage</div>
+          <div className={s.fl}>{t('parametres.catalogue.deviseAffichage')}</div>
           <div className={s.fw}>
             <i className={`fas fa-coins ${s.fi}`} />
             <select className={`${s.fin} ${s.finSelect}`} value={devise} onChange={e => { setDevise(e.target.value); onDirty(); }}>
-              <option value="GNF">GNF — Franc guinéen</option>
-              <option value="EUR">EUR — Euro</option>
-              <option value="USD">USD — Dollar américain</option>
+              <option value="GNF">{t('parametres.catalogue.deviseGnf')}</option>
+              <option value="EUR">{t('parametres.catalogue.deviseEur')}</option>
+              <option value="USD">{t('parametres.catalogue.deviseUsd')}</option>
             </select>
           </div>
         </div>
       </FormCard>
 
-      <FormCard title="Politique de retour" icon="fa-rotate-left" subtitle="Texte affiché sur chaque fiche produit">
+      <FormCard title={t('parametres.catalogue.politiqueRetourTitle')} icon="fa-rotate-left" subtitle={t('parametres.catalogue.politiqueRetourSubtitle')}>
         <div className={s.fg}>
           <div className={s.fw}>
             <textarea
               className={`${s.fin} ${s.finTextarea}`}
               value={returnPolicy}
               onChange={e => { setReturnPolicy(e.target.value); onDirty(); }}
-              placeholder="Ex : Retour accepté sous 7 jours après réception, produit non ouvert et dans son emballage d'origine."
+              placeholder={t('parametres.catalogue.politiquePlaceholder')}
               style={{ paddingLeft:14 }}
             />
           </div>
-          <div className={s.hint}><i className="fas fa-circle-info" /> Ce texte rassure vos acheteurs et réduit les litiges.</div>
+          <div className={s.hint}><i className="fas fa-circle-info" /> {t('parametres.catalogue.politiqueHint')}</div>
         </div>
 
         <div className={s.saveRow}>
           <button className={s.saveBtn} onClick={handleSave} disabled={saving}>
-            {saving ? <><i className="fas fa-spinner fa-spin" /> Sauvegarde…</> : <><i className="fas fa-cloud-arrow-up" /> Sauvegarder le catalogue</>}
+            {saving ? <><i className="fas fa-spinner fa-spin" /> {t('parametres.catalogue.sauvegardeEnCours')}</> : <><i className="fas fa-cloud-arrow-up" /> {t('parametres.catalogue.sauvegarderCatalogue')}</>}
           </button>
         </div>
       </FormCard>

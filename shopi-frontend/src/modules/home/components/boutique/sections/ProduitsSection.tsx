@@ -13,7 +13,8 @@
  *   - Pagination (5 pages)
  * ============================================================
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ProduitBoutique } from '../data/boutiqueMockData';
 import CardProduitBoutique from '../components/CardProduitBoutique';
 import styles from '../styles/ProduitsSection.module.css';
@@ -29,6 +30,7 @@ interface Props {
 export default function ProduitsSection({
   produits, filtresActifs, onRemoveFiltreActif, onResetFiltres, onToast,
 }: Props) {
+  const { t } = useTranslation();
 
   /* ── Vue grille / liste ── */
   const [vue, setVue] = useState<'grille' | 'liste'>('grille');
@@ -39,20 +41,20 @@ export default function ProduitsSection({
       {/* ── Chips des filtres actifs ── */}
       {filtresActifs.length > 0 && (
         <div className={styles.activeFilters}>
-          <span className={styles.afLabel}>Filtres actifs :</span>
+          <span className={styles.afLabel}>{t('boutiqueDetail.produitsSection.filtresActifs')}</span>
           {filtresActifs.map(f => (
             <span
               key={f}
               className={styles.chip}
               onClick={() => onRemoveFiltreActif(f)}
-              title="Supprimer ce filtre"
+              title={t('boutiqueDetail.produitsSection.supprimerFiltre')}
             >
               {f} <i className="fas fa-xmark" />
             </span>
           ))}
           {/* Tout effacer */}
           <button className={styles.clearAll} onClick={onResetFiltres}>
-            <i className="fas fa-xmark" /> Tout effacer
+            <i className="fas fa-xmark" /> {t('boutiqueDetail.produitsSection.toutEffacer')}
           </button>
         </div>
       )}
@@ -61,14 +63,14 @@ export default function ProduitsSection({
       <div className={styles.resultsHd}>
         <div className={styles.resultsCnt}>
           <strong>{produits.length}</strong>
-          {' '}produit{produits.length > 1 ? 's' : ''} trouvé{produits.length > 1 ? 's' : ''}
+          {' '}{t('boutiqueDetail.produitsSection.trouveCount', { count: produits.length })}
         </div>
         <div className={styles.viewBtns}>
           {/* Grille */}
           <button
             className={`${styles.vbtn} ${vue === 'grille' ? styles.vbtnActive : ''}`}
             onClick={() => setVue('grille')}
-            title="Vue grille"
+            title={t('boutiqueDetail.produitsSection.vueGrille')}
           >
             <i className="fas fa-grid-2" />
           </button>
@@ -76,7 +78,7 @@ export default function ProduitsSection({
           <button
             className={`${styles.vbtn} ${vue === 'liste' ? styles.vbtnActive : ''}`}
             onClick={() => setVue('liste')}
-            title="Vue liste"
+            title={t('boutiqueDetail.produitsSection.vueListe')}
           >
             <i className="fas fa-list" />
           </button>
@@ -89,10 +91,10 @@ export default function ProduitsSection({
         /* Message "aucun résultat" */
         <div className={styles.empty}>
           <span className={styles.emptyIco}>📦</span>
-          <strong>Aucun produit ne correspond à vos filtres</strong>
-          <p>Essayez de modifier ou supprimer certains filtres.</p>
+          <strong>{t('boutiqueDetail.produitsSection.aucunProduit')}</strong>
+          <p>{t('boutiqueDetail.produitsSection.essayezModifier')}</p>
           <button className={styles.emptyBtn} onClick={onResetFiltres}>
-            <i className="fas fa-rotate-left" /> Réinitialiser les filtres
+            <i className="fas fa-rotate-left" /> {t('boutiqueDetail.produitsSection.reinitialiser')}
           </button>
         </div>
 

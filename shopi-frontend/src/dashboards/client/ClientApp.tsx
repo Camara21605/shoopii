@@ -14,6 +14,7 @@
 
 import React, { useEffect, useState } from 'react';
 import PortefeuilleStandalone from '../../shared/components/portefeuille/PortefeuilleStandalone';
+import WalletQuickBar         from '../../shared/components/portefeuille/WalletQuickBar';
 import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
 import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
 import { apiFetch }               from '../../shared/services/apiFetch';
@@ -238,6 +239,11 @@ export default function ClientApp() {
             <i className="fas fa-circle-question" style={{ fontSize: 14 }} />
             Centre d'aide
           </a>
+        </div>
+
+        {/* Solde du portefeuille Shopi + actions rapides (Dépôt/Retrait/Actualiser) */}
+        <div style={{ marginBottom: 24 }}>
+          <WalletQuickBar />
         </div>
 
         {/* Widget de support — affiché avant le portefeuille */}

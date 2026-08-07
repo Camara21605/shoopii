@@ -10,6 +10,7 @@
 
 import React from 'react';
 import type { AdminPage } from '../types/admin.types';
+import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
 
 /* ─────────────────────────────────────────────────────────────
  * PROPS
@@ -97,6 +98,11 @@ export default function Sidebar({
             <span className="sidebar__logo-name">Shopi Africa</span>
             <span className="sidebar__logo-role">Administrateur</span>
           </div>
+        </div>
+
+        {/* Solde du portefeuille Shopi — accès rapide sous le logo */}
+        <div style={{ padding: '12px 22px' }}>
+          <WalletQuickBar compact mini onManage={go('portefeuille')} />
         </div>
 
         {/* ── Groupe : Tableau de bord ── */}

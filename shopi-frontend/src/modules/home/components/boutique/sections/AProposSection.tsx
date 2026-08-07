@@ -10,7 +10,7 @@
  *   - Liste des livreurs (aperçu)
  * ============================================================
  */
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { BOUTIQUE_INFO, LIVREURS_MOCK } from '../data/boutiqueMockData';
 import styles from '../styles/AProposSection.module.css';
 
@@ -21,19 +21,20 @@ function Stars({ n }: { n: number }) {
 }
 
 export default function AProposSection({ onToast }: Props) {
+  const { t } = useTranslation();
   return (
     <div className={styles.grid}>
 
       {/* ── 1. Description + stats ── */}
       <div className={styles.card}>
-        <h3><i className="fas fa-store" /> À propos de la boutique</h3>
+        <h3><i className="fas fa-store" /> {t('boutiqueDetail.aPropos.titre')}</h3>
         <p className={styles.desc}>{BOUTIQUE_INFO.description}</p>
         <div className={styles.statsGrid}>
           {[
-            { val:'5+',  lbl:"Années d'expérience" },
-            { val:'18K+',lbl:'Commandes livrées'   },
-            { val:'98%', lbl:'Satisfaction client' },
-            { val:'4.9', lbl:'Note moyenne'        },
+            { val:'5+',  lbl:t('boutiqueDetail.aPropos.anneesExperience') },
+            { val:'18K+',lbl:t('boutiqueDetail.aPropos.commandesLivrees') },
+            { val:'98%', lbl:t('boutiqueDetail.aPropos.satisfactionClient') },
+            { val:'4.9', lbl:t('boutiqueDetail.aPropos.noteMoyenne')        },
           ].map(s => (
             <div key={s.lbl} className={styles.stat}>
               <div className={styles.statV}>{s.val}</div>
@@ -45,14 +46,14 @@ export default function AProposSection({ onToast }: Props) {
 
       {/* ── 2. Infos pratiques ── */}
       <div className={styles.card}>
-        <h3><i className="fas fa-clock" /> Infos pratiques</h3>
+        <h3><i className="fas fa-clock" /> {t('boutiqueDetail.aPropos.infosPratiques')}</h3>
         <div className={styles.infoRows}>
           {[
-            { ico:'🕐', bg:'bg1', title:'Horaires',  sub: BOUTIQUE_INFO.horaires },
-            { ico:'📍', bg:'bg2', title:'Adresse',   sub: BOUTIQUE_INFO.adresse  },
-            { ico:'📞', bg:'bg3', title:'Téléphone', sub: BOUTIQUE_INFO.tel      },
-            { ico:'✉️', bg:'bg4', title:'Email',     sub: BOUTIQUE_INFO.email    },
-            { ico:'🌐', bg:'bg5', title:'Site web',  sub: BOUTIQUE_INFO.website  },
+            { ico:'🕐', bg:'bg1', title:t('boutiqueDetail.aPropos.horaires'),  sub: BOUTIQUE_INFO.horaires },
+            { ico:'📍', bg:'bg2', title:t('boutiqueDetail.aPropos.adresse'),   sub: BOUTIQUE_INFO.adresse  },
+            { ico:'📞', bg:'bg3', title:t('boutiqueDetail.aPropos.telephone'), sub: BOUTIQUE_INFO.tel      },
+            { ico:'✉️', bg:'bg4', title:t('boutiqueDetail.aPropos.email'),     sub: BOUTIQUE_INFO.email    },
+            { ico:'🌐', bg:'bg5', title:t('boutiqueDetail.aPropos.siteWeb'),  sub: BOUTIQUE_INFO.website  },
           ].map(r => (
             <div key={r.title} className={styles.infoRow}>
               <div className={`${styles.infoIco} ${styles[r.bg]}`}>{r.ico}</div>
@@ -67,7 +68,7 @@ export default function AProposSection({ onToast }: Props) {
 
       {/* ── 3. Livreurs de la boutique (pleine largeur) ── */}
       <div className={`${styles.card} ${styles.cardFull}`}>
-        <h3><i className="fas fa-motorcycle" /> Livreurs de la boutique</h3>
+        <h3><i className="fas fa-motorcycle" /> {t('boutiqueDetail.aPropos.livreursBoutique')}</h3>
         <div className={styles.livreursListe}>
           {LIVREURS_MOCK.slice(0, 4).map(l => (
             <div key={l.id} className={styles.livrItem}>
@@ -90,9 +91,9 @@ export default function AProposSection({ onToast }: Props) {
               {/* Bouton profil */}
               <button
                 className={styles.livrBtn}
-                onClick={() => onToast(`🛵 Profil de ${l.nom}`)}
+                onClick={() => onToast(t('boutiqueDetail.aPropos.profilToast', { nom: l.nom }))}
               >
-                Voir profil
+                {t('boutiqueDetail.aPropos.voirProfil')}
               </button>
             </div>
           ))}

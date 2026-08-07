@@ -1,0 +1,174 @@
+{
+  "sidebar": {
+    "sections": {
+      "principal": "Principal",
+      "catalogue": "Catalogue",
+      "marketing": "Marketing",
+      "reseauLogistique": "Réseau & Logistique",
+      "financesClients": "Finances & Clients",
+      "equipe": "Équipe",
+      "boutique": "Boutique"
+    },
+    "items": {
+      "overview": "Vue d'ensemble",
+      "commandes": "Commandes",
+      "retours": "Retours & SAV",
+      "produits": "Produits",
+      "ajouter": "Ajouter produit",
+      "inventaire": "Inventaire",
+      "promotions": "Promotions",
+      "analytics": "Analytics",
+      "seo": "SEO & Marketing",
+      "messages": "Messages",
+      "livreurs": "Mes livreurs",
+      "correspondants": "Correspondants",
+      "finances": "Finances",
+      "portefeuille": "Portefeuille",
+      "clients": "Clients",
+      "avis": "Avis clients",
+      "equipeGestion": "Gestion de l'équipe",
+      "parametres": "Paramètres",
+      "voirBoutique": "Voir ma boutique",
+      "alertes": "Alertes",
+      "quitter": "Quitter"
+    }
+  },
+  "topbar": {
+    "titles": {
+      "overview": {
+        "title": "Vue d'ensemble",
+        "subtitle": "Tableau de bord de votre boutique"
+      },
+      "commandes": {
+        "title": "Commandes",
+        "subtitle": "Gérez toutes vos commandes"
+      },
+      "retours": {
+        "title": "Retours & SAV",
+        "subtitle": "Gestion des retours et service après-vente"
+      },
+      "produits": {
+        "title": "Catalogue produits",
+        "subtitle": "124 produits · 8 catégories"
+      },
+      "ajouter": {
+        "title": "Ajouter un produit",
+        "subtitle": "Créez et publiez un nouveau produit"
+      },
+      "inventaire": {
+        "title": "Inventaire & Stock",
+        "subtitle": "Gérez vos niveaux de stock"
+      },
+      "promotions": {
+        "title": "Promotions & Codes promo",
+        "subtitle": "Boostez vos ventes avec des offres"
+      },
+      "analytics": {
+        "title": "Analytics avancées",
+        "subtitle": "Statistiques et performances de votre boutique"
+      },
+      "messages": {
+        "title": "Messages clients",
+        "subtitle": "Conversations et support client"
+      },
+      "seo": {
+        "title": "SEO & Marketing",
+        "subtitle": "Optimisation et campagnes marketing"
+      },
+      "livreurs": {
+        "title": "Mes livreurs",
+        "subtitle": "Réseau de livraison · 4 actifs"
+      },
+      "correspondants": {
+        "title": "Correspondants",
+        "subtitle": "Vos relais locaux et internationaux"
+      },
+      "finances": {
+        "title": "Finances",
+        "subtitle": "Revenus, dépenses et transactions"
+      },
+      "portefeuille": {
+        "title": "Portefeuille",
+        "subtitle": "Solde, retraits et transactions"
+      },
+      "clients": {
+        "title": "Clients",
+        "subtitle": "Base clients · 2 414 acheteurs"
+      },
+      "avis": {
+        "title": "Avis clients",
+        "subtitle": "248 avis · Note moyenne 4.9 ⭐"
+      },
+      "parametres": {
+        "title": "Paramètres",
+        "subtitle": "Configuration de votre boutique"
+      },
+      "profil": {
+        "title": "Mon profil",
+        "subtitle": "Profil public de votre boutique"
+      },
+      "boutiquePreview": {
+        "title": "Voir ma boutique",
+        "subtitle": "Aperçu de votre boutique telle que vos clients la voient"
+      },
+      "reseauCorrespondants": {
+        "title": "Correspondants",
+        "subtitle": "Suivez des correspondants du réseau Shopi"
+      },
+      "reseauLivreurs": {
+        "title": "Livreurs",
+        "subtitle": "Suivez d'autres livreurs du réseau Shopi"
+      },
+      "profilCorrespondantReseau": {
+        "title": "Profil correspondant",
+        "subtitle": "Détails et suivi"
+      },
+      "profilLivreurReseau": {
+        "title": "Profil livreur",
+        "subtitle": "Détails et suivi"
+      }
+    },
+    "searchPlaceholder": "Rechercher commandes, produits, clients…",
+    "tooltips": {
+      "livreurs": "Mes livreurs",
+      "correspondants": "Correspondants",
+      "commandes": "Commandes",
+      "messages": "Messages",
+      "aide": "Centre d'aide"
+    },
+    "menu": {
+      "profil": "Mon profil",
+      "voirBoutique": "Voir ma boutique",
+      "basculerAccueil": "Basculer vers l'accueil",
+      "deconnexion": "Se déconnecter"
+    },
+    "status": {
+      "active": "Boutique active",
+      "suspended": "En pause",
+      "private": "Privée",
+      "pending": "En attente de validation",
+      "default": "Vendeur Pro"
+    },
+    "bottomNav": {
+      "accueil": "Accueil",
+      "commandes": "Commandes",
+      "produits": "Produits",
+      "monEspace": "Mon espace"
+    },
+    "drawer": {
+      "menuAria": "Menu de navigation",
+      "voirBoutique": "Voir ma boutique",
+      "aide": "Centre d'aide",
+      "basculerAccueil": "Basculer vers l'accueil",
+      "deconnexion": "Se déconnecter"
+    },
+    "hamburgerAria": "Menu"
+  },
+  "reseauBottomNav": {
+    "ariaLabel": "Navigation réseau mobile",
+    "correspondants": "Correspondants",
+    "livreurs": "Livreurs",
+    "basculerEspaceClient": "Basculer vers l'espace client",
+    "monEspace": "Mon espace"
+  }
+}

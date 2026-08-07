@@ -1,0 +1,79 @@
+{
+  "overview": {
+    "hero": {
+      "greeting": "您好，",
+      "loading": "正在加载您的数据…",
+      "ready": "这是您最近的活动。",
+      "badgeActive_one": "店铺活跃 · {{count}} 名关注者",
+      "badgeActive_other": "店铺活跃 · {{count}} 名关注者",
+      "subCA": "收入",
+      "subCommandes_one": "{{count}} 个订单待处理",
+      "subCommandes_other": "{{count}} 个订单待处理",
+      "subRetours_one": "{{count}} 个退货待处理",
+      "subRetours_other": "{{count}} 个退货待处理",
+      "btnCommandes": "处理订单",
+      "btnAnalytics": "查看数据分析",
+      "btnPromotions": "促销活动",
+      "statCA": "本月收入",
+      "statCommandes": "订单",
+      "statNote": "平均评分",
+      "statAbonnes": "关注者",
+      "total": "总计",
+      "avis_one": "{{count}} 条评价",
+      "avis_other": "{{count}} 条评价",
+      "stable": "稳定"
+    },
+    "kpi": {
+      "ca": "收入 — 本月",
+      "commandes": "本月订单",
+      "commandesSub": "{{enAttente}} 待处理 · {{livrees}} 已送达 · {{enCours}} 进行中",
+      "abonnes": "店铺关注者",
+      "abonnesSub": "实际总数",
+      "note": "客户平均评分",
+      "noteSub_one": "共 {{count}} 条评价",
+      "noteSub_other": "共 {{count}} 条评价",
+      "retours": "本月退货",
+      "retoursSub": "{{enTraitement}} 处理中 · {{rembourses}} 已退款",
+      "benefice": "净利润（本月）",
+      "beneficeSub": "利润率：{{marge}}% · 佣金：{{commission}} GNF",
+      "margeBadge": "{{marge}}% 利润率"
+    },
+    "charts": {
+      "caMensuel": "每月收入",
+      "noSalesDelivered": "暂无已送达的销售。",
+      "legendCurrent": "每月收入（百万 GNF）",
+      "legendPrevious": "过去时期",
+      "topProduits": "热门产品",
+      "noSales": "暂无销售。",
+      "ventes_one": "{{count}} 笔销售",
+      "ventes_other": "{{count}} 笔销售"
+    },
+    "alerts": {
+      "title": "优先提醒",
+      "count_one": "{{count}} 条提醒",
+      "count_other": "{{count}} 条提醒",
+      "empty": "暂无库存提醒。",
+      "stockInfo": "库存：{{qty}} · 最低要求：{{min}}",
+      "fix": "补货"
+    },
+    "donut": {
+      "title": "销售分布"
+    },
+    "orders": {
+      "title": "最新订单",
+      "seeAll": "查看全部",
+      "empty": "暂无订单。",
+      "status": {
+        "new": "新订单",
+        "prep": "准备中",
+        "ship": "配送中",
+        "del": "已送达",
+        "can": "已取消"
+      }
+    },
+    "activity": {
+      "title": "最近活动",
+      "empty": "暂无最近活动。"
+    }
+  }
+}

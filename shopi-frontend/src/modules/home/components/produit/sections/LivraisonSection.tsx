@@ -9,6 +9,8 @@
  * ================================================================ */
 
 import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   GEO_DATA, SHOP_CONTINENT,
   SPEED_MUL, DIST_MUL, SPEED_ETA,
@@ -54,11 +56,11 @@ function getDistZone(ville: string, pays: string): 'local' | 'near' | 'far' {
   if (['Kindia','Boké'].includes(ville))   return 'near';
   return 'far';
 }
-function getDistBadge(isIntl: boolean, distZone: string) {
-  if (isIntl)             return { label:'🌍 International — Autre continent', cls:styles.distIntl, note:'Correspondant recommandé'       };
-  if (distZone==='local') return { label:'📍 Même zone — Conakry',            cls:styles.distSame, note:'Tarif de base livreur'           };
-  if (distZone==='near')  return { label:'🗺️ Ville proche — ~120 km',         cls:styles.distNear, note:'+30% sur le tarif de base'       };
-  return                         { label:'📦 Autre région — +200 km',          cls:styles.distFar,  note:'+80% sur le tarif de base'       };
+function getDistBadge(isIntl: boolean, distZone: string, t: TFunction) {
+  if (isIntl)             return { label:t('produitDetail.livraison.distBadge.intlLabel'),   cls:styles.distIntl, note:t('produitDetail.livraison.distBadge.intlNote')  };
+  if (distZone==='local') return { label:t('produitDetail.livraison.distBadge.localLabel'),  cls:styles.distSame, note:t('produitDetail.livraison.distBadge.localNote') };
+  if (distZone==='near')  return { label:t('produitDetail.livraison.distBadge.nearLabel'),   cls:styles.distNear, note:t('produitDetail.livraison.distBadge.nearNote')  };
+  return                         { label:t('produitDetail.livraison.distBadge.farLabel'),    cls:styles.distFar,  note:t('produitDetail.livraison.distBadge.farNote')   };
 }
 
 /* Convertit LivreurApi → Livreur (type mock) */
@@ -73,14 +75,18 @@ function toCorrespondant(c: CorrespondantApi): Correspondant {
     online: c.online, baseFee: c.baseFee };
 }
 
-const SPEED_OPTIONS: { key: SpeedKey; icon: string; label: string; mul: string }[] = [
-  { key: 'eco',      icon: '🐢', label: 'Économique', mul: '×1.0' },
-  { key: 'standard', icon: '🚴', label: 'Standard',   mul: '×1.3' },
-  { key: 'express',  icon: '🚀', label: 'Express',    mul: '×1.8' },
-  { key: 'ultra',    icon: '⚡', label: 'Ultra',      mul: '×2.5' },
-];
+function getSpeedOptions(t: TFunction): { key: SpeedKey; icon: string; label: string; mul: string }[] {
+  return [
+    { key: 'eco',      icon: '🐢', label: t('produitDetail.livraison.speedOptions.eco'),      mul: '×1.0' },
+    { key: 'standard', icon: '🚴', label: t('produitDetail.livraison.speedOptions.standard'), mul: '×1.3' },
+    { key: 'express',  icon: '🚀', label: t('produitDetail.livraison.speedOptions.express'),  mul: '×1.8' },
+    { key: 'ultra',    icon: '⚡', label: t('produitDetail.livraison.speedOptions.ultra'),     mul: '×2.5' },
+  ];
+}
 
 export default function LivraisonSection({ onChange, onToast, policy }: Props) {
+  const { t } = useTranslation();
+  const SPEED_OPTIONS = getSpeedOptions(t);
   /* ── Politique de livraison du produit (défauts permissifs) ── */
   const allowStandard      = policy?.standard      ?? true;
   const allowLivreur       = policy?.livreur        ?? true;
@@ -164,7 +170,7 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
     notify({ selectedCorr:null });
   }
   function handleSelCorr(c: Correspondant) {
-    setSelCorr(c); onToast(`✅ Correspondant : ${c.name}`);
+    setSelCorr(c); onToast(t('produitDetail.livraison.correspondantToast', { name: c.name }));
     notify({ selectedCorr:c });
   }
   function handleDelMode(mode: 'standard'|'livreur') {
@@ -174,37 +180,37 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
   function handleSelLvr(l: Livreur) {
     setSelLvr(l);
     const fee = calcFee(l.baseFee, distZ, speed);
-    onToast(`✅ ${l.name} — ${fee.toLocaleString('fr')} GNF`);
+    onToast(t('produitDetail.livraison.livreurToast', { name: l.name, fee: fee.toLocaleString('fr') }));
     notify({ selectedLvr:l });
   }
   function handleSpeed(s: SpeedKey) {
     setSpeed(s); notify({ currentSpeed: s });
   }
 
-  const distBadge = ville ? getDistBadge(isIntl, distZ) : null;
+  const distBadge = ville ? getDistBadge(isIntl, distZ, t) : null;
 
   return (
     <div className={styles.section}>
       <div className={styles.sectionHd}>
         <i className="fas fa-truck-fast" />
-        <span className={styles.hdTitle}>Livraison &amp; Réception</span>
-        <span className={styles.hdReq}>Requis avant commande</span>
+        <span className={styles.hdTitle}>{t('produitDetail.livraison.titre')}</span>
+        <span className={styles.hdReq}>{t('produitDetail.livraison.requis')}</span>
       </div>
 
       {/* ÉTAPE 1 — Adresse */}
       <div className={styles.step}>
         <div className={styles.stepTitle}>
           <span className={styles.stepNum}>1</span>
-          Votre adresse de destination
-          {ville && <span className={styles.stepDone}><i className="fas fa-check-circle" /> Renseigné</span>}
+          {t('produitDetail.livraison.etape1Titre')}
+          {ville && <span className={styles.stepDone}><i className="fas fa-check-circle" /> {t('produitDetail.livraison.renseigne')}</span>}
         </div>
         <div className={styles.addrRow}>
           <select className={styles.field} value={cont} onChange={e => handleContinent(e.target.value)}>
-            <option value="">-- Votre continent --</option>
+            <option value="">{t('produitDetail.livraison.choisirContinent')}</option>
             {Object.entries(GEO_DATA).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
           <select className={styles.field} value={pays} onChange={e => handlePays(e.target.value)} disabled={!cont}>
-            <option value="">-- Votre pays --</option>
+            <option value="">{t('produitDetail.livraison.choisirPays')}</option>
             {cont && GEO_DATA[cont] && Object.entries(GEO_DATA[cont].pays).map(([code, data]) => (
               <option key={code} value={code}>{data.label}</option>
             ))}
@@ -213,10 +219,10 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
         {pays && (
           <div className={styles.addrRow}>
             <select className={styles.field} value={ville} onChange={e => handleVille(e.target.value)}>
-              <option value="">-- Votre ville --</option>
+              <option value="">{t('produitDetail.livraison.choisirVille')}</option>
               {GEO_DATA[cont]?.pays[pays]?.villes.map(v => <option key={v} value={v}>{v}</option>)}
             </select>
-            <input type="text" className={styles.field} placeholder="Quartier / Rue (optionnel)" />
+            <input type="text" className={styles.field} placeholder={t('produitDetail.livraison.quartierPlaceholder')} />
           </div>
         )}
         {distBadge && (
@@ -237,8 +243,7 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
         }}>
           <i className="fas fa-circle-xmark" style={{ fontSize: 16, flexShrink: 0 }} />
           <span>
-            Aucun mode de livraison disponible pour ce produit.
-            Contactez directement la boutique pour organiser la livraison.
+            {t('produitDetail.livraison.aucunMode')}
           </span>
         </div>
       )}
@@ -248,19 +253,19 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
         <div className={styles.step}>
           <div className={styles.stepTitle}>
             <span className={styles.stepNum}>2</span>
-            Correspondant Shopi
-            {(corrMode === 'direct' || selCorr) && <span className={styles.stepDone}><i className="fas fa-check-circle" /> Sélectionné</span>}
+            {t('produitDetail.livraison.correspondantTitre')}
+            {(corrMode === 'direct' || selCorr) && <span className={styles.stepDone}><i className="fas fa-check-circle" /> {t('produitDetail.livraison.selectionne')}</span>}
           </div>
           <div className={styles.corrBlock}>
-            <div className={styles.corrBlockTitle}><i className="fas fa-map-pin" /> Boutique en dehors de votre continent</div>
+            <div className={styles.corrBlockTitle}><i className="fas fa-map-pin" /> {t('produitDetail.livraison.boutiqueHorsContinent')}</div>
             <div className={styles.corrBlockDesc}>
-              <strong>Pourquoi un correspondant ?</strong><br />
-              La boutique est à l'international. Un correspondant Shopi peut réceptionner votre colis, vérifier son état et vous le remettre.
+              <strong>{t('produitDetail.livraison.pourquoiCorrespondant')}</strong><br />
+              {t('produitDetail.livraison.pourquoiDesc')}
             </div>
             <div className={styles.corrChoix}>
               {[
-                { mode:'direct' as const, ico:'📦', titre:'Livraison directe',   sub:'La boutique expédie directement (délai plus long)' },
-                { mode:'corr'   as const, ico:'🤝', titre:'Via un correspondant', sub:'Recommandé — relais local, plus sûr et plus rapide' },
+                { mode:'direct' as const, ico:'📦', titre:t('produitDetail.livraison.livraisonDirecteTitre'),   sub:t('produitDetail.livraison.livraisonDirecteSub') },
+                { mode:'corr'   as const, ico:'🤝', titre:t('produitDetail.livraison.viaCorrespondantTitre'), sub:t('produitDetail.livraison.viaCorrespondantSub') },
               ].map(opt => (
                 <div key={opt.mode} className={`${styles.corrOpt} ${corrMode === opt.mode ? styles.corrOptSel : ''}`}
                   onClick={() => handleCorrMode(opt.mode)}>
@@ -274,7 +279,7 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
 
             {corrMode === 'corr' && (
               <div className={styles.corrList}>
-                <div className={styles.corrListHd}><i className="fas fa-users" /> Correspondants disponibles</div>
+                <div className={styles.corrListHd}><i className="fas fa-users" /> {t('produitDetail.livraison.correspondantsDisponibles')}</div>
                 {loadingCorr ? (
                   <div style={{ padding:'16px', textAlign:'center', color:'var(--t3)' }}>
                     <i className="fas fa-circle-notch fa-spin" />
@@ -292,7 +297,7 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
                       </div>
                     </div>
                     <div className={styles.corrRight}>
-                      <div className={styles.corrFee}>{c.baseFee.toLocaleString('fr')} GNF<small>frais corresp.</small></div>
+                      <div className={styles.corrFee}>{c.baseFee.toLocaleString('fr')} GNF<small>{t('produitDetail.livraison.fraisCorresp')}</small></div>
                       <div className={`${styles.corrRadio} ${selCorr?.id === c.id ? styles.corrRadioOn : ''}`} />
                     </div>
                   </div>
@@ -308,8 +313,8 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
         <div className={styles.step}>
           <div className={styles.stepTitle}>
             <span className={styles.stepNum}>{isIntl ? '3' : '2'}</span>
-            Mode de livraison finale
-            {delMode && (delMode === 'standard' || selLvr) && <span className={styles.stepDone}><i className="fas fa-check-circle" /> Sélectionné</span>}
+            {t('produitDetail.livraison.modeFinaleTitre')}
+            {delMode && (delMode === 'standard' || selLvr) && <span className={styles.stepDone}><i className="fas fa-check-circle" /> {t('produitDetail.livraison.selectionne')}</span>}
           </div>
 
           <div className={styles.modeGrid}>
@@ -320,16 +325,16 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
                 <div className={styles.modeOptTop}>
                   <div className={`${styles.modeRadio} ${delMode === 'standard' ? styles.modeRadioOn : ''}`} />
                   <div className={styles.modeIco}>🚚</div>
-                  <div><div className={styles.modeTitle}>Livraison standard</div><div className={styles.modeSub}>Gérée par la boutique</div></div>
+                  <div><div className={styles.modeTitle}>{t('produitDetail.livraison.livraisonStandardTitre')}</div><div className={styles.modeSub}>{t('produitDetail.livraison.livraisonStandardSub')}</div></div>
                 </div>
                 <span className={`${styles.modePrix} ${styles.modePrixGreen}`}>
                   {fraisStandard && fraisStandard > 0
                     ? `${fraisStandard.toLocaleString('fr-FR')} GNF`
-                    : 'Gratuite'
+                    : t('produitDetail.livraison.gratuite')
                   }
                 </span>
                 <div className={styles.modeDel}>
-                  <i className="fas fa-calendar" /> {delaiStandard ?? 'Délai selon la distance'}
+                  <i className="fas fa-calendar" /> {delaiStandard ?? t('produitDetail.livraison.delaiSelonDistance')}
                 </div>
               </div>
             )}
@@ -341,15 +346,15 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
                 <div className={styles.modeOptTop}>
                   <div className={`${styles.modeRadio} ${delMode === 'livreur' ? styles.modeRadioOn : ''}`} />
                   <div className={styles.modeIco}>🛵</div>
-                  <div><div className={styles.modeTitle}>Choisir un livreur</div><div className={styles.modeSub}>Livreurs de votre réseau</div></div>
+                  <div><div className={styles.modeTitle}>{t('produitDetail.livraison.choisirLivreurTitre')}</div><div className={styles.modeSub}>{t('produitDetail.livraison.choisirLivreurSub')}</div></div>
                 </div>
                 {loadingLvr
                   ? <span className={styles.modePrix}><i className="fas fa-circle-notch fa-spin" /></span>
                   : <span className={`${styles.modePrix} ${styles.modePrixTeal}`}>
-                      À partir de {Math.min(...livreurs.map(l => calcFee(l.baseFee, distZ, speed))).toLocaleString('fr')} GNF
+                      {t('produitDetail.livraison.aPartirDe', { montant: Math.min(...livreurs.map(l => calcFee(l.baseFee, distZ, speed))).toLocaleString('fr') })}
                     </span>
                 }
-                <div className={styles.modeDel}><i className="fas fa-bolt" /> Prix selon distance + vitesse</div>
+                <div className={styles.modeDel}><i className="fas fa-bolt" /> {t('produitDetail.livraison.prixSelonDistance')}</div>
               </div>
             )}
           </div>
@@ -358,14 +363,14 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
           {delMode === 'livreur' && !loadingLvr && (
             <div className={styles.livreurPanel}>
               <div className={styles.panelHd}>
-                <div><div className={styles.panelTitle}>Choisissez votre livreur</div><div className={styles.panelSub}>Livreurs abonnés à vous et à la boutique</div></div>
+                <div><div className={styles.panelTitle}>{t('produitDetail.livraison.choisissezVotreLivreur')}</div><div className={styles.panelSub}>{t('produitDetail.livraison.livreursAbonnes')}</div></div>
                 <div className={styles.srcTags}>
-                  <span className={`${styles.srcTag} ${styles.srcClient}`}><i className="fas fa-user" /> Mes abonnés</span>
-                  <span className={`${styles.srcTag} ${styles.srcBoutique}`}><i className="fas fa-store" /> Boutique</span>
+                  <span className={`${styles.srcTag} ${styles.srcClient}`}><i className="fas fa-user" /> {t('produitDetail.livraison.mesAbonnes')}</span>
+                  <span className={`${styles.srcTag} ${styles.srcBoutique}`}><i className="fas fa-store" /> {t('produitDetail.livraison.boutique')}</span>
                 </div>
               </div>
 
-              <div className={styles.speedLabel}><i className="fas fa-gauge" style={{ color:'var(--blue)' }} /> Vitesse de livraison</div>
+              <div className={styles.speedLabel}><i className="fas fa-gauge" style={{ color:'var(--blue)' }} /> {t('produitDetail.livraison.vitesseLivraison')}</div>
               <div className={styles.speedSel}>
                 {SPEED_OPTIONS.map(s => (
                   <button key={s.key} className={`${styles.speedBtn} ${speed === s.key ? styles.speedBtnActive : ''}`}
@@ -397,8 +402,8 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
                           <span className={styles.lvRat}><i className="fas fa-star" /> {l.rating}</span>
                         </div>
                         <div className={styles.lvMeta} style={{ marginTop:4 }}>
-                          {(l.source==='client'||l.source==='both') && <span className={`${styles.lvTag} ${styles.lvTagCli}`}>👤 Votre abonné</span>}
-                          {(l.source==='boutique'||l.source==='both') && <span className={`${styles.lvTag} ${styles.lvTagBou}`}>🏪 Boutique</span>}
+                          {(l.source==='client'||l.source==='both') && <span className={`${styles.lvTag} ${styles.lvTagCli}`}>{t('produitDetail.livraison.votreAbonne')}</span>}
+                          {(l.source==='boutique'||l.source==='both') && <span className={`${styles.lvTag} ${styles.lvTagBou}`}>🏪 {t('produitDetail.livraison.boutique')}</span>}
                         </div>
                       </div>
                       <div className={styles.lvRight}>
@@ -407,7 +412,7 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
                           {fee !== base && <span className={styles.lvBase}>{base.toLocaleString('fr')} GNF</span>}
                         </div>
                         <div className={styles.lvEta}><i className="fas fa-clock" /> {eta}</div>
-                        <div className={styles.lvDist}>{distZ==='local'?'Même ville':distZ==='near'?'Proche':'Autre région'}</div>
+                        <div className={styles.lvDist}>{distZ==='local'?t('produitDetail.livraison.distLabels.local'):distZ==='near'?t('produitDetail.livraison.distLabels.near'):t('produitDetail.livraison.distLabels.far')}</div>
                         <div className={`${styles.lvRadio} ${selLvr?.id === l.id ? styles.lvRadioOn : ''}`} />
                       </div>
                     </div>
@@ -417,13 +422,13 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
 
               {selLvr && (
                 <div className={styles.lvSummary}>
-                  <div className={styles.summItem}><span className={styles.summLbl}>Livreur :</span><span className={styles.summVal}>{selLvr.name}</span></div>
+                  <div className={styles.summItem}><span className={styles.summLbl}>{t('produitDetail.livraison.summary.livreur')}</span><span className={styles.summVal}>{selLvr.name}</span></div>
                   <div className={styles.summSep} />
-                  <div className={styles.summItem}><span className={styles.summLbl}>Vitesse :</span><span className={styles.summVal}>{SPEED_OPTIONS.find(s=>s.key===speed)?.icon} {SPEED_OPTIONS.find(s=>s.key===speed)?.label}</span></div>
+                  <div className={styles.summItem}><span className={styles.summLbl}>{t('produitDetail.livraison.summary.vitesse')}</span><span className={styles.summVal}>{SPEED_OPTIONS.find(s=>s.key===speed)?.icon} {SPEED_OPTIONS.find(s=>s.key===speed)?.label}</span></div>
                   <div className={styles.summSep} />
-                  <div className={styles.summItem}><span className={styles.summLbl}>Frais :</span><span className={`${styles.summVal} ${styles.summValTeal}`}>{calcFee(selLvr.baseFee, distZ, speed).toLocaleString('fr')} GNF</span></div>
+                  <div className={styles.summItem}><span className={styles.summLbl}>{t('produitDetail.livraison.summary.frais')}</span><span className={`${styles.summVal} ${styles.summValTeal}`}>{calcFee(selLvr.baseFee, distZ, speed).toLocaleString('fr')} GNF</span></div>
                   <div className={styles.summSep} />
-                  <div className={styles.summItem}><span className={styles.summLbl}>Délai :</span><span className={styles.summVal}>{SPEED_ETA[selLvr.distZone]?.[speed]}</span></div>
+                  <div className={styles.summItem}><span className={styles.summLbl}>{t('produitDetail.livraison.summary.delai')}</span><span className={styles.summVal}>{SPEED_ETA[selLvr.distZone]?.[speed]}</span></div>
                 </div>
               )}
             </div>

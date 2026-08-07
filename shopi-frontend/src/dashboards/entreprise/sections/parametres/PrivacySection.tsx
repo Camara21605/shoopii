@@ -2,7 +2,8 @@
  * FICHIER : src/dashboards/entreprise/sections/parametres/PrivacySection.tsx
  * Section 11 — Confidentialité (7 toggles)
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
@@ -13,22 +14,22 @@ interface Props {
   savePrivacy: (b: Record<string, boolean>) => Promise<void>;
 }
 
-const PRIVACY_ITEMS = [
-  { key:'showInSearch',       label:'Apparaître dans la recherche',           sub:'Votre boutique est visible dans les résultats de recherche Shopi' },
-  { key:'showSalesStats',     label:'Afficher les stats de vente',            sub:'Les clients voient le nombre de commandes et la note' },
-  { key:'allowFollow',        label:'Permettre les abonnements',              sub:'Les utilisateurs peuvent suivre votre boutique' },
-  { key:'shareExactLocation', label:'Partager l\'adresse exacte',             sub:'Sinon, seule la commune est affichée' },
-  { key:'improveAlgorithm',   label:'Améliorer les recommandations Shopi',    sub:'Vos données aident à personnaliser les résultats' },
-  { key:'anonymizedStats',    label:'Partager des statistiques anonymisées',  sub:'Contribue à l\'amélioration de la plateforme' },
-  { key:'advancedReports',    label:'Rapports avancés personnalisés',         sub:'Accédez à des analyses détaillées de votre boutique' },
-];
-
 const DEFAULTS: Record<string, boolean> = {
   showInSearch:true, showSalesStats:true, allowFollow:true,
   shareExactLocation:false, improveAlgorithm:true, anonymizedStats:true, advancedReports:false,
 };
 
 export default function PrivacySection({ data, saving, onDirty, onToast, savePrivacy }: Props) {
+  const { t } = useTranslation();
+  const PRIVACY_ITEMS = [
+    { key:'showInSearch',       label:t('parametres.privacy.items.showInSearch.label'),           sub:t('parametres.privacy.items.showInSearch.sub') },
+    { key:'showSalesStats',     label:t('parametres.privacy.items.showSalesStats.label'),            sub:t('parametres.privacy.items.showSalesStats.sub') },
+    { key:'allowFollow',        label:t('parametres.privacy.items.allowFollow.label'),              sub:t('parametres.privacy.items.allowFollow.sub') },
+    { key:'shareExactLocation', label:t('parametres.privacy.items.shareExactLocation.label'),             sub:t('parametres.privacy.items.shareExactLocation.sub') },
+    { key:'improveAlgorithm',   label:t('parametres.privacy.items.improveAlgorithm.label'),    sub:t('parametres.privacy.items.improveAlgorithm.sub') },
+    { key:'anonymizedStats',    label:t('parametres.privacy.items.anonymizedStats.label'),  sub:t('parametres.privacy.items.anonymizedStats.sub') },
+    { key:'advancedReports',    label:t('parametres.privacy.items.advancedReports.label'),         sub:t('parametres.privacy.items.advancedReports.sub') },
+  ];
   const [privacy, setPrivacy] = useState<Record<string, boolean>>(DEFAULTS);
 
   useEffect(() => {
@@ -38,18 +39,18 @@ export default function PrivacySection({ data, saving, onDirty, onToast, savePri
   function toggle(key: string) { setPrivacy(prev => ({ ...prev, [key]: !prev[key] })); onDirty(); }
 
   async function handleSave() {
-    try { await savePrivacy(privacy); onToast('✅ Confidentialité sauvegardée', 's'); }
-    catch { onToast('❌ Erreur lors de la sauvegarde', 'e'); }
+    try { await savePrivacy(privacy); onToast(t('parametres.privacy.savedToast'), 's'); }
+    catch { onToast(t('parametres.privacy.errorToast'), 'e'); }
   }
 
   return (
     <>
       <div className={s.sectionHd}>
-        <h1><i className="fas fa-eye-slash" /> Confidentialité</h1>
-        <p>Contrôlez quelles informations de votre boutique sont visibles et partagées.</p>
+        <h1><i className="fas fa-eye-slash" /> {t('parametres.privacy.title')}</h1>
+        <p>{t('parametres.privacy.subtitle')}</p>
       </div>
 
-      <FormCard title="Préférences de confidentialité" icon="fa-lock" subtitle="Ces paramètres s'appliquent à votre page boutique publique">
+      <FormCard title={t('parametres.privacy.prefsTitle')} icon="fa-lock" subtitle={t('parametres.privacy.prefsSubtitle')}>
         {PRIVACY_ITEMS.map((item, idx) => (
           <div key={item.key} style={{
             display:'flex', alignItems:'center', gap:16, padding:'12px 0',
@@ -72,7 +73,7 @@ export default function PrivacySection({ data, saving, onDirty, onToast, savePri
 
         <div className={s.saveRow}>
           <button className={s.saveBtn} onClick={handleSave} disabled={saving}>
-            {saving ? <><i className="fas fa-spinner fa-spin" /> Sauvegarde…</> : <><i className="fas fa-cloud-arrow-up" /> Sauvegarder la confidentialité</>}
+            {saving ? <><i className="fas fa-spinner fa-spin" /> {t('parametres.privacy.sauvegardeEnCours')}</> : <><i className="fas fa-cloud-arrow-up" /> {t('parametres.privacy.sauvegarderConfidentialite')}</>}
           </button>
         </div>
       </FormCard>

@@ -1,0 +1,204 @@
+{
+  "clients": {
+    "segment": {
+      "VIP": "VIP",
+      "Fidèle": "Loyal",
+      "Régulier": "Regular",
+      "Nouveau": "New",
+      "Abonné": "Follower"
+    },
+    "sourceBadge": {
+      "acheteurEtAbonne": "🛒 + 👁️",
+      "acheteur": "🛒 Buyer",
+      "abonne": "👁️ Follower"
+    },
+    "date": {
+      "auj": "Today",
+      "hier": "Yesterday",
+      "ilYaJours": "{{count}}d ago",
+      "ilYaSemaines": "{{count}}w ago",
+      "ilYaMois": "{{count}}mo ago"
+    },
+    "header": {
+      "titlePart1": "Customers",
+      "titleMark": "& Followers",
+      "subtitle": "Buyers + followers of your store — real-time data",
+      "actualiser": "Refresh"
+    },
+    "kpi": {
+      "totalClients": "Total customers",
+      "totalClientsSub": "{{buyers}} buyers · {{abonnes}} followers",
+      "clientsVip": "VIP customers",
+      "clientsVipSub": "≥ 10M GNF or 10+ orders",
+      "caTotalClients": "Total customer revenue",
+      "panierMoySub": "Avg. cart: {{montant}} GNF",
+      "nouveauxAcheteurs": "New buyers",
+      "premiereCommande": "First order"
+    },
+    "filters": {
+      "tous": "All",
+      "acheteurs": "🛒 Buyers",
+      "abonnes": "👁️ Followers",
+      "tousSegments": "All segments",
+      "vip": "👑 VIP",
+      "fideles": "⭐ Loyal",
+      "reguliers": "🔄 Regular",
+      "nouveaux": "🆕 New"
+    },
+    "search": "Name or email…",
+    "baseClients": "Customer base",
+    "sort": {
+      "plusDepense": "Most spent",
+      "plusCommandes": "Most orders",
+      "derniereCommande": "Last order",
+      "plusRecents": "Most recent"
+    },
+    "loading": "Loading customers…",
+    "error": {
+      "title": "Loading error",
+      "reessayer": "Retry"
+    },
+    "empty": {
+      "aucunResultat": "No results",
+      "aucunClient": "No customers yet",
+      "subRecherche": "No customer matches your search.",
+      "subDefaut": "Your first customers will appear here as soon as they place an order or follow your store."
+    },
+    "table": {
+      "client": "Customer",
+      "contact": "Contact",
+      "source": "Source",
+      "commandes": "Orders",
+      "totalDepense": "Total spent",
+      "segment": "Segment",
+      "derniereCmd": "Last order",
+      "actions": "Actions",
+      "abonne": "Follower",
+      "cmds": "orders",
+      "profil": "Profile",
+      "message": "Message",
+      "messageToast": "📧 Message sent to {{name}}"
+    },
+    "pagination_one": "{{count}} customer · Page {{page}}/{{pages}}",
+    "pagination_other": "{{count}} customers · Page {{page}}/{{pages}}",
+    "sidePanel": {
+      "repartition": "Breakdown",
+      "chargement": "Loading…",
+      "metriquesCles": "Key metrics",
+      "acheteurs": "Buyers",
+      "abonnesBoutique": "Store followers",
+      "caTotal": "Total revenue",
+      "panierMoyen": "Average cart",
+      "actionsCrm": "CRM actions"
+    },
+    "quickActions": {
+      "newsletterVip": "Send VIP newsletter",
+      "offreFidelite": "Automatic loyalty offer",
+      "rapportSegments": "Segments PDF report",
+      "relanceInactifs": "Re-engage inactive customers"
+    }
+  },
+  "clientProfil": {
+    "status": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "in_progress": "In progress",
+      "awaiting_client": "To confirm",
+      "delivered": "Delivered",
+      "auto_delivered": "Delivered (auto)",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded",
+      "disputed": "Disputed"
+    },
+    "mode": {
+      "livreur": "🛵 Courier",
+      "correspondant": "🤝 Correspondent",
+      "partenaire": "🤝 Partner",
+      "pickup": "🏪 Store pickup",
+      "mixte": "🔀 Mixed"
+    },
+    "clientDepuis": "Customer since {{date}}",
+    "kpi": {
+      "commandes": "Orders",
+      "dansCetteBoutique": "in this store",
+      "totalDepense": "Total spent",
+      "depuisLeDebut": "since the start",
+      "derniereCmd": "Last order"
+    },
+    "tabs": {
+      "apercu": "Overview",
+      "commandes": "Orders ({{count}})"
+    },
+    "loadingProfil": "Loading profile…",
+    "aperçu": {
+      "relationTitle": "Relationship with your store",
+      "commandesPassees": "Orders placed",
+      "totalDepense": "Total spent",
+      "abonneBoutique": "Follows the store",
+      "oui": "✅ Yes",
+      "non": "❌ No",
+      "segment": "Segment",
+      "derniereCommandeTitle": "Last order",
+      "aucuneCommandeTitle": "No orders yet",
+      "aucuneCommandeSub": "This customer follows your store but hasn't bought yet."
+    },
+    "commandesTab": {
+      "aucune": "No orders",
+      "livreLe": "Delivered on {{date}}",
+      "produits": "Products: {{montant}}",
+      "affichageLimite": "Showing the last 10 orders out of {{total}} in total."
+    },
+    "footer": {
+      "messageToast": "📧 Message sent to {{name}}",
+      "envoyerMessage": "Send a message",
+      "fermer": "Close"
+    }
+  },
+  "avis": {
+    "loadError": "Unable to load reviews",
+    "reponsePublieeToast": "✅ Reply published",
+    "reponseErrorToast": "❌ Error while publishing",
+    "kpi": {
+      "noteGlobale": "Overall rating",
+      "sur5Etoiles": "Out of 5 stars",
+      "avisAuTotal": "Total reviews",
+      "clientsVerifies": "Verified customers",
+      "satisfaction": "Satisfaction",
+      "quatreEtCinqEtoiles": "4 and 5 stars",
+      "sansReponse": "Unanswered",
+      "aTraiter": "To handle"
+    },
+    "filters": {
+      "tous": "All reviews",
+      "avecReponse": "✅ Replied",
+      "sansReponse": "⏳ Unanswered"
+    },
+    "loading": "Loading reviews…",
+    "empty": {
+      "title": "No reviews",
+      "subPending": "All reviews have received a reply.",
+      "subReplied": "No review has been replied to yet.",
+      "subDefault": "No customer reviews yet."
+    },
+    "sur": "On:",
+    "votreReponse": "Your reply",
+    "replyPlaceholder": "Reply to this review…",
+    "envoiEnCours": "Sending…",
+    "publier": "Publish",
+    "annuler": "Cancel",
+    "repondre": "Reply",
+    "modifierReponse": "Edit reply",
+    "modifierReponseToast": "✏️ Editing reply",
+    "signaler": "Report",
+    "signalerToast": "🚩 Review reported for moderation",
+    "sidePanel": {
+      "distributionNotes": "Rating distribution",
+      "avisVerifies_one": "{{count}} verified review",
+      "avisVerifies_other": "{{count}} verified reviews",
+      "conseilsShopi": "Shopi tips",
+      "tip1": "Reply within 24h for +12% satisfaction.",
+      "tip2": "A seller who replies gets 2× more new reviews.",
+      "tip3": "Always thank positive reviews — even briefly."
+    }
+  }
+}

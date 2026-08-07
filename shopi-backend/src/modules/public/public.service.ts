@@ -351,14 +351,32 @@ export class PublicService {
 
   // ── Mappers privés ────────────────────────────────────────────
 
+  /**
+   * Résout le prix EFFECTIVEMENT affiché d'un produit.
+   *
+   * Product.prixPromo/activePromoId sont synchronisés en temps réel par
+   * PromotionsService.syncCompanyProductPromoPrices() dès qu'une promotion
+   * (scope=PRODUCTS ciblant ce produit, ou scope=GLOBAL sur toute
+   * l'entreprise) est activée. Quand une promo est active, elle prime sur
+   * le prixAncien saisi manuellement par la boutique — évite d'afficher un
+   * double rabais incohérent (prix barré manuel + promo par-dessus).
+   */
+  private effectivePrix(p: Product): { prix: number; prixAncien: number | null } {
+    const hasPromo = p.prixPromo != null && Number(p.prixPromo) < Number(p.prix);
+    return hasPromo
+      ? { prix: Number(p.prixPromo), prixAncien: Number(p.prix) }
+      : { prix: Number(p.prix), prixAncien: p.prixAncien != null ? Number(p.prixAncien) : null };
+  }
+
   private toPublicProduit(p: Product): PublicProduitResponse {
     const company = p.company as Company | undefined;
+    const { prix, prixAncien } = this.effectivePrix(p);
     return {
       id:          p.id,
       nom:         p.nom,
       description: p.description,
-      prix:        p.prix,
-      prixAncien:  p.prixAncien,
+      prix,
+      prixAncien,
       marque:      p.marque,
       urlSlug:     p.urlSlug,
       stock:       p.stock,
@@ -400,8 +418,7 @@ export class PublicService {
   private toSimilaire(p: Product): SimilaireResponse {
     const company = p.company as Company | undefined;
     const images  = (p.media ?? []).sort((a, b) => a.ordre - b.ordre);
-    const prix     = p.prix;
-    const prixAnc  = p.prixAncien;
+    const { prix, prixAncien: prixAnc } = this.effectivePrix(p);
     const remise   = prixAnc && prixAnc > prix
       ? Math.round((1 - prix / prixAnc) * 100)
       : 0;
@@ -695,9 +712,8 @@ export class PublicService {
         const mappedSlides: HomeStorySlide[] = slides.map(s => {
           const p        = s.product as any;
           const cat      = p?.category;
-          const prix     = p?.prix ?? 0;
-          const prixAnc  = p?.prixAncien ?? null;
-          const hasPromo = prixAnc && Number(prixAnc) > Number(prix);
+          const { prix, prixAncien: prixAnc } = p ? this.effectivePrix(p) : { prix: 0, prixAncien: null };
+          const hasPromo = prixAnc != null && Number(prixAnc) > Number(prix);
           return {
             productId: s.productId,
             produit:   p?.nom ?? 'Produit',
@@ -744,9 +760,8 @@ export class PublicService {
     return stories.map(s => {
       const product  = s.product as any;
       const category = product?.category;
-      const prix     = product?.prix ?? 0;
-      const prixAnc  = product?.prixAncien ?? null;
-      const hasPromo = prixAnc && prixAnc > prix;
+      const { prix, prixAncien: prixAnc } = product ? this.effectivePrix(product) : { prix: 0, prixAncien: null };
+      const hasPromo = prixAnc != null && prixAnc > prix;
 
       return {
         id:        s.id,

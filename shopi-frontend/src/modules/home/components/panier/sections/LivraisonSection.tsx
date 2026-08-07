@@ -17,7 +17,8 @@
  *   Si la liste est vide → message invitant à suivre des livreurs.
  * ============================================================
  */
-import React from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { CORRESPONDANTS, SPEEDS, fmt, lvFeeCalc } from '../data/panierData';
 import type { LivreurSuivi } from '../services/livreursSuivis.api';
 import styles from '../styles/LivraisonSection.module.css';
@@ -37,18 +38,22 @@ interface Props {
   onToast:  (m: string)  => void;
 }
 
-const SPEED_BTNS = [
-  { key:'eco', em:'🐢', nm:'Éco',      mul:'×1.0'      },
-  { key:'std', em:'🚴', nm:'Standard',  mul:'×1.3 Rec.' },
-  { key:'exp', em:'🚀', nm:'Express',   mul:'×1.8'      },
-  { key:'ult', em:'⚡', nm:'Ultra',     mul:'×2.5'      },
-];
+function getSpeedBtns(t: TFunction) {
+  return [
+    { key:'eco', em:'🐢', nm:t('panierCommande.livraisonSection.speeds.eco'),      mul:'×1.0'      },
+    { key:'std', em:'🚴', nm:t('panierCommande.livraisonSection.speeds.std'),  mul:`×1.3 ${t('panierCommande.livraisonSection.recommande')}` },
+    { key:'exp', em:'🚀', nm:t('panierCommande.livraisonSection.speeds.exp'),   mul:'×1.8'      },
+    { key:'ult', em:'⚡', nm:t('panierCommande.livraisonSection.speeds.ult'),     mul:'×2.5'      },
+  ];
+}
 
 export default function LivraisonSection({
   delMode, selLvr, selCorr, curSpd, showCorr,
   livreurs, loadingLivreurs = false,
   onDel, onSelLvr, onSelCorr, onSpeed, onToast,
 }: Props) {
+  const { t } = useTranslation();
+  const SPEED_BTNS = getSpeedBtns(t);
 
   const spd = SPEEDS[curSpd];
 
@@ -64,8 +69,8 @@ export default function LivraisonSection({
       <div className={styles.scHd}>
         <div className={styles.scNum}>3</div>
         <div>
-          <div className={styles.scTitre}>Mode de livraison</div>
-          <div className={styles.scSub}>Choisissez comment recevoir votre commande</div>
+          <div className={styles.scTitre}>{t('panierCommande.livraisonSection.titre')}</div>
+          <div className={styles.scSub}>{t('panierCommande.livraisonSection.sub')}</div>
         </div>
       </div>
 
@@ -81,11 +86,11 @@ export default function LivraisonSection({
           >
             <div className={`${styles.delRadio} ${delMode === 'std' ? styles.delRadioOn : ''}`} />
             <div className={styles.delIcon}>🚚</div>
-            <div className={styles.delTitre}>Livraison standard</div>
-            <div className={styles.delSub}>Gérée par la boutique</div>
-            <span className={`${styles.delPrice} ${styles.delPriceFree}`}>Gratuite</span>
+            <div className={styles.delTitre}>{t('panierCommande.livraisonSection.livraisonStandard')}</div>
+            <div className={styles.delSub}>{t('panierCommande.livraisonSection.gereeParBoutique')}</div>
+            <span className={`${styles.delPrice} ${styles.delPriceFree}`}>{t('panierCommande.livraisonSection.gratuite')}</span>
             <div className={styles.delEta}>
-              <i className="fas fa-calendar" style={{ fontSize:9 }} /> 24 – 48 heures
+              <i className="fas fa-calendar" style={{ fontSize:9 }} /> {t('panierCommande.livraisonSection.delai2448h')}
             </div>
           </div>
 
@@ -96,14 +101,14 @@ export default function LivraisonSection({
           >
             <div className={`${styles.delRadio} ${delMode === 'lvr' ? styles.delRadioOn : ''}`} />
             <div className={styles.delIcon}>🛵</div>
-            <div className={styles.delTitre}>Choisir un livreur</div>
-            <div className={styles.delSub}>Vos livreurs abonnés</div>
+            <div className={styles.delTitre}>{t('panierCommande.livraisonSection.choisirLivreur')}</div>
+            <div className={styles.delSub}>{t('panierCommande.livraisonSection.vosLivreursAbonnes')}</div>
             <span className={`${styles.delPrice} ${styles.delPriceTeal}`}>
-              {livreurs.length ? `Dès ${fmt(minFee)}` : 'Aucun livreur'}
+              {livreurs.length ? t('panierCommande.livraisonSection.desPrix', { montant: fmt(minFee) }) : t('panierCommande.livraisonSection.aucunLivreur')}
             </span>
             <div className={styles.delEta}>
               <i className="fas fa-bolt" style={{ fontSize:9, color:'var(--teal,#0E7490)' }} />
-              Prix selon distance &amp; vitesse
+              {t('panierCommande.livraisonSection.prixSelonDistance')}
             </div>
           </div>
         </div>
@@ -116,16 +121,16 @@ export default function LivraisonSection({
             <div className={styles.panelHd}>
               <span>
                 <i className="fas fa-motorcycle" style={{ color:'var(--blue,#1A4FC4)', marginRight:4 }} />
-                Vos livreurs suivis
+                {t('panierCommande.livraisonSection.vosLivreursSuivis')}
               </span>
               <div className={styles.srcTags}>
-                <span className={`${styles.srcTag} ${styles.srcC}`}>👤 Vos abonnés</span>
+                <span className={`${styles.srcTag} ${styles.srcC}`}>{t('panierCommande.livraisonSection.vosAbonnes')}</span>
               </div>
             </div>
 
             {/* Sélecteur vitesse */}
             <div className={styles.spdLabel}>
-              <i className="fas fa-gauge" style={{ color:'var(--blue,#1A4FC4)' }} /> Vitesse
+              <i className="fas fa-gauge" style={{ color:'var(--blue,#1A4FC4)' }} /> {t('panierCommande.livraisonSection.vitesse')}
             </div>
             <div className={styles.spdRow}>
               {SPEED_BTNS.map(s => (
@@ -148,7 +153,7 @@ export default function LivraisonSection({
               {loadingLivreurs && (
                 <div style={{ padding:'24px 0', textAlign:'center', color:'var(--t3,#5A7A9E)', fontSize:13 }}>
                   <i className="fas fa-circle-notch fa-spin" style={{ marginRight:6 }} />
-                  Chargement de vos livreurs…
+                  {t('panierCommande.livraisonSection.chargementLivreurs')}
                 </div>
               )}
 
@@ -156,8 +161,8 @@ export default function LivraisonSection({
               {!loadingLivreurs && livreurs.length === 0 && (
                 <div style={{ padding:'24px 16px', textAlign:'center', color:'var(--t3,#5A7A9E)', fontSize:13 }}>
                   <i className="fas fa-user-slash" style={{ fontSize:24, display:'block', marginBottom:10, color:'var(--t4,#96B2CC)' }} />
-                  Vous ne suivez aucun livreur pour le moment.<br />
-                  Abonnez-vous à des livreurs depuis la page <strong>Livreurs</strong> pour les retrouver ici.
+                  {t('panierCommande.livraisonSection.aucunLivreurSuiviPart1')}<br />
+                  {t('panierCommande.livraisonSection.aucunLivreurSuiviPart2')} <strong>{t('panierCommande.livraisonSection.livreursPage')}</strong> {t('panierCommande.livraisonSection.aucunLivreurSuiviPart3')}
                 </div>
               )}
 
@@ -168,7 +173,7 @@ export default function LivraisonSection({
                   <div
                     key={lv.id}
                     className={`${styles.lvCard} ${selLvr === lv.id ? styles.lvCardSel : ''}`}
-                    onClick={() => { onSelLvr(lv.id); onToast(`✅ Livreur : ${lv.nm}`); }}
+                    onClick={() => { onSelLvr(lv.id); onToast(t('panierCommande.livraisonSection.livreurToast', { nom: lv.nm })); }}
                   >
                     {/* Avatar + indicateur online */}
                     <div className={styles.lvAvaWrap}>
@@ -184,7 +189,7 @@ export default function LivraisonSection({
                         <span><i className="fas fa-star" style={{ color:'#B45309' }} /> {lv.rt}</span>
                       </div>
                       <div className={styles.lvMeta} style={{ marginTop:3 }}>
-                        <span className={`${styles.lvSrc} ${styles.lvSrcC}`}>👤 Votre abonné</span>
+                        <span className={`${styles.lvSrc} ${styles.lvSrcC}`}>{t('panierCommande.livraisonSection.votreAbonne')}</span>
                       </div>
                     </div>
 
@@ -207,18 +212,18 @@ export default function LivraisonSection({
         {showCorr && (
           <div className={styles.corrBlk}>
             <div className={styles.corrTitre}>
-              <i className="fas fa-map-pin" /> Correspondant Shopi (boutique internationale)
+              <i className="fas fa-map-pin" /> {t('panierCommande.livraisonSection.correspondantIntl')}
             </div>
             <div className={styles.infoInd}>
               <i className="fas fa-circle-info" />
-              <span>La boutique est à l'étranger. Un correspondant local réceptionne et relaie votre colis.</span>
+              <span>{t('panierCommande.livraisonSection.boutiqueEtranger')}</span>
             </div>
             <div className={styles.corrList}>
               {CORRESPONDANTS.map(c => (
                 <div
                   key={c.id}
                   className={`${styles.corrCard} ${selCorr === c.id ? styles.corrCardSel : ''}`}
-                  onClick={() => { onSelCorr(c.id); onToast(`📍 Correspondant : ${c.nm}`); }}
+                  onClick={() => { onSelCorr(c.id); onToast(t('panierCommande.livraisonSection.correspondantToast', { nom: c.nm })); }}
                 >
                   <div className={styles.corrAva}>{c.em}</div>
                   <div className={styles.corrInf}>

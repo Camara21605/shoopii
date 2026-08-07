@@ -2,7 +2,7 @@
  * FICHIER : profil-correspondant/sections/TabZones.tsx
  * ================================================================ */
 
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/ProfilCorrespondant.module.css';
 import type { ZoneCard, PaysPartenaire } from '../data/types';
 
@@ -27,13 +27,14 @@ function EmptyState({ icon, title, desc }: { icon: string; title: string; desc: 
 }
 
 export default function TabZones({ zones, paysPartenaires, onToast }: Props) {
+  const { t } = useTranslation();
   return (
     <>
       <div className={styles.card}>
-        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-map" /> Zones de couverture</div></div>
+        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-map" /> {t('profilCorrespondant.tabZones.couverture')}</div></div>
         <div className={styles.cb}>
           {zones.length === 0 ? (
-            <EmptyState icon="fa-map-pin" title="Zones non renseignées" desc="Le correspondant n'a pas encore défini ses zones de couverture." />
+            <EmptyState icon="fa-map-pin" title={t('profilCorrespondant.tabZones.couvertureEmptyTitle')} desc={t('profilCorrespondant.tabZones.couvertureEmptyDesc')} />
           ) : (
             <div className={styles.zonesGrid}>
               {zones.map(z => (
@@ -49,15 +50,15 @@ export default function TabZones({ zones, paysPartenaires, onToast }: Props) {
       </div>
 
       <div className={styles.card}>
-        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-globe" /> Réseau de correspondants partenaires</div></div>
+        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-globe" /> {t('profilCorrespondant.tabZones.reseauTitle')}</div></div>
         <div className={styles.cb}>
           {paysPartenaires.length === 0 ? (
-            <EmptyState icon="fa-earth-africa" title="Réseau international non renseigné" desc="Les pays partenaires seront affichés ici dès que renseignés." />
+            <EmptyState icon="fa-earth-africa" title={t('profilCorrespondant.tabZones.reseauEmptyTitle')} desc={t('profilCorrespondant.tabZones.reseauEmptyDesc')} />
           ) : (
             <>
               <div className={styles.intlGrid}>
                 {paysPartenaires.map(p => (
-                  <div key={p.nom} className={styles.countryCard} onClick={() => onToast(`🌍 ${p.nom} — ${p.villes}`)}>
+                  <div key={p.nom} className={styles.countryCard} onClick={() => onToast(t('profilCorrespondant.tabZones.paysToast', { nom: p.nom, villes: p.villes }))}>
                     <div className={styles.ccFlag}>{p.flag}</div>
                     <div>
                       <div className={styles.ccNm}>{p.nom}</div>
@@ -68,7 +69,7 @@ export default function TabZones({ zones, paysPartenaires, onToast }: Props) {
               </div>
               <div className={styles.intlNote}>
                 <i className="fas fa-circle-info" />
-                <span>Les délais et tarifs varient selon la destination — contactez le correspondant pour un devis personnalisé.</span>
+                <span>{t('profilCorrespondant.tabZones.intlNote')}</span>
               </div>
             </>
           )}

@@ -4,8 +4,10 @@
  * CORRECTION : affiche la vraie image depuis imageUrl (API)
  *   avec fallback emoji si pas d'image.
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { ProduitBoutique } from '../data/boutiqueMockData';
 import styles from '../styles/CardsProduit.module.css';
 
@@ -21,18 +23,22 @@ interface Props {
   onToast: (m: string) => void;
 }
 
-const BADGE_CONFIG = {
-  hot:   { label:'🔥 Hot',     cls:'hot'   },
-  new:   { label:'✨ Nouveau', cls:'new'   },
-  promo: { label:'🏷️ Promo',  cls:'promo' },
-  sol:   { label:'🔴 Soldé',  cls:'sol'   },
-};
+function getBadgeConfig(t: TFunction) {
+  return {
+    hot:   { label:t('boutiqueDetail.cardProduit.badges.hot'),   cls:'hot'   },
+    new:   { label:t('boutiqueDetail.cardProduit.badges.new'),   cls:'new'   },
+    promo: { label:t('boutiqueDetail.cardProduit.badges.promo'), cls:'promo' },
+    sol:   { label:t('boutiqueDetail.cardProduit.badges.sol'),   cls:'sol'   },
+  };
+}
 
-const STOCK_CONFIG = {
-  ok:  { label:'✓ En stock',     cls:'ok'  },
-  low: { label:'⚠ Stock limité', cls:'low' },
-  out: { label:'✗ Rupture',      cls:'out' },
-};
+function getStockConfig(t: TFunction) {
+  return {
+    ok:  { label:t('boutiqueDetail.cardProduit.stock.ok'),  cls:'ok'  },
+    low: { label:t('boutiqueDetail.cardProduit.stock.low'), cls:'low' },
+    out: { label:t('boutiqueDetail.cardProduit.stock.out'), cls:'out' },
+  };
+}
 
 function Stars({ n }: { n: number }) {
   return (
@@ -43,11 +49,12 @@ function Stars({ n }: { n: number }) {
 }
 
 export default function CardProduitBoutique({ p, isList, onToast }: Props) {
+  const { t } = useTranslation();
   const [fav, setFav] = useState(false);
   const navigate      = useNavigate();
 
-  const badge = p.badge ? BADGE_CONFIG[p.badge] : null;
-  const stock = STOCK_CONFIG[p.stock];
+  const badge = p.badge ? getBadgeConfig(t)[p.badge] : null;
+  const stock = getStockConfig(t)[p.stock];
 
   // ✅ Navigue vers la page détail si on a un vrai ID produit
   function handleVoir() {
@@ -55,7 +62,7 @@ export default function CardProduitBoutique({ p, isList, onToast }: Props) {
       // ID UUID → vrai produit API
       navigate(`/produit/${p.id}`);
     } else {
-      onToast(`👁️ Détail : ${p.nom}`);
+      onToast(t('boutiqueDetail.cardProduit.detailToast', { nom: p.nom }));
     }
   }
 
@@ -68,7 +75,7 @@ export default function CardProduitBoutique({ p, isList, onToast }: Props) {
 
       <button
         className={`${styles.fav} ${fav ? styles.favOn : ''}`}
-        onClick={() => { setFav(f => !f); onToast(fav ? '💔 Retiré des favoris' : '❤️ Ajouté aux favoris'); }}
+        onClick={() => { setFav(f => !f); onToast(fav ? t('boutiqueDetail.cardProduit.retireFavorisToast') : t('boutiqueDetail.cardProduit.ajouteFavorisToast')); }}
       >
         <i className={fav ? 'fas fa-heart' : 'far fa-heart'} />
       </button>
@@ -84,7 +91,7 @@ export default function CardProduitBoutique({ p, isList, onToast }: Props) {
           : <span className={styles.imgEmoji}>{p.emoji}</span>
         }
         <div className={styles.imgOverlay}>
-          <span><i className="fas fa-eye" /> Voir</span>
+          <span><i className="fas fa-eye" /> {t('boutiqueDetail.cardProduit.voir')}</span>
         </div>
       </div>
 
@@ -109,16 +116,16 @@ export default function CardProduitBoutique({ p, isList, onToast }: Props) {
 
         <span className={`${styles.stock} ${styles[stock.cls]}`}>{stock.label}</span>
 
-        <button className={styles.btnCart} onClick={() => onToast('🛒 Ajouté au panier !')}>
-          <i className="fas fa-cart-plus" /> Ajouter au panier
+        <button className={styles.btnCart} onClick={() => onToast(t('boutiqueDetail.cardProduit.ajouteAuPanierToast'))}>
+          <i className="fas fa-cart-plus" /> {t('boutiqueDetail.cardProduit.ajouterPanier')}
         </button>
 
         <div className={styles.btnRow}>
           <button className={styles.btnSm} onClick={handleVoir}>
-            <i className="fas fa-eye" /> Voir
+            <i className="fas fa-eye" /> {t('boutiqueDetail.cardProduit.voir')}
           </button>
-          <button className={styles.btnSm} onClick={() => onToast(`📤 Partager : ${p.nom}`)}>
-            <i className="fas fa-share-nodes" /> Partager
+          <button className={styles.btnSm} onClick={() => onToast(t('boutiqueDetail.cardProduit.partagerToast', { nom: p.nom }))}>
+            <i className="fas fa-share-nodes" /> {t('boutiqueDetail.cardProduit.partager')}
           </button>
         </div>
       </div>

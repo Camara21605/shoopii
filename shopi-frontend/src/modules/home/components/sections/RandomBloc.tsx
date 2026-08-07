@@ -7,6 +7,8 @@
  *   - Plus aucun placeholder /* … 
  */
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 
 import type { BoutiqueCardData } from '../../data/types';
 import { getRoleFromToken } from '../../../../shared/services/authUtils';
@@ -34,13 +36,15 @@ interface Props {
   onToast: (m: string, type?: 's' | 'i' | 'w' | 'e') => void;
 }
 
-const CONFIG: Record<BlocKind, { kick: string; title: string; sub: string; link: string }> = {
-  produits:       { kick:'Catalogue',    title:'Produits <em>recommandés</em>',  sub:'Sélectionnés pour vous',                  link:'Voir tout le catalogue'  },
-  'produits-gros':{ kick:'Vente en gros',title:'Acheter en <em>gros</em>',       sub:'Prix dégressifs · commande minimum',      link:'Voir tous les produits en gros' },
-  entreprises:    { kick:'Boutiques',    title:'Boutiques <em>à la une</em>',     sub:'Abonnez-vous à vos boutiques favorites', link:'Toutes les boutiques'    },
-  correspondants: { kick:'Réseau local', title:'Nos <em>Correspondants</em>',     sub:'Des relais locaux dans chaque région',   link:'Tous les correspondants' },
-  livreurs:       { kick:'Logistique',   title:'Livreurs <em>disponibles</em>',   sub:'Professionnels vérifiés près de vous',   link:'Tous les livreurs'       },
-};
+function getConfig(t: TFunction): Record<BlocKind, { kick: string; title: string; sub: string; link: string }> {
+  return {
+    produits:        { kick: t('home.randomBloc.produits.kick'),       title: t('home.randomBloc.produits.title'),       sub: t('home.randomBloc.produits.sub'),       link: t('home.randomBloc.produits.link') },
+    'produits-gros': { kick: t('home.randomBloc.produitsGros.kick'),   title: t('home.randomBloc.produitsGros.title'),   sub: t('home.randomBloc.produitsGros.sub'),   link: t('home.randomBloc.produitsGros.link') },
+    entreprises:     { kick: t('home.randomBloc.entreprises.kick'),    title: t('home.randomBloc.entreprises.title'),    sub: t('home.randomBloc.entreprises.sub'),    link: t('home.randomBloc.entreprises.link') },
+    correspondants:  { kick: t('home.randomBloc.correspondants.kick'), title: t('home.randomBloc.correspondants.title'), sub: t('home.randomBloc.correspondants.sub'), link: t('home.randomBloc.correspondants.link') },
+    livreurs:        { kick: t('home.randomBloc.livreurs.kick'),       title: t('home.randomBloc.livreurs.title'),       sub: t('home.randomBloc.livreurs.sub'),       link: t('home.randomBloc.livreurs.link') },
+  };
+}
 
 const SkeletonCard = ({ height = 280 }: { height?: number }) => (
   <div style={{
@@ -56,6 +60,7 @@ const SkeletonCard = ({ height = 280 }: { height?: number }) => (
 
 /* ── Bloc Entreprises — GET /public/boutiques ───────────────── */
 function EntreprisesBloc({ onToast }: { onToast:(m:string)=>void }) {
+  const { t } = useTranslation();
   const [liste,      setListe]      = useState<BoutiqueCardData[]>([]);
   const [suiviIds,   setSuiviIds]   = useState<Set<string>>(new Set());
   const [loading,    setLoading]    = useState(true);
@@ -102,7 +107,7 @@ function EntreprisesBloc({ onToast }: { onToast:(m:string)=>void }) {
 
   if (listeEnrichie.length === 0) return (
     <div style={{ padding:'40px 0', textAlign:'center', color:'var(--t3)', fontSize:14 }}>
-      Aucune boutique disponible pour le moment.
+      {t('home.randomBloc.emptyBoutiques')}
     </div>
   );
 
@@ -114,6 +119,7 @@ function EntreprisesBloc({ onToast }: { onToast:(m:string)=>void }) {
 }
 
 function ProduitsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>void }) {
+  const { t } = useTranslation();
   const [produits, setProduits] = useState<ProductApi[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState(false);
@@ -137,7 +143,7 @@ function ProduitsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>voi
 
   if (error || produits.length === 0) return (
     <div style={{ padding:'40px 0', textAlign:'center', color:'var(--t3)', fontSize:14 }}>
-      {error ? '⚠️ Impossible de charger les produits.' : 'Aucun produit disponible.'}
+      {error ? `⚠️ ${t('home.randomBloc.errorProduits')}` : t('home.randomBloc.emptyProduits')}
     </div>
   );
 
@@ -152,6 +158,7 @@ function ProduitsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>voi
  * BLOC PRODUITS EN GROS
  ───────────────────────────────────────────────────────────── */
 function ProduitsGrosBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>void }) {
+  const { t } = useTranslation();
   const [produits, setProduits] = useState<ProductApi[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState(false);
@@ -175,7 +182,7 @@ function ProduitsGrosBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=
 
   if (error || produits.length === 0) return (
     <div style={{ padding:'40px 0', textAlign:'center', color:'var(--t3)', fontSize:14 }}>
-      {error ? '⚠️ Impossible de charger les produits en gros.' : 'Aucun produit en gros disponible pour le moment.'}
+      {error ? `⚠️ ${t('home.randomBloc.errorProduitsGros')}` : t('home.randomBloc.emptyProduitsGros')}
     </div>
   );
 
@@ -190,7 +197,7 @@ function ProduitsGrosBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=
               fontSize:10, fontWeight:800, padding:'3px 9px',
               borderRadius:99, letterSpacing:.4, lineHeight:1.4,
             }}>
-              MOQ {p.moq} unités
+              {t('home.randomBloc.moqUnites', { moq: p.moq })}
             </div>
           )}
           <CardProduit p={p} onToast={onToast} />
@@ -204,6 +211,7 @@ function ProduitsGrosBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=
  * BLOC LIVREURS
  ───────────────────────────────────────────────────────────── */
 function LivreursBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>void }) {
+  const { t } = useTranslation();
   const [liste,   setListe]   = useState<LivreurCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
@@ -212,9 +220,9 @@ function LivreursBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>voi
     /* L'API renvoie { data, total, page, limit } → on lit res.data */
     apiFetch<{ data: LivreurCardData[] }>('/suivis/livreurs')
       .then(res => setListe(Array.isArray(res?.data) ? res.data : []))
-      .catch(e  => setError(e?.message ?? 'Erreur réseau'))
+      .catch(e  => setError(e?.message ?? t('home.randomBloc.errorReseau')))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   /* Un seul appel API, optimistic + rollback */
   const onFollow = useCallback(async (id: string, next: boolean) => {
@@ -242,7 +250,7 @@ function LivreursBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>voi
 
   if (liste.length === 0) return (
     <div style={{ padding:'40px 0', textAlign:'center', color:'var(--t3)', fontSize:14 }}>
-      Aucun livreur disponible.
+      {t('home.randomBloc.emptyLivreurs')}
     </div>
   );
 
@@ -259,6 +267,7 @@ function LivreursBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>voi
  * BLOC CORRESPONDANTS
  ───────────────────────────────────────────────────────────── */
 function CorrespondantsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>void }) {
+  const { t } = useTranslation();
   const [liste,   setListe]   = useState<CorrespondantCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
@@ -274,9 +283,9 @@ function CorrespondantsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e'
                     : [];
         setListe(cards);
       })
-      .catch(e  => setError(e?.message ?? 'Erreur réseau'))
+      .catch(e  => setError(e?.message ?? t('home.randomBloc.errorReseau')))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   if (loading) return (
     <HScrollSection>
@@ -292,7 +301,7 @@ function CorrespondantsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e'
 
   if (liste.length === 0) return (
     <div style={{ padding:'40px 0', textAlign:'center', color:'var(--t3)', fontSize:14 }}>
-      Aucun correspondant disponible.
+      {t('home.randomBloc.emptyCorrespondants')}
     </div>
   );
 
@@ -309,7 +318,8 @@ function CorrespondantsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e'
  * COMPOSANT PRINCIPAL
  ───────────────────────────────────────────────────────────── */
 export default function RandomBloc({ kind, index, onToast }: Props) {
-  const cfg   = CONFIG[kind];
+  const { t } = useTranslation();
+  const cfg   = getConfig(t)[kind];
   const bgCls = index % 2 === 0 ? styles.bgWhite : styles.bgGray;
 
   return (
@@ -317,7 +327,7 @@ export default function RandomBloc({ kind, index, onToast }: Props) {
       <div className={styles.wrap}>
         <SectionHeader
           kick={cfg.kick} title={cfg.title} sub={cfg.sub}
-          linkText={cfg.link} onLink={() => onToast(`📄 ${cfg.link}`)}
+          linkText={cfg.link} onLink={() => onToast(t('home.randomBloc.toastLink', { link: cfg.link }))}
         />
         {kind === 'produits'       && <ProduitsBloc       onToast={onToast} />}
         {kind === 'produits-gros'  && <ProduitsGrosBloc   onToast={onToast} />}

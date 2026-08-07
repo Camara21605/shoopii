@@ -1,0 +1,688 @@
+{
+  "parametres": {
+    "sidebar": {
+      "title": "Settings",
+      "dirtyBadge": "Unsaved changes",
+      "items": {
+        "boutique": "Store & Identity",
+        "horaires": "Hours",
+        "catalogue": "Catalog & Products",
+        "livraison": "Shipping",
+        "paiement": "Payment & Billing",
+        "commissions": "Shopi Commissions",
+        "documents": "Documents & Verification",
+        "confidentialiteSecurite": "Privacy & Security",
+        "securite": "Security",
+        "notifs": "Notifications",
+        "privacy": "Privacy",
+        "langue": "Language",
+        "danger": "Sensitive zone"
+      },
+      "statusActive": "🟢 Active",
+      "statusPaused": "🟡 Paused",
+      "statusPrivate": "🔴 Private"
+    },
+    "confirmQuitterModifs": "You have unsaved changes. Leave anyway?",
+    "loading": "Loading settings…",
+    "reessayer": "Retry",
+    "saveFloat": {
+      "modifsNonSauvegardees": "Unsaved changes",
+      "annuler": "Cancel",
+      "sauvegarder": "Save"
+    },
+    "toggleRow": {
+      "badgeNew": "New",
+      "badgeRec": "Recommended",
+      "badgeAttn": "Attention"
+    },
+    "horaires": {
+      "savedToast": "✅ Hours saved",
+      "errorToast": "❌ Error while saving",
+      "title": "Opening hours",
+      "subtitle": "Set your opening days and hours. This information is displayed on your store page.",
+      "cardTitle": "Hours by day",
+      "cardSubtitle": "Enable opening days and set the hours",
+      "jours": {
+        "lundi": "Monday",
+        "mardi": "Tuesday",
+        "mercredi": "Wednesday",
+        "jeudi": "Thursday",
+        "vendredi": "Friday",
+        "samedi": "Saturday",
+        "dimanche": "Sunday"
+      },
+      "fermeCeJour": "Closed this day",
+      "sauvegardeEnCours": "Saving…",
+      "sauvegarderHoraires": "Save hours"
+    },
+    "catalogue": {
+      "savedToast": "✅ Catalog saved",
+      "errorToast": "❌ Error while saving",
+      "title": "Catalog & Publishing Rules",
+      "subtitle": "Control how your products are displayed and published on Shopi.",
+      "reglesTitle": "Display rules",
+      "reglesSubtitle": "Behavior of your public catalog",
+      "afficherRupture": "Show out-of-stock products",
+      "afficherRuptureSub": "If disabled, sold-out products are automatically hidden",
+      "publicationAuto": "Automatic publishing",
+      "publicationAutoSub": "New products are published immediately without manual review",
+      "afficherPrixBarres": "Show crossed-out prices",
+      "afficherPrixBarresSub": "Shows the old crossed-out price during promotions",
+      "autoriserAvis": "Allow customer reviews",
+      "autoriserAvisSub": "Only confirmed buyers can leave a review",
+      "deviseAffichage": "Display currency",
+      "deviseGnf": "GNF — Guinean Franc",
+      "deviseEur": "EUR — Euro",
+      "deviseUsd": "USD — US Dollar",
+      "politiqueRetourTitle": "Return policy",
+      "politiqueRetourSubtitle": "Text shown on every product page",
+      "politiquePlaceholder": "E.g.: Return accepted within 7 days of receipt, product unopened and in its original packaging.",
+      "politiqueHint": "This text reassures your buyers and reduces disputes.",
+      "sauvegardeEnCours": "Saving…",
+      "sauvegarderCatalogue": "Save catalog"
+    },
+    "livraison": {
+      "savedToast": "✅ Shipping saved",
+      "errorToast": "❌ Error while saving",
+      "title": "Shipping",
+      "subtitle": "Choose your delivery methods and the areas you serve.",
+      "methodesTitle": "Delivery methods",
+      "methodesSubtitle": "Enable the delivery modes available to your customers",
+      "standard": "Standard delivery",
+      "standardSub": "Handled by your store team",
+      "livreursShopi": "Shopi couriers",
+      "livreursShopiSub": "Shopi's partner courier network",
+      "correspondants": "Correspondents",
+      "correspondantsSub": "Network of local and international relays",
+      "clickCollect": "Click & Collect",
+      "clickCollectSub": "The customer picks up in-store",
+      "express": "Express delivery",
+      "expressSub": "Delivery < 2h with an extra fee",
+      "zonesTitle": "Delivery areas",
+      "zonesSubtitle": "Select the districts you serve",
+      "zonesSelectionnees_one": "{{count}} area selected",
+      "zonesSelectionnees_other": "{{count}} areas selected",
+      "sauvegardeEnCours": "Saving…",
+      "sauvegarderLivraison": "Save shipping"
+    },
+    "paiement": {
+      "savedToast": "✅ Payment saved",
+      "errorToast": "❌ Error while saving",
+      "title": "Payment & Billing",
+      "subtitle": "Configure your payment reception methods and tax information.",
+      "receptionTitle": "Shopi payment reception",
+      "receptionSubtitle": "How you receive your transfers from Shopi",
+      "canalReception": "Reception channel",
+      "waveOption": "Wave",
+      "virementBancaireOption": "Bank transfer",
+      "numeroReception": "Reception number",
+      "frequenceVirements": "Transfer frequency",
+      "quotidien": "Daily",
+      "hebdomadaire": "Weekly",
+      "bimensuel": "Bi-monthly",
+      "mensuel": "Monthly",
+      "montantMinimum": "Minimum amount (GNF)",
+      "fiscalesTitle": "Tax information",
+      "fiscalesSubtitle": "Your company's official numbers",
+      "nifLabel": "Tax ID",
+      "nifPlaceholder": "Tax Identification Number",
+      "rccmLabel": "Business Registry Number",
+      "raisonSocialeLabel": "Legal name",
+      "raisonSocialePlaceholder": "E.g.: TechStore Conakry LLC",
+      "sauvegardeEnCours": "Saving…",
+      "sauvegarderPaiement": "Save payment"
+    },
+    "commissions": {
+      "loadErrorToast": "Error loading commissions",
+      "title": "Shopi Commissions",
+      "subtitle": "Details of the commissions applied to your sales by transaction type.",
+      "grilleTitle": "Commission schedule",
+      "grilleSubtitle": "Your current plan: {{plan}}",
+      "typeTransaction": "Transaction type",
+      "commissionShopi": "Shopi commission",
+      "fraisLivreurCorresp": "Courier/correspondent fees",
+      "retraitImmediat": "Immediate withdrawal",
+      "venteDirecte": "Direct sale via Shopi",
+      "venteLivreurShopi": "Sale with Shopi courier",
+      "selonLivreur": "depends on courier",
+      "venteCorrespondant": "Sale via correspondent",
+      "selonCorresp": "depends on correspondent",
+      "abonnementMensuel": "Monthly store subscription",
+      "inclus": "— (included)",
+      "upgradeTitle": "Upgrade to a higher plan",
+      "upgradeSubtitle": "Reduce your commissions and access advanced features",
+      "planStandardSub": "Basic plan · Included with your registration",
+      "planProSub": "For high-volume stores",
+      "planPremiumSub": "Reduced commissions + advanced marketing tools",
+      "tauxParVente": "{{taux}}% / sale"
+    },
+    "documents": {
+      "docs": {
+        "cni": {
+          "label": "ID card / Passport",
+          "hint": "JPG, PNG or PDF · max 10 MB"
+        },
+        "rccm": {
+          "label": "Business Registry (RCCM)",
+          "hint": "PDF only · max 10 MB"
+        },
+        "bancaire": {
+          "label": "Bank proof",
+          "hint": "Statement or certificate PDF"
+        },
+        "photo": {
+          "label": "Physical store photo",
+          "hint": "JPG, PNG · max 10 MB"
+        },
+        "nif": {
+          "label": "Tax certificate (Tax ID)",
+          "hint": "PDF only · max 10 MB"
+        }
+      },
+      "status": {
+        "pending": "Not submitted",
+        "reviewing": "Under review",
+        "verified": "✅ Verified",
+        "rejected": "❌ Rejected"
+      },
+      "toasts": {
+        "tropLourd": "❌ File too large (max 10 MB)",
+        "uploadEnCours": "⏳ Uploading…",
+        "uploaded": "✅ Document \"{{type}}\" uploaded",
+        "echecUpload": "❌ Upload failed"
+      },
+      "title": "Documents & Verification",
+      "subtitle": "Submit your legal documents to get the \"Shopi Verified Store\" badge.",
+      "statutVerification": "Verification status:",
+      "requisTitle": "Required documents",
+      "requisSubtitle": "The 3 mandatory documents: ID + Business Registry + Bank proof",
+      "documentUploade": "Document uploaded",
+      "remplacer": "Replace",
+      "uploader": "Upload",
+      "hint": "Once the 3 mandatory documents are submitted, your file automatically goes into review. The Shopi team will contact you within 48h."
+    },
+    "securite": {
+      "title": "Security & Login",
+      "subtitle": "Protect your store account with a strong password and two-factor authentication.",
+      "changerMdpTitle": "Change password",
+      "mdpActuel": "Current password",
+      "nouveauMdp": "New password",
+      "nouveauMdpPlaceholder": "Min. 8 characters",
+      "confirmerMdp": "Confirm new password",
+      "confirmerMdpPlaceholder": "Repeat the new password",
+      "force": "Strength:",
+      "pwdLabels": {
+        "tropFaible": "Too weak",
+        "faible": "Weak",
+        "bon": "Good",
+        "fort": "Strong"
+      },
+      "mdpMisAJourToast": "🔐 Password updated",
+      "mettreAJourMdp": "Update password",
+      "twoFaTitle": "Two-Factor Authentication (2FA)",
+      "twoFaSubtitle": "Add an extra layer of security",
+      "nonActive": "Not enabled",
+      "twoFa": {
+        "appTitle": "Authenticator app",
+        "appSub": "Google Authenticator or Authy · Recommended",
+        "appBadge": "Most secure",
+        "smsTitle": "SMS / WhatsApp",
+        "smsSub": "Code sent by message on every login",
+        "smsBadge": "Convenient",
+        "emailTitle": "Email only",
+        "emailSub": "Code sent by email to your main address",
+        "emailBadge": "Basic"
+      },
+      "sessionsTitle": "Active sessions",
+      "sessionsSubtitle": "Devices connected to your store account",
+      "deconnecterTout": "Log out everywhere",
+      "toutesSessionsToast": "🔐 All sessions ended",
+      "sessionActuelle": "Current session",
+      "revoquer": "Revoke",
+      "sessionTermineeToast": "🔐 Session ended",
+      "sessions": {
+        "chromeWindows": "Chrome · Windows 11",
+        "chromeWindowsSub": "Conakry, Guinea · Now",
+        "safariIphone": "Safari · iPhone 14",
+        "safariIphoneSub": "Conakry, Guinea · 2 hours ago",
+        "chromeAndroid": "Chrome · Android",
+        "chromeAndroidSub": "Coyah, Guinea · Yesterday at 6:34 PM"
+      }
+    },
+    "notifs": {
+      "savedToast": "✅ Notifications saved",
+      "errorToast": "❌ Error while saving",
+      "title": "Notifications",
+      "subtitle": "Choose the events for which you want to receive notifications.",
+      "sauvegardeEnCours": "Saving…",
+      "sauvegarderNotifs": "Save notifications",
+      "groups": {
+        "commandes": "📦 Orders",
+        "stockCatalogue": "📊 Stock & Catalog",
+        "avisReputation": "⭐ Reviews & Reputation",
+        "marketingRapports": "📣 Marketing & Reports"
+      },
+      "items": {
+        "newOrder": "New order received",
+        "orderCancelled": "Order cancelled by customer",
+        "orderDelivered": "Order delivered successfully",
+        "paymentReceived": "Payment received",
+        "outOfStock": "Product out of stock",
+        "nearThreshold": "Stock near minimum threshold",
+        "productPublished": "Product publication confirmation",
+        "catalogRequest": "Catalog update request",
+        "newReview": "New customer review",
+        "negativeReview": "Negative review (< 3 stars)",
+        "weeklyReport": "Weekly reputation report",
+        "promoInvitations": "Shopi promotion invitations",
+        "monthlyReport": "Monthly performance report",
+        "shopNews": "Platform news"
+      }
+    },
+    "privacy": {
+      "savedToast": "✅ Privacy settings saved",
+      "errorToast": "❌ Error while saving",
+      "title": "Privacy",
+      "subtitle": "Control which information about your store is visible and shared.",
+      "prefsTitle": "Privacy preferences",
+      "prefsSubtitle": "These settings apply to your public store page",
+      "sauvegardeEnCours": "Saving…",
+      "sauvegarderConfidentialite": "Save privacy settings",
+      "items": {
+        "showInSearch": {
+          "label": "Appear in search",
+          "sub": "Your store is visible in Shopi search results"
+        },
+        "showSalesStats": {
+          "label": "Show sales stats",
+          "sub": "Customers see the number of orders and the rating"
+        },
+        "allowFollow": {
+          "label": "Allow follows",
+          "sub": "Users can follow your store"
+        },
+        "shareExactLocation": {
+          "label": "Share exact address",
+          "sub": "Otherwise, only the district is shown"
+        },
+        "improveAlgorithm": {
+          "label": "Improve Shopi recommendations",
+          "sub": "Your data helps personalize results"
+        },
+        "anonymizedStats": {
+          "label": "Share anonymized statistics",
+          "sub": "Helps improve the platform"
+        },
+        "advancedReports": {
+          "label": "Custom advanced reports",
+          "sub": "Access detailed analytics for your store"
+        }
+      }
+    },
+    "danger": {
+      "title": "Sensitive zone",
+      "subtitle": "These actions are irreversible or have a major impact on your store. Proceed with caution.",
+      "irreversiblesTitle": "Irreversible actions",
+      "irreversiblesSubtitle": "These operations cannot be undone",
+      "confirmationRequise": "⚠️ Confirmation required: {{action}}",
+      "actions": {
+        "pause": {
+          "ttl": "Pause the store",
+          "sub": "Temporarily hide your store. Your data and ongoing orders are kept.",
+          "btn": "Pause"
+        },
+        "disable": {
+          "ttl": "Deactivate account (30 days)",
+          "sub": "Your profile will be hidden for 30 days. All data is kept.",
+          "btn": "Deactivate"
+        },
+        "transfer": {
+          "ttl": "Transfer management",
+          "sub": "Transfer store management to another manager before leaving.",
+          "btn": "Transfer"
+        },
+        "delete": {
+          "ttl": "Permanently delete the store",
+          "sub": "Irreversible action — all your products, orders and sales history will be deleted.",
+          "btn": "Delete the store"
+        }
+      }
+    },
+    "boutique": {
+      "savedToast": "✅ Store saved successfully",
+      "errorToast": "❌ Error while saving",
+      "contactSavedToast": "✅ Contact saved successfully",
+      "logoTropLourd": "❌ Logo too large (max 5 MB)",
+      "formatInvalide": "❌ Invalid format (JPG, PNG, WebP)",
+      "uploadEnCours": "⏳ Uploading…",
+      "logoMisAJour": "✅ Logo updated",
+      "echecUploadLogo": "❌ Logo upload failed",
+      "imageTropLourde": "❌ Image too large (max 8 MB)",
+      "coverMiseAJour": "✅ Cover image updated",
+      "echecUploadCover": "❌ Cover upload failed",
+      "logoSupprime": "🗑️ Logo deleted",
+      "logoSuppressionImpossible": "❌ Unable to delete the logo",
+      "title": "Store & Identity",
+      "subtitle": "Public information about your store. Visible to all customers on the Shopi platform.",
+      "profilLbl": "Profile",
+      "completedAt": "Store {{pct}}% complete",
+      "elementsManquants": "— A few things are missing",
+      "profilCompletPart1": "A complete profile generates",
+      "profilCompletBold": "3× more",
+      "profilCompletPart2": "sales",
+      "logoCoverTitle": "Logo & Cover image",
+      "logoCoverSubtitle": "Visual identity of your store on Shopi",
+      "logoBoutique": "Store logo",
+      "cliquerChangerLogo": "Click to change the logo",
+      "changer": "Change",
+      "supprimer": "Delete",
+      "imageCouverture": "Cover image",
+      "changerCouverture": "Change cover",
+      "couvertureBoutique": "Store cover image",
+      "couvertureDims": "1200×400px · JPG, PNG · max 8 MB",
+      "changerImageCouverture": "Change the cover image",
+      "infosTitle": "Store information",
+      "infosSubtitle": "Data shown on your public store page",
+      "nomBoutique": "Store name",
+      "nomBoutiquePlaceholder": "E.g.: TechStore Conakry",
+      "nomBoutiqueHint": "This name appears in search and on your public URL shopi.gn/boutique/...",
+      "description": "Description",
+      "descriptionVisiblePublique": "publicly visible",
+      "descriptionPlaceholder": "Describe your store in a few lines…",
+      "descriptionHint": "500 characters max",
+      "typeEntreprise": "Business type",
+      "selectionnerType": "Select a type…",
+      "statutLabel": "Status",
+      "statutActive": "🟢 Active — Visible",
+      "statutPause": "🟡 Paused",
+      "statutPrivee": "🔴 Private",
+      "slogan": "Slogan",
+      "optionnel": "optional",
+      "sloganPlaceholder": "E.g.: Fresh guaranteed since 2019",
+      "siteWeb": "Website",
+      "siteWebPlaceholder": "https://your-site.com",
+      "tagsMotsCles": "Tags & Keywords",
+      "tagsPlaceholder": "restaurant, fast delivery, Conakry…",
+      "tagsHint": "Comma-separated",
+      "sauvegardeEnCours": "Saving…",
+      "sauvegarderBoutique": "Save store",
+      "contactTitle": "Contact & Location",
+      "contactSubtitle": "Contact details shown on your public page",
+      "telephonePrincipal": "Main phone",
+      "emailBoutique": "Store email",
+      "whatsappLabel": "WhatsApp",
+      "whatsappPlaceholder": "620 00 00 00 (without +224)",
+      "ville": "City",
+      "choisirVille": "— Choose a city —",
+      "villePlaceholder": "E.g.: Conakry",
+      "commune": "District",
+      "choisirCommune": "— Choose a district —",
+      "quartier": "Neighborhood",
+      "choisirQuartier": "— Choose a neighborhood —",
+      "adressePhysique": "Physical address",
+      "adresseHintRue": "(street, number…)",
+      "adressePlaceholder": "E.g.: Republic Avenue, facing the Grand Market",
+      "repereLivreurs": "Landmark for couriers",
+      "repereLivreursPlaceholder": "E.g.: Red building next to the pharmacy",
+      "sauvegardeContactEnCours": "Saving…",
+      "sauvegarderContact": "Save contact",
+      "responsableTitle": "Manager & Owner",
+      "responsableSubtitle": "Main manager's information",
+      "prenom": "First name",
+      "prenomPlaceholder": "Manager's first name",
+      "nom": "Last name",
+      "nomPlaceholder": "Manager's last name",
+      "responsableHintPart1": "First and last name are changed in",
+      "responsableHintBold": "your account settings",
+      "responsableHintPart2": ".",
+      "steps": {
+        "logo": "Logo",
+        "companyName": "Name & description",
+        "contact": "Contact",
+        "products": "Products",
+        "coverImage": "Cover photo",
+        "returnPolicy": "Return policy"
+      }
+    }
+  },
+  "equipe": {
+    "title": "Team management",
+    "subtitle": "Manage your collaborators' access and permissions.",
+    "addMember": "Add a member",
+    "stats": {
+      "activeMembers": "Active members",
+      "slotsUsed": "Slots used",
+      "suspended": "Suspended",
+      "remainingSlots": "Remaining slots",
+      "activePlan": "Active plan"
+    },
+    "tabs": {
+      "members": "Members",
+      "invitations": "Invitations"
+    },
+    "toolbar": {
+      "searchPlaceholder": "Search by name, email, job title…",
+      "count_one": "{{count}} member",
+      "count_other": "{{count}} members"
+    },
+    "table": {
+      "member": "Member",
+      "jobRole": "Job / Role",
+      "status": "Status",
+      "lastLogin": "Last login",
+      "actions": "Actions"
+    },
+    "loading": "Loading…",
+    "empty": {
+      "membersTitle": "No collaborators yet.",
+      "membersSub": "Click \"Add a member\" to invite your first team member.",
+      "invitationsTitle": "No pending invitations.",
+      "invitationsSub": "Use \"Add a member\" to invite a collaborator by email."
+    },
+    "mustChangePassword": "⚠ Password change required",
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended",
+      "pending": "Pending",
+      "revoked": "Revoked"
+    },
+    "actions": {
+      "editPermissions": "Edit permissions",
+      "activityLog": "Activity log",
+      "resetPassword": "Reset password",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "deleteAccess": "Delete access"
+    },
+    "pagination": {
+      "pageOf": "Page {{page}} / {{total}}"
+    },
+    "invitations": {
+      "pendingTitle": "Pending invitations",
+      "send": "Send an invitation",
+      "expiresOn": "Expires on {{date}}",
+      "resend": "Resend invitation",
+      "cancel": "Cancel invitation"
+    },
+    "confirm": {
+      "suspendTitle": "Suspend {{name}}",
+      "suspendMessage": "{{firstName}} will no longer be able to log in. You can reactivate their access at any time.",
+      "deleteTitle": "Delete access for {{name}}",
+      "deleteMessage": "{{firstName}}'s access will be permanently revoked. This action is irreversible.",
+      "cancelInviteTitle": "Cancel the invitation for {{email}}",
+      "cancelInviteMessage": "The invitation sent to {{email}} will be cancelled. The link will no longer be valid.",
+      "cancel": "Cancel",
+      "confirmBtn": "Confirm"
+    },
+    "toast": {
+      "loadMembersError": "Unable to load members.",
+      "suspended": "{{name}} has been suspended.",
+      "reactivated": "{{name}} has been reactivated.",
+      "reactivateError": "Error while reactivating.",
+      "deleted": "{{name}}'s access has been revoked.",
+      "resetPasswordError": "Error while resetting password.",
+      "permissionsUpdated": "Permissions updated.",
+      "permissionsUpdateError": "Error while updating.",
+      "invitationResent": "Invitation resent.",
+      "genericError": "Error.",
+      "invitationCancelled": "Invitation cancelled.",
+      "passwordCopied": "Password copied!"
+    },
+    "permGroups": {
+      "products": {
+        "label": "Products",
+        "view": "View",
+        "create": "Create",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "orders": {
+        "label": "Orders",
+        "view": "View",
+        "validate": "Validate",
+        "cancel": "Cancel",
+        "edit": "Edit"
+      },
+      "deliveries": {
+        "label": "Deliveries",
+        "view": "View",
+        "assign": "Assign",
+        "edit": "Edit"
+      },
+      "payments": {
+        "label": "Payments",
+        "view": "View",
+        "viewTransactions": "Transactions",
+        "manageRefunds": "Refunds"
+      },
+      "messaging": {
+        "label": "Messaging",
+        "read": "Read",
+        "send": "Send"
+      },
+      "statistics": {
+        "label": "Statistics",
+        "view": "View"
+      },
+      "settings": {
+        "label": "Settings",
+        "view": "View",
+        "edit": "Edit"
+      },
+      "returns": {
+        "label": "Returns & Support",
+        "view": "View",
+        "process": "Process"
+      },
+      "wallet": {
+        "label": "Wallet",
+        "view": "View",
+        "withdraw": "Withdraw"
+      }
+    },
+    "permPanel": {
+      "title": "Permissions",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "activityPanel": {
+      "title": "Recent activity",
+      "empty": "No activity recorded."
+    },
+    "tempPwdModal": {
+      "title": "Temporary password",
+      "transmitPrefix": "Share this password with",
+      "mustChange": "They will have to change it at their next login.",
+      "warn": "This password will only be shown once.",
+      "gotIt": "I noted the password"
+    },
+    "addModal": {
+      "title": "Add a collaborator",
+      "modeDirect": "Direct creation",
+      "modeInvite": "Email invitation",
+      "firstName": "First name *",
+      "firstNamePlaceholder": "Marie",
+      "lastName": "Last name *",
+      "lastNamePlaceholder": "Diallo",
+      "email": "Professional email *",
+      "emailPlaceholder": "marie.diallo@shop.com",
+      "phone": "Phone",
+      "phonePlaceholder": "+224 620 000 000",
+      "jobTitle": "Job title",
+      "jobTitlePlaceholder": "Sales manager",
+      "internalRole": "Internal role",
+      "selectPlaceholder": "— Select —",
+      "roles": {
+        "manager": "Manager",
+        "commercial": "Sales rep",
+        "orderManager": "Order manager",
+        "logisticsManager": "Logistics manager",
+        "customerService": "Customer service",
+        "accountant": "Accountant"
+      },
+      "permTemplate": "Permission template",
+      "noTemplate": "— No template —",
+      "noteInvite": "An invitation email will be sent. The collaborator will choose their own password.",
+      "noteDirect": "A temporary password will be generated and shown only once.",
+      "cancel": "Cancel",
+      "createAccount": "Create account",
+      "sendInvitation": "Send invitation",
+      "errors": {
+        "firstName": "First name required",
+        "lastName": "Last name required",
+        "email": "Invalid email"
+      },
+      "invitationSentToast": "Invitation sent to {{email}}.",
+      "createError": "Error while creating."
+    }
+  },
+  "boutiquePreview": {
+    "loading": "Loading…",
+    "back": "Back",
+    "tabs": {
+      "apercu": "Preview",
+      "localisation": "Location"
+    },
+    "subtitleApercu": "Public preview of the store",
+    "subtitleLocalisation": "Pin your store on the map",
+    "ouvrir": "Open",
+    "enregistrement": "Saving…",
+    "enregistre": "Saved!",
+    "sauvegarderLocalisation": "Save location",
+    "iframeTitle": "Preview",
+    "panelTitle": "Location",
+    "panelSub": "The 🏪 marker follows your selection",
+    "pays": "Country",
+    "ville": "City",
+    "choisirVille": "— Choose a city —",
+    "villePlaceholder": "City name",
+    "commune": "District",
+    "choisirCommune": "— Choose a district —",
+    "quartier": "Neighborhood",
+    "choisirQuartier": "— Choose a neighborhood —",
+    "localisationEnCours": "Locating…",
+    "adresse": "Address",
+    "optionnel": "(optional)",
+    "adressePlaceholder": "Street, number…",
+    "repere": "Delivery landmark",
+    "reperePlaceholder": "Opposite the blue pharmacy…",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "villeObligatoire": "City is required.",
+    "errorSauvegarde": "Error while saving.",
+    "localisationEnregistree": "Location saved!",
+    "enregistrerLocalisation": "Save location",
+    "recherchePosition": "Searching for position…",
+    "hintCarte": "Click or drag the marker to refine",
+    "pays_list": {
+      "GN": "Guinea",
+      "SN": "Senegal",
+      "ML": "Mali",
+      "CI": "Ivory Coast",
+      "GW": "Guinea-Bissau",
+      "LR": "Liberia",
+      "SL": "Sierra Leone",
+      "FR": "France"
+    }
+  }
+}

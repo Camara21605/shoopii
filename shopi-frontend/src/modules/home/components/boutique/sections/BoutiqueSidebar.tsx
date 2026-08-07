@@ -22,7 +22,7 @@
  *   + setters pour modifier chaque état
  * ============================================================
  */
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { CATEGORIES_BOUTIQUE, BOUTIQUE_INFO } from '../data/boutiqueMockData';
 import styles from '../styles/BoutiqueSidebar.module.css';
 
@@ -45,6 +45,7 @@ export default function BoutiqueSidebar({
   filtrStock, setFiltrStock, filtrPromo, setFiltrPromo,
   filtrNew,   setFiltrNew,  onToast,
 }: Props) {
+  const { t } = useTranslation();
 
   /* Nombre total de produits pour la catégorie "Tout" */
   const totalProduits = CATEGORIES_BOUTIQUE.reduce((a, c) => a + c.count, 0);
@@ -55,15 +56,22 @@ export default function BoutiqueSidebar({
       {/* ══ 1. Tri ══ */}
       <div className={styles.card}>
         <div className={styles.cardHd}>
-          <h4><i className="fas fa-arrow-up-wide-short" /> Trier par</h4>
+          <h4><i className="fas fa-arrow-up-wide-short" /> {t('boutiqueDetail.sidebar.trierPar')}</h4>
         </div>
         <div className={styles.cardBd}>
           <select
             className={styles.sortSel}
             value={sortBy}
-            onChange={e => { setSortBy(e.target.value); onToast(`🔃 Tri : ${e.target.value}`); }}
+            onChange={e => { setSortBy(e.target.value); onToast(t('boutiqueDetail.sidebar.triToast', { value: e.target.value })); }}
           >
-            {['Pertinence','Prix croissant','Prix décroissant','Mieux notés','Nouveautés','Meilleures ventes'].map(o => (
+            {[
+              t('boutiqueDetail.sidebar.triOptions.pertinence'),
+              t('boutiqueDetail.sidebar.triOptions.prixCroissant'),
+              t('boutiqueDetail.sidebar.triOptions.prixDecroissant'),
+              t('boutiqueDetail.sidebar.triOptions.mieuxNotes'),
+              t('boutiqueDetail.sidebar.triOptions.nouveautes'),
+              t('boutiqueDetail.sidebar.triOptions.meilleuresVentes'),
+            ].map(o => (
               <option key={o}>{o}</option>
             ))}
           </select>
@@ -73,10 +81,10 @@ export default function BoutiqueSidebar({
       {/* ══ 2. Catégories ══ */}
       <div className={styles.card}>
         <div className={styles.cardHd}>
-          <h4><i className="fas fa-layer-group" /> Catégories</h4>
+          <h4><i className="fas fa-layer-group" /> {t('boutiqueDetail.sidebar.categories')}</h4>
           {/* Bouton "Tout" pour réinitialiser */}
           <button className={styles.clearBtn} onClick={() => setCatActive('Tout')}>
-            Tout
+            {t('boutiqueDetail.sidebar.tout')}
           </button>
         </div>
         <div className={`${styles.cardBd} ${styles.cardBdPad}`}>
@@ -88,7 +96,7 @@ export default function BoutiqueSidebar({
               onClick={() => setCatActive('Tout')}
             >
               <span className={styles.catEm}>✦</span>
-              <span>Tout</span>
+              <span>{t('boutiqueDetail.sidebar.tout')}</span>
               <span className={styles.catCnt}>{totalProduits}</span>
             </div>
 
@@ -111,7 +119,7 @@ export default function BoutiqueSidebar({
       {/* ══ 3. Fourchette de prix ══ */}
       <div className={styles.card}>
         <div className={styles.cardHd}>
-          <h4><i className="fas fa-coins" /> Prix (GNF)</h4>
+          <h4><i className="fas fa-coins" /> {t('boutiqueDetail.sidebar.prix')}</h4>
         </div>
         <div className={styles.cardBd}>
           {/* Slider */}
@@ -132,7 +140,7 @@ export default function BoutiqueSidebar({
       {/* ══ 4. Note minimale ══ */}
       <div className={styles.card}>
         <div className={styles.cardHd}>
-          <h4><i className="fas fa-star" /> Note minimale</h4>
+          <h4><i className="fas fa-star" /> {t('boutiqueDetail.sidebar.noteMinimale')}</h4>
         </div>
         <div className={styles.cardBd}>
           <div className={styles.ratingList}>
@@ -146,7 +154,7 @@ export default function BoutiqueSidebar({
                   type="radio"
                   name="rat"
                   style={{ accentColor: 'var(--blue)' }}
-                  onChange={() => onToast(`⭐ Filtre ${r.val}+ étoiles`)}
+                  onChange={() => onToast(t('boutiqueDetail.sidebar.filtreEtoilesToast', { n: r.val }))}
                 />
                 <span className={styles.ratingStars}>{r.label}</span>
                 <span className={styles.ratingCnt}>{r.cnt}</span>
@@ -159,9 +167,9 @@ export default function BoutiqueSidebar({
                 name="rat"
                 defaultChecked
                 style={{ accentColor: 'var(--blue)' }}
-                onChange={() => onToast('Tous les avis')}
+                onChange={() => onToast(t('boutiqueDetail.sidebar.tousLesAvis'))}
               />
-              <span className={styles.ratingAll}>Tous les avis</span>
+              <span className={styles.ratingAll}>{t('boutiqueDetail.sidebar.tousLesAvis')}</span>
             </label>
           </div>
         </div>
@@ -170,14 +178,14 @@ export default function BoutiqueSidebar({
       {/* ══ 5. Disponibilité ══ */}
       <div className={styles.card}>
         <div className={styles.cardHd}>
-          <h4><i className="fas fa-warehouse" /> Disponibilité</h4>
+          <h4><i className="fas fa-warehouse" /> {t('boutiqueDetail.sidebar.disponibilite')}</h4>
         </div>
         <div className={styles.cardBd}>
           <div className={styles.checkList}>
             {[
-              { lbl: 'En stock uniquement', val: filtrStock, set: setFiltrStock },
-              { lbl: 'En promotion',         val: filtrPromo, set: setFiltrPromo },
-              { lbl: 'Nouveautés seulement', val: filtrNew,   set: setFiltrNew   },
+              { lbl: t('boutiqueDetail.sidebar.enStockUniquement'), val: filtrStock, set: setFiltrStock },
+              { lbl: t('boutiqueDetail.sidebar.enPromotion'),         val: filtrPromo, set: setFiltrPromo },
+              { lbl: t('boutiqueDetail.sidebar.nouveautesSeulement'), val: filtrNew,   set: setFiltrNew   },
             ].map(c => (
               <label key={c.lbl} className={styles.checkItem}>
                 <input
@@ -196,15 +204,15 @@ export default function BoutiqueSidebar({
       {/* ══ 6. Infos boutique ══ */}
       <div className={styles.card}>
         <div className={styles.cardHd}>
-          <h4><i className="fas fa-circle-info" /> Infos boutique</h4>
+          <h4><i className="fas fa-circle-info" /> {t('boutiqueDetail.sidebar.infosBoutique')}</h4>
         </div>
         <div className={styles.cardBd}>
           <div className={styles.infoRows}>
             {[
-              { ico: '🕐', bg: 'bg1', title: 'Horaires',  sub: BOUTIQUE_INFO.horaires },
-              { ico: '📍', bg: 'bg2', title: 'Adresse',   sub: BOUTIQUE_INFO.adresse  },
-              { ico: '📞', bg: 'bg3', title: 'Téléphone', sub: BOUTIQUE_INFO.tel      },
-              { ico: '✉️', bg: 'bg4', title: 'Email',     sub: BOUTIQUE_INFO.email    },
+              { ico: '🕐', bg: 'bg1', title: t('boutiqueDetail.sidebar.horaires'),  sub: BOUTIQUE_INFO.horaires },
+              { ico: '📍', bg: 'bg2', title: t('boutiqueDetail.sidebar.adresse'),   sub: BOUTIQUE_INFO.adresse  },
+              { ico: '📞', bg: 'bg3', title: t('boutiqueDetail.sidebar.telephone'), sub: BOUTIQUE_INFO.tel      },
+              { ico: '✉️', bg: 'bg4', title: t('boutiqueDetail.sidebar.email'),     sub: BOUTIQUE_INFO.email    },
             ].map(r => (
               <div key={r.title} className={styles.infoRow}>
                 <div className={`${styles.infoIco} ${styles[r.bg]}`}>{r.ico}</div>

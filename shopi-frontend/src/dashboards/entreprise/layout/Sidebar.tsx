@@ -8,9 +8,11 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
 import { useAppContext } from '../../../shared/context/AppContext';
+import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
 import './Sidebar.css';
 
 type CanFn = (group: string, action: string) => boolean;
@@ -41,51 +43,55 @@ interface NavItem {
   perm?:       [string, string];
 }
 
+/* Les valeurs title/label sont des CLÉS de traduction (namespace "common",
+   voir src/shared/i18n/locales/{fr,en}/common.json → sidebar.*), pas du
+   texte en dur — NAV_SECTIONS reste une constante de module (pas de hook
+   ici), la résolution `t(clé)` se fait au rendu dans le composant. */
 const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
   {
-    title: 'Principal',
+    title: 'sidebar.sections.principal',
     items: [
-      { id: 'overview',  icon: 'fa-chart-pie',  label: "Vue d'ensemble" },
-      { id: 'commandes', icon: 'fa-box',         label: 'Commandes',     badge: '14', badgeClass: 'r', perm: ['orders',  'view'] },
-      { id: 'retours',   icon: 'fa-rotate-left', label: 'Retours & SAV', badge: '3',  badgeClass: 'a', perm: ['returns', 'view'] },
+      { id: 'overview',  icon: 'fa-chart-pie',  label: 'sidebar.items.overview' },
+      { id: 'commandes', icon: 'fa-box',         label: 'sidebar.items.commandes', badge: '14', badgeClass: 'r', perm: ['orders',  'view'] },
+      { id: 'retours',   icon: 'fa-rotate-left', label: 'sidebar.items.retours',   badge: '3',  badgeClass: 'a', perm: ['returns', 'view'] },
     ],
   },
   {
-    title: 'Catalogue',
+    title: 'sidebar.sections.catalogue',
     items: [
-      { id: 'produits',   icon: 'fa-tag',         label: 'Produits',       badge: '124',              perm: ['products',   'view']   },
-      { id: 'ajouter',    icon: 'fa-plus-circle', label: 'Ajouter produit',                           perm: ['products',   'create'] },
-      { id: 'inventaire', icon: 'fa-warehouse',   label: 'Inventaire',     badge: '6', badgeClass: 'a', perm: ['products', 'view']   },
-      { id: 'promotions', icon: 'fa-percent',     label: 'Promotions',     badge: '4', badgeClass: 'p', perm: ['promotions','view']  },
+      { id: 'produits',   icon: 'fa-tag',         label: 'sidebar.items.produits',   badge: '124',              perm: ['products',   'view']   },
+      { id: 'ajouter',    icon: 'fa-plus-circle', label: 'sidebar.items.ajouter',                               perm: ['products',   'create'] },
+      { id: 'inventaire', icon: 'fa-warehouse',   label: 'sidebar.items.inventaire', badge: '6', badgeClass: 'a', perm: ['products', 'view']   },
+      { id: 'promotions', icon: 'fa-percent',     label: 'sidebar.items.promotions', badge: '4', badgeClass: 'p', perm: ['promotions','view']  },
     ],
   },
   {
-    title: 'Marketing',
+    title: 'sidebar.sections.marketing',
     items: [
-      { id: 'analytics', icon: 'fa-chart-line',             label: 'Analytics',      perm: ['statistics', 'view'] },
-      { id: 'seo',       icon: 'fa-magnifying-glass-chart', label: 'SEO & Marketing', perm: ['statistics', 'view'] },
+      { id: 'analytics', icon: 'fa-chart-line',             label: 'sidebar.items.analytics', perm: ['statistics', 'view'] },
+      { id: 'seo',       icon: 'fa-magnifying-glass-chart', label: 'sidebar.items.seo',       perm: ['statistics', 'view'] },
     ],
   },
   {
-    title: 'Réseau & Logistique',
+    title: 'sidebar.sections.reseauLogistique',
     items: [
-      { id: 'livreurs',       icon: 'fa-motorcycle', label: 'Mes livreurs',   badge: '6', badgeClass: 'g', perm: ['deliveries', 'view'] },
-      { id: 'correspondants', icon: 'fa-map-pin',    label: 'Correspondants', badge: '3', badgeClass: 'p', perm: ['deliveries', 'view'] },
+      { id: 'livreurs',       icon: 'fa-motorcycle', label: 'sidebar.items.livreurs',       badge: '6', badgeClass: 'g', perm: ['deliveries', 'view'] },
+      { id: 'correspondants', icon: 'fa-map-pin',    label: 'sidebar.items.correspondants', badge: '3', badgeClass: 'p', perm: ['deliveries', 'view'] },
     ],
   },
   {
-    title: 'Finances & Clients',
+    title: 'sidebar.sections.financesClients',
     items: [
-      { id: 'finances',     icon: 'fa-coins',  label: 'Finances',    perm: ['payments', 'view']             },
-      { id: 'portefeuille', icon: 'fa-wallet', label: 'Portefeuille', perm: ['payments', 'viewTransactions'] },
-      { id: 'clients',  icon: 'fa-users', label: 'Clients',      perm: ['orders', 'view'] },
-      { id: 'avis',     icon: 'fa-star',  label: 'Avis clients', badge: '8', badgeClass: 'a', perm: ['orders', 'view'] },
+      { id: 'finances',     icon: 'fa-coins',  label: 'sidebar.items.finances',     perm: ['payments', 'view']             },
+      { id: 'portefeuille', icon: 'fa-wallet', label: 'sidebar.items.portefeuille', perm: ['payments', 'viewTransactions'] },
+      { id: 'clients',  icon: 'fa-users', label: 'sidebar.items.clients', perm: ['orders', 'view'] },
+      { id: 'avis',     icon: 'fa-star',  label: 'sidebar.items.avis',    badge: '8', badgeClass: 'a', perm: ['orders', 'view'] },
     ],
   },
   {
-    title: 'Équipe',
+    title: 'sidebar.sections.equipe',
     items: [
-      { id: 'equipe', icon: 'fa-users-gear', label: "Gestion de l'équipe", perm: ['team', 'view'] },
+      { id: 'equipe', icon: 'fa-users-gear', label: 'sidebar.items.equipeGestion', perm: ['team', 'view'] },
     ],
   },
 ];
@@ -98,6 +104,7 @@ export default function Sidebar({
   const { pop } = useToast();
   const navigate = useNavigate();
   const { logout } = useAppContext();
+  const { t } = useTranslation();
 
   const initiales = (companyName ?? 'TC')
     .split(' ')
@@ -124,7 +131,7 @@ export default function Sidebar({
 
       {/* ── Carte boutique ── */}
       <div className="sb-shop">
-        <div className="sb-shop-card" onClick={() => onNavigate('parametres')}>
+        <div className="sb-shop-card" onClick={() => onNavigate('overview')}>
           <div className="sb-shop-logo">
             {companyLogo ? (
               <img
@@ -142,13 +149,18 @@ export default function Sidebar({
             <div className="sb-shop-nm">{companyName ?? 'Ma boutique'}</div>
             <div className="sb-shop-sub">
               <span className="sb-shop-dot"></span>
-              Boutique active · Vendeur Pro
+              {t('topbar.status.active')} · {t('topbar.status.default')}
             </div>
           </div>
           <div className="sb-verified">
             <i className="fas fa-shield-check"></i>
           </div>
         </div>
+      </div>
+
+      {/* ── Solde du portefeuille Shopi — sous la carte boutique ── */}
+      <div className="sb-wallet" style={{ padding: '0 22px 12px' }}>
+        <WalletQuickBar compact mini onManage={() => onNavigate('portefeuille')} />
       </div>
 
       {/* ── Navigation ── */}
@@ -158,7 +170,7 @@ export default function Sidebar({
           if (visibleItems.length === 0) return null;
           return (
             <React.Fragment key={section.title}>
-              <div className="sb-sect">{section.title}</div>
+              <div className="sb-sect">{t(section.title)}</div>
               {visibleItems.map(item => (
                 <div
                   key={item.id}
@@ -166,7 +178,7 @@ export default function Sidebar({
                   onClick={() => onNavigate(item.id)}
                 >
                   <i className={`fas ${item.icon}`}></i>
-                  <span>{item.label}</span>
+                  <span>{t(item.label)}</span>
                   {item.badge && (
                     <span className={`nb-badge${item.badgeClass ? ` ${item.badgeClass}` : ''}`}>
                       {item.badge}
@@ -181,29 +193,29 @@ export default function Sidebar({
         {/* ── Section Boutique (propriétaire uniquement ou settings.view) ── */}
         {(isOwner || (can && can('settings', 'view'))) && (
           <>
-            <div className="sb-sect">Boutique</div>
+            <div className="sb-sect">{t('sidebar.sections.boutique')}</div>
             <div
               className={`nb${activePage === 'parametres' ? ' on' : ''}`}
               onClick={() => onNavigate('parametres')}
             >
               <i className="fas fa-gear"></i>
-              <span>Paramètres</span>
+              <span>{t('sidebar.items.parametres')}</span>
             </div>
           </>
         )}
         <div className="nb" onClick={() => pop('👁️ Voir votre boutique publique', 'i')}>
           <i className="fas fa-arrow-up-right-from-square"></i>
-          <span>Voir ma boutique</span>
+          <span>{t('sidebar.items.voirBoutique')}</span>
         </div>
       </div>
 
       {/* ── Boutons bas ── */}
       <div className="sb-bot">
         <button className="sb-bot-btn" onClick={() => pop('🔔 Notifications', 'i')}>
-          <i className="fas fa-bell"></i><span>Alertes</span>
+          <i className="fas fa-bell"></i><span>{t('sidebar.items.alertes')}</span>
         </button>
         <button className="sb-bot-btn" onClick={() => { logout(); navigate('/login'); }}>
-          <i className="fas fa-right-from-bracket"></i><span>Quitter</span>
+          <i className="fas fa-right-from-bracket"></i><span>{t('sidebar.items.quitter')}</span>
         </button>
       </div>
     </nav>

@@ -3,7 +3,8 @@
  * Connectée au profil client réel et aux adresses enregistrées.
  * Formulaire entièrement contrôlé — remonte les données via onAdresseChange.
  */
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ProfilData, AdresseItem } from '../../settings/api/settings.api';
 import { VILLES, COMMUNES } from '../data/panierData';
 import styles from '../styles/AdresseSection.module.css';
@@ -53,6 +54,7 @@ export default function AdresseSection({
   clientProfil, savedAddresses, loadingClient,
   onVilleChange, onAdresseChange, onToast,
 }: Props) {
+  const { t } = useTranslation();
   const [activeAddr, setActiveAddr] = useState('');
   const [form, setForm]             = useState<AdresseFormData>(EMPTY);
   const didInit = useRef(false);
@@ -111,7 +113,7 @@ export default function AdresseSection({
     setActiveAddr(a.id);
     onVilleChange(etaDest(next));
     onAdresseChange(next);
-    onToast(`📍 ${a.nom}`);
+    onToast(t('panierCommande.adresseSection.adresseSelectionneeToast', { nom: a.nom }));
   }
 
   /* ── Nouvelle adresse (vider les champs d'adresse) ── */
@@ -135,8 +137,8 @@ export default function AdresseSection({
       <div className={styles.scHd}>
         <div className={styles.scNum}>2</div>
         <div>
-          <div className={styles.scTitre}>Adresse de livraison</div>
-          <div className={styles.scSub}>Où souhaitez-vous être livré ?</div>
+          <div className={styles.scTitre}>{t('panierCommande.adresseSection.titre')}</div>
+          <div className={styles.scSub}>{t('panierCommande.adresseSection.sub')}</div>
         </div>
       </div>
 
@@ -145,7 +147,7 @@ export default function AdresseSection({
         {/* ── Chips adresses enregistrées ── */}
         {loadingClient ? (
           <div style={{ height:52, display:'flex', alignItems:'center', gap:8, color:'var(--t3)', fontSize:13 }}>
-            <i className="fas fa-spinner fa-spin" /> Chargement de vos adresses…
+            <i className="fas fa-spinner fa-spin" /> {t('panierCommande.adresseSection.chargementAdresses')}
           </div>
         ) : (
           <div className={styles.addrChips}>
@@ -168,7 +170,7 @@ export default function AdresseSection({
               className={`${styles.addrNew} ${activeAddr === 'new' ? styles.addrChipSel : ''}`}
               onClick={newAddr}
             >
-              <i className="fas fa-plus" /> Nouvelle
+              <i className="fas fa-plus" /> {t('panierCommande.adresseSection.nouvelle')}
             </div>
           </div>
         )}
@@ -176,23 +178,23 @@ export default function AdresseSection({
         {/* ── Prénom + Nom ── */}
         <div className={styles.fr}>
           <div className={styles.fg}>
-            <div className={styles.fl}>Prénom <span>*</span></div>
+            <div className={styles.fl}>{t('panierCommande.adresseSection.prenom')} <span>*</span></div>
             <div className={styles.fw}>
               <i className={`fas fa-user ${styles.fi}`} />
               <input
                 className={`${styles.fin} ${form.prenom ? styles.finOk : ''}`}
-                type="text" value={form.prenom} placeholder="Votre prénom"
+                type="text" value={form.prenom} placeholder={t('panierCommande.adresseSection.prenomPlaceholder')}
                 onChange={e => update({ prenom: e.target.value })}
               />
             </div>
           </div>
           <div className={styles.fg}>
-            <div className={styles.fl}>Nom <span>*</span></div>
+            <div className={styles.fl}>{t('panierCommande.adresseSection.nom')} <span>*</span></div>
             <div className={styles.fw}>
               <i className={`fas fa-user ${styles.fi}`} />
               <input
                 className={`${styles.fin} ${form.nom ? styles.finOk : ''}`}
-                type="text" value={form.nom} placeholder="Votre nom"
+                type="text" value={form.nom} placeholder={t('panierCommande.adresseSection.nomPlaceholder')}
                 onChange={e => update({ nom: e.target.value })}
               />
             </div>
@@ -202,7 +204,7 @@ export default function AdresseSection({
         {/* ── Téléphone ── */}
         <div className={`${styles.fr} ${styles.frFull}`}>
           <div className={styles.fg}>
-            <div className={styles.fl}>Téléphone <span>*</span></div>
+            <div className={styles.fl}>{t('panierCommande.adresseSection.telephone')} <span>*</span></div>
             <div className={styles.fw}>
               <div className={styles.dialCode}>🇬🇳 +224</div>
               <input
@@ -217,7 +219,7 @@ export default function AdresseSection({
         {/* ── Ville + Commune ── */}
         <div className={styles.fr}>
           <div className={styles.fg}>
-            <div className={styles.fl}>Ville <span>*</span></div>
+            <div className={styles.fl}>{t('panierCommande.adresseSection.villeLabel')} <span>*</span></div>
             <div className={styles.fw}>
               <i className={`fas fa-city ${styles.fi}`} />
               <select
@@ -230,7 +232,7 @@ export default function AdresseSection({
             </div>
           </div>
           <div className={styles.fg}>
-            <div className={styles.fl}>Commune <span>*</span></div>
+            <div className={styles.fl}>{t('panierCommande.adresseSection.commune')} <span>*</span></div>
             <div className={styles.fw}>
               <i className={`fas fa-map-pin ${styles.fi}`} />
               <select
@@ -247,12 +249,12 @@ export default function AdresseSection({
         {/* ── Adresse précise ── */}
         <div className={`${styles.fr} ${styles.frFull}`}>
           <div className={styles.fg}>
-            <div className={styles.fl}>Adresse précise <span className={styles.flOpt}>* (rue, repère)</span></div>
+            <div className={styles.fl}>{t('panierCommande.adresseSection.adressePrecise')} <span className={styles.flOpt}>{t('panierCommande.adresseSection.adressePreciseOpt')}</span></div>
             <div className={styles.fw}>
               <i className={`fas fa-location-dot ${styles.fi}`} />
               <input
                 className={`${styles.fin} ${form.adressePrecise ? styles.finOk : ''}`}
-                type="text" value={form.adressePrecise} placeholder="Quartier, rue, repère…"
+                type="text" value={form.adressePrecise} placeholder={t('panierCommande.adresseSection.adressePrecisePlaceholder')}
                 onChange={e => update({ adressePrecise: e.target.value })}
               />
             </div>
@@ -263,14 +265,14 @@ export default function AdresseSection({
         <div className={`${styles.fr} ${styles.frFull}`}>
           <div className={styles.fg}>
             <div className={styles.fl}>
-              Instructions de livraison
-              <span className={styles.flOpt}>optionnel</span>
+              {t('panierCommande.adresseSection.instructions')}
+              <span className={styles.flOpt}>{t('panierCommande.adresseSection.optionnel')}</span>
             </div>
             <div className={styles.fw}>
               <i className={`fas fa-comment ${styles.fi}`} />
               <input
                 className={styles.fin}
-                type="text" value={form.instructions} placeholder="Ex : Appeler avant d'arriver…"
+                type="text" value={form.instructions} placeholder={t('panierCommande.adresseSection.instructionsPlaceholder')}
                 onChange={e => update({ instructions: e.target.value })}
               />
             </div>

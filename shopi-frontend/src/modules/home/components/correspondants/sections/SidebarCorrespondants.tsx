@@ -5,7 +5,7 @@
  * note minimale, statut en ligne/hors ligne.
  * ================================================================ */
 
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/Correspondants.module.css';
 import type { CorrType } from '../data/types';
 
@@ -29,44 +29,44 @@ interface Props {
   countType:   (t: CorrType) => number;
 }
 
-const TYPES: { id: CorrType; ico: string; nm: string; desc: string }[] = [
-  { id: 'regional', ico: '🏠', nm: 'Régional', desc: 'Couvre une ville' },
-  { id: 'zonal',    ico: '🗺️', nm: 'Zonal',    desc: 'Couvre une région' },
-  { id: 'national', ico: '🌍', nm: 'National',  desc: 'Couvre tout le pays' },
-];
-
-const NOTES = [
-  { val: 5, label: '5 étoiles seulement', stars: 5 },
-  { val: 4, label: '4+ étoiles',          stars: 4 },
-  { val: 3, label: '3+ étoiles',          stars: 3 },
-  { val: 0, label: 'Toutes les notes',    stars: 0 },
-];
-
 export default function SidebarCorrespondants({
   typeActif, onType, communeActive, communes, onCommune,
   noteMin, onNote, statut, onStatut, onReset, countType,
 }: Props) {
+  const { t } = useTranslation();
+  const TYPES: { id: CorrType; ico: string; nm: string; desc: string }[] = [
+    { id: 'regional', ico: '🏠', nm: t('correspondantsPage.typeLabel.regional'), desc: t('correspondantsPage.sidebar.types.regional.desc') },
+    { id: 'zonal',    ico: '🗺️', nm: t('correspondantsPage.typeLabel.zonal'),    desc: t('correspondantsPage.sidebar.types.zonal.desc') },
+    { id: 'national', ico: '🌍', nm: t('correspondantsPage.typeLabel.national'), desc: t('correspondantsPage.sidebar.types.national.desc') },
+  ];
+
+  const NOTES = [
+    { val: 5, label: t('correspondantsPage.sidebar.ratingOpts.cinqEtoiles'),   stars: 5 },
+    { val: 4, label: t('correspondantsPage.sidebar.ratingOpts.quatrePlus'),    stars: 4 },
+    { val: 3, label: t('correspondantsPage.sidebar.ratingOpts.troisPlus'),     stars: 3 },
+    { val: 0, label: t('correspondantsPage.sidebar.ratingOpts.toutesLesNotes'), stars: 0 },
+  ];
   return (
     <aside>
       {/* ── Type ── */}
       <div className={styles.sf}>
         <div className={styles.sfh}>
-          <span className={styles.sft}><i className="fas fa-layer-group" /> Type de correspondant</span>
+          <span className={styles.sft}><i className="fas fa-layer-group" /> {t('correspondantsPage.sidebar.typeDeCorrespondant')}</span>
         </div>
         <div className={styles.sfb}>
           <div className={styles.typeCards}>
-            {TYPES.map(t => (
+            {TYPES.map(typeItem => (
               <div
-                key={t.id}
-                className={`${styles.tc} ${typeActif === t.id ? styles.tcOn : ''}`}
-                onClick={() => onType(typeActif === t.id ? 'all' : t.id)}
+                key={typeItem.id}
+                className={`${styles.tc} ${typeActif === typeItem.id ? styles.tcOn : ''}`}
+                onClick={() => onType(typeActif === typeItem.id ? 'all' : typeItem.id)}
               >
-                <div className={styles.tcIco}>{t.ico}</div>
+                <div className={styles.tcIco}>{typeItem.ico}</div>
                 <div>
-                  <div className={styles.tcNm}>{t.nm}</div>
-                  <div className={styles.tcDesc}>{t.desc}</div>
+                  <div className={styles.tcNm}>{typeItem.nm}</div>
+                  <div className={styles.tcDesc}>{typeItem.desc}</div>
                 </div>
-                <span className={styles.tcCnt}>{countType(t.id)}</span>
+                <span className={styles.tcCnt}>{countType(typeItem.id)}</span>
               </div>
             ))}
           </div>
@@ -76,7 +76,7 @@ export default function SidebarCorrespondants({
       {/* ── Commune ── */}
       <div className={styles.sf}>
         <div className={styles.sfh}>
-          <span className={styles.sft}><i className="fas fa-map-pin" /> Commune</span>
+          <span className={styles.sft}><i className="fas fa-map-pin" /> {t('correspondantsPage.sidebar.commune')}</span>
         </div>
         <div className={styles.sfb}>
           <div className={styles.comChips}>
@@ -97,7 +97,7 @@ export default function SidebarCorrespondants({
       {/* ── Note ── */}
       <div className={styles.sf}>
         <div className={styles.sfh}>
-          <span className={styles.sft}><i className="fas fa-star" /> Note minimale</span>
+          <span className={styles.sft}><i className="fas fa-star" /> {t('correspondantsPage.sidebar.noteMinimale')}</span>
         </div>
         <div className={styles.sfb}>
           <div className={styles.rops}>
@@ -122,8 +122,8 @@ export default function SidebarCorrespondants({
       {/* ── Statut ── */}
       <div className={styles.sf}>
         <div className={styles.sfh}>
-          <span className={styles.sft}><i className="fas fa-signal" /> Disponibilité</span>
-          <button className={styles.sfr} onClick={onReset}>Réinitialiser</button>
+          <span className={styles.sft}><i className="fas fa-signal" /> {t('correspondantsPage.sidebar.disponibilite')}</span>
+          <button className={styles.sfr} onClick={onReset}>{t('correspondantsPage.sidebar.reinitialiser')}</button>
         </div>
         <div className={styles.sfb}>
           <div className={styles.stogWrap}>
@@ -131,13 +131,13 @@ export default function SidebarCorrespondants({
               className={`${styles.stog} ${statut === 'online' ? styles.stogOnAv : ''}`}
               onClick={() => onStatut(statut === 'online' ? 'all' : 'online')}
             >
-              <i className="fas fa-circle" style={{ color: '#10B981' }} />En ligne
+              <i className="fas fa-circle" style={{ color: '#10B981' }} />{t('correspondantsPage.sidebar.enLigne')}
             </div>
             <div
               className={`${styles.stog} ${statut === 'offline' ? styles.stogOnOff : ''}`}
               onClick={() => onStatut(statut === 'offline' ? 'all' : 'offline')}
             >
-              <i className="fas fa-moon" />Hors ligne
+              <i className="fas fa-moon" />{t('correspondantsPage.sidebar.horsLigne')}
             </div>
           </div>
         </div>

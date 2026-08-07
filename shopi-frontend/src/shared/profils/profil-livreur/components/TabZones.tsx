@@ -4,16 +4,17 @@
  * Onglet "Zones" : liste des communes desservies.
  * ================================================================ */
 
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/ProfilLivreur.module.css';
 import type { LivreurProfile } from '../types';
 
 export default function TabZones({ profile }: { profile: LivreurProfile }) {
+  const { t } = useTranslation();
   if (profile.zones.length === 0) {
     return (
       <div className={styles.card}>
         <div className={styles.cb} style={{ textAlign: 'center', color: 'var(--t3)' }}>
-          Aucune zone de livraison renseignée.
+          {t('profilLivreur.tabZones.empty')}
         </div>
       </div>
     );
@@ -21,7 +22,7 @@ export default function TabZones({ profile }: { profile: LivreurProfile }) {
 
   return (
     <div className={styles.card}>
-      <div className={styles.ch}><div className={styles.ct}><i className="fas fa-map" /> Zones de livraison</div></div>
+      <div className={styles.ch}><div className={styles.ct}><i className="fas fa-map" /> {t('profilLivreur.tabZones.title')}</div></div>
       <div className={styles.cb}>
         <div className={styles.zoneMap}>
           {profile.zones.map(z => (

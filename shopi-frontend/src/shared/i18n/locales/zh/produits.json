@@ -1,0 +1,704 @@
+{
+  "produits": {
+    "visibilite": {
+      "public": "公开",
+      "draft": "草稿",
+      "private": "私有"
+    },
+    "header": {
+      "title": "我的产品",
+      "subtitle": "管理您的目录和库存",
+      "nouveau": "新产品"
+    },
+    "stats": {
+      "total": "总计",
+      "publies": "已发布",
+      "brouillons": "草稿",
+      "rupture": "缺货"
+    },
+    "search": "按名称、品牌、参考号搜索…",
+    "filters": {
+      "tous": "全部",
+      "publics": "🟢 已发布",
+      "brouillons": "🟡 草稿",
+      "prives": "🔴 私有"
+    },
+    "loading": "正在加载产品…",
+    "retry": "重试",
+    "empty": {
+      "noneTitle": "暂无产品",
+      "noResultsTitle": "无结果",
+      "noneSub": "首先添加您的第一个产品。",
+      "noResultsSub": "尝试修改您的筛选条件。",
+      "addFirst": "添加产品"
+    },
+    "count_one": "{{count}} 个产品",
+    "count_other": "{{count}} 个产品",
+    "countFor": "关于“{{search}}”",
+    "card": {
+      "voir": "查看",
+      "rupture": "缺货",
+      "outOfStock": "缺货",
+      "lowStock": "库存不足 — 剩余 {{count}}",
+      "inStock": "{{count}} 件有货",
+      "voirDetail": "查看详情",
+      "modifRapide": "快速修改",
+      "modifComplet": "完整修改",
+      "modifier": "修改",
+      "supprimer": "删除"
+    },
+    "toasts": {
+      "archived": "📦 产品已归档",
+      "archiveError": "归档时出错",
+      "updated": "✅ 产品已更新",
+      "deleted": "🗑️ 产品已删除"
+    },
+    "modalVoir": {
+      "noImage": "无图片",
+      "prix": "价格",
+      "commission": "Shopi 佣金（3%）",
+      "revenuNet": "净收入",
+      "stock": "库存",
+      "unites": "件",
+      "seuilInfo": "预警阈值：{{count}} 件",
+      "details": "详情",
+      "marque": "品牌",
+      "condition": "状况",
+      "garantie": "保修",
+      "origine": "产地",
+      "ajouteLe": "添加于",
+      "description": "描述",
+      "caracteristiques": "特点",
+      "variantes": "变体",
+      "tags": "标签",
+      "supprimer": "删除",
+      "archiver": "归档",
+      "modifier": "修改"
+    },
+    "modalModifier": {
+      "title": "快速修改",
+      "visibilite": "可见性",
+      "optPublic": "🟢 公开 — 在店铺可见",
+      "optDraft": "🟡 草稿 — 未发布",
+      "optPrivate": "🔴 私有 — 仅直接链接",
+      "stockActuel": "当前库存",
+      "seuilAlerte": "预警阈值",
+      "seuilPlaceholder": "例如：5",
+      "info": "要修改名称、价格或图片，请使用完整表单。",
+      "annuler": "取消",
+      "saving": "保存中…",
+      "save": "保存"
+    },
+    "modalDelete": {
+      "title": "确认删除",
+      "confirm": "确定要删除“{{nom}}”吗？",
+      "irreversible": "此操作不可逆。产品将被永久删除。",
+      "annuler": "取消",
+      "deleting": "删除中…",
+      "confirmBtn": "永久删除"
+    }
+  },
+  "ajouter": {
+    "constants": {
+      "varianteTypes": {
+        "Couleur": "颜色",
+        "Stockage": "存储",
+        "RAM": "内存",
+        "Taille": "尺寸",
+        "Résolution": "分辨率",
+        "Matière": "材质"
+      },
+      "paysOrigine": {
+        "GN": "🇬🇳 几内亚（本地）",
+        "SN": "🇸🇳 塞内加尔",
+        "CI": "🇨🇮 科特迪瓦",
+        "ML": "🇲🇱 马里",
+        "CM": "🇨🇲 喀麦隆",
+        "FR": "🇫🇷 法国",
+        "CN": "🇨🇳 中国",
+        "US": "🇺🇸 美国",
+        "DE": "🇩🇪 德国",
+        "GB": "🇬🇧 英国",
+        "JP": "🇯🇵 日本",
+        "AE": "🇦🇪 阿联酋"
+      },
+      "retourOptions": {
+        "7j": "7 天 — 全额退款",
+        "14j": "14 天 — 退款或换货",
+        "30j": "30 天 — 仅换货",
+        "defect": "仅在有缺陷时退货",
+        "none": "不接受退货"
+      }
+    },
+    "errorBanner": {
+      "title": "发生错误"
+    },
+    "validation": {
+      "nomRequired": "产品名称是必填项。",
+      "nomMinLength": "名称必须至少包含 3 个字符。",
+      "prixRequired": "售价是必填项。",
+      "prixPositive": "价格必须是正数。",
+      "stockRequired": "库存数量是必填项。",
+      "stockPositive": "库存必须是正数或零。",
+      "categorieRequired": "请选择类别。",
+      "fixErrors": "⚠️ 请修正表单中的错误。"
+    },
+    "toasts": {
+      "maxMedia": "⚠️ 已达到最多 {{count}} 个媒体",
+      "maxMediaRestIgnored": "⚠️ 最多 {{count}} 个媒体 — 其余已忽略。",
+      "maxVideo": "⚠️ 每个产品最多 {{count}} 个视频 — “{{name}}”已忽略。",
+      "maxImages": "⚠️ 每个产品最多 {{count}} 张图片 — “{{name}}”已忽略。",
+      "fileTooLarge": "⚠️ “{{name}}”超过 {{max}} — 已忽略。",
+      "networkError": "无法连接服务器。请检查您的后端是否已启动。",
+      "sessionExpired": "会话已过期。",
+      "mediaUploaded_one": "✅ 已上传 {{count}} 个媒体",
+      "mediaUploaded_other": "✅ 已上传 {{count}} 个媒体",
+      "sessionExpiredReconnect": "会话已过期。请重新登录。",
+      "categoriesServerError": "加载类别时服务器错误（{{status}}）。",
+      "unexpectedFormat": "格式意外。",
+      "networkErrorBackend": "无法连接服务器。请检查您的后端是否已在端口 3001 启动。",
+      "productDataLoaded": "📝 产品数据已加载",
+      "productLoadError": "❌ 无法加载产品：{{message}}",
+      "productLoadServerError": "加载产品时错误 {{status}}。",
+      "networkErrorNest": "无法连接服务器。请检查您的 NestJS 后端是否已在端口 3001 启动。",
+      "sessionExpiredFull": "您的会话已过期。请重新登录。",
+      "forbidden": "您没有必要的权限。",
+      "slugTaken": "URL slug 已被使用。请更改 slug。",
+      "serverError500": "服务器内部错误。请查看日志。",
+      "serverErrorGeneric": "服务器错误（{{status}}）。",
+      "updateSuccess": "✅ 产品更新成功！",
+      "draftSaved": "💾 草稿已保存！",
+      "publishSuccess": "✅ 产品发布成功！",
+      "unexpectedError": "发生意外错误。",
+      "publishFailed": "❌ 失败"
+    },
+    "header": {
+      "editTitle": "修改产品",
+      "createTitle": "添加产品",
+      "editSubtitle": "修改产品信息并保存更改。",
+      "createSubtitle": "填写信息以在店铺发布产品。",
+      "cancel": "取消",
+      "saving": "保存中…",
+      "draft": "草稿",
+      "updating": "更新中…",
+      "publishing": "发布中…",
+      "update": "更新",
+      "publish": "发布产品",
+      "editModeBadge": "编辑模式 — 您正在修改现有产品"
+    },
+    "loadingProduct": "正在加载产品…",
+    "medias": {
+      "title": "产品媒体",
+      "loading": "上传中…",
+      "dropTitle": "将媒体拖到这里",
+      "dropSub": "或点击选择",
+      "quota": "{{images}} 张图片（JPG、PNG、WebP · 最大 5 MB）+ {{videos}} 个视频（MP4、WebM、MOV · 最大 50 MB）",
+      "principale": "主图"
+    },
+    "stories": {
+      "title": "产品故事",
+      "activees": "已启用",
+      "desactivees": "已禁用",
+      "addImagesFirst": "请先添加产品图片，以便将其选为故事。",
+      "selectHint": "选择要发布为故事的图片（24 小时后过期）。点击图片进行选择。",
+      "selected_one": "{{count}} 张图片已选为故事",
+      "selected_other": "{{count}} 张图片已选为故事",
+      "plageHoraire": "显示时间段（每天）",
+      "aPartirDe": "从",
+      "jusquA": "到",
+      "deA": "从 {{debut}} 到 {{fin}}",
+      "heureInvalide": "结束时间必须晚于开始时间。",
+      "joursAffichage": "显示日期",
+      "toutDeselectionner": "全部取消选择",
+      "tousLesJours": "每天",
+      "jours": {
+        "lun": "一",
+        "mar": "二",
+        "mer": "三",
+        "jeu": "四",
+        "ven": "五",
+        "sam": "六",
+        "dim": "日"
+      },
+      "selectAuMoinsUnJour": "至少选择一个日期。",
+      "visibleTousLesJours": "每天可见",
+      "visibleLunVen": "周一至周五可见",
+      "visibleWeekend": "仅周末可见",
+      "visibleNJours_one": "每周可见 {{count}} 天",
+      "visibleNJours_other": "每周可见 {{count}} 天",
+      "disabledHint": "启用故事以在店铺故事流中展示此产品 24 小时。"
+    },
+    "organisation": {
+      "title": "组织",
+      "categorie": "类别 *",
+      "retry": "重试",
+      "loadingCats": "加载中…",
+      "noCategorie": "暂无可用类别",
+      "sousCategorie": "子类别",
+      "choisir": "选择…",
+      "marque": "品牌",
+      "marquePlaceholder": "例如：Apple、Samsung…",
+      "tagsSeo": "SEO 标签（用逗号分隔）",
+      "tagsPlaceholder": "智能手机、iphone、apple…",
+      "langue": "语言",
+      "langueFr": "🇫🇷 法语",
+      "langueEn": "🇬🇧 英语",
+      "langueAr": "🇸🇦 阿拉伯语",
+      "visibilite": "可见性",
+      "optPublic": "公开 · 在店铺可见",
+      "optDraft": "草稿 · 未发布",
+      "optPrivate": "私有 · 仅直接链接"
+    },
+    "infosComplementaires": {
+      "title": "补充信息",
+      "etat": "产品状态",
+      "etatNeuf": "全新 — 从未使用",
+      "etatReconditionne": "认证翻新",
+      "etatOccasion": "二手 — 状况良好",
+      "garantie": "保修",
+      "garantieOptions": {
+        "3m": "3 个月",
+        "6m": "6 个月",
+        "12m": "12 个月",
+        "24m": "24 个月",
+        "aucune": "无保修"
+      },
+      "politiqueRetour": "退货政策",
+      "paysOrigine": "原产国",
+      "internationalTitle": "检测到国际产品",
+      "internationalSub": "产品卡片将自动显示国际横幅。",
+      "poids": "重量（kg）",
+      "dimensions": "物理尺寸（cm）",
+      "longueur": "长度",
+      "largeur": "宽度",
+      "hauteur": "高度",
+      "volume": "📦 体积：{{volume}} L"
+    },
+    "livraison": {
+      "title": "配送政策",
+      "standard": "标准配送",
+      "standardSub": "由您的店铺管理",
+      "choisirLivreur": "选择配送员",
+      "choisirLivreurSub": "买家选择他的配送员",
+      "correspondant": "通过 Shopi 代理商",
+      "correspondantSub": "适用于来自国外的产品",
+      "fraisLocal": "本地配送费用（GNF）",
+      "fraisPlaceholder": "0 = 免费配送",
+      "delai": "预计配送时间",
+      "delaiOptions": {
+        "jour": "当天",
+        "d1_3": "1-3 天",
+        "d3_7": "3-7 天",
+        "d7_14": "7-14 天",
+        "d14_30": "14-30 天",
+        "surCommande": "按订单"
+      }
+    },
+    "garanties": {
+      "title": "卡片上显示的保障",
+      "paiement": "安全支付",
+      "paiementSub": "SSL · Orange Money · Visa",
+      "retour": "退货保障",
+      "retourSub": "退款或换货",
+      "authentique": "正品",
+      "authentiqueSub": "Shopi 认证卖家",
+      "support": "24/7 支持",
+      "supportSub": "聊天 · WhatsApp · 电话"
+    },
+    "infosProduit": {
+      "title": "产品信息",
+      "nom": "产品名称 *",
+      "nomPlaceholder": "例如：iPhone 15 Pro 256GB 钛金属",
+      "description": "描述",
+      "descriptionPlaceholder": "详细描述您的产品…",
+      "descCounter": "{{count}} 字符 {{status}}",
+      "descMinRecommande": "（建议最少 100）",
+      "contenuBoite": "包装内容",
+      "contenuBoitePlaceholder": "例如：1× iPhone 15 Pro、1× USB-C 线…",
+      "prixVente": "售价（GNF）*",
+      "prixPlaceholder": "例如：12500000",
+      "prixBarre": "划线价（GNF）",
+      "prixBarrePlaceholder": "例如：14000000",
+      "reduction": "✓ 显示 {{pct}}% 折扣",
+      "reference": "参考号 / SKU",
+      "referencePlaceholder": "例如：APPL-IP15P-256-TIT",
+      "stock": "库存数量 *",
+      "stockPlaceholder": "例如：10",
+      "seuil": "库存预警阈值",
+      "seuilPlaceholder": "例如：5 件"
+    },
+    "specs": {
+      "title": "技术特点",
+      "critereCount_one": "{{count}} 个标准",
+      "critereCount_other": "{{count}} 个标准",
+      "critere": "标准",
+      "criterePlaceholder": "例如：芯片",
+      "valeur": "值",
+      "valeurPlaceholder": "例如：A17 Pro（3 nm）",
+      "add": "添加特点",
+      "defaultMarque": "品牌",
+      "defaultPuce": "芯片 / 处理器",
+      "defaultConnectivite": "连接性"
+    },
+    "variantes": {
+      "title": "产品变体",
+      "activees": "已启用",
+      "desactivees": "已禁用",
+      "type": "类型",
+      "valeurs": "值（用逗号分隔）",
+      "valeursPlaceholder": "例如：黑色、白色、蓝色…",
+      "add": "添加变体类型",
+      "disabledHint": "启用变体以定义颜色、存储或尺寸等选项。"
+    },
+    "venteEnGros": {
+      "title": "批发销售",
+      "activee": "已启用",
+      "desactivee": "已禁用",
+      "moq": "最低订购量（MOQ）",
+      "moqPlaceholder": "例如：10",
+      "conditionnement": "包装（件/箱）",
+      "conditionnementPlaceholder": "例如：24",
+      "delaiPreparation": "准备时间",
+      "delaiPlaceholder": "例如：3-5 天",
+      "paliers": "按数量递减的价格阶梯",
+      "qteMin": "最小数量",
+      "qteMax": "最大数量",
+      "qteMaxPlaceholder": "49（留空 = +）",
+      "prixUnitaire": "单价（GNF）",
+      "prixUnitairePlaceholder": "例如：50000",
+      "add": "添加阶梯",
+      "disabledHint": "启用批发销售以提供最低订购量和按数量递减的价格。"
+    },
+    "seo": {
+      "title": "SEO 与排名",
+      "score": "SEO 评分",
+      "titreSeo": "SEO 标题",
+      "titrePlaceholder": "例如：iPhone 15 Pro 256GB — Shopi 几内亚",
+      "titreIdeal": "理想：50–70 字符",
+      "descriptionSeo": "SEO 描述",
+      "descriptionPlaceholder": "120-160 字符…",
+      "descriptionIdeal": "理想：120–160 字符",
+      "urlSlug": "URL Slug",
+      "qualite": "质量标准",
+      "criteres": {
+        "nom": "已填写产品名称",
+        "description": "描述 > 100 字符",
+        "titreSeo": "已设置 SEO 标题",
+        "descriptionSeo": "已设置 SEO 描述",
+        "urlSlug": "自定义 URL Slug",
+        "tags": "已填写 SEO 标签",
+        "marque": "已设置品牌",
+        "image": "至少上传 1 张图片",
+        "prix": "已输入售价",
+        "reference": "已设置 SKU 参考号"
+      }
+    },
+    "revenus": {
+      "title": "收入预览",
+      "prixVente": "售价",
+      "commission": "Shopi 佣金（{{pct}}%）",
+      "revenuNet": "预计净收入"
+    },
+    "actions": {
+      "fixErrorsTitle": "修正以下错误：",
+      "retour": "返回"
+    }
+  },
+  "inventaire": {
+    "status": {
+      "rupture": "缺货",
+      "faible": "库存不足",
+      "critique": "严重",
+      "enStock": "有货"
+    },
+    "modal": {
+      "title": "修改库存",
+      "subtitle": "无需离开库存页即可快速更新",
+      "quantite": "库存数量 *",
+      "unites": "件",
+      "placeholder1": "例如：25",
+      "nouveauStatut": "新状态：",
+      "seuilAlerte": "预警阈值（可选）",
+      "seuilPlaceholder": "例如：5",
+      "seuilHint": "当库存低于此阈值时会出现提醒。",
+      "niveauStock": "库存水平",
+      "annuler": "取消",
+      "saving": "保存中…",
+      "update": "更新库存",
+      "invalidStock": "⚠️ 库存必须是正数",
+      "updated": "✅ 库存已更新"
+    },
+    "header": {
+      "title": "库存与存货",
+      "subtitle": "实时跟踪库存水平并管理提醒",
+      "exportCsv": "导出 CSV",
+      "exportToast": "📥 已生成 CSV 导出",
+      "refresh": "刷新",
+      "loading": "加载中…"
+    },
+    "stats": {
+      "produitsCatalogues": "目录产品",
+      "unitesTotal": "共 {{count}} 件",
+      "rupturesStock": "缺货",
+      "aucuneRupture": "无缺货 ✓",
+      "actionRequise": "需要操作！",
+      "stocksFaibles": "库存不足",
+      "sousLeSeuil": "低于预警阈值",
+      "valeurStock": "库存价值（GNF）",
+      "prixParQuantite": "价格 × 库存数量"
+    },
+    "filters": {
+      "tous": "全部",
+      "rupture": "🔴 缺货",
+      "faibles": "🟡 不足",
+      "enStock": "✅ 有货"
+    },
+    "search": "搜索产品…",
+    "loadingInventaire": "正在加载库存…",
+    "retry": "重试",
+    "empty": {
+      "noneTitle": "暂无产品",
+      "noResultsTitle": "无结果",
+      "noneSub": "添加产品以查看库存。",
+      "noResultsSub": "尝试修改您的筛选条件。"
+    },
+    "table": {
+      "produit": "产品",
+      "categorie": "类别",
+      "prixUnitaire": "单价",
+      "stockActuel": "当前库存",
+      "niveauVisuel": "视觉水平",
+      "statut": "状态",
+      "actions": "操作",
+      "valeurStockLigne": "= {{montant}} GNF 库存",
+      "seuil": "阈值：{{count}}",
+      "modifierTitle": "修改库存",
+      "modifier": "修改",
+      "reapproTitle": "发起补货",
+      "reapproToast": "📦 已为“{{nom}}”发起补货"
+    },
+    "footer": {
+      "count_one": "{{count}} 个产品",
+      "count_other": "{{count}} 个产品",
+      "filtres": "已筛选",
+      "pourRecherche": "关于“{{search}}”"
+    },
+    "alertes": {
+      "title": "严重提醒",
+      "allGood": "一切正常！",
+      "noneDetected": "未检测到严重库存。",
+      "stock": "库存：",
+      "min": "· 最低：{{count}}"
+    },
+    "quickActions": {
+      "title": "快速操作",
+      "reapproAll": "为所有严重产品补货",
+      "reapproAllSub": "涉及 {{count}} 个产品",
+      "reapproAllToast": "📦 已发起批量补货",
+      "exportInventaire": "导出库存（CSV）",
+      "exportInventaireSub": "{{count}} 个产品 · {{units}} 件",
+      "exportInventaireToast": "📥 正在生成 CSV 导出…",
+      "configAlertes": "配置提醒",
+      "configAlertesSub": "设置自动阈值",
+      "configAlertesToast": "⚙️ 已打开提醒配置",
+      "syncStock": "同步库存",
+      "syncStockSub": "与您的供应商同步",
+      "syncStockToast": "🔄 同步中…"
+    }
+  },
+  "promotions": {
+    "typeCfg": {
+      "discount": "折扣 %",
+      "freeShip": "免费配送",
+      "bundle": "捆绑销售",
+      "flash": "限时抢购"
+    },
+    "statusCfg": {
+      "active": "活跃",
+      "scheduled": "已计划",
+      "draft": "草稿",
+      "paused": "已暂停",
+      "ended": "已结束"
+    },
+    "templates": {
+      "pctDiscount": {
+        "label": "百分比折扣",
+        "sub": "例如：全店 -10%"
+      },
+      "fixedDiscount": {
+        "label": "固定折扣（GNF）",
+        "sub": "例如：-5,000 GNF"
+      },
+      "freeShip": {
+        "label": "免费配送",
+        "sub": "订单超过 X"
+      },
+      "bundle": {
+        "label": "捆绑 / 组合",
+        "sub": "买 2 送 1"
+      },
+      "flash": {
+        "label": "限时抢购",
+        "sub": "限时和限量"
+      }
+    },
+    "scope": {
+      "global": "整个企业",
+      "produits_one": "{{count}} 个产品",
+      "produits_other": "{{count}} 个产品"
+    },
+    "card": {
+      "copierTitle": "复制",
+      "codeCopied": "📋 代码“{{code}}”已复制！",
+      "copyError": "❌ 无法复制代码（剪贴板权限被拒绝）。",
+      "activated": "🚀 促销已激活！",
+      "paused": "⏸️ 促销已暂停",
+      "utilisations": "使用次数",
+      "caGenere": "产生的收入",
+      "tauxUsage": "使用率",
+      "modifier": "修改",
+      "stats": "统计",
+      "statsToast": "📊 详细统计",
+      "activer": "激活"
+    },
+    "selector": {
+      "search": "搜索产品…",
+      "selected_one": "已选择 {{count}} 个产品",
+      "selected_other": "已选择 {{count}} 个产品",
+      "clearAll": "全部取消选择",
+      "empty": "未找到产品"
+    },
+    "hero": {
+      "badge": "活跃促销",
+      "titlePart1": "通过",
+      "titleEm": "精准优惠",
+      "sub": "创建优惠码、计划限时抢购并实时跟踪其表现。",
+      "create": "创建促销",
+      "exportBtn": "导出",
+      "exportToast": "📤 导出中…",
+      "statsActives": "活跃",
+      "statsTotal": "总计",
+      "statsGnf": "GNF",
+      "lblPromotions": "促销",
+      "lblUtilisations": "使用次数",
+      "lblCaGenere": "产生的收入"
+    },
+    "kpi": {
+      "totales": "促销总数",
+      "actives": "当前活跃",
+      "activesSub": "{{count}} 个已计划",
+      "utilisationsTotales": "总使用次数",
+      "caGenereGnf": "产生的收入（GNF）"
+    },
+    "filters": {
+      "toutes": "全部",
+      "actives": "● 活跃",
+      "planifiees": "⏰ 已计划",
+      "brouillons": "✎ 草稿",
+      "search": "搜索促销…"
+    },
+    "loading": "正在加载促销…",
+    "empty": {
+      "title": "未找到促销",
+      "sub": "创建您的第一个促销以提升销量"
+    },
+    "performance": {
+      "title": "促销表现",
+      "badge": "本月",
+      "uses": "次使用"
+    },
+    "sidebar": {
+      "creerRapide": "快速创建",
+      "templateToast": "➕ 已选择模板“{{label}}”",
+      "meilleuresPromos": "最佳促销",
+      "uses": "次使用",
+      "tipsTitle": "Shopi 提示",
+      "tip1": "限时抢购产生的购买紧迫感高出 3 倍。",
+      "tip2": "免费配送 = 转化率 +28%。",
+      "tip3": "针对特定产品可将使用率提升 +40%。"
+    },
+    "modal": {
+      "editTitle": "✏️ 修改促销",
+      "createTitle": "✨ 新促销",
+      "editSub": "更新此促销的信息",
+      "createSub": "创建优惠以提升销量",
+      "typeLabel": "促销类型",
+      "nomLabel": "促销名称 *",
+      "nomPlaceholder": "例如：一月大减价",
+      "codeLabel": "优惠码 *",
+      "codePlaceholder": "例如：SOLDES20",
+      "discountLabel": "折扣值",
+      "discountPlaceholderPct": "例如：20",
+      "discountPlaceholderFree": "免费配送",
+      "discountPlaceholderFixed": "例如：5000",
+      "maxLabel": "最大使用次数",
+      "maxPlaceholder": "例如：500（留空 = 不限）",
+      "expireLabel": "到期日期",
+      "scopeTitle": "促销范围",
+      "scopeGlobalTitle": "整个企业",
+      "scopeGlobalSub": "促销适用于您所有产品",
+      "scopeProduits": "{{count}} 个产品",
+      "scopeProductsTitle": "特定产品",
+      "scopeProductsSub": "针对一个或多个特定产品",
+      "scopeSelected_one": "已选择 {{count}} 个",
+      "scopeSelected_other": "已选择 {{count}} 个",
+      "scopeWarn": "至少选择一个产品才能创建此促销。",
+      "previewLabel": "预览",
+      "previewDefaultNom": "促销名称",
+      "previewDefaultCode": "代码",
+      "annuler": "取消",
+      "brouillon": "草稿",
+      "saveEdit": "保存更改",
+      "createBtn": "创建促销"
+    },
+    "validation": {
+      "nomRequired": "促销名称是必填项。",
+      "codeRequired": "优惠码是必填项。",
+      "codeMaxLength": "优惠码不能超过 50 个字符。",
+      "codeFormat": "优惠码只能包含字母、数字、连字符或下划线。",
+      "scopeRequired": "为此促销至少选择一个产品。",
+      "discountRequired": "请提供折扣值。",
+      "discountPositive": "折扣值必须是正数。",
+      "discountMaxPct": "百分比折扣不能超过 100。",
+      "maxUsesInteger": "最大使用次数必须是正整数。",
+      "expireInPast": "到期日期不能在过去。"
+    },
+    "toasts": {
+      "updateSuccess": "✅ 促销“{{nom}}”已更新！",
+      "activateFailedAfterCreate": "⚠️ 促销“{{nom}}”已创建，但自动激活失败（{{err}}）— 请从列表手动激活。",
+      "createSuccess": "✅ 促销“{{nom}}”已创建并激活给{{who}}！",
+      "whoGlobal": "整个企业",
+      "whoProduits_one": "{{count}} 个产品",
+      "whoProduits_other": "{{count}} 个产品",
+      "draftSaved": "💾 草稿已保存",
+      "draftMissingFields": "即使草稿也需要名称和代码。",
+      "loadError": "❌ 加载错误：{{message}}",
+      "loadErrorDefault": "无法加载促销。"
+    }
+  },
+  "analytics": {
+    "ca": {
+      "title": "营业额",
+      "empty": "暂无已送达的销售。",
+      "legendCurrent": "每月收入（百万 GNF）",
+      "legendPrevious": "过去时期"
+    },
+    "categoryPerf": {
+      "title": "按类别表现",
+      "categorie": "类别",
+      "caMillions": "收入（百万 GNF）",
+      "commandes": "订单",
+      "empty": "暂无销售。"
+    },
+    "topProduits": {
+      "title": "热门产品 — 销售",
+      "empty": "暂无销售。",
+      "ventes_one": "{{count}} 笔销售",
+      "ventes_other": "{{count}} 笔销售"
+    },
+    "trafic": {
+      "title": "流量分析",
+      "sub": "访问、流量来源、转化率和销售漏斗 — 即将推出。"
+    }
+  }
+}

@@ -6,6 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shopi — Marketplace Africaine</title>
 
+    <!-- ✅ Applique le thème AVANT le premier rendu (évite le flash blanc/bleu
+         puis noir : sans ce script, [data-theme="dark"] n'est posé sur <html>
+         que dans un useEffect de ThemeProvider, donc après la 1ère peinture). -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('shopi_theme');
+          document.documentElement.setAttribute('data-theme', saved === 'light' ? 'light' : 'dark');
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
+
     <!-- ✅ Font Awesome 6.5 — Toutes les icônes fas fa-* -->
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"

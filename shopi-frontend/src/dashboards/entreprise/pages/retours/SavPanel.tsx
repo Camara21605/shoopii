@@ -3,24 +3,10 @@
  * Table des tickets + modale conversation.
  */
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSavDetail, type SavTicketSummary, type SavStatus, type SavMessage, type SavStats, type SavFilters } from '../../hooks/useSav';
 import type { ReturnPriority } from '../../hooks/useRetours';
 import s from './RetoursPage.module.css';
-
-const STATUS_LABELS: Record<SavStatus, { label: string; cls: string }> = {
-  open:           { label: '🟢 Ouvert',          cls: s.pillAccepted },
-  in_progress:    { label: '🔵 En cours',         cls: s.pillTransit  },
-  waiting_client: { label: '🟡 Attente client',   cls: s.pillPending  },
-  resolved:       { label: '✓ Résolu',            cls: s.pillRefunded },
-  closed:         { label: 'Fermé',               cls: s.pillClosed   },
-};
-
-const PRIORITY_LABELS: Record<ReturnPriority, { label: string; cls: string }> = {
-  low:    { label: 'Basse',     cls: s.prioLow    },
-  normal: { label: 'Normal',    cls: s.prioNormal },
-  high:   { label: 'Haute',     cls: s.prioHigh   },
-  urgent: { label: '🔴 Urgent', cls: s.prioUrgent },
-};
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' });
@@ -48,7 +34,23 @@ export default function SavPanel({
   onFilterChange,
   onReply, onClose, onResolve, onPop,
 }: Props) {
+  const { t } = useTranslation();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const STATUS_LABELS: Record<SavStatus, { label: string; cls: string }> = {
+    open:           { label: t('retours.sav.status.open'),           cls: s.pillAccepted },
+    in_progress:    { label: t('retours.sav.status.in_progress'),    cls: s.pillTransit  },
+    waiting_client: { label: t('retours.sav.status.waiting_client'), cls: s.pillPending  },
+    resolved:       { label: t('retours.sav.status.resolved'),       cls: s.pillRefunded },
+    closed:         { label: t('retours.sav.status.closed'),         cls: s.pillClosed   },
+  };
+
+  const PRIORITY_LABELS: Record<ReturnPriority, { label: string; cls: string }> = {
+    low:    { label: t('retours.list.priority.low'),    cls: s.prioLow    },
+    normal: { label: t('retours.list.priority.normal'), cls: s.prioNormal },
+    high:   { label: t('retours.list.priority.high'),   cls: s.prioHigh   },
+    urgent: { label: t('retours.list.priority.urgent'), cls: s.prioUrgent },
+  };
 
   return (
     <div>
@@ -56,10 +58,10 @@ export default function SavPanel({
       {stats && (
         <div className={s.kpiStrip} style={{ marginBottom: 16 }}>
           {[
-            { ico: '📬', label: 'Tickets ouverts',    val: stats.open,       color: 'var(--t2)', bg: 'var(--g100)' },
-            { ico: '🔵', label: 'En cours',           val: stats.inProgress, color: 'var(--t2)', bg: 'var(--g100)' },
-            { ico: '✅', label: 'Résolus',            val: stats.resolved,   color: 'var(--t2)', bg: 'var(--g100)' },
-            { ico: '⏱️', label: 'Délai réponse moy.', val: `${stats.avgResponseMinutes}m`, color: 'var(--t2)', bg: 'var(--g100)' },
+            { ico: '📬', label: t('retours.sav.stats.ouverts'), val: stats.open,       color: 'var(--t2)', bg: 'var(--g100)' },
+            { ico: '🔵', label: t('retours.sav.stats.enCours'), val: stats.inProgress, color: 'var(--t2)', bg: 'var(--g100)' },
+            { ico: '✅', label: t('retours.sav.stats.resolus'), val: stats.resolved,   color: 'var(--t2)', bg: 'var(--g100)' },
+            { ico: '⏱️', label: t('retours.sav.stats.delaiMoy'), val: `${stats.avgResponseMinutes}m`, color: 'var(--t2)', bg: 'var(--g100)' },
           ].map((k, i) => (
             <div key={i} className={s.kpiCard}>
               <div className={s.kpiStripe} style={{ background: k.color }} />
@@ -77,7 +79,7 @@ export default function SavPanel({
           <i className={`fas fa-magnifying-glass ${s.searchIco}`} />
           <input
             className={s.searchInput}
-            placeholder="Rechercher un ticket (réf., sujet)…"
+            placeholder={t('retours.sav.search')}
             value={filters.search ?? ''}
             onChange={e => onFilterChange({ search: e.target.value })}
           />
@@ -87,7 +89,7 @@ export default function SavPanel({
           value={filters.status ?? ''}
           onChange={e => onFilterChange({ status: e.target.value as SavStatus || undefined })}
         >
-          <option value="">Tous les statuts</option>
+          <option value="">{t('retours.sav.allStatus')}</option>
           {(Object.keys(STATUS_LABELS) as SavStatus[]).map(k => (
             <option key={k} value={k}>{STATUS_LABELS[k].label}</option>
           ))}
@@ -97,7 +99,7 @@ export default function SavPanel({
           value={filters.priority ?? ''}
           onChange={e => onFilterChange({ priority: e.target.value as ReturnPriority || undefined })}
         >
-          <option value="">Toutes les priorités</option>
+          <option value="">{t('retours.sav.allPriorities')}</option>
           {(Object.keys(PRIORITY_LABELS) as ReturnPriority[]).map(k => (
             <option key={k} value={k}>{PRIORITY_LABELS[k].label}</option>
           ))}
@@ -110,15 +112,15 @@ export default function SavPanel({
           <table className={s.table}>
             <thead>
               <tr>
-                <th>Référence</th>
-                <th>Sujet</th>
-                <th>Client</th>
-                <th>Produit</th>
-                <th>Priorité</th>
-                <th>Statut</th>
-                <th>Messages</th>
-                <th>Date</th>
-                <th>Actions</th>
+                <th>{t('retours.sav.table.reference')}</th>
+                <th>{t('retours.sav.table.sujet')}</th>
+                <th>{t('retours.sav.table.client')}</th>
+                <th>{t('retours.sav.table.produit')}</th>
+                <th>{t('retours.sav.table.priorite')}</th>
+                <th>{t('retours.sav.table.statut')}</th>
+                <th>{t('retours.sav.table.messages')}</th>
+                <th>{t('retours.sav.table.date')}</th>
+                <th>{t('retours.sav.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -135,55 +137,55 @@ export default function SavPanel({
                   <td colSpan={9}>
                     <div className={s.empty}>
                       <div className={s.emptyIco}>🎧</div>
-                      <div className={s.emptyTitle}>Aucun ticket SAV</div>
-                      <div className={s.emptySub}>Les tickets client apparaîtront ici.</div>
+                      <div className={s.emptyTitle}>{t('retours.sav.emptyTitle')}</div>
+                      <div className={s.emptySub}>{t('retours.sav.emptySub')}</div>
                     </div>
                   </td>
                 </tr>
-              ) : tickets.map(t => {
-                const st   = STATUS_LABELS[t.status]    ?? { label: t.status,    cls: s.pillClosed };
-                const prio = PRIORITY_LABELS[t.priority] ?? { label: t.priority, cls: s.prioNormal };
+              ) : tickets.map(ticket => {
+                const st   = STATUS_LABELS[ticket.status]    ?? { label: ticket.status,    cls: s.pillClosed };
+                const prio = PRIORITY_LABELS[ticket.priority] ?? { label: ticket.priority, cls: s.prioNormal };
                 return (
-                  <tr key={t.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedId(t.id)}>
+                  <tr key={ticket.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedId(ticket.id)}>
                     <td>
                       <span style={{ fontFamily: 'monospace', fontSize: 11.5, fontWeight: 700, color: 'var(--t2)' }}>
-                        {t.reference}
+                        {ticket.reference}
                       </span>
                     </td>
                     <td>
                       <div style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--navy)', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {t.subject}
+                        {ticket.subject}
                       </div>
                     </td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--g300)', color: 'var(--t2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>
-                          {t.clientName.charAt(0).toUpperCase()}
+                          {ticket.clientName.charAt(0).toUpperCase()}
                         </div>
-                        <span style={{ fontSize: 12.5 }}>{t.clientName}</span>
+                        <span style={{ fontSize: 12.5 }}>{ticket.clientName}</span>
                       </div>
                     </td>
                     <td style={{ fontSize: 12, color: 'var(--t3)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {t.productName ?? '—'}
+                      {ticket.productName ?? '—'}
                     </td>
                     <td><span className={`${s.pill} ${prio.cls}`}>{prio.label}</span></td>
                     <td><span className={`${s.pill} ${st.cls}`}>{st.label}</span></td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                         <i className="fas fa-comment-dots" style={{ fontSize: 11, color: 'var(--t3)' }} />
-                        <span style={{ fontSize: 12.5 }}>{t.messageCount}</span>
-                        {t.unreadCount > 0 && (
+                        <span style={{ fontSize: 12.5 }}>{ticket.messageCount}</span>
+                        {ticket.unreadCount > 0 && (
                           <span style={{ background: 'var(--btn)', color: '#fff', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 800 }}>
-                            {t.unreadCount}
+                            {ticket.unreadCount}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td style={{ fontSize: 12, color: 'var(--t3)', whiteSpace: 'nowrap' }}>{fmtDate(t.createdAt)}</td>
+                    <td style={{ fontSize: 12, color: 'var(--t3)', whiteSpace: 'nowrap' }}>{fmtDate(ticket.createdAt)}</td>
                     <td onClick={e => e.stopPropagation()}>
                       <div className={s.actions}>
-                        <button className={`${s.btnSm} ${s.btnDetail}`} onClick={() => setSelectedId(t.id)}>
-                          <i className="fas fa-comment" /> Répondre
+                        <button className={`${s.btnSm} ${s.btnDetail}`} onClick={() => setSelectedId(ticket.id)}>
+                          <i className="fas fa-comment" /> {t('retours.sav.repondre')}
                         </button>
                       </div>
                     </td>
@@ -222,6 +224,7 @@ function SavConversationModal({
   onResolve: (id: string) => Promise<void>;
   onPop:     (msg: string, type?: string) => void;
 }) {
+  const { t } = useTranslation();
   const { detail, loading, addMessage } = useSavDetail(ticketId);
   const [draft,   setDraft]   = useState('');
   const [sending, setSending] = useState(false);
@@ -245,19 +248,19 @@ function SavConversationModal({
       addMessage(msg);
       setDraft('');
     } catch (e: any) {
-      onPop(`❌ ${e?.message ?? 'Erreur envoi'}`, 'e');
+      onPop(`❌ ${e?.message ?? t('retours.sav.sendError')}`, 'e');
     } finally { setSending(false); }
   };
 
   const handleClose = async () => {
-    if (!window.confirm('Fermer ce ticket ?')) return;
-    try { await onClose2(ticketId); onPop('Ticket fermé', 'i'); onClose(); }
-    catch { onPop('❌ Erreur', 'e'); }
+    if (!window.confirm(t('retours.sav.confirmClose'))) return;
+    try { await onClose2(ticketId); onPop(t('retours.sav.ticketClosed'), 'i'); onClose(); }
+    catch { onPop(t('retours.sav.genericError'), 'e'); }
   };
 
   const handleResolve = async () => {
-    try { await onResolve(ticketId); onPop('✅ Ticket résolu', 's'); onClose(); }
-    catch { onPop('❌ Erreur', 'e'); }
+    try { await onResolve(ticketId); onPop(t('retours.sav.ticketResolved'), 's'); onClose(); }
+    catch { onPop(t('retours.sav.genericError'), 'e'); }
   };
 
   return (
@@ -274,10 +277,10 @@ function SavConversationModal({
             {detail && detail.status !== 'closed' && detail.status !== 'resolved' && (
               <>
                 <button className={`${s.btnSm} ${s.btnAccept}`} onClick={handleResolve}>
-                  <i className="fas fa-check" /> Résoudre
+                  <i className="fas fa-check" /> {t('retours.sav.resoudre')}
                 </button>
                 <button className={`${s.btnSm} ${s.btnClose}`} onClick={handleClose}>
-                  <i className="fas fa-xmark" /> Fermer
+                  <i className="fas fa-xmark" /> {t('retours.sav.fermer')}
                 </button>
               </>
             )}
@@ -325,7 +328,7 @@ function SavConversationModal({
             <textarea
               className={s.textarea}
               style={{ flex: 1, minHeight: 60, maxHeight: 120, resize: 'vertical' }}
-              placeholder="Répondre au client…"
+              placeholder={t('retours.sav.replyPlaceholder')}
               value={draft}
               onChange={e => setDraft(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSend(); }}
@@ -338,7 +341,7 @@ function SavConversationModal({
             >
               {sending
                 ? <i className="fas fa-spinner fa-spin" />
-                : <><i className="fas fa-paper-plane" /> Envoyer</>
+                : <><i className="fas fa-paper-plane" /> {t('retours.sav.envoyer')}</>
               }
             </button>
           </div>

@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
 import { apiFetch } from '../../../shared/services/apiFetch';
@@ -52,12 +53,6 @@ function fmt(n: number) {
   return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 }
 
-function trendBadge(pct: number) {
-  if (pct > 0) return { type: 'up' as const, label: `↑ +${pct}%` };
-  if (pct < 0) return { type: 'dn' as const, label: `↓ ${pct}%` };
-  return { type: 'neu' as const, label: 'Stable' };
-}
-
 /** KPI card individuelle (sans sparkline — pas de série journalière réelle disponible) */
 function KpiCard({
   variant, icon, badge, badgeType, value, label, sub,
@@ -80,6 +75,7 @@ function KpiCard({
 }
 
 export default function OverviewPage({ onNavigate }: OverviewPageProps) {
+  const { t } = useTranslation();
   const { pop } = useToast();
   const [data, setData]       = useState<OverviewData>(EMPTY);
   const [loading, setLoading] = useState(true);
@@ -93,6 +89,13 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
 
   const { kpis, caData, topProduits, categoryBreakdown, dernieresCommandes, stockAlertes, activite } = data;
 
+  /** "Stable" dépend de t(), donc fonction locale plutôt que module-level. */
+  function trendBadge(pct: number) {
+    if (pct > 0) return { type: 'up' as const, label: `↑ +${pct}%` };
+    if (pct < 0) return { type: 'dn' as const, label: `↓ ${pct}%` };
+    return { type: 'neu' as const, label: t('overview.hero.stable') };
+  }
+
   const maxCA = Math.max(1, ...caData.map(d => d.v));
   const caTrend = trendBadge(kpis.croissanceCA);
   const cmdTrend = trendBadge(kpis.commandesCroissance);
@@ -104,11 +107,11 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
   });
 
   const STATUS_LABELS: Record<string, ReactElement> = {
-    new:  <span className="s-pill s-new">● Nouveau</span>,
-    prep: <span className="s-pill s-prep">⚙ En prépa</span>,
-    ship: <span className="s-pill s-ship">🚚 Livraison</span>,
-    del:  <span className="s-pill s-del">✓ Livré</span>,
-    can:  <span className="s-pill s-can">✕ Annulé</span>,
+    new:  <span className="s-pill s-new">● {t('overview.orders.status.new')}</span>,
+    prep: <span className="s-pill s-prep">⚙ {t('overview.orders.status.prep')}</span>,
+    ship: <span className="s-pill s-ship">🚚 {t('overview.orders.status.ship')}</span>,
+    del:  <span className="s-pill s-del">✓ {t('overview.orders.status.del')}</span>,
+    can:  <span className="s-pill s-can">✕ {t('overview.orders.status.can')}</span>,
   };
 
   return (
@@ -121,33 +124,33 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
         <div className="hero-left">
           <div className="hero-badge">
             <span></span>
-            Boutique active · {fmt(kpis.abonnes)} abonnés
+            {t('overview.hero.badgeActive', { count: kpis.abonnes })}
           </div>
           <div className="hero-title">
-            Bonjour, <em>{data.zoneNom}</em> 👋<br />
-            {loading ? 'Chargement de vos données…' : 'Voici votre activité récente.'}
+            {t('overview.hero.greeting')} <em>{data.zoneNom}</em> 👋<br />
+            {loading ? t('overview.hero.loading') : t('overview.hero.ready')}
           </div>
           <div className="hero-sub">
-            {caTrend.label} de chiffre d'affaires · {kpis.enAttente} commande{kpis.enAttente !== 1 ? 's' : ''} à traiter · {kpis.retoursEnTraitement} retour{kpis.retoursEnTraitement !== 1 ? 's' : ''} en attente
+            {caTrend.label} {t('overview.hero.subCA')} · {t('overview.hero.subCommandes', { count: kpis.enAttente })} · {t('overview.hero.subRetours', { count: kpis.retoursEnTraitement })}
           </div>
           <div className="hero-btns">
             <button className="hb1" onClick={() => onNavigate('commandes')}>
-              <i className="fas fa-box"></i> Traiter les commandes
+              <i className="fas fa-box"></i> {t('overview.hero.btnCommandes')}
             </button>
             <button className="hb2" onClick={() => onNavigate('analytics')}>
-              <i className="fas fa-chart-line"></i> Voir analytics
+              <i className="fas fa-chart-line"></i> {t('overview.hero.btnAnalytics')}
             </button>
             <button className="hb2" onClick={() => onNavigate('promotions')}>
-              <i className="fas fa-percent"></i> Promotions
+              <i className="fas fa-percent"></i> {t('overview.hero.btnPromotions')}
             </button>
           </div>
         </div>
         <div className="hero-right">
           {[
-            { v: fmt(kpis.caCeMois / 1_000_000), u: 'M GNF', l: 'CA ce mois',   trend: caTrend },
-            { v: String(kpis.commandesCeMois),    u: 'cmds', l: 'Commandes',    trend: cmdTrend },
-            { v: kpis.noteMoyenne.toFixed(1),      u: '⭐',   l: 'Note moy.',   trend: { type: 'neu' as const, label: `${kpis.totalAvis} avis` } },
-            { v: String(kpis.abonnes),             u: '',     l: 'Abonnés',     trend: { type: 'neu' as const, label: 'Total' } },
+            { v: fmt(kpis.caCeMois / 1_000_000), u: 'M GNF', l: t('overview.hero.statCA'),        trend: caTrend },
+            { v: String(kpis.commandesCeMois),    u: 'cmds', l: t('overview.hero.statCommandes'), trend: cmdTrend },
+            { v: kpis.noteMoyenne.toFixed(1),      u: '⭐',   l: t('overview.hero.statNote'),      trend: { type: 'neu' as const, label: t('overview.hero.avis', { count: kpis.totalAvis }) } },
+            { v: String(kpis.abonnes),             u: '',     l: t('overview.hero.statAbonnes'),   trend: { type: 'neu' as const, label: t('overview.hero.total') } },
           ].map((s, i) => (
             <div className="hs" key={i}>
               <div className="hs-v">{s.v}</div>
@@ -166,30 +169,30 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
       <div className="kpi-grid">
         <KpiCard
           variant="k1" icon="💰" badge={caTrend.label} badgeType={caTrend.type}
-          value={fmt(kpis.caCeMois)} label="Chiffre d'affaires — ce mois" sub="GNF"
+          value={fmt(kpis.caCeMois)} label={t('overview.kpi.ca')} sub="GNF"
         />
         <KpiCard
           variant="k2" icon="📦" badge={cmdTrend.label} badgeType={cmdTrend.type}
-          value={String(kpis.commandesCeMois)} label="Commandes ce mois"
-          sub={`${kpis.enAttente} en attente · ${kpis.livrees} livrées · ${kpis.enCours} en cours`}
+          value={String(kpis.commandesCeMois)} label={t('overview.kpi.commandes')}
+          sub={t('overview.kpi.commandesSub', { enAttente: kpis.enAttente, livrees: kpis.livrees, enCours: kpis.enCours })}
         />
         <KpiCard
-          variant="k3" icon="🛍️" badge="Total" badgeType="neu"
-          value={fmt(kpis.abonnes)} label="Abonnés boutique" sub="Nombre total réel"
+          variant="k3" icon="🛍️" badge={t('overview.hero.total')} badgeType="neu"
+          value={fmt(kpis.abonnes)} label={t('overview.kpi.abonnes')} sub={t('overview.kpi.abonnesSub')}
         />
         <KpiCard
-          variant="k4" icon="⭐" badge={`${kpis.totalAvis} avis`} badgeType="neu"
-          value={kpis.noteMoyenne.toFixed(1)} label="Note moyenne clients" sub={`${kpis.totalAvis} avis au total`}
+          variant="k4" icon="⭐" badge={t('overview.hero.avis', { count: kpis.totalAvis })} badgeType="neu"
+          value={kpis.noteMoyenne.toFixed(1)} label={t('overview.kpi.note')} sub={t('overview.kpi.noteSub', { count: kpis.totalAvis })}
         />
         <KpiCard
           variant="k5" icon="🔄" badge={String(kpis.retoursCeMois)} badgeType="neu"
-          value={String(kpis.retoursCeMois)} label="Retours ce mois"
-          sub={`${kpis.retoursEnTraitement} en traitement · ${kpis.retoursRembourses} remboursés`}
+          value={String(kpis.retoursCeMois)} label={t('overview.kpi.retours')}
+          sub={t('overview.kpi.retoursSub', { enTraitement: kpis.retoursEnTraitement, rembourses: kpis.retoursRembourses })}
         />
         <KpiCard
-          variant="k6" icon="💸" badge={`${kpis.margePct}% marge`} badgeType="neu"
-          value={fmt(kpis.beneficeNet)} label="Bénéfice net (ce mois)"
-          sub={`Marge: ${kpis.margePct}% · Commissions: ${fmt(kpis.commissionCeMois)} GNF`}
+          variant="k6" icon="💸" badge={t('overview.kpi.margeBadge', { marge: kpis.margePct })} badgeType="neu"
+          value={fmt(kpis.beneficeNet)} label={t('overview.kpi.benefice')}
+          sub={t('overview.kpi.beneficeSub', { marge: kpis.margePct, commission: fmt(kpis.commissionCeMois) })}
         />
       </div>
 
@@ -197,11 +200,11 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
       <div className="g3">
         <div className="card">
           <div className="ch">
-            <div className="ch-t"><i className="fas fa-chart-line"></i> Chiffre d'affaires mensuel</div>
+            <div className="ch-t"><i className="fas fa-chart-line"></i> {t('overview.charts.caMensuel')}</div>
           </div>
           <div className="cb">
             {caData.length === 0 && !loading && (
-              <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)' }}>Aucune vente livrée pour l'instant.</div>
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)' }}>{t('overview.charts.noSalesDelivered')}</div>
             )}
             <div className="chart-bars">
               {caData.map((d, i) => (
@@ -220,19 +223,19 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
               ))}
             </div>
             <div className="chart-legend">
-              <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--t2)' }}></div>CA mensuel (Millions GNF)</div>
-              <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--sky-3)' }}></div>Périodes précédentes</div>
+              <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--t2)' }}></div>{t('overview.charts.legendCurrent')}</div>
+              <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--sky-3)' }}></div>{t('overview.charts.legendPrevious')}</div>
             </div>
           </div>
         </div>
 
         <div className="card">
           <div className="ch">
-            <div className="ch-t"><i className="fas fa-trophy"></i> Top produits</div>
+            <div className="ch-t"><i className="fas fa-trophy"></i> {t('overview.charts.topProduits')}</div>
           </div>
           <div className="cb">
             {topProduits.length === 0 && !loading && (
-              <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)' }}>Aucune vente pour l'instant.</div>
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)' }}>{t('overview.charts.noSales')}</div>
             )}
             {topProduits.map((p, i) => {
               const mx = Math.max(1, ...topProduits.map(x => x.ventes));
@@ -247,7 +250,7 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
                     </div>
                   </div>
                   <div className="tp-stats">
-                    <div className="tp-ventes">{p.ventes} ventes</div>
+                    <div className="tp-ventes">{t('overview.charts.ventes', { count: p.ventes })}</div>
                     <div className={`tp-trend ${p.trend === 'up' ? 'up' : p.trend === 'dn' ? 'dn' : 'neu'}`}>
                       {p.trend === 'up' ? '↑' : p.trend === 'dn' ? '↓' : '—'} {p.ca}
                     </div>
@@ -264,14 +267,14 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
         <div>
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-triangle-exclamation"></i> Alertes prioritaires</div>
+              <div className="ch-t"><i className="fas fa-triangle-exclamation"></i> {t('overview.alerts.title')}</div>
               <span className="ch-badge" style={{ background: 'var(--g100)', color: 'var(--t2)', borderColor: 'rgba(128,128,128,.2)' }}>
-                {stockAlertes.length} alerte{stockAlertes.length !== 1 ? 's' : ''}
+                {t('overview.alerts.count', { count: stockAlertes.length })}
               </span>
             </div>
             <div className="cb">
               {stockAlertes.length === 0 && !loading && (
-                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>Aucune alerte de stock.</div>
+                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('overview.alerts.empty')}</div>
               )}
               <div className="alert-list">
                 {stockAlertes.slice(0, 5).map((a, i) => (
@@ -279,10 +282,10 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
                     <div className="alert-ic"><i className={`fas ${a.type === 'red' ? 'fa-circle-xmark' : 'fa-triangle-exclamation'}`}></i></div>
                     <div>
                       <div className="alert-nm">{a.em} {a.nm}</div>
-                      <div className="alert-sub">Stock: {a.qty} · Min requis: {a.min}</div>
+                      <div className="alert-sub">{t('overview.alerts.stockInfo', { qty: a.qty, min: a.min })}</div>
                     </div>
                     <button className="alert-fix" onClick={() => onNavigate('produits')}>
-                      Réappro
+                      {t('overview.alerts.fix')}
                     </button>
                   </div>
                 ))}
@@ -291,10 +294,10 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
           </div>
 
           <div className="card">
-            <div className="ch"><div className="ch-t"><i className="fas fa-chart-pie"></i> Répartition des ventes</div></div>
+            <div className="ch"><div className="ch-t"><i className="fas fa-chart-pie"></i> {t('overview.donut.title')}</div></div>
             <div className="cb">
               {categoryBreakdown.length === 0 && !loading ? (
-                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>Aucune vente pour l'instant.</div>
+                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('overview.charts.noSales')}</div>
               ) : (
                 <div className="donut-wrap">
                   <div className="donut" style={{ background: `conic-gradient(${segments.join(',')})` }}></div>
@@ -315,9 +318,9 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
         <div>
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-box"></i> Dernières commandes</div>
+              <div className="ch-t"><i className="fas fa-box"></i> {t('overview.orders.title')}</div>
               <button className="sh-action" onClick={() => onNavigate('commandes')}>
-                Tout voir <i className="fas fa-arrow-right"></i>
+                {t('overview.orders.seeAll')} <i className="fas fa-arrow-right"></i>
               </button>
             </div>
             <div className="tbl-wrap">
@@ -342,16 +345,16 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
                 </tbody>
               </table>
               {dernieresCommandes.length === 0 && !loading && (
-                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>Aucune commande pour l'instant.</div>
+                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('overview.orders.empty')}</div>
               )}
             </div>
           </div>
 
           <div className="card">
-            <div className="ch"><div className="ch-t"><i className="fas fa-timeline"></i> Activité récente</div></div>
+            <div className="ch"><div className="ch-t"><i className="fas fa-timeline"></i> {t('overview.activity.title')}</div></div>
             <div className="cb">
               {activite.length === 0 && !loading && (
-                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>Aucune activité récente.</div>
+                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('overview.activity.empty')}</div>
               )}
               <div className="act-list">
                 {activite.map((a, i) => (

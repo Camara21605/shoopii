@@ -4,6 +4,7 @@
  * ================================================================ */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../styles/SettingsCard.module.css';
 import { settingsApi, type PaymentItem } from '../../api/settings.api';
 
@@ -13,12 +14,16 @@ const PAY_ICONS: Record<string, string> = {
   orange: '📱', mtn: '💛', carte: '💳', especes: '💵',
   virement: '🏦', wallet: '👛',
 };
-const PAY_LABELS: Record<string, string> = {
-  orange: 'Orange Money', mtn: 'MTN Mobile Money', carte: 'Carte bancaire',
-  especes: 'Espèces', virement: 'Virement bancaire', wallet: 'Portefeuille Shopi',
-};
 
 export default function PaiementSection({ onToast }: Props) {
+  const { t } = useTranslation();
+  const PAY_LABELS: Record<string, string> = {
+    orange: 'Orange Money', mtn: 'MTN Mobile Money',
+    carte: t('settingsPage.paiement.labels.carte'),
+    especes: t('settingsPage.paiement.labels.especes'),
+    virement: t('settingsPage.paiement.labels.virement'),
+    wallet: t('settingsPage.paiement.labels.wallet'),
+  };
   const [methods,  setMethods]  = useState<PaymentItem[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
@@ -26,7 +31,7 @@ export default function PaiementSection({ onToast }: Props) {
   useEffect(() => {
     settingsApi.getPaiement()
       .then(setMethods)
-      .catch(() => onToast('❌ Impossible de charger les moyens de paiement'))
+      .catch(() => onToast(t('settingsPage.paiement.loadError')))
       .finally(() => setLoading(false));
   }, []);
 
@@ -35,7 +40,7 @@ export default function PaiementSection({ onToast }: Props) {
     try {
       const updated = await settingsApi.deletePaiement(id);
       setMethods(updated);
-      onToast('🗑️ Moyen de paiement supprimé');
+      onToast(t('settingsPage.paiement.toastSupprime'));
     } catch (err: any) { onToast(`❌ ${err.message}`); }
     finally { setActionId(null); }
   }
@@ -45,7 +50,7 @@ export default function PaiementSection({ onToast }: Props) {
     try {
       const updated = await settingsApi.setDefaultPay(id);
       setMethods(updated);
-      onToast('⭐ Moyen de paiement défini par défaut');
+      onToast(t('settingsPage.paiement.toastDefiniParDefaut'));
     } catch (err: any) { onToast(`❌ ${err.message}`); }
     finally { setActionId(null); }
   }
@@ -64,18 +69,18 @@ export default function PaiementSection({ onToast }: Props) {
         <div className={s.cardTitle}>
           <div className={`${s.cardIco} ${s.icoViolet}`}><i className="fas fa-credit-card" /></div>
           <div>
-            <div className={s.cardH}>Moyens de paiement</div>
-            <div className={s.cardSub}>Cartes, Mobile Money et portefeuilles</div>
+            <div className={s.cardH}>{t('settingsPage.paiement.titre')}</div>
+            <div className={s.cardSub}>{t('settingsPage.paiement.subtitle')}</div>
           </div>
         </div>
-        <button className={s.cardAction} onClick={() => onToast('➕ Ajouter un moyen de paiement')}>
-          <i className="fas fa-plus" /> Ajouter
+        <button className={s.cardAction} onClick={() => onToast(t('settingsPage.paiement.toastAjouter'))}>
+          <i className="fas fa-plus" /> {t('settingsPage.paiement.ajouter')}
         </button>
       </div>
       <div className={s.cardBody} style={{ paddingBottom:4 }}>
         {methods.length === 0 && (
           <div style={{ padding:'24px', textAlign:'center', color:'var(--t3)', fontSize:13 }}>
-            Aucun moyen de paiement enregistré
+            {t('settingsPage.paiement.aucunMoyen')}
           </div>
         )}
         {methods.map(m => (
@@ -85,14 +90,14 @@ export default function PaiementSection({ onToast }: Props) {
               <div>
                 <div className={s.payInfoTitle}>
                   {PAY_LABELS[m.type] ?? m.type}
-                  {m.isDefault && <span className={s.payDefault}><i className="fas fa-check" /> Par défaut</span>}
+                  {m.isDefault && <span className={s.payDefault}><i className="fas fa-check" /> {t('settingsPage.paiement.parDefaut')}</span>}
                 </div>
-                <div className={s.payInfoSub}>{m.numero} · Ajouté le {m.addedAt}</div>
+                <div className={s.payInfoSub}>{m.numero} · {t('settingsPage.paiement.ajouteLe')} {m.addedAt}</div>
               </div>
             </div>
             <div style={{ display:'flex', gap:4 }}>
               {!m.isDefault && (
-                <button className={s.addrAct} onClick={() => handleSetDefault(m.id)} disabled={actionId === m.id} title="Définir par défaut">
+                <button className={s.addrAct} onClick={() => handleSetDefault(m.id)} disabled={actionId === m.id} title={t('settingsPage.paiement.definirParDefautTitle')}>
                   {actionId === m.id ? <i className="fas fa-circle-notch fa-spin" /> : <i className="fas fa-star" />}
                 </button>
               )}
@@ -103,8 +108,8 @@ export default function PaiementSection({ onToast }: Props) {
           </div>
         ))}
         <div style={{ margin:'0 24px 20px' }}>
-          <button className={s.addrAdd} onClick={() => onToast('➕ Ajouter un moyen de paiement')}>
-            <i className="fas fa-plus" /> Ajouter un moyen de paiement
+          <button className={s.addrAdd} onClick={() => onToast(t('settingsPage.paiement.toastAjouter'))}>
+            <i className="fas fa-plus" /> {t('settingsPage.paiement.ajouterNouveau')}
           </button>
         </div>
       </div>

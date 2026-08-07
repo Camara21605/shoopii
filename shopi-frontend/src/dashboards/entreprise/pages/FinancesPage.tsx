@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
 import { apiFetch } from '../../../shared/services/apiFetch';
 import './FinancesPage.css';
@@ -35,6 +36,7 @@ function fmtGNF(n: number) {
 }
 
 export default function FinancesPage() {
+  const { t } = useTranslation();
   const { pop } = useToast();
   const [data, setData]       = useState<FinancesData>(EMPTY);
   const [loading, setLoading] = useState(true);
@@ -50,10 +52,10 @@ export default function FinancesPage() {
   const maxCA = Math.max(1, ...caData.map(d => d.v));
 
   const BALANCE_STATS = [
-    { ic: '💳', v: fmtGNF(solde),          l: 'Solde disponible',     k: 'k2', trend: 'Wallet entreprise' },
-    { ic: '📈', v: fmtGNF(revenusMois),     l: 'Revenus ce mois',      k: 'k1', trend: `${croissanceRevenus >= 0 ? '+' : ''}${croissanceRevenus}% vs mois dernier` },
-    { ic: '📉', v: fmtGNF(depensesMois),    l: 'Dépenses ce mois',     k: 'k5', trend: 'Commissions + livraison' },
-    { ic: '⏳', v: fmtGNF(soldeEnAttente),  l: 'En attente (escrow)',  k: 'k3', trend: 'Libéré à la livraison' },
+    { ic: '💳', v: fmtGNF(solde),          l: t('finances.kpi.soldeDisponible'),     k: 'k2', trend: t('finances.kpi.walletEntreprise') },
+    { ic: '📈', v: fmtGNF(revenusMois),     l: t('finances.kpi.revenusCeMois'),      k: 'k1', trend: t('finances.kpi.vsMoisDernier', { sign: croissanceRevenus >= 0 ? '+' : '', pct: croissanceRevenus }) },
+    { ic: '📉', v: fmtGNF(depensesMois),    l: t('finances.kpi.depensesCeMois'),     k: 'k5', trend: t('finances.kpi.commissionsLivraison') },
+    { ic: '⏳', v: fmtGNF(soldeEnAttente),  l: t('finances.kpi.enAttenteEscrow'),  k: 'k3', trend: t('finances.kpi.libereALaLivraison') },
   ];
 
   return (
@@ -69,7 +71,7 @@ export default function FinancesPage() {
             </div>
             <div className="kpi-val" style={{ fontSize: 20 }}>{s.v}</div>
             <div className="kpi-lbl">{s.l}</div>
-            <div className="kpi-sub">GNF</div>
+            <div className="kpi-sub">{t('finances.gnf')}</div>
           </div>
         ))}
       </div>
@@ -78,11 +80,11 @@ export default function FinancesPage() {
         <div>
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-chart-area"></i> Évolution des revenus</div>
+              <div className="ch-t"><i className="fas fa-chart-area"></i> {t('finances.evolutionRevenus')}</div>
             </div>
             <div className="cb">
               {caData.length === 0 && !loading && (
-                <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)' }}>Aucune vente livrée pour l'instant.</div>
+                <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)' }}>{t('analytics.ca.empty')}</div>
               )}
               <div className="chart-bars" style={{ height: 150 }}>
                 {caData.map((d, i) => (
@@ -103,32 +105,32 @@ export default function FinancesPage() {
                 ))}
               </div>
               <div className="chart-legend">
-                <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--t2)' }}></div>Revenus (M GNF)</div>
-                <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--sky-3)' }}></div>Mois précédents</div>
+                <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--t2)' }}></div>{t('finances.legendRevenus')}</div>
+                <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--sky-3)' }}></div>{t('finances.legendMoisPrecedents')}</div>
               </div>
             </div>
           </div>
 
           <div className="card">
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-list-ul"></i> Transactions récentes</div>
+              <div className="ch-t"><i className="fas fa-list-ul"></i> {t('finances.transactionsRecentes')}</div>
             </div>
             <div className="cb">
               {transactions.length === 0 && !loading && (
-                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>Aucune transaction pour l'instant.</div>
+                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('finances.emptyTransactions')}</div>
               )}
               <div className="tx-list">
-                {transactions.map(t => (
-                  <div key={t.id} className="tx-item" onClick={() => pop(`💰 ${t.description}`, 'i')}>
-                    <div className="tx-ic" style={{ background: t.dir === 'in' ? 'var(--em-bg)' : 'var(--rs-bg)' }}>
-                      <i className={`fas ${t.dir === 'in' ? 'fa-arrow-down' : 'fa-arrow-up'}`} style={{ fontSize: 14 }} />
+                {transactions.map(tx => (
+                  <div key={tx.id} className="tx-item" onClick={() => pop(`💰 ${tx.description}`, 'i')}>
+                    <div className="tx-ic" style={{ background: tx.dir === 'in' ? 'var(--em-bg)' : 'var(--rs-bg)' }}>
+                      <i className={`fas ${tx.dir === 'in' ? 'fa-arrow-down' : 'fa-arrow-up'}`} style={{ fontSize: 14 }} />
                     </div>
                     <div className="tx-inf">
-                      <div className="tx-nm">{t.description}</div>
-                      <div className="tx-sub">{t.reference ?? new Date(t.date).toLocaleDateString('fr-FR')}</div>
+                      <div className="tx-nm">{tx.description}</div>
+                      <div className="tx-sub">{tx.reference ?? new Date(tx.date).toLocaleDateString('fr-FR')}</div>
                     </div>
-                    <div className={`tx-amt ${t.dir}`}>
-                      {t.montant >= 0 ? '+' : ''}{fmtGNF(t.montant)} <span className="tx-unit">GNF</span>
+                    <div className={`tx-amt ${tx.dir}`}>
+                      {tx.montant >= 0 ? '+' : ''}{fmtGNF(tx.montant)} <span className="tx-unit">{t('finances.gnf')}</span>
                     </div>
                   </div>
                 ))}
@@ -140,11 +142,11 @@ export default function FinancesPage() {
         <div>
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-chart-pie"></i> Répartition</div>
+              <div className="ch-t"><i className="fas fa-chart-pie"></i> {t('finances.repartition')}</div>
             </div>
             <div className="cb">
               {repartition.length === 0 && !loading && (
-                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>Aucune donnée ce mois.</div>
+                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('finances.emptyRepartition')}</div>
               )}
               {repartition.map((r, i) => (
                 <div key={i} style={{ marginBottom: 13 }}>
@@ -167,11 +169,11 @@ export default function FinancesPage() {
 
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
-              <div className="ch-t"><i className="fas fa-building-columns"></i> Virements Shopi</div>
+              <div className="ch-t"><i className="fas fa-building-columns"></i> {t('finances.virementsShopi')}</div>
             </div>
             <div className="cb">
               {virements.length === 0 && !loading && (
-                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>Aucun virement pour l'instant.</div>
+                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('finances.emptyVirements')}</div>
               )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
                 {virements.map(v => (
@@ -182,7 +184,7 @@ export default function FinancesPage() {
                       <div style={{ fontSize: 10.5, color: 'var(--t3)', marginTop: 1 }}>{new Date(v.date).toLocaleDateString('fr-FR')}</div>
                     </div>
                     <span className={`s-pill ${v.statut === 'done' ? 's-del' : 's-prep'}`} style={{ fontSize: 9 }}>
-                      {v.statut === 'done' ? '✓ Reçu' : '⏳ Attente'}
+                      {v.statut === 'done' ? t('finances.statutRecu') : t('finances.statutAttente')}
                     </span>
                   </div>
                 ))}
@@ -191,13 +193,13 @@ export default function FinancesPage() {
           </div>
 
           <div className="card">
-            <div className="ch"><div className="ch-t"><i className="fas fa-bolt"></i> Actions</div></div>
+            <div className="ch"><div className="ch-t"><i className="fas fa-bolt"></i> {t('finances.actions')}</div></div>
             <div className="cb" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[
-                { ic: '📊', l: 'Télécharger bilan mensuel' },
-                { ic: '🏦', l: 'Demander virement anticipé' },
-                { ic: '⚙️', l: 'Modifier infos bancaires' },
-                { ic: '📋', l: 'Voir factures Shopi' },
+                { ic: '📊', l: t('finances.quickActions.telechargerBilan') },
+                { ic: '🏦', l: t('finances.quickActions.demanderVirement') },
+                { ic: '⚙️', l: t('finances.quickActions.modifierInfosBancaires') },
+                { ic: '📋', l: t('finances.quickActions.voirFactures') },
               ].map((a, i) => (
                 <button key={i} onClick={() => pop(`⚙️ ${a.l}`, 'i')}
                   style={{ background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-md)', padding: '10px 14px', fontSize: 12.5, fontWeight: 600, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', textAlign: 'left', transition: 'all .18s' }}>

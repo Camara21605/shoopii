@@ -5,6 +5,7 @@
  */
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import Header           from '../../layout/Header';
 import { useCart }      from '../../../../../shared/context/CartContext';
@@ -13,22 +14,29 @@ import { apiFetch }     from '../../../../../shared/services/apiFetch';
 import ProgressBar      from '../components/ProgressBar';
 import ConfirmModal     from '../components/ConfirmModal';
 import AdresseSection, { type AdresseFormData } from '../sections/AdresseSection';
+import LivraisonSection from '../sections/LivraisonSection';
 import RecapSection     from '../sections/RecapSection';
 import SummaryPanel     from '../sections/SummaryPanel';
 
 import { settingsApi }                       from '../../settings/api/settings.api';
 import type { ProfilData, AdresseItem }      from '../../settings/api/settings.api';
+import { fetchLivreursSuivis, type LivreurSuivi } from '../services/livreursSuivis.api';
+import { fetchWalletSummary }                from '../../../../../shared/services/walletApi';
+import { SPEEDS, lvFeeCalc }                 from '../data/panierData';
 import styles from '../styles/CommandePage.module.css';
 
 export default function CommandePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { items, count, updateQty, removeItem, clearCart } = useCart();
 
-  const delMode = 'std' as const;
-  const selLvr  = null;
-  const selCorr = null;
-  const curSpd  = 'std';
-  const payMode   = 'omo';
+  const [delMode,    setDelMode]    = useState<'std' | 'lvr'>('std');
+  const [selLvr,     setSelLvr]     = useState<string | null>(null);
+  const [selCorr,    setSelCorr]    = useState<number | null>(null);
+  const [curSpd,     setCurSpd]     = useState('std');
+  /* Paiement toujours via le portefeuille Shopi — plus de sélection de
+     mode de paiement ni de code promo (étape "Mode de paiement" retirée). */
+  const payMode    = 'wallet' as const;
   const promoActif = false;
   const [termsOk,        setTermsOk]        = useState(false);
   const [loading,        setLoading]        = useState(false);
@@ -39,6 +47,17 @@ export default function CommandePage() {
   const [savedAddresses,  setSavedAddresses] = useState<AdresseItem[]>([]);
   const [loadingClient,   setLoadingClient]  = useState(true);
   const [adresseLivraison, setAdresseLivraison] = useState<AdresseFormData | null>(null);
+
+  /* ── Livreurs auxquels le client est abonné (choix "Choisir un livreur") ── */
+  const [livreurs,        setLivreurs]        = useState<LivreurSuivi[]>([]);
+  const [loadingLivreurs, setLoadingLivreurs]  = useState(true);
+
+  /* ── Solde réel du portefeuille Shopi du client (mode de paiement "Wallet") ── */
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [loadingWallet, setLoadingWallet] = useState(true);
+
+  /* ── Ancre pour le lien "Modifier" du panneau récapitulatif ── */
+  const articlesRef = useRef<HTMLDivElement | null>(null);
 
   /* ── Toast ── */
   const [toastMsg, setToastMsg]     = useState('');
@@ -64,11 +83,26 @@ export default function CommandePage() {
       .finally(() => setLoadingClient(false));
   }, []);
 
-  /* ── Calculs ── */
-  const co      = null;
+  useEffect(() => {
+    fetchLivreursSuivis()
+      .then(setLivreurs)
+      .catch(() => {})
+      .finally(() => setLoadingLivreurs(false));
+  }, []);
+
+  useEffect(() => {
+    fetchWalletSummary()
+      .then(s => setWalletBalance(s.balance))
+      .catch(() => {})
+      .finally(() => setLoadingWallet(false));
+  }, []);
+
+  /* ── Calculs ──
+     Correspondant non disponible (pas de boutique internationale détectée
+     ni d'API de correspondants réels côté panier) — toujours désactivé. */
   const corrFee = 0;
-  const lv      = null;
-  const lvFee   = 0;
+  const lv      = delMode === 'lvr' ? livreurs.find(l => l.id === selLvr) ?? null : null;
+  const lvFee   = lv ? lvFeeCalc(lv.base, SPEEDS[curSpd].m) : 0;
   const sub     = items.reduce((s, i) => s + i.prix * i.qty, 0);
   const disc    = promoActif ? Math.round(sub * 0.2) : 0;
   const total   = sub + corrFee + lvFee - disc;
@@ -78,21 +112,27 @@ export default function CommandePage() {
     if (!item) return;
     const newQty = Math.max(1, Math.min(10, item.qty + delta));
     try { await updateQty(id, newQty); }
-    catch { showToast('❌ Impossible de modifier la quantité'); }
+    catch { showToast(t('panierCommande.page.erreurQtyToast')); }
   }
 
   async function handleRemove(id: string) {
-    try { await removeItem(id); showToast('🗑️ Article retiré du panier'); }
-    catch { showToast('❌ Impossible de supprimer'); }
+    try { await removeItem(id); showToast(t('panierCommande.page.articleRetireToast')); }
+    catch { showToast(t('panierCommande.page.erreurSuppressionToast')); }
   }
 
   function askConfirm() {
-    if (!termsOk)           { showToast('⚠️ Acceptez les conditions générales'); return; }
-    if (items.length === 0) { showToast('⚠️ Votre panier est vide');              return; }
+    if (!termsOk)           { showToast(t('panierCommande.page.acceptezCguToast')); return; }
+    if (items.length === 0) { showToast(t('panierCommande.page.panierVideToast'));              return; }
     const a = adresseLivraison;
-    if (!a?.prenom || !a?.nom)        { showToast('⚠️ Indiquez votre prénom et nom');     return; }
-    if (!a?.telephone)                { showToast('⚠️ Indiquez votre numéro de téléphone'); return; }
-    if (!a?.adressePrecise)           { showToast('⚠️ Indiquez votre adresse précise');    return; }
+    if (!a?.prenom || !a?.nom)        { showToast(t('panierCommande.page.prenomNomToast'));     return; }
+    if (!a?.telephone)                { showToast(t('panierCommande.page.telephoneToast')); return; }
+    if (!a?.adressePrecise)           { showToast(t('panierCommande.page.adresseToast'));    return; }
+    if (delMode === 'lvr' && !selLvr) { showToast(t('panierCommande.page.choisirLivreurToast'));             return; }
+    if (loadingWallet)                { showToast(t('panierCommande.page.verificationSoldeToast')); return; }
+    if (walletBalance != null && walletBalance < total) {
+      showToast(t('panierCommande.page.soldeInsuffisantToast'));
+      return;
+    }
     setShowConfirmAsk(true);
   }
 
@@ -105,6 +145,7 @@ export default function CommandePage() {
         body: {
           items:           items.map(i => ({ panierItemId: i.id })),
           delMode,
+          livreurId:       delMode === 'lvr' && selLvr ? selLvr : undefined,
           payMode,
           destination:     etaDest,
           /* ── Adresse de livraison ── */
@@ -121,7 +162,7 @@ export default function CommandePage() {
       navigate(`/commande/${res.id}/suivi`);
       setShowConfirmAsk(false);
     } catch (e: any) {
-      showToast(`❌ ${e?.message ?? 'Impossible de confirmer la commande'}`);
+      showToast(t('panierCommande.page.erreurCommandeToast', { msg: e?.message ?? t('panierCommande.page.impossibleConfirmer') }));
     } finally {
       setLoading(false);
     }
@@ -141,12 +182,12 @@ export default function CommandePage() {
         <main className={styles.main}>
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>🛒</div>
-            <div className={styles.emptyTitle}>Votre panier est vide</div>
+            <div className={styles.emptyTitle}>{t('panierCommande.page.panierVideTitre')}</div>
             <div className={styles.emptyText}>
-              Parcourez les boutiques et ajoutez vos produits préférés pour passer commande.
+              {t('panierCommande.page.panierVideDesc')}
             </div>
             <button className={styles.emptyBtn} onClick={() => navigate('/home')}>
-              <i className="fas fa-arrow-left" /> Explorer les boutiques
+              <i className="fas fa-arrow-left" /> {t('panierCommande.page.explorerBoutiques')}
             </button>
           </div>
         </main>
@@ -166,15 +207,15 @@ export default function CommandePage() {
           <div className={styles.leftCol}>
 
             {/* ── Section articles ── */}
-            <div className={styles.card}>
+            <div className={styles.card} ref={articlesRef}>
               <div className={styles.cardHead}>
                 <div className={`${styles.cardHeadIcon} ${styles.iconGreen}`}>
                   <i className="fas fa-check" />
                 </div>
                 <div className={styles.cardHeadText}>
-                  <div className={styles.cardHeadTitle}>Vos articles</div>
+                  <div className={styles.cardHeadTitle}>{t('panierCommande.page.cardHeadTitle')}</div>
                   <div className={styles.cardHeadSub}>
-                    {count} article{count > 1 ? 's' : ''} · Prêt pour la commande
+                    {t('panierCommande.page.cardHeadSub', { count })}
                   </div>
                 </div>
               </div>
@@ -208,7 +249,7 @@ export default function CommandePage() {
                         {item.stock > 0 && item.stock < 5 && (
                           <div className={styles.articleStockWarn}>
                             <i className="fas fa-triangle-exclamation" style={{ marginRight: 4 }} />
-                            Plus que {item.stock} en stock
+                            {t('panierCommande.page.plusQueEnStock', { count: item.stock })}
                           </div>
                         )}
                         {/* Quantité */}
@@ -249,7 +290,7 @@ export default function CommandePage() {
                         <button
                           className={styles.removeBtn}
                           onClick={() => handleRemove(item.id)}
-                          title="Retirer du panier"
+                          title={t('panierCommande.page.retirerDuPanier')}
                         >
                           <i className="fas fa-trash-can" />
                         </button>
@@ -267,6 +308,20 @@ export default function CommandePage() {
               loadingClient={loadingClient}
               onVilleChange={setEtaDest}
               onAdresseChange={setAdresseLivraison}
+              onToast={showToast}
+            />
+            <LivraisonSection
+              delMode={delMode}
+              selLvr={selLvr}
+              selCorr={selCorr}
+              curSpd={curSpd}
+              showCorr={false}
+              livreurs={livreurs}
+              loadingLivreurs={loadingLivreurs}
+              onDel={setDelMode}
+              onSelLvr={setSelLvr}
+              onSelCorr={setSelCorr}
+              onSpeed={setCurSpd}
               onToast={showToast}
             />
             <RecapSection
@@ -287,8 +342,11 @@ export default function CommandePage() {
               delMode={delMode} selLvrObj={lv}
               corrFee={corrFee} curSpd={curSpd}
               promoActif={promoActif} etaDest={etaDest}
-              loading={loading} onToast={showToast}
+              loading={loading}
+              walletBalance={walletBalance}
+              loadingWallet={loadingWallet}
               onConfirm={askConfirm}
+              onEdit={() => articlesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             />
           </div>
         </div>

@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { apiFetch } from '../../../../../shared/services/apiFetch';
 
 import Header             from '../../layout/Header';
@@ -44,7 +46,7 @@ export interface ProduitApi {
   delaiLivraison:         string;
 }
 
-function toProduitInfo(p: ProduitApi): ProduitInfo {
+function toProduitInfo(p: ProduitApi, t: TFunction): ProduitInfo {
   return {
     id:          p.id,
     nom:         p.nom,
@@ -64,7 +66,7 @@ function toProduitInfo(p: ProduitApi): ProduitInfo {
       : [p.category?.icone ?? '📦'],
     specs: p.specs?.map(s => ({ label: s.cle, value: s.valeur })) ?? [],
     boutique: {
-      nom:       p.companyName ?? 'Boutique Shopi',
+      nom:       p.companyName ?? t('boutiqueDetail.page.boutiqueShopiDefault'),
       emoji:     p.companyLogo ?? '🏪',
       verified:  true,
       pays:      'Guinée',
@@ -100,6 +102,7 @@ const LIVRAISON_INIT: LivraisonState = {
 
 export default function ProduitPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { id: produitId } = useParams<{ id: string }>();
 
   const [produitApi, setProduitApi] = useState<ProduitApi | null>(null);
@@ -107,12 +110,12 @@ export default function ProduitPage() {
   const [error,      setError]      = useState<string | null>(null);
 
   useEffect(() => {
-    if (!produitId) { setError('ID produit manquant.'); setLoading(false); return; }
+    if (!produitId) { setError(t('produitDetail.page.idManquant')); setLoading(false); return; }
     apiFetch<ProduitApi>(`/public/produits/${produitId}`, { public: true })
       .then(data => setProduitApi(data))
-      .catch(() => setError('Produit introuvable ou non publié.'))
+      .catch(() => setError(t('produitDetail.page.introuvable')))
       .finally(() => setLoading(false));
-  }, [produitId]);
+  }, [produitId, t]);
 
   const [qty,         setQty]         = useState(1);
   const [livraison,   setLivraison]   = useState<LivraisonState>(LIVRAISON_INIT);
@@ -157,20 +160,20 @@ export default function ProduitPage() {
       <Header onToast={showToast} onLogin={() => navigate('/login')} onRegister={() => navigate('/register')} />
       <div style={{ padding:'80px 20px', textAlign:'center', color:'var(--t3)' }}>
         <div style={{ fontSize:64, marginBottom:16 }}>📦</div>
-        <div style={{ fontSize:18, fontWeight:700, color:'var(--navy)', marginBottom:8 }}>Produit introuvable</div>
+        <div style={{ fontSize:18, fontWeight:700, color:'var(--navy)', marginBottom:8 }}>{t('produitDetail.page.produitIntrouvableTitre')}</div>
         <div style={{ fontSize:14, marginBottom:24 }}>
-          {error ?? "Ce produit n'existe pas ou n'est pas encore publié."}
+          {error ?? t('produitDetail.page.produitIntrouvableDesc')}
         </div>
         <button onClick={() => navigate('/home')}
           style={{ background:'var(--navy)', color:'#fff', border:'none', borderRadius:10, padding:'10px 24px', fontWeight:700, cursor:'pointer' }}>
-          Retour à l'accueil
+          {t('produitDetail.page.retourAccueil')}
         </button>
       </div>
       <Footer onToast={showToast} />
     </div>
   );
 
-  const produit          = toProduitInfo(produitApi);
+  const produit          = toProduitInfo(produitApi, t);
   const shareUrl         = `https://shopi.gn/produit/${produitApi.urlSlug ?? produitApi.id}`;
   const varianteCombinee = [storActive, colorActive].filter(Boolean).join(' · ') || undefined;
 
@@ -187,7 +190,7 @@ export default function ProduitPage() {
         <div className={styles.wrap}>
 
           <nav className={styles.breadcrumb}>
-            <a href="/home">Accueil</a>
+            <a href="/home">{t('produitDetail.page.accueil')}</a>
             <i className="fas fa-chevron-right" />
             <span>{produit.categorie}</span>
             <i className="fas fa-chevron-right" />
@@ -263,7 +266,7 @@ export default function ProduitPage() {
       {partageOpen && (
         <ModalPartage
           url={shareUrl}
-          titre="Partager ce produit"
+          titre={t('produitDetail.page.partagerTitre')}
           onClose={() => setPartageOpen(false)}
           onToast={showToast}
         />

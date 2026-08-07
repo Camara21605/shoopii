@@ -23,6 +23,7 @@ import CommandePage      from '../modules/home/components/panier/pages/CommandeP
 import SettingsPage      from '../modules/home/components/settings/pages/SettingsPage';
 import LivreursPage      from '../modules/home/components/livreurs/pages/LivreursPage';
 import BoutiquesPage     from '../modules/home/components/boutiques/pages/BoutiquesPage';
+import OffresPage        from '../modules/home/components/offres/pages/OffresPage';
 import ProfilLivreurPage from '../shared/profils/profil-livreur/ProfilLivreurPage';
 import ProfilClientPage  from '../shared/profils/profil-client/ProfilClientPage';
 import CorrespondantsPage from '../modules/home/components/correspondants/pages/CorrespondantsPage';
@@ -163,6 +164,9 @@ export const AppRouter: React.FC = () => (
 
           {/* Boutiques — publique */}
           <Route path="/boutiques"          element={<BoutiquesPage />} />
+
+          {/* Offres / promotions — publique */}
+          <Route path="/offres"             element={<OffresPage />} />
 
           {/* Livreurs — publiques */}
           <Route path="/livreurs"           element={<LivreursPage />} />

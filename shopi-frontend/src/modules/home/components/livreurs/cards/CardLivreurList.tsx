@@ -11,6 +11,7 @@
 
 import React            from 'react';
 import { useNavigate }  from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import styles           from '../styles/CardLivreurList.module.css';
 import { useFollowToggle } from '../../../../../shared/hooks/useFollowToggle';
 import { useAuthGate }     from '../../../../../shared/hooks/useAuthGate';
@@ -29,6 +30,7 @@ interface CardLivreurListProps {
 const CardLivreurList: React.FC<CardLivreurListProps> = ({
   livreur, onToast, onFollow,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   /* ✅ État contrôlé par le parent + logique commune */
@@ -50,12 +52,12 @@ const CardLivreurList: React.FC<CardLivreurListProps> = ({
       className={styles.item}
       onClick={handleViewProfile}
       role="article"
-      aria-label={`Livreur ${livreur.fullName}`}
+      aria-label={t('livreursPage.card.livreurAriaLabel', { nom: livreur.fullName })}
     >
       {/* ── Avatar ── */}
       <div className={styles.ava} style={{ background: livreur.avatarBg }}>
         {livreur.initials}
-        {livreur.disponible && <span className={styles.avaDot} aria-label="Disponible" />}
+        {livreur.disponible && <span className={styles.avaDot} aria-label={t('livreursPage.card.disponible')} />}
       </div>
 
       {/* ── Infos ── */}
@@ -68,7 +70,7 @@ const CardLivreurList: React.FC<CardLivreurListProps> = ({
             <i className="fas fa-circle"
               style={{ color: livreur.disponible ? 'var(--t1)' : 'var(--t4)', fontSize: 8 }}
               aria-hidden="true" />
-            {livreur.disponible ? 'Disponible' : 'En course'}
+            {livreur.disponible ? t('livreursPage.card.disponible') : t('livreursPage.card.enCourse')}
           </span>
         </div>
       </div>
@@ -78,7 +80,7 @@ const CardLivreurList: React.FC<CardLivreurListProps> = ({
         <div className={styles.ratingWrap}>
           <div className={styles.ratingVal}>{livreur.averageRating}★</div>
           <div className={styles.ratingLivs}>
-            {livreur.totalLivraisons.toLocaleString('fr-FR')} livraisons
+            {t('livreursPage.card.livraisonsCount', { count: livreur.totalLivraisons.toLocaleString('fr-FR') })}
           </div>
         </div>
         <button
@@ -89,9 +91,9 @@ const CardLivreurList: React.FC<CardLivreurListProps> = ({
           {loading ? (
             <i className="fas fa-spinner fa-spin" aria-hidden="true" />
           ) : suivi ? (
-            <><i className="fas fa-user-check" aria-hidden="true" /> Abonné(e)</>
+            <><i className="fas fa-user-check" aria-hidden="true" /> {t('livreursPage.card.abonneFem')}</>
           ) : (
-            <><i className="fas fa-plus" aria-hidden="true" /> Suivre</>
+            <><i className="fas fa-plus" aria-hidden="true" /> {t('livreursPage.card.suivre')}</>
           )}
         </button>
       </div>

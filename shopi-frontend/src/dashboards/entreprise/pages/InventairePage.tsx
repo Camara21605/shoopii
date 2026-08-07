@@ -17,7 +17,8 @@
  * ============================================================
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
 import styles from './InventairePage.module.css';
 
@@ -64,14 +65,14 @@ function fmt(n: number) {
 // HELPER — Calcule le statut de stock d'un produit
 // Retourne le label et la classe CSS selon le niveau
 // ─────────────────────────────────────────────────────────────
-function stockStatus(stock: number, seuil: number | null): {
+function stockStatus(stock: number, seuil: number | null, t: (key: string) => string): {
   label: string;
   cls:   'out' | 'low' | 'ok';
 } {
-  if (stock === 0)                          return { label: 'Rupture',      cls: 'out' };
-  if (seuil !== null && stock <= seuil)     return { label: 'Stock faible', cls: 'low' };
-  if (stock < 5)                            return { label: 'Critique',     cls: 'low' };
-  return                                           { label: 'En stock',     cls: 'ok'  };
+  if (stock === 0)                          return { label: t('inventaire.status.rupture'),  cls: 'out' };
+  if (seuil !== null && stock <= seuil)     return { label: t('inventaire.status.faible'),   cls: 'low' };
+  if (stock < 5)                            return { label: t('inventaire.status.critique'), cls: 'low' };
+  return                                           { label: t('inventaire.status.enStock'),  cls: 'ok'  };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -98,6 +99,7 @@ function ModalStock({ produit, onClose, onSaved }: {
   onSaved:  (id: string, stock: number, seuil: number | null) => void;
 }) {
   const { pop } = useToast();
+  const { t } = useTranslation();
 
   // État local du formulaire
   const [stock,   setStock]   = useState(String(produit.stock));
@@ -117,7 +119,7 @@ function ModalStock({ produit, onClose, onSaved }: {
 
     // Validation simple côté client
     if (isNaN(newStock) || newStock < 0) {
-      pop('⚠️ Le stock doit être un nombre positif', 'w');
+      pop(t('inventaire.modal.invalidStock'), 'w');
       return;
     }
 
@@ -139,7 +141,7 @@ function ModalStock({ produit, onClose, onSaved }: {
 
       // Notifie le parent pour mettre à jour l'état local
       onSaved(produit.id, newStock, newSeuil);
-      pop('✅ Stock mis à jour', 's');
+      pop(t('inventaire.modal.updated'), 's');
       onClose();
 
     } catch (e: any) {
@@ -151,7 +153,7 @@ function ModalStock({ produit, onClose, onSaved }: {
 
   const stockNum  = parseInt(stock) || 0;
   const seuilNum  = seuil ? parseInt(seuil) : null;
-  const { cls }   = stockStatus(stockNum, seuilNum);
+  const { cls }   = stockStatus(stockNum, seuilNum, t);
 
   return (
     // Overlay sombre — clic dessus ferme la modale
@@ -164,10 +166,10 @@ function ModalStock({ produit, onClose, onSaved }: {
           <div>
             <div className={styles.modalTitle}>
               <i className="fas fa-boxes-stacked" />
-              Modifier le stock
+              {t('inventaire.modal.title')}
             </div>
             <div className={styles.modalSub}>
-              Mise à jour rapide sans quitter l'inventaire
+              {t('inventaire.modal.subtitle')}
             </div>
           </div>
           <button className={styles.closeBtn} onClick={onClose}>
@@ -209,7 +211,7 @@ function ModalStock({ produit, onClose, onSaved }: {
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>
               <i className="fas fa-cube" />
-              Quantité en stock *
+              {t('inventaire.modal.quantite')}
             </label>
             <div className={styles.inputWithUnit}>
               <input
@@ -218,15 +220,15 @@ function ModalStock({ produit, onClose, onSaved }: {
                 value={stock}
                 min={0}
                 onChange={e => setStock(e.target.value)}
-                placeholder="Ex: 25"
+                placeholder={t('inventaire.modal.placeholder1')}
               />
-              <span className={styles.inputUnit}>unités</span>
+              <span className={styles.inputUnit}>{t('inventaire.modal.unites')}</span>
             </div>
             {/* Aperçu du nouveau statut en temps réel */}
             {stock && (
               <div className={`${styles.statusPreview} ${styles[`status_${cls}`]}`}>
                 <span className={styles.statusDot} />
-                Nouveau statut : <strong>{stockStatus(parseInt(stock) || 0, seuilNum).label}</strong>
+                {t('inventaire.modal.nouveauStatut')} <strong>{stockStatus(parseInt(stock) || 0, seuilNum, t).label}</strong>
               </div>
             )}
           </div>
@@ -235,7 +237,7 @@ function ModalStock({ produit, onClose, onSaved }: {
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>
               <i className="fas fa-bell" />
-              Seuil d'alerte (optionnel)
+              {t('inventaire.modal.seuilAlerte')}
             </label>
             <div className={styles.inputWithUnit}>
               <input
@@ -244,21 +246,21 @@ function ModalStock({ produit, onClose, onSaved }: {
                 value={seuil}
                 min={0}
                 onChange={e => setSeuil(e.target.value)}
-                placeholder="Ex: 5"
+                placeholder={t('inventaire.modal.seuilPlaceholder')}
               />
-              <span className={styles.inputUnit}>unités</span>
+              <span className={styles.inputUnit}>{t('inventaire.modal.unites')}</span>
             </div>
             {/* Explication du seuil */}
             <p className={styles.formHint}>
               <i className="fas fa-circle-info" />
-              Une alerte apparaîtra quand le stock descend sous ce seuil.
+              {t('inventaire.modal.seuilHint')}
             </p>
           </div>
 
           {/* Barre de progression visuelle */}
           <div className={styles.stockVisuel}>
             <div className={styles.stockBarLabel}>
-              <span>Niveau de stock</span>
+              <span>{t('inventaire.modal.niveauStock')}</span>
               <span className={styles.stockBarPct}>{stockPct(parseInt(stock) || 0, seuilNum)}%</span>
             </div>
             <div className={styles.stockBar}>
@@ -278,7 +280,7 @@ function ModalStock({ produit, onClose, onSaved }: {
             onClick={onClose}
             disabled={loading}
           >
-            Annuler
+            {t('inventaire.modal.annuler')}
           </button>
           <button
             className={styles.btnPrimary}
@@ -286,8 +288,8 @@ function ModalStock({ produit, onClose, onSaved }: {
             disabled={loading}
           >
             {loading
-              ? <><i className="fas fa-spinner fa-spin" /> Sauvegarde…</>
-              : <><i className="fas fa-check" /> Mettre à jour le stock</>
+              ? <><i className="fas fa-spinner fa-spin" /> {t('inventaire.modal.saving')}</>
+              : <><i className="fas fa-check" /> {t('inventaire.modal.update')}</>
             }
           </button>
         </div>
@@ -301,6 +303,7 @@ function ModalStock({ produit, onClose, onSaved }: {
 // ─────────────────────────────────────────────────────────────
 export default function InventairePage() {
   const { pop } = useToast();
+  const { t } = useTranslation();
 
   // ── États principaux ─────────────────────────────────────────
   const [produits,  setProduits]  = useState<Produit[]>([]);
@@ -394,18 +397,18 @@ export default function InventairePage() {
           ════════════════════════════════════════════════════════ */}
       <div className={styles.header}>
         <div>
-          <h1 className={styles.titre}>Inventaire & Stock</h1>
+          <h1 className={styles.titre}>{t('inventaire.header.title')}</h1>
           <p className={styles.sousTitre}>
-            Suivez vos niveaux de stock en temps réel et gérez les alertes
+            {t('inventaire.header.subtitle')}
           </p>
         </div>
         {/* Actions de la barre du haut */}
         <div className={styles.headerActions}>
           <button
             className={styles.btnSecondaryOutline}
-            onClick={() => pop('📥 Export CSV généré', 's')}
+            onClick={() => pop(t('inventaire.header.exportToast'), 's')}
           >
-            <i className="fas fa-file-export" /> Exporter CSV
+            <i className="fas fa-file-export" /> {t('inventaire.header.exportCsv')}
           </button>
           <button
             className={styles.btnRecharger}
@@ -413,7 +416,7 @@ export default function InventairePage() {
             disabled={loading}
           >
             <i className={`fas fa-rotate-right ${loading ? 'fa-spin' : ''}`} />
-            {loading ? 'Chargement…' : 'Actualiser'}
+            {loading ? t('inventaire.header.loading') : t('inventaire.header.refresh')}
           </button>
         </div>
       </div>
@@ -433,8 +436,8 @@ export default function InventairePage() {
           </div>
           <div className={styles.statRight}>
             <div className={styles.statVal}>{stats.total}</div>
-            <div className={styles.statLabel}>Produits catalogués</div>
-            <div className={styles.statSub}>{fmt(stats.totalUnits)} unités au total</div>
+            <div className={styles.statLabel}>{t('inventaire.stats.produitsCatalogues')}</div>
+            <div className={styles.statSub}>{t('inventaire.stats.unitesTotal', { count: fmt(stats.totalUnits) })}</div>
           </div>
         </div>
 
@@ -447,9 +450,9 @@ export default function InventairePage() {
           </div>
           <div className={styles.statRight}>
             <div className={styles.statVal}>{stats.rupture}</div>
-            <div className={styles.statLabel}>Ruptures de stock</div>
+            <div className={styles.statLabel}>{t('inventaire.stats.rupturesStock')}</div>
             <div className={styles.statSub}>
-              {stats.rupture === 0 ? 'Aucune rupture ✓' : 'Action requise !'}
+              {stats.rupture === 0 ? t('inventaire.stats.aucuneRupture') : t('inventaire.stats.actionRequise')}
             </div>
           </div>
           {/* Badge pulsant si ruptures */}
@@ -465,8 +468,8 @@ export default function InventairePage() {
           </div>
           <div className={styles.statRight}>
             <div className={styles.statVal}>{stats.faible + stats.critique}</div>
-            <div className={styles.statLabel}>Stocks faibles</div>
-            <div className={styles.statSub}>Sous le seuil d'alerte</div>
+            <div className={styles.statLabel}>{t('inventaire.stats.stocksFaibles')}</div>
+            <div className={styles.statSub}>{t('inventaire.stats.sousLeSeuil')}</div>
           </div>
         </div>
 
@@ -485,8 +488,8 @@ export default function InventairePage() {
                 : fmt(stats.valeurStock)
               }
             </div>
-            <div className={styles.statLabel}>Valeur du stock (GNF)</div>
-            <div className={styles.statSub}>Prix × quantité en stock</div>
+            <div className={styles.statLabel}>{t('inventaire.stats.valeurStock')}</div>
+            <div className={styles.statSub}>{t('inventaire.stats.prixParQuantite')}</div>
           </div>
         </div>
       </div>
@@ -508,10 +511,10 @@ export default function InventairePage() {
             {/* Boutons de filtre par niveau de stock */}
             <div className={styles.filtresBtns}>
               {[
-                { val: 'all', label: 'Tous',      count: stats.total },
-                { val: 'out', label: '🔴 Rupture', count: stats.rupture },
-                { val: 'low', label: '🟡 Faibles', count: stats.faible + stats.critique },
-                { val: 'ok',  label: '✅ En stock', count: stats.total - stats.rupture - stats.faible - stats.critique },
+                { val: 'all', label: t('inventaire.filters.tous'),    count: stats.total },
+                { val: 'out', label: t('inventaire.filters.rupture'), count: stats.rupture },
+                { val: 'low', label: t('inventaire.filters.faibles'), count: stats.faible + stats.critique },
+                { val: 'ok',  label: t('inventaire.filters.enStock'), count: stats.total - stats.rupture - stats.faible - stats.critique },
               ].map(f => (
                 <button
                   key={f.val}
@@ -530,7 +533,7 @@ export default function InventairePage() {
               <i className="fas fa-magnifying-glass" />
               <input
                 className={styles.searchInput}
-                placeholder="Rechercher un produit…"
+                placeholder={t('inventaire.search')}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
@@ -550,7 +553,7 @@ export default function InventairePage() {
             // État de chargement
             <div className={styles.stateBox}>
               <i className="fas fa-spinner fa-spin" style={{ fontSize: 24, color: 'var(--t2)' }} />
-              <span>Chargement de l'inventaire…</span>
+              <span>{t('inventaire.loadingInventaire')}</span>
             </div>
           ) : erreur ? (
             // État d'erreur
@@ -558,7 +561,7 @@ export default function InventairePage() {
               <i className="fas fa-triangle-exclamation" style={{ fontSize: 24, color: 'var(--t2)' }} />
               <span style={{ color: 'var(--t2)' }}>{erreur}</span>
               <button className={styles.btnRecharger} onClick={charger}>
-                <i className="fas fa-rotate-right" /> Réessayer
+                <i className="fas fa-rotate-right" /> {t('inventaire.retry')}
               </button>
             </div>
           ) : produitsFiltres.length === 0 ? (
@@ -566,12 +569,12 @@ export default function InventairePage() {
             <div className={styles.stateBox}>
               <span style={{ fontSize: 40 }}>📦</span>
               <strong style={{ color: 'var(--navy)' }}>
-                {produits.length === 0 ? 'Aucun produit' : 'Aucun résultat'}
+                {produits.length === 0 ? t('inventaire.empty.noneTitle') : t('inventaire.empty.noResultsTitle')}
               </strong>
               <span style={{ fontSize: 13, color: 'var(--t3)' }}>
                 {produits.length === 0
-                  ? 'Ajoutez des produits pour voir l\'inventaire.'
-                  : 'Essayez de modifier vos filtres.'}
+                  ? t('inventaire.empty.noneSub')
+                  : t('inventaire.empty.noResultsSub')}
               </span>
             </div>
           ) : (
@@ -580,19 +583,19 @@ export default function InventairePage() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th className={styles.th}>Produit</th>
-                    <th className={styles.th}>Catégorie</th>
-                    <th className={styles.th}>Prix unitaire</th>
-                    <th className={styles.th}>Stock actuel</th>
-                    <th className={styles.th}>Niveau visuel</th>
-                    <th className={styles.th}>Statut</th>
-                    <th className={styles.th}>Actions</th>
+                    <th className={styles.th}>{t('inventaire.table.produit')}</th>
+                    <th className={styles.th}>{t('inventaire.table.categorie')}</th>
+                    <th className={styles.th}>{t('inventaire.table.prixUnitaire')}</th>
+                    <th className={styles.th}>{t('inventaire.table.stockActuel')}</th>
+                    <th className={styles.th}>{t('inventaire.table.niveauVisuel')}</th>
+                    <th className={styles.th}>{t('inventaire.table.statut')}</th>
+                    <th className={styles.th}>{t('inventaire.table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {produitsFiltres.map(p => {
                     // Calcule le statut pour ce produit
-                    const { label, cls } = stockStatus(p.stock, p.seuil);
+                    const { label, cls } = stockStatus(p.stock, p.seuil, t);
                     // Calcule le % pour la barre de progression
                     const pct = stockPct(p.stock, p.seuil);
 
@@ -647,7 +650,7 @@ export default function InventairePage() {
                           <div className={styles.prixCell}>{fmt(p.prix)} GNF</div>
                           {/* Valeur totale du stock pour ce produit */}
                           <div className={styles.prixSub}>
-                            = {fmt(p.prix * p.stock)} GNF en stock
+                            {t('inventaire.table.valeurStockLigne', { montant: fmt(p.prix * p.stock) })}
                           </div>
                         </td>
 
@@ -658,12 +661,12 @@ export default function InventairePage() {
                             <span className={`${styles.stockNum} ${styles[`stockNum_${cls}`]}`}>
                               {p.stock}
                             </span>
-                            <span className={styles.stockUnit}>unités</span>
+                            <span className={styles.stockUnit}>{t('inventaire.modal.unites')}</span>
                           </div>
                           {/* Seuil d'alerte affiché en dessous si défini */}
                           {p.seuil !== null && (
                             <div className={styles.seuilLabel}>
-                              <i className="fas fa-bell" /> Seuil : {p.seuil}
+                              <i className="fas fa-bell" /> {t('inventaire.table.seuil', { count: p.seuil })}
                             </div>
                           )}
                         </td>
@@ -703,15 +706,15 @@ export default function InventairePage() {
                             <button
                               className={styles.btnModif}
                               onClick={() => setModalProd(p)}
-                              title="Modifier le stock"
+                              title={t('inventaire.table.modifierTitle')}
                             >
-                              <i className="fas fa-pen" /> Modifier
+                              <i className="fas fa-pen" /> {t('inventaire.table.modifier')}
                             </button>
                             {/* Bouton réappro (simulation) */}
                             <button
                               className={styles.btnReappro}
-                              onClick={() => pop(`📦 Réappro lancée pour "${p.nom}"`, 's')}
-                              title="Lancer une réapprovisionnement"
+                              onClick={() => pop(t('inventaire.table.reapproToast', { nom: p.nom }), 's')}
+                              title={t('inventaire.table.reapproTitle')}
                             >
                               <i className="fas fa-truck" />
                             </button>
@@ -726,9 +729,9 @@ export default function InventairePage() {
               {/* Pied du tableau : compteur de résultats */}
               <div className={styles.tableFooter}>
                 <span>
-                  {produitsFiltres.length} produit{produitsFiltres.length > 1 ? 's' : ''}
-                  {filtre !== 'all' && ' filtrés'}
-                  {search && ` pour "${search}"`}
+                  {t('inventaire.footer.count', { count: produitsFiltres.length })}
+                  {filtre !== 'all' && ` ${t('inventaire.footer.filtres')}`}
+                  {search && ` ${t('inventaire.footer.pourRecherche', { search })}`}
                 </span>
               </div>
             </div>
@@ -745,7 +748,7 @@ export default function InventairePage() {
             <div className={styles.sideCardHeader}>
               <div className={styles.sideCardTitle}>
                 <i className="fas fa-bell" />
-                Alertes critiques
+                {t('inventaire.alertes.title')}
               </div>
               {/* Nombre d'alertes */}
               {alertes.length > 0 && (
@@ -758,15 +761,15 @@ export default function InventairePage() {
                 <div className={styles.noAlerte}>
                   <span>✅</span>
                   <div>
-                    <strong>Tout est en ordre !</strong>
-                    <p>Aucun stock critique détecté.</p>
+                    <strong>{t('inventaire.alertes.allGood')}</strong>
+                    <p>{t('inventaire.alertes.noneDetected')}</p>
                   </div>
                 </div>
               ) : (
                 // Liste des alertes
                 <div className={styles.alerteList}>
                   {alertes.map(p => {
-                    const { cls } = stockStatus(p.stock, p.seuil);
+                    const { cls } = stockStatus(p.stock, p.seuil, t);
                     return (
                       <div key={p.id} className={`${styles.alerteItem} ${styles[`alerte_${cls}`]}`}>
                         {/* Icône selon criticité */}
@@ -777,15 +780,15 @@ export default function InventairePage() {
                         <div className={styles.alerteInfo}>
                           <div className={styles.alerteNom}>{p.nom}</div>
                           <div className={styles.alerteSub}>
-                            Stock : <strong>{p.stock}</strong>
-                            {p.seuil !== null && ` · Min : ${p.seuil}`}
+                            {t('inventaire.alertes.stock')} <strong>{p.stock}</strong>
+                            {p.seuil !== null && ` ${t('inventaire.alertes.min', { count: p.seuil })}`}
                           </div>
                         </div>
                         {/* Bouton action rapide */}
                         <button
                           className={styles.alerteAction}
                           onClick={() => setModalProd(p)}
-                          title="Modifier le stock"
+                          title={t('inventaire.table.modifierTitle')}
                         >
                           <i className="fas fa-pen" />
                         </button>
@@ -802,7 +805,7 @@ export default function InventairePage() {
             <div className={styles.sideCardHeader}>
               <div className={styles.sideCardTitle}>
                 <i className="fas fa-bolt" />
-                Actions rapides
+                {t('inventaire.quickActions.title')}
               </div>
             </div>
             <div className={styles.sideCardBody}>
@@ -810,30 +813,30 @@ export default function InventairePage() {
                 {[
                   {
                     ico:    '📦',
-                    label:  'Réappro. tous les critiques',
-                    sub:    `${stats.rupture + stats.faible} produits concernés`,
-                    action: '📦 Réapprovisionnement groupé lancé',
+                    label:  t('inventaire.quickActions.reapproAll'),
+                    sub:    t('inventaire.quickActions.reapproAllSub', { count: stats.rupture + stats.faible }),
+                    action: t('inventaire.quickActions.reapproAllToast'),
                     type:   's' as const,
                   },
                   {
                     ico:    '📊',
-                    label:  'Exporter l\'inventaire (CSV)',
-                    sub:    `${stats.total} produits · ${fmt(stats.totalUnits)} unités`,
-                    action: '📥 Export CSV en cours de génération…',
+                    label:  t('inventaire.quickActions.exportInventaire'),
+                    sub:    t('inventaire.quickActions.exportInventaireSub', { count: stats.total, units: fmt(stats.totalUnits) }),
+                    action: t('inventaire.quickActions.exportInventaireToast'),
                     type:   'i' as const,
                   },
                   {
                     ico:    '🔔',
-                    label:  'Configurer les alertes',
-                    sub:    'Définir des seuils automatiques',
-                    action: '⚙️ Configuration des alertes ouverte',
+                    label:  t('inventaire.quickActions.configAlertes'),
+                    sub:    t('inventaire.quickActions.configAlertesSub'),
+                    action: t('inventaire.quickActions.configAlertesToast'),
                     type:   'i' as const,
                   },
                   {
                     ico:    '🔄',
-                    label:  'Synchroniser le stock',
-                    sub:    'Avec votre fournisseur',
-                    action: '🔄 Synchronisation en cours…',
+                    label:  t('inventaire.quickActions.syncStock'),
+                    sub:    t('inventaire.quickActions.syncStockSub'),
+                    action: t('inventaire.quickActions.syncStockToast'),
                     type:   'i' as const,
                   },
                 ].map((a, i) => (
