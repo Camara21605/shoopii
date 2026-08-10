@@ -24,16 +24,34 @@ const TOKEN_KEY = 'shopi_access_token';
 
 /* ─────────────────────────────────────────────
  * CSRF (double-submit cookie) — voir csrf.middleware.ts côté backend.
- * Le cookie csrf_token n'est PAS httpOnly : il doit être lisible ici
- * pour être renvoyé en en-tête sur chaque requête mutante. Un attaquant
- * cross-site ne peut pas lire ce cookie (Same-Origin Policy) pour le
- * rejouer, même s'il peut faire partir le cookie de session automatiquement.
+ *
+ * En production, frontend (Vercel/shopi.gn) et backend (Render) sont sur
+ * des domaines différents : document.cookie ne peut PAS lire un cookie
+ * posé par une réponse d'un autre domaine, donc jamais `csrf_token`
+ * (c'est une règle stricte du navigateur, pas un blocage occasionnel —
+ * ça ne "marchait" en local que parce que localhost:5173/3001 partagent
+ * le même host). Le serveur renvoie donc aussi le token dans l'en-tête
+ * de réponse `X-CSRF-Token` (lisible cross-origin, voir exposedHeaders
+ * dans main.ts) — on le met en cache ici dès qu'on le voit passer, sur
+ * n'importe quelle réponse (généralement capturé dès le premier GET,
+ * ex: /auth/me au démarrage), et on le réutilise pour chaque requête
+ * mutante suivante. document.cookie reste tenté en repli — inoffensif
+ * et toujours correct en dev local.
  * ───────────────────────────────────────────── */
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const CSRF_HEADER = 'X-CSRF-Token';
+
+let cachedCsrfToken: string | null = null;
 
 function getCsrfToken(): string | null {
+  if (cachedCsrfToken) return cachedCsrfToken;
   const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
   return match ? decodeURIComponent(match[1]) : null;
+}
+
+function captureCsrfToken(response: Response): void {
+  const fromHeader = response.headers.get(CSRF_HEADER);
+  if (fromHeader) cachedCsrfToken = fromHeader;
 }
 
 /* ─────────────────────────────────────────────
@@ -117,6 +135,7 @@ export function silentRefresh(): Promise<boolean> {
       headers:     csrfToken ? { 'X-CSRF-Token': csrfToken } : undefined,
     })
       .then(async r => {
+        captureCsrfToken(r);
         if (!r.ok) { _refreshDeadUntil = Date.now() + REFRESH_COOLDOWN_MS; return false; }
         /* Le cookie httpOnly est déjà renouvelé par le serveur, mais
          * localStorage (shopi_access_token) ne l'était jamais — resté
@@ -231,6 +250,11 @@ export async function apiFetch<T = unknown>(
     console.error(`[apiFetch] Réseau inaccessible → ${method} ${url}`, networkError);
     throw new ApiError(0, 'Impossible de contacter le serveur. Vérifiez que le backend est démarré.', networkError);
   }
+
+  /* Capturé sur TOUTE réponse (succès comme erreur, y compris un 403 CSRF
+     lui-même — le serveur renvoie toujours un token valide en en-tête) :
+     voir le commentaire au-dessus de getCsrfToken(). */
+  captureCsrfToken(response);
 
   /* ── 401 → Silent refresh → retry ── */
   if (response.status === 401 && !_retry && endpoint !== '/auth/refresh') {

@@ -80,6 +80,13 @@ async function bootstrap() {
     credentials:    true,
     methods:        ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token'],
+    /* Par défaut, fetch() cross-origin ne peut lire qu'une poignée d'en-
+     * têtes de réponse "sûrs" (Content-Type, Cache-Control…) — un en-tête
+     * personnalisé comme X-CSRF-Token doit être explicitement exposé ici,
+     * sinon response.headers.get('X-CSRF-Token') renvoie toujours null
+     * côté frontend, même si le serveur l'envoie bien (voir
+     * csrf.middleware.ts pour pourquoi ce canal est nécessaire en prod). */
+    exposedHeaders: ['X-CSRF-Token'],
   });
 
   /* ── Cookie parser (lecture de req.cookies pour JwtStrategy) ── */
