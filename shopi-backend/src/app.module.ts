@@ -149,19 +149,28 @@ import { PerformanceModule }           from './modules/performance-engine/perfor
             lazyConnect: true,
 
             /*
-             * retryStrategy : réessaie jusqu'à 5 fois avec backoff.
-             * Retourne null → abandonne sans faire crasher l'app.
+             * retryStrategy : ne JAMAIS abandonner (retourner null coupe la
+             * reconnexion pour de bon — toute commande ultérieure échoue
+             * immédiatement avec "Stream isn't writeable", y compris pour
+             * les services qui dégradent pourtant gracieusement une panne
+             * Redis ponctuelle, ex. PresenceService.isOnlineOrUnknown). Une
+             * coupure réseau transitoire vers Supabase/Redis managé doit
+             * pouvoir se rétablir toute seule, pas tuer la connexion Redis
+             * pour le reste de la vie du process.
              */
             retryStrategy: (times: number) => {
-              if (times > 5) {
-                console.error(`[Redis] Impossible de se connecter après ${times} tentatives.`);
-                return null;
+              if (times > 20 && times % 10 === 0) {
+                console.error(`[Redis] Toujours pas reconnecté après ${times} tentatives — nouvelle tentative dans quelques secondes.`);
               }
-              return Math.min(times * 300, 3000);
+              return Math.min(times * 300, 5000);
             },
 
-            /* Évite les messages d'erreur intempestifs sur les sockets fermés */
-            enableOfflineQueue: false,
+            /* Met en buffer les commandes émises PENDANT une reconnexion
+             * transitoire au lieu de les rejeter immédiatement — évite le
+             * flot d'erreurs "Stream isn't writeable" observé en pratique
+             * (workers BullMQ, checks de présence) sur une simple coupure
+             * réseau de quelques secondes vers Redis managé. */
+            enableOfflineQueue: true,
           },
         };
       },
@@ -191,14 +200,18 @@ import { PerformanceModule }           from './modules/performance-engine/perfor
             ...(password && { password }),
             ...(useTls && { tls: {} }),
             maxRetriesPerRequest: null,    // obligatoire BullMQ v5+
-            enableOfflineQueue:   false,
-            /* Backoff entre tentatives de reconnexion Redis.
-             * Sans ça, BullMQ Workers bouclent à plein régime
-             * et inondent les logs quand Redis est indisponible. */
+            /* true : les commandes émises pendant une reconnexion
+             * transitoire sont mises en buffer plutôt que de faire planter
+             * les Workers avec "Stream isn't writeable" (voir RedisModule
+             * ci-dessus pour le même raisonnement). */
+            enableOfflineQueue:   true,
+            /* Backoff entre tentatives de reconnexion Redis — ne jamais
+             * abandonner (retourner null coupe la reconnexion pour de bon),
+             * juste ralentir le rythme des tentatives pour ne pas inonder
+             * les logs quand Redis est indisponible plus longtemps. */
             retryStrategy: (times: number) => {
-              if (times > 10) {
-                console.error(`[BullMQ/Redis] Abandon après ${times} tentatives.`);
-                return null;
+              if (times > 20 && times % 10 === 0) {
+                console.error(`[BullMQ/Redis] Toujours indisponible après ${times} tentatives.`);
               }
               return Math.min(times * 500, 5000);
             },
