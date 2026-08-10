@@ -179,29 +179,41 @@ export default function MessagerieCore() {
 
   // ── Lancer un appel vers le contact actif (conv seulement) ──
   const handleCall = () => {
-    if (activeGroupId || !activeConv || !activeUser) return;
+    if (activeGroupId || !activeConv || !activeUser) {
+      console.warn('[Call] handleCall abandonné — groupe/conv/user manquant', { activeGroupId, activeConv, activeUser });
+      return;
+    }
     const remoteUserId = activeUser.userId ?? null;
-    if (!remoteUserId) return;
+    if (!remoteUserId) {
+      console.warn('[Call] handleCall abandonné — activeUser.userId manquant', activeUser);
+      return;
+    }
     startCall({
       conversationId: activeConv.id,
       remoteUserId,
       remoteName:   activeUser.name,
       remoteAvatar: activeUser.ava?.startsWith('http') ? activeUser.ava : undefined,
       callType:     'audio',
-    });
+    }).catch(err => console.error('[Call] startCall (audio) a rejeté :', err));
   };
 
   const handleVideoCall = () => {
-    if (activeGroupId || !activeConv || !activeUser) return;
+    if (activeGroupId || !activeConv || !activeUser) {
+      console.warn('[Call] handleVideoCall abandonné — groupe/conv/user manquant', { activeGroupId, activeConv, activeUser });
+      return;
+    }
     const remoteUserId = activeUser.userId ?? null;
-    if (!remoteUserId) return;
+    if (!remoteUserId) {
+      console.warn('[Call] handleVideoCall abandonné — activeUser.userId manquant', activeUser);
+      return;
+    }
     startCall({
       conversationId: activeConv.id,
       remoteUserId,
       remoteName:   activeUser.name,
       remoteAvatar: activeUser.ava?.startsWith('http') ? activeUser.ava : undefined,
       callType:     'video',
-    });
+    }).catch(err => console.error('[Call] startCall (vidéo) a rejeté :', err));
   };
 
   // ── Rendu ─────────────────────────────────────────────────────

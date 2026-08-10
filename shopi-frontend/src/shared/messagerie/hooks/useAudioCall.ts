@@ -330,10 +330,15 @@ export function useAudioCall(props?: UseAudioCallProps) {
   /** Démarre un appel sortant (audio ou vidéo selon info.callType). */
   const startCall = useCallback(async (info: Omit<CallInfo, 'direction'>) => {
     if (status !== 'idle') {
+      /* Silencieux jusqu'ici — si `status` reste coincé sur une valeur
+         non-idle après un appel précédent mal terminé, CE bouton ne fait
+         plus RIEN, pour toujours, sans le moindre signe visible. */
+      console.warn(`[Call] startCall ignoré — status="${status}" (attendu "idle")`);
       emit('call:busy', { conversationId: info.conversationId, callerUserId: info.remoteUserId });
       return;
     }
 
+    console.debug('[Call] startCall →', info);
     const isVideo = info.callType === 'video';
     try {
       localStream.current = await navigator.mediaDevices.getUserMedia({
@@ -341,7 +346,9 @@ export function useAudioCall(props?: UseAudioCallProps) {
         video: isVideo ? { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: facingMode.current } : false,
       });
       setLocalMediaStream(localStream.current);
-    } catch {
+      console.debug('[Call] getUserMedia OK');
+    } catch (err) {
+      console.error('[Call] getUserMedia a échoué :', err);
       alert(isVideo ? 'Accès à la caméra ou au microphone refusé.' : 'Accès au microphone refusé.');
       return;
     }
