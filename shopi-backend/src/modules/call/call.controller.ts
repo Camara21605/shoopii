@@ -73,4 +73,23 @@ export class CallController {
   async iceServers() {
     return { iceServers: await this.callService.getIceServers() };
   }
+
+  /**
+   * PARTIE 5 — resynchronisation après reconnexion Socket.IO.
+   *
+   * Si la coupure réseau du socket dépasse le ping-timeout Socket.IO, le
+   * serveur a déjà raccroché l'appel via CallGateway.handleDisconnect avant
+   * même que le client ait fini sa propre reprise ICE côté WebRTC — sans ce
+   * point de contrôle, le client restait bloqué en "Reconnexion…" jusqu'à
+   * l'expiration de son délai local (20s), sans jamais savoir que le
+   * serveur avait déjà tranché. Pas de vérification de permission
+   * supplémentaire nécessaire : ne révèle qu'un appel impliquant
+   * l'appelant lui-même (findActiveCallId filtre sur user.id).
+   */
+  @Get('active-with/:userId')
+  async activeWith(@Req() req: Request, @Param('userId') userId: string) {
+    const user = req.user as User;
+    const callId = await this.callService.findActiveCallId(user.id, userId);
+    return { callId };
+  }
 }

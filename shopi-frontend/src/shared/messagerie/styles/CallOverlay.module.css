@@ -111,6 +111,40 @@
 }
 @keyframes statusBlink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
+/* ── Bandeau de reconnexion (appel connecté, coupure réseau transitoire) ── */
+.reconnectBanner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+  width: fit-content;
+}
+.reconnectBanner[data-phase="unstable"],
+.reconnectBanner[data-phase="restoring"] {
+  color: #FBBF24;
+  background: rgba(251,191,36,.12);
+}
+.reconnectBanner[data-phase="restored"] {
+  color: #10B981;
+  background: rgba(16,185,129,.12);
+}
+.reconnectBanner[data-phase="failed"] {
+  color: #F87171;
+  background: rgba(248,113,113,.12);
+}
+/* Variante superposée au plein écran vidéo — centrée sous la barre du haut */
+.reconnectBannerVideo {
+  position: absolute;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 11;
+}
+
 /* ── Durée (appel connecté) ── */
 .duration {
   font-size: 28px;

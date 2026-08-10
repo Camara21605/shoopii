@@ -102,6 +102,8 @@ export interface GroupCallPeer {
   stream:       MediaStream | null;
   audioEnabled: boolean;
   videoEnabled: boolean;
+  /** undefined = connexion stable — coupure réseau transitoire avec CE pair uniquement (n'affecte pas les autres). */
+  connectionState?: 'unstable' | 'reconnecting';
 }
 
 /** État complet de l'appel de groupe actif. */

@@ -21,7 +21,7 @@
  *   └──────────────────────────────────┘
  */
 import { useEffect, useRef } from 'react';
-import type { CallStatus, CallInfo } from '../hooks/useAudioCall';
+import type { CallStatus, CallInfo, ReconnectPhase } from '../hooks/useAudioCall';
 import s from '../styles/CallOverlay.module.css';
 
 interface Props {
@@ -33,6 +33,8 @@ interface Props {
   isSpeakerOn:       boolean;
   localMediaStream:  MediaStream | null;
   remoteMediaStream: MediaStream | null;
+  /** null hors coupure réseau — affiche un petit bandeau non-technique pendant l'appel connecté. */
+  reconnectPhase?:   ReconnectPhase | null;
   onAccept:          () => void;
   onReject:          () => void;
   onHangUp:          () => void;
@@ -48,9 +50,16 @@ function fmt(sec: number): string {
   return `${String(m).padStart(2,'0')}:${String(s2).padStart(2,'0')}`;
 }
 
+const RECONNECT_LABEL: Record<ReconnectPhase, string> = {
+  unstable:  'Connexion instable…',
+  restoring: 'Reconnexion…',
+  restored:  'Connexion rétablie',
+  failed:    'Impossible de reconnecter',
+};
+
 export default function CallOverlay({
   status, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
-  localMediaStream, remoteMediaStream,
+  localMediaStream, remoteMediaStream, reconnectPhase,
   onAccept, onReject, onHangUp, onToggleMute, onToggleVideo, onToggleSpeaker, onFlipCamera,
 }: Props) {
   const isVideo    = callInfo.callType === 'video';
@@ -108,6 +117,13 @@ export default function CallOverlay({
           : callInfo.remoteName.slice(0,2).toUpperCase()
         }
       </div>
+    </div>
+  );
+
+  /* ── Bandeau de reconnexion (uniquement pendant un appel connecté) ── */
+  const reconnectBanner = reconnectPhase && (
+    <div className={s.reconnectBanner} data-phase={reconnectPhase}>
+      <span className={s.statusDot} />{RECONNECT_LABEL[reconnectPhase]}
     </div>
   );
 
@@ -174,6 +190,12 @@ export default function CallOverlay({
           className={s.remoteVideo}
           autoPlay playsInline
         />
+
+        {reconnectPhase && (
+          <div className={`${s.reconnectBanner} ${s.reconnectBannerVideo}`} data-phase={reconnectPhase}>
+            <span className={s.statusDot} />{RECONNECT_LABEL[reconnectPhase]}
+          </div>
+        )}
 
         {/* Fond de secours si pas encore de flux */}
         {!remoteMediaStream && (
@@ -283,6 +305,7 @@ export default function CallOverlay({
         {/* Appel connecté (audio uniquement ici — vidéo = plein écran) */}
         {status === 'connected' && !isVideo && (
           <>
+            {reconnectBanner}
             <div className={s.duration}>{fmt(duration)}</div>
             {controls}
           </>

@@ -29,7 +29,7 @@ import React, {
 import { useLocation } from 'react-router-dom';
 
 import { useAudioCall }         from '../messagerie/hooks/useAudioCall';
-import type { CallStatus, CallInfo, CallEventPayload } from '../messagerie/hooks/useAudioCall';
+import type { CallStatus, CallInfo, CallEventPayload, ReconnectPhase } from '../messagerie/hooks/useAudioCall';
 import { initGlobalSocket, getActiveSocket } from '../messagerie/hooks/useSocket';
 import type { WsNewMessage }    from '../messagerie/hooks/useSocket';
 import { apiFetch }             from '../services/apiFetch';
@@ -51,6 +51,7 @@ export interface GlobalCallContextValue {
   isSpeakerOn:       boolean;
   localMediaStream:  MediaStream | null;
   remoteMediaStream: MediaStream | null;
+  reconnectPhase:    ReconnectPhase | null;
 
   startCall:     (info: Omit<CallInfo, 'direction'>) => Promise<void>;
   acceptCall:    () => Promise<void>;
@@ -141,7 +142,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
 
   const {
     callStatus, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
-    localMediaStream, remoteMediaStream,
+    localMediaStream, remoteMediaStream, reconnectPhase,
     startCall, acceptCall, rejectCall, hangUp, cancelUnavailable,
     toggleMute, toggleVideo, toggleSpeaker, flipCamera,
   } = useAudioCall({
@@ -308,7 +309,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
   return (
     <GlobalCallContext.Provider value={{
       callStatus, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
-      localMediaStream, remoteMediaStream,
+      localMediaStream, remoteMediaStream, reconnectPhase,
       startCall, acceptCall, rejectCall, hangUp,
       toggleMute, toggleVideo, toggleSpeaker, flipCamera,
       msgUnread,
@@ -331,6 +332,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
           isSpeakerOn={isSpeakerOn}
           localMediaStream={localMediaStream}
           remoteMediaStream={remoteMediaStream}
+          reconnectPhase={reconnectPhase}
           onAccept={acceptCall}
           onReject={rejectCall}
           onHangUp={hangUp}

@@ -22,6 +22,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getActiveSocket } from './useSocket';
 import type { WsCallIncoming, WsCallSignal } from './useSocket';
 import { getIceServers, prefetchIceServers } from './iceServers';
+import { apiFetch } from '../../services/apiFetch';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -51,6 +52,12 @@ export type CallEndStatus =
   | 'cancelled'  // appelant a annulé avant réponse
   | 'busy';      // appelé était occupé
 
+export type ReconnectPhase =
+  | 'unstable'   // connexion coupée, on attend de voir si ça se rétablit seul
+  | 'restoring'  // tentative active de reprise ICE en cours
+  | 'restored'   // reprise réussie (message bref avant de redisparaître)
+  | 'failed';    // reprise abandonnée — l'appel va se terminer
+
 export interface CallEventPayload {
   conversationId: string;
   status:         CallEndStatus;
@@ -68,6 +75,14 @@ interface UseAudioCallProps {
    */
   onCallEvent?: (event: CallEventPayload) => void;
 }
+
+/* Bornes de la stratégie de reprise réseau — voir attemptIceRestart/
+   handleConnectionDisruption plus bas. Constantes de module (pas de re-
+   création à chaque rendu, contrairement à un tableau littéral déclaré
+   dans le corps du hook). */
+const ICE_RESTART_MAX_ATTEMPTS   = 2;
+const ICE_RESTART_BACKOFF_MS     = [1200, 2500]; // délai avant chaque tentative (indexé par nb de tentatives déjà faites)
+const RECONNECT_TOTAL_TIMEOUT_MS = 20_000;       // durée maximale totale d'une tentative de reprise
 
 // ── Hook ─────────────────────────────────────────────────────
 
@@ -103,6 +118,11 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const isSpeakerOnRef = useRef(true); // miroir de isSpeakerOn, lu dans pc.ontrack (closure stable)
   /** Nombre de tentatives d'ICE-restart déjà faites pour la connexion en cours. */
   const iceRestartAttempts = useRef(0);
+  /** Phase de reprise réseau affichée à l'utilisateur (null = rien à signaler). */
+  const [reconnectPhase, setReconnectPhase] = useState<ReconnectPhase | null>(null);
+  const reconnectPhaseRef      = useRef<ReconnectPhase | null>(null);
+  const reconnectBackoffTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectDeadlineTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   /* Miroir de `status`, lu dans onCallIncoming (closure stable — voir plus bas).
      SANS cette ref, onCallIncoming devait dépendre de [status] pour rester à
      jour, ce qui obligeait le useEffect d'enregistrement des listeners socket
@@ -186,9 +206,19 @@ export function useAudioCall(props?: UseAudioCallProps) {
     if (timeoutRef.current)  { clearTimeout(timeoutRef.current);   timeoutRef.current  = null; }
   }
 
+  /** Annule toute tentative de reprise réseau en cours (backoff + délai maximal). */
+  function clearReconnectTimers() {
+    if (reconnectBackoffTimer.current)  { clearTimeout(reconnectBackoffTimer.current);  reconnectBackoffTimer.current  = null; }
+    if (reconnectDeadlineTimer.current) { clearTimeout(reconnectDeadlineTimer.current); reconnectDeadlineTimer.current = null; }
+    reconnectPhaseRef.current = null;
+  }
+
   /** Nettoie TOUT : streams, PeerConnection, timers, audio element. */
   const cleanup = useCallback(() => {
     clearTimers();
+    clearReconnectTimers();
+    setReconnectPhase(null);
+    iceRestartAttempts.current = 0;
     pcRef.current?.close();
     pcRef.current = null;
     localStream.current?.getTracks().forEach(t => t.stop());
@@ -304,38 +334,97 @@ export function useAudioCall(props?: UseAudioCallProps) {
   }, []);
 
   /**
-   * Tente de relancer la négociation ICE avant d'abandonner l'appel.
-   * 'failed' peut survenir sur une coupure réseau transitoire (perte
-   * Wi-Fi de quelques secondes, bascule Wi-Fi↔4G) — raccrocher directement
-   * dans ce cas coupait des appels qui auraient pu se rétablir tout seuls.
-   * Limité à 2 tentatives pour ne pas boucler indéfiniment sur un échec
-   * définitif (aucun chemin réseau trouvé, STUN/TURN injoignables).
+   * Abandonne la reprise réseau et termine proprement l'appel — dernier
+   * recours quand les tentatives d'ICE-restart sont épuisées OU que le
+   * délai maximal de reprise (RECONNECT_TOTAL_TIMEOUT_MS) est dépassé.
+   * `notify: true` : même si la connexion média locale est morte, le canal
+   * de signalisation Socket.IO est probablement toujours vivant — autant
+   * prévenir l'autre participant tout de suite plutôt que de le laisser
+   * découvrir la coupure via son propre timeout.
    */
-  const attemptIceRestart = useCallback(async (pc: RTCPeerConnection) => {
-    try {
-      if (iceRestartAttempts.current >= 2 || !localStream.current || !callInfoRef.current) {
-        endCall(false);
-        return;
-      }
-      iceRestartAttempts.current += 1;
-      console.warn(`[Call] connexion ICE échouée — tentative de reprise ${iceRestartAttempts.current}/2`);
+  const giveUpReconnecting = useCallback(() => {
+    clearReconnectTimers();
+    setReconnectPhase('failed');
+    setTimeout(() => {
+      setReconnectPhase(null);
+      endCall(true, wasConnected.current ? 'completed' : 'missed');
+    }, 1500);
+  }, [endCall]);
 
-      await attachLocalTracks(pc, localStream.current);
-      const offer = await pc.createOffer({ iceRestart: true });
-      await pc.setLocalDescription(offer);
-      emit('call:offer', {
-        conversationId: callInfoRef.current.conversationId,
-        targetUserId:   callInfoRef.current.remoteUserId,
-        sdp:            offer,
-      });
-      /* On attend la nouvelle négociation — pas de endCall ici, seul un
-         nouvel échec ('failed' à nouveau) ou le timeout 20s existant
-         tranchera si la reprise n'aboutit pas. */
-    } catch (e) {
-      console.error('[Call] Échec de la tentative de reprise ICE :', e);
-      endCall(false);
+  /**
+   * Tente de relancer la négociation ICE avant d'abandonner l'appel.
+   * 'failed'/'disconnected' peuvent survenir sur une coupure réseau
+   * transitoire (perte Wi-Fi de quelques secondes, bascule Wi-Fi↔4G) —
+   * raccrocher immédiatement dans ce cas coupait des appels qui auraient
+   * pu se rétablir tout seuls.
+   *
+   * Idempotent (reconnectBackoffTimer sert de verrou) : peut être appelée
+   * plusieurs fois de suite (ex. 'disconnected' puis 'failed' juste après)
+   * sans programmer deux tentatives en parallèle. Un backoff précède
+   * chaque tentative — le temps d'attente sert aussi de fenêtre pour
+   * laisser une reprise spontanée se produire (si le state repasse à
+   * 'connected' avant l'échéance, le callback se retire sans rien faire).
+   * Limité à ICE_RESTART_MAX_ATTEMPTS pour ne pas boucler indéfiniment sur
+   * un échec définitif (aucun chemin réseau trouvé, STUN/TURN injoignables).
+   */
+  const attemptIceRestart = useCallback((pc: RTCPeerConnection) => {
+    if (reconnectBackoffTimer.current) return; // une tentative est déjà programmée
+
+    if (iceRestartAttempts.current >= ICE_RESTART_MAX_ATTEMPTS || !localStream.current || !callInfoRef.current) {
+      giveUpReconnecting();
+      return;
     }
-  }, [endCall, attachLocalTracks]);
+
+    const backoffMs = ICE_RESTART_BACKOFF_MS[Math.min(iceRestartAttempts.current, ICE_RESTART_BACKOFF_MS.length - 1)];
+    reconnectBackoffTimer.current = setTimeout(async () => {
+      reconnectBackoffTimer.current = null;
+
+      /* Reprise spontanée pendant le backoff, ou appel déjà terminé/remplacé
+         entre-temps → rien à faire. */
+      if (pcRef.current !== pc || pc.connectionState === 'connected' || pc.connectionState === 'closed') return;
+
+      reconnectPhaseRef.current = 'restoring';
+      setReconnectPhase('restoring');
+      iceRestartAttempts.current += 1;
+      console.warn(`[Call] connexion ICE échouée — tentative de reprise ${iceRestartAttempts.current}/${ICE_RESTART_MAX_ATTEMPTS}`);
+
+      try {
+        await attachLocalTracks(pc, localStream.current!);
+        const offer = await pc.createOffer({ iceRestart: true });
+        await pc.setLocalDescription(offer);
+        emit('call:offer', {
+          conversationId: callInfoRef.current!.conversationId,
+          targetUserId:   callInfoRef.current!.remoteUserId,
+          sdp:            offer,
+        });
+        /* On attend la nouvelle négociation — un nouvel échec relancera
+           attemptIceRestart (via 'failed'), le délai maximal global tranchera
+           sinon. */
+      } catch (e) {
+        console.error('[Call] Échec de la tentative de reprise ICE :', e);
+        giveUpReconnecting();
+      }
+    }, backoffMs);
+  }, [giveUpReconnecting, attachLocalTracks]);
+
+  /**
+   * Point d'entrée commun à 'disconnected' et 'failed' — arme (une seule
+   * fois) le délai maximal global de reprise, puis délègue à
+   * attemptIceRestart. Ne s'active que si l'appel avait déjà été connecté
+   * au moins une fois : avant ça, 'disconnected'/'failed' pendant la
+   * négociation initiale sont couverts par les timeouts 20s existants
+   * d'acceptCall/onCallAccepted, pas par cette logique de RE-connexion.
+   */
+  const handleConnectionDisruption = useCallback((pc: RTCPeerConnection) => {
+    if (!wasConnected.current) return;
+
+    if (reconnectPhaseRef.current === null) {
+      reconnectPhaseRef.current = 'unstable';
+      setReconnectPhase('unstable');
+      reconnectDeadlineTimer.current = setTimeout(giveUpReconnecting, RECONNECT_TOTAL_TIMEOUT_MS);
+    }
+    attemptIceRestart(pc);
+  }, [attemptIceRestart, giveUpReconnecting]);
 
   // ── Création du RTCPeerConnection ─────────────────────────────
 
@@ -377,16 +466,31 @@ export function useAudioCall(props?: UseAudioCallProps) {
 
       if (state === 'connected') {
         clearTimers();
+        const isFirstConnection = !wasConnected.current;
         setStatus('connected');
-        startDurationTimer();
+        if (isFirstConnection) {
+          startDurationTimer();
+        } else {
+          /* Reprise après coupure — NE PAS réinitialiser connectedSince
+             (sinon la durée affichée repart de 0 à chaque micro-coupure) ;
+             juste relancer l'intervalle d'affichage que clearTimers()
+             vient d'arrêter. */
+          durationRef.current = setInterval(() => setDuration(d => d + 1), 1000);
+        }
         iceRestartAttempts.current = 0; // repart de zéro pour une future coupure
-      } else if (state === 'failed') {
-        void attemptIceRestart(pc);
-      } else if (state === 'disconnected' && wasConnected.current) {
-        /* Coupure réseau après un appel déjà établi → on referme.
-           Avant d'avoir été connecté une fois, 'disconnected' peut être
-           un état transitoire normal pendant l'échange ICE : on l'ignore. */
-        endCall(false);
+
+        const wasReconnecting = reconnectPhaseRef.current !== null;
+        clearReconnectTimers();
+        if (wasReconnecting) {
+          setReconnectPhase('restored');
+          setTimeout(() => setReconnectPhase(null), 1500);
+        }
+      } else if (state === 'failed' || state === 'disconnected') {
+        /* Un 'disconnected'/'failed' pendant la négociation INITIALE (avant
+           tout premier 'connected') reste couvert par les timeouts 20s
+           d'acceptCall/onCallAccepted — handleConnectionDisruption s'auto-
+           désactive tant que wasConnected.current est faux. */
+        handleConnectionDisruption(pc);
       }
       /* 'closed' est déclenché par notre propre pc.close() dans cleanup()
          — déjà géré par l'appelant de cleanup(), on ne refait rien ici. */
@@ -394,7 +498,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
 
     pcRef.current = pc;
     return pc;
-  }, [endCall, attemptIceRestart, playRemoteAudioWithFallback]);
+  }, [handleConnectionDisruption, playRemoteAudioWithFallback]);
 
   /** Applique les ICE candidates mis en file avant setRemoteDescription. */
   const flushIcePending = useCallback(async () => {
@@ -731,6 +835,40 @@ export function useAudioCall(props?: UseAudioCallProps) {
     endCall(false, 'busy');
   }, [endCall]);
 
+  /**
+   * Le socket /messaging s'est (re)connecté — si un appel était en cours,
+   * vérifie côté serveur qu'il existe toujours. Sans ça, une coupure
+   * réseau assez longue pour dépasser le ping-timeout Socket.IO faisait
+   * déjà raccrocher l'appel côté serveur (CallGateway.handleDisconnect)
+   * PENDANT la coupure — le client, lui, ne le découvrait qu'à l'échéance
+   * de son propre délai de reprise ICE (jusqu'à 20s), en restant bloqué sur
+   * "Reconnexion…" entre-temps. N'émet jamais rien qui pourrait créer un
+   * second appel — lecture seule ; le signaling éventuellement bufferisé
+   * par socket.io-client pendant la coupure est réémis automatiquement dès
+   * la reconnexion, sans intervention ici.
+   */
+  const onSocketReconnected = useCallback(() => {
+    const info = callInfoRef.current;
+    if (!info) return;
+    apiFetch<{ callId: string | null }>(`/calls/active-with/${info.remoteUserId}`)
+      .then(res => {
+        /* L'appel a pu changer (raccroché puis un AUTRE relancé) entre le
+           moment de la requête et sa réponse — ne conclure que si on parle
+           toujours du même correspondant. */
+        if (callInfoRef.current?.remoteUserId !== info.remoteUserId) return;
+        if (!res.callId) {
+          console.warn('[Call] Reconnexion Socket.IO — le serveur n\'a plus trace de cet appel, fermeture locale.');
+          endCall(false, wasConnected.current ? 'completed' : 'missed');
+        }
+      })
+      .catch(() => {
+        /* Requête échouée (réseau encore instable) — ne pas couper l'appel
+           sur la seule foi d'un échec de vérification ; la reprise ICE
+           locale (délai maximal RECONNECT_TOTAL_TIMEOUT_MS) reste le filet
+           de sécurité. */
+      });
+  }, [endCall]);
+
   // ── Enregistrement des événements socket ─────────────────────
   /*
    * PROBLÈME : le socket est créé par useSocket (dans useMessagerie)
@@ -754,6 +892,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
       socket.off('call:answer',        onCallAnswer);
       socket.off('call:ice-candidate', onCallIceCandidate);
       socket.off('call:busy',          onCallBusy);
+      socket.off('connect',            onSocketReconnected);
     }
 
     /*
@@ -775,6 +914,10 @@ export function useAudioCall(props?: UseAudioCallProps) {
       socket.on('call:answer',        onCallAnswer);
       socket.on('call:ice-candidate', onCallIceCandidate);
       socket.on('call:busy',          onCallBusy);
+      /* 'connect' se déclenche aussi bien pour la 1ère connexion que pour
+         chaque reconnexion — onSocketReconnected s'auto-limite au cas où
+         un appel est réellement en cours (callInfoRef non-null). */
+      socket.on('connect',            onSocketReconnected);
     }
 
     /* Essai immédiat : si socket déjà disponible, on enregistre tout de suite */
@@ -799,7 +942,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     };
   }, [
     onCallIncoming, onCallAccepted, onCallRejected, onCallEnded,
-    onCallOffer, onCallAnswer, onCallIceCandidate, onCallBusy,
+    onCallOffer, onCallAnswer, onCallIceCandidate, onCallBusy, onSocketReconnected,
   ]);
 
   /* Best-effort : notifie le correspondant et libère micro/caméra si
@@ -826,6 +969,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     isSpeakerOn,
     localMediaStream,  // pour l'élément <video> local dans CallOverlay
     remoteMediaStream, // pour l'élément <video> distant dans CallOverlay
+    reconnectPhase,    // null hors coupure réseau — voir ReconnectPhase
     startCall,
     acceptCall,
     rejectCall,

@@ -80,6 +80,22 @@ function PeerTile({ peer }: { peer: GroupCallPeer }) {
         </div>
       )}
 
+      {/* Bandeau reconnexion — coupure réseau avec CE participant uniquement,
+          n'affecte jamais les autres tuiles du mesh. */}
+      {peer.connectionState && (
+        <div style={{
+          position: 'absolute', top: 8, left: 10, right: 10,
+          background: 'rgba(251,191,36,.18)', color: '#FBBF24',
+          borderRadius: 99, padding: '3px 9px', fontSize: 10, fontWeight: 600,
+          display: 'flex', alignItems: 'center', gap: 5, width: 'fit-content',
+        }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: '50%', background: '#FBBF24',
+          }} />
+          {peer.connectionState === 'unstable' ? 'Connexion instable…' : 'Reconnexion…'}
+        </div>
+      )}
+
       {/* Badges micro / vidéo */}
       <div style={{
         position: 'absolute', bottom: 8, left: 10,

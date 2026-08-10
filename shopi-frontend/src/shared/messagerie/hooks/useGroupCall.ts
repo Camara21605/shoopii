@@ -57,6 +57,13 @@ interface MediaToggledPayload {
   videoEnabled?: boolean;
 }
 
+/* Bornes de la stratégie de reprise réseau — un pair à la fois, le reste
+   du mesh n'est jamais affecté (voir handlePeerDisruption). Constantes de
+   module (pas de re-création à chaque rendu). */
+const ICE_RESTART_MAX_ATTEMPTS  = 2;
+const ICE_RESTART_BACKOFF_MS    = [1200, 2500];
+const PEER_RECONNECT_TIMEOUT_MS = 20_000;
+
 // ── Hook ──────────────────────────────────────────────────────
 
 export function useGroupCall() {
@@ -78,6 +85,10 @@ export function useGroupCall() {
   const peersRef       = useRef<Map<string, GroupCallPeer>>(new Map());
   /** userId → nombre de tentatives d'ICE-restart déjà faites pour ce pair */
   const iceRestartAttemptsRef = useRef<Map<string, number>>(new Map());
+  /** userId → timer de backoff avant la prochaine tentative de reprise ICE */
+  const reconnectBackoffTimers  = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  /** userId → délai maximal global de reprise pour ce pair (donne l'ordre d'abandon) */
+  const reconnectDeadlineTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   /** Sens de la caméra courante (mobile) — partagé par tous les pairs du mesh */
   const facingModeRef = useRef<'user' | 'environment'>('user');
 
@@ -96,12 +107,32 @@ export function useGroupCall() {
     setPeers(new Map(next));
   }, []);
 
+  /** Annule toute tentative de reprise réseau programmée pour ce pair. */
+  function clearPeerReconnectTimers(userId: string) {
+    const b = reconnectBackoffTimers.current.get(userId);
+    if (b) { clearTimeout(b); reconnectBackoffTimers.current.delete(userId); }
+    const d = reconnectDeadlineTimers.current.get(userId);
+    if (d) { clearTimeout(d); reconnectDeadlineTimers.current.delete(userId); }
+  }
+
   /** Ferme et supprime le PeerConnection d'un pair. */
   const closePeer = useCallback((userId: string) => {
+    clearPeerReconnectTimers(userId);
+    iceRestartAttemptsRef.current.delete(userId);
     pcMapRef.current.get(userId)?.close();
     pcMapRef.current.delete(userId);
     icePendingRef.current.delete(userId);
     updatePeers(prev => { prev.delete(userId); return prev; });
+  }, [updatePeers]);
+
+  /** Affiche/efface l'état de connexion réseau d'un pair (bandeau UI). */
+  const setPeerConnectionState = useCallback((userId: string, connState: 'unstable' | 'reconnecting' | undefined) => {
+    updatePeers(prev => {
+      const p = prev.get(userId);
+      if (!p) return prev;
+      prev.set(userId, { ...p, connectionState: connState });
+      return prev;
+    });
   }, [updatePeers]);
 
   /** Libère toutes les ressources (local stream + toutes les PCs). */
@@ -149,33 +180,68 @@ export function useGroupCall() {
   /**
    * Tente de relancer la négociation ICE avec CE pair avant de fermer sa
    * connexion — une coupure réseau transitoire ne doit fermer qu'UNE
-   * connexion du mesh, pas tout l'appel. Limité à 2 tentatives par pair.
+   * connexion du mesh, pas tout l'appel. Limité à ICE_RESTART_MAX_ATTEMPTS
+   * tentatives par pair, chacune précédée d'un backoff (laisse une chance
+   * à une reprise spontanée avant de renégocier pour de vrai).
    */
-  const attemptIceRestart = useCallback(async (pc: RTCPeerConnection, userId: string) => {
-    try {
-      const attempts = iceRestartAttemptsRef.current.get(userId) ?? 0;
-      const cs = callStateRef.current;
-      if (attempts >= 2 || !localStreamRef.current || !cs) {
-        closePeer(userId);
-        return;
-      }
-      iceRestartAttemptsRef.current.set(userId, attempts + 1);
-      console.warn(`[GroupCall] connexion ICE échouée avec ${userId} — tentative de reprise ${attempts + 1}/2`);
+  const attemptIceRestart = useCallback((pc: RTCPeerConnection, userId: string) => {
+    if (reconnectBackoffTimers.current.has(userId)) return; // déjà programmé
 
-      await attachLocalTracks(pc, localStreamRef.current);
-      const offer = await pc.createOffer({ iceRestart: true });
-      await pc.setLocalDescription(offer);
-      emit('group_call:offer', {
-        groupId:      cs.groupId,
-        callId:       cs.callId,
-        targetUserId: userId,
-        sdp:          offer,
-      });
-    } catch (e) {
-      console.error(`[GroupCall] Échec de la reprise ICE avec ${userId} :`, e);
+    const attempts = iceRestartAttemptsRef.current.get(userId) ?? 0;
+    const cs = callStateRef.current;
+    if (attempts >= ICE_RESTART_MAX_ATTEMPTS || !localStreamRef.current || !cs) {
+      clearPeerReconnectTimers(userId);
+      setPeerConnectionState(userId, undefined);
       closePeer(userId);
+      return;
     }
-  }, [closePeer, attachLocalTracks]);
+
+    setPeerConnectionState(userId, 'reconnecting');
+    const backoffMs = ICE_RESTART_BACKOFF_MS[Math.min(attempts, ICE_RESTART_BACKOFF_MS.length - 1)];
+    const timer = setTimeout(async () => {
+      reconnectBackoffTimers.current.delete(userId);
+      if (pcMapRef.current.get(userId) !== pc || pc.connectionState === 'connected' || pc.connectionState === 'closed') return;
+
+      iceRestartAttemptsRef.current.set(userId, attempts + 1);
+      console.warn(`[GroupCall] connexion ICE échouée avec ${userId} — tentative de reprise ${attempts + 1}/${ICE_RESTART_MAX_ATTEMPTS}`);
+      try {
+        await attachLocalTracks(pc, localStreamRef.current!);
+        const offer = await pc.createOffer({ iceRestart: true });
+        await pc.setLocalDescription(offer);
+        emit('group_call:offer', {
+          groupId:      cs.groupId,
+          callId:       cs.callId,
+          targetUserId: userId,
+          sdp:          offer,
+        });
+      } catch (e) {
+        console.error(`[GroupCall] Échec de la reprise ICE avec ${userId} :`, e);
+        clearPeerReconnectTimers(userId);
+        setPeerConnectionState(userId, undefined);
+        closePeer(userId);
+      }
+    }, backoffMs);
+    reconnectBackoffTimers.current.set(userId, timer);
+  }, [closePeer, attachLocalTracks, setPeerConnectionState]);
+
+  /**
+   * Point d'entrée commun à 'disconnected' et 'failed' pour un pair du
+   * mesh — arme (une seule fois) le délai maximal de reprise pour CE pair
+   * précis, puis délègue à attemptIceRestart. Les autres connexions du
+   * mesh ne sont jamais touchées.
+   */
+  const handlePeerDisruption = useCallback((pc: RTCPeerConnection, userId: string) => {
+    if (!reconnectDeadlineTimers.current.has(userId)) {
+      setPeerConnectionState(userId, 'unstable');
+      const deadline = setTimeout(() => {
+        clearPeerReconnectTimers(userId);
+        setPeerConnectionState(userId, undefined);
+        closePeer(userId);
+      }, PEER_RECONNECT_TIMEOUT_MS);
+      reconnectDeadlineTimers.current.set(userId, deadline);
+    }
+    attemptIceRestart(pc, userId);
+  }, [attemptIceRestart, closePeer, setPeerConnectionState]);
 
   // ── Création RTCPeerConnection ────────────────────────────────
 
@@ -211,12 +277,16 @@ export function useGroupCall() {
     };
 
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === 'connected') {
+      const state = pc.connectionState;
+      if (state === 'connected') {
         setCallState(s => s ? { ...s, status: 'connected' } : s);
         iceRestartAttemptsRef.current.set(userId, 0);
-      } else if (pc.connectionState === 'failed') {
-        void attemptIceRestart(pc, userId);
-      } else if (pc.connectionState === 'closed') {
+        clearPeerReconnectTimers(userId);
+        setPeerConnectionState(userId, undefined);
+      } else if (state === 'failed' || state === 'disconnected') {
+        handlePeerDisruption(pc, userId);
+      } else if (state === 'closed') {
+        clearPeerReconnectTimers(userId);
         closePeer(userId);
       }
     };
@@ -233,7 +303,7 @@ export function useGroupCall() {
     icePendingRef.current.set(userId, []);
     iceRestartAttemptsRef.current.set(userId, 0);
     return pc;
-  }, [updatePeers, closePeer, attemptIceRestart]);
+  }, [updatePeers, closePeer, handlePeerDisruption, setPeerConnectionState]);
 
   // ── Handlers événements socket ────────────────────────────────
 
@@ -299,6 +369,37 @@ export function useGroupCall() {
     setIncomingCall(null);
     cleanupAll();
   }, [cleanupAll]);
+
+  /**
+   * Erreur de groupe — seul CALL_NOT_FOUND nous intéresse ici : signifie
+   * que le serveur n'a plus trace de l'appel qu'on croit encore actif
+   * (le plus souvent après resync post-reconnexion, voir
+   * onSocketReconnected ci-dessous — le ping-timeout Socket.IO a dépassé
+   * la durée de la coupure et GroupCallGateway.handleDisconnect nous a
+   * déjà retiré de l'appel PENDANT qu'on était injoignable).
+   */
+  const onGroupCallError = useCallback((payload: { code: string; message: string }) => {
+    if (payload.code === 'CALL_NOT_FOUND' && callStateRef.current) {
+      console.warn('[GroupCall] Reconnexion Socket.IO — appel introuvable côté serveur, fermeture locale.');
+      cleanupAll();
+    }
+  }, [cleanupAll]);
+
+  /**
+   * Le socket /messaging s'est (re)connecté — si un appel de groupe est en
+   * cours, on re-signale notre présence. handleJoin (serveur) est
+   * idempotent pour un participant déjà présent (aucun doublon créé) ; si
+   * le serveur a déjà terminé l'appel pendant la coupure, il répond
+   * group_call:error CALL_NOT_FOUND (voir onGroupCallError) plutôt que de
+   * nous laisser croire à tort que l'appel est toujours actif. Le
+   * signaling par-pair (offer/answer/ice) éventuellement bufferisé par
+   * socket.io-client pendant la coupure est réémis automatiquement.
+   */
+  const onSocketReconnected = useCallback(() => {
+    const cs = callStateRef.current;
+    if (!cs) return;
+    emit('group_call:join', { groupId: cs.groupId, callId: cs.callId });
+  }, []);
 
   const onOffer = useCallback(async (payload: SignalPayload) => {
     const cs = callStateRef.current;
@@ -387,6 +488,8 @@ export function useGroupCall() {
       socket.off('group_call:ice_candidate',       onIceCandidate);
       socket.off('group_call:media_toggled',       onMediaToggled);
       socket.off('account_status_changed',         onAccountStatusChanged);
+      socket.off('group_call:error',               onGroupCallError);
+      socket.off('connect',                        onSocketReconnected);
 
       socket.on('group_call:incoming',            onIncoming);
       socket.on('group_call:joined',              onJoined);
@@ -399,6 +502,10 @@ export function useGroupCall() {
       socket.on('group_call:ice_candidate',       onIceCandidate);
       socket.on('group_call:media_toggled',       onMediaToggled);
       socket.on('account_status_changed',         onAccountStatusChanged);
+      socket.on('group_call:error',               onGroupCallError);
+      /* 'connect' se déclenche pour la 1ère connexion ET chaque reconnexion —
+         onSocketReconnected s'auto-limite au cas où un appel est en cours. */
+      socket.on('connect',                        onSocketReconnected);
     }
 
     const socket = getActiveSocket();
@@ -428,11 +535,13 @@ export function useGroupCall() {
       s.off('group_call:ice_candidate',       onIceCandidate);
       s.off('group_call:media_toggled',       onMediaToggled);
       s.off('account_status_changed',         onAccountStatusChanged);
+      s.off('group_call:error',               onGroupCallError);
+      s.off('connect',                        onSocketReconnected);
     };
   }, [
     onIncoming, onJoined, onParticipantJoined, onParticipantLeft,
     onDeclined, onCallEnded, onOffer, onAnswer, onIceCandidate, onMediaToggled,
-    onAccountStatusChanged,
+    onAccountStatusChanged, onGroupCallError, onSocketReconnected,
   ]);
 
   // ── API publique ──────────────────────────────────────────────
