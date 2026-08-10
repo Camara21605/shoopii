@@ -23,13 +23,27 @@ import {
   WebSocketGateway, WebSocketServer, SubscribeMessage, ConnectedSocket, MessageBody,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
+import { Logger, UsePipes, ValidationPipe } from '@nestjs/common';
 import type { Server } from 'socket.io';
 
 import type { AuthenticatedSocket } from '../messagerie/interfaces/messaging.interfaces';
 import { CallService } from './call.service';
 import { CallType } from 'src/database/entities/call/call.entity';
+import {
+  CallInitiateDto, CallAcceptDto, CallRejectDto, CallEndDto, CallBusyDto,
+  CallOfferDto, CallAnswerDto, CallIceCandidateDto,
+} from './dto/call-socket.dto';
 
+/* Même configuration que le ValidationPipe global de main.ts (HTTP) — le
+ * pipe global ne s'applique PAS aux @MessageBody() des gateways, il faut
+ * le redéclarer explicitement ici. whitelist+forbidNonWhitelisted rejette
+ * tout champ non attendu, transform convertit les payloads bruts en
+ * instances de classe (nécessaire pour @ValidateNested). */
+@UsePipes(new ValidationPipe({
+  whitelist:            true,
+  transform:            true,
+  forbidNonWhitelisted: true,
+}))
 @WebSocketGateway({
   namespace: '/messaging',
   cors: { origin: true, credentials: true },
@@ -78,13 +92,7 @@ export class CallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('call:initiate')
   async handleCallInitiate(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: {
-      conversationId: string;
-      calleeUserId:   string;
-      callerName:     string;
-      callerAvatar?:  string;
-      callType?:      'audio' | 'video';
-    },
+    @MessageBody() body: CallInitiateDto,
   ): Promise<void> {
     const callerUserId = socket.data.userId;
     this.logger.log(`📞 call:initiate REÇU caller=${callerUserId} callee=${body.calleeUserId}`);
@@ -134,7 +142,7 @@ export class CallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('call:accept')
   async handleCallAccept(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: { conversationId: string; callerUserId: string },
+    @MessageBody() body: CallAcceptDto,
   ): Promise<void> {
     const calleeUserId = socket.data.userId;
 
@@ -156,7 +164,7 @@ export class CallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('call:reject')
   async handleCallReject(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: { conversationId: string; callerUserId: string },
+    @MessageBody() body: CallRejectDto,
   ): Promise<void> {
     const calleeUserId = socket.data.userId;
 
@@ -175,7 +183,7 @@ export class CallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('call:end')
   async handleCallEnd(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: { conversationId: string; targetUserId: string },
+    @MessageBody() body: CallEndDto,
   ): Promise<void> {
     const userId = socket.data.userId;
 
@@ -213,11 +221,7 @@ export class CallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('call:offer')
   async handleCallOffer(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: {
-      conversationId: string;
-      targetUserId:   string;
-      sdp:            RTCSessionDescriptionInit;
-    },
+    @MessageBody() body: CallOfferDto,
   ): Promise<void> {
     const fromUserId = socket.data.userId;
     if (!(await this.assertActiveCallBetween(fromUserId, body?.targetUserId))) return;
@@ -235,11 +239,7 @@ export class CallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('call:answer')
   async handleCallAnswer(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: {
-      conversationId: string;
-      targetUserId:   string;
-      sdp:            RTCSessionDescriptionInit;
-    },
+    @MessageBody() body: CallAnswerDto,
   ): Promise<void> {
     const fromUserId = socket.data.userId;
     if (!(await this.assertActiveCallBetween(fromUserId, body?.targetUserId))) return;
@@ -257,11 +257,7 @@ export class CallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('call:ice-candidate')
   async handleCallIceCandidate(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: {
-      conversationId: string;
-      targetUserId:   string;
-      candidate:      RTCIceCandidateInit;
-    },
+    @MessageBody() body: CallIceCandidateDto,
   ): Promise<void> {
     const fromUserId = socket.data.userId;
     if (!(await this.assertActiveCallBetween(fromUserId, body?.targetUserId))) return;
@@ -281,7 +277,7 @@ export class CallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('call:busy')
   async handleCallBusy(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() body: { conversationId: string; callerUserId: string },
+    @MessageBody() body: CallBusyDto,
   ): Promise<void> {
     const fromUserId = socket.data.userId;
     if (!(await this.assertActiveCallBetween(fromUserId, body?.callerUserId))) return;

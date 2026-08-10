@@ -47,7 +47,7 @@ import {
   SubscribeMessage, ConnectedSocket, MessageBody,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
+import { Logger, UsePipes, ValidationPipe } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { Server } from 'socket.io';
@@ -56,8 +56,13 @@ import { v4 as uuid } from 'uuid';
 import { DeliveryGroupMember } from 'src/database/entities/delivery-group/delivery-group-member.entity';
 import { DeliveryGroup }       from 'src/database/entities/delivery-group/delivery-group.entity';
 import { GroupMessage, GroupMessageContentType } from 'src/database/entities/delivery-group/group-message.entity';
+import { CallType } from 'src/database/entities/call/call.entity';
 import { BroadcastService }    from '../services/broadcast.service';
 import type { AuthenticatedSocket } from '../interfaces/messaging.interfaces';
+import {
+  GroupCallInitiateDto, GroupCallRefDto, GroupCallOfferDto, GroupCallAnswerDto,
+  GroupCallIceCandidateDto, GroupCallToggleMediaDto,
+} from '../dto/group-call-socket.dto';
 
 // ── Types internes ────────────────────────────────────────────
 
@@ -71,7 +76,7 @@ interface ActiveGroupCall {
   groupId:         string;
   initiatorId:     string;
   initiatorName:   string;
-  callType:        'audio' | 'video';
+  callType:        CallType;
   startedAt:       Date;
   /** Nombre max de participants simultanés (pour détecter appel manqué) */
   maxParticipants: number;
@@ -83,35 +88,15 @@ interface ActiveGroupCall {
   declined:        Set<string>;
 }
 
-// ── Payloads entrants ─────────────────────────────────────────
-
-interface InitiatePayload {
-  groupId:   string;
-  callType?: 'audio' | 'video';
-}
-
-interface CallRefPayload {
-  groupId: string;
-  callId:  string;
-}
-
-interface SignalPayload {
-  groupId:      string;
-  callId:       string;
-  targetUserId: string;
-  sdp?:         RTCSessionDescriptionInit;
-  candidate?:   RTCIceCandidateInit;
-}
-
-interface ToggleMediaPayload {
-  groupId:       string;
-  callId:        string;
-  audioEnabled?: boolean;
-  videoEnabled?: boolean;
-}
-
 // ─────────────────────────────────────────────────────────────
 
+/* Même config que le ValidationPipe global de main.ts — ne s'applique pas
+ * automatiquement aux gateways, voir call-socket.dto.ts pour le détail. */
+@UsePipes(new ValidationPipe({
+  whitelist:            true,
+  transform:            true,
+  forbidNonWhitelisted: true,
+}))
 @WebSocketGateway({
   namespace:  '/messaging',
   cors:       { origin: true, credentials: true },
@@ -217,7 +202,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('group_call:initiate')
   async handleInitiate(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() payload: InitiatePayload,
+    @MessageBody() payload: GroupCallInitiateDto,
   ): Promise<void> {
     const userId = this.uid(socket);
     try {
@@ -234,7 +219,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
       }
 
       const callId   = uuid();
-      const callType = payload.callType ?? 'audio';
+      const callType = payload.callType ?? CallType.AUDIO;
       const members  = await this.getActiveMembers(payload.groupId);
 
       /* Créer l'appel — l'initiateur est d'emblée participant */
@@ -292,7 +277,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('group_call:join')
   async handleJoin(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() payload: CallRefPayload,
+    @MessageBody() payload: GroupCallRefDto,
   ): Promise<void> {
     const userId = this.uid(socket);
     try {
@@ -345,7 +330,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('group_call:leave')
   async handleLeave(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() payload: CallRefPayload,
+    @MessageBody() payload: GroupCallRefDto,
   ): Promise<void> {
     const userId = this.uid(socket);
     try {
@@ -378,7 +363,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('group_call:decline')
   async handleDecline(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() payload: CallRefPayload,
+    @MessageBody() payload: GroupCallRefDto,
   ): Promise<void> {
     const userId = this.uid(socket);
     try {
@@ -403,7 +388,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('group_call:offer')
   async handleOffer(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() payload: SignalPayload,
+    @MessageBody() payload: GroupCallOfferDto,
   ): Promise<void> {
     const userId = this.uid(socket);
     try {
@@ -424,7 +409,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('group_call:answer')
   async handleAnswer(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() payload: SignalPayload,
+    @MessageBody() payload: GroupCallAnswerDto,
   ): Promise<void> {
     const userId = this.uid(socket);
     try {
@@ -443,7 +428,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('group_call:ice_candidate')
   async handleIceCandidate(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() payload: SignalPayload,
+    @MessageBody() payload: GroupCallIceCandidateDto,
   ): Promise<void> {
     const userId = this.uid(socket);
     try {
@@ -464,7 +449,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
   @SubscribeMessage('group_call:toggle_media')
   async handleToggleMedia(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() payload: ToggleMediaPayload,
+    @MessageBody() payload: GroupCallToggleMediaDto,
   ): Promise<void> {
     const userId = this.uid(socket);
     try {
