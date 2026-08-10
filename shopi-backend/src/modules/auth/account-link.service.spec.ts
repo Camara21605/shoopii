@@ -211,6 +211,23 @@ describe('AccountLinkService', () => {
       expect(result.accessToken).toBe('tok');
     });
 
+    it('convertit une violation de contrainte unique Postgres (23505, course perdue) en ConflictException plutôt qu\'en 500 brute', async () => {
+      const proUser = makeUser({ id: 'pro-uuid' });
+      userRepo.findOneOrFail.mockResolvedValue(proUser);
+      linkRepo.findOne.mockResolvedValue(null);
+      userRepo.findOne.mockResolvedValue(null);
+      // Simule l'index unique partiel qui tranche en dernier ressort entre
+      // deux requêtes concurrentes — la 2nde à committer perd la course.
+      mockQR.manager.save.mockImplementationOnce((_entity: unknown, x: any) => Promise.resolve({ ...x, id: 'new-uuid' })); // User
+      mockQR.manager.save.mockImplementationOnce((_entity: unknown, x: any) => Promise.resolve(x));                        // Client
+      mockQR.manager.save.mockImplementationOnce((_entity: unknown, x: any) => Promise.resolve(x));                        // Wallet
+      mockQR.manager.save.mockImplementationOnce(() => Promise.reject(Object.assign(new Error('duplicate key'), { code: '23505' })));
+
+      await expect(service.createLinkedClient('pro-uuid', 'Password1!'))
+        .rejects.toThrow(ConflictException);
+      expect(mockQR.rollbackTransaction).toHaveBeenCalled();
+    });
+
     it("bloque avec un message clair si l'email du pro est déjà pris par le compte client de QUELQU'UN D'AUTRE", async () => {
       const proUser = makeUser({ id: 'pro-uuid', email: 'partage@test.com' });
       userRepo.findOneOrFail.mockResolvedValue(proUser);
@@ -337,6 +354,26 @@ describe('AccountLinkService', () => {
       }));
       expect(linkRepo.save).toHaveBeenCalledWith(expect.objectContaining({ clientUserId: 'client-uuid' }));
       expect(result.accessToken).toBe('tok');
+    });
+
+    it('convertit une violation de contrainte unique Postgres (23505, course perdue) en ConflictException plutôt qu\'en 500 brute', async () => {
+      const proUser    = makeUser({ id: 'pro-uuid' });
+      const clientUser = makeUser({ id: 'client-uuid', role: UserRole.CLIENT });
+
+      userRepo.findOneOrFail.mockResolvedValue(proUser);
+      linkRepo.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+      userRepo.find.mockResolvedValue([clientUser]);
+      linkRepo.find.mockResolvedValue([]);
+      mockPasswordQueryBuilder(userRepo, 'client-uuid', 'hash');
+      // L'index unique partiel tranche en dernier ressort si une autre
+      // requête a lié ce même client entre le check applicatif et le save.
+      linkRepo.save.mockRejectedValue(Object.assign(new Error('duplicate key'), { code: '23505' }));
+
+      const bcrypt = require('bcryptjs');
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+
+      await expect(service.linkExistingClient('pro-uuid', { password: 'secret' }))
+        .rejects.toThrow(ConflictException);
     });
 
     it('refuse si le compte client ciblé a déjà un lien ACTIF avec un autre pro', async () => {

@@ -30,6 +30,14 @@ import { TwoFaService } from './twofa/twofa.service';
 
 const BCRYPT_ROUNDS = 12;
 
+/** Code erreur Postgres "unique_violation" — TypeORM le recopie tel quel
+ *  sur QueryFailedError (driver pg). Sert de dernier rempart contre une
+ *  race condition gagnée par la contrainte DB (les gardes applicatifs
+ *  au-dessus ne voient rien tant que l'autre transaction n'a pas commité). */
+function isUniqueViolation(err: unknown): boolean {
+  return (err as { code?: string })?.code === '23505';
+}
+
 /** Rôles pro pouvant posséder un compte client lié — CLIENT et SUPER_ADMIN exclus. */
 const PRO_ROLES: UserRole[] = [
   UserRole.COMPANY, UserRole.DELIVERY, UserRole.CORRESPONDENT, UserRole.PARTNER, UserRole.ADMIN,
@@ -203,6 +211,9 @@ export class AccountLinkService {
     } catch (err) {
       await queryRunner.rollbackTransaction();
       this.logger.error(`[MON ESPACE ❌ création] pro=${proUserId} | ${(err as Error).message}`);
+      if (isUniqueViolation(err)) {
+        throw new ConflictException('Ce compte a déjà été lié entre-temps. Rechargez la page.');
+      }
       throw err;
     } finally {
       await queryRunner.release();
@@ -292,14 +303,21 @@ export class AccountLinkService {
       throw new ConflictException('Ce compte client est déjà lié à un autre compte professionnel.');
     }
 
-    await this.linkRepo.save(this.linkRepo.create({
-      proUserId,
-      clientUserId: candidate.id,
-      linkMethod:   AccountLinkMethod.EXISTING_VERIFIED,
-      verifiedVia,
-      status:       AccountLinkStatus.ACTIVE,
-      linkedAt:     new Date(),
-    }));
+    try {
+      await this.linkRepo.save(this.linkRepo.create({
+        proUserId,
+        clientUserId: candidate.id,
+        linkMethod:   AccountLinkMethod.EXISTING_VERIFIED,
+        verifiedVia,
+        status:       AccountLinkStatus.ACTIVE,
+        linkedAt:     new Date(),
+      }));
+    } catch (err) {
+      if (isUniqueViolation(err)) {
+        throw new ConflictException('Ce compte a déjà été lié entre-temps. Rechargez la page.');
+      }
+      throw err;
+    }
 
     this.logger.log(`[MON ESPACE ✅ liaison] pro=${proUserId} → client=${candidate.id} via=${verifiedVia}`);
     return this.authService.issueTokensForUser(candidate, false, null, null);
