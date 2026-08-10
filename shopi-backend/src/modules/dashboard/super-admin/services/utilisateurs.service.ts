@@ -28,6 +28,7 @@ import {
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
 import { Commande, CommandeStatus }   from 'src/database/entities/commande/commande.entity';
+import { BroadcastService } from 'src/modules/messagerie/services/broadcast.service';
 
 /* ── Interfaces ────────────────────────────────────────────── */
 
@@ -100,6 +101,7 @@ export class UtilisateursService {
 
     private readonly auditLog: AuditLogService,
     private readonly notifEventSvc: NotificationEventService,
+    private readonly broadcast: BroadcastService,
   ) {}
 
   /* ── 1. LISTE ─────────────────────────────────────────────── */
@@ -206,6 +208,14 @@ export class UtilisateursService {
       : { type: NotificationType.ACCOUNT_APPROVED, title: 'Compte débloqué ✅', body: 'Votre compte a été débloqué par l\'administration.' }
     );
 
+    /* Coupe immédiatement toute session active (et donc tout appel WebRTC
+       en cours) — sans ça, un compte fraîchement banni pouvait continuer
+       un appel déjà établi jusqu'à sa fin naturelle. Ne s'applique qu'au
+       blocage, jamais au déblocage. */
+    if (newStatus === UserStatus.BANNED) {
+      void this.broadcast.disconnectUser(user.id, 'account_banned');
+    }
+
     return {
       message: `${user.firstName} ${user.lastName} a été ${action}.`,
       status:  STATUS_TO_FRONTEND[newStatus] ?? newStatus,
@@ -239,6 +249,8 @@ export class UtilisateursService {
         ? `Votre compte a été suspendu. Raison : ${raison}`
         : 'Votre compte a été temporairement suspendu par l\'administration.',
     });
+
+    void this.broadcast.disconnectUser(user.id, 'account_suspended');
 
     return { message: `${user.firstName} ${user.lastName} a été suspendu.` };
   }

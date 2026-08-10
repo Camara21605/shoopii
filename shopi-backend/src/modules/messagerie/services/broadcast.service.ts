@@ -72,6 +72,47 @@ export class BroadcastService {
     this.server.to(userRoom(userId)).emit(event, payload);
   }
 
+  /**
+   * Déconnecte de force TOUS les sockets actifs d'un utilisateur (tous
+   * onglets/appareils) du namespace /messaging — utilisé quand un compte
+   * est banni/suspendu PENDANT qu'il est éventuellement en appel actif.
+   *
+   * Sans ça, le bannissement ne bloquait que les FUTURES connexions
+   * (vérification dans MessagerieGateway.handleConnection) — un socket
+   * déjà connecté au moment du bannissement restait ouvert
+   * jusqu'à sa fermeture naturelle, donc un appel WebRTC déjà établi
+   * continuait sans interruption.
+   *
+   * Effet de bord volontaire et réutilisé tel quel (pas de duplication) :
+   * la déconnexion forcée déclenche le handleDisconnect existant de
+   * CallGateway (raccroche tout appel 1:1 actif) et de GroupCallGateway
+   * (retire le participant de tout appel de groupe actif) — même chemin
+   * que pour une fermeture d'onglet normale.
+   */
+  async disconnectUser(userId: string, reason: string): Promise<void> {
+    if (!this.server) {
+      this.logger.warn(`[Broadcast] disconnectUser ignoré (server null) — user:${userId}`);
+      return;
+    }
+    try {
+      const sockets = await this.server.in(userRoom(userId)).fetchSockets();
+      for (const s of sockets) {
+        s.emit('account_status_changed', { reason });
+        s.disconnect(true);
+      }
+      if (sockets.length > 0) {
+        this.logger.log(`[Broadcast] ${sockets.length} socket(s) déconnecté(s) de force — user:${userId} (${reason})`);
+      }
+    } catch (e) {
+      /* fetchSockets peut échouer en multi-instance sans Redis Adapter —
+         le pire cas est que la déconnexion forcée n'ait pas lieu tout de
+         suite (le socket restera bloqué à la prochaine action nécessitant
+         un compte actif), jamais une erreur qui doit remonter à l'appelant
+         (bannir un compte ne doit jamais échouer à cause de ça). */
+      this.logger.warn(`[Broadcast] disconnectUser échoué — user:${userId} : ${(e as Error).message}`);
+    }
+  }
+
   // ─────────────────────────────────────────────────────────
   // MESSAGES
   // ─────────────────────────────────────────────────────────

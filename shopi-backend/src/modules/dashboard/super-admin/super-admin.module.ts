@@ -55,6 +55,7 @@ import { PlatformSettingsService } from './services/platform-settings.service';
 import { SecuriteAdminService }    from './services/securite-admin.service';
 import { NotificationsModule }      from '../../notifications/notifications.module';
 import { ReportingModule }          from '../../reporting-engine/reporting.module';
+import { MessagerieModule }         from '../../messagerie/messagerie.module';
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { ReportingModule }          from '../../reporting-engine/reporting.modul
     CategoriesModule,
     NotificationsModule,
     ReportingModule,
+    MessagerieModule, // pour BroadcastService.disconnectUser() (bannissement/suspension)
   ],
 
   controllers: [
