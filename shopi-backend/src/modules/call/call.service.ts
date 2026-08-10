@@ -18,10 +18,10 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import type { Redis } from 'ioredis';
-import { randomUUID } from 'crypto';
+import { randomUUID, createHmac } from 'crypto';
 
 import { Call, CallStatus, CallType } from 'src/database/entities/call/call.entity';
 import { CallHistory, CallHistoryStatus } from 'src/database/entities/call/call-history.entity';
@@ -83,6 +83,7 @@ export class CallService {
     private readonly presence:         PresenceService,
     private readonly notifications:    NotificationService,
     private readonly config:           ConfigService,
+    private readonly dataSource:       DataSource,
 
     @InjectRedis() private readonly redis: Redis,
   ) {}
@@ -94,21 +95,57 @@ export class CallService {
     { urls: 'stun:stun1.l.google.com:19302' },
   ];
 
+  /** Durée de vie d'un identifiant TURN dynamique — largement au-dessus de
+   *  la durée de négociation ICE (quelques secondes), mais courte pour
+   *  limiter la fenêtre d'exploitation si jamais interceptée. */
+  private static readonly TURN_CREDENTIAL_TTL_S = 3600;
+
   /**
-   * Identifiants TURN statiques Metered.ca (host + username/credential fixes,
-   * générés une fois dans le dashboard Metered — pas d'appel API externe,
-   * pas d'expiration à gérer). Restent côté serveur, jamais exposés au bundle
-   * frontend. Fallback STUN seul si mal configuré — les appels pourront
+   * Serveurs ICE (STUN + TURN Metered.ca). Restent côté serveur, jamais
+   * exposés au bundle frontend — seul le payload de CETTE réponse (via
+   * GET /calls/ice-servers) atteint le client, comme l'exige WebRTC.
+   *
+   * Deux modes, selon la configuration :
+   *   1. METERED_TURN_SECRET défini → identifiants dynamiques à durée de
+   *      vie limitée (1h), générés via le schéma HMAC-SHA1 standard "REST
+   *      API TURN" (coturn et compatibles, dont Metered.ca) :
+   *        username   = "<expiration_unix>:shopi"
+   *        credential = base64(HMAC-SHA1(secret, username))
+   *      Aucune valeur volée dans le trafic réseau ne reste utilisable
+   *      au-delà d'une heure.
+   *   2. Sinon → identifiants statiques (comportement historique, appels
+   *      fonctionnels mais un identifiant intercepté reste valide
+   *      indéfiniment tant qu'il n'est pas manuellement changé côté
+   *      dashboard Metered).
+   *
+   * Fallback STUN seul si rien n'est configuré — les appels pourront
    * échouer derrière un NAT mobile strict, mais ne seront jamais bloqués.
    */
   async getIceServers(): Promise<IceServerConfig[]> {
-    const host       = this.config.get<string>('METERED_TURN_HOST');
-    const username   = this.config.get<string>('METERED_TURN_USERNAME');
-    const credential = this.config.get<string>('METERED_TURN_CREDENTIAL');
+    const host   = this.config.get<string>('METERED_TURN_HOST');
+    const secret = this.config.get<string>('METERED_TURN_SECRET');
 
-    if (!host || !username || !credential) {
-      this.logger.warn('[Call] METERED_TURN_HOST/USERNAME/CREDENTIAL manquants — appels en STUN seul (échoueront souvent derrière un NAT mobile)');
+    if (!host) {
+      this.logger.warn('[Call] METERED_TURN_HOST manquant — appels en STUN seul (échoueront souvent derrière un NAT mobile)');
       return CallService.STATIC_STUN;
+    }
+
+    let username: string;
+    let credential: string;
+
+    if (secret) {
+      const expiresAt = Math.floor(Date.now() / 1000) + CallService.TURN_CREDENTIAL_TTL_S;
+      username   = `${expiresAt}:shopi`;
+      credential = createHmac('sha1', secret).update(username).digest('base64');
+    } else {
+      const staticUsername   = this.config.get<string>('METERED_TURN_USERNAME');
+      const staticCredential = this.config.get<string>('METERED_TURN_CREDENTIAL');
+      if (!staticUsername || !staticCredential) {
+        this.logger.warn('[Call] Ni METERED_TURN_SECRET ni METERED_TURN_USERNAME/CREDENTIAL configurés — appels en STUN seul');
+        return CallService.STATIC_STUN;
+      }
+      username   = staticUsername;
+      credential = staticCredential;
     }
 
     /* Pas de "stun:${host}" ici — le sous-domaine STUN de Metered
@@ -232,8 +269,9 @@ export class CallService {
    * en plus du nettoyage à la déconnexion — voir endAllCallsForUser). */
   private static readonly STALE_UNANSWERED_MS = 60_000;
 
-  async isUserBusy(userId: string): Promise<boolean> {
-    const calls = await this.callRepo.find({
+  async isUserBusy(userId: string, manager?: EntityManager): Promise<boolean> {
+    const repo = manager ? manager.getRepository(Call) : this.callRepo;
+    const calls = await repo.find({
       where: [{ callerId: userId }, { calleeId: userId }],
     });
     if (calls.length === 0) return false;
@@ -244,7 +282,7 @@ export class CallService {
         call.status !== CallStatus.CONNECTED &&
         Date.now() - call.startedAt.getTime() > CallService.STALE_UNANSWERED_MS;
       if (isStale) {
-        await this.finalizeCall(call, CallHistoryStatus.MISSED);
+        await this.finalizeCall(call, CallHistoryStatus.MISSED, manager);
       } else {
         stillBusy = true;
       }
@@ -265,10 +303,41 @@ export class CallService {
 
   private async checkRateLimit(userId: string): Promise<void> {
     const key = `call:rate:${userId}`;
-    const count = await this.redis.incr(key);
-    if (count === 1) await this.redis.expire(key, RATE_LIMIT_TTL_S);
+    let count: number;
+    try {
+      count = await this.redis.incr(key);
+      if (count === 1) await this.redis.expire(key, RATE_LIMIT_TTL_S);
+    } catch (e) {
+      /* Une panne Redis ne doit jamais bloquer silencieusement tous les
+         appels — même principe que presence.isOnlineOrUnknown() : on ne
+         sait pas combien de tentatives ont eu lieu, donc on n'en bloque
+         aucune plutôt que de casser toute la plateforme d'appel sur un
+         Redis indisponible. */
+      this.logger.warn(`[Call] Redis indisponible pour le rate-limit d'appel de ${userId} — autorisé par défaut : ${(e as Error).message}`);
+      return;
+    }
     if (count > RATE_LIMIT_MAX) {
       throw new ForbiddenException('Trop de tentatives d\'appel. Réessayez dans une minute.');
+    }
+  }
+
+  /**
+   * Verrous consultatifs Postgres (pg_advisory_xact_lock), acquis dans un
+   * ordre déterministe (tri lexicographique des deux userId) pour qu'aucune
+   * paire de transactions ne puisse se verrouiller mutuellement en tenant
+   * l'un des deux verrous en ordre inverse. Portée : la transaction
+   * courante — libérés automatiquement au commit/rollback.
+   *
+   * Sans ça, deux `startCall` concurrents impliquant un utilisateur commun
+   * (A→B et C→A lancés à la même milliseconde, ou même A→B lancé deux fois
+   * depuis deux onglets) peuvent TOUS LES DEUX lire "pas occupé" avant que
+   * l'un des deux ait eu le temps d'insérer sa ligne `calls` — ce verrou
+   * sérialise le "check occupé + insertion" en une section critique unique
+   * par utilisateur impliqué.
+   */
+  private async lockUsersForCall(manager: EntityManager, userA: string, userB: string): Promise<void> {
+    for (const userId of [userA, userB].sort()) {
+      await manager.query('SELECT pg_advisory_xact_lock(hashtext($1))', [userId]);
     }
   }
 
@@ -278,86 +347,103 @@ export class CallService {
     await this.checkRateLimit(callerUserId);
     await this.assertCanCall(callerUserId, dto.calleeUserId);
 
-    /* Les 3 vérifications sont indépendantes (2 lectures DB + 1 lecture Redis) —
-       les paralléliser évite d'empiler leurs latences réseau vers Supabase/Redis
-       une par une, ce qui rendait `call:initiate` perceptiblement lent. */
-    const [callerBusy, calleeBusy, online] = await Promise.all([
-      this.isUserBusy(callerUserId),
-      this.isUserBusy(dto.calleeUserId),
-      /* isOnlineOrUnknown (pas isOnline) : une panne Redis ne doit jamais
-         bloquer silencieusement tous les appels 1:1 — voir presence.service.ts. */
-      this.presence.isOnlineOrUnknown(dto.calleeUserId),
-    ]);
+    return this.dataSource.transaction(async (manager) => {
+      await this.lockUsersForCall(manager, callerUserId, dto.calleeUserId);
 
-    if (callerBusy) {
-      throw new ForbiddenException('Vous êtes déjà en appel.');
-    }
+      /* Les 3 vérifications sont indépendantes (2 lectures DB + 1 lecture Redis) —
+         les paralléliser évite d'empiler leurs latences réseau vers Supabase/Redis
+         une par une, ce qui rendait `call:initiate` perceptiblement lent. */
+      const [callerBusy, calleeBusy, online] = await Promise.all([
+        this.isUserBusy(callerUserId, manager),
+        this.isUserBusy(dto.calleeUserId, manager),
+        /* isOnlineOrUnknown (pas isOnline) : une panne Redis ne doit jamais
+           bloquer silencieusement tous les appels 1:1 — voir presence.service.ts. */
+        this.presence.isOnlineOrUnknown(dto.calleeUserId),
+      ]);
 
-    if (calleeBusy) {
-      await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.BUSY);
-      await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_BUSY,
-        'Utilisateur occupé', 'La personne que vous appelez est déjà en appel.');
-      return { outcome: 'busy' };
-    }
+      if (callerBusy) {
+        throw new ForbiddenException('Vous êtes déjà en appel.');
+      }
 
-    if (!online) {
-      await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.MISSED);
-      await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_OFFLINE,
-        'Utilisateur hors ligne', 'La personne que vous appelez est actuellement hors ligne.');
-      await this.notifyCallee(dto.calleeUserId, callerUserId, NotificationType.CALL_MISSED,
-        'Appel manqué', 'Vous avez manqué un appel.');
-      return { outcome: 'offline' };
-    }
+      if (calleeBusy) {
+        await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.BUSY, manager);
+        await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_BUSY,
+          'Utilisateur occupé', 'La personne que vous appelez est déjà en appel.');
+        return { outcome: 'busy' };
+      }
 
-    const call = this.callRepo.create({
-      callerId:       callerUserId,
-      calleeId:       dto.calleeUserId,
-      conversationId: dto.conversationId ?? null,
-      callType:       dto.callType,
-      status:         CallStatus.RINGING,
-      startedAt:      new Date(),
+      if (!online) {
+        await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.MISSED, manager);
+        await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_OFFLINE,
+          'Utilisateur hors ligne', 'La personne que vous appelez est actuellement hors ligne.');
+        await this.notifyCallee(dto.calleeUserId, callerUserId, NotificationType.CALL_MISSED,
+          'Appel manqué', 'Vous avez manqué un appel.');
+        return { outcome: 'offline' };
+      }
+
+      const call = manager.create(Call, {
+        callerId:       callerUserId,
+        calleeId:       dto.calleeUserId,
+        conversationId: dto.conversationId ?? null,
+        callType:       dto.callType,
+        status:         CallStatus.RINGING,
+        startedAt:      new Date(),
+      });
+      const saved = await manager.save(call);
+      return { outcome: 'ringing', call: saved };
     });
-    const saved = await this.callRepo.save(call);
-    return { outcome: 'ringing', call: saved };
   }
 
   async acceptCall(userId: string, callId: string): Promise<Call> {
-    const call = await this.callRepo.findOne({ where: { id: callId } });
-    if (!call) throw new NotFoundException('Appel introuvable ou déjà terminé.');
-    if (call.calleeId !== userId) {
-      throw new ForbiddenException('Cet appel ne vous est pas destiné.');
-    }
-    call.status     = CallStatus.CONNECTED;
-    call.answeredAt = new Date();
-    return this.callRepo.save(call);
+    return this.dataSource.transaction(async (manager) => {
+      /* pessimistic_write = SELECT ... FOR UPDATE — bloque toute autre
+         transaction qui tenterait de lire/modifier CETTE ligne (accept
+         depuis un 2e appareil, reject/end concurrent) jusqu'au commit. */
+      const call = await manager.findOne(Call, { where: { id: callId }, lock: { mode: 'pessimistic_write' } });
+      if (!call) throw new NotFoundException('Appel introuvable ou déjà terminé.');
+      if (call.calleeId !== userId) {
+        throw new ForbiddenException('Cet appel ne vous est pas destiné.');
+      }
+      /* Idempotent : si un autre appareil du même callee a déjà accepté
+         pendant qu'on attendait le verrou, ne pas réémettre answeredAt. */
+      if (call.status === CallStatus.CONNECTED) return call;
+
+      call.status     = CallStatus.CONNECTED;
+      call.answeredAt = new Date();
+      return manager.save(call);
+    });
   }
 
   async rejectCall(userId: string, callId: string): Promise<void> {
-    const call = await this.callRepo.findOne({ where: { id: callId } });
-    if (!call) return; // déjà nettoyé — idempotent
-    if (call.calleeId !== userId) {
-      throw new ForbiddenException('Cet appel ne vous est pas destiné.');
-    }
-    await this.finalizeCall(call, CallHistoryStatus.REJECTED);
-    await this.notifyCaller(call.callerId, call.calleeId, NotificationType.CALL_REJECTED,
-      'Appel refusé', 'Votre appel a été refusé.');
+    await this.dataSource.transaction(async (manager) => {
+      const call = await manager.findOne(Call, { where: { id: callId }, lock: { mode: 'pessimistic_write' } });
+      if (!call) return; // déjà nettoyé — idempotent
+      if (call.calleeId !== userId) {
+        throw new ForbiddenException('Cet appel ne vous est pas destiné.');
+      }
+      await this.finalizeCall(call, CallHistoryStatus.REJECTED, manager);
+      await this.notifyCaller(call.callerId, call.calleeId, NotificationType.CALL_REJECTED,
+        'Appel refusé', 'Votre appel a été refusé.');
+    });
   }
 
   async endCall(userId: string, callId: string): Promise<void> {
-    const call = await this.callRepo.findOne({ where: { id: callId } });
-    if (!call) return; // déjà nettoyé — idempotent
-    if (call.callerId !== userId && call.calleeId !== userId) {
-      throw new ForbiddenException('Cet appel ne vous concerne pas.');
-    }
+    await this.dataSource.transaction(async (manager) => {
+      const call = await manager.findOne(Call, { where: { id: callId }, lock: { mode: 'pessimistic_write' } });
+      if (!call) return; // déjà nettoyé — idempotent
+      if (call.callerId !== userId && call.calleeId !== userId) {
+        throw new ForbiddenException('Cet appel ne vous concerne pas.');
+      }
 
-    const wasConnected = call.status === CallStatus.CONNECTED;
-    await this.finalizeCall(call, wasConnected ? CallHistoryStatus.COMPLETED : CallHistoryStatus.MISSED);
+      const wasConnected = call.status === CallStatus.CONNECTED;
+      await this.finalizeCall(call, wasConnected ? CallHistoryStatus.COMPLETED : CallHistoryStatus.MISSED, manager);
 
-    /* Un appel jamais décroché qui se termine = manqué pour le destinataire. */
-    if (!wasConnected) {
-      await this.notifyCallee(call.calleeId, call.callerId, NotificationType.CALL_MISSED,
-        'Appel manqué', 'Vous avez manqué un appel.');
-    }
+      /* Un appel jamais décroché qui se termine = manqué pour le destinataire. */
+      if (!wasConnected) {
+        await this.notifyCallee(call.calleeId, call.callerId, NotificationType.CALL_MISSED,
+          'Appel manqué', 'Vous avez manqué un appel.');
+      }
+    });
   }
 
   /**
@@ -377,29 +463,37 @@ export class CallService {
    * @returns la liste des autres participants à notifier (`call:ended`).
    */
   async endAllCallsForUser(userId: string): Promise<{ otherUserId: string; conversationId: string | null }[]> {
-    const calls = await this.callRepo.find({
-      where: [{ callerId: userId }, { calleeId: userId }],
-    });
-    if (calls.length === 0) return [];
+    return this.dataSource.transaction(async (manager) => {
+      /* FOR UPDATE — évite de finaliser une ligne qu'un accept/reject/end
+         concurrent de l'autre participant est justement en train de traiter. */
+      const calls = await manager.find(Call, {
+        where: [{ callerId: userId }, { calleeId: userId }],
+        lock:  { mode: 'pessimistic_write' },
+      });
+      if (calls.length === 0) return [];
 
-    const notify: { otherUserId: string; conversationId: string | null }[] = [];
-    for (const call of calls) {
-      const wasConnected = call.status === CallStatus.CONNECTED;
-      const otherUserId  = call.callerId === userId ? call.calleeId : call.callerId;
-      await this.finalizeCall(call, wasConnected ? CallHistoryStatus.COMPLETED : CallHistoryStatus.MISSED);
-      notify.push({ otherUserId, conversationId: call.conversationId });
-    }
-    return notify;
+      const notify: { otherUserId: string; conversationId: string | null }[] = [];
+      for (const call of calls) {
+        const wasConnected = call.status === CallStatus.CONNECTED;
+        const otherUserId  = call.callerId === userId ? call.calleeId : call.callerId;
+        await this.finalizeCall(call, wasConnected ? CallHistoryStatus.COMPLETED : CallHistoryStatus.MISSED, manager);
+        notify.push({ otherUserId, conversationId: call.conversationId });
+      }
+      return notify;
+    });
   }
 
   /** Copie l'appel actif vers l'archive permanente puis supprime la ligne active. */
-  private async finalizeCall(call: Call, status: CallHistoryStatus): Promise<void> {
+  private async finalizeCall(call: Call, status: CallHistoryStatus, manager?: EntityManager): Promise<void> {
+    const historyRepo = manager ? manager.getRepository(CallHistory) : this.historyRepo;
+    const callRepo     = manager ? manager.getRepository(Call)        : this.callRepo;
+
     const endedAt  = new Date();
     const duration = call.answeredAt
       ? Math.max(0, Math.floor((endedAt.getTime() - call.answeredAt.getTime()) / 1000))
       : 0;
 
-    const history = this.historyRepo.create({
+    const history = historyRepo.create({
       callId:         call.id,
       callerId:       call.callerId,
       calleeId:       call.calleeId,
@@ -411,16 +505,17 @@ export class CallService {
       endedAt,
       duration,
     });
-    await this.historyRepo.save(history);
-    await this.callRepo.delete({ id: call.id });
+    await historyRepo.save(history);
+    await callRepo.delete({ id: call.id });
   }
 
   /** Cas "occupé"/"hors ligne" : aucun appel n'a jamais réellement sonné — on journalise directement dans l'historique. */
   private async recordShortCircuit(
-    callerUserId: string, dto: StartCallDto, status: CallHistoryStatus,
+    callerUserId: string, dto: StartCallDto, status: CallHistoryStatus, manager?: EntityManager,
   ): Promise<void> {
+    const historyRepo = manager ? manager.getRepository(CallHistory) : this.historyRepo;
     const now = new Date();
-    const history = this.historyRepo.create({
+    const history = historyRepo.create({
       callId:         randomUUID(),
       callerId:       callerUserId,
       calleeId:       dto.calleeUserId,
@@ -432,7 +527,7 @@ export class CallService {
       endedAt:        now,
       duration:       0,
     });
-    await this.historyRepo.save(history);
+    await historyRepo.save(history);
   }
 
   // ── Historique ────────────────────────────────────────────────
