@@ -19,7 +19,7 @@
 
 import { Type } from 'class-transformer';
 import {
-  IsEnum, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID,
+  IsDefined, IsEnum, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID,
   MaxLength, ValidateNested,
 } from 'class-validator';
 import { CallType } from 'src/database/entities/call/call.entity';
@@ -98,6 +98,11 @@ export class CallOfferDto {
   @IsUUID()
   targetUserId: string;
 
+  /* @IsDefined() est nécessaire EN PLUS de @ValidateNested() : sans lui,
+   * un payload où "sdp" est complètement absent passe la validation sans
+   * erreur (ValidateNested ne valide que ce qui est présent, il n'impose
+   * pas la présence du champ lui-même). */
+  @IsDefined()
   @ValidateNested()
   @Type(() => SdpDto)
   sdp: SdpDto;
@@ -110,6 +115,7 @@ export class CallAnswerDto {
   @IsUUID()
   targetUserId: string;
 
+  @IsDefined()
   @ValidateNested()
   @Type(() => SdpDto)
   sdp: SdpDto;
@@ -142,6 +148,7 @@ export class CallIceCandidateDto {
   @IsUUID()
   targetUserId: string;
 
+  @IsDefined()
   @ValidateNested()
   @Type(() => IceCandidateDto)
   candidate: IceCandidateDto;

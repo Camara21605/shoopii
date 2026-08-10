@@ -23,7 +23,7 @@ import {
   WebSocketGateway, WebSocketServer, SubscribeMessage, ConnectedSocket, MessageBody,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Logger, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Logger, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import type { Server } from 'socket.io';
 
 import type { AuthenticatedSocket } from '../messagerie/interfaces/messaging.interfaces';
@@ -33,6 +33,17 @@ import {
   CallInitiateDto, CallAcceptDto, CallRejectDto, CallEndDto, CallBusyDto,
   CallOfferDto, CallAnswerDto, CallIceCandidateDto,
 } from './dto/call-socket.dto';
+import { SocketFloodGuard } from '../messagerie/utils/socket-flood-guard';
+import { WsValidationExceptionFilter } from '../messagerie/filters/ws-validation.filter';
+
+/* offer+answer+ice-candidate combinés, par CONNEXION (socket.id, pas
+ * userId — un flood ne doit pénaliser que la connexion fautive, pas les
+ * autres appareils du même utilisateur). 100 messages/10s est très au-
+ * dessus de ce qu'une négociation ICE légitime produit (quelques dizaines
+ * de candidats au grand maximum, même avec TURN + plusieurs interfaces
+ * réseau) — ne bloque jamais un appel réel, seulement un flood soutenu. */
+const SIGNAL_FLOOD_MAX      = 100;
+const SIGNAL_FLOOD_WINDOW_MS = 10_000;
 
 /* Même configuration que le ValidationPipe global de main.ts (HTTP) — le
  * pipe global ne s'applique PAS aux @MessageBody() des gateways, il faut
@@ -44,6 +55,7 @@ import {
   transform:            true,
   forbidNonWhitelisted: true,
 }))
+@UseFilters(WsValidationExceptionFilter)
 @WebSocketGateway({
   namespace: '/messaging',
   cors: { origin: true, credentials: true },
@@ -54,6 +66,7 @@ export class CallGateway implements OnGatewayDisconnect {
   private readonly server: Server;
 
   private readonly logger = new Logger(CallGateway.name);
+  private readonly floodGuard = new SocketFloodGuard();
 
   constructor(private readonly callService: CallService) {}
 
@@ -217,12 +230,20 @@ export class CallGateway implements OnGatewayDisconnect {
     return true;
   }
 
+  /** true si CETTE connexion n'a pas dépassé le débit de signalisation autorisé. */
+  private checkSignalFlood(socket: AuthenticatedSocket): boolean {
+    if (this.floodGuard.allow('signal', socket.id, SIGNAL_FLOOD_MAX, SIGNAL_FLOOD_WINDOW_MS)) return true;
+    this.logger.warn(`⛔ Flood de signalisation détecté — socket=${socket.id} user=${socket.data?.userId}`);
+    return false;
+  }
+
   /** Offer SDP (appelant → appelé). */
   @SubscribeMessage('call:offer')
   async handleCallOffer(
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: CallOfferDto,
   ): Promise<void> {
+    if (!this.checkSignalFlood(socket)) return;
     const fromUserId = socket.data.userId;
     if (!(await this.assertActiveCallBetween(fromUserId, body?.targetUserId))) return;
 
@@ -241,6 +262,7 @@ export class CallGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: CallAnswerDto,
   ): Promise<void> {
+    if (!this.checkSignalFlood(socket)) return;
     const fromUserId = socket.data.userId;
     if (!(await this.assertActiveCallBetween(fromUserId, body?.targetUserId))) return;
 
@@ -259,6 +281,7 @@ export class CallGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: CallIceCandidateDto,
   ): Promise<void> {
+    if (!this.checkSignalFlood(socket)) return;
     const fromUserId = socket.data.userId;
     if (!(await this.assertActiveCallBetween(fromUserId, body?.targetUserId))) return;
 

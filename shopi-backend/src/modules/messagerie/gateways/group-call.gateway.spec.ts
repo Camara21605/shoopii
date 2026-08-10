@@ -15,6 +15,9 @@
  *   ✅ leave — dernier participant → appel terminé + message sauvegardé
  *   ✅ decline — ajouté au set "declined", ne bloque pas les autres
  *   ✅ déconnexion — retire l'utilisateur de tous ses appels actifs
+ *   ✅ rate limiting Redis sur group_call:initiate (+ dégradation gracieuse
+ *      sur panne Redis — ne bloque jamais tous les appels de groupe)
+ *   ✅ flood-guard en mémoire sur la signalisation (offer/answer/ice_candidate)
  *
  * Comme le reste de la suite, tous les repos TypeORM sont mockés — pas de
  * connexion DB réelle. L'état des appels actifs (Map en mémoire) est
@@ -27,8 +30,11 @@ import { BroadcastService } from '../services/broadcast.service';
 import { CallType } from 'src/database/entities/call/call.entity';
 import type { AuthenticatedSocket } from '../interfaces/messaging.interfaces';
 
+let socketIdCounter = 0;
 function makeSocket(userId: string): AuthenticatedSocket & { emit: jest.Mock } {
-  return { data: { userId }, emit: jest.fn() } as unknown as AuthenticatedSocket & { emit: jest.Mock };
+  return {
+    id: `socket-${++socketIdCounter}`, data: { userId }, emit: jest.fn(),
+  } as unknown as AuthenticatedSocket & { emit: jest.Mock };
 }
 
 function makeMember(userId: string, displayName = 'Membre') {
@@ -46,6 +52,7 @@ describe('GroupCallGateway', () => {
   let groupRepo: ReturnType<typeof mockRepo>;
   let msgRepo: { save: jest.Mock; create: jest.Mock };
   let broadcast: { emitToUser: jest.Mock };
+  let redis: { incr: jest.Mock; expire: jest.Mock };
 
   beforeEach(() => {
     /* handleInitiate arme un setTimeout(30_000) réel pour la sonnerie —
@@ -57,11 +64,12 @@ describe('GroupCallGateway', () => {
     groupRepo  = mockRepo();
     msgRepo    = { save: jest.fn().mockResolvedValue({ id: 'msg-uuid', createdAt: new Date(), content: '{}' }), create: jest.fn(x => x) };
     broadcast  = { emitToUser: jest.fn() };
+    redis      = { incr: jest.fn().mockResolvedValue(1), expire: jest.fn().mockResolvedValue(1) };
 
     groupRepo.findOne.mockResolvedValue({ id: 'group-uuid', status: 'active', commandeNumero: 'CMD-1' });
 
     gateway = new GroupCallGateway(
-      memberRepo as any, groupRepo as any, msgRepo as any, broadcast as unknown as BroadcastService,
+      memberRepo as any, groupRepo as any, msgRepo as any, broadcast as unknown as BroadcastService, redis as any,
     );
   });
 
@@ -291,6 +299,93 @@ describe('GroupCallGateway', () => {
     it('utilisateur sans appel actif — aucune action', async () => {
       await gateway.handleDisconnect(makeSocket('personne-uuid'));
       expect(broadcast.emitToUser).not.toHaveBeenCalled();
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════
+  // Rate limiting — group_call:initiate (Redis)
+  // ════════════════════════════════════════════════════════════
+
+  describe('rate limiting group_call:initiate', () => {
+    it('bloque au-delà de 10 tentatives/60s — group_call:error RATE_LIMITED', async () => {
+      redis.incr.mockResolvedValue(11); // 11e tentative dans la fenêtre
+      const socket = makeSocket('flood-uuid');
+
+      await gateway.handleInitiate(socket, { groupId: 'group-uuid' });
+
+      expect(socket.emit).toHaveBeenCalledWith('group_call:error', expect.objectContaining({ code: 'RATE_LIMITED' }));
+      expect(memberRepo.findOne).not.toHaveBeenCalled(); // rejeté avant même de vérifier l'appartenance
+    });
+
+    it('panne Redis sur le rate-limit → autorisé par défaut (dégradation gracieuse)', async () => {
+      redis.incr.mockRejectedValue(new Error('ECONNREFUSED'));
+      memberRepo.findOne.mockResolvedValue(makeMember('user-uuid'));
+      memberRepo.find.mockResolvedValue([makeMember('user-uuid')]);
+      const socket = makeSocket('user-uuid');
+
+      await gateway.handleInitiate(socket, { groupId: 'group-uuid' });
+
+      expect(socket.emit).toHaveBeenCalledWith('group_call:joined', expect.anything());
+      expect(socket.emit).not.toHaveBeenCalledWith('group_call:error', expect.objectContaining({ code: 'RATE_LIMITED' }));
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════
+  // Flood-guard — signalisation (offer/answer/ice_candidate)
+  // ════════════════════════════════════════════════════════════
+
+  describe('flood-guard signalisation', () => {
+    async function startAndJoin(initiatorId: string, joinerId: string) {
+      memberRepo.findOne.mockResolvedValue(makeMember(initiatorId));
+      memberRepo.find.mockResolvedValue([makeMember(initiatorId), makeMember(joinerId)]);
+      const initSocket = makeSocket(initiatorId);
+      await gateway.handleInitiate(initSocket, { groupId: 'group-uuid' });
+      const callId = (initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')?.[1] as any).callId;
+
+      memberRepo.findOne.mockResolvedValue(makeMember(joinerId));
+      await gateway.handleJoin(makeSocket(joinerId), { groupId: 'group-uuid', callId });
+      broadcast.emitToUser.mockClear();
+      return callId as string;
+    }
+
+    it('un flood soutenu d\'ice_candidate depuis UNE connexion finit par être ignoré silencieusement', async () => {
+      const callId = await startAndJoin('a-uuid', 'b-uuid');
+      memberRepo.findOne.mockResolvedValue(makeMember('a-uuid'));
+      const socket = makeSocket('a-uuid');
+
+      // Seuil = 200/10s pour le groupe — on en envoie 205 depuis LA MÊME connexion.
+      for (let i = 0; i < 205; i++) {
+        await gateway.handleIceCandidate(socket, {
+          groupId: 'group-uuid', callId, targetUserId: 'b-uuid',
+          candidate: { candidate: `candidate:${i} 1 UDP 1 1.1.1.1 1 typ host` },
+        });
+      }
+
+      // Les 200 premiers relayés, les suivants silencieusement ignorés.
+      expect(broadcast.emitToUser).toHaveBeenCalledTimes(200);
+    });
+
+    it('un flood sur une connexion ne pénalise pas une AUTRE connexion du même appel', async () => {
+      const callId = await startAndJoin('a-uuid', 'b-uuid');
+      const socketA = makeSocket('a-uuid');
+      const socketB = makeSocket('b-uuid');
+
+      memberRepo.findOne.mockResolvedValue(makeMember('a-uuid'));
+      for (let i = 0; i < 205; i++) {
+        await gateway.handleIceCandidate(socketA, {
+          groupId: 'group-uuid', callId, targetUserId: 'b-uuid',
+          candidate: { candidate: `candidate:${i} 1 UDP 1 1.1.1.1 1 typ host` },
+        });
+      }
+      broadcast.emitToUser.mockClear();
+
+      memberRepo.findOne.mockResolvedValue(makeMember('b-uuid'));
+      await gateway.handleIceCandidate(socketB, {
+        groupId: 'group-uuid', callId, targetUserId: 'a-uuid',
+        candidate: { candidate: 'candidate:1 1 UDP 1 1.1.1.1 1 typ host' },
+      });
+
+      expect(broadcast.emitToUser).toHaveBeenCalledWith('a-uuid', 'group_call:ice_candidate', expect.anything());
     });
   });
 });

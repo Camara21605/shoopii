@@ -10,7 +10,7 @@
 
 import { Type } from 'class-transformer';
 import {
-  IsBoolean, IsEnum, IsIn, IsInt, IsOptional, IsString, IsUUID, MaxLength, ValidateNested,
+  IsBoolean, IsDefined, IsEnum, IsIn, IsInt, IsOptional, IsString, IsUUID, MaxLength, ValidateNested,
 } from 'class-validator';
 import { CallType } from 'src/database/entities/call/call.entity';
 
@@ -72,6 +72,7 @@ export class GroupCallOfferDto {
   @IsUUID()
   targetUserId: string;
 
+  @IsDefined()
   @ValidateNested()
   @Type(() => GroupSdpDto)
   sdp: GroupSdpDto;
@@ -87,6 +88,7 @@ export class GroupCallAnswerDto {
   @IsUUID()
   targetUserId: string;
 
+  @IsDefined()
   @ValidateNested()
   @Type(() => GroupSdpDto)
   sdp: GroupSdpDto;
@@ -102,6 +104,7 @@ export class GroupCallIceCandidateDto {
   @IsUUID()
   targetUserId: string;
 
+  @IsDefined()
   @ValidateNested()
   @Type(() => GroupIceCandidateDto)
   candidate: GroupIceCandidateDto;

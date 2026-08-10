@@ -47,9 +47,11 @@ import {
   SubscribeMessage, ConnectedSocket, MessageBody,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Logger, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Logger, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import type { Redis } from 'ioredis';
 import type { Server } from 'socket.io';
 import { v4 as uuid } from 'uuid';
 
@@ -59,10 +61,29 @@ import { GroupMessage, GroupMessageContentType } from 'src/database/entities/del
 import { CallType } from 'src/database/entities/call/call.entity';
 import { BroadcastService }    from '../services/broadcast.service';
 import type { AuthenticatedSocket } from '../interfaces/messaging.interfaces';
+import { SocketFloodGuard } from '../utils/socket-flood-guard';
+import { WsValidationExceptionFilter } from '../filters/ws-validation.filter';
 import {
   GroupCallInitiateDto, GroupCallRefDto, GroupCallOfferDto, GroupCallAnswerDto,
   GroupCallIceCandidateDto, GroupCallToggleMediaDto,
 } from '../dto/group-call-socket.dto';
+
+/* Signalisation (offer+answer+ice_candidate) — plafond plus généreux qu'en
+ * 1:1 : la topologie mesh amplifie naturellement le nombre de messages
+ * (chaque participant négocie avec chaque autre), donc un appel de groupe
+ * légitime à plusieurs participants produit mécaniquement plus de trafic
+ * qu'un appel 1:1 sans qu'il s'agisse d'un abus. */
+const SIGNAL_FLOOD_MAX       = 200;
+const SIGNAL_FLOOD_WINDOW_MS = 10_000;
+/** join/decline — actions qui déclenchent des requêtes DB (assertMember). */
+const MEMBERSHIP_FLOOD_MAX       = 20;
+const MEMBERSHIP_FLOOD_WINDOW_MS = 60_000;
+/** toggle_media — mute/unmute peut légitimement être assez fréquent. */
+const MEDIA_FLOOD_MAX       = 30;
+const MEDIA_FLOOD_WINDOW_MS = 10_000;
+/** group_call:initiate — miroir de CallService.checkRateLimit (1:1). */
+const INITIATE_RATE_MAX   = 10;
+const INITIATE_RATE_TTL_S = 60;
 
 // ── Types internes ────────────────────────────────────────────
 
@@ -97,6 +118,7 @@ interface ActiveGroupCall {
   transform:            true,
   forbidNonWhitelisted: true,
 }))
+@UseFilters(WsValidationExceptionFilter)
 @WebSocketGateway({
   namespace:  '/messaging',
   cors:       { origin: true, credentials: true },
@@ -111,6 +133,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
 
   /** groupId → appel actif */
   private readonly activeCalls = new Map<string, ActiveGroupCall>();
+  private readonly floodGuard  = new SocketFloodGuard();
 
   constructor(
     @InjectRepository(DeliveryGroupMember)
@@ -120,6 +143,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
     @InjectRepository(GroupMessage)
     private readonly msgRepo:     Repository<GroupMessage>,
     private readonly broadcast:   BroadcastService,
+    @InjectRedis() private readonly redis: Redis,
   ) {}
 
   // ── Helpers d'accès ──────────────────────────────────────────
@@ -141,6 +165,32 @@ export class GroupCallGateway implements OnGatewayDisconnect {
     if (!g || g.status === 'expired' || g.status === 'cancelled') {
       throw Object.assign(new Error('GROUP_INACTIVE'), { code: 'GROUP_INACTIVE' });
     }
+  }
+
+  /**
+   * Rate-limit Redis sur group_call:initiate — miroir de
+   * CallService.checkRateLimit (1:1) : même fenêtre, même dégradation
+   * gracieuse sur panne Redis (ne bloque jamais tous les appels de groupe
+   * parce que Redis est indisponible — on ne sait pas combien de
+   * tentatives ont eu lieu, donc on n'en bloque aucune).
+   */
+  private async checkInitiateRateLimit(userId: string): Promise<boolean> {
+    const key = `group_call:rate:${userId}`;
+    try {
+      const count = await this.redis.incr(key);
+      if (count === 1) await this.redis.expire(key, INITIATE_RATE_TTL_S);
+      return count <= INITIATE_RATE_MAX;
+    } catch (e) {
+      this.logger.warn(`[GroupCall] Redis indisponible pour le rate-limit de ${userId} — autorisé par défaut : ${(e as Error).message}`);
+      return true;
+    }
+  }
+
+  /** true si CETTE connexion n'a pas dépassé le débit autorisé pour ce type d'action. */
+  private checkFlood(bucket: string, socket: AuthenticatedSocket, max: number, windowMs: number): boolean {
+    if (this.floodGuard.allow(bucket, socket.id, max, windowMs)) return true;
+    this.logger.warn(`[GroupCall] Flood "${bucket}" détecté — socket=${socket.id} user=${socket.data?.userId}`);
+    return false;
   }
 
   /** Récupère tous les membres actifs du groupe. */
@@ -206,6 +256,13 @@ export class GroupCallGateway implements OnGatewayDisconnect {
   ): Promise<void> {
     const userId = this.uid(socket);
     try {
+      if (!(await this.checkInitiateRateLimit(userId))) {
+        socket.emit('group_call:error', {
+          code: 'RATE_LIMITED', message: 'Trop de tentatives d\'appel de groupe. Réessayez dans une minute.',
+        });
+        return;
+      }
+
       const member = await this.assertMember(payload.groupId, userId);
       await this.assertGroupActive(payload.groupId);
 
@@ -279,6 +336,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() payload: GroupCallRefDto,
   ): Promise<void> {
+    if (!this.checkFlood('membership', socket, MEMBERSHIP_FLOOD_MAX, MEMBERSHIP_FLOOD_WINDOW_MS)) return;
     const userId = this.uid(socket);
     try {
       const member = await this.assertMember(payload.groupId, userId);
@@ -332,6 +390,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() payload: GroupCallRefDto,
   ): Promise<void> {
+    if (!this.checkFlood('membership', socket, MEMBERSHIP_FLOOD_MAX, MEMBERSHIP_FLOOD_WINDOW_MS)) return;
     const userId = this.uid(socket);
     try {
       await this.assertMember(payload.groupId, userId);
@@ -365,6 +424,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() payload: GroupCallRefDto,
   ): Promise<void> {
+    if (!this.checkFlood('membership', socket, MEMBERSHIP_FLOOD_MAX, MEMBERSHIP_FLOOD_WINDOW_MS)) return;
     const userId = this.uid(socket);
     try {
       await this.assertMember(payload.groupId, userId);
@@ -390,6 +450,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() payload: GroupCallOfferDto,
   ): Promise<void> {
+    if (!this.checkFlood('signal', socket, SIGNAL_FLOOD_MAX, SIGNAL_FLOOD_WINDOW_MS)) return;
     const userId = this.uid(socket);
     try {
       await this.assertMember(payload.groupId, userId);
@@ -411,6 +472,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() payload: GroupCallAnswerDto,
   ): Promise<void> {
+    if (!this.checkFlood('signal', socket, SIGNAL_FLOOD_MAX, SIGNAL_FLOOD_WINDOW_MS)) return;
     const userId = this.uid(socket);
     try {
       await this.assertMember(payload.groupId, userId);
@@ -430,6 +492,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() payload: GroupCallIceCandidateDto,
   ): Promise<void> {
+    if (!this.checkFlood('signal', socket, SIGNAL_FLOOD_MAX, SIGNAL_FLOOD_WINDOW_MS)) return;
     const userId = this.uid(socket);
     try {
       await this.assertMember(payload.groupId, userId);
@@ -451,6 +514,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() payload: GroupCallToggleMediaDto,
   ): Promise<void> {
+    if (!this.checkFlood('media', socket, MEDIA_FLOOD_MAX, MEDIA_FLOOD_WINDOW_MS)) return;
     const userId = this.uid(socket);
     try {
       await this.assertMember(payload.groupId, userId);
