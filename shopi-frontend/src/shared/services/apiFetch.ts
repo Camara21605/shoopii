@@ -180,9 +180,23 @@ export async function apiFetch<T = unknown>(
     headers['Content-Type'] = 'application/json';
   }
 
-  /* Pas d'Authorization: Bearer — auth via cookie httpOnly uniquement.
-   * Le cookie access_token est envoyé automatiquement grâce à credentials:'include'. */
+  /* Cookie httpOnly access_token en priorité (XSS-proof, voir JwtStrategy).
+   * EN PLUS : Authorization: Bearer <token> depuis localStorage, en filet de
+   * secours — indispensable en prod où frontend (Vercel) et backend (Render)
+   * sont sur des domaines différents. Un nombre croissant de navigateurs
+   * (Safari ITP, Firefox ETP, migration 3rd-party cookies de Chrome)
+   * bloquent/partitionnent les cookies cross-site même avec
+   * credentials:'include' correctement posé — le cookie n'arrive alors
+   * simplement jamais côté serveur, qui répond 401 sur TOUT, y compris
+   * GET /calls/ice-servers (fetchIceServers() retombe alors silencieusement
+   * sur STUN seul → échec des appels derrière un NAT strict, en apparence
+   * aléatoire selon le navigateur). JwtStrategy accepte déjà ce fallback
+   * nativement (ExtractJwt.fromAuthHeaderAsBearerToken()) — il suffisait de
+   * l'envoyer. Le token localStorage n'expose rien de plus qu'avant : il y
+   * était déjà stocké, seule sa transmission en en-tête est nouvelle ici. */
   void isPublic; // gardé pour compatibilité API mais sans effet sur les headers
+  const bearerToken = tokenStorage.get();
+  if (bearerToken) headers['Authorization'] = `Bearer ${bearerToken}`;
 
   /* CSRF — uniquement sur les méthodes mutantes, le backend ignore
    * l'en-tête pour les GET/HEAD/OPTIONS de toute façon. */
