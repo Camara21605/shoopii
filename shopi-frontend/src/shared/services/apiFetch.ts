@@ -118,6 +118,29 @@ let _refreshDeadUntil = 0;
 const REFRESH_COOLDOWN_MS = 30_000;
 
 /**
+ * Tant qu'on est dans cette fenêtre après un refresh RÉUSSI, on considère
+ * le token forcément encore frais et on n'en relance surtout pas un autre.
+ *
+ * POURQUOI (bug constaté en prod) : la coalescence via `_refreshPromise`
+ * ci-dessus ne protège que les appels VRAIMENT concurrents (dans la même
+ * fenêtre de promesse). Une rafale de 401 quasi-simultanés au chargement
+ * de page (plusieurs requêtes REST en parallèle, chacune avec sa propre
+ * latence réseau) fait que le 2e 401 arrive parfois juste APRÈS que le
+ * 1er refresh ait déjà fini et remis `_refreshPromise` à null — il
+ * déclenche alors SON PROPRE appel /auth/refresh, séparé. Or /auth/refresh
+ * fait une rotation à usage unique du refresh token (voir
+ * auth.controller.ts) : ce 2e appel retente avec un refresh_token déjà
+ * consommé par le 1er → détecté comme rejeu → révocation GLOBALE de la
+ * session côté serveur. Conséquence observée : jusqu'à 10 appels
+ * /auth/refresh en rafale, puis 401 permanent dessus (session révoquée),
+ * déconnexions Socket.IO en boucle ("io server disconnect") — un appel
+ * 1:1, qui a besoin d'une connexion stable le temps de la négociation
+ * WebRTC, ne pouvait plus jamais aboutir.
+ */
+let _lastRefreshSuccessAt = 0;
+const REFRESH_SUCCESS_GRACE_MS = 5_000;
+
+/**
  * Exporté pour useSocket.ts : le socket Socket.IO n'appelle jamais aucune
  * route REST, donc il ne bénéficie jamais du silent refresh automatique
  * déclenché par un 401 ci-dessous. Quand le serveur rejette la connexion
@@ -126,6 +149,7 @@ const REFRESH_COOLDOWN_MS = 30_000;
  */
 export function silentRefresh(): Promise<boolean> {
   if (Date.now() < _refreshDeadUntil) return Promise.resolve(false);
+  if (Date.now() - _lastRefreshSuccessAt < REFRESH_SUCCESS_GRACE_MS) return Promise.resolve(true);
 
   if (!_refreshPromise) {
     const csrfToken = getCsrfToken();
@@ -147,6 +171,7 @@ export function silentRefresh(): Promise<boolean> {
           const data = await r.json() as { accessToken?: string };
           if (data.accessToken) tokenStorage.set(data.accessToken);
         } catch { /* réponse sans corps JSON exploitable — cookie déjà à jour, on continue */ }
+        _lastRefreshSuccessAt = Date.now();
         return true;
       })
       .catch(() => { _refreshDeadUntil = Date.now() + REFRESH_COOLDOWN_MS; return false; })
