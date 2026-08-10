@@ -49,29 +49,14 @@ async function bootstrap() {
    * un en-tête X-Forwarded-For arbitraire plus loin dans la chaîne. */
   app.set('trust proxy', 1);
 
-  /* ── Cookie parser (lecture de req.cookies pour JwtStrategy) ── */
-  app.use(cookieParser());
-
-  /* ── CSRF (double-submit cookie) — défense en profondeur ──────
-   * Doit être APRÈS cookieParser (a besoin de req.cookies) et AVANT
-   * les routes. Voir csrf.middleware.ts pour le détail du modèle
-   * de risque et pourquoi c'est nécessaire malgré sameSite. */
-  app.use(csrfProtection(process.env.NODE_ENV === 'production'));
-
-  /* ── Validation globale des DTO ─────────────────────────────── */
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist:            true,
-      transform:            true,
-      forbidNonWhitelisted: true,
-      transformOptions:     { enableImplicitConversion: true },
-    }),
-  );
-
-  /* ── WebSocket ─────────────────────────────────────────────── */
-  app.useWebSocketAdapter(new IoAdapter(app));
-
-  /* ── CORS ──────────────────────────────────────────────────── */
+  /* ── CORS ──────────────────────────────────────────────────────
+   * DOIT être enregistré AVANT tout middleware capable de court-
+   * circuiter la requête (csrfProtection notamment). Un middleware
+   * Express répond dans l'ordre d'enregistrement : si csrfProtection
+   * rejette une requête (403) AVANT que le middleware CORS n'ait eu
+   * la main, la réponse part sans en-tête Access-Control-Allow-Origin
+   * — le navigateur masque alors le vrai 403 derrière une erreur CORS
+   * généraliste, impossible à diagnostiquer côté frontend. */
   const rawFrontend = process.env.FRONTEND_URL ?? '';
   const prodOrigins = rawFrontend.split(',').map(s => s.trim()).filter(Boolean);
   const isProd      = process.env.NODE_ENV === 'production';
@@ -96,6 +81,28 @@ async function bootstrap() {
     methods:        ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token'],
   });
+
+  /* ── Cookie parser (lecture de req.cookies pour JwtStrategy) ── */
+  app.use(cookieParser());
+
+  /* ── CSRF (double-submit cookie) — défense en profondeur ──────
+   * Doit être APRÈS cookieParser (a besoin de req.cookies) et AVANT
+   * les routes. Voir csrf.middleware.ts pour le détail du modèle
+   * de risque et pourquoi c'est nécessaire malgré sameSite. */
+  app.use(csrfProtection(isProd));
+
+  /* ── Validation globale des DTO ─────────────────────────────── */
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist:            true,
+      transform:            true,
+      forbidNonWhitelisted: true,
+      transformOptions:     { enableImplicitConversion: true },
+    }),
+  );
+
+  /* ── WebSocket ─────────────────────────────────────────────── */
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   /* ── Préfixe global ─────────────────────────────────────────── */
   app.setGlobalPrefix('api');
