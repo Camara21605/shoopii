@@ -540,4 +540,44 @@ describe('AccountLinkService', () => {
       expect(authService.issueTokensForUser).toHaveBeenCalled();
     });
   });
+
+  // ════════════════════════════════════════════════════════════
+  // unlinkAccount
+  // ════════════════════════════════════════════════════════════
+
+  describe('unlinkAccount', () => {
+    it('refuse si aucun lien actif pour ce compte', async () => {
+      linkRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.unlinkAccount('user-uuid'))
+        .rejects.toThrow(BadRequestException);
+      expect(linkRepo.update).not.toHaveBeenCalled();
+    });
+
+    it('marque le lien REVOKED (jamais de suppression) qu\'il soit appelé côté pro ou côté client', async () => {
+      linkRepo.findOne.mockResolvedValue(makeLink({ id: 'link-uuid', proUserId: 'pro-uuid', clientUserId: 'client-uuid' }));
+
+      const result = await service.unlinkAccount('pro-uuid');
+
+      expect(linkRepo.update).toHaveBeenCalledWith('link-uuid', expect.objectContaining({
+        status: AccountLinkStatus.REVOKED, revokedAt: expect.any(Date),
+      }));
+      // Aucune action sur les repos user/client/wallet — pas de cascade sur l'autre compte.
+      expect(userRepo.update).not.toHaveBeenCalled();
+      expect(authService.logEvent).toHaveBeenCalledWith('account_unlink', expect.objectContaining({
+        userId: 'pro-uuid', success: true, failureReason: 'link=link-uuid',
+      }));
+      expect(result.message).toContain('délié');
+    });
+
+    it('délie aussi bien appelé depuis le compte CLIENT que depuis le compte pro', async () => {
+      linkRepo.findOne.mockResolvedValue(makeLink({ id: 'link-uuid', proUserId: 'pro-uuid', clientUserId: 'client-uuid' }));
+
+      await service.unlinkAccount('client-uuid');
+
+      expect(linkRepo.update).toHaveBeenCalledWith('link-uuid', expect.objectContaining({
+        status: AccountLinkStatus.REVOKED,
+      }));
+    });
+  });
 });

@@ -23,6 +23,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -637,6 +638,24 @@ export class AuthController {
     setAuthCookies(res, this.isProd, result.accessToken, 60 * 60 * 1000, result.refreshToken, result.refreshTtlMs);
     const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
     return publicResult;
+  }
+
+  // ── DELETE /auth/account-link ─────────────────────────────────────────────
+
+  @Delete('account-link')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Délier le compte lié ("Mon espace")',
+    description:
+      'Marque le lien pro↔client "revoked" — jamais de suppression/désactivation ' +
+      "en cascade de l'autre compte, les deux restent utilisables indépendamment.",
+  })
+  @ApiResponse({ status: 200, description: 'Compte délié.' })
+  @ApiResponse({ status: 400, description: 'Aucun compte lié.' })
+  async unlinkAccount(@CurrentUser() user: User): Promise<{ message: string }> {
+    return this.accountLinkService.unlinkAccount(user.id);
   }
 
   // ── GET /auth/me ──────────────────────────────────────────────────────────

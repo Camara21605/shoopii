@@ -376,4 +376,31 @@ export class AccountLinkService {
     this.logger.log(`[MON ESPACE 🔀 switch] ${currentUserId} → ${targetUserId}`);
     return this.authService.issueTokensForUser(target, false, null, null);
   }
+
+  // ── DELETE /auth/account-link ──────────────────────────────────
+
+  /**
+   * Délie le compte connecté (pro OU client) de son compte lié — marque
+   * le lien `revoked`, JAMAIS de suppression/désactivation en cascade de
+   * l'autre compte (voir l'en-tête du fichier : ce n'est qu'un pointeur
+   * d'identité, pas une fusion). Les deux comptes restent utilisables
+   * indépendamment ensuite, chacun avec son propre mot de passe.
+   */
+  async unlinkAccount(currentUserId: string): Promise<{ message: string }> {
+    const link = await this.linkRepo.findOne({
+      where: [
+        { proUserId: currentUserId, status: AccountLinkStatus.ACTIVE },
+        { clientUserId: currentUserId, status: AccountLinkStatus.ACTIVE },
+      ],
+    });
+    if (!link) throw new BadRequestException('Aucun compte lié à délier.');
+
+    await this.linkRepo.update(link.id, { status: AccountLinkStatus.REVOKED, revokedAt: new Date() });
+
+    this.authService.logEvent('account_unlink', {
+      userId: currentUserId, success: true, failureReason: `link=${link.id}`,
+    });
+    this.logger.log(`[MON ESPACE 🔓 déliaison] ${currentUserId} (lien ${link.id})`);
+    return { message: 'Compte délié avec succès. Vos deux comptes restent actifs indépendamment.' };
+  }
 }
