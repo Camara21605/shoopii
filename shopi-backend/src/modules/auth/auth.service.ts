@@ -50,12 +50,14 @@ import { RegisterDto }          from './dto/register.dto';
 import { LoginDto }             from './dto/login.dto';
 import { ForgotPasswordDto }    from './dto/password.dto';
 import type { JwtPayload }      from './strategies/jwt.strategy';
+import { TwoFaService }         from './twofa/twofa.service';
 
 /* ── Constantes ── */
 const BCRYPT_ROUNDS         = 12;
 const JWT_TTL_ACCESS        = '1h';   // Access token court — refresh tokens prennent le relais
 const JWT_TTL_SUPER         = '4h';   // Super admin : TTL max 4h, pas de refresh token
 const JWT_TTL_RESET         = '15m';
+const JWT_TTL_TWOFA         = '5m';   // défi 2FA — court, une seule tentative de connexion
 const OAUTH_CODE_TTL_SEC    = 60;     // Code OAuth à usage unique, expire en 60s
 const MAX_FAILED_LOGINS     = 5;
 const LOCKOUT_MINUTES       = 30;
@@ -65,6 +67,9 @@ const OTP_RATE_LIMIT_WINDOW = 15;
 const OTP_RATE_LIMIT_MAX    = 3;
 const REFRESH_TTL_NORMAL_MS = 24 * 60 * 60 * 1000;       // 24h
 const REFRESH_TTL_LONG_MS   = 7  * 24 * 60 * 60 * 1000;  // 7j (rememberMe)
+/** Durée de grâce après un step-up 2FA réussi lors d'un switch "Mon espace" —
+ *  ne pas redemander le code à CHAQUE bascule pendant la même session. */
+const SWITCH_2FA_GRACE_S    = 15 * 60; // 15 min
 const MAX_REFRESH_TOKENS    = 5;  // Révoque les plus anciens au-delà de ce seuil
 
 /* Hash factice pour neutraliser les timing attacks sur login (user introuvable).
@@ -116,6 +121,24 @@ export interface OtpVerifyResponse {
   resetToken: string;
 }
 
+/** Retourné par login() à la place d'AuthServiceResult quand le compte a la 2FA active. */
+export interface TwoFaChallengeResult {
+  requiresTwoFa:  true;
+  challengeToken: string;
+}
+
+/**
+ * Retourné par login() quand l'identifiant + mot de passe saisis correspondent
+ * à PLUSIEURS comptes à la fois (cas rare : un pro et son compte client lié
+ * qui partagent, par coïncidence, le même mot de passe). Le frontend doit
+ * représenter à l'utilisateur pour choisir, puis rappeler
+ * POST /auth/login/choose-account avec le userId choisi.
+ */
+export interface AccountChoiceResult {
+  requiresAccountChoice: true;
+  accounts: { userId: string; role: UserRole }[];
+}
+
 @Injectable()
 export class AuthService implements OnModuleInit {
 
@@ -161,6 +184,7 @@ export class AuthService implements OnModuleInit {
     private readonly dataSource:          DataSource,
     private readonly codeCreationService: CodeCreationService,
     private readonly mailService:         MailService,
+    private readonly twoFaService:        TwoFaService,
 
     @InjectRedis()
     private readonly redis: Redis,
@@ -251,13 +275,16 @@ export class AuthService implements OnModuleInit {
       throw new ForbiddenException(`Le rôle "${dto.role}" ne peut pas être créé via l'inscription.`);
     }
 
-    // Vérifier unicité email
-    /* withDeleted: true → inclut les comptes soft-deleted.
+    // Vérifier unicité email — SCOPÉE PAR RÔLE (UNIQUE(email, role) en base).
+    /* Un même email peut désormais correspondre à un compte pro ET un compte
+     * client (comptes liés "Mon espace") : ne bloquer que si CE rôle précis
+     * est déjà pris pour cet email, pas n'importe quel rôle.
+     * withDeleted: true → inclut les comptes soft-deleted.
        Sans ça, TypeORM ignore les lignes avec deletedAt IS NOT NULL,
        mais la contrainte UNIQUE en base s'applique à TOUTES les lignes
        → INSERT échoue avec QueryFailedError au lieu de ConflictException. */
     const emailExists = await this.userRepo.findOne({
-      where: { email: dto.email },
+      where: { email: dto.email, role: dto.role as UserRole },
       withDeleted: true,
     });
     if (emailExists) {
@@ -532,21 +559,121 @@ export class AuthService implements OnModuleInit {
     dto:       LoginDto,
     clientIp:  string,
     userAgent: string | null = null,
-  ): Promise<AuthServiceResult> {
+  ): Promise<AuthServiceResult | TwoFaChallengeResult | AccountChoiceResult> {
     const INVALID_MSG = 'Identifiants incorrects. Vérifiez votre email et mot de passe.';
-    const user = await this.findByIdentifier(dto.identifier);
+    const candidates = await this.findAllByIdentifier(dto.identifier);
 
-    /* FIX timing attack — on exécute TOUJOURS bcrypt, que l'utilisateur existe ou non.
-     * Sans ça, un attaquant mesure la différence de temps pour énumérer les emails. */
-    if (!user) {
-      await bcrypt.compare(dto.password, DUMMY_HASH);
+    const matched = await this.verifyPasswordAgainstCandidates(candidates, dto.password);
+
+    if (matched.length === 0) {
+      // Compteur d'échecs uniquement sur les comptes RÉELS (pas les slots factices).
+      await Promise.all(candidates.map(c => this.handleFailedLogin(c)));
       this.logEvent('login_failed', {
         email: dto.identifier, ipAddress: clientIp, userAgent, success: false,
-        failureReason: 'Utilisateur introuvable',
+        failureReason: candidates.length === 0 ? 'Utilisateur introuvable' : 'Mot de passe incorrect',
       });
       throw new UnauthorizedException(INVALID_MSG);
     }
 
+    if (matched.length === 1) {
+      return this.finishLogin(matched[0], dto.rememberMe ?? false, clientIp, userAgent);
+    }
+
+    /* Les comptes liés (pro + client, même email/téléphone) partagent, par
+     * coïncidence, le même mot de passe — impossible de savoir lequel est
+     * visé, on demande explicitement. */
+    this.logEvent('login_account_choice', {
+      email: dto.identifier, ipAddress: clientIp, userAgent, success: true,
+    });
+    return {
+      requiresAccountChoice: true,
+      accounts: matched.map(u => ({ userId: u.id, role: u.role })),
+    };
+  }
+
+  /**
+   * Teste `password` contre chaque candidat et renvoie ceux qui correspondent.
+   *
+   * FIX timing attack (comptes liés) : le nombre de comparaisons bcrypt
+   * exécutées ne doit JAMAIS dépendre du nombre de comptes réels trouvés —
+   * sinon un attaquant mesure le temps de réponse (bcrypt ≈150-300ms/appel)
+   * pour déduire si un email a 0, 1 ou 2 comptes liés, avant même de
+   * connaître le bon mot de passe. On complète donc TOUJOURS à exactement 2
+   * emplacements (2 = maximum réel possible : UNIQ_user_email_role limite à
+   * un compte par rôle, et seul le couple pro+client partage un identifiant)
+   * avec un hachage factice si besoin, et on exécute les comparaisons EN
+   * PARALLÈLE (Promise.all) pour que le temps total reste borné par UNE
+   * comparaison bcrypt, pas par leur somme.
+   */
+  private async verifyPasswordAgainstCandidates(candidates: User[], password: string): Promise<User[]> {
+    const slots: (User | null)[] = [...candidates];
+    while (slots.length < 2) slots.push(null);
+
+    const results = await Promise.all(slots.map(async (candidate) => {
+      if (!candidate) {
+        await bcrypt.compare(password, DUMMY_HASH);
+        return null;
+      }
+      const withPwd = await this.userRepo
+        .createQueryBuilder('u')
+        .select(['u.id', 'u.password'])
+        .where('u.id = :id', { id: candidate.id })
+        .getOne();
+      const valid = await bcrypt.compare(password, withPwd!.password);
+      return valid ? candidate : null;
+    }));
+
+    return results.filter((c): c is User => c !== null);
+  }
+
+  /** POST /auth/login/choose-account — termine la connexion quand plusieurs comptes liés matchaient. */
+  async loginChooseAccount(
+    identifier: string,
+    password:   string,
+    userId:     string,
+    rememberMe: boolean,
+    clientIp:   string,
+    userAgent:  string | null,
+  ): Promise<AuthServiceResult | TwoFaChallengeResult> {
+    const INVALID_MSG = 'Identifiants incorrects. Vérifiez votre email et mot de passe.';
+    /* On ne fait JAMAIS confiance au userId envoyé par le client seul — il doit
+     * être l'un des candidats réels pour cet identifiant, mot de passe revérifié.
+     * Pas de protection anti-timing nécessaire ici : les comptes candidats sont
+     * déjà connus de l'appelant (révélés dans la réponse requiresAccountChoice
+     * du 1er appel), un seul bcrypt.compare ne fuit donc rien de nouveau. */
+    const candidates = await this.findAllByIdentifier(identifier);
+    const chosen = candidates.find(c => c.id === userId);
+    if (!chosen) throw new UnauthorizedException(INVALID_MSG);
+
+    const withPwd = await this.userRepo
+      .createQueryBuilder('u')
+      .select(['u.id', 'u.password'])
+      .where('u.id = :id', { id: chosen.id })
+      .getOne();
+    const passwordValid = await bcrypt.compare(password, withPwd!.password);
+    if (!passwordValid) {
+      await this.handleFailedLogin(chosen);
+      this.logEvent('login_failed', {
+        userId: chosen.id, email: chosen.email, role: chosen.role,
+        ipAddress: clientIp, userAgent, success: false, failureReason: 'Mot de passe incorrect (choix de compte)',
+      });
+      throw new UnauthorizedException(INVALID_MSG);
+    }
+
+    return this.finishLogin(chosen, rememberMe, clientIp, userAgent);
+  }
+
+  /**
+   * Termine la connexion pour un compte dont le mot de passe est DÉJÀ
+   * vérifié : statut/verrouillage, défi 2FA, puis émission des tokens.
+   * Partagé entre login() (match unique) et loginChooseAccount().
+   */
+  private async finishLogin(
+    user:       User,
+    rememberMe: boolean,
+    clientIp:   string,
+    userAgent:  string | null,
+  ): Promise<AuthServiceResult | TwoFaChallengeResult> {
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       const min = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60_000);
       this.logEvent('login_locked', {
@@ -571,22 +698,6 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException("Votre compte est suspendu. Contactez l'administrateur.");
     }
 
-    const userWithPwd = await this.userRepo
-      .createQueryBuilder('u')
-      .select(['u.id', 'u.password', 'u.failedLoginAttempts'])
-      .where('u.id = :id', { id: user.id })
-      .getOne();
-
-    const passwordValid = await bcrypt.compare(dto.password, userWithPwd!.password);
-    if (!passwordValid) {
-      await this.handleFailedLogin(user);
-      this.logEvent('login_failed', {
-        userId: user.id, email: user.email, role: user.role,
-        ipAddress: clientIp, userAgent, success: false, failureReason: 'Mot de passe incorrect',
-      });
-      throw new UnauthorizedException(INVALID_MSG);
-    }
-
     await this.userRepo.update(user.id, {
       failedLoginAttempts: 0,
       lockedUntil:         null,
@@ -594,18 +705,21 @@ export class AuthService implements OnModuleInit {
       lastLoginIp:         clientIp,
     });
 
-    const actorId    = await this.findProfileId(user.id, user.role as UserRole);
-    const accessToken = this.signJwt(user, false, actorId);
-
-    /* SUPER_ADMIN n'a pas de refresh token — il doit se reconnecter manuellement après 4h */
-    let refreshToken: string | null = null;
-    let refreshTtlMs = 0;
-    if (user.role !== UserRole.SUPER_ADMIN) {
-      const ttlMs = dto.rememberMe ? REFRESH_TTL_LONG_MS : REFRESH_TTL_NORMAL_MS;
-      const expiresAt = new Date(Date.now() + ttlMs);
-      const { rawToken } = await this.issueRefreshToken(user.id, clientIp, userAgent, expiresAt);
-      refreshToken = rawToken;
-      refreshTtlMs = ttlMs;
+    /* ── Défi 2FA ────────────────────────────────────────────
+     * Le mot de passe est correct, mais le compte a la 2FA active :
+     * on n'émet PAS encore les tokens d'accès. On renvoie un
+     * challengeToken de courte durée (5 min) que le frontend doit
+     * échanger via POST /auth/2fa/verify-login avec le code TOTP. */
+    if (await this.twoFaService.isEnabled(user.role as UserRole, user.id)) {
+      const challengeToken = this.jwtService.sign(
+        { sub: user.id, purpose: '2fa-challenge' },
+        { expiresIn: JWT_TTL_TWOFA, secret: this.jwtResetSecret },
+      );
+      this.logEvent('login_2fa_challenge', {
+        userId: user.id, email: user.email, role: user.role,
+        ipAddress: clientIp, userAgent, success: true,
+      });
+      return { requiresTwoFa: true, challengeToken };
     }
 
     this.logEvent('login_success', {
@@ -613,6 +727,128 @@ export class AuthService implements OnModuleInit {
       ipAddress: clientIp, userAgent, success: true,
     });
     this.logger.log(`[LOGIN ✅] ${user.email} | ${user.role} | IP=${clientIp}`);
+
+    return this.issueTokensForUser(user, rememberMe, clientIp, userAgent);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 2bis. VÉRIFICATION DU DÉFI 2FA — POST /auth/2fa/verify-login
+  // ══════════════════════════════════════════════════════════════════════════
+
+  async verifyTwoFaLogin(
+    challengeToken: string,
+    code:           string,
+    clientIp:       string,
+    userAgent:      string | null = null,
+  ): Promise<AuthServiceResult> {
+    let payload: { sub: string; purpose: string; switchFrom?: string };
+    try {
+      payload = this.jwtService.verify(challengeToken, { secret: this.jwtResetSecret });
+    } catch {
+      throw new UnauthorizedException('Session de connexion expirée. Reconnectez-vous.');
+    }
+    if (payload.purpose !== '2fa-challenge') {
+      throw new ForbiddenException('Token invalide.');
+    }
+
+    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+    if (!user || user.status === UserStatus.BANNED || user.status === UserStatus.SUSPENDED) {
+      throw new UnauthorizedException('Compte inactif. Reconnectez-vous.');
+    }
+
+    const valid = await this.twoFaService.verifyLoginCode(user.role as UserRole, user.id, code);
+    if (!valid) {
+      this.logEvent('login_2fa_failed', {
+        userId: user.id, email: user.email, role: user.role,
+        ipAddress: clientIp, userAgent, success: false, failureReason: 'Code 2FA incorrect',
+      });
+      throw new UnauthorizedException('Code de vérification incorrect.');
+    }
+
+    await this.userRepo.update(user.id, { lastLoginAt: new Date(), lastLoginIp: clientIp });
+
+    /* Défi émis par AccountLinkService.switchAccount() (payload.switchFrom
+     * présent) plutôt que par un login classique : pose la grâce pour ne
+     * pas redemander le code à chaque bascule pendant SWITCH_2FA_GRACE_S. */
+    if (payload.switchFrom) {
+      await this.markSwitch2faVerified(payload.switchFrom, user.id);
+      this.logEvent('account_switch_2fa_verified', {
+        userId: user.id, email: user.email, role: user.role,
+        ipAddress: clientIp, userAgent, success: true,
+      });
+    } else {
+      this.logEvent('login_success', {
+        userId: user.id, email: user.email, role: user.role,
+        ipAddress: clientIp, userAgent, success: true,
+      });
+    }
+    this.logger.log(`[LOGIN 2FA ✅] ${user.email} | ${user.role} | IP=${clientIp}`);
+
+    /* rememberMe n'est pas connu à cette étape (pas transmis dans le défi) —
+     * session normale (24h) par défaut ; l'utilisateur peut se reconnecter
+     * avec "Se souvenir de moi" si besoin d'une session plus longue. */
+    return this.issueTokensForUser(user, false, clientIp, userAgent);
+  }
+
+  /**
+   * Émet un défi 2FA pour un switch "Mon espace" — même format et même
+   * endpoint de vérification (POST /auth/2fa/verify-login) qu'un défi de
+   * login classique, avec en plus `switchFrom` pour que verifyTwoFaLogin()
+   * sache poser la grâce une fois validé. Utilisé par AccountLinkService.
+   */
+  signSwitchTwoFaChallenge(targetUserId: string, switchFromUserId: string): string {
+    return this.jwtService.sign(
+      { sub: targetUserId, purpose: '2fa-challenge', switchFrom: switchFromUserId },
+      { expiresIn: JWT_TTL_TWOFA, secret: this.jwtResetSecret },
+    );
+  }
+
+  /** true si un step-up 2FA a déjà été validé pour CE couple (source→cible)
+   *  dans les SWITCH_2FA_GRACE_S dernières minutes — évite de redemander le
+   *  code à chaque bascule pendant la même session. */
+  async isSwitch2faGraced(sourceUserId: string, targetUserId: string): Promise<boolean> {
+    return (await this.redis.get(`switch2fa:${sourceUserId}:${targetUserId}`)) === '1';
+  }
+
+  private async markSwitch2faVerified(sourceUserId: string, targetUserId: string): Promise<void> {
+    await this.redis.set(`switch2fa:${sourceUserId}:${targetUserId}`, '1', 'EX', SWITCH_2FA_GRACE_S);
+  }
+
+  /**
+   * Vérifie un resetToken émis par verifyOtp() (preuve qu'un OTP envoyé sur
+   * l'email/téléphone d'un compte a été validé). Réutilisé par
+   * AccountLinkService comme preuve de possession pour lier un compte
+   * client PRÉEXISTANT — pas besoin de dupliquer l'infra OTP : "a prouvé
+   * qu'il contrôle la boîte mail/le téléphone de ce compte" est exactement
+   * la preuve recherchée, que ce soit pour réinitialiser un mot de passe
+   * ou pour lier un compte.
+   */
+  verifyResetToken(token: string): { sub: string; purpose: string; email: string } {
+    return this.jwtService.verify(token, { secret: this.jwtResetSecret });
+  }
+
+  /** Émet accessToken + (sauf SUPER_ADMIN) refreshToken pour un utilisateur déjà authentifié.
+   *  Non-private : réutilisé par AccountLinkService pour le switch pro↔client
+   *  (aucune réauthentification nécessaire, le lien fait déjà foi). */
+  async issueTokensForUser(
+    user:       User,
+    rememberMe: boolean,
+    clientIp:   string | null,
+    userAgent:  string | null,
+  ): Promise<AuthServiceResult> {
+    const actorId    = await this.findProfileId(user.id, user.role as UserRole);
+    const accessToken = this.signJwt(user, false, actorId);
+
+    /* SUPER_ADMIN n'a pas de refresh token — il doit se reconnecter manuellement après 4h */
+    let refreshToken: string | null = null;
+    let refreshTtlMs = 0;
+    if (user.role !== UserRole.SUPER_ADMIN) {
+      const ttlMs = rememberMe ? REFRESH_TTL_LONG_MS : REFRESH_TTL_NORMAL_MS;
+      const expiresAt = new Date(Date.now() + ttlMs);
+      const { rawToken } = await this.issueRefreshToken(user.id, clientIp, userAgent, expiresAt);
+      refreshToken = rawToken;
+      refreshTtlMs = ttlMs;
+    }
 
     return { accessToken, refreshToken, refreshTtlMs, user: this.toPublicUser(user) };
   }
@@ -626,18 +862,26 @@ export class AuthService implements OnModuleInit {
       'Si un compte actif correspond à cet identifiant, ' +
       'vous recevrez un code de vérification dans quelques minutes.';
 
-    const user = await this.findByIdentifier(dto.identifier);
+    /* Peut désormais renvoyer 2 comptes (pro + client lié, même email).
+     * Comme les deux partagent la même boîte mail, on génère UN SEUL code
+     * OTP et on le stocke sur les DEUX lignes actives — un seul email est
+     * envoyé, verifyOtp() décidera ensuite (via accountUserId) quel compte
+     * précis réinitialiser si les deux acceptent encore ce code. */
+    const candidates = (await this.findAllByIdentifier(dto.identifier))
+      .filter(u => u.status === UserStatus.ACTIVE);
 
-    if (user && user.status === UserStatus.ACTIVE) {
+    if (candidates.length > 0) {
+      const primary = candidates[0];
 
       // Rate limiting : max OTP_RATE_LIMIT_MAX demandes par OTP_RATE_LIMIT_WINDOW min
+      // (basé sur le 1er compte trouvé — les deux comptes liés sont demandés ensemble).
       const windowStart = new Date(Date.now() - OTP_RATE_LIMIT_WINDOW * 60_000);
       if (
-        user.resetOtpRequestedAt &&
-        user.resetOtpRequestedAt > windowStart &&
-        (user.resetOtpRequestCount ?? 0) >= OTP_RATE_LIMIT_MAX
+        primary.resetOtpRequestedAt &&
+        primary.resetOtpRequestedAt > windowStart &&
+        (primary.resetOtpRequestCount ?? 0) >= OTP_RATE_LIMIT_MAX
       ) {
-        this.logger.warn(`[OTP RATE LIMIT 🚨] ${user.email}`);
+        this.logger.warn(`[OTP RATE LIMIT 🚨] ${primary.email}`);
         return { message: GENERIC_MSG };
       }
 
@@ -647,36 +891,45 @@ export class AuthService implements OnModuleInit {
       const otpExpiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60_000);
 
       const newRequestCount =
-        user.resetOtpRequestedAt && user.resetOtpRequestedAt > windowStart
-          ? (user.resetOtpRequestCount ?? 0) + 1
+        primary.resetOtpRequestedAt && primary.resetOtpRequestedAt > windowStart
+          ? (primary.resetOtpRequestCount ?? 0) + 1
           : 1;
 
-      await this.userRepo.update(user.id, {
+      await Promise.all(candidates.map(u => this.userRepo.update(u.id, {
         resetOtpHash:         otpHash,
         resetOtpExpiry:       otpExpiry,
         resetOtpAttempts:     0,
         resetOtpRequestedAt:  new Date(),
         resetOtpRequestCount: newRequestCount,
-      });
+      })));
 
+      /* Fire-and-forget : la réponse HTTP (message générique anti-énumération)
+       * ne doit pas attendre le round-trip SMTP. En cas d'échec, l'erreur est
+       * logguée en détail ici — MailService.send() l'a déjà logguée une 1re
+       * fois avec code/responseCode/response avant de la relancer ; ce
+       * deuxième log confirme le contexte métier (quel OTP, pour qui). */
       this.mailService
         .sendPasswordResetOtpEmail({
-          toEmail:   user.email,
-          firstName: user.firstName,
+          toEmail:   primary.email,
+          firstName: primary.firstName,
           otpCode,
           expiresAt: otpExpiry,
         })
-        .catch(err =>
-          this.logger.error(`[OTP EMAIL ❌] ${user.email} | ${(err as Error).message}`),
+        .catch((err: any) =>
+          this.logger.error(
+            `[OTP EMAIL ❌] Échec d'envoi à ${primary.email} — `
+            + `code=${err?.code ?? 'N/A'} responseCode=${err?.responseCode ?? 'N/A'} `
+            + `message=${err?.message ?? err}`,
+          ),
         );
 
       this.logEvent('otp_sent', {
-        userId: user.id, email: user.email,
+        userId: primary.id, email: primary.email,
         ipAddress: clientIp, userAgent, success: true,
       });
 
       this.logger.log(
-        `[OTP ENVOYÉ] ${user.email} | Expiration=${otpExpiry.toISOString()} | Demandes=${newRequestCount}`,
+        `[OTP ENVOYÉ] ${primary.email} | Expiration=${otpExpiry.toISOString()} | Demandes=${newRequestCount} | Comptes=${candidates.length}`,
       );
     }
 
@@ -687,25 +940,61 @@ export class AuthService implements OnModuleInit {
   // 4. VÉRIFICATION OTP
   // ══════════════════════════════════════════════════════════════════════════
 
-  async verifyOtp(identifier: string, code: string): Promise<OtpVerifyResponse> {
+  async verifyOtp(
+    identifier:     string,
+    code:           string,
+    accountUserId?: string,
+  ): Promise<OtpVerifyResponse | AccountChoiceResult> {
     const INVALID_OTP = 'Code incorrect ou expiré. Vérifiez et réessayez.';
 
     // On doit récupérer resetOtpHash (select: false → query builder explicite)
-    const user = await this.userRepo
+    // getMany() : identifier n'est plus unique tous rôles confondus — un compte
+    // pro et son compte client lié peuvent tous deux matcher (forgotPassword()
+    // leur a écrit le MÊME hash OTP, voir plus haut).
+    const allMatches = await this.userRepo
       .createQueryBuilder('u')
       .select([
-        'u.id', 'u.email', 'u.firstName', 'u.status',
+        'u.id', 'u.email', 'u.role', 'u.firstName', 'u.status',
         'u.resetOtpHash', 'u.resetOtpExpiry', 'u.resetOtpAttempts',
       ])
       .where('u.email = :email', { email: identifier.toLowerCase().trim() })
       .orWhere('u.phone = :phone', { phone: identifier.replace(/\s/g, '') })
-      .getOne();
+      .getMany();
 
-    if (!user || user.status !== UserStatus.ACTIVE) {
+    /* Cible précise si l'appelant a déjà choisi (2e appel après un
+     * requiresAccountChoice), sinon le seul candidat s'il n'y en a qu'un. */
+    const user = accountUserId
+      ? allMatches.find(u => u.id === accountUserId)
+      : (allMatches.length === 1 ? allMatches[0] : undefined);
+
+    if ((!user && allMatches.length <= 1) || (user && user.status !== UserStatus.ACTIVE)) {
       this.logEvent('otp_failed', {
         email: identifier, success: false, failureReason: 'Utilisateur introuvable ou inactif',
       });
       throw new BadRequestException(INVALID_OTP);
+    }
+
+    /* Ambigu (comptes liés, pas encore de choix) : on valide le code contre
+     * le 1er candidat AVANT de révéler l'ambiguïté — les deux comptes liés
+     * partagent le même hash OTP (écrit par forgotPassword()), donc ce test
+     * est représentatif des deux ; on ne veut pas laisser deviner un code
+     * sans connaître l'identifiant exact. */
+    if (!user) {
+      const representative = allMatches[0];
+      const otpStillValid =
+        representative.resetOtpHash && representative.resetOtpExpiry
+        && representative.resetOtpExpiry > new Date()
+        && await bcrypt.compare(code.trim(), representative.resetOtpHash);
+      if (!otpStillValid) {
+        this.logEvent('otp_failed', {
+          email: identifier, success: false, failureReason: 'OTP invalide (comptes liés)',
+        });
+        throw new BadRequestException(INVALID_OTP);
+      }
+      return {
+        requiresAccountChoice: true,
+        accounts: allMatches.map(u => ({ userId: u.id, role: u.role })),
+      };
     }
 
     if (!user.resetOtpHash || !user.resetOtpExpiry || user.resetOtpExpiry < new Date()) {
@@ -756,10 +1045,13 @@ export class AuthService implements OnModuleInit {
       );
     }
 
-    // OTP valide → effacer
-    await this.userRepo.update(user.id, {
+    /* OTP valide → effacer sur TOUS les comptes liés à cet identifiant, pas
+     * seulement celui choisi : forgotPassword() a écrit le même hash sur
+     * chacun, un code déjà utilisé pour l'un ne doit plus être rejouable
+     * pour l'autre. */
+    await Promise.all(allMatches.map(u => this.userRepo.update(u.id, {
       resetOtpHash: null, resetOtpExpiry: null, resetOtpAttempts: 0,
-    });
+    })));
 
     // Générer resetToken JWT 15 min
     const resetToken = this.jwtService.sign(
@@ -911,15 +1203,29 @@ export class AuthService implements OnModuleInit {
     return code?.targetEmail ?? null;
   }
 
-  private async findByIdentifier(identifier: string): Promise<User | null> {
+  /**
+   * Renvoie TOUS les comptes correspondant à cet identifiant — email/téléphone
+   * ne sont plus uniques globalement (UNIQUE(email, role)) depuis l'ajout des
+   * comptes liés pro↔client : un même email peut désormais correspondre à
+   * DEUX lignes `users` (le compte pro et son compte client lié). En pratique
+   * jamais plus de 2 résultats (au plus un par rôle, et seul le couple
+   * pro+client partage un identifiant).
+   */
+  private async findAllByIdentifier(identifier: string): Promise<User[]> {
     const normalized = identifier.trim().toLowerCase();
     if (normalized.includes('@')) {
-      return this.userRepo.findOne({ where: { email: normalized } });
+      return this.userRepo.find({ where: { email: normalized } });
     }
-    return this.userRepo.findOne({ where: { phone: normalized.replace(/\s/g, '') } });
+    return this.userRepo.find({ where: { phone: normalized.replace(/\s/g, '') } });
   }
 
-  private async handleFailedLogin(user: User): Promise<void> {
+  /**
+   * Non-private : réutilisé par AccountLinkService.linkExistingClient() pour
+   * que le mot de passe testé contre un compte client CIBLE (preuve de
+   * possession) bénéficie du même verrouillage à 5 tentatives que le login
+   * normal — ce chemin ne passait auparavant par aucun compteur d'échec.
+   */
+  async handleFailedLogin(user: User): Promise<void> {
     const attempts = (user.failedLoginAttempts ?? 0) + 1;
     const updates: Partial<User> = { failedLoginAttempts: attempts };
     if (attempts >= MAX_FAILED_LOGINS) {
@@ -998,7 +1304,15 @@ export class AuthService implements OnModuleInit {
   }): Promise<string> {
     const email = googleUser.email.toLowerCase().trim();
 
-    let user = await this.userRepo.findOne({ where: { email } });
+    /* email n'est plus unique tous rôles confondus (comptes liés pro↔client).
+     * Google ne fournit qu'un email, pas de mot de passe pour désambiguïser
+     * comme en login classique — on privilégie le compte CLIENT (c'est
+     * l'identité par défaut pour l'OAuth grand public), sinon le premier
+     * trouvé. Un utilisateur avec un compte pro + client liés voulant
+     * spécifiquement se connecter en pro via Google devra utiliser le
+     * login classique ou le switch depuis "Mon espace". */
+    const matches = await this.userRepo.find({ where: { email } });
+    let user = matches.find(u => u.role === UserRole.CLIENT) ?? matches[0] ?? null;
 
     if (user) {
       if (user.status === UserStatus.BANNED)
@@ -1137,7 +1451,9 @@ export class AuthService implements OnModuleInit {
   // AUDIT LOG — journalisation des événements de sécurité (fire-and-forget)
   // ══════════════════════════════════════════════════════════════════════════
 
-  private logEvent(
+  /** Non-private : réutilisé par AccountLinkService pour journaliser les
+   *  switches "Mon espace" dans le même journal d'audit que le reste de l'auth. */
+  logEvent(
     event: string,
     data: {
       userId?:        string | null;
@@ -1267,7 +1583,9 @@ export class AuthService implements OnModuleInit {
     return { accessToken, refreshToken: newRawToken, refreshTtlMs, user: this.toPublicUser(user) };
   }
 
-  private async generateUniqueUsername(firstName: string, lastName: string): Promise<string> {
+  /** Non-private : réutilisé par AccountLinkService pour générer le username
+   *  du compte client créé depuis "Mon espace". */
+  async generateUniqueUsername(firstName: string, lastName: string): Promise<string> {
     const normalize = (s: string) =>
       s.toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
