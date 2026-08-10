@@ -59,6 +59,7 @@ import { DeliveryGroupMember } from 'src/database/entities/delivery-group/delive
 import { DeliveryGroup }       from 'src/database/entities/delivery-group/delivery-group.entity';
 import { GroupMessage, GroupMessageContentType } from 'src/database/entities/delivery-group/group-message.entity';
 import { CallType } from 'src/database/entities/call/call.entity';
+import { User, UserStatus } from 'src/database/entities/user.entity';
 import { BroadcastService }    from '../services/broadcast.service';
 import type { AuthenticatedSocket } from '../interfaces/messaging.interfaces';
 import { SocketFloodGuard } from '../utils/socket-flood-guard';
@@ -142,6 +143,8 @@ export class GroupCallGateway implements OnGatewayDisconnect {
     private readonly groupRepo:   Repository<DeliveryGroup>,
     @InjectRepository(GroupMessage)
     private readonly msgRepo:     Repository<GroupMessage>,
+    @InjectRepository(User)
+    private readonly userRepo:    Repository<User>,
     private readonly broadcast:   BroadcastService,
     @InjectRedis() private readonly redis: Redis,
   ) {}
@@ -152,10 +155,29 @@ export class GroupCallGateway implements OnGatewayDisconnect {
     return socket.data.userId;
   }
 
-  /** Vérifie l'appartenance active au groupe — lève une erreur si non-membre. */
+  /**
+   * Vérifie l'appartenance active au groupe ET que le compte est toujours
+   * ACTIVE — lève une erreur sinon.
+   *
+   * Le statut du compte (banni/suspendu) est indépendant de l'appartenance
+   * au groupe (DeliveryGroupMember.isActive) : un banni reste "membre actif"
+   * du groupe tant que personne ne l'en retire explicitement. Sans ce
+   * contrôle, un socket encore ouvert dans la fenêtre entre le bannissement
+   * (commit DB) et sa déconnexion forcée (BroadcastService.disconnectUser,
+   * asynchrone) pourrait continuer à rejoindre/signaler dans un appel de
+   * groupe — appelé sur CHAQUE action de groupe (join/leave/decline/offer/
+   * answer/ice/toggle_media), donc coût marginal nul : ce chemin fait déjà
+   * systématiquement un aller-retour DB pour le membership.
+   */
   private async assertMember(groupId: string, userId: string): Promise<DeliveryGroupMember> {
-    const m = await this.memberRepo.findOne({ where: { groupId, userId, isActive: true } });
+    const [m, user] = await Promise.all([
+      this.memberRepo.findOne({ where: { groupId, userId, isActive: true } }),
+      this.userRepo.findOne({ where: { id: userId }, select: ['id', 'status'] }),
+    ]);
     if (!m) throw Object.assign(new Error('NOT_MEMBER'), { code: 'NOT_MEMBER' });
+    if (!user || user.status === UserStatus.BANNED || user.status === UserStatus.SUSPENDED) {
+      throw Object.assign(new Error('ACCOUNT_DISABLED'), { code: 'ACCOUNT_DISABLED' });
+    }
     return m;
   }
 

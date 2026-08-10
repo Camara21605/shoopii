@@ -51,6 +51,7 @@ describe('GroupCallGateway', () => {
   let memberRepo: ReturnType<typeof mockRepo>;
   let groupRepo: ReturnType<typeof mockRepo>;
   let msgRepo: { save: jest.Mock; create: jest.Mock };
+  let userRepo: ReturnType<typeof mockRepo>;
   let broadcast: { emitToUser: jest.Mock };
   let redis: { incr: jest.Mock; expire: jest.Mock };
 
@@ -63,13 +64,17 @@ describe('GroupCallGateway', () => {
     memberRepo = mockRepo();
     groupRepo  = mockRepo();
     msgRepo    = { save: jest.fn().mockResolvedValue({ id: 'msg-uuid', createdAt: new Date(), content: '{}' }), create: jest.fn(x => x) };
+    userRepo   = mockRepo();
     broadcast  = { emitToUser: jest.fn() };
     redis      = { incr: jest.fn().mockResolvedValue(1), expire: jest.fn().mockResolvedValue(1) };
 
     groupRepo.findOne.mockResolvedValue({ id: 'group-uuid', status: 'active', commandeNumero: 'CMD-1' });
+    // Compte ACTIVE par défaut — la plupart des tests ne concernent pas le bannissement.
+    userRepo.findOne.mockResolvedValue({ id: 'user-uuid', status: 'active' });
 
     gateway = new GroupCallGateway(
-      memberRepo as any, groupRepo as any, msgRepo as any, broadcast as unknown as BroadcastService, redis as any,
+      memberRepo as any, groupRepo as any, msgRepo as any, userRepo as any,
+      broadcast as unknown as BroadcastService, redis as any,
     );
   });
 
@@ -102,6 +107,37 @@ describe('GroupCallGateway', () => {
       await gateway.handleInitiate(socket, { groupId: 'group-uuid' });
 
       expect(socket.emit).toHaveBeenCalledWith('group_call:error', expect.objectContaining({ code: 'GROUP_INACTIVE' }));
+    });
+
+    it('partie 4 — compte banni refusé (ACCOUNT_DISABLED), même si toujours membre actif du groupe', async () => {
+      memberRepo.findOne.mockResolvedValue(makeMember('banni-uuid'));
+      userRepo.findOne.mockResolvedValue({ id: 'banni-uuid', status: 'banned' });
+      const socket = makeSocket('banni-uuid');
+
+      await gateway.handleInitiate(socket, { groupId: 'group-uuid' });
+
+      expect(socket.emit).toHaveBeenCalledWith('group_call:error', expect.objectContaining({ code: 'ACCOUNT_DISABLED' }));
+      expect(broadcast.emitToUser).not.toHaveBeenCalled();
+    });
+
+    it('partie 4 — compte suspendu refusé (ACCOUNT_DISABLED)', async () => {
+      memberRepo.findOne.mockResolvedValue(makeMember('suspendu-uuid'));
+      userRepo.findOne.mockResolvedValue({ id: 'suspendu-uuid', status: 'suspended' });
+      const socket = makeSocket('suspendu-uuid');
+
+      await gateway.handleInitiate(socket, { groupId: 'group-uuid' });
+
+      expect(socket.emit).toHaveBeenCalledWith('group_call:error', expect.objectContaining({ code: 'ACCOUNT_DISABLED' }));
+    });
+
+    it('partie 4 — group_call:join refusé pour un compte banni sur un appel déjà actif', async () => {
+      memberRepo.findOne.mockResolvedValue(makeMember('banni-uuid'));
+      userRepo.findOne.mockResolvedValue({ id: 'banni-uuid', status: 'banned' });
+      const socket = makeSocket('banni-uuid');
+
+      await gateway.handleJoin(socket, { groupId: 'group-uuid', callId: 'call-uuid' });
+
+      expect(socket.emit).toHaveBeenCalledWith('group_call:error', expect.objectContaining({ code: 'ACCOUNT_DISABLED' }));
     });
 
     it('initiateur reçoit joined (liste vide) ; les AUTRES membres reçoivent incoming, pas l\'initiateur', async () => {

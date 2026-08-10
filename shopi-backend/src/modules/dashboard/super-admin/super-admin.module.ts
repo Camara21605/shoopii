@@ -56,6 +56,7 @@ import { SecuriteAdminService }    from './services/securite-admin.service';
 import { NotificationsModule }      from '../../notifications/notifications.module';
 import { ReportingModule }          from '../../reporting-engine/reporting.module';
 import { MessagerieModule }         from '../../messagerie/messagerie.module';
+import { CallModule }               from '../../call/call.module';
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { MessagerieModule }         from '../../messagerie/messagerie.module';
     NotificationsModule,
     ReportingModule,
     MessagerieModule, // pour BroadcastService.disconnectUser() (bannissement/suspension)
+    CallModule,       // pour CallService.endAllCallsForUser() (partie 4 — coupe les appels actifs/RINGING au bannissement)
   ],
 
   controllers: [

@@ -257,19 +257,42 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
         cancelUnavailable(p.reason);
       };
 
-      socket.on('new_message',       onNewMessage);
-      socket.on('group_new_message', onGroupMessage);
-      socket.on('call:unavailable',  onCallUnavailable);
+      /* Compte banni/suspendu PENDANT que ce socket est ouvert — émis par
+       * BroadcastService.disconnectUser() JUSTE AVANT de forcer la
+       * déconnexion (voir handleConnection côté serveur, qui bloque déjà
+       * toute RECONNEXION future ; ceci gère la session déjà ouverte).
+       * Sans ce listener, un appel WebRTC en cours restait affiché/actif
+       * côté client (RTCPeerConnection + pistes micro/caméra toujours
+       * ouvertes) jusqu'à ce que le socket meure silencieusement — aucun
+       * message clair, aucun nettoyage explicite. hangUp() ici fait le
+       * même nettoyage complet qu'un raccroché normal (RTCPeerConnection,
+       * MediaStream, tracks, timers, overlay) ; sans effet s'il n'y a pas
+       * d'appel en cours (callInfoRef déjà null → no-op). */
+      const onAccountStatusChanged = (p: { reason: string }) => {
+        const message = p.reason === 'account_banned'
+          ? 'Votre compte a été bloqué par l\'administration. Tout appel en cours a été interrompu.'
+          : p.reason === 'account_suspended'
+          ? 'Votre compte a été suspendu par l\'administration. Tout appel en cours a été interrompu.'
+          : 'Votre session a été fermée par l\'administration.';
+        showToast(`🚫 ${message}`, 'w');
+        hangUp();
+      };
+
+      socket.on('new_message',           onNewMessage);
+      socket.on('group_new_message',     onGroupMessage);
+      socket.on('call:unavailable',      onCallUnavailable);
+      socket.on('account_status_changed', onAccountStatusChanged);
       cleanup = () => {
-        socket.off('new_message',       onNewMessage);
-        socket.off('group_new_message', onGroupMessage);
-        socket.off('call:unavailable',  onCallUnavailable);
+        socket.off('new_message',            onNewMessage);
+        socket.off('group_new_message',      onGroupMessage);
+        socket.off('call:unavailable',       onCallUnavailable);
+        socket.off('account_status_changed', onAccountStatusChanged);
       };
     }
 
     subscribe();
     return () => cleanup?.();
-  }, [showToast, cancelUnavailable]);
+  }, [showToast, cancelUnavailable, hangUp]);
 
   // ── Enregistrement du handler MessagerieCore ─────────────────
 

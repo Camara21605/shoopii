@@ -357,6 +357,22 @@ export function useGroupCall() {
 
   // ── Écoute socket ─────────────────────────────────────────────
 
+  /*
+   * Compte banni/suspendu PENDANT un appel de groupe — émis par
+   * BroadcastService.disconnectUser() juste avant de forcer la
+   * déconnexion. Le serveur retire déjà ce participant de l'appel côté
+   * GroupCallGateway (handleDisconnect, inconditionnel) et notifie les
+   * AUTRES participants via group_call:participant_left — mais CE socket
+   * étant sur le point de mourir, il ne recevra jamais cet événement lui-
+   * même. Sans ce listener, ses RTCPeerConnection/pistes locales
+   * restaient ouvertes côté client jusqu'à la mort silencieuse du socket.
+   * cleanupAll() ne notifie pas le serveur (inutile, le retrait est déjà
+   * fait) — juste le nettoyage local.
+   */
+  const onAccountStatusChanged = useCallback(() => {
+    cleanupAll();
+  }, [cleanupAll]);
+
   useEffect(() => {
     function register(socket: ReturnType<typeof getActiveSocket>) {
       if (!socket) return;
@@ -370,6 +386,7 @@ export function useGroupCall() {
       socket.off('group_call:answer',              onAnswer);
       socket.off('group_call:ice_candidate',       onIceCandidate);
       socket.off('group_call:media_toggled',       onMediaToggled);
+      socket.off('account_status_changed',         onAccountStatusChanged);
 
       socket.on('group_call:incoming',            onIncoming);
       socket.on('group_call:joined',              onJoined);
@@ -381,6 +398,7 @@ export function useGroupCall() {
       socket.on('group_call:answer',              onAnswer);
       socket.on('group_call:ice_candidate',       onIceCandidate);
       socket.on('group_call:media_toggled',       onMediaToggled);
+      socket.on('account_status_changed',         onAccountStatusChanged);
     }
 
     const socket = getActiveSocket();
@@ -409,10 +427,12 @@ export function useGroupCall() {
       s.off('group_call:answer',              onAnswer);
       s.off('group_call:ice_candidate',       onIceCandidate);
       s.off('group_call:media_toggled',       onMediaToggled);
+      s.off('account_status_changed',         onAccountStatusChanged);
     };
   }, [
     onIncoming, onJoined, onParticipantJoined, onParticipantLeft,
     onDeclined, onCallEnded, onOffer, onAnswer, onIceCandidate, onMediaToggled,
+    onAccountStatusChanged,
   ]);
 
   // ── API publique ──────────────────────────────────────────────
