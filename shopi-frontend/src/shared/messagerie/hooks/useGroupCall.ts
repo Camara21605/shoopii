@@ -76,6 +76,10 @@ export function useGroupCall() {
   const icePendingRef  = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
   /** Mirror de peers pour éviter la stale-closure dans les callbacks socket */
   const peersRef       = useRef<Map<string, GroupCallPeer>>(new Map());
+  /** userId → nombre de tentatives d'ICE-restart déjà faites pour ce pair */
+  const iceRestartAttemptsRef = useRef<Map<string, number>>(new Map());
+  /** Sens de la caméra courante (mobile) — partagé par tous les pairs du mesh */
+  const facingModeRef = useRef<'user' | 'environment'>('user');
 
   /* Préchauffe le cache des serveurs ICE dès le montage. */
   useEffect(() => { prefetchIceServers(); }, []);
@@ -125,6 +129,54 @@ export function useGroupCall() {
     icePendingRef.current.set(userId, []);
   }, []);
 
+  /**
+   * Attache les pistes locales à une PeerConnection en réutilisant un
+   * sender existant (replaceTrack) plutôt que d'en ajouter un nouveau —
+   * nécessaire pour l'ICE-restart : addTrack dupliquerait la piste déjà
+   * envoyée à ce pair et casserait la négociation.
+   */
+  const attachLocalTracks = useCallback(async (pc: RTCPeerConnection, stream: MediaStream) => {
+    for (const track of stream.getTracks()) {
+      const sender = pc.getSenders().find(s => s.track?.kind === track.kind);
+      if (sender) {
+        try { await sender.replaceTrack(track); } catch { /* best-effort */ }
+      } else {
+        try { pc.addTrack(track, stream); } catch { /* ignore doublon éventuel */ }
+      }
+    }
+  }, []);
+
+  /**
+   * Tente de relancer la négociation ICE avec CE pair avant de fermer sa
+   * connexion — une coupure réseau transitoire ne doit fermer qu'UNE
+   * connexion du mesh, pas tout l'appel. Limité à 2 tentatives par pair.
+   */
+  const attemptIceRestart = useCallback(async (pc: RTCPeerConnection, userId: string) => {
+    try {
+      const attempts = iceRestartAttemptsRef.current.get(userId) ?? 0;
+      const cs = callStateRef.current;
+      if (attempts >= 2 || !localStreamRef.current || !cs) {
+        closePeer(userId);
+        return;
+      }
+      iceRestartAttemptsRef.current.set(userId, attempts + 1);
+      console.warn(`[GroupCall] connexion ICE échouée avec ${userId} — tentative de reprise ${attempts + 1}/2`);
+
+      await attachLocalTracks(pc, localStreamRef.current);
+      const offer = await pc.createOffer({ iceRestart: true });
+      await pc.setLocalDescription(offer);
+      emit('group_call:offer', {
+        groupId:      cs.groupId,
+        callId:       cs.callId,
+        targetUserId: userId,
+        sdp:          offer,
+      });
+    } catch (e) {
+      console.error(`[GroupCall] Échec de la reprise ICE avec ${userId} :`, e);
+      closePeer(userId);
+    }
+  }, [closePeer, attachLocalTracks]);
+
   // ── Création RTCPeerConnection ────────────────────────────────
 
   const createPeerConnection = useCallback((
@@ -161,7 +213,10 @@ export function useGroupCall() {
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === 'connected') {
         setCallState(s => s ? { ...s, status: 'connected' } : s);
-      } else if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+        iceRestartAttemptsRef.current.set(userId, 0);
+      } else if (pc.connectionState === 'failed') {
+        void attemptIceRestart(pc, userId);
+      } else if (pc.connectionState === 'closed') {
         closePeer(userId);
       }
     };
@@ -176,8 +231,9 @@ export function useGroupCall() {
 
     pcMapRef.current.set(userId, pc);
     icePendingRef.current.set(userId, []);
+    iceRestartAttemptsRef.current.set(userId, 0);
     return pc;
-  }, [updatePeers, closePeer]);
+  }, [updatePeers, closePeer, attemptIceRestart]);
 
   // ── Handlers événements socket ────────────────────────────────
 
@@ -214,7 +270,7 @@ export function useGroupCall() {
 
     const iceServers = await getIceServers();
     const pc = createPeerConnection(payload.userId, payload.displayName, iceServers);
-    localStreamRef.current.getTracks().forEach(t => pc.addTrack(t, localStreamRef.current!));
+    await attachLocalTracks(pc, localStreamRef.current);
 
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
@@ -225,7 +281,7 @@ export function useGroupCall() {
       targetUserId: payload.userId,
       sdp:          offer,
     });
-  }, [createPeerConnection]);
+  }, [createPeerConnection, attachLocalTracks]);
 
   const onParticipantLeft = useCallback((payload: ParticipantLeftPayload) => {
     const cs = callStateRef.current;
@@ -252,7 +308,7 @@ export function useGroupCall() {
     const pc = pcMapRef.current.get(payload.fromUserId);
     if (!pc) return;
 
-    localStreamRef.current.getTracks().forEach(t => pc.addTrack(t, localStreamRef.current!));
+    await attachLocalTracks(pc, localStreamRef.current);
     await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp!));
     await flushIcePending(payload.fromUserId);
 
@@ -265,7 +321,7 @@ export function useGroupCall() {
       targetUserId: payload.fromUserId,
       sdp:          answer,
     });
-  }, [flushIcePending]);
+  }, [flushIcePending, attachLocalTracks]);
 
   const onAnswer = useCallback(async (payload: SignalPayload) => {
     const pc = pcMapRef.current.get(payload.fromUserId);
@@ -424,6 +480,48 @@ export function useGroupCall() {
     if (cs) emit('group_call:toggle_media', { groupId: cs.groupId, callId: cs.callId, videoEnabled: !next });
   }, [isVideoOff]);
 
+  /**
+   * Bascule caméra avant/arrière (mobile) — remplace la piste vidéo envoyée
+   * à CHAQUE pair du mesh sans renégocier (replaceTrack), contrairement au
+   * 1:1 où il n'y a qu'une seule PeerConnection à mettre à jour.
+   */
+  const flipCamera = useCallback(async () => {
+    if (!localStreamRef.current) return;
+    facingModeRef.current = facingModeRef.current === 'user' ? 'environment' : 'user';
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: facingModeRef.current },
+      });
+      const newTrack = newStream.getVideoTracks()[0];
+      if (!newTrack) return;
+
+      for (const pc of pcMapRef.current.values()) {
+        const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+        if (sender) {
+          try { await sender.replaceTrack(newTrack); } catch { /* best-effort */ }
+        }
+      }
+
+      localStreamRef.current.getVideoTracks().forEach(t => { t.stop(); localStreamRef.current?.removeTrack(t); });
+      localStreamRef.current.addTrack(newTrack);
+      setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
+    } catch { /* silencieux si l'appareil n'a pas de caméra arrière */ }
+  }, []);
+
+  /* Best-effort : quitte proprement l'appel si l'utilisateur ferme
+   * l'onglet/le navigateur — libère micro/caméra et prévient les autres
+   * participants immédiatement plutôt que d'attendre le ping-timeout. */
+  useEffect(() => {
+    const handler = () => {
+      if (callStateRef.current) {
+        try { leaveCall(); } catch { /* best-effort */ }
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [leaveCall]);
+
   return {
     /** Invitation d'appel entrant (null si aucune) */
     incomingCall,
@@ -441,6 +539,7 @@ export function useGroupCall() {
     leaveCall,
     toggleMute,
     toggleVideo,
+    flipCamera,
   };
 }
 

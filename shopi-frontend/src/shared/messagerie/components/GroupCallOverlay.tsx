@@ -23,6 +23,7 @@ interface Props {
   onLeave:       () => void;
   onToggleMute:  () => void;
   onToggleVideo: () => void;
+  onFlipCamera:  () => void;
 }
 
 // ── Tuile vidéo d'un participant distant ──────────────────────
@@ -123,7 +124,7 @@ function PeerTile({ peer }: { peer: GroupCallPeer }) {
 export default function GroupCallOverlay({
   callState, peers, localStream,
   isMuted, isVideoOff,
-  onLeave, onToggleMute, onToggleVideo,
+  onLeave, onToggleMute, onToggleVideo, onFlipCamera,
 }: Props) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const peerList = [...peers.values()];
@@ -275,6 +276,18 @@ export default function GroupCallOverlay({
             activeColor="rgba(239,68,68,.25)"
             activeBorder="rgba(239,68,68,.5)"
             onClick={onToggleVideo}
+          />
+        )}
+
+        {/* Basculer caméra avant/arrière (mobile) */}
+        {isVideo && !isVideoOff && (
+          <CtrlBtn
+            icon="fa-rotate"
+            label="Retourner"
+            active={false}
+            activeColor="rgba(255,255,255,.1)"
+            activeBorder="rgba(255,255,255,.15)"
+            onClick={onFlipCamera}
           />
         )}
 

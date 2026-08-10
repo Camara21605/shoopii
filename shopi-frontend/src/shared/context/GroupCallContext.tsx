@@ -54,6 +54,7 @@ export function GroupCallProvider({ children }: { children: React.ReactNode }) {
           onLeave={groupCall.leaveCall}
           onToggleMute={groupCall.toggleMute}
           onToggleVideo={groupCall.toggleVideo}
+          onFlipCamera={groupCall.flipCamera}
         />
       )}
     </GroupCallContext.Provider>

@@ -101,6 +101,8 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const connectedSince = useRef(0);
   const facingMode     = useRef<'user' | 'environment'>('user'); // flip caméra mobile
   const isSpeakerOnRef = useRef(true); // miroir de isSpeakerOn, lu dans pc.ontrack (closure stable)
+  /** Nombre de tentatives d'ICE-restart déjà faites pour la connexion en cours. */
+  const iceRestartAttempts = useRef(0);
   /* Miroir de `status`, lu dans onCallIncoming (closure stable — voir plus bas).
      SANS cette ref, onCallIncoming devait dépendre de [status] pour rester à
      jour, ce qui obligeait le useEffect d'enregistrement des listeners socket
@@ -254,6 +256,87 @@ export function useAudioCall(props?: UseAudioCallProps) {
     setTimeout(() => setStatus('idle'), 1500);
   }, [cleanup]);
 
+  /**
+   * Attache les pistes locales à la PeerConnection en réutilisant un
+   * sender existant (replaceTrack) au lieu d'en ajouter un nouveau —
+   * nécessaire pour l'ICE-restart : addTrack dupliquerait la piste déjà
+   * envoyée et casserait la négociation.
+   */
+  const attachLocalTracks = useCallback(async (pc: RTCPeerConnection, stream: MediaStream) => {
+    for (const track of stream.getTracks()) {
+      const sender = pc.getSenders().find(s => s.track?.kind === track.kind);
+      if (sender) {
+        try { await sender.replaceTrack(track); } catch { /* best-effort */ }
+      } else {
+        try { pc.addTrack(track, stream); } catch { /* ignore doublon éventuel */ }
+      }
+    }
+  }, []);
+
+  /**
+   * Tente de lancer la lecture du flux distant — si bloquée par la
+   * politique autoplay du navigateur (fréquent sur mobile hors interaction
+   * utilisateur directe), affiche un petit bouton de secours plutôt que de
+   * laisser l'appel silencieux sans aucune explication.
+   */
+  const playRemoteAudioWithFallback = useCallback(async (audioEl: HTMLAudioElement) => {
+    try {
+      await audioEl.play();
+    } catch {
+      console.warn('[Call] Lecture audio distante bloquée par le navigateur (autoplay) — bouton de secours affiché.');
+      const id = 'shopi-call-enable-audio-btn';
+      if (document.getElementById(id)) return;
+      const btn = document.createElement('button');
+      btn.id = id;
+      btn.textContent = 'Activer le son';
+      Object.assign(btn.style, {
+        position: 'fixed', right: '16px', bottom: '16px', zIndex: '10050',
+        padding: '10px 16px', background: '#0B1F3A', color: '#fff',
+        border: 'none', borderRadius: '8px', cursor: 'pointer',
+        fontSize: '14px', fontWeight: '600', boxShadow: '0 4px 12px rgba(0,0,0,.25)',
+      });
+      btn.onclick = async () => {
+        try { await audioEl.play(); } catch { /* toujours bloqué — laisse le bouton visible */ }
+        btn.remove();
+      };
+      document.body.appendChild(btn);
+    }
+  }, []);
+
+  /**
+   * Tente de relancer la négociation ICE avant d'abandonner l'appel.
+   * 'failed' peut survenir sur une coupure réseau transitoire (perte
+   * Wi-Fi de quelques secondes, bascule Wi-Fi↔4G) — raccrocher directement
+   * dans ce cas coupait des appels qui auraient pu se rétablir tout seuls.
+   * Limité à 2 tentatives pour ne pas boucler indéfiniment sur un échec
+   * définitif (aucun chemin réseau trouvé, STUN/TURN injoignables).
+   */
+  const attemptIceRestart = useCallback(async (pc: RTCPeerConnection) => {
+    try {
+      if (iceRestartAttempts.current >= 2 || !localStream.current || !callInfoRef.current) {
+        endCall(false);
+        return;
+      }
+      iceRestartAttempts.current += 1;
+      console.warn(`[Call] connexion ICE échouée — tentative de reprise ${iceRestartAttempts.current}/2`);
+
+      await attachLocalTracks(pc, localStream.current);
+      const offer = await pc.createOffer({ iceRestart: true });
+      await pc.setLocalDescription(offer);
+      emit('call:offer', {
+        conversationId: callInfoRef.current.conversationId,
+        targetUserId:   callInfoRef.current.remoteUserId,
+        sdp:            offer,
+      });
+      /* On attend la nouvelle négociation — pas de endCall ici, seul un
+         nouvel échec ('failed' à nouveau) ou le timeout 20s existant
+         tranchera si la reprise n'aboutit pas. */
+    } catch (e) {
+      console.error('[Call] Échec de la tentative de reprise ICE :', e);
+      endCall(false);
+    }
+  }, [endCall, attachLocalTracks]);
+
   // ── Création du RTCPeerConnection ─────────────────────────────
 
   const createPeerConnection = useCallback((iceServers: RTCIceServer[]): RTCPeerConnection => {
@@ -284,6 +367,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
         }
         remoteAudio.current.srcObject = stream;
         void applySpeaker(remoteAudio.current, isSpeakerOnRef.current);
+        void playRemoteAudioWithFallback(remoteAudio.current);
       }
     };
 
@@ -295,12 +379,9 @@ export function useAudioCall(props?: UseAudioCallProps) {
         clearTimers();
         setStatus('connected');
         startDurationTimer();
+        iceRestartAttempts.current = 0; // repart de zéro pour une future coupure
       } else if (state === 'failed') {
-        /* Échec définitif de la négociation ICE (aucun chemin réseau
-           trouvé — STUN seul ne suffit pas toujours derrière certains
-           NAT/pare-feux). On le distingue de 'disconnected' qui peut
-           n'être qu'un flottement transitoire pendant la négociation. */
-        endCall(false);
+        void attemptIceRestart(pc);
       } else if (state === 'disconnected' && wasConnected.current) {
         /* Coupure réseau après un appel déjà établi → on referme.
            Avant d'avoir été connecté une fois, 'disconnected' peut être
@@ -313,7 +394,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
 
     pcRef.current = pc;
     return pc;
-  }, [endCall]);
+  }, [endCall, attemptIceRestart, playRemoteAudioWithFallback]);
 
   /** Applique les ICE candidates mis en file avant setRemoteDescription. */
   const flushIcePending = useCallback(async () => {
@@ -563,7 +644,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     try {
       const iceServers = await getIceServers();
       const pc = createPeerConnection(iceServers);
-      localStream.current.getTracks().forEach(t => pc.addTrack(t, localStream.current!));
+      await attachLocalTracks(pc, localStream.current);
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
@@ -580,7 +661,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
       console.error('[Call] Échec création de l\'offer WebRTC :', err);
       endCall(true, 'missed');
     }
-  }, [createPeerConnection, endCall]);
+  }, [createPeerConnection, attachLocalTracks, endCall]);
 
   /* Appelé a refusé — l'appelant reçoit cet événement et enregistre 'rejected' */
   const onCallRejected = useCallback(() => {
@@ -599,7 +680,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     try {
       const iceServers = await getIceServers();
       const pc = createPeerConnection(iceServers);
-      localStream.current.getTracks().forEach(t => pc.addTrack(t, localStream.current!));
+      await attachLocalTracks(pc, localStream.current);
 
       await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp!));
       await flushIcePending();
@@ -619,7 +700,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
       console.error('[Call] Échec traitement de l\'offer WebRTC reçue :', err);
       endCall(true, 'missed');
     }
-  }, [createPeerConnection, flushIcePending, endCall]);
+  }, [createPeerConnection, attachLocalTracks, flushIcePending, endCall]);
 
   /* Answer WebRTC reçue (caller) */
   const onCallAnswer = useCallback(async (payload: WsCallSignal) => {
@@ -720,6 +801,21 @@ export function useAudioCall(props?: UseAudioCallProps) {
     onCallIncoming, onCallAccepted, onCallRejected, onCallEnded,
     onCallOffer, onCallAnswer, onCallIceCandidate, onCallBusy,
   ]);
+
+  /* Best-effort : notifie le correspondant et libère micro/caméra si
+   * l'utilisateur ferme l'onglet/le navigateur en pleine communication —
+   * sans ça, l'autre participant ne voit l'appel se couper qu'au
+   * ping-timeout Socket.IO (délai perceptible), et la caméra/micro locaux
+   * restent parfois allumés jusqu'au déchargement complet de la page. */
+  useEffect(() => {
+    const handler = () => {
+      if (statusRef.current !== 'idle') {
+        try { endCall(true, wasConnected.current ? 'completed' : 'cancelled'); } catch { /* best-effort */ }
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [endCall]);
 
   return {
     callStatus:       status,
