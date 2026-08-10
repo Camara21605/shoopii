@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 20px 56px rgba(11,31,58,.38), 0 4px 12px rgba(11,31,58,.15);
+  box-shadow: 0 20px 56px rgba(0,0,0,.38), 0 4px 12px rgba(0,0,0,.15);
   z-index: 800;
   transition: transform .42s var(--spring, cubic-bezier(.34,1.56,.64,1)), opacity .3s;
   white-space: nowrap;
@@ -25,7 +25,7 @@
 }
 .msg {
   font-size: 12px;
-  color: rgba(200,217,248,.7);
+  color: rgba(228,228,231,.7);
   display: flex;
   align-items: center;
   gap: 7px;
@@ -44,12 +44,12 @@
   align-items: center;
   gap: 6px;
   transition: all .2s;
-  box-shadow: 0 3px 10px rgba(14,116,144,.35);
+  box-shadow: 0 3px 10px rgba(0,0,0,.35);
 }
 .btnSave:hover { background: var(--teal-2); transform: translateY(-1px); box-shadow: var(--sh-teal); }
 .btnCancel {
   background: rgba(255,255,255,.07);
-  color: rgba(200,217,248,.55);
+  color: rgba(228,228,231,.55);
   border: none;
   border-radius: var(--pill);
   padding: 8px 16px;
@@ -57,7 +57,7 @@
   cursor: pointer;
   transition: all .2s;
 }
-.btnCancel:hover { background: rgba(255,255,255,.14); color: rgba(200,217,248,.9); }
+.btnCancel:hover { background: rgba(255,255,255,.14); color: rgba(228,228,231,.9); }
 @media (max-width: 640px) {
   .float { left:14px; right:14px; transform:translateY(130px); border-radius:var(--r-xl); flex-wrap:wrap; justify-content:center; }
   .show  { transform: translateY(0); }

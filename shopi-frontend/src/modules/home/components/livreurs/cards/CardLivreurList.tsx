@@ -3,53 +3,43 @@
  *
  * RÔLE : Carte livreur — vue LISTE (ligne horizontale compacte).
  *
- * ✅ REFACTOR : même logique que CardLivreurGrid via useFollowToggle.
- *   - Composant CONTRÔLÉ (suivi = livreur.isSuivi).
- *   - N'appelle plus l'API (le parent useLivreurs le fait).
- *   - Route harmonisée : /livreurs/:id
+ * Même logique que CardLivreurGrid : le suivi est délégué au composant
+ * partagé FollowButton (qui fait lui-même l'appel API), cette carte
+ * reste juste un composant d'affichage. Route harmonisée : /livreurs/:id.
  * ================================================================ */
 
 import React            from 'react';
 import { useNavigate }  from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import styles           from '../styles/CardLivreurList.module.css';
-import { useFollowToggle } from '../../../../../shared/hooks/useFollowToggle';
 import { useAuthGate }     from '../../../../../shared/hooks/useAuthGate';
+import FollowButton        from '../../../../../shared/components/FollowButton';
 import type { LivreurItem } from '../data/livreursMockData';
 
 /* ── Props ── */
 interface CardLivreurListProps {
-  livreur:  LivreurItem;
-  onToast:  (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
-  onFollow: (id: string, newState: boolean) => Promise<void>;
+  livreur:   LivreurItem;
+  onToast:   (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  /** Voir le commentaire équivalent dans CardLivreurGrid.tsx. */
+  onChange?: (id: string, next: { isSuivi: boolean; hidden?: boolean; removed?: boolean }) => void;
 }
 
 /* ================================================================
  * COMPOSANT
  * ================================================================ */
 const CardLivreurList: React.FC<CardLivreurListProps> = ({
-  livreur, onToast, onFollow,
+  livreur, onToast, onChange,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-
-  /* ✅ État contrôlé par le parent + logique commune */
-  const suivi = livreur.isSuivi;
   const { openAuthModal, authModal } = useAuthGate();
-  const { loading, toggle } = useFollowToggle({
-    id:      livreur.id,
-    name:    livreur.fullName,
-    isSuivi: suivi,
-    onFollow,
-    onToast,
-    onRequireAuth: openAuthModal,
-  });
 
   const handleViewProfile = () => navigate(`/livreurs/${livreur.id}`);
 
   return (
     <div
       className={styles.item}
+      style={{ position: 'relative' }}
       onClick={handleViewProfile}
       role="article"
       aria-label={t('livreursPage.card.livreurAriaLabel', { nom: livreur.fullName })}
@@ -83,19 +73,15 @@ const CardLivreurList: React.FC<CardLivreurListProps> = ({
             {t('livreursPage.card.livraisonsCount', { count: livreur.totalLivraisons.toLocaleString('fr-FR') })}
           </div>
         </div>
-        <button
-          className={`${styles.followBtn} ${suivi ? styles.followBtnOn : styles.followBtnOff}`}
-          onClick={toggle}
-          disabled={loading}
-        >
-          {loading ? (
-            <i className="fas fa-spinner fa-spin" aria-hidden="true" />
-          ) : suivi ? (
-            <><i className="fas fa-user-check" aria-hidden="true" /> {t('livreursPage.card.abonneFem')}</>
-          ) : (
-            <><i className="fas fa-plus" aria-hidden="true" /> {t('livreursPage.card.suivre')}</>
-          )}
-        </button>
+        <FollowButton
+          actorType="livreur"
+          id={livreur.id}
+          name={livreur.fullName}
+          isSuivi={livreur.isSuivi}
+          onToast={onToast}
+          onRequireAuth={openAuthModal}
+          onChange={next => onChange?.(livreur.id, next)}
+        />
       </div>
 
       {authModal}

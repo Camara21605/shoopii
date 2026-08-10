@@ -19,9 +19,10 @@ interface Props {
 }
 
 const ROLE_META = {
-  vendor:   { icon: 'fa-store',          color: '#047857', label: 'Boutique',  bg: '#D1FAE5' },
-  delivery: { icon: 'fa-motorcycle',     color: '#1A4FC4', label: 'Livreur',   bg: '#DBEAFE' },
-  client:   { icon: 'fa-house',          color: '#7C3AED', label: 'Destination', bg: '#EDE9FE' },
+  vendor:        { icon: 'fa-store',          color: '#047857', label: 'Boutique',     bg: '#D1FAE5' },
+  delivery:      { icon: 'fa-motorcycle',     color: '#1A4FC4', label: 'Livreur',      bg: '#DBEAFE' },
+  client:        { icon: 'fa-house',          color: '#7C3AED', label: 'Destination',  bg: '#EDE9FE' },
+  correspondent: { icon: 'fa-box',            color: '#B45309', label: 'Correspondant', bg: '#FEF3C7' },
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {

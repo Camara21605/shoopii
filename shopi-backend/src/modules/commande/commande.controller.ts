@@ -7,7 +7,7 @@
  *   - EntrepriseCommandeController → GET /entreprise/commandes
  * ============================================================ */
 
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
 
 import { JwtAuthGuard } from '../../common/guards/auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -19,9 +19,12 @@ import { CommandeCreationService } from './services/commande-creation.service';
 import { CommandeQueryService } from './services/commande-query.service';
 import { CommandeValidationService } from './services/commande-validation.service';
 import { CommandeFeedbackService } from './services/commande-feedback.service';
+import { CommandeLivreurAssignmentService } from './services/commande-livreur-assignment.service';
 import { CreateCommandeDto } from './dto/create-commande.dto';
 import { ValiderEtapeDto } from './dto/valider-etape.dto';
 import { EnvoyerNotationsDto, LitigeDto } from './dto/notation.dto';
+import { RefuserMissionDto } from './dto/refuser-mission.dto';
+import { AssignLivreurDto } from './dto/assign-livreur.dto';
 
 /* ── /client/commandes ── */
 @Controller('client/commandes')
@@ -31,6 +34,7 @@ export class ClientCommandeController {
   constructor(
     private readonly creationService: CommandeCreationService,
     private readonly queryService: CommandeQueryService,
+    private readonly assignmentService: CommandeLivreurAssignmentService,
   ) {}
 
   @Post()
@@ -41,6 +45,16 @@ export class ClientCommandeController {
   @Get()
   list(@CurrentUser() user: User) {
     return this.queryService.listClient(user);
+  }
+
+  /** Choisir un autre livreur (ex. après refus du premier) */
+  @Patch(':id/livreur')
+  assignerLivreur(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AssignLivreurDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.assignmentService.assignerParClient(user, id, dto.livreurId);
   }
 }
 
@@ -80,11 +94,24 @@ export class CommandeController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.COMPANY)
 export class EntrepriseCommandeController {
-  constructor(private readonly queryService: CommandeQueryService) {}
+  constructor(
+    private readonly queryService: CommandeQueryService,
+    private readonly assignmentService: CommandeLivreurAssignmentService,
+  ) {}
 
   @Get()
   list(@CurrentUser() user: User) {
     return this.queryService.listEntreprise(user);
+  }
+
+  /** Assigner ou changer le livreur sur une commande de l'entreprise */
+  @Patch(':id/livreur')
+  assignerLivreur(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AssignLivreurDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.assignmentService.assignerParEntreprise(user, id, dto.livreurId);
   }
 }
 
@@ -93,11 +120,30 @@ export class EntrepriseCommandeController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.DELIVERY)
 export class LivreurMissionsController {
-  constructor(private readonly queryService: CommandeQueryService) {}
+  constructor(
+    private readonly queryService: CommandeQueryService,
+    private readonly assignmentService: CommandeLivreurAssignmentService,
+  ) {}
 
   @Get()
   list(@CurrentUser() user: User) {
     return this.queryService.listLivreur(user);
+  }
+
+  /** Accepter la mission assignée — génère le code de validation LIVREUR */
+  @Patch(':id/accepter')
+  accepter(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.assignmentService.accepter(user, id);
+  }
+
+  /** Refuser la mission — motif obligatoire, libère le livreur de la commande */
+  @Patch(':id/refuser')
+  refuser(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: RefuserMissionDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.assignmentService.refuser(user, id, dto.reason);
   }
 }
 

@@ -10,27 +10,31 @@
  * ============================================================ */
 
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import '../styles/location.css';
 import type { ClientAddress, TypeAdresse } from '../types/location.types';
-import { TYPE_ADRESSE_LABELS }             from '../types/location.types';
+import { getTypeAdresseLabels }            from '../types/location.types';
 import {
   VILLES_SORTED, getCommunesByVille, getQuartiersByCommune,
 } from '../data/geo-guinee';
 
 /* ── Pays supportés (extensible) ────────────────────────── */
 interface PaysInfo { code: string; nom: string; emoji: string; }
-const PAYS_SUPPORTES: PaysInfo[] = [
-  { code: 'GN', nom: 'Guinée',          emoji: '🇬🇳' },
-  { code: 'SN', nom: 'Sénégal',         emoji: '🇸🇳' },
-  { code: 'ML', nom: 'Mali',             emoji: '🇲🇱' },
-  { code: 'CI', nom: "Côte d'Ivoire",   emoji: '🇨🇮' },
-  { code: 'GW', nom: 'Guinée-Bissau',   emoji: '🇬🇼' },
-  { code: 'MR', nom: 'Mauritanie',      emoji: '🇲🇷' },
-  { code: 'LR', nom: 'Libéria',         emoji: '🇱🇷' },
-  { code: 'SL', nom: 'Sierra Leone',    emoji: '🇸🇱' },
-  { code: 'FR', nom: 'France',           emoji: '🇫🇷' },
-  { code: 'OTHER', nom: 'Autre pays',   emoji: '🌍' },
-];
+function getPaysSupportes(t: TFunction): PaysInfo[] {
+  return [
+    { code: 'GN', nom: t('clientDashboard.addressForm.pays.guinee'),       emoji: '🇬🇳' },
+    { code: 'SN', nom: t('clientDashboard.addressForm.pays.senegal'),      emoji: '🇸🇳' },
+    { code: 'ML', nom: t('clientDashboard.addressForm.pays.mali'),         emoji: '🇲🇱' },
+    { code: 'CI', nom: t('clientDashboard.addressForm.pays.coteIvoire'),   emoji: '🇨🇮' },
+    { code: 'GW', nom: t('clientDashboard.addressForm.pays.guineeBissau'), emoji: '🇬🇼' },
+    { code: 'MR', nom: t('clientDashboard.addressForm.pays.mauritanie'),   emoji: '🇲🇷' },
+    { code: 'LR', nom: t('clientDashboard.addressForm.pays.liberia'),      emoji: '🇱🇷' },
+    { code: 'SL', nom: t('clientDashboard.addressForm.pays.sierraLeone'),  emoji: '🇸🇱' },
+    { code: 'FR', nom: t('clientDashboard.addressForm.pays.france'),       emoji: '🇫🇷' },
+    { code: 'OTHER', nom: t('clientDashboard.addressForm.pays.autrePays'), emoji: '🌍' },
+  ];
+}
 
 /* ── Props ───────────────────────────────────────────────── */
 interface AddressFormProps {
@@ -102,6 +106,9 @@ export default function AddressForm({
   initial, countryCodeUser = 'GN', countryNameUser = 'Guinée',
   onSave, onCancel, loading = false,
 }: AddressFormProps) {
+  const { t } = useTranslation();
+  const PAYS_SUPPORTES = getPaysSupportes(t);
+  const TYPE_ADRESSE_LABELS = getTypeAdresseLabels(t);
 
   const [form,   setForm]   = useState<typeof EMPTY>({ ...EMPTY, pays: countryCodeUser, ...initial });
   const [saving, setSaving] = useState(false);
@@ -156,13 +163,13 @@ export default function AddressForm({
 
   /* ── Soumission ─────────────────────────────────────── */
   const handleSubmit = async () => {
-    if (!form.ville.trim()) { setError('La ville est obligatoire.'); return; }
+    if (!form.ville.trim()) { setError(t('clientDashboard.addressForm.villeObligatoire')); return; }
     setSaving(true);
     setError(null);
     try {
       await onSave(form);
     } catch (e: any) {
-      setError(e?.message ?? 'Erreur lors de la sauvegarde.');
+      setError(e?.message ?? t('clientDashboard.addressForm.erreurSauvegarde'));
     } finally {
       setSaving(false);
     }
@@ -174,22 +181,22 @@ export default function AddressForm({
 
       {/* ── TYPE D'ADRESSE ── */}
       <div style={fieldWrap}>
-        <span style={fieldLabel}>Type d'adresse</span>
+        <span style={fieldLabel}>{t('clientDashboard.addressForm.typeAdresseLabel')}</span>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {TYPE_OPTIONS.map(t => (
+          {TYPE_OPTIONS.map(opt => (
             <button
-              key={t}
+              key={opt}
               type="button"
-              onClick={() => set('typeAdresse', t)}
+              onClick={() => set('typeAdresse', opt)}
               style={{
                 padding: '6px 14px', borderRadius: 20, fontSize: 12.5,
-                border: `1.5px solid ${form.typeAdresse === t ? 'var(--blue, #1A4FC4)' : 'var(--bdr2, #CBD5E1)'}`,
-                background: form.typeAdresse === t ? 'var(--blue, #1A4FC4)' : 'transparent',
-                color: form.typeAdresse === t ? '#fff' : 'var(--t2, #475569)',
+                border: `1.5px solid ${form.typeAdresse === opt ? 'var(--blue, #1A4FC4)' : 'var(--bdr2, #CBD5E1)'}`,
+                background: form.typeAdresse === opt ? 'var(--blue, #1A4FC4)' : 'transparent',
+                color: form.typeAdresse === opt ? '#fff' : 'var(--t2, #475569)',
                 cursor: 'pointer', fontWeight: 600, transition: 'all .15s',
               }}
             >
-              {TYPE_ADRESSE_LABELS[t]}
+              {TYPE_ADRESSE_LABELS[opt]}
             </button>
           ))}
         </div>
@@ -197,8 +204,8 @@ export default function AddressForm({
 
       {/* ── LIBELLÉ ── */}
       <div style={fieldWrap}>
-        <label style={fieldLabel}>Libellé <span style={{ color: 'var(--t3)', fontWeight: 400 }}>(ex : "Maison mère", "Bureau")</span></label>
-        <input style={inputStyle} value={form.libelle ?? ''} onChange={e => set('libelle', e.target.value)} placeholder="Libellé optionnel" />
+        <label style={fieldLabel}>{t('clientDashboard.addressForm.libelleLabel')} <span style={{ color: 'var(--t3)', fontWeight: 400 }}>{t('clientDashboard.addressForm.libelleHint')}</span></label>
+        <input style={inputStyle} value={form.libelle ?? ''} onChange={e => set('libelle', e.target.value)} placeholder={t('clientDashboard.addressForm.libellePlaceholder')} />
       </div>
 
       {/* ══════════════════════════════════════════════════
@@ -208,16 +215,16 @@ export default function AddressForm({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
           <i className="fas fa-map-location-dot" style={{ color: 'var(--blue, #1A4FC4)', fontSize: 15 }} />
-          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--navy, #0B1F3A)' }}>Localisation</span>
+          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--navy, #0B1F3A)' }}>{t('clientDashboard.addressForm.localisation')}</span>
         </div>
 
         {/* ── PAYS ── */}
         <div style={fieldWrap}>
           <label style={fieldLabel}>
-            Pays
+            {t('clientDashboard.addressForm.paysLabel')}
             {countryCodeUser === form.pays && (
               <span style={{ marginLeft: 8, fontSize: 10.5, fontWeight: 600, color: 'var(--emerald, #047857)', background: '#D1FAE5', padding: '1px 7px', borderRadius: 999 }}>
-                <i className="fas fa-check" /> Depuis votre inscription
+                <i className="fas fa-check" /> {t('clientDashboard.addressForm.depuisInscription')}
               </span>
             )}
           </label>
@@ -240,7 +247,7 @@ export default function AddressForm({
         {/* ── VILLE ── */}
         <div style={fieldWrap}>
           <label style={fieldLabel}>
-            Ville <span style={{ color: 'var(--rose, #E11D48)' }}>*</span>
+            {t('clientDashboard.addressForm.villeLabel')} <span style={{ color: 'var(--rose, #E11D48)' }}>*</span>
           </label>
           {estGuinee ? (
             <select
@@ -248,7 +255,7 @@ export default function AddressForm({
               value={form.ville}
               onChange={e => handleVilleChange(e.target.value)}
             >
-              <option value="">— Choisir une ville —</option>
+              <option value="">{t('clientDashboard.addressForm.choisirVille')}</option>
               {villes.map(v => (
                 <option key={v.slug} value={v.nom}>
                   {v.nom} ({v.region})
@@ -260,7 +267,7 @@ export default function AddressForm({
               style={inputStyle}
               value={form.ville}
               onChange={e => set('ville', e.target.value)}
-              placeholder="Saisir la ville"
+              placeholder={t('clientDashboard.addressForm.villePlaceholder')}
             />
           )}
         </div>
@@ -269,14 +276,14 @@ export default function AddressForm({
         {estGuinee && communes.length > 0 && (
           <div style={fieldWrap}>
             <label style={fieldLabel}>
-              Commune / Arrondissement <span style={{ color: 'var(--rose, #E11D48)' }}>*</span>
+              {t('clientDashboard.addressForm.communeLabel')} <span style={{ color: 'var(--rose, #E11D48)' }}>*</span>
             </label>
             <select
               style={selectStyle}
               value={form.commune}
               onChange={e => handleCommuneChange(e.target.value)}
             >
-              <option value="">— Choisir une commune —</option>
+              <option value="">{t('clientDashboard.addressForm.choisirCommune')}</option>
               {communes.map(c => (
                 <option key={c.nom} value={c.nom}>{c.nom}</option>
               ))}
@@ -288,14 +295,14 @@ export default function AddressForm({
         {estGuinee && quartiers.length > 0 && (
           <div style={fieldWrap}>
             <label style={fieldLabel}>
-              Quartier <span style={{ color: 'var(--rose, #E11D48)' }}>*</span>
+              {t('clientDashboard.addressForm.quartierLabel')} <span style={{ color: 'var(--rose, #E11D48)' }}>*</span>
             </label>
             <select
               style={selectStyle}
               value={form.quartier}
               onChange={e => set('quartier', e.target.value)}
             >
-              <option value="">— Choisir un quartier —</option>
+              <option value="">{t('clientDashboard.addressForm.choisirQuartier')}</option>
               {quartiers.map(q => (
                 <option key={q} value={q}>{q}</option>
               ))}
@@ -320,26 +327,26 @@ export default function AddressForm({
       {/* ── RUE / ADRESSE PRÉCISE ── */}
       <div style={fieldWrap}>
         <label style={fieldLabel}>
-          Rue / Adresse précise <span style={{ color: 'var(--t3)', fontWeight: 400 }}>(optionnel)</span>
+          {t('clientDashboard.addressForm.rueLabel')} <span style={{ color: 'var(--t3)', fontWeight: 400 }}>{t('clientDashboard.addressForm.optionnel')}</span>
         </label>
         <input
           style={inputStyle}
           value={form.rue ?? ''}
           onChange={e => set('rue', e.target.value)}
-          placeholder="Numéro, nom de rue, repère…"
+          placeholder={t('clientDashboard.addressForm.ruePlaceholder')}
         />
       </div>
 
       {/* ── INSTRUCTIONS DE LIVRAISON ── */}
       <div style={fieldWrap}>
         <label style={fieldLabel}>
-          Instructions de livraison <span style={{ color: 'var(--t3)', fontWeight: 400 }}>(optionnel)</span>
+          {t('clientDashboard.addressForm.instructionsLabel')} <span style={{ color: 'var(--t3)', fontWeight: 400 }}>{t('clientDashboard.addressForm.optionnel')}</span>
         </label>
         <textarea
           style={{ ...inputStyle, resize: 'vertical', minHeight: 72, lineHeight: 1.6 } as React.CSSProperties}
           value={form.instructions ?? ''}
           onChange={e => set('instructions', e.target.value)}
-          placeholder="Ex : Maison jaune près de la mosquée, sonner à l'entrée…"
+          placeholder={t('clientDashboard.addressForm.instructionsPlaceholder')}
           rows={3}
         />
       </div>
@@ -347,13 +354,13 @@ export default function AddressForm({
       {/* ── TÉLÉPHONE ── */}
       <div style={fieldWrap}>
         <label style={fieldLabel}>
-          Téléphone de contact <span style={{ color: 'var(--t3)', fontWeight: 400 }}>(optionnel)</span>
+          {t('clientDashboard.addressForm.telephoneLabel')} <span style={{ color: 'var(--t3)', fontWeight: 400 }}>{t('clientDashboard.addressForm.optionnel')}</span>
         </label>
         <input
           style={inputStyle}
           value={form.telephone ?? ''}
           onChange={e => set('telephone', e.target.value)}
-          placeholder="+224 6xx xx xx xx"
+          placeholder={t('clientDashboard.addressForm.telephonePlaceholder')}
           type="tel"
         />
       </div>
@@ -369,10 +376,10 @@ export default function AddressForm({
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>
             <i className="fas fa-star" style={{ color: '#F59E0B', marginRight: 6 }} />
-            Définir comme adresse par défaut
+            {t('clientDashboard.addressForm.parDefautLabel')}
           </div>
           <div style={{ fontSize: 11.5, color: 'var(--t3)' }}>
-            Sera pré-sélectionnée lors de vos prochaines commandes
+            {t('clientDashboard.addressForm.parDefautDesc')}
           </div>
         </div>
       </label>
@@ -393,7 +400,7 @@ export default function AddressForm({
             onClick={onCancel}
             style={{ padding: '10px 22px', borderRadius: 10, border: '1.5px solid var(--bdr2)', background: 'transparent', cursor: 'pointer', fontSize: 13.5, fontWeight: 600, color: 'var(--t2)' }}
           >
-            Annuler
+            {t('clientDashboard.addressForm.annuler')}
           </button>
         )}
         <button
@@ -403,8 +410,8 @@ export default function AddressForm({
           style={{ padding: '10px 26px', borderRadius: 10, background: 'var(--blue, #1A4FC4)', color: '#fff', border: 'none', cursor: (saving || loading) ? 'not-allowed' : 'pointer', fontSize: 13.5, fontWeight: 700, opacity: (saving || loading) ? .6 : 1, display: 'flex', alignItems: 'center', gap: 8 }}
         >
           {saving
-            ? <><i className="fas fa-circle-notch fa-spin" /> Enregistrement…</>
-            : <><i className="fas fa-check" /> Enregistrer l'adresse</>
+            ? <><i className="fas fa-circle-notch fa-spin" /> {t('clientDashboard.addressForm.enregistrement')}</>
+            : <><i className="fas fa-check" /> {t('clientDashboard.addressForm.enregistrerAdresse')}</>
           }
         </button>
       </div>

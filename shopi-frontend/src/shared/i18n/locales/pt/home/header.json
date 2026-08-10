@@ -1,0 +1,42 @@
+{
+  "publicHeader": {
+    "accueilTitle": "Início Shopi",
+    "nav": {
+      "explorer": "Explorar",
+      "boutiques": "Lojas",
+      "livreurs": "Entregadores",
+      "relais": "Pontos de apoio",
+      "offres": "Ofertas"
+    },
+    "searchAll": "Tudo",
+    "searchPlaceholder": "Produtos, lojas, entregadores…",
+    "searchAria": "Pesquisar",
+    "searchSuggestions": {
+      "tendances": "Tendências do momento",
+      "smartphones": "Smartphones — 4 200 resultados",
+      "boutiquesPopulaires": "Lojas populares",
+      "livreursDispo": "Entregadores disponíveis perto de você",
+      "offresDuJour": "Ofertas do dia"
+    },
+    "searchToast": "🔍 {{text}}",
+    "accueil": "Início",
+    "messagerie": "Mensagens",
+    "panier": "Cesto",
+    "aide": "Centro de ajuda",
+    "connexion": "Entrar",
+    "inscription": "Registar",
+    "monCompte": "Minha conta",
+    "monProfil": "Meu perfil",
+    "monEspace": "Meu espaço",
+    "monEspacePro": "Meu espaço profissional",
+    "monEspaceProShort": "Meu espaço pro",
+    "seDeconnecter": "Sair",
+    "deconnexion": "Sair",
+    "menu": "Menu",
+    "parametres": "Definições",
+    "adresses": "Endereços",
+    "retourAccueil": "Voltar ao início",
+    "avantDeVousConnecter": "Antes de entrar…",
+    "navMobileAria": "Navegação principal móvel"
+  }
+}

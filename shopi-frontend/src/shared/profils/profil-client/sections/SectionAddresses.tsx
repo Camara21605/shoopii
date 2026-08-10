@@ -7,13 +7,27 @@
  * ================================================================ */
 
 import { useState, useEffect, lazy, Suspense } from 'react';
+import { Polyline }  from 'react-leaflet';
 import { apiFetch }  from '../../../../shared/services/apiFetch';
 import AddressCard   from '../../../../shared/location/components/AddressCard';
 import '../../../../shared/location/styles/location.css';
 import styles        from '../styles/ProfilClient.module.css';
-import type { ClientAddress } from '../../../../shared/location/types/location.types';
+import type { ClientAddress, Coordinates } from '../../../../shared/location/types/location.types';
 import type { LocationPickerValue } from '../../../../shared/location/components/LocationPicker';
 import { TYPE_ADRESSE_LABELS } from '../../../../shared/location/types/location.types';
+import { searchActor } from '../../../../shared/location/services/routingApi';
+import type { ActorSearchResult } from '../../../../shared/location/services/routingApi';
+import { distanceKm, formatDistance } from '../../../../shared/location/utils/geoUtils';
+/* La commande exige que la position GPS du client soit autorisée
+ * (voir CommandePage.tsx du panier, qui bloque le paiement si le
+ * navigateur refuse la géolocalisation). Cette carte "Ma position
+ * actuelle" est affichée en PERMANENCE ici (pas seulement pendant
+ * l'ajout/édition d'une adresse) pour que le client :
+ *   1. Voie tout de suite si sa position est autorisée ou non,
+ *   2. Puisse relancer la demande de permission (bouton "Réessayer")
+ *      directement depuis son profil, avant même d'arriver au panier. */
+import { useGeolocation }  from '../../../../shared/location/hooks/useGeolocation';
+import LocationMap         from '../../../../shared/location/components/LocationMap';
 
 const LocationPicker = lazy(() => import('../../../../shared/location/components/LocationPicker'));
 
@@ -24,6 +38,21 @@ interface Props {
 type Mode = 'list' | 'create' | 'edit';
 
 const TYPE_OPTIONS = ['domicile', 'bureau', 'boutique', 'entrepot', 'relais', 'autre'] as const;
+
+/* Libellé/emoji/couleur d'affichage par type d'acteur trouvé via la recherche. */
+const ROLE_META: Record<ActorSearchResult['role'], { label: string; emoji: string; color: 'green' | 'blue' | 'orange' }> = {
+  vendor:        { label: 'Boutique',      emoji: '🏪', color: 'green'  },
+  delivery:      { label: 'Livreur',       emoji: '🛵', color: 'blue'   },
+  correspondent: { label: 'Correspondant', emoji: '📦', color: 'orange' },
+};
+
+/** Centre + zoom couvrant à la fois la position du client et l'acteur trouvé. */
+function computeSearchView(client: Coordinates, actor: ActorSearchResult): { center: Coordinates; zoom: number } {
+  const center = { latitude: (client.latitude + actor.lat) / 2, longitude: (client.longitude + actor.lng) / 2 };
+  const spread = Math.max(Math.abs(client.latitude - actor.lat), Math.abs(client.longitude - actor.lng));
+  const zoom = spread < 0.02 ? 15 : spread < 0.05 ? 14 : spread < 0.15 ? 12 : spread < 0.5 ? 10 : spread < 2 ? 8 : 6;
+  return { center, zoom };
+}
 
 const EMPTY_FORM = {
   typeAdresse:  'domicile' as ClientAddress['typeAdresse'],
@@ -50,6 +79,48 @@ export default function SectionAddresses({ onToast }: Props) {
   const [form,       setForm]       = useState({ ...EMPTY_FORM });
   const [pickerVal,  setPickerVal]  = useState<LocationPickerValue | null>(null);
   const [saving,     setSaving]     = useState(false);
+
+  /* Position GPS live du client — demandée dès l'arrivée sur cette page
+   * (watch:true = suivi continu, pas un simple instantané) car c'est ici
+   * que le client doit accorder la permission AVANT d'essayer de
+   * commander (le panier refuse la commande si elle n'est pas accordée). */
+  const geo = useGeolocation({ watch: true });
+
+  /* ── Recherche d'une boutique / d'un livreur / d'un correspondant ──
+   * Débounce simple (400ms) pour ne pas spammer l'API à chaque frappe. */
+  const [searchQuery,   setSearchQuery]   = useState('');
+  const [searchResults, setSearchResults] = useState<ActorSearchResult[]>([]);
+  const [searching,     setSearching]     = useState(false);
+  const [showResults,   setShowResults]   = useState(false);
+  const [foundActor,    setFoundActor]    = useState<ActorSearchResult | null>(null);
+
+  useEffect(() => {
+    if (foundActor || searchQuery.trim().length < 2) { setSearchResults([]); return; }
+    setSearching(true);
+    const t = setTimeout(() => {
+      searchActor(searchQuery.trim())
+        .then(setSearchResults)
+        .catch(() => setSearchResults([]))
+        .finally(() => setSearching(false));
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchQuery, foundActor]);
+
+  const selectActor = (a: ActorSearchResult) => {
+    setFoundActor(a);
+    setSearchQuery(a.name);
+    setShowResults(false);
+  };
+
+  const clearActorSearch = () => {
+    setFoundActor(null);
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+
+  const foundDistance = foundActor && geo.position
+    ? distanceKm(geo.position, { latitude: foundActor.lat, longitude: foundActor.lng })
+    : null;
 
   /* ── Chargement ─────────────────────────────────────────── */
   const load = async () => {
@@ -171,10 +242,172 @@ export default function SectionAddresses({ onToast }: Props) {
     } catch (e: any) { onToast(`❌ ${e.message}`, 'e'); }
   };
 
+  /* ── Bloc "Ma position actuelle" — affiché en PERMANENCE, quel que
+   * soit le mode (liste, ajout, édition). Sert à la fois de rappel
+   * visuel ("votre position est bien partagée") et de point d'entrée
+   * pour ré-autoriser la géolocalisation si elle a été refusée. */
+  const positionStatus = (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--t2)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <i className="fas fa-location-crosshairs" style={{ color: 'var(--b2)' }} />
+        Ma position actuelle
+        <span style={{ fontWeight: 400, color: 'var(--t3)' }}>— requise pour pouvoir commander</span>
+      </div>
+
+      {geo.error ? (
+        /* Permission refusée / GPS indisponible : pas de carte à afficher,
+         * juste l'explication + un bouton pour redemander l'autorisation. */
+        <div style={{
+          padding: '14px 16px', background: 'rgba(220,38,38,.07)', border: '1.5px solid rgba(220,38,38,.25)',
+          borderRadius: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+        }}>
+          <i className="fas fa-location-crosshairs" style={{ color: '#DC2626', fontSize: 18 }} />
+          <div style={{ flex: 1, minWidth: 200, fontSize: 12.5, color: 'var(--t2)' }}>
+            {geo.error} Sans position autorisée, vous ne pourrez pas passer de commande.
+          </div>
+          <button
+            onClick={geo.refresh}
+            style={{ background: '#DC2626', color: '#fff', border: 'none', borderRadius: 9, padding: '8px 16px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
+          >
+            <i className="fas fa-rotate-right" /> Réessayer
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Recherche d'une boutique / d'un livreur / d'un correspondant —
+           * une fois trouvé, une ligne bleu clair relie la position du
+           * client à l'acteur trouvé, avec la distance affichée. */}
+          <div style={{ position: 'relative', marginBottom: 10 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <i className="fas fa-magnifying-glass" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--t3)', fontSize: 12 }} />
+                <input
+                  value={searchQuery}
+                  onChange={e => { setSearchQuery(e.target.value); setShowResults(true); if (foundActor) setFoundActor(null); }}
+                  onFocus={() => setShowResults(true)}
+                  onBlur={() => setTimeout(() => setShowResults(false), 150) /* délai pour laisser le clic sur un résultat s'exécuter */}
+                  placeholder="Rechercher une boutique, un livreur, un correspondant…"
+                  style={{ width: '100%', padding: '9px 12px 9px 32px', border: '1.5px solid var(--bdr2)', borderRadius: 9, fontSize: 12.5, outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+              {(searchQuery || foundActor) && (
+                <button
+                  onClick={clearActorSearch}
+                  title="Effacer"
+                  style={{ background: 'var(--g100)', border: 'none', borderRadius: 9, padding: '0 12px', cursor: 'pointer', color: 'var(--t3)' }}
+                >
+                  <i className="fas fa-xmark" />
+                </button>
+              )}
+            </div>
+
+            {/* Dropdown des résultats */}
+            {showResults && !foundActor && searchQuery.trim().length >= 2 && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 1000,
+                background: '#fff', border: '1.5px solid var(--bdr2)', borderRadius: 10,
+                boxShadow: '0 8px 24px rgba(0,0,0,.12)', maxHeight: 220, overflowY: 'auto',
+              }}>
+                {searching ? (
+                  <div style={{ padding: 14, textAlign: 'center', color: 'var(--t3)', fontSize: 12.5 }}>
+                    <i className="fas fa-circle-notch fa-spin" /> Recherche…
+                  </div>
+                ) : searchResults.length === 0 ? (
+                  <div style={{ padding: 14, textAlign: 'center', color: 'var(--t3)', fontSize: 12.5 }}>
+                    Aucun résultat pour « {searchQuery} »
+                  </div>
+                ) : (
+                  searchResults.map(r => (
+                    <div
+                      key={`${r.role}-${r.id}`}
+                      onClick={() => selectActor(r)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', cursor: 'pointer', borderBottom: '1px solid var(--g100)' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--g100)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = ''; }}
+                    >
+                      <span style={{ fontSize: 18 }}>{ROLE_META[r.role].emoji}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--n)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {r.name}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--t3)' }}>
+                          {ROLE_META[r.role].label}{r.address ? ` · ${r.address}` : ''}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Acteur trouvé + distance depuis la position du client */}
+          {foundActor && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 10,
+              background: 'rgba(37,99,235,.06)', border: '1.5px solid rgba(37,99,235,.2)', borderRadius: 9, fontSize: 12.5,
+            }}>
+              <span style={{ fontSize: 16 }}>{ROLE_META[foundActor.role].emoji}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <strong style={{ color: 'var(--n)' }}>{foundActor.name}</strong>
+                <span style={{ color: 'var(--t3)' }}> — {ROLE_META[foundActor.role].label}</span>
+              </div>
+              {foundDistance != null && (
+                <span style={{ fontWeight: 700, color: '#2563EB', flexShrink: 0 }}>
+                  <i className="fas fa-ruler" /> {formatDistance(foundDistance)}
+                </span>
+              )}
+            </div>
+          )}
+
+          <LocationMap
+            center={
+              foundActor && geo.position
+                ? computeSearchView(geo.position, foundActor).center
+                : geo.position ?? { latitude: 9.6412, longitude: -13.5784 } /* Conakry par défaut, le temps que le GPS réponde */
+            }
+            zoom={foundActor && geo.position ? computeSearchView(geo.position, foundActor).zoom : 15}
+            height="200px"
+            showGpsMarker={geo.position}
+            markers={foundActor ? [{
+              id:       foundActor.id,
+              position: { latitude: foundActor.lat, longitude: foundActor.lng },
+              color:    ROLE_META[foundActor.role].color,
+              emoji:    ROLE_META[foundActor.role].emoji,
+              popupContent: (
+                <div style={{ fontSize: 12.5, fontWeight: 700 }}>
+                  {foundActor.name}
+                  {foundDistance != null && (
+                    <div style={{ fontWeight: 400, color: '#64748B', marginTop: 2 }}>
+                      {formatDistance(foundDistance)} de votre position
+                    </div>
+                  )}
+                </div>
+              ),
+            }] : []}
+          >
+            {/* Ligne bleu clair entre le client et l'acteur trouvé */}
+            {foundActor && geo.position && (
+              <Polyline
+                positions={[
+                  [geo.position.latitude, geo.position.longitude],
+                  [foundActor.lat, foundActor.lng],
+                ]}
+                pathOptions={{ color: '#60A5FA', weight: 4, opacity: 0.85, dashArray: '8, 6' }}
+              />
+            )}
+          </LocationMap>
+        </>
+      )}
+    </div>
+  );
+
   /* ── Vue formulaire (create / edit) ─────────────────────── */
   if (mode !== 'list') {
     return (
       <div style={{ paddingTop: 8 }}>
+
+        {positionStatus}
 
         {/* En-tête */}
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
@@ -392,6 +625,8 @@ export default function SectionAddresses({ onToast }: Props) {
   /* ── Vue liste ───────────────────────────────────────────── */
   return (
     <div style={{ paddingTop: 8 }}>
+
+      {positionStatus}
 
       {/* En-tête */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>

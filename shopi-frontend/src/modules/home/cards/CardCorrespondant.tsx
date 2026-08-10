@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
 import { useNavigate }         from 'react-router-dom';
+import { useTranslation }      from 'react-i18next';
 import styles                  from './Cards.module.css';
-import { apiFetch }            from '../../../shared/services/apiFetch';
 import { useAuthGate }         from '../../../shared/hooks/useAuthGate';
+import FollowButton            from '../../../shared/components/FollowButton';
 
 export interface CorrespondantCardData {
   id: string; fullName: string; profilePicture: string | null;
@@ -11,17 +11,22 @@ export interface CorrespondantCardData {
   online: boolean; isSuivi: boolean;
 }
 
-const TYPE_LABEL: Record<string, string> = { regional: 'Régional', zonal: 'Zonal', national: 'National' };
-const TOKEN_KEY = 'shopi_access_token';
-
 interface Props {
   c:         CorrespondantCardData | any;
   onToast:   (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
-  onToggle?: (id: string, val: boolean) => void;
+  /** Appelé quand l'utilisateur choisit "Supprimer" dans le menu ⋮ —
+   *  le parent doit retirer ce correspondant de sa liste locale. */
+  onRemoved?: (id: string) => void;
 }
 
-export default function CardCorrespondant({ c, onToast, onToggle }: Props) {
+export default function CardCorrespondant({ c, onToast, onRemoved }: Props) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const TYPE_LABEL: Record<string, string> = {
+    regional: t('sharedCards.correspondant.typeLabel.regional'),
+    zonal: t('sharedCards.correspondant.typeLabel.zonal'),
+    national: t('sharedCards.correspondant.typeLabel.national'),
+  };
 
   const id       = c?.id ?? '';
   const name     = c?.fullName ?? c?.nom ?? '';
@@ -33,38 +38,13 @@ export default function CardCorrespondant({ c, onToast, onToggle }: Props) {
   const rating   = Number(c?.averageRating ?? c?.note ?? 0);
   const online   = c?.online ?? false;
 
-  const [suivi,   setSuivi]   = useState<boolean>(c?.isSuivi ?? false);
-  const [loading, setLoading] = useState(false);
-  const [hovered, setHovered] = useState(false);
   const { openAuthModal, authModal } = useAuthGate();
-
-  useEffect(() => { setSuivi(c?.isSuivi ?? false); }, [c?.isSuivi]);
 
   const initials = name.trim().split(/\s+/).slice(0, 2)
     .map((w: string) => w[0]?.toUpperCase() ?? '').join('') || '?';
 
-  async function handleToggle() {
-    if (!localStorage.getItem(TOKEN_KEY)) { openAuthModal(); return; }
-    if (!id) { onToast('❌ ID manquant', 'e'); return; }
-    setLoading(true);
-    const optimistic = !suivi;
-    setSuivi(optimistic);
-    try {
-      const res = await apiFetch<{ isSuivi: boolean; message: string }>(
-        `/suivis/correspondants/${id}`, { method: 'POST' }
-      );
-      const confirmed = res?.isSuivi ?? optimistic;
-      setSuivi(confirmed);
-      onToggle?.(id, confirmed);
-      onToast(confirmed ? `✅ Abonné à ${name}` : `👋 Désabonné de ${name}`, confirmed ? 's' : 'i');
-    } catch (e: any) {
-      setSuivi(!optimistic);
-      onToast(`❌ ${e?.message ?? 'Erreur réseau'}`, 'e');
-    } finally { setLoading(false); setHovered(false); }
-  }
-
   return (
-    <div className={styles.crCard}>
+    <div className={styles.crCard} style={{ position: 'relative' }}>
 
       {/* ── Bannière ── */}
       <div className={styles.crBanner}>
@@ -76,7 +56,7 @@ export default function CardCorrespondant({ c, onToast, onToggle }: Props) {
             display: 'flex', alignItems: 'center', gap: 5,
           }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#34D399', boxShadow: '0 0 5px #34D399' }} />
-            En ligne
+            {t('sharedCards.correspondant.enLigne')}
           </span>
         )}
       </div>
@@ -108,7 +88,7 @@ export default function CardCorrespondant({ c, onToast, onToggle }: Props) {
             {c?.emoji ?? initials}
           </div>
           <div className={`${styles.crOl} ${online ? styles.crOlOn : styles.crOlOff}`}
-            title={online ? 'En ligne' : 'Hors ligne'} />
+            title={online ? t('sharedCards.correspondant.enLigne') : t('sharedCards.correspondant.horsLigne')} />
         </div>
 
         {/* Nom */}
@@ -123,17 +103,17 @@ export default function CardCorrespondant({ c, onToast, onToggle }: Props) {
         <span className={styles.crType}>{TYPE_LABEL[type] ?? type}</span>
 
         {/* Bio */}
-        <div className={styles.crDesc}>{bio || 'Aucune description disponible.'}</div>
+        <div className={styles.crDesc}>{bio || t('sharedCards.correspondant.aucuneDescription')}</div>
 
         {/* Stats */}
         <div className={styles.crStatsRow}>
           <div className={styles.crStat}>
             <span className={styles.crStatVal}>{missions.toLocaleString('fr-FR')}</span>
-            <span className={styles.crStatLbl}>Missions</span>
+            <span className={styles.crStatLbl}>{t('sharedCards.correspondant.missions')}</span>
           </div>
           <div className={styles.crStat}>
             <span className={styles.crStatVal}>{rating > 0 ? rating.toFixed(1) : '—'}</span>
-            <span className={styles.crStatLbl}>Note ⭐</span>
+            <span className={styles.crStatLbl}>{t('sharedCards.correspondant.note')}</span>
           </div>
         </div>
 
@@ -143,27 +123,17 @@ export default function CardCorrespondant({ c, onToast, onToggle }: Props) {
             className={styles.crV}
             onClick={() => id ? navigate(`/profil/correspondant/${id}`) : onToast(`📍 ${name}`, 'i')}
           >
-            <i className="fas fa-user" /> Voir profil
+            <i className="fas fa-user" /> {t('sharedCards.correspondant.voirProfil')}
           </button>
-          <button
-            className={`${styles.crC} ${suivi ? styles.crCOn : ''}`}
-            onClick={handleToggle}
-            disabled={loading}
-            onMouseEnter={() => suivi && setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            title={!localStorage.getItem(TOKEN_KEY) ? 'Connectez-vous pour suivre' : undefined}
-          >
-            {loading
-              ? <i className="fas fa-spinner fa-spin" />
-              : !localStorage.getItem(TOKEN_KEY)
-                ? <><i className="fas fa-right-to-bracket" /> Connexion</>
-                : suivi && hovered
-                  ? <><i className="fas fa-user-minus" /> Désabonner</>
-                  : suivi
-                    ? <><i className="fas fa-user-check" /> Abonné(e)</>
-                    : <><i className="fas fa-plus" /> Suivre</>
-            }
-          </button>
+          <FollowButton
+            actorType="correspondant"
+            id={id}
+            name={name}
+            isSuivi={c?.isSuivi ?? false}
+            onToast={onToast}
+            onRequireAuth={openAuthModal}
+            onChange={next => { if (next.removed) onRemoved?.(id); }}
+          />
         </div>
       </div>
 

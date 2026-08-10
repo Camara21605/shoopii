@@ -1,0 +1,204 @@
+{
+  "retours": {
+    "title": "Devoluções & SAV",
+    "subtitle": "Gestão de pedidos de devolução e serviço pós-venda",
+    "refresh": "Atualizar",
+    "tabRetours": "Devoluções",
+    "tabSav": "SAV",
+    "toasts": {
+      "accepted": "✅ Devolução aceite — cliente notificado",
+      "refused": "Devolução recusada — cliente notificado",
+      "refunded": "💸 Reembolso registado",
+      "noteAdded": "📝 Nota adicionada",
+      "genericError": "Erro",
+      "acceptError": "Erro ao aceitar"
+    },
+    "reasons": {
+      "defective": "Produto defeituoso",
+      "not_matching": "Não corresponde",
+      "change_of_mind": "Mudança de opinião",
+      "wrong_item": "Artigo errado",
+      "damaged": "Danificado",
+      "expired": "Produto expirado",
+      "other": "Outro"
+    },
+    "stats": {
+      "totalMois": "Total este mês",
+      "badgeAuj": "+{{count}} hoje",
+      "enAttente": "Pendente",
+      "urgents": "Urgentes",
+      "acceptes": "Aceites",
+      "badgeRetours": "{{count}} devoluções",
+      "rembourseGnf": "Reembolsado (GNF)",
+      "badgeRemb": "{{count}} reemb.",
+      "topMotifs": "Principais motivos de devolução",
+      "aucuneDonnee": "Sem dados",
+      "performance": "Desempenho",
+      "tauxAcceptation": "Taxa de aceitação",
+      "delaiMoyen": "Prazo médio de tratamento",
+      "retoursRefuses": "Devoluções recusadas",
+      "remboursementsEffectues": "Reembolsos efetuados"
+    },
+    "list": {
+      "status": {
+        "pending": "⏳ Pendente",
+        "accepted": "✓ Aceite",
+        "refused": "✕ Recusado",
+        "in_transit": "🚚 Em trânsito",
+        "received": "📦 Recebido",
+        "refunded": "💸 Reembolsado",
+        "exchanged": "🔁 Trocado",
+        "closed": "Fechado"
+      },
+      "reasons": {
+        "defective": "Produto defeituoso",
+        "not_matching": "Não corresponde",
+        "change_of_mind": "Mudança de opinião",
+        "wrong_item": "Artigo errado recebido",
+        "damaged": "Danificado",
+        "expired": "Produto expirado",
+        "other": "Outro motivo"
+      },
+      "priority": {
+        "low": "Baixa",
+        "normal": "Normal",
+        "high": "Alta",
+        "urgent": "🔴 Urgente"
+      },
+      "returnType": {
+        "refund": "Reembolso",
+        "exchange": "Troca",
+        "repair": "Reparação",
+        "credit": "Crédito"
+      },
+      "search": "Pesquisar por referência ou produto…",
+      "allStatus": "Todos os estatutos",
+      "allReasons": "Todos os motivos",
+      "allPriorities": "Todas as prioridades",
+      "sort": {
+        "recent": "Mais recentes",
+        "oldest": "Mais antigos",
+        "amountDesc": "Montante ↓",
+        "amountAsc": "Montante ↑",
+        "statusAz": "Estatuto A→Z"
+      },
+      "loadError": "Erro de carregamento",
+      "emptyTitle": "Nenhuma devolução encontrada",
+      "emptySub": "Nenhum pedido de devolução corresponde aos seus filtros.",
+      "table": {
+        "reference": "Referência",
+        "produit": "Produto",
+        "client": "Cliente",
+        "motif": "Motivo",
+        "type": "Tipo",
+        "montant": "Montante",
+        "priorite": "Prioridade",
+        "statut": "Estatuto",
+        "date": "Data",
+        "actions": "Ações"
+      },
+      "accorde": "Concedido: {{montant}} GNF",
+      "voir": "Ver",
+      "results_one": "{{count}} resultado",
+      "results_other": "{{count}} resultados",
+      "page": "Página {{page}}/{{pages}}"
+    },
+    "detail": {
+      "tabInfo": "Detalhes",
+      "tabHistory": "Histórico",
+      "tabEvidence": "Provas ({{count}})",
+      "produitRetourne": "PRODUTO DEVOLVIDO",
+      "qte": "Qtd.:",
+      "commande": "Encomenda:",
+      "montants": "MONTANTES",
+      "demande": "Pedido:",
+      "accorde": "Concedido:",
+      "descriptionProbleme": "DESCRIÇÃO DO PROBLEMA",
+      "noteInterne": "NOTA INTERNA",
+      "messageClient": "MENSAGEM DO CLIENTE",
+      "accept": {
+        "title": "Aceitar a devolução",
+        "montant": "Montante concedido (GNF)",
+        "message": "Mensagem ao cliente (opcional)",
+        "placeholder": "Ex: A sua devolução foi aceite. O reembolso será efetuado dentro de 3-5 dias.",
+        "confirm": "Confirmar a aceitação",
+        "annuler": "Cancelar"
+      },
+      "refuse": {
+        "title": "Recusar a devolução",
+        "raison": "Motivo da recusa (enviado ao cliente)",
+        "placeholder": "Ex: O seu pedido não respeita a política de devolução (prazo excedido).",
+        "confirm": "Confirmar a recusa",
+        "annuler": "Cancelar"
+      },
+      "note": {
+        "title": "Nota interna",
+        "placeholder": "Nota visível apenas para a sua equipa…",
+        "save": "Guardar",
+        "annuler": "Cancelar"
+      },
+      "historyEmptyTitle": "Sem histórico",
+      "historyEmptySub": "O histórico das ações aparecerá aqui.",
+      "actions": {
+        "created": "Pedido de devolução criado",
+        "accepted": "Devolução aceite",
+        "refused": "Devolução recusada",
+        "refunded": "Reembolso efetuado",
+        "received": "Devolução recebida",
+        "note_added": "Nota interna adicionada",
+        "evidence_uploaded": "Prova adicionada",
+        "priority_changed": "Prioridade alterada"
+      },
+      "evidenceEmptyTitle": "Nenhuma prova",
+      "evidenceEmptySub": "O cliente ainda não anexou fotos ou documentos.",
+      "footerNote": "Nota",
+      "footerRefuser": "Recusar",
+      "footerAccepter": "Aceitar",
+      "footerRembourser": "Reembolsar",
+      "footerFermer": "Fechar",
+      "confirmRefund": "Confirmar o reembolso?",
+      "invalidAmount": "⚠️ Montante inválido"
+    },
+    "sav": {
+      "stats": {
+        "ouverts": "Tickets abertos",
+        "enCours": "Em curso",
+        "resolus": "Resolvidos",
+        "delaiMoy": "Prazo médio de resposta"
+      },
+      "status": {
+        "open": "🟢 Aberto",
+        "in_progress": "🔵 Em curso",
+        "waiting_client": "🟡 A aguardar cliente",
+        "resolved": "✓ Resolvido",
+        "closed": "Fechado"
+      },
+      "search": "Pesquisar um ticket (ref., assunto)…",
+      "allStatus": "Todos os estatutos",
+      "allPriorities": "Todas as prioridades",
+      "table": {
+        "reference": "Referência",
+        "sujet": "Assunto",
+        "client": "Cliente",
+        "produit": "Produto",
+        "priorite": "Prioridade",
+        "statut": "Estatuto",
+        "messages": "Mensagens",
+        "date": "Data",
+        "actions": "Ações"
+      },
+      "emptyTitle": "Nenhum ticket SAV",
+      "emptySub": "Os tickets dos clientes aparecerão aqui.",
+      "repondre": "Responder",
+      "resoudre": "Resolver",
+      "fermer": "Fechar",
+      "confirmClose": "Fechar este ticket?",
+      "ticketClosed": "Ticket fechado",
+      "ticketResolved": "✅ Ticket resolvido",
+      "genericError": "❌ Erro",
+      "sendError": "Erro no envio",
+      "replyPlaceholder": "Responder ao cliente…",
+      "envoyer": "Enviar"
+    }
+  }
+}

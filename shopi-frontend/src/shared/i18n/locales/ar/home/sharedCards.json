@@ -1,0 +1,107 @@
+{
+  "sharedCards": {
+    "partenaire": {
+      "abonnesSuffix": "متابع",
+      "enSavoirPlus": "معرفة المزيد",
+      "desabonneToast": "👋 تم إلغاء المتابعة",
+      "abonneToast": "✅ تمت متابعة {{nom}}",
+      "abonne": "متابَع",
+      "suivre": "متابعة هذا الشريك"
+    },
+    "entreprise": {
+      "verifie": "موثّق",
+      "villeDefault": "Conakry",
+      "commandes": "الطلبات",
+      "note": "التقييم ⭐",
+      "avis": "التقييمات",
+      "abonne": "متابَع",
+      "sabonner": "متابعة"
+    },
+    "livreur": {
+      "disponible": "متاح",
+      "enCourse": "في مهمة",
+      "livraisons": "التوصيلات",
+      "note": "التقييم ⭐",
+      "voirProfil": "عرض الملف",
+      "connectezVous": "سجّلوا الدخول للمتابعة"
+    },
+    "correspondant": {
+      "typeLabel": {
+        "regional": "إقليمي",
+        "zonal": "منطقي",
+        "national": "وطني"
+      },
+      "enLigne": "متصل",
+      "horsLigne": "غير متصل",
+      "idManquantToast": "❌ المعرّف مفقود",
+      "erreurReseauFallback": "خطأ في الشبكة",
+      "abonneToast": "✅ تمت متابعة {{nom}}",
+      "desabonneToast": "👋 تم إلغاء متابعة {{nom}}",
+      "aucuneDescription": "لا يوجد وصف متاح.",
+      "missions": "المهام",
+      "note": "التقييم ⭐",
+      "voirProfil": "عرض الملف",
+      "connectezVous": "سجّلوا الدخول للمتابعة",
+      "connexion": "تسجيل الدخول",
+      "desabonner": "إلغاء المتابعة",
+      "abonneParenth": "متابَع",
+      "suivre": "متابعة"
+    },
+    "produit": {
+      "badges": {
+        "hot": "🔥 رائج",
+        "new": "✨ جديد",
+        "promo": "🏷️ عرض"
+      },
+      "copier": "نسخ",
+      "partageViaToast": "📲 تمت المشاركة عبر {{label}}",
+      "instagramToast": "📸 افتحوا إنستغرام وشاركوا الرابط",
+      "lienCopieToast": "🔗 تم نسخ الرابط!",
+      "dejaAuPanierToast": "✓ {{nom}} موجود بالفعل في سلتكم",
+      "ajouteAuPanierToast": "🛒 تمت إضافة {{nom}} إلى السلة!",
+      "ajoutErrorFallback": "تعذّرت الإضافة إلى السلة",
+      "favoriAjoute": "❤️ أُضيف إلى المفضلة",
+      "favoriRetire": "💔 أُزيل من المفضلة",
+      "favoriErrorFallback": "الإجراء غير متاح",
+      "voir": "عرض",
+      "boutique": "المتجر",
+      "partager": "مشاركة",
+      "prixGros": "سعر الجملة",
+      "dejaAuPanierBtn": "موجود في السلة",
+      "dejaAuPanierClicToast": "✓ موجود بالفعل في سلتكم — أزيلوه من السلة",
+      "ajoutEnCours": "جارٍ الإضافة…",
+      "ajouterAuPanier": "أضف إلى السلة",
+      "modalEntreprise": {
+        "titre": "المتجر",
+        "guinee": "غينيا",
+        "boutiqueVerifiee": "متجر موثّق من شوبي",
+        "commandes": "الطلبات",
+        "note": "التقييم",
+        "avis": "التقييمات",
+        "ville": "المدينة",
+        "produitPublieLabel": "منتج نشره هذا المتجر",
+        "desabonneToast": "👋 تم إلغاء المتابعة",
+        "abonneToast": "✅ تمت متابعة {{nom}}",
+        "abonne": "متابَع",
+        "sabonner": "متابعة",
+        "voirBoutique": "عرض المتجر"
+      },
+      "modalPartage": {
+        "titre": "شارك هذا المنتج"
+      },
+      "modalGros": {
+        "titre": "سعر الجملة",
+        "prixStandard": "السعر العادي:",
+        "uniteSuffix": "/ وحدة",
+        "min": "الحد الأدنى",
+        "unites": "وحدات",
+        "aucunPalier": "لا توجد شرائح أسعار محددة لهذا المنتج.",
+        "paliersLabel": "أسعار تنازلية حسب الكمية",
+        "quantite": "الكمية",
+        "prixParUnite": "السعر / الوحدة",
+        "economie": "التوفير",
+        "note": "أضيفوا المنتج إلى السلة بالكمية المطلوبة. يُطبَّق السعر التنازلي تلقائياً على الطلب."
+      }
+    }
+  }
+}

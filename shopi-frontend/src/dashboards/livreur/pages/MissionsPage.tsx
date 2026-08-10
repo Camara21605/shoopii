@@ -1,9 +1,11 @@
 // src/dashboards/livreur/pages/MissionsPage.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MissionCard from '../components/MissionCard';
-import { fetchMissions } from '../services/missions.api';
+import RefuseMissionModal from '../components/RefuseMissionModal';
+import { fetchMissions, accepterMission, refuserMission } from '../services/missions.api';
 import type { MissionApi } from '../services/missions.api';
+import { buildMapMissionState } from '../data/livreurData';
 import shared from '../styles/Shared.module.css';
 
 interface Props { onPop: (m: string, t?: string) => void; }
@@ -16,6 +18,8 @@ export default function MissionsPage({ onPop }: Props) {
   const [missions, setMissions] = useState<MissionApi[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [autoAcc,  setAutoAcc]  = useState(true);
+  const [refusingMission, setRefusingMission] = useState<MissionApi | null>(null);
+  const [refusing, setRefusing] = useState(false);
 
   useEffect(() => {
     fetchMissions()
@@ -30,12 +34,51 @@ export default function MissionsPage({ onPop }: Props) {
     : active === 'Urgentes'   ? missions.filter(m => m.urgent)
     : missions.filter(m => parseInt(m.dist) <= 5);
 
-  /* ── Ouvrir la page de suivi de la commande ── */
-  const accept = (id: string) => {
+  /* ── "Accepter" (status new → accepte réellement) ou "Voir la commande" (status prep/active → navigue) ── */
+  const accept = async (id: string) => {
     const m = missions.find(x => x.id === id);
     if (!m) return;
-    navigate(`/commande/${m.uuid}/suivi`);
+
+    if (m.status !== 'new') {
+      navigate(`/commande/${m.uuid}/suivi`);
+      return;
+    }
+
+    try {
+      await accepterMission(m.uuid);
+      setMissions(prev => prev.map(x => x.id === id ? { ...x, status: 'prep' } : x));
+      onPop(`✅ Mission ${m.id} acceptée`, 's');
+    } catch (err: any) {
+      onPop(err?.message ?? '❌ Impossible d\'accepter cette mission', 'e');
+    }
   };
+
+  /* ── Refuser (motif obligatoire via RefuseMissionModal) ── */
+  const confirmRefuse = async (reason: string) => {
+    if (!refusingMission) return;
+    setRefusing(true);
+    try {
+      await refuserMission(refusingMission.uuid, reason);
+      setMissions(prev => prev.filter(x => x.id !== refusingMission.id));
+      onPop(`✕ Mission ${refusingMission.id} refusée`, 'w');
+      setRefusingMission(null);
+    } catch (err: any) {
+      onPop(err?.message ?? '❌ Impossible de refuser cette mission', 'e');
+    } finally {
+      setRefusing(false);
+    }
+  };
+
+  /* ── Voir la boutique + le client de cette mission sur "Ma zone de livraison" ── */
+  const showOnMap = (m: MissionApi) => {
+    navigate('/dashboard/livreur/zone', { state: { mapMission: buildMapMissionState(m) } });
+  };
+
+  /* ── Ouvrir le détail complet de la commande (clic sur la carte) ──
+   * La commande existe déjà même si le livreur n'a pas encore répondu
+   * (status 'new') — l'accès y est autorisé car il en est déjà le
+   * livreur assigné côté backend (voir isInvolved dans getCommandeDetail). */
+  const openDetail = (m: MissionApi) => navigate(`/commande/${m.uuid}/suivi`);
 
   const count = missions.filter(m => m.status === 'new').length;
 
@@ -59,7 +102,7 @@ export default function MissionsPage({ onPop }: Props) {
             </label>
             <span style={{ fontSize:12, color:'var(--t2)', fontWeight:600 }}>Auto-accepter missions &lt;5km</span>
           </div>
-          <span style={{ fontSize:12, color:'var(--t3)' }}>· <strong style={{ color:'var(--navy)' }}>{count}</strong> disponibles</span>
+          <span style={{ fontSize:12, color:'var(--t3)' }}>· <strong style={{ color:'var(--navy)' }}>{count}</strong> en attente</span>
         </div>
       </div>
 
@@ -79,8 +122,26 @@ export default function MissionsPage({ onPop }: Props) {
 
       {!loading && filtered.length > 0 && (
         <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-          {filtered.map(m => <MissionCard key={m.id} mission={m} onAccept={accept} onPop={onPop} />)}
+          {filtered.map(m => (
+            <MissionCard
+              key={m.id}
+              mission={m}
+              onAccept={accept}
+              onMap={() => showOnMap(m)}
+              onRefuse={() => setRefusingMission(m)}
+              onOpen={() => openDetail(m)}
+            />
+          ))}
         </div>
+      )}
+
+      {refusingMission && (
+        <RefuseMissionModal
+          mission={refusingMission}
+          saving={refusing}
+          onClose={() => setRefusingMission(null)}
+          onConfirm={confirmRefuse}
+        />
       )}
     </div>
   );

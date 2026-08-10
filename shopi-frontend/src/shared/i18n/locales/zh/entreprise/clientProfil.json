@@ -1,0 +1,58 @@
+{
+  "clientProfil": {
+    "status": {
+      "pending": "待处理",
+      "paid": "已支付",
+      "in_progress": "进行中",
+      "awaiting_client": "待确认",
+      "delivered": "已送达",
+      "auto_delivered": "已送达（自动）",
+      "cancelled": "已取消",
+      "refunded": "已退款",
+      "disputed": "争议"
+    },
+    "mode": {
+      "livreur": "🛵 配送员",
+      "correspondant": "🤝 代理商",
+      "partenaire": "🤝 合作伙伴",
+      "pickup": "🏪 店铺自取",
+      "mixte": "🔀 混合"
+    },
+    "clientDepuis": "自 {{date}} 起为客户",
+    "kpi": {
+      "commandes": "订单",
+      "dansCetteBoutique": "在此店铺",
+      "totalDepense": "总消费",
+      "depuisLeDebut": "自始至今",
+      "derniereCmd": "最近订单"
+    },
+    "tabs": {
+      "apercu": "概览",
+      "commandes": "订单（{{count}}）"
+    },
+    "loadingProfil": "正在加载资料…",
+    "aperçu": {
+      "relationTitle": "与您店铺的关系",
+      "commandesPassees": "已下订单",
+      "totalDepense": "总消费",
+      "abonneBoutique": "已关注店铺",
+      "oui": "✅ 是",
+      "non": "❌ 否",
+      "segment": "细分",
+      "derniereCommandeTitle": "最近订单",
+      "aucuneCommandeTitle": "暂无订单",
+      "aucuneCommandeSub": "此客户关注您的店铺但尚未购买。"
+    },
+    "commandesTab": {
+      "aucune": "暂无订单",
+      "livreLe": "于 {{date}} 送达",
+      "produits": "产品：{{montant}}",
+      "affichageLimite": "显示 {{total}} 单中的最近 10 单。"
+    },
+    "footer": {
+      "messageToast": "📧 消息已发送给{{name}}",
+      "envoyerMessage": "发送消息",
+      "fermer": "关闭"
+    }
+  }
+}

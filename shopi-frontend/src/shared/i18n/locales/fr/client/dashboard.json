@@ -1,0 +1,88 @@
+{
+  "clientDashboard": {
+    "monEspace": "Mon espace",
+    "centreAide": "Centre d'aide",
+    "centreAideTitle": "Accéder au Centre d'aide Shopi",
+    "support": {
+      "titre": "🎫 Mes tickets de support",
+      "voirTout": "Voir tout",
+      "chargement": "Chargement…",
+      "aucunTicket": "Aucun ticket ouvert — besoin d'aide ?",
+      "nouveauTicket": "+ Nouveau ticket"
+    },
+    "typeAdresse": {
+      "domicile": "Domicile",
+      "bureau": "Bureau",
+      "boutique": "Boutique",
+      "entrepot": "Entrepôt",
+      "relais": "Relais",
+      "depart": "Départ",
+      "autre": "Autre"
+    },
+    "adresses": {
+      "nouvelleAdresse": "Nouvelle adresse",
+      "modifierAdresse": "Modifier l'adresse",
+      "mesAdresses": "Mes adresses",
+      "subtitleSuffix_one": "adresse enregistrée",
+      "subtitleSuffix_other": "adresses enregistrées",
+      "ajouter": "Ajouter",
+      "aucuneAdresse": "Aucune adresse",
+      "aucuneAdresseDesc": "Ajoutez vos adresses pour faciliter vos livraisons.",
+      "ajouterPremiere": "Ajouter ma première adresse",
+      "toastAjoutee": "✅ Adresse ajoutée avec succès !",
+      "toastMiseAJour": "✅ Adresse mise à jour.",
+      "confirmSuppression": "Supprimer cette adresse ?",
+      "toastSupprimee": "🗑️ Adresse supprimée.",
+      "toastParDefaut": "⭐ Adresse par défaut mise à jour."
+    },
+    "addressCard": {
+      "parDefaut": "Par défaut",
+      "adresseIncomplete": "Adresse incomplète",
+      "definirParDefautTitle": "Définir par défaut",
+      "modifierTitle": "Modifier",
+      "supprimerTitle": "Supprimer"
+    },
+    "addressForm": {
+      "typeAdresseLabel": "Type d'adresse",
+      "libelleLabel": "Libellé",
+      "libelleHint": "(ex : \"Maison mère\", \"Bureau\")",
+      "libellePlaceholder": "Libellé optionnel",
+      "localisation": "Localisation",
+      "paysLabel": "Pays",
+      "depuisInscription": "Depuis votre inscription",
+      "villeLabel": "Ville",
+      "choisirVille": "— Choisir une ville —",
+      "villePlaceholder": "Saisir la ville",
+      "communeLabel": "Commune / Arrondissement",
+      "choisirCommune": "— Choisir une commune —",
+      "quartierLabel": "Quartier",
+      "choisirQuartier": "— Choisir un quartier —",
+      "rueLabel": "Rue / Adresse précise",
+      "optionnel": "(optionnel)",
+      "ruePlaceholder": "Numéro, nom de rue, repère…",
+      "instructionsLabel": "Instructions de livraison",
+      "instructionsPlaceholder": "Ex : Maison jaune près de la mosquée, sonner à l'entrée…",
+      "telephoneLabel": "Téléphone de contact",
+      "telephonePlaceholder": "+224 6xx xx xx xx",
+      "parDefautLabel": "Définir comme adresse par défaut",
+      "parDefautDesc": "Sera pré-sélectionnée lors de vos prochaines commandes",
+      "villeObligatoire": "La ville est obligatoire.",
+      "erreurSauvegarde": "Erreur lors de la sauvegarde.",
+      "annuler": "Annuler",
+      "enregistrement": "Enregistrement…",
+      "enregistrerAdresse": "Enregistrer l'adresse",
+      "pays": {
+        "guinee": "Guinée",
+        "senegal": "Sénégal",
+        "mali": "Mali",
+        "coteIvoire": "Côte d'Ivoire",
+        "guineeBissau": "Guinée-Bissau",
+        "mauritanie": "Mauritanie",
+        "liberia": "Libéria",
+        "sierraLeone": "Sierra Leone",
+        "france": "France",
+        "autrePays": "Autre pays"
+      }
+    }
+  }
+}

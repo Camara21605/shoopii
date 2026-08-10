@@ -4,10 +4,10 @@
  *           Boutons : modifier, supprimer, définir par défaut.
  * ============================================================ */
 
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import '../styles/location.css';
 import type { ClientAddress } from '../types/location.types';
-import { TYPE_ADRESSE_ICONS, TYPE_ADRESSE_LABELS } from '../types/location.types';
+import { TYPE_ADRESSE_ICONS, getTypeAdresseLabels } from '../types/location.types';
 
 interface AddressCardProps {
   address:       ClientAddress;
@@ -26,8 +26,9 @@ export default function AddressCard({
   selected,
   onClick,
 }: AddressCardProps) {
+  const { t } = useTranslation();
   const icon  = TYPE_ADRESSE_ICONS[address.typeAdresse] ?? '📌';
-  const label = TYPE_ADRESSE_LABELS[address.typeAdresse] ?? address.typeAdresse;
+  const label = getTypeAdresseLabels(t)[address.typeAdresse] ?? address.typeAdresse;
 
   const formatted = [
     address.rue,
@@ -53,11 +54,11 @@ export default function AddressCard({
         <div className="loc-address-card__title">
           <span>{address.libelle || label}</span>
           {address.estDefaut && (
-            <span className="loc-address-card__badge">Par défaut</span>
+            <span className="loc-address-card__badge">{t('clientDashboard.addressCard.parDefaut')}</span>
           )}
         </div>
         <div className="loc-address-card__text">
-          <div>{formatted || 'Adresse incomplète'}</div>
+          <div>{formatted || t('clientDashboard.addressCard.adresseIncomplete')}</div>
           {address.instructions && (
             <div style={{ marginTop: 3, fontStyle: 'italic', opacity: .8 }}>
               {address.instructions}
@@ -84,7 +85,7 @@ export default function AddressCard({
           {!address.estDefaut && onSetDefault && (
             <button
               className="loc-address-card__btn"
-              title="Définir par défaut"
+              title={t('clientDashboard.addressCard.definirParDefautTitle')}
               onClick={() => onSetDefault(address.id)}
             >
               <i className="fas fa-star" />
@@ -93,7 +94,7 @@ export default function AddressCard({
           {onEdit && (
             <button
               className="loc-address-card__btn"
-              title="Modifier"
+              title={t('clientDashboard.addressCard.modifierTitle')}
               onClick={() => onEdit(address)}
             >
               <i className="fas fa-pen" />
@@ -102,7 +103,7 @@ export default function AddressCard({
           {onDelete && !address.estDefaut && (
             <button
               className="loc-address-card__btn delete"
-              title="Supprimer"
+              title={t('clientDashboard.addressCard.supprimerTitle')}
               onClick={() => onDelete(address.id)}
             >
               <i className="fas fa-trash" />

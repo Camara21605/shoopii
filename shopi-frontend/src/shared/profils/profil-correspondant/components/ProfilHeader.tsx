@@ -7,6 +7,7 @@
 
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/ProfilCorrespondant.module.css';
+import FollowButton from '../../../components/FollowButton';
 import type { CorrProfil } from '../data/types';
 
 /* Mappe le type de badge → classe de chip */
@@ -18,16 +19,18 @@ const CHIP_ICON: Record<string, string> = {
 };
 
 interface Props {
-  profil:       CorrProfil;
-  suivi:        boolean;
-  callLoading?: boolean;
-  onToggle:     () => void;
-  onMessage:    () => void;
-  onShare:      () => void;
-  onCall?:      () => void;
+  profil:        CorrProfil;
+  suivi:         boolean;
+  callLoading?:  boolean;
+  onToast:       (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  onRequireAuth: () => void;
+  onFollowChange:(next: { isSuivi: boolean }) => void;
+  onMessage:     () => void;
+  onShare:       () => void;
+  onCall?:       () => void;
 }
 
-export default function ProfilHeader({ profil, suivi, callLoading, onToggle, onMessage, onShare, onCall }: Props) {
+export default function ProfilHeader({ profil, suivi, callLoading, onToast, onRequireAuth, onFollowChange, onMessage, onShare, onCall }: Props) {
   const { t } = useTranslation();
   /* Les 8 KPI dérivés du profil */
   const KPIS = [
@@ -97,12 +100,15 @@ export default function ProfilHeader({ profil, suivi, callLoading, onToggle, onM
               <button className={styles.btnMsg} onClick={onMessage}>
                 <i className="fas fa-comment-dots" /> {t('profilCorrespondant.contacter')}
               </button>
-              <button
-                className={`${styles.btn} ${suivi ? styles.btnFollowOn : styles.btnFollow}`}
-                onClick={onToggle}
-              >
-                {suivi ? <><i className="fas fa-user-check" /> {t('profilCorrespondant.abonne')}</> : <><i className="fas fa-plus" /> {t('profilCorrespondant.suivre')}</>}
-              </button>
+              <FollowButton
+                actorType="correspondant"
+                id={profil.id}
+                name={profil.nom}
+                isSuivi={suivi}
+                onToast={onToast}
+                onRequireAuth={onRequireAuth}
+                onChange={onFollowChange}
+              />
             </div>
           </div>
         </div>

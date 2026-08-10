@@ -88,9 +88,10 @@ export default function ParametresPage() {
     saveLivraison,
     savePaiement, savePlan,
     uploadDocument,
-    save2FA,
+    save2FA, savePassword,
     saveNotifs,
     savePrivacy,
+    reload,
   } = useParametres();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -271,6 +272,8 @@ export default function ParametresPage() {
               <SecuriteSection
                 {...commonProps}
                 save2FA={save2FA}
+                savePassword={savePassword}
+                onReload={reload}
               />
               <PrivacySection
                 {...commonProps}
@@ -283,6 +286,8 @@ export default function ParametresPage() {
             <SecuriteSection
               {...commonProps}
               save2FA={save2FA}
+              savePassword={savePassword}
+              onReload={reload}
             />
           )}
 

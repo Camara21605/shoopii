@@ -19,6 +19,7 @@ import { Company }          from 'src/database/entities/profiles/entreprise-prof
 import { User }             from 'src/database/entities/user.entity';
 import { CompanyHoraire }   from 'src/database/entities/entreprise.table/company-horaire.entity';
 import { PlatformSettings } from 'src/database/entities/platform-settings.entity';
+import { RefreshToken }     from 'src/database/entities/refresh-token.entity';
 
 /* ── Module Upload (Cloudinary) ── */
 import { UploadModule }   from 'src/modules/upload/upload.module';
@@ -47,6 +48,7 @@ import { DangerParametresService }     from './services/danger-parametres.servic
       User,
       CompanyHoraire,
       PlatformSettings,
+      RefreshToken,
     ]),
 
     /* Module upload Cloudinary (logo, cover, documents) */

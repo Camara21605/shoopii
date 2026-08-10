@@ -1,0 +1,101 @@
+{
+  "produits": {
+    "visibilite": {
+      "public": "Public",
+      "draft": "Brouillon",
+      "private": "Privé"
+    },
+    "header": {
+      "title": "Mes Produits",
+      "subtitle": "Gérez votre catalogue et votre inventaire",
+      "nouveau": "Nouveau produit"
+    },
+    "stats": {
+      "total": "Total",
+      "publies": "Publiés",
+      "brouillons": "Brouillons",
+      "rupture": "Rupture"
+    },
+    "search": "Rechercher par nom, marque, référence…",
+    "filters": {
+      "tous": "Tous",
+      "publics": "🟢 Publiés",
+      "brouillons": "🟡 Brouillons",
+      "prives": "🔴 Privés"
+    },
+    "loading": "Chargement des produits…",
+    "retry": "Réessayer",
+    "empty": {
+      "noneTitle": "Aucun produit encore",
+      "noResultsTitle": "Aucun résultat",
+      "noneSub": "Commencez par ajouter votre premier produit.",
+      "noResultsSub": "Essayez de modifier vos filtres.",
+      "addFirst": "Ajouter un produit"
+    },
+    "count_one": "{{count}} produit",
+    "count_other": "{{count}} produits",
+    "countFor": "pour \"{{search}}\"",
+    "card": {
+      "voir": "Voir",
+      "rupture": "Rupture",
+      "outOfStock": "Rupture de stock",
+      "lowStock": "Stock faible — {{count}} restants",
+      "inStock": "{{count}} en stock",
+      "voirDetail": "Voir le détail",
+      "modifRapide": "Modification rapide",
+      "modifComplet": "Modifier complet",
+      "modifier": "Modifier",
+      "supprimer": "Supprimer"
+    },
+    "toasts": {
+      "archived": "📦 Produit archivé",
+      "archiveError": "Erreur lors de l'archivage",
+      "updated": "✅ Produit mis à jour",
+      "deleted": "🗑️ Produit supprimé"
+    },
+    "modalVoir": {
+      "noImage": "Aucune image",
+      "prix": "Prix",
+      "commission": "Commission Shopi (3%)",
+      "revenuNet": "Revenu net",
+      "stock": "Stock",
+      "unites": "unités",
+      "seuilInfo": "Seuil d'alerte : {{count}} unités",
+      "details": "Détails",
+      "marque": "Marque",
+      "condition": "Condition",
+      "garantie": "Garantie",
+      "origine": "Origine",
+      "ajouteLe": "Ajouté le",
+      "description": "Description",
+      "caracteristiques": "Caractéristiques",
+      "variantes": "Variantes",
+      "tags": "Tags",
+      "supprimer": "Supprimer",
+      "archiver": "Archiver",
+      "modifier": "Modifier"
+    },
+    "modalModifier": {
+      "title": "Modification rapide",
+      "visibilite": "Visibilité",
+      "optPublic": "🟢 Public — Visible sur la boutique",
+      "optDraft": "🟡 Brouillon — Non publié",
+      "optPrivate": "🔴 Privé — Lien direct uniquement",
+      "stockActuel": "Stock actuel",
+      "seuilAlerte": "Seuil d'alerte",
+      "seuilPlaceholder": "Ex: 5",
+      "info": "Pour modifier le nom, le prix ou les images, utilisez le formulaire complet.",
+      "annuler": "Annuler",
+      "saving": "Sauvegarde…",
+      "save": "Sauvegarder"
+    },
+    "modalDelete": {
+      "title": "Confirmer la suppression",
+      "confirm": "Voulez-vous vraiment supprimer \"{{nom}}\" ?",
+      "irreversible": "Cette action est irréversible. Le produit sera définitivement effacé.",
+      "annuler": "Annuler",
+      "deleting": "Suppression…",
+      "confirmBtn": "Supprimer définitivement"
+    }
+  }
+}

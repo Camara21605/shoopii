@@ -1,0 +1,138 @@
+{
+  "profilCorrespondant": {
+    "loading": "正在加载资料…",
+    "notFoundTitle": "资料未找到",
+    "notFoundFallback": "此代理商不存在或已不可用。",
+    "retour": "返回",
+    "retourCorrespondants": "返回代理商",
+    "idMissingError": "缺少代理商标识符。",
+    "loadError": "资料未找到或不可用。",
+    "enLigneMaintenant": "现在在线",
+    "abonnesSuffix": "名关注者",
+    "partager": "分享",
+    "appeler": "打电话",
+    "contacter": "联系",
+    "abonne": "已关注",
+    "suivre": "关注",
+    "kpi": {
+      "missions": "任务",
+      "note": "评分",
+      "fiabilite": "可靠性",
+      "abonnes": "关注者",
+      "avisClients": "客户评价",
+      "experience": "经验",
+      "zonesCouvertes": "覆盖区域",
+      "delaiMoyen": "平均时间",
+      "top5": "前 5%"
+    },
+    "tabs": {
+      "info": "信息",
+      "services": "服务",
+      "zones": "区域",
+      "tarifs": "价格",
+      "avis": "评价",
+      "galerie": "图库"
+    },
+    "sidebar": {
+      "contacterPrenom": "联系{{prenom}}",
+      "envoyerMessage": "发送消息",
+      "whatsappToast": "📱 WhatsApp",
+      "appelToast": "📞 通话",
+      "contactsDetailles": "详细联系方式",
+      "statistiques": "统计",
+      "abonnesTitle": "关注者",
+      "aucunAbonne": "暂无关注者",
+      "abonneCount_one": "{{count}} 名关注者",
+      "abonneCount_other": "{{count}} 名关注者",
+      "suivreCeCorrespondant": "关注此代理商",
+      "verificationsShopi": "Shopi 验证",
+      "correspondantsSimilaires": "类似代理商",
+      "voirTout": "查看全部",
+      "suivreShort": "+ 关注",
+      "abonneToast": "✅ 已关注 {{nom}}",
+      "copieToast": "📋 {{valeur}}"
+    },
+    "statsSidebar": {
+      "missionsTotales": "总任务数",
+      "noteMoyenne": "平均评分",
+      "tauxFiabilite": "可靠性率",
+      "delaiRemise": "交付时间",
+      "missionsCeMois": "本月任务",
+      "litigesResolus": "已解决争议"
+    },
+    "verifieParShopi": "✓ 已由 Shopi 验证",
+    "tabInfo": {
+      "aPropos": "关于",
+      "informationsPratiques": "实用信息",
+      "disponibiliteHebdo": "每周可用时间",
+      "aujourdhui": "（今天）"
+    },
+    "tabServices": {
+      "title": "提供的服务",
+      "emptyTitle": "服务填写中",
+      "emptyDesc": "代理商尚未填写其服务。"
+    },
+    "tabZones": {
+      "couverture": "覆盖区域",
+      "couvertureEmptyTitle": "未填写区域",
+      "couvertureEmptyDesc": "代理商尚未定义其覆盖区域。",
+      "reseauTitle": "合作伙伴代理商网络",
+      "reseauEmptyTitle": "未填写国际网络",
+      "reseauEmptyDesc": "合作伙伴国家将在填写后显示在这里。",
+      "intlNote": "时间和价格因目的地而异 — 联系代理商获取定制报价。",
+      "paysToast": "🌍 {{nom}} — {{villes}}"
+    },
+    "tabTarifs": {
+      "title": "价格表",
+      "emptyTitle": "未填写价格",
+      "emptyDescPart1": "代理商尚未发布其价格表。",
+      "emptyDescPart2": "直接联系他获取报价。",
+      "abonnesShopi": "Shopi 关注者",
+      "reduction15": "— 所有服务享受 15% 折扣。"
+    },
+    "tabAvis": {
+      "title": "客户评价",
+      "emptyTitle": "暂无评价",
+      "emptyDesc": "每次任务完成后的客户评价将显示在这里。",
+      "avisCount_one": "{{count}} 条评价",
+      "avisCount_other": "{{count}} 条评价",
+      "achatVerifie": "已验证购买",
+      "reponseDe": "{{auteur}} 的回复",
+      "merciRetourToast": "👍 感谢您的反馈",
+      "signaleToast": "🚩 已举报",
+      "signaler": "举报",
+      "utileCount_one": "{{count}} 人觉得有用",
+      "utileCount_other": "{{count}} 人觉得有用"
+    },
+    "tabGalerie": {
+      "title": "仓库照片图库",
+      "voirTout": "查看全部",
+      "emptyTitle": "图库不可用",
+      "emptyDesc": "代理商尚未发布其仓库的照片。",
+      "galerieCompleteToast": "🖼️ 完整图库",
+      "labelToast": "🖼️ {{label}}",
+      "photoToast": "🖼️ 照片"
+    },
+    "reseauPage": {
+      "title": "关注代理商",
+      "loading": "加载中…",
+      "errorSuffix": "— 显示演示数据。",
+      "empty": "暂无可用代理商。",
+      "missionsCount_one": "{{count}} 个任务",
+      "missionsCount_other": "{{count}} 个任务",
+      "enLigne": "在线",
+      "suiviCheck": "已关注 ✓",
+      "suivre": "关注",
+      "desabonneToast": "👋 已取消关注 {{nom}}",
+      "abonneToast": "✅ 已关注 {{nom}}"
+    },
+    "publicPage": {
+      "abonnezVousMessage": "关注此代理商以给他发送消息。",
+      "abonnezVousAppel": "关注此代理商以给他打电话。",
+      "lienCopieToast": "🔗 资料链接已复制",
+      "desabonneToast": "👋 已取消关注 {{nom}}",
+      "abonneToast": "✅ 已关注 {{nom}}",
+      "erreurToast": "❌ {{msg}}"
+    }
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "livreursPage": {
+    "card": {
+      "livreurAriaLabel": "Delivery agent {{nom}}",
+      "disponible": "Available",
+      "enCourse": "On delivery",
+      "livraisonsCount": "{{count}} deliveries",
+      "abonneFem": "Following",
+      "suivre": "Follow",
+      "seDesabonnerDe": "Unfollow {{nom}}",
+      "suivreNom": "Follow {{nom}}",
+      "connexionRequise": "Login required",
+      "connexionRequisePourSuivre": "Login required to follow",
+      "seDesabonner": "Unfollow",
+      "avisCount": "({{count}} reviews)",
+      "livraisons": "Deliveries",
+      "ponctualite": "Punctuality",
+      "experience": "Experience",
+      "voirProfilComplet": "View full profile →",
+      "profilCompletAria": "View {{nom}}'s full profile",
+      "profilDe": "{{nom}}'s profile"
+    },
+    "suggestions": {
+      "ariaLabel": "Delivery agents suggested near you",
+      "titre": "Suggestions",
+      "sousTitre": "Near you",
+      "abonne": "✓ Following",
+      "suivre": "+ Follow"
+    },
+    "hero": {
+      "ariaLabel": "Shopi delivery agents overview",
+      "supTitle": "Shopi Network · Conakry",
+      "titrePart1": "Find your",
+      "titreEm": "delivery agent",
+      "titrePart2": "you can trust",
+      "sub": "Verified professional delivery agents, available across Guinea. Follow your favorite delivery agents and order with confidence.",
+      "livreursSuggeres": "Suggested delivery agents",
+      "abonne": "Following",
+      "suivre": "Follow",
+      "stats": {
+        "livreursActifs": "Active delivery agents",
+        "noteMoyenne": "Average rating",
+        "livraisonsMois": "Deliveries/month",
+        "communesCouvertes": "Districts covered"
+      }
+    },
+    "toolbar": {
+      "searchPlaceholder": "Name, zone, vehicle…",
+      "rechercherLivreurAria": "Search for a delivery agent",
+      "effacerRechercheAria": "Clear search",
+      "trierLivreursAria": "Sort delivery agents",
+      "modeAffichageAria": "Display mode",
+      "vueGrille": "Grid view",
+      "vueListe": "List view",
+      "livreurCount_one": "{{count}} delivery agent",
+      "livreurCount_other": "{{count}} delivery agents",
+      "filters": {
+        "tous": "All",
+        "disponibles": "Available",
+        "abonnements": "Followed",
+        "motos": "Motorbikes",
+        "voitures": "Cars"
+      },
+      "sorts": {
+        "mieuxNotes": "Top rated",
+        "plusDeLivraisons": "Most deliveries",
+        "disponiblesDabord": "Available first",
+        "lesPlusProches": "Closest first"
+      }
+    },
+    "sidebar": {
+      "ariaLabel": "Delivery agent filters",
+      "zoneDeLivraison": "Delivery zone",
+      "reinit": "Reset",
+      "toutesLesZones": "All zones",
+      "typeDeVehicule": "Vehicle type",
+      "noteMinimale": "Minimum rating",
+      "ratingOpts": {
+        "cinqEtoiles": "5 stars only",
+        "quatrePlus": "4+ stars",
+        "troisPlus": "3+ stars",
+        "toutesLesNotes": "All ratings"
+      },
+      "disponibilite": "Availability",
+      "disponible": "Available",
+      "enCourse": "On delivery",
+      "mesAbonnements": "My followed agents",
+      "vehicules": {
+        "moto": "Motorbike",
+        "voiture": "Car",
+        "pickup": "Pickup",
+        "camion": "Truck"
+      }
+    },
+    "page": {
+      "tousLesLivreurs": "All delivery agents",
+      "livreurDansRegion_one": "{{count}} delivery agent in your area",
+      "livreurDansRegion_other": "{{count}} delivery agents in your area",
+      "vueGrille": "Grid view",
+      "vueListe": "List view",
+      "impossibleDeCharger": "Unable to load delivery agents",
+      "aucunLivreurTrouve": "No delivery agent found",
+      "essayezModifier": "Try changing your filters or search.",
+      "chargementToast": "📄 Loading...",
+      "chargerPlus": "Load more delivery agents"
+    }
+  }
+}

@@ -43,7 +43,15 @@ export class AdminSignalementsService {
    * Le champ `type` est hardcodé à 'ent' car le type de cible
    * (par/ent/lvr/cor) n'est pas encore stocké dans Report.
    */
-  async getSignalements(_userId: string) {
+  async getSignalements(userId: string) {
+    /* Autorisation — vérifie que l'appelant a bien un profil Admin.
+     * Ce contrôleur n'a qu'un JwtAuthGuard (pas de RolesGuard global) ;
+     * chaque méthode de service doit donc vérifier elle-même l'accès via
+     * adminOf(). Cette méthode ne le faisait pas : n'importe quel
+     * utilisateur authentifié (client, entreprise, livreur…) pouvait lire
+     * l'intégralité des signalements d'abus de la plateforme. */
+    await this.zoneService.adminOf(userId);
+
     const reports = await this.reportRepo.find({
       order: { createdAt: 'DESC' },
       take: 100,

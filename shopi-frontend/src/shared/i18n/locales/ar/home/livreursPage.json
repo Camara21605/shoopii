@@ -1,0 +1,108 @@
+{
+  "livreursPage": {
+    "card": {
+      "livreurAriaLabel": "عامل التوصيل {{nom}}",
+      "disponible": "متاح",
+      "enCourse": "في مهمة توصيل",
+      "livraisonsCount": "{{count}} توصيلة",
+      "abonneFem": "متابَع",
+      "suivre": "متابعة",
+      "seDesabonnerDe": "إلغاء متابعة {{nom}}",
+      "suivreNom": "متابعة {{nom}}",
+      "connexionRequise": "تسجيل الدخول مطلوب",
+      "connexionRequisePourSuivre": "تسجيل الدخول مطلوب للمتابعة",
+      "seDesabonner": "إلغاء المتابعة",
+      "avisCount": "({{count}} تقييم)",
+      "livraisons": "التوصيلات",
+      "ponctualite": "الالتزام بالمواعيد",
+      "experience": "الخبرة",
+      "voirProfilComplet": "عرض الملف الكامل ←",
+      "profilCompletAria": "عرض الملف الكامل لـ {{nom}}",
+      "profilDe": "ملف {{nom}}"
+    },
+    "suggestions": {
+      "ariaLabel": "عمال توصيل مقترحون بالقرب منك",
+      "titre": "اقتراحات",
+      "sousTitre": "بالقرب منك",
+      "abonne": "✓ متابَع",
+      "suivre": "+ متابعة"
+    },
+    "hero": {
+      "ariaLabel": "تعريف بعمال التوصيل في شوبي",
+      "supTitle": "شبكة شوبي · كوناكري",
+      "titrePart1": "اعثر على",
+      "titreEm": "عامل التوصيل",
+      "titrePart2": "الموثوق بك",
+      "sub": "عمال توصيل محترفون موثّقون، متاحون في جميع أنحاء غينيا. تابع عمال التوصيل المفضلين لديك واطلب بكل ثقة.",
+      "livreursSuggeres": "عمال توصيل مقترحون",
+      "abonne": "متابَع",
+      "suivre": "متابعة",
+      "stats": {
+        "livreursActifs": "عمال توصيل نشطون",
+        "noteMoyenne": "متوسط التقييم",
+        "livraisonsMois": "توصيلات/شهر",
+        "communesCouvertes": "بلديات مغطاة"
+      }
+    },
+    "toolbar": {
+      "searchPlaceholder": "الاسم، المنطقة، المركبة…",
+      "rechercherLivreurAria": "البحث عن عامل توصيل",
+      "effacerRechercheAria": "مسح البحث",
+      "trierLivreursAria": "ترتيب عمال التوصيل",
+      "modeAffichageAria": "وضع العرض",
+      "vueGrille": "عرض شبكي",
+      "vueListe": "عرض قائمة",
+      "livreurCount_one": "عامل توصيل {{count}}",
+      "livreurCount_other": "{{count}} عامل توصيل",
+      "filters": {
+        "tous": "الكل",
+        "disponibles": "المتاحون",
+        "abonnements": "الاشتراكات",
+        "motos": "دراجات نارية",
+        "voitures": "سيارات"
+      },
+      "sorts": {
+        "mieuxNotes": "الأعلى تقييمًا",
+        "plusDeLivraisons": "الأكثر توصيلًا",
+        "disponiblesDabord": "المتاحون أولًا",
+        "lesPlusProches": "الأقرب"
+      }
+    },
+    "sidebar": {
+      "ariaLabel": "فلاتر عمال التوصيل",
+      "zoneDeLivraison": "منطقة التوصيل",
+      "reinit": "إعادة تعيين",
+      "toutesLesZones": "جميع المناطق",
+      "typeDeVehicule": "نوع المركبة",
+      "noteMinimale": "الحد الأدنى للتقييم",
+      "ratingOpts": {
+        "cinqEtoiles": "5 نجوم فقط",
+        "quatrePlus": "4+ نجوم",
+        "troisPlus": "3+ نجوم",
+        "toutesLesNotes": "جميع التقييمات"
+      },
+      "disponibilite": "التوفر",
+      "disponible": "متاح",
+      "enCourse": "في مهمة توصيل",
+      "mesAbonnements": "اشتراكاتي",
+      "vehicules": {
+        "moto": "دراجة نارية",
+        "voiture": "سيارة",
+        "pickup": "بيك أب",
+        "camion": "شاحنة"
+      }
+    },
+    "page": {
+      "tousLesLivreurs": "جميع عمال التوصيل",
+      "livreurDansRegion_one": "عامل توصيل {{count}} في منطقتك",
+      "livreurDansRegion_other": "{{count}} عامل توصيل في منطقتك",
+      "vueGrille": "عرض شبكي",
+      "vueListe": "عرض قائمة",
+      "impossibleDeCharger": "تعذّر تحميل عمال التوصيل",
+      "aucunLivreurTrouve": "لم يتم العثور على أي عامل توصيل",
+      "essayezModifier": "حاول تعديل الفلاتر أو البحث.",
+      "chargementToast": "📄 جارٍ التحميل...",
+      "chargerPlus": "عرض المزيد من عمال التوصيل"
+    }
+  }
+}

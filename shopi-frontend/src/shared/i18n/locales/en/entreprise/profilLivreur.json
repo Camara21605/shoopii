@@ -1,0 +1,127 @@
+{
+  "profilLivreur": {
+    "loading": "Loading profile…",
+    "notFound": "Delivery agent not found.",
+    "retourLivreurs": "Back to delivery agents",
+    "idMissingError": "Missing identifier",
+    "networkError": "Network error",
+    "contacter": "Contact",
+    "appeler": "Call",
+    "abonneFem": "Following",
+    "suivre": "Follow",
+    "livreurLabel": "Delivery agent",
+    "disponibleMaintenant": "Available now",
+    "horsLigne": "Offline",
+    "abonnesSuffix": "followers",
+    "identiteVerifiee": "Identity verified",
+    "assureShopi": "Insured by Shopi",
+    "avisSuffix": "reviews",
+    "kpi": {
+      "livraisons": "Deliveries",
+      "note": "Rating",
+      "ponctualite": "Punctuality",
+      "abonnes": "Followers",
+      "avis": "Reviews",
+      "experience": "Experience"
+    },
+    "tabs": {
+      "info": "Info",
+      "vehicule": "Vehicle",
+      "zones": "Zones",
+      "localisation": "Location",
+      "tarifs": "Rates",
+      "avis": "Reviews",
+      "historique": "History"
+    },
+    "sidebar": {
+      "contact": "Contact",
+      "telephone": "Phone",
+      "whatsapp": "WhatsApp",
+      "statistiques": "Statistics",
+      "livraisons": "Deliveries",
+      "note": "Rating",
+      "ponctualite": "Punctuality",
+      "abonnes": "Followers",
+      "copieToast": "📋 Copied!"
+    },
+    "tabInfo": {
+      "aPropos": "About",
+      "aucuneDescription": "No description available.",
+      "informationsPratiques": "Practical information",
+      "zonePrincipale": "Main zone",
+      "contactDirect": "Direct contact",
+      "languesParlees": "Languages spoken",
+      "assurance": "Insurance",
+      "couvert": "Covered ✓",
+      "nonRenseignee": "Not provided",
+      "disponibiliteHebdo": "Weekly availability",
+      "aujourdhui": "(today)",
+      "ferme": "Closed",
+      "ouvert": "Open",
+      "jours": {
+        "lundi": "Monday",
+        "mardi": "Tuesday",
+        "mercredi": "Wednesday",
+        "jeudi": "Thursday",
+        "vendredi": "Friday",
+        "samedi": "Saturday",
+        "dimanche": "Sunday"
+      }
+    },
+    "tabVehicule": {
+      "title": "Vehicle information",
+      "type": "Type: {{type}}",
+      "permis": "License",
+      "valide": "Validated ✓",
+      "nonRenseigne": "Not provided",
+      "assurance": "Insurance",
+      "validAssurance": "Valid ✓",
+      "nonRenseigneeF": "Not provided",
+      "immatriculation": "Registration"
+    },
+    "tabZones": {
+      "title": "Delivery zones",
+      "empty": "No delivery zones provided."
+    },
+    "tabTarifs": {
+      "title": "Rate schedule",
+      "tarifBase": "Base rate",
+      "parKm": "Per kilometer",
+      "supplementLourd": "Heavy package surcharge",
+      "majorationNocturne": "Night surcharge"
+    },
+    "placeholders": {
+      "avisTitle": "Reviews ({{count}})",
+      "avisText": "Customer reviews will be shown here soon.",
+      "historiqueTitle": "History",
+      "historiqueText": "Delivery history will be shown here soon."
+    },
+    "tabLocalisation": {
+      "title": "Real-time position",
+      "partageActif": "Sharing active",
+      "noticeNonPartagePart1": "isn't sharing their position right now.",
+      "noticeNonPartagePart2": "The position appears automatically once a delivery is in progress.",
+      "lat": "Lat: {{value}}",
+      "lng": "Lng: {{value}}"
+    },
+    "reseauPage": {
+      "title": "Follow delivery agents",
+      "loading": "Loading…",
+      "errorSuffix": "— demo data shown.",
+      "empty": "No delivery agent available.",
+      "livraisonsCount_one": "{{count}} delivery",
+      "livraisonsCount_other": "{{count}} deliveries",
+      "disponible": "Available",
+      "suiviCheck": "Following ✓",
+      "suivre": "Follow",
+      "desabonneToast": "👋 Unfollowed {{nom}}",
+      "abonneToast": "✅ Following {{nom}}",
+      "contacterToast": "📩 Contact {{nom}}"
+    },
+    "publicPage": {
+      "abonnezVousMessage": "Follow this delivery agent to send them a message.",
+      "abonnezVousAppel": "Follow this delivery agent to call them.",
+      "erreurToast": "❌ {{msg}}"
+    }
+  }
+}

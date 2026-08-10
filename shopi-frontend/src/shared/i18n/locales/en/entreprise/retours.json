@@ -1,0 +1,204 @@
+{
+  "retours": {
+    "title": "Returns & Support",
+    "subtitle": "Manage return requests and after-sales support",
+    "refresh": "Refresh",
+    "tabRetours": "Returns",
+    "tabSav": "Support",
+    "toasts": {
+      "accepted": "✅ Return accepted — customer notified",
+      "refused": "Return declined — customer notified",
+      "refunded": "💸 Refund recorded",
+      "noteAdded": "📝 Note added",
+      "genericError": "Error",
+      "acceptError": "Error while accepting"
+    },
+    "reasons": {
+      "defective": "Defective product",
+      "not_matching": "Doesn't match",
+      "change_of_mind": "Change of mind",
+      "wrong_item": "Wrong item",
+      "damaged": "Damaged",
+      "expired": "Expired product",
+      "other": "Other"
+    },
+    "stats": {
+      "totalMois": "Total this month",
+      "badgeAuj": "+{{count}} today",
+      "enAttente": "Pending",
+      "urgents": "Urgent",
+      "acceptes": "Accepted",
+      "badgeRetours": "{{count}} returns",
+      "rembourseGnf": "Refunded (GNF)",
+      "badgeRemb": "{{count}} refunds",
+      "topMotifs": "Top return reasons",
+      "aucuneDonnee": "No data",
+      "performance": "Performance",
+      "tauxAcceptation": "Acceptance rate",
+      "delaiMoyen": "Average processing time",
+      "retoursRefuses": "Declined returns",
+      "remboursementsEffectues": "Refunds processed"
+    },
+    "list": {
+      "status": {
+        "pending": "⏳ Pending",
+        "accepted": "✓ Accepted",
+        "refused": "✕ Refused",
+        "in_transit": "🚚 In transit",
+        "received": "📦 Received",
+        "refunded": "💸 Refunded",
+        "exchanged": "🔁 Exchanged",
+        "closed": "Closed"
+      },
+      "reasons": {
+        "defective": "Defective product",
+        "not_matching": "Doesn't match",
+        "change_of_mind": "Change of mind",
+        "wrong_item": "Wrong item received",
+        "damaged": "Damaged",
+        "expired": "Expired product",
+        "other": "Other reason"
+      },
+      "priority": {
+        "low": "Low",
+        "normal": "Normal",
+        "high": "High",
+        "urgent": "🔴 Urgent"
+      },
+      "returnType": {
+        "refund": "Refund",
+        "exchange": "Exchange",
+        "repair": "Repair",
+        "credit": "Store credit"
+      },
+      "search": "Search by reference or product…",
+      "allStatus": "All statuses",
+      "allReasons": "All reasons",
+      "allPriorities": "All priorities",
+      "sort": {
+        "recent": "Most recent",
+        "oldest": "Oldest",
+        "amountDesc": "Amount ↓",
+        "amountAsc": "Amount ↑",
+        "statusAz": "Status A→Z"
+      },
+      "loadError": "Loading error",
+      "emptyTitle": "No returns found",
+      "emptySub": "No return request matches your filters.",
+      "table": {
+        "reference": "Reference",
+        "produit": "Product",
+        "client": "Customer",
+        "motif": "Reason",
+        "type": "Type",
+        "montant": "Amount",
+        "priorite": "Priority",
+        "statut": "Status",
+        "date": "Date",
+        "actions": "Actions"
+      },
+      "accorde": "Granted: {{montant}} GNF",
+      "voir": "View",
+      "results_one": "{{count}} result",
+      "results_other": "{{count}} results",
+      "page": "Page {{page}}/{{pages}}"
+    },
+    "detail": {
+      "tabInfo": "Details",
+      "tabHistory": "History",
+      "tabEvidence": "Evidence ({{count}})",
+      "produitRetourne": "RETURNED PRODUCT",
+      "qte": "Qty:",
+      "commande": "Order:",
+      "montants": "AMOUNTS",
+      "demande": "Requested:",
+      "accorde": "Granted:",
+      "descriptionProbleme": "PROBLEM DESCRIPTION",
+      "noteInterne": "INTERNAL NOTE",
+      "messageClient": "CUSTOMER MESSAGE",
+      "accept": {
+        "title": "Accept the return",
+        "montant": "Amount granted (GNF)",
+        "message": "Message to customer (optional)",
+        "placeholder": "E.g.: Your return has been accepted. The refund will be processed within 3-5 days.",
+        "confirm": "Confirm acceptance",
+        "annuler": "Cancel"
+      },
+      "refuse": {
+        "title": "Decline the return",
+        "raison": "Reason for decline (sent to customer)",
+        "placeholder": "E.g.: Your request does not comply with the return policy (deadline exceeded).",
+        "confirm": "Confirm decline",
+        "annuler": "Cancel"
+      },
+      "note": {
+        "title": "Internal note",
+        "placeholder": "Note visible only to your team…",
+        "save": "Save",
+        "annuler": "Cancel"
+      },
+      "historyEmptyTitle": "No history",
+      "historyEmptySub": "The action history will appear here.",
+      "actions": {
+        "created": "Return request created",
+        "accepted": "Return accepted",
+        "refused": "Return declined",
+        "refunded": "Refund processed",
+        "received": "Return received",
+        "note_added": "Internal note added",
+        "evidence_uploaded": "Evidence added",
+        "priority_changed": "Priority changed"
+      },
+      "evidenceEmptyTitle": "No evidence",
+      "evidenceEmptySub": "The customer hasn't attached any photos or documents yet.",
+      "footerNote": "Note",
+      "footerRefuser": "Decline",
+      "footerAccepter": "Accept",
+      "footerRembourser": "Refund",
+      "footerFermer": "Close",
+      "confirmRefund": "Confirm the refund?",
+      "invalidAmount": "⚠️ Invalid amount"
+    },
+    "sav": {
+      "stats": {
+        "ouverts": "Open tickets",
+        "enCours": "In progress",
+        "resolus": "Resolved",
+        "delaiMoy": "Avg. response time"
+      },
+      "status": {
+        "open": "🟢 Open",
+        "in_progress": "🔵 In progress",
+        "waiting_client": "🟡 Awaiting customer",
+        "resolved": "✓ Resolved",
+        "closed": "Closed"
+      },
+      "search": "Search a ticket (ref., subject)…",
+      "allStatus": "All statuses",
+      "allPriorities": "All priorities",
+      "table": {
+        "reference": "Reference",
+        "sujet": "Subject",
+        "client": "Customer",
+        "produit": "Product",
+        "priorite": "Priority",
+        "statut": "Status",
+        "messages": "Messages",
+        "date": "Date",
+        "actions": "Actions"
+      },
+      "emptyTitle": "No support tickets",
+      "emptySub": "Customer tickets will appear here.",
+      "repondre": "Reply",
+      "resoudre": "Resolve",
+      "fermer": "Close",
+      "confirmClose": "Close this ticket?",
+      "ticketClosed": "Ticket closed",
+      "ticketResolved": "✅ Ticket resolved",
+      "genericError": "❌ Error",
+      "sendError": "Send error",
+      "replyPlaceholder": "Reply to the customer…",
+      "envoyer": "Send"
+    }
+  }
+}

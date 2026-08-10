@@ -1,0 +1,193 @@
+{
+  "equipe": {
+    "title": "Gestion de l'équipe",
+    "subtitle": "Gérez les accès et permissions de vos collaborateurs.",
+    "addMember": "Ajouter un membre",
+    "stats": {
+      "activeMembers": "Membres actifs",
+      "slotsUsed": "Slots utilisés",
+      "suspended": "Suspendus",
+      "remainingSlots": "Places restantes",
+      "activePlan": "Plan actif"
+    },
+    "tabs": {
+      "members": "Membres",
+      "invitations": "Invitations"
+    },
+    "toolbar": {
+      "searchPlaceholder": "Rechercher par nom, email, poste…",
+      "count_one": "{{count}} membre",
+      "count_other": "{{count}} membres"
+    },
+    "table": {
+      "member": "Membre",
+      "jobRole": "Poste / Rôle",
+      "status": "Statut",
+      "lastLogin": "Dernière connexion",
+      "actions": "Actions"
+    },
+    "loading": "Chargement…",
+    "empty": {
+      "membersTitle": "Aucun collaborateur pour le moment.",
+      "membersSub": "Cliquez sur \"Ajouter un membre\" pour inviter votre première équipe.",
+      "invitationsTitle": "Aucune invitation en attente.",
+      "invitationsSub": "Utilisez \"Ajouter un membre\" pour inviter un collaborateur par email."
+    },
+    "mustChangePassword": "⚠ MDP à changer",
+    "status": {
+      "active": "Actif",
+      "suspended": "Suspendu",
+      "pending": "En attente",
+      "revoked": "Révoqué"
+    },
+    "actions": {
+      "editPermissions": "Modifier les permissions",
+      "activityLog": "Journal d'activité",
+      "resetPassword": "Réinitialiser le mot de passe",
+      "suspend": "Suspendre",
+      "reactivate": "Réactiver",
+      "deleteAccess": "Supprimer l'accès"
+    },
+    "pagination": {
+      "pageOf": "Page {{page}} / {{total}}"
+    },
+    "invitations": {
+      "pendingTitle": "Invitations en attente",
+      "send": "Envoyer une invitation",
+      "expiresOn": "Expire le {{date}}",
+      "resend": "Renvoyer l'invitation",
+      "cancel": "Annuler l'invitation"
+    },
+    "confirm": {
+      "suspendTitle": "Suspendre {{name}}",
+      "suspendMessage": "{{firstName}} ne pourra plus se connecter. Vous pouvez réactiver son accès à tout moment.",
+      "deleteTitle": "Supprimer l'accès de {{name}}",
+      "deleteMessage": "L'accès de {{firstName}} sera définitivement révoqué. Cette action est irréversible.",
+      "cancelInviteTitle": "Annuler l'invitation pour {{email}}",
+      "cancelInviteMessage": "L'invitation envoyée à {{email}} sera annulée. Le lien ne sera plus valide.",
+      "cancel": "Annuler",
+      "confirmBtn": "Confirmer"
+    },
+    "toast": {
+      "loadMembersError": "Impossible de charger les membres.",
+      "suspended": "{{name}} a été suspendu(e).",
+      "reactivated": "{{name}} a été réactivé(e).",
+      "reactivateError": "Erreur lors de la réactivation.",
+      "deleted": "Accès de {{name}} révoqué.",
+      "resetPasswordError": "Erreur lors de la réinitialisation.",
+      "permissionsUpdated": "Permissions mises à jour.",
+      "permissionsUpdateError": "Erreur lors de la mise à jour.",
+      "invitationResent": "Invitation renvoyée.",
+      "genericError": "Erreur.",
+      "invitationCancelled": "Invitation annulée.",
+      "passwordCopied": "Mot de passe copié !"
+    },
+    "permGroups": {
+      "products": {
+        "label": "Produits",
+        "view": "Voir",
+        "create": "Créer",
+        "edit": "Modifier",
+        "delete": "Supprimer"
+      },
+      "orders": {
+        "label": "Commandes",
+        "view": "Voir",
+        "validate": "Valider",
+        "cancel": "Annuler",
+        "edit": "Modifier"
+      },
+      "deliveries": {
+        "label": "Livraisons",
+        "view": "Voir",
+        "assign": "Affecter",
+        "edit": "Modifier"
+      },
+      "payments": {
+        "label": "Paiements",
+        "view": "Voir",
+        "viewTransactions": "Transactions",
+        "manageRefunds": "Remboursements"
+      },
+      "messaging": {
+        "label": "Messagerie",
+        "read": "Lire",
+        "send": "Envoyer"
+      },
+      "statistics": {
+        "label": "Statistiques",
+        "view": "Voir"
+      },
+      "settings": {
+        "label": "Paramètres",
+        "view": "Voir",
+        "edit": "Modifier"
+      },
+      "returns": {
+        "label": "Retours & SAV",
+        "view": "Voir",
+        "process": "Traiter"
+      },
+      "wallet": {
+        "label": "Portefeuille",
+        "view": "Voir",
+        "withdraw": "Retrait"
+      }
+    },
+    "permPanel": {
+      "title": "Permissions",
+      "cancel": "Annuler",
+      "save": "Enregistrer"
+    },
+    "activityPanel": {
+      "title": "Activité récente",
+      "empty": "Aucune activité enregistrée."
+    },
+    "tempPwdModal": {
+      "title": "Mot de passe temporaire",
+      "transmitPrefix": "Transmettez ce mot de passe à",
+      "mustChange": "Il devra le changer à la prochaine connexion.",
+      "warn": "Ce mot de passe ne sera affiché qu'une seule fois.",
+      "gotIt": "J'ai noté le mot de passe"
+    },
+    "addModal": {
+      "title": "Ajouter un collaborateur",
+      "modeDirect": "Création directe",
+      "modeInvite": "Invitation par email",
+      "firstName": "Prénom *",
+      "firstNamePlaceholder": "Marie",
+      "lastName": "Nom *",
+      "lastNamePlaceholder": "Diallo",
+      "email": "Email professionnel *",
+      "emailPlaceholder": "marie.diallo@boutique.com",
+      "phone": "Téléphone",
+      "phonePlaceholder": "+224 620 000 000",
+      "jobTitle": "Poste",
+      "jobTitlePlaceholder": "Responsable des ventes",
+      "internalRole": "Rôle interne",
+      "selectPlaceholder": "— Sélectionner —",
+      "roles": {
+        "manager": "Manager",
+        "commercial": "Commercial",
+        "orderManager": "Gestionnaire des commandes",
+        "logisticsManager": "Responsable logistique",
+        "customerService": "Service client",
+        "accountant": "Comptable"
+      },
+      "permTemplate": "Modèle de permissions",
+      "noTemplate": "— Aucun modèle —",
+      "noteInvite": "Un email d'invitation sera envoyé. Le collaborateur choisira son propre mot de passe.",
+      "noteDirect": "Un mot de passe temporaire sera généré et affiché une seule fois.",
+      "cancel": "Annuler",
+      "createAccount": "Créer le compte",
+      "sendInvitation": "Envoyer l'invitation",
+      "errors": {
+        "firstName": "Prénom requis",
+        "lastName": "Nom requis",
+        "email": "Email invalide"
+      },
+      "invitationSentToast": "Invitation envoyée à {{email}}.",
+      "createError": "Erreur lors de la création."
+    }
+  }
+}

@@ -75,8 +75,3 @@ export async function fetchCorrespondants(filters?: CorrFilters): Promise<Corres
   });
   return (data ?? []).map(adapt);
 }
-
-/* ── POST /suivis/correspondants/:id → toggle ── */
-export async function toggleSuiviCorrespondant(id: string): Promise<{ isSuivi: boolean }> {
-  return apiFetch<{ isSuivi: boolean }>(`/suivis/correspondants/${id}`, { method: 'POST' });
-}

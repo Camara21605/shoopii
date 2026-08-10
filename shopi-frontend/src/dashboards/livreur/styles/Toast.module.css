@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 20px 56px rgba(11,31,58,.32), 0 4px 12px rgba(11,31,58,.12);
+  box-shadow: 0 20px 56px rgba(0,0,0,.32), 0 4px 12px rgba(0,0,0,.12);
   transform: translateX(120%);
   opacity: 0;
   transition: all .34s var(--spring, cubic-bezier(.34,1.56,.64,1));

@@ -1,0 +1,46 @@
+{
+  "offresPage": {
+    "typeLabel": {
+      "discount": "Discounts",
+      "freeShip": "Free shipping",
+      "bundle": "Bundles",
+      "flash": "Flash sales"
+    },
+    "hero": {
+      "offreSuffix_one": "active offer",
+      "offreSuffix_other": "active offers",
+      "titrePart1": "All",
+      "titreEm": "offers",
+      "titrePart2": "right now",
+      "sub": "Discounts, flash sales and free shipping from every Shopi shop — in one place.",
+      "flashSuffix_one": "flash sale live — don't miss it",
+      "flashSuffix_other": "flash sales live — don't miss them"
+    },
+    "sidebar": {
+      "categories": "Categories",
+      "toutes": "All",
+      "recherche": "Search",
+      "searchPlaceholder": "Offer or shop…",
+      "trierPar": "Sort by",
+      "sortBest": "Best discounts",
+      "sortEnding": "Ending soon"
+    },
+    "card": {
+      "touteLaBoutique": "Whole shop",
+      "produitCible": "Targeted product",
+      "voirOffre": "View offer",
+      "offerte": "Free",
+      "promo": "Promo"
+    },
+    "states": {
+      "loadErrorTitle": "Unable to load offers",
+      "loadErrorFallback": "Unable to load offers.",
+      "reessayer": "Retry",
+      "aucuneOffreTitre": "No active offers right now",
+      "aucuneOffreText": "Check back soon, new promotions arrive regularly.",
+      "aucunResultatTitre": "No offer matches",
+      "aucunResultatText": "Try another filter or search.",
+      "reinitialiser": "Reset"
+    }
+  }
+}

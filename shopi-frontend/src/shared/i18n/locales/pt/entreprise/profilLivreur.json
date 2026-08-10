@@ -1,0 +1,127 @@
+{
+  "profilLivreur": {
+    "loading": "A carregar o perfil…",
+    "notFound": "Entregador não encontrado.",
+    "retourLivreurs": "Voltar aos entregadores",
+    "idMissingError": "Identificador em falta",
+    "networkError": "Erro de rede",
+    "contacter": "Contactar",
+    "appeler": "Ligar",
+    "abonneFem": "Subscrito(a)",
+    "suivre": "Seguir",
+    "livreurLabel": "Entregador",
+    "disponibleMaintenant": "Disponível agora",
+    "horsLigne": "Offline",
+    "abonnesSuffix": "subscritores",
+    "identiteVerifiee": "Identidade verificada",
+    "assureShopi": "Segurado Shopi",
+    "avisSuffix": "avaliações",
+    "kpi": {
+      "livraisons": "Entregas",
+      "note": "Nota",
+      "ponctualite": "Pontualidade",
+      "abonnes": "Subscritores",
+      "avis": "Avaliações",
+      "experience": "Experiência"
+    },
+    "tabs": {
+      "info": "Info",
+      "vehicule": "Veículo",
+      "zones": "Zonas",
+      "localisation": "Localização",
+      "tarifs": "Tarifas",
+      "avis": "Avaliações",
+      "historique": "Histórico"
+    },
+    "sidebar": {
+      "contact": "Contacto",
+      "telephone": "Telefone",
+      "whatsapp": "WhatsApp",
+      "statistiques": "Estatísticas",
+      "livraisons": "Entregas",
+      "note": "Nota",
+      "ponctualite": "Pontualidade",
+      "abonnes": "Subscritores",
+      "copieToast": "📋 Copiado!"
+    },
+    "tabInfo": {
+      "aPropos": "Sobre",
+      "aucuneDescription": "Nenhuma descrição disponível.",
+      "informationsPratiques": "Informações práticas",
+      "zonePrincipale": "Zona principal",
+      "contactDirect": "Contacto direto",
+      "languesParlees": "Idiomas falados",
+      "assurance": "Seguro",
+      "couvert": "Coberto ✓",
+      "nonRenseignee": "Não informada",
+      "disponibiliteHebdo": "Disponibilidade semanal",
+      "aujourdhui": "(hoje)",
+      "ferme": "Fechado",
+      "ouvert": "Aberto",
+      "jours": {
+        "lundi": "Segunda-feira",
+        "mardi": "Terça-feira",
+        "mercredi": "Quarta-feira",
+        "jeudi": "Quinta-feira",
+        "vendredi": "Sexta-feira",
+        "samedi": "Sábado",
+        "dimanche": "Domingo"
+      }
+    },
+    "tabVehicule": {
+      "title": "Informações do veículo",
+      "type": "Tipo: {{type}}",
+      "permis": "Carta de condução",
+      "valide": "Válida ✓",
+      "nonRenseigne": "Não informado",
+      "assurance": "Seguro",
+      "validAssurance": "Válido ✓",
+      "nonRenseigneeF": "Não informado",
+      "immatriculation": "Matrícula"
+    },
+    "tabZones": {
+      "title": "Zonas de entrega",
+      "empty": "Nenhuma zona de entrega informada."
+    },
+    "tabTarifs": {
+      "title": "Tabela de tarifas",
+      "tarifBase": "Tarifa base",
+      "parKm": "Por quilómetro",
+      "supplementLourd": "Suplemento de encomenda pesada",
+      "majorationNocturne": "Majoração noturna"
+    },
+    "placeholders": {
+      "avisTitle": "Avaliações ({{count}})",
+      "avisText": "As avaliações dos clientes serão exibidas aqui em breve.",
+      "historiqueTitle": "Histórico",
+      "historiqueText": "O histórico das entregas será exibido aqui em breve."
+    },
+    "tabLocalisation": {
+      "title": "Posição em tempo real",
+      "partageActif": "Partilha ativa",
+      "noticeNonPartagePart1": "não partilha a sua posição por enquanto.",
+      "noticeNonPartagePart2": "A posição é exibida automaticamente quando uma entrega está em curso.",
+      "lat": "Lat: {{value}}",
+      "lng": "Lng: {{value}}"
+    },
+    "reseauPage": {
+      "title": "Seguir entregadores",
+      "loading": "A carregar…",
+      "errorSuffix": "— dados de demonstração exibidos.",
+      "empty": "Nenhum entregador disponível.",
+      "livraisonsCount_one": "{{count}} entrega",
+      "livraisonsCount_other": "{{count}} entregas",
+      "disponible": "Disponível",
+      "suiviCheck": "A seguir ✓",
+      "suivre": "Seguir",
+      "desabonneToast": "👋 Deixou de seguir {{nom}}",
+      "abonneToast": "✅ Subscrito a {{nom}}",
+      "contacterToast": "📩 Contactar {{nom}}"
+    },
+    "publicPage": {
+      "abonnezVousMessage": "Subscreva-se a este entregador para lhe enviar uma mensagem.",
+      "abonnezVousAppel": "Subscreva-se a este entregador para lhe ligar.",
+      "erreurToast": "❌ {{msg}}"
+    }
+  }
+}

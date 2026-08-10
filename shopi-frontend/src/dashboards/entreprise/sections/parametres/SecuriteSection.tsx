@@ -2,33 +2,48 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
+import TwoFaSetupModal from '../../../../shared/components/TwoFaSetupModal';
+import type { ParametresData } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
 
-interface Props { onDirty: () => void; onToast: (m: string, t?: string) => void; }
+interface Props {
+  data:     ParametresData | null;
+  saving:   boolean;
+  onDirty:  () => void;
+  onToast:  (m: string, t?: string) => void;
+  save2FA:      (body: { twoFaEnabled: boolean; twoFaMethod?: string }) => Promise<void>;
+  savePassword: (body: { currentPassword: string; newPassword: string; confirmPassword: string }) => Promise<void>;
+  /** Recharge les paramètres depuis l'API — nécessaire après activation 2FA
+   *  via TwoFaSetupModal, qui n'appelle pas save2FA (donc ne met pas
+   *  data.twoFaEnabled à jour tout seul). */
+  onReload:     () => void;
+}
 
-export default function SecuriteSection({ onDirty, onToast }: Props) {
+export default function SecuriteSection({ data, saving, onDirty, onToast, save2FA, savePassword, onReload }: Props) {
   const { t } = useTranslation();
   const SESSIONS = [
     { ic:'fa-desktop', nm:t('parametres.securite.sessions.chromeWindows'), sub:t('parametres.securite.sessions.chromeWindowsSub'), cur:true },
     { ic:'fa-mobile-screen', nm:t('parametres.securite.sessions.safariIphone'), sub:t('parametres.securite.sessions.safariIphoneSub'), cur:false },
     { ic:'fa-tablet-screen-button', nm:t('parametres.securite.sessions.chromeAndroid'), sub:t('parametres.securite.sessions.chromeAndroidSub'), cur:false },
   ];
-  const TWO_FA = [
-    { em:'📱', ttl:t('parametres.securite.twoFa.appTitle'), sub:t('parametres.securite.twoFa.appSub'), badge:t('parametres.securite.twoFa.appBadge'), sel:true },
-    { em:'💬', ttl:t('parametres.securite.twoFa.smsTitle'), sub:t('parametres.securite.twoFa.smsSub'), badge:t('parametres.securite.twoFa.smsBadge'), sel:false },
-    { em:'📧', ttl:t('parametres.securite.twoFa.emailTitle'), sub:t('parametres.securite.twoFa.emailSub'), badge:t('parametres.securite.twoFa.emailBadge'), sel:false },
-  ];
+
   const [pwdVis, setPwdVis] = useState({ c:false, n:false, cf:false });
+  const [pwdCur, setPwdCur] = useState('');
+  const [pwdNew, setPwdNew] = useState('');
+  const [pwdConf, setPwdConf] = useState('');
   const [pwdStr, setPwdStr] = useState(0);
-  const [fa2, setFa2] = useState(0);
+  const [savingPwd, setSavingPwd] = useState(false);
+  const [show2fa, setShow2fa] = useState(false);
+  const [saving2fa, setSaving2fa] = useState(false);
 
   function checkPwd(v: string) {
-    let s = 0;
-    if (v.length >= 8) s++;
-    if (/[A-Z]/.test(v)) s++;
-    if (/[0-9]/.test(v)) s++;
-    if (/[^A-Za-z0-9]/.test(v)) s++;
-    setPwdStr(s);
+    let score = 0;
+    if (v.length >= 8) score++;
+    if (/[A-Z]/.test(v)) score++;
+    if (/[0-9]/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    setPwdStr(score);
+    setPwdNew(v);
     onDirty();
   }
 
@@ -40,18 +55,52 @@ export default function SecuriteSection({ onDirty, onToast }: Props) {
     t('parametres.securite.pwdLabels.fort'),
   ];
 
+  async function handleChangePassword() {
+    if (!pwdCur || !pwdNew) { onToast('Remplissez tous les champs', 'w'); return; }
+    if (pwdNew !== pwdConf) { onToast('Les mots de passe ne correspondent pas', 'w'); return; }
+    if (pwdNew.length < 8)  { onToast('Minimum 8 caractères requis', 'w'); return; }
+
+    setSavingPwd(true);
+    try {
+      await savePassword({ currentPassword: pwdCur, newPassword: pwdNew, confirmPassword: pwdConf });
+      onToast(t('parametres.securite.mdpMisAJourToast'), 's');
+      setPwdCur(''); setPwdNew(''); setPwdConf(''); setPwdStr(0);
+    } catch (err: any) {
+      onToast(err?.message ?? 'Mot de passe actuel incorrect', 'e');
+    } finally {
+      setSavingPwd(false);
+    }
+  }
+
+  /* Activation 2FA : passe par POST /auth/2fa/setup + /confirm (TwoFaService),
+   * qui exige un code TOTP valide avant d'activer réellement — l'ancien
+   * chemin direct (twoFaEnabled:true) est désormais rejeté côté backend. */
+  async function handleDisable2fa() {
+    setSaving2fa(true);
+    try {
+      await save2FA({ twoFaEnabled: false });
+      onToast('2FA désactivée', 'w');
+    } catch (err: any) {
+      onToast(err?.message ?? 'Erreur lors de la désactivation', 'e');
+    } finally {
+      setSaving2fa(false);
+    }
+  }
+
   return (
     <>
       <div className={s.sectionHd}>
         <h1><i className="fas fa-lock" /> {t('parametres.securite.title')}</h1>
         <p>{t('parametres.securite.subtitle')}</p>
       </div>
+
       <FormCard title={t('parametres.securite.changerMdpTitle')} icon="fa-key">
         <div className={s.fg}>
           <div className={s.fl}>{t('parametres.securite.mdpActuel')}</div>
           <div className={s.fw}>
             <i className={`fas fa-lock ${s.fi}`} />
-            <input className={s.fin} type={pwdVis.c ? 'text' : 'password'} placeholder="••••••••" onChange={onDirty} />
+            <input className={s.fin} type={pwdVis.c ? 'text' : 'password'} placeholder="••••••••"
+              value={pwdCur} onChange={e => { setPwdCur(e.target.value); onDirty(); }} />
             <button onClick={() => setPwdVis(p => ({ ...p, c: !p.c }))} style={{ position:'absolute', right:12, background:'none', border:'none', color:'var(--t3)', cursor:'pointer' }}><i className={`fas fa-${pwdVis.c ? 'eye-slash' : 'eye'}`} /></button>
           </div>
         </div>
@@ -59,7 +108,8 @@ export default function SecuriteSection({ onDirty, onToast }: Props) {
           <div className={s.fl}>{t('parametres.securite.nouveauMdp')}</div>
           <div className={s.fw}>
             <i className={`fas fa-lock-open ${s.fi}`} />
-            <input className={s.fin} type={pwdVis.n ? 'text' : 'password'} placeholder={t('parametres.securite.nouveauMdpPlaceholder')} onChange={e => checkPwd(e.target.value)} />
+            <input className={s.fin} type={pwdVis.n ? 'text' : 'password'} placeholder={t('parametres.securite.nouveauMdpPlaceholder')}
+              value={pwdNew} onChange={e => checkPwd(e.target.value)} />
             <button onClick={() => setPwdVis(p => ({ ...p, n: !p.n }))} style={{ position:'absolute', right:12, background:'none', border:'none', color:'var(--t3)', cursor:'pointer' }}><i className={`fas fa-${pwdVis.n ? 'eye-slash' : 'eye'}`} /></button>
           </div>
           {pwdStr > 0 && (
@@ -77,26 +127,62 @@ export default function SecuriteSection({ onDirty, onToast }: Props) {
           <div className={s.fl}>{t('parametres.securite.confirmerMdp')}</div>
           <div className={s.fw}>
             <i className={`fas fa-shield-check ${s.fi}`} />
-            <input className={s.fin} type={pwdVis.cf ? 'text' : 'password'} placeholder={t('parametres.securite.confirmerMdpPlaceholder')} onChange={onDirty} />
+            <input className={s.fin} type={pwdVis.cf ? 'text' : 'password'} placeholder={t('parametres.securite.confirmerMdpPlaceholder')}
+              value={pwdConf} onChange={e => { setPwdConf(e.target.value); onDirty(); }} />
             <button onClick={() => setPwdVis(p => ({ ...p, cf: !p.cf }))} style={{ position:'absolute', right:12, background:'none', border:'none', color:'var(--t3)', cursor:'pointer' }}><i className={`fas fa-${pwdVis.cf ? 'eye-slash' : 'eye'}`} /></button>
           </div>
+          {pwdConf && pwdNew !== pwdConf && (
+            <div style={{ fontSize:11, color:'var(--red, #DC2626)', marginTop:4 }}>
+              <i className="fas fa-triangle-exclamation" /> Les mots de passe ne correspondent pas
+            </div>
+          )}
         </div>
-        <button className={s.saveBtn} style={{ marginTop:4 }} onClick={() => onToast(t('parametres.securite.mdpMisAJourToast'), 's')}><i className="fas fa-key" /> {t('parametres.securite.mettreAJourMdp')}</button>
+        <button
+          className={s.saveBtn}
+          style={{ marginTop:4 }}
+          onClick={handleChangePassword}
+          disabled={savingPwd || saving}
+        >
+          {savingPwd
+            ? <><i className="fas fa-spinner fa-spin" /> Enregistrement…</>
+            : <><i className="fas fa-key" /> {t('parametres.securite.mettreAJourMdp')}</>
+          }
+        </button>
       </FormCard>
 
       <FormCard title={t('parametres.securite.twoFaTitle')} icon="fa-mobile-screen-button" subtitle={t('parametres.securite.twoFaSubtitle')}
-        action={<span className={`${s.badge} ${s.amber}`} style={{ fontSize:11, padding:'4px 12px' }}>{t('parametres.securite.nonActive')}</span>}
+        action={
+          <span className={`${s.badge} ${data?.twoFaEnabled ? s.green : s.amber}`} style={{ fontSize:11, padding:'4px 12px' }}>
+            {data?.twoFaEnabled ? 'Activé' : t('parametres.securite.nonActive')}
+          </span>
+        }
       >
-        <div className={s.radioGroup}>
-          {TWO_FA.map((p, i) => (
-            <div key={p.ttl} className={`${s.radioOpt} ${fa2 === i ? s.selected : ''}`} onClick={() => { setFa2(i); onDirty(); }}>
-              <div className={s.roDot} />
-              <span className={s.roEm}>{p.em}</span>
-              <div><div className={s.roTtl}>{p.ttl}</div><div className={s.roSub}>{p.sub}</div></div>
-              <div className={s.roBadge}>{p.badge}</div>
-            </div>
-          ))}
-        </div>
+        {data?.twoFaEnabled ? (
+          <>
+            <p style={{ fontSize: 12.5, color: 'var(--t3)', lineHeight: 1.6, marginBottom: 14 }}>
+              <i className="fas fa-circle-check" style={{ color: 'var(--emerald, #16A34A)', marginRight: 6 }} />
+              La 2FA est active sur ce compte via application d'authentification.
+            </p>
+            <button
+              className={s.saveBtn}
+              style={{ background: 'var(--red, #DC2626)' }}
+              onClick={handleDisable2fa}
+              disabled={saving2fa}
+            >
+              {saving2fa
+                ? <><i className="fas fa-spinner fa-spin" /> …</>
+                : <><i className="fas fa-shield-xmark" /> Désactiver la 2FA</>
+              }
+            </button>
+          </>
+        ) : (
+          <button
+            className={s.saveBtn}
+            onClick={() => setShow2fa(true)}
+          >
+            <i className="fas fa-plus" /> Activer la 2FA
+          </button>
+        )}
       </FormCard>
 
       <FormCard title={t('parametres.securite.sessionsTitle')} icon="fa-desktop" subtitle={t('parametres.securite.sessionsSubtitle')}
@@ -116,6 +202,13 @@ export default function SecuriteSection({ onDirty, onToast }: Props) {
           </div>
         ))}
       </FormCard>
+
+      {show2fa && (
+        <TwoFaSetupModal
+          onClose={() => setShow2fa(false)}
+          onEnabled={() => { onReload(); onToast('2FA activée avec succès', 's'); }}
+        />
+      )}
     </>
   );
 }

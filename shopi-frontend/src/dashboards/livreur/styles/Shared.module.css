@@ -11,14 +11,14 @@
 /* ── Card ── */
 .card {
   background: var(--white);
-  border: 1.5px solid var(--bdr, rgba(11,31,58,.09));
+  border: 1.5px solid var(--bdr, rgba(0,0,0,.09));
   border-radius: var(--r-xl);
   box-shadow: var(--sh-xs);
   overflow: hidden;
   margin-bottom: 16px;
   transition: border-color .25s, box-shadow .25s;
 }
-.card:hover { border-color: rgba(14,116,144,.18); box-shadow: var(--sh-sm); }
+.card:hover { border-color: rgba(0,0,0,.18); box-shadow: var(--sh-sm); }
 .cardLast { margin-bottom: 0; }
 
 .ch {
@@ -78,8 +78,8 @@
 
 .kpiBar { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
 .k1 .kpiBar { background: linear-gradient(90deg, var(--teal), var(--tl-lt)); }
-.k2 .kpiBar { background: linear-gradient(90deg, var(--emerald), #34D399); }
-.k3 .kpiBar { background: linear-gradient(90deg, var(--amber), #FCD34D); }
+.k2 .kpiBar { background: linear-gradient(90deg, var(--emerald), #000000); }
+.k3 .kpiBar { background: linear-gradient(90deg, var(--amber), #A1A1AA); }
 .k4 .kpiBar { background: linear-gradient(90deg, var(--blue), var(--blue-lt)); }
 
 .kpiTop { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
@@ -102,8 +102,8 @@
   padding: 3px 9px;
   border-radius: var(--pill);
 }
-.badgeUp { background: rgba(22,163,74,.10); color: var(--green); }
-.badgeDn { background: rgba(220,38,38,.10); color: var(--red); }
+.badgeUp { background: rgba(0,0,0,.10); color: var(--green); }
+.badgeDn { background: rgba(0,0,0,.10); color: var(--red); }
 .badgeNu { background: var(--g100); color: var(--t3); }
 
 .kpiVal {
@@ -136,13 +136,13 @@
 .speedEco { background: var(--sky-2);            color: var(--blue);    }
 .speedStd { background: var(--em-bg);            color: var(--emerald); }
 .speedExp { background: var(--am-bg);            color: var(--amber);   }
-.speedUlt { background: rgba(220,38,38,.10);     color: var(--red);     }
+.speedUlt { background: rgba(0,0,0,.10);     color: var(--red);     }
 
 /* ── Status pills ── */
 .sPill { display:inline-flex; align-items:center; gap:3px; font-size:9px; font-weight:800; padding:3px 9px; border-radius:var(--pill); text-transform:uppercase; letter-spacing:.3px; }
 .sDone { background: var(--em-bg); color: var(--emerald); }
 .sIss  { background: var(--am-bg); color: var(--amber);   }
-.sCan  { background: rgba(220,38,38,.10); color: var(--red); }
+.sCan  { background: rgba(0,0,0,.10); color: var(--red); }
 
 /* ── Table ── */
 .tableWrap { overflow-x: auto; }

@@ -18,7 +18,7 @@ import { Company } from '../../../database/entities/profiles/entreprise-profile.
 import { Delivery } from '../../../database/entities/profiles/livreur-profile.entity';
 import { Correspondent } from '../../../database/entities/profiles/correspondant-profile.entity';
 import {
-  Commande, CommandeStatus, ModeLivraison,
+  Commande, CommandeStatus, ModeLivraison, LivreurAssignmentStatus,
 } from '../../../database/entities/commande/commande.entity';
 import { CommandeItem } from '../../../database/entities/commande/commande-item.entity';
 import {
@@ -123,6 +123,8 @@ export class CommandeCreationService {
         clientId: client.id,
         companyId: company.id,
         livreurId: delivery?.id ?? null,
+        livreurAssignmentStatus: delivery ? LivreurAssignmentStatus.PENDING : null,
+        livreurAssignedBy: delivery ? 'client' : null,
         correspondantId: correspondant?.id ?? null,
         partenaireId: null,
         status: CommandeStatus.PAID,
@@ -211,18 +213,10 @@ export class CommandeCreationService {
         expiresAt,
       }));
 
-      if (delivery) {
-        codes.push(this.codeRepo.create({
-          commandeId: saved.id,
-          code: genererCode(),
-          acteurType: CodeActeurType.LIVREUR,
-          acteurId: delivery.userId,
-          acteurNom: delivery.fullName,
-          ordre: 2,
-          status: CodeCommandeStatus.PENDING,
-          expiresAt,
-        }));
-      }
+      /* Code LIVREUR : PAS généré ici — seulement quand le livreur ACCEPTE
+       * la mission (voir CommandeLivreurAssignmentService.accepter()). Tant
+       * qu'il n'a pas répondu, livreurAssignmentStatus reste PENDING et
+       * aucun code n'existe pour ce rôle. */
 
       if (correspondant) {
         codes.push(this.codeRepo.create({

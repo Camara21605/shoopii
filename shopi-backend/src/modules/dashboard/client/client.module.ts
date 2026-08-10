@@ -30,6 +30,8 @@ import { Correspondent }        from '../../../database/entities/profiles/corres
 import { CorrespondantHoraire } from '../../../database/entities/profiles/correspondant-horaire.entity';
 /* ✅ Entité likes (favoris) */
 import { ProductLike }          from '../../../database/entities/entreprise.table/product-like.entity';
+/* ✅ Révocation des sessions lors d'un changement de mot de passe */
+import { RefreshToken }         from '../../../database/entities/refresh-token.entity';
 
 /* Controllers existants */
 import { ClientParametresController } from './client-parametres.controller';
@@ -82,6 +84,7 @@ import { FavorisService }             from './services/favoris.service';
       Correspondent,         /* ✅ ajout */
       CorrespondantHoraire,  /* ✅ ajout */
       ProductLike,           /* ✅ ajout favoris */
+      RefreshToken,          /* ✅ ajout — révocation sessions au changement MDP */
     ]),
   ],
 

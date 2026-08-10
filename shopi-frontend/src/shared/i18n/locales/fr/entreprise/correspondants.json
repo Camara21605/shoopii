@@ -1,0 +1,181 @@
+{
+  "correspondants": {
+    "type": {
+      "principal": "⭐ Principal",
+      "entrepot": "🏭 Entrepôt",
+      "export": "✈️ Export",
+      "relais": "📍 Relais"
+    },
+    "status": {
+      "active": "Actif",
+      "pending": "En attente",
+      "suspended": "Suspendu"
+    },
+    "na": "N/A",
+    "modalProfil": {
+      "kpiTotalMissions": "Total missions",
+      "kpiCommandesTraitees": "Commandes traitées",
+      "kpiCeMois": "Ce mois-ci",
+      "kpiCommandes": "Commandes",
+      "kpiNoteMoyenne": "Note moyenne",
+      "kpiSur5Etoiles": "Sur 5 étoiles",
+      "kpiZoneCouverte": "Zone couverte",
+      "evaluationClients": "Évaluation clients",
+      "telephone": "Téléphone",
+      "email": "Email",
+      "adresse": "Adresse",
+      "zone": "Zone",
+      "derniereActivite": "Dernière activité",
+      "membreDepuis": "Membre depuis",
+      "suspendre": "Suspendre",
+      "contacter": "Contacter",
+      "appeler": "Appeler"
+    },
+    "modalInviter": {
+      "nomRequis": "⚠️ Le nom est requis",
+      "emailRequis": "⚠️ L'email est requis",
+      "emailInvalide": "⚠️ Email invalide",
+      "invitationEnvoyee": "✅ Invitation envoyée à {{email}}",
+      "defaultMessage": "Bonjour,\n\nVous avez été sélectionné pour rejoindre le réseau de correspondants Shopi.\n\nVeuillez utiliser le code ci-joint pour créer votre compte.",
+      "title": "Inviter un correspondant",
+      "etapeInformations": "Informations",
+      "etapeApercu": "Aperçu",
+      "etapeConfirme": "Confirmé",
+      "nomPointRelais": "Nom du point relais *",
+      "nomPlaceholder": "Ex: RelaisPlus Kaloum",
+      "emailContact": "Email de contact *",
+      "emailPlaceholder": "Ex: relais@gmail.com",
+      "codeEmailHint": "Le code d'invitation sera envoyé à cet email.",
+      "typeCorrespondant": "Type de correspondant",
+      "optRelais": "📍 Point relais — Dépôt/retrait colis",
+      "optEntrepot": "🏭 Entrepôt — Stockage régional",
+      "optExport": "✈️ Export — International",
+      "optPrincipal": "⭐ Principal — Hub central",
+      "ville": "Ville",
+      "villePlaceholder": "Ex: Conakry",
+      "quartierZone": "Quartier / Zone",
+      "quartierPlaceholder": "Ex: Kaloum, Matam…",
+      "messagePersonnalise": "Message personnalisé",
+      "apercuTitle": "Aperçu de l'email qui sera envoyé",
+      "emailSujetFixe": "Invitation Shopi — Rejoignez notre réseau",
+      "emailDestA": "À :",
+      "bonjour": "Bonjour",
+      "codeInvitationLabel": "Votre code d'invitation (10 chiffres)",
+      "codeInvitationNote": "Valable 7 jours · Usage unique · Généré à l'envoi",
+      "villeLabelInline": "Ville :",
+      "zoneLabelInline": "Zone :",
+      "typeLabelInline": "Type :",
+      "infoBoxExpire": "Ce code expire dans 7 jours. Il peut être utilisé une seule fois. L'email sera envoyé depuis noreply@shopi.gn.",
+      "invitationEnvoyeeTitle": "Invitation envoyée !",
+      "codeEnvoyeA": "Code envoyé à {{email}}",
+      "recapNom": "Nom",
+      "recapEmail": "Email",
+      "recapVille": "Ville",
+      "recapType": "Type",
+      "codeGenereLabel": "Code d'invitation généré",
+      "copier": "Copier",
+      "codeCopieToast": "📋 Code copié !",
+      "expireLe": "Expire le {{date}} · Usage unique",
+      "annuler": "Annuler",
+      "suivant": "Suivant",
+      "retour": "Retour",
+      "envoiEnCours": "Envoi…",
+      "envoyerInvitation": "Envoyer l'invitation",
+      "fermer": "Fermer"
+    },
+    "modalContacter": {
+      "sujetMessageRequis": "⚠️ Sujet et message requis",
+      "messageEnvoye": "✅ Message envoyé à {{name}}",
+      "title": "Contacter",
+      "sub": "Envoyer un message à {{name}} ({{email}})",
+      "sujetLabel": "Sujet *",
+      "sujetPlaceholder": "Ex: Mise à jour stock disponible",
+      "messageLabel": "Message *",
+      "messagePlaceholder": "Rédigez votre message…",
+      "infoBox": "Le message sera envoyé à {{email}} depuis noreply@shopi.gn.",
+      "annuler": "Annuler",
+      "envoiEnCours": "Envoi…",
+      "envoyer": "Envoyer"
+    },
+    "modalSuspendre": {
+      "title": "Suspendre le correspondant",
+      "confirmText": "Suspendre {{name}} ?",
+      "note": "Ce point relais ne pourra plus recevoir ni expédier de colis jusqu'à la levée de la suspension.",
+      "annuler": "Annuler",
+      "confirmer": "Confirmer"
+    },
+    "header": {
+      "title": "Réseau Correspondants",
+      "subtitle": "Gérez vos points relais, entrepôts et partenaires export",
+      "inviter": "Inviter un correspondant"
+    },
+    "stats": {
+      "actifs": "Correspondants actifs",
+      "auTotal": "{{count}} au total",
+      "commandesCeMois": "Commandes ce mois",
+      "traiteesParReseau": "Traitées par le réseau",
+      "villesCouvertes": "Villes couvertes",
+      "plusInternational": "+ International",
+      "enAttente": "En attente",
+      "validationRequise": "Validation requise"
+    },
+    "filters": {
+      "tous": "Tous"
+    },
+    "statutSelect": {
+      "tousStatuts": "Tous les statuts",
+      "actifs": "Actifs",
+      "enAttente": "En attente",
+      "suspendus": "Suspendus"
+    },
+    "search": "Rechercher…",
+    "compteur_one": "{{count}} correspondant",
+    "compteur_other": "{{count}} correspondants",
+    "compteurType": " · type : {{type}}",
+    "loading": "Chargement des correspondants…",
+    "empty": {
+      "title": "Aucun correspondant trouvé",
+      "sub": "Modifiez vos filtres ou invitez un nouveau correspondant.",
+      "inviter": "Inviter"
+    },
+    "card": {
+      "ceMois": "ce mois",
+      "total": "total",
+      "note": "note",
+      "voir": "Voir",
+      "contacter": "Contacter",
+      "appeler": "Appeler"
+    },
+    "table": {
+      "correspondant": "Correspondant",
+      "ville": "Ville",
+      "type": "Type",
+      "ceMois": "Ce mois",
+      "total": "Total",
+      "note": "Note",
+      "statut": "Statut",
+      "actions": "Actions"
+    },
+    "sidePanel": {
+      "couvertureZone": "Couverture par zone",
+      "aucuneZone": "Aucune donnée de zone",
+      "activiteRecente": "Activité récente",
+      "actionsRapides": "Actions rapides"
+    },
+    "quickActions": {
+      "envoyerCirculaire": "Envoyer circular à tous",
+      "envoiToast": "📧 Envoi en masse…",
+      "rapportReseau": "Rapport réseau mensuel",
+      "rapportToast": "📊 Rapport en génération…",
+      "voirCarte": "Voir carte des relais",
+      "carteToast": "🗺️ Carte des relais ouverte",
+      "validerEnAttente": "Valider les en attente ({{count}})",
+      "aucunEnAttente": "Aucun compte en attente",
+      "validesToast": "✅ {{count}} comptes validés"
+    },
+    "toasts": {
+      "loadError": "❌ Erreur de chargement : {{message}}",
+      "suspendu": "🚫 {{name}} suspendu"
+    }
+  }
+}

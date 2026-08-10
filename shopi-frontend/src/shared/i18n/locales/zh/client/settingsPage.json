@@ -1,0 +1,541 @@
+{
+  "settingsPage": {
+    "tabs": {
+      "ariaLabel": "设置部分",
+      "profil": "资料",
+      "adresses": "地址",
+      "paiement": "支付",
+      "points": "Shopi 积分",
+      "confidentialiteSecurite": "隐私与安全",
+      "securite": "安全",
+      "sessions": "已连接设备",
+      "activite": "活动日志",
+      "approbations": "信任设备",
+      "notifs": "通知",
+      "confidentialite": "隐私",
+      "apparence": "外观",
+      "langue": "语言与地区",
+      "donnees": "我的数据",
+      "danger": "危险区域"
+    },
+    "page": {
+      "retourAccueil": "返回首页",
+      "titrePart1": "账户",
+      "titreEm": "设置",
+      "sub": "管理您的信息、安全和 Shopi 偏好"
+    },
+    "sidebar": {
+      "photoAlt": "资料照片",
+      "chargement": "加载中…",
+      "changerPhoto": "更改资料照片",
+      "uploadEnCours": "上传中…",
+      "verifie": "已验证",
+      "invalidFormat": "❌ 格式无效 — 请选择图片（JPG、PNG、WebP）",
+      "tropGrande": "❌ 图片过大 — 最大 5 MB",
+      "uploadEnCoursToast": "📤 上传中…",
+      "photoMiseAJour": "✅ 资料照片已更新！",
+      "uploadErrorFallback": "上传时出错"
+    },
+    "securityBanner": {
+      "items": {
+        "motDePasseFort": "强密码",
+        "emailVerifie": "已验证邮箱",
+        "telephoneVerifie": "已验证电话",
+        "twoFaActive": "已启用 2FA",
+        "questionsSecurite": "安全问题",
+        "codesSecours": "已生成备用码"
+      },
+      "niveaux": {
+        "excellent": "优秀",
+        "bien": "良好",
+        "moyen": "中等",
+        "faible": "较弱"
+      },
+      "titre": "安全评分",
+      "chargementDesc": "正在加载安全评分…",
+      "descExcellent": "您的账户已得到完美保护。继续保持！",
+      "descBien": "您的账户保护良好。仍有一些改进空间。",
+      "descFaible": "通过完成以下操作加强您的安全。",
+      "ameliorer": "改进"
+    },
+    "points": {
+      "titre": "我的 Shopi 积分",
+      "pts": "分",
+      "niveauLabel": "等级",
+      "prochainA": "到",
+      "prochainPts": "分",
+      "pointsGagnes": "本月获得积分",
+      "pointsUtilises": "已使用积分",
+      "expirationProchaine": "下次过期"
+    },
+    "activite": {
+      "titre": "活动日志",
+      "subtitle": "您账户上所有操作的完整追踪",
+      "exportEnCours": "导出…",
+      "exporter": "导出",
+      "aucuneActivite": "无已记录的活动",
+      "loadError": "❌ 无法加载日志",
+      "types": {
+        "login": "登录",
+        "order": "订单",
+        "security": "安全",
+        "alert": "提醒",
+        "profile": "资料"
+      }
+    },
+    "adresses": {
+      "titre": "配送地址",
+      "subtitleSuffix_one": "个已保存地址",
+      "subtitleSuffix_other": "个已保存地址",
+      "ajouter": "添加",
+      "aucuneAdresse": "无已保存地址",
+      "parDefaut": "默认",
+      "ajouterNouvelle": "添加新地址",
+      "loadError": "❌ 无法加载地址",
+      "toastSupprimee": "🗑️ 地址已删除",
+      "toastDefiniParDefaut": "⭐ 地址已设为默认",
+      "toastFormulaireTodo": "➕ 添加表单 — 待实现",
+      "toastModificationTodo": "✏️ 修改 — 待实现",
+      "toastAjouterNouvelle": "➕ 添加新地址"
+    },
+    "paiement": {
+      "titre": "支付方式",
+      "subtitle": "银行卡、Mobile Money 和钱包",
+      "ajouter": "添加",
+      "aucunMoyen": "无已保存的支付方式",
+      "parDefaut": "默认",
+      "ajouteLe": "添加于",
+      "definirParDefautTitle": "设为默认",
+      "loadError": "❌ 无法加载支付方式",
+      "toastSupprime": "🗑️ 支付方式已删除",
+      "toastDefiniParDefaut": "⭐ 支付方式已设为默认",
+      "toastAjouter": "➕ 添加支付方式",
+      "ajouterNouveau": "添加支付方式",
+      "labels": {
+        "carte": "银行卡",
+        "especes": "现金",
+        "virement": "银行转账",
+        "wallet": "Shopi 钱包"
+      }
+    },
+    "sessions": {
+      "titre": "已连接设备",
+      "subtitleSuffix_one": "个活跃会话",
+      "subtitleSuffix_other": "个活跃会话",
+      "suspectSuffix_one": "次可疑连接",
+      "suspectSuffix_other": "次可疑连接",
+      "deconnecterTout": "全部断开",
+      "enCours": "处理中…",
+      "aucuneSession": "无活跃会话",
+      "sessionActuelle": "当前会话",
+      "suspect": "可疑",
+      "revoquer": "撤销",
+      "conseilTitre": "安全建议",
+      "conseilTexteSuffix_one": "次可疑连接检测到。请立即撤销并更改密码。",
+      "conseilTexteSuffix_other": "次可疑连接检测到。请立即撤销并更改密码。",
+      "loadError": "❌ 无法加载会话",
+      "toastRevoked": "🔒 会话已撤销",
+      "toastRevokedAll": "🔒 所有其他会话已撤销"
+    },
+    "approbations": {
+      "titre": "信任设备",
+      "subtitle": "这些设备无需额外 2FA 代码即可连接",
+      "approuve": "已批准",
+      "retirer": "移除",
+      "derniereUtilisation": "最近使用",
+      "ajouteLe": "添加于",
+      "aujourdhui": "今天",
+      "hier": "昨天",
+      "commentTitre": "工作原理",
+      "commentTexte": "信任设备在 2FA 验证成功后会被记住。如果无法识别或丢失设备，请将其移除。",
+      "toastRetire": "🔒 设备已从信任列表移除",
+      "toastRetireMac": "🔒 MacBook 已从信任列表移除",
+      "aucunAppareil": "无已保存的信任设备",
+      "loadError": "❌ 无法加载设备"
+    },
+    "notifs": {
+      "titre": "通知",
+      "subtitle": "选择何时以及如何通知您",
+      "enregistrer": "保存",
+      "enregistrement": "保存中…",
+      "toastSaved": "✅ 通知偏好已保存",
+      "sms": "短信",
+      "email": "邮箱",
+      "push": "推送",
+      "rows": {
+        "commandes": {
+          "title": "订单状态",
+          "desc": "确认、发货、配送"
+        },
+        "promos": {
+          "title": "促销与优惠",
+          "desc": "折扣、优惠码、专属优惠"
+        },
+        "messages": {
+          "title": "消息",
+          "desc": "来自卖家或支持的新消息"
+        },
+        "points": {
+          "title": "积分与奖励",
+          "desc": "获得积分、达到等级"
+        }
+      }
+    },
+    "confidentialite": {
+      "titre": "资料隐私",
+      "subtitle": "控制谁能查看您的信息",
+      "enregistrer": "保存",
+      "enregistrement": "保存中…",
+      "toastSaved": "✅ 隐私设置已保存",
+      "visibiliteTitle": "资料可见性",
+      "visibiliteDesc": "谁能查看您的公开资料",
+      "visibiliteOptions": {
+        "toutLeMonde": "所有人",
+        "membresShopi": "Shopi 会员",
+        "personne": "无人"
+      },
+      "rows": {
+        "historique": {
+          "title": "订单历史",
+          "desc": "在您的资料上显示最近的购买"
+        },
+        "wishlist": {
+          "title": "愿望清单",
+          "desc": "让他人可见您的愿望清单"
+        },
+        "perso": {
+          "title": "个性化数据",
+          "desc": "使用您的行为改进推荐"
+        },
+        "localisation": {
+          "title": "大致位置",
+          "desc": "分享您的城市以获取本地优惠"
+        },
+        "pubs": {
+          "title": "个性化广告",
+          "desc": "接收基于您兴趣的广告"
+        }
+      }
+    },
+    "apparence": {
+      "titre": "外观",
+      "subtitle": "主题、文本大小和显示",
+      "enregistrer": "保存",
+      "enregistrement": "保存中…",
+      "toastSaved": "✅ 外观已更新",
+      "themeTitle": "主题",
+      "themeDesc": "浅色、深色或自动",
+      "themeOptions": {
+        "clair": "浅色",
+        "sombre": "深色",
+        "auto": "自动"
+      },
+      "tailleTitle": "文本大小",
+      "tailleDesc": "调整以获得更好的可读性",
+      "tailleOptions": {
+        "normal": "正常",
+        "grand": "大",
+        "tresGrand": "很大"
+      },
+      "qualiteTitle": "图片质量",
+      "qualiteDesc": "降低以节省移动数据",
+      "qualiteOptions": {
+        "haute": "高质量",
+        "eco": "省流量"
+      }
+    },
+    "langue": {
+      "titre": "语言与地区",
+      "subtitle": "语言、货币和时区",
+      "enregistrer": "保存",
+      "enregistrement": "保存中…",
+      "toastSaved": "✅ 地区偏好已保存",
+      "langueTitle": "显示语言",
+      "langueDesc": "Shopi 界面语言",
+      "deviseTitle": "显示货币",
+      "deviseDesc": "用于价格和交易",
+      "fuseauTitle": "时区",
+      "fuseauDesc": "用于配送时间和日期"
+    },
+    "donnees": {
+      "titre": "我的个人数据",
+      "subtitle": "访问、导出或删除您的数据 — GDPR 合规",
+      "droitsTitre": "您的权利",
+      "droitsTexteSuffix": "您有权随时访问、更正、导出和删除您的数据。如有任何请求，请联系我们的数据保护官",
+      "items": {
+        "export": {
+          "title": "导出我所有数据",
+          "desc": "包含资料、订单、消息、积分的 ZIP 文件",
+          "btnLabel": "导出",
+          "msg": "📦 导出准备中 — 24 小时内发送邮件"
+        },
+        "historique": {
+          "title": "订单历史",
+          "desc": "自账户创建以来的所有订单 — CSV 或 PDF",
+          "btnLabel": "CSV",
+          "msg": "📋 历史已导出"
+        },
+        "factures": {
+          "title": "我的发票和收据",
+          "desc": "自注册以来所有发票的 PDF",
+          "btnLabel": "PDF",
+          "msg": "🧾 发票已下载"
+        },
+        "rapport": {
+          "title": "隐私报告",
+          "desc": "收集哪些数据、如何使用",
+          "btnLabel": "查看",
+          "msg": "📄 报告已打开"
+        },
+        "portabilite": {
+          "title": "数据可携带性请求（GDPR）",
+          "desc": "将数据转移到另一个平台 — 法定期限 30 天",
+          "btnLabel": "请求",
+          "msg": "📨 数据可携带性请求已发送"
+        }
+      },
+      "rowsLive": {
+        "export": {
+          "title": "导出我所有数据",
+          "desc": "ZIP 文件 — 资料、订单、消息、积分",
+          "label": "导出"
+        },
+        "commandes": {
+          "title": "订单历史",
+          "desc": "您所有订单 — CSV 或 PDF",
+          "label": "CSV"
+        },
+        "factures": {
+          "title": "我的发票和收据",
+          "desc": "您所有发票的 PDF",
+          "label": "PDF"
+        },
+        "rapport": {
+          "title": "隐私报告",
+          "desc": "收集哪些数据以及如何",
+          "label": "查看"
+        },
+        "portabilite2": {
+          "title": "GDPR 可携带性",
+          "desc": "转移您的数据 — 法定期限 30 天",
+          "label": "请求"
+        }
+      },
+      "droitsTexteShort": "您有权访问、更正、导出和删除您的数据。请联系我们的数据保护官"
+    },
+    "danger": {
+      "titre": "危险区域",
+      "subtitle": "这些操作不可逆 — 行动前请三思",
+      "rows": {
+        "desactiver": {
+          "title": "临时停用账户",
+          "desc": "您的资料将被隐藏，进行中的订单将被处理。可随时重新激活。",
+          "btn": "停用",
+          "msg": "⚠️ 需要确认 — 请检查您的邮箱"
+        },
+        "revoquerAcces": {
+          "title": "撤销所有第三方访问",
+          "desc": "断开链接到您账户的所有应用程序和服务。",
+          "btn": "撤销访问",
+          "msg": "🔌 所有第三方访问已撤销"
+        },
+        "reinitialiser": {
+          "title": "重置我所有偏好",
+          "desc": "将通知、外观、语言和隐私重置为 Shopi 默认值。",
+          "btn": "重置",
+          "msg": "🔄 偏好已重置"
+        },
+        "supprimer": {
+          "title": "永久删除账户",
+          "descPart1": "您所有数据、订单、积分和历史将在",
+          "descStrong": "30 天内永久删除",
+          "descPart2": "。此操作",
+          "descStrong2": "不可逆",
+          "descPart3": "。",
+          "btn": "删除我的账户",
+          "msg": "⛔ 请求已发送 — 请检查您的邮箱"
+        }
+      },
+      "rowsLive": {
+        "desactiver": {
+          "title": "临时停用账户",
+          "desc": "您的资料将被隐藏。可随时重新激活。",
+          "btn": "停用"
+        },
+        "revoquer": {
+          "title": "撤销所有第三方访问",
+          "desc": "断开链接到您账户的所有应用程序和服务。",
+          "btn": "撤销访问"
+        },
+        "reinitialiser": {
+          "title": "重置我所有偏好",
+          "desc": "将通知、外观、语言重置为默认值。",
+          "btn": "重置"
+        },
+        "supprimer": {
+          "titre": "永久删除账户",
+          "descPart1": "您所有数据将在",
+          "descStrong1": "30 天内",
+          "descPart2": "被删除。此操作",
+          "descStrong2": "不可逆",
+          "descPart3": "。",
+          "btn": "删除我的账户"
+        }
+      },
+      "clicAgain": "再次点击以确认",
+      "confirmerBtn": "确认",
+      "annulerBtn": "取消"
+    },
+    "profil": {
+      "photoTitle": "资料照片",
+      "photoSubtitle": "其他 Shopi 用户可见的您的照片",
+      "photoAlt": "资料照片",
+      "uploadEnCoursTitle": "上传中…",
+      "changerPhotoTitle": "更改照片",
+      "aucunUsername": "无用户名",
+      "uploadEnCoursBtn": "上传…",
+      "changerPhotoBtn": "更改照片",
+      "supprimer": "删除",
+      "photoHint": "JPG、PNG 或 WebP · 最大 5 MB",
+      "invalidFormat": "❌ 格式无效 — 请选择图片（JPG、PNG、WebP）",
+      "tropGrande": "❌ 图片过大 — 最大 5 MB",
+      "uploadEnCoursToast": "📤 上传中…",
+      "photoMiseAJour": "✅ 资料照片已更新！",
+      "photoSupprimee": "✅ 照片已删除",
+      "photoSuppressionError": "❌ 无法删除照片",
+      "uploadErrorFallback": "上传时出错",
+      "loadError": "❌ 无法加载资料",
+      "infosTitle": "个人信息",
+      "infosSubtitle": "您在 Shopi 平台上的身份",
+      "modifier": "修改",
+      "prenomNom": "名字与姓氏",
+      "nomUtilisateur": "用户名",
+      "nonDefini": "未定义",
+      "dateNaissance": "出生日期",
+      "nonRenseignee": "未填写",
+      "genre": "性别",
+      "nonRenseigne": "未填写",
+      "bio": "简介",
+      "aucuneBio": "无简介",
+      "fields": {
+        "prenom": "名字",
+        "nom": "姓氏",
+        "nomUtilisateur": "用户名",
+        "dateNaissance": "出生日期",
+        "genre": "性别",
+        "genreOptions": {
+          "nonPrecise": "未说明",
+          "homme": "男",
+          "femme": "女",
+          "autre": "其他"
+        },
+        "languePreferee": "首选语言",
+        "bio": "简介",
+        "bioPlaceholder": "用几句话介绍自己…",
+        "caracteres": "个字符"
+      },
+      "enregistrer": "保存",
+      "enregistrement": "保存中…",
+      "annuler": "取消",
+      "savedToast": "✅ 更改已保存！",
+      "coordonneesTitle": "联系方式",
+      "coordonneesSubtitle": "邮箱和电话 — 用于登录和提醒",
+      "adresseEmail": "邮箱地址",
+      "telephone": "电话",
+      "verifie": "已验证",
+      "nonVerifie": "未验证",
+      "nonRenseigneTel": "未填写",
+      "emailHint": "确认邮件将发送到新地址",
+      "numeroTelephone": "电话号码",
+      "telHint": "将发送短信验证码",
+      "enregistrerChangements": "保存更改",
+      "coordonneesSavedToast": "✅ 联系方式已更新 — 验证已发送"
+    },
+    "securite": {
+      "authTitle": "身份验证与访问",
+      "authSubtitle": "为您的账户提供多层保护",
+      "mdpTitle": "密码",
+      "dernierModifSuffix_one": "上次修改于 {{count}} 天前",
+      "dernierModifSuffix_other": "上次修改于 {{count}} 天前",
+      "jamaisModifie": "从未修改",
+      "actif": "活跃",
+      "modifier": "修改",
+      "mdpActuel": "当前密码",
+      "nouveauMdp": "新密码",
+      "mdpHint": "最少 8 个字符，1 个大写字母，1 个数字",
+      "confirmer": "确认",
+      "changerMdp": "更改密码",
+      "enregistrement": "保存中…",
+      "annuler": "取消",
+      "mismatchToast": "❌ 密码不匹配",
+      "loadError": "❌ 无法加载安全数据",
+      "twofaTitle": "双重身份验证（2FA）",
+      "twofaDesc": "即使密码泄露也能保护您的账户",
+      "active": "已启用",
+      "desactive": "已禁用",
+      "desactiver": "禁用",
+      "activer": "启用",
+      "twofaActiveToast": "🔐 2FA 已成功启用",
+      "twofaDesactiveToast": "⚠️ 2FA 已禁用",
+      "codesTitle": "备用码",
+      "codesDescAvailable_one": "{{count}} 个可用一次性码",
+      "codesDescAvailable_other": "{{count}} 个可用一次性码",
+      "codesDescDefault": "8 个一次性码 — 如果无法访问 2FA 请保留",
+      "generes": "已生成",
+      "nonGeneres": "未生成",
+      "regenerer": "重新生成",
+      "generer": "生成",
+      "codesGeneresToast": "📋 代码已生成 — 请立即保存！",
+      "sauvegardezCodes": "⚠️ 请保存这些代码 — 只显示一次",
+      "toutCopier": "全部复制",
+      "codesCopiesToast": "📋 代码已复制！",
+      "questionsTitle": "安全问题",
+      "questionsSuffix": "个已配置问题",
+      "modifierBtn": "修改",
+      "configurerBtn": "配置",
+      "questionLabel": "问题",
+      "configureeSuffix": "已配置 · 答案已隐藏",
+      "nonConfiguree": "未配置",
+      "ok": "好",
+      "manquante": "缺失",
+      "choisirQuestion": "选择问题…",
+      "questionOptions": {
+        "animal": "您第一只宠物的名字是什么？",
+        "ecole": "您小学的名字是什么？",
+        "ville": "您出生在哪个城市？",
+        "ami": "您童年最好的朋友叫什么名字？",
+        "mere": "您外婆的名字是什么？"
+      },
+      "reponseLabel": "答案",
+      "reponsePlaceholder": "您的秘密答案…",
+      "atLeastOneQuestionToast": "⚠️ 至少填写一个问题",
+      "alertesTitle": "安全提醒",
+      "alertesSubtitle": "检测到可疑活动时立即通知您",
+      "sms": "短信",
+      "email": "邮箱",
+      "push": "推送",
+      "alertRows": {
+        "connex": {
+          "title": "检测到新登录",
+          "desc": "从未知设备或国家登录时提醒"
+        },
+        "mdp": {
+          "title": "密码更改",
+          "desc": "密码修改时立即提醒"
+        },
+        "tentatives": {
+          "title": "登录尝试失败",
+          "desc": "连续 3 次错误尝试后提醒"
+        },
+        "transaction": {
+          "title": "可疑或拒绝的交易",
+          "desc": "异常高额支付时提醒"
+        },
+        "pays": {
+          "title": "从未知国家访问",
+          "desc": "账户从未知国家使用时提醒"
+        }
+      }
+    }
+  }
+}

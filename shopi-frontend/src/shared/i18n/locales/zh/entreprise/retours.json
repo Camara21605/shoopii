@@ -1,0 +1,204 @@
+{
+  "retours": {
+    "title": "退货与售后",
+    "subtitle": "管理退货请求和售后服务",
+    "refresh": "刷新",
+    "tabRetours": "退货",
+    "tabSav": "售后",
+    "toasts": {
+      "accepted": "✅ 退货已接受 — 客户已通知",
+      "refused": "退货已拒绝 — 客户已通知",
+      "refunded": "💸 退款已记录",
+      "noteAdded": "📝 已添加备注",
+      "genericError": "错误",
+      "acceptError": "接受时出错"
+    },
+    "reasons": {
+      "defective": "产品有缺陷",
+      "not_matching": "与描述不符",
+      "change_of_mind": "改变主意",
+      "wrong_item": "商品错误",
+      "damaged": "已损坏",
+      "expired": "产品过期",
+      "other": "其他"
+    },
+    "stats": {
+      "totalMois": "本月总计",
+      "badgeAuj": "+{{count}} 今天",
+      "enAttente": "待处理",
+      "urgents": "紧急",
+      "acceptes": "已接受",
+      "badgeRetours": "{{count}} 个退货",
+      "rembourseGnf": "已退款（GNF）",
+      "badgeRemb": "{{count}} 退款",
+      "topMotifs": "退货主要原因",
+      "aucuneDonnee": "暂无数据",
+      "performance": "表现",
+      "tauxAcceptation": "接受率",
+      "delaiMoyen": "平均处理时间",
+      "retoursRefuses": "已拒绝的退货",
+      "remboursementsEffectues": "已执行的退款"
+    },
+    "list": {
+      "status": {
+        "pending": "⏳ 待处理",
+        "accepted": "✓ 已接受",
+        "refused": "✕ 已拒绝",
+        "in_transit": "🚚 运输中",
+        "received": "📦 已收到",
+        "refunded": "💸 已退款",
+        "exchanged": "🔁 已换货",
+        "closed": "已关闭"
+      },
+      "reasons": {
+        "defective": "产品有缺陷",
+        "not_matching": "与描述不符",
+        "change_of_mind": "改变主意",
+        "wrong_item": "收到错误商品",
+        "damaged": "已损坏",
+        "expired": "产品过期",
+        "other": "其他原因"
+      },
+      "priority": {
+        "low": "低",
+        "normal": "普通",
+        "high": "高",
+        "urgent": "🔴 紧急"
+      },
+      "returnType": {
+        "refund": "退款",
+        "exchange": "换货",
+        "repair": "维修",
+        "credit": "代金券"
+      },
+      "search": "按参考号或产品搜索…",
+      "allStatus": "所有状态",
+      "allReasons": "所有原因",
+      "allPriorities": "所有优先级",
+      "sort": {
+        "recent": "最新",
+        "oldest": "最早",
+        "amountDesc": "金额 ↓",
+        "amountAsc": "金额 ↑",
+        "statusAz": "状态 A→Z"
+      },
+      "loadError": "加载错误",
+      "emptyTitle": "未找到退货",
+      "emptySub": "没有符合您筛选条件的退货请求。",
+      "table": {
+        "reference": "参考号",
+        "produit": "产品",
+        "client": "客户",
+        "motif": "原因",
+        "type": "类型",
+        "montant": "金额",
+        "priorite": "优先级",
+        "statut": "状态",
+        "date": "日期",
+        "actions": "操作"
+      },
+      "accorde": "已授予：{{montant}} GNF",
+      "voir": "查看",
+      "results_one": "{{count}} 个结果",
+      "results_other": "{{count}} 个结果",
+      "page": "第 {{page}}/{{pages}} 页"
+    },
+    "detail": {
+      "tabInfo": "详情",
+      "tabHistory": "历史记录",
+      "tabEvidence": "证据（{{count}}）",
+      "produitRetourne": "退回的产品",
+      "qte": "数量：",
+      "commande": "订单：",
+      "montants": "金额",
+      "demande": "请求：",
+      "accorde": "授予：",
+      "descriptionProbleme": "问题描述",
+      "noteInterne": "内部备注",
+      "messageClient": "客户消息",
+      "accept": {
+        "title": "接受退货",
+        "montant": "授予金额（GNF）",
+        "message": "给客户的消息（可选）",
+        "placeholder": "例如：您的退货已被接受。退款将在 3-5 天内完成。",
+        "confirm": "确认接受",
+        "annuler": "取消"
+      },
+      "refuse": {
+        "title": "拒绝退货",
+        "raison": "拒绝原因（发送给客户）",
+        "placeholder": "例如：您的请求不符合退货政策（已超时）。",
+        "confirm": "确认拒绝",
+        "annuler": "取消"
+      },
+      "note": {
+        "title": "内部备注",
+        "placeholder": "仅您的团队可见的备注…",
+        "save": "保存",
+        "annuler": "取消"
+      },
+      "historyEmptyTitle": "暂无历史记录",
+      "historyEmptySub": "操作历史将显示在这里。",
+      "actions": {
+        "created": "退货请求已创建",
+        "accepted": "退货已接受",
+        "refused": "退货已拒绝",
+        "refunded": "退款已完成",
+        "received": "退货已收到",
+        "note_added": "已添加内部备注",
+        "evidence_uploaded": "已添加证据",
+        "priority_changed": "优先级已修改"
+      },
+      "evidenceEmptyTitle": "暂无证据",
+      "evidenceEmptySub": "客户尚未上传照片或文件。",
+      "footerNote": "备注",
+      "footerRefuser": "拒绝",
+      "footerAccepter": "接受",
+      "footerRembourser": "退款",
+      "footerFermer": "关闭",
+      "confirmRefund": "确认退款？",
+      "invalidAmount": "⚠️ 金额无效"
+    },
+    "sav": {
+      "stats": {
+        "ouverts": "打开的工单",
+        "enCours": "进行中",
+        "resolus": "已解决",
+        "delaiMoy": "平均响应时间"
+      },
+      "status": {
+        "open": "🟢 已打开",
+        "in_progress": "🔵 进行中",
+        "waiting_client": "🟡 等待客户",
+        "resolved": "✓ 已解决",
+        "closed": "已关闭"
+      },
+      "search": "搜索工单（参考号、主题）…",
+      "allStatus": "所有状态",
+      "allPriorities": "所有优先级",
+      "table": {
+        "reference": "参考号",
+        "sujet": "主题",
+        "client": "客户",
+        "produit": "产品",
+        "priorite": "优先级",
+        "statut": "状态",
+        "messages": "消息",
+        "date": "日期",
+        "actions": "操作"
+      },
+      "emptyTitle": "暂无售后工单",
+      "emptySub": "客户工单将显示在这里。",
+      "repondre": "回复",
+      "resoudre": "解决",
+      "fermer": "关闭",
+      "confirmClose": "关闭此工单？",
+      "ticketClosed": "工单已关闭",
+      "ticketResolved": "✅ 工单已解决",
+      "genericError": "❌ 错误",
+      "sendError": "发送错误",
+      "replyPlaceholder": "回复客户…",
+      "envoyer": "发送"
+    }
+  }
+}

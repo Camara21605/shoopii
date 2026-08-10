@@ -6,6 +6,8 @@
 
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/Correspondants.module.css';
+import { useAuthGate } from '../../../../../shared/hooks/useAuthGate';
+import FollowButton    from '../../../../../shared/components/FollowButton';
 import type { Correspondant } from '../data/types';
 
 const AVA_BG: Record<string, string> = {
@@ -16,19 +18,21 @@ const AVA_BG: Record<string, string> = {
 
 interface Props {
   c:        Correspondant;
-  onToggle: (id: string) => void;
+  onToast:  (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
   onView:   (id: string) => void;
+  onChange: (id: string, next: { isSuivi: boolean; hidden?: boolean; removed?: boolean }) => void;
 }
 
-export default function ListItemCorrespondant({ c, onToggle, onView }: Props) {
+export default function ListItemCorrespondant({ c, onToast, onView, onChange }: Props) {
   const { t } = useTranslation();
+  const { openAuthModal, authModal } = useAuthGate();
   const TYPE_LABEL: Record<string, string> = {
     regional: t('correspondantsPage.typeLabel.regional'),
     zonal: t('correspondantsPage.typeLabel.zonal'),
     national: t('correspondantsPage.typeLabel.national'),
   };
   return (
-    <div className={styles.listItem} onClick={() => onView(c.id)}>
+    <div className={styles.listItem} style={{ position: 'relative' }} onClick={() => onView(c.id)}>
       <div className={styles.liAva} style={{ background: AVA_BG[c.type] }}>
         {c.initiales}
         {c.enLigne && <div className={styles.liDot} />}
@@ -42,14 +46,19 @@ export default function ListItemCorrespondant({ c, onToggle, onView }: Props) {
           <span><i className="fas fa-box" /> {t('correspondantsPage.listItem.missionsCount', { count: c.missions.toLocaleString('fr-FR') })}</span>
         </div>
       </div>
-      <div className={styles.liR}>
-        <button
-          className={`${styles.liFlw} ${c.suivi ? styles.fbOn : styles.fbOff}`}
-          onClick={e => { e.stopPropagation(); onToggle(c.id); }}
-        >
-          {c.suivi ? <><i className="fas fa-user-check" /> {t('correspondantsPage.listItem.abonne')}</> : <><i className="fas fa-plus" /> {t('correspondantsPage.listItem.suivre')}</>}
-        </button>
+      <div className={styles.liR} onClick={e => e.stopPropagation()}>
+        <FollowButton
+          actorType="correspondant"
+          id={c.id}
+          name={c.nom}
+          isSuivi={c.suivi}
+          onToast={onToast}
+          onRequireAuth={openAuthModal}
+          onChange={next => onChange(c.id, next)}
+        />
       </div>
+
+      {authModal}
     </div>
   );
 }

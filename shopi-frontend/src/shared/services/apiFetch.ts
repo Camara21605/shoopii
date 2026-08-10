@@ -23,6 +23,20 @@ const BASE_URL =
 const TOKEN_KEY = 'shopi_access_token';
 
 /* ─────────────────────────────────────────────
+ * CSRF (double-submit cookie) — voir csrf.middleware.ts côté backend.
+ * Le cookie csrf_token n'est PAS httpOnly : il doit être lisible ici
+ * pour être renvoyé en en-tête sur chaque requête mutante. Un attaquant
+ * cross-site ne peut pas lire ce cookie (Same-Origin Policy) pour le
+ * rejouer, même s'il peut faire partir le cookie de session automatiquement.
+ * ───────────────────────────────────────────── */
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+function getCsrfToken(): string | null {
+  const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+/* ─────────────────────────────────────────────
  * Gestion localStorage — conservé pour UI compat
  * L'authentification API passe par httpOnly cookies.
  * ───────────────────────────────────────────── */
@@ -96,9 +110,11 @@ export function silentRefresh(): Promise<boolean> {
   if (Date.now() < _refreshDeadUntil) return Promise.resolve(false);
 
   if (!_refreshPromise) {
+    const csrfToken = getCsrfToken();
     _refreshPromise = fetch(`${BASE_URL}/auth/refresh`, {
       method:      'POST',
       credentials: 'include',
+      headers:     csrfToken ? { 'X-CSRF-Token': csrfToken } : undefined,
     })
       .then(async r => {
         if (!r.ok) { _refreshDeadUntil = Date.now() + REFRESH_COOLDOWN_MS; return false; }
@@ -167,6 +183,13 @@ export async function apiFetch<T = unknown>(
   /* Pas d'Authorization: Bearer — auth via cookie httpOnly uniquement.
    * Le cookie access_token est envoyé automatiquement grâce à credentials:'include'. */
   void isPublic; // gardé pour compatibilité API mais sans effet sur les headers
+
+  /* CSRF — uniquement sur les méthodes mutantes, le backend ignore
+   * l'en-tête pour les GET/HEAD/OPTIONS de toute façon. */
+  if (MUTATING_METHODS.has(method)) {
+    const csrfToken = getCsrfToken();
+    if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
+  }
 
   /* ── Requête HTTP ── */
   let response: Response;

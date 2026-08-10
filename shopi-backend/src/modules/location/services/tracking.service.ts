@@ -16,10 +16,12 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository }       from 'typeorm';
 
-import { Commande }      from '../../../database/entities/commande/commande.entity';
+import { Commande, LivreurAssignmentStatus } from '../../../database/entities/commande/commande.entity';
+import { CommandeCode, CodeActeurType, CodeCommandeStatus } from '../../../database/entities/commande/commande-code.entity';
 import { Client }        from '../../../database/entities/profiles/client-profile.entity';
 import { Company }       from '../../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery }      from '../../../database/entities/profiles/livreur-profile.entity';
+import { Correspondent } from '../../../database/entities/profiles/correspondant-profile.entity';
 import { Localisation }  from '../../../database/entities/localisation.entity';
 
 import { RouteService }  from './route.service';
@@ -31,11 +33,26 @@ import type { ICoordinates } from '../interfaces/location.interfaces';
 export interface ActorPosition {
   id:       string;
   name:     string;
-  role:     'vendor' | 'delivery' | 'client';
+  /* 'correspondent' = position FIXE du dépôt/point relais (jamais "live"
+   * comme le livreur — un correspondant ne bouge pas, seul son dépôt a
+   * des coordonnées GPS enregistrées, voir CorrespondantLocationService). */
+  role:     'vendor' | 'delivery' | 'client' | 'correspondent';
   lat:      number;
   lng:      number;
   address?: string;
   isLive:   boolean;   // true = mis à jour en temps réel (livreur)
+}
+
+/**
+ * Trois tronçons distincts, colorés selon l'étape de la livraison :
+ *   - livreurToShop   (rouge) — le livreur doit encore récupérer le colis
+ *   - shopToClient    (vert)  — trajet de référence boutique → client, toujours affiché
+ *   - livreurToClient (bleu)  — le livreur a récupéré le colis, en route vers le client
+ */
+export interface OrderTrackingRoutes {
+  livreurToShop:   RouteResult | null;
+  shopToClient:    RouteResult | null;
+  livreurToClient: RouteResult | null;
 }
 
 export interface OrderTrackingResult {
@@ -43,9 +60,9 @@ export interface OrderTrackingResult {
   numero:   string;
   status:   string;
   actors:   ActorPosition[];
-  route:    RouteResult | null;
-  /** Ordre de passage des waypoints (index dans actors[]) */
-  waypointOrder: number[];
+  /** true = le livreur a déjà validé son code (colis récupéré en boutique) */
+  livreurPickedUp: boolean;
+  routes:   OrderTrackingRoutes;
 }
 
 @Injectable()
@@ -66,8 +83,14 @@ export class TrackingService {
     @InjectRepository(Delivery)
     private readonly deliveryRepo: Repository<Delivery>,
 
+    @InjectRepository(Correspondent)
+    private readonly correspondantRepo: Repository<Correspondent>,
+
     @InjectRepository(Localisation)
     private readonly locRepo: Repository<Localisation>,
+
+    @InjectRepository(CommandeCode)
+    private readonly codeRepo: Repository<CommandeCode>,
 
     private readonly routeService: RouteService,
   ) {}
@@ -89,101 +112,101 @@ export class TrackingService {
     /* ── 1. Charger la commande ──────────────────────────────── */
     const commande = await this.commandeRepo.findOne({
       where:  { id: orderId },
-      select: ['id', 'numero', 'status', 'clientId', 'companyId', 'livreurId'],
+      select: ['id', 'numero', 'status', 'clientId', 'companyId', 'livreurId', 'livreurAssignmentStatus', 'correspondantId'],
     });
 
     if (!commande) {
       throw new NotFoundException(`Commande introuvable (${orderId}).`);
     }
 
-    /* ── 2. Vérifier l'accès (client, livreur ou entreprise) ─── */
+    /* ── 2. Vérifier l'accès (client, livreur, entreprise ou correspondant) ─── */
     await this.assertAccess(commande, userId);
 
-    /* ── 3. Collecter les positions ─────────────────────────── */
-    const actors: ActorPosition[]     = [];
-    const waypoints: ICoordinates[]   = [];
-    const waypointOrder: number[]     = [];
+    /* ── 3. Collecter les positions ───────────────────────────
+     * Le livreur n'est inclus que s'il a réellement accepté la
+     * mission — sinon sa dernière position connue (mission
+     * précédente) resterait affichée à tort. */
+    const actors: ActorPosition[] = [];
 
-    /* --- Vendeur (Company) --- */
     const vendorPos = await this.getCompanyPosition(commande.companyId);
-    if (vendorPos) {
-      actors.push(vendorPos);
-      waypoints.push({ latitude: vendorPos.lat, longitude: vendorPos.lng });
-      waypointOrder.push(actors.length - 1);
+    if (vendorPos) actors.push(vendorPos);
+
+    let deliveryPos: ActorPosition | null = null;
+    let livreurPickedUp = false;
+    if (commande.livreurId && commande.livreurAssignmentStatus === LivreurAssignmentStatus.ACCEPTED) {
+      deliveryPos = await this.getDeliveryPosition(commande.livreurId);
+      if (deliveryPos) actors.push(deliveryPos);
+
+      const livreurCode = await this.codeRepo.findOne({
+        where: { commandeId: commande.id, acteurType: CodeActeurType.LIVREUR },
+      });
+      livreurPickedUp = livreurCode?.status === CodeCommandeStatus.VALIDATED;
     }
 
-    /* --- Livreur (Delivery) — position temps réel --- */
-    if (commande.livreurId) {
-      const deliveryPos = await this.getDeliveryPosition(commande.livreurId);
-      if (deliveryPos) {
-        actors.push(deliveryPos);
-        waypoints.push({ latitude: deliveryPos.lat, longitude: deliveryPos.lng });
-        waypointOrder.push(actors.length - 1);
-      }
-    }
-
-    /* --- Client (adresse de livraison) --- */
     const clientPos = await this.getClientPosition(commande.clientId);
-    if (clientPos) {
-      actors.push(clientPos);
-      waypoints.push({ latitude: clientPos.lat, longitude: clientPos.lng });
-      waypointOrder.push(actors.length - 1);
+    if (clientPos) actors.push(clientPos);
+
+    /* Correspondant (point relais) — position FIXE de son dépôt, affichée
+     * dès qu'un correspondant est réellement impliqué dans la commande
+     * (mode CORRESPONDANT ou MIXTE). Contrairement au livreur, il n'y a
+     * pas de notion d'acceptation à vérifier ici : le correspondant a
+     * déjà été choisi/impliqué en amont (voir commande.correspondantId). */
+    if (commande.correspondantId) {
+      const correspondantPos = await this.getCorrespondantPosition(commande.correspondantId);
+      if (correspondantPos) actors.push(correspondantPos);
     }
 
-    /* ── 4. Calculer l'itinéraire si assez de points ─────────── */
-    let route: RouteResult | null = null;
-    if (waypoints.length >= 2) {
-      try {
-        route = await this.routeService.getRoute(waypoints);
-        this.logger.debug(
-          `[Tracking] Itinéraire ${commande.numero} via ${route.provider} `
-          + `— ${route.totalDistanceTxt} / ${route.totalDurationTxt}`,
-        );
-      } catch (err: any) {
-        this.logger.warn(`[Tracking] Route échouée pour ${commande.numero}: ${err.message}`);
-      }
+    /* ── 4. Calculer les 3 tronçons colorés ───────────────────
+     *   rouge : livreur → boutique  (avant récupération du colis)
+     *   vert  : boutique → client   (trajet de référence, toujours)
+     *   bleu  : livreur → client    (après récupération du colis)     */
+    const routes: OrderTrackingRoutes = {
+      livreurToShop:   null,
+      shopToClient:    null,
+      livreurToClient: null,
+    };
+
+    if (vendorPos && clientPos) {
+      routes.shopToClient = await this.safeRoute(commande.numero, 'boutique→client', [
+        { latitude: vendorPos.lat, longitude: vendorPos.lng },
+        { latitude: clientPos.lat, longitude: clientPos.lng },
+      ]);
+    }
+
+    if (deliveryPos && vendorPos && !livreurPickedUp) {
+      routes.livreurToShop = await this.safeRoute(commande.numero, 'livreur→boutique', [
+        { latitude: deliveryPos.lat, longitude: deliveryPos.lng },
+        { latitude: vendorPos.lat,   longitude: vendorPos.lng },
+      ]);
+    }
+
+    if (deliveryPos && clientPos && livreurPickedUp) {
+      routes.livreurToClient = await this.safeRoute(commande.numero, 'livreur→client', [
+        { latitude: deliveryPos.lat, longitude: deliveryPos.lng },
+        { latitude: clientPos.lat,   longitude: clientPos.lng },
+      ]);
     }
 
     return {
-      orderId:       commande.id,
-      numero:        commande.numero,
-      status:        commande.status,
+      orderId: commande.id,
+      numero:  commande.numero,
+      status:  commande.status,
       actors,
-      route,
-      waypointOrder,
+      livreurPickedUp,
+      routes,
     };
   }
 
-  /* ── Recalcul d'itinéraire (déclenché par le livreur) ────────── */
-
-  /**
-   * Recalcule l'itinéraire si la position du livreur a changé
-   * significativement depuis le dernier calcul.
-   */
-  async recalculateRoute(
-    orderId:         string,
-    currentDelivery: ICoordinates,
-  ): Promise<RouteResult | null> {
-    const commande = await this.commandeRepo.findOne({
-      where:  { id: orderId },
-      select: ['id', 'companyId', 'clientId', 'livreurId'],
-    });
-
-    if (!commande) return null;
-
-    const waypoints: ICoordinates[] = [];
-
-    const vendor = await this.getCompanyPosition(commande.companyId);
-    if (vendor) waypoints.push({ latitude: vendor.lat, longitude: vendor.lng });
-
-    waypoints.push(currentDelivery);
-
-    const client = await this.getClientPosition(commande.clientId);
-    if (client) waypoints.push({ latitude: client.lat, longitude: client.lng });
-
-    if (waypoints.length < 2) return null;
-
-    return this.routeService.getRoute(waypoints);
+  /** Calcule un itinéraire entre 2 points sans jamais faire échouer le tracking global. */
+  private async safeRoute(numero: string, label: string, waypoints: ICoordinates[]): Promise<RouteResult | null> {
+    try {
+      const route = await this.routeService.getRoute(waypoints);
+      this.logger.debug(`[Tracking] ${numero} — ${label} via ${route.provider} (${route.totalDistanceTxt})`);
+      return route;
+    } catch (err: any) {
+      this.logger.warn(`[Tracking] ${numero} — ${label} échoué: ${err.message}`);
+      return null;
+    }
   }
 
   /* ── Helpers privés ─────────────────────────────────────────── */
@@ -194,6 +217,9 @@ export class TrackingService {
      * - Le client de la commande
      * - Le livreur assigné
      * - L'entreprise vendeuse
+     * - Le correspondant impliqué (point relais) — ajouté pour que la
+     *   carte de suivi soit visible par CHAQUE acteur réellement
+     *   concerné par la commande, pas seulement client/entreprise/livreur.
      */
     const client = await this.clientRepo.findOne({
       where: { userId },
@@ -213,6 +239,14 @@ export class TrackingService {
         select: ['id'],
       });
       if (delivery && delivery.id === commande.livreurId) return;
+    }
+
+    if (commande.correspondantId) {
+      const correspondant = await this.correspondantRepo.findOne({
+        where: { userId },
+        select: ['id'],
+      });
+      if (correspondant && correspondant.id === commande.correspondantId) return;
     }
 
     throw new ForbiddenException('Accès non autorisé à ce suivi de commande.');
@@ -252,6 +286,27 @@ export class TrackingService {
       lat:    Number(d.lastLatitude),
       lng:    Number(d.lastLongitude),
       isLive: true,
+    };
+  }
+
+  /** Position FIXE du dépôt/point relais du correspondant — jamais "live",
+   *  contrairement au livreur qui envoie sa position en continu via socket. */
+  private async getCorrespondantPosition(correspondantId: string): Promise<ActorPosition | null> {
+    const c = await this.correspondantRepo.findOne({
+      where:  { id: correspondantId },
+      select: ['id', 'fullName', 'depotLatitude', 'depotLongitude', 'depotAdresse', 'depotVille'] as any,
+    });
+
+    if (!c || (c as any).depotLatitude == null || (c as any).depotLongitude == null) return null;
+
+    return {
+      id:      c.id,
+      name:    (c as any).fullName ?? 'Correspondant',
+      role:    'correspondent',
+      lat:     Number((c as any).depotLatitude),
+      lng:     Number((c as any).depotLongitude),
+      address: [(c as any).depotAdresse, (c as any).depotVille].filter(Boolean).join(', '),
+      isLive:  false,
     };
   }
 

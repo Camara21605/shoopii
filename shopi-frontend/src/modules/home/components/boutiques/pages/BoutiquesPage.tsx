@@ -45,7 +45,7 @@ export default function BoutiquesPage() {
     setSearchParams(params);
   };
 
-  const { boutiques, loading, error, total, hasMore, loadMore, reload } = useBoutiquesList({
+  const { boutiques, loading, error, total, hasMore, loadMore, reload, removeLocal } = useBoutiquesList({
     categoryId, subCategoryId, companyTypeId, search: searchInput,
   });
 
@@ -129,7 +129,7 @@ export default function BoutiquesPage() {
         {boutiques.length > 0 && (
           <div className={styles.cardsGrid}>
             {boutiques.map(b => (
-              <CardEntreprise key={b.id} e={b} onToast={onToast} />
+              <CardEntreprise key={b.id} e={b} onToast={onToast} onRemoved={removeLocal} />
             ))}
           </div>
         )}

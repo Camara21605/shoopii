@@ -1,0 +1,138 @@
+{
+  "profilCorrespondant": {
+    "loading": "Chargement du profil…",
+    "notFoundTitle": "Profil introuvable",
+    "notFoundFallback": "Ce correspondant n'existe pas ou n'est plus disponible.",
+    "retour": "Retour",
+    "retourCorrespondants": "Retour aux correspondants",
+    "idMissingError": "Identifiant correspondant manquant.",
+    "loadError": "Profil introuvable ou indisponible.",
+    "enLigneMaintenant": "En ligne maintenant",
+    "abonnesSuffix": "abonnés",
+    "partager": "Partager",
+    "appeler": "Appeler",
+    "contacter": "Contacter",
+    "abonne": "Abonné",
+    "suivre": "Suivre",
+    "kpi": {
+      "missions": "Missions",
+      "note": "Note",
+      "fiabilite": "Fiabilité",
+      "abonnes": "Abonnés",
+      "avisClients": "Avis clients",
+      "experience": "Expérience",
+      "zonesCouvertes": "Zones couvertes",
+      "delaiMoyen": "Délai moyen",
+      "top5": "Top 5%"
+    },
+    "tabs": {
+      "info": "Infos",
+      "services": "Services",
+      "zones": "Zones",
+      "tarifs": "Tarifs",
+      "avis": "Avis",
+      "galerie": "Galerie"
+    },
+    "sidebar": {
+      "contacterPrenom": "Contacter {{prenom}}",
+      "envoyerMessage": "Envoyer un message",
+      "whatsappToast": "📱 WhatsApp",
+      "appelToast": "📞 Appel",
+      "contactsDetailles": "Contacts détaillés",
+      "statistiques": "Statistiques",
+      "abonnesTitle": "Abonnés",
+      "aucunAbonne": "Aucun abonné pour le moment",
+      "abonneCount_one": "{{count}} abonné",
+      "abonneCount_other": "{{count}} abonnés",
+      "suivreCeCorrespondant": "Suivre ce correspondant",
+      "verificationsShopi": "Vérifications Shopi",
+      "correspondantsSimilaires": "Correspondants similaires",
+      "voirTout": "Voir tout",
+      "suivreShort": "+ Suivre",
+      "abonneToast": "✅ Abonné à {{nom}}",
+      "copieToast": "📋 {{valeur}}"
+    },
+    "statsSidebar": {
+      "missionsTotales": "Missions totales",
+      "noteMoyenne": "Note moyenne",
+      "tauxFiabilite": "Taux fiabilité",
+      "delaiRemise": "Délai remise",
+      "missionsCeMois": "Missions ce mois",
+      "litigesResolus": "Litiges résolus"
+    },
+    "verifieParShopi": "✓ Vérifié par Shopi",
+    "tabInfo": {
+      "aPropos": "À propos",
+      "informationsPratiques": "Informations pratiques",
+      "disponibiliteHebdo": "Disponibilité hebdomadaire",
+      "aujourdhui": "(auj.)"
+    },
+    "tabServices": {
+      "title": "Services proposés",
+      "emptyTitle": "Services en cours de renseignement",
+      "emptyDesc": "Le correspondant n'a pas encore renseigné ses services."
+    },
+    "tabZones": {
+      "couverture": "Zones de couverture",
+      "couvertureEmptyTitle": "Zones non renseignées",
+      "couvertureEmptyDesc": "Le correspondant n'a pas encore défini ses zones de couverture.",
+      "reseauTitle": "Réseau de correspondants partenaires",
+      "reseauEmptyTitle": "Réseau international non renseigné",
+      "reseauEmptyDesc": "Les pays partenaires seront affichés ici dès que renseignés.",
+      "intlNote": "Les délais et tarifs varient selon la destination — contactez le correspondant pour un devis personnalisé.",
+      "paysToast": "🌍 {{nom}} — {{villes}}"
+    },
+    "tabTarifs": {
+      "title": "Grille tarifaire",
+      "emptyTitle": "Tarifs non renseignés",
+      "emptyDescPart1": "Le correspondant n'a pas encore publié sa grille tarifaire.",
+      "emptyDescPart2": "Contactez-le directement pour obtenir un devis.",
+      "abonnesShopi": "Abonnés Shopi",
+      "reduction15": "— Réduction de 15% sur tous les services."
+    },
+    "tabAvis": {
+      "title": "Avis clients",
+      "emptyTitle": "Aucun avis pour le moment",
+      "emptyDesc": "Les avis clients apparaîtront ici après chaque mission complétée.",
+      "avisCount_one": "{{count}} avis",
+      "avisCount_other": "{{count}} avis",
+      "achatVerifie": "Achat vérifié",
+      "reponseDe": "Réponse de {{auteur}}",
+      "merciRetourToast": "👍 Merci pour votre retour",
+      "signaleToast": "🚩 Signalé",
+      "signaler": "Signaler",
+      "utileCount_one": "{{count}} utile",
+      "utileCount_other": "{{count}} utile"
+    },
+    "tabGalerie": {
+      "title": "Galerie photos du dépôt",
+      "voirTout": "Voir tout",
+      "emptyTitle": "Galerie non disponible",
+      "emptyDesc": "Le correspondant n'a pas encore publié de photos de son dépôt.",
+      "galerieCompleteToast": "🖼️ Galerie complète",
+      "labelToast": "🖼️ {{label}}",
+      "photoToast": "🖼️ Photo"
+    },
+    "reseauPage": {
+      "title": "Suivre des correspondants",
+      "loading": "Chargement…",
+      "errorSuffix": "— données de démonstration affichées.",
+      "empty": "Aucun correspondant disponible.",
+      "missionsCount_one": "{{count}} mission",
+      "missionsCount_other": "{{count}} missions",
+      "enLigne": "En ligne",
+      "suiviCheck": "Suivi ✓",
+      "suivre": "Suivre",
+      "desabonneToast": "👋 Désabonné de {{nom}}",
+      "abonneToast": "✅ Abonné à {{nom}}"
+    },
+    "publicPage": {
+      "abonnezVousMessage": "Abonnez-vous à ce correspondant pour lui envoyer un message.",
+      "abonnezVousAppel": "Abonnez-vous à ce correspondant pour l'appeler.",
+      "lienCopieToast": "🔗 Lien du profil copié",
+      "desabonneToast": "👋 Désabonné de {{nom}}",
+      "abonneToast": "✅ Abonné à {{nom}}",
+      "erreurToast": "❌ {{msg}}"
+    }
+  }
+}

@@ -32,6 +32,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -43,6 +44,7 @@ import { randomUUID }       from 'crypto';
 
 import { Commande, CommandeStatus } from '../../../database/entities/commande/commande.entity';
 import { User }                     from '../../../database/entities/user.entity';
+import { UserRole }                 from '../../../common/enums/user-role.enum';
 import {
   PaiementSession,
   PaiementSessionStatus,
@@ -102,6 +104,16 @@ export class PaiementInitiationService {
 
     if (!commande) {
       throw new NotFoundException('Commande introuvable.');
+    }
+
+    /* Autorisation — seul le client propriétaire de la commande peut en
+     * initier le paiement. Sans ce contrôle, n'importe quel utilisateur
+     * authentifié pouvait payer (et, en mode provider "internal", faire
+     * auto-confirmer) la commande d'un autre client en devinant/obtenant
+     * son UUID — un vecteur de fraude direct. */
+    const actorId = (user as any).actorId as string | undefined;
+    if (commande.clientId !== actorId) {
+      throw new ForbiddenException("Cette commande ne vous appartient pas.");
     }
 
     if (commande.status !== CommandeStatus.PENDING) {
@@ -247,13 +259,21 @@ export class PaiementInitiationService {
 
   /* ── Statut d'une session ────────────────────────────────── */
 
-  async getStatus(sessionId: string): Promise<{
+  async getStatus(sessionId: string, user: User): Promise<{
     status:      string;
     confirmedAt: Date | null;
     redirectUrl: string | null;
   }> {
     const session = await this.sessionRepo.findOne({ where: { id: sessionId } });
     if (!session) throw new NotFoundException('Session de paiement introuvable.');
+
+    /* Autorisation — seul le client à l'origine du paiement peut en
+     * consulter le statut (sinon fuite du statut/URL de paiement d'un
+     * tiers à quiconque connaît l'UUID de session). */
+    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
+    if (!isAdmin && session.clientUserId !== user.id) {
+      throw new ForbiddenException("Cette session de paiement ne vous appartient pas.");
+    }
 
     return {
       status:      session.status,

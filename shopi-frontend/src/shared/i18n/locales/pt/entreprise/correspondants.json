@@ -1,0 +1,181 @@
+{
+  "correspondants": {
+    "type": {
+      "principal": "⭐ Principal",
+      "entrepot": "🏭 Armazém",
+      "export": "✈️ Exportação",
+      "relais": "📍 Ponto de apoio"
+    },
+    "status": {
+      "active": "Ativo",
+      "pending": "Pendente",
+      "suspended": "Suspenso"
+    },
+    "na": "N/A",
+    "modalProfil": {
+      "kpiTotalMissions": "Total de missões",
+      "kpiCommandesTraitees": "Encomendas tratadas",
+      "kpiCeMois": "Este mês",
+      "kpiCommandes": "Encomendas",
+      "kpiNoteMoyenne": "Nota média",
+      "kpiSur5Etoiles": "Em 5 estrelas",
+      "kpiZoneCouverte": "Zona coberta",
+      "evaluationClients": "Avaliação dos clientes",
+      "telephone": "Telefone",
+      "email": "Email",
+      "adresse": "Morada",
+      "zone": "Zona",
+      "derniereActivite": "Última atividade",
+      "membreDepuis": "Membro desde",
+      "suspendre": "Suspender",
+      "contacter": "Contactar",
+      "appeler": "Ligar"
+    },
+    "modalInviter": {
+      "nomRequis": "⚠️ O nome é obrigatório",
+      "emailRequis": "⚠️ O email é obrigatório",
+      "emailInvalide": "⚠️ Email inválido",
+      "invitationEnvoyee": "✅ Convite enviado para {{email}}",
+      "defaultMessage": "Olá,\n\nVocê foi selecionado para se juntar à rede de correspondentes Shopi.\n\nUse o código anexo para criar a sua conta.",
+      "title": "Convidar um correspondente",
+      "etapeInformations": "Informações",
+      "etapeApercu": "Pré-visualização",
+      "etapeConfirme": "Confirmado",
+      "nomPointRelais": "Nome do ponto de apoio *",
+      "nomPlaceholder": "Ex: RelaisPlus Kaloum",
+      "emailContact": "Email de contacto *",
+      "emailPlaceholder": "Ex: relais@gmail.com",
+      "codeEmailHint": "O código de convite será enviado para este email.",
+      "typeCorrespondant": "Tipo de correspondente",
+      "optRelais": "📍 Ponto de apoio — Depósito/levantamento de encomendas",
+      "optEntrepot": "🏭 Armazém — Armazenamento regional",
+      "optExport": "✈️ Exportação — Internacional",
+      "optPrincipal": "⭐ Principal — Hub central",
+      "ville": "Cidade",
+      "villePlaceholder": "Ex: Conacri",
+      "quartierZone": "Bairro / Zona",
+      "quartierPlaceholder": "Ex: Kaloum, Matam…",
+      "messagePersonnalise": "Mensagem personalizada",
+      "apercuTitle": "Pré-visualização do email que será enviado",
+      "emailSujetFixe": "Convite Shopi — Junte-se à nossa rede",
+      "emailDestA": "Para:",
+      "bonjour": "Olá",
+      "codeInvitationLabel": "O seu código de convite (10 dígitos)",
+      "codeInvitationNote": "Válido 7 dias · Uso único · Gerado no envio",
+      "villeLabelInline": "Cidade:",
+      "zoneLabelInline": "Zona:",
+      "typeLabelInline": "Tipo:",
+      "infoBoxExpire": "Este código expira em 7 dias. Só pode ser usado uma vez. O email será enviado a partir de noreply@shopi.gn.",
+      "invitationEnvoyeeTitle": "Convite enviado!",
+      "codeEnvoyeA": "Código enviado para {{email}}",
+      "recapNom": "Nome",
+      "recapEmail": "Email",
+      "recapVille": "Cidade",
+      "recapType": "Tipo",
+      "codeGenereLabel": "Código de convite gerado",
+      "copier": "Copiar",
+      "codeCopieToast": "📋 Código copiado!",
+      "expireLe": "Expira em {{date}} · Uso único",
+      "annuler": "Cancelar",
+      "suivant": "Seguinte",
+      "retour": "Voltar",
+      "envoiEnCours": "A enviar…",
+      "envoyerInvitation": "Enviar o convite",
+      "fermer": "Fechar"
+    },
+    "modalContacter": {
+      "sujetMessageRequis": "⚠️ Assunto e mensagem obrigatórios",
+      "messageEnvoye": "✅ Mensagem enviada para {{name}}",
+      "title": "Contactar",
+      "sub": "Enviar uma mensagem para {{name}} ({{email}})",
+      "sujetLabel": "Assunto *",
+      "sujetPlaceholder": "Ex: Atualização de stock disponível",
+      "messageLabel": "Mensagem *",
+      "messagePlaceholder": "Escreva a sua mensagem…",
+      "infoBox": "A mensagem será enviada para {{email}} a partir de noreply@shopi.gn.",
+      "annuler": "Cancelar",
+      "envoiEnCours": "A enviar…",
+      "envoyer": "Enviar"
+    },
+    "modalSuspendre": {
+      "title": "Suspender o correspondente",
+      "confirmText": "Suspender {{name}}?",
+      "note": "Este ponto de apoio não poderá mais receber nem expedir encomendas até ao levantamento da suspensão.",
+      "annuler": "Cancelar",
+      "confirmer": "Confirmar"
+    },
+    "header": {
+      "title": "Rede de Correspondentes",
+      "subtitle": "Gerencie os seus pontos de apoio, armazéns e parceiros de exportação",
+      "inviter": "Convidar um correspondente"
+    },
+    "stats": {
+      "actifs": "Correspondentes ativos",
+      "auTotal": "{{count}} no total",
+      "commandesCeMois": "Encomendas este mês",
+      "traiteesParReseau": "Tratadas pela rede",
+      "villesCouvertes": "Cidades cobertas",
+      "plusInternational": "+ Internacional",
+      "enAttente": "Pendente",
+      "validationRequise": "Validação necessária"
+    },
+    "filters": {
+      "tous": "Todos"
+    },
+    "statutSelect": {
+      "tousStatuts": "Todos os estatutos",
+      "actifs": "Ativos",
+      "enAttente": "Pendentes",
+      "suspendus": "Suspensos"
+    },
+    "search": "Pesquisar…",
+    "compteur_one": "{{count}} correspondente",
+    "compteur_other": "{{count}} correspondentes",
+    "compteurType": " · tipo: {{type}}",
+    "loading": "A carregar os correspondentes…",
+    "empty": {
+      "title": "Nenhum correspondente encontrado",
+      "sub": "Modifique os seus filtros ou convide um novo correspondente.",
+      "inviter": "Convidar"
+    },
+    "card": {
+      "ceMois": "este mês",
+      "total": "total",
+      "note": "nota",
+      "voir": "Ver",
+      "contacter": "Contactar",
+      "appeler": "Ligar"
+    },
+    "table": {
+      "correspondant": "Correspondente",
+      "ville": "Cidade",
+      "type": "Tipo",
+      "ceMois": "Este mês",
+      "total": "Total",
+      "note": "Nota",
+      "statut": "Estatuto",
+      "actions": "Ações"
+    },
+    "sidePanel": {
+      "couvertureZone": "Cobertura por zona",
+      "aucuneZone": "Nenhum dado de zona",
+      "activiteRecente": "Atividade recente",
+      "actionsRapides": "Ações rápidas"
+    },
+    "quickActions": {
+      "envoyerCirculaire": "Enviar circular a todos",
+      "envoiToast": "📧 Envio em massa…",
+      "rapportReseau": "Relatório de rede mensal",
+      "rapportToast": "📊 Relatório a ser gerado…",
+      "voirCarte": "Ver mapa dos pontos de apoio",
+      "carteToast": "🗺️ Mapa dos pontos de apoio aberto",
+      "validerEnAttente": "Validar os pendentes ({{count}})",
+      "aucunEnAttente": "Nenhuma conta pendente",
+      "validesToast": "✅ {{count}} contas validadas"
+    },
+    "toasts": {
+      "loadError": "❌ Erro de carregamento: {{message}}",
+      "suspendu": "🚫 {{name}} suspenso"
+    }
+  }
+}

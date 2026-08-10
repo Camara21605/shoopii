@@ -1,0 +1,8 @@
+{
+  "followToggle": {
+    "abonneToast": "✅ 已关注 {{name}}",
+    "desabonneToast": "👋 已取消关注 {{name}}",
+    "erreurToast": "❌ {{msg}}",
+    "erreurReseau": "网络错误"
+  }
+}

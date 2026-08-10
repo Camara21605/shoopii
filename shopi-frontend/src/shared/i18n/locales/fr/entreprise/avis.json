@@ -1,0 +1,49 @@
+{
+  "avis": {
+    "loadError": "Impossible de charger les avis",
+    "reponsePublieeToast": "✅ Réponse publiée",
+    "reponseErrorToast": "❌ Erreur lors de la publication",
+    "kpi": {
+      "noteGlobale": "Note globale",
+      "sur5Etoiles": "Sur 5 étoiles",
+      "avisAuTotal": "Avis au total",
+      "clientsVerifies": "Clients vérifiés",
+      "satisfaction": "Satisfaction",
+      "quatreEtCinqEtoiles": "4 et 5 étoiles",
+      "sansReponse": "Sans réponse",
+      "aTraiter": "À traiter"
+    },
+    "filters": {
+      "tous": "Tous les avis",
+      "avecReponse": "✅ Avec réponse",
+      "sansReponse": "⏳ Sans réponse"
+    },
+    "loading": "Chargement des avis…",
+    "empty": {
+      "title": "Aucun avis",
+      "subPending": "Tous les avis ont reçu une réponse.",
+      "subReplied": "Aucun avis n'a encore été répondu.",
+      "subDefault": "Aucun avis client pour le moment."
+    },
+    "sur": "Sur :",
+    "votreReponse": "Votre réponse",
+    "replyPlaceholder": "Répondre à cet avis…",
+    "envoiEnCours": "Envoi…",
+    "publier": "Publier",
+    "annuler": "Annuler",
+    "repondre": "Répondre",
+    "modifierReponse": "Modifier réponse",
+    "modifierReponseToast": "✏️ Modification de réponse",
+    "signaler": "Signaler",
+    "signalerToast": "🚩 Avis signalé pour modération",
+    "sidePanel": {
+      "distributionNotes": "Distribution des notes",
+      "avisVerifies_one": "{{count}} avis vérifié",
+      "avisVerifies_other": "{{count}} avis vérifiés",
+      "conseilsShopi": "Conseils Shopi",
+      "tip1": "Répondez en moins de 24h pour +12% de satisfaction.",
+      "tip2": "Un vendeur qui répond obtient 2× plus de nouveaux avis.",
+      "tip3": "Remerciez toujours les avis positifs — même brièvement."
+    }
+  }
+}

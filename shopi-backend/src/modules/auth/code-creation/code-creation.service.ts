@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository }       from 'typeorm';
+import { randomInt }        from 'crypto';
 
 import { CreationCode, CodeStatus } from '../../../database/entities/code-creation.entity';
 import { User, UserStatus }         from '../../../database/entities/user.entity';
@@ -75,7 +76,13 @@ export class CodeCreationService {
       throw new ForbiddenException(`Le super-admin ne peut pas inviter un "${ROLE_LABELS[dto.targetRole] ?? dto.targetRole}".`);
     }
     const normalizedEmail = dto.targetEmail.toLowerCase().trim();
-    const existingUser = await this.userRepo.findOne({ where: { email: normalizedEmail } });
+    /* Scopé par rôle (UNIQUE(email, role) désormais) : un email peut déjà
+     * être pris par un compte d'un AUTRE rôle (ex. client) sans empêcher
+     * l'invitation pour CE rôle précis — seul un compte du même rôle cible
+     * doit bloquer l'invitation. */
+    const existingUser = await this.userRepo.findOne({
+      where: { email: normalizedEmail, role: dto.targetRole as UserRole },
+    });
     if (existingUser) throw new ConflictException(`Un compte Shopi existe déjà pour "${normalizedEmail}".`);
     const activePending = await this.codeRepo.findOne({ where: { targetEmail: normalizedEmail, status: CodeStatus.PENDING } });
     if (activePending) throw new ConflictException(`Un code valide existe déjà pour "${normalizedEmail}".`);
@@ -341,7 +348,10 @@ export class CodeCreationService {
 
   /* ── Privés ── */
   private generateReadableCode(): string {
-    const rand = (n: number) => Array.from({ length: n }, () => CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)]).join('');
+    /* crypto.randomInt (CSPRNG) plutôt que Math.random() — ce code
+     * conditionne la création de comptes à privilèges (Admin, Company,
+     * Delivery, Partner, Correspondent), il doit être imprévisible. */
+    const rand = (n: number) => Array.from({ length: n }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join('');
     return `${rand(4)}-${rand(4)}-${rand(2)}`;
   }
   private computeExpiry(days: number): Date {

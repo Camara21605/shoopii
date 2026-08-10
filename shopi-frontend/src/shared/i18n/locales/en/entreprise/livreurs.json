@@ -1,0 +1,201 @@
+{
+  "livreurs": {
+    "vehicle": {
+      "moto": "Motorbike",
+      "voiture": "Car",
+      "velo": "Bicycle",
+      "tricycle": "Tricycle",
+      "camion": "Truck",
+      "pieton": "On foot"
+    },
+    "avail": {
+      "available": "Available",
+      "on_delivery": "On delivery",
+      "offline": "Offline"
+    },
+    "availLower": {
+      "available": "available",
+      "on_delivery": "on delivery",
+      "offline": "offline"
+    },
+    "status": {
+      "active": "Active",
+      "pending": "Pending",
+      "suspended": "Suspended",
+      "banned": "Banned"
+    },
+    "na": "N/A",
+    "modalProfil": {
+      "kpiTotalCourses": "Total deliveries",
+      "kpiReussies": "{{count}} successful",
+      "kpiTauxReussite": "Success rate",
+      "kpiTresBon": "Very good",
+      "kpiTiret": "–",
+      "kpiNoteMoyenne": "Average rating",
+      "kpiSur5Etoiles": "Out of 5 stars",
+      "kpiGainsTotaux": "Total earnings",
+      "kpiGnfCumules": "GNF accumulated",
+      "evaluationClients": "Customer rating",
+      "telephone": "Phone",
+      "email": "Email",
+      "zone": "Zone",
+      "vehicule": "Vehicle",
+      "plaque": "Plate",
+      "nonRenseignee": "Not provided",
+      "livraisonsAuj": "Deliveries today",
+      "derniereActivite": "Last activity",
+      "membreDepuis": "Member since",
+      "suspendre": "Suspend",
+      "contacter": "Contact",
+      "whatsapp": "WhatsApp",
+      "appeler": "Call"
+    },
+    "modalContacter": {
+      "sujetMessageRequis": "⚠️ Subject and message required",
+      "messageEnvoye": "✅ Message sent to {{name}}",
+      "title": "Contact",
+      "sub": "Send a message to {{name}} ({{email}})",
+      "sujetLabel": "Subject *",
+      "sujetPlaceholder": "E.g.: New assignment available",
+      "messageLabel": "Message *",
+      "messagePlaceholder": "Write your message…",
+      "infoBox": "The message will be sent to {{email}} from noreply@shopi.gn.",
+      "annuler": "Cancel",
+      "envoiEnCours": "Sending…",
+      "envoyer": "Send"
+    },
+    "modalInviter": {
+      "nomRequis": "⚠️ Name is required",
+      "emailRequis": "⚠️ Email is required",
+      "emailInvalide": "⚠️ Invalid email",
+      "invitationEnvoyee": "✅ Invitation sent to {{email}}",
+      "defaultMessage": "Hello,\n\nYou have been selected to join the Shopi delivery team.\n\nPlease use the enclosed code to create your account.",
+      "title": "Invite a courier",
+      "etapeInformations": "Information",
+      "etapeApercu": "Preview",
+      "etapeConfirme": "Confirmed",
+      "nomComplet": "Full name *",
+      "nomPlaceholder": "E.g.: Mamadou Diallo",
+      "emailContact": "Contact email *",
+      "emailPlaceholder": "E.g.: courier@gmail.com",
+      "codeEmailHint": "The invitation code will be sent to this email.",
+      "typeVehicule": "Vehicle type",
+      "zoneLivraison": "Delivery zone",
+      "zonePlaceholder": "E.g.: Kaloum, Matam, Dixinn",
+      "messagePersonnalise": "Custom message",
+      "apercuTitle": "Preview of the email that will be sent",
+      "emailSujetFixe": "Shopi Invitation — Join our delivery team",
+      "emailDestA": "To:",
+      "bonjour": "Hello",
+      "codeInvitationLabel": "Your invitation code (courier)",
+      "codeInvitationNote": "Valid for 7 days · Single use · Generated on send",
+      "zoneLabelInline": "Zone:",
+      "vehiculeLabelInline": "Vehicle:",
+      "infoBoxExpire": "Code expires in 7 days. Single use. Sent from noreply@shopi.gn.",
+      "invitationEnvoyeeTitle": "Invitation sent!",
+      "codeEnvoyeA": "Code sent to {{email}}",
+      "recapNom": "Name",
+      "recapEmail": "Email",
+      "recapZone": "Zone",
+      "recapVehicule": "Vehicle",
+      "codeGenereLabel": "Generated invitation code",
+      "copier": "Copy",
+      "codeCopieToast": "📋 Code copied!",
+      "expireLe": "Expires on {{date}} · Single use",
+      "annuler": "Cancel",
+      "suivant": "Next",
+      "retour": "Back",
+      "envoiEnCours": "Sending…",
+      "envoyerInvitation": "Send the invitation",
+      "fermer": "Close"
+    },
+    "modalSuspendre": {
+      "title": "Suspend the courier",
+      "confirmText": "Suspend {{name}}?",
+      "note": "This courier will no longer be able to accept orders until the suspension is lifted.",
+      "annuler": "Cancel",
+      "confirmer": "Confirm"
+    },
+    "header": {
+      "title": "Courier Network",
+      "subtitle": "Manage your delivery team in real time",
+      "inviter": "Invite a courier"
+    },
+    "kpi": {
+      "actifs": "Active couriers",
+      "auTotal": "{{count}} in total",
+      "disponibles": "Available",
+      "pretsALivrer": "Ready to deliver",
+      "enCourse": "On delivery",
+      "actuellement": "Currently",
+      "livraisonsAuj": "Deliveries today",
+      "enAttenteSub": "{{count}} pending",
+      "cumulees": "Accumulated"
+    },
+    "filters": {
+      "tous": "All",
+      "disponibles": "🟢 Available",
+      "enCourse": "🔵 On delivery",
+      "horsLigne": "⚫ Offline"
+    },
+    "statutSelect": {
+      "tousStatuts": "All statuses",
+      "actifs": "Active",
+      "enAttente": "Pending",
+      "suspendus": "Suspended"
+    },
+    "search": "Search a courier…",
+    "compteur_one": "{{count}} courier",
+    "compteur_other": "{{count}} couriers",
+    "loading": "Loading couriers…",
+    "empty": {
+      "title": "No courier found",
+      "sub": "Adjust your filters or invite a new courier.",
+      "inviter": "Invite"
+    },
+    "card": {
+      "zoneNonDefinie": "Zone not defined",
+      "note": "rating",
+      "courses": "deliveries",
+      "auj": "today",
+      "voir": "View",
+      "contacter": "Contact",
+      "whatsapp": "WhatsApp",
+      "appeler": "Call"
+    },
+    "table": {
+      "livreur": "Courier",
+      "zone": "Zone",
+      "vehicule": "Vehicle",
+      "note": "Rating",
+      "courses": "Deliveries",
+      "auj": "Today",
+      "disponibilite": "Availability",
+      "statut": "Status",
+      "actions": "Actions"
+    },
+    "sidePanel": {
+      "couvertureZone": "Coverage by zone",
+      "aucuneZone": "No zone data",
+      "activiteRecente": "Recent activity",
+      "aucuneActivite": "No activity",
+      "actionsRapides": "Quick actions"
+    },
+    "quickActions": {
+      "diffuserMission": "Broadcast an assignment",
+      "diffusionToast": "📢 Broadcasting…",
+      "rapportPerf": "Performance report",
+      "rapportToast": "📊 Generating report…",
+      "voirCarte": "View courier map",
+      "carteToast": "🗺️ Map opened",
+      "validerEnAttente": "Approve pending ({{count}})",
+      "aucunEnAttente": "No pending couriers",
+      "validesToast_one": "✅ {{count}} courier approved",
+      "validesToast_other": "✅ {{count}} couriers approved"
+    },
+    "toasts": {
+      "loadError": "❌ Loading error: {{message}}",
+      "suspendu": "🚫 {{name}} suspended"
+    }
+  }
+}

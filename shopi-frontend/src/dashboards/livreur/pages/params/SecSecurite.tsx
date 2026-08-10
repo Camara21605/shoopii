@@ -6,6 +6,7 @@ import React, { useState, useRef } from 'react';
 import { SESSIONS } from '../../data/parametresData';
 import type { LivreurData } from '../../hooks/useLivreurParametres';
 import ps from '../../styles/ParamsShared.module.css';
+import TwoFaSetupModal from '../../../../shared/components/TwoFaSetupModal';
 
 interface Props {
   data:         LivreurData | null;
@@ -25,7 +26,7 @@ function pwdStrength(v: string) {
   return {
     score: s,
     label: ['','Trop faible','Faible','Bon','Fort'][s] ?? '',
-    color: ['','#DC2626','#F59E0B','#84CC16','#16A34A'][s] ?? 'var(--t3)',
+    color: ['','#A1A1AA','#71717A','#3F3F46','#000000'][s] ?? 'var(--t3)',
   };
 }
 
@@ -37,6 +38,7 @@ export default function SecSecurite({ data, saving, dirty, onPop, savePassword, 
   const [twoFaOn,     setTwoFaOn]     = useState(data?.twoFaEnabled ?? false);
   const [twoFaMethod, setTwoFaMethod] = useState(data?.twoFaMethod ?? 'sms');
   const [otp,         setOtp]         = useState(['','','','','','']);
+  const [show2fa,     setShow2fa]     = useState(false);
   const otpRefs = useRef<(HTMLInputElement|null)[]>([]);
   const str = pwdStrength(newPwd);
 
@@ -60,6 +62,13 @@ export default function SecSecurite({ data, saving, dirty, onPop, savePassword, 
   }
 
   async function handleTwoFaSave() {
+    /* Activation : passe par POST /auth/2fa/setup + /confirm (TwoFaService),
+     * qui exige un code TOTP valide avant d'activer réellement — l'ancien
+     * chemin direct (twoFaEnabled:true) est désormais rejeté côté backend. */
+    if (twoFaOn && !data?.twoFaEnabled) {
+      setShow2fa(true);
+      return;
+    }
     try {
       await saveTwoFa({ twoFaEnabled:twoFaOn, twoFaMethod:twoFaOn ? twoFaMethod : undefined });
       onPop(twoFaOn ? '✅ Double authentification activée' : '⚠️ Double authentification désactivée', twoFaOn ? 's' : 'w');
@@ -147,10 +156,10 @@ export default function SecSecurite({ data, saving, dirty, onPop, savePassword, 
       <div className={ps.card}>
         <div className={ps.ch}>
           <div className={ps.chT}><i className="fas fa-mobile-screen" /> Authentification 2FA</div>
-          <div style={{ background: twoFaOn ? 'var(--em-bg)' : 'rgba(220,38,38,.09)',
+          <div style={{ background: twoFaOn ? 'var(--em-bg)' : 'rgba(0,0,0,.09)',
             color: twoFaOn ? 'var(--emerald)' : 'var(--red)', fontSize:11, fontWeight:700,
             padding:'4px 11px', borderRadius:'var(--pill)',
-            border:`1px solid ${twoFaOn ? 'rgba(4,120,87,.2)' : 'rgba(220,38,38,.2)'}` }}>
+            border:`1px solid ${twoFaOn ? 'rgba(0,0,0,.2)' : 'rgba(0,0,0,.2)'}` }}>
             <i className={`fas ${twoFaOn ? 'fa-shield-check' : 'fa-shield-xmark'}`} />
             {twoFaOn ? ' Activé' : ' Désactivé'}
           </div>
@@ -216,13 +225,13 @@ export default function SecSecurite({ data, saving, dirty, onPop, savePassword, 
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:13, fontWeight:700, color:'var(--navy)', display:'flex', alignItems:'center', gap:7 }}>
                   {s.nm}
-                  {s.active && <span style={{ background:'#10B981', color:'#fff', fontSize:9, fontWeight:800, padding:'2px 8px', borderRadius:'var(--pill)' }}>Session actuelle</span>}
+                  {s.active && <span style={{ background:'#000000', color:'#fff', fontSize:9, fontWeight:800, padding:'2px 8px', borderRadius:'var(--pill)' }}>Session actuelle</span>}
                 </div>
                 <div style={{ fontSize:11, color:'var(--t3)', marginTop:2 }}>{s.detail}</div>
               </div>
               {!s.active && (
                 <button onClick={() => onPop('⚠️ Session déconnectée avec succès', 'w')}
-                  style={{ background:'rgba(220,38,38,.08)', color:'var(--red)', border:'1px solid rgba(220,38,38,.2)',
+                  style={{ background:'rgba(0,0,0,.08)', color:'var(--red)', border:'1px solid rgba(0,0,0,.2)',
                     borderRadius:'var(--pill)', padding:'5px 13px', fontSize:11, fontWeight:700, cursor:'pointer' }}>
                   Déconnecter
                 </button>
@@ -231,6 +240,16 @@ export default function SecSecurite({ data, saving, dirty, onPop, savePassword, 
           ))}
         </div>
       </div>
+
+      {show2fa && (
+        <TwoFaSetupModal
+          onClose={() => setShow2fa(false)}
+          onEnabled={() => {
+            setTwoFaMethod('app');
+            onPop('🔐 Double authentification activée', 's');
+          }}
+        />
+      )}
     </div>
   );
 }

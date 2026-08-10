@@ -1,0 +1,49 @@
+{
+  "avis": {
+    "loadError": "无法加载评价",
+    "reponsePublieeToast": "✅ 回复已发布",
+    "reponseErrorToast": "❌ 发布时出错",
+    "kpi": {
+      "noteGlobale": "总体评分",
+      "sur5Etoiles": "满分 5 星",
+      "avisAuTotal": "总评价数",
+      "clientsVerifies": "已验证客户",
+      "satisfaction": "满意度",
+      "quatreEtCinqEtoiles": "4 和 5 星",
+      "sansReponse": "未回复",
+      "aTraiter": "待处理"
+    },
+    "filters": {
+      "tous": "所有评价",
+      "avecReponse": "✅ 有回复",
+      "sansReponse": "⏳ 无回复"
+    },
+    "loading": "正在加载评价…",
+    "empty": {
+      "title": "暂无评价",
+      "subPending": "所有评价都已收到回复。",
+      "subReplied": "尚无评价被回复。",
+      "subDefault": "暂无客户评价。"
+    },
+    "sur": "关于：",
+    "votreReponse": "您的回复",
+    "replyPlaceholder": "回复此评价…",
+    "envoiEnCours": "发送中…",
+    "publier": "发布",
+    "annuler": "取消",
+    "repondre": "回复",
+    "modifierReponse": "修改回复",
+    "modifierReponseToast": "✏️ 修改回复",
+    "signaler": "举报",
+    "signalerToast": "🚩 评价已举报供审核",
+    "sidePanel": {
+      "distributionNotes": "评分分布",
+      "avisVerifies_one": "{{count}} 条已验证评价",
+      "avisVerifies_other": "{{count}} 条已验证评价",
+      "conseilsShopi": "Shopi 提示",
+      "tip1": "在 24 小时内回复，满意度提高 +12%。",
+      "tip2": "回复的卖家获得的新评价多 2 倍。",
+      "tip3": "始终感谢正面评价 — 即使简短。"
+    }
+  }
+}

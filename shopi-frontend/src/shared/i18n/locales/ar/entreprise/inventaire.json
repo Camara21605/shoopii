@@ -1,0 +1,104 @@
+{
+  "inventaire": {
+    "status": {
+      "rupture": "نفد",
+      "faible": "مخزون منخفض",
+      "critique": "حرج",
+      "enStock": "متوفر"
+    },
+    "modal": {
+      "title": "تحديث المخزون",
+      "subtitle": "تحديث سريع دون مغادرة المخزون",
+      "quantite": "كمية المخزون *",
+      "unites": "وحدات",
+      "placeholder1": "مثال: 25",
+      "nouveauStatut": "الحالة الجديدة:",
+      "seuilAlerte": "حد التنبيه (اختياري)",
+      "seuilPlaceholder": "مثال: 5",
+      "seuilHint": "سيظهر تنبيه عندما ينخفض المخزون تحت هذا الحد.",
+      "niveauStock": "مستوى المخزون",
+      "annuler": "إلغاء",
+      "saving": "جارٍ الحفظ…",
+      "update": "تحديث المخزون",
+      "invalidStock": "⚠️ يجب أن يكون المخزون رقمًا موجبًا",
+      "updated": "✅ تم تحديث المخزون"
+    },
+    "header": {
+      "title": "المخزون والكميات",
+      "subtitle": "تتبع مستويات المخزون في الوقت الفعلي وإدارة التنبيهات",
+      "exportCsv": "تصدير CSV",
+      "exportToast": "📥 تم إنشاء تصدير CSV",
+      "refresh": "تحديث",
+      "loading": "جارٍ التحميل…"
+    },
+    "stats": {
+      "produitsCatalogues": "المنتجات المدرجة",
+      "unitesTotal": "{{count}} وحدة إجمالاً",
+      "rupturesStock": "نفد المخزون",
+      "aucuneRupture": "لا يوجد نفاد ✓",
+      "actionRequise": "إجراء مطلوب!",
+      "stocksFaibles": "مخزون منخفض",
+      "sousLeSeuil": "تحت حد التنبيه",
+      "valeurStock": "قيمة المخزون (فرنك)",
+      "prixParQuantite": "السعر × كمية المخزون"
+    },
+    "filters": {
+      "tous": "الكل",
+      "rupture": "🔴 نفد",
+      "faibles": "🟡 منخفض",
+      "enStock": "✅ متوفر"
+    },
+    "search": "ابحث عن منتج…",
+    "loadingInventaire": "جارٍ تحميل المخزون…",
+    "retry": "إعادة المحاولة",
+    "empty": {
+      "noneTitle": "لا توجد منتجات",
+      "noResultsTitle": "لا توجد نتائج",
+      "noneSub": "أضف منتجات لعرض المخزون.",
+      "noResultsSub": "جرّب تعديل عوامل التصفية."
+    },
+    "table": {
+      "produit": "المنتج",
+      "categorie": "الفئة",
+      "prixUnitaire": "سعر الوحدة",
+      "stockActuel": "المخزون الحالي",
+      "niveauVisuel": "المستوى المرئي",
+      "statut": "الحالة",
+      "actions": "الإجراءات",
+      "valeurStockLigne": "= {{montant}} فرنك في المخزون",
+      "seuil": "الحد: {{count}}",
+      "modifierTitle": "تحديث المخزون",
+      "modifier": "تعديل",
+      "reapproTitle": "بدء إعادة تزويد",
+      "reapproToast": "📦 تم بدء إعادة التزويد لـ \"{{nom}}\""
+    },
+    "footer": {
+      "count_one": "{{count}} منتج",
+      "count_other": "{{count}} منتجات",
+      "filtres": "مصفاة",
+      "pourRecherche": "لـ \"{{search}}\""
+    },
+    "alertes": {
+      "title": "تنبيهات حرجة",
+      "allGood": "كل شيء على ما يرام!",
+      "noneDetected": "لا يوجد مخزون حرج.",
+      "stock": "المخزون:",
+      "min": "· الحد الأدنى: {{count}}"
+    },
+    "quickActions": {
+      "title": "إجراءات سريعة",
+      "reapproAll": "إعادة تزويد كل العناصر الحرجة",
+      "reapproAllSub": "{{count}} منتجات متأثرة",
+      "reapproAllToast": "📦 تم بدء إعادة التزويد الجماعية",
+      "exportInventaire": "تصدير المخزون (CSV)",
+      "exportInventaireSub": "{{count}} منتجات · {{units}} وحدات",
+      "exportInventaireToast": "📥 جارٍ إنشاء تصدير CSV…",
+      "configAlertes": "إعداد التنبيهات",
+      "configAlertesSub": "تحديد عتبات تلقائية",
+      "configAlertesToast": "⚙️ تم فتح إعداد التنبيهات",
+      "syncStock": "مزامنة المخزون",
+      "syncStockSub": "مع المورد الخاص بك",
+      "syncStockToast": "🔄 جارٍ المزامنة…"
+    }
+  }
+}

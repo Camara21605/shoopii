@@ -1,0 +1,193 @@
+{
+  "equipe": {
+    "title": "Team management",
+    "subtitle": "Manage your collaborators' access and permissions.",
+    "addMember": "Add a member",
+    "stats": {
+      "activeMembers": "Active members",
+      "slotsUsed": "Slots used",
+      "suspended": "Suspended",
+      "remainingSlots": "Remaining slots",
+      "activePlan": "Active plan"
+    },
+    "tabs": {
+      "members": "Members",
+      "invitations": "Invitations"
+    },
+    "toolbar": {
+      "searchPlaceholder": "Search by name, email, job title…",
+      "count_one": "{{count}} member",
+      "count_other": "{{count}} members"
+    },
+    "table": {
+      "member": "Member",
+      "jobRole": "Job / Role",
+      "status": "Status",
+      "lastLogin": "Last login",
+      "actions": "Actions"
+    },
+    "loading": "Loading…",
+    "empty": {
+      "membersTitle": "No collaborators yet.",
+      "membersSub": "Click \"Add a member\" to invite your first team member.",
+      "invitationsTitle": "No pending invitations.",
+      "invitationsSub": "Use \"Add a member\" to invite a collaborator by email."
+    },
+    "mustChangePassword": "⚠ Password change required",
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended",
+      "pending": "Pending",
+      "revoked": "Revoked"
+    },
+    "actions": {
+      "editPermissions": "Edit permissions",
+      "activityLog": "Activity log",
+      "resetPassword": "Reset password",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "deleteAccess": "Delete access"
+    },
+    "pagination": {
+      "pageOf": "Page {{page}} / {{total}}"
+    },
+    "invitations": {
+      "pendingTitle": "Pending invitations",
+      "send": "Send an invitation",
+      "expiresOn": "Expires on {{date}}",
+      "resend": "Resend invitation",
+      "cancel": "Cancel invitation"
+    },
+    "confirm": {
+      "suspendTitle": "Suspend {{name}}",
+      "suspendMessage": "{{firstName}} will no longer be able to log in. You can reactivate their access at any time.",
+      "deleteTitle": "Delete access for {{name}}",
+      "deleteMessage": "{{firstName}}'s access will be permanently revoked. This action is irreversible.",
+      "cancelInviteTitle": "Cancel the invitation for {{email}}",
+      "cancelInviteMessage": "The invitation sent to {{email}} will be cancelled. The link will no longer be valid.",
+      "cancel": "Cancel",
+      "confirmBtn": "Confirm"
+    },
+    "toast": {
+      "loadMembersError": "Unable to load members.",
+      "suspended": "{{name}} has been suspended.",
+      "reactivated": "{{name}} has been reactivated.",
+      "reactivateError": "Error while reactivating.",
+      "deleted": "{{name}}'s access has been revoked.",
+      "resetPasswordError": "Error while resetting password.",
+      "permissionsUpdated": "Permissions updated.",
+      "permissionsUpdateError": "Error while updating.",
+      "invitationResent": "Invitation resent.",
+      "genericError": "Error.",
+      "invitationCancelled": "Invitation cancelled.",
+      "passwordCopied": "Password copied!"
+    },
+    "permGroups": {
+      "products": {
+        "label": "Products",
+        "view": "View",
+        "create": "Create",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "orders": {
+        "label": "Orders",
+        "view": "View",
+        "validate": "Validate",
+        "cancel": "Cancel",
+        "edit": "Edit"
+      },
+      "deliveries": {
+        "label": "Deliveries",
+        "view": "View",
+        "assign": "Assign",
+        "edit": "Edit"
+      },
+      "payments": {
+        "label": "Payments",
+        "view": "View",
+        "viewTransactions": "Transactions",
+        "manageRefunds": "Refunds"
+      },
+      "messaging": {
+        "label": "Messaging",
+        "read": "Read",
+        "send": "Send"
+      },
+      "statistics": {
+        "label": "Statistics",
+        "view": "View"
+      },
+      "settings": {
+        "label": "Settings",
+        "view": "View",
+        "edit": "Edit"
+      },
+      "returns": {
+        "label": "Returns & Support",
+        "view": "View",
+        "process": "Process"
+      },
+      "wallet": {
+        "label": "Wallet",
+        "view": "View",
+        "withdraw": "Withdraw"
+      }
+    },
+    "permPanel": {
+      "title": "Permissions",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "activityPanel": {
+      "title": "Recent activity",
+      "empty": "No activity recorded."
+    },
+    "tempPwdModal": {
+      "title": "Temporary password",
+      "transmitPrefix": "Share this password with",
+      "mustChange": "They will have to change it at their next login.",
+      "warn": "This password will only be shown once.",
+      "gotIt": "I noted the password"
+    },
+    "addModal": {
+      "title": "Add a collaborator",
+      "modeDirect": "Direct creation",
+      "modeInvite": "Email invitation",
+      "firstName": "First name *",
+      "firstNamePlaceholder": "Marie",
+      "lastName": "Last name *",
+      "lastNamePlaceholder": "Diallo",
+      "email": "Professional email *",
+      "emailPlaceholder": "marie.diallo@shop.com",
+      "phone": "Phone",
+      "phonePlaceholder": "+224 620 000 000",
+      "jobTitle": "Job title",
+      "jobTitlePlaceholder": "Sales manager",
+      "internalRole": "Internal role",
+      "selectPlaceholder": "— Select —",
+      "roles": {
+        "manager": "Manager",
+        "commercial": "Sales rep",
+        "orderManager": "Order manager",
+        "logisticsManager": "Logistics manager",
+        "customerService": "Customer service",
+        "accountant": "Accountant"
+      },
+      "permTemplate": "Permission template",
+      "noTemplate": "— No template —",
+      "noteInvite": "An invitation email will be sent. The collaborator will choose their own password.",
+      "noteDirect": "A temporary password will be generated and shown only once.",
+      "cancel": "Cancel",
+      "createAccount": "Create account",
+      "sendInvitation": "Send invitation",
+      "errors": {
+        "firstName": "First name required",
+        "lastName": "Last name required",
+        "email": "Invalid email"
+      },
+      "invitationSentToast": "Invitation sent to {{email}}.",
+      "createError": "Error while creating."
+    }
+  }
+}

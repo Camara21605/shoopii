@@ -55,7 +55,7 @@ export function useCommande({ id, currentRole = 'client', useApi = false }: UseC
   );
 
   /* ── Chargement ── */
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!useApi || !id) { setCommande(COMMANDE_MOCK); setLoading(false); return; }
     setLoading(true); setError(null);
     fetchCommande(id)
@@ -81,7 +81,9 @@ export function useCommande({ id, currentRole = 'client', useApi = false }: UseC
         /* Pas de fallback mock — on affiche l'erreur réelle */
       })
       .finally(() => setLoading(false));
-  }, [id, useApi]);
+  }, [id, useApi, storageKey]);
+
+  useEffect(() => { load(); }, [load]);
 
   /* ── État dérivé : statut de chaque étape ── */
   const statuts: EtapeStatut[] = useMemo(
@@ -154,7 +156,7 @@ export function useCommande({ id, currentRole = 'client', useApi = false }: UseC
 
   return {
     /* données */
-    commande, loading, error, currentRole,
+    commande, loading, error, currentRole, refetch: load,
     /* chaîne */
     statuts, currentStep, times, done, progression, valider,
     /* notation */

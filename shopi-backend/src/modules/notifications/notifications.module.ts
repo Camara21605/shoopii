@@ -32,6 +32,7 @@ import { NotificationPreference }
   from 'src/database/entities/notification/notification-preference.entity';
 import { NotificationDeliveryLog }
   from 'src/database/entities/notification/notification-delivery-log.entity';
+import { User }           from 'src/database/entities/user.entity';
 import { Client }        from 'src/database/entities/profiles/client-profile.entity';
 import { Company }       from 'src/database/entities/profiles/entreprise-profile.entity';
 import { Delivery }      from 'src/database/entities/profiles/livreur-profile.entity';
@@ -83,6 +84,7 @@ import { NotificationStatsService }     from './services/notification-stats.serv
       Notification,
       NotificationPreference,
       NotificationDeliveryLog,
+      User, // WsAuth gateway — vérif banni/suspendu/mdp changé
       // Profils acteurs — résolution nom + avatar du déclencheur
       Client, Company, Delivery, Correspondent, Partner, Admin,
     ]),

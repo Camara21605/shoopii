@@ -571,7 +571,9 @@ export class MailService implements OnModuleInit {
       this.logger.debug(`[SMTP] ✉ Envoyé à ${opts.to} | messageId: ${info.messageId} | response: ${info.response}`);
     } catch (err: any) {
       this.logger.error(
-        `[SMTP] ❌ Échec d'envoi à ${opts.to} — ${err.code ?? err.message}`,
+        `[SMTP] ❌ Échec d'envoi à ${opts.to} — code=${err.code ?? 'N/A'} `
+        + `responseCode=${err.responseCode ?? 'N/A'} response=${err.response ?? 'N/A'} `
+        + `message=${err.message}`,
         err.stack,
       );
       throw err;

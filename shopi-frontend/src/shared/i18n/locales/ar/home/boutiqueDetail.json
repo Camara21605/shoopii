@@ -1,0 +1,240 @@
+{
+  "boutiqueDetail": {
+    "nav": {
+      "produits": "المنتجات",
+      "promotions": "العروض",
+      "livreurs": "عمال التوصيل",
+      "correspondants": "المراسلون",
+      "avis": "التقييمات",
+      "apropos": "حول المتجر"
+    },
+    "cover": {
+      "verifiee": "متجر موثّق من شوبي",
+      "active": "نشط"
+    },
+    "identity": {
+      "verifie": "موثّق من شوبي",
+      "note": "التقييم",
+      "abonnes": "المتابعون",
+      "satisfaction": "الرضا",
+      "ventes": "المبيعات",
+      "abonner": "متابعة",
+      "abonneLabel": "متابَع",
+      "messageBtn": "رسالة",
+      "appelerBtn": "اتصال",
+      "abonnezVousMessage": "اشترك لإرسال رسالة",
+      "envoyerMessageTitle": "إرسال رسالة",
+      "abonnezVousAppel": "اشترك للاتصال",
+      "appelerTitle": "اتصال",
+      "partagerTitle": "مشاركة المتجر"
+    },
+    "livreursSection": {
+      "disponibleCount_one": "متاح",
+      "disponibleCount_other": "متاحون",
+      "enCourse": "في مهمة توصيل",
+      "totalCount": "عامل توصيل إجمالاً"
+    },
+    "cardLivreur": {
+      "livraisonsCount": "{{count}} توصيلة",
+      "disponible": "● متاح",
+      "enCourseBadge": "⚙ في مهمة توصيل",
+      "voirProfil": "عرض الملف",
+      "profilToast": "🛵 ملف {{nom}}",
+      "desabonneToast": "👋 تم إلغاء الاشتراك من {{nom}}",
+      "abonneToast": "✅ تم الاشتراك في {{nom}}"
+    },
+    "correspondantsSection": {
+      "disponibleCount_one": "متاح",
+      "disponibleCount_other": "متاحون",
+      "completCount_one": "ممتلئ",
+      "completCount_other": "ممتلئون",
+      "totalCount": "مراسل إجمالاً",
+      "infoBannerTitle": "ما هو المراسل في شوبي؟",
+      "infoBannerDesc": "المراسل هو ممثل لشوبي في مدينتك. يستلم طردك ويتحقق منه ويحفظه في مكان آمن. يمكنك استلامه مباشرة أو تكليف عامل توصيل بإيصاله إلى منزلك.",
+      "steps": {
+        "colisRecu": "تم استلام الطرد والتحقق منه",
+        "stockageSecurise": "تخزين آمن",
+        "remiseDirecte": "تسليم مباشر أو عبر عامل توصيل",
+        "noteCertifie": "مقيَّم ومعتمد من شوبي"
+      },
+      "fermer": "إغلاق"
+    },
+    "cardCorrespondant": {
+      "verifie": "موثّق",
+      "colisMois": "{{count}} طرد/شهر",
+      "disponible": "● متاح",
+      "complet": "◌ ممتلئ",
+      "contacter": "تواصل",
+      "choisir": "اختيار",
+      "choisi": "تم الاختيار",
+      "messageToast": "💬 رسالة إلى {{nom}}",
+      "retireToast": "↩️ تمت إزالة المراسل {{nom}}",
+      "selectionneToast": "✅ تم اختيار {{nom}} كمراسل"
+    },
+    "modalPartage": {
+      "titre": "مشاركة هذا المتجر",
+      "fermer": "إغلاق",
+      "copier": "نسخ",
+      "lienCopiePresseToast": "🔗 تم نسخ الرابط إلى الحافظة!",
+      "instagramCopieToast": "📸 تم نسخ الرابط — الصقه في Instagram",
+      "partageVia": "📲 المشاركة عبر {{label}}",
+      "lienCopieToast": "🔗 تم نسخ الرابط!",
+      "emailSujet": "اكتشف هذا المتجر على شوبي"
+    },
+    "aPropos": {
+      "titre": "حول المتجر",
+      "anneesExperience": "سنوات الخبرة",
+      "commandesLivrees": "الطلبات المسلَّمة",
+      "satisfactionClient": "رضا العملاء",
+      "noteMoyenne": "متوسط التقييم",
+      "infosPratiques": "معلومات عملية",
+      "horaires": "أوقات العمل",
+      "adresse": "العنوان",
+      "telephone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "siteWeb": "الموقع الإلكتروني",
+      "livreursBoutique": "عمال توصيل المتجر",
+      "voirProfil": "عرض الملف",
+      "profilToast": "🛵 ملف {{nom}}"
+    },
+    "cardProduit": {
+      "voir": "عرض",
+      "ajouterPanier": "إضافة إلى السلة",
+      "partager": "مشاركة",
+      "retireFavorisToast": "💔 تمت الإزالة من المفضلة",
+      "ajouteFavorisToast": "❤️ تمت الإضافة إلى المفضلة",
+      "detailToast": "👁️ التفاصيل: {{nom}}",
+      "ajouteAuPanierToast": "🛒 تمت الإضافة إلى السلة!",
+      "partagerToast": "📤 مشاركة: {{nom}}",
+      "badges": {
+        "hot": "🔥 رائج",
+        "new": "✨ جديد",
+        "promo": "🏷️ عرض",
+        "sol": "🔴 تخفيض"
+      },
+      "stock": {
+        "ok": "✓ متوفر",
+        "low": "⚠ كمية محدودة",
+        "out": "✗ نفدت الكمية"
+      }
+    },
+    "promotions": {
+      "reduction": "تخفيض",
+      "livraisonOfferte": "توصيل مجاني",
+      "bundle": "باقة",
+      "venteFlash": "تخفيضات سريعة",
+      "offerte": "مجاني",
+      "des": "ابتداءً من {{montant}} GNF",
+      "jusquau": "حتى {{date}}",
+      "restants": "{{count}} متبقٍ",
+      "utilisationsRestantes_one": "{{count}} استخدام متبقٍ",
+      "utilisationsRestantes_other": "{{count}} استخدام متبقٍ",
+      "codePromoToast": "🏷️ رمز الخصم: {{code}}",
+      "copierLeCode": "نسخ الرمز",
+      "codeCopieToast": "✅ تم نسخ الرمز: {{code}}",
+      "chargement": "جارٍ تحميل العروض…",
+      "aucunePromo": "لا يوجد أي عرض نشط",
+      "aucunePromoDesc": "لا يوجد لدى هذا المتجر أي عرض حاليًا.",
+      "activeCount_one": "{{count}} عرض نشط",
+      "activeCount_other": "{{count}} عرض نشط"
+    },
+    "produitsSection": {
+      "filtresActifs": "الفلاتر النشطة:",
+      "supprimerFiltre": "إزالة هذا الفلتر",
+      "toutEffacer": "مسح الكل",
+      "trouveCount_one": "منتج تم العثور عليه",
+      "trouveCount_other": "منتجات تم العثور عليها",
+      "vueGrille": "عرض شبكي",
+      "vueListe": "عرض قائمة",
+      "aucunProduit": "لا يوجد أي منتج يطابق فلاترك",
+      "essayezModifier": "حاول تعديل أو إزالة بعض الفلاتر.",
+      "reinitialiser": "إعادة تعيين الفلاتر",
+      "pageToast": "📄 الصفحة {{n}}",
+      "pageSuivanteToast": "📄 الصفحة التالية"
+    },
+    "sidebar": {
+      "trierPar": "الترتيب حسب",
+      "triOptions": {
+        "pertinence": "الأكثر صلة",
+        "prixCroissant": "السعر تصاعديًا",
+        "prixDecroissant": "السعر تنازليًا",
+        "mieuxNotes": "الأعلى تقييمًا",
+        "nouveautes": "الأحدث",
+        "meilleuresVentes": "الأكثر مبيعًا"
+      },
+      "triToast": "🔃 الترتيب: {{value}}",
+      "categories": "الفئات",
+      "tout": "الكل",
+      "prix": "السعر (GNF)",
+      "noteMinimale": "الحد الأدنى للتقييم",
+      "tousLesAvis": "جميع التقييمات",
+      "filtreEtoilesToast": "⭐ فلتر {{n}}+ نجوم",
+      "disponibilite": "التوفر",
+      "enStockUniquement": "المتوفر فقط",
+      "enPromotion": "ضمن العروض",
+      "nouveautesSeulement": "الجديد فقط",
+      "infosBoutique": "معلومات المتجر",
+      "horaires": "أوقات العمل",
+      "adresse": "العنوان",
+      "telephone": "الهاتف",
+      "email": "البريد الإلكتروني"
+    },
+    "avis": {
+      "chargement": "جارٍ تحميل التقييمات…",
+      "sur5": "{{n}} من 5",
+      "aucuneNote": "لا يوجد تقييم",
+      "avisVerifies_one": "{{count}} تقييم موثّق",
+      "avisVerifies_other": "{{count}} تقييم موثّق",
+      "aucunAvis": "لا توجد أي تقييمات حاليًا",
+      "aucunAvisDetaille": "لا يوجد أي تقييم مفصّل متاح",
+      "noteExisteDeja": "التقييم الإجمالي موجود بالفعل، لكن التعليقات غير متاحة بعد.",
+      "avisApparaissent": "تظهر التقييمات بعد تأكيد العملاء استلام طلباتهم.",
+      "achatVerifie": "شراء موثّق"
+    },
+    "stories": {
+      "precedent": "السابق",
+      "suivant": "التالي",
+      "ilYA1j": "منذ يوم",
+      "ilYAHeures": "منذ {{h}} ساعة",
+      "ilYAMinutes": "منذ {{m}} دقيقة",
+      "aLInstant": "الآن",
+      "voirLeProduit": "عرض المنتج",
+      "ajouterPanier": "إضافة إلى السلة",
+      "ajouteAuPanierToast": "🛒 تمت الإضافة إلى السلة: {{produit}}",
+      "partager": "مشاركة",
+      "lienCopieToast": "🔗 تم نسخ الرابط!",
+      "precedente": "السابقة",
+      "suivante": "التالية",
+      "badges": {
+        "promo": "🔥 عرض",
+        "new": "✨ جديد",
+        "top": "⭐ الأكثر مبيعًا",
+        "flash": "⚡ سريع"
+      }
+    },
+    "page": {
+      "boutiqueIntrouvable": "المتجر غير موجود",
+      "boutiqueIntrouvableDesc": "هذا المتجر غير موجود أو تم تعطيله.",
+      "retourAccueil": "← العودة إلى الرئيسية",
+      "idBoutiqueManquant": "معرّف المتجر مفقود.",
+      "erreurChargement": "تعذّر تحميل بيانات المتجر.",
+      "accueil": "الرئيسية",
+      "boutiques": "المتاجر",
+      "abonneToast": "✅ تم الاشتراك في {{nom}}",
+      "abonneDefaultToast": "✅ تم الاشتراك في هذا المتجر",
+      "desabonneToast": "👋 تم إلغاء الاشتراك",
+      "erreurSuivi": "خطأ أثناء المتابعة — أعد المحاولة",
+      "abonnezVousMessage": "اشترك في المتجر لإرسال رسالة إليه",
+      "abonnezVousAppel": "اشترك في المتجر للاتصال به",
+      "erreurToast": "❌ {{msg}}",
+      "filtreEnStock": "متوفر",
+      "filtreEnPromotion": "ضمن العروض",
+      "filtreNouveautes": "الجديد",
+      "partagerTitre": "مشاركة هذا المتجر",
+      "boutiqueShopiDefault": "متجر شوبي",
+      "membreDepuis": "عضو منذ {{date}}",
+      "membreShopi": "عضو شوبي",
+      "horairesNonRenseignes": "أوقات العمل غير محددة"
+    }
+  }
+}

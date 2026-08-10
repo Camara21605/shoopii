@@ -17,6 +17,15 @@ export class UpdateFollowNotifDto {
 }
 
 /**
+ * DTO pour masquer/réafficher une cible déjà suivie.
+ * PATCH /suivis/<type>/:id/masquer
+ */
+export class SetHiddenDto {
+  @IsBoolean()
+  hidden: boolean;
+}
+
+/**
  * DTO de pagination pour les listes (followers, suivis).
  */
 export class PaginationDto {

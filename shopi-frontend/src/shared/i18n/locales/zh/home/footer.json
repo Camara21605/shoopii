@@ -1,0 +1,54 @@
+{
+  "publicFooter": {
+    "brandTagline": "非洲领先的电商平台。在统一的数字生态系统中连接西非的经济参与者。",
+    "socialToast": "📲 {{label}}",
+    "appStoreToast": "📱 App Store 即将推出",
+    "googlePlayToast": "🤖 Google Play 即将推出",
+    "disponibleSur": "可在以下平台使用",
+    "linkToast": "📄 {{label}}",
+    "cols": {
+      "plateforme": {
+        "titre": "平台",
+        "explorerProduits": "探索产品",
+        "boutiques": "店铺",
+        "livreurs": "配送员",
+        "partenaires": "合作伙伴",
+        "correspondants": "代理商",
+        "offresPromos": "优惠与促销"
+      },
+      "acteurs": {
+        "titre": "参与者",
+        "espaceClient": "客户空间",
+        "espaceEntreprise": "企业空间",
+        "espaceLivreur": "配送员空间",
+        "espacePartenaire": "合作伙伴空间",
+        "espaceCorrespondant": "代理商空间",
+        "espaceAdmin": "管理空间"
+      },
+      "aide": {
+        "titre": "帮助",
+        "centreAide": "帮助中心",
+        "contact": "联系",
+        "faq": "常见问题",
+        "signalerProbleme": "报告问题",
+        "remboursements": "退款",
+        "politiqueRetour": "退货政策"
+      }
+    },
+    "trust": {
+      "paiementSecurise": "SSL 安全支付",
+      "livraisonExpress": "7 天/周加急配送",
+      "protectionAcheteur": "买家保护",
+      "support247": "24/7 支持",
+      "retourFacile": "7 天轻松退货"
+    },
+    "copyright": "© 2025 Shopi Africa. 保留所有权利。在几内亚用爱心制作 🇬🇳",
+    "bottomLinks": {
+      "mentionsLegales": "法律声明",
+      "confidentialite": "隐私",
+      "cookies": "Cookies",
+      "cgu": "服务条款",
+      "accessibilite": "无障碍"
+    }
+  }
+}

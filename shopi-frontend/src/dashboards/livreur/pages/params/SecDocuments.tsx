@@ -23,10 +23,10 @@ const DOCS: { type: DocKey; label: string; sub: string; icon: string; accept: st
 ];
 
 const VERIFICATION_CFG: Record<string, { label: string; bg: string; color: string; icon: string }> = {
-  pending:   { label:'Non soumis',         bg:'rgba(180,83,9,.09)',  color:'#B45309',   icon:'fa-clock'         },
-  reviewing: { label:'En cours d\'examen', bg:'rgba(26,79,196,.09)', color:'var(--blue)', icon:'fa-magnifying-glass' },
+  pending:   { label:'Non soumis',         bg:'rgba(0,0,0,.09)',  color:'#52525B',   icon:'fa-clock'         },
+  reviewing: { label:'En cours d\'examen', bg:'rgba(0,0,0,.09)', color:'var(--blue)', icon:'fa-magnifying-glass' },
   verified:  { label:'✅ Compte vérifié',  bg:'var(--em-bg)',        color:'var(--emerald)', icon:'fa-shield-check' },
-  rejected:  { label:'❌ Dossier refusé', bg:'rgba(220,38,38,.09)', color:'var(--red)',  icon:'fa-circle-xmark'  },
+  rejected:  { label:'❌ Dossier refusé', bg:'rgba(0,0,0,.09)', color:'var(--red)',  icon:'fa-circle-xmark'  },
 };
 
 export default function SecDocuments({ data, saving, onPop, uploadDocument }: Props) {
@@ -100,9 +100,9 @@ export default function SecDocuments({ data, saving, onPop, uploadDocument }: Pr
 
                 {/* Badge statut doc */}
                 <span style={{ fontSize:10, fontWeight:700, padding:'4px 10px', borderRadius:'var(--pill)',
-                  background: present ? 'var(--em-bg)' : 'rgba(220,38,38,.09)',
+                  background: present ? 'var(--em-bg)' : 'rgba(0,0,0,.09)',
                   color: present ? 'var(--emerald)' : 'var(--red)',
-                  border:`1px solid ${present ? 'rgba(4,120,87,.2)' : 'rgba(220,38,38,.2)'}`,
+                  border:`1px solid ${present ? 'rgba(0,0,0,.2)' : 'rgba(0,0,0,.2)'}`,
                   flexShrink:0 }}>
                   {present ? '✓ Soumis' : '⚠ Manquant'}
                 </span>

@@ -6,7 +6,7 @@
 // ─────────────────────────────────────────────────────────────
 export type PageId =
   | 'overview' | 'missions' | 'encours' | 'historique'
-  | 'boutiques' | 'abonner' | 'revenus' | 'wallet'
+  | 'boutiques' | 'revenus' | 'wallet'
   | 'zone' | 'evaluation' | 'parametres' | 'profil' | 'messagerie'
   | 'reseauCorrespondants' | 'reseauLivreurs'
   | 'profilCorrespondant' | 'profilLivreur';
@@ -29,6 +29,56 @@ export interface Mission {
   status:  MissionStatus;
   urgent:  boolean;
   date:    string;
+  /** Position GPS réelle de la boutique — absente sur les données mock */
+  companyLat?:    number | null;
+  companyLng?:    number | null;
+  /** Position GPS réelle du client (adresse par défaut) — null si le client
+   * n'a pas encore d'adresse GPS-pointée, auquel cas on retombe sur une
+   * position approximative dérivée de clientCommune. */
+  clientLat?:     number | null;
+  clientLng?:     number | null;
+  /** Commune/ville de livraison — pour localiser approximativement le client sur la carte */
+  clientCommune?:  string | null;
+  /** Adresse complète réelle — boutique */
+  companyPays?:    string;
+  companyVille?:   string | null;
+  companyQuartier?: string | null;
+  /** Adresse complète réelle — client (pas de "pays" distinct en base) */
+  clientVille?:    string | null;
+}
+
+/** État passé à ZonePage via navigate('/dashboard/livreur/zone', { state: { mapMission } })
+ *  depuis le bouton "Carte" d'une mission — voir MissionCard.tsx. */
+export interface MapMissionState {
+  id:              string;
+  shop:            string;
+  client:          string;
+  companyLat:      number | null;
+  companyLng:      number | null;
+  clientLat:       number | null;
+  clientLng:       number | null;
+  clientCommune:   string | null;
+  companyPays:     string | null;
+  companyVille:    string | null;
+  companyQuartier: string | null;
+  clientVille:     string | null;
+}
+
+export function buildMapMissionState(m: Mission): MapMissionState {
+  return {
+    id:              m.id,
+    shop:            m.shop,
+    client:          m.client,
+    companyLat:      m.companyLat      ?? null,
+    companyLng:      m.companyLng      ?? null,
+    clientLat:       m.clientLat       ?? null,
+    clientLng:       m.clientLng       ?? null,
+    clientCommune:   m.clientCommune   ?? null,
+    companyPays:     m.companyPays     ?? null,
+    companyVille:    m.companyVille    ?? null,
+    companyQuartier: m.companyQuartier ?? null,
+    clientVille:     m.clientVille     ?? null,
+  };
 }
 
 export interface HistItem {
@@ -42,16 +92,6 @@ export interface HistItem {
   status: HistStatus;
   date:   string;
   earn:   boolean;
-}
-
-export interface Boutique {
-  em:      string;
-  nm:      string;
-  cat:     string;
-  rat:     number;
-  delivs:  number;
-  pending: number;
-  since:   string;
 }
 
 export interface TxItem {
@@ -110,7 +150,6 @@ export const PAGE_META: Record<PageId, { title: string; sub: string }> = {
   encours:    { title: "Mission en cours",         sub: "iPhone 15 Pro — TechStore Conakry · Express"             },
   historique: { title: "Historique des livraisons",sub: "Toutes vos missions passées"                            },
   boutiques:  { title: "Mes boutiques",           sub: "3 boutiques partenaires"                                 },
-  abonner:    { title: "Rejoindre une boutique",  sub: "Entrez un code d'invitation"                             },
   revenus:    { title: "Mes revenus",             sub: "Finances & performances — Janvier 2025"                  },
   wallet:     { title: "Wallet Shopi",            sub: "385 000 GNF disponibles"                                 },
   zone:       { title: "Ma zone de livraison",    sub: "Kaloum · Dixinn · Matam · Ratoma"                        },
@@ -148,15 +187,6 @@ export const HISTORIQUE: HistItem[] = [
   { id:'MIS-0108', em:'📷', nm:'Sony A6400',         shop:'AppleZone', fee:42000, dist:'17 km', speed:'ult', status:'done', date:'9 jan.',  earn:true  },
   { id:'MIS-0105', em:'🔌', nm:'Hub USB-C 7-en-1',  shop:'TechStore', fee:12000, dist:'4 km',  speed:'eco', status:'iss',  date:'8 jan.',  earn:false },
   { id:'MIS-0101', em:'⌚', nm:'Samsung Watch 6',    shop:'TechStore', fee:18000, dist:'8 km',  speed:'std', status:'can',  date:'7 jan.',  earn:false },
-];
-
-// ─────────────────────────────────────────────────────────────
-// BOUTIQUES
-// ─────────────────────────────────────────────────────────────
-export const BOUTIQUES: Boutique[] = [
-  { em:'📱', nm:'TechStore Conakry', cat:'Électronique',   rat:4.9, delivs:28, pending:3, since:'Mars 2024'  },
-  { em:'💻', nm:'AppleZone GN',      cat:'High-Tech Apple',rat:4.8, delivs:9,  pending:1, since:'Oct. 2024'  },
-  { em:'👗', nm:'FashionHub GN',     cat:'Mode',           rat:4.6, delivs:5,  pending:0, since:'Janv. 2025' },
 ];
 
 // ─────────────────────────────────────────────────────────────

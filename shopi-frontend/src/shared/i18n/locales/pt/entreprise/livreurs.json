@@ -1,0 +1,201 @@
+{
+  "livreurs": {
+    "vehicle": {
+      "moto": "Moto",
+      "voiture": "Carro",
+      "velo": "Bicicleta",
+      "tricycle": "Triciclo",
+      "camion": "Camião",
+      "pieton": "A pé"
+    },
+    "avail": {
+      "available": "Disponível",
+      "on_delivery": "Em curso",
+      "offline": "Offline"
+    },
+    "availLower": {
+      "available": "disponível",
+      "on_delivery": "em curso",
+      "offline": "offline"
+    },
+    "status": {
+      "active": "Ativo",
+      "pending": "Pendente",
+      "suspended": "Suspenso",
+      "banned": "Banido"
+    },
+    "na": "N/A",
+    "modalProfil": {
+      "kpiTotalCourses": "Total de corridas",
+      "kpiReussies": "{{count}} bem-sucedidas",
+      "kpiTauxReussite": "Taxa de sucesso",
+      "kpiTresBon": "Muito bom",
+      "kpiTiret": "–",
+      "kpiNoteMoyenne": "Nota média",
+      "kpiSur5Etoiles": "Em 5 estrelas",
+      "kpiGainsTotaux": "Ganhos totais",
+      "kpiGnfCumules": "GNF acumulados",
+      "evaluationClients": "Avaliação dos clientes",
+      "telephone": "Telefone",
+      "email": "Email",
+      "zone": "Zona",
+      "vehicule": "Veículo",
+      "plaque": "Matrícula",
+      "nonRenseignee": "Não informada",
+      "livraisonsAuj": "Entregas hoje",
+      "derniereActivite": "Última atividade",
+      "membreDepuis": "Membro desde",
+      "suspendre": "Suspender",
+      "contacter": "Contactar",
+      "whatsapp": "WhatsApp",
+      "appeler": "Ligar"
+    },
+    "modalContacter": {
+      "sujetMessageRequis": "⚠️ Assunto e mensagem obrigatórios",
+      "messageEnvoye": "✅ Mensagem enviada para {{name}}",
+      "title": "Contactar",
+      "sub": "Enviar uma mensagem para {{name}} ({{email}})",
+      "sujetLabel": "Assunto *",
+      "sujetPlaceholder": "Ex: Nova missão disponível",
+      "messageLabel": "Mensagem *",
+      "messagePlaceholder": "Escreva a sua mensagem…",
+      "infoBox": "A mensagem será enviada para {{email}} a partir de noreply@shopi.gn.",
+      "annuler": "Cancelar",
+      "envoiEnCours": "A enviar…",
+      "envoyer": "Enviar"
+    },
+    "modalInviter": {
+      "nomRequis": "⚠️ O nome é obrigatório",
+      "emailRequis": "⚠️ O email é obrigatório",
+      "emailInvalide": "⚠️ Email inválido",
+      "invitationEnvoyee": "✅ Convite enviado para {{email}}",
+      "defaultMessage": "Olá,\n\nVocê foi selecionado para se juntar à equipa de entregadores Shopi.\n\nUse o código anexo para criar a sua conta.",
+      "title": "Convidar um entregador",
+      "etapeInformations": "Informações",
+      "etapeApercu": "Pré-visualização",
+      "etapeConfirme": "Confirmado",
+      "nomComplet": "Nome completo *",
+      "nomPlaceholder": "Ex: Mamadou Diallo",
+      "emailContact": "Email de contacto *",
+      "emailPlaceholder": "Ex: entregador@gmail.com",
+      "codeEmailHint": "O código de convite será enviado para este email.",
+      "typeVehicule": "Tipo de veículo",
+      "zoneLivraison": "Zona de entrega",
+      "zonePlaceholder": "Ex: Kaloum, Matam, Dixinn",
+      "messagePersonnalise": "Mensagem personalizada",
+      "apercuTitle": "Pré-visualização do email que será enviado",
+      "emailSujetFixe": "Convite Shopi — Junte-se à nossa equipa de entrega",
+      "emailDestA": "Para:",
+      "bonjour": "Olá",
+      "codeInvitationLabel": "O seu código de convite (entregador)",
+      "codeInvitationNote": "Válido 7 dias · Uso único · Gerado no envio",
+      "zoneLabelInline": "Zona:",
+      "vehiculeLabelInline": "Veículo:",
+      "infoBoxExpire": "O código expira em 7 dias. Uso único. Enviado de noreply@shopi.gn.",
+      "invitationEnvoyeeTitle": "Convite enviado!",
+      "codeEnvoyeA": "Código enviado para {{email}}",
+      "recapNom": "Nome",
+      "recapEmail": "Email",
+      "recapZone": "Zona",
+      "recapVehicule": "Veículo",
+      "codeGenereLabel": "Código de convite gerado",
+      "copier": "Copiar",
+      "codeCopieToast": "📋 Código copiado!",
+      "expireLe": "Expira em {{date}} · Uso único",
+      "annuler": "Cancelar",
+      "suivant": "Seguinte",
+      "retour": "Voltar",
+      "envoiEnCours": "A enviar…",
+      "envoyerInvitation": "Enviar o convite",
+      "fermer": "Fechar"
+    },
+    "modalSuspendre": {
+      "title": "Suspender o entregador",
+      "confirmText": "Suspender {{name}}?",
+      "note": "Este entregador não poderá mais aceitar encomendas até ao levantamento da suspensão.",
+      "annuler": "Cancelar",
+      "confirmer": "Confirmar"
+    },
+    "header": {
+      "title": "Rede de Entregadores",
+      "subtitle": "Gerencie a sua equipa de entrega em tempo real",
+      "inviter": "Convidar um entregador"
+    },
+    "kpi": {
+      "actifs": "Entregadores ativos",
+      "auTotal": "{{count}} no total",
+      "disponibles": "Disponíveis",
+      "pretsALivrer": "Prontos a entregar",
+      "enCourse": "Em curso",
+      "actuellement": "Atualmente",
+      "livraisonsAuj": "Entregas hoje",
+      "enAttenteSub": "{{count}} pendentes",
+      "cumulees": "Acumuladas"
+    },
+    "filters": {
+      "tous": "Todos",
+      "disponibles": "🟢 Disponíveis",
+      "enCourse": "🔵 Em curso",
+      "horsLigne": "⚫ Offline"
+    },
+    "statutSelect": {
+      "tousStatuts": "Todos os estatutos",
+      "actifs": "Ativos",
+      "enAttente": "Pendentes",
+      "suspendus": "Suspensos"
+    },
+    "search": "Pesquisar um entregador…",
+    "compteur_one": "{{count}} entregador",
+    "compteur_other": "{{count}} entregadores",
+    "loading": "A carregar os entregadores…",
+    "empty": {
+      "title": "Nenhum entregador encontrado",
+      "sub": "Modifique os seus filtros ou convide um novo entregador.",
+      "inviter": "Convidar"
+    },
+    "card": {
+      "zoneNonDefinie": "Zona não definida",
+      "note": "nota",
+      "courses": "corridas",
+      "auj": "hoje",
+      "voir": "Ver",
+      "contacter": "Contactar",
+      "whatsapp": "WhatsApp",
+      "appeler": "Ligar"
+    },
+    "table": {
+      "livreur": "Entregador",
+      "zone": "Zona",
+      "vehicule": "Veículo",
+      "note": "Nota",
+      "courses": "Corridas",
+      "auj": "Hoje",
+      "disponibilite": "Disponibilidade",
+      "statut": "Estatuto",
+      "actions": "Ações"
+    },
+    "sidePanel": {
+      "couvertureZone": "Cobertura por zona",
+      "aucuneZone": "Nenhum dado de zona",
+      "activiteRecente": "Atividade recente",
+      "aucuneActivite": "Nenhuma atividade",
+      "actionsRapides": "Ações rápidas"
+    },
+    "quickActions": {
+      "diffuserMission": "Difundir uma missão",
+      "diffusionToast": "📢 Difusão em curso…",
+      "rapportPerf": "Relatório de desempenho",
+      "rapportToast": "📊 Relatório a ser gerado…",
+      "voirCarte": "Ver mapa dos entregadores",
+      "carteToast": "🗺️ Mapa aberto",
+      "validerEnAttente": "Validar os pendentes ({{count}})",
+      "aucunEnAttente": "Nenhum entregador pendente",
+      "validesToast_one": "✅ {{count}} entregador validado",
+      "validesToast_other": "✅ {{count}} entregadores validados"
+    },
+    "toasts": {
+      "loadError": "❌ Erro de carregamento: {{message}}",
+      "suspendu": "🚫 {{name}} suspenso"
+    }
+  }
+}

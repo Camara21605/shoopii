@@ -98,7 +98,11 @@ export class ProfilService {
 
     if (dto.email !== undefined) {
       const norm = dto.email.toLowerCase().trim();
-      const exists = await this.userRepo.findOne({ where: { email: norm } });
+      /* Scopé par rôle (UNIQUE(email, role)) : un compte pro lié partageant
+       * cet email (même personne, "Mon espace") ne doit pas bloquer le client
+       * qui garde/redéfinit son propre email — seul un AUTRE compte CLIENT
+       * avec cet email est un vrai conflit. */
+      const exists = await this.userRepo.findOne({ where: { email: norm, role: dbUser.role } });
       if (exists && exists.id !== user.id)
         throw new ConflictException(`L'email "${norm}" est déjà utilisé.`);
       dbUser.email         = norm;

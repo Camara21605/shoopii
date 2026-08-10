@@ -38,6 +38,7 @@ import { CommandeCode }         from '../../../database/entities/commande/comman
 import { Company }              from '../../../database/entities/profiles/entreprise-profile.entity';
 import { Client }               from '../../../database/entities/profiles/client-profile.entity';
 import { Delivery }             from '../../../database/entities/profiles/livreur-profile.entity';
+import { RefreshToken }         from '../../../database/entities/refresh-token.entity';
 
 /* ── Controllers ── */
 import { CorrespondantParametresController } from './correspondant-parametres.controller';
@@ -88,6 +89,7 @@ import { MessagerieModule } from '../../messagerie/messagerie.module';
       Company,
       Client,
       Delivery,
+      RefreshToken,
     ]),
 
     /* Module Cloudinary pour les uploads photo et documents */

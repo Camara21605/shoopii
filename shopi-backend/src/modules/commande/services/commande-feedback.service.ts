@@ -8,7 +8,7 @@
  *   - signalerProbleme  : POST /commandes/:id/litige
  * ============================================================ */
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -47,6 +47,15 @@ export class CommandeFeedbackService {
       select: ['id', 'companyId', 'clientId', 'status'],
     });
     if (!commande) throw new NotFoundException('Commande introuvable.');
+
+    /* Autorisation — seul le client de la commande peut la noter. Sans ce
+     * contrôle, n'importe quel utilisateur authentifié pouvait soumettre
+     * un avis (avec son propre nom en snapshot) sur la commande d'un
+     * tiers et fausser la note moyenne de l'entreprise concernée. */
+    const actorId = (user as any).actorId as string | undefined;
+    if (commande.clientId !== actorId) {
+      throw new ForbiddenException("Cette commande ne vous appartient pas.");
+    }
 
     /* 2. Note de l'entreprise */
     const entrepriseNote = dto.notes.find(n => n.role === 'entreprise');
@@ -118,11 +127,27 @@ export class CommandeFeedbackService {
    ════════════════════════════════════════════════════════ */
   async signalerProbleme(
     commandeId: string,
-    _user: User,
+    user: User,
     _dto: LitigeDto,
   ): Promise<{ ok: boolean }> {
     const commande = await this.commandeRepo.findOne({ where: { id: commandeId } });
     if (!commande) throw new NotFoundException('Commande introuvable.');
+
+    /* Autorisation — seul un acteur impliqué dans la commande (client,
+     * entreprise, livreur, correspondant, partenaire) peut signaler un
+     * litige. Sans ce contrôle, n'importe quel utilisateur authentifié
+     * pouvait faire passer une commande tierce en statut DISPUTED. */
+    const actorId = (user as any).actorId as string | undefined;
+    const isInvolved =
+      commande.clientId === actorId ||
+      commande.companyId === actorId ||
+      commande.livreurId === actorId ||
+      commande.correspondantId === actorId ||
+      commande.partenaireId === actorId;
+    if (!isInvolved) {
+      throw new ForbiddenException("Cette commande ne vous appartient pas.");
+    }
+
     commande.status = CommandeStatus.DISPUTED;
     await this.commandeRepo.save(commande);
 

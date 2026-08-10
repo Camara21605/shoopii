@@ -80,8 +80,8 @@ export class PaiementController {
    */
   @UseGuards(JwtAuthGuard)
   @Get('session/:id')
-  async getSessionStatus(@Param('id') sessionId: string) {
-    return this.initiationService.getStatus(sessionId);
+  async getSessionStatus(@Param('id') sessionId: string, @CurrentUser() user: User) {
+    return this.initiationService.getStatus(sessionId, user);
   }
 
   /* ── POST /paiement/webhook/:provider ──────────────────── */

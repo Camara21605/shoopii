@@ -1,0 +1,240 @@
+{
+  "boutiqueDetail": {
+    "nav": {
+      "produits": "Products",
+      "promotions": "Promotions",
+      "livreurs": "Delivery",
+      "correspondants": "Correspondents",
+      "avis": "Reviews",
+      "apropos": "About"
+    },
+    "cover": {
+      "verifiee": "Shopi-verified shop",
+      "active": "Active"
+    },
+    "identity": {
+      "verifie": "Shopi Verified",
+      "note": "Rating",
+      "abonnes": "Followers",
+      "satisfaction": "Satisfaction",
+      "ventes": "Sales",
+      "abonner": "Follow",
+      "abonneLabel": "Following",
+      "messageBtn": "Message",
+      "appelerBtn": "Call",
+      "abonnezVousMessage": "Follow to send a message",
+      "envoyerMessageTitle": "Send a message",
+      "abonnezVousAppel": "Follow to call",
+      "appelerTitle": "Call",
+      "partagerTitle": "Share the shop"
+    },
+    "livreursSection": {
+      "disponibleCount_one": "available",
+      "disponibleCount_other": "available",
+      "enCourse": "on delivery",
+      "totalCount": "delivery agents total"
+    },
+    "cardLivreur": {
+      "livraisonsCount": "{{count}} deliveries",
+      "disponible": "● Available",
+      "enCourseBadge": "⚙ On delivery",
+      "voirProfil": "View profile",
+      "profilToast": "🛵 {{nom}}'s profile",
+      "desabonneToast": "👋 Unfollowed {{nom}}",
+      "abonneToast": "✅ Following {{nom}}"
+    },
+    "correspondantsSection": {
+      "disponibleCount_one": "available",
+      "disponibleCount_other": "available",
+      "completCount_one": "full",
+      "completCount_other": "full",
+      "totalCount": "correspondents total",
+      "infoBannerTitle": "What is a Shopi correspondent?",
+      "infoBannerDesc": "A correspondent is a Shopi representative in your city. They receive your package, check it, and keep it safe. You can pick it up directly or have a delivery agent bring it to your home.",
+      "steps": {
+        "colisRecu": "Package received and checked",
+        "stockageSecurise": "Secure storage",
+        "remiseDirecte": "Direct pickup or via delivery agent",
+        "noteCertifie": "Rated and Shopi-certified"
+      },
+      "fermer": "Close"
+    },
+    "cardCorrespondant": {
+      "verifie": "Verified",
+      "colisMois": "{{count}} packages/month",
+      "disponible": "● Available",
+      "complet": "◌ Full",
+      "contacter": "Contact",
+      "choisir": "Choose",
+      "choisi": "Chosen",
+      "messageToast": "💬 Message to {{nom}}",
+      "retireToast": "↩️ Correspondent {{nom}} removed",
+      "selectionneToast": "✅ {{nom}} selected as correspondent"
+    },
+    "modalPartage": {
+      "titre": "Share this shop",
+      "fermer": "Close",
+      "copier": "Copy",
+      "lienCopiePresseToast": "🔗 Link copied to clipboard!",
+      "instagramCopieToast": "📸 Link copied — paste it into Instagram",
+      "partageVia": "📲 Shared via {{label}}",
+      "lienCopieToast": "🔗 Link copied!",
+      "emailSujet": "Check out this shop on Shopi"
+    },
+    "aPropos": {
+      "titre": "About the shop",
+      "anneesExperience": "Years of experience",
+      "commandesLivrees": "Orders delivered",
+      "satisfactionClient": "Customer satisfaction",
+      "noteMoyenne": "Average rating",
+      "infosPratiques": "Practical information",
+      "horaires": "Hours",
+      "adresse": "Address",
+      "telephone": "Phone",
+      "email": "Email",
+      "siteWeb": "Website",
+      "livreursBoutique": "Shop's delivery agents",
+      "voirProfil": "View profile",
+      "profilToast": "🛵 {{nom}}'s profile"
+    },
+    "cardProduit": {
+      "voir": "View",
+      "ajouterPanier": "Add to cart",
+      "partager": "Share",
+      "retireFavorisToast": "💔 Removed from favorites",
+      "ajouteFavorisToast": "❤️ Added to favorites",
+      "detailToast": "👁️ Details: {{nom}}",
+      "ajouteAuPanierToast": "🛒 Added to cart!",
+      "partagerToast": "📤 Share: {{nom}}",
+      "badges": {
+        "hot": "🔥 Hot",
+        "new": "✨ New",
+        "promo": "🏷️ Deal",
+        "sol": "🔴 Sale"
+      },
+      "stock": {
+        "ok": "✓ In stock",
+        "low": "⚠ Low stock",
+        "out": "✗ Out of stock"
+      }
+    },
+    "promotions": {
+      "reduction": "Discount",
+      "livraisonOfferte": "Free delivery",
+      "bundle": "Bundle",
+      "venteFlash": "Flash sale",
+      "offerte": "Free",
+      "des": "From {{montant}} GNF",
+      "jusquau": "Until {{date}}",
+      "restants": "{{count}} left",
+      "utilisationsRestantes_one": "{{count}} use left",
+      "utilisationsRestantes_other": "{{count}} uses left",
+      "codePromoToast": "🏷️ Promo code: {{code}}",
+      "copierLeCode": "Copy code",
+      "codeCopieToast": "✅ Code copied: {{code}}",
+      "chargement": "Loading promotions…",
+      "aucunePromo": "No active promotion",
+      "aucunePromoDesc": "This shop has no ongoing promotion right now.",
+      "activeCount_one": "{{count}} active promotion",
+      "activeCount_other": "{{count}} active promotions"
+    },
+    "produitsSection": {
+      "filtresActifs": "Active filters:",
+      "supprimerFiltre": "Remove this filter",
+      "toutEffacer": "Clear all",
+      "trouveCount_one": "product found",
+      "trouveCount_other": "products found",
+      "vueGrille": "Grid view",
+      "vueListe": "List view",
+      "aucunProduit": "No product matches your filters",
+      "essayezModifier": "Try changing or removing some filters.",
+      "reinitialiser": "Reset filters",
+      "pageToast": "📄 Page {{n}}",
+      "pageSuivanteToast": "📄 Next page"
+    },
+    "sidebar": {
+      "trierPar": "Sort by",
+      "triOptions": {
+        "pertinence": "Relevance",
+        "prixCroissant": "Price: low to high",
+        "prixDecroissant": "Price: high to low",
+        "mieuxNotes": "Top rated",
+        "nouveautes": "Newest",
+        "meilleuresVentes": "Best sellers"
+      },
+      "triToast": "🔃 Sort: {{value}}",
+      "categories": "Categories",
+      "tout": "All",
+      "prix": "Price (GNF)",
+      "noteMinimale": "Minimum rating",
+      "tousLesAvis": "All reviews",
+      "filtreEtoilesToast": "⭐ Filter {{n}}+ stars",
+      "disponibilite": "Availability",
+      "enStockUniquement": "In stock only",
+      "enPromotion": "On sale",
+      "nouveautesSeulement": "New arrivals only",
+      "infosBoutique": "Shop info",
+      "horaires": "Hours",
+      "adresse": "Address",
+      "telephone": "Phone",
+      "email": "Email"
+    },
+    "avis": {
+      "chargement": "Loading reviews…",
+      "sur5": "{{n}} out of 5",
+      "aucuneNote": "No rating",
+      "avisVerifies_one": "{{count}} verified review",
+      "avisVerifies_other": "{{count}} verified reviews",
+      "aucunAvis": "No reviews yet",
+      "aucunAvisDetaille": "No detailed review available",
+      "noteExisteDeja": "The overall rating already exists, but comments aren't available yet.",
+      "avisApparaissent": "Reviews appear once customers confirm receipt of their order.",
+      "achatVerifie": "Verified purchase"
+    },
+    "stories": {
+      "precedent": "Previous",
+      "suivant": "Next",
+      "ilYA1j": "1d ago",
+      "ilYAHeures": "{{h}}h ago",
+      "ilYAMinutes": "{{m}}min ago",
+      "aLInstant": "just now",
+      "voirLeProduit": "View product",
+      "ajouterPanier": "Add to cart",
+      "ajouteAuPanierToast": "🛒 Added to cart: {{produit}}",
+      "partager": "Share",
+      "lienCopieToast": "🔗 Link copied!",
+      "precedente": "Previous",
+      "suivante": "Next",
+      "badges": {
+        "promo": "🔥 Deal",
+        "new": "✨ New",
+        "top": "⭐ Top Seller",
+        "flash": "⚡ Flash"
+      }
+    },
+    "page": {
+      "boutiqueIntrouvable": "Shop not found",
+      "boutiqueIntrouvableDesc": "This shop doesn't exist or has been deactivated.",
+      "retourAccueil": "← Back to home",
+      "idBoutiqueManquant": "Missing shop ID.",
+      "erreurChargement": "Unable to load the shop's data.",
+      "accueil": "Home",
+      "boutiques": "Shops",
+      "abonneToast": "✅ Following {{nom}}",
+      "abonneDefaultToast": "✅ Following this shop",
+      "desabonneToast": "👋 Unfollowed",
+      "erreurSuivi": "Error while following — try again",
+      "abonnezVousMessage": "Follow the shop to send it a message",
+      "abonnezVousAppel": "Follow the shop to call it",
+      "erreurToast": "❌ {{msg}}",
+      "filtreEnStock": "In stock",
+      "filtreEnPromotion": "On sale",
+      "filtreNouveautes": "New arrivals",
+      "partagerTitre": "Share this shop",
+      "boutiqueShopiDefault": "Shopi Shop",
+      "membreDepuis": "Member since {{date}}",
+      "membreShopi": "Shopi Member",
+      "horairesNonRenseignes": "Hours not provided"
+    }
+  }
+}

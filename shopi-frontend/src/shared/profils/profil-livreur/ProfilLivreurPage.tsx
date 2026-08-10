@@ -18,6 +18,7 @@ import { useAuthGate } from '../../hooks/useAuthGate';
 import Header from '../../../modules/home/components/layout/Header';
 
 import { useLivreurProfile } from './hooks/useLivreurProfile';
+import FollowButton   from '../../components/FollowButton';
 import ProfilHeader   from './components/ProfilHeader';
 import ProfilTabs     from './components/ProfilTabs';
 import TabInfo        from './components/TabInfo';
@@ -39,8 +40,8 @@ export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
   const { t } = useTranslation();
 
   const { openAuthModal, authModal } = useAuthGate();
-  const { profile, loading, error, tab, setTab, follow, followLoading } =
-    useLivreurProfile(id, onToast, openAuthModal);
+  const { profile, loading, error, tab, setTab, updateFollowState } =
+    useLivreurProfile(id);
   const { start: startConv } = useStartConversation();
   const { call: callProfile, loading: callLoading } = useProfileCall();
 
@@ -113,9 +114,10 @@ export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
       <div className={styles.page}>
         <ProfilHeader
           profile={profile}
-          followLoading={followLoading}
           callLoading={callLoading}
-          onFollow={follow}
+          onToast={onToast}
+          onRequireAuth={openAuthModal}
+          onFollowChange={updateFollowState}
           onContact={onContact}
           onCall={onCall}
         />
@@ -148,11 +150,15 @@ export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
           <button className={styles.abMsg} onClick={onContact}>
             <i className="fas fa-message" /> {t('profilLivreur.contacter')}
           </button>
-          <button className={styles.abFollow} onClick={follow} disabled={followLoading}>
-            {profile.isSuivi
-              ? <><i className="fas fa-user-check" /> {t('profilLivreur.abonneFem')}</>
-              : <><i className="fas fa-plus" /> {t('profilLivreur.suivre')}</>}
-          </button>
+          <FollowButton
+            actorType="livreur"
+            id={profile.id}
+            name={profile.fullName}
+            isSuivi={profile.isSuivi}
+            onToast={onToast}
+            onRequireAuth={openAuthModal}
+            onChange={updateFollowState}
+          />
         </div>
       </div>
 

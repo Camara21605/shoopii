@@ -1,0 +1,88 @@
+{
+  "clientDashboard": {
+    "monEspace": "My space",
+    "centreAide": "Help center",
+    "centreAideTitle": "Go to the Shopi Help Center",
+    "support": {
+      "titre": "🎫 My support tickets",
+      "voirTout": "See all",
+      "chargement": "Loading…",
+      "aucunTicket": "No open ticket — need help?",
+      "nouveauTicket": "+ New ticket"
+    },
+    "typeAdresse": {
+      "domicile": "Home",
+      "bureau": "Office",
+      "boutique": "Shop",
+      "entrepot": "Warehouse",
+      "relais": "Relay point",
+      "depart": "Departure",
+      "autre": "Other"
+    },
+    "adresses": {
+      "nouvelleAdresse": "New address",
+      "modifierAdresse": "Edit address",
+      "mesAdresses": "My addresses",
+      "subtitleSuffix_one": "address saved",
+      "subtitleSuffix_other": "addresses saved",
+      "ajouter": "Add",
+      "aucuneAdresse": "No address",
+      "aucuneAdresseDesc": "Add your addresses to make deliveries easier.",
+      "ajouterPremiere": "Add my first address",
+      "toastAjoutee": "✅ Address added successfully!",
+      "toastMiseAJour": "✅ Address updated.",
+      "confirmSuppression": "Delete this address?",
+      "toastSupprimee": "🗑️ Address deleted.",
+      "toastParDefaut": "⭐ Default address updated."
+    },
+    "addressCard": {
+      "parDefaut": "Default",
+      "adresseIncomplete": "Incomplete address",
+      "definirParDefautTitle": "Set as default",
+      "modifierTitle": "Edit",
+      "supprimerTitle": "Delete"
+    },
+    "addressForm": {
+      "typeAdresseLabel": "Address type",
+      "libelleLabel": "Label",
+      "libelleHint": "(e.g. \"Main house\", \"Office\")",
+      "libellePlaceholder": "Optional label",
+      "localisation": "Location",
+      "paysLabel": "Country",
+      "depuisInscription": "From your registration",
+      "villeLabel": "City",
+      "choisirVille": "— Choose a city —",
+      "villePlaceholder": "Enter the city",
+      "communeLabel": "District / Ward",
+      "choisirCommune": "— Choose a district —",
+      "quartierLabel": "Neighborhood",
+      "choisirQuartier": "— Choose a neighborhood —",
+      "rueLabel": "Street / Precise address",
+      "optionnel": "(optional)",
+      "ruePlaceholder": "Number, street name, landmark…",
+      "instructionsLabel": "Delivery instructions",
+      "instructionsPlaceholder": "E.g.: Yellow house near the mosque, ring at the entrance…",
+      "telephoneLabel": "Contact phone",
+      "telephonePlaceholder": "+224 6xx xx xx xx",
+      "parDefautLabel": "Set as default address",
+      "parDefautDesc": "Will be pre-selected for your next orders",
+      "villeObligatoire": "City is required.",
+      "erreurSauvegarde": "Error while saving.",
+      "annuler": "Cancel",
+      "enregistrement": "Saving…",
+      "enregistrerAdresse": "Save address",
+      "pays": {
+        "guinee": "Guinea",
+        "senegal": "Senegal",
+        "mali": "Mali",
+        "coteIvoire": "Ivory Coast",
+        "guineeBissau": "Guinea-Bissau",
+        "mauritanie": "Mauritania",
+        "liberia": "Liberia",
+        "sierraLeone": "Sierra Leone",
+        "france": "France",
+        "autrePays": "Other country"
+      }
+    }
+  }
+}

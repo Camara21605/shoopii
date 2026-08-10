@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import s from '../styles/SettingsCard.module.css';
 import { Toggle } from '../components/Toggle';
 import { settingsApi, type SecuriteData } from '../../api/settings.api';
+import TwoFaSetupModal from '../../../../../../shared/components/TwoFaSetupModal';
 
 interface Props { onToast: (msg: string) => void; }
 
@@ -19,6 +20,7 @@ export default function SecuriteSection({ onToast }: Props) {
   const [savingQ,       setSavingQ]       = useState(false);
   const [generatingCodes, setGeneratingCodes] = useState(false);
   const [codes,         setCodes]         = useState<string[] | null>(null);
+  const [show2faModal,  setShow2faModal]  = useState(false);
 
   /* Formulaire mot de passe */
   const [pwdForm, setPwdForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -188,7 +190,7 @@ export default function SecuriteSection({ onToast }: Props) {
             </span>
             <button
               className={`${s.secBtn} ${!securite?.twoFaEnabled ? s.secBtnPrim : ''}`}
-              onClick={() => toggle2fa(!securite?.twoFaEnabled)}
+              onClick={() => securite?.twoFaEnabled ? toggle2fa(false) : setShow2faModal(true)}
             >
               {securite?.twoFaEnabled ? 'Désactiver' : <><i className="fas fa-plus" /> Activer</>}
             </button>
@@ -350,6 +352,16 @@ export default function SecuriteSection({ onToast }: Props) {
           ))}
         </div>
       </div>
+
+      {show2faModal && (
+        <TwoFaSetupModal
+          onClose={() => setShow2faModal(false)}
+          onEnabled={() => {
+            setSecurite(prev => prev ? { ...prev, twoFaEnabled: true } : prev);
+            onToast('🔐 2FA activée avec succès');
+          }}
+        />
+      )}
     </>
   );
 }

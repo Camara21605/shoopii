@@ -1,0 +1,27 @@
+{
+  "analytics": {
+    "ca": {
+      "title": "营业额",
+      "empty": "暂无已送达的销售。",
+      "legendCurrent": "每月收入（百万 GNF）",
+      "legendPrevious": "过去时期"
+    },
+    "categoryPerf": {
+      "title": "按类别表现",
+      "categorie": "类别",
+      "caMillions": "收入（百万 GNF）",
+      "commandes": "订单",
+      "empty": "暂无销售。"
+    },
+    "topProduits": {
+      "title": "热门产品 — 销售",
+      "empty": "暂无销售。",
+      "ventes_one": "{{count}} 笔销售",
+      "ventes_other": "{{count}} 笔销售"
+    },
+    "trafic": {
+      "title": "流量分析",
+      "sub": "访问、流量来源、转化率和销售漏斗 — 即将推出。"
+    }
+  }
+}

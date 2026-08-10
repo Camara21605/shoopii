@@ -86,7 +86,8 @@ export class SuivisEntrepriseService extends SuivisBaseService {
       category?: string;
     },
   ) {
-    const suiviIds = await this.getMyFollowedIds(userId, role);
+    const suiviIds  = await this.getMyFollowedIds(userId, role);
+    const hiddenIds = await this.getMyHiddenIds(userId, role);
 
     const qb = this.companyRepo
       .createQueryBuilder('co')
@@ -110,17 +111,20 @@ export class SuivisEntrepriseService extends SuivisBaseService {
     const now       = Date.now();
     const threshold  = 15 * 60 * 1000;
 
-    return companies.map(co => ({
-      id:            co.id,
-      companyName:   (co as any).companyName,
-      logo:          (co as any).logo ?? null,
-      description:   (co as any).description ?? null,
-      region:        [(co as any).commune, (co as any).ville].filter(Boolean).join(', '),
-      online:        (co as any).user?.lastLoginAt
-                       ? (now - new Date((co as any).user.lastLoginAt).getTime()) < threshold
-                       : false,
-      /* ← Clé : isSuivi calculé depuis la BDD, pas hardcodé */
-      isSuivi:       suiviIds.includes(co.id),
-    }));
+    return companies
+      /* Masquée par le client (suivie mais cachée des listes de découverte) */
+      .filter(co => !hiddenIds.includes(co.id))
+      .map(co => ({
+        id:            co.id,
+        companyName:   (co as any).companyName,
+        logo:          (co as any).logo ?? null,
+        description:   (co as any).description ?? null,
+        region:        [(co as any).commune, (co as any).ville].filter(Boolean).join(', '),
+        online:        (co as any).user?.lastLoginAt
+                         ? (now - new Date((co as any).user.lastLoginAt).getTime()) < threshold
+                         : false,
+        /* ← Clé : isSuivi calculé depuis la BDD, pas hardcodé */
+        isSuivi:       suiviIds.includes(co.id),
+      }));
   }
 }

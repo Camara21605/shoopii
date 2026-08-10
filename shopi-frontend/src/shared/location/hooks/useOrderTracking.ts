@@ -2,29 +2,34 @@
  * FICHIER : src/shared/location/hooks/useOrderTracking.ts
  *
  * RÔLE : Hook React pour le suivi d'une commande en temps réel.
- *        - Charge les positions initiales via REST
+ *        - Charge les positions + 3 tronçons colorés initiaux via REST
  *        - Met à jour la position du livreur via Socket.IO
- *        - Recalcule l'itinéraire si le livreur bouge de > 50m
+ *        - Recalcule le tronçon ACTIF (rouge avant récupération,
+ *          bleu après) si le livreur bouge de > 50m — le tronçon
+ *          vert (boutique → client) ne bouge jamais, pas de recalcul.
  * ============================================================ */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { fetchOrderTracking, fetchRoute }            from '../services/routingApi';
 import { useTrackDelivery }                          from './useLocationSocket';
 import { isSignificantMove }                         from '../utils/geoUtils';
-import type { OrderTrackingData, ActorPosition, RouteResult } from '../services/routingApi';
+import type { OrderTrackingData, OrderTrackingRoutes, ActorPosition } from '../services/routingApi';
 
 const RECALC_THRESHOLD_M = 50;  // recalcul si livreur bouge de > 50m
 
 interface UseOrderTrackingReturn {
-  actors:       ActorPosition[];
-  route:        RouteResult | null;
-  numero:       string;
-  status:       string;
-  loading:      boolean;
-  error:        string | null;
-  deliveryLive: boolean;    // true si livreur partage sa position
-  refresh:      () => void;
+  actors:          ActorPosition[];
+  routes:          OrderTrackingRoutes;
+  livreurPickedUp: boolean;
+  numero:          string;
+  status:          string;
+  loading:         boolean;
+  error:           string | null;
+  deliveryLive:    boolean;    // true si livreur partage sa position
+  refresh:         () => void;
 }
+
+const EMPTY_ROUTES: OrderTrackingRoutes = { livreurToShop: null, shopToClient: null, livreurToClient: null };
 
 export function useOrderTracking(orderId: string | null): UseOrderTrackingReturn {
   const [data,    setData]    = useState<OrderTrackingData | null>(null);
@@ -47,7 +52,6 @@ export function useOrderTracking(orderId: string | null): UseOrderTrackingReturn
     try {
       const result = await fetchOrderTracking(orderId);
       setData(result);
-      /* Initialiser la position de référence pour recalcul */
       const deliveryActor = result.actors.find(a => a.role === 'delivery');
       if (deliveryActor) {
         lastRecalcPos.current = { latitude: deliveryActor.lat, longitude: deliveryActor.lng };
@@ -61,7 +65,7 @@ export function useOrderTracking(orderId: string | null): UseOrderTrackingReturn
 
   useEffect(() => { load(); }, [load]);
 
-  /* ── Mise à jour live du livreur + recalcul itinéraire ────── */
+  /* ── Mise à jour live du livreur + recalcul du tronçon actif ── */
 
   useEffect(() => {
     if (!livePos || !data) return;
@@ -79,7 +83,7 @@ export function useOrderTracking(orderId: string | null): UseOrderTrackingReturn
       };
     });
 
-    /* 2. Recalcul d'itinéraire si mouvement > 50m */
+    /* 2. Recalcul si mouvement > 50m */
     const newPos = { latitude: livePos.latitude, longitude: livePos.longitude };
     const shouldRecalc = !lastRecalcPos.current
       || isSignificantMove(lastRecalcPos.current, newPos, RECALC_THRESHOLD_M);
@@ -87,32 +91,31 @@ export function useOrderTracking(orderId: string | null): UseOrderTrackingReturn
     if (!shouldRecalc) return;
     lastRecalcPos.current = newPos;
 
-    /* Construire les waypoints dans l'ordre : vendor → delivery → client */
-    const actors = data.actors;
-    const waypoints = data.waypointOrder
-      .map(i => actors[i])
-      .map(a => {
-        if (a.role === 'delivery') {
-          return { latitude: livePos.latitude, longitude: livePos.longitude };
-        }
-        return { latitude: a.lat, longitude: a.lng };
-      });
+    const shop   = data.actors.find(a => a.role === 'vendor');
+    const client = data.actors.find(a => a.role === 'client');
 
-    if (waypoints.length >= 2) {
-      fetchRoute(waypoints)
-        .then(route => setData(prev => prev ? { ...prev, route } : prev))
-        .catch(() => {}); // silencieux — on garde l'ancien itinéraire
+    /* Avant récupération → recalcule le tronçon rouge (livreur→boutique).
+     * Après récupération → recalcule le tronçon bleu (livreur→client). */
+    if (!data.livreurPickedUp && shop) {
+      fetchRoute([newPos, { latitude: shop.lat, longitude: shop.lng }])
+        .then(route => setData(prev => prev ? { ...prev, routes: { ...prev.routes, livreurToShop: route } } : prev))
+        .catch(() => {});
+    } else if (data.livreurPickedUp && client) {
+      fetchRoute([newPos, { latitude: client.lat, longitude: client.lng }])
+        .then(route => setData(prev => prev ? { ...prev, routes: { ...prev.routes, livreurToClient: route } } : prev))
+        .catch(() => {});
     }
   }, [livePos, data]);
 
   return {
-    actors:       data?.actors        ?? [],
-    route:        data?.route         ?? null,
-    numero:       data?.numero        ?? '',
-    status:       data?.status        ?? '',
+    actors:          data?.actors          ?? [],
+    routes:          data?.routes          ?? EMPTY_ROUTES,
+    livreurPickedUp: data?.livreurPickedUp ?? false,
+    numero:          data?.numero          ?? '',
+    status:          data?.status          ?? '',
     loading,
     error,
-    deliveryLive: sharing,
-    refresh:      load,
+    deliveryLive:    sharing,
+    refresh:         load,
   };
 }

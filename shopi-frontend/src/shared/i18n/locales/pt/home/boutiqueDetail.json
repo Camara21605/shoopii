@@ -1,0 +1,240 @@
+{
+  "boutiqueDetail": {
+    "nav": {
+      "produits": "Produtos",
+      "promotions": "Promoções",
+      "livreurs": "Entregadores",
+      "correspondants": "Correspondentes",
+      "avis": "Avaliações",
+      "apropos": "Sobre"
+    },
+    "cover": {
+      "verifiee": "Loja verificada Shopi",
+      "active": "Ativa"
+    },
+    "identity": {
+      "verifie": "Verificado Shopi",
+      "note": "Nota",
+      "abonnes": "Subscritores",
+      "satisfaction": "Satisfação",
+      "ventes": "Vendas",
+      "abonner": "Subscrever",
+      "abonneLabel": "Subscrito",
+      "messageBtn": "Mensagem",
+      "appelerBtn": "Ligar",
+      "abonnezVousMessage": "Subscreva-se para enviar uma mensagem",
+      "envoyerMessageTitle": "Enviar uma mensagem",
+      "abonnezVousAppel": "Subscreva-se para ligar",
+      "appelerTitle": "Ligar",
+      "partagerTitle": "Partilhar a loja"
+    },
+    "livreursSection": {
+      "disponibleCount_one": "disponível",
+      "disponibleCount_other": "disponíveis",
+      "enCourse": "em curso",
+      "totalCount": "entregadores no total"
+    },
+    "cardLivreur": {
+      "livraisonsCount": "{{count}} entregas",
+      "disponible": "● Disponível",
+      "enCourseBadge": "⚙ Em curso",
+      "voirProfil": "Ver perfil",
+      "profilToast": "🛵 Perfil de {{nom}}",
+      "desabonneToast": "👋 Deixou de seguir {{nom}}",
+      "abonneToast": "✅ Subscrito a {{nom}}"
+    },
+    "correspondantsSection": {
+      "disponibleCount_one": "disponível",
+      "disponibleCount_other": "disponíveis",
+      "completCount_one": "completo",
+      "completCount_other": "completos",
+      "totalCount": "correspondentes no total",
+      "infoBannerTitle": "O que é um correspondente Shopi?",
+      "infoBannerDesc": "Um correspondente é um representante Shopi na sua cidade. Ele recebe a sua encomenda, verifica-a e guarda-a em segurança. Pode levantá-la diretamente ou confiá-la a um entregador para entrega ao domicílio.",
+      "steps": {
+        "colisRecu": "Encomenda recebida e verificada",
+        "stockageSecurise": "Armazenamento seguro",
+        "remiseDirecte": "Entrega direta ou via entregador",
+        "noteCertifie": "Avaliado e certificado Shopi"
+      },
+      "fermer": "Fechar"
+    },
+    "cardCorrespondant": {
+      "verifie": "Verificado",
+      "colisMois": "{{count}} encomendas/mês",
+      "disponible": "● Disponível",
+      "complet": "◌ Completo",
+      "contacter": "Contactar",
+      "choisir": "Escolher",
+      "choisi": "Escolhido",
+      "messageToast": "💬 Mensagem para {{nom}}",
+      "retireToast": "↩️ Correspondente {{nom}} removido",
+      "selectionneToast": "✅ {{nom}} selecionado como correspondente"
+    },
+    "modalPartage": {
+      "titre": "Partilhar esta loja",
+      "fermer": "Fechar",
+      "copier": "Copiar",
+      "lienCopiePresseToast": "🔗 Link copiado para a área de transferência!",
+      "instagramCopieToast": "📸 Link copiado — cole-o no Instagram",
+      "partageVia": "📲 Partilha via {{label}}",
+      "lienCopieToast": "🔗 Link copiado!",
+      "emailSujet": "Descubra esta loja Shopi"
+    },
+    "aPropos": {
+      "titre": "Sobre a loja",
+      "anneesExperience": "Anos de experiência",
+      "commandesLivrees": "Encomendas entregues",
+      "satisfactionClient": "Satisfação do cliente",
+      "noteMoyenne": "Nota média",
+      "infosPratiques": "Info práticas",
+      "horaires": "Horários",
+      "adresse": "Morada",
+      "telephone": "Telefone",
+      "email": "Email",
+      "siteWeb": "Site web",
+      "livreursBoutique": "Entregadores da loja",
+      "voirProfil": "Ver perfil",
+      "profilToast": "🛵 Perfil de {{nom}}"
+    },
+    "cardProduit": {
+      "voir": "Ver",
+      "ajouterPanier": "Adicionar ao cesto",
+      "partager": "Partilhar",
+      "retireFavorisToast": "💔 Removido dos favoritos",
+      "ajouteFavorisToast": "❤️ Adicionado aos favoritos",
+      "detailToast": "👁️ Detalhe: {{nom}}",
+      "ajouteAuPanierToast": "🛒 Adicionado ao cesto!",
+      "partagerToast": "📤 Partilhar: {{nom}}",
+      "badges": {
+        "hot": "🔥 Quente",
+        "new": "✨ Novo",
+        "promo": "🏷️ Promo",
+        "sol": "🔴 Em saldo"
+      },
+      "stock": {
+        "ok": "✓ Em stock",
+        "low": "⚠ Stock limitado",
+        "out": "✗ Esgotado"
+      }
+    },
+    "promotions": {
+      "reduction": "Desconto",
+      "livraisonOfferte": "Entrega gratuita",
+      "bundle": "Bundle",
+      "venteFlash": "Venda relâmpago",
+      "offerte": "Grátis",
+      "des": "Desde {{montant}} GNF",
+      "jusquau": "Até {{date}}",
+      "restants": "{{count}} restantes",
+      "utilisationsRestantes_one": "{{count}} utilização restante",
+      "utilisationsRestantes_other": "{{count}} utilizações restantes",
+      "codePromoToast": "🏷️ Código promocional: {{code}}",
+      "copierLeCode": "Copiar o código",
+      "codeCopieToast": "✅ Código copiado: {{code}}",
+      "chargement": "A carregar as promoções…",
+      "aucunePromo": "Nenhuma promoção ativa",
+      "aucunePromoDesc": "Esta loja não tem promoção em curso por enquanto.",
+      "activeCount_one": "{{count}} promoção ativa",
+      "activeCount_other": "{{count}} promoções ativas"
+    },
+    "produitsSection": {
+      "filtresActifs": "Filtros ativos:",
+      "supprimerFiltre": "Remover este filtro",
+      "toutEffacer": "Limpar tudo",
+      "trouveCount_one": "produto encontrado",
+      "trouveCount_other": "produtos encontrados",
+      "vueGrille": "Vista grelha",
+      "vueListe": "Vista lista",
+      "aucunProduit": "Nenhum produto corresponde aos seus filtros",
+      "essayezModifier": "Tente modificar ou remover alguns filtros.",
+      "reinitialiser": "Repor os filtros",
+      "pageToast": "📄 Página {{n}}",
+      "pageSuivanteToast": "📄 Página seguinte"
+    },
+    "sidebar": {
+      "trierPar": "Ordenar por",
+      "triOptions": {
+        "pertinence": "Relevância",
+        "prixCroissant": "Preço crescente",
+        "prixDecroissant": "Preço decrescente",
+        "mieuxNotes": "Melhor avaliados",
+        "nouveautes": "Novidades",
+        "meilleuresVentes": "Mais vendidos"
+      },
+      "triToast": "🔃 Ordenar: {{value}}",
+      "categories": "Categorias",
+      "tout": "Tudo",
+      "prix": "Preço (GNF)",
+      "noteMinimale": "Nota mínima",
+      "tousLesAvis": "Todas as avaliações",
+      "filtreEtoilesToast": "⭐ Filtro {{n}}+ estrelas",
+      "disponibilite": "Disponibilidade",
+      "enStockUniquement": "Apenas em stock",
+      "enPromotion": "Em promoção",
+      "nouveautesSeulement": "Apenas novidades",
+      "infosBoutique": "Info da loja",
+      "horaires": "Horários",
+      "adresse": "Morada",
+      "telephone": "Telefone",
+      "email": "Email"
+    },
+    "avis": {
+      "chargement": "A carregar as avaliações…",
+      "sur5": "{{n}} de 5",
+      "aucuneNote": "Sem nota",
+      "avisVerifies_one": "{{count}} avaliação verificada",
+      "avisVerifies_other": "{{count}} avaliações verificadas",
+      "aucunAvis": "Nenhuma avaliação por enquanto",
+      "aucunAvisDetaille": "Nenhuma avaliação detalhada disponível",
+      "noteExisteDeja": "A nota global já existe, mas os comentários ainda não estão disponíveis.",
+      "avisApparaissent": "As avaliações aparecem após os clientes validarem a receção da sua encomenda.",
+      "achatVerifie": "Compra verificada"
+    },
+    "stories": {
+      "precedent": "Anterior",
+      "suivant": "Seguinte",
+      "ilYA1j": "há 1d",
+      "ilYAHeures": "há {{h}}h",
+      "ilYAMinutes": "há {{m}}min",
+      "aLInstant": "agora mesmo",
+      "voirLeProduit": "Ver o produto",
+      "ajouterPanier": "Adicionar ao cesto",
+      "ajouteAuPanierToast": "🛒 Adicionado ao cesto: {{produit}}",
+      "partager": "Partilhar",
+      "lienCopieToast": "🔗 Link copiado!",
+      "precedente": "Anterior",
+      "suivante": "Seguinte",
+      "badges": {
+        "promo": "🔥 Promo",
+        "new": "✨ Novo",
+        "top": "⭐ Top Venda",
+        "flash": "⚡ Flash"
+      }
+    },
+    "page": {
+      "boutiqueIntrouvable": "Loja não encontrada",
+      "boutiqueIntrouvableDesc": "Esta loja não existe ou foi desativada.",
+      "retourAccueil": "← Voltar ao início",
+      "idBoutiqueManquant": "ID da loja em falta.",
+      "erreurChargement": "Impossível carregar os dados da loja.",
+      "accueil": "Início",
+      "boutiques": "Lojas",
+      "abonneToast": "✅ Subscrito a {{nom}}",
+      "abonneDefaultToast": "✅ Subscrito a esta loja",
+      "desabonneToast": "👋 Deixou de seguir",
+      "erreurSuivi": "Erro ao seguir — tente novamente",
+      "abonnezVousMessage": "Subscreva-se à loja para lhe enviar uma mensagem",
+      "abonnezVousAppel": "Subscreva-se à loja para lhe ligar",
+      "erreurToast": "❌ {{msg}}",
+      "filtreEnStock": "Em stock",
+      "filtreEnPromotion": "Em promoção",
+      "filtreNouveautes": "Novidades",
+      "partagerTitre": "Partilhar esta loja",
+      "boutiqueShopiDefault": "Loja Shopi",
+      "membreDepuis": "Membro desde {{date}}",
+      "membreShopi": "Membro Shopi",
+      "horairesNonRenseignes": "Horários não informados"
+    }
+  }
+}

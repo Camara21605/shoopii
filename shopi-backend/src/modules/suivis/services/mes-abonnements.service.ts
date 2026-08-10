@@ -35,6 +35,7 @@ export interface AbonnementItem {
   note:      number;                 // note moyenne
   type:      'boutiques' | 'livreurs' | 'correspondants';
   suivi:     boolean;                // toujours true ici (ce sont des abonnements)
+  hidden:    boolean;                // masqué des listes de découverte, mais toujours suivi
 }
 
 export interface MesAbonnementsResponse {
@@ -73,26 +74,30 @@ export class MesAbonnementsService {
         isSubscribed: true,
         status:       FollowStatus.ACTIVE,
       },
-      select: ['targetType', 'targetId'],
+      select: ['targetType', 'targetId', 'hidden'],
     });
 
-    /* 3. Séparer les IDs par type de cible */
+    /* 3. Séparer les IDs par type de cible + ceux marqués masqués — cette
+     * page ("Mes abonnements") est la SEULE à devoir afficher les items
+     * masqués (avec un bouton "Réafficher"), contrairement aux listes de
+     * découverte qui les excluent entièrement. */
     const companyIds = follows.filter(f => f.targetType === TargetActorType.COMPANY).map(f => f.targetId);
     const delivIds   = follows.filter(f => f.targetType === TargetActorType.DELIVERY).map(f => f.targetId);
     const corrIds    = follows.filter(f => f.targetType === TargetActorType.CORRESPONDENT).map(f => f.targetId);
+    const hiddenIds  = new Set(follows.filter(f => f.hidden).map(f => f.targetId));
 
     /* 4. Charger les infos de chaque type en parallèle + compter leurs followers */
     const [boutiques, livreurs, correspondants] = await Promise.all([
-      this.loadCompanies(companyIds),
-      this.loadDeliveries(delivIds),
-      this.loadCorrespondents(corrIds),
+      this.loadCompanies(companyIds, hiddenIds),
+      this.loadDeliveries(delivIds, hiddenIds),
+      this.loadCorrespondents(corrIds, hiddenIds),
     ]);
 
     return { boutiques, livreurs, correspondants };
   }
 
   /* ── Charger les entreprises suivies ── */
-  private async loadCompanies(ids: string[]): Promise<AbonnementItem[]> {
+  private async loadCompanies(ids: string[], hiddenIds: Set<string>): Promise<AbonnementItem[]> {
     if (ids.length === 0) return [];
 
     const companies = await this.companyRepo.find({
@@ -114,11 +119,12 @@ export class MesAbonnementsService {
       note:      0,                         // pas de note entreprise pour l'instant
       type:      'boutiques' as const,
       suivi:     true,
+      hidden:    hiddenIds.has(co.id),
     }));
   }
 
   /* ── Charger les livreurs suivis ── */
-  private async loadDeliveries(ids: string[]): Promise<AbonnementItem[]> {
+  private async loadDeliveries(ids: string[], hiddenIds: Set<string>): Promise<AbonnementItem[]> {
     if (ids.length === 0) return [];
 
     const livreurs = await this.delivRepo.find({
@@ -137,11 +143,12 @@ export class MesAbonnementsService {
       note:      Number((d as any).averageRating ?? 0),
       type:      'livreurs' as const,
       suivi:     true,
+      hidden:    hiddenIds.has(d.id),
     }));
   }
 
   /* ── Charger les correspondants suivis ── */
-  private async loadCorrespondents(ids: string[]): Promise<AbonnementItem[]> {
+  private async loadCorrespondents(ids: string[], hiddenIds: Set<string>): Promise<AbonnementItem[]> {
     if (ids.length === 0) return [];
 
     const corrs = await this.corrRepo.find({
@@ -160,6 +167,7 @@ export class MesAbonnementsService {
       note:      Number((c as any).averageRating ?? 0),
       type:      'correspondants' as const,
       suivi:     true,
+      hidden:    hiddenIds.has(c.id),
     }));
   }
 

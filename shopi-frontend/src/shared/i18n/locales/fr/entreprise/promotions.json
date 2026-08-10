@@ -1,0 +1,172 @@
+{
+  "promotions": {
+    "typeCfg": {
+      "discount": "Réduction %",
+      "freeShip": "Livraison offerte",
+      "bundle": "Bundle",
+      "flash": "Vente flash"
+    },
+    "statusCfg": {
+      "active": "Actif",
+      "scheduled": "Planifié",
+      "draft": "Brouillon",
+      "paused": "En pause",
+      "ended": "Terminé"
+    },
+    "templates": {
+      "pctDiscount": {
+        "label": "Réduction en %",
+        "sub": "Ex: -10% sur tout"
+      },
+      "fixedDiscount": {
+        "label": "Réduction fixe (GNF)",
+        "sub": "Ex: -5 000 GNF"
+      },
+      "freeShip": {
+        "label": "Livraison gratuite",
+        "sub": "Pour commandes > X"
+      },
+      "bundle": {
+        "label": "Bundle / Lot",
+        "sub": "2 achetés = 1 offert"
+      },
+      "flash": {
+        "label": "Vente flash",
+        "sub": "Durée & stock limités"
+      }
+    },
+    "scope": {
+      "global": "Toute l'entreprise",
+      "produits_one": "{{count}} produit",
+      "produits_other": "{{count}} produits"
+    },
+    "card": {
+      "copierTitle": "Copier",
+      "codeCopied": "📋 Code \"{{code}}\" copié !",
+      "copyError": "❌ Impossible de copier le code (permission presse-papiers refusée).",
+      "activated": "🚀 Promotion activée !",
+      "paused": "⏸️ Promotion suspendue",
+      "utilisations": "Utilisations",
+      "caGenere": "CA généré",
+      "tauxUsage": "Taux usage",
+      "modifier": "Modifier",
+      "stats": "Stats",
+      "statsToast": "📊 Stats détaillées",
+      "activer": "Activer"
+    },
+    "selector": {
+      "search": "Rechercher un produit…",
+      "selected_one": "{{count}} produit sélectionné",
+      "selected_other": "{{count}} produits sélectionnés",
+      "clearAll": "Tout désélectionner",
+      "empty": "Aucun produit trouvé"
+    },
+    "hero": {
+      "badge": "Promotions actives",
+      "titlePart1": "Boostez vos ventes avec des",
+      "titleEm": "offres ciblées",
+      "sub": "Créez des codes promo, planifiez des ventes flash et suivez leurs performances en temps réel.",
+      "create": "Créer une promotion",
+      "exportBtn": "Exporter",
+      "exportToast": "📤 Export en cours…",
+      "statsActives": "actives",
+      "statsTotal": "total",
+      "statsGnf": "GNF",
+      "lblPromotions": "Promotions",
+      "lblUtilisations": "Utilisations",
+      "lblCaGenere": "CA généré"
+    },
+    "kpi": {
+      "totales": "Promotions totales",
+      "actives": "Actives maintenant",
+      "activesSub": "{{count}} planifiées",
+      "utilisationsTotales": "Utilisations totales",
+      "caGenereGnf": "CA généré (GNF)"
+    },
+    "filters": {
+      "toutes": "Toutes",
+      "actives": "● Actives",
+      "planifiees": "⏰ Planifiées",
+      "brouillons": "✎ Brouillons",
+      "search": "Rechercher une promo…"
+    },
+    "loading": "Chargement des promotions…",
+    "empty": {
+      "title": "Aucune promotion trouvée",
+      "sub": "Créez votre première promotion pour booster vos ventes"
+    },
+    "performance": {
+      "title": "Performance des promotions",
+      "badge": "Ce mois",
+      "uses": "uses"
+    },
+    "sidebar": {
+      "creerRapide": "Créer rapidement",
+      "templateToast": "➕ Template \"{{label}}\" sélectionné",
+      "meilleuresPromos": "Meilleures promos",
+      "uses": "uses",
+      "tipsTitle": "Conseils Shopi",
+      "tip1": "Les promos flash génèrent 3× plus d'urgence d'achat.",
+      "tip2": "Livraison gratuite = +28% de conversion.",
+      "tip3": "Cibler un produit spécifique booste le taux usage +40%."
+    },
+    "modal": {
+      "editTitle": "✏️ Modifier la promotion",
+      "createTitle": "✨ Nouvelle promotion",
+      "editSub": "Mettez à jour les informations de cette promotion",
+      "createSub": "Créez une offre pour booster vos ventes",
+      "typeLabel": "Type de promotion",
+      "nomLabel": "Nom de la promotion *",
+      "nomPlaceholder": "Ex: Soldes Janvier",
+      "codeLabel": "Code promo *",
+      "codePlaceholder": "Ex: SOLDES20",
+      "discountLabel": "Valeur de la réduction",
+      "discountPlaceholderPct": "Ex: 20",
+      "discountPlaceholderFree": "Livraison offerte",
+      "discountPlaceholderFixed": "Ex: 5000",
+      "maxLabel": "Utilisations maximum",
+      "maxPlaceholder": "Ex: 500 (vide = illimité)",
+      "expireLabel": "Date d'expiration",
+      "scopeTitle": "Portée de la promotion",
+      "scopeGlobalTitle": "Toute l'entreprise",
+      "scopeGlobalSub": "La promo s'applique à tous vos produits",
+      "scopeProduits": "{{count}} produits",
+      "scopeProductsTitle": "Produit(s) spécifique(s)",
+      "scopeProductsSub": "Cibler un ou plusieurs produits précis",
+      "scopeSelected_one": "{{count}} sélectionné",
+      "scopeSelected_other": "{{count}} sélectionnés",
+      "scopeWarn": "Sélectionnez au moins un produit pour pouvoir créer cette promotion.",
+      "previewLabel": "Aperçu",
+      "previewDefaultNom": "Nom de la promo",
+      "previewDefaultCode": "CODE",
+      "annuler": "Annuler",
+      "brouillon": "Brouillon",
+      "saveEdit": "Enregistrer les modifications",
+      "createBtn": "Créer la promotion"
+    },
+    "validation": {
+      "nomRequired": "Le nom de la promotion est obligatoire.",
+      "codeRequired": "Le code promo est obligatoire.",
+      "codeMaxLength": "Le code promo ne doit pas dépasser 50 caractères.",
+      "codeFormat": "Le code promo ne peut contenir que des lettres, chiffres, tirets ou underscores.",
+      "scopeRequired": "Sélectionnez au moins un produit pour cette promotion.",
+      "discountRequired": "Indiquez une valeur de réduction.",
+      "discountPositive": "La valeur de la réduction doit être un nombre positif.",
+      "discountMaxPct": "Une réduction en pourcentage ne peut pas dépasser 100.",
+      "maxUsesInteger": "Le nombre maximum d'utilisations doit être un entier positif.",
+      "expireInPast": "La date d'expiration ne peut pas être dans le passé."
+    },
+    "toasts": {
+      "updateSuccess": "✅ Promo \"{{nom}}\" mise à jour !",
+      "activateFailedAfterCreate": "⚠️ Promo \"{{nom}}\" créée mais l'activation automatique a échoué ({{err}}) — activez-la manuellement depuis la liste.",
+      "createSuccess": "✅ Promo \"{{nom}}\" créée et activée pour {{who}} !",
+      "whoGlobal": "toute l'entreprise",
+      "whoProduits_one": "{{count}} produit",
+      "whoProduits_other": "{{count}} produits",
+      "draftSaved": "💾 Brouillon sauvegardé",
+      "draftMissingFields": "Le nom et le code sont obligatoires même pour un brouillon.",
+      "loadError": "❌ Erreur de chargement : {{message}}",
+      "loadErrorDefault": "Impossible de charger les promotions."
+    }
+  }
+}

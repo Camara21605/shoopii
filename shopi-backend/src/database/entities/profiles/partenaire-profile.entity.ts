@@ -172,6 +172,10 @@ export class Partner {
   @Column({ type: 'varchar', length: 20, nullable: true })
   twoFaMethod!: string | null;
 
+  /** Secret TOTP (Base32) — ne jamais exposer au frontend une fois confirmé. */
+  @Column({ type: 'varchar', length: 64, nullable: true })
+  twoFaSecret!: string | null;
+
   /* ============================================================
    * PRÉFÉRENCES (JSON sérialisé — pas de table séparée)
    * ============================================================ */

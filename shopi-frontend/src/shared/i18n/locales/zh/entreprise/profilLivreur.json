@@ -1,0 +1,127 @@
+{
+  "profilLivreur": {
+    "loading": "正在加载资料…",
+    "notFound": "配送员未找到。",
+    "retourLivreurs": "返回配送员",
+    "idMissingError": "缺少标识符",
+    "networkError": "网络错误",
+    "contacter": "联系",
+    "appeler": "打电话",
+    "abonneFem": "已关注",
+    "suivre": "关注",
+    "livreurLabel": "配送员",
+    "disponibleMaintenant": "现在可接单",
+    "horsLigne": "离线",
+    "abonnesSuffix": "名关注者",
+    "identiteVerifiee": "身份已验证",
+    "assureShopi": "Shopi 保险",
+    "avisSuffix": "条评价",
+    "kpi": {
+      "livraisons": "配送",
+      "note": "评分",
+      "ponctualite": "准时率",
+      "abonnes": "关注者",
+      "avis": "评价",
+      "experience": "经验"
+    },
+    "tabs": {
+      "info": "信息",
+      "vehicule": "交通工具",
+      "zones": "区域",
+      "localisation": "定位",
+      "tarifs": "价格",
+      "avis": "评价",
+      "historique": "历史"
+    },
+    "sidebar": {
+      "contact": "联系",
+      "telephone": "电话",
+      "whatsapp": "WhatsApp",
+      "statistiques": "统计",
+      "livraisons": "配送",
+      "note": "评分",
+      "ponctualite": "准时率",
+      "abonnes": "关注者",
+      "copieToast": "📋 已复制！"
+    },
+    "tabInfo": {
+      "aPropos": "关于",
+      "aucuneDescription": "暂无可用描述。",
+      "informationsPratiques": "实用信息",
+      "zonePrincipale": "主要区域",
+      "contactDirect": "直接联系",
+      "languesParlees": "使用语言",
+      "assurance": "保险",
+      "couvert": "已覆盖 ✓",
+      "nonRenseignee": "未填写",
+      "disponibiliteHebdo": "每周可用时间",
+      "aujourdhui": "（今天）",
+      "ferme": "关闭",
+      "ouvert": "开放",
+      "jours": {
+        "lundi": "星期一",
+        "mardi": "星期二",
+        "mercredi": "星期三",
+        "jeudi": "星期四",
+        "vendredi": "星期五",
+        "samedi": "星期六",
+        "dimanche": "星期日"
+      }
+    },
+    "tabVehicule": {
+      "title": "交通工具信息",
+      "type": "类型：{{type}}",
+      "permis": "驾照",
+      "valide": "已验证 ✓",
+      "nonRenseigne": "未填写",
+      "assurance": "保险",
+      "validAssurance": "有效 ✓",
+      "nonRenseigneeF": "未填写",
+      "immatriculation": "车牌号"
+    },
+    "tabZones": {
+      "title": "配送区域",
+      "empty": "未填写配送区域。"
+    },
+    "tabTarifs": {
+      "title": "价格表",
+      "tarifBase": "基础价格",
+      "parKm": "每公里",
+      "supplementLourd": "重包裹附加费",
+      "majorationNocturne": "夜间附加费"
+    },
+    "placeholders": {
+      "avisTitle": "评价（{{count}}）",
+      "avisText": "客户评价将很快显示在这里。",
+      "historiqueTitle": "历史",
+      "historiqueText": "配送历史将很快显示在这里。"
+    },
+    "tabLocalisation": {
+      "title": "实时位置",
+      "partageActif": "位置共享已开启",
+      "noticeNonPartagePart1": "当前未共享其位置。",
+      "noticeNonPartagePart2": "配送进行中时位置会自动显示。",
+      "lat": "纬度：{{value}}",
+      "lng": "经度：{{value}}"
+    },
+    "reseauPage": {
+      "title": "关注配送员",
+      "loading": "加载中…",
+      "errorSuffix": "— 显示演示数据。",
+      "empty": "暂无可用配送员。",
+      "livraisonsCount_one": "{{count}} 次配送",
+      "livraisonsCount_other": "{{count}} 次配送",
+      "disponible": "可接单",
+      "suiviCheck": "已关注 ✓",
+      "suivre": "关注",
+      "desabonneToast": "👋 已取消关注 {{nom}}",
+      "abonneToast": "✅ 已关注 {{nom}}",
+      "contacterToast": "📩 联系 {{nom}}"
+    },
+    "publicPage": {
+      "abonnezVousMessage": "关注此配送员以给他发送消息。",
+      "abonnezVousAppel": "关注此配送员以给他打电话。",
+      "erreurToast": "❌ {{msg}}"
+    }
+  }
+}

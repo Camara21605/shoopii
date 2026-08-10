@@ -1,0 +1,240 @@
+{
+  "boutiqueDetail": {
+    "nav": {
+      "produits": "产品",
+      "promotions": "促销",
+      "livreurs": "配送员",
+      "correspondants": "代理商",
+      "avis": "评价",
+      "apropos": "关于"
+    },
+    "cover": {
+      "verifiee": "Shopi 已验证店铺",
+      "active": "活跃"
+    },
+    "identity": {
+      "verifie": "Shopi 已验证",
+      "note": "评分",
+      "abonnes": "关注者",
+      "satisfaction": "满意度",
+      "ventes": "销售",
+      "abonner": "关注",
+      "abonneLabel": "已关注",
+      "messageBtn": "消息",
+      "appelerBtn": "打电话",
+      "abonnezVousMessage": "关注后才能发送消息",
+      "envoyerMessageTitle": "发送消息",
+      "abonnezVousAppel": "关注后才能打电话",
+      "appelerTitle": "打电话",
+      "partagerTitle": "分享店铺"
+    },
+    "livreursSection": {
+      "disponibleCount_one": "可用",
+      "disponibleCount_other": "可用",
+      "enCourse": "配送中",
+      "totalCount": "配送员总数"
+    },
+    "cardLivreur": {
+      "livraisonsCount": "{{count}} 次配送",
+      "disponible": "● 可用",
+      "enCourseBadge": "⚙ 配送中",
+      "voirProfil": "查看资料",
+      "profilToast": "🛵 {{nom}} 的资料",
+      "desabonneToast": "👋 已取消关注 {{nom}}",
+      "abonneToast": "✅ 已关注 {{nom}}"
+    },
+    "correspondantsSection": {
+      "disponibleCount_one": "可用",
+      "disponibleCount_other": "可用",
+      "completCount_one": "已满",
+      "completCount_other": "已满",
+      "totalCount": "代理商总数",
+      "infoBannerTitle": "什么是 Shopi 代理商？",
+      "infoBannerDesc": "代理商是您所在城市的 Shopi 代表。他接收您的包裹、检查并安全存放。您可以直接取回或交给配送员送货上门。",
+      "steps": {
+        "colisRecu": "包裹已接收并检查",
+        "stockageSecurise": "安全存放",
+        "remiseDirecte": "直接交付或通过配送员",
+        "noteCertifie": "Shopi 评分和认证"
+      },
+      "fermer": "关闭"
+    },
+    "cardCorrespondant": {
+      "verifie": "已验证",
+      "colisMois": "{{count}} 个包裹/月",
+      "disponible": "● 可用",
+      "complet": "◌ 已满",
+      "contacter": "联系",
+      "choisir": "选择",
+      "choisi": "已选择",
+      "messageToast": "💬 给{{nom}}发消息",
+      "retireToast": "↩️ 已移除代理商 {{nom}}",
+      "selectionneToast": "✅ {{nom}} 已选为代理商"
+    },
+    "modalPartage": {
+      "titre": "分享此店铺",
+      "fermer": "关闭",
+      "copier": "复制",
+      "lienCopiePresseToast": "🔗 链接已复制到剪贴板！",
+      "instagramCopieToast": "📸 链接已复制 — 粘贴到 Instagram",
+      "partageVia": "📲 通过 {{label}} 分享",
+      "lienCopieToast": "🔗 链接已复制！",
+      "emailSujet": "发现这家 Shopi 店铺"
+    },
+    "aPropos": {
+      "titre": "关于店铺",
+      "anneesExperience": "经验年限",
+      "commandesLivrees": "已送达订单",
+      "satisfactionClient": "客户满意度",
+      "noteMoyenne": "平均评分",
+      "infosPratiques": "实用信息",
+      "horaires": "营业时间",
+      "adresse": "地址",
+      "telephone": "电话",
+      "email": "邮箱",
+      "siteWeb": "网站",
+      "livreursBoutique": "店铺配送员",
+      "voirProfil": "查看资料",
+      "profilToast": "🛵 {{nom}} 的资料"
+    },
+    "cardProduit": {
+      "voir": "查看",
+      "ajouterPanier": "加入购物车",
+      "partager": "分享",
+      "retireFavorisToast": "💔 已从收藏中移除",
+      "ajouteFavorisToast": "❤️ 已加入收藏",
+      "detailToast": "👁️ 详情：{{nom}}",
+      "ajouteAuPanierToast": "🛒 已加入购物车！",
+      "partagerToast": "📤 分享：{{nom}}",
+      "badges": {
+        "hot": "🔥 热门",
+        "new": "✨ 新品",
+        "promo": "🏷️ 促销",
+        "sol": "🔴 打折"
+      },
+      "stock": {
+        "ok": "✓ 有货",
+        "low": "⚠ 库存有限",
+        "out": "✗ 缺货"
+      }
+    },
+    "promotions": {
+      "reduction": "折扣",
+      "livraisonOfferte": "免费配送",
+      "bundle": "捆绑",
+      "venteFlash": "限时抢购",
+      "offerte": "免费",
+      "des": "起 {{montant}} GNF",
+      "jusquau": "至 {{date}}",
+      "restants": "剩余 {{count}}",
+      "utilisationsRestantes_one": "剩余 {{count}} 次使用",
+      "utilisationsRestantes_other": "剩余 {{count}} 次使用",
+      "codePromoToast": "🏷️ 优惠码：{{code}}",
+      "copierLeCode": "复制代码",
+      "codeCopieToast": "✅ 代码已复制：{{code}}",
+      "chargement": "正在加载促销…",
+      "aucunePromo": "暂无活跃促销",
+      "aucunePromoDesc": "此店铺目前暂无促销活动。",
+      "activeCount_one": "{{count}} 个活跃促销",
+      "activeCount_other": "{{count}} 个活跃促销"
+    },
+    "produitsSection": {
+      "filtresActifs": "活跃筛选：",
+      "supprimerFiltre": "移除此筛选",
+      "toutEffacer": "全部清除",
+      "trouveCount_one": "找到的产品",
+      "trouveCount_other": "找到的产品",
+      "vueGrille": "网格视图",
+      "vueListe": "列表视图",
+      "aucunProduit": "没有符合筛选条件的产品",
+      "essayezModifier": "请尝试修改或移除某些筛选条件。",
+      "reinitialiser": "重置筛选",
+      "pageToast": "📄 第 {{n}} 页",
+      "pageSuivanteToast": "📄 下一页"
+    },
+    "sidebar": {
+      "trierPar": "排序方式",
+      "triOptions": {
+        "pertinence": "相关度",
+        "prixCroissant": "价格升序",
+        "prixDecroissant": "价格降序",
+        "mieuxNotes": "评分最高",
+        "nouveautes": "新品",
+        "meilleuresVentes": "畅销"
+      },
+      "triToast": "🔃 排序：{{value}}",
+      "categories": "类别",
+      "tout": "全部",
+      "prix": "价格（GNF）",
+      "noteMinimale": "最低评分",
+      "tousLesAvis": "所有评价",
+      "filtreEtoilesToast": "⭐ 筛选 {{n}}+ 星",
+      "disponibilite": "可用性",
+      "enStockUniquement": "仅限有货",
+      "enPromotion": "促销中",
+      "nouveautesSeulement": "仅限新品",
+      "infosBoutique": "店铺信息",
+      "horaires": "营业时间",
+      "adresse": "地址",
+      "telephone": "电话",
+      "email": "邮箱"
+    },
+    "avis": {
+      "chargement": "正在加载评价…",
+      "sur5": "{{n}} 分（满分 5）",
+      "aucuneNote": "暂无评分",
+      "avisVerifies_one": "{{count}} 条已验证评价",
+      "avisVerifies_other": "{{count}} 条已验证评价",
+      "aucunAvis": "暂无评价",
+      "aucunAvisDetaille": "暂无详细评价",
+      "noteExisteDeja": "总体评分已存在，但评论尚不可用。",
+      "avisApparaissent": "客户确认收到订单后评价才会显示。",
+      "achatVerifie": "已验证购买"
+    },
+    "stories": {
+      "precedent": "上一个",
+      "suivant": "下一个",
+      "ilYA1j": "1 天前",
+      "ilYAHeures": "{{h}} 小时前",
+      "ilYAMinutes": "{{m}} 分钟前",
+      "aLInstant": "刚刚",
+      "voirLeProduit": "查看产品",
+      "ajouterPanier": "加入购物车",
+      "ajouteAuPanierToast": "🛒 已加入购物车：{{produit}}",
+      "partager": "分享",
+      "lienCopieToast": "🔗 链接已复制！",
+      "precedente": "上一个",
+      "suivante": "下一个",
+      "badges": {
+        "promo": "🔥 促销",
+        "new": "✨ 新品",
+        "top": "⭐ 热卖",
+        "flash": "⚡ 限时"
+      }
+    },
+    "page": {
+      "boutiqueIntrouvable": "店铺未找到",
+      "boutiqueIntrouvableDesc": "此店铺不存在或已停用。",
+      "retourAccueil": "← 返回首页",
+      "idBoutiqueManquant": "缺少店铺 ID。",
+      "erreurChargement": "无法加载店铺数据。",
+      "accueil": "首页",
+      "boutiques": "店铺",
+      "abonneToast": "✅ 已关注 {{nom}}",
+      "abonneDefaultToast": "✅ 已关注此店铺",
+      "desabonneToast": "👋 已取消关注",
+      "erreurSuivi": "关注时出错 — 请重试",
+      "abonnezVousMessage": "关注店铺后才能发送消息",
+      "abonnezVousAppel": "关注店铺后才能打电话",
+      "erreurToast": "❌ {{msg}}",
+      "filtreEnStock": "有货",
+      "filtreEnPromotion": "促销中",
+      "filtreNouveautes": "新品",
+      "partagerTitre": "分享此店铺",
+      "boutiqueShopiDefault": "Shopi 店铺",
+      "membreDepuis": "自 {{date}} 起成为会员",
+      "membreShopi": "Shopi 会员",
+      "horairesNonRenseignes": "未填写营业时间"
+    }
+  }
+}

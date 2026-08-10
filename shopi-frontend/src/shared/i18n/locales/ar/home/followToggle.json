@@ -1,0 +1,8 @@
+{
+  "followToggle": {
+    "abonneToast": "✅ تم الاشتراك في {{name}}",
+    "desabonneToast": "👋 تم إلغاء الاشتراك من {{name}}",
+    "erreurToast": "❌ {{msg}}",
+    "erreurReseau": "خطأ في الشبكة"
+  }
+}

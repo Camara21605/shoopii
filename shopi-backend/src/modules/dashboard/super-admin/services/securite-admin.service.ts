@@ -23,54 +23,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository }       from 'typeorm';
 import * as bcrypt          from 'bcryptjs';
-import * as crypto          from 'crypto';
 
 import { Admin } from '../../../../database/entities/profiles/admin-profile.entity';
 import { User }  from '../../../../database/entities/user.entity';
 
-/* ─── Alphabet Base32 RFC 4648 ──────────────────────────────── */
-const BASE32_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-
-/**
- * Encode des octets aléatoires en Base32 (RFC 4648, sans padding).
- * Utilisé pour générer les secrets TOTP compatibles avec
- * Google Authenticator et Authy sans dépendance externe.
- */
-function encodeBase32(buffer: Buffer): string {
-  let bits = 0, value = 0, output = '';
-  for (const byte of buffer) {
-    value = (value << 8) | byte;
-    bits += 8;
-    while (bits >= 5) {
-      output += BASE32_CHARS[(value >>> (bits - 5)) & 31];
-      bits -= 5;
-    }
-  }
-  if (bits > 0) output += BASE32_CHARS[(value << (5 - bits)) & 31];
-  return output;
-}
-
-/** Génère un secret TOTP de 20 octets encodé en Base32 */
-function generateTotpSecret(): string {
-  return encodeBase32(crypto.randomBytes(20));
-}
-
-/**
- * Construit l'URI otpauth:// standard (RFC 6238).
- * Le frontend transforme cet URI en QR code avec react-qr-code
- * ou l'affiche sous forme de lien cliquable ("Ouvrir dans Authenticator").
- */
-function buildOtpAuthUri(secret: string, account: string, issuer = 'Shopi Africa'): string {
-  const label = `${encodeURIComponent(issuer)}:${encodeURIComponent(account)}`;
-  return (
-    `otpauth://totp/${label}` +
-    `?secret=${secret}` +
-    `&issuer=${encodeURIComponent(issuer)}` +
-    `&algorithm=SHA1` +
-    `&digits=6` +
-    `&period=30`
-  );
-}
+/* Génération/vérification TOTP réelle : voir TwoFaService
+ * (src/modules/auth/twofa/twofa.service.ts), qui est l'unique source
+ * de vérité pour les 6 rôles — voir POST /auth/2fa/setup + /confirm. */
 
 /* ─── Poids des indicateurs du score de sécurité ──────────── */
 /* Chaque critère vaut 20 points → score max = 100 */
@@ -180,73 +139,33 @@ export class SecuriteAdminService {
   }
 
   /* ──────────────────────────────────────────────────────────
-   * PATCH — Activer / désactiver la 2FA
+   * PATCH — Désactiver la 2FA
    *
-   * Activation (twoFaEnabled: true, twoFaMethod: 'app') :
-   *   → Génère un secret TOTP Base32.
-   *   → Retourne l'URI otpauth:// et le secret texte.
-   *   → Le frontend affiche le QR code pour scan dans l'app.
-   *
-   * Désactivation (twoFaEnabled: false) :
-   *   → Efface le secret stocké.
+   * L'activation réelle (secret + vérification TOTP) passe désormais
+   * par POST /auth/2fa/setup puis /auth/2fa/confirm (TwoFaService),
+   * qui n'active la 2FA qu'après un code valide — un secret jamais
+   * confirmé ne bascule plus jamais twoFaEnabled à true. Cet endpoint
+   * ne permet plus qu'une désactivation directe.
    * ────────────────────────────────────────────────────────── */
   async toggleTwoFa(
     userId: string,
     dto: { twoFaEnabled: boolean; twoFaMethod?: string },
   ) {
-    /* Charger admin + email pour l'URI TOTP */
-    const admin = await this.adminRepo.findOne({
-      where:     { userId },
-      relations: ['user'],
-    });
+    const admin = await this.adminRepo.findOne({ where: { userId } });
     if (!admin) throw new NotFoundException('Profil administrateur introuvable.');
 
-    admin.twoFaEnabled = dto.twoFaEnabled;
-
-    /* ── Désactivation ── */
-    if (!dto.twoFaEnabled) {
-      admin.twoFaMethod = null;
-      admin.twoFaSecret = null;
-      await this.adminRepo.save(admin);
-
-      this.logger.log(`[2FA] Désactivée — adminUserId=${userId}`);
-      return { twoFaEnabled: false, message: '2FA désactivée.' };
+    if (dto.twoFaEnabled) {
+      throw new BadRequestException(
+        "Activez la 2FA via POST /auth/2fa/setup puis /auth/2fa/confirm (vérification du code requise).",
+      );
     }
 
-    /* ── Activation ── */
-    admin.twoFaMethod = dto.twoFaMethod ?? 'app';
-
-    if (admin.twoFaMethod === 'app') {
-      /* Génération du secret TOTP et de l'URI */
-      const secret     = generateTotpSecret();
-      const account    = admin.user.email;
-      const otpAuthUri = buildOtpAuthUri(secret, account);
-
-      admin.twoFaSecret = secret;
-      await this.adminRepo.save(admin);
-
-      this.logger.log(`[2FA] Activée (TOTP app) — adminUserId=${userId}`);
-
-      return {
-        twoFaEnabled: true,
-        method:       'app',
-        /* URI pour générer le QR code côté frontend */
-        otpAuthUri,
-        /* Secret affiché pour saisie manuelle dans l'app */
-        secret,
-        message: 'Scannez le QR code avec Google Authenticator ou Authy.',
-      };
-    }
-
-    /* ── Autres méthodes (sms / email) : pas de TOTP ── */
-    admin.twoFaSecret = null;
+    admin.twoFaEnabled = false;
+    admin.twoFaMethod  = null;
+    admin.twoFaSecret  = null;
     await this.adminRepo.save(admin);
 
-    this.logger.log(`[2FA] Activée (${admin.twoFaMethod}) — adminUserId=${userId}`);
-    return {
-      twoFaEnabled: true,
-      method:       admin.twoFaMethod,
-      message:      `2FA activée via ${admin.twoFaMethod === 'sms' ? 'SMS' : 'email'}.`,
-    };
+    this.logger.log(`[2FA] Désactivée — adminUserId=${userId}`);
+    return { twoFaEnabled: false, message: '2FA désactivée.' };
   }
 }

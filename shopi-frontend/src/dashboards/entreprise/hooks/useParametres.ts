@@ -124,13 +124,15 @@ export function useParametres() {
   const [error,   setError]   = useState<string | null>(null);
   const [saving,  setSaving]  = useState(false);
 
-  // ── Chargement initial ─────────────────────────────────────
-  useEffect(() => {
-    apiFetch<ParametresData>(BASE)
+  // ── Chargement (initial + rechargement manuel) ──────────────
+  const reload = useCallback(() => {
+    return apiFetch<ParametresData>(BASE)
       .then(d  => { setData(d); setError(null); })
       .catch(() => setError('Impossible de charger les paramètres.'))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { reload(); }, [reload]);
 
   // ── Helper PATCH JSON ──────────────────────────────────────
   // apiFetch stringify body automatiquement si ce n'est pas FormData
@@ -282,7 +284,7 @@ export function useParametres() {
 
   return {
     // État
-    data, loading, error, saving,
+    data, loading, error, saving, reload,
 
     // Sections 1+2
     saveBoutique, saveContact,

@@ -13,9 +13,10 @@
  * - Pagination réelle : loadMore() ajoute la page suivante à la liste.
  * ================================================================ */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { apiFetch } from '../../../../../shared/services/apiFetch';
-import type { BoutiqueCardData } from '../../../data/types';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { apiFetch, tokenStorage } from '../../../../../shared/services/apiFetch';
+import { getRoleFromToken }       from '../../../../../shared/services/authUtils';
+import type { BoutiqueCardData }  from '../../../data/types';
 
 export interface BoutiquesFilters {
   categoryId?:    string;
@@ -56,6 +57,36 @@ export function useBoutiquesList(filters: BoutiquesFilters) {
   const [debouncedSearch, setDebouncedSearch] = useState(filters.search ?? '');
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef        = useRef<AbortController | null>(null);
+
+  /* ── Statut d'abonnement du client connecté ──────────────────
+   * /public/boutiques est un endpoint 100% anonyme (aucun contexte
+   * utilisateur) : il ne renvoie jamais isSuivi. Sans ce complément,
+   * le bouton "S'abonner" de cette page ne refléterait JAMAIS un
+   * abonnement réel, même juste après l'avoir fait — le prochain
+   * chargement de la liste (filtre, pagination, retour sur la page)
+   * repartirait toujours de isSuivi=false. On récupère donc les ids
+   * suivis séparément (même endpoint que RandomBloc.EntreprisesBloc)
+   * et on les fusionne dans les résultats affichés. */
+  const isClient = useMemo(
+    () => !!tokenStorage.get() && getRoleFromToken() === 'client',
+    [],
+  );
+  const [suiviIds,  setSuiviIds]  = useState<Set<string>>(new Set());
+  /* Boutiques suivies mais masquées ("Masquer" dans le menu ⋮) : à
+   * exclure entièrement de cette liste de découverte, contrairement à
+   * suiviIds qui ne fait que piloter le libellé du bouton. */
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!isClient) { setSuiviIds(new Set()); setHiddenIds(new Set()); return; }
+    apiFetch<{ boutiques: { id: string; hidden: boolean }[] }>('/suivis/mes-abonnements')
+      .then(res => {
+        const list = res?.boutiques ?? [];
+        setSuiviIds(new Set(list.map(b => b.id)));
+        setHiddenIds(new Set(list.filter(b => b.hidden).map(b => b.id)));
+      })
+      .catch(() => { setSuiviIds(new Set()); setHiddenIds(new Set()); });
+  }, [isClient]);
 
   /* ── Debounce de la recherche texte ── */
   useEffect(() => {
@@ -126,9 +157,25 @@ export function useBoutiquesList(filters: BoutiquesFilters) {
 
   const reload = useCallback(() => fetchPage(1, true), [fetchPage]);
 
+  /* Retire une boutique de la liste affichée sans refetch — utilisé par
+   * l'action "Supprimer" du menu ⋮ (FollowButton). */
+  const removeLocal = useCallback((id: string) => {
+    setBoutiques(prev => prev.filter(b => b.id !== id));
+    setTotal(t => Math.max(0, t - 1));
+  }, []);
+
+  /* Fusion isSuivi + exclusion des boutiques masquées — voir les
+   * commentaires sur suiviIds/hiddenIds ci-dessus. */
+  const boutiquesEnrichies = useMemo(
+    () => boutiques
+      .filter(b => !hiddenIds.has(b.id))
+      .map(b => ({ ...b, isSuivi: suiviIds.has(b.id) })),
+    [boutiques, suiviIds, hiddenIds],
+  );
+
   return {
-    boutiques, loading, error, total,
+    boutiques: boutiquesEnrichies, loading, error, total,
     hasMore: boutiques.length < total,
-    loadMore, reload,
+    loadMore, reload, removeLocal,
   };
 }

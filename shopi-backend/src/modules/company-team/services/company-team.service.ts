@@ -220,9 +220,11 @@ export class CompanyTeamService {
       );
     }
 
-    /* ── 2. Vérifier unicité de l'email ── */
+    /* ── 2. Vérifier unicité de l'email (scopée par rôle — UNIQUE(email, role) —
+     *      un email déjà pris par un compte d'un AUTRE rôle, ex. client, ne doit
+     *      pas bloquer la création d'un collaborateur COMPANY) ── */
     const emailExists = await this.userRepo.findOne({
-      where: { email: dto.email.toLowerCase().trim() },
+      where: { email: dto.email.toLowerCase().trim(), role: UserRole.COMPANY },
       withDeleted: true,
     });
     if (emailExists) {

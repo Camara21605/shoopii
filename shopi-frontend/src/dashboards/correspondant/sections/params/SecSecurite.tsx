@@ -5,6 +5,7 @@ import ToggleRow from './ToggleRow';
 import { pop } from '../../components/Toast';
 import { SESSIONS, SEC_TOGGLES, type ToggleRow as TRow } from '../../data/parametresData';
 import type { CorrespondantData } from '../../hooks/useCorrespondantParametres';
+import TwoFaSetupModal from '../../../../shared/components/TwoFaSetupModal';
 
 interface Props {
   data: CorrespondantData | null; saving: boolean;
@@ -26,6 +27,7 @@ export default function SecSecurite({ data, saving, dirty, markClean, saveTrigge
   const [secToggs, setSecToggs] = useState<TRow[]>(SEC_TOGGLES.map(t => ({ ...t })));
   const [otp,      setOtp]      = useState(Array(6).fill(''));
   const [changing, setChanging] = useState(false);
+  const [show2fa,  setShow2fa]  = useState(false);
   const otpRefs = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null));
   const str = strength(pwdNew);
 
@@ -43,9 +45,17 @@ export default function SecSecurite({ data, saving, dirty, markClean, saveTrigge
   useEffect(() => { if (saveTrigger > 0) handleSave2FA(); }, [saveTrigger]);
 
   async function handleSave2FA() {
+    const enabling = secToggs[0].checked || secToggs[1].checked;
+    /* Activation : passe par POST /auth/2fa/setup + /confirm (TwoFaService),
+     * qui exige un code TOTP valide avant d'activer réellement — l'ancien
+     * chemin direct (twoFaEnabled:true) est désormais rejeté côté backend. */
+    if (enabling && !data?.twoFaEnabled) {
+      setShow2fa(true);
+      return;
+    }
     const method = secToggs[0].checked ? 'sms' : secToggs[1].checked ? 'authenticator' : null;
     try {
-      await onSave({ twoFaEnabled: secToggs[0].checked || secToggs[1].checked, twoFaMethod: method as any });
+      await onSave({ twoFaEnabled: enabling, twoFaMethod: method as any });
       markClean();
       pop('✅ Sécurité mise à jour', 's');
     } catch (e: any) { pop(`❌ ${e.message}`, 'e'); }
@@ -180,6 +190,17 @@ export default function SecSecurite({ data, saving, dirty, markClean, saveTrigge
           {saving ? <><i className="fas fa-spinner fa-spin" /> Sauvegarde…</> : <><i className="fas fa-cloud-arrow-up" /> Sauvegarder la 2FA</>}
         </button>
       </div>
+
+      {show2fa && (
+        <TwoFaSetupModal
+          onClose={() => setShow2fa(false)}
+          onEnabled={() => {
+            setSecToggs(p => p.map((x, j) => ({ ...x, checked: j === 1 ? true : j === 0 ? false : x.checked })));
+            markClean();
+            pop('🔐 2FA activée avec succès', 's');
+          }}
+        />
+      )}
     </div>
   );
 }

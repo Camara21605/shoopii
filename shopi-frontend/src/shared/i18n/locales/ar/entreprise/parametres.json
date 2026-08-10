@@ -1,0 +1,448 @@
+{
+  "parametres": {
+    "sidebar": {
+      "title": "الإعدادات",
+      "dirtyBadge": "تغييرات غير محفوظة",
+      "items": {
+        "boutique": "المتجر والهوية",
+        "horaires": "المواعيد",
+        "catalogue": "الكتالوج والمنتجات",
+        "livraison": "التوصيل",
+        "paiement": "الدفع والفواتير",
+        "commissions": "عمولات Shopi",
+        "documents": "المستندات والتحقق",
+        "confidentialiteSecurite": "الخصوصية والأمان",
+        "securite": "الأمان",
+        "notifs": "الإشعارات",
+        "privacy": "الخصوصية",
+        "langue": "اللغة",
+        "danger": "منطقة حساسة"
+      },
+      "statusActive": "🟢 نشط",
+      "statusPaused": "🟡 موقوف",
+      "statusPrivate": "🔴 خاص"
+    },
+    "confirmQuitterModifs": "لديك تغييرات غير محفوظة. هل تريد المغادرة؟",
+    "loading": "جارٍ تحميل الإعدادات…",
+    "reessayer": "إعادة المحاولة",
+    "saveFloat": {
+      "modifsNonSauvegardees": "تغييرات غير محفوظة",
+      "annuler": "إلغاء",
+      "sauvegarder": "حفظ"
+    },
+    "toggleRow": {
+      "badgeNew": "جديد",
+      "badgeRec": "موصى به",
+      "badgeAttn": "انتباه"
+    },
+    "horaires": {
+      "savedToast": "✅ تم حفظ المواعيد",
+      "errorToast": "❌ خطأ أثناء الحفظ",
+      "title": "مواعيد العمل",
+      "subtitle": "حدد أيام وساعات العمل. تُعرض هذه المعلومات في صفحة متجرك.",
+      "cardTitle": "المواعيد حسب اليوم",
+      "cardSubtitle": "فعّل أيام العمل وحدد المواعيد",
+      "jours": {
+        "lundi": "الاثنين",
+        "mardi": "الثلاثاء",
+        "mercredi": "الأربعاء",
+        "jeudi": "الخميس",
+        "vendredi": "الجمعة",
+        "samedi": "السبت",
+        "dimanche": "الأحد"
+      },
+      "fermeCeJour": "مغلق هذا اليوم",
+      "sauvegardeEnCours": "جارٍ الحفظ…",
+      "sauvegarderHoraires": "حفظ المواعيد"
+    },
+    "catalogue": {
+      "savedToast": "✅ تم حفظ الكتالوج",
+      "errorToast": "❌ خطأ أثناء الحفظ",
+      "title": "الكتالوج وقواعد النشر",
+      "subtitle": "تحكم في كيفية عرض ونشر منتجاتك على Shopi.",
+      "reglesTitle": "قواعد العرض",
+      "reglesSubtitle": "سلوك الكتالوج العام الخاص بك",
+      "afficherRupture": "عرض المنتجات النافدة من المخزون",
+      "afficherRuptureSub": "إذا عطّلته، تُخفى المنتجات النافدة تلقائيًا",
+      "publicationAuto": "النشر التلقائي",
+      "publicationAutoSub": "تُنشر المنتجات الجديدة فورًا دون مراجعة يدوية",
+      "afficherPrixBarres": "عرض الأسعار المشطوبة",
+      "afficherPrixBarresSub": "يظهر السعر القديم المشطوب أثناء العروض",
+      "autoriserAvis": "السماح بتقييمات العملاء",
+      "autoriserAvisSub": "يمكن للمشترين الموثقين فقط ترك تقييم",
+      "deviseAffichage": "عملة العرض",
+      "deviseGnf": "فرنك — الفرنك الغيني",
+      "deviseEur": "يورو",
+      "deviseUsd": "دولار أمريكي",
+      "politiqueRetourTitle": "سياسة الإرجاع",
+      "politiqueRetourSubtitle": "النص المعروض في كل صفحة منتج",
+      "politiquePlaceholder": "مثال: يُقبل الإرجاع خلال 7 أيام من الاستلام، منتج غير مفتوح وفي تغليفه الأصلي.",
+      "politiqueHint": "هذا النص يطمئن المشترين ويقلل النزاعات.",
+      "sauvegardeEnCours": "جارٍ الحفظ…",
+      "sauvegarderCatalogue": "حفظ الكتالوج"
+    },
+    "livraison": {
+      "savedToast": "✅ تم حفظ التوصيل",
+      "errorToast": "❌ خطأ أثناء الحفظ",
+      "title": "التوصيل",
+      "subtitle": "اختر طرق التوصيل والمناطق التي تخدمها.",
+      "methodesTitle": "طرق التوصيل",
+      "methodesSubtitle": "فعّل أوضاع التوصيل المتاحة لعملائك",
+      "standard": "توصيل قياسي",
+      "standardSub": "تدار بواسطة فريق متجرك",
+      "livreursShopi": "عمال توصيل Shopi",
+      "livreursShopiSub": "شبكة عمال توصيل شركاء Shopi",
+      "correspondants": "المراسلون",
+      "correspondantsSub": "شبكة نقاط الخدمة المحلية والدولية",
+      "clickCollect": "انقر واستلم",
+      "clickCollectSub": "يستلم العميل من المتجر",
+      "express": "توصيل سريع",
+      "expressSub": "توصيل خلال أقل من ساعتين برسوم إضافية",
+      "zonesTitle": "مناطق التوصيل",
+      "zonesSubtitle": "اختر البلديات التي تخدمها",
+      "zonesSelectionnees_one": "{{count}} منطقة مختارة",
+      "zonesSelectionnees_other": "{{count}} مناطق مختارة",
+      "sauvegardeEnCours": "جارٍ الحفظ…",
+      "sauvegarderLivraison": "حفظ التوصيل"
+    },
+    "paiement": {
+      "savedToast": "✅ تم حفظ الدفع",
+      "errorToast": "❌ خطأ أثناء الحفظ",
+      "title": "الدفع والفواتير",
+      "subtitle": "اعدد طرق استلام المدفوعات ومعلوماتك الضريبية.",
+      "receptionTitle": "استلام مدفوعات Shopi",
+      "receptionSubtitle": "كيف تستلم تحويلاتك من Shopi",
+      "canalReception": "قناة الاستلام",
+      "waveOption": "ويف",
+      "virementBancaireOption": "تحويل بنكي",
+      "numeroReception": "رقم الاستلام",
+      "frequenceVirements": "تكرار التحويلات",
+      "quotidien": "يومي",
+      "hebdomadaire": "أسبوعي",
+      "bimensuel": "نصف شهري",
+      "mensuel": "شهري",
+      "montantMinimum": "الحد الأدنى للمبلغ (فرنك)",
+      "fiscalesTitle": "معلومات ضريبية",
+      "fiscalesSubtitle": "الأرقام الرسمية لشركتك",
+      "nifLabel": "الرقم الضريبي",
+      "nifPlaceholder": "رقم التعريف الضريبي",
+      "rccmLabel": "رقم السجل التجاري",
+      "raisonSocialeLabel": "الاسم القانوني",
+      "raisonSocialePlaceholder": "مثال: TechStore Conakry LLC",
+      "sauvegardeEnCours": "جارٍ الحفظ…",
+      "sauvegarderPaiement": "حفظ الدفع"
+    },
+    "commissions": {
+      "loadErrorToast": "خطأ في تحميل العمولات",
+      "title": "عمولات Shopi",
+      "subtitle": "تفاصيل العمولات المطبقة على مبيعاتك حسب نوع المعاملة.",
+      "grilleTitle": "جدول العمولات",
+      "grilleSubtitle": "خطتك الحالية: {{plan}}",
+      "typeTransaction": "نوع المعاملة",
+      "commissionShopi": "عمولة Shopi",
+      "fraisLivreurCorresp": "رسوم عامل التوصيل/المراسل",
+      "retraitImmediat": "سحب فوري",
+      "venteDirecte": "بيع مباشر عبر Shopi",
+      "venteLivreurShopi": "بيع مع عامل توصيل Shopi",
+      "selonLivreur": "حسب عامل التوصيل",
+      "venteCorrespondant": "بيع عبر مراسل",
+      "selonCorresp": "حسب المراسل",
+      "abonnementMensuel": "اشتراك المتجر الشهري",
+      "inclus": "— (مشمول)",
+      "upgradeTitle": "الترقية إلى خطة أعلى",
+      "upgradeSubtitle": "قلل عمولاتك واطلع على ميزات متقدمة",
+      "planStandardSub": "الخطة الأساسية · مشمولة في تسجيلك",
+      "planProSub": "للمتاجر ذات حجم المبيعات الكبير",
+      "planPremiumSub": "عمولات مخفضة + أدوات تسويق متقدمة",
+      "tauxParVente": "{{taux}}% / بيع"
+    },
+    "documents": {
+      "docs": {
+        "cni": {
+          "label": "بطاقة الهوية / جواز السفر",
+          "hint": "JPG, PNG أو PDF · الحد الأقصى 10 ميجابايت"
+        },
+        "rccm": {
+          "label": "السجل التجاري (RCCM)",
+          "hint": "PDF فقط · الحد الأقصى 10 ميجابايت"
+        },
+        "bancaire": {
+          "label": "إثبات بنكي",
+          "hint": "كشف أو شهادة PDF"
+        },
+        "photo": {
+          "label": "صورة المتجر الفيزيائي",
+          "hint": "JPG, PNG · الحد الأقصى 10 ميجابايت"
+        },
+        "nif": {
+          "label": "الشهادة الضريبية (الرقم الضريبي)",
+          "hint": "PDF فقط · الحد الأقصى 10 ميجابايت"
+        }
+      },
+      "status": {
+        "pending": "غير مقدم",
+        "reviewing": "قيد المراجعة",
+        "verified": "✅ موثق",
+        "rejected": "❌ مرفوض"
+      },
+      "toasts": {
+        "tropLourd": "❌ الملف كبير جدًا (الحد الأقصى 10 ميجابايت)",
+        "uploadEnCours": "⏳ جارٍ الرفع…",
+        "uploaded": "✅ تم رفع المستند \"{{type}}\"",
+        "echecUpload": "❌ فشل الرفع"
+      },
+      "title": "المستندات والتحقق",
+      "subtitle": "قدّم مستنداتك القانونية للحصول على شارة \"متجر موثق Shopi\".",
+      "statutVerification": "حالة التحقق:",
+      "requisTitle": "المستندات المطلوبة",
+      "requisSubtitle": "المستندات الثلاثة الإلزامية: الهوية + السجل التجاري + الإثبات البنكي",
+      "documentUploade": "مستند مرفوع",
+      "remplacer": "استبدال",
+      "uploader": "رفع",
+      "hint": "بمجرد تقديم المستندات الثلاثة الإلزامية، ينتقل ملفك تلقائيًا للمراجعة. سيتواصل معك فريق Shopi خلال 48 ساعة."
+    },
+    "securite": {
+      "title": "الأمان وتسجيل الدخول",
+      "subtitle": "احمِ حساب متجرك بكلمة مرور قوية والمصادقة الثنائية.",
+      "changerMdpTitle": "تغيير كلمة المرور",
+      "mdpActuel": "كلمة المرور الحالية",
+      "nouveauMdp": "كلمة المرور الجديدة",
+      "nouveauMdpPlaceholder": "8 أحرف كحد أدنى",
+      "confirmerMdp": "تأكيد كلمة المرور الجديدة",
+      "confirmerMdpPlaceholder": "أعد كتابة كلمة المرور الجديدة",
+      "force": "القوة:",
+      "pwdLabels": {
+        "tropFaible": "ضعيفة جدًا",
+        "faible": "ضعيفة",
+        "bon": "جيدة",
+        "fort": "قوية"
+      },
+      "mdpMisAJourToast": "🔐 تم تحديث كلمة المرور",
+      "mettreAJourMdp": "تحديث كلمة المرور",
+      "twoFaTitle": "المصادقة الثنائية (2FA)",
+      "twoFaSubtitle": "أضف طبقة أمان إضافية",
+      "nonActive": "غير مفعلة",
+      "twoFa": {
+        "appTitle": "تطبيق المصادقة",
+        "appSub": "Google Authenticator أو Authy · موصى به",
+        "appBadge": "الأكثر أمانًا",
+        "smsTitle": "رسائل / واتساب",
+        "smsSub": "رمز يُرسل عبر رسالة عند كل تسجيل دخول",
+        "smsBadge": "عملي",
+        "emailTitle": "البريد الإلكتروني فقط",
+        "emailSub": "رمز يُرسل إلى بريدك الإلكتروني الرئيسي عند كل تسجيل دخول",
+        "emailBadge": "أساسي"
+      },
+      "sessionsTitle": "الجلسات النشطة",
+      "sessionsSubtitle": "الأجهزة المتصلة بحساب متجرك",
+      "deconnecterTout": "تسجيل الخروج من الكل",
+      "toutesSessionsToast": "🔐 تم إنهاء جميع الجلسات",
+      "sessionActuelle": "الجلسة الحالية",
+      "revoquer": "إلغاء",
+      "sessionTermineeToast": "🔐 تم إنهاء الجلسة",
+      "sessions": {
+        "chromeWindows": "Chrome · Windows 11",
+        "chromeWindowsSub": "كوناكري، غينيا · الآن",
+        "safariIphone": "Safari · iPhone 14",
+        "safariIphoneSub": "كوناكري، غينيا · منذ ساعتين",
+        "chromeAndroid": "Chrome · Android",
+        "chromeAndroidSub": "Coyah، غينيا · أمس الساعة 18:34"
+      }
+    },
+    "notifs": {
+      "savedToast": "✅ تم حفظ الإشعارات",
+      "errorToast": "❌ خطأ أثناء الحفظ",
+      "title": "الإشعارات",
+      "subtitle": "اختر الأحداث التي ترغب في تلقي إشعارات بشأنها.",
+      "sauvegardeEnCours": "جارٍ الحفظ…",
+      "sauvegarderNotifs": "حفظ الإشعارات",
+      "groups": {
+        "commandes": "📦 الطلبات",
+        "stockCatalogue": "📊 المخزون والكتالوج",
+        "avisReputation": "⭐ التقييمات والسمعة",
+        "marketingRapports": "📣 التسويق والتقارير"
+      },
+      "items": {
+        "newOrder": "استلام طلب جديد",
+        "orderCancelled": "طلب ملغي من العميل",
+        "orderDelivered": "تم توصيل الطلب بنجاح",
+        "paymentReceived": "تم استلام الدفع",
+        "outOfStock": "نفاد منتج من المخزون",
+        "nearThreshold": "المخزون قريب من الحد الأدنى",
+        "productPublished": "تأكيد نشر المنتج",
+        "catalogRequest": "طلب تحديث الكتالوج",
+        "newReview": "تقييم عميل جديد",
+        "negativeReview": "تقييم سلبي (أقل من 3 نجوم)",
+        "weeklyReport": "تقرير السمعة الأسبوعي",
+        "promoInvitations": "دعوات إلى عروض Shopi",
+        "monthlyReport": "تقرير الأداء الشهري",
+        "shopNews": "مستجدات المنصة"
+      }
+    },
+    "privacy": {
+      "savedToast": "✅ تم حفظ الخصوصية",
+      "errorToast": "❌ خطأ أثناء الحفظ",
+      "title": "الخصوصية",
+      "subtitle": "تحكم في المعلومات المرئية والمشاركة من متجرك.",
+      "prefsTitle": "تفضيلات الخصوصية",
+      "prefsSubtitle": "تنطبق هذه الإعدادات على صفحة متجرك العامة",
+      "sauvegardeEnCours": "جارٍ الحفظ…",
+      "sauvegarderConfidentialite": "حفظ الخصوصية",
+      "items": {
+        "showInSearch": {
+          "label": "الظهور في البحث",
+          "sub": "متجرك مرئي في نتائج بحث Shopi"
+        },
+        "showSalesStats": {
+          "label": "عرض إحصائيات المبيعات",
+          "sub": "يرى العملاء عدد الطلبات والتقييم"
+        },
+        "allowFollow": {
+          "label": "السماح بالاشتراك",
+          "sub": "يمكن للمستخدمين متابعة متجرك"
+        },
+        "shareExactLocation": {
+          "label": "مشاركة العنوان الدقيق",
+          "sub": "وإلا، تظهر البلدية فقط"
+        },
+        "improveAlgorithm": {
+          "label": "تحسين توصيات Shopi",
+          "sub": "تساعد بياناتك في تخصيص النتائج"
+        },
+        "anonymizedStats": {
+          "label": "مشاركة إحصائيات مجهولة المصدر",
+          "sub": "تساهم في تحسين المنصة"
+        },
+        "advancedReports": {
+          "label": "تقارير متقدمة مخصصة",
+          "sub": "الوصول إلى تحليلات مفصلة لمتجرك"
+        }
+      }
+    },
+    "danger": {
+      "title": "منطقة حساسة",
+      "subtitle": "هذه الإجراءات لا يمكن التراجع عنها أو لها تأثير كبير على متجرك. تعامل بحذر.",
+      "irreversiblesTitle": "إجراءات لا يمكن التراجع عنها",
+      "irreversiblesSubtitle": "لا يمكن إلغاء هذه العمليات",
+      "confirmationRequise": "⚠️ التأكيد مطلوب: {{action}}",
+      "actions": {
+        "pause": {
+          "ttl": "إيقاف المتجر مؤقتًا",
+          "sub": "إخفاء متجرك مؤقتًا. يتم الاحتفاظ ببياناتك وطلباتك الجارية.",
+          "btn": "إيقاف مؤقت"
+        },
+        "disable": {
+          "ttl": "تعطيل الحساب (30 يومًا)",
+          "sub": "سيتم إخفاء ملفك لمدة 30 يومًا. يتم الاحتفاظ بجميع البيانات.",
+          "btn": "تعطيل"
+        },
+        "transfer": {
+          "ttl": "نقل الإدارة",
+          "sub": "انقل إدارة المتجر إلى مسؤول آخر قبل المغادرة.",
+          "btn": "نقل"
+        },
+        "delete": {
+          "ttl": "حذف المتجر نهائيًا",
+          "sub": "إجراء لا يمكن التراجع عنه — سيتم حذف جميع منتجاتك وطلباتك وسجل مبيعاتك.",
+          "btn": "حذف المتجر"
+        }
+      }
+    },
+    "boutique": {
+      "savedToast": "✅ تم حفظ المتجر بنجاح",
+      "errorToast": "❌ خطأ أثناء الحفظ",
+      "contactSavedToast": "✅ تم حفظ جهة الاتصال بنجاح",
+      "logoTropLourd": "❌ الشعار كبير جدًا (الحد الأقصى 5 ميجابايت)",
+      "formatInvalide": "❌ تنسيق غير صالح (JPG, PNG, WebP)",
+      "uploadEnCours": "⏳ جارٍ الرفع…",
+      "logoMisAJour": "✅ تم تحديث الشعار",
+      "echecUploadLogo": "❌ فشل رفع الشعار",
+      "imageTropLourde": "❌ الصورة كبيرة جدًا (الحد الأقصى 8 ميجابايت)",
+      "coverMiseAJour": "✅ تم تحديث صورة الغلاف",
+      "echecUploadCover": "❌ فشل رفع الغلاف",
+      "logoSupprime": "🗑️ تم حذف الشعار",
+      "logoSuppressionImpossible": "❌ تعذر حذف الشعار",
+      "title": "المتجر والهوية",
+      "subtitle": "المعلومات العامة لمتجرك. تظهر لجميع العملاء على منصة Shopi.",
+      "profilLbl": "الملف",
+      "completedAt": "اكتمل المتجر بنسبة {{pct}}%",
+      "elementsManquants": "— بعض العناصر ناقصة",
+      "profilCompletPart1": "الملف الكامل يولد",
+      "profilCompletBold": "3× أكثر",
+      "profilCompletPart2": "من المبيعات",
+      "logoCoverTitle": "الشعار وصورة الغلاف",
+      "logoCoverSubtitle": "الهوية البصرية لمتجرك على Shopi",
+      "logoBoutique": "شعار المتجر",
+      "cliquerChangerLogo": "انقر لتغيير الشعار",
+      "changer": "تغيير",
+      "supprimer": "حذف",
+      "imageCouverture": "صورة الغلاف",
+      "changerCouverture": "تغيير الغلاف",
+      "couvertureBoutique": "صورة غلاف المتجر",
+      "couvertureDims": "1200×400px · JPG, PNG · الحد الأقصى 8 ميجابايت",
+      "changerImageCouverture": "تغيير صورة الغلاف",
+      "infosTitle": "معلومات المتجر",
+      "infosSubtitle": "البيانات المعروضة على صفحة متجرك العامة",
+      "nomBoutique": "اسم المتجر",
+      "nomBoutiquePlaceholder": "مثال: TechStore Conakry",
+      "nomBoutiqueHint": "يظهر هذا الاسم في البحث وعلى الرابط العام shopi.gn/boutique/...",
+      "description": "الوصف",
+      "descriptionVisiblePublique": "مرئي للعموم",
+      "descriptionPlaceholder": "صف متجرك في بضعة أسطر…",
+      "descriptionHint": "500 حرف كحد أقصى",
+      "typeEntreprise": "نوع الشركة",
+      "selectionnerType": "اختر نوعًا…",
+      "statutLabel": "الحالة",
+      "statutActive": "🟢 نشط — مرئي",
+      "statutPause": "🟡 متوقف مؤقتًا",
+      "statutPrivee": "🔴 خاص",
+      "slogan": "الشعار",
+      "optionnel": "اختياري",
+      "sloganPlaceholder": "مثال: طزاجة مضمونة منذ 2019",
+      "siteWeb": "الموقع الإلكتروني",
+      "siteWebPlaceholder": "https://votre-site.com",
+      "tagsMotsCles": "الوسوم والكلمات المفتاحية",
+      "tagsPlaceholder": "مطعم، توصيل سريع، كوناكري…",
+      "tagsHint": "مفصولة بفواصل",
+      "sauvegardeEnCours": "جارٍ الحفظ…",
+      "sauvegarderBoutique": "حفظ المتجر",
+      "contactTitle": "جهة الاتصال والموقع",
+      "contactSubtitle": "الإحداثيات المعروضة على صفحتك العامة",
+      "telephonePrincipal": "الهاتف الرئيسي",
+      "emailBoutique": "بريد المتجر الإلكتروني",
+      "whatsappLabel": "واتساب",
+      "whatsappPlaceholder": "620 00 00 00 (بدون +224)",
+      "ville": "المدينة",
+      "choisirVille": "— اختر مدينة —",
+      "villePlaceholder": "مثال: كوناكري",
+      "commune": "البلدية / الحي",
+      "choisirCommune": "— اختر بلدية —",
+      "quartier": "الحي",
+      "choisirQuartier": "— اختر حيًا —",
+      "adressePhysique": "العنوان الفعلي",
+      "adresseHintRue": "(شارع، رقم…)",
+      "adressePlaceholder": "مثال: شارع الجمهورية، مقابل السوق الكبير",
+      "repereLivreurs": "علامة لعمال التوصيل",
+      "repereLivreursPlaceholder": "مثال: المبنى الأحمر بجانب الصيدلية",
+      "sauvegardeContactEnCours": "جارٍ الحفظ…",
+      "sauvegarderContact": "حفظ جهة الاتصال",
+      "responsableTitle": "المسؤول والمالك",
+      "responsableSubtitle": "معلومات المدير الرئيسي",
+      "prenom": "الاسم الأول",
+      "prenomPlaceholder": "الاسم الأول للمسؤول",
+      "nom": "الاسم",
+      "nomPlaceholder": "اسم المسؤول",
+      "responsableHintPart1": "يتم تعديل الاسم الأول والاسم في",
+      "responsableHintBold": "إعدادات حسابك",
+      "responsableHintPart2": ".",
+      "steps": {
+        "logo": "الشعار",
+        "companyName": "الاسم والوصف",
+        "contact": "جهة الاتصال",
+        "products": "المنتجات",
+        "coverImage": "صورة الغلاف",
+        "returnPolicy": "سياسة الإرجاع"
+      }
+    }
+  }
+}

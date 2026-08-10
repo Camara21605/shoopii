@@ -26,6 +26,7 @@ import BoutiquesPage     from '../modules/home/components/boutiques/pages/Boutiq
 import OffresPage        from '../modules/home/components/offres/pages/OffresPage';
 import ProfilLivreurPage from '../shared/profils/profil-livreur/ProfilLivreurPage';
 import ProfilClientPage  from '../shared/profils/profil-client/ProfilClientPage';
+import AdressesPage      from '../modules/home/components/adresses/pages/AdressesPage';
 import CorrespondantsPage from '../modules/home/components/correspondants/pages/CorrespondantsPage';
 import ProfilCorrespondantPage from '../shared/profils/profil-correspondant/pages/ProfilCorrespondantPage';
 
@@ -176,6 +177,7 @@ export const AppRouter: React.FC = () => (
 
           {/* Pages client — protégées */}
           <Route path="/mon-profil"           element={<PrivateRoute><ProfilClientPage /></PrivateRoute>} />
+          <Route path="/mes-adresses"         element={<PrivateRoute><AdressesPage /></PrivateRoute>} />
           <Route path="/commande"             element={<PrivateRoute><CommandePage /></PrivateRoute>} />
           <Route path="/commande/:id/suivi"   element={<PrivateRoute><CommandeSuiviRoute /></PrivateRoute>} />
           <Route path="/messagerie"           element={<PrivateRoute><MessageriePage /></PrivateRoute>} />

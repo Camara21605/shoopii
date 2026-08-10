@@ -1,0 +1,101 @@
+{
+  "clients": {
+    "segment": {
+      "VIP": "VIP",
+      "Fidèle": "忠实",
+      "Régulier": "常规",
+      "Nouveau": "新客户",
+      "Abonné": "已关注"
+    },
+    "sourceBadge": {
+      "acheteurEtAbonne": "🛒 + 👁️",
+      "acheteur": "🛒 买家",
+      "abonne": "👁️ 关注者"
+    },
+    "date": {
+      "auj": "今天",
+      "hier": "昨天",
+      "ilYaJours": "{{count}} 天前",
+      "ilYaSemaines": "{{count}} 周前",
+      "ilYaMois": "{{count}} 个月前"
+    },
+    "header": {
+      "titlePart1": "客户",
+      "titleMark": "与关注者",
+      "subtitle": "您店铺的买家 + 关注者 — 实时数据",
+      "actualiser": "刷新"
+    },
+    "kpi": {
+      "totalClients": "客户总数",
+      "totalClientsSub": "{{buyers}} 名买家 · {{abonnes}} 名关注者",
+      "clientsVip": "VIP 客户",
+      "clientsVipSub": "≥ 1000 万 GNF 或 10+ 单",
+      "caTotalClients": "客户总销售额",
+      "panierMoySub": "平均购物车：{{montant}} GNF",
+      "nouveauxAcheteurs": "新买家",
+      "premiereCommande": "首次订单"
+    },
+    "filters": {
+      "tous": "全部",
+      "acheteurs": "🛒 买家",
+      "abonnes": "👁️ 关注者",
+      "tousSegments": "所有细分",
+      "vip": "👑 VIP",
+      "fideles": "⭐ 忠实",
+      "reguliers": "🔄 常规",
+      "nouveaux": "🆕 新客户"
+    },
+    "search": "姓名或邮箱…",
+    "baseClients": "客户群",
+    "sort": {
+      "plusDepense": "消费最多",
+      "plusCommandes": "订单最多",
+      "derniereCommande": "最近订单",
+      "plusRecents": "最新"
+    },
+    "loading": "正在加载客户…",
+    "error": {
+      "title": "加载错误",
+      "reessayer": "重试"
+    },
+    "empty": {
+      "aucunResultat": "无结果",
+      "aucunClient": "暂无客户",
+      "subRecherche": "没有符合您搜索的客户。",
+      "subDefaut": "您的首批客户将在首次下单或关注后显示在这里。"
+    },
+    "table": {
+      "client": "客户",
+      "contact": "联系方式",
+      "source": "来源",
+      "commandes": "订单",
+      "totalDepense": "总消费",
+      "segment": "细分",
+      "derniereCmd": "最近订单",
+      "actions": "操作",
+      "abonne": "已关注",
+      "cmds": "单",
+      "profil": "资料",
+      "message": "消息",
+      "messageToast": "📧 消息已发送给{{name}}"
+    },
+    "pagination_one": "{{count}} 名客户 · 第 {{page}}/{{pages}} 页",
+    "pagination_other": "{{count}} 名客户 · 第 {{page}}/{{pages}} 页",
+    "sidePanel": {
+      "repartition": "分布",
+      "chargement": "加载中…",
+      "metriquesCles": "关键指标",
+      "acheteurs": "买家",
+      "abonnesBoutique": "店铺关注者",
+      "caTotal": "总销售额",
+      "panierMoyen": "平均购物车",
+      "actionsCrm": "CRM 操作"
+    },
+    "quickActions": {
+      "newsletterVip": "发送 VIP 新闻通讯",
+      "offreFidelite": "自动忠诚度优惠",
+      "rapportSegments": "细分报告 PDF",
+      "relanceInactifs": "重新联系不活跃客户"
+    }
+  }
+}

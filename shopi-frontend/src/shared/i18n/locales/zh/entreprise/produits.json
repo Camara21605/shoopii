@@ -1,0 +1,101 @@
+{
+  "produits": {
+    "visibilite": {
+      "public": "公开",
+      "draft": "草稿",
+      "private": "私有"
+    },
+    "header": {
+      "title": "我的产品",
+      "subtitle": "管理您的目录和库存",
+      "nouveau": "新产品"
+    },
+    "stats": {
+      "total": "总计",
+      "publies": "已发布",
+      "brouillons": "草稿",
+      "rupture": "缺货"
+    },
+    "search": "按名称、品牌、参考号搜索…",
+    "filters": {
+      "tous": "全部",
+      "publics": "🟢 已发布",
+      "brouillons": "🟡 草稿",
+      "prives": "🔴 私有"
+    },
+    "loading": "正在加载产品…",
+    "retry": "重试",
+    "empty": {
+      "noneTitle": "暂无产品",
+      "noResultsTitle": "无结果",
+      "noneSub": "首先添加您的第一个产品。",
+      "noResultsSub": "尝试修改您的筛选条件。",
+      "addFirst": "添加产品"
+    },
+    "count_one": "{{count}} 个产品",
+    "count_other": "{{count}} 个产品",
+    "countFor": "关于“{{search}}”",
+    "card": {
+      "voir": "查看",
+      "rupture": "缺货",
+      "outOfStock": "缺货",
+      "lowStock": "库存不足 — 剩余 {{count}}",
+      "inStock": "{{count}} 件有货",
+      "voirDetail": "查看详情",
+      "modifRapide": "快速修改",
+      "modifComplet": "完整修改",
+      "modifier": "修改",
+      "supprimer": "删除"
+    },
+    "toasts": {
+      "archived": "📦 产品已归档",
+      "archiveError": "归档时出错",
+      "updated": "✅ 产品已更新",
+      "deleted": "🗑️ 产品已删除"
+    },
+    "modalVoir": {
+      "noImage": "无图片",
+      "prix": "价格",
+      "commission": "Shopi 佣金（3%）",
+      "revenuNet": "净收入",
+      "stock": "库存",
+      "unites": "件",
+      "seuilInfo": "预警阈值：{{count}} 件",
+      "details": "详情",
+      "marque": "品牌",
+      "condition": "状况",
+      "garantie": "保修",
+      "origine": "产地",
+      "ajouteLe": "添加于",
+      "description": "描述",
+      "caracteristiques": "特点",
+      "variantes": "变体",
+      "tags": "标签",
+      "supprimer": "删除",
+      "archiver": "归档",
+      "modifier": "修改"
+    },
+    "modalModifier": {
+      "title": "快速修改",
+      "visibilite": "可见性",
+      "optPublic": "🟢 公开 — 在店铺可见",
+      "optDraft": "🟡 草稿 — 未发布",
+      "optPrivate": "🔴 私有 — 仅直接链接",
+      "stockActuel": "当前库存",
+      "seuilAlerte": "预警阈值",
+      "seuilPlaceholder": "例如：5",
+      "info": "要修改名称、价格或图片，请使用完整表单。",
+      "annuler": "取消",
+      "saving": "保存中…",
+      "save": "保存"
+    },
+    "modalDelete": {
+      "title": "确认删除",
+      "confirm": "确定要删除“{{nom}}”吗？",
+      "irreversible": "此操作不可逆。产品将被永久删除。",
+      "annuler": "取消",
+      "deleting": "删除中…",
+      "confirmBtn": "永久删除"
+    }
+  }
+}

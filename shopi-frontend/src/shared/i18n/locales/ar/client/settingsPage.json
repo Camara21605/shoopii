@@ -1,0 +1,541 @@
+{
+  "settingsPage": {
+    "tabs": {
+      "ariaLabel": "أقسام الإعدادات",
+      "profil": "الملف الشخصي",
+      "adresses": "العناوين",
+      "paiement": "الدفع",
+      "points": "نقاط شوبي",
+      "confidentialiteSecurite": "الخصوصية والأمان",
+      "securite": "الأمان",
+      "sessions": "الأجهزة المتصلة",
+      "activite": "سجل النشاط",
+      "approbations": "الأجهزة الموثوقة",
+      "notifs": "الإشعارات",
+      "confidentialite": "الخصوصية",
+      "apparence": "المظهر",
+      "langue": "اللغة والمنطقة",
+      "donnees": "بياناتي",
+      "danger": "منطقة الخطر"
+    },
+    "page": {
+      "retourAccueil": "العودة إلى الرئيسية",
+      "titrePart1": "إعدادات",
+      "titreEm": "الحساب",
+      "sub": "أدِر معلوماتك وأمانك وتفضيلاتك في شوبي"
+    },
+    "sidebar": {
+      "photoAlt": "صورة الملف الشخصي",
+      "chargement": "جارٍ التحميل…",
+      "changerPhoto": "تغيير صورة الملف الشخصي",
+      "uploadEnCours": "جارٍ الرفع…",
+      "verifie": "موثّق",
+      "invalidFormat": "❌ صيغة غير صالحة — اختر صورة (JPG أو PNG أو WebP)",
+      "tropGrande": "❌ الصورة كبيرة جداً — الحد الأقصى 5 ميغابايت",
+      "uploadEnCoursToast": "📤 جارٍ الرفع…",
+      "photoMiseAJour": "✅ تم تحديث صورة الملف الشخصي!",
+      "uploadErrorFallback": "خطأ أثناء الرفع"
+    },
+    "securityBanner": {
+      "items": {
+        "motDePasseFort": "كلمة مرور قوية",
+        "emailVerifie": "بريد إلكتروني موثّق",
+        "telephoneVerifie": "هاتف موثّق",
+        "twoFaActive": "التحقق بخطوتين مفعّل",
+        "questionsSecurite": "أسئلة الأمان",
+        "codesSecours": "رموز احتياطية تم إنشاؤها"
+      },
+      "niveaux": {
+        "excellent": "ممتاز",
+        "bien": "جيد",
+        "moyen": "متوسط",
+        "faible": "ضعيف"
+      },
+      "titre": "درجة الأمان",
+      "chargementDesc": "جارٍ تحميل درجة الأمان…",
+      "descExcellent": "حسابك محمي بشكل ممتاز. استمر هكذا!",
+      "descBien": "حسابك محمي بشكل جيد. لا تزال بعض التحسينات ممكنة.",
+      "descFaible": "عزّز أمانك بإتمام الإجراءات أدناه.",
+      "ameliorer": "تحسين"
+    },
+    "points": {
+      "titre": "نقاط شوبي الخاصة بي",
+      "pts": "نقطة",
+      "niveauLabel": "المستوى",
+      "prochainA": "عند",
+      "prochainPts": "نقطة",
+      "pointsGagnes": "النقاط المكتسبة هذا الشهر",
+      "pointsUtilises": "النقاط المستخدمة",
+      "expirationProchaine": "انتهاء الصلاحية القادم"
+    },
+    "activite": {
+      "titre": "سجل النشاط",
+      "subtitle": "تتبّع كامل لجميع الإجراءات على حسابك",
+      "exportEnCours": "جارٍ التصدير…",
+      "exporter": "تصدير",
+      "aucuneActivite": "لا يوجد نشاط مسجَّل",
+      "loadError": "❌ تعذّر تحميل السجل",
+      "types": {
+        "login": "تسجيل الدخول",
+        "order": "طلب",
+        "security": "الأمان",
+        "alert": "تنبيه",
+        "profile": "الملف الشخصي"
+      }
+    },
+    "adresses": {
+      "titre": "عناوين التوصيل",
+      "subtitleSuffix_one": "عنوان مسجَّل",
+      "subtitleSuffix_other": "عناوين مسجَّلة",
+      "ajouter": "إضافة",
+      "aucuneAdresse": "لا يوجد عنوان مسجَّل",
+      "parDefaut": "افتراضي",
+      "ajouterNouvelle": "إضافة عنوان جديد",
+      "loadError": "❌ تعذّر تحميل العناوين",
+      "toastSupprimee": "🗑️ تم حذف العنوان",
+      "toastDefiniParDefaut": "⭐ تم تعيين العنوان كافتراضي",
+      "toastFormulaireTodo": "➕ استمارة الإضافة — قيد التطوير",
+      "toastModificationTodo": "✏️ التعديل — قيد التطوير",
+      "toastAjouterNouvelle": "➕ إضافة عنوان جديد"
+    },
+    "paiement": {
+      "titre": "وسائل الدفع",
+      "subtitle": "البطاقات وMobile Money والمحافظ",
+      "ajouter": "إضافة",
+      "aucunMoyen": "لا توجد وسيلة دفع مسجَّلة",
+      "parDefaut": "افتراضي",
+      "ajouteLe": "أُضيفت في",
+      "definirParDefautTitle": "تعيين كافتراضي",
+      "loadError": "❌ تعذّر تحميل وسائل الدفع",
+      "toastSupprime": "🗑️ تم حذف وسيلة الدفع",
+      "toastDefiniParDefaut": "⭐ تم تعيين وسيلة الدفع كافتراضية",
+      "toastAjouter": "➕ إضافة وسيلة دفع",
+      "ajouterNouveau": "إضافة وسيلة دفع",
+      "labels": {
+        "carte": "بطاقة بنكية",
+        "especes": "نقداً",
+        "virement": "تحويل بنكي",
+        "wallet": "محفظة شوبي"
+      }
+    },
+    "sessions": {
+      "titre": "الأجهزة المتصلة",
+      "subtitleSuffix_one": "جلسة نشطة",
+      "subtitleSuffix_other": "جلسات نشطة",
+      "suspectSuffix_one": "اتصال مشبوه",
+      "suspectSuffix_other": "اتصالات مشبوهة",
+      "deconnecterTout": "تسجيل الخروج من الكل",
+      "enCours": "جارٍ التنفيذ…",
+      "aucuneSession": "لا توجد جلسة نشطة",
+      "sessionActuelle": "الجلسة الحالية",
+      "suspect": "مشبوه",
+      "revoquer": "إلغاء",
+      "conseilTitre": "نصيحة أمان",
+      "conseilTexteSuffix_one": "تم رصد اتصال مشبوه. ألغِه وغيّر كلمة مرورك فوراً.",
+      "conseilTexteSuffix_other": "تم رصد اتصالات مشبوهة. ألغِها وغيّر كلمة مرورك فوراً.",
+      "loadError": "❌ تعذّر تحميل الجلسات",
+      "toastRevoked": "🔒 تم إلغاء الجلسة",
+      "toastRevokedAll": "🔒 تم إلغاء جميع الجلسات الأخرى"
+    },
+    "approbations": {
+      "titre": "الأجهزة الموثوقة",
+      "subtitle": "يمكن لهذه الأجهزة الاتصال دون رمز تحقق إضافي",
+      "approuve": "معتمَد",
+      "retirer": "إزالة",
+      "derniereUtilisation": "آخر استخدام",
+      "ajouteLe": "أُضيف في",
+      "aujourdhui": "اليوم",
+      "hier": "أمس",
+      "commentTitre": "كيف يعمل هذا",
+      "commentTexte": "يتم تذكّر الأجهزة الموثوقة بعد نجاح التحقق بخطوتين. أزل جهازاً إذا لم تتعرف عليه أو إذا فقدته.",
+      "toastRetire": "🔒 تمت إزالة الجهاز من قائمة الثقة",
+      "toastRetireMac": "🔒 تمت إزالة MacBook من قائمة الثقة",
+      "aucunAppareil": "لا يوجد جهاز موثوق مسجَّل",
+      "loadError": "❌ تعذّر تحميل الأجهزة"
+    },
+    "notifs": {
+      "titre": "الإشعارات",
+      "subtitle": "اختر متى وكيف تريد أن تُخطَر",
+      "enregistrer": "حفظ",
+      "enregistrement": "جارٍ الحفظ…",
+      "toastSaved": "✅ تم حفظ تفضيلات الإشعارات",
+      "sms": "رسالة نصية",
+      "email": "بريد إلكتروني",
+      "push": "إشعار فوري",
+      "rows": {
+        "commandes": {
+          "title": "حالة الطلب",
+          "desc": "التأكيد، الشحن، التوصيل"
+        },
+        "promos": {
+          "title": "العروض والتخفيضات",
+          "desc": "التخفيضات، رموز الخصم، العروض الحصرية"
+        },
+        "messages": {
+          "title": "الرسائل",
+          "desc": "رسائل جديدة من البائعين أو الدعم"
+        },
+        "points": {
+          "title": "النقاط والمكافآت",
+          "desc": "اكتساب النقاط، بلوغ المستويات"
+        }
+      }
+    },
+    "confidentialite": {
+      "titre": "خصوصية الملف الشخصي",
+      "subtitle": "تحكّم في من يمكنه رؤية معلوماتك",
+      "enregistrer": "حفظ",
+      "enregistrement": "جارٍ الحفظ…",
+      "toastSaved": "✅ تم حفظ إعدادات الخصوصية",
+      "visibiliteTitle": "ظهور الملف الشخصي",
+      "visibiliteDesc": "من يمكنه رؤية ملفك الشخصي العام",
+      "visibiliteOptions": {
+        "toutLeMonde": "الجميع",
+        "membresShopi": "أعضاء شوبي",
+        "personne": "لا أحد"
+      },
+      "rows": {
+        "historique": {
+          "title": "سجل الطلبات",
+          "desc": "عرض مشترياتك الأخيرة في ملفك الشخصي"
+        },
+        "wishlist": {
+          "title": "قائمة الرغبات",
+          "desc": "جعل قائمة رغباتك مرئية للآخرين"
+        },
+        "perso": {
+          "title": "بيانات التخصيص",
+          "desc": "استخدام سلوكك لتحسين التوصيات"
+        },
+        "localisation": {
+          "title": "الموقع التقريبي",
+          "desc": "مشاركة مدينتك للحصول على عروض محلية"
+        },
+        "pubs": {
+          "title": "إعلانات مخصصة",
+          "desc": "تلقّي إعلانات مبنية على اهتماماتك"
+        }
+      }
+    },
+    "apparence": {
+      "titre": "المظهر",
+      "subtitle": "السمة وحجم النص والعرض",
+      "enregistrer": "حفظ",
+      "enregistrement": "جارٍ الحفظ…",
+      "toastSaved": "✅ تم تحديث المظهر",
+      "themeTitle": "السمة",
+      "themeDesc": "فاتحة أو داكنة أو تلقائية",
+      "themeOptions": {
+        "clair": "فاتحة",
+        "sombre": "داكنة",
+        "auto": "تلقائية"
+      },
+      "tailleTitle": "حجم النص",
+      "tailleDesc": "اضبطه لقراءة أفضل",
+      "tailleOptions": {
+        "normal": "عادي",
+        "grand": "كبير",
+        "tresGrand": "كبير جداً"
+      },
+      "qualiteTitle": "جودة الصور",
+      "qualiteDesc": "قلّلها لتوفير بيانات الهاتف",
+      "qualiteOptions": {
+        "haute": "جودة عالية",
+        "eco": "موفّرة"
+      }
+    },
+    "langue": {
+      "titre": "اللغة والمنطقة",
+      "subtitle": "اللغة والعملة والمنطقة الزمنية",
+      "enregistrer": "حفظ",
+      "enregistrement": "جارٍ الحفظ…",
+      "toastSaved": "✅ تم حفظ التفضيلات الإقليمية",
+      "langueTitle": "لغة العرض",
+      "langueDesc": "لغة واجهة شوبي",
+      "deviseTitle": "عملة العرض",
+      "deviseDesc": "للأسعار والمعاملات",
+      "fuseauTitle": "المنطقة الزمنية",
+      "fuseauDesc": "لمواعيد التوصيل والتواريخ"
+    },
+    "donnees": {
+      "titre": "بياناتي الشخصية",
+      "subtitle": "الوصول إلى بياناتك أو تصديرها أو حذفها — متوافق مع اللائحة العامة لحماية البيانات",
+      "droitsTitre": "حقوقك",
+      "droitsTexteSuffix": "لك الحق في الوصول إلى بياناتك وتصحيحها وتصديرها وحذفها في أي وقت. لأي طلب، تواصل مع مسؤول حماية البيانات لدينا على",
+      "items": {
+        "export": {
+          "title": "تصدير جميع بياناتي",
+          "desc": "ملف ZIP يضم الملف الشخصي والطلبات والرسائل والنقاط",
+          "btnLabel": "تصدير",
+          "msg": "📦 التصدير قيد التحضير — بريد إلكتروني خلال 24 ساعة"
+        },
+        "historique": {
+          "title": "سجل الطلبات",
+          "desc": "جميع طلباتك منذ إنشاء الحساب — CSV أو PDF",
+          "btnLabel": "CSV",
+          "msg": "📋 تم تصدير السجل"
+        },
+        "factures": {
+          "title": "فواتيري وإيصالاتي",
+          "desc": "PDF لجميع فواتيرك منذ التسجيل",
+          "btnLabel": "PDF",
+          "msg": "🧾 تم تحميل الفواتير"
+        },
+        "rapport": {
+          "title": "تقرير الخصوصية",
+          "desc": "ما هي البيانات المجمَّعة وكيفية استخدامها",
+          "btnLabel": "عرض",
+          "msg": "📄 تم فتح التقرير"
+        },
+        "portabilite": {
+          "title": "طلب نقل البيانات (RGPD)",
+          "desc": "نقل بياناتك إلى منصة أخرى — المهلة القانونية 30 يوماً",
+          "btnLabel": "طلب",
+          "msg": "📨 تم إرسال طلب النقل"
+        }
+      },
+      "rowsLive": {
+        "export": {
+          "title": "تصدير جميع بياناتي",
+          "desc": "ملف ZIP — الملف الشخصي، الطلبات، الرسائل، النقاط",
+          "label": "تصدير"
+        },
+        "commandes": {
+          "title": "سجل الطلبات",
+          "desc": "جميع طلباتك — CSV أو PDF",
+          "label": "CSV"
+        },
+        "factures": {
+          "title": "فواتيري وإيصالاتي",
+          "desc": "PDF لجميع فواتيرك",
+          "label": "PDF"
+        },
+        "rapport": {
+          "title": "تقرير الخصوصية",
+          "desc": "ما هي البيانات المجمَّعة وكيف",
+          "label": "عرض"
+        },
+        "portabilite2": {
+          "title": "نقل البيانات (RGPD)",
+          "desc": "نقل بياناتك — المهلة القانونية 30 يوماً",
+          "label": "طلب"
+        }
+      },
+      "droitsTexteShort": "لك الحق في الوصول إلى بياناتك وتصحيحها وتصديرها وحذفها. تواصل مع مسؤول حماية البيانات لدينا على"
+    },
+    "danger": {
+      "titre": "منطقة الخطر",
+      "subtitle": "هذه الإجراءات لا رجعة فيها — فكّر جيداً قبل التصرف",
+      "rows": {
+        "desactiver": {
+          "title": "تعطيل الحساب مؤقتاً",
+          "desc": "سيُخفى ملفك الشخصي وستتم معالجة طلباتك الجارية. يمكن إعادة التفعيل في أي وقت.",
+          "btn": "تعطيل",
+          "msg": "⚠️ التأكيد مطلوب — تحقق من بريدك الإلكتروني"
+        },
+        "revoquerAcces": {
+          "title": "إلغاء جميع أذونات الوصول الخارجية",
+          "desc": "يقطع الاتصال عن جميع التطبيقات والخدمات المرتبطة بحسابك.",
+          "btn": "إلغاء الأذونات",
+          "msg": "🔌 تم إلغاء جميع أذونات الوصول الخارجية"
+        },
+        "reinitialiser": {
+          "title": "إعادة تعيين جميع تفضيلاتي",
+          "desc": "يعيد ضبط الإشعارات والمظهر واللغة والخصوصية إلى القيم الافتراضية لشوبي.",
+          "btn": "إعادة التعيين",
+          "msg": "🔄 تمت إعادة تعيين التفضيلات"
+        },
+        "supprimer": {
+          "title": "حذف الحساب نهائياً",
+          "descPart1": "ستُحذف جميع بياناتك وطلباتك ونقاطك وسجلك",
+          "descStrong": "نهائياً",
+          "descPart2": "خلال مهلة 30 يوماً. هذا الإجراء",
+          "descStrong2": "لا رجعة فيه",
+          "descPart3": ".",
+          "btn": "حذف حسابي",
+          "msg": "⛔ تم إرسال الطلب — تحقق من بريدك الإلكتروني"
+        }
+      },
+      "rowsLive": {
+        "desactiver": {
+          "title": "تعطيل الحساب مؤقتاً",
+          "desc": "سيُخفى ملفك الشخصي. يمكن إعادة التفعيل في أي وقت.",
+          "btn": "تعطيل"
+        },
+        "revoquer": {
+          "title": "إلغاء جميع أذونات الوصول الخارجية",
+          "desc": "يقطع الاتصال عن جميع التطبيقات والخدمات المرتبطة بحسابك.",
+          "btn": "إلغاء الأذونات"
+        },
+        "reinitialiser": {
+          "title": "إعادة تعيين جميع تفضيلاتي",
+          "desc": "يعيد ضبط الإشعارات والمظهر واللغة إلى القيم الافتراضية.",
+          "btn": "إعادة التعيين"
+        },
+        "supprimer": {
+          "titre": "حذف الحساب نهائياً",
+          "descPart1": "ستُحذف جميع بياناتك خلال",
+          "descStrong1": "30 يوماً",
+          "descPart2": ". هذا الإجراء",
+          "descStrong2": "لا رجعة فيه",
+          "descPart3": ".",
+          "btn": "حذف حسابي"
+        }
+      },
+      "clicAgain": "انقر مرة أخرى للتأكيد",
+      "confirmerBtn": "تأكيد",
+      "annulerBtn": "إلغاء"
+    },
+    "profil": {
+      "photoTitle": "صورة الملف الشخصي",
+      "photoSubtitle": "صورتك مرئية لمستخدمي شوبي الآخرين",
+      "photoAlt": "صورة الملف الشخصي",
+      "uploadEnCoursTitle": "جارٍ الرفع…",
+      "changerPhotoTitle": "تغيير الصورة",
+      "aucunUsername": "لا يوجد اسم مستخدم",
+      "uploadEnCoursBtn": "جارٍ الرفع…",
+      "changerPhotoBtn": "تغيير الصورة",
+      "supprimer": "حذف",
+      "photoHint": "JPG أو PNG أو WebP · 5 ميغابايت كحد أقصى",
+      "invalidFormat": "❌ صيغة غير صالحة — اختر صورة (JPG أو PNG أو WebP)",
+      "tropGrande": "❌ الصورة كبيرة جداً — الحد الأقصى 5 ميغابايت",
+      "uploadEnCoursToast": "📤 جارٍ الرفع…",
+      "photoMiseAJour": "✅ تم تحديث صورة الملف الشخصي!",
+      "photoSupprimee": "✅ تم حذف الصورة",
+      "photoSuppressionError": "❌ تعذّر حذف الصورة",
+      "uploadErrorFallback": "خطأ أثناء الرفع",
+      "loadError": "❌ تعذّر تحميل الملف الشخصي",
+      "infosTitle": "المعلومات الشخصية",
+      "infosSubtitle": "هويتك على منصة شوبي",
+      "modifier": "تعديل",
+      "prenomNom": "الاسم واللقب",
+      "nomUtilisateur": "اسم المستخدم",
+      "nonDefini": "غير محدَّد",
+      "dateNaissance": "تاريخ الميلاد",
+      "nonRenseignee": "غير مُدخَل",
+      "genre": "الجنس",
+      "nonRenseigne": "غير مُدخَل",
+      "bio": "نبذة",
+      "aucuneBio": "لا توجد نبذة",
+      "fields": {
+        "prenom": "الاسم",
+        "nom": "اللقب",
+        "nomUtilisateur": "اسم المستخدم",
+        "dateNaissance": "تاريخ الميلاد",
+        "genre": "الجنس",
+        "genreOptions": {
+          "nonPrecise": "غير محدَّد",
+          "homme": "ذكر",
+          "femme": "أنثى",
+          "autre": "آخر"
+        },
+        "languePreferee": "اللغة المفضَّلة",
+        "bio": "نبذة",
+        "bioPlaceholder": "عرِّف بنفسك ببضع كلمات…",
+        "caracteres": "حرفاً"
+      },
+      "enregistrer": "حفظ",
+      "enregistrement": "جارٍ الحفظ…",
+      "annuler": "إلغاء",
+      "savedToast": "✅ تم حفظ التعديلات!",
+      "coordonneesTitle": "معلومات التواصل",
+      "coordonneesSubtitle": "البريد الإلكتروني والهاتف — يُستخدمان لتسجيل الدخول والتنبيهات",
+      "adresseEmail": "البريد الإلكتروني",
+      "telephone": "الهاتف",
+      "verifie": "موثّق",
+      "nonVerifie": "غير موثّق",
+      "nonRenseigneTel": "غير مُدخَل",
+      "emailHint": "سيُرسَل بريد تأكيد إلى العنوان الجديد",
+      "numeroTelephone": "رقم الهاتف",
+      "telHint": "سيُرسَل رمز تحقق عبر رسالة نصية",
+      "enregistrerChangements": "حفظ التغييرات",
+      "coordonneesSavedToast": "✅ تم تحديث معلومات التواصل — تم إرسال التحقق"
+    },
+    "securite": {
+      "authTitle": "التوثيق والوصول",
+      "authSubtitle": "طبقات متعددة من الحماية لحسابك",
+      "mdpTitle": "كلمة المرور",
+      "dernierModifSuffix_one": "آخر تعديل قبل {{count}} يوم",
+      "dernierModifSuffix_other": "آخر تعديل قبل {{count}} أيام",
+      "jamaisModifie": "لم يُعدَّل قط",
+      "actif": "نشط",
+      "modifier": "تعديل",
+      "mdpActuel": "كلمة المرور الحالية",
+      "nouveauMdp": "كلمة المرور الجديدة",
+      "mdpHint": "8 أحرف على الأقل، حرف كبير واحد، رقم واحد",
+      "confirmer": "تأكيد",
+      "changerMdp": "تغيير كلمة المرور",
+      "enregistrement": "جارٍ الحفظ…",
+      "annuler": "إلغاء",
+      "mismatchToast": "❌ كلمتا المرور غير متطابقتين",
+      "loadError": "❌ تعذّر تحميل بيانات الأمان",
+      "twofaTitle": "التحقق بخطوتين (2FA)",
+      "twofaDesc": "يحمي حسابك حتى لو تم اختراق كلمة مرورك",
+      "active": "مفعَّل",
+      "desactive": "معطَّل",
+      "desactiver": "تعطيل",
+      "activer": "تفعيل",
+      "twofaActiveToast": "🔐 تم تفعيل التحقق بخطوتين بنجاح",
+      "twofaDesactiveToast": "⚠️ تم تعطيل التحقق بخطوتين",
+      "codesTitle": "الرموز الاحتياطية",
+      "codesDescAvailable_one": "{{count}} رمز متاح للاستخدام لمرة واحدة",
+      "codesDescAvailable_other": "{{count}} رموز متاحة للاستخدام لمرة واحدة",
+      "codesDescDefault": "8 رموز للاستخدام لمرة واحدة — احتفظ بها إذا فقدت الوصول إلى التحقق بخطوتين",
+      "generes": "تم إنشاؤها",
+      "nonGeneres": "لم تُنشَأ",
+      "regenerer": "إعادة الإنشاء",
+      "generer": "إنشاء",
+      "codesGeneresToast": "📋 تم إنشاء الرموز — احفظها الآن!",
+      "sauvegardezCodes": "⚠️ احفظ هذه الرموز — لن تظهر إلا مرة واحدة",
+      "toutCopier": "نسخ الكل",
+      "codesCopiesToast": "📋 تم نسخ الرموز!",
+      "questionsTitle": "أسئلة الأمان",
+      "questionsSuffix": "أسئلة مُعدَّة",
+      "modifierBtn": "تعديل",
+      "configurerBtn": "إعداد",
+      "questionLabel": "سؤال",
+      "configureeSuffix": "مُعدّ · الإجابة مخفية",
+      "nonConfiguree": "غير مُعدّ",
+      "ok": "موافق",
+      "manquante": "مفقودة",
+      "choisirQuestion": "اختر سؤالاً…",
+      "questionOptions": {
+        "animal": "ما اسم حيوانك الأليف الأول؟",
+        "ecole": "ما اسم مدرستك الابتدائية؟",
+        "ville": "في أي مدينة وُلدت؟",
+        "ami": "ما اسم أفضل صديق لك في الطفولة؟",
+        "mere": "ما اسم جدتك لأمك؟"
+      },
+      "reponseLabel": "الإجابة",
+      "reponsePlaceholder": "إجابتك السرية…",
+      "atLeastOneQuestionToast": "⚠️ أدخل سؤالاً واحداً على الأقل",
+      "alertesTitle": "تنبيهات الأمان",
+      "alertesSubtitle": "تلقَّ إشعاراً فورياً عند أي نشاط مشبوه",
+      "sms": "رسالة نصية",
+      "email": "بريد إلكتروني",
+      "push": "إشعار فوري",
+      "alertRows": {
+        "connex": {
+          "title": "تم رصد اتصال جديد",
+          "desc": "تنبيه عند الاتصال من جهاز أو بلد غير معروف"
+        },
+        "mdp": {
+          "title": "تغيير كلمة المرور",
+          "desc": "تنبيه فوري عند تعديل كلمة مرورك"
+        },
+        "tentatives": {
+          "title": "محاولات دخول فاشلة",
+          "desc": "تنبيه بعد 3 محاولات خاطئة متتالية"
+        },
+        "transaction": {
+          "title": "معاملة مشبوهة أو مرفوضة",
+          "desc": "تنبيه عند دفعة مرتفعة بشكل غير معتاد"
+        },
+        "pays": {
+          "title": "وصول من بلد غير معتاد",
+          "desc": "تنبيه إذا استُخدم حسابك من بلد غير معروف"
+        }
+      }
+    }
+  }
+}

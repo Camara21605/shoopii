@@ -10,9 +10,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { AuthController }      from './auth.controller';
 import { AuthService }         from './auth.service';
+import { AccountLinkService }  from './account-link.service';
 import { JwtStrategy }         from './strategies/jwt.strategy';
 import { GoogleStrategy }      from './strategies/google.strategy';
 import { CodeCreationService } from './code-creation/code-creation.service';
+import { TwoFaService }        from './twofa/twofa.service';
 import { MailModule }          from '../email/email.module';
 
 // ── Entité principale ─────────────────────────────────────────
@@ -31,9 +33,10 @@ import { Client }            from '../../database/entities/profiles/client-profi
 import { Wallet }            from '../../database/entities/wallet.entity';
 // ── Company Team Member (détection collaborateurs au login) ──
 import { CompanyTeamMember } from '../../database/entities/company-team/company-team-member.entity';
-// ── Auth — journalisation et refresh tokens ───────────────────
+// ── Auth — journalisation, refresh tokens, comptes liés ─────────
 import { AuthLog }      from '../../database/entities/auth-log.entity';
 import { RefreshToken } from '../../database/entities/refresh-token.entity';
+import { AccountLink }  from '../../database/entities/account-link.entity';
 
 @Module({
   imports: [
@@ -50,6 +53,7 @@ import { RefreshToken } from '../../database/entities/refresh-token.entity';
       CompanyTeamMember,
       AuthLog,
       RefreshToken,
+      AccountLink,
     ]),
 
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -68,10 +72,12 @@ import { RefreshToken } from '../../database/entities/refresh-token.entity';
   controllers: [AuthController],
   providers: [
     AuthService,
+    AccountLinkService,
     JwtStrategy,
     GoogleStrategy,
     CodeCreationService,
+    TwoFaService,
   ],
-  exports: [AuthService, JwtModule, PassportModule],
+  exports: [AuthService, JwtModule, PassportModule, TwoFaService],
 })
 export class AuthModule {}

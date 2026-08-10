@@ -1,0 +1,49 @@
+{
+  "avis": {
+    "loadError": "Unable to load reviews",
+    "reponsePublieeToast": "✅ Reply published",
+    "reponseErrorToast": "❌ Error while publishing",
+    "kpi": {
+      "noteGlobale": "Overall rating",
+      "sur5Etoiles": "Out of 5 stars",
+      "avisAuTotal": "Total reviews",
+      "clientsVerifies": "Verified customers",
+      "satisfaction": "Satisfaction",
+      "quatreEtCinqEtoiles": "4 and 5 stars",
+      "sansReponse": "Unanswered",
+      "aTraiter": "To handle"
+    },
+    "filters": {
+      "tous": "All reviews",
+      "avecReponse": "✅ Replied",
+      "sansReponse": "⏳ Unanswered"
+    },
+    "loading": "Loading reviews…",
+    "empty": {
+      "title": "No reviews",
+      "subPending": "All reviews have received a reply.",
+      "subReplied": "No review has been replied to yet.",
+      "subDefault": "No customer reviews yet."
+    },
+    "sur": "On:",
+    "votreReponse": "Your reply",
+    "replyPlaceholder": "Reply to this review…",
+    "envoiEnCours": "Sending…",
+    "publier": "Publish",
+    "annuler": "Cancel",
+    "repondre": "Reply",
+    "modifierReponse": "Edit reply",
+    "modifierReponseToast": "✏️ Editing reply",
+    "signaler": "Report",
+    "signalerToast": "🚩 Review reported for moderation",
+    "sidePanel": {
+      "distributionNotes": "Rating distribution",
+      "avisVerifies_one": "{{count}} verified review",
+      "avisVerifies_other": "{{count}} verified reviews",
+      "conseilsShopi": "Shopi tips",
+      "tip1": "Reply within 24h for +12% satisfaction.",
+      "tip2": "A seller who replies gets 2× more new reviews.",
+      "tip3": "Always thank positive reviews — even briefly."
+    }
+  }
+}

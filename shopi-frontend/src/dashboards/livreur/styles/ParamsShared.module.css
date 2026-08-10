@@ -12,10 +12,10 @@
   margin-bottom: 16px;
   transition: border-color .25s, box-shadow .25s;
 }
-.card:hover { border-color: rgba(14,116,144,.14); box-shadow: var(--sh-sm); }
+.card:hover { border-color: rgba(0,0,0,.14); box-shadow: var(--sh-sm); }
 .cardLast   { margin-bottom: 0; }
-.cardDanger { border-color: rgba(220,38,38,.22) !important; }
-.cardDanger:hover { border-color: rgba(220,38,38,.35) !important; }
+.cardDanger { border-color: rgba(0,0,0,.22) !important; }
+.cardDanger:hover { border-color: rgba(0,0,0,.35) !important; }
 
 /* ── Card header ── */
 .ch {
@@ -31,7 +31,7 @@
 }
 .chT i { color: var(--teal); font-size: 13px; }
 .chTDanger { color: var(--red) !important; }
-.chDanger  { background: rgba(220,38,38,.03) !important; }
+.chDanger  { background: rgba(0,0,0,.03) !important; }
 .chAction {
   background: var(--sky); color: var(--blue);
   border: 1px solid var(--sky-3); border-radius: var(--pill);
@@ -92,7 +92,7 @@
 .fiInput::placeholder { color: var(--t4); }
 .fiInput:focus {
   border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(14,116,144,.10);
+  box-shadow: 0 0 0 3px rgba(0,0,0,.10);
   background: var(--white);
 }
 .fiInput.noIcon { padding-left: 13px; }
@@ -137,7 +137,7 @@
   border-radius: var(--r-lg); padding: 13px 10px;
   cursor: pointer; transition: all .2s; text-align: center; position: relative;
 }
-.zoneOpt:hover { border-color: rgba(14,116,144,.32); transform: translateY(-3px); background: var(--sky); box-shadow: var(--sh-xs); }
+.zoneOpt:hover { border-color: rgba(0,0,0,.32); transform: translateY(-3px); background: var(--sky); box-shadow: var(--sh-xs); }
 .zoneOn { border-color: var(--teal); background: var(--tl-bg); }
 .zoneOn::after {
   content: '✓'; position: absolute; top: -7px; right: -7px;
@@ -158,7 +158,7 @@
   border-radius: var(--r-xl); padding: 16px 12px;
   cursor: pointer; text-align: center; transition: all .22s; position: relative;
 }
-.speedOpt:hover { border-color: rgba(14,116,144,.32); transform: translateY(-4px); box-shadow: var(--sh-md); }
+.speedOpt:hover { border-color: rgba(0,0,0,.32); transform: translateY(-4px); box-shadow: var(--sh-md); }
 .speedOn { border-color: var(--teal); background: var(--tl-bg); }
 .speedOn::after {
   content: '✓'; position: absolute; top: -8px; right: -8px;
@@ -180,7 +180,7 @@
   background: var(--g50); border: 1px solid var(--bdr); border-radius: var(--r-lg);
   transition: all .2s;
 }
-.horRow:hover { border-color: rgba(14,116,144,.25); background: var(--white); box-shadow: var(--sh-xs); }
+.horRow:hover { border-color: rgba(0,0,0,.25); background: var(--white); box-shadow: var(--sh-xs); }
 .horOff { opacity: .38; }
 .horDay { font-size: 13px; font-weight: 700; color: var(--navy); min-width: 82px; flex-shrink: 0; }
 .horT   { display: flex; align-items: center; gap: 9px; flex: 1; }
@@ -189,7 +189,7 @@
   padding: 7px 11px; font-size: 13px; font-weight: 600; color: var(--t1);
   outline: none; transition: all .2s; width: 90px; font-family: var(--fb);
 }
-.horInp:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(14,116,144,.10); background: var(--white); }
+.horInp:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(0,0,0,.10); background: var(--white); }
 .horSep { font-size: 12px; color: var(--t3); font-weight: 600; }
 
 /* ── Radio options ── */
@@ -200,7 +200,7 @@
   border: 1.5px solid var(--bdr2); border-radius: var(--r-lg);
   cursor: pointer; transition: all .2s;
 }
-.radioOpt:hover { border-color: rgba(14,116,144,.3); background: var(--sky); }
+.radioOpt:hover { border-color: rgba(0,0,0,.3); background: var(--sky); }
 .radioSel { border-color: var(--teal); background: var(--tl-bg); }
 .roDot {
   width: 20px; height: 20px; border-radius: 50%;
@@ -223,14 +223,14 @@
   background: var(--g50); border: 1.5px solid var(--bdr); border-radius: var(--r-lg);
   transition: all .18s;
 }
-.pmItem:hover { border-color: rgba(14,116,144,.22); background: var(--white); box-shadow: var(--sh-xs); }
+.pmItem:hover { border-color: rgba(0,0,0,.22); background: var(--white); box-shadow: var(--sh-xs); }
 .pmDef { border-color: var(--teal); }
 .pmIc  { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
 .pmNm  { font-size: 13px; font-weight: 700; color: var(--navy); }
 .pmSub { font-size: 11px; color: var(--t3); margin-top: 2px; }
 .pmDefTag {
   font-size: 9px; font-weight: 800; color: var(--teal);
-  background: var(--tl-bg); border: 1px solid rgba(14,116,144,.2);
+  background: var(--tl-bg); border: 1px solid rgba(0,0,0,.2);
   padding: 2px 8px; border-radius: var(--pill);
   text-transform: uppercase; letter-spacing: .3px;
 }
@@ -240,9 +240,9 @@
   padding: 5px 11px; font-size: 10px; font-weight: 700; color: var(--t2);
   cursor: pointer; transition: all .18s;
 }
-.pmBtn:hover { background: var(--sky); border-color: rgba(14,116,144,.25); color: var(--teal); }
+.pmBtn:hover { background: var(--sky); border-color: rgba(0,0,0,.25); color: var(--teal); }
 .pmBtnDanger { color: var(--red) !important; }
-.pmBtnDanger:hover { background: rgba(220,38,38,.07) !important; border-color: rgba(220,38,38,.2) !important; }
+.pmBtnDanger:hover { background: rgba(0,0,0,.07) !important; border-color: rgba(0,0,0,.2) !important; }
 
 /* ── OTP digits ── */
 .otpRow { display: flex; gap: 9px; margin-top: 12px; }
@@ -252,7 +252,7 @@
   font-family: var(--fd); font-size: 22px; font-weight: 800;
   color: var(--navy); text-align: center; outline: none; transition: all .2s;
 }
-.otpD:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(14,116,144,.10); background: var(--white); }
+.otpD:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(0,0,0,.10); background: var(--white); }
 
 /* ── Sessions ── */
 .sessionItem {
@@ -275,19 +275,19 @@
 /* ── Danger rows ── */
 .dangerRow {
   display: flex; align-items: flex-start; justify-content: space-between;
-  padding: 15px 0; border-bottom: 1px solid rgba(220,38,38,.09); gap: 16px;
+  padding: 15px 0; border-bottom: 1px solid rgba(0,0,0,.09); gap: 16px;
 }
 .dangerRow:first-child { padding-top: 0; }
 .dangerRow:last-child  { border-bottom: none; padding-bottom: 0; }
 .drTtl { font-size: 13px; font-weight: 700; color: var(--red); }
 .drSub { font-size: 11px; color: var(--t3); margin-top: 3px; max-width: 380px; line-height: 1.5; }
 .drBtn {
-  background: rgba(220,38,38,.07); color: var(--red);
-  border: 1.5px solid rgba(220,38,38,.22); border-radius: var(--pill);
+  background: rgba(0,0,0,.07); color: var(--red);
+  border: 1.5px solid rgba(0,0,0,.22); border-radius: var(--pill);
   padding: 9px 19px; font-size: 12px; font-weight: 700;
   white-space: nowrap; cursor: pointer; transition: all .2s; flex-shrink: 0;
 }
-.drBtn:hover { background: rgba(220,38,38,.14); border-color: rgba(220,38,38,.38); transform: translateY(-1px); }
+.drBtn:hover { background: rgba(0,0,0,.14); border-color: rgba(0,0,0,.38); transform: translateY(-1px); }
 
 /* ── Profil complétion ── */
 .profComplete {
@@ -298,7 +298,7 @@
 }
 .pcBg {
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse 55% 80% at 90% 30%, rgba(14,116,144,.32), transparent 55%);
+  background: radial-gradient(ellipse 55% 80% at 90% 30%, rgba(0,0,0,.32), transparent 55%);
   pointer-events: none;
 }
 .pcInner  { position: relative; z-index: 1; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
@@ -308,15 +308,15 @@
   display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .pcPct  { font-family: var(--fd); font-size: 18px; font-weight: 800; color: #fff; line-height: 1; letter-spacing: -.5px; }
-.pcPctL { font-size: 8px; color: rgba(200,217,248,.5); text-transform: uppercase; letter-spacing: .5px; }
+.pcPctL { font-size: 8px; color: rgba(228,228,231,.5); text-transform: uppercase; letter-spacing: .5px; }
 .pcInfo { flex: 1; min-width: 180px; }
 .pcTitle { font-family: var(--fd); font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px; }
 .pcBarBg   { width: 100%; height: 5px; background: rgba(255,255,255,.12); border-radius: var(--pill); overflow: hidden; margin-bottom: 8px; }
 .pcBarFill { height: 100%; background: linear-gradient(90deg, var(--teal), var(--tl-lt)); border-radius: var(--pill); transition: width 1s var(--ease); }
 .pcSteps { display: flex; gap: 9px; flex-wrap: wrap; }
 .pcStep  { font-size: 10px; display: flex; align-items: center; gap: 4px; font-weight: 600; }
-.pcDone  { color: #10B981; }
-.pcMiss  { color: rgba(200,217,248,.38); }
+.pcDone  { color: #000000; }
+.pcMiss  { color: rgba(228,228,231,.38); }
 
 /* ── Responsive ── */
 @media (max-width: 1200px) {

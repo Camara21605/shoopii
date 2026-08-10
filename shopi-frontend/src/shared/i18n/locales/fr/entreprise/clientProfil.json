@@ -1,0 +1,58 @@
+{
+  "clientProfil": {
+    "status": {
+      "pending": "En attente",
+      "paid": "Payée",
+      "in_progress": "En cours",
+      "awaiting_client": "À confirmer",
+      "delivered": "Livrée",
+      "auto_delivered": "Livrée (auto)",
+      "cancelled": "Annulée",
+      "refunded": "Remboursée",
+      "disputed": "Litige"
+    },
+    "mode": {
+      "livreur": "🛵 Livreur",
+      "correspondant": "🤝 Correspondant",
+      "partenaire": "🤝 Partenaire",
+      "pickup": "🏪 Retrait boutique",
+      "mixte": "🔀 Mixte"
+    },
+    "clientDepuis": "Client depuis {{date}}",
+    "kpi": {
+      "commandes": "Commandes",
+      "dansCetteBoutique": "dans cette boutique",
+      "totalDepense": "Total dépensé",
+      "depuisLeDebut": "depuis le début",
+      "derniereCmd": "Dernière cmd"
+    },
+    "tabs": {
+      "apercu": "Aperçu",
+      "commandes": "Commandes ({{count}})"
+    },
+    "loadingProfil": "Chargement du profil…",
+    "aperçu": {
+      "relationTitle": "Relation avec votre boutique",
+      "commandesPassees": "Commandes passées",
+      "totalDepense": "Total dépensé",
+      "abonneBoutique": "Abonné à la boutique",
+      "oui": "✅ Oui",
+      "non": "❌ Non",
+      "segment": "Segment",
+      "derniereCommandeTitle": "Dernière commande",
+      "aucuneCommandeTitle": "Aucune commande pour le moment",
+      "aucuneCommandeSub": "Ce client suit votre boutique mais n'a pas encore acheté."
+    },
+    "commandesTab": {
+      "aucune": "Aucune commande",
+      "livreLe": "Livré le {{date}}",
+      "produits": "Produits : {{montant}}",
+      "affichageLimite": "Affichage des 10 dernières commandes sur {{total}} au total."
+    },
+    "footer": {
+      "messageToast": "📧 Message envoyé à {{name}}",
+      "envoyerMessage": "Envoyer un message",
+      "fermer": "Fermer"
+    }
+  }
+}

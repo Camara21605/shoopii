@@ -1,0 +1,448 @@
+{
+  "parametres": {
+    "sidebar": {
+      "title": "Paramètres",
+      "dirtyBadge": "Modifications en attente",
+      "items": {
+        "boutique": "Boutique & Identité",
+        "horaires": "Horaires",
+        "catalogue": "Catalogue & Produits",
+        "livraison": "Livraison",
+        "paiement": "Paiement & Facturation",
+        "commissions": "Commissions Shopi",
+        "documents": "Documents & Vérification",
+        "confidentialiteSecurite": "Confidentialité et sécurité",
+        "securite": "Sécurité",
+        "notifs": "Notifications",
+        "privacy": "Confidentialité",
+        "langue": "Langue",
+        "danger": "Zone sensible"
+      },
+      "statusActive": "🟢 Active",
+      "statusPaused": "🟡 En pause",
+      "statusPrivate": "🔴 Privée"
+    },
+    "confirmQuitterModifs": "Vous avez des modifications non sauvegardées. Quitter quand même ?",
+    "loading": "Chargement des paramètres…",
+    "reessayer": "Réessayer",
+    "saveFloat": {
+      "modifsNonSauvegardees": "Modifications non sauvegardées",
+      "annuler": "Annuler",
+      "sauvegarder": "Sauvegarder"
+    },
+    "toggleRow": {
+      "badgeNew": "Nouveau",
+      "badgeRec": "Recommandé",
+      "badgeAttn": "Attention"
+    },
+    "horaires": {
+      "savedToast": "✅ Horaires sauvegardés",
+      "errorToast": "❌ Erreur lors de la sauvegarde",
+      "title": "Horaires d'ouverture",
+      "subtitle": "Définissez vos jours et heures d'ouverture. Ces informations sont affichées sur votre page boutique.",
+      "cardTitle": "Horaires par jour",
+      "cardSubtitle": "Activez les jours d'ouverture et définissez les horaires",
+      "jours": {
+        "lundi": "Lundi",
+        "mardi": "Mardi",
+        "mercredi": "Mercredi",
+        "jeudi": "Jeudi",
+        "vendredi": "Vendredi",
+        "samedi": "Samedi",
+        "dimanche": "Dimanche"
+      },
+      "fermeCeJour": "Fermé ce jour",
+      "sauvegardeEnCours": "Sauvegarde…",
+      "sauvegarderHoraires": "Sauvegarder les horaires"
+    },
+    "catalogue": {
+      "savedToast": "✅ Catalogue sauvegardé",
+      "errorToast": "❌ Erreur lors de la sauvegarde",
+      "title": "Catalogue & Règles de publication",
+      "subtitle": "Contrôlez comment vos produits sont affichés et publiés sur Shopi.",
+      "reglesTitle": "Règles d'affichage",
+      "reglesSubtitle": "Comportement de votre catalogue public",
+      "afficherRupture": "Afficher les produits en rupture de stock",
+      "afficherRuptureSub": "Si désactivé, les produits épuisés sont masqués automatiquement",
+      "publicationAuto": "Publication automatique",
+      "publicationAutoSub": "Les nouveaux produits sont publiés immédiatement sans validation manuelle",
+      "afficherPrixBarres": "Afficher les prix barrés",
+      "afficherPrixBarresSub": "Montre l'ancien prix barré lors des promotions",
+      "autoriserAvis": "Autoriser les avis clients",
+      "autoriserAvisSub": "Seuls les acheteurs confirmés peuvent laisser un avis",
+      "deviseAffichage": "Devise d'affichage",
+      "deviseGnf": "GNF — Franc guinéen",
+      "deviseEur": "EUR — Euro",
+      "deviseUsd": "USD — Dollar américain",
+      "politiqueRetourTitle": "Politique de retour",
+      "politiqueRetourSubtitle": "Texte affiché sur chaque fiche produit",
+      "politiquePlaceholder": "Ex : Retour accepté sous 7 jours après réception, produit non ouvert et dans son emballage d'origine.",
+      "politiqueHint": "Ce texte rassure vos acheteurs et réduit les litiges.",
+      "sauvegardeEnCours": "Sauvegarde…",
+      "sauvegarderCatalogue": "Sauvegarder le catalogue"
+    },
+    "livraison": {
+      "savedToast": "✅ Livraison sauvegardée",
+      "errorToast": "❌ Erreur lors de la sauvegarde",
+      "title": "Livraison",
+      "subtitle": "Choisissez vos méthodes de livraison et les zones que vous desservez.",
+      "methodesTitle": "Méthodes de livraison",
+      "methodesSubtitle": "Activez les modes de livraison disponibles pour vos clients",
+      "standard": "Livraison standard",
+      "standardSub": "Géré par votre équipe boutique",
+      "livreursShopi": "Livreurs Shopi",
+      "livreursShopiSub": "Réseau de livreurs partenaires Shopi",
+      "correspondants": "Correspondants",
+      "correspondantsSub": "Réseau de relais locaux et internationaux",
+      "clickCollect": "Click & Collect",
+      "clickCollectSub": "Le client récupère en boutique",
+      "express": "Livraison express",
+      "expressSub": "Livraison < 2h avec supplément tarifaire",
+      "zonesTitle": "Zones de livraison",
+      "zonesSubtitle": "Sélectionnez les communes que vous desservez",
+      "zonesSelectionnees_one": "{{count}} zone sélectionnée",
+      "zonesSelectionnees_other": "{{count}} zones sélectionnées",
+      "sauvegardeEnCours": "Sauvegarde…",
+      "sauvegarderLivraison": "Sauvegarder la livraison"
+    },
+    "paiement": {
+      "savedToast": "✅ Paiement sauvegardé",
+      "errorToast": "❌ Erreur lors de la sauvegarde",
+      "title": "Paiement & Facturation",
+      "subtitle": "Configurez vos méthodes de réception des paiements et vos informations fiscales.",
+      "receptionTitle": "Réception des paiements Shopi",
+      "receptionSubtitle": "Comment vous recevez vos virements de Shopi",
+      "canalReception": "Canal de réception",
+      "waveOption": "Wave",
+      "virementBancaireOption": "Virement bancaire",
+      "numeroReception": "Numéro de réception",
+      "frequenceVirements": "Fréquence des virements",
+      "quotidien": "Quotidien",
+      "hebdomadaire": "Hebdomadaire",
+      "bimensuel": "Bi-mensuel",
+      "mensuel": "Mensuel",
+      "montantMinimum": "Montant minimum (GNF)",
+      "fiscalesTitle": "Informations fiscales",
+      "fiscalesSubtitle": "Numéros officiels de votre entreprise",
+      "nifLabel": "NIF",
+      "nifPlaceholder": "Numéro d'Identification Fiscale",
+      "rccmLabel": "RCCM",
+      "raisonSocialeLabel": "Raison sociale",
+      "raisonSocialePlaceholder": "Ex : TechStore Conakry SARL",
+      "sauvegardeEnCours": "Sauvegarde…",
+      "sauvegarderPaiement": "Sauvegarder le paiement"
+    },
+    "commissions": {
+      "loadErrorToast": "Erreur chargement commissions",
+      "title": "Commissions Shopi",
+      "subtitle": "Détail des commissions appliquées sur vos ventes selon le type de transaction.",
+      "grilleTitle": "Grille de commissions",
+      "grilleSubtitle": "Votre plan actuel : {{plan}}",
+      "typeTransaction": "Type de transaction",
+      "commissionShopi": "Commission Shopi",
+      "fraisLivreurCorresp": "Frais livreur/corresp.",
+      "retraitImmediat": "Retrait immédiat",
+      "venteDirecte": "Vente directe via Shopi",
+      "venteLivreurShopi": "Vente avec livreur Shopi",
+      "selonLivreur": "selon livreur",
+      "venteCorrespondant": "Vente via correspondant",
+      "selonCorresp": "selon corresp.",
+      "abonnementMensuel": "Abonnement mensuel boutique",
+      "inclus": "— (inclus)",
+      "upgradeTitle": "Passer à un plan supérieur",
+      "upgradeSubtitle": "Réduisez vos commissions et accédez à des fonctionnalités avancées",
+      "planStandardSub": "Plan de base · Inclus dans votre inscription",
+      "planProSub": "Pour les boutiques à fort volume de ventes",
+      "planPremiumSub": "Commissions réduites + outils marketing avancés",
+      "tauxParVente": "{{taux}}% / vente"
+    },
+    "documents": {
+      "docs": {
+        "cni": {
+          "label": "CNI / Passeport",
+          "hint": "JPG, PNG ou PDF · max 10 MB"
+        },
+        "rccm": {
+          "label": "Registre du Commerce (RCCM)",
+          "hint": "PDF uniquement · max 10 MB"
+        },
+        "bancaire": {
+          "label": "Justificatif bancaire",
+          "hint": "Relevé ou attestation PDF"
+        },
+        "photo": {
+          "label": "Photo boutique physique",
+          "hint": "JPG, PNG · max 10 MB"
+        },
+        "nif": {
+          "label": "Attestation fiscale (NIF)",
+          "hint": "PDF uniquement · max 10 MB"
+        }
+      },
+      "status": {
+        "pending": "Non soumis",
+        "reviewing": "En cours d'examen",
+        "verified": "✅ Vérifié",
+        "rejected": "❌ Refusé"
+      },
+      "toasts": {
+        "tropLourd": "❌ Fichier trop lourd (max 10 MB)",
+        "uploadEnCours": "⏳ Upload en cours…",
+        "uploaded": "✅ Document \"{{type}}\" uploadé",
+        "echecUpload": "❌ Échec de l'upload"
+      },
+      "title": "Documents & Vérification",
+      "subtitle": "Soumettez vos documents légaux pour obtenir le badge \"Boutique vérifiée Shopi\".",
+      "statutVerification": "Statut de vérification :",
+      "requisTitle": "Documents requis",
+      "requisSubtitle": "Les 3 documents obligatoires : CNI + RCCM + Justificatif bancaire",
+      "documentUploade": "Document uploadé",
+      "remplacer": "Remplacer",
+      "uploader": "Uploader",
+      "hint": "Une fois les 3 documents obligatoires soumis, votre dossier passe automatiquement en révision. L'équipe Shopi vous contactera sous 48h."
+    },
+    "securite": {
+      "title": "Sécurité & Connexion",
+      "subtitle": "Protégez votre compte boutique avec un mot de passe fort et la double authentification.",
+      "changerMdpTitle": "Changer le mot de passe",
+      "mdpActuel": "Mot de passe actuel",
+      "nouveauMdp": "Nouveau mot de passe",
+      "nouveauMdpPlaceholder": "Min. 8 caractères",
+      "confirmerMdp": "Confirmer le nouveau mot de passe",
+      "confirmerMdpPlaceholder": "Répétez le nouveau mot de passe",
+      "force": "Force :",
+      "pwdLabels": {
+        "tropFaible": "Trop faible",
+        "faible": "Faible",
+        "bon": "Bon",
+        "fort": "Fort"
+      },
+      "mdpMisAJourToast": "🔐 Mot de passe mis à jour",
+      "mettreAJourMdp": "Mettre à jour le mot de passe",
+      "twoFaTitle": "Double Authentification (2FA)",
+      "twoFaSubtitle": "Ajoutez une couche de sécurité supplémentaire",
+      "nonActive": "Non activé",
+      "twoFa": {
+        "appTitle": "Application d'authentification",
+        "appSub": "Google Authenticator ou Authy · Recommandé",
+        "appBadge": "Le plus sécurisé",
+        "smsTitle": "SMS / WhatsApp",
+        "smsSub": "Code envoyé par message à chaque connexion",
+        "smsBadge": "Pratique",
+        "emailTitle": "Email uniquement",
+        "emailSub": "Code envoyé par email à votre adresse principale",
+        "emailBadge": "Basique"
+      },
+      "sessionsTitle": "Sessions actives",
+      "sessionsSubtitle": "Appareils connectés à votre compte boutique",
+      "deconnecterTout": "Déconnecter tout",
+      "toutesSessionsToast": "🔐 Toutes les sessions terminées",
+      "sessionActuelle": "Session actuelle",
+      "revoquer": "Révoquer",
+      "sessionTermineeToast": "🔐 Session terminée",
+      "sessions": {
+        "chromeWindows": "Chrome · Windows 11",
+        "chromeWindowsSub": "Conakry, Guinée · Maintenant",
+        "safariIphone": "Safari · iPhone 14",
+        "safariIphoneSub": "Conakry, Guinée · Il y a 2 heures",
+        "chromeAndroid": "Chrome · Android",
+        "chromeAndroidSub": "Coyah, Guinée · Hier à 18h34"
+      }
+    },
+    "notifs": {
+      "savedToast": "✅ Notifications sauvegardées",
+      "errorToast": "❌ Erreur lors de la sauvegarde",
+      "title": "Notifications",
+      "subtitle": "Choisissez les événements pour lesquels vous souhaitez recevoir des notifications.",
+      "sauvegardeEnCours": "Sauvegarde…",
+      "sauvegarderNotifs": "Sauvegarder les notifications",
+      "groups": {
+        "commandes": "📦 Commandes",
+        "stockCatalogue": "📊 Stock & Catalogue",
+        "avisReputation": "⭐ Avis & Réputation",
+        "marketingRapports": "📣 Marketing & Rapports"
+      },
+      "items": {
+        "newOrder": "Nouvelle commande reçue",
+        "orderCancelled": "Commande annulée par le client",
+        "orderDelivered": "Commande livrée avec succès",
+        "paymentReceived": "Paiement reçu",
+        "outOfStock": "Produit en rupture de stock",
+        "nearThreshold": "Stock proche du seuil minimum",
+        "productPublished": "Confirmation de publication produit",
+        "catalogRequest": "Demande de mise à jour catalogue",
+        "newReview": "Nouvel avis client",
+        "negativeReview": "Avis négatif (< 3 étoiles)",
+        "weeklyReport": "Rapport hebdo réputation",
+        "promoInvitations": "Invitations aux promotions Shopi",
+        "monthlyReport": "Rapport de performance mensuel",
+        "shopNews": "Nouveautés de la plateforme"
+      }
+    },
+    "privacy": {
+      "savedToast": "✅ Confidentialité sauvegardée",
+      "errorToast": "❌ Erreur lors de la sauvegarde",
+      "title": "Confidentialité",
+      "subtitle": "Contrôlez quelles informations de votre boutique sont visibles et partagées.",
+      "prefsTitle": "Préférences de confidentialité",
+      "prefsSubtitle": "Ces paramètres s'appliquent à votre page boutique publique",
+      "sauvegardeEnCours": "Sauvegarde…",
+      "sauvegarderConfidentialite": "Sauvegarder la confidentialité",
+      "items": {
+        "showInSearch": {
+          "label": "Apparaître dans la recherche",
+          "sub": "Votre boutique est visible dans les résultats de recherche Shopi"
+        },
+        "showSalesStats": {
+          "label": "Afficher les stats de vente",
+          "sub": "Les clients voient le nombre de commandes et la note"
+        },
+        "allowFollow": {
+          "label": "Permettre les abonnements",
+          "sub": "Les utilisateurs peuvent suivre votre boutique"
+        },
+        "shareExactLocation": {
+          "label": "Partager l'adresse exacte",
+          "sub": "Sinon, seule la commune est affichée"
+        },
+        "improveAlgorithm": {
+          "label": "Améliorer les recommandations Shopi",
+          "sub": "Vos données aident à personnaliser les résultats"
+        },
+        "anonymizedStats": {
+          "label": "Partager des statistiques anonymisées",
+          "sub": "Contribue à l'amélioration de la plateforme"
+        },
+        "advancedReports": {
+          "label": "Rapports avancés personnalisés",
+          "sub": "Accédez à des analyses détaillées de votre boutique"
+        }
+      }
+    },
+    "danger": {
+      "title": "Zone sensible",
+      "subtitle": "Ces actions sont irréversibles ou ont un impact majeur sur votre boutique. Procédez avec précaution.",
+      "irreversiblesTitle": "Actions irréversibles",
+      "irreversiblesSubtitle": "Ces opérations ne peuvent pas être annulées",
+      "confirmationRequise": "⚠️ Confirmation requise : {{action}}",
+      "actions": {
+        "pause": {
+          "ttl": "Mettre la boutique en pause",
+          "sub": "Masquez votre boutique temporairement. Vos données et commandes en cours sont conservés.",
+          "btn": "Mettre en pause"
+        },
+        "disable": {
+          "ttl": "Désactiver le compte (30 jours)",
+          "sub": "Votre profil sera masqué pendant 30 jours. Toutes les données sont conservées.",
+          "btn": "Désactiver"
+        },
+        "transfer": {
+          "ttl": "Transférer la gestion",
+          "sub": "Transférez la gestion de la boutique à un autre responsable avant de partir.",
+          "btn": "Transférer"
+        },
+        "delete": {
+          "ttl": "Supprimer définitivement la boutique",
+          "sub": "Action irréversible — tous vos produits, commandes et historique de ventes seront supprimés.",
+          "btn": "Supprimer la boutique"
+        }
+      }
+    },
+    "boutique": {
+      "savedToast": "✅ Boutique sauvegardée avec succès",
+      "errorToast": "❌ Erreur lors de la sauvegarde",
+      "contactSavedToast": "✅ Contact sauvegardé avec succès",
+      "logoTropLourd": "❌ Logo trop lourd (max 5 MB)",
+      "formatInvalide": "❌ Format invalide (JPG, PNG, WebP)",
+      "uploadEnCours": "⏳ Upload en cours…",
+      "logoMisAJour": "✅ Logo mis à jour",
+      "echecUploadLogo": "❌ Échec de l'upload du logo",
+      "imageTropLourde": "❌ Image trop lourde (max 8 MB)",
+      "coverMiseAJour": "✅ Image de couverture mise à jour",
+      "echecUploadCover": "❌ Échec de l'upload de la couverture",
+      "logoSupprime": "🗑️ Logo supprimé",
+      "logoSuppressionImpossible": "❌ Impossible de supprimer le logo",
+      "title": "Boutique & Identité",
+      "subtitle": "Informations publiques de votre boutique. Elles sont visibles par tous les clients sur la plateforme Shopi.",
+      "profilLbl": "Profil",
+      "completedAt": "Boutique complétée à {{pct}}%",
+      "elementsManquants": "— Quelques éléments manquants",
+      "profilCompletPart1": "Un profil complet génère",
+      "profilCompletBold": "3× plus",
+      "profilCompletPart2": "de ventes",
+      "logoCoverTitle": "Logo & Image de couverture",
+      "logoCoverSubtitle": "Identité visuelle de votre boutique sur Shopi",
+      "logoBoutique": "Logo boutique",
+      "cliquerChangerLogo": "Cliquer pour changer le logo",
+      "changer": "Changer",
+      "supprimer": "Supprimer",
+      "imageCouverture": "Image de couverture",
+      "changerCouverture": "Changer la couverture",
+      "couvertureBoutique": "Image de couverture de la boutique",
+      "couvertureDims": "1200×400px · JPG, PNG · max 8 MB",
+      "changerImageCouverture": "Changer l'image de couverture",
+      "infosTitle": "Informations de la boutique",
+      "infosSubtitle": "Données affichées sur votre page boutique publique",
+      "nomBoutique": "Nom de la boutique",
+      "nomBoutiquePlaceholder": "Ex : TechStore Conakry",
+      "nomBoutiqueHint": "Ce nom apparaît dans la recherche et sur votre URL publique shopi.gn/boutique/...",
+      "description": "Description",
+      "descriptionVisiblePublique": "visible publiquement",
+      "descriptionPlaceholder": "Décrivez votre boutique en quelques lignes…",
+      "descriptionHint": "500 caractères max",
+      "typeEntreprise": "Type d'entreprise",
+      "selectionnerType": "Sélectionner un type…",
+      "statutLabel": "Statut",
+      "statutActive": "🟢 Active — Visible",
+      "statutPause": "🟡 En pause",
+      "statutPrivee": "🔴 Privée",
+      "slogan": "Slogan",
+      "optionnel": "optionnel",
+      "sloganPlaceholder": "Ex : Fraîcheur garantie depuis 2019",
+      "siteWeb": "Site web",
+      "siteWebPlaceholder": "https://votre-site.com",
+      "tagsMotsCles": "Tags & Mots-clés",
+      "tagsPlaceholder": "restaurant, livraison rapide, Conakry…",
+      "tagsHint": "Séparés par des virgules",
+      "sauvegardeEnCours": "Sauvegarde en cours…",
+      "sauvegarderBoutique": "Sauvegarder la boutique",
+      "contactTitle": "Contact & Localisation",
+      "contactSubtitle": "Coordonnées affichées sur votre page publique",
+      "telephonePrincipal": "Téléphone principal",
+      "emailBoutique": "Email boutique",
+      "whatsappLabel": "WhatsApp",
+      "whatsappPlaceholder": "620 00 00 00 (sans +224)",
+      "ville": "Ville",
+      "choisirVille": "— Choisir une ville —",
+      "villePlaceholder": "Ex : Conakry",
+      "commune": "Commune / Arrondissement",
+      "choisirCommune": "— Choisir une commune —",
+      "quartier": "Quartier",
+      "choisirQuartier": "— Choisir un quartier —",
+      "adressePhysique": "Adresse physique",
+      "adresseHintRue": "(rue, numéro…)",
+      "adressePlaceholder": "Ex : Avenue de la République, face au Grand Marché",
+      "repereLivreurs": "Repère pour les livreurs",
+      "repereLivreursPlaceholder": "Ex : Bâtiment rouge à côté de la pharmacie",
+      "sauvegardeContactEnCours": "Sauvegarde…",
+      "sauvegarderContact": "Sauvegarder le contact",
+      "responsableTitle": "Responsable & Propriétaire",
+      "responsableSubtitle": "Informations du gérant principal",
+      "prenom": "Prénom",
+      "prenomPlaceholder": "Prénom du responsable",
+      "nom": "Nom",
+      "nomPlaceholder": "Nom du responsable",
+      "responsableHintPart1": "Le prénom et le nom se modifient dans les",
+      "responsableHintBold": "paramètres de votre compte",
+      "responsableHintPart2": ".",
+      "steps": {
+        "logo": "Logo",
+        "companyName": "Nom & description",
+        "contact": "Contact",
+        "products": "Produits",
+        "coverImage": "Photo de couverture",
+        "returnPolicy": "Politique retour"
+      }
+    }
+  }
+}

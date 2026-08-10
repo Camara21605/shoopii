@@ -91,6 +91,22 @@ export class Follow {
   @Column({ type:'timestamp', nullable:true })
   unfollowedAt: Date | null;
 
+  /* ══════════════════════════════════════════════════════════
+   * ✅ CHAMP : hidden
+   *
+   * Masque la cible des listes de découverte SANS se désabonner
+   * (contrairement à isSubscribed=false qui retire complètement
+   * le suivi). Réversible via la même route (toggle explicite).
+   * N'affecte jamais isSuivi()/getMyFollowedIds() — seules les
+   * listes de navigation (getEntreprisesWithSuiviStatus, etc.)
+   * doivent l'exclure.
+   ══════════════════════════════════════════════════════════ */
+  @Column({ type:'boolean', default:false })
+  hidden: boolean;
+
+  @Column({ type:'timestamp', nullable:true })
+  hiddenAt: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

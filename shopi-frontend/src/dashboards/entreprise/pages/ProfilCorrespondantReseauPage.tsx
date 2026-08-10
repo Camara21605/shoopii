@@ -5,6 +5,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCorrespondantProfil } from '../../../shared/profils/profil-correspondant/hooks/useCorrespondantProfil';
+import { useAuthGate } from '../../../shared/hooks/useAuthGate';
 
 import ProfilHeader  from '../../../shared/profils/profil-correspondant/components/ProfilHeader';
 import ProfilTabs    from '../../../shared/profils/profil-correspondant/components/ProfilTabs';
@@ -29,10 +30,11 @@ interface Props {
 export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Props) {
   const { t } = useTranslation();
   const {
-    profil, loading, error, suivi, toggleSuivi,
+    profil, loading, error, suivi, updateFollowState,
     aboutTags, infosPratiques, schedule, services, zones, paysPartenaires,
     tarifs, avisScore, avis, galerie, contacts, statsSidebar, verifications, similaires,
   } = useCorrespondantProfil(id);
+  const { openAuthModal, authModal } = useAuthGate();
 
   const [tab, setTab] = useState<ProfilTab>('info');
 
@@ -49,10 +51,6 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
   const onToast = useCallback((msg: string) => onPop(msg, 'i'), [onPop]);
   const onMessage = useCallback(() => onPop(`💬 Message à ${profil?.nom}`, 'i'), [profil?.nom, onPop]);
   const onShare   = useCallback(() => onPop(t('profilCorrespondant.publicPage.lienCopieToast'), 'i'), [onPop, t]);
-  const handleToggle = useCallback(() => {
-    toggleSuivi();
-    onPop(suivi ? t('profilCorrespondant.publicPage.desabonneToast', { nom: profil?.nom }) : t('profilCorrespondant.publicPage.abonneToast', { nom: profil?.nom }), suivi ? 'i' : 's');
-  }, [toggleSuivi, suivi, profil?.nom, onPop, t]);
 
   const backBtn = (
     <div className={shared.page} style={{ paddingBottom: 0 }}>
@@ -94,7 +92,9 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
         <ProfilHeader
           profil={profil}
           suivi={suivi}
-          onToggle={handleToggle}
+          onToast={onToast}
+          onRequireAuth={openAuthModal}
+          onFollowChange={updateFollowState}
           onMessage={onMessage}
           onShare={onShare}
         />
@@ -122,6 +122,7 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
           </main>
 
           <ProfilSidebar
+            id={profil.id}
             nom={profil.nom}
             contacts={contacts}
             stats={statsSidebar}
@@ -129,12 +130,15 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
             verifications={verifications}
             similaires={similaires}
             suivi={suivi}
-            onToggle={handleToggle}
+            onRequireAuth={openAuthModal}
+            onFollowChange={updateFollowState}
             onMessage={onMessage}
             onToast={onToast}
           />
         </div>
       </div>
+
+      {authModal}
     </>
   );
 }

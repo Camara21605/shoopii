@@ -6,7 +6,7 @@
  *   - onFollow centralisé (un seul POST) pour livreurs et correspondants
  *   - Plus aucun placeholder /* … 
  */
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 
@@ -14,7 +14,6 @@ import type { BoutiqueCardData } from '../../data/types';
 import { getRoleFromToken } from '../../../../shared/services/authUtils';
 import { tokenStorage }    from '../../../../shared/services/apiFetch';
 import { apiFetch }   from '../../../../shared/services/apiFetch';
-import { toggleFollowLivreur } from '../../../../shared/services/follow';
 
 import type { ProductApi }            from '../../cards/CardProduit';
 import type { CorrespondantCardData } from '../../cards/CardCorrespondant';
@@ -113,7 +112,12 @@ function EntreprisesBloc({ onToast }: { onToast:(m:string)=>void }) {
 
   return (
     <HScrollSection>
-      {listeEnrichie.map(e => <CardEntreprise key={e.id} e={e} onToast={onToast} />)}
+      {listeEnrichie.map(e => (
+        <CardEntreprise
+          key={e.id} e={e} onToast={onToast}
+          onRemoved={id => setListe(prev => prev.filter(b => b.id !== id))}
+        />
+      ))}
     </HScrollSection>
   );
 }
@@ -224,18 +228,6 @@ function LivreursBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>voi
       .finally(() => setLoading(false));
   }, [t]);
 
-  /* Un seul appel API, optimistic + rollback */
-  const onFollow = useCallback(async (id: string, next: boolean) => {
-    setListe(prev => prev.map(l => l.id === id ? { ...l, isSuivi: next } : l));
-    try {
-      const confirmed = await toggleFollowLivreur(id);
-      setListe(prev => prev.map(l => l.id === id ? { ...l, isSuivi: confirmed } : l));
-    } catch (e) {
-      setListe(prev => prev.map(l => l.id === id ? { ...l, isSuivi: !next } : l));
-      throw e;
-    }
-  }, []);
-
   if (loading) return (
     <HScrollSection>
       {[...Array(4)].map((_,i) => <SkeletonCard key={i} height={260} />)}
@@ -257,7 +249,10 @@ function LivreursBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>voi
   return (
     <HScrollSection>
       {liste.map(l => (
-        <CardLivreur key={l.id} l={l} onToast={onToast} onFollow={onFollow} />
+        <CardLivreur
+          key={l.id} l={l} onToast={onToast}
+          onRemoved={id => setListe(prev => prev.filter(x => x.id !== id))}
+        />
       ))}
     </HScrollSection>
   );
@@ -308,7 +303,10 @@ function CorrespondantsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e'
   return (
     <HScrollSection>
       {liste.map(c => (
-        <CardCorrespondant key={c.id} c={c} onToast={onToast} />
+        <CardCorrespondant
+          key={c.id} c={c} onToast={onToast}
+          onRemoved={id => setListe(prev => prev.filter(x => x.id !== id))}
+        />
       ))}
     </HScrollSection>
   );

@@ -1,8 +1,9 @@
 // src/dashboards/livreur/pages/ReseauLivreursPage.tsx
 // Liste des autres livreurs à suivre, intégrée dans le dashboard livreur.
 
-import React from 'react';
 import { useLivreurs } from '../../../modules/home/components/livreurs/hooks/useLivreurs';
+import { useAuthGate } from '../../../shared/hooks/useAuthGate';
+import FollowButton    from '../../../shared/components/FollowButton';
 import shared from '../styles/Shared.module.css';
 
 interface Props {
@@ -11,12 +12,8 @@ interface Props {
 }
 
 export default function ReseauLivreursPage({ onPop, onView }: Props) {
-  const { filtered, loading, error, onFollow } = useLivreurs((msg, type) => onPop(msg, type));
-
-  const handleFollow = (id: string, fullName: string, isSuivi: boolean) => {
-    onFollow(id, !isSuivi);
-    onPop(isSuivi ? `👋 Désabonné de ${fullName}` : `✅ Abonné à ${fullName}`, isSuivi ? 'i' : 's');
-  };
+  const { filtered, loading, error, onChange } = useLivreurs();
+  const { openAuthModal, authModal } = useAuthGate();
 
   return (
     <div className={shared.page}>
@@ -32,7 +29,7 @@ export default function ReseauLivreursPage({ onPop, onView }: Props) {
           )}
 
           {error && !loading && (
-            <div style={{ marginBottom: 14, padding: '10px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, fontSize: 12.5, color: '#991B1B' }}>
+            <div style={{ marginBottom: 14, padding: '10px 14px', background: '#FAFAFA', border: '1px solid #D4D4D8', borderRadius: 10, fontSize: 12.5, color: '#18181B' }}>
               <i className="fas fa-triangle-exclamation" /> {error} — données de démonstration affichées.
             </div>
           )}
@@ -46,7 +43,7 @@ export default function ReseauLivreursPage({ onPop, onView }: Props) {
           {!loading && filtered.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {filtered.map(l => (
-                <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '12px 14px', background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-lg)', cursor: 'pointer', transition: 'all .2s' }}
+                <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '12px 14px', background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-lg)', cursor: 'pointer', transition: 'all .2s', position: 'relative' }}
                   onClick={() => onView(l.id)}
                 >
                   <div style={{ width: 40, height: 40, borderRadius: '50%', background: l.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'var(--navy)', flexShrink: 0 }}>
@@ -61,28 +58,25 @@ export default function ReseauLivreursPage({ onPop, onView }: Props) {
                       {l.disponible && <span style={{ background: 'var(--em-bg)', color: 'var(--emerald)', fontWeight: 700, padding: '1px 7px', borderRadius: 'var(--pill)' }}>Disponible</span>}
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleFollow(l.id, l.fullName, l.isSuivi); }}
-                    style={{
-                      background:   l.isSuivi ? 'var(--white)' : 'var(--teal)',
-                      color:        l.isSuivi ? 'var(--teal)'  : '#fff',
-                      border:       '1px solid var(--teal)',
-                      borderRadius: 'var(--pill)',
-                      padding:      '6px 14px',
-                      fontSize:     11,
-                      fontWeight:   700,
-                      cursor:       'pointer',
-                      flexShrink:   0,
-                    }}
-                  >
-                    {l.isSuivi ? 'Suivi ✓' : 'Suivre'}
-                  </button>
+                  <div onClick={e => e.stopPropagation()}>
+                    <FollowButton
+                      actorType="livreur"
+                      id={l.id}
+                      name={l.fullName}
+                      isSuivi={l.isSuivi}
+                      onToast={onPop}
+                      onRequireAuth={openAuthModal}
+                      onChange={next => onChange(l.id, next)}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {authModal}
     </div>
   );
 }

@@ -8,10 +8,10 @@ import type { LivreurData } from '../../hooks/useLivreurParametres';
 import ps from '../../styles/ParamsShared.module.css';
 
 const SPEEDS_DEFAULT = [
-  { id:'eco',      em:'🐢', nm:'Éco',      mul:'×1.0', color:'#84CC16', on:true  },
-  { id:'standard', em:'🛵', nm:'Standard', mul:'×1.3', color:'#F59E0B', on:true  },
-  { id:'express',  em:'⚡', nm:'Express',  mul:'×1.8', color:'#3B82F6', on:true  },
-  { id:'ultra',    em:'🚀', nm:'Ultra',    mul:'×2.5', color:'#DC2626', on:false },
+  { id:'eco',      em:'🐢', nm:'Éco',      mul:'×1.0', color:'#A1A1AA', on:true  },
+  { id:'standard', em:'🛵', nm:'Standard', mul:'×1.3', color:'#71717A', on:true  },
+  { id:'express',  em:'⚡', nm:'Express',  mul:'×1.8', color:'#3F3F46', on:true  },
+  { id:'ultra',    em:'🚀', nm:'Ultra',    mul:'×2.5', color:'#000000', on:false },
 ];
 
 interface Props {

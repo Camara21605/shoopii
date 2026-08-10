@@ -4,6 +4,8 @@
 
 import { useTranslation } from 'react-i18next';
 import { useCorrespondants } from '../../../modules/home/components/correspondants/hooks/useCorrespondants';
+import { useAuthGate } from '../../../shared/hooks/useAuthGate';
+import FollowButton    from '../../../shared/components/FollowButton';
 import shared from './ReseauShared.module.css';
 
 interface Props {
@@ -13,12 +15,8 @@ interface Props {
 
 export default function ReseauCorrespondantsPage({ onPop, onView }: Props) {
   const { t } = useTranslation();
-  const { correspondants, loading, error, toggleSuivi } = useCorrespondants();
-
-  const handleToggle = (id: string, nom: string, suivi: boolean) => {
-    toggleSuivi(id);
-    onPop(suivi ? t('profilCorrespondant.reseauPage.desabonneToast', { nom }) : t('profilCorrespondant.reseauPage.abonneToast', { nom }), suivi ? 'i' : 's');
-  };
+  const { correspondants, loading, error, onChange } = useCorrespondants();
+  const { openAuthModal, authModal } = useAuthGate();
 
   return (
     <div className={shared.page}>
@@ -48,7 +46,7 @@ export default function ReseauCorrespondantsPage({ onPop, onView }: Props) {
           {!loading && correspondants.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {correspondants.map(c => (
-                <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '12px 14px', background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-lg)', cursor: 'pointer', transition: 'all .2s' }}
+                <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '12px 14px', background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-lg)', cursor: 'pointer', transition: 'all .2s', position: 'relative' }}
                   onClick={() => onView(c.id)}
                 >
                   <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,var(--g100),var(--g200))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'var(--navy)', flexShrink: 0 }}>
@@ -63,28 +61,25 @@ export default function ReseauCorrespondantsPage({ onPop, onView }: Props) {
                       {c.enLigne && <span style={{ background: 'var(--g100)', color: 'var(--t2)', fontWeight: 700, padding: '1px 7px', borderRadius: 'var(--pill)' }}>{t('profilCorrespondant.reseauPage.enLigne')}</span>}
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleToggle(c.id, c.nom, c.suivi); }}
-                    style={{
-                      background:   c.suivi ? 'var(--white)' : 'var(--t2)',
-                      color:        c.suivi ? 'var(--t2)'  : '#fff',
-                      border:       '1px solid var(--t2)',
-                      borderRadius: 'var(--pill)',
-                      padding:      '6px 14px',
-                      fontSize:     11,
-                      fontWeight:   700,
-                      cursor:       'pointer',
-                      flexShrink:   0,
-                    }}
-                  >
-                    {c.suivi ? t('profilCorrespondant.reseauPage.suiviCheck') : t('profilCorrespondant.reseauPage.suivre')}
-                  </button>
+                  <div onClick={e => e.stopPropagation()}>
+                    <FollowButton
+                      actorType="correspondant"
+                      id={c.id}
+                      name={c.nom}
+                      isSuivi={c.suivi}
+                      onToast={onPop}
+                      onRequireAuth={openAuthModal}
+                      onChange={next => onChange(c.id, next)}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {authModal}
     </div>
   );
 }

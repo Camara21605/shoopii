@@ -34,7 +34,7 @@ import styles from '../styles/Correspondants.module.css';
 export default function CorrespondantsPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { correspondants, loading, error, toggleSuivi } = useCorrespondants();
+  const { correspondants, loading, error, onChange } = useCorrespondants();
 
   /* ── États de filtrage/affichage (côté client) ── */
   const [recherche, setRecherche] = useState('');
@@ -50,13 +50,6 @@ export default function CorrespondantsPage() {
   const onToast = useCallback((msg: string) => {
     window.dispatchEvent(new CustomEvent('shopi-toast', { detail: msg }));
   }, []);
-
-  /* Suivi avec toast */
-  const handleToggle = useCallback((id: string) => {
-    const c = correspondants.find(x => x.id === id);
-    toggleSuivi(id);
-    if (c) onToast(c.suivi ? t('correspondantsPage.page.desabonneToast', { nom: c.nom }) : t('correspondantsPage.page.abonneToast', { nom: c.nom }));
-  }, [correspondants, toggleSuivi, onToast]);
 
   const handleView = useCallback((id: string) => {
     navigate(`/correspondants/${id}`);
@@ -180,7 +173,8 @@ export default function CorrespondantsPage() {
           missions={stats.missions}
           communes={stats.communes}
           vedettes={vedettes}
-          onToggle={handleToggle}
+          onToast={onToast}
+          onChange={onChange}
         />
 
         {/* Toolbar */}
@@ -225,13 +219,13 @@ export default function CorrespondantsPage() {
             ) : vue === 'grid' ? (
               <div className={styles.grid}>
                 {visibles.map(c => (
-                  <CardCorrespondant key={c.id} c={c} onToggle={handleToggle} onView={handleView} />
+                  <CardCorrespondant key={c.id} c={c} onToast={onToast} onView={handleView} onChange={onChange} />
                 ))}
               </div>
             ) : (
               <div>
                 {visibles.map(c => (
-                  <ListItemCorrespondant key={c.id} c={c} onToggle={handleToggle} onView={handleView} />
+                  <ListItemCorrespondant key={c.id} c={c} onToast={onToast} onView={handleView} onChange={onChange} />
                 ))}
               </div>
             )}

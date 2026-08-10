@@ -22,7 +22,6 @@ import {
   OneToOne,
   OneToMany,
   Index,
-  Unique,
   DeleteDateColumn,
 } from 'typeorm';
 
@@ -55,7 +54,13 @@ export enum UserStatus {
 @Entity('users')
 @Index('IDX_user_role', ['role'])
 @Index('IDX_user_status', ['status'])
-@Unique('UNIQ_user_email', ['email'])
+/* Un même email/téléphone peut désormais correspondre à DEUX comptes
+ * (un pro + son compte client lié — voir account-link.entity.ts) tant
+ * qu'ils n'ont pas le même rôle. L'ancienne contrainte globale
+ * UNIQUE(email) interdisait structurellement ce cas. */
+@Index('UNIQ_user_email_role', ['email', 'role'], { unique: true })
+@Index('UNIQ_user_phone_role', ['phone', 'role'], { unique: true })
+@Index('UNIQ_user_phoneHash_role', ['phoneHash', 'role'], { unique: true, where: '"phoneHash" IS NOT NULL' })
 export class User {
 
   /* ==========================================================
@@ -74,11 +79,9 @@ export class User {
   @Column({ type: 'varchar', length: 100 })
   lastName: string;
 
-  @Index({ unique: true })
   @Column({ type: 'varchar', length: 255 })
   email: string;
 
-  @Index({ unique: true })
   @Column({ type: 'varchar', length: 20, nullable: true })
   phone: string | null;
 
@@ -257,7 +260,6 @@ export class User {
    * Permet la découverte de contacts sans stocker le numéro en clair.
    * Rempli à l'inscription si l'utilisateur fournit son numéro de téléphone.
    */
-  @Index({ unique: true, where: '"phoneHash" IS NOT NULL' })
   @Column({ type: 'varchar', length: 64, nullable: true, select: false })
   phoneHash: string | null;
 

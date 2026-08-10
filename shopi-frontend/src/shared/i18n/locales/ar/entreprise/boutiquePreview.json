@@ -1,0 +1,51 @@
+{
+  "boutiquePreview": {
+    "loading": "جارٍ التحميل…",
+    "back": "رجوع",
+    "tabs": {
+      "apercu": "معاينة",
+      "localisation": "الموقع"
+    },
+    "subtitleApercu": "معاينة عامة للمتجر",
+    "subtitleLocalisation": "ثبّت متجرك على الخريطة",
+    "ouvrir": "فتح",
+    "enregistrement": "جارٍ الحفظ…",
+    "enregistre": "تم الحفظ!",
+    "sauvegarderLocalisation": "حفظ الموقع",
+    "iframeTitle": "معاينة",
+    "panelTitle": "الموقع",
+    "panelSub": "يتبع العلامة 🏪 اختيارك",
+    "pays": "البلد",
+    "ville": "المدينة",
+    "choisirVille": "— اختر مدينة —",
+    "villePlaceholder": "اسم المدينة",
+    "commune": "البلدية",
+    "choisirCommune": "— اختر بلدية —",
+    "quartier": "الحي",
+    "choisirQuartier": "— اختر حيًا —",
+    "localisationEnCours": "جارٍ تحديد الموقع…",
+    "adresse": "العنوان",
+    "optionnel": "(اختياري)",
+    "adressePlaceholder": "الشارع، الرقم…",
+    "repere": "علامة لعمال التوصيل",
+    "reperePlaceholder": "مقابل الصيدلية الزرقاء…",
+    "latitude": "خط العرض",
+    "longitude": "خط الطول",
+    "villeObligatoire": "المدينة إلزامية.",
+    "errorSauvegarde": "خطأ أثناء الحفظ.",
+    "localisationEnregistree": "تم حفظ الموقع!",
+    "enregistrerLocalisation": "حفظ الموقع",
+    "recherchePosition": "جارٍ البحث عن الموقع…",
+    "hintCarte": "انقر أو اسحب العلامة للتحسين",
+    "pays_list": {
+      "GN": "غينيا",
+      "SN": "السنغال",
+      "ML": "مالي",
+      "CI": "ساحل العاج",
+      "GW": "غينيا بيساو",
+      "LR": "ليبيريا",
+      "SL": "سيراليون",
+      "FR": "فرنسا"
+    }
+  }
+}

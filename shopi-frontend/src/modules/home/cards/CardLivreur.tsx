@@ -1,9 +1,8 @@
-import { useState }     from 'react';
 import { useNavigate }  from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import styles           from './Cards.module.css';
-import { tokenStorage } from '../../../shared/services/apiFetch';
-import { useFollowToggle } from '../../../shared/hooks/useFollowToggle';
 import { useAuthGate }  from '../../../shared/hooks/useAuthGate';
+import FollowButton     from '../../../shared/components/FollowButton';
 
 export interface LivreurCardData {
   id: string; fullName: string; profilePicture: string | null;
@@ -13,14 +12,16 @@ export interface LivreurCardData {
 }
 
 interface Props {
-  l:        LivreurCardData;
-  onToast:  (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
-  onFollow: (id: string, newState: boolean) => Promise<void>;
+  l:          LivreurCardData;
+  onToast:    (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  /** Appelé quand l'utilisateur choisit "Supprimer" dans le menu ⋮ —
+   *  le parent doit retirer ce livreur de sa liste locale. */
+  onRemoved?: (id: string) => void;
 }
 
-export default function CardLivreur({ l, onToast, onFollow }: Props) {
+export default function CardLivreur({ l, onToast, onRemoved }: Props) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  const [hovered, setHovered] = useState(false);
 
   const id         = l?.id ?? '';
   const name       = l?.fullName ?? '';
@@ -31,16 +32,13 @@ export default function CardLivreur({ l, onToast, onFollow }: Props) {
   const rating     = Number(l?.averageRating ?? 0);
   const dispo      = l?.disponible ?? false;
 
-  const suivi = l?.isSuivi ?? false;
   const { openAuthModal, authModal } = useAuthGate();
-  const { loading, toggle } = useFollowToggle({ id, name, isSuivi: suivi, onFollow, onToast, onRequireAuth: openAuthModal });
 
   const initials = name.trim().split(/\s+/).slice(0, 2)
     .map((w: string) => w[0]?.toUpperCase() ?? '').join('') || '?';
-  const isLogged = !!tokenStorage.get();
 
   return (
-    <div className={styles.dlCard}>
+    <div className={styles.dlCard} style={{ position: 'relative' }}>
 
       {/* ── Bannière ── */}
       <div className={styles.dlBanner} />
@@ -72,7 +70,7 @@ export default function CardLivreur({ l, onToast, onFollow }: Props) {
             {l?.emoji ?? initials}
           </div>
           <div className={`${styles.dlDot} ${dispo ? styles.dlDotOn : styles.dlDotOff}`}
-            title={dispo ? 'Disponible' : 'En course'} />
+            title={dispo ? t('sharedCards.livreur.disponible') : t('sharedCards.livreur.enCourse')} />
         </div>
 
         {/* Nom */}
@@ -90,17 +88,17 @@ export default function CardLivreur({ l, onToast, onFollow }: Props) {
         <div className={styles.dlStatsRow}>
           <div className={styles.dlStat}>
             <span className={styles.dlStatVal}>{livraisons.toLocaleString('fr-FR')}</span>
-            <span className={styles.dlStatLbl}>Livraisons</span>
+            <span className={styles.dlStatLbl}>{t('sharedCards.livreur.livraisons')}</span>
           </div>
           <div className={styles.dlStat}>
             <span className={styles.dlStatVal}>{rating > 0 ? rating.toFixed(1) : '—'}</span>
-            <span className={styles.dlStatLbl}>Note ⭐</span>
+            <span className={styles.dlStatLbl}>{t('sharedCards.livreur.note')}</span>
           </div>
         </div>
 
         {/* Badge disponibilité */}
         <span className={dispo ? styles.dispoBadge : styles.occupeBadge}>
-          {dispo ? <><i className="fas fa-circle" /> Disponible</> : <><i className="fas fa-gear" /> En course</>}
+          {dispo ? <><i className="fas fa-circle" /> {t('sharedCards.livreur.disponible')}</> : <><i className="fas fa-gear" /> {t('sharedCards.livreur.enCourse')}</>}
         </span>
 
         {/* Boutons */}
@@ -109,27 +107,17 @@ export default function CardLivreur({ l, onToast, onFollow }: Props) {
             className={styles.dlV}
             onClick={() => id ? navigate(`/livreurs/${id}`) : onToast(`🛵 ${name}`, 'i')}
           >
-            <i className="fas fa-user" /> Voir profil
+            <i className="fas fa-user" /> {t('sharedCards.livreur.voirProfil')}
           </button>
-          <button
-            className={`${styles.dlF} ${suivi ? styles.dlFOn : ''}`}
-            onClick={toggle}
-            disabled={loading}
-            onMouseEnter={() => suivi && setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            title={!isLogged ? 'Connectez-vous pour suivre' : undefined}
-          >
-            {loading
-              ? <i className="fas fa-spinner fa-spin" />
-              : !isLogged
-                ? <i className="fas fa-right-to-bracket" />
-                : suivi && hovered
-                  ? <i className="fas fa-user-minus" />
-                  : suivi
-                    ? <i className="fas fa-user-check" />
-                    : <i className="fas fa-plus" />
-            }
-          </button>
+          <FollowButton
+            actorType="livreur"
+            id={id}
+            name={name}
+            isSuivi={l?.isSuivi ?? false}
+            onToast={onToast}
+            onRequireAuth={openAuthModal}
+            onChange={next => { if (next.removed) onRemoved?.(id); }}
+          />
         </div>
       </div>
 

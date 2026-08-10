@@ -1,0 +1,49 @@
+{
+  "avis": {
+    "loadError": "تعذر تحميل التقييمات",
+    "reponsePublieeToast": "✅ تم نشر الرد",
+    "reponseErrorToast": "❌ خطأ أثناء النشر",
+    "kpi": {
+      "noteGlobale": "التقييم العام",
+      "sur5Etoiles": "من 5 نجوم",
+      "avisAuTotal": "إجمالي التقييمات",
+      "clientsVerifies": "عملاء موثقون",
+      "satisfaction": "الرضا",
+      "quatreEtCinqEtoiles": "4 و5 نجوم",
+      "sansReponse": "بدون رد",
+      "aTraiter": "للمعالجة"
+    },
+    "filters": {
+      "tous": "كل التقييمات",
+      "avecReponse": "✅ مع رد",
+      "sansReponse": "⏳ بدون رد"
+    },
+    "loading": "جارٍ تحميل التقييمات…",
+    "empty": {
+      "title": "لا توجد تقييمات",
+      "subPending": "تلقى كل التقييمات ردًا.",
+      "subReplied": "لم يتم الرد على أي تقييم بعد.",
+      "subDefault": "لا توجد تقييمات عملاء بعد."
+    },
+    "sur": "على:",
+    "votreReponse": "ردك",
+    "replyPlaceholder": "الرد على هذا التقييم…",
+    "envoiEnCours": "جارٍ الإرسال…",
+    "publier": "نشر",
+    "annuler": "إلغاء",
+    "repondre": "رد",
+    "modifierReponse": "تعديل الرد",
+    "modifierReponseToast": "✏️ تعديل الرد",
+    "signaler": "إبلاغ",
+    "signalerToast": "🚩 تم إبلاغ التقييم للمراجعة",
+    "sidePanel": {
+      "distributionNotes": "توزيع التقييمات",
+      "avisVerifies_one": "{{count}} تقييم موثق",
+      "avisVerifies_other": "{{count}} تقييمات موثقة",
+      "conseilsShopi": "نصائح Shopi",
+      "tip1": "رد خلال 24 ساعة لزيادة الرضا بنسبة 12%.",
+      "tip2": "البائع الذي يرد يحصل على ضعف التقييمات الجديدة.",
+      "tip3": "اشكر دائمًا التقييمات الإيجابية — حتى باقتضاب."
+    }
+  }
+}

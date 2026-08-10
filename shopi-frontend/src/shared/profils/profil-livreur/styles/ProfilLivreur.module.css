@@ -147,3 +147,46 @@
   .actionBar { display:flex; }
   .idActs .btnIcon, .idActs .btnMsg { display:none; }
 }
+
+/* ================================================================
+ * THÈME NOIR — dashboard livreur uniquement.
+ *
+ * Cette page est PARTAGÉE (dashboard entreprise, page publique,
+ * dashboard livreur). Le lock noir global de LivreurApp.module.css
+ * (!important sur --white/--navy/--t1…) ne peut pas l'atteindre :
+ * .page redéclare ses PROPRES variables locales (--wh, --n, --t1…)
+ * directement sur lui-même, ce qui écrase la valeur héritée AVANT
+ * même que le lock global n'entre en jeu (une déclaration locale,
+ * même non-!important, gagne toujours sur une valeur héritée).
+ *
+ * Fix : classe modificatrice .pageDark, ajoutée UNIQUEMENT par
+ * dashboards/livreur/pages/ProfilLivreurReseauPage.tsx, qui
+ * redéfinit ces variables locales + les quelques couleurs encore
+ * codées en dur (chips, badges, cartes véhicule/horaires) en
+ * palette noir/gris — jamais appliquée côté entreprise ou public.
+ * ================================================================ */
+.pageDark {
+  --n:#F4F4F5; --b:#A1A1AA; --blt:rgba(255,255,255,.08);
+  --em:#A1A1AA; --em2:#71717A;
+  --g50:#000000; --g100:#0A0A0A; --bdr:rgba(255,255,255,.10); --bdr2:rgba(255,255,255,.16);
+  --t1:#F4F4F5; --t2:#A1A1AA; --t3:#71717A; --t4:#52525B; --wh:#000000;
+  --sh:0 2px 12px rgba(0,0,0,.45); --sh2:0 6px 28px rgba(0,0,0,.6);
+  --gr:linear-gradient(135deg,#2D2D30,#1C1C1F,#0A0A0A);
+  background: var(--g50) !important;
+  color:      var(--t1)  !important;
+}
+.pageDark .coverBg  { background: linear-gradient(118deg,#000 0%,#0A0A0A 30%,#1C1C1F 65%,#2D2D30 100%) !important; }
+.pageDark .ava       { color:#F4F4F5 !important; }
+.pageDark .avaOn      { background:#A1A1AA !important; }
+.pageDark .idVeh      { background:rgba(255,255,255,.08) !important; border-color:rgba(255,255,255,.16) !important; color:#F4F4F5 !important; }
+.pageDark .chipG,
+.pageDark .chipB,
+.pageDark .chipY      { background:rgba(255,255,255,.08) !important; color:#F4F4F5 !important; }
+.pageDark .btnFollowOn { background:rgba(255,255,255,.08) !important; color:#F4F4F5 !important; border-color:rgba(255,255,255,.22) !important; }
+.pageDark .btnFollowOn:hover { background:rgba(239,68,68,.14) !important; color:#EF4444 !important; border-color:#EF4444 !important; }
+.pageDark .vehCard    { background:linear-gradient(135deg,#0A0A0A,#1C1C1F) !important; }
+.pageDark .zoneDot    { background:#A1A1AA !important; }
+.pageDark .schToday   { background:rgba(255,255,255,.08) !important; border-color:rgba(255,255,255,.16) !important; }
+.pageDark .ssOpen     { background:rgba(255,255,255,.08) !important; color:#F4F4F5 !important; }
+.pageDark .ssClosed   { background:rgba(255,255,255,.05) !important; color:#71717A !important; }
+.pageDark .clIco      { background:rgba(255,255,255,.08) !important; color:#F4F4F5 !important; }

@@ -1,0 +1,79 @@
+{
+  "overview": {
+    "hero": {
+      "greeting": "Olá,",
+      "loading": "A carregar os seus dados…",
+      "ready": "Aqui está a sua atividade recente.",
+      "badgeActive_one": "Loja ativa · {{count}} subscritor",
+      "badgeActive_other": "Loja ativa · {{count}} subscritores",
+      "subCA": "de volume de negócios",
+      "subCommandes_one": "{{count}} encomenda por tratar",
+      "subCommandes_other": "{{count}} encomendas por tratar",
+      "subRetours_one": "{{count}} devolução pendente",
+      "subRetours_other": "{{count}} devoluções pendentes",
+      "btnCommandes": "Tratar encomendas",
+      "btnAnalytics": "Ver analytics",
+      "btnPromotions": "Promoções",
+      "statCA": "CA este mês",
+      "statCommandes": "Encomendas",
+      "statNote": "Nota média",
+      "statAbonnes": "Subscritores",
+      "total": "Total",
+      "avis_one": "{{count}} avaliação",
+      "avis_other": "{{count}} avaliações",
+      "stable": "Estável"
+    },
+    "kpi": {
+      "ca": "Volume de negócios — este mês",
+      "commandes": "Encomendas este mês",
+      "commandesSub": "{{enAttente}} pendentes · {{livrees}} entregues · {{enCours}} em curso",
+      "abonnes": "Subscritores da loja",
+      "abonnesSub": "Número total real",
+      "note": "Nota média dos clientes",
+      "noteSub_one": "{{count}} avaliação no total",
+      "noteSub_other": "{{count}} avaliações no total",
+      "retours": "Devoluções este mês",
+      "retoursSub": "{{enTraitement}} em tratamento · {{rembourses}} reembolsados",
+      "benefice": "Lucro líquido (este mês)",
+      "beneficeSub": "Margem: {{marge}}% · Comissões: {{commission}} GNF",
+      "margeBadge": "{{marge}}% margem"
+    },
+    "charts": {
+      "caMensuel": "Volume de negócios mensal",
+      "noSalesDelivered": "Nenhuma venda entregue por enquanto.",
+      "legendCurrent": "CA mensal (Milhões GNF)",
+      "legendPrevious": "Períodos anteriores",
+      "topProduits": "Top produtos",
+      "noSales": "Nenhuma venda por enquanto.",
+      "ventes_one": "{{count}} venda",
+      "ventes_other": "{{count}} vendas"
+    },
+    "alerts": {
+      "title": "Alertas prioritários",
+      "count_one": "{{count}} alerta",
+      "count_other": "{{count}} alertas",
+      "empty": "Nenhum alerta de stock.",
+      "stockInfo": "Stock: {{qty}} · Mín. exigido: {{min}}",
+      "fix": "Repor"
+    },
+    "donut": {
+      "title": "Repartição das vendas"
+    },
+    "orders": {
+      "title": "Últimas encomendas",
+      "seeAll": "Ver tudo",
+      "empty": "Nenhuma encomenda por enquanto.",
+      "status": {
+        "new": "Novo",
+        "prep": "Em preparação",
+        "ship": "Entrega",
+        "del": "Entregue",
+        "can": "Cancelado"
+      }
+    },
+    "activity": {
+      "title": "Atividade recente",
+      "empty": "Nenhuma atividade recente."
+    }
+  }
+}

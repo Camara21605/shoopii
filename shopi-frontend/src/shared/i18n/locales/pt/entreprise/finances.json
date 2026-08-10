@@ -1,0 +1,33 @@
+{
+  "finances": {
+    "gnf": "GNF",
+    "kpi": {
+      "soldeDisponible": "Saldo disponível",
+      "walletEntreprise": "Carteira da empresa",
+      "revenusCeMois": "Receitas este mês",
+      "vsMoisDernier": "{{sign}}{{pct}}% vs mês passado",
+      "depensesCeMois": "Despesas este mês",
+      "commissionsLivraison": "Comissões + entrega",
+      "enAttenteEscrow": "Em espera (escrow)",
+      "libereALaLivraison": "Liberado na entrega"
+    },
+    "evolutionRevenus": "Evolução das receitas",
+    "legendRevenus": "Receitas (M GNF)",
+    "legendMoisPrecedents": "Meses anteriores",
+    "transactionsRecentes": "Transações recentes",
+    "emptyTransactions": "Nenhuma transação por enquanto.",
+    "repartition": "Repartição",
+    "emptyRepartition": "Nenhum dado este mês.",
+    "virementsShopi": "Transferências Shopi",
+    "emptyVirements": "Nenhuma transferência por enquanto.",
+    "statutRecu": "✓ Recebido",
+    "statutAttente": "⏳ Em espera",
+    "actions": "Ações",
+    "quickActions": {
+      "telechargerBilan": "Baixar balanço mensal",
+      "demanderVirement": "Pedir transferência antecipada",
+      "modifierInfosBancaires": "Modificar informações bancárias",
+      "voirFactures": "Ver faturas Shopi"
+    }
+  }
+}

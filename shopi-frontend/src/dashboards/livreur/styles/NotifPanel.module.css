@@ -79,8 +79,8 @@
   border-bottom: 1px solid var(--bdr);
 }
 .item:hover { background: var(--g50); }
-.unread { background: rgba(14,116,144,.04); }
-.unread:hover { background: rgba(14,116,144,.07); }
+.unread { background: rgba(0,0,0,.04); }
+.unread:hover { background: rgba(0,0,0,.07); }
 
 .ic {
   width: 36px; height: 36px;

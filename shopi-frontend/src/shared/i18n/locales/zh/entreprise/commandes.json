@@ -1,0 +1,38 @@
+{
+  "commandes": {
+    "filters": {
+      "attente": "待处理",
+      "preparation": "准备中",
+      "livraison": "配送中",
+      "livre": "已送达",
+      "annule": "已取消",
+      "tous": "全部"
+    },
+    "table": {
+      "commande": "订单",
+      "produits": "产品",
+      "client": "客户",
+      "montant": "金额",
+      "statut": "状态",
+      "date": "日期",
+      "livreur": "配送员",
+      "actions": "操作"
+    },
+    "loading": "加载中…",
+    "empty": "暂无订单",
+    "exportCsv": "导出 CSV",
+    "exportExcel": "Excel",
+    "voir": "查看",
+    "preparer": "准备",
+    "envoyer": "发送",
+    "autresArticles_one": "+{{count}} 件其他商品",
+    "autresArticles_other": "+{{count}} 件其他商品",
+    "toasts": {
+      "exportCsv": "📥 已生成 CSV 导出",
+      "exportExcel": "📊 已生成 Excel 导出",
+      "accepted": "✅ 订单已接受",
+      "shipping": "🚚 已发货配送",
+      "orderRef": "📋 订单 {{id}}"
+    }
+  }
+}

@@ -66,6 +66,19 @@ export const TYPE_ADRESSE_LABELS: Record<TypeAdresse, string> = {
   autre:     'Autre',
 };
 
+/** Version traduite de TYPE_ADRESSE_LABELS — passer le `t` de useTranslation(). */
+export function getTypeAdresseLabels(t: (key: string) => string): Record<TypeAdresse, string> {
+  return {
+    domicile: t('clientDashboard.typeAdresse.domicile'),
+    bureau:   t('clientDashboard.typeAdresse.bureau'),
+    boutique: t('clientDashboard.typeAdresse.boutique'),
+    entrepot: t('clientDashboard.typeAdresse.entrepot'),
+    relais:   t('clientDashboard.typeAdresse.relais'),
+    depart:   t('clientDashboard.typeAdresse.depart'),
+    autre:    t('clientDashboard.typeAdresse.autre'),
+  };
+}
+
 export const TYPE_ADRESSE_ICONS: Record<TypeAdresse, string> = {
   domicile:  '🏠',
   bureau:    '🏢',

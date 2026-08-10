@@ -10,6 +10,15 @@ import { CommandeStatus } from '../../../database/entities/commande/commande.ent
 
 export const CODE_EXPIRY_MS = 72 * 3600 * 1000;
 
+/* ── Libellé pays affichable depuis un code ISO-2 (Company.pays) ── */
+const COUNTRY_NAMES: Record<string, string> = {
+  GN: 'Guinée', SN: 'Sénégal', ML: 'Mali', CI: "Côte d'Ivoire",
+};
+export function countryLabel(code: string | null | undefined): string {
+  if (!code) return '—';
+  return COUNTRY_NAMES[code.toUpperCase()] ?? code;
+}
+
 /* ── Types de réponse pour la page de suivi (miroir du frontend) ── */
 export type ActeurRole = 'entreprise' | 'livreur' | 'correspondant' | 'client';
 
@@ -42,6 +51,9 @@ export interface CommandeDetailResponse {
   codes: Record<ActeurRole, string>;
   currentStep: number;
   times: (string | undefined)[];
+  /** Pour la bannière "choisir un autre livreur" côté client quand refusé */
+  livreurAssignmentStatus: 'pending' | 'accepted' | 'refused' | null;
+  livreurRefusalReason:    string | null;
 }
 
 export interface CommandeListItem {
@@ -60,6 +72,10 @@ export interface CommandeListItem {
   date: string;
   livreur: string;
   zone: string;
+  /** Pour piloter l'action "assigner/changer le livreur" côté entreprise */
+  livreurId:               string | null;
+  livreurAssignmentStatus: 'pending' | 'accepted' | 'refused' | null;
+  livreurRefusalReason:    string | null;
 }
 
 /* ── Mission livreur (GET /livreur/missions) ── */
@@ -78,6 +94,22 @@ export interface MissionListItem {
   status: 'new' | 'prep' | 'active' | 'done';
   urgent: boolean;
   date: string;
+  /** Position GPS réelle de la boutique (Company.latitude/longitude) — pour affichage carte */
+  companyLat: number | null;
+  companyLng: number | null;
+  /** Position GPS réelle du client (adresse par défaut, Localisation.latitude/longitude) —
+   * null si le client n'a pas encore enregistré d'adresse GPS-pointée ; dans ce cas
+   * le frontend retombe sur une position approximative dérivée de clientCommune. */
+  clientLat: number | null;
+  clientLng: number | null;
+  /** Commune/ville de livraison — pour résoudre une position approximative du client sur la carte */
+  clientCommune: string | null;
+  /** Adresse complète (réelle) de la boutique — pour "Ma zone de livraison" */
+  companyPays:     string;
+  companyVille:    string | null;
+  companyQuartier: string | null;
+  /** Adresse complète (réelle) du client — pas de champ "pays" distinct en base (déduit du pays de la boutique) */
+  clientVille:     string | null;
 }
 
 /* ── Historique livreur (GET /livreur/historique) ── */

@@ -1,0 +1,116 @@
+{
+  "home": {
+    "trustSection": {
+      "paiement": {
+        "titre": "دفع آمن",
+        "sub": "Orange Money، Visa، Mastercard — SSL"
+      },
+      "livraison": {
+        "titre": "توصيل سريع",
+        "sub": "أكثر من 640 عامل توصيل موثّق، طوال الأسبوع"
+      },
+      "protection": {
+        "titre": "حماية المشتري",
+        "sub": "استرداد مضمون في حال وجود مشكلة"
+      },
+      "support": {
+        "titre": "دعم على مدار الساعة",
+        "sub": "دردشة، واتساب، هاتف"
+      }
+    },
+    "typeEntreprise": {
+      "kick": "أنواع المتاجر",
+      "title": "جميع <em>فئات الشركات</em>",
+      "sub": "اعثر على الشركة التي تناسبك",
+      "linkText": "جميع المتاجر",
+      "loadError": "تعذّر تحميل أنواع الشركات.",
+      "empty": "لا يوجد أي نوع شركة متاح حاليًا.",
+      "boutiqueCount_one": "متجر {{count}}",
+      "boutiqueCount_other": "{{count}} متجر",
+      "categorieCount_one": "فئة {{count}}",
+      "categorieCount_other": "{{count}} فئة"
+    },
+    "categories": {
+      "kick": "استكشف",
+      "title": "الفئات <em>الشائعة</em>",
+      "sub": "تصفّح عوالم منتجاتنا",
+      "linkText": "تصفّح الكل",
+      "loadError": "تعذّر تحميل الفئات.",
+      "tout": "الكل",
+      "sousCat_one": "فئة فرعية {{count}}",
+      "sousCat_other": "{{count}} فئة فرعية"
+    },
+    "promotions": {
+      "kick": "عروض محدودة",
+      "title": "تخفيضات سريعة و<em>عروض</em>",
+      "sub": "أسعار استثنائية، لفترة محدودة",
+      "linkText": "عرض جميع العروض",
+      "livraison": "التوصيل",
+      "promo": "عرض",
+      "surBoutique": "على كامل المتجر",
+      "surSelection": "على مجموعة مختارة من المنتجات",
+      "voirOffre": "عرض العرض"
+    },
+    "storiesStrip": {
+      "title": "قصص المتاجر",
+      "sub": "منتجات مميزة أبرزها شركاؤنا",
+      "voirTout": "عرض الكل",
+      "toastVoirTout": "📖 جميع القصص",
+      "storiesDe": "قصص {{nom}}",
+      "produitCount_one": "منتج {{count}}",
+      "produitCount_other": "{{count}} منتج",
+      "enLigneMaintenant": "متصل الآن",
+      "vuRecemment": "شوهد مؤخرًا",
+      "badgePromo": "🔥 عرض",
+      "badgeNouveau": "✨ جديد",
+      "badgeFlash": "⚡ سريع",
+      "badgeTop": "⭐ الأكثر مبيعًا",
+      "voirProduit": "عرض المنتج",
+      "laBoutique": "المتجر",
+      "partager": "مشاركة",
+      "lienCopieToast": "🔗 تم نسخ الرابط!"
+    },
+    "randomBloc": {
+      "produits": {
+        "kick": "الكتالوج",
+        "title": "منتجات <em>موصى بها</em>",
+        "sub": "مختارة من أجلك",
+        "link": "عرض الكتالوج بالكامل"
+      },
+      "produitsGros": {
+        "kick": "بيع بالجملة",
+        "title": "الشراء <em>بالجملة</em>",
+        "sub": "أسعار تنازلية · حد أدنى للطلب",
+        "link": "عرض جميع منتجات الجملة"
+      },
+      "entreprises": {
+        "kick": "المتاجر",
+        "title": "متاجر <em>مميزة</em>",
+        "sub": "اشترك في متاجرك المفضلة",
+        "link": "جميع المتاجر"
+      },
+      "correspondants": {
+        "kick": "الشبكة المحلية",
+        "title": "<em>مراسلونا</em>",
+        "sub": "نقاط اتصال محلية في كل منطقة",
+        "link": "جميع المراسلين"
+      },
+      "livreurs": {
+        "kick": "الخدمات اللوجستية",
+        "title": "عمال توصيل <em>متاحون</em>",
+        "sub": "محترفون موثّقون بالقرب منك",
+        "link": "جميع عمال التوصيل"
+      },
+      "toastLink": "📄 {{link}}",
+      "moqUnites": "الحد الأدنى للطلب {{moq}} وحدة",
+      "errorReseau": "خطأ في الشبكة",
+      "emptyBoutiques": "لا يوجد أي متجر متاح حاليًا.",
+      "emptyProduits": "لا يوجد أي منتج متاح.",
+      "emptyProduitsGros": "لا يوجد أي منتج بالجملة متاح حاليًا.",
+      "emptyLivreurs": "لا يوجد أي عامل توصيل متاح.",
+      "emptyCorrespondants": "لا يوجد أي مراسل متاح.",
+      "errorProduits": "تعذّر تحميل المنتجات.",
+      "errorProduitsGros": "تعذّر تحميل منتجات الجملة."
+    }
+  }
+}

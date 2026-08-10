@@ -169,6 +169,15 @@ export class CallService {
   // ── Vérification de permission (réutilise les règles de messagerie) ──
 
   async assertCanCall(callerUserId: string, calleeUserId: string): Promise<void> {
+    /* Garde explicite : userRepo.findOne({ where: { id: undefined } }) ne
+       rejette pas — TypeORM ignore une clause where à undefined et renvoie
+       une ligne arbitraire de la table. Sans ce garde, un socket dont
+       l'authentification n'a pas fini de s'appliquer (socket.data.userId
+       pas encore posé par MessagerieGateway.handleConnection, async) ferait
+       passer l'appel pour un utilisateur totalement différent. */
+    if (!callerUserId || !calleeUserId) {
+      throw new ForbiddenException('Identifiant utilisateur manquant.');
+    }
     if (callerUserId === calleeUserId) {
       throw new ForbiddenException('Vous ne pouvez pas vous appeler vous-même.');
     }
@@ -181,18 +190,19 @@ export class CallService {
     if (!caller || caller.status !== UserStatus.ACTIVE) {
       throw new ForbiddenException('Votre compte doit être actif pour passer un appel.');
     }
-    if (!caller.phoneVerified) {
-      throw new ForbiddenException('Vérifiez votre numéro de téléphone pour passer des appels.');
-    }
     if (!callee || callee.status !== UserStatus.ACTIVE) {
       throw new NotFoundException('Cet utilisateur est introuvable ou son compte est inactif.');
     }
-    if (!callee.phoneVerified) {
-      throw new ForbiddenException('Cet utilisateur n\'a pas encore vérifié son numéro de téléphone.');
-    }
+    /* Pas de contrôle phoneVerified ici : aucun flux de vérification SMS
+       ne met jamais ce champ à true dans l'app (0 utilisateur actif sur la
+       base ne l'a) — la vérification bloquait donc TOUS les appels 1:1,
+       sans exception, pour tout le monde. Les appels de groupe (group-call.
+       gateway.ts) n'ont jamais eu ce contrôle — on aligne le comportement. */
 
-    const callerActor = await this.resolveActor(callerUserId, caller.role);
-    const calleeActor = await this.resolveActor(calleeUserId, callee.role);
+    const [callerActor, calleeActor] = await Promise.all([
+      this.resolveActor(callerUserId, caller.role),
+      this.resolveActor(calleeUserId, callee.role),
+    ]);
     if (!callerActor || !calleeActor) {
       throw new ForbiddenException('Profil introuvable pour cet appel.');
     }
@@ -217,11 +227,29 @@ export class CallService {
 
   // ── Occupé / anti-spam ────────────────────────────────────────
 
+  /** Un appel qui sonne/se connecte depuis plus longtemps que ça sans
+   * jamais avoir été décroché est considéré abandonné (filet de sécurité
+   * en plus du nettoyage à la déconnexion — voir endAllCallsForUser). */
+  private static readonly STALE_UNANSWERED_MS = 60_000;
+
   async isUserBusy(userId: string): Promise<boolean> {
-    const count = await this.callRepo.count({
+    const calls = await this.callRepo.find({
       where: [{ callerId: userId }, { calleeId: userId }],
     });
-    return count > 0;
+    if (calls.length === 0) return false;
+
+    let stillBusy = false;
+    for (const call of calls) {
+      const isStale =
+        call.status !== CallStatus.CONNECTED &&
+        Date.now() - call.startedAt.getTime() > CallService.STALE_UNANSWERED_MS;
+      if (isStale) {
+        await this.finalizeCall(call, CallHistoryStatus.MISSED);
+      } else {
+        stillBusy = true;
+      }
+    }
+    return stillBusy;
   }
 
   /** Trouve l'appel actif entre deux utilisateurs (peu importe qui a appelé qui). */
@@ -250,20 +278,28 @@ export class CallService {
     await this.checkRateLimit(callerUserId);
     await this.assertCanCall(callerUserId, dto.calleeUserId);
 
-    if (await this.isUserBusy(callerUserId)) {
+    /* Les 3 vérifications sont indépendantes (2 lectures DB + 1 lecture Redis) —
+       les paralléliser évite d'empiler leurs latences réseau vers Supabase/Redis
+       une par une, ce qui rendait `call:initiate` perceptiblement lent. */
+    const [callerBusy, calleeBusy, online] = await Promise.all([
+      this.isUserBusy(callerUserId),
+      this.isUserBusy(dto.calleeUserId),
+      /* isOnlineOrUnknown (pas isOnline) : une panne Redis ne doit jamais
+         bloquer silencieusement tous les appels 1:1 — voir presence.service.ts. */
+      this.presence.isOnlineOrUnknown(dto.calleeUserId),
+    ]);
+
+    if (callerBusy) {
       throw new ForbiddenException('Vous êtes déjà en appel.');
     }
 
-    if (await this.isUserBusy(dto.calleeUserId)) {
+    if (calleeBusy) {
       await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.BUSY);
       await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_BUSY,
         'Utilisateur occupé', 'La personne que vous appelez est déjà en appel.');
       return { outcome: 'busy' };
     }
 
-    /* isOnlineOrUnknown (pas isOnline) : une panne Redis ne doit jamais
-       bloquer silencieusement tous les appels 1:1 — voir presence.service.ts. */
-    const online = await this.presence.isOnlineOrUnknown(dto.calleeUserId);
     if (!online) {
       await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.MISSED);
       await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_OFFLINE,
@@ -322,6 +358,38 @@ export class CallService {
       await this.notifyCallee(call.calleeId, call.callerId, NotificationType.CALL_MISSED,
         'Appel manqué', 'Vous avez manqué un appel.');
     }
+  }
+
+  /**
+   * Nettoie tout appel actif d'un utilisateur dont le socket vient de se
+   * déconnecter (fermeture d'onglet, crash, perte réseau…) — sans ça, la
+   * ligne restait indéfiniment dans `calls` et `isUserBusy()` bloquait
+   * TOUS les appels futurs de cet utilisateur ("Vous êtes déjà en appel"
+   * en boucle, plus aucun appel possible tant qu'un admin ne nettoyait
+   * pas la ligne en base à la main).
+   *
+   * Appelé depuis CallGateway.handleDisconnect — voir la limite connue
+   * documentée là-bas (un utilisateur multi-onglets dont un seul onglet
+   * portait l'appel actif peut se voir couper cet appel si un AUTRE de
+   * ses onglets se déconnecte ; accepté comme compromis raisonnable face
+   * au risque bien pire de blocage permanent).
+   *
+   * @returns la liste des autres participants à notifier (`call:ended`).
+   */
+  async endAllCallsForUser(userId: string): Promise<{ otherUserId: string; conversationId: string | null }[]> {
+    const calls = await this.callRepo.find({
+      where: [{ callerId: userId }, { calleeId: userId }],
+    });
+    if (calls.length === 0) return [];
+
+    const notify: { otherUserId: string; conversationId: string | null }[] = [];
+    for (const call of calls) {
+      const wasConnected = call.status === CallStatus.CONNECTED;
+      const otherUserId  = call.callerId === userId ? call.calleeId : call.callerId;
+      await this.finalizeCall(call, wasConnected ? CallHistoryStatus.COMPLETED : CallHistoryStatus.MISSED);
+      notify.push({ otherUserId, conversationId: call.conversationId });
+    }
+    return notify;
   }
 
   /** Copie l'appel actif vers l'archive permanente puis supprime la ligne active. */

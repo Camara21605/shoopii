@@ -1,0 +1,46 @@
+{
+  "offresPage": {
+    "typeLabel": {
+      "discount": "Réductions",
+      "freeShip": "Livraison offerte",
+      "bundle": "Bundles",
+      "flash": "Ventes flash"
+    },
+    "hero": {
+      "offreSuffix_one": "offre active",
+      "offreSuffix_other": "offres actives",
+      "titrePart1": "Toutes les",
+      "titreEm": "offres",
+      "titrePart2": "du moment",
+      "sub": "Réductions, ventes flash et livraisons offertes de toutes les boutiques Shopi — au même endroit.",
+      "flashSuffix_one": "vente flash en cours — ne les manquez pas",
+      "flashSuffix_other": "ventes flash en cours — ne les manquez pas"
+    },
+    "sidebar": {
+      "categories": "Catégories",
+      "toutes": "Toutes",
+      "recherche": "Recherche",
+      "searchPlaceholder": "Offre ou boutique…",
+      "trierPar": "Trier par",
+      "sortBest": "Meilleures réductions",
+      "sortEnding": "Expire bientôt"
+    },
+    "card": {
+      "touteLaBoutique": "Toute la boutique",
+      "produitCible": "Produit ciblé",
+      "voirOffre": "Voir l'offre",
+      "offerte": "Offerte",
+      "promo": "Promo"
+    },
+    "states": {
+      "loadErrorTitle": "Impossible de charger les offres",
+      "loadErrorFallback": "Impossible de charger les offres.",
+      "reessayer": "Réessayer",
+      "aucuneOffreTitre": "Aucune offre active pour le moment",
+      "aucuneOffreText": "Revenez bientôt, de nouvelles promotions arrivent régulièrement.",
+      "aucunResultatTitre": "Aucune offre ne correspond",
+      "aucunResultatText": "Essayez un autre filtre ou une autre recherche.",
+      "reinitialiser": "Réinitialiser"
+    }
+  }
+}

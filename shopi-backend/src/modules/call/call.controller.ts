@@ -54,9 +54,17 @@ export class CallController {
     return this.callService.getHistory(user.id, page, limit);
   }
 
-  /** Utilisé par les pages de profil pour afficher un badge "En appel". */
+  /**
+   * Utilisé par les pages de profil pour afficher un badge "En appel".
+   * assertCanCall (mêmes règles contact/follow/commande que pour appeler
+   * réellement) évite qu'un utilisateur authentifié puisse sonder le statut
+   * d'appel de n'importe qui d'autre sur la plateforme sans lien avec lui —
+   * fuite d'info mineure mais réelle (harcèlement/surveillance facilités).
+   */
   @Get('busy/:userId')
-  async busy(@Param('userId') userId: string) {
+  async busy(@Req() req: Request, @Param('userId') userId: string) {
+    const user = req.user as User;
+    await this.callService.assertCanCall(user.id, userId);
     return { busy: await this.callService.isUserBusy(userId) };
   }
 

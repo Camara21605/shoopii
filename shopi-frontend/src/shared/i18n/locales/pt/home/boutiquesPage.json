@@ -1,0 +1,22 @@
+{
+  "boutiquesPage": {
+    "title": "Todas as lojas",
+    "subtitleCount_one": "{{count}} empresa disponível",
+    "subtitleCount_other": "{{count}} empresas disponíveis",
+    "subtitleDefault": "Descubra as nossas empresas parceiras",
+    "searchPlaceholder": "Pesquisar uma loja...",
+    "resultats": "Resultados",
+    "loading": "A carregar…",
+    "resultCount_one": "{{count}} loja",
+    "resultCount_other": "{{count}} lojas",
+    "errorTitle": "Impossível carregar as lojas",
+    "retry": "Tentar novamente",
+    "emptyTitle": "Nenhuma empresa encontrada",
+    "emptyText": "Nenhuma empresa está disponível nesta categoria.",
+    "loadMore": "Carregar mais lojas",
+    "filterBar": {
+      "toutesCategories": "✦ Todas as categorias",
+      "toutesSousCategories": "Todas as subcategorias"
+    }
+  }
+}

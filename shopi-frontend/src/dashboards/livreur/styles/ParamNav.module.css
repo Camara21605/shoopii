@@ -58,13 +58,13 @@
 
 .icon { width: 15px; text-align: center; font-size: 13px; flex-shrink: 0; color: var(--t4); }
 .iconOn     { color: var(--teal) !important; }
-.iconDanger { color: var(--red, #DC2626) !important; }
-.dangerItem { color: var(--red, #DC2626) !important; }
-.dangerItem:hover { background: rgba(220,38,38,.06); }
+.iconDanger { color: var(--red, #000000) !important; }
+.dangerItem { color: var(--red, #000000) !important; }
+.dangerItem:hover { background: rgba(0,0,0,.06); }
 
 .dot { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.dotR { background: var(--red, #DC2626); }
-.dotA { background: var(--amber, #B45309); }
+.dotR { background: var(--red, #000000); }
+.dotA { background: var(--amber, #52525B); }
 
 /* ── Responsive : onglets scrollables ── */
 @media (max-width: 1100px) {
@@ -103,11 +103,11 @@
     border: 1.5px solid var(--bdr2);
   }
   .item span { display: inline; }
-  .item:hover { background: var(--sky); border-color: rgba(14,116,144,.3); color: var(--teal); }
+  .item:hover { background: var(--sky); border-color: rgba(0,0,0,.3); color: var(--teal); }
 
   .on {
-    background: var(--teal, #0E7490);
-    border-color: var(--teal, #0E7490);
+    background: var(--teal, #000000);
+    border-color: var(--teal, #000000);
     color: #fff;
     font-weight: 700;
   }
@@ -115,7 +115,7 @@
   .on .icon { color: #fff !important; }
   .on:hover { background: var(--teal); }
 
-  .dangerItem { border-color: rgba(220,38,38,.25); color: var(--red, #DC2626) !important; background: rgba(220,38,38,.05); }
+  .dangerItem { border-color: rgba(0,0,0,.25); color: var(--red, #000000) !important; background: rgba(0,0,0,.05); }
 
   .icon { width: auto; }
   .dot  { display: none; }

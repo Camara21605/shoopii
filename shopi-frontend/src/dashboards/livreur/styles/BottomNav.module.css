@@ -11,8 +11,8 @@
   background: var(--surface-btm, rgba(255,255,255,.97));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--bdr, rgba(11,31,58,.09));
-  box-shadow: 0 -4px 24px rgba(11,31,58,.10);
+  border-top: 1px solid var(--bdr, rgba(0,0,0,.09));
+  box-shadow: 0 -4px 24px rgba(0,0,0,.10);
   z-index: 890;
   align-items: center;
   justify-content: space-around;

@@ -2,8 +2,8 @@
 // Affiche le profil complet d'un livreur du réseau, sans le Header public,
 // intégré dans le dashboard livreur.
 
-import React from 'react';
 import { useLivreurProfile } from '../../../shared/profils/profil-livreur/hooks/useLivreurProfile';
+import { useAuthGate } from '../../../shared/hooks/useAuthGate';
 import ProfilHeader   from '../../../shared/profils/profil-livreur/components/ProfilHeader';
 import ProfilTabs     from '../../../shared/profils/profil-livreur/components/ProfilTabs';
 import TabInfo          from '../../../shared/profils/profil-livreur/components/TabInfo';
@@ -24,8 +24,8 @@ interface Props {
 }
 
 export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel = 'Retour aux livreurs' }: Props) {
-  const { profile, loading, error, tab, setTab, follow, followLoading } =
-    useLivreurProfile(id, onPop);
+  const { profile, loading, error, tab, setTab, updateFollowState } = useLivreurProfile(id);
+  const { openAuthModal, authModal } = useAuthGate();
 
   const backBtn = (
     <div className={shared.page} style={{ paddingBottom: 0 }}>
@@ -39,7 +39,7 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel =
     return (
       <>
         {backBtn}
-        <div className={styles.page}>
+        <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}>
             <i className="fas fa-spinner fa-spin" />
             Chargement du profil…
@@ -53,7 +53,7 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel =
     return (
       <>
         {backBtn}
-        <div className={styles.page}>
+        <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}>
             <i className="fas fa-triangle-exclamation" />
             {error ?? 'Livreur introuvable.'}
@@ -68,12 +68,14 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel =
   return (
     <>
       {backBtn}
-      <div className={styles.page}>
+      <div className={`${styles.page} ${styles.pageDark}`}>
         <ProfilHeader
           profile={profile}
-          followLoading={followLoading}
-          onFollow={follow}
+          onToast={onPop}
+          onRequireAuth={openAuthModal}
+          onFollowChange={updateFollowState}
           onContact={onContact}
+          dark
         />
 
         <div className={styles.pw}>
@@ -83,7 +85,7 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel =
             {tab === 'info'          && <TabInfo          profile={profile} />}
             {tab === 'vehicule'      && <TabVehicule      profile={profile} />}
             {tab === 'zones'         && <TabZones         profile={profile} />}
-            {tab === 'localisation'  && <TabLocalisation  profile={profile} />}
+            {tab === 'localisation'  && <TabLocalisation  profile={profile} dark />}
             {tab === 'tarifs'        && <TabTarifs        profile={profile} />}
             {tab === 'avis'          && (
               <TabPlaceholder icon="fa-star" title={`Avis (${profile.reviewsCount})`}
@@ -98,6 +100,8 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel =
           <ProfilSidebar profile={profile} onToast={onPop} />
         </div>
       </div>
+
+      {authModal}
     </>
   );
 }

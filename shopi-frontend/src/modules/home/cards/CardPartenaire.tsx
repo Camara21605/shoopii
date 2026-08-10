@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Partenaire } from '../data/mockData';
 import styles from './Cards.module.css';
 
 interface Props { p: Partenaire; onToast: (m: string) => void; }
 
 export default function CardPartenaire({ p, onToast }: Props) {
+  const { t } = useTranslation();
   const [suivi, setSuivi] = useState(false);
   const abonnesK = p.abonnes >= 1000 ? `${(p.abonnes / 1000).toFixed(1)}K` : p.abonnes.toString();
 
@@ -37,21 +39,21 @@ export default function CardPartenaire({ p, onToast }: Props) {
         {/* Abonnés */}
         <div className={styles.ptAbonnes}>
           <i className="fas fa-users" />
-          <span><strong>{abonnesK}</strong> abonnés</span>
+          <span><strong>{abonnesK}</strong> {t('sharedCards.partenaire.abonnesSuffix')}</span>
         </div>
 
         {/* Boutons */}
         <div className={styles.ptBtns}>
           <button className={styles.ptAcc} onClick={() => onToast(`🤝 ${p.nom}`)}>
-            <i className="fas fa-arrow-up-right-from-square" /> En savoir plus
+            <i className="fas fa-arrow-up-right-from-square" /> {t('sharedCards.partenaire.enSavoirPlus')}
           </button>
           <button
             className={`${styles.ptFlw} ${suivi ? styles.ptFlwOn : ''}`}
-            onClick={() => { setSuivi(s => !s); onToast(suivi ? '👋 Désabonné' : `✅ Abonné à ${p.nom}`); }}
+            onClick={() => { setSuivi(s => !s); onToast(suivi ? t('sharedCards.partenaire.desabonneToast') : t('sharedCards.partenaire.abonneToast', { nom: p.nom })); }}
           >
             {suivi
-              ? <><i className="fas fa-check" /> Abonné</>
-              : <><i className="fas fa-plus" /> Suivre ce partenaire</>
+              ? <><i className="fas fa-check" /> {t('sharedCards.partenaire.abonne')}</>
+              : <><i className="fas fa-plus" /> {t('sharedCards.partenaire.suivre')}</>
             }
           </button>
         </div>

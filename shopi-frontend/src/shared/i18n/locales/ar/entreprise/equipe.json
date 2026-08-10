@@ -1,0 +1,193 @@
+{
+  "equipe": {
+    "title": "إدارة الفريق",
+    "subtitle": "أدر صلاحيات ووصولات زملائك.",
+    "addMember": "إضافة عضو",
+    "stats": {
+      "activeMembers": "أعضاء نشطون",
+      "slotsUsed": "المراكز المستخدمة",
+      "suspended": "موقوفون",
+      "remainingSlots": "الأماكن المتبقية",
+      "activePlan": "الخطة الحالية"
+    },
+    "tabs": {
+      "members": "الأعضاء",
+      "invitations": "الدعوات"
+    },
+    "toolbar": {
+      "searchPlaceholder": "ابحث بالاسم أو البريد أو المنصب…",
+      "count_one": "{{count}} عضو",
+      "count_other": "{{count}} أعضاء"
+    },
+    "table": {
+      "member": "العضو",
+      "jobRole": "المنصب / الدور",
+      "status": "الحالة",
+      "lastLogin": "آخر تسجيل دخول",
+      "actions": "الإجراءات"
+    },
+    "loading": "جارٍ التحميل…",
+    "empty": {
+      "membersTitle": "لا يوجد زميل في الوقت الحالي.",
+      "membersSub": "انقر على \"إضافة عضو\" لدعوة فريقك الأول.",
+      "invitationsTitle": "لا توجد دعوات معلقة.",
+      "invitationsSub": "استخدم \"إضافة عضو\" لدعوة زميل عبر البريد الإلكتروني."
+    },
+    "mustChangePassword": "⚠ كلمة المرور تحتاج تغيير",
+    "status": {
+      "active": "نشط",
+      "suspended": "موقوف",
+      "pending": "قيد الانتظار",
+      "revoked": "ملغى"
+    },
+    "actions": {
+      "editPermissions": "تعديل الصلاحيات",
+      "activityLog": "سجل النشاط",
+      "resetPassword": "إعادة تعيين كلمة المرور",
+      "suspend": "إيقاف",
+      "reactivate": "إعادة تفعيل",
+      "deleteAccess": "حذف الوصول"
+    },
+    "pagination": {
+      "pageOf": "الصفحة {{page}} / {{total}}"
+    },
+    "invitations": {
+      "pendingTitle": "دعوات معلقة",
+      "send": "إرسال دعوة",
+      "expiresOn": "تنتهي في {{date}}",
+      "resend": "إعادة إرسال الدعوة",
+      "cancel": "إلغاء الدعوة"
+    },
+    "confirm": {
+      "suspendTitle": "إيقاف {{name}}",
+      "suspendMessage": "لن يتمكن {{firstName}} من تسجيل الدخول. يمكنك إعادة تفعيل وصوله في أي وقت.",
+      "deleteTitle": "حذف وصول {{name}}",
+      "deleteMessage": "سيتم إلغاء وصول {{firstName}} نهائيًا. هذا الإجراء لا يمكن التراجع عنه.",
+      "cancelInviteTitle": "إلغاء الدعوة لـ {{email}}",
+      "cancelInviteMessage": "سيتم إلغاء الدعوة المرسلة إلى {{email}}. لن يكون الرابط صالحًا بعد الآن.",
+      "cancel": "إلغاء",
+      "confirmBtn": "تأكيد"
+    },
+    "toast": {
+      "loadMembersError": "تعذر تحميل الأعضاء.",
+      "suspended": "تم إيقاف {{name}}.",
+      "reactivated": "تمت إعادة تفعيل {{name}}.",
+      "reactivateError": "خطأ أثناء إعادة التفعيل.",
+      "deleted": "تم إلغاء وصول {{name}}.",
+      "resetPasswordError": "خطأ أثناء إعادة التعيين.",
+      "permissionsUpdated": "تم تحديث الصلاحيات.",
+      "permissionsUpdateError": "خطأ أثناء التحديث.",
+      "invitationResent": "تمت إعادة إرسال الدعوة.",
+      "genericError": "خطأ.",
+      "invitationCancelled": "تم إلغاء الدعوة.",
+      "passwordCopied": "تم نسخ كلمة المرور!"
+    },
+    "permGroups": {
+      "products": {
+        "label": "المنتجات",
+        "view": "عرض",
+        "create": "إنشاء",
+        "edit": "تعديل",
+        "delete": "حذف"
+      },
+      "orders": {
+        "label": "الطلبات",
+        "view": "عرض",
+        "validate": "تحقق",
+        "cancel": "إلغاء",
+        "edit": "تعديل"
+      },
+      "deliveries": {
+        "label": "التوصيلات",
+        "view": "عرض",
+        "assign": "إسناد",
+        "edit": "تعديل"
+      },
+      "payments": {
+        "label": "المدفوعات",
+        "view": "عرض",
+        "viewTransactions": "المعاملات",
+        "manageRefunds": "الاستردادات"
+      },
+      "messaging": {
+        "label": "المراسلة",
+        "read": "قراءة",
+        "send": "إرسال"
+      },
+      "statistics": {
+        "label": "الإحصائيات",
+        "view": "عرض"
+      },
+      "settings": {
+        "label": "الإعدادات",
+        "view": "عرض",
+        "edit": "تعديل"
+      },
+      "returns": {
+        "label": "المرتجعات والدعم",
+        "view": "عرض",
+        "process": "معالجة"
+      },
+      "wallet": {
+        "label": "المحفظة",
+        "view": "عرض",
+        "withdraw": "سحب"
+      }
+    },
+    "permPanel": {
+      "title": "الصلاحيات",
+      "cancel": "إلغاء",
+      "save": "حفظ"
+    },
+    "activityPanel": {
+      "title": "النشاط الأخير",
+      "empty": "لا يوجد نشاط مسجل."
+    },
+    "tempPwdModal": {
+      "title": "كلمة مرور مؤقتة",
+      "transmitPrefix": "أرسل هذه الكلمة إلى",
+      "mustChange": "سيتعين عليه تغييرها عند تسجيل الدخول التالي.",
+      "warn": "ستظهر هذه الكلمة مرة واحدة فقط.",
+      "gotIt": "لقد حفظت كلمة المرور"
+    },
+    "addModal": {
+      "title": "إضافة زميل",
+      "modeDirect": "إنشاء مباشر",
+      "modeInvite": "دعوة عبر البريد",
+      "firstName": "الاسم الأول *",
+      "firstNamePlaceholder": "ماري",
+      "lastName": "الاسم *",
+      "lastNamePlaceholder": "ديالو",
+      "email": "البريد المهني *",
+      "emailPlaceholder": "marie.diallo@boutique.com",
+      "phone": "الهاتف",
+      "phonePlaceholder": "+224 620 000 000",
+      "jobTitle": "المنصب",
+      "jobTitlePlaceholder": "مسؤول المبيعات",
+      "internalRole": "الدور الداخلي",
+      "selectPlaceholder": "— اختر —",
+      "roles": {
+        "manager": "مدير",
+        "commercial": "تجاري",
+        "orderManager": "مدير الطلبات",
+        "logisticsManager": "مسؤول اللوجستيات",
+        "customerService": "خدمة العملاء",
+        "accountant": "محاسب"
+      },
+      "permTemplate": "قالب الصلاحيات",
+      "noTemplate": "— بدون قالب —",
+      "noteInvite": "سيتم إرسال بريد دعوة. سيختار الزميل كلمة المرور الخاصة به.",
+      "noteDirect": "سيتم إنشاء كلمة مرور مؤقتة وعرضها مرة واحدة.",
+      "cancel": "إلغاء",
+      "createAccount": "إنشاء الحساب",
+      "sendInvitation": "إرسال الدعوة",
+      "errors": {
+        "firstName": "الاسم الأول مطلوب",
+        "lastName": "الاسم مطلوب",
+        "email": "بريد غير صالح"
+      },
+      "invitationSentToast": "تم إرسال الدعوة إلى {{email}}.",
+      "createError": "خطأ أثناء الإنشاء."
+    }
+  }
+}

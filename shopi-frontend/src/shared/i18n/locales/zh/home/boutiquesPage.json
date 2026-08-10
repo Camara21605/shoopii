@@ -1,0 +1,22 @@
+{
+  "boutiquesPage": {
+    "title": "所有店铺",
+    "subtitleCount_one": "{{count}} 家可用企业",
+    "subtitleCount_other": "{{count}} 家可用企业",
+    "subtitleDefault": "发现我们的合作伙伴企业",
+    "searchPlaceholder": "搜索店铺...",
+    "resultats": "结果",
+    "loading": "加载中…",
+    "resultCount_one": "{{count}} 家店铺",
+    "resultCount_other": "{{count}} 家店铺",
+    "errorTitle": "无法加载店铺",
+    "retry": "重试",
+    "emptyTitle": "未找到企业",
+    "emptyText": "此类别中没有可用企业。",
+    "loadMore": "加载更多店铺",
+    "filterBar": {
+      "toutesCategories": "✦ 所有类别",
+      "toutesSousCategories": "所有子类别"
+    }
+  }
+}

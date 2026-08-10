@@ -64,6 +64,15 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
   const [showForgot,     setShowForgot]     = useState(false);
   const [toast,          setToast]          = useState<ToastState>({ msg: '', visible: false });
 
+  // ── 2FA — challenge posé par /auth/login quand le compte a activé la 2FA ──
+  const [twoFaChallengeToken, setTwoFaChallengeToken] = useState<string | null>(null);
+  const [twoFaError,          setTwoFaError]          = useState('');
+
+  // ── Choix de compte — identifiant + mot de passe partagés par un compte
+  //    pro et son compte client lié (coïncidence), posé par /auth/login ──
+  const [accountChoiceOptions, setAccountChoiceOptions] = useState<{ userId: string; role: UserRole }[] | null>(null);
+  const [accountChoiceError,   setAccountChoiceError]   = useState('');
+
   const showToast = useCallback((msg: string) => {
     setToast({ msg, visible: true });
     setTimeout(() => setToast({ msg: '', visible: false }), 3000);
@@ -212,6 +221,15 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     });
   }, [registerRole, validateRegisterField]);
 
+  // Finalise une connexion réussie (login direct ou après vérif 2FA)
+  const completeLogin = useCallback((res: import('../types').AuthResponse) => {
+    setUser(res.user);
+    setSuccessAction('Connexion');
+    setShowSuccess(true);
+    setTimeout(() => navigate(ROLE_ROUTES[res.user.role] ?? '/home'), 1500);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, setUser]);
+
   // Soumission Login
   const handleLogin = useCallback(async () => {
     if (!validateLogin()) return;
@@ -222,10 +240,17 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
         password:   loginData.password,
         rememberMe: loginData.rememberMe,
       });
-      setUser(res.user);
-      setSuccessAction('Connexion');
-      setShowSuccess(true);
-      setTimeout(() => navigate(ROLE_ROUTES[res.user.role] ?? '/home'), 1500);
+      if ('requiresTwoFa' in res) {
+        setTwoFaError('');
+        setTwoFaChallengeToken(res.challengeToken);
+        return;
+      }
+      if ('requiresAccountChoice' in res) {
+        setAccountChoiceError('');
+        setAccountChoiceOptions(res.accounts);
+        return;
+      }
+      completeLogin(res);
     } catch (err) {
       const msg = err instanceof ApiError
         ? err.message
@@ -235,7 +260,62 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
       setIsLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loginData, navigate, setUser]);
+  }, [loginData, completeLogin]);
+
+  // Soumission du choix de compte (étape 2 quand requiresAccountChoice) —
+  // le mot de passe est revérifié côté serveur contre le userId choisi.
+  const handleChooseAccount = useCallback(async (userId: string) => {
+    setAccountChoiceError('');
+    setIsLoading(true);
+    try {
+      const res = await authService.chooseAccount(
+        loginData.email.trim(), loginData.password, userId, loginData.rememberMe,
+      );
+      if ('requiresTwoFa' in res) {
+        setAccountChoiceOptions(null);
+        setTwoFaError('');
+        setTwoFaChallengeToken(res.challengeToken);
+        return;
+      }
+      setAccountChoiceOptions(null);
+      completeLogin(res);
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : 'Identifiants incorrects.';
+      setAccountChoiceError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [loginData, completeLogin]);
+
+  // Retour à l'étape identifiants depuis l'écran de choix de compte
+  const cancelAccountChoice = useCallback(() => {
+    setAccountChoiceOptions(null);
+    setAccountChoiceError('');
+  }, []);
+
+  // Soumission du code 2FA (étape 2 du login)
+  const handleVerifyTwoFa = useCallback(async (code: string) => {
+    if (!twoFaChallengeToken) return;
+    setTwoFaError('');
+    setIsLoading(true);
+    try {
+      const res = await authService.verifyTwoFaLogin(twoFaChallengeToken, code);
+      completeLogin(res);
+    } catch (err) {
+      const msg = err instanceof ApiError
+        ? err.message
+        : 'Code invalide ou expiré. Réessayez.';
+      setTwoFaError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [twoFaChallengeToken, completeLogin]);
+
+  // Retour à l'étape identifiants depuis l'écran 2FA
+  const cancelTwoFa = useCallback(() => {
+    setTwoFaChallengeToken(null);
+    setTwoFaError('');
+  }, []);
 
   // Soumission Register
   const handleRegister = useCallback(async () => {
@@ -285,5 +365,15 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     handleRegister,
     validateRegisterStep,
     showToast,
+    // ✅ 2FA — étape 2 du login
+    twoFaChallengeToken,
+    twoFaError,
+    handleVerifyTwoFa,
+    cancelTwoFa,
+    // ✅ Choix de compte — comptes liés pro↔client partageant identifiant+mdp
+    accountChoiceOptions,
+    accountChoiceError,
+    handleChooseAccount,
+    cancelAccountChoice,
   };
 }

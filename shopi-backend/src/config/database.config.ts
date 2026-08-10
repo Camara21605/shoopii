@@ -116,9 +116,10 @@ import { CompanyTeamInvitation }     from '../database/entities/company-team/com
 import { TeamPermissionCategory }    from '../database/entities/company-team/team-permission-category.entity';
 import { TeamPermissionDefinition }  from '../database/entities/company-team/team-permission-definition.entity';
 import { TeamPermissionTemplate }    from '../database/entities/company-team/team-permission-template.entity';
-// ── Auth — journalisation et refresh tokens ───────────────────
+// ── Auth — journalisation, refresh tokens, comptes liés ────────
 import { AuthLog }      from '../database/entities/auth-log.entity';
 import { RefreshToken } from '../database/entities/refresh-token.entity';
+import { AccountLink }  from '../database/entities/account-link.entity';
 // ── Sécurité plateforme ──────────────────────────────────────
 import { SystemMetric }       from '../database/entities/security/system-metric.entity';
 import { SecurityEventLog }   from '../database/entities/security/security-event-log.entity';
@@ -365,9 +366,10 @@ export const databaseConfigFactory = {
       TeamPermissionCategory,
       TeamPermissionDefinition,
       TeamPermissionTemplate,
-      // ── Auth — journalisation et refresh tokens ──────────────
+      // ── Auth — journalisation, refresh tokens, comptes liés ──
       AuthLog,
       RefreshToken,
+      AccountLink,
       // ── Sécurité plateforme ────────────────────────────────
       SystemMetric,
       SecurityEventLog,

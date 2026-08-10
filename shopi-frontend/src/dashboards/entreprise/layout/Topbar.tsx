@@ -26,6 +26,8 @@ import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
 import { useNotifications } from '../../../shared/notifications/NotificationContext';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
+import MonEspaceClientModal from '../../../shared/components/MonEspaceClientModal';
+import AccountSwitchLink   from '../../../shared/components/AccountSwitchLink';
 import './Topbar.css';
 
 type CanFn = (group: string, action: string) => boolean;
@@ -121,6 +123,7 @@ export default function Topbar({
 
   const [searchVal,      setSearchVal]      = useState('');
   const [avatarOpen,     setAvatarOpen]     = useState(false);
+  const [monEspaceOpen,  setMonEspaceOpen]  = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const avatarRef = useRef<HTMLDivElement>(null);
 
@@ -288,6 +291,15 @@ export default function Topbar({
                 <button className="tb-menu-it" onClick={handleSwitchHome}>
                   <i className="fas fa-house"></i> {t('topbar.menu.basculerAccueil')}
                 </button>
+                {/* Accès direct si déjà lié (1 clic) — se cache tout seul sinon. */}
+                <AccountSwitchLink render={({ label, onClick, pending }) => (
+                  <button className="tb-menu-it" disabled={pending} onClick={() => { onClick(); setAvatarOpen(false); }}>
+                    <i className="fas fa-right-left"></i> Basculer vers mon espace {label}
+                  </button>
+                )} />
+                <button className="tb-menu-it" onClick={() => { setMonEspaceOpen(true); setAvatarOpen(false); }}>
+                  <i className="fas fa-user-group"></i> Mon espace client
+                </button>
 
                 <div className="tb-menu-sep"></div>
 
@@ -397,6 +409,8 @@ export default function Topbar({
           </div>
         </div>
       )}
+
+      {monEspaceOpen && <MonEspaceClientModal onClose={() => setMonEspaceOpen(false)} />}
     </>
   );
 }

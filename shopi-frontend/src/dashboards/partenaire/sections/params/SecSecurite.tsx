@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react';
 import s from '../../styles/ParamsShared.module.css';
 import type { PartenaireData } from '../../hooks/usePartenaireParametres';
+import TwoFaSetupModal from '../../../../shared/components/TwoFaSetupModal';
 
 interface Props {
   data:             PartenaireData | null;
@@ -31,6 +32,7 @@ export default function SecSecurite({
   const [pwdScore,   setPwdScore]   = useState(0);
   const [twoFa,      setTwoFa]      = useState(true);
   const [twoFaMethod,setTwoFaMethod]= useState('sms');
+  const [show2fa,    setShow2fa]    = useState(false);
 
   useEffect(() => {
     if (!data) return;
@@ -72,7 +74,14 @@ export default function SecSecurite({
         return;
       }
     }
-    /* Paramètres 2FA */
+    /* Activation 2FA : passe par POST /auth/2fa/setup + /confirm (TwoFaService),
+     * qui exige un code TOTP valide avant d'activer réellement — l'ancien
+     * chemin direct (twoFaEnabled:true) est désormais rejeté côté backend. */
+    if (twoFa && !data?.twoFaEnabled) {
+      setShow2fa(true);
+      return;
+    }
+    /* Paramètres 2FA (uniquement désactivation ou re-sauvegarde inchangée) */
     try {
       await onSaveSecurite({ twoFaEnabled: twoFa, twoFaMethod: twoFa ? twoFaMethod : null });
       markClean();
@@ -172,6 +181,17 @@ export default function SecSecurite({
           </div>
         </div>
       </div>
+
+      {show2fa && (
+        <TwoFaSetupModal
+          onClose={() => setShow2fa(false)}
+          onEnabled={() => {
+            setTwoFaMethod('totp');
+            markClean();
+            onToast('🔐 2FA activée avec succès', 's');
+          }}
+        />
+      )}
     </>
   );
 }

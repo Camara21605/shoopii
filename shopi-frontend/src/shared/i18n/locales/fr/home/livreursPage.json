@@ -1,0 +1,108 @@
+{
+  "livreursPage": {
+    "card": {
+      "livreurAriaLabel": "Livreur {{nom}}",
+      "disponible": "Disponible",
+      "enCourse": "En course",
+      "livraisonsCount": "{{count}} livraisons",
+      "abonneFem": "Abonné(e)",
+      "suivre": "Suivre",
+      "seDesabonnerDe": "Se désabonner de {{nom}}",
+      "suivreNom": "Suivre {{nom}}",
+      "connexionRequise": "Connexion requise",
+      "connexionRequisePourSuivre": "Connexion requise pour suivre",
+      "seDesabonner": "Se désabonner",
+      "avisCount": "({{count}} avis)",
+      "livraisons": "Livraisons",
+      "ponctualite": "Ponctualité",
+      "experience": "Expérience",
+      "voirProfilComplet": "Voir le profil complet →",
+      "profilCompletAria": "Voir le profil complet de {{nom}}",
+      "profilDe": "Profil de {{nom}}"
+    },
+    "suggestions": {
+      "ariaLabel": "Livreurs suggérés près de vous",
+      "titre": "Suggestions",
+      "sousTitre": "Près de vous",
+      "abonne": "✓ Abonné",
+      "suivre": "+ Suivre"
+    },
+    "hero": {
+      "ariaLabel": "Présentation des livreurs Shopi",
+      "supTitle": "Réseau Shopi · Conakry",
+      "titrePart1": "Trouvez votre",
+      "titreEm": "livreur",
+      "titrePart2": "de confiance",
+      "sub": "Des livreurs professionnels vérifiés, disponibles dans toute la Guinée. Suivez vos livreurs préférés et commandez en toute confiance.",
+      "livreursSuggeres": "Livreurs suggérés",
+      "abonne": "Abonné",
+      "suivre": "Suivre",
+      "stats": {
+        "livreursActifs": "Livreurs actifs",
+        "noteMoyenne": "Note moyenne",
+        "livraisonsMois": "Livraisons/mois",
+        "communesCouvertes": "Communes couvertes"
+      }
+    },
+    "toolbar": {
+      "searchPlaceholder": "Nom, zone, véhicule…",
+      "rechercherLivreurAria": "Rechercher un livreur",
+      "effacerRechercheAria": "Effacer la recherche",
+      "trierLivreursAria": "Trier les livreurs",
+      "modeAffichageAria": "Mode d'affichage",
+      "vueGrille": "Vue grille",
+      "vueListe": "Vue liste",
+      "livreurCount_one": "{{count}} livreur",
+      "livreurCount_other": "{{count}} livreurs",
+      "filters": {
+        "tous": "Tous",
+        "disponibles": "Disponibles",
+        "abonnements": "Abonnements",
+        "motos": "Motos",
+        "voitures": "Voitures"
+      },
+      "sorts": {
+        "mieuxNotes": "Mieux notés",
+        "plusDeLivraisons": "Plus de livraisons",
+        "disponiblesDabord": "Disponibles d'abord",
+        "lesPlusProches": "Les plus proches"
+      }
+    },
+    "sidebar": {
+      "ariaLabel": "Filtres livreurs",
+      "zoneDeLivraison": "Zone de livraison",
+      "reinit": "Réinit.",
+      "toutesLesZones": "Toutes les zones",
+      "typeDeVehicule": "Type de véhicule",
+      "noteMinimale": "Note minimale",
+      "ratingOpts": {
+        "cinqEtoiles": "5 étoiles seulement",
+        "quatrePlus": "4+ étoiles",
+        "troisPlus": "3+ étoiles",
+        "toutesLesNotes": "Toutes les notes"
+      },
+      "disponibilite": "Disponibilité",
+      "disponible": "Disponible",
+      "enCourse": "En course",
+      "mesAbonnements": "Mes abonnements",
+      "vehicules": {
+        "moto": "Moto",
+        "voiture": "Voiture",
+        "pickup": "Pickup",
+        "camion": "Camion"
+      }
+    },
+    "page": {
+      "tousLesLivreurs": "Tous les livreurs",
+      "livreurDansRegion_one": "{{count}} livreur dans votre région",
+      "livreurDansRegion_other": "{{count}} livreurs dans votre région",
+      "vueGrille": "Vue grille",
+      "vueListe": "Vue liste",
+      "impossibleDeCharger": "Impossible de charger les livreurs",
+      "aucunLivreurTrouve": "Aucun livreur trouvé",
+      "essayezModifier": "Essayez de modifier vos filtres ou votre recherche.",
+      "chargementToast": "📄 Chargement...",
+      "chargerPlus": "Charger plus de livreurs"
+    }
+  }
+}

@@ -146,9 +146,18 @@ export class CommandeValidationService {
         });
       }
 
-      const autresValides = commande.codes
-        .filter(c => c.acteurType !== CodeActeurType.CLIENT)
-        .every(c => c.status === CodeCommandeStatus.VALIDATED);
+      /* Vérification explicite des types REQUIS plutôt qu'un simple
+       * .every() sur les codes existants : si un livreur est assigné
+       * mais n'a pas encore accepté (donc pas encore de code LIVREUR
+       * en base), il ne doit PAS être ignoré silencieusement — sinon
+       * le code CLIENT se débloquerait avant même que le livreur ait
+       * confirmé la mission. */
+      const requiredTypes: CodeActeurType[] = [CodeActeurType.ENTREPRISE];
+      if (commande.livreurId)       requiredTypes.push(CodeActeurType.LIVREUR);
+      if (commande.correspondantId) requiredTypes.push(CodeActeurType.CORRESPONDANT);
+      const autresValides = requiredTypes.every(type =>
+        commande.codes.find(c => c.acteurType === type)?.status === CodeCommandeStatus.VALIDATED,
+      );
 
       if (autresValides) {
         const codeClient = commande.codes.find(c => c.acteurType === CodeActeurType.CLIENT);

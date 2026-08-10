@@ -1,0 +1,58 @@
+{
+  "clientProfil": {
+    "status": {
+      "pending": "Pendente",
+      "paid": "Paga",
+      "in_progress": "Em curso",
+      "awaiting_client": "A confirmar",
+      "delivered": "Entregue",
+      "auto_delivered": "Entregue (auto)",
+      "cancelled": "Cancelada",
+      "refunded": "Reembolsada",
+      "disputed": "Litígio"
+    },
+    "mode": {
+      "livreur": "🛵 Entregador",
+      "correspondant": "🤝 Correspondente",
+      "partenaire": "🤝 Parceiro",
+      "pickup": "🏪 Levantamento na loja",
+      "mixte": "🔀 Misto"
+    },
+    "clientDepuis": "Cliente desde {{date}}",
+    "kpi": {
+      "commandes": "Encomendas",
+      "dansCetteBoutique": "nesta loja",
+      "totalDepense": "Total gasto",
+      "depuisLeDebut": "desde o início",
+      "derniereCmd": "Última enc."
+    },
+    "tabs": {
+      "apercu": "Resumo",
+      "commandes": "Encomendas ({{count}})"
+    },
+    "loadingProfil": "A carregar o perfil…",
+    "aperçu": {
+      "relationTitle": "Relação com a sua loja",
+      "commandesPassees": "Encomendas realizadas",
+      "totalDepense": "Total gasto",
+      "abonneBoutique": "Subscrito à loja",
+      "oui": "✅ Sim",
+      "non": "❌ Não",
+      "segment": "Segmento",
+      "derniereCommandeTitle": "Última encomenda",
+      "aucuneCommandeTitle": "Nenhuma encomenda por enquanto",
+      "aucuneCommandeSub": "Este cliente segue a sua loja mas ainda não comprou."
+    },
+    "commandesTab": {
+      "aucune": "Nenhuma encomenda",
+      "livreLe": "Entregue em {{date}}",
+      "produits": "Produtos: {{montant}}",
+      "affichageLimite": "Exibição das 10 últimas encomendas de {{total}} no total."
+    },
+    "footer": {
+      "messageToast": "📧 Mensagem enviada para {{name}}",
+      "envoyerMessage": "Enviar uma mensagem",
+      "fermer": "Fechar"
+    }
+  }
+}

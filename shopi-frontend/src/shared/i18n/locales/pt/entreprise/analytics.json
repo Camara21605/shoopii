@@ -1,0 +1,27 @@
+{
+  "analytics": {
+    "ca": {
+      "title": "Volume de negócios",
+      "empty": "Nenhuma venda entregue por enquanto.",
+      "legendCurrent": "CA mensal (M GNF)",
+      "legendPrevious": "Períodos passados"
+    },
+    "categoryPerf": {
+      "title": "Desempenho por categoria",
+      "categorie": "Categoria",
+      "caMillions": "CA (M GNF)",
+      "commandes": "Encomendas",
+      "empty": "Nenhuma venda por enquanto."
+    },
+    "topProduits": {
+      "title": "Top produtos — Vendas",
+      "empty": "Nenhuma venda por enquanto.",
+      "ventes_one": "{{count}} venda",
+      "ventes_other": "{{count}} vendas"
+    },
+    "trafic": {
+      "title": "Analytics de tráfego",
+      "sub": "Visitas, fontes de tráfego, taxa de conversão e funil de vendas — em breve disponível."
+    }
+  }
+}

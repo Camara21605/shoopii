@@ -30,6 +30,25 @@ export interface AuthResponse {
   user:        PublicUser;
 }
 
+/** Réponse de /auth/login quand le compte a la 2FA activée — aucun
+ *  cookie n'est posé, il faut échanger challengeToken + code via
+ *  /auth/2fa/verify-login pour obtenir l'AuthResponse complet. */
+export interface TwoFaChallengeResponse {
+  requiresTwoFa:  true;
+  challengeToken: string;
+}
+
+/** Réponse de /auth/login quand l'identifiant + mot de passe saisis
+ *  correspondent à DEUX comptes liés (pro + client, même email/téléphone,
+ *  mot de passe coïncidant sur les deux) — cas rare. Il faut rappeler
+ *  /auth/login/choose-account avec le userId choisi par l'utilisateur. */
+export interface AccountChoiceResponse {
+  requiresAccountChoice: true;
+  accounts: { userId: string; role: UserRole }[];
+}
+
+export type LoginResult = AuthResponse | TwoFaChallengeResponse | AccountChoiceResponse;
+
 /** Métadonnées pays extraites du numéro de téléphone */
 export interface PhoneCountryMeta {
   countryCode: string;   // "GN"

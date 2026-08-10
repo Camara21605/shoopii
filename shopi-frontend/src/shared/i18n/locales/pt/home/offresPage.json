@@ -1,0 +1,46 @@
+{
+  "offresPage": {
+    "typeLabel": {
+      "discount": "Descontos",
+      "freeShip": "Entrega gratuita",
+      "bundle": "Bundles",
+      "flash": "Vendas relâmpago"
+    },
+    "hero": {
+      "offreSuffix_one": "oferta ativa",
+      "offreSuffix_other": "ofertas ativas",
+      "titrePart1": "Todas as",
+      "titreEm": "ofertas",
+      "titrePart2": "do momento",
+      "sub": "Descontos, vendas relâmpago e entregas gratuitas de todas as lojas Shopi — num só lugar.",
+      "flashSuffix_one": "venda relâmpago em curso — não as perca",
+      "flashSuffix_other": "vendas relâmpago em curso — não as perca"
+    },
+    "sidebar": {
+      "categories": "Categorias",
+      "toutes": "Todas",
+      "recherche": "Pesquisar",
+      "searchPlaceholder": "Oferta ou loja…",
+      "trierPar": "Ordenar por",
+      "sortBest": "Melhores descontos",
+      "sortEnding": "Expira em breve"
+    },
+    "card": {
+      "touteLaBoutique": "Toda a loja",
+      "produitCible": "Produto alvo",
+      "voirOffre": "Ver a oferta",
+      "offerte": "Grátis",
+      "promo": "Promo"
+    },
+    "states": {
+      "loadErrorTitle": "Impossível carregar as ofertas",
+      "loadErrorFallback": "Impossível carregar as ofertas.",
+      "reessayer": "Tentar novamente",
+      "aucuneOffreTitre": "Nenhuma oferta ativa por enquanto",
+      "aucuneOffreText": "Volte em breve, novas promoções chegam regularmente.",
+      "aucunResultatTitre": "Nenhuma oferta corresponde",
+      "aucunResultatText": "Tente outro filtro ou outra pesquisa.",
+      "reinitialiser": "Repor"
+    }
+  }
+}

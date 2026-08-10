@@ -3,7 +3,8 @@
  *
  * FIX :
  *   ✅ Badge panier → useCart().count (temps réel)
- *   ✅ Bouton ⚙️ mobile → navigate('/parametres') via clientAction
+ *   ✅ Bouton 📍 mobile → navigate('/mes-adresses') via clientAction (remplace l'ancien bouton Paramètres)
+ *   ✅ Bouton 📍 desktop → navigate('/mes-adresses') via clientAction (remplace l'ancien bouton Centre d'aide)
  *   ✅ Badge notifications → API à connecter (mock conservé pour l'instant)
  *   ✅ Bottom nav mobile → état actif sur /livreurs, /correspondants, /boutiques
  *   ✅ Menu avatar "Mon profil" → /mon-profil (page profil client)
@@ -25,6 +26,7 @@ import { useAuthGate }                        from '../../../../shared/hooks/use
 import AuthPromptModal                        from '../../../../shared/components/AuthPromptModal';
 import { useForceDarkTheme }                  from '../../../../shared/context/ThemeContext';
 import WalletQuickBar                         from '../../../../shared/components/portefeuille/WalletQuickBar';
+import AccountSwitchLink                      from '../../../../shared/components/AccountSwitchLink';
 
 type NavKey = 'explorer' | 'boutiques' | 'livreurs' | 'relais' | 'offres';
 
@@ -78,7 +80,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
   const isBoutiques      = location.pathname === '/boutiques';
   const isMessagerie     = location.pathname === '/messagerie';
   const isCommande       = location.pathname.startsWith('/commande');
-  const isAide           = location.pathname.startsWith('/aide');
+  const isAdresses       = location.pathname === '/mes-adresses';
 
   const userInitial = (() => {
     try {
@@ -282,9 +284,9 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
 
               <span className={styles.sep} />
 
-              <button className={`${styles.iconBtn} ${isAide ? styles.iconBtnActive : ''}`}
-                onClick={() => navigate('/aide')} title={t('publicHeader.aide')}>
-                <i className="fas fa-circle-question" />
+              <button className={`${styles.iconBtn} ${isAdresses ? styles.iconBtnActive : ''}`}
+                onClick={() => clientAction(() => navigate('/mes-adresses'))} title={t('publicHeader.adresses')}>
+                <i className="fas fa-location-dot" />
               </button>
               <span className={styles.sep} />
 
@@ -317,6 +319,12 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
                         style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer', textAlign:'left' }}>
                         <i className="fas fa-layer-group" style={{ color:'var(--blue)', width:14 }} /> {t('publicHeader.monEspace')}
                       </button>
+                      <AccountSwitchLink render={({ label, onClick, pending }) => (
+                        <button disabled={pending} onClick={() => { onClick(); setAvatarOpen(false); }}
+                          style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer', textAlign:'left' }}>
+                          <i className="fas fa-right-left" style={{ color:'var(--blue)', width:14 }} /> Basculer vers mon espace {label}
+                        </button>
+                      )} />
                       <div style={{ height:1, background:'var(--bdr)', margin:'4px 0' }} />
                       <button onClick={handleLogout}
                         style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--red,#DC2626)', cursor:'pointer', textAlign:'left' }}>
@@ -360,8 +368,8 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
 
               {isLoggedIn && <NotificationCenter />}
               <button className={styles.iconBtn}
-                onClick={() => clientAction(() => navigate('/parametres'))} title={t('publicHeader.parametres')}>
-                <i className="fas fa-gear" />
+                onClick={() => clientAction(() => navigate('/mes-adresses'))} title={t('publicHeader.adresses')}>
+                <i className="fas fa-location-dot" />
               </button>
               <button className={styles.iconBtn} data-mobile-menu
                 onClick={() => setMobileOpen(o => !o)} aria-label={t('publicHeader.menu')}>
@@ -391,6 +399,12 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
                         style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer' }}>
                         <i className="fas fa-layer-group" style={{ color:'var(--blue)', width:14 }} /> {t('publicHeader.monEspace')}
                       </button>
+                      <AccountSwitchLink render={({ label, onClick, pending }) => (
+                        <button disabled={pending} onClick={() => { onClick(); setAvatarOpen(false); }}
+                          style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer' }}>
+                          <i className="fas fa-right-left" style={{ color:'var(--blue)', width:14 }} /> Basculer vers mon espace {label}
+                        </button>
+                      )} />
                       <div style={{ height:1, background:'var(--bdr)', margin:'4px 0' }} />
                       <button onClick={handleLogout}
                         style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--red,#DC2626)', cursor:'pointer' }}>
@@ -475,6 +489,18 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
                 <span>{inDashboard ? t('publicHeader.retourAccueil') : t('publicHeader.monEspace')}</span>
                 <i className="fas fa-chevron-right" style={{ color:'var(--t4)', fontSize:11 }} />
               </button>
+
+              {/* Bascule vers le compte pro lié (masqué si aucun compte lié) */}
+              {isClient && (
+                <AccountSwitchLink render={({ label, onClick, pending }) => (
+                  <button className={styles.drawerLink} disabled={pending}
+                    onClick={() => { setMobileOpen(false); onClick(); }}>
+                    <div className={styles.drawerLinkIco}><i className="fas fa-right-left" /></div>
+                    <span>Basculer vers mon espace {label}</span>
+                    <i className="fas fa-chevron-right" style={{ color:'var(--t4)', fontSize:11 }} />
+                  </button>
+                )} />
+              )}
             </nav>
             <div className={styles.drawerDivider} />
             <div className={styles.drawerCta}>

@@ -1,0 +1,138 @@
+{
+  "profilCorrespondant": {
+    "loading": "Loading profile…",
+    "notFoundTitle": "Profile not found",
+    "notFoundFallback": "This correspondent doesn't exist or is no longer available.",
+    "retour": "Back",
+    "retourCorrespondants": "Back to correspondents",
+    "idMissingError": "Missing correspondent identifier.",
+    "loadError": "Profile not found or unavailable.",
+    "enLigneMaintenant": "Online now",
+    "abonnesSuffix": "followers",
+    "partager": "Share",
+    "appeler": "Call",
+    "contacter": "Contact",
+    "abonne": "Following",
+    "suivre": "Follow",
+    "kpi": {
+      "missions": "Missions",
+      "note": "Rating",
+      "fiabilite": "Reliability",
+      "abonnes": "Followers",
+      "avisClients": "Reviews",
+      "experience": "Experience",
+      "zonesCouvertes": "Zones covered",
+      "delaiMoyen": "Average delay",
+      "top5": "Top 5%"
+    },
+    "tabs": {
+      "info": "Info",
+      "services": "Services",
+      "zones": "Zones",
+      "tarifs": "Rates",
+      "avis": "Reviews",
+      "galerie": "Gallery"
+    },
+    "sidebar": {
+      "contacterPrenom": "Contact {{prenom}}",
+      "envoyerMessage": "Send a message",
+      "whatsappToast": "📱 WhatsApp",
+      "appelToast": "📞 Call",
+      "contactsDetailles": "Detailed contacts",
+      "statistiques": "Statistics",
+      "abonnesTitle": "Followers",
+      "aucunAbonne": "No followers yet",
+      "abonneCount_one": "{{count}} follower",
+      "abonneCount_other": "{{count}} followers",
+      "suivreCeCorrespondant": "Follow this correspondent",
+      "verificationsShopi": "Shopi verifications",
+      "correspondantsSimilaires": "Similar correspondents",
+      "voirTout": "See all",
+      "suivreShort": "+ Follow",
+      "abonneToast": "✅ Following {{nom}}",
+      "copieToast": "📋 {{valeur}}"
+    },
+    "statsSidebar": {
+      "missionsTotales": "Total missions",
+      "noteMoyenne": "Average rating",
+      "tauxFiabilite": "Reliability rate",
+      "delaiRemise": "Delivery delay",
+      "missionsCeMois": "Missions this month",
+      "litigesResolus": "Disputes resolved"
+    },
+    "verifieParShopi": "✓ Verified by Shopi",
+    "tabInfo": {
+      "aPropos": "About",
+      "informationsPratiques": "Practical information",
+      "disponibiliteHebdo": "Weekly availability",
+      "aujourdhui": "(today)"
+    },
+    "tabServices": {
+      "title": "Services offered",
+      "emptyTitle": "Services being added",
+      "emptyDesc": "This correspondent hasn't listed their services yet."
+    },
+    "tabZones": {
+      "couverture": "Coverage zones",
+      "couvertureEmptyTitle": "Coverage zones not set",
+      "couvertureEmptyDesc": "This correspondent hasn't defined their coverage zones yet.",
+      "reseauTitle": "Partner correspondent network",
+      "reseauEmptyTitle": "International network not set",
+      "reseauEmptyDesc": "Partner countries will be shown here once provided.",
+      "intlNote": "Delays and rates vary by destination — contact the correspondent for a personalized quote.",
+      "paysToast": "🌍 {{nom}} — {{villes}}"
+    },
+    "tabTarifs": {
+      "title": "Rate schedule",
+      "emptyTitle": "Rates not set",
+      "emptyDescPart1": "This correspondent hasn't published their rate schedule yet.",
+      "emptyDescPart2": "Contact them directly for a quote.",
+      "abonnesShopi": "Shopi subscribers",
+      "reduction15": "— 15% discount on all services."
+    },
+    "tabAvis": {
+      "title": "Reviews",
+      "emptyTitle": "No reviews yet",
+      "emptyDesc": "Reviews will appear here after each completed mission.",
+      "avisCount_one": "{{count}} review",
+      "avisCount_other": "{{count}} reviews",
+      "achatVerifie": "Verified purchase",
+      "reponseDe": "Reply from {{auteur}}",
+      "merciRetourToast": "👍 Thanks for your feedback",
+      "signaleToast": "🚩 Reported",
+      "signaler": "Report",
+      "utileCount_one": "{{count}} helpful",
+      "utileCount_other": "{{count}} helpful"
+    },
+    "tabGalerie": {
+      "title": "Warehouse photo gallery",
+      "voirTout": "See all",
+      "emptyTitle": "Gallery unavailable",
+      "emptyDesc": "This correspondent hasn't published photos of their warehouse yet.",
+      "galerieCompleteToast": "🖼️ Full gallery",
+      "labelToast": "🖼️ {{label}}",
+      "photoToast": "🖼️ Photo"
+    },
+    "reseauPage": {
+      "title": "Follow correspondents",
+      "loading": "Loading…",
+      "errorSuffix": "— demo data shown.",
+      "empty": "No correspondent available.",
+      "missionsCount_one": "{{count}} mission",
+      "missionsCount_other": "{{count}} missions",
+      "enLigne": "Online",
+      "suiviCheck": "Following ✓",
+      "suivre": "Follow",
+      "desabonneToast": "👋 Unfollowed {{nom}}",
+      "abonneToast": "✅ Following {{nom}}"
+    },
+    "publicPage": {
+      "abonnezVousMessage": "Follow this correspondent to send them a message.",
+      "abonnezVousAppel": "Follow this correspondent to call them.",
+      "lienCopieToast": "🔗 Profile link copied",
+      "desabonneToast": "👋 Unfollowed {{nom}}",
+      "abonneToast": "✅ Following {{nom}}",
+      "erreurToast": "❌ {{msg}}"
+    }
+  }
+}

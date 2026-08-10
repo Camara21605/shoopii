@@ -1,0 +1,116 @@
+{
+  "home": {
+    "trustSection": {
+      "paiement": {
+        "titre": "安全支付",
+        "sub": "Orange Money、Visa、Mastercard — SSL"
+      },
+      "livraison": {
+        "titre": "加急配送",
+        "sub": "640+ 名已验证配送员，7 天/周"
+      },
+      "protection": {
+        "titre": "买家保护",
+        "sub": "如有问题保证退款"
+      },
+      "support": {
+        "titre": "24/7 支持",
+        "sub": "聊天、WhatsApp、电话"
+      }
+    },
+    "typeEntreprise": {
+      "kick": "店铺类型",
+      "title": "所有<em>企业类别</em>",
+      "sub": "找到适合您的企业",
+      "linkText": "所有店铺",
+      "loadError": "无法加载企业类型。",
+      "empty": "暂无可用企业类型。",
+      "boutiqueCount_one": "{{count}} 家店铺",
+      "boutiqueCount_other": "{{count}} 家店铺",
+      "categorieCount_one": "{{count}} 个类别",
+      "categorieCount_other": "{{count}} 个类别"
+    },
+    "categories": {
+      "kick": "探索",
+      "title": "热门<em>类别</em>",
+      "sub": "浏览我们的产品世界",
+      "linkText": "浏览全部",
+      "loadError": "无法加载类别。",
+      "tout": "全部",
+      "sousCat_one": "{{count}} 个子类别",
+      "sousCat_other": "{{count}} 个子类别"
+    },
+    "promotions": {
+      "kick": "限时优惠",
+      "title": "限时抢购 &amp; <em>促销</em>",
+      "sub": "超值价格，限时供应",
+      "linkText": "查看所有优惠",
+      "livraison": "配送",
+      "promo": "促销",
+      "surBoutique": "全店",
+      "surSelection": "部分产品",
+      "voirOffre": "查看优惠"
+    },
+    "storiesStrip": {
+      "title": "店铺故事",
+      "sub": "合作伙伴重点展示的热门产品",
+      "voirTout": "查看全部",
+      "toastVoirTout": "📖 所有故事",
+      "storiesDe": "{{nom}} 的故事",
+      "produitCount_one": "{{count}} 个产品",
+      "produitCount_other": "{{count}} 个产品",
+      "enLigneMaintenant": "现在在线",
+      "vuRecemment": "最近查看",
+      "badgePromo": "🔥 促销",
+      "badgeNouveau": "✨ 新品",
+      "badgeFlash": "⚡ 限时",
+      "badgeTop": "⭐ 热卖",
+      "voirProduit": "查看产品",
+      "laBoutique": "店铺",
+      "partager": "分享",
+      "lienCopieToast": "🔗 链接已复制！"
+    },
+    "randomBloc": {
+      "produits": {
+        "kick": "目录",
+        "title": "推荐<em>产品</em>",
+        "sub": "为您精选",
+        "link": "查看全部目录"
+      },
+      "produitsGros": {
+        "kick": "批发",
+        "title": "批量<em>购买</em>",
+        "sub": "递减价格 · 最低订购",
+        "link": "查看所有批发产品"
+      },
+      "entreprises": {
+        "kick": "店铺",
+        "title": "精选<em>店铺</em>",
+        "sub": "关注您最喜欢的店铺",
+        "link": "所有店铺"
+      },
+      "correspondants": {
+        "kick": "本地网络",
+        "title": "我们的<em>代理商</em>",
+        "sub": "每个地区的本地中转站",
+        "link": "所有代理商"
+      },
+      "livreurs": {
+        "kick": "物流",
+        "title": "可用的<em>配送员</em>",
+        "sub": "您附近经过验证的专业人士",
+        "link": "所有配送员"
+      },
+      "toastLink": "📄 {{link}}",
+      "moqUnites": "MOQ {{moq}} 件",
+      "errorReseau": "网络错误",
+      "emptyBoutiques": "暂无可用店铺。",
+      "emptyProduits": "暂无可用产品。",
+      "emptyProduitsGros": "暂无可用批发产品。",
+      "emptyLivreurs": "暂无可用配送员。",
+      "emptyCorrespondants": "暂无可用代理商。",
+      "errorProduits": "无法加载产品。",
+      "errorProduitsGros": "无法加载批发产品。"
+    }
+  }
+}

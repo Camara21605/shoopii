@@ -1,0 +1,30 @@
+{
+  "profilCorrespondant": {
+    "title": "ملف المراسل",
+    "kpi": {
+      "missions": "إجمالي المهام",
+      "commandesTraitees": "الطلبات المعالجة",
+      "noteMoyenne": "متوسط التقييم",
+      "reussite": "معدل النجاح"
+    },
+    "tabs": {
+      "apercu": "نظرة عامة",
+      "zones": "المناطق"
+    },
+    "zoneCouverture": "منطقة التغطية",
+    "localisation": "الموقع",
+    "adresse": "العنوان",
+    "telephone": "الهاتف",
+    "email": "البريد الإلكتروني",
+    "type": "النوع",
+    "statut": "الحالة",
+    "membreDepuis": "عضو منذ",
+    "derniereActivite": "آخر نشاط",
+    "contacter": "تواصل",
+    "voirProfil": "عرض الملف",
+    "suivre": "متابعة",
+    "suivi": "متابَع",
+    "envoyerMessage": "إرسال رسالة",
+    "messageEnvoye": "✅ تم إرسال الرسالة إلى {{name}}"
+  }
+}

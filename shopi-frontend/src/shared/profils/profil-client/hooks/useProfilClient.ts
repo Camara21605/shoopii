@@ -229,6 +229,7 @@ function mapAbonnements(api: MesAbonnementsApi | null): Abonnement[] {
     note:        a.note != null ? Number(a.note).toFixed(1) : '—',
     type,                          /* injecté depuis le tableau parent */
     suivi:       a.suivi ?? true,
+    hidden:      a.hidden ?? false,
     international: a.international ?? false,
   });
   return [

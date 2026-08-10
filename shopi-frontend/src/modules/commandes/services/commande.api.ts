@@ -48,3 +48,14 @@ export async function signalerProbleme(
     body: { type, description },
   });
 }
+
+/* ── PATCH /client/commandes/:id/livreur — choisir un autre livreur
+ * (typiquement après le refus du précédent) ── */
+export async function assignerLivreurClient(
+  id: string, livreurId: string,
+): Promise<{ ok: boolean; livreurId: string; livreurAssignmentStatus: string }> {
+  return apiFetch(`/client/commandes/${id}/livreur`, {
+    method: 'PATCH',
+    body: { livreurId },
+  });
+}

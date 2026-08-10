@@ -1,7 +1,7 @@
 // src/dashboards/livreur/LivreurApp.tsx
 // Route : /dashboard/livreur/*
 // Contrôleur racine du dashboard livreur.
-// Accent : teal (#0E7490) + navy
+// Accent : teal (#000000) + navy
 //
 // ✅ NAVIGATION URL-BASED :
 //    La page active est lue depuis l'URL (useParams) et écrite avec
@@ -17,6 +17,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate as useRouterNavigate } from 'react-router-dom';
 import { apiFetch } from '../../shared/services/apiFetch';
 import { useAppContext } from '../../shared/context/AppContext';
+import { useLivreurSharing } from '../../shared/location/hooks/useLocationSocket';
+import { fetchEnCours } from './services/encours.api';
 import type { PageId } from './data/livreurData';
 import { PAGE_META } from './data/livreurData';
 
@@ -32,7 +34,6 @@ import MissionsPage    from './pages/MissionsPage';
 import EnCoursPage     from './pages/EnCoursPage';
 import HistoriquePage  from './pages/HistoriquePage';
 import BoutiquesPage   from './pages/BoutiquesPage';
-import AbonnerPage     from './pages/AbonnerPage';
 import RevenusPage     from './pages/RevenusPage';
 import WalletPage      from './pages/WalletPage';
 import ZonePage        from './pages/ZonePage';
@@ -82,7 +83,7 @@ function parseSplat(splat: string): { page: PageId; viewedId?: string } {
   }
 
   const DIRECT_PAGES: PageId[] = [
-    'missions', 'encours', 'historique', 'boutiques', 'abonner',
+    'missions', 'encours', 'historique', 'boutiques',
     'revenus', 'wallet', 'zone', 'evaluation', 'parametres', 'profil', 'messagerie',
   ];
   if (DIRECT_PAGES.includes(a as PageId)) return { page: a as PageId };
@@ -106,6 +107,7 @@ export default function LivreurApp() {
   const [rating,       setRating]       = useState<number | null>(null);
   const [totalDeliveries, setTotalDeliveries] = useState<number | null>(null);
   const [encoursCount, setEncoursCount] = useState(0);
+  const [hasActiveMission, setHasActiveMission] = useState(false);
 
   /* Charge la photo de profil au montage (endpoint léger — 2 colonnes seulement) */
   const refreshAvatar = useCallback(() => {
@@ -132,8 +134,7 @@ export default function LivreurApp() {
       .catch(() => {});
 
     /* NOTE : pas d'endpoint "boutiques suivies par un livreur" pour l'instant —
-       /suivis/mes-abonnements est réservé aux profils client. Le badge
-       correspondant reste donc masqué côté Sidebar (cf. buildNavReseau). */
+       le badge correspondant reste donc masqué côté Sidebar (cf. buildNavReseau). */
   }, []);
 
   /* Déconnexion : vide le token et redirige vers /login */
@@ -153,6 +154,32 @@ export default function LivreurApp() {
     setToasts(t => [{ id, msg, type }, ...t]);
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3400);
   }, []);
+
+  /* ── Partage de position — persiste sur tout le dashboard (pas
+   * seulement sur la page "Ma zone de livraison"), pour que le client
+   * et l'entreprise de la mission acceptée voient le livreur en
+   * continu, même s'il navigue vers une autre page.
+   * Actif automatiquement dès qu'une mission est acceptée ("en cours"),
+   * arrêté automatiquement quand il n'y a plus de mission active. */
+  const sharingCtl = useLivreurSharing({ onError: msg => pop(`❌ ${msg}`, 'e') });
+
+  useEffect(() => {
+    let cancelled = false;
+    const check = () => {
+      fetchEnCours()
+        .then(d => { if (!cancelled) setHasActiveMission(!!d); })
+        .catch(() => { if (!cancelled) setHasActiveMission(false); });
+    };
+    check();
+    const id = setInterval(check, 30_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
+  useEffect(() => {
+    if (hasActiveMission && !sharingCtl.sharing) sharingCtl.startSharing();
+    else if (!hasActiveMission && sharingCtl.sharing) sharingCtl.stopSharing();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasActiveMission]);
 
   // Navigation → écrit l'URL (un rafraîchissement conserve donc la page)
   const navigate = useCallback((p: PageId, id?: string) => {
@@ -194,14 +221,9 @@ export default function LivreurApp() {
     <NotificationToastStack />
     <div className={styles.root}>
 
-      {/* Overlay mobile */}
-      {sidebarOpen && (
-        <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />
-      )}
-
       {!isMessagesPage && (
         <>
-          {/* Sidebar */}
+          {/* Sidebar — desktop uniquement, le menu mobile est le drawer du Topbar */}
           <Sidebar
             activePage={page}
             isOpen={sidebarOpen}
@@ -224,15 +246,19 @@ export default function LivreurApp() {
             onGoHome={handleGoHome}
           />
 
-          {/* Topbar */}
+          {/* Topbar + drawer mobile (même approche que le dashboard entreprise) */}
           <Topbar
             title={meta.title}
             subtitle={meta.sub}
             isOnline={isOnline}
             avatarUrl={avatarUrl}
             livreurName={livreurName}
+            encoursCount={encoursCount}
+            menuOpen={sidebarOpen}
             onMenuToggle={() => setSidebarOpen(o => !o)}
+            onMenuClose={() => setSidebarOpen(false)}
             onNavigate={navigate}
+            onLogout={handleLogout}
           />
 
           {/* Bottom nav (mobile) : Correspondants · Livreurs · Mon espace */}
@@ -247,10 +273,18 @@ export default function LivreurApp() {
         {page === 'encours'     && <EnCoursPage    onPop={pop} onNavigate={navigate} />}
         {page === 'historique'  && <HistoriquePage onPop={pop} />}
         {page === 'boutiques'   && <BoutiquesPage  onPop={pop} />}
-        {page === 'abonner'     && <AbonnerPage    onPop={pop} />}
         {page === 'revenus'     && <RevenusPage    onPop={pop} />}
         {page === 'wallet'      && <WalletPage />}
-        {page === 'zone'        && <ZonePage       onPop={pop} />}
+        {page === 'zone'        && (
+          <ZonePage
+            onPop={pop}
+            sharing={sharingCtl.sharing}
+            position={sharingCtl.position}
+            hasActiveMission={hasActiveMission}
+            startSharing={sharingCtl.startSharing}
+            stopSharing={sharingCtl.stopSharing}
+          />
+        )}
         {page === 'evaluation'  && <AjouterCorrespondantPage onPop={pop} />}
         {page === 'parametres'  && (
           <ParametresPage onBack={() => navigate('overview')} onPop={pop} onAvatarRefresh={refreshAvatar} />

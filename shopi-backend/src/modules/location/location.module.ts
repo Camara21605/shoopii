@@ -12,6 +12,7 @@ import { PassportModule }   from '@nestjs/passport';
 
 /* ── Entités ─────────────────────────────────────────────── */
 import { Localisation }     from '../../database/entities/localisation.entity';
+import { User }             from '../../database/entities/user.entity';
 import { Delivery }         from '../../database/entities/profiles/livreur-profile.entity';
 import { Company }          from '../../database/entities/profiles/entreprise-profile.entity';
 import { Correspondent }    from '../../database/entities/profiles/correspondant-profile.entity';
@@ -19,6 +20,7 @@ import { Client }           from '../../database/entities/profiles/client-profil
 import { CompanyBranch }    from '../../database/entities/location/company-branch.entity';
 import { LocationHistory }  from '../../database/entities/location/location-history.entity';
 import { Commande }         from '../../database/entities/commande/commande.entity';
+import { CommandeCode }     from '../../database/entities/commande/commande-code.entity';
 
 /* ── Services ────────────────────────────────────────────── */
 import { GeoService }                    from './services/geo.service';
@@ -28,6 +30,7 @@ import { ClientAddressService }          from './services/client-address.service
 import { DeliveryLocationService }       from './services/delivery-location.service';
 import { CompanyLocationService }        from './services/company-location.service';
 import { CorrespondantLocationService }  from './services/correspondant-location.service';
+import { ActorSearchService }            from './services/actor-search.service';
 
 /* ── Gateway ─────────────────────────────────────────────── */
 import { LocationGateway }  from './gateways/location.gateway';
@@ -38,11 +41,13 @@ import { DeliveryLocationController }        from './controllers/delivery-locati
 import { CompanyLocationController }         from './controllers/company-location.controller';
 import { CorrespondantLocationController }   from './controllers/correspondant-location.controller';
 import { TrackingController }                from './controllers/tracking.controller';
+import { ActorSearchController }             from './controllers/actor-search.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Localisation,
+      User, // WsAuth gateway — vérif banni/suspendu/mdp changé
       Delivery,
       Company,
       Correspondent,
@@ -50,6 +55,7 @@ import { TrackingController }                from './controllers/tracking.contro
       CompanyBranch,
       LocationHistory,
       Commande,
+      CommandeCode,
     ]),
 
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -70,6 +76,7 @@ import { TrackingController }                from './controllers/tracking.contro
     CompanyLocationController,
     CorrespondantLocationController,
     TrackingController,
+    ActorSearchController,
   ],
 
   providers: [
@@ -80,6 +87,7 @@ import { TrackingController }                from './controllers/tracking.contro
     DeliveryLocationService,
     CompanyLocationService,
     CorrespondantLocationService,
+    ActorSearchService,
     LocationGateway,
   ],
 

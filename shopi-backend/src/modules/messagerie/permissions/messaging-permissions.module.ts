@@ -24,6 +24,7 @@ import { ClientClientEvaluator }                 from './evaluators/client-clien
 import { ClientCompanyEvaluator }                from './evaluators/client-company.evaluator';
 import { CompanyClientEvaluator }                from './evaluators/company-client.evaluator';
 import { CompanyDeliveryEvaluator }              from './evaluators/company-delivery.evaluator';
+import { DeliveryCompanyEvaluator }              from './evaluators/delivery-company.evaluator';
 import { DeliveryDeliveryEvaluator }             from './evaluators/delivery-delivery.evaluator';
 import { CorrespondentCorrespondentEvaluator }   from './evaluators/correspondent-correspondent.evaluator';
 import { PartnerAsSourceEvaluator, PartnerAsTargetEvaluator } from './evaluators/partner.evaluator';
@@ -39,6 +40,7 @@ const evaluatorClasses = [
   ClientCompanyEvaluator,
   CompanyClientEvaluator,
   CompanyDeliveryEvaluator,
+  DeliveryCompanyEvaluator,
   DeliveryDeliveryEvaluator,
   CorrespondentCorrespondentEvaluator,
   PartnerAsSourceEvaluator,
@@ -73,11 +75,12 @@ const evaluatorClasses = [
         cco: ClientCompanyEvaluator,
         co:  CompanyClientEvaluator,
         cd:  CompanyDeliveryEvaluator,
+        dc:  DeliveryCompanyEvaluator,
         dd:  DeliveryDeliveryEvaluator,
         cr:  CorrespondentCorrespondentEvaluator,
         ps:  PartnerAsSourceEvaluator,
         pt:  PartnerAsTargetEvaluator,
-      ) => [cc, cco, co, cd, dd, cr, ps, pt],
+      ) => [cc, cco, co, cd, dc, dd, cr, ps, pt],
       inject: evaluatorClasses,
     },
 

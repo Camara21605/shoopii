@@ -1,0 +1,22 @@
+{
+  "boutiquesPage": {
+    "title": "Toutes les boutiques",
+    "subtitleCount_one": "{{count}} entreprise disponible",
+    "subtitleCount_other": "{{count}} entreprises disponibles",
+    "subtitleDefault": "Découvrez nos entreprises partenaires",
+    "searchPlaceholder": "Rechercher une boutique...",
+    "resultats": "Résultats",
+    "loading": "Chargement…",
+    "resultCount_one": "{{count}} boutique",
+    "resultCount_other": "{{count}} boutiques",
+    "errorTitle": "Impossible de charger les boutiques",
+    "retry": "Réessayer",
+    "emptyTitle": "Aucune entreprise trouvée",
+    "emptyText": "Aucune entreprise n'est disponible dans cette catégorie.",
+    "loadMore": "Charger plus de boutiques",
+    "filterBar": {
+      "toutesCategories": "✦ Toutes catégories",
+      "toutesSousCategories": "Toutes les sous-catégories"
+    }
+  }
+}

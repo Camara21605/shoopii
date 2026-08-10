@@ -1,0 +1,42 @@
+{
+  "publicHeader": {
+    "accueilTitle": "الرئيسية · شوبي",
+    "nav": {
+      "explorer": "استكشف",
+      "boutiques": "المتاجر",
+      "livreurs": "عمال التوصيل",
+      "relais": "نقاط الاستلام",
+      "offres": "العروض"
+    },
+    "searchAll": "الكل",
+    "searchPlaceholder": "منتجات، متاجر، عمال توصيل…",
+    "searchAria": "بحث",
+    "searchSuggestions": {
+      "tendances": "الأكثر رواجًا الآن",
+      "smartphones": "هواتف ذكية — 4200 نتيجة",
+      "boutiquesPopulaires": "المتاجر الشائعة",
+      "livreursDispo": "عمال توصيل متاحون بالقرب منك",
+      "offresDuJour": "عروض اليوم"
+    },
+    "searchToast": "🔍 {{text}}",
+    "accueil": "الرئيسية",
+    "messagerie": "الرسائل",
+    "panier": "السلة",
+    "aide": "مركز المساعدة",
+    "connexion": "تسجيل الدخول",
+    "inscription": "إنشاء حساب",
+    "monCompte": "حسابي",
+    "monProfil": "ملفي الشخصي",
+    "monEspace": "مساحتي",
+    "monEspacePro": "مساحتي الاحترافية",
+    "monEspaceProShort": "المساحة الاحترافية",
+    "seDeconnecter": "تسجيل الخروج",
+    "deconnexion": "تسجيل الخروج",
+    "menu": "القائمة",
+    "parametres": "الإعدادات",
+    "adresses": "العناوين",
+    "retourAccueil": "العودة إلى الرئيسية",
+    "avantDeVousConnecter": "قبل تسجيل الدخول…",
+    "navMobileAria": "التنقل الرئيسي للجوال"
+  }
+}

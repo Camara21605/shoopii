@@ -1,0 +1,201 @@
+{
+  "livreurs": {
+    "vehicle": {
+      "moto": "摩托车",
+      "voiture": "汽车",
+      "velo": "自行车",
+      "tricycle": "三轮车",
+      "camion": "卡车",
+      "pieton": "步行"
+    },
+    "avail": {
+      "available": "可接单",
+      "on_delivery": "配送中",
+      "offline": "离线"
+    },
+    "availLower": {
+      "available": "可接单",
+      "on_delivery": "配送中",
+      "offline": "离线"
+    },
+    "status": {
+      "active": "活跃",
+      "pending": "待处理",
+      "suspended": "已暂停",
+      "banned": "已封禁"
+    },
+    "na": "N/A",
+    "modalProfil": {
+      "kpiTotalCourses": "总配送次数",
+      "kpiReussies": "{{count}} 次成功",
+      "kpiTauxReussite": "成功率",
+      "kpiTresBon": "非常好",
+      "kpiTiret": "–",
+      "kpiNoteMoyenne": "平均评分",
+      "kpiSur5Etoiles": "满分 5 星",
+      "kpiGainsTotaux": "总收入",
+      "kpiGnfCumules": "累计 GNF",
+      "evaluationClients": "客户评价",
+      "telephone": "电话",
+      "email": "邮箱",
+      "zone": "区域",
+      "vehicule": "交通工具",
+      "plaque": "车牌",
+      "nonRenseignee": "未填写",
+      "livraisonsAuj": "今日配送",
+      "derniereActivite": "最近活动",
+      "membreDepuis": "加入时间",
+      "suspendre": "暂停",
+      "contacter": "联系",
+      "whatsapp": "WhatsApp",
+      "appeler": "打电话"
+    },
+    "modalContacter": {
+      "sujetMessageRequis": "⚠️ 主题和消息为必填项",
+      "messageEnvoye": "✅ 消息已发送给{{name}}",
+      "title": "联系",
+      "sub": "给{{name}}发送消息（{{email}}）",
+      "sujetLabel": "主题 *",
+      "sujetPlaceholder": "例如：有新任务可用",
+      "messageLabel": "消息 *",
+      "messagePlaceholder": "撰写您的消息…",
+      "infoBox": "消息将从 noreply@shopi.gn 发送到 {{email}}。",
+      "annuler": "取消",
+      "envoiEnCours": "发送中…",
+      "envoyer": "发送"
+    },
+    "modalInviter": {
+      "nomRequis": "⚠️ 姓名是必填项",
+      "emailRequis": "⚠️ 邮箱是必填项",
+      "emailInvalide": "⚠️ 邮箱无效",
+      "invitationEnvoyee": "✅ 邀请已发送到 {{email}}",
+      "defaultMessage": "您好，\n\n您已被选中加入 Shopi 配送员团队。\n\n请使用随附的代码创建您的账户。",
+      "title": "邀请配送员",
+      "etapeInformations": "信息",
+      "etapeApercu": "预览",
+      "etapeConfirme": "已确认",
+      "nomComplet": "全名 *",
+      "nomPlaceholder": "例如：Mamadou Diallo",
+      "emailContact": "联系邮箱 *",
+      "emailPlaceholder": "例如：livreur@gmail.com",
+      "codeEmailHint": "邀请码将发送到此邮箱。",
+      "typeVehicule": "交通工具类型",
+      "zoneLivraison": "配送区域",
+      "zonePlaceholder": "例如：Kaloum、Matam、Dixinn",
+      "messagePersonnalise": "个性化消息",
+      "apercuTitle": "将要发送的邮件预览",
+      "emailSujetFixe": "Shopi 邀请 — 加入我们的配送团队",
+      "emailDestA": "收件人：",
+      "bonjour": "您好",
+      "codeInvitationLabel": "您的邀请码（配送员）",
+      "codeInvitationNote": "有效期 7 天 · 一次性使用 · 发送时生成",
+      "zoneLabelInline": "区域：",
+      "vehiculeLabelInline": "交通工具：",
+      "infoBoxExpire": "代码将于 7 天后过期。一次性使用。从 noreply@shopi.gn 发送。",
+      "invitationEnvoyeeTitle": "邀请已发送！",
+      "codeEnvoyeA": "代码已发送到 {{email}}",
+      "recapNom": "姓名",
+      "recapEmail": "邮箱",
+      "recapZone": "区域",
+      "recapVehicule": "交通工具",
+      "codeGenereLabel": "已生成的邀请码",
+      "copier": "复制",
+      "codeCopieToast": "📋 代码已复制！",
+      "expireLe": "于 {{date}} 过期 · 一次性使用",
+      "annuler": "取消",
+      "suivant": "下一步",
+      "retour": "返回",
+      "envoiEnCours": "发送中…",
+      "envoyerInvitation": "发送邀请",
+      "fermer": "关闭"
+    },
+    "modalSuspendre": {
+      "title": "暂停配送员",
+      "confirmText": "暂停 {{name}}？",
+      "note": "在解除暂停之前，此配送员将无法接受订单。",
+      "annuler": "取消",
+      "confirmer": "确认"
+    },
+    "header": {
+      "title": "配送员网络",
+      "subtitle": "实时管理您的配送团队",
+      "inviter": "邀请配送员"
+    },
+    "kpi": {
+      "actifs": "活跃配送员",
+      "auTotal": "共 {{count}} 名",
+      "disponibles": "可接单",
+      "pretsALivrer": "准备配送",
+      "enCourse": "配送中",
+      "actuellement": "当前",
+      "livraisonsAuj": "今日配送",
+      "enAttenteSub": "{{count}} 待处理",
+      "cumulees": "累计"
+    },
+    "filters": {
+      "tous": "全部",
+      "disponibles": "🟢 可接单",
+      "enCourse": "🔵 配送中",
+      "horsLigne": "⚫ 离线"
+    },
+    "statutSelect": {
+      "tousStatuts": "所有状态",
+      "actifs": "活跃",
+      "enAttente": "待处理",
+      "suspendus": "已暂停"
+    },
+    "search": "搜索配送员…",
+    "compteur_one": "{{count}} 名配送员",
+    "compteur_other": "{{count}} 名配送员",
+    "loading": "正在加载配送员…",
+    "empty": {
+      "title": "未找到配送员",
+      "sub": "修改筛选条件或邀请新配送员。",
+      "inviter": "邀请"
+    },
+    "card": {
+      "zoneNonDefinie": "未定义区域",
+      "note": "评分",
+      "courses": "配送",
+      "auj": "今日",
+      "voir": "查看",
+      "contacter": "联系",
+      "whatsapp": "WhatsApp",
+      "appeler": "打电话"
+    },
+    "table": {
+      "livreur": "配送员",
+      "zone": "区域",
+      "vehicule": "交通工具",
+      "note": "评分",
+      "courses": "配送",
+      "auj": "今日",
+      "disponibilite": "可用性",
+      "statut": "状态",
+      "actions": "操作"
+    },
+    "sidePanel": {
+      "couvertureZone": "按区域覆盖",
+      "aucuneZone": "无区域数据",
+      "activiteRecente": "最近活动",
+      "aucuneActivite": "无活动",
+      "actionsRapides": "快速操作"
+    },
+    "quickActions": {
+      "diffuserMission": "发布任务",
+      "diffusionToast": "📢 发布中…",
+      "rapportPerf": "表现报告",
+      "rapportToast": "📊 正在生成报告…",
+      "voirCarte": "查看配送员地图",
+      "carteToast": "🗺️ 地图已打开",
+      "validerEnAttente": "验证待处理（{{count}}）",
+      "aucunEnAttente": "无待处理的配送员",
+      "validesToast_one": "✅ 已验证 {{count}} 名配送员",
+      "validesToast_other": "✅ 已验证 {{count}} 名配送员"
+    },
+    "toasts": {
+      "loadError": "❌ 加载错误：{{message}}",
+      "suspendu": "🚫 {{name}} 已暂停"
+    }
+  }
+}

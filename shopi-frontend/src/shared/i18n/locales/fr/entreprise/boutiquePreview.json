@@ -1,0 +1,51 @@
+{
+  "boutiquePreview": {
+    "loading": "Chargement…",
+    "back": "Retour",
+    "tabs": {
+      "apercu": "Aperçu",
+      "localisation": "Localisation"
+    },
+    "subtitleApercu": "Aperçu public de la boutique",
+    "subtitleLocalisation": "Épinglez votre boutique sur la carte",
+    "ouvrir": "Ouvrir",
+    "enregistrement": "Enregistrement…",
+    "enregistre": "Enregistré !",
+    "sauvegarderLocalisation": "Sauvegarder la localisation",
+    "iframeTitle": "Aperçu",
+    "panelTitle": "Localisation",
+    "panelSub": "Le marqueur 🏪 suit votre sélection",
+    "pays": "Pays",
+    "ville": "Ville",
+    "choisirVille": "— Choisir une ville —",
+    "villePlaceholder": "Nom de la ville",
+    "commune": "Commune",
+    "choisirCommune": "— Choisir une commune —",
+    "quartier": "Quartier",
+    "choisirQuartier": "— Choisir un quartier —",
+    "localisationEnCours": "Localisation en cours…",
+    "adresse": "Adresse",
+    "optionnel": "(optionnel)",
+    "adressePlaceholder": "Rue, numéro…",
+    "repere": "Repère livreurs",
+    "reperePlaceholder": "Face à la pharmacie bleue…",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "villeObligatoire": "La ville est obligatoire.",
+    "errorSauvegarde": "Erreur lors de la sauvegarde.",
+    "localisationEnregistree": "Localisation enregistrée !",
+    "enregistrerLocalisation": "Enregistrer la localisation",
+    "recherchePosition": "Recherche de la position…",
+    "hintCarte": "Cliquez ou glissez le marqueur pour affiner",
+    "pays_list": {
+      "GN": "Guinée",
+      "SN": "Sénégal",
+      "ML": "Mali",
+      "CI": "Côte d'Ivoire",
+      "GW": "Guinée-Bissau",
+      "LR": "Libéria",
+      "SL": "Sierra Leone",
+      "FR": "France"
+    }
+  }
+}

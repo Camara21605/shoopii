@@ -1,0 +1,49 @@
+{
+  "avis": {
+    "loadError": "Impossível carregar as avaliações",
+    "reponsePublieeToast": "✅ Resposta publicada",
+    "reponseErrorToast": "❌ Erro na publicação",
+    "kpi": {
+      "noteGlobale": "Nota global",
+      "sur5Etoiles": "Em 5 estrelas",
+      "avisAuTotal": "Avaliações no total",
+      "clientsVerifies": "Clientes verificados",
+      "satisfaction": "Satisfação",
+      "quatreEtCinqEtoiles": "4 e 5 estrelas",
+      "sansReponse": "Sem resposta",
+      "aTraiter": "Por tratar"
+    },
+    "filters": {
+      "tous": "Todas as avaliações",
+      "avecReponse": "✅ Com resposta",
+      "sansReponse": "⏳ Sem resposta"
+    },
+    "loading": "A carregar as avaliações…",
+    "empty": {
+      "title": "Nenhuma avaliação",
+      "subPending": "Todas as avaliações receberam resposta.",
+      "subReplied": "Nenhuma avaliação foi respondida ainda.",
+      "subDefault": "Nenhuma avaliação de cliente por enquanto."
+    },
+    "sur": "Em:",
+    "votreReponse": "A sua resposta",
+    "replyPlaceholder": "Responder a esta avaliação…",
+    "envoiEnCours": "A enviar…",
+    "publier": "Publicar",
+    "annuler": "Cancelar",
+    "repondre": "Responder",
+    "modifierReponse": "Modificar resposta",
+    "modifierReponseToast": "✏️ Modificação da resposta",
+    "signaler": "Denunciar",
+    "signalerToast": "🚩 Avaliação denunciada para moderação",
+    "sidePanel": {
+      "distributionNotes": "Distribuição das notas",
+      "avisVerifies_one": "{{count}} avaliação verificada",
+      "avisVerifies_other": "{{count}} avaliações verificadas",
+      "conseilsShopi": "Dicas Shopi",
+      "tip1": "Responda em menos de 24h para +12% de satisfação.",
+      "tip2": "Um vendedor que responde obtém 2× mais novas avaliações.",
+      "tip3": "Agradeça sempre as avaliações positivas — mesmo que brevemente."
+    }
+  }
+}

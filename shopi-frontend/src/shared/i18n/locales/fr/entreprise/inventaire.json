@@ -1,0 +1,104 @@
+{
+  "inventaire": {
+    "status": {
+      "rupture": "Rupture",
+      "faible": "Stock faible",
+      "critique": "Critique",
+      "enStock": "En stock"
+    },
+    "modal": {
+      "title": "Modifier le stock",
+      "subtitle": "Mise à jour rapide sans quitter l'inventaire",
+      "quantite": "Quantité en stock *",
+      "unites": "unités",
+      "placeholder1": "Ex: 25",
+      "nouveauStatut": "Nouveau statut :",
+      "seuilAlerte": "Seuil d'alerte (optionnel)",
+      "seuilPlaceholder": "Ex: 5",
+      "seuilHint": "Une alerte apparaîtra quand le stock descend sous ce seuil.",
+      "niveauStock": "Niveau de stock",
+      "annuler": "Annuler",
+      "saving": "Sauvegarde…",
+      "update": "Mettre à jour le stock",
+      "invalidStock": "⚠️ Le stock doit être un nombre positif",
+      "updated": "✅ Stock mis à jour"
+    },
+    "header": {
+      "title": "Inventaire & Stock",
+      "subtitle": "Suivez vos niveaux de stock en temps réel et gérez les alertes",
+      "exportCsv": "Exporter CSV",
+      "exportToast": "📥 Export CSV généré",
+      "refresh": "Actualiser",
+      "loading": "Chargement…"
+    },
+    "stats": {
+      "produitsCatalogues": "Produits catalogués",
+      "unitesTotal": "{{count}} unités au total",
+      "rupturesStock": "Ruptures de stock",
+      "aucuneRupture": "Aucune rupture ✓",
+      "actionRequise": "Action requise !",
+      "stocksFaibles": "Stocks faibles",
+      "sousLeSeuil": "Sous le seuil d'alerte",
+      "valeurStock": "Valeur du stock (GNF)",
+      "prixParQuantite": "Prix × quantité en stock"
+    },
+    "filters": {
+      "tous": "Tous",
+      "rupture": "🔴 Rupture",
+      "faibles": "🟡 Faibles",
+      "enStock": "✅ En stock"
+    },
+    "search": "Rechercher un produit…",
+    "loadingInventaire": "Chargement de l'inventaire…",
+    "retry": "Réessayer",
+    "empty": {
+      "noneTitle": "Aucun produit",
+      "noResultsTitle": "Aucun résultat",
+      "noneSub": "Ajoutez des produits pour voir l'inventaire.",
+      "noResultsSub": "Essayez de modifier vos filtres."
+    },
+    "table": {
+      "produit": "Produit",
+      "categorie": "Catégorie",
+      "prixUnitaire": "Prix unitaire",
+      "stockActuel": "Stock actuel",
+      "niveauVisuel": "Niveau visuel",
+      "statut": "Statut",
+      "actions": "Actions",
+      "valeurStockLigne": "= {{montant}} GNF en stock",
+      "seuil": "Seuil : {{count}}",
+      "modifierTitle": "Modifier le stock",
+      "modifier": "Modifier",
+      "reapproTitle": "Lancer une réapprovisionnement",
+      "reapproToast": "📦 Réappro lancée pour \"{{nom}}\""
+    },
+    "footer": {
+      "count_one": "{{count}} produit",
+      "count_other": "{{count}} produits",
+      "filtres": "filtrés",
+      "pourRecherche": "pour \"{{search}}\""
+    },
+    "alertes": {
+      "title": "Alertes critiques",
+      "allGood": "Tout est en ordre !",
+      "noneDetected": "Aucun stock critique détecté.",
+      "stock": "Stock :",
+      "min": "· Min : {{count}}"
+    },
+    "quickActions": {
+      "title": "Actions rapides",
+      "reapproAll": "Réappro. tous les critiques",
+      "reapproAllSub": "{{count}} produits concernés",
+      "reapproAllToast": "📦 Réapprovisionnement groupé lancé",
+      "exportInventaire": "Exporter l'inventaire (CSV)",
+      "exportInventaireSub": "{{count}} produits · {{units}} unités",
+      "exportInventaireToast": "📥 Export CSV en cours de génération…",
+      "configAlertes": "Configurer les alertes",
+      "configAlertesSub": "Définir des seuils automatiques",
+      "configAlertesToast": "⚙️ Configuration des alertes ouverte",
+      "syncStock": "Synchroniser le stock",
+      "syncStockSub": "Avec votre fournisseur",
+      "syncStockToast": "🔄 Synchronisation en cours…"
+    }
+  }
+}

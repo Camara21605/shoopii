@@ -1,0 +1,181 @@
+{
+  "correspondants": {
+    "type": {
+      "principal": "⭐ Main",
+      "entrepot": "🏭 Warehouse",
+      "export": "✈️ Export",
+      "relais": "📍 Relay"
+    },
+    "status": {
+      "active": "Active",
+      "pending": "Pending",
+      "suspended": "Suspended"
+    },
+    "na": "N/A",
+    "modalProfil": {
+      "kpiTotalMissions": "Total missions",
+      "kpiCommandesTraitees": "Orders processed",
+      "kpiCeMois": "This month",
+      "kpiCommandes": "Orders",
+      "kpiNoteMoyenne": "Average rating",
+      "kpiSur5Etoiles": "Out of 5 stars",
+      "kpiZoneCouverte": "Zone covered",
+      "evaluationClients": "Customer rating",
+      "telephone": "Phone",
+      "email": "Email",
+      "adresse": "Address",
+      "zone": "Zone",
+      "derniereActivite": "Last activity",
+      "membreDepuis": "Member since",
+      "suspendre": "Suspend",
+      "contacter": "Contact",
+      "appeler": "Call"
+    },
+    "modalInviter": {
+      "nomRequis": "⚠️ Name is required",
+      "emailRequis": "⚠️ Email is required",
+      "emailInvalide": "⚠️ Invalid email",
+      "invitationEnvoyee": "✅ Invitation sent to {{email}}",
+      "defaultMessage": "Hello,\n\nYou have been selected to join the Shopi correspondent network.\n\nPlease use the enclosed code to create your account.",
+      "title": "Invite a correspondent",
+      "etapeInformations": "Information",
+      "etapeApercu": "Preview",
+      "etapeConfirme": "Confirmed",
+      "nomPointRelais": "Relay point name *",
+      "nomPlaceholder": "E.g.: RelaisPlus Kaloum",
+      "emailContact": "Contact email *",
+      "emailPlaceholder": "E.g.: relay@gmail.com",
+      "codeEmailHint": "The invitation code will be sent to this email.",
+      "typeCorrespondant": "Correspondent type",
+      "optRelais": "📍 Relay point — Parcel drop-off/pickup",
+      "optEntrepot": "🏭 Warehouse — Regional storage",
+      "optExport": "✈️ Export — International",
+      "optPrincipal": "⭐ Main — Central hub",
+      "ville": "City",
+      "villePlaceholder": "E.g.: Conakry",
+      "quartierZone": "District / Zone",
+      "quartierPlaceholder": "E.g.: Kaloum, Matam…",
+      "messagePersonnalise": "Custom message",
+      "apercuTitle": "Preview of the email that will be sent",
+      "emailSujetFixe": "Shopi Invitation — Join our network",
+      "emailDestA": "To:",
+      "bonjour": "Hello",
+      "codeInvitationLabel": "Your invitation code (10 digits)",
+      "codeInvitationNote": "Valid for 7 days · Single use · Generated on send",
+      "villeLabelInline": "City:",
+      "zoneLabelInline": "Zone:",
+      "typeLabelInline": "Type:",
+      "infoBoxExpire": "This code expires in 7 days. It can be used once. The email will be sent from noreply@shopi.gn.",
+      "invitationEnvoyeeTitle": "Invitation sent!",
+      "codeEnvoyeA": "Code sent to {{email}}",
+      "recapNom": "Name",
+      "recapEmail": "Email",
+      "recapVille": "City",
+      "recapType": "Type",
+      "codeGenereLabel": "Generated invitation code",
+      "copier": "Copy",
+      "codeCopieToast": "📋 Code copied!",
+      "expireLe": "Expires on {{date}} · Single use",
+      "annuler": "Cancel",
+      "suivant": "Next",
+      "retour": "Back",
+      "envoiEnCours": "Sending…",
+      "envoyerInvitation": "Send the invitation",
+      "fermer": "Close"
+    },
+    "modalContacter": {
+      "sujetMessageRequis": "⚠️ Subject and message required",
+      "messageEnvoye": "✅ Message sent to {{name}}",
+      "title": "Contact",
+      "sub": "Send a message to {{name}} ({{email}})",
+      "sujetLabel": "Subject *",
+      "sujetPlaceholder": "E.g.: Stock update available",
+      "messageLabel": "Message *",
+      "messagePlaceholder": "Write your message…",
+      "infoBox": "The message will be sent to {{email}} from noreply@shopi.gn.",
+      "annuler": "Cancel",
+      "envoiEnCours": "Sending…",
+      "envoyer": "Send"
+    },
+    "modalSuspendre": {
+      "title": "Suspend the correspondent",
+      "confirmText": "Suspend {{name}}?",
+      "note": "This relay point will no longer be able to receive or ship parcels until the suspension is lifted.",
+      "annuler": "Cancel",
+      "confirmer": "Confirm"
+    },
+    "header": {
+      "title": "Correspondent Network",
+      "subtitle": "Manage your relay points, warehouses and export partners",
+      "inviter": "Invite a correspondent"
+    },
+    "stats": {
+      "actifs": "Active correspondents",
+      "auTotal": "{{count}} in total",
+      "commandesCeMois": "Orders this month",
+      "traiteesParReseau": "Processed by the network",
+      "villesCouvertes": "Cities covered",
+      "plusInternational": "+ International",
+      "enAttente": "Pending",
+      "validationRequise": "Validation required"
+    },
+    "filters": {
+      "tous": "All"
+    },
+    "statutSelect": {
+      "tousStatuts": "All statuses",
+      "actifs": "Active",
+      "enAttente": "Pending",
+      "suspendus": "Suspended"
+    },
+    "search": "Search…",
+    "compteur_one": "{{count}} correspondent",
+    "compteur_other": "{{count}} correspondents",
+    "compteurType": " · type: {{type}}",
+    "loading": "Loading correspondents…",
+    "empty": {
+      "title": "No correspondent found",
+      "sub": "Adjust your filters or invite a new correspondent.",
+      "inviter": "Invite"
+    },
+    "card": {
+      "ceMois": "this month",
+      "total": "total",
+      "note": "rating",
+      "voir": "View",
+      "contacter": "Contact",
+      "appeler": "Call"
+    },
+    "table": {
+      "correspondant": "Correspondent",
+      "ville": "City",
+      "type": "Type",
+      "ceMois": "This month",
+      "total": "Total",
+      "note": "Rating",
+      "statut": "Status",
+      "actions": "Actions"
+    },
+    "sidePanel": {
+      "couvertureZone": "Coverage by zone",
+      "aucuneZone": "No zone data",
+      "activiteRecente": "Recent activity",
+      "actionsRapides": "Quick actions"
+    },
+    "quickActions": {
+      "envoyerCirculaire": "Send a circular to all",
+      "envoiToast": "📧 Bulk sending…",
+      "rapportReseau": "Monthly network report",
+      "rapportToast": "📊 Generating report…",
+      "voirCarte": "View relay map",
+      "carteToast": "🗺️ Relay map opened",
+      "validerEnAttente": "Approve pending ({{count}})",
+      "aucunEnAttente": "No pending accounts",
+      "validesToast": "✅ {{count}} accounts approved"
+    },
+    "toasts": {
+      "loadError": "❌ Loading error: {{message}}",
+      "suspendu": "🚫 {{name}} suspended"
+    }
+  }
+}

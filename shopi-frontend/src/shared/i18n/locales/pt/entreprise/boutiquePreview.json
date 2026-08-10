@@ -1,0 +1,51 @@
+{
+  "boutiquePreview": {
+    "loading": "A carregar…",
+    "back": "Voltar",
+    "tabs": {
+      "apercu": "Pré-visualização",
+      "localisation": "Localização"
+    },
+    "subtitleApercu": "Pré-visualização pública da loja",
+    "subtitleLocalisation": "Fixe a sua loja no mapa",
+    "ouvrir": "Abrir",
+    "enregistrement": "A guardar…",
+    "enregistre": "Guardado!",
+    "sauvegarderLocalisation": "Guardar a localização",
+    "iframeTitle": "Pré-visualização",
+    "panelTitle": "Localização",
+    "panelSub": "O marcador 🏪 segue a sua seleção",
+    "pays": "País",
+    "ville": "Cidade",
+    "choisirVille": "— Escolher uma cidade —",
+    "villePlaceholder": "Nome da cidade",
+    "commune": "Comuna",
+    "choisirCommune": "— Escolher uma comuna —",
+    "quartier": "Bairro",
+    "choisirQuartier": "— Escolher um bairro —",
+    "localisationEnCours": "A localizar…",
+    "adresse": "Morada",
+    "optionnel": "(opcional)",
+    "adressePlaceholder": "Rua, número…",
+    "repere": "Ponto de referência para entregadores",
+    "reperePlaceholder": "Em frente à farmácia azul…",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "villeObligatoire": "A cidade é obrigatória.",
+    "errorSauvegarde": "Erro ao guardar.",
+    "localisationEnregistree": "Localização guardada!",
+    "enregistrerLocalisation": "Guardar a localização",
+    "recherchePosition": "A procurar a posição…",
+    "hintCarte": "Clique ou arraste o marcador para refinar",
+    "pays_list": {
+      "GN": "Guiné",
+      "SN": "Senegal",
+      "ML": "Mali",
+      "CI": "Costa do Marfim",
+      "GW": "Guiné-Bissau",
+      "LR": "Libéria",
+      "SL": "Serra Leoa",
+      "FR": "França"
+    }
+  }
+}

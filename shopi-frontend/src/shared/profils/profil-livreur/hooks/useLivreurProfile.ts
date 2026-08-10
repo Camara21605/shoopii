@@ -9,27 +9,24 @@
  *          POST /suivis/livreurs/:id → toggle abonnement
  * ================================================================ */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiFetch }            from '../../../services/apiFetch';
-import { toggleFollowLivreur } from '../../../services/follow';
-import { getRoleFromToken }    from '../../../services/authUtils';
 import type { LivreurProfile, ProfilTab } from '../types';
 
 interface UseLivreurProfileReturn {
-  profile:       LivreurProfile | null;
-  loading:       boolean;
-  error:         string | null;
-  tab:           ProfilTab;
-  setTab:        (t: ProfilTab) => void;
-  follow:        () => Promise<void>;
-  followLoading: boolean;
+  profile:            LivreurProfile | null;
+  loading:            boolean;
+  error:              string | null;
+  tab:                ProfilTab;
+  setTab:             (t: ProfilTab) => void;
+  /** Synchronise profile.isSuivi après une action de FollowButton
+   *  (le composant fait lui-même l'appel API désormais). */
+  updateFollowState:  (next: { isSuivi: boolean }) => void;
 }
 
 export function useLivreurProfile(
   id: string | undefined,
-  onToast?: (msg: string, type?: 's' | 'i' | 'w' | 'e') => void,
-  onRequireAuth?: () => void,
 ): UseLivreurProfileReturn {
 
   const { t } = useTranslation();
@@ -37,7 +34,6 @@ export function useLivreurProfile(
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
   const [tab,     setTab]     = useState<ProfilTab>('info');
-  const [followLoading, setFollowLoading] = useState(false);
 
   /* ── Chargement du profil ── */
   useEffect(() => {
@@ -54,28 +50,9 @@ export function useLivreurProfile(
     return () => { cancelled = true; };
   }, [id, t]);
 
-  /* ── Toggle abonnement (optimistic + rollback) ── */
-  const follow = useCallback(async () => {
-    if (!profile) return;
-    if (!getRoleFromToken()) { onRequireAuth?.(); return; }
-    setFollowLoading(true);
-    const next = !profile.isSuivi;
-    setProfile(p => p ? { ...p, isSuivi: next } : p);
+  const updateFollowState = (next: { isSuivi: boolean }) => {
+    setProfile(p => p ? { ...p, isSuivi: next.isSuivi } : p);
+  };
 
-    try {
-      const confirmed = await toggleFollowLivreur(profile.id);
-      setProfile(p => p ? { ...p, isSuivi: confirmed } : p);
-      onToast?.(
-        confirmed ? t('profilLivreur.reseauPage.abonneToast', { nom: profile.fullName }) : t('profilLivreur.reseauPage.desabonneToast', { nom: profile.fullName }),
-        confirmed ? 's' : 'i',
-      );
-    } catch (e: any) {
-      setProfile(p => p ? { ...p, isSuivi: !next } : p);
-      onToast?.(t('profilLivreur.publicPage.erreurToast', { msg: e?.message ?? t('profilLivreur.networkError') }), 'e');
-    } finally {
-      setFollowLoading(false);
-    }
-  }, [profile, onToast, onRequireAuth, t]);
-
-  return { profile, loading, error, tab, setTab, follow, followLoading };
+  return { profile, loading, error, tab, setTab, updateFollowState };
 }

@@ -13,6 +13,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
@@ -37,6 +38,32 @@ export class LoginDto {
    * Si true  → JWT valable 30 jours  (JWT_TTL_LONG)
    * Si false → JWT valable 24 heures (JWT_TTL_SHORT)
    */
+  @IsOptional()
+  @IsBoolean({ message: '"rememberMe" doit être un booléen.' })
+  rememberMe?: boolean;
+}
+
+/**
+ * POST /auth/login/choose-account — 2e appel quand /auth/login a répondu
+ * requiresAccountChoice (identifiant + mot de passe partagés par un compte
+ * pro et son compte client lié). Le mot de passe est REVÉRIFIÉ côté serveur
+ * contre le userId choisi — on ne fait jamais confiance au choix client seul.
+ */
+export class ChooseAccountDto {
+  @IsString()
+  @IsNotEmpty({ message: "L'identifiant est obligatoire." })
+  @Transform(({ value }) => (value as string).trim().toLowerCase())
+  identifier: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Le mot de passe est obligatoire.' })
+  password: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Le compte choisi est obligatoire.' })
+  @IsUUID(4, { message: 'Identifiant de compte invalide.' })
+  userId: string;
+
   @IsOptional()
   @IsBoolean({ message: '"rememberMe" doit être un booléen.' })
   rememberMe?: boolean;

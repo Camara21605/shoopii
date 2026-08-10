@@ -1,0 +1,54 @@
+{
+  "publicFooter": {
+    "brandTagline": "Africa's leading marketplace. Connecting West Africa's economic players in one unified digital ecosystem.",
+    "socialToast": "📲 {{label}}",
+    "appStoreToast": "📱 App Store coming soon",
+    "googlePlayToast": "🤖 Google Play coming soon",
+    "disponibleSur": "Available on",
+    "linkToast": "📄 {{label}}",
+    "cols": {
+      "plateforme": {
+        "titre": "Platform",
+        "explorerProduits": "Explore products",
+        "boutiques": "Shops",
+        "livreurs": "Delivery agents",
+        "partenaires": "Partners",
+        "correspondants": "Correspondents",
+        "offresPromos": "Deals & Promos"
+      },
+      "acteurs": {
+        "titre": "Members",
+        "espaceClient": "Client space",
+        "espaceEntreprise": "Business space",
+        "espaceLivreur": "Delivery space",
+        "espacePartenaire": "Partner space",
+        "espaceCorrespondant": "Correspondent space",
+        "espaceAdmin": "Admin space"
+      },
+      "aide": {
+        "titre": "Help",
+        "centreAide": "Help center",
+        "contact": "Contact",
+        "faq": "FAQ",
+        "signalerProbleme": "Report a problem",
+        "remboursements": "Refunds",
+        "politiqueRetour": "Return policy"
+      }
+    },
+    "trust": {
+      "paiementSecurise": "Secure SSL payment",
+      "livraisonExpress": "Express delivery 7 days a week",
+      "protectionAcheteur": "Buyer protection",
+      "support247": "24/7 support",
+      "retourFacile": "Easy 7-day returns"
+    },
+    "copyright": "© 2025 Shopi Africa. All rights reserved. Made with ❤️ in Guinea 🇬🇳",
+    "bottomLinks": {
+      "mentionsLegales": "Legal notice",
+      "confidentialite": "Privacy",
+      "cookies": "Cookies",
+      "cgu": "Terms of use",
+      "accessibilite": "Accessibility"
+    }
+  }
+}

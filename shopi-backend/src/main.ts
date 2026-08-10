@@ -20,16 +20,18 @@ setDefaultResultOrder('ipv4first');
 
 import { NestFactory }            from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { IoAdapter }              from '@nestjs/platform-socket.io';
 import cookieParser               from 'cookie-parser';
 import { AppModule }              from './app.module';
+import { csrfProtection }         from './common/middleware/csrf.middleware';
 
 const logger = new Logger('Bootstrap');
 
 async function bootstrap() {
 
   /* ── Application ───────────────────────────────────────────── */
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: process.env.NODE_ENV === 'production'
       ? ['error', 'warn', 'log']
       : ['error', 'warn', 'log', 'debug', 'verbose'],
@@ -38,8 +40,23 @@ async function bootstrap() {
   /* ── Graceful shutdown (SIGTERM Render) ─────────────────────── */
   app.enableShutdownHooks();
 
+  /* ── Faire confiance au premier proxy (Render) ───────────────
+   * Sans ça, req.ip (utilisé par @Ip() pour le rate limiting et les
+   * logs d'audit AuthLog) renvoie l'IP interne du load balancer Render
+   * pour TOUTES les requêtes — le rate limiting par IP devient partagé
+   * entre tous les utilisateurs et les IP loguées sont inexploitables.
+   * `1` = ne fait confiance qu'au premier hop (le proxy Render), pas à
+   * un en-tête X-Forwarded-For arbitraire plus loin dans la chaîne. */
+  app.set('trust proxy', 1);
+
   /* ── Cookie parser (lecture de req.cookies pour JwtStrategy) ── */
   app.use(cookieParser());
+
+  /* ── CSRF (double-submit cookie) — défense en profondeur ──────
+   * Doit être APRÈS cookieParser (a besoin de req.cookies) et AVANT
+   * les routes. Voir csrf.middleware.ts pour le détail du modèle
+   * de risque et pourquoi c'est nécessaire malgré sameSite. */
+  app.use(csrfProtection(process.env.NODE_ENV === 'production'));
 
   /* ── Validation globale des DTO ─────────────────────────────── */
   app.useGlobalPipes(
@@ -77,7 +94,7 @@ async function bootstrap() {
     origin:         allowedOrigins,
     credentials:    true,
     methods:        ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token'],
   });
 
   /* ── Préfixe global ─────────────────────────────────────────── */

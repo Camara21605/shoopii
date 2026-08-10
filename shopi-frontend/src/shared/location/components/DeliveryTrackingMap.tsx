@@ -4,11 +4,9 @@
  *           S'abonne aux événements Socket.IO /location.
  * ============================================================ */
 
-import React, { useState } from 'react';
-import { Circle }           from 'react-leaflet';
 import LocationMap          from './LocationMap';
 import { useTrackDelivery } from '../hooks/useLocationSocket';
-import { formatDistance, estimatedDuration } from '../utils/geoUtils';
+import { formatDistance, estimatedDuration, distanceKm } from '../utils/geoUtils';
 import type { Coordinates }  from '../types/location.types';
 
 interface DeliveryTrackingMapProps {
@@ -51,7 +49,7 @@ export default function DeliveryTrackingMap({
           {destination && (
             <div style={{ marginTop: 4, fontSize: 12 }}>
               Distance : {formatDistance(
-                require('../utils/geoUtils').distanceKm(
+                distanceKm(
                   { latitude: position.latitude, longitude: position.longitude },
                   destination,
                 ),
@@ -124,7 +122,7 @@ export default function DeliveryTrackingMap({
             <div style={{ color: 'var(--t2)', fontSize: 11 }}>Distance</div>
             <div style={{ fontWeight: 700 }}>
               {formatDistance(
-                require('../utils/geoUtils').distanceKm(
+                distanceKm(
                   { latitude: position.latitude, longitude: position.longitude },
                   destination,
                 ),
@@ -135,7 +133,7 @@ export default function DeliveryTrackingMap({
             <div style={{ color: 'var(--t2)', fontSize: 11 }}>Temps estimé</div>
             <div style={{ fontWeight: 700 }}>
               {estimatedDuration(
-                require('../utils/geoUtils').distanceKm(
+                distanceKm(
                   { latitude: position.latitude, longitude: position.longitude },
                   destination,
                 ),

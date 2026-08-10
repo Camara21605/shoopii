@@ -19,6 +19,7 @@ import { useState, useEffect } from 'react';
 import styles from '../../styles/ParametresPage.module.css';
 import type { SectionProps } from './types';
 import { apiFetch } from '../../../../shared/services/apiFetch';
+import TwoFaSetupModal from '../../../../shared/components/TwoFaSetupModal';
 
 /* ── Types retournés par GET /my-securite ── */
 interface ScoreItem {
@@ -77,10 +78,7 @@ export default function SecuriteSection({ onToast }: SectionProps) {
 
   /* ── 2FA ── */
   const [saving2fa,    setSaving2fa]    = useState(false);
-  /* URI otpauth:// retourné par le backend lors de l'activation TOTP */
-  const [otpAuthUri,   setOtpAuthUri]   = useState<string | null>(null);
-  /* Secret texte pour saisie manuelle dans l'app */
-  const [totpSecret,   setTotpSecret]   = useState<string | null>(null);
+  const [show2fa,      setShow2fa]      = useState(false);
 
   /* ── Chargement des données de sécurité ── */
   useEffect(() => {
@@ -127,55 +125,33 @@ export default function SecuriteSection({ onToast }: SectionProps) {
 
   /* ──────────────────────────────────────────────────────────
    * Toggle 2FA
+   *
+   * Activation : passe désormais par POST /auth/2fa/setup + /confirm
+   * (TwoFaService), qui exige un code TOTP valide avant d'activer
+   * réellement — l'ancien chemin direct via ce PATCH est rejeté par
+   * le backend pour twoFaEnabled:true. Seule la désactivation reste
+   * gérée par cet endpoint.
    * ────────────────────────────────────────────────────────── */
   async function toggleTwoFa() {
     if (!data) return;
-    const enable = !data.twoFaEnabled;
+
+    if (!data.twoFaEnabled) {
+      setShow2fa(true);
+      return;
+    }
 
     setSaving2fa(true);
     try {
-      const res = await apiFetch<{
-        twoFaEnabled: boolean;
-        method?:      string;
-        otpAuthUri?:  string;
-        secret?:      string;
-        message:      string;
-      }>('/dashboard/super-admin/my-securite/2fa', {
-        method: 'PATCH',
-        body: {
-          twoFaEnabled: enable,
-          twoFaMethod:  enable ? 'app' : undefined,
-        },
-      });
-
-      /* Mettre à jour l'état local */
-      setData(prev => prev ? { ...prev, twoFaEnabled: res.twoFaEnabled, twoFaMethod: res.method ?? null } : prev);
-
-      if (res.otpAuthUri) {
-        /* Actication TOTP : afficher l'URI et le secret */
-        setOtpAuthUri(res.otpAuthUri);
-        setTotpSecret(res.secret ?? null);
-        onToast('2FA activée — scannez le QR code ou copiez le code secret', 's');
-      } else {
-        /* Désactivation : cacher l'URI/secret précédents */
-        setOtpAuthUri(null);
-        setTotpSecret(null);
-        onToast(res.message, enable ? 's' : 'w');
-      }
+      const res = await apiFetch<{ twoFaEnabled: boolean; message: string }>(
+        '/dashboard/super-admin/my-securite/2fa',
+        { method: 'PATCH', body: { twoFaEnabled: false } },
+      );
+      setData(prev => prev ? { ...prev, twoFaEnabled: res.twoFaEnabled, twoFaMethod: null } : prev);
+      onToast(res.message, 'w');
     } catch (err: any) {
       onToast(err.message ?? 'Erreur lors de la modification 2FA', 'w');
     } finally {
       setSaving2fa(false);
-    }
-  }
-
-  /* ── Copier dans le presse-papiers ── */
-  async function copyToClipboard(text: string, label: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      onToast(`${label} copié !`, 'i');
-    } catch {
-      onToast('Copie non supportée par ce navigateur', 'w');
     }
   }
 
@@ -310,48 +286,8 @@ export default function SecuriteSection({ onToast }: SectionProps) {
           />
         </div>
 
-        {/* Panneau affiché après activation TOTP — URI + secret texte */}
-        {data?.twoFaEnabled && otpAuthUri && (
-          <div className={styles.cardBody}>
-            <p style={{ fontSize: 12.5, color: 'var(--t3)', lineHeight: 1.6, marginBottom: 14 }}>
-              Ouvrez <b>Google Authenticator</b> ou <b>Authy</b>, ajoutez un compte en scannant
-              le QR code via l&apos;application, ou entrez le code secret manuellement.
-            </p>
-
-            {/* Lien cliquable vers l'URI otpauth:// (ouvre l'app Authenticator sur mobile) */}
-            <a href={otpAuthUri}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                fontSize: 13, color: 'var(--blue)', fontWeight: 600, marginBottom: 12,
-              }}>
-              <i className="fas fa-qrcode" /> Ouvrir dans mon application Authenticator
-            </a>
-
-            {/* Code secret en texte pour saisie manuelle */}
-            {totpSecret && (
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <code style={{
-                  flex: 1, background: 'var(--g50)', border: '1px solid var(--bdr)',
-                  borderRadius: 'var(--r-md)', padding: '10px 14px',
-                  fontSize: 13, fontFamily: 'monospace', letterSpacing: 2,
-                  color: 'var(--navy)', wordBreak: 'break-all',
-                }}>
-                  {totpSecret}
-                </code>
-                <button className={`${styles.btn} ${styles.btnSecondary} ${styles.btnSm}`}
-                  onClick={() => copyToClipboard(totpSecret, 'Code secret')}>
-                  <i className="fas fa-copy" />
-                </button>
-              </div>
-            )}
-            <span className={styles.fldHint} style={{ marginTop: 8, display: 'block' }}>
-              Ce code ne s&apos;affiche qu&apos;une seule fois. Conservez-le en lieu sûr.
-            </span>
-          </div>
-        )}
-
-        {/* Message d'aide si 2FA activée mais URI déjà caché (session précédente) */}
-        {data?.twoFaEnabled && !otpAuthUri && (
+        {/* Message d'aide si 2FA activée */}
+        {data?.twoFaEnabled && (
           <div className={styles.cardBody}>
             <p style={{ fontSize: 12.5, color: 'var(--t3)', lineHeight: 1.6 }}>
               <i className="fas fa-circle-check" style={{ color: 'var(--emerald)', marginRight: 6 }} />
@@ -360,6 +296,16 @@ export default function SecuriteSection({ onToast }: SectionProps) {
           </div>
         )}
       </div>
+
+      {show2fa && (
+        <TwoFaSetupModal
+          onClose={() => setShow2fa(false)}
+          onEnabled={() => {
+            setData(prev => prev ? { ...prev, twoFaEnabled: true, twoFaMethod: 'app' } : prev);
+            onToast('2FA activée avec succès', 's');
+          }}
+        />
+      )}
 
       {/* ── Carte : Dernière connexion ── */}
       <div className={styles.card}>

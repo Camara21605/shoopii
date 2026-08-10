@@ -7,8 +7,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
-import { fetchEntrepriseCommandes } from '../services/commandesApi';
+import { fetchEntrepriseCommandes, assignerLivreurCommande, fetchAssignableLivreurs } from '../services/commandesApi';
 import type { Order, OrderItem, OrderStatus } from '../types';
+import ChoisirLivreurModal from '../../../shared/components/ChoisirLivreurModal';
+import type { LivreurPickerItem } from '../../../shared/components/ChoisirLivreurModal';
 
 function fmt(n: number) {
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -172,6 +174,12 @@ export default function CommandesPage() {
   const [orders,       setOrders]       = useState<Order[]>([]);
   const [loading,      setLoading]      = useState(true);
 
+  /* Assigner / changer le livreur */
+  const [assigningOrder,  setAssigningOrder]  = useState<Order | null>(null);
+  const [livreurOptions,  setLivreurOptions]  = useState<LivreurPickerItem[]>([]);
+  const [loadingLivreurs, setLoadingLivreurs] = useState(false);
+  const [savingLivreur,   setSavingLivreur]   = useState(false);
+
   const FILTERS: { label: string; value: string }[] = [
     { label: `🔴 ${t('commandes.filters.attente')}`,     value: 'new'  },
     { label: `⚙️ ${t('commandes.filters.preparation')}`, value: 'prep' },
@@ -203,6 +211,34 @@ export default function CommandesPage() {
   function voirCommande(o: Order) {
     if (o.uuid) navigate(`/commande/${o.uuid}/suivi`);
     else pop(t('commandes.toasts.orderRef', { id: o.id }), 'i');
+  }
+
+  function openAssignerLivreur(o: Order) {
+    setAssigningOrder(o);
+    setLoadingLivreurs(true);
+    fetchAssignableLivreurs()
+      .then(setLivreurOptions)
+      .catch(() => setLivreurOptions([]))
+      .finally(() => setLoadingLivreurs(false));
+  }
+
+  async function handleAssignerLivreur(livreurId: string) {
+    if (!assigningOrder?.uuid) return;
+    setSavingLivreur(true);
+    try {
+      await assignerLivreurCommande(assigningOrder.uuid, livreurId);
+      const chosen = livreurOptions.find(l => l.id === livreurId);
+      setOrders(prev => prev.map(o => o.uuid === assigningOrder.uuid
+        ? { ...o, livreur: chosen?.nom ?? o.livreur, livreurId, livreurAssignmentStatus: 'pending', livreurRefusalReason: null }
+        : o,
+      ));
+      pop('🛵 Livreur assigné — en attente de sa confirmation', 's');
+      setAssigningOrder(null);
+    } catch (err: any) {
+      pop(err?.message ?? "Impossible d'assigner ce livreur.", 'e');
+    } finally {
+      setSavingLivreur(false);
+    }
   }
 
   return (
@@ -294,7 +330,25 @@ export default function CommandesPage() {
                   <td><div className="td-price">{fmt(o.price)} GNF</div></td>
                   <td>{STATUS_LABELS[o.status]}</td>
                   <td style={{ fontSize:12, color:'var(--t2)' }}>{o.date}</td>
-                  <td style={{ fontSize:12, color:'var(--t2)' }}>{o.livreur}</td>
+                  <td>
+                    <button
+                      onClick={e => { e.stopPropagation(); openAssignerLivreur(o); }}
+                      style={{
+                        background:'none', border:'none', cursor:'pointer', padding:0,
+                        textAlign:'left', display:'flex', flexDirection:'column', gap:2,
+                      }}
+                    >
+                      <span style={{ fontSize:12, color:'var(--t2)', textDecoration:'underline', textDecorationStyle:'dotted' }}>
+                        {o.livreur !== '—' ? o.livreur : 'Assigner'}
+                      </span>
+                      {o.livreurAssignmentStatus === 'pending' && (
+                        <span style={{ fontSize:10, fontWeight:700, color:'#D97706' }}>⏳ En attente</span>
+                      )}
+                      {o.livreurAssignmentStatus === 'refused' && (
+                        <span style={{ fontSize:10, fontWeight:700, color:'#DC2626' }}>✕ Refusé — à réassigner</span>
+                      )}
+                    </button>
+                  </td>
 
                   <td>
                     <div className="td-action">
@@ -332,6 +386,18 @@ export default function CommandesPage() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
+
+      {assigningOrder && (
+        <ChoisirLivreurModal
+          title={`Assigner un livreur — ${assigningOrder.id}`}
+          items={livreurOptions}
+          loading={loadingLivreurs}
+          saving={savingLivreur}
+          emptyMessage="Aucun livreur disponible dans votre entreprise pour le moment."
+          onClose={() => setAssigningOrder(null)}
+          onSelect={handleAssignerLivreur}
+        />
+      )}
     </div>
   );
 }

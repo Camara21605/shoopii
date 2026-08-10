@@ -57,6 +57,7 @@ export interface AbonnementApi {
   note:      number;
   type:      'boutiques' | 'livreurs' | 'correspondants';
   suivi:     boolean;
+  hidden:    boolean;
 }
 export interface MesAbonnementsApi {
   boutiques:      AbonnementApi[];

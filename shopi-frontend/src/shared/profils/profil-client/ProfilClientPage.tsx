@@ -34,7 +34,6 @@ import SectionSubs      from './sections/SectionSubs';
 import SectionFavs      from './sections/SectionFavs';
 import SectionReviews   from './sections/SectionReviews';
 import SectionActivity  from './sections/SectionActivity';
-import SectionAddresses from './sections/SectionAddresses';
 
 import type { ClientTab } from './types';
 import styles from './styles/ProfilClient.module.css';
@@ -123,7 +122,6 @@ export default function ProfilClientPage() {
             {tab === 'favs'      && <SectionFavs      onToast={onToast} favoris={favoris} />}
             {tab === 'reviews'   && <SectionReviews   onToast={onToast} avis={avis} score={avisScore} />}
             {tab === 'activity'  && <SectionActivity  onToast={onToast} jours={activites} />}
-            {tab === 'addresses' && <SectionAddresses onToast={onToast} />}
           </div>
 
           {/* SIDEBAR — paiement, infos & points DYNAMIQUES */}

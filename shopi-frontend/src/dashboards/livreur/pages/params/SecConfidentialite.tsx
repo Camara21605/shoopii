@@ -28,10 +28,10 @@ const PRIVACY_KEYS = [
 /* Métadonnées visuelles enrichies pour chaque item */
 const ITEM_META = [
   { icon: 'fa-phone',              iconColor: 'var(--teal)',    iconBg: 'var(--tl-bg)'              },
-  { icon: 'fa-clock-rotate-left',  iconColor: 'var(--blue)',    iconBg: 'rgba(26,79,196,.08)'       },
+  { icon: 'fa-clock-rotate-left',  iconColor: 'var(--blue)',    iconBg: 'rgba(0,0,0,.08)'       },
   { icon: 'fa-magnifying-glass',   iconColor: 'var(--teal)',    iconBg: 'var(--tl-bg)'              },
-  { icon: 'fa-location-dot',       iconColor: 'var(--amber)',   iconBg: 'rgba(217,119,6,.09)'       },
-  { icon: 'fa-chart-bar',          iconColor: 'var(--blue)',    iconBg: 'rgba(26,79,196,.08)'       },
+  { icon: 'fa-location-dot',       iconColor: 'var(--amber)',   iconBg: 'rgba(0,0,0,.09)'       },
+  { icon: 'fa-chart-bar',          iconColor: 'var(--blue)',    iconBg: 'rgba(0,0,0,.08)'       },
   { icon: 'fa-bullhorn',           iconColor: 'var(--t3)',      iconBg: 'var(--g100)'               },
 ];
 
@@ -96,8 +96,8 @@ export default function SecConfidentialite({ data, saving, dirty, onPop, savePri
         alignItems:      'center',
         gap:             14,
         padding:         '14px 18px',
-        background:      'linear-gradient(135deg, rgba(14,116,144,.07), rgba(14,116,144,.03))',
-        border:          '1px solid rgba(14,116,144,.18)',
+        background:      'linear-gradient(135deg, rgba(0,0,0,.07), rgba(0,0,0,.03))',
+        border:          '1px solid rgba(0,0,0,.18)',
         borderRadius:    'var(--r-xl)',
         color:           'var(--t2)',
         fontSize:        12.5,
@@ -107,12 +107,12 @@ export default function SecConfidentialite({ data, saving, dirty, onPop, savePri
           width:           40,
           height:          40,
           borderRadius:    '50%',
-          background:      'linear-gradient(135deg, var(--teal), rgba(14,116,144,.6))',
+          background:      'linear-gradient(135deg, var(--teal), rgba(0,0,0,.6))',
           display:         'flex',
           alignItems:      'center',
           justifyContent:  'center',
           flexShrink:      0,
-          boxShadow:       '0 4px 12px rgba(14,116,144,.25)',
+          boxShadow:       '0 4px 12px rgba(0,0,0,.25)',
         }}>
           <i className="fas fa-lock" style={{ color: '#fff', fontSize: 15 }} />
         </div>
@@ -158,7 +158,7 @@ export default function SecConfidentialite({ data, saving, dirty, onPop, savePri
                 borderRadius: 'var(--pill)',
                 background:   groupActive > 0 ? 'var(--tl-bg)' : 'var(--g100)',
                 color:        groupActive > 0 ? 'var(--teal)' : 'var(--t3)',
-                border:       `1px solid ${groupActive > 0 ? 'rgba(14,116,144,.2)' : 'var(--bdr2)'}`,
+                border:       `1px solid ${groupActive > 0 ? 'rgba(0,0,0,.2)' : 'var(--bdr2)'}`,
                 flexShrink:   0,
               }}>
                 {groupActive}/{groupItems.length} actif{groupActive > 1 ? 's' : ''}
@@ -214,9 +214,9 @@ export default function SecConfidentialite({ data, saving, dirty, onPop, savePri
                             fontWeight:   800,
                             padding:      '2px 7px',
                             borderRadius: 'var(--pill)',
-                            background:   isOn ? 'rgba(16,185,129,.12)' : 'var(--g100)',
-                            color:        isOn ? '#059669' : 'var(--t3)',
-                            border:       `1px solid ${isOn ? 'rgba(16,185,129,.22)' : 'var(--bdr2)'}`,
+                            background:   isOn ? 'rgba(0,0,0,.12)' : 'var(--g100)',
+                            color:        isOn ? '#000000' : 'var(--t3)',
+                            border:       `1px solid ${isOn ? 'rgba(0,0,0,.22)' : 'var(--bdr2)'}`,
                             letterSpacing: '.3px',
                             textTransform: 'uppercase' as const,
                             transition:    'all .2s',
@@ -276,7 +276,7 @@ export default function SecConfidentialite({ data, saving, dirty, onPop, savePri
             display:       'inline-flex',
             alignItems:    'center',
             gap:           8,
-            background:    saving ? 'var(--g300)' : 'linear-gradient(135deg, var(--teal), #0a5570)',
+            background:    saving ? 'var(--g300)' : 'linear-gradient(135deg, var(--teal), #18181B)',
             color:         '#fff',
             border:        'none',
             borderRadius:  'var(--pill)',
@@ -285,7 +285,7 @@ export default function SecConfidentialite({ data, saving, dirty, onPop, savePri
             fontWeight:    700,
             cursor:        saving ? 'not-allowed' : 'pointer',
             opacity:       saving ? 0.7 : 1,
-            boxShadow:     saving ? 'none' : '0 4px 16px rgba(14,116,144,.35)',
+            boxShadow:     saving ? 'none' : '0 4px 16px rgba(0,0,0,.35)',
             transition:    'all .2s',
           }}
           onMouseEnter={e => { if (!saving) (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'; }}

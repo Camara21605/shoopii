@@ -12,7 +12,7 @@
  *   - Correspondants → CORRESPONDANTS_MOCK
  *   - À propos    → données boutique
  */
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
@@ -237,7 +237,6 @@ export default function BoutiquePage() {
   // ── États UI ─────────────────────────────────────────────────
   const [onglet,       setOnglet]       = useState<OngletType>('produits');
   const [suivi,        setSuivi]        = useState(false);
-  const [suiviPending,   setSuiviPending]   = useState(false);
   const { start: startConv, loading: msgLoading } = useStartConversation();
   const { call: callProfile, loading: callLoading } = useProfileCall();
   const [partageOpen,    setPartageOpen]    = useState(false);
@@ -259,32 +258,6 @@ export default function BoutiquePage() {
     timerRef.current = setTimeout(() => setToastVisible(false), 2800);
   }
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
-
-  // ── Toggle suivi boutique (appel API réel) ───────────────────
-  const handleToggleSuivi = useCallback(async () => {
-    if (!companyId || suiviPending) return;
-    if (!isLoggedIn) { openAuthModal(); return; }
-
-    setSuiviPending(true);
-    const wasFollowing = suivi;
-    setSuivi(!wasFollowing); /* optimiste */
-    try {
-      const res = await apiFetch<{ isSuivi: boolean }>(
-        `/suivis/entreprises/${companyId}`,
-        { method: 'POST' },
-      );
-      const confirmed = res?.isSuivi ?? !wasFollowing;
-      setSuivi(confirmed);
-      showToast(confirmed
-        ? (boutiqueInfo?.nom ? t('boutiqueDetail.page.abonneToast', { nom: boutiqueInfo.nom }) : t('boutiqueDetail.page.abonneDefaultToast'))
-        : t('boutiqueDetail.page.desabonneToast'));
-    } catch {
-      setSuivi(wasFollowing); /* rollback */
-      showToast(t('boutiqueDetail.page.erreurSuivi'));
-    } finally {
-      setSuiviPending(false);
-    }
-  }, [companyId, suivi, suiviPending, isLoggedIn, t]);
 
   // ── Chargement des promotions (rechargé à chaque clic sur l'onglet) ──
   useEffect(() => {
@@ -467,12 +440,14 @@ export default function BoutiquePage() {
 
         {/* Identité sticky */}
         <BoutiqueIdentity
+          boutiqueId={companyId ?? ''}
           boutique={boutiqueInfo}
           suivi={suivi}
-          suiviPending={suiviPending}
           msgLoading={msgLoading}
           callLoading={callLoading}
-          onToggleSuivi={handleToggleSuivi}
+          onToast={showToast}
+          onRequireAuth={openAuthModal}
+          onSuiviChange={setSuivi}
           onMessage={() => {
             if (!isLoggedIn) { openAuthModal(); return; }
             if (!suivi)      { showToast(t('boutiqueDetail.page.abonnezVousMessage')); return; }

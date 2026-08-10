@@ -20,7 +20,7 @@ const ACTION_CFG: Record<NonNullable<ActionType>, { ttl: string; sub: string; bt
     ttl: 'Mettre le compte en pause',
     sub: 'Vous ne recevrez plus de missions. Réactivez à tout moment depuis ce menu.',
     btn: 'Mettre en pause',
-    color: '#B45309',
+    color: '#52525B',
     icon: 'fa-pause-circle',
     confirm: 'Votre compte sera mis en pause. Vous pouvez réactiver à tout moment.',
   },
@@ -28,7 +28,7 @@ const ACTION_CFG: Record<NonNullable<ActionType>, { ttl: string; sub: string; bt
     ttl: 'Désactiver le compte',
     sub: 'Compte désactivé pendant 30 jours. Passé ce délai, une réactivation manuelle sera nécessaire.',
     btn: 'Désactiver',
-    color: '#DC2626',
+    color: '#000000',
     icon: 'fa-ban',
     confirm: 'Votre compte sera désactivé pour 30 jours.',
   },
@@ -36,7 +36,7 @@ const ACTION_CFG: Record<NonNullable<ActionType>, { ttl: string; sub: string; bt
     ttl: 'Supprimer définitivement le compte',
     sub: 'Action irréversible. Toutes vos données, missions et historique seront supprimés.',
     btn: 'Supprimer définitivement',
-    color: '#DC2626',
+    color: '#000000',
     icon: 'fa-trash-can',
     confirm: '⚠️ ATTENTION : cette action est IRRÉVERSIBLE. Toutes vos données seront supprimées.',
   },
@@ -104,13 +104,13 @@ export default function SecDanger({ saving, onPop, pauseCompte, desactiverCompte
       {/* Modal de confirmation */}
       {activeAction && (
         <div style={{
-          position:'fixed', inset:0, background:'rgba(11,31,58,.6)', backdropFilter:'blur(4px)',
+          position:'fixed', inset:0, background:'rgba(0,0,0,.6)', backdropFilter:'blur(4px)',
           display:'flex', alignItems:'center', justifyContent:'center', zIndex:900, padding:16,
         }}>
           <div style={{ background:'var(--white)', borderRadius:'var(--r-xl)', padding:28,
             maxWidth:440, width:'100%', boxShadow:'0 24px 60px rgba(0,0,0,.25)' }}>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
-              <div style={{ width:40, height:40, borderRadius:12, background:'rgba(220,38,38,.1)',
+              <div style={{ width:40, height:40, borderRadius:12, background:'rgba(0,0,0,.1)',
                 display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                 <i className={`fas ${ACTION_CFG[activeAction].icon}`} style={{ color:'var(--red)', fontSize:16 }} />
               </div>
@@ -120,8 +120,8 @@ export default function SecDanger({ saving, onPop, pauseCompte, desactiverCompte
               </div>
             </div>
 
-            <div style={{ padding:'12px 14px', background:'rgba(220,38,38,.06)', border:'1px solid rgba(220,38,38,.2)',
-              borderRadius:'var(--r-lg)', marginBottom:18, fontSize:12, color:'#7F1D1D', lineHeight:1.5 }}>
+            <div style={{ padding:'12px 14px', background:'rgba(0,0,0,.06)', border:'1px solid rgba(0,0,0,.2)',
+              borderRadius:'var(--r-lg)', marginBottom:18, fontSize:12, color:'#18181B', lineHeight:1.5 }}>
               {ACTION_CFG[activeAction].confirm}
             </div>
 
@@ -158,7 +158,7 @@ export default function SecDanger({ saving, onPop, pauseCompte, desactiverCompte
                 Annuler
               </button>
               <button onClick={handleConfirm} disabled={saving || !password}
-                style={{ flex:1, background: password ? '#DC2626' : 'var(--g200)',
+                style={{ flex:1, background: password ? '#000000' : 'var(--g200)',
                   color: password ? '#fff' : 'var(--t3)', border:'none',
                   borderRadius:'var(--pill)', padding:'11px 0', fontSize:13, fontWeight:700,
                   cursor: password ? 'pointer' : 'not-allowed', display:'flex', alignItems:'center',

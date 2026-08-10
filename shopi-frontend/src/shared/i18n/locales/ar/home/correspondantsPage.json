@@ -1,0 +1,97 @@
+{
+  "correspondantsPage": {
+    "typeLabel": {
+      "regional": "🏠 إقليمي",
+      "zonal": "🗺️ منطقي",
+      "national": "🌍 وطني"
+    },
+    "listItem": {
+      "missionsCount": "{{count}} مهمة",
+      "abonne": "متابَع",
+      "suivre": "متابعة"
+    },
+    "hero": {
+      "sup": "شبكة شوبي · غينيا والمهجر",
+      "titrePart1": "مراسلوكم",
+      "titreEm": "الموثوقون",
+      "titrePart2": "في كل مكان",
+      "sub": "وسطاء محليون موثّقون يسهّلون تبادلاتكم التجارية بين غينيا والمهجر. استلموا وأرسلوا وانقلوا طرودكم بكل أمان.",
+      "correspondantsActifs": "المراسلون النشطون",
+      "noteMoyenne": "متوسط التقييم",
+      "missionsAuTotal": "إجمالي المهام",
+      "communesCouvertes": "البلديات المغطاة",
+      "abonne": "✓ متابَع",
+      "suivre": "+ متابعة"
+    },
+    "toolbar": {
+      "searchPlaceholder": "ابحث عن مراسل أو منطقة…",
+      "filters": {
+        "tous": "الكل",
+        "enLigne": "متصل",
+        "mesAbonnements": "متابعاتي",
+        "regionaux": "إقليميون",
+        "zonaux": "منطقيون",
+        "nationaux": "وطنيون"
+      },
+      "sorts": {
+        "pertinence": "الأكثر صلة",
+        "mieuxNotes": "الأعلى تقييماً",
+        "plusDeMissions": "الأكثر مهامًا",
+        "nomAZ": "الاسم (أ-ي)"
+      },
+      "correspondantCount_one": "{{count}} مراسل",
+      "correspondantCount_other": "{{count}} مراسلين"
+    },
+    "card": {
+      "enLigne": "متصل",
+      "horsLigne": "غير متصل",
+      "avisCount": "({{count}} تقييم)",
+      "missions": "المهام",
+      "fiabilite": "الموثوقية",
+      "experience": "الخبرة",
+      "abonne": "متابَع",
+      "suivre": "متابعة",
+      "voirProfilComplet": "عرض الملف الكامل ←"
+    },
+    "sidebar": {
+      "typeDeCorrespondant": "نوع المراسل",
+      "types": {
+        "regional": {
+          "nm": "إقليمي",
+          "desc": "يغطي مدينة واحدة"
+        },
+        "zonal": {
+          "nm": "منطقي",
+          "desc": "يغطي منطقة"
+        },
+        "national": {
+          "nm": "وطني",
+          "desc": "يغطي البلد بأكمله"
+        }
+      },
+      "commune": "البلدية",
+      "toutes": "الكل",
+      "noteMinimale": "التقييم الأدنى",
+      "ratingOpts": {
+        "cinqEtoiles": "5 نجوم فقط",
+        "quatrePlus": "4+ نجوم",
+        "troisPlus": "3+ نجوم",
+        "toutesLesNotes": "جميع التقييمات"
+      },
+      "disponibilite": "التوفر",
+      "reinitialiser": "إعادة التعيين",
+      "enLigne": "متصل",
+      "horsLigne": "غير متصل"
+    },
+    "page": {
+      "chargement": "جارٍ تحميل المراسلين…",
+      "correspondantsDisponibles": "المراسلون المتاحون",
+      "resultatCount_one": "{{count}} نتيجة",
+      "resultatCount_other": "{{count}} نتائج",
+      "errorSuffix": "— يتم عرض بيانات تجريبية.",
+      "aucunCorrespondant": "لا يوجد مراسل يطابق مرشحاتكم.",
+      "desabonneToast": "👋 تم إلغاء متابعة {{nom}}",
+      "abonneToast": "✅ تمت متابعة {{nom}}"
+    }
+  }
+}

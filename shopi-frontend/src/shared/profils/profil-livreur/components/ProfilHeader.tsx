@@ -7,17 +7,21 @@
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/ProfilLivreur.module.css';
 import type { LivreurProfile } from '../types';
+import FollowButton from '../../../components/FollowButton';
 
 interface Props {
   profile:       LivreurProfile;
-  followLoading: boolean;
   callLoading?:  boolean;
-  onFollow:      () => void;
+  onToast:       (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  onRequireAuth: () => void;
+  onFollowChange:(next: { isSuivi: boolean }) => void;
   onContact:     () => void;
   onCall?:       () => void;
+  /** Dashboard livreur : thème noir permanent — pas de vert clair sur le point de disponibilité */
+  dark?:         boolean;
 }
 
-export default function ProfilHeader({ profile, followLoading, callLoading, onFollow, onContact, onCall }: Props) {
+export default function ProfilHeader({ profile, callLoading, onToast, onRequireAuth, onFollowChange, onContact, onCall, dark }: Props) {
   const { t } = useTranslation();
   const initials = profile.fullName.trim().split(/\s+/).slice(0, 2)
     .map(w => w[0]?.toUpperCase() ?? '').join('') || '?';
@@ -54,7 +58,7 @@ export default function ProfilHeader({ profile, followLoading, callLoading, onFo
               <div className={styles.idMeta}>
                 <span><i className="fas fa-map-pin" /> {profile.zone}</span>
                 <span>
-                  <i className="fas fa-circle" style={{ color: profile.disponible ? '#10B981' : '#9CA3AF', fontSize: 8 }} />
+                  <i className="fas fa-circle" style={{ color: profile.disponible ? (dark ? '#F4F4F5' : '#10B981') : (dark ? '#52525B' : '#9CA3AF'), fontSize: 8 }} />
                   {profile.disponible ? t('profilLivreur.disponibleMaintenant') : t('profilLivreur.horsLigne')}
                 </span>
                 <span><i className="fas fa-users" /> {profile.abonnesCount} {t('profilLivreur.abonnesSuffix')}</span>
@@ -77,17 +81,15 @@ export default function ProfilHeader({ profile, followLoading, callLoading, onFo
               <button className={`${styles.btn} ${styles.btnMsg}`} onClick={onContact}>
                 <i className="fas fa-message" /> {t('profilLivreur.contacter')}
               </button>
-              <button
-                className={`${styles.btn} ${profile.isSuivi ? styles.btnFollowOn : styles.btnFollow}`}
-                onClick={onFollow}
-                disabled={followLoading}
-              >
-                {followLoading
-                  ? <><i className="fas fa-spinner fa-spin" /> …</>
-                  : profile.isSuivi
-                    ? <><i className="fas fa-user-check" /> {t('profilLivreur.abonneFem')}</>
-                    : <><i className="fas fa-plus" /> {t('profilLivreur.suivre')}</>}
-              </button>
+              <FollowButton
+                actorType="livreur"
+                id={profile.id}
+                name={profile.fullName}
+                isSuivi={profile.isSuivi}
+                onToast={onToast}
+                onRequireAuth={onRequireAuth}
+                onChange={onFollowChange}
+              />
             </div>
           </div>
         </div>

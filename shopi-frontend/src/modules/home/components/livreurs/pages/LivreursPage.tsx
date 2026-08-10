@@ -82,8 +82,8 @@ const LivreursPage: React.FC = () => {
     filters, viewMode,
     onSearch, onFilter, onSort, onViewChange,
     onZone, onVehicleToggle, onRating, onAvailability,
-    onReset, onFollow,
-  } = useLivreurs(onToast);
+    onReset, onChange,
+  } = useLivreurs();
 
   /* ── Livreurs déjà suivis (pour la sidebar) ── */
   const myFollowed = livreurs.filter(l => l.isSuivi);
@@ -106,7 +106,8 @@ const LivreursPage: React.FC = () => {
       <HeroBanner
         stats={heroStats}
         featured={featuredLivreurs}
-        onFollow={onFollow}
+        onToast={onToast}
+        onChange={onChange}
       />
 
       {/* ── Barre de filtres sticky ── */}
@@ -140,7 +141,8 @@ const LivreursPage: React.FC = () => {
           {/* Rangée suggestions */}
           <SuggestionsRow
             livreurs={livreurs}
-            onFollow={onFollow}
+            onToast={onToast}
+            onChange={onChange}
           />
 
           {/* En-tête de section */}
@@ -206,7 +208,7 @@ const LivreursPage: React.FC = () => {
                   key={livreur.id}
                   livreur={livreur}
                   onToast={onToast}
-                  onFollow={onFollow}
+                  onChange={onChange}
                 />
               ))}
             </div>
@@ -220,7 +222,7 @@ const LivreursPage: React.FC = () => {
                   key={livreur.id}
                   livreur={livreur}
                   onToast={onToast}
-                  onFollow={onFollow}
+                  onChange={onChange}
                 />
               ))}
             </div>

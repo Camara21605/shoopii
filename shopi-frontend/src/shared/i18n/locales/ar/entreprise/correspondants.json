@@ -1,0 +1,181 @@
+{
+  "correspondants": {
+    "type": {
+      "principal": "⭐ رئيسي",
+      "entrepot": "🏭 مستودع",
+      "export": "✈️ تصدير",
+      "relais": "📍 نقطة خدمة"
+    },
+    "status": {
+      "active": "نشط",
+      "pending": "قيد الانتظار",
+      "suspended": "موقوف"
+    },
+    "na": "غير متاح",
+    "modalProfil": {
+      "kpiTotalMissions": "إجمالي المهام",
+      "kpiCommandesTraitees": "الطلبات المعالجة",
+      "kpiCeMois": "هذا الشهر",
+      "kpiCommandes": "الطلبات",
+      "kpiNoteMoyenne": "متوسط التقييم",
+      "kpiSur5Etoiles": "من 5 نجوم",
+      "kpiZoneCouverte": "المنطقة المغطاة",
+      "evaluationClients": "تقييم العملاء",
+      "telephone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "adresse": "العنوان",
+      "zone": "المنطقة",
+      "derniereActivite": "آخر نشاط",
+      "membreDepuis": "عضو منذ",
+      "suspendre": "إيقاف",
+      "contacter": "تواصل",
+      "appeler": "اتصال"
+    },
+    "modalInviter": {
+      "nomRequis": "⚠️ الاسم مطلوب",
+      "emailRequis": "⚠️ البريد الإلكتروني مطلوب",
+      "emailInvalide": "⚠️ بريد إلكتروني غير صالح",
+      "invitationEnvoyee": "✅ تم إرسال الدعوة إلى {{email}}",
+      "defaultMessage": "مرحبًا،\n\nتم اختيارك للانضمام إلى شبكة مراسلي Shopi.\n\nيرجى استخدام الرمز المرفق لإنشاء حسابك.",
+      "title": "دعوة مراسل",
+      "etapeInformations": "المعلومات",
+      "etapeApercu": "معاينة",
+      "etapeConfirme": "مؤكد",
+      "nomPointRelais": "اسم نقطة الخدمة *",
+      "nomPlaceholder": "مثال: RelaisPlus Kaloum",
+      "emailContact": "بريد الاتصال *",
+      "emailPlaceholder": "مثال: relay@gmail.com",
+      "codeEmailHint": "سيُرسل رمز الدعوة إلى هذا البريد.",
+      "typeCorrespondant": "نوع المراسل",
+      "optRelais": "📍 نقطة خدمة — استلام/تسليم الطرود",
+      "optEntrepot": "🏭 مستودع — تخزين إقليمي",
+      "optExport": "✈️ تصدير — دولي",
+      "optPrincipal": "⭐ رئيسي — مركز رئيسي",
+      "ville": "المدينة",
+      "villePlaceholder": "مثال: كوناكري",
+      "quartierZone": "الحي / المنطقة",
+      "quartierPlaceholder": "مثال: Kaloum, Matam…",
+      "messagePersonnalise": "رسالة مخصصة",
+      "apercuTitle": "معاينة البريد الذي سيُرسل",
+      "emailSujetFixe": "دعوة Shopi — انضم إلى شبكتنا",
+      "emailDestA": "إلى:",
+      "bonjour": "مرحبًا",
+      "codeInvitationLabel": "رمز الدعوة الخاص بك (10 أرقام)",
+      "codeInvitationNote": "صالح 7 أيام · استخدام واحد · يُنشأ عند الإرسال",
+      "villeLabelInline": "المدينة:",
+      "zoneLabelInline": "المنطقة:",
+      "typeLabelInline": "النوع:",
+      "infoBoxExpire": "ينتهي هذا الرمز خلال 7 أيام. يمكن استخدامه مرة واحدة. سيُرسل البريد من noreply@shopi.gn.",
+      "invitationEnvoyeeTitle": "تم إرسال الدعوة!",
+      "codeEnvoyeA": "تم إرسال الرمز إلى {{email}}",
+      "recapNom": "الاسم",
+      "recapEmail": "البريد الإلكتروني",
+      "recapVille": "المدينة",
+      "recapType": "النوع",
+      "codeGenereLabel": "رمز الدعوة المُنشأ",
+      "copier": "نسخ",
+      "codeCopieToast": "📋 تم نسخ الرمز!",
+      "expireLe": "ينتهي في {{date}} · استخدام واحد",
+      "annuler": "إلغاء",
+      "suivant": "التالي",
+      "retour": "رجوع",
+      "envoiEnCours": "جارٍ الإرسال…",
+      "envoyerInvitation": "إرسال الدعوة",
+      "fermer": "إغلاق"
+    },
+    "modalContacter": {
+      "sujetMessageRequis": "⚠️ الموضوع والرسالة مطلوبان",
+      "messageEnvoye": "✅ تم إرسال الرسالة إلى {{name}}",
+      "title": "تواصل",
+      "sub": "إرسال رسالة إلى {{name}} ({{email}})",
+      "sujetLabel": "الموضوع *",
+      "sujetPlaceholder": "مثال: تحديث المخزون المتاح",
+      "messageLabel": "الرسالة *",
+      "messagePlaceholder": "اكتب رسالتك…",
+      "infoBox": "ستُرسل الرسالة إلى {{email}} من noreply@shopi.gn.",
+      "annuler": "إلغاء",
+      "envoiEnCours": "جارٍ الإرسال…",
+      "envoyer": "إرسال"
+    },
+    "modalSuspendre": {
+      "title": "إيقاف المراسل",
+      "confirmText": "إيقاف {{name}}؟",
+      "note": "لن تتمكن نقطة الخدمة من استلام أو شحن الطرود حتى رفع الإيقاف.",
+      "annuler": "إلغاء",
+      "confirmer": "تأكيد"
+    },
+    "header": {
+      "title": "شبكة المراسلين",
+      "subtitle": "إدارة نقاط الخدمة والمستودعات وشركاء التصدير",
+      "inviter": "دعوة مراسل"
+    },
+    "stats": {
+      "actifs": "مراسلون نشطون",
+      "auTotal": "{{count}} إجمالاً",
+      "commandesCeMois": "طلبات هذا الشهر",
+      "traiteesParReseau": "معالجة بواسطة الشبكة",
+      "villesCouvertes": "المدن المغطاة",
+      "plusInternational": "+ دولي",
+      "enAttente": "قيد الانتظار",
+      "validationRequise": "تحقق مطلوب"
+    },
+    "filters": {
+      "tous": "الكل"
+    },
+    "statutSelect": {
+      "tousStatuts": "كل الحالات",
+      "actifs": "نشطون",
+      "enAttente": "قيد الانتظار",
+      "suspendus": "موقوفون"
+    },
+    "search": "ابحث…",
+    "compteur_one": "{{count}} مراسل",
+    "compteur_other": "{{count}} مراسلين",
+    "compteurType": " · النوع: {{type}}",
+    "loading": "جارٍ تحميل المراسلين…",
+    "empty": {
+      "title": "لا يوجد مراسل",
+      "sub": "عدّل عوامل التصفية أو ادعُ مراسلًا جديدًا.",
+      "inviter": "دعوة"
+    },
+    "card": {
+      "ceMois": "هذا الشهر",
+      "total": "الإجمالي",
+      "note": "تقييم",
+      "voir": "عرض",
+      "contacter": "تواصل",
+      "appeler": "اتصال"
+    },
+    "table": {
+      "correspondant": "المراسل",
+      "ville": "المدينة",
+      "type": "النوع",
+      "ceMois": "هذا الشهر",
+      "total": "الإجمالي",
+      "note": "التقييم",
+      "statut": "الحالة",
+      "actions": "الإجراءات"
+    },
+    "sidePanel": {
+      "couvertureZone": "التغطية حسب المنطقة",
+      "aucuneZone": "لا توجد بيانات مناطق",
+      "activiteRecente": "النشاط الأخير",
+      "actionsRapides": "إجراءات سريعة"
+    },
+    "quickActions": {
+      "envoyerCirculaire": "إرسال تعميم للجميع",
+      "envoiToast": "📧 جارٍ الإرسال الجماعي…",
+      "rapportReseau": "تقرير الشبكة الشهري",
+      "rapportToast": "📊 جارٍ إنشاء التقرير…",
+      "voirCarte": "عرض خريطة نقاط الخدمة",
+      "carteToast": "🗺️ تم فتح خريطة نقاط الخدمة",
+      "validerEnAttente": "الموافقة على القيد ({{count}})",
+      "aucunEnAttente": "لا توجد حسابات قيد الانتظار",
+      "validesToast": "✅ تمت الموافقة على {{count}} حسابات"
+    },
+    "toasts": {
+      "loadError": "❌ خطأ في التحميل: {{message}}",
+      "suspendu": "🚫 تم إيقاف {{name}}"
+    }
+  }
+}

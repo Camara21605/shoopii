@@ -1,0 +1,58 @@
+{
+  "clientProfil": {
+    "status": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "in_progress": "In progress",
+      "awaiting_client": "To confirm",
+      "delivered": "Delivered",
+      "auto_delivered": "Delivered (auto)",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded",
+      "disputed": "Disputed"
+    },
+    "mode": {
+      "livreur": "🛵 Courier",
+      "correspondant": "🤝 Correspondent",
+      "partenaire": "🤝 Partner",
+      "pickup": "🏪 Store pickup",
+      "mixte": "🔀 Mixed"
+    },
+    "clientDepuis": "Customer since {{date}}",
+    "kpi": {
+      "commandes": "Orders",
+      "dansCetteBoutique": "in this store",
+      "totalDepense": "Total spent",
+      "depuisLeDebut": "since the start",
+      "derniereCmd": "Last order"
+    },
+    "tabs": {
+      "apercu": "Overview",
+      "commandes": "Orders ({{count}})"
+    },
+    "loadingProfil": "Loading profile…",
+    "aperçu": {
+      "relationTitle": "Relationship with your store",
+      "commandesPassees": "Orders placed",
+      "totalDepense": "Total spent",
+      "abonneBoutique": "Follows the store",
+      "oui": "✅ Yes",
+      "non": "❌ No",
+      "segment": "Segment",
+      "derniereCommandeTitle": "Last order",
+      "aucuneCommandeTitle": "No orders yet",
+      "aucuneCommandeSub": "This customer follows your store but hasn't bought yet."
+    },
+    "commandesTab": {
+      "aucune": "No orders",
+      "livreLe": "Delivered on {{date}}",
+      "produits": "Products: {{montant}}",
+      "affichageLimite": "Showing the last 10 orders out of {{total}} in total."
+    },
+    "footer": {
+      "messageToast": "📧 Message sent to {{name}}",
+      "envoyerMessage": "Send a message",
+      "fermer": "Close"
+    }
+  }
+}

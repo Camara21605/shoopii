@@ -21,6 +21,7 @@ import { Delivery } from '../../database/entities/profiles/livreur-profile.entit
 import { Correspondent } from '../../database/entities/profiles/correspondant-profile.entity';
 import { CompanyAvis }   from '../../database/entities/entreprise.table/company-avis.entity';
 import { PlatformSettings } from '../../database/entities/platform-settings.entity';
+import { Localisation } from '../../database/entities/localisation.entity';
 
 import {
   ClientCommandeController, CommandeController, EntrepriseCommandeController,
@@ -30,6 +31,7 @@ import { CommandeCreationService } from './services/commande-creation.service';
 import { CommandeQueryService } from './services/commande-query.service';
 import { CommandeValidationService } from './services/commande-validation.service';
 import { CommandeFeedbackService } from './services/commande-feedback.service';
+import { CommandeLivreurAssignmentService } from './services/commande-livreur-assignment.service';
 import { CommandeScheduler } from './commande.scheduler';
 
 @Module({
@@ -50,6 +52,7 @@ import { CommandeScheduler } from './commande.scheduler';
       Correspondent,
       CompanyAvis,
       PlatformSettings,
+      Localisation,
     ]),
   ],
   controllers: [
@@ -65,6 +68,7 @@ import { CommandeScheduler } from './commande.scheduler';
     CommandeQueryService,
     CommandeValidationService,
     CommandeFeedbackService,
+    CommandeLivreurAssignmentService,
     CommandeScheduler,
   ],
   exports: [
@@ -72,6 +76,7 @@ import { CommandeScheduler } from './commande.scheduler';
     CommandeQueryService,
     CommandeValidationService,
     CommandeFeedbackService,
+    CommandeLivreurAssignmentService,
   ],
 })
 export class CommandeModule {}

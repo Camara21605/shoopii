@@ -1,0 +1,138 @@
+{
+  "profilCorrespondant": {
+    "loading": "A carregar o perfil…",
+    "notFoundTitle": "Perfil não encontrado",
+    "notFoundFallback": "Este correspondente não existe ou já não está disponível.",
+    "retour": "Voltar",
+    "retourCorrespondants": "Voltar aos correspondentes",
+    "idMissingError": "Identificador do correspondente em falta.",
+    "loadError": "Perfil não encontrado ou indisponível.",
+    "enLigneMaintenant": "Online agora",
+    "abonnesSuffix": "subscritores",
+    "partager": "Partilhar",
+    "appeler": "Ligar",
+    "contacter": "Contactar",
+    "abonne": "Subscrito",
+    "suivre": "Seguir",
+    "kpi": {
+      "missions": "Missões",
+      "note": "Nota",
+      "fiabilite": "Fiabilidade",
+      "abonnes": "Subscritores",
+      "avisClients": "Avaliações de clientes",
+      "experience": "Experiência",
+      "zonesCouvertes": "Zonas cobertas",
+      "delaiMoyen": "Prazo médio",
+      "top5": "Top 5%"
+    },
+    "tabs": {
+      "info": "Info",
+      "services": "Serviços",
+      "zones": "Zonas",
+      "tarifs": "Tarifas",
+      "avis": "Avaliações",
+      "galerie": "Galeria"
+    },
+    "sidebar": {
+      "contacterPrenom": "Contactar {{prenom}}",
+      "envoyerMessage": "Enviar uma mensagem",
+      "whatsappToast": "📱 WhatsApp",
+      "appelToast": "📞 Chamada",
+      "contactsDetailles": "Contactos detalhados",
+      "statistiques": "Estatísticas",
+      "abonnesTitle": "Subscritores",
+      "aucunAbonne": "Nenhum subscritor por enquanto",
+      "abonneCount_one": "{{count}} subscritor",
+      "abonneCount_other": "{{count}} subscritores",
+      "suivreCeCorrespondant": "Seguir este correspondente",
+      "verificationsShopi": "Verificações Shopi",
+      "correspondantsSimilaires": "Correspondentes semelhantes",
+      "voirTout": "Ver tudo",
+      "suivreShort": "+ Seguir",
+      "abonneToast": "✅ Subscrito a {{nom}}",
+      "copieToast": "📋 {{valeur}}"
+    },
+    "statsSidebar": {
+      "missionsTotales": "Missões totais",
+      "noteMoyenne": "Nota média",
+      "tauxFiabilite": "Taxa de fiabilidade",
+      "delaiRemise": "Prazo de entrega",
+      "missionsCeMois": "Missões este mês",
+      "litigesResolus": "Litígios resolvidos"
+    },
+    "verifieParShopi": "✓ Verificado pela Shopi",
+    "tabInfo": {
+      "aPropos": "Sobre",
+      "informationsPratiques": "Informações práticas",
+      "disponibiliteHebdo": "Disponibilidade semanal",
+      "aujourdhui": "(hoje)"
+    },
+    "tabServices": {
+      "title": "Serviços oferecidos",
+      "emptyTitle": "Serviços a serem preenchidos",
+      "emptyDesc": "O correspondente ainda não preencheu os seus serviços."
+    },
+    "tabZones": {
+      "couverture": "Zonas de cobertura",
+      "couvertureEmptyTitle": "Zonas não informadas",
+      "couvertureEmptyDesc": "O correspondente ainda não definiu as suas zonas de cobertura.",
+      "reseauTitle": "Rede de correspondentes parceiros",
+      "reseauEmptyTitle": "Rede internacional não informada",
+      "reseauEmptyDesc": "Os países parceiros serão exibidos aqui assim que forem informados.",
+      "intlNote": "Os prazos e tarifas variam conforme o destino — contacte o correspondente para um orçamento personalizado.",
+      "paysToast": "🌍 {{nom}} — {{villes}}"
+    },
+    "tabTarifs": {
+      "title": "Tabela de tarifas",
+      "emptyTitle": "Tarifas não informadas",
+      "emptyDescPart1": "O correspondente ainda não publicou a sua tabela de tarifas.",
+      "emptyDescPart2": "Contacte-o diretamente para obter um orçamento.",
+      "abonnesShopi": "Subscritores Shopi",
+      "reduction15": "— Desconto de 15% em todos os serviços."
+    },
+    "tabAvis": {
+      "title": "Avaliações de clientes",
+      "emptyTitle": "Nenhuma avaliação por enquanto",
+      "emptyDesc": "As avaliações dos clientes aparecerão aqui após cada missão concluída.",
+      "avisCount_one": "{{count}} avaliação",
+      "avisCount_other": "{{count}} avaliações",
+      "achatVerifie": "Compra verificada",
+      "reponseDe": "Resposta de {{auteur}}",
+      "merciRetourToast": "👍 Obrigado pelo seu feedback",
+      "signaleToast": "🚩 Denunciado",
+      "signaler": "Denunciar",
+      "utileCount_one": "{{count}} útil",
+      "utileCount_other": "{{count}} úteis"
+    },
+    "tabGalerie": {
+      "title": "Galeria de fotos do depósito",
+      "voirTout": "Ver tudo",
+      "emptyTitle": "Galeria indisponível",
+      "emptyDesc": "O correspondente ainda não publicou fotos do seu depósito.",
+      "galerieCompleteToast": "🖼️ Galeria completa",
+      "labelToast": "🖼️ {{label}}",
+      "photoToast": "🖼️ Foto"
+    },
+    "reseauPage": {
+      "title": "Seguir correspondentes",
+      "loading": "A carregar…",
+      "errorSuffix": "— dados de demonstração exibidos.",
+      "empty": "Nenhum correspondente disponível.",
+      "missionsCount_one": "{{count}} missão",
+      "missionsCount_other": "{{count}} missões",
+      "enLigne": "Online",
+      "suiviCheck": "A seguir ✓",
+      "suivre": "Seguir",
+      "desabonneToast": "👋 Deixou de seguir {{nom}}",
+      "abonneToast": "✅ Subscrito a {{nom}}"
+    },
+    "publicPage": {
+      "abonnezVousMessage": "Subscreva-se a este correspondente para lhe enviar uma mensagem.",
+      "abonnezVousAppel": "Subscreva-se a este correspondente para lhe ligar.",
+      "lienCopieToast": "🔗 Link do perfil copiado",
+      "desabonneToast": "👋 Deixou de seguir {{nom}}",
+      "abonneToast": "✅ Subscrito a {{nom}}",
+      "erreurToast": "❌ {{msg}}"
+    }
+  }
+}

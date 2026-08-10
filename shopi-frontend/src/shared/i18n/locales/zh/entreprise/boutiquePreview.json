@@ -1,0 +1,51 @@
+{
+  "boutiquePreview": {
+    "loading": "加载中…",
+    "back": "返回",
+    "tabs": {
+      "apercu": "预览",
+      "localisation": "定位"
+    },
+    "subtitleApercu": "店铺公开预览",
+    "subtitleLocalisation": "在地图上标注您的店铺",
+    "ouvrir": "打开",
+    "enregistrement": "保存中…",
+    "enregistre": "已保存！",
+    "sauvegarderLocalisation": "保存定位",
+    "iframeTitle": "预览",
+    "panelTitle": "定位",
+    "panelSub": "标记 🏪 跟随您的选择",
+    "pays": "国家",
+    "ville": "城市",
+    "choisirVille": "— 选择城市 —",
+    "villePlaceholder": "城市名称",
+    "commune": "区域",
+    "choisirCommune": "— 选择区域 —",
+    "quartier": "街区",
+    "choisirQuartier": "— 选择街区 —",
+    "localisationEnCours": "定位中…",
+    "adresse": "地址",
+    "optionnel": "（可选）",
+    "adressePlaceholder": "街道、门牌号…",
+    "repere": "配送员参考点",
+    "reperePlaceholder": "面对蓝色药房…",
+    "latitude": "纬度",
+    "longitude": "经度",
+    "villeObligatoire": "城市是必填项。",
+    "errorSauvegarde": "保存时出错。",
+    "localisationEnregistree": "定位已保存！",
+    "enregistrerLocalisation": "保存定位",
+    "recherchePosition": "正在搜索位置…",
+    "hintCarte": "点击或拖动标记以调整",
+    "pays_list": {
+      "GN": "几内亚",
+      "SN": "塞内加尔",
+      "ML": "马里",
+      "CI": "科特迪瓦",
+      "GW": "几内亚比绍",
+      "LR": "利比里亚",
+      "SL": "塞拉利昂",
+      "FR": "法国"
+    }
+  }
+}

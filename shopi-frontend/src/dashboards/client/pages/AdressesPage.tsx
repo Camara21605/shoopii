@@ -5,11 +5,11 @@
  * ============================================================ */
 
 import { useState, useEffect, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import { apiFetch }    from '../../../shared/services/apiFetch';
 import AddressCard     from '../../../shared/location/components/AddressCard';
 import '../../../shared/location/styles/location.css';
 import type { ClientAddress } from '../../../shared/location/types/location.types';
-import type { LocationPickerValue } from '../../../shared/location/components/LocationPicker';
 
 // Lazy pour ne pas bloquer le chargement
 const AddressForm = lazy(() => import('../../../shared/location/components/AddressForm'));
@@ -21,6 +21,7 @@ interface Props {
 type Mode = 'list' | 'create' | 'edit';
 
 export default function AdressesPage({ onToast }: Props) {
+  const { t } = useTranslation();
   const [addresses,  setAddresses]  = useState<ClientAddress[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [mode,       setMode]       = useState<Mode>('list');
@@ -47,7 +48,7 @@ export default function AdressesPage({ onToast }: Props) {
     setSaving(true);
     try {
       await apiFetch('/location/addresses', { method: 'POST', body: form });
-      onToast?.('✅ Adresse ajoutée avec succès !', 's');
+      onToast?.(t('clientDashboard.adresses.toastAjoutee'), 's');
       setMode('list');
       await load();
     } finally { setSaving(false); }
@@ -61,7 +62,7 @@ export default function AdressesPage({ onToast }: Props) {
     setSaving(true);
     try {
       await apiFetch(`/location/addresses/${editTarget.id}`, { method: 'PATCH', body: form });
-      onToast?.('✅ Adresse mise à jour.', 's');
+      onToast?.(t('clientDashboard.adresses.toastMiseAJour'), 's');
       setMode('list');
       setEditTarget(null);
       await load();
@@ -70,10 +71,10 @@ export default function AdressesPage({ onToast }: Props) {
 
   /* ── Supprimer ───────────────────────────────────────────── */
   const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cette adresse ?')) return;
+    if (!confirm(t('clientDashboard.adresses.confirmSuppression'))) return;
     try {
       await apiFetch(`/location/addresses/${id}`, { method: 'DELETE' });
-      onToast?.('🗑️ Adresse supprimée.', 'i');
+      onToast?.(t('clientDashboard.adresses.toastSupprimee'), 'i');
       setAddresses(prev => prev.filter(a => a.id !== id));
     } catch (e: any) {
       onToast?.(`❌ ${e.message}`, 'e');
@@ -85,7 +86,7 @@ export default function AdressesPage({ onToast }: Props) {
     try {
       const updated = await apiFetch<ClientAddress[]>(`/location/addresses/${id}/default`, { method: 'PATCH' });
       if (Array.isArray(updated)) setAddresses(updated);
-      onToast?.('⭐ Adresse par défaut mise à jour.', 's');
+      onToast?.(t('clientDashboard.adresses.toastParDefaut'), 's');
     } catch (e: any) {
       onToast?.(`❌ ${e.message}`, 'e');
     }
@@ -109,7 +110,7 @@ export default function AdressesPage({ onToast }: Props) {
             <i className="fas fa-arrow-left" />
           </button>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
-            {mode === 'create' ? 'Nouvelle adresse' : 'Modifier l\'adresse'}
+            {mode === 'create' ? t('clientDashboard.adresses.nouvelleAdresse') : t('clientDashboard.adresses.modifierAdresse')}
           </h2>
         </div>
         <Suspense fallback={
@@ -133,9 +134,9 @@ export default function AdressesPage({ onToast }: Props) {
       {/* En-tête */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Mes adresses</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{t('clientDashboard.adresses.mesAdresses')}</h2>
           <p style={{ fontSize: 12.5, color: 'var(--t2)', margin: '4px 0 0' }}>
-            {addresses.length} adresse{addresses.length !== 1 ? 's' : ''} enregistrée{addresses.length !== 1 ? 's' : ''}
+            {addresses.length} {t('clientDashboard.adresses.subtitleSuffix', { count: addresses.length })}
           </p>
         </div>
         <button
@@ -147,7 +148,7 @@ export default function AdressesPage({ onToast }: Props) {
             border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer',
           }}
         >
-          <i className="fas fa-plus" /> Ajouter
+          <i className="fas fa-plus" /> {t('clientDashboard.adresses.ajouter')}
         </button>
       </div>
 
@@ -166,9 +167,9 @@ export default function AdressesPage({ onToast }: Props) {
           border: '1.5px dashed var(--sky-3, #c7d9f8)',
         }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>📍</div>
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Aucune adresse</div>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>{t('clientDashboard.adresses.aucuneAdresse')}</div>
           <div style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 20 }}>
-            Ajoutez vos adresses pour faciliter vos livraisons.
+            {t('clientDashboard.adresses.aucuneAdresseDesc')}
           </div>
           <button
             onClick={() => setMode('create')}
@@ -179,7 +180,7 @@ export default function AdressesPage({ onToast }: Props) {
             }}
           >
             <i className="fas fa-plus" style={{ marginRight: 8 }} />
-            Ajouter ma première adresse
+            {t('clientDashboard.adresses.ajouterPremiere')}
           </button>
         </div>
       )}

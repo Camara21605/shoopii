@@ -171,6 +171,7 @@ export function useMessagerie() {
 
   const loadedMsgs    = useRef<Set<string>>(new Set());
   const activeConvRef = useRef<string | null>(null);
+  const pendingConvHandled = useRef(false);
 
   // ── Callbacks Socket.IO ───────────────────────────────────
 
@@ -326,11 +327,25 @@ export function useMessagerie() {
   const pendingConvId = (location.state as any)?.activeConvId as string | undefined;
 
   // ── Charge les conversations + pré-sélectionne si nécessaire ──
+  //
+  // BUG CORRIGÉ : en dev, React.StrictMode (main.tsx) exécute cet effet
+  // DEUX FOIS au montage (mount → cleanup → mount), donc DEUX requêtes
+  // GET /messagerie/conversations partent en parallèle. La première (issue
+  // du montage "fantôme") pouvait résoudre APRÈS que selectConv() (déclenché
+  // par la pré-sélection ci-dessous) ait déjà rempli conv.messages — son
+  // setConversations(newConvs) écrasait alors tout l'état avec des
+  // conversations fraîches (messages: [] par défaut), vidant l'écran alors
+  // que les messages avaient bien été chargés un instant plus tôt.
+  // Fix standard React : un flag "ignore" mis à true par le cleanup, pour
+  // que seule la requête du DERNIER montage applique son résultat.
   useEffect(() => {
     if (!role) { setLoadingConvs(false); return; }
 
+    let ignore = false;
+
     apiFetch<ApiConv[]>('/messagerie/conversations')
       .then(data => {
+        if (ignore) return;
         const list = Array.isArray(data) ? data : [];
         const newConvs: Conversation[] = [];
         const newUsers: ChatUser[]     = [];
@@ -341,15 +356,11 @@ export function useMessagerie() {
         });
         setConversations(newConvs);
         setUsers(newUsers);
-
-        /* Pré-sélectionner la conversation demandée (ex. depuis profil boutique) */
-        if (pendingConvId) {
-          const exists = newConvs.find(c => c.id === pendingConvId);
-          if (exists) setActiveConvId(pendingConvId);
-        }
       })
       .catch(() => {})
-      .finally(() => setLoadingConvs(false));
+      .finally(() => { if (!ignore) setLoadingConvs(false); });
+
+    return () => { ignore = true; };
   }, []);
 
   // ── Map userId → user ─────────────────────────────────────
@@ -394,6 +405,22 @@ export function useMessagerie() {
       }
     } catch { /* silencieux */ }
   }, [joinConv, leaveConv, markRead]);
+
+  /* Pré-sélectionne + charge les messages d'une conversation demandée depuis
+   * l'extérieur (ex. bouton "Message" d'une fiche boutique/profil), passée
+   * via navigate('/messagerie', { state: { activeConvId } }).
+   *
+   * BUG CORRIGÉ : l'ancien code faisait juste setActiveConvId(pendingConvId)
+   * après le chargement de la liste — la conversation s'ouvrait donc bien
+   * (bon contact affiché) mais ses messages n'étaient JAMAIS récupérés
+   * (seul selectConv() fait le GET .../messages), donnant l'impression
+   * qu'aucune conversation n'avait jamais existé alors qu'elle existait. */
+  useEffect(() => {
+    if (!pendingConvId || pendingConvHandled.current) return;
+    if (!conversations.some(c => c.id === pendingConvId)) return;
+    pendingConvHandled.current = true;
+    selectConv(pendingConvId);
+  }, [pendingConvId, conversations, selectConv]);
 
   // ── Envoyer un message (texte ou média) ──────────────────
   const sendMessage = useCallback(async (

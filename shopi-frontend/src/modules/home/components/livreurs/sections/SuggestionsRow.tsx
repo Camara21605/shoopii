@@ -8,23 +8,28 @@
  * STYLES : ../styles/SuggestionsRow.module.css
  * ================================================================ */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/SuggestionsRow.module.css';
+import { useAuthGate } from '../../../../../shared/hooks/useAuthGate';
+import FollowButton    from '../../../../../shared/components/FollowButton';
 import type { LivreurItem } from '../data/livreursMockData';
 
 /* ── Props ── */
 interface SuggestionsRowProps {
   livreurs: LivreurItem[];
-  onFollow: (id: string, newState: boolean) => void;
+  onToast:  (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  onChange: (id: string, next: { isSuivi: boolean; hidden?: boolean; removed?: boolean }) => void;
 }
 
 /* ================================================================
  * COMPOSANT PRINCIPAL
  * ================================================================ */
-const SuggestionsRow: React.FC<SuggestionsRowProps> = ({ livreurs, onFollow }) => {
+const SuggestionsRow: React.FC<SuggestionsRowProps> = ({ livreurs, onToast, onChange }) => {
   const { t } = useTranslation();
-  /* Livreurs non encore suivis (suggestions pertinentes) */
+  /* Livreurs non encore suivis (suggestions pertinentes) — disparaît
+   * naturellement de cette rangée une fois suivi (isSuivi devient true
+   * dans la liste partagée du parent). */
   const suggestions = livreurs.filter(l => !l.isSuivi).slice(0, 8);
 
   if (suggestions.length === 0) return null;
@@ -43,7 +48,7 @@ const SuggestionsRow: React.FC<SuggestionsRowProps> = ({ livreurs, onFollow }) =
 
       {/* Cards suggestions */}
       {suggestions.map(l => (
-        <SuggestItem key={l.id} livreur={l} onFollow={onFollow} />
+        <SuggestItem key={l.id} livreur={l} onToast={onToast} onChange={onChange} />
       ))}
 
     </div>
@@ -55,22 +60,16 @@ const SuggestionsRow: React.FC<SuggestionsRowProps> = ({ livreurs, onFollow }) =
  * ================================================================ */
 interface SuggestItemProps {
   livreur:  LivreurItem;
-  onFollow: (id: string, newState: boolean) => void;
+  onToast:  (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  onChange: (id: string, next: { isSuivi: boolean; hidden?: boolean; removed?: boolean }) => void;
 }
 
-const SuggestItem: React.FC<SuggestItemProps> = ({ livreur, onFollow }) => {
+const SuggestItem: React.FC<SuggestItemProps> = ({ livreur, onToast, onChange }) => {
   const { t } = useTranslation();
-  const [followed, setFollowed] = useState(livreur.isSuivi);
-
-  const handleFollow = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const next = !followed;
-    setFollowed(next);
-    onFollow(livreur.id, next);
-  };
+  const { openAuthModal, authModal } = useAuthGate();
 
   return (
-    <div className={styles.item} role="listitem">
+    <div className={styles.item} style={{ position: 'relative' }} role="listitem">
       {/* Avatar avec indicateur en ligne */}
       <div className={styles.avaWrap}>
         <div
@@ -95,16 +94,19 @@ const SuggestItem: React.FC<SuggestItemProps> = ({ livreur, onFollow }) => {
       <div className={styles.zone}>{livreur.zone.split('·')[0].trim()}</div>
 
       {/* Bouton suivre */}
-      <button
-        className={`${styles.followBtn} ${followed ? styles.followBtnOn : ''}`}
-        onClick={handleFollow}
-        aria-label={followed
-          ? t('livreursPage.card.seDesabonnerDe', { nom: livreur.fullName })
-          : t('livreursPage.card.suivreNom', { nom: livreur.fullName })
-        }
-      >
-        {followed ? t('livreursPage.suggestions.abonne') : t('livreursPage.suggestions.suivre')}
-      </button>
+      <div onClick={e => e.stopPropagation()}>
+        <FollowButton
+          actorType="livreur"
+          id={livreur.id}
+          name={livreur.fullName}
+          isSuivi={livreur.isSuivi}
+          onToast={onToast}
+          onRequireAuth={openAuthModal}
+          onChange={next => onChange(livreur.id, next)}
+        />
+      </div>
+
+      {authModal}
     </div>
   );
 };

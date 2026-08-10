@@ -4,6 +4,7 @@
 
 import { useTranslation } from 'react-i18next';
 import { useLivreurProfile } from '../../../shared/profils/profil-livreur/hooks/useLivreurProfile';
+import { useAuthGate } from '../../../shared/hooks/useAuthGate';
 import ProfilHeader   from '../../../shared/profils/profil-livreur/components/ProfilHeader';
 import ProfilTabs     from '../../../shared/profils/profil-livreur/components/ProfilTabs';
 import TabInfo        from '../../../shared/profils/profil-livreur/components/TabInfo';
@@ -24,8 +25,8 @@ interface Props {
 
 export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel }: Props) {
   const { t } = useTranslation();
-  const { profile, loading, error, tab, setTab, follow, followLoading } =
-    useLivreurProfile(id, onPop);
+  const { profile, loading, error, tab, setTab, updateFollowState } = useLivreurProfile(id);
+  const { openAuthModal, authModal } = useAuthGate();
   const backLabelResolved = backLabel ?? t('profilLivreur.retourLivreurs');
 
   const backBtn = (
@@ -72,8 +73,9 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel }
       <div className={styles.page}>
         <ProfilHeader
           profile={profile}
-          followLoading={followLoading}
-          onFollow={follow}
+          onToast={onPop}
+          onRequireAuth={openAuthModal}
+          onFollowChange={updateFollowState}
           onContact={onContact}
         />
 
@@ -98,6 +100,8 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel }
           <ProfilSidebar profile={profile} onToast={onPop} />
         </div>
       </div>
+
+      {authModal}
     </>
   );
 }

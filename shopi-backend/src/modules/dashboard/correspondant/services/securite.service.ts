@@ -13,7 +13,7 @@
  * ============================================================ */
 
 import {
-  Injectable, UnauthorizedException, Logger,
+  Injectable, UnauthorizedException, BadRequestException, Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository }       from 'typeorm';
@@ -21,6 +21,7 @@ import * as bcrypt          from 'bcryptjs';
 
 import { Correspondent } from '../../../../database/entities/profiles/correspondant-profile.entity';
 import { User }          from '../../../../database/entities/user.entity';
+import { RefreshToken }  from '../../../../database/entities/refresh-token.entity';
 import { UpdateSecuriteDto, ChangePasswordDto } from '../dto/correspondant-parametres.dto';
 import { CorrespondantBaseService }             from './base.service';
 
@@ -32,23 +33,33 @@ export class SecuriteService extends CorrespondantBaseService {
   constructor(
     @InjectRepository(Correspondent) corRepo:  Repository<Correspondent>,
     @InjectRepository(User)          userRepo: Repository<User>,
+    @InjectRepository(RefreshToken)
+    private readonly refreshTokenRepo: Repository<RefreshToken>,
   ) {
     super(corRepo, userRepo);
   }
 
   /**
-   * Active/désactive la 2FA et définit la méthode.
-   * Seuls twoFaEnabled et twoFaMethod sont dans Correspondent.
-   * Le secret 2FA (twoFaSecret) est géré séparément via un flux TOTP.
+   * Désactive la 2FA. L'activation réelle (secret + vérification TOTP)
+   * passe désormais par POST /auth/2fa/setup puis /auth/2fa/confirm
+   * (TwoFaService) — un secret jamais confirmé par un code valide
+   * ne peut plus activer twoFaEnabled.
    */
   async updateSecurite(userId: string, dto: UpdateSecuriteDto): Promise<Correspondent> {
     const cor = await this.findCorOrFail(userId);
 
-    if (dto.twoFaEnabled !== undefined) cor.twoFaEnabled = dto.twoFaEnabled;
-    if (dto.twoFaMethod  !== undefined) cor.twoFaMethod  = dto.twoFaMethod ?? null;
+    if (dto.twoFaEnabled) {
+      throw new BadRequestException(
+        "Activez la 2FA via POST /auth/2fa/setup puis /auth/2fa/confirm (vérification du code requise).",
+      );
+    }
+
+    cor.twoFaEnabled = false;
+    cor.twoFaMethod  = null;
+    cor.twoFaSecret  = null;
 
     const updated = await this.corRepo.save(cor);
-    this.logger.log(`[2FA] enabled=${cor.twoFaEnabled} method=${cor.twoFaMethod} — userId=${userId}`);
+    this.logger.log(`[2FA] Désactivée — userId=${userId}`);
     return updated;
   }
 
@@ -85,6 +96,14 @@ export class SecuriteService extends CorrespondantBaseService {
     user.password              = await bcrypt.hash(dto.newPassword, 12);
     user.lastPasswordChangedAt = new Date();
     await this.userRepo.save(user);
+
+    /* Révoque toutes les sessions actives — un refresh token volé sur un
+     * autre appareil ne doit pas survivre à un changement de mot de passe
+     * volontaire (même logique que auth.service.ts → resetPassword). */
+    await this.refreshTokenRepo.update(
+      { userId, revoked: false },
+      { revoked: true },
+    );
 
     this.logger.log(`[MOT DE PASSE] Changé dans User — userId=${userId}`);
     return { message: 'Mot de passe modifié avec succès.' };

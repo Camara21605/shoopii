@@ -1,0 +1,97 @@
+{
+  "correspondantsPage": {
+    "typeLabel": {
+      "regional": "🏠 区域",
+      "zonal": "🗺️ 地区",
+      "national": "🌍 全国"
+    },
+    "listItem": {
+      "missionsCount": "{{count}} 个任务",
+      "abonne": "已关注",
+      "suivre": "关注"
+    },
+    "hero": {
+      "sup": "Shopi 网络 · 几内亚与海外",
+      "titrePart1": "您",
+      "titreEm": "信赖的代理商",
+      "titrePart2": "遍布各地",
+      "sub": "经过验证的本地中转站，促进几内亚与海外之间的商业往来。安全地接收、发送和转运您的包裹。",
+      "correspondantsActifs": "活跃代理商",
+      "noteMoyenne": "平均评分",
+      "missionsAuTotal": "总任务数",
+      "communesCouvertes": "覆盖区域",
+      "abonne": "✓ 已关注",
+      "suivre": "+ 关注"
+    },
+    "toolbar": {
+      "searchPlaceholder": "搜索代理商、区域…",
+      "filters": {
+        "tous": "全部",
+        "enLigne": "在线",
+        "mesAbonnements": "我的关注",
+        "regionaux": "区域",
+        "zonaux": "地区",
+        "nationaux": "全国"
+      },
+      "sorts": {
+        "pertinence": "相关度",
+        "mieuxNotes": "评分最高",
+        "plusDeMissions": "任务最多",
+        "nomAZ": "姓名（A-Z）"
+      },
+      "correspondantCount_one": "{{count}} 名代理商",
+      "correspondantCount_other": "{{count}} 名代理商"
+    },
+    "card": {
+      "enLigne": "在线",
+      "horsLigne": "离线",
+      "avisCount": "（{{count}} 条评价）",
+      "missions": "任务",
+      "fiabilite": "可靠性",
+      "experience": "经验",
+      "abonne": "已关注",
+      "suivre": "关注",
+      "voirProfilComplet": "查看完整资料 →"
+    },
+    "sidebar": {
+      "typeDeCorrespondant": "代理商类型",
+      "types": {
+        "regional": {
+          "nm": "区域",
+          "desc": "覆盖一座城市"
+        },
+        "zonal": {
+          "nm": "地区",
+          "desc": "覆盖一个地区"
+        },
+        "national": {
+          "nm": "全国",
+          "desc": "覆盖整个国家"
+        }
+      },
+      "commune": "区域",
+      "toutes": "全部",
+      "noteMinimale": "最低评分",
+      "ratingOpts": {
+        "cinqEtoiles": "仅 5 星",
+        "quatrePlus": "4+ 星",
+        "troisPlus": "3+ 星",
+        "toutesLesNotes": "所有评分"
+      },
+      "disponibilite": "可用性",
+      "reinitialiser": "重置",
+      "enLigne": "在线",
+      "horsLigne": "离线"
+    },
+    "page": {
+      "chargement": "正在加载代理商…",
+      "correspondantsDisponibles": "可用代理商",
+      "resultatCount_one": "{{count}} 个结果",
+      "resultatCount_other": "{{count}} 个结果",
+      "errorSuffix": "— 显示演示数据。",
+      "aucunCorrespondant": "没有符合筛选条件的代理商。",
+      "desabonneToast": "👋 已取消关注 {{nom}}",
+      "abonneToast": "✅ 已关注 {{nom}}"
+    }
+  }
+}

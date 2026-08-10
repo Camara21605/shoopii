@@ -1,0 +1,104 @@
+{
+  "inventaire": {
+    "status": {
+      "rupture": "Out of stock",
+      "faible": "Low stock",
+      "critique": "Critical",
+      "enStock": "In stock"
+    },
+    "modal": {
+      "title": "Update stock",
+      "subtitle": "Quick update without leaving the inventory",
+      "quantite": "Stock quantity *",
+      "unites": "units",
+      "placeholder1": "E.g.: 25",
+      "nouveauStatut": "New status:",
+      "seuilAlerte": "Alert threshold (optional)",
+      "seuilPlaceholder": "E.g.: 5",
+      "seuilHint": "An alert will appear when stock drops below this threshold.",
+      "niveauStock": "Stock level",
+      "annuler": "Cancel",
+      "saving": "Saving…",
+      "update": "Update stock",
+      "invalidStock": "⚠️ Stock must be a positive number",
+      "updated": "✅ Stock updated"
+    },
+    "header": {
+      "title": "Inventory & Stock",
+      "subtitle": "Track your stock levels in real time and manage alerts",
+      "exportCsv": "Export CSV",
+      "exportToast": "📥 CSV export generated",
+      "refresh": "Refresh",
+      "loading": "Loading…"
+    },
+    "stats": {
+      "produitsCatalogues": "Catalogued products",
+      "unitesTotal": "{{count}} units in total",
+      "rupturesStock": "Out of stock",
+      "aucuneRupture": "No stockouts ✓",
+      "actionRequise": "Action required!",
+      "stocksFaibles": "Low stock",
+      "sousLeSeuil": "Below the alert threshold",
+      "valeurStock": "Stock value (GNF)",
+      "prixParQuantite": "Price × stock quantity"
+    },
+    "filters": {
+      "tous": "All",
+      "rupture": "🔴 Out of stock",
+      "faibles": "🟡 Low",
+      "enStock": "✅ In stock"
+    },
+    "search": "Search a product…",
+    "loadingInventaire": "Loading inventory…",
+    "retry": "Retry",
+    "empty": {
+      "noneTitle": "No products",
+      "noResultsTitle": "No results",
+      "noneSub": "Add products to see the inventory.",
+      "noResultsSub": "Try adjusting your filters."
+    },
+    "table": {
+      "produit": "Product",
+      "categorie": "Category",
+      "prixUnitaire": "Unit price",
+      "stockActuel": "Current stock",
+      "niveauVisuel": "Visual level",
+      "statut": "Status",
+      "actions": "Actions",
+      "valeurStockLigne": "= {{montant}} GNF in stock",
+      "seuil": "Threshold: {{count}}",
+      "modifierTitle": "Update stock",
+      "modifier": "Edit",
+      "reapproTitle": "Start a restock",
+      "reapproToast": "📦 Restock started for \"{{nom}}\""
+    },
+    "footer": {
+      "count_one": "{{count}} product",
+      "count_other": "{{count}} products",
+      "filtres": "filtered",
+      "pourRecherche": "for \"{{search}}\""
+    },
+    "alertes": {
+      "title": "Critical alerts",
+      "allGood": "Everything is in order!",
+      "noneDetected": "No critical stock detected.",
+      "stock": "Stock:",
+      "min": "· Min: {{count}}"
+    },
+    "quickActions": {
+      "title": "Quick actions",
+      "reapproAll": "Restock all critical items",
+      "reapproAllSub": "{{count}} products affected",
+      "reapproAllToast": "📦 Bulk restock started",
+      "exportInventaire": "Export inventory (CSV)",
+      "exportInventaireSub": "{{count}} products · {{units}} units",
+      "exportInventaireToast": "📥 CSV export in progress…",
+      "configAlertes": "Configure alerts",
+      "configAlertesSub": "Set automatic thresholds",
+      "configAlertesToast": "⚙️ Alert configuration opened",
+      "syncStock": "Sync stock",
+      "syncStockSub": "With your supplier",
+      "syncStockToast": "🔄 Syncing in progress…"
+    }
+  }
+}

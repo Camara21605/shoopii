@@ -1,0 +1,101 @@
+{
+  "produits": {
+    "visibilite": {
+      "public": "Public",
+      "draft": "Draft",
+      "private": "Private"
+    },
+    "header": {
+      "title": "My Products",
+      "subtitle": "Manage your catalog and inventory",
+      "nouveau": "New product"
+    },
+    "stats": {
+      "total": "Total",
+      "publies": "Published",
+      "brouillons": "Drafts",
+      "rupture": "Out of stock"
+    },
+    "search": "Search by name, brand, reference…",
+    "filters": {
+      "tous": "All",
+      "publics": "🟢 Published",
+      "brouillons": "🟡 Drafts",
+      "prives": "🔴 Private"
+    },
+    "loading": "Loading products…",
+    "retry": "Retry",
+    "empty": {
+      "noneTitle": "No products yet",
+      "noResultsTitle": "No results",
+      "noneSub": "Start by adding your first product.",
+      "noResultsSub": "Try adjusting your filters.",
+      "addFirst": "Add a product"
+    },
+    "count_one": "{{count}} product",
+    "count_other": "{{count}} products",
+    "countFor": "for \"{{search}}\"",
+    "card": {
+      "voir": "View",
+      "rupture": "Out of stock",
+      "outOfStock": "Out of stock",
+      "lowStock": "Low stock — {{count}} left",
+      "inStock": "{{count}} in stock",
+      "voirDetail": "View details",
+      "modifRapide": "Quick edit",
+      "modifComplet": "Full edit",
+      "modifier": "Edit",
+      "supprimer": "Delete"
+    },
+    "toasts": {
+      "archived": "📦 Product archived",
+      "archiveError": "Error while archiving",
+      "updated": "✅ Product updated",
+      "deleted": "🗑️ Product deleted"
+    },
+    "modalVoir": {
+      "noImage": "No image",
+      "prix": "Price",
+      "commission": "Shopi commission (3%)",
+      "revenuNet": "Net revenue",
+      "stock": "Stock",
+      "unites": "units",
+      "seuilInfo": "Alert threshold: {{count}} units",
+      "details": "Details",
+      "marque": "Brand",
+      "condition": "Condition",
+      "garantie": "Warranty",
+      "origine": "Origin",
+      "ajouteLe": "Added on",
+      "description": "Description",
+      "caracteristiques": "Specifications",
+      "variantes": "Variants",
+      "tags": "Tags",
+      "supprimer": "Delete",
+      "archiver": "Archive",
+      "modifier": "Edit"
+    },
+    "modalModifier": {
+      "title": "Quick edit",
+      "visibilite": "Visibility",
+      "optPublic": "🟢 Public — Visible on the store",
+      "optDraft": "🟡 Draft — Not published",
+      "optPrivate": "🔴 Private — Direct link only",
+      "stockActuel": "Current stock",
+      "seuilAlerte": "Alert threshold",
+      "seuilPlaceholder": "E.g.: 5",
+      "info": "To edit the name, price or images, use the full form.",
+      "annuler": "Cancel",
+      "saving": "Saving…",
+      "save": "Save"
+    },
+    "modalDelete": {
+      "title": "Confirm deletion",
+      "confirm": "Are you sure you want to delete \"{{nom}}\"?",
+      "irreversible": "This action is irreversible. The product will be permanently deleted.",
+      "annuler": "Cancel",
+      "deleting": "Deleting…",
+      "confirmBtn": "Delete permanently"
+    }
+  }
+}

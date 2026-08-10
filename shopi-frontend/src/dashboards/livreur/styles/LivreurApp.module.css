@@ -1,63 +1,73 @@
 /* ================================================================
  * LivreurApp.module.css — Shell principal du dashboard livreur
- * DESIGN : Dark-teal premium, glassmorphism topbar, sidebar fluide
+ * DESIGN : Noir permanent — fond noir, texte clair. PAS de mode
+ * clair : le thème sombre s'applique quel que soit le préférence OS
+ * ou le toggle clair/sombre global du site (voir bloc haute-
+ * spécificité en bas de fichier, qui verrouille ces valeurs avec
+ * !important).
  * ================================================================ */
 
 :global(:root) {
-  /* ── Palette teal-navy ── */
-  --teal:    #0E7490;
-  --teal-2:  #0c6480;
-  --teal-3:  #0a5570;
-  --tl-bg:   rgba(14,116,144,.10);
-  --tl-lt:   #67E8F9;
-  --bdrb:    rgba(14,116,144,.25);
-  --sh-teal: 0 8px 28px rgba(14,116,144,.32);
+  /* ── Accent — gris moyen, lisible en texte-sur-noir ET en fond-sous-texte-blanc ── */
+  --teal:    #52525B;
+  --teal-2:  #71717A;
+  --teal-3:  #A1A1AA;
+  --tl-bg:   rgba(255,255,255,.08);
+  --tl-lt:   #A1A1AA;
+  --bdrb:    rgba(255,255,255,.22);
+  --sh-teal: 0 8px 28px rgba(0,0,0,.5);
 
-  /* ── Accents ── */
-  --navy:    #0B1F3A;
-  --navy-2:  #112648;
-  --navy-3:  #0d1e35;
-  --white:   #ffffff;
-  --g50:     #F7F9FB;
-  --g100:    #EEF2F6;
-  --g200:    #DDE4ED;
-  --g300:    #C8D4E3;
-  --g400:    #9EB0C7;
-  --t1:      #0B1F3A;
-  --t2:      #3A5068;
-  --t3:      #6B849E;
-  --t4:      #9EB0C7;
+  /* ── Neutres — fond noir, texte clair ── */
+  --navy:    #F4F4F5;
+  --navy-2:  #E4E4E7;
+  --navy-3:  #D4D4D8;
+  --white:   #000000;
+  --g50:     #000000;
+  --g100:    #0A0A0A;
+  --g200:    #1C1C1F;
+  --g300:    #2D2D30;
+  --g400:    #71717A;
+  --t1:      #F4F4F5;
+  --t2:      #A1A1AA;
+  --t3:      #71717A;
+  --t4:      #52525B;
 
-  /* ── Sémantiques ── */
-  --emerald: #047857;
-  --em-bg:   rgba(4,120,87,.10);
-  --green:   #16A34A;
-  --amber:   #B45309;
-  --am-bg:   rgba(180,83,9,.10);
-  --red:     #DC2626;
-  --rs-bg:   rgba(220,38,38,.09);
-  --rose:    #E11D48;
-  --blue:    #1A4FC4;
-  --blue-lt: #93C5FD;
-  --blue-2:  #1d40ae;
-  --sky:     #EEF6FF;
-  --sky-2:   #DBEAFE;
-  --sky-3:   #BFDBFE;
-  --orange:  #EA580C;
-  --or-bg:   rgba(234,88,12,.09);
-  --violet:  #7C3AED;
-  --vl-bg:   rgba(124,58,237,.09);
-  --btn:     #111113;
-  --btn-h:   #1C1C1F;
-  --surface-bar: rgba(255,255,255,.92);
-  --surface-btm: rgba(255,255,255,.97);
+  /* ── Bordures ── */
+  --bdr:     rgba(255,255,255,.10);
+  --bdr2:    rgba(255,255,255,.16);
 
-  /* ── Ombres ── */
-  --sh-xs:  0 1px 3px rgba(11,31,58,.07), 0 1px 2px rgba(11,31,58,.05);
-  --sh-sm:  0 3px 10px rgba(11,31,58,.09), 0 1px 3px rgba(11,31,58,.06);
-  --sh-md:  0 8px 24px rgba(11,31,58,.12), 0 3px 8px rgba(11,31,58,.07);
-  --sh-lg:  0 18px 48px rgba(11,31,58,.18), 0 6px 16px rgba(11,31,58,.10);
-  --sh-b:   0 -2px 16px rgba(11,31,58,.08);
+  /* ── États sémantiques — différenciés par poids/opacité, pas par teinte ──
+   * Exception : rouge conservé en couleur pour les notifications/alertes/
+   * danger — convention universelle, seul accent chromatique du thème. */
+  --emerald: #52525B;
+  --em-bg:   rgba(255,255,255,.08);
+  --green:   #52525B;
+  --amber:   #71717A;
+  --am-bg:   rgba(255,255,255,.08);
+  --red:     #EF4444;
+  --rs-bg:   rgba(239,68,68,.14);
+  --rose:    #EF4444;
+  --blue:    #52525B;
+  --blue-lt: #A1A1AA;
+  --blue-2:  #71717A;
+  --sky:     rgba(255,255,255,.05);
+  --sky-2:   rgba(255,255,255,.07);
+  --sky-3:   rgba(255,255,255,.10);
+  --orange:  #52525B;
+  --or-bg:   rgba(255,255,255,.08);
+  --violet:  #52525B;
+  --vl-bg:   rgba(255,255,255,.08);
+  --btn:     #52525B;
+  --btn-h:   #71717A;
+  --surface-bar: rgba(0,0,0,.92);
+  --surface-btm: rgba(0,0,0,.97);
+
+  /* ── Ombres (fond noir → ombres plus marquées) ── */
+  --sh-xs:  0 2px 8px rgba(0,0,0,.45);
+  --sh-sm:  0 4px 16px rgba(0,0,0,.55);
+  --sh-md:  0 8px 28px rgba(0,0,0,.65);
+  --sh-lg:  0 16px 48px rgba(0,0,0,.72);
+  --sh-b:   0 -2px 20px rgba(0,0,0,.5);
 
   /* ── Rayons ── */
   --r-sm:   8px;
@@ -81,94 +91,62 @@
 }
 
 /* ════════════════════════════════════════════════════════════
-   MODE SOMBRE — noir pur, cohérent avec le reste du site
-   • @media (prefers-color-scheme: dark) → réaction à l'OS
-   • :global(:root[data-theme="dark"])   → toggle explicite sombre
-   • :global(:root[data-theme="light"])  → toggle explicite clair
-     (annule la préférence OS quand le mode sombre est actif)
+   RÉ-ASSERTION HAUTE SPÉCIFICITÉ + !important — noir forcé, en
+   toutes circonstances.
+
+   Deux problèmes réglés d'un coup ici :
+
+   1. COLLISION INTER-DASHBOARDS : plusieurs dashboards (ex.
+      AdminApp.module.css) déclarent les MÊMES noms de variable
+      (--white, --navy, --blue, --red, --sky, --t1..t4, --g50..g300,
+      --bdr…) via :global(:root). Dans une SPA, le CSS d'un dashboard
+      déjà visité reste chargé — si celui d'un AUTRE dashboard
+      s'injecte APRÈS celui de livreur, ses valeurs gagnent la
+      cascade (même spécificité, seul l'ordre de chargement départage).
+
+   2. TOGGLE CLAIR/SOMBRE DU SITE : le dashboard livreur ne doit PAS
+      repasser en clair si l'utilisateur bascule le thème global sur
+      "light" (:root[data-theme="light"] a une spécificité (0,2,0),
+      supérieure à un simple .root scoped — sans !important il
+      gagnerait quand même).
+
+   FIX : réaffirmer ces variables sur .root (le conteneur racine de
+   CE dashboard) avec !important — gagne face à n'importe quelle
+   règle non-!important, quels que soient spécificité et ordre de
+   chargement.
    ════════════════════════════════════════════════════════════ */
-@media (prefers-color-scheme: dark) {
-  :global(:root) {
-    --teal:    #2DD4BF; --teal-2: #14B8A6; --teal-3: #0D9488;
-    --tl-bg:   rgba(45,212,191,.14); --tl-lt: #67E8F9;
-    --bdrb:    rgba(45,212,191,.35); --sh-teal: 0 8px 28px rgba(0,0,0,.5);
+:global(html) .root {
+  --teal:    #52525B !important; --teal-2: #71717A !important; --teal-3: #A1A1AA !important;
+  --tl-bg:   rgba(255,255,255,.08) !important; --tl-lt: #A1A1AA !important;
+  --bdrb:    rgba(255,255,255,.22) !important; --sh-teal: 0 8px 28px rgba(0,0,0,.5) !important;
 
-    --navy:    #F4F4F5; --navy-2: #E4E4E7; --navy-3: #D4D4D8;
-    --white:   #000000;
-    --g50:     #000000; --g100: #0A0A0A; --g200: #1C1C1F; --g300: #2D2D30; --g400: #71717A;
-    --t1:      #F4F4F5; --t2: #A1A1AA; --t3: #71717A; --t4: #52525B;
+  --navy:    #F4F4F5 !important; --navy-2: #E4E4E7 !important; --navy-3: #D4D4D8 !important;
+  --white:   #000000 !important;
+  --g50:     #000000 !important; --g100: #0A0A0A !important; --g200: #1C1C1F !important;
+  --g300:    #2D2D30 !important; --g400: #71717A !important;
+  --t1:      #F4F4F5 !important; --t2: #A1A1AA !important; --t3: #71717A !important; --t4: #52525B !important;
 
-    --em-bg:   rgba(5,150,105,.18);
-    --am-bg:   rgba(180,83,9,.18);
-    --rs-bg:   rgba(220,38,38,.15);
-    --blue:    #60A5FA; --blue-lt: #BFDBFE; --blue-2: #3B82F6;
-    --sky:     rgba(255,255,255,.04); --sky-2: rgba(255,255,255,.06); --sky-3: rgba(255,255,255,.10);
-    --or-bg:   rgba(234,88,12,.18);
-    --vl-bg:   rgba(124,58,237,.18);
-    --btn:     #1C1C1F; --btn-h: #2D2D30;
-    --surface-bar: rgba(0,0,0,.92);
-    --surface-btm: rgba(0,0,0,.97);
+  --bdr:     rgba(255,255,255,.10) !important;
+  --bdr2:    rgba(255,255,255,.16) !important;
 
-    --sh-xs:  0 2px 8px rgba(0,0,0,.45);
-    --sh-sm:  0 4px 16px rgba(0,0,0,.55);
-    --sh-md:  0 8px 28px rgba(0,0,0,.65);
-    --sh-lg:  0 16px 48px rgba(0,0,0,.72);
-    --sh-b:   0 -2px 20px rgba(0,0,0,.5);
-  }
-}
-:global(:root[data-theme="dark"]) {
-  --teal:    #2DD4BF; --teal-2: #14B8A6; --teal-3: #0D9488;
-  --tl-bg:   rgba(45,212,191,.14); --tl-lt: #67E8F9;
-  --bdrb:    rgba(45,212,191,.35); --sh-teal: 0 8px 28px rgba(0,0,0,.5);
+  --emerald: #52525B !important; --em-bg: rgba(255,255,255,.08) !important;
+  --green:   #52525B !important;
+  --amber:   #71717A !important; --am-bg: rgba(255,255,255,.08) !important;
+  --red:     #EF4444 !important; --rs-bg: rgba(239,68,68,.14) !important;
+  --rose:    #EF4444 !important;
+  --blue:    #52525B !important; --blue-lt: #A1A1AA !important; --blue-2: #71717A !important;
+  --sky:     rgba(255,255,255,.05) !important; --sky-2: rgba(255,255,255,.07) !important; --sky-3: rgba(255,255,255,.10) !important;
+  --orange:  #52525B !important; --or-bg: rgba(255,255,255,.08) !important;
+  --violet:  #52525B !important; --vl-bg: rgba(255,255,255,.08) !important;
+  --btn:     #52525B !important; --btn-h: #71717A !important;
+  --surface-bar: rgba(0,0,0,.92) !important;
+  --surface-btm: rgba(0,0,0,.97) !important;
 
-  --navy:    #F4F4F5; --navy-2: #E4E4E7; --navy-3: #D4D4D8;
-  --white:   #000000;
-  --g50:     #000000; --g100: #0A0A0A; --g200: #1C1C1F; --g300: #2D2D30; --g400: #71717A;
-  --t1:      #F4F4F5; --t2: #A1A1AA; --t3: #71717A; --t4: #52525B;
-
-  --em-bg:   rgba(5,150,105,.18);
-  --am-bg:   rgba(180,83,9,.18);
-  --rs-bg:   rgba(220,38,38,.15);
-  --blue:    #60A5FA; --blue-lt: #BFDBFE; --blue-2: #3B82F6;
-  --sky:     rgba(255,255,255,.04); --sky-2: rgba(255,255,255,.06); --sky-3: rgba(255,255,255,.10);
-  --or-bg:   rgba(234,88,12,.18);
-  --vl-bg:   rgba(124,58,237,.18);
-  --btn:     #1C1C1F; --btn-h: #2D2D30;
-  --surface-bar: rgba(0,0,0,.92);
-  --surface-btm: rgba(0,0,0,.97);
-
-  --sh-xs:  0 2px 8px rgba(0,0,0,.45);
-  --sh-sm:  0 4px 16px rgba(0,0,0,.55);
-  --sh-md:  0 8px 28px rgba(0,0,0,.65);
-  --sh-lg:  0 16px 48px rgba(0,0,0,.72);
-  --sh-b:   0 -2px 20px rgba(0,0,0,.5);
-}
-:global(:root[data-theme="light"]) {
-  --teal:    #0E7490; --teal-2: #0c6480; --teal-3: #0a5570;
-  --tl-bg:   rgba(14,116,144,.10); --tl-lt: #67E8F9;
-  --bdrb:    rgba(14,116,144,.25); --sh-teal: 0 8px 28px rgba(14,116,144,.32);
-
-  --navy:    #0B1F3A; --navy-2: #112648; --navy-3: #0d1e35;
-  --white:   #ffffff;
-  --g50:     #F7F9FB; --g100: #EEF2F6; --g200: #DDE4ED; --g300: #C8D4E3; --g400: #9EB0C7;
-  --t1:      #0B1F3A; --t2: #3A5068; --t3: #6B849E; --t4: #9EB0C7;
-
-  --em-bg:   rgba(4,120,87,.10);
-  --am-bg:   rgba(180,83,9,.10);
-  --rs-bg:   rgba(220,38,38,.09);
-  --blue:    #1A4FC4; --blue-lt: #93C5FD; --blue-2: #1d40ae;
-  --sky:     #EEF6FF; --sky-2: #DBEAFE; --sky-3: #BFDBFE;
-  --or-bg:   rgba(234,88,12,.09);
-  --vl-bg:   rgba(124,58,237,.09);
-  --btn:     #111113; --btn-h: #1C1C1F;
-  --surface-bar: rgba(255,255,255,.92);
-  --surface-btm: rgba(255,255,255,.97);
-
-  --sh-xs:  0 1px 3px rgba(11,31,58,.07), 0 1px 2px rgba(11,31,58,.05);
-  --sh-sm:  0 3px 10px rgba(11,31,58,.09), 0 1px 3px rgba(11,31,58,.06);
-  --sh-md:  0 8px 24px rgba(11,31,58,.12), 0 3px 8px rgba(11,31,58,.07);
-  --sh-lg:  0 18px 48px rgba(11,31,58,.18), 0 6px 16px rgba(11,31,58,.10);
-  --sh-b:   0 -2px 16px rgba(11,31,58,.08);
+  --sh-xs:  0 2px 8px rgba(0,0,0,.45) !important;
+  --sh-sm:  0 4px 16px rgba(0,0,0,.55) !important;
+  --sh-md:  0 8px 28px rgba(0,0,0,.65) !important;
+  --sh-lg:  0 16px 48px rgba(0,0,0,.72) !important;
+  --sh-b:   0 -2px 20px rgba(0,0,0,.5) !important;
 }
 
 /* ── Root ── */

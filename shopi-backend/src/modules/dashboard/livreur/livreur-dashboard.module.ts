@@ -30,6 +30,8 @@ import { Commande }              from '../../../database/entities/commande/comma
 import { Notification }          from '../../../database/entities/notification/notification.entitiy';
 import { PlatformSettings }      from '../../../database/entities/platform-settings.entity';
 import { PaiementDistribution }  from '../../../database/entities/paiement/paiement-distribution.entity';
+import { Follow }                from '../../../database/entities/follow/follow.entity';
+import { Company }               from '../../../database/entities/profiles/entreprise-profile.entity';
 
 /* ── Module Paramètres (assemble les 8 services + controller) ── */
 import { LivreurParametresModule } from './livreur-parametres.module';
@@ -39,6 +41,9 @@ import { LivreurDashboardController } from './livreur-dashboard.controller';
 
 /* ── Service principal du dashboard ── */
 import { LivreurDashboardService } from './livreur-dashboard.service';
+
+/* ── Boutiques partenaires réelles (dérivées des commandes) ── */
+import { BoutiquesManagementService } from './services/boutiques-management.service';
 
 @Module({
   imports: [
@@ -51,6 +56,8 @@ import { LivreurDashboardService } from './livreur-dashboard.service';
       Notification,
       PlatformSettings,
       PaiementDistribution,
+      Follow,
+      Company,
     ]),
 
     /*
@@ -72,6 +79,9 @@ import { LivreurDashboardService } from './livreur-dashboard.service';
   providers: [
     /* Service stats/overview */
     LivreurDashboardService,
+
+    /* Boutiques partenaires réelles */
+    BoutiquesManagementService,
   ],
 
   exports: [

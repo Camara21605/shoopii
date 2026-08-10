@@ -52,14 +52,16 @@ function makeIcon(emoji: string, color: string) {
   });
 }
 
-const VENDOR_ICON   = makeIcon('🏪', '#047857');
-const DELIVERY_ICON = makeIcon('🛵', '#1A4FC4');
-const CLIENT_ICON   = makeIcon('🏠', '#7C3AED');
+const VENDOR_ICON        = makeIcon('🏪', '#047857');
+const DELIVERY_ICON      = makeIcon('🛵', '#1A4FC4');
+const CLIENT_ICON        = makeIcon('🏠', '#7C3AED');
+const CORRESPONDENT_ICON = makeIcon('📦', '#B45309');
 
 const ROLE_ICONS = {
-  vendor:   VENDOR_ICON,
-  delivery: DELIVERY_ICON,
-  client:   CLIENT_ICON,
+  vendor:        VENDOR_ICON,
+  delivery:      DELIVERY_ICON,
+  client:        CLIENT_ICON,
+  correspondent: CORRESPONDENT_ICON,
 };
 
 /* ── Props ────────────────────────────────────────────────── */
@@ -78,9 +80,13 @@ export default function OrderTrackingMap({
   showPanel = true,
 }: Props) {
   const {
-    actors, route, numero, status,
+    actors, routes, livreurPickedUp, numero, status,
     loading, error, deliveryLive, refresh,
   } = useOrderTracking(orderId);
+
+  /* Tronçon "actif" (celui que le livreur parcourt actuellement) — c'est
+   * celui dont on affiche les métriques distance/durée/ETA dans le panneau. */
+  const activeRoute = livreurPickedUp ? routes.livreurToClient : routes.livreurToShop;
 
   /* Postion live du livreur (pour le panneau vitesse) */
   const deliveryId = actors.find(a => a.role === 'delivery')?.id ?? null;
@@ -175,27 +181,47 @@ export default function OrderTrackingMap({
             );
           })}
 
-          {/* Itinéraire */}
-          {route && (
+          {/* Tronçon vert — boutique → client (trajet de référence, toujours affiché) */}
+          {routes.shopToClient && (
             <Suspense fallback={null}>
-              <RoutePolyline route={route} fitBounds={actors.length >= 2} />
+              <RoutePolyline route={routes.shopToClient} color="#059669" fitBounds={false} />
+            </Suspense>
+          )}
+
+          {/* Tronçon rouge — livreur → boutique (avant récupération du colis) */}
+          {routes.livreurToShop && (
+            <Suspense fallback={null}>
+              <RoutePolyline route={routes.livreurToShop} color="#DC2626" fitBounds={actors.length >= 2} />
+            </Suspense>
+          )}
+
+          {/* Tronçon bleu — livreur → client (après récupération du colis) */}
+          {routes.livreurToClient && (
+            <Suspense fallback={null}>
+              <RoutePolyline route={routes.livreurToClient} color="#1A4FC4" fitBounds={actors.length >= 2} />
             </Suspense>
           )}
         </MapContainer>
 
-        {/* Légende fournisseur de route */}
-        {route && (
+        {/* Légende des tronçons */}
+        {(routes.livreurToShop || routes.shopToClient || routes.livreurToClient) && (
           <div style={{
             position:   'absolute', bottom: 10, left: 10, zIndex: 400,
             background: 'rgba(255,255,255,.92)', backdropFilter: 'blur(8px)',
-            borderRadius: 8, padding: '4px 10px',
+            borderRadius: 8, padding: '6px 10px',
             fontSize: 10, color: '#64748B', fontWeight: 600,
             border: '1px solid rgba(0,0,0,.07)',
+            display: 'flex', flexDirection: 'column', gap: 3,
           }}>
-            {route.provider === 'openrouteservice'
-              ? <><i className="fas fa-route" style={{ color: '#1A4FC4' }} /> OpenRouteService</>
-              : <><i className="fas fa-minus" style={{ color: '#94A3B8' }} /> Ligne droite</>
-            }
+            {routes.livreurToShop && (
+              <span><span style={{ display:'inline-block', width:10, height:3, background:'#DC2626', marginRight:6, borderRadius:2 }} />Livreur → Boutique (à récupérer)</span>
+            )}
+            {routes.shopToClient && (
+              <span><span style={{ display:'inline-block', width:10, height:3, background:'#059669', marginRight:6, borderRadius:2 }} />Boutique → Client</span>
+            )}
+            {routes.livreurToClient && (
+              <span><span style={{ display:'inline-block', width:10, height:3, background:'#1A4FC4', marginRight:6, borderRadius:2 }} />Livreur → Client (en route)</span>
+            )}
           </div>
         )}
 
@@ -212,7 +238,7 @@ export default function OrderTrackingMap({
       {showPanel && (
         <TrackingPanel
           actors={actors}
-          route={route}
+          route={activeRoute}
           livePosition={livePos}
           numero={numero}
           status={status}

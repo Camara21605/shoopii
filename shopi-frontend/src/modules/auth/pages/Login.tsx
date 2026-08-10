@@ -11,6 +11,8 @@ import { LeftPanel }      from '../components/LeftPanel';
 import { LoginForm }      from '../components/LoginForm';
 import { RegisterForm }   from '../components/RegisterForm';
 import { ForgotPassword } from './ForgotPassword';
+import { TwoFaChallenge } from './TwoFaChallenge';
+import { AccountChoiceScreen } from './AccountChoiceScreen';
 import { SuccessScreen }  from '../components/SuccessScreen';
 import { Toast }          from '../../../shared/components/ui/Toast';
 
@@ -79,6 +81,16 @@ const Login: React.FC = () => {
     showToast,
     // ✅ Nouveau : forcer le rôle depuis l'invitation
     setRegisterRole,
+    // ✅ 2FA — étape 2 du login
+    twoFaChallengeToken,
+    twoFaError,
+    handleVerifyTwoFa,
+    cancelTwoFa,
+    // ✅ Choix de compte — comptes liés pro↔client partageant identifiant+mdp
+    accountChoiceOptions,
+    accountChoiceError,
+    handleChooseAccount,
+    cancelAccountChoice,
   } = useLoginPage({ initialTab: isInvited ? 'register' : 'login' });
 
   /* ── Retour du callback Google OAuth ──────────────────────────────────────
@@ -166,7 +178,7 @@ const Login: React.FC = () => {
             )}
 
             {/* En-tête */}
-            {!showSuccess && !showForgot && (
+            {!showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && (
               <div className="form-hd">
                 <h2 className="form-title">
                   {activeTab === 'login' ? 'Connexion' : 'Créer mon compte'}
@@ -203,7 +215,7 @@ const Login: React.FC = () => {
             )}
 
             {/* Onglets */}
-            {!showSuccess && !showForgot && (
+            {!showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && (
               <div className="form-tabs">
                 <button
                   className={`ftab${activeTab === 'login' ? ' active' : ''}`}
@@ -221,7 +233,7 @@ const Login: React.FC = () => {
             )}
 
             {/* Connexion */}
-            {activeTab === 'login' && !showSuccess && !showForgot && (
+            {activeTab === 'login' && !showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && (
               <LoginForm
                 data={loginData}
                 errors={loginErrors}
@@ -251,6 +263,27 @@ const Login: React.FC = () => {
                 prefilledCode={prefilledCode}
                 onlyClientRole={!isInvited}
                 onValidateStep={validateRegisterStep}
+              />
+            )}
+
+            {/* 2FA — étape 2 du login */}
+            {twoFaChallengeToken && !showSuccess && (
+              <TwoFaChallenge
+                isLoading={isLoading}
+                error={twoFaError}
+                onVerify={handleVerifyTwoFa}
+                onCancel={cancelTwoFa}
+              />
+            )}
+
+            {/* Choix de compte — identifiant + mdp partagés par 2 comptes liés */}
+            {accountChoiceOptions && !showSuccess && (
+              <AccountChoiceScreen
+                accounts={accountChoiceOptions}
+                isLoading={isLoading}
+                error={accountChoiceError}
+                onChoose={handleChooseAccount}
+                onCancel={cancelAccountChoice}
               />
             )}
 

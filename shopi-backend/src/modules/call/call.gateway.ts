@@ -21,6 +21,7 @@
 
 import {
   WebSocketGateway, WebSocketServer, SubscribeMessage, ConnectedSocket, MessageBody,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import type { Server } from 'socket.io';
@@ -34,13 +35,39 @@ import { CallType } from 'src/database/entities/call/call.entity';
   cors: { origin: true, credentials: true },
   transports: ['websocket', 'polling'],
 })
-export class CallGateway {
+export class CallGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   private readonly server: Server;
 
   private readonly logger = new Logger(CallGateway.name);
 
   constructor(private readonly callService: CallService) {}
+
+  /**
+   * Nettoie tout appel actif dont ce socket faisait partie — sans ça, un
+   * onglet fermé/un crash/une coupure réseau EN PLEIN APPEL laissait la
+   * ligne `calls` orpheline pour toujours, et `isUserBusy()` bloquait
+   * ensuite CHAQUE tentative d'appel future de cet utilisateur ("Vous
+   * êtes déjà en appel") — plus aucun moyen de rappeler sans intervention
+   * manuelle en base. Voir CallService.endAllCallsForUser pour la limite
+   * connue (multi-onglets) et le raisonnement complet.
+   */
+  async handleDisconnect(socket: AuthenticatedSocket): Promise<void> {
+    const userId = socket.data?.userId;
+    if (!userId) return;
+
+    try {
+      const toNotify = await this.callService.endAllCallsForUser(userId);
+      for (const { otherUserId, conversationId } of toNotify) {
+        this.logger.log(`📞 Appel coupé (déconnexion) user=${userId} → notifié=${otherUserId}`);
+        this.server.to(`user:${otherUserId}`).emit('call:ended', { conversationId });
+      }
+    } catch (e) {
+      // Une panne ici ne doit jamais faire planter le process — le pire
+      // cas est un appel qui reste "actif" un peu plus longtemps.
+      this.logger.error(`❌ Erreur nettoyage appels à la déconnexion user=${userId}`, e as Error);
+    }
+  }
 
   private roomSize(room: string): number {
     return (this.server as unknown as { adapter: { rooms: Map<string, Set<string>> } })
@@ -163,57 +190,85 @@ export class CallGateway {
     });
   }
 
+  /**
+   * Vérifie qu'un appel actif existe bien entre ces deux users avant de
+   * relayer un signal WebRTC — SANS ça, n'importe quel utilisateur
+   * authentifié pouvait émettre call:offer/answer/ice-candidate vers un
+   * targetUserId arbitraire et injecter de la signalisation chez un
+   * utilisateur avec qui il n'a AUCUNE relation, en contournant entièrement
+   * assertCanCall (contact/follow/commande) qui ne s'exécute que dans
+   * call:initiate. call:accept/reject/end avaient déjà ce garde-fou via
+   * findActiveCallId — il manquait ici. */
+  private async assertActiveCallBetween(userA: string, userB: string): Promise<boolean> {
+    if (!userA || !userB) return false;
+    const callId = await this.callService.findActiveCallId(userA, userB);
+    if (!callId) {
+      this.logger.warn(`⛔ Signal WebRTC refusé — aucun appel actif entre ${userA} et ${userB}`);
+      return false;
+    }
+    return true;
+  }
+
   /** Offer SDP (appelant → appelé). */
   @SubscribeMessage('call:offer')
-  handleCallOffer(
+  async handleCallOffer(
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: {
       conversationId: string;
       targetUserId:   string;
       sdp:            RTCSessionDescriptionInit;
     },
-  ): void {
+  ): Promise<void> {
+    const fromUserId = socket.data.userId;
+    if (!(await this.assertActiveCallBetween(fromUserId, body?.targetUserId))) return;
+
     const room = `user:${body.targetUserId}`;
-    this.logger.log(`🔄 call:offer from=${socket.data.userId} to=${body.targetUserId} sockets-in-room=${this.roomSize(room)}`);
+    this.logger.log(`🔄 call:offer from=${fromUserId} to=${body.targetUserId} sockets-in-room=${this.roomSize(room)}`);
     this.server.to(room).emit('call:offer', {
       conversationId: body.conversationId,
-      fromUserId:     socket.data.userId,
+      fromUserId,
       sdp:            body.sdp,
     });
   }
 
   /** Answer SDP (appelé → appelant). */
   @SubscribeMessage('call:answer')
-  handleCallAnswer(
+  async handleCallAnswer(
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: {
       conversationId: string;
       targetUserId:   string;
       sdp:            RTCSessionDescriptionInit;
     },
-  ): void {
+  ): Promise<void> {
+    const fromUserId = socket.data.userId;
+    if (!(await this.assertActiveCallBetween(fromUserId, body?.targetUserId))) return;
+
     const room = `user:${body.targetUserId}`;
-    this.logger.log(`🔄 call:answer from=${socket.data.userId} to=${body.targetUserId} sockets-in-room=${this.roomSize(room)}`);
+    this.logger.log(`🔄 call:answer from=${fromUserId} to=${body.targetUserId} sockets-in-room=${this.roomSize(room)}`);
     this.server.to(room).emit('call:answer', {
       conversationId: body.conversationId,
-      fromUserId:     socket.data.userId,
+      fromUserId,
       sdp:            body.sdp,
     });
   }
 
   /** Candidat ICE (dans les deux sens). */
   @SubscribeMessage('call:ice-candidate')
-  handleCallIceCandidate(
+  async handleCallIceCandidate(
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: {
       conversationId: string;
       targetUserId:   string;
       candidate:      RTCIceCandidateInit;
     },
-  ): void {
+  ): Promise<void> {
+    const fromUserId = socket.data.userId;
+    if (!(await this.assertActiveCallBetween(fromUserId, body?.targetUserId))) return;
+
     this.server.to(`user:${body.targetUserId}`).emit('call:ice-candidate', {
       conversationId: body.conversationId,
-      fromUserId:     socket.data.userId,
+      fromUserId,
       candidate:      body.candidate,
     });
   }
@@ -224,10 +279,13 @@ export class CallGateway {
    *  répond déjà 'busy' avant même que ça sonne) — conservé pour les
    *  cas limites (deux appels initiés en même temps). */
   @SubscribeMessage('call:busy')
-  handleCallBusy(
+  async handleCallBusy(
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: { conversationId: string; callerUserId: string },
-  ): void {
+  ): Promise<void> {
+    const fromUserId = socket.data.userId;
+    if (!(await this.assertActiveCallBetween(fromUserId, body?.callerUserId))) return;
+
     this.server.to(`user:${body.callerUserId}`).emit('call:busy', {
       conversationId: body.conversationId,
     });

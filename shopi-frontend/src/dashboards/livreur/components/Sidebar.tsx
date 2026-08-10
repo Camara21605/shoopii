@@ -38,11 +38,9 @@ function buildNavMonEspace(encoursCount: number): NavItem[] {
 }
 const NAV_RESEAU: NavItem[] = [
   { id:'boutiques', icon:'fa-store',       label:'Mes boutiques'                            },
-  { id:'abonner',   icon:'fa-plus-circle', label:"S'abonner à une boutique"                 },
 ];
 const NAV_FINANCES: NavItem[] = [
   { id:'revenus', icon:'fa-coins',  label:'Mes revenus'   },
-  { id:'wallet',  icon:'fa-wallet', label:'Wallet Shopi'  },
 ];
 const NAV_COMPTE: NavItem[] = [
   { id:'zone',       icon:'fa-map-location-dot', label:'Ma zone de livraison'             },

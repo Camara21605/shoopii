@@ -1,0 +1,107 @@
+{
+  "sharedCards": {
+    "partenaire": {
+      "abonnesSuffix": "followers",
+      "enSavoirPlus": "Learn more",
+      "desabonneToast": "👋 Unfollowed",
+      "abonneToast": "✅ Following {{nom}}",
+      "abonne": "Following",
+      "suivre": "Follow this partner"
+    },
+    "entreprise": {
+      "verifie": "Verified",
+      "villeDefault": "Conakry",
+      "commandes": "Orders",
+      "note": "Rating ⭐",
+      "avis": "Reviews",
+      "abonne": "Following",
+      "sabonner": "Follow"
+    },
+    "livreur": {
+      "disponible": "Available",
+      "enCourse": "On delivery",
+      "livraisons": "Deliveries",
+      "note": "Rating ⭐",
+      "voirProfil": "View profile",
+      "connectezVous": "Log in to follow"
+    },
+    "correspondant": {
+      "typeLabel": {
+        "regional": "Regional",
+        "zonal": "Zonal",
+        "national": "National"
+      },
+      "enLigne": "Online",
+      "horsLigne": "Offline",
+      "idManquantToast": "❌ Missing ID",
+      "erreurReseauFallback": "Network error",
+      "abonneToast": "✅ Following {{nom}}",
+      "desabonneToast": "👋 Unfollowed {{nom}}",
+      "aucuneDescription": "No description available.",
+      "missions": "Missions",
+      "note": "Rating ⭐",
+      "voirProfil": "View profile",
+      "connectezVous": "Log in to follow",
+      "connexion": "Log in",
+      "desabonner": "Unfollow",
+      "abonneParenth": "Following",
+      "suivre": "Follow"
+    },
+    "produit": {
+      "badges": {
+        "hot": "🔥 Hot",
+        "new": "✨ New",
+        "promo": "🏷️ Promo"
+      },
+      "copier": "Copy",
+      "partageViaToast": "📲 Shared via {{label}}",
+      "instagramToast": "📸 Open Instagram and share the link",
+      "lienCopieToast": "🔗 Link copied!",
+      "dejaAuPanierToast": "✓ {{nom}} is already in your cart",
+      "ajouteAuPanierToast": "🛒 {{nom}} added to cart!",
+      "ajoutErrorFallback": "Unable to add to cart",
+      "favoriAjoute": "❤️ Added to favorites",
+      "favoriRetire": "💔 Removed from favorites",
+      "favoriErrorFallback": "Action unavailable",
+      "voir": "View",
+      "boutique": "Shop",
+      "partager": "Share",
+      "prixGros": "Wholesale price",
+      "dejaAuPanierBtn": "Already in cart",
+      "dejaAuPanierClicToast": "✓ Already in your cart — remove it from the cart",
+      "ajoutEnCours": "Adding…",
+      "ajouterAuPanier": "Add to cart",
+      "modalEntreprise": {
+        "titre": "Shop",
+        "guinee": "Guinea",
+        "boutiqueVerifiee": "Verified Shopi shop",
+        "commandes": "Orders",
+        "note": "Rating",
+        "avis": "Reviews",
+        "ville": "City",
+        "produitPublieLabel": "Product published by this shop",
+        "desabonneToast": "👋 Unfollowed",
+        "abonneToast": "✅ Following {{nom}}",
+        "abonne": "Following",
+        "sabonner": "Follow",
+        "voirBoutique": "View shop"
+      },
+      "modalPartage": {
+        "titre": "Share this product"
+      },
+      "modalGros": {
+        "titre": "Wholesale price",
+        "prixStandard": "Standard price:",
+        "uniteSuffix": "/ unit",
+        "min": "Min.",
+        "unites": "units",
+        "aucunPalier": "No price tier configured for this product.",
+        "paliersLabel": "Tiered pricing",
+        "quantite": "Quantity",
+        "prixParUnite": "Price / unit",
+        "economie": "Savings",
+        "note": "Add the product to your cart with the desired quantity. The tiered price applies automatically to the order."
+      }
+    }
+  }
+}

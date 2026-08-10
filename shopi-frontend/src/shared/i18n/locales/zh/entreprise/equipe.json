@@ -1,0 +1,193 @@
+{
+  "equipe": {
+    "title": "团队管理",
+    "subtitle": "管理您的协作者的访问和权限。",
+    "addMember": "添加成员",
+    "stats": {
+      "activeMembers": "活跃成员",
+      "slotsUsed": "已用名额",
+      "suspended": "已暂停",
+      "remainingSlots": "剩余名额",
+      "activePlan": "当前套餐"
+    },
+    "tabs": {
+      "members": "成员",
+      "invitations": "邀请"
+    },
+    "toolbar": {
+      "searchPlaceholder": "按姓名、邮箱、职位搜索…",
+      "count_one": "{{count}} 名成员",
+      "count_other": "{{count}} 名成员"
+    },
+    "table": {
+      "member": "成员",
+      "jobRole": "职位 / 角色",
+      "status": "状态",
+      "lastLogin": "最近登录",
+      "actions": "操作"
+    },
+    "loading": "加载中…",
+    "empty": {
+      "membersTitle": "暂无协作者。",
+      "membersSub": "点击“添加成员”邀请您的第一个团队成员。",
+      "invitationsTitle": "暂无待处理邀请。",
+      "invitationsSub": "使用“添加成员”通过邮箱邀请协作者。"
+    },
+    "mustChangePassword": "⚠ 需要更改密码",
+    "status": {
+      "active": "活跃",
+      "suspended": "已暂停",
+      "pending": "待处理",
+      "revoked": "已撤销"
+    },
+    "actions": {
+      "editPermissions": "修改权限",
+      "activityLog": "活动日志",
+      "resetPassword": "重置密码",
+      "suspend": "暂停",
+      "reactivate": "重新激活",
+      "deleteAccess": "删除访问权"
+    },
+    "pagination": {
+      "pageOf": "第 {{page}} / {{total}} 页"
+    },
+    "invitations": {
+      "pendingTitle": "待处理邀请",
+      "send": "发送邀请",
+      "expiresOn": "于 {{date}} 过期",
+      "resend": "重新发送邀请",
+      "cancel": "取消邀请"
+    },
+    "confirm": {
+      "suspendTitle": "暂停 {{name}}",
+      "suspendMessage": "{{firstName}} 将无法登录。您可以随时重新激活其访问权。",
+      "deleteTitle": "删除 {{name}} 的访问权",
+      "deleteMessage": "{{firstName}} 的访问权将被永久撤销。此操作不可逆。",
+      "cancelInviteTitle": "取消发给 {{email}} 的邀请",
+      "cancelInviteMessage": "发送给 {{email}} 的邀请将被取消。链接将不再有效。",
+      "cancel": "取消",
+      "confirmBtn": "确认"
+    },
+    "toast": {
+      "loadMembersError": "无法加载成员。",
+      "suspended": "{{name}} 已被暂停。",
+      "reactivated": "{{name}} 已被重新激活。",
+      "reactivateError": "重新激活时出错。",
+      "deleted": "{{name}} 的访问权已撤销。",
+      "resetPasswordError": "重置时出错。",
+      "permissionsUpdated": "权限已更新。",
+      "permissionsUpdateError": "更新时出错。",
+      "invitationResent": "邀请已重新发送。",
+      "genericError": "错误。",
+      "invitationCancelled": "邀请已取消。",
+      "passwordCopied": "密码已复制！"
+    },
+    "permGroups": {
+      "products": {
+        "label": "产品",
+        "view": "查看",
+        "create": "创建",
+        "edit": "修改",
+        "delete": "删除"
+      },
+      "orders": {
+        "label": "订单",
+        "view": "查看",
+        "validate": "验证",
+        "cancel": "取消",
+        "edit": "修改"
+      },
+      "deliveries": {
+        "label": "配送",
+        "view": "查看",
+        "assign": "分配",
+        "edit": "修改"
+      },
+      "payments": {
+        "label": "支付",
+        "view": "查看",
+        "viewTransactions": "交易",
+        "manageRefunds": "退款"
+      },
+      "messaging": {
+        "label": "消息",
+        "read": "阅读",
+        "send": "发送"
+      },
+      "statistics": {
+        "label": "统计",
+        "view": "查看"
+      },
+      "settings": {
+        "label": "设置",
+        "view": "查看",
+        "edit": "修改"
+      },
+      "returns": {
+        "label": "退货与售后",
+        "view": "查看",
+        "process": "处理"
+      },
+      "wallet": {
+        "label": "钱包",
+        "view": "查看",
+        "withdraw": "提现"
+      }
+    },
+    "permPanel": {
+      "title": "权限",
+      "cancel": "取消",
+      "save": "保存"
+    },
+    "activityPanel": {
+      "title": "最近活动",
+      "empty": "无已记录的活动。"
+    },
+    "tempPwdModal": {
+      "title": "临时密码",
+      "transmitPrefix": "将此密码交给",
+      "mustChange": "他下次登录时必须更改。",
+      "warn": "此密码只显示一次。",
+      "gotIt": "我已记下密码"
+    },
+    "addModal": {
+      "title": "添加协作者",
+      "modeDirect": "直接创建",
+      "modeInvite": "通过邮箱邀请",
+      "firstName": "名字 *",
+      "firstNamePlaceholder": "玛丽",
+      "lastName": "姓氏 *",
+      "lastNamePlaceholder": "迪亚洛",
+      "email": "工作邮箱 *",
+      "emailPlaceholder": "marie.diallo@boutique.com",
+      "phone": "电话",
+      "phonePlaceholder": "+224 620 000 000",
+      "jobTitle": "职位",
+      "jobTitlePlaceholder": "销售负责人",
+      "internalRole": "内部角色",
+      "selectPlaceholder": "— 选择 —",
+      "roles": {
+        "manager": "经理",
+        "commercial": "销售",
+        "orderManager": "订单管理员",
+        "logisticsManager": "物流负责人",
+        "customerService": "客服",
+        "accountant": "会计"
+      },
+      "permTemplate": "权限模板",
+      "noTemplate": "— 无模板 —",
+      "noteInvite": "将发送邀请邮件。协作者将选择自己的密码。",
+      "noteDirect": "将生成一个临时密码并只显示一次。",
+      "cancel": "取消",
+      "createAccount": "创建账户",
+      "sendInvitation": "发送邀请",
+      "errors": {
+        "firstName": "名字为必填项",
+        "lastName": "姓氏为必填项",
+        "email": "邮箱无效"
+      },
+      "invitationSentToast": "邀请已发送到 {{email}}。",
+      "createError": "创建时出错。"
+    }
+  }
+}

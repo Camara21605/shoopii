@@ -25,15 +25,15 @@
 }
 .mc:hover {
   border-color: var(--bdrb);
-  background: rgba(238,246,255,.5);
+  background: rgba(244,244,245,.5);
   transform: translateY(-2px) translateX(2px);
   box-shadow: var(--sh-sm);
 }
 .mc:hover::before { opacity: 1; }
 
-.urgent { border-color: rgba(220,38,38,.28) !important; }
+.urgent { border-color: rgba(0,0,0,.28) !important; }
 .urgent::before { background: var(--red); }
-.urgent:hover { background: rgba(220,38,38,.025) !important; }
+.urgent:hover { background: rgba(0,0,0,.025) !important; }
 
 /* ── Badge ── */
 .mcBadge {
@@ -47,7 +47,7 @@
   letter-spacing: .3px;
 }
 .badgeNew    { background: var(--tl-bg);              color: var(--teal);   }
-.badgeUrgent { background: rgba(220,38,38,.12);        color: var(--red);    }
+.badgeUrgent { background: rgba(0,0,0,.12);        color: var(--red);    }
 .badgePrep   { background: var(--am-bg);              color: var(--amber);  }
 
 /* ── Top ── */
@@ -161,15 +161,15 @@
 }
 .btnMap:hover { border-color: var(--teal); color: var(--teal); background: var(--sky); }
 .btnX {
-  background: rgba(220,38,38,.07);
-  border: 1px solid rgba(220,38,38,.18);
+  background: rgba(0,0,0,.07);
+  border: 1px solid rgba(0,0,0,.18);
   border-radius: var(--r-md);
   padding: 10px;
   color: var(--red);
   cursor: pointer;
   transition: all .2s;
 }
-.btnX:hover { background: rgba(220,38,38,.13); }
+.btnX:hover { background: rgba(0,0,0,.13); }
 .mcFee {
   font-family: var(--fd);
   font-size: 16px;

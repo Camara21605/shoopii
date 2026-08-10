@@ -14,7 +14,7 @@
   align-items: center;
   gap: 18px;
 }
-.maBg   { position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 90% 30%,rgba(14,116,144,.45),transparent 60%);pointer-events:none; }
+.maBg   { position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 90% 30%,rgba(0,0,0,.45),transparent 60%);pointer-events:none; }
 .maGrid { position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none; }
 
 .maPulse {
@@ -34,11 +34,11 @@
 .maInfo { flex: 1; position: relative; z-index: 1; min-width: 0; }
 .maLabel {
   font-size: 10px; font-weight: 800;
-  color: rgba(200,217,248,.6);
+  color: rgba(228,228,231,.6);
   text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 5px;
   display: flex; align-items: center; gap: 7px;
 }
-.maLabel::before { content:'';width:6px;height:6px;border-radius:50%;background:#10B981;display:inline-block; }
+.maLabel::before { content:'';width:6px;height:6px;border-radius:50%;background:#000000;display:inline-block; }
 .maTitle {
   font-family: var(--fd);
   font-size: 17px; font-weight: 800; color: #fff;
@@ -46,7 +46,7 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .maMeta { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.maMeta span { font-size:12px; color:rgba(200,217,248,.65); display:flex; align-items:center; gap:5px; white-space:nowrap; }
+.maMeta span { font-size:12px; color:rgba(228,228,231,.65); display:flex; align-items:center; gap:5px; white-space:nowrap; }
 
 .maRoute {
   display: flex; align-items: center; gap: 7px;
@@ -58,16 +58,16 @@
 }
 .maDot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .dotFr  { background: rgba(255,255,255,.9); }
-.dotTo  { background: #10B981; }
+.dotTo  { background: #000000; }
 .maLine { flex:1; height:1px; background:repeating-linear-gradient(90deg,rgba(255,255,255,.35) 0,rgba(255,255,255,.35) 4px,transparent 4px,transparent 8px); }
-.maPlace { font-size:11px; color:rgba(200,217,248,.8); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; max-width:140px; }
+.maPlace { font-size:11px; color:rgba(228,228,231,.8); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; max-width:140px; }
 
 .maRight { display:flex; align-items:center; gap:14px; position:relative; z-index:1; flex-shrink:0; }
 .maTimer { background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.16); border-radius:var(--r-lg); padding:12px 18px; text-align:center; min-width:90px; }
 .maTimerVal { font-family:var(--fd); font-size:26px; font-weight:800; color:#fff; letter-spacing:-1.5px; line-height:1; transition:color .3s; }
-.maTimerLbl { font-size:9px; color:rgba(200,217,248,.45); text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
+.maTimerLbl { font-size:9px; color:rgba(228,228,231,.45); text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
 .timerUrgent { opacity: .85; }
-.timerValUrgent { color: #FCA5A5 !important; }
+.timerValUrgent { color: #D4D4D8 !important; }
 
 .maActions { display:flex; flex-direction:column; gap:7px; }
 .maBtnOk {
@@ -80,7 +80,7 @@
 }
 .maBtnOk:hover { background: var(--sky-2); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.14); }
 .maBtnIssue {
-  background: rgba(255,255,255,.09); color: rgba(200,217,248,.8);
+  background: rgba(255,255,255,.09); color: rgba(228,228,231,.8);
   border: 1px solid rgba(255,255,255,.14); border-radius: var(--pill);
   padding: 8px 18px; font-size: 12px; font-weight: 600;
   display: flex; align-items: center; gap: 6px; cursor: pointer;
@@ -91,7 +91,7 @@
 /* ── Smart banner ── */
 .smartBanner {
   display: flex; align-items: center; gap: 14px;
-  background: linear-gradient(135deg, var(--sky), rgba(219,234,254,.7));
+  background: linear-gradient(135deg, var(--sky), rgba(228,228,231,.7));
   border: 1.5px solid var(--sky-3); border-radius: var(--r-xl);
   padding: 16px 20px; margin-bottom: 16px; cursor: pointer; transition: all .22s;
 }
@@ -121,7 +121,7 @@
 .icTtl  { font-size:12px; font-weight:700; color:var(--navy); margin-bottom:3px; }
 .icSub  { font-size:11px; color:var(--t3); line-height:1.4; }
 .icBadge{ margin-top:8px; font-size:10px; font-weight:700; padding:3px 9px; border-radius:var(--pill); display:inline-flex; align-items:center; gap:4px; }
-.badge_up   { background:rgba(22,163,74,.10); color:var(--green); }
+.badge_up   { background:rgba(0,0,0,.10); color:var(--green); }
 .badge_tip  { background:var(--tl-bg);        color:var(--teal);  }
 .badge_warn { background:var(--am-bg);         color:var(--amber); }
 

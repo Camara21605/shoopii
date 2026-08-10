@@ -18,9 +18,11 @@ const DeliveryTrackingMap = lazy(
 
 interface Props {
   profile: LivreurProfile;
+  /** Dashboard livreur : thème noir permanent — pas de pastilles vertes/ambrées claires */
+  dark?:   boolean;
 }
 
-export default function TabLocalisation({ profile }: Props) {
+export default function TabLocalisation({ profile, dark }: Props) {
   const { t } = useTranslation();
   const { position, sharing } = useTrackDelivery(profile.id);
 
@@ -43,13 +45,13 @@ export default function TabLocalisation({ profile }: Props) {
           borderRadius: 20,
           fontSize:     11,
           fontWeight:   700,
-          background:   sharing ? '#D1FAE5' : '#F1F5F9',
-          color:        sharing ? '#065F46' : '#94A3B8',
-          border:       `1.5px solid ${sharing ? '#A7F3D0' : '#E2E8F0'}`,
+          background:   dark ? 'rgba(255,255,255,.08)' : (sharing ? '#D1FAE5' : '#F1F5F9'),
+          color:        dark ? '#F4F4F5' : (sharing ? '#065F46' : '#94A3B8'),
+          border:       `1.5px solid ${dark ? 'rgba(255,255,255,.16)' : (sharing ? '#A7F3D0' : '#E2E8F0')}`,
         }}>
           <span style={{
             width:        7, height: 7, borderRadius: '50%',
-            background:   sharing ? '#10B981' : '#CBD5E1',
+            background:   dark ? '#A1A1AA' : (sharing ? '#10B981' : '#CBD5E1'),
             display:      'inline-block',
             animation:    sharing ? 'locPulse 2s ease infinite' : 'none',
           }} />
@@ -61,8 +63,8 @@ export default function TabLocalisation({ profile }: Props) {
 
         {/* Carte */}
         <Suspense fallback={
-          <div style={{ height: 340, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFF', borderRadius: 12 }}>
-            <i className="fas fa-circle-notch fa-spin" style={{ color: '#047857', fontSize: 24 }} />
+          <div style={{ height: 340, display: 'flex', alignItems: 'center', justifyContent: 'center', background: dark ? '#0A0A0A' : '#F8FAFF', borderRadius: 12 }}>
+            <i className="fas fa-circle-notch fa-spin" style={{ color: dark ? '#A1A1AA' : '#047857', fontSize: 24 }} />
           </div>
         }>
           <DeliveryTrackingMap
@@ -79,11 +81,11 @@ export default function TabLocalisation({ profile }: Props) {
             alignItems:   'flex-start',
             gap:          12,
             padding:      '16px 18px',
-            background:   '#FFFBEB',
-            borderTop:    '1px solid #FDE68A',
+            background:   dark ? 'rgba(255,255,255,.06)' : '#FFFBEB',
+            borderTop:    `1px solid ${dark ? 'rgba(255,255,255,.14)' : '#FDE68A'}`,
           }}>
-            <i className="fas fa-circle-info" style={{ color: '#D97706', marginTop: 2, flexShrink: 0 }} />
-            <div style={{ fontSize: 12.5, color: '#92400E', lineHeight: 1.6 }}>
+            <i className="fas fa-circle-info" style={{ color: dark ? '#A1A1AA' : '#D97706', marginTop: 2, flexShrink: 0 }} />
+            <div style={{ fontSize: 12.5, color: dark ? '#D4D4D8' : '#92400E', lineHeight: 1.6 }}>
               <strong>{profile.fullName}</strong> {t('profilLivreur.tabLocalisation.noticeNonPartagePart1')}
               {' '}{t('profilLivreur.tabLocalisation.noticeNonPartagePart2')}
             </div>
@@ -96,19 +98,19 @@ export default function TabLocalisation({ profile }: Props) {
             display:        'flex',
             gap:            24,
             padding:        '12px 18px',
-            borderTop:      '1px solid #F1F5F9',
+            borderTop:      `1px solid ${dark ? 'rgba(255,255,255,.10)' : '#F1F5F9'}`,
             fontSize:       12,
-            color:          '#5A7A9E',
-            background:     '#F8FAFF',
+            color:          dark ? '#A1A1AA' : '#5A7A9E',
+            background:     dark ? '#000000' : '#F8FAFF',
           }}>
-            <span><i className="fas fa-arrows-up-down" style={{ marginRight: 5, color: '#047857' }} />
+            <span><i className="fas fa-arrows-up-down" style={{ marginRight: 5, color: dark ? '#71717A' : '#047857' }} />
               {t('profilLivreur.tabLocalisation.lat', { value: position.latitude.toFixed(5) })}
             </span>
-            <span><i className="fas fa-arrows-left-right" style={{ marginRight: 5, color: '#047857' }} />
+            <span><i className="fas fa-arrows-left-right" style={{ marginRight: 5, color: dark ? '#71717A' : '#047857' }} />
               {t('profilLivreur.tabLocalisation.lng', { value: position.longitude.toFixed(5) })}
             </span>
             {position.vitesseKmh && (
-              <span><i className="fas fa-gauge-high" style={{ marginRight: 5, color: '#047857' }} />
+              <span><i className="fas fa-gauge-high" style={{ marginRight: 5, color: dark ? '#71717A' : '#047857' }} />
                 {position.vitesseKmh.toFixed(0)} km/h
               </span>
             )}

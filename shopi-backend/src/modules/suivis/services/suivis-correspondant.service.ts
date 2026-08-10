@@ -81,6 +81,9 @@ export class SuivisCorrespondantService extends SuivisBaseService {
     const suiviIds: string[] = skipSuivi
       ? []
       : await this.getMyFollowedIds(userId, role);
+    const hiddenIds: string[] = skipSuivi
+      ? []
+      : await this.getMyHiddenIds(userId, role);
 
     const qb = this.correspondantRepo
       .createQueryBuilder('cor')
@@ -98,6 +101,9 @@ export class SuivisCorrespondantService extends SuivisBaseService {
     const ONLINE_DELAY_MS = 15 * 60 * 1000;
 
     return correspondants.map(cor => {
+      /* Masqué par le client (suivi mais caché des listes de découverte) */
+      if (hiddenIds.includes(cor.id)) return null;
+
       const lastLogin = cor.user?.lastLoginAt;
       const isOnline  = lastLogin
         ? (now - new Date(lastLogin).getTime()) < ONLINE_DELAY_MS

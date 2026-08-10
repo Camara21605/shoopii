@@ -48,6 +48,7 @@ import { v4 as uuid }             from 'uuid';
 
 import { Delivery }               from '../../../database/entities/profiles/livreur-profile.entity';
 import { LocationHistory }        from '../../../database/entities/location/location-history.entity';
+import { User, UserStatus }       from '../../../database/entities/user.entity';
 import { GeoService }             from '../services/geo.service';
 import type { ILocationUpdatePayload } from '../interfaces/location.interfaces';
 
@@ -101,6 +102,9 @@ export class LocationGateway
 
     @InjectRepository(LocationHistory)
     private readonly histRepo:  Repository<LocationHistory>,
+
+    @InjectRepository(User)
+    private readonly userRepo:  Repository<User>,
   ) {}
 
   /* ── Init ─────────────────────────────────────────────────── */
@@ -120,13 +124,26 @@ export class LocationGateway
 
       if (!token) return void socket.disconnect();
 
-      let payload: { sub: string; role: string };
+      let payload: { sub: string; role: string; iat?: number };
       try {
         payload = this.jwt.verify(token, {
           secret: this.config.get<string>('JWT_SECRET'),
         });
       } catch {
         return void socket.disconnect();
+      }
+
+      // Compte banni/suspendu ou mdp changé après émission du token
+      // → refuser (même contrôle que JwtStrategy).
+      const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+      if (!user) return void socket.disconnect();
+      if (user.status === UserStatus.BANNED || user.status === UserStatus.SUSPENDED) {
+        return void socket.disconnect();
+      }
+      if (user.lastPasswordChangedAt && payload.iat !== undefined) {
+        const tokenIssuedAt   = new Date(payload.iat * 1000);
+        const passwordChanged = new Date(user.lastPasswordChangedAt);
+        if (passwordChanged > tokenIssuedAt) return void socket.disconnect();
       }
 
       socket.data.userId = payload.sub;
@@ -300,6 +317,15 @@ export class LocationGateway
 
   /**
    * Un client ou une entreprise s'abonne aux mises à jour d'un livreur.
+   *
+   * Rattrapage d'état : si le livreur partage déjà sa position au moment
+   * de l'abonnement (cas très fréquent — la mission est acceptée et le
+   * partage démarre AVANT que le client/l'entreprise n'ouvre la page de
+   * suivi), on renvoie immédiatement l'état "sharing-on" + la dernière
+   * position connue à CE socket. Sans ça, l'abonné restait avec
+   * sharing=false et aucun marqueur tant que le livreur n'effectuait pas
+   * un nouveau déplacement significatif (jamais si le livreur est à
+   * l'arrêt) — donc pas vraiment "temps réel".
    */
   @SubscribeMessage('location:subscribe')
   async handleSubscribe(
@@ -309,6 +335,25 @@ export class LocationGateway
     if (!body?.deliveryId) return;
     const room = `delivery:${body.deliveryId}`;
     await socket.join(room);
+
+    const session = this.findActiveSession(body.deliveryId);
+    if (session) {
+      socket.emit('location:sharing-on', {
+        deliveryId: body.deliveryId,
+        sessionId:  session.sessionId,
+        ts:         new Date().toISOString(),
+      });
+      if (session.lastLat !== 0 || session.lastLng !== 0) {
+        socket.emit('location:position', {
+          deliveryId: body.deliveryId,
+          latitude:   session.lastLat,
+          longitude:  session.lastLng,
+          sessionId:  session.sessionId,
+          ts:         new Date().toISOString(),
+        });
+      }
+    }
+
     this.logger.debug(`📍 Subscribe socket=${socket.id} → room=${room}`);
   }
 
@@ -343,9 +388,14 @@ export class LocationGateway
   }
 
   isSharing(deliveryId: string): boolean {
+    return this.findActiveSession(deliveryId) !== undefined;
+  }
+
+  /** Trouve la session de partage active d'un livreur, s'il y en a une. */
+  private findActiveSession(deliveryId: string): SharingSession | undefined {
     for (const s of this.sessions.values()) {
-      if (s.deliveryId === deliveryId) return true;
+      if (s.deliveryId === deliveryId) return s;
     }
-    return false;
+    return undefined;
   }
 }

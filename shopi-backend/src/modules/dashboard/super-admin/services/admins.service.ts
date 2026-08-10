@@ -100,9 +100,13 @@ export class AdminsService {
       throw new BadRequestException(`Permission inconnue : "${perm}".`);
     }
 
+    /* Scopé par rôle par prudence : protégé indirectement par la jointure
+     * sur le profil Admin (au plus un compte ADMIN par email de toute façon,
+     * via UNIQUE(email, role)), mais explicite ici pour ne pas dépendre de
+     * cet effet de bord si la requête évolue. */
     const admin = await this.adminRepo.findOne({
       relations: ['user'],
-      where: { user: { email } },
+      where: { user: { email, role: UserRole.ADMIN } },
     });
     if (!admin) throw new NotFoundException('Administrateur introuvable.');
 
@@ -166,9 +170,13 @@ export class AdminsService {
   ): Promise<{ message: string; paysAssigne: string | null }> {
     this.assertIsSuperAdmin(caller);
 
+    /* Scopé par rôle par prudence : protégé indirectement par la jointure
+     * sur le profil Admin (au plus un compte ADMIN par email de toute façon,
+     * via UNIQUE(email, role)), mais explicite ici pour ne pas dépendre de
+     * cet effet de bord si la requête évolue. */
     const admin = await this.adminRepo.findOne({
       relations: ['user'],
-      where: { user: { email } },
+      where: { user: { email, role: UserRole.ADMIN } },
     });
     if (!admin) throw new NotFoundException('Administrateur introuvable.');
 

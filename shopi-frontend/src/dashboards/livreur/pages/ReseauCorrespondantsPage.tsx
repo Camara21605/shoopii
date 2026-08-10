@@ -1,8 +1,9 @@
 // src/dashboards/livreur/pages/ReseauCorrespondantsPage.tsx
 // Liste des correspondants à suivre, intégrée dans le dashboard livreur.
 
-import React from 'react';
 import { useCorrespondants } from '../../../modules/home/components/correspondants/hooks/useCorrespondants';
+import { useAuthGate } from '../../../shared/hooks/useAuthGate';
+import FollowButton    from '../../../shared/components/FollowButton';
 import shared from '../styles/Shared.module.css';
 
 interface Props {
@@ -11,12 +12,8 @@ interface Props {
 }
 
 export default function ReseauCorrespondantsPage({ onPop, onView }: Props) {
-  const { correspondants, loading, error, toggleSuivi } = useCorrespondants();
-
-  const handleToggle = (id: string, nom: string, suivi: boolean) => {
-    toggleSuivi(id);
-    onPop(suivi ? `👋 Désabonné de ${nom}` : `✅ Abonné à ${nom}`, suivi ? 'i' : 's');
-  };
+  const { correspondants, loading, error, onChange } = useCorrespondants();
+  const { openAuthModal, authModal } = useAuthGate();
 
   return (
     <div className={shared.page}>
@@ -32,7 +29,7 @@ export default function ReseauCorrespondantsPage({ onPop, onView }: Props) {
           )}
 
           {error && !loading && (
-            <div style={{ marginBottom: 14, padding: '10px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, fontSize: 12.5, color: '#991B1B' }}>
+            <div style={{ marginBottom: 14, padding: '10px 14px', background: '#FAFAFA', border: '1px solid #D4D4D8', borderRadius: 10, fontSize: 12.5, color: '#18181B' }}>
               <i className="fas fa-triangle-exclamation" /> {error} — données de démonstration affichées.
             </div>
           )}
@@ -46,10 +43,10 @@ export default function ReseauCorrespondantsPage({ onPop, onView }: Props) {
           {!loading && correspondants.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {correspondants.map(c => (
-                <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '12px 14px', background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-lg)', cursor: 'pointer', transition: 'all .2s' }}
+                <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '12px 14px', background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-lg)', cursor: 'pointer', transition: 'all .2s', position: 'relative' }}
                   onClick={() => onView(c.id)}
                 >
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,#EEF3FD,#D6E4F8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'var(--navy)', flexShrink: 0 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,#F4F4F5,#E4E4E7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'var(--navy)', flexShrink: 0 }}>
                     {c.initiales}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -61,28 +58,25 @@ export default function ReseauCorrespondantsPage({ onPop, onView }: Props) {
                       {c.enLigne && <span style={{ background: 'var(--em-bg)', color: 'var(--emerald)', fontWeight: 700, padding: '1px 7px', borderRadius: 'var(--pill)' }}>En ligne</span>}
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleToggle(c.id, c.nom, c.suivi); }}
-                    style={{
-                      background:   c.suivi ? 'var(--white)' : 'var(--teal)',
-                      color:        c.suivi ? 'var(--teal)'  : '#fff',
-                      border:       c.suivi ? '1px solid var(--teal)' : '1px solid var(--teal)',
-                      borderRadius: 'var(--pill)',
-                      padding:      '6px 14px',
-                      fontSize:     11,
-                      fontWeight:   700,
-                      cursor:       'pointer',
-                      flexShrink:   0,
-                    }}
-                  >
-                    {c.suivi ? 'Suivi ✓' : 'Suivre'}
-                  </button>
+                  <div onClick={e => e.stopPropagation()}>
+                    <FollowButton
+                      actorType="correspondant"
+                      id={c.id}
+                      name={c.nom}
+                      isSuivi={c.suivi}
+                      onToast={onPop}
+                      onRequireAuth={openAuthModal}
+                      onChange={next => onChange(c.id, next)}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {authModal}
     </div>
   );
 }

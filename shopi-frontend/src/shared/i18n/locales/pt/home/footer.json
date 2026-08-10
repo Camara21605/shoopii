@@ -1,0 +1,54 @@
+{
+  "publicFooter": {
+    "brandTagline": "O marketplace africano de referência. Vamos ligar os atores económicos da África Ocidental num ecossistema digital unificado.",
+    "socialToast": "📲 {{label}}",
+    "appStoreToast": "📱 App Store em breve",
+    "googlePlayToast": "🤖 Google Play em breve",
+    "disponibleSur": "Disponível em",
+    "linkToast": "📄 {{label}}",
+    "cols": {
+      "plateforme": {
+        "titre": "Plataforma",
+        "explorerProduits": "Explorar os produtos",
+        "boutiques": "Lojas",
+        "livreurs": "Entregadores",
+        "partenaires": "Parceiros",
+        "correspondants": "Correspondentes",
+        "offresPromos": "Ofertas & Promos"
+      },
+      "acteurs": {
+        "titre": "Atores",
+        "espaceClient": "Espaço Cliente",
+        "espaceEntreprise": "Espaço Empresa",
+        "espaceLivreur": "Espaço Entregador",
+        "espacePartenaire": "Espaço Parceiro",
+        "espaceCorrespondant": "Espaço Correspondente",
+        "espaceAdmin": "Espaço Admin"
+      },
+      "aide": {
+        "titre": "Ajuda",
+        "centreAide": "Centro de ajuda",
+        "contact": "Contacto",
+        "faq": "FAQ",
+        "signalerProbleme": "Reportar um problema",
+        "remboursements": "Reembolsos",
+        "politiqueRetour": "Política de devolução"
+      }
+    },
+    "trust": {
+      "paiementSecurise": "Pagamento seguro SSL",
+      "livraisonExpress": "Entrega express 7d/7",
+      "protectionAcheteur": "Proteção do comprador",
+      "support247": "Suporte 24/7",
+      "retourFacile": "Devolução fácil 7 dias"
+    },
+    "copyright": "© 2025 Shopi Africa. Todos os direitos reservados. Feito com ❤️ na Guiné 🇬🇳",
+    "bottomLinks": {
+      "mentionsLegales": "Avisos legais",
+      "confidentialite": "Privacidade",
+      "cookies": "Cookies",
+      "cgu": "Termos",
+      "accessibilite": "Acessibilidade"
+    }
+  }
+}

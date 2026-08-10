@@ -1,0 +1,46 @@
+{
+  "offresPage": {
+    "typeLabel": {
+      "discount": "折扣",
+      "freeShip": "免费配送",
+      "bundle": "捆绑",
+      "flash": "限时抢购"
+    },
+    "hero": {
+      "offreSuffix_one": "个活跃优惠",
+      "offreSuffix_other": "个活跃优惠",
+      "titrePart1": "所有",
+      "titreEm": "优惠",
+      "titrePart2": "当前",
+      "sub": "所有 Shopi 店铺的折扣、限时抢购和免费配送 — 集中在一个地方。",
+      "flashSuffix_one": "个进行中的限时抢购 — 不要错过",
+      "flashSuffix_other": "个进行中的限时抢购 — 不要错过"
+    },
+    "sidebar": {
+      "categories": "类别",
+      "toutes": "全部",
+      "recherche": "搜索",
+      "searchPlaceholder": "优惠或店铺…",
+      "trierPar": "排序方式",
+      "sortBest": "最佳折扣",
+      "sortEnding": "即将过期"
+    },
+    "card": {
+      "touteLaBoutique": "全店",
+      "produitCible": "目标产品",
+      "voirOffre": "查看优惠",
+      "offerte": "免费",
+      "promo": "促销"
+    },
+    "states": {
+      "loadErrorTitle": "无法加载优惠",
+      "loadErrorFallback": "无法加载优惠。",
+      "reessayer": "重试",
+      "aucuneOffreTitre": "暂无活跃优惠",
+      "aucuneOffreText": "请稍后再来，新促销会定期推出。",
+      "aucunResultatTitre": "没有匹配的优惠",
+      "aucunResultatText": "尝试其他筛选或搜索。",
+      "reinitialiser": "重置"
+    }
+  }
+}

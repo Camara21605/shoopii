@@ -1,0 +1,172 @@
+{
+  "promotions": {
+    "typeCfg": {
+      "discount": "خصم %",
+      "freeShip": "توصيل مجاني",
+      "bundle": "حزمة",
+      "flash": "بيع خاطف"
+    },
+    "statusCfg": {
+      "active": "نشط",
+      "scheduled": "مجدول",
+      "draft": "مسودة",
+      "paused": "متوقف مؤقتًا",
+      "ended": "انتهى"
+    },
+    "templates": {
+      "pctDiscount": {
+        "label": "خصم بالنسبة",
+        "sub": "مثال: -10% على كل شيء"
+      },
+      "fixedDiscount": {
+        "label": "خصم ثابت (فرنك)",
+        "sub": "مثال: -5,000 فرنك"
+      },
+      "freeShip": {
+        "label": "توصيل مجاني",
+        "sub": "للطلبات > X"
+      },
+      "bundle": {
+        "label": "حزمة / عبوة",
+        "sub": "اشترِ 2 واحصل على 1 مجانًا"
+      },
+      "flash": {
+        "label": "بيع خاطف",
+        "sub": "وقت ومخزون محدودين"
+      }
+    },
+    "scope": {
+      "global": "المتجر بأكمله",
+      "produits_one": "{{count}} منتج",
+      "produits_other": "{{count}} منتجات"
+    },
+    "card": {
+      "copierTitle": "نسخ",
+      "codeCopied": "📋 تم نسخ الرمز \"{{code}}\"!",
+      "copyError": "❌ تعذر نسخ الرمز (تم رفض إذن الحافظة).",
+      "activated": "🚀 تم تفعيل العرض!",
+      "paused": "⏸️ تم إيقاف العرض",
+      "utilisations": "الاستخدامات",
+      "caGenere": "الإيرادات المولدة",
+      "tauxUsage": "معدل الاستخدام",
+      "modifier": "تعديل",
+      "stats": "الإحصائيات",
+      "statsToast": "📊 إحصائيات مفصلة",
+      "activer": "تفعيل"
+    },
+    "selector": {
+      "search": "ابحث عن منتج…",
+      "selected_one": "{{count}} منتج مختار",
+      "selected_other": "{{count}} منتجات مختارة",
+      "clearAll": "إلغاء التحديد الكل",
+      "empty": "لا يوجد منتج"
+    },
+    "hero": {
+      "badge": "عروض نشطة",
+      "titlePart1": "عزز مبيعاتك بـ",
+      "titleEm": "عروض مستهدفة",
+      "sub": "أنشئ أكواد خصم، وجدول مبيعات خاطفة، وتتبع أداءها في الوقت الفعلي.",
+      "create": "إنشاء عرض",
+      "exportBtn": "تصدير",
+      "exportToast": "📤 جارٍ التصدير…",
+      "statsActives": "نشط",
+      "statsTotal": "إجمالي",
+      "statsGnf": "فرنك",
+      "lblPromotions": "العروض",
+      "lblUtilisations": "الاستخدامات",
+      "lblCaGenere": "الإيرادات المولدة"
+    },
+    "kpi": {
+      "totales": "إجمالي العروض",
+      "actives": "نشطة الآن",
+      "activesSub": "{{count}} مجدولة",
+      "utilisationsTotales": "إجمالي الاستخدامات",
+      "caGenereGnf": "الإيرادات المولدة (فرنك)"
+    },
+    "filters": {
+      "toutes": "الكل",
+      "actives": "● نشطة",
+      "planifiees": "⏰ مجدولة",
+      "brouillons": "✎ مسودات",
+      "search": "ابحث عن عرض…"
+    },
+    "loading": "جارٍ تحميل العروض…",
+    "empty": {
+      "title": "لا توجد عروض",
+      "sub": "أنشئ عرضك الأول لتعزيز مبيعاتك"
+    },
+    "performance": {
+      "title": "أداء العروض",
+      "badge": "هذا الشهر",
+      "uses": "استخدام"
+    },
+    "sidebar": {
+      "creerRapide": "إنشاء سريع",
+      "templateToast": "➕ تم اختيار القالب \"{{label}}\"",
+      "meilleuresPromos": "أفضل العروض",
+      "uses": "استخدام",
+      "tipsTitle": "نصائح Shopi",
+      "tip1": "المبيعات الخاطفة تولد 3× إلحاحًا للشراء.",
+      "tip2": "التوصيل المجاني = +28% تحويل.",
+      "tip3": "استهداف منتج محدد يعزز معدل الاستخدام +40%."
+    },
+    "modal": {
+      "editTitle": "✏️ تعديل العرض",
+      "createTitle": "✨ عرض جديد",
+      "editSub": "حدّث معلومات هذا العرض",
+      "createSub": "أنشئ عرضًا لتعزيز مبيعاتك",
+      "typeLabel": "نوع العرض",
+      "nomLabel": "اسم العرض *",
+      "nomPlaceholder": "مثال: تخفيضات يناير",
+      "codeLabel": "رمز الخصم *",
+      "codePlaceholder": "مثال: SALE20",
+      "discountLabel": "قيمة الخصم",
+      "discountPlaceholderPct": "مثال: 20",
+      "discountPlaceholderFree": "توصيل مجاني",
+      "discountPlaceholderFixed": "مثال: 5000",
+      "maxLabel": "الحد الأقصى للاستخدامات",
+      "maxPlaceholder": "مثال: 500 (فارغ = غير محدود)",
+      "expireLabel": "تاريخ الانتهاء",
+      "scopeTitle": "نطاق العرض",
+      "scopeGlobalTitle": "المتجر بأكمله",
+      "scopeGlobalSub": "ينطبق العرض على جميع منتجاتك",
+      "scopeProduits": "{{count}} منتجات",
+      "scopeProductsTitle": "منتج (ات) محدد",
+      "scopeProductsSub": "استهداف منتج أو أكثر محدد",
+      "scopeSelected_one": "{{count}} مختار",
+      "scopeSelected_other": "{{count}} مختارين",
+      "scopeWarn": "اختر منتجًا واحدًا على الأقل لإنشاء هذا العرض.",
+      "previewLabel": "معاينة",
+      "previewDefaultNom": "اسم العرض",
+      "previewDefaultCode": "الرمز",
+      "annuler": "إلغاء",
+      "brouillon": "مسودة",
+      "saveEdit": "حفظ التغييرات",
+      "createBtn": "إنشاء العرض"
+    },
+    "validation": {
+      "nomRequired": "اسم العرض مطلوب.",
+      "codeRequired": "رمز الخصم مطلوب.",
+      "codeMaxLength": "يجب ألا يتجاوز رمز الخصم 50 حرفًا.",
+      "codeFormat": "يمكن أن يحتوي رمز الخصم على أحرف وأرقام وواصلات وشرطات سفلية فقط.",
+      "scopeRequired": "اختر منتجًا واحدًا على الأقل لهذا العرض.",
+      "discountRequired": "أدخل قيمة الخصم.",
+      "discountPositive": "يجب أن تكون قيمة الخصم رقمًا موجبًا.",
+      "discountMaxPct": "لا يمكن أن يتجاوز الخصم بالنسبة 100.",
+      "maxUsesInteger": "يجب أن يكون الحد الأقصى للاستخدامات عددًا صحيحًا موجبًا.",
+      "expireInPast": "لا يمكن أن يكون تاريخ الانتهاء في الماضي."
+    },
+    "toasts": {
+      "updateSuccess": "✅ تم تحديث العرض \"{{nom}}\"!",
+      "activateFailedAfterCreate": "⚠️ تم إنشاء العرض \"{{nom}}\" لكن التفعيل التلقائي فشل ({{err}}) — فعّله يدويًا من القائمة.",
+      "createSuccess": "✅ تم إنشاء وتفعيل العرض \"{{nom}}\" لـ {{who}}!",
+      "whoGlobal": "المتجر بأكمله",
+      "whoProduits_one": "{{count}} منتج",
+      "whoProduits_other": "{{count}} منتجات",
+      "draftSaved": "💾 تم حفظ المسودة",
+      "draftMissingFields": "الاسم والرمز مطلوبان حتى للمسودة.",
+      "loadError": "❌ خطأ في التحميل: {{message}}",
+      "loadErrorDefault": "تعذر تحميل العروض."
+    }
+  }
+}

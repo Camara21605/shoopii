@@ -1,0 +1,97 @@
+{
+  "correspondantsPage": {
+    "typeLabel": {
+      "regional": "🏠 Regional",
+      "zonal": "🗺️ Zonal",
+      "national": "🌍 National"
+    },
+    "listItem": {
+      "missionsCount": "{{count}} missions",
+      "abonne": "Following",
+      "suivre": "Follow"
+    },
+    "hero": {
+      "sup": "Shopi Network · Guinea & Diaspora",
+      "titrePart1": "Your",
+      "titreEm": "correspondents",
+      "titrePart2": "you can trust, everywhere",
+      "sub": "Verified local relays that make trading between Guinea and the diaspora easier. Receive, ship, and transit your packages safely.",
+      "correspondantsActifs": "Active correspondents",
+      "noteMoyenne": "Average rating",
+      "missionsAuTotal": "Total missions",
+      "communesCouvertes": "Districts covered",
+      "abonne": "✓ Following",
+      "suivre": "+ Follow"
+    },
+    "toolbar": {
+      "searchPlaceholder": "Search a correspondent, a zone…",
+      "filters": {
+        "tous": "All",
+        "enLigne": "Online",
+        "mesAbonnements": "Followed",
+        "regionaux": "Regional",
+        "zonaux": "Zonal",
+        "nationaux": "National"
+      },
+      "sorts": {
+        "pertinence": "Relevance",
+        "mieuxNotes": "Top rated",
+        "plusDeMissions": "Most missions",
+        "nomAZ": "Name (A-Z)"
+      },
+      "correspondantCount_one": "{{count}} correspondent",
+      "correspondantCount_other": "{{count}} correspondents"
+    },
+    "card": {
+      "enLigne": "Online",
+      "horsLigne": "Offline",
+      "avisCount": "({{count}} reviews)",
+      "missions": "Missions",
+      "fiabilite": "Reliability",
+      "experience": "Experience",
+      "abonne": "Following",
+      "suivre": "Follow",
+      "voirProfilComplet": "View full profile →"
+    },
+    "sidebar": {
+      "typeDeCorrespondant": "Correspondent type",
+      "types": {
+        "regional": {
+          "nm": "Regional",
+          "desc": "Covers a city"
+        },
+        "zonal": {
+          "nm": "Zonal",
+          "desc": "Covers a region"
+        },
+        "national": {
+          "nm": "National",
+          "desc": "Covers the whole country"
+        }
+      },
+      "commune": "District",
+      "toutes": "All",
+      "noteMinimale": "Minimum rating",
+      "ratingOpts": {
+        "cinqEtoiles": "5 stars only",
+        "quatrePlus": "4+ stars",
+        "troisPlus": "3+ stars",
+        "toutesLesNotes": "All ratings"
+      },
+      "disponibilite": "Availability",
+      "reinitialiser": "Reset",
+      "enLigne": "Online",
+      "horsLigne": "Offline"
+    },
+    "page": {
+      "chargement": "Loading correspondents…",
+      "correspondantsDisponibles": "Available correspondents",
+      "resultatCount_one": "{{count}} result",
+      "resultatCount_other": "{{count}} results",
+      "errorSuffix": "— demo data shown.",
+      "aucunCorrespondant": "No correspondent matches your filters.",
+      "desabonneToast": "👋 Unfollowed {{nom}}",
+      "abonneToast": "✅ Following {{nom}}"
+    }
+  }
+}

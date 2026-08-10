@@ -62,6 +62,7 @@ import { Repository }         from 'typeorm';
 import type { Server }        from 'socket.io';
 
 import { Conversation } from 'src/database/entities/messaging/conversation.entity';
+import { User, UserStatus } from 'src/database/entities/user.entity';
 import { PresenceService }  from '../services/presence.service';
 import { BroadcastService } from '../services/broadcast.service';
 import { MessagerieService } from '../messagerie.service';
@@ -111,6 +112,8 @@ export class MessagerieGateway
     private readonly msgService:    MessagerieService,
     @InjectRepository(Conversation)
     private readonly convRepo:      Repository<Conversation>,
+    @InjectRepository(User)
+    private readonly userRepo:      Repository<User>,
   ) {}
 
   // ─────────────────────────────────────────────────────────
@@ -136,7 +139,7 @@ export class MessagerieGateway
         return this.rejectSocket(socket, 'TOKEN_MISSING', 'Token manquant.');
       }
 
-      let payload: { sub: string; role: string };
+      let payload: { sub: string; role: string; iat?: number };
       try {
         payload = this.jwt.verify(token, {
           secret: this.config.get<string>('JWT_SECRET'),
@@ -145,8 +148,26 @@ export class MessagerieGateway
         return this.rejectSocket(socket, 'TOKEN_INVALID', 'Token invalide.');
       }
 
-      // ── 2. Injecter userId dans socket.data ─────────────
       const userId = payload.sub;
+
+      // ── 1bis. Compte banni/suspendu ou mdp changé après émission
+      //         du token → refuser (même contrôle que JwtStrategy). ─
+      const user = await this.userRepo.findOne({ where: { id: userId } });
+      if (!user) {
+        return this.rejectSocket(socket, 'TOKEN_INVALID', 'Utilisateur introuvable.');
+      }
+      if (user.status === UserStatus.BANNED || user.status === UserStatus.SUSPENDED) {
+        return this.rejectSocket(socket, 'ACCOUNT_DISABLED', 'Compte banni ou suspendu.');
+      }
+      if (user.lastPasswordChangedAt && payload.iat !== undefined) {
+        const tokenIssuedAt   = new Date(payload.iat * 1000);
+        const passwordChanged = new Date(user.lastPasswordChangedAt);
+        if (passwordChanged > tokenIssuedAt) {
+          return this.rejectSocket(socket, 'TOKEN_INVALID', 'Session expirée suite à un changement de mot de passe.');
+        }
+      }
+
+      // ── 2. Injecter userId dans socket.data ─────────────
       socket.data.userId   = userId;
       socket.data.userRole = payload.role;
 

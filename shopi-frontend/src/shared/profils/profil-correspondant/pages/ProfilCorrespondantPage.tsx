@@ -14,6 +14,7 @@ import { useAuthGate } from '../../../hooks/useAuthGate';
 
 import Header from '../../../../modules/home/components/layout/Header';
 import { useCorrespondantProfil } from '../hooks/useCorrespondantProfil';
+import FollowButton from '../../../components/FollowButton';
 
 import ProfilHeader  from '../components/ProfilHeader';
 import ProfilTabs    from '../components/ProfilTabs';
@@ -36,10 +37,10 @@ export default function ProfilCorrespondantPage() {
   const { openAuthModal, authModal } = useAuthGate();
 
   const {
-    profil, loading, error, suivi, toggleSuivi,
+    profil, loading, error, suivi, updateFollowState,
     aboutTags, infosPratiques, schedule, services, zones, paysPartenaires,
     tarifs, avisScore, avis, galerie, contacts, statsSidebar, verifications, similaires,
-  } = useCorrespondantProfil(id, openAuthModal);
+  } = useCorrespondantProfil(id);
 
   const [tab, setTab] = useState<ProfilTab>('info');
 
@@ -66,13 +67,6 @@ export default function ProfilCorrespondantPage() {
   }, [suivi, callProfile, id, profil, onToast, t]);
 
   const onShare = useCallback(() => onToast(t('profilCorrespondant.publicPage.lienCopieToast')), [onToast, t]);
-
-  const handleToggle = useCallback(() => {
-    toggleSuivi();
-    if (profil) {
-      onToast(suivi ? t('profilCorrespondant.publicPage.desabonneToast', { nom: profil.nom }) : t('profilCorrespondant.publicPage.abonneToast', { nom: profil.nom }));
-    }
-  }, [toggleSuivi, suivi, profil, onToast, t]);
 
   const header = (
     <Header
@@ -128,7 +122,9 @@ export default function ProfilCorrespondantPage() {
           profil={profil}
           suivi={suivi}
           callLoading={callLoading}
-          onToggle={handleToggle}
+          onToast={onToast}
+          onRequireAuth={openAuthModal}
+          onFollowChange={updateFollowState}
           onMessage={onMessage}
           onShare={onShare}
           onCall={onCall}
@@ -147,6 +143,7 @@ export default function ProfilCorrespondantPage() {
           </main>
 
           <ProfilSidebar
+            id={profil.id}
             nom={profil.nom}
             contacts={contacts}
             stats={statsSidebar}
@@ -155,7 +152,8 @@ export default function ProfilCorrespondantPage() {
             similaires={similaires}
             suivi={suivi}
             callLoading={callLoading}
-            onToggle={handleToggle}
+            onRequireAuth={openAuthModal}
+            onFollowChange={updateFollowState}
             onMessage={onMessage}
             onCall={onCall}
             onToast={onToast}
@@ -167,9 +165,15 @@ export default function ProfilCorrespondantPage() {
           <button className={styles.abMsg} onClick={onMessage}>
             <i className="fas fa-comment-dots" /> {t('profilCorrespondant.contacter')}
           </button>
-          <button className={styles.abFollow} onClick={handleToggle}>
-            {suivi ? <><i className="fas fa-user-check" /> {t('profilCorrespondant.abonne')}</> : <><i className="fas fa-plus" /> {t('profilCorrespondant.suivre')}</>}
-          </button>
+          <FollowButton
+            actorType="correspondant"
+            id={profil.id}
+            name={profil.nom}
+            isSuivi={suivi}
+            onToast={onToast}
+            onRequireAuth={openAuthModal}
+            onChange={updateFollowState}
+          />
         </div>
       </div>
 

@@ -12,6 +12,9 @@ import type { RouteResult } from '../services/routingApi';
 interface Props {
   route:     RouteResult;
   fitBounds?: boolean;   // auto-zoom sur la route
+  /** Couleur imposée (ex. rouge/vert/bleu selon l'étape de la livraison) —
+   *  sinon bleu par défaut pour un itinéraire ORS, gris en fallback ligne droite. */
+  color?:    string;
 }
 
 const ROUTE_STYLE = {
@@ -44,12 +47,13 @@ function FitRouteEffect({ polyline }: { polyline: [number, number][] }) {
   return null;
 }
 
-export default function RoutePolyline({ route, fitBounds = true }: Props) {
+export default function RoutePolyline({ route, fitBounds = true, color }: Props) {
   if (!route.polyline.length) return null;
 
-  const style = route.provider === 'openrouteservice'
+  const baseStyle = route.provider === 'openrouteservice'
     ? ROUTE_STYLE
     : FALLBACK_STYLE;
+  const style = color ? { ...baseStyle, color } : baseStyle;
 
   return (
     <>

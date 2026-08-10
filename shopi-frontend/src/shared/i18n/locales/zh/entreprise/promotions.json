@@ -1,0 +1,172 @@
+{
+  "promotions": {
+    "typeCfg": {
+      "discount": "折扣 %",
+      "freeShip": "免费配送",
+      "bundle": "捆绑销售",
+      "flash": "限时抢购"
+    },
+    "statusCfg": {
+      "active": "活跃",
+      "scheduled": "已计划",
+      "draft": "草稿",
+      "paused": "已暂停",
+      "ended": "已结束"
+    },
+    "templates": {
+      "pctDiscount": {
+        "label": "百分比折扣",
+        "sub": "例如：全店 -10%"
+      },
+      "fixedDiscount": {
+        "label": "固定折扣（GNF）",
+        "sub": "例如：-5,000 GNF"
+      },
+      "freeShip": {
+        "label": "免费配送",
+        "sub": "订单超过 X"
+      },
+      "bundle": {
+        "label": "捆绑 / 组合",
+        "sub": "买 2 送 1"
+      },
+      "flash": {
+        "label": "限时抢购",
+        "sub": "限时和限量"
+      }
+    },
+    "scope": {
+      "global": "整个企业",
+      "produits_one": "{{count}} 个产品",
+      "produits_other": "{{count}} 个产品"
+    },
+    "card": {
+      "copierTitle": "复制",
+      "codeCopied": "📋 代码“{{code}}”已复制！",
+      "copyError": "❌ 无法复制代码（剪贴板权限被拒绝）。",
+      "activated": "🚀 促销已激活！",
+      "paused": "⏸️ 促销已暂停",
+      "utilisations": "使用次数",
+      "caGenere": "产生的收入",
+      "tauxUsage": "使用率",
+      "modifier": "修改",
+      "stats": "统计",
+      "statsToast": "📊 详细统计",
+      "activer": "激活"
+    },
+    "selector": {
+      "search": "搜索产品…",
+      "selected_one": "已选择 {{count}} 个产品",
+      "selected_other": "已选择 {{count}} 个产品",
+      "clearAll": "全部取消选择",
+      "empty": "未找到产品"
+    },
+    "hero": {
+      "badge": "活跃促销",
+      "titlePart1": "通过",
+      "titleEm": "精准优惠",
+      "sub": "创建优惠码、计划限时抢购并实时跟踪其表现。",
+      "create": "创建促销",
+      "exportBtn": "导出",
+      "exportToast": "📤 导出中…",
+      "statsActives": "活跃",
+      "statsTotal": "总计",
+      "statsGnf": "GNF",
+      "lblPromotions": "促销",
+      "lblUtilisations": "使用次数",
+      "lblCaGenere": "产生的收入"
+    },
+    "kpi": {
+      "totales": "促销总数",
+      "actives": "当前活跃",
+      "activesSub": "{{count}} 个已计划",
+      "utilisationsTotales": "总使用次数",
+      "caGenereGnf": "产生的收入（GNF）"
+    },
+    "filters": {
+      "toutes": "全部",
+      "actives": "● 活跃",
+      "planifiees": "⏰ 已计划",
+      "brouillons": "✎ 草稿",
+      "search": "搜索促销…"
+    },
+    "loading": "正在加载促销…",
+    "empty": {
+      "title": "未找到促销",
+      "sub": "创建您的第一个促销以提升销量"
+    },
+    "performance": {
+      "title": "促销表现",
+      "badge": "本月",
+      "uses": "次使用"
+    },
+    "sidebar": {
+      "creerRapide": "快速创建",
+      "templateToast": "➕ 已选择模板“{{label}}”",
+      "meilleuresPromos": "最佳促销",
+      "uses": "次使用",
+      "tipsTitle": "Shopi 提示",
+      "tip1": "限时抢购产生的购买紧迫感高出 3 倍。",
+      "tip2": "免费配送 = 转化率 +28%。",
+      "tip3": "针对特定产品可将使用率提升 +40%。"
+    },
+    "modal": {
+      "editTitle": "✏️ 修改促销",
+      "createTitle": "✨ 新促销",
+      "editSub": "更新此促销的信息",
+      "createSub": "创建优惠以提升销量",
+      "typeLabel": "促销类型",
+      "nomLabel": "促销名称 *",
+      "nomPlaceholder": "例如：一月大减价",
+      "codeLabel": "优惠码 *",
+      "codePlaceholder": "例如：SOLDES20",
+      "discountLabel": "折扣值",
+      "discountPlaceholderPct": "例如：20",
+      "discountPlaceholderFree": "免费配送",
+      "discountPlaceholderFixed": "例如：5000",
+      "maxLabel": "最大使用次数",
+      "maxPlaceholder": "例如：500（留空 = 不限）",
+      "expireLabel": "到期日期",
+      "scopeTitle": "促销范围",
+      "scopeGlobalTitle": "整个企业",
+      "scopeGlobalSub": "促销适用于您所有产品",
+      "scopeProduits": "{{count}} 个产品",
+      "scopeProductsTitle": "特定产品",
+      "scopeProductsSub": "针对一个或多个特定产品",
+      "scopeSelected_one": "已选择 {{count}} 个",
+      "scopeSelected_other": "已选择 {{count}} 个",
+      "scopeWarn": "至少选择一个产品才能创建此促销。",
+      "previewLabel": "预览",
+      "previewDefaultNom": "促销名称",
+      "previewDefaultCode": "代码",
+      "annuler": "取消",
+      "brouillon": "草稿",
+      "saveEdit": "保存更改",
+      "createBtn": "创建促销"
+    },
+    "validation": {
+      "nomRequired": "促销名称是必填项。",
+      "codeRequired": "优惠码是必填项。",
+      "codeMaxLength": "优惠码不能超过 50 个字符。",
+      "codeFormat": "优惠码只能包含字母、数字、连字符或下划线。",
+      "scopeRequired": "为此促销至少选择一个产品。",
+      "discountRequired": "请提供折扣值。",
+      "discountPositive": "折扣值必须是正数。",
+      "discountMaxPct": "百分比折扣不能超过 100。",
+      "maxUsesInteger": "最大使用次数必须是正整数。",
+      "expireInPast": "到期日期不能在过去。"
+    },
+    "toasts": {
+      "updateSuccess": "✅ 促销“{{nom}}”已更新！",
+      "activateFailedAfterCreate": "⚠️ 促销“{{nom}}”已创建，但自动激活失败（{{err}}）— 请从列表手动激活。",
+      "createSuccess": "✅ 促销“{{nom}}”已创建并激活给{{who}}！",
+      "whoGlobal": "整个企业",
+      "whoProduits_one": "{{count}} 个产品",
+      "whoProduits_other": "{{count}} 个产品",
+      "draftSaved": "💾 草稿已保存",
+      "draftMissingFields": "即使草稿也需要名称和代码。",
+      "loadError": "❌ 加载错误：{{message}}",
+      "loadErrorDefault": "无法加载促销。"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "boutiquePreview": {
+    "loading": "Loading…",
+    "back": "Back",
+    "tabs": {
+      "apercu": "Preview",
+      "localisation": "Location"
+    },
+    "subtitleApercu": "Public preview of the store",
+    "subtitleLocalisation": "Pin your store on the map",
+    "ouvrir": "Open",
+    "enregistrement": "Saving…",
+    "enregistre": "Saved!",
+    "sauvegarderLocalisation": "Save location",
+    "iframeTitle": "Preview",
+    "panelTitle": "Location",
+    "panelSub": "The 🏪 marker follows your selection",
+    "pays": "Country",
+    "ville": "City",
+    "choisirVille": "— Choose a city —",
+    "villePlaceholder": "City name",
+    "commune": "District",
+    "choisirCommune": "— Choose a district —",
+    "quartier": "Neighborhood",
+    "choisirQuartier": "— Choose a neighborhood —",
+    "localisationEnCours": "Locating…",
+    "adresse": "Address",
+    "optionnel": "(optional)",
+    "adressePlaceholder": "Street, number…",
+    "repere": "Delivery landmark",
+    "reperePlaceholder": "Opposite the blue pharmacy…",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "villeObligatoire": "City is required.",
+    "errorSauvegarde": "Error while saving.",
+    "localisationEnregistree": "Location saved!",
+    "enregistrerLocalisation": "Save location",
+    "recherchePosition": "Searching for position…",
+    "hintCarte": "Click or drag the marker to refine",
+    "pays_list": {
+      "GN": "Guinea",
+      "SN": "Senegal",
+      "ML": "Mali",
+      "CI": "Ivory Coast",
+      "GW": "Guinea-Bissau",
+      "LR": "Liberia",
+      "SL": "Sierra Leone",
+      "FR": "France"
+    }
+  }
+}

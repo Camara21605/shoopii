@@ -14,8 +14,6 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { apiFetch }                                  from '../../../../../shared/services/apiFetch';
 import { MOCK_LIVREURS }                             from '../data/livreursMockData';
 import type { LivreurItem }                          from '../data/livreursMockData';
-// En haut du fichier, ajouter l'import du helper partagé :
-import { toggleFollowLivreur } from '../../../../../shared/services/follow';
 
 /* ── Types internes ── */
 export type ViewMode   = 'grid' | 'list';
@@ -59,15 +57,16 @@ export interface UseLivreursReturn {
   onRating:          (r: number | null) => void;
   onAvailability:    (v: 'all' | 'available' | 'busy') => void;
   onReset:           () => void;
-  onFollow:          (id: string, newState: boolean) => void;
+  /** Reflète l'action du menu ⋮ de FollowButton (suivi/masqué/supprimé)
+   *  dans la liste partagée — le composant fait lui-même l'appel API,
+   *  ce hook n'a plus qu'à synchroniser son état local. */
+  onChange:          (id: string, next: { isSuivi: boolean; hidden?: boolean; removed?: boolean }) => void;
 }
 
 /* ================================================================
  * HOOK PRINCIPAL
  * ================================================================ */
-export function useLivreurs(
-  onToast?: (msg: string, type?: 's' | 'i' | 'w' | 'e') => void,
-): UseLivreursReturn {
+export function useLivreurs(): UseLivreursReturn {
 
   const [livreurs, setLivreurs] = useState<LivreurItem[]>([]);
   const [loading,  setLoading]  = useState(true);
@@ -140,30 +139,17 @@ export function useLivreurs(
 
 
 
-// ... puis remplacer onFollow par :
-
-/* ── Toggle follow (optimiste, centralisé) ── */
-const onFollow = useCallback(async (id: string, next: boolean) => {
-  /* 1. Optimistic update de la liste globale */
-  setLivreurs(prev => prev.map(l =>
-    l.id === id ? { ...l, isSuivi: next } : l
-  ));
-
-  try {
-    /* 2. Un SEUL appel API (helper partagé) */
-    const confirmed = await toggleFollowLivreur(id);
-
-    /* 3. Aligne l'état sur la valeur confirmée par le serveur */
-    setLivreurs(prev => prev.map(l =>
-      l.id === id ? { ...l, isSuivi: confirmed } : l
-    ));
-  } catch (e) {
-    /* 4. Rollback + relance pour que la carte affiche le toast d'erreur */
-    setLivreurs(prev => prev.map(l =>
-      l.id === id ? { ...l, isSuivi: !next } : l
-    ));
-    throw e;
+/* ── Synchronise la liste locale après une action de FollowButton ──
+ * FollowButton fait lui-même l'appel API (toggle/masquer) ; ce hook
+ * n'a qu'à répercuter le résultat confirmé sur sa propre liste, pour
+ * que le filtre rapide "Abonnés" et la sidebar "Mes livreurs suivis"
+ * restent à jour sans refetch. */
+const onChange = useCallback((id: string, next: { isSuivi: boolean; hidden?: boolean; removed?: boolean }) => {
+  if (next.removed) {
+    setLivreurs(prev => prev.filter(l => l.id !== id));
+    return;
   }
+  setLivreurs(prev => prev.map(l => l.id === id ? { ...l, isSuivi: next.isSuivi } : l));
 }, []);
 
   /* ── Handlers filtres ── */
@@ -189,6 +175,6 @@ const onFollow = useCallback(async (id: string, next: boolean) => {
     filters, viewMode,
     onSearch, onFilter, onSort, onViewChange,
     onZone, onVehicleToggle, onRating, onAvailability,
-    onReset, onFollow,
+    onReset, onChange,
   };
 }

@@ -1,0 +1,116 @@
+{
+  "home": {
+    "trustSection": {
+      "paiement": {
+        "titre": "Paiement sécurisé",
+        "sub": "Orange Money, Visa, Mastercard — SSL"
+      },
+      "livraison": {
+        "titre": "Livraison express",
+        "sub": "640+ livreurs vérifiés, 7j/7"
+      },
+      "protection": {
+        "titre": "Protection acheteur",
+        "sub": "Remboursement garanti si problème"
+      },
+      "support": {
+        "titre": "Support 24/7",
+        "sub": "Chat, WhatsApp, téléphone"
+      }
+    },
+    "typeEntreprise": {
+      "kick": "Types de boutiques",
+      "title": "Toutes les <em>catégories d'entreprises</em>",
+      "sub": "Trouvez l'entreprise qui vous correspond",
+      "linkText": "Toutes les boutiques",
+      "loadError": "Impossible de charger les types d'entreprise.",
+      "empty": "Aucun type d'entreprise disponible pour le moment.",
+      "boutiqueCount_one": "{{count}} boutique",
+      "boutiqueCount_other": "{{count}} boutiques",
+      "categorieCount_one": "{{count}} catégorie",
+      "categorieCount_other": "{{count}} catégories"
+    },
+    "categories": {
+      "kick": "Explorer",
+      "title": "Catégories <em>populaires</em>",
+      "sub": "Naviguez dans nos univers produits",
+      "linkText": "Tout parcourir",
+      "loadError": "Impossible de charger les catégories.",
+      "tout": "Tout",
+      "sousCat_one": "{{count}} sous-cat",
+      "sousCat_other": "{{count}} sous-cats"
+    },
+    "promotions": {
+      "kick": "Offres limitées",
+      "title": "Flash Sales &amp; <em>Promotions</em>",
+      "sub": "Des prix exceptionnels, pour un temps limité",
+      "linkText": "Voir toutes les offres",
+      "livraison": "Livraison",
+      "promo": "Promo",
+      "surBoutique": "Sur toute la boutique",
+      "surSelection": "Sur une sélection de produits",
+      "voirOffre": "Voir l'offre"
+    },
+    "storiesStrip": {
+      "title": "Stories des boutiques",
+      "sub": "Produits phares mis en avant par nos partenaires",
+      "voirTout": "Voir tout",
+      "toastVoirTout": "📖 Toutes les stories",
+      "storiesDe": "Stories de {{nom}}",
+      "produitCount_one": "{{count}} produit",
+      "produitCount_other": "{{count}} produits",
+      "enLigneMaintenant": "En ligne maintenant",
+      "vuRecemment": "Vu récemment",
+      "badgePromo": "🔥 Promo",
+      "badgeNouveau": "✨ Nouveau",
+      "badgeFlash": "⚡ Flash",
+      "badgeTop": "⭐ Top Vente",
+      "voirProduit": "Voir le produit",
+      "laBoutique": "La boutique",
+      "partager": "Partager",
+      "lienCopieToast": "🔗 Lien copié !"
+    },
+    "randomBloc": {
+      "produits": {
+        "kick": "Catalogue",
+        "title": "Produits <em>recommandés</em>",
+        "sub": "Sélectionnés pour vous",
+        "link": "Voir tout le catalogue"
+      },
+      "produitsGros": {
+        "kick": "Vente en gros",
+        "title": "Acheter en <em>gros</em>",
+        "sub": "Prix dégressifs · commande minimum",
+        "link": "Voir tous les produits en gros"
+      },
+      "entreprises": {
+        "kick": "Boutiques",
+        "title": "Boutiques <em>à la une</em>",
+        "sub": "Abonnez-vous à vos boutiques favorites",
+        "link": "Toutes les boutiques"
+      },
+      "correspondants": {
+        "kick": "Réseau local",
+        "title": "Nos <em>Correspondants</em>",
+        "sub": "Des relais locaux dans chaque région",
+        "link": "Tous les correspondants"
+      },
+      "livreurs": {
+        "kick": "Logistique",
+        "title": "Livreurs <em>disponibles</em>",
+        "sub": "Professionnels vérifiés près de vous",
+        "link": "Tous les livreurs"
+      },
+      "toastLink": "📄 {{link}}",
+      "moqUnites": "MOQ {{moq}} unités",
+      "errorReseau": "Erreur réseau",
+      "emptyBoutiques": "Aucune boutique disponible pour le moment.",
+      "emptyProduits": "Aucun produit disponible.",
+      "emptyProduitsGros": "Aucun produit en gros disponible pour le moment.",
+      "emptyLivreurs": "Aucun livreur disponible.",
+      "emptyCorrespondants": "Aucun correspondant disponible.",
+      "errorProduits": "Impossible de charger les produits.",
+      "errorProduitsGros": "Impossible de charger les produits en gros."
+    }
+  }
+}

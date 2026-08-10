@@ -1,0 +1,101 @@
+{
+  "produits": {
+    "visibilite": {
+      "public": "عام",
+      "draft": "مسودة",
+      "private": "خاص"
+    },
+    "header": {
+      "title": "منتجاتي",
+      "subtitle": "إدارة الكتالوج والمخزون",
+      "nouveau": "منتج جديد"
+    },
+    "stats": {
+      "total": "الإجمالي",
+      "publies": "منشورة",
+      "brouillons": "مسودات",
+      "rupture": "نفد"
+    },
+    "search": "ابحث بالاسم أو العلامة أو المرجع…",
+    "filters": {
+      "tous": "الكل",
+      "publics": "🟢 منشورة",
+      "brouillons": "🟡 مسودات",
+      "prives": "🔴 خاصة"
+    },
+    "loading": "جارٍ تحميل المنتجات…",
+    "retry": "إعادة المحاولة",
+    "empty": {
+      "noneTitle": "لا توجد منتجات بعد",
+      "noResultsTitle": "لا توجد نتائج",
+      "noneSub": "ابدأ بإضافة منتجك الأول.",
+      "noResultsSub": "جرّب تعديل عوامل التصفية.",
+      "addFirst": "إضافة منتج"
+    },
+    "count_one": "{{count}} منتج",
+    "count_other": "{{count}} منتجات",
+    "countFor": "لـ \"{{search}}\"",
+    "card": {
+      "voir": "عرض",
+      "rupture": "نفد",
+      "outOfStock": "نفد المخزون",
+      "lowStock": "مخزون منخفض — {{count}} متبقي",
+      "inStock": "{{count}} في المخزون",
+      "voirDetail": "عرض التفاصيل",
+      "modifRapide": "تعديل سريع",
+      "modifComplet": "تعديل كامل",
+      "modifier": "تعديل",
+      "supprimer": "حذف"
+    },
+    "toasts": {
+      "archived": "📦 تمت أرشفة المنتج",
+      "archiveError": "خطأ أثناء الأرشفة",
+      "updated": "✅ تم تحديث المنتج",
+      "deleted": "🗑️ تم حذف المنتج"
+    },
+    "modalVoir": {
+      "noImage": "لا توجد صورة",
+      "prix": "السعر",
+      "commission": "عمولة Shopi (3%)",
+      "revenuNet": "صافي الإيراد",
+      "stock": "المخزون",
+      "unites": "وحدات",
+      "seuilInfo": "حد التنبيه: {{count}} وحدة",
+      "details": "التفاصيل",
+      "marque": "العلامة",
+      "condition": "الحالة",
+      "garantie": "الضمان",
+      "origine": "المنشأ",
+      "ajouteLe": "أُضيف في",
+      "description": "الوصف",
+      "caracteristiques": "المواصفات",
+      "variantes": "الخيارات",
+      "tags": "الوسوم",
+      "supprimer": "حذف",
+      "archiver": "أرشفة",
+      "modifier": "تعديل"
+    },
+    "modalModifier": {
+      "title": "تعديل سريع",
+      "visibilite": "الرؤية",
+      "optPublic": "🟢 عام — مرئي في المتجر",
+      "optDraft": "🟡 مسودة — غير منشور",
+      "optPrivate": "🔴 خاص — رابط مباشر فقط",
+      "stockActuel": "المخزون الحالي",
+      "seuilAlerte": "حد التنبيه",
+      "seuilPlaceholder": "مثال: 5",
+      "info": "لتعديل الاسم أو السعر أو الصور، استخدم النموذج الكامل.",
+      "annuler": "إلغاء",
+      "saving": "جارٍ الحفظ…",
+      "save": "حفظ"
+    },
+    "modalDelete": {
+      "title": "تأكيد الحذف",
+      "confirm": "هل تريد حقًا حذف \"{{nom}}\"؟",
+      "irreversible": "هذا الإجراء لا يمكن التراجع عنه. سيتم حذف المنتج نهائيًا.",
+      "annuler": "إلغاء",
+      "deleting": "جارٍ الحذف…",
+      "confirmBtn": "حذف نهائيًا"
+    }
+  }
+}

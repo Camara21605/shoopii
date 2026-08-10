@@ -1,0 +1,33 @@
+{
+  "finances": {
+    "gnf": "فرنك",
+    "kpi": {
+      "soldeDisponible": "الرصيد المتاح",
+      "walletEntreprise": "محفظة الشركة",
+      "revenusCeMois": "إيرادات هذا الشهر",
+      "vsMoisDernier": "{{sign}}{{pct}}% مقارنة بالشهر الماضي",
+      "depensesCeMois": "مصاريف هذا الشهر",
+      "commissionsLivraison": "العمولات + التوصيل",
+      "enAttenteEscrow": "قيد الانتظار (ضمان)",
+      "libereALaLivraison": "يُحرر عند التوصيل"
+    },
+    "evolutionRevenus": "تطور الإيرادات",
+    "legendRevenus": "الإيرادات (ملايين فرنك)",
+    "legendMoisPrecedents": "الأشهر السابقة",
+    "transactionsRecentes": "المعاملات الأخيرة",
+    "emptyTransactions": "لا توجد معاملات بعد.",
+    "repartition": "التوزيع",
+    "emptyRepartition": "لا توجد بيانات هذا الشهر.",
+    "virementsShopi": "تحويلات Shopi",
+    "emptyVirements": "لا توجد تحويلات بعد.",
+    "statutRecu": "✓ مستلم",
+    "statutAttente": "⏳ بانتظار",
+    "actions": "الإجراءات",
+    "quickActions": {
+      "telechargerBilan": "تنزيل الكشف الشهري",
+      "demanderVirement": "طلب تحويل مبكر",
+      "modifierInfosBancaires": "تعديل المعلومات البنكية",
+      "voirFactures": "عرض فواتير Shopi"
+    }
+  }
+}

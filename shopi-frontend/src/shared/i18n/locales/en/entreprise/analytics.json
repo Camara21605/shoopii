@@ -1,0 +1,27 @@
+{
+  "analytics": {
+    "ca": {
+      "title": "Revenue",
+      "empty": "No sales delivered yet.",
+      "legendCurrent": "Monthly revenue (Millions GNF)",
+      "legendPrevious": "Previous periods"
+    },
+    "categoryPerf": {
+      "title": "Performance by category",
+      "categorie": "Category",
+      "caMillions": "Revenue (Millions GNF)",
+      "commandes": "Orders",
+      "empty": "No sales yet."
+    },
+    "topProduits": {
+      "title": "Top products — Sales",
+      "empty": "No sales yet.",
+      "ventes_one": "{{count}} sale",
+      "ventes_other": "{{count}} sales"
+    },
+    "trafic": {
+      "title": "Traffic analytics",
+      "sub": "Visits, traffic sources, conversion rate and sales funnel — coming soon."
+    }
+  }
+}

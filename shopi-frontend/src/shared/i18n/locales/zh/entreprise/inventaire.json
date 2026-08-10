@@ -1,0 +1,104 @@
+{
+  "inventaire": {
+    "status": {
+      "rupture": "缺货",
+      "faible": "库存不足",
+      "critique": "严重",
+      "enStock": "有货"
+    },
+    "modal": {
+      "title": "修改库存",
+      "subtitle": "无需离开库存页即可快速更新",
+      "quantite": "库存数量 *",
+      "unites": "件",
+      "placeholder1": "例如：25",
+      "nouveauStatut": "新状态：",
+      "seuilAlerte": "预警阈值（可选）",
+      "seuilPlaceholder": "例如：5",
+      "seuilHint": "当库存低于此阈值时会出现提醒。",
+      "niveauStock": "库存水平",
+      "annuler": "取消",
+      "saving": "保存中…",
+      "update": "更新库存",
+      "invalidStock": "⚠️ 库存必须是正数",
+      "updated": "✅ 库存已更新"
+    },
+    "header": {
+      "title": "库存与存货",
+      "subtitle": "实时跟踪库存水平并管理提醒",
+      "exportCsv": "导出 CSV",
+      "exportToast": "📥 已生成 CSV 导出",
+      "refresh": "刷新",
+      "loading": "加载中…"
+    },
+    "stats": {
+      "produitsCatalogues": "目录产品",
+      "unitesTotal": "共 {{count}} 件",
+      "rupturesStock": "缺货",
+      "aucuneRupture": "无缺货 ✓",
+      "actionRequise": "需要操作！",
+      "stocksFaibles": "库存不足",
+      "sousLeSeuil": "低于预警阈值",
+      "valeurStock": "库存价值（GNF）",
+      "prixParQuantite": "价格 × 库存数量"
+    },
+    "filters": {
+      "tous": "全部",
+      "rupture": "🔴 缺货",
+      "faibles": "🟡 不足",
+      "enStock": "✅ 有货"
+    },
+    "search": "搜索产品…",
+    "loadingInventaire": "正在加载库存…",
+    "retry": "重试",
+    "empty": {
+      "noneTitle": "暂无产品",
+      "noResultsTitle": "无结果",
+      "noneSub": "添加产品以查看库存。",
+      "noResultsSub": "尝试修改您的筛选条件。"
+    },
+    "table": {
+      "produit": "产品",
+      "categorie": "类别",
+      "prixUnitaire": "单价",
+      "stockActuel": "当前库存",
+      "niveauVisuel": "视觉水平",
+      "statut": "状态",
+      "actions": "操作",
+      "valeurStockLigne": "= {{montant}} GNF 库存",
+      "seuil": "阈值：{{count}}",
+      "modifierTitle": "修改库存",
+      "modifier": "修改",
+      "reapproTitle": "发起补货",
+      "reapproToast": "📦 已为“{{nom}}”发起补货"
+    },
+    "footer": {
+      "count_one": "{{count}} 个产品",
+      "count_other": "{{count}} 个产品",
+      "filtres": "已筛选",
+      "pourRecherche": "关于“{{search}}”"
+    },
+    "alertes": {
+      "title": "严重提醒",
+      "allGood": "一切正常！",
+      "noneDetected": "未检测到严重库存。",
+      "stock": "库存：",
+      "min": "· 最低：{{count}}"
+    },
+    "quickActions": {
+      "title": "快速操作",
+      "reapproAll": "为所有严重产品补货",
+      "reapproAllSub": "涉及 {{count}} 个产品",
+      "reapproAllToast": "📦 已发起批量补货",
+      "exportInventaire": "导出库存（CSV）",
+      "exportInventaireSub": "{{count}} 个产品 · {{units}} 件",
+      "exportInventaireToast": "📥 正在生成 CSV 导出…",
+      "configAlertes": "配置提醒",
+      "configAlertesSub": "设置自动阈值",
+      "configAlertesToast": "⚙️ 已打开提醒配置",
+      "syncStock": "同步库存",
+      "syncStockSub": "与您的供应商同步",
+      "syncStockToast": "🔄 同步中…"
+    }
+  }
+}

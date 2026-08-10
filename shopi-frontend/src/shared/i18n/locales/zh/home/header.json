@@ -1,0 +1,42 @@
+{
+  "publicHeader": {
+    "accueilTitle": "Shopi 首页",
+    "nav": {
+      "explorer": "探索",
+      "boutiques": "店铺",
+      "livreurs": "配送员",
+      "relais": "中转站",
+      "offres": "优惠"
+    },
+    "searchAll": "全部",
+    "searchPlaceholder": "产品、店铺、配送员…",
+    "searchAria": "搜索",
+    "searchSuggestions": {
+      "tendances": "当前趋势",
+      "smartphones": "智能手机 — 4,200 个结果",
+      "boutiquesPopulaires": "热门店铺",
+      "livreursDispo": "您附近可用的配送员",
+      "offresDuJour": "今日优惠"
+    },
+    "searchToast": "🔍 {{text}}",
+    "accueil": "首页",
+    "messagerie": "消息",
+    "panier": "购物车",
+    "aide": "帮助中心",
+    "connexion": "登录",
+    "inscription": "注册",
+    "monCompte": "我的账户",
+    "monProfil": "我的资料",
+    "monEspace": "我的空间",
+    "monEspacePro": "我的专业空间",
+    "monEspaceProShort": "我的专业空间",
+    "seDeconnecter": "退出登录",
+    "deconnexion": "退出登录",
+    "menu": "菜单",
+    "parametres": "设置",
+    "adresses": "地址",
+    "retourAccueil": "返回首页",
+    "avantDeVousConnecter": "登录前…",
+    "navMobileAria": "移动主导航"
+  }
+}

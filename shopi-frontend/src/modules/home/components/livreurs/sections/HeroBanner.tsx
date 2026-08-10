@@ -9,22 +9,25 @@
  * STYLES : ../styles/HeroBanner.module.css
  * ================================================================ */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import styles               from '../styles/HeroBanner.module.css';
+import { useAuthGate }      from '../../../../../shared/hooks/useAuthGate';
+import FollowButton         from '../../../../../shared/components/FollowButton';
 import type { LivreurItem, HeroStat } from '../data/livreursMockData';
 
 /* ── Props ── */
 interface HeroBannerProps {
   stats:    HeroStat[];
   featured: LivreurItem[];
-  onFollow: (id: string, newState: boolean) => void;
+  onToast:  (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  onChange: (id: string, next: { isSuivi: boolean; hidden?: boolean; removed?: boolean }) => void;
 }
 
 /* ================================================================
  * COMPOSANT PRINCIPAL
  * ================================================================ */
-const HeroBanner: React.FC<HeroBannerProps> = ({ stats, featured, onFollow }) => {
+const HeroBanner: React.FC<HeroBannerProps> = ({ stats, featured, onToast, onChange }) => {
   const { t } = useTranslation();
   return (
     <section className={styles.hero} aria-label={t('livreursPage.hero.ariaLabel')}>
@@ -64,7 +67,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ stats, featured, onFollow }) =>
         {/* ── Colonne droite : mini-cartes livreurs ── */}
         <div className={styles.right} aria-label={t('livreursPage.hero.livreursSuggeres')}>
           {featured.slice(0, 2).map(l => (
-            <HeroMiniCard key={l.id} livreur={l} onFollow={onFollow} />
+            <HeroMiniCard key={l.id} livreur={l} onToast={onToast} onChange={onChange} />
           ))}
         </div>
 
@@ -78,21 +81,15 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ stats, featured, onFollow }) =>
  * ================================================================ */
 interface HeroMiniCardProps {
   livreur:  LivreurItem;
-  onFollow: (id: string, newState: boolean) => void;
+  onToast:  (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  onChange: (id: string, next: { isSuivi: boolean; hidden?: boolean; removed?: boolean }) => void;
 }
 
-const HeroMiniCard: React.FC<HeroMiniCardProps> = ({ livreur, onFollow }) => {
-  const { t } = useTranslation();
-  const [followed, setFollowed] = useState(livreur.isSuivi);
-
-  const handleFollow = () => {
-    const next = !followed;
-    setFollowed(next);
-    onFollow(livreur.id, next);
-  };
+const HeroMiniCard: React.FC<HeroMiniCardProps> = ({ livreur, onToast, onChange }) => {
+  const { openAuthModal, authModal } = useAuthGate();
 
   return (
-    <div className={styles.miniCard}>
+    <div className={styles.miniCard} style={{ position: 'relative' }}>
       {/* Avatar */}
       <div className={styles.miniAvaWrap}>
         <div className={styles.miniAva} style={{ background: livreur.avatarBg }}>
@@ -110,16 +107,17 @@ const HeroMiniCard: React.FC<HeroMiniCardProps> = ({ livreur, onFollow }) => {
       </div>
 
       {/* Bouton suivre */}
-      <button
-        className={`${styles.miniBtn} ${followed ? styles.miniBtnOn : ''}`}
-        onClick={handleFollow}
-        aria-label={followed ? t('livreursPage.card.seDesabonnerDe', { nom: livreur.fullName }) : t('livreursPage.card.suivreNom', { nom: livreur.fullName })}
-      >
-        {followed
-          ? <><i className="fas fa-check" aria-hidden="true" /> {t('livreursPage.hero.abonne')}</>
-          : <><i className="fas fa-plus"  aria-hidden="true" /> {t('livreursPage.hero.suivre')}</>
-        }
-      </button>
+      <FollowButton
+        actorType="livreur"
+        id={livreur.id}
+        name={livreur.fullName}
+        isSuivi={livreur.isSuivi}
+        onToast={onToast}
+        onRequireAuth={openAuthModal}
+        onChange={next => onChange(livreur.id, next)}
+      />
+
+      {authModal}
     </div>
   );
 };

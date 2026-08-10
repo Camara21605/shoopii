@@ -1,0 +1,33 @@
+{
+  "finances": {
+    "gnf": "GNF",
+    "kpi": {
+      "soldeDisponible": "可用余额",
+      "walletEntreprise": "企业钱包",
+      "revenusCeMois": "本月收入",
+      "vsMoisDernier": "{{sign}}{{pct}}% 与上月相比",
+      "depensesCeMois": "本月支出",
+      "commissionsLivraison": "佣金 + 配送",
+      "enAttenteEscrow": "待处理（托管）",
+      "libereALaLivraison": "配送时释放"
+    },
+    "evolutionRevenus": "收入变化",
+    "legendRevenus": "收入（百万 GNF）",
+    "legendMoisPrecedents": "前几个月",
+    "transactionsRecentes": "最近交易",
+    "emptyTransactions": "暂无交易。",
+    "repartition": "分布",
+    "emptyRepartition": "本月暂无数据。",
+    "virementsShopi": "Shopi 转账",
+    "emptyVirements": "暂无转账。",
+    "statutRecu": "✓ 已收到",
+    "statutAttente": "⏳ 等待中",
+    "actions": "操作",
+    "quickActions": {
+      "telechargerBilan": "下载月度报表",
+      "demanderVirement": "请求提前转账",
+      "modifierInfosBancaires": "修改银行信息",
+      "voirFactures": "查看 Shopi 发票"
+    }
+  }
+}

@@ -48,6 +48,8 @@ export interface Abonnement {
   abonnes: string; note: string;
   type: 'boutiques' | 'livreurs' | 'correspondants';
   suivi: boolean;
+  /** Masqué des listes de découverte, mais toujours suivi — voir onglet "Masqués". */
+  hidden: boolean;
 }
 
 /* ── Produit favori ── */

@@ -12,8 +12,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { fetchCorrespondantProfil, toggleSuiviCorrespondant } from '../services/correspondantProfil.api';
-import { getRoleFromToken } from '../../../services/authUtils';
+import { fetchCorrespondantProfil } from '../services/correspondantProfil.api';
 import type {
   CorrProfil, InfoPratique, ScheduleRow, ContactRow,
   Service, ZoneCard, PaysPartenaire, TarifRow,
@@ -32,7 +31,7 @@ const AVIS_SCORE_VIDE: AvisScore = {
   keywords: [],
 };
 
-export function useCorrespondantProfil(id: string | undefined, onRequireAuth?: () => void) {
+export function useCorrespondantProfil(id: string | undefined) {
   const { t } = useTranslation();
   const [profil,  setProfil]  = useState<CorrProfil | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,18 +94,11 @@ export function useCorrespondantProfil(id: string | undefined, onRequireAuth?: (
 
   useEffect(() => { load(); }, [load]);
 
-  /* Suivi optimiste + rollback */
-  const toggleSuivi = useCallback(async () => {
-    if (!id) return;
-    if (!getRoleFromToken()) { onRequireAuth?.(); return; }
-    setSuivi(s => !s);
-    try {
-      const { isSuivi } = await toggleSuiviCorrespondant(id);
-      setSuivi(isSuivi);
-    } catch {
-      setSuivi(s => !s);
-    }
-  }, [id, onRequireAuth]);
+  /* Synchronise suivi après une action de FollowButton (le composant
+   * fait lui-même l'appel API désormais). */
+  const updateFollowState = useCallback((next: { isSuivi: boolean }) => {
+    setSuivi(next.isSuivi);
+  }, []);
 
   /* Statistiques sidebar dérivées des données API réelles */
   const statsSidebar = profil ? [
@@ -125,7 +117,7 @@ export function useCorrespondantProfil(id: string | undefined, onRequireAuth?: (
   }));
 
   return {
-    profil, loading, error, suivi, toggleSuivi, reload: load,
+    profil, loading, error, suivi, updateFollowState, reload: load,
     /* Données réelles (API) */
     aboutTags, infosPratiques, schedule, contacts, statsSidebar, verifications,
     /* Sections sans endpoint backend → tableaux vides */

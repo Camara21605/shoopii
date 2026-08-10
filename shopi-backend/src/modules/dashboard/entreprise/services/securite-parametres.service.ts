@@ -17,6 +17,7 @@ import * as bcrypt from 'bcryptjs';
 
 import { Company } from 'src/database/entities/profiles/entreprise-profile.entity';
 import { User }    from 'src/database/entities/user.entity';
+import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import { UpdateTwoFaDto, UpdatePasswordDto } from '../dto/update-securite.dto';
 
 @Injectable()
@@ -30,6 +31,9 @@ export class SecuriteParametresService {
 
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+
+    @InjectRepository(RefreshToken)
+    private readonly refreshTokenRepo: Repository<RefreshToken>,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -66,33 +70,40 @@ export class SecuriteParametresService {
 
     await this.userRepo.save(user);
 
+    /* Révoque toutes les sessions actives — un refresh token volé sur un
+     * autre appareil ne doit pas survivre à un changement de mot de passe
+     * volontaire. */
+    await this.refreshTokenRepo.update({ userId, revoked: false }, { revoked: true });
+
     this.logger.log(`[MOT DE PASSE] Changé + tokens révoqués — userId=${userId}`);
     return { message: 'Mot de passe mis à jour avec succès.' };
   }
 
   /* ──────────────────────────────────────────────────────────
    * PATCH — Activer / configurer la 2FA (section 9)
+   *
+   * L'activation réelle (secret + vérification) passe désormais par
+   * POST /auth/2fa/setup puis /auth/2fa/confirm (TwoFaService), qui
+   * n'active la 2FA qu'après un code TOTP valide. Cet endpoint ne
+   * permet plus qu'une désactivation directe — l'activer sans jamais
+   * vérifier un code ne protégeait rien.
    * ────────────────────────────────────────────────────────── */
 
   async updateTwoFa(userId: string, dto: UpdateTwoFaDto): Promise<Company> {
     const company = await this.findCompanyOrFail(userId);
 
-    company.twoFaEnabled = dto.twoFaEnabled;
-
-    if (dto.twoFaEnabled && dto.twoFaMethod) {
-      company.twoFaMethod = dto.twoFaMethod;
-      // TODO : Si method = "app", générer le secret TOTP via otplib
-      // et retourner le QR code à afficher au front
+    if (dto.twoFaEnabled) {
+      throw new BadRequestException(
+        "Activez la 2FA via POST /auth/2fa/setup puis /auth/2fa/confirm (vérification du code requise).",
+      );
     }
 
-    if (!dto.twoFaEnabled) {
-      // Désactivation : effacer la méthode et le secret
-      company.twoFaMethod = null;
-      company.twoFaSecret = null;
-    }
+    company.twoFaEnabled = false;
+    company.twoFaMethod  = null;
+    company.twoFaSecret  = null;
 
     const updated = await this.companyRepo.save(company);
-    this.logger.log(`[2FA] ${dto.twoFaEnabled ? 'Activée' : 'Désactivée'} — userId=${userId}`);
+    this.logger.log(`[2FA] Désactivée — userId=${userId}`);
 
     return updated;
   }

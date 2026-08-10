@@ -74,6 +74,10 @@ export interface Commande {
   /* progression de la chaîne — renseignée par le backend (useApi=true) */
   currentStep?: number;
   times?:       (string | undefined)[];
+  /* Statut d'acceptation du livreur assigné — pour proposer d'en choisir
+   * un autre côté client quand il a refusé. */
+  livreurAssignmentStatus?: 'pending' | 'accepted' | 'refused' | null;
+  livreurRefusalReason?:    string | null;
 }
 
 /* Types de problème signalable */

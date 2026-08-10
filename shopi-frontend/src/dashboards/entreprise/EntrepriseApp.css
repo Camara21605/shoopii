@@ -9,6 +9,96 @@
   background: var(--g50);
 }
 
+/* ════════════════════════════════════════════════════════════
+   NOIR PERMANENT — verrouillage haute spécificité + !important.
+
+   PROBLÈME : les jetons de couleur (--white, --navy, --t1..t4,
+   --g50..g300, --bdr, --red, --blue…) sont déclarés dans PLUSIEURS
+   fichiers indépendants (Sidebar.css pour la palette partagée,
+   EquipePage.css pour ses propres --eq-*), chacun avec un bloc
+   :root de base (clair) + un bloc :root[data-theme="dark"] /
+   @media(prefers-color-scheme:dark). Selon la page visitée et
+   l'ordre de chargement des CSS par le navigateur, un bloc clair
+   peut regagner la cascade après un bloc sombre déjà appliqué —
+   d'où des pages qui repassent en blanc de façon imprévisible.
+
+   FIX : réaffirmer toutes ces variables (reprises telles quelles du
+   thème sombre déjà existant dans Sidebar.css — mêmes couleurs
+   d'accent, juste rendu permanent) sur .entreprise-app combiné à
+   :root(html), avec !important. Gagne face à n'importe quelle règle
+   non-!important, quels que soient spécificité et ordre de
+   chargement — le dashboard reste noir même si le toggle clair/
+   sombre du site est basculé sur "light".
+   ════════════════════════════════════════════════════════════ */
+html .entreprise-app {
+  --blue:    #60A5FA !important;
+  --blue-2:  #3B82F6 !important;
+  --blue-3:  #93C5FD !important;
+  --blue-lt: #BFDBFE !important;
+
+  --emerald: #34D399 !important;
+  --violet:  #A78BFA !important;
+  --rose:    #FB7185 !important;
+  --amber:   #FBBF24 !important;
+  --teal:    #22D3EE !important;
+  --orange:  #FB923C !important;
+  --pink:    #F472B6 !important;
+  --green:   #4ADE80 !important;
+  --red:     #F87171 !important;
+
+  --sky:   rgba(255,255,255,.04) !important;
+  --sky-2: rgba(255,255,255,.06) !important;
+  --sky-3: rgba(255,255,255,.10) !important;
+
+  --navy:   #F4F4F5 !important;
+  --navy-2: #E4E4E7 !important;
+  --navy-3: #D4D4D8 !important;
+
+  --white: #000000 !important;
+  --g50:   #000000 !important;
+  --g100:  #0A0A0A !important;
+  --g200:  #1C1C1F !important;
+  --g300:  #2D2D30 !important;
+
+  --t1: #F4F4F5 !important;
+  --t2: #A1A1AA !important;
+  --t3: #71717A !important;
+  --t4: #52525B !important;
+
+  --bdr:  rgba(255,255,255,.08) !important;
+  --bdr2: rgba(255,255,255,.12) !important;
+  --bdrb: rgba(160,160,160,.40) !important;
+
+  --sh-xs: 0 2px 8px rgba(0,0,0,.45) !important;
+  --sh-sm: 0 4px 16px rgba(0,0,0,.55) !important;
+  --sh-md: 0 8px 28px rgba(0,0,0,.65) !important;
+  --sh-lg: 0 16px 48px rgba(0,0,0,.72) !important;
+  --sh-xl: 0 24px 64px rgba(0,0,0,.78) !important;
+  --sh-b:  0 6px 20px rgba(0,0,0,.45) !important;
+
+  --btn:   #1C1C1F !important;
+  --btn-h: #2D2D30 !important;
+
+  --em-bg: rgba(5,150,105,.18) !important;
+  --vl-bg: rgba(109,40,217,.18) !important;
+  --rs-bg: rgba(190,24,93,.15) !important;
+  --am-bg: rgba(180,83,9,.18) !important;
+  --tl-bg: rgba(14,116,144,.18) !important;
+  --or-bg: rgba(234,88,12,.18) !important;
+  --pk-bg: rgba(219,39,119,.18) !important;
+
+  --surface-bar: rgba(0,0,0,.93) !important;
+  --surface-btm: rgba(0,0,0,.97) !important;
+
+  /* ── Jetons propres à EquipePage.css (namespace --eq-*) ── */
+  --eq-bg:         #000000 !important;
+  --eq-card:       #111113 !important;
+  --eq-border:     rgba(255,255,255,.08) !important;
+  --eq-text:       #F4F4F5 !important;
+  --eq-text-muted: #A1A1AA !important;
+  --eq-shadow:     0 1px 3px rgba(0,0,0,.55) !important;
+}
+
 /* Zone de contenu : décalée de la largeur de la sidebar et du header */
 .main {
   margin-left: var(--sb);

@@ -74,7 +74,7 @@ export default function SecPaiement({ data, saving, dirty, onPop, savePaiement }
         <div className={ps.ch}><div className={ps.chT}><i className="fas fa-coins" /> Wallet Shopi</div></div>
         <div className={ps.cb}>
           {/* Solde — depuis l'API */}
-          <div style={{ background:'var(--tl-bg)', border:'1px solid rgba(14,116,144,.2)', borderRadius:'var(--r-lg)', padding:18,
+          <div style={{ background:'var(--tl-bg)', border:'1px solid rgba(0,0,0,.2)', borderRadius:'var(--r-lg)', padding:18,
             display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
             <div>
               <div style={{ fontSize:11, color:'var(--teal)', fontWeight:700, textTransform:'uppercase', letterSpacing:.5, marginBottom:4 }}>

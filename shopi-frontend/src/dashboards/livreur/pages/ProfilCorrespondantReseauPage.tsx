@@ -2,8 +2,9 @@
 // Affiche le profil complet d'un correspondant du réseau, sans le Header
 // public, intégré dans le dashboard livreur.
 
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useCorrespondantProfil } from '../../../shared/profils/profil-correspondant/hooks/useCorrespondantProfil';
+import { useAuthGate } from '../../../shared/hooks/useAuthGate';
 
 import ProfilHeader  from '../../../shared/profils/profil-correspondant/components/ProfilHeader';
 import ProfilTabs    from '../../../shared/profils/profil-correspondant/components/ProfilTabs';
@@ -27,10 +28,11 @@ interface Props {
 
 export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Props) {
   const {
-    profil, loading, error, suivi, toggleSuivi,
+    profil, loading, error, suivi, updateFollowState,
     aboutTags, infosPratiques, schedule, services, zones, paysPartenaires,
     tarifs, avisScore, avis, galerie, contacts, statsSidebar, verifications, similaires,
   } = useCorrespondantProfil(id);
+  const { openAuthModal, authModal } = useAuthGate();
 
   const [tab, setTab] = useState<ProfilTab>('info');
 
@@ -45,12 +47,8 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
   }, [onPop]);
 
   const onToast = useCallback((msg: string) => onPop(msg, 'i'), [onPop]);
-  const onMessage = useCallback(() => onPop(`💬 Message à ${profil.nom}`, 'i'), [profil.nom, onPop]);
+  const onMessage = useCallback(() => onPop(`💬 Message à ${profil?.nom}`, 'i'), [profil?.nom, onPop]);
   const onShare   = useCallback(() => onPop('🔗 Lien du profil copié', 'i'), [onPop]);
-  const handleToggle = useCallback(() => {
-    toggleSuivi();
-    onPop(suivi ? `👋 Désabonné de ${profil.nom}` : `✅ Abonné à ${profil.nom}`, suivi ? 'i' : 's');
-  }, [toggleSuivi, suivi, profil.nom, onPop]);
 
   const backBtn = (
     <div className={shared.page} style={{ paddingBottom: 0 }}>
@@ -71,6 +69,20 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
     );
   }
 
+  if (!profil) {
+    return (
+      <>
+        {backBtn}
+        <div className={styles.page}>
+          <div className={styles.state}>
+            <i className="fas fa-triangle-exclamation" />
+            {error ?? 'Correspondant introuvable.'}
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       {backBtn}
@@ -78,14 +90,16 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
         <ProfilHeader
           profil={profil}
           suivi={suivi}
-          onToggle={handleToggle}
+          onToast={onToast}
+          onRequireAuth={openAuthModal}
+          onFollowChange={updateFollowState}
           onMessage={onMessage}
           onShare={onShare}
         />
 
         {error && (
           <div style={{ maxWidth: 1160, margin: '14px auto 0', padding: '0 28px' }}>
-            <div style={{ padding: '10px 14px', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 10, fontSize: 12.5, color: '#78350F' }}>
+            <div style={{ padding: '10px 14px', background: '#F4F4F5', border: '1px solid #E4E4E7', borderRadius: 10, fontSize: 12.5, color: '#27272A' }}>
               <i className="fas fa-triangle-exclamation" /> {error}
             </div>
           </div>
@@ -106,6 +120,7 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
           </main>
 
           <ProfilSidebar
+            id={profil.id}
             nom={profil.nom}
             contacts={contacts}
             stats={statsSidebar}
@@ -113,12 +128,15 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
             verifications={verifications}
             similaires={similaires}
             suivi={suivi}
-            onToggle={handleToggle}
+            onRequireAuth={openAuthModal}
+            onFollowChange={updateFollowState}
             onMessage={onMessage}
             onToast={onToast}
           />
         </div>
       </div>
+
+      {authModal}
     </>
   );
 }

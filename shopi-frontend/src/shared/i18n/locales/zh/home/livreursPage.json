@@ -1,0 +1,108 @@
+{
+  "livreursPage": {
+    "card": {
+      "livreurAriaLabel": "配送员 {{nom}}",
+      "disponible": "可用",
+      "enCourse": "配送中",
+      "livraisonsCount": "{{count}} 次配送",
+      "abonneFem": "已关注",
+      "suivre": "关注",
+      "seDesabonnerDe": "取消关注 {{nom}}",
+      "suivreNom": "关注 {{nom}}",
+      "connexionRequise": "需要登录",
+      "connexionRequisePourSuivre": "关注需要登录",
+      "seDesabonner": "取消关注",
+      "avisCount": "（{{count}} 条评价）",
+      "livraisons": "配送",
+      "ponctualite": "准时率",
+      "experience": "经验",
+      "voirProfilComplet": "查看完整资料 →",
+      "profilCompletAria": "查看 {{nom}} 的完整资料",
+      "profilDe": "{{nom}} 的资料"
+    },
+    "suggestions": {
+      "ariaLabel": "您附近的推荐配送员",
+      "titre": "推荐",
+      "sousTitre": "在您附近",
+      "abonne": "✓ 已关注",
+      "suivre": "+ 关注"
+    },
+    "hero": {
+      "ariaLabel": "Shopi 配送员介绍",
+      "supTitle": "Shopi 网络 · 科纳克里",
+      "titrePart1": "找到您",
+      "titreEm": "信赖的",
+      "titrePart2": "配送员",
+      "sub": "经过验证的专业配送员，遍布整个几内亚。关注您喜欢的配送员，放心下单。",
+      "livreursSuggeres": "推荐配送员",
+      "abonne": "已关注",
+      "suivre": "关注",
+      "stats": {
+        "livreursActifs": "活跃配送员",
+        "noteMoyenne": "平均评分",
+        "livraisonsMois": "配送/月",
+        "communesCouvertes": "覆盖区域"
+      }
+    },
+    "toolbar": {
+      "searchPlaceholder": "姓名、区域、交通工具…",
+      "rechercherLivreurAria": "搜索配送员",
+      "effacerRechercheAria": "清除搜索",
+      "trierLivreursAria": "排序配送员",
+      "modeAffichageAria": "显示模式",
+      "vueGrille": "网格视图",
+      "vueListe": "列表视图",
+      "livreurCount_one": "{{count}} 名配送员",
+      "livreurCount_other": "{{count}} 名配送员",
+      "filters": {
+        "tous": "全部",
+        "disponibles": "可用",
+        "abonnements": "关注",
+        "motos": "摩托车",
+        "voitures": "汽车"
+      },
+      "sorts": {
+        "mieuxNotes": "评分最高",
+        "plusDeLivraisons": "配送最多",
+        "disponiblesDabord": "优先可用",
+        "lesPlusProches": "最近"
+      }
+    },
+    "sidebar": {
+      "ariaLabel": "配送员筛选",
+      "zoneDeLivraison": "配送区域",
+      "reinit": "重置",
+      "toutesLesZones": "所有区域",
+      "typeDeVehicule": "交通工具类型",
+      "noteMinimale": "最低评分",
+      "ratingOpts": {
+        "cinqEtoiles": "仅 5 星",
+        "quatrePlus": "4+ 星",
+        "troisPlus": "3+ 星",
+        "toutesLesNotes": "所有评分"
+      },
+      "disponibilite": "可用性",
+      "disponible": "可用",
+      "enCourse": "配送中",
+      "mesAbonnements": "我的关注",
+      "vehicules": {
+        "moto": "摩托车",
+        "voiture": "汽车",
+        "pickup": "皮卡",
+        "camion": "卡车"
+      }
+    },
+    "page": {
+      "tousLesLivreurs": "所有配送员",
+      "livreurDansRegion_one": "您所在地区有 {{count}} 名配送员",
+      "livreurDansRegion_other": "您所在地区有 {{count}} 名配送员",
+      "vueGrille": "网格视图",
+      "vueListe": "列表视图",
+      "impossibleDeCharger": "无法加载配送员",
+      "aucunLivreurTrouve": "未找到配送员",
+      "essayezModifier": "尝试修改筛选条件或搜索。",
+      "chargementToast": "📄 加载中...",
+      "chargerPlus": "加载更多配送员"
+    }
+  }
+}

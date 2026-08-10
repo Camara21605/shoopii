@@ -101,6 +101,14 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const connectedSince = useRef(0);
   const facingMode     = useRef<'user' | 'environment'>('user'); // flip caméra mobile
   const isSpeakerOnRef = useRef(true); // miroir de isSpeakerOn, lu dans pc.ontrack (closure stable)
+  /* Miroir de `status`, lu dans onCallIncoming (closure stable — voir plus bas).
+     SANS cette ref, onCallIncoming devait dépendre de [status] pour rester à
+     jour, ce qui obligeait le useEffect d'enregistrement des listeners socket
+     (tout en bas du fichier) à se désinscrire/ré-inscrire sur LES 8 événements
+     d'appel à CHAQUE changement de statut (idle→ringing→connecting→connected→
+     ended→idle) — plusieurs fois par appel — au lieu d'une seule fois au montage. */
+  const statusRef      = useRef<CallStatus>('idle');
+  useEffect(() => { statusRef.current = status; }, [status]);
 
   // ── Utilitaires internes ──────────────────────────────────────
 
@@ -120,15 +128,35 @@ export function useAudioCall(props?: UseAudioCallProps) {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
       const outputs = devices.filter(d => d.kind === 'audiooutput');
+      console.debug('[Call] audiooutput devices disponibles :', outputs.map(d => ({ id: d.deviceId, label: d.label })));
       if (outputs.length < 2) return;
 
-      const target = on
-        ? outputs.find(d => /speaker|haut.?parleur/i.test(d.label)) ?? outputs[0]
-        : outputs.find(d => /default|earpiece|écouteur/i.test(d.label)) ?? outputs[outputs.length - 1];
+      /* Chrome/Android bascule l'audio en mode "communication" (écouteur,
+         volume physiquement plus faible que le haut-parleur principal) dès
+         qu'un flux micro WebRTC est actif — d'où la nécessité de forcer
+         explicitement la sortie "haut-parleur" via setSinkId, le volume
+         seul (ci-dessus) ne suffisant pas à compenser la différence
+         matérielle entre les deux transducteurs. Les libellés exacts
+         varient selon les fabricants (ex: "Haut-parleur du téléphone",
+         "Speakerphone", "Loudspeaker"…) — on élargit la détection et on
+         exclut explicitement l'écouteur plutôt que de deviner un index. */
+      const SPEAKER_RE  = /speaker|haut.?parleur|loud/i;
+      const EARPIECE_RE = /earpiece|receiver|écouteur|ecouteur|handset/i;
 
-      if (target) await setSinkId.call(audioEl, target.deviceId);
-    } catch {
+      const target = on
+        ? outputs.find(d => SPEAKER_RE.test(d.label))
+          ?? outputs.find(d => !EARPIECE_RE.test(d.label))
+          ?? outputs[0]
+        : outputs.find(d => EARPIECE_RE.test(d.label) || /default/i.test(d.label))
+          ?? outputs[outputs.length - 1];
+
+      if (target) {
+        console.debug(`[Call] setSinkId → "${target.label || target.deviceId}" (speaker=${on})`);
+        await setSinkId.call(audioEl, target.deviceId);
+      }
+    } catch (e) {
       /* setSinkId refusé/non supporté — le volume ci-dessus reste le fallback. */
+      console.debug('[Call] setSinkId a échoué, fallback volume seul :', (e as Error)?.message);
     }
   }
 
@@ -351,10 +379,14 @@ export function useAudioCall(props?: UseAudioCallProps) {
         try {
           localStream.current = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
         } catch {
+          /* Avant : rejectCall() silencieux — l'appelé voyait juste la carte
+             "Appel entrant" disparaître sans comprendre pourquoi. */
+          alert('Accès au microphone refusé.');
           rejectCall();
           return;
         }
       } else {
+        alert(isVideo ? 'Accès à la caméra ou au microphone refusé.' : 'Accès au microphone refusé.');
         rejectCall();
         return;
       }
@@ -369,8 +401,19 @@ export function useAudioCall(props?: UseAudioCallProps) {
       conversationId: callInfoRef.current.conversationId,
       callerUserId:   callInfoRef.current.remoteUserId,
     });
-    /* Le caller va créer l'offer → on attend call:offer */
-  }, []);
+    /* Le caller va créer l'offer → on attend call:offer. Filet de sécurité :
+       si l'offre (ou la négociation ICE qui suit) n'aboutit jamais — paquet
+       perdu, bug de reconnexion, aucun chemin réseau trouvé — on ne doit pas
+       rester bloqué sur "Connexion…" indéfiniment avec pour seule option un
+       "Annuler" manuel. clearTimers() (déclenché dès state==='connected'
+       dans onconnectionstatechange) annule ce timer si tout se passe bien. */
+    timeoutRef.current = setTimeout(() => {
+      if (!wasConnected.current) {
+        alert('La connexion a échoué. Vérifiez votre connexion internet et réessayez.');
+        endCall(true, 'missed');
+      }
+    }, 20_000);
+  }, [endCall]);
 
   /** Refuse un appel entrant. */
   const rejectCall = useCallback(() => {
@@ -470,7 +513,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
 
   /* Appel entrant */
   const onCallIncoming = useCallback((payload: WsCallIncoming) => {
-    if (status !== 'idle') {
+    if (statusRef.current !== 'idle') {
       emit('call:busy', {
         conversationId: payload.conversationId,
         callerUserId:   payload.callerUserId,
@@ -488,7 +531,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     callInfoRef.current = ci;
     setCallInfo(ci);
     setStatus('ringing');
-  }, [status]);
+  }, []);
 
   /* Appelé a accepté → on crée l'offer (caller) */
   const onCallAccepted = useCallback(async () => {
@@ -496,19 +539,41 @@ export function useAudioCall(props?: UseAudioCallProps) {
     clearTimers();
     setStatus('connecting');
 
-    const iceServers = await getIceServers();
-    const pc = createPeerConnection(iceServers);
-    localStream.current.getTracks().forEach(t => pc.addTrack(t, localStream.current!));
+    /* Filet de sécurité symétrique à celui d'acceptCall (côté appelé) —
+       SANS ça, un échec de négociation ICE côté APPELANT (offer qui ne
+       part jamais, réponse jamais reçue, paquet perdu…) laissait le statut
+       bloqué sur "Connexion…" indéfiniment, avec pcRef/callInfoRef jamais
+       réinitialisés : aucun moyen de relancer un appel suivant sans
+       recharger toute la page. clearTimers() dans onconnectionstatechange
+       annule ce timer dès que la connexion aboutit réellement. */
+    timeoutRef.current = setTimeout(() => {
+      if (!wasConnected.current) {
+        alert('La connexion a échoué. Vérifiez votre connexion internet et réessayez.');
+        endCall(true, 'missed');
+      }
+    }, 20_000);
 
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
+    try {
+      const iceServers = await getIceServers();
+      const pc = createPeerConnection(iceServers);
+      localStream.current.getTracks().forEach(t => pc.addTrack(t, localStream.current!));
 
-    emit('call:offer', {
-      conversationId: callInfoRef.current.conversationId,
-      targetUserId:   callInfoRef.current.remoteUserId,
-      sdp:            offer,
-    });
-  }, [createPeerConnection]);
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      emit('call:offer', {
+        conversationId: callInfoRef.current.conversationId,
+        targetUserId:   callInfoRef.current.remoteUserId,
+        sdp:            offer,
+      });
+    } catch (err) {
+      /* Échec de création de l'offer (accès média perdu, PeerConnection en
+         erreur…) — sans ce catch, l'exception restait non gérée et le
+         statut ne redescendait jamais à 'idle' tout seul. */
+      console.error('[Call] Échec création de l\'offer WebRTC :', err);
+      endCall(true, 'missed');
+    }
+  }, [createPeerConnection, endCall]);
 
   /* Appelé a refusé — l'appelant reçoit cet événement et enregistre 'rejected' */
   const onCallRejected = useCallback(() => {
@@ -524,30 +589,43 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const onCallOffer = useCallback(async (payload: WsCallSignal) => {
     if (!callInfoRef.current || !localStream.current) return;
 
-    const iceServers = await getIceServers();
-    const pc = createPeerConnection(iceServers);
-    localStream.current.getTracks().forEach(t => pc.addTrack(t, localStream.current!));
+    try {
+      const iceServers = await getIceServers();
+      const pc = createPeerConnection(iceServers);
+      localStream.current.getTracks().forEach(t => pc.addTrack(t, localStream.current!));
 
-    await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp!));
-    await flushIcePending();
+      await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp!));
+      await flushIcePending();
 
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
 
-    emit('call:answer', {
-      conversationId: callInfoRef.current.conversationId,
-      targetUserId:   callInfoRef.current.remoteUserId,
-      sdp:            answer,
-    });
-  }, [createPeerConnection, flushIcePending]);
+      emit('call:answer', {
+        conversationId: callInfoRef.current.conversationId,
+        targetUserId:   callInfoRef.current.remoteUserId,
+        sdp:            answer,
+      });
+    } catch (err) {
+      /* SDP distante invalide, média perdu… — sans ce catch, le statut
+         restait bloqué sur "Connexion…" indéfiniment (voir acceptCall,
+         qui a déjà un timeout 20s en filet, mais autant échouer vite). */
+      console.error('[Call] Échec traitement de l\'offer WebRTC reçue :', err);
+      endCall(true, 'missed');
+    }
+  }, [createPeerConnection, flushIcePending, endCall]);
 
   /* Answer WebRTC reçue (caller) */
   const onCallAnswer = useCallback(async (payload: WsCallSignal) => {
     const pc = pcRef.current;
     if (!pc) return;
-    await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp!));
-    await flushIcePending();
-  }, [flushIcePending]);
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp!));
+      await flushIcePending();
+    } catch (err) {
+      console.error('[Call] Échec application de l\'answer WebRTC :', err);
+      endCall(true, 'missed');
+    }
+  }, [flushIcePending, endCall]);
 
   /* Candidat ICE reçu */
   const onCallIceCandidate = useCallback(async (payload: WsCallSignal) => {

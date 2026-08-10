@@ -1,0 +1,38 @@
+{
+  "commandes": {
+    "filters": {
+      "attente": "En attente",
+      "preparation": "En préparation",
+      "livraison": "En livraison",
+      "livre": "Livré",
+      "annule": "Annulé",
+      "tous": "Tous"
+    },
+    "table": {
+      "commande": "Commande",
+      "produits": "Produit(s)",
+      "client": "Client",
+      "montant": "Montant",
+      "statut": "Statut",
+      "date": "Date",
+      "livreur": "Livreur",
+      "actions": "Actions"
+    },
+    "loading": "Chargement…",
+    "empty": "Aucune commande",
+    "exportCsv": "Exporter CSV",
+    "exportExcel": "Excel",
+    "voir": "Voir",
+    "preparer": "Préparer",
+    "envoyer": "Envoyer",
+    "autresArticles_one": "+{{count}} autre article",
+    "autresArticles_other": "+{{count}} autres articles",
+    "toasts": {
+      "exportCsv": "📥 Export CSV généré",
+      "exportExcel": "📊 Export Excel généré",
+      "accepted": "✅ Commande acceptée",
+      "shipping": "🚚 Envoi en livraison",
+      "orderRef": "📋 Commande {{id}}"
+    }
+  }
+}

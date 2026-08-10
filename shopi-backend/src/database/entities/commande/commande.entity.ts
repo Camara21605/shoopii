@@ -138,6 +138,19 @@ export enum ModeLivraison {
   MIXTE          = 'mixte',          // code ENTREPRISE + acteurs renseignés + CLIENT
 }
 
+/**
+ * Statut d'acceptation du livreur assigné à la commande.
+ * NULL         → aucun livreur assigné.
+ * PENDING      → livreur assigné, en attente de sa réponse (code LIVREUR pas encore généré).
+ * ACCEPTED     → livreur a accepté (code LIVREUR généré, ordre 2).
+ * REFUSED      → livreur a refusé (livreurId remis à null, un autre doit être choisi).
+ */
+export enum LivreurAssignmentStatus {
+  PENDING  = 'pending',
+  ACCEPTED = 'accepted',
+  REFUSED  = 'refused',
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // ENTITÉ COMMANDE — AMÉLIORÉE
 // ─────────────────────────────────────────────────────────────────────────────
@@ -204,9 +217,11 @@ export class Commande {
   // ───────────────────────────────────────────────────────────
 
   /**
-   * Livreur choisi par le client.
-   * NULL → pas de code LIVREUR généré.
-   * Renseigné → code LIVREUR généré (ordre 2).
+   * Livreur choisi (par le client à la commande, ou assigné/changé
+   * ensuite par l'entreprise).
+   * NULL → pas de livreur assigné (ou refus en attente d'un nouveau choix).
+   * Renseigné → en attente d'acceptation (voir livreurAssignmentStatus) ;
+   * le code LIVREUR n'est généré (ordre 2) qu'une fois le livreur ACCEPTED.
    */
   @ManyToOne(() => Delivery, {
     nullable: true,
@@ -219,6 +234,22 @@ export class Commande {
 
   @Column({ name: 'livreurId', type: 'uuid', nullable: true })
   livreurId: string | null;
+
+  /** Statut de la réponse du livreur assigné — NULL si aucun livreur assigné. */
+  @Column({ type: 'enum', enum: LivreurAssignmentStatus, nullable: true })
+  livreurAssignmentStatus: LivreurAssignmentStatus | null;
+
+  /** Qui a choisi ce livreur — pilote qui doit en choisir un autre en cas de refus. */
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  livreurAssignedBy: 'client' | 'company' | null;
+
+  /** Horodatage de la réponse (acceptation ou refus) du livreur. */
+  @Column({ type: 'timestamp', nullable: true })
+  livreurRespondedAt: Date | null;
+
+  /** Motif du refus (obligatoire côté validation applicative). */
+  @Column({ type: 'text', nullable: true })
+  livreurRefusalReason: string | null;
 
   // ───────────────────────────────────────────────────────────
 

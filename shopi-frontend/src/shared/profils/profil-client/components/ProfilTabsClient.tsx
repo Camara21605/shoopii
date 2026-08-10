@@ -14,7 +14,6 @@ const TABS: { id: ClientTab; icon: string; label: string }[] = [
   { id: 'favs',      icon: 'fa-heart',            label: 'Favoris'     },
   { id: 'reviews',   icon: 'fa-star',             label: 'Avis'        },
   { id: 'activity',  icon: 'fa-clock-rotate-left', label: 'Activité'   },
-  { id: 'addresses', icon: 'fa-location-dot',     label: 'Adresses'   },
 ];
 
 interface Props { active: ClientTab; onChange: (t: ClientTab) => void; }

@@ -7,21 +7,23 @@
  *   - listClient        : GET /client/commandes
  * ============================================================ */
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
 import { User } from '../../../database/entities/user.entity';
+import { UserRole } from '../../../common/enums/user-role.enum';
 import { Client } from '../../../database/entities/profiles/client-profile.entity';
 import { Company } from '../../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery } from '../../../database/entities/profiles/livreur-profile.entity';
-import { Commande, CommandeStatus } from '../../../database/entities/commande/commande.entity';
+import { Localisation } from '../../../database/entities/localisation.entity';
+import { Commande, CommandeStatus, LivreurAssignmentStatus } from '../../../database/entities/commande/commande.entity';
 import { CodeActeurType, CodeCommandeStatus } from '../../../database/entities/commande/commande-code.entity';
 
 import {
   ACTEUR_INFO, Acteur, ActeurRole, Commission, CommandeDetailResponse,
   CommandeListItem, EnCoursResponse, EnCoursStep, HistListItem, MissionListItem,
-  initiales, mapHistStatus, mapOrderStatus,
+  initiales, mapHistStatus, mapOrderStatus, countryLabel,
 } from './commande.helpers';
 
 @Injectable()
@@ -32,6 +34,7 @@ export class CommandeQueryService {
     @InjectRepository(Company) private readonly companyRepo: Repository<Company>,
     @InjectRepository(Delivery) private readonly deliveryRepo: Repository<Delivery>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
+    @InjectRepository(Localisation) private readonly locRepo: Repository<Localisation>,
   ) {}
 
   /* ════════════════════════════════════════════════════════
@@ -43,6 +46,24 @@ export class CommandeQueryService {
       relations: ['items', 'codes'],
     });
     if (!commande) throw new NotFoundException('Commande introuvable.');
+
+    /* Autorisation — seuls les acteurs impliqués dans la commande (client,
+     * entreprise, livreur, correspondant, partenaire) ou un admin peuvent
+     * en consulter le détail. Sans ce contrôle, n'importe quel utilisateur
+     * authentifié connaissant l'UUID pouvait lire l'adresse de livraison,
+     * les articles, les montants et la répartition des commissions d'une
+     * commande qui ne le concerne pas. */
+    const actorId = (user as any).actorId as string | undefined;
+    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
+    const isInvolved =
+      commande.clientId === actorId ||
+      commande.companyId === actorId ||
+      commande.livreurId === actorId ||
+      commande.correspondantId === actorId ||
+      commande.partenaireId === actorId;
+    if (!isAdmin && !isInvolved) {
+      throw new ForbiddenException("Vous n'avez pas accès à cette commande.");
+    }
 
     const company = await this.companyRepo.findOne({ where: { id: commande.companyId } });
     const delivery = commande.livreurId ? await this.deliveryRepo.findOne({ where: { id: commande.livreurId } }) : null;
@@ -128,6 +149,8 @@ export class CommandeQueryService {
       codes,
       currentStep,
       times,
+      livreurAssignmentStatus: commande.livreurAssignmentStatus,
+      livreurRefusalReason:    commande.livreurRefusalReason,
     };
   }
 
@@ -178,6 +201,9 @@ export class CommandeQueryService {
         date:     c.createdAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
         livreur:  (c.livreurId && deliveryById.get(c.livreurId)?.fullName) ?? '—',
         zone:     c.villeLivraison ?? '—',
+        livreurId:               c.livreurId,
+        livreurAssignmentStatus: c.livreurAssignmentStatus,
+        livreurRefusalReason:    c.livreurRefusalReason,
       };
     });
   }
@@ -227,6 +253,9 @@ export class CommandeQueryService {
         date:     c.createdAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
         livreur:  (c.livreurId && deliveryById.get(c.livreurId)?.fullName) ?? '—',
         zone:     c.villeLivraison ?? '—',
+        livreurId:               c.livreurId,
+        livreurAssignmentStatus: c.livreurAssignmentStatus,
+        livreurRefusalReason:    c.livreurRefusalReason,
       };
     });
   }
@@ -258,22 +287,39 @@ export class CommandeQueryService {
     const clientById = new Map(clients.map(c => [c.id, c]));
     const companyById = new Map(companies.map(c => [c.id, c]));
 
+    /* Position GPS réelle du client — adresse par défaut (même source que
+     * tracking.service.ts). Sans ça, "Ma zone de livraison" ne pouvait
+     * placer le client qu'approximativement (centre de sa commune). */
+    const clientUserIds = clients.map(c => c.userId).filter((id): id is string => !!id);
+    const localisations = clientUserIds.length
+      ? await this.locRepo.find({ where: { userId: In(clientUserIds), estDefaut: true } })
+      : [];
+    const locByUserId = new Map(localisations.map(l => [l.userId, l]));
+
     return commandes.map(c => {
       const firstItem = c.items[0];
       const livreurCode = c.codes.find(code => code.acteurType === CodeActeurType.LIVREUR);
 
+      /* 'new' = en attente d'acceptation (boutons Accepter/Refuser côté UI) ;
+       * 'active' = accepté et code de livraison déjà validé ;
+       * 'prep' = accepté, code pas encore validé. */
       let missionStatus: MissionListItem['status'] = 'new';
-      if (livreurCode?.status === CodeCommandeStatus.VALIDATED) missionStatus = 'active';
-      else if (c.status !== CommandeStatus.PAID) missionStatus = 'prep';
+      if (c.livreurAssignmentStatus === LivreurAssignmentStatus.PENDING) missionStatus = 'new';
+      else if (livreurCode?.status === CodeCommandeStatus.VALIDATED) missionStatus = 'active';
+      else missionStatus = 'prep';
+
+      const company = companyById.get(c.companyId);
+      const client  = clientById.get(c.clientId);
+      const clientLoc = client?.userId ? locByUserId.get(client.userId) : undefined;
 
       return {
         id: c.numero,
         uuid: c.id,
         em: '📦',
         nm: firstItem?.nomProduit ?? '—',
-        shop: companyById.get(c.companyId)?.companyName ?? 'Boutique',
-        client: clientById.get(c.clientId)?.fullName ?? '—',
-        from: companyById.get(c.companyId)?.commune ?? companyById.get(c.companyId)?.ville ?? 'Boutique',
+        shop: company?.companyName ?? 'Boutique',
+        client: client?.fullName ?? '—',
+        from: company?.commune ?? company?.ville ?? 'Boutique',
         to: c.villeLivraison ?? c.adresseLivraison ?? '—',
         dist: '—',
         fee: Number(c.fraisLivraison),
@@ -281,6 +327,15 @@ export class CommandeQueryService {
         status: missionStatus,
         urgent: false,
         date: c.createdAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
+        companyLat: company?.latitude  != null ? Number(company.latitude)  : null,
+        companyLng: company?.longitude != null ? Number(company.longitude) : null,
+        clientLat: clientLoc?.latitude  != null ? Number(clientLoc.latitude)  : null,
+        clientLng: clientLoc?.longitude != null ? Number(clientLoc.longitude) : null,
+        clientCommune: c.communeLivraison ?? c.villeLivraison ?? null,
+        companyPays:     countryLabel(company?.pays),
+        companyVille:    company?.ville ?? null,
+        companyQuartier: company?.quartier ?? company?.commune ?? null,
+        clientVille:     c.villeLivraison ?? null,
       };
     });
   }

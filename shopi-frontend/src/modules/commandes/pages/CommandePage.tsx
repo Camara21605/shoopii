@@ -31,6 +31,11 @@ import RatingModal from '../sections/RatingModal';
 import IssueModal from '../sections/IssueModal';
 import type { ActeurRole, TypeProbleme } from '../data/types';
 import { useForceDarkTheme } from '../../../shared/context/ThemeContext';
+import { assignerLivreurClient } from '../services/commande.api';
+import { fetchLivreursSuivis } from '../../home/components/panier/services/livreursSuivis.api';
+import ChoisirLivreurModal from '../../../shared/components/ChoisirLivreurModal';
+import type { LivreurPickerItem } from '../../../shared/components/ChoisirLivreurModal';
+import OrderTrackingMap from '../../../shared/location/components/OrderTrackingMap';
 
 interface CommandePageProps {
   /* rôle de l'utilisateur qui consulte (sinon 'client' par défaut) */
@@ -59,7 +64,42 @@ export default function CommandePage({ role = 'client', useApi = false, onToast 
   const [showIssue,   setShowIssue]   = useState(false);
   const [invoiceShownOnce, setInvoiceShownOnce] = useState(false);
 
+  /* Choisir un autre livreur (après refus du précédent) */
+  const [showChoisirLivreur, setShowChoisirLivreur] = useState(false);
+  const [livreurOptions, setLivreurOptions] = useState<LivreurPickerItem[]>([]);
+  const [loadingLivreurs, setLoadingLivreurs] = useState(false);
+  const [savingLivreur,   setSavingLivreur]   = useState(false);
+
+  /* Affichage/masquage de la carte "Suivi en direct" — repliée par
+   * défaut pour ne pas alourdir la page (chargement carte + itinéraires),
+   * l'utilisateur choisit explicitement de la faire apparaître. */
+  const [showMap, setShowMap] = useState(false);
+
   const toast = (m: string, t: 's' | 'i' | 'w' | 'e' = 'i') => onToast?.(m, t);
+
+  function openChoisirLivreur() {
+    setShowChoisirLivreur(true);
+    setLoadingLivreurs(true);
+    fetchLivreursSuivis()
+      .then(list => setLivreurOptions(list.map(l => ({ id: l.id, nom: l.nm, sous: l.zn, emoji: l.em, note: l.rt !== '—' ? l.rt : undefined }))))
+      .catch(() => setLivreurOptions([]))
+      .finally(() => setLoadingLivreurs(false));
+  }
+
+  async function handleChoisirLivreur(livreurId: string) {
+    if (!id) return;
+    setSavingLivreur(true);
+    try {
+      await assignerLivreurClient(id, livreurId);
+      toast('🛵 Nouveau livreur assigné — en attente de sa confirmation', 's');
+      setShowChoisirLivreur(false);
+      c.refetch();
+    } catch (err: any) {
+      toast(err?.message ?? 'Impossible d\'assigner ce livreur.', 'e');
+    } finally {
+      setSavingLivreur(false);
+    }
+  }
 
   /* ── Validation d'une étape ── */
   async function handleValidate(idx: number, code: string): Promise<boolean> {
@@ -140,6 +180,34 @@ export default function CommandePage({ role = 'client', useApi = false, onToast 
   const monIdx = c.commande.acteurs.findIndex(a => a.role === c.currentRole);
   const monCodeVisible = !!monCode && monIdx !== -1 && c.statuts[monIdx] === 'now';
 
+  /* ── Visibilité du "Suivi en direct" ────────────────────────────
+   * Le backend (tracking.service.ts) sait déjà construire une carte
+   * utile même SANS livreur ni correspondant : il retombe sur la
+   * position de la boutique + celle du client (trajet vert de
+   * référence). Il ne faut donc PAS conditionner l'affichage côté
+   * client/entreprise à l'acceptation d'un livreur — sinon la carte
+   * n'apparaît jamais tant qu'aucun livreur n'a encore été assigné/
+   * confirmé (cas vécu : commande tout juste payée, encore "Étape 1/2").
+   *   - client / entreprise : toujours visible tant que la commande
+   *     n'est pas terminée (le backend affiche ce qu'il peut : au
+   *     minimum boutique + client, en plus le livreur/correspondant
+   *     dès qu'ils sont réellement impliqués).
+   *   - livreur : visible seulement une fois SA mission acceptée
+   *     (avant ça, il n'a rien à faire sur cette commande).
+   *   - correspondant : visible seulement si cette commande passe
+   *     réellement par lui (acteurs.some role==='correspondant').
+   */
+  const hasLivreurActeur       = c.commande.acteurs.some(a => a.role === 'livreur');
+  const hasCorrespondantActeur = c.commande.acteurs.some(a => a.role === 'correspondant');
+  const livreurEnRoute         = hasLivreurActeur && c.commande.livreurAssignmentStatus === 'accepted';
+  const showTrackingMap =
+    !!id && !c.done && (
+      role === 'client' ||
+      role === 'entreprise' ||
+      (role === 'livreur' && livreurEnRoute) ||
+      (role === 'correspondant' && hasCorrespondantActeur)
+    );
+
   return (
     <div className={styles.order}>
 
@@ -177,10 +245,64 @@ export default function CommandePage({ role = 'client', useApi = false, onToast 
         </div>
       )}
 
+      {/* Le livreur a refusé la mission — le client doit en choisir un autre */}
+      {role === 'client' && c.commande.livreurAssignmentStatus === 'refused' && (
+        <div style={{
+          display:'flex', alignItems:'center', gap:12, flexWrap:'wrap',
+          background:'rgba(239,68,68,.08)', border:'1.5px solid rgba(239,68,68,.3)',
+          borderRadius:14, padding:'14px 18px', marginBottom:16,
+        }}>
+          <i className="fas fa-triangle-exclamation" style={{ color:'#DC2626', fontSize:18 }} />
+          <div style={{ flex:1, minWidth:200 }}>
+            <div style={{ fontSize:13.5, fontWeight:700, color:'var(--navy,#0B1F3A)' }}>Le livreur a refusé cette mission</div>
+            <div style={{ fontSize:12, color:'var(--t2,#475569)' }}>
+              {c.commande.livreurRefusalReason ? `Motif : ${c.commande.livreurRefusalReason} — ` : ''}
+              Choisissez un autre livreur pour continuer.
+            </div>
+          </div>
+          <button
+            onClick={openChoisirLivreur}
+            style={{ background:'#DC2626', color:'#fff', border:'none', borderRadius:10, padding:'10px 18px', fontSize:13, fontWeight:700, cursor:'pointer', flexShrink:0 }}
+          >
+            <i className="fas fa-motorcycle" /> Choisir un livreur
+          </button>
+        </div>
+      )}
+
       <div className={styles.grid}>
 
         {/* ── Colonne gauche ── */}
         <div>
+          {/* Suivi en direct — voir showTrackingMap ci-dessus pour le détail
+           * des conditions de visibilité par rôle. Le bouton bascule
+           * showMap : l'en-tête reste visible, la carte elle-même
+           * (coûteuse — Leaflet + calcul d'itinéraires) ne se charge
+           * que si l'utilisateur choisit explicitement de l'afficher. */}
+          {showTrackingMap && (
+            <div style={{ marginBottom: 16 }}>
+              <button
+                onClick={() => setShowMap(v => !v)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: showMap ? 'var(--g100,#F1F5F9)' : '#fff',
+                  border: '1.5px solid var(--bdr,#E2E8F0)', borderRadius: 12,
+                  padding: '10px 14px', cursor: 'pointer', marginBottom: showMap ? 10 : 0,
+                }}
+              >
+                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--navy,#0B1F3A)', display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <i className="fas fa-location-crosshairs" style={{ color: 'var(--blue,#1A4FC4)' }} /> Suivi en direct
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--blue,#1A4FC4)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  {showMap ? 'Masquer la carte' : 'Voir la carte'}
+                  <i className={`fas fa-chevron-${showMap ? 'up' : 'down'}`} />
+                </span>
+              </button>
+              {showMap && (
+                <OrderTrackingMap orderId={id!} height="320px" showPanel={false} />
+              )}
+            </div>
+          )}
+
           {c.done && (
             <DoneBanner onRate={() => setShowRating(true)} onIssue={() => setShowIssue(true)} />
           )}
@@ -226,6 +348,17 @@ export default function CommandePage({ role = 'client', useApi = false, onToast 
       )}
       {showIssue && (
         <IssueModal onClose={() => setShowIssue(false)} onSubmit={handleIssueSubmit} />
+      )}
+      {showChoisirLivreur && (
+        <ChoisirLivreurModal
+          title="Choisir un livreur"
+          items={livreurOptions}
+          loading={loadingLivreurs}
+          saving={savingLivreur}
+          emptyMessage="Vous ne suivez aucun livreur pour le moment. Suivez-en un depuis la page Livreurs pour pouvoir le choisir ici."
+          onClose={() => setShowChoisirLivreur(false)}
+          onSelect={handleChoisirLivreur}
+        />
       )}
     </div>
   );

@@ -1,0 +1,101 @@
+{
+  "clients": {
+    "segment": {
+      "VIP": "VIP",
+      "Fidèle": "Loyal",
+      "Régulier": "Regular",
+      "Nouveau": "New",
+      "Abonné": "Follower"
+    },
+    "sourceBadge": {
+      "acheteurEtAbonne": "🛒 + 👁️",
+      "acheteur": "🛒 Buyer",
+      "abonne": "👁️ Follower"
+    },
+    "date": {
+      "auj": "Today",
+      "hier": "Yesterday",
+      "ilYaJours": "{{count}}d ago",
+      "ilYaSemaines": "{{count}}w ago",
+      "ilYaMois": "{{count}}mo ago"
+    },
+    "header": {
+      "titlePart1": "Customers",
+      "titleMark": "& Followers",
+      "subtitle": "Buyers + followers of your store — real-time data",
+      "actualiser": "Refresh"
+    },
+    "kpi": {
+      "totalClients": "Total customers",
+      "totalClientsSub": "{{buyers}} buyers · {{abonnes}} followers",
+      "clientsVip": "VIP customers",
+      "clientsVipSub": "≥ 10M GNF or 10+ orders",
+      "caTotalClients": "Total customer revenue",
+      "panierMoySub": "Avg. cart: {{montant}} GNF",
+      "nouveauxAcheteurs": "New buyers",
+      "premiereCommande": "First order"
+    },
+    "filters": {
+      "tous": "All",
+      "acheteurs": "🛒 Buyers",
+      "abonnes": "👁️ Followers",
+      "tousSegments": "All segments",
+      "vip": "👑 VIP",
+      "fideles": "⭐ Loyal",
+      "reguliers": "🔄 Regular",
+      "nouveaux": "🆕 New"
+    },
+    "search": "Name or email…",
+    "baseClients": "Customer base",
+    "sort": {
+      "plusDepense": "Most spent",
+      "plusCommandes": "Most orders",
+      "derniereCommande": "Last order",
+      "plusRecents": "Most recent"
+    },
+    "loading": "Loading customers…",
+    "error": {
+      "title": "Loading error",
+      "reessayer": "Retry"
+    },
+    "empty": {
+      "aucunResultat": "No results",
+      "aucunClient": "No customers yet",
+      "subRecherche": "No customer matches your search.",
+      "subDefaut": "Your first customers will appear here as soon as they place an order or follow your store."
+    },
+    "table": {
+      "client": "Customer",
+      "contact": "Contact",
+      "source": "Source",
+      "commandes": "Orders",
+      "totalDepense": "Total spent",
+      "segment": "Segment",
+      "derniereCmd": "Last order",
+      "actions": "Actions",
+      "abonne": "Follower",
+      "cmds": "orders",
+      "profil": "Profile",
+      "message": "Message",
+      "messageToast": "📧 Message sent to {{name}}"
+    },
+    "pagination_one": "{{count}} customer · Page {{page}}/{{pages}}",
+    "pagination_other": "{{count}} customers · Page {{page}}/{{pages}}",
+    "sidePanel": {
+      "repartition": "Breakdown",
+      "chargement": "Loading…",
+      "metriquesCles": "Key metrics",
+      "acheteurs": "Buyers",
+      "abonnesBoutique": "Store followers",
+      "caTotal": "Total revenue",
+      "panierMoyen": "Average cart",
+      "actionsCrm": "CRM actions"
+    },
+    "quickActions": {
+      "newsletterVip": "Send VIP newsletter",
+      "offreFidelite": "Automatic loyalty offer",
+      "rapportSegments": "Segments PDF report",
+      "relanceInactifs": "Re-engage inactive customers"
+    }
+  }
+}

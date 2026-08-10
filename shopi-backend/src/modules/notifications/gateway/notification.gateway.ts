@@ -44,11 +44,14 @@ import {
 import { Logger }        from '@nestjs/common';
 import { JwtService }    from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository }    from 'typeorm';
 import type { Server }   from 'socket.io';
 
 import {
   NotificationActorType,
 } from 'src/database/entities/notification/notification.entitiy';
+import { User, UserStatus } from 'src/database/entities/user.entity';
 import type { NotificationSocket } from '../interfaces/notification.interfaces';
 import { NotificationBroadcastService } from '../services/notification-broadcast.service';
 import { NotificationService }          from '../services/notification.service';
@@ -80,6 +83,8 @@ export class NotificationGateway
     private readonly config:    ConfigService,
     private readonly broadcast: NotificationBroadcastService,
     private readonly service:   NotificationService,
+    @InjectRepository(User)
+    private readonly userRepo:  Repository<User>,
   ) {}
 
   // ─────────────────────────────────────────────────────────
@@ -108,7 +113,7 @@ export class NotificationGateway
         return this.rejectSocket(socket, 'TOKEN_MISSING');
       }
 
-      let payload: { sub: string; role: string; actorId?: string };
+      let payload: { sub: string; role: string; actorId?: string; iat?: number };
       try {
         payload = this.jwt.verify(token, {
           secret: this.config.get<string>('JWT_SECRET'),
@@ -119,6 +124,23 @@ export class NotificationGateway
 
       const userId   = payload.sub;
       const userRole = payload.role;
+
+      // ── 1bis. Compte banni/suspendu ou mdp changé après émission
+      //         du token → refuser (même contrôle que JwtStrategy). ─
+      const user = await this.userRepo.findOne({ where: { id: userId } });
+      if (!user) {
+        return this.rejectSocket(socket, 'TOKEN_INVALID');
+      }
+      if (user.status === UserStatus.BANNED || user.status === UserStatus.SUSPENDED) {
+        return this.rejectSocket(socket, 'ACCOUNT_DISABLED');
+      }
+      if (user.lastPasswordChangedAt && payload.iat !== undefined) {
+        const tokenIssuedAt   = new Date(payload.iat * 1000);
+        const passwordChanged = new Date(user.lastPasswordChangedAt);
+        if (passwordChanged > tokenIssuedAt) {
+          return this.rejectSocket(socket, 'TOKEN_INVALID');
+        }
+      }
 
       // ── 2. Résoudre l'actorType ───────────────────────────
       const actorType = ROLE_TO_ACTOR_TYPE[userRole];

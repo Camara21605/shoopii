@@ -3,20 +3,17 @@
  *
  * RÔLE : Carte livreur — vue GRILLE (bande colorée, stats détaillées).
  *
- * ✅ REFACTOR :
- *   - Composant CONTRÔLÉ : suivi = livreur.isSuivi (plus d'état local).
- *   - Logique follow déléguée au hook partagé useFollowToggle.
- *   - N'appelle plus l'API directement (le parent useLivreurs le fait).
- *   - Route harmonisée : /livreurs/:id
+ * Le suivi (S'abonner / Suivi(e) + menu ⋮) est délégué au composant
+ * partagé FollowButton, qui fait lui-même l'appel API — cette carte
+ * reste juste un composant d'affichage, route harmonisée : /livreurs/:id.
  * ================================================================ */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate }      from 'react-router-dom';
 import { useTranslation }   from 'react-i18next';
 import styles               from '../styles/CardLivreurGrid.module.css';
-import { tokenStorage }     from '../../../../../shared/services/apiFetch';
-import { useFollowToggle }  from '../../../../../shared/hooks/useFollowToggle';
 import { useAuthGate }      from '../../../../../shared/hooks/useAuthGate';
+import FollowButton         from '../../../../../shared/components/FollowButton';
 import type { LivreurItem } from '../data/livreursMockData';
 
 /* ── Mapping variante de bande → classe CSS ── */
@@ -36,42 +33,27 @@ const renderStars = (note: number) => {
 
 /* ── Props ── */
 interface CardLivreurGridProps {
-  livreur:  LivreurItem;
-  onToast:  (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
-  onFollow: (id: string, newState: boolean) => Promise<void>;
+  livreur:    LivreurItem;
+  onToast:    (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  /** Reflète l'action du menu ⋮ (suivi/masqué/supprimé) vers la liste
+   *  partagée du parent — nécessaire ici car le filtre rapide "Abonnés"
+   *  et la sidebar "Mes livreurs suivis" lisent isSuivi depuis ce même
+   *  état partagé (useLivreurs), contrairement aux pages plus simples. */
+  onChange?:  (id: string, next: { isSuivi: boolean; hidden?: boolean; removed?: boolean }) => void;
 }
 
 /* ================================================================
  * COMPOSANT
  * ================================================================ */
 const CardLivreurGrid: React.FC<CardLivreurGridProps> = ({
-  livreur, onToast, onFollow,
+  livreur, onToast, onChange,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [hovered, setHovered] = useState(false);
 
-  /* ✅ État contrôlé par le parent + logique commune */
-  const suivi = livreur.isSuivi;
   const { openAuthModal, authModal } = useAuthGate();
-  const { loading, toggle } = useFollowToggle({
-    id:      livreur.id,
-    name:    livreur.fullName,
-    isSuivi: suivi,
-    onFollow,
-    onToast,
-    onRequireAuth: openAuthModal,
-  });
 
   const handleViewProfile = () => navigate(`/livreurs/${livreur.id}`);
-
-  /* Style dynamique du bouton selon l'état */
-  const followStyle: React.CSSProperties = suivi ? {
-    background:  'var(--btn)',
-    color:       '#fff',
-    borderColor: 'var(--btn)',
-    transition:  'all .2s',
-  } : {};
 
   return (
     <article
@@ -82,9 +64,6 @@ const CardLivreurGrid: React.FC<CardLivreurGridProps> = ({
       {/* ── Bande colorée ── */}
       <div className={`${styles.band} ${BAND_CLASS[livreur.bandVariant] ?? styles.bandGreen}`}>
         <div className={styles.bandPattern} aria-hidden="true" />
-        <div className={styles.cardMenu} onClick={e => e.stopPropagation()} aria-label="Options">
-          <i className="fas fa-ellipsis" aria-hidden="true" />
-        </div>
       </div>
 
       {/* ── Avatar ── */}
@@ -132,32 +111,18 @@ const CardLivreurGrid: React.FC<CardLivreurGridProps> = ({
           </div>
         </div>
 
-        {/* ── Bouton Suivre (hook partagé) ── */}
-        <button
-          className={`${styles.followBtn} ${suivi ? styles.followBtnOn : styles.followBtnOff}`}
-          onClick={toggle}
-          disabled={loading}
-          style={followStyle}
-          onMouseEnter={() => suivi && setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-          aria-label={
-            !tokenStorage.get() ? t('livreursPage.card.connexionRequisePourSuivre')
-            : suivi ? t('livreursPage.card.seDesabonnerDe', { nom: livreur.fullName })
-            : t('livreursPage.card.suivreNom', { nom: livreur.fullName })
-          }
-        >
-          {loading ? (
-            <><i className="fas fa-spinner fa-spin" aria-hidden="true" /> …</>
-          ) : !tokenStorage.get() ? (
-            <><i className="fas fa-right-to-bracket" aria-hidden="true" /> {t('livreursPage.card.connexionRequise')}</>
-          ) : suivi && hovered ? (
-            <><i className="fas fa-user-minus" aria-hidden="true" /> {t('livreursPage.card.seDesabonner')}</>
-          ) : suivi ? (
-            <><i className="fas fa-user-check" aria-hidden="true" /> {t('livreursPage.card.abonneFem')}</>
-          ) : (
-            <><i className="fas fa-plus" aria-hidden="true" /> {t('livreursPage.card.suivre')}</>
-          )}
-        </button>
+        {/* ── Bouton Suivre / Suivi(e) + menu ⋮ ── */}
+        <div onClick={ev => ev.stopPropagation()}>
+          <FollowButton
+            actorType="livreur"
+            id={livreur.id}
+            name={livreur.fullName}
+            isSuivi={livreur.isSuivi}
+            onToast={onToast}
+            onRequireAuth={openAuthModal}
+            onChange={next => onChange?.(livreur.id, next)}
+          />
+        </div>
 
         <button className={styles.profileLink} onClick={handleViewProfile}
           aria-label={t('livreursPage.card.profilCompletAria', { nom: livreur.fullName })}>

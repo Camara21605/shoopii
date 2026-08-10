@@ -1,0 +1,97 @@
+{
+  "correspondantsPage": {
+    "typeLabel": {
+      "regional": "🏠 Régional",
+      "zonal": "🗺️ Zonal",
+      "national": "🌍 National"
+    },
+    "listItem": {
+      "missionsCount": "{{count}} missions",
+      "abonne": "Abonné",
+      "suivre": "Suivre"
+    },
+    "hero": {
+      "sup": "Réseau Shopi · Guinée & Diaspora",
+      "titrePart1": "Vos",
+      "titreEm": "correspondants",
+      "titrePart2": "de confiance partout",
+      "sub": "Des relais locaux vérifiés qui facilitent vos échanges commerciaux entre la Guinée et la diaspora. Réceptionnez, expédiez et faites transiter vos colis en toute sécurité.",
+      "correspondantsActifs": "Correspondants actifs",
+      "noteMoyenne": "Note moyenne",
+      "missionsAuTotal": "Missions au total",
+      "communesCouvertes": "Communes couvertes",
+      "abonne": "✓ Abonné",
+      "suivre": "+ Suivre"
+    },
+    "toolbar": {
+      "searchPlaceholder": "Rechercher un correspondant, une zone…",
+      "filters": {
+        "tous": "Tous",
+        "enLigne": "En ligne",
+        "mesAbonnements": "Mes abonnements",
+        "regionaux": "Régionaux",
+        "zonaux": "Zonaux",
+        "nationaux": "Nationaux"
+      },
+      "sorts": {
+        "pertinence": "Pertinence",
+        "mieuxNotes": "Mieux notés",
+        "plusDeMissions": "Plus de missions",
+        "nomAZ": "Nom (A-Z)"
+      },
+      "correspondantCount_one": "{{count}} correspondant",
+      "correspondantCount_other": "{{count}} correspondants"
+    },
+    "card": {
+      "enLigne": "En ligne",
+      "horsLigne": "Hors ligne",
+      "avisCount": "({{count}} avis)",
+      "missions": "Missions",
+      "fiabilite": "Fiabilité",
+      "experience": "Expérience",
+      "abonne": "Abonné",
+      "suivre": "Suivre",
+      "voirProfilComplet": "Voir le profil complet →"
+    },
+    "sidebar": {
+      "typeDeCorrespondant": "Type de correspondant",
+      "types": {
+        "regional": {
+          "nm": "Régional",
+          "desc": "Couvre une ville"
+        },
+        "zonal": {
+          "nm": "Zonal",
+          "desc": "Couvre une région"
+        },
+        "national": {
+          "nm": "National",
+          "desc": "Couvre tout le pays"
+        }
+      },
+      "commune": "Commune",
+      "toutes": "Toutes",
+      "noteMinimale": "Note minimale",
+      "ratingOpts": {
+        "cinqEtoiles": "5 étoiles seulement",
+        "quatrePlus": "4+ étoiles",
+        "troisPlus": "3+ étoiles",
+        "toutesLesNotes": "Toutes les notes"
+      },
+      "disponibilite": "Disponibilité",
+      "reinitialiser": "Réinitialiser",
+      "enLigne": "En ligne",
+      "horsLigne": "Hors ligne"
+    },
+    "page": {
+      "chargement": "Chargement des correspondants…",
+      "correspondantsDisponibles": "Correspondants disponibles",
+      "resultatCount_one": "{{count}} résultat",
+      "resultatCount_other": "{{count}} résultats",
+      "errorSuffix": "— données de démonstration affichées.",
+      "aucunCorrespondant": "Aucun correspondant ne correspond à vos filtres.",
+      "desabonneToast": "👋 Désabonné de {{nom}}",
+      "abonneToast": "✅ Abonné à {{nom}}"
+    }
+  }
+}

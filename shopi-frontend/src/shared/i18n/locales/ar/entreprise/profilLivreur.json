@@ -1,0 +1,30 @@
+{
+  "profilLivreur": {
+    "title": "ملف عامل التوصيل",
+    "kpi": {
+      "courses": "إجمالي التوصيلات",
+      "reussies": "التوصيلات الناجحة",
+      "noteMoyenne": "متوسط التقييم",
+      "gains": "إجمالي الأرباح"
+    },
+    "tabs": {
+      "apercu": "نظرة عامة",
+      "livraisons": "التوصيلات"
+    },
+    "zone": "المنطقة",
+    "vehicule": "المركبة",
+    "plaque": "اللوحة",
+    "telephone": "الهاتف",
+    "email": "البريد الإلكتروني",
+    "disponibilite": "التوفر",
+    "statut": "الحالة",
+    "membreDepuis": "عضو منذ",
+    "derniereActivite": "آخر نشاط",
+    "contacter": "تواصل",
+    "voirProfil": "عرض الملف",
+    "suivre": "متابعة",
+    "suivi": "متابَع",
+    "envoyerMessage": "إرسال رسالة",
+    "messageEnvoye": "✅ تم إرسال الرسالة إلى {{name}}"
+  }
+}

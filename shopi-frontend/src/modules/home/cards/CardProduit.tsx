@@ -9,8 +9,10 @@
  *   - Galerie de miniatures dans ModalVoir (inchangée)
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate }  from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { apiFetch }     from '../../../shared/services/apiFetch';
 import { useCart }      from '../../../shared/context/CartContext';
 import { useFavoris }   from '../../../shared/context/FavorisContext';
@@ -64,11 +66,13 @@ interface Props {
 // HELPERS
 // ─────────────────────────────────────────────────────────────
 
-const BADGE_CONFIG = {
-  hot:   { label: '🔥 Hot',     cls: 'badgeHot'   },
-  new:   { label: '✨ Nouveau', cls: 'badgeNew'   },
-  promo: { label: '🏷️ Promo',  cls: 'badgePromo' },
-};
+function getBadgeConfig(t: TFunction) {
+  return {
+    hot:   { label: t('sharedCards.produit.badges.hot'),   cls: 'badgeHot'   },
+    new:   { label: t('sharedCards.produit.badges.new'),   cls: 'badgeNew'   },
+    promo: { label: t('sharedCards.produit.badges.promo'), cls: 'badgePromo' },
+  };
+}
 
 const RESEAUX = [
   { icon: 'fab fa-whatsapp',   label: 'WhatsApp', color: '#25D366', action: (u: string) => `https://wa.me/?text=${encodeURIComponent(u)}` },
@@ -78,6 +82,11 @@ const RESEAUX = [
   { icon: 'fas fa-envelope',   label: 'Email',    color: '#6B7280', action: (u: string) => `mailto:?body=${encodeURIComponent(u)}` },
   { icon: 'fas fa-link',       label: 'Copier',   color: '#1A4FC4', action: () => '' },
 ];
+
+/* Libellé affiché — "Copier" est traduit, les noms de marques restent tels quels. */
+function reseauLabel(label: string, t: TFunction): string {
+  return label === 'Copier' ? t('sharedCards.produit.copier') : label;
+}
 
 function fmt(n: number): string {
   return n.toLocaleString('fr-FR');
@@ -108,6 +117,7 @@ function emoji(p: ProductApi): string {
 // ─────────────────────────────────────────────────────────────
 
 function useAddToCart(p: ProductApi, onToast: (m: string) => void, requireClient: (action: () => void) => void) {
+  const { t } = useTranslation();
   const { addToCart, isInCart } = useCart();
   const [adding, setAdding]     = useState(false); /* état LOCAL — chaque carte indépendante */
 
@@ -116,17 +126,17 @@ function useAddToCart(p: ProductApi, onToast: (m: string) => void, requireClient
   const handleAdd = (onDone?: () => void) => {
     requireClient(async () => {
       if (dejaAuPanier) {
-        onToast(`✓ ${p.nom} est déjà dans votre panier`);
+        onToast(t('sharedCards.produit.dejaAuPanierToast', { nom: p.nom }));
         return;
       }
 
       setAdding(true);
       try {
         await addToCart(p.id, 1);
-        onToast(`🛒 ${p.nom} ajouté au panier !`);
+        onToast(t('sharedCards.produit.ajouteAuPanierToast', { nom: p.nom }));
         onDone?.();
       } catch (e: any) {
-        onToast(`❌ ${e?.message ?? 'Impossible d\'ajouter au panier'}`);
+        onToast(`❌ ${e?.message ?? t('sharedCards.produit.ajoutErrorFallback')}`);
       } finally {
         setAdding(false);
       }
@@ -144,6 +154,7 @@ function useAddToCart(p: ProductApi, onToast: (m: string) => void, requireClient
 // ─────────────────────────────────────────────────────────────
 
 function useFavorite(p: ProductApi, onToast: (m: string) => void, requireClient: (action: () => void) => void) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const { isLiked, toggle } = useFavoris();
 
@@ -155,9 +166,9 @@ function useFavorite(p: ProductApi, onToast: (m: string) => void, requireClient:
       setLoading(true);
       try {
         const nowLiked = await toggle(p.id);
-        onToast(nowLiked ? '❤️ Ajouté aux favoris' : '💔 Retiré des favoris');
+        onToast(nowLiked ? t('sharedCards.produit.favoriAjoute') : t('sharedCards.produit.favoriRetire'));
       } catch (e: any) {
-        onToast(`❌ ${e?.message ?? 'Action impossible'}`);
+        onToast(`❌ ${e?.message ?? t('sharedCards.produit.favoriErrorFallback')}`);
       } finally {
         setLoading(false);
       }
@@ -172,6 +183,7 @@ function useFavorite(p: ProductApi, onToast: (m: string) => void, requireClient:
 // ─────────────────────────────────────────────────────────────
 
 function ModalEntreprise({ p, onClose, onToast }: { p: ProductApi; onClose: () => void; onToast: (m: string) => void }) {
+  const { t } = useTranslation();
   const [suivi,    setSuivi]    = useState(false);
   const [boutique, setBoutique] = useState<BoutiqueApi | null>(null);
   const [loading,  setLoading]  = useState(true);
@@ -196,7 +208,7 @@ function ModalEntreprise({ p, onClose, onToast }: { p: ProductApi; onClose: () =
       <div className={`${styles.modal} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
 
         <div className={styles.mHeader}>
-          <div className={styles.mTitle}><i className="fas fa-store" /> Boutique</div>
+          <div className={styles.mTitle}><i className="fas fa-store" /> {t('sharedCards.produit.modalEntreprise.titre')}</div>
           <button className={styles.closeBtn} onClick={onClose}><i className="fas fa-xmark" /></button>
         </div>
 
@@ -220,9 +232,9 @@ function ModalEntreprise({ p, onClose, onToast }: { p: ProductApi; onClose: () =
                 </div>
                 <div>
                   <div className={styles.boutiqueNom}>{b?.companyName}</div>
-                  <div className={styles.boutiqueVille}><i className="fas fa-map-pin" /> {b?.ville ?? 'Conakry'}, Guinée</div>
+                  <div className={styles.boutiqueVille}><i className="fas fa-map-pin" /> {b?.ville ?? 'Conakry'}, {t('sharedCards.produit.modalEntreprise.guinee')}</div>
                   {b?.verified && (
-                    <div className={styles.boutiqueVerif}><i className="fas fa-circle-check" /> Boutique vérifiée Shopi</div>
+                    <div className={styles.boutiqueVerif}><i className="fas fa-circle-check" /> {t('sharedCards.produit.modalEntreprise.boutiqueVerifiee')}</div>
                   )}
                 </div>
               </div>
@@ -233,10 +245,10 @@ function ModalEntreprise({ p, onClose, onToast }: { p: ProductApi; onClose: () =
 
               <div className={styles.boutiqueStats}>
                 {[
-                  { ico:'📦', val: b?.totalOrders  ? b.totalOrders.toLocaleString('fr-FR')  : '—', lbl:'Commandes' },
-                  { ico:'⭐', val: b?.averageRating ? b.averageRating.toFixed(1)              : '—', lbl:'Note'      },
-                  { ico:'💬', val: b?.totalRatings  ? b.totalRatings.toLocaleString('fr-FR') : '—', lbl:'Avis'      },
-                  { ico:'📍', val: b?.ville ?? 'Conakry',                                          lbl:'Ville'     },
+                  { ico:'📦', val: b?.totalOrders  ? b.totalOrders.toLocaleString('fr-FR')  : '—', lbl: t('sharedCards.produit.modalEntreprise.commandes') },
+                  { ico:'⭐', val: b?.averageRating ? b.averageRating.toFixed(1)              : '—', lbl: t('sharedCards.produit.modalEntreprise.note')      },
+                  { ico:'💬', val: b?.totalRatings  ? b.totalRatings.toLocaleString('fr-FR') : '—', lbl: t('sharedCards.produit.modalEntreprise.avis')      },
+                  { ico:'📍', val: b?.ville ?? 'Conakry',                                          lbl: t('sharedCards.produit.modalEntreprise.ville')     },
                 ].map(s => (
                   <div key={s.lbl} className={styles.boutiqueStat}>
                     <span className={styles.boutiqueStatIco}>{s.ico}</span>
@@ -247,7 +259,7 @@ function ModalEntreprise({ p, onClose, onToast }: { p: ProductApi; onClose: () =
               </div>
 
               <div className={styles.produitPublie}>
-                <div className={styles.produitPublieLabel}><i className="fas fa-box" /> Produit publié par cette boutique</div>
+                <div className={styles.produitPublieLabel}><i className="fas fa-box" /> {t('sharedCards.produit.modalEntreprise.produitPublieLabel')}</div>
                 <div className={styles.produitPublieCard}>
                   <span className={styles.produitPublieEmo}>
                     {mainImage(p)
@@ -266,12 +278,12 @@ function ModalEntreprise({ p, onClose, onToast }: { p: ProductApi; onClose: () =
 
         <div className={styles.mFooter}>
           <button className={`${styles.suiviBtn} ${suivi ? styles.suiviBtnOn : ''}`}
-            onClick={() => { setSuivi(s => !s); onToast(suivi ? '👋 Désabonné' : `✅ Abonné à ${p.companyName}`); }}>
-            {suivi ? <><i className="fas fa-check" /> Abonné</> : <><i className="fas fa-plus" /> S'abonner</>}
+            onClick={() => { setSuivi(s => !s); onToast(suivi ? t('sharedCards.produit.modalEntreprise.desabonneToast') : t('sharedCards.produit.modalEntreprise.abonneToast', { nom: p.companyName })); }}>
+            {suivi ? <><i className="fas fa-check" /> {t('sharedCards.produit.modalEntreprise.abonne')}</> : <><i className="fas fa-plus" /> {t('sharedCards.produit.modalEntreprise.sabonner')}</>}
           </button>
           <button className={styles.voirBoutiqueBtn}
             onClick={() => { onClose(); navigate(`/boutique/${p.companyId}`); }}>
-            <i className="fas fa-store" /> Voir la boutique
+            <i className="fas fa-store" /> {t('sharedCards.produit.modalEntreprise.voirBoutique')}
           </button>
         </div>
       </div>
@@ -284,20 +296,21 @@ function ModalEntreprise({ p, onClose, onToast }: { p: ProductApi; onClose: () =
 // ─────────────────────────────────────────────────────────────
 
 function ModalPartage({ p, onClose, onToast }: { p: ProductApi; onClose: () => void; onToast: (m: string) => void }) {
+  const { t } = useTranslation();
   const slug       = p.urlSlug ?? p.nom.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   const produitUrl = `https://shopi.gn/p/${slug}`;
 
   function handleCopier() {
     navigator.clipboard.writeText(produitUrl).catch(() => {});
-    onToast('🔗 Lien copié !');
+    onToast(t('sharedCards.produit.lienCopieToast'));
   }
 
   function handleReseau(r: typeof RESEAUX[0]) {
     if (r.label === 'Copier')    { handleCopier(); return; }
-    if (r.label === 'Instagram') { onToast('📸 Ouvrez Instagram et partagez le lien'); return; }
+    if (r.label === 'Instagram') { onToast(t('sharedCards.produit.instagramToast')); return; }
     const url = r.action(produitUrl);
     if (url) window.open(url, '_blank', 'noopener,noreferrer');
-    onToast(`📲 Partage via ${r.label}`);
+    onToast(t('sharedCards.produit.partageViaToast', { label: r.label }));
   }
 
   return (
@@ -305,7 +318,7 @@ function ModalPartage({ p, onClose, onToast }: { p: ProductApi; onClose: () => v
       <div className={`${styles.modal} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
 
         <div className={styles.mHeader}>
-          <div className={styles.mTitle}><i className="fas fa-share-nodes" /> Partager ce produit</div>
+          <div className={styles.mTitle}><i className="fas fa-share-nodes" /> {t('sharedCards.produit.modalPartage.titre')}</div>
           <button className={styles.closeBtn} onClick={onClose}><i className="fas fa-xmark" /></button>
         </div>
 
@@ -328,7 +341,7 @@ function ModalPartage({ p, onClose, onToast }: { p: ProductApi; onClose: () => v
                 <div className={styles.partageBtnIco} style={{ background:`${r.color}15`, border:`1.5px solid ${r.color}30` }}>
                   <i className={r.icon} style={{ color:r.color }} />
                 </div>
-                <span className={styles.partageBtnLabel}>{r.label}</span>
+                <span className={styles.partageBtnLabel}>{reseauLabel(r.label, t)}</span>
               </button>
             ))}
           </div>
@@ -336,7 +349,7 @@ function ModalPartage({ p, onClose, onToast }: { p: ProductApi; onClose: () => v
           <div className={styles.partageLien}>
             <span className={styles.partageLienUrl}>{produitUrl}</span>
             <button className={styles.partageLienBtn} onClick={handleCopier}>
-              <i className="fas fa-copy" /> Copier
+              <i className="fas fa-copy" /> {t('sharedCards.produit.copier')}
             </button>
           </div>
         </div>
@@ -350,6 +363,7 @@ function ModalPartage({ p, onClose, onToast }: { p: ProductApi; onClose: () => v
 // ─────────────────────────────────────────────────────────────
 
 function ModalGros({ p, onClose }: { p: ProductApi; onClose: () => void }) {
+  const { t } = useTranslation();
   const tiers = [...(p.wholesaleTiers ?? [])].sort((a, b) => a.ordre - b.ordre);
 
   return (
@@ -357,7 +371,7 @@ function ModalGros({ p, onClose }: { p: ProductApi; onClose: () => void }) {
       <div className={`${styles.modal} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
 
         <div className={styles.mHeader}>
-          <div className={styles.mTitle}><i className="fas fa-layer-group" /> Prix en gros</div>
+          <div className={styles.mTitle}><i className="fas fa-layer-group" /> {t('sharedCards.produit.modalGros.titre')}</div>
           <button className={styles.closeBtn} onClick={onClose}><i className="fas fa-xmark" /></button>
         </div>
 
@@ -370,34 +384,34 @@ function ModalGros({ p, onClose }: { p: ProductApi; onClose: () => void }) {
             </span>
             <div>
               <div className={styles.grossNom}>{p.nom}</div>
-              <div className={styles.grossSub}>Prix standard : {fmt(p.prix)} GNF / unité</div>
+              <div className={styles.grossSub}>{t('sharedCards.produit.modalGros.prixStandard')} {fmt(p.prix)} GNF {t('sharedCards.produit.modalGros.uniteSuffix')}</div>
               {p.moq && (
-                <div className={styles.grossMoq}><i className="fas fa-boxes-stacked" /> Min. {p.moq} unités</div>
+                <div className={styles.grossMoq}><i className="fas fa-boxes-stacked" /> {t('sharedCards.produit.modalGros.min')} {p.moq} {t('sharedCards.produit.modalGros.unites')}</div>
               )}
             </div>
           </div>
 
           {tiers.length === 0 ? (
             <div style={{ textAlign:'center', padding:'24px 0', color:'var(--t3)', fontSize:13 }}>
-              Aucun palier de prix configuré pour ce produit.
+              {t('sharedCards.produit.modalGros.aucunPalier')}
             </div>
           ) : (
             <>
-              <div className={styles.grossLabel}>Paliers de prix dégressifs</div>
+              <div className={styles.grossLabel}>{t('sharedCards.produit.modalGros.paliersLabel')}</div>
               <div className={styles.grossTable}>
                 <div className={styles.grossHead}>
-                  <span>Quantité</span>
-                  <span>Prix / unité</span>
-                  <span>Économie</span>
+                  <span>{t('sharedCards.produit.modalGros.quantite')}</span>
+                  <span>{t('sharedCards.produit.modalGros.prixParUnite')}</span>
+                  <span>{t('sharedCards.produit.modalGros.economie')}</span>
                 </div>
-                {tiers.map((t, i) => {
-                  const eco = p.prix > t.prixUnitaire ? Math.round((1 - t.prixUnitaire / p.prix) * 100) : 0;
+                {tiers.map((tier, i) => {
+                  const eco = p.prix > tier.prixUnitaire ? Math.round((1 - tier.prixUnitaire / p.prix) * 100) : 0;
                   return (
                     <div key={i} className={`${styles.grossRow} ${i === 0 ? styles.grossRowFirst : ''}`}>
                       <span className={styles.grossQte}>
-                        {t.quantiteMin}{t.quantiteMax != null ? ` – ${t.quantiteMax}` : '+'} unités
+                        {tier.quantiteMin}{tier.quantiteMax != null ? ` – ${tier.quantiteMax}` : '+'} {t('sharedCards.produit.modalGros.unites')}
                       </span>
-                      <span className={styles.grossPrix}>{fmt(t.prixUnitaire)} GNF</span>
+                      <span className={styles.grossPrix}>{fmt(tier.prixUnitaire)} GNF</span>
                       <span className={styles.grossEco}>
                         {eco > 0 ? <span className={styles.grossEcoTag}>-{eco}%</span> : '—'}
                       </span>
@@ -410,7 +424,7 @@ function ModalGros({ p, onClose }: { p: ProductApi; onClose: () => void }) {
 
           <div className={styles.grossNote}>
             <i className="fas fa-circle-info" />
-            <span>Ajoutez le produit au panier avec la quantité souhaitée. Le prix dégressif s'applique automatiquement à la commande.</span>
+            <span>{t('sharedCards.produit.modalGros.note')}</span>
           </div>
         </div>
       </div>
@@ -423,6 +437,7 @@ function ModalGros({ p, onClose }: { p: ProductApi; onClose: () => void }) {
 // ─────────────────────────────────────────────────────────────
 
 export default function CardProduit({ p, onToast }: Props) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [modalEntreprise, setModalEntreprise] = useState(false);
   const [modalPartage,    setModalPartage]    = useState(false);
@@ -430,7 +445,7 @@ export default function CardProduit({ p, onToast }: Props) {
 
   const img = mainImage(p);
   const em  = emoji(p);
-  const b   = p.badge ? BADGE_CONFIG[p.badge] : null;
+  const b   = p.badge ? getBadgeConfig(t)[p.badge] : null;
 
   /* ✅ Garde d'authentification partagée (panier + favoris) */
   const { requireClient, authModal } = useAuthGate();
@@ -456,7 +471,7 @@ export default function CardProduit({ p, onToast }: Props) {
           {img
             ? <img src={img} alt={p.nom} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
             : <span className={styles.pimgEmoji}>{em}</span>}
-          <div className={styles.pimgOverlay}><span><i className="fas fa-eye" /> Voir</span></div>
+          <div className={styles.pimgOverlay}><span><i className="fas fa-eye" /> {t('sharedCards.produit.voir')}</span></div>
         </div>
 
         <div className={styles.pbody}>
@@ -484,27 +499,27 @@ export default function CardProduit({ p, onToast }: Props) {
           <div className={styles.pbottomRow}>
             {dejaAuPanier ? (
               <button className={`${styles.pcart} ${styles.pcartDone}`}
-                onClick={e => { e.stopPropagation(); onToast('✓ Déjà dans votre panier — retirez-le depuis le panier'); }}>
-                <i className="fas fa-check" /> Déjà au panier
+                onClick={e => { e.stopPropagation(); onToast(t('sharedCards.produit.dejaAuPanierClicToast')); }}>
+                <i className="fas fa-check" /> {t('sharedCards.produit.dejaAuPanierBtn')}
               </button>
             ) : (
               <button className={styles.pcart} disabled={loading} onClick={e => { e.stopPropagation(); handleAdd(); }}>
                 {loading
-                  ? <><i className="fas fa-spinner fa-spin" /> Ajout…</>
-                  : <><i className="fas fa-cart-plus" /> Ajouter au panier</>}
+                  ? <><i className="fas fa-spinner fa-spin" /> {t('sharedCards.produit.ajoutEnCours')}</>
+                  : <><i className="fas fa-cart-plus" /> {t('sharedCards.produit.ajouterAuPanier')}</>}
               </button>
             )}
 
             <div className={styles.pactions}>
-              <button className={`${styles.paction} ${styles.pactionEntreprise}`} onClick={e => { e.stopPropagation(); setModalEntreprise(true); }} title="Boutique" aria-label="Boutique">
-                <i className="fas fa-store" /><span>Boutique</span>
+              <button className={`${styles.paction} ${styles.pactionEntreprise}`} onClick={e => { e.stopPropagation(); setModalEntreprise(true); }} title={t('sharedCards.produit.boutique')} aria-label={t('sharedCards.produit.boutique')}>
+                <i className="fas fa-store" /><span>{t('sharedCards.produit.boutique')}</span>
               </button>
-              <button className={`${styles.paction} ${styles.pactionPartage}`} onClick={e => { e.stopPropagation(); setModalPartage(true); }} title="Partager" aria-label="Partager">
-                <i className="fas fa-share-nodes" /><span>Partager</span>
+              <button className={`${styles.paction} ${styles.pactionPartage}`} onClick={e => { e.stopPropagation(); setModalPartage(true); }} title={t('sharedCards.produit.partager')} aria-label={t('sharedCards.produit.partager')}>
+                <i className="fas fa-share-nodes" /><span>{t('sharedCards.produit.partager')}</span>
               </button>
               {p.venteEnGros && (
-                <button className={`${styles.paction} ${styles.pactionGros}`} onClick={e => { e.stopPropagation(); setModalGros(true); }} title="Prix gros" aria-label="Prix gros">
-                  <i className="fas fa-tags" /><span>Prix gros</span>
+                <button className={`${styles.paction} ${styles.pactionGros}`} onClick={e => { e.stopPropagation(); setModalGros(true); }} title={t('sharedCards.produit.prixGros')} aria-label={t('sharedCards.produit.prixGros')}>
+                  <i className="fas fa-tags" /><span>{t('sharedCards.produit.prixGros')}</span>
                 </button>
               )}
             </div>

@@ -19,6 +19,7 @@ import * as bcrypt          from 'bcryptjs';
 
 import { Partner } from 'src/database/entities/profiles/partenaire-profile.entity';
 import { User }    from 'src/database/entities/user.entity';
+import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import {
   UpdatePartenairePasswordDto,
   UpdatePartenaireTwoFaDto,
@@ -32,6 +33,7 @@ export class SecuritePartenaireService {
   constructor(
     @InjectRepository(Partner) private readonly partnerRepo: Repository<Partner>,
     @InjectRepository(User)    private readonly userRepo:    Repository<User>,
+    @InjectRepository(RefreshToken) private readonly refreshTokenRepo: Repository<RefreshToken>,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -70,36 +72,40 @@ export class SecuritePartenaireService {
     if (!valid) throw new UnauthorizedException('Mot de passe actuel incorrect.');
 
     user.password = await bcrypt.hash(dto.newPassword, 12);
+    /* Invalide les JWT émis avant ce changement (JwtStrategy compare iat
+     * à lastPasswordChangedAt) — ce champ n'était jamais mis à jour ici. */
+    user.lastPasswordChangedAt = new Date();
     await this.userRepo.save(user);
 
-    this.logger.log(`[MOT DE PASSE] Changé — userId=${userId}`);
+    /* Révoque toutes les sessions actives (refresh tokens). */
+    await this.refreshTokenRepo.update({ userId, revoked: false }, { revoked: true });
+
+    this.logger.log(`[MOT DE PASSE] Changé + tokens révoqués — userId=${userId}`);
     return { message: 'Mot de passe mis à jour avec succès.' };
   }
 
   /* ──────────────────────────────────────────────────────────
-   * PATCH — Activer / désactiver le 2FA
+   * PATCH — Désactiver le 2FA
+   *
+   * L'activation réelle (secret + vérification TOTP) passe par
+   * POST /auth/2fa/setup puis /auth/2fa/confirm (TwoFaService).
+   * Cet endpoint ne permet plus qu'une désactivation directe.
    * ────────────────────────────────────────────────────────── */
   async updateTwoFa(userId: string, dto: UpdatePartenaireTwoFaDto) {
     const partner = await this.findOrFail(userId);
 
-    partner.twoFaEnabled = dto.twoFaEnabled;
-
-    if (!dto.twoFaEnabled) {
-      partner.twoFaMethod = null;
-      await this.partnerRepo.save(partner);
-      this.logger.log(`[2FA] Désactivée — userId=${userId}`);
-      return { twoFaEnabled: false, message: '2FA désactivée avec succès.' };
+    if (dto.twoFaEnabled) {
+      throw new BadRequestException(
+        "Activez la 2FA via POST /auth/2fa/setup puis /auth/2fa/confirm (vérification du code requise).",
+      );
     }
 
-    partner.twoFaMethod = dto.twoFaMethod ?? 'sms';
+    partner.twoFaEnabled = false;
+    partner.twoFaMethod  = null;
+    partner.twoFaSecret  = null;
     await this.partnerRepo.save(partner);
-    this.logger.log(`[2FA] Activée (${partner.twoFaMethod}) — userId=${userId}`);
-
-    return {
-      twoFaEnabled: true,
-      method:       partner.twoFaMethod,
-      message:      `2FA activée via ${partner.twoFaMethod === 'sms' ? 'SMS' : "l'application"}.`,
-    };
+    this.logger.log(`[2FA] Désactivée — userId=${userId}`);
+    return { twoFaEnabled: false, message: '2FA désactivée avec succès.' };
   }
 
   /* ── Helper ── */

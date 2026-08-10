@@ -210,7 +210,7 @@ export default function LocationPicker({
           <FlyTo center={position} />
           <ClickHandler onClick={handlePositionChange} />
           <DraggableMarker position={position} onDragEnd={handlePositionChange} />
-          {gpsPos && <L.Marker position={[gpsPos.latitude, gpsPos.longitude]} icon={GPS_ICON} />}
+          {gpsPos && <Marker position={[gpsPos.latitude, gpsPos.longitude]} icon={GPS_ICON} />}
         </MapContainer>
       </div>
 

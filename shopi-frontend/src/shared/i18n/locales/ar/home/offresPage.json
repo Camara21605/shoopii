@@ -1,0 +1,46 @@
+{
+  "offresPage": {
+    "typeLabel": {
+      "discount": "تخفيضات",
+      "freeShip": "توصيل مجاني",
+      "bundle": "باقات",
+      "flash": "عروض خاطفة"
+    },
+    "hero": {
+      "offreSuffix_one": "عرض نشط",
+      "offreSuffix_other": "عروض نشطة",
+      "titrePart1": "جميع",
+      "titreEm": "العروض",
+      "titrePart2": "الحالية",
+      "sub": "تخفيضات وعروض خاطفة وتوصيل مجاني من جميع متاجر شوبي — في مكان واحد.",
+      "flashSuffix_one": "عرض خاطف جارٍ — لا تفوّتوه",
+      "flashSuffix_other": "عروض خاطفة جارية — لا تفوّتوها"
+    },
+    "sidebar": {
+      "categories": "الفئات",
+      "toutes": "الكل",
+      "recherche": "البحث",
+      "searchPlaceholder": "عرض أو متجر…",
+      "trierPar": "ترتيب حسب",
+      "sortBest": "أفضل التخفيضات",
+      "sortEnding": "ينتهي قريباً"
+    },
+    "card": {
+      "touteLaBoutique": "المتجر بأكمله",
+      "produitCible": "منتج محدد",
+      "voirOffre": "عرض التخفيض",
+      "offerte": "مجاني",
+      "promo": "عرض"
+    },
+    "states": {
+      "loadErrorTitle": "تعذّر تحميل العروض",
+      "loadErrorFallback": "تعذّر تحميل العروض.",
+      "reessayer": "إعادة المحاولة",
+      "aucuneOffreTitre": "لا توجد عروض نشطة حالياً",
+      "aucuneOffreText": "عودوا قريباً، تصلنا عروض جديدة بانتظام.",
+      "aucunResultatTitre": "لا يوجد عرض مطابق",
+      "aucunResultatText": "جرّبوا مرشحاً أو بحثاً آخر.",
+      "reinitialiser": "إعادة التعيين"
+    }
+  }
+}

@@ -4,13 +4,14 @@
  * ============================================================ */
 
 import {
-  Controller, Post, Get, Param, Req, UseGuards, Query, HttpCode, HttpStatus,
+  Controller, Post, Patch, Get, Param, Body, Req, UseGuards, Query, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import type { Request } from 'express';
 
 import { JwtAuthGuard }               from '../../../common/guards/auth.guard';
 import { SuivisEntrepriseService } from '../services/suivis-entreprise.service';
 import { UserRole }                from '../../../common/enums/user-role.enum';
+import { SetHiddenDto }            from '../dto/suivis.dto';
 
 @Controller('suivis/entreprises')
 @UseGuards(JwtAuthGuard)
@@ -46,6 +47,17 @@ export class SuivisEntrepriseController {
   ) {
     const { userId, role } = this.ctx(req);
     return this.service.getEntreprisesWithSuiviStatus(userId, role, { commune, category });
+  }
+
+  /**
+   * PATCH /suivis/entreprises/:id/masquer
+   * Masque/réaffiche une entreprise déjà suivie des listes de découverte,
+   * sans se désabonner.
+   */
+  @Patch(':id/masquer')
+  async setMasque(@Req() req: Request, @Param('id') id: string, @Body() dto: SetHiddenDto) {
+    const { userId, role } = this.ctx(req);
+    return this.service.setHidden(userId, role, id, dto.hidden);
   }
 
   /** GET /suivis/entreprises/:id/count → nombre de followers */

@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import styles from './Cards.module.css';
 import type { BoutiqueCardData } from '../data/types';
-import { useBoutiqueFollow } from '../hooks/useBoutiqueFollow';
 import { useAuthGate } from '../../../shared/hooks/useAuthGate';
+import FollowButton from '../../../shared/components/FollowButton';
 
 const DOMAIN_COLORS: Record<string, { bg: string; bg2: string; color: string }> = {
   'Électronique': { bg:'rgba(37,99,235,.18)',   bg2:'rgba(37,99,235,.08)',  color:'#1D4ED8' },
@@ -23,21 +24,18 @@ function initials(nom: string): string {
 }
 
 interface Props {
-  e:       BoutiqueCardData;
-  onToast: (m: string) => void;
+  e:          BoutiqueCardData;
+  onToast:    (m: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  /** Appelé quand l'utilisateur choisit "Supprimer" dans le menu ⋮ —
+   *  le parent doit retirer cette boutique de sa liste locale. */
+  onRemoved?: (id: string) => void;
 }
 
-export default function CardEntreprise({ e, onToast }: Props) {
+export default function CardEntreprise({ e, onToast, onRemoved }: Props) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const ds = domainStyle(e.domaine);
   const { openAuthModal, authModal } = useAuthGate();
-  const { suivi, pending, toggleFollow } = useBoutiqueFollow({
-    boutiqueId: e.id,
-    companyName: e.companyName,
-    initialIsSuivi: e.isSuivi,
-    onToast,
-    onRequireAuth: openAuthModal,
-  });
 
   const rating = e.averageRating > 0 ? e.averageRating.toFixed(1) : '—';
   const orders = e.totalOrders  > 0 ? `${e.totalOrders}+` : '0';
@@ -55,7 +53,7 @@ export default function CardEntreprise({ e, onToast }: Props) {
       {/* ── Badge vérifié ── */}
       {e.verified && (
         <div className={styles.coVerif}>
-          <i className="fas fa-circle-check" /> Vérifié
+          <i className="fas fa-circle-check" /> {t('sharedCards.entreprise.verifie')}
         </div>
       )}
 
@@ -88,7 +86,7 @@ export default function CardEntreprise({ e, onToast }: Props) {
         {/* Ville */}
         <div className={styles.coType}>
           <i className={`fas fa-location-dot ${styles.coTypeIcon}`} />
-          {e.ville ?? 'Conakry'}
+          {e.ville ?? t('sharedCards.entreprise.villeDefault')}
         </div>
 
         {/* Description */}
@@ -100,32 +98,29 @@ export default function CardEntreprise({ e, onToast }: Props) {
         <div className={styles.coStats}>
           <div className={styles.coStat}>
             <span className={styles.coStatVal}>{orders}</span>
-            <span className={styles.coStatLbl}>Commandes</span>
+            <span className={styles.coStatLbl}>{t('sharedCards.entreprise.commandes')}</span>
           </div>
           <div className={styles.coStat}>
             <span className={styles.coStatVal}>{rating}</span>
-            <span className={styles.coStatLbl}>Note ⭐</span>
+            <span className={styles.coStatLbl}>{t('sharedCards.entreprise.note')}</span>
           </div>
           <div className={styles.coStat}>
             <span className={styles.coStatVal}>{avis}</span>
-            <span className={styles.coStatLbl}>Avis</span>
+            <span className={styles.coStatLbl}>{t('sharedCards.entreprise.avis')}</span>
           </div>
         </div>
 
         {/* Bouton */}
-        <div className={`${styles.coBtns} ${styles.coBtns1}`}>
-          <button
-            className={`${styles.coF} ${suivi ? styles.coFOn : ''}`}
-            disabled={pending}
-            onClick={e => { e.stopPropagation(); toggleFollow(); }}
-          >
-            {pending
-              ? <><i className="fas fa-spinner fa-spin" /> …</>
-              : suivi
-                ? <><i className="fas fa-check" /> Abonné</>
-                : <><i className="fas fa-plus" /> S'abonner</>
-            }
-          </button>
+        <div className={`${styles.coBtns} ${styles.coBtns1}`} onClick={ev => ev.stopPropagation()}>
+          <FollowButton
+            actorType="entreprise"
+            id={e.id}
+            name={e.companyName}
+            isSuivi={e.isSuivi ?? false}
+            onToast={onToast}
+            onRequireAuth={openAuthModal}
+            onChange={next => { if (next.removed) onRemoved?.(e.id); }}
+          />
         </div>
       </div>
 

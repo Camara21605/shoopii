@@ -1,0 +1,88 @@
+{
+  "clientDashboard": {
+    "monEspace": "مساحتي",
+    "centreAide": "مركز المساعدة",
+    "centreAideTitle": "الوصول إلى مركز مساعدة شوبي",
+    "support": {
+      "titre": "🎫 تذاكر الدعم الخاصة بي",
+      "voirTout": "عرض الكل",
+      "chargement": "جارٍ التحميل…",
+      "aucunTicket": "لا توجد تذكرة مفتوحة — بحاجة إلى مساعدة؟",
+      "nouveauTicket": "+ تذكرة جديدة"
+    },
+    "typeAdresse": {
+      "domicile": "المنزل",
+      "bureau": "المكتب",
+      "boutique": "المتجر",
+      "entrepot": "المستودع",
+      "relais": "نقطة استلام",
+      "depart": "نقطة الانطلاق",
+      "autre": "أخرى"
+    },
+    "adresses": {
+      "nouvelleAdresse": "عنوان جديد",
+      "modifierAdresse": "تعديل العنوان",
+      "mesAdresses": "عناويني",
+      "subtitleSuffix_one": "عنوان مسجَّل",
+      "subtitleSuffix_other": "عناوين مسجَّلة",
+      "ajouter": "إضافة",
+      "aucuneAdresse": "لا يوجد عنوان",
+      "aucuneAdresseDesc": "أضيفوا عناوينكم لتسهيل عمليات التوصيل.",
+      "ajouterPremiere": "إضافة عنواني الأول",
+      "toastAjoutee": "✅ تمت إضافة العنوان بنجاح!",
+      "toastMiseAJour": "✅ تم تحديث العنوان.",
+      "confirmSuppression": "هل تريدون حذف هذا العنوان؟",
+      "toastSupprimee": "🗑️ تم حذف العنوان.",
+      "toastParDefaut": "⭐ تم تحديث العنوان الافتراضي."
+    },
+    "addressCard": {
+      "parDefaut": "افتراضي",
+      "adresseIncomplete": "عنوان غير مكتمل",
+      "definirParDefautTitle": "تعيين كافتراضي",
+      "modifierTitle": "تعديل",
+      "supprimerTitle": "حذف"
+    },
+    "addressForm": {
+      "typeAdresseLabel": "نوع العنوان",
+      "libelleLabel": "التسمية",
+      "libelleHint": "(مثال: \"المنزل الرئيسي\"، \"المكتب\")",
+      "libellePlaceholder": "تسمية اختيارية",
+      "localisation": "الموقع",
+      "paysLabel": "البلد",
+      "depuisInscription": "من بيانات تسجيلكم",
+      "villeLabel": "المدينة",
+      "choisirVille": "— اختر مدينة —",
+      "villePlaceholder": "أدخل المدينة",
+      "communeLabel": "البلدية / الدائرة",
+      "choisirCommune": "— اختر بلدية —",
+      "quartierLabel": "الحي",
+      "choisirQuartier": "— اختر حياً —",
+      "rueLabel": "الشارع / العنوان الدقيق",
+      "optionnel": "(اختياري)",
+      "ruePlaceholder": "الرقم، اسم الشارع، علامة مميزة…",
+      "instructionsLabel": "تعليمات التوصيل",
+      "instructionsPlaceholder": "مثال: منزل أصفر بالقرب من المسجد، اطرقوا الجرس عند المدخل…",
+      "telephoneLabel": "هاتف التواصل",
+      "telephonePlaceholder": "+224 6xx xx xx xx",
+      "parDefautLabel": "تعيينه كعنوان افتراضي",
+      "parDefautDesc": "سيُختار مسبقاً في طلباتكم القادمة",
+      "villeObligatoire": "المدينة مطلوبة.",
+      "erreurSauvegarde": "خطأ أثناء الحفظ.",
+      "annuler": "إلغاء",
+      "enregistrement": "جارٍ الحفظ…",
+      "enregistrerAdresse": "حفظ العنوان",
+      "pays": {
+        "guinee": "غينيا",
+        "senegal": "السنغال",
+        "mali": "مالي",
+        "coteIvoire": "ساحل العاج",
+        "guineeBissau": "غينيا بيساو",
+        "mauritanie": "موريتانيا",
+        "liberia": "ليبيريا",
+        "sierraLeone": "سيراليون",
+        "france": "فرنسا",
+        "autrePays": "بلد آخر"
+      }
+    }
+  }
+}

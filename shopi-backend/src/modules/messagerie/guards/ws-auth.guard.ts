@@ -15,16 +15,25 @@
  *   1. Extrait le token depuis auth.token, query.token ou
  *      headers.authorization
  *   2. Vérifie signature JWT avec JwtService
- *   3. Injecte les données dans socket.data
- *   4. Retourne false → NestJS refuse la connexion
+ *   3. Recharge l'utilisateur en base et applique les mêmes
+ *      contrôles que JwtStrategy (banni/suspendu, mot de passe
+ *      changé après émission du token) — un compte banni ou un
+ *      token émis avant un reset de mot de passe ne doit pas
+ *      pouvoir ouvrir une connexion WebSocket.
+ *   4. Injecte les données dans socket.data
+ *   5. Retourne false / lève → NestJS refuse la connexion
  * ============================================================
  */
 
 import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
 import { JwtService }  from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { WsException }  from '@nestjs/websockets';
 import type { Socket }  from 'socket.io';
+
+import { User, UserStatus } from '../../../database/entities/user.entity';
 
 @Injectable()
 export class WsAuthGuard implements CanActivate {
@@ -33,9 +42,11 @@ export class WsAuthGuard implements CanActivate {
   constructor(
     private readonly jwt:    JwtService,
     private readonly config: ConfigService,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const socket: Socket = context.switchToWs().getClient<Socket>();
 
     const token = this.extractToken(socket);
@@ -48,21 +59,47 @@ export class WsAuthGuard implements CanActivate {
     try {
       const secret  = this.config.get<string>('JWT_SECRET');
       const payload = this.jwt.verify<{
-        sub:    string;
-        role:   string;
-        userId: string;
+        sub:      string;
+        role:     string;
+        userId:   string;
+        actorId?: string;
+        iat?:     number;
       }>(token, { secret });
+
+      const userId = payload.sub ?? payload.userId;
+      const user   = await this.userRepo.findOne({ where: { id: userId } });
+
+      if (!user) {
+        this.logger.warn(`[WsAuth] Utilisateur introuvable socket=${socket.id}`);
+        throw new WsException('Token invalide — utilisateur introuvable.');
+      }
+
+      if (user.status === UserStatus.BANNED || user.status === UserStatus.SUSPENDED) {
+        this.logger.warn(`[WsAuth] Compte ${user.status} refusé socket=${socket.id}`);
+        throw new WsException('Compte banni ou suspendu.');
+      }
+
+      if (user.lastPasswordChangedAt && payload.iat !== undefined) {
+        const tokenIssuedAt   = new Date(payload.iat * 1000);
+        const passwordChanged = new Date(user.lastPasswordChangedAt);
+        if (passwordChanged > tokenIssuedAt) {
+          this.logger.warn(`[WsAuth] Token émis avant reset mdp refusé socket=${socket.id}`);
+          throw new WsException('Session expirée suite à un changement de mot de passe.');
+        }
+      }
 
       /*
        * Injecte dans socket.data pour être accessible partout
        * dans le gateway sans repasser par l'injection.
        * userId = sub du JWT (UUID utilisateur).
        */
-      socket.data.userId    = payload.sub ?? payload.userId;
+      socket.data.userId    = userId;
       socket.data.userRole  = payload.role;
+      socket.data.actorId   = payload.actorId;
 
       return true;
-    } catch {
+    } catch (err) {
+      if (err instanceof WsException) throw err;
       this.logger.warn(`[WsAuth] Token invalide socket=${socket.id}`);
       throw new WsException('Token invalide ou expiré.');
     }

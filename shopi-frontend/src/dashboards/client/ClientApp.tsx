@@ -13,6 +13,7 @@
  * ============================================================ */
 
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import PortefeuilleStandalone from '../../shared/components/portefeuille/PortefeuilleStandalone';
 import WalletQuickBar         from '../../shared/components/portefeuille/WalletQuickBar';
 import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
@@ -151,6 +152,7 @@ const styles = {
  * si le ticket a des messages non lus.
  */
 function ClientSupportWidget() {
+  const { t } = useTranslation();
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -166,20 +168,20 @@ function ClientSupportWidget() {
     <div style={styles.supportCard}>
       <div style={styles.supportHeader}>
         <div style={styles.supportTitle}>
-          🎫 Mes tickets de support
+          {t('clientDashboard.support.titre')}
         </div>
-        <a href="/support" style={styles.linkBtn}>Voir tout</a>
+        <a href="/support" style={styles.linkBtn}>{t('clientDashboard.support.voirTout')}</a>
       </div>
 
       {/* État chargement */}
       {loading && (
-        <div style={styles.emptyTxt}>Chargement…</div>
+        <div style={styles.emptyTxt}>{t('clientDashboard.support.chargement')}</div>
       )}
 
       {/* Aucun ticket */}
       {!loading && tickets.length === 0 && (
         <div style={styles.emptyTxt}>
-          Aucun ticket ouvert — besoin d'aide ?
+          {t('clientDashboard.support.aucunTicket')}
         </div>
       )}
 
@@ -197,7 +199,7 @@ function ClientSupportWidget() {
 
       {/* Bouton créer un nouveau ticket */}
       <a href="/support/nouveau" style={styles.newBtn}>
-        + Nouveau ticket
+        {t('clientDashboard.support.nouveauTicket')}
       </a>
     </div>
   );
@@ -208,6 +210,7 @@ function ClientSupportWidget() {
 // ─────────────────────────────────────────────────────────────
 
 export default function ClientApp() {
+  const { t } = useTranslation();
   return (
     /*
      * NotificationProvider :
@@ -222,7 +225,7 @@ export default function ClientApp() {
         {/* En-tête : titre + accès rapide au Centre d'aide */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0B1F3A', margin: 0 }}>
-            Mon espace
+            {t('clientDashboard.monEspace')}
           </h1>
           <a
             href="/aide"
@@ -234,10 +237,10 @@ export default function ClientApp() {
               textDecoration: 'none', whiteSpace: 'nowrap',
               transition: 'background .15s, border-color .15s',
             }}
-            title="Accéder au Centre d'aide Shopi"
+            title={t('clientDashboard.centreAideTitle')}
           >
             <i className="fas fa-circle-question" style={{ fontSize: 14 }} />
-            Centre d'aide
+            {t('clientDashboard.centreAide')}
           </a>
         </div>
 

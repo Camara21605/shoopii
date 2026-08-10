@@ -18,6 +18,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 /* ── Entités ── */
 import { Partner } from 'src/database/entities/profiles/partenaire-profile.entity';
 import { User }    from 'src/database/entities/user.entity';
+import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 
 /* ── Module Cloudinary ── */
 import { UploadModule } from 'src/modules/upload/upload.module';
@@ -36,6 +37,7 @@ import { DangerPartenaireService }   from './services/danger-partenaire.service'
     TypeOrmModule.forFeature([
       Partner, // table partenaires
       User,    // pour bcrypt (changement de mot de passe)
+      RefreshToken, // révocation sessions au changement de mot de passe
     ]),
     UploadModule, // Cloudinary (photo de profil)
   ],

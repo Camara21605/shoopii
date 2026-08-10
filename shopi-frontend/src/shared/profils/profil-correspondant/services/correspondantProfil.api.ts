@@ -49,8 +49,3 @@ export interface CorrespondantProfilApi {
 export async function fetchCorrespondantProfil(id: string): Promise<CorrespondantProfilApi> {
   return apiFetch<CorrespondantProfilApi>(`/client/correspondants/${id}`);
 }
-
-/* ── POST /suivis/correspondants/:id → toggle suivre/désabonner ── */
-export async function toggleSuiviCorrespondant(id: string): Promise<{ isSuivi: boolean }> {
-  return apiFetch<{ isSuivi: boolean }>(`/suivis/correspondants/${id}`, { method: 'POST' });
-}

@@ -1,0 +1,107 @@
+{
+  "sharedCards": {
+    "partenaire": {
+      "abonnesSuffix": "关注者",
+      "enSavoirPlus": "了解更多",
+      "desabonneToast": "👋 已取消关注",
+      "abonneToast": "✅ 已关注 {{nom}}",
+      "abonne": "已关注",
+      "suivre": "关注该合作伙伴"
+    },
+    "entreprise": {
+      "verifie": "已验证",
+      "villeDefault": "科纳克里",
+      "commandes": "订单",
+      "note": "评分 ⭐",
+      "avis": "评价",
+      "abonne": "已关注",
+      "sabonner": "关注"
+    },
+    "livreur": {
+      "disponible": "空闲",
+      "enCourse": "配送中",
+      "livraisons": "配送次数",
+      "note": "评分 ⭐",
+      "voirProfil": "查看资料",
+      "connectezVous": "登录后即可关注"
+    },
+    "correspondant": {
+      "typeLabel": {
+        "regional": "区域级",
+        "zonal": "地区级",
+        "national": "全国级"
+      },
+      "enLigne": "在线",
+      "horsLigne": "离线",
+      "idManquantToast": "❌ 缺少ID",
+      "erreurReseauFallback": "网络错误",
+      "abonneToast": "✅ 已关注 {{nom}}",
+      "desabonneToast": "👋 已取消关注 {{nom}}",
+      "aucuneDescription": "暂无描述。",
+      "missions": "任务",
+      "note": "评分 ⭐",
+      "voirProfil": "查看资料",
+      "connectezVous": "登录后即可关注",
+      "connexion": "登录",
+      "desabonner": "取消关注",
+      "abonneParenth": "已关注",
+      "suivre": "关注"
+    },
+    "produit": {
+      "badges": {
+        "hot": "🔥 热门",
+        "new": "✨ 新品",
+        "promo": "🏷️ 促销"
+      },
+      "copier": "复制",
+      "partageViaToast": "📲 通过 {{label}} 分享",
+      "instagramToast": "📸 打开 Instagram 并分享链接",
+      "lienCopieToast": "🔗 链接已复制！",
+      "dejaAuPanierToast": "✓ {{nom}} 已在您的购物车中",
+      "ajouteAuPanierToast": "🛒 {{nom}} 已加入购物车！",
+      "ajoutErrorFallback": "无法加入购物车",
+      "favoriAjoute": "❤️ 已加入收藏",
+      "favoriRetire": "💔 已从收藏中移除",
+      "favoriErrorFallback": "操作失败",
+      "voir": "查看",
+      "boutique": "店铺",
+      "partager": "分享",
+      "prixGros": "批发价",
+      "dejaAuPanierBtn": "已在购物车",
+      "dejaAuPanierClicToast": "✓ 已在购物车中 — 请在购物车中移除",
+      "ajoutEnCours": "添加中…",
+      "ajouterAuPanier": "加入购物车",
+      "modalEntreprise": {
+        "titre": "店铺",
+        "guinee": "几内亚",
+        "boutiqueVerifiee": "Shopi 认证店铺",
+        "commandes": "订单",
+        "note": "评分",
+        "avis": "评价",
+        "ville": "城市",
+        "produitPublieLabel": "该店铺发布的产品",
+        "desabonneToast": "👋 已取消关注",
+        "abonneToast": "✅ 已关注 {{nom}}",
+        "abonne": "已关注",
+        "sabonner": "关注",
+        "voirBoutique": "查看店铺"
+      },
+      "modalPartage": {
+        "titre": "分享此产品"
+      },
+      "modalGros": {
+        "titre": "批发价格",
+        "prixStandard": "标准价格：",
+        "uniteSuffix": "/ 件",
+        "min": "最低",
+        "unites": "件",
+        "aucunPalier": "该产品未设置价格阶梯。",
+        "paliersLabel": "阶梯降价",
+        "quantite": "数量",
+        "prixParUnite": "单价",
+        "economie": "节省",
+        "note": "将产品以所需数量加入购物车，阶梯价格将自动应用于订单。"
+      }
+    }
+  }
+}

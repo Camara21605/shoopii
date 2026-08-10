@@ -1,0 +1,42 @@
+{
+  "publicHeader": {
+    "accueilTitle": "Accueil Shopi",
+    "nav": {
+      "explorer": "Explorer",
+      "boutiques": "Boutiques",
+      "livreurs": "Livreurs",
+      "relais": "Relais",
+      "offres": "Offres"
+    },
+    "searchAll": "Tout",
+    "searchPlaceholder": "Produits, boutiques, livreurs…",
+    "searchAria": "Rechercher",
+    "searchSuggestions": {
+      "tendances": "Tendances du moment",
+      "smartphones": "Smartphones — 4 200 résultats",
+      "boutiquesPopulaires": "Boutiques populaires",
+      "livreursDispo": "Livreurs disponibles près de vous",
+      "offresDuJour": "Offres du jour"
+    },
+    "searchToast": "🔍 {{text}}",
+    "accueil": "Accueil",
+    "messagerie": "Messagerie",
+    "panier": "Panier",
+    "aide": "Centre d'aide",
+    "connexion": "Connexion",
+    "inscription": "S'inscrire",
+    "monCompte": "Mon compte",
+    "monProfil": "Mon profil",
+    "monEspace": "Mon espace",
+    "monEspacePro": "Mon espace professionnel",
+    "monEspaceProShort": "Mon espace pro",
+    "seDeconnecter": "Se déconnecter",
+    "deconnexion": "Déconnexion",
+    "menu": "Menu",
+    "parametres": "Paramètres",
+    "adresses": "Adresses",
+    "retourAccueil": "Retour à l'accueil",
+    "avantDeVousConnecter": "Avant de vous connecter…",
+    "navMobileAria": "Navigation principale mobile"
+  }
+}

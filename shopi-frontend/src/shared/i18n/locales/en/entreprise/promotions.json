@@ -1,0 +1,172 @@
+{
+  "promotions": {
+    "typeCfg": {
+      "discount": "% Discount",
+      "freeShip": "Free shipping",
+      "bundle": "Bundle",
+      "flash": "Flash sale"
+    },
+    "statusCfg": {
+      "active": "Active",
+      "scheduled": "Scheduled",
+      "draft": "Draft",
+      "paused": "Paused",
+      "ended": "Ended"
+    },
+    "templates": {
+      "pctDiscount": {
+        "label": "Percentage discount",
+        "sub": "E.g.: -10% off everything"
+      },
+      "fixedDiscount": {
+        "label": "Fixed discount (GNF)",
+        "sub": "E.g.: -5,000 GNF"
+      },
+      "freeShip": {
+        "label": "Free shipping",
+        "sub": "For orders > X"
+      },
+      "bundle": {
+        "label": "Bundle / Bulk offer",
+        "sub": "Buy 2, get 1 free"
+      },
+      "flash": {
+        "label": "Flash sale",
+        "sub": "Limited time & stock"
+      }
+    },
+    "scope": {
+      "global": "Entire store",
+      "produits_one": "{{count}} product",
+      "produits_other": "{{count}} products"
+    },
+    "card": {
+      "copierTitle": "Copy",
+      "codeCopied": "📋 Code \"{{code}}\" copied!",
+      "copyError": "❌ Unable to copy the code (clipboard permission denied).",
+      "activated": "🚀 Promotion activated!",
+      "paused": "⏸️ Promotion paused",
+      "utilisations": "Uses",
+      "caGenere": "Revenue generated",
+      "tauxUsage": "Usage rate",
+      "modifier": "Edit",
+      "stats": "Stats",
+      "statsToast": "📊 Detailed stats",
+      "activer": "Activate"
+    },
+    "selector": {
+      "search": "Search a product…",
+      "selected_one": "{{count}} product selected",
+      "selected_other": "{{count}} products selected",
+      "clearAll": "Deselect all",
+      "empty": "No product found"
+    },
+    "hero": {
+      "badge": "Active promotions",
+      "titlePart1": "Boost your sales with",
+      "titleEm": "targeted offers",
+      "sub": "Create promo codes, schedule flash sales, and track their performance in real time.",
+      "create": "Create a promotion",
+      "exportBtn": "Export",
+      "exportToast": "📤 Exporting…",
+      "statsActives": "active",
+      "statsTotal": "total",
+      "statsGnf": "GNF",
+      "lblPromotions": "Promotions",
+      "lblUtilisations": "Uses",
+      "lblCaGenere": "Revenue generated"
+    },
+    "kpi": {
+      "totales": "Total promotions",
+      "actives": "Active now",
+      "activesSub": "{{count}} scheduled",
+      "utilisationsTotales": "Total uses",
+      "caGenereGnf": "Revenue generated (GNF)"
+    },
+    "filters": {
+      "toutes": "All",
+      "actives": "● Active",
+      "planifiees": "⏰ Scheduled",
+      "brouillons": "✎ Drafts",
+      "search": "Search a promotion…"
+    },
+    "loading": "Loading promotions…",
+    "empty": {
+      "title": "No promotions found",
+      "sub": "Create your first promotion to boost your sales"
+    },
+    "performance": {
+      "title": "Promotion performance",
+      "badge": "This month",
+      "uses": "uses"
+    },
+    "sidebar": {
+      "creerRapide": "Quick create",
+      "templateToast": "➕ Template \"{{label}}\" selected",
+      "meilleuresPromos": "Top promotions",
+      "uses": "uses",
+      "tipsTitle": "Shopi tips",
+      "tip1": "Flash sales create 3× more buying urgency.",
+      "tip2": "Free shipping = +28% conversion.",
+      "tip3": "Targeting a specific product boosts usage rate by +40%."
+    },
+    "modal": {
+      "editTitle": "✏️ Edit promotion",
+      "createTitle": "✨ New promotion",
+      "editSub": "Update this promotion's information",
+      "createSub": "Create an offer to boost your sales",
+      "typeLabel": "Promotion type",
+      "nomLabel": "Promotion name *",
+      "nomPlaceholder": "E.g.: January Sale",
+      "codeLabel": "Promo code *",
+      "codePlaceholder": "E.g.: SALE20",
+      "discountLabel": "Discount value",
+      "discountPlaceholderPct": "E.g.: 20",
+      "discountPlaceholderFree": "Free shipping",
+      "discountPlaceholderFixed": "E.g.: 5000",
+      "maxLabel": "Maximum uses",
+      "maxPlaceholder": "E.g.: 500 (empty = unlimited)",
+      "expireLabel": "Expiration date",
+      "scopeTitle": "Promotion scope",
+      "scopeGlobalTitle": "Entire store",
+      "scopeGlobalSub": "The promotion applies to all your products",
+      "scopeProduits": "{{count}} products",
+      "scopeProductsTitle": "Specific product(s)",
+      "scopeProductsSub": "Target one or more specific products",
+      "scopeSelected_one": "{{count}} selected",
+      "scopeSelected_other": "{{count}} selected",
+      "scopeWarn": "Select at least one product to create this promotion.",
+      "previewLabel": "Preview",
+      "previewDefaultNom": "Promotion name",
+      "previewDefaultCode": "CODE",
+      "annuler": "Cancel",
+      "brouillon": "Draft",
+      "saveEdit": "Save changes",
+      "createBtn": "Create the promotion"
+    },
+    "validation": {
+      "nomRequired": "The promotion name is required.",
+      "codeRequired": "The promo code is required.",
+      "codeMaxLength": "The promo code must not exceed 50 characters.",
+      "codeFormat": "The promo code can only contain letters, numbers, hyphens or underscores.",
+      "scopeRequired": "Select at least one product for this promotion.",
+      "discountRequired": "Enter a discount value.",
+      "discountPositive": "The discount value must be a positive number.",
+      "discountMaxPct": "A percentage discount cannot exceed 100.",
+      "maxUsesInteger": "The maximum number of uses must be a positive integer.",
+      "expireInPast": "The expiration date cannot be in the past."
+    },
+    "toasts": {
+      "updateSuccess": "✅ Promo \"{{nom}}\" updated!",
+      "activateFailedAfterCreate": "⚠️ Promo \"{{nom}}\" created but automatic activation failed ({{err}}) — activate it manually from the list.",
+      "createSuccess": "✅ Promo \"{{nom}}\" created and activated for {{who}}!",
+      "whoGlobal": "the entire store",
+      "whoProduits_one": "{{count}} product",
+      "whoProduits_other": "{{count}} products",
+      "draftSaved": "💾 Draft saved",
+      "draftMissingFields": "The name and code are required even for a draft.",
+      "loadError": "❌ Loading error: {{message}}",
+      "loadErrorDefault": "Unable to load promotions."
+    }
+  }
+}

@@ -138,11 +138,11 @@
 }
 @keyframes bubbleIn { from { opacity:0; transform: scale(.92) translateY(6px); } to { opacity:1; transform: scale(1) translateY(0); } }
 .bubble.recv {
-  background: var(--white); border: 1px solid var(--bdr);
+  background: var(--g100); border: 1px solid var(--bdr);
   border-radius: var(--r-xl) var(--r-xl) var(--r-xl) 4px; box-shadow: var(--sh-xs);
 }
 .msgRow.firstGroup .bubble.recv { border-radius: 4px var(--r-xl) var(--r-xl) var(--r-xl); }
-.bubble.sent { background: var(--btn, #111113); color: rgba(255,255,255,.95); border-radius: var(--r-xl) var(--r-xl) 4px var(--r-xl); }
+.bubble.sent { background: var(--blue); color: rgba(255,255,255,.95); border-radius: var(--r-xl) var(--r-xl) 4px var(--r-xl); }
 .msgRow.firstGroup .bubble.sent { border-radius: var(--r-xl) 4px var(--r-xl) var(--r-xl); }
 
 /* Hover actions bulle */
@@ -338,9 +338,9 @@
   margin-top: 4px;
   min-width: 210px; max-width: 280px;
 }
-/* Version envoyée par moi (fond navy) */
+/* Version envoyée par moi (fond bleu — aligné sur .bubble.sent) */
 .msgVoiceMe {
-  background: rgba(255,255,255,.15);
+  background: var(--blue);
 }
 .mvBtn {
   width: 34px; height: 34px; border-radius: 50%;
@@ -383,8 +383,8 @@
   min-width: 170px; max-width: 240px;
 }
 .callBubbleMe {
-  background: rgba(255,255,255,.12);
-  border-color: rgba(255,255,255,.15);
+  background: var(--blue);
+  border-color: var(--blue);
 }
 /* Appel manqué / refusé — fond rouge très léger, bordure rouge */
 .callBubbleMissed {

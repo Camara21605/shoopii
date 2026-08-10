@@ -1,0 +1,107 @@
+{
+  "sharedCards": {
+    "partenaire": {
+      "abonnesSuffix": "abonnés",
+      "enSavoirPlus": "En savoir plus",
+      "desabonneToast": "👋 Désabonné",
+      "abonneToast": "✅ Abonné à {{nom}}",
+      "abonne": "Abonné",
+      "suivre": "Suivre ce partenaire"
+    },
+    "entreprise": {
+      "verifie": "Vérifié",
+      "villeDefault": "Conakry",
+      "commandes": "Commandes",
+      "note": "Note ⭐",
+      "avis": "Avis",
+      "abonne": "Abonné",
+      "sabonner": "S'abonner"
+    },
+    "livreur": {
+      "disponible": "Disponible",
+      "enCourse": "En course",
+      "livraisons": "Livraisons",
+      "note": "Note ⭐",
+      "voirProfil": "Voir profil",
+      "connectezVous": "Connectez-vous pour suivre"
+    },
+    "correspondant": {
+      "typeLabel": {
+        "regional": "Régional",
+        "zonal": "Zonal",
+        "national": "National"
+      },
+      "enLigne": "En ligne",
+      "horsLigne": "Hors ligne",
+      "idManquantToast": "❌ ID manquant",
+      "erreurReseauFallback": "Erreur réseau",
+      "abonneToast": "✅ Abonné à {{nom}}",
+      "desabonneToast": "👋 Désabonné de {{nom}}",
+      "aucuneDescription": "Aucune description disponible.",
+      "missions": "Missions",
+      "note": "Note ⭐",
+      "voirProfil": "Voir profil",
+      "connectezVous": "Connectez-vous pour suivre",
+      "connexion": "Connexion",
+      "desabonner": "Désabonner",
+      "abonneParenth": "Abonné(e)",
+      "suivre": "Suivre"
+    },
+    "produit": {
+      "badges": {
+        "hot": "🔥 Hot",
+        "new": "✨ Nouveau",
+        "promo": "🏷️ Promo"
+      },
+      "copier": "Copier",
+      "partageViaToast": "📲 Partage via {{label}}",
+      "instagramToast": "📸 Ouvrez Instagram et partagez le lien",
+      "lienCopieToast": "🔗 Lien copié !",
+      "dejaAuPanierToast": "✓ {{nom}} est déjà dans votre panier",
+      "ajouteAuPanierToast": "🛒 {{nom}} ajouté au panier !",
+      "ajoutErrorFallback": "Impossible d'ajouter au panier",
+      "favoriAjoute": "❤️ Ajouté aux favoris",
+      "favoriRetire": "💔 Retiré des favoris",
+      "favoriErrorFallback": "Action impossible",
+      "voir": "Voir",
+      "boutique": "Boutique",
+      "partager": "Partager",
+      "prixGros": "Prix gros",
+      "dejaAuPanierBtn": "Déjà au panier",
+      "dejaAuPanierClicToast": "✓ Déjà dans votre panier — retirez-le depuis le panier",
+      "ajoutEnCours": "Ajout…",
+      "ajouterAuPanier": "Ajouter au panier",
+      "modalEntreprise": {
+        "titre": "Boutique",
+        "guinee": "Guinée",
+        "boutiqueVerifiee": "Boutique vérifiée Shopi",
+        "commandes": "Commandes",
+        "note": "Note",
+        "avis": "Avis",
+        "ville": "Ville",
+        "produitPublieLabel": "Produit publié par cette boutique",
+        "desabonneToast": "👋 Désabonné",
+        "abonneToast": "✅ Abonné à {{nom}}",
+        "abonne": "Abonné",
+        "sabonner": "S'abonner",
+        "voirBoutique": "Voir la boutique"
+      },
+      "modalPartage": {
+        "titre": "Partager ce produit"
+      },
+      "modalGros": {
+        "titre": "Prix en gros",
+        "prixStandard": "Prix standard :",
+        "uniteSuffix": "/ unité",
+        "min": "Min.",
+        "unites": "unités",
+        "aucunPalier": "Aucun palier de prix configuré pour ce produit.",
+        "paliersLabel": "Paliers de prix dégressifs",
+        "quantite": "Quantité",
+        "prixParUnite": "Prix / unité",
+        "economie": "Économie",
+        "note": "Ajoutez le produit au panier avec la quantité souhaitée. Le prix dégressif s'applique automatiquement à la commande."
+      }
+    }
+  }
+}

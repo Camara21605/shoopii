@@ -147,15 +147,23 @@ export class LivreursClientService {
 
     const { page = 1, limit = 20 } = dto;
 
+    /* Set des id de PROFILS livreurs suivis / masqués par l'utilisateur connecté.
+     * hiddenIds doit être résolu AVANT la requête paginée (exclusion en SQL,
+     * pas en JS après coup) sinon `total`/la pagination seraient faussés. */
+    const [followedIds, hiddenIds] = await Promise.all([
+      this.getFollowedIds(userId),
+      this.getHiddenIds(userId),
+    ]);
+
     const qb = this.buildBaseQuery();
     this.applyFilters(qb, dto);
+    if (hiddenIds.size > 0) {
+      qb.andWhere('lp.id NOT IN (:...hiddenIds)', { hiddenIds: [...hiddenIds] });
+    }
     this.applySorting(qb, dto);
     qb.skip((page - 1) * limit).take(limit);
 
     const [profiles, total] = await qb.getManyAndCount();
-
-    /* Set des id de PROFILS livreurs suivis par l'utilisateur connecté */
-    const followedIds = await this.getFollowedIds(userId);
 
     const data = profiles.map(p => this.toCardData(p, followedIds));
 
@@ -280,6 +288,55 @@ export class LivreursClientService {
         targetType:   TargetActorType.DELIVERY,
         isSubscribed: true,
         status:       FollowStatus.ACTIVE,
+      },
+      select: ['targetId'],
+    });
+
+    return new Set(rows.map(r => r.targetId));
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * getHiddenIds — mêmes résolutions que getFollowedIds, mais pour
+   * les livreurs MASQUÉS (suivis mais cachés des listes de
+   * découverte) par l'utilisateur connecté. Utilisé pour les
+   * exclure de la requête paginée de getLivreurs().
+   * ────────────────────────────────────────────────────────────── */
+  async getHiddenIds(userId?: string): Promise<Set<string>> {
+    if (!userId) return new Set<string>();
+
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      select: ['id', 'role'],
+    });
+    if (!user) return new Set<string>();
+
+    let followerType: FollowerActorType;
+    let followerId: string | undefined;
+
+    switch (user.role) {
+      case UserRole.DELIVERY:
+        followerType = FollowerActorType.DELIVERY;
+        followerId   = (await this.profileRepo.findOne({ where: { userId }, select: ['id'] }))?.id;
+        break;
+      case UserRole.CORRESPONDENT:
+        followerType = FollowerActorType.CORRESPONDENT;
+        followerId   = (await this.correspondantRepo.findOne({ where: { userId }, select: ['id'] }))?.id;
+        break;
+      default:
+        followerType = FollowerActorType.CLIENT;
+        followerId   = (await this.clientRepo.findOne({ where: { userId }, select: ['id'] }))?.id;
+    }
+
+    if (!followerId) return new Set<string>();
+
+    const rows = await this.followRepo.find({
+      where: {
+        followerType,
+        followerId,
+        targetType:   TargetActorType.DELIVERY,
+        isSubscribed: true,
+        status:       FollowStatus.ACTIVE,
+        hidden:       true,
       },
       select: ['targetId'],
     });

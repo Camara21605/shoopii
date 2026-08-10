@@ -1,0 +1,97 @@
+{
+  "correspondantsPage": {
+    "typeLabel": {
+      "regional": "🏠 Regional",
+      "zonal": "🗺️ Zonal",
+      "national": "🌍 Nacional"
+    },
+    "listItem": {
+      "missionsCount": "{{count}} missões",
+      "abonne": "Subscrito",
+      "suivre": "Seguir"
+    },
+    "hero": {
+      "sup": "Rede Shopi · Guiné & Diáspora",
+      "titrePart1": "Os seus",
+      "titreEm": "correspondentes",
+      "titrePart2": "de confiança em todo o lado",
+      "sub": "Pontos de apoio locais verificados que facilitam as suas trocas comerciais entre a Guiné e a diáspora. Receba, envie e faça transitar as suas encomendas em toda a segurança.",
+      "correspondantsActifs": "Correspondentes ativos",
+      "noteMoyenne": "Nota média",
+      "missionsAuTotal": "Missões no total",
+      "communesCouvertes": "Comunas cobertas",
+      "abonne": "✓ Subscrito",
+      "suivre": "+ Seguir"
+    },
+    "toolbar": {
+      "searchPlaceholder": "Pesquisar um correspondente, uma zona…",
+      "filters": {
+        "tous": "Todos",
+        "enLigne": "Online",
+        "mesAbonnements": "As minhas subscrições",
+        "regionaux": "Regionais",
+        "zonaux": "Zonais",
+        "nationaux": "Nacionais"
+      },
+      "sorts": {
+        "pertinence": "Relevância",
+        "mieuxNotes": "Melhor avaliados",
+        "plusDeMissions": "Mais missões",
+        "nomAZ": "Nome (A-Z)"
+      },
+      "correspondantCount_one": "{{count}} correspondente",
+      "correspondantCount_other": "{{count}} correspondentes"
+    },
+    "card": {
+      "enLigne": "Online",
+      "horsLigne": "Offline",
+      "avisCount": "({{count}} avaliações)",
+      "missions": "Missões",
+      "fiabilite": "Fiabilidade",
+      "experience": "Experiência",
+      "abonne": "Subscrito",
+      "suivre": "Seguir",
+      "voirProfilComplet": "Ver o perfil completo →"
+    },
+    "sidebar": {
+      "typeDeCorrespondant": "Tipo de correspondente",
+      "types": {
+        "regional": {
+          "nm": "Regional",
+          "desc": "Cobre uma cidade"
+        },
+        "zonal": {
+          "nm": "Zonal",
+          "desc": "Cobre uma região"
+        },
+        "national": {
+          "nm": "Nacional",
+          "desc": "Cobre todo o país"
+        }
+      },
+      "commune": "Comuna",
+      "toutes": "Todas",
+      "noteMinimale": "Nota mínima",
+      "ratingOpts": {
+        "cinqEtoiles": "Apenas 5 estrelas",
+        "quatrePlus": "4+ estrelas",
+        "troisPlus": "3+ estrelas",
+        "toutesLesNotes": "Todas as notas"
+      },
+      "disponibilite": "Disponibilidade",
+      "reinitialiser": "Repor",
+      "enLigne": "Online",
+      "horsLigne": "Offline"
+    },
+    "page": {
+      "chargement": "A carregar os correspondentes…",
+      "correspondantsDisponibles": "Correspondentes disponíveis",
+      "resultatCount_one": "{{count}} resultado",
+      "resultatCount_other": "{{count}} resultados",
+      "errorSuffix": "— dados de demonstração exibidos.",
+      "aucunCorrespondant": "Nenhum correspondente corresponde aos seus filtros.",
+      "desabonneToast": "👋 Deixou de seguir {{nom}}",
+      "abonneToast": "✅ Subscrito a {{nom}}"
+    }
+  }
+}

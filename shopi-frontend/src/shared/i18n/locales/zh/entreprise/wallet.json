@@ -1,0 +1,158 @@
+{
+  "wallet": {
+    "methodMeta": {
+      "orangeMoney": "Orange Money",
+      "mtnMoney": "MTN Money",
+      "kulu": "Kulu",
+      "paycard": "PayCard",
+      "card": "银行卡",
+      "bank": "银行转账",
+      "cash": "现金"
+    },
+    "formFields": {
+      "orangeMoneyLabel": "Orange Money 号码",
+      "mtnMoneyLabel": "MTN Money 号码",
+      "kuluLabel": "Kulu 号码",
+      "paycardNumberLabel": "PayCard 号码",
+      "titulaireLabel": "持有人",
+      "nomCompletPlaceholder": "全名",
+      "cardNumberLabel": "卡号",
+      "nomSurCarteLabel": "卡上姓名",
+      "exPrefix": "例如：",
+      "dateExpirationLabel": "到期日期",
+      "nomBanqueLabel": "银行名称",
+      "titulaireCompteLabel": "账户持有人",
+      "numeroCompteIbanLabel": "账号 / IBAN"
+    },
+    "errors": {
+      "loadWalletFailed": "无法加载钱包",
+      "loadTransactionsFailed": "无法加载交易",
+      "loadChartFailed": "无法加载图表",
+      "loadBalanceFailed": "无法加载余额",
+      "champsRequis": "请填写所有必填字段",
+      "ajoutImpossible": "无法添加",
+      "montantInvalide": "请输入有效金额",
+      "choisirMoyenPaiement": "请选择支付方式",
+      "operationImpossible": "操作失败",
+      "suppressionImpossible": "删除失败",
+      "actionImpossible": "操作失败",
+      "activerAutoTransferRequisMethode": "在启用自动转账前请先添加支付方式"
+    },
+    "toasts": {
+      "operationEffectuee": "✅ 已执行 {{label}} {{montant}} GNF",
+      "methodeAjoutee": "✅ 已添加支付方式",
+      "methodeParDefautMaj": "✅ 默认方式已更新",
+      "methodeSupprimee": "🗑️ 支付方式已删除",
+      "virementAutoActive": "✅ 自动转账已启用",
+      "virementAutoDesactive": "⏸️ 自动转账已禁用"
+    },
+    "opLabels": {
+      "deposit": "充值",
+      "withdraw": "提现",
+      "transfer": "转账"
+    },
+    "modalTitles": {
+      "deposit": "存入资金",
+      "withdraw": "提取资金",
+      "transfer": "转移资金"
+    },
+    "modalBtns": {
+      "deposit": "确认充值",
+      "withdraw": "确认提现",
+      "transfer": "确认转账"
+    },
+    "loadingWallet": "正在加载钱包…",
+    "header": {
+      "title": "钱包",
+      "subtitle": "管理您的余额、提现和 Shopi 交易",
+      "exporter": "导出",
+      "exportToast": "📄 正在导出账单…",
+      "retirerDesFonds": "提取资金"
+    },
+    "balance": {
+      "soldeDisponible": "可用余额",
+      "masquerSolde": "隐藏余额",
+      "totalPortefeuille": "您的 Shopi 钱包总额",
+      "ceMois": "本月 +{{pct}}%",
+      "entreesCeMois": "本月收入",
+      "sortiesCeMois": "本月支出",
+      "enAttente": "待处理",
+      "deposer": "充值",
+      "retirer": "提现",
+      "transferer": "转账"
+    },
+    "kpi": {
+      "totalEncaisse": "总收入",
+      "totalRetire": "总提现",
+      "commissionsShopi": "Shopi 佣金"
+    },
+    "chart": {
+      "title": "收入变化",
+      "semaine": "周",
+      "mois": "月",
+      "annee": "年"
+    },
+    "transactions": {
+      "title": "最近交易",
+      "tout": "全部",
+      "entrees": "收入",
+      "sorties": "支出",
+      "aucune": "暂无交易",
+      "credit": "存款",
+      "debit": "扣款",
+      "statutValide": "已生效",
+      "statutEnAttente": "待处理",
+      "statutEchoue": "失败",
+      "statutAnnule": "已取消"
+    },
+    "methodes": {
+      "title": "支付方式",
+      "aucune": "未注册方式",
+      "defaut": "默认",
+      "supprimer": "删除",
+      "ajouter": "添加方式"
+    },
+    "autoTransfer": {
+      "title": "自动转账",
+      "hebdomadaire": "每周转账",
+      "chaqueVersMethode": "每周一 · 转到 {{label}}",
+      "versMethodeParDefaut": "转到您的默认方式"
+    },
+    "commission": {
+      "title": "Shopi 佣金",
+      "textPart1": "Shopi 对每笔收到的交易收取",
+      "textPct": "3%",
+      "textPart2": "的手续费。M转账到 Mobile Money 是",
+      "textGratuits": "免费的",
+      "textPart3": "。银行转账：",
+      "textMontant": "1,500 GNF",
+      "textPart4": "，每次操作。"
+    },
+    "opPage": {
+      "chooseMethodFrom": "选择一种电子支付方式，从您的 Shopi 账户转出资金。",
+      "chooseMethodTo": "选择一种电子支付方式，将资金转入您的 Shopi 账户。",
+      "ajouterType": "添加{{type}}",
+      "ajouter": "添加",
+      "ajouterEtContinuer": "添加并继续",
+      "ajoutEnCours": "添加中…",
+      "changer": "更改",
+      "montantGnf": "金额（GNF）",
+      "traitementEnCours": "处理中…"
+    },
+    "addMethodModal": {
+      "title": "添加支付方式",
+      "typeLabel": "类型"
+    },
+    "quickBar": {
+      "soldeShopi": "Shopi 余额",
+      "actionsTitle": "钱包操作",
+      "depot": "充值",
+      "retrait": "提现",
+      "actualiser": "刷新",
+      "actualiserSolde": "刷新余额",
+      "gererPortefeuille": "管理我的钱包",
+      "chooseMethodDeposit": "选择一种电子支付方式，将资金转入您的 Shopi 账户。",
+      "chooseMethodWithdraw": "选择一种电子支付方式，从您的 Shopi 账户接收资金。"
+    }
+  }
+}

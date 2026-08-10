@@ -7,6 +7,8 @@
 
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/Correspondants.module.css';
+import { useAuthGate } from '../../../../../shared/hooks/useAuthGate';
+import FollowButton    from '../../../../../shared/components/FollowButton';
 import type { Correspondant } from '../data/types';
 
 interface Props {
@@ -17,7 +19,8 @@ interface Props {
   communes:  number;
   /* 2 correspondants à mettre en avant */
   vedettes:  Correspondant[];
-  onToggle:  (id: string) => void;
+  onToast:   (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  onChange:  (id: string, next: { isSuivi: boolean; hidden?: boolean; removed?: boolean }) => void;
 }
 
 const AVA_BG: Record<string, string> = {
@@ -26,8 +29,9 @@ const AVA_BG: Record<string, string> = {
   national: 'linear-gradient(135deg,#78350F,#B45309)',
 };
 
-export default function HeroCorrespondants({ total, noteMoy, missions, communes, vedettes, onToggle }: Props) {
+export default function HeroCorrespondants({ total, noteMoy, missions, communes, vedettes, onToast, onChange }: Props) {
   const { t } = useTranslation();
+  const { openAuthModal, authModal } = useAuthGate();
   const TYPE_LABEL: Record<string, string> = {
     regional: t('correspondantsPage.typeLabel.regional'),
     zonal: t('correspondantsPage.typeLabel.zonal'),
@@ -63,20 +67,28 @@ export default function HeroCorrespondants({ total, noteMoy, missions, communes,
         {/* Cartes vedettes */}
         <div className={styles.heroRight}>
           {vedettes.map(v => (
-            <div key={v.id} className={styles.hcard}>
+            <div key={v.id} className={styles.hcard} style={{ position: 'relative' }}>
               <div className={styles.hcardAva} style={{ background: AVA_BG[v.type] }}>
                 {v.initiales}
                 {v.enLigne && <div className={styles.hcardDot} />}
               </div>
               <div className={styles.hcardNm}>{v.nom}</div>
               <div className={styles.hcardType}>{TYPE_LABEL[v.type]} · {v.zone.split(',')[0]}</div>
-              <button className={styles.hcardBtn} onClick={() => onToggle(v.id)}>
-                {v.suivi ? t('correspondantsPage.hero.abonne') : t('correspondantsPage.hero.suivre')}
-              </button>
+              <FollowButton
+                actorType="correspondant"
+                id={v.id}
+                name={v.nom}
+                isSuivi={v.suivi}
+                onToast={onToast}
+                onRequireAuth={openAuthModal}
+                onChange={next => onChange(v.id, next)}
+              />
             </div>
           ))}
         </div>
       </div>
+
+      {authModal}
     </div>
   );
 }

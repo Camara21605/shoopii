@@ -1,0 +1,240 @@
+{
+  "boutiqueDetail": {
+    "nav": {
+      "produits": "Produits",
+      "promotions": "Promotions",
+      "livreurs": "Livreurs",
+      "correspondants": "Correspondants",
+      "avis": "Avis",
+      "apropos": "À propos"
+    },
+    "cover": {
+      "verifiee": "Boutique vérifiée Shopi",
+      "active": "Active"
+    },
+    "identity": {
+      "verifie": "Vérifié Shopi",
+      "note": "Note",
+      "abonnes": "Abonnés",
+      "satisfaction": "Satisfaction",
+      "ventes": "Ventes",
+      "abonner": "S'abonner",
+      "abonneLabel": "Abonné",
+      "messageBtn": "Message",
+      "appelerBtn": "Appeler",
+      "abonnezVousMessage": "Abonnez-vous pour envoyer un message",
+      "envoyerMessageTitle": "Envoyer un message",
+      "abonnezVousAppel": "Abonnez-vous pour appeler",
+      "appelerTitle": "Appeler",
+      "partagerTitle": "Partager la boutique"
+    },
+    "livreursSection": {
+      "disponibleCount_one": "disponible",
+      "disponibleCount_other": "disponibles",
+      "enCourse": "en course",
+      "totalCount": "livreurs au total"
+    },
+    "cardLivreur": {
+      "livraisonsCount": "{{count}} livraisons",
+      "disponible": "● Disponible",
+      "enCourseBadge": "⚙ En course",
+      "voirProfil": "Voir profil",
+      "profilToast": "🛵 Profil de {{nom}}",
+      "desabonneToast": "👋 Désabonné de {{nom}}",
+      "abonneToast": "✅ Abonné à {{nom}}"
+    },
+    "correspondantsSection": {
+      "disponibleCount_one": "disponible",
+      "disponibleCount_other": "disponibles",
+      "completCount_one": "complet",
+      "completCount_other": "complets",
+      "totalCount": "correspondants au total",
+      "infoBannerTitle": "Qu'est-ce qu'un correspondant Shopi ?",
+      "infoBannerDesc": "Un correspondant est un représentant Shopi dans votre ville. Il réceptionne votre colis, le vérifie et le garde en lieu sûr. Vous pouvez le récupérer directement ou le confier à un livreur pour une livraison à domicile.",
+      "steps": {
+        "colisRecu": "Colis reçu et vérifié",
+        "stockageSecurise": "Stockage sécurisé",
+        "remiseDirecte": "Remise directe ou via livreur",
+        "noteCertifie": "Noté et certifié Shopi"
+      },
+      "fermer": "Fermer"
+    },
+    "cardCorrespondant": {
+      "verifie": "Vérifié",
+      "colisMois": "{{count}} colis/mois",
+      "disponible": "● Disponible",
+      "complet": "◌ Complet",
+      "contacter": "Contacter",
+      "choisir": "Choisir",
+      "choisi": "Choisi",
+      "messageToast": "💬 Message à {{nom}}",
+      "retireToast": "↩️ Correspondant {{nom}} retiré",
+      "selectionneToast": "✅ {{nom}} sélectionné comme correspondant"
+    },
+    "modalPartage": {
+      "titre": "Partager cette boutique",
+      "fermer": "Fermer",
+      "copier": "Copier",
+      "lienCopiePresseToast": "🔗 Lien copié dans le presse-papier !",
+      "instagramCopieToast": "📸 Lien copié — collez-le dans Instagram",
+      "partageVia": "📲 Partage via {{label}}",
+      "lienCopieToast": "🔗 Lien copié !",
+      "emailSujet": "Découvrez cette boutique Shopi"
+    },
+    "aPropos": {
+      "titre": "À propos de la boutique",
+      "anneesExperience": "Années d'expérience",
+      "commandesLivrees": "Commandes livrées",
+      "satisfactionClient": "Satisfaction client",
+      "noteMoyenne": "Note moyenne",
+      "infosPratiques": "Infos pratiques",
+      "horaires": "Horaires",
+      "adresse": "Adresse",
+      "telephone": "Téléphone",
+      "email": "Email",
+      "siteWeb": "Site web",
+      "livreursBoutique": "Livreurs de la boutique",
+      "voirProfil": "Voir profil",
+      "profilToast": "🛵 Profil de {{nom}}"
+    },
+    "cardProduit": {
+      "voir": "Voir",
+      "ajouterPanier": "Ajouter au panier",
+      "partager": "Partager",
+      "retireFavorisToast": "💔 Retiré des favoris",
+      "ajouteFavorisToast": "❤️ Ajouté aux favoris",
+      "detailToast": "👁️ Détail : {{nom}}",
+      "ajouteAuPanierToast": "🛒 Ajouté au panier !",
+      "partagerToast": "📤 Partager : {{nom}}",
+      "badges": {
+        "hot": "🔥 Hot",
+        "new": "✨ Nouveau",
+        "promo": "🏷️ Promo",
+        "sol": "🔴 Soldé"
+      },
+      "stock": {
+        "ok": "✓ En stock",
+        "low": "⚠ Stock limité",
+        "out": "✗ Rupture"
+      }
+    },
+    "promotions": {
+      "reduction": "Réduction",
+      "livraisonOfferte": "Livraison offerte",
+      "bundle": "Bundle",
+      "venteFlash": "Vente flash",
+      "offerte": "Offerte",
+      "des": "Dès {{montant}} GNF",
+      "jusquau": "Jusqu'au {{date}}",
+      "restants": "{{count}} restants",
+      "utilisationsRestantes_one": "{{count}} utilisation restante",
+      "utilisationsRestantes_other": "{{count}} utilisations restantes",
+      "codePromoToast": "🏷️ Code promo : {{code}}",
+      "copierLeCode": "Copier le code",
+      "codeCopieToast": "✅ Code copié : {{code}}",
+      "chargement": "Chargement des promotions…",
+      "aucunePromo": "Aucune promotion active",
+      "aucunePromoDesc": "Cette boutique n'a pas de promotion en cours pour le moment.",
+      "activeCount_one": "{{count}} promotion active",
+      "activeCount_other": "{{count}} promotions actives"
+    },
+    "produitsSection": {
+      "filtresActifs": "Filtres actifs :",
+      "supprimerFiltre": "Supprimer ce filtre",
+      "toutEffacer": "Tout effacer",
+      "trouveCount_one": "produit trouvé",
+      "trouveCount_other": "produits trouvés",
+      "vueGrille": "Vue grille",
+      "vueListe": "Vue liste",
+      "aucunProduit": "Aucun produit ne correspond à vos filtres",
+      "essayezModifier": "Essayez de modifier ou supprimer certains filtres.",
+      "reinitialiser": "Réinitialiser les filtres",
+      "pageToast": "📄 Page {{n}}",
+      "pageSuivanteToast": "📄 Page suivante"
+    },
+    "sidebar": {
+      "trierPar": "Trier par",
+      "triOptions": {
+        "pertinence": "Pertinence",
+        "prixCroissant": "Prix croissant",
+        "prixDecroissant": "Prix décroissant",
+        "mieuxNotes": "Mieux notés",
+        "nouveautes": "Nouveautés",
+        "meilleuresVentes": "Meilleures ventes"
+      },
+      "triToast": "🔃 Tri : {{value}}",
+      "categories": "Catégories",
+      "tout": "Tout",
+      "prix": "Prix (GNF)",
+      "noteMinimale": "Note minimale",
+      "tousLesAvis": "Tous les avis",
+      "filtreEtoilesToast": "⭐ Filtre {{n}}+ étoiles",
+      "disponibilite": "Disponibilité",
+      "enStockUniquement": "En stock uniquement",
+      "enPromotion": "En promotion",
+      "nouveautesSeulement": "Nouveautés seulement",
+      "infosBoutique": "Infos boutique",
+      "horaires": "Horaires",
+      "adresse": "Adresse",
+      "telephone": "Téléphone",
+      "email": "Email"
+    },
+    "avis": {
+      "chargement": "Chargement des avis…",
+      "sur5": "{{n}} sur 5",
+      "aucuneNote": "Aucune note",
+      "avisVerifies_one": "{{count}} avis vérifié",
+      "avisVerifies_other": "{{count}} avis vérifiés",
+      "aucunAvis": "Aucun avis pour le moment",
+      "aucunAvisDetaille": "Aucun avis détaillé disponible",
+      "noteExisteDeja": "La note globale existe déjà, mais les commentaires ne sont pas encore disponibles.",
+      "avisApparaissent": "Les avis apparaissent après que les clients ont validé la réception de leur commande.",
+      "achatVerifie": "Achat vérifié"
+    },
+    "stories": {
+      "precedent": "Précédent",
+      "suivant": "Suivant",
+      "ilYA1j": "il y a 1j",
+      "ilYAHeures": "il y a {{h}}h",
+      "ilYAMinutes": "il y a {{m}}min",
+      "aLInstant": "à l'instant",
+      "voirLeProduit": "Voir le produit",
+      "ajouterPanier": "Ajouter au panier",
+      "ajouteAuPanierToast": "🛒 Ajouté au panier : {{produit}}",
+      "partager": "Partager",
+      "lienCopieToast": "🔗 Lien copié !",
+      "precedente": "Précédente",
+      "suivante": "Suivante",
+      "badges": {
+        "promo": "🔥 Promo",
+        "new": "✨ Nouveau",
+        "top": "⭐ Top Vente",
+        "flash": "⚡ Flash"
+      }
+    },
+    "page": {
+      "boutiqueIntrouvable": "Boutique introuvable",
+      "boutiqueIntrouvableDesc": "Cette boutique n'existe pas ou a été désactivée.",
+      "retourAccueil": "← Retour à l'accueil",
+      "idBoutiqueManquant": "ID boutique manquant.",
+      "erreurChargement": "Impossible de charger les données de la boutique.",
+      "accueil": "Accueil",
+      "boutiques": "Boutiques",
+      "abonneToast": "✅ Abonné à {{nom}}",
+      "abonneDefaultToast": "✅ Abonné à cette boutique",
+      "desabonneToast": "👋 Désabonné",
+      "erreurSuivi": "Erreur lors du suivi — réessayez",
+      "abonnezVousMessage": "Abonnez-vous à la boutique pour lui envoyer un message",
+      "abonnezVousAppel": "Abonnez-vous à la boutique pour l'appeler",
+      "erreurToast": "❌ {{msg}}",
+      "filtreEnStock": "En stock",
+      "filtreEnPromotion": "En promotion",
+      "filtreNouveautes": "Nouveautés",
+      "partagerTitre": "Partager cette boutique",
+      "boutiqueShopiDefault": "Boutique Shopi",
+      "membreDepuis": "Membre depuis {{date}}",
+      "membreShopi": "Membre Shopi",
+      "horairesNonRenseignes": "Horaires non renseignés"
+    }
+  }
+}

@@ -16,21 +16,24 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BoutiqueInfo } from '../data/boutiqueMockData';
+import FollowButton from '../../../../../shared/components/FollowButton';
 import styles from '../styles/BoutiqueIdentity.module.css';
 
 interface Props {
+  boutiqueId:     string;
   boutique:       BoutiqueInfo;
   suivi:          boolean;
-  suiviPending?:  boolean;
   msgLoading?:    boolean;
   callLoading?:   boolean;
-  onToggleSuivi:  () => void;
+  onToast:        (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
+  onRequireAuth:  () => void;
+  onSuiviChange:  (isSuivi: boolean) => void;
   onMessage:      () => void;
   onCall?:        () => void;
   onPartage:      () => void;
 }
 
-export default function BoutiqueIdentity({ boutique, suivi, suiviPending, msgLoading, callLoading, onToggleSuivi, onMessage, onCall, onPartage }: Props) {
+export default function BoutiqueIdentity({ boutiqueId, boutique, suivi, msgLoading, callLoading, onToast, onRequireAuth, onSuiviChange, onMessage, onCall, onPartage }: Props) {
   const { t } = useTranslation();
   return (
     <div className={styles.bar}>
@@ -100,16 +103,16 @@ export default function BoutiqueIdentity({ boutique, suivi, suiviPending, msgLoa
 
         {/* ── Boutons d'action ── */}
         <div className={styles.actions}>
-          {/* S'abonner / Abonné (toggle — appel API réel) */}
-          <button
-            className={`${styles.btnSub} ${suivi ? styles.btnSubOn : ''}`}
-            onClick={onToggleSuivi}
-            disabled={suiviPending}
-            style={{ opacity: suiviPending ? 0.65 : 1 }}
-          >
-            <i className={`fas ${suiviPending ? 'fa-spinner fa-spin' : suivi ? 'fa-check' : 'fa-plus'}`} />
-            <span>{suiviPending ? '…' : suivi ? t('boutiqueDetail.identity.abonneLabel') : t('boutiqueDetail.identity.abonner')}</span>
-          </button>
+          {/* S'abonner / Suivi(e) + menu ⋮ (désabonner/masquer/supprimer) */}
+          <FollowButton
+            actorType="entreprise"
+            id={boutiqueId}
+            name={boutique.nom}
+            isSuivi={suivi}
+            onToast={onToast}
+            onRequireAuth={onRequireAuth}
+            onChange={next => onSuiviChange(next.isSuivi)}
+          />
 
           {/* Message — le parent gère l'auth/abonnement requis au clic */}
           <button

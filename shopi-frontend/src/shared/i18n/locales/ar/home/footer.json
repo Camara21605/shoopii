@@ -1,0 +1,54 @@
+{
+  "publicFooter": {
+    "brandTagline": "السوق الإلكتروني الأفريقي المرجعي. نربط الفاعلين الاقتصاديين في غرب أفريقيا ضمن نظام رقمي موحّد.",
+    "socialToast": "📲 {{label}}",
+    "appStoreToast": "📱 متجر App Store قريبًا",
+    "googlePlayToast": "🤖 متجر Google Play قريبًا",
+    "disponibleSur": "متوفر على",
+    "linkToast": "📄 {{label}}",
+    "cols": {
+      "plateforme": {
+        "titre": "المنصة",
+        "explorerProduits": "استكشاف المنتجات",
+        "boutiques": "المتاجر",
+        "livreurs": "عمال التوصيل",
+        "partenaires": "الشركاء",
+        "correspondants": "المراسلون",
+        "offresPromos": "العروض والتخفيضات"
+      },
+      "acteurs": {
+        "titre": "الفاعلون",
+        "espaceClient": "مساحة العميل",
+        "espaceEntreprise": "مساحة الشركة",
+        "espaceLivreur": "مساحة عامل التوصيل",
+        "espacePartenaire": "مساحة الشريك",
+        "espaceCorrespondant": "مساحة المراسل",
+        "espaceAdmin": "مساحة الإدارة"
+      },
+      "aide": {
+        "titre": "المساعدة",
+        "centreAide": "مركز المساعدة",
+        "contact": "اتصل بنا",
+        "faq": "الأسئلة الشائعة",
+        "signalerProbleme": "الإبلاغ عن مشكلة",
+        "remboursements": "المبالغ المستردة",
+        "politiqueRetour": "سياسة الإرجاع"
+      }
+    },
+    "trust": {
+      "paiementSecurise": "دفع آمن SSL",
+      "livraisonExpress": "توصيل سريع طوال الأسبوع",
+      "protectionAcheteur": "حماية المشتري",
+      "support247": "دعم على مدار الساعة",
+      "retourFacile": "إرجاع سهل خلال 7 أيام"
+    },
+    "copyright": "© 2025 Shopi Africa. جميع الحقوق محفوظة. صُنع بـ ❤️ في غينيا 🇬🇳",
+    "bottomLinks": {
+      "mentionsLegales": "الإشعارات القانونية",
+      "confidentialite": "الخصوصية",
+      "cookies": "ملفات تعريف الارتباط",
+      "cgu": "شروط الاستخدام",
+      "accessibilite": "إمكانية الوصول"
+    }
+  }
+}

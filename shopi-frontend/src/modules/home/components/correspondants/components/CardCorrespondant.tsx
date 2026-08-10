@@ -7,6 +7,8 @@
 
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/Correspondants.module.css';
+import { useAuthGate } from '../../../../../shared/hooks/useAuthGate';
+import FollowButton    from '../../../../../shared/components/FollowButton';
 import type { Correspondant } from '../data/types';
 
 /* Couleur du bandeau + libellé selon le type */
@@ -25,12 +27,15 @@ const AVA_BG: Record<string, string> = {
 
 interface Props {
   c:          Correspondant;
-  onToggle:   (id: string) => void;
+  onToast:    (msg: string, type?: 's' | 'i' | 'w' | 'e') => void;
   onView:     (id: string) => void;
+  /** Reflète l'action du menu ⋮ dans la liste partagée du parent. */
+  onChange:   (id: string, next: { isSuivi: boolean; hidden?: boolean; removed?: boolean }) => void;
 }
 
-export default function CardCorrespondant({ c, onToggle, onView }: Props) {
+export default function CardCorrespondant({ c, onToast, onView, onChange }: Props) {
   const { t } = useTranslation();
+  const { openAuthModal, authModal } = useAuthGate();
   const TYPE_LABEL: Record<string, string> = {
     regional: t('correspondantsPage.typeLabel.regional'),
     zonal: t('correspondantsPage.typeLabel.zonal'),
@@ -78,19 +83,24 @@ export default function CardCorrespondant({ c, onToggle, onView }: Props) {
         </div>
 
         {/* Bouton suivre (stopPropagation pour ne pas déclencher onView) */}
-        <button
-          className={`${styles.flwBtn} ${c.suivi ? styles.fbOn : styles.fbOff}`}
-          onClick={e => { e.stopPropagation(); onToggle(c.id); }}
-        >
-          {c.suivi
-            ? <><i className="fas fa-user-check" /> {t('correspondantsPage.card.abonne')}</>
-            : <><i className="fas fa-plus" /> {t('correspondantsPage.card.suivre')}</>}
-        </button>
+        <div onClick={e => e.stopPropagation()}>
+          <FollowButton
+            actorType="correspondant"
+            id={c.id}
+            name={c.nom}
+            isSuivi={c.suivi}
+            onToast={onToast}
+            onRequireAuth={openAuthModal}
+            onChange={next => onChange(c.id, next)}
+          />
+        </div>
 
         <button className={styles.cPlink} onClick={e => { e.stopPropagation(); onView(c.id); }}>
           {t('correspondantsPage.card.voirProfilComplet')}
         </button>
       </div>
+
+      {authModal}
     </div>
   );
 }

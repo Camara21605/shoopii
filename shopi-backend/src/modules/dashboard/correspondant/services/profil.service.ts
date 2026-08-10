@@ -107,9 +107,13 @@ export class ProfilService extends CorrespondantBaseService {
         user.lastName = dto.lastName;
         userChanged   = true;
       }
+      /* Unicité scopée par rôle (UNIQUE(email/phone, role)) : un compte pro
+       * lié ou d'un autre rôle partageant ces coordonnées (même personne,
+       * "Mon espace") ne doit pas bloquer ce correspondant — seul un AUTRE
+       * compte CORRESPONDENT avec la même valeur est un vrai conflit. */
       if (dto.email?.trim()) {
         const existing = await manager.findOne(User, {
-          where: { email: dto.email }, select: ['id'],
+          where: { email: dto.email, role: user.role }, select: ['id'],
         });
         if (existing && existing.id !== userId) {
           throw new BadRequestException('Email déjà utilisé par un autre compte.');
@@ -119,7 +123,7 @@ export class ProfilService extends CorrespondantBaseService {
       }
       if (dto.phone?.trim()) {
         const existing = await manager.findOne(User, {
-          where: { phone: dto.phone }, select: ['id'],
+          where: { phone: dto.phone, role: user.role }, select: ['id'],
         });
         if (existing && existing.id !== userId) {
           throw new BadRequestException('Téléphone déjà utilisé par un autre compte.');

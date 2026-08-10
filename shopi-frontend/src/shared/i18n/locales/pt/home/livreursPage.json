@@ -1,0 +1,108 @@
+{
+  "livreursPage": {
+    "card": {
+      "livreurAriaLabel": "Entregador {{nom}}",
+      "disponible": "Disponível",
+      "enCourse": "Em curso",
+      "livraisonsCount": "{{count}} entregas",
+      "abonneFem": "Subscrito(a)",
+      "suivre": "Seguir",
+      "seDesabonnerDe": "Deixar de seguir {{nom}}",
+      "suivreNom": "Seguir {{nom}}",
+      "connexionRequise": "É necessário entrar",
+      "connexionRequisePourSuivre": "É necessário entrar para seguir",
+      "seDesabonner": "Deixar de seguir",
+      "avisCount": "({{count}} avaliações)",
+      "livraisons": "Entregas",
+      "ponctualite": "Pontualidade",
+      "experience": "Experiência",
+      "voirProfilComplet": "Ver o perfil completo →",
+      "profilCompletAria": "Ver o perfil completo de {{nom}}",
+      "profilDe": "Perfil de {{nom}}"
+    },
+    "suggestions": {
+      "ariaLabel": "Entregadores sugeridos perto de você",
+      "titre": "Sugestões",
+      "sousTitre": "Perto de você",
+      "abonne": "✓ Subscrito",
+      "suivre": "+ Seguir"
+    },
+    "hero": {
+      "ariaLabel": "Apresentação dos entregadores Shopi",
+      "supTitle": "Rede Shopi · Conacri",
+      "titrePart1": "Encontre o seu",
+      "titreEm": "entregador",
+      "titrePart2": "de confiança",
+      "sub": "Entregadores profissionais verificados, disponíveis em toda a Guiné. Siga os seus entregadores favoritos e encomende com toda a confiança.",
+      "livreursSuggeres": "Entregadores sugeridos",
+      "abonne": "Subscrito",
+      "suivre": "Seguir",
+      "stats": {
+        "livreursActifs": "Entregadores ativos",
+        "noteMoyenne": "Nota média",
+        "livraisonsMois": "Entregas/mês",
+        "communesCouvertes": "Comunas cobertas"
+      }
+    },
+    "toolbar": {
+      "searchPlaceholder": "Nome, zona, veículo…",
+      "rechercherLivreurAria": "Pesquisar um entregador",
+      "effacerRechercheAria": "Limpar a pesquisa",
+      "trierLivreursAria": "Ordenar os entregadores",
+      "modeAffichageAria": "Modo de exibição",
+      "vueGrille": "Vista grelha",
+      "vueListe": "Vista lista",
+      "livreurCount_one": "{{count}} entregador",
+      "livreurCount_other": "{{count}} entregadores",
+      "filters": {
+        "tous": "Todos",
+        "disponibles": "Disponíveis",
+        "abonnements": "Subscrições",
+        "motos": "Motos",
+        "voitures": "Carros"
+      },
+      "sorts": {
+        "mieuxNotes": "Melhor avaliados",
+        "plusDeLivraisons": "Mais entregas",
+        "disponiblesDabord": "Disponíveis primeiro",
+        "lesPlusProches": "Os mais próximos"
+      }
+    },
+    "sidebar": {
+      "ariaLabel": "Filtros de entregadores",
+      "zoneDeLivraison": "Zona de entrega",
+      "reinit": "Repor",
+      "toutesLesZones": "Todas as zonas",
+      "typeDeVehicule": "Tipo de veículo",
+      "noteMinimale": "Nota mínima",
+      "ratingOpts": {
+        "cinqEtoiles": "Apenas 5 estrelas",
+        "quatrePlus": "4+ estrelas",
+        "troisPlus": "3+ estrelas",
+        "toutesLesNotes": "Todas as notas"
+      },
+      "disponibilite": "Disponibilidade",
+      "disponible": "Disponível",
+      "enCourse": "Em curso",
+      "mesAbonnements": "As minhas subscrições",
+      "vehicules": {
+        "moto": "Moto",
+        "voiture": "Carro",
+        "pickup": "Pickup",
+        "camion": "Camião"
+      }
+    },
+    "page": {
+      "tousLesLivreurs": "Todos os entregadores",
+      "livreurDansRegion_one": "{{count}} entregador na sua região",
+      "livreurDansRegion_other": "{{count}} entregadores na sua região",
+      "vueGrille": "Vista grelha",
+      "vueListe": "Vista lista",
+      "impossibleDeCharger": "Impossível carregar os entregadores",
+      "aucunLivreurTrouve": "Nenhum entregador encontrado",
+      "essayezModifier": "Tente modificar os seus filtros ou a sua pesquisa.",
+      "chargementToast": "📄 A carregar...",
+      "chargerPlus": "Carregar mais entregadores"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "finances": {
+    "gnf": "GNF",
+    "kpi": {
+      "soldeDisponible": "Solde disponible",
+      "walletEntreprise": "Wallet entreprise",
+      "revenusCeMois": "Revenus ce mois",
+      "vsMoisDernier": "{{sign}}{{pct}}% vs mois dernier",
+      "depensesCeMois": "Dépenses ce mois",
+      "commissionsLivraison": "Commissions + livraison",
+      "enAttenteEscrow": "En attente (escrow)",
+      "libereALaLivraison": "Libéré à la livraison"
+    },
+    "evolutionRevenus": "Évolution des revenus",
+    "legendRevenus": "Revenus (M GNF)",
+    "legendMoisPrecedents": "Mois précédents",
+    "transactionsRecentes": "Transactions récentes",
+    "emptyTransactions": "Aucune transaction pour l'instant.",
+    "repartition": "Répartition",
+    "emptyRepartition": "Aucune donnée ce mois.",
+    "virementsShopi": "Virements Shopi",
+    "emptyVirements": "Aucun virement pour l'instant.",
+    "statutRecu": "✓ Reçu",
+    "statutAttente": "⏳ Attente",
+    "actions": "Actions",
+    "quickActions": {
+      "telechargerBilan": "Télécharger bilan mensuel",
+      "demanderVirement": "Demander virement anticipé",
+      "modifierInfosBancaires": "Modifier infos bancaires",
+      "voirFactures": "Voir factures Shopi"
+    }
+  }
+}

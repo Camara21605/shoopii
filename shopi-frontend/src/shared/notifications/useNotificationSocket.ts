@@ -94,12 +94,29 @@ async function recoverFromServerDisconnect(): Promise<void> {
   }
 }
 
-/** Ferme et efface le socket singleton — à appeler au logout. */
+/** Ferme et efface le socket singleton — à appeler au logout, ou avant un
+ *  switch de compte "Mon espace" (nouvelle identité = nouveau handshake
+ *  requis, un socket déjà connecté ne se ré-authentifie pas tout seul —
+ *  voir disconnectGlobalSocket() dans useSocket.ts pour le même besoin
+ *  côté messagerie). */
 export function disconnectNotificationSocket(): void {
   if (_socket) {
     _socket.disconnect();
     _socket = null;
   }
+}
+
+/**
+ * Initialise (ou réutilise) le socket notifications sans monter le hook
+ * React complet — miroir de initGlobalSocket() (useSocket.ts). Utile après
+ * un disconnectNotificationSocket() explicite (switch de compte) pour
+ * rouvrir immédiatement une connexion sous la nouvelle identité, sans
+ * attendre qu'un composant utilisant useNotificationSocket() remonte.
+ */
+export function initNotificationSocket(): void {
+  const token = localStorage.getItem('shopi_access_token');
+  if (!token) return;
+  getSocket(token);
 }
 
 // ── Hook ──────────────────────────────────────────────────────

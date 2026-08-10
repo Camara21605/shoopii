@@ -7,7 +7,7 @@
  * ============================================================ */
 
 import {
-  Controller, Post, Get, Param, Req,
+  Controller, Post, Patch, Get, Param, Body, Req,
   UseGuards, Query, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import type { Request } from 'express';
@@ -16,6 +16,7 @@ import { JwtAuthGuard }               from '../../../common/guards/auth.guard';
 import { OptionalJwtAuthGuard }       from '../../../common/guards/optional-jwt.guard'; /* ✅ */
 import { SuivisCorrespondantService } from '../services/suivis-correspondant.service';
 import { UserRole }                   from '../../../common/enums/user-role.enum';
+import { SetHiddenDto }               from '../dto/suivis.dto';
 
 @Controller('suivis/correspondants')
 export class SuivisCorrespondantController {
@@ -56,6 +57,14 @@ export class SuivisCorrespondantController {
       type,
       online: online === undefined ? undefined : online === 'true',
     });
+  }
+
+  /* ─── PATCH /suivis/correspondants/:id/masquer ─── */
+  @Patch(':id/masquer')
+  @UseGuards(JwtAuthGuard)
+  async setMasque(@Req() req: Request, @Param('id') id: string, @Body() dto: SetHiddenDto) {
+    const { userId, role } = this.ctx(req);
+    return this.service.setHidden(userId, role, id, dto.hidden);
   }
 
   /* ─── GET /suivis/correspondants/:id/count ─── */

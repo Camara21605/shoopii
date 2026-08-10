@@ -160,14 +160,14 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
             <div style={{
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '10px 14px', marginBottom: 14,
-              background: 'rgba(234,179,8,.08)',
-              border: '1.5px solid rgba(234,179,8,.35)',
+              background: 'rgba(0,0,0,.08)',
+              border: '1.5px solid rgba(0,0,0,.35)',
               borderRadius: 'var(--r-md)', fontSize: 12,
             }}>
-              <i className="fas fa-lock" style={{ color:'#b45309', fontSize:15, flexShrink:0 }} />
+              <i className="fas fa-lock" style={{ color:'#52525B', fontSize:15, flexShrink:0 }} />
               <div>
-                <div style={{ fontWeight:700, color:'#92400e' }}>Type de livraison verrouillé</div>
-                <div style={{ color:'#78350f', marginTop:2 }}>
+                <div style={{ fontWeight:700, color:'#3F3F46' }}>Type de livraison verrouillé</div>
+                <div style={{ color:'#27272A', marginTop:2 }}>
                   Modifiable à partir du <strong>{unlockDate}</strong>. Vous pouvez modifier vos zones actives à tout moment.
                 </div>
               </div>

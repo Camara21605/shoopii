@@ -1,0 +1,22 @@
+{
+  "boutiquesPage": {
+    "title": "جميع المتاجر",
+    "subtitleCount_one": "شركة {{count}} متاحة",
+    "subtitleCount_other": "{{count}} شركة متاحة",
+    "subtitleDefault": "اكتشف شركاءنا",
+    "searchPlaceholder": "ابحث عن متجر...",
+    "resultats": "النتائج",
+    "loading": "جارٍ التحميل…",
+    "resultCount_one": "متجر {{count}}",
+    "resultCount_other": "{{count}} متجر",
+    "errorTitle": "تعذّر تحميل المتاجر",
+    "retry": "إعادة المحاولة",
+    "emptyTitle": "لم يتم العثور على أي شركة",
+    "emptyText": "لا توجد أي شركة متاحة في هذه الفئة.",
+    "loadMore": "عرض المزيد من المتاجر",
+    "filterBar": {
+      "toutesCategories": "✦ جميع الفئات",
+      "toutesSousCategories": "جميع الفئات الفرعية"
+    }
+  }
+}

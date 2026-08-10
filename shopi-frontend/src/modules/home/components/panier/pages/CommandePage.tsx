@@ -23,6 +23,12 @@ import type { ProfilData, AdresseItem }      from '../../settings/api/settings.a
 import { fetchLivreursSuivis, type LivreurSuivi } from '../services/livreursSuivis.api';
 import { fetchWalletSummary }                from '../../../../../shared/services/walletApi';
 import { SPEEDS, lvFeeCalc }                 from '../data/panierData';
+/* La position GPS du client doit être autorisée pour pouvoir commander
+ * (le livreur/l'entreprise doivent pouvoir localiser la livraison en
+ * temps réel — voir aussi SectionAddresses.tsx du profil client, qui
+ * demande déjà cette autorisation en amont). askConfirm() bloque la
+ * commande tant que geo.position n'est pas disponible. */
+import { useGeolocation }                    from '../../../../../shared/location/hooks/useGeolocation';
 import styles from '../styles/CommandePage.module.css';
 
 export default function CommandePage() {
@@ -55,6 +61,12 @@ export default function CommandePage() {
   /* ── Solde réel du portefeuille Shopi du client (mode de paiement "Wallet") ── */
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [loadingWallet, setLoadingWallet] = useState(true);
+
+  /* Demande la permission GPS dès l'arrivée sur le panier — pas seulement
+   * au clic sur "Commander" — pour laisser le temps au client de
+   * l'accorder (ou de comprendre qu'il doit l'accorder) avant d'arriver
+   * au bout du formulaire. askConfirm() vérifie geo.position plus bas. */
+  const geo = useGeolocation();
 
   /* ── Ancre pour le lien "Modifier" du panneau récapitulatif ── */
   const articlesRef = useRef<HTMLDivElement | null>(null);
@@ -121,6 +133,18 @@ export default function CommandePage() {
   }
 
   function askConfirm() {
+    /* Position GPS obligatoire : sans elle, ni le livreur ni l'entreprise
+     * ne peuvent localiser la livraison sur la carte de suivi (voir
+     * OrderTrackingMap). On bloque donc la commande tant qu'elle n'est
+     * pas accordée, plutôt que de laisser passer une commande impossible
+     * à livrer correctement. */
+    if (!geo.position) {
+      showToast(geo.error
+        ? `📍 ${geo.error}`
+        : '📍 Autorisez la géolocalisation pour pouvoir commander.');
+      geo.refresh();
+      return;
+    }
     if (!termsOk)           { showToast(t('panierCommande.page.acceptezCguToast')); return; }
     if (items.length === 0) { showToast(t('panierCommande.page.panierVideToast'));              return; }
     const a = adresseLivraison;
@@ -199,6 +223,34 @@ export default function CommandePage() {
     <div className={styles.root}>
       <Header onToast={showToast} onLogin={() => navigate('/login')} onRegister={() => navigate('/register')} />
       <ProgressBar />
+
+      {/* Avertissement position GPS — affiché tant que la permission n'est
+       * pas accordée, pour que le client comprenne AVANT de cliquer sur
+       * "Commander" pourquoi le bouton le bloquera (voir askConfirm()). */}
+      {!geo.position && (
+        <div style={{
+          maxWidth: 1100, margin: '0 auto', padding: '0 20px',
+        }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+            background: 'rgba(220,38,38,.08)', border: '1.5px solid rgba(220,38,38,.25)',
+            borderRadius: 12, padding: '12px 16px', margin: '14px 0',
+          }}>
+            <i className="fas fa-location-crosshairs" style={{ color: '#DC2626', fontSize: 17 }} />
+            <div style={{ flex: 1, minWidth: 220, fontSize: 12.5, color: 'var(--t2)' }}>
+              {geo.error
+                ? geo.error
+                : 'Autorisez votre position GPS pour pouvoir commander — elle permet au livreur et à la boutique de suivre votre livraison.'}
+            </div>
+            <button
+              onClick={geo.refresh}
+              style={{ background: '#DC2626', color: '#fff', border: 'none', borderRadius: 9, padding: '8px 16px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
+            >
+              <i className="fas fa-rotate-right" /> Autoriser ma position
+            </button>
+          </div>
+        </div>
+      )}
 
       <main className={styles.main}>
         <div className={styles.grid}>

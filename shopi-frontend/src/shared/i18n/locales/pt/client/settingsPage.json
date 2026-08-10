@@ -1,0 +1,541 @@
+{
+  "settingsPage": {
+    "tabs": {
+      "ariaLabel": "Secções das definições",
+      "profil": "Perfil",
+      "adresses": "Endereços",
+      "paiement": "Pagamento",
+      "points": "Pontos Shopi",
+      "confidentialiteSecurite": "Privacidade & segurança",
+      "securite": "Segurança",
+      "sessions": "Dispositivos ligados",
+      "activite": "Registo de atividade",
+      "approbations": "Dispositivos de confiança",
+      "notifs": "Notificações",
+      "confidentialite": "Privacidade",
+      "apparence": "Aparência",
+      "langue": "Idioma & região",
+      "donnees": "Os meus dados",
+      "danger": "Zona de perigo"
+    },
+    "page": {
+      "retourAccueil": "Voltar ao início",
+      "titrePart1": "Definições",
+      "titreEm": "da conta",
+      "sub": "Gerencie as suas informações, segurança e preferências Shopi"
+    },
+    "sidebar": {
+      "photoAlt": "Foto de perfil",
+      "chargement": "A carregar…",
+      "changerPhoto": "Alterar a foto de perfil",
+      "uploadEnCours": "A carregar…",
+      "verifie": "Verificado",
+      "invalidFormat": "❌ Formato inválido — escolha uma imagem (JPG, PNG, WebP)",
+      "tropGrande": "❌ Imagem demasiado grande — máximo 5 MB",
+      "uploadEnCoursToast": "📤 A carregar…",
+      "photoMiseAJour": "✅ Foto de perfil atualizada!",
+      "uploadErrorFallback": "Erro ao carregar"
+    },
+    "securityBanner": {
+      "items": {
+        "motDePasseFort": "Palavra-passe forte",
+        "emailVerifie": "Email verificado",
+        "telephoneVerifie": "Telefone verificado",
+        "twoFaActive": "2FA ativado",
+        "questionsSecurite": "Questões de segurança",
+        "codesSecours": "Códigos de backup gerados"
+      },
+      "niveaux": {
+        "excellent": "Excelente",
+        "bien": "Bom",
+        "moyen": "Médio",
+        "faible": "Fraco"
+      },
+      "titre": "Pontuação de segurança",
+      "chargementDesc": "A carregar a pontuação de segurança…",
+      "descExcellent": "A sua conta está perfeitamente segura. Continue assim!",
+      "descBien": "A sua conta está bem protegida. Algumas melhorias ainda são possíveis.",
+      "descFaible": "Reforce a sua segurança completando as ações abaixo.",
+      "ameliorer": "Melhorar"
+    },
+    "points": {
+      "titre": "Os meus Shopi Points",
+      "pts": "pts",
+      "niveauLabel": "Nível",
+      "prochainA": "a",
+      "prochainPts": "pts",
+      "pointsGagnes": "Pontos ganhos este mês",
+      "pointsUtilises": "Pontos utilizados",
+      "expirationProchaine": "Próxima expiração"
+    },
+    "activite": {
+      "titre": "Registo de atividade",
+      "subtitle": "Rastreabilidade completa de todas as ações na sua conta",
+      "exportEnCours": "A exportar…",
+      "exporter": "Exportar",
+      "aucuneActivite": "Nenhuma atividade registada",
+      "loadError": "❌ Impossível carregar o registo",
+      "types": {
+        "login": "Entrada",
+        "order": "Encomenda",
+        "security": "Segurança",
+        "alert": "Alerta",
+        "profile": "Perfil"
+      }
+    },
+    "adresses": {
+      "titre": "Endereços de entrega",
+      "subtitleSuffix_one": "endereço registado",
+      "subtitleSuffix_other": "endereços registados",
+      "ajouter": "Adicionar",
+      "aucuneAdresse": "Nenhum endereço registado",
+      "parDefaut": "Padrão",
+      "ajouterNouvelle": "Adicionar um novo endereço",
+      "loadError": "❌ Impossível carregar os endereços",
+      "toastSupprimee": "🗑️ Endereço eliminado",
+      "toastDefiniParDefaut": "⭐ Endereço definido como padrão",
+      "toastFormulaireTodo": "➕ Formulário de adição — a implementar",
+      "toastModificationTodo": "✏️ Modificação — a implementar",
+      "toastAjouterNouvelle": "➕ Adicionar um novo endereço"
+    },
+    "paiement": {
+      "titre": "Meios de pagamento",
+      "subtitle": "Cartões, Mobile Money e carteiras",
+      "ajouter": "Adicionar",
+      "aucunMoyen": "Nenhum meio de pagamento registado",
+      "parDefaut": "Padrão",
+      "ajouteLe": "Adicionado em",
+      "definirParDefautTitle": "Definir como padrão",
+      "loadError": "❌ Impossível carregar os meios de pagamento",
+      "toastSupprime": "🗑️ Meio de pagamento eliminado",
+      "toastDefiniParDefaut": "⭐ Meio de pagamento definido como padrão",
+      "toastAjouter": "➕ Adicionar um meio de pagamento",
+      "ajouterNouveau": "Adicionar um meio de pagamento",
+      "labels": {
+        "carte": "Cartão bancário",
+        "especes": "Dinheiro",
+        "virement": "Transferência bancária",
+        "wallet": "Carteira Shopi"
+      }
+    },
+    "sessions": {
+      "titre": "Dispositivos ligados",
+      "subtitleSuffix_one": "sessão ativa",
+      "subtitleSuffix_other": "sessões ativas",
+      "suspectSuffix_one": "ligação suspeita",
+      "suspectSuffix_other": "ligações suspeitas",
+      "deconnecterTout": "Terminar todas",
+      "enCours": "Em curso…",
+      "aucuneSession": "Nenhuma sessão ativa",
+      "sessionActuelle": "Sessão atual",
+      "suspect": "Suspeita",
+      "revoquer": "Revogar",
+      "conseilTitre": "Conselho de segurança",
+      "conseilTexteSuffix_one": "ligação suspeita detetada. Revogue-a e mude a sua palavra-passe imediatamente.",
+      "conseilTexteSuffix_other": "ligações suspeitas detetadas. Revogue-as e mude a sua palavra-passe imediatamente.",
+      "loadError": "❌ Impossível carregar as sessões",
+      "toastRevoked": "🔒 Sessão revogada",
+      "toastRevokedAll": "🔒 Todas as outras sessões revogadas"
+    },
+    "approbations": {
+      "titre": "Dispositivos de confiança",
+      "subtitle": "Estes dispositivos podem ligar-se sem código 2FA adicional",
+      "approuve": "Aprovado",
+      "retirer": "Remover",
+      "derniereUtilisation": "Última utilização",
+      "ajouteLe": "Adicionado em",
+      "aujourdhui": "hoje",
+      "hier": "ontem",
+      "commentTitre": "Como funciona",
+      "commentTexte": "Os dispositivos de confiança são memorizados após uma verificação 2FA bem-sucedida. Remova um dispositivo se não o reconhecer ou se o tiver perdido.",
+      "toastRetire": "🔒 Dispositivo removido da lista de confiança",
+      "toastRetireMac": "🔒 MacBook removido da lista de confiança",
+      "aucunAppareil": "Nenhum dispositivo de confiança registado",
+      "loadError": "❌ Impossível carregar os dispositivos"
+    },
+    "notifs": {
+      "titre": "Notificações",
+      "subtitle": "Escolha quando e como ser notificado",
+      "enregistrer": "Guardar",
+      "enregistrement": "A guardar…",
+      "toastSaved": "✅ Preferências de notificações guardadas",
+      "sms": "SMS",
+      "email": "Email",
+      "push": "Push",
+      "rows": {
+        "commandes": {
+          "title": "Estatuto da encomenda",
+          "desc": "Confirmação, envio, entrega"
+        },
+        "promos": {
+          "title": "Promoções & ofertas",
+          "desc": "Saldos, códigos promocionais, ofertas exclusivas"
+        },
+        "messages": {
+          "title": "Mensagens",
+          "desc": "Novas mensagens de vendedores ou do suporte"
+        },
+        "points": {
+          "title": "Pontos & recompensas",
+          "desc": "Ganhos de pontos, níveis atingidos"
+        }
+      }
+    },
+    "confidentialite": {
+      "titre": "Privacidade do perfil",
+      "subtitle": "Controle quem pode ver as suas informações",
+      "enregistrer": "Guardar",
+      "enregistrement": "A guardar…",
+      "toastSaved": "✅ Definições de privacidade guardadas",
+      "visibiliteTitle": "Visibilidade do perfil",
+      "visibiliteDesc": "Quem pode ver o seu perfil público",
+      "visibiliteOptions": {
+        "toutLeMonde": "Todos",
+        "membresShopi": "Membros Shopi",
+        "personne": "Ninguém"
+      },
+      "rows": {
+        "historique": {
+          "title": "Histórico de encomendas",
+          "desc": "Mostrar as suas compras recentes no seu perfil"
+        },
+        "wishlist": {
+          "title": "Lista de desejos",
+          "desc": "Tornar a sua lista de desejos visível aos outros"
+        },
+        "perso": {
+          "title": "Dados de personalização",
+          "desc": "Usar o seu comportamento para melhorar as recomendações"
+        },
+        "localisation": {
+          "title": "Localização aproximada",
+          "desc": "Partilhar a sua cidade para ofertas locais"
+        },
+        "pubs": {
+          "title": "Publicidade personalizada",
+          "desc": "Receber publicidade baseada nos seus interesses"
+        }
+      }
+    },
+    "apparence": {
+      "titre": "Aparência",
+      "subtitle": "Tema, tamanho de texto e exibição",
+      "enregistrer": "Guardar",
+      "enregistrement": "A guardar…",
+      "toastSaved": "✅ Aparência atualizada",
+      "themeTitle": "Tema",
+      "themeDesc": "Claro, escuro ou automático",
+      "themeOptions": {
+        "clair": "Claro",
+        "sombre": "Escuro",
+        "auto": "Automático"
+      },
+      "tailleTitle": "Tamanho do texto",
+      "tailleDesc": "Ajuste para uma melhor legibilidade",
+      "tailleOptions": {
+        "normal": "Normal",
+        "grand": "Grande",
+        "tresGrand": "Muito grande"
+      },
+      "qualiteTitle": "Qualidade das imagens",
+      "qualiteDesc": "Reduzir para poupar dados móveis",
+      "qualiteOptions": {
+        "haute": "Alta qualidade",
+        "eco": "Económico"
+      }
+    },
+    "langue": {
+      "titre": "Idioma & região",
+      "subtitle": "Idioma, moeda e fuso horário",
+      "enregistrer": "Guardar",
+      "enregistrement": "A guardar…",
+      "toastSaved": "✅ Preferências regionais guardadas",
+      "langueTitle": "Idioma de exibição",
+      "langueDesc": "Idioma da interface Shopi",
+      "deviseTitle": "Moeda de exibição",
+      "deviseDesc": "Para preços e transações",
+      "fuseauTitle": "Fuso horário",
+      "fuseauDesc": "Para prazos de entrega e datas"
+    },
+    "donnees": {
+      "titre": "Os meus dados pessoais",
+      "subtitle": "Aceda, exporte ou elimine os seus dados — conformidade RGPD",
+      "droitsTitre": "Os seus direitos",
+      "droitsTexteSuffix": "Você tem o direito de aceder, corrigir, exportar e eliminar os seus dados a qualquer momento. Para qualquer pedido, contacte o nosso DPO em",
+      "items": {
+        "export": {
+          "title": "Exportar todos os meus dados",
+          "desc": "Ficheiro ZIP com perfil, encomendas, mensagens, pontos",
+          "btnLabel": "Exportar",
+          "msg": "📦 Exportação em preparação — email em 24h"
+        },
+        "historique": {
+          "title": "Histórico de encomendas",
+          "desc": "Todas as suas encomendas desde a criação da conta — CSV ou PDF",
+          "btnLabel": "CSV",
+          "msg": "📋 Histórico exportado"
+        },
+        "factures": {
+          "title": "As minhas faturas e recibos",
+          "desc": "PDF de todas as suas faturas desde a inscrição",
+          "btnLabel": "PDF",
+          "msg": "🧾 Faturas descarregadas"
+        },
+        "rapport": {
+          "title": "Relatório de privacidade",
+          "desc": "Que dados são recolhidos, como são utilizados",
+          "btnLabel": "Ver",
+          "msg": "📄 Relatório aberto"
+        },
+        "portabilite": {
+          "title": "Pedido de portabilidade (RGPD)",
+          "desc": "Transferir os seus dados para outra plataforma — prazo legal 30 dias",
+          "btnLabel": "Pedir",
+          "msg": "📨 Pedido de portabilidade enviado"
+        }
+      },
+      "rowsLive": {
+        "export": {
+          "title": "Exportar todos os meus dados",
+          "desc": "Ficheiro ZIP — perfil, encomendas, mensagens, pontos",
+          "label": "Exportar"
+        },
+        "commandes": {
+          "title": "Histórico de encomendas",
+          "desc": "Todas as suas encomendas — CSV ou PDF",
+          "label": "CSV"
+        },
+        "factures": {
+          "title": "As minhas faturas e recibos",
+          "desc": "PDF de todas as suas faturas",
+          "label": "PDF"
+        },
+        "rapport": {
+          "title": "Relatório de privacidade",
+          "desc": "Que dados são recolhidos e como",
+          "label": "Ver"
+        },
+        "portabilite2": {
+          "title": "Portabilidade RGPD",
+          "desc": "Transferir os seus dados — prazo legal 30 dias",
+          "label": "Pedir"
+        }
+      },
+      "droitsTexteShort": "Você tem o direito de aceder, corrigir, exportar e eliminar os seus dados. Contacte o nosso DPO em"
+    },
+    "danger": {
+      "titre": "Zona de perigo",
+      "subtitle": "Estas ações são irreversíveis — pense antes de agir",
+      "rows": {
+        "desactiver": {
+          "title": "Desativar temporariamente a conta",
+          "desc": "O seu perfil será ocultado e as suas encomendas em curso serão processadas. Reativação possível a qualquer momento.",
+          "btn": "Desativar",
+          "msg": "⚠️ Confirmação necessária — verifique o seu email"
+        },
+        "revoquerAcces": {
+          "title": "Revogar todos os acessos de terceiros",
+          "desc": "Desliga todas as aplicações e serviços ligados à sua conta.",
+          "btn": "Revogar os acessos",
+          "msg": "🔌 Todos os acessos de terceiros revogados"
+        },
+        "reinitialiser": {
+          "title": "Repor todas as minhas preferências",
+          "desc": "Repõe notificações, aparência, idioma e privacidade para os valores padrão Shopi.",
+          "btn": "Repor",
+          "msg": "🔄 Preferências repostas"
+        },
+        "supprimer": {
+          "title": "Eliminar definitivamente a conta",
+          "descPart1": "Todos os seus dados, encomendas, pontos e histórico serão",
+          "descStrong": "definitivamente eliminados",
+          "descPart2": "num prazo de 30 dias. Esta ação é",
+          "descStrong2": "irreversível",
+          "descPart3": ".",
+          "btn": "Eliminar a minha conta",
+          "msg": "⛔ Pedido enviado — verifique o seu email"
+        }
+      },
+      "rowsLive": {
+        "desactiver": {
+          "title": "Desativar temporariamente a conta",
+          "desc": "O seu perfil será ocultado. Reativação possível a qualquer momento.",
+          "btn": "Desativar"
+        },
+        "revoquer": {
+          "title": "Revogar todos os acessos de terceiros",
+          "desc": "Desliga todas as aplicações e serviços ligados à sua conta.",
+          "btn": "Revogar os acessos"
+        },
+        "reinitialiser": {
+          "title": "Repor todas as minhas preferências",
+          "desc": "Repõe notificações, aparência, idioma para os valores padrão.",
+          "btn": "Repor"
+        },
+        "supprimer": {
+          "titre": "Eliminar definitivamente a conta",
+          "descPart1": "Todos os seus dados serão eliminados num prazo de",
+          "descStrong1": "30 dias",
+          "descPart2": ". Ação",
+          "descStrong2": "irreversível",
+          "descPart3": ".",
+          "btn": "Eliminar a minha conta"
+        }
+      },
+      "clicAgain": "Clique novamente para confirmar",
+      "confirmerBtn": "Confirmar",
+      "annulerBtn": "Cancelar"
+    },
+    "profil": {
+      "photoTitle": "Foto de perfil",
+      "photoSubtitle": "A sua foto visível aos outros utilizadores Shopi",
+      "photoAlt": "Foto de perfil",
+      "uploadEnCoursTitle": "A carregar…",
+      "changerPhotoTitle": "Alterar a foto",
+      "aucunUsername": "Sem nome de utilizador",
+      "uploadEnCoursBtn": "A carregar…",
+      "changerPhotoBtn": "Alterar a foto",
+      "supprimer": "Eliminar",
+      "photoHint": "JPG, PNG ou WebP · máx 5 MB",
+      "invalidFormat": "❌ Formato inválido — escolha uma imagem (JPG, PNG, WebP)",
+      "tropGrande": "❌ Imagem demasiado grande — máximo 5 MB",
+      "uploadEnCoursToast": "📤 A carregar…",
+      "photoMiseAJour": "✅ Foto de perfil atualizada!",
+      "photoSupprimee": "✅ Foto eliminada",
+      "photoSuppressionError": "❌ Impossível eliminar a foto",
+      "uploadErrorFallback": "Erro ao carregar",
+      "loadError": "❌ Impossível carregar o perfil",
+      "infosTitle": "Informações pessoais",
+      "infosSubtitle": "A sua identidade na plataforma Shopi",
+      "modifier": "Modificar",
+      "prenomNom": "Nome próprio & Apelido",
+      "nomUtilisateur": "Nome de utilizador",
+      "nonDefini": "Não definido",
+      "dateNaissance": "Data de nascimento",
+      "nonRenseignee": "Não informada",
+      "genre": "Género",
+      "nonRenseigne": "Não informado",
+      "bio": "Bio",
+      "aucuneBio": "Nenhuma bio informada",
+      "fields": {
+        "prenom": "Nome próprio",
+        "nom": "Apelido",
+        "nomUtilisateur": "Nome de utilizador",
+        "dateNaissance": "Data de nascimento",
+        "genre": "Género",
+        "genreOptions": {
+          "nonPrecise": "Não especificado",
+          "homme": "Homem",
+          "femme": "Mulher",
+          "autre": "Outro"
+        },
+        "languePreferee": "Idioma preferido",
+        "bio": "Bio",
+        "bioPlaceholder": "Apresente-se em poucas palavras…",
+        "caracteres": "caracteres"
+      },
+      "enregistrer": "Guardar",
+      "enregistrement": "A guardar…",
+      "annuler": "Cancelar",
+      "savedToast": "✅ Alterações guardadas!",
+      "coordonneesTitle": "Coordenadas",
+      "coordonneesSubtitle": "Email e telefone — usados para a entrada e alertas",
+      "adresseEmail": "Endereço de email",
+      "telephone": "Telefone",
+      "verifie": "Verificado",
+      "nonVerifie": "Não verificado",
+      "nonRenseigneTel": "Não informado",
+      "emailHint": "Será enviado um email de confirmação para o novo endereço",
+      "numeroTelephone": "Número de telefone",
+      "telHint": "Será enviado um código de verificação SMS",
+      "enregistrerChangements": "Guardar as alterações",
+      "coordonneesSavedToast": "✅ Coordenadas atualizadas — verificação enviada"
+    },
+    "securite": {
+      "authTitle": "Autenticação & Acesso",
+      "authSubtitle": "Várias camadas de proteção para a sua conta",
+      "mdpTitle": "Palavra-passe",
+      "dernierModifSuffix_one": "Última modificação há {{count}} dia",
+      "dernierModifSuffix_other": "Última modificação há {{count}} dias",
+      "jamaisModifie": "Nunca modificada",
+      "actif": "Ativa",
+      "modifier": "Modificar",
+      "mdpActuel": "Palavra-passe atual",
+      "nouveauMdp": "Nova palavra-passe",
+      "mdpHint": "Mín. 8 caracteres, 1 maiúscula, 1 número",
+      "confirmer": "Confirmar",
+      "changerMdp": "Alterar a palavra-passe",
+      "enregistrement": "A guardar…",
+      "annuler": "Cancelar",
+      "mismatchToast": "❌ As palavras-passe não coincidem",
+      "loadError": "❌ Impossível carregar os dados de segurança",
+      "twofaTitle": "Autenticação de dois fatores (2FA)",
+      "twofaDesc": "Protege a sua conta mesmo se a sua palavra-passe for comprometida",
+      "active": "Ativado",
+      "desactive": "Desativado",
+      "desactiver": "Desativar",
+      "activer": "Ativar",
+      "twofaActiveToast": "🔐 2FA ativado com sucesso",
+      "twofaDesactiveToast": "⚠️ 2FA desativado",
+      "codesTitle": "Códigos de backup",
+      "codesDescAvailable_one": "{{count}} código de uso único disponível",
+      "codesDescAvailable_other": "{{count}} códigos de uso único disponíveis",
+      "codesDescDefault": "8 códigos de uso único — para guardar se perder o acesso ao seu 2FA",
+      "generes": "Gerados",
+      "nonGeneres": "Não gerados",
+      "regenerer": "Regenerar",
+      "generer": "Gerar",
+      "codesGeneresToast": "📋 Códigos gerados — guarde-os agora!",
+      "sauvegardezCodes": "⚠️ Guarde estes códigos — só serão exibidos uma vez",
+      "toutCopier": "Copiar tudo",
+      "codesCopiesToast": "📋 Códigos copiados!",
+      "questionsTitle": "Questões de segurança",
+      "questionsSuffix": "questões configuradas",
+      "modifierBtn": "Modificar",
+      "configurerBtn": "Configurar",
+      "questionLabel": "Questão",
+      "configureeSuffix": "Configurada · Resposta oculta",
+      "nonConfiguree": "Não configurada",
+      "ok": "OK",
+      "manquante": "Em falta",
+      "choisirQuestion": "Escolher uma questão…",
+      "questionOptions": {
+        "animal": "Qual é o nome do seu primeiro animal de estimação?",
+        "ecole": "Qual era o nome da sua escola primária?",
+        "ville": "Qual é a cidade onde nasceu?",
+        "ami": "Qual era o nome do seu melhor amigo de infância?",
+        "mere": "Qual é o nome da sua avó materna?"
+      },
+      "reponseLabel": "Resposta",
+      "reponsePlaceholder": "A sua resposta secreta…",
+      "atLeastOneQuestionToast": "⚠️ Preencha pelo menos uma questão",
+      "alertesTitle": "Alertas de segurança",
+      "alertesSubtitle": "Seja notificado imediatamente em caso de atividade suspeita",
+      "sms": "SMS",
+      "email": "Email",
+      "push": "Push",
+      "alertRows": {
+        "connex": {
+          "title": "Nova ligação detetada",
+          "desc": "Alerta se houver ligação de um dispositivo ou país desconhecido"
+        },
+        "mdp": {
+          "title": "Alteração de palavra-passe",
+          "desc": "Alerta imediato se a sua palavra-passe for modificada"
+        },
+        "tentatives": {
+          "title": "Tentativas de ligação falhadas",
+          "desc": "Alerta após 3 tentativas incorretas consecutivas"
+        },
+        "transaction": {
+          "title": "Transação suspeita ou recusada",
+          "desc": "Alerta em caso de pagamento anormalmente elevado"
+        },
+        "pays": {
+          "title": "Acesso de um país incomum",
+          "desc": "Alerta se a sua conta for utilizada de um país desconhecido"
+        }
+      }
+    }
+  }
+}

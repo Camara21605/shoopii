@@ -5,9 +5,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/ProfilCorrespondant.module.css';
+import FollowButton from '../../../components/FollowButton';
 import type { ContactRow, VerifRow, SimilaireItem } from '../data/types';
 
 interface Props {
+  id:            string;
   nom:           string;
   contacts:      ContactRow[];
   stats:         { v: string; l: string }[];
@@ -16,15 +18,16 @@ interface Props {
   similaires:    SimilaireItem[];
   suivi:         boolean;
   callLoading?:  boolean;
-  onToggle:      () => void;
+  onRequireAuth: () => void;
+  onFollowChange:(next: { isSuivi: boolean }) => void;
   onMessage:     () => void;
   onCall?:       () => void;
-  onToast:       (m: string) => void;
+  onToast:       (m: string, type?: 's' | 'i' | 'w' | 'e') => void;
 }
 
 export default function ProfilSidebar({
-  nom, contacts, stats, abonnes, verifications, similaires,
-  suivi, callLoading, onToggle, onMessage, onCall, onToast,
+  id, nom, contacts, stats, abonnes, verifications, similaires,
+  suivi, callLoading, onRequireAuth, onFollowChange, onMessage, onCall, onToast,
 }: Props) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -97,7 +100,7 @@ export default function ProfilSidebar({
       )}
 
       {/* Abonnés */}
-      <div className={styles.card}>
+      <div className={styles.card} style={{ position: 'relative' }}>
         <div className={styles.ch}><div className={styles.ct}><i className="fas fa-users" /> {t('profilCorrespondant.sidebar.abonnesTitle')}</div></div>
         <div className={styles.cb}>
           <div className={styles.folWrap}>
@@ -107,14 +110,15 @@ export default function ProfilSidebar({
                 : t('profilCorrespondant.sidebar.aucunAbonne')}
             </span>
           </div>
-          <button
-            className={`${styles.sideBtn} ${suivi ? styles.sbCall : styles.sbPrimary}`}
-            onClick={onToggle}
-          >
-            {suivi
-              ? <><i className="fas fa-user-check" /> {t('profilCorrespondant.abonne')}</>
-              : <><i className="fas fa-plus" /> {t('profilCorrespondant.sidebar.suivreCeCorrespondant')}</>}
-          </button>
+          <FollowButton
+            actorType="correspondant"
+            id={id}
+            name={nom}
+            isSuivi={suivi}
+            onToast={onToast}
+            onRequireAuth={onRequireAuth}
+            onChange={onFollowChange}
+          />
         </div>
       </div>
 

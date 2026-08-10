@@ -1,0 +1,101 @@
+{
+  "clients": {
+    "segment": {
+      "VIP": "VIP",
+      "Fidèle": "Fidèle",
+      "Régulier": "Régulier",
+      "Nouveau": "Nouveau",
+      "Abonné": "Abonné"
+    },
+    "sourceBadge": {
+      "acheteurEtAbonne": "🛒 + 👁️",
+      "acheteur": "🛒 Acheteur",
+      "abonne": "👁️ Abonné"
+    },
+    "date": {
+      "auj": "Auj.",
+      "hier": "Hier",
+      "ilYaJours": "Il y a {{count}}j",
+      "ilYaSemaines": "Il y a {{count}}sem",
+      "ilYaMois": "Il y a {{count}}mois"
+    },
+    "header": {
+      "titlePart1": "Clients",
+      "titleMark": "& Abonnés",
+      "subtitle": "Acheteurs + abonnés de votre boutique — données temps réel",
+      "actualiser": "Actualiser"
+    },
+    "kpi": {
+      "totalClients": "Total clients",
+      "totalClientsSub": "{{buyers}} acheteurs · {{abonnes}} abonnés",
+      "clientsVip": "Clients VIP",
+      "clientsVipSub": "≥ 10M GNF ou 10+ cmds",
+      "caTotalClients": "CA total clients",
+      "panierMoySub": "Panier moy. : {{montant}} GNF",
+      "nouveauxAcheteurs": "Nouveaux acheteurs",
+      "premiereCommande": "Première commande"
+    },
+    "filters": {
+      "tous": "Tous",
+      "acheteurs": "🛒 Acheteurs",
+      "abonnes": "👁️ Abonnés",
+      "tousSegments": "Tous segments",
+      "vip": "👑 VIP",
+      "fideles": "⭐ Fidèles",
+      "reguliers": "🔄 Réguliers",
+      "nouveaux": "🆕 Nouveaux"
+    },
+    "search": "Nom ou email…",
+    "baseClients": "Base clients",
+    "sort": {
+      "plusDepense": "Plus dépensé",
+      "plusCommandes": "Plus de commandes",
+      "derniereCommande": "Dernière commande",
+      "plusRecents": "Plus récents"
+    },
+    "loading": "Chargement des clients…",
+    "error": {
+      "title": "Erreur de chargement",
+      "reessayer": "Réessayer"
+    },
+    "empty": {
+      "aucunResultat": "Aucun résultat",
+      "aucunClient": "Aucun client pour le moment",
+      "subRecherche": "Aucun client ne correspond à votre recherche.",
+      "subDefaut": "Vos premiers clients apparaîtront ici dès leur première commande ou abonnement."
+    },
+    "table": {
+      "client": "Client",
+      "contact": "Contact",
+      "source": "Source",
+      "commandes": "Commandes",
+      "totalDepense": "Total dépensé",
+      "segment": "Segment",
+      "derniereCmd": "Dernière cmd",
+      "actions": "Actions",
+      "abonne": "Abonné",
+      "cmds": "cmds",
+      "profil": "Profil",
+      "message": "Message",
+      "messageToast": "📧 Message envoyé à {{name}}"
+    },
+    "pagination_one": "{{count}} client · Page {{page}}/{{pages}}",
+    "pagination_other": "{{count}} clients · Page {{page}}/{{pages}}",
+    "sidePanel": {
+      "repartition": "Répartition",
+      "chargement": "Chargement…",
+      "metriquesCles": "Métriques clés",
+      "acheteurs": "Acheteurs",
+      "abonnesBoutique": "Abonnés boutique",
+      "caTotal": "CA total",
+      "panierMoyen": "Panier moyen",
+      "actionsCrm": "Actions CRM"
+    },
+    "quickActions": {
+      "newsletterVip": "Envoyer newsletter VIP",
+      "offreFidelite": "Offre fidélité automatique",
+      "rapportSegments": "Rapport segments PDF",
+      "relanceInactifs": "Relance clients inactifs"
+    }
+  }
+}

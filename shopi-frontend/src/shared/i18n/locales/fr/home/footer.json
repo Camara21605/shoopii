@@ -1,0 +1,54 @@
+{
+  "publicFooter": {
+    "brandTagline": "La marketplace africaine de référence. Connectons les acteurs économiques de l'Afrique de l'Ouest dans un écosystème digital unifié.",
+    "socialToast": "📲 {{label}}",
+    "appStoreToast": "📱 App Store bientôt disponible",
+    "googlePlayToast": "🤖 Google Play bientôt disponible",
+    "disponibleSur": "Disponible sur",
+    "linkToast": "📄 {{label}}",
+    "cols": {
+      "plateforme": {
+        "titre": "Plateforme",
+        "explorerProduits": "Explorer les produits",
+        "boutiques": "Boutiques",
+        "livreurs": "Livreurs",
+        "partenaires": "Partenaires",
+        "correspondants": "Correspondants",
+        "offresPromos": "Offres & Promos"
+      },
+      "acteurs": {
+        "titre": "Acteurs",
+        "espaceClient": "Espace Client",
+        "espaceEntreprise": "Espace Entreprise",
+        "espaceLivreur": "Espace Livreur",
+        "espacePartenaire": "Espace Partenaire",
+        "espaceCorrespondant": "Espace Correspondant",
+        "espaceAdmin": "Espace Admin"
+      },
+      "aide": {
+        "titre": "Aide",
+        "centreAide": "Centre d'aide",
+        "contact": "Contact",
+        "faq": "FAQ",
+        "signalerProbleme": "Signaler un problème",
+        "remboursements": "Remboursements",
+        "politiqueRetour": "Politique de retour"
+      }
+    },
+    "trust": {
+      "paiementSecurise": "Paiement sécurisé SSL",
+      "livraisonExpress": "Livraison express 7j/7",
+      "protectionAcheteur": "Protection acheteur",
+      "support247": "Support 24/7",
+      "retourFacile": "Retour facile 7 jours"
+    },
+    "copyright": "© 2025 Shopi Africa. Tous droits réservés. Fait avec ❤️ en Guinée 🇬🇳",
+    "bottomLinks": {
+      "mentionsLegales": "Mentions légales",
+      "confidentialite": "Confidentialité",
+      "cookies": "Cookies",
+      "cgu": "CGU",
+      "accessibilite": "Accessibilité"
+    }
+  }
+}

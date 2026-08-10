@@ -9,6 +9,7 @@
 import {
   IsJWT,
   IsNotEmpty,
+  IsOptional,
   IsString,
   IsUUID,
   Length,
@@ -54,6 +55,13 @@ export class VerifyOtpDto {
   @Matches(/^\d{6}$/, { message: 'Le code OTP doit être composé uniquement de chiffres.' })
   @Transform(({ value }) => (value as string).trim())
   code: string;
+
+  /** Requis uniquement si /auth/verify-otp a déjà renvoyé requiresAccountChoice
+   *  (identifiant partagé par un compte pro et son compte client lié). */
+  @ApiProperty({ required: false, description: 'userId choisi si plusieurs comptes partagent cet identifiant' })
+  @IsOptional()
+  @IsUUID(4, { message: 'Identifiant de compte invalide.' })
+  accountUserId?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

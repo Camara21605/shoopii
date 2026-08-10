@@ -1,0 +1,22 @@
+{
+  "boutiquesPage": {
+    "title": "All shops",
+    "subtitleCount_one": "{{count}} business available",
+    "subtitleCount_other": "{{count}} businesses available",
+    "subtitleDefault": "Discover our partner businesses",
+    "searchPlaceholder": "Search for a shop...",
+    "resultats": "Results",
+    "loading": "Loading…",
+    "resultCount_one": "{{count}} shop",
+    "resultCount_other": "{{count}} shops",
+    "errorTitle": "Unable to load shops",
+    "retry": "Retry",
+    "emptyTitle": "No business found",
+    "emptyText": "No business is available in this category.",
+    "loadMore": "Load more shops",
+    "filterBar": {
+      "toutesCategories": "✦ All categories",
+      "toutesSousCategories": "All subcategories"
+    }
+  }
+}

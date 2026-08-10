@@ -1,0 +1,38 @@
+{
+  "commandes": {
+    "filters": {
+      "attente": "قيد الانتظار",
+      "preparation": "قيد التحضير",
+      "livraison": "قيد التوصيل",
+      "livre": "تم التوصيل",
+      "annule": "ملغي",
+      "tous": "الكل"
+    },
+    "table": {
+      "commande": "الطلب",
+      "produits": "المنتج (ات)",
+      "client": "العميل",
+      "montant": "المبلغ",
+      "statut": "الحالة",
+      "date": "التاريخ",
+      "livreur": "عامل التوصيل",
+      "actions": "الإجراءات"
+    },
+    "loading": "جارٍ التحميل…",
+    "empty": "لا توجد طلبات",
+    "exportCsv": "تصدير CSV",
+    "exportExcel": "Excel",
+    "voir": "عرض",
+    "preparer": "تحضير",
+    "envoyer": "إرسال",
+    "autresArticles_one": "+{{count}} عنصر آخر",
+    "autresArticles_other": "+{{count}} عناصر أخرى",
+    "toasts": {
+      "exportCsv": "📥 تم إنشاء تصدير CSV",
+      "exportExcel": "📊 تم إنشاء تصدير Excel",
+      "accepted": "✅ تم قبول الطلب",
+      "shipping": "🚚 تم إرساله للتوصيل",
+      "orderRef": "📋 الطلب {{id}}"
+    }
+  }
+}

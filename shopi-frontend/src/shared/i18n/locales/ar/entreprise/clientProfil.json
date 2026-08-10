@@ -1,0 +1,58 @@
+{
+  "clientProfil": {
+    "status": {
+      "pending": "قيد الانتظار",
+      "paid": "مدفوع",
+      "in_progress": "قيد التنفيذ",
+      "awaiting_client": "بانتظار التأكيد",
+      "delivered": "تم التوصيل",
+      "auto_delivered": "تم التوصيل (تلقائي)",
+      "cancelled": "ملغي",
+      "refunded": "تم الاسترداد",
+      "disputed": "نزاع"
+    },
+    "mode": {
+      "livreur": "🛵 عامل توصيل",
+      "correspondant": "🤝 مراسل",
+      "partenaire": "🤝 شريك",
+      "pickup": "🏪 استلام من المتجر",
+      "mixte": "🔀 مختلط"
+    },
+    "clientDepuis": "عميل منذ {{date}}",
+    "kpi": {
+      "commandes": "الطلبات",
+      "dansCetteBoutique": "في هذا المتجر",
+      "totalDepense": "إجمالي الإنفاق",
+      "depuisLeDebut": "منذ البداية",
+      "derniereCmd": "آخر طلب"
+    },
+    "tabs": {
+      "apercu": "نظرة عامة",
+      "commandes": "الطلبات ({{count}})"
+    },
+    "loadingProfil": "جارٍ تحميل الملف…",
+    "aperçu": {
+      "relationTitle": "العلاقة مع متجرك",
+      "commandesPassees": "الطلبات المقدمة",
+      "totalDepense": "إجمالي الإنفاق",
+      "abonneBoutique": "يتبع المتجر",
+      "oui": "✅ نعم",
+      "non": "❌ لا",
+      "segment": "الشريحة",
+      "derniereCommandeTitle": "آخر طلب",
+      "aucuneCommandeTitle": "لا توجد طلبات بعد",
+      "aucuneCommandeSub": "يتبع هذا العميل متجرك لكنه لم يشترِ بعد."
+    },
+    "commandesTab": {
+      "aucune": "لا توجد طلبات",
+      "livreLe": "تم التوصيل في {{date}}",
+      "produits": "المنتجات: {{montant}}",
+      "affichageLimite": "عرض آخر 10 طلبات من {{total}} إجمالاً."
+    },
+    "footer": {
+      "messageToast": "📧 تم إرسال الرسالة إلى {{name}}",
+      "envoyerMessage": "إرسال رسالة",
+      "fermer": "إغلاق"
+    }
+  }
+}

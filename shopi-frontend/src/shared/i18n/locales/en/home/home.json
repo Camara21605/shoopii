@@ -1,0 +1,116 @@
+{
+  "home": {
+    "trustSection": {
+      "paiement": {
+        "titre": "Secure payment",
+        "sub": "Orange Money, Visa, Mastercard — SSL"
+      },
+      "livraison": {
+        "titre": "Express delivery",
+        "sub": "640+ verified delivery agents, 7 days a week"
+      },
+      "protection": {
+        "titre": "Buyer protection",
+        "sub": "Refund guaranteed if there's an issue"
+      },
+      "support": {
+        "titre": "24/7 support",
+        "sub": "Chat, WhatsApp, phone"
+      }
+    },
+    "typeEntreprise": {
+      "kick": "Shop types",
+      "title": "All <em>business categories</em>",
+      "sub": "Find the business that suits you",
+      "linkText": "All shops",
+      "loadError": "Unable to load business types.",
+      "empty": "No business type available at the moment.",
+      "boutiqueCount_one": "{{count}} shop",
+      "boutiqueCount_other": "{{count}} shops",
+      "categorieCount_one": "{{count}} category",
+      "categorieCount_other": "{{count}} categories"
+    },
+    "categories": {
+      "kick": "Explore",
+      "title": "<em>Popular</em> categories",
+      "sub": "Browse our product universes",
+      "linkText": "Browse all",
+      "loadError": "Unable to load categories.",
+      "tout": "All",
+      "sousCat_one": "{{count}} subcat",
+      "sousCat_other": "{{count}} subcats"
+    },
+    "promotions": {
+      "kick": "Limited offers",
+      "title": "Flash Sales &amp; <em>Promotions</em>",
+      "sub": "Exceptional prices, for a limited time",
+      "linkText": "See all offers",
+      "livraison": "Delivery",
+      "promo": "Promo",
+      "surBoutique": "On the whole shop",
+      "surSelection": "On a selection of products",
+      "voirOffre": "See the offer"
+    },
+    "storiesStrip": {
+      "title": "Shop stories",
+      "sub": "Featured products highlighted by our partners",
+      "voirTout": "See all",
+      "toastVoirTout": "📖 All stories",
+      "storiesDe": "Stories from {{nom}}",
+      "produitCount_one": "{{count}} product",
+      "produitCount_other": "{{count}} products",
+      "enLigneMaintenant": "Online now",
+      "vuRecemment": "Recently seen",
+      "badgePromo": "🔥 Promo",
+      "badgeNouveau": "✨ New",
+      "badgeFlash": "⚡ Flash",
+      "badgeTop": "⭐ Best seller",
+      "voirProduit": "View product",
+      "laBoutique": "The shop",
+      "partager": "Share",
+      "lienCopieToast": "🔗 Link copied!"
+    },
+    "randomBloc": {
+      "produits": {
+        "kick": "Catalog",
+        "title": "<em>Recommended</em> products",
+        "sub": "Selected for you",
+        "link": "See the full catalog"
+      },
+      "produitsGros": {
+        "kick": "Wholesale",
+        "title": "Buy in <em>bulk</em>",
+        "sub": "Tiered pricing · minimum order",
+        "link": "See all wholesale products"
+      },
+      "entreprises": {
+        "kick": "Shops",
+        "title": "<em>Featured</em> shops",
+        "sub": "Follow your favorite shops",
+        "link": "All shops"
+      },
+      "correspondants": {
+        "kick": "Local network",
+        "title": "Our <em>correspondents</em>",
+        "sub": "Local relays in every region",
+        "link": "All correspondents"
+      },
+      "livreurs": {
+        "kick": "Logistics",
+        "title": "<em>Available</em> delivery agents",
+        "sub": "Verified professionals near you",
+        "link": "All delivery agents"
+      },
+      "toastLink": "📄 {{link}}",
+      "moqUnites": "MOQ {{moq}} units",
+      "errorReseau": "Network error",
+      "emptyBoutiques": "No shop available at the moment.",
+      "emptyProduits": "No product available.",
+      "emptyProduitsGros": "No wholesale product available at the moment.",
+      "emptyLivreurs": "No delivery agent available.",
+      "emptyCorrespondants": "No correspondent available.",
+      "errorProduits": "Unable to load products.",
+      "errorProduitsGros": "Unable to load wholesale products."
+    }
+  }
+}

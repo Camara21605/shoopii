@@ -15,6 +15,7 @@ import { TypeOrmModule }  from '@nestjs/typeorm';
 import { Delivery }       from 'src/database/entities/profiles/livreur-profile.entity';
 import { User }           from 'src/database/entities/user.entity';
 import { LivreurHoraire } from 'src/database/entities/livreur.table/livreur-horaire.entity';
+import { RefreshToken }   from 'src/database/entities/refresh-token.entity';
 
 /* ── Module Upload Cloudinary ── */
 import { UploadModule }   from 'src/modules/upload/upload.module';
@@ -38,6 +39,7 @@ import { DangerLivreurService }   from './services/danger-livreur.service';
       Delivery,       // table livreurs
       User,           // pour bcrypt (changement de mot de passe)
       LivreurHoraire, // table livreur_horaires
+      RefreshToken,   // révocation sessions au changement de mot de passe
     ]),
     UploadModule, // Cloudinary (photo + documents)
   ],

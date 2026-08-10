@@ -171,6 +171,53 @@ export abstract class SuivisBaseService {
   }
 
   /* ══════════════════════════════════════════════════════════
+   * SET HIDDEN — masquer/réafficher une cible déjà suivie
+   *   Ne touche jamais isSubscribed : un item masqué reste "suivi"
+   *   au sens strict (profil, "Mes abonnements"). Seules les listes
+   *   de découverte doivent l'exclure (voir getMyHiddenIds).
+   ══════════════════════════════════════════════════════════ */
+  async setHidden(userId: string, role: UserRole, targetId: string, hidden: boolean): Promise<{ hidden: boolean }> {
+    const followerType = this.resolveFollowerType(role);
+    const followerId    = await this.getFollowerProfileId(userId, followerType);
+
+    const existing = await this.followRepo.findOne({
+      where: { followerType, followerId, targetType: this.targetType, targetId },
+    });
+
+    if (!existing || !existing.isSubscribed) {
+      throw new BadRequestException("Vous ne pouvez masquer que ce que vous suivez déjà.");
+    }
+
+    existing.hidden   = hidden;
+    existing.hiddenAt = hidden ? new Date() : null;
+    await this.followRepo.save(existing);
+
+    return { hidden };
+  }
+
+  /* ══════════════════════════════════════════════════════════
+   * GET MY HIDDEN IDS — pour exclure des listes de découverte
+   ══════════════════════════════════════════════════════════ */
+  async getMyHiddenIds(userId: string, role: UserRole): Promise<string[]> {
+    const followerType = this.resolveFollowerType(role);
+    const followerId    = await this.getFollowerProfileId(userId, followerType);
+
+    const follows = await this.followRepo.find({
+      where: {
+        followerType,
+        followerId,
+        targetType:   this.targetType,
+        isSubscribed: true,
+        status:       FollowStatus.ACTIVE,
+        hidden:       true,
+      },
+      select: ['targetId'],
+    });
+
+    return follows.map(f => f.targetId);
+  }
+
+  /* ══════════════════════════════════════════════════════════
    * GET MY FOLLOWED IDS
    * ✅ FIX : filtre sur isSubscribed: true ET status: ACTIVE
    *    Les deux doivent être vrais (cohérence avec le toggle)

@@ -1,0 +1,107 @@
+{
+  "sharedCards": {
+    "partenaire": {
+      "abonnesSuffix": "seguidores",
+      "enSavoirPlus": "Saiba mais",
+      "desabonneToast": "👋 Deixou de seguir",
+      "abonneToast": "✅ Seguindo {{nom}}",
+      "abonne": "Seguindo",
+      "suivre": "Seguir este parceiro"
+    },
+    "entreprise": {
+      "verifie": "Verificado",
+      "villeDefault": "Conacri",
+      "commandes": "Pedidos",
+      "note": "Avaliação ⭐",
+      "avis": "Avaliações",
+      "abonne": "Seguindo",
+      "sabonner": "Seguir"
+    },
+    "livreur": {
+      "disponible": "Disponível",
+      "enCourse": "Em entrega",
+      "livraisons": "Entregas",
+      "note": "Avaliação ⭐",
+      "voirProfil": "Ver perfil",
+      "connectezVous": "Faça login para seguir"
+    },
+    "correspondant": {
+      "typeLabel": {
+        "regional": "Regional",
+        "zonal": "Zonal",
+        "national": "Nacional"
+      },
+      "enLigne": "Online",
+      "horsLigne": "Offline",
+      "idManquantToast": "❌ ID em falta",
+      "erreurReseauFallback": "Erro de rede",
+      "abonneToast": "✅ Seguindo {{nom}}",
+      "desabonneToast": "👋 Deixou de seguir {{nom}}",
+      "aucuneDescription": "Nenhuma descrição disponível.",
+      "missions": "Missões",
+      "note": "Avaliação ⭐",
+      "voirProfil": "Ver perfil",
+      "connectezVous": "Faça login para seguir",
+      "connexion": "Login",
+      "desabonner": "Deixar de seguir",
+      "abonneParenth": "Seguindo",
+      "suivre": "Seguir"
+    },
+    "produit": {
+      "badges": {
+        "hot": "🔥 Popular",
+        "new": "✨ Novo",
+        "promo": "🏷️ Promoção"
+      },
+      "copier": "Copiar",
+      "partageViaToast": "📲 Compartilhar via {{label}}",
+      "instagramToast": "📸 Abra o Instagram e compartilhe o link",
+      "lienCopieToast": "🔗 Link copiado!",
+      "dejaAuPanierToast": "✓ {{nom}} já está no seu carrinho",
+      "ajouteAuPanierToast": "🛒 {{nom}} adicionado ao carrinho!",
+      "ajoutErrorFallback": "Não foi possível adicionar ao carrinho",
+      "favoriAjoute": "❤️ Adicionado aos favoritos",
+      "favoriRetire": "💔 Removido dos favoritos",
+      "favoriErrorFallback": "Ação impossível",
+      "voir": "Ver",
+      "boutique": "Loja",
+      "partager": "Compartilhar",
+      "prixGros": "Preço por atacado",
+      "dejaAuPanierBtn": "Já no carrinho",
+      "dejaAuPanierClicToast": "✓ Já está no seu carrinho — remova-o pelo carrinho",
+      "ajoutEnCours": "Adicionando…",
+      "ajouterAuPanier": "Adicionar ao carrinho",
+      "modalEntreprise": {
+        "titre": "Loja",
+        "guinee": "Guiné",
+        "boutiqueVerifiee": "Loja verificada Shopi",
+        "commandes": "Pedidos",
+        "note": "Avaliação",
+        "avis": "Avaliações",
+        "ville": "Cidade",
+        "produitPublieLabel": "Produto publicado por esta loja",
+        "desabonneToast": "👋 Deixou de seguir",
+        "abonneToast": "✅ Seguindo {{nom}}",
+        "abonne": "Seguindo",
+        "sabonner": "Seguir",
+        "voirBoutique": "Ver loja"
+      },
+      "modalPartage": {
+        "titre": "Compartilhar este produto"
+      },
+      "modalGros": {
+        "titre": "Preço por atacado",
+        "prixStandard": "Preço padrão:",
+        "uniteSuffix": "/ unidade",
+        "min": "Mín.",
+        "unites": "unidades",
+        "aucunPalier": "Nenhuma faixa de preço configurada para este produto.",
+        "paliersLabel": "Faixas de preço decrescentes",
+        "quantite": "Quantidade",
+        "prixParUnite": "Preço / unidade",
+        "economie": "Economia",
+        "note": "Adicione o produto ao carrinho com a quantidade desejada. O preço decrescente é aplicado automaticamente ao pedido."
+      }
+    }
+  }
+}

@@ -5,12 +5,15 @@
 import { apiFetch, tokenStorage } from '../../../shared/services/apiFetch';
 import type {
   AuthResponse,
+  LoginResult,
   PublicUser,
   RegisterPayload,
   LoginPayload,
   ForgotPasswordPayload,
   RegisterFormData,
   Role,
+  TwoFaChallengeResponse,
+  AccountChoiceResponse,
 } from '../types';
 
 function buildRegisterPayload(
@@ -85,10 +88,45 @@ export async function register(
   return data;
 }
 
-export async function login(payload: LoginPayload): Promise<AuthResponse> {
-  const data = await apiFetch<AuthResponse>('/auth/login', {
+export async function login(payload: LoginPayload): Promise<LoginResult> {
+  const data = await apiFetch<LoginResult>('/auth/login', {
     method: 'POST',
     body:   payload,
+    public: true,
+  });
+  // Compte avec 2FA active : pas de token émis tant que le code n'est
+  // pas vérifié via verifyTwoFaLogin() ci-dessous.
+  if ('requiresTwoFa' in data) return data;
+  // Identifiant + mot de passe partagés par un compte pro et son compte
+  // client lié (coïncidence) : pas de token tant que l'utilisateur n'a
+  // pas choisi via chooseAccount() ci-dessous.
+  if ('requiresAccountChoice' in data) return data;
+  tokenStorage.set(data.accessToken);
+  return data;
+}
+
+/** 2e appel quand login() a renvoyé requiresAccountChoice — le mot de passe
+ *  est revérifié côté serveur contre le userId choisi. */
+export async function chooseAccount(
+  identifier: string, password: string, userId: string, rememberMe?: boolean,
+): Promise<AuthResponse | TwoFaChallengeResponse> {
+  const data = await apiFetch<AuthResponse | TwoFaChallengeResponse>('/auth/login/choose-account', {
+    method: 'POST',
+    body:   { identifier, password, userId, rememberMe },
+    public: true,
+  });
+  if ('requiresTwoFa' in data) return data;
+  tokenStorage.set(data.accessToken);
+  return data;
+}
+
+export async function verifyTwoFaLogin(
+  challengeToken: string,
+  code:           string,
+): Promise<AuthResponse> {
+  const data = await apiFetch<AuthResponse>('/auth/2fa/verify-login', {
+    method: 'POST',
+    body:   { challengeToken, code },
     public: true,
   });
   tokenStorage.set(data.accessToken);
@@ -101,13 +139,17 @@ export async function logout(): Promise<void> {
   await apiFetch('/auth/logout', { method: 'POST', public: true }).catch(() => {});
 }
 
+/** accountUserId : requis seulement en 2e appel, quand la 1re réponse était
+ *  requiresAccountChoice (identifiant partagé par un compte pro et son
+ *  compte client lié — voir "Mon espace"). */
 export async function verifyOtp(
   identifier: string,
   code: string,
-): Promise<{ resetToken: string }> {
-  return apiFetch<{ resetToken: string }>('/auth/verify-otp', {
+  accountUserId?: string,
+): Promise<{ resetToken: string } | AccountChoiceResponse> {
+  return apiFetch<{ resetToken: string } | AccountChoiceResponse>('/auth/verify-otp', {
     method: 'POST',
-    body:   { identifier, code },
+    body:   { identifier, code, accountUserId },
     public: true,
   });
 }
@@ -144,6 +186,8 @@ export function isAuthenticated(): boolean {
 export const authService = {
   register,
   login,
+  chooseAccount,
+  verifyTwoFaLogin,
   logout,
   forgotPassword,
   verifyOtp,

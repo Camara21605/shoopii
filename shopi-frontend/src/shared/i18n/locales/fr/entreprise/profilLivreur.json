@@ -1,0 +1,127 @@
+{
+  "profilLivreur": {
+    "loading": "Chargement du profil…",
+    "notFound": "Livreur introuvable.",
+    "retourLivreurs": "Retour aux livreurs",
+    "idMissingError": "Identifiant manquant",
+    "networkError": "Erreur réseau",
+    "contacter": "Contacter",
+    "appeler": "Appeler",
+    "abonneFem": "Abonné(e)",
+    "suivre": "Suivre",
+    "livreurLabel": "Livreur",
+    "disponibleMaintenant": "Disponible maintenant",
+    "horsLigne": "Hors ligne",
+    "abonnesSuffix": "abonnés",
+    "identiteVerifiee": "Identité vérifiée",
+    "assureShopi": "Assuré Shopi",
+    "avisSuffix": "avis",
+    "kpi": {
+      "livraisons": "Livraisons",
+      "note": "Note",
+      "ponctualite": "Ponctualité",
+      "abonnes": "Abonnés",
+      "avis": "Avis",
+      "experience": "Expérience"
+    },
+    "tabs": {
+      "info": "Infos",
+      "vehicule": "Véhicule",
+      "zones": "Zones",
+      "localisation": "Localisation",
+      "tarifs": "Tarifs",
+      "avis": "Avis",
+      "historique": "Historique"
+    },
+    "sidebar": {
+      "contact": "Contact",
+      "telephone": "Téléphone",
+      "whatsapp": "WhatsApp",
+      "statistiques": "Statistiques",
+      "livraisons": "Livraisons",
+      "note": "Note",
+      "ponctualite": "Ponctualité",
+      "abonnes": "Abonnés",
+      "copieToast": "📋 Copié !"
+    },
+    "tabInfo": {
+      "aPropos": "À propos",
+      "aucuneDescription": "Aucune description disponible.",
+      "informationsPratiques": "Informations pratiques",
+      "zonePrincipale": "Zone principale",
+      "contactDirect": "Contact direct",
+      "languesParlees": "Langues parlées",
+      "assurance": "Assurance",
+      "couvert": "Couvert ✓",
+      "nonRenseignee": "Non renseignée",
+      "disponibiliteHebdo": "Disponibilité hebdomadaire",
+      "aujourdhui": "(auj.)",
+      "ferme": "Fermé",
+      "ouvert": "Ouvert",
+      "jours": {
+        "lundi": "Lundi",
+        "mardi": "Mardi",
+        "mercredi": "Mercredi",
+        "jeudi": "Jeudi",
+        "vendredi": "Vendredi",
+        "samedi": "Samedi",
+        "dimanche": "Dimanche"
+      }
+    },
+    "tabVehicule": {
+      "title": "Informations véhicule",
+      "type": "Type : {{type}}",
+      "permis": "Permis",
+      "valide": "Validé ✓",
+      "nonRenseigne": "Non renseigné",
+      "assurance": "Assurance",
+      "validAssurance": "Valide ✓",
+      "nonRenseigneeF": "Non renseignée",
+      "immatriculation": "Immatriculation"
+    },
+    "tabZones": {
+      "title": "Zones de livraison",
+      "empty": "Aucune zone de livraison renseignée."
+    },
+    "tabTarifs": {
+      "title": "Grille tarifaire",
+      "tarifBase": "Tarif de base",
+      "parKm": "Par kilomètre",
+      "supplementLourd": "Supplément colis lourd",
+      "majorationNocturne": "Majoration nocturne"
+    },
+    "placeholders": {
+      "avisTitle": "Avis ({{count}})",
+      "avisText": "Les avis clients seront affichés ici prochainement.",
+      "historiqueTitle": "Historique",
+      "historiqueText": "L'historique des livraisons sera affiché ici prochainement."
+    },
+    "tabLocalisation": {
+      "title": "Position en temps réel",
+      "partageActif": "Partage actif",
+      "noticeNonPartagePart1": "ne partage pas sa position pour le moment.",
+      "noticeNonPartagePart2": "La position s'affiche automatiquement lorsqu'une livraison est en cours.",
+      "lat": "Lat : {{value}}",
+      "lng": "Lng : {{value}}"
+    },
+    "reseauPage": {
+      "title": "Suivre des livreurs",
+      "loading": "Chargement…",
+      "errorSuffix": "— données de démonstration affichées.",
+      "empty": "Aucun livreur disponible.",
+      "livraisonsCount_one": "{{count}} livraison",
+      "livraisonsCount_other": "{{count}} livraisons",
+      "disponible": "Disponible",
+      "suiviCheck": "Suivi ✓",
+      "suivre": "Suivre",
+      "desabonneToast": "👋 Désabonné de {{nom}}",
+      "abonneToast": "✅ Abonné à {{nom}}",
+      "contacterToast": "📩 Contacter {{nom}}"
+    },
+    "publicPage": {
+      "abonnezVousMessage": "Abonnez-vous à ce livreur pour lui envoyer un message.",
+      "abonnezVousAppel": "Abonnez-vous à ce livreur pour l'appeler.",
+      "erreurToast": "❌ {{msg}}"
+    }
+  }
+}

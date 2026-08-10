@@ -4,12 +4,21 @@
  * RÔLE : Strategy EMAIL — envoie via Nodemailer (SMTP).
  *
  * CONFIG (variables d'environnement) :
- *   MAIL_HOST    — serveur SMTP (ex: smtp.gmail.com)
- *   MAIL_PORT    — port SMTP (défaut: 587)
- *   MAIL_SECURE  — TLS forcé sur port 465 (défaut: false)
- *   MAIL_USER    — adresse d'authentification SMTP
- *   MAIL_PASS    — mot de passe SMTP / App Password
- *   MAIL_FROM    — adresse expéditeur (défaut: noreply@shopi.app)
+ *   MAIL_HOST    — serveur SMTP (ex: smtp.gmail.com)   — fallback SMTP_HOST
+ *   MAIL_PORT    — port SMTP (défaut: 587)              — fallback SMTP_PORT
+ *   MAIL_SECURE  — TLS forcé sur port 465 (défaut: auto selon le port)
+ *   MAIL_USER    — adresse d'authentification SMTP      — fallback SMTP_USER
+ *   MAIL_PASS    — mot de passe SMTP / App Password      — fallback SMTP_PASS
+ *   MAIL_FROM    — adresse expéditeur (défaut: SMTP_FROM ou noreply@shopi.app)
+ *
+ * FALLBACK SMTP_* : ce canal notifications et MailService (emails
+ * d'authentification — src/modules/email/email.service.ts) partagent
+ * le même compte SMTP en pratique. Avant ce fallback, ce canal restait
+ * désactivé dès que seules les variables SMTP_* (déjà configurées et
+ * fonctionnelles pour les emails d'auth) étaient définies — MAIL_HOST
+ * n'était jamais renseigné nulle part, donc canSend() retournait
+ * toujours false et AUCUNE notification par email ne partait jamais,
+ * silencieusement (juste un warn au démarrage, jamais revu ensuite).
  *
  * GESTION DES ERREURS :
  *   - Bounce / adresse invalide → isPermanentFailure: true
@@ -53,7 +62,8 @@ export class EmailChannelStrategy implements IChannelStrategy {
     @Optional()
     private readonly config?: ConfigService,
   ) {
-    this.fromAddress = config?.get<string>('MAIL_FROM') ?? 'noreply@shopi.app';
+    this.fromAddress =
+      config?.get<string>('MAIL_FROM') ?? config?.get<string>('SMTP_FROM') ?? 'noreply@shopi.app';
     this.transporter = this.buildTransporter();
   }
 
@@ -99,7 +109,8 @@ export class EmailChannelStrategy implements IChannelStrategy {
 
       this.logger.warn(
         `EMAIL failed notif=${notif.id} to=${emailTo} `
-        + `code=${errorCode} permanent=${isPermanent}`,
+        + `code=${errorCode} responseCode=${err?.responseCode ?? 'N/A'} `
+        + `permanent=${isPermanent} message=${err?.message ?? 'N/A'}`,
       );
 
       return {
@@ -117,21 +128,32 @@ export class EmailChannelStrategy implements IChannelStrategy {
   // ─── Helpers privés ───────────────────────────────────────
 
   private buildTransporter(): Transporter | null {
-    const host = this.config?.get<string>('MAIL_HOST');
+    const host = this.config?.get<string>('MAIL_HOST') ?? this.config?.get<string>('SMTP_HOST');
     if (!host) {
-      this.logger.warn('MAIL_HOST non configuré — canal EMAIL désactivé');
+      this.logger.warn('MAIL_HOST/SMTP_HOST non configuré — canal EMAIL désactivé');
+      return null;
+    }
+
+    const port = this.config!.get<number>('MAIL_PORT') ?? this.config!.get<number>('SMTP_PORT', 587);
+    const user = this.config!.get<string>('MAIL_USER') ?? this.config!.get<string>('SMTP_USER', '');
+    /* Supprime les espaces dans le mot de passe App Password Gmail
+     * (les utilisateurs copient souvent "xxxx xxxx xxxx xxxx") —
+     * même correctif que MailService.send() pour les emails d'auth. */
+    const rawPass = this.config!.get<string>('MAIL_PASS') ?? this.config!.get<string>('SMTP_PASS', '');
+    const pass    = rawPass.replace(/\s/g, '');
+
+    if (!user || !pass) {
+      this.logger.warn('MAIL_USER/SMTP_USER ou MAIL_PASS/SMTP_PASS absent — canal EMAIL désactivé');
       return null;
     }
 
     return createTransport({
       host,
-      port:   this.config!.get<number>('MAIL_PORT', 587),
-      secure: this.config!.get<boolean>('MAIL_SECURE', false),
-      auth: {
-        user: this.config!.get<string>('MAIL_USER', ''),
-        pass: this.config!.get<string>('MAIL_PASS', ''),
-      },
-    });
+      port,
+      secure: this.config!.get<boolean>('MAIL_SECURE', port === 465),
+      auth: { user, pass },
+      tls: { rejectUnauthorized: false },
+    } as any);
   }
 
   private buildHtml(notif: Notification): string {

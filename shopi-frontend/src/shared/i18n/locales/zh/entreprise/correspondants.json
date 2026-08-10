@@ -1,0 +1,181 @@
+{
+  "correspondants": {
+    "type": {
+      "principal": "⭐ 主要",
+      "entrepot": "🏭 仓库",
+      "export": "✈️ 出口",
+      "relais": "📍 中转站"
+    },
+    "status": {
+      "active": "活跃",
+      "pending": "待处理",
+      "suspended": "已暂停"
+    },
+    "na": "N/A",
+    "modalProfil": {
+      "kpiTotalMissions": "总任务数",
+      "kpiCommandesTraitees": "已处理订单",
+      "kpiCeMois": "本月",
+      "kpiCommandes": "订单",
+      "kpiNoteMoyenne": "平均评分",
+      "kpiSur5Etoiles": "满分 5 星",
+      "kpiZoneCouverte": "覆盖区域",
+      "evaluationClients": "客户评价",
+      "telephone": "电话",
+      "email": "邮箱",
+      "adresse": "地址",
+      "zone": "区域",
+      "derniereActivite": "最近活动",
+      "membreDepuis": "加入时间",
+      "suspendre": "暂停",
+      "contacter": "联系",
+      "appeler": "打电话"
+    },
+    "modalInviter": {
+      "nomRequis": "⚠️ 姓名是必填项",
+      "emailRequis": "⚠️ 邮箱是必填项",
+      "emailInvalide": "⚠️ 邮箱无效",
+      "invitationEnvoyee": "✅ 邀请已发送到 {{email}}",
+      "defaultMessage": "您好，\n\n您已被选中加入 Shopi 代理商网络。\n\n请使用随附的代码创建您的账户。",
+      "title": "邀请代理商",
+      "etapeInformations": "信息",
+      "etapeApercu": "预览",
+      "etapeConfirme": "已确认",
+      "nomPointRelais": "中转站名称 *",
+      "nomPlaceholder": "例如：RelaisPlus Kaloum",
+      "emailContact": "联系邮箱 *",
+      "emailPlaceholder": "例如：relais@gmail.com",
+      "codeEmailHint": "邀请码将发送到此邮箱。",
+      "typeCorrespondant": "代理商类型",
+      "optRelais": "📍 中转站 — 包裹存放/提取",
+      "optEntrepot": "🏭 仓库 — 区域存储",
+      "optExport": "✈️ 出口 — 国际",
+      "optPrincipal": "⭐ 主要 — 中央枢纽",
+      "ville": "城市",
+      "villePlaceholder": "例如：科纳克里",
+      "quartierZone": "区 / 区域",
+      "quartierPlaceholder": "例如：Kaloum、Matam…",
+      "messagePersonnalise": "个性化消息",
+      "apercuTitle": "将要发送的邮件预览",
+      "emailSujetFixe": "Shopi 邀请 — 加入我们的网络",
+      "emailDestA": "收件人：",
+      "bonjour": "您好",
+      "codeInvitationLabel": "您的邀请码（10 位数字）",
+      "codeInvitationNote": "有效期 7 天 · 一次性使用 · 发送时生成",
+      "villeLabelInline": "城市：",
+      "zoneLabelInline": "区域：",
+      "typeLabelInline": "类型：",
+      "infoBoxExpire": "此代码将于 7 天后过期。只能使用一次。邮件将从 noreply@shopi.gn 发送。",
+      "invitationEnvoyeeTitle": "邀请已发送！",
+      "codeEnvoyeA": "代码已发送到 {{email}}",
+      "recapNom": "姓名",
+      "recapEmail": "邮箱",
+      "recapVille": "城市",
+      "recapType": "类型",
+      "codeGenereLabel": "已生成的邀请码",
+      "copier": "复制",
+      "codeCopieToast": "📋 代码已复制！",
+      "expireLe": "于 {{date}} 过期 · 一次性使用",
+      "annuler": "取消",
+      "suivant": "下一步",
+      "retour": "返回",
+      "envoiEnCours": "发送中…",
+      "envoyerInvitation": "发送邀请",
+      "fermer": "关闭"
+    },
+    "modalContacter": {
+      "sujetMessageRequis": "⚠️ 主题和消息为必填项",
+      "messageEnvoye": "✅ 消息已发送给{{name}}",
+      "title": "联系",
+      "sub": "给{{name}}发送消息（{{email}}）",
+      "sujetLabel": "主题 *",
+      "sujetPlaceholder": "例如：库存更新",
+      "messageLabel": "消息 *",
+      "messagePlaceholder": "撰写您的消息…",
+      "infoBox": "消息将从 noreply@shopi.gn 发送到 {{email}}。",
+      "annuler": "取消",
+      "envoiEnCours": "发送中…",
+      "envoyer": "发送"
+    },
+    "modalSuspendre": {
+      "title": "暂停代理商",
+      "confirmText": "暂停 {{name}}？",
+      "note": "在解除暂停之前，此中转站将无法接收或发送包裹。",
+      "annuler": "取消",
+      "confirmer": "确认"
+    },
+    "header": {
+      "title": "代理商网络",
+      "subtitle": "管理您的中转站、仓库和出口合作伙伴",
+      "inviter": "邀请代理商"
+    },
+    "stats": {
+      "actifs": "活跃代理商",
+      "auTotal": "共 {{count}} 名",
+      "commandesCeMois": "本月订单",
+      "traiteesParReseau": "通过网络处理",
+      "villesCouvertes": "覆盖城市",
+      "plusInternational": "+ 国际",
+      "enAttente": "待处理",
+      "validationRequise": "需要验证"
+    },
+    "filters": {
+      "tous": "全部"
+    },
+    "statutSelect": {
+      "tousStatuts": "所有状态",
+      "actifs": "活跃",
+      "enAttente": "待处理",
+      "suspendus": "已暂停"
+    },
+    "search": "搜索…",
+    "compteur_one": "{{count}} 名代理商",
+    "compteur_other": "{{count}} 名代理商",
+    "compteurType": " · 类型：{{type}}",
+    "loading": "正在加载代理商…",
+    "empty": {
+      "title": "未找到代理商",
+      "sub": "修改筛选条件或邀请新代理商。",
+      "inviter": "邀请"
+    },
+    "card": {
+      "ceMois": "本月",
+      "total": "总计",
+      "note": "评分",
+      "voir": "查看",
+      "contacter": "联系",
+      "appeler": "打电话"
+    },
+    "table": {
+      "correspondant": "代理商",
+      "ville": "城市",
+      "type": "类型",
+      "ceMois": "本月",
+      "total": "总计",
+      "note": "评分",
+      "statut": "状态",
+      "actions": "操作"
+    },
+    "sidePanel": {
+      "couvertureZone": "按区域覆盖",
+      "aucuneZone": "无区域数据",
+      "activiteRecente": "最近活动",
+      "actionsRapides": "快速操作"
+    },
+    "quickActions": {
+      "envoyerCirculaire": "向所有人发送通知",
+      "envoiToast": "📧 群发中…",
+      "rapportReseau": "月度网络报告",
+      "rapportToast": "📊 正在生成报告…",
+      "voirCarte": "查看中转站地图",
+      "carteToast": "🗺️ 中转站地图已打开",
+      "validerEnAttente": "验证待处理（{{count}}）",
+      "aucunEnAttente": "无待处理账户",
+      "validesToast": "✅ 已验证 {{count}} 个账户"
+    },
+    "toasts": {
+      "loadError": "❌ 加载错误：{{message}}",
+      "suspendu": "🚫 {{name}} 已暂停"
+    }
+  }
+}

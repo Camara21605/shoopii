@@ -118,8 +118,8 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
               })}
             </div>
           </div>
-          <div style={{ fontSize:11, color:'rgba(200,217,248,.45)', maxWidth:160, lineHeight:1.5, flexShrink:0 }}>
-            Un profil complet reçoit <strong style={{ color:'#10B981' }}>3×</strong> plus de missions
+          <div style={{ fontSize:11, color:'rgba(228,228,231,.45)', maxWidth:160, lineHeight:1.5, flexShrink:0 }}>
+            Un profil complet reçoit <strong style={{ color:'#000000' }}>3×</strong> plus de missions
           </div>
         </div>
       </div>
@@ -149,7 +149,7 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
               <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp"
                 style={{ display:'none' }} onChange={handlePhotoChange} />
               <button onClick={() => photoRef.current?.click()} disabled={saving}
-                style={{ background:'var(--tl-bg)', color:'var(--teal)', border:'1px solid rgba(14,116,144,.2)',
+                style={{ background:'var(--tl-bg)', color:'var(--teal)', border:'1px solid rgba(0,0,0,.2)',
                   borderRadius:'var(--pill)', padding:'6px 14px', fontSize:11, fontWeight:700, width:'100%', cursor:'pointer' }}>
                 {saving ? <><i className="fas fa-spinner fa-spin" /></> : 'Changer'}
               </button>

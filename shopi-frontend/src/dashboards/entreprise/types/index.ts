@@ -53,6 +53,10 @@ export interface Order {
   date: string;
   livreur: string;
   zone: string;
+  /** Pour l'action "assigner/changer le livreur" */
+  livreurId?:               string | null;
+  livreurAssignmentStatus?: 'pending' | 'accepted' | 'refused' | null;
+  livreurRefusalReason?:    string | null;
 }
 
 /** Un produit */

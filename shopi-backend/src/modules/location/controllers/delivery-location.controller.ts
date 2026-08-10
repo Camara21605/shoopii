@@ -10,7 +10,7 @@
 
 import {
   Controller, Get, Patch, Body, Param, ParseUUIDPipe,
-  UseGuards, Query, HttpCode, HttpStatus,
+  UseGuards, Query, HttpCode, HttpStatus, ForbiddenException,
 } from '@nestjs/common';
 import { JwtAuthGuard }                from '../../../common/guards/auth.guard';
 import { Roles, CurrentUser }          from '../../../common/decorators/roles.decorator';
@@ -36,20 +36,35 @@ export class DeliveryLocationController {
     return this.svc.findNearby(query);
   }
 
-  /** Position actuelle d'un livreur */
+  /** Position actuelle d'un livreur (livreur lui-même ou admin) */
   @Get(':id/position')
-  getPosition(@Param('id', ParseUUIDPipe) id: string) {
+  getPosition(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    this.assertSelfOrAdmin(id, user);
     return this.svc.getPosition(id);
   }
 
-  /** Historique des positions (livreur ou admin) */
+  /** Historique des positions (livreur lui-même ou admin) */
   @Get(':id/history')
   getHistory(
     @Param('id', ParseUUIDPipe) id:        string,
     @Query('sessionId')         sessionId?: string,
     @Query('limit')             limit?:     number,
+    @CurrentUser()              user?:      User,
   ) {
+    this.assertSelfOrAdmin(id, user!);
     return this.svc.getHistory(id, sessionId, limit ? Number(limit) : undefined);
+  }
+
+  /* Autorisation — seul le livreur concerné ou un admin peut consulter sa
+   * position/trajectoire GPS. Sans ce contrôle, n'importe quel utilisateur
+   * authentifié (client, entreprise…) pouvait suivre les déplacements de
+   * n'importe quel livreur en connaissant son UUID. */
+  private assertSelfOrAdmin(deliveryId: string, user: User): void {
+    const actorId = (user as any).actorId as string | undefined;
+    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
+    if (!isAdmin && actorId !== deliveryId) {
+      throw new ForbiddenException("Vous n'avez pas accès à cette position.");
+    }
   }
 
   /** Mise à jour REST (fallback si WebSocket indisponible) */

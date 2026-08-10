@@ -97,9 +97,11 @@ export class CompanyTeamInvitationService {
     dto: CreateInvitationDto,
   ): Promise<Omit<CompanyTeamInvitation, 'token'> & { invitationLink: string }> {
 
-    /* Vérifier que l'email n'est pas déjà utilisé */
+    /* Vérifier que l'email n'est pas déjà utilisé — scopé par rôle
+     * (UNIQUE(email, role)) : un compte d'un AUTRE rôle (ex. client)
+     * partageant cet email ne doit pas bloquer l'invitation COMPANY. */
     const existingUser = await this.userRepo.findOne({
-      where: { email: dto.email.toLowerCase() },
+      where: { email: dto.email.toLowerCase(), role: UserRole.COMPANY },
     });
     if (existingUser) {
       throw new ConflictException(

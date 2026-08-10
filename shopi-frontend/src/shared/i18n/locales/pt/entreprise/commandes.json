@@ -1,0 +1,38 @@
+{
+  "commandes": {
+    "filters": {
+      "attente": "Pendente",
+      "preparation": "Em preparação",
+      "livraison": "Em entrega",
+      "livre": "Entregue",
+      "annule": "Cancelado",
+      "tous": "Todos"
+    },
+    "table": {
+      "commande": "Encomenda",
+      "produits": "Produto(s)",
+      "client": "Cliente",
+      "montant": "Montante",
+      "statut": "Estatuto",
+      "date": "Data",
+      "livreur": "Entregador",
+      "actions": "Ações"
+    },
+    "loading": "A carregar…",
+    "empty": "Nenhuma encomenda",
+    "exportCsv": "Exportar CSV",
+    "exportExcel": "Excel",
+    "voir": "Ver",
+    "preparer": "Preparar",
+    "envoyer": "Enviar",
+    "autresArticles_one": "+{{count}} outro artigo",
+    "autresArticles_other": "+{{count}} outros artigos",
+    "toasts": {
+      "exportCsv": "📥 Exportação CSV gerada",
+      "exportExcel": "📊 Exportação Excel gerada",
+      "accepted": "✅ Encomenda aceite",
+      "shipping": "🚚 Envio em entrega",
+      "orderRef": "📋 Encomenda {{id}}"
+    }
+  }
+}

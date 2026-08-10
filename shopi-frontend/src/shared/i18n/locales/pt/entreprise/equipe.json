@@ -1,0 +1,193 @@
+{
+  "equipe": {
+    "title": "Gestão da equipa",
+    "subtitle": "Gerencie os acessos e permissões dos seus colaboradores.",
+    "addMember": "Adicionar um membro",
+    "stats": {
+      "activeMembers": "Membros ativos",
+      "slotsUsed": "Slots utilizados",
+      "suspended": "Suspensos",
+      "remainingSlots": "Lugares restantes",
+      "activePlan": "Plano ativo"
+    },
+    "tabs": {
+      "members": "Membros",
+      "invitations": "Convites"
+    },
+    "toolbar": {
+      "searchPlaceholder": "Pesquisar por nome, email, cargo…",
+      "count_one": "{{count}} membro",
+      "count_other": "{{count}} membros"
+    },
+    "table": {
+      "member": "Membro",
+      "jobRole": "Cargo / Papel",
+      "status": "Estatuto",
+      "lastLogin": "Última ligação",
+      "actions": "Ações"
+    },
+    "loading": "A carregar…",
+    "empty": {
+      "membersTitle": "Nenhum colaborador por enquanto.",
+      "membersSub": "Clique em \"Adicionar um membro\" para convidar a sua primeira equipa.",
+      "invitationsTitle": "Nenhum convite pendente.",
+      "invitationsSub": "Use \"Adicionar um membro\" para convidar um colaborador por email."
+    },
+    "mustChangePassword": "⚠ MDP a alterar",
+    "status": {
+      "active": "Ativo",
+      "suspended": "Suspenso",
+      "pending": "Pendente",
+      "revoked": "Revogado"
+    },
+    "actions": {
+      "editPermissions": "Modificar as permissões",
+      "activityLog": "Registo de atividade",
+      "resetPassword": "Repor a palavra-passe",
+      "suspend": "Suspender",
+      "reactivate": "Reativar",
+      "deleteAccess": "Eliminar o acesso"
+    },
+    "pagination": {
+      "pageOf": "Página {{page}} / {{total}}"
+    },
+    "invitations": {
+      "pendingTitle": "Convites pendentes",
+      "send": "Enviar um convite",
+      "expiresOn": "Expira em {{date}}",
+      "resend": "Reenviar o convite",
+      "cancel": "Cancelar o convite"
+    },
+    "confirm": {
+      "suspendTitle": "Suspender {{name}}",
+      "suspendMessage": "{{firstName}} não poderá mais entrar. Pode reativar o seu acesso a qualquer momento.",
+      "deleteTitle": "Eliminar o acesso de {{name}}",
+      "deleteMessage": "O acesso de {{firstName}} será definitivamente revogado. Esta ação é irreversível.",
+      "cancelInviteTitle": "Cancelar o convite para {{email}}",
+      "cancelInviteMessage": "O convite enviado para {{email}} será cancelado. O link deixará de ser válido.",
+      "cancel": "Cancelar",
+      "confirmBtn": "Confirmar"
+    },
+    "toast": {
+      "loadMembersError": "Impossível carregar os membros.",
+      "suspended": "{{name}} foi suspenso(a).",
+      "reactivated": "{{name}} foi reativado(a).",
+      "reactivateError": "Erro na reativação.",
+      "deleted": "Acesso de {{name}} revogado.",
+      "resetPasswordError": "Erro ao repor a palavra-passe.",
+      "permissionsUpdated": "Permissões atualizadas.",
+      "permissionsUpdateError": "Erro na atualização.",
+      "invitationResent": "Convite reenviado.",
+      "genericError": "Erro.",
+      "invitationCancelled": "Convite cancelado.",
+      "passwordCopied": "Palavra-passe copiada!"
+    },
+    "permGroups": {
+      "products": {
+        "label": "Produtos",
+        "view": "Ver",
+        "create": "Criar",
+        "edit": "Modificar",
+        "delete": "Eliminar"
+      },
+      "orders": {
+        "label": "Encomendas",
+        "view": "Ver",
+        "validate": "Validar",
+        "cancel": "Cancelar",
+        "edit": "Modificar"
+      },
+      "deliveries": {
+        "label": "Entregas",
+        "view": "Ver",
+        "assign": "Atribuir",
+        "edit": "Modificar"
+      },
+      "payments": {
+        "label": "Pagamentos",
+        "view": "Ver",
+        "viewTransactions": "Transações",
+        "manageRefunds": "Reembolsos"
+      },
+      "messaging": {
+        "label": "Mensagens",
+        "read": "Ler",
+        "send": "Enviar"
+      },
+      "statistics": {
+        "label": "Estatísticas",
+        "view": "Ver"
+      },
+      "settings": {
+        "label": "Definições",
+        "view": "Ver",
+        "edit": "Modificar"
+      },
+      "returns": {
+        "label": "Devoluções & SAV",
+        "view": "Ver",
+        "process": "Processar"
+      },
+      "wallet": {
+        "label": "Carteira",
+        "view": "Ver",
+        "withdraw": "Levantamento"
+      }
+    },
+    "permPanel": {
+      "title": "Permissões",
+      "cancel": "Cancelar",
+      "save": "Guardar"
+    },
+    "activityPanel": {
+      "title": "Atividade recente",
+      "empty": "Nenhuma atividade registada."
+    },
+    "tempPwdModal": {
+      "title": "Palavra-passe temporária",
+      "transmitPrefix": "Transmita esta palavra-passe a",
+      "mustChange": "Ele terá de a alterar na próxima ligação.",
+      "warn": "Esta palavra-passe só será exibida uma vez.",
+      "gotIt": "Anotei a palavra-passe"
+    },
+    "addModal": {
+      "title": "Adicionar um colaborador",
+      "modeDirect": "Criação direta",
+      "modeInvite": "Convite por email",
+      "firstName": "Nome próprio *",
+      "firstNamePlaceholder": "Maria",
+      "lastName": "Apelido *",
+      "lastNamePlaceholder": "Diallo",
+      "email": "Email profissional *",
+      "emailPlaceholder": "maria.diallo@loja.com",
+      "phone": "Telefone",
+      "phonePlaceholder": "+224 620 000 000",
+      "jobTitle": "Cargo",
+      "jobTitlePlaceholder": "Responsável de vendas",
+      "internalRole": "Papel interno",
+      "selectPlaceholder": "— Selecionar —",
+      "roles": {
+        "manager": "Gestor",
+        "commercial": "Comercial",
+        "orderManager": "Gestor de encomendas",
+        "logisticsManager": "Responsável de logística",
+        "customerService": "Serviço ao cliente",
+        "accountant": "Contabilista"
+      },
+      "permTemplate": "Modelo de permissões",
+      "noTemplate": "— Nenhum modelo —",
+      "noteInvite": "Será enviado um email de convite. O colaborador escolherá a sua própria palavra-passe.",
+      "noteDirect": "Será gerada uma palavra-passe temporária e exibida uma única vez.",
+      "cancel": "Cancelar",
+      "createAccount": "Criar a conta",
+      "sendInvitation": "Enviar o convite",
+      "errors": {
+        "firstName": "Nome próprio obrigatório",
+        "lastName": "Apelido obrigatório",
+        "email": "Email inválido"
+      },
+      "invitationSentToast": "Convite enviado para {{email}}.",
+      "createError": "Erro na criação."
+    }
+  }
+}
