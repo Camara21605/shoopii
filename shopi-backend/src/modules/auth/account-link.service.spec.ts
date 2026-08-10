@@ -74,6 +74,7 @@ const mockRepo = () => ({
   findOneOrFail: jest.fn(),
   create:        jest.fn((x) => x),
   save:          jest.fn((x) => Promise.resolve(x)),
+  update:        jest.fn().mockResolvedValue(undefined),
   createQueryBuilder: jest.fn(() => ({
     select: jest.fn().mockReturnThis(),
     where:  jest.fn().mockReturnThis(),
@@ -176,18 +177,38 @@ describe('AccountLinkService', () => {
     });
 
     it('est idempotent — un lien ACTIF existant reconnecte sans recréer de compte', async () => {
-      userRepo.findOneOrFail
-        .mockResolvedValueOnce(makeUser({ id: 'pro-uuid' }))      // proUser
-        .mockResolvedValueOnce(makeUser({ id: 'client-uuid', role: UserRole.CLIENT })); // clientUser existant
+      userRepo.findOneOrFail.mockResolvedValueOnce(makeUser({ id: 'pro-uuid' })); // proUser
+      userRepo.findOne.mockResolvedValue(makeUser({ id: 'client-uuid', role: UserRole.CLIENT })); // clientUser existant
       linkRepo.findOne.mockResolvedValue(makeLink({ proUserId: 'pro-uuid', clientUserId: 'client-uuid' }));
 
       await service.createLinkedClient('pro-uuid', 'Password1!');
 
       // Aucune transaction (queryRunner) ne doit être ouverte — pas de recréation.
       expect(mockQR.startTransaction).not.toHaveBeenCalled();
+      expect(linkRepo.update).not.toHaveBeenCalled();
       expect(authService.issueTokensForUser).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'client-uuid' }), false, null, null,
       );
+    });
+
+    it('révoque un lien ACTIF orphelin (compte client cible soft-supprimé) puis recrée un nouveau compte client lié', async () => {
+      const proUser = makeUser({ id: 'pro-uuid' });
+      userRepo.findOneOrFail.mockResolvedValue(proUser);
+      linkRepo.findOne.mockResolvedValue(makeLink({ id: 'old-link-uuid', proUserId: 'pro-uuid', clientUserId: 'deleted-client-uuid' }));
+      // userRepo.findOne sert deux fois : d'abord pour retrouver le client
+      // du lien existant (introuvable, soft-deleted), puis pour le garde-fou
+      // anyExistingClient (aucun autre compte client en conflit).
+      userRepo.findOne.mockResolvedValue(null);
+
+      const result = await service.createLinkedClient('pro-uuid', 'Password1!');
+
+      expect(linkRepo.update).toHaveBeenCalledWith('old-link-uuid', expect.objectContaining({
+        status: AccountLinkStatus.REVOKED, revokedAt: expect.any(Date),
+      }));
+      // Le flux normal de création continue ensuite — nouveau compte + nouveau lien.
+      expect(mockQR.startTransaction).toHaveBeenCalled();
+      expect(mockQR.commitTransaction).toHaveBeenCalled();
+      expect(result.accessToken).toBe('tok');
     });
 
     it("bloque avec un message clair si l'email du pro est déjà pris par le compte client de QUELQU'UN D'AUTRE", async () => {
@@ -281,9 +302,8 @@ describe('AccountLinkService', () => {
 
     it('est idempotent — un lien ACTIF existant reconnecte sans re-vérifier de preuve', async () => {
       linkRepo.findOne.mockResolvedValue(makeLink({ proUserId: 'pro-uuid', clientUserId: 'client-uuid' }));
-      userRepo.findOneOrFail
-        .mockResolvedValueOnce(makeUser({ id: 'pro-uuid' }))                              // proUser
-        .mockResolvedValueOnce(makeUser({ id: 'client-uuid', role: UserRole.CLIENT }));   // clientUser
+      userRepo.findOneOrFail.mockResolvedValue(makeUser({ id: 'pro-uuid' })); // proUser
+      userRepo.findOne.mockResolvedValue(makeUser({ id: 'client-uuid', role: UserRole.CLIENT })); // clientUser
 
       await service.linkExistingClient('pro-uuid', { password: 'peu-importe' });
 
@@ -292,6 +312,31 @@ describe('AccountLinkService', () => {
       expect(authService.issueTokensForUser).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'client-uuid' }), false, null, null,
       );
+    });
+
+    it('révoque un lien ACTIF orphelin (compte client cible soft-supprimé) puis relie normalement un nouveau candidat', async () => {
+      const proUser    = makeUser({ id: 'pro-uuid' });
+      const clientUser = makeUser({ id: 'client-uuid', role: UserRole.CLIENT });
+
+      userRepo.findOneOrFail.mockResolvedValue(proUser);
+      linkRepo.findOne
+        .mockResolvedValueOnce(makeLink({ id: 'old-link-uuid', proUserId: 'pro-uuid', clientUserId: 'deleted-client-uuid' })) // existingLink orphelin
+        .mockResolvedValueOnce(null); // alreadyLinkedElsewhere — aucun
+      userRepo.findOne.mockResolvedValue(null); // le clientUser du vieux lien est introuvable (soft-deleted)
+      userRepo.find.mockResolvedValue([clientUser]);
+      linkRepo.find.mockResolvedValue([]);
+      mockPasswordQueryBuilder(userRepo, 'client-uuid', 'hash');
+
+      const bcrypt = require('bcryptjs');
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+
+      const result = await service.linkExistingClient('pro-uuid', { password: 'secret' });
+
+      expect(linkRepo.update).toHaveBeenCalledWith('old-link-uuid', expect.objectContaining({
+        status: AccountLinkStatus.REVOKED, revokedAt: expect.any(Date),
+      }));
+      expect(linkRepo.save).toHaveBeenCalledWith(expect.objectContaining({ clientUserId: 'client-uuid' }));
+      expect(result.accessToken).toBe('tok');
     });
 
     it('refuse si le compte client ciblé a déjà un lien ACTIF avec un autre pro', async () => {

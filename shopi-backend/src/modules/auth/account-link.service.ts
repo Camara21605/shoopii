@@ -130,8 +130,16 @@ export class AccountLinkService {
      * au compte client existant (évite une erreur confuse en cas de double clic). */
     const existingLink = await this.linkRepo.findOne({ where: { proUserId, status: AccountLinkStatus.ACTIVE } });
     if (existingLink) {
-      const clientUser = await this.userRepo.findOneOrFail({ where: { id: existingLink.clientUserId } });
-      return this.authService.issueTokensForUser(clientUser, false, null, null);
+      const clientUser = await this.userRepo.findOne({ where: { id: existingLink.clientUserId } });
+      if (clientUser) {
+        return this.authService.issueTokensForUser(clientUser, false, null, null);
+      }
+      /* Compte cible soft-supprimé entre-temps : le lien "actif" pointe dans
+       * le vide. On le révoque au lieu de planter (findOneOrFail exclut les
+       * lignes soft-deleted) pour laisser le pro recréer un nouveau compte
+       * client lié ci-dessous — sans ça il resterait bloqué indéfiniment. */
+      await this.linkRepo.update(existingLink.id, { status: AccountLinkStatus.REVOKED, revokedAt: new Date() });
+      this.logger.warn(`[MON ESPACE ⚠️ lien orphelin révoqué] pro=${proUserId} → client=${existingLink.clientUserId} (compte cible introuvable)`);
     }
 
     /* Un compte CLIENT avec cet email/téléphone peut déjà exister sans être
@@ -223,8 +231,12 @@ export class AccountLinkService {
 
     const existingLink = await this.linkRepo.findOne({ where: { proUserId, status: AccountLinkStatus.ACTIVE } });
     if (existingLink) {
-      const clientUser = await this.userRepo.findOneOrFail({ where: { id: existingLink.clientUserId } });
-      return this.authService.issueTokensForUser(clientUser, false, null, null);
+      const clientUser = await this.userRepo.findOne({ where: { id: existingLink.clientUserId } });
+      if (clientUser) {
+        return this.authService.issueTokensForUser(clientUser, false, null, null);
+      }
+      await this.linkRepo.update(existingLink.id, { status: AccountLinkStatus.REVOKED, revokedAt: new Date() });
+      this.logger.warn(`[MON ESPACE ⚠️ lien orphelin révoqué] pro=${proUserId} → client=${existingLink.clientUserId} (compte cible introuvable)`);
     }
 
     const match = await this.findUnlinkedClientMatching(proUser);
