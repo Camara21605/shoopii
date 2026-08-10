@@ -43,22 +43,26 @@ function makeSocket(userId: string): AuthenticatedSocket & { emit: jest.Mock } {
 describe('CallGateway', () => {
   let gateway: CallGateway;
   let callService: jest.Mocked<Pick<CallService,
-    'startCall' | 'acceptCall' | 'rejectCall' | 'endCall' | 'findActiveCallId' | 'endAllCallsForUser'
+    'startCall' | 'acceptCall' | 'rejectCall' | 'endCall' | 'findActiveCallId'
+    | 'endAllCallsForUser' | 'findActiveCallsForUser'
   >>;
   let server: { to: jest.Mock; emit: jest.Mock };
   let roomEmit: jest.Mock;
+  let exceptEmit: jest.Mock;
 
   beforeEach(() => {
-    roomEmit = jest.fn();
-    server = { to: jest.fn(() => ({ emit: roomEmit })), emit: jest.fn() };
+    roomEmit   = jest.fn();
+    exceptEmit = jest.fn();
+    server = { to: jest.fn(() => ({ emit: roomEmit, except: jest.fn(() => ({ emit: exceptEmit })) })), emit: jest.fn() };
 
     callService = {
       startCall:           jest.fn(),
       acceptCall:           jest.fn().mockResolvedValue(undefined),
       rejectCall:           jest.fn().mockResolvedValue(undefined),
       endCall:              jest.fn().mockResolvedValue(undefined),
-      findActiveCallId:     jest.fn(),
-      endAllCallsForUser:   jest.fn().mockResolvedValue([]),
+      findActiveCallId:        jest.fn(),
+      endAllCallsForUser:      jest.fn().mockResolvedValue([]),
+      findActiveCallsForUser:  jest.fn().mockResolvedValue([]),
     };
 
     gateway = new CallGateway(callService as unknown as CallService);
@@ -133,9 +137,9 @@ describe('CallGateway', () => {
   // ════════════════════════════════════════════════════════════
 
   describe('handleCallAccept', () => {
-    it('accepte et notifie l\'appelant sur sa room', async () => {
+    it('accepte (gagnant) → notifie l\'appelant + les AUTRES appareils du callee', async () => {
       callService.findActiveCallId.mockResolvedValue('call-uuid');
-      callService.acceptCall.mockResolvedValue({ status: CallStatus.CONNECTED } as any);
+      callService.acceptCall.mockResolvedValue({ call: { status: CallStatus.CONNECTED } as any, alreadyAccepted: false });
       const socket = makeSocket('callee-uuid');
 
       await gateway.handleCallAccept(socket, { conversationId: 'conv-uuid', callerUserId: 'caller-uuid' });
@@ -143,16 +147,43 @@ describe('CallGateway', () => {
       expect(callService.acceptCall).toHaveBeenCalledWith('callee-uuid', 'call-uuid');
       expect(server.to).toHaveBeenCalledWith('user:caller-uuid');
       expect(roomEmit).toHaveBeenCalledWith('call:accepted', expect.objectContaining({ calleeUserId: 'callee-uuid' }));
+      // Les autres appareils du callee reçoivent call:accepted-elsewhere (via .except(socket.id))
+      expect(server.to).toHaveBeenCalledWith('user:callee-uuid');
+      expect(exceptEmit).toHaveBeenCalledWith('call:accepted-elsewhere', expect.anything());
     });
 
-    it('émet quand même call:accepted si la persistance échoue (signalisation live prioritaire)', async () => {
+    it('2e appareil (perdant) → PAS de 2e call:accepted à l\'appelant, juste call:accept-superseded à CE socket', async () => {
+      callService.findActiveCallId.mockResolvedValue('call-uuid');
+      callService.acceptCall.mockResolvedValue({ call: { status: CallStatus.CONNECTED } as any, alreadyAccepted: true });
+      const socket = makeSocket('callee-uuid');
+
+      await gateway.handleCallAccept(socket, { conversationId: 'conv-uuid', callerUserId: 'caller-uuid' });
+
+      expect(roomEmit).not.toHaveBeenCalledWith('call:accepted', expect.anything());
+      expect(socket.emit).toHaveBeenCalledWith('call:accept-superseded', expect.objectContaining({ conversationId: 'conv-uuid' }));
+    });
+
+    it('n\'émet PAS call:accepted si la persistance échoue — sinon un échec (Forbidden, DB down...) sur UN des deux appareils en course serait traité comme une victoire par défaut, provoquant un 2e call:accepted au caller', async () => {
       callService.findActiveCallId.mockResolvedValue('call-uuid');
       callService.acceptCall.mockRejectedValue(new Error('DB down'));
       const socket = makeSocket('callee-uuid');
 
       await gateway.handleCallAccept(socket, { conversationId: 'conv-uuid', callerUserId: 'caller-uuid' });
 
-      expect(roomEmit).toHaveBeenCalledWith('call:accepted', expect.anything());
+      expect(roomEmit).not.toHaveBeenCalledWith('call:accepted', expect.anything());
+      expect(exceptEmit).not.toHaveBeenCalledWith('call:accepted-elsewhere', expect.anything());
+      expect(socket.emit).toHaveBeenCalledWith('call:accept-failed', expect.objectContaining({ conversationId: 'conv-uuid' }));
+    });
+
+    it('n\'émet rien si aucun appel actif n\'est trouvé (findActiveCallId → null)', async () => {
+      callService.findActiveCallId.mockResolvedValue(null);
+      const socket = makeSocket('callee-uuid');
+
+      await gateway.handleCallAccept(socket, { conversationId: 'conv-uuid', callerUserId: 'caller-uuid' });
+
+      expect(callService.acceptCall).not.toHaveBeenCalled();
+      expect(roomEmit).not.toHaveBeenCalledWith('call:accepted', expect.anything());
+      expect(socket.emit).toHaveBeenCalledWith('call:accept-failed', expect.objectContaining({ conversationId: 'conv-uuid' }));
     });
   });
 
@@ -243,31 +274,78 @@ describe('CallGateway', () => {
   // ════════════════════════════════════════════════════════════
 
   describe('handleDisconnect', () => {
-    it('nettoie les appels actifs et notifie chaque correspondant', async () => {
-      callService.endAllCallsForUser.mockResolvedValue([
-        { otherUserId: 'other-1', conversationId: 'conv-1' },
-        { otherUserId: 'other-2', conversationId: 'conv-2' },
-      ]);
-      const socket = makeSocket('user-uuid');
-
-      await gateway.handleDisconnect(socket);
-
-      expect(callService.endAllCallsForUser).toHaveBeenCalledWith('user-uuid');
-      expect(server.to).toHaveBeenCalledWith('user:other-1');
-      expect(server.to).toHaveBeenCalledWith('user:other-2');
-      expect(roomEmit).toHaveBeenCalledTimes(2);
-    });
-
     it('ne fait rien si socket.data.userId absent (déconnexion avant authentification complète)', async () => {
       const socket = { data: {} } as unknown as AuthenticatedSocket;
       await gateway.handleDisconnect(socket);
-      expect(callService.endAllCallsForUser).not.toHaveBeenCalled();
+      expect(callService.findActiveCallsForUser).not.toHaveBeenCalled();
     });
 
     it('une erreur de nettoyage ne remonte jamais (ne doit jamais planter le process)', async () => {
-      callService.endAllCallsForUser.mockRejectedValue(new Error('DB down'));
+      callService.findActiveCallsForUser.mockRejectedValue(new Error('DB down'));
       const socket = makeSocket('user-uuid');
       await expect(gateway.handleDisconnect(socket)).resolves.toBeUndefined();
+    });
+
+    it('aucun appel actif → endAllCallsForUser jamais appelé', async () => {
+      callService.findActiveCallsForUser.mockResolvedValue([]);
+      await gateway.handleDisconnect(makeSocket('user-uuid'));
+      expect(callService.endAllCallsForUser).not.toHaveBeenCalled();
+    });
+
+    it('caller dont l\'appel n\'a jamais été accepté (RINGING, aucun binding) → termine cet appel', async () => {
+      callService.findActiveCallsForUser.mockResolvedValue([
+        { id: 'call-uuid', callerId: 'user-uuid', calleeId: 'callee-uuid', status: CallStatus.RINGING } as any,
+      ]);
+      callService.endAllCallsForUser.mockResolvedValue([{ otherUserId: 'callee-uuid', conversationId: 'conv-1' }]);
+
+      await gateway.handleDisconnect(makeSocket('user-uuid'));
+
+      expect(callService.endAllCallsForUser).toHaveBeenCalledWith('user-uuid', ['call-uuid']);
+      expect(server.to).toHaveBeenCalledWith('user:callee-uuid');
+      expect(roomEmit).toHaveBeenCalledWith('call:ended', expect.anything());
+    });
+
+    it('callee en RINGING (aucun appareil n\'a encore accepté) → NE PAS terminer l\'appel : une autre session peut encore répondre', async () => {
+      callService.findActiveCallsForUser.mockResolvedValue([
+        { id: 'call-uuid', callerId: 'caller-uuid', calleeId: 'user-uuid', status: CallStatus.RINGING } as any,
+      ]);
+
+      await gateway.handleDisconnect(makeSocket('user-uuid'));
+
+      expect(callService.endAllCallsForUser).not.toHaveBeenCalled();
+    });
+
+    it('plusieurs appareils — le socket qui a RÉELLEMENT accepté se déconnecte → l\'appel se termine', async () => {
+      // Le callee accepte depuis un socket précis : le binding se pose via handleCallAccept.
+      callService.findActiveCallId.mockResolvedValue('call-uuid');
+      callService.acceptCall.mockResolvedValue({ call: {} as any, alreadyAccepted: false });
+      const acceptingSocket = makeSocket('user-uuid');
+      await gateway.handleCallAccept(acceptingSocket, { conversationId: 'conv-1', callerUserId: 'caller-uuid' });
+
+      callService.findActiveCallsForUser.mockResolvedValue([
+        { id: 'call-uuid', callerId: 'caller-uuid', calleeId: 'user-uuid', status: CallStatus.CONNECTED } as any,
+      ]);
+      callService.endAllCallsForUser.mockResolvedValue([{ otherUserId: 'caller-uuid', conversationId: 'conv-1' }]);
+
+      await gateway.handleDisconnect(acceptingSocket); // LE MÊME socket qui a accepté se déconnecte
+
+      expect(callService.endAllCallsForUser).toHaveBeenCalledWith('user-uuid', ['call-uuid']);
+    });
+
+    it('plusieurs appareils — un AUTRE appareil du même callee se déconnecte → l\'appel actif N\'EST PAS coupé', async () => {
+      callService.findActiveCallId.mockResolvedValue('call-uuid');
+      callService.acceptCall.mockResolvedValue({ call: {} as any, alreadyAccepted: false });
+      const acceptingSocket = makeSocket('user-uuid');
+      await gateway.handleCallAccept(acceptingSocket, { conversationId: 'conv-1', callerUserId: 'caller-uuid' });
+
+      callService.findActiveCallsForUser.mockResolvedValue([
+        { id: 'call-uuid', callerId: 'caller-uuid', calleeId: 'user-uuid', status: CallStatus.CONNECTED } as any,
+      ]);
+
+      const otherDeviceSocket = makeSocket('user-uuid'); // même utilisateur, AUTRE connexion
+      await gateway.handleDisconnect(otherDeviceSocket);
+
+      expect(callService.endAllCallsForUser).not.toHaveBeenCalled();
     });
   });
 

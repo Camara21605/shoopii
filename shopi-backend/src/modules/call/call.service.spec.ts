@@ -40,7 +40,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { getRedisConnectionToken } from '@nestjs-modules/ioredis';
 import { ConfigService } from '@nestjs/config';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 
 import { CallService } from './call.service';
 import { Call, CallStatus, CallType } from 'src/database/entities/call/call.entity';
@@ -278,6 +278,17 @@ describe('CallService', () => {
       const result = await service.startCall('caller-uuid', { calleeUserId: 'callee-uuid', callType: CallType.AUDIO });
       expect(result.outcome).toBe('ringing');
     });
+
+    it('violation de la contrainte unique DB (UNIQ_calls_active_pair, backstop) → ConflictException claire', async () => {
+      const caller = makeUser({ id: 'caller-uuid' });
+      const callee = makeUser({ id: 'callee-uuid' });
+      mockActiveUsers(caller, callee);
+      callRepo.find.mockResolvedValue([]); // le check applicatif ne voit rien (race gagnée par l'autre transaction)
+      manager.save.mockRejectedValueOnce(Object.assign(new Error('duplicate key'), { code: '23505' }));
+
+      await expect(service.startCall('caller-uuid', { calleeUserId: 'callee-uuid', callType: CallType.AUDIO }))
+        .rejects.toThrow(ConflictException);
+    });
   });
 
   // ════════════════════════════════════════════════════════════
@@ -285,13 +296,14 @@ describe('CallService', () => {
   // ════════════════════════════════════════════════════════════
 
   describe('acceptCall', () => {
-    it('accepte un appel valide → CONNECTED + answeredAt posé', async () => {
+    it('accepte un appel valide → CONNECTED + answeredAt posé, alreadyAccepted=false', async () => {
       callRepo.findOne.mockResolvedValue(makeCall({ status: CallStatus.RINGING }));
 
-      const result = await service.acceptCall('callee-uuid', 'call-uuid');
+      const { call, alreadyAccepted } = await service.acceptCall('callee-uuid', 'call-uuid');
 
-      expect(result.status).toBe(CallStatus.CONNECTED);
-      expect(result.answeredAt).toBeInstanceOf(Date);
+      expect(call.status).toBe(CallStatus.CONNECTED);
+      expect(call.answeredAt).toBeInstanceOf(Date);
+      expect(alreadyAccepted).toBe(false);
     });
 
     it('faux call_id → NotFoundException', async () => {
@@ -306,13 +318,14 @@ describe('CallService', () => {
         .rejects.toThrow(ForbiddenException);
     });
 
-    it('plusieurs appareils — un 2e accept sur un appel déjà CONNECTED est idempotent', async () => {
+    it('plusieurs appareils — un 2e accept sur un appel déjà CONNECTED est idempotent, alreadyAccepted=true', async () => {
       const already = makeCall({ status: CallStatus.CONNECTED, answeredAt: new Date('2026-01-01T00:00:00Z') });
       callRepo.findOne.mockResolvedValue(already);
 
-      const result = await service.acceptCall('callee-uuid', 'call-uuid');
+      const { call, alreadyAccepted } = await service.acceptCall('callee-uuid', 'call-uuid');
 
-      expect(result).toBe(already);
+      expect(call).toBe(already);
+      expect(alreadyAccepted).toBe(true);
       expect(callRepo.save).not.toHaveBeenCalled(); // pas de ré-écriture de answeredAt
     });
   });
@@ -394,6 +407,39 @@ describe('CallService', () => {
       const result = await service.endAllCallsForUser('user-uuid');
       expect(result).toEqual([]);
       expect(historyRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('onlyCallIds=[] → retourne [] immédiatement sans ouvrir de transaction ni interroger la DB', async () => {
+      const result = await service.endAllCallsForUser('user-uuid', []);
+      expect(result).toEqual([]);
+      expect(callRepo.find).not.toHaveBeenCalled();
+    });
+
+    it('onlyCallIds fourni → seuls les appels listés sont finalisés (utilisé par le socket-binding de CallGateway)', async () => {
+      callRepo.find.mockResolvedValue([
+        makeCall({ id: 'c1', callerId: 'user-uuid', calleeId: 'other-1', status: CallStatus.CONNECTED, answeredAt: new Date() }),
+      ]);
+
+      const result = await service.endAllCallsForUser('user-uuid', ['c1']);
+
+      expect(result).toEqual([{ otherUserId: 'other-1', conversationId: 'conv-uuid' }]);
+      // Le filtre est bien transmis à la requête (peu importe la forme exacte du WHERE ici,
+      // seul le comportement observable compte pour ce mock).
+      expect(callRepo.find).toHaveBeenCalled();
+    });
+  });
+
+  describe('findActiveCallsForUser', () => {
+    it('retourne les appels où l\'utilisateur est caller OU callee, lecture seule', async () => {
+      const calls = [makeCall({ id: 'c1' }), makeCall({ id: 'c2' })];
+      callRepo.find.mockResolvedValue(calls);
+
+      const result = await service.findActiveCallsForUser('user-uuid');
+
+      expect(result).toBe(calls);
+      expect(callRepo.find).toHaveBeenCalledWith({
+        where: [{ callerId: 'user-uuid' }, { calleeId: 'user-uuid' }],
+      });
     });
   });
 

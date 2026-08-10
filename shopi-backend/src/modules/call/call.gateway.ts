@@ -28,7 +28,7 @@ import type { Server } from 'socket.io';
 
 import type { AuthenticatedSocket } from '../messagerie/interfaces/messaging.interfaces';
 import { CallService } from './call.service';
-import { CallType } from 'src/database/entities/call/call.entity';
+import { CallStatus, CallType } from 'src/database/entities/call/call.entity';
 import {
   CallInitiateDto, CallAcceptDto, CallRejectDto, CallEndDto, CallBusyDto,
   CallOfferDto, CallAnswerDto, CallIceCandidateDto,
@@ -68,27 +68,72 @@ export class CallGateway implements OnGatewayDisconnect {
   private readonly logger = new Logger(CallGateway.name);
   private readonly floodGuard = new SocketFloodGuard();
 
+  /**
+   * callId → quel socket.id précis porte chaque côté de l'appel — permet
+   * à handleDisconnect de savoir si LE SOCKET qui vient de se déconnecter
+   * est réellement celui engagé dans un appel donné, plutôt que de couper
+   * TOUS les appels de l'utilisateur dès qu'UN de ses appareils se
+   * déconnecte (ancien comportement, cassait un appel en cours sur le
+   * téléphone si l'onglet navigateur du même utilisateur se fermait).
+   * En mémoire (comme ActiveGroupCall côté groupe) — perdu au redémarrage,
+   * voir le fallback conservateur dans handleDisconnect.
+   */
+  private readonly callBindings = new Map<string, { callerSocketId: string; calleeSocketId?: string }>();
+
   constructor(private readonly callService: CallService) {}
 
   /**
-   * Nettoie tout appel actif dont ce socket faisait partie — sans ça, un
-   * onglet fermé/un crash/une coupure réseau EN PLEIN APPEL laissait la
-   * ligne `calls` orpheline pour toujours, et `isUserBusy()` bloquait
-   * ensuite CHAQUE tentative d'appel future de cet utilisateur ("Vous
-   * êtes déjà en appel") — plus aucun moyen de rappeler sans intervention
-   * manuelle en base. Voir CallService.endAllCallsForUser pour la limite
-   * connue (multi-onglets) et le raisonnement complet.
+   * Ne coupe QUE les appels réellement portés par CE socket précis — pas
+   * tous les appels de l'utilisateur. Distinction :
+   *   - Appelant qui part, appel jamais accepté : personne d'autre ne peut
+   *     porter cet appel à sa place → toujours terminé.
+   *   - Un côté dont le binding connu correspond à CE socket → terminé.
+   *   - Callee dont AUCUN appareil n'a encore accepté (RINGING, pas de
+   *     binding côté callee) : une AUTRE session du même utilisateur peut
+   *     encore répondre → jamais terminé sur la seule foi qu'un appareil
+   *     tiers vient de se déconnecter.
+   *   - Binding inconnu (ex. redémarrage serveur ayant vidé callBindings)
+   *     pour un côté callee déjà répondu : comportement conservateur
+   *     historique (on termine) plutôt que de risquer un appel orphelin
+   *     permanent — compromis déjà assumé avant cette partie.
    */
   async handleDisconnect(socket: AuthenticatedSocket): Promise<void> {
     const userId = socket.data?.userId;
     if (!userId) return;
 
     try {
-      const toNotify = await this.callService.endAllCallsForUser(userId);
+      const activeCalls = await this.callService.findActiveCallsForUser(userId);
+      const callIdsToEnd: string[] = [];
+
+      for (const call of activeCalls) {
+        const binding    = this.callBindings.get(call.id);
+        const isCaller    = call.callerId === userId;
+        const boundSocket = isCaller ? binding?.callerSocketId : binding?.calleeSocketId;
+
+        if (boundSocket) {
+          if (boundSocket === socket.id) callIdsToEnd.push(call.id);
+          // sinon : un AUTRE appareil du même utilisateur porte cet appel — ignorer.
+        } else if (isCaller) {
+          // Personne n'a encore de binding ET c'est le caller qui part —
+          // aucun autre appareil ne peut porter SON côté de cet appel.
+          callIdsToEnd.push(call.id);
+        } else if (call.status === CallStatus.CONNECTED) {
+          // Callee déjà connecté mais binding inconnu (ex. redémarrage
+          // serveur) — comportement conservateur historique.
+          callIdsToEnd.push(call.id);
+        }
+        // Dernier cas restant : callee en RINGING sans binding connu →
+        // volontairement IGNORÉ, une autre session peut encore répondre.
+      }
+
+      if (callIdsToEnd.length === 0) return;
+
+      const toNotify = await this.callService.endAllCallsForUser(userId, callIdsToEnd);
       for (const { otherUserId, conversationId } of toNotify) {
-        this.logger.log(`📞 Appel coupé (déconnexion) user=${userId} → notifié=${otherUserId}`);
+        this.logger.log(`📞 Appel coupé (déconnexion) user=${userId} socket=${socket.id} → notifié=${otherUserId}`);
         this.server.to(`user:${otherUserId}`).emit('call:ended', { conversationId });
       }
+      for (const callId of callIdsToEnd) this.callBindings.delete(callId);
     } catch (e) {
       // Une panne ici ne doit jamais faire planter le process — le pire
       // cas est un appel qui reste "actif" un peu plus longtemps.
@@ -132,6 +177,9 @@ export class CallGateway implements OnGatewayDisconnect {
         return;
       }
 
+      /* Lie ce socket précis au côté "caller" de l'appel — voir callBindings. */
+      this.callBindings.set(result.call.id, { callerSocketId: socket.id });
+
       const room = `user:${body.calleeUserId}`;
       this.logger.log(`📞 call:initiate caller=${callerUserId} callee=${body.calleeUserId} sockets-in-room=${this.roomSize(room)}`);
       this.server.to(room).emit('call:incoming', {
@@ -151,7 +199,14 @@ export class CallGateway implements OnGatewayDisconnect {
     }
   }
 
-  /** Appelé accepte → notifie l'appelant. */
+  /**
+   * Appelé accepte → notifie l'appelant. Gère explicitement le cas
+   * multi-appareils : si CE callId a déjà été accepté par un AUTRE
+   * appareil du même callee (course gagnée ailleurs pendant qu'on
+   * attendait le verrou DB — voir CallService.acceptCall), on ne
+   * ré-émet JAMAIS call:accepted à l'appelant (déjà fait par le
+   * gagnant) — seul cet appareil précis est informé qu'il a perdu.
+   */
   @SubscribeMessage('call:accept')
   async handleCallAccept(
     @ConnectedSocket() socket: AuthenticatedSocket,
@@ -160,10 +215,47 @@ export class CallGateway implements OnGatewayDisconnect {
     const calleeUserId = socket.data.userId;
 
     const callId = await this.callService.findActiveCallId(body.callerUserId, calleeUserId);
-    if (callId) {
-      await this.callService.acceptCall(calleeUserId, callId).catch(e =>
-        this.logger.warn(`call:accept persistance échouée : ${(e as Error).message}`));
+    if (!callId) {
+      this.logger.warn(`call:accept sans appel actif — callee=${calleeUserId} caller=${body.callerUserId}`);
+      socket.emit('call:accept-failed', { conversationId: body.conversationId });
+      return;
     }
+
+    /* IMPORTANT : un échec ici (Forbidden/NotFound/DB down) ne doit JAMAIS
+       être traité comme une victoire par défaut. Le bug historique était de
+       garder `alreadyAccepted = false` (sa valeur initiale) quand acceptCall
+       levait — ce qui faisait passer CE socket dans la branche "gagnant" et
+       émettait un second call:accepted au caller. On sort donc explicitement
+       ici, sans jamais atteindre la logique gagnant/perdant plus bas. */
+    let result: { call: unknown; alreadyAccepted: boolean };
+    try {
+      result = await this.callService.acceptCall(calleeUserId, callId);
+    } catch (e) {
+      this.logger.warn(`call:accept persistance échouée : ${(e as Error).message}`);
+      socket.emit('call:accept-failed', { conversationId: body.conversationId });
+      return;
+    }
+
+    if (result.alreadyAccepted) {
+      /* Cet appareil a perdu la course — un autre appareil du même
+         utilisateur a déjà fait aboutir l'appel. Ne PAS re-notifier
+         l'appelant (déjà fait), juste informer CET appareil précis. */
+      this.logger.log(`ℹ️ call:accept déjà traité ailleurs — callee=${calleeUserId} caller=${body.callerUserId} socket=${socket.id}`);
+      socket.emit('call:accept-superseded', { conversationId: body.conversationId });
+      return;
+    }
+
+    /* Cet appareil a gagné — le lier au côté "callee" de l'appel (voir
+       callBindings) et informer les AUTRES appareils du même callee
+       (qui affichaient peut-être encore "appel entrant") de se fermer. */
+    if (callId) {
+      const binding = this.callBindings.get(callId);
+      if (binding) binding.calleeSocketId = socket.id;
+      else this.callBindings.set(callId, { callerSocketId: '', calleeSocketId: socket.id });
+    }
+    this.server.to(`user:${calleeUserId}`).except(socket.id).emit('call:accepted-elsewhere', {
+      conversationId: body.conversationId,
+    });
 
     const room = `user:${body.callerUserId}`;
     this.logger.log(`✅ call:accept callee=${calleeUserId} caller=${body.callerUserId} sockets-in-room=${this.roomSize(room)}`);
@@ -185,6 +277,7 @@ export class CallGateway implements OnGatewayDisconnect {
     if (callId) {
       await this.callService.rejectCall(calleeUserId, callId).catch(e =>
         this.logger.warn(`call:reject persistance échouée : ${(e as Error).message}`));
+      this.callBindings.delete(callId);
     }
 
     this.server.to(`user:${body.callerUserId}`).emit('call:rejected', {
@@ -204,6 +297,7 @@ export class CallGateway implements OnGatewayDisconnect {
     if (callId) {
       await this.callService.endCall(userId, callId).catch(e =>
         this.logger.warn(`call:end persistance échouée : ${(e as Error).message}`));
+      this.callBindings.delete(callId);
     }
 
     this.server.to(`user:${body.targetUserId}`).emit('call:ended', {

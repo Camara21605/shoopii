@@ -18,7 +18,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import type { Redis } from 'ioredis';
 import { randomUUID, createHmac } from 'crypto';
@@ -47,6 +47,14 @@ import type { StartCallDto } from './dto/call.dto';
 /** Nombre max de tentatives d'appel par utilisateur / fenêtre de 60s. */
 const RATE_LIMIT_MAX    = 10;
 const RATE_LIMIT_TTL_S  = 60;
+
+/** Code erreur Postgres "unique_violation" — TypeORM le recopie tel quel
+ *  sur QueryFailedError (driver pg). Backstop de dernier ressort si le
+ *  verrou consultatif (lockUsersForCall) a été contourné d'une façon ou
+ *  d'une autre — voir la migration UNIQ_calls_active_pair. */
+function isUniqueViolation(err: unknown): boolean {
+  return (err as { code?: string })?.code === '23505';
+}
 
 /** Forme attendue par RTCPeerConnection côté frontend (pas de lib DOM ici). */
 export interface IceServerConfig {
@@ -389,12 +397,32 @@ export class CallService {
         status:         CallStatus.RINGING,
         startedAt:      new Date(),
       });
-      const saved = await manager.save(call);
-      return { outcome: 'ringing', call: saved };
+
+      try {
+        const saved = await manager.save(call);
+        return { outcome: 'ringing', call: saved };
+      } catch (err) {
+        /* Ne devrait normalement jamais arriver — lockUsersForCall() rend
+           déjà cette section critique atomique — mais l'index unique
+           UNIQ_calls_active_pair (migration 1721400000003) reste le
+           dernier rempart si ce verrou était un jour contourné. */
+        if (isUniqueViolation(err)) {
+          throw new ConflictException('Un appel est déjà en cours avec cette personne.');
+        }
+        throw err;
+      }
     });
   }
 
-  async acceptCall(userId: string, callId: string): Promise<Call> {
+  /**
+   * @returns `alreadyAccepted: true` quand CET appel avait déjà été accepté
+   * par un autre appareil du même callee AVANT que cette transaction n'ait
+   * pu poser son verrou — permet à CallGateway de distinguer l'appareil
+   * gagnant (qui doit notifier l'appelant) des appareils perdants (qui
+   * doivent seulement être informés qu'ils ont perdu la course, sans
+   * jamais re-notifier l'appelant une 2e fois).
+   */
+  async acceptCall(userId: string, callId: string): Promise<{ call: Call; alreadyAccepted: boolean }> {
     return this.dataSource.transaction(async (manager) => {
       /* pessimistic_write = SELECT ... FOR UPDATE — bloque toute autre
          transaction qui tenterait de lire/modifier CETTE ligne (accept
@@ -406,11 +434,12 @@ export class CallService {
       }
       /* Idempotent : si un autre appareil du même callee a déjà accepté
          pendant qu'on attendait le verrou, ne pas réémettre answeredAt. */
-      if (call.status === CallStatus.CONNECTED) return call;
+      if (call.status === CallStatus.CONNECTED) return { call, alreadyAccepted: true };
 
       call.status     = CallStatus.CONNECTED;
       call.answeredAt = new Date();
-      return manager.save(call);
+      const saved = await manager.save(call);
+      return { call: saved, alreadyAccepted: false };
     });
   }
 
@@ -447,6 +476,17 @@ export class CallService {
   }
 
   /**
+   * Lecture seule — liste des appels actifs (RINGING/CONNECTED) d'un
+   * utilisateur, sans verrou ni effet de bord. Utilisé par
+   * CallGateway.handleDisconnect pour décider, appel par appel, si CE
+   * socket précis est bien celui qui le porte avant de le terminer (voir
+   * endAllCallsForUser ci-dessous pour la distinction utilisateur/socket).
+   */
+  async findActiveCallsForUser(userId: string): Promise<Call[]> {
+    return this.callRepo.find({ where: [{ callerId: userId }, { calleeId: userId }] });
+  }
+
+  /**
    * Nettoie tout appel actif d'un utilisateur dont le socket vient de se
    * déconnecter (fermeture d'onglet, crash, perte réseau…) — sans ça, la
    * ligne restait indéfiniment dans `calls` et `isUserBusy()` bloquait
@@ -454,22 +494,30 @@ export class CallService {
    * en boucle, plus aucun appel possible tant qu'un admin ne nettoyait
    * pas la ligne en base à la main).
    *
-   * Appelé depuis CallGateway.handleDisconnect — voir la limite connue
-   * documentée là-bas (un utilisateur multi-onglets dont un seul onglet
-   * portait l'appel actif peut se voir couper cet appel si un AUTRE de
-   * ses onglets se déconnecte ; accepté comme compromis raisonnable face
-   * au risque bien pire de blocage permanent).
+   * Appelé depuis CallGateway.handleDisconnect, qui détermine EN AMONT
+   * (via findActiveCallsForUser + son propre suivi socket↔appel) quels
+   * callIds précis doivent réellement se terminer — un utilisateur
+   * multi-appareils dont un SEUL appareil porte l'appel actif ne perd
+   * plus cet appel quand un AUTRE de ses appareils se déconnecte (ancienne
+   * limitation, désormais corrigée : voir CallGateway.callBindings).
    *
+   * @param onlyCallIds si fourni, ne finalise QUE ces appels précis parmi
+   *   ceux de l'utilisateur (sinon, comportement historique : tous).
    * @returns la liste des autres participants à notifier (`call:ended`).
    */
-  async endAllCallsForUser(userId: string): Promise<{ otherUserId: string; conversationId: string | null }[]> {
+  async endAllCallsForUser(
+    userId: string,
+    onlyCallIds?: string[],
+  ): Promise<{ otherUserId: string; conversationId: string | null }[]> {
+    if (onlyCallIds && onlyCallIds.length === 0) return [];
+
     return this.dataSource.transaction(async (manager) => {
       /* FOR UPDATE — évite de finaliser une ligne qu'un accept/reject/end
          concurrent de l'autre participant est justement en train de traiter. */
-      const calls = await manager.find(Call, {
-        where: [{ callerId: userId }, { calleeId: userId }],
-        lock:  { mode: 'pessimistic_write' },
-      });
+      const where = onlyCallIds
+        ? [{ callerId: userId, id: In(onlyCallIds) }, { calleeId: userId, id: In(onlyCallIds) }]
+        : [{ callerId: userId }, { calleeId: userId }];
+      const calls = await manager.find(Call, { where, lock: { mode: 'pessimistic_write' } });
       if (calls.length === 0) return [];
 
       const notify: { otherUserId: string; conversationId: string | null }[] = [];
