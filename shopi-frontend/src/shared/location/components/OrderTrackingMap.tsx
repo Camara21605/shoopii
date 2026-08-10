@@ -13,8 +13,7 @@
 
 import { lazy, Suspense }                          from 'react';
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import L from '../leafletSetup';
 import '../styles/location.css';
 
 import { useOrderTracking }    from '../hooks/useOrderTracking';
@@ -24,14 +23,6 @@ import { DEFAULT_CENTER, OSM_TILE, DARK_TILE } from '../utils/geoUtils';
 
 /* Lazy-load RoutePolyline (dépend de react-leaflet Polyline) */
 const RoutePolyline = lazy(() => import('./RoutePolyline'));
-
-/* ── Fix icônes Leaflet avec Vite ─────────────────────────── */
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
 
 /* ── Icônes personnalisées ─────────────────────────────────── */
 function makeIcon(emoji: string, color: string) {

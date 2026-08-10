@@ -6,6 +6,7 @@
 import React from 'react'
 import { AppProviders } from './providers/AppProviders'
 import { AppRouter } from './router'
+import { ErrorBoundary } from './ErrorBoundary'
 
 import '../shared/i18n/i18n'
 import '../styles/global.css'
@@ -15,9 +16,11 @@ import '../styles/global.css'
  * Point d'entrée React
  */
 const App: React.FC = () => (
-  <AppProviders>
-    <AppRouter />
-  </AppProviders>
+  <ErrorBoundary>
+    <AppProviders>
+      <AppRouter />
+    </AppProviders>
+  </ErrorBoundary>
 )
 
 export default App

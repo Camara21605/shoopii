@@ -6,22 +6,13 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { MapContainer, TileLayer, Marker, ZoomControl, useMap, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import L from '../../../shared/location/leafletSetup';
 import { useParametres } from '../hooks/useParametres';
 import type { EntreprisePage } from '../types';
 import {
   VILLES_SORTED, getCommunesByVille, getQuartiersByCommune, findVille,
 } from '../../../shared/location/data/geo-guinee';
 import { searchAddress } from '../../../shared/location/utils/nominatim';
-
-/* ── Fix icônes Leaflet + Vite ── */
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
 
 /* Marqueur bleu personnalisé */
 const BLUE_ICON = L.divIcon({

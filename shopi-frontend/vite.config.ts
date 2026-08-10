@@ -18,6 +18,6 @@ export default defineConfig({
   },
 
   optimizeDeps: {
-    include: ['socket.io-client'],
+    include: ['socket.io-client', 'leaflet', 'react-leaflet'],
   },
 })

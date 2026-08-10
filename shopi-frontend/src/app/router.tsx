@@ -26,7 +26,6 @@ import BoutiquesPage     from '../modules/home/components/boutiques/pages/Boutiq
 import OffresPage        from '../modules/home/components/offres/pages/OffresPage';
 import ProfilLivreurPage from '../shared/profils/profil-livreur/ProfilLivreurPage';
 import ProfilClientPage  from '../shared/profils/profil-client/ProfilClientPage';
-import AdressesPage      from '../modules/home/components/adresses/pages/AdressesPage';
 import CorrespondantsPage from '../modules/home/components/correspondants/pages/CorrespondantsPage';
 import ProfilCorrespondantPage from '../shared/profils/profil-correspondant/pages/ProfilCorrespondantPage';
 
@@ -59,6 +58,11 @@ const LivreurApp     = lazy(() => import('../dashboards/livreur/LivreurApp'));
 const CorrespApp     = lazy(() => import('../dashboards/correspondant/CorrespondantApp'));
 const ClientApp      = lazy(() => import('../dashboards/client/ClientApp'));
 const CommandeSuiviPage = lazy(() => import('../modules/commandes/pages/CommandePage'));
+/* lazy() car cette page tire leaflet/react-leaflet (LocationMap) — un import
+ * direct en tête de fichier bundlerait ce chunk dans le graphe évalué au
+ * démarrage de l'app, donc si ce chunk plante toutes les pages tombent avec
+ * lui (voir incident production "aucune page ne s'affiche"). */
+const AdressesPage = lazy(() => import('../modules/home/components/adresses/pages/AdressesPage'));
 
 const Loader = () => <LoadingScreen />;
 
