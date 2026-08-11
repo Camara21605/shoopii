@@ -40,7 +40,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { getRedisConnectionToken } from '@nestjs-modules/ioredis';
 import { ConfigService } from '@nestjs/config';
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
 
 import { CallService } from './call.service';
 import { Call, CallStatus, CallType } from 'src/database/entities/call/call.entity';
@@ -489,6 +489,58 @@ describe('CallService', () => {
       if (turnServers[0].username === turnServers2[0].username) {
         expect(turnServers2[0].credential).toBe(turnServers[0].credential);
       }
+    });
+
+    // ── Partie 6 : observabilité + avertissement mode statique ──
+
+    it('mode statique → avertit UNE SEULE FOIS par process, jamais à chaque appel', async () => {
+      config.get.mockImplementation((key: string) => ({
+        METERED_TURN_HOST: 'relay.example.com',
+        METERED_TURN_USERNAME: 'static-user',
+        METERED_TURN_CREDENTIAL: 'static-cred',
+      } as Record<string, string>)[key]);
+      const warnSpy = jest.spyOn(Logger.prototype, 'warn');
+
+      await service.getIceServers();
+      await service.getIceServers();
+      await service.getIceServers();
+
+      const staticModeWarnings = warnSpy.mock.calls.filter(([msg]) =>
+        typeof msg === 'string' && msg.includes('Identifiants TURN STATIQUES'));
+      expect(staticModeWarnings).toHaveLength(1);
+    });
+
+    it('mode éphémère → aucun avertissement "statique" émis', async () => {
+      config.get.mockImplementation((key: string) => ({
+        METERED_TURN_HOST: 'relay.example.com',
+        METERED_TURN_SECRET: 'shared-secret',
+      } as Record<string, string>)[key]);
+      const warnSpy = jest.spyOn(Logger.prototype, 'warn');
+
+      await service.getIceServers();
+
+      const staticModeWarnings = warnSpy.mock.calls.filter(([msg]) =>
+        typeof msg === 'string' && msg.includes('Identifiants TURN STATIQUES'));
+      expect(staticModeWarnings).toHaveLength(0);
+    });
+
+    it('aucun log (warn/debug) ne contient jamais le secret HMAC ni les identifiants générés', async () => {
+      config.get.mockImplementation((key: string) => ({
+        METERED_TURN_HOST: 'relay.example.com',
+        METERED_TURN_SECRET: 'ultra-secret-hmac-key',
+      } as Record<string, string>)[key]);
+      const warnSpy  = jest.spyOn(Logger.prototype, 'warn');
+      const debugSpy = jest.spyOn(Logger.prototype, 'debug');
+
+      const servers = await service.getIceServers();
+      const turnServer = servers.find(s => (s.urls as string).startsWith('turn'));
+
+      const allLoggedMessages = [...warnSpy.mock.calls, ...debugSpy.mock.calls]
+        .map(args => String(args[0]));
+
+      expect(allLoggedMessages.some(m => m.includes('ultra-secret-hmac-key'))).toBe(false);
+      expect(allLoggedMessages.some(m => turnServer?.credential && m.includes(turnServer.credential))).toBe(false);
+      expect(allLoggedMessages.some(m => turnServer?.username && m.includes(turnServer.username))).toBe(false);
     });
   });
 });

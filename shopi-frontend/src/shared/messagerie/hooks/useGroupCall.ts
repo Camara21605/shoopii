@@ -19,7 +19,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getActiveSocket }                           from './useSocket';
-import { getIceServers, prefetchIceServers }         from './iceServers';
+import { getIceServers, getFreshIceServers, prefetchIceServers, watchIceConnectivity } from './iceServers';
 import type { GroupCallInvite, GroupCallPeer, GroupCallState } from '../data/messagerieTypes';
 
 // ── Types internes ────────────────────────────────────────────
@@ -205,6 +205,18 @@ export function useGroupCall() {
       iceRestartAttemptsRef.current.set(userId, attempts + 1);
       console.warn(`[GroupCall] connexion ICE échouée avec ${userId} — tentative de reprise ${attempts + 1}/${ICE_RESTART_MAX_ATTEMPTS}`);
       try {
+        /* Rafraîchit les serveurs ICE (ignore le cache) avant de relancer —
+           voir le commentaire équivalent dans useAudioCall.ts (partie 6) :
+           un mesh de groupe peut durer bien plus longtemps que le cache
+           30 min, et chaque PeerConnection garde pour toujours les
+           serveurs fournis à sa construction. */
+        try {
+          const freshIceServers = await getFreshIceServers();
+          pc.setConfiguration({ iceServers: freshIceServers });
+        } catch (e) {
+          console.warn(`[GroupCall] Rafraîchissement des serveurs ICE échoué avant reprise avec ${userId} — on continue avec les serveurs déjà en place :`, e);
+        }
+
         await attachLocalTracks(pc, localStreamRef.current!);
         const offer = await pc.createOffer({ iceRestart: true });
         await pc.setLocalDescription(offer);
@@ -299,6 +311,7 @@ export function useGroupCall() {
       return prev;
     });
 
+    watchIceConnectivity(pc, `group:${userId}`);
     pcMapRef.current.set(userId, pc);
     icePendingRef.current.set(userId, []);
     iceRestartAttemptsRef.current.set(userId, 0);

@@ -21,7 +21,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getActiveSocket } from './useSocket';
 import type { WsCallIncoming, WsCallSignal } from './useSocket';
-import { getIceServers, prefetchIceServers } from './iceServers';
+import { getIceServers, getFreshIceServers, prefetchIceServers, watchIceConnectivity } from './iceServers';
 import { apiFetch } from '../../services/apiFetch';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -389,6 +389,21 @@ export function useAudioCall(props?: UseAudioCallProps) {
       console.warn(`[Call] connexion ICE échouée — tentative de reprise ${iceRestartAttempts.current}/${ICE_RESTART_MAX_ATTEMPTS}`);
 
       try {
+        /* Rafraîchit les serveurs ICE (ignore le cache 30 min) AVANT de
+           relancer la négociation — une RTCPeerConnection garde pour
+           toujours les serveurs fournis à sa construction ; sans ce
+           setConfiguration(), un appel qui dure plus longtemps que le
+           cache pourrait retenter la reprise avec des identifiants TURN
+           déjà expirés (partie 6). setConfiguration() peut échouer sur de
+           très vieux navigateurs — la reprise se poursuit alors avec les
+           serveurs déjà en place plutôt que d'échouer entièrement. */
+        try {
+          const freshIceServers = await getFreshIceServers();
+          pc.setConfiguration({ iceServers: freshIceServers });
+        } catch (e) {
+          console.warn('[Call] Rafraîchissement des serveurs ICE échoué avant reprise — on continue avec les serveurs déjà en place :', e);
+        }
+
         await attachLocalTracks(pc, localStream.current!);
         const offer = await pc.createOffer({ iceRestart: true });
         await pc.setLocalDescription(offer);
@@ -496,6 +511,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
          — déjà géré par l'appelant de cleanup(), on ne refait rien ici. */
     };
 
+    watchIceConnectivity(pc, '1:1');
     pcRef.current = pc;
     return pc;
   }, [handleConnectionDisruption, playRemoteAudioWithFallback]);

@@ -129,32 +129,68 @@ export class CallService {
    * Fallback STUN seul si rien n'est configuré — les appels pourront
    * échouer derrière un NAT mobile strict, mais ne seront jamais bloqués.
    */
+  /**
+   * true une fois qu'on a déjà journalisé l'avertissement "mode statique"
+   * pour ce process — évite de spammer les logs à chaque appel (potentiel-
+   * lement des dizaines par minute) tout en gardant le risque visible au
+   * démarrage/dans les premières minutes d'activité.
+   */
+  private staticModeWarned = false;
+
+  /**
+   * MULTI-FOURNISSEURS (partie 6) : un seul fournisseur TURN (Metered.ca)
+   * est configuré aujourd'hui — STATIC_STUN + ce bloc suffisent. Un second
+   * fournisseur s'ajouterait de la même façon : lire ses variables d'env
+   * dédiées (ex. TURN2_HOST/TURN2_SECRET), générer son propre bloc
+   * d'IceServerConfig avec le même schéma HMAC si le fournisseur le
+   * supporte, puis le concaténer au tableau retourné. Ne PAS ajouter un
+   * bloc "fournisseur secondaire" tant qu'aucun n'est réellement configuré
+   * — un bloc STUN/TURN silencieusement non fonctionnel serait pire qu'une
+   * absence (échec ICE difficile à diagnostiquer).
+   */
   async getIceServers(): Promise<IceServerConfig[]> {
     const host   = this.config.get<string>('METERED_TURN_HOST');
     const secret = this.config.get<string>('METERED_TURN_SECRET');
 
     if (!host) {
-      this.logger.warn('[Call] METERED_TURN_HOST manquant — appels en STUN seul (échoueront souvent derrière un NAT mobile)');
+      this.logger.warn('[ICE] METERED_TURN_HOST manquant — appels en STUN seul (échoueront souvent derrière un NAT mobile)');
       return CallService.STATIC_STUN;
     }
 
     let username: string;
     let credential: string;
+    let mode: 'ephemeral' | 'static';
 
     if (secret) {
       const expiresAt = Math.floor(Date.now() / 1000) + CallService.TURN_CREDENTIAL_TTL_S;
       username   = `${expiresAt}:shopi`;
       credential = createHmac('sha1', secret).update(username).digest('base64');
+      mode = 'ephemeral';
     } else {
       const staticUsername   = this.config.get<string>('METERED_TURN_USERNAME');
       const staticCredential = this.config.get<string>('METERED_TURN_CREDENTIAL');
       if (!staticUsername || !staticCredential) {
-        this.logger.warn('[Call] Ni METERED_TURN_SECRET ni METERED_TURN_USERNAME/CREDENTIAL configurés — appels en STUN seul');
+        this.logger.warn('[ICE] Ni METERED_TURN_SECRET ni METERED_TURN_USERNAME/CREDENTIAL configurés — appels en STUN seul');
         return CallService.STATIC_STUN;
       }
       username   = staticUsername;
       credential = staticCredential;
+      mode = 'static';
+
+      if (!this.staticModeWarned) {
+        this.staticModeWarned = true;
+        this.logger.warn(
+          '[ICE] Identifiants TURN STATIQUES (non-expirants) — un identifiant intercepté reste ' +
+          'utilisable indéfiniment. Définir METERED_TURN_SECRET (identifiants éphémères à durée de ' +
+          `vie limitée, ${CallService.TURN_CREDENTIAL_TTL_S}s) dès que la clé secrète du compte Metered.ca est disponible.`,
+        );
+      }
     }
+
+    /* Observabilité (partie 6) : aucune valeur sensible journalisée — ni le
+       secret HMAC, ni le username/credential générés (le username porte un
+       timestamp d'expiration en clair, jamais logué non plus par prudence). */
+    this.logger.debug(`[ICE] serveurs fournis — mode=${mode}`);
 
     /* Pas de "stun:${host}" ici — le sous-domaine STUN de Metered
        (stun.relay.metered.ca) est différent du host TURN

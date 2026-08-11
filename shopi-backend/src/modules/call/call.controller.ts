@@ -68,8 +68,19 @@ export class CallController {
     return { busy: await this.callService.isUserBusy(userId) };
   }
 
-  /** Identifiants TURN/STUN pour RTCPeerConnection — la clé API Metered reste côté serveur. */
+  /**
+   * Identifiants TURN/STUN pour RTCPeerConnection — la clé/le secret Metered
+   * restent côté serveur, jamais exposés au bundle frontend. Authentification
+   * + statut de compte déjà vérifiés par JwtAuthGuard (JwtStrategy rejette
+   * les comptes bannis/suspendus à CHAQUE requête, pas seulement au login).
+   * Rate-limit dédié : cet endpoint peut être appelé plus souvent que
+   * `start` (relance d'ICE côté client à chaque tentative de reprise réseau
+   * — voir partie 5 — pour éviter d'utiliser des identifiants TURN périmés),
+   * donc une limite plus généreuse mais toujours bornée.
+   */
   @Get('ice-servers')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   async iceServers() {
     return { iceServers: await this.callService.getIceServers() };
   }
