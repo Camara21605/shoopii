@@ -676,20 +676,17 @@ export function useAudioCall(props?: UseAudioCallProps) {
 
     console.debug('[Call] startCall →', info);
     const isVideo = info.callType === 'video';
-    try {
-      localStream.current = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: isVideo ? { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: facingMode.current } : false,
-      });
-      attachLocalTrackEndedHandlers(localStream.current);
-      setLocalMediaStream(localStream.current);
-      console.debug('[Call] getUserMedia OK');
-    } catch (err) {
-      console.error('[Call] getUserMedia a échoué :', err);
-      reportMediaError(err, isVideo);
-      return;
-    }
 
+    /* PARTIE 9.5 — signaling D'ABORD, acquisition média EN PARALLÈLE :
+       call:initiate ne dépend d'AUCUNE donnée média (juste calleeUserId/
+       callType/nom/avatar) — le faire attendre getUserMedia() (prompt de
+       permission navigateur potentiellement long, parfois plusieurs
+       secondes, ou initialisation matérielle caméra/micro) retardait
+       inutilement le moment où B voit "appel entrant", alors que rien
+       n'empêche B de sonner pendant que A finit d'acquérir son propre
+       flux local. Si l'acquisition échoue APRÈS que B a commencé à
+       sonner, on annule proprement (même chemin que le bouton "Annuler"
+       — B voit "Appel annulé", sans timeout à attendre). */
     const ci: CallInfo = { ...info, direction: 'outgoing' };
     callInfoRef.current = ci;
     setCallInfo(ci);
@@ -703,17 +700,50 @@ export function useAudioCall(props?: UseAudioCallProps) {
       callType:       info.callType,
     });
 
-    /* Timeout 30s sans réponse → appel manqué */
+    /* Timeout 30s sans réponse → appel manqué (compte à partir du moment
+       où B commence réellement à sonner, pas de l'acquisition média locale). */
     timeoutRef.current = setTimeout(() => {
       reportCallError(callError('call-expired'));
       endCall(true, 'missed');
     }, 30_000);
+
+    try {
+      localStream.current = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: isVideo ? { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: facingMode.current } : false,
+      });
+      attachLocalTrackEndedHandlers(localStream.current);
+      setLocalMediaStream(localStream.current);
+      console.debug('[Call] getUserMedia OK');
+    } catch (err) {
+      console.error('[Call] getUserMedia a échoué :', err);
+      reportMediaError(err, isVideo);
+      /* B sonne déjà (call:initiate est déjà parti) — annuler proprement
+         plutôt que de le laisser sonner pour un appel qui ne pourra jamais
+         aboutir côté A (pas de flux local à envoyer). */
+      endCall(true, 'missed');
+    }
   }, [status, endCall, reportCallError, reportMediaError]);
 
   /** Accepte un appel entrant. */
   const acceptCall = useCallback(async () => {
     if (!callInfoRef.current) return;
     const isVideo = callInfoRef.current.callType === 'video';
+
+    /* PARTIE 9.5 — signaling D'ABORD, acquisition média EN PARALLÈLE :
+       call:accept ne dépend d'aucune donnée média — A doit apprendre que
+       B a accepté (et démarrer sa propre négociation WebRTC) dès le clic,
+       sans attendre que B ait fini d'acquérir son flux local. Si
+       l'acquisition média échoue APRÈS cet accept, on ne peut plus
+       "annuler l'acceptation" (A pense déjà que l'appel est en cours de
+       connexion) — on termine proprement l'appel (endCall), même chemin
+       que les autres échecs post-accept déjà gérés plus bas
+       (onCallAccepted, timeout WebRTC). */
+    setStatus('connecting');
+    emit('call:accept', {
+      conversationId: callInfoRef.current.conversationId,
+      callerUserId:   callInfoRef.current.remoteUserId,
+    });
 
     try {
       localStream.current = await navigator.mediaDevices.getUserMedia({
@@ -726,29 +756,19 @@ export function useAudioCall(props?: UseAudioCallProps) {
         try {
           localStream.current = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
         } catch (fallbackErr) {
-          /* Avant : rejectCall() silencieux — l'appelé voyait juste la carte
-             "Appel entrant" disparaître sans comprendre pourquoi. */
           reportMediaError(fallbackErr, false);
-          rejectCall();
+          endCall(true, 'missed');
           return;
         }
       } else {
         reportMediaError(err, isVideo);
-        rejectCall();
+        endCall(true, 'missed');
         return;
       }
     }
     attachLocalTrackEndedHandlers(localStream.current);
     setLocalMediaStream(localStream.current);
 
-    /* Retour visuel immédiat : la carte "Appel entrant" doit disparaître
-       dès le clic sur "Accepter", avant même la fin de la négociation ICE. */
-    setStatus('connecting');
-
-    emit('call:accept', {
-      conversationId: callInfoRef.current.conversationId,
-      callerUserId:   callInfoRef.current.remoteUserId,
-    });
     /* Le caller va créer l'offer → on attend call:offer. Filet de sécurité :
        si l'offre (ou la négociation ICE qui suit) n'aboutit jamais — paquet
        perdu, bug de reconnexion, aucun chemin réseau trouvé — on ne doit pas

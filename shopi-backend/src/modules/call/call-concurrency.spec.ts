@@ -206,7 +206,7 @@ describe('Partie 3 — Concurrence, transactions et multi-appareils', () => {
     (gateway as any).server = { to: jest.fn(() => ({ emit: jest.fn(), except: jest.fn(() => ({ emit: jest.fn() })) })), adapter: { rooms: new Map() } };
     const callServiceMock = {
       startCall:            jest.fn().mockResolvedValue({ outcome: 'ringing', call: makeCall() }),
-      acceptCall:            jest.fn(),
+      acceptCallFast:        jest.fn(),
       findActiveCallId:      jest.fn().mockResolvedValue('call-uuid'),
       findActiveCallsForUser: jest.fn(),
       endAllCallsForUser:     jest.fn(),
@@ -214,7 +214,7 @@ describe('Partie 3 — Concurrence, transactions et multi-appareils', () => {
     const gw = new CallGateway(callServiceMock as unknown as CallService);
     (gw as any).server = (gateway as any).server;
 
-    callServiceMock.acceptCall
+    callServiceMock.acceptCallFast
       .mockResolvedValueOnce({ call: makeCall({ status: CallStatus.CONNECTED }), alreadyAccepted: false })
       .mockResolvedValueOnce({ call: makeCall({ status: CallStatus.CONNECTED }), alreadyAccepted: true });
 
@@ -236,7 +236,7 @@ describe('Partie 3 — Concurrence, transactions et multi-appareils', () => {
         makeCall({ id: 'call-uuid', callerId: 'caller-uuid', calleeId: 'callee-uuid', status: CallStatus.CONNECTED }),
       ]),
       endAllCallsForUser: jest.fn(),
-      acceptCall:          jest.fn().mockResolvedValue({ call: makeCall({ status: CallStatus.CONNECTED }), alreadyAccepted: false }),
+      acceptCallFast:      jest.fn().mockResolvedValue({ call: makeCall({ status: CallStatus.CONNECTED }), alreadyAccepted: false }),
       findActiveCallId:    jest.fn().mockResolvedValue('call-uuid'),
     };
     const gw = new CallGateway(callServiceMock as unknown as CallService);

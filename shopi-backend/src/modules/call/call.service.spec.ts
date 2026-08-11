@@ -218,13 +218,15 @@ describe('CallService', () => {
       const caller = makeUser({ id: 'caller-uuid' });
       const callee = makeUser({ id: 'callee-uuid' });
       mockActiveUsers(caller, callee);
-      callRepo.find.mockImplementation(({ where }: any) => {
-        const ids = where.map((w: any) => w.callerId ?? w.calleeId);
-        if (ids.includes('callee-uuid')) {
-          return Promise.resolve([makeCall({ status: CallStatus.CONNECTED, startedAt: new Date() })]);
-        }
-        return Promise.resolve([]);
-      });
+      /* PARTIE 9.5 — checkBusyPair() fait UNE seule requête combinée pour
+         caller+callee (au lieu de deux isUserBusy() séparées) : la ligne
+         retournée doit représenter un appel RÉEL impliquant callee-uuid avec
+         un TIERS (pas avec caller-uuid lui-même), pour tester sans ambiguïté
+         l'attribution busy au bon côté (callerId/calleeId de la ligne
+         déterminent qui est busy, pas la branche du mock qui l'a renvoyée). */
+      callRepo.find.mockResolvedValue([
+        makeCall({ callerId: 'callee-uuid', calleeId: 'tiers-uuid', status: CallStatus.CONNECTED, startedAt: new Date() }),
+      ]);
 
       const result = await service.startCall('caller-uuid', {
         calleeUserId: 'callee-uuid', callType: CallType.AUDIO,

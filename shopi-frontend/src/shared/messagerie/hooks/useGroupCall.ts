@@ -662,9 +662,23 @@ export function useGroupCall(props?: UseGroupCallProps) {
 
   // ── API publique ──────────────────────────────────────────────
 
-  /** Lance un appel dans le groupe. */
+  /**
+   * Lance un appel dans le groupe.
+   *
+   * PARTIE 9.5 — signaling D'ABORD, acquisition média EN PARALLÈLE :
+   * group_call:initiate ne dépend d'aucune donnée média — les autres
+   * membres doivent être notifiés ("appel entrant") dès que possible,
+   * sans attendre que l'initiateur ait fini d'acquérir son propre flux.
+   * Si l'acquisition échoue APRÈS l'émission, l'appel existe déjà côté
+   * serveur : on le quitte proprement dès que son callId est connu
+   * (callStateRef, posé par onJoined juste après group_call:joined). Si
+   * onJoined n'a pas encore eu le temps de s'exécuter, la sonnerie 30s
+   * côté serveur (GroupCallGateway) nettoie de toute façon l'appel si
+   * personne d'autre ne rejoint jamais — aucun appel fantôme durable.
+   */
   const initiateCall = useCallback(async (groupId: string, callType: 'audio' | 'video') => {
     if (callStateRef.current) return;
+    emit('group_call:initiate', { groupId, callType });
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
@@ -673,15 +687,33 @@ export function useGroupCall(props?: UseGroupCallProps) {
       attachLocalTrackEndedHandlers(stream);
       localStreamRef.current = stream;
       setLocalStream(stream);
-      emit('group_call:initiate', { groupId, callType });
     } catch (err) {
       reportMediaError(err, callType === 'video');
+      /* Cast nécessaire : TS étroit callStateRef.current à `null` après le
+         garde précoce `if (callStateRef.current) return;` en tête de cette
+         fonction, et ne réévalue pas ce type au-delà d'un `await` — alors
+         qu'onJoined (un AUTRE handler) a très bien pu le réassigner entre
+         temps (c'est précisément le cas qu'on veut détecter ici). */
+      const cs = callStateRef.current as GroupCallState | null;
+      if (cs) {
+        emit('group_call:leave', { groupId: cs.groupId, callId: cs.callId });
+        cleanupAll();
+      }
     }
-  }, [reportMediaError]);
+  }, [reportMediaError, cleanupAll]);
 
-  /** Rejoint l'appel entrant (après réception de group_call:incoming). */
+  /**
+   * Rejoint l'appel entrant (après réception de group_call:incoming).
+   *
+   * PARTIE 9.5 — même principe qu'initiateCall : group_call:join part
+   * immédiatement (groupId/callId déjà connus depuis l'invitation reçue),
+   * l'acquisition média suit. Échec après coup → on quitte proprement
+   * (callId déjà connu ici, pas de fenêtre d'incertitude comme pour
+   * initiateCall).
+   */
   const joinCall = useCallback(async (invite: GroupCallInvite) => {
     if (callStateRef.current) return;
+    emit('group_call:join', { groupId: invite.groupId, callId: invite.callId });
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
@@ -690,11 +722,12 @@ export function useGroupCall(props?: UseGroupCallProps) {
       attachLocalTrackEndedHandlers(stream);
       localStreamRef.current = stream;
       setLocalStream(stream);
-      emit('group_call:join', { groupId: invite.groupId, callId: invite.callId });
     } catch (err) {
       reportMediaError(err, invite.callType === 'video');
+      emit('group_call:leave', { groupId: invite.groupId, callId: invite.callId });
+      cleanupAll();
     }
-  }, [reportMediaError]);
+  }, [reportMediaError, cleanupAll]);
 
   /** Décline l'appel entrant sans rejoindre. */
   const declineCall = useCallback((invite: GroupCallInvite) => {

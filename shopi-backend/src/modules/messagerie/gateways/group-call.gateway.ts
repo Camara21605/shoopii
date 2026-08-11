@@ -282,6 +282,7 @@ export class GroupCallGateway implements OnGatewayDisconnect {
     @MessageBody() payload: GroupCallInitiateDto,
   ): Promise<void> {
     const userId = this.uid(socket);
+    const t0 = performance.now();
     try {
       if (!(await this.checkInitiateRateLimit(userId))) {
         socket.emit('group_call:error', {
@@ -289,9 +290,22 @@ export class GroupCallGateway implements OnGatewayDisconnect {
         });
         return;
       }
+      const t1 = performance.now();
 
-      const member = await this.assertMember(payload.groupId, userId);
-      await this.assertGroupActive(payload.groupId);
+      /* PARTIE 9.5 — assertMember/assertGroupActive/getActiveMembers sont 3
+         lectures indépendantes (aucune ne dépend du résultat d'une autre —
+         toutes ne nécessitent que payload.groupId/userId) : les paralléliser
+         évite de les empiler en 3 allers-retours DB séquentiels avant même
+         de savoir si l'appel peut démarrer. Si l'une échoue, Promise.all
+         rejette et members/member ne sont simplement jamais utilisés — le
+         coût de la lecture superflue (rare, seulement sur refus) est
+         négligeable comparé au gain sur le chemin normal. */
+      const [member, , members] = await Promise.all([
+        this.assertMember(payload.groupId, userId),
+        this.assertGroupActive(payload.groupId),
+        this.getActiveMembers(payload.groupId),
+      ]);
+      const t2 = performance.now();
 
       /* Un seul appel simultané par groupe */
       if (this.activeCalls.has(payload.groupId)) {
@@ -304,7 +318,6 @@ export class GroupCallGateway implements OnGatewayDisconnect {
 
       const callId   = uuid();
       const callType = payload.callType ?? CallType.AUDIO;
-      const members  = await this.getActiveMembers(payload.groupId);
 
       /* Créer l'appel — l'initiateur est d'emblée participant */
       this.activeCalls.set(payload.groupId, {
@@ -339,6 +352,10 @@ export class GroupCallGateway implements OnGatewayDisconnect {
       });
 
       this.logger.log(`[GroupCall] ${callId} démarré — groupe ${payload.groupId} — initiateur ${userId}`);
+      const t3 = performance.now();
+      this.logger.verbose(
+        `[Perf][group_call:initiate] rateLimit=${(t1 - t0).toFixed(1)}ms lectures-parallèles=${(t2 - t1).toFixed(1)}ms broadcast=${(t3 - t2).toFixed(1)}ms total=${(t3 - t0).toFixed(1)}ms`,
+      );
 
       /* Sonnerie de 30 secondes — coupe l'appel si personne n'a rejoint */
       setTimeout(async () => {

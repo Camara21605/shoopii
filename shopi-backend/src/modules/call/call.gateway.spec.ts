@@ -43,7 +43,7 @@ function makeSocket(userId: string): AuthenticatedSocket & { emit: jest.Mock } {
 describe('CallGateway', () => {
   let gateway: CallGateway;
   let callService: jest.Mocked<Pick<CallService,
-    'startCall' | 'acceptCall' | 'rejectCall' | 'endCall' | 'findActiveCallId'
+    'startCall' | 'acceptCall' | 'acceptCallFast' | 'rejectCall' | 'endCall' | 'findActiveCallId'
     | 'endAllCallsForUser' | 'findActiveCallsForUser'
   >>;
   let server: { to: jest.Mock; emit: jest.Mock };
@@ -58,6 +58,7 @@ describe('CallGateway', () => {
     callService = {
       startCall:           jest.fn(),
       acceptCall:           jest.fn().mockResolvedValue(undefined),
+      acceptCallFast:       jest.fn().mockResolvedValue(null),
       rejectCall:           jest.fn().mockResolvedValue(undefined),
       endCall:              jest.fn().mockResolvedValue(undefined),
       findActiveCallId:        jest.fn(),
@@ -138,13 +139,12 @@ describe('CallGateway', () => {
 
   describe('handleCallAccept', () => {
     it('accepte (gagnant) → notifie l\'appelant + les AUTRES appareils du callee', async () => {
-      callService.findActiveCallId.mockResolvedValue('call-uuid');
-      callService.acceptCall.mockResolvedValue({ call: { status: CallStatus.CONNECTED } as any, alreadyAccepted: false });
+      callService.acceptCallFast.mockResolvedValue({ call: { id: 'call-uuid', status: CallStatus.CONNECTED } as any, alreadyAccepted: false });
       const socket = makeSocket('callee-uuid');
 
       await gateway.handleCallAccept(socket, { conversationId: 'conv-uuid', callerUserId: 'caller-uuid' });
 
-      expect(callService.acceptCall).toHaveBeenCalledWith('callee-uuid', 'call-uuid');
+      expect(callService.acceptCallFast).toHaveBeenCalledWith('callee-uuid', 'caller-uuid');
       expect(server.to).toHaveBeenCalledWith('user:caller-uuid');
       expect(roomEmit).toHaveBeenCalledWith('call:accepted', expect.objectContaining({ calleeUserId: 'callee-uuid' }));
       // Les autres appareils du callee reçoivent call:accepted-elsewhere (via .except(socket.id))
@@ -153,8 +153,7 @@ describe('CallGateway', () => {
     });
 
     it('2e appareil (perdant) → PAS de 2e call:accepted à l\'appelant, juste call:accept-superseded à CE socket', async () => {
-      callService.findActiveCallId.mockResolvedValue('call-uuid');
-      callService.acceptCall.mockResolvedValue({ call: { status: CallStatus.CONNECTED } as any, alreadyAccepted: true });
+      callService.acceptCallFast.mockResolvedValue({ call: { id: 'call-uuid', status: CallStatus.CONNECTED } as any, alreadyAccepted: true });
       const socket = makeSocket('callee-uuid');
 
       await gateway.handleCallAccept(socket, { conversationId: 'conv-uuid', callerUserId: 'caller-uuid' });
@@ -164,8 +163,7 @@ describe('CallGateway', () => {
     });
 
     it('n\'émet PAS call:accepted si la persistance échoue — sinon un échec (Forbidden, DB down...) sur UN des deux appareils en course serait traité comme une victoire par défaut, provoquant un 2e call:accepted au caller', async () => {
-      callService.findActiveCallId.mockResolvedValue('call-uuid');
-      callService.acceptCall.mockRejectedValue(new Error('DB down'));
+      callService.acceptCallFast.mockRejectedValue(new Error('DB down'));
       const socket = makeSocket('callee-uuid');
 
       await gateway.handleCallAccept(socket, { conversationId: 'conv-uuid', callerUserId: 'caller-uuid' });
@@ -175,13 +173,12 @@ describe('CallGateway', () => {
       expect(socket.emit).toHaveBeenCalledWith('call:accept-failed', expect.objectContaining({ conversationId: 'conv-uuid' }));
     });
 
-    it('n\'émet rien si aucun appel actif n\'est trouvé (findActiveCallId → null)', async () => {
-      callService.findActiveCallId.mockResolvedValue(null);
+    it('n\'émet rien si aucun appel actif n\'est trouvé (acceptCallFast → null)', async () => {
+      callService.acceptCallFast.mockResolvedValue(null);
       const socket = makeSocket('callee-uuid');
 
       await gateway.handleCallAccept(socket, { conversationId: 'conv-uuid', callerUserId: 'caller-uuid' });
 
-      expect(callService.acceptCall).not.toHaveBeenCalled();
       expect(roomEmit).not.toHaveBeenCalledWith('call:accepted', expect.anything());
       expect(socket.emit).toHaveBeenCalledWith('call:accept-failed', expect.objectContaining({ conversationId: 'conv-uuid' }));
     });
@@ -293,8 +290,12 @@ describe('CallGateway', () => {
     });
 
     it('caller dont l\'appel n\'a jamais été accepté (RINGING, aucun binding) → termine cet appel', async () => {
+      /* PARTIE 9.5 : la diffusion part désormais directement des données déjà
+         lues (activeCalls), sans attendre le retour d'endAllCallsForUser()
+         (persistance en arrière-plan) — conversationId doit donc être présent
+         sur la ligne lue, pas seulement sur le retour mocké de la persistance. */
       callService.findActiveCallsForUser.mockResolvedValue([
-        { id: 'call-uuid', callerId: 'user-uuid', calleeId: 'callee-uuid', status: CallStatus.RINGING } as any,
+        { id: 'call-uuid', callerId: 'user-uuid', calleeId: 'callee-uuid', status: CallStatus.RINGING, conversationId: 'conv-1' } as any,
       ]);
       callService.endAllCallsForUser.mockResolvedValue([{ otherUserId: 'callee-uuid', conversationId: 'conv-1' }]);
 
@@ -302,7 +303,7 @@ describe('CallGateway', () => {
 
       expect(callService.endAllCallsForUser).toHaveBeenCalledWith('user-uuid', ['call-uuid']);
       expect(server.to).toHaveBeenCalledWith('user:callee-uuid');
-      expect(roomEmit).toHaveBeenCalledWith('call:ended', expect.anything());
+      expect(roomEmit).toHaveBeenCalledWith('call:ended', { conversationId: 'conv-1' });
     });
 
     it('callee en RINGING (aucun appareil n\'a encore accepté) → NE PAS terminer l\'appel : une autre session peut encore répondre', async () => {
@@ -317,8 +318,7 @@ describe('CallGateway', () => {
 
     it('plusieurs appareils — le socket qui a RÉELLEMENT accepté se déconnecte → l\'appel se termine', async () => {
       // Le callee accepte depuis un socket précis : le binding se pose via handleCallAccept.
-      callService.findActiveCallId.mockResolvedValue('call-uuid');
-      callService.acceptCall.mockResolvedValue({ call: {} as any, alreadyAccepted: false });
+      callService.acceptCallFast.mockResolvedValue({ call: { id: 'call-uuid' } as any, alreadyAccepted: false });
       const acceptingSocket = makeSocket('user-uuid');
       await gateway.handleCallAccept(acceptingSocket, { conversationId: 'conv-1', callerUserId: 'caller-uuid' });
 
@@ -333,8 +333,7 @@ describe('CallGateway', () => {
     });
 
     it('plusieurs appareils — un AUTRE appareil du même callee se déconnecte → l\'appel actif N\'EST PAS coupé', async () => {
-      callService.findActiveCallId.mockResolvedValue('call-uuid');
-      callService.acceptCall.mockResolvedValue({ call: {} as any, alreadyAccepted: false });
+      callService.acceptCallFast.mockResolvedValue({ call: { id: 'call-uuid' } as any, alreadyAccepted: false });
       const acceptingSocket = makeSocket('user-uuid');
       await gateway.handleCallAccept(acceptingSocket, { conversationId: 'conv-1', callerUserId: 'caller-uuid' });
 

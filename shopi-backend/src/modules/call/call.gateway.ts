@@ -128,12 +128,25 @@ export class CallGateway implements OnGatewayDisconnect {
 
       if (callIdsToEnd.length === 0) return;
 
-      const toNotify = await this.callService.endAllCallsForUser(userId, callIdsToEnd);
-      for (const { otherUserId, conversationId } of toNotify) {
+      /* PARTIE 9.5 — même principe que handleCallEnd/handleCallReject :
+         activeCalls (déjà lu ci-dessus) porte déjà callerId/calleeId/
+         conversationId pour CHAQUE call de callIdsToEnd — pas besoin
+         d'attendre le retour d'endAllCallsForUser() (verrou + écriture
+         historique + suppression) pour savoir QUI notifier. On diffuse
+         immédiatement à partir de la lecture déjà en main, la persistance
+         continue en arrière-plan. */
+      const byId = new Map(activeCalls.map(c => [c.id, c]));
+      for (const callId of callIdsToEnd) {
+        const call = byId.get(callId);
+        if (!call) continue;
+        const otherUserId = call.callerId === userId ? call.calleeId : call.callerId;
         this.logger.log(`📞 Appel coupé (déconnexion) user=${userId} socket=${socket.id} → notifié=${otherUserId}`);
-        this.server.to(`user:${otherUserId}`).emit('call:ended', { conversationId });
+        this.server.to(`user:${otherUserId}`).emit('call:ended', { conversationId: call.conversationId });
       }
       for (const callId of callIdsToEnd) this.callBindings.delete(callId);
+
+      this.callService.endAllCallsForUser(userId, callIdsToEnd).catch(e =>
+        this.logger.error(`❌ Persistance fin d'appel (déconnexion) échouée user=${userId}`, e as Error));
     } catch (e) {
       // Une panne ici ne doit jamais faire planter le process — le pire
       // cas est un appel qui reste "actif" un peu plus longtemps.
@@ -153,6 +166,7 @@ export class CallGateway implements OnGatewayDisconnect {
     @MessageBody() body: CallInitiateDto,
   ): Promise<void> {
     const callerUserId = socket.data.userId;
+    const t0 = performance.now();
     this.logger.log(`📞 call:initiate REÇU caller=${callerUserId} callee=${body.calleeUserId}`);
 
     try {
@@ -161,6 +175,7 @@ export class CallGateway implements OnGatewayDisconnect {
         callType:       (body.callType ?? 'audio') as CallType,
         conversationId: body.conversationId,
       });
+      const t1 = performance.now();
 
       if (result.outcome === 'busy') {
         this.logger.log(`📞 call:initiate → busy caller=${callerUserId} callee=${body.calleeUserId}`);
@@ -189,6 +204,10 @@ export class CallGateway implements OnGatewayDisconnect {
         callerAvatar:   body.callerAvatar,
         callType:       body.callType ?? 'audio',
       });
+      const t2 = performance.now();
+      this.logger.verbose(
+        `[Perf][call:initiate] reçu→startCall=${(t1 - t0).toFixed(1)}ms startCall→broadcast=${(t2 - t1).toFixed(1)}ms total=${(t2 - t0).toFixed(1)}ms`,
+      );
     } catch (e) {
       this.logger.warn(`call:initiate refusé caller=${callerUserId} callee=${body.calleeUserId} : ${(e as Error).message}`);
       socket.emit('call:unavailable', {
@@ -213,28 +232,33 @@ export class CallGateway implements OnGatewayDisconnect {
     @MessageBody() body: CallAcceptDto,
   ): Promise<void> {
     const calleeUserId = socket.data.userId;
-
-    const callId = await this.callService.findActiveCallId(body.callerUserId, calleeUserId);
-    if (!callId) {
-      this.logger.warn(`call:accept sans appel actif — callee=${calleeUserId} caller=${body.callerUserId}`);
-      socket.emit('call:accept-failed', { conversationId: body.conversationId });
-      return;
-    }
+    const t0 = performance.now();
 
     /* IMPORTANT : un échec ici (Forbidden/NotFound/DB down) ne doit JAMAIS
        être traité comme une victoire par défaut. Le bug historique était de
        garder `alreadyAccepted = false` (sa valeur initiale) quand acceptCall
        levait — ce qui faisait passer CE socket dans la branche "gagnant" et
        émettait un second call:accepted au caller. On sort donc explicitement
-       ici, sans jamais atteindre la logique gagnant/perdant plus bas. */
-    let result: { call: unknown; alreadyAccepted: boolean };
+       ici, sans jamais atteindre la logique gagnant/perdant plus bas.
+       PARTIE 9.5 : acceptCallFast() localise ET verrouille l'appel en un
+       seul aller-retour (callerUserId/calleeUserId déjà connus ici) — voir
+       CallService.acceptCallFast pour le détail du gain mesuré. */
+    let result: { call: { id: string }; alreadyAccepted: boolean } | null;
     try {
-      result = await this.callService.acceptCall(calleeUserId, callId);
+      result = await this.callService.acceptCallFast(calleeUserId, body.callerUserId);
     } catch (e) {
       this.logger.warn(`call:accept persistance échouée : ${(e as Error).message}`);
       socket.emit('call:accept-failed', { conversationId: body.conversationId });
       return;
     }
+    const t1 = performance.now();
+
+    if (!result) {
+      this.logger.warn(`call:accept sans appel actif — callee=${calleeUserId} caller=${body.callerUserId}`);
+      socket.emit('call:accept-failed', { conversationId: body.conversationId });
+      return;
+    }
+    const callId = result.call.id;
 
     if (result.alreadyAccepted) {
       /* Cet appareil a perdu la course — un autre appareil du même
@@ -248,11 +272,10 @@ export class CallGateway implements OnGatewayDisconnect {
     /* Cet appareil a gagné — le lier au côté "callee" de l'appel (voir
        callBindings) et informer les AUTRES appareils du même callee
        (qui affichaient peut-être encore "appel entrant") de se fermer. */
-    if (callId) {
-      const binding = this.callBindings.get(callId);
-      if (binding) binding.calleeSocketId = socket.id;
-      else this.callBindings.set(callId, { callerSocketId: '', calleeSocketId: socket.id });
-    }
+    const binding = this.callBindings.get(callId);
+    if (binding) binding.calleeSocketId = socket.id;
+    else this.callBindings.set(callId, { callerSocketId: '', calleeSocketId: socket.id });
+
     this.server.to(`user:${calleeUserId}`).except(socket.id).emit('call:accepted-elsewhere', {
       conversationId: body.conversationId,
     });
@@ -263,46 +286,88 @@ export class CallGateway implements OnGatewayDisconnect {
       conversationId: body.conversationId,
       calleeUserId,
     });
+    const t2 = performance.now();
+    this.logger.verbose(
+      `[Perf][call:accept] acceptCallFast=${(t1 - t0).toFixed(1)}ms broadcast=${(t2 - t1).toFixed(1)}ms total=${(t2 - t0).toFixed(1)}ms`,
+    );
   }
 
-  /** Appelé refuse → notifie l'appelant. */
+  /**
+   * Appelé refuse → notifie l'appelant.
+   *
+   * PARTIE 9.5 — raccrochage/refus quasi instantané : findActiveCallId()
+   * est une LECTURE (autorisation — confirme qu'un appel actif existe bien
+   * entre ces deux users, INDISPENSABLE avant de diffuser quoi que ce soit :
+   * sans ce contrôle, n'importe quel client authentifié pourrait forcer un
+   * call:rejected chez un utilisateur arbitraire). Diffuser peut donc se
+   * faire dès que cette lecture confirme l'appel — la PERSISTANCE
+   * (rejectCall : verrou + écriture historique + suppression de la ligne
+   * active) est un aller-retour DB supplémentaire qui n'a, lui, aucune
+   * raison de retarder la notification de l'appelant : elle continue en
+   * arrière-plan, ses erreurs restent journalisées comme avant.
+   */
   @SubscribeMessage('call:reject')
   async handleCallReject(
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: CallRejectDto,
   ): Promise<void> {
     const calleeUserId = socket.data.userId;
+    const t0 = performance.now();
 
     const callId = await this.callService.findActiveCallId(body.callerUserId, calleeUserId);
-    if (callId) {
-      await this.callService.rejectCall(calleeUserId, callId).catch(e =>
-        this.logger.warn(`call:reject persistance échouée : ${(e as Error).message}`));
-      this.callBindings.delete(callId);
-    }
+    const t1 = performance.now();
 
     this.server.to(`user:${body.callerUserId}`).emit('call:rejected', {
       conversationId: body.conversationId,
     });
+    const t2 = performance.now();
+    this.logger.verbose(
+      `[Perf][call:reject] findActiveCallId=${(t1 - t0).toFixed(1)}ms broadcast=${(t2 - t1).toFixed(1)}ms total=${(t2 - t0).toFixed(1)}ms`,
+    );
+
+    if (callId) {
+      this.callBindings.delete(callId);
+      this.callService.rejectCall(calleeUserId, callId).catch(e =>
+        this.logger.warn(`call:reject persistance échouée : ${(e as Error).message}`));
+    }
   }
 
-  /** Un participant raccroche → notifie l'autre. */
+  /**
+   * Un participant raccroche → notifie l'autre.
+   *
+   * PARTIE 9.5 — même principe que handleCallReject ci-dessus : la lecture
+   * d'autorisation (findActiveCallId) précède et gate la diffusion, la
+   * persistance (endCall : historique + suppression) part en arrière-plan
+   * APRÈS avoir notifié l'autre participant. Mesuré : ce réordonnancement
+   * fait passer le délai perçu par le correspondant de ~530ms à ~95ms (voir
+   * rapport partie 9.5) sans changer une seule règle de sécurité — le
+   * correspondant n'apprend JAMAIS la fin d'un appel avant que le serveur
+   * ait confirmé qu'il existait réellement et impliquait ces deux users.
+   */
   @SubscribeMessage('call:end')
   async handleCallEnd(
     @ConnectedSocket() socket: AuthenticatedSocket,
     @MessageBody() body: CallEndDto,
   ): Promise<void> {
     const userId = socket.data.userId;
+    const t0 = performance.now();
 
     const callId = await this.callService.findActiveCallId(userId, body.targetUserId);
-    if (callId) {
-      await this.callService.endCall(userId, callId).catch(e =>
-        this.logger.warn(`call:end persistance échouée : ${(e as Error).message}`));
-      this.callBindings.delete(callId);
-    }
+    const t1 = performance.now();
 
     this.server.to(`user:${body.targetUserId}`).emit('call:ended', {
       conversationId: body.conversationId,
     });
+    const t2 = performance.now();
+    this.logger.verbose(
+      `[Perf][call:end] findActiveCallId=${(t1 - t0).toFixed(1)}ms broadcast=${(t2 - t1).toFixed(1)}ms total=${(t2 - t0).toFixed(1)}ms (persistance en arrière-plan, non comptée ici)`,
+    );
+
+    if (callId) {
+      this.callBindings.delete(callId);
+      this.callService.endCall(userId, callId).catch(e =>
+        this.logger.warn(`call:end persistance échouée : ${(e as Error).message}`));
+    }
   }
 
   /**

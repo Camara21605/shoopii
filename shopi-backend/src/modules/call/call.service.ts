@@ -334,6 +334,47 @@ export class CallService {
     return stillBusy;
   }
 
+  /**
+   * PARTIE 9.5 — variante combinée de isUserBusy() pour startCall() UNIQUEMENT :
+   * une seule requête DB pour caller+callee au lieu de deux appels isUserBusy()
+   * séparés. Mesuré en conditions réelles : dans la transaction de startCall(),
+   * `manager` est LA connexion unique de la transaction — deux requêtes
+   * envoyées via Promise.all() dessus ne partent donc PAS réellement en
+   * parallèle sur le réseau (elles se sérialisent sur cette même connexion
+   * malgré l'apparence de parallélisme du code), contrairement aux lectures
+   * hors transaction (assertCanCall) qui utilisent le pool et parallélisent
+   * réellement. Même logique de nettoyage des appels abandonnés (stale)
+   * qu'isUserBusy() — celle-ci n'est pas dupliquée, seulement réunie en un
+   * aller-retour réseau au lieu de deux. isUserBusy() reste inchangée (utilisée
+   * telle quelle par GET /calls/busy/:userId, hors de toute transaction).
+   */
+  private async checkBusyPair(
+    callerUserId: string, calleeUserId: string, manager: EntityManager,
+  ): Promise<{ callerBusy: boolean; calleeBusy: boolean }> {
+    const repo = manager.getRepository(Call);
+    const calls = await repo.find({
+      where: [
+        { callerId: callerUserId }, { calleeId: callerUserId },
+        { callerId: calleeUserId }, { calleeId: calleeUserId },
+      ],
+    });
+
+    let callerBusy = false;
+    let calleeBusy = false;
+    for (const call of calls) {
+      const isStale =
+        call.status !== CallStatus.CONNECTED &&
+        Date.now() - call.startedAt.getTime() > CallService.STALE_UNANSWERED_MS;
+      if (isStale) {
+        await this.finalizeCall(call, CallHistoryStatus.MISSED, manager);
+        continue;
+      }
+      if (call.callerId === callerUserId || call.calleeId === callerUserId) callerBusy = true;
+      if (call.callerId === calleeUserId || call.calleeId === calleeUserId) calleeBusy = true;
+    }
+    return { callerBusy, calleeBusy };
+  }
+
   /** Trouve l'appel actif entre deux utilisateurs (peu importe qui a appelé qui). */
   async findActiveCallId(userA: string, userB: string): Promise<string | null> {
     const call = await this.callRepo.findOne({
@@ -388,22 +429,35 @@ export class CallService {
   // ── Cycle de vie de l'appel ───────────────────────────────────
 
   async startCall(callerUserId: string, dto: StartCallDto): Promise<StartCallOutcome> {
+    /* PARTIE 9.5 — timestamps de diagnostic (perf only, jamais de secret/
+       SDP/JWT/donnée personnelle). logger.verbose() est déjà filtré hors
+       des logs en production par la config Logger de main.ts
+       (['error','warn','log'] uniquement quand NODE_ENV=production) —
+       aucun flag supplémentaire nécessaire pour les désactiver. */
+    const t0 = performance.now();
     await this.checkRateLimit(callerUserId);
+    const t1 = performance.now();
     await this.assertCanCall(callerUserId, dto.calleeUserId);
+    const t2 = performance.now();
 
-    return this.dataSource.transaction(async (manager) => {
+    const result = await this.dataSource.transaction(async (manager) => {
+      const tx0 = performance.now();
       await this.lockUsersForCall(manager, callerUserId, dto.calleeUserId);
+      const tx1 = performance.now();
 
-      /* Les 3 vérifications sont indépendantes (2 lectures DB + 1 lecture Redis) —
-         les paralléliser évite d'empiler leurs latences réseau vers Supabase/Redis
-         une par une, ce qui rendait `call:initiate` perceptiblement lent. */
-      const [callerBusy, calleeBusy, online] = await Promise.all([
-        this.isUserBusy(callerUserId, manager),
-        this.isUserBusy(dto.calleeUserId, manager),
+      /* PARTIE 9.5 — mesuré en conditions réelles : dans une transaction,
+         `manager` est UNE connexion unique, donc les deux isUserBusy() ci-
+         dessous (avant cette partie) se sérialisaient déjà malgré l'appel
+         Promise.all — checkBusyPair() les réunit en une seule requête. La
+         présence, elle, utilise Redis (connexion différente) et part donc
+         réellement en parallèle. */
+      const [{ callerBusy, calleeBusy }, online] = await Promise.all([
+        this.checkBusyPair(callerUserId, dto.calleeUserId, manager),
         /* isOnlineOrUnknown (pas isOnline) : une panne Redis ne doit jamais
            bloquer silencieusement tous les appels 1:1 — voir presence.service.ts. */
         this.presence.isOnlineOrUnknown(dto.calleeUserId),
       ]);
+      const tx2 = performance.now();
 
       if (callerBusy) {
         throw new ForbiddenException('Vous êtes déjà en appel.');
@@ -413,7 +467,7 @@ export class CallService {
         await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.BUSY, manager);
         await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_BUSY,
           'Utilisateur occupé', 'La personne que vous appelez est déjà en appel.');
-        return { outcome: 'busy' };
+        return { outcome: 'busy' as const };
       }
 
       if (!online) {
@@ -422,7 +476,7 @@ export class CallService {
           'Utilisateur hors ligne', 'La personne que vous appelez est actuellement hors ligne.');
         await this.notifyCallee(dto.calleeUserId, callerUserId, NotificationType.CALL_MISSED,
           'Appel manqué', 'Vous avez manqué un appel.');
-        return { outcome: 'offline' };
+        return { outcome: 'offline' as const };
       }
 
       const call = manager.create(Call, {
@@ -436,7 +490,11 @@ export class CallService {
 
       try {
         const saved = await manager.save(call);
-        return { outcome: 'ringing', call: saved };
+        const tx3 = performance.now();
+        this.logger.verbose(
+          `[Perf][startCall][tx] lock=${(tx1 - tx0).toFixed(1)}ms busy/presence=${(tx2 - tx1).toFixed(1)}ms insert=${(tx3 - tx2).toFixed(1)}ms txTotal=${(tx3 - tx0).toFixed(1)}ms`,
+        );
+        return { outcome: 'ringing' as const, call: saved };
       } catch (err) {
         /* Ne devrait normalement jamais arriver — lockUsersForCall() rend
            déjà cette section critique atomique — mais l'index unique
@@ -448,6 +506,12 @@ export class CallService {
         throw err;
       }
     });
+    const t3 = performance.now();
+
+    this.logger.verbose(
+      `[Perf][startCall] rateLimit=${(t1 - t0).toFixed(1)}ms assertCanCall=${(t2 - t1).toFixed(1)}ms transaction=${(t3 - t2).toFixed(1)}ms total=${(t3 - t0).toFixed(1)}ms outcome=${result.outcome}`,
+    );
+    return result;
   }
 
   /**
@@ -468,6 +532,42 @@ export class CallService {
       if (call.calleeId !== userId) {
         throw new ForbiddenException('Cet appel ne vous est pas destiné.');
       }
+      /* Idempotent : si un autre appareil du même callee a déjà accepté
+         pendant qu'on attendait le verrou, ne pas réémettre answeredAt. */
+      if (call.status === CallStatus.CONNECTED) return { call, alreadyAccepted: true };
+
+      call.status     = CallStatus.CONNECTED;
+      call.answeredAt = new Date();
+      const saved = await manager.save(call);
+      return { call: saved, alreadyAccepted: false };
+    });
+  }
+
+  /**
+   * PARTIE 9.5 — variante de acceptCall() pour le seul chemin Socket.IO
+   * (CallGateway.handleCallAccept) : le gateway connaît déjà callerUserId
+   * (payload) ET calleeUserId (socket.data.userId), donc localise ET
+   * verrouille l'appel EN UNE SEULE requête, au lieu de l'ancien
+   * findActiveCallId() (1 aller-retour) suivi d'acceptCall() (verrou par id,
+   * encore 1 aller-retour) — mesuré : ce doublon coûtait ~90-100ms de plus
+   * sur un chemin explicitement prioritaire (partie 9.5, "APPELÉ accepte").
+   * acceptCall(userId, callId) reste INCHANGÉE — toujours utilisée telle
+   * quelle par POST /calls/accept (callId explicite, pas de callerUserId
+   * connu côté REST).
+   *
+   * @returns `null` si aucun appel actif ne correspond (équivalent du
+   *   `callId` introuvable de l'ancien flux findActiveCallId()).
+   */
+  async acceptCallFast(
+    calleeUserId: string, callerUserId: string,
+  ): Promise<{ call: Call; alreadyAccepted: boolean } | null> {
+    return this.dataSource.transaction(async (manager) => {
+      const call = await manager.findOne(Call, {
+        where:    { callerId: callerUserId, calleeId: calleeUserId },
+        lock:     { mode: 'pessimistic_write' },
+      });
+      if (!call) return null;
+
       /* Idempotent : si un autre appareil du même callee a déjà accepté
          pendant qu'on attendait le verrou, ne pas réémettre answeredAt. */
       if (call.status === CallStatus.CONNECTED) return { call, alreadyAccepted: true };
