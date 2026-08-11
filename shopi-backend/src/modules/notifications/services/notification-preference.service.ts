@@ -120,6 +120,7 @@ const DEFAULT_CHANNEL_PREFERENCES: Record<
   [NotificationType.CALL_REJECTED]:         { in_app: true, push: false, email: false, sms: false },
   [NotificationType.CALL_BUSY]:             { in_app: true, push: false, email: false, sms: false },
   [NotificationType.CALL_OFFLINE]:          { in_app: true, push: false, email: false, sms: false },
+  [NotificationType.GROUP_CALL_MISSED]:     { in_app: true, push: true,  email: false, sms: false },
 };
 
 // ─────────────────────────────────────────────────────────────

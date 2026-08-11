@@ -269,6 +269,12 @@ export enum NotificationType {
   CALL_REJECTED         = 'call.rejected',          // appel refusé (pour l'appelant)
   CALL_BUSY             = 'call.busy',              // destinataire déjà en appel (pour l'appelant)
   CALL_OFFLINE          = 'call.offline',           // destinataire hors ligne (pour l'appelant)
+  // Partie 9 : même besoin ALTER TYPE en production que les 4 valeurs
+  // call.* ci-dessus (aucune migration dédiée ne les a jamais accompagnées
+  // dans ce dépôt — synchronize:true en dev, ajout manuel constaté en prod
+  // pour les précédentes ; on garde la même convention plutôt que d'en
+  // inventer une nouvelle pour cette seule valeur).
+  GROUP_CALL_MISSED     = 'group_call.missed',      // appel de groupe manqué (membre n'ayant ni rejoint ni décliné)
 
   // ── SYSTÈME ────────────────────────────────────────────────
   SYSTEM_MAINTENANCE    = 'system.maintenance',     // maintenance planifiée

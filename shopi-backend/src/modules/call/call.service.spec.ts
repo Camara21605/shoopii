@@ -444,6 +444,84 @@ describe('CallService', () => {
   });
 
   // ════════════════════════════════════════════════════════════
+  // getHistory (partie 9)
+  // ════════════════════════════════════════════════════════════
+
+  describe('getHistory', () => {
+    function makeHistoryRow(overrides: Partial<CallHistory> = {}): CallHistory {
+      return Object.assign(new CallHistory(), {
+        id: 'hist-uuid', callerId: 'user-uuid', calleeId: 'other-uuid',
+        conversationId: 'conv-uuid', callType: CallType.AUDIO,
+        status: CallHistoryStatus.COMPLETED,
+        startedAt: new Date('2026-01-01T10:00:00Z'),
+        answeredAt: new Date('2026-01-01T10:00:05Z'),
+        endedAt:    new Date('2026-01-01T10:05:00Z'),
+        duration:   295,
+        ...overrides,
+      } as CallHistory);
+    }
+
+    it('pagination transmise telle quelle à findAndCount (skip/take dérivés de page/limit)', async () => {
+      historyRepo.findAndCount.mockResolvedValue([[], 0]);
+
+      await service.getHistory('user-uuid', 3, 20);
+
+      expect(historyRepo.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
+        where: [{ callerId: 'user-uuid' }, { calleeId: 'user-uuid' }],
+        order: { endedAt: 'DESC' },
+        skip:  40, // (page 3 - 1) * limit 20
+        take:  20,
+      }));
+    });
+
+    it('appel sortant (callerId = userId) → direction "outgoing", contact = callee', async () => {
+      historyRepo.findAndCount.mockResolvedValue([[makeHistoryRow({ callerId: 'user-uuid', calleeId: 'other-uuid' })], 1]);
+      userRepo.findOne.mockResolvedValue(makeUser({ id: 'other-uuid', role: UserRole.CLIENT }));
+      clientRepo.findOne.mockResolvedValue({ id: 'profile-uuid', fullName: 'Bob Client' });
+
+      const result = await service.getHistory('user-uuid', 1, 20);
+
+      expect(result.data[0]).toMatchObject({
+        direction:   'outgoing',
+        contactName: 'Bob Client',
+        status:      CallHistoryStatus.COMPLETED,
+        duration:    295,
+      });
+    });
+
+    it('appel entrant (calleeId = userId) → direction "incoming", contact = caller', async () => {
+      historyRepo.findAndCount.mockResolvedValue([[makeHistoryRow({ callerId: 'other-uuid', calleeId: 'user-uuid' })], 1]);
+      userRepo.findOne.mockResolvedValue(makeUser({ id: 'other-uuid', role: UserRole.CLIENT }));
+      clientRepo.findOne.mockResolvedValue({ id: 'profile-uuid', fullName: 'Alice Cliente' });
+
+      const result = await service.getHistory('user-uuid', 1, 20);
+
+      expect(result.data[0]).toMatchObject({ direction: 'incoming', contactName: 'Alice Cliente' });
+    });
+
+    it('appel manqué — status et duration reflètent bien MISSED (jamais décroché)', async () => {
+      historyRepo.findAndCount.mockResolvedValue([[
+        makeHistoryRow({ status: CallHistoryStatus.MISSED, answeredAt: null, duration: 0 }),
+      ], 1]);
+      userRepo.findOne.mockResolvedValue(makeUser({ id: 'other-uuid', role: UserRole.CLIENT }));
+      clientRepo.findOne.mockResolvedValue({ id: 'profile-uuid', fullName: 'Bob' });
+
+      const result = await service.getHistory('user-uuid', 1, 20);
+
+      expect(result.data[0]).toMatchObject({ status: CallHistoryStatus.MISSED, answeredAt: null, duration: 0 });
+    });
+
+    it('confidentialité — un utilisateur ne voit que les lignes où il est caller OU callee (filtre transmis au repo)', async () => {
+      historyRepo.findAndCount.mockResolvedValue([[], 0]);
+
+      await service.getHistory('user-uuid', 1, 20);
+
+      const callArg = historyRepo.findAndCount.mock.calls[0][0];
+      expect(callArg.where).toEqual([{ callerId: 'user-uuid' }, { calleeId: 'user-uuid' }]);
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════
   // getIceServers (TURN/STUN)
   // ════════════════════════════════════════════════════════════
 

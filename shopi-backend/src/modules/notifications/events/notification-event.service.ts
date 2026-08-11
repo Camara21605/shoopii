@@ -52,6 +52,17 @@ export interface IMessageNotificationParams {
   conversationId: string;
 }
 
+export interface IGroupCallMissedParams {
+  /** profileId + type du membre n'ayant ni rejoint ni décliné (partie 9) */
+  recipientType:  string;
+  recipientId:    string;
+  groupId:        string;
+  /** Nom affichable du groupe/de la conversation — jamais de SDP/ICE/donnée d'appel technique. */
+  groupName:      string;
+  initiatorName:  string;
+  callType:       'audio' | 'video';
+}
+
 export interface IOrderPlacedParams {
   /** profileId de l'entreprise destinataire */
   companyId:   string;
@@ -240,6 +251,40 @@ export class NotificationEventService {
       });
     } catch (err) {
       this.logger.error('notifyMessageReceived failed', err);
+    }
+  }
+
+  /**
+   * Notifie un membre de groupe qu'il a manqué un appel — celui-ci N'A
+   * NI rejoint NI décliné avant la fin de l'appel (voir GroupCallGateway.
+   * saveCallMessage, seule source de vérité sur qui a "raté" l'appel).
+   *
+   * Ne contient QUE des informations d'affichage (nom du groupe, nom de
+   * l'initiateur, type audio/vidéo) — jamais de SDP/ICE/identifiant TURN/
+   * JWT/donnée technique de signalisation (partie 9, confidentialité).
+   */
+  async notifyGroupCallMissed(params: IGroupCallMissedParams): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType as NotificationActorType,
+        recipientId:   params.recipientId,
+        actorType:     null,
+        actorId:       null,
+        type:          NotificationType.GROUP_CALL_MISSED,
+        priority:      NotificationPriority.NORMAL,
+        title:         'Appel de groupe manqué',
+        body:          `${params.initiatorName} a lancé un appel ${params.callType === 'video' ? 'vidéo' : 'audio'} dans ${params.groupName}`,
+        // Pas de route dédiée /livraisons/groupe/:id côté frontend (router.tsx
+        // n'expose qu'une seule route statique /messagerie, sans segment
+        // dynamique — sélection de conversation/groupe gérée côté client).
+        // Même destination que les notifications call.* existantes.
+        actionUrl:     '/messagerie',
+        groupKey:      `group_call.missed:group:${params.groupId}`,
+        resourceType:  'delivery_group',
+        resourceId:    params.groupId,
+      });
+    } catch (err) {
+      this.logger.error('notifyGroupCallMissed failed', err);
     }
   }
 

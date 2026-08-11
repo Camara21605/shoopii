@@ -47,7 +47,7 @@ import {
   SubscribeMessage, ConnectedSocket, MessageBody,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Logger, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Logger, Optional, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InjectRedis } from '@nestjs-modules/ioredis';
@@ -61,6 +61,7 @@ import { GroupMessage, GroupMessageContentType } from 'src/database/entities/del
 import { CallType } from 'src/database/entities/call/call.entity';
 import { User, UserStatus } from 'src/database/entities/user.entity';
 import { BroadcastService }    from '../services/broadcast.service';
+import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 import type { AuthenticatedSocket } from '../interfaces/messaging.interfaces';
 import { SocketFloodGuard } from '../utils/socket-flood-guard';
 import { WsValidationExceptionFilter } from '../filters/ws-validation.filter';
@@ -147,6 +148,10 @@ export class GroupCallGateway implements OnGatewayDisconnect {
     private readonly userRepo:    Repository<User>,
     private readonly broadcast:   BroadcastService,
     @InjectRedis() private readonly redis: Redis,
+    /* @Optional, même pattern que MessagerieService : évite de durcir une
+     * dépendance circulaire potentielle entre gateways et NotificationsModule. */
+    @Optional()
+    private readonly notifEventSvc?: NotificationEventService,
   ) {}
 
   // ── Helpers d'accès ──────────────────────────────────────────
@@ -634,9 +639,46 @@ export class GroupCallGateway implements OnGatewayDisconnect {
           },
         });
       }
+
+      await this.notifyMissedMembers(call, members, group);
     } catch (e) {
       this.logger.error('[GroupCall] saveCallMessage error', e);
     }
+  }
+
+  /**
+   * Notifie chaque membre n'ayant NI rejoint NI décliné avant la fin de
+   * l'appel — indépendant du statut global de l'appel (`saveCallMessage`
+   * peut le marquer "completed" dès que 2 personnes s'y sont croisées,
+   * alors qu'un 3ᵉ membre du groupe, lui, l'a réellement manqué).
+   *
+   * Réutilise le système de notification existant (NotificationEventService
+   * / NotificationService) plutôt que d'en créer un nouveau — même
+   * infrastructure que pour les messages/commandes.
+   */
+  private async notifyMissedMembers(
+    call:    ActiveGroupCall,
+    members: DeliveryGroupMember[],
+    group:   DeliveryGroup,
+  ): Promise<void> {
+    if (!this.notifEventSvc) return;
+
+    const missed = members.filter(
+      m => m.userId !== call.initiatorId
+        && !call.everJoined.has(m.userId)
+        && !call.declined.has(m.userId),
+    );
+    if (missed.length === 0) return;
+
+    const groupName = `${group.companyName} · ${group.commandeNumero}`;
+    await Promise.all(missed.map(m => this.notifEventSvc!.notifyGroupCallMissed({
+      recipientType: m.actorType,
+      recipientId:   m.actorId,
+      groupId:       call.groupId,
+      groupName,
+      initiatorName: call.initiatorName,
+      callType:      call.callType === CallType.VIDEO ? 'video' : 'audio',
+    })));
   }
 
   // ── API interne (utilisable par d'autres services) ────────────

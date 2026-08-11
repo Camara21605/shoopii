@@ -42,6 +42,7 @@ function getTypeMeta(type: string): TypeMeta {
     stock:   { icon: 'fa-warehouse',    bg: 'rgba(239,68,68,.12)',   color: '#DC2626' },
     account: { icon: 'fa-user-check',   bg: 'rgba(16,185,129,.12)',  color: '#059669' },
     call:    { icon: 'fa-phone',        bg: 'rgba(22,82,240,.12)',   color: '#1652F0' },
+    group_call: { icon: 'fa-phone',     bg: 'rgba(22,82,240,.12)',   color: '#1652F0' },
   };
   return map[prefix] ?? { icon: 'fa-bell', bg: 'rgba(100,100,100,.1)', color: '#6B7280' };
 }
@@ -132,8 +133,8 @@ function resolveNavTarget(notif: INotificationDto): string {
       : resId ? `/commande/${resId}/suivi` : '/home';
   }
 
-  // ── 3. Messages / conversations / appels → messagerie ───────────
-  if (prefix === 'message' || prefix === 'conversation' || prefix === 'call') {
+  // ── 3. Messages / conversations / appels (1:1 et groupe) → messagerie ─
+  if (prefix === 'message' || prefix === 'conversation' || prefix === 'call' || prefix === 'group_call') {
     return '/messagerie';
   }
 

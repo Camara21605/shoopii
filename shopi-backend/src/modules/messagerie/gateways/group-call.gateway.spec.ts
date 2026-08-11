@@ -424,4 +424,98 @@ describe('GroupCallGateway', () => {
       expect(broadcast.emitToUser).toHaveBeenCalledWith('a-uuid', 'group_call:ice_candidate', expect.anything());
     });
   });
+
+  // ════════════════════════════════════════════════════════════
+  // Partie 9 — notification "appel de groupe manqué"
+  // ════════════════════════════════════════════════════════════
+
+  describe('notifyMissedMembers (partie 9)', () => {
+    let notifEventSvc: { notifyGroupCallMissed: jest.Mock };
+    let gw: GroupCallGateway;
+
+    function memberWithActor(userId: string, displayName = 'Membre') {
+      return { ...makeMember(userId, displayName), actorType: 'client', actorId: `actor-${userId}` };
+    }
+
+    beforeEach(() => {
+      notifEventSvc = { notifyGroupCallMissed: jest.fn().mockResolvedValue(undefined) };
+      gw = new GroupCallGateway(
+        memberRepo as any, groupRepo as any, msgRepo as any, userRepo as any,
+        broadcast as unknown as BroadcastService, redis as any,
+        notifEventSvc as any,
+      );
+    });
+
+    it('notifie les membres n\'ayant ni rejoint ni décliné quand l\'appel se termine (sonnerie expirée)', async () => {
+      memberRepo.findOne.mockResolvedValue(memberWithActor('initiateur-uuid', 'Alice'));
+      memberRepo.find.mockResolvedValue([
+        memberWithActor('initiateur-uuid', 'Alice'),
+        memberWithActor('absent-uuid', 'Bob'),
+      ]);
+      const socket = makeSocket('initiateur-uuid');
+      await gw.handleInitiate(socket, { groupId: 'group-uuid', callType: CallType.AUDIO });
+
+      // Fait avancer le timer de sonnerie (30s) sans que personne ne rejoigne.
+      await jest.advanceTimersByTimeAsync(30_000);
+
+      expect(notifEventSvc.notifyGroupCallMissed).toHaveBeenCalledTimes(1);
+      expect(notifEventSvc.notifyGroupCallMissed).toHaveBeenCalledWith(expect.objectContaining({
+        recipientType: 'client',
+        recipientId:   'actor-absent-uuid',
+        groupId:       'group-uuid',
+        initiatorName: 'Alice',
+        callType:      'audio',
+      }));
+      // Jamais l'initiateur lui-même.
+      expect(notifEventSvc.notifyGroupCallMissed).not.toHaveBeenCalledWith(
+        expect.objectContaining({ recipientId: 'actor-initiateur-uuid' }),
+      );
+    });
+
+    it('un membre ayant décliné n\'est PAS considéré comme "manqué"', async () => {
+      memberRepo.findOne.mockResolvedValue(memberWithActor('initiateur-uuid', 'Alice'));
+      memberRepo.find.mockResolvedValue([
+        memberWithActor('initiateur-uuid', 'Alice'),
+        memberWithActor('declinant-uuid', 'Bob'),
+      ]);
+      const initSocket = makeSocket('initiateur-uuid');
+      await gw.handleInitiate(initSocket, { groupId: 'group-uuid' });
+      const callId = (initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')?.[1] as any).callId;
+
+      memberRepo.findOne.mockResolvedValue(memberWithActor('declinant-uuid'));
+      await gw.handleDecline(makeSocket('declinant-uuid'), { groupId: 'group-uuid', callId });
+
+      // Après le déclin, il ne reste que l'initiateur → checkIfCallShouldEnd termine l'appel.
+      expect(notifEventSvc.notifyGroupCallMissed).not.toHaveBeenCalled();
+    });
+
+    it('aucune notification envoyée quand tout le monde a rejoint (appel complet)', async () => {
+      memberRepo.findOne.mockResolvedValue(memberWithActor('a-uuid'));
+      memberRepo.find.mockResolvedValue([memberWithActor('a-uuid'), memberWithActor('b-uuid')]);
+      const initSocket = makeSocket('a-uuid');
+      await gw.handleInitiate(initSocket, { groupId: 'group-uuid' });
+      const callId = (initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')?.[1] as any).callId;
+
+      memberRepo.findOne.mockResolvedValue(memberWithActor('b-uuid'));
+      await gw.handleJoin(makeSocket('b-uuid'), { groupId: 'group-uuid', callId });
+
+      await gw.handleLeave(makeSocket('a-uuid'), { groupId: 'group-uuid', callId });
+      await gw.handleLeave(makeSocket('b-uuid'), { groupId: 'group-uuid', callId });
+
+      expect(notifEventSvc.notifyGroupCallMissed).not.toHaveBeenCalled();
+    });
+
+    it('absence de NotificationEventService (non fourni) → aucune erreur, appel terminé normalement', async () => {
+      // `gateway` (créé dans le beforeEach externe) n'a PAS de notifEventSvc.
+      memberRepo.findOne.mockResolvedValue(memberWithActor('solo-uuid'));
+      memberRepo.find.mockResolvedValue([memberWithActor('solo-uuid'), memberWithActor('absent-uuid')]);
+      const initSocket = makeSocket('solo-uuid');
+      await gateway.handleInitiate(initSocket, { groupId: 'group-uuid' });
+      const callId = (initSocket.emit.mock.calls.find(c => c[0] === 'group_call:joined')?.[1] as any).callId;
+
+      await expect(gateway.handleLeave(makeSocket('solo-uuid'), { groupId: 'group-uuid', callId }))
+        .resolves.not.toThrow();
+      expect(gateway.getActiveCall('group-uuid')).toBeNull();
+    });
+  });
 });

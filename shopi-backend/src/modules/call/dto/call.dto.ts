@@ -1,4 +1,5 @@
-import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 import { CallType } from 'src/database/entities/call/call.entity';
 
 export class StartCallDto {
@@ -18,12 +19,24 @@ export class CallIdDto {
   callId: string;
 }
 
+/**
+ * PARTIE 9 — page/limit étaient de simples chaînes non bornées jusqu'ici :
+ * un client pouvait demander ?limit=999999 (payload disproportionné, coût
+ * DB inutile) et une valeur non numérique produisait un NaN silencieux
+ * (skip/take incohérents côté TypeORM) au lieu d'un 400 propre. Même
+ * convention que ListNotificationsQueryDto (limite max 50).
+ */
 export class CallHistoryQueryDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   @IsOptional()
-  @IsString()
-  page?: string;
+  page?: number = 1;
 
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(50)
   @IsOptional()
-  @IsString()
-  limit?: string;
+  limit?: number = 20;
 }

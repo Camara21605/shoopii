@@ -49,9 +49,8 @@ export class CallController {
   @Get('history')
   async history(@Req() req: Request, @Query() query: CallHistoryQueryDto) {
     const user = req.user as User;
-    const page  = query.page  ? parseInt(query.page)  : 1;
-    const limit = query.limit ? parseInt(query.limit) : 20;
-    return this.callService.getHistory(user.id, page, limit);
+    // page/limit déjà des nombres validés/bornés par CallHistoryQueryDto (partie 9).
+    return this.callService.getHistory(user.id, query.page ?? 1, query.limit ?? 20);
   }
 
   /**
