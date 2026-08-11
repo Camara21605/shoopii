@@ -51,10 +51,14 @@ export function GroupCallProvider({ children }: { children: React.ReactNode }) {
           localStream={groupCall.localStream}
           isMuted={groupCall.isMuted}
           isVideoOff={groupCall.isVideoOff}
+          isScreenSharing={groupCall.isScreenSharing}
+          canFlipCamera={groupCall.canFlipCamera}
+          canShareScreen={groupCall.canShareScreen}
           onLeave={groupCall.leaveCall}
           onToggleMute={groupCall.toggleMute}
           onToggleVideo={groupCall.toggleVideo}
           onFlipCamera={groupCall.flipCamera}
+          onToggleScreenShare={groupCall.toggleScreenShare}
         />
       )}
     </GroupCallContext.Provider>

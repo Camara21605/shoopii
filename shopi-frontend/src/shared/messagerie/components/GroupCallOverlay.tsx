@@ -20,10 +20,16 @@ interface Props {
   localStream:   MediaStream | null;
   isMuted:       boolean;
   isVideoOff:    boolean;
+  isScreenSharing?: boolean;
+  /** false = un seul périphérique vidéo détecté (enumerateDevices) — masque "Retourner". */
+  canFlipCamera?:   boolean;
+  /** false = navigateur sans support getDisplayMedia. */
+  canShareScreen?:  boolean;
   onLeave:       () => void;
   onToggleMute:  () => void;
   onToggleVideo: () => void;
   onFlipCamera:  () => void;
+  onToggleScreenShare?: () => void;
 }
 
 // ── Tuile vidéo d'un participant distant ──────────────────────
@@ -139,8 +145,8 @@ function PeerTile({ peer }: { peer: GroupCallPeer }) {
 
 export default function GroupCallOverlay({
   callState, peers, localStream,
-  isMuted, isVideoOff,
-  onLeave, onToggleMute, onToggleVideo, onFlipCamera,
+  isMuted, isVideoOff, isScreenSharing = false, canFlipCamera = true, canShareScreen = false,
+  onLeave, onToggleMute, onToggleVideo, onFlipCamera, onToggleScreenShare,
 }: Props) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const peerList = [...peers.values()];
@@ -184,6 +190,11 @@ export default function GroupCallOverlay({
             {' · '}
             <i className={`fas ${isVideo ? 'fa-video' : 'fa-phone'}`}
                style={{ color: 'rgba(255,255,255,.4)', fontSize: 11 }} />
+            {isScreenSharing && (
+              <span style={{ color: '#67e8f9', marginLeft: 8 }}>
+                <i className="fas fa-desktop" style={{ fontSize: 10 }} /> Partage d'écran actif
+              </span>
+            )}
           </div>
         </div>
 
@@ -235,7 +246,10 @@ export default function GroupCallOverlay({
       </div>
 
       {/* ── PiP local ────────────────────────────────────────── */}
-      {isVideo && (
+      {/* Masqué pendant un partage d'écran — l'utilisateur voit déjà son
+          propre écran, un mini aperçu caméra n'apporte rien (cohérent avec
+          le comportement 1:1, voir CallOverlay.tsx). */}
+      {isVideo && !isScreenSharing && (
         <div style={{
           position: 'fixed', bottom: 90, right: 16,
           width: 96, height: 128,
@@ -295,8 +309,9 @@ export default function GroupCallOverlay({
           />
         )}
 
-        {/* Basculer caméra avant/arrière (mobile) */}
-        {isVideo && !isVideoOff && (
+        {/* Basculer caméra avant/arrière (mobile) — masqué si un seul
+            périphérique vidéo détecté (enumerateDevices, partie 7). */}
+        {isVideo && !isVideoOff && canFlipCamera && (
           <CtrlBtn
             icon="fa-rotate"
             label="Retourner"
@@ -304,6 +319,18 @@ export default function GroupCallOverlay({
             activeColor="rgba(255,255,255,.1)"
             activeBorder="rgba(255,255,255,.15)"
             onClick={onFlipCamera}
+          />
+        )}
+
+        {/* Partage d'écran — remplace la piste vidéo sur TOUS les pairs du mesh. */}
+        {canShareScreen && onToggleScreenShare && (
+          <CtrlBtn
+            icon={isScreenSharing ? 'fa-stop' : 'fa-desktop'}
+            label={isScreenSharing ? 'Arrêter' : 'Partager'}
+            active={isScreenSharing}
+            activeColor="rgba(14,116,144,.35)"
+            activeBorder="rgba(103,232,249,.5)"
+            onClick={onToggleScreenShare}
           />
         )}
 

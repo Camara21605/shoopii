@@ -239,6 +239,9 @@
 .btnVideoOff  .btnIcon { background: rgba(220,38,38,.25); color: #f87171; }
 /* Bouton flip caméra */
 .btnFlip      .btnIcon { background: rgba(255,255,255,.12); }
+/* Bouton partage d'écran */
+.btnScreenShare   .btnIcon { background: rgba(255,255,255,.12); }
+.btnScreenShareOn .btnIcon { background: rgba(14,116,144,.35); color: #67e8f9; }
 
 /* Contrôles en mode vidéo (plein écran) — icônes plus gros */
 .actionsVideo { gap: 28px; }

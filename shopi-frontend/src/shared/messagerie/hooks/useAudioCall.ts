@@ -23,6 +23,8 @@ import { getActiveSocket } from './useSocket';
 import type { WsCallIncoming, WsCallSignal } from './useSocket';
 import { getIceServers, getFreshIceServers, prefetchIceServers, watchIceConnectivity } from './iceServers';
 import { apiFetch } from '../../services/apiFetch';
+import { describeMediaError } from './mediaErrors';
+import { hasMultipleCameras } from './deviceCapabilities';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -94,11 +96,33 @@ export function useAudioCall(props?: UseAudioCallProps) {
      l'aller-retour réseau au moment précis où l'appel démarre. */
   useEffect(() => { prefetchIceServers(); }, []);
 
+  /**
+   * Capacité "plusieurs caméras" (partie 7) — ne JAMAIS supposer qu'un
+   * appareil a une caméra avant/arrière ; recalculé sur 'devicechange' pour
+   * suivre un branchement/débranchement en cours de session (webcam USB…).
+   */
+  const [canFlipCamera, setCanFlipCamera] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = () => { hasMultipleCameras().then(v => { if (!cancelled) setCanFlipCamera(v); }); };
+    refresh();
+    navigator.mediaDevices?.addEventListener?.('devicechange', refresh);
+    return () => {
+      cancelled = true;
+      navigator.mediaDevices?.removeEventListener?.('devicechange', refresh);
+    };
+  }, []);
+
+  /** Support navigateur du partage d'écran — absent sur certains mobiles. */
+  const canShareScreen = typeof navigator !== 'undefined'
+    && typeof navigator.mediaDevices?.getDisplayMedia === 'function';
+
   const [status,            setStatus]            = useState<CallStatus>('idle');
   const [callInfo,          setCallInfo]          = useState<CallInfo | null>(null);
   const [isMuted,           setIsMuted]           = useState(false);
   const [isVideoOff,        setIsVideoOff]        = useState(false);
   const [isSpeakerOn,       setIsSpeakerOn]       = useState(true);
+  const [isScreenSharing,   setIsScreenSharing]   = useState(false);
   const [duration,          setDuration]          = useState(0);
   /** Streams exposés à CallOverlay pour les éléments <video> */
   const [localMediaStream,  setLocalMediaStream]  = useState<MediaStream | null>(null);
@@ -108,6 +132,17 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const callInfoRef    = useRef<CallInfo | null>(null);
   const pcRef          = useRef<RTCPeerConnection | null>(null);
   const localStream    = useRef<MediaStream | null>(null);
+  /** Piste caméra mise de côté pendant un partage d'écran, pour la restaurer à l'arrêt. */
+  const cameraTrackRef = useRef<MediaStreamTrack | null>(null);
+  /* Référence directe au sender vidéo, indépendante de son track courant —
+     `sender.track` devient null après replaceTrack(null) (cas d'un appel
+     AUDIO-ONLY dont on arrête le partage d'écran) ; chercher par
+     `.track?.kind==='video'` échouerait alors sur un 2e partage d'écran
+     (le sender existant, track=null, ne matcherait plus la recherche, et
+     un nouveau sender serait ajouté par erreur au lieu de réutiliser
+     l'existant). */
+  const videoSenderRef = useRef<RTCRtpSender | null>(null);
+  const screenStream   = useRef<MediaStream | null>(null);
   const remoteAudio    = useRef<HTMLAudioElement | null>(null);
   const icePendingQ    = useRef<RTCIceCandidateInit[]>([]);
   const durationRef    = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -195,6 +230,42 @@ export function useAudioCall(props?: UseAudioCallProps) {
     socket?.emit(event, data);
   }
 
+  /**
+   * Détecte un périphérique débranché/révoqué EN COURS D'APPEL — `onended`
+   * ne se déclenche que sur une fin INATTENDUE (le navigateur ne l'émet
+   * jamais pour un simple track.stop() appelé par notre propre code, voir
+   * MDN MediaStreamTrack : "ended" event). Aucune tentative de reconnexion
+   * automatique du périphérique ici (hors-scope, risque de boucle) — juste
+   * refléter l'état honnêtement plutôt que de laisser l'UI mentir
+   * (caméra/micro affichés "actifs" alors que la source a disparu).
+   */
+  function attachLocalTrackEndedHandlers(stream: MediaStream | null): void {
+    if (!stream) return;
+    for (const track of stream.getTracks()) {
+      track.onended = () => {
+        console.warn(`[Call] piste locale "${track.kind}" terminée de façon inattendue (périphérique débranché/permission révoquée).`);
+        if (track.kind === 'video') setIsVideoOff(true);
+        if (track.kind === 'audio') setIsMuted(true);
+      };
+    }
+  }
+
+  /**
+   * Retrouve le sender vidéo d'une pc, en le mémorisant — indispensable dès
+   * qu'un partage d'écran peut avoir mis son `.track` à null (replaceTrack
+   * (null), cas d'un appel audio-only sans piste de repli) : chercher par
+   * `.track?.kind==='video'` échouerait alors sur un 2e appel. Repose sur
+   * l'invariant qu'une seule RTCPeerConnection vit à la fois pour cet appel
+   * (jamais recréée pendant l'ICE-restart, voir attemptIceRestart) — la ref
+   * est réinitialisée dans cleanup() à chaque fin d'appel.
+   */
+  function getVideoSender(pc: RTCPeerConnection): RTCRtpSender | null {
+    if (videoSenderRef.current) return videoSenderRef.current;
+    const sender = pc.getSenders().find(s => s.track?.kind === 'video') ?? null;
+    videoSenderRef.current = sender;
+    return sender;
+  }
+
   function startDurationTimer() {
     wasConnected.current   = true;
     connectedSince.current = Date.now();
@@ -221,8 +292,15 @@ export function useAudioCall(props?: UseAudioCallProps) {
     iceRestartAttempts.current = 0;
     pcRef.current?.close();
     pcRef.current = null;
-    localStream.current?.getTracks().forEach(t => t.stop());
+    localStream.current?.getTracks().forEach(t => { t.onended = null; t.stop(); });
     localStream.current = null;
+    /* Libère le partage d'écran s'il était en cours — sans ça, l'onglet/la
+       fenêtre partagée reste "en cours de partage" (bordure navigateur,
+       icône d'enregistrement) après la fin de l'appel. */
+    screenStream.current?.getTracks().forEach(t => { t.onended = null; t.stop(); });
+    screenStream.current = null;
+    cameraTrackRef.current = null;
+    videoSenderRef.current = null; // la pc qui le portait vient d'être fermée
     icePendingQ.current = [];
     if (remoteAudio.current) {
       remoteAudio.current.srcObject = null;
@@ -234,6 +312,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     setLocalMediaStream(null);
     setRemoteMediaStream(null);
     setIsVideoOff(false);
+    setIsScreenSharing(false);
     facingMode.current = 'user';
     callInfoRef.current = null;
   }, []);
@@ -459,11 +538,19 @@ export function useAudioCall(props?: UseAudioCallProps) {
     /* Reçoit le flux distant (audio seul ou audio+vidéo) */
     pc.ontrack = ({ streams }) => {
       const stream = streams[0];
-      setRemoteMediaStream(stream);
+      /* Nouvel objet MediaStream à chaque événement (même si `stream` est la
+         même référence sous-jacente WebRTC) — sans ça, l'ajout d'une piste
+         vidéo à un flux déjà existant (ex. partage d'écran démarré en cours
+         d'appel AUDIO, voir startScreenShare) ne déclenche aucun re-render :
+         React ignore un setState avec la même référence d'objet. */
+      setRemoteMediaStream(new MediaStream(stream.getTracks()));
 
-      /* Pour les appels audio, on utilise un élément <audio> caché.
-         Pour la vidéo, l'overlay règle srcObject sur l'élément <video>. */
-      if (callInfoRef.current?.callType !== 'video') {
+      /* Décidé sur le contenu RÉEL du flux, pas sur callInfo.callType figé à
+         l'établissement de l'appel — un appel audio peut acquérir une piste
+         vidéo en cours de route (partage d'écran, partie 7) sans jamais
+         changer de callType. */
+      const hasVideo = stream.getVideoTracks().length > 0;
+      if (!hasVideo) {
         if (!remoteAudio.current) {
           remoteAudio.current = document.createElement('audio');
           remoteAudio.current.autoplay = true;
@@ -472,6 +559,14 @@ export function useAudioCall(props?: UseAudioCallProps) {
         remoteAudio.current.srcObject = stream;
         void applySpeaker(remoteAudio.current, isSpeakerOnRef.current);
         void playRemoteAudioWithFallback(remoteAudio.current);
+      } else if (remoteAudio.current) {
+        /* Une piste vidéo vient d'apparaître sur ce flux — le <video> de
+           l'overlay va désormais porter l'audio ET la vidéo du MÊME flux ;
+           garder l'élément <audio> caché doublerait le son. */
+        remoteAudio.current.srcObject = null;
+        remoteAudio.current.pause();
+        if (document.body.contains(remoteAudio.current)) document.body.removeChild(remoteAudio.current);
+        remoteAudio.current = null;
       }
     };
 
@@ -546,11 +641,12 @@ export function useAudioCall(props?: UseAudioCallProps) {
         audio: true,
         video: isVideo ? { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: facingMode.current } : false,
       });
+      attachLocalTrackEndedHandlers(localStream.current);
       setLocalMediaStream(localStream.current);
       console.debug('[Call] getUserMedia OK');
     } catch (err) {
       console.error('[Call] getUserMedia a échoué :', err);
-      alert(isVideo ? 'Accès à la caméra ou au microphone refusé.' : 'Accès au microphone refusé.');
+      alert(describeMediaError(err, isVideo ? 'la caméra ou le microphone' : 'le microphone').message);
       return;
     }
 
@@ -586,19 +682,20 @@ export function useAudioCall(props?: UseAudioCallProps) {
         /* Caméra déjà utilisée par un autre onglet → fallback audio seul */
         try {
           localStream.current = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        } catch {
+        } catch (fallbackErr) {
           /* Avant : rejectCall() silencieux — l'appelé voyait juste la carte
              "Appel entrant" disparaître sans comprendre pourquoi. */
-          alert('Accès au microphone refusé.');
+          alert(describeMediaError(fallbackErr, 'le microphone').message);
           rejectCall();
           return;
         }
       } else {
-        alert(isVideo ? 'Accès à la caméra ou au microphone refusé.' : 'Accès au microphone refusé.');
+        alert(describeMediaError(err, isVideo ? 'la caméra ou le microphone' : 'le microphone').message);
         rejectCall();
         return;
       }
     }
+    attachLocalTrackEndedHandlers(localStream.current);
     setLocalMediaStream(localStream.current);
 
     /* Retour visuel immédiat : la carte "Appel entrant" doit disparaître
@@ -677,9 +774,12 @@ export function useAudioCall(props?: UseAudioCallProps) {
   /**
    * Bascule caméra avant/arrière (mobile).
    * Remplace la piste vidéo sans couper l'appel.
+   * Sans effet pendant un partage d'écran : le sender vidéo porte alors la
+   * piste écran, pas la caméra — la remplacer casserait le partage sans
+   * jamais mettre à jour isScreenSharing (état incohérent).
    */
   const flipCamera = useCallback(async () => {
-    if (!localStream.current || callInfoRef.current?.callType !== 'video') return;
+    if (!localStream.current || callInfoRef.current?.callType !== 'video' || screenStream.current) return;
     facingMode.current = facingMode.current === 'user' ? 'environment' : 'user';
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({
@@ -688,14 +788,98 @@ export function useAudioCall(props?: UseAudioCallProps) {
       });
       const newTrack = newStream.getVideoTracks()[0];
       /* Remplace la piste dans le PeerConnection sans renegocier */
-      const sender = pcRef.current?.getSenders().find(s => s.track?.kind === 'video');
+      const sender = pcRef.current ? getVideoSender(pcRef.current) : null;
       if (sender && newTrack) await sender.replaceTrack(newTrack);
       /* Met à jour le stream local */
       localStream.current.getVideoTracks().forEach(t => { t.stop(); localStream.current?.removeTrack(t); });
       localStream.current.addTrack(newTrack);
       setLocalMediaStream(new MediaStream(localStream.current.getTracks()));
-    } catch { /* silencieux si appareil sans caméra arrière */ }
+    } catch (err) {
+      /* Reviens à l'orientation précédente — la bascule a échoué, pas la peine
+         de laisser facingMode désynchronisé du flux réellement actif. */
+      facingMode.current = facingMode.current === 'user' ? 'environment' : 'user';
+      const { message } = describeMediaError(err, 'la caméra arrière');
+      console.warn('[Call] flipCamera a échoué :', message, err);
+    }
   }, []);
+
+  /** Arrête le partage d'écran et restaure la caméra (ou une piste vide si l'appel était audio-only). */
+  const stopScreenShare = useCallback(async () => {
+    if (!screenStream.current) return;
+    screenStream.current.getTracks().forEach(t => { t.onended = null; t.stop(); });
+    screenStream.current = null;
+    setIsScreenSharing(false);
+
+    const pc = pcRef.current;
+    const sender = pc ? getVideoSender(pc) : null;
+    if (sender) {
+      try { await sender.replaceTrack(cameraTrackRef.current); } catch { /* best-effort */ }
+    }
+    cameraTrackRef.current = null;
+  }, []);
+
+  /**
+   * Démarre le partage d'écran — remplace la piste vidéo envoyée sur la
+   * PeerConnection existante (jamais de 2e PeerConnection). Si l'appel
+   * était audio uniquement (aucun sender vidéo existant), ajoute une piste
+   * et renégocie une fois (l'autre côté répond via onCallOffer, qui
+   * réutilise désormais la pc existante — voir plus haut).
+   */
+  const startScreenShare = useCallback(async () => {
+    if (!callInfoRef.current || !pcRef.current || screenStream.current) return;
+    try {
+      const display = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      const screenTrack = display.getVideoTracks()[0];
+      if (!screenTrack) return;
+
+      const pc = pcRef.current;
+      const sender = getVideoSender(pc);
+      if (sender) {
+        /* Piste caméra existante (appel vidéo, caméra active ou coupée —
+           ou sender déjà créé par un précédent partage d'écran sur un
+           appel audio-only, track actuellement null) — on la met de côté
+           pour la restaurer à l'arrêt du partage (null si elle l'était déjà). */
+        cameraTrackRef.current = sender.track;
+        await sender.replaceTrack(screenTrack);
+      } else {
+        /* Aucun sender vidéo n'existe encore pour cette pc — 1er partage
+           d'écran d'un appel audio uniquement. Ajoute une piste et
+           renégocie (seul cas où un 2e aller-retour SDP est nécessaire ;
+           replaceTrack seul aurait suffi sinon). getVideoSender() mémorise
+           le sender créé ici pour que les prochains toggles réutilisent
+           replaceTrack au lieu de rajouter un nouveau sender à chaque fois. */
+        videoSenderRef.current = pc.addTrack(screenTrack, display);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        emit('call:offer', {
+          conversationId: callInfoRef.current.conversationId,
+          targetUserId:   callInfoRef.current.remoteUserId,
+          sdp:            offer,
+        });
+      }
+
+      screenStream.current = display;
+      /* L'utilisateur peut arrêter le partage depuis le contrôle natif du
+         navigateur (barre "Vous partagez cet écran" / raccourci système) —
+         sans ce listener, l'app resterait bloquée en `isScreenSharing=true`
+         alors que la piste réelle est déjà morte côté navigateur. */
+      screenTrack.onended = () => { void stopScreenShare(); };
+
+      setIsScreenSharing(true);
+    } catch (err) {
+      const { message } = describeMediaError(err, "le partage d'écran");
+      if ((err as { name?: string })?.name !== 'AbortError') {
+        // AbortError = l'utilisateur a fermé la boîte de sélection — pas une erreur à signaler.
+        alert(message);
+      }
+    }
+  }, [stopScreenShare]);
+
+  /** Bascule marche/arrêt — pratique pour un bouton unique dans l'UI. */
+  const toggleScreenShare = useCallback(async () => {
+    if (screenStream.current) await stopScreenShare();
+    else await startScreenShare();
+  }, [startScreenShare, stopScreenShare]);
 
   /** Active / coupe le micro. */
   const toggleMute = useCallback(() => {
@@ -798,9 +982,18 @@ export function useAudioCall(props?: UseAudioCallProps) {
     if (!callInfoRef.current || !localStream.current) return;
 
     try {
-      const iceServers = await getIceServers();
-      const pc = createPeerConnection(iceServers);
-      await attachLocalTracks(pc, localStream.current);
+      /* ⚠️ Réutilise la PeerConnection existante si elle existe déjà —
+         un offer peut arriver une 2e fois EN COURS D'APPEL (renégociation,
+         ex. l'autre participant démarre un partage d'écran, partie 7), pas
+         seulement à l'établissement initial. Recréer systématiquement la pc
+         ici (comportement précédent) aurait détruit une connexion média
+         déjà établie et fonctionnelle à chaque renégociation. */
+      let pc = pcRef.current;
+      if (!pc) {
+        const iceServers = await getIceServers();
+        pc = createPeerConnection(iceServers);
+        await attachLocalTracks(pc, localStream.current);
+      }
 
       await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp!));
       await flushIcePending();
@@ -983,8 +1176,15 @@ export function useAudioCall(props?: UseAudioCallProps) {
     isMuted,
     isVideoOff,
     isSpeakerOn,
+    isScreenSharing,
+    canFlipCamera,   // false = un seul périphérique vidéo détecté, ne pas afficher le bouton "retourner"
+    canShareScreen,  // false = navigateur sans support getDisplayMedia (mobile, essentiellement)
     localMediaStream,  // pour l'élément <video> local dans CallOverlay
     remoteMediaStream, // pour l'élément <video> distant dans CallOverlay
+    /* Reflète le contenu RÉEL du flux distant, pas callInfo.callType figé —
+       un appel audio dont l'autre participant démarre un partage d'écran
+       acquiert une piste vidéo sans jamais changer de callType. */
+    hasRemoteVideo: (remoteMediaStream?.getVideoTracks().length ?? 0) > 0,
     reconnectPhase,    // null hors coupure réseau — voir ReconnectPhase
     startCall,
     acceptCall,
@@ -995,5 +1195,6 @@ export function useAudioCall(props?: UseAudioCallProps) {
     toggleVideo,
     toggleSpeaker,
     flipCamera,
+    toggleScreenShare,
   };
 }

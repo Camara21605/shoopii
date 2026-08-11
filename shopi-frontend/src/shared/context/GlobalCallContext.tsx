@@ -52,15 +52,20 @@ export interface GlobalCallContextValue {
   localMediaStream:  MediaStream | null;
   remoteMediaStream: MediaStream | null;
   reconnectPhase:    ReconnectPhase | null;
+  isScreenSharing:   boolean;
+  canFlipCamera:     boolean;
+  canShareScreen:    boolean;
+  hasRemoteVideo:    boolean;
 
-  startCall:     (info: Omit<CallInfo, 'direction'>) => Promise<void>;
-  acceptCall:    () => Promise<void>;
-  rejectCall:    () => void;
-  hangUp:        () => void;
-  toggleMute:    () => void;
-  toggleVideo:   () => void;
-  toggleSpeaker: () => void;
-  flipCamera:    () => Promise<void>;
+  startCall:         (info: Omit<CallInfo, 'direction'>) => Promise<void>;
+  acceptCall:        () => Promise<void>;
+  rejectCall:        () => void;
+  hangUp:            () => void;
+  toggleMute:        () => void;
+  toggleVideo:       () => void;
+  toggleSpeaker:     () => void;
+  flipCamera:        () => Promise<void>;
+  toggleScreenShare: () => Promise<void>;
 
   /** Nombre total de messages non lus — mis à jour en temps réel via socket */
   msgUnread: number;
@@ -142,9 +147,10 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
 
   const {
     callStatus, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
+    isScreenSharing, canFlipCamera, canShareScreen, hasRemoteVideo,
     localMediaStream, remoteMediaStream, reconnectPhase,
     startCall, acceptCall, rejectCall, hangUp, cancelUnavailable,
-    toggleMute, toggleVideo, toggleSpeaker, flipCamera,
+    toggleMute, toggleVideo, toggleSpeaker, flipCamera, toggleScreenShare,
   } = useAudioCall({
     onCallEvent: (event) => {
       /* 1. Mise à jour locale optimiste (si MessagerieCore est monté) */
@@ -309,9 +315,10 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
   return (
     <GlobalCallContext.Provider value={{
       callStatus, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
+      isScreenSharing, canFlipCamera, canShareScreen, hasRemoteVideo,
       localMediaStream, remoteMediaStream, reconnectPhase,
       startCall, acceptCall, rejectCall, hangUp,
-      toggleMute, toggleVideo, toggleSpeaker, flipCamera,
+      toggleMute, toggleVideo, toggleSpeaker, flipCamera, toggleScreenShare,
       msgUnread,
       syncMsgUnread: setMsgUnread,
       registerCallEventHandler,
@@ -333,6 +340,10 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
           localMediaStream={localMediaStream}
           remoteMediaStream={remoteMediaStream}
           reconnectPhase={reconnectPhase}
+          isScreenSharing={isScreenSharing}
+          canFlipCamera={canFlipCamera}
+          canShareScreen={canShareScreen}
+          hasRemoteVideo={hasRemoteVideo}
           onAccept={acceptCall}
           onReject={rejectCall}
           onHangUp={hangUp}
@@ -340,6 +351,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
           onToggleVideo={toggleVideo}
           onToggleSpeaker={toggleSpeaker}
           onFlipCamera={flipCamera}
+          onToggleScreenShare={toggleScreenShare}
         />
       )}
     </GlobalCallContext.Provider>

@@ -35,6 +35,14 @@ interface Props {
   remoteMediaStream: MediaStream | null;
   /** null hors coupure réseau — affiche un petit bandeau non-technique pendant l'appel connecté. */
   reconnectPhase?:   ReconnectPhase | null;
+  isScreenSharing?:  boolean;
+  /** false = un seul périphérique vidéo détecté (enumerateDevices) — ne pas afficher "Retourner". */
+  canFlipCamera?:    boolean;
+  /** false = navigateur sans support getDisplayMedia (mobile, essentiellement). */
+  canShareScreen?:   boolean;
+  /** Le flux distant contient une piste vidéo — vrai pour un appel vidéo normal
+   *  OU un appel audio dont l'autre participant a démarré un partage d'écran. */
+  hasRemoteVideo?:   boolean;
   onAccept:          () => void;
   onReject:          () => void;
   onHangUp:          () => void;
@@ -42,6 +50,7 @@ interface Props {
   onToggleVideo:     () => void;
   onToggleSpeaker:   () => void;
   onFlipCamera:      () => void;
+  onToggleScreenShare?: () => void;
 }
 
 function fmt(sec: number): string {
@@ -60,11 +69,17 @@ const RECONNECT_LABEL: Record<ReconnectPhase, string> = {
 export default function CallOverlay({
   status, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
   localMediaStream, remoteMediaStream, reconnectPhase,
-  onAccept, onReject, onHangUp, onToggleMute, onToggleVideo, onToggleSpeaker, onFlipCamera,
+  isScreenSharing = false, canFlipCamera = true, canShareScreen = false, hasRemoteVideo = false,
+  onAccept, onReject, onHangUp, onToggleMute, onToggleVideo, onToggleSpeaker, onFlipCamera, onToggleScreenShare,
 }: Props) {
   const isVideo    = callInfo.callType === 'video';
   const isImgAva   = callInfo.remoteAvatar?.startsWith('http');
   const isConnected = status === 'connected';
+  /* Plein écran dès qu'il y a quelque chose à montrer côté distant — un
+     appel vidéo normal OU un appel audio dont l'autre participant a
+     démarré un partage d'écran (callInfo.callType reste 'audio' dans ce
+     cas, d'où hasRemoteVideo plutôt que isVideo seul). */
+  const showFullscreenVideo = (isVideo || hasRemoteVideo) && isConnected;
 
   /* Refs pour les éléments <video> */
   const localVideoRef  = useRef<HTMLVideoElement>(null);
@@ -152,11 +167,26 @@ export default function CallOverlay({
             <span className={s.btnLabel}>{isVideoOff ? 'Caméra off' : 'Caméra'}</span>
           </button>
 
-          <button className={`${s.btn} ${s.btnFlip}`} onClick={onFlipCamera} title="Retourner caméra">
-            <div className={s.btnIcon}><i className="fas fa-rotate" /></div>
-            <span className={s.btnLabel}>Retourner</span>
-          </button>
+          {canFlipCamera && (
+            <button className={`${s.btn} ${s.btnFlip}`} onClick={onFlipCamera} title="Retourner caméra">
+              <div className={s.btnIcon}><i className="fas fa-rotate" /></div>
+              <span className={s.btnLabel}>Retourner</span>
+            </button>
+          )}
         </>
+      )}
+
+      {canShareScreen && onToggleScreenShare && (
+        <button
+          className={`${s.btn} ${isScreenSharing ? s.btnScreenShareOn : s.btnScreenShare}`}
+          onClick={onToggleScreenShare}
+          title={isScreenSharing ? "Arrêter le partage d'écran" : "Partager l'écran"}
+        >
+          <div className={s.btnIcon}>
+            <i className={`fas ${isScreenSharing ? 'fa-stop' : 'fa-desktop'}`} />
+          </div>
+          <span className={s.btnLabel}>{isScreenSharing ? 'Arrêter' : 'Partager écran'}</span>
+        </button>
       )}
 
       <button className={`${s.btn} ${s.btnHangup}`} onClick={onHangUp}>
@@ -180,8 +210,9 @@ export default function CallOverlay({
 
   /* ════════════════════════════════════
      MODE VIDÉO CONNECTÉ → plein écran
+     (appel vidéo normal OU appel audio avec partage d'écran distant)
   ════════════════════════════════════ */
-  if (isVideo && isConnected) {
+  if (showFullscreenVideo) {
     return (
       <div className={s.videoOverlay}>
         {/* Flux distant (plein écran) */}
@@ -225,14 +256,31 @@ export default function CallOverlay({
           </button>
         </div>
 
-        {/* Flux local (PiP) — cliquable pour flip caméra */}
-        <div className={s.localVideoPip} onClick={onFlipCamera} title="Retourner caméra">
-          {isVideoOff ? (
-            <div className={s.localVideoOff}><i className="fas fa-video-slash" /></div>
-          ) : (
-            <video ref={localVideoRef} className={s.localVideoEl} autoPlay playsInline muted />
-          )}
-        </div>
+        {/* Indicateur partage d'écran actif (mode plein écran) */}
+        {isScreenSharing && (
+          <div className={`${s.reconnectBanner} ${s.reconnectBannerVideo}`} style={{ background: 'rgba(14,116,144,.35)', color: '#67e8f9', top: reconnectPhase ? 130 : 90 }}>
+            <i className="fas fa-desktop" style={{ fontSize: 11 }} /> Vous partagez votre écran
+          </div>
+        )}
+
+        {/* Flux local (PiP) — caméra uniquement, cliquable pour flip caméra.
+            Masqué pendant un partage d'écran (rien de pertinent à montrer :
+            l'utilisateur voit déjà son propre écran) ou sur un appel audio
+            (pas de caméra locale à prévisualiser). */}
+        {isVideo && !isScreenSharing && (
+          <div
+            className={s.localVideoPip}
+            onClick={canFlipCamera ? onFlipCamera : undefined}
+            title={canFlipCamera ? 'Retourner caméra' : undefined}
+            style={canFlipCamera ? undefined : { cursor: 'default' }}
+          >
+            {isVideoOff ? (
+              <div className={s.localVideoOff}><i className="fas fa-video-slash" /></div>
+            ) : (
+              <video ref={localVideoRef} className={s.localVideoEl} autoPlay playsInline muted />
+            )}
+          </div>
+        )}
 
         {/* Barre de contrôles inférieure */}
         <div className={s.videoControls}>
@@ -302,10 +350,15 @@ export default function CallOverlay({
           </>
         )}
 
-        {/* Appel connecté (audio uniquement ici — vidéo = plein écran) */}
-        {status === 'connected' && !isVideo && (
+        {/* Appel connecté (audio uniquement ici — vidéo/partage distant = plein écran) */}
+        {status === 'connected' && !showFullscreenVideo && (
           <>
             {reconnectBanner}
+            {isScreenSharing && (
+              <div className={s.status} style={{ color: '#67e8f9' }}>
+                <i className="fas fa-desktop" style={{ fontSize: 11 }} /> Partage d'écran en cours
+              </div>
+            )}
             <div className={s.duration}>{fmt(duration)}</div>
             {controls}
           </>

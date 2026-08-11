@@ -20,6 +20,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getActiveSocket }                           from './useSocket';
 import { getIceServers, getFreshIceServers, prefetchIceServers, watchIceConnectivity } from './iceServers';
+import { describeMediaError } from './mediaErrors';
+import { hasMultipleCameras } from './deviceCapabilities';
 import type { GroupCallInvite, GroupCallPeer, GroupCallState } from '../data/messagerieTypes';
 
 // ── Types internes ────────────────────────────────────────────
@@ -73,10 +75,19 @@ export function useGroupCall() {
   const [localStream,  setLocalStream]  = useState<MediaStream | null>(null);
   const [isMuted,      setIsMuted]      = useState(false);
   const [isVideoOff,   setIsVideoOff]   = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [canFlipCamera,   setCanFlipCamera]   = useState(false);
 
   // Refs internes (pas de re-render)
   const callStateRef   = useRef<GroupCallState | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  /** Piste caméra mise de côté pendant un partage d'écran, pour la restaurer à l'arrêt. */
+  const cameraTrackRef = useRef<MediaStreamTrack | null>(null);
+  const screenStreamRef = useRef<MediaStream | null>(null);
+  /** userId → sender vidéo mémorisé — voir le commentaire équivalent dans
+      useAudioCall.ts (getVideoSender) : nécessaire dès qu'un sender peut
+      avoir son .track à null (arrêt de partage sur un pair audio-only). */
+  const videoSendersRef = useRef<Map<string, RTCRtpSender>>(new Map());
   /** userId → RTCPeerConnection */
   const pcMapRef       = useRef<Map<string, RTCPeerConnection>>(new Map());
   /** userId → ICE candidates reçus avant setRemoteDescription */
@@ -95,10 +106,44 @@ export function useGroupCall() {
   /* Préchauffe le cache des serveurs ICE dès le montage. */
   useEffect(() => { prefetchIceServers(); }, []);
 
+  /** Ne jamais supposer plusieurs caméras (partie 7) — recalculé sur 'devicechange'. */
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = () => { hasMultipleCameras().then(v => { if (!cancelled) setCanFlipCamera(v); }); };
+    refresh();
+    navigator.mediaDevices?.addEventListener?.('devicechange', refresh);
+    return () => {
+      cancelled = true;
+      navigator.mediaDevices?.removeEventListener?.('devicechange', refresh);
+    };
+  }, []);
+
+  /** Support navigateur du partage d'écran — absent sur certains mobiles. */
+  const canShareScreen = typeof navigator !== 'undefined'
+    && typeof navigator.mediaDevices?.getDisplayMedia === 'function';
+
   // ── Helpers ───────────────────────────────────────────────────
 
   function emit(event: string, data: object) {
     getActiveSocket()?.emit(event, data);
+  }
+
+  /**
+   * Détecte un périphérique débranché/révoqué EN COURS D'APPEL — `onended`
+   * ne se déclenche que sur une fin INATTENDUE, jamais sur un track.stop()
+   * de notre propre code (voir le commentaire équivalent dans
+   * useAudioCall.ts). Aucune tentative de reconnexion automatique du
+   * périphérique — juste refléter l'état honnêtement.
+   */
+  function attachLocalTrackEndedHandlers(stream: MediaStream | null): void {
+    if (!stream) return;
+    for (const track of stream.getTracks()) {
+      track.onended = () => {
+        console.warn(`[GroupCall] piste locale "${track.kind}" terminée de façon inattendue (périphérique débranché/permission révoquée).`);
+        if (track.kind === 'video') setIsVideoOff(true);
+        if (track.kind === 'audio') setIsMuted(true);
+      };
+    }
   }
 
   const updatePeers = useCallback((fn: (prev: Map<string, GroupCallPeer>) => Map<string, GroupCallPeer>) => {
@@ -115,10 +160,23 @@ export function useGroupCall() {
     if (d) { clearTimeout(d); reconnectDeadlineTimers.current.delete(userId); }
   }
 
+  /**
+   * Retrouve le sender vidéo d'un pair, en le mémorisant — voir le
+   * commentaire de videoSendersRef ci-dessus.
+   */
+  function getVideoSender(userId: string, pc: RTCPeerConnection): RTCRtpSender | null {
+    const cached = videoSendersRef.current.get(userId);
+    if (cached) return cached;
+    const sender = pc.getSenders().find(s => s.track?.kind === 'video') ?? null;
+    if (sender) videoSendersRef.current.set(userId, sender);
+    return sender;
+  }
+
   /** Ferme et supprime le PeerConnection d'un pair. */
   const closePeer = useCallback((userId: string) => {
     clearPeerReconnectTimers(userId);
     iceRestartAttemptsRef.current.delete(userId);
+    videoSendersRef.current.delete(userId);
     pcMapRef.current.get(userId)?.close();
     pcMapRef.current.delete(userId);
     icePendingRef.current.delete(userId);
@@ -138,11 +196,19 @@ export function useGroupCall() {
   /** Libère toutes les ressources (local stream + toutes les PCs). */
   const cleanupAll = useCallback(() => {
     for (const [uid] of pcMapRef.current) closePeer(uid);
-    localStreamRef.current?.getTracks().forEach(t => t.stop());
+    localStreamRef.current?.getTracks().forEach(t => { t.onended = null; t.stop(); });
     localStreamRef.current = null;
+    /* Libère le partage d'écran s'il était en cours — sans ça, l'onglet/la
+       fenêtre reste "en cours de partage" côté navigateur après la fin
+       de l'appel de groupe. */
+    screenStreamRef.current?.getTracks().forEach(t => { t.onended = null; t.stop(); });
+    screenStreamRef.current = null;
+    cameraTrackRef.current = null;
+    videoSendersRef.current.clear(); // déjà vidée pair par pair via closePeer() ci-dessus — filet de sécurité
     setLocalStream(null);
     setIsMuted(false);
     setIsVideoOff(false);
+    setIsScreenSharing(false);
     callStateRef.current = null;
     peersRef.current = new Map();
     setPeers(new Map());
@@ -567,11 +633,12 @@ export function useGroupCall() {
         audio: true,
         video: callType === 'video' ? { width: { ideal: 1280 }, height: { ideal: 720 } } : false,
       });
+      attachLocalTrackEndedHandlers(stream);
       localStreamRef.current = stream;
       setLocalStream(stream);
       emit('group_call:initiate', { groupId, callType });
-    } catch {
-      alert(callType === 'video' ? 'Accès à la caméra ou au micro refusé.' : 'Accès au micro refusé.');
+    } catch (err) {
+      alert(describeMediaError(err, callType === 'video' ? 'la caméra ou le microphone' : 'le microphone').message);
     }
   }, []);
 
@@ -583,11 +650,12 @@ export function useGroupCall() {
         audio: true,
         video: invite.callType === 'video' ? { width: { ideal: 1280 }, height: { ideal: 720 } } : false,
       });
+      attachLocalTrackEndedHandlers(stream);
       localStreamRef.current = stream;
       setLocalStream(stream);
       emit('group_call:join', { groupId: invite.groupId, callId: invite.callId });
-    } catch {
-      alert('Accès au micro refusé.');
+    } catch (err) {
+      alert(describeMediaError(err, invite.callType === 'video' ? 'la caméra ou le microphone' : 'le microphone').message);
     }
   }, []);
 
@@ -628,7 +696,10 @@ export function useGroupCall() {
    * 1:1 où il n'y a qu'une seule PeerConnection à mettre à jour.
    */
   const flipCamera = useCallback(async () => {
-    if (!localStreamRef.current) return;
+    /* Sans effet pendant un partage d'écran : chaque sender vidéo du mesh
+       porte alors la piste écran, pas la caméra — la remplacer casserait
+       le partage sans jamais mettre à jour isScreenSharing. */
+    if (!localStreamRef.current || screenStreamRef.current) return;
     facingModeRef.current = facingModeRef.current === 'user' ? 'environment' : 'user';
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({
@@ -638,8 +709,8 @@ export function useGroupCall() {
       const newTrack = newStream.getVideoTracks()[0];
       if (!newTrack) return;
 
-      for (const pc of pcMapRef.current.values()) {
-        const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+      for (const [userId, pc] of pcMapRef.current.entries()) {
+        const sender = getVideoSender(userId, pc);
         if (sender) {
           try { await sender.replaceTrack(newTrack); } catch { /* best-effort */ }
         }
@@ -648,8 +719,76 @@ export function useGroupCall() {
       localStreamRef.current.getVideoTracks().forEach(t => { t.stop(); localStreamRef.current?.removeTrack(t); });
       localStreamRef.current.addTrack(newTrack);
       setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
-    } catch { /* silencieux si l'appareil n'a pas de caméra arrière */ }
+    } catch (err) {
+      facingModeRef.current = facingModeRef.current === 'user' ? 'environment' : 'user';
+      console.warn('[GroupCall] flipCamera a échoué :', describeMediaError(err, 'la caméra arrière').message, err);
+    }
   }, []);
+
+  /** Arrête le partage d'écran et restaure la caméra sur chaque pair du mesh. */
+  const stopScreenShare = useCallback(async () => {
+    if (!screenStreamRef.current) return;
+    screenStreamRef.current.getTracks().forEach(t => { t.onended = null; t.stop(); });
+    screenStreamRef.current = null;
+    setIsScreenSharing(false);
+
+    for (const [userId, pc] of pcMapRef.current.entries()) {
+      const sender = getVideoSender(userId, pc);
+      if (sender) {
+        try { await sender.replaceTrack(cameraTrackRef.current); } catch { /* best-effort pour ce pair */ }
+      }
+    }
+    cameraTrackRef.current = null;
+  }, []);
+
+  /**
+   * Démarre le partage d'écran — remplace la piste vidéo de CHAQUE
+   * PeerConnection du mesh (jamais de PeerConnection supplémentaire). Pour
+   * un pair dont l'appel était audio uniquement (aucun sender vidéo
+   * existant), ajoute une piste et renégocie avec CE pair précisément —
+   * onOffer côté groupe réutilise déjà la pc existante (pas de recréation),
+   * donc cette renégociation est sûre.
+   */
+  const startScreenShare = useCallback(async () => {
+    const cs = callStateRef.current;
+    if (!cs || screenStreamRef.current) return;
+    try {
+      const display = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      const screenTrack = display.getVideoTracks()[0];
+      if (!screenTrack) return;
+
+      for (const [userId, pc] of pcMapRef.current.entries()) {
+        const sender = getVideoSender(userId, pc);
+        if (sender) {
+          if (!cameraTrackRef.current) cameraTrackRef.current = sender.track;
+          try { await sender.replaceTrack(screenTrack); } catch { /* best-effort pour ce pair */ }
+        } else {
+          try {
+            const newSender = pc.addTrack(screenTrack, display);
+            videoSendersRef.current.set(userId, newSender);
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            emit('group_call:offer', { groupId: cs.groupId, callId: cs.callId, targetUserId: userId, sdp: offer });
+          } catch { /* best-effort pour ce pair — les autres continuent */ }
+        }
+      }
+
+      screenStreamRef.current = display;
+      /* Arrêt depuis le contrôle natif du navigateur — un seul listener sur
+         la piste suffit pour arrêter le partage envoyé à TOUS les pairs. */
+      screenTrack.onended = () => { void stopScreenShare(); };
+      setIsScreenSharing(true);
+    } catch (err) {
+      const { message, reason } = describeMediaError(err, "le partage d'écran");
+      if (reason !== 'aborted') alert(message);
+    }
+  }, [stopScreenShare]);
+
+  /** Bascule marche/arrêt — pratique pour un bouton unique dans l'UI. */
+  const toggleScreenShare = useCallback(async () => {
+    if (screenStreamRef.current) await stopScreenShare();
+    else await startScreenShare();
+  }, [startScreenShare, stopScreenShare]);
 
   /* Best-effort : quitte proprement l'appel si l'utilisateur ferme
    * l'onglet/le navigateur — libère micro/caméra et prévient les autres
@@ -675,6 +814,9 @@ export function useGroupCall() {
     localStream,
     isMuted,
     isVideoOff,
+    isScreenSharing,
+    canFlipCamera,  // false = un seul périphérique vidéo détecté
+    canShareScreen, // false = navigateur sans support getDisplayMedia
     initiateCall,
     joinCall,
     declineCall,
@@ -682,6 +824,7 @@ export function useGroupCall() {
     toggleMute,
     toggleVideo,
     flipCamera,
+    toggleScreenShare,
   };
 }
 
