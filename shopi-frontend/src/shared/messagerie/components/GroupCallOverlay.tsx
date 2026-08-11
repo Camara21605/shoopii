@@ -11,7 +11,7 @@
  * LOCAL : PiP fixé en bas-droite, toujours visible.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { GroupCallPeer, GroupCallState } from '../data/messagerieTypes';
 
 interface Props {
@@ -36,12 +36,25 @@ interface Props {
 
 function PeerTile({ peer }: { peer: GroupCallPeer }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  /* Autoplay non-mute peut être bloqué par le navigateur (fréquent hors
+     interaction utilisateur directe, ex. mobile) — sans ce contrôle, un
+     pair restait silencieux/figé sans aucune explication (partie 8). */
+  const [needsUnlock, setNeedsUnlock] = useState(false);
 
   useEffect(() => {
     if (videoRef.current && peer.stream) {
       videoRef.current.srcObject = peer.stream;
+      videoRef.current.play()
+        .then(() => setNeedsUnlock(false))
+        .catch(() => setNeedsUnlock(true));
     }
   }, [peer.stream]);
+
+  const enableTile = () => {
+    videoRef.current?.play()
+      .then(() => setNeedsUnlock(false))
+      .catch(() => { /* toujours bloqué — le bouton reste affiché */ });
+  };
 
   const initials = peer.displayName.slice(0, 2).toUpperCase();
 
@@ -66,11 +79,29 @@ function PeerTile({ peer }: { peer: GroupCallPeer }) {
           {initials}
         </div>
       ) : peer.stream ? (
-        <video
-          ref={videoRef}
-          autoPlay playsInline
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        />
+        <>
+          <video
+            ref={videoRef}
+            autoPlay playsInline
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+          {needsUnlock && (
+            <button
+              onClick={enableTile}
+              aria-label={`Activer le son de ${peer.displayName}`}
+              style={{
+                position: 'absolute', inset: 0, margin: 'auto', width: 'fit-content', height: 'fit-content',
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '8px 14px', background: '#0B1F3A', color: '#fff',
+                border: '1px solid rgba(255,255,255,.15)', borderRadius: 999,
+                cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                boxShadow: '0 4px 14px rgba(0,0,0,.35)',
+              }}
+            >
+              <i className="fas fa-volume-xmark" aria-hidden="true" /> Activer le son
+            </button>
+          )}
+        </>
       ) : (
         /* Pas encore de stream — connexion en cours */
         <div style={{ textAlign: 'center', color: 'rgba(255,255,255,.4)' }}>
@@ -200,8 +231,10 @@ export default function GroupCallOverlay({
 
         {/* Raccrocher (barre supérieure — accès rapide) */}
         <button
+          type="button"
           onClick={onLeave}
           title="Raccrocher"
+          aria-label="Raccrocher"
           style={{
             width: 40, height: 40, borderRadius: '50%',
             background: '#ef4444', border: 'none', cursor: 'pointer',
@@ -285,6 +318,10 @@ export default function GroupCallOverlay({
         background: 'rgba(0,0,0,.45)',
         backdropFilter: 'blur(10px)',
         flexShrink: 0,
+        /* partie 8 : jusqu'à 5 contrôles possibles (partage d'écran ajouté
+           partie 7) — wrap plutôt que déborder sur un écran étroit. */
+        flexWrap: 'wrap',
+        rowGap: 10,
       }}>
 
         {/* Micro */}
@@ -336,7 +373,9 @@ export default function GroupCallOverlay({
 
         {/* Raccrocher */}
         <button
+          type="button"
           onClick={onLeave}
+          aria-label="Quitter l'appel de groupe"
           style={{
             width: 64, height: 64, borderRadius: '50%',
             background: '#ef4444', border: 'none', cursor: 'pointer',
@@ -346,7 +385,7 @@ export default function GroupCallOverlay({
             boxShadow: '0 4px 20px rgba(239,68,68,.4)',
           }}
         >
-          <i className="fas fa-phone-slash" style={{ fontSize: 20 }} />
+          <i className="fas fa-phone-slash" style={{ fontSize: 20 }} aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -365,9 +404,18 @@ interface CtrlBtnProps {
 }
 
 function CtrlBtn({ icon, label, active, activeColor, activeBorder, onClick }: CtrlBtnProps) {
+  /* Styles 100% inline dans ce fichier (pas de CSS module) — :focus-visible
+     n'est pas exprimable en style inline, d'où cet état local pour piloter
+     l'anneau de focus clavier (partie 8). */
+  const [isFocused, setIsFocused] = useState(false);
   return (
     <button
+      type="button"
       onClick={onClick}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
+      aria-pressed={active}
+      aria-label={label}
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
         background: active ? activeColor : 'rgba(255,255,255,.1)',
@@ -376,9 +424,11 @@ function CtrlBtn({ icon, label, active, activeColor, activeBorder, onClick }: Ct
         cursor: 'pointer', color: active ? '#f87171' : '#fff',
         minWidth: 64,
         transition: 'background .2s, border-color .2s',
+        outline: isFocused ? '2px solid #34d399' : 'none',
+        outlineOffset: 2,
       }}
     >
-      <i className={`fas ${icon}`} style={{ fontSize: 18 }} />
+      <i className={`fas ${icon}`} style={{ fontSize: 18 }} aria-hidden="true" />
       <span style={{ fontSize: 10, fontWeight: 500 }}>{label}</span>
     </button>
   );

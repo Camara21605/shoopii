@@ -20,6 +20,7 @@ import { useGroupCall }        from '../messagerie/hooks/useGroupCall';
 import type { UseGroupCallReturn } from '../messagerie/hooks/useGroupCall';
 import GroupCallIncoming       from '../messagerie/components/GroupCallIncoming';
 import GroupCallOverlay        from '../messagerie/components/GroupCallOverlay';
+import { useToast }            from './ToastContext';
 
 // ── Contexte ──────────────────────────────────────────────────
 
@@ -28,7 +29,13 @@ const GroupCallContext = createContext<UseGroupCallReturn | null>(null);
 // ── Provider ──────────────────────────────────────────────────
 
 export function GroupCallProvider({ children }: { children: React.ReactNode }) {
-  const groupCall = useGroupCall();
+  const { pop: showToast } = useToast();
+  const groupCall = useGroupCall({
+    /* Le hook ne sait pas afficher de toast (pas de contexte React) — il
+       délègue au système UI Shopi existant (partie 8, remplace les alert()
+       précédents). */
+    onError: (error) => showToast(error.message, error.severity),
+  });
 
   return (
     <GroupCallContext.Provider value={groupCall}>

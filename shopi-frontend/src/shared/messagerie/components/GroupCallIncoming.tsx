@@ -93,7 +93,9 @@ export default function GroupCallIncoming({ invite, onAccept, onDecline }: Props
         <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
           {/* Refuser */}
           <button
+            type="button"
             onClick={onDecline}
+            aria-label="Refuser l'appel de groupe"
             style={{
               flex: 1, maxWidth: 130,
               padding: '14px 0',
@@ -107,13 +109,15 @@ export default function GroupCallIncoming({ invite, onAccept, onDecline }: Props
             onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,.35)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239,68,68,.2)')}
           >
-            <i className="fas fa-phone-slash" />
+            <i className="fas fa-phone-slash" aria-hidden="true" />
             Refuser
           </button>
 
           {/* Rejoindre */}
           <button
+            type="button"
             onClick={onAccept}
+            aria-label="Rejoindre l'appel de groupe"
             style={{
               flex: 1, maxWidth: 130,
               padding: '14px 0',
@@ -128,7 +132,7 @@ export default function GroupCallIncoming({ invite, onAccept, onDecline }: Props
             onMouseEnter={e => (e.currentTarget.style.opacity = '0.88')}
             onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
           >
-            <i className={`fas ${isVideo ? 'fa-video' : 'fa-phone'}`} />
+            <i className={`fas ${isVideo ? 'fa-video' : 'fa-phone'}`} aria-hidden="true" />
             Rejoindre
           </button>
         </div>

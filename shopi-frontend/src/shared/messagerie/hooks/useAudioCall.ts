@@ -25,16 +25,20 @@ import { getIceServers, getFreshIceServers, prefetchIceServers, watchIceConnecti
 import { apiFetch } from '../../services/apiFetch';
 import { describeMediaError } from './mediaErrors';
 import { hasMultipleCameras } from './deviceCapabilities';
+import { callError } from './callErrors';
+import type { CallErrorInfo } from './callErrors';
 
 // ── Types ─────────────────────────────────────────────────────
 
 export type CallStatus =
-  | 'idle'        // aucun appel
-  | 'calling'     // appel sortant en attente de réponse
-  | 'ringing'     // appel entrant non décroché
-  | 'connecting'  // décroché, négociation WebRTC (ICE) en cours
-  | 'connected'   // appel en cours
-  | 'ended';      // appel terminé (transition rapide → idle)
+  | 'idle'         // aucun appel
+  | 'calling'      // appel sortant en attente de réponse
+  | 'ringing'      // appel entrant non décroché
+  | 'connecting'   // décroché, négociation WebRTC (ICE) en cours
+  | 'connected'    // appel en cours, connexion stable
+  | 'reconnecting' // appel en cours mais connexion perturbée — voir reconnectPhase pour le détail (instable/reprise active)
+  | 'failed'       // reprise réseau abandonnée — transition brève avant 'ended' (partie 8)
+  | 'ended';       // appel terminé (transition rapide → idle)
 
 export interface CallInfo {
   conversationId: string;
@@ -76,6 +80,13 @@ interface UseAudioCallProps {
    * Permet à MessagerieCore d'enregistrer l'événement dans la conversation.
    */
   onCallEvent?: (event: CallEventPayload) => void;
+  /**
+   * Erreur/évènement d'appel à afficher à l'utilisateur (partie 8) — le hook
+   * ne sait pas afficher de toast (pas de contexte React ici), il délègue à
+   * GlobalCallContext.tsx qui, lui, a accès à useToast() (système UI Shopi
+   * existant, jamais un nouvel alert()).
+   */
+  onError?: (error: CallErrorInfo) => void;
 }
 
 /* Bornes de la stratégie de reprise réseau — voir attemptIceRestart/
@@ -91,6 +102,31 @@ const RECONNECT_TOTAL_TIMEOUT_MS = 20_000;       // durée maximale totale d'une
 export function useAudioCall(props?: UseAudioCallProps) {
   const onCallEventRef = useRef(props?.onCallEvent);
   useEffect(() => { onCallEventRef.current = props?.onCallEvent; });
+  const onErrorRef = useRef(props?.onError);
+  useEffect(() => { onErrorRef.current = props?.onError; });
+  /**
+   * Raccourci — reportCallError(callError('mic-permission-denied')) etc.
+   * useCallback([]) plutôt qu'une fonction simple : ne lit que la ref
+   * onErrorRef (toujours stable), donc peut être listée sans risque dans
+   * les tableaux de dépendances des autres useCallback qui l'utilisent
+   * (satisfait exhaustive-deps sans provoquer de ré-créations inutiles).
+   */
+  const reportCallError = useCallback((error: CallErrorInfo): void => {
+    onErrorRef.current?.(error);
+  }, []);
+
+  /** Traduit une erreur getUserMedia (DOMException) vers la taxonomie centralisée (partie 8). */
+  const reportMediaError = useCallback((err: unknown, isVideo: boolean): void => {
+    const device = isVideo ? 'la caméra ou le microphone' : 'le microphone';
+    const { reason, message } = describeMediaError(err, device);
+    switch (reason) {
+      case 'not-found':    reportCallError(callError(isVideo ? 'no-camera' : 'no-microphone')); break;
+      case 'not-allowed':  reportCallError(callError(isVideo ? 'camera-permission-denied' : 'mic-permission-denied')); break;
+      case 'not-readable': reportCallError(callError('device-busy')); break;
+      case 'security':     reportCallError(callError('permission-blocked')); break;
+      default:             reportCallError(callError('unknown', message));
+    }
+  }, [reportCallError]);
 
   /* Préchauffe le cache des serveurs ICE dès le montage — évite d'attendre
      l'aller-retour réseau au moment précis où l'appel démarre. */
@@ -123,6 +159,8 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const [isVideoOff,        setIsVideoOff]        = useState(false);
   const [isSpeakerOn,       setIsSpeakerOn]       = useState(true);
   const [isScreenSharing,   setIsScreenSharing]   = useState(false);
+  /** true = lecture audio distante bloquée par l'autoplay du navigateur — CallOverlay affiche un bouton "Activer le son" (partie 8). */
+  const [needsAudioUnlock,  setNeedsAudioUnlock]   = useState(false);
   const [duration,          setDuration]          = useState(0);
   /** Streams exposés à CallOverlay pour les éléments <video> */
   const [localMediaStream,  setLocalMediaStream]  = useState<MediaStream | null>(null);
@@ -313,6 +351,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     setRemoteMediaStream(null);
     setIsVideoOff(false);
     setIsScreenSharing(false);
+    setNeedsAudioUnlock(false);
     facingMode.current = 'user';
     callInfoRef.current = null;
   }, []);
@@ -385,30 +424,29 @@ export function useAudioCall(props?: UseAudioCallProps) {
   /**
    * Tente de lancer la lecture du flux distant — si bloquée par la
    * politique autoplay du navigateur (fréquent sur mobile hors interaction
-   * utilisateur directe), affiche un petit bouton de secours plutôt que de
-   * laisser l'appel silencieux sans aucune explication.
+   * utilisateur directe), signale needsAudioUnlock=true : CallOverlay
+   * affiche un vrai bouton du design system Shopi (partie 8 — avant : bouton
+   * DOM brut créé à la main, hors système UI, sans aria-label).
    */
   const playRemoteAudioWithFallback = useCallback(async (audioEl: HTMLAudioElement) => {
     try {
       await audioEl.play();
+      setNeedsAudioUnlock(false);
     } catch {
-      console.warn('[Call] Lecture audio distante bloquée par le navigateur (autoplay) — bouton de secours affiché.');
-      const id = 'shopi-call-enable-audio-btn';
-      if (document.getElementById(id)) return;
-      const btn = document.createElement('button');
-      btn.id = id;
-      btn.textContent = 'Activer le son';
-      Object.assign(btn.style, {
-        position: 'fixed', right: '16px', bottom: '16px', zIndex: '10050',
-        padding: '10px 16px', background: '#0B1F3A', color: '#fff',
-        border: 'none', borderRadius: '8px', cursor: 'pointer',
-        fontSize: '14px', fontWeight: '600', boxShadow: '0 4px 12px rgba(0,0,0,.25)',
-      });
-      btn.onclick = async () => {
-        try { await audioEl.play(); } catch { /* toujours bloqué — laisse le bouton visible */ }
-        btn.remove();
-      };
-      document.body.appendChild(btn);
+      console.warn('[Call] Lecture audio distante bloquée par le navigateur (autoplay) — action utilisateur requise.');
+      setNeedsAudioUnlock(true);
+    }
+  }, []);
+
+  /** Relance la lecture suite au clic utilisateur sur "Activer le son" (CallOverlay). */
+  const enableAudio = useCallback(async () => {
+    if (!remoteAudio.current) return;
+    try {
+      await remoteAudio.current.play();
+      setNeedsAudioUnlock(false);
+    } catch {
+      /* Toujours bloqué (rare — le clic lui-même est normalement suffisant
+         pour lever la restriction autoplay) — le bouton reste affiché. */
     }
   }, []);
 
@@ -424,6 +462,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const giveUpReconnecting = useCallback(() => {
     clearReconnectTimers();
     setReconnectPhase('failed');
+    setStatus('failed');
     setTimeout(() => {
       setReconnectPhase(null);
       endCall(true, wasConnected.current ? 'completed' : 'missed');
@@ -515,6 +554,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
     if (reconnectPhaseRef.current === null) {
       reconnectPhaseRef.current = 'unstable';
       setReconnectPhase('unstable');
+      setStatus('reconnecting');
       reconnectDeadlineTimer.current = setTimeout(giveUpReconnecting, RECONNECT_TOTAL_TIMEOUT_MS);
     }
     attemptIceRestart(pc);
@@ -646,7 +686,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
       console.debug('[Call] getUserMedia OK');
     } catch (err) {
       console.error('[Call] getUserMedia a échoué :', err);
-      alert(describeMediaError(err, isVideo ? 'la caméra ou le microphone' : 'le microphone').message);
+      reportMediaError(err, isVideo);
       return;
     }
 
@@ -664,8 +704,11 @@ export function useAudioCall(props?: UseAudioCallProps) {
     });
 
     /* Timeout 30s sans réponse → appel manqué */
-    timeoutRef.current = setTimeout(() => endCall(true, 'missed'), 30_000);
-  }, [status, endCall]);
+    timeoutRef.current = setTimeout(() => {
+      reportCallError(callError('call-expired'));
+      endCall(true, 'missed');
+    }, 30_000);
+  }, [status, endCall, reportCallError, reportMediaError]);
 
   /** Accepte un appel entrant. */
   const acceptCall = useCallback(async () => {
@@ -685,12 +728,12 @@ export function useAudioCall(props?: UseAudioCallProps) {
         } catch (fallbackErr) {
           /* Avant : rejectCall() silencieux — l'appelé voyait juste la carte
              "Appel entrant" disparaître sans comprendre pourquoi. */
-          alert(describeMediaError(fallbackErr, 'le microphone').message);
+          reportMediaError(fallbackErr, false);
           rejectCall();
           return;
         }
       } else {
-        alert(describeMediaError(err, isVideo ? 'la caméra ou le microphone' : 'le microphone').message);
+        reportMediaError(err, isVideo);
         rejectCall();
         return;
       }
@@ -714,11 +757,11 @@ export function useAudioCall(props?: UseAudioCallProps) {
        dans onconnectionstatechange) annule ce timer si tout se passe bien. */
     timeoutRef.current = setTimeout(() => {
       if (!wasConnected.current) {
-        alert('La connexion a échoué. Vérifiez votre connexion internet et réessayez.');
+        reportCallError(callError('webrtc-error'));
         endCall(true, 'missed');
       }
     }, 20_000);
-  }, [endCall]);
+  }, [endCall, reportCallError, reportMediaError]);
 
   /** Refuse un appel entrant. */
   const rejectCall = useCallback(() => {
@@ -798,10 +841,13 @@ export function useAudioCall(props?: UseAudioCallProps) {
       /* Reviens à l'orientation précédente — la bascule a échoué, pas la peine
          de laisser facingMode désynchronisé du flux réellement actif. */
       facingMode.current = facingMode.current === 'user' ? 'environment' : 'user';
-      const { message } = describeMediaError(err, 'la caméra arrière');
+      const { reason, message } = describeMediaError(err, 'la caméra arrière');
       console.warn('[Call] flipCamera a échoué :', message, err);
+      reportCallError(reason === 'not-allowed' ? callError('camera-permission-denied')
+        : reason === 'not-readable' ? callError('device-busy')
+        : callError('unknown', message));
     }
-  }, []);
+  }, [reportCallError]);
 
   /** Arrête le partage d'écran et restaure la caméra (ou une piste vide si l'appel était audio-only). */
   const stopScreenShare = useCallback(async () => {
@@ -867,13 +913,13 @@ export function useAudioCall(props?: UseAudioCallProps) {
 
       setIsScreenSharing(true);
     } catch (err) {
-      const { message } = describeMediaError(err, "le partage d'écran");
-      if ((err as { name?: string })?.name !== 'AbortError') {
-        // AbortError = l'utilisateur a fermé la boîte de sélection — pas une erreur à signaler.
-        alert(message);
+      const { reason, message } = describeMediaError(err, "le partage d'écran");
+      if (reason !== 'aborted') {
+        // aborted = l'utilisateur a fermé la boîte de sélection — pas une erreur à signaler.
+        reportCallError(callError('unknown', message));
       }
     }
-  }, [stopScreenShare]);
+  }, [stopScreenShare, reportCallError]);
 
   /** Bascule marche/arrêt — pratique pour un bouton unique dans l'UI. */
   const toggleScreenShare = useCallback(async () => {
@@ -940,7 +986,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
        annule ce timer dès que la connexion aboutit réellement. */
     timeoutRef.current = setTimeout(() => {
       if (!wasConnected.current) {
-        alert('La connexion a échoué. Vérifiez votre connexion internet et réessayez.');
+        reportCallError(callError('webrtc-error'));
         endCall(true, 'missed');
       }
     }, 20_000);
@@ -965,12 +1011,13 @@ export function useAudioCall(props?: UseAudioCallProps) {
       console.error('[Call] Échec création de l\'offer WebRTC :', err);
       endCall(true, 'missed');
     }
-  }, [createPeerConnection, attachLocalTracks, endCall]);
+  }, [createPeerConnection, attachLocalTracks, endCall, reportCallError]);
 
   /* Appelé a refusé — l'appelant reçoit cet événement et enregistre 'rejected' */
   const onCallRejected = useCallback(() => {
+    reportCallError(callError('call-rejected'));
     endCall(false, 'rejected');
-  }, [endCall]);
+  }, [endCall, reportCallError]);
 
   /* L'autre a raccroché — si connecté c'est 'completed', sinon 'missed' */
   const onCallEnded = useCallback(() => {
@@ -1041,8 +1088,9 @@ export function useAudioCall(props?: UseAudioCallProps) {
 
   /* Occupé — l'appelant enregistre 'busy' */
   const onCallBusy = useCallback(() => {
+    reportCallError(callError('user-busy'));
     endCall(false, 'busy');
-  }, [endCall]);
+  }, [endCall, reportCallError]);
 
   /**
    * Le socket /messaging s'est (re)connecté — si un appel était en cours,
@@ -1179,6 +1227,8 @@ export function useAudioCall(props?: UseAudioCallProps) {
     isScreenSharing,
     canFlipCamera,   // false = un seul périphérique vidéo détecté, ne pas afficher le bouton "retourner"
     canShareScreen,  // false = navigateur sans support getDisplayMedia (mobile, essentiellement)
+    needsAudioUnlock, // true = autoplay bloqué, afficher le bouton "Activer le son"
+    enableAudio,
     localMediaStream,  // pour l'élément <video> local dans CallOverlay
     remoteMediaStream, // pour l'élément <video> distant dans CallOverlay
     /* Reflète le contenu RÉEL du flux distant, pas callInfo.callType figé —

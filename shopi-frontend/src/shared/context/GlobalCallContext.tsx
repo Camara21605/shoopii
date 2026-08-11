@@ -56,6 +56,7 @@ export interface GlobalCallContextValue {
   canFlipCamera:     boolean;
   canShareScreen:    boolean;
   hasRemoteVideo:    boolean;
+  needsAudioUnlock:  boolean;
 
   startCall:         (info: Omit<CallInfo, 'direction'>) => Promise<void>;
   acceptCall:        () => Promise<void>;
@@ -66,6 +67,7 @@ export interface GlobalCallContextValue {
   toggleSpeaker:     () => void;
   flipCamera:        () => Promise<void>;
   toggleScreenShare: () => Promise<void>;
+  enableAudio:       () => Promise<void>;
 
   /** Nombre total de messages non lus — mis à jour en temps réel via socket */
   msgUnread: number;
@@ -148,6 +150,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
   const {
     callStatus, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
     isScreenSharing, canFlipCamera, canShareScreen, hasRemoteVideo,
+    needsAudioUnlock, enableAudio,
     localMediaStream, remoteMediaStream, reconnectPhase,
     startCall, acceptCall, rejectCall, hangUp, cancelUnavailable,
     toggleMute, toggleVideo, toggleSpeaker, flipCamera, toggleScreenShare,
@@ -158,6 +161,10 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
       /* 2. Persistance REST — toujours, quelle que soit la page courante */
       void persistCallEvent(event);
     },
+    /* Le hook ne sait pas afficher de toast (pas de contexte React) — il
+       délègue au système UI Shopi existant (partie 8, remplace les alert()
+       précédents). */
+    onError: (error) => showToast(error.message, error.severity),
   });
 
   // ── Initialisation du socket messaging ──────────────────────
@@ -316,6 +323,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
     <GlobalCallContext.Provider value={{
       callStatus, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
       isScreenSharing, canFlipCamera, canShareScreen, hasRemoteVideo,
+      needsAudioUnlock, enableAudio,
       localMediaStream, remoteMediaStream, reconnectPhase,
       startCall, acceptCall, rejectCall, hangUp,
       toggleMute, toggleVideo, toggleSpeaker, flipCamera, toggleScreenShare,
@@ -344,6 +352,8 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
           canFlipCamera={canFlipCamera}
           canShareScreen={canShareScreen}
           hasRemoteVideo={hasRemoteVideo}
+          needsAudioUnlock={needsAudioUnlock}
+          onEnableAudio={enableAudio}
           onAccept={acceptCall}
           onReject={rejectCall}
           onHangUp={hangUp}

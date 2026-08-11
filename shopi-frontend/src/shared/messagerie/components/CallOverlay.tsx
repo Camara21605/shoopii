@@ -43,6 +43,8 @@ interface Props {
   /** Le flux distant contient une piste vidéo — vrai pour un appel vidéo normal
    *  OU un appel audio dont l'autre participant a démarré un partage d'écran. */
   hasRemoteVideo?:   boolean;
+  /** true = lecture audio distante bloquée par l'autoplay du navigateur. */
+  needsAudioUnlock?: boolean;
   onAccept:          () => void;
   onReject:          () => void;
   onHangUp:          () => void;
@@ -51,6 +53,7 @@ interface Props {
   onToggleSpeaker:   () => void;
   onFlipCamera:      () => void;
   onToggleScreenShare?: () => void;
+  onEnableAudio?:       () => void;
 }
 
 function fmt(sec: number): string {
@@ -70,11 +73,17 @@ export default function CallOverlay({
   status, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
   localMediaStream, remoteMediaStream, reconnectPhase,
   isScreenSharing = false, canFlipCamera = true, canShareScreen = false, hasRemoteVideo = false,
+  needsAudioUnlock = false,
   onAccept, onReject, onHangUp, onToggleMute, onToggleVideo, onToggleSpeaker, onFlipCamera, onToggleScreenShare,
+  onEnableAudio,
 }: Props) {
   const isVideo    = callInfo.callType === 'video';
   const isImgAva   = callInfo.remoteAvatar?.startsWith('http');
-  const isConnected = status === 'connected';
+  /* 'reconnecting' reste un appel EN COURS (juste perturbé) — ne jamais
+     quitter le mode plein écran vidéo pour une coupure réseau transitoire,
+     sinon l'utilisateur perd sa vue vidéo à chaque micro-coupure (partie 8,
+     harmonisation de la machine à états introduite partie 5). */
+  const isConnected = status === 'connected' || status === 'reconnecting';
   /* Plein écran dès qu'il y a quelque chose à montrer côté distant — un
      appel vidéo normal OU un appel audio dont l'autre participant a
      démarré un partage d'écran (callInfo.callType reste 'audio' dans ce
@@ -146,11 +155,14 @@ export default function CallOverlay({
   const controls = (
     <div className={`${s.actions} ${isVideo ? s.actionsVideo : ''}`}>
       <button
+        type="button"
         className={`${s.btn} ${isMuted ? s.btnMuteOn : s.btnMute}`}
         onClick={onToggleMute}
+        aria-pressed={isMuted}
+        aria-label={isMuted ? 'Réactiver le micro' : 'Couper le micro'}
       >
         <div className={s.btnIcon}>
-          <i className={`fas ${isMuted ? 'fa-microphone-slash' : 'fa-microphone'}`} />
+          <i className={`fas ${isMuted ? 'fa-microphone-slash' : 'fa-microphone'}`} aria-hidden="true" />
         </div>
         <span className={s.btnLabel}>{isMuted ? 'Muet' : 'Micro'}</span>
       </button>
@@ -158,18 +170,21 @@ export default function CallOverlay({
       {isVideo && (
         <>
           <button
+            type="button"
             className={`${s.btn} ${isVideoOff ? s.btnVideoOff : s.btnVideo}`}
             onClick={onToggleVideo}
+            aria-pressed={isVideoOff}
+            aria-label={isVideoOff ? 'Réactiver la caméra' : 'Couper la caméra'}
           >
             <div className={s.btnIcon}>
-              <i className={`fas ${isVideoOff ? 'fa-video-slash' : 'fa-video'}`} />
+              <i className={`fas ${isVideoOff ? 'fa-video-slash' : 'fa-video'}`} aria-hidden="true" />
             </div>
             <span className={s.btnLabel}>{isVideoOff ? 'Caméra off' : 'Caméra'}</span>
           </button>
 
           {canFlipCamera && (
-            <button className={`${s.btn} ${s.btnFlip}`} onClick={onFlipCamera} title="Retourner caméra">
-              <div className={s.btnIcon}><i className="fas fa-rotate" /></div>
+            <button type="button" className={`${s.btn} ${s.btnFlip}`} onClick={onFlipCamera} title="Retourner caméra" aria-label="Retourner la caméra">
+              <div className={s.btnIcon}><i className="fas fa-rotate" aria-hidden="true" /></div>
               <span className={s.btnLabel}>Retourner</span>
             </button>
           )}
@@ -178,29 +193,35 @@ export default function CallOverlay({
 
       {canShareScreen && onToggleScreenShare && (
         <button
+          type="button"
           className={`${s.btn} ${isScreenSharing ? s.btnScreenShareOn : s.btnScreenShare}`}
           onClick={onToggleScreenShare}
           title={isScreenSharing ? "Arrêter le partage d'écran" : "Partager l'écran"}
+          aria-pressed={isScreenSharing}
+          aria-label={isScreenSharing ? "Arrêter le partage d'écran" : "Partager l'écran"}
         >
           <div className={s.btnIcon}>
-            <i className={`fas ${isScreenSharing ? 'fa-stop' : 'fa-desktop'}`} />
+            <i className={`fas ${isScreenSharing ? 'fa-stop' : 'fa-desktop'}`} aria-hidden="true" />
           </div>
           <span className={s.btnLabel}>{isScreenSharing ? 'Arrêter' : 'Partager écran'}</span>
         </button>
       )}
 
-      <button className={`${s.btn} ${s.btnHangup}`} onClick={onHangUp}>
-        <div className={s.btnIcon}><i className="fas fa-phone-slash" /></div>
+      <button type="button" className={`${s.btn} ${s.btnHangup}`} onClick={onHangUp} aria-label="Raccrocher">
+        <div className={s.btnIcon}><i className="fas fa-phone-slash" aria-hidden="true" /></div>
         <span className={s.btnLabel}>Raccrocher</span>
       </button>
 
       {!isVideo && (
         <button
+          type="button"
           className={`${s.btn} ${isSpeakerOn ? s.btnSpeakerOn : s.btnSpeaker}`}
           onClick={onToggleSpeaker}
+          aria-pressed={isSpeakerOn}
+          aria-label={isSpeakerOn ? 'Désactiver le haut-parleur' : 'Activer le haut-parleur'}
         >
           <div className={s.btnIcon}>
-            <i className={`fas ${isSpeakerOn ? 'fa-volume-high' : 'fa-volume-low'}`} />
+            <i className={`fas ${isSpeakerOn ? 'fa-volume-high' : 'fa-volume-low'}`} aria-hidden="true" />
           </div>
           <span className={s.btnLabel}>Haut-parleur</span>
         </button>
@@ -251,8 +272,8 @@ export default function CallOverlay({
             <div className={s.videoName}>{callInfo.remoteName}</div>
             <div className={s.videoDuration}>{fmt(duration)}</div>
           </div>
-          <button className={s.videoClose} onClick={onHangUp} title="Raccrocher">
-            <i className="fas fa-xmark" />
+          <button className={s.videoClose} onClick={onHangUp} title="Raccrocher" aria-label="Raccrocher">
+            <i className="fas fa-xmark" aria-hidden="true" />
           </button>
         </div>
 
@@ -263,23 +284,38 @@ export default function CallOverlay({
           </div>
         )}
 
+        {/* Autoplay bloqué — action claire pour l'utilisateur (partie 8) */}
+        {needsAudioUnlock && onEnableAudio && (
+          <button
+            className={`${s.audioUnlockBtn} ${s.audioUnlockBtnVideo}`}
+            style={{ top: 90 + (reconnectPhase ? 40 : 0) + (isScreenSharing ? 40 : 0) }}
+            onClick={onEnableAudio}
+            aria-label="Activer le son de l'appel"
+          >
+            <i className="fas fa-volume-xmark" aria-hidden="true" /> Activer le son
+          </button>
+        )}
+
         {/* Flux local (PiP) — caméra uniquement, cliquable pour flip caméra.
             Masqué pendant un partage d'écran (rien de pertinent à montrer :
             l'utilisateur voit déjà son propre écran) ou sur un appel audio
             (pas de caméra locale à prévisualiser). */}
         {isVideo && !isScreenSharing && (
-          <div
+          <button
+            type="button"
             className={s.localVideoPip}
-            onClick={canFlipCamera ? onFlipCamera : undefined}
+            onClick={onFlipCamera}
+            disabled={!canFlipCamera}
             title={canFlipCamera ? 'Retourner caméra' : undefined}
+            aria-label={canFlipCamera ? 'Retourner la caméra' : 'Aperçu caméra locale'}
             style={canFlipCamera ? undefined : { cursor: 'default' }}
           >
             {isVideoOff ? (
-              <div className={s.localVideoOff}><i className="fas fa-video-slash" /></div>
+              <div className={s.localVideoOff}><i className="fas fa-video-slash" aria-hidden="true" /></div>
             ) : (
               <video ref={localVideoRef} className={s.localVideoEl} autoPlay playsInline muted />
             )}
-          </div>
+          </button>
         )}
 
         {/* Barre de contrôles inférieure */}
@@ -350,8 +386,10 @@ export default function CallOverlay({
           </>
         )}
 
-        {/* Appel connecté (audio uniquement ici — vidéo/partage distant = plein écran) */}
-        {status === 'connected' && !showFullscreenVideo && (
+        {/* Appel connecté (audio uniquement ici — vidéo/partage distant = plein écran).
+            'reconnecting' inclus : un appel audio perturbé reste affiché
+            avec ses contrôles, juste avec le bandeau de reconnexion visible. */}
+        {(status === 'connected' || status === 'reconnecting') && !showFullscreenVideo && (
           <>
             {reconnectBanner}
             {isScreenSharing && (
@@ -359,8 +397,21 @@ export default function CallOverlay({
                 <i className="fas fa-desktop" style={{ fontSize: 11 }} /> Partage d'écran en cours
               </div>
             )}
+            {needsAudioUnlock && onEnableAudio && (
+              <button className={s.audioUnlockBtn} onClick={onEnableAudio} aria-label="Activer le son de l'appel">
+                <i className="fas fa-volume-xmark" aria-hidden="true" /> Activer le son
+              </button>
+            )}
             <div className={s.duration}>{fmt(duration)}</div>
             {controls}
+          </>
+        )}
+
+        {/* Connexion perdue — bref avant la fermeture (voir giveUpReconnecting) */}
+        {status === 'failed' && (
+          <>
+            <div className={s.endedBadge}>Connexion perdue</div>
+            <div className={s.status}>Impossible de rétablir l'appel</div>
           </>
         )}
 

@@ -22,7 +22,18 @@ import { getActiveSocket }                           from './useSocket';
 import { getIceServers, getFreshIceServers, prefetchIceServers, watchIceConnectivity } from './iceServers';
 import { describeMediaError } from './mediaErrors';
 import { hasMultipleCameras } from './deviceCapabilities';
+import { callError } from './callErrors';
+import type { CallErrorInfo } from './callErrors';
 import type { GroupCallInvite, GroupCallPeer, GroupCallState } from '../data/messagerieTypes';
+
+interface UseGroupCallProps {
+  /**
+   * Erreur/évènement d'appel à afficher (partie 8) — le hook délègue
+   * l'affichage à GroupCallContext.tsx (accès à useToast(), système UI
+   * Shopi existant), symétrique à useAudioCall.ts.
+   */
+  onError?: (error: CallErrorInfo) => void;
+}
 
 // ── Types internes ────────────────────────────────────────────
 
@@ -68,7 +79,27 @@ const PEER_RECONNECT_TIMEOUT_MS = 20_000;
 
 // ── Hook ──────────────────────────────────────────────────────
 
-export function useGroupCall() {
+export function useGroupCall(props?: UseGroupCallProps) {
+  const onErrorRef = useRef(props?.onError);
+  useEffect(() => { onErrorRef.current = props?.onError; });
+  /* useCallback([]) — ne lit que la ref onErrorRef (toujours stable),
+     listable sans risque dans les deps des autres useCallback (satisfait
+     exhaustive-deps sans provoquer de ré-créations inutiles). */
+  const reportCallError = useCallback((error: CallErrorInfo): void => {
+    onErrorRef.current?.(error);
+  }, []);
+  const reportMediaError = useCallback((err: unknown, isVideo: boolean): void => {
+    const device = isVideo ? 'la caméra ou le microphone' : 'le microphone';
+    const { reason, message } = describeMediaError(err, device);
+    switch (reason) {
+      case 'not-found':    reportCallError(callError(isVideo ? 'no-camera' : 'no-microphone')); break;
+      case 'not-allowed':  reportCallError(callError(isVideo ? 'camera-permission-denied' : 'mic-permission-denied')); break;
+      case 'not-readable': reportCallError(callError('device-busy')); break;
+      case 'security':     reportCallError(callError('permission-blocked')); break;
+      default:             reportCallError(callError('unknown', message));
+    }
+  }, [reportCallError]);
+
   const [incomingCall, setIncomingCall] = useState<GroupCallInvite | null>(null);
   const [callState,    setCallState]    = useState<GroupCallState   | null>(null);
   const [peers,        setPeers]        = useState<Map<string, GroupCallPeer>>(new Map());
@@ -461,8 +492,14 @@ export function useGroupCall() {
     if (payload.code === 'CALL_NOT_FOUND' && callStateRef.current) {
       console.warn('[GroupCall] Reconnexion Socket.IO — appel introuvable côté serveur, fermeture locale.');
       cleanupAll();
+      return;
     }
-  }, [cleanupAll]);
+    /* Tous les autres codes (NOT_MEMBER/GROUP_INACTIVE/CALL_ALREADY_ACTIVE/
+       RATE_LIMITED/ACCOUNT_DISABLED…) restaient jusqu'ici silencieux côté
+       client — le serveur fournit déjà un message clair en français
+       (payload.message), on le relaie simplement au lieu de le perdre. */
+    reportCallError(callError('unknown', payload.message));
+  }, [cleanupAll, reportCallError]);
 
   /**
    * Le socket /messaging s'est (re)connecté — si un appel de groupe est en
@@ -638,9 +675,9 @@ export function useGroupCall() {
       setLocalStream(stream);
       emit('group_call:initiate', { groupId, callType });
     } catch (err) {
-      alert(describeMediaError(err, callType === 'video' ? 'la caméra ou le microphone' : 'le microphone').message);
+      reportMediaError(err, callType === 'video');
     }
-  }, []);
+  }, [reportMediaError]);
 
   /** Rejoint l'appel entrant (après réception de group_call:incoming). */
   const joinCall = useCallback(async (invite: GroupCallInvite) => {
@@ -655,9 +692,9 @@ export function useGroupCall() {
       setLocalStream(stream);
       emit('group_call:join', { groupId: invite.groupId, callId: invite.callId });
     } catch (err) {
-      alert(describeMediaError(err, invite.callType === 'video' ? 'la caméra ou le microphone' : 'le microphone').message);
+      reportMediaError(err, invite.callType === 'video');
     }
-  }, []);
+  }, [reportMediaError]);
 
   /** Décline l'appel entrant sans rejoindre. */
   const declineCall = useCallback((invite: GroupCallInvite) => {
@@ -721,9 +758,13 @@ export function useGroupCall() {
       setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
     } catch (err) {
       facingModeRef.current = facingModeRef.current === 'user' ? 'environment' : 'user';
-      console.warn('[GroupCall] flipCamera a échoué :', describeMediaError(err, 'la caméra arrière').message, err);
+      const { reason, message } = describeMediaError(err, 'la caméra arrière');
+      console.warn('[GroupCall] flipCamera a échoué :', message, err);
+      reportCallError(reason === 'not-allowed' ? callError('camera-permission-denied')
+        : reason === 'not-readable' ? callError('device-busy')
+        : callError('unknown', message));
     }
-  }, []);
+  }, [reportCallError]);
 
   /** Arrête le partage d'écran et restaure la caméra sur chaque pair du mesh. */
   const stopScreenShare = useCallback(async () => {
@@ -780,9 +821,9 @@ export function useGroupCall() {
       setIsScreenSharing(true);
     } catch (err) {
       const { message, reason } = describeMediaError(err, "le partage d'écran");
-      if (reason !== 'aborted') alert(message);
+      if (reason !== 'aborted') reportCallError(callError('unknown', message));
     }
-  }, [stopScreenShare]);
+  }, [stopScreenShare, reportCallError]);
 
   /** Bascule marche/arrêt — pratique pour un bouton unique dans l'UI. */
   const toggleScreenShare = useCallback(async () => {
