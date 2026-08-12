@@ -1,7 +1,8 @@
 {
   "messagerie": {
     "core": {
-      "disconnected": "已断开与实时服务器的连接 — 消息和通话不可用"
+      "disconnected": "已断开与实时服务器的连接 — 消息和通话不可用",
+      "demarrerConversationEchec": "无法开始此对话。"
     },
     "roles": {
       "groupe": "配送",

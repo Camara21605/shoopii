@@ -1,7 +1,8 @@
 {
   "messagerie": {
     "core": {
-      "disconnected": "Disconnected from the real-time server — messages and calls unavailable"
+      "disconnected": "Disconnected from the real-time server — messages and calls unavailable",
+      "demarrerConversationEchec": "Couldn't start this conversation."
     },
     "roles": {
       "groupe": "Delivery",

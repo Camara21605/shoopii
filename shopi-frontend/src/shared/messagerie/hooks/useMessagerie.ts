@@ -698,23 +698,27 @@ export function useMessagerie() {
   }, []);
 
   // ── Démarrer une nouvelle conversation ────────────────────
+  /* Ne pas avaler les erreurs ici : une conversation refusée par le
+   * moteur de permission (ForbiddenException, ex. aucune commande en
+   * cours entre les deux acteurs) doit remonter jusqu'à l'appelant
+   * (MessagerieCore) pour afficher un toast — sinon le clic sur un
+   * utilisateur dans "Démarrer une conversation" ne produit visuellement
+   * rien, sans aucun indice de la raison réelle. */
   const startNewConv = useCallback(async (newUser: NewConvUser) => {
     setNewConvOpen(false);
-    try {
-      const api = await apiFetch<ApiConv>(
-        '/messagerie/conversations',
-        { method: 'POST', body: { targetType: newUser.id.split(':')[0], targetId: newUser.id.split(':')[1] } },
-      );
-      if (!api) return;
+    const api = await apiFetch<ApiConv>(
+      '/messagerie/conversations',
+      { method: 'POST', body: { targetType: newUser.id.split(':')[0], targetId: newUser.id.split(':')[1] } },
+    );
+    if (!api) return;
 
-      const { conv, user } = apiConvToState(api);
-      setUsers(prev => prev.some(u => u.id === user.id) ? prev : [...prev, user]);
-      setConversations(prev => {
-        if (prev.some(c => c.id === conv.id)) return prev;
-        return [conv, ...prev];
-      });
-      setActiveConvId(conv.id);
-    } catch { /* silencieux */ }
+    const { conv, user } = apiConvToState(api);
+    setUsers(prev => prev.some(u => u.id === user.id) ? prev : [...prev, user]);
+    setConversations(prev => {
+      if (prev.some(c => c.id === conv.id)) return prev;
+      return [conv, ...prev];
+    });
+    setActiveConvId(conv.id);
   }, []);
 
   return {

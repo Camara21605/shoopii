@@ -197,6 +197,15 @@ export default function MessagerieCore() {
     }).catch(err => console.error('[Call] startCall (audio) a rejeté :', err));
   };
 
+  // ── Démarrer une nouvelle conversation (avec retour d'erreur visible) ──
+  const handleStartNewConv = useCallback(async (user: Parameters<typeof startNewConv>[0]) => {
+    try {
+      await startNewConv(user);
+    } catch (err: any) {
+      toast(err?.message ?? t('messagerie.core.demarrerConversationEchec'), 'e');
+    }
+  }, [startNewConv, toast, t]);
+
   const handleVideoCall = () => {
     if (activeGroupId || !activeConv || !activeUser) {
       console.warn('[Call] handleVideoCall abandonné — groupe/conv/user manquant', { activeGroupId, activeConv, activeUser });
@@ -298,7 +307,7 @@ export default function MessagerieCore() {
       <NewConvModal
         open={newConvOpen}
         onClose={() => setNewConvOpen(false)}
-        onStart={startNewConv}
+        onStart={handleStartNewConv}
       />
 
       {/* Overlay mobile */}

@@ -1,7 +1,8 @@
 {
   "messagerie": {
     "core": {
-      "disconnected": "Déconnecté du serveur temps réel — messages et appels non disponibles"
+      "disconnected": "Déconnecté du serveur temps réel — messages et appels non disponibles",
+      "demarrerConversationEchec": "Impossible de démarrer cette conversation."
     },
     "roles": {
       "groupe": "Livraison",

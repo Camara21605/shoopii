@@ -1,7 +1,8 @@
 {
   "messagerie": {
     "core": {
-      "disconnected": "Desligado do servidor em tempo real — mensagens e chamadas indisponíveis"
+      "disconnected": "Desligado do servidor em tempo real — mensagens e chamadas indisponíveis",
+      "demarrerConversationEchec": "Não foi possível iniciar esta conversa."
     },
     "roles": {
       "groupe": "Entrega",
