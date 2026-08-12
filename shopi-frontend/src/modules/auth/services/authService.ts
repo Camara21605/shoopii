@@ -135,8 +135,20 @@ export async function verifyTwoFaLogin(
 
 export async function logout(): Promise<void> {
   tokenStorage.remove();
-  // Efface aussi le cookie httpOnly côté serveur — fire & forget
-  await apiFetch('/auth/logout', { method: 'POST', public: true }).catch(() => {});
+  /* Efface aussi le cookie httpOnly côté serveur — fire & forget côté UI
+   * (AppContext.logout() n'attend pas cette promesse pour rester réactif),
+   * mais keepalive:true est indispensable : sans lui, un utilisateur qui
+   * navigue ou recharge la page juste après avoir cliqué "Déconnexion" peut
+   * voir cette requête annulée avant même d'atteindre le serveur — le cookie
+   * de session reste alors valide, et la session "revient" silencieusement
+   * au chargement suivant (voir apiFetch.ts pour le détail du bug observé).
+   *
+   * Le `.catch` NE DOIT JAMAIS rester silencieux : un 403 CSRF (jeton
+   * manquant/périmé) ou toute autre erreur ici laisse EXACTEMENT le même
+   * cookie de session valide côté serveur, avec zéro signal pour le
+   * diagnostiquer si on avale l'erreur sans rien logger. */
+  await apiFetch('/auth/logout', { method: 'POST', public: true, keepalive: true })
+    .catch(err => console.error('[Auth] POST /auth/logout a échoué — la session côté serveur n\'a peut-être pas été révoquée :', err));
 }
 
 /** accountUserId : requis seulement en 2e appel, quand la 1re réponse était

@@ -88,6 +88,27 @@ const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
   return <Navigate to={getDashboardPath(role)} replace />;
 };
 
+/**
+ * Protège une route de dashboard contre un utilisateur connecté mais dont
+ * le rôle ne correspond PAS à ce dashboard précis — PrivateRoute seul ne
+ * vérifie que l'authentification, pas le rôle. Sans ce garde, un client
+ * connecté qui atterrit sur /dashboard/entreprise/* (URL restée en
+ * historique, changement de rôle après un switch de compte, lien
+ * partagé...) se retrouvait avec la coquille ENTIÈRE du dashboard
+ * entreprise montée pour lui : chaque appel API spécifique à l'entreprise
+ * échouait en 403 (le backend refuse correctement), mais le frontend
+ * affichait quand même la page cassée au lieu de rediriger proprement.
+ * Renvoie vers le dashboard réellement associé au rôle courant (ou /login
+ * si pas connecté du tout, ou /home en dernier recours pour un rôle
+ * inconnu/client).
+ */
+const RoleRoute: React.FC<{ role: string; children: React.ReactNode }> = ({ role, children }) => {
+  const { isAuthenticated, user } = useAppContext();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user?.role !== role) return <Navigate to={getDashboardPath(user?.role ?? null)} replace />;
+  return <>{children}</>;
+};
+
 /** Home — accessible aux clients et aux non-connectés ; redirige les autres rôles. */
 const HomeRoute: React.FC = () => {
   const { isAuthenticated, user } = useAppContext();
@@ -187,14 +208,16 @@ export const AppRouter: React.FC = () => (
           <Route path="/messagerie"           element={<PrivateRoute><MessageriePage /></PrivateRoute>} />
           <Route path="/parametres"           element={<PrivateRoute><SettingsPage onToast={showToast} /></PrivateRoute>} />
 
-          {/* Dashboards */}
-          <Route path="/dashboard/super-admin/*"   element={<PrivateRoute><SuperAdminApp /></PrivateRoute>} />
-          <Route path="/dashboard/admin/*"         element={<PrivateRoute><AdminApp /></PrivateRoute>} />
-          <Route path="/dashboard/entreprise/*"    element={<PrivateRoute><EntrepriseApp /></PrivateRoute>} />
-          <Route path="/dashboard/partenaire/*"    element={<PrivateRoute><PartenaireApp /></PrivateRoute>} />
-          <Route path="/dashboard/livreur/*"       element={<PrivateRoute><LivreurApp /></PrivateRoute>} />
-          <Route path="/dashboard/correspondant/*" element={<PrivateRoute><CorrespApp /></PrivateRoute>} />
-          <Route path="/dashboard/client/*"        element={<PrivateRoute><ClientApp /></PrivateRoute>} />
+          {/* Dashboards — RoleRoute vérifie que le rôle connecté correspond
+              bien à CE dashboard précis (pas juste "connecté", voir son
+              commentaire ci-dessus). */}
+          <Route path="/dashboard/super-admin/*"   element={<RoleRoute role="super_admin"><SuperAdminApp /></RoleRoute>} />
+          <Route path="/dashboard/admin/*"         element={<RoleRoute role="admin"><AdminApp /></RoleRoute>} />
+          <Route path="/dashboard/entreprise/*"    element={<RoleRoute role="company"><EntrepriseApp /></RoleRoute>} />
+          <Route path="/dashboard/partenaire/*"    element={<RoleRoute role="partner"><PartenaireApp /></RoleRoute>} />
+          <Route path="/dashboard/livreur/*"       element={<RoleRoute role="delivery"><LivreurApp /></RoleRoute>} />
+          <Route path="/dashboard/correspondant/*" element={<RoleRoute role="correspondent"><CorrespApp /></RoleRoute>} />
+          <Route path="/dashboard/client/*"        element={<RoleRoute role="client"><ClientApp /></RoleRoute>} />
 
           {/* Raccourcis dashboards */}
           <Route path="/super-admin/*"   element={<Navigate to="/dashboard/super-admin"   replace />} />

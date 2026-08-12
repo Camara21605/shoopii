@@ -17,7 +17,6 @@ interface Props {
   onMenuToggle: () => void;
   onMenuClose:  () => void;
   onNavigate:   (p: PageId) => void;
-  onLogout:     () => void;
 }
 
 /** Calcule les initiales depuis un nom complet */
@@ -53,7 +52,7 @@ export default function Topbar({
   title, subtitle, isOnline,
   avatarUrl, livreurName, encoursCount = 0,
   menuOpen, onMenuToggle, onMenuClose,
-  onNavigate, onLogout,
+  onNavigate,
 }: Props) {
   const initials = livreurName ? getInitials(livreurName) : '🛵';
   const { msgUnread } = useGlobalCall();
@@ -173,9 +172,6 @@ export default function Topbar({
           <div className={styles.tbDrawerFoot}>
             <button className={styles.tbDrawerHome} onClick={() => { onMenuClose(); navigate('/aide'); }}>
               <i className="fas fa-circle-question" /> Centre d'aide
-            </button>
-            <button className={styles.tbDrawerOut} onClick={onLogout}>
-              <i className="fas fa-right-from-bracket" /> Déconnexion
             </button>
           </div>
         </div>

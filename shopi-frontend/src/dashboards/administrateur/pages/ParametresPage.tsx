@@ -13,8 +13,10 @@
  * ================================================================ */
 
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from '../styles/ParametresPage.module.css';
 import type { ParamSection } from './parametres/types';
+import { useAppContext } from '../../../shared/context/AppContext';
 
 /* ── Imports des 16 sections ── */
 import ProfilSection         from './parametres/ProfilSection';
@@ -124,6 +126,13 @@ interface ParametresPageProps {
  * Composant principal
  * ================================================================ */
 export default function ParametresPage({ onToast }: ParametresPageProps) {
+  const { logout } = useAppContext();
+  const navigate = useNavigate();
+  const handleLogout = useCallback(() => {
+    logout();
+    navigate('/login');
+  }, [logout, navigate]);
+
   const [active,  setActive]  = useState<ParamSection>('profil');
   const [query,   setQuery]   = useState('');
   const [dirty,   setDirty]   = useState(false);
@@ -244,6 +253,24 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
 
         {/* Rendu de la section active */}
         {renderSection()}
+
+        {/* ── Déconnexion — en bas de la page paramètres, sous toutes
+            les sections ── */}
+        <div style={{ padding: '24px 28px', borderTop: '1px solid var(--bdr)', marginTop: 8 }}>
+          <button
+            type="button"
+            onClick={handleLogout}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 9,
+              padding: '10px 18px', borderRadius: 'var(--pill, 999px)',
+              fontSize: 13, fontWeight: 700, color: 'var(--red, #DC2626)',
+              background: 'none', border: '1px solid var(--red, #DC2626)', cursor: 'pointer',
+            }}
+          >
+            <i className="fas fa-right-from-bracket" />
+            Se déconnecter
+          </button>
+        </div>
 
       </div>
 

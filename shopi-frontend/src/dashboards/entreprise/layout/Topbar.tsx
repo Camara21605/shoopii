@@ -21,7 +21,6 @@ import { useTranslation } from 'react-i18next';
 
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
-import { useAppContext } from '../../../shared/context/AppContext';
 import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
 import { useNotifications } from '../../../shared/notifications/NotificationContext';
@@ -116,7 +115,6 @@ export default function Topbar({
   const { t } = useTranslation();
   const { pop } = useToast();
   const navigate = useNavigate();
-  const { logout } = useAppContext();
   const { msgUnread } = useGlobalCall();
   const { notifications } = useNotifications();
   const orderUnread = notifications.filter(n => n.type.startsWith('order') && !n.isRead).length;
@@ -163,13 +161,6 @@ export default function Topbar({
     setAvatarOpen(false);
     setMobileMenuOpen(false);
     navigate('/home');               /* bascule vers l'accueil client public */
-  }
-
-  function handleLogout() {
-    logout();
-    setAvatarOpen(false);
-    setMobileMenuOpen(false);
-    navigate('/login');
   }
 
   function go(page: EntreprisePage) {
@@ -300,12 +291,6 @@ export default function Topbar({
                 <button className="tb-menu-it" onClick={() => { setMonEspaceOpen(true); setAvatarOpen(false); }}>
                   <i className="fas fa-user-group"></i> Mon espace client
                 </button>
-
-                <div className="tb-menu-sep"></div>
-
-                <button className="tb-menu-it danger" onClick={handleLogout}>
-                  <i className="fas fa-right-from-bracket"></i> {t('topbar.menu.deconnexion')}
-                </button>
               </div>
             )}
           </div>
@@ -401,9 +386,6 @@ export default function Topbar({
               </button>
               <button className="tb-drawer-home" onClick={handleSwitchHome}>
                 <i className="fas fa-house"></i> {t('topbar.drawer.basculerAccueil')}
-              </button>
-              <button className="tb-drawer-out" onClick={handleLogout}>
-                <i className="fas fa-right-from-bracket"></i> {t('topbar.drawer.deconnexion')}
               </button>
             </div>
           </div>

@@ -24,7 +24,6 @@ interface SidebarProps {
   slaViolations:   number;
   isOpen:          boolean;
   onClose:         () => void;
-  onLogout:        () => void;
   /** Profil réel du super-admin connecté (chargé par SuperAdminApp) */
   profilName?:     string;
   profilAvatar?:   string | null;
@@ -66,7 +65,7 @@ export default function Sidebar({
   activeSection, navigate, navUsers,
   totalUsers, roleStats, pendingAlerts, totalUnread, validCodesCount,
   slaViolations,
-  isOpen, onClose, onLogout,
+  isOpen, onClose,
   profilName, profilAvatar,
 }: SidebarProps) {
   const rs = (role: string) => roleStats[role] || undefined;
@@ -186,11 +185,6 @@ export default function Sidebar({
           <NavItem icon="👤" label="Mon profil" active={activeSection==='profil'}
             onClick={go(() => navigate('profil'))} />
         </NavGroup>
-
-        {/* ── Footer : Déconnexion ── */}
-        <div className="sidebar-footer">
-          <NavItem icon="🚪" label="Déconnexion" onClick={onLogout} />
-        </div>
 
       </nav>
     </>

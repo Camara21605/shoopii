@@ -23,9 +23,9 @@ import SecNotifications   from './params/SecNotifications';
 import SecConfidentialite from './params/SecConfidentialite';
 import SecDanger          from './params/SecDanger';
 
-interface Props { onBack: () => void; onPop: (m: string, t?: string) => void; onAvatarRefresh?: () => void; }
+interface Props { onBack: () => void; onPop: (m: string, t?: string) => void; onAvatarRefresh?: () => void; onLogout: () => void; }
 
-export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh }: Props) {
+export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, onLogout }: Props) {
   const [section, setSection] = useState<ParamSectionId>('profil');
   const [isDirty, setIsDirty] = useState(false);
 
@@ -95,7 +95,27 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh }
   return (
     <div className={styles.page}>
       <div className={styles.layout}>
-        <ParamNav active={section} onSelect={goTo} onBack={onBack} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <ParamNav active={section} onSelect={goTo} onBack={onBack} />
+
+          {/* ── Déconnexion — persistante en bas de la navigation
+              paramètres, quelle que soit la section active ── */}
+          <div style={{ background: 'var(--white)', border: '1.5px solid var(--bdr)', borderRadius: 'var(--r-xl, 26px)', padding: 10, boxShadow: 'var(--sh-xs)' }}>
+            <button
+              type="button"
+              onClick={onLogout}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 9, width: '100%',
+                padding: '10px 11px', borderRadius: 'var(--r-md, 12px)',
+                fontSize: 13, fontWeight: 700, color: 'var(--red)',
+                background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
+              }}
+            >
+              <i className="fas fa-right-from-bracket" style={{ width: 15, textAlign: 'center', fontSize: 13 }} />
+              Se déconnecter
+            </button>
+          </div>
+        </div>
         <div className={styles.content}>
           {sections[section]}
         </div>

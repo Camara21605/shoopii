@@ -9,6 +9,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate }    from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
+import { useAppContext } from '../../../../../shared/context/AppContext';
+
 /* ✅ Même Header que toutes les pages home */
 import Header from '../../layout/Header';
 
@@ -57,9 +59,15 @@ function useLocalToast() {
 export default function SettingsPage() {
   const navigate            = useNavigate();
   const { t } = useTranslation();
+  const { logout } = useAppContext();
   const { msg, visible, showToast } = useLocalToast();
   const [activePanel, setActivePanel] = useState<PanelId>('profil');
   const mainRef = useRef<HTMLDivElement>(null);
+
+  function handleLogout() {
+    logout();
+    navigate('/login');
+  }
 
   const handleSwitch = (id: PanelId) => {
     setActivePanel(id);
@@ -141,6 +149,24 @@ export default function SettingsPage() {
             {panel('donnees',         <DonneesSection      onToast={showToast} />)}
             {panel('danger',          <DangerSection       onToast={showToast} />)}
           </div>
+        </div>
+
+        {/* ── Déconnexion — en bas de la page paramètres, sous toutes
+            les sections ── */}
+        <div style={{ padding: '24px 4px 40px', borderTop: '1px solid var(--bdr)', marginTop: 8 }}>
+          <button
+            type="button"
+            onClick={handleLogout}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 9,
+              padding: '10px 18px', borderRadius: 'var(--pill, 999px)',
+              fontSize: 13, fontWeight: 700, color: 'var(--red, #DC2626)',
+              background: 'none', border: '1px solid var(--red, #DC2626)', cursor: 'pointer',
+            }}
+          >
+            <i className="fas fa-right-from-bracket" />
+            {t('publicHeader.seDeconnecter')}
+          </button>
         </div>
       </div>
 

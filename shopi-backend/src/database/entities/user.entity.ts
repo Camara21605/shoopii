@@ -193,6 +193,18 @@ export class User {
   @Column({ type: 'timestamp', nullable: true })
   lastPasswordChangedAt: Date | null;
 
+  /**
+   * Date de la dernière déconnexion explicite (bouton "Déconnexion").
+   * Même principe que lastPasswordChangedAt : un access token est un JWT
+   * sans état — POST /auth/logout révoque bien les refresh tokens, mais
+   * sans ce champ, un access token déjà émis restait valide jusqu'à sa
+   * propre expiration naturelle malgré la déconnexion (fenêtre de
+   * plusieurs minutes où une session "fermée" restait en réalité active).
+   * Vérifié dans JwtStrategy comme lastPasswordChangedAt.
+   */
+  @Column({ type: 'timestamp', nullable: true })
+  lastLogoutAt: Date | null;
+
   /* ==========================================================
    * PROFILS MÉTIER (inchangés)
    * ========================================================== */

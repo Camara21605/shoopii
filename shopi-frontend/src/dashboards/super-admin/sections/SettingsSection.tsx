@@ -54,12 +54,13 @@ interface Props {
   store:    SuperAdminStore;
   toast:    (type: string, msg: string) => void;
   isActive: boolean;
+  onLogout: () => void;
 }
 
 /* ═════════════════════════════════════════════════════════════
  * COMPOSANT PRINCIPAL
  * ═════════════════════════════════════════════════════════════ */
-export default function SettingsSection({ store, toast, isActive }: Props) {
+export default function SettingsSection({ store, toast, isActive, onLogout }: Props) {
 
   /* ── Onglet affiché ── */
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
@@ -257,6 +258,18 @@ export default function SettingsSection({ store, toast, isActive }: Props) {
           )}
         </>
       )}
+
+      {/* ── Déconnexion — en bas de Paramètres, visible quel que soit
+          l'onglet actif (hors de la zone conditionnelle ci-dessus) ── */}
+      <div style={{ marginTop: 32, paddingTop: 20, borderTop: '1px solid var(--bdr, #E5E7EB)' }}>
+        <button
+          className="btn"
+          onClick={onLogout}
+          style={{ color: 'var(--rose, #DC2626)', display: 'flex', alignItems: 'center', gap: 8 }}
+        >
+          <i className="fas fa-right-from-bracket" /> Se déconnecter
+        </button>
+      </div>
 
     </div>
   );

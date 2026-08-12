@@ -17,7 +17,6 @@ interface Props {
   onNavigate:     (p: PageId) => void;
   onClose:        () => void;
   onToggleOnline: () => void;
-  onLogout:       () => void;
   onGoHome:       () => void;
 }
 
@@ -51,7 +50,7 @@ const NAV_COMPTE: NavItem[] = [
 export default function Sidebar({
   activePage, isOpen, isOnline, todayEarn,
   avatarUrl, livreurName, rating, totalDeliveries, encoursCount = 0,
-  onNavigate, onToggleOnline, onLogout, onGoHome,
+  onNavigate, onToggleOnline, onGoHome,
 }: Props) {
   const navMonEspace = buildNavMonEspace(encoursCount);
   const displayName  = livreurName || 'Mon profil';
@@ -129,18 +128,6 @@ export default function Sidebar({
         {NAV_COMPTE.map(item => (
           <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={onNavigate} />
         ))}
-      </div>
-
-      {/* Bas sidebar */}
-      <div className={styles.sbBot}>
-        <button
-          className={styles.btnLogout}
-          onClick={onLogout}
-          title="Se déconnecter"
-        >
-          <i className="fas fa-right-from-bracket" />
-          <span>Déconnexion</span>
-        </button>
       </div>
     </nav>
   );

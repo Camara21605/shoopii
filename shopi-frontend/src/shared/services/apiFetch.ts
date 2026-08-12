@@ -194,6 +194,19 @@ export async function apiFetch<T = unknown>(
     signal?:  AbortSignal;
     /** Interne — empêche une 2e tentative de silent refresh en boucle */
     _retry?:  boolean;
+    /**
+     * Demande au navigateur de continuer la requête même si la page se
+     * décharge (navigation, fermeture d'onglet, rechargement) juste après
+     * l'appel — sans ça, une requête "fire & forget" lancée juste avant une
+     * navigation peut être purement et simplement annulée avant d'atteindre
+     * le serveur. Utilisé par authService.logout() : POST /auth/logout doit
+     * effacer le cookie httpOnly côté serveur même si l'utilisateur navigue
+     * ailleurs dans la foulée — sinon la session reste valide côté serveur,
+     * et un rechargement ultérieur "reconnecte" silencieusement l'utilisateur
+     * (PublicOnlyRoute le renvoie alors hors de /login sans qu'il comprenne
+     * pourquoi son clic sur "Se connecter" ne fait rien).
+     */
+    keepalive?: boolean;
   } = {},
 ): Promise<T> {
 
@@ -204,6 +217,7 @@ export async function apiFetch<T = unknown>(
     public: isPublic = false,
     signal,
     _retry = false,
+    keepalive = false,
   } = options;
 
   /* ── Construction URL ── */
@@ -257,6 +271,7 @@ export async function apiFetch<T = unknown>(
       method,
       headers,
       credentials: 'include', // cookie httpOnly envoyé automatiquement
+      keepalive,
       signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(60_000)]) : AbortSignal.timeout(60_000),
       body:
         body instanceof FormData
@@ -280,6 +295,34 @@ export async function apiFetch<T = unknown>(
      lui-même — le serveur renvoie toujours un token valide en en-tête) :
      voir le commentaire au-dessus de getCsrfToken(). */
   captureCsrfToken(response);
+
+  /* ── 403 CSRF → retry une fois avec le token frais ──
+   * Course réelle et observée : sur un chargement de page frais, plusieurs
+   * requêtes mutantes/concurrentes peuvent partir AVANT qu'aucune n'ait
+   * encore de cookie csrf_token — le middleware (double-submit cookie, voir
+   * csrf.middleware.ts) en génère alors un NOUVEAU par requête qui arrive
+   * sans cookie, et pose un Set-Cookie différent à chacune. Le cache JS
+   * (cachedCsrfToken) et le cookie réellement retenu par le navigateur
+   * peuvent alors diverger d'une valeur générée lors d'une requête
+   * concurrente différente — un POST parti avec ce token désormais
+   * périmé échoue en 403, alors que la RÉPONSE de cet échec transporte
+   * déjà (via captureCsrfToken juste au-dessus) le token désormais à
+   * jour. Un simple nouvel essai avec ce token frais suffit — même
+   * principe que le retry après silentRefresh() sur 401 ci-dessous.
+   * Observé en conditions réelles : sans ce retry, un clic sur
+   * "Déconnexion" pouvait échouer silencieusement (session jamais
+   * révoquée côté serveur) sur cette seule course de démarrage. */
+  if (response.status === 403 && !_retry && MUTATING_METHODS.has(method)) {
+    let isCsrfError = false;
+    try {
+      const probe = await response.clone().json();
+      isCsrfError = typeof probe?.message === 'string' && probe.message.toLowerCase().includes('csrf');
+    } catch { /* réponse non-JSON — pas une erreur CSRF connue */ }
+
+    if (isCsrfError) {
+      return apiFetch<T>(endpoint, { ...options, _retry: true });
+    }
+  }
 
   /* ── 401 → Silent refresh → retry ── */
   if (response.status === 401 && !_retry && endpoint !== '/auth/refresh') {

@@ -46,10 +46,8 @@ export default function AuthPromptModal({
   if (!open) return null;
 
   const goToLogin    = () => {
-    console.log('[AuthPromptModal] goToLogin — onLoginClick=', typeof onLoginClick, onLoginClick);
     onClose();
     (onLoginClick ?? (() => navigate('/login')))();
-    console.log('[AuthPromptModal] goToLogin — après appel');
   };
   const goToRegister = () => { onClose(); (onRegisterClick ?? (() => navigate('/register')))(); };
 

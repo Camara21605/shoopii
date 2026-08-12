@@ -135,7 +135,6 @@ export default function SuperAdminApp() {
         slaViolations={slaViolations}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        onLogout={handleLogout}
         profilName={profilName}
         profilAvatar={profilAvatar}
       />
@@ -166,7 +165,7 @@ export default function SuperAdminApp() {
             {sec === 'alerts'              && <AlertsSection store={store} toast={toast} isActive />}
             {sec === 'audit'               && <AuditSection store={store} isActive />}
             {sec === 'system'              && <SystemSection store={store} isActive />}
-            {sec === 'settings'            && <SettingsSection store={store} toast={toast} isActive />}
+            {sec === 'settings'            && <SettingsSection store={store} toast={toast} isActive onLogout={handleLogout} />}
             {sec === 'permissions'         && <PermissionsSection store={store} toast={toast} isActive />}
             {sec === 'notifications-admin' && <NotificationsAdminSection isActive />}
             {sec === 'support'             && <SupportSection isActive />}

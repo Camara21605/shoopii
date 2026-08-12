@@ -7,11 +7,9 @@
  */
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
-import { useAppContext } from '../../../shared/context/AppContext';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
 import './Sidebar.css';
 
@@ -102,8 +100,6 @@ export default function Sidebar({
   can, isOwner = false,
 }: SidebarProps) {
   const { pop } = useToast();
-  const navigate = useNavigate();
-  const { logout } = useAppContext();
   const { t } = useTranslation();
 
   const initiales = (companyName ?? 'TC')
@@ -213,9 +209,6 @@ export default function Sidebar({
       <div className="sb-bot">
         <button className="sb-bot-btn" onClick={() => pop('🔔 Notifications', 'i')}>
           <i className="fas fa-bell"></i><span>{t('sidebar.items.alertes')}</span>
-        </button>
-        <button className="sb-bot-btn" onClick={() => { logout(); navigate('/login'); }}>
-          <i className="fas fa-right-from-bracket"></i><span>{t('sidebar.items.quitter')}</span>
         </button>
       </div>
     </nav>

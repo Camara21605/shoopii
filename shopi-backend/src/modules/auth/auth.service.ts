@@ -1523,6 +1523,18 @@ export class AuthService implements OnModuleInit {
     await this.refreshTokenRepo.update({ userId, revoked: false }, { revoked: true });
   }
 
+  /**
+   * Marque l'instant de la dernière déconnexion explicite — JwtStrategy
+   * rejette ensuite tout access token émis AVANT cette date (même principe
+   * que lastPasswordChangedAt). Nécessaire car revokeAllRefreshTokens()
+   * ci-dessus ne couvre que les refresh tokens : un access token JWT est
+   * sans état, donc rester valide jusqu'à sa propre expiration malgré la
+   * déconnexion sans ce marqueur.
+   */
+  async markLoggedOut(userId: string): Promise<void> {
+    await this.userRepo.update(userId, { lastLogoutAt: new Date() });
+  }
+
   // ══════════════════════════════════════════════════════════════════════════
   // REFRESH — rotation du refresh token + nouvel access token
   // ══════════════════════════════════════════════════════════════════════════

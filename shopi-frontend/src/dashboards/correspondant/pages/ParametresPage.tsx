@@ -15,10 +15,12 @@
  * ================================================================ */
 
 import React, { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import ParamNav   from '../components/ParamNav';
 import SaveFloat  from '../components/SaveFloat';
 import SecLangue  from '../../../shared/components/params/SecLangue';
+import { useAppContext } from '../../../shared/context/AppContext';
 
 import SecProfil          from '../sections/params/SecProfil';
 import SecDepot           from '../sections/params/SecDepot';
@@ -39,6 +41,13 @@ import p from '../styles/ParametresPage.module.css';
 import s from '../styles/ParamsShared.module.css';
 
 export default function ParametresPage() {
+  const { logout } = useAppContext();
+  const navigate = useNavigate();
+  const handleLogout = useCallback(() => {
+    logout();
+    navigate('/login');
+  }, [logout, navigate]);
+
   const [section,     setSection]     = useState<SectionId>('profil');
   const [isDirty,     setIsDirty]     = useState(false);
   /* Incrémenter pour déclencher la sauvegarde dans la section active */
@@ -147,20 +156,40 @@ export default function ParametresPage() {
       <div className={p.layout}>
 
         {/* ── Navigation gauche ── */}
-        {/*
-          data={data} est indispensable :
-          ParamNav l'utilise dans computeNavState() pour calculer
-          les % de complétion et les points d'alerte de chaque section.
-          Sans ce prop, tous les indicateurs restent vides.
-        */}
-        <ParamNav
-          section={section}
-          onSection={id => {
-            setSection(id);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          data={data}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/*
+            data={data} est indispensable :
+            ParamNav l'utilise dans computeNavState() pour calculer
+            les % de complétion et les points d'alerte de chaque section.
+            Sans ce prop, tous les indicateurs restent vides.
+          */}
+          <ParamNav
+            section={section}
+            onSection={id => {
+              setSection(id);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            data={data}
+          />
+
+          {/* ── Déconnexion — persistante en bas de la navigation
+              paramètres, quelle que soit la section active ── */}
+          <div style={{ background: 'var(--white)', border: '1.5px solid var(--bdr)', borderRadius: 'var(--r-xl, 26px)', padding: 10, boxShadow: 'var(--sh-xs)' }}>
+            <button
+              type="button"
+              onClick={handleLogout}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 9, width: '100%',
+                padding: '10px 11px', borderRadius: 'var(--r-md, 12px)',
+                fontSize: 13, fontWeight: 700, color: 'var(--red)',
+                background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
+              }}
+            >
+              <i className="fas fa-right-from-bracket" style={{ width: 15, textAlign: 'center', fontSize: 13 }} />
+              Se déconnecter
+            </button>
+          </div>
+        </div>
 
         {/* ── Section active ── */}
         <div className={p.content}>

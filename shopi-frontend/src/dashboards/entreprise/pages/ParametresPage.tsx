@@ -25,8 +25,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation }            from 'react-i18next';
 import type { TFunction }            from 'i18next';
-import { useSearchParams }           from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '../../../shared/context/ToastContext';
+import { useAppContext } from '../../../shared/context/AppContext';
 import { useParametres } from '../hooks/useParametres';
 import SecLangue from '../../../shared/components/params/SecLangue';
 
@@ -78,6 +79,16 @@ function getSidebarItems(t: TFunction): { key: SectionKey; icon: string; label: 
 export default function ParametresPage() {
   const { t } = useTranslation();
   const { pop } = useToast();
+  const { logout } = useAppContext();
+  const navigate = useNavigate();
+
+  /* Point unique de déconnexion pour ce dashboard — voir en bas de la
+     sidebar interne des paramètres (persistant quelle que soit la
+     section active). */
+  function handleLogout() {
+    logout();
+    navigate('/login');
+  }
 
   // Hook central — 1 seul appel API pour toute la page
   const {
@@ -210,6 +221,19 @@ export default function ParametresPage() {
               </div>
             </div>
           )}
+
+          {/* ── Déconnexion — persistante en bas de la sidebar paramètres,
+              quelle que soit la section active ── */}
+          <div style={{ borderTop: '1px solid var(--bdr)', marginTop: 10, paddingTop: 10 }}>
+            <button
+              type="button"
+              className={`${s.sidebarItem} ${s.dangerItem}`}
+              onClick={handleLogout}
+            >
+              <i className="fas fa-right-from-bracket" />
+              <span>Se déconnecter</span>
+            </button>
+          </div>
         </aside>
 
         {/* ── Contenu de la section active ── */}

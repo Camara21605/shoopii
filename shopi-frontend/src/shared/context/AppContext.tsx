@@ -61,10 +61,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // UI mise à jour immédiatement; authService.logout() révoque les refresh
     // tokens côté serveur et efface les cookies httpOnly (fire & forget).
     setUserState(null);
-    // Sans ça, le socket restait connecté sous l'identité de l'utilisateur
-    // déconnecté jusqu'à l'expiration naturelle du token en storage.
-    disconnectGlobalSocket();
-    disconnectNotificationSocket();
+    /* CRITIQUE : chaque étape est isolée dans son propre try/catch. Sans
+     * ça, une exception dans disconnectGlobalSocket()/
+     * disconnectNotificationSocket() (ex. socket déjà dans un état
+     * incohérent pendant un appel WebRTC actif) interrompait le reste de
+     * la fonction AVANT d'atteindre authService.logout() — tokenStorage
+     * n'était alors JAMAIS vidé et le cookie de session JAMAIS révoqué
+     * côté serveur, alors que l'UI affichait déjà "déconnecté". La
+     * session survivait silencieusement : au rechargement suivant (ou à
+     * toute re-vérification /auth/me), l'utilisateur "redevenait"
+     * connecté sans comprendre pourquoi, et PublicOnlyRoute renvoyait
+     * alors /login vers son dashboard au lieu d'afficher le formulaire —
+     * exactement le blocage réel observé ("Se connecter" semblait ne
+     * rien faire). */
+    try {
+      // Sans ça, le socket restait connecté sous l'identité de l'utilisateur
+      // déconnecté jusqu'à l'expiration naturelle du token en storage.
+      disconnectGlobalSocket();
+    } catch (e) {
+      console.error('[Auth] disconnectGlobalSocket a échoué pendant la déconnexion :', e);
+    }
+    try {
+      disconnectNotificationSocket();
+    } catch (e) {
+      console.error('[Auth] disconnectNotificationSocket a échoué pendant la déconnexion :', e);
+    }
     void authService.logout();
   }, []);
 

@@ -397,6 +397,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ message: string }> {
     await this.authService.revokeAllRefreshTokens(user.id);
+    await this.authService.markLoggedOut(user.id);
     clearAccessCookie(res, this.isProd);
     clearRefreshCookie(res, this.isProd);
     return { message: 'Déconnexion réussie.' };

@@ -96,6 +96,25 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       }
     }
 
+    /* Même principe pour une déconnexion explicite : POST /auth/logout ne
+     * révoque que les refresh tokens (JWT stateless — l'access token émis
+     * reste, lui, cryptographiquement valide jusqu'à sa propre expiration).
+     * Sans ce contrôle, un access token encore valide au moment du clic sur
+     * "Déconnexion" continuait à authentifier normalement toute requête
+     * (y compris une nouvelle vérification /auth/me après rechargement) —
+     * l'utilisateur "redevenait" connecté malgré lui, et les gardes de
+     * route basés sur cet état (PublicOnlyRoute) le renvoyaient alors hors
+     * de /login au lieu d'afficher le formulaire de connexion. */
+    if (user.lastLogoutAt && payload.iat !== undefined) {
+      const tokenIssuedAt = new Date(payload.iat * 1000);
+      const loggedOutAt   = new Date(user.lastLogoutAt);
+      if (loggedOutAt > tokenIssuedAt) {
+        throw new UnauthorizedException(
+          'Session expirée suite à une déconnexion. Veuillez vous reconnecter.',
+        );
+      }
+    }
+
     return Object.assign(user, { actorId: payload.actorId });
   }
 }

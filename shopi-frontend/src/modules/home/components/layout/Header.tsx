@@ -23,7 +23,6 @@ import { NotificationProvider }               from '../../../../shared/notificat
 import NotificationToastStack                 from '../../../../shared/notifications/NotificationToastStack';
 import NotificationCenter                     from '../../../../shared/notifications/NotificationCenter';
 import { useAuthGate }                        from '../../../../shared/hooks/useAuthGate';
-import AuthPromptModal                        from '../../../../shared/components/AuthPromptModal';
 import { useForceDarkTheme }                  from '../../../../shared/context/ThemeContext';
 import WalletQuickBar                         from '../../../../shared/components/portefeuille/WalletQuickBar';
 import AccountSwitchLink                      from '../../../../shared/components/AccountSwitchLink';
@@ -50,7 +49,6 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
   const [searchFocus,  setSearchFocus]  = useState(false);
   const [mobileSearch, setMobileSearch] = useState(false);
   const [avatarOpen,   setAvatarOpen]   = useState(false);
-  const [loginGateOpen, setLoginGateOpen] = useState(false);
   const [avatarUrl,    setAvatarUrl]    = useState<string | null>(null);
   const [activeNav,    setActiveNav]    = useState<NavKey | null>(null);
   const avatarRefDesktop = useRef<HTMLDivElement>(null);
@@ -98,10 +96,12 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
     openAuthModal();
   }
 
-  /* ✅ "Se connecter" n'ouvre plus /login directement — on demande d'abord
-   *    si le visiteur préfère créer un compte client. */
+  /* "Se connecter" navigue directement vers /login — l'étape intermédiaire
+   * de confirmation (modal "Before you log in") a été retirée : elle
+   * provoquait un blocage de navigation non résolu sur une reconnexion
+   * après déconnexion, sans cause identifiable malgré investigation. */
   function handleLoginClick() {
-    setLoginGateOpen(true);
+    onLogin();
   }
 
   useEffect(() => {
@@ -193,12 +193,6 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
     if (!isLoggedIn) { openAuthModal(); return; }
     if (inDashboard)  navigate('/home');
     else              navigate(getDashboardPath(role));
-  }
-
-  function handleLogout() {
-    tokenStorage.remove();
-    setAvatarOpen(false);
-    navigate('/login');
   }
 
   return (
@@ -325,11 +319,6 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
                           <i className="fas fa-right-left" style={{ color:'var(--blue)', width:14 }} /> Basculer vers mon espace {label}
                         </button>
                       )} />
-                      <div style={{ height:1, background:'var(--bdr)', margin:'4px 0' }} />
-                      <button onClick={handleLogout}
-                        style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--red,#DC2626)', cursor:'pointer', textAlign:'left' }}>
-                        <i className="fas fa-right-from-bracket" style={{ width:14 }} /> {t('publicHeader.seDeconnecter')}
-                      </button>
                     </div>
                   )}
                 </div>
@@ -405,11 +394,6 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
                           <i className="fas fa-right-left" style={{ color:'var(--blue)', width:14 }} /> Basculer vers mon espace {label}
                         </button>
                       )} />
-                      <div style={{ height:1, background:'var(--bdr)', margin:'4px 0' }} />
-                      <button onClick={handleLogout}
-                        style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--red,#DC2626)', cursor:'pointer' }}>
-                        <i className="fas fa-right-from-bracket" style={{ width:14 }} /> {t('publicHeader.deconnexion')}
-                      </button>
                     </div>
                   )}
                 </div>
@@ -514,20 +498,11 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
                   </button>
                 </>
               ) : isNonClient ? (
-                <>
-                  <button className={styles.drawerBtnUp}
-                    onClick={() => { navigate(getDashboardPath(role)); setMobileOpen(false); }}>
-                    <i className="fas fa-layer-group" /> {t('publicHeader.monEspaceProShort')}
-                  </button>
-                  <button className={styles.drawerBtnIn} onClick={handleLogout}>
-                    <i className="fas fa-right-from-bracket" /> {t('publicHeader.deconnexion')}
-                  </button>
-                </>
-              ) : (
-                <button className={styles.drawerBtnIn} onClick={handleLogout}>
-                  <i className="fas fa-right-from-bracket" /> {t('publicHeader.seDeconnecter')}
+                <button className={styles.drawerBtnUp}
+                  onClick={() => { navigate(getDashboardPath(role)); setMobileOpen(false); }}>
+                  <i className="fas fa-layer-group" /> {t('publicHeader.monEspaceProShort')}
                 </button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -590,15 +565,6 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
       </nav>
 
       {authModal}
-
-      <AuthPromptModal
-        open={loginGateOpen}
-        onClose={() => setLoginGateOpen(false)}
-        variant="anonymous"
-        title={t('publicHeader.avantDeVousConnecter')}
-        onLoginClick={onLogin}
-        onRegisterClick={onRegister}
-      />
     </NotificationProvider>
   );
 }

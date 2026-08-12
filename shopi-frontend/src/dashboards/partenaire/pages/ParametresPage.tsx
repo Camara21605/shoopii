@@ -16,9 +16,11 @@
  * ================================================================ */
 
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import ParamNav  from '../components/ParamNav';
 import SaveFloat from '../components/SaveFloat';
+import { useAppContext } from '../../../shared/context/AppContext';
 
 import SecProfil          from '../sections/params/SecProfil';
 import SecPaiement        from '../sections/params/SecPaiement';
@@ -38,6 +40,13 @@ import { useToasts, ToastStack }   from '../components/Toast';
 import p from '../styles/ParametresPage.module.css';
 
 export default function ParametresPage() {
+  const { logout } = useAppContext();
+  const navigate = useNavigate();
+  const handleLogout = useCallback(() => {
+    logout();
+    navigate('/login');
+  }, [logout, navigate]);
+
   const [section,     setSection]     = useState<SectionId>('profil');
   const [isDirty,     setIsDirty]     = useState(false);
   const [saveTrigger, setSaveTrigger] = useState(0);
@@ -195,15 +204,35 @@ export default function ParametresPage() {
 
       <div className={p.layout}>
         {/* ── Navigation gauche ── */}
-        <ParamNav
-          section={section}
-          onSection={id => {
-            /* Avertir si modifications non sauvegardées */
-            setSection(id);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          data={data}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <ParamNav
+            section={section}
+            onSection={id => {
+              /* Avertir si modifications non sauvegardées */
+              setSection(id);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            data={data}
+          />
+
+          {/* ── Déconnexion — persistante en bas de la navigation
+              paramètres, quelle que soit la section active ── */}
+          <div style={{ background: 'var(--white)', border: '1.5px solid var(--bdr)', borderRadius: 'var(--r-xl, 26px)', padding: 10, boxShadow: 'var(--sh-xs)' }}>
+            <button
+              type="button"
+              onClick={handleLogout}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 9, width: '100%',
+                padding: '10px 11px', borderRadius: 'var(--r-md, 12px)',
+                fontSize: 13, fontWeight: 700, color: 'var(--red)',
+                background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
+              }}
+            >
+              <i className="fas fa-right-from-bracket" style={{ width: 15, textAlign: 'center', fontSize: 13 }} />
+              Se déconnecter
+            </button>
+          </div>
+        </div>
 
         {/* ── Section active ── */}
         <main className={p.content}>

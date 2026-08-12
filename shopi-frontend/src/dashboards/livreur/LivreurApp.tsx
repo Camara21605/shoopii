@@ -242,7 +242,6 @@ export default function LivreurApp() {
                 return !v;
               });
             }}
-            onLogout={handleLogout}
             onGoHome={handleGoHome}
           />
 
@@ -258,7 +257,6 @@ export default function LivreurApp() {
             onMenuToggle={() => setSidebarOpen(o => !o)}
             onMenuClose={() => setSidebarOpen(false)}
             onNavigate={navigate}
-            onLogout={handleLogout}
           />
 
           {/* Bottom nav (mobile) : Correspondants · Livreurs · Mon espace */}
@@ -287,7 +285,7 @@ export default function LivreurApp() {
         )}
         {page === 'evaluation'  && <AjouterCorrespondantPage onPop={pop} />}
         {page === 'parametres'  && (
-          <ParametresPage onBack={() => navigate('overview')} onPop={pop} onAvatarRefresh={refreshAvatar} />
+          <ParametresPage onBack={() => navigate('overview')} onPop={pop} onAvatarRefresh={refreshAvatar} onLogout={handleLogout} />
         )}
         {page === 'messagerie'  && <MessagesPage />}
         {page === 'reseauCorrespondants' && <ReseauCorrespondantsPage onPop={pop} onView={viewCorrespondant} />}
