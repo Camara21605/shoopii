@@ -1,7 +1,7 @@
 /* ================================================================
  * FICHIER : pages/parametres/EntreprisesSection.tsx
  *
- * Centre de Gouvernance des Entreprises Shopi
+ * Centre de Gouvernance des Entreprises Shoneya
  * 7 onglets : Vue d'ensemble | Documents | Catégories | Validation |
  *             Suspensions | Règles | Tableau de bord
  * ================================================================ */
@@ -382,7 +382,7 @@ export default function EntreprisesSection({ onToast }: SectionProps) {
                     icon: 'fa-tags', color: '#7C3AED', bg: 'rgba(124,58,237,.10)',
                     label: 'Catégories actives',
                     val: categories.length > 0 ? `${activeCatCount} / ${categories.length}` : 'Aucune',
-                    sub: 'Du catalogue Shopi',
+                    sub: 'Du catalogue Shoneya',
                     goto: 'categories' as TabId,
                   },
                   {

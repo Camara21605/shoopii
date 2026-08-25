@@ -40,7 +40,7 @@ export default function CommandePage() {
   const [selLvr,     setSelLvr]     = useState<string | null>(null);
   const [selCorr,    setSelCorr]    = useState<number | null>(null);
   const [curSpd,     setCurSpd]     = useState('std');
-  /* Paiement toujours via le portefeuille Shopi — plus de sélection de
+  /* Paiement toujours via le portefeuille Shoneya — plus de sélection de
      mode de paiement ni de code promo (étape "Mode de paiement" retirée). */
   const payMode    = 'wallet' as const;
   const promoActif = false;
@@ -58,7 +58,7 @@ export default function CommandePage() {
   const [livreurs,        setLivreurs]        = useState<LivreurSuivi[]>([]);
   const [loadingLivreurs, setLoadingLivreurs]  = useState(true);
 
-  /* ── Solde réel du portefeuille Shopi du client (mode de paiement "Wallet") ── */
+  /* ── Solde réel du portefeuille Shoneya du client (mode de paiement "Wallet") ── */
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [loadingWallet, setLoadingWallet] = useState(true);
 

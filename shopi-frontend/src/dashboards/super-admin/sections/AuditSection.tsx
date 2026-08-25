@@ -286,10 +286,12 @@ const AuditDetailModal = memo(({
         position: 'relative', zIndex: 1,
         background: 'var(--bg)', border: '1px solid var(--border)',
         borderRadius: 16, width: '100%', maxWidth: 600,
-        boxShadow: '0 24px 48px rgba(0,0,0,.35)', overflow: 'hidden',
+        maxHeight: 'calc(100vh - 48px)', overflow: 'hidden',
+        display: 'flex', flexDirection: 'column',
+        boxShadow: '0 24px 48px rgba(0,0,0,.35)',
       }}>
         {/* Header */}
-        <div style={{ background: cfg.bg, borderBottom: `2px solid ${cfg.color}35`, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ background: cfg.bg, borderBottom: `2px solid ${cfg.color}35`, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           <span style={{ fontSize: 26 }}>{entry.icon}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -304,7 +306,7 @@ const AuditDetailModal = memo(({
         </div>
 
         {/* Corps */}
-        <div style={{ padding: 22, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+        <div className="grid-collapse-sm" style={{ padding: 22, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, overflowY: 'auto', minHeight: 0 }}>
           {/* Acteur */}
           <div>
             <SectionLabel>Acteur</SectionLabel>

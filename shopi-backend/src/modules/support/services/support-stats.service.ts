@@ -70,20 +70,38 @@ export class SupportStatsService {
    * Retourne toutes les métriques en un seul appel.
    * Utilise des requêtes SQL agrégées pour minimiser les
    * allers-retours avec la base de données.
+   *
+   * @param visibleUserIds  Portée hiérarchique résolue par
+   *   SupportPermissionService — null = SUPER_ADMIN (aucun filtre,
+   *   comportement inchangé), Set = uniquement les tickets dont
+   *   userId ∈ Set, Set vide = agent sans acteurs supervisés
+   *   (renvoie des statistiques à zéro sans toucher la base —
+   *   un `IN (:...ids)` avec un tableau vide provoque une erreur
+   *   de syntaxe SQL côté Postgres).
    * ────────────────────────────────────────────────────────── */
-  async getOverview(): Promise<SupportOverview> {
+  async getOverview(visibleUserIds: Set<string> | null): Promise<SupportOverview> {
+    if (visibleUserIds !== null && visibleUserIds.size === 0) {
+      return {
+        total: 0, openCount: 0, inProgressCount: 0, waitingUserCount: 0,
+        resolvedCount: 0, closedCount: 0, avgFirstResponseH: 0, avgCsat: 0,
+        slaBreachedCount: 0, byStatus: [], byType: [],
+        last7Days: this.emptyLast7Days(),
+      };
+    }
+    const ids = visibleUserIds ? [...visibleUserIds] : null;
 
     /* ── 1. Comptage par statut ─────────────────────────────
      * On GROUP BY status pour obtenir un tableau [{status, count}].
      * Le cast ::int est nécessaire car PostgreSQL renvoie les COUNT
      * sous forme de string dans certains drivers.
      * ─────────────────────────────────────────────────────── */
-    const byStatusRaw: { status: string; count: string }[] = await this.ticketRepo
+    const byStatusQb = this.ticketRepo
       .createQueryBuilder('t')
       .select('t.status', 'status')
       .addSelect('COUNT(t.id)', 'count')
-      .groupBy('t.status')
-      .getRawMany();
+      .groupBy('t.status');
+    if (ids) byStatusQb.where('t.userId IN (:...ids)', { ids });
+    const byStatusRaw: { status: string; count: string }[] = await byStatusQb.getRawMany();
 
     const byStatus: TicketStatusCount[] = byStatusRaw.map(r => ({
       status: r.status,
@@ -93,13 +111,14 @@ export class SupportStatsService {
     /* ── 2. Comptage par type de demande ────────────────────
      * Même principe que par statut, on group by type.
      * ─────────────────────────────────────────────────────── */
-    const byTypeRaw: { type: string; count: string }[] = await this.ticketRepo
+    const byTypeQb = this.ticketRepo
       .createQueryBuilder('t')
       .select('t.type', 'type')
       .addSelect('COUNT(t.id)', 'count')
       .groupBy('t.type')
-      .orderBy('COUNT(t.id)', 'DESC')
-      .getRawMany();
+      .orderBy('COUNT(t.id)', 'DESC');
+    if (ids) byTypeQb.where('t.userId IN (:...ids)', { ids });
+    const byTypeRaw: { type: string; count: string }[] = await byTypeQb.getRawMany();
 
     const byType: TicketTypeCount[] = byTypeRaw.map(r => ({
       type:  r.type,
@@ -118,7 +137,7 @@ export class SupportStatsService {
      * - COUNT(id) FILTER (WHERE firstResponseAt IS NULL AND ...)
      *   → tickets sans réponse depuis plus de 24 heures (SLA breach)
      * ─────────────────────────────────────────────────────── */
-    const metricsRaw = await this.ticketRepo
+    const metricsQb = this.ticketRepo
       .createQueryBuilder('t')
       .select([
         'COUNT(t.id) AS total',
@@ -131,8 +150,9 @@ export class SupportStatsService {
              AND t.status NOT IN ('resolved','closed')
              AND t."createdAt" < NOW() - INTERVAL '24 hours'
          ) AS "slaBreached"`,
-      ])
-      .getRawOne();
+      ]);
+    if (ids) metricsQb.where('t.userId IN (:...ids)', { ids });
+    const metricsRaw = await metricsQb.getRawOne();
 
     /* ── 4. Tendance sur 7 jours ────────────────────────────
      *
@@ -142,6 +162,10 @@ export class SupportStatsService {
      *
      * generate_series(NOW()-6 days, NOW(), '1 day') :
      *   → génère [J-6, J-5, ..., J-1, J] (7 dates)
+     *
+     * Filtre de portée : ANY($1::uuid[]) plutôt qu'un IN interpolé,
+     * pour rester paramétré (protection injection SQL) — $1 est
+     * omis (clause TRUE) quand ids est null (SUPER_ADMIN).
      * ─────────────────────────────────────────────────────── */
     const last7DaysRaw: { day: string; created: string; resolved: string }[] =
       await this.ticketRepo.query(`
@@ -160,6 +184,7 @@ export class SupportStatsService {
           SELECT COUNT(*) AS cnt
           FROM support_tickets
           WHERE DATE("createdAt") = DATE(day)
+            AND ($1::uuid[] IS NULL OR "userId" = ANY($1::uuid[]))
         ) created ON TRUE
 
         /* Tickets résolus ce jour */
@@ -167,10 +192,11 @@ export class SupportStatsService {
           SELECT COUNT(*) AS cnt
           FROM support_tickets
           WHERE DATE("resolvedAt") = DATE(day)
+            AND ($1::uuid[] IS NULL OR "userId" = ANY($1::uuid[]))
         ) resolved ON TRUE
 
         ORDER BY day ASC
-      `);
+      `, [ids]);
 
     const last7Days: DailyCount[] = last7DaysRaw.map(r => ({
       date:     r.day,
@@ -198,5 +224,15 @@ export class SupportStatsService {
       byType,
       last7Days,
     };
+  }
+
+  /** Série de 7 jours à zéro — utilisée quand l'agent n'a aucun acteur supervisé. */
+  private emptyLast7Days(): DailyCount[] {
+    const days: DailyCount[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86_400_000);
+      days.push({ date: d.toISOString().slice(0, 10), created: 0, resolved: 0 });
+    }
+    return days;
   }
 }

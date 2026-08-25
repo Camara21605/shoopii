@@ -57,8 +57,8 @@ export default function SignalementsPage({ onReport }: Props) {
       <div className={styles.banner}>
         <div className={styles.bannerIc}><i className="fas fa-shield-halved" /></div>
         <div>
-          <div className={styles.bannerT}>Aidez-nous à garder Shopi sûr</div>
-          <div className={styles.bannerP}>En tant que partenaire, vous êtes en première ligne. Signalez tout acteur au comportement suspect. Chaque signalement est examiné par l'équipe de sécurité Shopi.</div>
+          <div className={styles.bannerT}>Aidez-nous à garder Shoneya sûr</div>
+          <div className={styles.bannerP}>En tant que partenaire, vous êtes en première ligne. Signalez tout acteur au comportement suspect. Chaque signalement est examiné par l'équipe de sécurité Shoneya.</div>
         </div>
         <button className={styles.bannerBtn} onClick={onReport}><i className="fas fa-flag" /> Signaler un utilisateur</button>
       </div>

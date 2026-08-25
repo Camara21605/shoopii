@@ -71,7 +71,7 @@ export default function AuthPromptModal({
         </div>
 
         <p style={{ fontSize:14, color:'var(--t2)', lineHeight:1.7, marginBottom:24 }}>
-          Cette fonctionnalité est réservée aux <strong>comptes clients Shopi</strong>.<br />
+          Cette fonctionnalité est réservée aux <strong>comptes clients Shoneya</strong>.<br />
           {isWrongRole
             ? 'Créez un compte client gratuit pour accéder à votre panier, vos commandes et vos messages.'
             : 'Connectez-vous ou créez un compte client gratuit pour accéder à votre panier, vos commandes et vos messages.'}

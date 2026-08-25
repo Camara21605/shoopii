@@ -18,7 +18,7 @@
     "emptyTransactions": "Aucune transaction pour l'instant.",
     "repartition": "Répartition",
     "emptyRepartition": "Aucune donnée ce mois.",
-    "virementsShopi": "Virements Shopi",
+    "virementsShopi": "Virements Shoneya",
     "emptyVirements": "Aucun virement pour l'instant.",
     "statutRecu": "✓ Reçu",
     "statutAttente": "⏳ Attente",
@@ -27,7 +27,7 @@
       "telechargerBilan": "Télécharger bilan mensuel",
       "demanderVirement": "Demander virement anticipé",
       "modifierInfosBancaires": "Modifier infos bancaires",
-      "voirFactures": "Voir factures Shopi"
+      "voirFactures": "Voir factures Shoneya"
     }
   }
 }

@@ -2,7 +2,7 @@
  * FICHIER : src/shared/location/services/routingApi.ts
  *
  * RÔLE : Client frontend pour les endpoints de tracking/routing.
- *        Appelle le backend Shopi qui relaie vers OpenRouteService.
+ *        Appelle le backend Shoneya qui relaie vers OpenRouteService.
  * ============================================================ */
 
 import { apiFetch }       from '../../services/apiFetch';

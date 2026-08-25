@@ -64,7 +64,7 @@
     "loadingWallet": "جارٍ تحميل المحفظة…",
     "header": {
       "title": "المحفظة",
-      "subtitle": "إدارة رصيدك وسحوباتك ومعاملات Shopi",
+      "subtitle": "إدارة رصيدك وسحوباتك ومعاملات Shoneya",
       "exporter": "تصدير",
       "exportToast": "📄 جارٍ تصدير الكشف…",
       "retirerDesFonds": "سحب أموال"
@@ -72,7 +72,7 @@
     "balance": {
       "soldeDisponible": "الرصيد المتاح",
       "masquerSolde": "إخفاء الرصيد",
-      "totalPortefeuille": "الإجمالي في محفظة Shopi الخاصة بك",
+      "totalPortefeuille": "الإجمالي في محفظة Shoneya الخاصة بك",
       "ceMois": "+{{pct}}% هذا الشهر",
       "entreesCeMois": "الدخل هذا الشهر",
       "sortiesCeMois": "المصاريف هذا الشهر",
@@ -84,7 +84,7 @@
     "kpi": {
       "totalEncaisse": "إجمالي المحصّل",
       "totalRetire": "إجمالي المسحوب",
-      "commissionsShopi": "عمولات Shopi"
+      "commissionsShopi": "عمولات Shoneya"
     },
     "chart": {
       "title": "تطور الإيرادات",
@@ -119,8 +119,8 @@
       "versMethodeParDefaut": "إلى وسيلتك الافتراضية"
     },
     "commission": {
-      "title": "عمولات Shopi",
-      "textPart1": "تفرض Shopi عمولة قدرها",
+      "title": "عمولات Shoneya",
+      "textPart1": "تفرض Shoneya عمولة قدرها",
       "textPct": "3%",
       "textPart2": "على كل معاملة محصلة. التحويلات إلى المحفظة المتنقلة",
       "textGratuits": "مجانية",
@@ -129,8 +129,8 @@
       "textPart4": "لكل عملية."
     },
     "opPage": {
-      "chooseMethodFrom": "اختر وسيلة دفع إلكترونية للتحويل منها بحسابك في Shopi.",
-      "chooseMethodTo": "اختر وسيلة دفع إلكترونية للتحويل إليها بحسابك في Shopi.",
+      "chooseMethodFrom": "اختر وسيلة دفع إلكترونية للتحويل منها بحسابك في Shoneya.",
+      "chooseMethodTo": "اختر وسيلة دفع إلكترونية للتحويل إليها بحسابك في Shoneya.",
       "ajouterType": "إضافة {{type}}",
       "ajouter": "إضافة",
       "ajouterEtContinuer": "إضافة والمتابعة",
@@ -144,15 +144,15 @@
       "typeLabel": "النوع"
     },
     "quickBar": {
-      "soldeShopi": "رصيد Shopi",
+      "soldeShopi": "رصيد Shoneya",
       "actionsTitle": "إجراءات المحفظة",
       "depot": "إيداع",
       "retrait": "سحب",
       "actualiser": "تحديث",
       "actualiserSolde": "تحديث الرصيد",
       "gererPortefeuille": "إدارة محفظتي",
-      "chooseMethodDeposit": "اختر وسيلة دفع إلكترونية لتحويل الأموال إلى حسابك في Shopi.",
-      "chooseMethodWithdraw": "اختر وسيلة دفع إلكترونية لاستلام الأموال من حسابك في Shopi."
+      "chooseMethodDeposit": "اختر وسيلة دفع إلكترونية لتحويل الأموال إلى حسابك في Shoneya.",
+      "chooseMethodWithdraw": "اختر وسيلة دفع إلكترونية لاستلام الأموال من حسابك في Shoneya."
     }
   }
 }

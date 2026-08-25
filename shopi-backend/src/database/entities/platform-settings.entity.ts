@@ -26,7 +26,7 @@ export class PlatformSettings {
    * GÉNÉRAL — Identité & localisation
    * ══════════════════════════════════════════════════════════ */
 
-  @Column({ type: 'varchar', length: 100, default: 'Shopi Africa' })
+  @Column({ type: 'varchar', length: 100, default: 'Shopi' })
   platformName!: string;
 
   @Column({ type: 'varchar', length: 200, nullable: true, default: null })

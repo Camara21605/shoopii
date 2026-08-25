@@ -42,7 +42,7 @@ export const PARAM_NAV_SECTIONS: { title: string; items: ParamNavItem[] }[] = [
     title: 'Finances',
     items: [
       { id: 'paiement',     icon: 'fa-wallet',   label: 'Paiement & Facturation', pct: 100 },
-      { id: 'commissions',  icon: 'fa-percent',  label: 'Commissions Shopi',      pct: 100 },
+      { id: 'commissions',  icon: 'fa-percent',  label: 'Commissions Shoneya',      pct: 100 },
     ],
   },
   {

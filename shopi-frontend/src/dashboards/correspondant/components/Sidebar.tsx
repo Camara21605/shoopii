@@ -3,6 +3,7 @@ import React from 'react';
 import s from '../styles/Sidebar.module.css';
 import { pop } from './Toast';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
+import ShoneyaLogo from '../../../shared/components/ShoneyaLogo';
 import type { PageId } from '../data/correspondantData';
 
 interface Props {
@@ -46,8 +47,8 @@ export default function Sidebar({ page, setPage, open, onClose, nomUtilisateur, 
     <nav className={`${s.sb} ${open ? s.open : ''}`}>
       {/* Logo */}
       <div className={s.logo}>
-        <div className={s.logoMark}>Sh</div>
-        <div className={s.brand}>Sho<b>pi</b></div>
+        <ShoneyaLogo size={32} />
+        <div className={s.brand}>Sho<b>neya</b></div>
       </div>
 
       {/* Card correspondant */}
@@ -72,8 +73,10 @@ export default function Sidebar({ page, setPage, open, onClose, nomUtilisateur, 
         </div>
       </div>
 
-      {/* Solde du portefeuille Shopi — sous la carte correspondant */}
-      <div style={{ padding: '0 22px 12px' }}>
+      {/* Solde du portefeuille Shoneya — sous la carte correspondant.
+          Masqué en rail compact (≤960px, s.walletWrap) : WalletQuickBar
+          n'a pas de mode icône-seule et déborderait dans une piste de 68px. */}
+      <div className={s.walletWrap} style={{ padding: '0 22px 12px' }}>
         <WalletQuickBar compact mini onManage={() => go('portefeuille')} />
       </div>
 

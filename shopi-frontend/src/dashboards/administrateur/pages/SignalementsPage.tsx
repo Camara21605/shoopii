@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react';
 import styles from '../styles/SignalementsPage.module.css';
 import { apiFetch } from '../../../shared/services/apiFetch';
-import type { SignalementStatut, Gravite } from '../data/types';
+import Pagination from '../components/Pagination';
 
 interface SignalementsPageProps {
   onSanction: (cible: string) => void;
@@ -28,18 +28,19 @@ type Onglet = 'atraiter' | 'encours' | 'traites';
 
 export default function SignalementsPage({ onSanction, onToast }: SignalementsPageProps) {
   const [onglet,  setOnglet]  = useState<Onglet>('atraiter');
-  const [data,    setData]    = useState<{ list: any[]; stats: any } | null>(null);
+  const [page,    setPage]    = useState(1);
+  const [data,    setData]    = useState<{ list: any[]; stats: any; total: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = () => {
     setLoading(true);
-    apiFetch('/dashboard/admin/signalements')
+    apiFetch('/dashboard/admin/signalements', { params: { page: String(page), limit: '20' } })
       .then(d => setData(d as any))
       .catch(console.error)
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, []);
+  useEffect(load, [page]);
 
   const resolve = async (id: string, titre: string) => {
     try {
@@ -53,6 +54,7 @@ export default function SignalementsPage({ onSanction, onToast }: SignalementsPa
 
   const stats = data?.stats ?? { aTraiter: 0, enCours: 0, traites: 0, suspendus: 0 };
   const all   = data?.list  ?? [];
+  const total = data?.total ?? 0;
 
   const visibles = all.filter((s: any) =>
     onglet === 'atraiter' ? s.statut === 'review'
@@ -165,6 +167,7 @@ export default function SignalementsPage({ onSanction, onToast }: SignalementsPa
             })}
           </div>
         )}
+        <Pagination page={page} limit={20} total={total} onChange={setPage} />
       </div>
     </div>
   );

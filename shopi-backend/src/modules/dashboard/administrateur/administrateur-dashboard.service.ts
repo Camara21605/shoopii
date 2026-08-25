@@ -33,6 +33,8 @@ import { AdminPartenairesService }   from './services/admin-partenaires.service'
 import { AdminSignalementsService }  from './services/admin-signalements.service';
 import { AdminCommandesService }     from './services/admin-commandes.service';
 import { AdminAuditService }         from './services/admin-audit.service';
+import { AdminClientsService }       from './services/admin-clients.service';
+import { AdminStatsService }         from './services/admin-stats.service';
 
 // Ré-export du DTO pour que le contrôleur puisse l'importer depuis ce fichier
 export { GenerateCodeDto } from './dto/generate-code.dto';
@@ -49,6 +51,8 @@ export class AdministrateurDashboardService {
     private readonly signalements: AdminSignalementsService,
     private readonly commandes:    AdminCommandesService,
     private readonly audit:        AdminAuditService,
+    private readonly clients:      AdminClientsService,
+    private readonly stats:        AdminStatsService,
   ) {}
 
   // ── Taux de commission ───────────────────────────────────────
@@ -59,29 +63,44 @@ export class AdministrateurDashboardService {
   getOverview(userId: string)                      { return this.overview.getOverview(userId); }
 
   // ── Codes de création ────────────────────────────────────────
-  getCodes(userId: string)                         { return this.codes.getCodes(userId); }
+  getCodes(userId: string, page?: number, limit?: number) { return this.codes.getCodes(userId, page, limit); }
   generateCode(userId: string, dto: any)           { return this.codes.generateCode(userId, dto); }
   revokeCode(userId: string, codeId: string)       { return this.codes.revokeCode(userId, codeId); }
+  sendCodeByEmail(userId: string, codeId: string)  { return this.codes.sendCodeByEmail(userId, codeId); }
 
   // ── Acteurs de la zone + Validations ────────────────────────
-  getActeurs(userId: string, role?: string, search?: string) {
-    return this.acteurs.getActeurs(userId, role, search);
+  getActeurs(userId: string, role?: string, search?: string, page?: number, limit?: number) {
+    return this.acteurs.getActeurs(userId, role, search, page, limit);
   }
   getValidations(userId: string)                   { return this.acteurs.getValidations(userId); }
   approveValidation(adminId: string, id: string)   { return this.acteurs.approveValidation(adminId, id); }
   rejectValidation(adminId: string, id: string)    { return this.acteurs.rejectValidation(adminId, id); }
 
   // ── Partenaires ──────────────────────────────────────────────
-  getPartenaires(userId: string)                   { return this.partenaires.getPartenaires(userId); }
+  getPartenaires(userId: string, tier?: string, search?: string, page?: number, limit?: number) {
+    return this.partenaires.getPartenaires(userId, tier, search, page, limit);
+  }
 
   // ── Signalements ─────────────────────────────────────────────
-  getSignalements(userId: string)                  { return this.signalements.getSignalements(userId); }
+  getSignalements(userId: string, page?: number, limit?: number) {
+    return this.signalements.getSignalements(userId, page, limit);
+  }
   resolveSignalement(adminId: string, id: string)  { return this.signalements.resolveSignalement(adminId, id); }
 
   // ── Commandes + Finances ─────────────────────────────────────
-  getCommandes(userId: string)                     { return this.commandes.getCommandes(userId); }
+  getCommandes(userId: string, onglet?: 'toutes' | 'encours' | 'litiges', page?: number, limit?: number) {
+    return this.commandes.getCommandes(userId, onglet, page, limit);
+  }
   getFinances(userId: string)                      { return this.commandes.getFinances(userId); }
 
   // ── Journal d'audit ──────────────────────────────────────────
-  getAudit(userId: string)                         { return this.audit.getAudit(userId); }
+  getAudit(userId: string, page?: number, limit?: number) { return this.audit.getAudit(userId, page, limit); }
+
+  // ── Clients de la zone (lecture seule) ───────────────────────
+  getClients(userId: string, search?: string, page?: number, limit?: number) {
+    return this.clients.getClients(userId, search, page, limit);
+  }
+
+  // ── Statistiques complémentaires ─────────────────────────────
+  getStats(userId: string)                         { return this.stats.getStats(userId); }
 }

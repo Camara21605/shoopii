@@ -36,6 +36,9 @@ export interface NotificationSocket extends Socket {
     actorType: NotificationActorType;
     /** UUID du profil acteur (companies.id, clients.id…) */
     actorId:   string;
+    /** Session unique (voir SessionService) — absent si token émis avant
+     *  cette fonctionnalité. */
+    sessionId?: string;
   };
 }
 

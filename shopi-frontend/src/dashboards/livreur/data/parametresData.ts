@@ -168,7 +168,7 @@ export const NOTIFS_FINANCES = [
   { l:'Bilan hebdomadaire',   sub:'Résumé gains chaque lundi matin',           on:true  },
 ];
 export const NOTIFS_CANAUX = [
-  { l:'Notifications push (app)', sub:"Sur votre smartphone via l'app Shopi",     on:true  },
+  { l:'Notifications push (app)', sub:"Sur votre smartphone via l'app Shoneya",     on:true  },
   { l:'SMS',                      sub:'Messages texte pour alertes critiques',     on:true  },
   { l:'WhatsApp',                 sub:'Notifications via WhatsApp Business',       on:false },
   { l:'Email',                    sub:'Résumés et documents importants',            on:true  },
@@ -180,7 +180,7 @@ export const PRIVACY_ITEMS = [
   { l:'Afficher mon historique',          sub:'Visible sur mon profil public',                        on:true  },
   { l:'Apparaître dans la recherche',     sub:'Être trouvable par de nouvelles boutiques',            on:true  },
   { l:'Localisation en temps réel',       sub:'Partagée uniquement durant la livraison active',       on:true  },
-  { l:'Statistiques anonymisées',         sub:"Permettre à Shopi d'utiliser vos stats pour ses rapports", on:true },
+  { l:'Statistiques anonymisées',         sub:"Permettre à Shoneya d'utiliser vos stats pour ses rapports", on:true },
   { l:'Publicité personnalisée',          sub:'Recevoir des offres adaptées à votre profil',          on:false },
 ];
 

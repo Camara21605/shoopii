@@ -1,7 +1,7 @@
 /* ================================================================
  * FICHIER : src/dashboards/administrateur/AdministrateurApp.tsx
  *
- * Point d'entrée du dashboard administrateur de zone Shopi.
+ * Point d'entrée du dashboard administrateur de zone Shoneya.
  * Pattern activePage + PageRenderer (identique partenaire/client).
  * Route : /dashboard/administrateur/*
  * ================================================================ */
@@ -30,10 +30,13 @@ const OverviewPage       = lazy(() => import('./pages/OverviewPage'));
 const CodesPage          = lazy(() => import('./pages/CodesPage'));
 const PartenairesPage    = lazy(() => import('./pages/PartenairesPage'));
 const ActeursPage        = lazy(() => import('./pages/ActeursPage'));
+const ClientsPage        = lazy(() => import('./pages/ClientsPage'));
 const ValidationsPage    = lazy(() => import('./pages/ValidationsPage'));
 const SignalementsPage   = lazy(() => import('./pages/SignalementsPage'));
 const CommandesPage      = lazy(() => import('./pages/CommandesPage'));
 const FinancesPage       = lazy(() => import('./pages/FinancesPage'));
+const StatsPage          = lazy(() => import('./pages/StatsPage'));
+const SupportPage        = lazy(() => import('./pages/SupportPage'));
 const AuditPage          = lazy(() => import('./pages/AuditPage'));
 const NotificationsPage  = lazy(() => import('./pages/NotificationsPage'));
 const ParametresPage     = lazy(() => import('./pages/ParametresPage'));
@@ -63,19 +66,44 @@ export default function AdministrateurApp() {
       .catch(() => {});
   }, []);
 
+  /* Filet de sécurité : si l'accès à activePage a été révoqué (ou n'a
+   * jamais été accordé) pendant que l'admin s'y trouvait déjà — ex. le
+   * super-admin retire "Signalements" en temps réel — on renvoie vers
+   * la vue d'ensemble plutôt que de laisser une page à moitié accessible
+   * affichée. Miroir de Sidebar.tsx (même mapping page → permission). */
+  const PAGE_PERM: Partial<Record<typeof s.activePage, string>> = {
+    partenaires:   'partners',
+    signalements:  'reports',
+    notifications: 'notifs',
+    clients:       'customers',
+    stats:         'stats',
+    support:       'support',
+  };
+  useEffect(() => {
+    if (!s.permsLoaded) return; // attend le premier chargement avant de juger
+    const requiredPerm = PAGE_PERM[s.activePage];
+    if (requiredPerm && s.geoPerms[requiredPerm] !== true) {
+      s.navigate('overview');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.activePage, s.geoPerms, s.permsLoaded]);
+
   /* ── PageRenderer ── */
   const renderPage = () => {
     switch (s.activePage) {
       case 'overview':       return <OverviewPage onNavigate={s.navigate} />;
       case 'codes':          return <CodesPage onGenerate={() => s.setGenOpen(true)} onToast={pop} />;
       case 'partenaires':    return <PartenairesPage onSanction={s.ouvrirSanction} onToast={pop} />;
-      case 'acteurs':        return <ActeursPage onSanction={s.ouvrirSanction} onToast={pop} />;
+      case 'acteurs':        return <ActeursPage onSanction={s.ouvrirSanction} onToast={pop} geoPerms={s.geoPerms} />;
+      case 'clients':        return <ClientsPage onToast={pop} />;
       case 'validations':    return <ValidationsPage onToast={pop} />;
       case 'signalements':   return <SignalementsPage onSanction={s.ouvrirSanction} onToast={pop} />;
       case 'commandes':      return <CommandesPage onToast={pop} />;
       case 'finances':       return <FinancesPage onToast={pop} />;
+      case 'stats':          return <StatsPage onToast={pop} />;
+      case 'support':        return <SupportPage onToast={pop} />;
       case 'audit':          return <AuditPage onToast={pop} />;
-      case 'notifications':  return <NotificationsPage onToast={pop} onNavigate={s.navigate} />;
+      case 'notifications':  return <NotificationsPage {...notifs} onToast={pop} onNavigate={s.navigate} />;
       case 'parametres':     return <ParametresPage onToast={pop} />;
       case 'geo':            return <GeoReferentielPage geoPerms={s.geoPerms} onToast={pop} />;
       default:               return <OverviewPage onNavigate={s.navigate} />;
@@ -108,6 +136,7 @@ export default function AdministrateurApp() {
           onToast={pop}
           unreadCount={notifs.unreadCount}
           onBell={() => setNotifOpen(o => !o)}
+          geoPerms={s.geoPerms}
         />
 
         <main className={styles.page}>
@@ -136,7 +165,6 @@ export default function AdministrateurApp() {
       {s.genOpen && (
         <GenerateCodeModal
           onClose={() => s.setGenOpen(false)}
-          onGenerate={s.genererCode}
           onToast={pop}
         />
       )}

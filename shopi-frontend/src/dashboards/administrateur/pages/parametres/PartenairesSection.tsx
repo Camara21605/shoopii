@@ -1,7 +1,7 @@
 /* ================================================================
  * FICHIER : pages/parametres/PartenairesSection.tsx
  *
- * Partner Management Center (PMC) — Shopi
+ * Partner Management Center (PMC) — Shoneya
  * 7 onglets : Vue d'ensemble | Tiers | Commissions | Objectifs |
  *             Bonus & Récompenses | Validation | Tableau de bord
  * ================================================================ */

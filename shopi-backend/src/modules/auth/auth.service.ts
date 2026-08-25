@@ -51,6 +51,8 @@ import { LoginDto }             from './dto/login.dto';
 import { ForgotPasswordDto }    from './dto/password.dto';
 import type { JwtPayload }      from './strategies/jwt.strategy';
 import { TwoFaService }         from './twofa/twofa.service';
+import { SessionService }       from '../session/session.service';
+import { NotificationBroadcastService } from '../notifications/services/notification-broadcast.service';
 
 /* ── Constantes ── */
 const BCRYPT_ROUNDS         = 12;
@@ -108,6 +110,10 @@ export interface AuthResponse {
     role:      UserRole;
     status:    UserStatus;
   };
+  /** true si cette connexion a révoqué une session déjà active sur un
+   *  autre appareil — le frontend affiche alors une notification
+   *  informative (non alarmiste, voir mission §13). */
+  sessionReplaced: boolean;
 }
 
 /** Type interne : refreshToken n'est PAS retourné dans le corps de la réponse HTTP.
@@ -185,6 +191,8 @@ export class AuthService implements OnModuleInit {
     private readonly codeCreationService: CodeCreationService,
     private readonly mailService:         MailService,
     private readonly twoFaService:        TwoFaService,
+    private readonly sessionService:      SessionService,
+    private readonly notificationBroadcast: NotificationBroadcastService,
 
     @InjectRedis()
     private readonly redis: Redis,
@@ -404,20 +412,15 @@ export class AuthService implements OnModuleInit {
         this.logger.error(`[WELCOME EMAIL ❌] ${newUser.email} | ${(err as Error).message}`),
       );
 
-    const actorId     = await this.findProfileId(newUser.id, newUser.role as UserRole);
-    const accessToken  = this.signJwt(newUser, false, actorId);
-    const ttlMs        = REFRESH_TTL_NORMAL_MS;
-    const expiresAt    = new Date(Date.now() + ttlMs);
-    const { rawToken: refreshToken } = await this.issueRefreshToken(
-      newUser.id, clientIp, userAgent, expiresAt,
-    );
-
     this.logEvent('register_success', {
       userId: newUser.id, email: newUser.email, role: newUser.role,
       ipAddress: clientIp, userAgent, success: true,
     });
 
-    return { accessToken, refreshToken, refreshTtlMs: ttlMs, user: this.toPublicUser(newUser) };
+    /* Un compte fraîchement créé n'a jamais de session précédente —
+     * issueTokensForUser() le gère nativement (sessionReplaced restera
+     * false), pas besoin de dupliquer signJwt+issueRefreshToken ici. */
+    return this.issueTokensForUser(newUser, false, clientIp, userAgent, dto.deviceId ?? null);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -576,7 +579,7 @@ export class AuthService implements OnModuleInit {
     }
 
     if (matched.length === 1) {
-      return this.finishLogin(matched[0], dto.rememberMe ?? false, clientIp, userAgent);
+      return this.finishLogin(matched[0], dto.rememberMe ?? false, clientIp, userAgent, dto.deviceId ?? null);
     }
 
     /* Les comptes liés (pro + client, même email/téléphone) partagent, par
@@ -634,6 +637,7 @@ export class AuthService implements OnModuleInit {
     rememberMe: boolean,
     clientIp:   string,
     userAgent:  string | null,
+    deviceId:   string | null = null,
   ): Promise<AuthServiceResult | TwoFaChallengeResult> {
     const INVALID_MSG = 'Identifiants incorrects. Vérifiez votre email et mot de passe.';
     /* On ne fait JAMAIS confiance au userId envoyé par le client seul — il doit
@@ -660,7 +664,7 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException(INVALID_MSG);
     }
 
-    return this.finishLogin(chosen, rememberMe, clientIp, userAgent);
+    return this.finishLogin(chosen, rememberMe, clientIp, userAgent, deviceId);
   }
 
   /**
@@ -673,6 +677,7 @@ export class AuthService implements OnModuleInit {
     rememberMe: boolean,
     clientIp:   string,
     userAgent:  string | null,
+    deviceId:   string | null = null,
   ): Promise<AuthServiceResult | TwoFaChallengeResult> {
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       const min = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60_000);
@@ -712,7 +717,7 @@ export class AuthService implements OnModuleInit {
      * échanger via POST /auth/2fa/verify-login avec le code TOTP. */
     if (await this.twoFaService.isEnabled(user.role as UserRole, user.id)) {
       const challengeToken = this.jwtService.sign(
-        { sub: user.id, purpose: '2fa-challenge' },
+        { sub: user.id, purpose: '2fa-challenge', deviceId },
         { expiresIn: JWT_TTL_TWOFA, secret: this.jwtResetSecret },
       );
       this.logEvent('login_2fa_challenge', {
@@ -728,7 +733,7 @@ export class AuthService implements OnModuleInit {
     });
     this.logger.log(`[LOGIN ✅] ${user.email} | ${user.role} | IP=${clientIp}`);
 
-    return this.issueTokensForUser(user, rememberMe, clientIp, userAgent);
+    return this.issueTokensForUser(user, rememberMe, clientIp, userAgent, deviceId);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -741,7 +746,7 @@ export class AuthService implements OnModuleInit {
     clientIp:       string,
     userAgent:      string | null = null,
   ): Promise<AuthServiceResult> {
-    let payload: { sub: string; purpose: string; switchFrom?: string };
+    let payload: { sub: string; purpose: string; switchFrom?: string; deviceId?: string | null };
     try {
       payload = this.jwtService.verify(challengeToken, { secret: this.jwtResetSecret });
     } catch {
@@ -787,7 +792,7 @@ export class AuthService implements OnModuleInit {
     /* rememberMe n'est pas connu à cette étape (pas transmis dans le défi) —
      * session normale (24h) par défaut ; l'utilisateur peut se reconnecter
      * avec "Se souvenir de moi" si besoin d'une session plus longue. */
-    return this.issueTokensForUser(user, false, clientIp, userAgent);
+    return this.issueTokensForUser(user, false, clientIp, userAgent, payload.deviceId ?? null);
   }
 
   /**
@@ -829,15 +834,31 @@ export class AuthService implements OnModuleInit {
 
   /** Émet accessToken + (sauf SUPER_ADMIN) refreshToken pour un utilisateur déjà authentifié.
    *  Non-private : réutilisé par AccountLinkService pour le switch pro↔client
-   *  (aucune réauthentification nécessaire, le lien fait déjà foi). */
+   *  (aucune réauthentification nécessaire, le lien fait déjà foi).
+   *
+   *  SESSION UNIQUE : chaque appel démarre une nouvelle session (voir
+   *  SessionService.startSession) qui remplace atomiquement toute session
+   *  déjà active pour cet utilisateur. Si une session précédente existait
+   *  (autre appareil), elle est révoquée ici même : refresh tokens associés
+   *  marqués révoqués, et une notification temps réel `session:revoked`
+   *  est diffusée sur la room de cette session (voir NotificationGateway). */
   async issueTokensForUser(
     user:       User,
     rememberMe: boolean,
     clientIp:   string | null,
     userAgent:  string | null,
+    deviceId:   string | null = null,
   ): Promise<AuthServiceResult> {
-    const actorId    = await this.findProfileId(user.id, user.role as UserRole);
-    const accessToken = this.signJwt(user, false, actorId);
+    const actorId = await this.findProfileId(user.id, user.role as UserRole);
+
+    const { sessionId, previousSessionId, sessionReplaced } =
+      await this.sessionService.startSession(user.id, deviceId, clientIp, userAgent);
+
+    if (previousSessionId) {
+      await this.revokeSessionAndNotify(user.id, previousSessionId, 'NEW_LOGIN');
+    }
+
+    const accessToken = this.signJwt(user, false, actorId, sessionId);
 
     /* SUPER_ADMIN n'a pas de refresh token — il doit se reconnecter manuellement après 4h */
     let refreshToken: string | null = null;
@@ -845,12 +866,40 @@ export class AuthService implements OnModuleInit {
     if (user.role !== UserRole.SUPER_ADMIN) {
       const ttlMs = rememberMe ? REFRESH_TTL_LONG_MS : REFRESH_TTL_NORMAL_MS;
       const expiresAt = new Date(Date.now() + ttlMs);
-      const { rawToken } = await this.issueRefreshToken(user.id, clientIp, userAgent, expiresAt);
+      const { rawToken } = await this.issueRefreshToken(
+        user.id, clientIp, userAgent, expiresAt, sessionId, deviceId,
+      );
       refreshToken = rawToken;
       refreshTtlMs = ttlMs;
     }
 
-    return { accessToken, refreshToken, refreshTtlMs, user: this.toPublicUser(user) };
+    this.logger.log(`[AUTH] Session ${sessionId} créée pour ${user.email}${sessionReplaced ? ` (remplace ${previousSessionId})` : ''}`);
+
+    return { accessToken, refreshToken, refreshTtlMs, user: this.toPublicUser(user), sessionReplaced };
+  }
+
+  /**
+   * Révoque une session (refresh tokens associés) et diffuse l'événement
+   * temps réel `session:revoked` à l'appareil concerné, s'il est encore
+   * connecté. Aucune donnée sensible dans le payload diffusé (§10).
+   */
+  private async revokeSessionAndNotify(
+    userId:    string,
+    sessionId: string,
+    reason:    'NEW_LOGIN' | 'USER_LOGOUT',
+  ): Promise<void> {
+    await this.refreshTokenRepo.update(
+      { sessionId, revoked: false },
+      { revoked: true, revokedReason: reason },
+    );
+
+    if (reason === 'NEW_LOGIN') {
+      this.notificationBroadcast.emitToSession(sessionId, 'session:revoked', {
+        reason,
+        message: 'Votre compte vient d\'être connecté sur un autre appareil. Pour des raisons de sécurité, cette session a été fermée.',
+      });
+    }
+    this.logger.log(`[AUTH] Session précédente ${sessionId} révoquée (${reason}) pour user=${userId}`);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1235,9 +1284,10 @@ export class AuthService implements OnModuleInit {
     await this.userRepo.update(user.id, updates as any);
   }
 
-  private signJwt(user: User, _rememberMe: boolean, actorId?: string): string {
+  private signJwt(user: User, _rememberMe: boolean, actorId?: string, sessionId?: string): string {
     const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role };
-    if (actorId) payload.actorId = actorId;
+    if (actorId)   payload.actorId = actorId;
+    if (sessionId) payload.sid     = sessionId;
 
     /* Access token court (1h) pour tous les rôles non-super-admin.
      * La persistance de session est assurée par le refresh token (24h ou 7j).
@@ -1321,8 +1371,7 @@ export class AuthService implements OnModuleInit {
         throw new UnauthorizedException('Votre compte est suspendu. Contactez l\'administrateur.');
       user.lastLoginAt = new Date();
       await this.userRepo.save(user);
-      const actorId = await this.findProfileId(user.id, user.role as UserRole);
-      return this.signJwt(user, true, actorId);
+      return this.issueGoogleSessionJwt(user);
     }
 
     /* ── Nouveau compte CLIENT ── */
@@ -1379,8 +1428,27 @@ export class AuthService implements OnModuleInit {
       await queryRunner.release();
     }
 
-    const actorId = await this.findProfileId(user!.id, user!.role as UserRole);
-    return this.signJwt(user!, true, actorId);
+    return this.issueGoogleSessionJwt(user!);
+  }
+
+  /**
+   * Démarre une session unique et signe l'access token pour un login
+   * Google — partagé entre le cas "compte existant" et "nouveau compte
+   * client" de googleLogin(). Le flow OAuth est un aller-retour de
+   * redirection (googleLogin() → Redis oauth_code → exchangeGoogleOAuthCode()),
+   * donc contrairement à issueTokensForUser() le refresh token n'est PAS
+   * émis ici : exchangeGoogleOAuthCode() le fait, en réutilisant le même
+   * sessionId lu depuis le claim `sid` de ce JWT déjà signé — pas besoin
+   * de le faire transiter autrement à travers la redirection.
+   */
+  private async issueGoogleSessionJwt(user: User): Promise<string> {
+    const actorId = await this.findProfileId(user.id, user.role as UserRole);
+    const { sessionId, previousSessionId } =
+      await this.sessionService.startSession(user.id, null, null, null);
+    if (previousSessionId) {
+      await this.revokeSessionAndNotify(user.id, previousSessionId, 'NEW_LOGIN');
+    }
+    return this.signJwt(user, true, actorId, sessionId);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1433,10 +1501,18 @@ export class AuthService implements OnModuleInit {
     const user = await this.userRepo.findOne({ where: { id: payload.sub } });
     if (!user) throw new NotFoundException('Compte introuvable.');
 
+    /* Le code OAuth est valable 60s (voir createGoogleOAuthCode) — fenêtre
+     * assez courte, mais une autre connexion a pu théoriquement survenir
+     * entre-temps et remplacer la session démarrée par googleLogin(). On
+     * n'émet jamais de refresh token pour une session déjà supplantée. */
+    if (payload.sid && !(await this.sessionService.validateSession(user.id, payload.sid))) {
+      throw new UnauthorizedException('Session expirée. Reconnectez-vous.');
+    }
+
     const ttlMs    = REFRESH_TTL_NORMAL_MS;
     const expiresAt = new Date(Date.now() + ttlMs);
     const { rawToken: refreshToken } = await this.issueRefreshToken(
-      user.id, ipAddress, userAgent, expiresAt,
+      user.id, ipAddress, userAgent, expiresAt, payload.sid ?? null, null,
     );
 
     this.logEvent('login_success', {
@@ -1444,7 +1520,7 @@ export class AuthService implements OnModuleInit {
       ipAddress, userAgent, success: true,
     });
 
-    return { accessToken: jwt, refreshToken, refreshTtlMs: ttlMs, user: this.toPublicUser(user) };
+    return { accessToken: jwt, refreshToken, refreshTtlMs: ttlMs, user: this.toPublicUser(user), sessionReplaced: false };
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1490,6 +1566,8 @@ export class AuthService implements OnModuleInit {
     ipAddress:  string | null,
     userAgent:  string | null,
     expiresAt:  Date,
+    sessionId:  string | null = null,
+    deviceId:   string | null = null,
   ): Promise<{ rawToken: string; record: RefreshToken }> {
     /* Plafonner à MAX_REFRESH_TOKENS tokens actifs par utilisateur.
      * Révoque les plus anciens si le seuil est dépassé (ex : multi-appareils). */
@@ -1509,7 +1587,9 @@ export class AuthService implements OnModuleInit {
     const rawToken  = crypto.randomUUID() + crypto.randomUUID();
     const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
 
-    const record = this.refreshTokenRepo.create({ tokenHash, userId, ipAddress, userAgent, expiresAt });
+    const record = this.refreshTokenRepo.create({
+      tokenHash, userId, ipAddress, userAgent, expiresAt, sessionId, deviceId,
+    });
     await this.refreshTokenRepo.save(record);
 
     return { rawToken, record };
@@ -1533,6 +1613,16 @@ export class AuthService implements OnModuleInit {
    */
   async markLoggedOut(userId: string): Promise<void> {
     await this.userRepo.update(userId, { lastLogoutAt: new Date() });
+  }
+
+  /** Déconnexion volontaire — termine la session Redis et marque les
+   *  refresh tokens associés comme révoqués (raison USER_LOGOUT, distincte
+   *  de NEW_LOGIN — pas de notification temps réel ici, l'appareil qui se
+   *  déconnecte est celui qui l'a demandé). */
+  async endSession(userId: string, sessionId: string | undefined | null): Promise<void> {
+    if (!sessionId) return;
+    await this.sessionService.endSession(userId, sessionId);
+    await this.revokeSessionAndNotify(userId, sessionId, 'USER_LOGOUT');
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1573,17 +1663,41 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Compte inactif. Reconnectez-vous.');
     }
 
+    /* Session unique : un refresh token dont le sessionId ne correspond
+     * plus à la session active a été supplanté par une connexion plus
+     * récente sur un autre appareil (voir SessionService.startSession,
+     * qui révoque déjà les lignes de l'ancienne session — ce contrôle
+     * couvre le cas rare d'une requête de refresh déjà en vol au moment
+     * exact de la bascule). Aucun nouveau token émis dans ce cas — c'est
+     * exactement le "L'ancien appareil ne doit pas pouvoir utiliser
+     * POST /auth/refresh" du §16 de la mission. */
+    if (record.sessionId && !(await this.sessionService.validateSession(user.id, record.sessionId))) {
+      await this.revokeRefreshToken(record.id);
+      this.logEvent('token_refresh_failed', {
+        userId: user.id, email: user.email, role: user.role,
+        ipAddress, userAgent, success: false,
+        failureReason: 'Session révoquée (connectée ailleurs)',
+      });
+      throw new UnauthorizedException('Votre compte a été connecté sur un autre appareil. Veuillez vous reconnecter.');
+    }
+
     /* Rotation : révocation de l'ancien + émission d'un nouveau avec la même expiration.
-     * Si le même token est utilisé deux fois → détection de vol → révocation totale. */
+     * Si le même token est utilisé deux fois → détection de vol → révocation totale.
+     * Le sessionId est préservé à travers la rotation — la SESSION continue,
+     * seul le token qui la matérialise change. */
     const newExpiresAt = record.expiresAt;
     await this.revokeRefreshToken(record.id);
     const { rawToken: newRawToken, record: newRecord } = await this.issueRefreshToken(
-      user.id, ipAddress, userAgent, newExpiresAt,
+      user.id, ipAddress, userAgent, newExpiresAt, record.sessionId, record.deviceId,
     );
     await this.refreshTokenRepo.update(record.id, { replacedByTokenId: newRecord.id });
 
+    if (record.sessionId) {
+      await this.sessionService.touchSession(user.id, record.sessionId);
+    }
+
     const actorId    = await this.findProfileId(user.id, user.role as UserRole);
-    const accessToken = this.signJwt(user, false, actorId);
+    const accessToken = this.signJwt(user, false, actorId, record.sessionId ?? undefined);
     const refreshTtlMs = newExpiresAt.getTime() - Date.now();
 
     this.logEvent('token_refreshed', {
@@ -1592,7 +1706,7 @@ export class AuthService implements OnModuleInit {
     });
 
     this.logger.log(`[REFRESH ✅] ${user.email} | IP=${ipAddress}`);
-    return { accessToken, refreshToken: newRawToken, refreshTtlMs, user: this.toPublicUser(user) };
+    return { accessToken, refreshToken: newRawToken, refreshTtlMs, user: this.toPublicUser(user), sessionReplaced: false };
   }
 
   /** Non-private : réutilisé par AccountLinkService pour générer le username

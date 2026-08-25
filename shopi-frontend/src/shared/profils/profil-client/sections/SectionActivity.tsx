@@ -31,7 +31,7 @@ export default function SectionActivity({ onToast, jours }: Props) {
           <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--t3)' }}>
             <i className="fas fa-clock-rotate-left" style={{ fontSize: 28, display: 'block', marginBottom: 10, opacity: 0.3 }} />
             <div style={{ fontWeight: 600, marginBottom: 4 }}>Aucune activité récente</div>
-            <div style={{ fontSize: 12 }}>Vos actions sur Shopi apparaîtront ici.</div>
+            <div style={{ fontSize: 12 }}>Vos actions sur Shoneya apparaîtront ici.</div>
           </div>
         </div>
       </div>

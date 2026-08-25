@@ -3,7 +3,7 @@
 //
 // Sections supprimées (aucune réalité backend, ne sont remplacées par
 // rien plutôt que par des données inventées) :
-//   - Bannière "Suggestion intelligente Shopi" (aucun moteur d'IA/
+//   - Bannière "Suggestion intelligente Shoneya" (aucun moteur d'IA/
 //     recommandation n'existe côté backend)
 //   - Grille "Smart insights" (même raison)
 //   - Carte "Objectifs du mois" (aucune notion d'objectif/cible

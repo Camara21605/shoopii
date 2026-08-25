@@ -16,6 +16,8 @@ import { GoogleStrategy }      from './strategies/google.strategy';
 import { CodeCreationService } from './code-creation/code-creation.service';
 import { TwoFaService }        from './twofa/twofa.service';
 import { MailModule }          from '../email/email.module';
+import { SessionModule }       from '../session/session.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 // ── Entité principale ─────────────────────────────────────────
 import { User }              from '../../database/entities/user.entity';
@@ -68,6 +70,8 @@ import { AccountLink }  from '../../database/entities/account-link.entity';
     }),
 
     MailModule,
+    NotificationsModule,
+    SessionModule,
   ],
   controllers: [AuthController],
   providers: [
@@ -78,6 +82,6 @@ import { AccountLink }  from '../../database/entities/account-link.entity';
     CodeCreationService,
     TwoFaService,
   ],
-  exports: [AuthService, JwtModule, PassportModule, TwoFaService],
+  exports: [AuthService, JwtModule, PassportModule, TwoFaService, SessionModule],
 })
 export class AuthModule {}

@@ -12,6 +12,8 @@
 import { Module }           from '@nestjs/common';
 import { TypeOrmModule }    from '@nestjs/typeorm';
 import { NotificationsModule } from '../../notifications/notifications.module';
+import { MailModule }          from '../../email/email.module';
+import { PerformanceModule }   from '../../performance-engine/performance.module';
 
 // ── Entités ──────────────────────────────────────────────────
 import { PlatformSettings }     from '../../../database/entities/platform-settings.entity';
@@ -26,6 +28,7 @@ import { Report }               from '../../../database/entities/report.entity';
 import { AuditLog }             from '../../../database/entities/audit-log.entity';
 import { User }                 from '../../../database/entities/user.entity';
 import { Commande }             from '../../../database/entities/commande/commande.entity';
+import { Client }               from '../../../database/entities/profiles/client-profile.entity';
 
 // ── Controller ───────────────────────────────────────────────
 import { AdministrateurDashboardController } from './administrateur-dashboard.controller';
@@ -43,6 +46,8 @@ import { AdminPartenairesService }   from './services/admin-partenaires.service'
 import { AdminSignalementsService }  from './services/admin-signalements.service';
 import { AdminCommandesService }     from './services/admin-commandes.service';
 import { AdminAuditService }         from './services/admin-audit.service';
+import { AdminClientsService }       from './services/admin-clients.service';
+import { AdminStatsService }         from './services/admin-stats.service';
 
 /** Services de domaine — chacun gère un périmètre fonctionnel isolé. */
 const DOMAIN_SERVICES = [
@@ -55,11 +60,15 @@ const DOMAIN_SERVICES = [
   AdminSignalementsService,  // signalements + résolution
   AdminCommandesService,     // commandes de la zone + graphe financier
   AdminAuditService,         // journal d'audit
+  AdminClientsService,       // clients ayant commandé dans la zone (lecture seule)
+  AdminStatsService,         // statistiques complémentaires (communes, litiges, rôles)
 ];
 
 @Module({
   imports: [
     NotificationsModule,
+    MailModule,
+    PerformanceModule,
     TypeOrmModule.forFeature([
       PlatformSettings,
       PaiementDistribution,
@@ -73,6 +82,7 @@ const DOMAIN_SERVICES = [
       AuditLog,
       User,
       Commande,
+      Client,
     ]),
   ],
   controllers: [AdministrateurDashboardController],

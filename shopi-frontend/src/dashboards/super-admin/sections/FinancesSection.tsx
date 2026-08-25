@@ -175,7 +175,7 @@ export default function FinancesSection({ isActive }: Props) {
       ico:   '💰',
     },
     {
-      label: 'Revenus Shopi',
+      label: 'Revenus Shoneya',
       val:   fmt(kpis.revenusShopi),
       sub:   'Commissions + frais',
       trend: '',
@@ -211,7 +211,7 @@ export default function FinancesSection({ isActive }: Props) {
       ico:   '📱',
     })),
     {
-      label: 'Commissions Shopi',
+      label: 'Commissions Shoneya',
       val:   fmt(kpis.commissions.shopiTotal),
       sub:   `Total distribué ${fmt(kpis.commissions.totalDistribue)}`,
       trend: '',

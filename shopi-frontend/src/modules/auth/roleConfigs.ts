@@ -63,13 +63,13 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     icon: '🏪',
     label: 'Entreprise',
     sub: 'Vendre',
-    info: "<strong>Entreprise / Vendeur</strong> — Gérez votre boutique, catalogue, commandes et livreurs depuis un tableau de bord complet. Un code fourni par un Partenaire ou un Administrateur Shopi est obligatoire.",
+    info: "<strong>Entreprise / Vendeur</strong> — Gérez votre boutique, catalogue, commandes et livreurs depuis un tableau de bord complet. Un code fourni par un Partenaire ou un Administrateur Shoneya est obligatoire.",
     code: true,   // un code d'activation est obligatoire
     shop: true,   // seul rôle qui demande un nom de boutique
     codeType: 'single',                 // un seul champ code (pas de choix)
     codeLength: 10,                     // code attendu sur 10 caractères
     codeLabel: "Code d'activation boutique",   // titre du bloc code
-    codeNote: "Ce code vous est remis par le Partenaire ou l'Administrateur Shopi qui vous a enregistré sur la plateforme.",
+    codeNote: "Ce code vous est remis par le Partenaire ou l'Administrateur Shoneya qui vous a enregistré sur la plateforme.",
     codePlaceholder: 'SHOPX9',           // exemple affiché dans le champ
     codeIcon: '🤝',                      // icône de la source du code
     codeFrom: 'Partenaire ou Administrateur', // affiché dans "Fourni par : ..."
@@ -81,13 +81,13 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     icon: '🛵',
     label: 'Livreur',
     sub: 'Livrer',
-    info: "<strong>Livreur</strong> — Consultez vos missions, suivez vos revenus et communiquez avec entreprises et clients. Un code fourni par une Entreprise ou un Partenaire Shopi est obligatoire.",
+    info: "<strong>Livreur</strong> — Consultez vos missions, suivez vos revenus et communiquez avec entreprises et clients. Un code fourni par une Entreprise ou un Partenaire Shoneya est obligatoire.",
     code: true,
     shop: false, // pas de boutique pour un livreur
     codeType: 'single',
     codeLength: 10,
     codeLabel: "Code d'invitation livreur",
-    codeNote: "Ce code vous est remis par l'Entreprise ou le Partenaire Shopi qui vous recrute comme livreur.",
+    codeNote: "Ce code vous est remis par l'Entreprise ou le Partenaire Shoneya qui vous recrute comme livreur.",
     codePlaceholder: 'LVR2024',
     codeIcon: '🏪',
     codeFrom: 'Entreprise ou Partenaire',
@@ -100,16 +100,16 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     icon: '🤝',
     label: 'Partenaire',
     sub: 'Superviser',
-    info: "<strong>Partenaire</strong> — Supervisez votre réseau d'entreprises et de livreurs. Votre code d'accès est fourni exclusivement par l'Administrateur Shopi.",
+    info: "<strong>Partenaire</strong> — Supervisez votre réseau d'entreprises et de livreurs. Votre code d'accès est fourni exclusivement par l'Administrateur Shoneya.",
     code: true,
     shop: false,
     codeType: 'single',
     codeLength: 10,
     codeLabel: "Code d'accès Administrateur",
-    codeNote: "Ce code de 10 caractères est fourni uniquement par l'Administrateur Shopi.",
+    codeNote: "Ce code de 10 caractères est fourni uniquement par l'Administrateur Shoneya.",
     codePlaceholder: 'PARTNER8',
     codeIcon: '🔑',
-    codeFrom: 'Administrateur Shopi',
+    codeFrom: 'Administrateur Shoneya',
   },
 
   // ── CORRESPONDANT ─────────────────────────────────────────────────────────
@@ -145,10 +145,10 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     codeType: 'single',
     codeLength: 10,
     codeLabel: 'Code Super Administrateur',
-    codeNote: "Ce code confidentiel de 10 caractères est remis exclusivement par le Super Administrateur Shopi.",
+    codeNote: "Ce code confidentiel de 10 caractères est remis exclusivement par le Super Administrateur Shoneya.",
     codePlaceholder: 'SUPERADMIN',
     codeIcon: '🔐',
-    codeFrom: 'Super Administrateur Shopi',
+    codeFrom: 'Super Administrateur Shoneya',
   },
 
   // ── SUPER ADMIN ───────────────────────────────────────────────────────────
@@ -159,7 +159,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     icon: '👑',
     label: 'Super Admin',
     sub: 'Contrôler',
-    info: "<strong>Super Administrateur</strong> — Accès total à la plateforme Shopi.",
+    info: "<strong>Super Administrateur</strong> — Accès total à la plateforme Shoneya.",
     code: false,
     shop: false,
   },
@@ -191,7 +191,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 // (ex: "Bienvenue dans votre espace livreur").
 // ─────────────────────────────────────────────────────────────────────────────
 export const ROLE_DASHBOARD: Record<UserRole, string> = {
-  client:        'votre accueil Shopi',
+  client:        'votre accueil Shoneya',
   company:       'votre tableau de bord boutique',
   delivery:      'votre espace livreur',
   partner:       'votre espace partenaire',

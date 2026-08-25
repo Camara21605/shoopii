@@ -69,7 +69,7 @@ export default function SecNotifications({
     { ic: 'fa-coins',           t: 'Commission créditée',     d: 'À chaque commission ajoutée à votre solde.',               val: notifComm,   set: setNotifComm   },
     { ic: 'fa-shield-halved',   t: 'Suivi des signalements',  d: 'Mises à jour sur les signalements que vous avez envoyés.', val: notifSig,    set: setNotifSig    },
     { ic: 'fa-award',           t: 'Changement de palier',    d: 'Quand vous progressez vers un nouveau niveau partenaire.', val: notifPalier, set: setNotifPalier },
-    { ic: 'fa-bullhorn',        t: 'Offres & nouveautés Shopi',d: 'Conseils, programmes et actualités partenaires.',          val: notifNews,   set: setNotifNews   },
+    { ic: 'fa-bullhorn',        t: 'Offres & nouveautés Shoneya',d: 'Conseils, programmes et actualités partenaires.',          val: notifNews,   set: setNotifNews   },
   ];
   const CANAUX: TRow[] = [
     { ic: 'fa-envelope',      t: 'Email',              d: '', val: cEmail, set: setCEmail },

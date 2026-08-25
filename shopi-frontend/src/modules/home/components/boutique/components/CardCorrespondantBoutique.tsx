@@ -6,7 +6,7 @@
  *           de la page boutique, vue client.
  *
  * AFFICHE :
- *   - Avatar emoji + badge "Vérifié Shopi" si certified
+ *   - Avatar emoji + badge "Vérifié Shoneya" si certified
  *   - Nom, ville/quartier, pays + drapeau
  *   - Note + nombre de colis gérés + taux de succès
  *   - Badge statut (Disponible / Complet)

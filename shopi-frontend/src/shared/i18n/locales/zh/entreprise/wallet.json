@@ -64,7 +64,7 @@
     "loadingWallet": "正在加载钱包…",
     "header": {
       "title": "钱包",
-      "subtitle": "管理您的余额、提现和 Shopi 交易",
+      "subtitle": "管理您的余额、提现和 Shoneya 交易",
       "exporter": "导出",
       "exportToast": "📄 正在导出账单…",
       "retirerDesFonds": "提取资金"
@@ -72,7 +72,7 @@
     "balance": {
       "soldeDisponible": "可用余额",
       "masquerSolde": "隐藏余额",
-      "totalPortefeuille": "您的 Shopi 钱包总额",
+      "totalPortefeuille": "您的 Shoneya 钱包总额",
       "ceMois": "本月 +{{pct}}%",
       "entreesCeMois": "本月收入",
       "sortiesCeMois": "本月支出",
@@ -84,7 +84,7 @@
     "kpi": {
       "totalEncaisse": "总收入",
       "totalRetire": "总提现",
-      "commissionsShopi": "Shopi 佣金"
+      "commissionsShopi": "Shoneya 佣金"
     },
     "chart": {
       "title": "收入变化",
@@ -119,8 +119,8 @@
       "versMethodeParDefaut": "转到您的默认方式"
     },
     "commission": {
-      "title": "Shopi 佣金",
-      "textPart1": "Shopi 对每笔收到的交易收取",
+      "title": "Shoneya 佣金",
+      "textPart1": "Shoneya 对每笔收到的交易收取",
       "textPct": "3%",
       "textPart2": "的手续费。M转账到 Mobile Money 是",
       "textGratuits": "免费的",
@@ -129,8 +129,8 @@
       "textPart4": "，每次操作。"
     },
     "opPage": {
-      "chooseMethodFrom": "选择一种电子支付方式，从您的 Shopi 账户转出资金。",
-      "chooseMethodTo": "选择一种电子支付方式，将资金转入您的 Shopi 账户。",
+      "chooseMethodFrom": "选择一种电子支付方式，从您的 Shoneya 账户转出资金。",
+      "chooseMethodTo": "选择一种电子支付方式，将资金转入您的 Shoneya 账户。",
       "ajouterType": "添加{{type}}",
       "ajouter": "添加",
       "ajouterEtContinuer": "添加并继续",
@@ -144,15 +144,15 @@
       "typeLabel": "类型"
     },
     "quickBar": {
-      "soldeShopi": "Shopi 余额",
+      "soldeShopi": "Shoneya 余额",
       "actionsTitle": "钱包操作",
       "depot": "充值",
       "retrait": "提现",
       "actualiser": "刷新",
       "actualiserSolde": "刷新余额",
       "gererPortefeuille": "管理我的钱包",
-      "chooseMethodDeposit": "选择一种电子支付方式，将资金转入您的 Shopi 账户。",
-      "chooseMethodWithdraw": "选择一种电子支付方式，从您的 Shopi 账户接收资金。"
+      "chooseMethodDeposit": "选择一种电子支付方式，将资金转入您的 Shoneya 账户。",
+      "chooseMethodWithdraw": "选择一种电子支付方式，从您的 Shoneya 账户接收资金。"
     }
   }
 }

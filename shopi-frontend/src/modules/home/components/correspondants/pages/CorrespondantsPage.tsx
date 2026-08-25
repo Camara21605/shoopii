@@ -9,7 +9,7 @@
  * DONNÉES : GET /suivis/correspondants via useCorrespondants().
  *   Le filtrage/tri/recherche se fait côté client sur la liste chargée.
  *
- * AUTONOME : aucune prop. Toasts via 'shopi-toast'.
+ * AUTONOME : aucune prop. Toasts via 'shoneya-toast'.
  * ================================================================ */
 
 import { useState, useMemo, useCallback } from 'react';
@@ -48,7 +48,7 @@ export default function CorrespondantsPage() {
 
   /* Toast global */
   const onToast = useCallback((msg: string) => {
-    window.dispatchEvent(new CustomEvent('shopi-toast', { detail: msg }));
+    window.dispatchEvent(new CustomEvent('shoneya-toast', { detail: msg }));
   }, []);
 
   const handleView = useCallback((id: string) => {
@@ -203,7 +203,7 @@ export default function CorrespondantsPage() {
               </div>
             </div>
 
-            {/* État erreur (non bloquant : mock affiché) */}
+            {/* État erreur */}
             {error && (
               <div style={{ marginBottom: 14, padding: '10px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, fontSize: 12.5, color: '#991B1B' }}>
                 <i className="fas fa-triangle-exclamation" /> {error} {t('correspondantsPage.page.errorSuffix')}

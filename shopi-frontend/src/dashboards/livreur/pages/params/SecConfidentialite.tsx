@@ -48,7 +48,7 @@ const GROUPS = [
     id:    'donnees',
     icon:  'fa-database',
     title: 'Données & confidentialité',
-    desc:  'Comment Shopi utilise vos données pour améliorer le service.',
+    desc:  'Comment Shoneya utilise vos données pour améliorer le service.',
     range: [3, 4, 5] as const,
   },
 ];
@@ -120,7 +120,7 @@ export default function SecConfidentialite({ data, saving, dirty, onPop, savePri
           <div style={{ fontWeight: 700, color: 'var(--navy)', marginBottom: 2 }}>
             {activeCount} paramètre{activeCount > 1 ? 's' : ''} actif{activeCount > 1 ? 's' : ''} sur {totalCount}
           </div>
-          <div>Vos données ne sont jamais vendues à des tiers. Shopi respecte votre vie privée.</div>
+          <div>Vos données ne sont jamais vendues à des tiers. Shoneya respecte votre vie privée.</div>
         </div>
         {/* Barre de progression */}
         <div style={{ flexShrink: 0, width: 56, textAlign: 'center' }}>

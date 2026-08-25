@@ -30,7 +30,6 @@ import { NotificationProvider }   from '../../shared/notifications/NotificationC
 import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
 import LoadingScreen    from '../../shared/components/LoadingScreen';
 import { useTeamPermissions } from './hooks/useTeamPermissions';
-import { useForceDarkTheme } from '../../shared/context/ThemeContext';
 
 /* ── Pages chargées à la demande ── */
 const OverviewPage                  = lazy(() => import('./pages/OverviewPage'));
@@ -211,11 +210,15 @@ function EntrepriseLayout() {
       .catch(() => {});
   }, []);
 
-  /* ✅ Le dashboard entreprise n'a pas de mode clair : on force le
-     thème sombre tant qu'on y est, et on restaure le thème choisi
-     par l'utilisateur en quittant (pour ne pas affecter le reste du
-     site — home, autres dashboards…). */
-  useForceDarkTheme();
+  /* Le dashboard entreprise n'a pas de mode clair : le thème sombre est
+     forcé de façon centralisée par ThemeRouteSync (src/app/router.tsx),
+     dès que l'URL correspond à /dashboard/entreprise — pas ici. Deux
+     instances indépendantes de useForceDarkTheme (une ici, une dans
+     ThemeRouteSync) créaient une course sur la restauration du thème
+     précédent à la déconnexion/reconnexion dans le même onglet : chacune
+     capture "le thème d'avant" à SON propre montage et le restaure à SON
+     propre démontage, dans un ordre non garanti — ce qui pouvait
+     réappliquer le thème clair après coup et le laisser bloqué ainsi. */
 
   const handlePop = (msg: string, type?: string) => pop(msg, type as ToastType | undefined);
 

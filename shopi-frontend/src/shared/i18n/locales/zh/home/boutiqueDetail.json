@@ -9,11 +9,11 @@
       "apropos": "关于"
     },
     "cover": {
-      "verifiee": "Shopi 已验证店铺",
+      "verifiee": "Shoneya 已验证店铺",
       "active": "活跃"
     },
     "identity": {
-      "verifie": "Shopi 已验证",
+      "verifie": "Shoneya 已验证",
       "note": "评分",
       "abonnes": "关注者",
       "satisfaction": "满意度",
@@ -49,13 +49,13 @@
       "completCount_one": "已满",
       "completCount_other": "已满",
       "totalCount": "代理商总数",
-      "infoBannerTitle": "什么是 Shopi 代理商？",
-      "infoBannerDesc": "代理商是您所在城市的 Shopi 代表。他接收您的包裹、检查并安全存放。您可以直接取回或交给配送员送货上门。",
+      "infoBannerTitle": "什么是 Shoneya 代理商？",
+      "infoBannerDesc": "代理商是您所在城市的 Shoneya 代表。他接收您的包裹、检查并安全存放。您可以直接取回或交给配送员送货上门。",
       "steps": {
         "colisRecu": "包裹已接收并检查",
         "stockageSecurise": "安全存放",
         "remiseDirecte": "直接交付或通过配送员",
-        "noteCertifie": "Shopi 评分和认证"
+        "noteCertifie": "Shoneya 评分和认证"
       },
       "fermer": "关闭"
     },
@@ -79,7 +79,7 @@
       "instagramCopieToast": "📸 链接已复制 — 粘贴到 Instagram",
       "partageVia": "📲 通过 {{label}} 分享",
       "lienCopieToast": "🔗 链接已复制！",
-      "emailSujet": "发现这家 Shopi 店铺"
+      "emailSujet": "发现这家 Shoneya 店铺"
     },
     "aPropos": {
       "titre": "关于店铺",
@@ -231,9 +231,9 @@
       "filtreEnPromotion": "促销中",
       "filtreNouveautes": "新品",
       "partagerTitre": "分享此店铺",
-      "boutiqueShopiDefault": "Shopi 店铺",
+      "boutiqueShopiDefault": "Shoneya 店铺",
       "membreDepuis": "自 {{date}} 起成为会员",
-      "membreShopi": "Shopi 会员",
+      "membreShopi": "Shoneya 会员",
       "horairesNonRenseignes": "未填写营业时间"
     }
   }

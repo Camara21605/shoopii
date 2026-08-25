@@ -1,7 +1,7 @@
 ﻿/*
  * ============================================================
  * FICHIER : src/dashboards/entreprise/layout/Sidebar.css
- * RÔLE    : Styles globaux du dashboard Entreprise Shopi.
+ * RÔLE    : Styles globaux du dashboard Entreprise Shoneya.
  *
  * Ce fichier couvre :
  *   1.  Variables CSS (design tokens)
@@ -39,7 +39,7 @@
 
 
 /* ════════════════════════════════════════════════════════════
-   1. VARIABLES CSS — Design Tokens Shopi
+   1. VARIABLES CSS — Design Tokens Shoneya
    Importées automatiquement dans tous les composants via ce fichier.
    ════════════════════════════════════════════════════════════ */
 
@@ -1873,7 +1873,7 @@ select.pf-in {
   .sb-brand, .sb-shop-nm, .sb-shop-sub, .sb-verified,
   .nb span, .nb-badge, .sb-sect, .sb-bot span { display: none; }
 
-  /* La carte "Solde Shopi" (icône + montant + menu ⋮) ne tient pas
+  /* La carte "Solde Shoneya" (icône + montant + menu ⋮) ne tient pas
      dans un rail de 68px — la masquer plutôt que la laisser déborder/
      être coupée par le overflow:hidden du .sb. */
   .sb-wallet { display: none; }

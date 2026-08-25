@@ -294,7 +294,7 @@ export const CORRESPONDANTS_MOCK: CorrespondantBoutique[] = [
     note:4.9, colis:48, succès:'98%', dispo:true, verified:true,
     langues:['Français','Pular'],
     tarif:'15 000 – 25 000 GNF', delai:'24h – 48h', horaires:'Lun–Sam : 8h–20h',
-    bio:'Correspondant Shopi Premium depuis 2021. Point de relais sécurisé à Kaloum, idéal pour les produits high-tech et les colis de valeur.',
+    bio:'Correspondant Shoneya Premium depuis 2021. Point de relais sécurisé à Kaloum, idéal pour les produits high-tech et les colis de valeur.',
   },
   {
     id:'c2', emoji:'🏪', nom:'Mariama Diallo',

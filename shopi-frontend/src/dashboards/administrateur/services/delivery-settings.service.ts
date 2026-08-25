@@ -171,7 +171,7 @@ export async function getDeliveryStats(): Promise<DeliveryStats> {
 export function exportDeliveryConfigAsJson(settings: DeliverySettings): void {
   const { updatedAt, ...rest } = settings;
   const json = JSON.stringify(
-    { exportedAt: new Date().toISOString(), source: 'Shopi Admin — Configuration Livreurs', config: rest },
+    { exportedAt: new Date().toISOString(), source: 'Shoneya Admin — Configuration Livreurs', config: rest },
     null,
     2,
   );
@@ -179,7 +179,7 @@ export function exportDeliveryConfigAsJson(settings: DeliverySettings): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `shopi-livreurs-config-${new Date().toISOString().split('T')[0]}.json`;
+  a.download = `shoneya-livreurs-config-${new Date().toISOString().split('T')[0]}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -209,7 +209,7 @@ export function exportDeliveryStatsAsCsv(stats: DeliveryStats): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `shopi-livreurs-stats-${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = `shoneya-livreurs-stats-${new Date().toISOString().split('T')[0]}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

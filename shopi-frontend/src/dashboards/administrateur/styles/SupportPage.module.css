@@ -1,0 +1,73 @@
+/* ================================================================
+ * FICHIER : src/dashboards/administrateur/styles/SupportPage.module.css
+ * File d'attente support — reprend le vocabulaire tableau
+ * d'ActeursPage.module.css + les KPI cards partagées.
+ * ================================================================ */
+
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+
+.card { background: var(--white); border: 1px solid var(--bdr); border-radius: var(--r-lg); overflow: hidden; }
+.ch {
+  padding: 16px 20px; border-bottom: 1px solid var(--bdr);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+.chT { font-family: var(--fd); font-weight: 700; font-size: 15px; color: var(--navy); display: flex; align-items: center; gap: 9px; }
+.chT i { color: var(--blue); font-size: 13px; }
+
+.filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.filters select {
+  background: var(--white); border: 1.5px solid var(--bdr2); border-radius: var(--pill);
+  padding: 8px 14px; font-size: 12px; font-family: var(--fb); color: var(--t2);
+  outline: none; cursor: pointer;
+}
+.searchIn { position: relative; }
+.searchIn input {
+  background: var(--white); border: 1.5px solid var(--bdr2); border-radius: var(--pill);
+  padding: 9px 14px 9px 36px; font-size: 12.5px; font-family: var(--fb);
+  outline: none; width: 200px; transition: .2s;
+}
+.searchIn input:focus { border-color: var(--blue-2); }
+.searchIn i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--t3); }
+.exportBtn {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12px; font-weight: 700; font-family: var(--fb);
+  color: var(--t2); background: var(--white);
+  border: 1.5px solid var(--bdr2); border-radius: var(--pill);
+  padding: 8px 15px; cursor: pointer; transition: .15s;
+}
+.exportBtn:hover { border-color: var(--bdrb); color: var(--blue); }
+
+.tblWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; }
+.table thead th {
+  text-align: left; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .6px; color: var(--t3);
+  padding: 11px 14px; background: var(--g50); border-bottom: 1px solid var(--g200);
+  white-space: nowrap;
+}
+.table tbody td { padding: 13px 14px; font-size: 13px; color: var(--t1); border-bottom: 1px solid var(--bdr); vertical-align: middle; }
+.row { cursor: pointer; transition: background .1s; }
+.row:hover { background: var(--sky); }
+.table tbody tr:last-child td { border-bottom: none; }
+.refCell { font-family: var(--fd); font-weight: 700; color: var(--navy); }
+
+.stPill { font-size: 10.5px; font-weight: 700; padding: 4px 11px; border-radius: var(--pill); white-space: nowrap; }
+.st_open         { background: var(--sky-2); color: var(--blue); }
+.st_in_progress  { background: var(--am-bg); color: var(--amber); }
+.st_waiting_user { background: var(--vl-bg); color: var(--violet); }
+.st_resolved     { background: var(--em-bg); color: var(--emerald); }
+.st_closed       { background: var(--g100); color: var(--t3); }
+
+.prPill { font-size: 10.5px; font-weight: 700; padding: 4px 11px; border-radius: var(--pill); white-space: nowrap; }
+.pr_low    { background: var(--g100); color: var(--t3); }
+.pr_normal { background: var(--sky-2); color: var(--blue); }
+.pr_high   { background: var(--am-bg); color: var(--amber); }
+.pr_urgent { background: rgba(220,38,38,.1); color: #DC2626; }
+
+@media (max-width: 1100px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) {
+  .kpis { grid-template-columns: 1fr; }
+  .searchIn input { width: 100%; }
+  .filters { width: 100%; }
+}

@@ -122,7 +122,7 @@ export default function ProfilSidebar({
         </div>
       </div>
 
-      {/* Vérifications Shopi */}
+      {/* Vérifications Shoneya */}
       {verifications.length > 0 && (
         <div className={styles.card}>
           <div className={styles.ch}><div className={styles.ct}><i className="fas fa-shield-halved" /> {t('profilCorrespondant.sidebar.verificationsShopi')}</div></div>

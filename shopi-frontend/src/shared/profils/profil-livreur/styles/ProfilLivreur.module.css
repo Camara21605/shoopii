@@ -2,7 +2,7 @@
  * FICHIER : src/modules/home/components/profil-livreur/styles/ProfilLivreur.module.css
  *
  * Styles de la page profil livreur (scopés via CSS Module).
- * Variables couleurs reprises du design Shopi (vert livreur).
+ * Variables couleurs reprises du design Shoneya (vert livreur).
  * ================================================================ */
 
 .page {
@@ -57,8 +57,12 @@
 .kiV { font-family:'Fraunces',serif; font-size:20px; font-weight:700; color:var(--n); line-height:1; }
 .kiL { font-size:10px; color:var(--t3); margin-top:3px; text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
 
-/* BODY */
-.pw { max-width:1160px; margin:0 auto; padding:22px 28px 80px; display:grid; grid-template-columns:1fr 330px; gap:20px; align-items:start; }
+/* BODY
+ * minmax(0, ...) et non 1fr seul : un track `1fr` a par défaut un
+ * minimum implicite = la taille min-content de son contenu, pas 0 —
+ * un contenu large peut alors faire déborder la piste de grille
+ * au-delà du conteneur plutôt que de s'y adapter. */
+.pw { max-width:1160px; margin:0 auto; padding:22px 28px 80px; display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:20px; align-items:start; }
 
 /* CARD */
 .card { background:var(--wh); border:1px solid var(--bdr); border-radius:16px; overflow:hidden; margin-bottom:18px; }
@@ -143,7 +147,7 @@
 
 /* RESPONSIVE */
 @media (max-width:900px) {
-  .pw { grid-template-columns:1fr; padding:14px; }
+  .pw { grid-template-columns:minmax(0,1fr); padding:14px; }
   .actionBar { display:flex; }
   .idActs .btnIcon, .idActs .btnMsg { display:none; }
 }

@@ -60,7 +60,7 @@ export default function FinancesSection({ onToast }: SectionProps) {
         <div className={styles.cardHead}>
           <div>
             <div className={styles.cardTitle}><i className="fas fa-receipt" /> Taxes</div>
-            <div className={styles.cardSub}>Application de la TVA sur les transactions Shopi</div>
+            <div className={styles.cardSub}>Application de la TVA sur les transactions Shoneya</div>
           </div>
           <div className={`${styles.sw} ${tvaActif ? styles.swOn : ''}`}
             onClick={() => { setTvaActif(v => !v); onToast(`TVA ${tvaActif ? 'désactivée' : 'activée'}`, 's'); }} />

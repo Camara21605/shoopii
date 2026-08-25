@@ -41,10 +41,10 @@ export default function PaiementsTab({ settings, set }: Props) {
       {/* ── GROUPE 1 : Commission & Seuils ── */}
       <SettingGroup icon="💰" iconBg="var(--acid-dim)" title="Commission & Seuils">
 
-        {/* Pourcentage prélevé par Shopi sur chaque transaction vendeur */}
+        {/* Pourcentage prélevé par Shoneya sur chaque transaction vendeur */}
         <SettingRow
           label="Commission plateforme (%)"
-          desc="Prélevée sur chaque transaction vendeur → Shopi (0–50%)"
+          desc="Prélevée sur chaque transaction vendeur → Shoneya (0–50%)"
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <input
@@ -122,7 +122,7 @@ export default function PaiementsTab({ settings, set }: Props) {
       </SettingGroup>
 
       {/* ── GROUPE 2 : Fournisseurs de paiement mobile ── */}
-      {/* Chaque carte représente un opérateur de mobile money africain */}
+      {/* Chaque carte représente un opérateur de mobile money */}
       <div className="setting-group" style={{ gridColumn: '1 / -1' }}>
         <div className="sg-head">
           <div className="sg-icon" style={{ background: 'var(--violet-dim)' }}>💳</div>

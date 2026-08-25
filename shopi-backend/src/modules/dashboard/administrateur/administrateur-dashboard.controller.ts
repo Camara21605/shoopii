@@ -34,7 +34,9 @@ export class AdministrateurDashboardController {
 
   // ── Codes ───────────────────────────────────────────────────
   @Get('codes')
-  getCodes(@Request() req: any) { return this.svc.getCodes(req.user.id); }
+  getCodes(@Request() req: any, @Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.svc.getCodes(req.user.id, Number(page) || 1, Number(limit) || 20);
+  }
 
   @Post('codes')
   generateCode(@Request() req: any, @Body() body: GenerateCodeDto) {
@@ -46,14 +48,21 @@ export class AdministrateurDashboardController {
     return this.svc.revokeCode(req.user.id, id);
   }
 
+  @Post('codes/:id/send-email')
+  sendCodeByEmail(@Request() req: any, @Param('id') id: string) {
+    return this.svc.sendCodeByEmail(req.user.id, id);
+  }
+
   // ── Acteurs ─────────────────────────────────────────────────
   @Get('acteurs')
   getActeurs(
     @Request() req: any,
     @Query('role')   role?:   string,
     @Query('search') search?: string,
+    @Query('page')   page?:   string,
+    @Query('limit')  limit?:  string,
   ) {
-    return this.svc.getActeurs(req.user.id, role, search);
+    return this.svc.getActeurs(req.user.id, role, search, Number(page) || 1, Number(limit) || 20);
   }
 
   // ── Validations ─────────────────────────────────────────────
@@ -72,11 +81,21 @@ export class AdministrateurDashboardController {
 
   // ── Partenaires ─────────────────────────────────────────────
   @Get('partenaires')
-  getPartenaires(@Request() req: any) { return this.svc.getPartenaires(req.user.id); }
+  getPartenaires(
+    @Request() req: any,
+    @Query('tier')   tier?:   string,
+    @Query('search') search?: string,
+    @Query('page')   page?:   string,
+    @Query('limit')  limit?:  string,
+  ) {
+    return this.svc.getPartenaires(req.user.id, tier, search, Number(page) || 1, Number(limit) || 20);
+  }
 
   // ── Signalements ────────────────────────────────────────────
   @Get('signalements')
-  getSignalements(@Request() req: any) { return this.svc.getSignalements(req.user.id); }
+  getSignalements(@Request() req: any, @Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.svc.getSignalements(req.user.id, Number(page) || 1, Number(limit) || 20);
+  }
 
   @Patch('signalements/:id/resolve')
   resolveSignalement(@Request() req: any, @Param('id') id: string) {
@@ -85,9 +104,33 @@ export class AdministrateurDashboardController {
 
   // ── Commandes ───────────────────────────────────────────────
   @Get('commandes')
-  getCommandes(@Request() req: any) { return this.svc.getCommandes(req.user.id); }
+  getCommandes(
+    @Request() req: any,
+    @Query('onglet') onglet?: 'toutes' | 'encours' | 'litiges',
+    @Query('page')   page?:   string,
+    @Query('limit')  limit?:  string,
+  ) {
+    return this.svc.getCommandes(req.user.id, onglet, Number(page) || 1, Number(limit) || 20);
+  }
 
   // ── Audit ───────────────────────────────────────────────────
   @Get('audit')
-  getAudit(@Request() req: any) { return this.svc.getAudit(req.user.id); }
+  getAudit(@Request() req: any, @Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.svc.getAudit(req.user.id, Number(page) || 1, Number(limit) || 20);
+  }
+
+  // ── Clients de la zone (lecture seule) ───────────────────────
+  @Get('clients')
+  getClients(
+    @Request() req: any,
+    @Query('search') search?: string,
+    @Query('page')   page?:   string,
+    @Query('limit')  limit?:  string,
+  ) {
+    return this.svc.getClients(req.user.id, search, Number(page) || 1, Number(limit) || 20);
+  }
+
+  // ── Statistiques complémentaires ─────────────────────────────
+  @Get('stats')
+  getStats(@Request() req: any) { return this.svc.getStats(req.user.id); }
 }

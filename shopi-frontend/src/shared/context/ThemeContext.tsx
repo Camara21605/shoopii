@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useLayoutEffect, useState } from 'react';
 
 type Theme = 'dark' | 'light';
 
@@ -22,7 +22,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return saved ?? 'dark';
   });
 
-  useEffect(() => {
+  /* useLayoutEffect (pas useEffect) : applique data-theme AVANT que le
+   * navigateur peigne. Avec useEffect, la mise à jour du DOM arrive après
+   * la 1ère peinture -> un frame visible avec l'ancien thème (flash). */
+  useLayoutEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
@@ -55,10 +58,11 @@ export const useTheme = () => useContext(ThemeContext);
  * ne pose pas de problème : chaque page force "dark" à son montage et
  * restaure fidèlement ce qu'elle a trouvé à son démontage.
  */
-export function useForceDarkTheme(): void {
+export function useForceDarkTheme(enabled: boolean = true): void {
   const { theme, setTheme } = useTheme();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (!enabled) return;
     const themeAvantForçage = theme;
     if (theme !== 'dark') setTheme('dark');
 
@@ -66,5 +70,5 @@ export function useForceDarkTheme(): void {
       if (themeAvantForçage !== 'dark') setTheme(themeAvantForçage);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [enabled]);
 }

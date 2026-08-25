@@ -2,6 +2,7 @@
 import type { PageId } from '../data/livreurData';
 import { fmtGNF } from '../data/livreurData';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
+import ShoneyaLogo from '../../../shared/components/ShoneyaLogo';
 import styles from '../styles/Sidebar.module.css';
 
 interface Props {
@@ -62,8 +63,8 @@ export default function Sidebar({
 
       {/* Logo */}
       <div className={styles.sbLogo}>
-        <div className={styles.sbLm}>Sh</div>
-        <div className={styles.sbBrand}>Sho<b>pi</b></div>
+        <ShoneyaLogo size={34} />
+        <div className={styles.sbBrand}>Sho<b>neya</b></div>
       </div>
 
       {/* Carte livreur */}
@@ -102,8 +103,10 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* Solde du portefeuille Shopi — sous la carte livreur */}
-      <div style={{ padding: '0 22px 12px' }}>
+      {/* Solde du portefeuille Shoneya — sous la carte livreur.
+          Masqué en rail compact (≤1100px, styles.walletWrap) : WalletQuickBar
+          n'a pas de mode icône-seule et déborderait dans une piste de 68px. */}
+      <div className={styles.walletWrap} style={{ padding: '0 22px 12px' }}>
         <WalletQuickBar compact mini onManage={() => onNavigate('wallet' as PageId)} />
       </div>
 

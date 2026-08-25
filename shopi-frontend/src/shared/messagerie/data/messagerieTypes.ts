@@ -1,6 +1,6 @@
 /*
  * FICHIER : src/shared/messagerie/data/messagerieTypes.ts
- * Types TypeScript et config rôles partagés par toute la messagerie Shopi.
+ * Types TypeScript et config rôles partagés par toute la messagerie Shoneya.
  */
 
 export type UserRole = 'client' | 'vendeur' | 'livreur' | 'partenaire' | 'correspondant' | 'admin' | 'groupe';

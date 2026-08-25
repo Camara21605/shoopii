@@ -46,7 +46,7 @@ export const PRODUITS: Produit[] = [
 
 export const ENTREPRISES: Entreprise[] = [
   { id:'e1', emoji:'📱', nom:'TechStore Conakry', desc:'Votre spécialiste en électronique et high-tech en Guinée', dom:'Électronique', domColor:'var(--blue)',    domBg:'var(--sky)',    type:'Boutique',   ville:'Conakry', note:4.9, prods:342, abonnes:12400, verified:true  },
-  { id:'e2', emoji:'👗', nom:'FashionHub GN',     desc:'Mode africaine contemporaine, prêt-à-porter haut de gamme', dom:'Mode & Beauté', domColor:'var(--rose)',  domBg:'var(--rs-bg)', type:'Boutique',   ville:'Conakry', note:4.7, prods:218, abonnes:8900,  verified:true  },
+  { id:'e2', emoji:'👗', nom:'FashionHub GN',     desc:'Mode contemporaine, prêt-à-porter haut de gamme', dom:'Mode & Beauté', domColor:'var(--rose)',  domBg:'var(--rs-bg)', type:'Boutique',   ville:'Conakry', note:4.7, prods:218, abonnes:8900,  verified:true  },
   { id:'e3', emoji:'🛋️', nom:'MaisonPlus Déco',   desc:'Mobilier, décoration intérieure et arts de la table',      dom:'Maison & Déco', domColor:'var(--amber)', domBg:'var(--am-bg)', type:'Boutique',   ville:'Kindia',  note:4.5, prods:156, abonnes:3200,  verified:false },
   { id:'e4', emoji:'🍕', nom:'FoodExpress GN',    desc:'Plats chauds et produits locaux livrés en 30 minutes',     dom:'Alimentation', domColor:'var(--emerald)',domBg:'var(--em-bg)', type:'Restaurant', ville:'Conakry', note:4.8, prods:94,  abonnes:21000, verified:true  },
   { id:'e5', emoji:'💊', nom:'PharmaCare Guinée', desc:'Médicaments, parapharmacie et compléments certifiés',      dom:'Santé',         domColor:'var(--teal)',  domBg:'var(--tl-bg)', type:'Pharmacie',  ville:'Conakry', note:4.6, prods:412, abonnes:6700,  verified:true  },
@@ -57,7 +57,7 @@ export const PARTENAIRES: Partenaire[] = [
   { id:'pt1', emoji:'🏦', nom:'Orange Money GN',    desc:'Solution de paiement mobile leader en Guinée.', cert:'Partenaire financier certifié',  domaine:'Finance',    abonnes:45200 },
   { id:'pt2', emoji:'🚚', nom:'Logistique Express', desc:'Livraison express inter-régional, camions frigo.', cert:'Partenaire logistique officiel', domaine:'Logistique', abonnes:12800 },
   { id:'pt3', emoji:'🛡️', nom:'SecurePay GN',       desc:'Protection paiements, PCI-DSS, anti-fraude.',   cert:'Partenaire sécurité certifié',  domaine:'Sécurité',   abonnes:9400  },
-  { id:'pt4', emoji:'📦', nom:'StorageHub Africa',  desc:'Stockage et entreposage pour e-commerçants.',   cert:'Partenaire entrepôt certifié',  domaine:'Stockage',   abonnes:7600  },
+  { id:'pt4', emoji:'📦', nom:'StorageHub', desc:'Stockage et entreposage pour e-commerçants.',   cert:'Partenaire entrepôt certifié',  domaine:'Stockage',   abonnes:7600  },
   { id:'pt5', emoji:'📊', nom:'DataInsight GN',     desc:'Analyses de marché et statistiques e-commerce.', cert:'Partenaire analytics certifié', domaine:'Analytics',  abonnes:5100  },
 ];
 

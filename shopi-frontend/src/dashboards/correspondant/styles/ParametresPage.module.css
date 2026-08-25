@@ -7,10 +7,14 @@
   min-height: 100vh;
 }
 
-/* Grille 2 colonnes : nav + contenu */
+/* Grille 2 colonnes : nav + contenu
+ * minmax(0, 1fr) et non 1fr seul : un track `1fr` a par défaut un
+ * minimum implicite = la taille min-content de son contenu, pas 0 —
+ * un contenu large (ex. les onglets ParamNav en ligne) peut alors
+ * faire déborder la piste de grille au-delà du conteneur. */
 .layout {
   display: grid;
-  grid-template-columns: 224px 1fr;
+  grid-template-columns: 224px minmax(0, 1fr);
   gap: 22px;
   align-items: start;
 }
@@ -24,7 +28,7 @@
 }
 
 @media (max-width: 1100px) {
-  .layout { grid-template-columns: 1fr; gap: 16px; }
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
 }
 @media (max-width: 640px) {
   .page { padding: 12px 14px; }

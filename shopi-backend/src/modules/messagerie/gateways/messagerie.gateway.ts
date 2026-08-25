@@ -66,6 +66,7 @@ import { User, UserStatus } from 'src/database/entities/user.entity';
 import { PresenceService }  from '../services/presence.service';
 import { BroadcastService } from '../services/broadcast.service';
 import { MessagerieService } from '../messagerie.service';
+import { SessionService }   from '../../session/session.service';
 import type {
   AuthenticatedSocket,
   WsJoinConvPayload,
@@ -110,6 +111,7 @@ export class MessagerieGateway
     private readonly presence:      PresenceService,
     private readonly broadcast:     BroadcastService,
     private readonly msgService:    MessagerieService,
+    private readonly sessionService: SessionService,
     @InjectRepository(Conversation)
     private readonly convRepo:      Repository<Conversation>,
     @InjectRepository(User)
@@ -139,7 +141,7 @@ export class MessagerieGateway
         return this.rejectSocket(socket, 'TOKEN_MISSING', 'Token manquant.');
       }
 
-      let payload: { sub: string; role: string; iat?: number };
+      let payload: { sub: string; role: string; sid?: string; iat?: number };
       try {
         payload = this.jwt.verify(token, {
           secret: this.config.get<string>('JWT_SECRET'),
@@ -165,6 +167,12 @@ export class MessagerieGateway
         if (passwordChanged > tokenIssuedAt) {
           return this.rejectSocket(socket, 'TOKEN_INVALID', 'Session expirée suite à un changement de mot de passe.');
         }
+      }
+      // Session unique — un token dont le sessionId a été supplanté par
+      // une connexion sur un autre appareil ne doit jamais (re)ouvrir de
+      // socket temps réel (§14 : coupure réseau puis reconnexion).
+      if (payload.sid && !(await this.sessionService.validateSession(userId, payload.sid))) {
+        return this.rejectSocket(socket, 'SESSION_REVOKED', 'Session révoquée — connectée ailleurs.');
       }
 
       // ── 2. Injecter userId dans socket.data ─────────────

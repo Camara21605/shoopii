@@ -1,6 +1,6 @@
 /*
  * FICHIER : src/shared/components/LoadingScreen.tsx
- * ROLE    : Écran de chargement brandé Shopi — affiché pendant le
+ * ROLE    : Écran de chargement brandé Shoneya — affiché pendant le
  *           chargement asynchrone des bundles (Suspense fallback).
  *
  * UTILISATION :
@@ -16,10 +16,10 @@
  */
 
 import React from 'react';
-import ShopiLogo from './ShopiLogo';
+import ShoneyaLogo from './ShoneyaLogo';
 
 /* ── Styles injectés une seule fois ───────────────────────── */
-const STYLE_ID = 'shopi-loading-styles';
+const STYLE_ID = 'shoneya-loading-styles';
 
 function injectStyles() {
   if (typeof document === 'undefined') return;
@@ -27,15 +27,15 @@ function injectStyles() {
   const el = document.createElement('style');
   el.id = STYLE_ID;
   el.textContent = `
-    @keyframes shopi-pulse {
+    @keyframes shoneya-pulse {
       0%,100% { transform: scale(1);   opacity: 1;   }
       50%      { transform: scale(1.06); opacity: .88; }
     }
-    @keyframes shopi-dot {
+    @keyframes shoneya-dot {
       0%,80%,100% { transform: scaleY(1);   opacity: .4; }
       40%          { transform: scaleY(1.6); opacity: 1;  }
     }
-    @keyframes shopi-fade-in {
+    @keyframes shoneya-fade-in {
       from { opacity:0; transform:translateY(10px); }
       to   { opacity:1; transform:translateY(0);    }
     }
@@ -64,11 +64,11 @@ export default function LoadingScreen({ mini = false }: LoadingScreenProps) {
           justifyContent: 'center',
           minHeight:      280,
           gap:            16,
-          animation:      'shopi-fade-in .3s ease both',
+          animation:      'shoneya-fade-in .3s ease both',
         }}
       >
-        <div style={{ animation: 'shopi-pulse 2s ease-in-out infinite' }}>
-          <ShopiLogo size={64} />
+        <div style={{ animation: 'shoneya-pulse 2s ease-in-out infinite' }}>
+          <ShoneyaLogo size={64} />
         </div>
         <DotsLoader />
       </div>
@@ -87,18 +87,18 @@ export default function LoadingScreen({ mini = false }: LoadingScreenProps) {
         justifyContent: 'center',
         gap:            28,
         zIndex:         9999,
-        animation:      'shopi-fade-in .25s ease both',
+        animation:      'shoneya-fade-in .25s ease both',
       }}
     >
       {/* Logo animé */}
       <div
         style={{
-          animation:    'shopi-pulse 2.2s ease-in-out infinite',
+          animation:    'shoneya-pulse 2.2s ease-in-out infinite',
           filter:       'drop-shadow(0 0 24px rgba(33,150,243,.35))',
           borderRadius: 44,
         }}
       >
-        <ShopiLogo size={128} />
+        <ShoneyaLogo size={128} />
       </div>
 
       {/* Points de chargement */}
@@ -135,7 +135,7 @@ function DotsLoader() {
             height:          8,
             borderRadius:    '50%',
             background:      '#2196F3',
-            animation:       `shopi-dot 1.1s ease-in-out ${i * 0.18}s infinite`,
+            animation:       `shoneya-dot 1.1s ease-in-out ${i * 0.18}s infinite`,
           }}
         />
       ))}

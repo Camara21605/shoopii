@@ -1,26 +1,24 @@
 // ─────────────────────────────────────────────────────────────
 // FICHIER : src/dashboards/super-admin/layout/Topbar.tsx
 //
-// Barre supérieure : recherche globale, horloge, thème,
-// badges messagerie et notifications.
+// Barre supérieure : recherche globale, horloge,
+// badge notifications.
 // ─────────────────────────────────────────────────────────────
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { SectionId } from '../types/codes.types';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
-import ThemeToggle from '../../../shared/components/ThemeToggle';
 
 interface TopbarProps {
   onMenuClick: () => void;
   onSearchGlobal: (v: string) => void;
-  totalUnread: number;
   pendingAlerts: number;
   onNavigate: (section: SectionId) => void;
 }
 
 export default function Topbar({
-  onMenuClick, onSearchGlobal, totalUnread, pendingAlerts, onNavigate,
+  onMenuClick, onSearchGlobal, pendingAlerts, onNavigate,
 }: TopbarProps) {
   const [clock, setClock] = useState('');
   const navigate = useNavigate();
@@ -63,19 +61,6 @@ export default function Topbar({
       </div>
 
       <div className="tb-clock">{clock}</div>
-
-      {/* Theme toggle */}
-      <ThemeToggle />
-
-      {/* Messagerie */}
-      <button
-        className="tb-icon-btn"
-        onClick={() => onNavigate('messaging')}
-        title="Messagerie"
-      >
-        💬
-        {totalUnread > 0 && <div className="tb-badge" />}
-      </button>
 
       {/* Alertes */}
       <button

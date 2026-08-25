@@ -75,7 +75,7 @@ export default function SecDanger({ data, onSuspendre, onDesactiver, onSupprimer
           <i className="fas fa-triangle-exclamation" style={{ color:'var(--red)' }} />
           <span style={{ color:'var(--red)' }}>Zone sensible</span>
         </h1>
-        <p>Actions irréversibles concernant votre compte correspondant Shopi. Procédez avec précaution.</p>
+        <p>Actions irréversibles concernant votre compte correspondant Shoneya. Procédez avec précaution.</p>
       </div>
 
       {/* Statut actuel */}

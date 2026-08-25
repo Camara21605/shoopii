@@ -84,6 +84,7 @@ export class Partner {
   @JoinColumn({ name: 'adminId' })
   admin!: Promise<Admin> | Admin | null;
 
+  @Index()
   @Column({ name: 'adminId', type: 'uuid', nullable: true })
   adminId!: string | null;
 

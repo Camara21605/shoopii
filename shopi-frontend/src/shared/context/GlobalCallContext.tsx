@@ -37,7 +37,7 @@ import { getRoleFromToken }     from '../services/authUtils';
 import { useToast }             from './ToastContext';
 import CallOverlay              from '../messagerie/components/CallOverlay';
 
-/* Rôles autorisés à utiliser la messagerie Shopi */
+/* Rôles autorisés à utiliser la messagerie Shoneya */
 const MESSAGING_ROLES = new Set(['client', 'company', 'delivery', 'correspondent', 'partner']);
 
 // ── Interface du contexte ──────────────────────────────────────
@@ -162,7 +162,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
       void persistCallEvent(event);
     },
     /* Le hook ne sait pas afficher de toast (pas de contexte React) — il
-       délègue au système UI Shopi existant (partie 8, remplace les alert()
+       délègue au système UI Shoneya existant (partie 8, remplace les alert()
        précédents). */
     onError: (error) => showToast(error.message, error.severity),
   });

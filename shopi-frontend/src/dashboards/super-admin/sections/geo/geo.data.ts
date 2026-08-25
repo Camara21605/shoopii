@@ -1,6 +1,6 @@
 /* ================================================================
  * FICHIER : sections/geo/geo.data.ts
- * Données mock du référentiel géographique Guinée / Shopi.
+ * Données mock du référentiel géographique Guinée / Shoneya.
  * En production : remplacer par appels API /geo/…
  * ================================================================ */
 

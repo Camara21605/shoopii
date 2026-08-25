@@ -56,7 +56,7 @@ export const COMMANDE_MOCK: Commande = {
     { role: 'entreprise',    nom: 'TechCorp Guinée', libelle: 'Vente produits',          montant: 14002500, icone: 'fa-store' },
     { role: 'livreur',       nom: 'Mamadou Diallo',  libelle: 'Frais de livraison',      montant: 85000,    icone: 'fa-motorcycle' },
     { role: 'correspondant', nom: 'Amadou Bah',      libelle: 'Frais correspondant',     montant: 25000,    icone: 'fa-map-pin' },
-    { role: 'shopi',         nom: 'Shopi',           libelle: 'Commission plateforme (3 %)', montant: 347500, icone: 'fa-percent' },
+    { role: 'shoneya',         nom: 'Shoneya',           libelle: 'Commission plateforme (3 %)', montant: 347500, icone: 'fa-percent' },
   ],
 
   /* Codes démo (à retirer en production) */

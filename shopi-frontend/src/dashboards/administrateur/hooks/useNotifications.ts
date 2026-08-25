@@ -128,6 +128,17 @@ export function useNotifications() {
     } catch { /* silencieux */ }
   }, []);
 
+  /* Contrairement aux autres actions, l'erreur remonte (pas de try/catch
+   * silencieux) — c'est une action destructive irréversible, la page
+   * doit pouvoir informer l'admin en cas d'échec plutôt que de laisser
+   * croire que tout a été supprimé. */
+  const deleteAll = useCallback(async () => {
+    await apiFetch('/notifications', { method: 'DELETE' });
+    setItems([]);
+    setUnreadCount(0);
+    setNextCursor(null);
+  }, []);
+
   return {
     items,
     unreadCount,
@@ -136,6 +147,7 @@ export function useNotifications() {
     markRead,
     markAll,
     dismiss,
+    deleteAll,
     loadMore,
     refetch,
   };

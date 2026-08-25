@@ -13,7 +13,6 @@ import Topbar       from './components/Topbar';
 import Toast        from './components/Toast';
 import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
 import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
-import { useForceDarkTheme }      from '../../shared/context/ThemeContext';
 
 import OverviewPage    from './pages/OverviewPage';
 import ColisPage       from './pages/ColisPage';
@@ -31,12 +30,7 @@ import ParametresPage  from './pages/ParametresPage';
 import type { PageId } from './data/correspondantData';
 
 export default function CorrespondantApp() {
-  // ✅ Le dashboard correspondant n'a plus de mode clair : on force le
-  // thème sombre tant qu'on y est, et on restaure le thème précédent en
-  // quittant (voir useForceDarkTheme — même mécanisme que le dashboard
-  // entreprise / partenaire).
-  useForceDarkTheme();
-
+  // Thème sombre forcé de façon centralisée par ThemeRouteSync (router.tsx).
   const [page,      setPage]      = useState<PageId>('overview');
   const [sideOpen,  setSideOpen]  = useState(false);
   const [nomUtilisateur, setNomUtilisateur] = useState<string | undefined>(undefined);

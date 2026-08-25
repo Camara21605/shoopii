@@ -1,7 +1,7 @@
 /* ============================================================
  * FICHIER : src/modules/help/pages/HelpHomePage.tsx
  *
- * RÔLE    : Page d'accueil du Centre d'aide Shopi.
+ * RÔLE    : Page d'accueil du Centre d'aide Shoneya.
  *           Accessible publiquement depuis /aide.
  *
  * SECTIONS :
@@ -122,7 +122,7 @@ export default function HelpHomePage() {
       {/* ── Hero ── */}
       <section className={styles.hero}>
         <div className={styles.heroWrap}>
-          <div className={styles.heroBadge}><i className="fas fa-headset" /> Centre d'aide Shopi</div>
+          <div className={styles.heroBadge}><i className="fas fa-headset" /> Centre d'aide Shoneya</div>
           <h1 className={styles.heroTitle}>Comment pouvons-nous vous aider ?</h1>
           <p className={styles.heroSub}>Trouvez des réponses, des guides et des tutoriels pour tout ce dont vous avez besoin.</p>
 

@@ -10,7 +10,6 @@ import { useSuperAdminState } from './hooks/useSuperAdminState';
 import Sidebar   from './layout/Sidebar';
 import Topbar    from './layout/Topbar';
 import UserModal from './components/UserModal';
-import NewMessageModal from './components/NewMessageModal';
 import ToastStack from './components/ToastStack';
 import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
 import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
@@ -22,7 +21,6 @@ const OverviewSection         = React.lazy(() => import('./sections/OverviewSect
 const UsersSection            = React.lazy(() => import('./sections/UsersSection'));
 const AnalyticsSection        = React.lazy(() => import('./sections/AnalyticsSection'));
 const FinancesSection         = React.lazy(() => import('./sections/FinancesSection'));
-const PortefeuilleSection     = React.lazy(() => import('./sections/PortefeuilleSection'));
 const InvitationsSection      = React.lazy(() => import('./sections/InvitationsSection'));
 const AlertsSection           = React.lazy(() => import('./sections/AlertsSection'));
 const AuditSection            = React.lazy(() => import('./sections/AuditSection'));
@@ -34,24 +32,21 @@ const SupportSection          = React.lazy(() => import('./sections/SupportSecti
 const HelpCenterSection       = React.lazy(() => import('./sections/HelpCenterSection'));
 const GeoReferentielSection   = React.lazy(() => import('./sections/GeoReferentielSection'));
 const CommissionsSection      = React.lazy(() => import('./sections/CommissionsSection'));
-const ProfilSection           = React.lazy(() => import('./sections/ProfilSection'));
 
 function SectionLoader() {
   return <LoadingScreen mini />;
 }
 
 export default function SuperAdminApp() {
+  // Thème sombre forcé de façon centralisée par ThemeRouteSync (router.tsx).
   const store = useSuperAdminState();
   const { state, navigate } = store;
   const routerNavigate = useNavigate();
   const { logout } = useAppContext();
 
   const [sidebarOpen,   setSidebarOpen]  = useState(false);
-  const [newMsgOpen,    setNewMsgOpen]   = useState(false);
   const [toasts,        setToasts]       = useState<{ id: number; type: string; msg: string }[]>([]);
   const [slaViolations, setSlaViolations] = useState(0);
-  const [profilName,    setProfilName]   = useState<string>('');
-  const [profilAvatar,  setProfilAvatar] = useState<string | null>(null);
 
   const toast = useCallback((type: string, msg: string) => {
     const id = Date.now();
@@ -69,7 +64,7 @@ export default function SuperAdminApp() {
   }, [routerNavigate, logout]);
 
   useEffect(() => {
-    const handleResize = () => { if (window.innerWidth > 960) setSidebarOpen(false); };
+    const handleResize = () => { if (window.innerWidth > 1024) setSidebarOpen(false); };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -80,37 +75,9 @@ export default function SuperAdminApp() {
       .catch(() => {});
   }, []);
 
-  /* Charge le profil du super-admin pour la sidebar et le titre */
-  useEffect(() => {
-    apiFetch<{ firstName: string; lastName: string; profilePicture: string | null }>(
-      '/dashboard/super-admin/my-profil',
-    )
-      .then(data => {
-        setProfilName(`${data.firstName} ${data.lastName}`.trim());
-        setProfilAvatar(data.profilePicture ?? null);
-      })
-      .catch(() => {/* silencieux — on garde les valeurs par défaut */});
-  }, []);
-
-  /* Écoute les mises à jour de la section ProfilSection */
-  useEffect(() => {
-    const onProfilUpdated = (e: CustomEvent<{ firstName: string; lastName: string }>) => {
-      setProfilName(`${e.detail.firstName} ${e.detail.lastName}`.trim());
-    };
-    const onAvatarUpdated = (e: CustomEvent<string | null>) => {
-      setProfilAvatar(e.detail);
-    };
-    window.addEventListener('profil-updated', onProfilUpdated as EventListener);
-    window.addEventListener('avatar-updated', onAvatarUpdated as EventListener);
-    return () => {
-      window.removeEventListener('profil-updated', onProfilUpdated as EventListener);
-      window.removeEventListener('avatar-updated', onAvatarUpdated as EventListener);
-    };
-  }, []);
-
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { store.closeUserModal(); setNewMsgOpen(false); }
+      if (e.key === 'Escape') { store.closeUserModal(); }
     };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
@@ -130,13 +97,10 @@ export default function SuperAdminApp() {
         totalUsers={store.usersTotal}
         roleStats={store.roleStats}
         pendingAlerts={store.pendingAlerts}
-        totalUnread={store.totalUnread}
         validCodesCount={validCodesCount}
         slaViolations={slaViolations}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        profilName={profilName}
-        profilAvatar={profilAvatar}
       />
 
       <div className="main">
@@ -149,7 +113,6 @@ export default function SuperAdminApp() {
               navigate('users');
             }
           }}
-          totalUnread={store.totalUnread}
           pendingAlerts={store.pendingAlerts}
           onNavigate={navigate}
         />
@@ -160,25 +123,22 @@ export default function SuperAdminApp() {
             {sec === 'users'               && <UsersSection store={store} toast={toast} isActive />}
             {sec === 'analytics'           && <AnalyticsSection store={store} isActive />}
             {sec === 'finances'            && <FinancesSection store={store} isActive />}
-            {sec === 'portefeuille'        && <PortefeuilleSection isActive />}
             {sec === 'invitations'         && <InvitationsSection store={store} toast={toast} isActive />}
             {sec === 'alerts'              && <AlertsSection store={store} toast={toast} isActive />}
             {sec === 'audit'               && <AuditSection store={store} isActive />}
             {sec === 'system'              && <SystemSection store={store} isActive />}
-            {sec === 'settings'            && <SettingsSection store={store} toast={toast} isActive onLogout={handleLogout} />}
+            {sec === 'settings'            && <SettingsSection toast={toast} isActive onLogout={handleLogout} />}
             {sec === 'permissions'         && <PermissionsSection store={store} toast={toast} isActive />}
             {sec === 'notifications-admin' && <NotificationsAdminSection isActive />}
             {sec === 'support'             && <SupportSection isActive />}
             {sec === 'help-center'         && <HelpCenterSection isActive />}
             {sec === 'geo-referentiel'     && <GeoReferentielSection isActive toast={toast} />}
             {sec === 'commissions'         && <CommissionsSection isActive toast={toast} />}
-            {sec === 'profil'             && <ProfilSection toast={toast} />}
           </Suspense>
         </main>
       </div>
 
       {state.currentUser && <UserModal store={store} toast={toast} />}
-      <NewMessageModal store={store} toast={toast} isOpen={newMsgOpen} onClose={() => setNewMsgOpen(false)} />
       <ToastStack toasts={toasts} onRemove={removeToast} />
     </div>
     </NotificationProvider>

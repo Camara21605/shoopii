@@ -48,7 +48,7 @@ export class CreationCode {
   /* ================= CODE ================= */
 
   @Index({ unique: true })
-  @Column({ type: 'varchar', length: 12 })
+  @Column({ type: 'varchar', length: 20 })
   code: string;
 
   @Column({ type: 'enum', enum: UserRole })
@@ -109,6 +109,7 @@ export class CreationCode {
   @JoinColumn({ name: 'adminId' })
   admin: Admin | null;
 
+  @Index()
   @Column({ type: 'uuid', nullable: true })
   adminId: string | null;
 

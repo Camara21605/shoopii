@@ -59,10 +59,14 @@
 .pri { background: var(--btn); color: #fff; border-color: var(--btn); }
 .pri:hover { background: var(--btn-h); color: #fff; }
 
-/* ── Contenu facture (scrollable) ── */
+/* ── Contenu facture (scrollable) ──
+ * overflow-x:auto en plus de overflow-y : .modal a overflow:hidden,
+ * donc sans ça un tableau trop large sur mobile serait silencieusement
+ * coupé au lieu de devenir scrollable horizontalement. */
 .facture {
   padding: 34px 38px;
   overflow-y: auto;               /* scroll interne si contenu long */
+  overflow-x: auto;
   flex: 1;
 }
 

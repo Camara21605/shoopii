@@ -1,7 +1,7 @@
 /* ================================================================
  * FICHIER : pages/parametres/ZoneSection.tsx
  *
- * Centre de contrôle territorial de l'administrateur Shopi.
+ * Centre de contrôle territorial de l'administrateur Shoneya.
  * Toutes les données proviennent du backend — aucune constante codée.
  *
  * ONGLETS :

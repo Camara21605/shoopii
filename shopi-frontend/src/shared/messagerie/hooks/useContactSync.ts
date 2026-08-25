@@ -1,7 +1,7 @@
 /*
  * FICHIER : src/shared/messagerie/hooks/useContactSync.ts
  *
- * RÔLE : Synchroniser les contacts téléphoniques avec les utilisateurs Shopi.
+ * RÔLE : Synchroniser les contacts téléphoniques avec les utilisateurs Shoneya.
  *
  * PRIVACY : Les numéros ne quittent JAMAIS l'appareil en clair.
  *   → Hachage SHA-256 via Web Crypto API (natif, aucune dépendance).
@@ -155,7 +155,7 @@ export function useContactSync() {
     }
   }, [syncContacts]);
 
-  /** Récupère les suggestions de contacts Shopi (recommandations). */
+  /** Récupère les suggestions de contacts Shoneya (recommandations). */
   const fetchDiscoveries = useCallback(async (): Promise<void> => {
     try {
       const res = await apiFetch<DiscoveredContact[]>('/contacts/discover');

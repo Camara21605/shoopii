@@ -44,15 +44,20 @@ export class AdminPartenairesService {
    * Le nombre de recrues = totalCompanies + totalDeliveries + totalCorrespondants
    * (colonnes dénormalisées sur Partner, mises à jour par triggers / events).
    */
-  async getPartenaires(userId: string) {
+  async getPartenaires(userId: string, tier?: string, search?: string, page = 1, limit = 20) {
     const admin    = await this.zoneService.adminOf(userId);
     const partners = await this.partnerRepo.find({
       where:     { adminId: admin.id },
       relations: ['user'],
       order:     { totalCompanies: 'DESC' },
+      // Le classement (tier/rang/top3) dépend de l'ordre sur TOUTE la
+      // zone — on plafonne à 500 par sécurité (une zone n'a
+      // réalistement pas plus de partenaires que ça) puis on pagine
+      // l'affichage séparément ci-dessous, sans casser le classement.
+      take: 500,
     });
 
-    const list = partners.map((p, i) => {
+    const full = partners.map((p, i) => {
       const nom     = userName(p.user);
       const recrues = ((p as any).totalCompanies      ?? 0)
                     + ((p as any).totalDeliveries     ?? 0)
@@ -78,8 +83,9 @@ export class AdminPartenairesService {
       };
     });
 
-    // Top 3 pour le widget de mise en avant (sans données redondantes)
-    const top3 = list.slice(0, 3).map(p => ({
+    // Top 3 pour le widget de mise en avant (sans données redondantes,
+    // toujours calculé sur le classement complet, avant filtrage).
+    const top3 = full.slice(0, 3).map(p => ({
       nom:    p.nom,
       avatar: p.avatar,
       v:      p.recrues,
@@ -87,6 +93,26 @@ export class AdminPartenairesService {
       grad:   p.grad,
     }));
 
-    return { list, top3 };
+    // Compteurs par palier — sur l'ensemble complet (pas le sous-filtré),
+    // pour que les chips de filtre affichent des totaux stables.
+    const counts = {
+      all: full.length,
+      or:  full.filter(p => p.tier === 'or').length,
+      arg: full.filter(p => p.tier === 'arg').length,
+      brz: full.filter(p => p.tier === 'brz').length,
+    };
+
+    let filtered = full;
+    if (tier && tier !== 'all') filtered = filtered.filter(p => p.tier === tier);
+    if (search?.trim()) {
+      const q = search.trim().toLowerCase();
+      filtered = filtered.filter(p => p.nom.toLowerCase().includes(q));
+    }
+
+    const safeLimit = Math.min(limit, 100);
+    const start = (page - 1) * safeLimit;
+    const list  = filtered.slice(start, start + safeLimit);
+
+    return { list, top3, counts, page, limit: safeLimit, total: filtered.length };
   }
 }

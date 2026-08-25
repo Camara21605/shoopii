@@ -5,7 +5,7 @@
       "profil": "Profile",
       "adresses": "Addresses",
       "paiement": "Payment",
-      "points": "Shopi Points",
+      "points": "Shoneya Points",
       "confidentialiteSecurite": "Privacy & security",
       "securite": "Security",
       "sessions": "Connected devices",
@@ -22,7 +22,7 @@
       "retourAccueil": "Back to home",
       "titrePart1": "Account",
       "titreEm": "settings",
-      "sub": "Manage your information, security and Shopi preferences"
+      "sub": "Manage your information, security and Shoneya preferences"
     },
     "sidebar": {
       "photoAlt": "Profile photo",
@@ -59,7 +59,7 @@
       "ameliorer": "Improve"
     },
     "points": {
-      "titre": "My Shopi Points",
+      "titre": "My Shoneya Points",
       "pts": "pts",
       "niveauLabel": "Level",
       "prochainA": "at",
@@ -115,7 +115,7 @@
         "carte": "Bank card",
         "especes": "Cash",
         "virement": "Bank transfer",
-        "wallet": "Shopi Wallet"
+        "wallet": "Shoneya Wallet"
       }
     },
     "sessions": {
@@ -191,7 +191,7 @@
       "visibiliteDesc": "Who can see your public profile",
       "visibiliteOptions": {
         "toutLeMonde": "Everyone",
-        "membresShopi": "Shopi members",
+        "membresShopi": "Shoneya members",
         "personne": "No one"
       },
       "rows": {
@@ -251,7 +251,7 @@
       "enregistrement": "Saving…",
       "toastSaved": "✅ Regional preferences saved",
       "langueTitle": "Display language",
-      "langueDesc": "Shopi interface language",
+      "langueDesc": "Shoneya interface language",
       "deviseTitle": "Display currency",
       "deviseDesc": "For prices and transactions",
       "fuseauTitle": "Time zone",
@@ -341,7 +341,7 @@
         },
         "reinitialiser": {
           "title": "Reset all my preferences",
-          "desc": "Resets notifications, appearance, language and privacy to Shopi defaults.",
+          "desc": "Resets notifications, appearance, language and privacy to Shoneya defaults.",
           "btn": "Reset",
           "msg": "🔄 Preferences reset"
         },
@@ -388,7 +388,7 @@
     },
     "profil": {
       "photoTitle": "Profile photo",
-      "photoSubtitle": "Your photo visible to other Shopi users",
+      "photoSubtitle": "Your photo visible to other Shoneya users",
       "photoAlt": "Profile photo",
       "uploadEnCoursTitle": "Uploading…",
       "changerPhotoTitle": "Change photo",
@@ -406,7 +406,7 @@
       "uploadErrorFallback": "Upload error",
       "loadError": "❌ Unable to load profile",
       "infosTitle": "Personal information",
-      "infosSubtitle": "Your identity on the Shopi platform",
+      "infosSubtitle": "Your identity on the Shoneya platform",
       "modifier": "Edit",
       "prenomNom": "First & last name",
       "nomUtilisateur": "Username",

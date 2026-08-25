@@ -9,11 +9,11 @@
       "apropos": "About"
     },
     "cover": {
-      "verifiee": "Shopi-verified shop",
+      "verifiee": "Shoneya-verified shop",
       "active": "Active"
     },
     "identity": {
-      "verifie": "Shopi Verified",
+      "verifie": "Shoneya Verified",
       "note": "Rating",
       "abonnes": "Followers",
       "satisfaction": "Satisfaction",
@@ -49,13 +49,13 @@
       "completCount_one": "full",
       "completCount_other": "full",
       "totalCount": "correspondents total",
-      "infoBannerTitle": "What is a Shopi correspondent?",
-      "infoBannerDesc": "A correspondent is a Shopi representative in your city. They receive your package, check it, and keep it safe. You can pick it up directly or have a delivery agent bring it to your home.",
+      "infoBannerTitle": "What is a Shoneya correspondent?",
+      "infoBannerDesc": "A correspondent is a Shoneya representative in your city. They receive your package, check it, and keep it safe. You can pick it up directly or have a delivery agent bring it to your home.",
       "steps": {
         "colisRecu": "Package received and checked",
         "stockageSecurise": "Secure storage",
         "remiseDirecte": "Direct pickup or via delivery agent",
-        "noteCertifie": "Rated and Shopi-certified"
+        "noteCertifie": "Rated and Shoneya-certified"
       },
       "fermer": "Close"
     },
@@ -79,7 +79,7 @@
       "instagramCopieToast": "📸 Link copied — paste it into Instagram",
       "partageVia": "📲 Shared via {{label}}",
       "lienCopieToast": "🔗 Link copied!",
-      "emailSujet": "Check out this shop on Shopi"
+      "emailSujet": "Check out this shop on Shoneya"
     },
     "aPropos": {
       "titre": "About the shop",
@@ -231,9 +231,9 @@
       "filtreEnPromotion": "On sale",
       "filtreNouveautes": "New arrivals",
       "partagerTitre": "Share this shop",
-      "boutiqueShopiDefault": "Shopi Shop",
+      "boutiqueShopiDefault": "Shoneya Shop",
       "membreDepuis": "Member since {{date}}",
-      "membreShopi": "Shopi Member",
+      "membreShopi": "Shoneya Member",
       "horairesNonRenseignes": "Hours not provided"
     }
   }

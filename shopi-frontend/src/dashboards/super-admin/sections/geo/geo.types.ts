@@ -1,6 +1,6 @@
 /* ================================================================
  * FICHIER : sections/geo/geo.types.ts
- * Référentiel Géographique Shopi — types centraux.
+ * Référentiel Géographique Shoneya — types centraux.
  * Utilisé par : administrateurs, entreprises, livreurs, partenaires,
  *               clients, commandes, livraisons, statistiques, cartes.
  * ================================================================ */

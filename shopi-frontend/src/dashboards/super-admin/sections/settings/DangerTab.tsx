@@ -161,7 +161,7 @@ export default function DangerTab({
     const a    = document.createElement('a');
     a.href     = url;
     // Nom de fichier avec la date du jour pour faciliter la traçabilité
-    a.download = `shopi-config-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `shoneya-config-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast('📥 Configuration exportée', 'success');
@@ -268,7 +268,7 @@ export default function DangerTab({
               cursor: 'pointer',
             }}
           >
-            📥 Télécharger shopi-config.json
+            📥 Télécharger shoneya-config.json
           </button>
 
           {/* Affiche la date de dernière sauvegarde si disponible */}

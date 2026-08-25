@@ -9,9 +9,9 @@ import styles from '../../styles/ParametresPage.module.css';
 import type { SectionProps } from './types';
 
 const TEMPLATES_INIT = [
-  { id: 'welcome',  type: 'email', label: 'Bienvenue',               objet: 'Bienvenue sur Shopi !', corps: 'Bonjour {{prenom}}, votre compte a été créé avec succès. Bonne découverte !' },
+  { id: 'welcome',  type: 'email', label: 'Bienvenue',               objet: 'Bienvenue sur Shoneya !', corps: 'Bonjour {{prenom}}, votre compte a été créé avec succès. Bonne découverte !' },
   { id: 'valid',    type: 'email', label: 'Validation confirmée',    objet: 'Votre compte est validé', corps: 'Félicitations {{prenom}} ! Votre dossier a été approuvé.' },
-  { id: 'suspend',  type: 'sms',   label: 'Suspension de compte',   objet: '',                        corps: 'Votre compte Shopi a été suspendu. Contactez-nous au +224 XXX.' },
+  { id: 'suspend',  type: 'sms',   label: 'Suspension de compte',   objet: '',                        corps: 'Votre compte Shoneya a été suspendu. Contactez-nous au +224 XXX.' },
   { id: 'rappel',   type: 'sms',   label: 'Rappel commande',        objet: '',                        corps: 'Rappel : la commande #{{ref}} est en attente de votre action.' },
 ];
 

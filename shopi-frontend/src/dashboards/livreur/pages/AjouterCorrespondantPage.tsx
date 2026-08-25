@@ -53,7 +53,7 @@ export default function AjouterCorrespondantPage({ onPop }: Props) {
   const [quartier, setQuartier] = useState('');
   const [type,     setType]     = useState<CorrespondantType>('relais');
   const [message,  setMessage]  = useState(
-    'Bonjour,\n\nVous avez été sélectionné pour rejoindre le réseau de correspondants Shopi.\n\nVeuillez utiliser le code ci-joint pour créer votre compte.'
+    'Bonjour,\n\nVous avez été sélectionné pour rejoindre le réseau de correspondants Shoneya.\n\nVeuillez utiliser le code ci-joint pour créer votre compte.'
   );
   const [loading,  setLoading]  = useState(false);
   const [result,   setResult]   = useState<InvitationResponse | null>(null);
@@ -174,7 +174,7 @@ export default function AjouterCorrespondantPage({ onPop }: Props) {
                 <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px', background:'var(--g50)', borderBottom:'1px solid var(--bdr)' }}>
                   <div style={{ width:32, height:32, borderRadius:'50%', background:'var(--teal)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontFamily:'var(--fd)' }}>S</div>
                   <div>
-                    <div style={{ fontSize:13, fontWeight:700, color:'var(--navy)' }}>Invitation Shopi — Rejoignez notre réseau</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:'var(--navy)' }}>Invitation Shoneya — Rejoignez notre réseau</div>
                     <div style={{ fontSize:11, color:'var(--t3)' }}>À : <strong>{email}</strong></div>
                   </div>
                 </div>

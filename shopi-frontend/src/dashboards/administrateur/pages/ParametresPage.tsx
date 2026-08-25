@@ -1,7 +1,7 @@
 /* ================================================================
  * FICHIER : src/dashboards/administrateur/pages/ParametresPage.tsx
  *
- * Centre de configuration complet de l'administrateur Shopi.
+ * Centre de configuration complet de l'administrateur Shoneya.
  * 16 sections organisées en sidebar interne avec navigation rapide.
  *
  * Architecture :
@@ -12,29 +12,32 @@
  *  - chaque section est un composant isolé dans pages/parametres/
  * ================================================================ */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/ParametresPage.module.css';
 import type { ParamSection } from './parametres/types';
 import { useAppContext } from '../../../shared/context/AppContext';
 
-/* ── Imports des 16 sections ── */
-import ProfilSection         from './parametres/ProfilSection';
-import ZoneSection           from './parametres/ZoneSection';
-import ValidationsSection    from './parametres/ValidationsSection';
-import NotificationsSection  from './parametres/NotificationsSection';
-import SecuriteSection       from './parametres/SecuriteSection';
-import EntreprisesSection    from './parametres/EntreprisesSection';
-import LivreursSection       from './parametres/LivreursSection';
-import PartenairesSection    from './parametres/PartenairesSection';
-import FinancesSection       from './parametres/FinancesSection';
-import CommunicationSection  from './parametres/CommunicationSection';
-import JournalSection        from './parametres/JournalSection';
-import ApparenceSection      from './parametres/ApparenceSection';
-import SauvegardeSection     from './parametres/SauvegardeSection';
-import ConfidentialiteSection from './parametres/ConfidentialiteSection';
-import AvanceSection         from './parametres/AvanceSection';
-import SanteSection          from './parametres/SanteSection';
+/* ── Imports des 16 sections — chargées à la demande (une seule
+ * section est visible à la fois) au lieu d'être toutes regroupées
+ * dans le chunk ParametresPage, même lazy-loadé, dès l'ouverture
+ * de la page. ── */
+const ProfilSection         = lazy(() => import('./parametres/ProfilSection'));
+const ZoneSection           = lazy(() => import('./parametres/ZoneSection'));
+const ValidationsSection    = lazy(() => import('./parametres/ValidationsSection'));
+const NotificationsSection  = lazy(() => import('./parametres/NotificationsSection'));
+const SecuriteSection       = lazy(() => import('./parametres/SecuriteSection'));
+const EntreprisesSection    = lazy(() => import('./parametres/EntreprisesSection'));
+const LivreursSection       = lazy(() => import('./parametres/LivreursSection'));
+const PartenairesSection    = lazy(() => import('./parametres/PartenairesSection'));
+const FinancesSection       = lazy(() => import('./parametres/FinancesSection'));
+const CommunicationSection  = lazy(() => import('./parametres/CommunicationSection'));
+const JournalSection        = lazy(() => import('./parametres/JournalSection'));
+const ApparenceSection      = lazy(() => import('./parametres/ApparenceSection'));
+const SauvegardeSection     = lazy(() => import('./parametres/SauvegardeSection'));
+const ConfidentialiteSection = lazy(() => import('./parametres/ConfidentialiteSection'));
+const AvanceSection         = lazy(() => import('./parametres/AvanceSection'));
+const SanteSection          = lazy(() => import('./parametres/SanteSection'));
 
 /* ================================================================
  * Configuration de la navigation latérale interne
@@ -252,7 +255,13 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
         </div>
 
         {/* Rendu de la section active */}
-        {renderSection()}
+        <Suspense fallback={
+          <div style={{ textAlign: 'center', padding: '3rem', opacity: .4 }}>
+            <i className="fas fa-spinner fa-spin fa-2x" />
+          </div>
+        }>
+          {renderSection()}
+        </Suspense>
 
         {/* ── Déconnexion — en bas de la page paramètres, sous toutes
             les sections ── */}

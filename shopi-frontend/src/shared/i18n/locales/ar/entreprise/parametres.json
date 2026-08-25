@@ -9,7 +9,7 @@
         "catalogue": "الكتالوج والمنتجات",
         "livraison": "التوصيل",
         "paiement": "الدفع والفواتير",
-        "commissions": "عمولات Shopi",
+        "commissions": "عمولات Shoneya",
         "documents": "المستندات والتحقق",
         "confidentialiteSecurite": "الخصوصية والأمان",
         "securite": "الأمان",
@@ -59,7 +59,7 @@
       "savedToast": "✅ تم حفظ الكتالوج",
       "errorToast": "❌ خطأ أثناء الحفظ",
       "title": "الكتالوج وقواعد النشر",
-      "subtitle": "تحكم في كيفية عرض ونشر منتجاتك على Shopi.",
+      "subtitle": "تحكم في كيفية عرض ونشر منتجاتك على Shoneya.",
       "reglesTitle": "قواعد العرض",
       "reglesSubtitle": "سلوك الكتالوج العام الخاص بك",
       "afficherRupture": "عرض المنتجات النافدة من المخزون",
@@ -90,8 +90,8 @@
       "methodesSubtitle": "فعّل أوضاع التوصيل المتاحة لعملائك",
       "standard": "توصيل قياسي",
       "standardSub": "تدار بواسطة فريق متجرك",
-      "livreursShopi": "عمال توصيل Shopi",
-      "livreursShopiSub": "شبكة عمال توصيل شركاء Shopi",
+      "livreursShopi": "عمال توصيل Shoneya",
+      "livreursShopiSub": "شبكة عمال توصيل شركاء Shoneya",
       "correspondants": "المراسلون",
       "correspondantsSub": "شبكة نقاط الخدمة المحلية والدولية",
       "clickCollect": "انقر واستلم",
@@ -110,8 +110,8 @@
       "errorToast": "❌ خطأ أثناء الحفظ",
       "title": "الدفع والفواتير",
       "subtitle": "اعدد طرق استلام المدفوعات ومعلوماتك الضريبية.",
-      "receptionTitle": "استلام مدفوعات Shopi",
-      "receptionSubtitle": "كيف تستلم تحويلاتك من Shopi",
+      "receptionTitle": "استلام مدفوعات Shoneya",
+      "receptionSubtitle": "كيف تستلم تحويلاتك من Shoneya",
       "canalReception": "قناة الاستلام",
       "waveOption": "ويف",
       "virementBancaireOption": "تحويل بنكي",
@@ -134,16 +134,16 @@
     },
     "commissions": {
       "loadErrorToast": "خطأ في تحميل العمولات",
-      "title": "عمولات Shopi",
+      "title": "عمولات Shoneya",
       "subtitle": "تفاصيل العمولات المطبقة على مبيعاتك حسب نوع المعاملة.",
       "grilleTitle": "جدول العمولات",
       "grilleSubtitle": "خطتك الحالية: {{plan}}",
       "typeTransaction": "نوع المعاملة",
-      "commissionShopi": "عمولة Shopi",
+      "commissionShopi": "عمولة Shoneya",
       "fraisLivreurCorresp": "رسوم عامل التوصيل/المراسل",
       "retraitImmediat": "سحب فوري",
-      "venteDirecte": "بيع مباشر عبر Shopi",
-      "venteLivreurShopi": "بيع مع عامل توصيل Shopi",
+      "venteDirecte": "بيع مباشر عبر Shoneya",
+      "venteLivreurShopi": "بيع مع عامل توصيل Shoneya",
       "selonLivreur": "حسب عامل التوصيل",
       "venteCorrespondant": "بيع عبر مراسل",
       "selonCorresp": "حسب المراسل",
@@ -192,14 +192,14 @@
         "echecUpload": "❌ فشل الرفع"
       },
       "title": "المستندات والتحقق",
-      "subtitle": "قدّم مستنداتك القانونية للحصول على شارة \"متجر موثق Shopi\".",
+      "subtitle": "قدّم مستنداتك القانونية للحصول على شارة \"متجر موثق Shoneya\".",
       "statutVerification": "حالة التحقق:",
       "requisTitle": "المستندات المطلوبة",
       "requisSubtitle": "المستندات الثلاثة الإلزامية: الهوية + السجل التجاري + الإثبات البنكي",
       "documentUploade": "مستند مرفوع",
       "remplacer": "استبدال",
       "uploader": "رفع",
-      "hint": "بمجرد تقديم المستندات الثلاثة الإلزامية، ينتقل ملفك تلقائيًا للمراجعة. سيتواصل معك فريق Shopi خلال 48 ساعة."
+      "hint": "بمجرد تقديم المستندات الثلاثة الإلزامية، ينتقل ملفك تلقائيًا للمراجعة. سيتواصل معك فريق Shoneya خلال 48 ساعة."
     },
     "securite": {
       "title": "الأمان وتسجيل الدخول",
@@ -274,7 +274,7 @@
         "newReview": "تقييم عميل جديد",
         "negativeReview": "تقييم سلبي (أقل من 3 نجوم)",
         "weeklyReport": "تقرير السمعة الأسبوعي",
-        "promoInvitations": "دعوات إلى عروض Shopi",
+        "promoInvitations": "دعوات إلى عروض Shoneya",
         "monthlyReport": "تقرير الأداء الشهري",
         "shopNews": "مستجدات المنصة"
       }
@@ -291,7 +291,7 @@
       "items": {
         "showInSearch": {
           "label": "الظهور في البحث",
-          "sub": "متجرك مرئي في نتائج بحث Shopi"
+          "sub": "متجرك مرئي في نتائج بحث Shoneya"
         },
         "showSalesStats": {
           "label": "عرض إحصائيات المبيعات",
@@ -306,7 +306,7 @@
           "sub": "وإلا، تظهر البلدية فقط"
         },
         "improveAlgorithm": {
-          "label": "تحسين توصيات Shopi",
+          "label": "تحسين توصيات Shoneya",
           "sub": "تساعد بياناتك في تخصيص النتائج"
         },
         "anonymizedStats": {
@@ -363,7 +363,7 @@
       "logoSupprime": "🗑️ تم حذف الشعار",
       "logoSuppressionImpossible": "❌ تعذر حذف الشعار",
       "title": "المتجر والهوية",
-      "subtitle": "المعلومات العامة لمتجرك. تظهر لجميع العملاء على منصة Shopi.",
+      "subtitle": "المعلومات العامة لمتجرك. تظهر لجميع العملاء على منصة Shoneya.",
       "profilLbl": "الملف",
       "completedAt": "اكتمل المتجر بنسبة {{pct}}%",
       "elementsManquants": "— بعض العناصر ناقصة",
@@ -371,7 +371,7 @@
       "profilCompletBold": "3× أكثر",
       "profilCompletPart2": "من المبيعات",
       "logoCoverTitle": "الشعار وصورة الغلاف",
-      "logoCoverSubtitle": "الهوية البصرية لمتجرك على Shopi",
+      "logoCoverSubtitle": "الهوية البصرية لمتجرك على Shoneya",
       "logoBoutique": "شعار المتجر",
       "cliquerChangerLogo": "انقر لتغيير الشعار",
       "changer": "تغيير",

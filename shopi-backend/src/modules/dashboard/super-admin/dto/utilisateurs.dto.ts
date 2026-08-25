@@ -45,7 +45,7 @@ export type RoleFilter =
   | 'all'
   | 'company'
   | 'delivery'
-  | 'customer'
+  | 'client'
   | 'partner'
   | 'admin'
   | 'correspondent';
@@ -93,11 +93,11 @@ export class FilterUsersDto {
    * 'all' → aucun filtre rôle appliqué.
    */
   @ApiPropertyOptional({
-    enum: ['all', 'company', 'delivery', 'customer', 'partner', 'admin', 'correspondent'],
+    enum: ['all', 'company', 'delivery', 'client', 'partner', 'admin', 'correspondent'],
     default: 'all',
   })
   @IsOptional()
-  @IsIn(['all', 'company', 'delivery', 'customer', 'partner', 'admin', 'correspondent'])
+  @IsIn(['all', 'company', 'delivery', 'client', 'partner', 'admin', 'correspondent'])
   role?: RoleFilter;
 
   /**

@@ -76,6 +76,7 @@ import { NotificationEventService }     from './events/notification-event.servic
 import { NotificationsController }      from './notifications.controller';
 import { NotificationsAdminController } from './notifications-admin.controller';
 import { NotificationStatsService }     from './services/notification-stats.service';
+import { SessionModule }                from '../session/session.module';
 
 @Module({
   imports: [
@@ -111,6 +112,9 @@ import { NotificationStatsService }     from './services/notification-stats.serv
         secret: config.get<string>('JWT_SECRET'),
       }),
     }),
+
+    // ── Session unique : validation du sid à la connexion socket ──
+    SessionModule,
   ],
 
   controllers: [NotificationsController, NotificationsAdminController],

@@ -3,7 +3,7 @@
  * @module sections
  *
  * ════════════════════════════════════════════════════════════════════
- *  ORCHESTRATEUR — Centre de contrôle plateforme Shopi Africa
+ *  ORCHESTRATEUR — Centre de contrôle plateforme Shoneya
  * ════════════════════════════════════════════════════════════════════
  *
  * Ce fichier est volontairement mince (~150 lignes).
@@ -27,7 +27,6 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import type { SuperAdminStore }                   from '../hooks/useSuperAdminState';
 import { apiFetch, ApiError }                     from '../../../shared/services/apiFetch';
 
 /* ── Composants partagés des settings ── */
@@ -51,7 +50,6 @@ import DangerTab        from './settings/DangerTab';
  * ─────────────────────────────────────────────────────────────
  */
 interface Props {
-  store:    SuperAdminStore;
   toast:    (type: string, msg: string) => void;
   isActive: boolean;
   onLogout: () => void;
@@ -60,7 +58,7 @@ interface Props {
 /* ═════════════════════════════════════════════════════════════
  * COMPOSANT PRINCIPAL
  * ═════════════════════════════════════════════════════════════ */
-export default function SettingsSection({ store, toast, isActive, onLogout }: Props) {
+export default function SettingsSection({ toast, isActive, onLogout }: Props) {
 
   /* ── Onglet affiché ── */
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
@@ -184,7 +182,7 @@ export default function SettingsSection({ store, toast, isActive, onLogout }: Pr
           <div>
             <div className="ph-title">Paramètres <mark>Plateforme</mark></div>
             <div className="ph-sub">
-              {settings.platformName || 'Shopi Africa'} — Centre de contrôle total
+              {settings.platformName || 'Shoneya'} — Centre de contrôle total
               {settings.updatedAt && (
                 <span style={{ marginLeft: 10, color: 'var(--txt-3)', fontWeight: 400 }}>
                   · Sauvegardé le {new Date(settings.updatedAt).toLocaleDateString('fr-FR', {
@@ -244,7 +242,7 @@ export default function SettingsSection({ store, toast, isActive, onLogout }: Pr
               apiKeyRegenning={apiKeyRegenning}
             />
           )}
-          {activeTab === 'apparence'     && <ApparenceTab     settings={settings} set={set} store={store} />}
+          {activeTab === 'apparence'     && <ApparenceTab     settings={settings} set={set} />}
           {activeTab === 'danger'        && (
             <DangerTab
               settings={settings}

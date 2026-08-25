@@ -181,7 +181,7 @@
       "standardSub": "Gerida pela sua loja",
       "choisirLivreur": "Escolher um entregador",
       "choisirLivreurSub": "O comprador seleciona o seu entregador",
-      "correspondant": "Via um correspondente Shopi",
+      "correspondant": "Via um correspondente Shoneya",
       "correspondantSub": "Para produtos vindos do estrangeiro",
       "fraisLocal": "Taxas de entrega local (GNF)",
       "fraisPlaceholder": "0 = Entrega gratuita",
@@ -202,7 +202,7 @@
       "retour": "Devolução garantida",
       "retourSub": "Reembolso ou troca",
       "authentique": "Produto autêntico",
-      "authentiqueSub": "Vendedor Shopi certificado",
+      "authentiqueSub": "Vendedor Shoneya certificado",
       "support": "Suporte 24/7",
       "supportSub": "Chat · WhatsApp · Tel."
     },
@@ -274,7 +274,7 @@
       "title": "SEO & Referenciação",
       "score": "Pontuação SEO",
       "titreSeo": "Título SEO",
-      "titrePlaceholder": "Ex: iPhone 15 Pro 256GB — Shopi Guiné",
+      "titrePlaceholder": "Ex: iPhone 15 Pro 256GB — Shoneya Guiné",
       "titreIdeal": "Ideal: 50–70 car.",
       "descriptionSeo": "Descrição SEO",
       "descriptionPlaceholder": "120-160 caracteres…",
@@ -297,7 +297,7 @@
     "revenus": {
       "title": "Pré-visualização das receitas",
       "prixVente": "Preço de venda",
-      "commission": "Comissão Shopi ({{pct}}%)",
+      "commission": "Comissão Shoneya ({{pct}}%)",
       "revenuNet": "Receita líquida estimada"
     },
     "actions": {

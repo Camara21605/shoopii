@@ -82,7 +82,7 @@ export default function GeoLevel({ level, items, allData, parents, toast, onAdd,
     const csv = [cols.join(','), ...rows].join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = `shopi-${level}-${Date.now()}.csv`;
+    a.download = `shoneya-${level}-${Date.now()}.csv`;
     a.click();
     toast('success', `Export CSV de ${filtered.length} ${cfg.labelPlural} lancé`);
   };

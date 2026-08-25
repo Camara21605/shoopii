@@ -46,7 +46,7 @@ export default function AdressesPage() {
   const navigate = useNavigate();
 
   const onToast = (msg: string) => {
-    window.dispatchEvent(new CustomEvent('shopi-toast', { detail: msg }));
+    window.dispatchEvent(new CustomEvent('shoneya-toast', { detail: msg }));
   };
 
   return (

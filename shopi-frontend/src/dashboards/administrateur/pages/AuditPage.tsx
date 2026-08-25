@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import styles from '../styles/AuditPage.module.css';
 import { apiFetch } from '../../../shared/services/apiFetch';
+import Pagination from '../components/Pagination';
 import type { AuditKind } from '../data/types';
 
 interface AuditPageProps {
@@ -28,15 +29,20 @@ const FILTRES: { id: 'all' | AuditKind; label: string }[] = [
 export default function AuditPage({ onToast }: AuditPageProps) {
   const [filtre,    setFiltre]    = useState<'all' | AuditKind>('all');
   const [recherche, setRecherche] = useState('');
+  const [page,      setPage]      = useState(1);
   const [data,      setData]      = useState<{ list: any[]; total: number } | null>(null);
   const [loading,   setLoading]   = useState(true);
 
+  /* Le filtre kind/recherche s'applique sur la page courante (20
+   * entrées) — kind est dérivé côté backend d'icon+action (pas une
+   * colonne brute), pousser ce filtre en SQL demanderait de dupliquer
+   * iconKind() en base ; acceptable ici, page à faible trafic. */
   useEffect(() => {
-    apiFetch('/dashboard/admin/audit')
+    apiFetch('/dashboard/admin/audit', { params: { page: String(page), limit: '20' } })
       .then(d => setData(d as any))
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   const total   = data?.total ?? 0;
   const visibles = (data?.list ?? []).filter((a: any) =>
@@ -97,6 +103,7 @@ export default function AuditPage({ onToast }: AuditPageProps) {
             ))}
           </div>
         )}
+        <Pagination page={page} limit={20} total={total} onChange={setPage} />
       </div>
     </div>
   );

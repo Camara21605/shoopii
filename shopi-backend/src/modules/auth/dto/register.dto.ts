@@ -183,4 +183,10 @@ export class RegisterDto {
   @IsOptional()
   @IsBoolean()
   gpsEnabled?: boolean;
+
+  /** Identifiant d'appareil — voir LoginDto.deviceId. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  deviceId?: string;
 }

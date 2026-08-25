@@ -4,7 +4,7 @@
  * RÔLE : Client API pour "Mon espace" — compte client lié à un compte
  *        pro (entreprise/livreur/correspondant/admin/partenaire), même
  *        email/téléphone, bascule sans réauthentification.
- *        Voir shopi-backend/src/modules/auth/account-link.service.ts
+ *        Voir shoneya-backend/src/modules/auth/account-link.service.ts
  *        pour la logique métier correspondante.
  * ============================================================ */
 

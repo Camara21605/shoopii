@@ -77,7 +77,7 @@ export default function RevenusPage() {
           {[
             { lbl:'Revenus ce mois',                         val: fmtGNF(revenusThisMonth), sub:'+vs mois dernier',          ic:'fa-coins',     c:'var(--t2)' },
             { lbl:'Total revenus',                           val: fmtGNF(totalRevenus),     sub:'Depuis le début',            ic:'fa-chart-line', c:'var(--t2)' },
-            { lbl:`Commission Shopi (${tauxCommission}%)`,   val: fmtGNF(Math.round(revenusThisMonth * tauxCommission / 100)), sub:'Déduit automatiquement', ic:'fa-percent', c:'var(--t2)' },
+            { lbl:`Commission Shoneya (${tauxCommission}%)`,   val: fmtGNF(Math.round(revenusThisMonth * tauxCommission / 100)), sub:'Déduit automatiquement', ic:'fa-percent', c:'var(--t2)' },
           ].map(item => (
             <div key={item.lbl} className={sh.card} style={{ padding:18, marginBottom:12 }}>
               <div style={{ display:'flex', alignItems:'center', gap:12 }}>

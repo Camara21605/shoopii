@@ -28,6 +28,9 @@ export interface PublicUser {
 export interface AuthResponse {
   accessToken: string;
   user:        PublicUser;
+  /** true si cette connexion a fermé une session déjà active sur un
+   *  autre appareil — affiche une notification informative. */
+  sessionReplaced?: boolean;
 }
 
 /** Réponse de /auth/login quand le compte a la 2FA activée — aucun
@@ -95,6 +98,7 @@ export interface RegisterPayload {
   country?:        string;
   postalCode?:     string;
   gpsEnabled?:     boolean;
+  deviceId?:       string;
 }
 
 export interface LoginPayload {

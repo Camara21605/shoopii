@@ -6,7 +6,7 @@
  *   TABS              — définition des 9 onglets (id, icône, label, couleur)
  *   CURRENCIES        — devises disponibles pour la plateforme
  *   TIMEZONES         — fuseaux horaires disponibles (format IANA)
- *   PAYMENT_PROVIDERS — 4 fournisseurs de mobile money africains
+ *   PAYMENT_PROVIDERS — 4 fournisseurs de mobile money
  *   DEFAULT_SETTINGS  — valeurs par défaut de PlatformSettings
  */
 
@@ -138,7 +138,7 @@ export const PAYMENT_PROVIDERS: {
  * Doivent correspondre aux valeurs par défaut de l'entité backend.
  */
 export const DEFAULT_SETTINGS: PlatformSettings = {
-  platformName:           'Shopi Africa',
+  platformName:           'Shoneya',
   platformTagline:        null,
   supportEmail:           null,
   defaultCurrency:        'GNF',

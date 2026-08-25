@@ -293,7 +293,7 @@ export default function SecLangue({ onPop }: Props) {
       <div style={styles.header}>
         <div>
           <h2 style={styles.title}><i className="fas fa-language" /> Langue de l'interface</h2>
-          <p style={styles.sub}>Choisissez la langue d'affichage de Shopi. Toutes les langues du monde sont disponibles.</p>
+          <p style={styles.sub}>Choisissez la langue d'affichage de Shoneya. Toutes les langues du monde sont disponibles.</p>
         </div>
         {activeLang && (
           <div style={styles.activeBadge} title="Langue actuellement appliquée à l'interface">

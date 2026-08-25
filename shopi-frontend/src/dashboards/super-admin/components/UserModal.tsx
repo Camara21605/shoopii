@@ -16,7 +16,7 @@ type ModalTab = 'info' | 'security' | 'activity';
 export default function UserModal({ store, toast }: Props) {
   const [activeTab, setActiveTab] = useState<ModalTab>('info');
 
-  const { state, closeUserModal, toggleBlockUser, suspendUser, verifyUser, deleteUser, navigate } = store;
+  const { state, closeUserModal, toggleBlockUser, suspendUser, verifyUser, deleteUser } = store;
   const u = state.currentUser;
 
   if (!u) return null;
@@ -60,11 +60,6 @@ export default function UserModal({ store, toast }: Props) {
         toast('error', `❌ ${e?.message ?? 'Erreur lors de la suppression'}`);
       }
     }
-  };
-
-  const handleMessage = () => {
-    closeUserModal();
-    navigate('messaging');
   };
 
   const ACTIVITIES = [
@@ -173,7 +168,6 @@ export default function UserModal({ store, toast }: Props) {
 
         {/* Actions */}
         <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button className="btn btn-ghost btn-sm" onClick={handleMessage}>💬 Message</button>
           <button
             className={`btn btn-sm ${u.status === 'blocked' ? 'btn-primary' : 'btn-danger'}`}
             onClick={handleBlock}

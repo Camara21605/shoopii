@@ -21,15 +21,12 @@ export type SectionId =
   | 'codes'
   | 'analytics'
   | 'finances'
-  | 'portefeuille'
-  | 'messages'
   | 'alerts'
   | 'admins'
   | 'audit'
   | 'health'
   // sections utilisées dans Sidebar + SuperAdminApp
   | 'invitations'
-  | 'messaging'
   | 'system'
   | 'settings'
   | 'permissions'
@@ -41,9 +38,7 @@ export type SectionId =
   /* Phase 7 — Référentiel Géographique (pays/régions/préfectures/communes/quartiers/zones) */
   | 'geo-referentiel'
   /* Phase 8 — Centre de Gestion des Commissions (entreprises, partenaires, livreurs, plateforme) */
-  | 'commissions'
-  /* Profil personnel du super-admin connecté */
-  | 'profil';
+  | 'commissions';
 
 /* ── Utilisateur affiché dans le store (correspond à UserListItem API) ─────── */
 export interface User {
@@ -99,14 +94,6 @@ export interface HealthService {
   status: string;
 }
 
-/* ── Messagerie (mock — non branchée sur une API réelle) ────────────────────── */
-export interface Conversation {
-  id:     number;
-  userId: number;
-  unread: number;
-  messages: { from: 'user' | 'admin'; text: string; time: string }[];
-}
-
 /* ── État global du hook useSuperAdminState ──────────────────────────────── */
 export interface SuperAdminState {
   section:          SectionId;
@@ -120,10 +107,7 @@ export interface SuperAdminState {
   codeFilter:       string;
   codeStatusFilter: string;
   codeRoleFilter:   string;
-  activeConvId:     number | null;
-  convSearch:       string;
   currentUser:      User | null;
-  theme:            'dark' | 'light';
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

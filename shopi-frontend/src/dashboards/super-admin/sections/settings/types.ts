@@ -39,7 +39,7 @@ export type SettingsTab =
  */
 export interface PlatformSettings {
   // ── Général ────────────────────────────────────────────────
-  /** Nom affiché de la plateforme (ex: "Shopi Africa") */
+  /** Nom affiché de la plateforme (ex: "Shoneya") */
   platformName:         string;
   /** Slogan court affiché sous le logo et dans les emails */
   platformTagline:      string | null;

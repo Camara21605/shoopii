@@ -5,7 +5,7 @@
  *        Utilise le MÊME Header que le reste du site.
  *        Assemble : Header global + header profil + onglets + sidebar.
  *
- * AUTONOME : aucune prop. Toasts émis via 'shopi-toast'.
+ * AUTONOME : aucune prop. Toasts émis via 'shoneya-toast'.
  *
  * DONNÉES (stratégie hybride mock → API) :
  *   ✅ DYNAMIQUE via useProfilClient() : identité, KPI, points,
@@ -44,7 +44,7 @@ export default function ProfilClientPage() {
 
   /* Toast global (même mécanisme que le routeur) */
   const onToast = useCallback((msg: string, _type?: 's' | 'i' | 'w' | 'e') => {
-    window.dispatchEvent(new CustomEvent('shopi-toast', { detail: msg }));
+    window.dispatchEvent(new CustomEvent('shoneya-toast', { detail: msg }));
   }, []);
 
   /* ── Données dynamiques du profil ── */

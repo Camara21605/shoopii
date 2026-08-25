@@ -10,11 +10,12 @@
  * ================================================================ */
 
 import React, { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { GlobalCallProvider } from '../shared/context/GlobalCallContext';
 import { GroupCallProvider }  from '../shared/context/GroupCallContext';
 import { useAppContext }      from '../shared/context/AppContext';
 import { getDashboardPath }   from '../shared/services/authUtils';
+import { useForceDarkTheme }  from '../shared/context/ThemeContext';
 
 /* ── Pages publiques (import direct) ── */
 import BoutiquePage      from '../modules/home/components/boutique/pages/BoutiquePage';
@@ -109,6 +110,40 @@ const RoleRoute: React.FC<{ role: string; children: React.ReactNode }> = ({ role
   return <>{children}</>;
 };
 
+/**
+ * ThemeRouteSync — force le thème sombre dès que l'URL correspond à un
+ * dashboard "toujours sombre", AVANT même que le chunk lazy du dashboard
+ * (EntrepriseApp, PartenaireApp...) ait fini de se charger.
+ *
+ * Pourquoi pas dans RoleRoute (essayé d'abord, insuffisant) : RoleRoute
+ * est monté À L'INTÉRIEUR du même <Suspense> que le composant lazy du
+ * dashboard. Or quand un enfant lazy suspend (chunk pas encore prêt),
+ * React n'engage AUCUNE partie du sous-arbre de ce Suspense — y compris
+ * RoleRoute lui-même — tant que le chunk n'est pas prêt : son effet de
+ * forçage ne s'exécute donc qu'au moment même où le dashboard apparaît
+ * déjà, trop tard pour éviter le flash clair à la toute première
+ * connexion (le rafraîchissement, lui, fonctionnait déjà : le script
+ * inline de index.html fixe le thème avant le tout premier rendu React).
+ *
+ * Ce composant est rendu en dehors du <Suspense>, donc jamais suspendu :
+ * son effet (useLayoutEffect, via useForceDarkTheme) s'exécute dès que
+ * l'URL change, indépendamment du chargement du chunk du dashboard.
+ */
+const DARK_FORCED_PREFIXES = [
+  '/dashboard/super-admin',
+  '/dashboard/entreprise',
+  '/dashboard/partenaire',
+  '/dashboard/correspondant',
+];
+
+const ThemeRouteSync: React.FC = () => {
+  const { pathname } = useLocation();
+  const { isAuthenticated } = useAppContext();
+  const forceDark = isAuthenticated && DARK_FORCED_PREFIXES.some(p => pathname.startsWith(p));
+  useForceDarkTheme(forceDark);
+  return null;
+};
+
 /** Home — accessible aux clients et aux non-connectés ; redirige les autres rôles. */
 const HomeRoute: React.FC = () => {
   const { isAuthenticated, user } = useAppContext();
@@ -151,7 +186,7 @@ const CommandeSuiviRoute: React.FC = () => {
 };
 
 function showToast(msg: string) {
-  window.dispatchEvent(new CustomEvent('shopi-toast', { detail: msg }));
+  window.dispatchEvent(new CustomEvent('shoneya-toast', { detail: msg }));
 }
 
 /* ── Router ── */
@@ -159,6 +194,7 @@ export const AppRouter: React.FC = () => (
   <BrowserRouter>
     <GlobalCallProvider>
       <GroupCallProvider>
+      <ThemeRouteSync />
       <Suspense fallback={<Loader />}>
         <Routes>
           <Route path="/"         element={<SmartRedirect />} />

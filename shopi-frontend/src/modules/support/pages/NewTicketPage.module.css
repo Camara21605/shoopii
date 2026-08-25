@@ -49,7 +49,7 @@
 
 /* ✅ Bascule EXPLICITE du thème via le site (ThemeContext → <html data-theme>) —
    `prefers-color-scheme` seul ne réagit qu'à la préférence de l'OS et ignore
-   le choix fait dans l'app (ex: OS clair + "Mode sombre" cliqué dans Shopi). */
+   le choix fait dans l'app (ex: OS clair + "Mode sombre" cliqué dans Shoneya). */
 :root[data-theme="dark"] {
   --nt-bg:         #0D1526;
   --nt-card:       #131E35;

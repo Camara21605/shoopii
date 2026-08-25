@@ -185,8 +185,8 @@ export default function UsersSection({ store, toast, isActive }: Props) {
         )}
 
         {/* ── Tableau ── */}
-        <div style={{ overflowX:'auto' }}>
-          <table className="tbl">
+        <div className="tbl-wrap">
+          <table className="tbl users-tbl">
             <thead>
               <tr>
                 <th>Utilisateur</th>
@@ -217,7 +217,7 @@ export default function UsersSection({ store, toast, isActive }: Props) {
                 return (
                   <tr key={u.id} style={{ opacity: isActing ? .6 : 1, transition:'opacity .2s' }}>
 
-                    <td>
+                    <td data-label="Utilisateur">
                       <div className="u-cell">
                         <div className="u-av" style={{ background:bg, color:fg }}>{initials}</div>
                         <div className="u-info">
@@ -227,38 +227,38 @@ export default function UsersSection({ store, toast, isActive }: Props) {
                       </div>
                     </td>
 
-                    <td>
+                    <td data-label="Rôle">
                       <span className={`role-pill ${ROLE_PILL[u.role] ?? ''}`}>
                         {ROLE_LABELS[u.role] || u.role}
                       </span>
                     </td>
 
-                    <td>
+                    <td data-label="Statut">
                       <span className={`status-dot ${STATUS_CLASS[u.status] ?? ''}`}>
                         {STATUS_LABEL[u.status] ?? u.status}
                       </span>
                     </td>
 
-                    <td style={{ whiteSpace: 'nowrap' }}>
+                    <td data-label="Pays" style={{ whiteSpace: 'nowrap' }}>
                       {u.country
                         ? <>{FLAGS[u.country] ?? '🌍'} {COUNTRY_NAMES[u.country] ?? u.country}</>
                         : <span style={{ color: 'var(--txt-3)', fontSize: 11 }}>—</span>
                       }
                     </td>
 
-                    <td style={{ fontFamily:'var(--font-m)', fontSize:11 }}>
+                    <td data-label="Téléphone" style={{ fontFamily:'var(--font-m)', fontSize:11 }}>
                       {u.phone}
                     </td>
 
-                    <td style={{ fontFamily:'var(--font-m)', fontSize:11, color:'var(--txt-3)' }}>
+                    <td data-label="Inscription" style={{ fontFamily:'var(--font-m)', fontSize:11, color:'var(--txt-3)' }}>
                       {new Date(u.date).toLocaleDateString('fr-FR')}
                     </td>
 
-                    <td style={{ textAlign:'center' }}>
+                    <td data-label="Vérifié" style={{ textAlign:'center' }}>
                       {u.verified ? '✅' : '⏳'}
                     </td>
 
-                    <td>
+                    <td data-label="Actions">
                       <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
 
                         {/* 👁 Voir détail */}

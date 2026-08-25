@@ -340,7 +340,7 @@ export default function ProfilEntreprisePage({ onNavigate }: Props) {
               <i className="fas fa-motorcycle" style={{ color:'var(--blue)', marginRight:7 }} /> Options de livraison
             </div>
             {[
-              { ok: data.livraisonShopi,    label: 'Livraison Shopi'    },
+              { ok: data.livraisonShopi,    label: 'Livraison Shoneya'    },
               { ok: data.livraisonStandard, label: 'Livraison standard' },
               { ok: data.livraisonCorresp,  label: 'Correspondants'     },
               { ok: data.clickCollect,      label: 'Click & Collect'    },

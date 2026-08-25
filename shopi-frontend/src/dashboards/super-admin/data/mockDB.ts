@@ -7,7 +7,7 @@
 
 import type {
   InvitationCode,
-  HealthService, Conversation
+  HealthService,
 } from '../types/codes.types';
 
 export const MOCK_CODES: InvitationCode[] = [
@@ -26,28 +26,6 @@ export const MOCK_HEALTH: HealthService[] = [
   { name:'Paiement MTN',       val:95, unit:'% succès',  color:'var(--acid)',   status:'Nominal' },
   { name:'Paiement Orange',    val:88, unit:'% succès',  color:'var(--sky)',    status:'Normal'  },
   { name:'Notifications Push', val:41, unit:'% charge',  color:'var(--acid)',   status:'Nominal' },
-];
-
-export const MOCK_CONVERSATIONS: Conversation[] = [
-  { id:1, userId:1, unread:2, messages:[
-    { from:'user',  text:'Bonjour, j\'ai un problème avec ma boutique, je ne peux plus ajouter de produits.', time:'10:15' },
-    { from:'admin', text:'Bonjour Mamadou, nous vérifions cela. Pouvez-vous me donner votre identifiant boutique ?',   time:'10:20' },
-    { from:'user',  text:'Mon identifiant est SHOP-GN-001. Merci de votre aide.',                              time:'10:22' },
-    { from:'user',  text:'Avez-vous pu résoudre le problème ?',                                                time:'14:10' },
-  ]},
-  { id:2, userId:4, unread:1, messages:[
-    { from:'user',  text:'Bonjour, je souhaite étendre ma zone partenaire au Sénégal.',                       time:'Hier' },
-    { from:'admin', text:'Bonjour Aissatou, votre demande est en cours d\'examen. Merci de votre confiance.', time:'Hier' },
-    { from:'user',  text:'Merci. Quand puis-je avoir une réponse ?',                                          time:'09:30' },
-  ]},
-  { id:3, userId:7, unread:0, messages:[
-    { from:'admin', text:'Bonjour Sekou, votre commande #3421 a bien été expédiée.', time:'Avant-hier' },
-    { from:'user',  text:'Merci beaucoup !',                                          time:'Avant-hier' },
-  ]},
-  { id:4, userId:2, unread:0, messages:[
-    { from:'user',  text:'Comment puis-je modifier mon adresse de livraison ?',        time:'Lundi' },
-    { from:'admin', text:'Rendez-vous dans Paramètres > Adresses > Modifier.',         time:'Lundi' },
-  ]},
 ];
 
 // ─────────────────────────────────────────────────────────────

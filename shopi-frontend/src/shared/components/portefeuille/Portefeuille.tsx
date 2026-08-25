@@ -2,7 +2,7 @@
  * FICHIER : src/shared/components/portefeuille/Portefeuille.tsx
  *
  * RÔLE : Composant Portefeuille partagé — réutilisable dans
- *        tous les dashboards Shopi (entreprise, livreur,
+ *        tous les dashboards Shoneya (entreprise, livreur,
  *        correspondant, partenaire, client, administrateur,
  *        super-admin). Chaque utilisateur gère son propre
  *        wallet via l'API /api/wallet.
@@ -504,7 +504,7 @@ export default function Portefeuille() {
             </div>
           </div>
 
-          {/* Commission Shopi */}
+          {/* Commission Shoneya */}
           <div className={styles.card}>
             <div className={styles.ch}><div className={styles.chT}><i className="fas fa-circle-info"></i> {t('wallet.commission.title')}</div></div>
             <div className={styles.cb}>

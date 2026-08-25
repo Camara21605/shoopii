@@ -36,14 +36,14 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
 
   const [tab, setTab] = useState<ProfilTab>('info');
 
-  /* Relaie les toasts internes ('shopi-toast') vers le toast du dashboard */
+  /* Relaie les toasts internes ('shoneya-toast') vers le toast du dashboard */
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<string>).detail;
       onPop(detail, 'i');
     };
-    window.addEventListener('shopi-toast', handler);
-    return () => window.removeEventListener('shopi-toast', handler);
+    window.addEventListener('shoneya-toast', handler);
+    return () => window.removeEventListener('shoneya-toast', handler);
   }, [onPop]);
 
   const onToast = useCallback((msg: string) => onPop(msg, 'i'), [onPop]);
@@ -62,7 +62,7 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
     return (
       <>
         {backBtn}
-        <div className={styles.page}>
+        <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}><i className="fas fa-spinner fa-spin" /> Chargement du profil…</div>
         </div>
       </>
@@ -73,7 +73,7 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
     return (
       <>
         {backBtn}
-        <div className={styles.page}>
+        <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}>
             <i className="fas fa-triangle-exclamation" />
             {error ?? 'Correspondant introuvable.'}
@@ -86,7 +86,7 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
   return (
     <>
       {backBtn}
-      <div className={styles.page}>
+      <div className={`${styles.page} ${styles.pageDark}`}>
         <ProfilHeader
           profil={profil}
           suivi={suivi}

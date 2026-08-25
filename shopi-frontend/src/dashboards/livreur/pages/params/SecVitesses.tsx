@@ -56,7 +56,7 @@ export default function SecVitesses({ data, saving, dirty, onPop, saveVitesses }
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
       <div className={ps.psHd}>
         <h2><i className="fas fa-gauge-high" /> Vitesses & Tarification</h2>
-        <p>Modes de livraison proposés et tarifs de base. Les multiplicateurs sont appliqués automatiquement par Shopi.</p>
+        <p>Modes de livraison proposés et tarifs de base. Les multiplicateurs sont appliqués automatiquement par Shoneya.</p>
       </div>
 
       <div className={ps.card}>
@@ -79,7 +79,7 @@ export default function SecVitesses({ data, saving, dirty, onPop, saveVitesses }
           </div>
           <div style={{ marginTop:14, padding:'12px 14px', background:'var(--sky)', border:'1px solid var(--sky-3)', borderRadius:'var(--r-md)', fontSize:12, color:'var(--t2)', display:'flex', gap:8 }}>
             <i className="fas fa-circle-info" style={{ color:'var(--blue)', flexShrink:0, marginTop:1 }} />
-            Multiplicateurs Shopi : <strong style={{ color:'var(--navy)' }}>Éco ×1.0 · Standard ×1.3 · Express ×1.8 · Ultra ×2.5</strong>
+            Multiplicateurs Shoneya : <strong style={{ color:'var(--navy)' }}>Éco ×1.0 · Standard ×1.3 · Express ×1.8 · Ultra ×2.5</strong>
           </div>
         </div>
       </div>

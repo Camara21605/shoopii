@@ -1,6 +1,6 @@
 /* ============================================================
  * FICHIER  : src/dashboards/super-admin/sections/SystemSection.tsx
- * ROLE     : Centre de supervision système enterprise — Shopi Africa
+ * ROLE     : Centre de supervision système enterprise — Shoneya
  * RESPONSABILITES :
  *   – Métriques infra temps réel (CPU, RAM, Disque, Réseau, API)
  *   – État des services avec latence et disponibilité
@@ -804,7 +804,7 @@ export default function SystemSection({ store, isActive }: Props) {
       </div>
 
       {/* ── Alertes + Journal ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="grid-collapse-sm" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
         {/* Alertes */}
         <div className="card">

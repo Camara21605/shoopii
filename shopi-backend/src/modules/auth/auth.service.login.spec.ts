@@ -28,6 +28,8 @@ import { AuthService } from './auth.service';
 import { CodeCreationService } from './code-creation/code-creation.service';
 import { MailService }         from '../email/email.service';
 import { TwoFaService }        from './twofa/twofa.service';
+import { SessionService }      from '../session/session.service';
+import { NotificationBroadcastService } from '../notifications/services/notification-broadcast.service';
 
 import { User, UserStatus }     from '../../database/entities/user.entity';
 import { Admin }                from '../../database/entities/profiles/admin-profile.entity';
@@ -110,6 +112,16 @@ describe('AuthService — login (comptes liés pro↔client)', () => {
         { provide: CodeCreationService, useValue: {} },
         { provide: MailService,         useValue: { sendWelcomeEmail: jest.fn() } },
         { provide: TwoFaService,        useValue: { isEnabled: jest.fn().mockResolvedValue(false) } },
+        {
+          provide: SessionService,
+          useValue: {
+            startSession: jest.fn().mockResolvedValue({ sessionId: 'session-uuid', previousSessionId: null, sessionReplaced: false }),
+            validateSession: jest.fn().mockResolvedValue(true),
+            touchSession: jest.fn(),
+            endSession: jest.fn(),
+          },
+        },
+        { provide: NotificationBroadcastService, useValue: { emitToSession: jest.fn(), emitToUser: jest.fn() } },
         { provide: getRedisConnectionToken(), useValue: { incr: jest.fn(), expire: jest.fn() } },
       ],
     }).compile();

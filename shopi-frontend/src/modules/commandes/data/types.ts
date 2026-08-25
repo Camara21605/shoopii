@@ -46,7 +46,7 @@ export interface CommandeMontant {
 
 /* Commission versée à un acteur (après livraison) */
 export interface Commission {
-  role:    ActeurRole | 'shopi';
+  role:    ActeurRole | 'shoneya';
   nom:     string;
   libelle: string;
   montant: number;

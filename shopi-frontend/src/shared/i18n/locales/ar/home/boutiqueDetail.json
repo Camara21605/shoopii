@@ -9,11 +9,11 @@
       "apropos": "حول المتجر"
     },
     "cover": {
-      "verifiee": "متجر موثّق من شوبي",
+      "verifiee": "متجر موثّق من شونيا",
       "active": "نشط"
     },
     "identity": {
-      "verifie": "موثّق من شوبي",
+      "verifie": "موثّق من شونيا",
       "note": "التقييم",
       "abonnes": "المتابعون",
       "satisfaction": "الرضا",
@@ -49,13 +49,13 @@
       "completCount_one": "ممتلئ",
       "completCount_other": "ممتلئون",
       "totalCount": "مراسل إجمالاً",
-      "infoBannerTitle": "ما هو المراسل في شوبي؟",
-      "infoBannerDesc": "المراسل هو ممثل لشوبي في مدينتك. يستلم طردك ويتحقق منه ويحفظه في مكان آمن. يمكنك استلامه مباشرة أو تكليف عامل توصيل بإيصاله إلى منزلك.",
+      "infoBannerTitle": "ما هو المراسل في شونيا؟",
+      "infoBannerDesc": "المراسل هو ممثل لشونيا في مدينتك. يستلم طردك ويتحقق منه ويحفظه في مكان آمن. يمكنك استلامه مباشرة أو تكليف عامل توصيل بإيصاله إلى منزلك.",
       "steps": {
         "colisRecu": "تم استلام الطرد والتحقق منه",
         "stockageSecurise": "تخزين آمن",
         "remiseDirecte": "تسليم مباشر أو عبر عامل توصيل",
-        "noteCertifie": "مقيَّم ومعتمد من شوبي"
+        "noteCertifie": "مقيَّم ومعتمد من شونيا"
       },
       "fermer": "إغلاق"
     },
@@ -79,7 +79,7 @@
       "instagramCopieToast": "📸 تم نسخ الرابط — الصقه في Instagram",
       "partageVia": "📲 المشاركة عبر {{label}}",
       "lienCopieToast": "🔗 تم نسخ الرابط!",
-      "emailSujet": "اكتشف هذا المتجر على شوبي"
+      "emailSujet": "اكتشف هذا المتجر على شونيا"
     },
     "aPropos": {
       "titre": "حول المتجر",
@@ -231,9 +231,9 @@
       "filtreEnPromotion": "ضمن العروض",
       "filtreNouveautes": "الجديد",
       "partagerTitre": "مشاركة هذا المتجر",
-      "boutiqueShopiDefault": "متجر شوبي",
+      "boutiqueShopiDefault": "متجر شونيا",
       "membreDepuis": "عضو منذ {{date}}",
-      "membreShopi": "عضو شوبي",
+      "membreShopi": "عضو شونيا",
       "horairesNonRenseignes": "أوقات العمل غير محددة"
     }
   }

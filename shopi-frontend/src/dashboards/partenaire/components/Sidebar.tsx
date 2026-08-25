@@ -7,6 +7,7 @@
 import styles from '../styles/Sidebar.module.css';
 import type { PartenairePage } from '../data/types';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
+import ShoneyaLogo from '../../../shared/components/ShoneyaLogo';
 
 interface SidebarProps {
   activePage:   PartenairePage;
@@ -59,8 +60,8 @@ export default function Sidebar({
       <nav className={`${styles.sb} ${isOpen ? styles.sbOpen : ''}`}>
         {/* Logo */}
         <div className={styles.logo}>
-          <div className={styles.lm}>Sh</div>
-          <div className={styles.brand}>Sho<b>pi</b></div>
+          <ShoneyaLogo size={34} />
+          <div className={styles.brand}>Sho<b>neya</b></div>
           <span className={styles.tag}>PARTENAIRE</span>
         </div>
 
@@ -75,7 +76,7 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* Solde du portefeuille Shopi — sous la carte partenaire */}
+        {/* Solde du portefeuille Shoneya — sous la carte partenaire */}
         <div style={{ padding: '0 22px 12px' }}>
           <WalletQuickBar compact mini onManage={() => onNavigate('paiements')} />
         </div>

@@ -253,6 +253,58 @@
 .state { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:50vh; gap:12px; padding:40px 20px; text-align:center; font-size:14px; font-weight:600; color:var(--t3); }
 .state i { font-size:30px; color:var(--co); }
 
+/* ================================================================
+ * THÈME NOIR — page publique de profil (site public forcé en sombre,
+ * voir useForceDarkTheme() dans Header.tsx). Cette page est PARTAGÉE
+ * (page publique + dashboards livreur/entreprise via
+ * ProfilCorrespondantReseauPage.tsx) : .page redéclare ses PROPRES
+ * variables locales (--wh, --n, --t1…) directement sur lui-même, ce
+ * qui écrase toute valeur héritée du thème global — donc sans classe
+ * modificatrice explicite, la page reste toujours claire même quand
+ * le reste du site est forcé en noir.
+ *
+ * Fix : classe modificatrice .pageDark (même mécanisme que
+ * profil-livreur/styles/ProfilLivreur.module.css), qui redéfinit ces
+ * variables locales + les couleurs encore codées en dur (cover,
+ * avatar, chips, carte zone principale) en palette noir/gris.
+ * ================================================================ */
+.pageDark {
+  --n:#F4F4F5; --n2:#E4E4E7; --b:#A1A1AA; --b2:#71717A;
+  --co:#A78BFA; --co2:#8B5CF6; --blt:rgba(255,255,255,.08); --plt:rgba(167,139,250,.14);
+  --em:#71717A; --am:#71717A; --re:#EF4444; --go:#71717A;
+  --g50:#000000; --g100:#0A0A0A; --bdr:rgba(255,255,255,.10); --bdr2:rgba(255,255,255,.16);
+  --t1:#F4F4F5; --t2:#A1A1AA; --t3:#71717A; --t4:#52525B; --wh:#000000;
+  --sh:0 2px 12px rgba(0,0,0,.45); --sh2:0 6px 28px rgba(0,0,0,.6);
+  background: var(--g50) !important;
+  color:      var(--t1)  !important;
+}
+.pageDark .coverBg    { background: linear-gradient(118deg,#000 0%,#1C0A33 30%,#0A0A0A 65%,#000 100%) !important; }
+.pageDark .ava,
+.pageDark .revAva,
+.pageDark .simAva      { color:#F4F4F5 !important; }
+.pageDark .avaOn        { background:#A1A1AA !important; }
+.pageDark .idType,
+.pageDark .chipP,
+.pageDark .pillP        { background:rgba(167,139,250,.14) !important; color:#F4F4F5 !important; }
+.pageDark .chipG, .pageDark .pillG,
+.pageDark .chipB, .pageDark .pillB,
+.pageDark .chipY, .pageDark .pillY,
+.pageDark .pillR        { background:rgba(255,255,255,.08) !important; color:#F4F4F5 !important; }
+.pageDark .btnFollowOn  { background:rgba(255,255,255,.08) !important; color:#F4F4F5 !important; border-color:rgba(255,255,255,.22) !important; }
+.pageDark .btnFollowOn:hover { background:rgba(239,68,68,.14) !important; color:#EF4444 !important; border-color:#EF4444 !important; }
+.pageDark .schRowToday  { background:rgba(167,139,250,.14) !important; border-color:rgba(167,139,250,.3) !important; }
+.pageDark .schOpen      { background:rgba(255,255,255,.08) !important; color:#F4F4F5 !important; }
+.pageDark .schClosed    { background:rgba(255,255,255,.05) !important; color:#71717A !important; }
+.pageDark .schPartial   { background:rgba(255,255,255,.08) !important; color:#F4F4F5 !important; }
+.pageDark .zoneCardPrimary,
+.pageDark .zbMain       { background:rgba(167,139,250,.14) !important; }
+.pageDark .intlNote,
+.pageDark .tarifWarn,
+.pageDark .revReply     { background:rgba(167,139,250,.1) !important; border-color:rgba(167,139,250,.3) !important; color:#F4F4F5 !important; }
+.pageDark .vrOk         { background:rgba(255,255,255,.08) !important; border-color:rgba(255,255,255,.16) !important; }
+.pageDark .vrWarn       { background:rgba(239,68,68,.1) !important; border-color:rgba(239,68,68,.25) !important; }
+.pageDark .kbG, .pageDark .kbP { background:rgba(255,255,255,.08) !important; color:#F4F4F5 !important; }
+
 /* ════════ RESPONSIVE ════════ */
 @media (max-width:900px) {
   .pw { grid-template-columns:1fr; padding:14px; }

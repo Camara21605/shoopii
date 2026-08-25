@@ -7,7 +7,7 @@
  *           le contexte de la boutique.
  *
  * AFFICHE :
- *   - Nom de la boutique + badge Vérifié Shopi
+ *   - Nom de la boutique + badge Vérifié Shoneya
  *   - Domaine, ville, date membre
  *   - Stats (note, abonnés, satisfaction, ventes)
  *   - Boutons : S'abonner (toggle) | Message | Partager

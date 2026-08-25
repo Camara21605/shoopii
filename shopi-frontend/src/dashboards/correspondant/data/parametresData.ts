@@ -107,7 +107,7 @@ export interface VirFreq {
 export const VIR_FREQ: VirFreq[] = [
   { em:'📅', nm:'Virement quotidien',     sub:'Chaque matin — commissions de la veille',         prix:'Gratuit',   sel:false, color:'var(--t2)' },
   { em:'📆', nm:'Virement hebdomadaire',  sub:'Chaque lundi — commissions de la semaine',        prix:'Gratuit',   sel:true,  color:'var(--t2)' },
-  { em:'⚡', nm:'Retrait instantané',     sub:'À la demande via Wallet Shopi',                   prix:'−1.5%',     sel:false, color:'var(--t2)'     },
+  { em:'⚡', nm:'Retrait instantané',     sub:'À la demande via Wallet Shoneya',                   prix:'−1.5%',     sel:false, color:'var(--t2)'     },
 ];
 
 /* ── Toggles partagés (label, sub, checked, badge) ── */
@@ -135,7 +135,7 @@ export const ACCESS_TOGGLES: ToggleRow[] = [
 ];
 
 export const COLAB_TOGGLES: ToggleRow[] = [
-  { label:'Accepter les boutiques non vérifiées',   sub:'Permettre à des boutiques sans badge Shopi de vous confier des colis',    checked:false, badge:''    },
+  { label:'Accepter les boutiques non vérifiées',   sub:'Permettre à des boutiques sans badge Shoneya de vous confier des colis',    checked:false, badge:''    },
   { label:'Auto-assigner les colis aux livreurs',   sub:'Assigner automatiquement les colis disponibles au livreur le mieux noté',  checked:true,  badge:'rec' },
   { label:'Notifier les boutiques à chaque mouvement', sub:'Informer la boutique à chaque dépôt, transfert et remise',             checked:true,  badge:''    },
   { label:'Partager les statistiques avec partenaires', sub:'Boutiques et livreurs voient vos stats de performance',               checked:true,  badge:''    },
@@ -143,7 +143,7 @@ export const COLAB_TOGGLES: ToggleRow[] = [
 
 export const INCIDENT_RULES: ToggleRow[] = [
   { label:'Initier le retour automatiquement si >7j',   sub:'Générer automatiquement un retour boutique après le délai configuré',              checked:true,  badge:'rec' },
-  { label:'Alerter le support Shopi si litige',         sub:'Escalader automatiquement les litiges non résolus sous 24h',                       checked:true,  badge:'rec' },
+  { label:'Alerter le support Shoneya si litige',         sub:'Escalader automatiquement les litiges non résolus sous 24h',                       checked:true,  badge:'rec' },
   { label:'Bloquer un livreur après 3 incidents',       sub:'Suspendre temporairement un livreur ayant causé 3 incidents consécutifs',          checked:false, badge:''    },
   { label:'Photo obligatoire à la remise',              sub:'Exiger une photo de confirmation lors de chaque remise de colis',                   checked:true,  badge:'new' },
 ];
@@ -163,14 +163,14 @@ export const NOTIF_COLIS: ToggleRow[] = [
 ];
 
 export const NOTIF_FINANCES: ToggleRow[] = [
-  { label:'Commission encaissée',      sub:'Confirmation après chaque mission payée par Shopi',          checked:true,  badge:''    },
+  { label:'Commission encaissée',      sub:'Confirmation après chaque mission payée par Shoneya',          checked:true,  badge:''    },
   { label:'Virement effectué',         sub:'Notification après chaque virement sur votre compte',        checked:true,  badge:''    },
   { label:'Bilan hebdomadaire',        sub:'Résumé performances + revenus chaque lundi matin',           checked:true,  badge:'rec' },
   { label:'Seuil Wallet atteint',      sub:'Alerte quand votre Wallet dépasse le seuil configuré',       checked:false, badge:''    },
 ];
 
 export const NOTIF_CANAUX: ToggleRow[] = [
-  { label:'Notifications push (app)', sub:"Sur votre smartphone via l'application Shopi",                checked:true,  badge:''    },
+  { label:'Notifications push (app)', sub:"Sur votre smartphone via l'application Shoneya",                checked:true,  badge:''    },
   { label:'SMS',                      sub:'Alertes critiques — colis urgents, saturation, litiges',     checked:true,  badge:''    },
   { label:'WhatsApp Business',        sub:'Notifications via WhatsApp',                                  checked:false, badge:'new' },
   { label:'Email',                    sub:'Bilans et documents officiels',                               checked:true,  badge:''    },
@@ -178,14 +178,14 @@ export const NOTIF_CANAUX: ToggleRow[] = [
 
 export const PRIV_VISIBILITE: ToggleRow[] = [
   { label:'Afficher mes statistiques de performance', sub:'Boutiques et livreurs voient vos taux de succès et délais', checked:true,  badge:'' },
-  { label:'Afficher mon numéro de téléphone public',  sub:'Visible sur votre profil correspondant Shopi',              checked:false, badge:'' },
+  { label:'Afficher mon numéro de téléphone public',  sub:'Visible sur votre profil correspondant Shoneya',              checked:false, badge:'' },
   { label:'Apparaître dans la recherche de relais',   sub:'Être trouvable par de nouvelles boutiques cherchant un correspondant', checked:true, badge:'' },
   { label:'Partager la localisation du dépôt',        sub:"Afficher l'adresse exacte dans les informations de livraison", checked:true, badge:'' },
 ];
 
 export const PRIV_DATA: ToggleRow[] = [
-  { label:'Amélioration des algorithmes Shopi', sub:"Permettre l'utilisation de vos données pour améliorer les recommandations", checked:true,  badge:''    },
-  { label:'Statistiques anonymisées',           sub:'Partager vos stats dans les rapports agrégés Shopi',                        checked:true,  badge:''    },
+  { label:'Amélioration des algorithmes Shoneya', sub:"Permettre l'utilisation de vos données pour améliorer les recommandations", checked:true,  badge:''    },
+  { label:'Statistiques anonymisées',           sub:'Partager vos stats dans les rapports agrégés Shoneya',                        checked:true,  badge:''    },
   { label:'Rapports personnalisés',             sub:'Recevoir des analyses de performance adaptées à votre zone',                 checked:false, badge:'new' },
 ];
 

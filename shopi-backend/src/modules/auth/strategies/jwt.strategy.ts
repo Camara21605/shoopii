@@ -23,6 +23,7 @@ import { Repository }                        from 'typeorm';
 import type { Request }                      from 'express';
 
 import { User, UserStatus } from '../../../database/entities/user.entity';
+import { SessionService }   from '../../session/session.service';
 
 // ── Payload stocké dans le JWT ────────────────────────────────────────────────
 export interface JwtPayload {
@@ -30,6 +31,7 @@ export interface JwtPayload {
   email:    string;
   role:     string;
   actorId?: string;   // UUID du profil (client.id, company.id, etc.)
+  sid?:     string;   // Session ID — session unique par utilisateur (voir SessionService)
   iat?:     number;   // Issued At — Unix timestamp (secondes), ajouté automatiquement par jwtService.sign()
   exp?:     number;   // Expiration — Unix timestamp (secondes)
 }
@@ -42,6 +44,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+
+    private readonly sessionService: SessionService,
   ) {
     const secret = config.get<string>('JWT_SECRET');
     if (!secret) {
@@ -68,7 +72,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * Appelé après vérification réussie de la signature JWT.
    * Retourne l'objet attaché à req.user pour toute la durée de la requête.
    */
-  async validate(payload: JwtPayload): Promise<User & { actorId?: string }> {
+  async validate(payload: JwtPayload): Promise<User & { actorId?: string; sessionId?: string }> {
 
     const user = await this.userRepo.findOne({ where: { id: payload.sub } });
 
@@ -115,6 +119,24 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       }
     }
 
-    return Object.assign(user, { actorId: payload.actorId });
+    /* ── Session unique par utilisateur ─────────────────────────
+     * Un token cryptographiquement valide n'est PAS forcément une
+     * session valide : si un autre appareil s'est connecté depuis
+     * (voir SessionService.startSession), le sessionId "sid" de ce
+     * token ne correspond plus à la session active dans Redis — on
+     * le rejette même s'il n'a pas encore expiré. `sid` absent
+     * (tokens émis avant cette fonctionnalité) → pas de contrôle,
+     * pour ne pas invalider en masse les sessions déjà ouvertes au
+     * déploiement. */
+    if (payload.sid) {
+      const valid = await this.sessionService.validateSession(user.id, payload.sid);
+      if (!valid) {
+        throw new UnauthorizedException(
+          'Votre compte a été connecté sur un autre appareil. Veuillez vous reconnecter.',
+        );
+      }
+    }
+
+    return Object.assign(user, { actorId: payload.actorId, sessionId: payload.sid });
   }
 }

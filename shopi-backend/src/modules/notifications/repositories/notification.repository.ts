@@ -303,6 +303,20 @@ export class NotificationRepository {
   }
 
   /**
+   * Supprime TOUTES les notifications d'un acteur (hard delete).
+   * Même portée que markAllAsRead() — { recipientType, recipientId }.
+   *
+   * @returns Nombre de notifications supprimées
+   */
+  async deleteAll(
+    recipientType: NotificationActorType,
+    recipientId:   string,
+  ): Promise<number> {
+    const result = await this.repo.delete({ recipientType, recipientId });
+    return result.affected ?? 0;
+  }
+
+  /**
    * Supprime toutes les notifications expirées.
    *
    * @returns Nombre de notifications supprimées

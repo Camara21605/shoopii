@@ -350,7 +350,7 @@ export default function Topbar({
               </button>
             </div>
 
-            {/* Solde du portefeuille Shopi — accès rapide dans le drawer mobile */}
+            {/* Solde du portefeuille Shoneya — accès rapide dans le drawer mobile */}
             <div style={{ padding: '0 20px 14px' }}>
               <WalletQuickBar compact mini onManage={() => go('portefeuille')} />
             </div>

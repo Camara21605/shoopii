@@ -83,7 +83,7 @@ interface UseAudioCallProps {
   /**
    * Erreur/évènement d'appel à afficher à l'utilisateur (partie 8) — le hook
    * ne sait pas afficher de toast (pas de contexte React ici), il délègue à
-   * GlobalCallContext.tsx qui, lui, a accès à useToast() (système UI Shopi
+   * GlobalCallContext.tsx qui, lui, a accès à useToast() (système UI Shoneya
    * existant, jamais un nouvel alert()).
    */
   onError?: (error: CallErrorInfo) => void;
@@ -425,7 +425,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
    * Tente de lancer la lecture du flux distant — si bloquée par la
    * politique autoplay du navigateur (fréquent sur mobile hors interaction
    * utilisateur directe), signale needsAudioUnlock=true : CallOverlay
-   * affiche un vrai bouton du design system Shopi (partie 8 — avant : bouton
+   * affiche un vrai bouton du design system Shoneya (partie 8 — avant : bouton
    * DOM brut créé à la main, hors système UI, sans aria-label).
    */
   const playRemoteAudioWithFallback = useCallback(async (audioEl: HTMLAudioElement) => {

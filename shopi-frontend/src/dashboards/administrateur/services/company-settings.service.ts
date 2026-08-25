@@ -90,7 +90,7 @@ export const DEFAULT_BRACKETS: CommissionBracket[] = [
 export const DEFAULT_DOCUMENTS: RequiredDocument[] = [
   { id: 'rccm',    label: 'RCCM',                    description: 'Registre du Commerce et du Crédit Mobilier',   required: true  },
   { id: 'cni',     label: 'CNI / Passeport',          description: "Pièce d'identité du représentant légal",      required: true  },
-  { id: 'contrat', label: 'Contrat Shopi',             description: 'Contrat signé avec Shopi Guinée',             required: true  },
+  { id: 'contrat', label: 'Contrat Shoneya',             description: 'Contrat signé avec Shoneya Guinée',             required: true  },
   { id: 'nif',     label: 'NIF / Attestation fiscale', description: "Numéro d'Identification Fiscale",            required: false },
   { id: 'photo',   label: 'Photo du commerce',         description: 'Photo extérieure du point de vente',         required: false },
   { id: 'banque',  label: 'Coordonnées bancaires',     description: 'RIB ou compte Mobile Money de réception',    required: false },
@@ -164,14 +164,14 @@ export function exportConfigAsJson(settings: CompanySettings): void {
   const { updatedAt, ...rest } = settings;
   const json = JSON.stringify({
     exportedAt: new Date().toISOString(),
-    source:     'Shopi Admin — Configuration Entreprises',
+    source:     'Shoneya Admin — Configuration Entreprises',
     config:     rest,
   }, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `shopi-config-${new Date().toISOString().split('T')[0]}.json`;
+  a.download = `shoneya-config-${new Date().toISOString().split('T')[0]}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -196,7 +196,7 @@ export function exportStatsAsCsv(stats: CompanyStats): void {
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `shopi-stats-${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = `shoneya-stats-${new Date().toISOString().split('T')[0]}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

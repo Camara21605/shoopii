@@ -36,7 +36,7 @@ interface FieldInputProps {
 
 /**
  * FieldInput
- * Champ de formulaire universel du design system Shopi.
+ * Champ de formulaire universel du design system Shoneya.
  * Supporte le toggle mot de passe, les icônes, les préfixes
  * et l'affichage conditionnel des erreurs.
  */

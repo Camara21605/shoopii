@@ -436,7 +436,7 @@ export default function InvitationsSection({ store, toast, isActive }: Props) {
           className="modal-overlay open"
           onClick={e => { if (e.target === e.currentTarget && !loadingInvite) setShowModal(false); }}
         >
-          <div className="modal" style={{ width:480 }}>
+          <div className="modal" style={{ maxWidth:480 }}>
             <div className="modal-head">
               <div>
                 <div style={{ fontFamily:'var(--font-h)', fontWeight:900, fontSize:17 }}>📧 Inviter un acteur</div>

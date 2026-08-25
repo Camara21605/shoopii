@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
+import ShoneyaLogo from '../../../shared/components/ShoneyaLogo';
 import './Sidebar.css';
 
 type CanFn = (group: string, action: string) => boolean;
@@ -118,10 +119,10 @@ export default function Sidebar({
 
   return (
     <nav className="sb">
-      {/* ── Logo Shopi ── */}
+      {/* ── Logo Shoneya ── */}
       <div className="sb-logo">
-        <div className="sb-lm">Sh</div>
-        <div className="sb-brand">Sho<b>pi</b></div>
+        <ShoneyaLogo size={34} />
+        <div className="sb-brand">Sho<b>neya</b></div>
         <span className="sb-version">PRO</span>
       </div>
 
@@ -154,7 +155,7 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* ── Solde du portefeuille Shopi — sous la carte boutique ── */}
+      {/* ── Solde du portefeuille Shoneya — sous la carte boutique ── */}
       <div className="sb-wallet" style={{ padding: '0 22px 12px' }}>
         <WalletQuickBar compact mini onManage={() => onNavigate('portefeuille')} />
       </div>

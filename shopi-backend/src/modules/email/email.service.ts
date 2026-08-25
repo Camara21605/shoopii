@@ -278,7 +278,7 @@ export class MailService implements OnModuleInit {
         'Votre mot de passe reste inchangé.',
         '',
         '---',
-        'Shopi Africa — shopi.gn',
+        'Shopi — shopi.gn',
       ].join('\n'),
     });
 
@@ -319,7 +319,7 @@ export class MailService implements OnModuleInit {
         reportUrl,
         '',
         '---',
-        'Shopi Africa — shopi.gn',
+        'Shopi — shopi.gn',
       ].join('\n'),
     });
 
@@ -360,7 +360,7 @@ export class MailService implements OnModuleInit {
       from:    `"${fromName} via Shopi" <${this.fromEmail}>`,
       subject: `📩 ${sujet}`,
       html:    this.buildContactHtml({ toName, fromName, sujet, message }),
-      text:    `Message de ${fromName}\n\nSujet : ${sujet}\n\n${message}\n\n---\nEnvoyé via Shopi Africa`,
+      text:    `Message de ${fromName}\n\nSujet : ${sujet}\n\n${message}\n\n---\nEnvoyé via Shopi`,
     });
 
     this.logger.log(`[CONTACT EMAIL] Email envoyé à ${toEmail} | Sujet: ${sujet}`);
@@ -405,13 +405,13 @@ export class MailService implements OnModuleInit {
           </table>
         </td></tr>
         <tr><td style="padding:20px 0;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi Africa · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a></p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a></p>
         </td></tr>
       </table>
     </td></tr>
   </table>
 </body></html>`,
-      text: `Bonjour ${firstName},\n\nVotre ticket de support ${reference} a été créé.\nSujet : ${subject}\n\nSuivre : ${ticketUrl}\n\nShopi Africa`,
+      text: `Bonjour ${firstName},\n\nVotre ticket de support ${reference} a été créé.\nSujet : ${subject}\n\nSuivre : ${ticketUrl}\n\nShopi`,
     });
     this.logger.log(`[SUPPORT] Email confirmation envoyé à ${toEmail} | ${reference}`);
   }
@@ -452,13 +452,13 @@ export class MailService implements OnModuleInit {
           </table>
         </td></tr>
         <tr><td style="padding:20px 0;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi Africa · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a></p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a></p>
         </td></tr>
       </table>
     </td></tr>
   </table>
 </body></html>`,
-      text: `${agentName} a répondu à votre ticket ${reference}.\nSujet : ${subject}\n\nVoir : ${ticketUrl}\n\nShopi Africa`,
+      text: `${agentName} a répondu à votre ticket ${reference}.\nSujet : ${subject}\n\nVoir : ${ticketUrl}\n\nShopi`,
     });
     this.logger.log(`[SUPPORT] Email réponse envoyé à ${toEmail} | ${reference}`);
   }
@@ -488,13 +488,13 @@ export class MailService implements OnModuleInit {
           <p style="font-size:13.5px;color:#64748b;line-height:1.7;">Notre équipe vous répondra dans les <strong>48 heures ouvrées</strong>.<br/>Pour un suivi plus rapide, créez un ticket de support.</p>
         </td></tr>
         <tr><td style="padding:20px 0;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi Africa · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a></p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a></p>
         </td></tr>
       </table>
     </td></tr>
   </table>
 </body></html>`,
-      text: `Bonjour ${firstName},\n\nNous avons bien reçu votre message : ${subject}\n\nShopi Africa`,
+      text: `Bonjour ${firstName},\n\nNous avons bien reçu votre message : ${subject}\n\nShopi`,
     });
   }
 
@@ -531,7 +531,7 @@ export class MailService implements OnModuleInit {
         `Vous devrez changer ce mot de passe lors de votre première connexion.`,
         '',
         '---',
-        'Shopi Africa — shopi.gn',
+        'Shopi — shopi.gn',
         'Ne partagez jamais ce mot de passe.',
       ].join('\n'),
     });
@@ -553,7 +553,7 @@ export class MailService implements OnModuleInit {
     text:     string;
     from?:    string;
   }): Promise<void> {
-    const from = opts.from ?? `"Shopi Africa" <${this.fromEmail}>`;
+    const from = opts.from ?? `"Shopi" <${this.fromEmail}>`;
     try {
       const info = await this.transporter.sendMail({
         from,
@@ -674,7 +674,7 @@ export class MailService implements OnModuleInit {
         <!-- Footer -->
         <tr><td style="padding:24px 0;text-align:center;">
           <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.8;">
-            Shopi Africa — La marketplace africaine de référence<br />
+            Shopi — La marketplace de référence<br />
             <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a>
           </p>
         </td></tr>
@@ -786,7 +786,7 @@ export class MailService implements OnModuleInit {
           </div>
         </td></tr>
         <tr><td style="padding:20px 0;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi Africa · <a href="${this.frontendUrl}" style="color:#3b82f6;">shopi.gn</a></p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi · <a href="${this.frontendUrl}" style="color:#3b82f6;">shopi.gn</a></p>
         </td></tr>
       </table>
     </td></tr>
@@ -804,7 +804,7 @@ export class MailService implements OnModuleInit {
       `${p.senderName} vous a invité à rejoindre Shopi.`,
       `Code d'activation : ${p.code}`, '',
       `Lien (valable jusqu'au ${p.expiryFormatted}) :`, p.registerUrl,
-      '', '---', 'Shopi Africa — shopi.gn',
+      '', '---', 'Shopi — shopi.gn',
     ].join('\n');
   }
 
@@ -967,7 +967,7 @@ export class MailService implements OnModuleInit {
         <!-- Footer -->
         <tr><td style="padding:24px 0;text-align:center;">
           <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.8;">
-            Shopi Africa — La marketplace africaine de référence<br/>
+            Shopi — La marketplace de référence<br/>
             <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a>
           </p>
         </td></tr>
@@ -992,7 +992,7 @@ export class MailService implements OnModuleInit {
           <h1 style="margin:0 0 18px;font-size:22px;color:#0f172a;">📩 Nouveau message</h1>
           <p style="font-size:14px;color:#475569;line-height:1.7;">
             Bonjour <strong>${p.toName ?? 'Correspondant'}</strong>,<br />
-            Vous avez reçu un message de <strong>${p.fromName}</strong> via Shopi Africa.
+            Vous avez reçu un message de <strong>${p.fromName}</strong> via Shopi.
           </p>
           <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:14px 18px;border-radius:10px;margin:20px 0;">
             <div style="font-size:12px;color:#64748b;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Sujet</div>

@@ -140,7 +140,7 @@ export default function ProfilSection({ onToast }: Props) {
             <div className={`${s.cardIco} ${s.icoViolet}`}><i className="fas fa-camera" /></div>
             <div>
               <div className={s.cardH}>Photo de profil</div>
-              <div className={s.cardSub}>Votre photo visible par les autres utilisateurs Shopi</div>
+              <div className={s.cardSub}>Votre photo visible par les autres utilisateurs Shoneya</div>
             </div>
           </div>
         </div>
@@ -222,7 +222,7 @@ export default function ProfilSection({ onToast }: Props) {
             <div className={`${s.cardIco} ${s.icoBlue}`}><i className="fas fa-user" /></div>
             <div>
               <div className={s.cardH}>Informations personnelles</div>
-              <div className={s.cardSub}>Votre identité sur la plateforme Shopi</div>
+              <div className={s.cardSub}>Votre identité sur la plateforme Shoneya</div>
             </div>
           </div>
           <button className={`${s.cardAction} ${s.cardActionOutline}`} onClick={() => setEditProfil(v => !v)}>

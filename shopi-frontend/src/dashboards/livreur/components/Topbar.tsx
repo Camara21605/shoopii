@@ -148,7 +148,7 @@ export default function Topbar({
             </button>
           </div>
 
-          {/* Solde du portefeuille Shopi */}
+          {/* Solde du portefeuille Shoneya */}
           <div style={{ padding: '0 20px 14px' }}>
             <WalletQuickBar compact mini onManage={() => go('wallet')} />
           </div>

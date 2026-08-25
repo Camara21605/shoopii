@@ -95,12 +95,12 @@ export default function Sidebar({
         <div className="sidebar__logo">
           <div className="sidebar__logo-mark">S</div>
           <div className="sidebar__logo-text">
-            <span className="sidebar__logo-name">Shopi Africa</span>
+            <span className="sidebar__logo-name">Shoneya</span>
             <span className="sidebar__logo-role">Administrateur</span>
           </div>
         </div>
 
-        {/* Solde du portefeuille Shopi — accès rapide sous le logo */}
+        {/* Solde du portefeuille Shoneya — accès rapide sous le logo */}
         <div style={{ padding: '12px 22px' }}>
           <WalletQuickBar compact mini onManage={go('portefeuille')} />
         </div>

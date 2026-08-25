@@ -2,7 +2,7 @@
  * FICHIER : src/shared/services/appearanceService.ts
  *
  * RÔLE : Service frontend pour la gestion des préférences
- *        d'apparence du dashboard administrateur Shopi.
+ *        d'apparence du dashboard administrateur Shoneya.
  *
  * RESPONSABILITÉS :
  *   1. Types TypeScript des préférences d'apparence
@@ -37,7 +37,7 @@ export interface AppearancePrefs {
   reduceMotion:      boolean;
 }
 
-/* ─── Valeurs par défaut du design system Shopi ────────────────── */
+/* ─── Valeurs par défaut du design system Shoneya ────────────────── */
 
 export const DEFAULT_PREFS: Readonly<AppearancePrefs> = {
   theme:             'light',
@@ -133,7 +133,7 @@ const RADIUS: Record<BorderRadius, { sm: string; md: string; lg: string; xl: str
 };
 
 /* ─── ID du <style> injecté dans <head> ────────────────────────── */
-const STYLE_ID = 'shopi-appearance-vars';
+const STYLE_ID = 'shoneya-appearance-vars';
 
 /* ─── Référence à l'écouteur de thème système (pour cleanup) ───── */
 let _mediaListener: (() => void) | null = null;
@@ -147,7 +147,7 @@ let _mediaListener: (() => void) | null = null;
  *
  * Mécanisme :
  *   - Attribut data-theme sur <html> → permet des règles CSS [data-theme="dark"]
- *   - Un <style id="shopi-appearance-vars"> injecté dans <head>
+ *   - Un <style id="shoneya-appearance-vars"> injecté dans <head>
  *     contient les overrides de variables CSS :root
  *     (priorité maximale, écrase les valeurs de variables.css)
  *
@@ -184,7 +184,7 @@ export function applyPrefs(prefs: AppearancePrefs): void {
   const noAnim = !prefs.animationsEnabled || prefs.reduceMotion;
 
   const css = `
-/* === Shopi Appearance Overrides — générés dynamiquement === */
+/* === Shoneya Appearance Overrides — générés dynamiquement === */
 
 /* Tokens globaux (accent, police, rayons, densité) — indépendants du thème */
 :root {
@@ -367,7 +367,7 @@ function _extractPrefs(raw: Record<string, unknown>): AppearancePrefs {
  */
 export function exportPrefsJson(
   prefs: AppearancePrefs,
-  filename = 'shopi-apparence.json',
+  filename = 'shoneya-apparence.json',
 ): void {
   const payload = JSON.stringify({ version: 1, prefs }, null, 2);
   const blob    = new Blob([payload], { type: 'application/json' });

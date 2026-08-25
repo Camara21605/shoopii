@@ -3,7 +3,7 @@
  * FICHIER : src/modules/home/components/boutique/sections/CorrespondantsSection.tsx
  *
  * RÔLE    : Onglet "Correspondants" — grille des correspondants
- *           Shopi rattachés à la boutique, vue client.
+ *           Shoneya rattachés à la boutique, vue client.
  *
  * AFFICHE :
  *   - Résumé en haut : disponibles / complets / total

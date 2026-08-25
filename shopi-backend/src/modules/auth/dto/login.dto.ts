@@ -41,6 +41,14 @@ export class LoginDto {
   @IsOptional()
   @IsBoolean({ message: '"rememberMe" doit être un booléen.' })
   rememberMe?: boolean;
+
+  /** Identifiant d'appareil généré et persisté côté client (crypto.randomUUID()).
+   *  Sert à la gestion de session unique — voir SessionService. Jamais
+   *  utilisé comme preuve d'identité, uniquement comme métadonnée. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  deviceId?: string;
 }
 
 /**
@@ -67,4 +75,9 @@ export class ChooseAccountDto {
   @IsOptional()
   @IsBoolean({ message: '"rememberMe" doit être un booléen.' })
   rememberMe?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  deviceId?: string;
 }

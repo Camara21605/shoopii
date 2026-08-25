@@ -51,8 +51,6 @@ import { Roles }         from '../../../common/decorators/roles.decorator';
 import { UserRole }      from '../../../common/enums/user-role.enum';
 
 import { SupportService }       from '../services/support.service';
-import { SupportStatsService }  from '../services/support-stats.service';
-import { SupportExportService } from '../services/support-export.service';
 
 import {
   ReplySupportTicketDto,
@@ -73,14 +71,10 @@ import { SupportTicketPriority } from '../../../database/entities/support/suppor
 export class SupportAgentController {
 
   constructor(
-    /* Service principal : CRUD des tickets et messages */
+    /* Service principal : CRUD des tickets et messages, expose aussi
+     * les stats/export déjà scopés par portée hiérarchique (voir
+     * getStatsAsAgent/exportCsvAsAgent — Phase 4 + correctif scope). */
     private readonly svc: SupportService,
-
-    /* Service stats : agrégations analytiques (Phase 4) */
-    private readonly statsSvc: SupportStatsService,
-
-    /* Service export : génération CSV (Phase 4) */
-    private readonly exportSvc: SupportExportService,
   ) {}
 
   /* ══════════════════════════════════════════════════════════
@@ -295,8 +289,9 @@ export class SupportAgentController {
    * ────────────────────────────────────────────────────────── */
   @Get('stats')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
-  getStats() {
-    return this.statsSvc.getOverview();
+  getStats(@Req() req: any) {
+    const agent = req.user as any;
+    return this.svc.getStatsAsAgent(agent.actorId, agent.role);
   }
 
   /* ──────────────────────────────────────────────────────────
@@ -308,13 +303,15 @@ export class SupportAgentController {
   @Get('export')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async exportCsv(
+    @Req() req: any,
     @Query('status')  status?:  string,
     @Query('type')    type?:    string,
     @Query('from')    from?:    string,
     @Query('to')      to?:      string,
     @Res() res?: Response,
   ) {
-    const { csv, filename } = await this.exportSvc.generateCsv(status, type, from, to);
+    const agent = req.user as any;
+    const { csv, filename } = await this.svc.exportCsvAsAgent(agent.actorId, agent.role, status, type, from, to);
 
     res!.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res!.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

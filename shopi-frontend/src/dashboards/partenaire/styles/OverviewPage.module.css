@@ -83,6 +83,15 @@
 @media (max-width: 560px) {
   .kpis { grid-template-columns: 1fr; }
   .heroIn { flex-direction: column; align-items: flex-start; }
+  .hero { padding: 20px 18px; }
+  /* .tier contient un anneau (88px) + une barre de progression fixe
+   * (150px) : côte à côte, ça dépasse la largeur d'un écran de
+   * 320-375px une fois le padding du hero soustrait. On empile. */
+  .tier { flex-direction: column; align-items: flex-start; width: 100%; }
+  .tierBar { width: 100%; }
+}
+@media (max-width: 480px) {
+  .repartition { grid-template-columns: 1fr; }
 }
 
 /* ─── Dark mode ──────────────────────────────────────────────── */

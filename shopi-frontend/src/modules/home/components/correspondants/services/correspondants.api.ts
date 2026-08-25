@@ -51,7 +51,7 @@ function adapt(c: CorrespondantApi): Correspondant {
     initiales:  initiales(c.fullName || 'CO'),
     zone:       c.region || 'Conakry',
     commune:    (c.commune ?? c.region ?? '').toLowerCase(),
-    bio:        c.bio ?? 'Correspondant Shopi vérifié.',
+    bio:        c.bio ?? 'Correspondant Shoneya vérifié.',
     type:       c.typeCorrespondant ?? 'regional',
     note:       Number(c.averageRating ?? 0),
     nbAvis:     c.nbAvis ?? 0,

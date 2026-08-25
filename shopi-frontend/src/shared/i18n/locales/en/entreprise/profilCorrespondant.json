@@ -45,7 +45,7 @@
       "abonneCount_one": "{{count}} follower",
       "abonneCount_other": "{{count}} followers",
       "suivreCeCorrespondant": "Follow this correspondent",
-      "verificationsShopi": "Shopi verifications",
+      "verificationsShopi": "Shoneya verifications",
       "correspondantsSimilaires": "Similar correspondents",
       "voirTout": "See all",
       "suivreShort": "+ Follow",
@@ -60,7 +60,7 @@
       "missionsCeMois": "Missions this month",
       "litigesResolus": "Disputes resolved"
     },
-    "verifieParShopi": "✓ Verified by Shopi",
+    "verifieParShopi": "✓ Verified by Shoneya",
     "tabInfo": {
       "aPropos": "About",
       "informationsPratiques": "Practical information",
@@ -87,7 +87,7 @@
       "emptyTitle": "Rates not set",
       "emptyDescPart1": "This correspondent hasn't published their rate schedule yet.",
       "emptyDescPart2": "Contact them directly for a quote.",
-      "abonnesShopi": "Shopi subscribers",
+      "abonnesShopi": "Shoneya subscribers",
       "reduction15": "— 15% discount on all services."
     },
     "tabAvis": {

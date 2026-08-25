@@ -20,6 +20,10 @@
 /* La classe .active est ajoutée par SuperAdminApp via isActive */
 .section.active { display: flex; }
 
+@media (max-width: 640px) {
+  .section { padding: 18px 16px; gap: 18px; }
+}
+
 /* ── En-tête de la section ─────────────────────────────────── */
 .header {
   display: flex;

@@ -1,6 +1,6 @@
 /* ================================================================
  * data/correspondantData.ts
- * Types partagés + formatteurs du dashboard correspondant Shopi.
+ * Types partagés + formatteurs du dashboard correspondant Shoneya.
  *
  * Toutes les données proviennent désormais du backend
  * (GET /dashboard/correspondant/...) — ce fichier ne contient

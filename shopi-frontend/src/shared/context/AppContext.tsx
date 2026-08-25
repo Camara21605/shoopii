@@ -8,8 +8,9 @@ import React, {
 } from 'react';
 import { authService } from '../../modules/auth/services/authService';
 import type { PublicUser } from '../../modules/auth/types';
+import { tokenStorage } from '../services/apiFetch';
 import { disconnectGlobalSocket } from '../messagerie/hooks/useSocket';
-import { disconnectNotificationSocket } from '../notifications/useNotificationSocket';
+import { disconnectNotificationSocket, useNotificationSocket } from '../notifications/useNotificationSocket';
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -88,6 +89,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
     void authService.logout();
   }, []);
+
+  /* ── Session révoquée par une connexion sur un autre appareil ──────
+   * Reçu en temps réel via le socket /notifications (voir
+   * notification.gateway.ts côté backend, room `session:{sessionId}`).
+   * Contrairement à logout() ci-dessus, on ne rappelle PAS
+   * authService.logout() : le serveur a DÉJÀ révoqué cette session
+   * (c'est justement pourquoi cet événement arrive) — un appel à
+   * /auth/logout ici échouerait de toute façon en 401 (access token
+   * déjà invalide côté serveur) et ne ferait que retarder la
+   * redirection. On nettoie localement et on redirige immédiatement.
+   *
+   * Redirection en dur (window.location.href), pas useNavigate() :
+   * même pattern que le 401 non récupérable dans apiFetch.ts — garantit
+   * une réinitialisation complète de l'état React (sockets, contexts,
+   * état d'appel WebRTC en cours compris) plutôt qu'une navigation SPA
+   * qui pourrait laisser des composants "vivants" avec un state obsolète. */
+  const handleSessionRevoked = useCallback((data: { reason: string; message: string }) => {
+    setUserState(null);
+    try { disconnectGlobalSocket(); } catch (e) { console.error('[Auth] disconnectGlobalSocket a échoué (session révoquée) :', e); }
+    try { disconnectNotificationSocket(); } catch (e) { console.error('[Auth] disconnectNotificationSocket a échoué (session révoquée) :', e); }
+    tokenStorage.remove();
+    try {
+      sessionStorage.setItem('shopi_session_revoked_message', data.message);
+    } catch { /* sessionStorage indisponible — la redirection reste correcte, juste sans message affiché */ }
+    window.location.href = '/login';
+  }, []);
+
+  useNotificationSocket({ onSessionRevoked: handleSessionRevoked });
 
   return (
     <AppContext.Provider value={{

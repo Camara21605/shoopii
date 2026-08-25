@@ -24,7 +24,7 @@ interface Props {
   promoActif: boolean;
   etaDest:    string;
   loading:    boolean;
-  /** Solde réel du portefeuille Shopi — le paiement se fait toujours par ce solde. */
+  /** Solde réel du portefeuille Shoneya — le paiement se fait toujours par ce solde. */
   walletBalance: number | null;
   loadingWallet: boolean;
   onConfirm:  () => void;
@@ -142,7 +142,7 @@ export default function SummaryPanel({
           <span className={styles.totalV}>{fmt(total)}</span>
         </div>
 
-        {/* Solde du portefeuille Shopi — le paiement est toujours prélevé dessus */}
+        {/* Solde du portefeuille Shoneya — le paiement est toujours prélevé dessus */}
         <div className={styles.row} style={{ marginTop: 2 }}>
           <span className={styles.rowL}>
             <i className="fas fa-wallet" />

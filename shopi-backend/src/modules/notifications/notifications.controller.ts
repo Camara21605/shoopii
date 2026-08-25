@@ -156,6 +156,18 @@ export class NotificationsController {
     await this.service.deleteOne(id, actorType, actorId);
   }
 
+  /**
+   * DELETE /notifications
+   *
+   * Supprime définitivement TOUTES les notifications de l'acteur connecté.
+   */
+  @Delete()
+  @HttpCode(HttpStatus.OK)
+  async deleteAllNotifications(@Request() req: any) {
+    const { actorType, actorId } = this.resolveActor(req);
+    return this.service.deleteAll(actorType, actorId);
+  }
+
   // ─────────────────────────────────────────────────────────
   // PRÉFÉRENCES
   // ─────────────────────────────────────────────────────────

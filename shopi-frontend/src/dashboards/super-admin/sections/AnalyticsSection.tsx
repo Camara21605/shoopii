@@ -110,7 +110,7 @@ export default function AnalyticsSection({ store, isActive }: Props) {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="grid-collapse-sm" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         {/* Courbe inscriptions mensuelles */}
         <div className="card">
           <div className="card-head">

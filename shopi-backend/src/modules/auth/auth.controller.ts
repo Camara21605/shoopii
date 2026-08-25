@@ -393,11 +393,12 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, description: 'Déconnecté avec succès.' })
   async logout(
-    @CurrentUser() user: User,
+    @CurrentUser() user: User & { sessionId?: string },
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ message: string }> {
     await this.authService.revokeAllRefreshTokens(user.id);
     await this.authService.markLoggedOut(user.id);
+    await this.authService.endSession(user.id, user.sessionId);
     clearAccessCookie(res, this.isProd);
     clearRefreshCookie(res, this.isProd);
     return { message: 'Déconnexion réussie.' };

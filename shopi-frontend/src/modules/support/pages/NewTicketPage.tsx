@@ -30,7 +30,7 @@ const TICKET_TYPES = [
     value: 'general',
     label: 'Question générale',
     icon:  'fa-circle-question',
-    desc:  'Toute question sur Shopi',
+    desc:  'Toute question sur Shoneya',
   },
   {
     value: 'billing',

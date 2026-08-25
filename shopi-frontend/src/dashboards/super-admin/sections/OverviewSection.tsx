@@ -280,7 +280,7 @@ export default function OverviewSection({ store, isActive }: Props) {
         <div>
           <div className="ph-title">Vue <mark>d'Ensemble</mark></div>
           <div className="ph-sub">
-            {loading ? 'Chargement des données…' : `Tableau de bord Shopi Africa — ${new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}`}
+            {loading ? 'Chargement des données…' : `Tableau de bord Shoneya — ${new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}`}
           </div>
         </div>
         <div className="ph-actions">

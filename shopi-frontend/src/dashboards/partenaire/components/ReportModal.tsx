@@ -51,7 +51,7 @@ export default function ReportModal({ defaultTarget = '', onClose, onSubmit, onT
     try {
       const ref = await onSubmit(cible, motif, sev, desc, motifLabel, targetType);
       onClose();
-      onToast("Signalement envoyé à l'équipe sécurité Shopi", 's');
+      onToast("Signalement envoyé à l'équipe sécurité Shoneya", 's');
       setTimeout(() => onToast('Référence : ' + ref, 'i'), 700);
     } catch {
       onToast('Erreur lors de l\'envoi du signalement', 'w');
@@ -67,7 +67,7 @@ export default function ReportModal({ defaultTarget = '', onClose, onSubmit, onT
 
         <div className={styles.head}>
           <div className={styles.title}><i className="fas fa-flag" /> Signaler un utilisateur</div>
-          <div className={styles.sub}>Votre signalement est confidentiel et examiné par l'équipe de sécurité Shopi.</div>
+          <div className={styles.sub}>Votre signalement est confidentiel et examiné par l'équipe de sécurité Shoneya.</div>
         </div>
 
         <div className={styles.body}>

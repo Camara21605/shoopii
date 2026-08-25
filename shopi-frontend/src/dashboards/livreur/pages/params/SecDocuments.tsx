@@ -59,7 +59,7 @@ export default function SecDocuments({ data, saving, onPop, uploadDocument }: Pr
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
       <div className={ps.psHd}>
         <h2><i className="fas fa-file-shield" /> Documents & Vérification</h2>
-        <p>Documents obligatoires pour maintenir votre compte livreur actif sur Shopi.</p>
+        <p>Documents obligatoires pour maintenir votre compte livreur actif sur Shoneya.</p>
       </div>
 
       {/* Badge statut global */}
@@ -125,7 +125,7 @@ export default function SecDocuments({ data, saving, onPop, uploadDocument }: Pr
 
           <div className={ps.fiHint} style={{ marginTop:12 }}>
             <i className="fas fa-circle-info" />
-            Une fois les 4 documents soumis, votre dossier est examiné sous 48h par l'équipe Shopi.
+            Une fois les 4 documents soumis, votre dossier est examiné sous 48h par l'équipe Shoneya.
           </div>
         </div>
       </div>

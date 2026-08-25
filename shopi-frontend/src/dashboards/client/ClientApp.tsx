@@ -244,7 +244,7 @@ export default function ClientApp() {
           </a>
         </div>
 
-        {/* Solde du portefeuille Shopi + actions rapides (Dépôt/Retrait/Actualiser) */}
+        {/* Solde du portefeuille Shoneya + actions rapides (Dépôt/Retrait/Actualiser) */}
         <div style={{ marginBottom: 24 }}>
           <WalletQuickBar />
         </div>

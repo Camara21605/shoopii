@@ -8,6 +8,7 @@
 
 import styles from '../styles/Sidebar.module.css';
 import type { AdminPage } from '../data/types';
+import ShoneyaLogo from '../../../shared/components/ShoneyaLogo';
 
 interface SidebarProps {
   activePage:     AdminPage;
@@ -22,33 +23,45 @@ interface SidebarProps {
   unreadCount?:   number;
 }
 
-/* Sections de navigation avec leurs items (badges statiques hors notifications) */
-const NAV = [
+/* Sections de navigation avec leurs items (badges statiques hors notifications).
+ * `perm` optionnel : clé de la permission "Modules généraux" (super-admin →
+ * Permissions Admins) requise pour voir cet item. Absent = toujours visible. */
+const NAV: { title: string; items: { id: AdminPage; icon: string; label: string; perm?: string }[] }[] = [
   { title: 'Principal', items: [
-    { id: 'overview' as AdminPage, icon: 'fa-chart-pie', label: "Vue d'ensemble" },
+    { id: 'overview', icon: 'fa-chart-pie',   label: "Vue d'ensemble" },
+    { id: 'stats',    icon: 'fa-chart-line',  label: 'Statistiques', perm: 'stats' },
   ]},
   { title: 'Acquisition', items: [
-    { id: 'codes'       as AdminPage, icon: 'fa-qrcode',    label: 'Codes de création' },
-    { id: 'partenaires' as AdminPage, icon: 'fa-handshake', label: 'Partenaires' },
+    { id: 'codes',       icon: 'fa-qrcode',    label: 'Codes de création' },
+    { id: 'partenaires', icon: 'fa-handshake', label: 'Partenaires', perm: 'partners' },
   ]},
   { title: 'Supervision', items: [
-    { id: 'acteurs'      as AdminPage, icon: 'fa-people-group',  label: 'Acteurs de la zone' },
-    { id: 'validations'  as AdminPage, icon: 'fa-user-check',    label: 'Validations' },
-    { id: 'signalements' as AdminPage, icon: 'fa-shield-halved', label: 'Signalements' },
+    { id: 'acteurs',      icon: 'fa-people-group',  label: 'Acteurs de la zone' },
+    { id: 'clients',      icon: 'fa-users',          label: 'Clients', perm: 'customers' },
+    { id: 'validations',  icon: 'fa-user-check',    label: 'Validations' },
+    { id: 'signalements', icon: 'fa-shield-halved', label: 'Signalements', perm: 'reports' },
   ]},
   { title: 'Activité', items: [
-    { id: 'commandes'     as AdminPage, icon: 'fa-box',            label: 'Commandes' },
-    { id: 'finances'      as AdminPage, icon: 'fa-coins',          label: 'Finances' },
-    { id: 'audit'         as AdminPage, icon: 'fa-clipboard-list', label: "Journal d'audit" },
-    { id: 'notifications' as AdminPage, icon: 'fa-bell',           label: 'Notifications' },
+    { id: 'commandes',     icon: 'fa-box',            label: 'Commandes' },
+    { id: 'finances',      icon: 'fa-coins',          label: 'Finances' },
+    { id: 'audit',         icon: 'fa-clipboard-list', label: "Journal d'audit" },
+    { id: 'notifications', icon: 'fa-bell',           label: 'Notifications', perm: 'notifs' },
+  ]},
+  { title: 'Support', items: [
+    { id: 'support', icon: 'fa-headset', label: 'Support', perm: 'support' },
   ]},
   { title: 'Compte', items: [
-    { id: 'parametres' as AdminPage, icon: 'fa-gear', label: 'Paramètres' },
+    { id: 'parametres', icon: 'fa-gear', label: 'Paramètres' },
   ]},
 ];
 
 export default function Sidebar({ activePage, open, onClose, onNavigate, onGenerate, geoPerms, zoneName, adminName, communesCount, unreadCount }: SidebarProps) {
   const hasGeoAccess = Object.entries(geoPerms ?? {}).some(([k, v]) => k.startsWith('geo_') && v);
+  /* Même logique que hasGeoAccess ci-dessus : tant que /my-permissions n'a
+   * pas répondu, geoPerms vaut {} → tout item avec `perm` reste masqué
+   * (jamais affiché puis retiré, cohérent avec le comportement déjà en
+   * place pour le Référentiel Géo). */
+  const hasPerm = (key?: string) => key === undefined || geoPerms?.[key] === true;
 
   return (
     <>
@@ -58,8 +71,8 @@ export default function Sidebar({ activePage, open, onClose, onNavigate, onGener
       <nav className={`${styles.sb} ${open ? styles.open : ''}`}>
         {/* ── Logo + badge ADMIN ── */}
         <div className={styles.logo}>
-          <div className={styles.lm}>Sh</div>
-          <div className={styles.brand}>Sho<b>pi</b></div>
+          <ShoneyaLogo size={34} />
+          <div className={styles.brand}>Sho<b>neya</b></div>
           <span className={styles.tag}>ADMIN</span>
           <button className={styles.close} onClick={onClose}><i className="fas fa-xmark" /></button>
         </div>
@@ -86,10 +99,13 @@ export default function Sidebar({ activePage, open, onClose, onNavigate, onGener
 
         {/* ── Navigation par sections ── */}
         <div className={styles.nav}>
-          {NAV.map(section => (
+          {NAV.map(section => {
+            const visibleItems = section.items.filter(item => hasPerm(item.perm));
+            if (visibleItems.length === 0) return null;
+            return (
             <div key={section.title}>
               <div className={styles.sect}>{section.title}</div>
-              {section.items.map(item => (
+              {visibleItems.map(item => (
                 <button key={item.id}
                   className={`${styles.nb} ${activePage === item.id ? styles.on : ''}`}
                   onClick={() => onNavigate(item.id)}>
@@ -104,7 +120,8 @@ export default function Sidebar({ activePage, open, onClose, onNavigate, onGener
                 </button>
               ))}
             </div>
-          ))}
+            );
+          })}
 
           {/* ── Référentiel Géo (visible uniquement si accès accordé) ── */}
           {hasGeoAccess && (

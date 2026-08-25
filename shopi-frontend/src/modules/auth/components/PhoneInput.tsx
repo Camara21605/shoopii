@@ -8,7 +8,7 @@ import React, { useState, useRef, useEffect } from 'react';
 
 /* ── Liste des pays avec indicatifs ── */
 export const COUNTRY_CODES = [
-  // Afrique de l'Ouest en premier (priorité Shopi)
+  // Afrique de l'Ouest en premier (priorité Shoneya)
   { code: 'GN',  dial: '+224', flag: '🇬🇳', name: 'Guinée' },
   { code: 'SN',  dial: '+221', flag: '🇸🇳', name: 'Sénégal' },
   { code: 'ML',  dial: '+223', flag: '🇲🇱', name: 'Mali' },

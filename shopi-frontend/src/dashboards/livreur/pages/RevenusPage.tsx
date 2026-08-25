@@ -45,7 +45,7 @@ export default function RevenusPage({ onPop }: Props) {
   const STATS = [
     { bg:'var(--tl-bg)', c:'var(--teal)',    ic:'fa-coins',             ttl:'Total revenus',    val: fmtGNF(totalRevenus)     },
     { bg:'var(--em-bg)', c:'var(--emerald)', ic:'fa-hand-holding-dollar',ttl:'Ce mois',          val: fmtGNF(revenusThisMonth) },
-    { bg:'var(--sky-2)', c:'var(--blue)',    ic:'fa-percent',            ttl:'Taux Shopi',       val: `${tauxCommission}%`     },
+    { bg:'var(--sky-2)', c:'var(--blue)',    ic:'fa-percent',            ttl:'Taux Shoneya',       val: `${tauxCommission}%`     },
   ];
 
   if (loading) return (

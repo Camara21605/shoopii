@@ -5,11 +5,20 @@
 
 .inputs { display: flex; gap: 8px; margin-bottom: 12px; }
 
+/* flex-basis 42px + shrink : sur mobile, imbriquées dans .codeZone →
+ * .body → .step (nœud 52px + gap fixes à côté), 6 cases à 42px fixe
+ * dépassaient le conteneur disponible. Elles se compriment maintenant
+ * proportionnellement plutôt que de déborder. */
 .box {
-  width: 42px; height: 48px; text-align: center;
+  flex: 1 1 42px; min-width: 0; max-width: 42px; height: 48px; text-align: center;
   font-family: var(--fd); font-size: 18px; font-weight: 800; color: var(--navy);
   border: 1.5px solid var(--bdr2); border-radius: var(--r-md);
   background: var(--white); transition: all .15s var(--ease);
+}
+
+@media (max-width: 380px) {
+  .inputs { gap: 5px; }
+  .box { height: 44px; font-size: 16px; }
 }
 .box:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,79,196,.15); }
 .filled { border-color: var(--blue); background: var(--sky); }

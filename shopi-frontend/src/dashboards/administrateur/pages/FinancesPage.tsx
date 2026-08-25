@@ -71,11 +71,11 @@ export default function FinancesPage({ onToast }: FinancesPageProps) {
           </div>
           <div className={styles.finMini}>
             <b>{tauxProd}%</b>
-            <span>Taux commission produits (brut Shopi)</span>
+            <span>Taux commission produits (brut Shoneya)</span>
           </div>
           <div className={styles.finMini}>
             <b>{tauxLivr}%</b>
-            <span>Taux commission livraisons (brut Shopi)</span>
+            <span>Taux commission livraisons (brut Shoneya)</span>
           </div>
         </div>
       </div>

@@ -45,7 +45,7 @@ export default function ProfilCorrespondantPage() {
   const [tab, setTab] = useState<ProfilTab>('info');
 
   const onToast = useCallback((msg: string) => {
-    window.dispatchEvent(new CustomEvent('shopi-toast', { detail: msg }));
+    window.dispatchEvent(new CustomEvent('shoneya-toast', { detail: msg }));
   }, []);
 
   const { start: startConv } = useStartConversation();
@@ -81,7 +81,7 @@ export default function ProfilCorrespondantPage() {
     return (
       <>
         {header}
-        <div className={styles.page}>
+        <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}><i className="fas fa-spinner fa-spin" /> {t('profilCorrespondant.loading')}</div>
         </div>
         {authModal}
@@ -94,7 +94,7 @@ export default function ProfilCorrespondantPage() {
     return (
       <>
         {header}
-        <div className={styles.page}>
+        <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}>
             <i className="fas fa-triangle-exclamation" style={{ color: '#B45309' }} />
             <div style={{ marginTop: 12, fontWeight: 700, fontSize: 16 }}>{t('profilCorrespondant.notFoundTitle')}</div>
@@ -116,7 +116,7 @@ export default function ProfilCorrespondantPage() {
   return (
     <>
       {header}
-      <div className={styles.page}>
+      <div className={`${styles.page} ${styles.pageDark}`}>
 
         <ProfilHeader
           profil={profil}

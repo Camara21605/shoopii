@@ -326,22 +326,24 @@ export default function NotificationsAdminSection({ isActive }: Props) {
               {dlq.topErrors.length > 0 && (
                 <div className={s.dlqStat} style={{ gridColumn: '1 / -1' }}>
                   <div className={s.dlqStatLabel} style={{ marginBottom: 10 }}>Top codes d'erreur</div>
-                  <table className={s.errorTable}>
-                    <thead>
-                      <tr>
-                        <th>Code d'erreur</th>
-                        <th style={{ textAlign: 'right' }}>Occurrences</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dlq.topErrors.map(e => (
-                        <tr key={e.errorCode}>
-                          <td>{e.errorCode}</td>
-                          <td>{e.count}</td>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table className={s.errorTable}>
+                      <thead>
+                        <tr>
+                          <th>Code d'erreur</th>
+                          <th style={{ textAlign: 'right' }}>Occurrences</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {dlq.topErrors.map(e => (
+                          <tr key={e.errorCode}>
+                            <td>{e.errorCode}</td>
+                            <td>{e.count}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 

@@ -176,7 +176,7 @@ export async function getPartnerStats(): Promise<PartnerStats> {
 export function exportPartnerConfigAsJson(settings: PartnerSettings): void {
   const { updatedAt, ...rest } = settings;
   const json = JSON.stringify(
-    { exportedAt: new Date().toISOString(), source: 'Shopi Admin — Configuration Partenaires', config: rest },
+    { exportedAt: new Date().toISOString(), source: 'Shoneya Admin — Configuration Partenaires', config: rest },
     null,
     2,
   );
@@ -184,7 +184,7 @@ export function exportPartnerConfigAsJson(settings: PartnerSettings): void {
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `shopi-partenaires-config-${new Date().toISOString().split('T')[0]}.json`;
+  a.download = `shoneya-partenaires-config-${new Date().toISOString().split('T')[0]}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -208,7 +208,7 @@ export function exportPartnerStatsAsCsv(stats: PartnerStats): void {
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `shopi-partenaires-stats-${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = `shoneya-partenaires-stats-${new Date().toISOString().split('T')[0]}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

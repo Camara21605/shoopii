@@ -5,7 +5,7 @@
       "profil": "资料",
       "adresses": "地址",
       "paiement": "支付",
-      "points": "Shopi 积分",
+      "points": "Shoneya 积分",
       "confidentialiteSecurite": "隐私与安全",
       "securite": "安全",
       "sessions": "已连接设备",
@@ -22,7 +22,7 @@
       "retourAccueil": "返回首页",
       "titrePart1": "账户",
       "titreEm": "设置",
-      "sub": "管理您的信息、安全和 Shopi 偏好"
+      "sub": "管理您的信息、安全和 Shoneya 偏好"
     },
     "sidebar": {
       "photoAlt": "资料照片",
@@ -59,7 +59,7 @@
       "ameliorer": "改进"
     },
     "points": {
-      "titre": "我的 Shopi 积分",
+      "titre": "我的 Shoneya 积分",
       "pts": "分",
       "niveauLabel": "等级",
       "prochainA": "到",
@@ -115,7 +115,7 @@
         "carte": "银行卡",
         "especes": "现金",
         "virement": "银行转账",
-        "wallet": "Shopi 钱包"
+        "wallet": "Shoneya 钱包"
       }
     },
     "sessions": {
@@ -191,7 +191,7 @@
       "visibiliteDesc": "谁能查看您的公开资料",
       "visibiliteOptions": {
         "toutLeMonde": "所有人",
-        "membresShopi": "Shopi 会员",
+        "membresShopi": "Shoneya 会员",
         "personne": "无人"
       },
       "rows": {
@@ -251,7 +251,7 @@
       "enregistrement": "保存中…",
       "toastSaved": "✅ 地区偏好已保存",
       "langueTitle": "显示语言",
-      "langueDesc": "Shopi 界面语言",
+      "langueDesc": "Shoneya 界面语言",
       "deviseTitle": "显示货币",
       "deviseDesc": "用于价格和交易",
       "fuseauTitle": "时区",
@@ -341,7 +341,7 @@
         },
         "reinitialiser": {
           "title": "重置我所有偏好",
-          "desc": "将通知、外观、语言和隐私重置为 Shopi 默认值。",
+          "desc": "将通知、外观、语言和隐私重置为 Shoneya 默认值。",
           "btn": "重置",
           "msg": "🔄 偏好已重置"
         },
@@ -388,7 +388,7 @@
     },
     "profil": {
       "photoTitle": "资料照片",
-      "photoSubtitle": "其他 Shopi 用户可见的您的照片",
+      "photoSubtitle": "其他 Shoneya 用户可见的您的照片",
       "photoAlt": "资料照片",
       "uploadEnCoursTitle": "上传中…",
       "changerPhotoTitle": "更改照片",
@@ -406,7 +406,7 @@
       "uploadErrorFallback": "上传时出错",
       "loadError": "❌ 无法加载资料",
       "infosTitle": "个人信息",
-      "infosSubtitle": "您在 Shopi 平台上的身份",
+      "infosSubtitle": "您在 Shoneya 平台上的身份",
       "modifier": "修改",
       "prenomNom": "名字与姓氏",
       "nomUtilisateur": "用户名",

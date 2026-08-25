@@ -54,7 +54,7 @@ export interface ValidationStats {
 /* ── Valeurs par défaut (affichage offline / avant premier load) */
 
 export const DEFAULT_ACTOR_RULES: Record<string, ActorRule> = {
-  company:       { auto: false, delaiH: 48, scoreMin: 80, actif: true, docs: ['RCCM', 'CNI', 'Contrat Shopi'] },
+  company:       { auto: false, delaiH: 48, scoreMin: 80, actif: true, docs: ['RCCM', 'CNI', 'Contrat Shoneya'] },
   partner:       { auto: false, delaiH: 24, scoreMin: 75, actif: true, docs: ['CNI', 'Justificatif local'] },
   delivery:      { auto: true,  delaiH: 12, scoreMin: 70, actif: true, docs: ['CNI', 'Permis de conduire'] },
   correspondent: { auto: true,  delaiH: 6,  scoreMin: 65, actif: true, docs: ['CNI'] },

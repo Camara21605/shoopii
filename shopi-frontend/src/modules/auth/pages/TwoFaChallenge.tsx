@@ -74,7 +74,7 @@ export const TwoFaChallenge: React.FC<TwoFaChallengeProps> = ({
       </h2>
       <p style={{ fontSize: '13.5px', color: 'var(--t2)', marginBottom: '22px', lineHeight: 1.6 }}>
         Ouvrez votre application d'authentification (Google Authenticator, Authy…)
-        et saisissez le code à 6 chiffres généré pour Shopi.
+        et saisissez le code à 6 chiffres généré pour Shoneya.
       </p>
 
       {error && (

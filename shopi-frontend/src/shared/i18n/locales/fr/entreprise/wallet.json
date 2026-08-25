@@ -64,7 +64,7 @@
     "loadingWallet": "Chargement du portefeuille…",
     "header": {
       "title": "Portefeuille",
-      "subtitle": "Gérez votre solde, vos retraits et vos transactions Shopi",
+      "subtitle": "Gérez votre solde, vos retraits et vos transactions Shoneya",
       "exporter": "Exporter",
       "exportToast": "📄 Export du relevé en cours…",
       "retirerDesFonds": "Retirer des fonds"
@@ -72,7 +72,7 @@
     "balance": {
       "soldeDisponible": "Solde disponible",
       "masquerSolde": "Masquer le solde",
-      "totalPortefeuille": "Total dans votre portefeuille Shopi",
+      "totalPortefeuille": "Total dans votre portefeuille Shoneya",
       "ceMois": "+{{pct}} % ce mois",
       "entreesCeMois": "Entrées ce mois",
       "sortiesCeMois": "Sorties ce mois",
@@ -84,7 +84,7 @@
     "kpi": {
       "totalEncaisse": "Total encaissé",
       "totalRetire": "Total retiré",
-      "commissionsShopi": "Commissions Shopi"
+      "commissionsShopi": "Commissions Shoneya"
     },
     "chart": {
       "title": "Évolution des revenus",
@@ -119,8 +119,8 @@
       "versMethodeParDefaut": "Vers votre méthode par défaut"
     },
     "commission": {
-      "title": "Commissions Shopi",
-      "textPart1": "Shopi prélève une commission de",
+      "title": "Commissions Shoneya",
+      "textPart1": "Shoneya prélève une commission de",
       "textPct": "3 %",
       "textPart2": "sur chaque transaction encaissée. Les virements vers Mobile Money sont",
       "textGratuits": "gratuits",
@@ -129,8 +129,8 @@
       "textPart4": "par opération."
     },
     "opPage": {
-      "chooseMethodFrom": "Choisissez un moyen de paiement électronique depuis lequel transférer l'argent avec votre compte Shopi.",
-      "chooseMethodTo": "Choisissez un moyen de paiement électronique vers lequel transférer l'argent avec votre compte Shopi.",
+      "chooseMethodFrom": "Choisissez un moyen de paiement électronique depuis lequel transférer l'argent avec votre compte Shoneya.",
+      "chooseMethodTo": "Choisissez un moyen de paiement électronique vers lequel transférer l'argent avec votre compte Shoneya.",
       "ajouterType": "Ajouter {{type}}",
       "ajouter": "Ajouter",
       "ajouterEtContinuer": "Ajouter et continuer",
@@ -144,15 +144,15 @@
       "typeLabel": "Type"
     },
     "quickBar": {
-      "soldeShopi": "Solde Shopi",
+      "soldeShopi": "Solde Shoneya",
       "actionsTitle": "Actions du portefeuille",
       "depot": "Dépôt",
       "retrait": "Retrait",
       "actualiser": "Actualiser",
       "actualiserSolde": "Actualiser le solde",
       "gererPortefeuille": "Gérer mon portefeuille",
-      "chooseMethodDeposit": "Choisissez un moyen de paiement électronique pour transférer de l'argent vers votre compte Shopi.",
-      "chooseMethodWithdraw": "Choisissez un moyen de paiement électronique pour recevoir l'argent depuis votre compte Shopi."
+      "chooseMethodDeposit": "Choisissez un moyen de paiement électronique pour transférer de l'argent vers votre compte Shoneya.",
+      "chooseMethodWithdraw": "Choisissez un moyen de paiement électronique pour recevoir l'argent depuis votre compte Shoneya."
     }
   }
 }

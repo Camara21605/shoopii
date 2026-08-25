@@ -36,10 +36,10 @@
         "smartHdr": "Smart HDR 5"
       },
       "livraisonTitre": "Livraison internationale et correspondants",
-      "livraisonDesc": "Cette boutique est basée en France. Shopi propose un système de correspondants locaux pour faciliter la réception de vos commandes en Afrique.",
-      "commentTitre": "Comment fonctionne le correspondant Shopi ?",
+      "livraisonDesc": "Cette boutique est basée en France. Shoneya propose un système de correspondants locaux pour faciliter la réception de vos commandes.",
+      "commentTitre": "Comment fonctionne le correspondant Shoneya ?",
       "commentList": {
-        "representant": "Le correspondant est un représentant Shopi dans votre ville ou région",
+        "representant": "Le correspondant est un représentant Shoneya dans votre ville ou région",
         "receptionne": "Il réceptionne votre colis, vérifie son état et vous notifie",
         "conserve": "Il le conserve en lieu sûr et vous le remet ou le confie à un livreur local",
         "facilite": "Il facilite la communication entre vous et la boutique internationale"
@@ -117,9 +117,9 @@
     "infoSection": {
       "sku": "SKU : {{sku}}",
       "intlTitre": "Boutique internationale détectée",
-      "intlDesc": "Cette boutique est localisée en dehors de votre continent. Un correspondant Shopi peut réceptionner votre commande et assurer la liaison locale.",
+      "intlDesc": "Cette boutique est localisée en dehors de votre continent. Un correspondant Shoneya peut réceptionner votre commande et assurer la liaison locale.",
       "voirLaBoutique": "Voir la boutique {{nom}}",
-      "boutiqueVerifieeShopi": "Boutique vérifiée Shopi",
+      "boutiqueVerifieeShopi": "Boutique vérifiée Shoneya",
       "abonnesCount": "{{count}} abonnés",
       "avisCount": "{{count}} avis",
       "acheteursConfirmes": "{{count}} acheteurs confirmés",
@@ -161,7 +161,7 @@
         "retourTitre": "Retour 7 jours",
         "retourSub": "Produit défectueux accepté",
         "authentiqueTitre": "Produit authentique",
-        "authentiqueSub": "Vendeur Shopi certifié",
+        "authentiqueSub": "Vendeur Shoneya certifié",
         "supportTitre": "Support 24/7",
         "supportSub": "Chat · WhatsApp · Tél."
       }
@@ -186,11 +186,11 @@
         "farNote": "+80% sur le tarif de base"
       },
       "aucunMode": "Aucun mode de livraison disponible pour ce produit. Contactez directement la boutique pour organiser la livraison.",
-      "correspondantTitre": "Correspondant Shopi",
+      "correspondantTitre": "Correspondant Shoneya",
       "selectionne": "Sélectionné",
       "boutiqueHorsContinent": "Boutique en dehors de votre continent",
       "pourquoiCorrespondant": "Pourquoi un correspondant ?",
-      "pourquoiDesc": "La boutique est à l'international. Un correspondant Shopi peut réceptionner votre colis, vérifier son état et vous le remettre.",
+      "pourquoiDesc": "La boutique est à l'international. Un correspondant Shoneya peut réceptionner votre colis, vérifier son état et vous le remettre.",
       "livraisonDirecteTitre": "Livraison directe",
       "livraisonDirecteSub": "La boutique expédie directement (délai plus long)",
       "viaCorrespondantTitre": "Via un correspondant",

@@ -81,6 +81,43 @@ function relTime(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
 }
 
+/**
+ * Étiquette du groupe de date façon Gmail : Aujourd'hui / Hier / Cette
+ * semaine / Ce mois-ci / puis un groupe par mois pour tout ce qui est
+ * plus ancien ("depuis le début" — aucune notification n'est exclue,
+ * juste regroupée par période au lieu d'un flux plat).
+ */
+function dateGroupLabel(iso: string): string {
+  const d = new Date(iso);
+  const startOfDay = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const today = startOfDay(new Date());
+  const day   = startOfDay(d);
+  const diffDays = Math.round((today - day) / 86_400_000);
+
+  if (diffDays <= 0) return "Aujourd'hui";
+  if (diffDays === 1) return 'Hier';
+  if (diffDays < 7)   return 'Cette semaine';
+  if (diffDays < 30)  return 'Ce mois-ci';
+
+  const label = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+/** Regroupe une liste (déjà triée du plus récent au plus ancien) par date. */
+function groupByDate(list: INotificationDto[]): { label: string; items: INotificationDto[] }[] {
+  const groups: { label: string; items: INotificationDto[] }[] = [];
+  for (const n of list) {
+    const label = dateGroupLabel(n.createdAt);
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) {
+      last.items.push(n);
+    } else {
+      groups.push({ label, items: [n] });
+    }
+  }
+  return groups;
+}
+
 // ─── Types de filtre ────────────────────────────────────────────
 
 type Filter = 'all' | 'unread' | 'urgent' | 'high';
@@ -94,19 +131,24 @@ const FILTERS: { id: Filter; label: string; icon: string }[] = [
 
 // ─── Composant ─────────────────────────────────────────────────
 
-interface NotificationsPageProps {
+/* Reçoit l'instance useNotifications() déjà chargée par AdministrateurApp
+ * (même state que la cloche/le panneau, voir NotifPanel) plutôt que d'en
+ * instancier une nouvelle ici — sinon chaque ouverture de cette page
+ * relançait une requête réseau redondante et affichait un loader alors
+ * que les données étaient déjà disponibles. */
+interface NotificationsPageProps extends ReturnType<typeof useNotifications> {
   onToast:    (msg: string, type?: 's' | 'i' | 'w') => void;
   onNavigate: (page: AdminPage) => void;
 }
 
-export default function NotificationsPage({ onToast, onNavigate }: NotificationsPageProps) {
-  const {
-    items, unreadCount, loading, hasMore,
-    markRead, markAll, dismiss, loadMore,
-  } = useNotifications();
-
+export default function NotificationsPage({
+  items, unreadCount, loading, hasMore,
+  markRead, markAll, dismiss, deleteAll, loadMore,
+  onToast, onNavigate,
+}: NotificationsPageProps) {
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
+  const [deletingAll, setDeletingAll] = useState(false);
 
   /* Filtrage en mémoire */
   const visible = useMemo<INotificationDto[]>(() => {
@@ -124,9 +166,27 @@ export default function NotificationsPage({ onToast, onNavigate }: Notifications
     return list;
   }, [items, filter, search]);
 
+  const grouped = useMemo(() => groupByDate(visible), [visible]);
+
   const handleMarkAll = async () => {
     await markAll();
     onToast('Toutes les notifications marquées comme lues', 's');
+  };
+
+  const handleDeleteAll = async () => {
+    if (deletingAll || items.length === 0) return;
+    if (!window.confirm(`Supprimer définitivement les ${items.length} notification${items.length > 1 ? 's' : ''} ? Cette action est irréversible.`)) {
+      return;
+    }
+    setDeletingAll(true);
+    try {
+      await deleteAll();
+      onToast('🗑️ Toutes les notifications ont été supprimées', 's');
+    } catch {
+      onToast('Échec de la suppression. Réessayez.', 'w');
+    } finally {
+      setDeletingAll(false);
+    }
   };
 
   const handleDismiss = async (id: string) => {
@@ -153,11 +213,18 @@ export default function NotificationsPage({ onToast, onNavigate }: Notifications
               : 'Tout est à jour'}
           </p>
         </div>
-        {unreadCount > 0 && (
-          <button className={styles.markAllBtn} onClick={handleMarkAll}>
-            <i className="fas fa-check-double" /> Tout marquer lu
-          </button>
-        )}
+        <div className={styles.headActions}>
+          {unreadCount > 0 && (
+            <button className={styles.markAllBtn} onClick={handleMarkAll}>
+              <i className="fas fa-check-double" /> Tout marquer lu
+            </button>
+          )}
+          {items.length > 0 && (
+            <button className={styles.deleteAllBtn} onClick={handleDeleteAll} disabled={deletingAll}>
+              <i className={`fas ${deletingAll ? 'fa-spinner fa-spin' : 'fa-trash-can'}`} /> Tout supprimer
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Barre de contrôles ── */}
@@ -217,71 +284,76 @@ export default function NotificationsPage({ onToast, onNavigate }: Notifications
           </div>
         )}
 
-        {visible.map(n => (
-          <div
-            key={n.id}
-            className={`${styles.item} ${!n.isRead ? styles.unread : ''} ${styles['pri_' + n.priority]}`}
-            onClick={() => handleMarkRead(n)}>
+        {grouped.map(group => (
+          <div key={group.label}>
+            <div className={styles.groupHead}>{group.label}</div>
+            {group.items.map(n => (
+              <div
+                key={n.id}
+                className={`${styles.item} ${!n.isRead ? styles.unread : ''} ${styles['pri_' + n.priority]}`}
+                onClick={() => handleMarkRead(n)}>
 
-            {/* Bande de priorité */}
-            <div className={`${styles.priBar} ${styles['bar_' + n.priority]}`} />
+                {/* Bande de priorité */}
+                <div className={`${styles.priBar} ${styles['bar_' + n.priority]}`} />
 
-            {/* Avatar de l'acteur déclencheur, sinon icône générique du type */}
-            {n.actor ? (
-              <div className={styles.avatarWrap}>
-                {n.actor.avatar ? (
-                  <img className={styles.avatarImg} src={n.actor.avatar} alt={n.actor.name} />
+                {/* Avatar de l'acteur déclencheur, sinon icône générique du type */}
+                {n.actor ? (
+                  <div className={styles.avatarWrap}>
+                    {n.actor.avatar ? (
+                      <img className={styles.avatarImg} src={n.actor.avatar} alt={n.actor.name} />
+                    ) : (
+                      <div className={styles.avatarInitial}>{initials(n.actor.name)}</div>
+                    )}
+                    <div className={`${styles.avatarBadge} ${styles['ic_' + n.priority]}`}>
+                      <i className={`fas ${iconForType(n.type, n.priority)}`} />
+                    </div>
+                  </div>
                 ) : (
-                  <div className={styles.avatarInitial}>{initials(n.actor.name)}</div>
+                  <div className={`${styles.iconWrap} ${styles['ic_' + n.priority]}`}>
+                    <i className={`fas ${iconForType(n.type, n.priority)}`} />
+                  </div>
                 )}
-                <div className={`${styles.avatarBadge} ${styles['ic_' + n.priority]}`}>
-                  <i className={`fas ${iconForType(n.type, n.priority)}`} />
+
+                {/* Corps */}
+                <div className={styles.body}>
+                  {n.actor && <p className={styles.itemActor}>{n.actor.name}</p>}
+                  <div className={styles.itemHead}>
+                    <span className={styles.itemTitle}>
+                      {n.count > 1 ? `(${n.count}) ` : ''}{n.title}
+                    </span>
+                    <span className={`${styles.priChip} ${styles['chip_' + n.priority]}`}>
+                      {priorityLabel(n.priority)}
+                    </span>
+                    {!n.isRead && <span className={styles.unreadDot} />}
+                  </div>
+                  <p className={styles.itemBody}>{n.body}</p>
+                  <div className={styles.itemFoot}>
+                    <span className={styles.itemTime}><i className="fas fa-clock" /> {relTime(n.createdAt)}</span>
+                    {n.resourceType && (
+                      <span className={styles.itemTag}>{n.resourceType}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className={styles.actions}>
+                  {!n.isRead && (
+                    <button
+                      className={styles.actionBtn}
+                      title="Marquer comme lu"
+                      onClick={e => { e.stopPropagation(); markRead(n.id); }}>
+                      <i className="fas fa-check" />
+                    </button>
+                  )}
+                  <button
+                    className={`${styles.actionBtn} ${styles.actionDel}`}
+                    title="Supprimer"
+                    onClick={e => { e.stopPropagation(); handleDismiss(n.id); }}>
+                    <i className="fas fa-trash-can" />
+                  </button>
                 </div>
               </div>
-            ) : (
-              <div className={`${styles.iconWrap} ${styles['ic_' + n.priority]}`}>
-                <i className={`fas ${iconForType(n.type, n.priority)}`} />
-              </div>
-            )}
-
-            {/* Corps */}
-            <div className={styles.body}>
-              {n.actor && <p className={styles.itemActor}>{n.actor.name}</p>}
-              <div className={styles.itemHead}>
-                <span className={styles.itemTitle}>
-                  {n.count > 1 ? `(${n.count}) ` : ''}{n.title}
-                </span>
-                <span className={`${styles.priChip} ${styles['chip_' + n.priority]}`}>
-                  {priorityLabel(n.priority)}
-                </span>
-                {!n.isRead && <span className={styles.unreadDot} />}
-              </div>
-              <p className={styles.itemBody}>{n.body}</p>
-              <div className={styles.itemFoot}>
-                <span className={styles.itemTime}><i className="fas fa-clock" /> {relTime(n.createdAt)}</span>
-                {n.resourceType && (
-                  <span className={styles.itemTag}>{n.resourceType}</span>
-                )}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className={styles.actions}>
-              {!n.isRead && (
-                <button
-                  className={styles.actionBtn}
-                  title="Marquer comme lu"
-                  onClick={e => { e.stopPropagation(); markRead(n.id); }}>
-                  <i className="fas fa-check" />
-                </button>
-              )}
-              <button
-                className={`${styles.actionBtn} ${styles.actionDel}`}
-                title="Supprimer"
-                onClick={e => { e.stopPropagation(); handleDismiss(n.id); }}>
-                <i className="fas fa-trash-can" />
-              </button>
-            </div>
+            ))}
           </div>
         ))}
 

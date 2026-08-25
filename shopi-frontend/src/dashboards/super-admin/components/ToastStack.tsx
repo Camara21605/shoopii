@@ -30,7 +30,7 @@ export default function ToastStack({ toasts, onRemove }: Props) {
   if (!toasts.length) return null;
 
   return (
-    <div id="toastStack" style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+    <div id="toastStack" className="toast-stack-fixed" style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
       {toasts.map(t => (
         <div
           key={t.id}

@@ -1,7 +1,7 @@
 /* ============================================================
  * FICHIER : src/modules/help/pages/ContactPage.tsx
  *
- * RÔLE    : Formulaire de contact public Shopi.
+ * RÔLE    : Formulaire de contact public Shoneya.
  *           Route : /contact
  *
  * FONCTIONNALITÉS :

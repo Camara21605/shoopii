@@ -16,7 +16,6 @@ interface LoginFormProps {
   onSubmit:          () => void;
   onForgot:          () => void;
   onSwitchToRegister:() => void;
-  onSocialToast:     (msg: string) => void;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({
@@ -27,7 +26,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   onSubmit,
   onForgot,
   onSwitchToRegister,
-  onSocialToast,
 }) => {
   return (
     <div id="loginForm">
@@ -117,21 +115,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
       {/* ── Séparateur ── */}
       <div className="or-div">ou continuer avec</div>
-
-      {/* ── Boutons sociaux ── */}
-      <div className="social-btns">
-        <button className="s-btn" onClick={() => onSocialToast('📲 Connexion Orange Money')}>
-          <span style={{ fontSize: '16px' }}>🏦</span> Orange Money
-        </button>
-        <button className="s-btn" onClick={() => onSocialToast('📘 Connexion Google')}>
-          <img src="https://www.google.com/favicon.ico" width={14} height={14} alt="" />
-          {' '}Google
-        </button>
-        <button className="s-btn" onClick={() => onSocialToast('📱 Connexion par SMS')}>
-          <i className="fas fa-mobile-screen" style={{ color: 'var(--blue)' }} />
-          {' '}SMS OTP
-        </button>
-      </div>
 
       {/* ── Lien inscription ── */}
       <div className="form-bottom">

@@ -55,7 +55,7 @@ export default function SecZone({
       <div className={s.fcHd}>
         <div>
           <div className={s.fcTtl}><i className="fas fa-location-dot" /> Zone d'activité</div>
-          <div className={s.fcSub}>Les zones où vous recrutez des acteurs pour Shopi.</div>
+          <div className={s.fcSub}>Les zones où vous recrutez des acteurs pour Shoneya.</div>
         </div>
       </div>
       <div className={s.fcBody}>
@@ -83,7 +83,7 @@ export default function SecZone({
             onChange={e => { setQuartiers(e.target.value); dirty(); }}
             placeholder="Ex: Madina, Cosa, Kaloum centre"
           />
-          <span className={s.hint}>Séparez par des virgules. Aide Shopi à vous proposer des prospects proches.</span>
+          <span className={s.hint}>Séparez par des virgules. Aide Shoneya à vous proposer des prospects proches.</span>
         </div>
       </div>
     </div>

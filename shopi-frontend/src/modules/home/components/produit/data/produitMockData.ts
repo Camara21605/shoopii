@@ -217,7 +217,7 @@ export const AVIS_DATA: AvisClient[] = [
     couleur:'linear-gradient(135deg,#E2EAFB,#C8D9F8)',
     nom:'Mamadou K.', date:'12 jan. 2025', note:5,
     titre:'Livraison via correspondant parfaite !',
-    texte:"Boutique en France, j'ai utilisé le correspondant à Conakry. Il a tout géré, réceptionné le colis, vérifié et remis à mon livreur Shopi. Téléphone authentique, parfait état. Je recommande !",
+    texte:"Boutique en France, j'ai utilisé le correspondant à Conakry. Il a tout géré, réceptionné le colis, vérifié et remis à mon livreur Shoneya. Téléphone authentique, parfait état. Je recommande !",
     verified: true,
   },
   {
@@ -235,7 +235,7 @@ export const AVIS_DATA: AvisClient[] = [
    ══════════════════════════════════════════════════════════ */
 
 export const GEO_DATA: GeoData = {
-  africa:  { label:'🌍 Afrique', pays: {
+  africa:  { label:'🌍', pays: {
     GN: { label:'🇬🇳 Guinée',        villes:['Conakry','Kindia','Boké','Labé','Kankan','Nzérékoré','Faranah','Coyah'] },
     SN: { label:'🇸🇳 Sénégal',       villes:['Dakar','Thiès','Ziguinchor','Saint-Louis','Touba'] },
     CI: { label:"🇨🇮 Côte d'Ivoire", villes:['Abidjan','Bouaké','Daloa','San-Pédro'] },
@@ -296,6 +296,6 @@ export const SPEED_ETA: Record<DistZone, Record<SpeedKey, string>> = {
 export const GARANTIES: { ico: string; titre: string; sub: string }[] = [
   { ico:'🔒', titre:'Paiement sécurisé',   sub:'SSL · Orange Money · Visa'  },
   { ico:'↩️', titre:'Retour 7 jours',      sub:'Produit défectueux accepté' },
-  { ico:'✅', titre:'Produit authentique',  sub:'Vendeur Shopi certifié'     },
+  { ico:'✅', titre:'Produit authentique',  sub:'Vendeur Shoneya certifié'     },
   { ico:'📞', titre:'Support 24/7',         sub:'Chat · WhatsApp · Tél.'     },
 ];

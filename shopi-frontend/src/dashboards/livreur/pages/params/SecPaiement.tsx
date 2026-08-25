@@ -71,7 +71,7 @@ export default function SecPaiement({ data, saving, dirty, onPop, savePaiement }
 
       {/* Wallet */}
       <div className={`${ps.card} ${ps.cardLast}`}>
-        <div className={ps.ch}><div className={ps.chT}><i className="fas fa-coins" /> Wallet Shopi</div></div>
+        <div className={ps.ch}><div className={ps.chT}><i className="fas fa-coins" /> Wallet Shoneya</div></div>
         <div className={ps.cb}>
           {/* Solde — depuis l'API */}
           <div style={{ background:'var(--tl-bg)', border:'1px solid rgba(0,0,0,.2)', borderRadius:'var(--r-lg)', padding:18,

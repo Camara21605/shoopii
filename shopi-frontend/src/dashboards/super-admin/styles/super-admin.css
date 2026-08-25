@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════
-   DARK THEME (défaut)
+   THÈME — noir permanent (mode clair retiré)
 ═══════════════════════════════════════════ */
-[data-theme="dark"] {
+:root {
   --void:       #000000;
   --deep:       #000000;
   --surface:    #0A0A0A;
@@ -15,25 +15,6 @@
   --txt-3: #2A3F58;
   --shadow: 0 4px 24px rgba(0,0,0,0.4);
   --modal-bg: rgba(2,4,8,0.88);
-}
-
-/* ═══════════════════════════════════════════
-   LIGHT THEME
-═══════════════════════════════════════════ */
-[data-theme="light"] {
-  --void:       #FFFFFF;
-  --deep:       #FFFFFF;
-  --surface:    #FFFFFF;
-  --raised:     #F5F5F5;
-  --hover:      #EFEFEF;
-  --border:     rgba(56,100,200,0.12);
-  --border-hi:  rgba(0,180,100,0.25);
-  --border-red: rgba(220,50,80,0.22);
-  --txt-1: #0D1B2E;
-  --txt-2: #4A6080;
-  --txt-3: #9BB0CC;
-  --shadow: 0 4px 24px rgba(0,0,50,0.08);
-  --modal-bg: rgba(200,210,230,0.7);
 }
 
 /* ═══════════════════════════════════════════
@@ -70,7 +51,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:14px;background:var(--void);transition:background 0.3s}
 body{font-family:var(--font-b);background:var(--void);color:var(--txt-1);min-height:100vh;overflow-x:hidden;transition:background 0.3s,color 0.3s}
-button{cursor:pointer;font-family:var(--font-b)}
+button{cursor:pointer;font-family:var(--font-b);color:inherit}
 input,select,textarea{font-family:var(--font-b);color:var(--txt-1)}
 a{text-decoration:none;color:inherit}
 ::-webkit-scrollbar{width:4px;height:4px}
@@ -128,13 +109,13 @@ a{text-decoration:none;color:inherit}
 /* ═══════════════════════════════════════════
    MAIN
 ═══════════════════════════════════════════ */
-.main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin 0.3s}
+.main{margin-left:240px;flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh;transition:margin 0.3s}
 
 /* ═══════════════════════════════════════════
    TOPBAR
 ═══════════════════════════════════════════ */
 .topbar{height:56px;background:var(--deep);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:100;transition:background 0.3s,border-color 0.3s}
-.topbar-search{flex:1;max-width:380px;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 14px;transition:border-color 0.2s}
+.topbar-search{flex:1;min-width:0;max-width:380px;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 14px;transition:border-color 0.2s}
 .topbar-search:focus-within{border-color:var(--border-hi)}
 .topbar-search input{background:none;border:none;outline:none;color:var(--txt-1);font-family:var(--font-b);font-size:12.5px;width:100%}
 .topbar-search input::placeholder{color:var(--txt-3)}
@@ -148,16 +129,10 @@ a{text-decoration:none;color:inherit}
 .tb-icon-btn:hover{border-color:var(--border-hi);background:var(--raised)}
 .tb-badge{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--rose);border:2px solid var(--deep)}
 
-/* THEME TOGGLE */
-.theme-toggle{width:54px;height:28px;border-radius:14px;background:var(--raised);border:1px solid var(--border);display:flex;align-items:center;cursor:pointer;padding:2px;transition:all 0.3s;position:relative;flex-shrink:0}
-.theme-toggle-thumb{width:22px;height:22px;border-radius:12px;background:var(--acid);display:flex;align-items:center;justify-content:center;font-size:12px;transition:transform 0.3s;transform:translateX(0)}
-[data-theme="light"] .theme-toggle-thumb{transform:translateX(26px)}
-
 /* ═══════════════════════════════════════════
    CONTENT
 ═══════════════════════════════════════════ */
-.content{flex:1;padding:24px;display:flex;flex-direction:column;gap:20px;background:var(--void)}
-[data-theme="dark"] .content{background:radial-gradient(ellipse 700px 500px at 75% 5%,rgba(0,200,138,0.025) 0%,transparent 70%),radial-gradient(ellipse 500px 400px at 15% 90%,rgba(56,191,255,0.025) 0%,transparent 70%),var(--void)}
+.content{flex:1;padding:24px;display:flex;flex-direction:column;gap:20px;background:radial-gradient(ellipse 700px 500px at 75% 5%,rgba(0,200,138,0.025) 0%,transparent 70%),radial-gradient(ellipse 500px 400px at 15% 90%,rgba(56,191,255,0.025) 0%,transparent 70%),var(--void)}
 
 .section{display:none}
 .section.active{display:flex;flex-direction:column;gap:20px;animation:sec-in 0.3s ease}
@@ -248,6 +223,7 @@ a{text-decoration:none;color:inherit}
 .donut-leg-val{font-family:var(--font-m);font-size:11px;font-weight:700;color:var(--txt-1)}
 
 /* TABLES */
+.tbl-wrap{overflow-x:auto}
 .tbl-controls{padding:12px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-wrap:wrap}
 .tbl-search{flex:1;min-width:180px;display:flex;align-items:center;gap:7px;background:var(--raised);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 12px}
 .tbl-search input{background:none;border:none;outline:none;color:var(--txt-1);font-size:12.5px;width:100%}
@@ -380,9 +356,22 @@ a{text-decoration:none;color:inherit}
 .modal-tab:hover:not(.active){color:var(--txt-1)}
 .modal-foot{padding:14px 24px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
+/* MODAL-BOX — variante utilisée par CatalogueTab (formulaires Types/
+   Catégories/Sous-catégories). Contrairement à .modal, elle n'a pas de
+   .modal-body dédié pour le scroll interne : on fait donc défiler la
+   boîte entière, ce qui suffit à ne jamais dépasser l'écran. */
+.modal-box{background:var(--surface);border:1px solid var(--border-hi);border-radius:var(--r-xl);width:100%;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;animation:modal-up 0.25s cubic-bezier(.4,0,.2,1);box-shadow:0 40px 80px rgba(0,0,0,0.3)}
+@media(max-width:700px){
+  .modal-box{border-radius:var(--r-lg) var(--r-lg) 0 0;max-height:85vh}
+}
+
 /* TOAST */
 .toast-stack{position:fixed;bottom:24px;right:24px;z-index:600;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-.toast{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 18px;display:flex;align-items:center;gap:10px;min-width:280px;pointer-events:all;animation:toast-in 0.3s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow)}
+.toast{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 18px;display:flex;align-items:center;gap:10px;min-width:280px;max-width:100%;pointer-events:all;animation:toast-in 0.3s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow)}
+@media(max-width:360px){
+  .toast-stack-fixed{left:12px!important;right:12px!important}
+  .toast-stack-fixed .toast{min-width:0;width:100%}
+}
 @keyframes toast-in{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
 .toast-out{animation:toast-out 0.3s forwards}
 @keyframes toast-out{to{opacity:0;transform:translateX(24px)}}
@@ -472,34 +461,44 @@ a{text-decoration:none;color:inherit}
 .sidebar-overlay.show{display:block}
 
 /* RESPONSIVE */
+/* .grid-collapse-sm marks raw inline two-column grids (detail panels,
+   chart splits) so they still collapse on small screens even though
+   their column count is set via inline style, which normally beats
+   a plain class rule regardless of media query. */
+.grid-collapse-sm{min-width:0}
 @media(max-width:1400px){
-  .kpi-row{grid-template-columns:repeat(3,1fr)}
+  .kpi-row{grid-template-columns:repeat(3,1fr)!important}
 }
 @media(max-width:1280px){
   .overview-grid{grid-template-columns:1fr}
-  .finance-row{grid-template-columns:repeat(2,1fr)}
-  .kpi-row{grid-template-columns:repeat(3,1fr)}
+  .finance-row{grid-template-columns:repeat(2,1fr)!important}
+  .kpi-row{grid-template-columns:repeat(3,1fr)!important}
   .prod-order-row{grid-template-columns:1fr}
 }
 @media(max-width:1100px){
   .msg-layout{grid-template-columns:260px 1fr}
 }
 #menuBtn{display:none}
-@media(max-width:960px){
+/* Sidebar -> drawer dès la tablette (<1024px), indépendamment des
+   breakpoints de mise en page ci-dessous qui restent réglés plus fin. */
+@media(max-width:1024px){
   .sidebar{transform:translateX(-100%)}
   .sidebar.open{transform:translateX(0)}
   .main{margin-left:0}
   #menuBtn{display:flex}
-  .kpi-row{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:960px){
+  .kpi-row{grid-template-columns:repeat(2,1fr)!important}
   .settings-grid{grid-template-columns:1fr}
+  .grid-collapse-sm{grid-template-columns:1fr!important}
   .live-chip{display:none}
   .tb-clock{display:none}
   .msg-layout{grid-template-columns:1fr;height:auto}
   .msg-sidebar{height:300px;border-right:none;border-bottom:1px solid var(--border)}
 }
 @media(max-width:700px){
-  .kpi-row{grid-template-columns:1fr 1fr}
-  .finance-row{grid-template-columns:1fr 1fr}
+  .kpi-row{grid-template-columns:1fr 1fr!important}
+  .finance-row{grid-template-columns:1fr 1fr!important}
   .modal{width:100%;border-radius:var(--r-lg) var(--r-lg) 0 0;align-self:flex-end}
   .modal-overlay{align-items:flex-end;padding:0}
   .modal-grid{grid-template-columns:1fr}
@@ -507,16 +506,74 @@ a{text-decoration:none;color:inherit}
   .content{padding:14px}
   .page-header{gap:8px}
   .ph-title{font-size:20px}
+  .ph-actions{width:100%}
+  .ph-actions .btn{flex:1;justify-content:center}
   .tbl-controls{gap:6px}
+  .tbl-controls .tbl-search{min-width:100%}
+  .tbl-controls .sel{flex:1;min-width:0}
   .code-gen-grid{grid-template-columns:1fr}
   .codes-grid{grid-template-columns:1fr}
   .msg-layout{min-height:300px}
 }
+@media(max-width:640px){
+  /* Tableau utilisateurs -> cartes empilées */
+  .users-tbl thead{display:none}
+  .users-tbl,.users-tbl tbody,.users-tbl tr,.users-tbl td{display:block;width:100%}
+  .users-tbl{border-collapse:separate;border-spacing:0}
+  .users-tbl tbody{padding-top:10px}
+  .users-tbl tr{
+    border:1px solid var(--border);
+    border-radius:var(--r-md);
+    margin:0 12px 10px;
+    overflow:hidden;
+    background:var(--surface);
+  }
+  .users-tbl tr:last-child{margin-bottom:12px}
+  .users-tbl td{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:9px 14px;
+    border-bottom:1px solid var(--border);
+    white-space:normal;
+    text-align:right;
+  }
+  .users-tbl td:last-child{border-bottom:none}
+  .users-tbl td::before{
+    content:attr(data-label);
+    font-size:9.5px;
+    font-weight:700;
+    letter-spacing:0.6px;
+    text-transform:uppercase;
+    color:var(--txt-3);
+    flex-shrink:0;
+  }
+  .users-tbl td[data-label="Utilisateur"]{
+    background:var(--raised);
+    text-align:left;
+  }
+  .users-tbl td[data-label="Utilisateur"]::before{display:none}
+  .users-tbl td[data-label="Utilisateur"] .u-cell{width:100%}
+  .users-tbl td[data-label="Actions"]{justify-content:flex-start}
+  .users-tbl td[data-label="Actions"]::before{display:none}
+  .users-tbl td[data-label="Actions"] > div{width:100%;justify-content:flex-end}
+  .users-tbl td[colspan]{display:block;text-align:center}
+  .users-tbl td[colspan]::before{display:none}
+}
 @media(max-width:480px){
-  .kpi-row{grid-template-columns:1fr}
-  .finance-row{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:1fr!important}
+  .finance-row{grid-template-columns:1fr!important}
   .overview-grid{grid-template-columns:1fr}
   .prod-order-row{grid-template-columns:1fr}
+  .role-tab{padding:5px 11px;font-size:11px}
+  .pager{justify-content:center}
+  .pager span{width:100%;text-align:center;order:-1;margin-bottom:4px}
+}
+@media(max-width:560px){
+  /* La barre de recherche globale du topbar cède la place aux icônes
+     (notifs, aide, réglages, avatar) qui doivent rester atteignables. */
+  .topbar-search{display:none}
 }
 
 /* ═══════════════════════════════════════════
@@ -830,7 +887,7 @@ a{text-decoration:none;color:inherit}
 
 .icon-picker-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
   gap: 4px;
 }
 

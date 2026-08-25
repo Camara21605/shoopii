@@ -51,14 +51,14 @@
       "cgv": "conditions générales de vente",
       "termsPart2": "la",
       "politiqueRetour": "politique de retour",
-      "termsPart3": "et j'autorise Shopi à traiter mon paiement.",
+      "termsPart3": "et j'autorise Shoneya à traiter mon paiement.",
       "payLabels": {
         "omo": "Orange Money 🏦",
         "mtn": "MTN Money 💛",
         "card": "Carte bancaire 💳",
         "cash": "À la livraison 💵",
         "wire": "Virement 🏛️",
-        "wallet": "Wallet Shopi 👛"
+        "wallet": "Wallet Shoneya 👛"
       }
     },
     "summaryPanel": {
@@ -78,7 +78,7 @@
       "confirmerLaCommande": "Confirmer la commande",
       "paiementSecuriseSsl": "Paiement sécurisé SSL 256-bit",
       "retourGratuit": "Retour gratuit sous 7 jours",
-      "protectionAcheteur": "Protection acheteur Shopi",
+      "protectionAcheteur": "Protection acheteur Shoneya",
       "estimationLivraison": "Estimation de livraison",
       "mode": "Mode",
       "destination": "Destination",
@@ -108,7 +108,7 @@
       "aucunLivreurSuiviPart3": "pour les retrouver ici.",
       "livreurToast": "✅ Livreur : {{nom}}",
       "votreAbonne": "👤 Votre abonné",
-      "correspondantIntl": "Correspondant Shopi (boutique internationale)",
+      "correspondantIntl": "Correspondant Shoneya (boutique internationale)",
       "boutiqueEtranger": "La boutique est à l'étranger. Un correspondant local réceptionne et relaie votre colis.",
       "correspondantToast": "📍 Correspondant : {{nom}}",
       "speeds": {

@@ -9,10 +9,10 @@
 import { useState } from 'react';
 import styles from '../styles/GenerateCodeModal.module.css';
 import type { ActeurType } from '../data/types';
+import { apiFetch } from '../../../shared/services/apiFetch';
 
 interface GenerateCodeModalProps {
   onClose:    () => void;
-  onGenerate: (type: ActeurType) => string;
   onToast:    (msg: string, type?: 's' | 'i' | 'w') => void;
 }
 
@@ -24,19 +24,68 @@ const TYPES: { id: ActeurType; icon: string; label: string }[] = [
   { id: 'cor', icon: 'fa-map-pin',    label: 'Correspondant' },
 ];
 
-export default function GenerateCodeModal({ onClose, onGenerate, onToast }: GenerateCodeModalProps) {
+/* ActeurType (court, frontend) → targetRole attendu par le backend */
+const TYPE_TO_ROLE: Record<ActeurType, string> = {
+  par: 'partner', ent: 'company', lvr: 'delivery', cor: 'correspondent',
+};
+
+/* Email obligatoire : seul canal d'envoi opérationnel pour l'instant
+ * (SMS/WhatsApp désactivés) — un code sans email ne pourrait jamais
+ * être transmis au destinataire. */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export default function GenerateCodeModal({ onClose, onToast }: GenerateCodeModalProps) {
   const [step, setStep]       = useState<1 | 2>(1);
   const [selType, setSelType] = useState<ActeurType>('par');
   const [nom, setNom]         = useState('');
   const [tel, setTel]         = useState('');
+  const [email, setEmail]     = useState('');
   const [code, setCode]       = useState('');
+  const [codeId, setCodeId]   = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
-  /* Étape 1 → 2 : génère le code et passe au résultat */
-  const generer = () => {
-    const c = onGenerate(selType);
-    setCode(c);
-    setStep(2);
-    onToast(`✅ Code généré${nom.trim() ? ' pour ' + nom.trim() : ''}`, 's');
+  const emailValid = EMAIL_RE.test(email.trim());
+
+  /* Étape 1 → 2 : génère réellement le code côté backend et passe au résultat */
+  const generer = async () => {
+    if (generating || !emailValid) return;
+    setGenerating(true);
+    try {
+      const res = await apiFetch<{ id: string; code: string }>('/dashboard/admin/codes', {
+        method: 'POST',
+        body: {
+          targetRole:  TYPE_TO_ROLE[selType],
+          targetEmail: email.trim(),
+          targetName:  nom.trim() || null,
+        },
+      });
+      setCode(res.code);
+      setCodeId(res.id);
+      setEmailSent(false);
+      setStep(2);
+      onToast(`✅ Code généré${nom.trim() ? ' pour ' + nom.trim() : ''}`, 's');
+    } catch {
+      onToast('Impossible de générer le code. Réessayez.', 'w');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  /* Envoie le code par email au destinataire enregistré à l'étape 1 */
+  const envoyerParEmail = async () => {
+    if (sendingEmail) return;
+    setSendingEmail(true);
+    try {
+      await apiFetch(`/dashboard/admin/codes/${codeId}/send-email`, { method: 'POST' });
+      setEmailSent(true);
+      onToast('✉️ Code envoyé par email à ' + email.trim(), 's');
+    } catch {
+      onToast('Échec de l\'envoi de l\'email. Réessayez.', 'w');
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   /* Copie le code dans le presse-papier */
@@ -83,8 +132,18 @@ export default function GenerateCodeModal({ onClose, onGenerate, onToast }: Gene
                 <input className={styles.fldIn} value={tel} onChange={e => setTel(e.target.value)}
                   placeholder="+224 6•• •• •• ••" inputMode="tel" />
               </div>
-              <button className={styles.mBtn} onClick={generer}>
-                <i className="fas fa-bolt" /> Générer le code
+              <div className={styles.fld}>
+                <label className={styles.fldL}>Email du destinataire <span className={styles.required}>*</span></label>
+                <input className={styles.fldIn} value={email} onChange={e => setEmail(e.target.value)}
+                  placeholder="destinataire@exemple.com" type="email" required />
+                {email.trim().length > 0 && !emailValid && (
+                  <div className={styles.fldErr}>Email invalide.</div>
+                )}
+              </div>
+              <button className={styles.mBtn} onClick={generer} disabled={generating || !emailValid}
+                title={!emailValid ? "L'email du destinataire est obligatoire" : undefined}>
+                <i className={`fas ${generating ? 'fa-spinner fa-spin' : 'fa-bolt'}`} />
+                {generating ? 'Génération…' : 'Générer le code'}
               </button>
             </div>
           </>
@@ -106,13 +165,19 @@ export default function GenerateCodeModal({ onClose, onGenerate, onToast }: Gene
                 </div>
               </div>
               <div className={styles.sendRow}>
-                <button className={`${styles.sendBtn} ${styles.sendWa}`}
-                  onClick={() => onToast('📱 Ouverture de WhatsApp…', 's')}>
-                  <i className="fab fa-whatsapp" /> WhatsApp
+                <button className={`${styles.sendBtn} ${styles.sendMail}`}
+                  disabled={sendingEmail || emailSent}
+                  onClick={envoyerParEmail}>
+                  <i className={`fas ${sendingEmail ? 'fa-spinner fa-spin' : emailSent ? 'fa-check' : 'fa-envelope'}`} />
+                  {emailSent ? 'Envoyé' : 'Email'}
                 </button>
-                <button className={`${styles.sendBtn} ${styles.sendSms}`}
-                  onClick={() => onToast('✉️ SMS préparé', 's')}>
+                <button className={`${styles.sendBtn} ${styles.sendSms}`} disabled
+                  title="Bientôt disponible">
                   <i className="fas fa-comment-sms" /> SMS
+                </button>
+                <button className={`${styles.sendBtn} ${styles.sendWa}`} disabled
+                  title="Bientôt disponible">
+                  <i className="fab fa-whatsapp" /> WhatsApp
                 </button>
                 <button className={`${styles.sendBtn} ${styles.sendCopy}`} onClick={copier}>
                   <i className="fas fa-copy" /> Copier

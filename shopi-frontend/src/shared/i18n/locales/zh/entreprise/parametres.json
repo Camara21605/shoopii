@@ -9,7 +9,7 @@
         "catalogue": "目录与产品",
         "livraison": "配送",
         "paiement": "支付与开票",
-        "commissions": "Shopi 佣金",
+        "commissions": "Shoneya 佣金",
         "documents": "文件与验证",
         "confidentialiteSecurite": "隐私与安全",
         "securite": "安全",
@@ -59,7 +59,7 @@
       "savedToast": "✅ 目录已保存",
       "errorToast": "❌ 保存时出错",
       "title": "目录与发布规则",
-      "subtitle": "控制产品在 Shopi 上的显示和发布方式。",
+      "subtitle": "控制产品在 Shoneya 上的显示和发布方式。",
       "reglesTitle": "显示规则",
       "reglesSubtitle": "公开目录的行为",
       "afficherRupture": "显示缺货产品",
@@ -90,8 +90,8 @@
       "methodesSubtitle": "为客户启用可用的配送模式",
       "standard": "标准配送",
       "standardSub": "由您的店铺团队管理",
-      "livreursShopi": "Shopi 配送员",
-      "livreursShopiSub": "Shopi 合作伙伴配送员网络",
+      "livreursShopi": "Shoneya 配送员",
+      "livreursShopiSub": "Shoneya 合作伙伴配送员网络",
       "correspondants": "代理商",
       "correspondantsSub": "本地和国际中转站网络",
       "clickCollect": "到店自取",
@@ -110,8 +110,8 @@
       "errorToast": "❌ 保存时出错",
       "title": "支付与开票",
       "subtitle": "配置您的收款方式和税务信息。",
-      "receptionTitle": "Shopi 收款",
-      "receptionSubtitle": "您如何接收 Shopi 的转账",
+      "receptionTitle": "Shoneya 收款",
+      "receptionSubtitle": "您如何接收 Shoneya 的转账",
       "canalReception": "收款渠道",
       "waveOption": "Wave",
       "virementBancaireOption": "银行转账",
@@ -134,16 +134,16 @@
     },
     "commissions": {
       "loadErrorToast": "加载佣金错误",
-      "title": "Shopi 佣金",
+      "title": "Shoneya 佣金",
       "subtitle": "根据交易类型对您销售收取的佣金明细。",
       "grilleTitle": "佣金表",
       "grilleSubtitle": "您当前的套餐：{{plan}}",
       "typeTransaction": "交易类型",
-      "commissionShopi": "Shopi 佣金",
+      "commissionShopi": "Shoneya 佣金",
       "fraisLivreurCorresp": "配送员/代理商费用",
       "retraitImmediat": "立即提现",
-      "venteDirecte": "通过 Shopi 直接销售",
-      "venteLivreurShopi": "使用 Shopi 配送员销售",
+      "venteDirecte": "通过 Shoneya 直接销售",
+      "venteLivreurShopi": "使用 Shoneya 配送员销售",
       "selonLivreur": "视配送员而定",
       "venteCorrespondant": "通过代理商销售",
       "selonCorresp": "视代理商而定",
@@ -192,14 +192,14 @@
         "echecUpload": "❌ 上传失败"
       },
       "title": "文件与验证",
-      "subtitle": "提交您的法律文件以获取“Shopi 已验证店铺”徽章。",
+      "subtitle": "提交您的法律文件以获取“Shoneya 已验证店铺”徽章。",
       "statutVerification": "验证状态：",
       "requisTitle": "必需文件",
       "requisSubtitle": "3 个必需文件：身份证 + 商业注册证 + 银行证明",
       "documentUploade": "文档已上传",
       "remplacer": "替换",
       "uploader": "上传",
-      "hint": "提交 3 个必需文件后，您的档案将自动进入审核。Shopi 团队将在 48 小时内联系您。"
+      "hint": "提交 3 个必需文件后，您的档案将自动进入审核。Shoneya 团队将在 48 小时内联系您。"
     },
     "securite": {
       "title": "安全与登录",
@@ -274,7 +274,7 @@
         "newReview": "新客户评价",
         "negativeReview": "负面评价（< 3 星）",
         "weeklyReport": "每周声誉报告",
-        "promoInvitations": "Shopi 促销邀请",
+        "promoInvitations": "Shoneya 促销邀请",
         "monthlyReport": "月度表现报告",
         "shopNews": "平台新功能"
       }
@@ -291,7 +291,7 @@
       "items": {
         "showInSearch": {
           "label": "出现在搜索中",
-          "sub": "您的店铺在 Shopi 搜索结果中可见"
+          "sub": "您的店铺在 Shoneya 搜索结果中可见"
         },
         "showSalesStats": {
           "label": "显示销售统计",
@@ -306,7 +306,7 @@
           "sub": "否则只显示所在区域"
         },
         "improveAlgorithm": {
-          "label": "改进 Shopi 推荐",
+          "label": "改进 Shoneya 推荐",
           "sub": "您的数据有助于个性化搜索结果"
         },
         "anonymizedStats": {
@@ -363,7 +363,7 @@
       "logoSupprime": "🗑️ 徽标已删除",
       "logoSuppressionImpossible": "❌ 无法删除徽标",
       "title": "店铺与身份",
-      "subtitle": "您店铺的公开信息。所有客户在 Shopi 平台上都可见。",
+      "subtitle": "您店铺的公开信息。所有客户在 Shoneya 平台上都可见。",
       "profilLbl": "资料",
       "completedAt": "店铺完成度 {{pct}}%",
       "elementsManquants": "— 一些缺失元素",
@@ -371,7 +371,7 @@
       "profilCompletBold": "3 倍",
       "profilCompletPart2": "的销售额",
       "logoCoverTitle": "徽标与封面图片",
-      "logoCoverSubtitle": "您店铺在 Shopi 上的视觉形象",
+      "logoCoverSubtitle": "您店铺在 Shoneya 上的视觉形象",
       "logoBoutique": "店铺徽标",
       "cliquerChangerLogo": "点击更改徽标",
       "changer": "更改",

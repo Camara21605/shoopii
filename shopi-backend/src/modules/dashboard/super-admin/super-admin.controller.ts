@@ -103,7 +103,7 @@ export class SuperAdminController {
 
   @ApiOperation({
     summary:     'Récupérer la configuration plateforme',
-    description: 'Retourne tous les paramètres globaux de Shopi Africa.',
+    description: 'Retourne tous les paramètres globaux de Shopi.',
   })
   @Get('settings')
   getSettings() {

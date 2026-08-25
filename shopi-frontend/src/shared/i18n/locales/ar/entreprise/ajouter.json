@@ -181,7 +181,7 @@
       "standardSub": "يُدار بواسطة متجرك",
       "choisirLivreur": "اختر عامل توصيل",
       "choisirLivreurSub": "يختار المشتري عامل التوصيل",
-      "correspondant": "عبر مراسل Shopi",
+      "correspondant": "عبر مراسل Shoneya",
       "correspondantSub": "للمنتجات القادمة من الخارج",
       "fraisLocal": "رسوم التوصيل المحلي (فرنك)",
       "fraisPlaceholder": "0 = توصيل مجاني",
@@ -202,7 +202,7 @@
       "retour": "إرجاع مضمون",
       "retourSub": "استرداد أو استبدال",
       "authentique": "منتج أصلي",
-      "authentiqueSub": "بائع Shopi معتمد",
+      "authentiqueSub": "بائع Shoneya معتمد",
       "support": "دعم 24/7",
       "supportSub": "محادثة · واتساب · هاتف"
     },
@@ -274,7 +274,7 @@
       "title": "تحسين محركات البحث",
       "score": "درجة SEO",
       "titreSeo": "عنوان SEO",
-      "titrePlaceholder": "مثال: ايفون 15 برو 256 جيجابايت — Shopi غينيا",
+      "titrePlaceholder": "مثال: ايفون 15 برو 256 جيجابايت — Shoneya غينيا",
       "titreIdeal": "مثالي: 50–70 حرفًا",
       "descriptionSeo": "وصف SEO",
       "descriptionPlaceholder": "120-160 حرفًا…",
@@ -297,7 +297,7 @@
     "revenus": {
       "title": "معاينة الإيرادات",
       "prixVente": "سعر البيع",
-      "commission": "عمولة Shopi ({{pct}}%)",
+      "commission": "عمولة Shoneya ({{pct}}%)",
       "revenuNet": "صافي الإيراد المقدر"
     },
     "actions": {

@@ -370,6 +370,11 @@
   .sbBrand, .sbLvNm, .sbLvSub, .nb span, .nbBadge,
   .sbBotBtn span, .teLabel, .todayEarn { display: none; }
 
+  /* WalletQuickBar n'a pas de mode icône-seule (son contenu minimal —
+   * icône + libellé + montant — dépasse déjà une piste de 68px) :
+   * masqué entièrement plutôt que de déborder sur le contenu principal. */
+  .walletWrap { display: none; }
+
   /* Remplacer les titres de section par de fines séparations */
   .sbSect {
     display: block;

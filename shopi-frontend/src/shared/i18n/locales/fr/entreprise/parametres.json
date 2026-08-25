@@ -9,7 +9,7 @@
         "catalogue": "Catalogue & Produits",
         "livraison": "Livraison",
         "paiement": "Paiement & Facturation",
-        "commissions": "Commissions Shopi",
+        "commissions": "Commissions Shoneya",
         "documents": "Documents & Vérification",
         "confidentialiteSecurite": "Confidentialité et sécurité",
         "securite": "Sécurité",
@@ -59,7 +59,7 @@
       "savedToast": "✅ Catalogue sauvegardé",
       "errorToast": "❌ Erreur lors de la sauvegarde",
       "title": "Catalogue & Règles de publication",
-      "subtitle": "Contrôlez comment vos produits sont affichés et publiés sur Shopi.",
+      "subtitle": "Contrôlez comment vos produits sont affichés et publiés sur Shoneya.",
       "reglesTitle": "Règles d'affichage",
       "reglesSubtitle": "Comportement de votre catalogue public",
       "afficherRupture": "Afficher les produits en rupture de stock",
@@ -90,8 +90,8 @@
       "methodesSubtitle": "Activez les modes de livraison disponibles pour vos clients",
       "standard": "Livraison standard",
       "standardSub": "Géré par votre équipe boutique",
-      "livreursShopi": "Livreurs Shopi",
-      "livreursShopiSub": "Réseau de livreurs partenaires Shopi",
+      "livreursShopi": "Livreurs Shoneya",
+      "livreursShopiSub": "Réseau de livreurs partenaires Shoneya",
       "correspondants": "Correspondants",
       "correspondantsSub": "Réseau de relais locaux et internationaux",
       "clickCollect": "Click & Collect",
@@ -110,8 +110,8 @@
       "errorToast": "❌ Erreur lors de la sauvegarde",
       "title": "Paiement & Facturation",
       "subtitle": "Configurez vos méthodes de réception des paiements et vos informations fiscales.",
-      "receptionTitle": "Réception des paiements Shopi",
-      "receptionSubtitle": "Comment vous recevez vos virements de Shopi",
+      "receptionTitle": "Réception des paiements Shoneya",
+      "receptionSubtitle": "Comment vous recevez vos virements de Shoneya",
       "canalReception": "Canal de réception",
       "waveOption": "Wave",
       "virementBancaireOption": "Virement bancaire",
@@ -134,16 +134,16 @@
     },
     "commissions": {
       "loadErrorToast": "Erreur chargement commissions",
-      "title": "Commissions Shopi",
+      "title": "Commissions Shoneya",
       "subtitle": "Détail des commissions appliquées sur vos ventes selon le type de transaction.",
       "grilleTitle": "Grille de commissions",
       "grilleSubtitle": "Votre plan actuel : {{plan}}",
       "typeTransaction": "Type de transaction",
-      "commissionShopi": "Commission Shopi",
+      "commissionShopi": "Commission Shoneya",
       "fraisLivreurCorresp": "Frais livreur/corresp.",
       "retraitImmediat": "Retrait immédiat",
-      "venteDirecte": "Vente directe via Shopi",
-      "venteLivreurShopi": "Vente avec livreur Shopi",
+      "venteDirecte": "Vente directe via Shoneya",
+      "venteLivreurShopi": "Vente avec livreur Shoneya",
       "selonLivreur": "selon livreur",
       "venteCorrespondant": "Vente via correspondant",
       "selonCorresp": "selon corresp.",
@@ -192,14 +192,14 @@
         "echecUpload": "❌ Échec de l'upload"
       },
       "title": "Documents & Vérification",
-      "subtitle": "Soumettez vos documents légaux pour obtenir le badge \"Boutique vérifiée Shopi\".",
+      "subtitle": "Soumettez vos documents légaux pour obtenir le badge \"Boutique vérifiée Shoneya\".",
       "statutVerification": "Statut de vérification :",
       "requisTitle": "Documents requis",
       "requisSubtitle": "Les 3 documents obligatoires : CNI + RCCM + Justificatif bancaire",
       "documentUploade": "Document uploadé",
       "remplacer": "Remplacer",
       "uploader": "Uploader",
-      "hint": "Une fois les 3 documents obligatoires soumis, votre dossier passe automatiquement en révision. L'équipe Shopi vous contactera sous 48h."
+      "hint": "Une fois les 3 documents obligatoires soumis, votre dossier passe automatiquement en révision. L'équipe Shoneya vous contactera sous 48h."
     },
     "securite": {
       "title": "Sécurité & Connexion",
@@ -274,7 +274,7 @@
         "newReview": "Nouvel avis client",
         "negativeReview": "Avis négatif (< 3 étoiles)",
         "weeklyReport": "Rapport hebdo réputation",
-        "promoInvitations": "Invitations aux promotions Shopi",
+        "promoInvitations": "Invitations aux promotions Shoneya",
         "monthlyReport": "Rapport de performance mensuel",
         "shopNews": "Nouveautés de la plateforme"
       }
@@ -291,7 +291,7 @@
       "items": {
         "showInSearch": {
           "label": "Apparaître dans la recherche",
-          "sub": "Votre boutique est visible dans les résultats de recherche Shopi"
+          "sub": "Votre boutique est visible dans les résultats de recherche Shoneya"
         },
         "showSalesStats": {
           "label": "Afficher les stats de vente",
@@ -306,7 +306,7 @@
           "sub": "Sinon, seule la commune est affichée"
         },
         "improveAlgorithm": {
-          "label": "Améliorer les recommandations Shopi",
+          "label": "Améliorer les recommandations Shoneya",
           "sub": "Vos données aident à personnaliser les résultats"
         },
         "anonymizedStats": {
@@ -363,7 +363,7 @@
       "logoSupprime": "🗑️ Logo supprimé",
       "logoSuppressionImpossible": "❌ Impossible de supprimer le logo",
       "title": "Boutique & Identité",
-      "subtitle": "Informations publiques de votre boutique. Elles sont visibles par tous les clients sur la plateforme Shopi.",
+      "subtitle": "Informations publiques de votre boutique. Elles sont visibles par tous les clients sur la plateforme Shoneya.",
       "profilLbl": "Profil",
       "completedAt": "Boutique complétée à {{pct}}%",
       "elementsManquants": "— Quelques éléments manquants",
@@ -371,7 +371,7 @@
       "profilCompletBold": "3× plus",
       "profilCompletPart2": "de ventes",
       "logoCoverTitle": "Logo & Image de couverture",
-      "logoCoverSubtitle": "Identité visuelle de votre boutique sur Shopi",
+      "logoCoverSubtitle": "Identité visuelle de votre boutique sur Shoneya",
       "logoBoutique": "Logo boutique",
       "cliquerChangerLogo": "Cliquer pour changer le logo",
       "changer": "Changer",

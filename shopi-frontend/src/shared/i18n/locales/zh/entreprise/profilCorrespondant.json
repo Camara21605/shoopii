@@ -45,7 +45,7 @@
       "abonneCount_one": "{{count}} 名关注者",
       "abonneCount_other": "{{count}} 名关注者",
       "suivreCeCorrespondant": "关注此代理商",
-      "verificationsShopi": "Shopi 验证",
+      "verificationsShopi": "Shoneya 验证",
       "correspondantsSimilaires": "类似代理商",
       "voirTout": "查看全部",
       "suivreShort": "+ 关注",
@@ -60,7 +60,7 @@
       "missionsCeMois": "本月任务",
       "litigesResolus": "已解决争议"
     },
-    "verifieParShopi": "✓ 已由 Shopi 验证",
+    "verifieParShopi": "✓ 已由 Shoneya 验证",
     "tabInfo": {
       "aPropos": "关于",
       "informationsPratiques": "实用信息",
@@ -87,7 +87,7 @@
       "emptyTitle": "未填写价格",
       "emptyDescPart1": "代理商尚未发布其价格表。",
       "emptyDescPart2": "直接联系他获取报价。",
-      "abonnesShopi": "Shopi 关注者",
+      "abonnesShopi": "Shoneya 关注者",
       "reduction15": "— 所有服务享受 15% 折扣。"
     },
     "tabAvis": {

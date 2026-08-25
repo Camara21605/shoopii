@@ -5,7 +5,7 @@
  * personnelles. Toutes les données viennent de /client/profil via
  * useProfilClient.
  *
- * Le solde du portefeuille (ex-carte "Shopi Wallet" ici) n'est plus
+ * Le solde du portefeuille (ex-carte "Shoneya Wallet" ici) n'est plus
  * dupliqué sur cette page — il est accessible partout via le widget
  * compact du tiroir de menu (WalletQuickBar, voir Header.tsx), qui
  * pointe vers la page portefeuille complète du dashboard client.

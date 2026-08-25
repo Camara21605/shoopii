@@ -22,6 +22,7 @@ import { Partner }  from '../../../../database/entities/profiles/partenaire-prof
 import { Company }  from '../../../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery } from '../../../../database/entities/profiles/livreur-profile.entity';
 import { User, UserStatus } from '../../../../database/entities/user.entity';
+import { UserRole }         from '../../../../common/enums/user-role.enum';
 import { AuditLog }         from '../../../../database/entities/audit-log.entity';
 
 import { initials, userName, mapSt, relTime } from '../helpers/admin.helpers';
@@ -56,10 +57,29 @@ export class AdminActeursService {
   /**
    * Résout le profileId et le type d'acteur d'un utilisateur.
    * Retourne null si le profil n'existe pas encore en base.
+   *
+   * Si le rôle est déjà connu de l'appelant (cas de approve/reject
+   * Validation, qui a déjà chargé le User), une seule requête ciblée
+   * suffit au lieu de sonder les 3 tables de profil en parallèle.
    */
   private async resolveProfile(
     userId: string,
+    role?:  UserRole,
   ): Promise<{ profileId: string; actorType: NotificationActorType } | null> {
+    if (role === UserRole.PARTNER) {
+      const p = await this.partnerRepo.findOne({ where: { user: { id: userId } } }).catch(() => null);
+      return p ? { profileId: p.id, actorType: NotificationActorType.PARTNER } : null;
+    }
+    if (role === UserRole.COMPANY) {
+      const c = await this.companyRepo.findOne({ where: { user: { id: userId } } }).catch(() => null);
+      return c ? { profileId: c.id, actorType: NotificationActorType.COMPANY } : null;
+    }
+    if (role === UserRole.DELIVERY) {
+      const d = await this.deliveryRepo.findOne({ where: { user: { id: userId } } }).catch(() => null);
+      return d ? { profileId: d.id, actorType: NotificationActorType.DELIVERY } : null;
+    }
+
+    // Rôle inconnu/absent — repli sur les 3 requêtes parallèles.
     const [partner, company, delivery] = await Promise.all([
       this.partnerRepo.findOne({ where: { user: { id: userId } } }).catch(() => null),
       this.companyRepo.findOne({ where: { user: { id: userId } } }).catch(() => null),
@@ -85,7 +105,7 @@ export class AdminActeursService {
    * Note : les correspondants ne sont pas encore inclus car le champ FK
    * (livreurId ou deliveryId) n'est pas stabilisé dans le schéma.
    */
-  async getActeurs(userId: string, roleFilter?: string, search?: string) {
+  async getActeurs(userId: string, roleFilter?: string, search?: string, page = 1, limit = 20) {
     const admin  = await this.zoneService.adminOf(userId);
     const result: any[] = [];
     const q = search?.toLowerCase();
@@ -174,16 +194,22 @@ export class AdminActeursService {
       );
     }
 
-    return {
-      list: result,
-      counts: {
-        all: result.length,
-        par: result.filter(a => a.type === 'par').length,
-        ent: result.filter(a => a.type === 'ent').length,
-        lvr: result.filter(a => a.type === 'lvr').length,
-        cor: 0, // correspondants non encore intégrés
-      },
+    const counts = {
+      all: result.length,
+      par: result.filter(a => a.type === 'par').length,
+      ent: result.filter(a => a.type === 'ent').length,
+      lvr: result.filter(a => a.type === 'lvr').length,
+      cor: 0, // correspondants non encore intégrés
     };
+
+    // Pagination appliquée après filtrage (recherche + type) — bornée
+    // par les take:200 par type ci-dessus (max 600 lignes en mémoire,
+    // jamais 600 renvoyées au frontend).
+    const safeLimit = Math.min(limit, 100);
+    const start = (page - 1) * safeLimit;
+    const list  = result.slice(start, start + safeLimit);
+
+    return { list, counts, page, limit: safeLimit, total: result.length };
   }
 
   // ════════════════════════════════════════════════════════════
@@ -193,18 +219,26 @@ export class AdminActeursService {
   /**
    * Retourne tous les comptes en attente de validation dans la zone
    * (partenaires, entreprises, livreurs dont user.status = PENDING).
+   *
+   * Filtre PENDING appliqué directement en SQL (jointure sur user +
+   * condition), au lieu de récupérer TOUS les acteurs de la zone pour
+   * ensuite ne garder que les PENDING en mémoire.
    */
   async getValidations(userId: string) {
     const admin = await this.zoneService.adminOf(userId);
     const items: any[] = [];
 
+    const pendingWhere = (adminId: string) => ({
+      adminId, user: { status: UserStatus.PENDING },
+    });
+
     const [partners, companies, deliveries] = await Promise.all([
-      this.partnerRepo.find({ where: { adminId: admin.id }, relations: ['user'] }),
-      this.companyRepo.find({ where: { adminId: admin.id }, relations: ['user'] }),
-      this.deliveryRepo.find({ where: { adminId: admin.id }, relations: ['user'] }),
+      this.partnerRepo.find({ where: pendingWhere(admin.id), relations: ['user'], take: 200 }),
+      this.companyRepo.find({ where: pendingWhere(admin.id), relations: ['user'], take: 200 }),
+      this.deliveryRepo.find({ where: pendingWhere(admin.id), relations: ['user'], take: 200 }),
     ]);
 
-    for (const p of partners.filter(x => x.user?.status === UserStatus.PENDING)) {
+    for (const p of partners) {
       const nom = userName(p.user);
       items.push({
         id: p.user.id, nom, avatar: initials(nom), type: 'par',
@@ -215,7 +249,7 @@ export class AdminActeursService {
       });
     }
 
-    for (const c of companies.filter(x => x.user?.status === UserStatus.PENDING)) {
+    for (const c of companies) {
       const nom = userName(c.user);
       items.push({
         id: c.user.id, nom, avatar: initials(nom), type: 'ent',
@@ -226,7 +260,7 @@ export class AdminActeursService {
       });
     }
 
-    for (const d of deliveries.filter(x => x.user?.status === UserStatus.PENDING)) {
+    for (const d of deliveries) {
       const nom = userName(d.user);
       items.push({
         id: d.user.id, nom, avatar: initials(nom), type: 'lvr',
@@ -266,7 +300,7 @@ export class AdminActeursService {
     }));
 
     // Notification asynchrone (fire-and-forget) à l'acteur validé
-    this.resolveProfile(targetUserId).then(profile => {
+    this.resolveProfile(targetUserId, user.role).then(profile => {
       if (!profile) return;
       this.notifEvents.notifyActeurAccountApproved({
         recipientType: profile.actorType,
@@ -301,7 +335,7 @@ export class AdminActeursService {
     }));
 
     // Notification asynchrone (fire-and-forget) à l'acteur refusé
-    this.resolveProfile(targetUserId).then(profile => {
+    this.resolveProfile(targetUserId, user.role).then(profile => {
       if (!profile) return;
       this.notifEvents.notifyActeurAccountRejected({
         recipientType: profile.actorType,

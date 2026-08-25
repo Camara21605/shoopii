@@ -9,7 +9,7 @@
         "catalogue": "Catalog & Products",
         "livraison": "Shipping",
         "paiement": "Payment & Billing",
-        "commissions": "Shopi Commissions",
+        "commissions": "Shoneya Commissions",
         "documents": "Documents & Verification",
         "confidentialiteSecurite": "Privacy & Security",
         "securite": "Security",
@@ -59,7 +59,7 @@
       "savedToast": "✅ Catalog saved",
       "errorToast": "❌ Error while saving",
       "title": "Catalog & Publishing Rules",
-      "subtitle": "Control how your products are displayed and published on Shopi.",
+      "subtitle": "Control how your products are displayed and published on Shoneya.",
       "reglesTitle": "Display rules",
       "reglesSubtitle": "Behavior of your public catalog",
       "afficherRupture": "Show out-of-stock products",
@@ -90,8 +90,8 @@
       "methodesSubtitle": "Enable the delivery modes available to your customers",
       "standard": "Standard delivery",
       "standardSub": "Handled by your store team",
-      "livreursShopi": "Shopi couriers",
-      "livreursShopiSub": "Shopi's partner courier network",
+      "livreursShopi": "Shoneya couriers",
+      "livreursShopiSub": "Shoneya's partner courier network",
       "correspondants": "Correspondents",
       "correspondantsSub": "Network of local and international relays",
       "clickCollect": "Click & Collect",
@@ -110,8 +110,8 @@
       "errorToast": "❌ Error while saving",
       "title": "Payment & Billing",
       "subtitle": "Configure your payment reception methods and tax information.",
-      "receptionTitle": "Shopi payment reception",
-      "receptionSubtitle": "How you receive your transfers from Shopi",
+      "receptionTitle": "Shoneya payment reception",
+      "receptionSubtitle": "How you receive your transfers from Shoneya",
       "canalReception": "Reception channel",
       "waveOption": "Wave",
       "virementBancaireOption": "Bank transfer",
@@ -134,16 +134,16 @@
     },
     "commissions": {
       "loadErrorToast": "Error loading commissions",
-      "title": "Shopi Commissions",
+      "title": "Shoneya Commissions",
       "subtitle": "Details of the commissions applied to your sales by transaction type.",
       "grilleTitle": "Commission schedule",
       "grilleSubtitle": "Your current plan: {{plan}}",
       "typeTransaction": "Transaction type",
-      "commissionShopi": "Shopi commission",
+      "commissionShopi": "Shoneya commission",
       "fraisLivreurCorresp": "Courier/correspondent fees",
       "retraitImmediat": "Immediate withdrawal",
-      "venteDirecte": "Direct sale via Shopi",
-      "venteLivreurShopi": "Sale with Shopi courier",
+      "venteDirecte": "Direct sale via Shoneya",
+      "venteLivreurShopi": "Sale with Shoneya courier",
       "selonLivreur": "depends on courier",
       "venteCorrespondant": "Sale via correspondent",
       "selonCorresp": "depends on correspondent",
@@ -192,14 +192,14 @@
         "echecUpload": "❌ Upload failed"
       },
       "title": "Documents & Verification",
-      "subtitle": "Submit your legal documents to get the \"Shopi Verified Store\" badge.",
+      "subtitle": "Submit your legal documents to get the \"Shoneya Verified Store\" badge.",
       "statutVerification": "Verification status:",
       "requisTitle": "Required documents",
       "requisSubtitle": "The 3 mandatory documents: ID + Business Registry + Bank proof",
       "documentUploade": "Document uploaded",
       "remplacer": "Replace",
       "uploader": "Upload",
-      "hint": "Once the 3 mandatory documents are submitted, your file automatically goes into review. The Shopi team will contact you within 48h."
+      "hint": "Once the 3 mandatory documents are submitted, your file automatically goes into review. The Shoneya team will contact you within 48h."
     },
     "securite": {
       "title": "Security & Login",
@@ -274,7 +274,7 @@
         "newReview": "New customer review",
         "negativeReview": "Negative review (< 3 stars)",
         "weeklyReport": "Weekly reputation report",
-        "promoInvitations": "Shopi promotion invitations",
+        "promoInvitations": "Shoneya promotion invitations",
         "monthlyReport": "Monthly performance report",
         "shopNews": "Platform news"
       }
@@ -291,7 +291,7 @@
       "items": {
         "showInSearch": {
           "label": "Appear in search",
-          "sub": "Your store is visible in Shopi search results"
+          "sub": "Your store is visible in Shoneya search results"
         },
         "showSalesStats": {
           "label": "Show sales stats",
@@ -306,7 +306,7 @@
           "sub": "Otherwise, only the district is shown"
         },
         "improveAlgorithm": {
-          "label": "Improve Shopi recommendations",
+          "label": "Improve Shoneya recommendations",
           "sub": "Your data helps personalize results"
         },
         "anonymizedStats": {
@@ -363,7 +363,7 @@
       "logoSupprime": "🗑️ Logo deleted",
       "logoSuppressionImpossible": "❌ Unable to delete the logo",
       "title": "Store & Identity",
-      "subtitle": "Public information about your store. Visible to all customers on the Shopi platform.",
+      "subtitle": "Public information about your store. Visible to all customers on the Shoneya platform.",
       "profilLbl": "Profile",
       "completedAt": "Store {{pct}}% complete",
       "elementsManquants": "— A few things are missing",
@@ -371,7 +371,7 @@
       "profilCompletBold": "3× more",
       "profilCompletPart2": "sales",
       "logoCoverTitle": "Logo & Cover image",
-      "logoCoverSubtitle": "Visual identity of your store on Shopi",
+      "logoCoverSubtitle": "Visual identity of your store on Shoneya",
       "logoBoutique": "Store logo",
       "cliquerChangerLogo": "Click to change the logo",
       "changer": "Change",

@@ -17,6 +17,11 @@ interface TopbarProps {
   onToast:     (msg: string, type?: 's' | 'i' | 'w') => void;
   unreadCount: number;
   onBell:      () => void;
+  /* Permissions "Modules généraux" — masque l'icône Signalements si
+   * l'admin n'a pas la permission 'reports' (cohérent avec Sidebar.tsx,
+   * sinon le clic navigue vers une page aussitôt renvoyée vers "overview"
+   * par le filet de sécurité d'AdministrateurApp.tsx). */
+  geoPerms?:   Record<string, boolean | string | null>;
 }
 
 /* Titre + sous-titre par page */
@@ -25,10 +30,13 @@ const TITLES: Record<AdminPage, [string, string]> = {
   codes:         ['Codes de création',  'Créez des comptes de tout type pour votre zone'],
   partenaires:   ['Partenaires',        'Les partenaires de votre zone'],
   acteurs:       ['Acteurs de la zone', 'Tous les comptes rattachés à votre zone'],
+  clients:       ['Clients',            'Clients ayant commandé dans votre zone'],
   validations:   ['Validations',        "Comptes en attente d'approbation"],
   signalements:  ['Signalements',       'Centre de modération de la zone'],
   commandes:     ['Commandes',          'Activité commerciale de la zone'],
   finances:      ['Finances',           "Volume d'affaires et commissions"],
+  stats:         ['Statistiques',       'Communes, litiges et activité de la zone'],
+  support:       ['Support',            'File d’attente des tickets de votre zone'],
   audit:         ["Journal d'audit",    "Historique de vos actions d'administration"],
   notifications: ['Notifications',      'Centre de notifications en temps réel'],
   parametres:    ['Paramètres',         'Configuration de votre compte administrateur'],
@@ -37,10 +45,11 @@ const TITLES: Record<AdminPage, [string, string]> = {
 
 export default function Topbar({
   activePage, onBurger, onGenerate, onNavigate, onToast,
-  unreadCount, onBell,
+  unreadCount, onBell, geoPerms,
 }: TopbarProps) {
   const [title, sub] = TITLES[activePage] ?? ['', ''];
   void onToast; // prop conservée pour compatibilité ascendante
+  const canSeeReports = geoPerms?.reports === true;
 
   return (
     <header className={styles.topbar}>
@@ -55,11 +64,13 @@ export default function Topbar({
 
       {/* Actions rapides : alertes, notifications, CTA */}
       <div className={styles.acts}>
-        {/* Alertes → page signalements */}
-        <button className={styles.ic} title="Signalements" onClick={() => onNavigate('signalements')}>
-          <i className="fas fa-triangle-exclamation" />
-          <span className={styles.dot} />
-        </button>
+        {/* Alertes → page signalements (masqué sans la permission 'reports') */}
+        {canSeeReports && (
+          <button className={styles.ic} title="Signalements" onClick={() => onNavigate('signalements')}>
+            <i className="fas fa-triangle-exclamation" />
+            <span className={styles.dot} />
+          </button>
+        )}
 
         {/* Cloche notifications avec badge compteur temps réel */}
         <button

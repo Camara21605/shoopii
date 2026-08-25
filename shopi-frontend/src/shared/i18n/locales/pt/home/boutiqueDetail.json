@@ -9,11 +9,11 @@
       "apropos": "Sobre"
     },
     "cover": {
-      "verifiee": "Loja verificada Shopi",
+      "verifiee": "Loja verificada Shoneya",
       "active": "Ativa"
     },
     "identity": {
-      "verifie": "Verificado Shopi",
+      "verifie": "Verificado Shoneya",
       "note": "Nota",
       "abonnes": "Subscritores",
       "satisfaction": "Satisfação",
@@ -49,13 +49,13 @@
       "completCount_one": "completo",
       "completCount_other": "completos",
       "totalCount": "correspondentes no total",
-      "infoBannerTitle": "O que é um correspondente Shopi?",
-      "infoBannerDesc": "Um correspondente é um representante Shopi na sua cidade. Ele recebe a sua encomenda, verifica-a e guarda-a em segurança. Pode levantá-la diretamente ou confiá-la a um entregador para entrega ao domicílio.",
+      "infoBannerTitle": "O que é um correspondente Shoneya?",
+      "infoBannerDesc": "Um correspondente é um representante Shoneya na sua cidade. Ele recebe a sua encomenda, verifica-a e guarda-a em segurança. Pode levantá-la diretamente ou confiá-la a um entregador para entrega ao domicílio.",
       "steps": {
         "colisRecu": "Encomenda recebida e verificada",
         "stockageSecurise": "Armazenamento seguro",
         "remiseDirecte": "Entrega direta ou via entregador",
-        "noteCertifie": "Avaliado e certificado Shopi"
+        "noteCertifie": "Avaliado e certificado Shoneya"
       },
       "fermer": "Fechar"
     },
@@ -79,7 +79,7 @@
       "instagramCopieToast": "📸 Link copiado — cole-o no Instagram",
       "partageVia": "📲 Partilha via {{label}}",
       "lienCopieToast": "🔗 Link copiado!",
-      "emailSujet": "Descubra esta loja Shopi"
+      "emailSujet": "Descubra esta loja Shoneya"
     },
     "aPropos": {
       "titre": "Sobre a loja",
@@ -231,9 +231,9 @@
       "filtreEnPromotion": "Em promoção",
       "filtreNouveautes": "Novidades",
       "partagerTitre": "Partilhar esta loja",
-      "boutiqueShopiDefault": "Loja Shopi",
+      "boutiqueShopiDefault": "Loja Shoneya",
       "membreDepuis": "Membro desde {{date}}",
-      "membreShopi": "Membro Shopi",
+      "membreShopi": "Membro Shoneya",
       "horairesNonRenseignes": "Horários não informados"
     }
   }

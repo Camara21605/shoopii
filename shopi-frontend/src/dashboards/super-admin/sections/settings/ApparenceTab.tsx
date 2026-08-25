@@ -5,30 +5,17 @@
  * Onglet 8 — Apparence
  *
  * Contenu :
- *   1. Thème global      — bascule clair / sombre
- *   2. Couleur principale — color picker + preview
- *   3. Identité visuelle — URL logo, favicon
- *   4. Preview branding  — carte live qui s'actualise en temps réel
+ *   1. Couleur principale — color picker + preview
+ *   2. Identité visuelle — URL logo, favicon
+ *   3. Preview branding  — carte live qui s'actualise en temps réel
  *
- * Remarque : le changement de thème appelle store.setTheme() depuis
- * le hook useSuperAdminState pour que le CSS variable --bg etc.
- * soit appliqué immédiatement à tout le dashboard.
+ * Le dashboard super-admin est en noir permanent (voir super-admin.css) —
+ * il n'y a plus de bascule clair/sombre ici.
  */
 
 import React, { memo } from 'react';
-import { SettingGroup, SettingRow, Toggle } from './components';
-import type { PlatformSettings }           from './types';
-
-/* ─────────────────────────────────────────────────────────────
- * TYPE du store minimal nécessaire pour changer le thème
- * ─────────────────────────────────────────────────────────────
- * On ne type que ce dont on a besoin depuis SuperAdminStore.
- * Le store expose state.theme et toggleTheme() — pas setTheme().
- */
-interface ThemeStore {
-  state: { theme: 'light' | 'dark' };
-  toggleTheme: () => void;
-}
+import { SettingGroup, SettingRow } from './components';
+import type { PlatformSettings }    from './types';
 
 /* ─────────────────────────────────────────────────────────────
  * PROPS
@@ -37,7 +24,6 @@ interface ThemeStore {
 interface Props {
   settings: PlatformSettings;
   set:      <K extends keyof PlatformSettings>(key: K, val: PlatformSettings[K]) => void;
-  store:    ThemeStore;              // Accès au store global pour changer le thème
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -97,7 +83,7 @@ const BrandingPreview = memo(function BrandingPreview({
         {/* Nom de la plateforme */}
         <div>
           <div style={{ fontWeight: 800, fontSize: 15, color: '#fff' }}>
-            {settings.platformName || 'Shopi Africa'}
+            {settings.platformName || 'Shoneya'}
           </div>
           {settings.platformTagline && (
             <div style={{ fontSize: 10, color: 'rgba(255,255,255,.7)', marginTop: 2 }}>
@@ -144,41 +130,11 @@ const BrandingPreview = memo(function BrandingPreview({
  * COMPOSANT PRINCIPAL
  * ─────────────────────────────────────────────────────────────
  */
-export default function ApparenceTab({ settings, set, store }: Props) {
+export default function ApparenceTab({ settings, set }: Props) {
   return (
     <div className="settings-grid">
 
-      {/* ── GROUPE 1 : Thème ── */}
-      <SettingGroup icon="🎨" iconBg="var(--violet-dim)" title="Thème de l'interface">
-
-        {/* Bascule clair/sombre — agit immédiatement sur tout le dashboard via store */}
-        <SettingRow
-          label="Mode sombre"
-          desc="Active le thème sombre pour tout le dashboard super-admin"
-        >
-          <Toggle
-            checked={store.state.theme === 'dark'}
-            onChange={() => store.toggleTheme()}
-          />
-        </SettingRow>
-
-        {/* Indicateur du thème actif */}
-        <SettingRow label="Thème actif" desc="Réglage appliqué immédiatement">
-          <span style={{
-            fontSize: 12,
-            fontWeight: 700,
-            padding: '4px 12px',
-            borderRadius: 20,
-            background: store.state.theme === 'dark' ? 'var(--raised)' : 'var(--acid-dim)',
-            color: store.state.theme === 'dark' ? 'var(--txt-2)' : 'var(--acid)',
-          }}>
-            {store.state.theme === 'dark' ? '🌙 Sombre' : '☀️ Clair'}
-          </span>
-        </SettingRow>
-
-      </SettingGroup>
-
-      {/* ── GROUPE 2 : Couleur principale ── */}
+      {/* ── GROUPE 1 : Couleur principale ── */}
       <SettingGroup icon="🖌️" iconBg="var(--sky-dim)" title="Couleur principale">
 
         {/* Color picker natif HTML — renvoie une valeur hexadécimale */}
@@ -223,7 +179,7 @@ export default function ApparenceTab({ settings, set, store }: Props) {
         <SettingRow label="Palette rapide" desc="Cliquez pour appliquer une couleur prédéfinie">
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {[
-              { hex: '#00c88a', name: 'Vert Shopi'   },
+              { hex: '#00c88a', name: 'Vert Shoneya'   },
               { hex: '#3b82f6', name: 'Bleu'         },
               { hex: '#8b5cf6', name: 'Violet'       },
               { hex: '#f59e0b', name: 'Ambre'        },
@@ -253,7 +209,7 @@ export default function ApparenceTab({ settings, set, store }: Props) {
 
       </SettingGroup>
 
-      {/* ── GROUPE 3 : Identité visuelle (URLs) ── */}
+      {/* ── GROUPE 2 : Identité visuelle (URLs) ── */}
       <SettingGroup icon="🖼️" iconBg="var(--gold-dim)" title="Identité visuelle">
 
         {/* URL du logo — doit pointer vers une image accessible publiquement */}

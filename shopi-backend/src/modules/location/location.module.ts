@@ -34,6 +34,7 @@ import { ActorSearchService }            from './services/actor-search.service';
 
 /* ── Gateway ─────────────────────────────────────────────── */
 import { LocationGateway }  from './gateways/location.gateway';
+import { SessionModule }    from '../session/session.module';
 
 /* ── Controllers ─────────────────────────────────────────── */
 import { ClientAddressController }           from './controllers/client-address.controller';
@@ -68,6 +69,8 @@ import { ActorSearchController }             from './controllers/actor-search.co
         signOptions: { expiresIn: '24h' },
       }),
     }),
+
+    SessionModule,
   ],
 
   controllers: [

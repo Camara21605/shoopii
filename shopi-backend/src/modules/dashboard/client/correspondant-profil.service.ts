@@ -159,7 +159,7 @@ export class CorrespondantProfilService {
 
   /* "Partenaire depuis jan. 2021" */
   private membreDepuis(createdAt?: Date): string {
-    if (!createdAt) return 'Partenaire Shopi';
+    if (!createdAt) return 'Partenaire Shoneya';
     const d = new Date(createdAt);
     const mois = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
     return `Partenaire depuis ${mois}. ${d.getFullYear()}`;
@@ -167,7 +167,7 @@ export class CorrespondantProfilService {
 
   /* Bio → tableau de paragraphes (découpe sur les sauts de ligne) */
   private buildBio(bio: string | null): string[] {
-    if (!bio) return ['Correspondant Shopi vérifié, au service de la communauté.'];
+    if (!bio) return ['Correspondant Shoneya vérifié, au service de la communauté.'];
     return bio.split(/\n+/).map(s => s.trim()).filter(Boolean);
   }
 

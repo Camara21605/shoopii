@@ -2,7 +2,7 @@
  * FICHIER : src/dashboards/super-admin/sections/HelpCenterSection.tsx
  *
  * RÔLE :
- *   Interface d'administration complète du Centre d'aide Shopi.
+ *   Interface d'administration complète du Centre d'aide Shoneya.
  *   Permet aux super-admins de gérer :
  *
  *   ① Articles  — créer, modifier, publier, archiver, supprimer

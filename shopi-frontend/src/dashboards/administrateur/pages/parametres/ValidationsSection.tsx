@@ -478,7 +478,7 @@ export default function ValidationsSection({ onToast }: SectionProps) {
             <div className={base.cardHead}>
               <div>
                 <div className={base.cardTitle}><i className="fas fa-bell" /> Canaux de notification</div>
-                <div className={base.cardSub}>Activez les canaux par lesquels Shopi informe les acteurs et les admins</div>
+                <div className={base.cardSub}>Activez les canaux par lesquels Shoneya informe les acteurs et les admins</div>
               </div>
             </div>
             <div className={base.cardBody}>

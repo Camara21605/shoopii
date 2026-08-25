@@ -12,6 +12,7 @@ import {
 
 @Entity('audit_logs')
 @Index('IDX_audit_log_createdAt', ['createdAt'])
+@Index('IDX_audit_log_actor_created', ['actorId', 'createdAt'])
 export class AuditLog {
 
   @PrimaryGeneratedColumn('uuid')

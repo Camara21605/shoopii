@@ -1,7 +1,7 @@
 /* ================================================================
  * FICHIER : sections/GeoReferentielSection.tsx
  *
- * Centre de Gestion du Référentiel Géographique Shopi.
+ * Centre de Gestion du Référentiel Géographique Shoneya.
  * Hiérarchie : Pays → Région → Préfecture → Commune
  *              → Quartier → Zone de livraison
  *
@@ -298,7 +298,7 @@ export default function GeoReferentielSection({ toast, isActive }: Props) {
   })).filter(g => g.items.length > 0);
 
   const headMeta: Record<string, { title: string; sub: string; icon: string; color: string }> = {
-    overview: { title: 'Référentiel Géographique', sub: 'Vue d\'ensemble de la hiérarchie géographique Shopi', icon: 'fa-earth-africa', color: 'var(--acid)' },
+    overview: { title: 'Référentiel Géographique', sub: 'Vue d\'ensemble de la hiérarchie géographique Shoneya', icon: 'fa-earth-africa', color: 'var(--acid)' },
     tree:     { title: 'Arbre hiérarchique',        sub: 'Naviguez dans la hiérarchie complète',               icon: 'fa-sitemap',      color: 'var(--acid)' },
     import:   { title: 'Import massif',             sub: 'Importez des données depuis CSV ou Excel',           icon: 'fa-file-import',  color: 'var(--violet)' },
     sync:     { title: 'Synchronisation',           sub: 'Synchroniser avec OpenStreetMap ou sources officielles', icon: 'fa-rotate',  color: 'var(--sky)' },

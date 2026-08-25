@@ -59,7 +59,7 @@ export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
     return (
       <>
         {header}
-        <div className={styles.page}>
+        <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}>
             <i className="fas fa-spinner fa-spin" />
             {t('profilLivreur.loading')}
@@ -74,7 +74,7 @@ export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
     return (
       <>
         {header}
-        <div className={styles.page}>
+        <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}>
             <i className="fas fa-triangle-exclamation" />
             {error ?? t('profilLivreur.notFound')}
@@ -111,7 +111,7 @@ export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
       {/* Header global partagé */}
       {header}
 
-      <div className={styles.page}>
+      <div className={`${styles.page} ${styles.pageDark}`}>
         <ProfilHeader
           profile={profile}
           callLoading={callLoading}

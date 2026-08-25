@@ -5,43 +5,94 @@
 import { useState, useEffect } from 'react';
 import styles from '../styles/ActeursPage.module.css';
 import { apiFetch } from '../../../shared/services/apiFetch';
+import Pagination from '../components/Pagination';
 import type { ActeurType } from '../data/types';
 
 interface ActeursPageProps {
   onSanction: (cible: string) => void;
   onToast:    (msg: string, type?: 's' | 'i' | 'w') => void;
+  /* Permissions "Modules généraux" de l'admin connecté (super-admin →
+   * Permissions Admins). Un type d'acteur sans permission correspondante
+   * accordée n'apparaît ni dans les filtres ni dans la liste. */
+  geoPerms?:  Record<string, boolean | string | null>;
 }
 
 const TYPE_LABEL: Record<string, string> = { par: 'Partenaire', ent: 'Entreprise', lvr: 'Livreur', cor: 'Correspondant' };
 const TYPE_ICON:  Record<string, string> = { par: 'fa-handshake', ent: 'fa-store', lvr: 'fa-motorcycle', cor: 'fa-map-pin' };
 const STATUT_LABEL: Record<string, string> = { act: 'Actif', pend: 'En attente', susp: 'Suspendu' };
 
-export default function ActeursPage({ onSanction, onToast }: ActeursPageProps) {
+/* Type d'acteur → clé de permission "Modules généraux" requise.
+ * 'cor' (correspondant) n'a pas d'équivalent dans les 8 permissions
+ * générales — toujours visible, comme avant ce chantier. */
+const TYPE_PERM: Partial<Record<ActeurType, string>> = {
+  par: 'partners', ent: 'companies', lvr: 'delivery',
+};
+
+export default function ActeursPage({ onSanction, onToast, geoPerms }: ActeursPageProps) {
   const [filtre,    setFiltre]    = useState<'all' | ActeurType>('all');
   const [recherche, setRecherche] = useState('');
-  const [data,      setData]      = useState<{ list: any[]; counts: Record<string, number> } | null>(null);
+  const [page,      setPage]      = useState(1);
+  const [data,      setData]      = useState<{ list: any[]; counts: Record<string, number>; total: number } | null>(null);
   const [loading,   setLoading]   = useState(true);
 
+  /* Filtre, recherche et pagination sont appliqués côté backend —
+   * débounce léger sur la recherche pour ne pas relancer une requête
+   * à chaque frappe. */
   useEffect(() => {
-    apiFetch('/dashboard/admin/acteurs')
-      .then(d => setData(d as any))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+    setLoading(true);
+    const t = setTimeout(() => {
+      apiFetch('/dashboard/admin/acteurs', {
+        params: {
+          role:   filtre !== 'all' ? filtre : undefined,
+          search: recherche.trim() || undefined,
+          page:   String(page),
+          limit:  '20',
+        },
+      })
+        .then(d => setData(d as any))
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }, recherche ? 300 : 0);
+    return () => clearTimeout(t);
+  }, [filtre, recherche, page]);
+
+  /* Changer de filtre ou de recherche revient à la page 1 — géré ici
+   * (plutôt qu'un useEffect séparé) pour éviter un double fetch : un
+   * effet réactif sur [filtre, recherche] qui appelle setPage(1)
+   * déclencherait une 1ère requête avec l'ancienne page, puis une 2e
+   * après le reset. */
+  const changeFiltre = (f: 'all' | ActeurType) => { setFiltre(f); setPage(1); };
+  const changeRecherche = (v: string) => { setRecherche(v); setPage(1); };
+
+  /* true si permission absente de TYPE_PERM (ex: 'cor') ou explicitement
+   * accordée — cohérent avec le comportement "toujours visible avant"
+   * pour les types qui n'ont jamais eu de permission dédiée. */
+  const typeAllowed = (type: ActeurType) => {
+    const perm = TYPE_PERM[type];
+    return perm === undefined || geoPerms?.[perm] === true;
+  };
+
+  /* Si le filtre actif devient inaccessible (permission retirée pendant
+   * que l'admin est sur cette page), on revient sur "Tous" plutôt que
+   * de laisser un filtre fantôme actif sans chip correspondant. */
+  useEffect(() => {
+    if (filtre !== 'all' && !typeAllowed(filtre)) setFiltre('all');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geoPerms, filtre]);
 
   const counts  = data?.counts ?? { all: 0, par: 0, ent: 0, lvr: 0, cor: 0 };
-  const acteurs = (data?.list ?? []).filter((a: any) =>
-    (filtre === 'all' || a.type === filtre) &&
-    a.nom.toLowerCase().includes(recherche.toLowerCase())
-  );
+  const total   = data?.total  ?? 0;
+  // Rôle + recherche sont déjà appliqués côté backend — ne reste que le
+  // filtre de permission (frontend-only, voir typeAllowed ci-dessus).
+  const acteurs = (data?.list ?? []).filter((a: any) => typeAllowed(a.type));
 
-  const FILTRES = [
+  const FILTRES = ([
     { id: 'all', label: 'Tous',           n: counts.all, icon: undefined },
     { id: 'par', label: 'Partenaires',    n: counts.par, icon: 'fa-handshake' },
     { id: 'ent', label: 'Entreprises',    n: counts.ent, icon: 'fa-store' },
     { id: 'lvr', label: 'Livreurs',       n: counts.lvr, icon: 'fa-motorcycle' },
     { id: 'cor', label: 'Correspondants', n: counts.cor, icon: 'fa-map-pin' },
-  ] as const;
+  ] as const).filter(f => f.id === 'all' || typeAllowed(f.id as ActeurType));
 
   return (
     <div>
@@ -49,14 +100,14 @@ export default function ActeursPage({ onSanction, onToast }: ActeursPageProps) {
       <div className={styles.filterBar}>
         {FILTRES.map(f => (
           <button key={f.id} className={`${styles.fchip} ${filtre === f.id ? styles.fon : ''}`}
-            onClick={() => setFiltre(f.id as 'all' | ActeurType)}>
+            onClick={() => changeFiltre(f.id as 'all' | ActeurType)}>
             {f.icon && <i className={`fas ${f.icon}`} />} {f.label} <span className={styles.n}>{f.n}</span>
           </button>
         ))}
         <div className={styles.searchIn}>
           <i className="fas fa-magnifying-glass" />
           <input placeholder="Nom, téléphone, ID…" value={recherche}
-            onChange={e => setRecherche(e.target.value)} />
+            onChange={e => changeRecherche(e.target.value)} />
         </div>
       </div>
 
@@ -140,6 +191,7 @@ export default function ActeursPage({ onSanction, onToast }: ActeursPageProps) {
             </table>
           </div>
         )}
+        <Pagination page={page} limit={20} total={total} onChange={setPage} />
       </div>
     </div>
   );

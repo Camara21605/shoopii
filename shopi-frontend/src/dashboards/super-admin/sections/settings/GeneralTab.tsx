@@ -50,7 +50,7 @@ export default function GeneralTab({ settings, set }: Props) {
             value={settings.platformName}
             onChange={e => set('platformName', e.target.value)}
             style={{ width: 220 }}
-            placeholder="Shopi Africa"
+            placeholder="Shoneya"
           />
         </SettingRow>
 

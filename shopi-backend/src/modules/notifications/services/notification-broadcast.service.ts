@@ -144,4 +144,24 @@ export class NotificationBroadcastService {
     if (!this.server) return;
     this.server.to(`notif:user:${userId}`).emit(event, payload);
   }
+
+  /**
+   * Émet sur la room d'une SESSION précise (`session:{sessionId}`), pas
+   * d'un utilisateur entier — indispensable pour la révocation de session
+   * unique : un même userId peut avoir deux sockets connectés à l'instant T
+   * (ancien appareil + nouveau appareil qui vient de se connecter), et
+   * `emitToUser` toucherait les deux. `session:{sessionId}` ne cible QUE
+   * l'appareil dont la session vient d'être révoquée.
+   *
+   * Ferme ensuite le socket après un court délai — laisse le temps au
+   * client de recevoir l'event avant la coupure de connexion.
+   */
+  emitToSession(sessionId: string, event: string, payload: unknown): void {
+    if (!this.server) return;
+    const room = `session:${sessionId}`;
+    this.server.to(room).emit(event, payload);
+    setTimeout(() => {
+      this.server?.in(room).disconnectSockets(true);
+    }, 300);
+  }
 }

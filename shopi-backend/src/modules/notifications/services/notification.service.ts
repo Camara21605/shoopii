@@ -291,6 +291,19 @@ export class NotificationService {
     }
   }
 
+  /**
+   * Supprime TOUTES les notifications de l'acteur connecté.
+   * Remet le compteur à 0 (tout a disparu).
+   */
+  async deleteAll(
+    actorType: NotificationActorType,
+    actorId:   string,
+  ): Promise<{ deleted: number }> {
+    const deleted = await this.notifRepo.deleteAll(actorType, actorId);
+    await this.broadcast.emitUnreadCount(actorType, actorId, 0);
+    return { deleted };
+  }
+
   // ═════════════════════════════════════════════════════════
   // PRÉFÉRENCES
   // ═════════════════════════════════════════════════════════

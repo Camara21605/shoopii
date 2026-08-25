@@ -1,7 +1,7 @@
 /*
  * FICHIER: src/dashboards/entreprise/pages/FinancesPage.tsx
  * Page Finances — solde, revenus, dépenses, transactions,
- * commissions Shopi, historique des virements. Données réelles
+ * commissions Shoneya, historique des virements. Données réelles
  * issues du wallet entreprise (GET /dashboard/entreprise/finances).
  */
 

@@ -33,12 +33,18 @@ export class AdminAuditService {
    *       – quand  : libellé de temps relatif ("Il y a 3h")
    *       – id     : identifiant lisible "AUD-XXXXXXXX"
    */
-  async getAudit(userId: string) {
-    const logs = await this.auditLogRepo.find({
-      where: { actorId: userId },
-      order: { createdAt: 'DESC' },
-      take: 200,
-    });
+  async getAudit(userId: string, page = 1, limit = 20) {
+    const safeLimit = Math.min(limit, 100);
+
+    const [logs, total] = await Promise.all([
+      this.auditLogRepo.find({
+        where: { actorId: userId },
+        order: { createdAt: 'DESC' },
+        skip: (page - 1) * safeLimit,
+        take: safeLimit,
+      }),
+      this.auditLogRepo.count({ where: { actorId: userId } }),
+    ]);
 
     const list = logs.map(a => ({
       id:     `AUD-${a.id.slice(0, 8).toUpperCase()}`,
@@ -48,6 +54,6 @@ export class AdminAuditService {
       quand:  relTime(a.createdAt),
     }));
 
-    return { list, total: list.length };
+    return { list, page, limit: safeLimit, total };
   }
 }

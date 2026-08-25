@@ -56,6 +56,8 @@
   outline: none; transition: all .2s;
 }
 .fldIn:focus { border-color: var(--blue-2); box-shadow: 0 0 0 3px rgba(26,79,196,.08); background: var(--white); }
+.required { color: #DC2626; }
+.fldErr { color: #DC2626; font-size: 11px; margin-top: 5px; }
 
 .typeGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .typeOpt {
@@ -93,12 +95,17 @@
   display: flex; align-items: center; justify-content: center; gap: 8px;
   cursor: pointer; transition: all .2s;
 }
+.sendMail { background: var(--blue); color: #fff; }
+.sendMail:hover:not(:disabled) { background: var(--blue-2); }
 .sendWa { background: #25D366; color: #fff; }
-.sendWa:hover { background: #1FA855; }
+.sendWa:hover:not(:disabled) { background: #1FA855; }
 .sendSms { background: var(--sky); color: var(--blue); }
-.sendSms:hover { background: var(--sky-2); }
+.sendSms:hover:not(:disabled) { background: var(--sky-2); }
 .sendCopy { background: var(--g100); color: var(--t2); }
 .sendCopy:hover { background: var(--g200); }
+
+/* Canaux pas encore branchés (SMS, WhatsApp) ou email indisponible/déjà envoyé */
+.sendBtn:disabled { opacity: .45; cursor: not-allowed; background: var(--g100); color: var(--t3); }
 
 .mBtn {
   width: 100%;
@@ -111,3 +118,5 @@
   margin-top: 4px;
 }
 .mBtn:hover { background: var(--adm-btn-h); box-shadow: var(--sh-b); }
+.mBtn:disabled { opacity: .6; cursor: not-allowed; }
+.mBtn:disabled:hover { background: var(--adm-btn); box-shadow: none; }

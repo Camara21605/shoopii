@@ -366,7 +366,7 @@ export default function CommissionsSection({ isActive, toast }: Props) {
         <div className="page-header-icon">💸</div>
         <div>
           <div className="page-header-title">Centre de Gestion des Commissions</div>
-          <div className="page-header-sub">Configurez les taux de commission pour toutes les entités de la plateforme Shopi.</div>
+          <div className="page-header-sub">Configurez les taux de commission pour toutes les entités de la plateforme Shoneya.</div>
         </div>
       </div>
 
@@ -448,7 +448,7 @@ export default function CommissionsSection({ isActive, toast }: Props) {
             <div className="error-box">
               <i className="fas fa-triangle-exclamation" style={{ fontSize: 28, color: '#dc2626', display: 'block', marginBottom: 10 }} />
               <div style={{ fontWeight: 700, fontSize: 15 }}>Données indisponibles</div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted,#6b7280)', margin: '8px 0 16px' }}>Impossible de charger la configuration des commissions entreprises.</div>
+              <div style={{ fontSize: 13, color: 'var(--txt-2)', margin: '8px 0 16px' }}>Impossible de charger la configuration des commissions entreprises.</div>
               <button className="btn btn-blue btn-sm" onClick={() => { setCompLoad(true); void getCompanySettings().then(d => { setCompSaved(d); setCompDraft(structuredClone(d)); }).finally(() => setCompLoad(false)); }}>
                 <i className="fas fa-rotate-right" /> Réessayer
               </button>
@@ -598,13 +598,13 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                     <div className="card-title"><i className="fas fa-tags" /> Commission par catégorie</div>
                     <div className="card-sub">Définissez un taux spécifique par secteur d'activité (laissez vide pour appliquer le taux par défaut)</div>
                   </div>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted,#6b7280)', fontWeight: 600 }}>
+                  <span style={{ fontSize: 12, color: 'var(--txt-2)', fontWeight: 600 }}>
                     {categories.length > 0 ? `${categories.length} catégories` : 'Aucune catégorie'}
                   </span>
                 </div>
                 <div className="card-body">
                   {categories.length === 0 ? (
-                    <div style={{ padding: '28px 0', textAlign: 'center', color: 'var(--text-muted,#6b7280)', fontSize: 13 }}>
+                    <div style={{ padding: '28px 0', textAlign: 'center', color: 'var(--txt-2)', fontSize: 13 }}>
                       <i className="fas fa-tags" style={{ fontSize: 24, display: 'block', marginBottom: 8, opacity: .4 }} />
                       Aucune catégorie disponible — créez-en via le module Catalogue.
                     </div>
@@ -633,7 +633,7 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                                   onChange={e => setCatRule(cat.nom, {
                                     commission: e.target.value === '' ? null : +e.target.value,
                                   })} />
-                                <span style={{ fontSize: 11, color: 'var(--text-muted,#6b7280)' }}>%</span>
+                                <span style={{ fontSize: 11, color: 'var(--txt-2)' }}>%</span>
                               </div>
                             )}
                           </div>
@@ -719,7 +719,7 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                   </span>
                 </div>
                 <div className="card-body">
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, alignItems: 'center' }}>
+                  <div className="cs-auto-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, alignItems: 'center' }}>
                     <div className="field-group">
                       <div className="field-label">Taux (%)</div>
                       <input type="number" className="field-input"
@@ -727,7 +727,7 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                         value={partDraft.defaultCommissionRate}
                         onChange={e => setPart('defaultCommissionRate', +e.target.value)} />
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted,#6b7280)', lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 12, color: 'var(--txt-2)', lineHeight: 1.5 }}>
                       <i className="fas fa-circle-info" /> Ce taux est versé aux partenaires sur chaque entreprise recrutée
                       active et génératrice de commandes sur la plateforme.
                     </div>
@@ -832,16 +832,16 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                     Les modifications s'appliquent immédiatement aux nouvelles livraisons.
                   </div>
                   {platDraft && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+                    <div className="cs-auto-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
                       {[
-                        { label: 'Part Shopi',          pct: platDraft.ratioShopiLivraison,      color: '#D97706' },
+                        { label: 'Part Shoneya',          pct: platDraft.ratioShopiLivraison,      color: '#D97706' },
                         { label: 'Part Partenaires',    pct: platDraft.ratioPartenaireLivraison,  color: '#7C3AED' },
                         { label: 'Part Administrateurs', pct: platDraft.ratioAdminLivraison,      color: '#0284C7' },
                       ].map(r => (
                         <div key={r.label} style={{
-                          background: 'var(--bg-input,#f9fafb)', borderRadius: 9, padding: '12px 14px', textAlign: 'center',
+                          background: 'var(--raised)', borderRadius: 9, padding: '12px 14px', textAlign: 'center',
                         }}>
-                          <div style={{ fontSize: 10, color: 'var(--text-muted,#6b7280)', marginBottom: 4 }}>{r.label}</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt-2)', marginBottom: 4 }}>{r.label}</div>
                           <div style={{ fontSize: 22, fontWeight: 800, color: r.color, fontVariantNumeric: 'tabular-nums' }}>
                             {r.pct ?? '—'}%
                           </div>
@@ -886,14 +886,14 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                 <div className="card-head">
                   <div>
                     <div className="card-title"><i className="fas fa-motorcycle" /> Commission plateforme sur les livraisons</div>
-                    <div className="card-sub">Pourcentage prélevé par Shopi sur chaque transaction de livraison</div>
+                    <div className="card-sub">Pourcentage prélevé par Shoneya sur chaque transaction de livraison</div>
                   </div>
                   <span style={{ fontSize: 26, fontWeight: 800, color: '#059669', fontVariantNumeric: 'tabular-nums' }}>
                     {delivDraft.platformCommissionRate}%
                   </span>
                 </div>
                 <div className="card-body">
-                  <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20, alignItems: 'center' }}>
+                  <div className="cs-auto-grid" style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20, alignItems: 'center' }}>
                     <div className="field-group">
                       <div className="field-label">Taux de commission (%)</div>
                       <input type="number" className="field-input"
@@ -906,30 +906,30 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                       borderRadius: 10, padding: '14px 16px', fontSize: 13, color: '#059669',
                     }}>
                       <i className="fas fa-circle-info" style={{ marginRight: 6 }} />
-                      Cette commission est prélevée par Shopi sur le montant de chaque livraison réalisée par un livreur.
+                      Cette commission est prélevée par Shoneya sur le montant de chaque livraison réalisée par un livreur.
                       Elle s'applique en plus des frais de livraison définis par l'entreprise.
                     </div>
                   </div>
 
                   <div style={{ marginTop: 20 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary,#111827)', marginBottom: 10 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt-1)', marginBottom: 10 }}>
                       Simulateur de commission
                     </div>
-                    <div style={{
+                    <div className="cs-auto-grid" style={{
                       display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10,
                     }}>
                       {[5_000, 10_000, 25_000, 50_000].map(amount => (
                         <div key={amount} style={{
-                          background: 'var(--bg-input,#f9fafb)', borderRadius: 9, padding: '12px',
+                          background: 'var(--raised)', borderRadius: 9, padding: '12px',
                           textAlign: 'center',
                         }}>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted,#6b7280)', fontWeight: 600 }}>
+                          <div style={{ fontSize: 11, color: 'var(--txt-2)', fontWeight: 600 }}>
                             Livraison {(amount / 1000).toFixed(0)}K GNF
                           </div>
                           <div style={{ fontSize: 17, fontWeight: 800, color: '#059669', marginTop: 4 }}>
                             {Math.round(amount * delivDraft.platformCommissionRate / 100).toLocaleString('fr-FR')} GNF
                           </div>
-                          <div style={{ fontSize: 10, color: 'var(--text-muted,#6b7280)' }}>Commission Shopi</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt-2)' }}>Commission Shoneya</div>
                         </div>
                       ))}
                     </div>
@@ -945,7 +945,7 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                       <div className="card-title"><i className="fas fa-chart-pie" /> Répartition des revenus par livraison</div>
                       <div className="card-sub">
                         Définissez comment la commission ({platDraft.tauxCommissionLivraison ?? 10}%) est partagée entre
-                        Shopi, les partenaires et les administrateurs
+                        Shoneya, les partenaires et les administrateurs
                       </div>
                     </div>
                     <span style={{
@@ -971,15 +971,15 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                         borderRadius: 10, padding: '12px 14px', fontSize: 12, color: '#059669',
                       }}>
                         <i className="fas fa-circle-info" style={{ marginRight: 6 }} />
-                        Ce taux brut est prélevé sur chaque livraison, puis réparti entre Shopi, les partenaires
+                        Ce taux brut est prélevé sur chaque livraison, puis réparti entre Shoneya, les partenaires
                         (qui ont recruté le livreur) et les administrateurs (qui ont recruté le partenaire).
                       </div>
                     </div>
 
                     {/* Répartition — 3 acteurs */}
-                    <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+                    <div className="cs-auto-grid" style={{ marginTop: 20, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
                       {[
-                        { key: 'ratioShopiLivraison'      as const, label: 'Part Shopi',           icon: 'fa-globe',     color: '#D97706', bg: 'rgba(217,119,6,.06)'    },
+                        { key: 'ratioShopiLivraison'      as const, label: 'Part Shoneya',           icon: 'fa-globe',     color: '#D97706', bg: 'rgba(217,119,6,.06)'    },
                         { key: 'ratioPartenaireLivraison' as const, label: 'Part Partenaires',     icon: 'fa-handshake', color: '#7C3AED', bg: 'rgba(124,58,237,.06)'   },
                         { key: 'ratioAdminLivraison'      as const, label: 'Part Administrateurs', icon: 'fa-shield',    color: '#0284C7', bg: 'rgba(2,132,199,.06)'    },
                       ].map(r => (
@@ -1010,22 +1010,22 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                     {/* Simulateur avec répartition */}
                     {Math.round(sumLivr) === 100 && (
                       <div style={{ marginTop: 20 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary,#111827)', marginBottom: 10 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt-1)', marginBottom: 10 }}>
                           Simulateur — Livraison de 20 000 GNF
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
+                        <div className="cs-auto-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
                           {(() => {
                             const total = Math.round(20_000 * (platDraft.tauxCommissionLivraison ?? 10) / 100);
                             return [
-                              { label: 'Commission totale', val: total,                                                                         color: '#6b7280' },
-                              { label: 'Part Shopi',        val: Math.round(total * (platDraft.ratioShopiLivraison ?? 60) / 100),               color: '#D97706' },
+                              { label: 'Commission totale', val: total,                                                                         color: 'var(--txt-2)' },
+                              { label: 'Part Shoneya',        val: Math.round(total * (platDraft.ratioShopiLivraison ?? 60) / 100),               color: '#D97706' },
                               { label: 'Part Partenaire',   val: Math.round(total * (platDraft.ratioPartenaireLivraison ?? 25) / 100),          color: '#7C3AED' },
                               { label: 'Part Admin',        val: Math.round(total * (platDraft.ratioAdminLivraison ?? 15) / 100),               color: '#0284C7' },
                             ].map(r => (
                               <div key={r.label} style={{
-                                background: 'var(--bg-input,#f9fafb)', borderRadius: 8, padding: '10px 12px', textAlign: 'center',
+                                background: 'var(--raised)', borderRadius: 8, padding: '10px 12px', textAlign: 'center',
                               }}>
-                                <div style={{ fontSize: 10, color: 'var(--text-muted,#6b7280)', marginBottom: 4 }}>{r.label}</div>
+                                <div style={{ fontSize: 10, color: 'var(--txt-2)', marginBottom: 4 }}>{r.label}</div>
                                 <div style={{ fontSize: 14, fontWeight: 800, color: r.color, fontVariantNumeric: 'tabular-nums' }}>
                                   {r.val.toLocaleString('fr-FR')} GNF
                                 </div>
@@ -1102,7 +1102,7 @@ export default function CommissionsSection({ isActive, toast }: Props) {
               <div className="card">
                 <div className="card-head">
                   <div>
-                    <div className="card-title"><i className="fas fa-globe" /> Commission globale Shopi</div>
+                    <div className="card-title"><i className="fas fa-globe" /> Commission globale Shoneya</div>
                     <div className="card-sub">Taux général prélevé par la plateforme sur toutes les transactions vendeur</div>
                   </div>
                   <span style={{ fontSize: 28, fontWeight: 800, color: '#D97706', fontVariantNumeric: 'tabular-nums' }}>
@@ -1110,14 +1110,14 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                   </span>
                 </div>
                 <div className="card-body">
-                  <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20, alignItems: 'center' }}>
+                  <div className="cs-auto-grid" style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20, alignItems: 'center' }}>
                     <div className="field-group">
                       <div className="field-label">Commission plateforme (%)</div>
                       <input type="number" className="field-input"
                         min={0} max={50} step={0.5}
                         value={platDraft.platformCommission as number}
                         onChange={e => setPlatDraft(d => d ? { ...d, platformCommission: parseFloat(e.target.value) || 0 } : d)} />
-                      <div className="field-unit">Appliqué sur toutes les ventes Shopi (0 – 50%)</div>
+                      <div className="field-unit">Appliqué sur toutes les ventes Shoneya (0 – 50%)</div>
                     </div>
                     <div style={{
                       background: 'rgba(217,119,6,.06)', border: '1px solid rgba(217,119,6,.2)',
@@ -1132,26 +1132,26 @@ export default function CommissionsSection({ isActive, toast }: Props) {
 
                   {/* Impact simulateur */}
                   <div style={{ marginTop: 24 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary,#111827)', marginBottom: 12 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt-1)', marginBottom: 12 }}>
                       Impact sur les transactions
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+                    <div className="cs-auto-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
                       {[100_000, 500_000, 1_000_000].map(amount => {
                         const commission = Math.round(amount * (platDraft.platformCommission as number) / 100);
                         const net = amount - commission;
                         return (
                           <div key={amount} style={{
-                            background: 'var(--bg-input,#f9fafb)', borderRadius: 10, padding: '14px 16px',
+                            background: 'var(--raised)', borderRadius: 10, padding: '14px 16px',
                           }}>
-                            <div style={{ fontSize: 11, color: 'var(--text-muted,#6b7280)', fontWeight: 600, marginBottom: 8 }}>
+                            <div style={{ fontSize: 11, color: 'var(--txt-2)', fontWeight: 600, marginBottom: 8 }}>
                               Transaction de {(amount / 1000).toFixed(0)}K GNF
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-                              <span style={{ color: 'var(--text-muted,#6b7280)' }}>Commission Shopi</span>
+                              <span style={{ color: 'var(--txt-2)' }}>Commission Shoneya</span>
                               <span style={{ fontWeight: 700, color: '#D97706' }}>{commission.toLocaleString('fr-FR')} GNF</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-                              <span style={{ color: 'var(--text-muted,#6b7280)' }}>Net vendeur</span>
+                              <span style={{ color: 'var(--txt-2)' }}>Net vendeur</span>
                               <span style={{ fontWeight: 700, color: '#059669' }}>{net.toLocaleString('fr-FR')} GNF</span>
                             </div>
                           </div>
@@ -1168,7 +1168,7 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                   <div>
                     <div className="card-title"><i className="fas fa-box-open" /> Répartition des revenus — Produits</div>
                     <div className="card-sub">
-                      Définissez le taux brut et la répartition Shopi / Partenaires / Administrateurs sur chaque vente produit
+                      Définissez le taux brut et la répartition Shoneya / Partenaires / Administrateurs sur chaque vente produit
                     </div>
                   </div>
                   <span style={{
@@ -1207,12 +1207,12 @@ export default function CommissionsSection({ isActive, toast }: Props) {
 
                   {/* Répartition — 3 acteurs */}
                   <div style={{ marginTop: 20 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary,#111827)', marginBottom: 10 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt-1)', marginBottom: 10 }}>
                       Répartition entre les acteurs
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+                    <div className="cs-auto-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
                       {[
-                        { key: 'ratioShopiProduit'      as const, label: 'Part Shopi',           icon: 'fa-globe',     color: '#D97706', bg: 'rgba(217,119,6,.06)'  },
+                        { key: 'ratioShopiProduit'      as const, label: 'Part Shoneya',           icon: 'fa-globe',     color: '#D97706', bg: 'rgba(217,119,6,.06)'  },
                         { key: 'ratioPartenaireProduit' as const, label: 'Part Partenaires',     icon: 'fa-handshake', color: '#7C3AED', bg: 'rgba(124,58,237,.06)' },
                         { key: 'ratioAdminProduit'      as const, label: 'Part Administrateurs', icon: 'fa-shield',    color: '#0284C7', bg: 'rgba(2,132,199,.06)'  },
                       ].map(r => (
@@ -1251,7 +1251,7 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                   </div>
                 </div>
                 <div className="card-body">
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }}>
+                  <div className="cs-auto-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }}>
                     {[
                       {
                         label: 'Commission globale (plateforme)',
@@ -1266,13 +1266,13 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                         source: 'Module Entreprises',
                       },
                       {
-                        label: `Taux produit — Shopi ${platDraft.ratioShopiProduit ?? '?'}% / Partenaire ${platDraft.ratioPartenaireProduit ?? '?'}% / Admin ${platDraft.ratioAdminProduit ?? '?'}%`,
+                        label: `Taux produit — Shoneya ${platDraft.ratioShopiProduit ?? '?'}% / Partenaire ${platDraft.ratioPartenaireProduit ?? '?'}% / Admin ${platDraft.ratioAdminProduit ?? '?'}%`,
                         value: `${platDraft.tauxCommissionProduit ?? '—'}%`,
                         icon: 'fa-box-open', color: '#7C3AED', bg: 'rgba(124,58,237,.1)',
                         source: 'Commissions Produit',
                       },
                       {
-                        label: `Taux livraison — Shopi ${platDraft.ratioShopiLivraison ?? '?'}% / Partenaire ${platDraft.ratioPartenaireLivraison ?? '?'}% / Admin ${platDraft.ratioAdminLivraison ?? '?'}%`,
+                        label: `Taux livraison — Shoneya ${platDraft.ratioShopiLivraison ?? '?'}% / Partenaire ${platDraft.ratioPartenaireLivraison ?? '?'}% / Admin ${platDraft.ratioAdminLivraison ?? '?'}%`,
                         value: `${platDraft.tauxCommissionLivraison ?? '—'}%`,
                         icon: 'fa-motorcycle', color: '#059669', bg: 'rgba(5,150,105,.1)',
                         source: 'Commissions Livraison',
@@ -1280,7 +1280,7 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                     ].map(r => (
                       <div key={r.label} style={{
                         display: 'flex', alignItems: 'center', gap: 12,
-                        background: 'var(--bg-input,#f9fafb)', borderRadius: 10, padding: '14px 16px',
+                        background: 'var(--raised)', borderRadius: 10, padding: '14px 16px',
                       }}>
                         <div style={{
                           width: 38, height: 38, borderRadius: 9, flexShrink: 0,
@@ -1291,8 +1291,8 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                           <i className={`fas ${r.icon}`} />
                         </div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary,#111827)' }}>{r.label}</div>
-                          <div style={{ fontSize: 10, color: 'var(--text-muted,#6b7280)' }}>{r.source}</div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--txt-1)' }}>{r.label}</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt-2)' }}>{r.source}</div>
                         </div>
                         <div style={{ fontSize: 18, fontWeight: 800, color: r.color, fontVariantNumeric: 'tabular-nums' }}>
                           {r.value}

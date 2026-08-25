@@ -24,14 +24,9 @@ import ParametresPage  from './pages/ParametresPage';
 import { usePartenaireState } from './hooks/usePartenaireState';
 import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
 import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
-import { useForceDarkTheme }      from '../../shared/context/ThemeContext';
 
 export default function PartenaireApp() {
-  // ✅ Le dashboard partenaire n'a plus de mode clair : on force le thème
-  // sombre tant qu'on y est, et on restaure le thème précédent en quittant
-  // (voir useForceDarkTheme — même mécanisme que le dashboard entreprise).
-  useForceDarkTheme();
-
+  // Thème sombre forcé de façon centralisée par ThemeRouteSync (router.tsx).
   const { toasts, pop } = useToasts();
   const s = usePartenaireState();
   const [sidebarOpen, setSidebarOpen] = useState(false);

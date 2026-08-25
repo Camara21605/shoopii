@@ -50,17 +50,27 @@ export class SupportExportService {
    * Récupère les tickets filtrés et les sérialise en CSV.
    *
    * PARAMÈTRES :
+   *   visibleUserIds — portée hiérarchique résolue par
+   *     SupportPermissionService (null = SUPER_ADMIN, aucun filtre ;
+   *     Set = uniquement les tickets dont userId ∈ Set). Sans ce
+   *     filtre, un ADMIN ou PARTNER exportait les tickets de TOUTE
+   *     la plateforme au lieu des siens.
    *   status   — filtre optionnel par statut ('open', 'resolved'…)
    *   type     — filtre optionnel par type ('billing', 'technical'…)
    *   fromDate — date de début (ISO string : '2026-01-01')
    *   toDate   — date de fin   (ISO string : '2026-12-31')
    * ────────────────────────────────────────────────────────── */
   async generateCsv(
+    visibleUserIds: Set<string> | null,
     status?:   string,
     type?:     string,
     fromDate?: string,
     toDate?:   string,
   ): Promise<CsvResult> {
+
+    if (visibleUserIds !== null && visibleUserIds.size === 0) {
+      return this.buildCsv([]);
+    }
 
     /* ── Construction de la requête avec filtres dynamiques ─ */
     const qb = this.ticketRepo
@@ -68,6 +78,9 @@ export class SupportExportService {
       .orderBy('t.createdAt', 'DESC')
       .take(5000); // Limite de sécurité : max 5000 lignes par export
 
+    if (visibleUserIds) {
+      qb.andWhere('t.userId IN (:...ids)', { ids: [...visibleUserIds] });
+    }
     if (status) {
       qb.andWhere('t.status = :status', { status });
     }
@@ -86,7 +99,11 @@ export class SupportExportService {
     }
 
     const tickets = await qb.getMany();
+    return this.buildCsv(tickets);
+  }
 
+  /** Sérialise une liste de tickets (éventuellement vide) en CSV. */
+  private buildCsv(tickets: SupportTicket[]): CsvResult {
     /* ── En-têtes des colonnes ──────────────────────────────
      * Ordre choisi pour faciliter la lecture dans Excel :
      * identifiant → dates → catégorisation → métriques

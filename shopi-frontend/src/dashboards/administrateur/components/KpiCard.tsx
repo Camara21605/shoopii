@@ -5,6 +5,7 @@
  * Variantes : k1 (teal), k2 (blue), k3 (emerald), k4 (amber).
  * ================================================================ */
 
+import { memo } from 'react';
 import styles from '../styles/KpiCard.module.css';
 
 interface KpiCardProps {
@@ -17,7 +18,10 @@ interface KpiCardProps {
   trend?:  'up' | 'down';
 }
 
-export default function KpiCard({ variant, icon, value, unit, label, delta, trend }: KpiCardProps) {
+/* React.memo justifié : composant purement présentationnel, ré-utilisé
+ * 3-4 fois par page (Overview/Stats/Support) avec des props primitives
+ * stables — évite un re-render de chaque carte quand une seule change. */
+function KpiCard({ variant, icon, value, unit, label, delta, trend }: KpiCardProps) {
   return (
     <div className={`${styles.kpi} ${styles[variant]}`}>
       {/* Barre colorée à gauche (couleur selon la variante) */}
@@ -41,3 +45,5 @@ export default function KpiCard({ variant, icon, value, unit, label, delta, tren
     </div>
   );
 }
+
+export default memo(KpiCard);

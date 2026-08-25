@@ -51,6 +51,7 @@ import { LocationHistory }        from '../../../database/entities/location/loca
 import { User, UserStatus }       from '../../../database/entities/user.entity';
 import { GeoService }             from '../services/geo.service';
 import type { ILocationUpdatePayload } from '../interfaces/location.interfaces';
+import { SessionService }         from '../../session/session.service';
 
 /** Intervalle minimum entre deux émissions par livreur (ms) */
 const THROTTLE_MS = 1_000;
@@ -105,6 +106,8 @@ export class LocationGateway
 
     @InjectRepository(User)
     private readonly userRepo:  Repository<User>,
+
+    private readonly sessionService: SessionService,
   ) {}
 
   /* ── Init ─────────────────────────────────────────────────── */
@@ -124,7 +127,7 @@ export class LocationGateway
 
       if (!token) return void socket.disconnect();
 
-      let payload: { sub: string; role: string; iat?: number };
+      let payload: { sub: string; role: string; sid?: string; iat?: number };
       try {
         payload = this.jwt.verify(token, {
           secret: this.config.get<string>('JWT_SECRET'),
@@ -144,6 +147,10 @@ export class LocationGateway
         const tokenIssuedAt   = new Date(payload.iat * 1000);
         const passwordChanged = new Date(user.lastPasswordChangedAt);
         if (passwordChanged > tokenIssuedAt) return void socket.disconnect();
+      }
+      // Session unique — voir messagerie.gateway.ts pour le détail.
+      if (payload.sid && !(await this.sessionService.validateSession(payload.sub, payload.sid))) {
+        return void socket.disconnect();
       }
 
       socket.data.userId = payload.sub;

@@ -57,7 +57,7 @@ export default function RemboursementsPage() {
             <h2>5. Comment initier un retour</h2>
             <p>Pour initier un retour :</p>
             <ol>
-              <li>Connectez-vous à votre espace client Shopi</li>
+              <li>Connectez-vous à votre espace client Shoneya</li>
               <li>Accédez à « Mes commandes » et sélectionnez la commande concernée</li>
               <li>Cliquez sur « Demander un retour » et suivez les instructions</li>
               <li>Vous recevrez une étiquette de retour par email</li>

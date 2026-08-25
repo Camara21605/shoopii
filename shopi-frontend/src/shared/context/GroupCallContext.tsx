@@ -32,7 +32,7 @@ export function GroupCallProvider({ children }: { children: React.ReactNode }) {
   const { pop: showToast } = useToast();
   const groupCall = useGroupCall({
     /* Le hook ne sait pas afficher de toast (pas de contexte React) — il
-       délègue au système UI Shopi existant (partie 8, remplace les alert()
+       délègue au système UI Shoneya existant (partie 8, remplace les alert()
        précédents). */
     onError: (error) => showToast(error.message, error.severity),
   });

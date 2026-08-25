@@ -7,7 +7,7 @@
  * textes dupliqués et une seule modalité (bloquante, jamais différenciée).
  *
  * Consommé via GlobalCallContext.tsx/GroupCallContext.tsx qui traduisent
- * un CallErrorInfo en toast (système UI Shopi existant — voir
+ * un CallErrorInfo en toast (système UI Shoneya existant — voir
  * ToastContext.tsx), jamais de nouvelle librairie.
  */
 
@@ -36,7 +36,7 @@ export type CallErrorCode =
 export interface CallErrorInfo {
   code:     CallErrorCode;
   message:  string;     // court, non technique, prêt à afficher
-  severity: ToastType;  // sévérité déjà mappée sur le système de toast Shopi
+  severity: ToastType;  // sévérité déjà mappée sur le système de toast Shoneya
 }
 
 const CATALOG: Record<CallErrorCode, Omit<CallErrorInfo, 'code'>> = {

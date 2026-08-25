@@ -89,7 +89,7 @@ export default function OverviewPage({ onNavigate, onGenerate }: Props) {
               vous avez recruté <em>{kpis.totalActeurs} acteurs</em> au total
             </div>
             <div className={styles.p}>
-              Continuez à faire grandir le réseau Shopi. Chaque entreprise et livreur que vous recrutez vous rapporte une commission récurrente.
+              Continuez à faire grandir le réseau Shoneya. Chaque entreprise et livreur que vous recrutez vous rapporte une commission récurrente.
             </div>
             <div className={styles.btns}>
               <button className={styles.b1} onClick={onGenerate}><i className="fas fa-qrcode" /> Générer un code</button>
@@ -100,7 +100,7 @@ export default function OverviewPage({ onNavigate, onGenerate }: Props) {
           <div className={styles.tier}>
             <div className={styles.tierRing}><i className="fas fa-award" /></div>
             <div>
-              <div className={styles.tierNm}>Partenaire {partenaire.zone ?? 'Shopi'}</div>
+              <div className={styles.tierNm}>Partenaire {partenaire.zone ?? 'Shoneya'}</div>
               <div className={styles.tierSub}>Statut : {partenaire.status}</div>
               <div className={styles.tierProg}>{kpis.totalActeurs} acteurs dans votre réseau</div>
               <div className={styles.tierBar}><span /></div>

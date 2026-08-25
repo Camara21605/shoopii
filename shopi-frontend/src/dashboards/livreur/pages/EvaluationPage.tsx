@@ -20,7 +20,7 @@ export default function EvaluationPage({ onPop }: Props) {
             <div style={{ textAlign:'center',padding:'14px 0 18px' }}>
               <div style={{ fontFamily:'var(--fd)',fontSize:52,fontWeight:800,color:'var(--navy)',letterSpacing:-3,lineHeight:1 }}>4.9</div>
               <div style={{ fontSize:18,color:'var(--amber)',margin:'5px 0 4px',letterSpacing:-1 }}>★★★★★</div>
-              <div style={{ fontSize:12,color:'var(--t3)' }}>248 avis · 97% satisfaction · <strong style={{ color:'var(--teal)' }}>Top 5% Shopi</strong></div>
+              <div style={{ fontSize:12,color:'var(--t3)' }}>248 avis · 97% satisfaction · <strong style={{ color:'var(--teal)' }}>Top 5% Shoneya</strong></div>
             </div>
             {/* Barres par étoile */}
             {[[5,82],[4,12],[3,4],[2,1],[1,1]].map(([s,p]) => (

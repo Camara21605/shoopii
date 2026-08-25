@@ -18,7 +18,7 @@
     "emptyTransactions": "暂无交易。",
     "repartition": "分布",
     "emptyRepartition": "本月暂无数据。",
-    "virementsShopi": "Shopi 转账",
+    "virementsShopi": "Shoneya 转账",
     "emptyVirements": "暂无转账。",
     "statutRecu": "✓ 已收到",
     "statutAttente": "⏳ 等待中",
@@ -27,7 +27,7 @@
       "telechargerBilan": "下载月度报表",
       "demanderVirement": "请求提前转账",
       "modifierInfosBancaires": "修改银行信息",
-      "voirFactures": "查看 Shopi 发票"
+      "voirFactures": "查看 Shoneya 发票"
     }
   }
 }

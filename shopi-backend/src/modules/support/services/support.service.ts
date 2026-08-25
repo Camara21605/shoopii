@@ -65,6 +65,8 @@ import { TicketService }            from './ticket.service';
 import { ConversationService }      from './conversation.service';
 import { AttachmentService }        from './attachment.service';
 import { SupportPermissionService } from './support-permission.service';
+import { SupportStatsService, SupportOverview } from './support-stats.service';
+import { SupportExportService, CsvResult }      from './support-export.service';
 import { MailService }              from '../../email/email.service';
 import { UserRole }                 from '../../../common/enums/user-role.enum';
 
@@ -83,6 +85,8 @@ export class SupportService {
     private readonly convSvc:        ConversationService,
     private readonly attachmentSvc:  AttachmentService,
     private readonly permissionSvc:  SupportPermissionService,
+    private readonly statsSvc:       SupportStatsService,
+    private readonly exportSvc:      SupportExportService,
     private readonly mailService:    MailService,
     private readonly config:         ConfigService,
   ) {}
@@ -230,6 +234,33 @@ export class SupportService {
   ): Promise<void> {
     await this.assertAgentAccess(actorId, role, ticketId);
     return this.ticketSvc.setPriority(ticketId, priority);
+  }
+
+  /**
+   * Statistiques agrégées dans la portée de l'agent.
+   * SUPER_ADMIN : plateforme entière. ADMIN/PARTNER : leurs acteurs
+   * supervisés uniquement (avant ce correctif, ces deux rôles
+   * voyaient les statistiques de TOUTE la plateforme).
+   */
+  async getStatsAsAgent(
+    actorId: string | undefined,
+    role:    string,
+  ): Promise<SupportOverview> {
+    const visibleUserIds = await this.permissionSvc.resolveVisibleUserIds(actorId, role);
+    return this.statsSvc.getOverview(visibleUserIds);
+  }
+
+  /** Export CSV dans la portée de l'agent — même correctif que getStatsAsAgent(). */
+  async exportCsvAsAgent(
+    actorId:   string | undefined,
+    role:      string,
+    status?:   string,
+    type?:     string,
+    fromDate?: string,
+    toDate?:   string,
+  ): Promise<CsvResult> {
+    const visibleUserIds = await this.permissionSvc.resolveVisibleUserIds(actorId, role);
+    return this.exportSvc.generateCsv(visibleUserIds, status, type, fromDate, toDate);
   }
 
   /* ════════════════════════════════════════════════════════════

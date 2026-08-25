@@ -92,6 +92,11 @@
 /* ── Responsive : onglets scrollables ── */
 @media (max-width: 1100px) {
   .nav {
+    /* Sans ça, la taille de contenu intrinsèque de la rangée nowrap
+     * (tous les onglets non compressés) fait exploser la largeur de la
+     * colonne grid — celle-ci est partagée avec .content une fois
+     * .layout replié à 1 colonne, donc TOUTE la page débordait. */
+    min-width: 0;
     position: static;
     display: flex;
     flex-wrap: nowrap;

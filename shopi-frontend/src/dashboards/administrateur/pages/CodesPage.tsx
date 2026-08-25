@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import styles from '../styles/CodesPage.module.css';
 import { apiFetch } from '../../../shared/services/apiFetch';
+import Pagination from '../components/Pagination';
 
 interface CodesPageProps {
   onGenerate: () => void;
@@ -16,18 +17,19 @@ const TYPE_ICON:  Record<string, string> = { par: 'fa-handshake', ent: 'fa-store
 const ST_LABEL:   Record<string, string> = { used: 'Utilisé', sent: 'Envoyé', expired: 'Expiré' };
 
 export default function CodesPage({ onGenerate, onToast }: CodesPageProps) {
-  const [data,    setData]    = useState<{ stats: any; list: any[] } | null>(null);
+  const [page,    setPage]    = useState(1);
+  const [data,    setData]    = useState<{ stats: any; list: any[]; total: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = () => {
     setLoading(true);
-    apiFetch('/dashboard/admin/codes')
+    apiFetch('/dashboard/admin/codes', { params: { page: String(page), limit: '20' } })
       .then(d => setData(d as any))
       .catch(() => onToast('Erreur lors du chargement des codes', 'w'))
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, []);
+  useEffect(load, [page]);
 
   const copier = (code: string) => {
     navigator.clipboard?.writeText(code);
@@ -46,6 +48,7 @@ export default function CodesPage({ onGenerate, onToast }: CodesPageProps) {
 
   const stats  = data?.stats  ?? { generated: 0, used: 0, pending: 0, expired: 0 };
   const codes  = data?.list   ?? [];
+  const total  = data?.total  ?? 0;
 
   return (
     <div>
@@ -147,6 +150,7 @@ export default function CodesPage({ onGenerate, onToast }: CodesPageProps) {
             </table>
           </div>
         )}
+        <Pagination page={page} limit={20} total={total} onChange={setPage} />
       </div>
     </div>
   );

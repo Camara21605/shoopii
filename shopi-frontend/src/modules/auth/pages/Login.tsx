@@ -15,6 +15,7 @@ import { TwoFaChallenge } from './TwoFaChallenge';
 import { AccountChoiceScreen } from './AccountChoiceScreen';
 import { SuccessScreen }  from '../components/SuccessScreen';
 import { Toast }          from '../../../shared/components/ui/Toast';
+import ShoneyaLogo          from '../../../shared/components/ShoneyaLogo';
 
 import { useLoginPage }  from '../hooks/useLoginPage';
 import { ROLE_CONFIGS }  from '../roleConfigs';
@@ -157,7 +158,7 @@ const Login: React.FC = () => {
 
   const registerSubtitle = isInvited && lockedRole
     ? `Invitation reçue — ${ROLE_CONFIGS[lockedRole]?.label ?? lockedRole}. Complétez vos informations.`
-    : 'Seul le compte Client est disponible sans invitation. Rejoignez Shopi gratuitement.';
+    : 'Seul le compte Client est disponible sans invitation. Rejoignez Shoneya gratuitement.';
 
   return (
     <>
@@ -172,8 +173,8 @@ const Login: React.FC = () => {
 
             {isMobile && (
               <div className="form-logo" id="mobileLogo">
-                <div className="form-logo-mark">Sh</div>
-                Sho<b>pi</b>
+                <ShoneyaLogo size={28} />
+                Sho<b>neya</b>
               </div>
             )}
 
@@ -244,7 +245,6 @@ const Login: React.FC = () => {
                 onSubmit={handleLogin}
                 onForgot={() => setShowForgot(true)}
                 onSwitchToRegister={() => switchTab('register')}
-                onSocialToast={showToast}
               />
             )}
 

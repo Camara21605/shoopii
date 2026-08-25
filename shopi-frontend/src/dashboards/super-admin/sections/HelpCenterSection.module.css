@@ -219,7 +219,7 @@
 }
 .iconBtn:hover { background: var(--sky); color: #fff; border-color: var(--sky); }
 .iconBtnDanger:hover { background: var(--rose); color: #fff; border-color: var(--rose); }
-.iconBtnGreen:hover { background: var(--acid); color: #000; border-color: var(--acid); }
+.iconBtnGreen:hover { background: var(--acid); color: #fff; border-color: var(--acid); }
 
 /* ── États vide / chargement / erreur ─────────────────────── */
 .empty, .loading, .error {

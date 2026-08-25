@@ -213,7 +213,17 @@
   :global(:root) { --sb: 360px; }
 }
 
-@media (max-width: 1100px) { .main { margin-left: 68px; } }
+/* --sb doit suivre la largeur RÉELLE de la sidebar (Sidebar.module.css
+ * lit width:var(--sb)) — sans ça, .main libère bien 68px, mais .sb
+ * (position:fixed, donc hors du flux et invisible à un test de largeur
+ * de scroll) reste à 268px et recouvre visuellement les 200px de
+ * contenu adjacents. Bug confirmé en capture d'écran réelle, invisible
+ * à un test document.scrollWidth puisqu'un élément fixed n'influence
+ * jamais le scrollWidth du document. */
+@media (max-width: 1100px) {
+  :global(:root) { --sb: 68px; }
+  .main { margin-left: 68px; }
+}
 @media (max-width: 640px) {
   .main { margin-left: 0; padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
 

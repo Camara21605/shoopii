@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { apiFetch, tokenStorage } from '../../../shared/services/apiFetch';
+import { getOrCreateDeviceId }    from '../../../shared/services/deviceId';
 import type {
   AuthResponse,
   LoginResult,
@@ -77,6 +78,7 @@ export async function register(
   formData: RegisterFormData & { role: Role },
 ): Promise<AuthResponse> {
   const payload = buildRegisterPayload(formData);
+  payload.deviceId = getOrCreateDeviceId();
 
   const data = await apiFetch<AuthResponse>('/auth/register', {
     method: 'POST',
@@ -91,7 +93,7 @@ export async function register(
 export async function login(payload: LoginPayload): Promise<LoginResult> {
   const data = await apiFetch<LoginResult>('/auth/login', {
     method: 'POST',
-    body:   payload,
+    body:   { ...payload, deviceId: getOrCreateDeviceId() },
     public: true,
   });
   // Compte avec 2FA active : pas de token émis tant que le code n'est
@@ -112,7 +114,7 @@ export async function chooseAccount(
 ): Promise<AuthResponse | TwoFaChallengeResponse> {
   const data = await apiFetch<AuthResponse | TwoFaChallengeResponse>('/auth/login/choose-account', {
     method: 'POST',
-    body:   { identifier, password, userId, rememberMe },
+    body:   { identifier, password, userId, rememberMe, deviceId: getOrCreateDeviceId() },
     public: true,
   });
   if ('requiresTwoFa' in data) return data;

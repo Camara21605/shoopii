@@ -48,7 +48,7 @@ export default function SecPaiement({ data, saving, dirty, markClean, saveTrigge
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-      <div className={s.psHd}><h1><i className="fas fa-wallet" /> Paiement</h1><p>Méthodes de réception des commissions Shopi.</p></div>
+      <div className={s.psHd}><h1><i className="fas fa-wallet" /> Paiement</h1><p>Méthodes de réception des commissions Shoneya.</p></div>
       <div className={s.fc}>
         <div className={s.fcHd}><div><div className={s.fcTtl}><i className="fas fa-money-bill-transfer" /> Méthodes de réception</div></div>
           <button className={s.fcAction} onClick={() => pop('➕ Ajouter une méthode','i')}><i className="fas fa-plus" /> Ajouter</button>

@@ -106,7 +106,7 @@ export default function ConfidentialiteSection({ onToast }: SectionProps) {
           <div className={styles.toggleRow}>
             <div className={`${styles.tIc} ${styles.tIcAmber}`}><i className="fas fa-share-nodes" /></div>
             <div className={styles.tMain}>
-              <div className={styles.tTitle}>Partage anonyme de données avec Shopi Central</div>
+              <div className={styles.tTitle}>Partage anonyme de données avec Shoneya Central</div>
               <div className={styles.tDesc}>Statistiques agrégées pour améliorer la plateforme (aucune donnée personnelle).</div>
             </div>
             <div className={`${styles.sw} ${partageData ? styles.swOn : ''}`}

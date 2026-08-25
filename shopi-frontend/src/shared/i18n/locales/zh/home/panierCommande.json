@@ -51,14 +51,14 @@
       "cgv": "销售通用条款",
       "termsPart2": "和",
       "politiqueRetour": "退货政策",
-      "termsPart3": "，并授权 Shopi 处理我的支付。",
+      "termsPart3": "，并授权 Shoneya 处理我的支付。",
       "payLabels": {
         "omo": "Orange Money 🏦",
         "mtn": "MTN Money 💛",
         "card": "银行卡 💳",
         "cash": "货到付款 💵",
         "wire": "转账 🏛️",
-        "wallet": "Shopi 钱包 👛"
+        "wallet": "Shoneya 钱包 👛"
       }
     },
     "summaryPanel": {
@@ -78,7 +78,7 @@
       "confirmerLaCommande": "确认订单",
       "paiementSecuriseSsl": "SSL 256 位安全支付",
       "retourGratuit": "7 天内免费退货",
-      "protectionAcheteur": "Shopi 买家保护",
+      "protectionAcheteur": "Shoneya 买家保护",
       "estimationLivraison": "配送预估",
       "mode": "方式",
       "destination": "目的地",
@@ -108,7 +108,7 @@
       "aucunLivreurSuiviPart3": "页面关注配送员，以便在这里找到他们。",
       "livreurToast": "✅ 配送员：{{nom}}",
       "votreAbonne": "👤 您的关注者",
-      "correspondantIntl": "Shopi 代理商（国际店铺）",
+      "correspondantIntl": "Shoneya 代理商（国际店铺）",
       "boutiqueEtranger": "店铺在国外。当地代理商接收并转交您的包裹。",
       "correspondantToast": "📍 代理商：{{nom}}",
       "speeds": {

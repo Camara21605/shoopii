@@ -9,7 +9,7 @@
 
 import React from 'react';
 import type { SectionId, UserRole } from '../types/codes.types';
-import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
+import ShoneyaLogo from '../../../shared/components/ShoneyaLogo';
 
 interface SidebarProps {
   activeSection:   SectionId;
@@ -19,14 +19,10 @@ interface SidebarProps {
   /** Compteurs par rôle issus de /users/stats — clés : company, delivery, customer, partner, correspondent, admin */
   roleStats:       Record<string, number>;
   pendingAlerts:   number;
-  totalUnread:     number;
   validCodesCount: number;
   slaViolations:   number;
   isOpen:          boolean;
   onClose:         () => void;
-  /** Profil réel du super-admin connecté (chargé par SuperAdminApp) */
-  profilName?:     string;
-  profilAvatar?:   string | null;
 }
 
 interface NavItemProps {
@@ -63,10 +59,9 @@ function NavGroup({ label, children }: { label: string; children: React.ReactNod
 
 export default function Sidebar({
   activeSection, navigate, navUsers,
-  totalUsers, roleStats, pendingAlerts, totalUnread, validCodesCount,
+  totalUsers, roleStats, pendingAlerts, validCodesCount,
   slaViolations,
   isOpen, onClose,
-  profilName, profilAvatar,
 }: SidebarProps) {
   const rs = (role: string) => roleStats[role] || undefined;
   // Sur petit écran, refermer le sidebar après avoir choisi une section
@@ -88,35 +83,9 @@ export default function Sidebar({
 
         {/* ── Logo ── */}
         <div className="sidebar-logo">
-          <div className="logo-mark">🛍</div>
-          <div className="logo-text">Shopi<em>Africa</em></div>
+          <ShoneyaLogo size={34} />
+          <div className="logo-text">Shoneya</div>
           <span className="logo-badge">SUPER ADMIN</span>
-        </div>
-
-        {/* ── Profil connecté ── */}
-        <div
-          className={`sidebar-profile${activeSection === 'profil' ? ' active' : ''}`}
-          onClick={go(() => navigate('profil'))}
-          style={{ cursor: 'pointer' }}
-          title="Modifier mon profil"
-        >
-          <div className="profile-av" style={{ overflow: 'hidden', padding: 0 }}>
-            {profilAvatar
-              ? <img src={profilAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-              : (profilName
-                  ? (profilName.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('') || 'SA')
-                  : 'SA')}
-          </div>
-          <div>
-            <div className="profile-name">{profilName || 'Super Admin'}</div>
-            <div className="profile-role">Contrôle total</div>
-          </div>
-          <div className="profile-dot" />
-        </div>
-
-        {/* Solde du portefeuille Shopi — sous le profil connecté */}
-        <div style={{ padding: '0 22px 12px' }}>
-          <WalletQuickBar compact mini onManage={go(() => navigate('portefeuille'))} />
         </div>
 
         {/* ── Groupe : Tableau de bord ── */}
@@ -128,8 +97,6 @@ export default function Sidebar({
             onClick={go(() => navigate('analytics'))} />
           <NavItem icon="💰" label="Finances" active={activeSection==='finances'}
             onClick={go(() => navigate('finances'))} />
-          <NavItem icon="👛" label="Portefeuille" active={activeSection==='portefeuille'}
-            onClick={go(() => navigate('portefeuille'))} />
         </NavGroup>
 
         {/* ── Groupe : Utilisateurs ── */}
@@ -182,8 +149,6 @@ export default function Sidebar({
             onClick={go(() => navigate('geo-referentiel'))} />
           <NavItem icon="💸" label="Commissions" active={activeSection==='commissions'}
             onClick={go(() => navigate('commissions'))} />
-          <NavItem icon="👤" label="Mon profil" active={activeSection==='profil'}
-            onClick={go(() => navigate('profil'))} />
         </NavGroup>
 
       </nav>

@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import styles from '../styles/PartenairesPage.module.css';
 import { apiFetch } from '../../../shared/services/apiFetch';
+import Pagination from '../components/Pagination';
 import type { PartenaireTier } from '../data/types';
 
 interface PartenairesPageProps {
@@ -17,30 +18,35 @@ const TIER_LABEL: Record<string, string> = { or: 'Or', arg: 'Argent', brz: 'Bron
 export default function PartenairesPage({ onSanction, onToast }: PartenairesPageProps) {
   const [filtre,    setFiltre]    = useState<'all' | PartenaireTier>('all');
   const [recherche, setRecherche] = useState('');
-  const [data,      setData]      = useState<{ list: any[]; top3: any[] } | null>(null);
+  const [page,      setPage]      = useState(1);
+  const [data,      setData]      = useState<{ list: any[]; top3: any[]; counts: Record<string, number>; total: number } | null>(null);
   const [loading,   setLoading]   = useState(true);
 
   useEffect(() => {
-    apiFetch('/dashboard/admin/partenaires')
-      .then(d => setData(d as any))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+    setLoading(true);
+    const t = setTimeout(() => {
+      apiFetch('/dashboard/admin/partenaires', {
+        params: {
+          tier:   filtre !== 'all' ? filtre : undefined,
+          search: recherche.trim() || undefined,
+          page:   String(page),
+          limit:  '20',
+        },
+      })
+        .then(d => setData(d as any))
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }, recherche ? 300 : 0);
+    return () => clearTimeout(t);
+  }, [filtre, recherche, page]);
 
-  const top3       = data?.top3 ?? [];
-  const partenaires = data?.list ?? [];
+  const changeFiltre = (f: 'all' | PartenaireTier) => { setFiltre(f); setPage(1); };
+  const changeRecherche = (v: string) => { setRecherche(v); setPage(1); };
 
-  const counts = {
-    all: partenaires.length,
-    or:  partenaires.filter((p: any) => p.tier === 'or').length,
-    arg: partenaires.filter((p: any) => p.tier === 'arg').length,
-    brz: partenaires.filter((p: any) => p.tier === 'brz').length,
-  };
-
-  const visibles = partenaires.filter((p: any) =>
-    (filtre === 'all' || p.tier === filtre) &&
-    p.nom.toLowerCase().includes(recherche.toLowerCase())
-  );
+  const top3     = data?.top3 ?? [];
+  const visibles = data?.list ?? [];
+  const total    = data?.total ?? 0;
+  const counts   = data?.counts ?? { all: 0, or: 0, arg: 0, brz: 0 };
 
   return (
     <div>
@@ -61,22 +67,22 @@ export default function PartenairesPage({ onSanction, onToast }: PartenairesPage
 
       {/* ── Filtres ── */}
       <div className={styles.filterBar}>
-        <button className={`${styles.fchip} ${filtre === 'all' ? styles.fon : ''}`} onClick={() => setFiltre('all')}>
+        <button className={`${styles.fchip} ${filtre === 'all' ? styles.fon : ''}`} onClick={() => changeFiltre('all')}>
           Tous <span className={styles.n}>{counts.all}</span>
         </button>
-        <button className={`${styles.fchip} ${filtre === 'or' ? styles.fon : ''}`} onClick={() => setFiltre('or')}>
+        <button className={`${styles.fchip} ${filtre === 'or' ? styles.fon : ''}`} onClick={() => changeFiltre('or')}>
           <i className="fas fa-crown" style={{ color: 'var(--gold)' }} /> Or <span className={styles.n}>{counts.or}</span>
         </button>
-        <button className={`${styles.fchip} ${filtre === 'arg' ? styles.fon : ''}`} onClick={() => setFiltre('arg')}>
+        <button className={`${styles.fchip} ${filtre === 'arg' ? styles.fon : ''}`} onClick={() => changeFiltre('arg')}>
           Argent <span className={styles.n}>{counts.arg}</span>
         </button>
-        <button className={`${styles.fchip} ${filtre === 'brz' ? styles.fon : ''}`} onClick={() => setFiltre('brz')}>
+        <button className={`${styles.fchip} ${filtre === 'brz' ? styles.fon : ''}`} onClick={() => changeFiltre('brz')}>
           Bronze <span className={styles.n}>{counts.brz}</span>
         </button>
         <div className={styles.searchIn}>
           <i className="fas fa-magnifying-glass" />
           <input placeholder="Rechercher un partenaire…" value={recherche}
-            onChange={e => setRecherche(e.target.value)} />
+            onChange={e => changeRecherche(e.target.value)} />
         </div>
       </div>
 
@@ -122,6 +128,7 @@ export default function PartenairesPage({ onSanction, onToast }: PartenairesPage
           ))}
         </div>
       )}
+      <Pagination page={page} limit={20} total={total} onChange={setPage} />
     </div>
   );
 }

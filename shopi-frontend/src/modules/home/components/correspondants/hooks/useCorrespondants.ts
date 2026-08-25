@@ -14,7 +14,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { fetchCorrespondants } from '../services/correspondants.api';
-import { CORRESPONDANTS_MOCK } from '../data/correspondantsMock';
 import type { Correspondant } from '../data/types';
 
 export function useCorrespondants() {
@@ -26,13 +25,10 @@ export function useCorrespondants() {
     setLoading(true);
     setError(null);
     fetchCorrespondants()
-      .then(data => {
-        /* Si l'API renvoie une liste vide, on garde le mock pour le dev */
-        setCorrespondants(data.length > 0 ? data : CORRESPONDANTS_MOCK);
-      })
+      .then(data => setCorrespondants(data))
       .catch(e => {
         setError(e?.message ?? 'Impossible de charger les correspondants');
-        setCorrespondants(CORRESPONDANTS_MOCK);   /* fallback */
+        setCorrespondants([]);
       })
       .finally(() => setLoading(false));
   }, []);

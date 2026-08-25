@@ -251,9 +251,13 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack, onSucces
   };
 
   /* ─── Styles communs ─── */
+  /* borderWidth/borderStyle/borderColor séparés (pas le raccourci `border`) :
+   * le champ de confirmation ci-dessous surcharge borderColor seul selon la
+   * saisie — mélanger raccourci et propriété longue sur le même style objet
+   * déclenche l'avertissement React "conflicting property" à chaque frappe. */
   const inputStyle: React.CSSProperties = {
     width: '100%', background: 'var(--white, #fff)',
-    border: '1.5px solid var(--bdr2, #CBD5E1)',
+    borderWidth: '1.5px', borderStyle: 'solid', borderColor: 'var(--bdr2, #CBD5E1)',
     borderRadius: '10px', padding: '11px 14px 11px 38px',
     fontSize: '13.5px', color: 'var(--t1, #0F172A)',
     fontFamily: 'inherit', outline: 'none',

@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import styles from '../styles/Facture.module.css';
 import type { Commande } from '../data/types';
+import ShoneyaLogo from '../../../shared/components/ShoneyaLogo';
 
 function FactureThumb({ src, emoji }: { src?: string | null; emoji: string }) {
   const [errored, setErrored] = useState(false);
@@ -66,9 +67,9 @@ export default function Facture({ commande, times, onClose }: FactureProps) {
           {/* En-tête */}
           <div className={styles.head}>
             <div className={styles.brand}>
-              <div className={styles.logo}>Sh</div>
+              <ShoneyaLogo size={46} />
               <div>
-                <div className={styles.brandNm}>Sho<b>pi</b></div>
+                <div className={styles.brandNm}>Sho<b>neya</b></div>
                 <div className={styles.brandSub}>Marketplace · Conakry, Guinée</div>
               </div>
             </div>
@@ -89,7 +90,7 @@ export default function Facture({ commande, times, onClose }: FactureProps) {
             <div>
               <div className={styles.partyLbl}>Vendeur</div>
               <div className={styles.partyNm}>{vendeur?.nom}</div>
-              <div className={styles.partyTxt}>Boutique vérifiée Shopi</div>
+              <div className={styles.partyTxt}>Boutique vérifiée Shoneya</div>
               <div className={styles.partyTxt}>Date : {dateJour}</div>
             </div>
           </div>
@@ -143,12 +144,12 @@ export default function Facture({ commande, times, onClose }: FactureProps) {
               <strong>Merci de votre confiance.</strong><br />
               Cette facture atteste que la commande {commande.id} a été payée, livrée et
               validée par tous les acteurs via leurs codes de validation sécurisés.
-              Document généré automatiquement par Shopi.
+              Document généré automatiquement par Shoneya.
             </div>
             <div className={styles.stamp}>
               <div className={styles.stampCircle}>
                 <i className="fas fa-shield-check" />
-                <span>Validé Shopi</span>
+                <span>Validé Shoneya</span>
               </div>
             </div>
           </div>

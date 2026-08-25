@@ -50,6 +50,37 @@
 }
 .markAllBtn:hover { background: rgba(96,165,250,.2); }
 
+.headActions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.deleteAllBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(239,68,68,.1);
+  border: 1px solid rgba(239,68,68,.22);
+  border-radius: 10px;
+  color: #F87171;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+}
+.deleteAllBtn:hover { background: rgba(239,68,68,.18); }
+.deleteAllBtn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── En-tête de groupe par date (Aujourd'hui / Cette semaine / …) ── */
+.groupHead {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--adm-text-3, #71717A);
+  padding: 14px 4px 4px;
+}
+.groupHead:first-child { padding-top: 2px; }
+
 /* ── Contrôles (filtres + recherche) ── */
 .controls {
   display: flex;
@@ -387,8 +418,24 @@
 
 @media (max-width: 600px) {
   .page { padding: 16px; }
+  /* Header à 2 boutons (Tout marquer lu + Tout supprimer) : passe en
+   * colonne avant que .headActions ne fasse déborder .pageHead. */
+  .pageHead { flex-direction: column; align-items: stretch; }
+  .headActions { width: 100%; }
+  .markAllBtn, .deleteAllBtn { flex: 1; justify-content: center; }
   .controls { flex-direction: column; align-items: stretch; }
   .searchWrap { margin-left: 0; }
   .searchIn { width: 100%; }
   .itemTitle { max-width: 200px; }
+
+  /* .actions dépend de :hover (item:hover .actions { opacity: 1 }), qui
+   * n'existe pas au toucher — sans ça, les boutons marquer-lu/supprimer
+   * d'une notification individuelle restent invisibles sur mobile. */
+  .actions { opacity: 1; }
+}
+
+/* Téléphones étroits : les 2 boutons côte à côte deviennent trop serrés
+ * (texte + icône sur chacun) — on les empile verticalement. */
+@media (max-width: 380px) {
+  .headActions { flex-direction: column; }
 }

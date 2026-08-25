@@ -5,7 +5,7 @@
  *           fois dans HomePage.tsx (bas de page, centré)
  * RÔLE    : Affiche le message toast flottant centré en
  *           bas de l'écran. Reçoit `msg` et `show` depuis
- *           useHomeState. Style Shopi navy/bleu.
+ *           useHomeState. Style Shoneya navy/bleu.
  * ════════════════════════════════════════════════════════
  */
 

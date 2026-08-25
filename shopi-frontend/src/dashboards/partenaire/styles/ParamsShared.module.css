@@ -351,12 +351,67 @@
 :root[data-theme="light"] .refLink i { color: rgba(255,255,255,.65); }
 :root[data-theme="light"] .healthGlow { background: radial-gradient(ellipse 50% 90% at 90% 20%, rgba(11,31,58,.2), transparent 58%), radial-gradient(ellipse 40% 70% at 5% 100%, rgba(109,40,217,.2), transparent 55%); }
 
-/* ── Responsive ── */
-@media (max-width: 700px) {
+/* ── Responsive — tablette / mobile large (≤768px) ── */
+@media (max-width: 768px) {
   .grid2, .grid3 { grid-template-columns: 1fr; }
   .optGrid { grid-template-columns: 1fr; }
   .avRow { flex-direction: column; align-items: flex-start; }
   .healthIn { flex-direction: column; align-items: flex-start; }
   .refStats { grid-template-columns: repeat(3, 1fr); }
   .refShare { flex-direction: column; }
+
+  .fcBody { padding: 16px; }
+  .fcHd { padding: 14px 16px; flex-wrap: wrap; }
+  .avBtns { width: 100%; }
+  .avBtns .btnPrimary, .avBtns .btnGhost { flex: 1; text-align: center; }
+}
+
+/* ── Responsive — mobile (≤480px) ──
+ * Cible les endroits où un contenu à largeur fixe (bouton nowrap, badge,
+ * icône) peut forcer un débordement horizontal sur petit écran. */
+@media (max-width: 480px) {
+  .fc { border-radius: var(--r-lg); }
+  .fcBody { padding: 14px; }
+  .fcHd { padding: 12px 14px; }
+  .fcTtl { font-size: 13px; }
+
+  /* .btnDanger est en white-space:nowrap — sur un rang flex avec
+   * .dangerMain, ça pousse la largeur totale au-delà du viewport. On
+   * empile verticalement et on repasse le bouton en pleine largeur. */
+  .dangerRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .btnDanger { width: 100%; text-align: center; white-space: normal; }
+
+  .payMethod { padding: 12px; gap: 11px; }
+  .payLogo { width: 40px; height: 40px; font-size: 17px; }
+
+  .docItem { flex-wrap: wrap; }
+  .docAct { flex-shrink: 0; }
+
+  /* .wdAmt + .wdSt sont des éléments à largeur fixe à droite de .wdMain :
+   * sur très petit écran on les repasse sur une ligne dédiée plutôt que
+   * de laisser le nom se compresser à l'excès. */
+  .wdItem { flex-wrap: wrap; }
+  .wdMain { min-width: 60%; }
+
+  .sess { flex-wrap: wrap; }
+
+  .trowIc { width: 34px; height: 34px; font-size: 13px; }
+
+  .av { width: 72px; height: 72px; font-size: 28px; }
+
+  .health { padding: 18px 16px; }
+  .healthRing { width: 76px; height: 76px; }
+  .healthRingV b { font-size: 21px; }
+
+  .refBox { padding: 16px; }
+  .refLinkRow { flex-direction: column; }
+  .refLink { min-width: 0; }
+  .refCopy { justify-content: center; padding: 10px; }
+
+  .cmodal { padding: 22px 18px 18px; }
+  .cmodalBtns { flex-direction: column; }
 }

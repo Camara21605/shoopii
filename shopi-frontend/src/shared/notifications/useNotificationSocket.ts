@@ -19,7 +19,7 @@
  * ============================================================
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { io, Socket }        from 'socket.io-client';
 import type { INotificationDto } from './types';
 import { tokenStorage, silentRefresh } from '../services/apiFetch';
@@ -36,11 +36,20 @@ export interface WsNotifUnreadCount { unreadCount: number; }
 
 export interface WsNotifUpdated { id: string; count: number; body: string; }
 
+/** Émis par le backend quand une nouvelle connexion sur un autre
+ *  appareil révoque la session courante (session unique par
+ *  utilisateur — voir SessionService côté backend). */
+export interface WsSessionRevoked {
+  reason:  'NEW_LOGIN' | 'USER_LOGOUT';
+  message: string;
+}
+
 export interface NotificationSocketCallbacks {
-  onConnected?:   (data: WsNotifConnected)   => void;
-  onNew?:         (data: WsNotifNew)          => void;
-  onUnreadCount?: (data: WsNotifUnreadCount)  => void;
-  onUpdated?:     (data: WsNotifUpdated)      => void;
+  onConnected?:      (data: WsNotifConnected)   => void;
+  onNew?:            (data: WsNotifNew)          => void;
+  onUnreadCount?:    (data: WsNotifUnreadCount)  => void;
+  onUpdated?:        (data: WsNotifUpdated)      => void;
+  onSessionRevoked?: (data: WsSessionRevoked)     => void;
 }
 
 // ── Singleton ─────────────────────────────────────────────────
@@ -128,6 +137,21 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
   // Mise à jour des callbacks sans recréer le socket
   useEffect(() => { cbRef.current = callbacks; });
 
+  /* Re-déclenche l'effet de connexion ci-dessous quand un token apparaît
+   * APRÈS le montage de ce composant (ex: AppProvider est monté une seule
+   * fois pour toute la durée de vie de l'app, souvent AVANT que
+   * l'utilisateur soit connecté — sans ce compteur, son effet ci-dessous
+   * s'exécutait une fois avec `!token` et ne se relançait plus jamais,
+   * donc onSessionRevoked ne s'attachait jamais réellement au socket).
+   * tokenStorage.set() (apiFetch.ts) émet 'auth:login' à chaque login/
+   * register/refresh réussi. */
+  const [authTick, setAuthTick] = useState(0);
+  useEffect(() => {
+    const bump = () => setAuthTick(t => t + 1);
+    window.addEventListener('auth:login', bump);
+    return () => window.removeEventListener('auth:login', bump);
+  }, []);
+
   useEffect(() => {
     const token = localStorage.getItem('shopi_access_token');
     if (!token) return;
@@ -135,10 +159,11 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
     const socket = getSocket(token);
     socketRef.current = socket;
 
-    const onConnected   = (d: WsNotifConnected)   => cbRef.current.onConnected?.(d);
-    const onNew         = (d: WsNotifNew)          => cbRef.current.onNew?.(d);
-    const onUnreadCount = (d: WsNotifUnreadCount)  => cbRef.current.onUnreadCount?.(d);
-    const onUpdated     = (d: WsNotifUpdated)      => cbRef.current.onUpdated?.(d);
+    const onConnected      = (d: WsNotifConnected)   => cbRef.current.onConnected?.(d);
+    const onNew            = (d: WsNotifNew)          => cbRef.current.onNew?.(d);
+    const onUnreadCount    = (d: WsNotifUnreadCount)  => cbRef.current.onUnreadCount?.(d);
+    const onUpdated        = (d: WsNotifUpdated)      => cbRef.current.onUpdated?.(d);
+    const onSessionRevoked = (d: WsSessionRevoked)    => cbRef.current.onSessionRevoked?.(d);
 
     const onConnectError = (err: Error) =>
       console.warn('[NotifSocket] Connexion échouée:', err.message);
@@ -156,6 +181,7 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
     socket.on('notif:new',          onNew);
     socket.on('notif:unread_count', onUnreadCount);
     socket.on('notif:updated',      onUpdated);
+    socket.on('session:revoked',    onSessionRevoked);
     socket.on('connect_error',      onConnectError);
     socket.on('disconnect',         onDisconnect);
 
@@ -166,10 +192,11 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
       socket.off('notif:new',          onNew);
       socket.off('notif:unread_count', onUnreadCount);
       socket.off('notif:updated',      onUpdated);
+      socket.off('session:revoked',    onSessionRevoked);
       socket.off('connect_error',      onConnectError);
       socket.off('disconnect',         onDisconnect);
     };
-  }, []); // Singleton — jamais recréé
+  }, [authTick]); // authTick : re-tente la connexion si le token n'existait pas au montage
 
   // ── Émetteurs ─────────────────────────────────────────────
 

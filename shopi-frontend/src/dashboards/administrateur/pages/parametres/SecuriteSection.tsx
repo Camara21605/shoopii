@@ -352,7 +352,7 @@ export default function SecuriteSection({ onToast }: SectionProps) {
         <div className={styles.cardBody}>
           <p style={{ fontSize: 12.5, color: 'var(--t3)', lineHeight: 1.6 }}>
             Les clés API administrateur seront disponibles dans une prochaine mise à jour.
-            Elles permettront d&apos;accéder à l&apos;API Shopi depuis des outils tiers sécurisés.
+            Elles permettront d&apos;accéder à l&apos;API Shoneya depuis des outils tiers sécurisés.
           </p>
         </div>
       </div>

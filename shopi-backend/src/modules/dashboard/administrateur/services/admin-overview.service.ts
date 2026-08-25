@@ -28,6 +28,10 @@ import { User, UserStatus } from '../../../../database/entities/user.entity';
 import { Commande, CommandeStatus } from '../../../../database/entities/commande/commande.entity';
 
 import { relTime, iconFa, iconKind } from '../helpers/admin.helpers';
+import { RedisCacheService } from '../../../performance-engine/services/redis-cache.service';
+
+/** TTL du cache Overview — données "peu changeantes" (KPIs/stats/charts). */
+const OVERVIEW_CACHE_TTL_SEC = 60;
 
 /** Libellés courts des jours de la semaine (index 0 = Dimanche). */
 const DAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
@@ -37,6 +41,7 @@ export class AdminOverviewService {
 
   constructor(
     private readonly zoneService: AdminZoneService,
+    private readonly cache:       RedisCacheService,
 
     @InjectRepository(Partner)
     private readonly partnerRepo: Repository<Partner>,
@@ -110,6 +115,13 @@ export class AdminOverviewService {
   async getOverview(userId: string) {
     const admin = await this.zoneService.adminOf(userId);
 
+    // Cache court (données "peu changeantes" — voir RedisCacheService) :
+    // les navigations répétées vers l'Overview pendant la même minute
+    // sont servies instantanément, sans requêter la base.
+    const cacheKey = `admin-overview:${admin.id}`;
+    const cached = await this.cache.get<Record<string, unknown>>(cacheKey);
+    if (cached) return cached;
+
     // IDs des acteurs de la zone — récupérés en parallèle
     const [pids, cids, dids] = await Promise.all([
       this.zoneService.partnerIds(admin.id),
@@ -117,45 +129,52 @@ export class AdminOverviewService {
       this.zoneService.deliveryIds(admin.id),
     ]);
 
-    // Correspondants : le champ livreurId peut ne pas exister selon la migration
-    let corCount = 0;
-    try {
-      if (dids.length) {
-        corCount = await this.correspondentRepo.count({
-          where: { livreurId: In(dids) } as any,
-        });
-      }
-    } catch { /* champ absent — on ignore silencieusement */ }
+    const now = new Date();
+    const w7  = new Date(now.getTime() - 7  * 86_400_000); // 7 derniers jours
+    const m30 = new Date(now.getTime() - 30 * 86_400_000); // 30 derniers jours
 
-    const total = pids.length + cids.length + dids.length + corCount;
-    const now   = new Date();
-    const w7    = new Date(now.getTime() - 7  * 86_400_000); // 7 derniers jours
-    const m30   = new Date(now.getTime() - 30 * 86_400_000); // 30 derniers jours
+    // ── Toutes les requêtes restantes sont indépendantes une fois
+    // pids/cids/dids connus (aucune ne dépend du résultat d'une autre) —
+    // un seul aller-retour parallèle au lieu des ~7 phases séquentielles
+    // d'origine. `disCount` est réutilisé pour la santé de zone ET le
+    // KPI litiges (avant : la même requête COUNT DISPUTED était lancée
+    // deux fois séparément).
+    const [
+      corCount,
+      pendPar, pendEnt, pendLvr, signalCnt, pendCode, cmdEnCours,
+      disCount, totCount,
+      comRows,
+      cmdSem7, volRow,
+      newP, newC, newD,
+      logs,
+      semaine, mois, annee,
+    ] = await Promise.all([
+      // Correspondants : le champ livreurId peut ne pas exister selon la migration
+      dids.length
+        ? this.correspondentRepo.count({ where: { livreurId: In(dids) } as any }).catch(() => 0)
+        : Promise.resolve(0),
 
-    // ── File d'attente + données KPI ──────────────────────────
-    // Toutes ces requêtes sont indépendantes → parallélisation complète
-    const [pendPar, pendEnt, pendLvr, signalCnt, pendCode, cmdEnCours] = await Promise.all([
       // Comptes partenaires en attente de validation
       pids.length
         ? this.userRepo.createQueryBuilder('u')
             .innerJoin('u.partner', 'p')
             .where('p.adminId = :aid AND u.status = :s', { aid: admin.id, s: UserStatus.PENDING })
             .getCount()
-        : 0,
+        : Promise.resolve(0),
       // Comptes entreprises en attente
       cids.length
         ? this.userRepo.createQueryBuilder('u')
             .innerJoin('u.company', 'c')
             .where('c.adminId = :aid AND u.status = :s', { aid: admin.id, s: UserStatus.PENDING })
             .getCount()
-        : 0,
+        : Promise.resolve(0),
       // Comptes livreurs en attente
       dids.length
         ? this.userRepo.createQueryBuilder('u')
             .innerJoin('u.delivery', 'd')
             .where('d.adminId = :aid AND u.status = :s', { aid: admin.id, s: UserStatus.PENDING })
             .getCount()
-        : 0,
+        : Promise.resolve(0),
       // Signalements globaux en attente (pas encore filtrés par zone)
       this.reportRepo.count({ where: { status: ReportStatus.PENDING } }),
       // Codes de création en attente générés par cet admin
@@ -172,81 +191,79 @@ export class AdminOverviewService {
             })
             .getCount()
             .catch(() => 0)
-        : 0,
+        : Promise.resolve(0),
+
+      // Litiges ouverts (toutes dates) — réutilisé pour sante + KPI
+      cids.length
+        ? this.commandeRepo.count({ where: { companyId: In(cids), status: CommandeStatus.DISPUTED } }).catch(() => 0)
+        : Promise.resolve(0),
+      // Total commandes de la zone (dénominateur du score de santé)
+      cids.length
+        ? this.commandeRepo.count({ where: { companyId: In(cids) } }).catch(() => 0)
+        : Promise.resolve(0),
+
+      // Top 6 communes par nombre de partenaires
+      this.partnerRepo.createQueryBuilder('p')
+        .select('p.commune', 'nom')
+        .addSelect('COUNT(*)', 'cnt')
+        .where('p.adminId = :aid AND p.commune IS NOT NULL', { aid: admin.id })
+        .groupBy('p.commune')
+        .orderBy('cnt', 'DESC')
+        .limit(6)
+        .getRawMany(),
+
+      // Commandes créées dans les 7 derniers jours
+      cids.length
+        ? this.commandeRepo.count({ where: { companyId: In(cids), createdAt: Between(w7, now) } }).catch(() => 0)
+        : Promise.resolve(0),
+      // Volume GNF des commandes livrées sur 7 jours
+      cids.length
+        ? this.commandeRepo.createQueryBuilder('c')
+            .select('COALESCE(SUM(CAST(c.total AS DECIMAL)), 0)', 'v')
+            .where('c.companyId IN (:...cids)', { cids })
+            .andWhere('c.status IN (:...ok)', {
+              ok: [CommandeStatus.DELIVERED, CommandeStatus.AUTO_DELIVERED],
+            })
+            .andWhere('c.createdAt >= :from', { from: w7 })
+            .getRawOne()
+            .catch(() => ({ v: 0 }))
+        : Promise.resolve({ v: 0 }),
+
+      // Delta KPI acteurs : nouveaux acteurs dans les 30 derniers jours
+      this.partnerRepo.count({ where: { adminId: admin.id, createdAt: Between(m30, now) } }).catch(() => 0),
+      this.companyRepo.count({ where: { adminId: admin.id, createdAt: Between(m30, now) } }).catch(() => 0),
+      this.deliveryRepo.count({ where: { adminId: admin.id, createdAt: Between(m30, now) } }).catch(() => 0),
+
+      // Activité récente (5 dernières entrées AuditLog DE CET ADMIN)
+      this.auditLogRepo.find({ where: { actorId: userId }, order: { createdAt: 'DESC' }, take: 5 }),
+
+      // Graphes de croissance
+      this.daySlice(admin.id, cids, 7),
+      this.weekSlice(admin.id, cids, 4),
+      this.quarterSlice(admin.id, cids),
     ]);
+
+    const total = pids.length + cids.length + dids.length + corCount;
 
     // ── Score de santé de la zone ─────────────────────────────
     // Formule : 100 − (litiges / total_commandes) × 500, capé [0, 100]
     // Un taux de litiges de 20% donne un score de 0 (zone critique).
-    let sante = 95;
-    if (cids.length) {
-      try {
-        const [dis, tot] = await Promise.all([
-          this.commandeRepo.count({ where: { companyId: In(cids), status: CommandeStatus.DISPUTED } }),
-          this.commandeRepo.count({ where: { companyId: In(cids) } }),
-        ]);
-        if (tot > 0) {
-          sante = Math.max(0, Math.min(100, Math.round(100 - (dis / tot) * 500)));
-        }
-      } catch { /* ignore */ }
-    }
+    const sante = totCount > 0
+      ? Math.max(0, Math.min(100, Math.round(100 - (disCount / totCount) * 500)))
+      : 95;
 
-    // ── Top 6 communes par nombre de partenaires ──────────────
-    const comRows = await this.partnerRepo.createQueryBuilder('p')
-      .select('p.commune', 'nom')
-      .addSelect('COUNT(*)', 'cnt')
-      .where('p.adminId = :aid AND p.commune IS NOT NULL', { aid: admin.id })
-      .groupBy('p.commune')
-      .orderBy('cnt', 'DESC')
-      .limit(6)
-      .getRawMany();
-
-    const comTotal = comRows.reduce((s, r) => s + parseInt(r.cnt), 0) || 1;
-    const communes = comRows.map(r => ({
+    const comTotal = comRows.reduce((s: number, r: any) => s + parseInt(r.cnt), 0) || 1;
+    const communes = comRows.map((r: any) => ({
       nom:     r.nom as string,
       acteurs: parseInt(r.cnt),
       pct:     Math.round((parseInt(r.cnt) / comTotal) * 100),
     }));
 
-    // ── KPIs numériques ───────────────────────────────────────
-    let cmdSem = 0, volMGnf = 0, litiges = 0;
-    if (cids.length) {
-      const [cc, lc, vr] = await Promise.all([
-        // Commandes créées dans les 7 derniers jours
-        this.commandeRepo.count({ where: { companyId: In(cids), createdAt: Between(w7, now) } })
-          .catch(() => 0),
-        // Litiges ouverts (toutes dates)
-        this.commandeRepo.count({ where: { companyId: In(cids), status: CommandeStatus.DISPUTED } })
-          .catch(() => 0),
-        // Volume GNF des commandes livrées sur 7 jours
-        this.commandeRepo.createQueryBuilder('c')
-          .select('COALESCE(SUM(CAST(c.total AS DECIMAL)), 0)', 'v')
-          .where('c.companyId IN (:...cids)', { cids })
-          .andWhere('c.status IN (:...ok)', {
-            ok: [CommandeStatus.DELIVERED, CommandeStatus.AUTO_DELIVERED],
-          })
-          .andWhere('c.createdAt >= :from', { from: w7 })
-          .getRawOne()
-          .catch(() => ({ v: 0 })),
-      ]);
-      cmdSem  = cc;
-      litiges = lc;
-      volMGnf = Math.round((+vr?.v || 0) / 1_000_000);
-    }
+    const cmdSem   = cmdSem7;
+    const litiges  = disCount;
+    const volMGnf  = Math.round((+(volRow as any)?.v || 0) / 1_000_000);
+    const newM     = newP + newC + newD;
 
-    // Delta KPI acteurs : nouveaux acteurs dans les 30 derniers jours
-    const newM = await Promise.all([
-      this.partnerRepo.count({ where: { adminId: admin.id, createdAt: Between(m30, now) } }).catch(() => 0),
-      this.companyRepo.count({ where: { adminId: admin.id, createdAt: Between(m30, now) } }).catch(() => 0),
-      this.deliveryRepo.count({ where: { adminId: admin.id, createdAt: Between(m30, now) } }).catch(() => 0),
-    ]).then(([p, c, d]) => p + c + d);
-
-    // ── Activité récente (5 dernières entrées AuditLog DE CET ADMIN) ───────
-    const logs = await this.auditLogRepo.find({
-      where:  { actorId: userId },
-      order:  { createdAt: 'DESC' },
-      take:   5,
-    });
     const activite = logs.map(a => ({
       icone: iconFa(a.icon),
       kind:  iconKind(a.icon, a.action),
@@ -254,14 +271,7 @@ export class AdminOverviewService {
       when:  relTime(a.createdAt),
     }));
 
-    // ── Graphes de croissance ─────────────────────────────────
-    const [semaine, mois, annee] = await Promise.all([
-      this.daySlice(admin.id, cids, 7),
-      this.weekSlice(admin.id, cids, 4),
-      this.quarterSlice(admin.id, cids),
-    ]);
-
-    return {
+    const result = {
       zone: { nom: admin.zone ?? 'Zone', sante, adminName: admin.fullName },
       kpis: [
         { cle: 'acteurs',   valeur: total.toLocaleString('fr-FR'),  label: 'Acteurs actifs dans la zone',    delta: `+${newM}`, trend: 'up'   },
@@ -285,6 +295,9 @@ export class AdminOverviewService {
       ],
       activite,
     };
+
+    await this.cache.set(cacheKey, result, OVERVIEW_CACHE_TTL_SEC);
+    return result;
   }
 
   // ════════════════════════════════════════════════════════════

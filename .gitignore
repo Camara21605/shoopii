@@ -16,6 +16,9 @@
 .agents/
 .claude/
 
+# Brouillons/exports logo bruts (non utilisés par le code, trop volumineux)
+/LOGO DE SHONEYA/
+
 # VS Code
 .vscode/
 

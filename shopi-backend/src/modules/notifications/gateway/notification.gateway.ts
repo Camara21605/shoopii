@@ -56,6 +56,7 @@ import type { NotificationSocket } from '../interfaces/notification.interfaces';
 import { NotificationBroadcastService } from '../services/notification-broadcast.service';
 import { NotificationService }          from '../services/notification.service';
 import { ROLE_TO_ACTOR_TYPE }           from '../utils/actor-type.util';
+import { SessionService }               from '../../session/session.service';
 
 @WebSocketGateway({
   namespace: '/notifications',
@@ -79,10 +80,11 @@ export class NotificationGateway
   private readonly logger = new Logger(NotificationGateway.name);
 
   constructor(
-    private readonly jwt:       JwtService,
-    private readonly config:    ConfigService,
-    private readonly broadcast: NotificationBroadcastService,
-    private readonly service:   NotificationService,
+    private readonly jwt:            JwtService,
+    private readonly config:         ConfigService,
+    private readonly broadcast:      NotificationBroadcastService,
+    private readonly service:        NotificationService,
+    private readonly sessionService: SessionService,
     @InjectRepository(User)
     private readonly userRepo:  Repository<User>,
   ) {}
@@ -113,7 +115,7 @@ export class NotificationGateway
         return this.rejectSocket(socket, 'TOKEN_MISSING');
       }
 
-      let payload: { sub: string; role: string; actorId?: string; iat?: number };
+      let payload: { sub: string; role: string; actorId?: string; sid?: string; iat?: number };
       try {
         payload = this.jwt.verify(token, {
           secret: this.config.get<string>('JWT_SECRET'),
@@ -142,6 +144,15 @@ export class NotificationGateway
         }
       }
 
+      /* ── 1ter. Session unique ────────────────────────────────
+       * Un token cryptographiquement valide dont le sessionId ne
+       * correspond plus à la session active (autre appareil connecté
+       * depuis) ne doit jamais pouvoir (re)ouvrir un socket temps réel —
+       * ferme la fenêtre "coupure réseau puis reconnexion" du §14. */
+      if (payload.sid && !(await this.sessionService.validateSession(userId, payload.sid))) {
+        return this.rejectSocket(socket, 'SESSION_REVOKED');
+      }
+
       // ── 2. Résoudre l'actorType ───────────────────────────
       const actorType = ROLE_TO_ACTOR_TYPE[userRole];
       if (!actorType) {
@@ -164,6 +175,13 @@ export class NotificationGateway
       // ── 4. Rejoindre la room privée ──────────────────────
       const room = `notif:user:${userId}`;
       await socket.join(room);
+
+      // Room de session — cible UNIQUEMENT cet appareil (pas les autres
+      // sockets du même userId) pour la révocation de session unique.
+      if (payload.sid) {
+        socket.data.sessionId = payload.sid;
+        await socket.join(`session:${payload.sid}`);
+      }
 
       // Room admin pour les annonces système
       if (actorType === NotificationActorType.ADMIN ||

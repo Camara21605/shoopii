@@ -125,7 +125,7 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
           <span>
             <strong>Inscription sans invitation :</strong> seul le compte Client est disponible.
             Les autres rôles (Entreprise, Livreur, Partenaire…) nécessitent
-            un <strong>lien d'invitation</strong> envoyé par un administrateur Shopi.
+            un <strong>lien d'invitation</strong> envoyé par un administrateur Shoneya.
           </span>
         </div>
       )}

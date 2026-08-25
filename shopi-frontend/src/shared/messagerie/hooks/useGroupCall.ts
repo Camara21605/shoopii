@@ -30,7 +30,7 @@ interface UseGroupCallProps {
   /**
    * Erreur/évènement d'appel à afficher (partie 8) — le hook délègue
    * l'affichage à GroupCallContext.tsx (accès à useToast(), système UI
-   * Shopi existant), symétrique à useAudioCall.ts.
+   * Shoneya existant), symétrique à useAudioCall.ts.
    */
   onError?: (error: CallErrorInfo) => void;
 }

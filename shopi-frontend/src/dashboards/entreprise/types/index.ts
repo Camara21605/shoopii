@@ -1,6 +1,6 @@
 /*
  * FICHIER: src/shared/types/index.ts
- * Types TypeScript partagés dans tout le projet Shopi
+ * Types TypeScript partagés dans tout le projet Shoneya
  */
 
 /** Type de notification Toast */

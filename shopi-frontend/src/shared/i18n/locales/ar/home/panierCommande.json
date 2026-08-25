@@ -51,14 +51,14 @@
       "cgv": "الشروط العامة للبيع",
       "termsPart2": "و",
       "politiqueRetour": "سياسة الإرجاع",
-      "termsPart3": "وأُفوّض شوبي بمعالجة دفعتي.",
+      "termsPart3": "وأُفوّض شونيا بمعالجة دفعتي.",
       "payLabels": {
         "omo": "Orange Money 🏦",
         "mtn": "MTN Money 💛",
         "card": "بطاقة مصرفية 💳",
         "cash": "عند التسليم 💵",
         "wire": "تحويل بنكي 🏛️",
-        "wallet": "محفظة شوبي 👛"
+        "wallet": "محفظة شونيا 👛"
       }
     },
     "summaryPanel": {
@@ -78,7 +78,7 @@
       "confirmerLaCommande": "تأكيد الطلب",
       "paiementSecuriseSsl": "دفع آمن بتشفير SSL 256-bit",
       "retourGratuit": "إرجاع مجاني خلال 7 أيام",
-      "protectionAcheteur": "حماية المشتري من شوبي",
+      "protectionAcheteur": "حماية المشتري من شونيا",
       "estimationLivraison": "تقدير التوصيل",
       "mode": "الوسيلة",
       "destination": "الوجهة",
@@ -108,7 +108,7 @@
       "aucunLivreurSuiviPart3": "لتجدهم هنا.",
       "livreurToast": "✅ عامل التوصيل: {{nom}}",
       "votreAbonne": "👤 متابعك",
-      "correspondantIntl": "مراسل شوبي (متجر دولي)",
+      "correspondantIntl": "مراسل شونيا (متجر دولي)",
       "boutiqueEtranger": "المتجر في الخارج. يستلم مراسل محلي طردك وينقله إليك.",
       "correspondantToast": "📍 المراسل: {{nom}}",
       "speeds": {

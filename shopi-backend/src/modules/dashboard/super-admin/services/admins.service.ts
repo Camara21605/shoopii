@@ -120,33 +120,53 @@ export class AdminsService {
       { type: 'admin', id: admin.id },
     );
 
-    /* ── Notification si permission géo accordée ── */
-    if (value && perm.startsWith('geo_')) {
-      const GEO_LABELS: Record<string, string> = {
-        geo_pays:        'Pays',
-        geo_regions:     'Régions',
-        geo_prefectures: 'Préfectures',
-        geo_communes:    'Communes',
-        geo_quartiers:   'Quartiers',
-        geo_zones:       'Zones de livraison',
-      };
-      const isAdvanced = perm === 'geo_modifier_protege';
-      this.notifSvc.create({
-        recipientType: NotificationActorType.ADMIN,
-        recipientId:   admin.id,
-        actorType:     NotificationActorType.SUPER_ADMIN,
-        actorId:       caller.id,
-        type:          NotificationType.ACCOUNT_APPROVED,
-        priority:      NotificationPriority.HIGH,
-        title:         isAdvanced ? 'Accès étendu accordé' : 'Accès Référentiel Géo accordé',
-        body:          isAdvanced
-          ? 'Vous êtes maintenant autorisé à modifier les éléments géographiques créés par le super-administrateur.'
-          : `Vous pouvez désormais gérer les ${GEO_LABELS[perm] ?? perm} dans le référentiel géographique.`,
-        actionUrl:     '/dashboard/administrateur',
-        resourceType:  'geo_permission',
-        resourceId:    admin.id,
-      }).catch(() => {/* notification non bloquante */});
-    }
+    /* ── Notification à chaque changement de permission ──
+     * Couvre désormais TOUTES les permissions (modules généraux ET
+     * géo), pas seulement geo_* — un admin doit être informé qu'un
+     * accès lui a été retiré autant qu'accordé. */
+    const GEO_LABELS: Record<string, string> = {
+      geo_pays:        'Pays',
+      geo_regions:     'Régions',
+      geo_prefectures: 'Préfectures',
+      geo_communes:    'Communes',
+      geo_quartiers:   'Quartiers',
+      geo_zones:       'Zones de livraison',
+    };
+    const GENERAL_LABELS: Record<string, string> = {
+      partners:  'Partenaires',
+      companies: 'Entreprises',
+      delivery:  'Livreurs',
+      customers: 'Clients',
+      stats:     'Statistiques',
+      reports:   'Signalements',
+      notifs:    'Notifications',
+      support:   'Support',
+    };
+    const isAdvanced = perm === 'geo_modifier_protege';
+    const isGeo      = perm.startsWith('geo_');
+    const label       = isGeo ? (GEO_LABELS[perm] ?? perm) : (GENERAL_LABELS[perm] ?? perm);
+
+    this.notifSvc.create({
+      recipientType: NotificationActorType.ADMIN,
+      recipientId:   admin.id,
+      actorType:     NotificationActorType.SUPER_ADMIN,
+      actorId:       caller.id,
+      type:          value ? NotificationType.ACCOUNT_APPROVED : NotificationType.SYSTEM_ANNOUNCEMENT,
+      priority:      NotificationPriority.HIGH,
+      title:         value
+        ? (isAdvanced ? 'Accès étendu accordé' : 'Accès accordé')
+        : 'Accès retiré',
+      body:          isAdvanced
+        ? (value
+            ? 'Vous êtes maintenant autorisé à modifier les éléments géographiques créés par le super-administrateur.'
+            : 'Vous n\'êtes plus autorisé à modifier les éléments géographiques créés par le super-administrateur.')
+        : (isGeo
+            ? `Vous pouvez ${value ? 'désormais' : 'ne pouvez plus'} gérer les ${label} dans le référentiel géographique.`
+            : `L'accès au module "${label}" vous a été ${value ? 'accordé' : 'retiré'}.`),
+      actionUrl:     '/dashboard/administrateur',
+      resourceType:  isGeo ? 'geo_permission' : 'admin_permission',
+      resourceId:    admin.id,
+    }).catch(() => {/* notification non bloquante */});
 
     return { message: 'Permission mise à jour.', perms };
   }

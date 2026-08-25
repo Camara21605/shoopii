@@ -74,7 +74,7 @@ function makeSettings(overrides: Partial<PlatformSettings> = {}): PlatformSettin
     maxWithdrawalAttempts:      3,
     withdrawalProcessingHours:  24,
     maintenanceMode:            false,
-    platformName:               'Shopi Africa',
+    platformName:               'Shopi',
     defaultCurrency:            'GNF',
     defaultLanguage:            'fr',
     timezone:                   'Africa/Conakry',

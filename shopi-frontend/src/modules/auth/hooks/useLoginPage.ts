@@ -2,7 +2,7 @@
 // FICHIER : src/modules/auth/hooks/useLoginPage.ts
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate }   from 'react-router-dom';
 import { authService }   from '../services/authService';
 import { ApiError }      from '../../../shared/services/apiFetch';
@@ -76,6 +76,21 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
   const showToast = useCallback((msg: string) => {
     setToast({ msg, visible: true });
     setTimeout(() => setToast({ msg: '', visible: false }), 3000);
+  }, []);
+
+  /* Session unique : redirigé ici après une déconnexion forcée par une
+   * connexion sur un autre appareil (voir AppContext.handleSessionRevoked,
+   * qui pose ce message avant window.location.href = '/login'). Affiché
+   * une seule fois puis effacé. */
+  useEffect(() => {
+    try {
+      const msg = sessionStorage.getItem('shopi_session_revoked_message');
+      if (msg) {
+        sessionStorage.removeItem('shopi_session_revoked_message');
+        showToast(`🔒 Session terminée — ${msg}`);
+      }
+    } catch { /* sessionStorage indisponible — pas de message, pas grave */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const switchTab = useCallback((tab: Tab) => {
@@ -226,9 +241,15 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     setUser(res.user);
     setSuccessAction('Connexion');
     setShowSuccess(true);
+    /* Session unique : ce compte était déjà connecté sur un autre appareil,
+     * qui vient d'être déconnecté par ce login-ci — message informatif,
+     * non alarmiste (mission §13). */
+    if (res.sessionReplaced) {
+      showToast('ℹ️ Votre compte était déjà connecté sur un autre appareil. Cette ancienne session a été automatiquement fermée.');
+    }
     setTimeout(() => navigate(ROLE_ROUTES[res.user.role] ?? '/home'), 1500);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, setUser]);
+  }, [navigate, setUser, showToast]);
 
   // Soumission Login
   const handleLogin = useCallback(async () => {

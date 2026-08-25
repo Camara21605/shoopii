@@ -35,7 +35,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
         }}>
           <h1 style={{ fontSize: 20, margin: 0 }}>Une erreur est survenue.</h1>
           <p style={{ color: '#666', margin: 0 }}>
-            Rechargez la page. Si le problème persiste, contactez le support Shopi.
+            Rechargez la page. Si le problème persiste, contactez le support Shoneya.
           </p>
           <button
             onClick={() => window.location.reload()}

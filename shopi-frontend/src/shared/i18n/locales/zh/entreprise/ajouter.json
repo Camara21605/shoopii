@@ -181,7 +181,7 @@
       "standardSub": "由您的店铺管理",
       "choisirLivreur": "选择配送员",
       "choisirLivreurSub": "买家选择他的配送员",
-      "correspondant": "通过 Shopi 代理商",
+      "correspondant": "通过 Shoneya 代理商",
       "correspondantSub": "适用于来自国外的产品",
       "fraisLocal": "本地配送费用（GNF）",
       "fraisPlaceholder": "0 = 免费配送",
@@ -202,7 +202,7 @@
       "retour": "退货保障",
       "retourSub": "退款或换货",
       "authentique": "正品",
-      "authentiqueSub": "Shopi 认证卖家",
+      "authentiqueSub": "Shoneya 认证卖家",
       "support": "24/7 支持",
       "supportSub": "聊天 · WhatsApp · 电话"
     },
@@ -274,7 +274,7 @@
       "title": "SEO 与排名",
       "score": "SEO 评分",
       "titreSeo": "SEO 标题",
-      "titrePlaceholder": "例如：iPhone 15 Pro 256GB — Shopi 几内亚",
+      "titrePlaceholder": "例如：iPhone 15 Pro 256GB — Shoneya 几内亚",
       "titreIdeal": "理想：50–70 字符",
       "descriptionSeo": "SEO 描述",
       "descriptionPlaceholder": "120-160 字符…",
@@ -297,7 +297,7 @@
     "revenus": {
       "title": "收入预览",
       "prixVente": "售价",
-      "commission": "Shopi 佣金（{{pct}}%）",
+      "commission": "Shoneya 佣金（{{pct}}%）",
       "revenuNet": "预计净收入"
     },
     "actions": {

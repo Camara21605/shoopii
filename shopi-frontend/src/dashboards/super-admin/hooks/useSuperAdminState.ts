@@ -8,7 +8,7 @@ import type {
   Alert, AuditEntry, Admin,
 } from '../types/codes.types';
 import {
-  MOCK_CODES, MOCK_HEALTH, MOCK_CONVERSATIONS,
+  MOCK_CODES, MOCK_HEALTH,
 } from '../data/mockDB';
 import {
   apiFetch, ApiError, tokenStorage,
@@ -39,7 +39,7 @@ export interface UserListResponse {
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
 
 const INITIAL_STATE: SuperAdminState = {
-  section:          (localStorage.getItem('shopi-super-admin-section') as SectionId) || 'overview',
+  section:          (localStorage.getItem('shoneya-super-admin-section') as SectionId) || 'overview',
   roleFilter:       'all',
   statusFilter:     'all',
   countryFilter:    'all',
@@ -50,10 +50,7 @@ const INITIAL_STATE: SuperAdminState = {
   codeFilter:       '',
   codeStatusFilter: 'all',
   codeRoleFilter:   'all',
-  activeConvId:     null,
-  convSearch:       '',
   currentUser:      null,
-  theme: (localStorage.getItem('shopi-theme') as 'dark' | 'light') || 'dark',
 };
 
 export function useSuperAdminState() {
@@ -77,7 +74,6 @@ export function useSuperAdminState() {
 
   /* ── Données encore en mock ── */
   const [codes,         setCodes]         = useState(MOCK_CODES);
-  const [conversations, setConversations] = useState(MOCK_CONVERSATIONS);
   const healthData = MOCK_HEALTH;
 
   /* ── Stats par rôle (badge sidebar) ── */
@@ -188,20 +184,10 @@ export function useSuperAdminState() {
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
 
-  /* ── Thème ── */
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', state.theme);
-    localStorage.setItem('shopi-theme', state.theme);
-  }, [state.theme]);
-
   /* ── Section active (persistée pour survivre à un rechargement) ── */
   useEffect(() => {
-    localStorage.setItem('shopi-super-admin-section', state.section);
+    localStorage.setItem('shoneya-super-admin-section', state.section);
   }, [state.section]);
-
-  const toggleTheme = useCallback(() => {
-    setState(s => ({ ...s, theme: s.theme === 'dark' ? 'light' : 'dark' }));
-  }, []);
 
   /* ── Navigation ── */
   const navigate = useCallback((section: SectionId) => {
@@ -298,7 +284,7 @@ export function useSuperAdminState() {
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = `shopi-utilisateurs-${Date.now()}.csv`;
+    a.download = `shoneya-utilisateurs-${Date.now()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }, [state.roleFilter, state.statusFilter, state.countryFilter, state.search]);
@@ -341,29 +327,22 @@ export function useSuperAdminState() {
     setAlerts(prev => prev.map(a => a.id === id ? { ...a, resolved: true } : a));
   }, []);
 
-  /* ── Messagerie ── */
-  const setActiveConv = useCallback((id: number | null) => {
-    setState(s => ({ ...s, activeConvId: id }));
-    if (id !== null) setConversations(prev => prev.map(c => c.id === id ? { ...c, unread: 0 } : c));
-  }, []);
-
-  const setConvSearch = useCallback((v: string) => setState(s => ({ ...s, convSearch: v })), []);
-
-  const sendMessage = useCallback((convId: number, text: string) => {
-    setConversations(prev => prev.map(c =>
-      c.id === convId
-        ? { ...c, messages: [...c.messages, { from: 'admin', text, time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }] }
-        : c,
-    ));
-  }, []);
-
-  /* ── Permissions admin ── */
+  /* ── Permissions admin ──
+   * Mise à jour optimiste : la case à cocher bascule immédiatement au
+   * clic (avant même la réponse serveur) pour un retour instantané ;
+   * en cas d'échec réseau, l'état est annulé et l'erreur remonte pour
+   * que PermissionsSection affiche le toast d'erreur. */
   const toggleAdminPerm = useCallback(async (email: string, perm: string, val: boolean) => {
-    await apiFetch<{ message: string; perms: Record<string, boolean> }>(
-      `/dashboard/super-admin/admins/${encodeURIComponent(email)}/permissions`,
-      { method: 'PATCH', body: { perm, value: val } },
-    );
     setAdmins(prev => prev.map(a => a.email === email ? { ...a, perms: { ...a.perms, [perm]: val } } : a));
+    try {
+      await apiFetch<{ message: string; perms: Record<string, boolean> }>(
+        `/dashboard/super-admin/admins/${encodeURIComponent(email)}/permissions`,
+        { method: 'PATCH', body: { perm, value: val } },
+      );
+    } catch (e) {
+      setAdmins(prev => prev.map(a => a.email === email ? { ...a, perms: { ...a.perms, [perm]: !val } } : a));
+      throw e;
+    }
   }, []);
 
   const setAdminPaysAssigne = useCallback(async (email: string, paysId: string | null) => {
@@ -374,7 +353,6 @@ export function useSuperAdminState() {
     setAdmins(prev => prev.map(a => a.email === email ? { ...a, paysAssigne: paysId } : a));
   }, []);
 
-  const totalUnread   = conversations.reduce((sum, c) => sum + c.unread, 0);
   const pendingAlerts = alerts.filter(a => !a.resolved).length;
 
   return {
@@ -385,18 +363,16 @@ export function useSuperAdminState() {
     admins, adminsLoading, adminsError, reloadAdmins: loadAdmins,
     codes,
     alerts, alertsLoading, alertsError, reloadAlerts: loadAlerts,
-    conversations,
     auditLog, auditLoading, auditError, reloadAudit: loadAudit,
     healthData,
-    totalUnread, pendingAlerts,
-    navigate, navUsers, toggleTheme,
+    pendingAlerts,
+    navigate, navUsers,
     setSearch, setRoleFilter, setStatusFilter, setCountryFilter, goPage,
     openUserModal, closeUserModal,
     toggleBlockUser, suspendUser, verifyUser, deleteUser, exportUsers,
     setCodeQty, setCodeFilter, setCodeStatusFilter, setCodeRoleFilter,
     generateCodes, revokeCode,
     resolveAlert,
-    setActiveConv, setConvSearch, sendMessage,
     toggleAdminPerm, setAdminPaysAssigne,
   };
 }

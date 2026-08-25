@@ -12,7 +12,7 @@ export const MOCK_USERS: ChatUser[] = [
   { id:'u3', name:'Fatoumata Diallo',  role:'client',        ava:'FD', avaColor:'linear-gradient(135deg,#ECFDF5,#D1FAE5)', online:false, context:'Livraison MIS-0123'     },
   { id:'u4', name:'AppleZone GN',      role:'vendeur',       ava:'💻', avaColor:'linear-gradient(135deg,#FAF5FF,#EDE9FE)', online:true,  context:'Nouvelle mission'       },
   { id:'u5', name:'Ibrahima Sylla',    role:'livreur',       ava:'IS', avaColor:'linear-gradient(135deg,#EEF3FD,#C8D9F8)', online:false, context:'Correspondant Ratoma'   },
-  { id:'u6', name:'Support Shopi',     role:'admin',         ava:'🛡️', avaColor:'linear-gradient(135deg,#FEF2F2,#FECACA)', online:true,  context:'Support technique'      },
+  { id:'u6', name:'Support Shoneya',     role:'admin',         ava:'🛡️', avaColor:'linear-gradient(135deg,#FEF2F2,#FECACA)', online:true,  context:'Support technique'      },
   { id:'u7', name:'Amadou Partenaire', role:'partenaire',    ava:'AP', avaColor:'linear-gradient(135deg,#FAF5FF,#EDE9FE)', online:false, context:'Réseau livreurs'        },
   { id:'u8', name:'FashionHub GN',     role:'vendeur',       ava:'👗', avaColor:'linear-gradient(135deg,#FFF5F7,#FCE7F3)', online:true,  context:'Abonnement boutique'    },
   { id:'u9', name:'Sekou Correspondant', role:'correspondant', ava:'📍', avaColor:'linear-gradient(135deg,#FFF7ED,#FED7AA)', online:true, context:'Correspondant Kindia' },
@@ -113,6 +113,6 @@ export const MODAL_USERS: NewConvUser[] = [
   { id:'un4', name:'Thierno Baldé',       role:'client',        ava:'TB', sub:'Client'                 },
   { id:'un5', name:'Kadiatou Mariam',     role:'livreur',       ava:'KM', sub:'Livreur Kaloum'         },
   { id:'un6', name:'Amadou Partenaire',   role:'partenaire',    ava:'AP', sub:'Partenaire réseau'      },
-  { id:'un7', name:'Support Shopi',       role:'admin',         ava:'🛡️', sub:'Assistance technique'   },
+  { id:'un7', name:'Support Shoneya',       role:'admin',         ava:'🛡️', sub:'Assistance technique'   },
   { id:'un8', name:'Sekou Correspondant', role:'correspondant', ava:'SC', sub:'Correspondant Kindia'   },
 ];

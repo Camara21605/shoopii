@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react';
 import styles from '../styles/CommandesPage.module.css';
 import { apiFetch } from '../../../shared/services/apiFetch';
-import type { CommandeStatut } from '../data/types';
+import Pagination from '../components/Pagination';
 
 interface CommandesPageProps {
   onToast: (msg: string, type?: 's' | 'i' | 'w') => void;
@@ -22,22 +22,23 @@ type Onglet = 'toutes' | 'encours' | 'litiges';
 
 export default function CommandesPage({ onToast }: CommandesPageProps) {
   const [onglet,  setOnglet]  = useState<Onglet>('toutes');
-  const [data,    setData]    = useState<{ list: any[]; stats: any } | null>(null);
+  const [page,    setPage]    = useState(1);
+  const [data,    setData]    = useState<{ list: any[]; stats: any; total: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiFetch('/dashboard/admin/commandes')
+    setLoading(true);
+    apiFetch('/dashboard/admin/commandes', { params: { onglet, page: String(page), limit: '20' } })
       .then(d => setData(d as any))
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [onglet, page]);
 
-  const stats    = data?.stats ?? { total: 0, reussies: 0, tauxReussite: 0, enCours: 0, litiges: 0 };
-  const commandes = (data?.list ?? []).filter((c: any) =>
-    onglet === 'toutes'   ? true
-    : onglet === 'litiges'  ? c.statut === 'dispute'
-    : c.statut !== 'done' && c.statut !== 'dispute'
-  );
+  const changeOnglet = (o: Onglet) => { setOnglet(o); setPage(1); };
+
+  const stats     = data?.stats ?? { total: 0, reussies: 0, tauxReussite: 0, enCours: 0, litiges: 0 };
+  const commandes = data?.list  ?? [];
+  const total     = data?.total ?? 0;
 
   return (
     <div>
@@ -57,7 +58,7 @@ export default function CommandesPage({ onToast }: CommandesPageProps) {
             <div className={styles.chTabs}>
               {(['toutes', 'encours', 'litiges'] as Onglet[]).map(o => (
                 <button key={o} className={`${styles.chTab} ${onglet === o ? styles.chTabOn : ''}`}
-                  onClick={() => setOnglet(o)}>
+                  onClick={() => changeOnglet(o)}>
                   {o === 'toutes' ? 'Toutes' : o === 'encours' ? 'En cours' : 'Litiges'}
                 </button>
               ))}
@@ -118,6 +119,7 @@ export default function CommandesPage({ onToast }: CommandesPageProps) {
             </table>
           </div>
         )}
+        <Pagination page={page} limit={20} total={total} onChange={setPage} />
       </div>
     </div>
   );

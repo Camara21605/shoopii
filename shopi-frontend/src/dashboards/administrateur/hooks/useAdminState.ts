@@ -10,20 +10,9 @@
  * ================================================================ */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { AdminPage, ActeurType } from '../data/types';
+import type { AdminPage } from '../data/types';
 import { apiFetch } from '../../../shared/services/apiFetch';
-
-const TYPE_PREFIX: Record<ActeurType, string> = {
-  par: 'PAR', ent: 'ENT', lvr: 'LVR', cor: 'COR',
-};
-
-/* Génère un suffixe aléatoire sans les caractères ambigus 0/O/1/I */
-function randCode(len = 5): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let s = '';
-  for (let i = 0; i < len; i++) s += chars[Math.floor(Math.random() * chars.length)];
-  return s;
-}
+import { useNotificationSocket } from '../../../shared/notifications/useNotificationSocket';
 
 export function useAdminState() {
   /* Page active */
@@ -33,34 +22,51 @@ export function useAdminState() {
   const [sbOpen, setSbOpen] = useState(false);
 
   /* Modale génération de code */
-  const [genOpen, setGenOpen]   = useState(false);
-  const [lastCode, setLastCode] = useState('');
+  const [genOpen, setGenOpen] = useState(false);
 
   /* Modale sanction (suspension d'un compte) */
   const [sanctionTarget, setSanctionTarget] = useState<string | null>(null);
 
-  /* Permissions géographiques de cet admin (inclut _paysAssigne: string | null) */
+  /* Permissions de cet admin — modules généraux + géo (inclut
+   * _paysAssigne: string | null). Nom historique "geoPerms" conservé
+   * (déjà utilisé dans plusieurs fichiers) même si ça couvre maintenant
+   * aussi les permissions non-géo. */
   const [geoPerms, setGeoPerms] = useState<Record<string, boolean | string | null>>({});
+  /* Distingue "pas encore chargé" de "chargé, tout est false" — sans ça,
+   * un effet de garde basé sur geoPerms redirigerait à tort un admin qui
+   * A la permission, le temps que le fetch initial se termine. */
+  const [permsLoaded, setPermsLoaded] = useState(false);
 
-  useEffect(() => {
+  const loadPerms = useCallback(() => {
     apiFetch<Record<string, boolean | string | null>>('/dashboard/super-admin/my-permissions')
       .then(data => { if (data) setGeoPerms(data); })
-      .catch(() => {/* silencieux — section géo masquée si erreur */});
+      .catch(() => {/* silencieux — section géo masquée si erreur */})
+      .finally(() => setPermsLoaded(true));
   }, []);
+
+  useEffect(() => { loadPerms(); }, [loadPerms]);
+
+  /* Recharge les permissions en temps réel dès que le super-admin en
+   * modifie une : setPermission() (admins.service.ts) crée déjà une
+   * notification 'admin_permission'/'geo_permission' à chaque
+   * changement — sans ce hook, la sidebar/topbar restaient figées sur
+   * les permissions chargées au montage jusqu'au prochain rechargement
+   * manuel de la page. Écoute passive : useNotificationSocket réutilise
+   * le socket singleton déjà ouvert par useNotifications(), donc aucune
+   * connexion supplémentaire n'est créée ici. */
+  useNotificationSocket({
+    onNew: ({ notification }) => {
+      if (notification.resourceType === 'admin_permission' || notification.resourceType === 'geo_permission') {
+        loadPerms();
+      }
+    },
+  });
 
   /* Navigation entre pages + fermeture de la sidebar mobile */
   const navigate = useCallback((page: AdminPage) => {
     setActivePage(page);
     setSbOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-
-  /* Génère un code de création.
-     En prod : POST /admin/codes { type, destinataire } → { code } */
-  const genererCode = useCallback((type: ActeurType): string => {
-    const code = `SHOPI-${TYPE_PREFIX[type]}-${randCode()}`;
-    setLastCode(code);
-    return code;
   }, []);
 
   /* Sanction — ouvre/ferme la modale de suspension.
@@ -71,8 +77,8 @@ export function useAdminState() {
   return {
     activePage, navigate,
     sbOpen, setSbOpen,
-    genOpen, setGenOpen, lastCode, genererCode,
+    genOpen, setGenOpen,
     sanctionTarget, ouvrirSanction, fermerSanction,
-    geoPerms,
+    geoPerms, permsLoaded,
   };
 }

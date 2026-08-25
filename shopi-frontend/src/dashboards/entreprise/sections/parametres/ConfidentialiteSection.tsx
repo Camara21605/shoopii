@@ -19,13 +19,13 @@ export default function ConfidentialiteSection({ onDirty, onToast }: Props) {
         <p>Contrôlez la visibilité de votre boutique et l'utilisation de vos données sur la plateforme.</p>
       </div>
       <FormCard title="Visibilité de la boutique" icon="fa-eye">
-        <ToggleRow label="Apparaître dans la recherche Shopi" sub="Votre boutique est trouvable par tous les clients" checked={vis.search} onChange={setV('search')} />
+        <ToggleRow label="Apparaître dans la recherche Shoneya" sub="Votre boutique est trouvable par tous les clients" checked={vis.search} onChange={setV('search')} />
         <ToggleRow label="Afficher les statistiques de vente" sub="Nombre de commandes et avis visibles sur votre profil public" checked={vis.stats} onChange={setV('stats')} />
         <ToggleRow label="Permettre le suivi de boutique" sub="Les clients peuvent s'abonner à votre boutique" checked={vis.suivi} onChange={setV('suivi')} />
         <ToggleRow label="Partager la localisation exacte" sub="Afficher l'adresse précise dans les résultats de recherche" checked={vis.loc} onChange={setV('loc')} />
       </FormCard>
       <FormCard title="Données & Statistiques" icon="fa-chart-pie">
-        <ToggleRow label="Améliorer les algorithmes Shopi" sub="Vos données de vente aident à améliorer les recommandations" checked={data.algo} onChange={setD('algo')} />
+        <ToggleRow label="Améliorer les algorithmes Shoneya" sub="Vos données de vente aident à améliorer les recommandations" checked={data.algo} onChange={setD('algo')} />
         <ToggleRow label="Statistiques de marché anonymisées" sub="Vos stats participent aux rapports agrégés de la plateforme" checked={data.anon} onChange={setD('anon')} />
         <ToggleRow label="Rapports personnalisés avancés" sub="Recevoir des analyses de performance adaptées à votre activité" checked={data.rapports} badge="new" onChange={setD('rapports')} />
       </FormCard>

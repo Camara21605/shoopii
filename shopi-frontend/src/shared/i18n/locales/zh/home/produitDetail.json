@@ -36,10 +36,10 @@
         "smartHdr": "智能 HDR 5"
       },
       "livraisonTitre": "国际配送与代理商",
-      "livraisonDesc": "此店铺位于法国。Shopi 提供本地代理商系统，方便您在非洲收货。",
-      "commentTitre": "Shopi 代理商如何运作？",
+      "livraisonDesc": "此店铺位于法国。Shoneya 提供本地代理商系统，方便您收货。",
+      "commentTitre": "Shoneya 代理商如何运作？",
       "commentList": {
-        "representant": "代理商是您所在城市或地区的 Shopi 代表",
+        "representant": "代理商是您所在城市或地区的 Shoneya 代表",
         "receptionne": "他接收您的包裹、检查状况并通知您",
         "conserve": "他安全存放并交付给您或交给当地配送员",
         "facilite": "他促进您与国际店铺之间的沟通"
@@ -117,9 +117,9 @@
     "infoSection": {
       "sku": "SKU：{{sku}}",
       "intlTitre": "检测到国际店铺",
-      "intlDesc": "此店铺位于您所在大陆之外。Shopi 代理商可以接收您的订单并负责本地联系。",
+      "intlDesc": "此店铺位于您所在大陆之外。Shoneya 代理商可以接收您的订单并负责本地联系。",
       "voirLaBoutique": "查看店铺 {{nom}}",
-      "boutiqueVerifieeShopi": "Shopi 已验证店铺",
+      "boutiqueVerifieeShopi": "Shoneya 已验证店铺",
       "abonnesCount": "{{count}} 名关注者",
       "avisCount": "{{count}} 条评价",
       "acheteursConfirmes": "{{count}} 名已确认买家",
@@ -161,7 +161,7 @@
         "retourTitre": "7 天退货",
         "retourSub": "接受有缺陷产品",
         "authentiqueTitre": "正品",
-        "authentiqueSub": "Shopi 认证卖家",
+        "authentiqueSub": "Shoneya 认证卖家",
         "supportTitre": "24/7 支持",
         "supportSub": "聊天 · WhatsApp · 电话"
       }
@@ -186,11 +186,11 @@
         "farNote": "基础价格 +80%"
       },
       "aucunMode": "此产品没有可用配送方式。请直接联系店铺安排配送。",
-      "correspondantTitre": "Shopi 代理商",
+      "correspondantTitre": "Shoneya 代理商",
       "selectionne": "已选择",
       "boutiqueHorsContinent": "您所在大陆之外的店铺",
       "pourquoiCorrespondant": "为什么需要代理商？",
-      "pourquoiDesc": "店铺在国际。Shopi 代理商可以接收您的包裹、检查状况并交付给您。",
+      "pourquoiDesc": "店铺在国际。Shoneya 代理商可以接收您的包裹、检查状况并交付给您。",
       "livraisonDirecteTitre": "直接配送",
       "livraisonDirecteSub": "店铺直接发货（时间较长）",
       "viaCorrespondantTitre": "通过代理商",

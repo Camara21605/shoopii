@@ -1,6 +1,6 @@
 /* ============================================================
  * FICHIER : src/shared/notifications/types.ts
- * Types TypeScript du centre de notifications Shopi.
+ * Types TypeScript du centre de notifications Shoneya.
  * Miroir exact des interfaces INotificationDto / INotificationListResult
  * retournées par le backend (NotificationsController).
  * ============================================================ */

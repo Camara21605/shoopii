@@ -45,7 +45,7 @@
       "abonneCount_one": "{{count}} subscritor",
       "abonneCount_other": "{{count}} subscritores",
       "suivreCeCorrespondant": "Seguir este correspondente",
-      "verificationsShopi": "Verificações Shopi",
+      "verificationsShopi": "Verificações Shoneya",
       "correspondantsSimilaires": "Correspondentes semelhantes",
       "voirTout": "Ver tudo",
       "suivreShort": "+ Seguir",
@@ -60,7 +60,7 @@
       "missionsCeMois": "Missões este mês",
       "litigesResolus": "Litígios resolvidos"
     },
-    "verifieParShopi": "✓ Verificado pela Shopi",
+    "verifieParShopi": "✓ Verificado pela Shoneya",
     "tabInfo": {
       "aPropos": "Sobre",
       "informationsPratiques": "Informações práticas",
@@ -87,7 +87,7 @@
       "emptyTitle": "Tarifas não informadas",
       "emptyDescPart1": "O correspondente ainda não publicou a sua tabela de tarifas.",
       "emptyDescPart2": "Contacte-o diretamente para obter um orçamento.",
-      "abonnesShopi": "Subscritores Shopi",
+      "abonnesShopi": "Subscritores Shoneya",
       "reduction15": "— Desconto de 15% em todos os serviços."
     },
     "tabAvis": {

@@ -18,7 +18,7 @@
     "emptyTransactions": "لا توجد معاملات بعد.",
     "repartition": "التوزيع",
     "emptyRepartition": "لا توجد بيانات هذا الشهر.",
-    "virementsShopi": "تحويلات Shopi",
+    "virementsShopi": "تحويلات Shoneya",
     "emptyVirements": "لا توجد تحويلات بعد.",
     "statutRecu": "✓ مستلم",
     "statutAttente": "⏳ بانتظار",
@@ -27,7 +27,7 @@
       "telechargerBilan": "تنزيل الكشف الشهري",
       "demanderVirement": "طلب تحويل مبكر",
       "modifierInfosBancaires": "تعديل المعلومات البنكية",
-      "voirFactures": "عرض فواتير Shopi"
+      "voirFactures": "عرض فواتير Shoneya"
     }
   }
 }

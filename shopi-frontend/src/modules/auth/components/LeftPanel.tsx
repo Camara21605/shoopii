@@ -1,10 +1,11 @@
 /* ============================================================
  * FICHIER : src/modules/auth/components/LeftPanel.tsx
- * RÔLE    : Panneau gauche de la page Login — branding Shopi,
+ * RÔLE    : Panneau gauche de la page Login — branding Shoneya,
  *           statistiques, chips de rôles, cartes flottantes
  * ============================================================ */
 
 import React from 'react';
+import ShoneyaLogo from '../../../shared/components/ShoneyaLogo';
 
 /**
  * LeftPanel
@@ -17,9 +18,9 @@ export const LeftPanel: React.FC = () => {
     <div className="left-panel">
       {/* ── Logo ── */}
       <div className="logo rv">
-        <div className="logo-mark">Sh</div>
+        <ShoneyaLogo size={38} />
         <div className="logo-word">
-          Sho<b>pi</b>
+          Sho<b>neya</b>
         </div>
       </div>
 
@@ -28,19 +29,19 @@ export const LeftPanel: React.FC = () => {
         {/* Badge eyebrow */}
         <div className="left-eyebrow rv">
           <span className="left-dot" />
-          La Marketplace Africaine de Référence
+          La Marketplace de Référence
         </div>
 
         {/* Titre principal */}
         <h1 className="left-h1 rv d1">
           Bienvenue<br />
-          sur <em>Shopi</em>.<br />
+          sur <em>Shoneya</em>.<br />
           Connectez-vous.
         </h1>
 
         {/* Description */}
         <p className="left-p rv d2">
-          Achetez, vendez, livrez ou administrez. Shopi réunit six univers
+          Achetez, vendez, livrez ou administrez. Shoneya réunit six univers
           en une seule plateforme moderne, sécurisée et pensée pour l'Afrique.
         </p>
 
@@ -108,7 +109,7 @@ export const LeftPanel: React.FC = () => {
 
       {/* ── Liens de pied de page ── */}
       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }} className="rv">
-        {['À propos de Shopi', 'Aide & Support', 'Confidentialité'].map(link => (
+        {['À propos de Shoneya', 'Aide & Support', 'Confidentialité'].map(link => (
           <a
             key={link}
             href="#"
@@ -124,7 +125,7 @@ export const LeftPanel: React.FC = () => {
           </a>
         ))}
         <span style={{ fontSize: '12px', color: 'rgba(200,217,248,.25)' }}>
-          © 2025 Shopi Africa
+          © 2025 Shoneya
         </span>
       </div>
     </div>

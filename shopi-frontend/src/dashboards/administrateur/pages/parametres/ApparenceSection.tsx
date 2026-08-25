@@ -2,7 +2,7 @@
  * FICHIER : pages/parametres/ApparenceSection.tsx
  *
  * RÔLE : Section « Apparence & personnalisation » du dashboard
- *        administrateur Shopi.
+ *        administrateur Shoneya.
  *
  * FONCTIONNALITÉS :
  *   • Chargement des préférences persistées (GET /api/appearance)
@@ -47,7 +47,7 @@ const THEMES = [
 
 /** Couleurs d'accent disponibles avec labels et hex pour l'aperçu */
 const ACCENTS = [
-  { id: 'blue'    as const, label: 'Bleu Shopi',  hex: '#1A4FC4' },
+  { id: 'blue'    as const, label: 'Bleu Shoneya',  hex: '#1A4FC4' },
   { id: 'teal'    as const, label: 'Teal',         hex: '#0E7490' },
   { id: 'violet'  as const, label: 'Violet',       hex: '#7C3AED' },
   { id: 'emerald' as const, label: 'Émeraude',     hex: '#059669' },
@@ -55,7 +55,7 @@ const ACCENTS = [
   { id: 'rose'    as const, label: 'Rose',         hex: '#E11D48' },
 ];
 
-/** Polices disponibles (DM Sans = défaut Shopi, autres chargées via Google Fonts) */
+/** Polices disponibles (DM Sans = défaut Shoneya, autres chargées via Google Fonts) */
 const POLICES: { id: FontFamily; label: string }[] = [
   { id: 'DM Sans', label: 'DM Sans (par défaut)' },
   { id: 'Inter',   label: 'Inter'                 },
@@ -171,7 +171,7 @@ export default function ApparenceSection({ onToast }: SectionProps) {
     onToast('Modifications annulées', 'i');
   }, [onToast]);
 
-  /* ── Réinitialiser aux valeurs par défaut Shopi ──────────── */
+  /* ── Réinitialiser aux valeurs par défaut Shoneya ──────────── */
   const handleReset = useCallback(async () => {
     setShowReset(false);
     setSaving(true);
@@ -181,7 +181,7 @@ export default function ApparenceSection({ onToast }: SectionProps) {
       setPrefs(defaults);
       applyPrefs(defaults);
       watchAutoTheme(defaults);
-      onToast('Apparence réinitialisée aux valeurs par défaut Shopi', 's');
+      onToast('Apparence réinitialisée aux valeurs par défaut Shoneya', 's');
     } catch {
       onToast('Erreur lors de la réinitialisation', 'e');
     } finally {
@@ -360,7 +360,7 @@ export default function ApparenceSection({ onToast }: SectionProps) {
           <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 10 }}>
             Couleur active :{' '}
             <b style={{ color: currentAccent.hex }}>{currentAccent.label}</b>
-            {prefs.accentColor === 'blue' && ' (défaut Shopi)'}
+            {prefs.accentColor === 'blue' && ' (défaut Shoneya)'}
           </p>
         </div>
       </div>
@@ -405,7 +405,7 @@ export default function ApparenceSection({ onToast }: SectionProps) {
             borderRadius:'var(--r-sm)',
             fontFamily:  `'${prefs.fontFamily}', 'DM Sans', sans-serif`,
           }}>
-            <span style={{ fontSize: 15, fontWeight: 600 }}>Shopi Africa </span>
+            <span style={{ fontSize: 15, fontWeight: 600 }}>Shoneya </span>
             <span style={{ fontSize: 13, color: 'var(--t2)' }}>
               — Tableau de bord administrateur · 1234 ₣
             </span>
@@ -675,7 +675,7 @@ export default function ApparenceSection({ onToast }: SectionProps) {
               <p style={{ fontSize: 13, color: '#991B1B', marginBottom: 12 }}>
                 <i className="fas fa-triangle-exclamation" />{' '}
                 Cette action remettra <strong>toutes les préférences d&apos;apparence</strong> aux
-                valeurs par défaut Shopi. Cette opération est irréversible. Confirmer ?
+                valeurs par défaut Shoneya. Cette opération est irréversible. Confirmer ?
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button

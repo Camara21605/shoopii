@@ -343,7 +343,7 @@ export function useProfilClient(): UseProfilClientReturn {
     { valeur: String(nbCommandes),        label: 'Commandes'    },
     { valeur: String(nbAbos),             label: 'Abonnements'  },  /* ✅ réel */
     { valeur: String(api.totalFavorites), label: 'Favoris'      },
-    { valeur: api.shopiPoints.toLocaleString('fr-FR'), label: 'Pts Shopi', tag: 'y' },
+    { valeur: api.shopiPoints.toLocaleString('fr-FR'), label: 'Pts Shoneya', tag: 'y' },
     { valeur: '—',                        label: 'Note'         },
     { valeur: compactGnf(api.totalSpent), label: 'Dépensé GNF'  },
     { valeur: compactGnf(api.walletSolde),label: 'Wallet GNF'   },

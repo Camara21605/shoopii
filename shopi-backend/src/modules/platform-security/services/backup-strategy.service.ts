@@ -56,7 +56,7 @@ export class BackupStrategyService {
         type:          'full',
         retentionDays: 30,
         tool:          'Render / Supabase / Neon automated backups',
-        location:      'Cloud hébergeur (région EU/West Africa) + S3-compatible',
+        location:      'Cloud hébergeur (région EU) + S3-compatible',
         description:
           'La base de données PostgreSQL est sauvegardée automatiquement chaque jour ' +
           'par la plateforme d\'hébergement. Les sauvegardes sont chiffrées au repos. ' +

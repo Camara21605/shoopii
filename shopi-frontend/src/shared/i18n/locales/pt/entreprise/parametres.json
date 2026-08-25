@@ -9,7 +9,7 @@
         "catalogue": "Catálogo & Produtos",
         "livraison": "Entrega",
         "paiement": "Pagamento & Faturação",
-        "commissions": "Comissões Shopi",
+        "commissions": "Comissões Shoneya",
         "documents": "Documentos & Verificação",
         "confidentialiteSecurite": "Privacidade e segurança",
         "securite": "Segurança",
@@ -59,7 +59,7 @@
       "savedToast": "✅ Catálogo guardado",
       "errorToast": "❌ Erro ao guardar",
       "title": "Catálogo & Regras de publicação",
-      "subtitle": "Controle como os seus produtos são exibidos e publicados na Shopi.",
+      "subtitle": "Controle como os seus produtos são exibidos e publicados na Shoneya.",
       "reglesTitle": "Regras de exibição",
       "reglesSubtitle": "Comportamento do seu catálogo público",
       "afficherRupture": "Mostrar produtos esgotados",
@@ -90,8 +90,8 @@
       "methodesSubtitle": "Ative os modos de entrega disponíveis para os seus clientes",
       "standard": "Entrega standard",
       "standardSub": "Gerida pela sua equipa de loja",
-      "livreursShopi": "Entregadores Shopi",
-      "livreursShopiSub": "Rede de entregadores parceiros Shopi",
+      "livreursShopi": "Entregadores Shoneya",
+      "livreursShopiSub": "Rede de entregadores parceiros Shoneya",
       "correspondants": "Correspondentes",
       "correspondantsSub": "Rede de pontos de apoio locais e internacionais",
       "clickCollect": "Click & Collect",
@@ -110,8 +110,8 @@
       "errorToast": "❌ Erro ao guardar",
       "title": "Pagamento & Faturação",
       "subtitle": "Configure os seus métodos de receção de pagamentos e as suas informações fiscais.",
-      "receptionTitle": "Receção de pagamentos Shopi",
-      "receptionSubtitle": "Como recebe os seus virements da Shopi",
+      "receptionTitle": "Receção de pagamentos Shoneya",
+      "receptionSubtitle": "Como recebe os seus virements da Shoneya",
       "canalReception": "Canal de receção",
       "waveOption": "Wave",
       "virementBancaireOption": "Transferência bancária",
@@ -134,16 +134,16 @@
     },
     "commissions": {
       "loadErrorToast": "Erro ao carregar comissões",
-      "title": "Comissões Shopi",
+      "title": "Comissões Shoneya",
       "subtitle": "Detalhe das comissões aplicadas nas suas vendas conforme o tipo de transação.",
       "grilleTitle": "Tabela de comissões",
       "grilleSubtitle": "O seu plano atual: {{plan}}",
       "typeTransaction": "Tipo de transação",
-      "commissionShopi": "Comissão Shopi",
+      "commissionShopi": "Comissão Shoneya",
       "fraisLivreurCorresp": "Taxas entregador/corresp.",
       "retraitImmediat": "Levantamento imediato",
-      "venteDirecte": "Venda direta via Shopi",
-      "venteLivreurShopi": "Venda com entregador Shopi",
+      "venteDirecte": "Venda direta via Shoneya",
+      "venteLivreurShopi": "Venda com entregador Shoneya",
       "selonLivreur": "conforme entregador",
       "venteCorrespondant": "Venda via correspondente",
       "selonCorresp": "conforme corresp.",
@@ -192,14 +192,14 @@
         "echecUpload": "❌ Falha no carregamento"
       },
       "title": "Documentos & Verificação",
-      "subtitle": "Submeta os seus documentos legais para obter o selo \"Loja verificada Shopi\".",
+      "subtitle": "Submeta os seus documentos legais para obter o selo \"Loja verificada Shoneya\".",
       "statutVerification": "Estatuto de verificação:",
       "requisTitle": "Documentos obrigatórios",
       "requisSubtitle": "Os 3 documentos obrigatórios: CNI + RCCM + Comprovativo bancário",
       "documentUploade": "Documento carregado",
       "remplacer": "Substituir",
       "uploader": "Carregar",
-      "hint": "Uma vez submetidos os 3 documentos obrigatórios, o seu processo passa automaticamente para revisão. A equipa Shopi contactar-vos-á dentro de 48h."
+      "hint": "Uma vez submetidos os 3 documentos obrigatórios, o seu processo passa automaticamente para revisão. A equipa Shoneya contactar-vos-á dentro de 48h."
     },
     "securite": {
       "title": "Segurança & Ligação",
@@ -274,7 +274,7 @@
         "newReview": "Nova avaliação de cliente",
         "negativeReview": "Avaliação negativa (< 3 estrelas)",
         "weeklyReport": "Relatório semanal de reputação",
-        "promoInvitations": "Convites para promoções Shopi",
+        "promoInvitations": "Convites para promoções Shoneya",
         "monthlyReport": "Relatório de desempenho mensal",
         "shopNews": "Novidades da plataforma"
       }
@@ -291,7 +291,7 @@
       "items": {
         "showInSearch": {
           "label": "Aparecer na pesquisa",
-          "sub": "A sua loja é visível nos resultados de pesquisa Shopi"
+          "sub": "A sua loja é visível nos resultados de pesquisa Shoneya"
         },
         "showSalesStats": {
           "label": "Mostrar as estatísticas de vendas",
@@ -306,7 +306,7 @@
           "sub": "Caso contrário, apenas a comuna é exibida"
         },
         "improveAlgorithm": {
-          "label": "Melhorar as recomendações Shopi",
+          "label": "Melhorar as recomendações Shoneya",
           "sub": "Os seus dados ajudam a personalizar os resultados"
         },
         "anonymizedStats": {
@@ -363,7 +363,7 @@
       "logoSupprime": "🗑️ Logo eliminado",
       "logoSuppressionImpossible": "❌ Impossível eliminar o logo",
       "title": "Loja & Identidade",
-      "subtitle": "Informações públicas da sua loja. São visíveis por todos os clientes na plataforma Shopi.",
+      "subtitle": "Informações públicas da sua loja. São visíveis por todos os clientes na plataforma Shoneya.",
       "profilLbl": "Perfil",
       "completedAt": "Loja completada em {{pct}}%",
       "elementsManquants": "— Alguns elementos em falta",
@@ -371,7 +371,7 @@
       "profilCompletBold": "3× mais",
       "profilCompletPart2": "vendas",
       "logoCoverTitle": "Logo & Imagem de capa",
-      "logoCoverSubtitle": "Identidade visual da sua loja na Shopi",
+      "logoCoverSubtitle": "Identidade visual da sua loja na Shoneya",
       "logoBoutique": "Logo da loja",
       "cliquerChangerLogo": "Clique para alterar o logo",
       "changer": "Alterar",

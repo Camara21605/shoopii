@@ -5,7 +5,7 @@
       "profil": "Profil",
       "adresses": "Adresses",
       "paiement": "Paiement",
-      "points": "Points Shopi",
+      "points": "Points Shoneya",
       "confidentialiteSecurite": "Confidentialité & sécurité",
       "securite": "Sécurité",
       "sessions": "Appareils connectés",
@@ -22,7 +22,7 @@
       "retourAccueil": "Retour à l'accueil",
       "titrePart1": "Paramètres",
       "titreEm": "du compte",
-      "sub": "Gérez vos informations, sécurité et préférences Shopi"
+      "sub": "Gérez vos informations, sécurité et préférences Shoneya"
     },
     "sidebar": {
       "photoAlt": "Photo de profil",
@@ -59,7 +59,7 @@
       "ameliorer": "Améliorer"
     },
     "points": {
-      "titre": "Mes Shopi Points",
+      "titre": "Mes Shoneya Points",
       "pts": "pts",
       "niveauLabel": "Niveau",
       "prochainA": "à",
@@ -115,7 +115,7 @@
         "carte": "Carte bancaire",
         "especes": "Espèces",
         "virement": "Virement bancaire",
-        "wallet": "Portefeuille Shopi"
+        "wallet": "Portefeuille Shoneya"
       }
     },
     "sessions": {
@@ -191,7 +191,7 @@
       "visibiliteDesc": "Qui peut voir votre profil public",
       "visibiliteOptions": {
         "toutLeMonde": "Tout le monde",
-        "membresShopi": "Membres Shopi",
+        "membresShopi": "Membres Shoneya",
         "personne": "Personne"
       },
       "rows": {
@@ -251,7 +251,7 @@
       "enregistrement": "Enregistrement…",
       "toastSaved": "✅ Préférences régionales enregistrées",
       "langueTitle": "Langue d'affichage",
-      "langueDesc": "Langue de l'interface Shopi",
+      "langueDesc": "Langue de l'interface Shoneya",
       "deviseTitle": "Devise d'affichage",
       "deviseDesc": "Pour les prix et les transactions",
       "fuseauTitle": "Fuseau horaire",
@@ -341,7 +341,7 @@
         },
         "reinitialiser": {
           "title": "Réinitialiser toutes mes préférences",
-          "desc": "Réinitialise notifications, apparence, langue et confidentialité aux valeurs par défaut Shopi.",
+          "desc": "Réinitialise notifications, apparence, langue et confidentialité aux valeurs par défaut Shoneya.",
           "btn": "Réinitialiser",
           "msg": "🔄 Préférences réinitialisées"
         },
@@ -388,7 +388,7 @@
     },
     "profil": {
       "photoTitle": "Photo de profil",
-      "photoSubtitle": "Votre photo visible par les autres utilisateurs Shopi",
+      "photoSubtitle": "Votre photo visible par les autres utilisateurs Shoneya",
       "photoAlt": "Photo de profil",
       "uploadEnCoursTitle": "Upload en cours…",
       "changerPhotoTitle": "Changer la photo",
@@ -406,7 +406,7 @@
       "uploadErrorFallback": "Erreur lors de l'upload",
       "loadError": "❌ Impossible de charger le profil",
       "infosTitle": "Informations personnelles",
-      "infosSubtitle": "Votre identité sur la plateforme Shopi",
+      "infosSubtitle": "Votre identité sur la plateforme Shoneya",
       "modifier": "Modifier",
       "prenomNom": "Prénom & Nom",
       "nomUtilisateur": "Nom d'utilisateur",

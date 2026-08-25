@@ -43,7 +43,7 @@ export class AdminSignalementsService {
    * Le champ `type` est hardcodé à 'ent' car le type de cible
    * (par/ent/lvr/cor) n'est pas encore stocké dans Report.
    */
-  async getSignalements(userId: string) {
+  async getSignalements(userId: string, page = 1, limit = 20) {
     /* Autorisation — vérifie que l'appelant a bien un profil Admin.
      * Ce contrôleur n'a qu'un JwtAuthGuard (pas de RolesGuard global) ;
      * chaque méthode de service doit donc vérifier elle-même l'accès via
@@ -52,10 +52,17 @@ export class AdminSignalementsService {
      * l'intégralité des signalements d'abus de la plateforme. */
     await this.zoneService.adminOf(userId);
 
-    const reports = await this.reportRepo.find({
-      order: { createdAt: 'DESC' },
-      take: 100,
-    });
+    const safeLimit = Math.min(limit, 100);
+
+    const [reports, total, aTraiter] = await Promise.all([
+      this.reportRepo.find({
+        order: { createdAt: 'DESC' },
+        skip: (page - 1) * safeLimit,
+        take: safeLimit,
+      }),
+      this.reportRepo.count(),
+      this.reportRepo.count({ where: { status: ReportStatus.PENDING } }),
+    ]);
 
     const list = reports.map(r => ({
       id:         r.id,
@@ -77,11 +84,12 @@ export class AdminSignalementsService {
     return {
       list,
       stats: {
-        aTraiter:  list.filter(s => s.statut === 'review').length,
+        aTraiter,
         enCours:   0,   // pas de statut intermédiaire 'invest' en base pour l'instant
-        traites:   list.filter(s => s.statut === 'resolved').length,
+        traites:   total - aTraiter,
         suspendus: 0,
       },
+      page, limit: safeLimit, total,
     };
   }
 

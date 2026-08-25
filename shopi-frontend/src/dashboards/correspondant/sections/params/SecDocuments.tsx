@@ -60,7 +60,7 @@ export default function SecDocuments({ data, onUpload, onDelete }: Props) {
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
       <div className={s.psHd}>
         <h1><i className="fas fa-file-shield" /> Documents & Vérification</h1>
-        <p>Documents obligatoires pour maintenir votre statut de correspondant vérifié Shopi.</p>
+        <p>Documents obligatoires pour maintenir votre statut de correspondant vérifié Shoneya.</p>
       </div>
 
       <div className={s.fc}>

@@ -199,7 +199,7 @@ export default function HelpArticlePage() {
             <div className={styles.sideMeta}>
               <div className={styles.sideMetaRow}>
                 <i className="fas fa-shield-halved" />
-                <span>Contenu vérifié par l'équipe Shopi</span>
+                <span>Contenu vérifié par l'équipe Shoneya</span>
               </div>
               {article.publishedAt && (
                 <div className={styles.sideMetaRow}>

@@ -20,7 +20,7 @@ export function ApprobationsSection({ onToast }: Props) {
           <div className={`${s.trustedIco} ${s.icoBlue}`}><i className="fas fa-mobile-screen" /></div>
           <div className={s.trustedInfo}>
             <div className={s.trustedName}>iPhone 15 Pro <span className={s.trustedVerified}><i className="fas fa-check" /> {t('settingsPage.approbations.approuve')}</span></div>
-            <div className={s.trustedMeta}>App Shopi · Conakry, Guinée · {t('settingsPage.approbations.derniereUtilisation')} : {t('settingsPage.approbations.aujourdhui')} · {t('settingsPage.approbations.ajouteLe')} 14 jan. 2025</div>
+            <div className={s.trustedMeta}>App Shoneya · Conakry, Guinée · {t('settingsPage.approbations.derniereUtilisation')} : {t('settingsPage.approbations.aujourdhui')} · {t('settingsPage.approbations.ajouteLe')} 14 jan. 2025</div>
           </div>
           <button className={s.sessionRevoke} onClick={() => onToast(t('settingsPage.approbations.toastRetire'))}>{t('settingsPage.approbations.retirer')}</button>
         </div>
@@ -109,7 +109,7 @@ export function ConfidentialiteSection({ onToast }: Props) {
       <div className={s.cardBody}>
         <div className={s.privRow}>
           <div className={s.privLeft}><div className={`${s.privIco} ${s.icoBlue}`}><i className="fas fa-user" /></div><div><div className={s.privTitle}>Visibilité du profil</div><div className={s.privDesc}>Qui peut voir votre profil public</div></div></div>
-          <select className={s.privSelect}><option>Tout le monde</option><option>Membres Shopi</option><option>Personne</option></select>
+          <select className={s.privSelect}><option>Tout le monde</option><option>Membres Shoneya</option><option>Personne</option></select>
         </div>
         {[
           { key:'historique' as const, ico:'icoTeal',  icon:'fa-bag-shopping',      title:'Historique des commandes',        desc:'Afficher vos achats récents sur votre profil' },
@@ -163,7 +163,7 @@ export function LangueSection({ onToast }: Props) {
         <button className={s.cardAction} onClick={() => onToast('✅ Préférences régionales enregistrées')}>Enregistrer</button>
       </div>
       <div className={s.cardBody}>
-        <div className={s.privRow}><div className={s.privLeft}><div className={`${s.privIco} ${s.icoTeal}`}><i className="fas fa-language" /></div><div><div className={s.privTitle}>Langue d'affichage</div><div className={s.privDesc}>Langue de l'interface Shopi</div></div></div><select className={s.privSelect}><option>🇫🇷 Français</option><option>🇬🇧 English</option><option>🇸🇦 عربي</option><option>🇵🇹 Português</option></select></div>
+        <div className={s.privRow}><div className={s.privLeft}><div className={`${s.privIco} ${s.icoTeal}`}><i className="fas fa-language" /></div><div><div className={s.privTitle}>Langue d'affichage</div><div className={s.privDesc}>Langue de l'interface Shoneya</div></div></div><select className={s.privSelect}><option>🇫🇷 Français</option><option>🇬🇧 English</option><option>🇸🇦 عربي</option><option>🇵🇹 Português</option></select></div>
         <div className={s.privRow}><div className={s.privLeft}><div className={`${s.privIco} ${s.icoEmerald}`}><i className="fas fa-coins" /></div><div><div className={s.privTitle}>Devise d'affichage</div><div className={s.privDesc}>Pour les prix et les transactions</div></div></div><select className={s.privSelect}><option>GNF — Franc Guinéen</option><option>USD — Dollar américain</option><option>EUR — Euro</option><option>XOF — Franc CFA</option></select></div>
         <div className={s.privRow}><div className={s.privLeft}><div className={`${s.privIco} ${s.icoViolet}`}><i className="fas fa-clock" /></div><div><div className={s.privTitle}>Fuseau horaire</div><div className={s.privDesc}>Pour les délais de livraison et les dates</div></div></div><select className={s.privSelect}><option>GMT+0 — Conakry</option><option>GMT+1 — Lagos</option><option>GMT+2 — Le Caire</option></select></div>
       </div>
@@ -235,7 +235,7 @@ export function DangerSection({ onToast }: Props) {
           <button className={s.dangerBtn} onClick={() => onToast('🔌 Tous les accès tiers révoqués')}>Révoquer les accès</button>
         </div>
         <div className={s.dangerRow}>
-          <div><div className={s.dangerTitle}>Réinitialiser toutes mes préférences</div><div className={s.dangerDesc}>Réinitialise notifications, apparence, langue et confidentialité aux valeurs par défaut Shopi.</div></div>
+          <div><div className={s.dangerTitle}>Réinitialiser toutes mes préférences</div><div className={s.dangerDesc}>Réinitialise notifications, apparence, langue et confidentialité aux valeurs par défaut Shoneya.</div></div>
           <button className={s.dangerBtn} onClick={() => onToast('🔄 Préférences réinitialisées')}>Réinitialiser</button>
         </div>
         <div className={s.dangerRow}>

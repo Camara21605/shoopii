@@ -500,7 +500,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             <a href="#" style={{ color: 'var(--blue)', fontWeight: 700 }} onClick={e => e.preventDefault()}>conditions d&apos;utilisation</a>
             {' '}et la{' '}
             <a href="#" style={{ color: 'var(--blue)', fontWeight: 700 }} onClick={e => e.preventDefault()}>politique de confidentialité</a>
-            {' '}de Shopi. <span style={{ color: 'var(--rose,red)', fontWeight: 700 }}>*</span>
+            {' '}de Shoneya. <span style={{ color: 'var(--rose,red)', fontWeight: 700 }}>*</span>
           </span>
         </label>
         {errors.terms && (
