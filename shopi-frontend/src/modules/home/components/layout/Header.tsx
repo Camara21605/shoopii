@@ -343,7 +343,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
 
             {/* Actions Mobile Top Bar */}
             <div className={styles.mobileTopActions}>
-              <button className={styles.iconBtn} onClick={() => setMobileSearch(s => !s)} title={t('publicHeader.searchAria')}>
+              <button className={`${styles.iconBtn} ${styles.mobileSearchToggle}`} onClick={() => setMobileSearch(s => !s)} title={t('publicHeader.searchAria')}>
                 <i className={`fas ${mobileSearch ? 'fa-xmark' : 'fa-magnifying-glass'}`} />
               </button>
 

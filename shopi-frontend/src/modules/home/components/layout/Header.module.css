@@ -85,8 +85,12 @@
 .ssIt:hover { background: var(--sky); }
 .ssIt i { color: var(--blue); width: 14px; text-align: center; font-size: 12px; }
 
-/* Sur mobile, cacher la barre de recherche desktop */
-@media (max-width: 768px) { .srch { display: none; } }
+/* Sur petit mobile seulement : la barre desktop cède la place à l'icône
+ * de recherche dépliable (voir .mobileSearchToggle). De 481 à 768px, il y a
+ * assez de place pour la garder visible (elle rétrécit via flex:1) — la
+ * cacher sur toute cette plage laissait un grand vide entre le logo et les
+ * icônes d'action mobile. */
+@media (max-width: 480px) { .srch { display: none; } }
 
 /* ─── Actions desktop ──────────────────────────────────────── */
 .actions { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
@@ -109,6 +113,12 @@
   padding: 8px 0 12px;
   animation: fadeDown .15s ease;
 }
+
+/* Icône de recherche dépliable : uniquement en dessous de 480px,
+ * là où .srch (barre desktop) est masquée — au-delà, .srch reste visible.
+ * Sélecteur composé (.iconBtn.mobileSearchToggle) pour battre .iconBtn
+ * en spécificité, celui-ci étant défini plus bas dans ce fichier. */
+@media (min-width: 481px) { .iconBtn.mobileSearchToggle { display: none; } }
 
 /* ─── Boutons icônes (partagés desktop + mobile) ────────────── */
 .iconBtn {
