@@ -273,9 +273,10 @@ export class EntrepriseDashboardService {
     if (!rows.length) return [];
 
     const productIds = rows.map(r => r.productId).filter(Boolean);
-    // Product.category est eager:true → chargé automatiquement, pas besoin de jointure manuelle.
+    // Product.category n'est plus eager (voir product.entity.ts) — déclarée
+    // explicitement car category.icone est lu plus bas (ligne ~308).
     const products = productIds.length
-      ? await this.productRepo.find({ where: { id: In(productIds) } })
+      ? await this.productRepo.find({ where: { id: In(productIds) }, relations: ['category'] })
       : [];
     const productMap = new Map(products.map(p => [p.id, p]));
 

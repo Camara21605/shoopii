@@ -23,6 +23,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { IoAdapter }              from '@nestjs/platform-socket.io';
 import cookieParser               from 'cookie-parser';
+import compression                from 'compression';
 import { AppModule }              from './app.module';
 import { csrfProtection }         from './common/middleware/csrf.middleware';
 
@@ -88,6 +89,18 @@ async function bootstrap() {
      * csrf.middleware.ts pour pourquoi ce canal est nécessaire en prod). */
     exposedHeaders: ['X-CSRF-Token'],
   });
+
+  /* ── Compression gzip/brotli des réponses ─────────────────────
+   * Aucune compression n'était appliquée : chaque réponse JSON
+   * (listes de produits, boutiques…) partait en clair sur le réseau.
+   * `filter` exclut les réponses SSE/stream (Content-Type text/event-
+   * stream) où la compression casserait le flux. */
+  app.use(compression({
+    filter: (req, res) => {
+      if (res.getHeader('Content-Type')?.toString().includes('text/event-stream')) return false;
+      return compression.filter(req, res);
+    },
+  }));
 
   /* ── Cookie parser (lecture de req.cookies pour JwtStrategy) ── */
   app.use(cookieParser());

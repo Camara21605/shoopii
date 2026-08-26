@@ -15,6 +15,18 @@
  *  Product ──(OneToMany)──► ProductVariant (couleur, taille…)
  *  Product ──(OneToMany)──► ProductSpec    (caractéristiques clé/valeur)
  *
+ * ─── PERFORMANCE ──────────────────────────────────────────────
+ *  category / subCategory / wholesaleTiers / media / specs ne sont PLUS
+ *  `eager: true` (retiré le 2026-08-26). Avant : le moindre `find()`/
+ *  `findOne()` sur Product (ou sur une entité ayant une relation eager
+ *  vers Product, ex. PanierItem.produit) rechargeait systématiquement
+ *  ces 5 relations même quand seule une colonne scalaire était utile
+ *  (ex. getSimilaires() ne lisait que categoryId). Chaque appelant qui a
+ *  réellement besoin de ces relations les déclare maintenant explicitement
+ *  via `relations: [...]` — voir panier.service.ts, favoris.service.ts,
+ *  entreprise-dashboard.service.ts et commande-creation.service.ts pour
+ *  des exemples de ce correctif.
+ *
  * ─── CHAMPS ISSUS DE AjouterPage.tsx ─────────────────────────
  *  ① SEO : titreSeo, descriptionSeo, urlSlug
  *  ② Dimensions : longueur, largeur, hauteur, poids
@@ -110,16 +122,19 @@ export class Product {
 
   // ── Catégorie & Sous-catégorie ─────────────────────────────────────────────
 
-  /** Catégorie principale (ex: Électronique) */
-  @ManyToOne(() => Category, { nullable: false, onDelete: 'RESTRICT', eager: true })
+  /** Catégorie principale (ex: Électronique)
+   * Pas de `eager: true` — voir la note de performance en tête de fichier :
+   * charger cette relation explicitement (`relations: ['category']`) là où
+   * elle est réellement utilisée. */
+  @ManyToOne(() => Category, { nullable: false, onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'categoryId' })
   category: Category;
 
   @Column({ name: 'categoryId', type: 'uuid' })
   categoryId: string;
 
-  /** Sous-catégorie facultative (ex: Smartphones Android) */
-  @ManyToOne(() => SubCategory, { nullable: true, onDelete: 'SET NULL', eager: true })
+  /** Sous-catégorie facultative (ex: Smartphones Android) — idem, non eager. */
+  @ManyToOne(() => SubCategory, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'subCategoryId' })
   subCategory: SubCategory | null;
 
@@ -287,21 +302,21 @@ export class Product {
   @Column({ type: 'varchar', length: 50, nullable: true })
   delaiPreparationGros: string | null;
 
-  /** Paliers de prix dégressifs selon la quantité commandée */
-  @OneToMany(() => ProductWholesaleTier, t => t.product, { cascade: true, eager: true })
+  /** Paliers de prix dégressifs selon la quantité commandée — non eager, voir plus haut. */
+  @OneToMany(() => ProductWholesaleTier, t => t.product, { cascade: true })
   wholesaleTiers: ProductWholesaleTier[];
 
   // ── Relations OneToMany ────────────────────────────────────────────────────
 
-  /** Images du produit (max 10, ordre = 0 → image principale) */
-  @OneToMany(() => ProductMedia, media => media.product, { cascade: true, eager: true })
+  /** Images du produit (max 10, ordre = 0 → image principale) — non eager, voir plus haut. */
+  @OneToMany(() => ProductMedia, media => media.product, { cascade: true })
   media: ProductMedia[];
   /** Variantes (Couleur, Stockage, RAM, Taille…) */
   @OneToMany(() => ProductVariant, v => v.product, { cascade: true })
   variantes: ProductVariant[];
 
-  /** Caractéristiques techniques (tableau clé/valeur) */
-  @OneToMany(() => ProductSpec, s => s.product, { cascade: true, eager: true })
+  /** Caractéristiques techniques (tableau clé/valeur) — non eager, voir plus haut. */
+  @OneToMany(() => ProductSpec, s => s.product, { cascade: true })
   specs: ProductSpec[];
   
   /** Nombre de likes — dénormalisé pour la performance */

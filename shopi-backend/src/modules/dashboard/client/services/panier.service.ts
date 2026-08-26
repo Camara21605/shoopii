@@ -2,8 +2,11 @@
  * FICHIER : src/modules/dashboard/client/services/panier.service.ts
  *
  * PanierItem.produit est eager (@ManyToOne eager:true) : chaque
- * lecture du panier ramène le produit (+ media/category/specs,
- * eux-mêmes eager côté Product) en une seule requête via JOIN.
+ * lecture du panier ramène le produit en une seule requête via JOIN.
+ * Product.media / Product.category ne sont plus eager (voir
+ * product.entity.ts) — on les déclare donc explicitement ci-dessous
+ * (relations: ['produit.media', 'produit.category']) uniquement
+ * dans getAll(), le seul endroit qui affiche image + emoji catégorie.
  * ============================================================ */
 
 import {
@@ -76,8 +79,8 @@ export class PanierService {
    * GET /client/panier
    *
    * 1 seule requête : PanierItem.produit est @ManyToOne(eager:true),
-   * donc panierRepo.find() ramène déjà chaque produit (avec ses
-   * propres relations eager : media/category/specs) via LEFT JOIN.
+   * donc panierRepo.find() ramène déjà chaque produit via LEFT JOIN.
+   * media/category déclarés explicitement (non eager côté Product).
    * Avant : jusqu'à 3 requêtes DB supplémentaires PAR article
    * (retry sur des noms de relation 'medias'/'images' inexistants
    * sur Product — la vraie relation s'appelle 'media').
@@ -86,6 +89,7 @@ export class PanierService {
     const items = await this.panierRepo.find({
       where: { userId: user.id },
       order: { createdAt: 'ASC' },
+      relations: ['produit', 'produit.media', 'produit.category'],
     });
 
     return items

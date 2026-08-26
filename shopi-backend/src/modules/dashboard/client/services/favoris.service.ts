@@ -123,8 +123,10 @@ export class FavorisService {
   /* ════════════════════════════════════════════════════════
    * GET /client/favoris
    *
-   * 2 queries : find likes → findBy produits (IN)
-   * media et category sont eager:true → chargés automatiquement.
+   * 2 queries : find likes → find produits (IN)
+   * media et category ne sont plus eager côté Product (voir
+   * product.entity.ts) — déclarés explicitement ci-dessous, ce sont
+   * les deux seuls champs relationnels lus par cet endpoint.
    * ════════════════════════════════════════════════════════ */
   async getAll(user: User) {
     const clientId = await this.resolveClientId(user);
@@ -135,8 +137,9 @@ export class FavorisService {
     });
     if (likes.length === 0) return [];
 
-    const produits = await this.produitRepo.findBy({
-      id: In(likes.map(l => l.productId)),
+    const produits = await this.produitRepo.find({
+      where:     { id: In(likes.map(l => l.productId)) },
+      relations: ['media', 'category'],
     });
     const productMap = new Map(produits.map(p => [p.id, p]));
 

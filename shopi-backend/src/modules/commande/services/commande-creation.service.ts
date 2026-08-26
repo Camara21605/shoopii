@@ -53,7 +53,9 @@ export class CommandeCreationService {
   async creerDepuisPanier(user: User, dto: CreateCommandeDto): Promise<{ id: string }> {
     const panierItems = await this.panierRepo.find({
       where: { userId: user.id },
-      relations: ['produit'],
+      /* produit.media requis pour imageProduit (ligne ~154) —
+       * Product.media n'est plus eager, voir product.entity.ts. */
+      relations: ['produit', 'produit.media'],
     });
     if (panierItems.length === 0) throw new BadRequestException('Votre panier est vide.');
 

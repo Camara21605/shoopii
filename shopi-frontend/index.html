@@ -20,7 +20,12 @@
       })();
     </script>
 
-    <!-- ✅ Font Awesome 6.5 — Toutes les icônes fas fa-* -->
+    <!-- ✅ Font Awesome 6.5 — Toutes les icônes fas fa-*
+         preconnect : sans ça, cette feuille de style bloquante attend une
+         résolution DNS + handshake TLS complets vers cdnjs avant même de
+         commencer à télécharger (contrairement à Google Fonts ci-dessous,
+         qui en bénéficiait déjà). -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
       rel="stylesheet"
