@@ -13,6 +13,7 @@ import { RegisterForm }   from '../components/RegisterForm';
 import { ForgotPassword } from './ForgotPassword';
 import { TwoFaChallenge } from './TwoFaChallenge';
 import { AccountChoiceScreen } from './AccountChoiceScreen';
+import { SessionConfirmScreen } from './SessionConfirmScreen';
 import { SuccessScreen }  from '../components/SuccessScreen';
 import { Toast }          from '../../../shared/components/ui/Toast';
 import ShoneyaLogo          from '../../../shared/components/ShoneyaLogo';
@@ -92,6 +93,12 @@ const Login: React.FC = () => {
     accountChoiceError,
     handleChooseAccount,
     cancelAccountChoice,
+    // ✅ Session déjà active sur un autre appareil — confirmation requise
+    sessionConfirmPending,
+    sessionConfirmError,
+    sessionConfirmLoading,
+    handleConfirmDisconnectOther,
+    cancelSessionConfirm,
   } = useLoginPage({ initialTab: isInvited ? 'register' : 'login' });
 
   /* ── Retour du callback Google OAuth ──────────────────────────────────────
@@ -179,7 +186,7 @@ const Login: React.FC = () => {
             )}
 
             {/* En-tête */}
-            {!showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && (
+            {!showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && !sessionConfirmPending && (
               <div className="form-hd">
                 <h2 className="form-title">
                   {activeTab === 'login' ? 'Connexion' : 'Créer mon compte'}
@@ -216,7 +223,7 @@ const Login: React.FC = () => {
             )}
 
             {/* Onglets */}
-            {!showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && (
+            {!showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && !sessionConfirmPending && (
               <div className="form-tabs">
                 <button
                   className={`ftab${activeTab === 'login' ? ' active' : ''}`}
@@ -234,7 +241,7 @@ const Login: React.FC = () => {
             )}
 
             {/* Connexion */}
-            {activeTab === 'login' && !showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && (
+            {activeTab === 'login' && !showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && !sessionConfirmPending && (
               <LoginForm
                 data={loginData}
                 errors={loginErrors}
@@ -284,6 +291,16 @@ const Login: React.FC = () => {
                 error={accountChoiceError}
                 onChoose={handleChooseAccount}
                 onCancel={cancelAccountChoice}
+              />
+            )}
+
+            {/* Session déjà active sur un autre appareil — confirmation requise */}
+            {sessionConfirmPending && !showSuccess && (
+              <SessionConfirmScreen
+                isLoading={sessionConfirmLoading}
+                error={sessionConfirmError}
+                onConfirm={handleConfirmDisconnectOther}
+                onCancel={cancelSessionConfirm}
               />
             )}
 

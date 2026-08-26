@@ -49,6 +49,15 @@ export class LoginDto {
   @IsString()
   @MaxLength(100)
   deviceId?: string;
+
+  /** true seulement au 2e appel, après que l'utilisateur ait confirmé
+   *  vouloir déconnecter son autre appareil (réponse à un 1er appel qui
+   *  a renvoyé requiresSessionConfirm). Absent/false : si une session
+   *  est déjà active ailleurs, /auth/login ne la ferme pas et demande
+   *  confirmation au lieu d'émettre des tokens. */
+  @IsOptional()
+  @IsBoolean({ message: '"confirmDisconnectOther" doit être un booléen.' })
+  confirmDisconnectOther?: boolean;
 }
 
 /**
@@ -80,4 +89,9 @@ export class ChooseAccountDto {
   @IsString()
   @MaxLength(100)
   deviceId?: string;
+
+  /** Voir LoginDto.confirmDisconnectOther. */
+  @IsOptional()
+  @IsBoolean({ message: '"confirmDisconnectOther" doit être un booléen.' })
+  confirmDisconnectOther?: boolean;
 }

@@ -145,6 +145,17 @@ export interface AccountChoiceResult {
   accounts: { userId: string; role: UserRole }[];
 }
 
+/**
+ * Retourné par login() quand ce compte a déjà une session active sur un
+ * autre appareil et que le client n'a pas encore confirmé vouloir la
+ * fermer (dto.confirmDisconnectOther absent/false). Aucun token émis,
+ * aucune session touchée — le frontend doit demander confirmation à
+ * l'utilisateur puis rappeler /auth/login avec confirmDisconnectOther:true.
+ */
+export interface SessionConfirmResult {
+  requiresSessionConfirm: true;
+}
+
 @Injectable()
 export class AuthService implements OnModuleInit {
 
@@ -562,7 +573,7 @@ export class AuthService implements OnModuleInit {
     dto:       LoginDto,
     clientIp:  string,
     userAgent: string | null = null,
-  ): Promise<AuthServiceResult | TwoFaChallengeResult | AccountChoiceResult> {
+  ): Promise<AuthServiceResult | TwoFaChallengeResult | AccountChoiceResult | SessionConfirmResult> {
     const INVALID_MSG = 'Identifiants incorrects. Vérifiez votre email et mot de passe.';
     const candidates = await this.findAllByIdentifier(dto.identifier);
 
@@ -579,7 +590,10 @@ export class AuthService implements OnModuleInit {
     }
 
     if (matched.length === 1) {
-      return this.finishLogin(matched[0], dto.rememberMe ?? false, clientIp, userAgent, dto.deviceId ?? null);
+      return this.finishLogin(
+        matched[0], dto.rememberMe ?? false, clientIp, userAgent,
+        dto.deviceId ?? null, dto.confirmDisconnectOther ?? false,
+      );
     }
 
     /* Les comptes liés (pro + client, même email/téléphone) partagent, par
@@ -638,7 +652,8 @@ export class AuthService implements OnModuleInit {
     clientIp:   string,
     userAgent:  string | null,
     deviceId:   string | null = null,
-  ): Promise<AuthServiceResult | TwoFaChallengeResult> {
+    confirmDisconnectOther: boolean = false,
+  ): Promise<AuthServiceResult | TwoFaChallengeResult | SessionConfirmResult> {
     const INVALID_MSG = 'Identifiants incorrects. Vérifiez votre email et mot de passe.';
     /* On ne fait JAMAIS confiance au userId envoyé par le client seul — il doit
      * être l'un des candidats réels pour cet identifiant, mot de passe revérifié.
@@ -664,7 +679,7 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException(INVALID_MSG);
     }
 
-    return this.finishLogin(chosen, rememberMe, clientIp, userAgent, deviceId);
+    return this.finishLogin(chosen, rememberMe, clientIp, userAgent, deviceId, confirmDisconnectOther);
   }
 
   /**
@@ -678,7 +693,8 @@ export class AuthService implements OnModuleInit {
     clientIp:   string,
     userAgent:  string | null,
     deviceId:   string | null = null,
-  ): Promise<AuthServiceResult | TwoFaChallengeResult> {
+    confirmDisconnectOther: boolean = false,
+  ): Promise<AuthServiceResult | TwoFaChallengeResult | SessionConfirmResult> {
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       const min = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60_000);
       this.logEvent('login_locked', {
@@ -709,6 +725,20 @@ export class AuthService implements OnModuleInit {
       lastLoginAt:         new Date(),
       lastLoginIp:         clientIp,
     });
+
+    /* ── Session déjà active sur un autre appareil ──────────────
+     * Identifiants (et 2FA, le cas échéant) valides, mais avant de
+     * fermer la session existante on demande confirmation explicite —
+     * sauf si le client vient justement de confirmer ce point (2e appel
+     * avec confirmDisconnectOther:true). Aucun token émis, aucune
+     * session touchée tant que ce n'est pas confirmé. */
+    if (!confirmDisconnectOther && await this.sessionService.hasActiveSession(user.id)) {
+      this.logEvent('login_session_conflict', {
+        userId: user.id, email: user.email, role: user.role,
+        ipAddress: clientIp, userAgent, success: true,
+      });
+      return { requiresSessionConfirm: true };
+    }
 
     /* ── Défi 2FA ────────────────────────────────────────────
      * Le mot de passe est correct, mais le compte a la 2FA active :

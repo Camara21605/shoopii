@@ -201,7 +201,7 @@ export class AuthController {
     @Ip()   clientIp: string,
     @Req()  req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponse | { requiresTwoFa: true; challengeToken: string } | AccountChoiceResult> {
+  ): Promise<AuthResponse | { requiresTwoFa: true; challengeToken: string } | AccountChoiceResult | { requiresSessionConfirm: true }> {
     const userAgent = req.headers['user-agent'] ?? null;
     const result = await this.authService.login(dto, clientIp, userAgent);
 
@@ -214,6 +214,12 @@ export class AuthController {
      * client lié (coïncidence) : aucun cookie posé — le frontend doit
      * rappeler POST /auth/login/choose-account avec le userId choisi. */
     if ('requiresAccountChoice' in result) {
+      return result;
+    }
+    /* Session déjà active sur un autre appareil, pas encore confirmée :
+     * aucun cookie posé — le frontend doit rappeler POST /auth/login avec
+     * confirmDisconnectOther:true après confirmation de l'utilisateur. */
+    if ('requiresSessionConfirm' in result) {
       return result;
     }
 
@@ -250,13 +256,20 @@ export class AuthController {
     @Ip()   clientIp: string,
     @Req()  req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponse | { requiresTwoFa: true; challengeToken: string }> {
+  ): Promise<AuthResponse | { requiresTwoFa: true; challengeToken: string } | { requiresSessionConfirm: true }> {
     const userAgent = req.headers['user-agent'] ?? null;
     const result = await this.authService.loginChooseAccount(
       dto.identifier, dto.password, dto.userId, dto.rememberMe ?? false, clientIp, userAgent,
+      dto.deviceId ?? null, dto.confirmDisconnectOther ?? false,
     );
 
     if ('requiresTwoFa' in result) {
+      return result;
+    }
+    /* Session déjà active sur un autre appareil, pas encore confirmée :
+     * aucun cookie posé — le frontend doit rappeler ce même endpoint avec
+     * confirmDisconnectOther:true après confirmation de l'utilisateur. */
+    if ('requiresSessionConfirm' in result) {
       return result;
     }
 

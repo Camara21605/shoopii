@@ -73,6 +73,15 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
   const [accountChoiceOptions, setAccountChoiceOptions] = useState<{ userId: string; role: UserRole }[] | null>(null);
   const [accountChoiceError,   setAccountChoiceError]   = useState('');
 
+  // ── Session déjà active sur un autre appareil — posé par /auth/login
+  //    (ou /auth/login/choose-account) quand une confirmation est requise
+  //    avant de fermer l'autre session. `null` = pas de conflit en attente ;
+  //    'account' = le conflit vient du flux choix-de-compte (userId choisi
+  //    conservé pour le rappel confirmé). ──
+  const [sessionConfirmPending, setSessionConfirmPending] = useState<null | { via: 'login' } | { via: 'account'; userId: string }>(null);
+  const [sessionConfirmError,   setSessionConfirmError]   = useState('');
+  const [sessionConfirmLoading, setSessionConfirmLoading] = useState(false);
+
   const showToast = useCallback((msg: string) => {
     setToast({ msg, visible: true });
     setTimeout(() => setToast({ msg: '', visible: false }), 3000);
@@ -271,6 +280,11 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
         setAccountChoiceOptions(res.accounts);
         return;
       }
+      if ('requiresSessionConfirm' in res) {
+        setSessionConfirmError('');
+        setSessionConfirmPending({ via: 'login' });
+        return;
+      }
       completeLogin(res);
     } catch (err) {
       const msg = err instanceof ApiError
@@ -298,6 +312,11 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
         setTwoFaChallengeToken(res.challengeToken);
         return;
       }
+      if ('requiresSessionConfirm' in res) {
+        setSessionConfirmError('');
+        setSessionConfirmPending({ via: 'account', userId });
+        return;
+      }
       setAccountChoiceOptions(null);
       completeLogin(res);
     } catch (err) {
@@ -312,6 +331,79 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
   const cancelAccountChoice = useCallback(() => {
     setAccountChoiceOptions(null);
     setAccountChoiceError('');
+  }, []);
+
+  // Confirmation "déconnecter l'autre appareil" — rappelle le même endpoint
+  // (login ou choose-account, selon l'origine) avec confirmDisconnectOther:true.
+  // La session précédente est alors fermée instantanément côté serveur, qui
+  // diffuse un événement temps réel session:revoked à cet autre appareil
+  // (voir AppContext.handleSessionRevoked côté client).
+  const handleConfirmDisconnectOther = useCallback(async () => {
+    if (!sessionConfirmPending) return;
+    setSessionConfirmError('');
+    setSessionConfirmLoading(true);
+    try {
+      if (sessionConfirmPending.via === 'account') {
+        const res = await authService.chooseAccount(
+          loginData.email.trim(), loginData.password, sessionConfirmPending.userId,
+          loginData.rememberMe, true,
+        );
+        if ('requiresTwoFa' in res) {
+          setSessionConfirmPending(null);
+          setAccountChoiceOptions(null);
+          setTwoFaError('');
+          setTwoFaChallengeToken(res.challengeToken);
+          return;
+        }
+        /* Ne devrait pas se reproduire (on vient de confirmer) — sauf
+         * course très rare avec une 3e connexion entre-temps. */
+        if ('requiresSessionConfirm' in res) {
+          setSessionConfirmError('Une nouvelle connexion a eu lieu entre-temps. Réessayez.');
+          return;
+        }
+        setSessionConfirmPending(null);
+        setAccountChoiceOptions(null);
+        completeLogin(res);
+        return;
+      }
+      const res = await authService.login({
+        identifier: loginData.email.trim(),
+        password:   loginData.password,
+        rememberMe: loginData.rememberMe,
+        confirmDisconnectOther: true,
+      });
+      if ('requiresTwoFa' in res) {
+        setSessionConfirmPending(null);
+        setTwoFaError('');
+        setTwoFaChallengeToken(res.challengeToken);
+        return;
+      }
+      if ('requiresAccountChoice' in res) {
+        setSessionConfirmPending(null);
+        setAccountChoiceError('');
+        setAccountChoiceOptions(res.accounts);
+        return;
+      }
+      /* Ne devrait pas se reproduire (on vient de confirmer) — sauf
+       * course très rare avec une 3e connexion entre-temps. */
+      if ('requiresSessionConfirm' in res) {
+        setSessionConfirmError('Une nouvelle connexion a eu lieu entre-temps. Réessayez.');
+        return;
+      }
+      setSessionConfirmPending(null);
+      completeLogin(res);
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : 'Identifiants incorrects.';
+      setSessionConfirmError(msg);
+    } finally {
+      setSessionConfirmLoading(false);
+    }
+  }, [sessionConfirmPending, loginData, completeLogin]);
+
+  // Retour à l'étape identifiants depuis l'écran de confirmation de session
+  const cancelSessionConfirm = useCallback(() => {
+    setSessionConfirmPending(null);
+    setSessionConfirmError('');
   }, []);
 
   // Soumission du code 2FA (étape 2 du login)
@@ -396,5 +488,11 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     accountChoiceError,
     handleChooseAccount,
     cancelAccountChoice,
+    // ✅ Session déjà active sur un autre appareil — confirmation requise
+    sessionConfirmPending,
+    sessionConfirmError,
+    sessionConfirmLoading,
+    handleConfirmDisconnectOther,
+    cancelSessionConfirm,
   };
 }

@@ -50,7 +50,15 @@ export interface AccountChoiceResponse {
   accounts: { userId: string; role: UserRole }[];
 }
 
-export type LoginResult = AuthResponse | TwoFaChallengeResponse | AccountChoiceResponse;
+/** Réponse de /auth/login quand ce compte a déjà une session active sur
+ *  un autre appareil et que le client n'a pas encore confirmé vouloir la
+ *  fermer — aucun token émis. Il faut demander confirmation à l'utilisateur
+ *  puis rappeler /auth/login avec confirmDisconnectOther:true. */
+export interface SessionConfirmResponse {
+  requiresSessionConfirm: true;
+}
+
+export type LoginResult = AuthResponse | TwoFaChallengeResponse | AccountChoiceResponse | SessionConfirmResponse;
 
 /** Métadonnées pays extraites du numéro de téléphone */
 export interface PhoneCountryMeta {
@@ -105,6 +113,10 @@ export interface LoginPayload {
   identifier:  string;
   password:    string;
   rememberMe?: boolean;
+  /** true seulement au 2e appel, après confirmation explicite de
+   *  l'utilisateur qu'il veut déconnecter son autre appareil (réponse
+   *  à un 1er appel qui a renvoyé requiresSessionConfirm). */
+  confirmDisconnectOther?: boolean;
 }
 
 export interface ForgotPasswordPayload {

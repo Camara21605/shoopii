@@ -83,6 +83,16 @@ export class SessionService {
   ) {}
 
   /**
+   * Indique si une session est déjà active pour cet utilisateur, SANS
+   * la remplacer ni la modifier (simple lecture) — utilisé pour demander
+   * confirmation à l'utilisateur avant de fermer son autre appareil.
+   */
+  async hasActiveSession(userId: string): Promise<boolean> {
+    const existing = await this.redis.get(activeSessionKey(userId));
+    return !!existing;
+  }
+
+  /**
    * Démarre une nouvelle session pour cet utilisateur — remplace
    * atomiquement toute session déjà active (GETSET Redis).
    *

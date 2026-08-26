@@ -15,6 +15,7 @@ import type {
   Role,
   TwoFaChallengeResponse,
   AccountChoiceResponse,
+  SessionConfirmResponse,
 } from '../types';
 
 function buildRegisterPayload(
@@ -103,6 +104,10 @@ export async function login(payload: LoginPayload): Promise<LoginResult> {
   // client lié (coïncidence) : pas de token tant que l'utilisateur n'a
   // pas choisi via chooseAccount() ci-dessous.
   if ('requiresAccountChoice' in data) return data;
+  // Compte déjà connecté sur un autre appareil : pas de token tant que
+  // l'utilisateur n'a pas confirmé vouloir déconnecter l'autre appareil
+  // (rappel de login() ci-dessus avec confirmDisconnectOther:true).
+  if ('requiresSessionConfirm' in data) return data;
   tokenStorage.set(data.accessToken);
   return data;
 }
@@ -111,13 +116,15 @@ export async function login(payload: LoginPayload): Promise<LoginResult> {
  *  est revérifié côté serveur contre le userId choisi. */
 export async function chooseAccount(
   identifier: string, password: string, userId: string, rememberMe?: boolean,
-): Promise<AuthResponse | TwoFaChallengeResponse> {
-  const data = await apiFetch<AuthResponse | TwoFaChallengeResponse>('/auth/login/choose-account', {
+  confirmDisconnectOther?: boolean,
+): Promise<AuthResponse | TwoFaChallengeResponse | SessionConfirmResponse> {
+  const data = await apiFetch<AuthResponse | TwoFaChallengeResponse | SessionConfirmResponse>('/auth/login/choose-account', {
     method: 'POST',
-    body:   { identifier, password, userId, rememberMe, deviceId: getOrCreateDeviceId() },
+    body:   { identifier, password, userId, rememberMe, confirmDisconnectOther, deviceId: getOrCreateDeviceId() },
     public: true,
   });
   if ('requiresTwoFa' in data) return data;
+  if ('requiresSessionConfirm' in data) return data;
   tokenStorage.set(data.accessToken);
   return data;
 }
