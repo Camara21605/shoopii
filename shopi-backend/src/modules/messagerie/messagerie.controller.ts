@@ -166,7 +166,7 @@ export class MessagerieController {
     @Query('q')    q    = '',
     @Query('type') type?: string,
   ) {
-    const { userId, role } = this.ctx(req);
-    return this.svc.searchUsers(userId, role, q, type);
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.searchUsers(userId, role, q, type, actorId);
   }
 }

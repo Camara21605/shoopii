@@ -22,8 +22,8 @@ export class CallController {
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   async start(@Req() req: Request, @Body() dto: StartCallDto) {
-    const user = req.user as User;
-    return this.callService.startCall(user.id, dto);
+    const user = req.user as User & { actorId?: string };
+    return this.callService.startCall(user.id, dto, user.actorId);
   }
 
   @Post('accept')
@@ -62,8 +62,8 @@ export class CallController {
    */
   @Get('busy/:userId')
   async busy(@Req() req: Request, @Param('userId') userId: string) {
-    const user = req.user as User;
-    await this.callService.assertCanCall(user.id, userId);
+    const user = req.user as User & { actorId?: string };
+    await this.callService.assertCanCall(user.id, userId, user.actorId);
     return { busy: await this.callService.isUserBusy(userId) };
   }
 

@@ -141,7 +141,7 @@ export class MessagerieGateway
         return this.rejectSocket(socket, 'TOKEN_MISSING', 'Token manquant.');
       }
 
-      let payload: { sub: string; role: string; sid?: string; iat?: number };
+      let payload: { sub: string; role: string; sid?: string; iat?: number; actorId?: string };
       try {
         payload = this.jwt.verify(token, {
           secret: this.config.get<string>('JWT_SECRET'),
@@ -178,6 +178,11 @@ export class MessagerieGateway
       // ── 2. Injecter userId dans socket.data ─────────────
       socket.data.userId   = userId;
       socket.data.userRole = payload.role;
+      /* Nécessaire pour qu'un membre d'équipe (collaborateur d'une
+       * entreprise) puisse démarrer un appel via call:initiate — voir
+       * CallService.resolveActor(), qui en a besoin en fallback car
+       * companies.userId ne pointe jamais vers un collaborateur. */
+      socket.data.actorId  = payload.actorId;
 
       // ── 3. Rejoindre la room privée ─────────────────────
       await socket.join(`user:${userId}`);

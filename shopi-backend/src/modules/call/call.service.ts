@@ -218,7 +218,16 @@ export class CallService {
     return map[role] ?? null;
   }
 
-  private async resolveActor(userId: string, role: UserRole): Promise<ResolvedActor | null> {
+  /**
+   * @param actorId Fallback pour un membre d'équipe (collaborateur) d'une
+   * entreprise : son companies.userId ne pointe jamais vers lui (il pointe
+   * vers le propriétaire), donc `companyRepo.findOne({ where: { userId } })`
+   * échoue toujours pour son propre compte. Sans ce fallback, AUCUN
+   * collaborateur ne peut jamais passer ni recevoir d'appel (assertCanCall
+   * levait "Profil introuvable pour cet appel." à chaque tentative) — même
+   * correctif que MessagerieService.resolveProfileId().
+   */
+  private async resolveActor(userId: string, role: UserRole, actorId?: string): Promise<ResolvedActor | null> {
     const type = this.roleToActorType(role);
     if (!type) return null;
 
@@ -227,7 +236,9 @@ export class CallService {
       case ConversationActorType.CLIENT:
         profile = await this.clientRepo.findOne({ where: { userId }, select: ['id'] }); break;
       case ConversationActorType.COMPANY:
-        profile = await this.companyRepo.findOne({ where: { userId }, select: ['id'] }); break;
+        profile = await this.companyRepo.findOne({ where: { userId }, select: ['id'] });
+        if (!profile && actorId) profile = await this.companyRepo.findOne({ where: { id: actorId }, select: ['id'] });
+        break;
       case ConversationActorType.DELIVERY:
         profile = await this.deliveryRepo.findOne({ where: { userId }, select: ['id'] }); break;
       case ConversationActorType.CORRESPONDENT:
@@ -249,7 +260,7 @@ export class CallService {
 
   // ── Vérification de permission (réutilise les règles de messagerie) ──
 
-  async assertCanCall(callerUserId: string, calleeUserId: string): Promise<void> {
+  async assertCanCall(callerUserId: string, calleeUserId: string, callerActorId?: string): Promise<void> {
     /* Garde explicite : userRepo.findOne({ where: { id: undefined } }) ne
        rejette pas — TypeORM ignore une clause where à undefined et renvoie
        une ligne arbitraire de la table. Sans ce garde, un socket dont
@@ -281,7 +292,7 @@ export class CallService {
        gateway.ts) n'ont jamais eu ce contrôle — on aligne le comportement. */
 
     const [callerActor, calleeActor] = await Promise.all([
-      this.resolveActor(callerUserId, caller.role),
+      this.resolveActor(callerUserId, caller.role, callerActorId),
       this.resolveActor(calleeUserId, callee.role),
     ]);
     if (!callerActor || !calleeActor) {
@@ -428,7 +439,7 @@ export class CallService {
 
   // ── Cycle de vie de l'appel ───────────────────────────────────
 
-  async startCall(callerUserId: string, dto: StartCallDto): Promise<StartCallOutcome> {
+  async startCall(callerUserId: string, dto: StartCallDto, callerActorId?: string): Promise<StartCallOutcome> {
     /* PARTIE 9.5 — timestamps de diagnostic (perf only, jamais de secret/
        SDP/JWT/donnée personnelle). logger.verbose() est déjà filtré hors
        des logs en production par la config Logger de main.ts
@@ -437,7 +448,7 @@ export class CallService {
     const t0 = performance.now();
     await this.checkRateLimit(callerUserId);
     const t1 = performance.now();
-    await this.assertCanCall(callerUserId, dto.calleeUserId);
+    await this.assertCanCall(callerUserId, dto.calleeUserId, callerActorId);
     const t2 = performance.now();
 
     const result = await this.dataSource.transaction(async (manager) => {

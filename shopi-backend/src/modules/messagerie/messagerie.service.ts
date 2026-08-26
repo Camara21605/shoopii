@@ -545,54 +545,6 @@ export class MessagerieService {
   }
 
   // ══════════════════════════════════════════════════════════════
-  // 3. MESSAGES D'UNE CONVERSATION
-  // ══════════════════════════════════════════════════════════════
-
-  async getMessages(
-    userId: string, role: UserRole,
-    convId: string,
-    page = 1, limit = 30,
-  ): Promise<MessageItem[]> {
-    const myType = this.roleToActorType(role);
-    const myId   = await this.resolveProfileId(userId, role);
-
-    await this.assertConvAccess(convId, myType, myId);
-
-    const messages = await this.msgRepo.find({
-      where:  { conversationId: convId },
-      order:  { createdAt: 'ASC' },
-      skip:   (page - 1) * limit,
-      take:   limit,
-      withDeleted: false,
-    });
-
-    // Exclure les messages que cet utilisateur a supprimés pour lui-même
-    const visible = messages.filter(
-      m => !(m.deletedForUserIds ?? []).includes(userId),
-    );
-
-    return visible.map(m => ({
-      id:            m.id,
-      fromMe:        m.senderType === (myType as unknown as MessageActorType) && m.senderId === myId,
-      senderId:      m.senderId,
-      senderType:    m.senderType,
-      contentType:   m.contentType,
-      content:       m.content,
-      mediaUrl:      m.mediaUrl,
-      mediaName:     m.mediaName,
-      mediaMimeType: m.mediaMimeType,
-      mediaDuration: m.mediaDuration ?? null,
-      createdAt:     m.createdAt.toISOString(),
-      readAt:        m.readAt?.toISOString() ?? null,
-      replyToId:     m.replyToId,
-      productId:     m.productId,
-      orderId:       m.orderId,
-      isEdited:    m.isEdited,
-      deletedAt:   m.deletedAt?.toISOString() ?? null,
-    }));
-  }
-
-  // ══════════════════════════════════════════════════════════════
   // 4. ENVOYER UN MESSAGE
   // ══════════════════════════════════════════════════════════════
 
@@ -837,6 +789,7 @@ export class MessagerieService {
     userId: string, role: UserRole,
     q: string,
     type?: string,
+    actorId?: string,
   ): Promise<UserSearchItem[]> {
     const results: UserSearchItem[] = [];
     const now      = Date.now();
@@ -846,7 +799,7 @@ export class MessagerieService {
     const term     = q.trim();
 
     const myType = this.roleToActorType(role);
-    const myId   = await this.resolveProfileId(userId, role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
 
     // ── Relations réelles de l'appelant ─────────────────────────
     // Quel que soit son rôle, un acteur n'apparaît dans les résultats
@@ -937,7 +890,13 @@ export class MessagerieService {
     }
 
     /* ── Entreprises ── */
-    if (!type || type === ConversationActorType.COMPANY) {
+    /* Aucune entreprise ne peut écrire à une autre entreprise — il n'existe
+     * pas d'évaluateur "company↔company" dans le moteur de permission (voir
+     * permissions/evaluators/), toute tentative se solde par un 403
+     * FallbackDeny. Les proposer quand même dans la recherche affichait un
+     * résultat qui échouait systématiquement au clic ("Nouvelle
+     * conversation" semblait ne rien faire). */
+    if (myType !== ConversationActorType.COMPANY && (!type || type === ConversationActorType.COMPANY)) {
       const cos = await this.companyRepo.find({
         where:     { ...(term ? { companyName: ILike(`%${term}%`) } : {}), userId: Not(userId) },
         relations: ['user'],
@@ -949,7 +908,7 @@ export class MessagerieService {
         type:     ConversationActorType.COMPANY,
         name:     co.companyName,
         logo:     co.logo ?? null,
-        subtitle: `Boutique · ${co.ville ?? 'Conakry'}`,
+        subtitle: `Boutique · ${co.ville || 'Conakry'}`,
         online:   isOnline((co as any).user?.lastLoginAt),
       }));
     }

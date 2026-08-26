@@ -166,6 +166,7 @@ export class CallGateway implements OnGatewayDisconnect {
     @MessageBody() body: CallInitiateDto,
   ): Promise<void> {
     const callerUserId = socket.data.userId;
+    const callerActorId = socket.data.actorId;
     const t0 = performance.now();
     this.logger.log(`📞 call:initiate REÇU caller=${callerUserId} callee=${body.calleeUserId}`);
 
@@ -174,7 +175,7 @@ export class CallGateway implements OnGatewayDisconnect {
         calleeUserId:   body.calleeUserId,
         callType:       (body.callType ?? 'audio') as CallType,
         conversationId: body.conversationId,
-      });
+      }, callerActorId);
       const t1 = performance.now();
 
       if (result.outcome === 'busy') {
