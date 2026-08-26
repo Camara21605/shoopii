@@ -27,6 +27,7 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { InjectRedis }  from '@nestjs-modules/ioredis';
 import type { Redis }   from 'ioredis';
 import type { UserPresence } from '../interfaces/messaging.interfaces';
+import { withRedisTimeout } from '../../../common/utils/redis-timeout.util';
 
 /** Durée (secondes) avant qu'un utilisateur soit considéré hors-ligne */
 const PRESENCE_TTL_S = 45;
@@ -43,20 +44,6 @@ const KEY_SOCKETS  = (userId: string) => `presence:sockets:${userId}`;
  *  MessagerieService.getConversations() — sans borne de temps, une panne
  *  Redis peut y cumuler des dizaines de secondes d'attente. */
 const PRESENCE_OP_TIMEOUT_MS = 2_000;
-
-async function withTimeout<T>(op: Promise<T>, fallback: T, logger: Logger, label: string): Promise<T> {
-  try {
-    return await Promise.race([
-      op,
-      new Promise<T>((_, reject) =>
-        setTimeout(() => reject(new Error(`timeout après ${PRESENCE_OP_TIMEOUT_MS}ms`)), PRESENCE_OP_TIMEOUT_MS),
-      ),
-    ]);
-  } catch (err) {
-    logger.warn(`[PRESENCE] Redis indisponible (${label}) — dégradation gracieuse : ${(err as Error).message}`);
-    return fallback;
-  }
-}
 
 @Injectable()
 export class PresenceService implements OnModuleDestroy {
@@ -179,7 +166,7 @@ export class PresenceService implements OnModuleDestroy {
    */
   async getPresence(userId: string): Promise<UserPresence | null> {
     try {
-      const raw = await withTimeout(this.redis.get(KEY_PRESENCE(userId)), null, this.logger, 'getPresence');
+      const raw = await withRedisTimeout(() => this.redis.get(KEY_PRESENCE(userId)), null, PRESENCE_OP_TIMEOUT_MS, this.logger, 'getPresence');
       if (!raw) return null;
       return JSON.parse(raw) as UserPresence;
     } catch {
@@ -218,8 +205,8 @@ export class PresenceService implements OnModuleDestroy {
   async isOnlineOrUnknown(userId: string): Promise<boolean> {
     const TIMEOUT = Symbol('timeout');
     try {
-      const raw = await withTimeout<string | null | typeof TIMEOUT>(
-        this.redis.get(KEY_PRESENCE(userId)), TIMEOUT, this.logger, 'isOnlineOrUnknown',
+      const raw = await withRedisTimeout<string | null | typeof TIMEOUT>(
+        () => this.redis.get(KEY_PRESENCE(userId)), TIMEOUT, PRESENCE_OP_TIMEOUT_MS, this.logger, 'isOnlineOrUnknown',
       );
       if (raw === TIMEOUT) return true; // Redis injoignable — on ne sait pas, donc on ne bloque pas l'appel
       if (!raw) return false; // Redis a répondu : clé absente = vraiment hors ligne
@@ -250,7 +237,7 @@ export class PresenceService implements OnModuleDestroy {
        * Redis de getConversations()/getContactInfoBulk(), utilisé par
        * l'écran le plus consulté de la messagerie. Constaté en prod avec
        * Redis en panne : chargement de la messagerie très lent/bloqué. */
-      const results = await withTimeout(pipeline.exec(), null, this.logger, 'getBulkPresence');
+      const results = await withRedisTimeout(() => pipeline.exec(), null, PRESENCE_OP_TIMEOUT_MS, this.logger, 'getBulkPresence');
       const map     = new Map<string, UserPresence | null>();
 
       if (!results) {
