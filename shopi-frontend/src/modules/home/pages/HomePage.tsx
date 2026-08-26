@@ -24,7 +24,6 @@ import Header  from '../components/layout/Header';
 import Footer  from '../components/layout/Footer';
 
 /* ── Sections ── */
-import TrustSection           from '../components/sections/TrustSection';
 import TypeEntrepriseSection  from '../components/sections/TypeEntrepriseSection';
 import CategoriesSection      from '../components/sections/CategoriesSection';
 import PromotionsSection      from '../components/sections/PromotionsSection';
@@ -91,9 +90,6 @@ export default function HomePage() {
         /* Espace pour la bottom nav mobile (62px) */
         paddingBottom: 0,
       }}>
-
-        {/* 2 — Piliers de confiance */}
-        <TrustSection onToast={showToast} />
 
         {/* 3 — Types d'entreprises */}
         <TypeEntrepriseSection />

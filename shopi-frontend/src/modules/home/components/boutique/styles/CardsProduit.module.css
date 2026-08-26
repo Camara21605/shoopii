@@ -81,3 +81,14 @@
 :root[data-theme="dark"] .img         { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
 :root[data-theme="dark"] .btnCart     { background: #1C1C1F; border: 1px solid rgba(255,255,255,.12); }
 :root[data-theme="dark"] .btnCart:hover { background: #2D2D30; }
+
+/* ── Responsive ── */
+/* La vue "liste" (image fixe 150px + hauteur fixe 150px) déborde sur
+   mobile une fois le texte forcé à s'enrouler dans une colonne étroite —
+   on repasse en carte empilée (comme la vue grille) sous 480px. */
+@media (max-width: 480px) {
+  .cardList { flex-direction: column; height: auto; }
+  .cardList .img { width: 100%; height: auto; aspect-ratio: 4/3; }
+  .cardList .body { flex-direction: column; align-items: stretch; }
+  .cardList .btnCart, .cardList .btnRow { display: flex; }
+}

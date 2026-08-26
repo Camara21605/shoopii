@@ -21,8 +21,32 @@
 .btnMsg:hover { border-color:var(--blue); color:var(--blue); background:var(--sky); }
 .btnShare { width:40px; height:40px; border-radius:50%; background:var(--white); border:1.5px solid var(--bdr2); display:flex; align-items:center; justify-content:center; color:var(--t2); font-size:15px; cursor:pointer; transition:all .18s; }
 .btnShare:hover { background:var(--sky); border-color:var(--bdrb); color:var(--blue); }
-@media(max-width:900px){ .inner{padding-left:calc(16px + 88px + 16px);min-height:68px} .stats{display:none} }
-@media(max-width:480px){ .inner{padding-left:calc(12px + 72px + 12px)} .title{font-size:17px} }
+@media(max-width:900px){
+  .inner{padding-left:calc(16px + 88px + 16px);padding-right:16px;min-height:68px}
+  .stats{display:none}
+  /* Les boutons passent sur leur propre ligne : ils n'ont plus besoin
+     de rester décalés sous l'avatar (déjà dépassé verticalement), donc
+     on annule l'indentation héritée pour retrouver toute la largeur
+     disponible — sinon les 3-4 boutons débordent hors de l'écran. */
+  .actions{
+    flex-wrap:wrap;
+    margin-left:calc(-1 * (16px + 88px + 16px));
+    padding-left:calc(16px + 88px + 16px);
+    padding-right:16px;
+    box-sizing:border-box;
+    width:calc(100% + 16px + 88px + 16px);
+  }
+}
+@media(max-width:480px){
+  .inner{padding-left:calc(12px + 72px + 12px);padding-right:12px}
+  .title{font-size:17px}
+  .actions{
+    margin-left:calc(-1 * (12px + 72px + 12px));
+    padding-left:calc(12px + 72px + 12px);
+    padding-right:12px;
+    width:calc(100% + 12px + 72px + 12px);
+  }
+}
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {

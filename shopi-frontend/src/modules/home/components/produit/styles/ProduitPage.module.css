@@ -87,6 +87,16 @@
   overflow: hidden;
 }
 
+/* Empêche le contenu non-sécable (nowrap, tableaux, onglets…) d'un
+   descendant de forcer la piste de grille au-delà de la largeur
+   disponible : sans ça, la page entière scroll horizontalement sur
+   mobile dès qu'un élément interne est un peu trop large. */
+.leftCol,
+.centerCol,
+.rightCol {
+  min-width: 0;
+}
+
 /* ── Colonne gauche : galerie FIXE ── */
 .leftCol {
   overflow-y: auto;
@@ -183,6 +193,7 @@
     grid-template-areas:
       "galerie  infos"
       "panier   panier";
+    align-items: start; /* la galerie ne doit pas s'étirer sur toute la hauteur de la colonne infos */
     overflow: visible;
     height: auto;
     gap: 0;

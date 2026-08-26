@@ -139,3 +139,15 @@
   display: flex; align-items: center; justify-content: center; gap: 4px;
 }
 .vcBtnM:hover { background: #112648; }
+
+/* ─── Dark mode ─────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .btnCart       { background: #1A4FC4; }
+  .btnCart:hover { background: #1544A8; box-shadow: 0 6px 20px rgba(26,79,196,.4); }
+  .vcBtnM        { background: #1A4FC4; }
+  .vcBtnM:hover  { background: #1544A8; }
+}
+:root[data-theme="dark"] .btnCart       { background: #1A4FC4; }
+:root[data-theme="dark"] .btnCart:hover { background: #1544A8; box-shadow: 0 6px 20px rgba(26,79,196,.4); }
+:root[data-theme="dark"] .vcBtnM        { background: #1A4FC4; }
+:root[data-theme="dark"] .vcBtnM:hover  { background: #1544A8; }

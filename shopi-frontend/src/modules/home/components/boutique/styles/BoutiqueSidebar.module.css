@@ -216,7 +216,10 @@
 .infoSub   { color: var(--t3); line-height: 1.4; font-size: 11px; }
 
 /* ── Responsive ── */
-/* Sur mobile, la sidebar passe au-dessus du contenu (non sticky) */
-@media (max-width: 900px) {
+/* Sur mobile/tablette, le layout 2 colonnes de BoutiquePage.module.css
+   passe en 1 colonne (sidebar au-dessus du main) dès 960px — on désactive
+   le sticky au même seuil, sinon la sidebar reste collée en haut et
+   chevauche le contenu qui défile sous elle. */
+@media (max-width: 960px) {
   .sidebar { position: static; }
 }
