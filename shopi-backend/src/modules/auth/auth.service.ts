@@ -731,13 +731,29 @@ export class AuthService implements OnModuleInit {
      * fermer la session existante on demande confirmation explicite —
      * sauf si le client vient justement de confirmer ce point (2e appel
      * avec confirmDisconnectOther:true). Aucun token émis, aucune
-     * session touchée tant que ce n'est pas confirmé. */
-    if (!confirmDisconnectOther && await this.sessionService.hasActiveSession(user.id)) {
-      this.logEvent('login_session_conflict', {
-        userId: user.id, email: user.email, role: user.role,
-        ipAddress: clientIp, userAgent, success: true,
-      });
-      return { requiresSessionConfirm: true };
+     * session touchée tant que ce n'est pas confirmé.
+     *
+     * FAIL-OPEN volontaire : cette vérification est un confort UX, pas
+     * une garantie de sécurité (la session unique reste appliquée plus
+     * bas par issueTokensForUser → sessionService.startSession, qui,
+     * elle, DOIT réussir pour qu'un token soit émis). Si Redis est
+     * indisponible ici, on ne bloque pas tout le login pour un simple
+     * confort — on continue sans demander confirmation, quitte à ce
+     * que startSession() échoue ensuite pour la vraie raison. */
+    if (!confirmDisconnectOther) {
+      let hasActive = false;
+      try {
+        hasActive = await this.sessionService.hasActiveSession(user.id);
+      } catch (err) {
+        this.logger.warn(`[AUTH] hasActiveSession indisponible (Redis ?), vérification ignorée : ${(err as Error).message}`);
+      }
+      if (hasActive) {
+        this.logEvent('login_session_conflict', {
+          userId: user.id, email: user.email, role: user.role,
+          ipAddress: clientIp, userAgent, success: true,
+        });
+        return { requiresSessionConfirm: true };
+      }
     }
 
     /* ── Défi 2FA ────────────────────────────────────────────
