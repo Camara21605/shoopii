@@ -171,7 +171,19 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
 
   const NAV_LINKS: { key: NavKey; label: string; icon: string; action: () => void }[] = [
     { key: 'explorer', label:t('publicHeader.nav.explorer'), icon:'fa-compass',
-      action:() => { setActiveNav('explorer'); document.querySelector('#blocs')?.scrollIntoView({behavior:'smooth'}); setMobileOpen(false); } },
+      action:() => {
+        setActiveNav('explorer');
+        setMobileOpen(false);
+        /* "Explorer" est rendu sur TOUTES les pages publiques (Header y est
+         * partagé), pas seulement /home — #blocs n'existe que dans
+         * HomePage.tsx. Ailleurs, il faut d'abord y naviguer avant de
+         * pouvoir scroller, sinon le clic ne faisait rien de visible. */
+        if (isHome) {
+          document.querySelector('#blocs')?.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          navigate('/home', { state: { scrollTo: 'blocs' } });
+        }
+      } },
     { key: 'boutiques', label:t('publicHeader.nav.boutiques'), icon:'fa-store',
       action:() => { setActiveNav('boutiques'); navigate('/boutiques'); setMobileOpen(false); } },
     { key: 'livreurs', label:t('publicHeader.nav.livreurs'), icon:'fa-motorcycle',

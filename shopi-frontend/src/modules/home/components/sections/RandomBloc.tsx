@@ -321,7 +321,7 @@ export default function RandomBloc({ kind, index, onToast }: Props) {
   const bgCls = index % 2 === 0 ? styles.bgWhite : styles.bgGray;
 
   return (
-    <section className={`${styles.sec} ${bgCls}`} id={index === 0 ? 'blocs' : undefined}>
+    <section className={`${styles.sec} ${bgCls}`}>
       <div className={styles.wrap}>
         <SectionHeader
           kick={cfg.kick} title={cfg.title} sub={cfg.sub}
