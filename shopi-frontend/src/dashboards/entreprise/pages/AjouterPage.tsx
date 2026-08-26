@@ -189,8 +189,10 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   const [wholesaleTiers, setWholesaleTiers] = useState<WholesaleTier[]>([
     { quantiteMin: '10', quantiteMax: '49', prixUnitaire: '' },
   ]);
-  // ── Mode d'ajout : détermine quelles sections du formulaire sont affichées ──
-  const [productMode, setProductMode] = useState<'detaille' | 'gros' | 'rapide'>('detaille');
+  // ── Mode d'ajout : détermine quelles sections du formulaire sont affichées.
+  // null = aucun onglet choisi (état initial en création) → seules les 3
+  // cartes sont visibles, le formulaire se déplie seulement après un choix. ──
+  const [productMode, setProductMode] = useState<'detaille' | 'gros' | 'rapide' | null>(null);
 
   function handleChangeMode(mode: 'detaille' | 'gros' | 'rapide') {
     setProductMode(mode);
@@ -270,7 +272,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
       ]);
       setVariantes([{ type: 'Couleur', vals: '' }]);
       setVariantesOn(false);
-      setProductMode('detaille');
+      setProductMode(null);
       return;
     }
 
@@ -728,11 +730,11 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           </button>
           {/* En mode édition le brouillon garde le même produit */}
           {!isEditMode && (
-            <button className="btn-draft" onClick={() => handlePublish(true)} disabled={enChargement}>
+            <button className="btn-draft" onClick={() => handlePublish(true)} disabled={enChargement || productMode === null} title={productMode === null ? t('ajouter.header.chooseModeFirst') : undefined}>
               <i className="fas fa-save"></i> {enChargement ? t('ajouter.header.saving') : t('ajouter.header.draft')}
             </button>
           )}
-          <button className="btn-pub" onClick={() => handlePublish(false)} disabled={enChargement}>
+          <button className="btn-pub" onClick={() => handlePublish(false)} disabled={enChargement || productMode === null} title={productMode === null ? t('ajouter.header.chooseModeFirst') : undefined}>
             <i className={`fas ${isEditMode ? 'fa-check' : 'fa-cloud-arrow-up'}`}></i>
             {enChargement
               ? (isEditMode ? t('ajouter.header.updating') : t('ajouter.header.publishing'))
@@ -781,7 +783,11 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
       {errorBanner && <ErrorBanner message={errorBanner} onClose={() => setErrorBanner(null)} />}
 
       {/* ── Grille ── */}
-      <div className="g3r" style={{ alignItems: 'flex-start' }}>
+      {/* Le formulaire ne se déplie qu'après avoir choisi un mode d'ajout —
+          tant que productMode est null, seules les 3 cartes ci-dessus
+          sont visibles. */}
+      {productMode !== null && (
+      <div key={productMode} className="g3r aj-unfold" style={{ alignItems: 'flex-start' }}>
 
         {/* ════════ COLONNE GAUCHE ════════ */}
         <div>
@@ -1239,8 +1245,8 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           </div>
           )}
 
-          {/* Livraison — masquée en mode rapide */}
-          {productMode !== 'rapide' && (
+          {/* Livraison — masquée en mode rapide (et tant qu'aucun mode n'est choisi) */}
+          {(productMode === 'detaille' || productMode === 'gros') && (
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch"><div className="ch-t"><i className="fas fa-truck-fast"></i> {t('ajouter.livraison.title')}</div></div>
             <div className="cb" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1455,9 +1461,9 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           </div>
           )}
 
-          {/* Vente en gros — masquée en mode rapide ; toggle masqué (forcé actif)
-              en mode gros, libre en mode détaillé */}
-          {productMode !== 'rapide' && (
+          {/* Vente en gros — masquée en mode rapide (et tant qu'aucun mode n'est
+              choisi) ; toggle masqué (forcé actif) en mode gros, libre en détaillé */}
+          {(productMode === 'detaille' || productMode === 'gros') && (
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
               <div className="ch-t"><i className="fas fa-boxes-stacked"></i> {t('ajouter.venteEnGros.title')}</div>
@@ -1636,6 +1642,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
 
         </div>
       </div>
+      )}
     </div>
   );
 }

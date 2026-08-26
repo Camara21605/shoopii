@@ -79,6 +79,7 @@
       "editSubtitle": "修改产品信息并保存更改。",
       "createSubtitle": "填写信息以在店铺发布产品。",
       "cancel": "取消",
+      "chooseModeFirst": "请先在下方选择一种添加模式",
       "saving": "保存中…",
       "draft": "草稿",
       "updating": "更新中…",

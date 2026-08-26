@@ -2368,8 +2368,23 @@ select.pf-in {
   gap: 12px;
   margin-bottom: 18px;
 }
-@media (max-width: 720px) {
-  .aj-mode-grid { grid-template-columns: minmax(0, 1fr); }
+
+/* Petit écran : reste horizontal (3 colonnes), cartes juste plus compactes
+   (icône au-dessus du libellé, description masquée) plutôt qu'empilées en
+   1 colonne pleine largeur. */
+@media (max-width: 640px) {
+  .aj-mode-grid { gap: 7px; }
+  .aj-mode-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 5px;
+    padding: 10px 6px;
+  }
+  .aj-mode-card i:first-child { margin-top: 0; font-size: 15px; }
+  .aj-mode-card-label { font-size: 10.5px; margin-bottom: 0; line-height: 1.25; }
+  .aj-mode-card-desc  { display: none; }
+  .aj-mode-card-check { top: 4px; right: 4px; font-size: 11px; }
 }
 
 .aj-mode-card {
@@ -2417,5 +2432,17 @@ select.pf-in {
 :root[data-theme="light"] .aj-mode-card { background: var(--white); border-color: var(--bdr2); }
 :root[data-theme="light"] .aj-mode-card:hover { background: var(--g100); }
 :root[data-theme="light"] .aj-mode-card--active { background: #EEF2FF !important; border-color: var(--blue) !important; }
+
+/* Déplie le formulaire à l'ouverture ET à chaque changement d'onglet (le
+   composant React remonte ce conteneur via key={productMode}, ce qui
+   relance cette animation à chaque clic) — desktop comme mobile. */
+.aj-unfold { animation: aj-unfold .32s cubic-bezier(.16,1,.3,1); }
+@keyframes aj-unfold {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aj-unfold { animation: none; }
+}
 :root[data-theme="light"] .tb-srch:focus-within { box-shadow: 0 0 0 4px rgba(128,128,128,.12); }
 :root[data-theme="light"] .rbn-nav { box-shadow: 0 -2px 12px rgba(15,23,42,.06); }
