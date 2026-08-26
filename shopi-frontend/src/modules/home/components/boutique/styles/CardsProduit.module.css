@@ -91,4 +91,14 @@
   .cardList .img { width: 100%; height: auto; aspect-ratio: 4/3; }
   .cardList .body { flex-direction: column; align-items: stretch; }
   .cardList .btnCart, .cardList .btnRow { display: flex; }
+
+  /* Cartes de la grille (mode par défaut) plus compactes — la grille
+     passe à des colonnes ~140px sous 640px (ProduitsSection.module.css),
+     donc on resserre le contenu pour rester lisible sans déborder. */
+  .body { padding: 9px; gap: 4px; }
+  .nom  { font-size: 12px; }
+  .desc { font-size: 10px; -webkit-line-clamp: 1; }
+  .prix { font-size: 12.5px; }
+  .btnCart { padding: 7px; font-size: 10.5px; }
+  .btnSm   { padding: 6px; font-size: 10px; }
 }

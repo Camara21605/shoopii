@@ -123,6 +123,44 @@ export interface NewConvUser {
   sub:  string;
 }
 
+// ── Résultat brut de GET /messagerie/users/search ───────────────
+export interface ApiSearchUser {
+  id:       string;   // profileId
+  type:     string;   // actor type (client, company, delivery, correspondent)
+  name:     string;
+  logo:     string | null;
+  subtitle: string;
+  online:   boolean;
+}
+
+const SEARCH_TYPE_TO_ROLE: Record<string, UserRole> = {
+  company:       'vendeur',
+  delivery:      'livreur',
+  correspondent: 'correspondant',
+  client:        'client',
+};
+
+function initialsFrom(name: string): string {
+  return name.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
+}
+
+/**
+ * Convertit un résultat de GET /messagerie/users/search en NewConvUser
+ * exploitable par startNewConv() — utilisé par ConvList pour démarrer une
+ * conversation directement depuis un contact lié (sans conversation
+ * existante) affiché dans l'onglet par rôle dédié, ou depuis la recherche
+ * globale de l'onglet "Tous".
+ */
+export function apiSearchUserToNewConvUser(api: ApiSearchUser): NewConvUser {
+  return {
+    id:   `${api.type}:${api.id}`,
+    name: api.name,
+    role: SEARCH_TYPE_TO_ROLE[api.type] ?? 'client',
+    ava:  api.logo ?? initialsFrom(api.name) ?? '?',
+    sub:  api.subtitle,
+  };
+}
+
 // ── Config rôles (couleurs + icônes) ──────────────────────────
 export function getRoleConfig(t: (key: string) => string): Record<UserRole, { label: string; icon: string; color: string; bg: string }> {
   return {

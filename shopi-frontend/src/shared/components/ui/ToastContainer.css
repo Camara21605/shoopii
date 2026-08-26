@@ -1,0 +1,51 @@
+/*
+ * FICHIER: src/shared/components/ui/ToastContainer.css
+ * Styles du conteneur de toasts global (#tct / .tmsg).
+ *
+ * Auto-suffisant (valeurs codées en dur, pas de var(--xxx)) : ce
+ * conteneur est maintenant monté à la racine de l'app (AppProviders),
+ * donc visible sur N'IMPORTE QUELLE page — public, dashboard client,
+ * livreur, correspondant, ou la messagerie partagée. Il ne doit
+ * dépendre d'aucune variable CSS propre à un dashboard précis (ex:
+ * --white/--t1/--g200 définies uniquement dans Sidebar.css côté
+ * Entreprise), sinon les toasts restent invisibles/non stylés partout
+ * ailleurs — exactement le bug corrigé ici (voir AppProviders.tsx).
+ */
+
+#tct {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.tmsg {
+  background: #ffffff;
+  color: #1a1a2e;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 11px 16px;
+  font-size: 12.5px;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .18);
+  transform: translateX(120%);
+  opacity: 0;
+  transition: all .3s cubic-bezier(.34, 1.56, .64, 1);
+  max-width: 320px;
+  pointer-events: auto;
+}
+.tmsg.show { transform: translateX(0); opacity: 1; }
+.tmsg i { font-size: 13px; flex-shrink: 0; }
+
+.tmsg.s i { color: #059669; }
+.tmsg.i i { color: #2563eb; }
+.tmsg.w i { color: #d97706; }
+.tmsg.e i { color: #dc2626; }

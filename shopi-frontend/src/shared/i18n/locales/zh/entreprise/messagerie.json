@@ -36,6 +36,7 @@
       "conversationsMasquees": "隐藏对话",
       "epinglees": "📌 已置顶",
       "recentes": "最近",
+      "contactsSansConversation": "联系人",
       "groupStatus": {
         "active": "进行中",
         "completed": "已送达",

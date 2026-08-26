@@ -183,6 +183,8 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const screenStream   = useRef<MediaStream | null>(null);
   const remoteAudio    = useRef<HTMLAudioElement | null>(null);
   const icePendingQ    = useRef<RTCIceCandidateInit[]>([]);
+  /** Sérialise le traitement des 'call:offer' reçus — voir onCallOffer. */
+  const offerChainRef  = useRef<Promise<void>>(Promise.resolve());
   const durationRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const timeoutRef     = useRef<ReturnType<typeof setTimeout>  | null>(null);
   const wasConnected   = useRef(false);
@@ -1044,42 +1046,63 @@ export function useAudioCall(props?: UseAudioCallProps) {
     endCall(false, wasConnected.current ? 'completed' : 'missed');
   }, [endCall]);
 
-  /* Offer WebRTC reçue (callee) */
-  const onCallOffer = useCallback(async (payload: WsCallSignal) => {
-    if (!callInfoRef.current || !localStream.current) return;
+  /*
+   * Offer WebRTC reçue (callee).
+   *
+   * ⚠️ SÉRIALISÉ via offerChainRef : sans ça, un 'call:offer' reçu deux fois
+   * pour la MÊME négociation (redélivrance socket.io après une micro-
+   * coupure réseau réelle — jamais reproduit sur une boucle locale
+   * instantanée, mais confirmé en usage réel) déclenchait deux exécutions
+   * CONCURRENTES de ce handler. Les deux `await`aient sur la même
+   * RTCPeerConnection réutilisée (voir commentaire plus bas) sans jamais se
+   * coordonner : la 1ère invocation pouvait tenter setLocalDescription(answer)
+   * APRÈS que la 2ème ait déjà fait tout le cycle setRemoteDescription→
+   * createAnswer→setLocalDescription et ramené l'état à 'stable' — provoquant
+   * `InvalidStateError: Called in wrong state: stable`, jamais rattrapé
+   * proprement, qui terminait l'appel sans jamais atteindre 'connected' (le
+   * minutaire, affiché uniquement en 'connected', ne s'affichait donc jamais).
+   * En chaînant chaque invocation à la précédente, la 2ème attend que la 1ère
+   * ait fini d'amener la pc à 'stable' avant de démarrer son propre cycle —
+   * une vraie 2ème négociation légitime (partage d'écran, etc.) reste gérée
+   * normalement, juste sans jamais chevaucher une négociation en cours.
+   */
+  const onCallOffer = useCallback((payload: WsCallSignal) => {
+    offerChainRef.current = offerChainRef.current.then(async () => {
+      if (!callInfoRef.current || !localStream.current) return;
 
-    try {
-      /* ⚠️ Réutilise la PeerConnection existante si elle existe déjà —
-         un offer peut arriver une 2e fois EN COURS D'APPEL (renégociation,
-         ex. l'autre participant démarre un partage d'écran, partie 7), pas
-         seulement à l'établissement initial. Recréer systématiquement la pc
-         ici (comportement précédent) aurait détruit une connexion média
-         déjà établie et fonctionnelle à chaque renégociation. */
-      let pc = pcRef.current;
-      if (!pc) {
-        const iceServers = await getIceServers();
-        pc = createPeerConnection(iceServers);
-        await attachLocalTracks(pc, localStream.current);
+      try {
+        /* Réutilise la PeerConnection existante si elle existe déjà —
+           un offer peut arriver une 2e fois EN COURS D'APPEL (renégociation,
+           ex. l'autre participant démarre un partage d'écran, partie 7), pas
+           seulement à l'établissement initial. Recréer systématiquement la pc
+           ici (comportement précédent) aurait détruit une connexion média
+           déjà établie et fonctionnelle à chaque renégociation. */
+        let pc = pcRef.current;
+        if (!pc) {
+          const iceServers = await getIceServers();
+          pc = createPeerConnection(iceServers);
+          await attachLocalTracks(pc, localStream.current);
+        }
+
+        await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp!));
+        await flushIcePending();
+
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+
+        emit('call:answer', {
+          conversationId: callInfoRef.current.conversationId,
+          targetUserId:   callInfoRef.current.remoteUserId,
+          sdp:            answer,
+        });
+      } catch (err) {
+        /* SDP distante invalide, média perdu… — sans ce catch, le statut
+           restait bloqué sur "Connexion…" indéfiniment (voir acceptCall,
+           qui a déjà un timeout 20s en filet, mais autant échouer vite). */
+        console.error('[Call] Échec traitement de l\'offer WebRTC reçue :', err);
+        endCall(true, 'missed');
       }
-
-      await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp!));
-      await flushIcePending();
-
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-
-      emit('call:answer', {
-        conversationId: callInfoRef.current.conversationId,
-        targetUserId:   callInfoRef.current.remoteUserId,
-        sdp:            answer,
-      });
-    } catch (err) {
-      /* SDP distante invalide, média perdu… — sans ce catch, le statut
-         restait bloqué sur "Connexion…" indéfiniment (voir acceptCall,
-         qui a déjà un timeout 20s en filet, mais autant échouer vite). */
-      console.error('[Call] Échec traitement de l\'offer WebRTC reçue :', err);
-      endCall(true, 'missed');
-    }
+    });
   }, [createPeerConnection, attachLocalTracks, flushIcePending, endCall]);
 
   /* Answer WebRTC reçue (caller) */

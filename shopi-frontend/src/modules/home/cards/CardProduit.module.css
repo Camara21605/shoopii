@@ -11,7 +11,7 @@
 .pcard {
   background: var(--white);
   border: 1.5px solid var(--bdr);
-  border-radius: 18px;
+  border-radius: 15px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -28,12 +28,12 @@
 /* ── Badge Hot / Nouveau / Promo ── */
 .pbadge {
   position: absolute;
-  top: 10px; left: 10px;
+  top: 8px; left: 8px;
   z-index: 2;
-  font-size: 9.5px;
+  font-size: 8.5px;
   font-weight: 800;
   text-transform: uppercase;
-  padding: 3px 10px;
+  padding: 2px 8px;
   border-radius: 999px;
 }
 .badgeHot   { background: var(--blue);    color: #fff; }
@@ -43,15 +43,15 @@
 /* ── Bouton favori (cœur en haut à droite) ── */
 .pfav {
   position: absolute;
-  top: 10px; right: 10px;
+  top: 8px; right: 8px;
   z-index: 2;
-  width: 34px; height: 34px;
+  width: 28px; height: 28px;
   border-radius: 50%;
   background: rgba(255,255,255,.92);
   border: 1px solid var(--bdr);
   display: flex; align-items: center; justify-content: center;
   color: var(--t3);
-  font-size: 13px;
+  font-size: 11px;
   cursor: pointer;
   transition: all .2s;
   backdrop-filter: blur(4px);
@@ -69,7 +69,7 @@
   overflow: hidden;
   cursor: pointer;
 }
-.pimgEmoji { font-size: 54px; transition: transform .3s; }
+.pimgEmoji { font-size: 42px; transition: transform .3s; }
 .pcard:hover .pimgEmoji { transform: scale(1.05); }
 
 /* Overlay "Voir" qui apparaît au hover */
@@ -84,23 +84,23 @@
 .pimg:hover .pimgOverlay { opacity: 1; }
 .pimgOverlay span {
   color: #fff;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   display: flex; align-items: center; gap: 6px;
 }
 
 /* ── Corps de la carte ── */
 .pbody {
-  padding: 13px 14px 14px;
+  padding: 10px 11px 11px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
 }
 
 /* Nom de la boutique — cliquable */
 .pshop {
-  font-size: 10.5px;
+  font-size: 9.5px;
   font-weight: 700;
   color: var(--t3);
   text-transform: uppercase;
@@ -109,13 +109,13 @@
   transition: color .18s;
   display: flex; align-items: center; gap: 4px;
 }
-.pshop i { color: var(--blue); font-size: 10px; }
+.pshop i { color: var(--blue); font-size: 9px; }
 .pshop:hover { color: var(--blue); }
 
 /* Nom du produit */
 .pname {
   font-family: var(--fd, 'Fraunces', serif);
-  font-size: 13.5px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--navy);
   line-height: 1.3;
@@ -123,9 +123,9 @@
 
 /* Description courte */
 .pdesc {
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--t2);
-  line-height: 1.5;
+  line-height: 1.4;
   flex: 1;
   /* Limite à 2 lignes */
   display: -webkit-box;
@@ -136,22 +136,22 @@
 
 /* Étoiles + note + nombre d'avis */
 .prate  { display: flex; align-items: center; gap: 4px; }
-.stars  { color: var(--amber, #B45309); letter-spacing: -1px; font-size: 11.5px; }
-.pnote  { font-size: 11.5px; font-weight: 700; color: var(--navy); }
-.pcnt   { font-size: 10.5px; color: var(--t4); }
+.stars  { color: var(--amber, #B45309); letter-spacing: -1px; font-size: 11px; }
+.pnote  { font-size: 11px; font-weight: 700; color: var(--navy); }
+.pcnt   { font-size: 10px; color: var(--t4); }
 
 /* Prix principal + ancien prix + remise */
-.pprices { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
-.pprice  { font-family: var(--fd, 'Fraunces', serif); font-size: 15px; font-weight: 800; color: var(--blue); }
-.pold    { font-size: 11px; color: var(--t4); text-decoration: line-through; }
-.premise { font-size: 10px; font-weight: 800; color: var(--emerald); background: var(--em-bg); border-radius: 4px; padding: 1px 5px; }
+.pprices { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.pprice  { font-family: var(--fd, 'Fraunces', serif); font-size: 13.5px; font-weight: 800; color: var(--blue); }
+.pold    { font-size: 10.5px; color: var(--t4); text-decoration: line-through; }
+.premise { font-size: 9.5px; font-weight: 800; color: var(--emerald); background: var(--em-bg); border-radius: 4px; padding: 1px 5px; }
 
 /* ── Panier + actions secondaires, sur une seule ligne ── */
 .pbottomRow {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 4px;
+  gap: 5px;
+  margin-top: 3px;
 }
 
 /* ── Bouton "Ajouter au panier" ── */
@@ -161,22 +161,34 @@
   background: var(--navy);
   color: #fff;
   border: none;
-  border-radius: 10px;
-  padding: 9px;
+  border-radius: 9px;
+  padding: 7px;
   font-family: var(--fb, 'DM Sans', sans-serif);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  display: flex; align-items: center; justify-content: center; gap: 7px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
   cursor: pointer;
   transition: background .18s, transform .15s;
   white-space: nowrap;
+  overflow: hidden;
 }
 .pcart:hover { background: #112648; transform: translateY(-1px); }
+
+/* Le libellé peut être plus long que la place restante quand la carte
+   est étroite (auto-fill) ET a 3 boutons d'action à côté (Boutique,
+   Partager, Prix gros) — on tronque proprement avec "…" plutôt que de
+   laisser le texte se faire recouvrir par les icônes voisines. */
+.pcartLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
 
 /* ── Boutons d'action (petites icônes rondes, style Facebook) ── */
 .pactions {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   flex-shrink: 0;
 }
 
@@ -184,8 +196,8 @@
 .paction {
   position: relative;
   flex: 0 0 auto;
-  width: 28px;
-  height: 28px;
+  width: 25px;
+  height: 25px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -195,7 +207,7 @@
   transition: background .15s, color .15s, transform .15s;
   border: 1.5px solid transparent;
 }
-.paction i    { font-size: 12px; flex-shrink: 0; }
+.paction i    { font-size: 11px; flex-shrink: 0; }
 .paction span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 
 /* Bouton BOUTIQUE — vert émeraude */
@@ -594,6 +606,22 @@
   .mBody       { padding: 16px; }
   .mHeader     { padding: 14px 16px; }
   .mFooter     { padding: 12px 16px; }
+
+  /* Bouton "Ajouter au panier" en icône seule — sur petit écran, la
+     carte n'a plus la place pour un bouton texte + 2-3 icônes d'action
+     sur la même ligne. Le libellé (déjà dans un <span> séparé) est
+     masqué et le bouton reprend la taille ronde des boutons d'action
+     voisins au lieu de s'étirer (flex:1). */
+  .pcartLabel { display: none; }
+  .pcart {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 50%;
+    gap: 0;
+  }
+  .pcart i { font-size: 13px; }
 }
 
 .pcartDone {

@@ -91,6 +91,9 @@ export default function HomePage() {
         paddingBottom: 0,
       }}>
 
+        {/* 1 — Stories des boutiques */}
+        <HomeStoriesStrip onToast={showToast} />
+
         {/* 3 — Types d'entreprises */}
         <TypeEntrepriseSection />
 
@@ -99,9 +102,6 @@ export default function HomePage() {
 
         {/* 6 — Flash sale + promotions */}
         <PromotionsSection />
-
-        {/* 6.5 — Stories des boutiques */}
-        <HomeStoriesStrip onToast={showToast} />
 
         {/* 7 — Blocs aléatoires */}
         <div id="blocs">

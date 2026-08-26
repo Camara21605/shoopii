@@ -500,13 +500,13 @@ export default function CardProduit({ p, onToast }: Props) {
             {dejaAuPanier ? (
               <button className={`${styles.pcart} ${styles.pcartDone}`}
                 onClick={e => { e.stopPropagation(); onToast(t('sharedCards.produit.dejaAuPanierClicToast')); }}>
-                <i className="fas fa-check" /> {t('sharedCards.produit.dejaAuPanierBtn')}
+                <i className="fas fa-check" /> <span className={styles.pcartLabel}>{t('sharedCards.produit.dejaAuPanierBtn')}</span>
               </button>
             ) : (
               <button className={styles.pcart} disabled={loading} onClick={e => { e.stopPropagation(); handleAdd(); }}>
                 {loading
-                  ? <><i className="fas fa-spinner fa-spin" /> {t('sharedCards.produit.ajoutEnCours')}</>
-                  : <><i className="fas fa-cart-plus" /> {t('sharedCards.produit.ajouterAuPanier')}</>}
+                  ? <><i className="fas fa-spinner fa-spin" /> <span className={styles.pcartLabel}>{t('sharedCards.produit.ajoutEnCours')}</span></>
+                  : <><i className="fas fa-cart-plus" /> <span className={styles.pcartLabel}>{t('sharedCards.produit.ajouterAuPanier')}</span></>}
               </button>
             )}
 

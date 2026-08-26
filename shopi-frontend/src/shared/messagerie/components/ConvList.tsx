@@ -7,14 +7,36 @@
 import { memo, useState, useMemo, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import type { Conversation, ChatUser } from '../data/messagerieTypes';
-import { getRoleConfig } from '../data/messagerieTypes';
+import type { Conversation, ChatUser, ApiSearchUser, NewConvUser } from '../data/messagerieTypes';
+import { getRoleConfig, apiSearchUserToNewConvUser } from '../data/messagerieTypes';
 import { getRoleFromToken } from '../../services/authUtils';
+import { apiFetch } from '../../services/apiFetch';
 import type { CallHistoryItem } from '../hooks/useCallHistory';
 import { cldAvatar } from '../utils/chatUtils';
 import s from '../styles/ConvList.module.css';
 
 type Tab = 'all' | 'unread' | 'boutiques' | 'livreurs' | 'clients' | 'correspondants' | 'masquees' | 'groupes' | 'appels';
+
+/* Onglets "dédiés à un acteur" — un contact LIÉ (commande/abonnement/
+ * contact partagé, cf. MessagerieService.searchUsers) doit y apparaître
+ * même sans conversation existante, comme un contact WhatsApp qu'on n'a
+ * encore jamais écrit. Tab → type d'acteur backend attendu par
+ * GET /messagerie/users/search?type=. */
+const TAB_ACTOR_TYPE: Partial<Record<Tab, string>> = {
+  boutiques:      'company',
+  livreurs:       'delivery',
+  clients:        'client',
+  correspondants: 'correspondent',
+};
+
+/** Rôle frontend (ChatUser.role) correspondant à chaque onglet dédié — pour
+ *  dédupliquer les contacts liés contre les conversations déjà existantes. */
+const TAB_CONTACT_ROLE: Partial<Record<Tab, string>> = {
+  boutiques:      'vendeur',
+  livreurs:       'livreur',
+  clients:        'client',
+  correspondants: 'correspondant',
+};
 
 interface Props {
   conversations:   Conversation[];
@@ -24,6 +46,10 @@ interface Props {
   totalUnread:     number;
   onSelect:        (id: string) => void;
   onNewConv:       () => void;
+  onStartConversation: (user: NewConvUser) => void;
+  /** Incrémenté par MessagerieCore pour focaliser la recherche depuis l'extérieur
+   *  (ex: bouton "Démarrer une conversation" de l'état vide du chat). */
+  focusSearchToken?: number;
   onDeleteConv:    (id: string) => void;
   onHideConv:      (id: string) => void;
   archivedConvs:   Conversation[];
@@ -77,13 +103,15 @@ function getVisibleTabs(role: string | null): Tab[] {
 }
 
 function ConvList({
-  conversations, usersMap, activeId, mobileOpen, totalUnread, onSelect, onNewConv, onDeleteConv, onHideConv,
+  conversations, usersMap, activeId, mobileOpen, totalUnread, onSelect, onNewConv, onStartConversation,
+  focusSearchToken, onDeleteConv, onHideConv,
   archivedConvs, onLoadArchived, onUnhideConv, onMarkUnread, onMarkRead, groupConvs = [], groupUsersMap = new Map(),
   callHistory = [], callHistoryLoading = false, onLoadCallHistory,
 }: Props) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [tab,    setTab]    = useState<Tab>('all');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   /* Onglets pertinents pour le rôle de l'utilisateur connecté */
   const myRole     = getRoleFromToken();
@@ -94,6 +122,77 @@ function ConvList({
   useEffect(() => {
     if (!visibleSet.has(tab)) setTab('all');
   }, [visibleSet, tab]);
+
+  /* ── Contacts liés sans conversation existante ─────────────────
+   * Remplace l'ancienne modale "Nouvelle conversation" : sur un onglet
+   * dédié à un type d'acteur (Boutiques/Livreurs/Clients/Correspondants),
+   * tout contact LIÉ (commande partagée, abonnement, contact tél.) doit
+   * apparaître même sans conversation encore démarrée — comme un contact
+   * WhatsApp jamais écrit. Sur "Tous", la recherche interroge aussi le
+   * backend pour retrouver un contact lié qui n'apparaît dans aucune
+   * conversation existante (remplace la recherche de l'ex-modale).
+   */
+  const [relatedByKey, setRelatedByKey] = useState<Record<string, ApiSearchUser[]>>({});
+  const [relatedLoading, setRelatedLoading] = useState(false);
+  const relatedDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const actorType   = TAB_ACTOR_TYPE[tab];
+  const relatedKey  = actorType ?? 'all';
+  const wantRelated = !!actorType || (tab === 'all' && search.trim().length > 0);
+
+  useEffect(() => {
+    if (!wantRelated) return;
+
+    if (relatedDebounceRef.current) clearTimeout(relatedDebounceRef.current);
+    relatedDebounceRef.current = setTimeout(() => {
+      setRelatedLoading(true);
+      const qs = new URLSearchParams();
+      const q  = search.trim();
+      if (q) qs.set('q', q);
+      if (actorType) qs.set('type', actorType);
+      apiFetch<ApiSearchUser[]>(`/messagerie/users/search?${qs.toString()}`)
+        .then(data => setRelatedByKey(prev => ({ ...prev, [relatedKey]: Array.isArray(data) ? data : [] })))
+        .catch(() => setRelatedByKey(prev => ({ ...prev, [relatedKey]: [] })))
+        .finally(() => setRelatedLoading(false));
+    }, actorType ? 0 : 300); /* onglet dédié : chargement immédiat au changement d'onglet ; "Tous" : debounce de frappe */
+
+    return () => { if (relatedDebounceRef.current) clearTimeout(relatedDebounceRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, search, wantRelated]);
+
+  /* Contacts liés à afficher pour l'onglet courant, DÉDUPLIQUÉS contre
+   * les conversations déjà existantes du même type (déjà visibles via
+   * `filtered` plus bas, avec aperçu du dernier message). */
+  const relatedContacts = useMemo(() => {
+    if (!wantRelated) return [];
+    const list = relatedByKey[relatedKey] ?? [];
+    const contactRole = TAB_CONTACT_ROLE[tab];
+    const existingIds = new Set(
+      conversations
+        .filter(c => !c.isGroup && (!contactRole || usersMap.get(c.userId)?.role === contactRole))
+        .map(c => c.userId),
+    );
+    return list.filter(u => !existingIds.has(u.id));
+  }, [wantRelated, relatedByKey, relatedKey, conversations, usersMap, tab]);
+
+  /* ── Focus recherche déclenché depuis l'extérieur (état vide du chat) ── */
+  const focusTokenRef = useRef(focusSearchToken);
+  useEffect(() => {
+    if (focusSearchToken === undefined || focusSearchToken === focusTokenRef.current) return;
+    focusTokenRef.current = focusSearchToken;
+    if (tab === 'masquees' || tab === 'appels' || tab === 'groupes') setTab('all');
+    searchInputRef.current?.focus();
+  }, [focusSearchToken, tab]);
+
+  function handlePencilClick() {
+    if (tab === 'masquees' || tab === 'appels' || tab === 'groupes') setTab('all');
+    searchInputRef.current?.focus();
+    onNewConv();
+  }
+
+  function handleStartRelated(api: ApiSearchUser) {
+    onStartConversation(apiSearchUserToNewConvUser(api));
+  }
 
   const filtered = useMemo(() => {
     /* Les onglets Livraisons, Appels et Masquées sont gérés séparément */
@@ -157,7 +256,7 @@ function ConvList({
         <div className={s.searchRow}>
           <div className={s.searchInner}>
             <i className="fas fa-magnifying-glass" />
-            <input className={s.searchInput} type="text" placeholder={t('messagerie.convList.searchPlaceholder')}
+            <input ref={searchInputRef} className={s.searchInput} type="text" placeholder={t('messagerie.convList.searchPlaceholder')}
               value={search} onChange={e => setSearch(e.target.value)} />
             {search && (
               <button onClick={() => setSearch('')}
@@ -166,7 +265,7 @@ function ConvList({
               </button>
             )}
           </div>
-          <button className={s.newConvBtn} onClick={onNewConv} title={t('messagerie.convList.nouveauMessage')}>
+          <button className={s.newConvBtn} onClick={handlePencilClick} title={t('messagerie.convList.nouveauMessage')}>
             <i className="fas fa-pen-to-square" />
           </button>
         </div>
@@ -300,10 +399,22 @@ function ConvList({
                 ))}
               </>
             )}
+            {/* Contacts liés sans conversation existante — onglets dédiés
+             * (Boutiques/Livreurs/Clients/Correspondants) toujours ; "Tous"
+             * uniquement pendant une recherche active (remplace l'ex-modale). */}
+            {relatedContacts.length > 0 && (
+              <>
+                <div className={s.section}>{t('messagerie.convList.contactsSansConversation')}</div>
+                {relatedContacts.map(api => (
+                  <RelatedContactItem key={`related-${api.type}-${api.id}`} api={api} onStart={handleStartRelated} />
+                ))}
+              </>
+            )}
+
             {/* État vide :
              * - onglets "Tous"/"Non lus" : vide si aucune conv ET aucun groupe visible
              * - onglets de filtre P2P (boutiques, livreurs…) : vide si aucune conv */}
-            {filtered.length === 0 && (
+            {filtered.length === 0 && relatedContacts.length === 0 && !relatedLoading && (
               (tab === 'all' || tab === 'unread')
                 ? filteredGroups.filter(g => tab === 'unread' ? g.unread > 0 : true).length === 0
                 : true
@@ -529,6 +640,56 @@ const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSele
             </button>
           </div>
         )}
+      </div>
+    </div>
+  );
+});
+
+/* ── Item contact lié sans conversation existante ──────────────
+ * Même habillage visuel que ConvItem (avatar, badge de rôle, point
+ * en ligne) mais sans les affordances propres à une conversation déjà
+ * existante (épingle, menu masquer/supprimer, badge non-lu). Le clic
+ * démarre la conversation via getOrCreateConversation() côté backend
+ * (POST /messagerie/conversations), exactement comme le faisait l'ex-
+ * modale "Nouvelle conversation". */
+interface RelatedItemProps {
+  api:     ApiSearchUser;
+  onStart: (api: ApiSearchUser) => void;
+}
+
+const RelatedContactItem = memo(function RelatedContactItem({ api, onStart }: RelatedItemProps) {
+  const { t } = useTranslation();
+  const role     = ({ company: 'vendeur', delivery: 'livreur', correspondent: 'correspondant', client: 'client' } as Record<string, string>)[api.type] ?? 'client';
+  const rc       = getRoleConfig(t)[role as keyof ReturnType<typeof getRoleConfig>];
+  const isImgAva = !!api.logo;
+
+  return (
+    <div className={s.item} onClick={() => onStart(api)}>
+      <div className={s.avaWrap}>
+        <div className={s.ava} style={{ background: isImgAva ? undefined : rc.bg, overflow:'hidden', padding:0 }}>
+          {isImgAva
+            ? <img src={cldAvatar(api.logo, 56)!} alt={api.name}
+                style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'inherit', display:'block' }}
+                loading="lazy"
+                onError={e => {
+                  const img = e.currentTarget as HTMLImageElement;
+                  img.style.display = 'none';
+                  (img.parentElement as HTMLElement).textContent = api.name.slice(0,2).toUpperCase();
+                }}
+              />
+            : <span style={{ fontSize:16 }}>{rc.icon}</span>
+          }
+        </div>
+        <div className={`${s.onlineDot} ${api.online ? s.on : s.off}`} />
+        <div className={s.roleBadge} style={{ background: rc.color, color:'#fff' }}>{rc.icon}</div>
+      </div>
+
+      <div className={s.info}>
+        <div className={s.name}><span className={s.nameText}>{api.name}</span></div>
+        <div className={s.context} style={{ color: rc.color }}>{api.subtitle || rc.label}</div>
+        <div className={s.lastMsg}>
+          <span style={{ color:'var(--t4)', fontStyle:'italic' }}>{t('messagerie.convList.nouvelleConversation')}</span>
+        </div>
       </div>
     </div>
   );

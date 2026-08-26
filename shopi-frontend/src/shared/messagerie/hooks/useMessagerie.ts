@@ -162,7 +162,6 @@ export function useMessagerie() {
   const [users,             setUsers]             = useState<ChatUser[]>([]);
   const [activeConvId,      setActiveConvId]      = useState<string | null>(null);
   const [infoPanelOpen,     setInfoPanelOpen]     = useState(false);
-  const [newConvOpen,       setNewConvOpen]       = useState(false);
   const [mobileOpen,        setMobileOpen]        = useState(() => window.innerWidth <= 640);
   const [loadingConvs,      setLoadingConvs]      = useState(true);
 
@@ -716,7 +715,6 @@ export function useMessagerie() {
    * utilisateur dans "Démarrer une conversation" ne produit visuellement
    * rien, sans aucun indice de la raison réelle. */
   const startNewConv = useCallback(async (newUser: NewConvUser) => {
-    setNewConvOpen(false);
     const api = await apiFetch<ApiConv>(
       '/messagerie/conversations',
       { method: 'POST', body: { targetType: newUser.id.split(':')[0], targetId: newUser.id.split(':')[1] } },
@@ -740,7 +738,6 @@ export function useMessagerie() {
     activeConvId,
     totalUnread,
     infoPanelOpen,
-    newConvOpen,
     mobileOpen,
     loadingConvs,
     typingMap,       // indicateurs "X est en train d'écrire" temps réel
@@ -762,7 +759,6 @@ export function useMessagerie() {
     applyCallEventLocally,
     startNewConv,
     setInfoPanelOpen,
-    setNewConvOpen,
     setMobileOpen,
     setActiveConvId,
   };

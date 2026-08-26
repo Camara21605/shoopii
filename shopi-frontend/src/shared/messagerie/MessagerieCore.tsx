@@ -13,7 +13,7 @@
  *   Ce composant enregistre seulement un handler "mise à jour locale"
  *   (applyCallEventLocally) pour l'update optimiste du state React.
  */
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation }    from 'react-i18next';
 import { useMessagerie }     from './hooks/useMessagerie';
 import { useDeliveryGroups } from './hooks/useDeliveryGroups';
@@ -25,7 +25,6 @@ import { useToast }          from '../context/ToastContext';
 import ConvList     from './components/ConvList';
 import ChatWindow   from './sections/ChatWindow';
 import InfoPanel    from './sections/InfoPanel';
-import NewConvModal from './components/NewConvModal';
 
 import s from './styles/MessagerieLayout.module.css';
 
@@ -48,7 +47,6 @@ export default function MessagerieCore() {
     activeConvId,
     totalUnread,
     infoPanelOpen,
-    newConvOpen,
     mobileOpen,
     typingMap,
     sendTyping,
@@ -66,7 +64,6 @@ export default function MessagerieCore() {
     applyCallEventLocally,
     startNewConv,
     setInfoPanelOpen,
-    setNewConvOpen,
     setMobileOpen,
     setActiveConvId,
   } = useMessagerie();
@@ -209,6 +206,22 @@ export default function MessagerieCore() {
     }
   }, [startNewConv, toast, t]);
 
+  /*
+   * "Nouvelle conversation" n'ouvre plus de fenêtre modale séparée — un
+   * contact avec qui une relation existe (commande, abonnement, contact
+   * partagé) apparaît directement dans l'onglet dédié à son rôle
+   * (Boutiques/Livreurs/Clients/Correspondants) dans ConvList, comme un
+   * contact jamais encore écrit. Ce bouton se contente d'ouvrir la liste
+   * sur mobile et de donner le focus à la recherche déjà présente en
+   * haut de la liste (ConvList bascule aussi sur "Tous" si l'onglet actif
+   * ne peut pas afficher de nouveaux contacts, ex. Masquées/Appels).
+   */
+  const [focusSearchToken, setFocusSearchToken] = useState(0);
+  const handleRequestNewConv = useCallback(() => {
+    setMobileOpen(true);
+    setFocusSearchToken(v => v + 1);
+  }, [setMobileOpen]);
+
   const handleVideoCall = () => {
     if (activeGroupId || !activeConv || !activeUser) {
       console.warn('[Call] handleVideoCall abandonné — groupe/conv/user manquant', { activeGroupId, activeConv, activeUser });
@@ -257,7 +270,9 @@ export default function MessagerieCore() {
         mobileOpen={mobileOpen}
         totalUnread={totalUnread}
         onSelect={handleSelect}
-        onNewConv={() => setNewConvOpen(true)}
+        onNewConv={handleRequestNewConv}
+        onStartConversation={handleStartNewConv}
+        focusSearchToken={focusSearchToken}
         onDeleteConv={deleteConversation}
         onHideConv={hideConversation}
         archivedConvs={archivedConvs}
@@ -282,7 +297,7 @@ export default function MessagerieCore() {
         onSend={handleSend}
         onTyping={activeGroupId ? undefined : sendTyping}
         onToggleInfo={() => setInfoPanelOpen(p => !p)}
-        onNewConv={() => setNewConvOpen(true)}
+        onNewConv={handleRequestNewConv}
         onToast={toast}
         onDelete={handleDelete}
         onUpdateGroup={activeGroupId ? updateGroupDescription : undefined}
@@ -305,13 +320,6 @@ export default function MessagerieCore() {
           onToast={toast}
         />
       )}
-
-      {/* Modale nouvelle conversation */}
-      <NewConvModal
-        open={newConvOpen}
-        onClose={() => setNewConvOpen(false)}
-        onStart={handleStartNewConv}
-      />
 
       {/* Overlay mobile */}
       {mobileOpen && (

@@ -386,7 +386,19 @@ export function useSocket(callbacks: SocketCallbacks) {
     socket.on('group_call:ice_candidate',     onGrpIce);
     socket.on('group_call:media_toggled',     onGrpMediaToggled);
 
-    if (!socket.connected) socket.connect();
+    if (!socket.connected) {
+      socket.connect();
+    } else {
+      /* Le singleton (GlobalCallProvider → initGlobalSocket()) est en
+       * général déjà connecté AVANT que ce hook ne monte (ex: navigation
+       * vers /messagerie après connexion) — l'événement 'connect' s'est
+       * alors déjà déclenché dans le passé, avant que onConnect ci-dessus
+       * n'existe. Sans cette synchronisation, `connected` restait bloqué
+       * à `false` pour toujours malgré un socket réellement opérationnel,
+       * affichant en permanence le bandeau "Déconnecté du serveur temps
+       * réel" alors que messages/appels fonctionnaient normalement. */
+      onConnect();
+    }
 
     return () => {
       socket.off('connect',            onConnect);

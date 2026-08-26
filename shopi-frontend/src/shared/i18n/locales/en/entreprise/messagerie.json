@@ -36,6 +36,7 @@
       "conversationsMasquees": "Hidden conversations",
       "epinglees": "📌 Pinned",
       "recentes": "Recent",
+      "contactsSansConversation": "Contacts",
       "groupStatus": {
         "active": "In progress",
         "completed": "Delivered",

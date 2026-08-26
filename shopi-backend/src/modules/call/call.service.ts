@@ -32,7 +32,7 @@ import { Delivery }      from 'src/database/entities/profiles/livreur-profile.en
 import { Correspondent } from 'src/database/entities/profiles/correspondant-profile.entity';
 import { Partner }       from 'src/database/entities/profiles/partenaire-profile.entity';
 import { UserRole } from 'src/common/enums/user-role.enum';
-import { ConversationActorType } from 'src/database/entities/messaging/conversation.entity';
+import { Conversation, ConversationActorType, ConversationStatus } from 'src/database/entities/messaging/conversation.entity';
 
 import { MessagingPermissionEngine } from '../messagerie/permissions/messaging-permission.engine';
 import type { PermissionContext }    from '../messagerie/permissions/interfaces/permission-context.interface';
@@ -78,8 +78,9 @@ export class CallService {
   private readonly logger = new Logger(CallService.name);
 
   constructor(
-    @InjectRepository(Call)        private readonly callRepo:    Repository<Call>,
-    @InjectRepository(CallHistory) private readonly historyRepo: Repository<CallHistory>,
+    @InjectRepository(Call)         private readonly callRepo:    Repository<Call>,
+    @InjectRepository(CallHistory)  private readonly historyRepo: Repository<CallHistory>,
+    @InjectRepository(Conversation) private readonly convRepo:    Repository<Conversation>,
     @InjectRepository(User)        private readonly userRepo:    Repository<User>,
     @InjectRepository(Client)        private readonly clientRepo: Repository<Client>,
     @InjectRepository(Company)       private readonly companyRepo: Repository<Company>,
@@ -260,7 +261,10 @@ export class CallService {
 
   // ── Vérification de permission (réutilise les règles de messagerie) ──
 
-  async assertCanCall(callerUserId: string, calleeUserId: string, callerActorId?: string): Promise<void> {
+  async assertCanCall(
+    callerUserId: string, calleeUserId: string,
+    callerActorId?: string, conversationId?: string,
+  ): Promise<void> {
     /* Garde explicite : userRepo.findOne({ where: { id: undefined } }) ne
        rejette pas — TypeORM ignore une clause where à undefined et renvoie
        une ligne arbitraire de la table. Sans ce garde, un socket dont
@@ -299,6 +303,25 @@ export class CallService {
       throw new ForbiddenException('Profil introuvable pour cet appel.');
     }
 
+    /*
+     * Court-circuit : si les deux acteurs ont déjà une conversation ACTIVE
+     * entre eux (peu importe qui l'a démarrée), l'appel est autorisé sans
+     * repasser par l'évaluateur métier (commande/abonnement).
+     *
+     * POURQUOI : un client peut TOUJOURS écrire en premier à une entreprise/
+     * un livreur/un correspondant (ClientCompanyEvaluator etc. — aucune
+     * relation requise dans ce sens), donc une conversation existe souvent
+     * sans commande ni abonnement. Sans ce court-circuit, le bouton d'appel
+     * reste affiché et cliquable dans cette même conversation, mais l'appel
+     * du professionnel vers ce client échouait systématiquement ("Aucune
+     * relation commerciale…") — incohérent avec le fait qu'ils discutent
+     * déjà. Si une conversation existe, il est raisonnable qu'un
+     * professionnel puisse rappeler quelqu'un qui lui a déjà écrit.
+     */
+    if (conversationId && await this.hasActiveConversationBetween(callerActor, calleeActor, conversationId)) {
+      return;
+    }
+
     const ctx: PermissionContext = {
       requestorType:   callerActor.type,
       requestorId:     callerActor.id,
@@ -315,6 +338,24 @@ export class CallService {
         `Vous ne pouvez pas encore appeler cet utilisateur (${result.reason})`,
       );
     }
+  }
+
+  /** true si `conversationId` est une conversation ACTIVE dont les deux
+   *  acteurs donnés sont bien les participants (dans un sens ou l'autre). */
+  private async hasActiveConversationBetween(
+    actorA: ResolvedActor, actorB: ResolvedActor, conversationId: string,
+  ): Promise<boolean> {
+    const conv = await this.convRepo.findOne({
+      where: { id: conversationId, status: ConversationStatus.ACTIVE },
+      select: ['initiatorType', 'initiatorId', 'recipientType', 'recipientId'],
+    });
+    if (!conv) return false;
+
+    const isParticipant = (actor: ResolvedActor) =>
+      (conv.initiatorType === actor.type && conv.initiatorId === actor.id) ||
+      (conv.recipientType === actor.type && conv.recipientId === actor.id);
+
+    return isParticipant(actorA) && isParticipant(actorB);
   }
 
   // ── Occupé / anti-spam ────────────────────────────────────────
@@ -448,7 +489,7 @@ export class CallService {
     const t0 = performance.now();
     await this.checkRateLimit(callerUserId);
     const t1 = performance.now();
-    await this.assertCanCall(callerUserId, dto.calleeUserId, callerActorId);
+    await this.assertCanCall(callerUserId, dto.calleeUserId, callerActorId, dto.conversationId ?? undefined);
     const t2 = performance.now();
 
     const result = await this.dataSource.transaction(async (manager) => {

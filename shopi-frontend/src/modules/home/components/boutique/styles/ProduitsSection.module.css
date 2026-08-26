@@ -112,11 +112,16 @@
 .vbtn:hover  { background: var(--sky); border-color: var(--bdrb); color: var(--blue); }
 .vbtnActive  { background: var(--sky); border-color: var(--bdrb); color: var(--blue); }
 
-/* ── Grille produits ── */
+/* ── Grille produits ──
+   auto-fill/minmax (comme .cardsGrid dans Correspondants/Livreurs/Boutiques)
+   au lieu d'un nombre de colonnes fixe : les cartes gardent une taille
+   raisonnable et se multiplient sur grand écran, plutôt que de s'étirer
+   à l'infini (avec un seul produit, 3 colonnes fixes donnaient une carte
+   énorme). Voir la media query plus bas pour la variante mobile. */
 .grid {
   display: grid;
   gap: 14px;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
 }
 /* Vue liste : une colonne */
 .gridList { grid-template-columns: 1fr; }
@@ -179,8 +184,11 @@
 .pgDisabled    { opacity: .35; pointer-events: none; }
 
 /* Responsive */
-@media (max-width: 1100px) { .grid { grid-template-columns: repeat(2,1fr); } }
-@media (max-width: 640px)  { .grid { grid-template-columns: repeat(2,1fr); gap: 9px; } }
+/* Base minimale plus petite sur mobile pour garder au moins 2 cartes
+   par ligne même à 320px, au lieu d'une seule carte pleine largeur. */
+@media (max-width: 640px) {
+  .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 9px; }
+}
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {

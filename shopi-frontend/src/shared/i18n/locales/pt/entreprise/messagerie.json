@@ -36,6 +36,7 @@
       "conversationsMasquees": "Conversas ocultas",
       "epinglees": "📌 Fixadas",
       "recentes": "Recentes",
+      "contactsSansConversation": "Contatos",
       "groupStatus": {
         "active": "Em curso",
         "completed": "Entregue",
