@@ -87,6 +87,11 @@
       "publish": "Publier le produit",
       "editModeBadge": "Mode édition — vous modifiez un produit existant"
     },
+    "mode": {
+      "detaille": { "label": "Produit détaillé", "desc": "Fiche complète : caractéristiques, variantes, SEO…" },
+      "gros":     { "label": "Produit en gros",  "desc": "Paliers de prix par quantité, pour la vente en volume" },
+      "rapide":   { "label": "Produit rapide",   "desc": "Le minimum pour publier vite : nom, prix, stock" }
+    },
     "loadingProduct": "Chargement du produit…",
     "medias": {
       "title": "Médias produit",

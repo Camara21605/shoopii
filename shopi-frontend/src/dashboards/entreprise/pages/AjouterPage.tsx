@@ -189,6 +189,15 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
   const [wholesaleTiers, setWholesaleTiers] = useState<WholesaleTier[]>([
     { quantiteMin: '10', quantiteMax: '49', prixUnitaire: '' },
   ]);
+  // ── Mode d'ajout : détermine quelles sections du formulaire sont affichées ──
+  const [productMode, setProductMode] = useState<'detaille' | 'gros' | 'rapide'>('detaille');
+
+  function handleChangeMode(mode: 'detaille' | 'gros' | 'rapide') {
+    setProductMode(mode);
+    if (mode === 'gros')   { setVenteEnGrosOn(true); }
+    if (mode === 'rapide') { setVenteEnGrosOn(false); setVariantesOn(false); }
+  }
+
   const [storiesOn,       setStoriesOn]       = useState(false);
   const [storyIndices,    setStoryIndices]    = useState<Set<number>>(new Set());
   const [storyHeureDebut, setStoryHeureDebut] = useState('08:00');
@@ -261,6 +270,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
       ]);
       setVariantes([{ type: 'Couleur', vals: '' }]);
       setVariantesOn(false);
+      setProductMode('detaille');
       return;
     }
 
@@ -348,6 +358,10 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
             prixUnitaire: String(t.prixUnitaire),
           })));
         }
+
+        // ✅ Onglet initial déduit du produit — ne jamais ouvrir "rapide" par
+        // défaut en édition, pour ne cacher aucune donnée déjà renseignée.
+        setProductMode(p.venteEnGros ? 'gros' : 'detaille');
 
         pop(t('ajouter.toasts.productDataLoaded'), 'i');
       })
@@ -739,6 +753,29 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
           {t('ajouter.header.editModeBadge')}
         </div>
       )}
+
+      {/* ── Sélecteur de mode d'ajout ── */}
+      <div className="aj-mode-grid">
+        {([
+          { key: 'detaille' as const, icon: 'fa-file-lines',    label: t('ajouter.mode.detaille.label'),  desc: t('ajouter.mode.detaille.desc')  },
+          { key: 'gros'     as const, icon: 'fa-boxes-stacked', label: t('ajouter.mode.gros.label'),      desc: t('ajouter.mode.gros.desc')      },
+          { key: 'rapide'   as const, icon: 'fa-bolt',          label: t('ajouter.mode.rapide.label'),    desc: t('ajouter.mode.rapide.desc')    },
+        ]).map(m => (
+          <button
+            key={m.key}
+            type="button"
+            className={`aj-mode-card ${productMode === m.key ? 'aj-mode-card--active' : ''}`}
+            onClick={() => handleChangeMode(m.key)}
+          >
+            <i className={`fas ${m.icon}`} />
+            <div>
+              <div className="aj-mode-card-label">{m.label}</div>
+              <div className="aj-mode-card-desc">{m.desc}</div>
+            </div>
+            {productMode === m.key && <i className="fas fa-circle-check aj-mode-card-check" />}
+          </button>
+        ))}
+      </div>
 
       {/* Bannière d'erreur */}
       {errorBanner && <ErrorBanner message={errorBanner} onClose={() => setErrorBanner(null)} />}
@@ -1137,7 +1174,8 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
             </div>
           </div>
 
-          {/* Infos complémentaires */}
+          {/* Infos complémentaires — mode détaillé uniquement */}
+          {productMode === 'detaille' && (
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch"><div className="ch-t"><i className="fas fa-circle-info"></i> {t('ajouter.infosComplementaires.title')}</div></div>
             <div className="cb" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1199,8 +1237,10 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               </div>
             </div>
           </div>
+          )}
 
-          {/* Livraison */}
+          {/* Livraison — masquée en mode rapide */}
+          {productMode !== 'rapide' && (
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch"><div className="ch-t"><i className="fas fa-truck-fast"></i> {t('ajouter.livraison.title')}</div></div>
             <div className="cb" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1234,8 +1274,10 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               </div>
             </div>
           </div>
+          )}
 
-          {/* Garanties */}
+          {/* Garanties — mode détaillé uniquement */}
+          {productMode === 'detaille' && (
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch"><div className="ch-t"><i className="fas fa-shield-check"></i> {t('ajouter.garanties.title')}</div></div>
             <div className="cb" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1261,6 +1303,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               ))}
             </div>
           </div>
+          )}
 
         </div>
 
@@ -1278,6 +1321,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                   <FieldError message={errors.nom} />
                 </div>
 
+                {productMode !== 'rapide' && (
                 <div className="pf-full">
                   <label className="pf-lbl">{t('ajouter.infosProduit.description')}</label>
                   <textarea className="pf-in" rows={4} placeholder={t('ajouter.infosProduit.descriptionPlaceholder')} value={form.description} onChange={e => update('description', e.target.value)} style={{ resize: 'vertical' }} />
@@ -1285,11 +1329,14 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                     {t('ajouter.infosProduit.descCounter', { count: form.description.length, status: form.description.length < 100 ? t('ajouter.infosProduit.descMinRecommande') : '✓' })}
                   </p>
                 </div>
+                )}
 
+                {productMode !== 'rapide' && (
                 <div className="pf-full">
                   <label className="pf-lbl">{t('ajouter.infosProduit.contenuBoite')}</label>
                   <textarea className="pf-in" rows={3} placeholder={t('ajouter.infosProduit.contenuBoitePlaceholder')} value={form.contenuBoite} onChange={e => update('contenuBoite', e.target.value)} style={{ resize: 'vertical' }} />
                 </div>
+                )}
 
                 <div>
                   <label className="pf-lbl">{t('ajouter.infosProduit.prixVente')}</label>
@@ -1297,6 +1344,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                   <FieldError message={errors.prix} />
                 </div>
 
+                {productMode !== 'rapide' && (
                 <div>
                   <label className="pf-lbl">{t('ajouter.infosProduit.prixBarre')}</label>
                   <input className="pf-in" type="number" placeholder={t('ajouter.infosProduit.prixBarrePlaceholder')} value={form.prixAncien} onChange={e => update('prixAncien', e.target.value)} />
@@ -1306,8 +1354,11 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                     </p>
                   )}
                 </div>
+                )}
 
+                {productMode !== 'rapide' && (
                 <div><label className="pf-lbl">{t('ajouter.infosProduit.reference')}</label><input className="pf-in" placeholder={t('ajouter.infosProduit.referencePlaceholder')} value={form.reference} onChange={e => update('reference', e.target.value)} /></div>
+                )}
 
                 <div>
                   <label className="pf-lbl">{t('ajouter.infosProduit.stock')}</label>
@@ -1315,12 +1366,15 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                   <FieldError message={errors.stock} />
                 </div>
 
+                {productMode !== 'rapide' && (
                 <div><label className="pf-lbl">{t('ajouter.infosProduit.seuil')}</label><input className="pf-in" type="number" placeholder={t('ajouter.infosProduit.seuilPlaceholder')} value={form.seuil} onChange={e => update('seuil', e.target.value)} /></div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Caractéristiques techniques */}
+          {/* Caractéristiques techniques — mode détaillé uniquement */}
+          {productMode === 'detaille' && (
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
               <div className="ch-t"><i className="fas fa-list-check"></i> {t('ajouter.specs.title')}</div>
@@ -1351,8 +1405,10 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               </button>
             </div>
           </div>
+          )}
 
-          {/* Variantes */}
+          {/* Variantes — mode détaillé uniquement */}
+          {productMode === 'detaille' && (
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
               <div className="ch-t"><i className="fas fa-layer-group"></i> {t('ajouter.variantes.title')}</div>
@@ -1397,11 +1453,15 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               </div>
             )}
           </div>
+          )}
 
-          {/* Vente en gros */}
+          {/* Vente en gros — masquée en mode rapide ; toggle masqué (forcé actif)
+              en mode gros, libre en mode détaillé */}
+          {productMode !== 'rapide' && (
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
               <div className="ch-t"><i className="fas fa-boxes-stacked"></i> {t('ajouter.venteEnGros.title')}</div>
+              {productMode !== 'gros' && (
               <label className="aj-toggle">
                 <input type="checkbox" checked={venteEnGrosOn} onChange={e => setVenteEnGrosOn(e.target.checked)} />
                 <span className="aj-toggle-slider"></span>
@@ -1409,6 +1469,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
                   {venteEnGrosOn ? t('ajouter.venteEnGros.activee') : t('ajouter.venteEnGros.desactivee')}
                 </span>
               </label>
+              )}
             </div>
             {venteEnGrosOn ? (
               <div className="cb">
@@ -1463,8 +1524,10 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               </div>
             )}
           </div>
+          )}
 
-          {/* SEO */}
+          {/* SEO — mode détaillé uniquement */}
+          {productMode === 'detaille' && (
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
               <div className="ch-t"><i className="fas fa-magnifying-glass-chart"></i> {t('ajouter.seo.title')}</div>
@@ -1512,6 +1575,7 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
               </div>
             </div>
           </div>
+          )}
 
           {/* Aperçu revenus */}
           {form.prix && (

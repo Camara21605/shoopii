@@ -87,6 +87,11 @@
       "publish": "发布产品",
       "editModeBadge": "编辑模式 — 您正在修改现有产品"
     },
+    "mode": {
+      "detaille": { "label": "详细产品", "desc": "完整信息：规格、变体、SEO…" },
+      "gros":     { "label": "批发产品", "desc": "按数量分级定价，适合批量销售" },
+      "rapide":   { "label": "快速产品", "desc": "快速发布所需的最少信息：名称、价格、库存" }
+    },
     "loadingProduct": "正在加载产品…",
     "medias": {
       "title": "产品媒体",

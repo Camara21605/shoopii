@@ -2356,5 +2356,66 @@ select.pf-in {
 :root[data-theme="light"] .nb.on           { background: rgba(0,0,0,.06); }
 :root[data-theme="light"] .tb-drawer-it.on { background: rgba(0,0,0,.06); }
 :root[data-theme="light"] .modal-backdrop  { background: rgba(15,23,42,.35); }
+
+/* ════════════════════════════════════════════════════════════
+   35. SÉLECTEUR DE MODE D'AJOUT PRODUIT (aj-mode-grid, aj-mode-card)
+   Page "Ajouter un produit" — 3 onglets (détaillé / gros / rapide)
+   déterminant les sections du formulaire affichées.
+   ════════════════════════════════════════════════════════════ */
+.aj-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+@media (max-width: 720px) {
+  .aj-mode-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.aj-mode-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+  padding: 14px 16px;
+  background: var(--white);
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+  font-family: inherit;
+}
+.aj-mode-card:hover { border-color: var(--bdrb); background: var(--g50); }
+
+.aj-mode-card i:first-child {
+  font-size: 17px;
+  color: var(--t3);
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: color .15s;
+}
+
+.aj-mode-card-label { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
+.aj-mode-card-desc  { font-size: 11.5px; color: var(--t3); line-height: 1.4; }
+
+.aj-mode-card--active {
+  border-color: var(--blue) !important;
+  background: var(--sky) !important;
+  box-shadow: 0 0 0 3px rgba(26,79,196,.1);
+}
+.aj-mode-card--active i:first-child { color: var(--blue); }
+
+.aj-mode-card-check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 13px;
+  color: var(--blue) !important;
+}
+
+:root[data-theme="light"] .aj-mode-card { background: var(--white); border-color: var(--bdr2); }
+:root[data-theme="light"] .aj-mode-card:hover { background: var(--g100); }
+:root[data-theme="light"] .aj-mode-card--active { background: #EEF2FF !important; border-color: var(--blue) !important; }
 :root[data-theme="light"] .tb-srch:focus-within { box-shadow: 0 0 0 4px rgba(128,128,128,.12); }
 :root[data-theme="light"] .rbn-nav { box-shadow: 0 -2px 12px rgba(15,23,42,.06); }

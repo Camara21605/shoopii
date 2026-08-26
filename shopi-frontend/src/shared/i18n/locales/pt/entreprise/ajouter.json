@@ -87,6 +87,11 @@
       "publish": "Publicar o produto",
       "editModeBadge": "Modo de edição — está a modificar um produto existente"
     },
+    "mode": {
+      "detaille": { "label": "Produto detalhado", "desc": "Ficha completa: especificações, variantes, SEO…" },
+      "gros":     { "label": "Produto por grosso", "desc": "Escalões de preço por quantidade, para venda a granel" },
+      "rapide":   { "label": "Produto rápido",    "desc": "O mínimo para publicar rápido: nome, preço, stock" }
+    },
     "loadingProduct": "A carregar o produto…",
     "medias": {
       "title": "Médias do produto",

@@ -87,6 +87,11 @@
       "publish": "Publish product",
       "editModeBadge": "Edit mode — you are editing an existing product"
     },
+    "mode": {
+      "detaille": { "label": "Detailed product", "desc": "Full listing: specs, variants, SEO…" },
+      "gros":     { "label": "Wholesale product", "desc": "Volume price tiers, for bulk selling" },
+      "rapide":   { "label": "Quick product",    "desc": "The minimum to publish fast: name, price, stock" }
+    },
     "loadingProduct": "Loading product…",
     "medias": {
       "title": "Product media",
