@@ -733,27 +733,19 @@ export class AuthService implements OnModuleInit {
      * avec confirmDisconnectOther:true). Aucun token émis, aucune
      * session touchée tant que ce n'est pas confirmé.
      *
-     * FAIL-OPEN volontaire : cette vérification est un confort UX, pas
-     * une garantie de sécurité (la session unique reste appliquée plus
-     * bas par issueTokensForUser → sessionService.startSession, qui,
-     * elle, DOIT réussir pour qu'un token soit émis). Si Redis est
-     * indisponible ici, on ne bloque pas tout le login pour un simple
-     * confort — on continue sans demander confirmation, quitte à ce
-     * que startSession() échoue ensuite pour la vraie raison. */
-    if (!confirmDisconnectOther) {
-      let hasActive = false;
-      try {
-        hasActive = await this.sessionService.hasActiveSession(user.id);
-      } catch (err) {
-        this.logger.warn(`[AUTH] hasActiveSession indisponible (Redis ?), vérification ignorée : ${(err as Error).message}`);
-      }
-      if (hasActive) {
-        this.logEvent('login_session_conflict', {
-          userId: user.id, email: user.email, role: user.role,
-          ipAddress: clientIp, userAgent, success: true,
-        });
-        return { requiresSessionConfirm: true };
-      }
+     * FAIL-OPEN volontaire, géré directement dans SessionService
+     * (withRedisTimeout) : si Redis est indisponible ou trop lent,
+     * hasActiveSession() renvoie false plutôt que d'échouer — cette
+     * vérification est un confort UX, pas une garantie de sécurité
+     * (la session unique reste appliquée plus bas par
+     * issueTokensForUser → sessionService.startSession, elle aussi
+     * désormais résiliente à une panne Redis, voir SessionService). */
+    if (!confirmDisconnectOther && await this.sessionService.hasActiveSession(user.id)) {
+      this.logEvent('login_session_conflict', {
+        userId: user.id, email: user.email, role: user.role,
+        ipAddress: clientIp, userAgent, success: true,
+      });
+      return { requiresSessionConfirm: true };
     }
 
     /* ── Défi 2FA ────────────────────────────────────────────

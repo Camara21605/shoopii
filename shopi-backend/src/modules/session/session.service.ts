@@ -73,6 +73,19 @@ function sessionMetaKey(sessionId: string): string {
   return `session_meta:${sessionId}`;
 }
 
+/** Délai max toléré pour une opération Redis critique du chemin
+ *  d'authentification (login, validation de session sur CHAQUE requête
+ *  authentifiée) avant de dégrader gracieusement plutôt que de bloquer
+ *  toute l'application. Voir withRedisTimeout ci-dessous. */
+const REDIS_OP_TIMEOUT_MS = 3_000;
+
+/** Sentinelle distincte de toute valeur Redis réelle (y compris `null`,
+ *  qui est une réponse légitime : "cette clé n'existe pas") — permet de
+ *  distinguer sans ambiguïté "Redis a répondu : rien ici" de "Redis n'a
+ *  pas répondu du tout" dans les callers qui doivent réagir différemment
+ *  aux deux (ex. validateSession : fail-open uniquement sur le 2e cas). */
+const REDIS_DOWN = Symbol('REDIS_DOWN');
+
 @Injectable()
 export class SessionService {
   private readonly logger = new Logger(SessionService.name);
@@ -83,12 +96,43 @@ export class SessionService {
   ) {}
 
   /**
+   * Exécute une opération Redis avec un timeout court et une valeur de
+   * repli en cas d'échec (erreur OU dépassement du délai) — jamais de
+   * propagation d'exception vers l'appelant.
+   *
+   * POURQUOI : la session unique (et sa validation sur CHAQUE requête
+   * authentifiée, voir JwtStrategy) est un confort de sécurité, pas le
+   * cœur de l'authentification (qui reste la signature JWT, toujours
+   * vérifiée indépendamment de Redis). Si Redis tombe en panne ou
+   * répond trop lentement, l'app entière ne doit JAMAIS se bloquer ou
+   * répondre 500 à cause de ça — se dégrader (session unique
+   * temporairement non garantie) est préférable à un site inutilisable.
+   * En fonctionnement normal (Redis sain), l'opération réelle gagne
+   * toujours la course bien avant le timeout : coût ajouté ≈ nul.
+   */
+  private async withRedisTimeout<T>(op: Promise<T>, fallback: T, label: string): Promise<T> {
+    try {
+      return await Promise.race([
+        op,
+        new Promise<T>((_, reject) =>
+          setTimeout(() => reject(new Error(`timeout après ${REDIS_OP_TIMEOUT_MS}ms`)), REDIS_OP_TIMEOUT_MS),
+        ),
+      ]);
+    } catch (err) {
+      this.logger.warn(`[SESSION] Redis indisponible (${label}) — dégradation gracieuse : ${(err as Error).message}`);
+      return fallback;
+    }
+  }
+
+  /**
    * Indique si une session est déjà active pour cet utilisateur, SANS
    * la remplacer ni la modifier (simple lecture) — utilisé pour demander
    * confirmation à l'utilisateur avant de fermer son autre appareil.
    */
   async hasActiveSession(userId: string): Promise<boolean> {
-    const existing = await this.redis.get(activeSessionKey(userId));
+    const existing = await this.withRedisTimeout<string | null>(
+      this.redis.get(activeSessionKey(userId)), null, 'hasActiveSession',
+    );
     return !!existing;
   }
 
@@ -120,18 +164,36 @@ export class SessionService {
      * est supporté sans exception depuis Redis 2.6 — atomicité garantie
      * par l'exécution mono-thread des scripts Lua, sans dépendre d'une
      * syntaxe de commande récente. */
-    const previousSessionId = await this.redis.eval(
-      `local old = redis.call('GET', KEYS[1])
-       redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[2])
-       return old`,
-      1, activeSessionKey(userId), sessionId, SESSION_TTL_SEC,
-    ) as string | null;
-
     const meta: SessionMeta = {
       userId, deviceId, ipAddress, userAgent,
       createdAt: new Date().toISOString(),
     };
-    await this.redis.set(sessionMetaKey(sessionId), JSON.stringify(meta), 'EX', SESSION_TTL_SEC);
+
+    /* Les deux écritures sont indépendantes (clés distinctes, sessionId
+     * déjà généré localement) — en parallèle plutôt qu'en séquence pour
+     * borner à REDIS_OP_TIMEOUT_MS (pas 2×) le pire cas si Redis est
+     * indisponible. */
+    const [previousSessionId] = await Promise.all([
+      this.withRedisTimeout<string | null>(
+        this.redis.eval(
+          `local old = redis.call('GET', KEYS[1])
+           redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[2])
+           return old`,
+          1, activeSessionKey(userId), sessionId, SESSION_TTL_SEC,
+        ) as Promise<string | null>,
+        /* fallback si Redis est indisponible : on n'a pas pu poser ce
+         * pointeur ni lire l'ancien — le login se poursuit quand même
+         * (voir issueTokensForUser), juste sans garantie de session
+         * unique tant que Redis n'est pas revenu. */
+        null,
+        'startSession:eval',
+      ),
+      this.withRedisTimeout(
+        this.redis.set(sessionMetaKey(sessionId), JSON.stringify(meta), 'EX', SESSION_TTL_SEC),
+        null,
+        'startSession:meta',
+      ),
+    ]);
 
     const sessionReplaced = !!previousSessionId && previousSessionId !== sessionId;
 
@@ -154,7 +216,16 @@ export class SessionService {
    */
   async validateSession(userId: string, sessionId: string | undefined | null): Promise<boolean> {
     if (!sessionId) return false;
-    const current = await this.redis.get(activeSessionKey(userId));
+    /* FAIL-OPEN volontaire si Redis est indisponible : cette vérification
+     * tourne sur CHAQUE requête authentifiée (JwtStrategy, gateways
+     * Socket.IO) — une panne Redis ne doit jamais transformer en 401/500
+     * généralisé tout le trafic authentifié du site. Le JWT reste signé
+     * et vérifié indépendamment de Redis ; la session unique n'est elle
+     * plus garantie que le temps de la panne. */
+    const current = await this.withRedisTimeout<string | null | typeof REDIS_DOWN>(
+      this.redis.get(activeSessionKey(userId)), REDIS_DOWN, 'validateSession',
+    );
+    if (current === REDIS_DOWN) return true;
     return current === sessionId;
   }
 
@@ -166,10 +237,16 @@ export class SessionService {
    * connexion plus récente survenue entre-temps).
    */
   async touchSession(userId: string, sessionId: string): Promise<void> {
-    const current = await this.redis.get(activeSessionKey(userId));
-    if (current !== sessionId) return;
-    await this.redis.expire(activeSessionKey(userId), SESSION_TTL_SEC);
-    await this.redis.expire(sessionMetaKey(sessionId), SESSION_TTL_SEC);
+    /* Best-effort : une panne Redis ici ne fait que raccourcir la durée
+     * de vie de la session (TTL non prolongé) — jamais bloquant. */
+    const current = await this.withRedisTimeout<string | null | typeof REDIS_DOWN>(
+      this.redis.get(activeSessionKey(userId)), REDIS_DOWN, 'touchSession:get',
+    );
+    if (current === REDIS_DOWN || current !== sessionId) return;
+    await Promise.all([
+      this.withRedisTimeout(this.redis.expire(activeSessionKey(userId), SESSION_TTL_SEC), 0, 'touchSession:expire1'),
+      this.withRedisTimeout(this.redis.expire(sessionMetaKey(sessionId), SESSION_TTL_SEC), 0, 'touchSession:expire2'),
+    ]);
   }
 
   /**
