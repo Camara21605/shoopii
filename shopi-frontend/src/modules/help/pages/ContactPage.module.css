@@ -13,6 +13,12 @@
 
 /* ── Sidebar ── */
 .sidebar { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px; }
+/* Le layout passe en 1 colonne ≤768px (sidebar au-dessus du formulaire,
+ * voir .layout ci-dessus) — sans ce reset, la sidebar restait "sticky"
+ * et se figeait en haut du viewport pendant le défilement, chevauchant
+ * visuellement les cartes "Type de demande" du formulaire qui défilaient
+ * en dessous (même bug déjà corrigé sur BoutiqueSidebar). */
+@media (max-width: 768px) { .sidebar { position: static; } }
 
 .sideHeader { background: #fff; border: 1px solid #E5EBF5; border-radius: 16px; padding: 24px; text-align: center; }
 .sideIcon { width: 60px; height: 60px; border-radius: 16px; background: linear-gradient(135deg,#EEF2FF,#DBEAFE); display: flex; align-items: center; justify-content: center; font-size: 26px; color: #1A4FC4; margin: 0 auto 14px; }
