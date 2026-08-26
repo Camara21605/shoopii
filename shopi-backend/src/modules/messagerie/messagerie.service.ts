@@ -39,6 +39,7 @@ import { UserRole }      from 'src/common/enums/user-role.enum';
 import { Follow, FollowerActorType, TargetActorType } from 'src/database/entities/follow/follow.entity';
 import { UserContact }   from 'src/database/entities/contacts/user-contact.entity';
 import { Commande }      from 'src/database/entities/commande/commande.entity';
+import { CompanyTeamMember, TeamMemberStatus } from 'src/database/entities/company-team/company-team-member.entity';
 
 import {
   SendMessageDto, StartConversationDto,
@@ -110,6 +111,7 @@ export class MessagerieService {
     @InjectRepository(Follow)       private readonly followRepo: Repository<Follow>,
     @InjectRepository(UserContact)  private readonly contactRepo: Repository<UserContact>,
     @InjectRepository(Commande)     private readonly commandeRepo: Repository<Commande>,
+    @InjectRepository(CompanyTeamMember) private readonly teamMemberRepo: Repository<CompanyTeamMember>,
     /*
      * BroadcastService injecté optionnellement (@Optional) :
      * évite la dépendance circulaire MessagerieService ↔ Gateway.
@@ -164,6 +166,44 @@ export class MessagerieService {
         profile = await this.partnerRepo.findOne({ where: { id: profileId }, select: ['userId'] }); break;
     }
     return profile?.userId ?? null;
+  }
+
+  /**
+   * Résout TOUS les userId habilités à agir comme un acteur donné —
+   * pas seulement le userId dénormalisé sur la conversation.
+   *
+   * Cas COMPANY : le propriétaire (entreprises.userId) PEUT ne pas être
+   * la personne réellement connectée — un membre d'équipe (§CompanyTeamMember,
+   * cf. AuthService.findProfileId) opère la même entreprise sous son PROPRE
+   * userId. Diffuser uniquement au propriétaire faisait que les messages
+   * envoyés à une entreprise gérée par un collaborateur n'arrivaient JAMAIS
+   * en temps réel côté collaborateur (room Socket.IO `user:{ownerUserId}`
+   * jamais rejointe par son socket à lui) — seul un rechargement de page
+   * (refetch REST) faisait apparaître le message, d'où l'impression de
+   * messagerie "non instantanée".
+   *
+   * Pour les autres types d'acteur, un seul userId existe (pas de notion
+   * d'équipe) — comportement inchangé.
+   */
+  private async resolveActorUserIds(
+    type: ConversationActorType,
+    profileId: string,
+  ): Promise<string[]> {
+    if (type !== ConversationActorType.COMPANY) {
+      const uid = await this.resolveUserIdFromProfile(type, profileId);
+      return uid ? [uid] : [];
+    }
+
+    const ownerUserId = await this.resolveUserIdFromProfile(type, profileId);
+    const members = await this.teamMemberRepo.find({
+      where:  { companyId: profileId, status: TeamMemberStatus.ACTIVE },
+      select: ['userId'],
+    });
+
+    const ids = new Set<string>();
+    if (ownerUserId) ids.add(ownerUserId);
+    members.forEach(m => ids.add(m.userId));
+    return Array.from(ids);
   }
 
   /** Résout le profile ID à partir du userId et du rôle JWT.
@@ -550,22 +590,25 @@ export class MessagerieService {
      * (BroadcastService.setServer() appelé par afterInit).
      */
     if (this.broadcastSvc) {
-      // Récupère le userId du destinataire depuis la conversation
       const updatedConv = await this.convRepo.findOne({
         where:  { id: convId },
-        select: ['initiatorUserId', 'recipientUserId', 'lastMessagePreview', 'lastMessageAt', 'unreadCountInitiator', 'unreadCountRecipient'],
+        select: ['unreadCountInitiator', 'unreadCountRecipient'],
       });
-
-      const recipientUserId = amInitiator
-        ? updatedConv?.recipientUserId
-        : updatedConv?.initiatorUserId;
 
       const unreadForRecipient = amInitiator
         ? (updatedConv?.unreadCountRecipient ?? 1)
         : (updatedConv?.unreadCountInitiator ?? 1);
 
-      if (recipientUserId) {
-        this.broadcastSvc.newMessage([recipientUserId], userId, {
+      /* Résolu à chaque envoi (pas depuis la colonne dénormalisée figée à
+       * la création de la conversation) : pour une entreprise gérée par
+       * plusieurs membres d'équipe, la liste des destinataires temps réel
+       * peut changer au fil du temps (ajout/retrait de collaborateurs). */
+      const recipientActorType = amInitiator ? conv.recipientType : conv.initiatorType;
+      const recipientActorId   = amInitiator ? conv.recipientId   : conv.initiatorId;
+      const recipientUserIds   = await this.resolveActorUserIds(recipientActorType, recipientActorId);
+
+      if (recipientUserIds.length > 0) {
+        this.broadcastSvc.newMessage(recipientUserIds, userId, {
           conversationId: convId,
           message: {
             id:            saved.id,

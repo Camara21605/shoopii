@@ -27,6 +27,7 @@ import { Commande }     from 'src/database/entities/commande/commande.entity';
 import { DeliveryGroup }       from 'src/database/entities/delivery-group/delivery-group.entity';
 import { DeliveryGroupMember } from 'src/database/entities/delivery-group/delivery-group-member.entity';
 import { GroupMessage }        from 'src/database/entities/delivery-group/group-message.entity';
+import { CompanyTeamMember }   from 'src/database/entities/company-team/company-team-member.entity';
 
 import { AuthModule }                  from '../auth/auth.module';
 import { NotificationsModule }         from '../notifications/notifications.module';
@@ -56,6 +57,7 @@ import { BroadcastService }       from './services/broadcast.service';
       DeliveryGroup,
       DeliveryGroupMember,
       GroupMessage,
+      CompanyTeamMember,
     ]),
     AuthModule,
     NotificationsModule,
