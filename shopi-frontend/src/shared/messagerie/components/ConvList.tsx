@@ -4,13 +4,14 @@
  * Colonne gauche : recherche + onglets filtre + liste des conversations.
  * Reçoit les données depuis MessagerieCore via props.
  */
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { memo, useState, useMemo, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { Conversation, ChatUser } from '../data/messagerieTypes';
 import { getRoleConfig } from '../data/messagerieTypes';
 import { getRoleFromToken } from '../../services/authUtils';
 import type { CallHistoryItem } from '../hooks/useCallHistory';
+import { cldAvatar } from '../utils/chatUtils';
 import s from '../styles/ConvList.module.css';
 
 type Tab = 'all' | 'unread' | 'boutiques' | 'livreurs' | 'clients' | 'correspondants' | 'masquees' | 'groupes' | 'appels';
@@ -75,7 +76,7 @@ function getVisibleTabs(role: string | null): Tab[] {
   }
 }
 
-export default function ConvList({
+function ConvList({
   conversations, usersMap, activeId, mobileOpen, totalUnread, onSelect, onNewConv, onDeleteConv, onHideConv,
   archivedConvs, onLoadArchived, onUnhideConv, onMarkUnread, onMarkRead, groupConvs = [], groupUsersMap = new Map(),
   callHistory = [], callHistoryLoading = false, onLoadCallHistory,
@@ -319,6 +320,15 @@ export default function ConvList({
   );
 }
 
+/*
+ * React.memo : `conversations`/`usersMap` ne changent que quand la liste
+ * ou la présence d'un contact change réellement — évite de refaire tout
+ * le filtrage/tri quand seul un état SANS rapport (ex: texte en cours de
+ * saisie dans MessageInput, panneau d'info) provoque un rendu de
+ * MessagerieCore.
+ */
+export default memo(ConvList);
+
 /* ── Item conversation ───────────────────────────────────────── */
 interface ItemProps {
   conv:        Conversation;
@@ -341,7 +351,7 @@ interface GroupItemProps {
   onSelect: (id: string) => void;
 }
 
-function GroupConvItem({ conv, user, active, onSelect }: GroupItemProps) {
+const GroupConvItem = memo(function GroupConvItem({ conv, user, active, onSelect }: GroupItemProps) {
   const { t } = useTranslation();
   if (!user) return null;
 
@@ -395,9 +405,9 @@ function GroupConvItem({ conv, user, active, onSelect }: GroupItemProps) {
       </div>
     </div>
   );
-}
+});
 
-function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, onUnhide, onMarkUnread, onMarkRead }: ItemProps) {
+const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, onUnhide, onMarkUnread, onMarkRead }: ItemProps) {
   const { t } = useTranslation();
   if (!user) return null;
   const roleConfig = getRoleConfig(t);
@@ -425,8 +435,9 @@ function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, 
       <div className={s.avaWrap}>
         <div className={s.ava} style={{ background: isImgAva ? undefined : user.avaColor, overflow:'hidden', padding:0 }}>
           {isImgAva
-            ? <img src={user.ava} alt={user.name}
+            ? <img src={cldAvatar(user.ava, 56)!} alt={user.name}
                 style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'inherit', display:'block' }}
+                loading="lazy"
                 onError={e => {
                   const img = e.currentTarget as HTMLImageElement;
                   img.style.display = 'none';
@@ -521,7 +532,7 @@ function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, 
       </div>
     </div>
   );
-}
+});
 
 /* ── Item historique d'appel (onglet "Appels") ─────────────────
  * Lecture seule — pas de clic pour rappeler ici (à la différence
@@ -570,7 +581,7 @@ function CallHistoryItemRow({ item }: { item: CallHistoryItem }) {
       <div className={s.avaWrap}>
         <div className={s.ava} style={{ overflow: 'hidden', padding: 0, background: isImgAva ? undefined : 'var(--sky,#EEF3FF)' }}>
           {isImgAva
-            ? <img src={item.contactAvatar!} alt={item.contactName} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'inherit' }} />
+            ? <img src={cldAvatar(item.contactAvatar, 56)!} alt={item.contactName} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'inherit' }} loading="lazy" />
             : initials}
         </div>
       </div>

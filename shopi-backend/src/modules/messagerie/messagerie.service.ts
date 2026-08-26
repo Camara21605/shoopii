@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { Inject, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Not, Repository } from 'typeorm';
+import { ILike, In, Not, Repository } from 'typeorm';
 import { BroadcastService } from './services/broadcast.service';
 import { PresenceService }  from './services/presence.service';
 import { MessagingPermissionEngine } from './permissions/messaging-permission.engine';
@@ -291,6 +291,105 @@ export class MessagerieService {
     }
   }
 
+  /**
+   * Version BATCH de getContactInfo() — résout N contacts (issus de N
+   * conversations) en O(types distincts) requêtes BDD + 1 pipeline Redis,
+   * au lieu de 2×N requêtes BDD + N appels Redis séquentiels (un
+   * findOne "userId" + un findOne "profil complet" PAR conversation dans
+   * getContactInfo, plus un presence.isOnline() individuel).
+   *
+   * Utilisée par getConversations()/getArchivedConversations() qui
+   * résolvent jusqu'à 50 contacts par appel — la liste des conversations
+   * est l'écran le plus consulté de la messagerie, donc celui où le
+   * nombre de requêtes réseau vers Supabase/Redis pèse le plus sur le
+   * temps de chargement perçu.
+   */
+  private async getContactInfoBulk(
+    items: { type: ConversationActorType; id: string }[],
+  ): Promise<Map<string, { name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null }>> {
+    const result = new Map<string, { name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null }>();
+    if (items.length === 0) return result;
+
+    const idsByType = new Map<ConversationActorType, Set<string>>();
+    items.forEach(({ type, id }) => {
+      if (!idsByType.has(type)) idsByType.set(type, new Set());
+      idsByType.get(type)!.add(id);
+    });
+
+    const ids = (t: ConversationActorType) => Array.from(idsByType.get(t) ?? []);
+
+    /* Une seule requête par type d'acteur présent (au maximum 5),
+     * quel que soit le nombre de conversations à résoudre. */
+    const [companies, deliveries, corrs, partners, clients] = await Promise.all([
+      idsByType.has(ConversationActorType.COMPANY)
+        ? this.companyRepo.find({ where: { id: In(ids(ConversationActorType.COMPANY)) } })
+        : Promise.resolve([] as Company[]),
+      idsByType.has(ConversationActorType.DELIVERY)
+        ? this.deliveryRepo.find({ where: { id: In(ids(ConversationActorType.DELIVERY)) } })
+        : Promise.resolve([] as Delivery[]),
+      idsByType.has(ConversationActorType.CORRESPONDENT)
+        ? this.corrRepo.find({ where: { id: In(ids(ConversationActorType.CORRESPONDENT)) } })
+        : Promise.resolve([] as Correspondent[]),
+      idsByType.has(ConversationActorType.PARTNER)
+        ? this.partnerRepo.find({ where: { id: In(ids(ConversationActorType.PARTNER)) }, relations: ['user'] })
+        : Promise.resolve([] as Partner[]),
+      idsByType.has(ConversationActorType.CLIENT)
+        ? this.clientRepo.find({ where: { id: In(ids(ConversationActorType.CLIENT)) }, relations: ['user'] })
+        : Promise.resolve([] as Client[]),
+    ]);
+
+    const rowByKey = new Map<string, any>();
+    companies.forEach(c  => rowByKey.set(`${ConversationActorType.COMPANY}:${c.id}`, c));
+    deliveries.forEach(d => rowByKey.set(`${ConversationActorType.DELIVERY}:${d.id}`, d));
+    corrs.forEach(c      => rowByKey.set(`${ConversationActorType.CORRESPONDENT}:${c.id}`, c));
+    partners.forEach(p   => rowByKey.set(`${ConversationActorType.PARTNER}:${p.id}`, p));
+    clients.forEach(c    => rowByKey.set(`${ConversationActorType.CLIENT}:${c.id}`, c));
+
+    /* Présence : 1 seul pipeline Redis pour TOUS les contacts (au lieu
+     * d'un GET séquentiel par contact — voir PresenceService.getBulkPresence). */
+    const userIdByKey = new Map<string, string | null>();
+    items.forEach(({ type, id }) => {
+      const row = rowByKey.get(`${type}:${id}`);
+      userIdByKey.set(`${type}:${id}`, (row as any)?.userId ?? null);
+    });
+    const allUserIds  = Array.from(new Set(Array.from(userIdByKey.values()).filter((v): v is string => !!v)));
+    const presenceMap = await this.presence.getBulkPresence(allUserIds);
+
+    items.forEach(({ type, id }) => {
+      const key   = `${type}:${id}`;
+      const row   = rowByKey.get(key);
+      const uid   = userIdByKey.get(key) ?? null;
+      const online = uid ? presenceMap.get(uid)?.online === true : false;
+
+      switch (type) {
+        case ConversationActorType.COMPANY:
+          result.set(key, { name: row?.companyName ?? 'Boutique', logo: row?.logo ?? null, online, subtitle: 'Boutique Shopi', userId: uid });
+          break;
+        case ConversationActorType.DELIVERY:
+          result.set(key, { name: row?.fullName ?? 'Livreur', logo: null, online, subtitle: `Livreur · ${row?.zone ?? 'Conakry'}`, userId: uid });
+          break;
+        case ConversationActorType.CORRESPONDENT: {
+          const loc = [row?.depotCommune, row?.depotVille].filter(Boolean).join(', ');
+          result.set(key, { name: row?.fullName ?? 'Correspondant', logo: null, online, subtitle: `Correspondant · ${loc || 'Conakry'}`, userId: uid });
+          break;
+        }
+        case ConversationActorType.PARTNER: {
+          const u = row?.user;
+          result.set(key, { name: u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Partenaire', logo: null, online, subtitle: 'Partenaire', userId: uid });
+          break;
+        }
+        case ConversationActorType.CLIENT:
+        default: {
+          const u = row?.user;
+          result.set(key, { name: u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Client', logo: u?.profilePicture ?? null, online, subtitle: 'Client', userId: uid });
+          break;
+        }
+      }
+    });
+
+    return result;
+  }
+
   /** Normalise la paire pour garantir l'unicité A↔B */
   private normalizePair(
     typeA: ConversationActorType, idA: string,
@@ -321,19 +420,26 @@ export class MessagerieService {
       take:  50,
     });
 
-    /* En parallèle plutôt qu'en séquence : getContactInfo() interroge
-     * Redis (présence en ligne) une fois par conversation — en séquentiel,
-     * une panne/lenteur Redis cumule le délai de chacun des jusqu'à 50
-     * appels au lieu de les payer une seule fois tous ensemble (voir
-     * PresenceService.withTimeout, qui borne chaque appel individuel mais
-     * ne peut rien pour une boucle qui les enchaîne un par un). */
-    const results = await Promise.all(conversations.map(async conv => {
-      const amInitiator  = conv.initiatorType === myType && conv.initiatorId === myId;
-      const contactType  = amInitiator ? conv.recipientType : conv.initiatorType;
-      const contactId    = amInitiator ? conv.recipientId   : conv.initiatorId;
-      const unreadCount  = amInitiator ? conv.unreadCountInitiator : conv.unreadCountRecipient;
+    /* Résolution EN LOT (1 requête par type d'acteur + 1 pipeline Redis
+     * pour toute la liste) plutôt qu'un aller-retour BDD/Redis par
+     * conversation — voir getContactInfoBulk(). Pour un utilisateur avec
+     * 50 conversations, ça remplace jusqu'à ~150 requêtes réseau (100
+     * SELECT + 50 GET Redis) par 6 requêtes au total. */
+    const contacts = conversations.map(conv => {
+      const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
+      return {
+        type: amInitiator ? conv.recipientType : conv.initiatorType,
+        id:   amInitiator ? conv.recipientId   : conv.initiatorId,
+      };
+    });
+    const contactMap = await this.getContactInfoBulk(contacts);
 
-      const contact = await this.getContactInfo(contactType, contactId);
+    return conversations.map((conv, i) => {
+      const amInitiator  = conv.initiatorType === myType && conv.initiatorId === myId;
+      const { type: contactType, id: contactId } = contacts[i];
+      const unreadCount  = amInitiator ? conv.unreadCountInitiator : conv.unreadCountRecipient;
+      const contact = contactMap.get(`${contactType}:${contactId}`)
+        ?? { name: 'Utilisateur', logo: null, online: false, subtitle: '', userId: null };
 
       return {
         id:               conv.id,
@@ -348,9 +454,7 @@ export class MessagerieService {
         lastMessage:      conv.lastMessagePreview,
         lastMessageAt:    conv.lastMessageAt?.toISOString() ?? null,
       };
-    }));
-
-    return results;
+    });
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -1249,13 +1353,22 @@ export class MessagerieService {
       take:  50,
     });
 
-    /* En parallèle — voir le commentaire équivalent dans getConversations(). */
-    const results = await Promise.all(conversations.map(async conv => {
+    /* Résolution en lot — voir le commentaire équivalent dans getConversations(). */
+    const contacts = conversations.map(conv => {
       const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
-      const contactType = amInitiator ? conv.recipientType : conv.initiatorType;
-      const contactId   = amInitiator ? conv.recipientId   : conv.initiatorId;
+      return {
+        type: amInitiator ? conv.recipientType : conv.initiatorType,
+        id:   amInitiator ? conv.recipientId   : conv.initiatorId,
+      };
+    });
+    const contactMap = await this.getContactInfoBulk(contacts);
+
+    return conversations.map((conv, i) => {
+      const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
+      const { type: contactType, id: contactId } = contacts[i];
       const unreadCount = amInitiator ? conv.unreadCountInitiator : conv.unreadCountRecipient;
-      const contact     = await this.getContactInfo(contactType, contactId);
+      const contact = contactMap.get(`${contactType}:${contactId}`)
+        ?? { name: 'Utilisateur', logo: null, online: false, subtitle: '', userId: null };
 
       return {
         id:              conv.id,
@@ -1270,8 +1383,7 @@ export class MessagerieService {
         lastMessage:     conv.lastMessagePreview,
         lastMessageAt:   conv.lastMessageAt?.toISOString() ?? null,
       };
-    }));
-    return results;
+    });
   }
 
   // ══════════════════════════════════════════════════════════════

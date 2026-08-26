@@ -213,14 +213,18 @@ export function useMessagerie() {
     }));
   }, []);
 
-  /* message_delivered → ✓✓ gris sur les messages envoyés */
+  /* message_delivered → ✓✓ gris sur les messages envoyés.
+   * Ne recrée PAS l'objet message si `delivered` est déjà true — sinon
+   * chaque accusé de livraison casse la référence de l'objet même quand
+   * rien ne change visuellement, ce qui invalide React.memo sur
+   * MessageBubble pour ce message sans aucun bénéfice. */
   const handleMessageDelivered = useCallback((payload: WsMessageDelivered) => {
     setConversations(prev => prev.map(c => {
       if (c.id !== payload.conversationId) return c;
       return {
         ...c,
         messages: c.messages.map(m =>
-          m.id === payload.messageId && m.from === 'me'
+          m.id === payload.messageId && m.from === 'me' && !m.delivered
             ? { ...m, delivered: true }
             : m,
         ),
@@ -228,14 +232,21 @@ export function useMessagerie() {
     }));
   }, []);
 
-  /* message_read → ✓✓ coloré sur tous mes messages de la conv */
+  /* message_read → ✓✓ coloré sur tous mes messages de la conv.
+   * Même précaution que handleMessageDelivered : ne touche que les
+   * messages qui ne sont pas DÉJÀ marqués lus, pour ne pas casser la
+   * référence de tous les autres messages "de moi" à chaque accusé de
+   * lecture (ce qui forçait un re-render de TOUTE la conversation via
+   * MessageBubble même quand rien n'y avait changé). */
   const handleMessageRead = useCallback((payload: WsMessageRead) => {
     setConversations(prev => prev.map(c => {
       if (c.id !== payload.conversationId) return c;
       return {
         ...c,
         messages: c.messages.map(m =>
-          m.from === 'me' ? { ...m, delivered: true, read: true } : m,
+          m.from === 'me' && (!m.delivered || !m.read)
+            ? { ...m, delivered: true, read: true }
+            : m,
         ),
       };
     }));

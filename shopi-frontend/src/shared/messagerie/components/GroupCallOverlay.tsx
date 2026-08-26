@@ -11,7 +11,7 @@
  * LOCAL : PiP fixé en bas-droite, toujours visible.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import type { GroupCallPeer, GroupCallState } from '../data/messagerieTypes';
 
 interface Props {
@@ -174,7 +174,7 @@ function PeerTile({ peer }: { peer: GroupCallPeer }) {
 
 // ── Composant principal ───────────────────────────────────────
 
-export default function GroupCallOverlay({
+function GroupCallOverlay({
   callState, peers, localStream,
   isMuted, isVideoOff, isScreenSharing = false, canFlipCamera = true, canShareScreen = false,
   onLeave, onToggleMute, onToggleVideo, onFlipCamera, onToggleScreenShare,
@@ -391,6 +391,12 @@ export default function GroupCallOverlay({
     </div>
   );
 }
+
+/* React.memo : mêmes bénéfices que CallOverlay (voir son commentaire) —
+ * évite un re-rendu de l'overlay complet (grille de pairs, PiP local)
+ * quand GroupCallProvider re-rend pour une raison sans rapport avec
+ * l'appel en cours. */
+export default memo(GroupCallOverlay);
 
 // ── Bouton de contrôle réutilisable ───────────────────────────
 

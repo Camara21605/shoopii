@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { ChatUser, GroupMember }  from '../data/messagerieTypes';
 import { getRoleConfig }                from '../data/messagerieTypes';
+import { cldAvatar }                    from '../utils/chatUtils';
 import s from '../styles/ChatWindow.module.css';
 
 // ── Route profil selon le type d'acteur ──────────────────────
@@ -157,7 +158,7 @@ export default function ChatHeader({
               )}
             </div>
           ) : isImgAva ? (
-            <img src={user.ava} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit', display: 'block' }} />
+            <img src={cldAvatar(user.ava, 72)!} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit', display: 'block' }} />
           ) : user.ava}
         </div>
 

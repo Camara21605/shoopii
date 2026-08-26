@@ -5,12 +5,13 @@
  * Pour les groupes de livraison, affiche une bannière profil éditable
  * en tête de la zone, avant les messages.
  */
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { memo, useRef, useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { Conversation, ChatUser, GroupMember } from '../data/messagerieTypes';
 import type { WsTyping } from '../hooks/useSocket';
 import MessageBubble from './MessageBubble';
+import { cldAvatar } from '../utils/chatUtils';
 import s from '../styles/ChatWindow.module.css';
 
 // ── Couleurs initiales par type d'acteur ──────────────────────
@@ -400,7 +401,7 @@ interface Props {
   onUpdateGroup?:  (groupId: string, description: string) => void;
 }
 
-export default function MessagesZone({
+function MessagesZone({
   conv, user, members, typingActivity, onReply, onToast, onDelete, onUpdateGroup,
 }: Props) {
   const { t } = useTranslation();
@@ -469,7 +470,7 @@ export default function MessagesZone({
             fontSize: 13, fontWeight: 700, color: 'var(--navy)', flexShrink: 0, overflow: 'hidden',
           }}>
             {isImgAva
-              ? <img src={user.ava} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' }} />
+              ? <img src={cldAvatar(user.ava, 60)!} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' }} />
               : user.ava
             }
           </div>
@@ -484,3 +485,14 @@ export default function MessagesZone({
     </>
   );
 }
+
+/*
+ * React.memo (comparaison shallow par défaut) : évite de refaire tout le
+ * .map() des bulles quand MessagerieCore se re-rend pour une raison sans
+ * rapport avec la conversation ACTIVE (ex: présence d'un autre contact,
+ * changement de conversation dans la liste de gauche). `conv` change de
+ * référence uniquement quand la conversation affichée ici est concernée
+ * (voir useMessagerie.ts), donc le memo peut sauter le rendu le reste
+ * du temps.
+ */
+export default memo(MessagesZone);

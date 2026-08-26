@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { Conversation, ChatUser, GroupMember } from '../data/messagerieTypes';
 import { getRoleConfig } from '../data/messagerieTypes';
+import { cldAvatar } from '../utils/chatUtils';
 import s from '../styles/InfoPanel.module.css';
 
 // ── Route profil selon le type d'acteur ──────────────────────
@@ -98,7 +99,7 @@ function ContactInfoPanel({
       <div className={s.profile}>
         <div className={s.ava} style={{ background: isImgAva ? undefined : user.avaColor, padding: 0, overflow: 'hidden' }}>
           {isImgAva
-            ? <img src={user.ava} alt={user.name} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'inherit', display:'block' }} />
+            ? <img src={cldAvatar(user.ava, 160)!} alt={user.name} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'inherit', display:'block' }} />
             : user.ava}
         </div>
         <div className={s.name}>{user.name}</div>

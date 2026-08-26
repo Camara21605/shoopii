@@ -2,11 +2,12 @@
  * src/shared/messagerie/components/MessageBubble.tsx
  * Rendu d'une seule bulle de message (tous types).
  */
-import { useState, useRef } from 'react';
+import { memo, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ChatMessage, ChatUser } from '../data/messagerieTypes';
 import { getRoleConfig } from '../data/messagerieTypes';
 import VoicePlayer from './VoicePlayer';
+import { cldAvatar, cldChatImage } from '../utils/chatUtils';
 import s from '../styles/ChatWindow.module.css';
 
 interface Props {
@@ -21,7 +22,7 @@ interface Props {
   onDelete:    (msgId: string, mode: 'me' | 'everyone' | 'other') => void;
 }
 
-export default function MessageBubble({
+function MessageBubble({
   msg, idx, msgs, user, isLastRead = false, onReply, onToast, onDelete,
 }: Props) {
   const { t } = useTranslation();
@@ -83,7 +84,7 @@ export default function MessageBubble({
               fontSize: 13, fontWeight: 700, color: 'var(--navy)', overflow: 'hidden', flexShrink: 0,
             }}>
               {isImgAva
-                ? <img src={user.ava} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' }} />
+                ? <img src={cldAvatar(user.ava, 64)!} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' }} />
                 : user.ava
               }
             </div>
@@ -143,8 +144,9 @@ export default function MessageBubble({
             <>
               <div className={s.msgImg}>
                 {msg.mediaUrl
-                  ? <img src={msg.mediaUrl} alt={msg.mediaName ?? 'Photo'} className={s.msgImgReal}
-                      onClick={() => window.open(msg.mediaUrl, '_blank')} />
+                  ? <img src={cldChatImage(msg.mediaUrl, 480)!} alt={msg.mediaName ?? 'Photo'} className={s.msgImgReal}
+                      loading="lazy"
+                      onClick={() => window.open(msg.mediaUrl!, '_blank')} />
                   : <div className={s.msgImgPlaceholder}>📸</div>
                 }
               </div>
@@ -156,7 +158,7 @@ export default function MessageBubble({
             <>
               <div className={s.msgVideo}>
                 {msg.mediaUrl
-                  ? <video src={msg.mediaUrl} controls className={s.msgVideoEl} />
+                  ? <video src={msg.mediaUrl} controls preload="metadata" className={s.msgVideoEl} />
                   : <div className={s.msgImgPlaceholder}>🎥</div>
                 }
               </div>
@@ -308,7 +310,7 @@ export default function MessageBubble({
           <div className={s.msgStatus}>
             {isLastRead && (
               <div className={s.readAvatar} title={t('messagerie.messageBubble.vuPar', { name: user.name })}>
-                {isImgAva ? <img src={user.ava} alt={user.name} /> : user.ava}
+                {isImgAva ? <img src={cldAvatar(user.ava, 48)!} alt={user.name} /> : user.ava}
               </div>
             )}
             {msg.read ? (
@@ -387,3 +389,41 @@ function CallBubble({ meta, isMe }: { meta?: CallMeta; isMe: boolean }) {
     </div>
   );
 }
+
+/*
+ * React.memo avec comparateur personnalisé.
+ *
+ * Pourquoi pas la comparaison par défaut (shallow sur toutes les props) ?
+ * `msgs` (le tableau ENTIER des messages de la conversation) change de
+ * référence à chaque nouveau message, accusé de livraison/lecture,
+ * réaction, etc. — la comparaison par défaut invaliderait donc le memo
+ * de TOUTES les bulles à chaque événement temps réel, même celles très
+ * loin de tout changement réel.
+ *
+ * En pratique, une bulle n'a besoin de se re-rendre que si :
+ *   - son propre message (`msg`) a changé (nouveau contenu, réaction,
+ *     statut livré/lu, suppression, édition — voir handleXxx dans
+ *     useMessagerie.ts, qui ne recrée l'objet QUE si une valeur change) ;
+ *   - son statut "dernier message lu" change (avatar de lecture) ;
+ *   - le message adjacent change de EXPÉDITEUR (regroupement visuel :
+ *     avatar/nom affichés seulement pour le premier message d'un groupe) ;
+ *   - elle devient/cesse d'être le DERNIER message (affichage de l'heure).
+ */
+function arePropsEqual(prev: Props, next: Props): boolean {
+  if (prev.msg !== next.msg) return false;
+  if (prev.isLastRead !== next.isLastRead) return false;
+  if (prev.user !== next.user) return false;
+  if (prev.onReply !== next.onReply) return false;
+  if (prev.onToast !== next.onToast) return false;
+  if (prev.onDelete !== next.onDelete) return false;
+
+  const prevIsLast = prev.idx === prev.msgs.length - 1;
+  const nextIsLast = next.idx === next.msgs.length - 1;
+  if (prevIsLast !== nextIsLast) return false;
+
+  const prevPrevFrom = prev.msgs[prev.idx - 1]?.from;
+  const nextPrevFrom = next.msgs[next.idx - 1]?.from;
+  return prevPrevFrom === nextPrevFrom;
+}
+
+export default memo(MessageBubble, arePropsEqual);

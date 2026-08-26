@@ -20,8 +20,9 @@
  *   │  [Mic] [Caméra] [Flip] [Raccr.] │ ← barre inférieure
  *   └──────────────────────────────────┘
  */
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import type { CallStatus, CallInfo, ReconnectPhase } from '../hooks/useAudioCall';
+import { cldAvatar } from '../utils/chatUtils';
 import s from '../styles/CallOverlay.module.css';
 
 interface Props {
@@ -69,7 +70,7 @@ const RECONNECT_LABEL: Record<ReconnectPhase, string> = {
   failed:    'Impossible de reconnecter',
 };
 
-export default function CallOverlay({
+function CallOverlay({
   status, callInfo, duration, isMuted, isVideoOff, isSpeakerOn,
   localMediaStream, remoteMediaStream, reconnectPhase,
   isScreenSharing = false, canFlipCamera = true, canShareScreen = false, hasRemoteVideo = false,
@@ -136,7 +137,7 @@ export default function CallOverlay({
         style={{ background: isImgAva ? undefined : 'linear-gradient(135deg,#0E7490,#112648)' }}
       >
         {isImgAva
-          ? <img src={callInfo.remoteAvatar} alt={callInfo.remoteName}
+          ? <img src={cldAvatar(callInfo.remoteAvatar, 160)!} alt={callInfo.remoteName}
               style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%' }} />
           : callInfo.remoteName.slice(0,2).toUpperCase()
         }
@@ -426,3 +427,13 @@ export default function CallOverlay({
     </div>
   );
 }
+
+/*
+ * React.memo : CallOverlay est rendu à l'intérieur de GlobalCallProvider,
+ * qui porte AUSSI l'état "messages non lus" (msgUnread, incrémenté à
+ * chaque nouveau message reçu ailleurs dans l'app). Sans memo, un message
+ * reçu pendant un appel en cours re-rendait tout l'overlay d'appel
+ * (vidéo plein écran, PiP, contrôles) sans qu'aucune de ses propres
+ * props n'ait changé.
+ */
+export default memo(CallOverlay);

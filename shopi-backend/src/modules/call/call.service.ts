@@ -724,10 +724,17 @@ export class CallService {
       take:  limit,
     });
 
-    const data = await Promise.all(rows.map(async row => {
+    /* Résolution EN LOT des contacts (1 requête "users" + 1 requête par
+     * type de profil, au lieu de 2-3 requêtes SQL PAR ligne d'historique
+     * via l'ancien getDisplayInfo() séquentiel — jusqu'à 60 requêtes pour
+     * une page de 20 appels, ramené à ~7 requêtes au total). */
+    const otherIds = rows.map(row => row.callerId === userId ? row.calleeId : row.callerId);
+    const displayMap = await this.getDisplayInfoBulk(otherIds);
+
+    const data = rows.map(row => {
       const direction  = row.callerId === userId ? 'outgoing' as const : 'incoming' as const;
       const otherId    = direction === 'outgoing' ? row.calleeId : row.callerId;
-      const contact    = await this.getDisplayInfo(otherId);
+      const contact    = displayMap.get(otherId) ?? { name: 'Utilisateur', avatar: null };
       return {
         id:             row.id,
         conversationId: row.conversationId,
@@ -741,43 +748,66 @@ export class CallService {
         endedAt:        row.endedAt,
         duration:       row.duration,
       };
-    }));
+    });
 
     return { data, total, page };
   }
 
-  /** Nom + avatar affichables pour un users.id — utilisé par l'historique des appels. */
-  private async getDisplayInfo(userId: string): Promise<{ name: string; avatar: string | null }> {
-    const user = await this.userRepo.findOne({ where: { id: userId }, select: ['id', 'role'] });
-    if (!user) return { name: 'Utilisateur', avatar: null };
+  /**
+   * Version BATCH de getDisplayInfo() — résout N contacts (users.id) en
+   * 1 requête "users" (pour le rôle) + 1 requête par type de profil
+   * présent (au maximum 5), au lieu d'un aller-retour BDD par appel de
+   * l'historique. Comportement IDENTIQUE à getDisplayInfo() pour chaque
+   * userId (mêmes fallbacks, même bug préexistant sur Partner.fullName
+   * inexistant → 'Partenaire' générique — non modifié ici).
+   */
+  private async getDisplayInfoBulk(
+    userIds: string[],
+  ): Promise<Map<string, { name: string; avatar: string | null }>> {
+    const result = new Map<string, { name: string; avatar: string | null }>();
+    const uniqueIds = Array.from(new Set(userIds));
+    if (uniqueIds.length === 0) return result;
 
-    const actor = await this.resolveActor(userId, user.role);
-    if (!actor) return { name: 'Utilisateur', avatar: null };
+    const users = await this.userRepo.find({ where: { id: In(uniqueIds) }, select: ['id', 'role'] });
 
-    switch (actor.type) {
-      case ConversationActorType.CLIENT: {
-        const c = await this.clientRepo.findOne({ where: { id: actor.id } });
-        return { name: c?.fullName ?? 'Client', avatar: null };
-      }
-      case ConversationActorType.COMPANY: {
-        const co = await this.companyRepo.findOne({ where: { id: actor.id } });
-        return { name: co?.companyName ?? 'Boutique', avatar: co?.logo ?? null };
-      }
-      case ConversationActorType.DELIVERY: {
-        const d = await this.deliveryRepo.findOne({ where: { id: actor.id } });
-        return { name: (d as any)?.fullName ?? 'Livreur', avatar: null };
-      }
-      case ConversationActorType.CORRESPONDENT: {
-        const c = await this.corrRepo.findOne({ where: { id: actor.id } });
-        return { name: (c as any)?.fullName ?? 'Correspondant', avatar: null };
-      }
-      case ConversationActorType.PARTNER: {
-        const p = await this.partnerRepo.findOne({ where: { id: actor.id } });
-        return { name: (p as any)?.fullName ?? 'Partenaire', avatar: null };
-      }
-      default:
-        return { name: 'Utilisateur', avatar: null };
-    }
+    const idsByType = new Map<ConversationActorType, string[]>();
+    users.forEach(u => {
+      const type = this.roleToActorType(u.role);
+      if (!type) return;
+      if (!idsByType.has(type)) idsByType.set(type, []);
+      idsByType.get(type)!.push(u.id);
+    });
+    const ids = (t: ConversationActorType) => idsByType.get(t) ?? [];
+
+    const [clients, companies, deliveries, corrs, partners] = await Promise.all([
+      ids(ConversationActorType.CLIENT).length
+        ? this.clientRepo.find({ where: { userId: In(ids(ConversationActorType.CLIENT)) } })
+        : Promise.resolve([] as Client[]),
+      ids(ConversationActorType.COMPANY).length
+        ? this.companyRepo.find({ where: { userId: In(ids(ConversationActorType.COMPANY)) } })
+        : Promise.resolve([] as Company[]),
+      ids(ConversationActorType.DELIVERY).length
+        ? this.deliveryRepo.find({ where: { userId: In(ids(ConversationActorType.DELIVERY)) } })
+        : Promise.resolve([] as Delivery[]),
+      ids(ConversationActorType.CORRESPONDENT).length
+        ? this.corrRepo.find({ where: { userId: In(ids(ConversationActorType.CORRESPONDENT)) } })
+        : Promise.resolve([] as Correspondent[]),
+      ids(ConversationActorType.PARTNER).length
+        ? this.partnerRepo.find({ where: { userId: In(ids(ConversationActorType.PARTNER)) } })
+        : Promise.resolve([] as Partner[]),
+    ]);
+
+    clients.forEach(c    => result.set((c as any).userId, { name: c?.fullName ?? 'Client', avatar: null }));
+    companies.forEach(co => result.set((co as any).userId, { name: co?.companyName ?? 'Boutique', avatar: co?.logo ?? null }));
+    deliveries.forEach(d => result.set((d as any).userId, { name: (d as any)?.fullName ?? 'Livreur', avatar: null }));
+    corrs.forEach(c      => result.set((c as any).userId, { name: (c as any)?.fullName ?? 'Correspondant', avatar: null }));
+    partners.forEach(p   => result.set((p as any).userId, { name: (p as any)?.fullName ?? 'Partenaire', avatar: null }));
+
+    uniqueIds.forEach(id => {
+      if (!result.has(id)) result.set(id, { name: 'Utilisateur', avatar: null });
+    });
+
+    return result;
   }
 
   // ── Notifications ─────────────────────────────────────────────

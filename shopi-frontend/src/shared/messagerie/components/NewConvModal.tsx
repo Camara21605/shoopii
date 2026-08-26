@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { apiFetch }    from '../../services/apiFetch';
 import { getRoleConfig } from '../data/messagerieTypes';
 import type { NewConvUser } from '../data/messagerieTypes';
+import { cldAvatar } from '../utils/chatUtils';
 import s from '../styles/NewConvModal.module.css';
 
 // ── Type retourné par l'API ───────────────────────────────────
@@ -151,8 +152,9 @@ export default function NewConvModal({ open, onClose, onStart }: Props) {
                   {/* Avatar */}
                   <div className={s.userAva} style={{ position:'relative' }}>
                     {api.logo
-                      ? <img src={api.logo} alt={api.name}
+                      ? <img src={cldAvatar(api.logo, 56)!} alt={api.name}
                           style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%' }}
+                          loading="lazy"
                           onError={e => { (e.currentTarget as HTMLImageElement).style.display='none'; }}
                         />
                       : <span style={{ fontSize:18 }}>{rc?.icon ?? '👤'}</span>

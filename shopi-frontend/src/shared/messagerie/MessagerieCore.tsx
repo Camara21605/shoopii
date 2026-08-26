@@ -34,7 +34,10 @@ import s from './styles/MessagerieLayout.module.css';
 export default function MessagerieCore() {
   const { t } = useTranslation();
   const { pop } = useToast();
-  const toast = (msg: string, type?: string) => pop(msg, type as any);
+  /* useCallback : référence stable, propagée jusqu'à MessageBubble (via
+   * ChatWindow → MessagesZone) — sans ça, MessageBubble.memo est inutile
+   * puisque `onToast` change de référence à chaque rendu de ce composant. */
+  const toast = useCallback((msg: string, type?: string) => pop(msg, type as any), [pop]);
 
   // ── Messagerie ───────────────────────────────────────────────
   const {
