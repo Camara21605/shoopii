@@ -244,8 +244,19 @@ export class PresenceService implements OnModuleDestroy {
       const pipeline = this.redis.pipeline();
       userIds.forEach(id => pipeline.get(KEY_PRESENCE(id)));
 
-      const results = await pipeline.exec();
+      /* ⚠️ Sans borne de temps ici, une panne/latence Redis (ioredis met en
+       * file les commandes par défaut au lieu d'échouer immédiatement) fait
+       * pendre TOUTE la liste des conversations — c'est le SEUL appel
+       * Redis de getConversations()/getContactInfoBulk(), utilisé par
+       * l'écran le plus consulté de la messagerie. Constaté en prod avec
+       * Redis en panne : chargement de la messagerie très lent/bloqué. */
+      const results = await withTimeout(pipeline.exec(), null, this.logger, 'getBulkPresence');
       const map     = new Map<string, UserPresence | null>();
+
+      if (!results) {
+        userIds.forEach(id => map.set(id, null));
+        return map;
+      }
 
       userIds.forEach((id, i) => {
         const raw = results?.[i]?.[1] as string | null;

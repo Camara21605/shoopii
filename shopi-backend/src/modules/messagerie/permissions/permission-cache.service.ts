@@ -29,6 +29,29 @@ import type { PermissionResult } from './interfaces/permission-context.interface
 
 const PREFIX = 'perm:';
 
+/** Borne chaque appel Redis — sans ça, une panne/latence Redis (ioredis
+ *  met en file les commandes par défaut le temps de se reconnecter, au
+ *  lieu d'échouer immédiatement) bloquait TOUTE création/vérification de
+ *  conversation ou d'appel, puisque get()/set() sont AWAITÉS avant de
+ *  continuer vers l'évaluateur réel (SQL, lui non affecté par Redis).
+ *  Constaté en prod : /api/health/redis en timeout ⇒ ouverture d'une
+ *  conversation ou tentative d'appel qui ne répondait jamais / très lent. */
+const REDIS_OP_TIMEOUT_MS = 2_000;
+
+async function withTimeout<T>(op: Promise<T>, fallback: T, logger: Logger, label: string): Promise<T> {
+  try {
+    return await Promise.race([
+      op,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(`timeout après ${REDIS_OP_TIMEOUT_MS}ms`)), REDIS_OP_TIMEOUT_MS),
+      ),
+    ]);
+  } catch (err) {
+    logger.warn(`[PermCache] Redis indisponible (${label}) — dégradation gracieuse : ${(err as Error).message}`);
+    return fallback;
+  }
+}
+
 /** Sérialisé dans Redis */
 interface CachedDecision {
   granted:   boolean;
@@ -59,8 +82,9 @@ export class PermissionCacheService {
     targetType: string, targetId: string,
   ): Promise<PermissionResult | null> {
     try {
-      const raw = await this.redis.get(
-        this.key(sourceType, sourceId, targetType, targetId),
+      const raw = await withTimeout(
+        this.redis.get(this.key(sourceType, sourceId, targetType, targetId)),
+        null, this.logger, 'get',
       );
       if (!raw) return null;
 
@@ -92,10 +116,16 @@ export class PermissionCacheService {
         cachedAt:  Date.now(),
       };
 
-      await this.redis.setex(
-        this.key(sourceType, sourceId, targetType, targetId),
-        ttlSeconds,
-        JSON.stringify(value),
+      /* Écriture EN AWAIT dans l'appelant (messaging-permission.engine.ts) —
+       * une panne Redis ne doit jamais retarder la réponse de tout un
+       * appel/conversation juste pour un cache de confort. */
+      await withTimeout(
+        this.redis.setex(
+          this.key(sourceType, sourceId, targetType, targetId),
+          ttlSeconds,
+          JSON.stringify(value),
+        ),
+        undefined, this.logger, 'set',
       );
     } catch (err) {
       /* Cache miss ne bloque JAMAIS l'application */
