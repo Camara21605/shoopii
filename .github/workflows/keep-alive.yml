@@ -1,0 +1,36 @@
+# ============================================================
+# FICHIER : .github/workflows/keep-alive.yml
+#
+# RÔLE
+# ─────────────────────────────────────────────────────────────
+# Empêche le backend Render (plan free) de se mettre en veille
+# après 15 min d'inactivité — sans ce ping, la 1re requête d'un
+# visiteur après une période creuse (login, register, etc.)
+# attend le "réveil" du serveur (30-90s) et peut expirer côté
+# client (timeout).
+#
+# DÉCLENCHEURS
+# ─────────────────────────────────────────────────────────────
+#   - toutes les 10 minutes (cron) — sous les 15 min de veille
+#   - déclenchement manuel (workflow_dispatch), pour tester
+#
+# NOTE : GitHub peut retarder légèrement un cron programmé lors
+#   de pics de charge sur ses runners — ce n'est pas garanti à
+#   la minute près, mais largement suffisant pour cet usage.
+# ============================================================
+
+name: Keep backend alive (Render free tier)
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /api/health
+        run: |
+          curl -fsS --max-time 30 https://shoopii.onrender.com/api/health || \
+          echo "⚠️ Ping échoué — le backend était peut-être déjà en train de se réveiller."

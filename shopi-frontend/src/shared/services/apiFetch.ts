@@ -272,7 +272,12 @@ export async function apiFetch<T = unknown>(
       headers,
       credentials: 'include', // cookie httpOnly envoyé automatiquement
       keepalive,
-      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(60_000)]) : AbortSignal.timeout(60_000),
+      /* 90s (pas 60) : le backend Render (plan free) se met en veille après
+       * une période d'inactivité et met jusqu'à ~60-90s à se réveiller sur
+       * la 1re requête qui suit — un timeout trop court fait échouer un
+       * simple login/register alors que le serveur est juste en train de
+       * démarrer, sans aucun vrai problème réseau. */
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(90_000)]) : AbortSignal.timeout(90_000),
       body:
         body instanceof FormData
           ? body
@@ -287,8 +292,20 @@ export async function apiFetch<T = unknown>(
     if (networkError instanceof DOMException && networkError.name === 'AbortError') {
       throw networkError;
     }
-    console.error(`[apiFetch] Réseau inaccessible → ${method} ${url}`, networkError);
-    throw new ApiError(0, 'Impossible de contacter le serveur. Vérifiez que le backend est démarré.', networkError);
+    /* TimeoutError (AbortSignal.timeout) ≠ échec réseau réel : le plus
+     * souvent, sur le backend Render (plan free), c'est le serveur qui
+     * était en veille et se réveille — message rassurant plutôt que
+     * "vérifiez que le backend est démarré" (qui n'a aucun sens pour un
+     * utilisateur final en production, sans accès au serveur). */
+    const isTimeout = networkError instanceof DOMException && networkError.name === 'TimeoutError';
+    console.error(`[apiFetch] ${isTimeout ? 'Délai dépassé' : 'Réseau inaccessible'} → ${method} ${url}`, networkError);
+    throw new ApiError(
+      0,
+      isTimeout
+        ? 'Le serveur met du temps à répondre (il se réveille peut-être après une période d\'inactivité). Réessayez dans quelques secondes.'
+        : 'Impossible de contacter le serveur. Vérifiez votre connexion internet.',
+      networkError,
+    );
   }
 
   /* Capturé sur TOUTE réponse (succès comme erreur, y compris un 403 CSRF
