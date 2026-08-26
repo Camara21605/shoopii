@@ -5,7 +5,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import styles from './Footer.module.css';
-import ShoneyaLogo from '../../../../shared/components/ShoneyaLogo';
 
 type FooterLink = { label: string; to?: string };
 
@@ -60,7 +59,6 @@ export default function Footer({ onToast }: FooterProps) {
             {/* Brand */}
             <div className={styles.brand}>
               <div className={styles.logo}>
-                <ShoneyaLogo size={30} />
                 <div className={styles.lw}>Sho<b>neya</b></div>
               </div>
               <p className={styles.brandP}>

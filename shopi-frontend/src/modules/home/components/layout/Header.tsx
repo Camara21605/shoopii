@@ -17,7 +17,6 @@ import styles                                 from './Header.module.css';
 import { tokenStorage }                       from '../../../../shared/services/apiFetch';
 import { getRoleFromToken, getDashboardPath } from '../../../../shared/services/authUtils';
 import { useCart }                            from '../../../../shared/context/CartContext';
-import ShoneyaLogo                              from '../../../../shared/components/ShoneyaLogo';
 import { useGlobalCall }                      from '../../../../shared/context/GlobalCallContext';
 import { settingsApi }                        from '../settings/api/settings.api';
 import { NotificationProvider }               from '../../../../shared/notifications/NotificationContext';
@@ -206,7 +205,6 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
             {/* Logo */}
             <button className={styles.logo}
               onClick={() => navigate(isLoggedIn ? '/home' : '/')} title={t('publicHeader.accueilTitle')}>
-              <ShoneyaLogo size={32} />
               <div className={styles.lw}>Sho<b>neya</b></div>
             </button>
 
@@ -430,7 +428,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
           <div className={styles.mobileDrawer} data-mobile-menu onClick={e => e.stopPropagation()}>
             <div className={styles.drawerHd}>
               <button className={styles.logo} onClick={() => { navigate(isLoggedIn ? '/home' : '/'); setMobileOpen(false); }}>
-                <ShoneyaLogo size={32} /><div className={styles.lw}>Sho<b>neya</b></div>
+                <div className={styles.lw}>Sho<b>neya</b></div>
               </button>
               <button className={styles.drawerClose} onClick={() => setMobileOpen(false)}>
                 <i className="fas fa-xmark" />

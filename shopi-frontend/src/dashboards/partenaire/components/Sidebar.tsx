@@ -7,7 +7,6 @@
 import styles from '../styles/Sidebar.module.css';
 import type { PartenairePage } from '../data/types';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
-import ShoneyaLogo from '../../../shared/components/ShoneyaLogo';
 
 interface SidebarProps {
   activePage:   PartenairePage;
@@ -60,7 +59,6 @@ export default function Sidebar({
       <nav className={`${styles.sb} ${isOpen ? styles.sbOpen : ''}`}>
         {/* Logo */}
         <div className={styles.logo}>
-          <ShoneyaLogo size={34} />
           <div className={styles.brand}>Sho<b>neya</b></div>
           <span className={styles.tag}>PARTENAIRE</span>
         </div>

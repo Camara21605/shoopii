@@ -8,7 +8,6 @@
 
 import styles from '../styles/Sidebar.module.css';
 import type { AdminPage } from '../data/types';
-import ShoneyaLogo from '../../../shared/components/ShoneyaLogo';
 
 interface SidebarProps {
   activePage:     AdminPage;
@@ -71,7 +70,6 @@ export default function Sidebar({ activePage, open, onClose, onNavigate, onGener
       <nav className={`${styles.sb} ${open ? styles.open : ''}`}>
         {/* ── Logo + badge ADMIN ── */}
         <div className={styles.logo}>
-          <ShoneyaLogo size={34} />
           <div className={styles.brand}>Sho<b>neya</b></div>
           <span className={styles.tag}>ADMIN</span>
           <button className={styles.close} onClick={onClose}><i className="fas fa-xmark" /></button>

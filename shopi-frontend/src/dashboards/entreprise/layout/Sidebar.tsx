@@ -11,7 +11,6 @@ import { useTranslation } from 'react-i18next';
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
-import ShoneyaLogo from '../../../shared/components/ShoneyaLogo';
 import './Sidebar.css';
 
 type CanFn = (group: string, action: string) => boolean;
@@ -121,7 +120,6 @@ export default function Sidebar({
     <nav className="sb">
       {/* ── Logo Shoneya ── */}
       <div className="sb-logo">
-        <ShoneyaLogo size={34} />
         <div className="sb-brand">Sho<b>neya</b></div>
         <span className="sb-version">PRO</span>
       </div>

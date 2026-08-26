@@ -3,7 +3,6 @@ import React from 'react';
 import s from '../styles/Sidebar.module.css';
 import { pop } from './Toast';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
-import ShoneyaLogo from '../../../shared/components/ShoneyaLogo';
 import type { PageId } from '../data/correspondantData';
 
 interface Props {
@@ -47,7 +46,6 @@ export default function Sidebar({ page, setPage, open, onClose, nomUtilisateur, 
     <nav className={`${s.sb} ${open ? s.open : ''}`}>
       {/* Logo */}
       <div className={s.logo}>
-        <ShoneyaLogo size={32} />
         <div className={s.brand}>Sho<b>neya</b></div>
       </div>
 

@@ -2,7 +2,6 @@
 import type { PageId } from '../data/livreurData';
 import { fmtGNF } from '../data/livreurData';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
-import ShoneyaLogo from '../../../shared/components/ShoneyaLogo';
 import styles from '../styles/Sidebar.module.css';
 
 interface Props {
@@ -63,7 +62,6 @@ export default function Sidebar({
 
       {/* Logo */}
       <div className={styles.sbLogo}>
-        <ShoneyaLogo size={34} />
         <div className={styles.sbBrand}>Sho<b>neya</b></div>
       </div>
 

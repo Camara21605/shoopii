@@ -9,7 +9,6 @@
 
 import React from 'react';
 import type { SectionId, UserRole } from '../types/codes.types';
-import ShoneyaLogo from '../../../shared/components/ShoneyaLogo';
 
 interface SidebarProps {
   activeSection:   SectionId;
@@ -83,7 +82,6 @@ export default function Sidebar({
 
         {/* ── Logo ── */}
         <div className="sidebar-logo">
-          <ShoneyaLogo size={34} />
           <div className="logo-text">Shoneya</div>
           <span className="logo-badge">SUPER ADMIN</span>
         </div>
