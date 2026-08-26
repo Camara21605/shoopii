@@ -240,6 +240,7 @@ export default function BoutiquePage() {
   const { start: startConv, loading: msgLoading } = useStartConversation();
   const { call: callProfile, loading: callLoading } = useProfileCall();
   const [partageOpen,    setPartageOpen]    = useState(false);
+  const [filtresOpen,    setFiltresOpen]    = useState(false);
   const [avisData,       setAvisData]       = useState<AvisResponse | null>(null);
   const [avisLoading,    setAvisLoading]    = useState(false);
   const [promos,         setPromos]         = useState<PromoPublic[]>([]);
@@ -489,6 +490,8 @@ export default function BoutiquePage() {
               filtrPromo={filtrPromo} setFiltrPromo={setFiltrPromo}
               filtrNew={filtrNew}     setFiltrNew={setFiltrNew}
               onToast={showToast}
+              isOpen={filtresOpen}
+              onClose={() => setFiltresOpen(false)}
             />
           )}
 
@@ -500,6 +503,7 @@ export default function BoutiquePage() {
                 onRemoveFiltreActif={handleRemoveFiltreActif}
                 onResetFiltres={() => { setCatActive('Tout'); setFiltrStock(false); setFiltrPromo(false); setFiltrNew(false); }}
                 onToast={showToast}
+                onOpenFiltres={() => setFiltresOpen(true)}
               />
             )}
             {onglet === 'promos'         && <PromotionsSection

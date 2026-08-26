@@ -25,10 +25,15 @@ interface Props {
   onRemoveFiltreActif: (f: string) => void; /* supprime un filtre */
   onResetFiltres: () => void;         /* remet tous les filtres à zéro */
   onToast: (m: string) => void;
+  /* Ouvre le tiroir de filtres — bouton visible uniquement sur mobile,
+   * voir styles.mobileFiltresBtn (BoutiqueSidebar reste toujours en
+   * colonne visible sur desktop, ce bouton n'y sert à rien). */
+  onOpenFiltres?: () => void;
 }
 
 export default function ProduitsSection({
   produits, filtresActifs, onRemoveFiltreActif, onResetFiltres, onToast,
+  onOpenFiltres,
 }: Props) {
   const { t } = useTranslation();
 
@@ -65,6 +70,14 @@ export default function ProduitsSection({
           <strong>{produits.length}</strong>
           {' '}{t('boutiqueDetail.produitsSection.trouveCount', { count: produits.length })}
         </div>
+        {/* Ouvre le tiroir de filtres — mobile uniquement */}
+        {onOpenFiltres && (
+          <button className={styles.mobileFiltresBtn} onClick={onOpenFiltres}>
+            <i className="fas fa-sliders" />
+            {t('boutiqueDetail.produitsSection.filtres', 'Filtres')}
+            {filtresActifs.length > 0 && <span className={styles.mfBadge}>{filtresActifs.length}</span>}
+          </button>
+        )}
         <div className={styles.viewBtns}>
           {/* Grille */}
           <button

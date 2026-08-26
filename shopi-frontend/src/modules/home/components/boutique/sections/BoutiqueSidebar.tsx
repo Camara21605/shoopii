@@ -38,12 +38,18 @@ interface Props {
   filtrNew:     boolean;
   setFiltrNew:  (v: boolean) => void;
   onToast:      (m: string) => void;
+  /* Mobile uniquement : la sidebar devient un tiroir superposé plutôt
+   * que de s'empiler au-dessus de la grille produits (voir CSS). Sur
+   * desktop, isOpen/onClose n'ont aucun effet (colonne toujours visible). */
+  isOpen?:      boolean;
+  onClose?:     () => void;
 }
 
 export default function BoutiqueSidebar({
   catActive, setCatActive, sortBy, setSortBy,
   filtrStock, setFiltrStock, filtrPromo, setFiltrPromo,
   filtrNew,   setFiltrNew,  onToast,
+  isOpen = false, onClose,
 }: Props) {
   const { t } = useTranslation();
 
@@ -51,7 +57,19 @@ export default function BoutiqueSidebar({
   const totalProduits = CATEGORIES_BOUTIQUE.reduce((a, c) => a + c.count, 0);
 
   return (
-    <aside className={styles.sidebar}>
+    <>
+      {/* Fond assombri — mobile uniquement (voir CSS), ferme le tiroir au clic */}
+      {isOpen && <div className={styles.backdrop} onClick={onClose} />}
+
+      <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`}>
+
+        {/* En-tête du tiroir — mobile uniquement (voir CSS) */}
+        <div className={styles.drawerHd}>
+          <h3><i className="fas fa-filter" /> {t('boutiqueDetail.sidebar.titreTiroir', 'Filtres')}</h3>
+          <button className={styles.drawerClose} onClick={onClose} aria-label="Fermer">
+            <i className="fas fa-xmark" />
+          </button>
+        </div>
 
       {/* ══ 1. Tri ══ */}
       <div className={styles.card}>
@@ -225,6 +243,7 @@ export default function BoutiqueSidebar({
           </div>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

@@ -215,11 +215,82 @@
 .infoTitle { font-weight: 700; color: var(--navy); margin-bottom: 2px; font-size: 11.5px; }
 .infoSub   { color: var(--t3); line-height: 1.4; font-size: 11px; }
 
+/* ── En-tête du tiroir (mobile uniquement, voir media query) ── */
+.drawerHd {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--bdr);
+  flex-shrink: 0;
+}
+.drawerHd h3 {
+  margin: 0;
+  font-family: var(--fd,'Fraunces',serif);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.drawerClose {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--g100);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t2);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Fond assombri — mobile uniquement */
+.backdrop { display: none; }
+
 /* ── Responsive ── */
 /* Sur mobile/tablette, le layout 2 colonnes de BoutiquePage.module.css
-   passe en 1 colonne (sidebar au-dessus du main) dès 960px — on désactive
-   le sticky au même seuil, sinon la sidebar reste collée en haut et
-   chevauche le contenu qui défile sous elle. */
+   passe en 1 colonne (sidebar au-dessus du main) dès 960px. Plutôt que
+   de laisser les filtres s'empiler sur des écrans entiers au-dessus de
+   la grille produits (ce qui obligeait à scroller longuement avant de
+   voir un seul produit), la sidebar devient ici un tiroir superposé,
+   fermé par défaut et ouvert via le bouton "Filtres" (voir ProduitsSection
+   + BoutiquePage). On désactive aussi le sticky, inutile hors de la
+   colonne desktop. */
 @media (max-width: 960px) {
-  .sidebar { position: static; }
+  .sidebar {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: min(340px, 86vw);
+    z-index: 1000;
+    margin: 0;
+    padding: 0;
+    background: var(--white);
+    box-shadow: -8px 0 32px rgba(11,31,58,.18);
+    overflow-y: auto;
+    flex-direction: column;
+    gap: 0;
+    transform: translateX(100%);
+    transition: transform .28s ease;
+  }
+  .sidebarOpen { transform: translateX(0); }
+  .drawerHd { display: flex; }
+  /* Les cartes de filtres gardent leur style, juste un peu de respiration
+     à l'intérieur du tiroir (padding auparavant porté par .sidebar). */
+  .sidebar > .card { margin: 10px 14px; }
+  .sidebar > .card:last-child { margin-bottom: 20px; }
+
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(11,31,58,.45);
+    backdrop-filter: blur(2px);
+    z-index: 999;
+    animation: boutiqueFiltresFade .2s ease;
+  }
+  @keyframes boutiqueFiltresFade { from { opacity: 0; } to { opacity: 1; } }
 }
