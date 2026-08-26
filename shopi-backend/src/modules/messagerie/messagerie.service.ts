@@ -281,9 +281,13 @@ export class MessagerieService {
       take:  50,
     });
 
-    const results: ConvListItem[] = [];
-
-    for (const conv of conversations) {
+    /* En parallèle plutôt qu'en séquence : getContactInfo() interroge
+     * Redis (présence en ligne) une fois par conversation — en séquentiel,
+     * une panne/lenteur Redis cumule le délai de chacun des jusqu'à 50
+     * appels au lieu de les payer une seule fois tous ensemble (voir
+     * PresenceService.withTimeout, qui borne chaque appel individuel mais
+     * ne peut rien pour une boucle qui les enchaîne un par un). */
+    const results = await Promise.all(conversations.map(async conv => {
       const amInitiator  = conv.initiatorType === myType && conv.initiatorId === myId;
       const contactType  = amInitiator ? conv.recipientType : conv.initiatorType;
       const contactId    = amInitiator ? conv.recipientId   : conv.initiatorId;
@@ -291,7 +295,7 @@ export class MessagerieService {
 
       const contact = await this.getContactInfo(contactType, contactId);
 
-      results.push({
+      return {
         id:               conv.id,
         contactId,
         contactType,
@@ -303,8 +307,8 @@ export class MessagerieService {
         unreadCount,
         lastMessage:      conv.lastMessagePreview,
         lastMessageAt:    conv.lastMessageAt?.toISOString() ?? null,
-      });
-    }
+      };
+    }));
 
     return results;
   }
@@ -1202,15 +1206,15 @@ export class MessagerieService {
       take:  50,
     });
 
-    const results: ConvListItem[] = [];
-    for (const conv of conversations) {
+    /* En parallèle — voir le commentaire équivalent dans getConversations(). */
+    const results = await Promise.all(conversations.map(async conv => {
       const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
       const contactType = amInitiator ? conv.recipientType : conv.initiatorType;
       const contactId   = amInitiator ? conv.recipientId   : conv.initiatorId;
       const unreadCount = amInitiator ? conv.unreadCountInitiator : conv.unreadCountRecipient;
       const contact     = await this.getContactInfo(contactType, contactId);
 
-      results.push({
+      return {
         id:              conv.id,
         contactId,
         contactType,
@@ -1222,8 +1226,8 @@ export class MessagerieService {
         unreadCount,
         lastMessage:     conv.lastMessagePreview,
         lastMessageAt:   conv.lastMessageAt?.toISOString() ?? null,
-      });
-    }
+      };
+    }));
     return results;
   }
 

@@ -35,6 +35,29 @@ const PRESENCE_TTL_S = 45;
 const KEY_PRESENCE = (userId: string) => `presence:${userId}`;
 const KEY_SOCKETS  = (userId: string) => `presence:sockets:${userId}`;
 
+/** Délai max toléré pour une lecture de présence avant de dégrader
+ *  gracieusement — voir withTimeout ci-dessous. Un `try/catch` seul ne
+ *  protège pas contre une commande qui reste EN ATTENTE sans jamais
+ *  répondre (queue Redis pendant une reconnexion, cf. enableOfflineQueue
+ *  dans app.module.ts) : isOnline() est appelée une fois PAR CONTACT dans
+ *  MessagerieService.getConversations() — sans borne de temps, une panne
+ *  Redis peut y cumuler des dizaines de secondes d'attente. */
+const PRESENCE_OP_TIMEOUT_MS = 2_000;
+
+async function withTimeout<T>(op: Promise<T>, fallback: T, logger: Logger, label: string): Promise<T> {
+  try {
+    return await Promise.race([
+      op,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(`timeout après ${PRESENCE_OP_TIMEOUT_MS}ms`)), PRESENCE_OP_TIMEOUT_MS),
+      ),
+    ]);
+  } catch (err) {
+    logger.warn(`[PRESENCE] Redis indisponible (${label}) — dégradation gracieuse : ${(err as Error).message}`);
+    return fallback;
+  }
+}
+
 @Injectable()
 export class PresenceService implements OnModuleDestroy {
   private readonly logger = new Logger(PresenceService.name);
@@ -156,7 +179,7 @@ export class PresenceService implements OnModuleDestroy {
    */
   async getPresence(userId: string): Promise<UserPresence | null> {
     try {
-      const raw = await this.redis.get(KEY_PRESENCE(userId));
+      const raw = await withTimeout(this.redis.get(KEY_PRESENCE(userId)), null, this.logger, 'getPresence');
       if (!raw) return null;
       return JSON.parse(raw) as UserPresence;
     } catch {
@@ -193,8 +216,12 @@ export class PresenceService implements OnModuleDestroy {
    * téléphonique normal) plutôt que false ("hors ligne confirmé, on bloque").
    */
   async isOnlineOrUnknown(userId: string): Promise<boolean> {
+    const TIMEOUT = Symbol('timeout');
     try {
-      const raw = await this.redis.get(KEY_PRESENCE(userId));
+      const raw = await withTimeout<string | null | typeof TIMEOUT>(
+        this.redis.get(KEY_PRESENCE(userId)), TIMEOUT, this.logger, 'isOnlineOrUnknown',
+      );
+      if (raw === TIMEOUT) return true; // Redis injoignable — on ne sait pas, donc on ne bloque pas l'appel
       if (!raw) return false; // Redis a répondu : clé absente = vraiment hors ligne
       const presence = JSON.parse(raw) as UserPresence;
       return presence.online === true;
