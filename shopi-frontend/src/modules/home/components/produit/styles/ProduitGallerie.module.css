@@ -81,38 +81,59 @@
 }
 .shareBtn:hover { color: var(--blue, #1A4FC4); background: var(--sky, #EEF3FD); border-color: rgba(26,79,196,.2); }
 
-/* ── Miniatures ── */
+/* ── Miniatures ──
+ * Un produit a au maximum 5 médias (4 images + 1 vidéo — voir
+ * AjouterPage.tsx MAX_MEDIA_TOTAL) mais peut en avoir moins. Chaque
+ * miniature se partage donc équitablement la largeur disponible
+ * (flex-grow) selon le nombre RÉEL de médias — 4 miniatures
+ * remplissent toute la ligne, pas seulement 4/5 avec un vide à
+ * droite — tout en restant plafonnée (max-width) pour ne pas devenir
+ * démesurée quand il n'y a qu'1 ou 2 médias. À 5 médias (le maximum),
+ * elles tiennent toujours sur une seule ligne sans wrap ni débordement. */
 .thumbs {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
 }
 .thumb {
-  width: 64px; height: 64px;
+  flex: 1 1 0;
+  max-width: 90px;
+  aspect-ratio: 1 / 1;
   border-radius: 12px;
   background: linear-gradient(135deg, #EEF3FD, #E2EAFB);
   border: 2px solid var(--bdr, #E8EDF5);
   display: flex; align-items: center; justify-content: center;
-  font-size: 26px; cursor: pointer; flex-shrink: 0;
+  font-size: 26px; cursor: pointer;
   transition: all .2s;
+  position: relative;
 }
 .thumb:hover     { border-color: var(--blue, #1A4FC4); transform: translateY(-2px); }
 .thumbActive     { border-color: var(--blue, #1A4FC4); box-shadow: 0 0 0 3px rgba(26,79,196,.15); }
 
-/* Responsive */
+/* Icône ▶ superposée sur la miniature vidéo */
+.thumbPlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(11,31,58,.35);
+  color: #fff; font-size: 13px;
+  pointer-events: none;
+}
+
+/* Responsive — .thumb garde sa largeur en calc(1/5) définie plus haut,
+ * qui s'adapte déjà nativement à la largeur de la colonne à chaque
+ * palier ; seule la taille de l'emoji de repli est ajustée ici. */
 @media (max-width: 1024px) {
   .gallerie  { position: sticky; top: 84px; }
   .main      { font-size: 88px; border-radius: 18px; }
-  .thumb     { width: 54px; height: 54px; font-size: 22px; }
+  .thumb     { font-size: 22px; }
 }
 @media (max-width: 768px) {
   .gallerie  { position: static; }
   .main      { font-size: 80px; }
-  .thumb     { width: 52px; height: 52px; font-size: 20px; }
+  .thumb     { font-size: 20px; }
 }
 @media (max-width: 480px) {
   .main { font-size: 64px; border-radius: 16px; }
-  .thumb { width: 48px; height: 48px; font-size: 18px; }
+  .thumb { font-size: 18px; }
 }
 
 /* ─── Dark mode ─────────────────────────────────────────────── */

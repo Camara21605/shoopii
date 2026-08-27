@@ -634,6 +634,16 @@
   background: #D1FAE5 !important;
 }
 
+/* Rupture de stock — bouton grisé, non cliquable */
+.pcartOut {
+  background: var(--g100) !important;
+  color: var(--t4) !important;
+  border: 1.5px solid var(--bdr2) !important;
+  cursor: not-allowed !important;
+  opacity: .8;
+}
+.pcartOut:hover { background: var(--g100) !important; }
+
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   .pfav         { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }

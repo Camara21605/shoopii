@@ -14,7 +14,6 @@ import PanierPanel        from '../sections/PanierPanel';
 import TabsSection        from '../sections/TabsSection';
 import SimilairesSection  from '../sections/SimilairesSection';
 
-import { AVIS_DATA } from '../data/produitMockData';
 import type { ProduitInfo } from '../data/produitMockData';
 import styles from '../styles/ProduitPage.module.css';
 
@@ -30,7 +29,7 @@ export interface ProduitApi {
   condition:   string;
   garantie:    string;
   urlSlug:     string | null;
-  images:      { id: string; url: string; ordre: number; alt: string | null }[];
+  images:      { id: string; url: string; ordre: number; alt: string | null; type: string }[];
   category:    { id: string; nom: string; icone: string | null };
   subCategory: { id: string; nom: string } | null;
   specs:       { id: string; cle: string; valeur: string; ordre: number }[];
@@ -38,6 +37,13 @@ export interface ProduitApi {
   companyId:   string;
   companyName: string;
   companyLogo: string | null;
+  companyVerified: boolean;
+  companyVille:    string | null;
+  companyPays:     string;
+  /* Vente en gros */
+  venteEnGros:    boolean;
+  moq:            number | null;
+  wholesaleTiers: { quantiteMin: number; quantiteMax: number | null; prixUnitaire: number; ordre: number }[];
   /* Politique de livraison */
   livraisonStandard:      boolean;
   livraisonLivreur:       boolean;
@@ -45,6 +51,23 @@ export interface ProduitApi {
   fraisLivraisonLocal:    number | null;
   delaiLivraison:         string;
 }
+
+/** Étiquette + drapeau pour les pays déjà référencés dans GEO_DATA (produitMockData.ts)
+ *  — évite de dupliquer une seconde liste pays/drapeaux pour le même usage. */
+const PAYS_LABELS: Record<string, { label: string; drapeau: string; continent: string }> = {
+  GN: { label: 'Guinée',        drapeau: '🇬🇳', continent: 'africa'  },
+  SN: { label: 'Sénégal',       drapeau: '🇸🇳', continent: 'africa'  },
+  CI: { label: "Côte d'Ivoire", drapeau: '🇨🇮', continent: 'africa'  },
+  ML: { label: 'Mali',          drapeau: '🇲🇱', continent: 'africa'  },
+  CM: { label: 'Cameroun',      drapeau: '🇨🇲', continent: 'africa'  },
+  FR: { label: 'France',        drapeau: '🇫🇷', continent: 'europe'  },
+  BE: { label: 'Belgique',      drapeau: '🇧🇪', continent: 'europe'  },
+  DE: { label: 'Allemagne',     drapeau: '🇩🇪', continent: 'europe'  },
+  US: { label: 'États-Unis',    drapeau: '🇺🇸', continent: 'america' },
+  CA: { label: 'Canada',        drapeau: '🇨🇦', continent: 'america' },
+  CN: { label: 'Chine',         drapeau: '🇨🇳', continent: 'asia'    },
+  JP: { label: 'Japon',         drapeau: '🇯🇵', continent: 'asia'    },
+};
 
 function toProduitInfo(p: ProduitApi, t: TFunction): ProduitInfo {
   return {
@@ -68,11 +91,11 @@ function toProduitInfo(p: ProduitApi, t: TFunction): ProduitInfo {
     boutique: {
       nom:       p.companyName ?? t('boutiqueDetail.page.boutiqueShopiDefault'),
       emoji:     p.companyLogo ?? '🏪',
-      verified:  true,
-      pays:      'Guinée',
-      drapeau:   '🇬🇳',
-      region:    'Conakry',
-      continent: 'africa',
+      verified:  p.companyVerified,
+      pays:      PAYS_LABELS[p.companyPays]?.label   ?? p.companyPays,
+      drapeau:   PAYS_LABELS[p.companyPays]?.drapeau  ?? '🌍',
+      region:    p.companyVille ?? '—',
+      continent: PAYS_LABELS[p.companyPays]?.continent ?? 'africa',
       abonnes:   '—',
     },
   } as ProduitInfo;
@@ -120,8 +143,10 @@ export default function ProduitPage() {
   const [qty,         setQty]         = useState(1);
   const [livraison,   setLivraison]   = useState<LivraisonState>(LIVRAISON_INIT);
   const [partageOpen, setPartageOpen] = useState(false);
-  const [storActive,  setStorActive]  = useState('256 GB');
-  const [colorActive, setColorActive] = useState('Natural');
+  /* Une entrée par type de variante réel du produit (ex: {Couleur: 'Noir', Taille: 'M'})
+   * — remplace l'ancien storActive/colorActive à 2 emplacements fixes, qui affichait
+   * "Stockage"/"Coloris" pour TOUT produit quelles que soient ses vraies variantes. */
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
 
   const [toastMsg,     setToastMsg]     = useState('');
   const [toastVisible, setToastVisible] = useState(false);
@@ -175,7 +200,7 @@ export default function ProduitPage() {
 
   const produit          = toProduitInfo(produitApi, t);
   const shareUrl         = `https://shopi.gn/produit/${produitApi.urlSlug ?? produitApi.id}`;
-  const varianteCombinee = [storActive, colorActive].filter(Boolean).join(' · ') || undefined;
+  const varianteCombinee = Object.values(selectedVariants).filter(Boolean).join(' · ') || undefined;
 
   return (
     <div className={styles.root}>
@@ -211,15 +236,18 @@ export default function ProduitPage() {
             <div className={styles.centerCol}>
               <ProduitInfoSection
                 produit={produit}
+                produitId={produitApi.id}
+                variantes={produitApi.variantes}
+                venteEnGros={produitApi.venteEnGros}
+                moq={produitApi.moq}
+                wholesaleTiers={produitApi.wholesaleTiers}
                 qty={qty}
                 onChangeQty={handleChangeQty}
                 onToast={showToast}
                 onPartage={() => setPartageOpen(true)}
                 onBoutique={() => navigate(`/boutique/${produitApi.companyId}`)}
-                storActive={storActive}
-                colorActive={colorActive}
-                onStorChange={setStorActive}
-                onColorChange={setColorActive}
+                selectedVariants={selectedVariants}
+                onVariantsChange={setSelectedVariants}
               >
                 <div ref={livraisonRef}>
                   <LivraisonSection
@@ -236,7 +264,12 @@ export default function ProduitPage() {
                 </div>
               </ProduitInfoSection>
 
-              <TabsSection produit={produit} avis={AVIS_DATA} onToast={showToast} />
+              <TabsSection
+                produit={produit}
+                venteEnGros={produitApi.venteEnGros}
+                moq={produitApi.moq}
+                wholesaleTiers={produitApi.wholesaleTiers}
+              />
 
               <SimilairesSection
                 produitId={produitApi.id}

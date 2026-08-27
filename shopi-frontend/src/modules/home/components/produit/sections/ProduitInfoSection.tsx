@@ -8,14 +8,16 @@
  *   ✅ Prix ancien masqué si identique au prix actuel
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { ProduitInfo } from '../data/produitMockData';
-import { VARIANTES_STOCKAGE, VARIANTES_COLORIS } from '../data/produitMockData';
 import { useCart } from '../../../../../shared/context/CartContext';
 import { useAuthGate } from '../../../../../shared/hooks/useAuthGate';
 import styles from '../styles/ProduitInfoSection.module.css';
+
+interface VarianteApi { id: string; type: string; vals: string }
+interface WholesaleTier { quantiteMin: number; quantiteMax: number | null; prixUnitaire: number; ordre: number }
 
 interface Props {
   produit:       ProduitInfo;
@@ -27,20 +29,24 @@ interface Props {
   onBoutique:    () => void;
   children?:     React.ReactNode;
 
-  /* ✅ Variantes contrôlées depuis ProduitPage */
-  storActive?:   string;
-  colorActive?:  string;
-  onStorChange?: (v: string) => void;
-  onColorChange?:(v: string) => void;
+  /* ── Vraies variantes du produit (ex: [{type:'Couleur', vals:'Noir, Blanc'}]) —
+   * un groupe de chips par type réellement saisi par le vendeur, plus de
+   * "Stockage"/"Coloris" fixes affichés pour tous les produits. ── */
+  variantes?:        VarianteApi[];
+  selectedVariants?: Record<string, string>;
+  onVariantsChange?: (v: Record<string, string>) => void;
+
+  /* ── Vente en gros ── */
+  venteEnGros?:    boolean;
+  moq?:            number | null;
+  wholesaleTiers?: WholesaleTier[];
 }
 
 export default function ProduitInfoSection({
   produit, produitId, qty, onChangeQty,
   onToast, onPartage, onBoutique, children,
-  storActive:   storProp,
-  colorActive:  colorProp,
-  onStorChange,
-  onColorChange,
+  variantes = [], selectedVariants: selectedProp, onVariantsChange,
+  venteEnGros = false, moq, wholesaleTiers = [],
 }: Props) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -54,27 +60,39 @@ export default function ProduitInfoSection({
     { ico:'📞', titre:t('produitDetail.infoSection.garanties.supportTitre'),         sub:t('produitDetail.infoSection.garanties.supportSub')     },
   ];
 
-  /* État local si ProduitPage ne contrôle pas encore les variantes */
-  const [storLocal,  setStorLocal]  = useState('256 GB');
-  const [colorLocal, setColorLocal] = useState('Natural');
+  /* État local si le parent ne contrôle pas encore la sélection */
+  const [selectedLocal, setSelectedLocal] = useState<Record<string, string>>({});
   const [wish,       setWish]       = useState(false);
   const [addingCart, setAddingCart] = useState(false);
   const [addingBuy,  setAddingBuy]  = useState(false);
 
-  /* Utilise les props si disponibles, sinon l'état local */
-  const storActive  = storProp  ?? storLocal;
-  const colorActive = colorProp ?? colorLocal;
+  const selected = selectedProp ?? selectedLocal;
 
-  function setStorActive(v: string) {
-    setStorLocal(v);
-    onStorChange?.(v);
-  }
-  function setColorActive(v: string) {
-    setColorLocal(v);
-    onColorChange?.(v);
+  /* Sélectionne la première valeur de chaque variante par défaut, dès que
+   * la liste réelle arrive (chargement async du produit). */
+  useEffect(() => {
+    if (variantes.length === 0) return;
+    setSelectedLocal(prev => {
+      const next = { ...prev };
+      let changed = false;
+      for (const v of variantes) {
+        if (!next[v.type]) {
+          const first = v.vals.split(',')[0]?.trim();
+          if (first) { next[v.type] = first; changed = true; }
+        }
+      }
+      return changed ? next : prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variantes]);
+
+  function setVariant(type: string, value: string) {
+    const next = { ...selected, [type]: value };
+    setSelectedLocal(next);
+    onVariantsChange?.(next);
   }
 
-  const varianteCombinee = [storActive, colorActive].filter(Boolean).join(' · ');
+  const varianteCombinee = Object.values(selected).filter(Boolean).join(' · ');
 
   /* ── Calculs prix ── */
   const hasRemise = produit.ancien > produit.prix;
@@ -221,49 +239,50 @@ export default function ProduitInfoSection({
         <span className={styles.stockNote}>{stock.note}</span>
       </div>
 
-      {/* ── Variantes stockage ── */}
-      <div className={styles.varSec}>
-        <div className={styles.varLbl}>
-          {t('produitDetail.infoSection.stockage')} <span className={styles.varVal}>· {storActive}</span>
-        </div>
-        <div className={styles.varChips}>
-          {VARIANTES_STOCKAGE.map(v => (
-            <div
-              key={v.label}
-              className={`${styles.chip} ${!v.disabled && storActive === v.label ? styles.chipActive : ''} ${v.disabled ? styles.chipDisabled : ''}`}
-              onClick={() => {
-                if (v.disabled) return;
-                setStorActive(v.label);
-                onToast(t('produitDetail.infoSection.stockageToast', { v: v.label }));
-              }}
-            >
-              {v.label}
+      {/* ── Variantes réelles du produit (une section par type saisi par le vendeur) ── */}
+      {variantes.map(v => {
+        const values = v.vals.split(',').map(s => s.trim()).filter(Boolean);
+        if (values.length === 0) return null;
+        return (
+          <div className={styles.varSec} key={v.id}>
+            <div className={styles.varLbl}>
+              {v.type} <span className={styles.varVal}>· {selected[v.type] ?? values[0]}</span>
             </div>
-          ))}
-        </div>
-      </div>
+            <div className={styles.varChips}>
+              {values.map(val => (
+                <div
+                  key={val}
+                  className={`${styles.chip} ${selected[v.type] === val ? styles.chipActive : ''}`}
+                  onClick={() => { setVariant(v.type, val); onToast(t('produitDetail.infoSection.varianteToast', { type: v.type, v: val })); }}
+                >
+                  {val}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
 
-      {/* ── Variantes coloris ── */}
-      <div className={styles.varSec}>
-        <div className={styles.varLbl}>
-          {t('produitDetail.infoSection.coloris')} <span className={styles.varVal}>· {colorActive} {t('produitDetail.infoSection.titanium')}</span>
+      {/* ── Vente en gros — MOQ + paliers dégressifs ── */}
+      {venteEnGros && wholesaleTiers.length > 0 && (
+        <div className={styles.grosBox}>
+          <div className={styles.grosHead}>
+            <i className="fas fa-boxes-stacked" />
+            {t('produitDetail.infoSection.gros.titre')}
+            {moq != null && <span className={styles.grosMoq}>{t('produitDetail.infoSection.gros.moq', { moq })}</span>}
+          </div>
+          <div className={styles.grosTable}>
+            {wholesaleTiers.map((tier, i) => (
+              <div key={i} className={styles.grosRow}>
+                <span>
+                  {tier.quantiteMin}{tier.quantiteMax != null ? `–${tier.quantiteMax}` : '+'} {t('produitDetail.infoSection.gros.unites')}
+                </span>
+                <span className={styles.grosPrix}>{tier.prixUnitaire.toLocaleString('fr')} GNF</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className={styles.varChips}>
-          {VARIANTES_COLORIS.map(v => (
-            <div
-              key={v.label}
-              className={`${styles.chip} ${colorActive === v.label ? styles.chipActive : ''}`}
-              onClick={() => { setColorActive(v.label); onToast(t('produitDetail.infoSection.colorisToast', { v: v.label })); }}
-            >
-              <span
-                className={styles.colorDot}
-                style={{ background:v.color, border:v.border ? '1px solid var(--bdr2)' : 'none' }}
-              />
-              {v.label}
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* ── Quantité ── */}
       <div className={styles.qtyRow}>
@@ -286,43 +305,52 @@ export default function ProduitInfoSection({
       {/* ── Boutons CTA — connectés à CartContext ── */}
       <div className={styles.ctaRow}>
 
-        {isOutOfStock ? (
-          <button className={styles.btnCart} disabled style={{ opacity:.5, cursor:'not-allowed' }}>
-            <i className="fas fa-ban" /> {t('produitDetail.infoSection.ruptureDeStock')}
-          </button>
-        ) : (
+        <div className={styles.btnRow1}>
+          {isOutOfStock ? (
+            <button className={styles.btnCart} disabled style={{ opacity:.5, cursor:'not-allowed' }}>
+              <i className="fas fa-ban" /> {t('produitDetail.infoSection.ruptureDeStock')}
+            </button>
+          ) : (
+            <button
+              className={styles.btnCart}
+              onClick={handleAddToCart}
+              disabled={addingCart || addingBuy}
+            >
+              {addingCart
+                ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.infoSection.ajoutEnCours')}</>
+                : <><i className="fas fa-cart-plus" /> {t('produitDetail.infoSection.ajouterAuPanier')}</>
+              }
+            </button>
+          )}
+
           <button
-            className={styles.btnCart}
-            onClick={handleAddToCart}
-            disabled={addingCart || addingBuy}
+            className={styles.btnBuy}
+            onClick={handleBuyNow}
+            disabled={addingCart || addingBuy || isOutOfStock}
           >
-            {addingCart
-              ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.infoSection.ajoutEnCours')}</>
-              : <><i className="fas fa-cart-plus" /> {t('produitDetail.infoSection.ajouterAuPanier')}</>
+            {addingBuy
+              ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.infoSection.redirection')}</>
+              : <><i className="fas fa-bolt" /> {t('produitDetail.infoSection.acheterMaintenant')}</>
             }
           </button>
-        )}
-
-        <button
-          className={styles.btnBuy}
-          onClick={handleBuyNow}
-          disabled={addingCart || addingBuy || isOutOfStock}
-        >
-          {addingBuy
-            ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.infoSection.redirection')}</>
-            : <><i className="fas fa-bolt" /> {t('produitDetail.infoSection.acheterMaintenant')}</>
-          }
-        </button>
+        </div>
 
         <div className={styles.btnRow2}>
           <button
             className={`${styles.btnWish} ${wish ? styles.btnWishOn : ''}`}
             onClick={() => { setWish(w => !w); onToast(wish ? t('produitDetail.infoSection.retireFavorisToast') : t('produitDetail.infoSection.favorisToast')); }}
+            title={t('produitDetail.infoSection.favoris')}
+            aria-label={t('produitDetail.infoSection.favoris')}
           >
-            <i className={wish ? 'fas fa-heart' : 'far fa-heart'} /> {t('produitDetail.infoSection.favoris')}
+            <i className={wish ? 'fas fa-heart' : 'far fa-heart'} />
           </button>
-          <button className={styles.btnCompare} onClick={() => onToast(t('produitDetail.infoSection.comparaisonToast'))}>
-            <i className="fas fa-code-compare" /> {t('produitDetail.infoSection.comparer')}
+          <button
+            className={styles.btnCompare}
+            onClick={() => onToast(t('produitDetail.infoSection.comparaisonToast'))}
+            title={t('produitDetail.infoSection.comparer')}
+            aria-label={t('produitDetail.infoSection.comparer')}
+          >
+            <i className="fas fa-code-compare" />
           </button>
         </div>
       </div>

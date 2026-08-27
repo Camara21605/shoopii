@@ -626,7 +626,7 @@
    CARD ENTREPRISE
    ══════════════════════════════════════════════════════════════ */
 .coCard {
-  flex: 0 0 256px;
+  flex: 0 0 210px;
   background: var(--white);
   border: 1.5px solid var(--bdr);
   border-radius: 20px;
@@ -646,7 +646,7 @@
 
 /* ── Bannière colorée ── */
 .coBanner {
-  height: 68px;
+  height: 56px;
   background: linear-gradient(135deg, var(--co-bg, rgba(26,79,196,.15)), var(--co-bg2, rgba(26,79,196,.08)));
   position: relative;
   flex-shrink: 0;
@@ -667,20 +667,21 @@
 
 /* ── Zone logo + body ── */
 .coBody {
-  padding: 0 16px 16px;
+  padding: 0 13px 13px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   flex: 1;
 }
 
-/* ── Logo (déborde sur la bannière) ── */
+/* ── Logo (déborde sur la bannière, centré) ── */
 .coLogo {
-  width: 58px; height: 58px;
-  border-radius: 14px;
-  font-size: 26px;
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  font-size: 21px;
   display: flex; align-items: center; justify-content: center;
-  margin-top: -29px;
+  align-self: center;
+  margin-top: -24px;
   border: 3px solid var(--white);
   box-shadow: 0 4px 14px rgba(11,31,58,.12);
   transition: transform .2s;
@@ -694,7 +695,7 @@
 .coInitials {
   font-family: var(--fd);
   font-weight: 900;
-  font-size: 20px;
+  font-size: 17px;
 }
 
 /* ── Contenu principal ── */
@@ -706,24 +707,24 @@
 }
 .coName {
   font-family: var(--fd,'Fraunces',serif);
-  font-size: 14.5px; font-weight: 800;
+  font-size: 13px; font-weight: 800;
   color: var(--navy);
   line-height: 1.25;
   flex: 1;
 }
 .coDom {
-  font-size: 9.5px; font-weight: 800; text-transform: uppercase;
-  letter-spacing: .4px; padding: 2px 9px; border-radius: 999px;
+  font-size: 9px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .4px; padding: 2px 8px; border-radius: 999px;
   display: inline-flex; white-space: nowrap; flex-shrink: 0;
 }
 .coType {
-  font-size: 10.5px; color: var(--t4);
+  font-size: 10px; color: var(--t4);
   display: flex; align-items: center; gap: 3px;
 }
-.coTypeIcon { color: var(--blue); margin-right: 2px; font-size: 10px; }
+.coTypeIcon { color: var(--blue); margin-right: 2px; font-size: 9.5px; }
 
 .coDesc {
-  font-size: 11.5px; color: var(--t2); line-height: 1.5;
+  font-size: 11px; color: var(--t2); line-height: 1.4;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   flex: 1;
 }
@@ -740,14 +741,14 @@
 .coStat {
   flex: 1;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 8px 4px;
+  padding: 6px 4px;
   border-right: 1px solid var(--bdr);
   background: var(--g50);
 }
 .coStat:last-child { border-right: none; }
 .coStatVal {
   font-family: var(--fd,'Fraunces',serif);
-  font-size: 13px; font-weight: 800; color: var(--navy); line-height: 1;
+  font-size: 12px; font-weight: 800; color: var(--navy); line-height: 1;
 }
 .coStatLbl { font-size: 9px; color: var(--t4); text-transform: uppercase; letter-spacing: .3px; }
 

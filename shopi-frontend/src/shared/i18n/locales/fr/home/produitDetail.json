@@ -20,9 +20,15 @@
     "tabs": {
       "description": "Description",
       "caracteristiques": "Caractéristiques",
+      "venteEnGros": "Vente en gros",
       "livraisonCorrespondants": "Livraison & Correspondants",
       "avisCount": "Avis ({{count}})",
-      "aProposTitre": "À propos de l'iPhone 15 Pro",
+      "aProposTitre": "À propos de ce produit",
+      "aucuneDescription": "Le vendeur n'a pas encore renseigné de description pour ce produit.",
+      "aucuneCaracteristique": "Aucune caractéristique technique renseignée pour ce produit.",
+      "grosMoqInfo": "Commande minimum : {{moq}} unités.",
+      "aucunPalierGros": "Aucun palier de prix dégressif renseigné pour ce produit.",
+      "aucunAvis": "Aucun avis pour le moment.",
       "performances": "Performances",
       "performancesList": {
         "puce": "Puce A17 Pro gravée en 3 nm — la plus rapide jamais intégrée",
@@ -136,10 +142,16 @@
       "coloris": "Coloris",
       "titanium": "Titanium",
       "stockageToast": "✅ Stockage : {{v}}",
+      "varianteToast": "✅ {{type}} : {{v}}",
       "colorisToast": "✅ Coloris : {{v}} Titanium",
       "quantite": "Quantité",
       "maxParCommande": "Max. 5 par commande",
       "ruptureDeStock": "Rupture de stock",
+      "gros": {
+        "titre": "Vente en gros — prix dégressifs",
+        "moq": "Min. {{moq}} unités",
+        "unites": "unités"
+      },
       "ajoutEnCours": "Ajout en cours…",
       "ajouterAuPanier": "Ajouter au panier",
       "redirection": "Redirection…",

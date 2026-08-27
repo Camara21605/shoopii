@@ -97,79 +97,9 @@ export interface ProduitSimilaire {
   badge: 'hot' | 'new' | 'promo' | null;
 }
 
-export interface AvisClient {
-  id:       string;
-  initiale: string;
-  couleur:  string;
-  nom:      string;
-  date:     string;
-  note:     number;
-  titre:    string;
-  texte:    string;
-  verified: boolean;
-}
-
 export interface GeoVilleData { label: string; villes: string[]; }
 export interface GeoContData  { label: string; pays: Record<string, GeoVilleData>; }
 export interface GeoData      { [continent: string]: GeoContData; }
-
-/* ══════════════════════════════════════════════════════════
-   PRODUIT PRINCIPAL
-   ══════════════════════════════════════════════════════════ */
-
-export const PRODUIT_INFO: ProduitInfo = {
-  id:          'p-iphone15pro',
-  emoji:       '📱',
-  nom:         'iPhone 15 Pro 256GB — Titanium Natural',
-  sku:         'APL-IP15PRO-256-TIT',
-  categorie:   'Smartphones',
-  prix:        12_500_000,
-  ancien:      14_000_000,
-  note:        4.9,
-  avis:        248,
-  acheteurs:   231,
-  stock:       14,
-  stockStatus: 'ok',
-  vues:        1_842,
-  boutique: {
-    nom:       'TechZone Paris',
-    emoji:     '📱',
-    pays:      'France',
-    drapeau:   '🇫🇷',
-    region:    'Europe',
-    verified:  true,
-    abonnes:   '8,2K',
-    continent: 'europe',
-  },
-  thumbnails:  ['📱', '🔋', '📷', '🎧', '📦'],
-  description: `L'iPhone 15 Pro représente le summum de la technologie Apple. Conçu en titane de qualité aérospatiale, il allie légèreté, résistance et design raffiné. La puce A17 Pro gravée en 3 nm offre des performances inégalées, tandis que le système de caméra ProRes permet un enregistrement vidéo de niveau professionnel.`,
-  specs: [
-    { label:'Marque',       value:'Apple'                        },
-    { label:'Puce',         value:'A17 Pro (3 nm)'               },
-    { label:'Stockage',     value:'256 GB'                       },
-    { label:'Écran',        value:'6,1" OLED 120Hz ProMotion'    },
-    { label:'Caméra',       value:'48MP triple capteur'          },
-    { label:'Batterie',     value:'29h autonomie vidéo'          },
-    { label:'Connectivité', value:'5G · USB-C USB 3 · Wi-Fi 6E'  },
-    { label:'Résistance',   value:'IP68 — 6m / 30 min'           },
-    { label:'OS',           value:'iOS 17 (iOS 18 disponible)'   },
-    { label:'Garantie',     value:'1 an constructeur Apple'      },
-  ],
-};
-
-export const VARIANTES_STOCKAGE = [
-  { label:'128 GB', disabled: true  },
-  { label:'256 GB', disabled: false },
-  { label:'512 GB', disabled: false },
-  { label:'1 TB',   disabled: false },
-];
-
-export const VARIANTES_COLORIS = [
-  { label:'Natural', color:'#C8B89A', border: false },
-  { label:'Blue',    color:'#4A6FA5', border: false },
-  { label:'White',   color:'#F0EFED', border: true  },
-  { label:'Black',   color:'#3A3A3C', border: false },
-];
 
 /* ══════════════════════════════════════════════════════════
    LIVREURS
@@ -207,28 +137,6 @@ export const PRODUITS_SIMILAIRES: ProduitSimilaire[] = [
   { id:'s5', emoji:'🔌', nom:'Chargeur MagSafe 15W', shop:'TechZone Paris', prix:'350 000',    note:4, avis:88,  badge:null    },
 ];
 
-/* ══════════════════════════════════════════════════════════
-   AVIS CLIENTS
-   ══════════════════════════════════════════════════════════ */
-
-export const AVIS_DATA: AvisClient[] = [
-  {
-    id:'a1', initiale:'M',
-    couleur:'linear-gradient(135deg,#E2EAFB,#C8D9F8)',
-    nom:'Mamadou K.', date:'12 jan. 2025', note:5,
-    titre:'Livraison via correspondant parfaite !',
-    texte:"Boutique en France, j'ai utilisé le correspondant à Conakry. Il a tout géré, réceptionné le colis, vérifié et remis à mon livreur Shoneya. Téléphone authentique, parfait état. Je recommande !",
-    verified: true,
-  },
-  {
-    id:'a2', initiale:'F',
-    couleur:'linear-gradient(135deg,#D1FAE5,#A7F3D0)',
-    nom:'Fatoumata D.', date:'3 jan. 2025', note:5,
-    titre:'Service de correspondant excellent',
-    texte:"Le système de livraison avec correspondant est très bien pensé. Prix du livreur calculé automatiquement selon ma ville. Ultra rapide une fois en Guinée.",
-    verified: true,
-  },
-];
 
 /* ══════════════════════════════════════════════════════════
    GÉOGRAPHIE

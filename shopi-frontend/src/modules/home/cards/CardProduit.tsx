@@ -31,6 +31,7 @@ export interface ProductApi {
   prixAncien:  number | null;
   marque:      string | null;
   urlSlug:     string | null;
+  stock?:      number;
   images:      { id: string; url: string; ordre: number; alt: string | null }[];
   category:    { id: string; nom: string; icone: string | null };
   subCategory: { id: string; nom: string } | null;
@@ -446,6 +447,9 @@ export default function CardProduit({ p, onToast }: Props) {
   const img = mainImage(p);
   const em  = emoji(p);
   const b   = p.badge ? getBadgeConfig(t)[p.badge] : null;
+  /* stock absent (endpoint qui ne le renvoie pas encore) → on ne bloque pas,
+   * seul un stock EXPLICITEMENT à 0 (ou négatif) grise le bouton. */
+  const isOutOfStock = p.stock != null && p.stock <= 0;
 
   /* ✅ Garde d'authentification partagée (panier + favoris) */
   const { requireClient, authModal } = useAuthGate();
@@ -501,6 +505,11 @@ export default function CardProduit({ p, onToast }: Props) {
               <button className={`${styles.pcart} ${styles.pcartDone}`}
                 onClick={e => { e.stopPropagation(); onToast(t('sharedCards.produit.dejaAuPanierClicToast')); }}>
                 <i className="fas fa-check" /> <span className={styles.pcartLabel}>{t('sharedCards.produit.dejaAuPanierBtn')}</span>
+              </button>
+            ) : isOutOfStock ? (
+              <button className={`${styles.pcart} ${styles.pcartOut}`} disabled
+                onClick={e => e.stopPropagation()}>
+                <i className="fas fa-ban" /> <span className={styles.pcartLabel}>{t('sharedCards.produit.ruptureStock')}</span>
               </button>
             ) : (
               <button className={styles.pcart} disabled={loading} onClick={e => { e.stopPropagation(); handleAdd(); }}>

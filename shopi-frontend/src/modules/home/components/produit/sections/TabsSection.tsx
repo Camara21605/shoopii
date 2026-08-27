@@ -1,31 +1,39 @@
 /*
  * FICHIER : src/modules/home/components/produit/sections/TabsSection.tsx
  * RÔLE    : Onglets d'information du produit.
- *           - Description : texte + liste de fonctionnalités
- *           - Caractéristiques : tableau specs
- *           - Livraison & Correspondants : guide explicatif
- *           - Avis (248) : liste avis clients vérifiés
+ *           - Description : texte réel saisi par le vendeur (état vide si absent)
+ *           - Caractéristiques : tableau specs réel (état vide si absent)
+ *           - Vente en gros : MOQ + paliers, affiché seulement si venteEnGros
+ *           - Livraison & Correspondants : guide explicatif (générique, pas
+ *             spécifique au produit)
+ *           - Avis : PAS de système d'avis produit réel dans le projet à ce
+ *             jour (seul CompanyAvis existe, au niveau boutique) — état vide
+ *             honnête plutôt que les faux avis précédemment codés en dur.
  */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ProduitInfo, AvisClient } from '../data/produitMockData';
+import type { ProduitInfo } from '../data/produitMockData';
 import styles from '../styles/TabsSection.module.css';
 
-type TabId = 'desc' | 'specs' | 'delivery' | 'reviews';
+interface WholesaleTier { quantiteMin: number; quantiteMax: number | null; prixUnitaire: number; ordre: number }
+
+type TabId = 'desc' | 'specs' | 'gros' | 'delivery' | 'reviews';
 
 interface Props {
   produit: ProduitInfo;
-  avis:    AvisClient[];
-  onToast: (m: string) => void;
+  venteEnGros?:    boolean;
+  moq?:            number | null;
+  wholesaleTiers?: WholesaleTier[];
 }
 
-export default function TabsSection({ produit, avis, onToast }: Props) {
+export default function TabsSection({ produit, venteEnGros = false, moq, wholesaleTiers = [] }: Props) {
   const { t } = useTranslation();
   const [tab, setTab] = useState<TabId>('desc');
 
   const TABS: { id: TabId; label: string }[] = [
     { id:'desc',     label:t('produitDetail.tabs.description')             },
     { id:'specs',    label:t('produitDetail.tabs.caracteristiques')        },
+    ...(venteEnGros ? [{ id:'gros' as TabId, label:t('produitDetail.tabs.venteEnGros') }] : []),
     { id:'delivery', label:t('produitDetail.tabs.livraisonCorrespondants') },
     { id:'reviews',  label:t('produitDetail.tabs.avisCount', { count: produit.avis }) },
   ];
@@ -50,39 +58,58 @@ export default function TabsSection({ produit, avis, onToast }: Props) {
         {/* ── Description ── */}
         {tab === 'desc' && (
           <div className={styles.descContent}>
-            <h3>{t('produitDetail.tabs.aProposTitre')}</h3>
-            <p>{produit.description}</p>
-            <h3>{t('produitDetail.tabs.performances')}</h3>
-            <ul>
-              {[
-                t('produitDetail.tabs.performancesList.puce'),
-                t('produitDetail.tabs.performancesList.gpu'),
-                t('produitDetail.tabs.performancesList.autonomie'),
-              ].map(l => <li key={l}>{l}</li>)}
-            </ul>
-            <h3>{t('produitDetail.tabs.cameraProRes')}</h3>
-            <ul>
-              {[
-                t('produitDetail.tabs.cameraList.triple'),
-                t('produitDetail.tabs.cameraList.enregistrement'),
-                t('produitDetail.tabs.cameraList.smartHdr'),
-              ].map(l => <li key={l}>{l}</li>)}
-            </ul>
+            {produit.description?.trim() ? (
+              <>
+                <h3>{t('produitDetail.tabs.aProposTitre')}</h3>
+                <p>{produit.description}</p>
+              </>
+            ) : (
+              <p className={styles.emptyTab}>{t('produitDetail.tabs.aucuneDescription')}</p>
+            )}
           </div>
         )}
 
         {/* ── Caractéristiques ── */}
         {tab === 'specs' && (
-          <table className={styles.specsTable}>
-            <tbody>
-              {produit.specs.map(s => (
-                <tr key={s.label}>
-                  <td className={styles.specLbl}>{s.label}</td>
-                  <td className={styles.specVal}>{s.value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          produit.specs.length > 0 ? (
+            <table className={styles.specsTable}>
+              <tbody>
+                {produit.specs.map(s => (
+                  <tr key={s.label}>
+                    <td className={styles.specLbl}>{s.label}</td>
+                    <td className={styles.specVal}>{s.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className={styles.emptyTab}>{t('produitDetail.tabs.aucuneCaracteristique')}</p>
+          )
+        )}
+
+        {/* ── Vente en gros ── */}
+        {tab === 'gros' && (
+          <div className={styles.descContent}>
+            {moq != null && (
+              <p>{t('produitDetail.tabs.grosMoqInfo', { moq })}</p>
+            )}
+            {wholesaleTiers.length > 0 ? (
+              <table className={styles.specsTable}>
+                <tbody>
+                  {wholesaleTiers.map((tier, i) => (
+                    <tr key={i}>
+                      <td className={styles.specLbl}>
+                        {tier.quantiteMin}{tier.quantiteMax != null ? `–${tier.quantiteMax}` : '+'} {t('produitDetail.infoSection.gros.unites')}
+                      </td>
+                      <td className={styles.specVal}>{tier.prixUnitaire.toLocaleString('fr')} GNF</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className={styles.emptyTab}>{t('produitDetail.tabs.aucunPalierGros')}</p>
+            )}
+          </div>
         )}
 
         {/* ── Livraison & Correspondants ── */}
@@ -120,29 +147,9 @@ export default function TabsSection({ produit, avis, onToast }: Props) {
           </div>
         )}
 
-        {/* ── Avis ── */}
+        {/* ── Avis — pas de système d'avis produit réel à ce jour ── */}
         {tab === 'reviews' && (
-          <div className={styles.avisListe}>
-            {avis.map(a => (
-              <div key={a.id} className={styles.avisItem}>
-                <div className={styles.avisTop}>
-                  <div className={styles.avisAv} style={{ background: a.couleur }}>{a.initiale}</div>
-                  <div>
-                    <div className={styles.avisNom}>{a.nom}</div>
-                    <div className={styles.avisDate}>{a.date}</div>
-                  </div>
-                  {a.verified && (
-                    <span className={styles.avisVerif}>
-                      <i className="fas fa-check-circle" /> {t('produitDetail.tabs.achatVerifie')}
-                    </span>
-                  )}
-                </div>
-                <div className={styles.avisStars}>{'★'.repeat(a.note)}{'☆'.repeat(5-a.note)}</div>
-                <div className={styles.avisTitre}>{a.titre}</div>
-                <div className={styles.avisTexte}>{a.texte}</div>
-              </div>
-            ))}
-          </div>
+          <p className={styles.emptyTab}>{t('produitDetail.tabs.aucunAvis')}</p>
         )}
       </div>
     </div>

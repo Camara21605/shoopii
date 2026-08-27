@@ -12,6 +12,8 @@
 .descContent ul { list-style:none; padding:0; display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
 .descContent ul li { font-size:13px; color:var(--t2); display:flex; align-items:flex-start; gap:8px; line-height:1.5; }
 .descContent ul li::before { content:'✓'; color:var(--blue); font-weight:700; flex-shrink:0; margin-top:1px; }
+.emptyTab { padding:32px 16px; text-align:center; font-size:13.5px; color:var(--t3); }
+
 .specsTable { width:100%; border-collapse:collapse; }
 .specsTable tr { border-bottom:1px solid var(--bdr); }
 .specsTable tr:last-child { border-bottom:none; }

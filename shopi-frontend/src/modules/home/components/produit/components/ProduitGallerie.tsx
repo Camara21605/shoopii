@@ -51,18 +51,28 @@ export default function ProduitGallerie({ produit, produitApi, onToast, onPartag
           )}
         </div>
 
-        {/* Image réelle ou emoji fallback */}
+        {/* Média réel (image ou vidéo) ou emoji fallback */}
         {activeImg ? (
-          <img
-            src={activeImg.url}
-            alt={activeImg.alt ?? produit.nom}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block',
-            }}
-          />
+          activeImg.type === 'video' ? (
+            <video
+              key={activeImg.id}
+              src={activeImg.url}
+              controls
+              playsInline
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          ) : (
+            <img
+              src={activeImg.url}
+              alt={activeImg.alt ?? produit.nom}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+          )
         ) : (
           <span className={styles.emoji}>{fallbackEmoji}</span>
         )}
@@ -132,13 +142,26 @@ export default function ProduitGallerie({ produit, produitApi, onToast, onPartag
               className={`${styles.thumb} ${thumbActive === i ? styles.thumbActive : ''}`}
               onClick={() => setThumbActive(i)}
               title={img.alt ?? t('produitDetail.gallery.image', { n: i + 1 })}
-              style={{ overflow: 'hidden', padding: 0 }}
+              style={{ overflow: 'hidden', padding: 0, position: 'relative' }}
             >
-              <img
-                src={img.url}
-                alt={img.alt ?? t('produitDetail.gallery.image', { n: i + 1 })}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              />
+              {img.type === 'video' ? (
+                <>
+                  <video
+                    src={img.url}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                  <span className={styles.thumbPlay}><i className="fas fa-play" /></span>
+                </>
+              ) : (
+                <img
+                  src={img.url}
+                  alt={img.alt ?? t('produitDetail.gallery.image', { n: i + 1 })}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+              )}
             </div>
           ))}
         </div>

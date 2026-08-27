@@ -212,19 +212,22 @@ export default function PanierPanel({
           </button>
         )}
 
-        {/* ✅ Bouton Acheter maintenant */}
-        <button
-          className={styles.btnBuy}
-          onClick={handleBuyNow}
-          disabled={addingCart || addingBuy || isOutOfStock}
-        >
-          {addingBuy
-            ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.panier.redirection')}</>
-            : dejaAuPanier
-              ? <><i className="fas fa-bolt" /> {t('produitDetail.panier.allerAuPanier')}</>
+        {/* ✅ Bouton Acheter maintenant — masqué si déjà au panier :
+         * le bouton "Déjà au panier — Voir le panier" ci-dessus fait
+         * déjà exactement la même navigation (/commande), le doublon
+         * "Aller au panier" était redondant. */}
+        {!dejaAuPanier && (
+          <button
+            className={styles.btnBuy}
+            onClick={handleBuyNow}
+            disabled={addingCart || addingBuy || isOutOfStock}
+          >
+            {addingBuy
+              ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.panier.redirection')}</>
               : <><i className="fas fa-bolt" /> {t('produitDetail.panier.acheterMaintenant')}</>
-          }
-        </button>
+            }
+          </button>
+        )}
 
         <div className={styles.secure}><i className="fas fa-lock" /> {t('produitDetail.panier.paiementSecurise')}</div>
       </div>
@@ -234,16 +237,13 @@ export default function PanierPanel({
           <div className={styles.vcLogo}>{produit.boutique.emoji}</div>
           <div>
             <div className={styles.vcNom}>{produit.boutique.nom}</div>
-            <div className={styles.vcVer}>
-              <i className="fas fa-shield-check" /> {t('produitDetail.panier.boutiqueVerifiee')}
-              <span style={{ color:'#4338CA' }}> {produit.boutique.drapeau} {produit.boutique.pays}</span>
-            </div>
+            {produit.boutique.verified && (
+              <div className={styles.vcVer}>
+                <i className="fas fa-shield-check" /> {t('produitDetail.panier.boutiqueVerifiee')}
+                <span style={{ color:'#4338CA' }}> {produit.boutique.drapeau} {produit.boutique.pays}</span>
+              </div>
+            )}
           </div>
-        </div>
-        <div className={styles.vcStats}>
-          <div className={styles.vcStat}><div className={styles.vcStatV}>4.9</div><div className={styles.vcStatL}>{t('produitDetail.panier.note')}</div></div>
-          <div className={styles.vcStat}><div className={styles.vcStatV}>97%</div><div className={styles.vcStatL}>{t('produitDetail.panier.satisf')}</div></div>
-          <div className={styles.vcStat}><div className={styles.vcStatV}>8K+</div><div className={styles.vcStatL}>{t('produitDetail.panier.ventes')}</div></div>
         </div>
         <div className={styles.vcBtns}>
           <button className={styles.vcBtnV} onClick={onBoutique}>{t('produitDetail.panier.voirBoutique')}</button>

@@ -44,6 +44,14 @@
 .chipActive      { border-color:var(--blue); background:var(--sky); color:var(--blue); font-weight:700; }
 .chipDisabled    { opacity:.4; cursor:not-allowed; text-decoration:line-through; }
 .colorDot { width:14px; height:14px; border-radius:50%; flex-shrink:0; }
+
+/* ── Vente en gros — paliers dégressifs ── */
+.grosBox   { background:var(--am-bg,#FEF3C7); border:1.5px solid rgba(180,83,9,.2); border-radius:14px; padding:14px 16px; margin-bottom:18px; }
+.grosHead  { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:#92400E; margin-bottom:10px; }
+.grosMoq   { margin-left:auto; font-size:11px; font-weight:700; color:#92400E; background:rgba(146,64,14,.12); border-radius:999px; padding:3px 10px; }
+.grosTable { display:flex; flex-direction:column; gap:6px; }
+.grosRow   { display:flex; align-items:center; justify-content:space-between; font-size:13px; color:var(--t1); background:var(--white); border-radius:8px; padding:8px 12px; }
+.grosPrix  { font-family:var(--fd,'Fraunces',serif); font-weight:800; color:var(--blue); }
 .qtyRow    { display:flex; align-items:center; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
 .qtyLbl    { font-size:12px; font-weight:700; color:var(--navy); text-transform:uppercase; letter-spacing:.5px; }
 .qtyCtrl   { display:flex; align-items:center; background:var(--white); border:1.5px solid var(--bdr2); border-radius:12px; overflow:hidden; }
@@ -51,13 +59,14 @@
 .qtyBtn:hover { background:var(--sky); color:var(--navy); }
 .qtyNum    { min-width:36px; text-align:center; font-family:var(--fd,'Fraunces',serif); font-size:15px; font-weight:700; color:var(--navy); }
 .qtyMax    { font-size:11px; color:var(--t3); }
-.ctaRow    { display:flex; flex-direction:column; gap:10px; margin-bottom:22px; }
-.btnCart   { background:var(--navy); color:#fff; border:none; border-radius:18px; padding:16px 24px; font-size:15px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer; transition:all .25s; }
-.btnCart:hover  { background:#112648; transform:translateY(-2px); box-shadow:0 6px 24px rgba(26,79,196,.28); }
-.btnBuy    { background:var(--blue); color:#fff; border:none; border-radius:18px; padding:16px 24px; font-size:15px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer; transition:all .25s; }
-.btnBuy:hover   { background:var(--blue-2,#2560DC); transform:translateY(-2px); box-shadow:0 8px 24px rgba(37,96,220,.35); }
-.btnRow2   { display:flex; gap:10px; }
-.btnWish,.btnCompare { flex:1; background:var(--white); color:var(--navy); border:1.5px solid var(--bdr2); border-radius:18px; padding:12px 18px; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; transition:all .2s; }
+.ctaRow    { display:flex; flex-direction:column; gap:8px; margin-bottom:22px; }
+.btnRow1   { display:flex; gap:8px; }
+.btnCart   { flex:1; min-width:0; background:var(--navy); color:#fff; border:none; border-radius:12px; padding:12px 16px; font-size:13.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; transition:all .2s; white-space:nowrap; }
+.btnCart:hover  { background:#112648; transform:translateY(-1px); box-shadow:0 4px 16px rgba(26,79,196,.25); }
+.btnBuy    { flex:1; min-width:0; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px 16px; font-size:13.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; transition:all .2s; white-space:nowrap; }
+.btnBuy:hover   { background:var(--blue-2,#2560DC); transform:translateY(-1px); box-shadow:0 4px 16px rgba(37,96,220,.3); }
+.btnRow2   { display:flex; gap:8px; }
+.btnWish,.btnCompare { width:42px; height:42px; flex-shrink:0; background:var(--white); color:var(--navy); border:1.5px solid var(--bdr2); border-radius:12px; font-size:15px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .2s; }
 .btnWish:hover,.btnWishOn { border-color:var(--rose); color:var(--rose); background:var(--rs-bg); }
 .btnCompare:hover { border-color:var(--blue); color:var(--blue); background:var(--sky); }
 .garanties { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; margin-bottom:22px; }
@@ -73,7 +82,8 @@
 .socWa:hover  { background:rgba(37,211,102,.1); border-color:rgba(37,211,102,.3); color:#25D366; }
 .socFb:hover  { background:rgba(24,119,242,.1); border-color:rgba(24,119,242,.3); color:#1877F2; }
 .vues { margin-left:auto; font-size:11px; color:var(--t3); display:flex; align-items:center; gap:5px; }
-@media(max-width:768px) { .garanties{grid-template-columns:1fr} .titre{font-size:20px} .btnCart,.btnBuy{font-size:14px;padding:13px 18px} }
+@media(max-width:768px) { .garanties{grid-template-columns:1fr} .titre{font-size:20px} }
+@media(max-width:420px) { .btnCart,.btnBuy{font-size:12px;padding:11px 8px;gap:5px} .btnWish,.btnCompare{width:38px;height:38px} }
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
