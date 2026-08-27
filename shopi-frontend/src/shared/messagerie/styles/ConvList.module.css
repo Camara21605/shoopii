@@ -41,6 +41,25 @@
   box-shadow: 0 4px 14px rgba(14,116,144,.35);
 }
 .newConvBtn:active { transform: scale(0.95); }
+.syncContactsBtn {
+  flex-shrink: 0;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--blue, #1A4FC4);
+  color: #fff;
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(26,79,196,.25);
+}
+.syncContactsBtn:hover:not(:disabled) {
+  background: #1544A8;
+  transform: scale(1.08);
+  box-shadow: 0 4px 14px rgba(26,79,196,.35);
+}
+.syncContactsBtn:active:not(:disabled) { transform: scale(0.95); }
+.syncContactsBtn:disabled { opacity: .6; cursor: not-allowed; }
 .searchInner {
   flex: 1;
   display: flex; align-items: center;
@@ -149,6 +168,19 @@
 .metaTop { display: flex; align-items: center; gap: 4px; }
 .time { font-size: 10px; color: var(--t4); }
 .item.unread .time { color: var(--teal, #0E7490); }
+
+/* Supprimer une entrée d'historique d'appel — toujours visible (pas de
+   reveal au survol comme .itemMenuBtn) pour rester utilisable au tap
+   sur mobile, où il n'y a pas de survol. */
+.callDeleteBtn {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: none; border: none; color: var(--t4);
+  font-size: 11px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.callDeleteBtn:hover { background: var(--rs-bg, rgba(190,24,93,.08)); color: var(--rose, #BE185D); }
 
 /* Bouton options "..." — visible au survol de l'item */
 .itemMenuBtn {

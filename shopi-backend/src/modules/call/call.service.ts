@@ -769,8 +769,14 @@ export class CallService {
   // ── Historique ────────────────────────────────────────────────
 
   async getHistory(userId: string, page: number, limit: number) {
+    /* Chaque ligne est partagée entre appelant/appelé — on exclut celles
+     * que CET utilisateur a supprimées de SA propre liste (hiddenByCaller/
+     * hiddenByCallee), sans toucher à la ligne pour l'autre participant. */
     const [rows, total] = await this.historyRepo.findAndCount({
-      where: [{ callerId: userId }, { calleeId: userId }],
+      where: [
+        { callerId: userId, hiddenByCaller: false },
+        { calleeId: userId, hiddenByCallee: false },
+      ],
       order: { endedAt: 'DESC' },
       skip:  (page - 1) * limit,
       take:  limit,
@@ -803,6 +809,25 @@ export class CallService {
     });
 
     return { data, total, page };
+  }
+
+  /**
+   * Retire une entrée de l'historique d'appels de CET utilisateur
+   * uniquement (voir hiddenByCaller/hiddenByCallee sur CallHistory) —
+   * la ligne reste intacte pour l'autre participant.
+   */
+  async deleteHistoryItem(userId: string, historyId: string): Promise<void> {
+    const row = await this.historyRepo.findOne({ where: { id: historyId } });
+    if (!row) throw new NotFoundException('Entrée d\'historique introuvable.');
+
+    if (row.callerId === userId) {
+      row.hiddenByCaller = true;
+    } else if (row.calleeId === userId) {
+      row.hiddenByCallee = true;
+    } else {
+      throw new ForbiddenException('Cette entrée d\'historique ne vous appartient pas.');
+    }
+    await this.historyRepo.save(row);
   }
 
   /**

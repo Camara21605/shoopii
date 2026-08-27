@@ -186,7 +186,7 @@ function MessageBubble({
           )}
 
           {msg.type === 'call' && (
-            <CallBubble meta={msg.callMeta} isMe={isMe} />
+            <CallBubble meta={msg.callMeta} />
           )}
 
           {/* ── Actions au survol — communes à tous les types ── */}
@@ -339,11 +339,11 @@ function MessageBubble({
 
 type CallMeta = ChatMessage['callMeta'];
 
-function CallBubble({ meta, isMe }: { meta?: CallMeta; isMe: boolean }) {
+function CallBubble({ meta }: { meta?: CallMeta }) {
   const { t } = useTranslation();
   if (!meta) {
     return (
-      <div className={`${s.callBubble} ${isMe ? s.callBubbleMe : ''}`}>
+      <div className={s.callBubble}>
         <span className={s.callIcon}><i className="fas fa-phone" /></span>
         <span className={s.callLabel}>{t('messagerie.messageBubble.appelAudioFallback')}</span>
       </div>
@@ -352,10 +352,13 @@ function CallBubble({ meta, isMe }: { meta?: CallMeta; isMe: boolean }) {
 
   const isVideoCall = meta.callType === 'video';
 
-  const cfg: Record<string, { icon: string; iconColor: string; textRed?: boolean }> = {
-    completed: { icon: isVideoCall ? 'fa-video'        : 'fa-phone',        iconColor: 'var(--emerald,#059669)'             },
-    missed:    { icon: isVideoCall ? 'fa-video-slash'  : 'fa-phone-missed', iconColor: 'var(--rose,#DC2626)', textRed: true },
-    rejected:  { icon: isVideoCall ? 'fa-video-slash'  : 'fa-phone-slash',  iconColor: 'var(--rose,#DC2626)', textRed: true },
+  /* missed (pas décroché à temps) et rejected (décliné activement) sont
+     deux statuts distincts — chacun sa propre couleur pour qu'on les
+     distingue au premier coup d'œil, en plus du libellé déjà différent. */
+  const cfg: Record<string, { icon: string; iconColor: string; tinted?: boolean }> = {
+    completed: { icon: isVideoCall ? 'fa-video'        : 'fa-phone',        iconColor: 'var(--emerald,#059669)'            },
+    missed:    { icon: isVideoCall ? 'fa-video-slash'  : 'fa-phone-missed', iconColor: 'var(--rose,#DC2626)',  tinted: true },
+    rejected:  { icon: isVideoCall ? 'fa-video-slash'  : 'fa-phone-slash',  iconColor: '#7C3AED',              tinted: true },
     cancelled: { icon: isVideoCall ? 'fa-video-slash'  : 'fa-phone-slash',  iconColor: 'var(--t3,#94A3B8)'                 },
     busy:      { icon: isVideoCall ? 'fa-video'        : 'fa-phone-volume', iconColor: 'var(--amber,#B45309)'              },
   };
@@ -369,7 +372,7 @@ function CallBubble({ meta, isMe }: { meta?: CallMeta; isMe: boolean }) {
     busy:      t('messagerie.messageBubble.correspondantOccupe'),
   };
   const label = labelMap[meta.status] ?? t('messagerie.messageBubble.appelType', { type: typeLabel });
-  const { icon, iconColor, textRed } = cfg[meta.status] ?? cfg['completed'];
+  const { icon, iconColor, tinted } = cfg[meta.status] ?? cfg['completed'];
 
   const dur = meta.duration
     ? ` · ${Math.floor(meta.duration / 60)}:${String(meta.duration % 60).padStart(2, '0')}`
@@ -380,12 +383,12 @@ function CallBubble({ meta, isMe }: { meta?: CallMeta; isMe: boolean }) {
     : <i className="fas fa-arrow-down-left" style={{ fontSize: 9 }} />;
 
   return (
-    <div className={`${s.callBubble} ${isMe ? s.callBubbleMe : ''} ${textRed ? s.callBubbleMissed : ''}`}>
+    <div className={s.callBubble}>
       <span className={s.callIcon} style={{ color: iconColor }}>
         <i className={`fas ${icon}`} />
       </span>
-      <span className={s.callArrow} style={{ color: textRed ? iconColor : undefined }}>{arrow}</span>
-      <span className={s.callLabel} style={{ color: textRed ? iconColor : undefined }}>{label}{dur}</span>
+      <span className={s.callArrow} style={{ color: tinted ? iconColor : undefined }}>{arrow}</span>
+      <span className={s.callLabel} style={{ color: tinted ? iconColor : undefined }}>{label}{dur}</span>
     </div>
   );
 }

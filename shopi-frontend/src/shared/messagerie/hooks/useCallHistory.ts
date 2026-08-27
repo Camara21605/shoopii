@@ -34,5 +34,20 @@ export function useCallHistory() {
       .finally(() => { setLoading(false); setLoaded(true); });
   }, [loaded]);
 
-  return { data, loading, load };
+  /* Retrait optimiste — l'entrée disparaît immédiatement, restaurée si
+   * l'appel réseau échoue (voir CallHistoryItemRow, mêmes principes que
+   * FollowButton). Ne concerne que la liste de CET utilisateur (voir
+   * hiddenByCaller/hiddenByCallee côté backend). */
+  const deleteItem = useCallback(async (id: string) => {
+    const prev = data;
+    setData(list => list.filter(i => i.id !== id));
+    try {
+      await apiFetch(`/calls/history/${id}`, { method: 'DELETE' });
+    } catch (e) {
+      setData(prev);
+      throw e;
+    }
+  }, [data]);
+
+  return { data, loading, load, deleteItem };
 }

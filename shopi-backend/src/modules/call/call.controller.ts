@@ -3,7 +3,7 @@
  * ============================================================ */
 
 import {
-  Body, Controller, Get, Param, Post, Query, Req, UseGuards,
+  Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards,
 } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request } from 'express';
@@ -51,6 +51,14 @@ export class CallController {
     const user = req.user as User;
     // page/limit déjà des nombres validés/bornés par CallHistoryQueryDto (partie 9).
     return this.callService.getHistory(user.id, query.page ?? 1, query.limit ?? 20);
+  }
+
+  /** Retire une entrée de l'historique — pour l'utilisateur courant uniquement. */
+  @Delete('history/:id')
+  async deleteHistory(@Req() req: Request, @Param('id') id: string) {
+    const user = req.user as User;
+    await this.callService.deleteHistoryItem(user.id, id);
+    return { success: true };
   }
 
   /**

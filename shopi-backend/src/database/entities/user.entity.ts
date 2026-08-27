@@ -23,7 +23,10 @@ import {
   OneToMany,
   Index,
   DeleteDateColumn,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
+import { hashUserPhone } from 'src/common/utils/phone-hash.util';
 
 import { Admin }        from './profiles/admin-profile.entity';
 import { Partner }      from './profiles/partenaire-profile.entity';
@@ -284,4 +287,23 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  /*
+   * Recalcule phoneHash à partir de `phone` à chaque insertion/mise à jour
+   * passant par save() (le cas de la quasi-totalité des services de ce
+   * projet — vérifié). Centraliser ici évite d'avoir à se souvenir de
+   * hacher le téléphone dans chaque service qui le modifie (inscription,
+   * "Modifier mon profil" par rôle…) : un seul endroit, garanti exécuté.
+   *
+   * N'a AUCUN effet sur un repository.update(id, partial) — ce type de
+   * requête ne charge pas l'entité et ne déclenche donc jamais les hooks
+   * TypeORM. Vérifié à ce jour : aucun service ne modifie `phone` via ce
+   * chemin (tous font userRepo.save(entity)) — si un futur service le
+   * fait, il doit appeler hashUserPhone() lui-même.
+   */
+  @BeforeInsert()
+  @BeforeUpdate()
+  private syncPhoneHash(): void {
+    this.phoneHash = hashUserPhone(this.phone);
+  }
 }

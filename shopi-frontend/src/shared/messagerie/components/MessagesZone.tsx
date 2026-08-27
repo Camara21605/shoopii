@@ -430,34 +430,57 @@ function MessagesZone({
     if (onUpdateGroup) onUpdateGroup(conv.id, desc);
   }, [onUpdateGroup, conv.id]);
 
+  /* Aller au tout début / à la toute fin de la conversation */
+  const scrollToStart = useCallback(() => {
+    msgsRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+  const scrollToEnd = useCallback(() => {
+    const el = msgsRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+  }, []);
+
   return (
     <>
       {/* ── Liste des messages ── */}
-      <div className={s.msgsZone} ref={msgsRef}>
+      <div className={s.msgsZoneWrap}>
+        <div className={s.msgsZone} ref={msgsRef}>
 
-        {/* Bannière profil — groupes uniquement */}
-        {conv.isGroup && (
-          <GroupProfileBanner
-            conv={conv}
-            members={members ?? []}
-            onSaveDesc={handleSaveDesc}
-          />
-        )}
+          {/* Bannière profil — groupes uniquement */}
+          {conv.isGroup && (
+            <GroupProfileBanner
+              conv={conv}
+              members={members ?? []}
+              onSaveDesc={handleSaveDesc}
+            />
+          )}
 
-        {conv.messages.length === 0 && !conv.isGroup && (
-          <div className={s.sysMsg}><span>{t('messagerie.messagesZone.nouvelleConversationAvec', { name: user.name })}</span></div>
+          {conv.messages.length === 0 && !conv.isGroup && (
+            <div className={s.sysMsg}><span>{t('messagerie.messagesZone.nouvelleConversationAvec', { name: user.name })}</span></div>
+          )}
+          {conv.messages.map((msg, idx) => (
+            <MessageBubble
+              key={msg.id}
+              msg={msg} idx={idx} msgs={conv.messages}
+              user={user}
+              isLastRead={idx === lastReadIdx}
+              onReply={onReply}
+              onToast={onToast}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
+
+        {/* Navigation rapide — début / fin de la conversation */}
+        {conv.messages.length > 1 && (
+          <div className={s.jumpBtns}>
+            <button className={s.jumpBtn} onClick={scrollToStart} title={t('messagerie.messagesZone.allerAuDebut')} aria-label={t('messagerie.messagesZone.allerAuDebut')}>
+              <i className="fas fa-angles-up" />
+            </button>
+            <button className={s.jumpBtn} onClick={scrollToEnd} title={t('messagerie.messagesZone.allerALaFin')} aria-label={t('messagerie.messagesZone.allerALaFin')}>
+              <i className="fas fa-angles-down" />
+            </button>
+          </div>
         )}
-        {conv.messages.map((msg, idx) => (
-          <MessageBubble
-            key={msg.id}
-            msg={msg} idx={idx} msgs={conv.messages}
-            user={user}
-            isLastRead={idx === lastReadIdx}
-            onReply={onReply}
-            onToast={onToast}
-            onDelete={onDelete}
-          />
-        ))}
       </div>
 
       {/* ── Indicateur typing / recording / upload ── */}

@@ -184,10 +184,13 @@ export class ContactMatchingService {
   // ── Lookup rapide ────────────────────────────────────────────
 
   /**
-   * Vérifie si deux utilisateurs ont un contact mutuel.
-   * Utilisé par ClientClientEvaluator (en backup si cache Redis miss).
+   * Vérifie si l'un des deux utilisateurs a l'autre dans ses contacts
+   * téléphoniques synchronisés (à sens unique — pas besoin des deux
+   * côtés, voir client-client.evaluator.ts). Actuellement non appelée :
+   * ClientClientEvaluator fait sa propre requête équivalente en ligne ;
+   * conservée comme point d'entrée réutilisable pour un futur appelant.
    */
-  async hasMutualContact(userIdA: string, userIdB: string): Promise<boolean> {
+  async hasSharedContact(userIdA: string, userIdB: string): Promise<boolean> {
     const count = await this.contactRepo
       .createQueryBuilder('c')
       .where(

@@ -53,13 +53,13 @@ async function sha256hex(text: string): Promise<string> {
 /**
  * Normalisation en format E.164 :
  *   "00" préfixe  →  "+" puis chiffres
- *   9 chiffres    →  assume Sénégal +221
+ *   9 chiffres    →  assume Guinée +224 (marché principal Shoneya)
  *   10+ chiffres  →  "+" puis chiffres
  */
 function normalizeE164(phone: string): string {
   const d = phone.replace(/\D/g, '');
   if (d.startsWith('00'))            return '+' + d.slice(2);
-  if (d.length === 9)                return '+221' + d;
+  if (d.length === 9)                return '+224' + d;
   if (d.length >= 10)                return '+' + d;
   return '+' + d;
 }
@@ -83,12 +83,17 @@ export function useContactSync() {
   const [discovered, setDiscovered] = useState<DiscoveredContact[]>([]);
   const [error,      setError]      = useState<string | null>(null);
 
-  /** Synchronise une liste de contacts fournie manuellement. */
+  /**
+   * Synchronise une liste de contacts fournie manuellement.
+   * Retourne le résultat directement (voir syncFromDevice ci-dessous pour
+   * pourquoi : lire `error`/`matched` juste après l'await donnerait une
+   * valeur figée au rendu précédent, pas la valeur à jour).
+   */
   const syncContacts = useCallback(async (
     contacts:    ContactInput[],
     incremental = false,
-  ): Promise<SyncedContact[]> => {
-    if (!contacts.length) return [];
+  ): Promise<{ ok: true; matched: SyncedContact[] } | { ok: false; message: string }> => {
+    if (!contacts.length) return { ok: true, matched: [] };
     setSyncing(true);
     setError(null);
 
@@ -113,15 +118,14 @@ export function useContactSync() {
           : list,
       );
 
-      return list;
+      return { ok: true, matched: list };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erreur de synchronisation';
-      setError(
-        msg.includes('429') || msg.includes('trop')
-          ? 'Limite atteinte — réessayez dans 1 heure'
-          : msg,
-      );
-      return [];
+      const raw = err instanceof Error ? err.message : 'Erreur de synchronisation';
+      const message = raw.includes('429') || raw.includes('trop')
+        ? 'Limite atteinte — réessayez dans 1 heure'
+        : raw;
+      setError(message);
+      return { ok: false, message };
     } finally {
       setSyncing(false);
     }
@@ -130,11 +134,21 @@ export function useContactSync() {
   /**
    * Synchronise depuis l'API Contacts du navigateur (mobile uniquement).
    * Demande la permission à l'utilisateur avant tout accès.
+   *
+   * Retourne directement le résultat (au lieu de forcer l'appelant à relire
+   * `error`/`matched` juste après l'await, ce qui lirait une valeur figée
+   * au moment du rendu précédent — les setState de ce hook ne sont pas
+   * synchrones) : { ok: true, matched } en cas de succès, { ok: false,
+   * message } sinon (API indisponible, permission refusée, ou 0 contact
+   * sélectionné n'est PAS une erreur ici, juste ok avec matched=[]).
    */
-  const syncFromDevice = useCallback(async (): Promise<void> => {
+  const syncFromDevice = useCallback(async (): Promise<
+    { ok: true; matched: SyncedContact[] } | { ok: false; message: string }
+  > => {
     if (!('contacts' in navigator && 'ContactsManager' in window)) {
-      setError('La sélection de contacts n\'est disponible que sur mobile (Android Chrome / Safari iOS).');
-      return;
+      const message = 'La sélection de contacts n\'est disponible que sur mobile (Android Chrome / Safari iOS).';
+      setError(message);
+      return { ok: false, message };
     }
 
     try {
@@ -148,10 +162,12 @@ export function useContactSync() {
         })),
       );
 
-      if (inputs.length === 0) return;
-      await syncContacts(inputs, true);
+      if (inputs.length === 0) return { ok: true, matched: [] };
+      return await syncContacts(inputs, true);
     } catch {
-      setError('Accès aux contacts refusé ou annulé.');
+      const message = 'Accès aux contacts refusé ou annulé.';
+      setError(message);
+      return { ok: false, message };
     }
   }, [syncContacts]);
 

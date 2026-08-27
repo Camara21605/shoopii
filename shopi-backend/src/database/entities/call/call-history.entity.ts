@@ -58,6 +58,15 @@ export class CallHistory {
   @Column({ type: 'int', default: 0 })
   duration: number;
 
+  /** Suppression PAR UTILISATEUR — la ligne reste partagée entre les deux
+   *  participants (traçabilité), mais chacun peut retirer l'entrée de sa
+   *  propre liste sans affecter l'historique de l'autre. */
+  @Column({ type: 'boolean', default: false })
+  hiddenByCaller: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  hiddenByCallee: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 }

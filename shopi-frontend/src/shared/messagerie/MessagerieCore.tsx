@@ -115,7 +115,7 @@ export default function MessagerieCore() {
   const { initiateCall: initiateGroupCall } = useGroupCallCtx();
 
   // ── Historique des appels (onglet "Appels") ──────────────────
-  const { data: callHistory, loading: callHistoryLoading, load: loadCallHistory } = useCallHistory();
+  const { data: callHistory, loading: callHistoryLoading, load: loadCallHistory, deleteItem: deleteCallHistoryItem } = useCallHistory();
 
   /*
    * Enregistre la fonction de mise à jour locale auprès du contexte global.
@@ -275,6 +275,7 @@ export default function MessagerieCore() {
         focusSearchToken={focusSearchToken}
         onDeleteConv={deleteConversation}
         onHideConv={hideConversation}
+        onToast={toast}
         archivedConvs={archivedConvs}
         onLoadArchived={loadArchivedConvs}
         onUnhideConv={unhideConversation}
@@ -285,6 +286,7 @@ export default function MessagerieCore() {
         callHistory={callHistory}
         callHistoryLoading={callHistoryLoading}
         onLoadCallHistory={loadCallHistory}
+        onDeleteCallHistoryItem={id => deleteCallHistoryItem(id).catch(() => toast('❌ Suppression impossible', 'e'))}
       />
 
       {/* Colonne centrale : fenêtre de chat */}

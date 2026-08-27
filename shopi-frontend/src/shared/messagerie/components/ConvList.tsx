@@ -12,6 +12,7 @@ import { getRoleConfig, apiSearchUserToNewConvUser } from '../data/messagerieTyp
 import { getRoleFromToken } from '../../services/authUtils';
 import { apiFetch } from '../../services/apiFetch';
 import type { CallHistoryItem } from '../hooks/useCallHistory';
+import { useContactSync } from '../hooks/useContactSync';
 import { cldAvatar } from '../utils/chatUtils';
 import s from '../styles/ConvList.module.css';
 
@@ -52,6 +53,8 @@ interface Props {
   focusSearchToken?: number;
   onDeleteConv:    (id: string) => void;
   onHideConv:      (id: string) => void;
+  /** Optionnel : affiche un toast (ex: résultat de la synchro de contacts). */
+  onToast?:        (msg: string, type?: string) => void;
   archivedConvs:   Conversation[];
   onLoadArchived:  () => void;
   onUnhideConv:    (id: string) => void;
@@ -64,6 +67,7 @@ interface Props {
   callHistory?:        CallHistoryItem[];
   callHistoryLoading?: boolean;
   onLoadCallHistory?:  () => void;
+  onDeleteCallHistoryItem?: (id: string) => void;
 }
 
 /* Toutes les définitions d'onglets disponibles */
@@ -103,10 +107,10 @@ function getVisibleTabs(role: string | null): Tab[] {
 }
 
 function ConvList({
-  conversations, usersMap, activeId, mobileOpen, totalUnread, onSelect, onNewConv, onStartConversation,
-  focusSearchToken, onDeleteConv, onHideConv,
+  conversations, usersMap, activeId, mobileOpen, totalUnread, onSelect, onStartConversation,
+  focusSearchToken, onDeleteConv, onHideConv, onToast,
   archivedConvs, onLoadArchived, onUnhideConv, onMarkUnread, onMarkRead, groupConvs = [], groupUsersMap = new Map(),
-  callHistory = [], callHistoryLoading = false, onLoadCallHistory,
+  callHistory = [], callHistoryLoading = false, onLoadCallHistory, onDeleteCallHistoryItem,
 }: Props) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
@@ -117,6 +121,28 @@ function ConvList({
   const myRole     = getRoleFromToken();
   const visibleSet = useMemo(() => new Set(getVisibleTabs(myRole)), [myRole]);
   const TABS       = useMemo(() => getAllTabs(t).filter(tb => visibleSet.has(tb.key)), [visibleSet, t]);
+
+  /* ── Synchronisation des contacts téléphoniques ──────────────────
+   * Client↔client uniquement (voir client-client.evaluator.ts côté
+   * backend — les autres rôles se retrouvent via commandes/follows).
+   * Après une synchro réussie, on bascule sur l'onglet "Clients" pour
+   * que l'utilisateur voie immédiatement les nouveaux contacts trouvés
+   * (relatedContacts se rafraîchit automatiquement au changement de tab). */
+  const { syncing, syncFromDevice } = useContactSync();
+  const handleSyncContacts = async () => {
+    const result = await syncFromDevice();
+    if (!result.ok) {
+      onToast?.(result.message, 'e');
+      return;
+    }
+    onToast?.(
+      result.matched.length > 0
+        ? t('messagerie.convList.contactsSyncSucces', { count: result.matched.length })
+        : t('messagerie.convList.contactsSyncAucun'),
+      's',
+    );
+    setTab('clients');
+  };
 
   /* Si l'onglet actif n'est plus dans la liste visible, revenir à "Tous" */
   useEffect(() => {
@@ -183,12 +209,6 @@ function ConvList({
     if (tab === 'masquees' || tab === 'appels' || tab === 'groupes') setTab('all');
     searchInputRef.current?.focus();
   }, [focusSearchToken, tab]);
-
-  function handlePencilClick() {
-    if (tab === 'masquees' || tab === 'appels' || tab === 'groupes') setTab('all');
-    searchInputRef.current?.focus();
-    onNewConv();
-  }
 
   function handleStartRelated(api: ApiSearchUser) {
     onStartConversation(apiSearchUserToNewConvUser(api));
@@ -265,9 +285,18 @@ function ConvList({
               </button>
             )}
           </div>
-          <button className={s.newConvBtn} onClick={handlePencilClick} title={t('messagerie.convList.nouveauMessage')}>
-            <i className="fas fa-pen-to-square" />
-          </button>
+          {/* Synchro contacts téléphoniques — client↔client uniquement,
+              voir client-client.evaluator.ts côté backend. */}
+          {myRole === 'client' && (
+            <button
+              className={s.syncContactsBtn}
+              onClick={handleSyncContacts}
+              disabled={syncing}
+              title={t('messagerie.convList.synchroniserContacts')}
+            >
+              <i className={`fas ${syncing ? 'fa-circle-notch fa-spin' : 'fa-address-book'}`} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -327,7 +356,9 @@ function ConvList({
                 {t('messagerie.convList.emptyAppels')}
               </div>
             ) : (
-              callHistory.map(h => <CallHistoryItemRow key={h.id} item={h} />)
+              callHistory.map(h => (
+                <CallHistoryItemRow key={h.id} item={h} onDelete={onDeleteCallHistoryItem} />
+              ))
             )}
           </>
         ) : tab === 'masquees' ? (
@@ -711,7 +742,7 @@ function getCallStatusLabel(t: TFunction): Record<CallHistoryItem['status'], str
 const CALL_STATUS_COLOR: Record<CallHistoryItem['status'], string> = {
   completed: 'var(--t3)',
   missed:    '#DC2626',
-  rejected:  '#DC2626',
+  rejected:  '#7C3AED',
   busy:      '#D97706',
 };
 
@@ -731,7 +762,7 @@ function fmtCallTime(iso: string): string {
     : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 }
 
-function CallHistoryItemRow({ item }: { item: CallHistoryItem }) {
+function CallHistoryItemRow({ item, onDelete }: { item: CallHistoryItem; onDelete?: (id: string) => void }) {
   const { t } = useTranslation();
   const isImgAva = item.contactAvatar?.startsWith('http');
   const initials = item.contactName.trim().split(/\s+/).slice(0, 2)
@@ -765,6 +796,19 @@ function CallHistoryItemRow({ item }: { item: CallHistoryItem }) {
         <div className={s.metaTop}>
           <div className={s.time}>{fmtCallTime(item.endedAt)}</div>
         </div>
+        {/* Toujours visible (pas de reveal au survol) — doit rester utilisable
+         * au clic/tap aussi bien sur petit écran (mobile, pas de hover) qu'en
+         * grand écran. Supprime cette entrée de MON historique uniquement. */}
+        {onDelete && (
+          <button
+            className={s.callDeleteBtn}
+            onClick={() => onDelete(item.id)}
+            title={t('messagerie.convList.supprimerAppel', 'Supprimer cet appel')}
+            aria-label={t('messagerie.convList.supprimerAppel', 'Supprimer cet appel')}
+          >
+            <i className="fas fa-trash-can" />
+          </button>
+        )}
       </div>
     </div>
   );

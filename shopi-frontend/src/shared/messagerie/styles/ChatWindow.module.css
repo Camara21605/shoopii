@@ -104,11 +104,28 @@
 }
 
 /* ── Zone messages ── */
+.msgsZoneWrap { position: relative; flex: 1; min-height: 0; display: flex; }
 .msgsZone {
-  flex: 1; overflow-y: auto;
+  flex: 1; min-height: 0; overflow-y: auto;
   padding: 20px 22px 32px;
   display: flex; flex-direction: column; gap: 2px;
 }
+
+/* Boutons "aller au début" / "aller à la fin" — flottants, ne défilent
+   pas avec les messages (voir .msgsZoneWrap, position:relative). */
+.jumpBtns {
+  position: absolute; right: 16px; bottom: 16px; z-index: 5;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.jumpBtn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--white); border: 1.5px solid var(--bdr2);
+  color: var(--t2); font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--sh-sm);
+  transition: all .15s;
+}
+.jumpBtn:hover { background: var(--sky, #EEF3FD); color: var(--navy); border-color: var(--bdrb); }
 
 /* Séparateur date */
 .dateSep { display: flex; align-items: center; gap: 10px; margin: 14px 0; }
@@ -142,7 +159,7 @@
   border-radius: var(--r-xl) var(--r-xl) var(--r-xl) 4px; box-shadow: var(--sh-xs);
 }
 .msgRow.firstGroup .bubble.recv { border-radius: 4px var(--r-xl) var(--r-xl) var(--r-xl); }
-.bubble.sent { background: var(--blue); color: rgba(255,255,255,.95); border-radius: var(--r-xl) var(--r-xl) 4px var(--r-xl); }
+.bubble.sent { background: var(--btn, #111113); color: rgba(255,255,255,.95); border-radius: var(--r-xl) var(--r-xl) 4px var(--r-xl); }
 .msgRow.firstGroup .bubble.sent { border-radius: var(--r-xl) 4px var(--r-xl) var(--r-xl); }
 
 /* Hover actions bulle */
@@ -338,9 +355,9 @@
   margin-top: 4px;
   min-width: 210px; max-width: 280px;
 }
-/* Version envoyée par moi (fond bleu — aligné sur .bubble.sent) */
+/* Version envoyée par moi (aligné sur .bubble.sent) */
 .msgVoiceMe {
-  background: var(--blue);
+  background: var(--btn, #111113);
 }
 .mvBtn {
   width: 34px; height: 34px; border-radius: 50%;
@@ -382,30 +399,14 @@
   border-radius: var(--r-lg);
   min-width: 170px; max-width: 240px;
 }
-.callBubbleMe {
-  background: var(--blue);
-  border-color: var(--blue);
-}
-/* Appel manqué / refusé — fond rouge très léger, bordure rouge */
-.callBubbleMissed {
-  background: rgba(220,38,38,.06);
-  border-color: rgba(220,38,38,.2);
-}
-.callBubbleMe.callBubbleMissed {
-  background: rgba(220,38,38,.15);
-  border-color: rgba(220,38,38,.3);
-}
 .callIcon {
   font-size: 14px; flex-shrink: 0;
   width: 32px; height: 32px; border-radius: 50%;
   background: var(--sky,#EEF3FD);
   display: flex; align-items: center; justify-content: center;
 }
-.callBubbleMe .callIcon { background: rgba(255,255,255,.15); color: rgba(255,255,255,.85); }
 .callArrow { color: var(--t4,#CBD5E1); font-size: 9px; flex-shrink: 0; }
 .callLabel { font-size: 13px; font-weight: 600; color: var(--navy,#0B1F3A); white-space: nowrap; }
-.callBubbleMe .callLabel { color: rgba(255,255,255,.9); }
-.callBubbleMe .callArrow { color: rgba(255,255,255,.4); }
 
 /* ── Barre d'enregistrement vocal (zone saisie) ── */
 .voiceBar {

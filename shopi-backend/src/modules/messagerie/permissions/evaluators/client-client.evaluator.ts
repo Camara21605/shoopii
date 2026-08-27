@@ -3,22 +3,22 @@
  *
  * RÈGLE : Un client peut contacter un autre client si :
  *   1. L'un suit l'autre (relation asymétrique) → GRANTED
- *   2. OU ils se suivent mutuellement → GRANTED (surcouche bonus)
- *   3. OU ils sont tous deux présents dans les contacts
- *      importés de l'autre (contact mutuel) → GRANTED
+ *   2. OU L'UN DES DEUX a l'autre dans ses contacts téléphoniques
+ *      synchronisés (à sens unique, PAS besoin d'être réciproque)
+ *      → GRANTED
  *
- * JUSTIFICATION MÉTIER :
- *   Sur Shopi, les clients interagissent au sein d'une communauté
- *   (avis, recommandations). La politique suit/suivi reflète une
- *   intention de communication mutuellement acceptée.
+ * JUSTIFICATION MÉTIER (décision produit du 2026-08-26) :
+ *   Si un client a le numéro de quelqu'un dans son répertoire et
+ *   que cette personne est sur Shoneya, il peut lui écrire — comme
+ *   un SMS classique. Pas besoin que l'autre ait aussi son numéro
+ *   enregistré. (Alternative envisagée : exiger un contact mutuel
+ *   comme WhatsApp — écartée, jugée trop restrictive pour l'usage
+ *   voulu ici.)
  *
- *   WhatsApp exige un numéro de téléphone mutuel.
- *   Shopi utilise le système de follows comme équivalent.
- *
- * ÉVOLUTION :
- *   Pour passer à "contacts mutuels uniquement", supprimer
- *   la règle follow et activer seulement la règle UserContact.
- *   Zéro modification du moteur.
+ * IMPLÉMENTATION : la requête ci-dessous utilise un `where` TypeORM
+ * sous forme de tableau ([condA, condB]), ce qui génère un OR SQL —
+ * PAS un AND. Elle est donc déjà à sens unique par construction ;
+ * ne pas la renommer/modifier en pensant "corriger" vers du mutuel.
  * ============================================================ */
 
 import { Injectable }       from '@nestjs/common';
@@ -74,19 +74,22 @@ export class ClientClientEvaluator implements PermissionEvaluator {
         };
       }
 
-      /* ── 2. Contact mutuel (importé depuis le téléphone) ─ */
+      /* ── 2. L'un des deux a l'autre en contact synchronisé ─
+       * OR (pas AND) : suffit qu'UN SEUL côté ait importé le
+       * numéro de l'autre — voir décision produit en tête de
+       * fichier. */
       if (ctx.requestorUserId && ctx.targetUserId) {
-        const mutualContact = await this.contactRepo.exists({
+        const oneWayContact = await this.contactRepo.exists({
           where: [
             { ownerUserId: ctx.requestorUserId, matchedUserId: ctx.targetUserId, isBlocked: false },
             { ownerUserId: ctx.targetUserId,    matchedUserId: ctx.requestorUserId, isBlocked: false },
           ],
         });
 
-        if (mutualContact) {
+        if (oneWayContact) {
           return {
             granted:   true,
-            reason:    'Contact mutuel importé depuis le téléphone.',
+            reason:    'Contact téléphonique partagé (numéro importé par l\'un des deux).',
             evaluator: this.name,
           };
         }
@@ -94,7 +97,7 @@ export class ClientClientEvaluator implements PermissionEvaluator {
 
       return {
         granted:   false,
-        reason:    'Aucune relation (ni follow ni contact mutuel) entre ces deux clients.',
+        reason:    'Aucune relation (ni follow ni contact téléphonique partagé) entre ces deux clients.',
         evaluator: this.name,
       };
 
