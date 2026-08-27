@@ -24,6 +24,7 @@ import CommandePage      from '../modules/home/components/panier/pages/CommandeP
 import SettingsPage      from '../modules/home/components/settings/pages/SettingsPage';
 import LivreursPage      from '../modules/home/components/livreurs/pages/LivreursPage';
 import BoutiquesPage     from '../modules/home/components/boutiques/pages/BoutiquesPage';
+import ExplorerPage      from '../modules/home/components/explorer/pages/ExplorerPage';
 import OffresPage        from '../modules/home/components/offres/pages/OffresPage';
 import ProfilLivreurPage from '../shared/profils/profil-livreur/ProfilLivreurPage';
 import ProfilClientPage  from '../shared/profils/profil-client/ProfilClientPage';
@@ -223,6 +224,9 @@ export const AppRouter: React.FC = () => (
           <Route path="/support/tickets/:id"  element={<PrivateRoute><TicketDetailPage /></PrivateRoute>} />
           {/* Analytics support — admin/super_admin uniquement */}
           <Route path="/support/stats"        element={<PrivateRoute><SupportStatsPage /></PrivateRoute>} />
+
+          {/* Explorer — publique */}
+          <Route path="/explorer"           element={<ExplorerPage />} />
 
           {/* Boutiques — publique */}
           <Route path="/boutiques"          element={<BoutiquesPage />} />

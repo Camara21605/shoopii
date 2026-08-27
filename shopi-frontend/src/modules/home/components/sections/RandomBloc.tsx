@@ -8,7 +8,6 @@
  */
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
 
 import type { BoutiqueCardData } from '../../data/types';
 import { getRoleFromToken } from '../../../../shared/services/authUtils';
@@ -24,25 +23,14 @@ import CardEntreprise    from '../../cards/CardEntreprise';
 import CardCorrespondant from '../../cards/CardCorrespondant';
 import CardLivreur       from '../../cards/CardLivreur';
 import HScrollSection    from '../ui/HScrollSection';
-import SectionHeader     from '../ui/SectionHeader';
 import styles from './RandomBloc.module.css';
 
-export type BlocKind = 'produits' | 'produits-gros' | 'entreprises' | 'correspondants' | 'livreurs';
+export type BlocKind = 'produits-gros' | 'entreprises' | 'correspondants' | 'livreurs';
 
 interface Props {
   kind:    BlocKind;
   index:   number;
   onToast: (m: string, type?: 's' | 'i' | 'w' | 'e') => void;
-}
-
-function getConfig(t: TFunction): Record<BlocKind, { kick: string; title: string; sub: string; link: string }> {
-  return {
-    produits:        { kick: t('home.randomBloc.produits.kick'),       title: t('home.randomBloc.produits.title'),       sub: t('home.randomBloc.produits.sub'),       link: t('home.randomBloc.produits.link') },
-    'produits-gros': { kick: t('home.randomBloc.produitsGros.kick'),   title: t('home.randomBloc.produitsGros.title'),   sub: t('home.randomBloc.produitsGros.sub'),   link: t('home.randomBloc.produitsGros.link') },
-    entreprises:     { kick: t('home.randomBloc.entreprises.kick'),    title: t('home.randomBloc.entreprises.title'),    sub: t('home.randomBloc.entreprises.sub'),    link: t('home.randomBloc.entreprises.link') },
-    correspondants:  { kick: t('home.randomBloc.correspondants.kick'), title: t('home.randomBloc.correspondants.title'), sub: t('home.randomBloc.correspondants.sub'), link: t('home.randomBloc.correspondants.link') },
-    livreurs:        { kick: t('home.randomBloc.livreurs.kick'),       title: t('home.randomBloc.livreurs.title'),       sub: t('home.randomBloc.livreurs.sub'),       link: t('home.randomBloc.livreurs.link') },
-  };
 }
 
 const SkeletonCard = ({ height = 280 }: { height?: number }) => (
@@ -119,42 +107,6 @@ function EntreprisesBloc({ onToast }: { onToast:(m:string)=>void }) {
         />
       ))}
     </HScrollSection>
-  );
-}
-
-function ProduitsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>void }) {
-  const { t } = useTranslation();
-  const [produits, setProduits] = useState<ProductApi[]>([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState(false);
-
-  useEffect(() => {
-    apiFetch<{ data: ProductApi[] }>('/public/produits', { public:true, params:{ limit:12, type:'detail' } })
-      .then(res => setProduits(Array.isArray(res?.data) ? res.data : []))
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return (
-    <div className={styles.pgrid}>
-      {[...Array(8)].map((_,i) => (
-        <div key={i} style={{ height:320, borderRadius:16,
-          background:'linear-gradient(90deg,#f1f5f9 25%,#f8fafc 50%,#f1f5f9 75%)',
-          backgroundSize:'200% 100%', animation:'shimmer 1.4s infinite' }} />
-      ))}
-    </div>
-  );
-
-  if (error || produits.length === 0) return (
-    <div style={{ padding:'40px 0', textAlign:'center', color:'var(--t3)', fontSize:14 }}>
-      {error ? `⚠️ ${t('home.randomBloc.errorProduits')}` : t('home.randomBloc.emptyProduits')}
-    </div>
-  );
-
-  return (
-    <div className={styles.pgrid}>
-      {produits.map(p => <CardProduit key={p.id} p={p} onToast={onToast} />)}
-    </div>
   );
 }
 
@@ -316,18 +268,11 @@ function CorrespondantsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e'
  * COMPOSANT PRINCIPAL
  ───────────────────────────────────────────────────────────── */
 export default function RandomBloc({ kind, index, onToast }: Props) {
-  const { t } = useTranslation();
-  const cfg   = getConfig(t)[kind];
   const bgCls = index % 2 === 0 ? styles.bgWhite : styles.bgGray;
 
   return (
     <section className={`${styles.sec} ${bgCls}`}>
       <div className={styles.wrap}>
-        <SectionHeader
-          kick={cfg.kick} title={cfg.title} sub={cfg.sub}
-          linkText={cfg.link} onLink={() => onToast(t('home.randomBloc.toastLink', { link: cfg.link }))}
-        />
-        {kind === 'produits'       && <ProduitsBloc       onToast={onToast} />}
         {kind === 'produits-gros'  && <ProduitsGrosBloc   onToast={onToast} />}
         {kind === 'correspondants' && <CorrespondantsBloc onToast={onToast} />}
         {kind === 'livreurs'       && <LivreursBloc       onToast={onToast} />}

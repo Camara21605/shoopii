@@ -15,7 +15,7 @@
  * ================================================================ */
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { shuffleArray }         from '../data/mockData';
 import { getRoleFromToken }     from '../../../shared/services/authUtils';
 
@@ -37,7 +37,6 @@ import styles from './HomePage.module.css';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const location = useLocation();
 
   /* ── État auth ── */
   const role       = getRoleFromToken();
@@ -62,38 +61,13 @@ export default function HomePage() {
     if (timerRef.current) clearTimeout(timerRef.current);
   }, []);
 
-  /* Scroll différé demandé depuis une autre page (ex. clic sur "Explorer"
-   * dans le Header depuis /boutiques, /livreurs...) — voir Header.tsx,
-   * qui navigue ici avec state.scrollTo au lieu de scroller directement
-   * un élément qui n'existe que sur cette page. */
-  useEffect(() => {
-    const target = (location.state as { scrollTo?: string } | null)?.scrollTo;
-    if (!target) return;
-    navigate(location.pathname, { replace: true, state: {} });
-
-    /* Les sections au-dessus (Stories, Catégories, Promotions) chargent
-     * leurs données en async et décalent #blocs vers le bas une fois
-     * rendues — un seul scrollIntoView() différé arrivait donc trop tôt,
-     * avant que ce décalage n'ait eu lieu. On réessaie sur quelques
-     * instants pour suivre la position finale, borné pour ne pas boucler
-     * indéfiniment si l'élément n'apparaît jamais. */
-    const delays = [60, 400, 900, 1600];
-    const timers = delays.map(ms => setTimeout(() => {
-      document.getElementById(target)?.scrollIntoView({ behavior: 'smooth' });
-    }, ms));
-    return () => timers.forEach(clearTimeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  /* ── Blocs aléatoires pondérés ── */
+  /* ── Blocs aléatoires pondérés — 'produits' reste hors du tirage :
+   * la découverte de produits vit désormais sur sa propre page /explorer
+   * (recherche + filtres + tendances/nouveautés/proches), pas dans Home. ── */
   const [blocsAleatoires] = useState<BlocKind[]>(() => shuffleArray([
-    'produits',
-    'produits',
     'entreprises',
-    'produits',
     'produits-gros',
     'correspondants',
-    'produits',
     'livreurs',
   ]));
 

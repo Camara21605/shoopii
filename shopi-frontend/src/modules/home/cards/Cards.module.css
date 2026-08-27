@@ -1066,7 +1066,7 @@
   cursor: pointer; transition: all .18s;
   display: flex; align-items: center; justify-content: center; gap: 5px;
 }
-.dlV { flex: 1; background: var(--sky); color: var(--t1); border: 1.5px solid var(--sky-3); }
+.dlV { flex: 0 0 38px; width: 38px; background: var(--sky); color: var(--t1); border: 1.5px solid var(--sky-3); }
 .dlV:hover { background: var(--btn,#111113); color: #fff; border-color: var(--btn,#111113); transform: translateY(-1px); }
 .dlF {
   flex: 0 0 38px;

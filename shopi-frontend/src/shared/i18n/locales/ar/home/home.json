@@ -111,6 +111,41 @@
       "emptyCorrespondants": "لا يوجد أي مراسل متاح.",
       "errorProduits": "تعذّر تحميل المنتجات.",
       "errorProduitsGros": "تعذّر تحميل منتجات الجملة."
+    },
+    "explorer": {
+      "searchPlaceholder": "ابحث عن منتج…",
+      "filtres": "التصفية",
+      "prixMin": "السعر الأدنى (GNF)",
+      "prixMax": "السعر الأقصى (GNF)",
+      "ville": "المدينة",
+      "villePlaceholder": "مثال: كوناكري",
+      "reinitialiser": "إعادة تعيين",
+      "tendances": {
+        "kick": "شائع",
+        "title": "الأكثر رواجًا"
+      },
+      "nouveautes": {
+        "kick": "أُضيف مؤخرًا",
+        "title": "وصل حديثًا"
+      },
+      "proches": {
+        "kick": "بالقرب منك",
+        "title": "بالقرب منك",
+        "renseignerVille": "أدخل مدينتك في التصفية لرؤية منتجات المتاجر القريبة منك.",
+        "aucun": "لا توجد منتجات في هذه المدينة حاليًا."
+      },
+      "grille": {
+        "kick": "استكشاف",
+        "title": "كل المنتجات",
+        "resultCount_one": "تم العثور على {{count}} منتج",
+        "resultCount_other": "تم العثور على {{count}} منتجات",
+        "errorTitle": "تعذّر تحميل المنتجات",
+        "reessayer": "إعادة المحاولة",
+        "emptyTitle": "لم يتم العثور على منتجات",
+        "emptyText": "جرّب مرشحات أخرى أو بحثًا مختلفًا.",
+        "chargement": "جارٍ التحميل…",
+        "chargerPlus": "تحميل المزيد"
+      }
     }
   }
 }

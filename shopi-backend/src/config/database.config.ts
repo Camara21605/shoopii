@@ -38,6 +38,8 @@ import { ProductMedia }   from '../database/entities/entreprise.table/product-me
 import { ProductStory } from '../database/entities/entreprise.table/product-story.entity';
 import { ProductLike } from '../database/entities/entreprise.table/product-like.entity';  
 import { PromotionProduct } from '../database/entities/entreprise.table/promotion-product.entity'; // ✅ AJOUTÉ : manquait l'import de PromotionProduct
+import { TrendingProduct }     from '../database/entities/entreprise.table/trending-product.entity';
+import { ProductCooccurrence } from '../database/entities/entreprise.table/product-cooccurrence.entity';
 import { PromotionUsage } from 'src/database/entities/entreprise.table/promotion-usage.entity';
 import {Commande} from "../database/entities/commande/commande.entity";
 import {CorrespondantHoraire} from "../database/entities/profiles/correspondant-horaire.entity";
@@ -283,6 +285,8 @@ export const databaseConfigFactory = {
       // 8. EN DERNIER — dépend de tous les profils
       ProductStory,
       ProductLike,
+      TrendingProduct,
+      ProductCooccurrence,
       CreationCode,
       PromotionProduct,
       PromotionUsage,

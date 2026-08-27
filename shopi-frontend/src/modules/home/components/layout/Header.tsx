@@ -161,6 +161,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
     if (p === '/livreurs')      return 'livreurs';
     if (p === '/correspondants') return 'relais';
     if (p === '/offres')        return 'offres';
+    if (p === '/explorer')      return 'explorer';
     return null;
   })();
 
@@ -171,19 +172,7 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
 
   const NAV_LINKS: { key: NavKey; label: string; icon: string; action: () => void }[] = [
     { key: 'explorer', label:t('publicHeader.nav.explorer'), icon:'fa-compass',
-      action:() => {
-        setActiveNav('explorer');
-        setMobileOpen(false);
-        /* "Explorer" est rendu sur TOUTES les pages publiques (Header y est
-         * partagé), pas seulement /home — #blocs n'existe que dans
-         * HomePage.tsx. Ailleurs, il faut d'abord y naviguer avant de
-         * pouvoir scroller, sinon le clic ne faisait rien de visible. */
-        if (isHome) {
-          document.querySelector('#blocs')?.scrollIntoView({ behavior: 'smooth' });
-        } else {
-          navigate('/home', { state: { scrollTo: 'blocs' } });
-        }
-      } },
+      action:() => { navigate('/explorer'); setMobileOpen(false); } },
     { key: 'boutiques', label:t('publicHeader.nav.boutiques'), icon:'fa-store',
       action:() => { setActiveNav('boutiques'); navigate('/boutiques'); setMobileOpen(false); } },
     { key: 'livreurs', label:t('publicHeader.nav.livreurs'), icon:'fa-motorcycle',
@@ -225,8 +214,8 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
               {NAV_LINKS.map(l => (
                 <button key={l.label}
                   className={`${styles.navLink} ${isNavActive(l) ? styles.navLinkActive : ''}`}
-                  onClick={l.action}>
-                  <i className={`fas ${l.icon}`} />{l.label}
+                  onClick={l.action} title={l.label} aria-label={l.label}>
+                  <i className={`fas ${l.icon}`} />
                 </button>
               ))}
             </nav>
@@ -526,36 +515,36 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
         <button
           className={`${styles.bnItem} ${isHome ? styles.bnActive : ''}`}
           onClick={() => navigate(isLoggedIn ? '/home' : '/')}
-          title={t('publicHeader.accueil')}
+          title={t('publicHeader.accueil')} aria-label={t('publicHeader.accueil')}
         >
-          <i className="fas fa-house" /><span>{t('publicHeader.accueil')}</span>
+          <i className="fas fa-house" />
         </button>
 
         {/* ✅ Boutiques — actif sur /boutiques */}
         <button
           className={`${styles.bnItem} ${isBoutiques ? styles.bnActive : ''}`}
           onClick={() => navigate('/boutiques')}
-          title={t('publicHeader.nav.boutiques')}
+          title={t('publicHeader.nav.boutiques')} aria-label={t('publicHeader.nav.boutiques')}
         >
-          <i className="fas fa-store" /><span>{t('publicHeader.nav.boutiques')}</span>
+          <i className="fas fa-store" />
         </button>
 
         {/* ✅ Livreurs — actif sur /livreurs */}
         <button
           className={`${styles.bnItem} ${isLivreurs ? styles.bnActive : ''}`}
           onClick={() => navigate('/livreurs')}
-          title={t('publicHeader.nav.livreurs')}
+          title={t('publicHeader.nav.livreurs')} aria-label={t('publicHeader.nav.livreurs')}
         >
-          <i className="fas fa-motorcycle" /><span>{t('publicHeader.nav.livreurs')}</span>
+          <i className="fas fa-motorcycle" />
         </button>
 
         {/* Panier — badge dynamique CartContext */}
         <button
           className={styles.bnItem}
           onClick={() => clientAction(() => navigate('/commande'))}
-          title={t('publicHeader.panier')}
+          title={t('publicHeader.panier')} aria-label={t('publicHeader.panier')}
         >
-          <i className="fas fa-bag-shopping" /><span>{t('publicHeader.panier')}</span>
+          <i className="fas fa-bag-shopping" />
           {isClient && cartCount > 0 && (
             <span className={styles.bnBadge}>{cartCount > 99 ? '99+' : cartCount}</span>
           )}
@@ -566,11 +555,11 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
           className={`${styles.bnItem} ${styles.bnSwitcher}`}
           onClick={handleSwitchDashboard}
           title={inDashboard ? t('publicHeader.retourAccueil') : t('publicHeader.monEspace')}
+          aria-label={inDashboard ? t('publicHeader.retourAccueil') : t('publicHeader.monEspace')}
         >
           <div className={styles.bnSwitcherIco}>
             <i className={`fas ${inDashboard ? 'fa-house' : 'fa-layer-group'}`} />
           </div>
-          <span>{inDashboard ? t('publicHeader.accueil') : t('publicHeader.monEspace')}</span>
         </button>
 
       </nav>

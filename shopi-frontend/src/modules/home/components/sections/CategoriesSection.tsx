@@ -15,7 +15,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiFetch }  from '../../../../shared/services/apiFetch';
-import SectionHeader from '../ui/SectionHeader';
 import styles        from './CategoriesSection.module.css';
 
 interface CategoryApi {
@@ -60,14 +59,6 @@ export default function CategoriesSection() {
   return (
     <section className={styles.sec}>
       <div className={styles.wrap}>
-        <SectionHeader
-          kick={t('home.categories.kick')}
-          title={t('home.categories.title')}
-          sub={t('home.categories.sub')}
-          linkText={t('home.categories.linkText')}
-          onLink={() => navigate('/boutiques')}
-        />
-
         {/* ── Skeleton ── */}
         {loading && (
           <div className={styles.cats}>

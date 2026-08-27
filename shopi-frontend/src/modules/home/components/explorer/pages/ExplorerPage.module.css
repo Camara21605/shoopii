@@ -1,0 +1,10 @@
+/* ================================================================
+ * ExplorerPage.module.css — Page principale Explorer (/explorer)
+ * Le contenu (recherche/filtres/grille) vit dans ExplorerSection.module.css ;
+ * ce fichier ne gère que le cadre de page (fond + décalage du header fixe).
+ * ================================================================ */
+.page { background: var(--g50, #F8F9FA); min-height: 100vh; }
+
+/* Header.tsx est position:fixed, hauteur 66px (--hdr) — sans ce décalage,
+ * le haut du contenu serait masqué dessous. */
+.body { padding-top: 66px; padding-bottom: 40px; }

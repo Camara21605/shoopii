@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import SectionHeader from '../ui/SectionHeader';
 import { promotionsApi, type PublicPromo } from '../../../../shared/services/api/promotions.api';
 import { useCountdown } from '../../hooks/useCountdown';
 import styles from './PromotionsSection.module.css';
@@ -55,8 +54,6 @@ export default function PromotionsSection() {
   const [big, ...small] = promos;
   const timer = useCountdown(big?.endDate ?? null);
 
-  const goToOffres = () => navigate('/offres');
-
   /**
    * Clic sur une promo précise : va DIRECTEMENT sur la fiche du produit
    * ciblé si la promo est liée à un produit spécifique (scope='products'),
@@ -79,8 +76,6 @@ export default function PromotionsSection() {
   return (
     <section className={styles.sec}>
       <div className={styles.wrap}>
-        <SectionHeader kick={t('home.promotions.kick')} title={t('home.promotions.title')} sub={t('home.promotions.sub')}
-          linkText={t('home.promotions.linkText')} onLink={goToOffres} />
         <div className={styles.layout}>
           {/* Grande promo — le plus gros pourcentage actif */}
           {big && (

@@ -111,6 +111,41 @@
       "emptyCorrespondants": "Aucun correspondant disponible.",
       "errorProduits": "Impossible de charger les produits.",
       "errorProduitsGros": "Impossible de charger les produits en gros."
+    },
+    "explorer": {
+      "searchPlaceholder": "Rechercher un produit…",
+      "filtres": "Filtres",
+      "prixMin": "Prix min (GNF)",
+      "prixMax": "Prix max (GNF)",
+      "ville": "Ville",
+      "villePlaceholder": "Ex : Conakry",
+      "reinitialiser": "Réinitialiser",
+      "tendances": {
+        "kick": "Populaire",
+        "title": "Tendances"
+      },
+      "nouveautes": {
+        "kick": "Fraîchement ajoutés",
+        "title": "Nouveautés"
+      },
+      "proches": {
+        "kick": "Autour de vous",
+        "title": "Proches de vous",
+        "renseignerVille": "Indiquez votre ville dans les filtres pour voir les produits des boutiques proches de vous.",
+        "aucun": "Aucun produit trouvé dans cette ville pour le moment."
+      },
+      "grille": {
+        "kick": "Explorer",
+        "title": "Tous les produits",
+        "resultCount_one": "{{count}} produit trouvé",
+        "resultCount_other": "{{count}} produits trouvés",
+        "errorTitle": "Impossible de charger les produits",
+        "reessayer": "Réessayer",
+        "emptyTitle": "Aucun produit trouvé",
+        "emptyText": "Essayez d'autres filtres ou une autre recherche.",
+        "chargement": "Chargement…",
+        "chargerPlus": "Charger plus"
+      }
     }
   }
 }

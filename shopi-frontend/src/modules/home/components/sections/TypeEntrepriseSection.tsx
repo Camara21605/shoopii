@@ -19,7 +19,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiFetch }   from '../../../../shared/services/apiFetch';
-import SectionHeader  from '../ui/SectionHeader';
 import styles         from './TypeEntrepriseSection.module.css';
 
 interface CompanyTypeApi {
@@ -60,14 +59,6 @@ export default function TypeEntrepriseSection() {
   return (
     <section className={styles.sec}>
       <div className={styles.wrap}>
-        <SectionHeader
-          kick={t('home.typeEntreprise.kick')}
-          title={t('home.typeEntreprise.title')}
-          sub={t('home.typeEntreprise.sub')}
-          linkText={t('home.typeEntreprise.linkText')}
-          onLink={() => navigate('/boutiques')}
-        />
-
         {/* ── Chargement ── */}
         {loading && (
           <div className={styles.state}>

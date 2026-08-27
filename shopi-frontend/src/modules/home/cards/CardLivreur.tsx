@@ -106,8 +106,10 @@ export default function CardLivreur({ l, onToast, onRemoved }: Props) {
           <button
             className={styles.dlV}
             onClick={() => id ? navigate(`/livreurs/${id}`) : onToast(`🛵 ${name}`, 'i')}
+            title={t('sharedCards.livreur.voirProfil')}
+            aria-label={t('sharedCards.livreur.voirProfil')}
           >
-            <i className="fas fa-user" /> {t('sharedCards.livreur.voirProfil')}
+            <i className="fas fa-user" />
           </button>
           <FollowButton
             actorType="livreur"

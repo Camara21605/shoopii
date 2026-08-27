@@ -29,6 +29,7 @@ import { UploadModule }     from './modules/upload/upload.module';
 import { DashboardModule }  from './modules/dashboard/dashboard.module';
 import { PromotionsModule } from './modules/promotions/promotions.module';
 import { PublicModule }     from './modules/public/public.module';
+import { ExploreModule }    from './modules/explore/explore.module';
 import { WalletModule }     from './modules/wallet/wallet.module';
 import { CommandeModule }   from './modules/commande/commande.module';
 import { SuivisModule }        from './modules/suivis/suivis.module';
@@ -85,6 +86,7 @@ import { PerformanceModule }           from './modules/performance-engine/perfor
     DashboardModule,
     PromotionsModule,
     PublicModule,
+    ExploreModule,
     WalletModule,
     WalletEngineModule,
     EscrowEngineModule,

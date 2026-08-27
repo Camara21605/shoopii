@@ -111,6 +111,41 @@
       "emptyCorrespondants": "暂无可用代理商。",
       "errorProduits": "无法加载产品。",
       "errorProduitsGros": "无法加载批发产品。"
+    },
+    "explorer": {
+      "searchPlaceholder": "搜索产品…",
+      "filtres": "筛选",
+      "prixMin": "最低价格 (GNF)",
+      "prixMax": "最高价格 (GNF)",
+      "ville": "城市",
+      "villePlaceholder": "例如：科纳克里",
+      "reinitialiser": "重置",
+      "tendances": {
+        "kick": "热门",
+        "title": "趋势"
+      },
+      "nouveautes": {
+        "kick": "新上架",
+        "title": "新品"
+      },
+      "proches": {
+        "kick": "在您附近",
+        "title": "附近店铺",
+        "renseignerVille": "在筛选中填写您的城市，即可查看附近店铺的产品。",
+        "aucun": "该城市暂无相关产品。"
+      },
+      "grille": {
+        "kick": "探索",
+        "title": "所有产品",
+        "resultCount_one": "找到 {{count}} 件产品",
+        "resultCount_other": "找到 {{count}} 件产品",
+        "errorTitle": "无法加载产品",
+        "reessayer": "重试",
+        "emptyTitle": "未找到产品",
+        "emptyText": "请尝试其他筛选条件或搜索词。",
+        "chargement": "加载中…",
+        "chargerPlus": "加载更多"
+      }
     }
   }
 }

@@ -130,6 +130,9 @@ export class Product {
   @JoinColumn({ name: 'categoryId' })
   category: Category;
 
+  /** Indexé : filtre principal de /public/explore et PublicService.listProduits(),
+   * jamais indexé jusqu'ici — voir migration 1721400000006. */
+  @Index()
   @Column({ name: 'categoryId', type: 'uuid' })
   categoryId: string;
 
@@ -347,6 +350,8 @@ export class Product {
 
   // ── Timestamps ─────────────────────────────────────────────────────────────
 
+  /** Indexé : tri "Nouveautés" (ORDER BY createdAt DESC) — voir migration 1721400000006. */
+  @Index()
   @CreateDateColumn()
   createdAt: Date;
 

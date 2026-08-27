@@ -111,6 +111,41 @@
       "emptyCorrespondants": "No correspondent available.",
       "errorProduits": "Unable to load products.",
       "errorProduitsGros": "Unable to load wholesale products."
+    },
+    "explorer": {
+      "searchPlaceholder": "Search for a product…",
+      "filtres": "Filters",
+      "prixMin": "Min price (GNF)",
+      "prixMax": "Max price (GNF)",
+      "ville": "City",
+      "villePlaceholder": "e.g. Conakry",
+      "reinitialiser": "Reset",
+      "tendances": {
+        "kick": "Popular",
+        "title": "Trending"
+      },
+      "nouveautes": {
+        "kick": "Freshly added",
+        "title": "New arrivals"
+      },
+      "proches": {
+        "kick": "Around you",
+        "title": "Near you",
+        "renseignerVille": "Enter your city in the filters to see products from shops near you.",
+        "aucun": "No products found in this city yet."
+      },
+      "grille": {
+        "kick": "Explore",
+        "title": "All products",
+        "resultCount_one": "{{count}} product found",
+        "resultCount_other": "{{count}} products found",
+        "errorTitle": "Unable to load products",
+        "reessayer": "Retry",
+        "emptyTitle": "No products found",
+        "emptyText": "Try different filters or another search.",
+        "chargement": "Loading…",
+        "chargerPlus": "Load more"
+      }
     }
   }
 }

@@ -183,7 +183,7 @@ export default function FollowButton({
         style={{
           display: 'flex', alignItems: 'center', gap: 6,
           padding: '7px 14px', borderRadius: 999,
-          border: 'none', background: 'var(--blue, #1A4FC4)', color: '#fff',
+          border: '1.5px solid var(--bdr2, #E2E8F0)', background: 'var(--white, #fff)', color: 'var(--navy, #0B1F3A)',
           fontSize: 12.5, fontWeight: 700, cursor: pending ? 'not-allowed' : 'pointer',
           opacity: pending ? .7 : 1, whiteSpace: 'nowrap',
         }}
