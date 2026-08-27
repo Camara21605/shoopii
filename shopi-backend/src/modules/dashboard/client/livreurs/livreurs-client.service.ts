@@ -362,13 +362,13 @@ export class LivreursClientService {
 
     /* Recherche par nom (fullName du profil livreur) */
     if (dto.search?.trim()) {
-      qb.andWhere('lp.fullName LIKE :search', { search: `%${dto.search.trim()}%` });
+      qb.andWhere('LOWER(lp.fullName) LIKE LOWER(:search)', { search: `%${dto.search.trim()}%` });
     }
 
     /* Zone : recherche dans zone OU communesActives (JSON) */
     if (dto.zone && dto.zone !== 'all') {
       qb.andWhere(
-        '(lp.zone LIKE :zone OR lp.communesActives LIKE :zone)',
+        '(LOWER(lp.zone) LIKE LOWER(:zone) OR LOWER(lp.communesActives) LIKE LOWER(:zone))',
         { zone: `%${dto.zone}%` },
       );
     }

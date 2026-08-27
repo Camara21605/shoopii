@@ -9,6 +9,20 @@
       "offres": "Offres"
     },
     "searchAll": "Tout",
+    "searchScopes": {
+      "tout": "Tout",
+      "produits": "Produits",
+      "boutiques": "Boutiques",
+      "livreurs": "Livreurs",
+      "correspondants": "Correspondants"
+    },
+    "searchScopeCorrespondantsSoon": "Recherche bientôt disponible",
+    "searchScopeSoonBadge": "Bientôt",
+    "searchScopeAria": "Choisir le type de recherche",
+    "searchInputAria": "Rechercher sur la plateforme",
+    "searchLoading": "Recherche…",
+    "searchNoResults": "Aucun résultat pour « {{query}} »",
+    "searchSeeAllResults": "Voir tous les résultats pour « {{query}} »",
     "searchPlaceholder": "Produits, boutiques, livreurs…",
     "searchAria": "Rechercher",
     "searchSuggestions": {

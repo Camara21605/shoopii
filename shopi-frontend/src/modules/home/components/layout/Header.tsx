@@ -10,11 +10,11 @@
  *   ✅ Menu avatar "Mon profil" → /mon-profil (page profil client)
  * ================================================================ */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type KeyboardEvent } from 'react';
 import { useNavigate, useLocation }           from 'react-router-dom';
 import { useTranslation }                     from 'react-i18next';
 import styles                                 from './Header.module.css';
-import { tokenStorage }                       from '../../../../shared/services/apiFetch';
+import { tokenStorage, apiFetch }             from '../../../../shared/services/apiFetch';
 import { getRoleFromToken, getDashboardPath } from '../../../../shared/services/authUtils';
 import { useCart }                            from '../../../../shared/context/CartContext';
 import { useGlobalCall }                      from '../../../../shared/context/GlobalCallContext';
@@ -29,13 +29,17 @@ import AccountSwitchLink                      from '../../../../shared/component
 
 type NavKey = 'explorer' | 'boutiques' | 'livreurs' | 'relais' | 'offres';
 
+/** Délai de debounce avant d'interroger le backend pour les suggestions
+ *  live de la recherche générale — évite un appel API par frappe. */
+const SEARCH_DEBOUNCE_MS = 300;
+
 interface HeaderProps {
   onToast:    (msg: string) => void;
   onLogin:    () => void;
   onRegister: () => void;
 }
 
-export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
+export default function Header({ onLogin, onRegister }: HeaderProps) {
   // ✅ Le site public (pages "home" côté client) n'a plus de mode clair :
   // Header étant rendu par la quasi-totalité de ces pages (accueil,
   // boutique, produit, panier, paramètres, livreurs, correspondants…),
@@ -53,6 +57,23 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
   const [activeNav,    setActiveNav]    = useState<NavKey | null>(null);
   const avatarRefDesktop = useRef<HTMLDivElement>(null);
   const avatarRefMobile  = useRef<HTMLDivElement>(null);
+
+  /* ✅ Recherche générale — cherche réellement sur la plateforme, au lieu
+   * de suggestions décoratives : "Tout"/"Produits" → Explorer (recherche
+   * produits déjà fonctionnelle), "Boutiques" → /boutiques?search=,
+   * "Livreurs" → /livreurs avec state.search (cette page filtre déjà
+   * côté client mais n'a pas d'entrée URL — voir useLivreurs.ts). */
+  type SearchScope = 'tout' | 'produits' | 'boutiques' | 'livreurs';
+  interface LiveSuggestion { id: string; label: string; sublabel?: string; image?: string | null; action: () => void }
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchScope, setSearchScope] = useState<SearchScope>('tout');
+  const [scopeMenuOpen, setScopeMenuOpen] = useState(false);
+  const [scopeActiveIndex, setScopeActiveIndex] = useState(0);
+  const [suggActiveIndex, setSuggActiveIndex] = useState(-1);
+  const [liveSuggestions, setLiveSuggestions] = useState<LiveSuggestion[]>([]);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const scopeRef = useRef<HTMLDivElement>(null);
+  const suggestSeqRef = useRef(0);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -104,8 +125,192 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
     onLogin();
   }
 
+  const SEARCH_SCOPES: { key: SearchScope; label: string }[] = [
+    { key: 'tout',      label: t('publicHeader.searchScopes.tout')      },
+    { key: 'produits',  label: t('publicHeader.searchScopes.produits')  },
+    { key: 'boutiques', label: t('publicHeader.searchScopes.boutiques') },
+    { key: 'livreurs',  label: t('publicHeader.searchScopes.livreurs')  },
+  ];
+
+  /* "Correspondants" n'a aucune recherche implémentée côté backend/UI
+   * (page sans query param ni filtre) — plutôt que de le laisser
+   * silencieusement absent, on l'affiche désactivé avec une infobulle
+   * pour que sa présence future reste visible, sans construire la
+   * fonctionnalité (hors périmètre de cette itération). */
+  const CORRESPONDANTS_SOON = {
+    label:   t('publicHeader.searchScopes.correspondants'),
+    tooltip: t('publicHeader.searchScopeCorrespondantsSoon'),
+  };
+
+  const SEARCH_SUGGESTIONS = [
+    { icon: 'fa-arrow-trend-up', text: t('publicHeader.searchSuggestions.tendances'),           action: () => navigate('/explorer') },
+    { icon: 'fa-mobile-screen',  text: t('publicHeader.searchSuggestions.smartphones'),         action: () => navigate('/explorer?q=smartphone') },
+    { icon: 'fa-store',          text: t('publicHeader.searchSuggestions.boutiquesPopulaires'), action: () => navigate('/boutiques') },
+    { icon: 'fa-motorcycle',     text: t('publicHeader.searchSuggestions.livreursDispo'),       action: () => navigate('/livreurs') },
+    { icon: 'fa-tag',            text: t('publicHeader.searchSuggestions.offresDuJour'),        action: () => navigate('/offres') },
+  ];
+
+  /* Suggestions live : dès que l'utilisateur tape (2 caractères mini),
+   * interroge le vrai backend de recherche du scope actif et propose
+   * les résultats directement cliquables — plus une entrée "Voir tous
+   * les résultats" en fin de liste. Debounce 300ms pour ne pas spammer
+   * l'API à chaque frappe ; un compteur de séquence ignore les réponses
+   * d'une requête devenue obsolète (arrivée après une plus récente). */
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 10);
+    const q = searchQuery.trim();
+    if (q.length < 2) {
+      setLiveSuggestions([]);
+      setSuggestLoading(false);
+      return;
+    }
+
+    const seq = ++suggestSeqRef.current;
+    setSuggestLoading(true);
+
+    const timer = setTimeout(() => {
+      const finish = (items: LiveSuggestion[]) => {
+        if (seq !== suggestSeqRef.current) return; // réponse obsolète
+        setLiveSuggestions(items);
+        setSuggestLoading(false);
+        setSuggActiveIndex(-1);
+      };
+
+      if (searchScope === 'boutiques') {
+        apiFetch<{ data: any[] }>(`/public/boutiques?search=${encodeURIComponent(q)}&limit=5`)
+          .then(res => finish((res?.data ?? []).map(c => ({
+            id: c.id, label: c.companyName, sublabel: c.ville || undefined, image: c.logo ?? null,
+            action: () => { navigate(`/boutique/${c.id}`); setSearchFocus(false); },
+          }))))
+          .catch(() => finish([]));
+      } else if (searchScope === 'livreurs') {
+        apiFetch<{ data: any[] }>(`/suivis/livreurs?search=${encodeURIComponent(q)}&limit=5`)
+          .then(res => finish((res?.data ?? []).map(l => ({
+            id: l.id, label: l.fullName, sublabel: l.zone || undefined, image: l.profilePicture ?? null,
+            action: () => { navigate(`/livreurs/${l.id}`); setSearchFocus(false); },
+          }))))
+          .catch(() => finish([]));
+      } else {
+        /* "tout" et "produits" — catalogue Explorer */
+        apiFetch<{ data: any[] }>(`/public/explore?search=${encodeURIComponent(q)}&limit=5`)
+          .then(res => finish((res?.data ?? []).map(p => ({
+            id: p.id, label: p.nom,
+            sublabel: p.prix != null ? `${Number(p.prix).toLocaleString('fr')} GNF` : undefined,
+            image: p.images?.[0]?.url ?? null,
+            action: () => { navigate(`/produit/${p.id}`); setSearchFocus(false); },
+          }))))
+          .catch(() => finish([]));
+      }
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, searchScope]);
+
+  function handleSearchSubmit() {
+    const q = searchQuery.trim();
+    if (!q) return;
+    setSearchFocus(false);
+    setMobileSearch(false);
+    setSuggActiveIndex(-1);
+    if (searchScope === 'boutiques') {
+      navigate(`/boutiques?search=${encodeURIComponent(q)}`);
+    } else if (searchScope === 'livreurs') {
+      navigate('/livreurs', { state: { search: q } });
+    } else {
+      /* "Tout" et "Produits" — Explorer couvre déjà la recherche produits
+       * en temps réel via ?q=, le catalogue le plus large de la plateforme. */
+      navigate(`/explorer?q=${encodeURIComponent(q)}`);
+    }
+  }
+
+  /* Liste unifiée affichée sous le champ : suggestions statiques (champ
+   * vide) OU résultats live du scope actif + une entrée finale "Voir
+   * tous les résultats" — la navigation clavier (flèches/Entrée) opère
+   * sur cette même liste quel que soit son contenu. */
+  const hasQuery = searchQuery.trim().length > 0;
+  const activeList: { icon?: string; image?: string | null; label: string; sublabel?: string; action: () => void }[] =
+    hasQuery
+      ? [
+          ...liveSuggestions,
+          {
+            icon: 'fa-magnifying-glass',
+            label: t('publicHeader.searchSeeAllResults', { query: searchQuery.trim() }),
+            action: handleSearchSubmit,
+          },
+        ]
+      : SEARCH_SUGGESTIONS.map(s => ({ icon: s.icon, label: s.text, action: s.action }));
+
+  /* Navigation clavier dans le champ : gère à la fois la soumission
+   * classique et le déplacement dans la liste ci-dessus, Échap referme
+   * sans naviguer. */
+  function handleSearchKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    const showSuggestions = searchFocus && activeList.length > 0;
+
+    if (showSuggestions && e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSuggActiveIndex(i => (i + 1) % activeList.length);
+      return;
+    }
+    if (showSuggestions && e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSuggActiveIndex(i => (i - 1 + activeList.length) % activeList.length);
+      return;
+    }
+    if (e.key === 'Escape') {
+      setSearchFocus(false);
+      setSuggActiveIndex(-1);
+      e.currentTarget.blur();
+      return;
+    }
+    if (e.key === 'Enter') {
+      if (showSuggestions && suggActiveIndex >= 0 && suggActiveIndex < activeList.length) {
+        activeList[suggActiveIndex].action();
+        setSearchFocus(false);
+        setSuggActiveIndex(-1);
+      } else {
+        handleSearchSubmit();
+      }
+    }
+  }
+
+  /* Navigation clavier dans le menu déroulant Tout/Produits/Boutiques/
+   * Livreurs, ouvert via le bouton .srchCat (pas un <select> natif). */
+  function handleScopeKeyDown(e: KeyboardEvent<HTMLButtonElement>) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!scopeMenuOpen) {
+        setScopeMenuOpen(true);
+        setScopeActiveIndex(SEARCH_SCOPES.findIndex(s => s.key === searchScope));
+        return;
+      }
+      const dir = e.key === 'ArrowDown' ? 1 : -1;
+      setScopeActiveIndex(i => (i + dir + SEARCH_SCOPES.length) % SEARCH_SCOPES.length);
+      return;
+    }
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (scopeMenuOpen) {
+        setSearchScope(SEARCH_SCOPES[scopeActiveIndex].key);
+        setScopeMenuOpen(false);
+      } else {
+        setScopeMenuOpen(true);
+        setScopeActiveIndex(SEARCH_SCOPES.findIndex(s => s.key === searchScope));
+      }
+      return;
+    }
+    if (e.key === 'Escape') {
+      setScopeMenuOpen(false);
+    }
+  }
+
+  useEffect(() => {
+    /* Ferme aussi le menu de scope et les suggestions/barre de recherche
+     * mobile au scroll (setState(false) est un no-op si déjà fermé). */
+    const fn = () => {
+      setScrolled(window.scrollY > 10);
+      setScopeMenuOpen(false);
+      setSearchFocus(false);
+      setMobileSearch(false);
+    };
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
   }, []);
@@ -149,6 +354,15 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
     document.addEventListener('click', fn);
     return () => document.removeEventListener('click', fn);
   }, [avatarOpen]);
+
+  useEffect(() => {
+    if (!scopeMenuOpen) return;
+    const fn = (e: MouseEvent) => {
+      if (!scopeRef.current?.contains(e.target as Node)) setScopeMenuOpen(false);
+    };
+    document.addEventListener('click', fn);
+    return () => document.removeEventListener('click', fn);
+  }, [scopeMenuOpen]);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
@@ -220,31 +434,83 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
               ))}
             </nav>
 
-            {/* Recherche */}
+            {/* Recherche — cherche réellement sur la plateforme (voir handleSearchSubmit) */}
             <div className={`${styles.srch} ${searchFocus ? styles.srchFocus : ''}`}>
               <div className={styles.srchBox}>
-                <span className={styles.srchCat}><i className="fas fa-th-large" /> {t('publicHeader.searchAll')}</span>
+                <div className={styles.scopeWrap} ref={scopeRef}>
+                  <button type="button" className={styles.srchCat}
+                    onClick={() => { setScopeMenuOpen(o => !o); setScopeActiveIndex(SEARCH_SCOPES.findIndex(s => s.key === searchScope)); }}
+                    onKeyDown={handleScopeKeyDown}
+                    aria-haspopup="listbox" aria-expanded={scopeMenuOpen}
+                    aria-label={t('publicHeader.searchScopeAria')}
+                  >
+                    <i className="fas fa-th-large" /> {SEARCH_SCOPES.find(s => s.key === searchScope)?.label}
+                    <i className="fas fa-chevron-down" style={{ fontSize: 9, marginLeft: 2 }} />
+                  </button>
+                  {scopeMenuOpen && (
+                    <div className={styles.scopeMenu} role="listbox">
+                      {SEARCH_SCOPES.map((s, i) => (
+                        <div
+                          key={s.key}
+                          role="option"
+                          aria-selected={searchScope === s.key}
+                          className={`${styles.scopeItem} ${searchScope === s.key ? styles.scopeItemActive : ''} ${scopeActiveIndex === i ? styles.scopeItemFocused : ''}`}
+                          onMouseEnter={() => setScopeActiveIndex(i)}
+                          onClick={() => { setSearchScope(s.key); setScopeMenuOpen(false); }}
+                        >
+                          {s.label}
+                        </div>
+                      ))}
+                      <div
+                        className={`${styles.scopeItem} ${styles.scopeItemDisabled}`}
+                        role="option" aria-disabled="true"
+                        title={CORRESPONDANTS_SOON.tooltip}
+                      >
+                        {CORRESPONDANTS_SOON.label}
+                        <span className={styles.scopeSoonBadge}>{t('publicHeader.searchScopeSoonBadge')}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <input className={styles.srchIn} type="text"
                   placeholder={t('publicHeader.searchPlaceholder')} autoComplete="off"
+                  aria-label={t('publicHeader.searchInputAria')}
+                  value={searchQuery}
+                  onChange={e => { setSearchQuery(e.target.value); setSuggActiveIndex(-1); }}
+                  onKeyDown={handleSearchKeyDown}
                   onFocus={() => setSearchFocus(true)}
                   onBlur={() => setTimeout(() => setSearchFocus(false), 200)}
                 />
-                <button className={styles.srchGo} aria-label={t('publicHeader.searchAria')}>
+                <button className={styles.srchGo} aria-label={t('publicHeader.searchAria')} onClick={handleSearchSubmit}>
                   <i className="fas fa-magnifying-glass" />
                 </button>
               </div>
-              {searchFocus && (
-                <div className={styles.srchSugg}>
-                  {[
-                    { icon:'fa-arrow-trend-up', text:t('publicHeader.searchSuggestions.tendances')          },
-                    { icon:'fa-mobile-screen',  text:t('publicHeader.searchSuggestions.smartphones')        },
-                    { icon:'fa-store',          text:t('publicHeader.searchSuggestions.boutiquesPopulaires')},
-                    { icon:'fa-motorcycle',     text:t('publicHeader.searchSuggestions.livreursDispo')      },
-                    { icon:'fa-tag',            text:t('publicHeader.searchSuggestions.offresDuJour')       },
-                  ].map((s, i) => (
-                    <div key={i} className={styles.ssIt}
-                      onClick={() => { onToast(t('publicHeader.searchToast', { text: s.text })); setSearchFocus(false); }}>
-                      <i className={`fas ${s.icon}`} />{s.text}
+              {searchFocus && (hasQuery || activeList.length > 0) && (
+                <div className={styles.srchSugg} role="listbox">
+                  {hasQuery && suggestLoading && (
+                    <div className={styles.ssLoading}>
+                      <i className="fas fa-circle-notch fa-spin" /> {t('publicHeader.searchLoading')}
+                    </div>
+                  )}
+                  {hasQuery && !suggestLoading && liveSuggestions.length === 0 && (
+                    <div className={styles.ssEmpty}>{t('publicHeader.searchNoResults', { query: searchQuery.trim() })}</div>
+                  )}
+                  {activeList.map((s, i) => (
+                    <div key={s.image !== undefined ? `${i}-${s.label}` : i} role="option" aria-selected={suggActiveIndex === i}
+                      className={`${styles.ssIt} ${suggActiveIndex === i ? styles.ssItFocused : ''}`}
+                      onMouseEnter={() => setSuggActiveIndex(i)}
+                      onClick={() => { s.action(); setSearchFocus(false); setSuggActiveIndex(-1); }}>
+                      {s.image !== undefined ? (
+                        s.image
+                          ? <img src={s.image} alt="" className={styles.ssImg} />
+                          : <div className={styles.ssImgPlaceholder} />
+                      ) : (
+                        <i className={`fas ${s.icon}`} />
+                      )}
+                      <span className={styles.ssText}>
+                        {s.label}
+                        {s.sublabel && <span className={styles.ssSub}>{s.sublabel}</span>}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -413,11 +679,51 @@ export default function Header({ onToast, onLogin, onRegister }: HeaderProps) {
               <div className={styles.srchBox} style={{ borderRadius:12 }}>
                 <input className={styles.srchIn} type="text"
                   placeholder={t('publicHeader.searchPlaceholder')}
-                  autoComplete="off" autoFocus />
-                <button className={styles.srchGo} aria-label={t('publicHeader.searchAria')}>
+                  aria-label={t('publicHeader.searchInputAria')}
+                  autoComplete="off" autoFocus
+                  value={searchQuery}
+                  onChange={e => { setSearchQuery(e.target.value); setSuggActiveIndex(-1); }}
+                  onKeyDown={e => {
+                    if (e.key === 'Escape' && !hasQuery) { setMobileSearch(false); return; }
+                    handleSearchKeyDown(e);
+                  }}
+                  onFocus={() => setSearchFocus(true)}
+                  onBlur={() => setTimeout(() => setSearchFocus(false), 200)}
+                />
+                <button className={styles.srchGo} aria-label={t('publicHeader.searchAria')} onClick={handleSearchSubmit}>
                   <i className="fas fa-magnifying-glass" />
                 </button>
               </div>
+              {searchFocus && (hasQuery || activeList.length > 0) && (
+                <div className={styles.srchSugg} role="listbox" style={{ position: 'static', marginTop: 6 }}>
+                  {hasQuery && suggestLoading && (
+                    <div className={styles.ssLoading}>
+                      <i className="fas fa-circle-notch fa-spin" /> {t('publicHeader.searchLoading')}
+                    </div>
+                  )}
+                  {hasQuery && !suggestLoading && liveSuggestions.length === 0 && (
+                    <div className={styles.ssEmpty}>{t('publicHeader.searchNoResults', { query: searchQuery.trim() })}</div>
+                  )}
+                  {activeList.map((s, i) => (
+                    <div key={s.image !== undefined ? `${i}-${s.label}` : i} role="option" aria-selected={suggActiveIndex === i}
+                      className={`${styles.ssIt} ${suggActiveIndex === i ? styles.ssItFocused : ''}`}
+                      onMouseEnter={() => setSuggActiveIndex(i)}
+                      onClick={() => { s.action(); setSearchFocus(false); setSuggActiveIndex(-1); setMobileSearch(false); }}>
+                      {s.image !== undefined ? (
+                        s.image
+                          ? <img src={s.image} alt="" className={styles.ssImg} />
+                          : <div className={styles.ssImgPlaceholder} />
+                      ) : (
+                        <i className={`fas ${s.icon}`} />
+                      )}
+                      <span className={styles.ssText}>
+                        {s.label}
+                        {s.sublabel && <span className={styles.ssSub}>{s.sublabel}</span>}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

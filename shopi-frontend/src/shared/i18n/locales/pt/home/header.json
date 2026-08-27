@@ -9,6 +9,20 @@
       "offres": "Ofertas"
     },
     "searchAll": "Tudo",
+    "searchScopes": {
+      "tout": "Tudo",
+      "produits": "Produtos",
+      "boutiques": "Lojas",
+      "livreurs": "Estafetas",
+      "correspondants": "Correspondentes"
+    },
+    "searchScopeCorrespondantsSoon": "Pesquisa em breve",
+    "searchScopeSoonBadge": "Em breve",
+    "searchScopeAria": "Escolher o tipo de pesquisa",
+    "searchInputAria": "Pesquisar na plataforma",
+    "searchLoading": "A pesquisar…",
+    "searchNoResults": "Nenhum resultado para \"{{query}}\"",
+    "searchSeeAllResults": "Ver todos os resultados para \"{{query}}\"",
     "searchPlaceholder": "Produtos, lojas, entregadores…",
     "searchAria": "Pesquisar",
     "searchSuggestions": {

@@ -9,6 +9,20 @@
       "offres": "优惠"
     },
     "searchAll": "全部",
+    "searchScopes": {
+      "tout": "全部",
+      "produits": "产品",
+      "boutiques": "店铺",
+      "livreurs": "骑手",
+      "correspondants": "联络点"
+    },
+    "searchScopeCorrespondantsSoon": "搜索即将推出",
+    "searchScopeSoonBadge": "即将推出",
+    "searchScopeAria": "选择搜索类型",
+    "searchInputAria": "搜索平台",
+    "searchLoading": "搜索中…",
+    "searchNoResults": "未找到与“{{query}}”相关的结果",
+    "searchSeeAllResults": "查看“{{query}}”的所有结果",
     "searchPlaceholder": "产品、店铺、配送员…",
     "searchAria": "搜索",
     "searchSuggestions": {

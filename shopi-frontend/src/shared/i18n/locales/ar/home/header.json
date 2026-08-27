@@ -9,6 +9,20 @@
       "offres": "العروض"
     },
     "searchAll": "الكل",
+    "searchScopes": {
+      "tout": "الكل",
+      "produits": "المنتجات",
+      "boutiques": "المتاجر",
+      "livreurs": "الموصّلون",
+      "correspondants": "المراسلون"
+    },
+    "searchScopeCorrespondantsSoon": "البحث متاح قريبًا",
+    "searchScopeSoonBadge": "قريبًا",
+    "searchScopeAria": "اختر نوع البحث",
+    "searchInputAria": "البحث في المنصة",
+    "searchLoading": "جارٍ البحث…",
+    "searchNoResults": "لا توجد نتائج لـ «{{query}}»",
+    "searchSeeAllResults": "عرض جميع النتائج لـ «{{query}}»",
     "searchPlaceholder": "منتجات، متاجر، عمال توصيل…",
     "searchAria": "بحث",
     "searchSuggestions": {

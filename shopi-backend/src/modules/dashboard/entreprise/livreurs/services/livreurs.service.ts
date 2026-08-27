@@ -244,7 +244,7 @@ export class LivreursService {
     if (dto.search?.trim()) {
       const term = `%${dto.search.trim()}%`;
       qb.andWhere(
-        '(d.fullName LIKE :term OR d.zone LIKE :term OR d.phone LIKE :term)',
+        '(LOWER(d.fullName) LIKE LOWER(:term) OR LOWER(d.zone) LIKE LOWER(:term) OR d.phone LIKE :term)',
         { term },
       );
     }

@@ -21,8 +21,8 @@
  *   </main>
  * ================================================================ */
 
-import React, { useState } from 'react';
-import { useNavigate }      from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation }   from 'react-i18next';
 
 /* ── Layout partagé du module home ── */
@@ -76,6 +76,10 @@ const LivreursPage: React.FC = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
+  /* Recherche générale du Header (navigate('/livreurs', { state: { search } })) */
+  const location = useLocation();
+  const initialSearch = (location.state as { search?: string } | null)?.search;
+
   /* ── Toute la logique vient du hook ── */
   const {
     livreurs, filtered, loading, error,
@@ -83,7 +87,15 @@ const LivreursPage: React.FC = () => {
     onSearch, onFilter, onSort, onViewChange,
     onZone, onVehicleToggle, onRating, onAvailability,
     onReset, onChange,
-  } = useLivreurs();
+  } = useLivreurs(initialSearch);
+
+  /* Si l'utilisateur relance une recherche depuis le Header en étant
+   * déjà sur /livreurs, la route ne remonte pas (state seul change) —
+   * on répercute donc explicitement le nouveau terme. */
+  useEffect(() => {
+    if (initialSearch) onSearch(initialSearch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSearch]);
 
   /* ── Livreurs déjà suivis (pour la sidebar) ── */
   const myFollowed = livreurs.filter(l => l.isSuivi);

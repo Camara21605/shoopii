@@ -84,11 +84,35 @@ export class ExploreService {
       .take(limit);
 
     if (query.search?.trim()) {
-      const term = `%${query.search.trim().toLowerCase()}%`;
+      const rawTerm = query.search.trim().toLowerCase();
+      const term = `%${rawTerm}%`;
       qb.andWhere(
-        `(LOWER(p.nom) LIKE :term OR LOWER(COALESCE(p.marque,'')) LIKE :term OR LOWER(COALESCE(p.tags,'')) LIKE :term)`,
+        `(LOWER(p.nom) LIKE :term
+          OR LOWER(COALESCE(p.marque,'')) LIKE :term
+          OR LOWER(COALESCE(p.tags,'')) LIKE :term
+          OR LOWER(COALESCE(p.description,'')) LIKE :term
+          OR LOWER(category.nom) LIKE :term)`,
         { term },
       );
+
+      /* Pertinence : nom exact > nom commence par le terme > nom contient
+       * le terme > match ailleurs (marque/tags/description/catégorie).
+       * .orderBy() REMPLACE le tri par défaut (createdAt DESC) posé plus
+       * haut ; .addOrderBy() le réinjecte ensuite comme critère secondaire
+       * (départage entre résultats de même pertinence). */
+      qb.addSelect(
+        `CASE
+           WHEN LOWER(p.nom) = :exactTerm THEN 0
+           WHEN LOWER(p.nom) LIKE :startTerm THEN 1
+           WHEN LOWER(p.nom) LIKE :term THEN 2
+           ELSE 3
+         END`,
+        'relevance',
+      )
+        .setParameter('exactTerm', rawTerm)
+        .setParameter('startTerm', `${rawTerm}%`)
+        .orderBy('relevance', 'ASC')
+        .addOrderBy('p.createdAt', 'DESC');
     }
 
     if (query.category) {
@@ -243,7 +267,7 @@ export class ExploreService {
       visibilite:  p.visibilite,
       images: (p.media ?? [])
         .sort((a, b) => a.ordre - b.ordre)
-        .map(img => ({ id: img.id, url: img.url, ordre: img.ordre, alt: img.alt })),
+        .map(img => ({ id: img.id, url: img.url, ordre: img.ordre, alt: img.alt, type: img.type })),
       category: {
         id:    p.category?.id    ?? '',
         nom:   p.category?.nom   ?? '',
@@ -255,6 +279,16 @@ export class ExploreService {
       companyId:   p.companyId,
       companyName: company?.companyName ?? '',
       companyLogo: company?.logo        ?? null,
+      companyVerified: company?.verificationStatus === 'verified',
+      companyVille:    company?.ville ?? null,
+      companyPays:     company?.pays  ?? 'GN',
+      /* Non chargés par les requêtes Explorer (grille/carrousels — pas
+       * besoin des specs/variantes détaillées) : valeurs par défaut,
+       * jamais consommées côté grille (voir CardProduit). */
+      condition: p.condition ?? 'neuf',
+      garantie:  p.garantie  ?? '',
+      specs:     [],
+      variantes: [],
       livraisonStandard:      p.livraisonStandard      ?? true,
       livraisonLivreur:       p.livraisonLivreur        ?? true,
       livraisonCorrespondant: p.livraisonCorrespondant  ?? false,

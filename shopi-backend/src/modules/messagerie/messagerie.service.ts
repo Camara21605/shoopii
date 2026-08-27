@@ -919,7 +919,7 @@ export class MessagerieService {
         .leftJoinAndSelect('d.user', 'user')
         .where('d.userId != :userId', { userId })
         .take(15);
-      if (term) qb.andWhere('d.fullName LIKE :t', { t: `%${term}%` });
+      if (term) qb.andWhere('LOWER(d.fullName) LIKE LOWER(:t)', { t: `%${term}%` });
       const livs = await qb.getMany();
       const filtered = livs.filter(d => relatedDeliveryIds.has(d.id));
       filtered.forEach(d => results.push({
@@ -938,7 +938,7 @@ export class MessagerieService {
         .leftJoinAndSelect('c.user', 'user')
         .where('c.userId != :userId', { userId })
         .take(15);
-      if (term) qb.andWhere('c.fullName LIKE :t', { t: `%${term}%` });
+      if (term) qb.andWhere('LOWER(c.fullName) LIKE LOWER(:t)', { t: `%${term}%` });
       const corrs = await qb.getMany();
       const filtered = corrs.filter(c => relatedCorrIds.has(c.id));
       filtered.forEach(c => {
@@ -967,7 +967,7 @@ export class MessagerieService {
           .take(10);
         if (term) {
           clientQb.andWhere(
-            `CONCAT(user.firstName, ' ', user.lastName) LIKE :t`,
+            `LOWER(CONCAT(user.firstName, ' ', user.lastName)) LIKE LOWER(:t)`,
             { t: `%${term}%` },
           );
         }

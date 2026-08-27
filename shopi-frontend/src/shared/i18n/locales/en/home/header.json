@@ -9,6 +9,20 @@
       "offres": "Deals"
     },
     "searchAll": "All",
+    "searchScopes": {
+      "tout": "All",
+      "produits": "Products",
+      "boutiques": "Shops",
+      "livreurs": "Couriers",
+      "correspondants": "Correspondents"
+    },
+    "searchScopeCorrespondantsSoon": "Search coming soon",
+    "searchScopeSoonBadge": "Soon",
+    "searchScopeAria": "Choose search type",
+    "searchInputAria": "Search the platform",
+    "searchLoading": "Searching…",
+    "searchNoResults": "No results for \"{{query}}\"",
+    "searchSeeAllResults": "See all results for \"{{query}}\"",
     "searchPlaceholder": "Products, shops, delivery agents…",
     "searchAria": "Search",
     "searchSuggestions": {

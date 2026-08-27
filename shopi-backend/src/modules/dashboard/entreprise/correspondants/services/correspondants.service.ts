@@ -171,7 +171,7 @@ export class CorrespondantsService {
     if (dto.search?.trim()) {
       const term = `%${dto.search.trim()}%`;
       qb.andWhere(
-        '(c.fullName LIKE :term OR c.address LIKE :term OR c.zone LIKE :term)',
+        '(LOWER(c.fullName) LIKE LOWER(:term) OR LOWER(c.address) LIKE LOWER(:term) OR LOWER(c.zone) LIKE LOWER(:term))',
         { term },
       );
     }

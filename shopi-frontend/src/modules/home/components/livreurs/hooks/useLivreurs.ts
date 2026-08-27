@@ -10,10 +10,14 @@
  * PATTERN : Sépare la logique (hook) de l'affichage (composants)
  * ================================================================ */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { apiFetch }                                  from '../../../../../shared/services/apiFetch';
 import { MOCK_LIVREURS }                             from '../data/livreursMockData';
 import type { LivreurItem }                          from '../data/livreursMockData';
+
+/** Délai de debounce avant d'interroger le backend après un changement
+ *  de filtre (recherche, zone, note...) — évite un appel API par frappe. */
+const SEARCH_DEBOUNCE_MS = 300;
 
 /* ── Types internes ── */
 export type ViewMode   = 'grid' | 'list';
@@ -66,76 +70,90 @@ export interface UseLivreursReturn {
 /* ================================================================
  * HOOK PRINCIPAL
  * ================================================================ */
-export function useLivreurs(): UseLivreursReturn {
+export function useLivreurs(initialSearch?: string): UseLivreursReturn {
 
   const [livreurs, setLivreurs] = useState<LivreurItem[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState<string | null>(null);
-  const [filters,  setFilters]  = useState<FilterState>(INITIAL_FILTERS);
+  /* initialSearch vient de la recherche générale du Header (navigate avec
+   * state.search) — voir LivreursPage.tsx et Header.tsx handleSearchSubmit. */
+  const [filters,  setFilters]  = useState<FilterState>(() => ({
+    ...INITIAL_FILTERS,
+    searchQuery: initialSearch ?? '',
+  }));
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
- /* ── Chargement initial depuis l'API ── */
+ /* ── Chargement depuis l'API, recherche/filtres réellement exécutés
+  * côté backend (GET /suivis/livreurs supporte search/zone/vehicule/
+  * sortBy/disponibleOnly/minRating/page/limit — cf. QueryLivreursDto).
+  * Avant : un seul fetch sans paramètres puis filtrage 100% client sur
+  * cette page fixe de 20 résultats → une recherche pouvait passer à
+  * côté de livreurs situés au-delà de la 1ère page. Debounce 300ms
+  * pour ne pas spammer l'API à chaque frappe dans la recherche. ── */
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* Filtres non couverts par QueryLivreursDto (isSuivi, "occupé
+   * uniquement", sélection multi-véhicules) restent appliqués côté
+   * client, sur la page déjà filtrée/triée par le backend. */
+  const singleVehicule = useMemo<string | null>(() => {
+    if (filters.activeFilter === 'moto')    return 'moto';
+    if (filters.activeFilter === 'voiture') return 'voiture';
+    if (filters.selectedVehicles.length === 1) return filters.selectedVehicles[0];
+    return null;
+  }, [filters.activeFilter, filters.selectedVehicles]);
+
   useEffect(() => {
-    setLoading(true);
-    /* L'API renvoie un objet paginé { data, total, page, limit } */
-    apiFetch<{ data: LivreurItem[] }>('/suivis/livreurs')
-      .then(res => setLivreurs(Array.isArray(res?.data) ? res.data : []))
-      .catch(() => {
-        /* Fallback mock si l'API n'est pas prête */
-        setLivreurs(MOCK_LIVREURS);
-        setError(null);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
 
-  /* ── Filtrage + tri mémoïsé ── */
+    debounceRef.current = setTimeout(() => {
+      setLoading(true);
+      setError(null);
+
+      const params = new URLSearchParams();
+      if (filters.searchQuery.trim())              params.set('search', filters.searchQuery.trim());
+      if (filters.selectedZone !== 'all')           params.set('zone', filters.selectedZone);
+      if (singleVehicule)                           params.set('vehicule', singleVehicule);
+      if (filters.activeFilter === 'available' || filters.availabilityFilter === 'available') {
+        params.set('disponibleOnly', 'true');
+      }
+      if (filters.minRating !== null)               params.set('minRating', String(filters.minRating));
+      if (filters.sortBy !== 'proches')             params.set('sortBy', filters.sortBy);
+      params.set('limit', '50');
+
+      /* L'API renvoie un objet paginé { data, total, page, limit } */
+      apiFetch<{ data: LivreurItem[] }>(`/suivis/livreurs?${params.toString()}`)
+        .then(res => setLivreurs(Array.isArray(res?.data) ? res.data : []))
+        .catch(() => {
+          /* Fallback mock si l'API n'est pas prête */
+          setLivreurs(MOCK_LIVREURS);
+        })
+        .finally(() => setLoading(false));
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [
+    filters.searchQuery, filters.selectedZone, filters.minRating,
+    filters.sortBy, filters.activeFilter, filters.availabilityFilter,
+    singleVehicule,
+  ]);
+
+  /* ── Résidu client : uniquement ce que le backend ne filtre pas ── */
   const filtered = useMemo<LivreurItem[]>(() => {
-    let r = [...livreurs];
+    let r = livreurs;
 
-    /* 1. Filtre rapide */
-    if (filters.activeFilter === 'available') r = r.filter(l => l.disponible);
-    if (filters.activeFilter === 'followed')  r = r.filter(l => l.isSuivi);
-    if (filters.activeFilter === 'moto')      r = r.filter(l => l.vehiculeType === 'moto');
-    if (filters.activeFilter === 'voiture')   r = r.filter(l => l.vehiculeType === 'voiture');
+    if (filters.activeFilter === 'followed') r = r.filter(l => l.isSuivi);
+    if (filters.availabilityFilter === 'busy') r = r.filter(l => !l.disponible);
 
-    /* 2. Recherche texte */
-    if (filters.searchQuery.trim()) {
-      const q = filters.searchQuery.toLowerCase();
-      r = r.filter(l =>
-        l.fullName.toLowerCase().includes(q) ||
-        l.zone?.toLowerCase().includes(q)    ||
-        l.vehicule?.toLowerCase().includes(q)
-      );
+    /* Sélection multi-véhicules (2+) : le backend ne prend qu'une seule
+     * valeur, donc ce cas précis reste filtré côté client. */
+    if (filters.selectedVehicles.length > 1) {
+      r = r.filter(l => filters.selectedVehicles.includes(l.vehiculeType));
     }
-
-    /* 3. Zone sidebar */
-    if (filters.selectedZone !== 'all') {
-      r = r.filter(l => l.zone?.toLowerCase().includes(filters.selectedZone));
-    }
-
-    /* 4. Véhicule sidebar */
-    if (filters.selectedVehicles.length > 0) {
-      r = r.filter(l =>
-        filters.selectedVehicles.includes(l.vehiculeType)
-      );
-    }
-
-    /* 5. Note minimale */
-    if (filters.minRating !== null) {
-      r = r.filter(l => l.averageRating >= (filters.minRating ?? 0));
-    }
-
-    /* 6. Disponibilité sidebar */
-    if (filters.availabilityFilter === 'available') r = r.filter(l =>  l.disponible);
-    if (filters.availabilityFilter === 'busy')      r = r.filter(l => !l.disponible);
-
-    /* 7. Tri */
-    if (filters.sortBy === 'note')       r.sort((a, b) => b.averageRating   - a.averageRating);
-    if (filters.sortBy === 'livraisons') r.sort((a, b) => b.totalLivraisons - a.totalLivraisons);
-    if (filters.sortBy === 'disponible') r.sort((a, b) => (b.disponible ? 1 : 0) - (a.disponible ? 1 : 0));
 
     return r;
-  }, [livreurs, filters]);
+  }, [livreurs, filters.activeFilter, filters.availabilityFilter, filters.selectedVehicles]);
 
 
 

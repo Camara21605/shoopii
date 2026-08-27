@@ -502,11 +502,11 @@ export class PromotionsService {
       qb.andWhere('p.scope = :scope', { scope: dto.scope });
     }
 
-    // Recherche sur le nom ou le code
+    // Recherche sur le nom ou le code (insensible à la casse)
     if (dto.search?.trim()) {
       const term = `%${dto.search.trim()}%`;
       qb.andWhere(
-        '(p.nom LIKE :term OR p.code LIKE :term)',
+        '(LOWER(p.nom) LIKE LOWER(:term) OR LOWER(p.code) LIKE LOWER(:term))',
         { term },
       );
     }

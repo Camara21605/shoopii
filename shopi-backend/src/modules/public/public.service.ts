@@ -36,12 +36,20 @@ export interface PublicProduitResponse {
   urlSlug:     string | null;
   stock:       number;
   visibilite:  string;
-  images:      { id: string; url: string; ordre: number; alt: string | null }[];
+  images:      { id: string; url: string; ordre: number; alt: string | null; type: string }[];
   category:    { id: string; nom: string; icone: string | null };
   subCategory: { id: string; nom: string } | null;
   companyId:   string;
   companyName: string;
   companyLogo: string | null;
+  companyVerified: boolean;
+  companyVille:    string | null;
+  companyPays:     string;
+  /* ── Détail produit (spécifique à getProduit, [] sur les listes) ── */
+  condition: string;
+  garantie:  string;
+  specs:     { id: string; cle: string; valeur: string; ordre: number }[];
+  variantes: { id: string; type: string; vals: string }[];
   /* ── Vente en gros ── */
   venteEnGros:    boolean;
   moq:            number | null;
@@ -220,6 +228,8 @@ export class PublicService {
       .leftJoinAndSelect('p.subCategory',    'subCategory')
       .leftJoinAndSelect('p.company',        'company')
       .leftJoinAndSelect('p.wholesaleTiers', 'tiers')
+      .leftJoinAndSelect('p.specs',          'specs')
+      .leftJoinAndSelect('p.variantes',      'variantes')
       .where('p.id = :id', { id })
       .andWhere('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
       .orderBy('images.ordre', 'ASC')
@@ -383,7 +393,7 @@ export class PublicService {
       visibilite:  p.visibilite,
       images: (p.media ?? [])
         .sort((a, b) => a.ordre - b.ordre)
-        .map(img => ({ id: img.id, url: img.url, ordre: img.ordre, alt: img.alt })),
+        .map(img => ({ id: img.id, url: img.url, ordre: img.ordre, alt: img.alt, type: img.type })),
       category: {
         id:    p.category?.id    ?? '',
         nom:   p.category?.nom   ?? '',
@@ -395,6 +405,16 @@ export class PublicService {
       companyId:   p.companyId,
       companyName: company?.companyName ?? '',
       companyLogo: company?.logo        ?? null,
+      companyVerified: company?.verificationStatus === 'verified',
+      companyVille:    company?.ville ?? null,
+      companyPays:     company?.pays  ?? 'GN',
+      condition: p.condition ?? 'neuf',
+      garantie:  p.garantie  ?? '',
+      specs: (p.specs ?? [])
+        .sort((a, b) => a.ordre - b.ordre)
+        .map(s => ({ id: s.id, cle: s.cle, valeur: s.valeur, ordre: s.ordre })),
+      variantes: (p.variantes ?? [])
+        .map(v => ({ id: v.id, type: v.type, vals: v.vals })),
       /* Politique de livraison — telle que configurée par la boutique */
       livraisonStandard:      p.livraisonStandard      ?? true,
       livraisonLivreur:       p.livraisonLivreur        ?? true,
@@ -504,7 +524,7 @@ export class PublicService {
       .take(limit);
 
     if (search) {
-      qb.andWhere('c.companyName LIKE :s', { s: `%${search}%` });
+      qb.andWhere('LOWER(c.companyName) LIKE LOWER(:s)', { s: `%${search}%` });
     }
 
     if (companyTypeId) {
