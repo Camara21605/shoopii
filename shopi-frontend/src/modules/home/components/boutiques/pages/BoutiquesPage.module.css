@@ -24,10 +24,10 @@
 .secSub   { font-size: 12px; color: var(--t3); margin-top: 1px; }
 
 /* Grille cartes */
-.cardsGrid { display: grid; grid-template-columns: repeat(auto-fill,minmax(230px,1fr)); gap: 16px; margin-bottom: 20px; }
+.cardsGrid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 16px; margin-bottom: 20px; }
 
 /* Skeleton chargement */
-.skeletonGrid { display: grid; grid-template-columns: repeat(auto-fill,minmax(230px,1fr)); gap: 16px; margin-bottom: 20px; }
+.skeletonGrid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 16px; margin-bottom: 20px; }
 .skeleton {
   background: linear-gradient(90deg,var(--g100,#F1F3F5) 25%,var(--white) 50%,var(--g100,#F1F3F5) 75%);
   background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 16px; height: 300px;

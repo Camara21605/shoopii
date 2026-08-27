@@ -49,9 +49,10 @@ export default function BoutiqueNav({ onglet, onChangeOnglet, counts }: Props) {
             key={o.key}
             className={`${styles.btn} ${onglet === o.key ? styles.btnActive : ''}`}
             onClick={() => onChangeOnglet(o.key)}
+            title={o.label}
+            aria-label={o.label}
           >
             <i className={`fas ${o.icon}`} />
-            {o.label}
             {o.countKey && (
               <span className={styles.cnt}>{counts[o.countKey]}</span>
             )}
