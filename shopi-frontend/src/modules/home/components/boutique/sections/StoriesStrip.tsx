@@ -4,6 +4,10 @@
  *
  * RÔLE    : Bande horizontale de stories produits scrollable.
  *           Données chargées depuis GET /public/boutiques/:id/stories.
+ *           Chaque PRODUIT = 1 bulle rectangle indépendante (même
+ *           format que la home page) → ses propres images dans le
+ *           viewer. Les stories de deux produits différents ne sont
+ *           jamais mélangées dans la même bulle.
  *
  * PROPS   : companyId, companyName, companyLogo, onToast
  * ============================================================
@@ -20,7 +24,7 @@ const COLORS = ['#1A4FC4', '#7C3AED', '#0D9488', '#B45309', '#DC2626', '#059669'
 
 // ─── Types ─────────────────────────────────────────────────────
 
-interface ApiStory {
+interface StorySlide {
   id:        string;
   productId: string;
   produit:   string;
@@ -34,9 +38,20 @@ interface ApiStory {
   createdAt: string;
 }
 
-interface Story extends ApiStory {
-  couleur: string;
-  lu:      boolean;
+interface ApiStory {
+  productId: string;
+  produit:   string;
+  images:    StorySlide[];
+}
+
+// Une bulle = UN produit. Ses images/stories lui sont propres —
+// jamais partagées ni mélangées avec celles d'un autre produit.
+interface ProductStoryBubble {
+  productId: string;
+  produit:   string;
+  couleur:   string;
+  lu:        boolean;
+  slides:    StorySlide[];
 }
 
 interface Props {
@@ -59,15 +74,12 @@ function getBadgeCfg(t: TFunction): Record<string, { label: string; bg: string; 
 // ─── Skeleton unique ───────────────────────────────────────────
 function StorySkeleton() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, width: 72 }}>
-      <div style={{
-        width: 64, height: 64, borderRadius: '50%',
-        background: 'linear-gradient(90deg, var(--g100) 25%, var(--g50) 50%, var(--g100) 75%)',
-        backgroundSize: '200% 100%',
-        animation: 'shimmer 1.4s infinite',
-      }} />
-      <div style={{ width: 56, height: 9, borderRadius: 4, background: 'var(--g100)', animation: 'shimmer 1.4s infinite' }} />
-    </div>
+    <div style={{
+      width: 108, height: 180, borderRadius: 16, flexShrink: 0,
+      background: 'linear-gradient(90deg, var(--g100) 25%, var(--g50) 50%, var(--g100) 75%)',
+      backgroundSize: '200% 100%',
+      animation: 'shimmer 1.4s infinite',
+    }} />
   );
 }
 
@@ -76,26 +88,28 @@ function StorySkeleton() {
 // ═══════════════════════════════════════════════════════════════
 export default function StoriesStrip({ companyId, companyName, companyLogo, onToast }: Props) {
   const { t } = useTranslation();
-  const BADGE_CFG = getBadgeCfg(t);
-  const [stories,  setStories]  = useState<Story[]>([]);
+  const [bubbles,  setBubbles]  = useState<ProductStoryBubble[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [openIdx,  setOpenIdx]  = useState<number | null>(null);
+  const [slideIdx, setSlideIdx] = useState(0);
   const stripRef   = useRef<HTMLDivElement>(null);
 
-  // ── Fetch stories ─────────────────────────────────────────────
+  // ── Fetch stories (déjà groupées par produit côté backend) ────
   useEffect(() => {
     if (!companyId) return;
     setLoading(true);
     apiFetch<ApiStory[]>(`/public/boutiques/${companyId}/stories`, { public: true })
       .then(data => {
         const list = Array.isArray(data) ? data : [];
-        setStories(list.map((s, i) => ({
-          ...s,
-          couleur: COLORS[i % COLORS.length],
-          lu:      false,
+        setBubbles(list.map((s, i) => ({
+          productId: s.productId,
+          produit:   s.produit,
+          couleur:   COLORS[i % COLORS.length],
+          lu:        false,
+          slides:    s.images,
         })));
       })
-      .catch(() => setStories([]))
+      .catch(() => setBubbles([]))
       .finally(() => setLoading(false));
   }, [companyId]);
 
@@ -115,25 +129,39 @@ export default function StoriesStrip({ companyId, companyName, companyLogo, onTo
   };
   const onMouseUp = () => { isDragging.current = false; };
 
-  // ── Navigation viewer ─────────────────────────────────────────
+  // ── Navigation viewer (2 niveaux : bulle produit → image) ─────
   const openStory = (idx: number) => {
-    setStories(prev => prev.map((s, i) => i === idx ? { ...s, lu: true } : s));
+    setBubbles(prev => prev.map((b, i) => i === idx ? { ...b, lu: true } : b));
     setOpenIdx(idx);
+    setSlideIdx(0);
   };
 
-  const goNext = useCallback(() => {
-    setOpenIdx(prev => {
-      if (prev === null) return null;
-      if (prev < stories.length - 1) {
-        setStories(s => s.map((x, i) => i === prev + 1 ? { ...x, lu: true } : x));
-        return prev + 1;
-      }
-      return null;
-    });
-  }, [stories.length]);
+  const currentBubble = openIdx !== null ? bubbles[openIdx] : null;
+  const totalSlides   = currentBubble?.slides.length ?? 0;
 
-  const goPrev     = useCallback(() => setOpenIdx(p => (p === null || p === 0) ? p : p - 1), []);
-  const closeViewer = useCallback(() => setOpenIdx(null), []);
+  const goNext = useCallback(() => {
+    if (slideIdx < totalSlides - 1) {
+      setSlideIdx(s => s + 1);
+    } else if (openIdx !== null && openIdx < bubbles.length - 1) {
+      setBubbles(prev => prev.map((b, i) => i === openIdx + 1 ? { ...b, lu: true } : b));
+      setOpenIdx(openIdx + 1);
+      setSlideIdx(0);
+    } else {
+      setOpenIdx(null);
+    }
+  }, [slideIdx, totalSlides, openIdx, bubbles.length]);
+
+  const goPrev = useCallback(() => {
+    if (slideIdx > 0) {
+      setSlideIdx(s => s - 1);
+    } else if (openIdx !== null && openIdx > 0) {
+      const prev = bubbles[openIdx - 1];
+      setOpenIdx(openIdx - 1);
+      setSlideIdx(prev.slides.length - 1);
+    }
+  }, [slideIdx, openIdx, bubbles]);
+
+  const closeViewer = useCallback(() => { setOpenIdx(null); setSlideIdx(0); }, []);
 
   useEffect(() => {
     const fn = (e: KeyboardEvent) => {
@@ -146,13 +174,13 @@ export default function StoriesStrip({ companyId, companyName, companyLogo, onTo
   }, [openIdx, closeViewer, goNext, goPrev]);
 
   // ── Pas de stories et chargement terminé → ne rien afficher ──
-  if (!loading && stories.length === 0) return null;
+  if (!loading && bubbles.length === 0) return null;
 
   return (
     <>
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
 
-      {/* ══ BANDE STORIES ══ */}
+      {/* ══ BANDE STORIES — bulles rectangle, une par produit ══ */}
       <div className={styles.strip}>
         <div
           className={styles.scroller}
@@ -165,35 +193,37 @@ export default function StoriesStrip({ companyId, companyName, companyLogo, onTo
           {/* Skeletons pendant le chargement */}
           {loading && Array.from({ length: 5 }).map((_, i) => <StorySkeleton key={i} />)}
 
-          {/* Stories réelles */}
-          {!loading && stories.map((s, i) => (
-            <button
-              key={s.id}
-              className={`${styles.storyBtn} ${s.lu ? styles.storyLu : ''}`}
-              onClick={() => openStory(i)}
-              title={s.produit}
-            >
-              <div
-                className={styles.storyRing}
-                style={{
-                  background: s.lu ? 'var(--g300)' : `conic-gradient(${s.couleur} 0%, ${s.couleur} 100%)`,
-                  padding:    s.lu ? '2px' : '2.5px',
-                }}
+          {/* Bulles produits réelles */}
+          {!loading && bubbles.map((b, i) => {
+            const cover   = b.slides[0]?.img || null;
+            const hasPromo = b.slides.some(sl => sl.badge === 'promo');
+            return (
+              <button
+                key={b.productId}
+                className={`${styles.storyBtn} ${b.lu ? styles.storyLu : ''}`}
+                onClick={() => openStory(i)}
+                title={b.produit}
               >
-                <div className={styles.storyCircle} style={{ background: `${s.couleur}15` }}>
-                  <img src={s.img} alt={s.produit} className={styles.storyImg}
-                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
-                  {s.badge && (
-                    <div className={styles.storyBadge} style={{ background: BADGE_CFG[s.badge]?.bg, color: BADGE_CFG[s.badge]?.c }}>
-                      {BADGE_CFG[s.badge]?.label}
-                    </div>
-                  )}
+                <div
+                  className={styles.storyRingRect}
+                  style={{
+                    background: b.lu ? 'var(--g300,#D1D5DB)' : `linear-gradient(135deg,${b.couleur},${b.couleur}88)`,
+                  }}
+                >
+                  <div className={styles.storyCard} style={{ background: cover ? '#111' : `linear-gradient(160deg,${b.couleur},${b.couleur}66)` }}>
+                    {cover
+                      ? <img src={cover} alt="" className={styles.storyCardImg}
+                          onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                      : <span className={styles.storyCardEmoji}>{b.slides[0]?.emoji ?? '📦'}</span>
+                    }
+                    <div className={styles.storyCardScrim} />
+                    {hasPromo && <div className={styles.storyBadgeDot}>🔥</div>}
+                    <span className={styles.storyCardLabel}>{b.produit}</span>
+                  </div>
                 </div>
-              </div>
-              <span className={styles.storyLabel}>{s.produit}</span>
-              <span className={styles.storyPrice}>{s.prix}</span>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
 
         {/* Flèches desktop */}
@@ -208,10 +238,10 @@ export default function StoriesStrip({ companyId, companyName, companyLogo, onTo
       </div>
 
       {/* ══ VIEWER ══ */}
-      {openIdx !== null && (
+      {openIdx !== null && currentBubble && (
         <StoryViewer
-          stories={stories}
-          currentIdx={openIdx}
+          bubble={currentBubble}
+          slideIdx={slideIdx}
           companyName={companyName}
           companyLogo={companyLogo}
           onNext={goNext}
@@ -225,11 +255,12 @@ export default function StoriesStrip({ companyId, companyName, companyLogo, onTo
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STORY VIEWER — modal plein écran
+// STORY VIEWER — modal plein écran, toujours scopé à UN produit
+// (passer au produit suivant/précédent change complètement de bulle)
 // ═══════════════════════════════════════════════════════════════
 interface ViewerProps {
-  stories:     Story[];
-  currentIdx:  number;
+  bubble:      ProductStoryBubble;
+  slideIdx:    number;
   companyName: string;
   companyLogo?: string | null;
   onNext:      () => void;
@@ -238,18 +269,18 @@ interface ViewerProps {
   onToast:     (m: string) => void;
 }
 
-function StoryViewer({ stories, currentIdx, companyName, companyLogo, onNext, onPrev, onClose, onToast }: ViewerProps) {
+function StoryViewer({ bubble, slideIdx, companyName, companyLogo, onNext, onPrev, onClose, onToast }: ViewerProps) {
   const { t } = useTranslation();
   const BADGE_CFG = getBadgeCfg(t);
   const navigate = useNavigate();
-  const story    = stories[currentIdx];
+  const slide    = bubble.slides[slideIdx];
   const [progress, setProgress] = useState(0);
   const animRef   = useRef<number | null>(null);
   const startRef  = useRef<number | null>(null);
 
   // ── Temps depuis la création ───────────────────────────────
   const tempsDepuis = (() => {
-    const diff = Date.now() - new Date(story.createdAt).getTime();
+    const diff = Date.now() - new Date(slide.createdAt).getTime();
     const h    = Math.floor(diff / 3_600_000);
     const m    = Math.floor((diff % 3_600_000) / 60_000);
     if (h >= 24) return t('boutiqueDetail.stories.ilYA1j');
@@ -264,14 +295,14 @@ function StoryViewer({ stories, currentIdx, companyName, companyLogo, onNext, on
     startRef.current = null;
     const tick = (now: number) => {
       if (startRef.current === null) startRef.current = now;
-      const pct = Math.min(100, ((now - startRef.current) / story.duree) * 100);
+      const pct = Math.min(100, ((now - startRef.current) / slide.duree) * 100);
       setProgress(pct);
       if (pct < 100) animRef.current = requestAnimationFrame(tick);
       else onNext();
     };
     animRef.current = requestAnimationFrame(tick);
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
-  }, [currentIdx, story.duree]);
+  }, [bubble.productId, slideIdx, slide.duree, onNext]);
 
   // ── Swipe tactile ─────────────────────────────────────────
   const touchStart = useRef(0);
@@ -281,26 +312,26 @@ function StoryViewer({ stories, currentIdx, companyName, companyLogo, onNext, on
     if (Math.abs(diff) > 50) diff > 0 ? onNext() : onPrev();
   };
 
-  const badge = story.badge ? BADGE_CFG[story.badge] : null;
+  const badge = slide.badge ? BADGE_CFG[slide.badge] : null;
 
   return (
     <div className={styles.viewer} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} onClick={onClose}>
 
       {/* Fond flouté */}
       <div className={styles.viewerBg}
-        style={{ background: `radial-gradient(ellipse at center, ${story.couleur}33 0%, #0B1F3A 70%)` }} />
+        style={{ background: `radial-gradient(ellipse at center, ${bubble.couleur}33 0%, #0B1F3A 70%)` }} />
 
       {/* Carte centrée */}
-      <div className={styles.viewerCard} style={{ borderColor: `${story.couleur}44` }} onClick={e => e.stopPropagation()}>
+      <div className={styles.viewerCard} style={{ borderColor: `${bubble.couleur}44` }} onClick={e => e.stopPropagation()}>
 
-        {/* Barres de progression */}
+        {/* Barres de progression — une par image de CE produit */}
         <div className={styles.progBars}>
-          {stories.map((_, i) => (
+          {bubble.slides.map((_, i) => (
             <div key={i} className={styles.progBar}>
               <div className={styles.progFill} style={{
-                width:      i < currentIdx ? '100%' : i === currentIdx ? `${progress}%` : '0%',
-                background: story.couleur,
-                transition: i === currentIdx ? 'none' : undefined,
+                width:      i < slideIdx ? '100%' : i === slideIdx ? `${progress}%` : '0%',
+                background: bubble.couleur,
+                transition: i === slideIdx ? 'none' : undefined,
               }} />
             </div>
           ))}
@@ -308,7 +339,7 @@ function StoryViewer({ stories, currentIdx, companyName, companyLogo, onNext, on
 
         {/* Header */}
         <div className={styles.viewerHd}>
-          <div className={styles.viewerAvatar} style={{ borderColor: story.couleur }}>
+          <div className={styles.viewerAvatar} style={{ borderColor: bubble.couleur }}>
             {companyLogo
               ? <img src={companyLogo} alt={companyName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
               : <span style={{ fontSize: 18 }}>🏪</span>
@@ -316,7 +347,7 @@ function StoryViewer({ stories, currentIdx, companyName, companyLogo, onNext, on
           </div>
           <div>
             <div className={styles.viewerShop}>{companyName}</div>
-            <div className={styles.viewerTime}>{tempsDepuis}</div>
+            <div className={styles.viewerTime}>{tempsDepuis} · {slideIdx + 1}/{bubble.slides.length}</div>
           </div>
           <button className={styles.viewerClose} onClick={onClose}>
             <i className="fas fa-xmark" />
@@ -324,17 +355,17 @@ function StoryViewer({ stories, currentIdx, companyName, companyLogo, onNext, on
         </div>
 
         {/* Visuel produit */}
-        <div className={styles.viewerVisual} style={{ background: `${story.couleur}18` }}>
-          <img src={story.img} alt={story.produit} className={styles.viewerImg}
+        <div className={styles.viewerVisual} style={{ background: `${bubble.couleur}18` }}>
+          <img src={slide.img} alt={slide.produit} className={styles.viewerImg}
             onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
-          <div className={styles.viewerRing} style={{ borderColor: `${story.couleur}55` }} />
+          <div className={styles.viewerRing} style={{ borderColor: `${bubble.couleur}55` }} />
 
           {/* ── Prix en overlay sur l'image ── */}
-          {story.prix && (
-            <div className={styles.viewerPrixTag} style={{ background: story.couleur }}>
-              <span className={styles.viewerPrixTagVal}>{story.prix}</span>
-              {story.prixBarre && (
-                <span className={styles.viewerPrixTagBarre}>{story.prixBarre}</span>
+          {slide.prix && (
+            <div className={styles.viewerPrixTag} style={{ background: bubble.couleur }}>
+              <span className={styles.viewerPrixTagVal}>{slide.prix}</span>
+              {slide.prixBarre && (
+                <span className={styles.viewerPrixTagBarre}>{slide.prixBarre}</span>
               )}
             </div>
           )}
@@ -349,10 +380,10 @@ function StoryViewer({ stories, currentIdx, companyName, companyLogo, onNext, on
 
         {/* Infos produit */}
         <div className={styles.viewerInfo}>
-          <div className={styles.viewerProduit}>{story.produit}</div>
-          {story.caption && (
+          <div className={styles.viewerProduit}>{slide.produit}</div>
+          {slide.caption && (
             <div className={styles.viewerTag}>
-              <i className="fas fa-quote-left" /> {story.caption}
+              <i className="fas fa-quote-left" /> {slide.caption}
             </div>
           )}
         </div>
@@ -361,19 +392,19 @@ function StoryViewer({ stories, currentIdx, companyName, companyLogo, onNext, on
         <div className={styles.viewerActions}>
           <button
             className={styles.vaBtn}
-            onClick={() => { onClose(); navigate(`/produit/${story.productId}`); }}
+            onClick={() => { onClose(); navigate(`/produit/${slide.productId}`); }}
           >
             <i className="fas fa-eye" /> {t('boutiqueDetail.stories.voirLeProduit')}
           </button>
           <button
             className={styles.vaBtn2}
-            onClick={() => onToast(t('boutiqueDetail.stories.ajouteAuPanierToast', { produit: story.produit }))}
+            onClick={() => onToast(t('boutiqueDetail.stories.ajouteAuPanierToast', { produit: slide.produit }))}
           >
             <i className="fas fa-bag-shopping" /> {t('boutiqueDetail.stories.ajouterPanier')}
           </button>
           <button
             className={styles.vaShare}
-            onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/produit/${story.productId}`); onToast(t('boutiqueDetail.stories.lienCopieToast')); }}
+            onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/produit/${slide.productId}`); onToast(t('boutiqueDetail.stories.lienCopieToast')); }}
             title={t('boutiqueDetail.stories.partager')}
           >
             <i className="fas fa-share-nodes" />
@@ -382,14 +413,14 @@ function StoryViewer({ stories, currentIdx, companyName, companyLogo, onNext, on
       </div>
 
       {/* Flèche gauche */}
-      {currentIdx > 0 && (
+      {slideIdx > 0 && (
         <button className={`${styles.vNav} ${styles.vNavL}`} onClick={e => { e.stopPropagation(); onPrev(); }} aria-label={t('boutiqueDetail.stories.precedente')}>
           <i className="fas fa-chevron-left" />
         </button>
       )}
 
       {/* Flèche droite */}
-      {currentIdx < stories.length - 1 && (
+      {slideIdx < bubble.slides.length - 1 && (
         <button className={`${styles.vNav} ${styles.vNavR}`} onClick={e => { e.stopPropagation(); onNext(); }} aria-label={t('boutiqueDetail.stories.suivante')}>
           <i className="fas fa-chevron-right" />
         </button>
