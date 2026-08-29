@@ -648,6 +648,8 @@ export class MessagerieService {
       unreadCount,
       lastMessage:      conv.lastMessagePreview,
       lastMessageAt:    conv.lastMessageAt?.toISOString() ?? null,
+      pinned:           amInitiator ? conv.pinnedByInitiator : conv.pinnedByRecipient,
+      muted:            amInitiator ? conv.mutedByInitiator  : conv.mutedByRecipient,
     };
   }
 
@@ -1304,6 +1306,9 @@ export class MessagerieService {
       orderId:       msg.orderId,
       isEdited:      true,
       deletedAt:     null,
+      latitude:      msg.latitude  != null ? Number(msg.latitude)  : null,
+      longitude:     msg.longitude != null ? Number(msg.longitude) : null,
+      locationLabel: msg.locationLabel,
     };
   }
 
@@ -1654,6 +1659,9 @@ export class MessagerieService {
           replyToId:     null,
           productId:     null,
           orderId:       null,
+          latitude:      parent.latitude  != null ? Number(parent.latitude)  : null,
+          longitude:     parent.longitude != null ? Number(parent.longitude) : null,
+          locationLabel: parent.locationLabel,
           isEdited:      parent.isEdited,
           deletedAt:     parent.deletedAt?.toISOString() ?? null,
         } : null,
