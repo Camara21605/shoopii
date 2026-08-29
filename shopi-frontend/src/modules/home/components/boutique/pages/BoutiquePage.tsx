@@ -2,15 +2,21 @@
  * FICHIER : src/modules/home/components/boutique/pages/BoutiquePage.tsx
  *
  * CONNEXION API :
- *   GET /public/boutiques/:id          → infos boutique
- *   GET /public/boutiques/:id/produits → produits publics
- *   GET /public/boutiques/:id/livreurs → livreurs
+ *   GET /public/boutiques/:id             → infos boutique
+ *   GET /public/boutiques/:id/produits    → produits publics
+ *   GET /public/boutiques/:id/livreurs    → livreurs
+ *   GET /public/boutiques/:id/correspondants → correspondants
  *
  *   Onglets sans API (encore en mock) :
  *   - Promotions  → PROMOS_MOCK
  *   - Avis        → AVIS_MOCK
- *   - Correspondants → CORRESPONDANTS_MOCK
- *   - À propos    → données boutique
+ *
+ *   À propos / sidebar "Infos boutique" : utilisent désormais boutiqueInfo
+ *   (vraies données déjà chargées ci-dessus pour BoutiqueCover/Identity) —
+ *   BOUTIQUE_INFO mock supprimé. Restent en mock dans BoutiqueSidebar :
+ *   CATEGORIES_BOUTIQUE (liste de catégories fixe, pas dérivée des vrais
+ *   produits de la boutique) et les compteurs du filtre "Note minimale" —
+ *   hors périmètre de cette passe, pas montrés/demandés par l'utilisateur.
  */
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -27,7 +33,7 @@ import Footer from '../../layout/Footer';
 
 /* ── Données mock restantes ── */
 import {
-  PROMOS_MOCK, AVIS_MOCK, CORRESPONDANTS_MOCK,
+  PROMOS_MOCK, AVIS_MOCK,
   type BoutiqueInfo,
 } from '../data/boutiqueMockData';
 import type { AvisResponse } from '../data/types';
@@ -94,12 +100,29 @@ interface ProduitApi {
   companyLogo: string | null;
 }
 
-interface LivreurApi {
+export interface LivreurApi {
   id:           string;
   fullName:     string;
   zone:         string | null;
   availability: string;
   phone:        string | null;
+  emoji:        string;
+  note:         number;
+  trips:        number;
+}
+
+export interface CorrespondantApi {
+  id:                string;
+  fullName:          string;
+  ville:             string | null;
+  quartier:          string | null;
+  note:              number;
+  missions:          number;
+  verified:          boolean;
+  langues:           string[];
+  bio:               string | null;
+  phone:             string | null;
+  horaireAujourdhui: string | null;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -228,11 +251,12 @@ export default function BoutiquePage() {
   const isPreview         = searchParams.get('preview') === '1';
 
   // ── Données API ──────────────────────────────────────────────
-  const [boutique,  setBoutique]  = useState<BoutiqueApi | null>(null);
-  const [produits,  setProduits]  = useState<ProduitApi[]>([]);
-  const [livreurs,  setLivreurs]  = useState<LivreurApi[]>([]);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState<string | null>(null);
+  const [boutique,       setBoutique]       = useState<BoutiqueApi | null>(null);
+  const [produits,       setProduits]       = useState<ProduitApi[]>([]);
+  const [livreurs,       setLivreurs]       = useState<LivreurApi[]>([]);
+  const [correspondants, setCorrespondants] = useState<CorrespondantApi[]>([]);
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState<string | null>(null);
 
   // ── États UI ─────────────────────────────────────────────────
   const [onglet,       setOnglet]       = useState<OngletType>('produits');
@@ -247,6 +271,22 @@ export default function BoutiquePage() {
   const [promosLoading,  setPromosLoading]  = useState(false);
   const isLoggedIn = !!tokenStorage.get();
   const { openAuthModal, authModal } = useAuthGate();
+
+  /* ── Suivi + compteur d'abonnés ────────────────────────────────
+   * FollowButton met à jour son propre badge "Suivi(e)" tout seul, mais
+   * ne touche à aucun compteur — sans ceci, le nombre d'abonnés affiché
+   * restait figé sur la valeur chargée au montage, même après avoir
+   * cliqué "S'abonner"/"Se désabonner" sur CETTE page. On ajuste ici
+   * `boutique.totalAbonnes` de ±1 en optimiste (boutiqueInfo.abonnes en
+   * dérive automatiquement, voir toBoutiqueInfo) ; comparé à l'ancien
+   * `suivi` pour ne compter qu'un vrai changement, jamais deux fois. */
+  function handleSuiviChange(isSuivi: boolean) {
+    setSuivi(prevSuivi => {
+      if (prevSuivi === isSuivi) return prevSuivi;
+      setBoutique(b => b ? { ...b, totalAbonnes: Math.max(0, (b.totalAbonnes ?? 0) + (isSuivi ? 1 : -1)) } : b);
+      return isSuivi;
+    });
+  }
 
   // ── Toast ────────────────────────────────────────────────────
   const [toastMsg,     setToastMsg]     = useState('');
@@ -298,9 +338,11 @@ export default function BoutiquePage() {
       }).catch(() => ({ data: [] })),
       apiFetch<any>(`/public/boutiques/${companyId}/livreurs`, { public: true })
         .catch(() => []),
+      apiFetch<any>(`/public/boutiques/${companyId}/correspondants`, { public: true })
+        .catch(() => []),
       suiviPromise,
     ])
-      .then(([b, p, l, s]) => {
+      .then(([b, p, l, co, s]) => {
         const boutiqueData = b as BoutiqueApi;
         setBoutique(boutiqueData);
         /* isSuivi provient de l'endpoint authentifié /suivis/entreprises/:id/statut */
@@ -308,6 +350,7 @@ export default function BoutiquePage() {
         const prodList = Array.isArray(p) ? p : (p?.data ?? p?.produits ?? []);
         setProduits(prodList);
         setLivreurs(Array.isArray(l) ? l : (l?.data ?? []));
+        setCorrespondants(Array.isArray(co) ? co : (co?.data ?? []));
       })
       .catch(() => setError(t('boutiqueDetail.page.erreurChargement')))
       .finally(() => setLoading(false));
@@ -369,7 +412,7 @@ export default function BoutiquePage() {
     produits:       produitsFiltres.length,
     promos:         PROMOS_MOCK.length,
     livreurs:       livreurs.length,
-    correspondants: CORRESPONDANTS_MOCK.length,
+    correspondants: correspondants.length,
     avis:           AVIS_MOCK.length * 49,
   };
 
@@ -448,7 +491,7 @@ export default function BoutiquePage() {
           callLoading={callLoading}
           onToast={showToast}
           onRequireAuth={openAuthModal}
-          onSuiviChange={setSuivi}
+          onSuiviChange={handleSuiviChange}
           onMessage={() => {
             if (!isLoggedIn) { openAuthModal(); return; }
             if (!suivi)      { showToast(t('boutiqueDetail.page.abonnezVousMessage')); return; }
@@ -492,6 +535,7 @@ export default function BoutiquePage() {
               onToast={showToast}
               isOpen={filtresOpen}
               onClose={() => setFiltresOpen(false)}
+              boutiqueInfo={boutiqueInfo}
             />
           )}
 
@@ -512,8 +556,8 @@ export default function BoutiquePage() {
                                               companyId={companyId ?? ''}
                                               onToast={showToast}
                                             />}
-            {onglet === 'livreurs'       && <LivreursSection        onToast={showToast} />}
-            {onglet === 'correspondants' && <CorrespondantsSection  onToast={showToast} />}
+            {onglet === 'livreurs'       && <LivreursSection        livreurs={livreurs} onToast={showToast} />}
+            {onglet === 'correspondants' && <CorrespondantsSection  correspondants={correspondants} onToast={showToast} />}
             {onglet === 'avis'           && <AvisSection
                                               note={avisData?.averageRating ?? boutiqueInfo.note}
                                               totalRatings={avisData?.totalRatings ?? boutiqueInfo.totalRatings ?? 0}
@@ -521,7 +565,7 @@ export default function BoutiquePage() {
                                               distribution={avisData?.distribution}
                                               loading={avisLoading}
                                             />}
-            {onglet === 'apropos'        && <AProposSection         onToast={showToast} />}
+            {onglet === 'apropos'        && <AProposSection         boutiqueInfo={boutiqueInfo} createdAt={boutique?.createdAt ?? null} livreurs={livreurs} onToast={showToast} />}
           </main>
         </div>
       </div>

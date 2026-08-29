@@ -36,6 +36,7 @@ import {
   CreateProductDto,
   FilterProductsDto,
   UpdateProductDto,
+  AddProductStoryDto,
 } from './dto/create-product.dto';
 
 import { JwtAuthGuard }       from 'src/common/guards/auth.guard';
@@ -102,6 +103,18 @@ export class ProduitsController {
     @CurrentUser() user: User,
   ) {
     return this.produitsService.getCategoriesPourEntreprise(user);
+  }
+
+  // ── GET /produits/stories ─────────────────────────────────────
+  // ⚠️ Déclarée avant /:id → sinon "stories" serait interprété comme un UUID
+
+  @Get('stories')
+  @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: "Toutes les stories de l'entreprise connectée, tous produits confondus" })
+  listMyStories(
+    @CurrentUser() user: User,
+  ) {
+    return this.produitsService.listMyStories(user);
   }
 
   // ── GET /produits ─────────────────────────────────────────────
@@ -181,6 +194,50 @@ export class ProduitsController {
     @CurrentUser() user: User,
   ) {
     return this.produitsService.archiveProduct(id, user);
+  }
+
+  // ── GET /produits/:id/stories ─────────────────────────────────
+
+  @Get(':id/stories')
+  @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: "Lister les stories publiées pour ce produit" })
+  @ApiParam({ name: 'id', description: 'UUID du produit' })
+  listStories(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.produitsService.listProductStories(id, user);
+  }
+
+  // ── POST /produits/:id/stories ────────────────────────────────
+
+  @Post(':id/stories')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: "Publier une nouvelle story pour ce produit" })
+  @ApiParam({ name: 'id', description: 'UUID du produit' })
+  addStory(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AddProductStoryDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.produitsService.addProductStory(id, dto, user);
+  }
+
+  // ── DELETE /produits/:id/stories/:storyId ─────────────────────
+
+  @Delete(':id/stories/:storyId')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: "Retirer une story de ce produit" })
+  @ApiParam({ name: 'id',      description: 'UUID du produit' })
+  @ApiParam({ name: 'storyId', description: 'UUID de la story' })
+  deleteStory(
+    @Param('id', ParseUUIDPipe)      id:      string,
+    @Param('storyId', ParseUUIDPipe) storyId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.produitsService.deleteProductStory(id, storyId, user);
   }
 
   // ── DELETE /produits/:id ──────────────────────────────────────

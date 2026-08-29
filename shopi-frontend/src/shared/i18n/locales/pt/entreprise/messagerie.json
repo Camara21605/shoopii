@@ -23,6 +23,7 @@
         "livreurs": "Entregadores",
         "clients": "Clientes",
         "correspondants": "Correspondentes",
+        "contacts": "Contatos",
         "masquees": "Ocultas"
       },
       "searchPlaceholder": "Pesquisar uma conversa…",

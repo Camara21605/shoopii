@@ -11,11 +11,13 @@
     },
     "items": {
       "overview": "Vue d'ensemble",
+      "notifications": "Notifications",
       "commandes": "Commandes",
       "retours": "Retours & SAV",
       "produits": "Produits",
       "ajouter": "Ajouter produit",
       "inventaire": "Inventaire",
+      "fournisseurs": "Fournisseurs",
       "promotions": "Promotions",
       "analytics": "Analytics",
       "seo": "SEO & Marketing",
@@ -58,6 +60,10 @@
       "inventaire": {
         "title": "Inventaire & Stock",
         "subtitle": "Gérez vos niveaux de stock"
+      },
+      "fournisseurs": {
+        "title": "Fournisseurs",
+        "subtitle": "Connectez-vous aux entreprises Shopi qui vendent en gros"
       },
       "promotions": {
         "title": "Promotions & Codes promo",
@@ -126,9 +132,26 @@
       "profilLivreurReseau": {
         "title": "Profil livreur",
         "subtitle": "Détails et suivi"
+      },
+      "equipe": {
+        "title": "Équipe",
+        "subtitle": "Membres et permissions de votre boutique"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "subtitle": "Toute l'activité de votre boutique"
       }
     },
     "searchPlaceholder": "Rechercher commandes, produits, clients…",
+    "search": {
+      "produits": "Produits",
+      "commandes": "Commandes",
+      "clients": "Clients",
+      "livreurs": "Livreurs",
+      "correspondants": "Correspondants",
+      "noResults": "Aucun résultat pour « {{query}} »",
+      "error": "Connexion au serveur impossible — réessayez"
+    },
     "tooltips": {
       "livreurs": "Mes livreurs",
       "correspondants": "Correspondants",

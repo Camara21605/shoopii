@@ -38,7 +38,24 @@ import {
   CreateProductDto,
   UpdateProductDto,
   FilterProductsDto,
+  AddProductStoryDto,
 } from './dto/create-product.dto';
+
+export interface ProductStoryResponse {
+  id:         string;
+  mediaUrl:   string;
+  mediaType:  StoryMediaType;
+  caption:    string | null;
+  status:     StoryStatus;
+  expiresAt:  string;
+  createdAt:  string;
+  viewsCount: number;
+}
+
+export interface MyProductStoryResponse extends ProductStoryResponse {
+  productId:  string;
+  productNom: string;
+}
 
 export interface ProductResponse {
   id:          string;
@@ -683,6 +700,84 @@ export class ProduitsService {
     if (excludeId) query.andWhere('p.id != :id', { id: excludeId });
     const exists = await query.getExists();
     return { available: !exists, slug: normalized };
+  }
+
+  // ── Stories d'un produit existant ──────────────────────────────────────────
+
+  /** Toutes les stories de l'entreprise connectée, tous produits confondus. */
+  async listMyStories(user: User): Promise<MyProductStoryResponse[]> {
+    if (user.role === UserRole.SUPER_ADMIN) return [];
+
+    const actorId = (user as any).actorId as string | undefined;
+    const companyProfile = await this.companyRepo.findOne({ where: { userId: user.id } });
+    const companyId = companyProfile?.id ?? actorId;
+    if (!companyId) return [];
+
+    const stories = await this.storyRepo.find({
+      where:     { companyId },
+      relations: ['product'],
+      order:     { createdAt: 'DESC' },
+    });
+
+    return stories.map(s => ({
+      ...this.toStoryResponse(s),
+      productId:  s.productId,
+      productNom: s.product?.nom ?? '',
+    }));
+  }
+
+  async listProductStories(productId: string, user: User): Promise<ProductStoryResponse[]> {
+    await this.findAndVerifyOwnership(productId, user);
+    const stories = await this.storyRepo.find({
+      where: { productId },
+      order:  { createdAt: 'DESC' },
+    });
+    return stories.map(s => this.toStoryResponse(s));
+  }
+
+  async addProductStory(productId: string, dto: AddProductStoryDto, user: User): Promise<ProductStoryResponse> {
+    const product = await this.findAndVerifyOwnership(productId, user);
+
+    const validUrls = (product.media ?? []).map(m => m.url);
+    if (!validUrls.includes(dto.mediaUrl)) {
+      throw new BadRequestException("L'image sélectionnée n'appartient pas à ce produit.");
+    }
+
+    const story = this.storyRepo.create({
+      productId,
+      companyId:  product.companyId,
+      mediaUrl:   dto.mediaUrl,
+      mediaType:  StoryMediaType.IMAGE,
+      caption:    dto.caption?.trim() || null,
+      heureDebut: dto.heureDebut ?? null,
+      heureFin:   dto.heureFin   ?? null,
+      jours:      dto.jours?.length ? dto.jours : null,
+      status:     StoryStatus.PUBLISHED,
+      expiresAt:  new Date(Date.now() + 24 * 60 * 60 * 1000),
+      duration:   5,
+    });
+    await this.storyRepo.save(story);
+    return this.toStoryResponse(story);
+  }
+
+  async deleteProductStory(productId: string, storyId: string, user: User): Promise<void> {
+    await this.findAndVerifyOwnership(productId, user);
+    const story = await this.storyRepo.findOne({ where: { id: storyId, productId } });
+    if (!story) throw new NotFoundException('Story introuvable.');
+    await this.storyRepo.remove(story);
+  }
+
+  private toStoryResponse(s: ProductStory): ProductStoryResponse {
+    return {
+      id:         s.id,
+      mediaUrl:   s.mediaUrl,
+      mediaType:  s.mediaType,
+      caption:    s.caption,
+      status:     s.status,
+      expiresAt:  s.expiresAt.toISOString(),
+      createdAt:  s.createdAt.toISOString(),
+      viewsCount: s.viewsCount,
+    };
   }
 
   // ── PRIVÉES ───────────────────────────────────────────────────────────────

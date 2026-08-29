@@ -35,6 +35,7 @@ export interface CorrFilters {
   ville?:   string;
   type?:    CorrType;
   online?:  boolean;
+  search?:  string;
 }
 
 /* Calcule les initiales depuis un nom complet */
@@ -71,6 +72,7 @@ export async function fetchCorrespondants(filters?: CorrFilters): Promise<Corres
       ville:   filters?.ville,
       type:    filters?.type,
       online:  filters?.online,
+      search:  filters?.search,
     },
   });
   return (data ?? []).map(adapt);

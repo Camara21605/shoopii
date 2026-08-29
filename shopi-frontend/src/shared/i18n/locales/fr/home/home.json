@@ -52,13 +52,7 @@
       "voirOffre": "Voir l'offre"
     },
     "storiesStrip": {
-      "title": "Stories des boutiques",
-      "sub": "Produits phares mis en avant par nos partenaires",
-      "voirTout": "Voir tout",
-      "toastVoirTout": "📖 Toutes les stories",
       "storiesDe": "Stories de {{nom}}",
-      "produitCount_one": "{{count}} produit",
-      "produitCount_other": "{{count}} produits",
       "enLigneMaintenant": "En ligne maintenant",
       "vuRecemment": "Vu récemment",
       "badgePromo": "🔥 Promo",
@@ -68,6 +62,12 @@
       "voirProduit": "Voir le produit",
       "laBoutique": "La boutique",
       "partager": "Partager",
+      "jaime": "J'aime",
+      "quiAVu": "Qui a vu",
+      "chargementVues": "Chargement…",
+      "aucuneVue": "Aucune vue pour l'instant",
+      "vuesEchec": "Impossible d'afficher les vues",
+      "jaimeEchec": "Connectez-vous pour aimer cette story",
       "lienCopieToast": "🔗 Lien copié !"
     },
     "randomBloc": {

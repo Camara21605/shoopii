@@ -122,8 +122,10 @@ export default function CardCorrespondant({ c, onToast, onRemoved }: Props) {
           <button
             className={styles.crV}
             onClick={() => id ? navigate(`/profil/correspondant/${id}`) : onToast(`📍 ${name}`, 'i')}
+            title={t('sharedCards.correspondant.voirProfil')}
+            aria-label={t('sharedCards.correspondant.voirProfil')}
           >
-            <i className="fas fa-user" /> {t('sharedCards.correspondant.voirProfil')}
+            <i className="fas fa-user" />
           </button>
           <FollowButton
             actorType="correspondant"

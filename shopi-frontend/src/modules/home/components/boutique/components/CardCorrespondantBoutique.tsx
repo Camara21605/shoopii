@@ -3,26 +3,30 @@
  * FICHIER : src/modules/home/components/boutique/components/CardCorrespondantBoutique.tsx
  *
  * RÔLE    : Carte d'un correspondant dans la section Correspondants
- *           de la page boutique, vue client.
+ *           de la page boutique, vue client — données réelles.
  *
  * AFFICHE :
- *   - Avatar emoji + badge "Vérifié Shoneya" si certified
- *   - Nom, ville/quartier, pays + drapeau
- *   - Note + nombre de colis gérés + taux de succès
- *   - Badge statut (Disponible / Complet)
- *   - Tarif + délai + horaires
+ *   - Avatar + badge "Vérifié Shoneya" si verified
+ *   - Nom, ville/quartier
+ *   - Note + nombre de missions accomplies
+ *   - Horaires du jour (si renseignés)
  *   - Langues parlées
  *   - Bio courte
- *   - Boutons : Contacter | Choisir ce correspondant
+ *   - Boutons : Contacter (tel: si numéro connu) | Choisir ce correspondant
+ *
+ * Volontairement absents par rapport à l'ancienne carte mock : tarif,
+ * "colis/mois", taux de succès, badge disponible/complet — aucune donnée
+ * réelle ne les alimente actuellement (pas de table colis/tarif côté
+ * backend). Les réafficher aurait recréé le problème qu'on corrige.
  * ============================================================
  */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { CorrespondantBoutique } from '../data/boutiqueMockData';
+import type { CorrespondantApi } from '../pages/BoutiquePage';
 import styles from '../styles/CardsCorrespondant.module.css';
 
 interface Props {
-  c:       CorrespondantBoutique;
+  c:       CorrespondantApi;
   onToast: (m: string) => void;
 }
 
@@ -37,9 +41,10 @@ function Stars({ n }: { n: number }) {
 export default function CardCorrespondantBoutique({ c, onToast }: Props) {
   const { t } = useTranslation();
   const [choisi, setChoisi] = useState(false);
+  const localisation = [c.quartier, c.ville].filter(Boolean).join(', ');
 
   return (
-    <div className={`${styles.card} ${!c.dispo ? styles.cardOff : ''} ${choisi ? styles.cardChoisi : ''}`}>
+    <div className={`${styles.card} ${choisi ? styles.cardChoisi : ''}`}>
 
       {/* ── Badge Vérifié (coin haut droit) ── */}
       {c.verified && (
@@ -50,20 +55,21 @@ export default function CardCorrespondantBoutique({ c, onToast }: Props) {
 
       {/* ── Avatar ── */}
       <div className={styles.avaWrap}>
-        <div className={styles.ava}>{c.emoji}</div>
-        <div className={`${styles.dot} ${c.dispo ? styles.dotOn : styles.dotOff}`} />
+        <div className={styles.ava}>🏢</div>
       </div>
 
       {/* ── Nom ── */}
-      <div className={styles.nom}>{c.nom}</div>
+      <div className={styles.nom}>{c.fullName}</div>
 
       {/* ── Localisation ── */}
-      <div className={styles.loc}>
-        <i className="fas fa-location-dot" />
-        {c.drapeau} {c.quartier}, {c.ville} · {c.pays}
-      </div>
+      {localisation && (
+        <div className={styles.loc}>
+          <i className="fas fa-location-dot" />
+          🇬🇳 {localisation}
+        </div>
+      )}
 
-      {/* ── Stats ── */}
+      {/* ── Stats : note + missions accomplies ── */}
       <div className={styles.stats}>
         <div className={styles.stat}>
           <Stars n={c.note} />
@@ -72,56 +78,49 @@ export default function CardCorrespondantBoutique({ c, onToast }: Props) {
         <div className={styles.statSep} />
         <div className={styles.stat}>
           <i className="fas fa-box" style={{ color:'var(--blue)', fontSize:11 }} />
-          <span className={styles.statVal}>{t('boutiqueDetail.cardCorrespondant.colisMois', { count: c.colis })}</span>
-        </div>
-        <div className={styles.statSep} />
-        <div className={styles.stat}>
-          <i className="fas fa-check-circle" style={{ color:'var(--emerald)', fontSize:11 }} />
-          <span className={styles.statVal}>{c.succès}</span>
+          <span className={styles.statVal}>{t('boutiqueDetail.cardCorrespondant.missionsCount', { count: c.missions })}</span>
         </div>
       </div>
-
-      {/* ── Badge statut disponibilité ── */}
-      <span className={c.dispo ? styles.dispoBadge : styles.occupeBadge}>
-        {c.dispo ? t('boutiqueDetail.cardCorrespondant.disponible') : t('boutiqueDetail.cardCorrespondant.complet')}
-      </span>
 
       {/* ── Infos pratiques ── */}
       <div className={styles.infos}>
         <div className={styles.infoRow}>
-          <i className="fas fa-coins" />
-          <span>{c.tarif}</span>
-        </div>
-        <div className={styles.infoRow}>
           <i className="fas fa-clock" />
-          <span>{c.delai} · {c.horaires}</span>
+          <span>
+            {c.horaireAujourdhui
+              ? t('boutiqueDetail.cardCorrespondant.ouvertAujourdhui', { horaire: c.horaireAujourdhui })
+              : t('boutiqueDetail.cardCorrespondant.fermeAujourdhui')}
+          </span>
         </div>
-        <div className={styles.infoRow}>
-          <i className="fas fa-language" />
-          <span>{c.langues.join(', ')}</span>
-        </div>
+        {c.langues.length > 0 && (
+          <div className={styles.infoRow}>
+            <i className="fas fa-language" />
+            <span>{c.langues.join(', ')}</span>
+          </div>
+        )}
       </div>
 
       {/* ── Bio ── */}
-      <p className={styles.bio}>{c.bio}</p>
+      {c.bio && <p className={styles.bio}>{c.bio}</p>}
 
       {/* ── Boutons d'action ── */}
       <div className={styles.btns}>
         <button
           className={styles.btnContact}
-          onClick={() => onToast(t('boutiqueDetail.cardCorrespondant.messageToast', { nom: c.nom }))}
+          onClick={() => {
+            if (c.phone) window.location.href = `tel:${c.phone}`;
+            else onToast(t('boutiqueDetail.cardCorrespondant.telephoneIndisponible'));
+          }}
         >
-          <i className="fas fa-comment-dots" /> {t('boutiqueDetail.cardCorrespondant.contacter')}
+          <i className="fas fa-phone" /> {t('boutiqueDetail.cardCorrespondant.contacter')}
         </button>
         <button
-          className={`${styles.btnChoisir} ${choisi ? styles.btnChoisirOn : ''} ${!c.dispo ? styles.btnChoisirOff : ''}`}
-          disabled={!c.dispo}
+          className={`${styles.btnChoisir} ${choisi ? styles.btnChoisirOn : ''}`}
           onClick={() => {
-            if (!c.dispo) return;
             setChoisi(v => !v);
             onToast(choisi
-              ? t('boutiqueDetail.cardCorrespondant.retireToast', { nom: c.nom })
-              : t('boutiqueDetail.cardCorrespondant.selectionneToast', { nom: c.nom })
+              ? t('boutiqueDetail.cardCorrespondant.retireToast', { nom: c.fullName })
+              : t('boutiqueDetail.cardCorrespondant.selectionneToast', { nom: c.fullName })
             );
           }}
         >

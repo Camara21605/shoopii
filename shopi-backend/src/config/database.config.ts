@@ -36,6 +36,9 @@ import { ProductSpec }    from '../database/entities/entreprise.table/product-sp
 import { ProductWholesaleTier } from '../database/entities/entreprise.table/product-wholesale-tier.entity';
 import { ProductMedia }   from '../database/entities/entreprise.table/product-media.entity';
 import { ProductStory } from '../database/entities/entreprise.table/product-story.entity';
+import { StoryView }    from '../database/entities/entreprise.table/story-view.entity';
+import { StoryLike }    from '../database/entities/entreprise.table/story-like.entity';
+import { CompanySupplierLink } from '../database/entities/entreprise.table/company-supplier-link.entity';
 import { ProductLike } from '../database/entities/entreprise.table/product-like.entity';  
 import { PromotionProduct } from '../database/entities/entreprise.table/promotion-product.entity'; // ✅ AJOUTÉ : manquait l'import de PromotionProduct
 import { TrendingProduct }     from '../database/entities/entreprise.table/trending-product.entity';
@@ -284,6 +287,9 @@ export const databaseConfigFactory = {
 
       // 8. EN DERNIER — dépend de tous les profils
       ProductStory,
+      StoryView,
+      StoryLike,
+      CompanySupplierLink,
       ProductLike,
       TrendingProduct,
       ProductCooccurrence,

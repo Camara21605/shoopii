@@ -49,7 +49,8 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
   {
     title: 'sidebar.sections.principal',
     items: [
-      { id: 'overview',  icon: 'fa-chart-pie',  label: 'sidebar.items.overview' },
+      { id: 'overview',      icon: 'fa-chart-pie', label: 'sidebar.items.overview' },
+      { id: 'notifications', icon: 'fa-bell',      label: 'sidebar.items.notifications' },
       { id: 'commandes', icon: 'fa-box',         label: 'sidebar.items.commandes', badge: '14', badgeClass: 'r', perm: ['orders',  'view'] },
       { id: 'retours',   icon: 'fa-rotate-left', label: 'sidebar.items.retours',   badge: '3',  badgeClass: 'a', perm: ['returns', 'view'] },
     ],
@@ -59,8 +60,9 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
     items: [
       { id: 'produits',   icon: 'fa-tag',         label: 'sidebar.items.produits',   badge: '124',              perm: ['products',   'view']   },
       { id: 'ajouter',    icon: 'fa-plus-circle', label: 'sidebar.items.ajouter',                               perm: ['products',   'create'] },
-      { id: 'inventaire', icon: 'fa-warehouse',   label: 'sidebar.items.inventaire', badge: '6', badgeClass: 'a', perm: ['products', 'view']   },
-      { id: 'promotions', icon: 'fa-percent',     label: 'sidebar.items.promotions', badge: '4', badgeClass: 'p', perm: ['promotions','view']  },
+      { id: 'inventaire',   icon: 'fa-warehouse', label: 'sidebar.items.inventaire',   badge: '6', badgeClass: 'a', perm: ['products', 'view']   },
+      { id: 'fournisseurs', icon: 'fa-industry',  label: 'sidebar.items.fournisseurs',                              perm: ['products', 'view']   },
+      { id: 'promotions',   icon: 'fa-percent',   label: 'sidebar.items.promotions',   badge: '4', badgeClass: 'p', perm: ['promotions','view']  },
     ],
   },
   {

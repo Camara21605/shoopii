@@ -1,0 +1,39 @@
+{
+  "fournisseurs": {
+    "header": {
+      "title": "Suppliers",
+      "subtitle": "Connect to Shopi companies that sell wholesale to restock your inventory",
+      "connecter": "Connect a supplier"
+    },
+    "loading": "Loading suppliers…",
+    "loadError": "Could not load your suppliers.",
+    "searchError": "Could not search for suppliers.",
+    "connectSuccess": "✅ Connected to {{nom}}",
+    "disconnectSuccess": "🔌 {{nom}} disconnected",
+    "disconnectError": "Could not disconnect this supplier.",
+    "catalogueError": "Could not load the catalog.",
+    "empty": {
+      "title": "No suppliers connected",
+      "sub": "Connect to a Shopi company that sells wholesale to access its restocking catalog."
+    },
+    "card": {
+      "produitsGros_one": "{{count}} wholesale product",
+      "produitsGros_other": "{{count}} wholesale products",
+      "voirCatalogue": "View catalog",
+      "deconnecter": "Disconnect"
+    },
+    "searchModal": {
+      "title": "Connect a supplier",
+      "placeholder": "Search a company…",
+      "noResults": "No company selling wholesale found.",
+      "connecter": "Connect",
+      "connecte": "Connected"
+    },
+    "catalogueModal": {
+      "subtitle": "Wholesale catalog",
+      "empty": "This supplier has no wholesale product published yet.",
+      "moq_one": "Min. quantity: {{count}} unit",
+      "moq_other": "Min. quantity: {{count}} units"
+    }
+  }
+}

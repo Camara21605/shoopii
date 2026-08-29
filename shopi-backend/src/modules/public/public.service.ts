@@ -3,19 +3,25 @@
  * ✅ AJOUT : getSimilaires()
  * ============================================================ */
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, MoreThan, In } from 'typeorm';
 
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
 import { Company }     from 'src/database/entities/profiles/entreprise-profile.entity';
-import { Delivery }    from 'src/database/entities/profiles/livreur-profile.entity';
+import { Delivery, DeliveryStatus } from 'src/database/entities/profiles/livreur-profile.entity';
+import { Correspondent, CorrespondantStatus, VerificationStatus } from 'src/database/entities/profiles/correspondant-profile.entity';
+import { JOURS_ORDER } from 'src/database/entities/profiles/correspondant-horaire.entity';
 import { CompanyAvis } from 'src/database/entities/entreprise.table/company-avis.entity';
 import { Promotion, PromoStatus } from 'src/database/entities/entreprise.table/promotion.entity';
 import { Follow, FollowStatus, TargetActorType } from 'src/database/entities/follow/follow.entity';
 import { ProductStory, StoryStatus } from 'src/database/entities/entreprise.table/product-story.entity';
+import { StoryView }   from 'src/database/entities/entreprise.table/story-view.entity';
+import { StoryLike }   from 'src/database/entities/entreprise.table/story-like.entity';
 import { Category }    from 'src/database/entities/entreprise.table/category.entity';
 import { SubCategory } from 'src/database/entities/entreprise.table/sub-category.entity';
+import { User }        from 'src/database/entities/user.entity';
+import { NotificationBroadcastService } from 'src/modules/notifications/services/notification-broadcast.service';
 
 // ── Interfaces de réponse ─────────────────────────────────────
 
@@ -100,6 +106,10 @@ export interface PublicBoutiqueResponse {
   domaine:       string | null;
   domaineIcon:   string | null;
   membre:        string;
+  /** Date de création du compte (ISO) — pour calculer côté client des
+   *  dérivés (ex: "X années d'expérience") sans dupliquer la logique de
+   *  formatage déjà faite ici pour `membre`. */
+  createdAt:     string;
   totalAbonnes:  number;
   online:        boolean;
 }
@@ -110,6 +120,34 @@ export interface PublicLivreurResponse {
   zone:         string | null;
   availability: string;
   phone:        string | null;
+  emoji:        string;
+  note:         number;
+  trips:        number;
+}
+
+/*
+ * Champs volontairement absents par rapport à l'ancien CORRESPONDANTS_MOCK
+ * du frontend (tarif, colis/mois, taux de succès, disponible/complet) :
+ * aucune colonne ni table ne les stocke réellement côté backend (pas de
+ * table "colis"/"package" dans ce projet à ce jour, pas de champ tarif sur
+ * Correspondent). Les inventer aurait recréé le problème qu'on corrige —
+ * de la donnée fictive présentée comme réelle. `verified` et `missions`
+ * remplacent la distinction disponible/complet dans le résumé de l'onglet,
+ * ce sont eux qui ont un vrai sens ici.
+ */
+export interface PublicCorrespondantResponse {
+  id:                string;
+  fullName:          string;
+  ville:             string | null;
+  quartier:          string | null;
+  note:              number;
+  missions:          number;
+  verified:          boolean;
+  langues:           string[];
+  bio:               string | null;
+  phone:             string | null;
+  /** Horaires du jour courant — null si fermé aujourd'hui ou horaires non renseignés. */
+  horaireAujourdhui: string | null;
 }
 
 export interface PublicStoryResponse {
@@ -127,6 +165,7 @@ export interface PublicStoryResponse {
 }
 
 export interface HomeStorySlide {
+  id:        string;
   productId: string;
   produit:   string;
   prix:      string;
@@ -138,13 +177,28 @@ export interface HomeStorySlide {
   duree:     number;
 }
 
-export interface HomeBoutiqueStoryResponse {
+/**
+ * Une entrée = UN produit (jamais plusieurs produits mélangés).
+ * `images` regroupe uniquement les stories actives de CE produit.
+ */
+export interface HomeProductStoryResponse {
+  productId: string;
+  produit:   string;
   companyId: string;
   shopNom:   string;
   shopLogo:  string | null;
   online:    boolean;
   hasPromo:  boolean;
-  slides:    HomeStorySlide[];
+  images:    HomeStorySlide[];
+}
+
+export interface StoryViewerResponse {
+  id:       string;
+  name:     string;
+  avatar:   string | null;
+  viewedAt: string;
+  /** A laissé un ❤️ sur cette story — comme les réactions WhatsApp Status. */
+  liked:    boolean;
 }
 
 @Injectable()
@@ -159,6 +213,9 @@ export class PublicService {
 
     @InjectRepository(Delivery)
     private readonly deliveryRepo: Repository<Delivery>,
+
+    @InjectRepository(Correspondent)
+    private readonly correspondantRepo: Repository<Correspondent>,
 
     @InjectRepository(CompanyAvis)
     private readonly avisRepo: Repository<CompanyAvis>,
@@ -177,6 +234,17 @@ export class PublicService {
 
     @InjectRepository(SubCategory)
     private readonly subCategoryRepo: Repository<SubCategory>,
+
+    @InjectRepository(StoryView)
+    private readonly storyViewRepo: Repository<StoryView>,
+
+    @InjectRepository(StoryLike)
+    private readonly storyLikeRepo: Repository<StoryLike>,
+
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+
+    private readonly broadcast: NotificationBroadcastService,
   ) {}
 
   // ── Produits publics paginés ──────────────────────────────────
@@ -349,14 +417,60 @@ export class PublicService {
   // ── Livreurs d'une boutique ───────────────────────────────────
 
   async getBoutiqueLivreurs(companyId: string): Promise<PublicLivreurResponse[]> {
-    const livreurs = await this.deliveryRepo.find({ where: { companyId } });
+    /* status: ACTIVE uniquement — un livreur pending/suspended/banned ne
+     * doit jamais apparaître publiquement sur la fiche boutique, même
+     * s'il est encore rattaché via companyId. */
+    const livreurs = await this.deliveryRepo.find({
+      where: { companyId, status: DeliveryStatus.ACTIVE },
+    });
     return livreurs.map(l => ({
       id:           l.id,
       fullName:     l.fullName,
       zone:         l.zone     ?? null,
       availability: l.availability,
       phone:        l.phone    ?? null,
+      emoji:        l.deliveryEmoji || '🛵',
+      note:         Number(l.averageRating) || 0,
+      trips:        l.totalDeliveries ?? 0,
     }));
+  }
+
+  // ── Correspondants d'une boutique ──────────────────────────────
+
+  async getBoutiqueCorrespondants(companyId: string): Promise<PublicCorrespondantResponse[]> {
+    /* status: ACTIVE uniquement — même règle que les livreurs : un
+     * correspondant pending/suspended/disabled/deleted ne doit jamais
+     * apparaître publiquement, même s'il est encore rattaché via companyId. */
+    const correspondants = await this.correspondantRepo.find({
+      where:     { companyId, status: CorrespondantStatus.ACTIVE },
+      relations: ['horaires'],
+    });
+
+    /* Date.getDay() : 0=dimanche..6=samedi → JourSemaine (JOURS_ORDER commence
+     * au lundi) : décalage de 1 jour, dimanche revient en dernière position. */
+    const todayIdx = new Date().getDay();
+    const today    = JOURS_ORDER[(todayIdx + 6) % 7];
+
+    return correspondants.map(c => {
+      const horaireDuJour = (c.horaires ?? []).find(h => h.jour === today);
+      const horaireAujourdhui = horaireDuJour?.actif
+        ? `${horaireDuJour.ouverture} – ${horaireDuJour.fermeture}`
+        : null;
+
+      return {
+        id:                c.id,
+        fullName:          c.fullName,
+        ville:             c.depotVille   ?? null,
+        quartier:          c.depotCommune ?? null,
+        note:              Number(c.averageRating) || 0,
+        missions:          c.totalMissions ?? 0,
+        verified:          c.verificationStatus === VerificationStatus.VERIFIED,
+        langues:           (c.langues ?? '').split(',').map(l => l.trim()).filter(Boolean),
+        bio:               c.bio ?? null,
+        phone:             c.depotPhone ?? null,
+        horaireAujourdhui,
+      };
+    });
   }
 
   // ── Mappers privés ────────────────────────────────────────────
@@ -494,6 +608,7 @@ export class PublicService {
       domaine:       (c.companyType as any)?.nom   ?? null,
       domaineIcon:   (c.companyType as any)?.icone ?? null,
       membre,
+      createdAt:     new Date(c.createdAt).toISOString(),
       totalAbonnes,
       online,
     };
@@ -686,9 +801,18 @@ export class PublicService {
   /* ════════════════════════════════════════════════════════
    * GET /public/stories
    * Stories actives de toutes les boutiques — page d'accueil.
-   * Groupées par boutique (max 15 boutiques, 4 slides chacune).
+   *
+   * Une entrée de la réponse = UN PRODUIT, jamais plusieurs produits
+   * mélangés dans le même groupe — même quand ils appartiennent à la
+   * même boutique. Chaque produit garde TOUTES ses images actives.
+   *
+   * Plafonds : 15 boutiques max, 4 produits max par boutique (une
+   * boutique qui publie 4 stories d'un coup sur un même produit ne
+   * doit pas manger tout le quota au détriment d'un autre produit
+   * storié la veille — ce 2e produit reste visible, en entier, dans
+   * sa propre entrée).
    ════════════════════════════════════════════════════════ */
-  async getHomeStories(): Promise<HomeBoutiqueStoryResponse[]> {
+  async getHomeStories(): Promise<HomeProductStoryResponse[]> {
     const now = new Date();
 
     /* 1. Toutes les stories publiées non expirées */
@@ -701,15 +825,17 @@ export class PublicService {
 
     if (!allStories.length) return [];
 
-    /* 2. Grouper par companyId (ordre d'apparition préservé) */
-    const groups = new Map<string, typeof allStories>();
+    /* 2. Grouper par companyId, puis par productId à l'intérieur —
+     *    l'ordre d'insertion préserve le tri par récence (allStories
+     *    est déjà trié DESC). */
+    const byCompany = new Map<string, typeof allStories>();
     for (const s of allStories) {
-      const arr = groups.get(s.companyId) ?? [];
+      const arr = byCompany.get(s.companyId) ?? [];
       arr.push(s);
-      groups.set(s.companyId, arr);
+      byCompany.set(s.companyId, arr);
     }
 
-    const companyIds = Array.from(groups.keys()).slice(0, 15);
+    const companyIds = Array.from(byCompany.keys()).slice(0, 15);
 
     /* 3. Charger les infos des boutiques en une requête */
     const companies = await this.companyRepo.find({
@@ -721,20 +847,36 @@ export class PublicService {
     const threshold = 15 * 60 * 1000;
     const tsNow     = Date.now();
 
-    /* 4. Construire la réponse */
-    return companyIds
-      .filter(id => companyMap.has(id))
-      .map(companyId => {
-        const company = companyMap.get(companyId)!;
-        const slides  = (groups.get(companyId) ?? []).slice(0, 4);
-        const user    = (company as any).user;
+    /* 4. Construire la réponse : une entrée par produit */
+    const result: HomeProductStoryResponse[] = [];
 
-        const mappedSlides: HomeStorySlide[] = slides.map(s => {
-          const p        = s.product as any;
+    for (const companyId of companyIds) {
+      const company = companyMap.get(companyId);
+      if (!company) continue;
+      const user = (company as any).user;
+      const online = user?.lastLoginAt
+        ? (tsNow - new Date(user.lastLoginAt).getTime()) < threshold
+        : false;
+
+      const byProduct = new Map<string, typeof allStories>();
+      for (const s of byCompany.get(companyId) ?? []) {
+        const arr = byProduct.get(s.productId) ?? [];
+        arr.push(s);
+        byProduct.set(s.productId, arr);
+      }
+
+      const topProductIds = Array.from(byProduct.keys()).slice(0, 4);
+
+      for (const productId of topProductIds) {
+        const productStories = byProduct.get(productId)!;
+
+        const images: HomeStorySlide[] = productStories.map(s => {
+          const p        = s.product;
           const cat      = p?.category;
           const { prix, prixAncien: prixAnc } = p ? this.effectivePrix(p) : { prix: 0, prixAncien: null };
           const hasPromo = prixAnc != null && Number(prixAnc) > Number(prix);
           return {
+            id:        s.id,
             productId: s.productId,
             produit:   p?.nom ?? 'Produit',
             prix:      `${Number(prix).toLocaleString('fr-FR')} GNF`,
@@ -747,17 +889,20 @@ export class PublicService {
           };
         });
 
-        return {
+        result.push({
+          productId,
+          produit:   images[0]?.produit ?? 'Produit',
           companyId,
-          shopNom:  company.companyName,
-          shopLogo: company.logo ?? null,
-          online:   user?.lastLoginAt
-            ? (tsNow - new Date(user.lastLoginAt).getTime()) < threshold
-            : false,
-          hasPromo: mappedSlides.some(sl => sl.badge === 'promo'),
-          slides:   mappedSlides,
-        };
-      });
+          shopNom:   company.companyName,
+          shopLogo:  company.logo ?? null,
+          online,
+          hasPromo:  images.some(img => img.badge === 'promo'),
+          images,
+        });
+      }
+    }
+
+    return result;
   }
 
   /* ════════════════════════════════════════════════════════
@@ -778,7 +923,7 @@ export class PublicService {
     });
 
     return stories.map(s => {
-      const product  = s.product as any;
+      const product  = s.product;
       const category = product?.category;
       const { prix, prixAncien: prixAnc } = product ? this.effectivePrix(product) : { prix: 0, prixAncien: null };
       const hasPromo = prixAnc != null && prixAnc > prix;
@@ -797,5 +942,110 @@ export class PublicService {
         createdAt: s.createdAt.toISOString(),
       };
     });
+  }
+
+  /* ════════════════════════════════════════════════════════
+   * POST /public/stories/:id/view
+   * Enregistre qu'un utilisateur connecté a vu cette story.
+   * Visiteur anonyme (pas de token) → no-op silencieux.
+   ════════════════════════════════════════════════════════ */
+  async recordStoryView(storyId: string, viewerId?: string): Promise<void> {
+    if (!viewerId) return;
+
+    const story = await this.storyRepo.findOne({ where: { id: storyId } });
+    if (!story) return;
+
+    const existing = await this.storyViewRepo.findOne({ where: { storyId, viewerId } });
+    if (existing) {
+      await this.storyViewRepo.save(existing); // @UpdateDateColumn rafraîchit viewedAt
+      return;
+    }
+
+    await this.storyViewRepo.save(this.storyViewRepo.create({ storyId, viewerId }));
+    // viewsCount ne compte que les vues uniques — une seule incrémentation par viewer
+    await this.storyRepo.increment({ id: storyId }, 'viewsCount', 1);
+    const viewsCount = story.viewsCount + 1;
+
+    // Pousse le nouveau compteur en direct au dashboard de l'entreprise
+    // propriétaire (si elle est connectée) — compteur instantané, pas de refresh.
+    const company = await this.companyRepo.findOne({ where: { id: story.companyId } });
+    if (company) {
+      this.broadcast.emitToUser(company.userId, 'story:viewed', {
+        storyId,
+        productId: story.productId,
+        viewsCount,
+      });
+    }
+  }
+
+  /* ════════════════════════════════════════════════════════
+   * POST /public/stories/:id/like
+   * Bascule le ❤️ d'un client sur cette story — connexion requise
+   * (le "j'aime" doit être attribuable à quelqu'un pour que
+   * l'entreprise puisse voir qui a réagi, comme WhatsApp Status).
+   ════════════════════════════════════════════════════════ */
+  async toggleStoryLike(storyId: string, likerId?: string): Promise<{ liked: boolean; likesCount: number }> {
+    if (!likerId) throw new ForbiddenException('Connexion requise.');
+
+    const story = await this.storyRepo.findOne({ where: { id: storyId } });
+    if (!story) throw new NotFoundException('Story introuvable.');
+
+    const existing = await this.storyLikeRepo.findOne({ where: { storyId, likerId } });
+    let liked: boolean;
+    if (existing) {
+      await this.storyLikeRepo.remove(existing);
+      liked = false;
+    } else {
+      await this.storyLikeRepo.save(this.storyLikeRepo.create({ storyId, likerId }));
+      liked = true;
+    }
+
+    const likesCount = await this.storyLikeRepo.count({ where: { storyId } });
+    return { liked, likesCount };
+  }
+
+  /* ════════════════════════════════════════════════════════
+   * GET /public/stories/:id/viewers
+   * Liste des clients ayant vu cette story, avec leur éventuel ❤️
+   * — réservé au propriétaire de la boutique qui l'a publiée
+   * (même liste que "qui a vu", comme sur un statut WhatsApp où
+   * la réaction apparaît directement dans la liste des vues).
+   ════════════════════════════════════════════════════════ */
+  async getStoryViewers(storyId: string, requesterUserId?: string): Promise<StoryViewerResponse[]> {
+    const story = await this.storyRepo.findOne({ where: { id: storyId } });
+    if (!story) throw new NotFoundException("Story introuvable.");
+
+    if (!requesterUserId) {
+      throw new ForbiddenException('Connexion requise.');
+    }
+    const company = await this.companyRepo.findOne({ where: { id: story.companyId } });
+    if (!company || company.userId !== requesterUserId) {
+      throw new ForbiddenException("Vous n'êtes pas autorisé à voir les vues de cette story.");
+    }
+
+    const views = await this.storyViewRepo.find({
+      where: { storyId },
+      order:  { viewedAt: 'DESC' },
+    });
+    if (!views.length) return [];
+
+    const likes    = await this.storyLikeRepo.find({ where: { storyId } });
+    const likedSet = new Set(likes.map(l => l.likerId));
+
+    const users   = await this.userRepo.find({ where: { id: In(views.map(v => v.viewerId)) } });
+    const userMap = new Map(users.map(u => [u.id, u]));
+
+    return views
+      .filter(v => userMap.has(v.viewerId))
+      .map(v => {
+        const u = userMap.get(v.viewerId)!;
+        return {
+          id:       u.id,
+          name:     `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || 'Utilisateur',
+          avatar:   u.profilePicture ?? null,
+          viewedAt: v.viewedAt.toISOString(),
+          liked:    likedSet.has(v.viewerId),
+        };
+      });
   }
 }

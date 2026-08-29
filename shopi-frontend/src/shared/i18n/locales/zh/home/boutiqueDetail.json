@@ -32,23 +32,24 @@
       "disponibleCount_one": "可用",
       "disponibleCount_other": "可用",
       "enCourse": "配送中",
-      "totalCount": "配送员总数"
+      "totalCount": "配送员总数",
+      "aucunLivreur": "该店铺暂无关联配送员。"
     },
     "cardLivreur": {
       "livraisonsCount": "{{count}} 次配送",
       "disponible": "● 可用",
       "enCourseBadge": "⚙ 配送中",
+      "horsLigne": "○ 离线",
       "voirProfil": "查看资料",
       "profilToast": "🛵 {{nom}} 的资料",
       "desabonneToast": "👋 已取消关注 {{nom}}",
       "abonneToast": "✅ 已关注 {{nom}}"
     },
     "correspondantsSection": {
-      "disponibleCount_one": "可用",
-      "disponibleCount_other": "可用",
-      "completCount_one": "已满",
-      "completCount_other": "已满",
+      "verifieCount_other": "已验证",
+      "nonVerifieCount_other": "未验证",
       "totalCount": "代理商总数",
+      "aucunCorrespondant": "该店铺暂无关联代理商。",
       "infoBannerTitle": "什么是 Shoneya 代理商？",
       "infoBannerDesc": "代理商是您所在城市的 Shoneya 代表。他接收您的包裹、检查并安全存放。您可以直接取回或交给配送员送货上门。",
       "steps": {
@@ -61,10 +62,11 @@
     },
     "cardCorrespondant": {
       "verifie": "已验证",
-      "colisMois": "{{count}} 个包裹/月",
-      "disponible": "● 可用",
-      "complet": "◌ 已满",
+      "missionsCount_other": "已完成 {{count}} 次任务",
+      "ouvertAujourdhui": "今天营业：{{horaire}}",
+      "fermeAujourdhui": "今天休息",
       "contacter": "联系",
+      "telephoneIndisponible": "未登记联系电话",
       "choisir": "选择",
       "choisi": "已选择",
       "messageToast": "💬 给{{nom}}发消息",

@@ -1,0 +1,10 @@
+/* ================================================================
+ * NotificationsPage.module.css — wrapper public de /notifications
+ * Header.tsx est position:fixed (66px, var(--hdr)) — décalage nécessaire
+ * pour ne pas faire chevaucher le contenu sous la barre du haut.
+ * ================================================================ */
+.page {
+  background: var(--g50, #F8F9FA);
+  min-height: 100vh;
+  padding-top: calc(var(--hdr, 66px) + 12px);
+}

@@ -71,3 +71,19 @@ export function cldChatImage(url: string | null | undefined, maxWidth = 480): st
   if (!url) return url ?? null;
   return cldTransform(url, `w_${maxWidth},c_limit,q_auto,f_auto`);
 }
+
+/** Déplace l'élément identifié par `id` en tête de liste après lui avoir
+ *  appliqué `updater` — la conversation (ou le groupe) qui vient de
+ *  recevoir/envoyer un message doit toujours remonter en premier, comme
+ *  WhatsApp, plutôt que de rester figée à la position du tri initial. */
+export function bumpToFront<T extends { id: string }>(
+  list: T[],
+  id: string,
+  updater: (item: T) => T,
+): T[] {
+  const idx = list.findIndex(item => item.id === id);
+  if (idx === -1) return list;
+  const updated = updater(list[idx]);
+  const rest = [...list.slice(0, idx), ...list.slice(idx + 1)];
+  return [updated, ...rest];
+}

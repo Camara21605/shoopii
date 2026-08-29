@@ -16,18 +16,29 @@ import { useContactSync } from '../hooks/useContactSync';
 import { cldAvatar } from '../utils/chatUtils';
 import s from '../styles/ConvList.module.css';
 
-type Tab = 'all' | 'unread' | 'boutiques' | 'livreurs' | 'clients' | 'correspondants' | 'masquees' | 'groupes' | 'appels';
+type Tab = 'all' | 'unread' | 'boutiques' | 'livreurs' | 'clients' | 'correspondants' | 'contacts' | 'masquees' | 'groupes' | 'appels';
 
 /* Onglets "dédiés à un acteur" — un contact LIÉ (commande/abonnement/
  * contact partagé, cf. MessagerieService.searchUsers) doit y apparaître
  * même sans conversation existante, comme un contact WhatsApp qu'on n'a
  * encore jamais écrit. Tab → type d'acteur backend attendu par
- * GET /messagerie/users/search?type=. */
+ * GET /messagerie/users/search?type=.
+ *
+ * 'contacts' et 'clients' pointent tous les deux vers l'acteur 'client' —
+ * ce sont les DEUX FACES du même lien client↔client (voir
+ * client-client.evaluator.ts) : 'clients' est ce qu'un vendeur/livreur/
+ * correspondant voit de SES clients (commandes/follows), 'contacts' est
+ * ce qu'un CLIENT voit des autres clients (uniquement via contacts
+ * téléphoniques synchronisés — voir messagerie.service.ts,
+ * "Client ↔ client : uniquement via contacts téléphoniques synchronisés").
+ * Mutuellement exclusifs par rôle (voir getVisibleTabs), donc partager
+ * la même clé de cache `relatedByKey['client']` est sans risque. */
 const TAB_ACTOR_TYPE: Partial<Record<Tab, string>> = {
   boutiques:      'company',
   livreurs:       'delivery',
   clients:        'client',
   correspondants: 'correspondent',
+  contacts:       'client',
 };
 
 /** Rôle frontend (ChatUser.role) correspondant à chaque onglet dédié — pour
@@ -37,6 +48,7 @@ const TAB_CONTACT_ROLE: Partial<Record<Tab, string>> = {
   livreurs:       'livreur',
   clients:        'client',
   correspondants: 'correspondant',
+  contacts:       'client',
 };
 
 interface Props {
@@ -81,6 +93,7 @@ function getAllTabs(t: TFunction): { key: Tab; label: string; icon?: string }[] 
     { key: 'livreurs',       label: t('messagerie.convList.tabs.livreurs')       },
     { key: 'clients',        label: t('messagerie.convList.tabs.clients')        },
     { key: 'correspondants', label: t('messagerie.convList.tabs.correspondants') },
+    { key: 'contacts',       label: t('messagerie.convList.tabs.contacts'),      icon: 'fas fa-address-book' },
     { key: 'masquees',       label: t('messagerie.convList.tabs.masquees'),       icon: 'fas fa-eye-slash' },
   ];
 }
@@ -98,7 +111,7 @@ function getVisibleTabs(role: string | null): Tab[] {
   const base: Tab[] = ['all', 'unread', 'groupes', 'appels'];
   const end:  Tab[] = ['masquees'];
   switch (role) {
-    case 'client':        return [...base, 'boutiques', 'livreurs',  'correspondants',           ...end];
+    case 'client':        return [...base, 'boutiques', 'livreurs',  'correspondants', 'contacts', ...end];
     case 'company':       return [...base, 'clients',   'livreurs',  'correspondants',           ...end];
     case 'delivery':      return [...base, 'boutiques', 'clients',   'correspondants',           ...end];
     case 'correspondent': return [...base, 'boutiques', 'clients',   'livreurs',                 ...end];
@@ -125,9 +138,13 @@ function ConvList({
   /* ── Synchronisation des contacts téléphoniques ──────────────────
    * Client↔client uniquement (voir client-client.evaluator.ts côté
    * backend — les autres rôles se retrouvent via commandes/follows).
-   * Après une synchro réussie, on bascule sur l'onglet "Clients" pour
+   * Après une synchro réussie, on bascule sur l'onglet "Contacts" pour
    * que l'utilisateur voie immédiatement les nouveaux contacts trouvés
-   * (relatedContacts se rafraîchit automatiquement au changement de tab). */
+   * (relatedContacts se rafraîchit automatiquement au changement de tab).
+   * NB : bascule bien sur 'contacts' (visible pour le rôle client), pas
+   * 'clients' (visible seulement pour vendeur/livreur/correspondant) —
+   * sinon l'effet juste en dessous annule immédiatement le changement
+   * d'onglet puisque 'clients' n'est pas dans getVisibleTabs('client'). */
   const { syncing, syncFromDevice } = useContactSync();
   const handleSyncContacts = async () => {
     const result = await syncFromDevice();
@@ -141,7 +158,7 @@ function ConvList({
         : t('messagerie.convList.contactsSyncAucun'),
       's',
     );
-    setTab('clients');
+    setTab('contacts');
   };
 
   /* Si l'onglet actif n'est plus dans la liste visible, revenir à "Tous" */
@@ -229,6 +246,7 @@ function ConvList({
     if (tab === 'livreurs')       list = list.filter(c => usersMap.get(c.userId)?.role === 'livreur');
     if (tab === 'clients')        list = list.filter(c => usersMap.get(c.userId)?.role === 'client');
     if (tab === 'correspondants') list = list.filter(c => usersMap.get(c.userId)?.role === 'correspondant');
+    if (tab === 'contacts')       list = list.filter(c => usersMap.get(c.userId)?.role === 'client');
 
     /* Filtre texte sur le nom du contact ou le dernier message */
     if (search.trim()) {

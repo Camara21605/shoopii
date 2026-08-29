@@ -89,10 +89,19 @@ const MENU_ITEMS: MenuItem[] = [
 export default function HelpFab() {
   const location          = useLocation();
   const [open, setOpen]   = useState(false);
+  const [overlayOpen, setOverlayOpen] = useState(false);
   const fabRef            = useRef<HTMLDivElement>(null);
 
+  // Cacher le FAB pendant qu'un overlay plein écran est ouvert (ex: story)
+  // → voir window.dispatchEvent(new CustomEvent('fullscreen-overlay-toggle', ...))
+  useEffect(() => {
+    const onToggle = (e: Event) => setOverlayOpen((e as CustomEvent<{ open: boolean }>).detail.open);
+    window.addEventListener('fullscreen-overlay-toggle', onToggle);
+    return () => window.removeEventListener('fullscreen-overlay-toggle', onToggle);
+  }, []);
+
   // Cacher le FAB sur les routes exclues
-  const hidden = shouldHide(location.pathname);
+  const hidden = shouldHide(location.pathname) || overlayOpen;
 
   // Fermer le menu si on clique en dehors du FAB
   useEffect(() => {

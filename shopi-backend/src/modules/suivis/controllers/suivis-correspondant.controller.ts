@@ -49,6 +49,8 @@ export class SuivisCorrespondantController {
     @Query('ville')   ville?:   string,
     @Query('type')    type?:    'regional' | 'zonal' | 'national',
     @Query('online')  online?:  string,
+    @Query('search')  search?:  string,
+    @Query('limit')   limit?:   string,
   ) {
     const { userId, role } = this.ctx(req);
     return this.service.getCorrespondantsWithSuiviStatus(userId, role, {
@@ -56,6 +58,8 @@ export class SuivisCorrespondantController {
       ville,
       type,
       online: online === undefined ? undefined : online === 'true',
+      search,
+      limit: limit ? parseInt(limit, 10) : undefined,
     });
   }
 

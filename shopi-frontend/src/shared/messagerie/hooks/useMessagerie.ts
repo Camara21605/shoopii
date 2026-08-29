@@ -11,6 +11,7 @@ import { useLocation }  from 'react-router-dom';
 import { apiFetch }    from '../../services/apiFetch';
 import { getRoleFromToken } from '../../services/authUtils';
 import type { Conversation, ChatUser, ChatMessage, NewConvUser } from '../data/messagerieTypes';
+import { bumpToFront } from '../utils/chatUtils';
 import { useSocket } from './useSocket';
 import type {
   WsNewMessage, WsMessageRead, WsMessageDelivered, WsTyping, WsPresence,
@@ -87,6 +88,7 @@ function fmtTime(iso: string | null | undefined): string {
 function nowTime(): string {
   return fmtTime(new Date().toISOString());
 }
+
 
 function fmtDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -197,9 +199,7 @@ export function useMessagerie() {
       try { chatMsg.callMeta = JSON.parse(message.content); } catch { /* ignoré */ }
     }
 
-    setConversations(prev => prev.map(c => {
-      if (c.id !== conversationId) return c;
-
+    setConversations(prev => bumpToFront(prev, conversationId, c => {
       /* Si la conv est active → ajoute le message et ne badge pas */
       const isActive = activeConvRef.current === conversationId;
       return {
@@ -459,10 +459,8 @@ export function useMessagerie() {
       msgType === 'voice' ? '🎙️ Message vocal' : ''
     );
 
-    setConversations(prev => prev.map(c =>
-      c.id === convId
-        ? { ...c, messages: [...c.messages, optimistic], lastMsg: previewText, lastTime: nowTime() }
-        : c
+    setConversations(prev => bumpToFront(prev, convId, c =>
+      ({ ...c, messages: [...c.messages, optimistic], lastMsg: previewText, lastTime: nowTime() })
     ));
 
     try {
@@ -517,10 +515,8 @@ export function useMessagerie() {
       read:     false,
       callMeta: meta,
     };
-    setConversations(prev => prev.map(c =>
-      c.id === convId
-        ? { ...c, messages: [...c.messages, optimistic], lastMsg: preview, lastTime: nowTime() }
-        : c,
+    setConversations(prev => bumpToFront(prev, convId, c =>
+      ({ ...c, messages: [...c.messages, optimistic], lastMsg: preview, lastTime: nowTime() })
     ));
 
     /* Persistance via REST */
@@ -559,21 +555,19 @@ export function useMessagerie() {
       : status === 'cancelled' ? `${icon} Appel annulé`
       : `${icon} Appel occupé`;
 
-    setConversations(prev => prev.map(c =>
-      c.id !== convId ? c : {
-        ...c,
-        lastMsg:  preview,
-        lastTime: nowTime(),
-        messages: [...c.messages, {
-          id:       'tmp-call-' + Date.now(),
-          from:     direction === 'outgoing' ? 'me' : convId,
-          type:     'call' as const,
-          time:     nowTime(),
-          read:     false,
-          callMeta: meta,
-        }],
-      },
-    ));
+    setConversations(prev => bumpToFront(prev, convId, c => ({
+      ...c,
+      lastMsg:  preview,
+      lastTime: nowTime(),
+      messages: [...c.messages, {
+        id:       'tmp-call-' + Date.now(),
+        from:     direction === 'outgoing' ? 'me' : convId,
+        type:     'call' as const,
+        time:     nowTime(),
+        read:     false,
+        callMeta: meta,
+      }],
+    })));
   }, []);
 
   // ── Modifier un message (texte, délai 24h) ───────────────

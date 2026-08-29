@@ -69,6 +69,7 @@ export class SuivisCorrespondantService extends SuivisBaseService {
     filters?: {
       commune?: string; ville?: string;
       type?: 'regional' | 'zonal' | 'national'; online?: boolean;
+      search?: string; limit?: number;
     },
   ) {
     /*
@@ -95,6 +96,21 @@ export class SuivisCorrespondantService extends SuivisBaseService {
     if (filters?.commune) qb.andWhere('cor.depotCommune = :commune', { commune: filters.commune });
     if (filters?.ville)   qb.andWhere('cor.depotVille = :ville',     { ville:   filters.ville   });
     if (filters?.type)    qb.andWhere('cor.typeCorrespondant = :type', { type:   filters.type    });
+
+    /* Recherche texte réelle (nom, bio, zone de dépôt) — insensible à la
+     * casse, cf. le même correctif appliqué à boutiques/livreurs/promotions. */
+    if (filters?.search?.trim()) {
+      const term = `%${filters.search.trim()}%`;
+      qb.andWhere(
+        `(LOWER(cor.fullName) LIKE LOWER(:term)
+          OR LOWER(COALESCE(cor.bio, '')) LIKE LOWER(:term)
+          OR LOWER(COALESCE(cor.depotCommune, '')) LIKE LOWER(:term)
+          OR LOWER(COALESCE(cor.depotVille, '')) LIKE LOWER(:term))`,
+        { term },
+      );
+    }
+
+    if (filters?.limit) qb.take(filters.limit);
 
     const correspondants  = await qb.getMany();
     const now             = Date.now();

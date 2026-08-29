@@ -69,8 +69,7 @@
       "seuil": "Limiar: {{count}}",
       "modifierTitle": "Modificar o stock",
       "modifier": "Modificar",
-      "reapproTitle": "Lançar uma reposição",
-      "reapproToast": "📦 Reposição lançada para \"{{nom}}\""
+      "reapproTitle": "Repor este produto"
     },
     "footer": {
       "count_one": "{{count}} produto",
@@ -89,16 +88,52 @@
       "title": "Ações rápidas",
       "reapproAll": "Repor todos os críticos",
       "reapproAllSub": "{{count}} produtos envolvidos",
-      "reapproAllToast": "📦 Reposição agrupada lançada",
       "exportInventaire": "Exportar o inventário (CSV)",
       "exportInventaireSub": "{{count}} produtos · {{units}} unidades",
-      "exportInventaireToast": "📥 Exportação CSV a ser gerada…",
       "configAlertes": "Configurar os alertas",
-      "configAlertesSub": "Definir limiares automáticos",
-      "configAlertesToast": "⚙️ Configuração dos alertas aberta",
+      "configAlertesSub_one": "{{count}} produto sem limiar definido",
+      "configAlertesSub_other": "{{count}} produtos sem limiar definido",
+      "configAlertesSubDone": "Todos os limiares estão definidos",
       "syncStock": "Sincronizar o stock",
-      "syncStockSub": "Com o seu fornecedor",
-      "syncStockToast": "🔄 Sincronização em curso…"
+      "syncStockSub": "Com os seus fornecedores Shopi"
+    },
+    "csv": {
+      "nom": "Nome",
+      "reference": "Referência",
+      "marque": "Marca",
+      "categorie": "Categoria",
+      "prix": "Preço unitário (GNF)",
+      "stock": "Stock",
+      "seuil": "Limiar de alerta",
+      "statut": "Estatuto"
+    },
+    "reapproModal": {
+      "title": "Repor stock",
+      "subtitle_one": "{{count}} produto a repor",
+      "subtitle_other": "{{count}} produtos a repor",
+      "stockActuel": "Stock atual: {{count}}",
+      "hint": "Ajuste a quantidade a entregar para cada produto antes de confirmar. O stock será atualizado imediatamente.",
+      "total": "Total a adicionar: {{count}} unidades",
+      "confirm_one": "Repor {{count}} produto",
+      "confirm_other": "Repor {{count}} produtos",
+      "success_one": "✅ {{count}} produto reposto",
+      "success_other": "✅ {{count}} produtos repostos",
+      "partialError_one": "⚠️ {{count}} produto não pôde ser atualizado",
+      "partialError_other": "⚠️ {{count}} produtos não puderam ser atualizados"
+    },
+    "seuilsModal": {
+      "title": "Configurar os alertas",
+      "subtitle_one": "{{count}} produto sem limiar definido",
+      "subtitle_other": "{{count}} produtos sem limiar definido",
+      "seuilLabel": "Limiar de alerta a aplicar",
+      "hint": "Este limiar será aplicado a todos os produtos que ainda não têm um. Poderá sempre ajustá-lo produto a produto depois.",
+      "confirm_one": "Aplicar a {{count}} produto",
+      "confirm_other": "Aplicar a {{count}} produtos",
+      "success_one": "✅ Limiar definido para {{count}} produto",
+      "success_other": "✅ Limiar definido para {{count}} produtos",
+      "partialError_one": "⚠️ {{count}} produto não pôde ser atualizado",
+      "partialError_other": "⚠️ {{count}} produtos não puderam ser atualizados",
+      "invalid": "⚠️ O limiar deve ser um número positivo"
     }
   }
 }

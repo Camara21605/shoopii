@@ -14,6 +14,7 @@ import { LivreursModule }       from './livreurs/livreurs.module';
 import { ParametresModule }     from './parametres.module';
 import { ReturnsModule }       from './returns/returns.module';
 import { ClientsModule }       from './clients/clients.module';
+import { FournisseursModule }  from './fournisseurs/fournisseurs.module';
 
 // ── Entités TypeORM ──────────────────────────────────────────
 import { User }             from '../../../database/entities/user.entity';
@@ -85,6 +86,7 @@ import { CategoriesService }          from '../super-admin/categories/categories
     ParametresModule,
     ReturnsModule,
     ClientsModule,
+    FournisseursModule,
   ],
 
   controllers: [
@@ -104,6 +106,7 @@ import { CategoriesService }          from '../super-admin/categories/categories
     PromotionsModule,
     CorrespondantsModule,
     LivreursModule,
+    FournisseursModule,
   ],
 })
 export class EntrepriseDashboardModule {}

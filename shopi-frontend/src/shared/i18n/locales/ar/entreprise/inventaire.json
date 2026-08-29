@@ -69,8 +69,7 @@
       "seuil": "الحد: {{count}}",
       "modifierTitle": "تحديث المخزون",
       "modifier": "تعديل",
-      "reapproTitle": "بدء إعادة تزويد",
-      "reapproToast": "📦 تم بدء إعادة التزويد لـ \"{{nom}}\""
+      "reapproTitle": "إعادة تزويد هذا المنتج"
     },
     "footer": {
       "count_one": "{{count}} منتج",
@@ -89,16 +88,52 @@
       "title": "إجراءات سريعة",
       "reapproAll": "إعادة تزويد كل العناصر الحرجة",
       "reapproAllSub": "{{count}} منتجات متأثرة",
-      "reapproAllToast": "📦 تم بدء إعادة التزويد الجماعية",
       "exportInventaire": "تصدير المخزون (CSV)",
       "exportInventaireSub": "{{count}} منتجات · {{units}} وحدات",
-      "exportInventaireToast": "📥 جارٍ إنشاء تصدير CSV…",
       "configAlertes": "إعداد التنبيهات",
-      "configAlertesSub": "تحديد عتبات تلقائية",
-      "configAlertesToast": "⚙️ تم فتح إعداد التنبيهات",
+      "configAlertesSub_one": "منتج واحد بدون حد محدد",
+      "configAlertesSub_other": "{{count}} منتجات بدون حد محدد",
+      "configAlertesSubDone": "تم إعداد جميع الحدود",
       "syncStock": "مزامنة المخزون",
-      "syncStockSub": "مع المورد الخاص بك",
-      "syncStockToast": "🔄 جارٍ المزامنة…"
+      "syncStockSub": "مع موردي Shopi الخاصين بك"
+    },
+    "csv": {
+      "nom": "الاسم",
+      "reference": "المرجع",
+      "marque": "العلامة التجارية",
+      "categorie": "الفئة",
+      "prix": "سعر الوحدة (فرنك)",
+      "stock": "المخزون",
+      "seuil": "حد التنبيه",
+      "statut": "الحالة"
+    },
+    "reapproModal": {
+      "title": "إعادة التزويد",
+      "subtitle_one": "منتج واحد لإعادة تزويده",
+      "subtitle_other": "{{count}} منتجات لإعادة تزويدها",
+      "stockActuel": "المخزون الحالي: {{count}}",
+      "hint": "اضبط الكمية المراد توريدها لكل منتج قبل التأكيد. سيتم تحديث المخزون فورًا.",
+      "total": "الإجمالي المُضاف: {{count}} وحدة",
+      "confirm_one": "إعادة تزويد منتج واحد",
+      "confirm_other": "إعادة تزويد {{count}} منتجات",
+      "success_one": "✅ تم إعادة تزويد منتج واحد",
+      "success_other": "✅ تم إعادة تزويد {{count}} منتجات",
+      "partialError_one": "⚠️ تعذر تحديث منتج واحد",
+      "partialError_other": "⚠️ تعذر تحديث {{count}} منتجات"
+    },
+    "seuilsModal": {
+      "title": "إعداد التنبيهات",
+      "subtitle_one": "منتج واحد بدون حد محدد",
+      "subtitle_other": "{{count}} منتجات بدون حد محدد",
+      "seuilLabel": "حد التنبيه المطلوب تطبيقه",
+      "hint": "سيُطبَّق هذا الحد على كل منتج ليس له حد بعد. يمكنك دائمًا تعديله لاحقًا لكل منتج على حدة.",
+      "confirm_one": "تطبيق على منتج واحد",
+      "confirm_other": "تطبيق على {{count}} منتجات",
+      "success_one": "✅ تم تحديد الحد لمنتج واحد",
+      "success_other": "✅ تم تحديد الحد لـ {{count}} منتجات",
+      "partialError_one": "⚠️ تعذر تحديث منتج واحد",
+      "partialError_other": "⚠️ تعذر تحديث {{count}} منتجات",
+      "invalid": "⚠️ يجب أن يكون الحد رقمًا موجبًا"
     }
   }
 }

@@ -713,9 +713,13 @@
   transition: all .18s;
   text-align: left;
 }
-.quickAction:hover {
+.quickAction:hover:not(:disabled) {
   background: var(--sky);
   border-color: var(--bdrb);
+}
+.quickAction:disabled {
+  opacity: .55;
+  cursor: not-allowed;
 }
 .quickAction i:last-child {
   margin-left: auto;
@@ -733,11 +737,27 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .quickActionSub {
   font-size: 10.5px;
   color: var(--t3);
   margin-top: 2px;
+}
+
+/* Badge "Bientôt disponible" sur une action pas encore active */
+.soonBadge {
+  flex-shrink: 0;
+  background: var(--g200);
+  color: var(--t3);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  padding: 2px 6px;
+  border-radius: var(--pill);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -798,7 +818,8 @@
   cursor: pointer;
   transition: all .18s;
 }
-.btnSecondaryOutline:hover { border-color: var(--t2); color: var(--t2); }
+.btnSecondaryOutline:hover:not(:disabled) { border-color: var(--t2); color: var(--t2); }
+.btnSecondaryOutline:disabled { opacity: .6; cursor: not-allowed; }
 
 /* Bouton "Actualiser" */
 .btnRecharger {
@@ -1122,6 +1143,76 @@
 .fill_ok  { background: var(--t2); }
 .fill_low { background: var(--t2); }
 .fill_out { background: var(--t2); }
+
+/* ══════════════════════════════════════════════════════════════
+   MODALE — Réapprovisionnement groupé (liste de produits)
+   ══════════════════════════════════════════════════════════════ */
+.reapproList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.reapproItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: var(--g50);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r-md);
+}
+
+.reapproThumb, .reapproThumbEmpty {
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+.reapproThumbEmpty {
+  background: var(--g100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t4);
+  font-size: 14px;
+}
+
+.reapproInfo { flex: 1; min-width: 0; }
+.reapproNom {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.reapproSub { font-size: 10.5px; color: var(--t3); margin-top: 2px; }
+
+.reapproInputWrap { flex-shrink: 0; }
+.reapproInput {
+  width: 64px;
+  padding: 7px 8px;
+  border: 1.5px solid var(--bdr2);
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--t1);
+  text-align: center;
+  outline: none;
+  transition: border-color .18s;
+}
+.reapproInput:focus { border-color: var(--t2); }
+
+.reapproTotal {
+  margin-right: auto;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--t3);
+}
 
 /* ══════════════════════════════════════════════════════════════
    RESPONSIVE

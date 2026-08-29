@@ -23,7 +23,8 @@
  * ============================================================
  */
 import { useTranslation } from 'react-i18next';
-import { CATEGORIES_BOUTIQUE, BOUTIQUE_INFO } from '../data/boutiqueMockData';
+import { CATEGORIES_BOUTIQUE } from '../data/boutiqueMockData';
+import type { BoutiqueInfo } from '../data/boutiqueMockData';
 import styles from '../styles/BoutiqueSidebar.module.css';
 
 interface Props {
@@ -43,13 +44,14 @@ interface Props {
    * desktop, isOpen/onClose n'ont aucun effet (colonne toujours visible). */
   isOpen?:      boolean;
   onClose?:     () => void;
+  boutiqueInfo: BoutiqueInfo | null;
 }
 
 export default function BoutiqueSidebar({
   catActive, setCatActive, sortBy, setSortBy,
   filtrStock, setFiltrStock, filtrPromo, setFiltrPromo,
   filtrNew,   setFiltrNew,  onToast,
-  isOpen = false, onClose,
+  isOpen = false, onClose, boutiqueInfo,
 }: Props) {
   const { t } = useTranslation();
 
@@ -219,30 +221,37 @@ export default function BoutiqueSidebar({
         </div>
       </div>
 
-      {/* ══ 6. Infos boutique ══ */}
-      <div className={styles.card}>
-        <div className={styles.cardHd}>
-          <h4><i className="fas fa-circle-info" /> {t('boutiqueDetail.sidebar.infosBoutique')}</h4>
-        </div>
-        <div className={styles.cardBd}>
-          <div className={styles.infoRows}>
-            {[
-              { ico: '🕐', bg: 'bg1', title: t('boutiqueDetail.sidebar.horaires'),  sub: BOUTIQUE_INFO.horaires },
-              { ico: '📍', bg: 'bg2', title: t('boutiqueDetail.sidebar.adresse'),   sub: BOUTIQUE_INFO.adresse  },
-              { ico: '📞', bg: 'bg3', title: t('boutiqueDetail.sidebar.telephone'), sub: BOUTIQUE_INFO.tel      },
-              { ico: '✉️', bg: 'bg4', title: t('boutiqueDetail.sidebar.email'),     sub: BOUTIQUE_INFO.email    },
-            ].map(r => (
-              <div key={r.title} className={styles.infoRow}>
-                <div className={`${styles.infoIco} ${styles[r.bg]}`}>{r.ico}</div>
-                <div>
-                  <div className={styles.infoTitle}>{r.title}</div>
-                  <div className={styles.infoSub}>{r.sub}</div>
-                </div>
+      {/* ══ 6. Infos boutique — n'affiche que les champs réellement
+             renseignés par la boutique (pas de ligne vide). ══ */}
+      {(() => {
+        const rows = boutiqueInfo ? [
+          { ico: '🕐', bg: 'bg1', title: t('boutiqueDetail.sidebar.horaires'),  sub: boutiqueInfo.horaires },
+          { ico: '📍', bg: 'bg2', title: t('boutiqueDetail.sidebar.adresse'),   sub: boutiqueInfo.adresse  },
+          { ico: '📞', bg: 'bg3', title: t('boutiqueDetail.sidebar.telephone'), sub: boutiqueInfo.tel      },
+          { ico: '✉️', bg: 'bg4', title: t('boutiqueDetail.sidebar.email'),     sub: boutiqueInfo.email    },
+        ].filter(r => r.sub && r.sub.trim().length > 0) : [];
+        if (rows.length === 0) return null;
+        return (
+          <div className={styles.card}>
+            <div className={styles.cardHd}>
+              <h4><i className="fas fa-circle-info" /> {t('boutiqueDetail.sidebar.infosBoutique')}</h4>
+            </div>
+            <div className={styles.cardBd}>
+              <div className={styles.infoRows}>
+                {rows.map(r => (
+                  <div key={r.title} className={styles.infoRow}>
+                    <div className={`${styles.infoIco} ${styles[r.bg]}`}>{r.ico}</div>
+                    <div>
+                      <div className={styles.infoTitle}>{r.title}</div>
+                      <div className={styles.infoSub}>{r.sub}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </div>
+        );
+      })()}
       </aside>
     </>
   );

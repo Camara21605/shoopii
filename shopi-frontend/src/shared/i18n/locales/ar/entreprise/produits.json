@@ -10,6 +10,11 @@
       "subtitle": "إدارة الكتالوج والمخزون",
       "nouveau": "منتج جديد"
     },
+    "creerStory": {
+      "bouton": "إنشاء قصة",
+      "titre": "إنشاء قصة",
+      "aucunProduit": "لا يوجد منتج يحتوي على صورة متاحة"
+    },
     "stats": {
       "total": "الإجمالي",
       "publies": "منشورة",
@@ -73,7 +78,32 @@
       "tags": "الوسوم",
       "supprimer": "حذف",
       "archiver": "أرشفة",
-      "modifier": "تعديل"
+      "modifier": "تعديل",
+      "stories": {
+        "titre": "القصص",
+        "aucune": "لا توجد قصة منشورة لهذا المنتج",
+        "chargement": "جارٍ التحميل…",
+        "ajouterTitre": "نشر صورة واحدة أو أكثر كقصص",
+        "ajouterHint": "اختر صورة واحدة أو أكثر من المنتج ثم انشرها كقصص (24 ساعة)",
+        "active": "نشطة",
+        "dejaActive": "منشورة بالفعل كقصة — انتظر انتهاءها لإعادة النشر",
+        "expiree": "منتهية",
+        "expireLe": "تنتهي في {{date}}",
+        "vues": "{{count}} مشاهدة",
+        "quiAVu": "شاهدها",
+        "jaime": "أعجب بها",
+        "aucuneVue": "لا توجد مشاهدات بعد",
+        "vuesEchec": "تعذّر عرض المشاهدات",
+        "publier": "نشر",
+        "publication": "جارٍ النشر…",
+        "confirmSupprimer": "إزالة هذه القصة؟",
+        "ajoutSucces_one": "✅ تم نشر القصة",
+        "ajoutSucces_other": "✅ تم نشر {{count}} قصص",
+        "ajoutPartiel": "⚠️ تم نشر {{ok}}/{{total}} قصص",
+        "ajoutEchec": "❌ تعذّر نشر هذه القصص",
+        "suppressionSucces": "🗑️ تمت إزالة القصة",
+        "suppressionEchec": "❌ تعذّرت إزالة هذه القصة"
+      }
     },
     "modalModifier": {
       "title": "تعديل سريع",

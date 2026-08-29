@@ -3,9 +3,10 @@
  * Page catalogue produits — données réelles API, modales Voir/Modifier
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
+import { useNotificationSocket } from '../../../shared/notifications/useNotificationSocket';
 import type { EntreprisePage } from '../types';
 import styles from './ProduitsPage.module.css';
 
@@ -62,6 +63,452 @@ function visibiliteLabel(v: string, t: (k: string) => string) {
 // ─────────────────────────────────────────────────────────────
 // MODALE — VOIR LE PRODUIT
 // ─────────────────────────────────────────────────────────────
+
+interface ProductStory {
+  id:         string;
+  mediaUrl:   string;
+  mediaType:  'image' | 'video';
+  caption:    string | null;
+  status:     'published' | 'expired' | 'archived';
+  expiresAt:  string;
+  createdAt:  string;
+  viewsCount: number;
+}
+
+interface MyStory extends ProductStory {
+  productId:  string;
+  productNom: string;
+}
+
+// ─────────────────────────────────────────────────────────────
+// GESTION DES STORIES D'UN PRODUIT — réutilisé dans ModalVoir
+// et dans ModalCreateStory (bouton général "Créer une story").
+// ─────────────────────────────────────────────────────────────
+
+function StoriesManager({ produit }: { produit: Produit }) {
+  const { t } = useTranslation();
+  const { pop } = useToast();
+
+  const [stories,        setStories]        = useState<ProductStory[]>([]);
+  const [storiesLoading, setStoriesLoading] = useState(true);
+  const [selectedUrls,   setSelectedUrls]   = useState<Set<string>>(new Set());
+  const [publishing,     setPublishing]     = useState(false);
+
+  function toggleSelect(url: string) {
+    setSelectedUrls(prev => {
+      const next = new Set(prev);
+      next.has(url) ? next.delete(url) : next.add(url);
+      return next;
+    });
+  }
+
+  const loadStories = useCallback(async () => {
+    setStoriesLoading(true);
+    try {
+      const res = await fetch(`${API}/produits/${produit.id}/stories`, {
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (res.ok) setStories(await res.json());
+    } finally {
+      setStoriesLoading(false);
+    }
+  }, [produit.id]);
+
+  useEffect(() => { loadStories(); }, [loadStories]);
+
+  // Compteur de vues instantané : le backend pousse un event à chaque nouvelle vue.
+  useNotificationSocket({
+    onStoryViewed: ({ storyId, viewsCount }) => {
+      setStories(prev => prev.map(s => s.id === storyId ? { ...s, viewsCount } : s));
+    },
+  });
+
+  async function handlePublish() {
+    if (selectedUrls.size === 0) return;
+    setPublishing(true);
+    try {
+      const results = await Promise.allSettled(
+        Array.from(selectedUrls).map(mediaUrl =>
+          fetch(`${API}/produits/${produit.id}/stories`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+            body:    JSON.stringify({ mediaUrl }),
+          }).then(res => { if (!res.ok) throw new Error(); }),
+        ),
+      );
+      await loadStories();
+      setSelectedUrls(new Set());
+      const echecs = results.filter(r => r.status === 'rejected').length;
+      if (echecs === 0) {
+        pop(t('produits.modalVoir.stories.ajoutSucces', { count: results.length }), 's');
+      } else if (echecs < results.length) {
+        pop(t('produits.modalVoir.stories.ajoutPartiel', { ok: results.length - echecs, total: results.length }), 'w');
+      } else {
+        pop(t('produits.modalVoir.stories.ajoutEchec'), 'e');
+      }
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  async function handleDeleteStory(storyId: string) {
+    if (!window.confirm(t('produits.modalVoir.stories.confirmSupprimer'))) return;
+    try {
+      const res = await fetch(`${API}/produits/${produit.id}/stories/${storyId}`, {
+        method:  'DELETE',
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (!res.ok) throw new Error();
+      setStories(prev => prev.filter(s => s.id !== storyId));
+      pop(t('produits.modalVoir.stories.suppressionSucces'), 's');
+    } catch {
+      pop(t('produits.modalVoir.stories.suppressionEchec'), 'e');
+    }
+  }
+
+  if (produit.images.length === 0) {
+    return <div className={styles.storiesEmpty}>{t('produits.modalVoir.noImage')}</div>;
+  }
+
+  // Une image déjà publiée en story active ne peut pas être sélectionnée à nouveau
+  // tant que cette story n'a pas expiré.
+  const activeUrls = new Set(stories.filter(s => s.status === 'published').map(s => s.mediaUrl));
+
+  return (
+    <>
+      {/* Stories déjà publiées */}
+      {storiesLoading ? (
+        <div className={styles.storiesEmpty}>{t('produits.modalVoir.stories.chargement')}</div>
+      ) : stories.length === 0 ? (
+        <div className={styles.storiesEmpty}>{t('produits.modalVoir.stories.aucune')}</div>
+      ) : (
+        <div className={styles.storiesGrid}>
+          {stories.map(s => (
+            <div key={s.id} className={styles.storyCardItem}>
+              <img src={s.mediaUrl} alt="" />
+              <span className={`${styles.storyStatusBadge} ${s.status === 'published' ? styles.storyStatusActive : styles.storyStatusExpired}`}>
+                {s.status === 'published'
+                  ? t('produits.modalVoir.stories.active')
+                  : t('produits.modalVoir.stories.expiree')}
+              </span>
+              <button className={styles.storyDeleteBtn} onClick={() => handleDeleteStory(s.id)}
+                title={t('produits.modalVoir.supprimer')}>
+                <i className="fas fa-trash" />
+              </button>
+              <div className={styles.storyCardFooter}>
+                {t('produits.modalVoir.stories.vues', { count: s.viewsCount })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Sélection (multiple) des images à publier en story */}
+      <div className={styles.storiesAdd}>
+        <div className={styles.storiesAddTitle}>{t('produits.modalVoir.stories.ajouterTitre')}</div>
+        <div className={styles.storiesAddHint}>{t('produits.modalVoir.stories.ajouterHint')}</div>
+        <div className={styles.storiesAddRow}>
+          {produit.images.map(img => {
+            const isActive = activeUrls.has(img.url);
+            return (
+              <button key={img.id}
+                className={`${styles.storyAddThumb} ${selectedUrls.has(img.url) ? styles.storyAddThumbSelected : ''} ${isActive ? styles.storyAddThumbDisabled : ''}`}
+                disabled={isActive}
+                onClick={() => toggleSelect(img.url)}
+                title={isActive ? t('produits.modalVoir.stories.dejaActive') : undefined}
+              >
+                <img src={img.url} alt={img.alt ?? ''} />
+                <span className={styles.storyAddOverlay}>
+                  {isActive
+                    ? <i className="fas fa-clock" />
+                    : selectedUrls.has(img.url)
+                      ? <i className="fas fa-check" />
+                      : <i className="fas fa-plus" />
+                  }
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <button className={styles.storiesPublishBtn} disabled={selectedUrls.size === 0 || publishing} onClick={handlePublish}>
+          {publishing
+            ? <><i className="fas fa-spinner fa-spin" /> {t('produits.modalVoir.stories.publication')}</>
+            : <><i className="fas fa-paper-plane" /> {t('produits.modalVoir.stories.publier')}{selectedUrls.size > 0 ? ` (${selectedUrls.size})` : ''}</>
+          }
+        </button>
+      </div>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// VIEWER — toutes les stories d'UN produit, façon Facebook/Instagram
+// (les images/vidéos d'un même produit restent dans un même bloc).
+// ─────────────────────────────────────────────────────────────
+
+interface StoryViewer { id: string; name: string; avatar: string | null; viewedAt: string; liked: boolean }
+
+function StoryGroupViewer({ productNom, stories, initialIndex, onClose, onDeleted }: {
+  productNom:   string;
+  stories:      MyStory[];
+  initialIndex?: number;
+  onClose:      () => void;
+  onDeleted:    (storyId: string) => void;
+}) {
+  const { t } = useTranslation();
+  const { pop } = useToast();
+  const [items, setItems] = useState(stories);
+  const [slideIdx, setSlideIdx] = useState(initialIndex ?? 0);
+  const [prog, setProg] = useState(0);
+  const [viewersOpen, setViewersOpen] = useState(false);
+  const [viewersLoading, setViewersLoading] = useState(false);
+  const [viewers, setViewers] = useState<StoryViewer[]>([]);
+
+  const animRef  = useRef<number | null>(null);
+  const startRef = useRef<number | null>(null);
+  const viewersOpenRef = useRef(false);
+  const pauseStartRef  = useRef<number | null>(null);
+  useEffect(() => { viewersOpenRef.current = viewersOpen; }, [viewersOpen]);
+
+  // Compteur de vues instantané pendant que le viewer est ouvert.
+  useNotificationSocket({
+    onStoryViewed: ({ storyId, viewsCount }) => {
+      setItems(prev => prev.map(s => s.id === storyId ? { ...s, viewsCount } : s));
+    },
+  });
+
+  const current = items[slideIdx];
+  const DUREE = 6000;
+
+  useEffect(() => {
+    if (!current) { onClose(); return; }
+    setProg(0);
+    setViewersOpen(false);
+    startRef.current = null;
+    pauseStartRef.current = null;
+    const tick = (now: number) => {
+      if (startRef.current === null) startRef.current = now;
+      if (viewersOpenRef.current) {
+        if (pauseStartRef.current === null) pauseStartRef.current = now;
+        animRef.current = requestAnimationFrame(tick);
+        return;
+      }
+      if (pauseStartRef.current !== null) {
+        startRef.current += now - pauseStartRef.current;
+        pauseStartRef.current = null;
+      }
+      const pct = Math.min(100, ((now - startRef.current) / DUREE) * 100);
+      setProg(pct);
+      if (pct < 100) animRef.current = requestAnimationFrame(tick);
+      else if (slideIdx < items.length - 1) setSlideIdx(i => i + 1);
+      else onClose();
+    };
+    animRef.current = requestAnimationFrame(tick);
+    return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slideIdx, items.length]);
+
+  function goPrev() { if (slideIdx > 0) setSlideIdx(i => i - 1); }
+  function goNext() { if (slideIdx < items.length - 1) setSlideIdx(i => i + 1); else onClose(); }
+
+  function openViewers() {
+    if (!current) return;
+    setViewersOpen(true);
+    setViewersLoading(true);
+    fetch(`${API}/public/stories/${current.id}/viewers`, {
+      headers: { Authorization: `Bearer ${token()}` },
+    })
+      .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+      .then(setViewers)
+      .catch(() => {
+        pop(t('produits.modalVoir.stories.vuesEchec'), 'e');
+        setViewersOpen(false);
+      })
+      .finally(() => setViewersLoading(false));
+  }
+
+  async function handleDeleteCurrent() {
+    if (!current || !window.confirm(t('produits.modalVoir.stories.confirmSupprimer'))) return;
+    try {
+      const res = await fetch(`${API}/produits/${current.productId}/stories/${current.id}`, {
+        method:  'DELETE',
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (!res.ok) throw new Error();
+      onDeleted(current.id);
+      const next = items.filter(i => i.id !== current.id);
+      if (next.length === 0) { onClose(); return; }
+      setItems(next);
+      setSlideIdx(i => Math.min(i, next.length - 1));
+      pop(t('produits.modalVoir.stories.suppressionSucces'), 's');
+    } catch {
+      pop(t('produits.modalVoir.stories.suppressionEchec'), 'e');
+    }
+  }
+
+  if (!current) return null;
+
+  return (
+    <div className={styles.pvOverlay} onClick={onClose}>
+      <div className={styles.pvCard} onClick={e => e.stopPropagation()}>
+
+        <div className={styles.pvVisual}>
+          {current.mediaType === 'video'
+            ? <video src={current.mediaUrl} className={styles.pvImg} autoPlay muted playsInline />
+            : <img src={current.mediaUrl} alt={productNom} className={styles.pvImg} />
+          }
+        </div>
+        <div className={styles.pvTopScrim} />
+        <div className={styles.pvBottomScrim} />
+
+        <div className={styles.pvTopBar}>
+          <div className={styles.progBars}>
+            {items.map((_, i) => (
+              <div key={i} className={styles.progBar}>
+                <div className={styles.progFill} style={{ width: i < slideIdx ? '100%' : i === slideIdx ? `${prog}%` : '0%' }} />
+              </div>
+            ))}
+          </div>
+          <div className={styles.pvHd}>
+            <span className={styles.pvHdNom}>{productNom}</span>
+            <button className={styles.pvViewsBtn} onClick={openViewers} title={t('produits.modalVoir.stories.quiAVu')}>
+              <i className="fas fa-eye" /> {current.viewsCount}
+            </button>
+            <button className={styles.pvIconBtn} onClick={handleDeleteCurrent} title={t('produits.modalVoir.supprimer')}>
+              <i className="fas fa-trash" />
+            </button>
+            <button className={styles.pvIconBtn} onClick={onClose}>
+              <i className="fas fa-xmark" />
+            </button>
+          </div>
+        </div>
+
+        {(slideIdx > 0) && (
+          <button className={`${styles.pvNav} ${styles.pvNavL}`} onClick={e => { e.stopPropagation(); goPrev(); }}>
+            <i className="fas fa-chevron-left" />
+          </button>
+        )}
+        <button className={`${styles.pvNav} ${styles.pvNavR}`} onClick={e => { e.stopPropagation(); goNext(); }}>
+          <i className="fas fa-chevron-right" />
+        </button>
+
+        {viewersOpen && (
+          <div className={styles.viewersSheet} onClick={() => setViewersOpen(false)}>
+            <div className={styles.viewersPanel} onClick={e => e.stopPropagation()}>
+              <div className={styles.viewersPanelHd}>
+                <span>{t('produits.modalVoir.stories.quiAVu')}</span>
+                <button className={styles.pvIconBtn} onClick={() => setViewersOpen(false)}>
+                  <i className="fas fa-xmark" />
+                </button>
+              </div>
+              {viewersLoading ? (
+                <div className={styles.viewersEmpty}>{t('produits.modalVoir.stories.chargement')}</div>
+              ) : viewers.length === 0 ? (
+                <div className={styles.viewersEmpty}>{t('produits.modalVoir.stories.aucuneVue')}</div>
+              ) : (
+                <div className={styles.viewersList}>
+                  {viewers.map(v => (
+                    <div key={v.id} className={styles.viewerRow}>
+                      <div className={styles.viewerAva}>
+                        {v.avatar
+                          ? <img src={v.avatar} alt={v.name} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%' }} />
+                          : <span>{v.name.trim().charAt(0).toUpperCase() || '?'}</span>
+                        }
+                      </div>
+                      <span className={styles.viewerRowName}>{v.name}</span>
+                      {v.liked && <i className={`fas fa-heart ${styles.viewerRowLiked}`} title={t('produits.modalVoir.stories.jaime')} />}
+                      <span className={styles.viewerRowTime}>
+                        {new Date(v.viewedAt).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// MODALE — CRÉER UNE STORY (bouton général, tous produits)
+// ─────────────────────────────────────────────────────────────
+
+function ModalCreateStory({ produits, initialProduit, onClose }: {
+  produits: Produit[]; initialProduit?: Produit | null; onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<Produit | null>(initialProduit ?? null);
+
+  const eligibles = produits.filter(p => p.images.length > 0);
+  const filtres = search.trim()
+    ? eligibles.filter(p => p.nom.toLowerCase().includes(search.trim().toLowerCase()))
+    : eligibles;
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={`${styles.modal} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <div>
+            <div className={styles.modalTitle}>
+              {selected && (
+                <button className={styles.storyBackBtn} onClick={() => setSelected(null)}>
+                  <i className="fas fa-arrow-left" />
+                </button>
+              )}
+              <i className="fas fa-clock-rotate-left" /> {t('produits.creerStory.titre')}
+            </div>
+            {selected && (
+              <div className={styles.modalMeta}>
+                <span className={styles.metaItem}>{selected.nom}</span>
+              </div>
+            )}
+          </div>
+          <button className={styles.closeBtn} onClick={onClose}>
+            <i className="fas fa-xmark" />
+          </button>
+        </div>
+        <div className={styles.modalBody}>
+          {selected ? (
+            <StoriesManager produit={selected} />
+          ) : (
+            <>
+              <div className={styles.searchWrap}>
+                <i className="fas fa-magnifying-glass" />
+                <input
+                  className={styles.searchInput}
+                  placeholder={t('produits.search')}
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              {filtres.length === 0 ? (
+                <div className={styles.storiesEmpty}>{t('produits.creerStory.aucunProduit')}</div>
+              ) : (
+                <div className={styles.creerStoryList}>
+                  {filtres.map(p => (
+                    <button key={p.id} className={styles.creerStoryItem} onClick={() => setSelected(p)}>
+                      <img src={p.images[0].url} alt={p.nom} />
+                      <div className={styles.creerStoryItemInfo}>
+                        <span className={styles.creerStoryItemNom}>{p.nom}</span>
+                        {p.category && <span className={styles.creerStoryItemCat}>{p.category.nom}</span>}
+                      </div>
+                      <i className="fas fa-chevron-right" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
   produit:   Produit;
@@ -258,6 +705,14 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
                   <span key={tag.trim()} className={styles.tag}>{tag.trim()}</span>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Stories */}
+          {produit.images.length > 0 && (
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}><i className="fas fa-clock-rotate-left" /> {t('produits.modalVoir.stories.titre')}</div>
+              <StoriesManager produit={produit} />
             </div>
           )}
         </div>
@@ -474,9 +929,37 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
   const [search,     setSearch]     = useState('');
   const [filtreVis,  setFiltreVis]  = useState('tous');
 
-  const [modalVoir,   setModalVoir]   = useState<Produit | null>(null);
-  const [modalModif,  setModalModif]  = useState<Produit | null>(null);
-  const [modalDelete, setModalDelete] = useState<Produit | null>(null);
+  const [modalVoir,    setModalVoir]    = useState<Produit | null>(null);
+  const [modalModif,   setModalModif]   = useState<Produit | null>(null);
+  const [modalDelete,  setModalDelete]  = useState<Produit | null>(null);
+  const [createStoryOpen, setCreateStoryOpen] = useState(false);
+  const [storyForModal,   setStoryForModal]   = useState<Produit | null>(null);
+  const [viewerGroup,     setViewerGroup]     = useState<{ productNom: string; stories: MyStory[]; startAt: number } | null>(null);
+
+  // ── Stories publiées par l'entreprise (tous produits) ────────────────────
+  const [myStories,        setMyStories]        = useState<MyStory[]>([]);
+  const [myStoriesLoading, setMyStoriesLoading] = useState(true);
+
+  const loadMyStories = useCallback(async () => {
+    setMyStoriesLoading(true);
+    try {
+      const res = await fetch(`${API}/produits/stories`, {
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (res.ok) setMyStories(await res.json());
+    } finally {
+      setMyStoriesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadMyStories(); }, [loadMyStories]);
+
+  // Compteur de vues instantané sur les tuiles de la tray, sans recharger la page.
+  useNotificationSocket({
+    onStoryViewed: ({ storyId, viewsCount }) => {
+      setMyStories(prev => prev.map(s => s.id === storyId ? { ...s, viewsCount } : s));
+    },
+  });
 
   // ── Chargement des produits ──────────────────────────────────────────────
   const charger = useCallback(async () => {
@@ -556,6 +1039,43 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
         <button className={styles.btnAjouter} onClick={() => onNavigate('ajouter')}>
           <i className="fas fa-plus" /> {t('produits.header.nouveau')}
         </button>
+      </div>
+
+      {/* ── Créer une story + mes stories déjà publiées (regroupées par produit), sur la même ligne ── */}
+      <div className={styles.storiesTrayRow}>
+        <button className={styles.creerStoryTile} onClick={() => { setStoryForModal(null); setCreateStoryOpen(true); }}>
+          <div className={styles.creerStoryTileTop}>
+            <span className={styles.creerStoryTileIcon}><i className="fas fa-camera" /></span>
+          </div>
+          <span className={styles.creerStoryTilePlus}><i className="fas fa-plus" /></span>
+          <span className={styles.creerStoryTileLabel}>{t('produits.creerStory.bouton')}</span>
+        </button>
+
+        {!myStoriesLoading && Object.values(
+          myStories.reduce((acc, s) => {
+            (acc[s.productId] ??= { productId: s.productId, productNom: s.productNom, items: [] }).items.push(s);
+            return acc;
+          }, {} as Record<string, { productId: string; productNom: string; items: MyStory[] }>)
+        ).map(group => {
+          const cover = group.items[0];
+          const totalVues = group.items.reduce((sum, s) => sum + s.viewsCount, 0);
+          return (
+            <button key={group.productId} className={styles.myStoryTile}
+              onClick={() => setViewerGroup({ productNom: group.productNom, stories: group.items, startAt: 0 })}
+            >
+              <img src={cover.mediaUrl} alt={group.productNom} />
+              <span className={`${styles.storyStatusBadge} ${cover.status === 'published' ? styles.storyStatusActive : styles.storyStatusExpired}`}>
+                {cover.status === 'published' ? t('produits.modalVoir.stories.active') : t('produits.modalVoir.stories.expiree')}
+              </span>
+              <span className={styles.myStoryViews} title={t('produits.modalVoir.stories.vues', { count: totalVues })}>
+                <i className="fas fa-eye" /> {totalVues}
+              </span>
+              {group.items.length > 1 && (
+                <span className={styles.myStoryCount}>{group.items.length}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Stats ── */}
@@ -758,6 +1278,22 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
           produit={modalDelete}
           onClose={() => setModalDelete(null)}
           onDeleted={() => handleDeleted(modalDelete.id)}
+        />
+      )}
+      {createStoryOpen && (
+        <ModalCreateStory
+          produits={produits}
+          initialProduit={storyForModal}
+          onClose={() => { setCreateStoryOpen(false); loadMyStories(); }}
+        />
+      )}
+      {viewerGroup && (
+        <StoryGroupViewer
+          productNom={viewerGroup.productNom}
+          stories={viewerGroup.stories}
+          initialIndex={viewerGroup.startAt}
+          onClose={() => { setViewerGroup(null); loadMyStories(); }}
+          onDeleted={storyId => setMyStories(prev => prev.filter(s => s.id !== storyId))}
         />
       )}
     </div>

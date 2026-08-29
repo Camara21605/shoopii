@@ -177,6 +177,7 @@ export type EntreprisePage =
   | 'produits'
   | 'ajouter'
   | 'inventaire'
+  | 'fournisseurs'
   | 'promotions'
   | 'analytics'
   | 'messages'
@@ -194,4 +195,5 @@ export type EntreprisePage =
   | 'profilLivreurReseau'
   | 'profil'
   | 'boutique-preview'
-  | 'equipe';
+  | 'equipe'
+  | 'notifications';

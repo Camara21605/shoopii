@@ -18,7 +18,8 @@ export type PartenairePage =
   | 'paiements'
   | 'stats'
   | 'signalements'
-  | 'parametres';
+  | 'parametres'
+  | 'notifications';
 
 /* Type d'acteur recrutable */
 export type ActeurType = 'ent' | 'lvr' | 'cor' | 'cli';

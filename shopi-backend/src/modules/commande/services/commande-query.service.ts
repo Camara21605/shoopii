@@ -157,7 +157,7 @@ export class CommandeQueryService {
   /* ════════════════════════════════════════════════════════
    * GET /entreprise/commandes — liste des commandes de la boutique
    ════════════════════════════════════════════════════════ */
-  async listEntreprise(user: User): Promise<CommandeListItem[]> {
+  async listEntreprise(user: User, opts?: { search?: string; limit?: number }): Promise<CommandeListItem[]> {
     const actorId = (user as any).actorId as string | undefined;
     let company = await this.companyRepo.findOne({ where: { userId: user.id } });
     if (!company && actorId) company = await this.companyRepo.findOne({ where: { id: actorId } });
@@ -180,7 +180,7 @@ export class CommandeQueryService {
     const clientById = new Map(clients.map(c => [c.id, c]));
     const deliveryById = new Map(deliveries.map(d => [d.id, d]));
 
-    return commandes.map(c => {
+    let mapped = commandes.map(c => {
       const firstItem = c.items[0];
       return {
         id:       c.numero,
@@ -206,6 +206,22 @@ export class CommandeQueryService {
         livreurRefusalReason:    c.livreurRefusalReason,
       };
     });
+
+    // Recherche facultative — utilisée par la recherche globale du header
+    // entreprise (numéro de commande, client, produit). Filtrage en mémoire
+    // comme pour ClientsService.getClients() : le volume par boutique reste
+    // raisonnable, pas besoin de pousser le filtre dans la requête SQL.
+    if (opts?.search?.trim()) {
+      const term = opts.search.trim().toLowerCase();
+      mapped = mapped.filter(m =>
+        m.id.toLowerCase().includes(term) ||
+        m.client.toLowerCase().includes(term) ||
+        m.nm.toLowerCase().includes(term),
+      );
+    }
+    if (opts?.limit) mapped = mapped.slice(0, opts.limit);
+
+    return mapped;
   }
 
   /* ════════════════════════════════════════════════════════

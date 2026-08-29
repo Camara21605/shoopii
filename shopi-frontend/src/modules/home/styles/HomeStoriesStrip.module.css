@@ -13,48 +13,6 @@
   padding: 18px 0 10px;
 }
 
-/* ── En-tête de section ── */
-.secHd {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px 14px;
-  max-width: 1320px;
-  margin: 0 auto;
-}
-.secLeft {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.secIc {
-  width: 38px; height: 38px;
-  border-radius: 11px;
-  background: linear-gradient(135deg, #EEF3FD, #D6E4F8);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; flex-shrink: 0;
-}
-.secTitle {
-  font-family: var(--fd, 'Fraunces', serif);
-  font-size: 16px; font-weight: 800;
-  color: var(--navy, #0B1F3A); letter-spacing: -.3px;
-}
-.secSub {
-  font-size: 12px; color: var(--t3, #7B92B2); margin-top: 2px;
-}
-.secLink {
-  background: var(--sky, #F1F3F5);
-  color: var(--t1, #0B1F3A);
-  border: 1px solid var(--sky-3, #D1D5DB);
-  border-radius: var(--pill, 999px);
-  padding: 7px 16px;
-  font-size: 12px; font-weight: 700;
-  display: flex; align-items: center; gap: 6px;
-  cursor: pointer; transition: all .2s; white-space: nowrap;
-  flex-shrink: 0;
-}
-.secLink:hover { background: var(--sky-2, #E8EAED); transform: translateY(-1px); }
-
 /* ────────────────────────────────────────────────────────────
    BANDE
 ──────────────────────────────────────────────────────────── */
@@ -84,77 +42,97 @@
 .scroller::-webkit-scrollbar { display: none; }
 
 /* ────────────────────────────────────────────────────────────
-   ITEM BOUTIQUE
+   ITEM BOUTIQUE — format rectangle façon Facebook Stories
 ──────────────────────────────────────────────────────────── */
 .storyBtn {
-  display: flex; flex-direction: column; align-items: center;
-  gap: 7px; background: transparent; border: none;
-  cursor: pointer; padding: 4px 2px; flex-shrink: 0;
+  display: block; background: transparent; border: none;
+  cursor: pointer; padding: 2px; flex-shrink: 0;
   transition: transform .22s var(--ease, cubic-bezier(.4,0,.2,1));
-  width: 78px;
 }
 .storyBtn:hover  { transform: translateY(-4px); }
 .storyBtn:active { transform: translateY(-1px) scale(.97); }
-.storyLu { opacity: .6; }
-.storyLu:hover { opacity: .85; }
+.storyLu { opacity: .7; }
+.storyLu:hover { opacity: .9; }
 
-/* Anneau */
-.storyRing {
-  width: 76px; height: 76px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
+/* Anneau (bordure dégradée autour du rectangle) */
+.storyRingRect {
+  width: 108px; height: 180px;
+  border-radius: 17px;
+  padding: 2.5px;
   transition: all .25s;
 }
 
-/* Cercle intérieur */
-.storyCircle {
-  width: 68px; height: 68px;
-  border-radius: 50%;
-  background: #fff;
-  display: flex; align-items: center; justify-content: center;
-  border: 2.5px solid #fff;
-  box-shadow: 0 2px 14px rgba(0,0,0,.1);
+/* Carte rectangle */
+.storyCard {
+  width: 100%; height: 100%;
+  border-radius: 15px;
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;
   position: relative; overflow: hidden;
+  box-shadow: 0 2px 14px rgba(0,0,0,.1);
+}
+.storyCardImg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+}
+.storyCardEmoji {
+  position: absolute; top: 42%; left: 50%; transform: translate(-50%,-50%);
+  font-size: 34px;
+}
+.storyCardScrim {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 62%;
+  background: linear-gradient(to top, rgba(0,0,0,.72), rgba(0,0,0,0));
+  pointer-events: none;
 }
 .shopEmoji {
-  font-size: 30px;
+  font-size: 16px;
   line-height: 1;
   display: flex; align-items: center; justify-content: center;
 }
 
-/* Badge dans la bulle */
+/* Badge promo (coin haut-droit) */
 .storyBadge {
-  position: absolute; bottom: 0; left: 50%;
-  transform: translateX(-50%);
-  width: 20px; height: 20px; border-radius: 50%;
+  position: absolute; top: 8px; right: 8px;
+  width: 22px; height: 22px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  font-size: 11px; z-index: 1;
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
   border: 2px solid #fff;
+}
+
+/* Avatar boutique (coin haut-gauche) */
+.storyAvatarWrap {
+  position: absolute; top: 8px; left: 8px; z-index: 1;
+}
+.storyAvatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  border: 2.5px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  overflow: hidden;
 }
 
 /* Point "En ligne" */
 .onlineDot {
-  position: absolute; bottom: 3px; right: 3px;
-  width: 13px; height: 13px; border-radius: 50%;
+  position: absolute; bottom: -1px; right: -1px;
+  width: 11px; height: 11px; border-radius: 50%;
   background: #10B981;
-  border: 2.5px solid #fff;
+  border: 2px solid #fff;
   box-shadow: 0 1px 4px rgba(16,185,129,.4);
 }
 
-/* Labels */
+/* Label — nom de la boutique, incrusté en bas de la carte */
 .shopLabel {
-  font-size: 11px; font-weight: 700;
-  color: var(--navy, #0B1F3A);
-  text-align: center;
-  width: 78px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.slidesCnt {
-  font-size: 10px; font-weight: 500;
-  color: var(--t3, #7B92B2);
-  text-align: center;
-  white-space: nowrap;
+  position: relative; z-index: 1;
+  padding: 0 10px 10px;
+  font-size: 12px; font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,.4);
+  display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.25;
 }
 
 /* ── Flèches navigation ── */
@@ -189,40 +167,54 @@
   background: rgba(11,31,58,.88);
 }
 
-/* Carte */
+/* Carte — même mécanique en petit et grand écran : l'image de la story
+   sert de fond plein cadre, tous les contrôles flottent par-dessus. */
 .viewerCard {
   position: relative; z-index: 1;
-  width: 100%; max-width: 400px;
-  background: linear-gradient(175deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.03) 100%);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 28px;
+  width: min(400px, 100vw); height: min(750px, 92vh);
+  background: #0B1F3A;
+  border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 32px 80px rgba(0,0,0,.55);
   animation: slideUp .32s var(--spring, cubic-bezier(.34,1.56,.64,1));
-  max-height: 92vh;
-  display: flex; flex-direction: column;
 }
 @keyframes slideUp {
   from { opacity:0; transform:translateY(40px) scale(.95); }
   to   { opacity:1; transform:translateY(0)   scale(1);   }
 }
 
+/* Dégradés de lisibilité au-dessus de l'image */
+.viewerTopScrim, .viewerBottomScrim {
+  position: absolute; left: 0; right: 0; z-index: 1; pointer-events: none;
+}
+.viewerTopScrim    { top: 0; height: 140px; background: linear-gradient(to bottom, rgba(0,0,0,.65), transparent); }
+.viewerBottomScrim { bottom: 0; height: 46%; background: linear-gradient(to top, rgba(0,0,0,.82), transparent); }
+
+/* Barre du haut (progression + en-tête), flottante sur l'image */
+.viewerTopBar {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 2;
+}
+
+/* Barre du bas (infos produit + actions), flottante sur l'image */
+.viewerBottomBar {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+}
+
 /* Barres progression */
 .progBars {
   display: flex; gap: 3px;
-  padding: 12px 14px 0; flex-shrink: 0;
+  padding: 14px 14px 0;
 }
 .progBar {
   flex: 1; height: 3px; border-radius: 2px;
-  background: rgba(255,255,255,.2); overflow: hidden;
+  background: rgba(255,255,255,.3); overflow: hidden;
 }
-.progFill { height: 100%; border-radius: 2px; transition: width .1s linear; }
+.progFill { height: 100%; border-radius: 2px; transition: width .1s linear; background: #fff; }
 
 /* Header viewer */
 .viewerHd {
   display: flex; align-items: center; gap: 10px;
-  padding: 11px 14px; flex-shrink: 0;
+  padding: 11px 14px;
 }
 
 /* Miniatures boutiques */
@@ -255,30 +247,95 @@
 }
 .viewerClose:hover { background: rgba(255,255,255,.2); color: #fff; }
 
-/* Visuel produit */
-.viewerVisual {
-  flex-shrink: 0; margin: 0 16px;
-  border-radius: 20px; height: 228px;
+/* Bouton "Qui a vu cette story" (entreprise uniquement) */
+.viewerViewersBtn {
+  background: rgba(255,255,255,.1); border: none;
+  width: 32px; height: 32px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  position: relative; overflow: hidden;
+  color: rgba(255,255,255,.7); font-size: 14px;
+  cursor: pointer; transition: all .18s; flex-shrink: 0;
+}
+.viewerViewersBtn:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+/* Panneau "Qui a vu cette story" — sheet qui remonte du bas */
+.viewersSheet {
+  position: absolute; inset: 0; z-index: 4;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: transparent;
+  animation: fadeIn .18s ease;
+}
+.viewersPanel {
+  width: 100%; max-height: 65%;
+  background: rgba(17,26,46,.55);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-top: 1px solid rgba(255,255,255,.14);
+  border-radius: 18px 18px 0 0;
+  display: flex; flex-direction: column;
+  animation: viewersSlideUp .22s var(--spring, cubic-bezier(.34,1.56,.64,1));
+  box-shadow: 0 -12px 40px rgba(0,0,0,.35);
+}
+@keyframes viewersSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.viewersPanelHd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; flex-shrink: 0;
+  font-size: 14px; font-weight: 800; color: #fff;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.viewersEmpty {
+  padding: 28px 16px; text-align: center;
+  font-size: 12.5px; color: rgba(200,217,248,.5);
+}
+.viewersList { overflow-y: auto; padding: 6px 0 10px; }
+.viewerRow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px;
+}
+.viewerAva {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(255,255,255,.1);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: 700; overflow: hidden;
+}
+.viewerRowName {
+  flex: 1; min-width: 0;
+  font-size: 13px; font-weight: 600; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.viewerRowLiked {
+  font-size: 12px; color: #FF3B5C; flex-shrink: 0;
+}
+.viewerRowTime {
+  font-size: 11px; color: rgba(200,217,248,.45); flex-shrink: 0;
+}
+
+/* Visuel produit — plein cadre, sert de fond à toute la carte */
+.viewerVisual {
+  position: absolute; inset: 0; z-index: 0;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
 }
 .viewerImg {
   width: 100%; height: 100%;
-  object-fit: cover; border-radius: 20px;
+  object-fit: contain;
 }
 .viewerEmoji {
-  font-size: 82px;
+  font-size: 96px;
   filter: drop-shadow(0 8px 20px rgba(0,0,0,.3));
   position: relative; z-index: 1;
 }
 .viewerRing {
-  position: absolute; inset: 14px;
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 190px; height: 190px;
   border-radius: 50%; border: 2px solid currentColor;
   opacity: .28;
 }
 
 /* Infos produit */
-.viewerInfo { padding: 14px 20px 8px; flex-shrink: 0; }
+.viewerInfo { padding: 4px 20px 10px; }
 .viewerBadge {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 10px; font-weight: 800; color: #fff;
@@ -302,7 +359,7 @@
 /* Actions viewer */
 .viewerActions {
   padding: 12px 16px 20px;
-  display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+  display: flex; gap: 8px; align-items: center;
 }
 .vaMain {
   flex: 1; background: rgba(255,255,255,.95); color: var(--navy);
@@ -329,6 +386,25 @@
 }
 .vaShare:hover { background: rgba(255,255,255,.2); color: #fff; }
 
+/* Bouton "J'aime" */
+.vaLike {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
+  color: rgba(200,217,248,.7); font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .2s; flex-shrink: 0;
+}
+.vaLike:hover { background: rgba(255,255,255,.2); color: #fff; }
+.vaLikeActive {
+  background: rgba(255,59,92,.15); border-color: rgba(255,59,92,.4); color: #FF3B5C;
+  animation: likePop .35s var(--spring, cubic-bezier(.34,1.56,.64,1));
+}
+@keyframes likePop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
 /* Flèches prev/next viewer */
 .vNav {
   position: absolute; top: 50%; transform: translateY(-50%);
@@ -346,39 +422,32 @@
    RESPONSIVE
 ──────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  .secHd   { padding: 0 14px 12px; flex-wrap: wrap; gap: 10px; }
-  .scroller { padding: 4px 14px 12px; gap: 13px; }
-  .storyBtn { width: 66px; }
-  .storyRing { width: 64px; height: 64px; }
-  .storyCircle { width: 56px; height: 56px; }
-  .shopEmoji { font-size: 26px; }
-  .shopLabel { width: 66px; font-size: 10px; }
+  .scroller { padding: 4px 14px 12px; gap: 11px; }
+  .storyRingRect { width: 92px; height: 154px; border-radius: 15px; }
+  .storyCard     { border-radius: 13px; }
+  .storyCardEmoji { font-size: 28px; }
+  .storyAvatar   { width: 28px; height: 28px; }
+  .shopLabel     { font-size: 11px; padding: 0 8px 8px; }
   .navArrow { display: none; }
-  .viewerCard { max-width: 100%; margin: 0 10px; border-radius: 22px; }
-  .viewerVisual { height: 188px; }
+
+  /* Viewer plein écran sur mobile (édge à édge, comme Facebook/Instagram) */
+  .viewerCard  { width: 100vw; height: 100dvh; border-radius: 0; }
   .viewerEmoji { font-size: 64px; }
   .shopRow     { display: none; }
   .vNavL { left: 4px; }
   .vNavR { right: 4px; }
 }
 @media (max-width: 380px) {
-  .storyBtn   { width: 58px; }
-  .storyRing  { width: 56px; height: 56px; }
-  .storyCircle{ width: 48px; height: 48px; }
-  .shopEmoji  { font-size: 22px; }
+  .storyRingRect  { width: 80px; height: 134px; }
+  .storyCardEmoji { font-size: 24px; }
+  .storyAvatar    { width: 26px; height: 26px; }
 }
 
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .storyCircle { background: var(--white,#111113); border-color: var(--white,#111113); }
-  .storyBadge  { border-color: var(--white,#111113); }
-  .onlineDot   { border-color: var(--white,#111113); }
   .vaMain       { color: #111113; }
   .vaMain:hover { background: rgba(255,255,255,1); color: #111113; }
 }
-:root[data-theme="dark"] .storyCircle { background: var(--white,#111113); border-color: var(--white,#111113); }
-:root[data-theme="dark"] .storyBadge  { border-color: var(--white,#111113); }
-:root[data-theme="dark"] .onlineDot   { border-color: var(--white,#111113); }
 :root[data-theme="dark"] .vaMain       { color: #111113; }
 :root[data-theme="dark"] .vaMain:hover { background: rgba(255,255,255,1); color: #111113; }
 :root[data-theme="dark"] .navArrow:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); color: #F4F4F5; }

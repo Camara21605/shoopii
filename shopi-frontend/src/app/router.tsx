@@ -26,6 +26,7 @@ import LivreursPage      from '../modules/home/components/livreurs/pages/Livreur
 import BoutiquesPage     from '../modules/home/components/boutiques/pages/BoutiquesPage';
 import ExplorerPage      from '../modules/home/components/explorer/pages/ExplorerPage';
 import OffresPage        from '../modules/home/components/offres/pages/OffresPage';
+import NotificationsPage from '../modules/home/components/notifications/pages/NotificationsPage';
 import ProfilLivreurPage from '../shared/profils/profil-livreur/ProfilLivreurPage';
 import ProfilClientPage  from '../shared/profils/profil-client/ProfilClientPage';
 import CorrespondantsPage from '../modules/home/components/correspondants/pages/CorrespondantsPage';
@@ -233,6 +234,9 @@ export const AppRouter: React.FC = () => (
 
           {/* Offres / promotions — publique */}
           <Route path="/offres"             element={<OffresPage />} />
+
+          {/* Notifications — page complète (remplace le dropdown "Voir tout") */}
+          <Route path="/notifications"      element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
 
           {/* Livreurs — publiques */}
           <Route path="/livreurs"           element={<LivreursPage />} />

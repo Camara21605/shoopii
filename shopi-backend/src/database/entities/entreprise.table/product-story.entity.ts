@@ -58,10 +58,9 @@ export class ProductStory {
   @ManyToOne(() => Product, product => product.stories, {
     nullable: false,
     onDelete: 'CASCADE',
-    lazy: true,
   })
   @JoinColumn({ name: 'productId' })
-  product: Promise<Product> | Product;
+  product: Product;
 
   @Column({ name: 'productId', type: 'uuid' })
   productId: string;
@@ -75,10 +74,9 @@ export class ProductStory {
   @ManyToOne(() => Company, company => company.stories, {
     nullable: false,
     onDelete: 'CASCADE',
-    lazy: true,
   })
   @JoinColumn({ name: 'companyId' })
-  company: Promise<Company> | Company;
+  company: Company;
 
   @Column({ name: 'companyId', type: 'uuid' })
   companyId: string;

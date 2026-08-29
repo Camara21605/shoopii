@@ -90,6 +90,8 @@ export default function Sidebar({
         <NavGroup label="Tableau de bord">
           <NavItem icon="📊" label="Vue d'ensemble" active={activeSection==='overview'}
             onClick={go(() => navigate('overview'))} />
+          <NavItem icon="🔔" label="Mes notifications" active={activeSection==='notifications'}
+            onClick={go(() => navigate('notifications'))} />
           <NavItem icon="📈" label="Analytiques" active={activeSection==='analytics'}
             badge="Live" badgeClass="nc-sky"
             onClick={go(() => navigate('analytics'))} />

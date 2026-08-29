@@ -129,7 +129,12 @@ async function bootstrap() {
 
   /* ── Port & host ────────────────────────────────────────────── */
   const port = parseInt(process.env.PORT ?? (isProd ? '3000' : '3001'), 10);
-  await app.listen(port, '0.0.0.0');
+  // En prod (Render) le bind doit être explicite sur 0.0.0.0. En dev, un bind
+  // explicite IPv4 empêche les connexions venant de "localhost" résolu en ::1
+  // (IPv6) par le navigateur → ERR_CONNECTION_REFUSED. Sans host, Node écoute
+  // en dual-stack et accepte les deux.
+  if (isProd) await app.listen(port, '0.0.0.0');
+  else        await app.listen(port);
 
   logger.log(`🚀 Backend running on port ${port}`);
   logger.log(`   NODE_ENV : ${process.env.NODE_ENV ?? 'development'}`);

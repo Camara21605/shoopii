@@ -760,7 +760,7 @@
 .coBtns {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 7px;
+  gap: 10px;
   margin-top: 4px;
 }
 .coBtns1 { grid-template-columns: 1fr; }
@@ -949,12 +949,15 @@
 
 .crStats { display: flex; justify-content: center; gap: 12px; font-size: 10.5px; color: var(--t3); flex-wrap: wrap; }
 .crStats i { color: var(--blue); }
-.crBtns { display: flex; gap: 7px; width: 100%; margin-top: 4px; }
+.crBtns { display: flex; gap: 10px; width: 100%; margin-top: 4px; }
 .crV, .crC {
-  flex: 1; border-radius: 10px; padding: 9px 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all .18s;
+  border-radius: 10px; padding: 9px 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all .18s;
   display: flex; align-items: center; justify-content: center; gap: 5px;
 }
+.crC { flex: 1; }
 .crV {
+  flex: 0 0 38px;
+  width: 38px;
   background: transparent;
   color: var(--t2);
   border: 1px solid var(--bdr2);
@@ -1061,7 +1064,7 @@
   border-radius: 999px; padding: 3px 10px;
   display: flex; align-items: center; gap: 4px;
 }
-.dlBtns { display: flex; gap: 7px; width: 100%; margin-top: 4px; }
+.dlBtns { display: flex; gap: 10px; width: 100%; margin-top: 4px; }
 .dlV, .dlF {
   border-radius: 10px; padding: 9px; font-size: 11.5px; font-weight: 700;
   cursor: pointer; transition: all .18s;

@@ -32,23 +32,26 @@
       "disponibleCount_one": "disponible",
       "disponibleCount_other": "disponibles",
       "enCourse": "en course",
-      "totalCount": "livreurs au total"
+      "totalCount": "livreurs au total",
+      "aucunLivreur": "Aucun livreur rattaché à cette boutique pour le moment."
     },
     "cardLivreur": {
       "livraisonsCount": "{{count}} livraisons",
       "disponible": "● Disponible",
       "enCourseBadge": "⚙ En course",
+      "horsLigne": "○ Hors ligne",
       "voirProfil": "Voir profil",
       "profilToast": "🛵 Profil de {{nom}}",
       "desabonneToast": "👋 Désabonné de {{nom}}",
       "abonneToast": "✅ Abonné à {{nom}}"
     },
     "correspondantsSection": {
-      "disponibleCount_one": "disponible",
-      "disponibleCount_other": "disponibles",
-      "completCount_one": "complet",
-      "completCount_other": "complets",
+      "verifieCount_one": "vérifié",
+      "verifieCount_other": "vérifiés",
+      "nonVerifieCount_one": "non vérifié",
+      "nonVerifieCount_other": "non vérifiés",
       "totalCount": "correspondants au total",
+      "aucunCorrespondant": "Aucun correspondant rattaché à cette boutique pour le moment.",
       "infoBannerTitle": "Qu'est-ce qu'un correspondant Shoneya ?",
       "infoBannerDesc": "Un correspondant est un représentant Shoneya dans votre ville. Il réceptionne votre colis, le vérifie et le garde en lieu sûr. Vous pouvez le récupérer directement ou le confier à un livreur pour une livraison à domicile.",
       "steps": {
@@ -61,10 +64,12 @@
     },
     "cardCorrespondant": {
       "verifie": "Vérifié",
-      "colisMois": "{{count}} colis/mois",
-      "disponible": "● Disponible",
-      "complet": "◌ Complet",
+      "missionsCount_one": "{{count}} mission accomplie",
+      "missionsCount_other": "{{count}} missions accomplies",
+      "ouvertAujourdhui": "Aujourd'hui : {{horaire}}",
+      "fermeAujourdhui": "Fermé aujourd'hui",
       "contacter": "Contacter",
+      "telephoneIndisponible": "Numéro de contact non renseigné",
       "choisir": "Choisir",
       "choisi": "Choisi",
       "messageToast": "💬 Message à {{nom}}",

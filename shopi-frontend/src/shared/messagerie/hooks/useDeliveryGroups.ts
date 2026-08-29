@@ -8,6 +8,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { apiFetch }        from '../../services/apiFetch';
 import { getActiveSocket } from './useSocket';
+import { bumpToFront }     from '../utils/chatUtils';
 import type { Conversation, ChatUser, ChatMessage, GroupMember } from '../data/messagerieTypes';
 
 // ── Types API ─────────────────────────────────────────────────
@@ -251,10 +252,8 @@ export function useDeliveryGroups() {
       if (!saved) return;
       const chatMsg  = apiMsgToChat(saved);
       const preview  = callPreview(saved) ?? (saved.contentType === 'audio' ? '🎙️ Message vocal' : saved.content ?? '');
-      setGroups(prev => prev.map(g =>
-        g.id === groupId
-          ? { ...g, messages: [...g.messages, chatMsg], lastMsg: preview, lastTime: formatTime(saved.createdAt) }
-          : g,
+      setGroups(prev => bumpToFront(prev, groupId, g =>
+        ({ ...g, messages: [...g.messages, chatMsg], lastMsg: preview, lastTime: formatTime(saved.createdAt) })
       ));
     } catch { /* silencieux */ }
   }, []);
@@ -312,8 +311,7 @@ export function useDeliveryGroups() {
 
       const onNewMsg = (p: { groupId: string; commandeNumero: string; message: ApiGroupMessage }) => {
         const msg = apiMsgToChat(p.message);
-        setGroups(prev => prev.map(g => {
-          if (g.id !== p.groupId) return g;
+        setGroups(prev => bumpToFront(prev, p.groupId, g => {
           const isActive = activeGroupRef.current === p.groupId;
           const lastMsg  = callPreview(p.message) ?? p.message.content ?? '';
           return {

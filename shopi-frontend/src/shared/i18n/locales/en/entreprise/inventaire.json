@@ -69,8 +69,7 @@
       "seuil": "Threshold: {{count}}",
       "modifierTitle": "Update stock",
       "modifier": "Edit",
-      "reapproTitle": "Start a restock",
-      "reapproToast": "📦 Restock started for \"{{nom}}\""
+      "reapproTitle": "Restock this product"
     },
     "footer": {
       "count_one": "{{count}} product",
@@ -89,16 +88,52 @@
       "title": "Quick actions",
       "reapproAll": "Restock all critical items",
       "reapproAllSub": "{{count}} products affected",
-      "reapproAllToast": "📦 Bulk restock started",
       "exportInventaire": "Export inventory (CSV)",
       "exportInventaireSub": "{{count}} products · {{units}} units",
-      "exportInventaireToast": "📥 CSV export in progress…",
       "configAlertes": "Configure alerts",
-      "configAlertesSub": "Set automatic thresholds",
-      "configAlertesToast": "⚙️ Alert configuration opened",
+      "configAlertesSub_one": "{{count}} product with no threshold set",
+      "configAlertesSub_other": "{{count}} products with no threshold set",
+      "configAlertesSubDone": "All thresholds are set",
       "syncStock": "Sync stock",
-      "syncStockSub": "With your supplier",
-      "syncStockToast": "🔄 Syncing in progress…"
+      "syncStockSub": "With your Shopi suppliers"
+    },
+    "csv": {
+      "nom": "Name",
+      "reference": "Reference",
+      "marque": "Brand",
+      "categorie": "Category",
+      "prix": "Unit price (GNF)",
+      "stock": "Stock",
+      "seuil": "Alert threshold",
+      "statut": "Status"
+    },
+    "reapproModal": {
+      "title": "Restock",
+      "subtitle_one": "{{count}} product to restock",
+      "subtitle_other": "{{count}} products to restock",
+      "stockActuel": "Current stock: {{count}}",
+      "hint": "Adjust the quantity to deliver for each product before confirming. Stock will be updated immediately.",
+      "total": "Total to add: {{count}} units",
+      "confirm_one": "Restock {{count}} product",
+      "confirm_other": "Restock {{count}} products",
+      "success_one": "✅ {{count}} product restocked",
+      "success_other": "✅ {{count}} products restocked",
+      "partialError_one": "⚠️ {{count}} product could not be updated",
+      "partialError_other": "⚠️ {{count}} products could not be updated"
+    },
+    "seuilsModal": {
+      "title": "Configure alerts",
+      "subtitle_one": "{{count}} product with no threshold set",
+      "subtitle_other": "{{count}} products with no threshold set",
+      "seuilLabel": "Alert threshold to apply",
+      "hint": "This threshold will be applied to every product that doesn't have one yet. You can still adjust it per product afterwards.",
+      "confirm_one": "Apply to {{count}} product",
+      "confirm_other": "Apply to {{count}} products",
+      "success_one": "✅ Threshold set for {{count}} product",
+      "success_other": "✅ Threshold set for {{count}} products",
+      "partialError_one": "⚠️ {{count}} product could not be updated",
+      "partialError_other": "⚠️ {{count}} products could not be updated",
+      "invalid": "⚠️ The threshold must be a positive number"
     }
   }
 }

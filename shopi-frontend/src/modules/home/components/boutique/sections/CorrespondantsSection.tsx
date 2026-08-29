@@ -6,44 +6,53 @@
  *           Shoneya rattachés à la boutique, vue client.
  *
  * AFFICHE :
- *   - Résumé en haut : disponibles / complets / total
+ *   - Résumé en haut : vérifiés / non vérifiés / total (données réelles —
+ *     "disponible/complet" a été retiré : aucune table de suivi des colis
+ *     n'existe encore côté backend pour calculer une vraie capacité)
  *   - Bannière explicative "Qu'est-ce qu'un correspondant ?"
  *   - Grille de cartes CardCorrespondantBoutique
  * ============================================================
  */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CORRESPONDANTS_MOCK } from '../data/boutiqueMockData';
+import type { CorrespondantApi } from '../pages/BoutiquePage';
 import CardCorrespondantBoutique from '../components/CardCorrespondantBoutique';
 import styles from '../styles/CorrespondantsSection.module.css';
 
-interface Props { onToast: (m: string) => void; }
+interface Props {
+  correspondants: CorrespondantApi[];
+  onToast:        (m: string) => void;
+}
 
-export default function CorrespondantsSection({ onToast }: Props) {
+export default function CorrespondantsSection({ correspondants, onToast }: Props) {
   const { t } = useTranslation();
   const [showInfo, setShowInfo] = useState(true);
 
-  const disponibles = CORRESPONDANTS_MOCK.filter(c => c.dispo).length;
-  const complets    = CORRESPONDANTS_MOCK.filter(c => !c.dispo).length;
+  const verifies    = correspondants.filter(c => c.verified).length;
+  const nonVerifies = correspondants.filter(c => !c.verified).length;
 
   return (
     <div>
 
       {/* ── Résumé en haut ── */}
-      <div className={styles.resume}>
-        <div className={`${styles.resumeItem} ${styles.resumeGreen}`}>
-          <span className={styles.resumeDot} />
-          <strong>{disponibles}</strong> {t('boutiqueDetail.correspondantsSection.disponibleCount', { count: disponibles })}
+      {correspondants.length > 0 && (
+        <div className={styles.resume}>
+          <div className={`${styles.resumeItem} ${styles.resumeGreen}`}>
+            <span className={styles.resumeDot} />
+            <strong>{verifies}</strong> {t('boutiqueDetail.correspondantsSection.verifieCount', { count: verifies })}
+          </div>
+          {nonVerifies > 0 && (
+            <div className={`${styles.resumeItem} ${styles.resumeGray}`}>
+              <span className={`${styles.resumeDot} ${styles.resumeDotGray}`} />
+              <strong>{nonVerifies}</strong> {t('boutiqueDetail.correspondantsSection.nonVerifieCount', { count: nonVerifies })}
+            </div>
+          )}
+          <div className={styles.resumeItem}>
+            <i className="fas fa-map-location-dot" style={{ color:'#4338CA', fontSize:12 }} />
+            <strong>{correspondants.length}</strong> {t('boutiqueDetail.correspondantsSection.totalCount')}
+          </div>
         </div>
-        <div className={`${styles.resumeItem} ${styles.resumeGray}`}>
-          <span className={`${styles.resumeDot} ${styles.resumeDotGray}`} />
-          <strong>{complets}</strong> {t('boutiqueDetail.correspondantsSection.completCount', { count: complets })}
-        </div>
-        <div className={styles.resumeItem}>
-          <i className="fas fa-map-location-dot" style={{ color:'#4338CA', fontSize:12 }} />
-          <strong>{CORRESPONDANTS_MOCK.length}</strong> {t('boutiqueDetail.correspondantsSection.totalCount')}
-        </div>
-      </div>
+      )}
 
       {/* ── Bannière explicative (fermable) ── */}
       {showInfo && (
@@ -77,11 +86,18 @@ export default function CorrespondantsSection({ onToast }: Props) {
       )}
 
       {/* ── Grille des correspondants ── */}
-      <div className={styles.grid}>
-        {CORRESPONDANTS_MOCK.map(c => (
-          <CardCorrespondantBoutique key={c.id} c={c} onToast={onToast} />
-        ))}
-      </div>
+      {correspondants.length === 0 ? (
+        <div className={styles.empty}>
+          <i className="fas fa-building-circle-check" />
+          {t('boutiqueDetail.correspondantsSection.aucunCorrespondant')}
+        </div>
+      ) : (
+        <div className={styles.grid}>
+          {correspondants.map(c => (
+            <CardCorrespondantBoutique key={c.id} c={c} onToast={onToast} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

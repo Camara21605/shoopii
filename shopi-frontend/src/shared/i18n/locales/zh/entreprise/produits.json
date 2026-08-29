@@ -10,6 +10,11 @@
       "subtitle": "管理您的目录和库存",
       "nouveau": "新产品"
     },
+    "creerStory": {
+      "bouton": "创建故事",
+      "titre": "创建故事",
+      "aucunProduit": "没有可用图片的产品"
+    },
     "stats": {
       "total": "总计",
       "publies": "已发布",
@@ -73,7 +78,32 @@
       "tags": "标签",
       "supprimer": "删除",
       "archiver": "归档",
-      "modifier": "修改"
+      "modifier": "修改",
+      "stories": {
+        "titre": "故事",
+        "aucune": "该产品还没有发布的故事",
+        "chargement": "加载中…",
+        "ajouterTitre": "发布一张或多张图片作为故事",
+        "ajouterHint": "选择一张或多张产品图片，然后发布为故事（24小时）",
+        "active": "进行中",
+        "dejaActive": "已在故事中发布——请等待过期后再重新发布",
+        "expiree": "已过期",
+        "expireLe": "{{date}} 过期",
+        "vues": "{{count}} 次观看",
+        "quiAVu": "观看者",
+        "jaime": "已点赞",
+        "aucuneVue": "暂无观看记录",
+        "vuesEchec": "无法加载观看记录",
+        "publier": "发布",
+        "publication": "发布中…",
+        "confirmSupprimer": "移除这个故事？",
+        "ajoutSucces_one": "✅ 故事已发布",
+        "ajoutSucces_other": "✅ 已发布 {{count}} 个故事",
+        "ajoutPartiel": "⚠️ 已发布 {{ok}}/{{total}} 个故事",
+        "ajoutEchec": "❌ 无法发布这些故事",
+        "suppressionSucces": "🗑️ 故事已移除",
+        "suppressionEchec": "❌ 无法移除此故事"
+      }
     },
     "modalModifier": {
       "title": "快速修改",

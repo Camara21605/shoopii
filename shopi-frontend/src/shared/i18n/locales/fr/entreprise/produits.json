@@ -10,6 +10,11 @@
       "subtitle": "Gérez votre catalogue et votre inventaire",
       "nouveau": "Nouveau produit"
     },
+    "creerStory": {
+      "bouton": "Créer une story",
+      "titre": "Créer une story",
+      "aucunProduit": "Aucun produit avec image disponible"
+    },
     "stats": {
       "total": "Total",
       "publies": "Publiés",
@@ -73,7 +78,32 @@
       "tags": "Tags",
       "supprimer": "Supprimer",
       "archiver": "Archiver",
-      "modifier": "Modifier"
+      "modifier": "Modifier",
+      "stories": {
+        "titre": "Stories",
+        "aucune": "Aucune story publiée pour ce produit",
+        "chargement": "Chargement…",
+        "ajouterTitre": "Publier une ou plusieurs images en story",
+        "ajouterHint": "Choisissez une ou plusieurs images du produit, puis publiez-les en story (24h)",
+        "active": "Active",
+        "dejaActive": "Déjà en story — attendez l'expiration pour la republier",
+        "expiree": "Expirée",
+        "expireLe": "Expire le {{date}}",
+        "vues": "{{count}} vues",
+        "quiAVu": "Qui a vu",
+        "jaime": "A aimé",
+        "aucuneVue": "Aucune vue pour l'instant",
+        "vuesEchec": "Impossible d'afficher les vues",
+        "publier": "Publier",
+        "publication": "Publication…",
+        "confirmSupprimer": "Retirer cette story ?",
+        "ajoutSucces_one": "✅ Story publiée",
+        "ajoutSucces_other": "✅ {{count}} stories publiées",
+        "ajoutPartiel": "⚠️ {{ok}}/{{total}} stories publiées",
+        "ajoutEchec": "❌ Impossible de publier ces stories",
+        "suppressionSucces": "🗑️ Story retirée",
+        "suppressionEchec": "❌ Impossible de retirer cette story"
+      }
     },
     "modalModifier": {
       "title": "Modification rapide",

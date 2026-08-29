@@ -26,6 +26,7 @@ import frRetours               from './locales/fr/entreprise/retours.json';
 import frProduits               from './locales/fr/entreprise/produits.json';
 import frAjouter                 from './locales/fr/entreprise/ajouter.json';
 import frInventaire               from './locales/fr/entreprise/inventaire.json';
+import frFournisseurs           from './locales/fr/entreprise/fournisseurs.json';
 import frPromotions                from './locales/fr/entreprise/promotions.json';
 import frAnalytics                  from './locales/fr/entreprise/analytics.json';
 import frLivreurs                    from './locales/fr/entreprise/livreurs.json';
@@ -68,6 +69,7 @@ import enRetours               from './locales/en/entreprise/retours.json';
 import enProduits               from './locales/en/entreprise/produits.json';
 import enAjouter                 from './locales/en/entreprise/ajouter.json';
 import enInventaire               from './locales/en/entreprise/inventaire.json';
+import enFournisseurs           from './locales/en/entreprise/fournisseurs.json';
 import enPromotions                from './locales/en/entreprise/promotions.json';
 import enAnalytics                  from './locales/en/entreprise/analytics.json';
 import enLivreurs                    from './locales/en/entreprise/livreurs.json';
@@ -110,6 +112,7 @@ import arRetours               from './locales/ar/entreprise/retours.json';
 import arProduits               from './locales/ar/entreprise/produits.json';
 import arAjouter                 from './locales/ar/entreprise/ajouter.json';
 import arInventaire               from './locales/ar/entreprise/inventaire.json';
+import arFournisseurs           from './locales/ar/entreprise/fournisseurs.json';
 import arPromotions                from './locales/ar/entreprise/promotions.json';
 import arAnalytics                  from './locales/ar/entreprise/analytics.json';
 import arLivreurs                    from './locales/ar/entreprise/livreurs.json';
@@ -152,6 +155,7 @@ import zhRetours               from './locales/zh/entreprise/retours.json';
 import zhProduits               from './locales/zh/entreprise/produits.json';
 import zhAjouter                 from './locales/zh/entreprise/ajouter.json';
 import zhInventaire               from './locales/zh/entreprise/inventaire.json';
+import zhFournisseurs           from './locales/zh/entreprise/fournisseurs.json';
 import zhPromotions                from './locales/zh/entreprise/promotions.json';
 import zhAnalytics                  from './locales/zh/entreprise/analytics.json';
 import zhLivreurs                    from './locales/zh/entreprise/livreurs.json';
@@ -194,6 +198,7 @@ import ptRetours               from './locales/pt/entreprise/retours.json';
 import ptProduits               from './locales/pt/entreprise/produits.json';
 import ptAjouter                 from './locales/pt/entreprise/ajouter.json';
 import ptInventaire               from './locales/pt/entreprise/inventaire.json';
+import ptFournisseurs           from './locales/pt/entreprise/fournisseurs.json';
 import ptPromotions                from './locales/pt/entreprise/promotions.json';
 import ptAnalytics                  from './locales/pt/entreprise/analytics.json';
 import ptLivreurs                    from './locales/pt/entreprise/livreurs.json';
@@ -228,7 +233,7 @@ import ptSettingsPage    from './locales/pt/client/settingsPage.json';
 import ptClientDashboard  from './locales/pt/client/dashboard.json';
 
 const fr = {
-  ...frLayout, ...frOverview, ...frCommandes, ...frRetours, ...frProduits, ...frAjouter, ...frInventaire,
+  ...frLayout, ...frOverview, ...frCommandes, ...frRetours, ...frProduits, ...frAjouter, ...frInventaire, ...frFournisseurs,
   ...frPromotions, ...frAnalytics, ...frLivreurs, ...frCorrespondants, ...frProfilCorrespondant, ...frProfilLivreur,
   ...frFinances, ...frWallet, ...frClients, ...frClientProfil, ...frAvis, ...frParametres, ...frEquipe,
   ...frBoutiquePreview, ...frMessagerie, ...frSeo,
@@ -238,7 +243,7 @@ const fr = {
 };
 
 const en = {
-  ...enLayout, ...enOverview, ...enCommandes, ...enRetours, ...enProduits, ...enAjouter, ...enInventaire,
+  ...enLayout, ...enOverview, ...enCommandes, ...enRetours, ...enProduits, ...enAjouter, ...enInventaire, ...enFournisseurs,
   ...enPromotions, ...enAnalytics, ...enLivreurs, ...enCorrespondants, ...enProfilCorrespondant, ...enProfilLivreur,
   ...enFinances, ...enWallet, ...enClients, ...enClientProfil, ...enAvis, ...enParametres, ...enEquipe,
   ...enBoutiquePreview, ...enMessagerie, ...enSeo,
@@ -248,7 +253,7 @@ const en = {
 };
 
 const ar = {
-  ...arLayout, ...arOverview, ...arCommandes, ...arRetours, ...arProduits, ...arAjouter, ...arInventaire,
+  ...arLayout, ...arOverview, ...arCommandes, ...arRetours, ...arProduits, ...arAjouter, ...arInventaire, ...arFournisseurs,
   ...arPromotions, ...arAnalytics, ...arLivreurs, ...arCorrespondants, ...arProfilCorrespondant, ...arProfilLivreur,
   ...arFinances, ...arWallet, ...arClients, ...arClientProfil, ...arAvis, ...arParametres, ...arEquipe,
   ...arBoutiquePreview, ...arMessagerie, ...arSeo,
@@ -258,7 +263,7 @@ const ar = {
 };
 
 const zh = {
-  ...zhLayout, ...zhOverview, ...zhCommandes, ...zhRetours, ...zhProduits, ...zhAjouter, ...zhInventaire,
+  ...zhLayout, ...zhOverview, ...zhCommandes, ...zhRetours, ...zhProduits, ...zhAjouter, ...zhInventaire, ...zhFournisseurs,
   ...zhPromotions, ...zhAnalytics, ...zhLivreurs, ...zhCorrespondants, ...zhProfilCorrespondant, ...zhProfilLivreur,
   ...zhFinances, ...zhWallet, ...zhClients, ...zhClientProfil, ...zhAvis, ...zhParametres, ...zhEquipe,
   ...zhBoutiquePreview, ...zhMessagerie, ...zhSeo,
@@ -268,7 +273,7 @@ const zh = {
 };
 
 const pt = {
-  ...ptLayout, ...ptOverview, ...ptCommandes, ...ptRetours, ...ptProduits, ...ptAjouter, ...ptInventaire,
+  ...ptLayout, ...ptOverview, ...ptCommandes, ...ptRetours, ...ptProduits, ...ptAjouter, ...ptInventaire, ...ptFournisseurs,
   ...ptPromotions, ...ptAnalytics, ...ptLivreurs, ...ptCorrespondants, ...ptProfilCorrespondant, ...ptProfilLivreur,
   ...ptFinances, ...ptWallet, ...ptClients, ...ptClientProfil, ...ptAvis, ...ptParametres, ...ptEquipe,
   ...ptBoutiquePreview, ...ptMessagerie, ...ptSeo,

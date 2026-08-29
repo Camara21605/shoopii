@@ -32,23 +32,26 @@
       "disponibleCount_one": "available",
       "disponibleCount_other": "available",
       "enCourse": "on delivery",
-      "totalCount": "delivery agents total"
+      "totalCount": "delivery agents total",
+      "aucunLivreur": "No delivery agent attached to this store yet."
     },
     "cardLivreur": {
       "livraisonsCount": "{{count}} deliveries",
       "disponible": "● Available",
       "enCourseBadge": "⚙ On delivery",
+      "horsLigne": "○ Offline",
       "voirProfil": "View profile",
       "profilToast": "🛵 {{nom}}'s profile",
       "desabonneToast": "👋 Unfollowed {{nom}}",
       "abonneToast": "✅ Following {{nom}}"
     },
     "correspondantsSection": {
-      "disponibleCount_one": "available",
-      "disponibleCount_other": "available",
-      "completCount_one": "full",
-      "completCount_other": "full",
+      "verifieCount_one": "verified",
+      "verifieCount_other": "verified",
+      "nonVerifieCount_one": "not verified",
+      "nonVerifieCount_other": "not verified",
       "totalCount": "correspondents total",
+      "aucunCorrespondant": "No correspondent attached to this store yet.",
       "infoBannerTitle": "What is a Shoneya correspondent?",
       "infoBannerDesc": "A correspondent is a Shoneya representative in your city. They receive your package, check it, and keep it safe. You can pick it up directly or have a delivery agent bring it to your home.",
       "steps": {
@@ -61,10 +64,12 @@
     },
     "cardCorrespondant": {
       "verifie": "Verified",
-      "colisMois": "{{count}} packages/month",
-      "disponible": "● Available",
-      "complet": "◌ Full",
+      "missionsCount_one": "{{count}} mission completed",
+      "missionsCount_other": "{{count}} missions completed",
+      "ouvertAujourdhui": "Today: {{horaire}}",
+      "fermeAujourdhui": "Closed today",
       "contacter": "Contact",
+      "telephoneIndisponible": "No contact number on file",
       "choisir": "Choose",
       "choisi": "Chosen",
       "messageToast": "💬 Message to {{nom}}",

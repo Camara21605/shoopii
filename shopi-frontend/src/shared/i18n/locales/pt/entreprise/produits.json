@@ -10,6 +10,11 @@
       "subtitle": "Gerencie o seu catálogo e inventário",
       "nouveau": "Novo produto"
     },
+    "creerStory": {
+      "bouton": "Criar story",
+      "titre": "Criar uma story",
+      "aucunProduit": "Nenhum produto com imagem disponível"
+    },
     "stats": {
       "total": "Total",
       "publies": "Publicados",
@@ -73,7 +78,32 @@
       "tags": "Tags",
       "supprimer": "Eliminar",
       "archiver": "Arquivar",
-      "modifier": "Modificar"
+      "modifier": "Modificar",
+      "stories": {
+        "titre": "Stories",
+        "aucune": "Nenhuma story publicada para este produto",
+        "chargement": "Carregando…",
+        "ajouterTitre": "Publicar uma ou várias imagens como stories",
+        "ajouterHint": "Escolha uma ou várias imagens do produto e publique-as como stories (24h)",
+        "active": "Ativa",
+        "dejaActive": "Já está em story — aguarde a expiração para republicar",
+        "expiree": "Expirada",
+        "expireLe": "Expira em {{date}}",
+        "vues": "{{count}} visualizações",
+        "quiAVu": "Visto por",
+        "jaime": "Curtiu",
+        "aucuneVue": "Nenhuma visualização ainda",
+        "vuesEchec": "Não foi possível carregar as visualizações",
+        "publier": "Publicar",
+        "publication": "A publicar…",
+        "confirmSupprimer": "Remover esta story?",
+        "ajoutSucces_one": "✅ Story publicada",
+        "ajoutSucces_other": "✅ {{count}} stories publicadas",
+        "ajoutPartiel": "⚠️ {{ok}}/{{total}} stories publicadas",
+        "ajoutEchec": "❌ Não foi possível publicar estas stories",
+        "suppressionSucces": "🗑️ Story removida",
+        "suppressionEchec": "❌ Não foi possível remover esta story"
+      }
     },
     "modalModifier": {
       "title": "Modificação rápida",

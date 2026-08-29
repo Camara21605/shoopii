@@ -32,23 +32,26 @@
       "disponibleCount_one": "disponível",
       "disponibleCount_other": "disponíveis",
       "enCourse": "em curso",
-      "totalCount": "entregadores no total"
+      "totalCount": "entregadores no total",
+      "aucunLivreur": "Nenhum entregador vinculado a esta loja por enquanto."
     },
     "cardLivreur": {
       "livraisonsCount": "{{count}} entregas",
       "disponible": "● Disponível",
       "enCourseBadge": "⚙ Em curso",
+      "horsLigne": "○ Offline",
       "voirProfil": "Ver perfil",
       "profilToast": "🛵 Perfil de {{nom}}",
       "desabonneToast": "👋 Deixou de seguir {{nom}}",
       "abonneToast": "✅ Subscrito a {{nom}}"
     },
     "correspondantsSection": {
-      "disponibleCount_one": "disponível",
-      "disponibleCount_other": "disponíveis",
-      "completCount_one": "completo",
-      "completCount_other": "completos",
+      "verifieCount_one": "verificado",
+      "verifieCount_other": "verificados",
+      "nonVerifieCount_one": "não verificado",
+      "nonVerifieCount_other": "não verificados",
       "totalCount": "correspondentes no total",
+      "aucunCorrespondant": "Nenhum correspondente vinculado a esta loja por enquanto.",
       "infoBannerTitle": "O que é um correspondente Shoneya?",
       "infoBannerDesc": "Um correspondente é um representante Shoneya na sua cidade. Ele recebe a sua encomenda, verifica-a e guarda-a em segurança. Pode levantá-la diretamente ou confiá-la a um entregador para entrega ao domicílio.",
       "steps": {
@@ -61,10 +64,12 @@
     },
     "cardCorrespondant": {
       "verifie": "Verificado",
-      "colisMois": "{{count}} encomendas/mês",
-      "disponible": "● Disponível",
-      "complet": "◌ Completo",
+      "missionsCount_one": "{{count}} missão concluída",
+      "missionsCount_other": "{{count}} missões concluídas",
+      "ouvertAujourdhui": "Hoje: {{horaire}}",
+      "fermeAujourdhui": "Fechado hoje",
       "contacter": "Contactar",
+      "telephoneIndisponible": "Nenhum número de contacto registado",
       "choisir": "Escolher",
       "choisi": "Escolhido",
       "messageToast": "💬 Mensagem para {{nom}}",

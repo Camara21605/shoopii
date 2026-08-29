@@ -52,13 +52,7 @@
       "voirOffre": "查看优惠"
     },
     "storiesStrip": {
-      "title": "店铺故事",
-      "sub": "合作伙伴重点展示的热门产品",
-      "voirTout": "查看全部",
-      "toastVoirTout": "📖 所有故事",
       "storiesDe": "{{nom}} 的故事",
-      "produitCount_one": "{{count}} 个产品",
-      "produitCount_other": "{{count}} 个产品",
       "enLigneMaintenant": "现在在线",
       "vuRecemment": "最近查看",
       "badgePromo": "🔥 促销",
@@ -68,6 +62,12 @@
       "voirProduit": "查看产品",
       "laBoutique": "店铺",
       "partager": "分享",
+      "jaime": "喜欢",
+      "quiAVu": "观看者",
+      "chargementVues": "加载中…",
+      "aucuneVue": "暂无观看记录",
+      "vuesEchec": "无法加载观看记录",
+      "jaimeEchec": "请登录后再点赞该动态",
       "lienCopieToast": "🔗 链接已复制！"
     },
     "randomBloc": {

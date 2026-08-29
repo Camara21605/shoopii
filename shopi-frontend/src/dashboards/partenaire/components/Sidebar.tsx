@@ -21,6 +21,7 @@ interface SidebarProps {
 const NAV = [
   { title: 'Principal', items: [
     { id: 'overview' as PartenairePage, icon: 'fa-chart-pie', label: "Vue d'ensemble" },
+    { id: 'notifications' as PartenairePage, icon: 'fa-bell', label: 'Notifications' },
   ]},
   { title: 'Acquisition', items: [
     { id: 'codes'        as PartenairePage, icon: 'fa-qrcode',        label: 'Codes de création', badge: '3',  badgeCls: 'a' },

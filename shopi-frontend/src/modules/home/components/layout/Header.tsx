@@ -61,10 +61,12 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
   /* ✅ Recherche générale — cherche réellement sur la plateforme, au lieu
    * de suggestions décoratives : "Tout"/"Produits" → Explorer (recherche
    * produits déjà fonctionnelle), "Boutiques" → /boutiques?search=,
-   * "Livreurs" → /livreurs avec state.search (cette page filtre déjà
-   * côté client mais n'a pas d'entrée URL — voir useLivreurs.ts). */
-  type SearchScope = 'tout' | 'produits' | 'boutiques' | 'livreurs';
-  interface LiveSuggestion { id: string; label: string; sublabel?: string; image?: string | null; action: () => void }
+   * "Livreurs"/"Correspondants" → leurs pages avec state.search (ces
+   * pages n'ont pas d'entrée URL dédiée — voir useLivreurs.ts et
+   * CorrespondantsPage.tsx). */
+  type SearchScope = 'tout' | 'produits' | 'boutiques' | 'livreurs' | 'correspondants';
+  type SuggType = 'produit' | 'boutique' | 'livreur' | 'correspondant';
+  interface LiveSuggestion { id: string; type: SuggType; label: string; sublabel?: string; image?: string | null; action: () => void }
   const [searchQuery, setSearchQuery] = useState('');
   const [searchScope, setSearchScope] = useState<SearchScope>('tout');
   const [scopeMenuOpen, setScopeMenuOpen] = useState(false);
@@ -126,20 +128,21 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
   }
 
   const SEARCH_SCOPES: { key: SearchScope; label: string }[] = [
-    { key: 'tout',      label: t('publicHeader.searchScopes.tout')      },
-    { key: 'produits',  label: t('publicHeader.searchScopes.produits')  },
-    { key: 'boutiques', label: t('publicHeader.searchScopes.boutiques') },
-    { key: 'livreurs',  label: t('publicHeader.searchScopes.livreurs')  },
+    { key: 'tout',           label: t('publicHeader.searchScopes.tout')           },
+    { key: 'produits',       label: t('publicHeader.searchScopes.produits')       },
+    { key: 'boutiques',      label: t('publicHeader.searchScopes.boutiques')      },
+    { key: 'livreurs',       label: t('publicHeader.searchScopes.livreurs')       },
+    { key: 'correspondants', label: t('publicHeader.searchScopes.correspondants') },
   ];
 
-  /* "Correspondants" n'a aucune recherche implémentée côté backend/UI
-   * (page sans query param ni filtre) — plutôt que de le laisser
-   * silencieusement absent, on l'affiche désactivé avec une infobulle
-   * pour que sa présence future reste visible, sans construire la
-   * fonctionnalité (hors périmètre de cette itération). */
-  const CORRESPONDANTS_SOON = {
-    label:   t('publicHeader.searchScopes.correspondants'),
-    tooltip: t('publicHeader.searchScopeCorrespondantsSoon'),
+  /* Icône de la pastille de type, affichée sur la miniature d'une
+   * suggestion uniquement en scope "Tout" (résultats mélangés — sinon
+   * redondant puisque tous les résultats sont déjà du même type). */
+  const TYPE_ICON: Record<SuggType, string> = {
+    produit:       'fa-box',
+    boutique:      'fa-store',
+    livreur:       'fa-motorcycle',
+    correspondant: 'fa-map-pin',
   };
 
   const SEARCH_SUGGESTIONS = [
@@ -150,12 +153,59 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
     { icon: 'fa-tag',            text: t('publicHeader.searchSuggestions.offresDuJour'),        action: () => navigate('/offres') },
   ];
 
+  /* Un fetcher par type d'acteur — réutilisés seuls (scope dédié) ou en
+   * parallèle (scope "Tout", voir plus bas) pour que taper le nom d'une
+   * entreprise/d'un livreur/d'un correspondant remonte bien une
+   * suggestion même quand aucun scope précis n'est sélectionné. */
+  function fetchProduitSuggestions(q: string, limit: number): Promise<LiveSuggestion[]> {
+    return apiFetch<{ data: any[] }>(`/public/explore?search=${encodeURIComponent(q)}&limit=${limit}`)
+      .then(res => (res?.data ?? []).map(p => ({
+        id: p.id, type: 'produit' as const, label: p.nom,
+        sublabel: p.prix != null ? `${Number(p.prix).toLocaleString('fr')} GNF` : undefined,
+        image: p.images?.[0]?.url ?? null,
+        action: () => { navigate(`/produit/${p.id}`); setSearchFocus(false); },
+      })))
+      .catch(() => []);
+  }
+  function fetchBoutiqueSuggestions(q: string, limit: number): Promise<LiveSuggestion[]> {
+    return apiFetch<{ data: any[] }>(`/public/boutiques?search=${encodeURIComponent(q)}&limit=${limit}`)
+      .then(res => (res?.data ?? []).map(c => ({
+        id: c.id, type: 'boutique' as const, label: c.companyName, sublabel: c.ville || undefined, image: c.logo ?? null,
+        action: () => { navigate(`/boutique/${c.id}`); setSearchFocus(false); },
+      })))
+      .catch(() => []);
+  }
+  function fetchLivreurSuggestions(q: string, limit: number): Promise<LiveSuggestion[]> {
+    return apiFetch<{ data: any[] }>(`/suivis/livreurs?search=${encodeURIComponent(q)}&limit=${limit}`)
+      .then(res => (res?.data ?? []).map(l => ({
+        id: l.id, type: 'livreur' as const, label: l.fullName, sublabel: l.zone || undefined, image: l.profilePicture ?? null,
+        action: () => { navigate(`/livreurs/${l.id}`); setSearchFocus(false); },
+      })))
+      .catch(() => []);
+  }
+  function fetchCorrespondantSuggestions(q: string, limit: number): Promise<LiveSuggestion[]> {
+    /* GET /suivis/correspondants renvoie un tableau brut (pas de
+     * pagination structurée { data, total }) — limit côté SQL. */
+    return apiFetch<any[]>(`/suivis/correspondants?search=${encodeURIComponent(q)}&limit=${limit}`)
+      .then(res => (res ?? []).map(c => ({
+        id: c.id, type: 'correspondant' as const, label: c.fullName, sublabel: c.region || undefined, image: c.profilePicture ?? null,
+        action: () => { navigate(`/correspondants/${c.id}`); setSearchFocus(false); },
+      })))
+      .catch(() => []);
+  }
+
   /* Suggestions live : dès que l'utilisateur tape (2 caractères mini),
    * interroge le vrai backend de recherche du scope actif et propose
    * les résultats directement cliquables — plus une entrée "Voir tous
    * les résultats" en fin de liste. Debounce 300ms pour ne pas spammer
    * l'API à chaque frappe ; un compteur de séquence ignore les réponses
-   * d'une requête devenue obsolète (arrivée après une plus récente). */
+   * d'une requête devenue obsolète (arrivée après une plus récente).
+   *
+   * Scope "Tout" : interroge les 4 sources en parallèle (2 résultats
+   * chacune) et mélange — sinon taper le nom d'une entreprise/d'un
+   * livreur/d'un correspondant ne remontait jamais rien tant que ce
+   * texte ne matchait pas aussi un produit (bug rapporté : "si je tape
+   * le nom d'un correspondant/livreur/entreprise, il ne sort pas"). */
   useEffect(() => {
     const q = searchQuery.trim();
     if (q.length < 2) {
@@ -176,29 +226,23 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
       };
 
       if (searchScope === 'boutiques') {
-        apiFetch<{ data: any[] }>(`/public/boutiques?search=${encodeURIComponent(q)}&limit=5`)
-          .then(res => finish((res?.data ?? []).map(c => ({
-            id: c.id, label: c.companyName, sublabel: c.ville || undefined, image: c.logo ?? null,
-            action: () => { navigate(`/boutique/${c.id}`); setSearchFocus(false); },
-          }))))
-          .catch(() => finish([]));
+        fetchBoutiqueSuggestions(q, 5).then(finish);
       } else if (searchScope === 'livreurs') {
-        apiFetch<{ data: any[] }>(`/suivis/livreurs?search=${encodeURIComponent(q)}&limit=5`)
-          .then(res => finish((res?.data ?? []).map(l => ({
-            id: l.id, label: l.fullName, sublabel: l.zone || undefined, image: l.profilePicture ?? null,
-            action: () => { navigate(`/livreurs/${l.id}`); setSearchFocus(false); },
-          }))))
-          .catch(() => finish([]));
+        fetchLivreurSuggestions(q, 5).then(finish);
+      } else if (searchScope === 'correspondants') {
+        fetchCorrespondantSuggestions(q, 5).then(finish);
+      } else if (searchScope === 'produits') {
+        fetchProduitSuggestions(q, 5).then(finish);
       } else {
-        /* "tout" et "produits" — catalogue Explorer */
-        apiFetch<{ data: any[] }>(`/public/explore?search=${encodeURIComponent(q)}&limit=5`)
-          .then(res => finish((res?.data ?? []).map(p => ({
-            id: p.id, label: p.nom,
-            sublabel: p.prix != null ? `${Number(p.prix).toLocaleString('fr')} GNF` : undefined,
-            image: p.images?.[0]?.url ?? null,
-            action: () => { navigate(`/produit/${p.id}`); setSearchFocus(false); },
-          }))))
-          .catch(() => finish([]));
+        /* "Tout" — un peu de chaque type */
+        Promise.all([
+          fetchProduitSuggestions(q, 2),
+          fetchBoutiqueSuggestions(q, 2),
+          fetchLivreurSuggestions(q, 2),
+          fetchCorrespondantSuggestions(q, 2),
+        ]).then(([produits, boutiques, livreurs, correspondants]) => {
+          finish([...produits, ...boutiques, ...livreurs, ...correspondants]);
+        });
       }
     }, SEARCH_DEBOUNCE_MS);
 
@@ -215,6 +259,8 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
       navigate(`/boutiques?search=${encodeURIComponent(q)}`);
     } else if (searchScope === 'livreurs') {
       navigate('/livreurs', { state: { search: q } });
+    } else if (searchScope === 'correspondants') {
+      navigate('/correspondants', { state: { search: q } });
     } else {
       /* "Tout" et "Produits" — Explorer couvre déjà la recherche produits
        * en temps réel via ?q=, le catalogue le plus large de la plateforme. */
@@ -227,7 +273,7 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
    * tous les résultats" — la navigation clavier (flèches/Entrée) opère
    * sur cette même liste quel que soit son contenu. */
   const hasQuery = searchQuery.trim().length > 0;
-  const activeList: { icon?: string; image?: string | null; label: string; sublabel?: string; action: () => void }[] =
+  const activeList: { icon?: string; type?: SuggType; image?: string | null; label: string; sublabel?: string; action: () => void }[] =
     hasQuery
       ? [
           ...liveSuggestions,
@@ -461,14 +507,6 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
                           {s.label}
                         </div>
                       ))}
-                      <div
-                        className={`${styles.scopeItem} ${styles.scopeItemDisabled}`}
-                        role="option" aria-disabled="true"
-                        title={CORRESPONDANTS_SOON.tooltip}
-                      >
-                        {CORRESPONDANTS_SOON.label}
-                        <span className={styles.scopeSoonBadge}>{t('publicHeader.searchScopeSoonBadge')}</span>
-                      </div>
                     </div>
                   )}
                 </div>
@@ -501,9 +539,14 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
                       onMouseEnter={() => setSuggActiveIndex(i)}
                       onClick={() => { s.action(); setSearchFocus(false); setSuggActiveIndex(-1); }}>
                       {s.image !== undefined ? (
-                        s.image
-                          ? <img src={s.image} alt="" className={styles.ssImg} />
-                          : <div className={styles.ssImgPlaceholder} />
+                        <span className={styles.ssImgWrap}>
+                          {s.image
+                            ? <img src={s.image} alt="" className={styles.ssImg} />
+                            : <div className={styles.ssImgPlaceholder} />}
+                          {searchScope === 'tout' && s.type && (
+                            <span className={styles.ssTypeBadge}><i className={`fas ${TYPE_ICON[s.type]}`} /></span>
+                          )}
+                        </span>
                       ) : (
                         <i className={`fas ${s.icon}`} />
                       )}
@@ -710,9 +753,14 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
                       onMouseEnter={() => setSuggActiveIndex(i)}
                       onClick={() => { s.action(); setSearchFocus(false); setSuggActiveIndex(-1); setMobileSearch(false); }}>
                       {s.image !== undefined ? (
-                        s.image
-                          ? <img src={s.image} alt="" className={styles.ssImg} />
-                          : <div className={styles.ssImgPlaceholder} />
+                        <span className={styles.ssImgWrap}>
+                          {s.image
+                            ? <img src={s.image} alt="" className={styles.ssImg} />
+                            : <div className={styles.ssImgPlaceholder} />}
+                          {searchScope === 'tout' && s.type && (
+                            <span className={styles.ssTypeBadge}><i className={`fas ${TYPE_ICON[s.type]}`} /></span>
+                          )}
+                        </span>
                       ) : (
                         <i className={`fas ${s.icon}`} />
                       )}

@@ -52,13 +52,7 @@
       "voirOffre": "See the offer"
     },
     "storiesStrip": {
-      "title": "Shop stories",
-      "sub": "Featured products highlighted by our partners",
-      "voirTout": "See all",
-      "toastVoirTout": "📖 All stories",
       "storiesDe": "Stories from {{nom}}",
-      "produitCount_one": "{{count}} product",
-      "produitCount_other": "{{count}} products",
       "enLigneMaintenant": "Online now",
       "vuRecemment": "Recently seen",
       "badgePromo": "🔥 Promo",
@@ -68,6 +62,12 @@
       "voirProduit": "View product",
       "laBoutique": "The shop",
       "partager": "Share",
+      "jaime": "Like",
+      "quiAVu": "Seen by",
+      "chargementVues": "Loading…",
+      "aucuneVue": "No views yet",
+      "vuesEchec": "Couldn't load the views",
+      "jaimeEchec": "Log in to like this story",
       "lienCopieToast": "🔗 Link copied!"
     },
     "randomBloc": {

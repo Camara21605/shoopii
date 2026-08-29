@@ -23,6 +23,7 @@
         "livreurs": "配送员",
         "clients": "客户",
         "correspondants": "代理商",
+        "contacts": "联系人",
         "masquees": "已隐藏"
       },
       "searchPlaceholder": "搜索对话…",

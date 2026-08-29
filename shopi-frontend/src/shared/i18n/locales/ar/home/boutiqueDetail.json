@@ -32,23 +32,26 @@
       "disponibleCount_one": "متاح",
       "disponibleCount_other": "متاحون",
       "enCourse": "في مهمة توصيل",
-      "totalCount": "عامل توصيل إجمالاً"
+      "totalCount": "عامل توصيل إجمالاً",
+      "aucunLivreur": "لا يوجد عامل توصيل مرتبط بهذا المتجر حاليًا."
     },
     "cardLivreur": {
       "livraisonsCount": "{{count}} توصيلة",
       "disponible": "● متاح",
       "enCourseBadge": "⚙ في مهمة توصيل",
+      "horsLigne": "○ غير متصل",
       "voirProfil": "عرض الملف",
       "profilToast": "🛵 ملف {{nom}}",
       "desabonneToast": "👋 تم إلغاء الاشتراك من {{nom}}",
       "abonneToast": "✅ تم الاشتراك في {{nom}}"
     },
     "correspondantsSection": {
-      "disponibleCount_one": "متاح",
-      "disponibleCount_other": "متاحون",
-      "completCount_one": "ممتلئ",
-      "completCount_other": "ممتلئون",
+      "verifieCount_one": "موثّق",
+      "verifieCount_other": "موثّقون",
+      "nonVerifieCount_one": "غير موثّق",
+      "nonVerifieCount_other": "غير موثّقين",
       "totalCount": "مراسل إجمالاً",
+      "aucunCorrespondant": "لا يوجد مراسل مرتبط بهذا المتجر حاليًا.",
       "infoBannerTitle": "ما هو المراسل في شونيا؟",
       "infoBannerDesc": "المراسل هو ممثل لشونيا في مدينتك. يستلم طردك ويتحقق منه ويحفظه في مكان آمن. يمكنك استلامه مباشرة أو تكليف عامل توصيل بإيصاله إلى منزلك.",
       "steps": {
@@ -61,10 +64,12 @@
     },
     "cardCorrespondant": {
       "verifie": "موثّق",
-      "colisMois": "{{count}} طرد/شهر",
-      "disponible": "● متاح",
-      "complet": "◌ ممتلئ",
+      "missionsCount_one": "مهمة واحدة منجزة",
+      "missionsCount_other": "{{count}} مهمة منجزة",
+      "ouvertAujourdhui": "اليوم: {{horaire}}",
+      "fermeAujourdhui": "مغلق اليوم",
       "contacter": "تواصل",
+      "telephoneIndisponible": "لا يوجد رقم تواصل مسجّل",
       "choisir": "اختيار",
       "choisi": "تم الاختيار",
       "messageToast": "💬 رسالة إلى {{nom}}",

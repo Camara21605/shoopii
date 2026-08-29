@@ -1,0 +1,39 @@
+{
+  "fournisseurs": {
+    "header": {
+      "title": "Fornecedores",
+      "subtitle": "Conecte-se a empresas Shopi que vendem por grosso para reabastecer o seu stock",
+      "connecter": "Conectar um fornecedor"
+    },
+    "loading": "A carregar fornecedores…",
+    "loadError": "Não foi possível carregar os seus fornecedores.",
+    "searchError": "Não foi possível pesquisar fornecedores.",
+    "connectSuccess": "✅ Conectado a {{nom}}",
+    "disconnectSuccess": "🔌 {{nom}} desconectado",
+    "disconnectError": "Não foi possível desconectar este fornecedor.",
+    "catalogueError": "Não foi possível carregar o catálogo.",
+    "empty": {
+      "title": "Nenhum fornecedor conectado",
+      "sub": "Conecte-se a uma empresa Shopi que vende por grosso para aceder ao seu catálogo de reabastecimento."
+    },
+    "card": {
+      "produitsGros_one": "{{count}} produto por grosso",
+      "produitsGros_other": "{{count}} produtos por grosso",
+      "voirCatalogue": "Ver catálogo",
+      "deconnecter": "Desconectar"
+    },
+    "searchModal": {
+      "title": "Conectar um fornecedor",
+      "placeholder": "Pesquisar uma empresa…",
+      "noResults": "Nenhuma empresa a vender por grosso encontrada.",
+      "connecter": "Conectar",
+      "connecte": "Conectado"
+    },
+    "catalogueModal": {
+      "subtitle": "Catálogo de venda por grosso",
+      "empty": "Este fornecedor ainda não tem nenhum produto por grosso publicado.",
+      "moq_one": "Quantidade mín.: {{count}} unidade",
+      "moq_other": "Quantidade mín.: {{count}} unidades"
+    }
+  }
+}

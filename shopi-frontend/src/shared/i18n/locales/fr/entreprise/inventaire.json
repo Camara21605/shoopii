@@ -69,8 +69,7 @@
       "seuil": "Seuil : {{count}}",
       "modifierTitle": "Modifier le stock",
       "modifier": "Modifier",
-      "reapproTitle": "Lancer une réapprovisionnement",
-      "reapproToast": "📦 Réappro lancée pour \"{{nom}}\""
+      "reapproTitle": "Réapprovisionner ce produit"
     },
     "footer": {
       "count_one": "{{count}} produit",
@@ -89,16 +88,52 @@
       "title": "Actions rapides",
       "reapproAll": "Réappro. tous les critiques",
       "reapproAllSub": "{{count}} produits concernés",
-      "reapproAllToast": "📦 Réapprovisionnement groupé lancé",
       "exportInventaire": "Exporter l'inventaire (CSV)",
       "exportInventaireSub": "{{count}} produits · {{units}} unités",
-      "exportInventaireToast": "📥 Export CSV en cours de génération…",
       "configAlertes": "Configurer les alertes",
-      "configAlertesSub": "Définir des seuils automatiques",
-      "configAlertesToast": "⚙️ Configuration des alertes ouverte",
+      "configAlertesSub_one": "{{count}} produit sans seuil défini",
+      "configAlertesSub_other": "{{count}} produits sans seuil défini",
+      "configAlertesSubDone": "Tous les seuils sont configurés",
       "syncStock": "Synchroniser le stock",
-      "syncStockSub": "Avec votre fournisseur",
-      "syncStockToast": "🔄 Synchronisation en cours…"
+      "syncStockSub": "Avec vos fournisseurs Shopi"
+    },
+    "csv": {
+      "nom": "Nom",
+      "reference": "Référence",
+      "marque": "Marque",
+      "categorie": "Catégorie",
+      "prix": "Prix unitaire (GNF)",
+      "stock": "Stock",
+      "seuil": "Seuil d'alerte",
+      "statut": "Statut"
+    },
+    "reapproModal": {
+      "title": "Réapprovisionner",
+      "subtitle_one": "{{count}} produit à réapprovisionner",
+      "subtitle_other": "{{count}} produits à réapprovisionner",
+      "stockActuel": "Stock actuel : {{count}}",
+      "hint": "Ajustez la quantité à livrer pour chaque produit avant de confirmer. Le stock sera mis à jour immédiatement.",
+      "total": "Total à ajouter : {{count}} unités",
+      "confirm_one": "Réapprovisionner {{count}} produit",
+      "confirm_other": "Réapprovisionner {{count}} produits",
+      "success_one": "✅ {{count}} produit réapprovisionné",
+      "success_other": "✅ {{count}} produits réapprovisionnés",
+      "partialError_one": "⚠️ {{count}} produit n'a pas pu être mis à jour",
+      "partialError_other": "⚠️ {{count}} produits n'ont pas pu être mis à jour"
+    },
+    "seuilsModal": {
+      "title": "Configurer les alertes",
+      "subtitle_one": "{{count}} produit sans seuil défini",
+      "subtitle_other": "{{count}} produits sans seuil défini",
+      "seuilLabel": "Seuil d'alerte à appliquer",
+      "hint": "Ce seuil sera appliqué à tous les produits qui n'en ont pas encore un. Vous pourrez toujours l'ajuster produit par produit ensuite.",
+      "confirm_one": "Appliquer à {{count}} produit",
+      "confirm_other": "Appliquer à {{count}} produits",
+      "success_one": "✅ Seuil défini pour {{count}} produit",
+      "success_other": "✅ Seuil défini pour {{count}} produits",
+      "partialError_one": "⚠️ {{count}} produit n'a pas pu être mis à jour",
+      "partialError_other": "⚠️ {{count}} produits n'ont pas pu être mis à jour",
+      "invalid": "⚠️ Le seuil doit être un nombre positif"
     }
   }
 }

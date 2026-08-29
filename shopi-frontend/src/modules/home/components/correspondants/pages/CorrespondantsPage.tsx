@@ -12,8 +12,8 @@
  * AUTONOME : aucune prop. Toasts via 'shoneya-toast'.
  * ================================================================ */
 
-import { useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import Header from '../../layout/Header';
@@ -36,8 +36,21 @@ export default function CorrespondantsPage() {
   const { t } = useTranslation();
   const { correspondants, loading, error, onChange } = useCorrespondants();
 
+  /* Recherche générale du Header (navigate('/correspondants', { state: { search } })) —
+   * même mécanisme que LivreursPage, cette page n'ayant pas d'entrée URL dédiée. */
+  const location = useLocation();
+  const initialSearch = (location.state as { search?: string } | null)?.search;
+
   /* ── États de filtrage/affichage (côté client) ── */
-  const [recherche, setRecherche] = useState('');
+  const [recherche, setRecherche] = useState(() => initialSearch ?? '');
+
+  /* Si l'utilisateur relance une recherche depuis le Header en étant déjà
+   * sur /correspondants, la route ne remonte pas (state seul change) — on
+   * répercute donc explicitement le nouveau terme. */
+  useEffect(() => {
+    if (initialSearch) setRecherche(initialSearch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSearch]);
   const [filtre,    setFiltre]    = useState<FiltreRapide>('all');
   const [tri,       setTri]       = useState<TriOption>('pertinence');
   const [vue,       setVue]       = useState<VueMode>('grid');

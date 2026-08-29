@@ -12,40 +12,13 @@ import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from './NotificationContext';
 import type { INotificationDto } from './types';
+import { relativeTime, getTypeMeta, resolveNavTarget } from './notificationUtils';
 import s from './NotificationCenter.module.css';
 
-// ─── Helpers ──────────────────────────────────────────────────
-
-function relativeTime(iso: string): string {
-  const diff = (Date.now() - new Date(iso).getTime()) / 1_000;
-  if (diff < 60)         return 'À l\'instant';
-  if (diff < 3_600)      return `Il y a ${Math.floor(diff / 60)} min`;
-  if (diff < 86_400)     return `Il y a ${Math.floor(diff / 3_600)} h`;
-  if (diff < 604_800)    return `Il y a ${Math.floor(diff / 86_400)} j`;
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-}
-
-// ─── Mapping type → icône FA + couleur de fond ────────────────
-
-interface TypeMeta { icon: string; bg: string; color: string; }
-
-function getTypeMeta(type: string): TypeMeta {
-  const prefix = type.split('.')[0];
-  const map: Record<string, TypeMeta> = {
-    order:   { icon: 'fa-box',          bg: 'rgba(16,185,129,.12)',  color: '#059669' },
-    message: { icon: 'fa-comment-dots', bg: 'rgba(22,82,240,.12)',   color: '#1652F0' },
-    follow:  { icon: 'fa-user-plus',    bg: 'rgba(124,58,237,.12)',  color: '#7C3AED' },
-    product: { icon: 'fa-heart',        bg: 'rgba(236,72,153,.12)',  color: '#DB2777' },
-    promo:   { icon: 'fa-percent',      bg: 'rgba(245,158,11,.12)',  color: '#D97706' },
-    payment: { icon: 'fa-credit-card',  bg: 'rgba(20,184,166,.12)',  color: '#0D9488' },
-    review:  { icon: 'fa-star',         bg: 'rgba(245,158,11,.12)',  color: '#D97706' },
-    stock:   { icon: 'fa-warehouse',    bg: 'rgba(239,68,68,.12)',   color: '#DC2626' },
-    account: { icon: 'fa-user-check',   bg: 'rgba(16,185,129,.12)',  color: '#059669' },
-    call:    { icon: 'fa-phone',        bg: 'rgba(22,82,240,.12)',   color: '#1652F0' },
-    group_call: { icon: 'fa-phone',     bg: 'rgba(22,82,240,.12)',   color: '#1652F0' },
-  };
-  return map[prefix] ?? { icon: 'fa-bell', bg: 'rgba(100,100,100,.1)', color: '#6B7280' };
-}
+/** Nombre de notifications affichées dans l'aperçu déroulant — la liste
+ *  complète (avec filtres, recherche et pagination) vit sur la page
+ *  dédiée, ouverte via le bouton "Voir tout" en pied de panneau. */
+const PREVIEW_LIMIT = 8;
 
 // ─── NotificationItem ─────────────────────────────────────────
 
@@ -101,104 +74,21 @@ function NotificationItem({ notif, onClick, onDelete }: ItemProps) {
   );
 }
 
-// ─── Résolution de la route interne à partir d'une notification ──
-//
-// Logique par priorité :
-//   1. Types "ordre" et "livraison" → toujours /commande/{id}/suivi
-//   2. Messages/conversations → toujours /messagerie
-//   3. product.liked → toujours /dashboard/entreprise/produits
-//   4. Paiements liés à une commande → /commande/{id}/suivi
-//   5. Tous les autres → actionUrl fourni par le backend (déjà correct par rôle)
-//   6. Fallback si actionUrl absent/invalide
-
-function resolveNavTarget(notif: INotificationDto): string {
-  const type    = notif.type;
-  const prefix  = type.split('.')[0];
-  const payload = notif.payload as Record<string, unknown> | null;
-  /* resourceId = UUID de la ressource principale (commande, produit, livraison…) */
-  const resId   = notif.resourceId ?? null;
-  /* commandeId peut être dans payload quand resourceId pointe vers autre chose */
-  const cmdId   = (payload?.commandeId as string | undefined) ?? null;
-  const url     = notif.actionUrl ?? '';
-
-  // ── 1. Commandes → suivi (resourceId = commandeId) ─────────────
-  if (prefix === 'order') {
-    return resId ? `/commande/${resId}/suivi` : '/home';
-  }
-
-  // ── 2. Livraisons → suivi (commandeId dans payload) ────────────
-  if (prefix === 'delivery' || prefix === 'colis') {
-    return cmdId
-      ? `/commande/${cmdId}/suivi`
-      : resId ? `/commande/${resId}/suivi` : '/home';
-  }
-
-  // ── 3. Messages / conversations / appels (1:1 et groupe) → messagerie ─
-  if (prefix === 'message' || prefix === 'conversation' || prefix === 'call' || prefix === 'group_call') {
-    return '/messagerie';
-  }
-
-  // ── 4. Produit liké → dashboard entreprise (récepteur = entreprise) ─
-  if (type === 'product.liked' || type === 'product.liked_agg') {
-    return '/dashboard/entreprise/produits';
-  }
-
-  // ── 5. Paiements → suivi si lié à une commande, sinon actionUrl ─
-  if (prefix === 'payment') {
-    if (cmdId) return `/commande/${cmdId}/suivi`;
-    // Sinon on laisse tomber vers l'étape 6 (actionUrl du backend)
-  }
-
-  // ── 6. Tous les autres types → on suit l'actionUrl du backend ───
-  //    Le backend envoie maintenant des URLs correctes par rôle.
-  if (url.startsWith('/')) {
-    /* Corriger les vieilles URLs envoyées avant le fix backend */
-    if (url.startsWith('/commandes/')) {
-      const seg = url.split('/')[2];
-      return seg ? `/commande/${seg}/suivi` : '/home';
-    }
-    if (url.startsWith('/dashboard/commandes/')) {
-      return '/dashboard/entreprise/commandes';
-    }
-    return url;
-  }
-
-  /* URL externe → le caller ouvre un nouvel onglet (géré dans handleItemClick) */
-  if (url.startsWith('http')) return url;
-
-  // ── 7. Fallback quand actionUrl est absent ──────────────────────
-  switch (prefix) {
-    case 'payment':
-      return resId ? `/commande/${resId}/suivi` : '/home';
-    case 'product':
-      return resId ? `/produit/${resId}` : '/boutiques';
-    case 'follow':
-      return '/home';
-    case 'promo':
-      return '/boutiques';
-    case 'review':
-      return '/home';
-    case 'stock':
-      return '/dashboard/entreprise/inventaire';
-    case 'account':
-      return '/home';
-    case 'support':
-      return '/aide';
-    case 'system':
-      return '/home';
-    default:
-      return '/home';
-  }
-}
-
 // ─── NotificationCenter ───────────────────────────────────────
 
-export default function NotificationCenter() {
+interface NotificationCenterProps {
+  /** Navigation vers la page complète des notifications — fournie par les
+   *  dashboards internes (activePage, pas de react-router). Sans ce prop
+   *  (site public), le clic sur "Voir tout" navigue vers /notifications. */
+  onSeeAll?: () => void;
+}
+
+export default function NotificationCenter({ onSeeAll }: NotificationCenterProps = {}) {
   const navigate = useNavigate();
   const {
     unreadCount, notifications,
     isOpen, toggle, close,
-    isLoading, hasMore, loadMore,
+    isLoading,
     markAsRead, markAllAsRead, deleteOne,
   } = useNotifications();
 
@@ -252,26 +142,25 @@ export default function NotificationCenter() {
     if (!notif.isRead) markAsRead(notif.id);
     close();
 
-    /* Log temporaire — à supprimer après diagnostic */
-    console.log('[NotifDebug] clic notification', {
-      id:         notif.id,
-      type:       notif.type,
-      resourceId: notif.resourceId,
-      actionUrl:  notif.actionUrl,
-      payload:    notif.payload,
-    });
-
     /* Résoudre d'abord l'URL cible (corrections + fallback par type),
      * puis décider si c'est une navigation interne ou un lien externe. */
     const target = resolveNavTarget(notif);
-    console.log('[NotifDebug] → navigation vers :', target);
-
     if (target.startsWith('http')) {
       window.open(target, '_blank', 'noopener');
     } else {
       navigate(target);
     }
   }
+
+  /** "Voir tout" — page dédiée. Dashboards internes (activePage) passent
+   *  `onSeeAll` ; le site public navigue via react-router. */
+  function goToNotificationsPage() {
+    close();
+    if (onSeeAll) onSeeAll();
+    else navigate('/notifications');
+  }
+
+  const previewNotifs = visibleNotifs.slice(0, PREVIEW_LIMIT);
 
   return (
     <div className={s.wrap} ref={wrapRef}>
@@ -333,8 +222,8 @@ export default function NotificationCenter() {
               </div>
             )}
 
-            {/* Items */}
-            {visibleNotifs.map(n => (
+            {/* Items — aperçu limité, la liste complète vit sur la page dédiée */}
+            {previewNotifs.map(n => (
               <NotificationItem
                 key={n.id}
                 notif={n}
@@ -342,19 +231,12 @@ export default function NotificationCenter() {
                 onDelete={() => deleteOne(n.id)}
               />
             ))}
-
-            {/* Chargement page suivante */}
-            {isLoading && notifications.length > 0 && (
-              <div className={s.loader}>
-                <i className="fas fa-circle-notch fa-spin" />
-              </div>
-            )}
           </div>
 
-          {/* Charger plus */}
-          {hasMore && !isLoading && (
-            <button className={s.loadMore} onClick={loadMore}>
-              Charger plus
+          {/* Voir tout — ouvre la page complète (filtres, recherche, pagination) */}
+          {visibleNotifs.length > 0 && (
+            <button className={s.loadMore} onClick={goToNotificationsPage}>
+              Voir toutes les notifications
             </button>
           )}
         </div>

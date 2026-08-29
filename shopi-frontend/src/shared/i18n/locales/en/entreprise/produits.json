@@ -10,6 +10,11 @@
       "subtitle": "Manage your catalog and inventory",
       "nouveau": "New product"
     },
+    "creerStory": {
+      "bouton": "Create story",
+      "titre": "Create a story",
+      "aucunProduit": "No product with an image available"
+    },
     "stats": {
       "total": "Total",
       "publies": "Published",
@@ -73,7 +78,32 @@
       "tags": "Tags",
       "supprimer": "Delete",
       "archiver": "Archive",
-      "modifier": "Edit"
+      "modifier": "Edit",
+      "stories": {
+        "titre": "Stories",
+        "aucune": "No story published for this product",
+        "chargement": "Loading…",
+        "ajouterTitre": "Publish one or more images as stories",
+        "ajouterHint": "Pick one or more product images, then publish them as stories (24h)",
+        "active": "Active",
+        "dejaActive": "Already in a story — wait for it to expire to republish",
+        "expiree": "Expired",
+        "expireLe": "Expires on {{date}}",
+        "vues": "{{count}} views",
+        "quiAVu": "Seen by",
+        "jaime": "Liked",
+        "aucuneVue": "No views yet",
+        "vuesEchec": "Couldn't load the views",
+        "publier": "Publish",
+        "publication": "Publishing…",
+        "confirmSupprimer": "Remove this story?",
+        "ajoutSucces_one": "✅ Story published",
+        "ajoutSucces_other": "✅ {{count}} stories published",
+        "ajoutPartiel": "⚠️ {{ok}}/{{total}} stories published",
+        "ajoutEchec": "❌ Couldn't publish these stories",
+        "suppressionSucces": "🗑️ Story removed",
+        "suppressionEchec": "❌ Couldn't remove this story"
+      }
     },
     "modalModifier": {
       "title": "Quick edit",

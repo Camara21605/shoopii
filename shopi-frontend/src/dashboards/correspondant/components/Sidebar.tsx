@@ -18,6 +18,7 @@ interface NavItem { id: PageId; icon: string; label: string; badge?: string; bad
 const GROUPS: { title: string; items: NavItem[] }[] = [
   { title: 'Mon espace', items: [
     { id: 'overview',   icon: 'fa-chart-pie',         label: "Vue d'ensemble" },
+    { id: 'notifications', icon: 'fa-bell',           label: 'Notifications' },
     { id: 'colis',      icon: 'fa-box',               label: 'Colis en dépôt',      badge: '14',     badgeCls: '' },
     { id: 'transferts', icon: 'fa-arrows-rotate',     label: 'Transferts actifs',   badge: '3',      badgeCls: s.badgeT },
     { id: 'retours',    icon: 'fa-rotate-left',       label: 'Retours & litiges',   badge: '2',      badgeCls: s.badgeR },

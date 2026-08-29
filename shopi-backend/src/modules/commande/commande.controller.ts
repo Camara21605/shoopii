@@ -7,7 +7,7 @@
  *   - EntrepriseCommandeController → GET /entreprise/commandes
  * ============================================================ */
 
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 
 import { JwtAuthGuard } from '../../common/guards/auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -100,8 +100,15 @@ export class EntrepriseCommandeController {
   ) {}
 
   @Get()
-  list(@CurrentUser() user: User) {
-    return this.queryService.listEntreprise(user);
+  list(
+    @CurrentUser() user: User,
+    @Query('search') search?: string,
+    @Query('limit')  limit?: string,
+  ) {
+    return this.queryService.listEntreprise(user, {
+      search,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
   }
 
   /** Assigner ou changer le livreur sur une commande de l'entreprise */

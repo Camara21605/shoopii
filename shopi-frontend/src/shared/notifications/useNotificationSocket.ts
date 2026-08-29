@@ -12,6 +12,7 @@
  *   notif:connected    → { unreadCount }  (handshake)
  *   notif:new          → { notification, unreadCount }
  *   notif:unread_count → { unreadCount }
+ *   story:viewed       → { storyId, productId, viewsCount } (compteur de vues story en direct)
  *
  * EVENTS ÉMIS :
  *   notif:mark_read    → { notificationId }
@@ -36,6 +37,8 @@ export interface WsNotifUnreadCount { unreadCount: number; }
 
 export interface WsNotifUpdated { id: string; count: number; body: string; }
 
+export interface WsStoryViewed { storyId: string; productId: string; viewsCount: number; }
+
 /** Émis par le backend quand une nouvelle connexion sur un autre
  *  appareil révoque la session courante (session unique par
  *  utilisateur — voir SessionService côté backend). */
@@ -50,6 +53,7 @@ export interface NotificationSocketCallbacks {
   onUnreadCount?:    (data: WsNotifUnreadCount)  => void;
   onUpdated?:        (data: WsNotifUpdated)      => void;
   onSessionRevoked?: (data: WsSessionRevoked)     => void;
+  onStoryViewed?:    (data: WsStoryViewed)        => void;
 }
 
 // ── Singleton ─────────────────────────────────────────────────
@@ -164,6 +168,7 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
     const onUnreadCount    = (d: WsNotifUnreadCount)  => cbRef.current.onUnreadCount?.(d);
     const onUpdated        = (d: WsNotifUpdated)      => cbRef.current.onUpdated?.(d);
     const onSessionRevoked = (d: WsSessionRevoked)    => cbRef.current.onSessionRevoked?.(d);
+    const onStoryViewed    = (d: WsStoryViewed)        => cbRef.current.onStoryViewed?.(d);
 
     const onConnectError = (err: Error) =>
       console.warn('[NotifSocket] Connexion échouée:', err.message);
@@ -182,6 +187,7 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
     socket.on('notif:unread_count', onUnreadCount);
     socket.on('notif:updated',      onUpdated);
     socket.on('session:revoked',    onSessionRevoked);
+    socket.on('story:viewed',       onStoryViewed);
     socket.on('connect_error',      onConnectError);
     socket.on('disconnect',         onDisconnect);
 
@@ -193,6 +199,7 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
       socket.off('notif:unread_count', onUnreadCount);
       socket.off('notif:updated',      onUpdated);
       socket.off('session:revoked',    onSessionRevoked);
+      socket.off('story:viewed',       onStoryViewed);
       socket.off('connect_error',      onConnectError);
       socket.off('disconnect',         onDisconnect);
     };

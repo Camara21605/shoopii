@@ -4,7 +4,7 @@
 .avaWrap { position:relative; display:inline-block; }
 .ava  { width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--navy),var(--blue)); display:flex; align-items:center; justify-content:center; font-size:26px; border:3px solid var(--sky-3,#C8D9F8); }
 .dot  { position:absolute; bottom:2px; right:2px; width:14px; height:14px; border-radius:50%; border:2.5px solid var(--white); }
-.dotOn  { background:#10B981; } .dotOff { background:#F59E0B; }
+.dotOn  { background:#10B981; } .dotOff { background:#F59E0B; } .dotOffline { background:var(--t4,#B0C4DE); }
 .nom  { font-family:var(--fd,'Fraunces',serif); font-size:14px; font-weight:700; color:var(--navy); }
 .zone { font-size:11px; color:var(--t3); display:flex; align-items:center; justify-content:center; gap:4px; }
 .zone i { color:var(--blue); font-size:10px; }
@@ -12,6 +12,7 @@
 .stars { color:var(--amber,#B45309); letter-spacing:-1px; font-size:11px; }
 .dispoBadge  { font-size:10.5px; font-weight:700; color:#059669; background:rgba(5,150,105,.1); border-radius:999px; padding:3px 10px; }
 .occupeBadge { font-size:10.5px; font-weight:700; color:var(--amber,#B45309); background:var(--am-bg); border-radius:999px; padding:3px 10px; }
+.offlineBadge { font-size:10.5px; font-weight:700; color:var(--t3); background:var(--g100); border-radius:999px; padding:3px 10px; }
 .btns { display:flex; gap:7px; width:100%; margin-top:2px; }
 .btnProfil { flex:1; background:var(--sky); color:var(--blue); border:1px solid var(--sky-3,#C8D9F8); border-radius:9px; padding:8px; font-size:11.5px; font-weight:700; cursor:pointer; transition:all .18s; display:flex; align-items:center; justify-content:center; gap:5px; }
 .btnProfil:hover { background:var(--blue); color:#fff; border-color:var(--blue); }

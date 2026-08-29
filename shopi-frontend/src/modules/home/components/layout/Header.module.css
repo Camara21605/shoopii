@@ -74,15 +74,6 @@
 .scopeItem:hover  { background: var(--sky); }
 .scopeItemActive  { background: var(--sky); color: var(--blue); font-weight: 700; }
 .scopeItemFocused { background: var(--sky); }
-.scopeItemDisabled {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  color: var(--t4); cursor: not-allowed;
-}
-.scopeItemDisabled:hover { background: none; }
-.scopeSoonBadge {
-  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em;
-  color: var(--t4); background: var(--sky); border-radius: 6px; padding: 2px 6px; white-space: nowrap;
-}
 .srchIn {
   flex: 1; background: transparent; border: none; outline: none;
   padding: 10px 10px; font-family: var(--fb); font-size: 13px; color: var(--t1); min-width: 0;
@@ -116,6 +107,13 @@
 .ssImgPlaceholder {
   width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; background: var(--sky);
 }
+.ssImgWrap { position: relative; flex-shrink: 0; display: flex; }
+.ssTypeBadge {
+  position: absolute; bottom: -3px; right: -4px; width: 15px; height: 15px; border-radius: 50%;
+  background: var(--navy); border: 2px solid var(--white);
+  display: flex; align-items: center; justify-content: center;
+}
+.ssTypeBadge i { color: #fff; font-size: 7px; width: auto; }
 .ssLoading, .ssEmpty {
   padding: 12px; font-size: 12.5px; color: var(--t4); display: flex; align-items: center; gap: 8px;
 }
@@ -129,7 +127,12 @@
 @media (max-width: 480px) { .srch { display: none; } }
 
 /* ─── Actions desktop ──────────────────────────────────────── */
-.actions { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+/* margin-left:auto : sur grand écran, .srch (flex:1) plafonne à sa
+ * max-width avant d'avoir absorbé tout l'espace disponible — sans cette
+ * marge auto, le surplus retombait en espace mort après .actions au lieu
+ * de la plaquer contre le bord droit de .row, cassant le centrage visuel
+ * de la barre (asymétrie gauche/droite visible dès ~1600px). */
+.actions { display: flex; align-items: center; gap: 3px; flex-shrink: 0; margin-left: auto; }
 @media (max-width: 768px) { .actions { display: none; } }
 
 /* ─── Actions mobile TOP (visibles sur mobile uniquement) ──── */

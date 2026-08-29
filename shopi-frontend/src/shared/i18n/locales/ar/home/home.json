@@ -52,13 +52,7 @@
       "voirOffre": "عرض العرض"
     },
     "storiesStrip": {
-      "title": "قصص المتاجر",
-      "sub": "منتجات مميزة أبرزها شركاؤنا",
-      "voirTout": "عرض الكل",
-      "toastVoirTout": "📖 جميع القصص",
       "storiesDe": "قصص {{nom}}",
-      "produitCount_one": "منتج {{count}}",
-      "produitCount_other": "{{count}} منتج",
       "enLigneMaintenant": "متصل الآن",
       "vuRecemment": "شوهد مؤخرًا",
       "badgePromo": "🔥 عرض",
@@ -68,6 +62,12 @@
       "voirProduit": "عرض المنتج",
       "laBoutique": "المتجر",
       "partager": "مشاركة",
+      "jaime": "إعجاب",
+      "quiAVu": "شاهدها",
+      "chargementVues": "جارٍ التحميل…",
+      "aucuneVue": "لا توجد مشاهدات بعد",
+      "vuesEchec": "تعذّر عرض المشاهدات",
+      "jaimeEchec": "سجّل الدخول لتعجب بهذه القصة",
       "lienCopieToast": "🔗 تم نسخ الرابط!"
     },
     "randomBloc": {

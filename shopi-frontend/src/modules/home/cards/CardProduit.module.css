@@ -150,7 +150,7 @@
 .pbottomRow {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   margin-top: 3px;
 }
 
@@ -188,7 +188,7 @@
 /* ── Boutons d'action (petites icônes rondes, style Facebook) ── */
 .pactions {
   display: flex;
-  gap: 3px;
+  gap: 6px;
   flex-shrink: 0;
 }
 

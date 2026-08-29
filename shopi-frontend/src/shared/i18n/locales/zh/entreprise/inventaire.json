@@ -69,8 +69,7 @@
       "seuil": "阈值：{{count}}",
       "modifierTitle": "修改库存",
       "modifier": "修改",
-      "reapproTitle": "发起补货",
-      "reapproToast": "📦 已为“{{nom}}”发起补货"
+      "reapproTitle": "为该产品补货"
     },
     "footer": {
       "count_one": "{{count}} 个产品",
@@ -89,16 +88,52 @@
       "title": "快速操作",
       "reapproAll": "为所有严重产品补货",
       "reapproAllSub": "涉及 {{count}} 个产品",
-      "reapproAllToast": "📦 已发起批量补货",
       "exportInventaire": "导出库存（CSV）",
       "exportInventaireSub": "{{count}} 个产品 · {{units}} 件",
-      "exportInventaireToast": "📥 正在生成 CSV 导出…",
       "configAlertes": "配置提醒",
-      "configAlertesSub": "设置自动阈值",
-      "configAlertesToast": "⚙️ 已打开提醒配置",
+      "configAlertesSub_one": "{{count}} 个产品未设置阈值",
+      "configAlertesSub_other": "{{count}} 个产品未设置阈值",
+      "configAlertesSubDone": "所有阈值均已设置",
       "syncStock": "同步库存",
-      "syncStockSub": "与您的供应商同步",
-      "syncStockToast": "🔄 同步中…"
+      "syncStockSub": "与您的 Shopi 供应商同步"
+    },
+    "csv": {
+      "nom": "名称",
+      "reference": "参考编号",
+      "marque": "品牌",
+      "categorie": "类别",
+      "prix": "单价（GNF）",
+      "stock": "库存",
+      "seuil": "预警阈值",
+      "statut": "状态"
+    },
+    "reapproModal": {
+      "title": "补货",
+      "subtitle_one": "{{count}} 个产品待补货",
+      "subtitle_other": "{{count}} 个产品待补货",
+      "stockActuel": "当前库存：{{count}}",
+      "hint": "确认前请调整每个产品的补货数量，库存将立即更新。",
+      "total": "合计新增：{{count}} 件",
+      "confirm_one": "为 {{count}} 个产品补货",
+      "confirm_other": "为 {{count}} 个产品补货",
+      "success_one": "✅ 已为 {{count}} 个产品补货",
+      "success_other": "✅ 已为 {{count}} 个产品补货",
+      "partialError_one": "⚠️ {{count}} 个产品更新失败",
+      "partialError_other": "⚠️ {{count}} 个产品更新失败"
+    },
+    "seuilsModal": {
+      "title": "配置提醒",
+      "subtitle_one": "{{count}} 个产品未设置阈值",
+      "subtitle_other": "{{count}} 个产品未设置阈值",
+      "seuilLabel": "要应用的预警阈值",
+      "hint": "该阈值将应用于所有尚未设置阈值的产品。之后您仍可逐个产品进行调整。",
+      "confirm_one": "应用于 {{count}} 个产品",
+      "confirm_other": "应用于 {{count}} 个产品",
+      "success_one": "✅ 已为 {{count}} 个产品设置阈值",
+      "success_other": "✅ 已为 {{count}} 个产品设置阈值",
+      "partialError_one": "⚠️ {{count}} 个产品更新失败",
+      "partialError_other": "⚠️ {{count}} 个产品更新失败",
+      "invalid": "⚠️ 阈值必须为正数"
     }
   }
 }

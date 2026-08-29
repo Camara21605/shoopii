@@ -97,7 +97,7 @@ export default function Topbar({
             <span className={styles.tbBadge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
           )}
         </button>
-        <NotificationCenter />
+        <NotificationCenter onSeeAll={() => onNavigate('notifications')} />
         <div className={styles.tbSep} />
 
         {/* Centre d'aide — accès direct depuis le dashboard livreur */}

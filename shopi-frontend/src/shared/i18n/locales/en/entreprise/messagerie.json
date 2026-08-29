@@ -23,6 +23,7 @@
         "livreurs": "Couriers",
         "clients": "Customers",
         "correspondants": "Correspondents",
+        "contacts": "Contacts",
         "masquees": "Hidden"
       },
       "searchPlaceholder": "Search a conversation…",

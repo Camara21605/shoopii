@@ -4,9 +4,11 @@
  * ============================================================ */
 
 import {
-  Controller, Get, Param, ParseUUIDPipe, Query,
+  Controller, Get, Post, Param, ParseUUIDPipe, Query, Req, UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt.guard';
 import { PublicService } from './public.service';
 
 @ApiTags('Public')
@@ -113,6 +115,13 @@ export class PublicController {
     return this.publicService.getBoutiqueLivreurs(id);
   }
 
+  @Get('boutiques/:id/correspondants')
+  @ApiOperation({ summary: "Correspondants d'une boutique" })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
+  getBoutiqueCorrespondants(@Param('id', ParseUUIDPipe) id: string) {
+    return this.publicService.getBoutiqueCorrespondants(id);
+  }
+
   @Get('boutiques/:id/avis')
   @ApiOperation({ summary: "Avis clients d'une boutique — note globale + liste" })
   @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
@@ -138,5 +147,36 @@ export class PublicController {
   @ApiOperation({ summary: 'Stories actives de toutes les boutiques — page d\'accueil (max 15 boutiques × 4 slides)' })
   getHomeStories() {
     return this.publicService.getHomeStories();
+  }
+
+  /* ─── POST /public/stories/:id/view — vue optionnelle (visiteur anonyme accepté) ─── */
+  @Post('stories/:id/view')
+  @UseGuards(OptionalJwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: "Enregistre qu'un utilisateur connecté a vu cette story" })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
+  async recordStoryView(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string) {
+    const u = (req as any).user;
+    await this.publicService.recordStoryView(id, u?.userId ?? u?.id);
+  }
+
+  /* ─── GET /public/stories/:id/viewers — réservé au propriétaire de la story ─── */
+  @Get('stories/:id/viewers')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Liste des clients ayant vu cette story, avec leur éventuel ❤️ (propriétaire uniquement)' })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
+  getStoryViewers(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string) {
+    const u = (req as any).user;
+    return this.publicService.getStoryViewers(id, u?.userId ?? u?.id);
+  }
+
+  /* ─── POST /public/stories/:id/like — bascule le ❤️ (connexion requise) ─── */
+  @Post('stories/:id/like')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: "Bascule le \"j'aime\" d'un client sur cette story" })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
+  toggleStoryLike(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string) {
+    const u = (req as any).user;
+    return this.publicService.toggleStoryLike(id, u?.userId ?? u?.id);
   }
 }

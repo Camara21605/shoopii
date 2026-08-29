@@ -11,11 +11,13 @@
     },
     "items": {
       "overview": "Overview",
+      "notifications": "Notifications",
       "commandes": "Orders",
       "retours": "Returns & Support",
       "produits": "Products",
       "ajouter": "Add product",
       "inventaire": "Inventory",
+      "fournisseurs": "Suppliers",
       "promotions": "Promotions",
       "analytics": "Analytics",
       "seo": "SEO & Marketing",
@@ -58,6 +60,10 @@
       "inventaire": {
         "title": "Inventory & Stock",
         "subtitle": "Manage your stock levels"
+      },
+      "fournisseurs": {
+        "title": "Suppliers",
+        "subtitle": "Connect to Shopi companies that sell wholesale"
       },
       "promotions": {
         "title": "Promotions & Promo codes",
@@ -126,9 +132,26 @@
       "profilLivreurReseau": {
         "title": "Courier profile",
         "subtitle": "Details and tracking"
+      },
+      "equipe": {
+        "title": "Team",
+        "subtitle": "Members and permissions of your store"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "subtitle": "All your store's activity"
       }
     },
     "searchPlaceholder": "Search orders, products, customers…",
+    "search": {
+      "produits": "Products",
+      "commandes": "Orders",
+      "clients": "Customers",
+      "livreurs": "Deliverers",
+      "correspondants": "Correspondents",
+      "noResults": "No results for \"{{query}}\"",
+      "error": "Could not reach the server — try again"
+    },
     "tooltips": {
       "livreurs": "My couriers",
       "correspondants": "Correspondents",

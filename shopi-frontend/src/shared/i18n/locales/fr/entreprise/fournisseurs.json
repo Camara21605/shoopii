@@ -1,0 +1,39 @@
+{
+  "fournisseurs": {
+    "header": {
+      "title": "Fournisseurs",
+      "subtitle": "Connectez-vous à des entreprises Shopi qui vendent en gros pour réapprovisionner votre stock",
+      "connecter": "Connecter un fournisseur"
+    },
+    "loading": "Chargement des fournisseurs…",
+    "loadError": "Impossible de charger vos fournisseurs.",
+    "searchError": "Impossible de rechercher des fournisseurs.",
+    "connectSuccess": "✅ Connecté à {{nom}}",
+    "disconnectSuccess": "🔌 {{nom}} déconnecté",
+    "disconnectError": "Impossible de déconnecter ce fournisseur.",
+    "catalogueError": "Impossible de charger le catalogue.",
+    "empty": {
+      "title": "Aucun fournisseur connecté",
+      "sub": "Connectez-vous à une entreprise Shopi qui vend en gros pour accéder à son catalogue de réapprovisionnement."
+    },
+    "card": {
+      "produitsGros_one": "{{count}} produit en gros",
+      "produitsGros_other": "{{count}} produits en gros",
+      "voirCatalogue": "Voir le catalogue",
+      "deconnecter": "Déconnecter"
+    },
+    "searchModal": {
+      "title": "Connecter un fournisseur",
+      "placeholder": "Rechercher une entreprise…",
+      "noResults": "Aucune entreprise vendant en gros trouvée.",
+      "connecter": "Connecter",
+      "connecte": "Connecté"
+    },
+    "catalogueModal": {
+      "subtitle": "Catalogue de vente en gros",
+      "empty": "Ce fournisseur n'a aucun produit en gros publié pour le moment.",
+      "moq_one": "Quantité min. : {{count}} unité",
+      "moq_other": "Quantité min. : {{count}} unités"
+    }
+  }
+}

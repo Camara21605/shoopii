@@ -12,14 +12,18 @@
  *  - Modale de modification rapide du stock via PATCH /produits/:id
  *  - Alertes critiques en temps réel
  *  - Barre de progression visuelle du niveau de stock
- *  - Export CSV (simulation)
- *  - Actions rapides groupées
+ *  - Export CSV réel (génère le fichier depuis les données chargées)
+ *  - Actions rapides groupées : réappro en masse, configuration des
+ *    seuils d'alerte, export — chacune PATCH réellement les produits
+ *    concernés. La synchronisation fournisseur est désactivée (aucune
+ *    intégration fournisseur n'existe côté backend).
  * ============================================================
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
+import type { NavigateFn } from '../EntrepriseApp';
 import styles from './InventairePage.module.css';
 
 // ─────────────────────────────────────────────────────────────
@@ -82,6 +86,54 @@ function stockStatus(stock: number, seuil: number | null, t: (key: string) => st
 function stockPct(stock: number, seuil: number | null): number {
   const max = (seuil ?? 10) * 3;
   return Math.min(100, Math.round((stock / max) * 100));
+}
+
+// ─────────────────────────────────────────────────────────────
+// HELPER — Quantité de réapprovisionnement suggérée par défaut
+// Remonte le stock à 3× le seuil (mini 10) — même règle que la
+// barre de progression, pour rester cohérent visuellement.
+// ─────────────────────────────────────────────────────────────
+function suggestRestock(p: Produit): number {
+  return Math.max((p.seuil ?? 5) * 3, 10);
+}
+
+// ─────────────────────────────────────────────────────────────
+// HELPER — Génère un CSV (séparateur ";") depuis la liste de produits
+// ─────────────────────────────────────────────────────────────
+function genererCsv(list: Produit[], t: (key: string) => string): string {
+  const escape = (v: string | number) => {
+    const s = String(v);
+    return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const header = [
+    t('inventaire.csv.nom'), t('inventaire.csv.reference'), t('inventaire.csv.marque'),
+    t('inventaire.csv.categorie'), t('inventaire.csv.prix'), t('inventaire.csv.stock'),
+    t('inventaire.csv.seuil'), t('inventaire.csv.statut'),
+  ];
+  const rows = list.map(p => {
+    const { label } = stockStatus(p.stock, p.seuil, t);
+    return [
+      p.nom, p.reference ?? '', p.marque ?? '', p.category.nom,
+      p.prix, p.stock, p.seuil ?? '', label,
+    ].map(escape).join(';');
+  });
+  return [header.map(escape).join(';'), ...rows].join('\n');
+}
+
+// ─────────────────────────────────────────────────────────────
+// HELPER — Déclenche le téléchargement d'un fichier CSV
+// BOM UTF-8 en tête pour qu'Excel affiche correctement les accents
+// ─────────────────────────────────────────────────────────────
+function downloadCsv(csv: string, filename: string) {
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -299,9 +351,270 @@ function ModalStock({ produit, onClose, onSaved }: {
 }
 
 // ─────────────────────────────────────────────────────────────
+// COMPOSANT — Modale de réapprovisionnement groupé
+//
+// Affiche la liste des produits à réapprovisionner (un seul via
+// le bouton camion d'une ligne, ou tous les critiques via l'action
+// rapide) avec une quantité éditable par produit. Chaque produit
+// est mis à jour via PATCH /produits/:id à la confirmation.
+// ─────────────────────────────────────────────────────────────
+function ModalReappro({ produits, onClose, onSaved }: {
+  produits: Produit[];
+  onClose:  () => void;
+  onSaved:  (updates: { id: string; stock: number }[]) => void;
+}) {
+  const { pop } = useToast();
+  const { t } = useTranslation();
+
+  // Quantité suggérée par défaut pour chaque produit
+  const [quantites, setQuantites] = useState<Record<string, string>>(() =>
+    Object.fromEntries(produits.map(p => [p.id, String(suggestRestock(p))]))
+  );
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  // ── Sauvegarde : un PATCH par produit, en parallèle ──────────
+  async function handleSave() {
+    setLoading(true);
+    const updates: { id: string; stock: number }[] = [];
+    let echecs = 0;
+
+    await Promise.all(produits.map(async p => {
+      const qte = parseInt(quantites[p.id]);
+      if (isNaN(qte) || qte < 0) return;
+      try {
+        const res = await fetch(`${API}/produits/${p.id}`, {
+          method:  'PATCH',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${token()}`,
+          },
+          body: JSON.stringify({ stock: qte }),
+        });
+        if (!res.ok) throw new Error();
+        updates.push({ id: p.id, stock: qte });
+      } catch {
+        echecs++;
+      }
+    }));
+
+    setLoading(false);
+    if (updates.length) onSaved(updates);
+
+    if (echecs === 0) {
+      pop(t('inventaire.reapproModal.success', { count: updates.length }), 's');
+      onClose();
+    } else {
+      pop(t('inventaire.reapproModal.partialError', { count: echecs }), 'w');
+      if (updates.length) onClose(); // Fermeture seulement si au moins un succès
+    }
+  }
+
+  // Total d'unités qui seront ajoutées (pour affichage informatif)
+  const total = produits.reduce((acc, p) => acc + (parseInt(quantites[p.id]) || 0), 0);
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+
+        <div className={styles.modalHeader}>
+          <div>
+            <div className={styles.modalTitle}>
+              <i className="fas fa-truck-fast" />
+              {t('inventaire.reapproModal.title')}
+            </div>
+            <div className={styles.modalSub}>
+              {t('inventaire.reapproModal.subtitle', { count: produits.length })}
+            </div>
+          </div>
+          <button className={styles.closeBtn} onClick={onClose}>
+            <i className="fas fa-xmark" />
+          </button>
+        </div>
+
+        <div className={styles.modalBody}>
+          <div className={styles.reapproList}>
+            {produits.map(p => (
+              <div key={p.id} className={styles.reapproItem}>
+                {p.images[0] ? (
+                  <img src={p.images[0].url} alt={p.nom} className={styles.reapproThumb} />
+                ) : (
+                  <div className={styles.reapproThumbEmpty}>
+                    <i className="fas fa-image" />
+                  </div>
+                )}
+                <div className={styles.reapproInfo}>
+                  <div className={styles.reapproNom}>{p.nom}</div>
+                  <div className={styles.reapproSub}>
+                    {t('inventaire.reapproModal.stockActuel', { count: p.stock })}
+                  </div>
+                </div>
+                <div className={styles.reapproInputWrap}>
+                  <input
+                    type="number"
+                    min={0}
+                    className={styles.reapproInput}
+                    value={quantites[p.id]}
+                    onChange={e => setQuantites(q => ({ ...q, [p.id]: e.target.value }))}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className={styles.formHint}>
+            <i className="fas fa-circle-info" />
+            {t('inventaire.reapproModal.hint')}
+          </p>
+        </div>
+
+        <div className={styles.modalFooter}>
+          <span className={styles.reapproTotal}>
+            {t('inventaire.reapproModal.total', { count: total })}
+          </span>
+          <button className={styles.btnSecondary} onClick={onClose} disabled={loading}>
+            {t('inventaire.modal.annuler')}
+          </button>
+          <button className={styles.btnPrimary} onClick={handleSave} disabled={loading}>
+            {loading
+              ? <><i className="fas fa-spinner fa-spin" /> {t('inventaire.modal.saving')}</>
+              : <><i className="fas fa-check" /> {t('inventaire.reapproModal.confirm', { count: produits.length })}</>
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// COMPOSANT — Modale de configuration des seuils d'alerte
+//
+// Définit un seuil unique appliqué à tous les produits qui n'en
+// ont pas encore un (bulk PATCH /produits/:id).
+// ─────────────────────────────────────────────────────────────
+function ModalSeuils({ produits, onClose, onSaved }: {
+  produits: Produit[]; // Produits sans seuil défini
+  onClose:  () => void;
+  onSaved:  (updates: { id: string; seuil: number }[]) => void;
+}) {
+  const { pop } = useToast();
+  const { t } = useTranslation();
+
+  const [seuil,   setSeuil]   = useState('5');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  async function handleSave() {
+    const val = parseInt(seuil);
+    if (isNaN(val) || val < 0) {
+      pop(t('inventaire.seuilsModal.invalid'), 'w');
+      return;
+    }
+
+    setLoading(true);
+    const updates: { id: string; seuil: number }[] = [];
+    let echecs = 0;
+
+    await Promise.all(produits.map(async p => {
+      try {
+        const res = await fetch(`${API}/produits/${p.id}`, {
+          method:  'PATCH',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${token()}`,
+          },
+          body: JSON.stringify({ seuil: val }),
+        });
+        if (!res.ok) throw new Error();
+        updates.push({ id: p.id, seuil: val });
+      } catch {
+        echecs++;
+      }
+    }));
+
+    setLoading(false);
+    if (updates.length) onSaved(updates);
+
+    if (echecs === 0) {
+      pop(t('inventaire.seuilsModal.success', { count: updates.length }), 's');
+      onClose();
+    } else {
+      pop(t('inventaire.seuilsModal.partialError', { count: echecs }), 'w');
+      if (updates.length) onClose();
+    }
+  }
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+
+        <div className={styles.modalHeader}>
+          <div>
+            <div className={styles.modalTitle}>
+              <i className="fas fa-bell" />
+              {t('inventaire.seuilsModal.title')}
+            </div>
+            <div className={styles.modalSub}>
+              {t('inventaire.seuilsModal.subtitle', { count: produits.length })}
+            </div>
+          </div>
+          <button className={styles.closeBtn} onClick={onClose}>
+            <i className="fas fa-xmark" />
+          </button>
+        </div>
+
+        <div className={styles.modalBody}>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>
+              <i className="fas fa-cube" />
+              {t('inventaire.seuilsModal.seuilLabel')}
+            </label>
+            <div className={styles.inputWithUnit}>
+              <input
+                type="number"
+                min={0}
+                className={styles.formInput}
+                value={seuil}
+                onChange={e => setSeuil(e.target.value)}
+                placeholder={t('inventaire.modal.seuilPlaceholder')}
+              />
+              <span className={styles.inputUnit}>{t('inventaire.modal.unites')}</span>
+            </div>
+            <p className={styles.formHint}>
+              <i className="fas fa-circle-info" />
+              {t('inventaire.seuilsModal.hint')}
+            </p>
+          </div>
+        </div>
+
+        <div className={styles.modalFooter}>
+          <button className={styles.btnSecondary} onClick={onClose} disabled={loading}>
+            {t('inventaire.modal.annuler')}
+          </button>
+          <button className={styles.btnPrimary} onClick={handleSave} disabled={loading}>
+            {loading
+              ? <><i className="fas fa-spinner fa-spin" /> {t('inventaire.modal.saving')}</>
+              : <><i className="fas fa-check" /> {t('inventaire.seuilsModal.confirm', { count: produits.length })}</>
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // COMPOSANT PRINCIPAL — InventairePage
 // ─────────────────────────────────────────────────────────────
-export default function InventairePage() {
+export default function InventairePage({ onNavigate }: { onNavigate?: NavigateFn }) {
   const { pop } = useToast();
   const { t } = useTranslation();
 
@@ -318,6 +631,12 @@ export default function InventairePage() {
 
   // Produit en cours de modification (null = modale fermée)
   const [modalProd, setModalProd] = useState<Produit | null>(null);
+
+  // Liste de produits à réapprovisionner (null = modale fermée)
+  const [modalReappro, setModalReappro] = useState<Produit[] | null>(null);
+
+  // Modale de configuration groupée des seuils d'alerte
+  const [modalSeuils, setModalSeuils] = useState(false);
 
   // ── Chargement des produits depuis l'API ─────────────────────
   const charger = useCallback(async () => {
@@ -347,6 +666,31 @@ export default function InventairePage() {
     setProduits(prev =>
       prev.map(p => p.id === id ? { ...p, stock, seuil } : p)
     );
+  }
+
+  // ── Mise à jour locale après réapprovisionnement groupé ────────
+  function handleReapproSaved(updates: { id: string; stock: number }[]) {
+    setProduits(prev => prev.map(p => {
+      const u = updates.find(x => x.id === p.id);
+      return u ? { ...p, stock: u.stock } : p;
+    }));
+  }
+
+  // ── Mise à jour locale après configuration groupée des seuils ──
+  function handleSeuilsSaved(updates: { id: string; seuil: number }[]) {
+    setProduits(prev => prev.map(p => {
+      const u = updates.find(x => x.id === p.id);
+      return u ? { ...p, seuil: u.seuil } : p;
+    }));
+  }
+
+  // ── Export CSV réel de l'inventaire complet ─────────────────────
+  function handleExportCsv() {
+    if (produits.length === 0) return;
+    const csv  = genererCsv(produits, t);
+    const date = new Date().toISOString().slice(0, 10);
+    downloadCsv(csv, `inventaire-shopi-${date}.csv`);
+    pop(t('inventaire.header.exportToast'), 's');
   }
 
   // ── Calcul des statistiques ───────────────────────────────────
@@ -386,6 +730,49 @@ export default function InventairePage() {
     .sort((a, b) => a.stock - b.stock) // Les plus critiques en premier
     .slice(0, 8); // Maximum 8 alertes affichées
 
+  // Liste complète (non tronquée) des produits critiques — utilisée
+  // par l'action rapide "Réappro. tous les critiques"
+  const critiques = produits.filter(p => p.stock === 0 || (p.seuil !== null && p.stock <= p.seuil));
+
+  // Produits sans seuil d'alerte défini — utilisée par "Configurer les alertes"
+  const sansSeuil = produits.filter(p => p.seuil === null);
+
+  // ── Actions rapides du panneau latéral ────────────────────────
+  const quickActions = [
+    {
+      ico:      '📦',
+      label:    t('inventaire.quickActions.reapproAll'),
+      sub:      t('inventaire.quickActions.reapproAllSub', { count: critiques.length }),
+      onClick:  () => setModalReappro(critiques),
+      disabled: critiques.length === 0,
+    },
+    {
+      ico:      '📊',
+      label:    t('inventaire.quickActions.exportInventaire'),
+      sub:      t('inventaire.quickActions.exportInventaireSub', { count: stats.total, units: fmt(stats.totalUnits) }),
+      onClick:  handleExportCsv,
+      disabled: stats.total === 0,
+    },
+    {
+      ico:      '🔔',
+      label:    t('inventaire.quickActions.configAlertes'),
+      sub:      sansSeuil.length > 0
+        ? t('inventaire.quickActions.configAlertesSub', { count: sansSeuil.length })
+        : t('inventaire.quickActions.configAlertesSubDone'),
+      onClick:  () => setModalSeuils(true),
+      disabled: sansSeuil.length === 0,
+    },
+    {
+      ico:      '🔄',
+      label:    t('inventaire.quickActions.syncStock'),
+      sub:      t('inventaire.quickActions.syncStockSub'),
+      // Ouvre la page Fournisseurs — connecter une entreprise Shopi vendant
+      // en gros, ou consulter le catalogue de celles déjà connectées.
+      onClick:  () => onNavigate?.('fournisseurs'),
+      disabled: !onNavigate,
+    },
+  ];
+
   // ─────────────────────────────────────────────────────────────
   // RENDU
   // ─────────────────────────────────────────────────────────────
@@ -406,7 +793,8 @@ export default function InventairePage() {
         <div className={styles.headerActions}>
           <button
             className={styles.btnSecondaryOutline}
-            onClick={() => pop(t('inventaire.header.exportToast'), 's')}
+            onClick={handleExportCsv}
+            disabled={produits.length === 0}
           >
             <i className="fas fa-file-export" /> {t('inventaire.header.exportCsv')}
           </button>
@@ -710,10 +1098,10 @@ export default function InventairePage() {
                             >
                               <i className="fas fa-pen" /> {t('inventaire.table.modifier')}
                             </button>
-                            {/* Bouton réappro (simulation) */}
+                            {/* Bouton réappro rapide — ouvre la modale pour ce produit */}
                             <button
                               className={styles.btnReappro}
-                              onClick={() => pop(t('inventaire.table.reapproToast', { nom: p.nom }), 's')}
+                              onClick={() => setModalReappro([p])}
                               title={t('inventaire.table.reapproTitle')}
                             >
                               <i className="fas fa-truck" />
@@ -810,40 +1198,12 @@ export default function InventairePage() {
             </div>
             <div className={styles.sideCardBody}>
               <div className={styles.actionsList}>
-                {[
-                  {
-                    ico:    '📦',
-                    label:  t('inventaire.quickActions.reapproAll'),
-                    sub:    t('inventaire.quickActions.reapproAllSub', { count: stats.rupture + stats.faible }),
-                    action: t('inventaire.quickActions.reapproAllToast'),
-                    type:   's' as const,
-                  },
-                  {
-                    ico:    '📊',
-                    label:  t('inventaire.quickActions.exportInventaire'),
-                    sub:    t('inventaire.quickActions.exportInventaireSub', { count: stats.total, units: fmt(stats.totalUnits) }),
-                    action: t('inventaire.quickActions.exportInventaireToast'),
-                    type:   'i' as const,
-                  },
-                  {
-                    ico:    '🔔',
-                    label:  t('inventaire.quickActions.configAlertes'),
-                    sub:    t('inventaire.quickActions.configAlertesSub'),
-                    action: t('inventaire.quickActions.configAlertesToast'),
-                    type:   'i' as const,
-                  },
-                  {
-                    ico:    '🔄',
-                    label:  t('inventaire.quickActions.syncStock'),
-                    sub:    t('inventaire.quickActions.syncStockSub'),
-                    action: t('inventaire.quickActions.syncStockToast'),
-                    type:   'i' as const,
-                  },
-                ].map((a, i) => (
+                {quickActions.map((a, i) => (
                   <button
                     key={i}
                     className={styles.quickAction}
-                    onClick={() => pop(a.action, a.type)}
+                    onClick={a.onClick}
+                    disabled={a.disabled}
                   >
                     <span className={styles.quickActionIco}>{a.ico}</span>
                     <div className={styles.quickActionText}>
@@ -869,6 +1229,29 @@ export default function InventairePage() {
           produit={modalProd}
           onClose={() => setModalProd(null)}
           onSaved={handleStockSaved}
+        />
+      )}
+
+      {/* ════════════════════════════════════════════════════════
+          MODALE DE RÉAPPROVISIONNEMENT GROUPÉ
+          Affichée quand modalReappro contient au moins un produit
+          ════════════════════════════════════════════════════════ */}
+      {modalReappro && (
+        <ModalReappro
+          produits={modalReappro}
+          onClose={() => setModalReappro(null)}
+          onSaved={handleReapproSaved}
+        />
+      )}
+
+      {/* ════════════════════════════════════════════════════════
+          MODALE DE CONFIGURATION DES SEUILS D'ALERTE
+          ════════════════════════════════════════════════════════ */}
+      {modalSeuils && (
+        <ModalSeuils
+          produits={sansSeuil}
+          onClose={() => setModalSeuils(false)}
+          onSaved={handleSeuilsSaved}
         />
       )}
     </div>

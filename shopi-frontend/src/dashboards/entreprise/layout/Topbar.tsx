@@ -20,7 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import type { EntreprisePage } from '../types';
-import { useToast } from '../../../shared/context/ToastContext';
+import { apiFetch } from '../../../shared/services/apiFetch';
 import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
 import { useNotifications } from '../../../shared/notifications/NotificationContext';
@@ -33,7 +33,7 @@ type CanFn = (group: string, action: string) => boolean;
 
 interface TopbarProps {
   activePage:     EntreprisePage;
-  onNavigate:     (page: EntreprisePage) => void;
+  onNavigate:     (page: EntreprisePage, id?: string) => void;
   companyId?:     string;
   companyLogo?:   string | null;
   companyName?:   string;
@@ -55,6 +55,7 @@ const TITLES: Record<EntreprisePage, [string, string]> = {
   produits:       ['topbar.titles.produits.title',       'topbar.titles.produits.subtitle'],
   ajouter:        ['topbar.titles.ajouter.title',        'topbar.titles.ajouter.subtitle'],
   inventaire:     ['topbar.titles.inventaire.title',     'topbar.titles.inventaire.subtitle'],
+  fournisseurs:   ['topbar.titles.fournisseurs.title',   'topbar.titles.fournisseurs.subtitle'],
   promotions:     ['topbar.titles.promotions.title',     'topbar.titles.promotions.subtitle'],
   analytics:      ['topbar.titles.analytics.title',      'topbar.titles.analytics.subtitle'],
   messages:       ['topbar.titles.messages.title',       'topbar.titles.messages.subtitle'],
@@ -72,6 +73,8 @@ const TITLES: Record<EntreprisePage, [string, string]> = {
   reseauLivreurs:            ['topbar.titles.reseauLivreurs.title',            'topbar.titles.reseauLivreurs.subtitle'],
   profilCorrespondantReseau: ['topbar.titles.profilCorrespondantReseau.title', 'topbar.titles.profilCorrespondantReseau.subtitle'],
   profilLivreurReseau:       ['topbar.titles.profilLivreurReseau.title',      'topbar.titles.profilLivreurReseau.subtitle'],
+  equipe:         ['topbar.titles.equipe.title',         'topbar.titles.equipe.subtitle'],
+  notifications:  ['topbar.titles.notifications.title',  'topbar.titles.notifications.subtitle'],
 };
 
 /* Items du drawer mobile (navigation complète) — réutilise les mêmes clés
@@ -96,6 +99,32 @@ const DRAWER_NAV: { id: EntreprisePage; icon: string; label: string; perm?: [str
   { id: 'parametres',     icon: 'fa-gear',          label: 'sidebar.items.parametres',     perm: ['settings',  'view'] },
 ];
 
+/* ─────────────────────────────────────────────────────────────
+   RECHERCHE GLOBALE — types de résultats (un sous-ensemble minimal
+   des champs réels, juste ce qu'affiche le dropdown) et endpoints
+   interrogés en parallèle. Chaque backend supporte déjà ?search= :
+     GET /produits                    → { data: Produit[] }
+     GET /entreprise/commandes        → Commande[]            (pas d'enveloppe)
+     GET /dashboard/entreprise/clients→ { data: Client[] }
+     GET /livreurs                    → { data: Livreur[] }
+     GET /correspondants              → { data: Correspondant[] }
+   ───────────────────────────────────────────────────────────── */
+interface SearchProduit       { id: string; nom: string; prix: number; images: { url: string }[] }
+interface SearchCommande      { uuid: string; id: string; client: string; price: number }
+interface SearchClient        { id: string; fullName: string; email: string; profilePicture: string | null }
+interface SearchLivreur       { id: string; fullName: string; zone: string | null; avatarEmoji: string }
+interface SearchCorrespondant { id: string; fullName: string; ville: string; avatarEmoji: string }
+
+interface SearchResults {
+  produits:       SearchProduit[];
+  commandes:      SearchCommande[];
+  clients:        SearchClient[];
+  livreurs:       SearchLivreur[];
+  correspondants: SearchCorrespondant[];
+}
+
+const EMPTY_RESULTS: SearchResults = { produits: [], commandes: [], clients: [], livreurs: [], correspondants: [] };
+
 /* Libellé statut boutique — clés dans topbar.status.*, 'default' pour le
    fallback "Vendeur Pro" utilisé quand companyStatus ne correspond à rien. */
 const STATUS_LABEL_KEYS: Record<string, string> = {
@@ -113,17 +142,22 @@ export default function Topbar({
   can, isOwner = false,
 }: TopbarProps) {
   const { t } = useTranslation();
-  const { pop } = useToast();
   const navigate = useNavigate();
   const { msgUnread } = useGlobalCall();
   const { notifications } = useNotifications();
   const orderUnread = notifications.filter(n => n.type.startsWith('order') && !n.isRead).length;
 
   const [searchVal,      setSearchVal]      = useState('');
+  const [searchOpen,     setSearchOpen]     = useState(false);
+  const [searchLoading,  setSearchLoading]  = useState(false);
+  const [searchError,    setSearchError]    = useState(false);
+  const [searchResults,  setSearchResults]  = useState<SearchResults>(EMPTY_RESULTS);
   const [avatarOpen,     setAvatarOpen]     = useState(false);
   const [monEspaceOpen,  setMonEspaceOpen]  = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const avatarRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
 
   const [titleKey, subtitleKey] = TITLES[activePage] ?? ['', ''];
 
@@ -141,6 +175,73 @@ export default function Topbar({
     document.addEventListener('click', fn);
     return () => document.removeEventListener('click', fn);
   }, [avatarOpen]);
+
+  /* Fermer le dropdown de recherche au clic extérieur */
+  useEffect(() => {
+    if (!searchOpen) return;
+    const fn = (e: MouseEvent) => {
+      if (!searchRef.current?.contains(e.target as Node)) setSearchOpen(false);
+    };
+    document.addEventListener('click', fn);
+    return () => document.removeEventListener('click', fn);
+  }, [searchOpen]);
+
+  /* Recherche globale — interroge en parallèle produits/commandes/clients/
+     livreurs/correspondants de la boutique connectée (chaque endpoint
+     supporte déjà ?search=). Dès le 1er caractère : le spinner s'affiche
+     immédiatement (retour instantané), la requête réseau elle-même reste
+     différée de 120ms pour ne pas déclencher 5 appels par frappe — annule
+     la requête en cours si l'utilisateur retape avant la réponse. */
+  useEffect(() => {
+    const q = searchVal.trim();
+    if (q.length < 1) {
+      searchAbortRef.current?.abort();
+      setSearchResults(EMPTY_RESULTS);
+      setSearchLoading(false);
+      setSearchError(false);
+      return;
+    }
+
+    setSearchLoading(true);
+
+    const timer = setTimeout(async () => {
+      searchAbortRef.current?.abort();
+      const controller = new AbortController();
+      searchAbortRef.current = controller;
+      setSearchLoading(true);
+
+      // Promise.allSettled (pas Promise.all + catch) — pour pouvoir distinguer
+      // "aucun résultat" d'un vrai échec réseau/serveur et l'afficher clairement
+      // au lieu de faire silencieusement croire qu'il n'y a rien à trouver.
+      const settled = await Promise.allSettled([
+        apiFetch<{ data: SearchProduit[] }>('/produits', { params: { search: q, limit: 4 }, signal: controller.signal }).then(r => r.data),
+        apiFetch<SearchCommande[]>('/entreprise/commandes', { params: { search: q, limit: 4 }, signal: controller.signal }),
+        apiFetch<{ data: SearchClient[] }>('/dashboard/entreprise/clients', { params: { search: q, limit: 4 }, signal: controller.signal }).then(r => r.data),
+        apiFetch<{ data: SearchLivreur[] }>('/livreurs', { params: { search: q, limit: 4 }, signal: controller.signal }).then(r => r.data),
+        apiFetch<{ data: SearchCorrespondant[] }>('/correspondants', { params: { search: q, limit: 4 }, signal: controller.signal }).then(r => r.data),
+      ]);
+
+      if (controller.signal.aborted) return;
+
+      const [produitsR, commandesR, clientsR, livreursR, correspondantsR] = settled;
+      settled.forEach(r => { if (r.status === 'rejected') console.error('[recherche globale]', r.reason); });
+
+      setSearchResults({
+        produits:       produitsR.status       === 'fulfilled' ? produitsR.value       : [],
+        commandes:      commandesR.status      === 'fulfilled' ? commandesR.value      : [],
+        clients:        clientsR.status        === 'fulfilled' ? clientsR.value        : [],
+        livreurs:       livreursR.status       === 'fulfilled' ? livreursR.value       : [],
+        correspondants: correspondantsR.status === 'fulfilled' ? correspondantsR.value : [],
+      });
+      // Erreur affichée seulement si TOUT a échoué (ex: backend injoignable) —
+      // un seul endpoint en échec (ex: 403 sur une catégorie) reste silencieux,
+      // les autres résultats restent utilisables.
+      setSearchError(settled.every(r => r.status === 'rejected'));
+      setSearchLoading(false);
+    }, 120);
+
+    return () => clearTimeout(timer);
+  }, [searchVal]);
 
   /* Verrouiller le scroll quand le drawer mobile est ouvert */
   useEffect(() => {
@@ -168,6 +269,22 @@ export default function Topbar({
     setMobileMenuOpen(false);
   }
 
+  /* Sélection d'un résultat de recherche — navigue vers la page concernée.
+     Pour un produit, ouvre directement sa fiche en édition (AjouterPage
+     accepte déjà un productId). Les autres catégories n'ont pas de vue
+     détail dédiée depuis cette page : on ouvre la liste, filtrée par
+     l'utilisateur une fois sur place. */
+  function selectSearchResult(page: EntreprisePage, id?: string) {
+    onNavigate(page, id);
+    setSearchOpen(false);
+    setSearchVal('');
+  }
+
+  const searchTotal =
+    searchResults.produits.length + searchResults.commandes.length + searchResults.clients.length +
+    searchResults.livreurs.length + searchResults.correspondants.length;
+  const searchDropdownVisible = searchOpen && searchVal.trim().length >= 1;
+
   return (
     <>
       <header className="topbar">
@@ -182,18 +299,98 @@ export default function Topbar({
           <div className="tb-sub">{t(subtitleKey)}</div>
         </div>
 
-        {/* Barre de recherche */}
-        <div className="tb-srch">
+        {/* Barre de recherche globale — produits/commandes/clients/livreurs/correspondants */}
+        <div className="tb-srch" ref={searchRef}>
           <input
             type="text"
             placeholder={t('topbar.searchPlaceholder')}
             value={searchVal}
-            onChange={e => {
-              setSearchVal(e.target.value);
-              if (e.target.value.length > 2) pop(`🔍 Recherche: "${e.target.value}"…`, 'i');
-            }}
+            onFocus={() => setSearchOpen(true)}
+            onChange={e => { setSearchVal(e.target.value); setSearchOpen(true); }}
+            onKeyDown={e => { if (e.key === 'Escape') { setSearchOpen(false); (e.target as HTMLInputElement).blur(); } }}
           />
-          <button><i className="fas fa-magnifying-glass"></i></button>
+          <button type="button" tabIndex={-1}><i className="fas fa-magnifying-glass"></i></button>
+
+          {searchDropdownVisible && (
+            <div className="tb-srch-drop" onClick={e => e.stopPropagation()}>
+              {searchLoading ? (
+                <div className="tb-srch-state"><i className="fas fa-spinner fa-spin" /></div>
+              ) : searchError ? (
+                <div className="tb-srch-state tb-srch-state-error">
+                  <i className="fas fa-triangle-exclamation" /> {t('topbar.search.error')}
+                </div>
+              ) : searchTotal === 0 ? (
+                <div className="tb-srch-state">{t('topbar.search.noResults', { query: searchVal.trim() })}</div>
+              ) : (
+                <>
+                  {searchResults.produits.length > 0 && (
+                    <div className="tb-srch-sec">
+                      <div className="tb-srch-sec-title">{t('topbar.search.produits')}</div>
+                      {searchResults.produits.map(p => (
+                        <button key={p.id} className="tb-srch-item" onClick={() => selectSearchResult('ajouter', p.id)}>
+                          {p.images?.[0]
+                            ? <img src={p.images[0].url} alt="" className="tb-srch-thumb" />
+                            : <span className="tb-srch-thumb tb-srch-thumb-ico"><i className="fas fa-box" /></span>}
+                          <span className="tb-srch-label">{p.nom}</span>
+                          <span className="tb-srch-meta">{p.prix.toLocaleString('fr-FR')} GNF</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {searchResults.commandes.length > 0 && (
+                    <div className="tb-srch-sec">
+                      <div className="tb-srch-sec-title">{t('topbar.search.commandes')}</div>
+                      {searchResults.commandes.map(c => (
+                        <button key={c.uuid} className="tb-srch-item" onClick={() => selectSearchResult('commandes')}>
+                          <span className="tb-srch-thumb tb-srch-thumb-ico"><i className="fas fa-box" /></span>
+                          <span className="tb-srch-label">#{c.id} · {c.client}</span>
+                          <span className="tb-srch-meta">{c.price.toLocaleString('fr-FR')} GNF</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {searchResults.clients.length > 0 && (
+                    <div className="tb-srch-sec">
+                      <div className="tb-srch-sec-title">{t('topbar.search.clients')}</div>
+                      {searchResults.clients.map(c => (
+                        <button key={c.id} className="tb-srch-item" onClick={() => selectSearchResult('clients')}>
+                          {c.profilePicture
+                            ? <img src={c.profilePicture} alt="" className="tb-srch-thumb" />
+                            : <span className="tb-srch-thumb tb-srch-thumb-ico"><i className="fas fa-user" /></span>}
+                          <span className="tb-srch-label">{c.fullName}</span>
+                          <span className="tb-srch-meta">{c.email}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {searchResults.livreurs.length > 0 && (
+                    <div className="tb-srch-sec">
+                      <div className="tb-srch-sec-title">{t('topbar.search.livreurs')}</div>
+                      {searchResults.livreurs.map(l => (
+                        <button key={l.id} className="tb-srch-item" onClick={() => selectSearchResult('livreurs')}>
+                          <span className="tb-srch-thumb tb-srch-thumb-ico">{l.avatarEmoji || '🏍️'}</span>
+                          <span className="tb-srch-label">{l.fullName}</span>
+                          <span className="tb-srch-meta">{l.zone ?? ''}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {searchResults.correspondants.length > 0 && (
+                    <div className="tb-srch-sec">
+                      <div className="tb-srch-sec-title">{t('topbar.search.correspondants')}</div>
+                      {searchResults.correspondants.map(c => (
+                        <button key={c.id} className="tb-srch-item" onClick={() => selectSearchResult('correspondants')}>
+                          <span className="tb-srch-thumb tb-srch-thumb-ico">{c.avatarEmoji || '📍'}</span>
+                          <span className="tb-srch-label">{c.fullName}</span>
+                          <span className="tb-srch-meta">{c.ville}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Actions rapides (desktop) */}
@@ -230,7 +427,7 @@ export default function Topbar({
               )}
             </button>
           )}
-          <NotificationCenter />
+          <NotificationCenter onSeeAll={() => onNavigate('notifications')} />
 
           <div className="tb-sep"></div>
 

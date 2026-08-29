@@ -38,6 +38,7 @@ const RetoursPage                   = lazy(() => import('./pages/RetoursPage'));
 const ProduitsPage                  = lazy(() => import('./pages/ProduitsPage'));
 const AjouterProduitPage            = lazy(() => import('./pages/AjouterPage'));
 const InventairePage                = lazy(() => import('./pages/InventairePage'));
+const FournisseursPage              = lazy(() => import('./pages/FournisseursPage'));
 const PromotionsPage                = lazy(() => import('./pages/PromotionsPage'));
 const AnalyticsPage                 = lazy(() => import('./pages/AnalyticsPage'));
 const MessagesPage                  = lazy(() => import('./pages/MessagesPage'));
@@ -56,6 +57,7 @@ const ProfilLivreurReseauPage       = lazy(() => import('./pages/ProfilLivreurRe
 const ProfilEntreprisePage          = lazy(() => import('../../shared/profils/profil-entreprise/ProfilEntreprisePage'));
 const BoutiquePreviewPage           = lazy(() => import('./pages/BoutiquePreviewPage'));
 const EquipePage                    = lazy(() => import('./pages/EquipePage'));
+const NotificationsPage             = lazy(() => import('../../shared/notifications/NotificationsPage'));
 
 import type { EntreprisePage, ToastType } from './types';
 import { useToast } from '../../shared/context/ToastContext';
@@ -115,10 +117,11 @@ function parseSplat(splat: string): { page: EntreprisePage; productId?: string; 
 
   /* Pages directes */
   const DIRECT_PAGES: EntreprisePage[] = [
-    'commandes', 'retours', 'produits', 'inventaire',
+    'commandes', 'retours', 'produits', 'inventaire', 'fournisseurs',
     'promotions', 'analytics', 'messages', 'seo',
     'livreurs', 'correspondants', 'finances', 'portefeuille',
     'clients', 'avis', 'parametres', 'profil', 'boutique-preview', 'equipe',
+    'notifications',
   ];
   if (DIRECT_PAGES.includes(a as EntreprisePage)) {
     return { page: a as EntreprisePage };
@@ -146,7 +149,8 @@ function PageRenderer({
     case 'retours':        return <RetoursPage />;
     case 'produits':       return <ProduitsPage onNavigate={onNavigate} />;
     case 'ajouter':        return <AjouterProduitPage onNavigate={onNavigate} productId={productId} />;
-    case 'inventaire':     return <InventairePage />;
+    case 'inventaire':     return <InventairePage onNavigate={onNavigate} />;
+    case 'fournisseurs':   return <FournisseursPage />;
     case 'promotions':     return <PromotionsPage />;
     case 'analytics':      return <AnalyticsPage />;
     case 'messages':       return <MessagesPage />;
@@ -173,6 +177,7 @@ function PageRenderer({
     case 'profil':           return <ProfilEntreprisePage onNavigate={onNavigate} />;
     case 'boutique-preview': return <BoutiquePreviewPage onNavigate={onNavigate} />;
     case 'equipe':           return <EquipePage />;
+    case 'notifications':    return <NotificationsPage />;
     default:                 return <OverviewPage onNavigate={onNavigate} />;
   }
 }

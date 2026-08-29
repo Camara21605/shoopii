@@ -1,0 +1,234 @@
+/* ============================================================
+ * FICHIER : src/shared/notifications/NotificationsPage.module.css
+ * Page complète du centre de notifications — réutilisée sur le
+ * site public et dans chaque dashboard interne.
+ * ============================================================ */
+
+.page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+}
+
+/* ── En-tête ─────────────────────────────────────────────────── */
+.pageHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.pageTitle {
+  font-family: var(--fd);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--t1);
+  letter-spacing: -0.4px;
+  margin: 0 0 4px;
+}
+.pageSub {
+  font-size: 13.5px;
+  color: var(--t3);
+  margin: 0;
+}
+.markAllBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--sky);
+  border: none;
+  color: var(--blue);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 9px 14px;
+  border-radius: var(--r-md, 10px);
+  cursor: pointer;
+  transition: background .15s;
+  font-family: var(--fb);
+  white-space: nowrap;
+}
+.markAllBtn:hover { background: #dde8fc; }
+
+/* ── Contrôles (filtres + recherche) ───────────────────────────── */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.filterBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--white);
+  border: 1.5px solid var(--bdr2);
+  color: var(--t3);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: var(--pill);
+  cursor: pointer;
+  transition: all .15s;
+  font-family: var(--fb);
+}
+.filterBtn:hover { border-color: var(--blue); color: var(--blue); }
+.filterBtn.active {
+  background: var(--navy, var(--blue));
+  border-color: var(--navy, var(--blue));
+  color: #fff;
+}
+.filterBadge {
+  background: rgba(255,255,255,.25);
+  border-radius: var(--pill);
+  font-size: 10px;
+  padding: 1px 6px;
+  font-weight: 800;
+}
+.filterBtn:not(.active) .filterBadge {
+  background: var(--red);
+  color: #fff;
+}
+
+.searchWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  border: 1.5px solid var(--bdr2);
+  border-radius: var(--pill);
+  padding: 7px 14px;
+  min-width: 200px;
+  flex: 1;
+  max-width: 280px;
+  color: var(--t4);
+  font-size: 12px;
+}
+.searchIn {
+  border: none;
+  outline: none;
+  background: none;
+  flex: 1;
+  font-size: 13px;
+  color: var(--t1);
+  font-family: var(--fb);
+  min-width: 0;
+}
+.searchIn::placeholder { color: var(--t4); }
+.clearSearch {
+  background: none;
+  border: none;
+  color: var(--t4);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px;
+}
+
+/* ── Liste ───────────────────────────────────────────────────── */
+.list { display: flex; flex-direction: column; }
+
+.groupHead {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--t4);
+  margin: 20px 4px 8px;
+}
+.groupHead:first-child { margin-top: 4px; }
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 14px 12px;
+  border-radius: var(--r-md, 12px);
+  cursor: pointer;
+  transition: background .15s;
+  position: relative;
+}
+.item:hover { background: var(--g50, #F7F8FA); }
+.item.unread { background: rgba(22,82,240,.04); }
+.item.unread:hover { background: rgba(22,82,240,.07); }
+
+.avatarWrap {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+.avatarImg { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; display: block; }
+.avatarInitial {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 800; font-family: var(--fd);
+}
+.typeBadge {
+  position: absolute; bottom: -2px; right: -4px;
+  width: 19px; height: 19px; border-radius: 50%;
+  border: 2.5px solid var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; color: #fff;
+}
+
+.body { flex: 1; min-width: 0; }
+.itemHead { display: flex; align-items: center; gap: 7px; }
+.itemTitle { font-size: 13.5px; font-weight: 700; color: var(--t1); }
+.item:not(.unread) .itemTitle { font-weight: 600; color: var(--t2); }
+.unreadDot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); flex-shrink: 0; }
+.itemBody { font-size: 12.5px; color: var(--t3); line-height: 1.5; margin: 3px 0 5px; }
+.itemTime { font-size: 11px; color: var(--t4); }
+
+.actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.item:hover .actions { opacity: 1; }
+@media (hover: none) { .actions { opacity: 1; } }
+.actionBtn {
+  width: 28px; height: 28px; border-radius: 8px;
+  border: none; background: var(--g100, #F3F4F6); color: var(--t3);
+  font-size: 11px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+}
+.actionBtn:hover { background: var(--sky); color: var(--blue); }
+.actionDel:hover { background: var(--red); color: #fff; }
+
+/* ── États ───────────────────────────────────────────────────── */
+.loader, .empty {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 60px 20px; color: var(--t4); text-align: center;
+}
+.loader { flex-direction: row; }
+.loader i, .empty i { font-size: 26px; }
+.empty span, .loader span { font-size: 13px; font-weight: 600; }
+
+.loadingMore { display: flex; justify-content: center; padding: 18px; color: var(--t3); font-size: 18px; }
+
+.loadMore {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; background: none; border: 1.5px dashed var(--bdr2);
+  border-radius: var(--r-md, 12px); padding: 13px; margin-top: 10px;
+  font-size: 12.5px; font-weight: 700; color: var(--blue); cursor: pointer;
+  transition: background .15s, border-color .15s; font-family: var(--fb);
+}
+.loadMore:hover { background: var(--sky); border-color: var(--blue); }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .page { padding: 18px 12px 48px; }
+  .controls { flex-direction: column; align-items: stretch; }
+  .searchWrap { max-width: none; }
+  .actions { opacity: 1; }
+}

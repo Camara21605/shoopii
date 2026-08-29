@@ -1,0 +1,39 @@
+{
+  "fournisseurs": {
+    "header": {
+      "title": "الموردون",
+      "subtitle": "تواصل مع شركات Shopi التي تبيع بالجملة لتجديد مخزونك",
+      "connecter": "ربط مورد"
+    },
+    "loading": "جارٍ تحميل الموردين…",
+    "loadError": "تعذر تحميل مورديك.",
+    "searchError": "تعذر البحث عن الموردين.",
+    "connectSuccess": "✅ تم الربط مع {{nom}}",
+    "disconnectSuccess": "🔌 تم فصل {{nom}}",
+    "disconnectError": "تعذر فصل هذا المورد.",
+    "catalogueError": "تعذر تحميل الكتالوج.",
+    "empty": {
+      "title": "لا يوجد مورد مرتبط",
+      "sub": "اربط حسابك بشركة على Shopi تبيع بالجملة للوصول إلى كتالوج إعادة التزويد الخاص بها."
+    },
+    "card": {
+      "produitsGros_one": "منتج واحد بالجملة",
+      "produitsGros_other": "{{count}} منتجات بالجملة",
+      "voirCatalogue": "عرض الكتالوج",
+      "deconnecter": "فصل"
+    },
+    "searchModal": {
+      "title": "ربط مورد",
+      "placeholder": "ابحث عن شركة…",
+      "noResults": "لم يتم العثور على أي شركة تبيع بالجملة.",
+      "connecter": "ربط",
+      "connecte": "مرتبط"
+    },
+    "catalogueModal": {
+      "subtitle": "كتالوج البيع بالجملة",
+      "empty": "لا يوجد لدى هذا المورد أي منتج بالجملة منشور حاليًا.",
+      "moq_one": "الكمية الدنيا: وحدة واحدة",
+      "moq_other": "الكمية الدنيا: {{count}} وحدة"
+    }
+  }
+}

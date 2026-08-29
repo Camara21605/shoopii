@@ -544,6 +544,77 @@
 .tagsList { display: flex; gap: 6px; flex-wrap: wrap; }
 .tag      { background: var(--g100); border: 1px solid var(--bdr2); border-radius: var(--pill); padding: 3px 10px; font-size: 11px; color: var(--t2); }
 
+/* ── Stories du produit ── */
+.storiesEmpty { font-size: 12px; color: var(--t3); padding: 10px 0; }
+
+.storiesGrid { display: flex; gap: 10px; flex-wrap: wrap; }
+.storyCardItem {
+  position: relative; width: 88px; height: 132px;
+  border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--bdr2);
+}
+.storyCardItem img { width: 100%; height: 100%; object-fit: cover; }
+.storyStatusBadge {
+  position: absolute; top: 6px; left: 6px;
+  font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: var(--pill);
+  color: #fff;
+}
+.storyStatusActive  { background: #10B981; }
+.storyStatusExpired { background: rgba(17,17,17,.55); }
+.storyDeleteBtn {
+  position: absolute; top: 6px; right: 6px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,0,0,.55); border: none; color: #fff; font-size: 10px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.storyDeleteBtn:hover { background: rgba(220,38,38,.85); }
+.storyCardFooter {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 5px 7px; font-size: 9.5px; font-weight: 700; color: #fff;
+  background: linear-gradient(to top, rgba(0,0,0,.7), transparent);
+}
+
+.storiesAdd { border-top: 1px dashed var(--bdr2); padding-top: 12px; }
+.storiesAddTitle { font-size: 12px; font-weight: 800; color: var(--navy); margin-bottom: 3px; }
+.storiesAddHint  { font-size: 11px; color: var(--t3); margin-bottom: 10px; }
+.storiesAddRow   { display: flex; gap: 8px; flex-wrap: wrap; }
+.storyAddThumb {
+  position: relative; width: 56px; height: 56px;
+  border-radius: 8px; overflow: hidden;
+  border: 2px solid var(--bdr2); padding: 0; cursor: pointer;
+  background: none; transition: border-color .18s;
+}
+.storyAddThumb:hover  { border-color: var(--blue, #1A4FC4); }
+.storyAddThumb:disabled { cursor: default; opacity: .7; }
+.storyAddThumbSelected { border-color: var(--blue, #1A4FC4); }
+.storyAddThumb img { width: 100%; height: 100%; object-fit: cover; }
+.storyAddOverlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(11,31,58,.35); color: #fff; font-size: 14px;
+  opacity: 0; transition: opacity .18s;
+}
+.storyAddThumb:hover .storyAddOverlay,
+.storyAddThumb:disabled .storyAddOverlay { opacity: 1; }
+.storyAddThumbSelected .storyAddOverlay { opacity: 1; background: rgba(26,79,196,.55); }
+
+/* Image déjà publiée en story active — verrouillée jusqu'à expiration */
+.storyAddThumbDisabled { cursor: not-allowed; border-color: var(--bdr2); }
+.storyAddThumbDisabled img { filter: grayscale(1); opacity: .55; }
+.storyAddThumbDisabled .storyAddOverlay { background: rgba(17,17,17,.45); }
+.storyAddThumbDisabled:hover { border-color: var(--bdr2); }
+
+.storiesPublishBtn {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; margin-top: 12px;
+  background: var(--btn, #111113); color: #fff;
+  border: none; border-radius: var(--pill);
+  padding: 10px; font-size: 12.5px; font-weight: 800;
+  cursor: pointer; transition: opacity .18s;
+}
+.storiesPublishBtn:disabled { opacity: .4; cursor: default; }
+.storiesPublishBtn:not(:disabled):hover { opacity: .88; }
+
 /* ── Modal Modifier ── */
 .prodNomResume { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--g50); border-radius: var(--r-md); border: 1px solid var(--bdr); margin-bottom: 4px; }
 .miniThumb     { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
@@ -604,6 +675,199 @@
 @media (max-width: 420px) {
   .statsRow    { grid-template-columns: 1fr; }
 }
+
+/* ── Rangée : bouton "Créer une story" + stories déjà publiées ── */
+.storiesTrayRow {
+  display: flex; align-items: flex-start; gap: 12px;
+  overflow-x: auto; padding-bottom: 4px;
+  margin-bottom: 20px;
+}
+
+/* ── Bouton "Créer une story" (façon Facebook) — même gabarit que les tuiles story ── */
+.creerStoryTile {
+  position: relative; flex-shrink: 0;
+  width: 74px; height: 118px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(160deg, var(--navy, #0B1F3A), #1A4FC4);
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  transition: transform .18s;
+}
+.creerStoryTile:hover { transform: translateY(-3px); }
+
+/* ── Tuile d'un produit — une seule par produit, même si plusieurs images ── */
+.myStoryTile {
+  position: relative; flex-shrink: 0;
+  width: 74px; height: 118px;
+  border-radius: 10px; overflow: hidden;
+  border: none; padding: 0; cursor: pointer;
+  background: var(--g100);
+  transition: transform .18s;
+}
+.myStoryTile:hover { transform: translateY(-3px); }
+.myStoryTile img { width: 100%; height: 100%; object-fit: cover; }
+.myStoryCount {
+  position: absolute; bottom: 6px; right: 6px;
+  min-width: 17px; height: 17px; padding: 0 4px;
+  border-radius: 999px;
+  background: rgba(11,31,58,.75); color: #fff;
+  font-size: 9.5px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.myStoryViews {
+  position: absolute; bottom: 6px; left: 6px;
+  height: 17px; padding: 0 5px; gap: 3px;
+  border-radius: 999px;
+  background: rgba(11,31,58,.75); color: #fff;
+  font-size: 9.5px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.myStoryViews i { font-size: 8.5px; }
+.creerStoryTileTop {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.08);
+}
+.creerStoryTileIcon {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(255,255,255,.14);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 12px;
+}
+.creerStoryTilePlus {
+  position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--blue, #1A4FC4);
+  border: 2px solid var(--white, #fff);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 9px;
+}
+.creerStoryTileLabel {
+  padding: 5px 4px 7px;
+  text-align: center;
+  font-size: 9px; font-weight: 800; color: #fff;
+  line-height: 1.2;
+  background: rgba(11,31,58,.55);
+}
+
+/* ── Modale "Créer une story" — sélection produit ── */
+.storyBackBtn {
+  background: none; border: none; color: var(--t2); font-size: 13px;
+  cursor: pointer; padding: 0; margin-right: 8px;
+}
+.storyBackBtn:hover { color: var(--navy); }
+.creerStoryList { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.creerStoryItem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px; border-radius: 10px;
+  background: var(--g50); border: 1px solid var(--bdr);
+  cursor: pointer; text-align: left; transition: background .15s;
+}
+.creerStoryItem:hover { background: var(--sky); }
+.creerStoryItem img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+.creerStoryItemInfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.creerStoryItemNom { font-size: 12.5px; font-weight: 700; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.creerStoryItemCat { font-size: 11px; color: var(--t3); }
+.creerStoryItem > i { color: var(--t3); font-size: 12px; flex-shrink: 0; }
+
+/* ── Viewer plein écran d'un groupe de stories (un produit = un bloc) ── */
+.pvOverlay {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(11,31,58,.88); backdrop-filter: blur(20px);
+  animation: pvFadeIn .2s ease;
+}
+@keyframes pvFadeIn { from{opacity:0} to{opacity:1} }
+.pvCard {
+  position: relative;
+  width: min(400px, 100vw); height: min(750px, 92vh);
+  background: #0B1F3A;
+  border-radius: 20px; overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,.55);
+}
+@media (max-width: 640px) {
+  .pvCard { width: 100vw; height: 100dvh; border-radius: 0; }
+}
+.pvVisual { position: absolute; inset: 0; z-index: 0; }
+.pvImg    { width: 100%; height: 100%; object-fit: contain; background: #000; }
+.pvTopScrim, .pvBottomScrim { position: absolute; left: 0; right: 0; z-index: 1; pointer-events: none; }
+.pvTopScrim    { top: 0; height: 120px; background: linear-gradient(to bottom, rgba(0,0,0,.65), transparent); }
+.pvBottomScrim { bottom: 0; height: 30%; background: linear-gradient(to top, rgba(0,0,0,.55), transparent); }
+.pvTopBar { position: absolute; top: 0; left: 0; right: 0; z-index: 2; }
+.pvHd { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+.pvHdNom { flex: 1; min-width: 0; font-size: 13px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pvIconBtn {
+  background: rgba(255,255,255,.12); border: none;
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,.85); font-size: 12.5px;
+  cursor: pointer; transition: all .18s;
+}
+.pvIconBtn:hover { background: rgba(255,255,255,.22); color: #fff; }
+.pvViewsBtn {
+  background: rgba(255,255,255,.12); border: none;
+  height: 30px; padding: 0 10px; border-radius: 999px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  color: rgba(255,255,255,.85); font-size: 12px; font-weight: 800;
+  cursor: pointer; transition: all .18s;
+}
+.pvViewsBtn:hover { background: rgba(255,255,255,.22); color: #fff; }
+.pvNav {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
+  color: rgba(255,255,255,.85); font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .18s;
+}
+.pvNav:hover { background: rgba(255,255,255,.22); color: #fff; }
+.pvNavL { left: 10px; }
+.pvNavR { right: 10px; }
+
+/* Barres de progression (partagées avec l'en-tête du viewer) */
+.progBars { display: flex; gap: 3px; padding: 12px 12px 0; }
+.progBar  { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.3); overflow: hidden; }
+.progFill { height: 100%; border-radius: 2px; background: #fff; transition: width .1s linear; }
+
+/* Panneau "Qui a vu cette story" */
+.viewersSheet {
+  position: absolute; inset: 0; z-index: 4;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: transparent;
+  animation: pvFadeIn .18s ease;
+}
+.viewersPanel {
+  width: 100%; max-height: 65%;
+  background: rgba(17,26,46,.55);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-top: 1px solid rgba(255,255,255,.14);
+  border-radius: 18px 18px 0 0;
+  display: flex; flex-direction: column;
+  animation: pvSlideUp .22s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 0 -12px 40px rgba(0,0,0,.35);
+}
+@keyframes pvSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.viewersPanelHd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; flex-shrink: 0;
+  font-size: 14px; font-weight: 800; color: #fff;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.viewersEmpty { padding: 28px 16px; text-align: center; font-size: 12.5px; color: rgba(200,217,248,.5); }
+.viewersList  { overflow-y: auto; padding: 6px 0 10px; }
+.viewerRow    { display: flex; align-items: center; gap: 10px; padding: 8px 16px; }
+.viewerAva {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(255,255,255,.1);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: 700; overflow: hidden;
+}
+.viewerRowName { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.viewerRowLiked { font-size: 12px; color: #FF3B5C; flex-shrink: 0; }
+.viewerRowTime { font-size: 11px; color: rgba(200,217,248,.45); flex-shrink: 0; }
 
 /* ════ MODE SOMBRE ════ */
 @media (prefers-color-scheme: dark) {

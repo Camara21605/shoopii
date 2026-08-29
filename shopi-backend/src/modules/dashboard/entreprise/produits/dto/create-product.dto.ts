@@ -526,6 +526,12 @@ categoryId: string;
 export class UpdateProductDto extends PartialType(CreateProductDto) {}
 
 // ─────────────────────────────────────────────────────────────
+// DTO — Ajout d'une story sur un produit déjà créé
+// ─────────────────────────────────────────────────────────────
+
+export class AddProductStoryDto extends ProductStoryDto {}
+
+// ─────────────────────────────────────────────────────────────
 // DTO DE FILTRAGE (GET /produits)
 // ─────────────────────────────────────────────────────────────
 

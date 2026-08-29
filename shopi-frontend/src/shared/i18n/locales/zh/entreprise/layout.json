@@ -11,11 +11,13 @@
     },
     "items": {
       "overview": "概览",
+      "notifications": "通知",
       "commandes": "订单",
       "retours": "退货与售后",
       "produits": "产品",
       "ajouter": "添加产品",
       "inventaire": "库存",
+      "fournisseurs": "供应商",
       "promotions": "促销活动",
       "analytics": "数据分析",
       "seo": "SEO与营销",
@@ -58,6 +60,10 @@
       "inventaire": {
         "title": "库存与存货",
         "subtitle": "管理您的库存水平"
+      },
+      "fournisseurs": {
+        "title": "供应商",
+        "subtitle": "连接到在 Shopi 上批发销售的企业"
       },
       "promotions": {
         "title": "促销与优惠码",
@@ -126,9 +132,26 @@
       "profilLivreurReseau": {
         "title": "配送员资料",
         "subtitle": "详情和跟踪"
+      },
+      "equipe": {
+        "title": "团队",
+        "subtitle": "店铺成员与权限"
+      },
+      "notifications": {
+        "title": "通知",
+        "subtitle": "您店铺的所有动态"
       }
     },
     "searchPlaceholder": "搜索订单、产品、客户…",
+    "search": {
+      "produits": "产品",
+      "commandes": "订单",
+      "clients": "客户",
+      "livreurs": "配送员",
+      "correspondants": "联络员",
+      "noResults": "未找到与“{{query}}”相关的结果",
+      "error": "无法连接服务器——请重试"
+    },
     "tooltips": {
       "livreurs": "我的配送员",
       "correspondants": "代理商",

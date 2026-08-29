@@ -4,20 +4,39 @@
  *
  * RÔLE    : Onglet "Livreurs" — grille des livreurs rattachés
  *           à la boutique avec leurs statuts de disponibilité.
+ *
+ * Données réelles — reçues de BoutiquePage (déjà chargées via
+ * GET /public/boutiques/:id/livreurs pour calculer le compteur de
+ * l'onglet ; on réutilise le même state ici plutôt que de refaire
+ * un appel réseau identique).
  * ============================================================
  */
 import { useTranslation } from 'react-i18next';
-import { LIVREURS_MOCK } from '../data/boutiqueMockData';
+import type { LivreurApi } from '../pages/BoutiquePage';
 import CardLivreurBoutique from '../components/CardLivreurBoutique';
 import styles from '../styles/LivreursSection.module.css';
 
-interface Props { onToast: (m: string) => void; }
+interface Props {
+  livreurs: LivreurApi[];
+  onToast:  (m: string) => void;
+}
 
-export default function LivreursSection({ onToast }: Props) {
+export default function LivreursSection({ livreurs, onToast }: Props) {
   const { t } = useTranslation();
-  /* Compteurs pour le résumé en haut */
-  const disponibles = LIVREURS_MOCK.filter(l => l.dispo).length;
-  const enCourse    = LIVREURS_MOCK.filter(l => !l.dispo).length;
+
+  /* Compteurs pour le résumé en haut — 3 états réels (available/
+   * on_delivery/offline), pas juste dispo/pas-dispo comme l'ancien mock. */
+  const disponibles = livreurs.filter(l => l.availability === 'available').length;
+  const enCourse     = livreurs.filter(l => l.availability === 'on_delivery').length;
+
+  if (livreurs.length === 0) {
+    return (
+      <div className={styles.empty}>
+        <i className="fas fa-motorcycle" />
+        {t('boutiqueDetail.livreursSection.aucunLivreur')}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -33,13 +52,13 @@ export default function LivreursSection({ onToast }: Props) {
         </div>
         <div className={styles.resumeItem}>
           <i className="fas fa-users" style={{ color:'var(--t3)', fontSize:12 }} />
-          <strong>{LIVREURS_MOCK.length}</strong> {t('boutiqueDetail.livreursSection.totalCount')}
+          <strong>{livreurs.length}</strong> {t('boutiqueDetail.livreursSection.totalCount')}
         </div>
       </div>
 
       {/* ── Grille des livreurs ── */}
       <div className={styles.grid}>
-        {LIVREURS_MOCK.map(l => (
+        {livreurs.map(l => (
           <CardLivreurBoutique key={l.id} l={l} onToast={onToast} />
         ))}
       </div>
