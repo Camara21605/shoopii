@@ -180,7 +180,7 @@
   .tbSub, .statusPill { display: none; }
   .tbTtl { font-size: 16px; }
 
-  /* Correspondants / Livreurs / Mon espace passent dans la bottom nav */
+  /* Correspondants / Livreurs passent dans la bottom nav */
   .tbReseauGroup, .hideMobile { display: none; }
 }
 

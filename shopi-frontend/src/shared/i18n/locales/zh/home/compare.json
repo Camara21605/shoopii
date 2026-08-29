@@ -1,0 +1,24 @@
+{
+  "compare": {
+    "titre": "商品比较",
+    "toutRetirer": "全部移除",
+    "videTitre": "暂无比较商品",
+    "videSub": "在商品页面点击 ⚖️「比较」将其添加到这里（最多 4 件商品）。",
+    "explorerBtn": "浏览商品",
+    "retirer": "从比较中移除",
+    "ajouterPanier": "加入",
+    "prix": "价格",
+    "boutique": "店铺",
+    "categorie": "分类",
+    "marque": "品牌",
+    "etat": "成色",
+    "garantie": "保修",
+    "stock": "库存",
+    "enStock_one": "有货 {{count}} 件",
+    "enStock_other": "有货 {{count}} 件",
+    "ruptureStock": "缺货",
+    "caracteristiques": "规格参数",
+    "ajouteAuPanierToast": "🛒 已加入购物车",
+    "ajoutEchecToast": "❌ 无法加入购物车"
+  }
+}

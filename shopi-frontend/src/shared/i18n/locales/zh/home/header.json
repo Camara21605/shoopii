@@ -39,15 +39,11 @@
     "inscription": "注册",
     "monCompte": "我的账户",
     "monProfil": "我的资料",
-    "monEspace": "我的空间",
-    "monEspacePro": "我的专业空间",
-    "monEspaceProShort": "我的专业空间",
     "seDeconnecter": "退出登录",
     "deconnexion": "退出登录",
     "menu": "菜单",
     "parametres": "设置",
     "adresses": "地址",
-    "retourAccueil": "返回首页",
     "avantDeVousConnecter": "登录前…",
     "navMobileAria": "移动主导航"
   }

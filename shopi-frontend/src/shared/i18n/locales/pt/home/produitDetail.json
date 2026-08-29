@@ -161,22 +161,13 @@
       "favoris": "Favoritos",
       "comparer": "Comparar",
       "comparaisonToast": "⚖️ Adicionado à comparação",
-      "partager": "Partilhar:",
+      "comparaisonRetireeToast": "Removido da comparação",
+      "comparaisonPleineToast": "⚖️ Comparação cheia (máx. {{max}} produtos) — remova um para adicionar outro",
       "vuesAujourdhui": "{{count}} visualizações hoje",
       "idManquantToast": "❌ ID do produto em falta",
       "ruptureToast": "❌ Produto esgotado",
       "ajouteToast": "🛒 Adicionado ao cesto!",
-      "erreurToast": "❌ {{msg}}",
-      "garanties": {
-        "paiementTitre": "Pagamento seguro",
-        "paiementSub": "SSL · Orange Money · Visa",
-        "retourTitre": "Devolução 7 dias",
-        "retourSub": "Produto defeituoso aceite",
-        "authentiqueTitre": "Produto autêntico",
-        "authentiqueSub": "Vendedor Shoneya certificado",
-        "supportTitre": "Suporte 24/7",
-        "supportSub": "Chat · WhatsApp · Tel."
-      }
+      "erreurToast": "❌ {{msg}}"
     },
     "livraison": {
       "titre": "Entrega & Receção",

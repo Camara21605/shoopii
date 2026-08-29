@@ -56,6 +56,7 @@ import frLivreursPage                 from './locales/fr/home/livreursPage.json'
 import frCorrespondantsPage            from './locales/fr/home/correspondantsPage.json';
 import frOffresPage                     from './locales/fr/home/offresPage.json';
 import frSharedCards                     from './locales/fr/home/sharedCards.json';
+import frCompare                         from './locales/fr/home/compare.json';
 // client/
 import frSettingsPage    from './locales/fr/client/settingsPage.json';
 import frClientDashboard  from './locales/fr/client/dashboard.json';
@@ -99,6 +100,7 @@ import enLivreursPage                 from './locales/en/home/livreursPage.json'
 import enCorrespondantsPage            from './locales/en/home/correspondantsPage.json';
 import enOffresPage                     from './locales/en/home/offresPage.json';
 import enSharedCards                     from './locales/en/home/sharedCards.json';
+import enCompare                         from './locales/en/home/compare.json';
 // client/
 import enSettingsPage    from './locales/en/client/settingsPage.json';
 import enClientDashboard  from './locales/en/client/dashboard.json';
@@ -142,6 +144,7 @@ import arLivreursPage                 from './locales/ar/home/livreursPage.json'
 import arCorrespondantsPage            from './locales/ar/home/correspondantsPage.json';
 import arOffresPage                     from './locales/ar/home/offresPage.json';
 import arSharedCards                     from './locales/ar/home/sharedCards.json';
+import arCompare                         from './locales/ar/home/compare.json';
 // client/
 import arSettingsPage    from './locales/ar/client/settingsPage.json';
 import arClientDashboard  from './locales/ar/client/dashboard.json';
@@ -185,6 +188,7 @@ import zhLivreursPage                 from './locales/zh/home/livreursPage.json'
 import zhCorrespondantsPage            from './locales/zh/home/correspondantsPage.json';
 import zhOffresPage                     from './locales/zh/home/offresPage.json';
 import zhSharedCards                     from './locales/zh/home/sharedCards.json';
+import zhCompare                         from './locales/zh/home/compare.json';
 // client/
 import zhSettingsPage    from './locales/zh/client/settingsPage.json';
 import zhClientDashboard  from './locales/zh/client/dashboard.json';
@@ -228,6 +232,7 @@ import ptLivreursPage                 from './locales/pt/home/livreursPage.json'
 import ptCorrespondantsPage            from './locales/pt/home/correspondantsPage.json';
 import ptOffresPage                     from './locales/pt/home/offresPage.json';
 import ptSharedCards                     from './locales/pt/home/sharedCards.json';
+import ptCompare                         from './locales/pt/home/compare.json';
 // client/
 import ptSettingsPage    from './locales/pt/client/settingsPage.json';
 import ptClientDashboard  from './locales/pt/client/dashboard.json';
@@ -239,6 +244,7 @@ const fr = {
   ...frBoutiquePreview, ...frMessagerie, ...frSeo,
   ...frHome, ...frHeader, ...frFooter, ...frBoutiquesPage, ...frBoutiqueDetail, ...frProduitDetail,
   ...frPanierCommande, ...frFollowToggle, ...frLivreursPage, ...frCorrespondantsPage, ...frOffresPage, ...frSharedCards,
+  ...frCompare,
   ...frSettingsPage, ...frClientDashboard,
 };
 
@@ -249,6 +255,7 @@ const en = {
   ...enBoutiquePreview, ...enMessagerie, ...enSeo,
   ...enHome, ...enHeader, ...enFooter, ...enBoutiquesPage, ...enBoutiqueDetail, ...enProduitDetail,
   ...enPanierCommande, ...enFollowToggle, ...enLivreursPage, ...enCorrespondantsPage, ...enOffresPage, ...enSharedCards,
+  ...enCompare,
   ...enSettingsPage, ...enClientDashboard,
 };
 
@@ -259,6 +266,7 @@ const ar = {
   ...arBoutiquePreview, ...arMessagerie, ...arSeo,
   ...arHome, ...arHeader, ...arFooter, ...arBoutiquesPage, ...arBoutiqueDetail, ...arProduitDetail,
   ...arPanierCommande, ...arFollowToggle, ...arLivreursPage, ...arCorrespondantsPage, ...arOffresPage, ...arSharedCards,
+  ...arCompare,
   ...arSettingsPage, ...arClientDashboard,
 };
 
@@ -269,6 +277,7 @@ const zh = {
   ...zhBoutiquePreview, ...zhMessagerie, ...zhSeo,
   ...zhHome, ...zhHeader, ...zhFooter, ...zhBoutiquesPage, ...zhBoutiqueDetail, ...zhProduitDetail,
   ...zhPanierCommande, ...zhFollowToggle, ...zhLivreursPage, ...zhCorrespondantsPage, ...zhOffresPage, ...zhSharedCards,
+  ...zhCompare,
   ...zhSettingsPage, ...zhClientDashboard,
 };
 
@@ -279,6 +288,7 @@ const pt = {
   ...ptBoutiquePreview, ...ptMessagerie, ...ptSeo,
   ...ptHome, ...ptHeader, ...ptFooter, ...ptBoutiquesPage, ...ptBoutiqueDetail, ...ptProduitDetail,
   ...ptPanierCommande, ...ptFollowToggle, ...ptLivreursPage, ...ptCorrespondantsPage, ...ptOffresPage, ...ptSharedCards,
+  ...ptCompare,
   ...ptSettingsPage, ...ptClientDashboard,
 };
 

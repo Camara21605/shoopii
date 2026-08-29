@@ -31,6 +31,7 @@ import ProfilLivreurPage from '../shared/profils/profil-livreur/ProfilLivreurPag
 import ProfilClientPage  from '../shared/profils/profil-client/ProfilClientPage';
 import CorrespondantsPage from '../modules/home/components/correspondants/pages/CorrespondantsPage';
 import ProfilCorrespondantPage from '../shared/profils/profil-correspondant/pages/ProfilCorrespondantPage';
+import ComparerPage      from '../modules/home/components/compare/pages/ComparerPage';
 
 /* ── Help Center ── */
 import HelpHomePage        from '../modules/help/pages/HelpHomePage';
@@ -44,6 +45,7 @@ import ContactPage         from '../modules/help/pages/ContactPage';
 /* ── Support ── */
 import LoadingScreen    from '../shared/components/LoadingScreen';
 import HelpFab          from '../shared/components/HelpFab';
+import CompareFab       from '../shared/components/CompareFab';
 import SupportPage      from '../modules/support/pages/SupportPage';
 import NewTicketPage    from '../modules/support/pages/NewTicketPage';
 import TicketDetailPage from '../modules/support/pages/TicketDetailPage';
@@ -165,6 +167,31 @@ const ThemeRouteSync: React.FC = () => {
 };
 
 /**
+ * ScrollToTop — remonte en haut de page à chaque changement de route.
+ *
+ * React Router (BrowserRouter) ne le fait PAS automatiquement — sans ce
+ * composant, naviguer vers une nouvelle page conserve la position de
+ * scroll de la page précédente : cliquer sur un onglet alors qu'on avait
+ * scrollé en bas d'une longue page affiche la nouvelle page déjà scrollée
+ * en bas, au lieu de commencer par le haut (bug rapporté : "l'affichage
+ * en bas de la page" après un clic sur un onglet).
+ *
+ * `pathname` uniquement (pas `search`/`hash`) : changer un filtre en query
+ * string sur la même page (ex. /explorer?category=x) ne doit pas remonter
+ * en haut à chaque frappe/clic de filtre, seul un changement de PAGE le
+ * doit. Instantané (pas 'smooth') : une vraie navigation de page démarre
+ * en haut directement, comme un site multi-page classique — un scroll
+ * animé à chaque clic d'onglet serait plus lent et inattendu.
+ */
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
+
+/**
  * Home — accessible aux clients et aux non-connectés ; redirige les autres
  * rôles vers leur dashboard.
  *
@@ -237,6 +264,7 @@ export const AppRouter: React.FC = () => (
     <GlobalCallProvider>
       <GroupCallProvider>
       <ThemeRouteSync />
+      <ScrollToTop />
       <Suspense fallback={<Loader />}>
         <Routes>
           <Route path="/"         element={<SmartRedirect />} />
@@ -274,6 +302,9 @@ export const AppRouter: React.FC = () => (
 
           {/* Offres / promotions — publique */}
           <Route path="/offres"             element={<OffresPage />} />
+
+          {/* Comparateur produits — publique, local (localStorage) */}
+          <Route path="/comparer"           element={<ComparerPage />} />
 
           {/* Notifications — page complète (remplace le dropdown "Voir tout") */}
           <Route path="/notifications"      element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
@@ -322,6 +353,7 @@ export const AppRouter: React.FC = () => (
          * Requiert d'être à l'intérieur de <BrowserRouter> pour useLocation.
          */}
         <HelpFab />
+        <CompareFab />
 
       </Suspense>
       </GroupCallProvider>

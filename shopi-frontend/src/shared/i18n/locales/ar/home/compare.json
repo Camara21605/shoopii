@@ -1,0 +1,24 @@
+{
+  "compare": {
+    "titre": "مقارنة المنتجات",
+    "toutRetirer": "إزالة الكل",
+    "videTitre": "لا توجد منتجات للمقارنة",
+    "videSub": "اضغط على ⚖️ «مقارنة» في صفحة المنتج لإضافته هنا (حتى 4 منتجات).",
+    "explorerBtn": "استكشاف المنتجات",
+    "retirer": "إزالة من المقارنة",
+    "ajouterPanier": "إضافة",
+    "prix": "السعر",
+    "boutique": "المتجر",
+    "categorie": "الفئة",
+    "marque": "العلامة التجارية",
+    "etat": "الحالة",
+    "garantie": "الضمان",
+    "stock": "المخزون",
+    "enStock_one": "{{count}} متوفر",
+    "enStock_other": "{{count}} متوفر",
+    "ruptureStock": "نفدت الكمية",
+    "caracteristiques": "المواصفات",
+    "ajouteAuPanierToast": "🛒 تمت الإضافة إلى السلة",
+    "ajoutEchecToast": "❌ تعذّرت الإضافة إلى السلة"
+  }
+}

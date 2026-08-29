@@ -1,0 +1,24 @@
+{
+  "compare": {
+    "titre": "Comparer les produits",
+    "toutRetirer": "Tout retirer",
+    "videTitre": "Aucun produit à comparer",
+    "videSub": "Clique sur ⚖️ « Comparer » sur une fiche produit pour l'ajouter ici (jusqu'à 4 produits).",
+    "explorerBtn": "Explorer les produits",
+    "retirer": "Retirer de la comparaison",
+    "ajouterPanier": "Ajouter",
+    "prix": "Prix",
+    "boutique": "Boutique",
+    "categorie": "Catégorie",
+    "marque": "Marque",
+    "etat": "État",
+    "garantie": "Garantie",
+    "stock": "Stock",
+    "enStock_one": "{{count}} en stock",
+    "enStock_other": "{{count}} en stock",
+    "ruptureStock": "Rupture de stock",
+    "caracteristiques": "Caractéristiques",
+    "ajouteAuPanierToast": "🛒 Ajouté au panier",
+    "ajoutEchecToast": "❌ Impossible d'ajouter au panier"
+  }
+}

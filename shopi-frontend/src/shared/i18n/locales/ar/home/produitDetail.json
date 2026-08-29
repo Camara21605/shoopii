@@ -161,22 +161,13 @@
       "favoris": "المفضلة",
       "comparer": "مقارنة",
       "comparaisonToast": "⚖️ تمت الإضافة إلى المقارنة",
-      "partager": "مشاركة:",
+      "comparaisonRetireeToast": "تمت الإزالة من المقارنة",
+      "comparaisonPleineToast": "⚖️ المقارنة ممتلئة (بحد أقصى {{max}} منتجات) — أزل واحدًا لإضافة آخر",
       "vuesAujourdhui": "{{count}} مشاهدة اليوم",
       "idManquantToast": "❌ معرّف المنتج مفقود",
       "ruptureToast": "❌ المنتج نفدت كميته",
       "ajouteToast": "🛒 تمت الإضافة إلى السلة!",
-      "erreurToast": "❌ {{msg}}",
-      "garanties": {
-        "paiementTitre": "دفع آمن",
-        "paiementSub": "SSL · Orange Money · Visa",
-        "retourTitre": "إرجاع خلال 7 أيام",
-        "retourSub": "المنتج المعيب مقبول",
-        "authentiqueTitre": "منتج أصلي",
-        "authentiqueSub": "بائع معتمد من شونيا",
-        "supportTitre": "دعم على مدار الساعة",
-        "supportSub": "دردشة · واتساب · هاتف"
-      }
+      "erreurToast": "❌ {{msg}}"
     },
     "livraison": {
       "titre": "التوصيل والاستلام",

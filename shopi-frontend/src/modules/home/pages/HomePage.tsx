@@ -61,10 +61,14 @@ export default function HomePage() {
     if (timerRef.current) clearTimeout(timerRef.current);
   }, []);
 
-  /* ── Blocs aléatoires pondérés — 'produits' reste hors du tirage :
-   * la découverte de produits vit désormais sur sa propre page /explorer
-   * (recherche + filtres + tendances/nouveautés/proches), pas dans Home. ── */
+  /* ── Blocs aléatoires pondérés — 'produits' (catalogue détail, PAS la
+   * vente en gros) est de retour dans le tirage : sans lui, un produit
+   * publié en visibilité PUBLIC mais non marqué "vente en gros" n'apparaissait
+   * nulle part sur la home, seulement sur /explorer (recherche + filtres +
+   * tendances/nouveautés/proches, qui reste la page dédiée à la découverte
+   * approfondie). ── */
   const [blocsAleatoires] = useState<BlocKind[]>(() => shuffleArray([
+    'produits',
     'entreprises',
     'produits-gros',
     'correspondants',

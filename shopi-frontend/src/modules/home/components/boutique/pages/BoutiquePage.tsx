@@ -39,7 +39,7 @@ import {
 import type { AvisResponse } from '../data/types';
 
 /* ── Sections boutique ── */
-import StoriesStrip          from '../sections/StoriesStrip';
+import HomeStoriesStrip      from '../../sections/HomeStoriesStrip';
 import BoutiqueCover         from '../sections/BoutiqueCover';
 import BoutiqueIdentity      from '../sections/BoutiqueIdentity';
 import BoutiqueNav, { type OngletType } from '../sections/BoutiqueNav';
@@ -512,12 +512,10 @@ export default function BoutiquePage() {
           counts={counts}
         />
 
-        {/* Stories */}
-        {onglet === 'produits' && (
-          <StoriesStrip
-            companyId={companyId ?? ''}
-            companyName={boutiqueInfo.nom}
-            companyLogo={boutique?.logo}
+        {/* Stories — même carte/viewer que la home, filtré sur cette boutique */}
+        {onglet === 'produits' && companyId && (
+          <HomeStoriesStrip
+            companyId={companyId}
             onToast={showToast}
           />
         )}

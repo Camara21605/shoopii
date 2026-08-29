@@ -501,12 +501,18 @@ export class MessagerieService {
     const qb = this.convRepo.createQueryBuilder('c')
       .where(new Brackets(w => {
         w.where(
-          'c.initiatorType = :myType AND c.initiatorId = :myId AND c.status = :status AND c.deletedByInitiator = false AND c.archivedByInitiator = :archived',
+          'c.initiatorType = :myTypeAsInitiator AND c.initiatorId = :myId AND c.status = :status AND c.deletedByInitiator = false AND c.archivedByInitiator = :archived',
         ).orWhere(
-          'c.recipientType = :myType AND c.recipientId = :myId AND c.status = :status AND c.deletedByRecipient = false AND c.archivedByRecipient = :archived',
+          'c.recipientType = :myTypeAsRecipient AND c.recipientId = :myId AND c.status = :status AND c.deletedByRecipient = false AND c.archivedByRecipient = :archived',
         );
       }))
-      .setParameters({ myType, myId, status: ConversationStatus.ACTIVE, archived })
+      .setParameters({
+        myTypeAsInitiator: myType,
+        myTypeAsRecipient: myType,
+        myId,
+        status: ConversationStatus.ACTIVE,
+        archived,
+      })
       .orderBy('COALESCE(c.lastMessageAt, c.updatedAt)', 'DESC')
       .addOrderBy('c.id', 'DESC')
       .take(take + 1);

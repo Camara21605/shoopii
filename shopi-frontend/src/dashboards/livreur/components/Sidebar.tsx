@@ -27,7 +27,7 @@ function getInitials(name: string): string {
   return name.trim().split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
 }
 
-function buildNavMonEspace(encoursCount: number): NavItem[] {
+function buildNavPrincipal(encoursCount: number): NavItem[] {
   return [
     { id:'overview',   icon:'fa-chart-pie',          label:"Vue d'ensemble"                                                       },
     { id:'notifications', icon:'fa-bell',            label:'Notifications'                                                       },
@@ -53,7 +53,7 @@ export default function Sidebar({
   avatarUrl, livreurName, rating, totalDeliveries, encoursCount = 0,
   onNavigate, onToggleOnline, onGoHome,
 }: Props) {
-  const navMonEspace = buildNavMonEspace(encoursCount);
+  const navPrincipal = buildNavPrincipal(encoursCount);
   const displayName  = livreurName || 'Mon profil';
   const ratingLabel  = typeof rating === 'number' && Number.isFinite(rating) ? rating.toFixed(1) : '—';
   const deliveriesLabel = totalDeliveries != null ? `${totalDeliveries} livraison${totalDeliveries > 1 ? 's' : ''}` : '0 livraison';
@@ -111,8 +111,7 @@ export default function Sidebar({
 
       {/* Nav */}
       <div className={styles.sbNav}>
-        <div className={styles.sbSect}>Mon espace</div>
-        {navMonEspace.map(item => (
+        {navPrincipal.map(item => (
           <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={onNavigate} />
         ))}
 

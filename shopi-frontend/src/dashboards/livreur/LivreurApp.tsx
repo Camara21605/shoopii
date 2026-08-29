@@ -261,7 +261,7 @@ export default function LivreurApp() {
             onNavigate={navigate}
           />
 
-          {/* Bottom nav (mobile) : Correspondants · Livreurs · Mon espace */}
+          {/* Bottom nav (mobile) : Correspondants · Livreurs */}
           <BottomNav activePage={page} onNavigate={navigate} />
         </>
       )}

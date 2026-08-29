@@ -161,22 +161,13 @@
       "favoris": "收藏",
       "comparer": "比较",
       "comparaisonToast": "⚖️ 已加入比较",
-      "partager": "分享：",
+      "comparaisonRetireeToast": "已从比较中移除",
+      "comparaisonPleineToast": "⚖️ 比较列表已满（最多 {{max}} 件商品）— 请先移除一件再添加",
       "vuesAujourdhui": "今日 {{count}} 次浏览",
       "idManquantToast": "❌ 缺少产品 ID",
       "ruptureToast": "❌ 产品缺货",
       "ajouteToast": "🛒 已加入购物车！",
-      "erreurToast": "❌ {{msg}}",
-      "garanties": {
-        "paiementTitre": "安全支付",
-        "paiementSub": "SSL · Orange Money · Visa",
-        "retourTitre": "7 天退货",
-        "retourSub": "接受有缺陷产品",
-        "authentiqueTitre": "正品",
-        "authentiqueSub": "Shoneya 认证卖家",
-        "supportTitre": "24/7 支持",
-        "supportSub": "聊天 · WhatsApp · 电话"
-      }
+      "erreurToast": "❌ {{msg}}"
     },
     "livraison": {
       "titre": "配送与收货",

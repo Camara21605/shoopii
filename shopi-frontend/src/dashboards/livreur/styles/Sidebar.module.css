@@ -294,39 +294,6 @@
   gap: 8px;
 }
 
-/* Bouton Mon espace livreur */
-.btnHome {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 14px;
-  background: rgba(0,0,0,.18);
-  border: 1px solid rgba(0,0,0,.35);
-  border-radius: var(--r-md);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #E4E4E7;
-  cursor: pointer;
-  transition: all .2s;
-  text-align: left;
-}
-.btnHome:hover {
-  background: rgba(0,0,0,.32);
-  border-color: rgba(0,0,0,.6);
-  color: #fff;
-  transform: translateX(2px);
-}
-.btnHome i:first-child {
-  width: 16px;
-  text-align: center;
-  font-size: 13px;
-  flex-shrink: 0;
-}
-.btnHome span {
-  flex: 1;
-}
-
 /* Bouton Déconnexion */
 .btnLogout {
   width: 100%;
@@ -360,8 +327,8 @@
 /* Responsive : icônes seules */
 @media (max-width: 1100px) {
   .sbBot { padding: 10px 8px; }
-  .btnHome span, .btnLogout span { display: none; }
-  .btnHome, .btnLogout { justify-content: center; padding: 10px; }
+  .btnLogout span { display: none; }
+  .btnLogout { justify-content: center; padding: 10px; }
 }
 
 /* ── Compact rail (≤1100px) ── */

@@ -14,12 +14,16 @@ import './styles/global.css';
 import { CartProvider } from './shared/context/CartContext';
 /* ✅ Contexte favoris global (cœur ❤️ synchronisé partout) */
 import { FavorisProvider } from './shared/context/FavorisContext';
+/* ✅ Contexte comparaison produits global (⚖️ badge + page /comparer) */
+import { CompareProvider } from './shared/context/CompareContext';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <CartProvider>
       <FavorisProvider>
-        <App />
+        <CompareProvider>
+          <App />
+        </CompareProvider>
       </FavorisProvider>
     </CartProvider>
   </React.StrictMode>

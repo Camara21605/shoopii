@@ -175,8 +175,7 @@
     "bottomNav": {
       "accueil": "首页",
       "commandes": "订单",
-      "produits": "产品",
-      "monEspace": "我的空间"
+      "produits": "产品"
     },
     "drawer": {
       "menuAria": "导航菜单",
@@ -190,8 +189,6 @@
   "reseauBottomNav": {
     "ariaLabel": "移动网络导航",
     "correspondants": "代理商",
-    "livreurs": "配送员",
-    "basculerEspaceClient": "切换到客户空间",
-    "monEspace": "我的空间"
+    "livreurs": "配送员"
   }
 }

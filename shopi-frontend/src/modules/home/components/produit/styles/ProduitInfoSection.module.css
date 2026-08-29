@@ -68,21 +68,10 @@
 .btnRow2   { display:flex; gap:8px; }
 .btnWish,.btnCompare { width:42px; height:42px; flex-shrink:0; background:var(--white); color:var(--navy); border:1.5px solid var(--bdr2); border-radius:12px; font-size:15px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .2s; }
 .btnWish:hover,.btnWishOn { border-color:var(--rose); color:var(--rose); background:var(--rs-bg); }
-.btnCompare:hover { border-color:var(--blue); color:var(--blue); background:var(--sky); }
-.garanties { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; margin-bottom:22px; }
-.guar  { background:var(--white); border:1px solid var(--bdr); border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:10px; transition:background .2s; }
-.guar:hover { background:var(--sky); }
-.guarIco  { font-size:20px; flex-shrink:0; }
-.guarTitre{ font-size:12px; font-weight:700; color:var(--navy); }
-.guarSub  { font-size:10px; color:var(--t3); line-height:1.3; }
+.btnCompare:hover,.btnCompareOn { border-color:var(--blue); color:var(--blue); background:var(--sky); }
 .socialRow { display:flex; align-items:center; gap:10px; padding-top:16px; border-top:1px solid var(--bdr); flex-wrap:wrap; }
-.socialLbl { font-size:12px; color:var(--t3); margin-right:4px; }
-.socBtn { width:34px; height:34px; border-radius:50%; background:var(--g100); border:1px solid var(--bdr2); display:flex; align-items:center; justify-content:center; color:var(--t2); font-size:14px; cursor:pointer; transition:all .2s; }
-.socBtn:hover { background:var(--sky); border-color:var(--bdrb); color:var(--blue); transform:translateY(-2px); }
-.socWa:hover  { background:rgba(37,211,102,.1); border-color:rgba(37,211,102,.3); color:#25D366; }
-.socFb:hover  { background:rgba(24,119,242,.1); border-color:rgba(24,119,242,.3); color:#1877F2; }
 .vues { margin-left:auto; font-size:11px; color:var(--t3); display:flex; align-items:center; gap:5px; }
-@media(max-width:768px) { .garanties{grid-template-columns:1fr} .titre{font-size:20px} }
+@media(max-width:768px) { .titre{font-size:20px} }
 @media(max-width:420px) { .btnCart,.btnBuy{font-size:12px;padding:11px 8px;gap:5px} .btnWish,.btnCompare{width:38px;height:38px} }
 
 /* ─── Dark mode ─────────────────────────────────────────────── */

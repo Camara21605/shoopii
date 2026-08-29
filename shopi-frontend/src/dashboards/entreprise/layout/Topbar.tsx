@@ -513,13 +513,6 @@ export default function Topbar({
           onClick={() => onNavigate('produits')}>
           <i className="fas fa-tag"></i><span>{t('topbar.bottomNav.produits')}</span>
         </button>
-        {/* ✅ Un seul menu de navigation complet : celui du hamburger en haut.
-            Ce 4e emplacement était un doublon (ouvrait le même drawer) —
-            remplacé par un accès direct à l'espace personnel. */}
-        <button className={`bn-it${activePage === 'profil' ? ' on' : ''}`}
-          onClick={() => onNavigate('profil')}>
-          <i className="fas fa-user"></i><span>{t('topbar.bottomNav.monEspace')}</span>
-        </button>
       </nav>
 
       {/* ════════ DRAWER MOBILE (menu complet) ════════ */}

@@ -15,8 +15,8 @@ interface Props {
 }
 interface NavItem { id: PageId; icon: string; label: string; badge?: string; badgeCls?: string; }
 
-const GROUPS: { title: string; items: NavItem[] }[] = [
-  { title: 'Mon espace', items: [
+const GROUPS: { title: string | null; items: NavItem[] }[] = [
+  { title: null, items: [
     { id: 'overview',   icon: 'fa-chart-pie',         label: "Vue d'ensemble" },
     { id: 'notifications', icon: 'fa-bell',           label: 'Notifications' },
     { id: 'colis',      icon: 'fa-box',               label: 'Colis en dépôt',      badge: '14',     badgeCls: '' },
@@ -81,9 +81,9 @@ export default function Sidebar({ page, setPage, open, onClose, nomUtilisateur, 
 
       {/* Navigation */}
       <div className={s.nav}>
-        {GROUPS.map(g => (
-          <div key={g.title}>
-            <div className={s.sect}>{g.title}</div>
+        {GROUPS.map((g, gi) => (
+          <div key={g.title ?? gi}>
+            {g.title && <div className={s.sect}>{g.title}</div>}
             {g.items.map(item => (
               <div
                 key={item.id}

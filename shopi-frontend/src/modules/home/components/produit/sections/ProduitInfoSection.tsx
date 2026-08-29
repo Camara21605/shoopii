@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { ProduitInfo } from '../data/produitMockData';
 import { useCart } from '../../../../../shared/context/CartContext';
+import { useCompare, MAX_COMPARE } from '../../../../../shared/context/CompareContext';
 import { useAuthGate } from '../../../../../shared/hooks/useAuthGate';
 import styles from '../styles/ProduitInfoSection.module.css';
 
@@ -44,21 +45,15 @@ interface Props {
 
 export default function ProduitInfoSection({
   produit, produitId, qty, onChangeQty,
-  onToast, onPartage, onBoutique, children,
+  onToast, onBoutique, children,
   variantes = [], selectedVariants: selectedProp, onVariantsChange,
   venteEnGros = false, moq, wholesaleTiers = [],
 }: Props) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { addToCart } = useCart();
+  const { isComparing, toggle: toggleCompare } = useCompare();
   const { requireClient, authModal } = useAuthGate();
-
-  const GARANTIES = [
-    { ico:'🔒', titre:t('produitDetail.infoSection.garanties.paiementTitre'),   sub:t('produitDetail.infoSection.garanties.paiementSub')   },
-    { ico:'↩️', titre:t('produitDetail.infoSection.garanties.retourTitre'),      sub:t('produitDetail.infoSection.garanties.retourSub') },
-    { ico:'✅', titre:t('produitDetail.infoSection.garanties.authentiqueTitre'),  sub:t('produitDetail.infoSection.garanties.authentiqueSub')     },
-    { ico:'📞', titre:t('produitDetail.infoSection.garanties.supportTitre'),         sub:t('produitDetail.infoSection.garanties.supportSub')     },
-  ];
 
   /* État local si le parent ne contrôle pas encore la sélection */
   const [selectedLocal, setSelectedLocal] = useState<Record<string, string>>({});
@@ -67,6 +62,21 @@ export default function ProduitInfoSection({
   const [addingBuy,  setAddingBuy]  = useState(false);
 
   const selected = selectedProp ?? selectedLocal;
+
+  const compareId = produitId ?? produit.id;
+  const comparing = compareId ? isComparing(compareId) : false;
+
+  const handleToggleCompare = () => {
+    if (!compareId) { onToast(t('produitDetail.infoSection.idManquantToast')); return; }
+    const { added, full } = toggleCompare(compareId);
+    if (full) {
+      onToast(t('produitDetail.infoSection.comparaisonPleineToast', { max: MAX_COMPARE }));
+      return;
+    }
+    onToast(added
+      ? t('produitDetail.infoSection.comparaisonToast')
+      : t('produitDetail.infoSection.comparaisonRetireeToast'));
+  };
 
   /* Sélectionne la première valeur de chaque variante par défaut, dès que
    * la liste réelle arrive (chargement async du produit). */
@@ -345,50 +355,24 @@ export default function ProduitInfoSection({
             <i className={wish ? 'fas fa-heart' : 'far fa-heart'} />
           </button>
           <button
-            className={styles.btnCompare}
-            onClick={() => onToast(t('produitDetail.infoSection.comparaisonToast'))}
+            className={`${styles.btnCompare} ${comparing ? styles.btnCompareOn : ''}`}
+            onClick={handleToggleCompare}
             title={t('produitDetail.infoSection.comparer')}
             aria-label={t('produitDetail.infoSection.comparer')}
+            aria-pressed={comparing}
           >
             <i className="fas fa-code-compare" />
           </button>
         </div>
       </div>
 
-      {/* ── Garanties ── */}
-      <div className={styles.garanties}>
-        {GARANTIES.map(g => (
-          <div key={g.titre} className={styles.guar}>
-            <div className={styles.guarIco}>{g.ico}</div>
-            <div>
-              <div className={styles.guarTitre}>{g.titre}</div>
-              <div className={styles.guarSub}>{g.sub}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Partage social ── */}
-      <div className={styles.socialRow}>
-        <span className={styles.socialLbl}>{t('produitDetail.infoSection.partager')}</span>
-        <button className={`${styles.socBtn} ${styles.socWa}`} onClick={() => onToast('📲 WhatsApp')}>
-          <i className="fab fa-whatsapp" />
-        </button>
-        <button className={`${styles.socBtn} ${styles.socFb}`} onClick={() => onToast('📘 Facebook')}>
-          <i className="fab fa-facebook-f" />
-        </button>
-        <button className={styles.socBtn} onClick={() => onToast('𝕏 X')}>
-          <i className="fab fa-x-twitter" />
-        </button>
-        <button className={styles.socBtn} onClick={onPartage}>
-          <i className="fas fa-share-nodes" />
-        </button>
-        {produit.vues > 0 && (
+      {produit.vues > 0 && (
+        <div className={styles.socialRow}>
           <span className={styles.vues}>
             <i className="fas fa-eye" /> {t('produitDetail.infoSection.vuesAujourdhui', { count: produit.vues.toLocaleString('fr') })}
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
       {authModal}
     </div>

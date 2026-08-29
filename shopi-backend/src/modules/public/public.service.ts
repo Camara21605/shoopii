@@ -150,33 +150,6 @@ export interface PublicCorrespondantResponse {
   horaireAujourdhui: string | null;
 }
 
-export interface BoutiqueStorySlide {
-  id:        string;
-  productId: string;
-  produit:   string;
-  prix:      string;
-  prixBarre: string | null;
-  badge:     'promo' | 'new' | null;
-  emoji:     string;
-  img:       string;
-  caption:   string | null;
-  duree:     number;
-  createdAt: string;
-}
-
-/**
- * Une entrée = UN produit (jamais plusieurs produits mélangés) — même
- * principe que HomeProductStoryResponse, mais scopé à une seule boutique
- * (page boutique : pas besoin de companyId/shopNom/shopLogo, déjà connus
- * de la page). `images` regroupe uniquement les stories actives de CE
- * produit, dans l'ordre où elles apparaissent dans son propre viewer.
- */
-export interface BoutiqueProductStoryResponse {
-  productId: string;
-  produit:   string;
-  images:    BoutiqueStorySlide[];
-}
-
 export interface HomeStorySlide {
   id:        string;
   productId: string;
@@ -818,28 +791,39 @@ export class PublicService {
   }
 
   /* ════════════════════════════════════════════════════════
-   * GET /public/stories
-   * Stories actives de toutes les boutiques — page d'accueil.
+   * GET /public/stories                      (page d'accueil, toutes boutiques)
+   * GET /public/boutiques/:id/stories         (page boutique, UNE SEULE — passer companyId)
+   *
+   * Même carte, même viewer partout (HomeStoriesStrip côté frontend) :
+   * la page boutique n'a pas sa propre implémentation, elle réutilise
+   * celle-ci filtrée sur son companyId.
    *
    * Une entrée de la réponse = UN PRODUIT, jamais plusieurs produits
    * mélangés dans le même groupe — même quand ils appartiennent à la
    * même boutique. Chaque produit garde TOUTES ses images actives.
    *
-   * Plafonds : 15 boutiques max, 4 produits max par boutique (une
-   * boutique qui publie 4 stories d'un coup sur un même produit ne
-   * doit pas manger tout le quota au détriment d'un autre produit
-   * storié la veille — ce 2e produit reste visible, en entier, dans
-   * sa propre entrée).
+   * Plafonds — seulement quand companyId n'est PAS fourni (flux partagé
+   * entre boutiques, page d'accueil) : 15 boutiques max, 4 produits max
+   * par boutique (une boutique qui publie 4 stories d'un coup sur un
+   * même produit ne doit pas manger tout le quota au détriment d'un
+   * autre produit storié la veille). Filtré sur UNE boutique (sa propre
+   * page dédiée), aucun des deux plafonds ne s'applique : il n'y a
+   * qu'une boutique, et rien à limiter face aux autres.
    ════════════════════════════════════════════════════════ */
-  async getHomeStories(): Promise<HomeProductStoryResponse[]> {
+  async getHomeStories(companyId?: string): Promise<HomeProductStoryResponse[]> {
     const now = new Date();
 
-    /* 1. Toutes les stories publiées non expirées */
+    /* 1. Toutes les stories publiées non expirées (d'une seule boutique
+     *    si companyId est fourni). */
     const allStories = await this.storyRepo.find({
-      where:     { status: StoryStatus.PUBLISHED, expiresAt: MoreThan(now) },
+      where: {
+        ...(companyId ? { companyId } : {}),
+        status:    StoryStatus.PUBLISHED,
+        expiresAt: MoreThan(now),
+      },
       relations: ['product', 'product.category'],
       order:     { createdAt: 'DESC' },
-      take:      200,
+      take:      companyId ? 100 : 200,
     });
 
     if (!allStories.length) return [];
@@ -854,7 +838,8 @@ export class PublicService {
       byCompany.set(s.companyId, arr);
     }
 
-    const companyIds = Array.from(byCompany.keys()).slice(0, 15);
+    const companyIds = companyId ? [companyId] : Array.from(byCompany.keys()).slice(0, 15);
+    const maxProductsPerCompany = companyId ? Infinity : 4;
 
     /* 3. Charger les infos des boutiques en une requête */
     const companies = await this.companyRepo.find({
@@ -869,8 +854,8 @@ export class PublicService {
     /* 4. Construire la réponse : une entrée par produit */
     const result: HomeProductStoryResponse[] = [];
 
-    for (const companyId of companyIds) {
-      const company = companyMap.get(companyId);
+    for (const cid of companyIds) {
+      const company = companyMap.get(cid);
       if (!company) continue;
       const user = (company as any).user;
       const online = user?.lastLoginAt
@@ -878,13 +863,13 @@ export class PublicService {
         : false;
 
       const byProduct = new Map<string, typeof allStories>();
-      for (const s of byCompany.get(companyId) ?? []) {
+      for (const s of byCompany.get(cid) ?? []) {
         const arr = byProduct.get(s.productId) ?? [];
         arr.push(s);
         byProduct.set(s.productId, arr);
       }
 
-      const topProductIds = Array.from(byProduct.keys()).slice(0, 4);
+      const topProductIds = Array.from(byProduct.keys()).slice(0, maxProductsPerCompany);
 
       for (const productId of topProductIds) {
         const productStories = byProduct.get(productId)!;
@@ -911,7 +896,7 @@ export class PublicService {
         result.push({
           productId,
           produit:   images[0]?.produit ?? 'Produit',
-          companyId,
+          companyId: cid,
           shopNom:   company.companyName,
           shopLogo:  company.logo ?? null,
           online,
@@ -922,64 +907,6 @@ export class PublicService {
     }
 
     return result;
-  }
-
-  /* ════════════════════════════════════════════════════════
-   * GET /public/boutiques/:id/stories
-   * Stories actives (non expirées) d'une boutique, groupées PAR PRODUIT
-   * — une entrée = un produit avec toutes ses images, jamais plusieurs
-   * produits mélangés dans la même bulle (même principe que
-   * getHomeStories(), mais sans plafond de produits : ici on est déjà
-   * sur la page dédiée de CETTE boutique, pas dans un flux partagé entre
-   * plusieurs boutiques où il faut limiter la place prise par chacune).
-   ════════════════════════════════════════════════════════ */
-  async getBoutiqueStories(companyId: string): Promise<BoutiqueProductStoryResponse[]> {
-    const stories = await this.storyRepo.find({
-      where: {
-        companyId,
-        status:    StoryStatus.PUBLISHED,
-        expiresAt: MoreThan(new Date()),
-      },
-      relations: ['product', 'product.category'],
-      order:     { createdAt: 'DESC' },
-      take:      100,
-    });
-
-    const byProduct = new Map<string, typeof stories>();
-    for (const s of stories) {
-      const arr = byProduct.get(s.productId) ?? [];
-      arr.push(s);
-      byProduct.set(s.productId, arr);
-    }
-
-    return Array.from(byProduct.entries()).map(([productId, group]) => {
-      const images: BoutiqueStorySlide[] = group.map(s => {
-        const product  = s.product;
-        const category = product?.category;
-        const { prix, prixAncien: prixAnc } = product ? this.effectivePrix(product) : { prix: 0, prixAncien: null };
-        const hasPromo = prixAnc != null && prixAnc > prix;
-
-        return {
-          id:        s.id,
-          productId: s.productId,
-          produit:   product?.nom ?? 'Produit',
-          prix:      `${Number(prix).toLocaleString('fr-FR')} GNF`,
-          prixBarre: hasPromo ? `${Number(prixAnc).toLocaleString('fr-FR')} GNF` : null,
-          badge:     hasPromo ? 'promo' as const : null,
-          emoji:     category?.icone ?? '📦',
-          img:       s.mediaUrl,
-          caption:   s.caption ?? null,
-          duree:     (s.duration ?? 5) * 1000,
-          createdAt: s.createdAt.toISOString(),
-        };
-      });
-
-      return {
-        productId,
-        produit: images[0]?.produit ?? 'Produit',
-        images,
-      };
-    });
   }
 
   /* ════════════════════════════════════════════════════════

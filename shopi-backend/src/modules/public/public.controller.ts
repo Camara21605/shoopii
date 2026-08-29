@@ -137,14 +137,14 @@ export class PublicController {
   }
 
   @Get('boutiques/:id/stories')
-  @ApiOperation({ summary: "Stories actives d'une boutique (non expirées)" })
+  @ApiOperation({ summary: "Stories actives d'une boutique (non expirées) — même format que GET /public/stories, filtré sur cette boutique" })
   @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
   getBoutiqueStories(@Param('id', ParseUUIDPipe) id: string) {
-    return this.publicService.getBoutiqueStories(id);
+    return this.publicService.getHomeStories(id);
   }
 
   @Get('stories')
-  @ApiOperation({ summary: 'Stories actives de toutes les boutiques — page d\'accueil (max 15 boutiques × 4 slides)' })
+  @ApiOperation({ summary: 'Stories actives de toutes les boutiques — page d\'accueil (max 15 boutiques × 4 produits)' })
   getHomeStories() {
     return this.publicService.getHomeStories();
   }

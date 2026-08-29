@@ -175,8 +175,7 @@
     "bottomNav": {
       "accueil": "الرئيسية",
       "commandes": "الطلبات",
-      "produits": "المنتجات",
-      "monEspace": "مساحتي"
+      "produits": "المنتجات"
     },
     "drawer": {
       "menuAria": "قائمة التنقل",
@@ -190,7 +189,6 @@
   "reseauBottomNav": {
     "accueil": "الرئيسية",
     "correspondants": "المراسلون",
-    "livreurs": "عمال التوصيل",
-    "monEspace": "مساحتي"
+    "livreurs": "عمال التوصيل"
   }
 }

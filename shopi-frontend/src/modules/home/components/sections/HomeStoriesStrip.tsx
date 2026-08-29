@@ -86,7 +86,18 @@ function StorySkeleton() {
 // ═════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL
 // ═════════════════════════════════════════════════════════════
-export default function HomeStoriesStrip({ onToast }: { onToast: (m: string) => void }) {
+interface Props {
+  onToast: (m: string) => void;
+  /**
+   * Fourni par la page boutique : filtre le flux sur CETTE seule boutique
+   * (`GET /public/boutiques/:id/stories`, même forme de réponse que
+   * `GET /public/stories`) — même carte, même viewer partout, jamais une
+   * implémentation séparée pour la page boutique.
+   */
+  companyId?: string;
+}
+
+export default function HomeStoriesStrip({ onToast, companyId }: Props) {
   const { t } = useTranslation();
   const [bubbles,  setBubbles]  = useState<ProductStoryBubble[]>([]);
   const [loading,  setLoading]  = useState(true);
@@ -94,9 +105,10 @@ export default function HomeStoriesStrip({ onToast }: { onToast: (m: string) => 
   const [slideIdx, setSlideIdx] = useState(0);
   const stripRef = useRef<HTMLDivElement>(null);
 
-  // ── Fetch ──────────────────────────────────────────────────
+  // ── Fetch (filtré sur companyId depuis la page boutique) ────
   useEffect(() => {
-    apiFetch<ApiStory[]>('/public/stories', { public: true })
+    const url = companyId ? `/public/boutiques/${companyId}/stories` : '/public/stories';
+    apiFetch<ApiStory[]>(url, { public: true })
       .then(data => {
         const list = Array.isArray(data) ? data : [];
         setBubbles(list.map((s, i) => {
@@ -120,7 +132,7 @@ export default function HomeStoriesStrip({ onToast }: { onToast: (m: string) => 
       })
       .catch(() => setBubbles([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [companyId]);
 
   // ── Drag-to-scroll ─────────────────────────────────────────
   const isDragging = useRef(false);
@@ -285,6 +297,7 @@ export default function HomeStoriesStrip({ onToast }: { onToast: (m: string) => 
           onPrevSlide={goPrevSlide}
           onClose={closeViewer}
           onToast={onToast}
+          hideBoutiqueLink={!!companyId}
         />
       )}
     </>
@@ -305,11 +318,13 @@ interface ViewerProps {
   onPrevSlide: () => void;
   onClose:     () => void;
   onToast:     (m: string) => void;
+  /** true depuis la page boutique elle-même — le bouton "La boutique" y serait redondant. */
+  hideBoutiqueLink?: boolean;
 }
 
 function HomeStoryViewer({
   bubble, allBubbles, bubbleIdx, slideIdx,
-  onNextSlide, onPrevSlide, onClose, onToast,
+  onNextSlide, onPrevSlide, onClose, onToast, hideBoutiqueLink,
 }: ViewerProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -582,12 +597,14 @@ function HomeStoryViewer({
             >
               <i className="fas fa-eye" /> {t('home.storiesStrip.voirProduit')}
             </button>
-            <button
-              className={styles.vaSecond}
-              onClick={() => { onClose(); navigate(`/boutique/${bubble.companyId}`); }}
-            >
-              <i className="fas fa-store" /> {t('home.storiesStrip.laBoutique')}
-            </button>
+            {!hideBoutiqueLink && (
+              <button
+                className={styles.vaSecond}
+                onClick={() => { onClose(); navigate(`/boutique/${bubble.companyId}`); }}
+              >
+                <i className="fas fa-store" /> {t('home.storiesStrip.laBoutique')}
+              </button>
+            )}
             <button
               className={`${styles.vaLike} ${isLiked ? styles.vaLikeActive : ''}`}
               onClick={toggleLike}

@@ -39,15 +39,11 @@
     "inscription": "Sign up",
     "monCompte": "My account",
     "monProfil": "My profile",
-    "monEspace": "My space",
-    "monEspacePro": "My professional space",
-    "monEspaceProShort": "My pro space",
     "seDeconnecter": "Log out",
     "deconnexion": "Log out",
     "menu": "Menu",
     "parametres": "Settings",
     "adresses": "Addresses",
-    "retourAccueil": "Back to home",
     "avantDeVousConnecter": "Before you log in…",
     "navMobileAria": "Main mobile navigation"
   }

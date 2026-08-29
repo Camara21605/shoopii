@@ -1,10 +1,9 @@
 // src/dashboards/entreprise/layout/ReseauBottomNav.tsx
 // Barre de navigation fixe en bas d'écran (mobile uniquement) :
-// Suivre correspondants · Suivre livreurs · Mon espace (bascule vers l'espace client)
+// Suivre correspondants · Suivre livreurs
 // ⚠️ Distinct du tb-bottomnav (gestion produits/commandes) et des pages
 //    "Mes livreurs" / "Correspondants" (gestion du réseau de l'entreprise).
 
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { EntreprisePage } from '../types';
 import './ReseauBottomNav.css';
@@ -15,7 +14,6 @@ interface Props {
 }
 
 export default function ReseauBottomNav({ activePage, onNavigate }: Props) {
-  const navigate = useNavigate();
   const { t } = useTranslation();
 
   const isCorrespondants = activePage === 'reseauCorrespondants' || activePage === 'profilCorrespondantReseau';
@@ -37,15 +35,6 @@ export default function ReseauBottomNav({ activePage, onNavigate }: Props) {
       >
         <i className="fas fa-motorcycle"></i>
         <span>{t('reseauBottomNav.livreurs')}</span>
-      </button>
-
-      <button
-        className="rbn-it"
-        onClick={() => navigate('/home')}
-        title={t('reseauBottomNav.basculerEspaceClient')}
-      >
-        <i className="fas fa-layer-group"></i>
-        <span>{t('reseauBottomNav.monEspace')}</span>
       </button>
     </nav>
   );

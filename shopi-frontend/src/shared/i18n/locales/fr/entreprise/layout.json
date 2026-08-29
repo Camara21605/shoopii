@@ -175,8 +175,7 @@
     "bottomNav": {
       "accueil": "Accueil",
       "commandes": "Commandes",
-      "produits": "Produits",
-      "monEspace": "Mon espace"
+      "produits": "Produits"
     },
     "drawer": {
       "menuAria": "Menu de navigation",
@@ -190,8 +189,6 @@
   "reseauBottomNav": {
     "ariaLabel": "Navigation réseau mobile",
     "correspondants": "Correspondants",
-    "livreurs": "Livreurs",
-    "basculerEspaceClient": "Basculer vers l'espace client",
-    "monEspace": "Mon espace"
+    "livreurs": "Livreurs"
   }
 }

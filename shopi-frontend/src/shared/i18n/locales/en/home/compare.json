@@ -1,0 +1,24 @@
+{
+  "compare": {
+    "titre": "Compare products",
+    "toutRetirer": "Remove all",
+    "videTitre": "No products to compare",
+    "videSub": "Click ⚖️ \"Compare\" on a product page to add it here (up to 4 products).",
+    "explorerBtn": "Explore products",
+    "retirer": "Remove from comparison",
+    "ajouterPanier": "Add",
+    "prix": "Price",
+    "boutique": "Shop",
+    "categorie": "Category",
+    "marque": "Brand",
+    "etat": "Condition",
+    "garantie": "Warranty",
+    "stock": "Stock",
+    "enStock_one": "{{count}} in stock",
+    "enStock_other": "{{count}} in stock",
+    "ruptureStock": "Out of stock",
+    "caracteristiques": "Specifications",
+    "ajouteAuPanierToast": "🛒 Added to cart",
+    "ajoutEchecToast": "❌ Could not add to cart"
+  }
+}

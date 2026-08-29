@@ -175,8 +175,7 @@
     "bottomNav": {
       "accueil": "Início",
       "commandes": "Encomendas",
-      "produits": "Produtos",
-      "monEspace": "Meu espaço"
+      "produits": "Produtos"
     },
     "drawer": {
       "menuAria": "Menu de navegação",
@@ -190,8 +189,6 @@
   "reseauBottomNav": {
     "ariaLabel": "Navegação de rede móvel",
     "correspondants": "Correspondentes",
-    "livreurs": "Entregadores",
-    "basculerEspaceClient": "Ir para o espaço do cliente",
-    "monEspace": "Meu espaço"
+    "livreurs": "Entregadores"
   }
 }

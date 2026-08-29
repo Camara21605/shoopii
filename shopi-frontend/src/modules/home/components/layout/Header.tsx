@@ -15,7 +15,7 @@ import { useNavigate, useLocation }           from 'react-router-dom';
 import { useTranslation }                     from 'react-i18next';
 import styles                                 from './Header.module.css';
 import { tokenStorage, apiFetch }             from '../../../../shared/services/apiFetch';
-import { getRoleFromToken, getDashboardPath } from '../../../../shared/services/authUtils';
+import { getRoleFromToken }                   from '../../../../shared/services/authUtils';
 import { useCart }                            from '../../../../shared/context/CartContext';
 import { useGlobalCall }                      from '../../../../shared/context/GlobalCallContext';
 import { settingsApi }                        from '../settings/api/settings.api';
@@ -89,11 +89,9 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
   const role        = getRoleFromToken();
   const isLoggedIn  = !!role;
   const isClient    = role === 'client';
-  const isNonClient = isLoggedIn && !isClient;
   const isAnonymous = !isLoggedIn;
   const canMessage  = isLoggedIn && ['client', 'company', 'delivery', 'correspondent'].includes(role ?? '');
   const isHome      = location.pathname === '/home';
-  const inDashboard = location.pathname.startsWith('/dashboard');
 
   /* ✅ États actifs du bottom nav pour chaque page publique */
   const isLivreurs       = location.pathname === '/livreurs';
@@ -450,12 +448,6 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
     return activeNav === l.key;
   }
 
-  function handleSwitchDashboard() {
-    if (!isLoggedIn) { openAuthModal(); return; }
-    if (inDashboard)  navigate('/home');
-    else              navigate(getDashboardPath(role));
-  }
-
   return (
     <NotificationProvider>
       <NotificationToastStack />
@@ -618,10 +610,6 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
                         style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer', textAlign:'left' }}>
                         <i className="fas fa-user" style={{ color:'var(--blue)', width:14 }} /> {t('publicHeader.monProfil')}
                       </button>
-                      <button onClick={() => { navigate(getDashboardPath(role)); setAvatarOpen(false); }}
-                        style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer', textAlign:'left' }}>
-                        <i className="fas fa-layer-group" style={{ color:'var(--blue)', width:14 }} /> {t('publicHeader.monEspace')}
-                      </button>
                       <AccountSwitchLink render={({ label, onClick, pending }) => (
                         <button disabled={pending} onClick={() => { onClick(); setAvatarOpen(false); }}
                           style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer', textAlign:'left' }}>
@@ -631,13 +619,6 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
                     </div>
                   )}
                 </div>
-              )}
-
-              {isNonClient && (
-                <button className={styles.btnUp}
-                  onClick={() => navigate(getDashboardPath(role))} title={t('publicHeader.monEspacePro')}>
-                  <i className="fas fa-layer-group" /> {t('publicHeader.monEspace')}
-                </button>
               )}
 
               <span className={styles.sep} />
@@ -693,10 +674,6 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
                         style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer' }}>
                         <i className="fas fa-user" style={{ color:'var(--blue)', width:14 }} /> {t('publicHeader.monProfil')}
                       </button>
-                      <button onClick={() => { navigate(getDashboardPath(role)); setAvatarOpen(false); }}
-                        style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer' }}>
-                        <i className="fas fa-layer-group" style={{ color:'var(--blue)', width:14 }} /> {t('publicHeader.monEspace')}
-                      </button>
                       <AccountSwitchLink render={({ label, onClick, pending }) => (
                         <button disabled={pending} onClick={() => { onClick(); setAvatarOpen(false); }}
                           style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer' }}>
@@ -706,13 +683,6 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
                     </div>
                   )}
                 </div>
-              )}
-              {isNonClient && (
-                <button className={styles.avatar}
-                  onClick={() => navigate(getDashboardPath(role))}
-                  title={t('publicHeader.monEspace')} style={{ fontSize:11 }}>
-                  <i className="fas fa-layer-group" />
-                </button>
               )}
             </div>
           </div>
@@ -818,16 +788,6 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
                 <i className="fas fa-chevron-right" style={{ color:'var(--t4)', fontSize:11 }} />
               </button>
 
-              {/* ✅ Mon espace — bascule home ↔ dashboard */}
-              <button className={styles.drawerLink}
-                onClick={() => { setMobileOpen(false); handleSwitchDashboard(); }}>
-                <div className={styles.drawerLinkIco}>
-                  <i className={`fas ${inDashboard ? 'fa-house' : 'fa-layer-group'}`} />
-                </div>
-                <span>{inDashboard ? t('publicHeader.retourAccueil') : t('publicHeader.monEspace')}</span>
-                <i className="fas fa-chevron-right" style={{ color:'var(--t4)', fontSize:11 }} />
-              </button>
-
               {/* Bascule vers le compte pro lié (masqué si aucun compte lié) */}
               {isClient && (
                 <AccountSwitchLink render={({ label, onClick, pending }) => (
@@ -851,11 +811,6 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
                     {t('publicHeader.inscription')} <i className="fas fa-arrow-right" />
                   </button>
                 </>
-              ) : isNonClient ? (
-                <button className={styles.drawerBtnUp}
-                  onClick={() => { navigate(getDashboardPath(role)); setMobileOpen(false); }}>
-                  <i className="fas fa-layer-group" /> {t('publicHeader.monEspaceProShort')}
-                </button>
               ) : null}
             </div>
           </div>
@@ -902,18 +857,6 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
           {isClient && cartCount > 0 && (
             <span className={styles.bnBadge}>{cartCount > 99 ? '99+' : cartCount}</span>
           )}
-        </button>
-
-        {/* Mon espace — switcher home ↔ dashboard */}
-        <button
-          className={`${styles.bnItem} ${styles.bnSwitcher}`}
-          onClick={handleSwitchDashboard}
-          title={inDashboard ? t('publicHeader.retourAccueil') : t('publicHeader.monEspace')}
-          aria-label={inDashboard ? t('publicHeader.retourAccueil') : t('publicHeader.monEspace')}
-        >
-          <div className={styles.bnSwitcherIco}>
-            <i className={`fas ${inDashboard ? 'fa-house' : 'fa-layer-group'}`} />
-          </div>
         </button>
 
       </nav>

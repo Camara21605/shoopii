@@ -161,22 +161,13 @@
       "favoris": "Favoris",
       "comparer": "Comparer",
       "comparaisonToast": "⚖️ Ajouté à la comparaison",
-      "partager": "Partager :",
+      "comparaisonRetireeToast": "Retiré de la comparaison",
+      "comparaisonPleineToast": "⚖️ Comparaison pleine (max {{max}} produits) — retire-en un pour en ajouter un autre",
       "vuesAujourdhui": "{{count}} vues aujourd'hui",
       "idManquantToast": "❌ ID produit manquant",
       "ruptureToast": "❌ Produit en rupture de stock",
       "ajouteToast": "🛒 Ajouté au panier !",
-      "erreurToast": "❌ {{msg}}",
-      "garanties": {
-        "paiementTitre": "Paiement sécurisé",
-        "paiementSub": "SSL · Orange Money · Visa",
-        "retourTitre": "Retour 7 jours",
-        "retourSub": "Produit défectueux accepté",
-        "authentiqueTitre": "Produit authentique",
-        "authentiqueSub": "Vendeur Shoneya certifié",
-        "supportTitre": "Support 24/7",
-        "supportSub": "Chat · WhatsApp · Tél."
-      }
+      "erreurToast": "❌ {{msg}}"
     },
     "livraison": {
       "titre": "Livraison & Réception",
