@@ -16,7 +16,7 @@ export interface ChatUser {
   context?: string;      // ex : "Commande SH-2025-0901"
 }
 
-export type MessageType = 'text' | 'image' | 'video' | 'file' | 'voice' | 'product' | 'order' | 'call';
+export type MessageType = 'text' | 'image' | 'video' | 'file' | 'voice' | 'product' | 'order' | 'location' | 'call';
 
 export interface ChatMessage {
   id:          string;
@@ -37,8 +37,12 @@ export interface ChatMessage {
   mediaUrl?:   string;    // URL Cloudinary (image / vidéo / document)
   mediaName?:  string;    // nom du fichier (documents)
   mediaMime?:  string;    // type MIME
-  product?:    { em: string; nm: string; price: string };
-  order?:      { id: string; nm: string; status: string };
+  /** Carte produit partagée — `summary` est le résumé (nom/prix) déjà formaté par le backend. */
+  product?:    { productId: string; summary: string };
+  /** Carte commande partagée — `summary` est le résumé (numéro/statut/total) déjà formaté par le backend. */
+  order?:      { orderId: string; summary: string };
+  /** Position GPS partagée — `label` est une adresse lisible si fournie, sinon null. */
+  location?:   { lat: number; lng: number; label: string | null };
   /** Métadonnées d'un événement d'appel audio */
   callMeta?:   {
     status:    'completed' | 'missed' | 'rejected' | 'cancelled' | 'busy';
@@ -55,6 +59,8 @@ export interface ChatMessage {
    * Ex: { "❤️": ["user-1", "user-2"], "👍": ["user-3"] }
    */
   reactions?:  Record<string, string[]>;
+  /** true si l'envoi a échoué (optimiste jamais confirmé par le serveur) — affiche "Échec, réessayer". */
+  sendFailed?: boolean;
 }
 
 export interface Conversation {
@@ -73,6 +79,10 @@ export interface Conversation {
   memberCount?:    number;
   expiresAt?:      string;
   description?:    string;
+  /** Pagination des messages — undefined = pas encore su, true = scroll-up peut charger plus ancien. */
+  hasMoreMessages?: boolean;
+  /** true pendant le chargement des messages plus anciens (spinner en haut de MessagesZone). */
+  loadingOlder?:    boolean;
 }
 
 export interface GroupMember {

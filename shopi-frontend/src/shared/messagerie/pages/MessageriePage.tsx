@@ -16,6 +16,7 @@
  */
 import MessagerieCore from '../MessagerieCore';
 import { useForceDarkTheme } from '../../context/ThemeContext';
+import s from '../styles/MessagerieLayout.module.css';
 
 export default function MessageriePage() {
   // ✅ Cette page n'a plus de mode clair — voir useForceDarkTheme.
@@ -42,13 +43,13 @@ export default function MessageriePage() {
     // bottom-nav fixe — qui existe sur les dashboards mais PAS sur cette
     // page publique. Sans cette annulation, il reste un 2e espace vide
     // (62px) sous la zone de saisie sur mobile, en plus du 1er.
-    <div style={{
-      height:    '100vh',
-      overflow:  'hidden',
-      boxSizing: 'border-box',
-      ['--hdr' as any]:      '0px',
-      ['--msg-bnav' as any]: '0px',
-    }}>
+    <div
+      className={s.pageWrap}
+      style={{
+        ['--hdr' as any]:      '0px',
+        ['--msg-bnav' as any]: '0px',
+      }}
+    >
       <MessagerieCore />
     </div>
   );

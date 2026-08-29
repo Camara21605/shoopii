@@ -130,20 +130,24 @@ function ContactInfoPanel({
         <button className={s.mediaAllBtn} onClick={() => onToast(t('messagerie.infoPanel.tousLesMediasToast'), 'i')}>{t('messagerie.infoPanel.voirTout')}</button>
       </div>
 
+      {/*
+        Épingler / Couper les notifications / Supprimer la conversation ont
+        été retirés d'ici : ce sont maintenant de VRAIES actions dans le
+        menu "⋮" du ChatHeader (au-dessus) — les garder ici en plus, encore
+        sous forme de toast factice, créerait deux endroits qui prétendent
+        faire la même chose avec des résultats différents (l'un marche,
+        l'autre pas). "Bloquer le contact" reste ici volontairement : c'est
+        l'emplacement où WhatsApp/Messenger le placent (fiche contact, pas
+        menu de conversation) — pas encore branché car bloquer un contact
+        touche le moteur de permissions de la messagerie et mérite son
+        propre chantier plutôt qu'un bouton qui ne ferait rien derrière. */}
       <div className={s.section}>
         <div className={s.sectTitle}>{t('messagerie.infoPanel.options')}</div>
         <div className={s.optionsWrap}>
-          {([
-            ['fa-thumbtack', t('messagerie.infoPanel.epinglerConversation'), 'i', false],
-            ['fa-bell-slash', t('messagerie.infoPanel.couperNotifications'), 'i', false],
-            ['fa-trash-can', t('messagerie.infoPanel.supprimerConversation'), 'w', false],
-            ['fa-ban', t('messagerie.infoPanel.bloquerContact'), 'e', true],
-          ] as [string, string, string, boolean][]).map(([icon, label, type, danger]) => (
-            <button key={label} className={`${s.optionBtn} ${danger ? s.danger : ''}`}
-              onClick={() => onToast(label, type)}>
-              <i className={`fas ${icon}`} />{label}
-            </button>
-          ))}
+          <button className={`${s.optionBtn} ${s.danger}`}
+            onClick={() => onToast(t('messagerie.infoPanel.bloquerContact'), 'e')}>
+            <i className="fas fa-ban" />{t('messagerie.infoPanel.bloquerContact')}
+          </button>
         </div>
       </div>
     </div>

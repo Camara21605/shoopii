@@ -15,7 +15,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Conversation, ChatUser, GroupMember } from '../data/messagerieTypes';
-import type { MediaAttachment }                     from '../hooks/useMessagerie';
+import type { MediaAttachment, ShareExtra }          from '../hooks/useMessagerie';
 import type { WsTyping }                            from '../hooks/useSocket';
 
 import ChatHeader    from '../components/ChatHeader';
@@ -31,7 +31,7 @@ interface Props {
   members?:        GroupMember[];
   infoPanelOpen:   boolean;
   typingActivity?: WsTyping;
-  onSend:          (convId: string, text: string, media?: MediaAttachment) => void;
+  onSend:          (convId: string, text: string, media?: MediaAttachment, extra?: ShareExtra) => void;
   onTyping?:       (convId: string, activity: WsTyping['activity']) => void;
   onToggleInfo:    () => void;
   onNewConv:       () => void;
@@ -41,6 +41,10 @@ interface Props {
   onCall?:         () => void;
   onVideoCall?:    () => void;
   onMobileMenu?:   () => void;
+  onLoadOlderMessages?: (convId: string) => void;
+  onRetry?:        (msgId: string) => void;
+  onArchiveConv?:  (convId: string) => void;
+  onDeleteConv?:   (convId: string) => void;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -48,6 +52,7 @@ interface Props {
 export default function ChatWindow({
   conv, user, members, infoPanelOpen, typingActivity,
   onSend, onTyping, onToggleInfo, onNewConv, onToast, onDelete, onUpdateGroup, onCall, onVideoCall, onMobileMenu,
+  onLoadOlderMessages, onRetry, onArchiveConv, onDeleteConv,
 }: Props) {
   const { t } = useTranslation();
   /** Message cité (réponse) — partagé entre MessagesZone (set) et MessageInput (affichage) */
@@ -81,6 +86,7 @@ export default function ChatWindow({
 
       {/* ── En-tête ── */}
       <ChatHeader
+        convId={conv.id}
         user={user}
         members={members}
         infoPanelOpen={infoPanelOpen}
@@ -89,6 +95,10 @@ export default function ChatWindow({
         onCall={onCall}
         onVideoCall={onVideoCall}
         onMobileMenu={onMobileMenu}
+        convPinned={conv.pinned}
+        convMuted={conv.muted}
+        onArchiveConv={onArchiveConv}
+        onDeleteConv={onDeleteConv}
       />
 
       {/* ── Messages + indicateur typing ── */}
@@ -101,6 +111,8 @@ export default function ChatWindow({
         onToast={onToast}
         onDelete={onDelete}
         onUpdateGroup={onUpdateGroup}
+        onLoadOlderMessages={onLoadOlderMessages}
+        onRetry={onRetry}
       />
 
       {/* ── Zone de saisie ── */}

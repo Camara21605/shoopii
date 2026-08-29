@@ -5,12 +5,15 @@
  * Auth     : JWT obligatoire (JwtAuthGuard)
  *
  * ENDPOINTS :
- *   GET    /conversations                         → liste
+ *   GET    /conversations                         → liste (pagination cursor : ?cursor=&limit=)
  *   POST   /conversations                         → créer/récupérer
- *   GET    /conversations/:id/messages            → messages (paginé + replies)
+ *   GET    /conversations/:id/messages            → messages (pagination cursor : ?cursor=&limit= + replies)
+ *   GET    /conversations/:id/messages/search?q=  → recherche plein texte dans la conversation
  *   POST   /conversations/:id/messages            → envoyer
  *   PATCH  /conversations/:id/read               → marquer lu
  *   PATCH  /conversations/:id/archive            → archiver
+ *   PATCH  /conversations/:id/pin                → épingler / désépingler
+ *   PATCH  /conversations/:id/mute               → couper / réactiver les notifications
  *   PATCH  /messages/:msgId                      → modifier un message
  *   DELETE /messages/:msgId                      → supprimer un message
  *   POST   /messages/:msgId/reactions            → toggle réaction emoji
@@ -33,6 +36,8 @@ import {
   DeleteMessageDto,
   ToggleReactionDto,
   ArchiveConversationDto,
+  PinConversationDto,
+  MuteConversationDto,
 } from './dto/messagerie.dto';
 
 @Controller('messagerie')
@@ -52,15 +57,23 @@ export class MessagerieController {
   // ── Conversations ────────────────────────────────────────────
 
   @Get('conversations')
-  getConversations(@Req() req: Request) {
+  getConversations(
+    @Req() req: Request,
+    @Query('cursor') cursor?: string,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit = 20,
+  ) {
     const { userId, actorId, role } = this.ctx(req);
-    return this.svc.getConversations(userId, role, actorId);
+    return this.svc.getConversations(userId, role, actorId, cursor, limit);
   }
 
   @Get('conversations/archived')
-  getArchivedConversations(@Req() req: Request) {
+  getArchivedConversations(
+    @Req() req: Request,
+    @Query('cursor') cursor?: string,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit = 20,
+  ) {
     const { userId, actorId, role } = this.ctx(req);
-    return this.svc.getArchivedConversations(userId, role, actorId);
+    return this.svc.getArchivedConversations(userId, role, actorId, cursor, limit);
   }
 
   @Post('conversations')
@@ -87,17 +100,73 @@ export class MessagerieController {
     return this.svc.archiveConversation(userId, role, convId, dto, actorId);
   }
 
+  @Patch('conversations/:id/pin')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  pinConversation(
+    @Req() req: Request,
+    @Param('id') convId: string,
+    @Body() dto: PinConversationDto,
+  ): Promise<void> {
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.pinConversation(userId, role, convId, dto, actorId);
+  }
+
+  @Patch('conversations/:id/mute')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  muteConversation(
+    @Req() req: Request,
+    @Param('id') convId: string,
+    @Body() dto: MuteConversationDto,
+  ): Promise<void> {
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.muteConversation(userId, role, convId, dto, actorId);
+  }
+
   // ── Messages ────────────────────────────────────────────────
 
   @Get('conversations/:id/messages')
   getMessages(
     @Req() req: Request,
     @Param('id') convId: string,
-    @Query('page',  new ParseIntPipe({ optional: true })) page  = 1,
+    @Query('cursor') cursor?: string,
     @Query('limit', new ParseIntPipe({ optional: true })) limit = 30,
   ) {
     const { userId, actorId, role } = this.ctx(req);
-    return this.svc.getMessagesWithReplies(userId, role, convId, page, limit, actorId);
+    return this.svc.getMessagesWithReplies(userId, role, convId, cursor, limit, actorId);
+  }
+
+  /* Recherche plein texte dans une conversation — texte des messages ET
+   * noms de documents partagés. Alimente le bouton 🔍 du ChatHeader. */
+  @Get('conversations/:id/messages/search')
+  searchMessages(
+    @Req() req: Request,
+    @Param('id') convId: string,
+    @Query('q') q = '',
+  ) {
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.searchMessages(userId, role, convId, q, actorId);
+  }
+
+  /* Liste des commandes partagées entre les deux participants de cette
+   * conversation — alimente le picker "🛒 Partager une commande". */
+  @Get('conversations/:id/commandes')
+  getShareableCommandes(
+    @Req() req: Request,
+    @Param('id') convId: string,
+  ) {
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.getShareableCommandes(userId, role, convId, actorId);
+  }
+
+  /* Catalogue public de la boutique participant à cette conversation —
+   * alimente le picker "📦 Partager un produit". */
+  @Get('conversations/:id/produits')
+  getShareableProduits(
+    @Req() req: Request,
+    @Param('id') convId: string,
+  ) {
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.getShareableProduits(userId, role, convId, actorId);
   }
 
   @Post('conversations/:id/messages')

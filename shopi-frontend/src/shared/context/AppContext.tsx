@@ -126,9 +126,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setUser,
       logout,
     }}>
-      {/* ✅ AJOUTÉ : on n'affiche rien pendant la restauration de session
-          pour éviter un flash de la page login avant redirect */}
-      {isLoading ? null : children}
+      {/*
+       * Ne bloque plus TOUT l'affichage pendant la restauration de session
+       * (GET /auth/me, jusqu'à 90s de timeout en cas de backend lent —
+       * voir apiFetch.ts) : ça gelait aussi les pages publiques (Home,
+       * boutique, produit...) qui n'ont besoin d'aucune info de session
+       * pour s'afficher, laissant le client devant un écran totalement
+       * vide sans raison.
+       *
+       * Le risque que ce gate évitait (flash de login/dashboard avant
+       * redirect) est désormais géré localement, uniquement là où c'est
+       * nécessaire : PrivateRoute/PublicOnlyRoute/RoleRoute (router.tsx)
+       * affichent leur propre loader tant qu'isLoading est vrai, plutôt
+       * que de faire attendre des pages qui n'en ont pas besoin.
+       */}
+      {children}
     </AppContext.Provider>
   );
 };

@@ -169,6 +169,11 @@ export enum ConversationStatus {
 @Index('IDX_conv_initiator', ['initiatorType', 'initiatorId'])
 @Index('IDX_conv_recipient', ['recipientType', 'recipientId'])
 @Index('IDX_conv_updated',   ['updatedAt'])
+/* IDX_conv_initiator_activity / IDX_conv_recipient_activity — index composites
+ * couvrant exactement le WHERE + ORDER BY de MessagerieService.listConversationsPage()
+ * (pagination cursor sur COALESCE(lastMessageAt, updatedAt) DESC, id DESC). Créés en
+ * migration uniquement (expression COALESCE non exprimable en @Index() décorateur) —
+ * voir 1721400000009-conversation-listing-indexes.ts. */
 @Entity('conversations')
 export class Conversation {
 
@@ -407,6 +412,32 @@ export class Conversation {
   /** true → le RECEVEUR a supprimé cette conversation pour lui. */
   @Column({ type: 'boolean', default: false })
   deletedByRecipient: boolean;
+
+  /* ==========================================================
+   * ÉPINGLAGE PAR ACTEUR  (préférence individuelle, comme archivedBy*)
+   * ========================================================== */
+
+  /** true → l'INITIATEUR a épinglé cette conversation en haut de sa liste. */
+  @Column({ type: 'boolean', default: false })
+  pinnedByInitiator: boolean;
+
+  /** true → le RECEVEUR a épinglé cette conversation. Indépendant de pinnedByInitiator. */
+  @Column({ type: 'boolean', default: false })
+  pinnedByRecipient: boolean;
+
+  /* ==========================================================
+   * NOTIFICATIONS COUPÉES PAR ACTEUR  (préférence individuelle)
+   * ========================================================== */
+
+  /** true → l'INITIATEUR a coupé les notifications de cette conversation
+   *  (NotificationEventService ne lui crée plus de notification IN_APP
+   *  pour les nouveaux messages — voir sendMessage()). */
+  @Column({ type: 'boolean', default: false })
+  mutedByInitiator: boolean;
+
+  /** true → le RECEVEUR a coupé les notifications. Indépendant de mutedByInitiator. */
+  @Column({ type: 'boolean', default: false })
+  mutedByRecipient: boolean;
 
   /* ==========================================================
    * STATISTIQUES

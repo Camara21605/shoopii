@@ -18,6 +18,50 @@ import s from '../styles/ConvList.module.css';
 
 type Tab = 'all' | 'unread' | 'boutiques' | 'livreurs' | 'clients' | 'correspondants' | 'contacts' | 'masquees' | 'groupes' | 'appels';
 
+/* ── Cascade "de haut en bas" ──────────────────────────────────
+ * Chaque ligne (skeleton pendant le chargement, ou conversation réelle)
+ * apparaît avec un délai croissant selon sa position plutôt que toutes
+ * en même temps — plafonné pour qu'une longue liste ne prenne pas des
+ * secondes à finir de s'afficher. Comme les clés React (`key={c.id}`)
+ * sont stables, l'animation CSS ne rejoue qu'au premier montage de
+ * chaque ligne, jamais sur un re-render (mise à jour de lastMsg, etc.). */
+const STAGGER_STEP_MS = 35;
+const STAGGER_MAX_MS  = 350;
+function staggerStyle(index: number): { animationDelay: string } {
+  return { animationDelay: `${Math.min(index * STAGGER_STEP_MS, STAGGER_MAX_MS)}ms` };
+}
+
+/* ── Badge qui compte "en suivant l'ordre d'arrivée" ─────────────
+ * Le backend envoie déjà le compteur absolu à jour à chaque message
+ * (WsNewMessage.convPreview.unreadCount) — plutôt que de faire sauter
+ * le badge directement à la nouvelle valeur, on l'anime en comptant
+ * pas à pas jusqu'à elle, pour une sensation d'incrément message par
+ * message plutôt qu'un saut brutal. Ne s'anime qu'à la HAUSSE — un
+ * retour à 0 (conversation lue) reste instantané. */
+function AnimatedCount({ value }: { value: number }) {
+  const [display, setDisplay] = useState(value);
+  const prevRef = useRef(value);
+
+  useEffect(() => {
+    const from = prevRef.current;
+    const to   = value;
+    prevRef.current = value;
+    if (to <= from) { setDisplay(to); return; }
+
+    const steps = Math.min(to - from, 12);
+    const stepSize = (to - from) / steps;
+    let step = 0;
+    const timer = setInterval(() => {
+      step += 1;
+      setDisplay(step >= steps ? to : Math.round(from + stepSize * step));
+      if (step >= steps) clearInterval(timer);
+    }, 90);
+    return () => clearInterval(timer);
+  }, [value]);
+
+  return <>{display}</>;
+}
+
 /* Onglets "dédiés à un acteur" — un contact LIÉ (commande/abonnement/
  * contact partagé, cf. MessagerieService.searchUsers) doit y apparaître
  * même sans conversation existante, comme un contact WhatsApp qu'on n'a
@@ -72,6 +116,12 @@ interface Props {
   onUnhideConv:    (id: string) => void;
   onMarkUnread:    (id: string) => void;
   onMarkRead:      (id: string) => void;
+  /** true pendant le tout premier chargement (avant que `conversations` ait le moindre élément) — affiche un skeleton. */
+  loadingConvs?:      boolean;
+  /** Pagination infinite scroll — voir loadMoreConversations() dans useMessagerie. */
+  hasMoreConvs?:      boolean;
+  loadingMoreConvs?:  boolean;
+  onLoadMoreConversations?: () => void;
   /** Groupes de livraison automatiques */
   groupConvs?:     Conversation[];
   groupUsersMap?:  Map<string, ChatUser>;
@@ -124,11 +174,14 @@ function ConvList({
   focusSearchToken, onDeleteConv, onHideConv, onToast,
   archivedConvs, onLoadArchived, onUnhideConv, onMarkUnread, onMarkRead, groupConvs = [], groupUsersMap = new Map(),
   callHistory = [], callHistoryLoading = false, onLoadCallHistory, onDeleteCallHistoryItem,
+  loadingConvs = false, hasMoreConvs = false, loadingMoreConvs = false, onLoadMoreConversations,
 }: Props) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [tab,    setTab]    = useState<Tab>('all');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const itemsRef    = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   /* Onglets pertinents pour le rôle de l'utilisateur connecté */
   const myRole     = getRoleFromToken();
@@ -231,6 +284,26 @@ function ConvList({
     onStartConversation(apiSearchUserToNewConvUser(api));
   }
 
+  /* ── Infinite scroll — charge la page suivante de conversations ──
+   * Sentinelle en bas de la liste (uniquement visible sur l'onglet "Tous",
+   * seul endroit où la liste paginée complète est affichée sans filtre de
+   * rôle côté serveur) : dès qu'elle entre dans le viewport du conteneur
+   * scrollable `.items`, on déclenche le chargement de la page suivante.
+   * `root: itemsRef.current` — sans ça, IntersectionObserver observerait
+   * le viewport de la fenêtre entière, pas le scroll interne de la liste. */
+  useEffect(() => {
+    if (tab !== 'all' || !hasMoreConvs || !onLoadMoreConversations) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      entries => { if (entries[0]?.isIntersecting) onLoadMoreConversations(); },
+      { root: itemsRef.current, rootMargin: '200px' },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [tab, hasMoreConvs, onLoadMoreConversations]);
+
   const filtered = useMemo(() => {
     /* Les onglets Livraisons, Appels et Masquées sont gérés séparément */
     if (tab === 'groupes' || tab === 'masquees' || tab === 'appels') return [];
@@ -272,6 +345,11 @@ function ConvList({
 
   const pinned  = filtered.filter(c => c.pinned);
   const regular = filtered.filter(c => !c.pinned);
+  /* Groupes visibles dans l'onglet "Tous"/"Non lus" — hissé hors du JSX
+   * (au lieu d'une IIFE inline) pour pouvoir calculer les délais de
+   * cascade des sections suivantes (pinned/regular/relatedContacts) à
+   * partir de sa longueur, sans redéfinir la logique deux fois. */
+  const visibleGroupsForList = tab === 'unread' ? filteredGroups.filter(g => g.unread > 0) : filteredGroups;
 
   const switchTab = (key: Tab) => {
     setTab(key);
@@ -325,10 +403,10 @@ function ConvList({
             {tb.icon && <i className={tb.icon} style={{ fontSize: 10 }} />}
             {tb.label}
             {(tb.key === 'all' || tb.key === 'unread') && totalUnread > 0 && (
-              <span className={s.tabCount}>{totalUnread}</span>
+              <span className={s.tabCount}><AnimatedCount value={totalUnread} /></span>
             )}
             {tb.key === 'groupes' && groupConvs.filter(g => g.unread > 0).length > 0 && (
-              <span className={s.tabCount}>{groupConvs.filter(g => g.unread > 0).length}</span>
+              <span className={s.tabCount}><AnimatedCount value={groupConvs.filter(g => g.unread > 0).length} /></span>
             )}
             {tb.key === 'masquees' && archivedConvs.length > 0 && (
               <span className={s.tabCount}>{archivedConvs.length}</span>
@@ -338,8 +416,12 @@ function ConvList({
       </div>
 
       {/* Liste */}
-      <div className={s.items}>
-        {tab === 'groupes' ? (
+      <div className={s.items} ref={itemsRef}>
+        {loadingConvs && conversations.length === 0 && groupConvs.length === 0 ? (
+          <>
+            {Array.from({ length: 8 }).map((_, i) => <ConvItemSkeleton key={i} index={i} />)}
+          </>
+        ) : tab === 'groupes' ? (
           <>
             {filteredGroups.length === 0 ? (
               <div className={s.empty}>
@@ -349,13 +431,14 @@ function ConvList({
             ) : (
               <>
                 <div className={s.section}>{t('messagerie.convList.groupesDeLivraison')}</div>
-                {filteredGroups.map(g => (
+                {filteredGroups.map((g, i) => (
                   <GroupConvItem
                     key={`grp-${g.id}`}
                     conv={g}
                     user={groupUsersMap.get(g.id)}
                     active={activeId === g.id}
                     onSelect={onSelect}
+                    index={i}
                   />
                 ))}
               </>
@@ -374,8 +457,8 @@ function ConvList({
                 {t('messagerie.convList.emptyAppels')}
               </div>
             ) : (
-              callHistory.map(h => (
-                <CallHistoryItemRow key={h.id} item={h} onDelete={onDeleteCallHistoryItem} />
+              callHistory.map((h, i) => (
+                <CallHistoryItemRow key={h.id} item={h} onDelete={onDeleteCallHistoryItem} index={i} />
               ))
             )}
           </>
@@ -389,12 +472,13 @@ function ConvList({
             ) : (
               <>
                 <div className={s.section}>{t('messagerie.convList.conversationsMasquees')}</div>
-                {filteredArchived.map(c => (
+                {filteredArchived.map((c, i) => (
                   <ConvItem key={`arch-${c.id}`} conv={c} user={usersMap.get(c.userId)}
                     active={false} isArchived
                     onSelect={onSelect} onDelete={onDeleteConv}
                     onHide={onHideConv} onUnhide={onUnhideConv}
-                    onMarkUnread={onMarkUnread} onMarkRead={onMarkRead} />
+                    onMarkUnread={onMarkUnread} onMarkRead={onMarkRead}
+                    index={i} />
                 ))}
               </>
             )}
@@ -404,47 +488,45 @@ function ConvList({
             {/* Groupes de livraison — uniquement dans "Tous" et "Non lus".
              * Les onglets de filtre par rôle (boutiques, livreurs…) ne montrent
              * que des conversations P2P, jamais les groupes automatiques. */}
-            {(tab === 'all' || tab === 'unread') && (() => {
-              const visibleGroups = tab === 'unread'
-                ? filteredGroups.filter(g => g.unread > 0)
-                : filteredGroups;
-              return visibleGroups.length > 0 ? (
-                <>
-                  <div className={s.section}>📦 {t('messagerie.convList.groupesDeLivraison')}</div>
-                  {visibleGroups.map(g => (
-                    <GroupConvItem
-                      key={`grp-${g.id}`}
-                      conv={g}
-                      user={groupUsersMap.get(g.id)}
-                      active={activeId === g.id}
-                      onSelect={onSelect}
-                    />
-                  ))}
-                </>
-              ) : null;
-            })()}
+            {(tab === 'all' || tab === 'unread') && visibleGroupsForList.length > 0 && (
+              <>
+                <div className={s.section}>📦 {t('messagerie.convList.groupesDeLivraison')}</div>
+                {visibleGroupsForList.map((g, i) => (
+                  <GroupConvItem
+                    key={`grp-${g.id}`}
+                    conv={g}
+                    user={groupUsersMap.get(g.id)}
+                    active={activeId === g.id}
+                    onSelect={onSelect}
+                    index={i}
+                  />
+                ))}
+              </>
+            )}
 
             {pinned.length > 0 && (
               <>
                 <div className={s.section}>{t('messagerie.convList.epinglees')}</div>
-                {pinned.map(c => (
+                {pinned.map((c, i) => (
                   <ConvItem key={`conv-${c.id}`} conv={c} user={usersMap.get(c.userId)}
                     active={activeId === c.id} isArchived={false}
                     onSelect={onSelect} onDelete={onDeleteConv}
                     onHide={onHideConv} onUnhide={onUnhideConv}
-                    onMarkUnread={onMarkUnread} onMarkRead={onMarkRead} />
+                    onMarkUnread={onMarkUnread} onMarkRead={onMarkRead}
+                    index={visibleGroupsForList.length + i} />
                 ))}
               </>
             )}
             {regular.length > 0 && (
               <>
                 {pinned.length > 0 && <div className={s.section}>{t('messagerie.convList.recentes')}</div>}
-                {regular.map(c => (
+                {regular.map((c, i) => (
                   <ConvItem key={`conv-${c.id}`} conv={c} user={usersMap.get(c.userId)}
                     active={activeId === c.id} isArchived={false}
                     onSelect={onSelect} onDelete={onDeleteConv}
                     onHide={onHideConv} onUnhide={onUnhideConv}
-                    onMarkUnread={onMarkUnread} onMarkRead={onMarkRead} />
+                    onMarkUnread={onMarkUnread} onMarkRead={onMarkRead}
+                    index={visibleGroupsForList.length + pinned.length + i} />
                 ))}
               </>
             )}
@@ -454,8 +536,9 @@ function ConvList({
             {relatedContacts.length > 0 && (
               <>
                 <div className={s.section}>{t('messagerie.convList.contactsSansConversation')}</div>
-                {relatedContacts.map(api => (
-                  <RelatedContactItem key={`related-${api.type}-${api.id}`} api={api} onStart={handleStartRelated} />
+                {relatedContacts.map((api, i) => (
+                  <RelatedContactItem key={`related-${api.type}-${api.id}`} api={api} onStart={handleStartRelated}
+                    index={visibleGroupsForList.length + pinned.length + regular.length + i} />
                 ))}
               </>
             )}
@@ -465,7 +548,7 @@ function ConvList({
              * - onglets de filtre P2P (boutiques, livreurs…) : vide si aucune conv */}
             {filtered.length === 0 && relatedContacts.length === 0 && !relatedLoading && (
               (tab === 'all' || tab === 'unread')
-                ? filteredGroups.filter(g => tab === 'unread' ? g.unread > 0 : true).length === 0
+                ? visibleGroupsForList.length === 0
                 : true
             ) && (
               <div className={s.empty}>
@@ -473,10 +556,40 @@ function ConvList({
                 {t('messagerie.convList.emptyConversations')}
               </div>
             )}
+
+            {/* Sentinelle infinite scroll — invisible, juste un déclencheur
+             * IntersectionObserver. Le spinner en dessous ne s'affiche que
+             * pendant le chargement effectif de la page suivante. */}
+            {tab === 'all' && hasMoreConvs && (
+              <div ref={sentinelRef} style={{ height: 1 }} />
+            )}
+            {tab === 'all' && loadingMoreConvs && (
+              <div className={s.empty} style={{ padding: '12px 0' }}>
+                <i className="fas fa-spinner fa-spin" />
+              </div>
+            )}
           </>
         )}
       </div>
     </aside>
+  );
+}
+
+/* Placeholder animé pendant le tout premier chargement — même gabarit
+ * qu'un ConvItem réel (avatar + 2 lignes) pour éviter un saut de mise en
+ * page quand les vraies conversations arrivent. */
+function ConvItemSkeleton({ index }: { index: number }) {
+  return (
+    <div className={`${s.item} ${s.itemEnter}`} style={{ cursor: 'default', ...staggerStyle(index) }}>
+      <div className={s.avaWrap}>
+        <div className={s.ava} style={{ background: 'var(--sky-2,#E2EAFB)', opacity: .6 }} />
+      </div>
+      <div className={s.info}>
+        <div className={s.skeletonLine} style={{ width: '55%' }} />
+        <div className={s.skeletonLine} style={{ width: '35%' }} />
+        <div className={s.skeletonLine} style={{ width: '75%' }} />
+      </div>
+    </div>
   );
 }
 
@@ -501,6 +614,8 @@ interface ItemProps {
   onUnhide:    (id: string) => void;
   onMarkUnread:(id: string) => void;
   onMarkRead:  (id: string) => void;
+  /** Position dans la liste affichée — pilote le délai de la cascade d'apparition. */
+  index:       number;
 }
 
 /* ── Item groupe de livraison ────────────────────────────────── */
@@ -509,9 +624,10 @@ interface GroupItemProps {
   user?:    ChatUser;
   active:   boolean;
   onSelect: (id: string) => void;
+  index:    number;
 }
 
-const GroupConvItem = memo(function GroupConvItem({ conv, user, active, onSelect }: GroupItemProps) {
+const GroupConvItem = memo(function GroupConvItem({ conv, user, active, onSelect, index }: GroupItemProps) {
   const { t } = useTranslation();
   if (!user) return null;
 
@@ -527,7 +643,8 @@ const GroupConvItem = memo(function GroupConvItem({ conv, user, active, onSelect
 
   return (
     <div
-      className={`${s.item} ${active ? s.active : ''} ${conv.unread > 0 ? s.unread : ''}`}
+      className={`${s.item} ${s.itemEnter} ${active ? s.active : ''} ${conv.unread > 0 ? s.unread : ''}`}
+      style={staggerStyle(index)}
       onClick={() => onSelect(conv.id)}
     >
       {/* Avatar groupe */}
@@ -561,13 +678,13 @@ const GroupConvItem = memo(function GroupConvItem({ conv, user, active, onSelect
         <div className={s.metaTop}>
           <div className={s.time}>{conv.lastTime}</div>
         </div>
-        {conv.unread > 0 && <div className={s.badge}>{conv.unread}</div>}
+        {conv.unread > 0 && <div className={s.badge}><AnimatedCount value={conv.unread} /></div>}
       </div>
     </div>
   );
 });
 
-const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, onUnhide, onMarkUnread, onMarkRead }: ItemProps) {
+const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSelect, onDelete, onHide, onUnhide, onMarkUnread, onMarkRead, index }: ItemProps) {
   const { t } = useTranslation();
   if (!user) return null;
   const roleConfig = getRoleConfig(t);
@@ -588,7 +705,8 @@ const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSele
   }, [menuOpen]);
 
   return (
-    <div className={`${s.item} ${active ? s.active : ''} ${conv.unread > 0 ? s.unread : ''}`}
+    <div className={`${s.item} ${s.itemEnter} ${active ? s.active : ''} ${conv.unread > 0 ? s.unread : ''}`}
+         style={staggerStyle(index)}
          onClick={() => { if (!menuOpen) onSelect(conv.id); }}>
 
       {/* Avatar */}
@@ -637,7 +755,7 @@ const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSele
             <i className="fas fa-ellipsis-vertical" />
           </button>
         </div>
-        {conv.unread > 0 && <div className={s.badge}>{conv.unread}</div>}
+        {conv.unread > 0 && <div className={s.badge}><AnimatedCount value={conv.unread} /></div>}
         {conv.muted && <i className="fas fa-bell-slash" style={{ fontSize:11, color:'var(--t4)' }} />}
 
         {menuOpen && (
@@ -704,16 +822,17 @@ const ConvItem = memo(function ConvItem({ conv, user, active, isArchived, onSele
 interface RelatedItemProps {
   api:     ApiSearchUser;
   onStart: (api: ApiSearchUser) => void;
+  index:   number;
 }
 
-const RelatedContactItem = memo(function RelatedContactItem({ api, onStart }: RelatedItemProps) {
+const RelatedContactItem = memo(function RelatedContactItem({ api, onStart, index }: RelatedItemProps) {
   const { t } = useTranslation();
   const role     = ({ company: 'vendeur', delivery: 'livreur', correspondent: 'correspondant', client: 'client' } as Record<string, string>)[api.type] ?? 'client';
   const rc       = getRoleConfig(t)[role as keyof ReturnType<typeof getRoleConfig>];
   const isImgAva = !!api.logo;
 
   return (
-    <div className={s.item} onClick={() => onStart(api)}>
+    <div className={`${s.item} ${s.itemEnter}`} style={staggerStyle(index)} onClick={() => onStart(api)}>
       <div className={s.avaWrap}>
         <div className={s.ava} style={{ background: isImgAva ? undefined : rc.bg, overflow:'hidden', padding:0 }}>
           {isImgAva
@@ -780,14 +899,14 @@ function fmtCallTime(iso: string): string {
     : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 }
 
-function CallHistoryItemRow({ item, onDelete }: { item: CallHistoryItem; onDelete?: (id: string) => void }) {
+function CallHistoryItemRow({ item, onDelete, index }: { item: CallHistoryItem; onDelete?: (id: string) => void; index: number }) {
   const { t } = useTranslation();
   const isImgAva = item.contactAvatar?.startsWith('http');
   const initials = item.contactName.trim().split(/\s+/).slice(0, 2)
     .map(w => w[0]?.toUpperCase() ?? '').join('') || '?';
 
   return (
-    <div className={s.item} style={{ cursor: 'default' }}>
+    <div className={`${s.item} ${s.itemEnter}`} style={{ cursor: 'default', ...staggerStyle(index) }}>
       <div className={s.avaWrap}>
         <div className={s.ava} style={{ overflow: 'hidden', padding: 0, background: isImgAva ? undefined : 'var(--sky,#EEF3FF)' }}>
           {isImgAva

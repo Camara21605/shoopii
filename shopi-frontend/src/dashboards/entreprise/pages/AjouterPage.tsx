@@ -141,7 +141,7 @@ function FieldError({ message }: { message?: string }) {
 
 const FORM_INITIAL = {
   nom: '', description: '', prix: '', prixAncien: '', stock: '', seuil: '',
-  marque: '', tags: '', visibilite: 'draft', reference: '', garantie: '12 mois',
+  marque: '', tags: '', visibilite: 'public', reference: '', garantie: '12 mois',
   poids: '', condition: 'neuf', categorieId: '', categorie: '', sousCatId: '', sousCat: '',
   titreSeo: '', descriptionSeo: '', urlSlug: '', longueur: '', largeur: '', hauteur: '',
   paysOrigine: 'GN', politiqueRetour: '7j', contenuBoite: '',

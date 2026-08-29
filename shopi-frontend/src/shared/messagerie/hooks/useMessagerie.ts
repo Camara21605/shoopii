@@ -48,8 +48,18 @@ interface ApiMessage {
   replyToId:     string | null;
   productId:     string | null;
   orderId:       string | null;
+  latitude:      number | null;
+  longitude:     number | null;
+  locationLabel: string | null;
   isEdited:      boolean;
   deletedAt:     string | null;
+}
+
+/** Réponse paginée cursor (keyset) — voir MessagerieService.CursorPage côté backend. */
+interface CursorPage<T> {
+  data:       T[];
+  nextCursor: string | null;
+  hasMore:    boolean;
 }
 
 export interface MediaAttachment {
@@ -60,6 +70,19 @@ export interface MediaAttachment {
   type:      'image' | 'video' | 'file' | 'audio';
   /** Durée en secondes — uniquement pour les messages vocaux */
   duration?: number;
+}
+
+/** Produit, commande ou position GPS jointe — alternative à `media` sur sendMessage(). */
+export interface ShareExtra {
+  productId?:      string;
+  /** Résumé du produit, connu du picker AVANT la réponse serveur — pour l'affichage optimiste. */
+  productSummary?: string;
+  orderId?:        string;
+  /** Résumé de la commande, connu du picker AVANT la réponse serveur — pour l'affichage optimiste. */
+  orderSummary?:   string;
+  latitude?:       number;
+  longitude?:      number;
+  locationLabel?:  string;
 }
 
 // ── Mapping actorType → UserRole frontend ─────────────────────
@@ -121,14 +144,15 @@ function apiConvToState(api: ApiConv, messages: ChatMessage[] = []): { conv: Con
 }
 
 const CONTENT_TYPE_MAP: Record<string, ChatMessage['type']> = {
-  text:    'text',
-  image:   'image',
-  video:   'video',
-  audio:   'voice',
-  file:    'file',
-  product: 'product',
-  order:   'order',
-  call:    'call',
+  text:     'text',
+  image:    'image',
+  video:    'video',
+  audio:    'voice',
+  file:     'file',
+  product:  'product',
+  order:    'order',
+  location: 'location',
+  call:     'call',
 };
 
 function apiMsgToChat(m: ApiMessage): ChatMessage {
@@ -144,6 +168,16 @@ function apiMsgToChat(m: ApiMessage): ChatMessage {
     mediaMime: m.mediaMimeType ?? undefined,
     duration:  m.mediaDuration ? fmtDuration(m.mediaDuration) : undefined,
   };
+
+  if (m.contentType === 'product' && m.productId) {
+    base.product = { productId: m.productId, summary: m.content ?? '' };
+  }
+  if (m.contentType === 'order' && m.orderId) {
+    base.order = { orderId: m.orderId, summary: m.content ?? '' };
+  }
+  if (m.contentType === 'location' && m.latitude != null && m.longitude != null) {
+    base.location = { lat: m.latitude, lng: m.longitude, label: m.locationLabel };
+  }
 
   /* Désérialise les métadonnées d'appel */
   if (m.contentType === 'call' && m.content) {
@@ -166,6 +200,10 @@ export function useMessagerie() {
   const [infoPanelOpen,     setInfoPanelOpen]     = useState(false);
   const [mobileOpen,        setMobileOpen]        = useState(() => window.innerWidth <= 640);
   const [loadingConvs,      setLoadingConvs]      = useState(true);
+  /** true pendant un appel loadMoreConversations() (infinite scroll de la liste) */
+  const [loadingMoreConvs,  setLoadingMoreConvs]  = useState(false);
+  /** false une fois qu'on sait qu'il n'y a plus de conversation à charger — pilote l'affichage de la sentinelle IntersectionObserver */
+  const [hasMoreConvs,      setHasMoreConvs]      = useState(false);
 
   /** Map<convId, {senderId, senderName, activity}> — indicateurs typing temps réel */
   const [typingMap, setTypingMap] = useState<Map<string, WsTyping>>(new Map());
@@ -173,6 +211,19 @@ export function useMessagerie() {
   const loadedMsgs    = useRef<Set<string>>(new Set());
   const activeConvRef = useRef<string | null>(null);
   const pendingConvHandled = useRef(false);
+  /** Curseur de la page suivante de conversations (null = pas encore chargé / plus de suite) */
+  const convCursorRef = useRef<string | null>(null);
+  /** Garde anti-appels multiples — ref plutôt que le state loadingMoreConvs
+   * (asynchrone) car IntersectionObserver peut déclencher plusieurs callbacks
+   * avant le premier re-render. */
+  const loadingMoreConvsRef = useRef(false);
+  /** Curseur "messages plus anciens" par conversation — Map<convId, cursor | null> */
+  const msgCursorMap  = useRef<Map<string, string | null>>(new Map());
+  /** Garde anti-appels multiples pour loadOlderMessages(), par conversation */
+  const loadingOlderRef = useRef<Set<string>>(new Set());
+  /** Arguments d'envoi d'origine par id de message optimiste — permet à
+   * retryMessage() de relancer sendMessage() à l'identique après un échec. */
+  const pendingSendArgs = useRef<Map<string, { convId: string; text: string; media?: MediaAttachment; extra?: ShareExtra }>>(new Map());
 
   // ── Callbacks Socket.IO ───────────────────────────────────
 
@@ -192,6 +243,16 @@ export function useMessagerie() {
       replyToId:   message.replyToId ?? undefined,
     };
 
+    if (message.contentType === 'product' && message.productId) {
+      chatMsg.product = { productId: message.productId, summary: message.content ?? '' };
+    }
+    if (message.contentType === 'order' && message.orderId) {
+      chatMsg.order = { orderId: message.orderId, summary: message.content ?? '' };
+    }
+    if (message.contentType === 'location' && message.latitude != null && message.longitude != null) {
+      chatMsg.location = { lat: message.latitude, lng: message.longitude, label: message.locationLabel ?? null };
+    }
+
     /* Désérialise les métadonnées d'appel — sinon la bulle "call" retombe
        en texte brut affichant le JSON du content (bug observé en prod : la
        bulle "Appel annulé" apparaissait sous forme de JSON non formaté). */
@@ -200,6 +261,12 @@ export function useMessagerie() {
     }
 
     setConversations(prev => bumpToFront(prev, conversationId, c => {
+      /* Garde anti-doublon : si ce message (id serveur) est déjà présent —
+       * ex. déjà inséré via le remplacement optimiste de sendMessage(), et
+       * le serveur broadcast aussi 'new_message' à l'émetteur (autre onglet/
+       * appareil) — on ne le repousse pas une 2e fois. */
+      if (c.messages.some(m => m.id === chatMsg.id)) return c;
+
       /* Si la conv est active → ajoute le message et ne badge pas */
       const isActive = activeConvRef.current === conversationId;
       return {
@@ -353,10 +420,10 @@ export function useMessagerie() {
 
     let ignore = false;
 
-    apiFetch<ApiConv[]>('/messagerie/conversations')
-      .then(data => {
+    apiFetch<CursorPage<ApiConv>>('/messagerie/conversations', { params: { limit: 20 } })
+      .then(page => {
         if (ignore) return;
-        const list = Array.isArray(data) ? data : [];
+        const list = Array.isArray(page?.data) ? page.data : [];
         const newConvs: Conversation[] = [];
         const newUsers: ChatUser[]     = [];
         list.forEach(api => {
@@ -366,11 +433,53 @@ export function useMessagerie() {
         });
         setConversations(newConvs);
         setUsers(newUsers);
+        convCursorRef.current = page?.nextCursor ?? null;
+        setHasMoreConvs(!!page?.hasMore);
       })
       .catch(() => {})
       .finally(() => { if (!ignore) setLoadingConvs(false); });
 
     return () => { ignore = true; };
+  }, []);
+
+  /* ── Infinite scroll — charge la page suivante de conversations ──
+   * Appelée par la sentinelle IntersectionObserver en bas de ConvList.
+   * Garde par ref (loadingMoreConvsRef) plutôt que le state loadingMoreConvs
+   * seul : l'observer peut émettre plusieurs callbacks avant le premier
+   * re-render qui refléterait le state "loading" à true. */
+  const loadMoreConversations = useCallback(async () => {
+    if (loadingMoreConvsRef.current || !convCursorRef.current) return;
+    loadingMoreConvsRef.current = true;
+    setLoadingMoreConvs(true);
+
+    try {
+      const page = await apiFetch<CursorPage<ApiConv>>('/messagerie/conversations', {
+        params: { cursor: convCursorRef.current, limit: 20 },
+      });
+      const list = Array.isArray(page?.data) ? page.data : [];
+      const newUsers: ChatUser[] = [];
+      const newConvs: Conversation[] = list.map(api => {
+        const { conv, user } = apiConvToState(api);
+        newUsers.push(user);
+        return conv;
+      });
+
+      setConversations(prev => {
+        const existingIds = new Set(prev.map(c => c.id));
+        return [...prev, ...newConvs.filter(c => !existingIds.has(c.id))];
+      });
+      setUsers(prev => {
+        const ids = new Set(prev.map(u => u.id));
+        return [...prev, ...newUsers.filter(u => !ids.has(u.id))];
+      });
+
+      convCursorRef.current = page?.nextCursor ?? null;
+      setHasMoreConvs(!!page?.hasMore);
+    } catch { /* silencieux — la sentinelle retentera au prochain scroll */ }
+    finally {
+      loadingMoreConvsRef.current = false;
+      setLoadingMoreConvs(false);
+    }
   }, []);
 
   // ── Map userId → user ─────────────────────────────────────
@@ -404,17 +513,53 @@ export function useMessagerie() {
     if (loadedMsgs.current.has(id)) return;
 
     try {
-      const msgs = await apiFetch<ApiMessage[]>(`/messagerie/conversations/${id}/messages?limit=50`);
-      if (Array.isArray(msgs)) {
-        setConversations(prev => prev.map(c =>
-          c.id === id ? { ...c, messages: msgs.map(apiMsgToChat) } : c
-        ));
-        loadedMsgs.current.add(id);
-        /* REST fallback — garantit la mise à jour BDD même si socket hors ligne */
-        apiFetch(`/messagerie/conversations/${id}/read`, { method: 'PATCH' }).catch(() => {});
-      }
+      const page = await apiFetch<CursorPage<ApiMessage>>(`/messagerie/conversations/${id}/messages`, { params: { limit: 50 } });
+      const msgs = Array.isArray(page?.data) ? page.data : [];
+      setConversations(prev => prev.map(c =>
+        c.id === id ? { ...c, messages: msgs.map(apiMsgToChat), hasMoreMessages: !!page?.hasMore } : c
+      ));
+      msgCursorMap.current.set(id, page?.nextCursor ?? null);
+      loadedMsgs.current.add(id);
+      /* REST fallback — garantit la mise à jour BDD même si socket hors ligne */
+      apiFetch(`/messagerie/conversations/${id}/read`, { method: 'PATCH' }).catch(() => {});
     } catch { /* silencieux */ }
   }, [joinConv, leaveConv, markRead]);
+
+  /* ── Charge les messages plus anciens qu'une conversation ouverte ──
+   * Déclenché par MessagesZone au scroll vers le haut. Préserve la position
+   * visuelle de scroll : MessagesZone mesure scrollHeight avant/après lui-même
+   * (cette fonction se contente de PRÉPENDRE les messages, sans toucher au DOM). */
+  const loadOlderMessages = useCallback(async (convId: string) => {
+    if (loadingOlderRef.current.has(convId)) return;
+    const cursor = msgCursorMap.current.get(convId);
+    if (!cursor) return; // null = plus rien à charger, undefined = pas encore ouverte
+
+    loadingOlderRef.current.add(convId);
+    setConversations(prev => prev.map(c => c.id === convId ? { ...c, loadingOlder: true } : c));
+
+    try {
+      const page = await apiFetch<CursorPage<ApiMessage>>(`/messagerie/conversations/${convId}/messages`, {
+        params: { cursor, limit: 50 },
+      });
+      const older = (Array.isArray(page?.data) ? page.data : []).map(apiMsgToChat);
+
+      setConversations(prev => prev.map(c => {
+        if (c.id !== convId) return c;
+        const existingIds = new Set(c.messages.map(m => m.id));
+        return {
+          ...c,
+          messages:        [...older.filter(m => !existingIds.has(m.id)), ...c.messages],
+          hasMoreMessages: !!page?.hasMore,
+          loadingOlder:    false,
+        };
+      }));
+      msgCursorMap.current.set(convId, page?.nextCursor ?? null);
+    } catch {
+      setConversations(prev => prev.map(c => c.id === convId ? { ...c, loadingOlder: false } : c));
+    } finally {
+      loadingOlderRef.current.delete(convId);
+    }
+  }, []);
 
   /* Pré-sélectionne + charge les messages d'une conversation demandée depuis
    * l'extérieur (ex. bouton "Message" d'une fiche boutique/profil), passée
@@ -432,13 +577,15 @@ export function useMessagerie() {
     selectConv(pendingConvId);
   }, [pendingConvId, conversations, selectConv]);
 
-  // ── Envoyer un message (texte ou média) ──────────────────
+  // ── Envoyer un message (texte, média, commande ou position) ──
   const sendMessage = useCallback(async (
     convId: string,
     text:   string,
     media?: MediaAttachment,
+    extra?: ShareExtra,
   ) => {
-    const rawType  = media?.type ?? 'text';
+    const hasLocation = extra?.latitude != null && extra?.longitude != null;
+    const rawType  = media?.type ?? (extra?.productId ? 'product' : extra?.orderId ? 'order' : hasLocation ? 'location' : 'text');
     const msgType: ChatMessage['type'] = rawType === 'audio' ? 'voice' : rawType as ChatMessage['type'];
     const optimistic: ChatMessage = {
       id:        'tmp-' + Date.now(),
@@ -451,13 +598,21 @@ export function useMessagerie() {
       mediaName: media?.name,
       mediaMime: media?.mime,
       duration:  media?.duration ? fmtDuration(media.duration) : undefined,
+      product:   extra?.productId ? { productId: extra.productId, summary: extra.productSummary ?? '' } : undefined,
+      order:     extra?.orderId ? { orderId: extra.orderId, summary: extra.orderSummary ?? '' } : undefined,
+      location:  hasLocation ? { lat: extra!.latitude!, lng: extra!.longitude!, label: extra?.locationLabel ?? null } : undefined,
     };
     const previewText = text || (
-      msgType === 'image' ? '📷 Photo' :
-      msgType === 'video' ? '🎥 Vidéo' :
-      msgType === 'file'  ? `📄 ${media?.name ?? 'Document'}` :
-      msgType === 'voice' ? '🎙️ Message vocal' : ''
+      msgType === 'image'    ? '📷 Photo' :
+      msgType === 'video'    ? '🎥 Vidéo' :
+      msgType === 'file'     ? `📄 ${media?.name ?? 'Document'}` :
+      msgType === 'voice'    ? '🎙️ Message vocal' :
+      msgType === 'product'  ? '📦 Produit partagé' :
+      msgType === 'order'    ? '🛒 Commande partagée' :
+      msgType === 'location' ? '📍 Position partagée' : ''
     );
+
+    pendingSendArgs.current.set(optimistic.id, { convId, text, media, extra });
 
     setConversations(prev => bumpToFront(prev, convId, c =>
       ({ ...c, messages: [...c.messages, optimistic], lastMsg: previewText, lastTime: nowTime() })
@@ -465,7 +620,7 @@ export function useMessagerie() {
 
     try {
       const body: Record<string, unknown> = {
-        contentType: media ? media.type : 'text',
+        contentType: media ? media.type : extra?.productId ? 'product' : extra?.orderId ? 'order' : hasLocation ? 'location' : 'text',
         content:     text || null,
       };
       if (media) {
@@ -475,11 +630,19 @@ export function useMessagerie() {
         body.mediaMimeType = media.mime;
         if (media.duration) body.mediaDuration = media.duration;
       }
+      if (extra?.productId) body.productId = extra.productId;
+      if (extra?.orderId) body.orderId = extra.orderId;
+      if (hasLocation) {
+        body.latitude  = extra!.latitude;
+        body.longitude = extra!.longitude;
+        if (extra?.locationLabel) body.locationLabel = extra.locationLabel;
+      }
 
       const saved = await apiFetch<ApiMessage>(
         `/messagerie/conversations/${convId}/messages`,
         { method: 'POST', body },
       );
+      pendingSendArgs.current.delete(optimistic.id);
       if (saved) {
         setConversations(prev => prev.map(c =>
           c.id === convId
@@ -487,8 +650,30 @@ export function useMessagerie() {
             : c
         ));
       }
-    } catch { /* garder le message optimiste */ }
+    } catch {
+      /* Échec réseau/serveur — la bulle optimiste reste affichée mais marquée
+       * en échec (sendFailed), avec les arguments d'origine conservés dans
+       * pendingSendArgs pour permettre retryMessage(). */
+      setConversations(prev => prev.map(c =>
+        c.id === convId
+          ? { ...c, messages: c.messages.map(m => m.id === optimistic.id ? { ...m, sendFailed: true } : m) }
+          : c
+      ));
+    }
   }, []);
+
+  /* ── Réessaye un message resté en échec (sendFailed) ──
+   * Retire l'ancienne bulle en erreur puis relance sendMessage() à l'identique
+   * (nouvel id optimiste) — évite les doublons plutôt que de "réanimer" l'ancien. */
+  const retryMessage = useCallback((convId: string, msgId: string) => {
+    const args = pendingSendArgs.current.get(msgId);
+    if (!args) return;
+    pendingSendArgs.current.delete(msgId);
+    setConversations(prev => prev.map(c =>
+      c.id === convId ? { ...c, messages: c.messages.filter(m => m.id !== msgId) } : c
+    ));
+    sendMessage(args.convId, args.text, args.media, args.extra);
+  }, [sendMessage]);
 
   // ── Enregistrer un événement d'appel dans la conversation ──
   const sendCallEvent = useCallback(async (
@@ -734,6 +919,11 @@ export function useMessagerie() {
     infoPanelOpen,
     mobileOpen,
     loadingConvs,
+    loadingMoreConvs,   // true pendant loadMoreConversations() (infinite scroll liste)
+    hasMoreConvs,       // pilote l'affichage de la sentinelle IntersectionObserver
+    loadMoreConversations,
+    loadOlderMessages,  // charge les messages plus anciens d'une conversation ouverte
+    retryMessage,       // relance un message resté en échec (sendFailed)
     typingMap,       // indicateurs "X est en train d'écrire" temps réel
     sendTyping,
     socketConnected, // true = Socket.IO connecté au serveur

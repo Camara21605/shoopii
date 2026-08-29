@@ -21,23 +21,58 @@
     </script>
 
     <!-- ✅ Font Awesome 6.5 — Toutes les icônes fas fa-*
-         preconnect : sans ça, cette feuille de style bloquante attend une
-         résolution DNS + handshake TLS complets vers cdnjs avant même de
-         commencer à télécharger (contrairement à Google Fonts ci-dessous,
-         qui en bénéficiait déjà). -->
+         preconnect : sans ça, cette feuille de style attend une résolution
+         DNS + handshake TLS complets vers cdnjs avant même de commencer à
+         télécharger (contrairement à Google Fonts ci-dessous, qui en
+         bénéficiait déjà).
+
+         Chargement NON bloquant (media="print" puis bascule sur "all" au
+         onload) : un <link rel="stylesheet"> classique bloque le premier
+         rendu de TOUTE la page tant que le CDN n'a pas répondu — si
+         cdnjs.cloudflare.com est lent/indisponible, ça retarde l'apparition
+         de la page entière (Header, Home, tout) juste pour des icônes, qui
+         ne sont de toute façon qu'un détail visuel secondaire à côté du
+         texte/contenu réel. Avec ce pattern, la page s'affiche immédiatement
+         avec des icônes manquantes le temps que la feuille de style arrive,
+         plutôt que d'attendre — <noscript> garde le comportement classique
+         si JS est désactivé. -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+    <link
+      rel="preload" as="style"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    </noscript>
 
-    <!-- ✅ Google Fonts — Fraunces (titres) + DM Sans (texte) -->
+    <!-- ✅ Google Fonts — Fraunces (titres) + DM Sans (texte)
+         Même pattern non bloquant que ci-dessus. `display=swap` (déjà dans
+         l'URL) garantit que le texte reste lisible avec la police de repli
+         pendant le chargement, mais la feuille elle-même reste bloquante
+         par défaut sans ce pattern — même raisonnement que Font Awesome :
+         le texte du site ne doit jamais attendre un CDN tiers pour
+         s'afficher. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      rel="preload" as="style"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,300&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
+    />
+    <link
       href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,300&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,300&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
+    </noscript>
   </head>
   <body>
     <div id="root"></div>

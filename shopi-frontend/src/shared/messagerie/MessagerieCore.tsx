@@ -48,6 +48,12 @@ export default function MessagerieCore() {
     totalUnread,
     infoPanelOpen,
     mobileOpen,
+    loadingConvs,
+    loadingMoreConvs,
+    hasMoreConvs,
+    loadMoreConversations,
+    loadOlderMessages,
+    retryMessage,
     typingMap,
     sendTyping,
     socketConnected,
@@ -152,8 +158,22 @@ export default function MessagerieCore() {
     }
   }, [activeGroupId, activeConvId, deleteGroupMessage, deleteMessage]);
 
+  // ── Charger les messages plus anciens (conv directe seulement —
+  // pas de pagination messages sur les groupes de livraison, hors périmètre) ──
+  const handleLoadOlderMessages = useCallback((convId: string) => {
+    if (!activeGroupId) loadOlderMessages(convId);
+  }, [activeGroupId, loadOlderMessages]);
+
+  // ── Réessayer un message resté en échec (conv directe seulement) ──
+  const handleRetry = useCallback((msgId: string) => {
+    if (!activeGroupId && activeConvId) retryMessage(activeConvId, msgId);
+  }, [activeGroupId, activeConvId, retryMessage]);
+
   // ── Envoyer un message (conv ou groupe) ──────────────────────
-  const handleSend = useCallback((convId: string, text: string, media?: any) => {
+  // Le partage de commande/position (`extra`) n'est disponible que pour les
+  // conversations directes — les groupes de livraison n'ont pas cette
+  // permission (contenu hors de leur périmètre : coordination de livraison).
+  const handleSend = useCallback((convId: string, text: string, media?: any, extra?: any) => {
     if (activeGroupId) {
       if (media) {
         const grpContentType =
@@ -173,7 +193,7 @@ export default function MessagerieCore() {
         sendGroupMessage(activeGroupId, { contentType: 'text', content: text });
       }
     } else {
-      sendMessage(convId, text, media);
+      sendMessage(convId, text, media, extra);
     }
   }, [activeGroupId, sendGroupMessage, sendMessage]);
 
@@ -281,6 +301,10 @@ export default function MessagerieCore() {
         onUnhideConv={unhideConversation}
         onMarkUnread={markConvAsUnread}
         onMarkRead={markConvAsRead}
+        loadingConvs={loadingConvs}
+        hasMoreConvs={hasMoreConvs}
+        loadingMoreConvs={loadingMoreConvs}
+        onLoadMoreConversations={loadMoreConversations}
         groupConvs={groups}
         groupUsersMap={groupUsersMap}
         callHistory={callHistory}
@@ -303,6 +327,10 @@ export default function MessagerieCore() {
         onToast={toast}
         onDelete={handleDelete}
         onUpdateGroup={activeGroupId ? updateGroupDescription : undefined}
+        onLoadOlderMessages={handleLoadOlderMessages}
+        onRetry={handleRetry}
+        onArchiveConv={activeGroupId ? undefined : hideConversation}
+        onDeleteConv={activeGroupId ? undefined : deleteConversation}
         onCall={activeGroupId
           ? () => initiateGroupCall(activeGroupId, 'audio')
           : (activeUser ? handleCall : undefined)}

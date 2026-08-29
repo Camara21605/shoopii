@@ -9,8 +9,8 @@
  *   ✅ Guards migrés vers useAppContext() — plus de tokenStorage dans les guards
  * ================================================================ */
 
-import React, { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import React, { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { GlobalCallProvider } from '../shared/context/GlobalCallContext';
 import { GroupCallProvider }  from '../shared/context/GroupCallContext';
 import { useAppContext }      from '../shared/context/AppContext';
@@ -73,18 +73,26 @@ const Loader = () => <LoadingScreen />;
 
 /**
  * Protège une route contre les utilisateurs non connectés.
- * AppProvider a déjà résolu la session (getMe) avant de rendre ses enfants,
- * donc isAuthenticated est définitif quand ces guards s'exécutent.
+ *
+ * AppProvider ne bloque plus le rendu global pendant GET /auth/me (voir
+ * AppContext.tsx) — donc isAuthenticated n'est PAS forcément définitif au
+ * tout premier rendu ici. Seules les routes qui en ont réellement besoin
+ * (celle-ci, PublicOnlyRoute, RoleRoute) attendent localement isLoading,
+ * pour ne jamais afficher le contenu protégé puis rediriger derrière (flash),
+ * sans pour autant faire attendre les pages publiques qui n'utilisent pas
+ * ce guard.
  */
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAppContext();
+  const { isAuthenticated, isLoading } = useAppContext();
+  if (isLoading) return <Loader />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
 
 /** Redirige les utilisateurs déjà connectés vers leur dashboard. */
 const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, user } = useAppContext();
+  const { isAuthenticated, isLoading, user } = useAppContext();
+  if (isLoading) return <Loader />;
   if (!isAuthenticated) return <>{children}</>;
   const role = user?.role ?? null;
   if (role === 'client') return <Navigate to="/home" replace />;
@@ -106,7 +114,8 @@ const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
  * inconnu/client).
  */
 const RoleRoute: React.FC<{ role: string; children: React.ReactNode }> = ({ role, children }) => {
-  const { isAuthenticated, user } = useAppContext();
+  const { isAuthenticated, isLoading, user } = useAppContext();
+  if (isLoading) return <Loader />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (user?.role !== role) return <Navigate to={getDashboardPath(user?.role ?? null)} replace />;
   return <>{children}</>;
@@ -140,19 +149,44 @@ const DARK_FORCED_PREFIXES = [
 
 const ThemeRouteSync: React.FC = () => {
   const { pathname } = useLocation();
-  const { isAuthenticated } = useAppContext();
-  const forceDark = isAuthenticated && DARK_FORCED_PREFIXES.some(p => pathname.startsWith(p));
+  /* Ne dépend QUE du chemin, pas de isAuthenticated : ce composant est
+   * rendu hors de tout Suspense/guard, donc AVANT même que GET /auth/me
+   * n'ait résolu (voir AppContext.tsx — le rendu global n'attend plus
+   * cette requête). Si on attendait isAuthenticated ici, un utilisateur
+   * déjà connecté qui rafraîchit une page de dashboard verrait un flash
+   * clair→sombre le temps de la résolution — exactement le bug que ce
+   * composant existe pour éviter (voir commentaire au-dessus). Un visiteur
+   * non connecté qui atterrit sur une URL de dashboard sera de toute façon
+   * redirigé vers /login par RoleRoute/PrivateRoute une fois résolu — le
+   * thème forcé entre-temps est sans conséquence. */
+  const forceDark = DARK_FORCED_PREFIXES.some(p => pathname.startsWith(p));
   useForceDarkTheme(forceDark);
   return null;
 };
 
-/** Home — accessible aux clients et aux non-connectés ; redirige les autres rôles. */
+/**
+ * Home — accessible aux clients et aux non-connectés ; redirige les autres
+ * rôles vers leur dashboard.
+ *
+ * Rend HomePage IMMÉDIATEMENT, sans attendre la résolution de la session
+ * (GET /auth/me) — Home est publique par nature (visiteur anonyme ou
+ * client), donc dans l'immense majorité des cas il n'y a rien à attendre.
+ * Le cas rare (utilisateur déjà connecté avec un rôle non-client qui
+ * atterrit sur /home) est corrigé après coup, dès que la session résout,
+ * via ce useEffect — un très bref affichage de Home avant redirection dans
+ * ce cas précis, plutôt que de bloquer TOUS les visiteurs (l'immense
+ * majorité) en attendant une vérification qui ne les concerne même pas.
+ */
 const HomeRoute: React.FC = () => {
-  const { isAuthenticated, user } = useAppContext();
-  if (isAuthenticated) {
+  const { isAuthenticated, isLoading, user } = useAppContext();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isLoading || !isAuthenticated) return;
     const role = user?.role ?? null;
-    if (role && role !== 'client') return <Navigate to={getDashboardPath(role)} replace />;
-  }
+    if (role && role !== 'client') navigate(getDashboardPath(role), { replace: true });
+  }, [isLoading, isAuthenticated, user, navigate]);
+
   return (
     <Suspense fallback={<Loader />}>
       <HomePage />
@@ -160,10 +194,16 @@ const HomeRoute: React.FC = () => {
   );
 };
 
-/** Redirige / et les routes inconnues vers home ou le dashboard selon le rôle. */
+/**
+ * Redirige / et les routes inconnues vers home ou le dashboard selon le rôle.
+ * Pendant la résolution de session (isLoading), traite l'utilisateur comme
+ * non connecté et part vers /home immédiatement plutôt que d'attendre —
+ * HomeRoute ci-dessus corrige elle-même la destination un instant plus tard
+ * si l'utilisateur s'avère être un rôle non-client déjà connecté.
+ */
 const SmartRedirect: React.FC = () => {
-  const { isAuthenticated, user } = useAppContext();
-  if (!isAuthenticated) return <Navigate to="/home" replace />;
+  const { isAuthenticated, isLoading, user } = useAppContext();
+  if (isLoading || !isAuthenticated) return <Navigate to="/home" replace />;
   const role = user?.role ?? null;
   if (role === 'client' || !role) return <Navigate to="/home" replace />;
   return <Navigate to={getDashboardPath(role)} replace />;

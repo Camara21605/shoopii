@@ -19,6 +19,7 @@
     "react-i18next": "^17.0.11",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.14.2",
+    "react-window": "^1.8.11",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
@@ -28,6 +29,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/react-window": "^1.8.8",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^10.2.1",
     "eslint-plugin-react-hooks": "^7.1.1",

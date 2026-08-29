@@ -5,11 +5,28 @@
 
 .layout {
   display: flex;
-  /* Hauteur totale moins la topbar du dashboard (66px) */
+  /* Hauteur totale moins la topbar du dashboard (66px).
+   * 100vh puis 100dvh (dynamic viewport height) juste après : sur mobile,
+   * 100vh compte la hauteur MAX du viewport (comme si la barre d'adresse
+   * du navigateur était masquée) — quand elle est visible ou qu'elle se
+   * réaffiche pendant un scroll, la zone de saisie (dernier élément en
+   * bas du flex) se retrouvait poussée sous le bord visible de l'écran,
+   * donnant l'impression qu'elle "disparaît". 100dvh suit la hauteur
+   * RÉELLEMENT visible à tout instant. Le 100vh reste en repli pour les
+   * navigateurs qui ne supportent pas dvh (valeur invalide → ignorée). */
   height: calc(100vh - var(--hdr, 66px));
+  height: calc(100dvh - var(--hdr, 66px));
   overflow: hidden;
   background: var(--g50);
   position: relative;
+}
+
+/* Wrapper plein écran de MessageriePage.tsx (site public, pas de header au-dessus) — même repli vh → dvh que .layout ci-dessus. */
+.pageWrap {
+  height:    100vh;
+  height:    100dvh;
+  overflow:  hidden;
+  box-sizing: border-box;
 }
 
 /* Overlay mobile (fond semi-transparent quand liste ouverte) */
@@ -22,17 +39,26 @@
 
 /* ── 1280px : InfoPanel rétrécit ── */
 @media (max-width: 1280px) {
-  .layout { height: calc(100vh - var(--hdr, 66px)); }
+  .layout {
+    height: calc(100vh - var(--hdr, 66px));
+    height: calc(100dvh - var(--hdr, 66px));
+  }
 }
 
 /* ── 1100px : InfoPanel masqué par overflow ── */
 @media (max-width: 1100px) {
-  .layout { height: calc(100vh - var(--hdr, 66px)); }
+  .layout {
+    height: calc(100vh - var(--hdr, 66px));
+    height: calc(100dvh - var(--hdr, 66px));
+  }
 }
 
 /* ── 820px : sidebar liste réduite ── */
 @media (max-width: 820px) {
-  .layout { height: calc(100vh - var(--hdr, 66px)); }
+  .layout {
+    height: calc(100vh - var(--hdr, 66px));
+    height: calc(100dvh - var(--hdr, 66px));
+  }
 }
 
 /* ── 768px : bottom nav fixe (home + dashboards) ──
@@ -44,7 +70,10 @@
    — sinon un espace vide de 62px reste sous la zone de saisie, exactement
    comme le bug --hdr corrigé plus haut. */
 @media (max-width: 768px) {
-  .layout { height: calc(100vh - var(--hdr, 66px) - var(--msg-bnav, 62px)); }
+  .layout {
+    height: calc(100vh - var(--hdr, 66px) - var(--msg-bnav, 62px));
+    height: calc(100dvh - var(--hdr, 66px) - var(--msg-bnav, 62px));
+  }
 }
 
 /* ── 640px : mode mobile ──
@@ -53,6 +82,7 @@
 @media (max-width: 640px) {
   .layout {
     height: calc(100vh - var(--hdr, 66px) - var(--msg-bnav, 62px));
+    height: calc(100dvh - var(--hdr, 66px) - var(--msg-bnav, 62px));
     width: 100vw;
     overflow-x: hidden;
   }

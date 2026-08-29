@@ -5,12 +5,14 @@
  * Pour les groupes de livraison, affiche une bannière profil éditable
  * en tête de la zone, avant les messages.
  */
-import React, { memo, useRef, useEffect, useState, useCallback } from 'react';
+import React, { memo, useRef, useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { Conversation, ChatUser, GroupMember } from '../data/messagerieTypes';
 import type { WsTyping } from '../hooks/useSocket';
 import MessageBubble from './MessageBubble';
+import VirtualizedMessageList from './VirtualizedMessageList';
+import type { VirtualizedMessageListHandle } from './VirtualizedMessageList';
 import { cldAvatar } from '../utils/chatUtils';
 import s from '../styles/ChatWindow.module.css';
 
@@ -399,21 +401,83 @@ interface Props {
   onToast:         (msg: string, type?: string) => void;
   onDelete:        (msgId: string, mode: 'me' | 'everyone' | 'other') => void;
   onUpdateGroup?:  (groupId: string, description: string) => void;
+  /** Charge les messages plus anciens que le plus ancien déjà affiché (scroll vers le haut). */
+  onLoadOlderMessages?: (convId: string) => void;
+  /** Relance l'envoi d'un message resté en échec */
+  onRetry?:        (msgId: string) => void;
 }
 
 function MessagesZone({
-  conv, user, members, typingActivity, onReply, onToast, onDelete, onUpdateGroup,
+  conv, user, members, typingActivity, onReply, onToast, onDelete, onUpdateGroup, onLoadOlderMessages, onRetry,
 }: Props) {
   const { t } = useTranslation();
-  const msgsRef  = useRef<HTMLDivElement>(null);
+  const msgsRef      = useRef<HTMLDivElement>(null);
+  const virtualRef    = useRef<VirtualizedMessageListHandle>(null);
   const isImgAva = user.ava?.startsWith('http');
 
-  /* Auto-scroll vers le bas à chaque nouveau message */
-  useEffect(() => {
-    setTimeout(() => {
-      if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
-    }, 50);
-  }, [conv.messages.length, conv.id]);
+  /* Virtualisation (react-window) pour les conversations directes —
+   * gère elle-même son scroll/prepend/append en interne (voir
+   * VirtualizedMessageList.tsx). Les groupes de livraison gardent le
+   * rendu natif ci-dessous (bannière profil + volume de messages
+   * typiquement faible) — voir le commentaire de fichier de
+   * VirtualizedMessageList.tsx pour le raisonnement complet. */
+  const isVirtualized = !conv.isGroup;
+
+  /* ── Scroll natif (groupes uniquement) : 3 cas distincts, tous gérés
+   * ici pour ne jamais se marcher dessus (voir dépendances ci-dessous,
+   * comparées par ref plutôt que par conv.messages.length seul, qui ne
+   * suffit pas à distinguer "message ajouté en bas" de "page plus
+   * ancienne préfixée en haut") :
+   *
+   *   1. Changement de conversation (conv.id) → aller tout en bas, direct.
+   *   2. Messages plus anciens préfixés (loadOlderMessages ci-dessous a
+   *      capturé scrollHeight/scrollTop AVANT le prepend) → recalculer
+   *      scrollTop pour conserver EXACTEMENT la position visuelle de
+   *      l'utilisateur (sinon le prepend fait "sauter" tout le contenu
+   *      visible vers le bas — bug classique des listes de chat).
+   *   3. Nouveau message ajouté en bas (envoyé ou reçu, id du dernier
+   *      message différent du précédent) → auto-scroll vers le bas. */
+  const prevConvIdRef = useRef<string | null>(null);
+  const prevLastIdRef = useRef<string | null>(null);
+  const pendingOldScrollHeightRef = useRef<number | null>(null);
+  const pendingOldScrollTopRef    = useRef<number>(0);
+
+  useLayoutEffect(() => {
+    if (isVirtualized) return; // VirtualizedMessageList gère son propre scroll
+    const el = msgsRef.current;
+    if (!el) return;
+    const lastId = conv.messages[conv.messages.length - 1]?.id ?? null;
+    const convChanged = prevConvIdRef.current !== conv.id;
+
+    if (convChanged) {
+      setTimeout(() => { if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight; }, 50);
+    } else if (pendingOldScrollHeightRef.current !== null) {
+      const delta = el.scrollHeight - pendingOldScrollHeightRef.current;
+      el.scrollTop = pendingOldScrollTopRef.current + delta;
+      pendingOldScrollHeightRef.current = null;
+    } else if (lastId !== prevLastIdRef.current) {
+      setTimeout(() => { if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight; }, 50);
+    }
+
+    prevConvIdRef.current = conv.id;
+    prevLastIdRef.current = lastId;
+  }, [conv.messages, conv.id, isVirtualized]);
+
+  /* Déclenche le chargement des messages plus anciens quand l'utilisateur
+   * approche du haut de la zone (groupes uniquement — VirtualizedMessageList
+   * a son propre équivalent via onScroll de react-window) — capture
+   * scrollHeight/scrollTop AVANT l'arrivée des nouveaux messages pour que
+   * l'effet ci-dessus puisse restaurer la position visuelle exacte après
+   * leur insertion. */
+  const handleScroll = useCallback(() => {
+    const el = msgsRef.current;
+    if (!el || !onLoadOlderMessages) return;
+    if (el.scrollTop < 80 && conv.hasMoreMessages && !conv.loadingOlder) {
+      pendingOldScrollHeightRef.current = el.scrollHeight;
+      pendingOldScrollTopRef.current    = el.scrollTop;
+      onLoadOlderMessages(conv.id);
+    }
+  }, [conv.id, conv.hasMoreMessages, conv.loadingOlder, onLoadOlderMessages]);
 
   /* Index du dernier message envoyé par moi et vu (pour avatar de lecture) */
   let lastReadIdx = -1;
@@ -430,45 +494,71 @@ function MessagesZone({
     if (onUpdateGroup) onUpdateGroup(conv.id, desc);
   }, [onUpdateGroup, conv.id]);
 
-  /* Aller au tout début / à la toute fin de la conversation */
+  /* Aller au tout début / à la toute fin de la conversation — délègue au
+   * handle impératif de VirtualizedMessageList pour les conv directes
+   * (react-window gère son propre conteneur de scroll interne, `msgsRef`
+   * ne pointe vers rien d'utile dans ce cas). */
   const scrollToStart = useCallback(() => {
-    msgsRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+    if (isVirtualized) virtualRef.current?.scrollToStart();
+    else msgsRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [isVirtualized]);
   const scrollToEnd = useCallback(() => {
+    if (isVirtualized) { virtualRef.current?.scrollToEnd(); return; }
     const el = msgsRef.current;
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-  }, []);
+  }, [isVirtualized]);
 
   return (
     <>
       {/* ── Liste des messages ── */}
       <div className={s.msgsZoneWrap}>
-        <div className={s.msgsZone} ref={msgsRef}>
+        {isVirtualized ? (
+          <VirtualizedMessageList
+            ref={virtualRef}
+            messages={conv.messages}
+            user={user}
+            lastReadIdx={lastReadIdx}
+            onReply={onReply}
+            onToast={onToast}
+            onDelete={onDelete}
+            onRetry={onRetry}
+            convId={conv.id}
+            hasMoreMessages={conv.hasMoreMessages}
+            loadingOlder={conv.loadingOlder}
+            onLoadOlderMessages={onLoadOlderMessages}
+            headerContent={conv.messages.length === 0 ? (
+              <div className={s.sysMsg}><span>{t('messagerie.messagesZone.nouvelleConversationAvec', { name: user.name })}</span></div>
+            ) : undefined}
+          />
+        ) : (
+          <div className={s.msgsZone} ref={msgsRef} onScroll={handleScroll}>
 
-          {/* Bannière profil — groupes uniquement */}
-          {conv.isGroup && (
+            {/* Spinner "chargement des messages plus anciens" — en haut de liste */}
+            {conv.loadingOlder && (
+              <div className={s.sysMsg}><i className="fas fa-spinner fa-spin" /></div>
+            )}
+
+            {/* Bannière profil — groupes uniquement */}
             <GroupProfileBanner
               conv={conv}
               members={members ?? []}
               onSaveDesc={handleSaveDesc}
             />
-          )}
 
-          {conv.messages.length === 0 && !conv.isGroup && (
-            <div className={s.sysMsg}><span>{t('messagerie.messagesZone.nouvelleConversationAvec', { name: user.name })}</span></div>
-          )}
-          {conv.messages.map((msg, idx) => (
-            <MessageBubble
-              key={msg.id}
-              msg={msg} idx={idx} msgs={conv.messages}
-              user={user}
-              isLastRead={idx === lastReadIdx}
-              onReply={onReply}
-              onToast={onToast}
-              onDelete={onDelete}
-            />
-          ))}
-        </div>
+            {conv.messages.map((msg, idx) => (
+              <MessageBubble
+                key={msg.id}
+                msg={msg} idx={idx} msgs={conv.messages}
+                user={user}
+                isLastRead={idx === lastReadIdx}
+                onReply={onReply}
+                onToast={onToast}
+                onDelete={onDelete}
+                onRetry={onRetry}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Navigation rapide — début / fin de la conversation */}
         {conv.messages.length > 1 && (

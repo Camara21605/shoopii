@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { Inject, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, In, Not, Repository } from 'typeorm';
+import { Brackets, ILike, In, Not, Repository } from 'typeorm';
 import { BroadcastService } from './services/broadcast.service';
 import { PresenceService }  from './services/presence.service';
 import { MessagingPermissionEngine } from './permissions/messaging-permission.engine';
@@ -38,13 +38,14 @@ import { Partner }       from 'src/database/entities/profiles/partenaire-profile
 import { UserRole }      from 'src/common/enums/user-role.enum';
 import { Follow, FollowerActorType, TargetActorType } from 'src/database/entities/follow/follow.entity';
 import { UserContact }   from 'src/database/entities/contacts/user-contact.entity';
-import { Commande }      from 'src/database/entities/commande/commande.entity';
+import { Commande, CommandeStatus } from 'src/database/entities/commande/commande.entity';
+import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
 import { CompanyTeamMember, TeamMemberStatus } from 'src/database/entities/company-team/company-team-member.entity';
 
 import {
   SendMessageDto, StartConversationDto,
   EditMessageDto, DeleteMessageDto, ToggleReactionDto,
-  ArchiveConversationDto,
+  ArchiveConversationDto, PinConversationDto, MuteConversationDto,
 } from './dto/messagerie.dto';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
@@ -62,6 +63,8 @@ export interface ConvListItem {
   unreadCount:      number;
   lastMessage:      string | null;
   lastMessageAt:    string | null;
+  pinned:           boolean;
+  muted:            boolean;
 }
 
 export interface MessageItem {
@@ -80,8 +83,37 @@ export interface MessageItem {
   replyToId:     string | null;
   productId:     string | null;
   orderId:       string | null;
+  latitude:      number | null;
+  longitude:     number | null;
+  locationLabel: string | null;
   isEdited:      boolean;
   deletedAt:     string | null;
+}
+
+export interface ShareableCommande {
+  id:        string;
+  numero:    string;
+  status:    string;
+  total:     number;
+  createdAt: string;
+}
+
+export interface ShareableProduit {
+  id:    string;
+  nom:   string;
+  prix:  number;
+  image: string | null;
+}
+
+export interface MessageSearchResult {
+  id:            string;
+  contentType:   string;
+  content:       string | null;
+  mediaName:     string | null;
+  senderId:      string;
+  senderType:    string;
+  fromMe:        boolean;
+  createdAt:     string;
 }
 
 export interface UserSearchItem {
@@ -91,6 +123,13 @@ export interface UserSearchItem {
   logo:     string | null;
   subtitle: string;
   online:   boolean;
+}
+
+/** Page de résultats en pagination cursor (keyset) — conversations ou messages. */
+export interface CursorPage<T> {
+  data:       T[];
+  nextCursor: string | null;
+  hasMore:    boolean;
 }
 
 // ── Constantes ────────────────────────────────────────────────
@@ -111,6 +150,7 @@ export class MessagerieService {
     @InjectRepository(Follow)       private readonly followRepo: Repository<Follow>,
     @InjectRepository(UserContact)  private readonly contactRepo: Repository<UserContact>,
     @InjectRepository(Commande)     private readonly commandeRepo: Repository<Commande>,
+    @InjectRepository(Product)      private readonly productRepo: Repository<Product>,
     @InjectRepository(CompanyTeamMember) private readonly teamMemberRepo: Repository<CompanyTeamMember>,
     /*
      * BroadcastService injecté optionnellement (@Optional) :
@@ -390,6 +430,31 @@ export class MessagerieService {
     return result;
   }
 
+  /**
+   * Pagination cursor (keyset) — encode/décode un curseur opaque
+   * "(date, id)" en base64. Utilisé pour la liste des conversations
+   * (tri par date d'activité) et des messages (tri par createdAt).
+   *
+   * Keyset plutôt qu'OFFSET : une table qui grossit en continu (nouveaux
+   * messages/conversations insérés entre deux appels) ne fait pas "glisser"
+   * les pages déjà chargées, et la requête reste en O(log n) via l'index
+   * au lieu de scanner+ignorer les N premières lignes à chaque page.
+   */
+  private encodeCursor(at: Date, id: string): string {
+    return Buffer.from(`${at.toISOString()}|${id}`, 'utf8').toString('base64url');
+  }
+
+  private decodeCursor(cursor: string): { at: Date; id: string } {
+    try {
+      const [iso, id] = Buffer.from(cursor, 'base64url').toString('utf8').split('|');
+      const at = new Date(iso);
+      if (!id || Number.isNaN(at.getTime())) throw new Error('bad cursor');
+      return { at, id };
+    } catch {
+      throw new BadRequestException('Curseur de pagination invalide.');
+    }
+  }
+
   /** Normalise la paire pour garantir l'unicité A↔B */
   private normalizePair(
     typeA: ConversationActorType, idA: string,
@@ -407,24 +472,57 @@ export class MessagerieService {
   // 1. LISTE DES CONVERSATIONS
   // ══════════════════════════════════════════════════════════════
 
-  async getConversations(userId: string, role: UserRole, actorId?: string): Promise<ConvListItem[]> {
+  async getConversations(
+    userId: string, role: UserRole, actorId?: string,
+    cursor?: string, limit = 20,
+  ): Promise<CursorPage<ConvListItem>> {
     const myType = this.roleToActorType(role);
     const myId   = await this.resolveProfileId(userId, role, actorId);
+    return this.listConversationsPage(myType, myId, false, cursor, limit);
+  }
 
-    const conversations = await this.convRepo.find({
-      where: [
-        { initiatorType: myType, initiatorId: myId, status: ConversationStatus.ACTIVE, deletedByInitiator: false, archivedByInitiator: false },
-        { recipientType: myType, recipientId: myId, status: ConversationStatus.ACTIVE, deletedByRecipient: false, archivedByRecipient: false },
-      ],
-      order: { lastMessageAt: 'DESC', updatedAt: 'DESC' },
-      take:  50,
-    });
+  /**
+   * Requête partagée par getConversations()/getArchivedConversations() —
+   * seule la valeur de archivedByInitiator/archivedByRecipient change.
+   *
+   * Pagination cursor (keyset) sur COALESCE(lastMessageAt, updatedAt) DESC,
+   * id DESC — même ordre visuel qu'avant (conversations les plus actives en
+   * haut), mais une conversation neuve sans aucun message trie désormais à
+   * sa vraie place chronologique (updatedAt) au lieu de systématiquement
+   * remonter en tête (comportement de l'ancien tri Postgres par défaut :
+   * "ORDER BY lastMessageAt DESC" place les NULL EN PREMIER).
+   */
+  private async listConversationsPage(
+    myType: ConversationActorType, myId: string, archived: boolean,
+    cursor: string | undefined, limit: number,
+  ): Promise<CursorPage<ConvListItem>> {
+    const take = Math.min(Math.max(limit || 20, 1), 50);
+
+    const qb = this.convRepo.createQueryBuilder('c')
+      .where(new Brackets(w => {
+        w.where(
+          'c.initiatorType = :myType AND c.initiatorId = :myId AND c.status = :status AND c.deletedByInitiator = false AND c.archivedByInitiator = :archived',
+        ).orWhere(
+          'c.recipientType = :myType AND c.recipientId = :myId AND c.status = :status AND c.deletedByRecipient = false AND c.archivedByRecipient = :archived',
+        );
+      }))
+      .setParameters({ myType, myId, status: ConversationStatus.ACTIVE, archived })
+      .orderBy('COALESCE(c.lastMessageAt, c.updatedAt)', 'DESC')
+      .addOrderBy('c.id', 'DESC')
+      .take(take + 1);
+
+    if (cursor) {
+      const { at, id } = this.decodeCursor(cursor);
+      qb.andWhere('(COALESCE(c.lastMessageAt, c.updatedAt), c.id) < (:cursorAt, :cursorId)', { cursorAt: at, cursorId: id });
+    }
+
+    const rows      = await qb.getMany();
+    const hasMore    = rows.length > take;
+    const conversations = hasMore ? rows.slice(0, take) : rows;
 
     /* Résolution EN LOT (1 requête par type d'acteur + 1 pipeline Redis
-     * pour toute la liste) plutôt qu'un aller-retour BDD/Redis par
-     * conversation — voir getContactInfoBulk(). Pour un utilisateur avec
-     * 50 conversations, ça remplace jusqu'à ~150 requêtes réseau (100
-     * SELECT + 50 GET Redis) par 6 requêtes au total. */
+     * pour toute la page) plutôt qu'un aller-retour BDD/Redis par
+     * conversation — voir getContactInfoBulk(). */
     const contacts = conversations.map(conv => {
       const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
       return {
@@ -434,7 +532,7 @@ export class MessagerieService {
     });
     const contactMap = await this.getContactInfoBulk(contacts);
 
-    return conversations.map((conv, i) => {
+    const data = conversations.map((conv, i) => {
       const amInitiator  = conv.initiatorType === myType && conv.initiatorId === myId;
       const { type: contactType, id: contactId } = contacts[i];
       const unreadCount  = amInitiator ? conv.unreadCountInitiator : conv.unreadCountRecipient;
@@ -453,8 +551,17 @@ export class MessagerieService {
         unreadCount,
         lastMessage:      conv.lastMessagePreview,
         lastMessageAt:    conv.lastMessageAt?.toISOString() ?? null,
+        pinned:           amInitiator ? conv.pinnedByInitiator : conv.pinnedByRecipient,
+        muted:            amInitiator ? conv.mutedByInitiator  : conv.mutedByRecipient,
       };
     });
+
+    const last = conversations[conversations.length - 1];
+    const nextCursor = hasMore && last
+      ? this.encodeCursor(last.lastMessageAt ?? last.updatedAt, last.id)
+      : null;
+
+    return { data, nextCursor, hasMore };
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -560,7 +667,64 @@ export class MessagerieService {
     const conv = await this.assertConvAccess(convId, myType, myId);
 
     const senderType  = myType as unknown as MessageActorType;
-    const contentText = dto.content?.trim() ?? null;
+    let   contentText = dto.content?.trim() ?? null;
+
+    const amInitiator0 = conv.initiatorType === myType && conv.initiatorId === myId;
+    const otherType0   = amInitiator0 ? conv.recipientType : conv.initiatorType;
+    const otherId0      = amInitiator0 ? conv.recipientId   : conv.initiatorId;
+
+    /* CARTE COMMANDE PARTAGÉE — le résumé (numéro, statut, total) est
+     * reconstruit ici côté serveur depuis la BDD (jamais fait confiance au
+     * `content` envoyé par le client), et l'appartenance de la commande
+     * aux DEUX participants de cette conversation est vérifiée — sinon
+     * n'importe qui pourrait partager le numéro d'une commande qui ne le
+     * concerne pas. */
+    if (dto.contentType === MessageContentType.ORDER && dto.orderId) {
+      const cmdColByType: Partial<Record<ConversationActorType, string>> = {
+        [ConversationActorType.CLIENT]:        'clientId',
+        [ConversationActorType.COMPANY]:       'companyId',
+        [ConversationActorType.DELIVERY]:      'livreurId',
+        [ConversationActorType.CORRESPONDENT]: 'correspondantId',
+      };
+      const myCol    = cmdColByType[myType];
+      const otherCol = cmdColByType[otherType0];
+      /* myCol === otherCol (ex: deux CLIENT) n'a pas de sens pour une
+       * commande — une seule ligne ne peut pas assigner le même rôle à
+       * deux profils différents — et écraserait silencieusement le
+       * premier filtre dans l'objet `where` ci-dessous. */
+      if (!myCol || !otherCol || myCol === otherCol) {
+        throw new ForbiddenException("Le partage de commande n'est pas disponible pour cette conversation.");
+      }
+
+      const order = await this.commandeRepo.findOne({
+        where: { id: dto.orderId, [myCol]: myId, [otherCol]: otherId0 } as any,
+      });
+      if (!order) {
+        throw new NotFoundException("Commande introuvable ou non partagée avec ce contact.");
+      }
+      contentText = `Commande ${order.numero} · ${this.formatCommandeStatus(order.status)} · ${Number(order.total).toLocaleString('fr-FR')} GNF`;
+    }
+
+    /* CARTE PRODUIT PARTAGÉE — même principe que la commande : le résumé
+     * (nom, prix) est reconstruit côté serveur, et seul un produit PUBLIC
+     * appartenant à la boutique participant à CETTE conversation (l'un des
+     * deux acteurs) peut être partagé — pas n'importe quel produit Shopi. */
+    if (dto.contentType === MessageContentType.PRODUCT && dto.productId) {
+      const companyId = myType === ConversationActorType.COMPANY ? myId
+        : otherType0 === ConversationActorType.COMPANY ? otherId0
+        : null;
+      if (!companyId) {
+        throw new ForbiddenException("Le partage de produit n'est pas disponible pour cette conversation.");
+      }
+
+      const product = await this.productRepo.findOne({
+        where: { id: dto.productId, companyId, visibilite: ProductVisibility.PUBLIC },
+      });
+      if (!product) {
+        throw new NotFoundException("Produit introuvable ou non partagé avec ce contact.");
+      }
+      contentText = `${product.nom} · ${Number(product.prix).toLocaleString('fr-FR')} GNF`;
+    }
 
     /* Aperçu pour la liste des conversations */
     let callPreview = '';
@@ -579,10 +743,11 @@ export class MessagerieService {
 
     const preview = callPreview
       || contentText
-      || (dto.contentType === MessageContentType.IMAGE ? '📷 Photo'
-        : dto.contentType === MessageContentType.VIDEO ? '🎥 Vidéo'
-        : dto.contentType === MessageContentType.FILE  ? `📄 ${dto.mediaName ?? 'Document'}`
-        : dto.contentType === MessageContentType.AUDIO ? '🎙️ Message vocal'
+      || (dto.contentType === MessageContentType.IMAGE    ? '📷 Photo'
+        : dto.contentType === MessageContentType.VIDEO    ? '🎥 Vidéo'
+        : dto.contentType === MessageContentType.FILE     ? `📄 ${dto.mediaName ?? 'Document'}`
+        : dto.contentType === MessageContentType.AUDIO    ? '🎙️ Message vocal'
+        : dto.contentType === MessageContentType.LOCATION ? '📍 Position partagée'
         : '');
 
     const message = this.msgRepo.create({
@@ -591,6 +756,9 @@ export class MessagerieService {
       senderId:       myId,
       contentType:    dto.contentType ?? MessageContentType.TEXT,
       content:        contentText,
+      latitude:       dto.latitude      ?? null,
+      longitude:      dto.longitude     ?? null,
+      locationLabel:  dto.locationLabel ?? null,
       mediaUrl:       dto.mediaUrl      ?? null,
       mediaName:      dto.mediaName     ?? null,
       mediaSize:      dto.mediaSize     ?? null,
@@ -636,6 +804,9 @@ export class MessagerieService {
       replyToId:     saved.replyToId,
       productId:     saved.productId,
       orderId:       saved.orderId,
+      latitude:      saved.latitude      != null ? Number(saved.latitude)  : null,
+      longitude:     saved.longitude     != null ? Number(saved.longitude) : null,
+      locationLabel: saved.locationLabel,
       isEdited:      false,
       deletedAt:     null,
     };
@@ -680,6 +851,11 @@ export class MessagerieService {
             mediaSize:     saved.mediaSize,
             createdAt:     saved.createdAt.toISOString(),
             replyToId:     saved.replyToId,
+            productId:     saved.productId,
+            orderId:       saved.orderId,
+            latitude:      saved.latitude      != null ? Number(saved.latitude)  : null,
+            longitude:     saved.longitude     != null ? Number(saved.longitude) : null,
+            locationLabel: saved.locationLabel,
           },
           convPreview: {
             lastMessage:   preview.slice(0, 100),
@@ -692,10 +868,14 @@ export class MessagerieService {
 
     /*
      * Notification persistante pour le destinataire.
-     * Ignorée pour les messages de type CALL (gérés côté appel).
+     * Ignorée pour les messages de type CALL (gérés côté appel), et pour
+     * un destinataire qui a coupé les notifications de CETTE conversation
+     * (bouton "Couper les notifications" du ChatHeader) — le message reste
+     * bien livré/persisté normalement, seule la notification est éteinte.
      * Fire-and-forget : les erreurs sont absorbées dans le service.
      */
-    if (this.notifEventSvc && dto.contentType !== MessageContentType.CALL) {
+    const recipientMuted = amInitiator ? conv.mutedByRecipient : conv.mutedByInitiator;
+    if (this.notifEventSvc && dto.contentType !== MessageContentType.CALL && !recipientMuted) {
       const recipientProfileType = amInitiator ? conv.recipientType : conv.initiatorType;
       const recipientProfileId   = amInitiator ? conv.recipientId   : conv.initiatorId;
       void this.getContactInfo(myType, myId).then(info =>
@@ -1296,53 +1476,60 @@ export class MessagerieService {
   }
 
   // ══════════════════════════════════════════════════════════════
+  // 10b. ÉPINGLER / DÉSÉPINGLER UNE CONVERSATION
+  // ══════════════════════════════════════════════════════════════
+
+  async pinConversation(
+    userId: string, role: UserRole,
+    convId: string,
+    dto: PinConversationDto,
+    actorId?: string,
+  ): Promise<void> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
+    const conv   = await this.assertConvAccess(convId, myType, myId);
+
+    const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
+
+    await this.convRepo.update(convId, amInitiator
+      ? { pinnedByInitiator: dto.pinned }
+      : { pinnedByRecipient: dto.pinned },
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 10c. COUPER / RÉACTIVER LES NOTIFICATIONS D'UNE CONVERSATION
+  // ══════════════════════════════════════════════════════════════
+
+  async muteConversation(
+    userId: string, role: UserRole,
+    convId: string,
+    dto: MuteConversationDto,
+    actorId?: string,
+  ): Promise<void> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
+    const conv   = await this.assertConvAccess(convId, myType, myId);
+
+    const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
+
+    await this.convRepo.update(convId, amInitiator
+      ? { mutedByInitiator: dto.muted }
+      : { mutedByRecipient: dto.muted },
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════
   // 11. CONVERSATIONS MASQUÉES (archivées par l'acteur)
   // ══════════════════════════════════════════════════════════════
 
-  async getArchivedConversations(userId: string, role: UserRole, actorId?: string): Promise<ConvListItem[]> {
+  async getArchivedConversations(
+    userId: string, role: UserRole, actorId?: string,
+    cursor?: string, limit = 20,
+  ): Promise<CursorPage<ConvListItem>> {
     const myType = this.roleToActorType(role);
     const myId   = await this.resolveProfileId(userId, role, actorId);
-
-    const conversations = await this.convRepo.find({
-      where: [
-        { initiatorType: myType, initiatorId: myId, status: ConversationStatus.ACTIVE, deletedByInitiator: false, archivedByInitiator: true },
-        { recipientType: myType, recipientId: myId, status: ConversationStatus.ACTIVE, deletedByRecipient: false, archivedByRecipient: true },
-      ],
-      order: { lastMessageAt: 'DESC', updatedAt: 'DESC' },
-      take:  50,
-    });
-
-    /* Résolution en lot — voir le commentaire équivalent dans getConversations(). */
-    const contacts = conversations.map(conv => {
-      const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
-      return {
-        type: amInitiator ? conv.recipientType : conv.initiatorType,
-        id:   amInitiator ? conv.recipientId   : conv.initiatorId,
-      };
-    });
-    const contactMap = await this.getContactInfoBulk(contacts);
-
-    return conversations.map((conv, i) => {
-      const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
-      const { type: contactType, id: contactId } = contacts[i];
-      const unreadCount = amInitiator ? conv.unreadCountInitiator : conv.unreadCountRecipient;
-      const contact = contactMap.get(`${contactType}:${contactId}`)
-        ?? { name: 'Utilisateur', logo: null, online: false, subtitle: '', userId: null };
-
-      return {
-        id:              conv.id,
-        contactId,
-        contactType,
-        contactName:     contact.name,
-        contactLogo:     contact.logo,
-        contactOnline:   contact.online,
-        contactUserId:   contact.userId,
-        contactSubtitle: contact.subtitle,
-        unreadCount,
-        lastMessage:     conv.lastMessagePreview,
-        lastMessageAt:   conv.lastMessageAt?.toISOString() ?? null,
-      };
-    });
+    return this.listConversationsPage(myType, myId, true, cursor, limit);
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -1379,21 +1566,39 @@ export class MessagerieService {
   async getMessagesWithReplies(
     userId: string, role: UserRole,
     convId: string,
-    page = 1, limit = 30,
+    cursor: string | undefined, limit = 30,
     actorId?: string,
-  ): Promise<(MessageItem & { replyToMessage?: MessageItem | null })[]> {
+  ): Promise<CursorPage<MessageItem & { replyToMessage?: MessageItem | null }>> {
     const myType = this.roleToActorType(role);
     const myId   = await this.resolveProfileId(userId, role, actorId);
 
     await this.assertConvAccess(convId, myType, myId);
 
-    const messages = await this.msgRepo.find({
-      where:       { conversationId: convId },
-      order:       { createdAt: 'ASC' },
-      skip:        (page - 1) * limit,
-      take:        limit,
-      withDeleted: false,
-    });
+    const take = Math.min(Math.max(limit || 30, 1), 100);
+
+    /* Tri DESC (les plus récents d'abord) + curseur keyset sur (createdAt, id)
+     * — comportement chat classique : premier appel = derniers messages,
+     * appels suivants avec `cursor` = messages plus anciens que le plus
+     * ancien déjà chargé. Le résultat est re-trié ASC juste avant renvoi
+     * pour un affichage chronologique direct côté frontend. */
+    const qb = this.msgRepo.createQueryBuilder('m')
+      .where('m.conversationId = :convId', { convId })
+      .orderBy('m.createdAt', 'DESC')
+      .addOrderBy('m.id', 'DESC')
+      .take(take + 1);
+
+    if (cursor) {
+      const { at, id } = this.decodeCursor(cursor);
+      qb.andWhere('(m.createdAt, m.id) < (:cursorAt, :cursorId)', { cursorAt: at, cursorId: id });
+    }
+
+    const rows    = await qb.getMany();
+    const hasMore = rows.length > take;
+    const page    = hasMore ? rows.slice(0, take) : rows;   // DESC — plus récent en premier
+    const oldest  = page[page.length - 1] ?? null;
+    const nextCursor = hasMore && oldest ? this.encodeCursor(oldest.createdAt, oldest.id) : null;
+
+    const messages = page.slice().reverse();                // ASC pour l'affichage
 
     /* Collecter les replyToIds uniques */
     const replyIds = [...new Set(messages.map(m => m.replyToId).filter(Boolean))] as string[];
@@ -1406,7 +1611,7 @@ export class MessagerieService {
 
     const senderMsgType = myType as unknown as MessageActorType;
 
-    return messages.map(m => {
+    const data = messages.map(m => {
       const base: MessageItem = {
         id:            m.id,
         fromMe:        m.senderType === senderMsgType && m.senderId === myId,
@@ -1423,6 +1628,9 @@ export class MessagerieService {
         replyToId:     m.replyToId,
         productId:     m.productId,
         orderId:       m.orderId,
+        latitude:      m.latitude  != null ? Number(m.latitude)  : null,
+        longitude:     m.longitude != null ? Number(m.longitude) : null,
+        locationLabel: m.locationLabel,
         isEdited:      m.isEdited,
         deletedAt:     m.deletedAt?.toISOString() ?? null,
       };
@@ -1449,6 +1657,167 @@ export class MessagerieService {
           isEdited:      parent.isEdited,
           deletedAt:     parent.deletedAt?.toISOString() ?? null,
         } : null,
+      };
+    });
+
+    return { data, nextCursor, hasMore };
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // RECHERCHE DANS UNE CONVERSATION (bouton 🔍 du ChatHeader)
+  //
+  // Cherche dans TOUT ce qui est textuellement significatif : le texte
+  // des messages (TEXT, mais aussi le résumé déjà stocké dans `content`
+  // pour PRODUCT/ORDER — voir sendMessage()) et les noms de documents
+  // partagés (FILE). CALL/SYSTEM sont exclus : leur `content` est un
+  // JSON technique interne, pas du texte destiné à être cherché.
+  // ══════════════════════════════════════════════════════════════
+
+  async searchMessages(
+    userId: string, role: UserRole,
+    convId: string,
+    query: string,
+    actorId?: string,
+  ): Promise<MessageSearchResult[]> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
+
+    await this.assertConvAccess(convId, myType, myId);
+
+    const term = query.trim();
+    if (!term) return [];
+
+    // Échappe les caractères spéciaux LIKE ('%' et '_') pour qu'une
+    // recherche littérale (ex: "50%") ne soit pas interprétée comme un
+    // joker — Postgres utilise '\' comme caractère d'échappement par défaut.
+    const escaped = term.replace(/[\\%_]/g, c => '\\' + c);
+    const pattern = `%${escaped}%`;
+
+    const senderMsgType = myType as unknown as MessageActorType;
+
+    const rows = await this.msgRepo.createQueryBuilder('m')
+      .where('m.conversationId = :convId', { convId })
+      .andWhere('m.contentType NOT IN (:...excluded)', {
+        excluded: [MessageContentType.CALL, MessageContentType.SYSTEM],
+      })
+      .andWhere('(m.content ILIKE :pattern OR m.mediaName ILIKE :pattern)', { pattern })
+      .orderBy('m.createdAt', 'DESC')
+      .take(50)
+      .getMany();
+
+    return rows.map(m => ({
+      id:          m.id,
+      contentType: m.contentType,
+      content:     m.content,
+      mediaName:   m.mediaName,
+      senderId:    m.senderId,
+      senderType:  m.senderType,
+      fromMe:      m.senderType === senderMsgType && m.senderId === myId,
+      createdAt:   m.createdAt.toISOString(),
+    }));
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // COMMANDES PARTAGEABLES DANS UNE CONVERSATION
+  // (bouton "🛒 Partager une commande" du picker de messagerie)
+  // ══════════════════════════════════════════════════════════════
+
+  async getShareableCommandes(
+    userId: string, role: UserRole,
+    convId: string,
+    actorId?: string,
+  ): Promise<ShareableCommande[]> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
+
+    const conv = await this.assertConvAccess(convId, myType, myId);
+    const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
+    const otherType = amInitiator ? conv.recipientType : conv.initiatorType;
+    const otherId   = amInitiator ? conv.recipientId   : conv.initiatorId;
+
+    const cmdColByType: Partial<Record<ConversationActorType, string>> = {
+      [ConversationActorType.CLIENT]:        'clientId',
+      [ConversationActorType.COMPANY]:       'companyId',
+      [ConversationActorType.DELIVERY]:      'livreurId',
+      [ConversationActorType.CORRESPONDENT]: 'correspondantId',
+    };
+    const myCol    = cmdColByType[myType];
+    const otherCol = cmdColByType[otherType];
+    if (!myCol || !otherCol || myCol === otherCol) return [];
+
+    const orders = await this.commandeRepo.find({
+      where:  { [myCol]: myId, [otherCol]: otherId } as any,
+      order:  { createdAt: 'DESC' },
+      take:   20,
+    });
+
+    return orders.map(o => ({
+      id:        o.id,
+      numero:    o.numero,
+      status:    this.formatCommandeStatus(o.status),
+      total:     Number(o.total),
+      createdAt: o.createdAt.toISOString(),
+    }));
+  }
+
+  private formatCommandeStatus(status: CommandeStatus): string {
+    switch (status) {
+      case CommandeStatus.PENDING:         return 'En attente';
+      case CommandeStatus.PAID:            return 'Payée';
+      case CommandeStatus.IN_PROGRESS:     return 'En cours';
+      case CommandeStatus.AWAITING_CLIENT: return 'En attente de confirmation';
+      case CommandeStatus.DELIVERED:       return 'Livrée';
+      case CommandeStatus.AUTO_DELIVERED:  return 'Livrée';
+      case CommandeStatus.CANCELLED:       return 'Annulée';
+      case CommandeStatus.REFUNDED:        return 'Remboursée';
+      case CommandeStatus.DISPUTED:        return 'Litige';
+      default:                             return status;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // PRODUITS PARTAGEABLES DANS UNE CONVERSATION
+  // (bouton "📦 Partager un produit" du picker de messagerie)
+  //
+  // Contrairement aux commandes (liées aux DEUX participants), un produit
+  // appartient à UNE SEULE boutique — on liste donc le catalogue public de
+  // la boutique participant à cette conversation (l'un des deux acteurs),
+  // s'il y en a une. Sans boutique impliquée (ex: client ↔ livreur), il n'y
+  // a pas de catalogue pertinent à proposer.
+  // ══════════════════════════════════════════════════════════════
+
+  async getShareableProduits(
+    userId: string, role: UserRole,
+    convId: string,
+    actorId?: string,
+  ): Promise<ShareableProduit[]> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
+
+    const conv = await this.assertConvAccess(convId, myType, myId);
+    const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
+    const otherType = amInitiator ? conv.recipientType : conv.initiatorType;
+    const otherId   = amInitiator ? conv.recipientId   : conv.initiatorId;
+
+    const companyId = myType === ConversationActorType.COMPANY ? myId
+      : otherType === ConversationActorType.COMPANY ? otherId
+      : null;
+    if (!companyId) return [];
+
+    const products = await this.productRepo.find({
+      where:     { companyId, visibilite: ProductVisibility.PUBLIC },
+      relations: ['media'],
+      order:     { createdAt: 'DESC' },
+      take:      30,
+    });
+
+    return products.map(p => {
+      const cover = [...(p.media ?? [])].sort((a, b) => a.ordre - b.ordre)[0];
+      return {
+        id:    p.id,
+        nom:   p.nom,
+        prix:  Number(p.prix),
+        image: cover?.url ?? null,
       };
     });
   }

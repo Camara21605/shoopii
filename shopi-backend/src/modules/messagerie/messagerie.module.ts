@@ -24,6 +24,7 @@ import { Partner }      from 'src/database/entities/profiles/partenaire-profile.
 import { Follow }       from 'src/database/entities/follow/follow.entity';
 import { UserContact }  from 'src/database/entities/contacts/user-contact.entity';
 import { Commande }     from 'src/database/entities/commande/commande.entity';
+import { Product }      from 'src/database/entities/entreprise.table/product.entity';
 import { DeliveryGroup }       from 'src/database/entities/delivery-group/delivery-group.entity';
 import { DeliveryGroupMember } from 'src/database/entities/delivery-group/delivery-group-member.entity';
 import { GroupMessage }        from 'src/database/entities/delivery-group/group-message.entity';
@@ -54,6 +55,7 @@ import { BroadcastService }       from './services/broadcast.service';
       Follow,
       UserContact,
       Commande,
+      Product,
       DeliveryGroup,
       DeliveryGroupMember,
       GroupMessage,

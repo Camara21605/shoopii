@@ -8,16 +8,18 @@
  */
 import React, { useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { MediaAttachment } from '../hooks/useMessagerie';
+import type { MediaAttachment, ShareExtra } from '../hooks/useMessagerie';
 import type { WsTyping }        from '../hooks/useSocket';
 import { EMOJIS }               from '../data/messagerieTypes';
 import { fmtDuration, uploadToServer } from '../utils/chatUtils';
+import OrderSharePicker         from './OrderSharePicker';
+import ProductSharePicker       from './ProductSharePicker';
 import s from '../styles/ChatWindow.module.css';
 
 interface Props {
   convId:       string;
   replyTo:      { sender: string; text: string } | null;
-  onSend:       (convId: string, text: string, media?: MediaAttachment) => void;
+  onSend:       (convId: string, text: string, media?: MediaAttachment, extra?: ShareExtra) => void;
   onTyping?:    (convId: string, activity: WsTyping['activity']) => void;
   onToast:      (msg: string, type?: string) => void;
   onClearReply: () => void;
@@ -32,6 +34,9 @@ export default function MessageInput({
   /* ── Texte & Emoji ── */
   const [text,      setText]      = useState('');
   const [attOpen,   setAttOpen]   = useState(false);
+  const [orderPickerOpen, setOrderPickerOpen] = useState(false);
+  const [productPickerOpen, setProductPickerOpen] = useState(false);
+  const [locating,  setLocating]  = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [emojiCat,  setEmojiCat]  = useState(Object.keys(EMOJIS)[0]);
   const [uploading, setUploading] = useState(false);
@@ -220,14 +225,38 @@ export default function MessageInput({
     setRecWave(Array(28).fill(4));
   }, [convId, recSeconds, onSend, onTyping, onToast]);
 
+  // ── Position GPS ────────────────────────────────────────────────
+
+  const shareLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      onToast(t('messagerie.messageInput.geolocNonSupporte'), 'e');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        setLocating(false);
+        onSend(convId, '', undefined, {
+          latitude:  pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        });
+      },
+      () => {
+        setLocating(false);
+        onToast(t('messagerie.messageInput.geolocRefuse'), 'e');
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  }, [convId, onSend, onToast, t]);
+
   // ── Items du menu pièces jointes ──────────────────────────────
 
   const ATT_ITEMS = [
     { ico: '📷', label: t('messagerie.messageInput.attPhoto'),      bg: 'rgba(190,24,93,.08)',   action: () => imageInputRef.current?.click() },
     { ico: '📄', label: t('messagerie.messageInput.attDocument'),   bg: 'var(--sky-2,#E2EAFB)',  action: () => docInputRef.current?.click()   },
-    { ico: '📦', label: t('messagerie.messageInput.attProduit'),    bg: 'rgba(4,120,87,.09)',    action: () => onToast(`📦 ${t('messagerie.messageInput.bientotDisponible')}`, 'i') },
-    { ico: '🛒', label: t('messagerie.messageInput.attCommande'),   bg: 'rgba(180,83,9,.09)',    action: () => onToast(`🛒 ${t('messagerie.messageInput.bientotDisponible')}`, 'i') },
-    { ico: '📍', label: t('messagerie.messageInput.attLocalisation'), bg: 'rgba(109,40,217,.09)',  action: () => onToast(`📍 ${t('messagerie.messageInput.bientotDisponible')}`, 'i') },
+    { ico: '📦', label: t('messagerie.messageInput.attProduit'),    bg: 'rgba(4,120,87,.09)',    action: () => setProductPickerOpen(true) },
+    { ico: '🛒', label: t('messagerie.messageInput.attCommande'),   bg: 'rgba(180,83,9,.09)',    action: () => setOrderPickerOpen(true) },
+    { ico: '📍', label: t('messagerie.messageInput.attLocalisation'), bg: 'rgba(109,40,217,.09)',  action: shareLocation },
   ];
 
   // ── Rendu ──────────────────────────────────────────────────────
@@ -313,8 +342,8 @@ export default function MessageInput({
           {/* Menu pièces jointes */}
           <div className={s.inputAttach} data-att>
             <button className={s.attBtn} onClick={() => setAttOpen(p => !p)}
-              title={t('messagerie.messageInput.joindre')} disabled={uploading} style={{ opacity: uploading ? 0.55 : 1 }}>
-              <i className={`fas ${uploading ? 'fa-circle-notch fa-spin' : 'fa-paperclip'}`} />
+              title={t('messagerie.messageInput.joindre')} disabled={uploading || locating} style={{ opacity: (uploading || locating) ? 0.55 : 1 }}>
+              <i className={`fas ${(uploading || locating) ? 'fa-circle-notch fa-spin' : 'fa-paperclip'}`} />
             </button>
             <div className={`${s.attMenu} ${attOpen ? s.open : ''}`}>
               {ATT_ITEMS.map(item => (
@@ -325,6 +354,34 @@ export default function MessageInput({
                 </div>
               ))}
             </div>
+            {orderPickerOpen && (
+              <OrderSharePicker
+                convId={convId}
+                onToast={onToast}
+                onClose={() => setOrderPickerOpen(false)}
+                onSelect={order => {
+                  onSend(convId, '', undefined, {
+                    orderId:      order.id,
+                    orderSummary: `Commande ${order.numero} · ${order.status} · ${order.total.toLocaleString('fr-FR')} GNF`,
+                  });
+                  setOrderPickerOpen(false);
+                }}
+              />
+            )}
+            {productPickerOpen && (
+              <ProductSharePicker
+                convId={convId}
+                onToast={onToast}
+                onClose={() => setProductPickerOpen(false)}
+                onSelect={product => {
+                  onSend(convId, '', undefined, {
+                    productId:      product.id,
+                    productSummary: `${product.nom} · ${product.prix.toLocaleString('fr-FR')} GNF`,
+                  });
+                  setProductPickerOpen(false);
+                }}
+              />
+            )}
           </div>
 
           {/* Textarea + emoji */}

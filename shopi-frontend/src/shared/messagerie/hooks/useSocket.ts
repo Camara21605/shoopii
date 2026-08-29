@@ -56,6 +56,11 @@ export interface WsNewMessage {
     mediaSize:     number | null;
     createdAt:     string;
     replyToId:     string | null;
+    productId?:     string | null;
+    orderId?:       string | null;
+    latitude?:      number | null;
+    longitude?:     number | null;
+    locationLabel?: string | null;
   };
   convPreview: {
     lastMessage:   string;

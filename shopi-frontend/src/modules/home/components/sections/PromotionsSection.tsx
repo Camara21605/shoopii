@@ -71,7 +71,26 @@ export default function PromotionsSection() {
   /* Rien à afficher (chargement terminé, aucune promo active nulle part) —
      mieux vaut masquer la section qu'afficher une "Flash Sale" vide. */
   if (!loading && promos.length === 0) return null;
-  if (loading) return null;
+
+  /* Skeleton pendant le chargement — occupe le même gabarit que le layout
+   * réel (grande carte + 4 petites) au lieu de retourner null, qui créait
+   * un "trou" invisible (hauteur 0) suivi d'un saut de mise en page (CLS)
+   * quand les vraies promos arrivaient, contrairement aux autres sections
+   * de la Home qui affichent déjà toutes un skeleton. */
+  if (loading) {
+    return (
+      <section className={styles.sec}>
+        <div className={styles.wrap}>
+          <div className={styles.layout}>
+            <div className={styles.bigSkeleton} />
+            <div className={styles.smGrid}>
+              {[...Array(4)].map((_, i) => <div key={i} className={styles.smSkeleton} />)}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className={styles.sec}>

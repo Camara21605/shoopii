@@ -123,6 +123,18 @@
 .item:hover { background: var(--g50); }
 .item.active { background: var(--sky, #EEF3FD); border-left-color: var(--teal, #0E7490); }
 
+/* Cascade d'apparition "de haut en bas" — voir staggerStyle() dans
+ * ConvList.tsx pour le calcul du délai par position. `both` conserve
+ * l'état de départ (opacity:0) jusqu'au démarrage du délai, pour que
+ * les items plus bas restent invisibles au lieu de flasher avant leur tour. */
+.itemEnter {
+  animation: convItemEnter .3s ease both;
+}
+@keyframes convItemEnter {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* Avatar */
 .avaWrap { position: relative; flex-shrink: 0; }
 .ava {
@@ -143,6 +155,18 @@
   border: 2px solid var(--white);
   display: flex; align-items: center; justify-content: center;
   font-size: 7px; font-weight: 800;
+}
+
+/* Skeleton — placeholder de chargement initial (voir ConvItemSkeleton) */
+.skeletonLine {
+  height: 9px; border-radius: 5px; margin: 5px 0;
+  background: linear-gradient(90deg, var(--g100,#F1F3F6) 25%, var(--g50,#F7F8FA) 50%, var(--g100,#F1F3F6) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+}
+@keyframes skeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 /* Infos */

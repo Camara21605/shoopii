@@ -2,6 +2,23 @@
 .wrap { max-width: 1360px; margin: 0 auto; padding: 0 28px; }
 .cats { display: flex; gap: 9px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .cats::-webkit-scrollbar { display: none; }
+
+/* Skeleton de chargement — même gabarit que .cat (min-width, hauteur
+ * approximative icône+nom+compteur) pour qu'aucun saut de mise en page
+ * ne se produise quand les vraies catégories remplacent les placeholders.
+ * (Bug corrigé : cette classe était référencée dans le JSX mais jamais
+ * définie ici — le "skeleton" rendait des <div> sans aucune taille ni
+ * style, donc invisibles pendant le chargement.) */
+.skeleton {
+  flex: 0 0 auto; min-width: 98px; height: 106px; border-radius: 16px;
+  background: linear-gradient(90deg, var(--g100,#F1F3F6) 25%, var(--g50,#F7F8FA) 50%, var(--g100,#F1F3F6) 75%);
+  background-size: 200% 100%;
+  animation: catSkeletonShimmer 1.4s ease-in-out infinite;
+}
+@keyframes catSkeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 .cat { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 7px; background: var(--white); border: 1.5px solid var(--bdr2); border-radius: 16px; padding: 16px 14px; min-width: 98px; cursor: pointer; box-shadow: 0 1px 4px rgba(11,31,58,.05); transition: all .22s; scroll-snap-align: start; }
 .cat:hover { border-color: var(--blue); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(11,31,58,.1); }
 .catOn { background: var(--sky); border-color: var(--blue); box-shadow: 0 4px 16px rgba(26,79,196,.15); }

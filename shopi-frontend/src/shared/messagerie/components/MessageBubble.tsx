@@ -3,6 +3,7 @@
  * Rendu d'une seule bulle de message (tous types).
  */
 import { memo, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { ChatMessage, ChatUser } from '../data/messagerieTypes';
 import { getRoleConfig } from '../data/messagerieTypes';
@@ -20,12 +21,15 @@ interface Props {
   onReply:     (r: { sender: string; text: string }) => void;
   onToast:     (msg: string, type?: string) => void;
   onDelete:    (msgId: string, mode: 'me' | 'everyone' | 'other') => void;
+  /** Relance l'envoi d'un message resté en échec (msg.sendFailed) */
+  onRetry?:    (msgId: string) => void;
 }
 
 function MessageBubble({
-  msg, idx, msgs, user, isLastRead = false, onReply, onToast, onDelete,
+  msg, idx, msgs, user, isLastRead = false, onReply, onToast, onDelete, onRetry,
 }: Props) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   // Affiche ou masque le petit menu "Supprimer pour moi / lui / tout le monde"
   const [showDeleteMenu, setShowDeleteMenu] = useState(false);
 
@@ -108,14 +112,16 @@ function MessageBubble({
 
           {msg.type === 'product' && msg.product && (
             <>
-              <div className={`${s.bubble} ${isMe ? s.sent : s.recv}`}>{msg.text}</div>
-              <div className={s.msgProduct} onClick={() => onToast(t('messagerie.messageBubble.voirProduit'), 'i')}>
-                <div className={s.mpImg}>{msg.product.em}</div>
-                <div className={s.mpBody}>
-                  <div className={s.mpNm}>{msg.product.nm}</div>
-                  <div className={s.mpPrice}>{msg.product.price}</div>
-                  <button className={s.mpBtn} onClick={e => { e.stopPropagation(); onToast(t('messagerie.messageBubble.ajouteAuPanierToast'), 's'); }}>
-                    {t('messagerie.messageBubble.ajouterAuPanier')}
+              {msg.text && <div className={`${s.bubble} ${isMe ? s.sent : s.recv}`}>{msg.text}</div>}
+              <div className={s.msgOrder} onClick={() => navigate(`/produit/${msg.product!.productId}`)} style={{ cursor: 'pointer' }}>
+                <div className={s.moHd}>
+                  <i className="fas fa-box" style={{ color: 'var(--emerald,#047857)' }} />
+                  <span>{t('messagerie.messageBubble.produitPartage')}</span>
+                </div>
+                <div className={s.moBody}>
+                  <div className={s.moNm}>{msg.product.summary}</div>
+                  <button className={s.moTrack} onClick={e => { e.stopPropagation(); navigate(`/produit/${msg.product!.productId}`); }}>
+                    <i className="fas fa-eye" /> {t('messagerie.messageBubble.voirProduit')}
                   </button>
                 </div>
               </div>
@@ -124,19 +130,37 @@ function MessageBubble({
 
           {msg.type === 'order' && msg.order && (
             <>
-              <div className={`${s.bubble} ${isMe ? s.sent : s.recv}`}>{msg.text}</div>
+              {msg.text && <div className={`${s.bubble} ${isMe ? s.sent : s.recv}`}>{msg.text}</div>}
               <div className={s.msgOrder}>
                 <div className={s.moHd}>
-                  <div className={s.moId}>{msg.order.id}</div>
-                  <span className={s.moStatus}>{msg.order.status}</span>
+                  <i className="fas fa-cart-shopping" style={{ color: 'var(--amber,#B45309)' }} />
+                  <span>{t('messagerie.messageBubble.commandePartagee')}</span>
                 </div>
                 <div className={s.moBody}>
-                  <div className={s.moNm}>{msg.order.nm}</div>
-                  <button className={s.moTrack} onClick={() => onToast(t('messagerie.messageBubble.suiviCommandeToast'), 'i')}>
+                  <div className={s.moNm}>{msg.order.summary}</div>
+                  <button className={s.moTrack} onClick={() => navigate(`/commande/${msg.order!.orderId}/suivi`)}>
                     <i className="fas fa-map-location-dot" /> {t('messagerie.messageBubble.suivreCommande')}
                   </button>
                 </div>
               </div>
+            </>
+          )}
+
+          {msg.type === 'location' && msg.location && (
+            <>
+              {msg.text && <div className={`${s.bubble} ${isMe ? s.sent : s.recv}`}>{msg.text}</div>}
+              <a
+                className={s.msgLocation}
+                href={`https://www.google.com/maps?q=${msg.location.lat},${msg.location.lng}`}
+                target="_blank" rel="noreferrer"
+              >
+                <div className={s.mlPin}><i className="fas fa-location-dot" /></div>
+                <div className={s.mlBody}>
+                  <div className={s.mlLabel}>{msg.location.label || t('messagerie.messageBubble.positionPartagee')}</div>
+                  <div className={s.mlCoords}>{msg.location.lat.toFixed(5)}, {msg.location.lng.toFixed(5)}</div>
+                  <span className={s.mlOpen}><i className="fas fa-arrow-up-right-from-square" /> {t('messagerie.messageBubble.ouvrirDansMaps')}</span>
+                </div>
+              </a>
             </>
           )}
 
@@ -313,7 +337,16 @@ function MessageBubble({
                 {isImgAva ? <img src={cldAvatar(user.ava, 48)!} alt={user.name} /> : user.ava}
               </div>
             )}
-            {msg.read ? (
+            {msg.sendFailed ? (
+              <button
+                onClick={() => onRetry?.(msg.id)}
+                title={t('messagerie.messageBubble.echecEnvoi', 'Échec de l\'envoi — réessayer')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3, color: 'var(--red,#DC2626)', fontSize: 10, fontWeight: 700, padding: 0 }}
+              >
+                <i className="fas fa-triangle-exclamation" />
+                {t('messagerie.messageBubble.reessayer', 'Réessayer')}
+              </button>
+            ) : msg.read ? (
               <span className={s.tickRead} title={t('messagerie.messageBubble.vu')}><i className="fas fa-check-double" /></span>
             ) : msg.delivered ? (
               <span className={s.tickDelivered} title={t('messagerie.messageBubble.livre')}><i className="fas fa-check-double" /></span>
@@ -419,6 +452,7 @@ function arePropsEqual(prev: Props, next: Props): boolean {
   if (prev.onReply !== next.onReply) return false;
   if (prev.onToast !== next.onToast) return false;
   if (prev.onDelete !== next.onDelete) return false;
+  if (prev.onRetry !== next.onRetry) return false;
 
   const prevIsLast = prev.idx === prev.msgs.length - 1;
   const nextIsLast = next.idx === next.msgs.length - 1;

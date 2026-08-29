@@ -4,6 +4,25 @@
  * réels (données backend), une grille repeat(N,1fr) laisse un grand vide
  * à droite du dernier élément au lieu de simplement s'arrêter. */
 .grid { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Wrapper skeleton — même layout que .grid (bug corrigé : .state n'était
+ * jamais défini, seulement référencé dans le JSX). */
+.state { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Skeleton de chargement — même gabarit que .card (flex-basis, hauteur
+ * approximative icône+label+compteur), même raison que ci-dessus : cette
+ * classe était référencée mais jamais définie, rendant le "skeleton"
+ * invisible pendant le chargement. */
+.skeleton {
+  flex: 1 1 110px; max-width: 150px; height: 104px; border-radius: 16px;
+  background: linear-gradient(90deg, var(--g100,#F1F3F6) 25%, var(--g50,#F7F8FA) 50%, var(--g100,#F1F3F6) 75%);
+  background-size: 200% 100%;
+  animation: typeSkeletonShimmer 1.4s ease-in-out infinite;
+}
+@keyframes typeSkeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 .card {
   background: var(--white); border: 1.5px solid var(--bdr); border-radius: 16px;
   padding: 18px 12px; display: flex; flex-direction: column; align-items: center; gap: 7px;

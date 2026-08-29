@@ -5,7 +5,7 @@
 
 import {
   IsEnum, IsNumber, IsOptional, IsString,
-  IsUUID, MaxLength, Min, IsBoolean, IsNotEmpty,
+  IsUUID, MaxLength, Min, Max, IsBoolean, IsNotEmpty,
   Length, IsIn,
 } from 'class-validator';
 import { ConversationActorType } from 'src/database/entities/messaging/conversation.entity';
@@ -69,6 +69,23 @@ export class SendMessageDto {
   @IsOptional()
   @IsUUID()
   orderId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  latitude?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  longitude?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  locationLabel?: string;
 }
 
 // ── Modifier un message ───────────────────────────────────────
@@ -129,4 +146,16 @@ export class MarkReadDto {
 export class ArchiveConversationDto {
   @IsBoolean()
   archived: boolean;
+}
+
+// ── Épingler / couper les notifications d'une conversation ────
+
+export class PinConversationDto {
+  @IsBoolean()
+  pinned: boolean;
+}
+
+export class MuteConversationDto {
+  @IsBoolean()
+  muted: boolean;
 }
