@@ -150,7 +150,7 @@ export interface PublicCorrespondantResponse {
   horaireAujourdhui: string | null;
 }
 
-export interface PublicStoryResponse {
+export interface BoutiqueStorySlide {
   id:        string;
   productId: string;
   produit:   string;
@@ -162,6 +162,19 @@ export interface PublicStoryResponse {
   caption:   string | null;
   duree:     number;
   createdAt: string;
+}
+
+/**
+ * Une entrée = UN produit (jamais plusieurs produits mélangés) — même
+ * principe que HomeProductStoryResponse, mais scopé à une seule boutique
+ * (page boutique : pas besoin de companyId/shopNom/shopLogo, déjà connus
+ * de la page). `images` regroupe uniquement les stories actives de CE
+ * produit, dans l'ordre où elles apparaissent dans son propre viewer.
+ */
+export interface BoutiqueProductStoryResponse {
+  productId: string;
+  produit:   string;
+  images:    BoutiqueStorySlide[];
 }
 
 export interface HomeStorySlide {
@@ -283,7 +296,8 @@ export class PublicService {
     }
 
     const [products, total] = await qb.getManyAndCount();
-    return { data: products.map(p => this.toPublicProduit(p)), total, page, pages: Math.ceil(total / limit) };
+    const data = await Promise.all(products.map(p => this.toPublicProduit(p)));
+    return { data, total, page, pages: Math.ceil(total / limit) };
   }
 
   // ── Détail produit ────────────────────────────────────────────
@@ -355,7 +369,7 @@ export class PublicService {
     }
 
     /* 4. Mapper */
-    return results.map(p => this.toSimilaire(p));
+    return Promise.all(results.map(p => this.toSimilaire(p)));
   }
 
   // ── Détail boutique ───────────────────────────────────────────
@@ -411,7 +425,8 @@ export class PublicService {
     }
 
     const [products, total] = await qb.getManyAndCount();
-    return { data: products.map(p => this.toPublicProduit(p)), total, page, pages: Math.ceil(total / limit) };
+    const data = await Promise.all(products.map(p => this.toPublicProduit(p)));
+    return { data, total, page, pages: Math.ceil(total / limit) };
   }
 
   // ── Livreurs d'une boutique ───────────────────────────────────
@@ -492,8 +507,12 @@ export class PublicService {
       : { prix: Number(p.prix), prixAncien: p.prixAncien != null ? Number(p.prixAncien) : null };
   }
 
-  private toPublicProduit(p: Product): PublicProduitResponse {
-    const company = p.company as Company | undefined;
+  private async toPublicProduit(p: Product): Promise<PublicProduitResponse> {
+    // p.company est une relation lazy (Promise<Company>) — même déjà
+    // chargée via leftJoinAndSelect, il faut l'attendre explicitement,
+    // sinon on récupère l'objet Promise au lieu de l'entité (bug constaté :
+    // companyName/logo/verified/ville toujours vides sur les produits publics).
+    const company = await p.company;
     const { prix, prixAncien } = this.effectivePrix(p);
     return {
       id:          p.id,
@@ -549,8 +568,8 @@ export class PublicService {
   }
 
   /* ✅ NOUVEAU mapper similaires */
-  private toSimilaire(p: Product): SimilaireResponse {
-    const company = p.company as Company | undefined;
+  private async toSimilaire(p: Product): Promise<SimilaireResponse> {
+    const company = await p.company;
     const images  = (p.media ?? []).sort((a, b) => a.ordre - b.ordre);
     const { prix, prixAncien: prixAnc } = this.effectivePrix(p);
     const remise   = prixAnc && prixAnc > prix
@@ -907,10 +926,14 @@ export class PublicService {
 
   /* ════════════════════════════════════════════════════════
    * GET /public/boutiques/:id/stories
-   * Stories actives (non expirées) d'une boutique,
-   * enrichies avec les infos produit.
+   * Stories actives (non expirées) d'une boutique, groupées PAR PRODUIT
+   * — une entrée = un produit avec toutes ses images, jamais plusieurs
+   * produits mélangés dans la même bulle (même principe que
+   * getHomeStories(), mais sans plafond de produits : ici on est déjà
+   * sur la page dédiée de CETTE boutique, pas dans un flux partagé entre
+   * plusieurs boutiques où il faut limiter la place prise par chacune).
    ════════════════════════════════════════════════════════ */
-  async getBoutiqueStories(companyId: string): Promise<PublicStoryResponse[]> {
+  async getBoutiqueStories(companyId: string): Promise<BoutiqueProductStoryResponse[]> {
     const stories = await this.storyRepo.find({
       where: {
         companyId,
@@ -919,27 +942,42 @@ export class PublicService {
       },
       relations: ['product', 'product.category'],
       order:     { createdAt: 'DESC' },
-      take:      20,
+      take:      100,
     });
 
-    return stories.map(s => {
-      const product  = s.product;
-      const category = product?.category;
-      const { prix, prixAncien: prixAnc } = product ? this.effectivePrix(product) : { prix: 0, prixAncien: null };
-      const hasPromo = prixAnc != null && prixAnc > prix;
+    const byProduct = new Map<string, typeof stories>();
+    for (const s of stories) {
+      const arr = byProduct.get(s.productId) ?? [];
+      arr.push(s);
+      byProduct.set(s.productId, arr);
+    }
+
+    return Array.from(byProduct.entries()).map(([productId, group]) => {
+      const images: BoutiqueStorySlide[] = group.map(s => {
+        const product  = s.product;
+        const category = product?.category;
+        const { prix, prixAncien: prixAnc } = product ? this.effectivePrix(product) : { prix: 0, prixAncien: null };
+        const hasPromo = prixAnc != null && prixAnc > prix;
+
+        return {
+          id:        s.id,
+          productId: s.productId,
+          produit:   product?.nom ?? 'Produit',
+          prix:      `${Number(prix).toLocaleString('fr-FR')} GNF`,
+          prixBarre: hasPromo ? `${Number(prixAnc).toLocaleString('fr-FR')} GNF` : null,
+          badge:     hasPromo ? 'promo' as const : null,
+          emoji:     category?.icone ?? '📦',
+          img:       s.mediaUrl,
+          caption:   s.caption ?? null,
+          duree:     (s.duration ?? 5) * 1000,
+          createdAt: s.createdAt.toISOString(),
+        };
+      });
 
       return {
-        id:        s.id,
-        productId: s.productId,
-        produit:   product?.nom ?? 'Produit',
-        prix:      `${Number(prix).toLocaleString('fr-FR')} GNF`,
-        prixBarre: hasPromo ? `${Number(prixAnc).toLocaleString('fr-FR')} GNF` : null,
-        badge:     hasPromo ? 'promo' as const : null,
-        emoji:     category?.icone ?? '📦',
-        img:       s.mediaUrl,
-        caption:   s.caption ?? null,
-        duree:     (s.duration ?? 5) * 1000,
-        createdAt: s.createdAt.toISOString(),
+        productId,
+        produit: images[0]?.produit ?? 'Produit',
+        images,
       };
     });
   }
