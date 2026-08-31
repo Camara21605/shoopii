@@ -19,7 +19,7 @@ import s from '../styles/ChatWindow.module.css';
 interface Props {
   convId:       string;
   replyTo:      { sender: string; text: string } | null;
-  onSend:       (convId: string, text: string, media?: MediaAttachment, extra?: ShareExtra) => void;
+  onSend:       (convId: string, text: string, media?: MediaAttachment, extra?: ShareExtra, resolveMedia?: () => Promise<MediaAttachment>) => void;
   onTyping?:    (convId: string, activity: WsTyping['activity']) => void;
   onToast:      (msg: string, type?: string) => void;
   onClearReply: () => void;
@@ -195,25 +195,34 @@ export default function MessageInput({
     if (!mediaRecRef.current) return;
     const durationSec = recSeconds;
 
-    mediaRecRef.current.onstop = async () => {
+    mediaRecRef.current.onstop = () => {
       const mimeType = audioChunks.current[0]?.type ?? 'audio/webm';
       const blob     = new Blob(audioChunks.current, { type: mimeType });
       streamRef.current?.getTracks().forEach(t => t.stop());
       streamRef.current = null;
       onTyping?.(convId, 'stopped');
 
-      try {
-        setUploading(true);
+      /* Préview LOCALE instantanée (blob: URL, déjà lisible depuis le
+       * blob en mémoire) — la bulle du message apparaît immédiatement chez
+       * l'expéditeur au lieu d'attendre la fin de l'upload+conversion MP3
+       * côté serveur (le vrai goulot pour l'audio, contrairement au texte).
+       * resolveMedia() fait le vrai upload en arrière-plan ; useMessagerie
+       * ::sendMessage() n'envoie la requête serveur qu'une fois résolu.
+       * Mémoïsé (resolved) : un retry après échec du POST (mais upload déjà
+       * réussi) ne re-uploade pas inutilement le même fichier. */
+      const localMedia: MediaAttachment = {
+        url: URL.createObjectURL(blob), name: t('messagerie.messageInput.messageVocal'),
+        size: blob.size, mime: mimeType, type: 'audio', duration: durationSec,
+      };
+      let resolved: MediaAttachment | null = null;
+      const resolveMedia = async (): Promise<MediaAttachment> => {
+        if (resolved) return resolved;
         const url = await uploadToServer(blob, '/upload/audio', 'voice.webm');
-        onSend(convId, '', {
-          url, name: t('messagerie.messageInput.messageVocal'), size: blob.size, mime: mimeType,
-          type: 'audio', duration: durationSec,
-        });
-      } catch {
-        onToast(t('messagerie.messageInput.envoiVocalEchoue'), 'e');
-      } finally {
-        setUploading(false);
-      }
+        resolved = { ...localMedia, url };
+        return resolved;
+      };
+
+      onSend(convId, '', localMedia, undefined, resolveMedia);
     };
 
     mediaRecRef.current.stop();
@@ -223,7 +232,7 @@ export default function MessageInput({
     setVoiceState('idle');
     setRecSeconds(0);
     setRecWave(Array(28).fill(4));
-  }, [convId, recSeconds, onSend, onTyping, onToast]);
+  }, [convId, recSeconds, onSend, onTyping]);
 
   // ── Position GPS ────────────────────────────────────────────────
 

@@ -223,7 +223,10 @@ export function useMessagerie() {
   const loadingOlderRef = useRef<Set<string>>(new Set());
   /** Arguments d'envoi d'origine par id de message optimiste — permet à
    * retryMessage() de relancer sendMessage() à l'identique après un échec. */
-  const pendingSendArgs = useRef<Map<string, { convId: string; text: string; media?: MediaAttachment; extra?: ShareExtra }>>(new Map());
+  const pendingSendArgs = useRef<Map<string, {
+    convId: string; text: string; media?: MediaAttachment; extra?: ShareExtra;
+    resolveMedia?: () => Promise<MediaAttachment>;
+  }>>(new Map());
 
   // ── Callbacks Socket.IO ───────────────────────────────────
 
@@ -583,6 +586,12 @@ export function useMessagerie() {
     text:   string,
     media?: MediaAttachment,
     extra?: ShareExtra,
+    /** Pour un média dont l'upload prend du temps (ex. message vocal) :
+     * `media` porte une préview LOCALE (ex. blob: URL) affichée instantanément,
+     * pendant que resolveMedia() fait le vrai upload en arrière-plan — la
+     * requête serveur n'est envoyée qu'une fois la vraie URL obtenue. Voir
+     * MessageInput.tsx::sendRecording(). */
+    resolveMedia?: () => Promise<MediaAttachment>,
   ) => {
     const hasLocation = extra?.latitude != null && extra?.longitude != null;
     const rawType  = media?.type ?? (extra?.productId ? 'product' : extra?.orderId ? 'order' : hasLocation ? 'location' : 'text');
@@ -612,23 +621,29 @@ export function useMessagerie() {
       msgType === 'location' ? '📍 Position partagée' : ''
     );
 
-    pendingSendArgs.current.set(optimistic.id, { convId, text, media, extra });
+    pendingSendArgs.current.set(optimistic.id, { convId, text, media, extra, resolveMedia });
 
     setConversations(prev => bumpToFront(prev, convId, c =>
       ({ ...c, messages: [...c.messages, optimistic], lastMsg: previewText, lastTime: nowTime() })
     ));
 
     try {
+      /* Si resolveMedia est fourni, `media` n'était qu'une préview locale
+       * (ex. blob: URL, déjà affichée ci-dessus) — on attend le vrai upload
+       * ici avant d'envoyer quoi que ce soit au serveur, qui a besoin d'une
+       * URL persistante (une blob: URL n'a de sens que dans cet onglet). */
+      const realMedia = resolveMedia ? await resolveMedia() : media;
+
       const body: Record<string, unknown> = {
-        contentType: media ? media.type : extra?.productId ? 'product' : extra?.orderId ? 'order' : hasLocation ? 'location' : 'text',
+        contentType: realMedia ? realMedia.type : extra?.productId ? 'product' : extra?.orderId ? 'order' : hasLocation ? 'location' : 'text',
         content:     text || null,
       };
-      if (media) {
-        body.mediaUrl      = media.url;
-        body.mediaName     = media.name;
-        body.mediaSize     = media.size;
-        body.mediaMimeType = media.mime;
-        if (media.duration) body.mediaDuration = media.duration;
+      if (realMedia) {
+        body.mediaUrl      = realMedia.url;
+        body.mediaName     = realMedia.name;
+        body.mediaSize     = realMedia.size;
+        body.mediaMimeType = realMedia.mime;
+        if (realMedia.duration) body.mediaDuration = realMedia.duration;
       }
       if (extra?.productId) body.productId = extra.productId;
       if (extra?.orderId) body.orderId = extra.orderId;
@@ -672,7 +687,7 @@ export function useMessagerie() {
     setConversations(prev => prev.map(c =>
       c.id === convId ? { ...c, messages: c.messages.filter(m => m.id !== msgId) } : c
     ));
-    sendMessage(args.convId, args.text, args.media, args.extra);
+    sendMessage(args.convId, args.text, args.media, args.extra, args.resolveMedia);
   }, [sendMessage]);
 
   // ── Enregistrer un événement d'appel dans la conversation ──

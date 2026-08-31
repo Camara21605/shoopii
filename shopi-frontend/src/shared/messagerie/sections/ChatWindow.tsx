@@ -31,7 +31,7 @@ interface Props {
   members?:        GroupMember[];
   infoPanelOpen:   boolean;
   typingActivity?: WsTyping;
-  onSend:          (convId: string, text: string, media?: MediaAttachment, extra?: ShareExtra) => void;
+  onSend:          (convId: string, text: string, media?: MediaAttachment, extra?: ShareExtra, resolveMedia?: () => Promise<MediaAttachment>) => void;
   onTyping?:       (convId: string, activity: WsTyping['activity']) => void;
   onToggleInfo:    () => void;
   onNewConv:       () => void;

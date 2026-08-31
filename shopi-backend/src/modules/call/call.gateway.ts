@@ -171,11 +171,19 @@ export class CallGateway implements OnGatewayDisconnect {
     this.logger.log(`📞 call:initiate REÇU caller=${callerUserId} callee=${body.calleeUserId}`);
 
     try {
-      const result = await this.callService.startCall(callerUserId, {
-        calleeUserId:   body.calleeUserId,
-        callType:       (body.callType ?? 'audio') as CallType,
-        conversationId: body.conversationId,
-      }, callerActorId);
+      /* getCallerDisplayInfo en parallèle de startCall() — indépendants,
+       * donc pas de latence supplémentaire ajoutée sur le chemin critique
+       * (voir son commentaire : résout le nom/avatar RÉELS de l'appelant
+       * côté serveur, jamais depuis body.callerName/callerAvatar fournis
+       * par le client). */
+      const [result, callerInfo] = await Promise.all([
+        this.callService.startCall(callerUserId, {
+          calleeUserId:   body.calleeUserId,
+          callType:       (body.callType ?? 'audio') as CallType,
+          conversationId: body.conversationId,
+        }, callerActorId),
+        this.callService.getCallerDisplayInfo(callerUserId, callerActorId),
+      ]);
       const t1 = performance.now();
 
       if (result.outcome === 'busy') {
@@ -201,8 +209,8 @@ export class CallGateway implements OnGatewayDisconnect {
       this.server.to(room).emit('call:incoming', {
         conversationId: body.conversationId,
         callerUserId,
-        callerName:     body.callerName,
-        callerAvatar:   body.callerAvatar,
+        callerName:     callerInfo.name,
+        callerAvatar:   callerInfo.avatar,
         callType:       body.callType ?? 'audio',
       });
       const t2 = performance.now();

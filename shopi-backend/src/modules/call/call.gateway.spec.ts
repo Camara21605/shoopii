@@ -44,7 +44,7 @@ describe('CallGateway', () => {
   let gateway: CallGateway;
   let callService: jest.Mocked<Pick<CallService,
     'startCall' | 'acceptCall' | 'acceptCallFast' | 'rejectCall' | 'endCall' | 'findActiveCallId'
-    | 'endAllCallsForUser' | 'findActiveCallsForUser'
+    | 'endAllCallsForUser' | 'findActiveCallsForUser' | 'getCallerDisplayInfo'
   >>;
   let server: { to: jest.Mock; emit: jest.Mock };
   let roomEmit: jest.Mock;
@@ -64,6 +64,10 @@ describe('CallGateway', () => {
       findActiveCallId:        jest.fn(),
       endAllCallsForUser:      jest.fn().mockResolvedValue([]),
       findActiveCallsForUser:  jest.fn().mockResolvedValue([]),
+      /* Résolu par défaut — appelée en Promise.all avec startCall() dans
+       * handleCallInitiate, quel que soit le résultat (ringing/busy/
+       * offline) ; non pertinente pour ces tests, qui portent sur startCall. */
+      getCallerDisplayInfo:    jest.fn().mockResolvedValue({ name: 'Jean', avatar: null }),
     };
 
     gateway = new CallGateway(callService as unknown as CallService);

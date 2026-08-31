@@ -732,6 +732,17 @@ export function useAudioCall(props?: UseAudioCallProps) {
     setCallInfo(ci);
     setStatus('calling');
 
+    /* callerName/callerAvatar : champs requis par CallInitiateDto mais
+     * PLUS UTILISÉS pour l'affichage — le serveur résout maintenant le
+     * nom/avatar réels de l'appelant lui-même (voir CallService.
+     * getCallerDisplayInfo, appelée par CallGateway.handleCallInitiate),
+     * plutôt que de faire confiance à ce que le client envoie ici. Bug
+     * corrigé : `info.remoteName` est le nom du CORRESPONDANT (utilisé
+     * juste au-dessus pour l'affichage LOCAL de CET appel sortant), pas
+     * le nôtre — l'envoyer comme "callerName" faisait apparaître son
+     * propre profil sur son écran d'appel entrant au lieu du nôtre. On
+     * garde ces champs (valeur sans importance) uniquement parce que le
+     * DTO les valide encore comme requis/optionnels. */
     emit('call:initiate', {
       conversationId: info.conversationId,
       calleeUserId:   info.remoteUserId,

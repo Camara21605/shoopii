@@ -152,13 +152,27 @@ export class UploadService {
       throw new BadRequestException('Fichier audio trop lourd. Maximum : 50 MB.');
     }
 
+    /* PAS de `format: 'mp3'` ici — ça forçait Cloudinary à transcoder AVANT
+     * de répondre (upload bloqué le temps de la conversion complète),
+     * retardant d'autant la création du message ET sa réception par le
+     * destinataire (qui a besoin d'une URL persistante — voir
+     * useMessagerie.ts::sendMessage). L'upload stocke le fichier brut
+     * (webm/ogg) tel quel — quasi instantané, pas de transcodage à
+     * attendre — et l'URL de livraison ci-dessous demande le mp3 : Cloudinary
+     * le génère à la demande au premier accès (mis en cache ensuite), donc
+     * seul le tout premier lecteur (souvent le destinataire) absorbe ce
+     * coût, jamais l'envoi du message. */
     const result = await this.uploadToCloudinary(file.buffer, {
       folder,
       resource_type: 'video',  // Cloudinary gère audio + vidéo ensemble
-      format:        'mp3',    // conversion universelle (iOS + Android + Web)
     });
 
-    return this.toUploadResult(result);
+    const uploadResult = this.toUploadResult(result);
+    /* Conversion universelle (iOS + Android + Web) demandée dans l'URL de
+     * livraison plutôt qu'à l'upload — voir commentaire ci-dessus. */
+    uploadResult.url    = uploadResult.url.replace(/\.[a-z0-9]+$/i, '.mp3');
+    uploadResult.format = 'mp3';
+    return uploadResult;
   }
 
   // ══════════════════════════════════════════════════════════════════════════

@@ -38,6 +38,33 @@ export default function MessagerieCore() {
    * puisque `onToast` change de référence à chaque rendu de ce composant. */
   const toast = useCallback((msg: string, type?: string) => pop(msg, type as any), [pop]);
 
+  /* Verrouille le scroll de la page (html + body) tant que la messagerie
+   * est montée. Le layout (.layout / .pageWrap) est déjà calé sur
+   * 100dvh avec overflow:hidden, mais ça reste fragile : le moindre écart
+   * de quelques pixels entre la hauteur réelle du contenu et le viewport
+   * (arrondi, barre d'adresse mobile qui se montre/cache pendant le
+   * scroll) rend le <body> scrollable, et tout l'écran "bouge"/rebondit
+   * au moindre geste au lieu de rester parfaitement fixe. Ce verrou
+   * s'applique partout où MessagerieCore est monté (page publique
+   * /messagerie ET l'onglet messages de chaque dashboard). */
+  useEffect(() => {
+    const html = document.documentElement;
+    const { body } = document;
+    const prev = {
+      htmlOverflow:   html.style.overflow,
+      bodyOverflow:   body.style.overflow,
+      bodyOverscroll: body.style.overscrollBehavior,
+    };
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    body.style.overscrollBehavior = 'none';
+    return () => {
+      html.style.overflow   = prev.htmlOverflow;
+      body.style.overflow   = prev.bodyOverflow;
+      body.style.overscrollBehavior = prev.bodyOverscroll;
+    };
+  }, []);
+
   // ── Messagerie ───────────────────────────────────────────────
   const {
     conversations,
@@ -173,27 +200,35 @@ export default function MessagerieCore() {
   // Le partage de commande/position (`extra`) n'est disponible que pour les
   // conversations directes — les groupes de livraison n'ont pas cette
   // permission (contenu hors de leur périmètre : coordination de livraison).
-  const handleSend = useCallback((convId: string, text: string, media?: any, extra?: any) => {
+  const handleSend = useCallback((convId: string, text: string, media?: any, extra?: any, resolveMedia?: () => Promise<any>) => {
     if (activeGroupId) {
-      if (media) {
-        const grpContentType =
-          media.type === 'image' ? 'image' :
-          media.type === 'video' ? 'video' :
-          media.type === 'audio' ? 'audio' : 'file';
-        sendGroupMessage(activeGroupId, {
-          contentType:   grpContentType,
-          content:       text || null as any,
-          mediaUrl:      media.url,
-          mediaName:     media.name,
-          mediaSize:     media.size,
-          mediaMimeType: media.mime,
-          mediaDuration: media.duration,
-        });
-      } else {
-        sendGroupMessage(activeGroupId, { contentType: 'text', content: text });
-      }
+      /* Les groupes n'ont pas (encore) d'affichage optimiste pendant l'upload
+       * — resolveMedia (préview locale, ex. message vocal) doit donc être
+       * attendu ICI avant d'envoyer, comme avant l'ajout de resolveMedia
+       * pour les conversations 1:1. */
+      const doSend = async () => {
+        const realMedia = resolveMedia ? await resolveMedia() : media;
+        if (realMedia) {
+          const grpContentType =
+            realMedia.type === 'image' ? 'image' :
+            realMedia.type === 'video' ? 'video' :
+            realMedia.type === 'audio' ? 'audio' : 'file';
+          sendGroupMessage(activeGroupId, {
+            contentType:   grpContentType,
+            content:       text || null as any,
+            mediaUrl:      realMedia.url,
+            mediaName:     realMedia.name,
+            mediaSize:     realMedia.size,
+            mediaMimeType: realMedia.mime,
+            mediaDuration: realMedia.duration,
+          });
+        } else {
+          sendGroupMessage(activeGroupId, { contentType: 'text', content: text });
+        }
+      };
+      void doSend();
     } else {
-      sendMessage(convId, text, media, extra);
+      sendMessage(convId, text, media, extra, resolveMedia);
     }
   }, [activeGroupId, sendGroupMessage, sendMessage]);
 

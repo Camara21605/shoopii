@@ -275,6 +275,51 @@ export class CallService {
     return profile ? { type, id: profile.id } : null;
   }
 
+  /**
+   * Nom + avatar RÉELS de l'appelant, résolus côté serveur à partir de
+   * callerUserId (authentifié, via socket.data.userId) — jamais à partir
+   * de callerName/callerAvatar fournis par le CLIENT dans le payload
+   * call:initiate. Bug constaté : CallGateway relayait tel quel
+   * body.callerName/body.callerAvatar au destinataire dans call:incoming,
+   * alors que le frontend (useAudioCall.ts::startCall) y plaçait par
+   * erreur les infos du DESTINATAIRE (remoteName/remoteAvatar, utilisées
+   * pour son propre affichage local) au lieu des siennes — le destinataire
+   * voyait donc son propre profil sur l'écran d'appel entrant. Résoudre
+   * ici, côté serveur, corrige le bug ET retire un vecteur d'usurpation
+   * (un client pouvait prétendre être n'importe qui). Appelée en parallèle
+   * de startCall() (Promise.all dans le gateway) pour ne pas retarder
+   * call:incoming.
+   */
+  async getCallerDisplayInfo(
+    callerUserId: string, actorId?: string,
+  ): Promise<{ name: string; avatar: string | null }> {
+    const user = await this.userRepo.findOne({ where: { id: callerUserId }, select: ['id', 'role', 'firstName', 'lastName', 'profilePicture'] as any });
+    if (!user) return { name: 'Utilisateur', avatar: null };
+
+    const actor = await this.resolveActor(callerUserId, user.role, actorId);
+    if (!actor) return { name: 'Utilisateur', avatar: (user as any).profilePicture ?? null };
+
+    switch (actor.type) {
+      case ConversationActorType.COMPANY: {
+        const co = await this.companyRepo.findOne({ where: { id: actor.id }, select: ['companyName', 'logo'] });
+        return { name: co?.companyName ?? 'Boutique', avatar: co?.logo ?? null };
+      }
+      case ConversationActorType.DELIVERY: {
+        const d = await this.deliveryRepo.findOne({ where: { id: actor.id }, select: ['id'] });
+        return { name: (d as any)?.fullName ?? 'Livreur', avatar: (user as any).profilePicture ?? null };
+      }
+      case ConversationActorType.CORRESPONDENT: {
+        const c = await this.corrRepo.findOne({ where: { id: actor.id }, select: ['id'] });
+        return { name: (c as any)?.fullName ?? 'Correspondant', avatar: (user as any).profilePicture ?? null };
+      }
+      default: {
+        /* CLIENT / PARTNER — nom depuis users.firstName/lastName */
+        const name = `${(user as any).firstName ?? ''} ${(user as any).lastName ?? ''}`.trim();
+        return { name: name || 'Utilisateur', avatar: (user as any).profilePicture ?? null };
+      }
+    }
+  }
+
   /** Résout (type acteur NotificationActorType, profil UUID) pour le destinataire d'une notification d'appel. */
   private async resolveNotificationRecipient(userId: string): Promise<{ type: NotificationActorType; id: string } | null> {
     const user = await this.userRepo.findOne({ where: { id: userId }, select: ['id', 'role'] });
