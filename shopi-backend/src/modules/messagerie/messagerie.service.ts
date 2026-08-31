@@ -1094,16 +1094,35 @@ export class MessagerieService {
       myCorrs.forEach(c => relatedCorrIds.add(c.id));
     }
 
-    // 4. Client ↔ client : uniquement via contacts téléphoniques synchronisés
-    let contactUserIds = new Set<string>();
-    if (myType === ConversationActorType.CLIENT) {
-      const contacts = await this.contactRepo.find({
-        where:  { ownerUserId: userId, isBlocked: false },
-        select: ['matchedUserId'],
-      });
-      contactUserIds = new Set(
-        contacts.filter(c => c.matchedUserId).map(c => c.matchedUserId as string),
-      );
+    // 4. Contacts téléphoniques synchronisés — n'importe quel rôle des deux
+    // côtés (voir MessagingPermissionEngine, check "ContactMatch" : deux
+    // utilisateurs qui s'ont dans leur répertoire ET utilisent Shoneya
+    // peuvent toujours se contacter, peu importe leurs rôles respectifs).
+    // Résolu une seule fois ici pour tout type de résultat ci-dessous —
+    // `contactUserIds` sert directement pour les clients (comparé à
+    // cl.userId, colonne users.id) ; pour entreprise/livreur/correspondant,
+    // traduit en IDs de profil et fusionné dans relatedXxxIds juste après
+    // (mêmes IDs, même filtrage, aucune branche à dupliquer).
+    const contacts = await this.contactRepo.find({
+      where:  { ownerUserId: userId, isBlocked: false },
+      select: ['matchedUserId'],
+    });
+    const contactUserIds = new Set(
+      contacts.filter(c => c.matchedUserId).map(c => c.matchedUserId as string),
+    );
+    if (contactUserIds.size > 0) {
+      const contactIdsArr = Array.from(contactUserIds);
+      const [contactCos, contactDels, contactCorrs] = await Promise.all([
+        this.companyRepo.find({ where: { userId: In(contactIdsArr) }, select: ['id'] }),
+        this.deliveryRepo.find({ where: { userId: In(contactIdsArr) }, select: ['id'] }),
+        this.corrRepo.find({ where: { userId: In(contactIdsArr) }, select: ['id'] }),
+      ]);
+      contactCos.forEach(c   => relatedCompanyIds.add(c.id));
+      contactDels.forEach(d  => relatedDeliveryIds.add(d.id));
+      contactCorrs.forEach(c => relatedCorrIds.add(c.id));
+      /* relatedClientIds n'a pas besoin de cette traduction : la branche
+       * client ci-dessous compare déjà contactUserIds directement à
+       * cl.userId (colonne users.id), pas à un id de profil client. */
     }
 
     /* ── Entreprises ── */
@@ -1113,13 +1132,22 @@ export class MessagerieService {
      * FallbackDeny. Les proposer quand même dans la recherche affichait un
      * résultat qui échouait systématiquement au clic ("Nouvelle
      * conversation" semblait ne rien faire). */
-    if (myType !== ConversationActorType.COMPANY && (!type || type === ConversationActorType.COMPANY)) {
+    if (myType !== ConversationActorType.COMPANY && (!type || type === ConversationActorType.COMPANY) && relatedCompanyIds.size > 0) {
+      /* IDs explicitement connus (commande/follow/contact) plutôt qu'un
+       * "top 15 puis filtre" — sans ça, une entreprise liée mais absente
+       * des 15 premières lignes non filtrées (ordre BDD arbitraire, ou
+       * hors résultat de recherche par terme) n'apparaissait jamais,
+       * même après y avoir ajouté les contacts téléphoniques ci-dessus. */
       const cos = await this.companyRepo.find({
-        where:     { ...(term ? { companyName: ILike(`%${term}%`) } : {}), userId: Not(userId) },
+        where: {
+          id:     In(Array.from(relatedCompanyIds)),
+          userId: Not(userId),
+          ...(term ? { companyName: ILike(`%${term}%`) } : {}),
+        },
         relations: ['user'],
-        take:      15,
+        take:      50,
       });
-      const filtered = cos.filter(co => relatedCompanyIds.has(co.id));
+      const filtered = cos;
       /* Présence temps réel (Redis) plutôt que lastLoginAt : lastLoginAt
        * n'est écrit qu'À LA CONNEXION — un utilisateur connecté depuis
        * des heures (session déjà ouverte, pas de nouveau login) passait
@@ -1140,14 +1168,15 @@ export class MessagerieService {
     }
 
     /* ── Livreurs ── */
-    if (!type || type === ConversationActorType.DELIVERY) {
+    if ((!type || type === ConversationActorType.DELIVERY) && relatedDeliveryIds.size > 0) {
       const qb = this.deliveryRepo.createQueryBuilder('d')
         .leftJoinAndSelect('d.user', 'user')
         .where('d.userId != :userId', { userId })
-        .take(15);
+        .andWhere('d.id IN (:...delIds)', { delIds: Array.from(relatedDeliveryIds) })
+        .take(50);
       if (term) qb.andWhere('LOWER(d.fullName) LIKE LOWER(:t)', { t: `%${term}%` });
       const livs = await qb.getMany();
-      const filtered = livs.filter(d => relatedDeliveryIds.has(d.id));
+      const filtered = livs;
       const dUserIds  = filtered.map(d => (d as any).user?.id).filter(Boolean) as string[];
       const dPresence = await this.presence.getBulkPresence(dUserIds);
       filtered.forEach(d => results.push({
@@ -1161,14 +1190,15 @@ export class MessagerieService {
     }
 
     /* ── Correspondants ── */
-    if (!type || type === ConversationActorType.CORRESPONDENT) {
+    if ((!type || type === ConversationActorType.CORRESPONDENT) && relatedCorrIds.size > 0) {
       const qb = this.corrRepo.createQueryBuilder('c')
         .leftJoinAndSelect('c.user', 'user')
         .where('c.userId != :userId', { userId })
-        .take(15);
+        .andWhere('c.id IN (:...corrIds)', { corrIds: Array.from(relatedCorrIds) })
+        .take(50);
       if (term) qb.andWhere('LOWER(c.fullName) LIKE LOWER(:t)', { t: `%${term}%` });
       const corrs = await qb.getMany();
-      const filtered = corrs.filter(c => relatedCorrIds.has(c.id));
+      const filtered = corrs;
       const cUserIds  = filtered.map(c => (c as any).user?.id).filter(Boolean) as string[];
       const cPresence = await this.presence.getBulkPresence(cUserIds);
       filtered.forEach(c => {
@@ -1185,24 +1215,45 @@ export class MessagerieService {
     }
 
     /* ── Clients (recherche par prénom/nom via User join) ──
-       Client → client : uniquement contacts téléphoniques.
-       Autres rôles → clientId::relatedClientIds (commande/follow). */
+       allowedByProfile (relatedClientIds) : commande/follow, tous rôles.
+       allowedByUserId (contactUserIds) : contact téléphonique synchronisé,
+       tous rôles depuis l'étape 4 ci-dessus (plus seulement client→client). */
     if (!type || type === ConversationActorType.CLIENT) {
       const allowedByProfile = relatedClientIds;
       const allowedByUserId  = contactUserIds;
       if (allowedByProfile.size > 0 || allowedByUserId.size > 0) {
         const clientQb = this.clientRepo.createQueryBuilder('cl')
           .leftJoinAndSelect('cl.user', 'user')
-          .where('cl.userId != :userId', { userId })
-          .take(10);
+          .where('cl.userId != :userId', { userId });
+
+        /* IDs explicitement connus (deux colonnes différentes : cl.id pour
+         * commande/follow, cl.userId pour contact téléphonique) plutôt
+         * qu'un "top 10 puis filtre" — mêmes raisons que les branches
+         * entreprise/livreur/correspondant ci-dessus. Brackets avec garde
+         * sur chaque taille de Set : un IN (:...vide) est du SQL invalide. */
+        clientQb.andWhere(new Brackets(qb => {
+          let hasCondition = false;
+          if (allowedByProfile.size > 0) {
+            qb.where('cl.id IN (:...clIds)', { clIds: Array.from(allowedByProfile) });
+            hasCondition = true;
+          }
+          if (allowedByUserId.size > 0) {
+            const cond = 'cl.userId IN (:...cuIds)';
+            const params = { cuIds: Array.from(allowedByUserId) };
+            if (hasCondition) qb.orWhere(cond, params);
+            else              qb.where(cond, params);
+          }
+        }));
+
         if (term) {
           clientQb.andWhere(
             `LOWER(CONCAT(user.firstName, ' ', user.lastName)) LIKE LOWER(:t)`,
             { t: `%${term}%` },
           );
         }
+        clientQb.take(50);
         const clients = await clientQb.getMany();
-        const filtered  = clients.filter(cl => allowedByProfile.has(cl.id) || allowedByUserId.has(cl.userId));
+        const filtered  = clients;
         const clUserIds  = filtered.map(cl => (cl as any).user?.id).filter(Boolean) as string[];
         const clPresence = await this.presence.getBulkPresence(clUserIds);
         filtered.forEach(cl => {

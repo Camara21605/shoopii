@@ -29,10 +29,13 @@ import {
   Injectable, Logger,
   ForbiddenException, Inject,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository }       from 'typeorm';
 import type { PermissionEvaluator } from './interfaces/permission-evaluator.interface';
 import { PERMISSION_EVALUATORS }    from './interfaces/permission-evaluator.interface';
 import type { PermissionContext, PermissionResult } from './interfaces/permission-context.interface';
 import { ConversationActorType }    from 'src/database/entities/messaging/conversation.entity';
+import { UserContact }              from 'src/database/entities/contacts/user-contact.entity';
 import { PermissionCacheService }   from './permission-cache.service';
 import { MessagingAuditService }    from './messaging-audit.service';
 
@@ -52,6 +55,9 @@ export class MessagingPermissionEngine {
 
     private readonly cache: PermissionCacheService,
     private readonly audit: MessagingAuditService,
+
+    @InjectRepository(UserContact)
+    private readonly contactRepo: Repository<UserContact>,
   ) {
     this.buildRegistry(evaluators);
   }
@@ -110,6 +116,35 @@ export class MessagingPermissionEngine {
     /* ── 2. Auto-conversation (soi-même) ─────────────────── */
     if (requestorType === targetType && requestorId === targetId) {
       return { granted: false, reason: 'Impossible d\'écrire à soi-même.', evaluator: 'SelfConversationGuard' };
+    }
+
+    /* ── 2b. Contact téléphonique synchronisé → autorisé, quels que
+       soient les types d'acteurs des deux côtés ─────────────────
+       Auparavant, seul ClientClientEvaluator vérifiait UserContact —
+       un client ne pouvait retrouver dans son répertoire QUE d'autres
+       clients pour démarrer une conversation, alors que la synchro
+       elle-même (ContactMatchingService) matche déjà n'importe quel
+       rôle. Ce check transversal, placé ici plutôt que dupliqué dans
+       chacun des ~15 évaluateurs par paire, couvre tous les couples de
+       types d'un coup — deux personnes qui s'ont dans leur répertoire
+       téléphonique ET utilisent Shoneya peuvent toujours se contacter,
+       peu importe leurs rôles respectifs. ClientClientEvaluator garde
+       son propre check redondant (harmless — mêmes conditions, un
+       coût négligeable en plus pour ce seul couple). */
+    if (ctx.requestorUserId && ctx.targetUserId) {
+      const hasContact = await this.contactRepo.exists({
+        where: [
+          { ownerUserId: ctx.requestorUserId, matchedUserId: ctx.targetUserId, isBlocked: false },
+          { ownerUserId: ctx.targetUserId,    matchedUserId: ctx.requestorUserId, isBlocked: false },
+        ],
+      });
+      if (hasContact) {
+        const result: PermissionResult = {
+          granted: true, reason: 'Contact téléphonique synchronisé.', evaluator: 'ContactMatch',
+        };
+        await this.setCache(requestorType, requestorId, targetType, targetId, result, 300);
+        return result;
+      }
     }
 
     /* ── 3. Partenaire → n'importe qui ───────────────────── */

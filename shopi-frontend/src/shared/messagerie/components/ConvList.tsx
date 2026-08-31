@@ -130,6 +130,10 @@ interface Props {
   callHistoryLoading?: boolean;
   onLoadCallHistory?:  () => void;
   onDeleteCallHistoryItem?: (id: string) => void;
+  /** Clic sur une entrée de l'historique d'appel — ouvre la conversation et va
+   *  jusqu'à la bulle d'appel correspondante (messageId peut être null si la
+   *  corrélation backend n'a pas trouvé de bulle, voir CallHistoryItem). */
+  onSelectCall?:       (conversationId: string, messageId: string | null) => void;
 }
 
 /* Toutes les définitions d'onglets disponibles */
@@ -173,7 +177,7 @@ function ConvList({
   conversations, usersMap, activeId, mobileOpen, totalUnread, onSelect, onStartConversation,
   focusSearchToken, onDeleteConv, onHideConv, onToast,
   archivedConvs, onLoadArchived, onUnhideConv, onMarkUnread, onMarkRead, groupConvs = [], groupUsersMap = new Map(),
-  callHistory = [], callHistoryLoading = false, onLoadCallHistory, onDeleteCallHistoryItem,
+  callHistory = [], callHistoryLoading = false, onLoadCallHistory, onDeleteCallHistoryItem, onSelectCall,
   loadingConvs = false, hasMoreConvs = false, loadingMoreConvs = false, onLoadMoreConversations,
 }: Props) {
   const { t } = useTranslation();
@@ -189,15 +193,21 @@ function ConvList({
   const TABS       = useMemo(() => getAllTabs(t).filter(tb => visibleSet.has(tb.key)), [visibleSet, t]);
 
   /* ── Synchronisation des contacts téléphoniques ──────────────────
-   * Client↔client uniquement (voir client-client.evaluator.ts côté
-   * backend — les autres rôles se retrouvent via commandes/follows).
-   * Après une synchro réussie, on bascule sur l'onglet "Contacts" pour
-   * que l'utilisateur voie immédiatement les nouveaux contacts trouvés
-   * (relatedContacts se rafraîchit automatiquement au changement de tab).
-   * NB : bascule bien sur 'contacts' (visible pour le rôle client), pas
-   * 'clients' (visible seulement pour vendeur/livreur/correspondant) —
-   * sinon l'effet juste en dessous annule immédiatement le changement
-   * d'onglet puisque 'clients' n'est pas dans getVisibleTabs('client'). */
+   * Ouverte à tous les rôles messagerie (client/vendeur/livreur/
+   * correspondant) — voir messaging-permission.engine.ts côté backend,
+   * check "ContactMatch" : un contact téléphonique synchronisé autorise
+   * la conversation quels que soient les types des deux côtés, plus
+   * seulement client↔client. searchUsers() (messagerie.service.ts)
+   * fait remonter ces contacts directement dans les onglets dédiés déjà
+   * visibles pour chaque rôle (Boutiques/Livreurs/Clients/
+   * Correspondants) — aucun nouvel onglet nécessaire.
+   * Après une synchro réussie, on bascule sur l'onglet "Contacts"
+   * UNIQUEMENT pour le rôle client (le seul où cet onglet existe —
+   * getVisibleTabs). Pour les autres rôles, les contacts synchronisés
+   * peuvent être de plusieurs types à la fois (boutique, livreur,
+   * client...) — il n'y a pas un onglet unique où basculer, donc on
+   * laisse l'utilisateur naviguer lui-même vers l'onglet pertinent
+   * après avoir vu le toast de résumé. */
   const { syncing, syncFromDevice } = useContactSync();
   const handleSyncContacts = async () => {
     const result = await syncFromDevice();
@@ -211,7 +221,7 @@ function ConvList({
         : t('messagerie.convList.contactsSyncAucun'),
       's',
     );
-    setTab('contacts');
+    if (myRole === 'client') setTab('contacts');
   };
 
   /* Si l'onglet actif n'est plus dans la liste visible, revenir à "Tous" */
@@ -381,9 +391,10 @@ function ConvList({
               </button>
             )}
           </div>
-          {/* Synchro contacts téléphoniques — client↔client uniquement,
-              voir client-client.evaluator.ts côté backend. */}
-          {myRole === 'client' && (
+          {/* Synchro contacts téléphoniques — ouverte à tous les rôles
+              messagerie, voir messaging-permission.engine.ts (check
+              "ContactMatch") côté backend. */}
+          {(myRole === 'client' || myRole === 'company' || myRole === 'delivery' || myRole === 'correspondent') && (
             <button
               className={s.syncContactsBtn}
               onClick={handleSyncContacts}
@@ -458,7 +469,7 @@ function ConvList({
               </div>
             ) : (
               callHistory.map((h, i) => (
-                <CallHistoryItemRow key={h.id} item={h} onDelete={onDeleteCallHistoryItem} index={i} />
+                <CallHistoryItemRow key={h.id} item={h} onDelete={onDeleteCallHistoryItem} onSelect={onSelectCall} index={i} />
               ))
             )}
           </>
@@ -864,10 +875,10 @@ const RelatedContactItem = memo(function RelatedContactItem({ api, onStart, inde
 });
 
 /* ── Item historique d'appel (onglet "Appels") ─────────────────
- * Lecture seule — pas de clic pour rappeler ici (à la différence
- * de WhatsApp) car on ne connaît pas toujours le contexte
- * conversation/relation d'origine ; l'utilisateur rappelle depuis
- * la conversation ou le profil du contact. */
+ * Cliquable pour aller à l'appel dans sa conversation d'origine (voir
+ * onSelect/CallHistoryItem.messageId) — pas de "rappeler" direct ici (à la
+ * différence de WhatsApp), l'utilisateur rappelle depuis la conversation
+ * ou le profil du contact une fois qu'il y est. */
 function getCallStatusLabel(t: TFunction): Record<CallHistoryItem['status'], string> {
   return {
     completed: t('messagerie.convList.callStatus.completed'),
@@ -899,14 +910,30 @@ function fmtCallTime(iso: string): string {
     : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 }
 
-function CallHistoryItemRow({ item, onDelete, index }: { item: CallHistoryItem; onDelete?: (id: string) => void; index: number }) {
+function CallHistoryItemRow({
+  item, onDelete, onSelect, index,
+}: {
+  item: CallHistoryItem;
+  onDelete?: (id: string) => void;
+  /** Ouvre la conversation d'origine et va jusqu'à la bulle d'appel (voir onSelectCall de ConvList). */
+  onSelect?: (conversationId: string, messageId: string | null) => void;
+  index: number;
+}) {
   const { t } = useTranslation();
   const isImgAva = item.contactAvatar?.startsWith('http');
   const initials = item.contactName.trim().split(/\s+/).slice(0, 2)
     .map(w => w[0]?.toUpperCase() ?? '').join('') || '?';
+  /* Cliquable seulement si on connaît la conversation d'origine — un appel
+   * peut exceptionnellement ne pas en avoir (conversationId nullable côté
+   * backend, voir CallHistoryItem). */
+  const clickable = !!item.conversationId && !!onSelect;
 
   return (
-    <div className={`${s.item} ${s.itemEnter}`} style={{ cursor: 'default', ...staggerStyle(index) }}>
+    <div
+      className={`${s.item} ${s.itemEnter}`}
+      style={{ cursor: clickable ? 'pointer' : 'default', ...staggerStyle(index) }}
+      onClick={clickable ? () => onSelect!(item.conversationId!, item.messageId) : undefined}
+    >
       <div className={s.avaWrap}>
         <div className={s.ava} style={{ overflow: 'hidden', padding: 0, background: isImgAva ? undefined : 'var(--sky,#EEF3FF)' }}>
           {isImgAva
@@ -939,7 +966,7 @@ function CallHistoryItemRow({ item, onDelete, index }: { item: CallHistoryItem; 
         {onDelete && (
           <button
             className={s.callDeleteBtn}
-            onClick={() => onDelete(item.id)}
+            onClick={e => { e.stopPropagation(); onDelete(item.id); }}
             title={t('messagerie.convList.supprimerAppel', 'Supprimer cet appel')}
             aria-label={t('messagerie.convList.supprimerAppel', 'Supprimer cet appel')}
           >
