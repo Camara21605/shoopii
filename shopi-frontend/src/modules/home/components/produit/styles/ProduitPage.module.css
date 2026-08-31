@@ -23,6 +23,14 @@
   background: var(--g50, #F8FAFF);
   color: var(--t1, #0B1F3A);
   font-family: var(--fb, 'DM Sans', sans-serif);
+  /* Filet de sécurité anti-débordement horizontal : une chaîne longue et
+   * non sécable (URL, référence produit très longue, mot sans espace...)
+   * dans n'importe quel texte de la page ne doit jamais pouvoir forcer
+   * toute la page à s'élargir au-delà du viewport sur mobile — c'est
+   * exactement ce qui causait un débordement horizontal réel (ex: une URL
+   * de logo boutique affichée par erreur en texte brut, voir boutique.emoji
+   * dans ProduitPage.tsx/produitMockData.ts). */
+  overflow-wrap: anywhere;
 }
 
 /* ── Main : hauteur totale sous le header ── */
@@ -93,7 +101,9 @@
    mobile dès qu'un élément interne est un peu trop large. */
 .leftCol,
 .centerCol,
-.rightCol {
+.rightCol,
+.infoBlock,
+.extraBlock {
   min-width: 0;
 }
 
@@ -192,7 +202,8 @@
     grid-template-columns: 1fr 1fr;
     grid-template-areas:
       "galerie  infos"
-      "panier   panier";
+      "panier   panier"
+      "extra    extra";
     align-items: start; /* la galerie ne doit pas s'étirer sur toute la hauteur de la colonne infos */
     overflow: visible;
     height: auto;
@@ -205,11 +216,25 @@
     border-right: none;
     border-bottom: none;
   }
+  /* .centerCol ne porte plus lui-même de grid-area : il devient
+   * "transparent" (display:contents) pour que ses deux enfants directs
+   * (.infoBlock et .extraBlock, voir ProduitPage.tsx) redeviennent des
+   * items de grille indépendants, replaçables chacun dans leur propre
+   * zone nommée — sans ça, le panier (rightCol) atterrissait après TOUT
+   * le contenu de centerCol (infos + onglets + produits similaires),
+   * au lieu de juste après les infos produit. */
   .centerCol {
+    display: contents;
+  }
+  .infoBlock {
     grid-area: infos;
     overflow: visible;
     padding: 20px 0 20px 16px;
     border-left: 1px solid var(--bdr);
+  }
+  .extraBlock {
+    grid-area: extra;
+    padding: 24px 0 0 16px;
   }
   .rightCol {
     grid-area: panier;
@@ -230,7 +255,8 @@
     grid-template-areas:
       "galerie"
       "infos"
-      "panier";
+      "panier"
+      "extra";
     gap: 0;
   }
   .leftCol {
@@ -238,12 +264,16 @@
     padding: 16px 0 0;
     border-right: none;
   }
-  .centerCol {
+  .infoBlock {
     grid-area: infos;
     padding: 16px 0 0;
     border-left: none;
     border-top: 1px solid var(--bdr);
     margin-top: 16px;
+  }
+  .extraBlock {
+    grid-area: extra;
+    padding: 16px 0 0;
   }
   .rightCol {
     grid-area: panier;

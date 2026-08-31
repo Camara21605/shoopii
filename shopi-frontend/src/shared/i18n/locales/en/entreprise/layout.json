@@ -11,7 +11,6 @@
     },
     "items": {
       "overview": "Overview",
-      "notifications": "Notifications",
       "commandes": "Orders",
       "retours": "Returns & Support",
       "produits": "Products",
@@ -136,10 +135,6 @@
       "equipe": {
         "title": "Team",
         "subtitle": "Members and permissions of your store"
-      },
-      "notifications": {
-        "title": "Notifications",
-        "subtitle": "All your store's activity"
       }
     },
     "searchPlaceholder": "Search orders, products, customers…",

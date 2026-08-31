@@ -18,14 +18,6 @@ export interface ClientProfil {
 /* ── KPI affichés sous l'identité ── */
 export interface ClientKpi { valeur: string; label: string; sub?: string; tag?: 'g' | 'y'; }
 
-
-/* ── Points fidélité ── */
-export interface PointsData {
-  solde: number; gagnesMois: number; utilisesMois: number; valeurEstimee: number;
-  enAttente: number; expirationProche: string; expireLe: string;
-  niveau: string; prochainNiveau: string; prochainSeuil: number; progressionPct: number;
-}
-
 /* ── Méthode de paiement ── */
 export interface PayMethod { id: string; emoji: string; nom: string; detail: string; tag: string; defaut: boolean; }
 

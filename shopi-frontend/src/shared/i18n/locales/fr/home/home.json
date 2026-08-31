@@ -79,26 +79,18 @@
       },
       "produitsGros": {
         "kick": "Vente en gros",
-        "title": "Acheter en <em>gros</em>",
-        "sub": "Prix dégressifs · commande minimum",
         "link": "Voir tous les produits en gros"
       },
       "entreprises": {
         "kick": "Boutiques",
-        "title": "Boutiques <em>à la une</em>",
-        "sub": "Abonnez-vous à vos boutiques favorites",
         "link": "Toutes les boutiques"
       },
       "correspondants": {
         "kick": "Réseau local",
-        "title": "Nos <em>Correspondants</em>",
-        "sub": "Des relais locaux dans chaque région",
         "link": "Tous les correspondants"
       },
       "livreurs": {
         "kick": "Logistique",
-        "title": "Livreurs <em>disponibles</em>",
-        "sub": "Professionnels vérifiés près de vous",
         "link": "Tous les livreurs"
       },
       "toastLink": "📄 {{link}}",

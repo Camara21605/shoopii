@@ -24,7 +24,6 @@ import ParametresPage  from './pages/ParametresPage';
 import { usePartenaireState } from './hooks/usePartenaireState';
 import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
 import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
-import SharedNotificationsPage    from '../../shared/notifications/NotificationsPage';
 
 export default function PartenaireApp() {
   // Thème sombre forcé de façon centralisée par ThemeRouteSync (router.tsx).
@@ -61,8 +60,6 @@ export default function PartenaireApp() {
           text="Analyses détaillées : conversion par type d'acteur, performance mensuelle, classement partenaires. Section à brancher." />;
       case 'parametres':
         return <ParametresPage />;
-      case 'notifications':
-        return <SharedNotificationsPage />;
       default:
         return null;
     }
@@ -85,7 +82,6 @@ export default function PartenaireApp() {
         onGenerate={() => s.setGenOpen(true)}
         onReport={() => s.ouvrirSignalement()}
         onMenuToggle={() => setSidebarOpen(o => !o)}
-        onNavigate={handleNavigate}
       />
 
       <main className={styles.main}>

@@ -1,4 +1,4 @@
-.sec  { background: var(--white); padding: 32px 0; border-top: 1px solid var(--bdr); }
+.sec  { background: var(--white); padding: 10px 0; border-top: 1px solid var(--bdr); }
 .wrap { max-width: 1360px; margin: 0 auto; padding: 0 28px; }
 .cats { display: flex; gap: 9px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .cats::-webkit-scrollbar { display: none; }

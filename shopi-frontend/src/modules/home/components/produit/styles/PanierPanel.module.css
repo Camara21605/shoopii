@@ -118,6 +118,7 @@
   background: linear-gradient(135deg, #EEF3FD, #D6E4F8);
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; border: 1px solid var(--bdr); flex-shrink: 0;
+  overflow: hidden;
 }
 .vcNom  { font-family: var(--fd, 'Fraunces', serif); font-size: 13px; font-weight: 700; color: var(--navy); }
 .vcVer  { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #047857; font-weight: 600; margin-top: 2px; flex-wrap: wrap; }

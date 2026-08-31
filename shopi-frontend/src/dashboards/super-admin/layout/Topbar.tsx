@@ -72,7 +72,7 @@ export default function Topbar({
       </button>
 
       {/* Notifications temps réel */}
-      <NotificationCenter onSeeAll={() => onNavigate('notifications')} />
+      <NotificationCenter />
 
       {/* Centre d'aide — accès direct depuis le dashboard super-admin */}
       <button

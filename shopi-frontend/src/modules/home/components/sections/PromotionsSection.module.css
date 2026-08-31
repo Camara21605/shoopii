@@ -1,4 +1,4 @@
-.sec  { background: var(--g50); padding: 32px 0; border-top: 1px solid var(--bdr); }
+.sec  { background: var(--g50); padding: 10px 0; border-top: 1px solid var(--bdr); }
 .wrap { max-width: 1360px; margin: 0 auto; padding: 0 28px; }
 .layout { display: grid; grid-template-columns: 1.5fr minmax(0,1fr); gap: 14px; }
 .big { background: var(--navy); border: 1.5px solid var(--bdr); border-radius: 20px; padding: 26px 22px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; cursor: pointer; transition: all .3s; min-height: 280px; }

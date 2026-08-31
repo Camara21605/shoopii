@@ -79,26 +79,18 @@
       },
       "produitsGros": {
         "kick": "批发",
-        "title": "批量<em>购买</em>",
-        "sub": "递减价格 · 最低订购",
         "link": "查看所有批发产品"
       },
       "entreprises": {
         "kick": "店铺",
-        "title": "精选<em>店铺</em>",
-        "sub": "关注您最喜欢的店铺",
         "link": "所有店铺"
       },
       "correspondants": {
         "kick": "本地网络",
-        "title": "我们的<em>代理商</em>",
-        "sub": "每个地区的本地中转站",
         "link": "所有代理商"
       },
       "livreurs": {
         "kick": "物流",
-        "title": "可用的<em>配送员</em>",
-        "sub": "您附近经过验证的专业人士",
         "link": "所有配送员"
       },
       "toastLink": "📄 {{link}}",

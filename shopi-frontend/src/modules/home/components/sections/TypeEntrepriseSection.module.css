@@ -1,4 +1,4 @@
-.sec  { background: var(--g50); padding: 32px 0; border-top: 1px solid var(--bdr); }
+.sec  { background: var(--g50); padding: 10px 0; border-top: 1px solid var(--bdr); }
 .wrap { max-width: 1360px; margin: 0 auto; padding: 0 28px; }
 /* flex-wrap plutôt qu'une grille à colonnes fixes : avec peu d'éléments
  * réels (données backend), une grille repeat(N,1fr) laisse un grand vide

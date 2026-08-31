@@ -30,7 +30,6 @@ function getInitials(name: string): string {
 function buildNavPrincipal(encoursCount: number): NavItem[] {
   return [
     { id:'overview',   icon:'fa-chart-pie',          label:"Vue d'ensemble"                                                       },
-    { id:'notifications', icon:'fa-bell',            label:'Notifications'                                                       },
     { id:'missions',   icon:'fa-motorcycle',          label:'Missions disponibles'                                                },
     { id:'encours',    icon:'fa-route',               label:'En cours', ...(encoursCount > 0 ? { badge: encoursCount, bCls:'g' } : {}) },
     { id:'historique', icon:'fa-clock-rotate-left',   label:'Historique'                                                          },

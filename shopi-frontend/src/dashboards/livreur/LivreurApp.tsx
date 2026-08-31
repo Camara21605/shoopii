@@ -45,7 +45,6 @@ import ReseauLivreursPage       from './pages/ReseauLivreursPage';
 import ProfilCorrespondantReseauPage from './pages/ProfilCorrespondantReseauPage';
 import ProfilLivreurReseauPage       from './pages/ProfilLivreurReseauPage';
 import MonProfilLivreurPage          from './pages/MonProfilLivreurPage';
-import SharedNotificationsPage       from '../../shared/notifications/NotificationsPage';
 
 import styles from './styles/LivreurApp.module.css';
 
@@ -86,7 +85,6 @@ function parseSplat(splat: string): { page: PageId; viewedId?: string } {
   const DIRECT_PAGES: PageId[] = [
     'missions', 'encours', 'historique', 'boutiques',
     'revenus', 'wallet', 'zone', 'evaluation', 'parametres', 'profil', 'messagerie',
-    'notifications',
   ];
   if (DIRECT_PAGES.includes(a as PageId)) return { page: a as PageId };
 
@@ -301,7 +299,6 @@ export default function LivreurApp() {
         {page === 'profil'      && (
           <MonProfilLivreurPage onPop={pop} onNavigate={navigate} />
         )}
-        {page === 'notifications' && <SharedNotificationsPage />}
       </main>
 
       {/* Toasts */}

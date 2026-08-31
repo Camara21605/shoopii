@@ -26,7 +26,6 @@ import PortefeuillePage from './pages/PortefeuillePage';
 import ZonePage        from './pages/ZonePage';
 import EvaluationPage  from './pages/EvaluationPage';
 import ParametresPage  from './pages/ParametresPage';
-import SharedNotificationsPage from '../../shared/notifications/NotificationsPage';
 
 import type { PageId } from './data/correspondantData';
 
@@ -62,7 +61,6 @@ export default function CorrespondantApp() {
     zone:       <ZonePage />,
     evaluation: <EvaluationPage />,
     parametres: <ParametresPage />,
-    notifications: <SharedNotificationsPage />,
   };
 
   return (

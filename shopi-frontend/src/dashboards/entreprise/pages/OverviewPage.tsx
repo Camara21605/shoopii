@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import type { ReactElement } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
@@ -31,7 +32,7 @@ interface OverviewData {
   caData: { m: string; v: number }[];
   topProduits: { em: string; nm: string; ventes: number; ca: string; trend: 'up' | 'dn' | 'neu' }[];
   categoryBreakdown: { label: string; pct: number }[];
-  dernieresCommandes: { id: string; em: string; nm: string; vt: string; client: string; price: number; status: string; date: string }[];
+  dernieresCommandes: { id: string; uuid?: string; em: string; nm: string; vt: string; client: string; price: number; status: string; date: string }[];
   stockAlertes: { em: string; nm: string; qty: number; min: number; type: 'red' | 'amber' }[];
   activite: { icon: string; txt: string; time: string }[];
 }
@@ -77,6 +78,7 @@ function KpiCard({
 export default function OverviewPage({ onNavigate }: OverviewPageProps) {
   const { t } = useTranslation();
   const { pop } = useToast();
+  const navigate = useNavigate();
   const [data, setData]       = useState<OverviewData>(EMPTY);
   const [loading, setLoading] = useState(true);
 
@@ -327,7 +329,11 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
               <table>
                 <tbody>
                   {dernieresCommandes.map(o => (
-                    <tr key={o.id} onClick={() => pop(`📦 Commande ${o.id}`, 'i')}>
+                    <tr
+                      key={o.id}
+                      onClick={() => o.uuid ? navigate(`/commande/${o.uuid}/suivi`) : pop(`📦 Commande ${o.id}`, 'i')}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <td>
                         <div className="td-prod">
                           <div className="td-em">{o.em}</div>

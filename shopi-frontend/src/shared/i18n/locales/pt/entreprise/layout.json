@@ -11,7 +11,6 @@
     },
     "items": {
       "overview": "Visão geral",
-      "notifications": "Notificações",
       "commandes": "Encomendas",
       "retours": "Devoluções & SAV",
       "produits": "Produtos",
@@ -136,10 +135,6 @@
       "equipe": {
         "title": "Equipa",
         "subtitle": "Membros e permissões da sua loja"
-      },
-      "notifications": {
-        "title": "Notificações",
-        "subtitle": "Toda a atividade da sua loja"
       }
     },
     "searchPlaceholder": "Pesquisar encomendas, produtos, clientes…",

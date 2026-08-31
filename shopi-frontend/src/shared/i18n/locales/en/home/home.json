@@ -79,26 +79,18 @@
       },
       "produitsGros": {
         "kick": "Wholesale",
-        "title": "Buy in <em>bulk</em>",
-        "sub": "Tiered pricing · minimum order",
         "link": "See all wholesale products"
       },
       "entreprises": {
         "kick": "Shops",
-        "title": "<em>Featured</em> shops",
-        "sub": "Follow your favorite shops",
         "link": "All shops"
       },
       "correspondants": {
         "kick": "Local network",
-        "title": "Our <em>correspondents</em>",
-        "sub": "Local relays in every region",
         "link": "All correspondents"
       },
       "livreurs": {
         "kick": "Logistics",
-        "title": "<em>Available</em> delivery agents",
-        "sub": "Verified professionals near you",
         "link": "All delivery agents"
       },
       "toastLink": "📄 {{link}}",

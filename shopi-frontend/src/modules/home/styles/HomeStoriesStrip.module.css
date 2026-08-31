@@ -10,7 +10,7 @@
   background: var(--white, #fff);
   border-top:    1px solid var(--bdr, #E8EDF5);
   border-bottom: 1px solid var(--bdr, #E8EDF5);
-  padding: 18px 0 10px;
+  padding: 10px 0 6px;
 }
 
 /* ────────────────────────────────────────────────────────────

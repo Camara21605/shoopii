@@ -5,7 +5,7 @@
  *
  * STRATÉGIE HYBRIDE (transition mock → API) :
  *   ✅ DYNAMIQUE (API) :
- *      - identité, KPI, points, paiement, infos, activité  (/client/profil)
+ *      - identité, KPI, paiement, infos, activité  (/client/profil)
  *      - ABONNEMENTS : boutiques + livreurs + correspondants
  *                      (/suivis/mes-abonnements)
  *   🟡 MOCK pour l'instant (pas encore d'endpoint dédié) :
@@ -239,14 +239,11 @@ function mapAbonnements(api: MesAbonnementsApi | null): Abonnement[] {
   ];
 }
 
-interface PointsLite { solde: number; gagnesMois: number; utilises: number; expiration: string | null; }
-
 interface UseProfilClientReturn {
   profile: ClientProfil | null;
   kpis:    ClientKpi[];
   pays:    PayMethod[];
   infos:   InfoRow[];
-  points:  PointsLite;
   commandes:   Commande[];
   abonnements: Abonnement[];
   favoris:     Favori[];
@@ -368,19 +365,12 @@ export function useProfilClient(): UseProfilClientReturn {
     { icone: 'fa-pen',          label: 'Bio',               valeur: api.bio ?? 'Aucune bio'          },
   ] : [];
 
-  const points: PointsLite = {
-    solde:      api?.shopiPoints      ?? 0,
-    gagnesMois: api?.pointsGagnesMois ?? 0,
-    utilises:   api?.pointsUtilises   ?? 0,
-    expiration: api?.pointsExpiration ?? null,
-  };
-
   /* ── Datasets des onglets ── */
   const activites:   ActiviteJour[] = api ? mapActivityLog(api.activityLog) : [];
   const abonnements: Abonnement[]   = mapAbonnements(abos);   /* ✅ API réelle */
 
   return {
-    profile, kpis, pays, infos, points,
+    profile, kpis, pays, infos,
     commandes,                 // ✅ API réelle (/client/commandes)
     abonnements,               // ✅ API réelle (/suivis/mes-abonnements)
     favoris,                   // ✅ API réelle (/client/favoris)

@@ -74,7 +74,6 @@ const TITLES: Record<EntreprisePage, [string, string]> = {
   profilCorrespondantReseau: ['topbar.titles.profilCorrespondantReseau.title', 'topbar.titles.profilCorrespondantReseau.subtitle'],
   profilLivreurReseau:       ['topbar.titles.profilLivreurReseau.title',      'topbar.titles.profilLivreurReseau.subtitle'],
   equipe:         ['topbar.titles.equipe.title',         'topbar.titles.equipe.subtitle'],
-  notifications:  ['topbar.titles.notifications.title',  'topbar.titles.notifications.subtitle'],
 };
 
 /* Items du drawer mobile (navigation complète) — réutilise les mêmes clés
@@ -427,7 +426,7 @@ export default function Topbar({
               )}
             </button>
           )}
-          <NotificationCenter onSeeAll={() => onNavigate('notifications')} />
+          <NotificationCenter />
 
           <div className="tb-sep"></div>
 

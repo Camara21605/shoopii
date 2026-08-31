@@ -11,7 +11,6 @@
     },
     "items": {
       "overview": "概览",
-      "notifications": "通知",
       "commandes": "订单",
       "retours": "退货与售后",
       "produits": "产品",
@@ -136,10 +135,6 @@
       "equipe": {
         "title": "团队",
         "subtitle": "店铺成员与权限"
-      },
-      "notifications": {
-        "title": "通知",
-        "subtitle": "您店铺的所有动态"
       }
     },
     "searchPlaceholder": "搜索订单、产品、客户…",

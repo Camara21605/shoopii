@@ -12,7 +12,6 @@ interface TopbarProps {
   onGenerate:    () => void;
   onReport:      () => void;
   onMenuToggle?: () => void;
-  onNavigate:    (page: PartenairePage) => void;
 }
 
 const TITLES: Record<PartenairePage, [string, string]> = {
@@ -25,10 +24,9 @@ const TITLES: Record<PartenairePage, [string, string]> = {
   stats:        ['Statistiques',            "Performance de votre acquisition"],
   signalements: ['Sécurité & Signalements', 'Signalez les utilisateurs malveillants'],
   parametres:   ['Paramètres',              'Configuration de votre compte partenaire'],
-  notifications:['Notifications',           'Toute votre activité'],
 };
 
-export default function Topbar({ activePage, onGenerate, onReport, onMenuToggle, onNavigate }: TopbarProps) {
+export default function Topbar({ activePage, onGenerate, onReport, onMenuToggle }: TopbarProps) {
   const navigate = useNavigate();
   const [title, sub] = TITLES[activePage] ?? ['', ''];
 
@@ -50,7 +48,7 @@ export default function Topbar({ activePage, onGenerate, onReport, onMenuToggle,
         <button className={styles.ic} title="Signaler un utilisateur" onClick={onReport}>
           <i className="fas fa-flag" />
         </button>
-        <NotificationCenter onSeeAll={() => onNavigate('notifications')} />
+        <NotificationCenter />
         <button className={styles.ic} onClick={() => navigate('/aide')} title="Centre d'aide">
           <i className="fas fa-circle-question" />
         </button>

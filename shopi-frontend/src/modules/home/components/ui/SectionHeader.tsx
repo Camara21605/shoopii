@@ -24,10 +24,12 @@ export default function SectionHeader({ kick, title, sub, linkText, onLink, dark
     <div className={`${styles.hd} ${dark ? styles.dark : ''}`}>
       <div>
         <div className={styles.kick}>{kick}</div>
-        <h2
-          className={styles.title}
-          dangerouslySetInnerHTML={{ __html: title }}
-        />
+        {title && (
+          <h2
+            className={styles.title}
+            dangerouslySetInnerHTML={{ __html: title }}
+          />
+        )}
         {sub && <p className={styles.sub}>{sub}</p>}
       </div>
 

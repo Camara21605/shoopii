@@ -329,10 +329,13 @@ export default function RandomBloc({ kind, index, onToast }: Props) {
   return (
     <section className={`${styles.sec} ${bgCls}`}>
       <div className={styles.wrap}>
+        {/* Pour tous les blocs : petit label ("kick", ex. "Logistique") et
+         * bouton "voir tout" conservés — le grand titre + sous-titre sont
+         * retirés partout (texte jugé redondant avec le contenu affiché
+         * juste en dessous). */}
         <SectionHeader
           kick={t(`home.randomBloc.${kind === 'produits-gros' ? 'produitsGros' : kind}.kick`)}
-          title={t(`home.randomBloc.${kind === 'produits-gros' ? 'produitsGros' : kind}.title`)}
-          sub={t(`home.randomBloc.${kind === 'produits-gros' ? 'produitsGros' : kind}.sub`)}
+          title=""
           linkText={t(`home.randomBloc.${kind === 'produits-gros' ? 'produitsGros' : kind}.link`)}
           onLink={() => navigate(BLOC_LINK[kind])}
         />

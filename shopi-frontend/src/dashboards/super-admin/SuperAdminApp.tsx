@@ -13,7 +13,6 @@ import UserModal from './components/UserModal';
 import ToastStack from './components/ToastStack';
 import { NotificationProvider }   from '../../shared/notifications/NotificationContext';
 import NotificationToastStack     from '../../shared/notifications/NotificationToastStack';
-import SharedNotificationsPage    from '../../shared/notifications/NotificationsPage';
 import LoadingScreen from '../../shared/components/LoadingScreen';
 import './styles/super-admin.css';
 
@@ -131,7 +130,6 @@ export default function SuperAdminApp() {
             {sec === 'settings'            && <SettingsSection toast={toast} isActive onLogout={handleLogout} />}
             {sec === 'permissions'         && <PermissionsSection store={store} toast={toast} isActive />}
             {sec === 'notifications-admin' && <NotificationsAdminSection isActive />}
-            {sec === 'notifications'       && <SharedNotificationsPage />}
             {sec === 'support'             && <SupportSection isActive />}
             {sec === 'help-center'         && <HelpCenterSection isActive />}
             {sec === 'geo-referentiel'     && <GeoReferentielSection isActive toast={toast} />}

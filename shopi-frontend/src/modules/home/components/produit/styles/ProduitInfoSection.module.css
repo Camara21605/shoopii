@@ -11,7 +11,7 @@
 .titre { font-family:var(--fd,'Fraunces',serif); font-size:clamp(20px,2.8vw,30px); font-weight:800; color:var(--navy); letter-spacing:-.5px; line-height:1.2; margin-bottom:14px; }
 .shopRow { display:flex; align-items:center; gap:10px; margin-bottom:16px; padding:12px; background:var(--sky); border-radius:12px; border:1px solid var(--sky-3); cursor:pointer; transition:background .18s; flex-wrap:wrap; }
 .shopRow:hover { background:var(--sky-2); }
-.shopLogo { width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,#EEF3FD,#D6E4F8); display:flex; align-items:center; justify-content:center; font-size:16px; border:1px solid var(--bdr); flex-shrink:0; }
+.shopLogo { width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,#EEF3FD,#D6E4F8); display:flex; align-items:center; justify-content:center; font-size:16px; border:1px solid var(--bdr); flex-shrink:0; overflow:hidden; }
 .shopNom  { font-size:13px; font-weight:700; color:var(--navy); }
 .shopBadges { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:3px; }
 .shopVer  { display:inline-flex; align-items:center; gap:3px; font-size:10px; color:var(--emerald); font-weight:600; }
@@ -71,6 +71,18 @@
 .btnCompare:hover,.btnCompareOn { border-color:var(--blue); color:var(--blue); background:var(--sky); }
 .socialRow { display:flex; align-items:center; gap:10px; padding-top:16px; border-top:1px solid var(--bdr); flex-wrap:wrap; }
 .vues { margin-left:auto; font-size:11px; color:var(--t3); display:flex; align-items:center; gap:5px; }
+/* En dessous de 1024px, le panier (PanierPanel) est repositionné juste
+ * après ce bloc (voir ProduitPage.module.css, .infoBlock/.extraBlock) —
+ * il a déjà sa PROPRE quantité + ses boutons Ajouter/Acheter, avec en
+ * plus le détail du prix (livraison, total). Garder .qtyRow/.btnRow1
+ * ici en plus créerait deux contrôles d'achat quasi identiques l'un
+ * juste au-dessus de l'autre. .btnRow2 (favoris/comparer) reste visible
+ * : ces actions n'existent nulle part ailleurs sur la page. */
+@media (max-width: 1024px) {
+  .qtyRow  { display: none; }
+  .btnRow1 { display: none; }
+  .ctaRow  { margin-bottom: 14px; }
+}
 @media(max-width:768px) { .titre{font-size:20px} }
 @media(max-width:420px) { .btnCart,.btnBuy{font-size:12px;padding:11px 8px;gap:5px} .btnWish,.btnCompare{width:38px;height:38px} }
 

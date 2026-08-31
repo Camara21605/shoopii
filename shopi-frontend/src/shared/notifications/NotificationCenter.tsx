@@ -15,9 +15,8 @@ import type { INotificationDto } from './types';
 import { relativeTime, getTypeMeta, resolveNavTarget } from './notificationUtils';
 import s from './NotificationCenter.module.css';
 
-/** Nombre de notifications affichées dans l'aperçu déroulant — la liste
- *  complète (avec filtres, recherche et pagination) vit sur la page
- *  dédiée, ouverte via le bouton "Voir tout" en pied de panneau. */
+/** Nombre de notifications affichées dans le panneau déroulant — seule
+ *  interface de notifications du site (pas de page dédiée séparée). */
 const PREVIEW_LIMIT = 8;
 
 // ─── NotificationItem ─────────────────────────────────────────
@@ -76,14 +75,7 @@ function NotificationItem({ notif, onClick, onDelete }: ItemProps) {
 
 // ─── NotificationCenter ───────────────────────────────────────
 
-interface NotificationCenterProps {
-  /** Navigation vers la page complète des notifications — fournie par les
-   *  dashboards internes (activePage, pas de react-router). Sans ce prop
-   *  (site public), le clic sur "Voir tout" navigue vers /notifications. */
-  onSeeAll?: () => void;
-}
-
-export default function NotificationCenter({ onSeeAll }: NotificationCenterProps = {}) {
+export default function NotificationCenter() {
   const navigate = useNavigate();
   const {
     unreadCount, notifications,
@@ -152,14 +144,6 @@ export default function NotificationCenter({ onSeeAll }: NotificationCenterProps
     }
   }
 
-  /** "Voir tout" — page dédiée. Dashboards internes (activePage) passent
-   *  `onSeeAll` ; le site public navigue via react-router. */
-  function goToNotificationsPage() {
-    close();
-    if (onSeeAll) onSeeAll();
-    else navigate('/notifications');
-  }
-
   const previewNotifs = visibleNotifs.slice(0, PREVIEW_LIMIT);
 
   return (
@@ -222,7 +206,7 @@ export default function NotificationCenter({ onSeeAll }: NotificationCenterProps
               </div>
             )}
 
-            {/* Items — aperçu limité, la liste complète vit sur la page dédiée */}
+            {/* Items — aperçu limité aux PREVIEW_LIMIT plus récents */}
             {previewNotifs.map(n => (
               <NotificationItem
                 key={n.id}
@@ -232,13 +216,6 @@ export default function NotificationCenter({ onSeeAll }: NotificationCenterProps
               />
             ))}
           </div>
-
-          {/* Voir tout — ouvre la page complète (filtres, recherche, pagination) */}
-          {visibleNotifs.length > 0 && (
-            <button className={s.loadMore} onClick={goToNotificationsPage}>
-              Voir toutes les notifications
-            </button>
-          )}
         </div>
       )}
     </div>

@@ -50,7 +50,6 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
     title: 'sidebar.sections.principal',
     items: [
       { id: 'overview',      icon: 'fa-chart-pie', label: 'sidebar.items.overview' },
-      { id: 'notifications', icon: 'fa-bell',      label: 'sidebar.items.notifications' },
       { id: 'commandes', icon: 'fa-box',         label: 'sidebar.items.commandes', badge: '14', badgeClass: 'r', perm: ['orders',  'view'] },
       { id: 'retours',   icon: 'fa-rotate-left', label: 'sidebar.items.retours',   badge: '3',  badgeClass: 'a', perm: ['returns', 'view'] },
     ],

@@ -195,5 +195,4 @@ export type EntreprisePage =
   | 'profilLivreurReseau'
   | 'profil'
   | 'boutique-preview'
-  | 'equipe'
-  | 'notifications';
+  | 'equipe';

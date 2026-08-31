@@ -183,7 +183,14 @@ export default function ProduitInfoSection({
 
       {/* ── Boutique ── */}
       <div className={styles.shopRow} onClick={onBoutique} title={t('produitDetail.infoSection.voirLaBoutique', { nom: produit.boutique.nom })}>
-        <div className={styles.shopLogo}>{produit.boutique.emoji}</div>
+        <div className={styles.shopLogo}>
+          {produit.boutique.logoUrl
+            ? <img src={produit.boutique.logoUrl} alt={produit.boutique.nom}
+                style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'inherit' }}
+                onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              />
+            : produit.boutique.emoji}
+        </div>
         <div>
           <div className={styles.shopNom}>{produit.boutique.nom}</div>
           <div className={styles.shopBadges}>

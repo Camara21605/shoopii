@@ -38,10 +38,7 @@ export type SectionId =
   /* Phase 7 — Référentiel Géographique (pays/régions/préfectures/communes/quartiers/zones) */
   | 'geo-referentiel'
   /* Phase 8 — Centre de Gestion des Commissions (entreprises, partenaires, livreurs, plateforme) */
-  | 'commissions'
-  /* Centre de notifications personnel (boîte de réception de l'admin connecté) —
-   * distinct de 'notifications-admin' qui gère les modèles/règles d'envoi. */
-  | 'notifications';
+  | 'commissions';
 
 /* ── Utilisateur affiché dans le store (correspond à UserListItem API) ─────── */
 export interface User {

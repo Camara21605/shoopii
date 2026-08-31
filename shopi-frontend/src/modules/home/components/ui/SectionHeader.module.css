@@ -1,4 +1,4 @@
-.hd { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 32px; gap: 16px; flex-wrap: wrap; }
+.hd { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 8px; gap: 16px; flex-wrap: wrap; }
 .kick {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 10px; font-weight: 800; color: var(--blue);

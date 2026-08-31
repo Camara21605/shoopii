@@ -234,7 +234,14 @@ export default function PanierPanel({
 
       <div className={styles.vendeurCard}>
         <div className={styles.vcTop}>
-          <div className={styles.vcLogo}>{produit.boutique.emoji}</div>
+          <div className={styles.vcLogo}>
+            {produit.boutique.logoUrl
+              ? <img src={produit.boutique.logoUrl} alt={produit.boutique.nom}
+                  style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'inherit' }}
+                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                />
+              : produit.boutique.emoji}
+          </div>
           <div>
             <div className={styles.vcNom}>{produit.boutique.nom}</div>
             {produit.boutique.verified && (

@@ -13,8 +13,7 @@ export type ColisStatus = 'att' | 'stock' | 'dep' | 'ret' | 'livr';
 export type PageId =
   | 'overview' | 'colis' | 'transferts' | 'retours'
   | 'boutiques' | 'livreurs' | 'clients'
-  | 'revenus' | 'portefeuille' | 'zone' | 'evaluation' | 'parametres'
-  | 'notifications';
+  | 'revenus' | 'portefeuille' | 'zone' | 'evaluation' | 'parametres';
 
 export interface Colis {
   id: string; em: string; nm: string;

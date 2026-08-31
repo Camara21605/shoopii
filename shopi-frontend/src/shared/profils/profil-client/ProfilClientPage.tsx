@@ -8,7 +8,7 @@
  * AUTONOME : aucune prop. Toasts émis via 'shoneya-toast'.
  *
  * DONNÉES (stratégie hybride mock → API) :
- *   ✅ DYNAMIQUE via useProfilClient() : identité, KPI, points,
+ *   ✅ DYNAMIQUE via useProfilClient() : identité, KPI,
  *      moyens de paiement, infos personnelles.
  *   🟡 MOCK pour l'instant : commandes, abonnements, favoris, avis,
  *      transactions wallet (pas encore d'endpoint dédié).
@@ -49,7 +49,7 @@ export default function ProfilClientPage() {
 
   /* ── Données dynamiques du profil ── */
   const {
-    profile, kpis, pays, infos, points,
+    profile, kpis, pays, infos,
     commandes, abonnements, favoris, avis, avisScore, activites,
     loading, error,
   } = useProfilClient();
@@ -124,12 +124,11 @@ export default function ProfilClientPage() {
             {tab === 'activity'  && <SectionActivity  onToast={onToast} jours={activites} />}
           </div>
 
-          {/* SIDEBAR — paiement, infos & points DYNAMIQUES */}
+          {/* SIDEBAR — paiement & infos DYNAMIQUES */}
           <ProfilSidebarClient
             onToast={onToast}
             pays={pays}
             infos={infos}
-            points={points}
           />
         </div>
 

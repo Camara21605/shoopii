@@ -9,7 +9,7 @@ export type PageId =
   | 'boutiques' | 'revenus' | 'wallet'
   | 'zone' | 'evaluation' | 'parametres' | 'profil' | 'messagerie'
   | 'reseauCorrespondants' | 'reseauLivreurs'
-  | 'profilCorrespondant' | 'profilLivreur' | 'notifications';
+  | 'profilCorrespondant' | 'profilLivreur';
 
 export type SpeedKey = 'eco' | 'std' | 'exp' | 'ult';
 export type MissionStatus = 'new' | 'prep' | 'active' | 'done';
@@ -161,7 +161,6 @@ export const PAGE_META: Record<PageId, { title: string; sub: string }> = {
   reseauLivreurs:       { title: "Livreurs",       sub: "Suivez d'autres livreurs du réseau Shoneya"                },
   profilCorrespondant:  { title: "Profil correspondant", sub: "Détails et suivi"                                  },
   profilLivreur:        { title: "Profil livreur",       sub: "Détails et suivi"                                  },
-  notifications:        { title: "Notifications",        sub: "Toute votre activité"                              },
 };
 
 // ─────────────────────────────────────────────────────────────

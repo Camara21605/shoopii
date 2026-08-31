@@ -1,9 +1,8 @@
 ﻿/* ================================================================
  * FICHIER : profil-client/components/ProfilSidebarClient.tsx
  *
- * Colonne latérale : points Gold, méthodes de paiement, infos
- * personnelles. Toutes les données viennent de /client/profil via
- * useProfilClient.
+ * Colonne latérale : méthodes de paiement, infos personnelles.
+ * Toutes les données viennent de /client/profil via useProfilClient.
  *
  * Le solde du portefeuille (ex-carte "Shoneya Wallet" ici) n'est plus
  * dupliqué sur cette page — il est accessible partout via le widget
@@ -14,43 +13,20 @@
 import styles from '../styles/ProfilClient.module.css';
 import type { PayMethod, InfoRow } from '../data/profilClientData';
 
-/* Points simplifiés venant du hook (sous-ensemble de PointsData) */
-interface PointsLite {
-  solde: number; gagnesMois: number; utilises: number; expiration: string | null;
-}
-
 interface Props {
   onToast: (m: string, t?: 's' | 'i' | 'w' | 'e') => void;
   pays?:   PayMethod[];
   infos?:  InfoRow[];
-  points?: PointsLite;
 }
 
 export default function ProfilSidebarClient({
   onToast,
   pays   = [],
   infos  = [],
-  points,
 }: Props) {
-
-  const ptsSolde      = points?.solde      ?? 0;
-  const ptsGagnes     = points?.gagnesMois ?? 0;
 
   return (
     <aside className={styles.sidebar}>
-
-      {/* ── POINTS GOLD ── */}
-      <div className={styles.pointsCard}>
-        <div className={styles.walletLabel} style={{ opacity: .85 }}>
-          <i className="fas fa-crown" /> Points ShopiGold
-        </div>
-        <div className={styles.pointsSolde}>{ptsSolde.toLocaleString('fr-FR')} pts</div>
-        {ptsGagnes > 0 && (
-          <div className={styles.pointsSub}>
-            +{ptsGagnes} pts ce mois{points?.expiration ? ` · Expire ${points.expiration}` : ''}
-          </div>
-        )}
-      </div>
 
       {/* ── MÉTHODES DE PAIEMENT (dynamique) ── */}
       <div className={styles.card}>

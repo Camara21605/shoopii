@@ -411,6 +411,7 @@ export class EntrepriseDashboardService {
       const firstItem = c.items?.[0];
       return {
         id:      c.numero,
+        uuid:    c.id,
         em:      '📦',
         nm:      firstItem?.nomProduit ?? 'Commande',
         vt:      firstItem?.varianteChoisie ?? '',

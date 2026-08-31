@@ -90,7 +90,8 @@ function toProduitInfo(p: ProduitApi, t: TFunction): ProduitInfo {
     specs: p.specs?.map(s => ({ label: s.cle, value: s.valeur })) ?? [],
     boutique: {
       nom:       p.companyName ?? t('boutiqueDetail.page.boutiqueShopiDefault'),
-      emoji:     p.companyLogo ?? '🏪',
+      emoji:     '🏪',
+      logoUrl:   p.companyLogo ?? null,
       verified:  p.companyVerified,
       pays:      PAYS_LABELS[p.companyPays]?.label   ?? p.companyPays,
       drapeau:   PAYS_LABELS[p.companyPays]?.drapeau  ?? '🌍',
@@ -234,47 +235,58 @@ export default function ProduitPage() {
             </div>
 
             <div className={styles.centerCol}>
-              <ProduitInfoSection
-                produit={produit}
-                produitId={produitApi.id}
-                variantes={produitApi.variantes}
-                venteEnGros={produitApi.venteEnGros}
-                moq={produitApi.moq}
-                wholesaleTiers={produitApi.wholesaleTiers}
-                qty={qty}
-                onChangeQty={handleChangeQty}
-                onToast={showToast}
-                onPartage={() => setPartageOpen(true)}
-                onBoutique={() => navigate(`/boutique/${produitApi.companyId}`)}
-                selectedVariants={selectedVariants}
-                onVariantsChange={setSelectedVariants}
-              >
-                <div ref={livraisonRef}>
-                  <LivraisonSection
-                    onChange={handleLivraisonChange}
-                    onToast={showToast}
-                    policy={produitApi ? {
-                      standard:      produitApi.livraisonStandard      ?? true,
-                      livreur:       produitApi.livraisonLivreur        ?? true,
-                      correspondant: produitApi.livraisonCorrespondant  ?? false,
-                      fraisLocal:    produitApi.fraisLivraisonLocal     ?? null,
-                      delai:         produitApi.delaiLivraison          ?? '1-3 jours',
-                    } : undefined}
-                  />
-                </div>
-              </ProduitInfoSection>
+              {/* Regroupé dans un wrapper dédié (styles.infoBlock) : en dessous de
+               * 1024px, .centerCol devient display:contents (voir CSS) pour que
+               * ce bloc et .extraBlock ci-dessous redeviennent des enfants directs
+               * de .layout, replaçables indépendamment via `order` — sans ça,
+               * le panier (rightCol) atterrissait tout en bas de la page, après
+               * les onglets et les produits similaires, au lieu de juste après
+               * les infos produit. */}
+              <div className={styles.infoBlock}>
+                <ProduitInfoSection
+                  produit={produit}
+                  produitId={produitApi.id}
+                  variantes={produitApi.variantes}
+                  venteEnGros={produitApi.venteEnGros}
+                  moq={produitApi.moq}
+                  wholesaleTiers={produitApi.wholesaleTiers}
+                  qty={qty}
+                  onChangeQty={handleChangeQty}
+                  onToast={showToast}
+                  onPartage={() => setPartageOpen(true)}
+                  onBoutique={() => navigate(`/boutique/${produitApi.companyId}`)}
+                  selectedVariants={selectedVariants}
+                  onVariantsChange={setSelectedVariants}
+                >
+                  <div ref={livraisonRef}>
+                    <LivraisonSection
+                      onChange={handleLivraisonChange}
+                      onToast={showToast}
+                      policy={produitApi ? {
+                        standard:      produitApi.livraisonStandard      ?? true,
+                        livreur:       produitApi.livraisonLivreur        ?? true,
+                        correspondant: produitApi.livraisonCorrespondant  ?? false,
+                        fraisLocal:    produitApi.fraisLivraisonLocal     ?? null,
+                        delai:         produitApi.delaiLivraison          ?? '1-3 jours',
+                      } : undefined}
+                    />
+                  </div>
+                </ProduitInfoSection>
+              </div>
 
-              <TabsSection
-                produit={produit}
-                venteEnGros={produitApi.venteEnGros}
-                moq={produitApi.moq}
-                wholesaleTiers={produitApi.wholesaleTiers}
-              />
+              <div className={styles.extraBlock}>
+                <TabsSection
+                  produit={produit}
+                  venteEnGros={produitApi.venteEnGros}
+                  moq={produitApi.moq}
+                  wholesaleTiers={produitApi.wholesaleTiers}
+                />
 
-              <SimilairesSection
-                produitId={produitApi.id}
-                onToast={showToast}
-              />
+                <SimilairesSection
+                  produitId={produitApi.id}
+                  onToast={showToast}
+                />
+              </div>
             </div>
 
             <div className={styles.rightCol}>

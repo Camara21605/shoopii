@@ -49,6 +49,12 @@ export interface ProduitInfo {
   boutique: {
     nom:       string;
     emoji:     string;
+    /** URL du logo réel de la boutique (Cloudinary) — si présent, affiché
+     *  en <img> à la place de `emoji`. Champ séparé exprès : `emoji` doit
+     *  toujours rester un vrai emoji court, jamais une URL (sinon elle se
+     *  retrouve affichée telle quelle en texte brut, cassant la mise en
+     *  page et débordant horizontalement sur mobile). */
+    logoUrl:   string | null;
     pays:      string;
     drapeau:   string;
     region:    string;

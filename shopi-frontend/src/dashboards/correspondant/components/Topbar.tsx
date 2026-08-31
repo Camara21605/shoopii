@@ -19,7 +19,6 @@ const TITLES: Record<PageId, { title: string; sub: string }> = {
   zone:       { title: 'Ma zone',               sub: 'Couverture Conakry · Régional'   },
   evaluation: { title: 'Mon évaluation',        sub: 'Note moyenne : ★ 4.9 / 5'        },
   parametres: { title: 'Paramètres',            sub: 'Profil et configuration'          },
-  notifications: { title: 'Notifications',      sub: 'Toute votre activité'             },
 };
 
 interface Props {
@@ -61,7 +60,7 @@ export default function Topbar({ page, onMenu, onPage }: Props) {
           )}
         </button>
 
-        <NotificationCenter onSeeAll={() => onPage('notifications')} />
+        <NotificationCenter />
 
         <div className={s.sep} />
 
