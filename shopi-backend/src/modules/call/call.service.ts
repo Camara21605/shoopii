@@ -38,6 +38,7 @@ import { MessagingPermissionEngine } from '../messagerie/permissions/messaging-p
 import type { PermissionContext }    from '../messagerie/permissions/interfaces/permission-context.interface';
 import { PresenceService }           from '../messagerie/services/presence.service';
 import { NotificationService }       from '../notifications/services/notification.service';
+import { withRedisTimeout }          from '../../common/utils/redis-timeout.util';
 import {
   NotificationActorType, NotificationType, NotificationPriority,
 } from 'src/database/entities/notification/notification.entitiy';
@@ -47,6 +48,14 @@ import type { StartCallDto } from './dto/call.dto';
 /** Nombre max de tentatives d'appel par utilisateur / fenêtre de 60s. */
 const RATE_LIMIT_MAX    = 10;
 const RATE_LIMIT_TTL_S  = 60;
+
+/** Borne l'appel Redis du rate-limit — même disjoncteur partagé que
+ *  SessionService/PresenceService (voir redis-timeout.util.ts). Sans ça,
+ *  un Redis dégradé peut faire attendre `redis.incr()` de nombreuses
+ *  secondes avant de retomber sur le catch, retardant d'autant la
+ *  sonnerie côté destinataire — constaté en prod (délai de 16-21s entre
+ *  "call:initiate REÇU" et la diffusion de call:incoming). */
+const REDIS_OP_TIMEOUT_MS = 2_000;
 
 /** Code erreur Postgres "unique_violation" — TypeORM le recopie tel quel
  *  sur QueryFailedError (driver pg). Backstop de dernier ressort si le
@@ -440,19 +449,32 @@ export class CallService {
 
   private async checkRateLimit(userId: string): Promise<void> {
     const key = `call:rate:${userId}`;
-    let count: number;
-    try {
-      count = await this.redis.incr(key);
-      if (count === 1) await this.redis.expire(key, RATE_LIMIT_TTL_S);
-    } catch (e) {
-      /* Une panne Redis ne doit jamais bloquer silencieusement tous les
-         appels — même principe que presence.isOnlineOrUnknown() : on ne
-         sait pas combien de tentatives ont eu lieu, donc on n'en bloque
-         aucune plutôt que de casser toute la plateforme d'appel sur un
-         Redis indisponible. */
-      this.logger.warn(`[Call] Redis indisponible pour le rate-limit d'appel de ${userId} — autorisé par défaut : ${(e as Error).message}`);
-      return;
-    }
+    const TIMEOUT = Symbol('timeout');
+
+    /* withRedisTimeout borne l'appel ET partage le disjoncteur avec
+       Session/Presence/PermissionCache — sans ça, un redis.incr() qui
+       traîne (Redis lent/en reconnexion) peut faire attendre plusieurs
+       secondes avant même d'atteindre un catch, retardant d'autant la
+       diffusion de call:incoming côté destinataire. */
+    const count = await withRedisTimeout<number | typeof TIMEOUT>(
+      async () => {
+        const c = await this.redis.incr(key);
+        if (c === 1) await this.redis.expire(key, RATE_LIMIT_TTL_S);
+        return c;
+      },
+      TIMEOUT,
+      REDIS_OP_TIMEOUT_MS,
+      this.logger,
+      'checkRateLimit',
+    );
+
+    /* Une panne/lenteur Redis ne doit jamais bloquer silencieusement tous
+       les appels — même principe que presence.isOnlineOrUnknown() : on ne
+       sait pas combien de tentatives ont eu lieu, donc on n'en bloque
+       aucune plutôt que de casser toute la plateforme d'appel sur un
+       Redis indisponible. */
+    if (count === TIMEOUT) return;
+
     if (count > RATE_LIMIT_MAX) {
       throw new ForbiddenException('Trop de tentatives d\'appel. Réessayez dans une minute.');
     }
