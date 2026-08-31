@@ -133,7 +133,8 @@
       "allerALaFin": "الانتقال إلى نهاية المحادثة",
       "typingRecording": "{{name}} يسجل…",
       "typingUploading": "{{name}} يرسل ملفًا…",
-      "typingWriting": "{{name}} يكتب…"
+      "typingWriting": "{{name}} يكتب…",
+      "messageIntrouvable": "الرسالة غير موجودة في هذه المحادثة"
     },
     "messageBubble": {
       "messageSupprime": "رسالة محذوفة",

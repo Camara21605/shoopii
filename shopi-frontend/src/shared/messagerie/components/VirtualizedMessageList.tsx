@@ -48,6 +48,18 @@ import s from '../styles/ChatWindow.module.css';
 const ROW_HEIGHT_ESTIMATE   = 76;
 const LOAD_OLDER_THRESHOLD  = 300; // px depuis le haut avant de déclencher le chargement
 
+/* ── Estimation de hauteur par TYPE de ligne, pour les messages jamais
+ * encore mesurés (heightCache vide pour cet id) — voir estimateRowHeight
+ * ci-dessous. Un seul ROW_HEIGHT_ESTIMATE plat sous-estimait largement
+ * les bulles avec avatar+nom+heure (premier message d'un groupe) et
+ * les médias (image/vidéo), ce qui faisait chevaucher le message
+ * suivant tant que le ResizeObserver n'avait pas corrigé — visible et
+ * gênant en cas d'envois rapprochés ("deux messages qui se suivent"). */
+const ROW_HEIGHT_FIRST         = 92;  // avatar + nom expéditeur + bulle + heure
+const ROW_HEIGHT_GROUPED_LAST  = 62;  // pas d'avatar/nom, mais heure affichée (dernier message)
+const ROW_HEIGHT_GROUPED_MID   = 46;  // pas d'avatar/nom/heure (au milieu d'un groupe)
+const ROW_HEIGHT_MEDIA         = 260; // image/vidéo — bien plus haut qu'une bulle texte
+
 interface Props {
   messages:    ChatMessage[];
   user:        ChatUser;
@@ -60,25 +72,58 @@ interface Props {
   hasMoreMessages?: boolean;
   loadingOlder?:    boolean;
   onLoadOlderMessages?: (convId: string) => void;
+  /** id du message actuellement mis en évidence (résultat de recherche — "aller au message") */
+  highlightedId?: string | null;
   /** Rendu avant la liste (ex: message système "nouvelle conversation") — pas virtualisé, toujours en tête. */
   headerContent?: ReactNode;
 }
 
-/** Handle impératif — utilisé par MessagesZone pour les boutons "aller au début/à la fin". */
+/** Handle impératif — utilisé par MessagesZone pour les boutons "aller au début/à la fin"
+ *  et pour "aller au message" (résultat de recherche). */
 export interface VirtualizedMessageListHandle {
-  scrollToStart: () => void;
-  scrollToEnd:   () => void;
+  scrollToStart:   () => void;
+  scrollToEnd:     () => void;
+  /** Fait défiler jusqu'au message d'id donné s'il est dans `messages` — no-op sinon
+   *  (l'appelant est responsable de charger les pages plus anciennes au préalable). */
+  scrollToMessage: (id: string) => void;
 }
 
 interface RowData {
   messages:    ChatMessage[];
   user:        ChatUser;
   lastReadIdx: number;
+  highlightedId?: string | null;
   onReply:     Props['onReply'];
   onToast:     Props['onToast'];
   onDelete:    Props['onDelete'];
   onRetry?:    Props['onRetry'];
   reportSize:  (id: string, index: number, height: number) => void;
+}
+
+/* Estimation de hauteur d'une ligne jamais mesurée, à partir de sa
+ * position dans le groupement visuel (même logique que MessageBubble :
+ * isSame/isFirst/isLast déterminent avatar, nom expéditeur et heure) et
+ * de son type. Bien plus précis qu'une constante plate unique — réduit
+ * fortement l'écart estimation/réel qui fait chevaucher un message tout
+ * juste envoyé avec le précédent, le temps que le ResizeObserver mesure
+ * sa vraie hauteur. */
+function estimateRowHeight(messages: ChatMessage[], index: number): number {
+  const msg = messages[index];
+  if (!msg) return ROW_HEIGHT_GROUPED_MID;
+
+  if (msg.type === 'image' || msg.type === 'video') return ROW_HEIGHT_MEDIA;
+
+  const prev = messages[index - 1];
+  const isSame = prev?.from === msg.from;
+  const isLast = index === messages.length - 1;
+
+  /* Texte long (plusieurs lignes probables) : ~40 caractères par ligne
+   * dans la largeur habituelle d'une bulle, ~20px par ligne ajoutée. */
+  const extraLines = msg.text ? Math.max(0, Math.ceil(msg.text.length / 40) - 1) : 0;
+  const extraHeight = extraLines * 20;
+
+  if (!isSame) return ROW_HEIGHT_FIRST + extraHeight;
+  return (isLast ? ROW_HEIGHT_GROUPED_LAST : ROW_HEIGHT_GROUPED_MID) + extraHeight;
 }
 
 /* ── Auto-sizing maison (évite la dépendance react-virtualized-auto-sizer) ── */
@@ -101,7 +146,7 @@ function useAutoSize<T extends HTMLElement>() {
 }
 
 function Row({ index, style, data }: ListChildComponentProps<RowData>) {
-  const { messages, user, lastReadIdx, onReply, onToast, onDelete, onRetry, reportSize } = data;
+  const { messages, user, lastReadIdx, highlightedId, onReply, onToast, onDelete, onRetry, reportSize } = data;
   const msg = messages[index];
   const rowRef = useRef<HTMLDivElement>(null);
 
@@ -121,11 +166,26 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
 
   return (
     <div style={style}>
-      <div ref={rowRef}>
+      {/* display:flow-root — CRUCIAL : sans ça, les margin-top/margin-bottom
+       * de .msgRow (MessageBubble) "s'échappent" de ce wrapper par collapse
+       * de marges (un unique enfant en flux normal, wrapper sans padding/
+       * bordure) et ne sont PAS comptés dans le contentRect.height mesuré
+       * par le ResizeObserver ci-dessus. react-window mémorisait donc une
+       * hauteur systématiquement plus PETITE que le rendu réel (de 2px en
+       * temps normal à 10px pour le 1er message d'un groupe), et
+       * positionnait le message suivant trop haut — chevauchement
+       * PERMANENT avec le pied de bulle (heure/coche) du message
+       * précédent, reproductible même sur des messages anciens déjà
+       * stabilisés. flow-root crée un contexte de formatage de bloc qui
+       * contient ces marges SANS rogner les débordements volontaires
+       * (ex: le menu ⋮ au survol d'une bulle, qui dépasse exprès vers le
+       * haut) — contrairement à overflow:hidden qui les aurait coupés. */}
+      <div ref={rowRef} style={{ display: 'flow-root' }}>
         <MessageBubble
           msg={msg} idx={index} msgs={messages}
           user={user}
           isLastRead={index === lastReadIdx}
+          highlighted={msg.id === highlightedId}
           onReply={onReply}
           onToast={onToast}
           onDelete={onDelete}
@@ -138,7 +198,7 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
 
 function VirtualizedMessageList({
   messages, user, lastReadIdx, onReply, onToast, onDelete, onRetry,
-  convId, hasMoreMessages, loadingOlder, onLoadOlderMessages, headerContent,
+  convId, hasMoreMessages, loadingOlder, onLoadOlderMessages, highlightedId, headerContent,
 }: Props, ref: Ref<VirtualizedMessageListHandle>) {
   const { ref: sizeRef, size } = useAutoSize<HTMLDivElement>();
   const listRef       = useRef<VariableSizeList>(null);
@@ -152,7 +212,7 @@ function VirtualizedMessageList({
   const getItemSize = useCallback((index: number) => {
     const id = messages[index]?.id;
     if (id === undefined) return ROW_HEIGHT_ESTIMATE;
-    return heightCache.current.get(id) ?? ROW_HEIGHT_ESTIMATE;
+    return heightCache.current.get(id) ?? estimateRowHeight(messages, index);
   }, [messages]);
 
   const reportSize = useCallback((id: string, index: number, height: number) => {
@@ -178,6 +238,16 @@ function VirtualizedMessageList({
       listRef.current?.resetAfterIndex(0, true);
       listRef.current?.scrollTo(lastScrollOffsetRef.current + addedCount * ROW_HEIGHT_ESTIMATE);
     } else if (lastId !== prevLastIdRef.current) {
+      /* Le message précédemment "dernier" peut changer de hauteur (il perd
+       * son heure affichée s'il devient un message groupé non-final) —
+       * sans reset, react-window garde son ANCIEN offset en cache et
+       * positionne le(s) nouveau(x) message(s) dessus/en dessous de façon
+       * incohérente le temps que le ResizeObserver corrige. On force le
+       * recalcul dès l'ajout pour que le nouveau message s'appuie sur des
+       * offsets à jour (ceux déjà mesurés + la meilleure estimation
+       * possible pour lui-même — voir estimateRowHeight). */
+      const fromIndex = Math.max(0, prevLenRef.current - 1);
+      listRef.current?.resetAfterIndex(fromIndex, true);
       requestAnimationFrame(() => listRef.current?.scrollToItem(Math.max(0, messages.length - 1), 'end'));
     }
 
@@ -197,9 +267,14 @@ function VirtualizedMessageList({
   useImperativeHandle(ref, () => ({
     scrollToStart: () => listRef.current?.scrollTo(0),
     scrollToEnd:   () => listRef.current?.scrollToItem(Math.max(0, messages.length - 1), 'end'),
-  }), [messages.length]);
+    scrollToMessage: (id: string) => {
+      const idx = messages.findIndex(m => m.id === id);
+      if (idx === -1) return;
+      listRef.current?.scrollToItem(idx, 'center');
+    },
+  }), [messages]);
 
-  const itemData: RowData = { messages, user, lastReadIdx, onReply, onToast, onDelete, onRetry, reportSize };
+  const itemData: RowData = { messages, user, lastReadIdx, highlightedId, onReply, onToast, onDelete, onRetry, reportSize };
 
   return (
     <div

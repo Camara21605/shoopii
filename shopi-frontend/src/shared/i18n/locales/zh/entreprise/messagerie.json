@@ -132,7 +132,8 @@
       "allerALaFin": "跳转到对话结尾",
       "typingRecording": "{{name}} 正在录音…",
       "typingUploading": "{{name}} 正在发送文件…",
-      "typingWriting": "{{name}} 正在输入…"
+      "typingWriting": "{{name}} 正在输入…",
+      "messageIntrouvable": "在此对话中未找到该消息"
     },
     "messageBubble": {
       "messageSupprime": "消息已删除",

@@ -80,6 +80,7 @@ export default function MessagerieCore() {
     hasMoreConvs,
     loadMoreConversations,
     loadOlderMessages,
+    jumpToMessage,
     retryMessage,
     typingMap,
     sendTyping,
@@ -130,6 +131,49 @@ export default function MessagerieCore() {
   // ── Données actives (conv ou groupe) ─────────────────────────
   const currentConv = activeGroupId ? activeGroup : activeConv;
   const currentUser = activeGroupId ? activeGroupUser : activeUser;
+
+  /* ── "Aller au message" (résultat de recherche du ChatHeader) ──
+   * `jumpTarget` déclenche le défilement/surlignage dans MessagesZone
+   * (voir jumpToMessageId ci-dessous) — mis à null par onJumpHandled une
+   * fois consommé, pour qu'un nouveau clic sur le MÊME résultat puisse
+   * redéclencher le défilement/flash. */
+  const [jumpTarget, setJumpTarget] = useState<string | null>(null);
+
+  const handleJumpToMessage = useCallback(async (msgId: string) => {
+    if (activeGroupId) {
+      /* Groupes de livraison : pas de chargement "page plus ancienne" à la
+       * demande côté jumpToMessage (volume de messages typiquement faible,
+       * voir VirtualizedMessageList.tsx) — on vérifie juste que le message
+       * est déjà dans la fenêtre chargée. */
+      if (!activeGroup?.messages.some(m => m.id === msgId)) {
+        toast(t('messagerie.messagesZone.messageIntrouvable'), 'w');
+        return;
+      }
+      setJumpTarget(msgId);
+      return;
+    }
+    if (!activeConvId) return;
+    const found = await jumpToMessage(activeConvId, msgId);
+    if (found) setJumpTarget(msgId);
+    else toast(t('messagerie.messagesZone.messageIntrouvable'), 'w');
+  }, [activeGroupId, activeGroup, activeConvId, jumpToMessage, toast, t]);
+
+  /* ── Clic sur une entrée de l'onglet "Appels" (ConvList) ──
+   * Toujours une conversation directe (les appels de groupe ne passent pas
+   * par ce service, voir group-call.gateway.ts) — on sélectionne la conv
+   * puis on va directement à la bulle d'appel avec l'id déjà connu, SANS
+   * passer par activeConvId (qui n'aurait pas encore la bonne valeur juste
+   * après selectConv — state React mis à jour de façon asynchrone). */
+  const handleSelectCall = useCallback(async (conversationId: string, messageId: string | null) => {
+    selectConv(conversationId);
+    selectGroup(null);
+    setMobileOpen(false);
+
+    if (!messageId) return; // corrélation backend sans résultat — la conversation reste ouverte
+    const found = await jumpToMessage(conversationId, messageId);
+    if (found) setJumpTarget(messageId);
+    else toast(t('messagerie.messagesZone.messageIntrouvable'), 'w');
+  }, [selectConv, selectGroup, setMobileOpen, jumpToMessage, toast, t]);
 
   // ── Map utilisateurs fusionnée pour ConvList ─────────────────
   const mergedUsersMap = useMemo(() => {
@@ -346,6 +390,7 @@ export default function MessagerieCore() {
         callHistoryLoading={callHistoryLoading}
         onLoadCallHistory={loadCallHistory}
         onDeleteCallHistoryItem={id => deleteCallHistoryItem(id).catch(() => toast('❌ Suppression impossible', 'e'))}
+        onSelectCall={handleSelectCall}
       />
 
       {/* Colonne centrale : fenêtre de chat */}
@@ -366,6 +411,9 @@ export default function MessagerieCore() {
         onRetry={handleRetry}
         onArchiveConv={activeGroupId ? undefined : hideConversation}
         onDeleteConv={activeGroupId ? undefined : deleteConversation}
+        onJumpToMessage={handleJumpToMessage}
+        jumpToMessageId={jumpTarget}
+        onJumpHandled={() => setJumpTarget(null)}
         onCall={activeGroupId
           ? () => initiateGroupCall(activeGroupId, 'audio')
           : (activeUser ? handleCall : undefined)}

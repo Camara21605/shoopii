@@ -133,7 +133,8 @@
       "allerALaFin": "Go to the end of the conversation",
       "typingRecording": "{{name}} is recording…",
       "typingUploading": "{{name}} is sending a file…",
-      "typingWriting": "{{name}} is typing…"
+      "typingWriting": "{{name}} is typing…",
+      "messageIntrouvable": "Message not found in this conversation"
     },
     "messageBubble": {
       "messageSupprime": "Message deleted",

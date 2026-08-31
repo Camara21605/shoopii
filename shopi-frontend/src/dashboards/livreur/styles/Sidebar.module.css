@@ -210,6 +210,9 @@
 /* ── Navigation ── */
 .sbNav {
   flex: 1;
+  min-height: 0; /* sans ça, un enfant flex en colonne ne rétrécit pas sous
+    la hauteur de son contenu — .sbNav débordait au lieu de défiler seul,
+    et toute la sidebar semblait bouger avec lui. */
   overflow-y: auto;
   padding: 10px;
   scrollbar-width: none;

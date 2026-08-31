@@ -85,7 +85,10 @@
 .zoneNm { font-size: 11.5px; font-weight: 700; color: #fff; }
 .zoneSub { font-size: 9.5px; color: rgba(180,200,255,.5); }
 
-.nav { flex: 1; overflow-y: auto; padding: 10px; position: relative; z-index: 1; }
+/* min-height:0 : sans ça un enfant flex en colonne ne rétrécit pas sous la
+   hauteur de son contenu — .nav débordait au lieu de défiler seul, et
+   toute la sidebar semblait bouger avec lui (logo/carte inclus). */
+.nav { flex: 1; min-height: 0; overflow-y: auto; padding: 10px; position: relative; z-index: 1; }
 .nav::-webkit-scrollbar { width: 0; }
 .sect {
   font-size: 9px; font-weight: 700;

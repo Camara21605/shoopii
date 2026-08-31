@@ -106,7 +106,7 @@
 /* ── Zone messages ── */
 .msgsZoneWrap { position: relative; flex: 1; min-height: 0; display: flex; }
 .msgsZone {
-  flex: 1; min-height: 0; overflow-y: auto;
+  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
   padding: 20px 22px 32px;
   display: flex; flex-direction: column; gap: 2px;
 }
@@ -136,6 +136,15 @@
 .msgRow { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 2px; }
 .msgRow.mine { flex-direction: row-reverse; }
 .msgRow.firstGroup { margin-top: 10px; }
+
+/* ── "Aller au message" (résultat de recherche) — bref flash pour attirer
+   l'œil sur le message ciblé, quel que soit son type (texte/média/carte). ── */
+.jumpHighlight .bubbleWrap { animation: jumpPulse 1.8s ease-out; border-radius: var(--r-xl); }
+@keyframes jumpPulse {
+  0%   { box-shadow: 0 0 0 6px rgba(22,82,240,.35); }
+  70%  { box-shadow: 0 0 0 6px rgba(22,82,240,.35); }
+  100% { box-shadow: 0 0 0 0 rgba(22,82,240,0); }
+}
 .msgAva {
   width: 30px; height: 30px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;

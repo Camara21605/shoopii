@@ -45,6 +45,10 @@ interface Props {
   onRetry?:        (msgId: string) => void;
   onArchiveConv?:  (convId: string) => void;
   onDeleteConv?:   (convId: string) => void;
+  /** "Aller au message" (résultat de recherche du ChatHeader) — voir MessagerieCore.handleJumpToMessage. */
+  onJumpToMessage?: (msgId: string) => void;
+  jumpToMessageId?: string | null;
+  onJumpHandled?:  () => void;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -53,6 +57,7 @@ export default function ChatWindow({
   conv, user, members, infoPanelOpen, typingActivity,
   onSend, onTyping, onToggleInfo, onNewConv, onToast, onDelete, onUpdateGroup, onCall, onVideoCall, onMobileMenu,
   onLoadOlderMessages, onRetry, onArchiveConv, onDeleteConv,
+  onJumpToMessage, jumpToMessageId, onJumpHandled,
 }: Props) {
   const { t } = useTranslation();
   /** Message cité (réponse) — partagé entre MessagesZone (set) et MessageInput (affichage) */
@@ -99,6 +104,7 @@ export default function ChatWindow({
         convMuted={conv.muted}
         onArchiveConv={onArchiveConv}
         onDeleteConv={onDeleteConv}
+        onJumpToMessage={onJumpToMessage}
       />
 
       {/* ── Messages + indicateur typing ── */}
@@ -113,6 +119,8 @@ export default function ChatWindow({
         onUpdateGroup={onUpdateGroup}
         onLoadOlderMessages={onLoadOlderMessages}
         onRetry={onRetry}
+        jumpToMessageId={jumpToMessageId}
+        onJumpHandled={onJumpHandled}
       />
 
       {/* ── Zone de saisie ── */}

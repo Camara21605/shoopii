@@ -18,6 +18,8 @@ interface Props {
   user:        ChatUser;
   /** Vrai pour le dernier message envoyé par moi et vu — affiche l'avatar de lecture */
   isLastRead?: boolean;
+  /** Vrai pour le message ciblé par "aller au message" (résultat de recherche) — bref flash visuel */
+  highlighted?: boolean;
   onReply:     (r: { sender: string; text: string }) => void;
   onToast:     (msg: string, type?: string) => void;
   onDelete:    (msgId: string, mode: 'me' | 'everyone' | 'other') => void;
@@ -26,7 +28,7 @@ interface Props {
 }
 
 function MessageBubble({
-  msg, idx, msgs, user, isLastRead = false, onReply, onToast, onDelete, onRetry,
+  msg, idx, msgs, user, isLastRead = false, highlighted = false, onReply, onToast, onDelete, onRetry,
 }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -55,13 +57,13 @@ function MessageBubble({
   const rc       = roleConfig[user.role] ?? roleConfig['client'];
   const isImgAva = user.ava?.startsWith('http');
 
-  const rowCls = [s.msgRow, isMe ? s.mine : '', isFirst ? s.firstGroup : '', isSame ? s.noAva : '']
+  const rowCls = [s.msgRow, isMe ? s.mine : '', isFirst ? s.firstGroup : '', isSame ? s.noAva : '', highlighted ? s.jumpHighlight : '']
     .filter(Boolean).join(' ');
 
   // ── Placeholder message supprimé ──────────────────────────────
   if (msg.deleted) {
     return (
-      <div className={rowCls}>
+      <div className={rowCls} data-msg-id={msg.id}>
         {!isMe && <div className={s.msgAva}>{isFirst && <div style={{ width: 30, height: 30 }} />}</div>}
         <div className={s.msgGroup}>
           <div className={s.msgDeleted}>
@@ -75,7 +77,7 @@ function MessageBubble({
   }
 
   return (
-    <div className={rowCls}>
+    <div className={rowCls} data-msg-id={msg.id}>
 
       {/* Avatar gauche (messages reçus) */}
       {!isMe && (
@@ -448,6 +450,7 @@ function CallBubble({ meta }: { meta?: CallMeta }) {
 function arePropsEqual(prev: Props, next: Props): boolean {
   if (prev.msg !== next.msg) return false;
   if (prev.isLastRead !== next.isLastRead) return false;
+  if (prev.highlighted !== next.highlighted) return false;
   if (prev.user !== next.user) return false;
   if (prev.onReply !== next.onReply) return false;
   if (prev.onToast !== next.onToast) return false;

@@ -405,10 +405,18 @@ interface Props {
   onLoadOlderMessages?: (convId: string) => void;
   /** Relance l'envoi d'un message resté en échec */
   onRetry?:        (msgId: string) => void;
+  /** id du message ciblé par "aller au message" (résultat de recherche, voir ChatHeader) —
+   *  doit déjà être présent dans conv.messages (l'appelant charge les pages plus anciennes
+   *  au préalable si besoin, voir MessagerieCore.handleJumpToMessage). */
+  jumpToMessageId?: string | null;
+  /** Appelé une fois le défilement/surlignage déclenché, pour que l'appelant remette
+   *  jumpToMessageId à null (sinon un nouveau clic sur le MÊME résultat ne redéclenche rien). */
+  onJumpHandled?:  () => void;
 }
 
 function MessagesZone({
   conv, user, members, typingActivity, onReply, onToast, onDelete, onUpdateGroup, onLoadOlderMessages, onRetry,
+  jumpToMessageId, onJumpHandled,
 }: Props) {
   const { t } = useTranslation();
   const msgsRef      = useRef<HTMLDivElement>(null);
@@ -422,6 +430,33 @@ function MessagesZone({
    * typiquement faible) — voir le commentaire de fichier de
    * VirtualizedMessageList.tsx pour le raisonnement complet. */
   const isVirtualized = !conv.isGroup;
+
+  /* ── "Aller au message" (résultat de recherche, voir ChatHeader) ──
+   * jumpToMessageId change → on fait défiler jusqu'au message ciblé (déjà
+   * chargé dans conv.messages à ce stade, voir MessagerieCore) et on le
+   * met brièvement en évidence (flash CSS, voir .jumpHighlight). */
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!jumpToMessageId) return;
+
+    if (isVirtualized) {
+      virtualRef.current?.scrollToMessage(jumpToMessageId);
+    } else {
+      const el = msgsRef.current?.querySelector<HTMLElement>(`[data-msg-id="${jumpToMessageId}"]`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    setHighlightedId(jumpToMessageId);
+    onJumpHandled?.();
+
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    highlightTimerRef.current = setTimeout(() => setHighlightedId(null), 1800);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jumpToMessageId]);
+
+  useEffect(() => () => { if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current); }, []);
 
   /* ── Scroll natif (groupes uniquement) : 3 cas distincts, tous gérés
    * ici pour ne jamais se marcher dessus (voir dépendances ci-dessous,
@@ -526,6 +561,7 @@ function MessagesZone({
             hasMoreMessages={conv.hasMoreMessages}
             loadingOlder={conv.loadingOlder}
             onLoadOlderMessages={onLoadOlderMessages}
+            highlightedId={highlightedId}
             headerContent={conv.messages.length === 0 ? (
               <div className={s.sysMsg}><span>{t('messagerie.messagesZone.nouvelleConversationAvec', { name: user.name })}</span></div>
             ) : undefined}
@@ -551,6 +587,7 @@ function MessagesZone({
                 msg={msg} idx={idx} msgs={conv.messages}
                 user={user}
                 isLastRead={idx === lastReadIdx}
+                highlighted={msg.id === highlightedId}
                 onReply={onReply}
                 onToast={onToast}
                 onDelete={onDelete}

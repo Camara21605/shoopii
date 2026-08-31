@@ -133,7 +133,8 @@
       "allerALaFin": "Ir para o fim da conversa",
       "typingRecording": "{{name}} está a gravar…",
       "typingUploading": "{{name}} está a enviar um ficheiro…",
-      "typingWriting": "{{name}} está a escrever…"
+      "typingWriting": "{{name}} está a escrever…",
+      "messageIntrouvable": "Mensagem não encontrada nesta conversa"
     },
     "messageBubble": {
       "messageSupprime": "Mensagem eliminada",

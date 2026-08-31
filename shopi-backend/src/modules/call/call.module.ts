@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Call }        from 'src/database/entities/call/call.entity';
 import { CallHistory } from 'src/database/entities/call/call-history.entity';
 import { Conversation } from 'src/database/entities/messaging/conversation.entity';
+import { Message }      from 'src/database/entities/messaging/message.entity';
 import { User }         from 'src/database/entities/user.entity';
 import { Client }        from 'src/database/entities/profiles/client-profile.entity';
 import { Company }       from 'src/database/entities/profiles/entreprise-profile.entity';
@@ -27,7 +28,7 @@ import { CallGateway }    from './call.gateway';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Call, CallHistory, Conversation, User,
+      Call, CallHistory, Conversation, User, Message,
       Client, Company, Delivery, Correspondent, Partner,
     ]),
     AuthModule,

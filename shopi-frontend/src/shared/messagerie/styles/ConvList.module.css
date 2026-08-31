@@ -106,7 +106,15 @@
 .tab.active .tabCount { background: var(--teal, #0E7490); color: #fff; }
 
 /* Liste */
-.items { flex: 1; overflow-y: auto; padding: 6px 0; }
+/* min-height:0 est INDISPENSABLE ici : par défaut, un enfant flex dans un
+ * conteneur en colonne (.aside) a min-height:auto, qui l'empêche de
+ * rétrécir sous la hauteur de SON CONTENU — avec beaucoup de conversations,
+ * .items grandissait donc au-delà de l'espace disponible, poussait .aside
+ * à déborder (au lieu de faire défiler seulement la liste en interne), et
+ * TOUTE la colonne (recherche + onglets + liste) semblait "bouger"/défiler
+ * ensemble plutôt que de garder l'en-tête fixe pendant que seule la liste
+ * défile. */
+.items { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 6px 0; }
 .section {
   font-size: 9px; font-weight: 800; color: var(--t4);
   text-transform: uppercase; letter-spacing: 1px;

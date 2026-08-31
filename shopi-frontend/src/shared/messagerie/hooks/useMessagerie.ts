@@ -193,6 +193,12 @@ function apiMsgToChat(m: ApiMessage): ChatMessage {
 
 export function useMessagerie() {
   const [conversations,     setConversations]     = useState<Conversation[]>([]);
+  /** Miroir synchrone de `conversations` — nécessaire dans jumpToMessage()
+   *  ci-dessous, qui boucle des appels réseau successifs et doit lire la
+   *  liste de messages À JOUR à chaque itération (le state React lui-même
+   *  n'est pas lisible de façon synchrone entre deux renders). */
+  const conversationsRef = useRef<Conversation[]>([]);
+  useEffect(() => { conversationsRef.current = conversations; }, [conversations]);
   const [archivedConvs,     setArchivedConvs]     = useState<Conversation[]>([]);
   const [archivedLoaded,    setArchivedLoaded]    = useState(false);
   const [users,             setUsers]             = useState<ChatUser[]>([]);
@@ -562,6 +568,63 @@ export function useMessagerie() {
     } finally {
       loadingOlderRef.current.delete(convId);
     }
+  }, []);
+
+  /* ── Fait défiler jusqu'à un message trouvé par la recherche (ChatHeader) ──
+   * Le message ciblé peut être bien plus ancien que la fenêtre actuellement
+   * chargée (recherche plein-texte côté backend sur TOUTE la conversation,
+   * pas seulement les 50 derniers messages) — cette fonction charge donc les
+   * pages plus anciennes une à une, comme loadOlderMessages ci-dessus, mais
+   * EN BOUCLE jusqu'à trouver l'id recherché (ou épuiser l'historique).
+   * Contrairement à loadOlderMessages, la décision de continuer se fait sur
+   * la réponse réseau elle-même (pas sur le state React, pas synchrone entre
+   * deux renders) — nécessaire pour boucler correctement.
+   * Retourne true si le message est chargé (déjà présent ou trouvé), false
+   * s'il n'existe pas dans l'historique de cette conversation. */
+  const jumpToMessage = useCallback(async (convId: string, msgId: string): Promise<boolean> => {
+    const already = conversationsRef.current
+      .find(c => c.id === convId)?.messages.some(m => m.id === msgId);
+    if (already) return true;
+
+    if (loadingOlderRef.current.has(convId)) return false;
+    let cursor = msgCursorMap.current.get(convId);
+    if (!cursor) return false; // null = plus rien à charger, undefined = conv jamais ouverte
+
+    loadingOlderRef.current.add(convId);
+    setConversations(prev => prev.map(c => c.id === convId ? { ...c, loadingOlder: true } : c));
+
+    let found = false;
+    const MAX_PAGES = 20; // filet de sécurité (~1000 messages) contre une boucle infinie
+    try {
+      for (let i = 0; i < MAX_PAGES && cursor; i++) {
+        const page = await apiFetch<CursorPage<ApiMessage>>(`/messagerie/conversations/${convId}/messages`, {
+          params: { cursor, limit: 50 },
+        });
+        const older = (Array.isArray(page?.data) ? page.data : []).map(apiMsgToChat);
+
+        setConversations(prev => prev.map(c => {
+          if (c.id !== convId) return c;
+          const existingIds = new Set(c.messages.map(m => m.id));
+          return {
+            ...c,
+            messages:        [...older.filter(m => !existingIds.has(m.id)), ...c.messages],
+            hasMoreMessages: !!page?.hasMore,
+          };
+        }));
+
+        cursor = page?.nextCursor ?? null;
+        msgCursorMap.current.set(convId, cursor);
+
+        if (older.some(m => m.id === msgId)) { found = true; break; }
+        if (!page?.hasMore) break;
+      }
+    } catch {
+      /* silencieux — found reste false, l'appelant affiche un message d'échec */
+    } finally {
+      loadingOlderRef.current.delete(convId);
+      setConversations(prev => prev.map(c => c.id === convId ? { ...c, loadingOlder: false } : c));
+    }
+    return found;
   }, []);
 
   /* Pré-sélectionne + charge les messages d'une conversation demandée depuis
@@ -938,6 +1001,7 @@ export function useMessagerie() {
     hasMoreConvs,       // pilote l'affichage de la sentinelle IntersectionObserver
     loadMoreConversations,
     loadOlderMessages,  // charge les messages plus anciens d'une conversation ouverte
+    jumpToMessage,      // charge (si besoin) puis confirme la présence d'un message trouvé par la recherche
     retryMessage,       // relance un message resté en échec (sendFailed)
     typingMap,       // indicateurs "X est en train d'écrire" temps réel
     sendTyping,

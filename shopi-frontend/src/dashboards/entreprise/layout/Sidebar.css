@@ -514,6 +514,11 @@ input, select, textarea { font-family: var(--fb); }
 /* ── Zone de navigation ── */
 .sb-nav {
   flex: 1;
+  min-height: 0; /* sans ça, un enfant flex en colonne ne rétrécit pas sous
+    la hauteur de son contenu (min-height:auto par défaut) — avec beaucoup
+    d'items, .sb-nav débordait de .sb au lieu de défiler seul en interne,
+    et TOUTE la sidebar (logo + carte boutique + nav) semblait bouger
+    ensemble au lieu de garder logo/carte fixes en haut. */
   overflow-y: auto;
   padding: 10px;
   position: relative;

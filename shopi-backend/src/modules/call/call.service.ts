@@ -33,6 +33,7 @@ import { Correspondent } from 'src/database/entities/profiles/correspondant-prof
 import { Partner }       from 'src/database/entities/profiles/partenaire-profile.entity';
 import { UserRole } from 'src/common/enums/user-role.enum';
 import { Conversation, ConversationActorType, ConversationStatus } from 'src/database/entities/messaging/conversation.entity';
+import { Message, MessageContentType } from 'src/database/entities/messaging/message.entity';
 
 import { MessagingPermissionEngine } from '../messagerie/permissions/messaging-permission.engine';
 import type { PermissionContext }    from '../messagerie/permissions/interfaces/permission-context.interface';
@@ -106,6 +107,7 @@ export class CallService {
     @InjectRepository(Call)         private readonly callRepo:    Repository<Call>,
     @InjectRepository(CallHistory)  private readonly historyRepo: Repository<CallHistory>,
     @InjectRepository(Conversation) private readonly convRepo:    Repository<Conversation>,
+    @InjectRepository(Message)      private readonly msgRepo:     Repository<Message>,
     @InjectRepository(User)        private readonly userRepo:    Repository<User>,
     @InjectRepository(Client)        private readonly clientRepo: Repository<Client>,
     @InjectRepository(Company)       private readonly companyRepo: Repository<Company>,
@@ -919,6 +921,8 @@ export class CallService {
     const otherIds = rows.map(row => row.callerId === userId ? row.calleeId : row.callerId);
     const displayMap = await this.getDisplayInfoBulk(otherIds);
 
+    const messageIdByRow = await this.correlateHistoryToMessages(rows);
+
     const data = rows.map(row => {
       const direction  = row.callerId === userId ? 'outgoing' as const : 'incoming' as const;
       const otherId    = direction === 'outgoing' ? row.calleeId : row.callerId;
@@ -935,10 +939,83 @@ export class CallService {
         answeredAt:     row.answeredAt,
         endedAt:        row.endedAt,
         duration:       row.duration,
+        /** Bulle d'appel correspondante dans la conversation (voir
+         *  correlateHistoryToMessages) — null si introuvable, permet au
+         *  frontend de proposer "aller au message" depuis l'historique. */
+        messageId:      messageIdByRow.get(row.id) ?? null,
       };
     });
 
     return { data, total, page };
+  }
+
+  /**
+   * Fait correspondre chaque ligne CallHistory à SA bulle d'appel dans les
+   * messages de la conversation (contentType='call'), pour permettre au
+   * frontend de faire défiler jusqu'au bon message depuis l'onglet "Appels".
+   *
+   * PAS DE LIEN EN BASE entre les deux : la bulle est créée par un appel
+   * REST séparé, déclenché côté client par l'appelant uniquement (voir
+   * GlobalCallContext.persistCallEvent), totalement découplé de l'écriture
+   * serveur de CallHistory (déclenchée par le socket call:end) — aucune
+   * transaction commune, aucun identifiant partagé. On corrèle donc par
+   * PROXIMITÉ : même conversation + même type d'appel + durée identique
+   * (fort discriminant : deux appels consécutifs ont rarement exactement
+   * la même durée en secondes) + horodatage le plus proche possible de
+   * `endedAt`, à moins de 60s d'écart (au-delà, on considère qu'il n'y a
+   * pas de correspondance fiable plutôt que de risquer un mauvais lien).
+   *
+   * Un même message ne peut être assigné qu'à UNE seule ligne d'historique
+   * (Set `usedMessageIds`) — évite qu'un appel juste avant/après "vole" par
+   * erreur le message d'un appel voisin très proche dans le temps.
+   */
+  private async correlateHistoryToMessages(rows: CallHistory[]): Promise<Map<string, string>> {
+    const result = new Map<string, string>(); // CallHistory.id → Message.id
+    const convIds = [...new Set(rows.map(r => r.conversationId).filter((id): id is string => !!id))];
+    if (convIds.length === 0) return result;
+
+    const candidates = await this.msgRepo.find({
+      where: { conversationId: In(convIds), contentType: MessageContentType.CALL },
+      select: ['id', 'conversationId', 'content', 'createdAt'],
+    });
+
+    interface ParsedCandidate { id: string; conversationId: string; createdAt: Date; duration?: number; callType?: string }
+    const byConv = new Map<string, ParsedCandidate[]>();
+    for (const m of candidates) {
+      let parsed: { duration?: number; callType?: string } = {};
+      try { parsed = JSON.parse(m.content ?? '{}'); } catch { /* ignoré */ }
+      const list = byConv.get(m.conversationId) ?? [];
+      list.push({ id: m.id, conversationId: m.conversationId, createdAt: m.createdAt, duration: parsed.duration, callType: parsed.callType });
+      byConv.set(m.conversationId, list);
+    }
+
+    const MAX_DELTA_MS = 60_000;
+    const usedMessageIds = new Set<string>();
+
+    /* Les plus récents d'abord (endedAt DESC, déjà l'ordre de `rows`) — en
+     * cas d'ambiguïté entre deux appels très proches, priorité au plus
+     * récent, cohérent avec l'ordre d'affichage de l'onglet "Appels". */
+    for (const row of rows) {
+      if (!row.conversationId) continue;
+      const pool = byConv.get(row.conversationId);
+      if (!pool) continue;
+
+      let best: ParsedCandidate | null = null;
+      let bestDelta = Infinity;
+      for (const c of pool) {
+        if (usedMessageIds.has(c.id)) continue;
+        if (c.callType && c.callType !== row.callType) continue;
+        if (c.duration !== undefined && c.duration !== row.duration) continue;
+        const delta = Math.abs(c.createdAt.getTime() - row.endedAt.getTime());
+        if (delta < bestDelta) { bestDelta = delta; best = c; }
+      }
+      if (best && bestDelta <= MAX_DELTA_MS) {
+        result.set(row.id, best.id);
+        usedMessageIds.add(best.id);
+      }
+    }
+
+    return result;
   }
 
   /**

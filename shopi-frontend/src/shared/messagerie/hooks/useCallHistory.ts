@@ -18,6 +18,10 @@ export interface CallHistoryItem {
   answeredAt:     string | null;
   endedAt:        string;
   duration:       number;
+  /** Bulle d'appel correspondante dans la conversation (corrélation best-effort
+   *  côté backend, voir CallService.correlateHistoryToMessages) — null si
+   *  introuvable. Permet "aller à l'appel" depuis cet onglet. */
+  messageId:      string | null;
 }
 
 export function useCallHistory() {

@@ -133,7 +133,8 @@
       "allerALaFin": "Aller à la fin de la conversation",
       "typingRecording": "{{name}} enregistre…",
       "typingUploading": "{{name}} envoie un fichier…",
-      "typingWriting": "{{name}} écrit…"
+      "typingWriting": "{{name}} écrit…",
+      "messageIntrouvable": "Message introuvable dans cette conversation"
     },
     "messageBubble": {
       "messageSupprime": "Message supprimé",
