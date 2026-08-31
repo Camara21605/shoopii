@@ -980,10 +980,6 @@ export class MessagerieService {
     actorId?: string,
   ): Promise<UserSearchItem[]> {
     const results: UserSearchItem[] = [];
-    const now      = Date.now();
-    const onlineMs = 15 * 60 * 1000;
-    const isOnline = (d: Date | null | undefined) =>
-      d ? (now - new Date(d).getTime()) < onlineMs : false;
     const term     = q.trim();
 
     const myType = this.roleToActorType(role);
@@ -1091,13 +1087,22 @@ export class MessagerieService {
         take:      15,
       });
       const filtered = cos.filter(co => relatedCompanyIds.has(co.id));
+      /* Présence temps réel (Redis) plutôt que lastLoginAt : lastLoginAt
+       * n'est écrit qu'À LA CONNEXION — un utilisateur connecté depuis
+       * des heures (session déjà ouverte, pas de nouveau login) passait
+       * "hors ligne" dans cette recherche dès que 15 min s'étaient
+       * écoulées depuis SON login, alors qu'il était bel et bien en
+       * ligne (visible correctement dans la liste de conversations, qui
+       * utilise déjà presence.isOnline() — voir plus haut dans ce fichier). */
+      const coUserIds  = filtered.map(co => (co as any).user?.id).filter(Boolean) as string[];
+      const coPresence = await this.presence.getBulkPresence(coUserIds);
       filtered.forEach(co => results.push({
         id:       co.id,
         type:     ConversationActorType.COMPANY,
         name:     co.companyName,
         logo:     co.logo ?? null,
         subtitle: `Boutique · ${co.ville || 'Conakry'}`,
-        online:   isOnline((co as any).user?.lastLoginAt),
+        online:   coPresence.get((co as any).user?.id)?.online === true,
       }));
     }
 
@@ -1110,13 +1115,15 @@ export class MessagerieService {
       if (term) qb.andWhere('LOWER(d.fullName) LIKE LOWER(:t)', { t: `%${term}%` });
       const livs = await qb.getMany();
       const filtered = livs.filter(d => relatedDeliveryIds.has(d.id));
+      const dUserIds  = filtered.map(d => (d as any).user?.id).filter(Boolean) as string[];
+      const dPresence = await this.presence.getBulkPresence(dUserIds);
       filtered.forEach(d => results.push({
         id:       d.id,
         type:     ConversationActorType.DELIVERY,
         name:     (d as any).fullName ?? 'Livreur',
         logo:     null,
         subtitle: `Livreur · ${(d as any).zone ?? 'Conakry'}`,
-        online:   isOnline((d as any).user?.lastLoginAt),
+        online:   dPresence.get((d as any).user?.id)?.online === true,
       }));
     }
 
@@ -1129,6 +1136,8 @@ export class MessagerieService {
       if (term) qb.andWhere('LOWER(c.fullName) LIKE LOWER(:t)', { t: `%${term}%` });
       const corrs = await qb.getMany();
       const filtered = corrs.filter(c => relatedCorrIds.has(c.id));
+      const cUserIds  = filtered.map(c => (c as any).user?.id).filter(Boolean) as string[];
+      const cPresence = await this.presence.getBulkPresence(cUserIds);
       filtered.forEach(c => {
         const loc = [(c as any).depotCommune, (c as any).depotVille].filter(Boolean).join(', ');
         results.push({
@@ -1137,7 +1146,7 @@ export class MessagerieService {
           name:     (c as any).fullName ?? 'Correspondant',
           logo:     null,
           subtitle: `Correspondant · ${loc || 'Conakry'}`,
-          online:   isOnline((c as any).user?.lastLoginAt),
+          online:   cPresence.get((c as any).user?.id)?.online === true,
         });
       });
     }
@@ -1160,7 +1169,9 @@ export class MessagerieService {
           );
         }
         const clients = await clientQb.getMany();
-        const filtered = clients.filter(cl => allowedByProfile.has(cl.id) || allowedByUserId.has(cl.userId));
+        const filtered  = clients.filter(cl => allowedByProfile.has(cl.id) || allowedByUserId.has(cl.userId));
+        const clUserIds  = filtered.map(cl => (cl as any).user?.id).filter(Boolean) as string[];
+        const clPresence = await this.presence.getBulkPresence(clUserIds);
         filtered.forEach(cl => {
           const u = (cl as any).user;
           results.push({
@@ -1169,7 +1180,7 @@ export class MessagerieService {
             name:     u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Client',
             logo:     u?.profilePicture ?? null,
             subtitle: 'Client Shopi',
-            online:   isOnline(u?.lastLoginAt),
+            online:   clPresence.get(u?.id)?.online === true,
           });
         });
       }
