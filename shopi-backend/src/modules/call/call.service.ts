@@ -425,11 +425,29 @@ export class CallService {
     callerUserId: string, calleeUserId: string, manager: EntityManager,
   ): Promise<{ callerBusy: boolean; calleeBusy: boolean }> {
     const repo = manager.getRepository(Call);
+    /* lock: 'pessimistic_write' — SANS lui, cette lecture est une SELECT
+     * ordinaire qui ne voit jamais un DELETE concurrent tant qu'il n'a pas
+     * COMMIT (isolation READ COMMITTED par défaut) : un utilisateur qui
+     * raccroche puis rappelle IMMÉDIATEMENT (endCall() verrouille la ligne
+     * en FOR UPDATE, l'archive, puis la supprime) pouvait tomber sur cette
+     * SELECT pile pendant que endCall() était encore en cours — elle
+     * voyait alors la ligne "comme si de rien n'était", fraîche (donc pas
+     * stale), et répondait callerBusy=true : "Vous êtes déjà en appel"
+     * alors que l'appel précédent venait tout juste d'être raccroché.
+     * Avec FOR UPDATE ici, cette lecture attend que endCall()/rejectCall()/
+     * acceptCall()/endAllCallsForUser() (qui verrouillent TOUS déjà la même
+     * ligne en pessimistic_write) aient fini avant de lire — elle voit donc
+     * soit la ligne déjà supprimée (plus busy du tout), soit son état
+     * réellement à jour. Constaté en prod : plusieurs lignes call_history
+     * dupliquées pour un même callId (même finalizeCall() exécuté deux fois
+     * en parallèle par cette SELECT non verrouillée et un endCall()/
+     * rejectCall() concurrent). */
     const calls = await repo.find({
       where: [
         { callerId: callerUserId }, { calleeId: callerUserId },
         { callerId: calleeUserId }, { calleeId: calleeUserId },
       ],
+      lock: { mode: 'pessimistic_write' },
     });
 
     let callerBusy = false;
