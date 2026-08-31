@@ -371,8 +371,11 @@ export class CallService {
 
   /** Un appel qui sonne/se connecte depuis plus longtemps que ça sans
    * jamais avoir été décroché est considéré abandonné (filet de sécurité
-   * en plus du nettoyage à la déconnexion — voir endAllCallsForUser). */
-  private static readonly STALE_UNANSWERED_MS = 60_000;
+   * en plus du nettoyage à la déconnexion — voir endAllCallsForUser).
+   * Le client annule lui-même une sonnerie sortante après 30s (voir
+   * useAudioCall.ts) — 35s laisse juste la marge réseau nécessaire pour
+   * que ce call:end arrive avant que ce filet ne s'en charge à sa place. */
+  private static readonly STALE_UNANSWERED_MS = 35_000;
 
   async isUserBusy(userId: string, manager?: EntityManager): Promise<boolean> {
     const repo = manager ? manager.getRepository(Call) : this.callRepo;

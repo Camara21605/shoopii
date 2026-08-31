@@ -187,6 +187,13 @@ export function useAudioCall(props?: UseAudioCallProps) {
   const offerChainRef  = useRef<Promise<void>>(Promise.resolve());
   const durationRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const timeoutRef     = useRef<ReturnType<typeof setTimeout>  | null>(null);
+  /** Horodatage (Date.now()) auquel le timeout 30s de sonnerie sortante doit
+   *  expirer, 0 si aucune sonnerie en cours — voir l'effet visibilitychange
+   *  plus bas : un onglet mis en arrière-plan fait dériver setTimeout de
+   *  plusieurs dizaines de secondes (throttling navigateur), ce qui laissait
+   *  la ligne "occupée" côté serveur bien après les 30s annoncées et
+   *  bloquait les tentatives suivantes avec "Vous êtes déjà en appel". */
+  const ringDeadlineRef = useRef(0);
   const wasConnected   = useRef(false);
   const connectedSince = useRef(0);
   const facingMode     = useRef<'user' | 'environment'>('user'); // flip caméra mobile
@@ -315,6 +322,7 @@ export function useAudioCall(props?: UseAudioCallProps) {
   function clearTimers() {
     if (durationRef.current) { clearInterval(durationRef.current); durationRef.current = null; }
     if (timeoutRef.current)  { clearTimeout(timeoutRef.current);   timeoutRef.current  = null; }
+    ringDeadlineRef.current = 0;
   }
 
   /** Annule toute tentative de reprise réseau en cours (backoff + délai maximal). */
@@ -405,6 +413,30 @@ export function useAudioCall(props?: UseAudioCallProps) {
     setStatus('ended');
     setTimeout(() => setStatus('idle'), 1500);
   }, [cleanup]);
+
+  /**
+   * Filet de sécurité pour le timeout 30s de sonnerie sortante (voir
+   * startCall) : un onglet mis en arrière-plan fait throttler setTimeout par
+   * le navigateur (Chrome ne le déclenche parfois qu'après ~1 minute), donc
+   * un appel jamais décroché pouvait rester "en attente" côté serveur bien
+   * au-delà des 30s annoncées — bloquant toute nouvelle tentative avec
+   * "Vous êtes déjà en appel" alors que rien n'est réellement en cours. Au
+   * retour de l'onglet au premier plan, on vérifie l'horloge murale plutôt
+   * que de faire confiance au timer : si l'échéance est dépassée, on
+   * termine l'appel immédiatement au lieu d'attendre le timer en retard. */
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (ringDeadlineRef.current && Date.now() >= ringDeadlineRef.current) {
+        ringDeadlineRef.current = 0;
+        if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
+        reportCallError(callError('call-expired'));
+        endCall(true, 'missed');
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [endCall, reportCallError]);
 
   /**
    * Attache les pistes locales à la PeerConnection en réutilisant un
@@ -704,7 +736,9 @@ export function useAudioCall(props?: UseAudioCallProps) {
 
     /* Timeout 30s sans réponse → appel manqué (compte à partir du moment
        où B commence réellement à sonner, pas de l'acquisition média locale). */
+    ringDeadlineRef.current = Date.now() + 30_000;
     timeoutRef.current = setTimeout(() => {
+      ringDeadlineRef.current = 0;
       reportCallError(callError('call-expired'));
       endCall(true, 'missed');
     }, 30_000);
