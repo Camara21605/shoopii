@@ -367,6 +367,36 @@ function ConvList({
     if (key === 'appels')   onLoadCallHistory?.();
   };
 
+  /* ── Balayage tactile pour changer d'onglet ────────────────────────
+   * Sur la liste (pas la barre d'onglets, déjà scrollable horizontalement
+   * — un swipe dessus doit rester un défilement normal). Balayer vers la
+   * gauche → onglet précédent (à gauche dans TABS) ; vers la droite →
+   * onglet suivant. Seuil de distance + ratio horizontal/vertical pour ne
+   * pas déclencher pendant un défilement vertical normal de la liste. */
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const SWIPE_MIN_PX = 60;
+
+  const handleItemsTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    swipeStartRef.current = { x: t.clientX, y: t.clientY };
+  };
+
+  const handleItemsTouchEnd = (e: React.TouchEvent) => {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!start) return;
+    const t  = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (Math.abs(dx) < SWIPE_MIN_PX || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+
+    const idx = TABS.findIndex(tb => tb.key === tab);
+    if (idx === -1) return;
+    const nextIdx = dx < 0 ? idx - 1 : idx + 1; // gauche → précédent, droite → suivant
+    if (nextIdx < 0 || nextIdx >= TABS.length) return;
+    switchTab(TABS[nextIdx].key);
+  };
+
   /* Conversations masquées filtrées par la recherche */
   const filteredArchived = archivedConvs.filter(c => {
     if (!search.trim()) return true;
@@ -427,7 +457,12 @@ function ConvList({
       </div>
 
       {/* Liste */}
-      <div className={s.items} ref={itemsRef}>
+      <div
+        className={s.items}
+        ref={itemsRef}
+        onTouchStart={handleItemsTouchStart}
+        onTouchEnd={handleItemsTouchEnd}
+      >
         {loadingConvs && conversations.length === 0 && groupConvs.length === 0 ? (
           <>
             {Array.from({ length: 8 }).map((_, i) => <ConvItemSkeleton key={i} index={i} />)}
