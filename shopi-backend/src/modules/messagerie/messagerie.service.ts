@@ -782,12 +782,14 @@ export class MessagerieService {
 
     /* Mise à jour dénormalisée de la conversation */
     const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
+    const newUnreadInitiator = amInitiator ? conv.unreadCountInitiator : conv.unreadCountInitiator + 1;
+    const newUnreadRecipient = amInitiator ? conv.unreadCountRecipient + 1 : conv.unreadCountRecipient;
     await this.convRepo.update(convId, {
       lastMessagePreview: preview.slice(0, 100),
       lastMessageAt:      new Date(),
       lastMessageId:      saved.id,
-      unreadCountInitiator: amInitiator ? conv.unreadCountInitiator : conv.unreadCountInitiator + 1,
-      unreadCountRecipient: amInitiator ? conv.unreadCountRecipient + 1 : conv.unreadCountRecipient,
+      unreadCountInitiator: newUnreadInitiator,
+      unreadCountRecipient: newUnreadRecipient,
       /* Réapparition : si le destinataire avait supprimé ou masqué, on remet à zéro */
       ...(amInitiator
         ? { deletedByRecipient: false, archivedByRecipient: false }
@@ -820,19 +822,41 @@ export class MessagerieService {
     };
 
     /*
+     * Diffusion temps réel + notification persistante : toutes deux EN
+     * ARRIÈRE-PLAN, après avoir répondu à l'expéditeur — le message est
+     * déjà durablement enregistré (msgRepo.save + convRepo.update
+     * ci-dessus), donc plus rien ici ne doit conditionner la réponse HTTP
+     * ni retarder la diffusion au destinataire. Avant ce changement,
+     * resolveActorUserIds()/getContactInfo() (2-3 lectures BDD
+     * supplémentaires, dont une re-lecture de la conversation totalement
+     * redondante avec newUnreadInitiator/newUnreadRecipient déjà connus
+     * ci-dessus) étaient AWAITÉES en série avant de répondre — même
+     * principe déjà appliqué à call:end (voir call.gateway.ts, partie
+     * 9.5). Bénéfice secondaire : un échec de diffusion (ex. Redis lent)
+     * ne fait plus échouer toute la requête d'envoi alors que le message
+     * est déjà bien enregistré. */
+    const senderInfoPromise = this.getContactInfo(myType, myId).catch((e: Error) => {
+      /* .catch() attaché IMMÉDIATEMENT à la création de la promesse — pas
+       * seulement là où elle est consommée (broadcast et/ou notification,
+       * potentiellement AUCUN des deux si broadcastSvc est indisponible ET
+       * le destinataire a coupé les notifications). Sans ce filet, un rejet
+       * jamais consommé devient une unhandledRejection Node — qui TERMINE
+       * le process par défaut depuis Node 15 (pas juste un log d'erreur) :
+       * un simple échec de lecture du nom de l'expéditeur aurait pu faire
+       * planter tout le serveur, coupant l'envoi de messages pour tout le
+       * monde jusqu'au redémarrage. */
+      this.logger.warn(`[MSG] getContactInfo échoué conv:${convId} : ${e.message}`);
+      return { name: 'Utilisateur', logo: null, online: false, subtitle: '', userId: null };
+    });
+
+    /*
      * Broadcast temps réel au destinataire via Socket.IO.
      * Fonctionne uniquement si le gateway est initialisé
      * (BroadcastService.setServer() appelé par afterInit).
      */
-    if (this.broadcastSvc) {
-      const updatedConv = await this.convRepo.findOne({
-        where:  { id: convId },
-        select: ['unreadCountInitiator', 'unreadCountRecipient'],
-      });
-
-      const unreadForRecipient = amInitiator
-        ? (updatedConv?.unreadCountRecipient ?? 1)
-        : (updatedConv?.unreadCountInitiator ?? 1);
+    const broadcastSvc = this.broadcastSvc;
+    if (broadcastSvc) {
+      const unreadForRecipient = amInitiator ? newUnreadRecipient : newUnreadInitiator;
 
       /* Résolu à chaque envoi (pas depuis la colonne dénormalisée figée à
        * la création de la conversation) : pour une entreprise gérée par
@@ -840,38 +864,47 @@ export class MessagerieService {
        * peut changer au fil du temps (ajout/retrait de collaborateurs). */
       const recipientActorType = amInitiator ? conv.recipientType : conv.initiatorType;
       const recipientActorId   = amInitiator ? conv.recipientId   : conv.initiatorId;
-      const recipientUserIds   = await this.resolveActorUserIds(recipientActorType, recipientActorId);
 
-      if (recipientUserIds.length > 0) {
-        this.broadcastSvc.newMessage(recipientUserIds, userId, {
-          conversationId: convId,
-          message: {
-            id:            saved.id,
-            fromMe:        false,
-            senderId:      myId,
-            senderType:    senderType,
-            senderName:    (await this.getContactInfo(myType, myId)).name,
-            contentType:   saved.contentType,
-            content:       saved.content,
-            mediaUrl:      saved.mediaUrl,
-            mediaName:     saved.mediaName,
-            mediaMimeType: saved.mediaMimeType,
-            mediaSize:     saved.mediaSize,
-            createdAt:     saved.createdAt.toISOString(),
-            replyToId:     saved.replyToId,
-            productId:     saved.productId,
-            orderId:       saved.orderId,
-            latitude:      saved.latitude      != null ? Number(saved.latitude)  : null,
-            longitude:     saved.longitude     != null ? Number(saved.longitude) : null,
-            locationLabel: saved.locationLabel,
-          },
-          convPreview: {
-            lastMessage:   preview.slice(0, 100),
-            lastMessageAt: new Date().toISOString(),
-            unreadCount:   unreadForRecipient,
-          },
-        });
-      }
+      void (async () => {
+        try {
+          const [recipientUserIds, senderInfo] = await Promise.all([
+            this.resolveActorUserIds(recipientActorType, recipientActorId),
+            senderInfoPromise,
+          ]);
+          if (recipientUserIds.length === 0) return;
+
+          broadcastSvc.newMessage(recipientUserIds, userId, {
+            conversationId: convId,
+            message: {
+              id:            saved.id,
+              fromMe:        false,
+              senderId:      myId,
+              senderType:    senderType,
+              senderName:    senderInfo.name,
+              contentType:   saved.contentType,
+              content:       saved.content,
+              mediaUrl:      saved.mediaUrl,
+              mediaName:     saved.mediaName,
+              mediaMimeType: saved.mediaMimeType,
+              mediaSize:     saved.mediaSize,
+              createdAt:     saved.createdAt.toISOString(),
+              replyToId:     saved.replyToId,
+              productId:     saved.productId,
+              orderId:       saved.orderId,
+              latitude:      saved.latitude      != null ? Number(saved.latitude)  : null,
+              longitude:     saved.longitude     != null ? Number(saved.longitude) : null,
+              locationLabel: saved.locationLabel,
+            },
+            convPreview: {
+              lastMessage:   preview.slice(0, 100),
+              lastMessageAt: new Date().toISOString(),
+              unreadCount:   unreadForRecipient,
+            },
+          });
+        } catch (e) {
+          this.logger.warn(`[MSG] diffusion temps réel échouée conv:${convId} : ${(e as Error).message}`);
+        }
+      })();
     }
 
     /*
@@ -886,7 +919,7 @@ export class MessagerieService {
     if (this.notifEventSvc && dto.contentType !== MessageContentType.CALL && !recipientMuted) {
       const recipientProfileType = amInitiator ? conv.recipientType : conv.initiatorType;
       const recipientProfileId   = amInitiator ? conv.recipientId   : conv.initiatorId;
-      void this.getContactInfo(myType, myId).then(info =>
+      void senderInfoPromise.then(info =>
         this.notifEventSvc!.notifyMessageReceived({
           recipientType:  recipientProfileType,
           recipientId:    recipientProfileId,
