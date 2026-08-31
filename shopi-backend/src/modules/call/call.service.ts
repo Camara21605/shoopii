@@ -74,6 +74,13 @@ function isUniqueViolation(err: unknown): boolean {
   return (err as { code?: string })?.code === '23505';
 }
 
+/** Code erreur Postgres "lock_timeout" — levée quand SET LOCAL lock_timeout
+ *  (voir startCall) expire en attendant un verrou consultatif/de ligne
+ *  tenu par une transaction concurrente. */
+function isLockTimeout(err: unknown): boolean {
+  return (err as { code?: string })?.code === '55P03';
+}
+
 /** Forme attendue par RTCPeerConnection côté frontend (pas de lib DOM ici). */
 export interface IceServerConfig {
   urls:        string | string[];
@@ -544,72 +551,98 @@ export class CallService {
     await this.assertCanCall(callerUserId, dto.calleeUserId, callerActorId, dto.conversationId ?? undefined);
     const t2 = performance.now();
 
-    const result = await this.dataSource.transaction(async (manager) => {
-      const tx0 = performance.now();
-      await this.lockUsersForCall(manager, callerUserId, dto.calleeUserId);
-      const tx1 = performance.now();
+    let result: StartCallOutcome;
+    try {
+      result = await this.dataSource.transaction(async (manager) => {
+        const tx0 = performance.now();
+        /* lock_timeout borné à 500ms — SANS lui, lockUsersForCall()
+           (pg_advisory_xact_lock) et le FOR UPDATE de checkBusyPair()
+           ci-dessous peuvent attendre INDÉFINIMENT si deux utilisateurs
+           s'appellent presque au même instant (A→B et B→A quasi
+           simultanés : chaque transaction tient déjà un verrou que
+           l'autre réclame) — constaté en prod : jusqu'à 23s entre "REÇU"
+           et la diffusion réelle de call:incoming. Passé ce délai,
+           Postgres lève une erreur lock_timeout (55P03), rattrapée plus
+           bas et traduite en "Vous êtes déjà en appel" — une réponse
+           rapide et honnête (l'autre transaction concurrente EST en
+           train de mettre en place un appel impliquant l'un des deux
+           utilisateurs) plutôt qu'une attente de plusieurs secondes pour,
+           au final, le même résultat. */
+        await manager.query("SET LOCAL lock_timeout = '500ms'");
+        await this.lockUsersForCall(manager, callerUserId, dto.calleeUserId);
+        const tx1 = performance.now();
 
-      /* PARTIE 9.5 — mesuré en conditions réelles : dans une transaction,
-         `manager` est UNE connexion unique, donc les deux isUserBusy() ci-
-         dessous (avant cette partie) se sérialisaient déjà malgré l'appel
-         Promise.all — checkBusyPair() les réunit en une seule requête. La
-         présence, elle, utilise Redis (connexion différente) et part donc
-         réellement en parallèle. */
-      const [{ callerBusy, calleeBusy }, online] = await Promise.all([
-        this.checkBusyPair(callerUserId, dto.calleeUserId, manager),
-        /* isOnlineOrUnknown (pas isOnline) : une panne Redis ne doit jamais
-           bloquer silencieusement tous les appels 1:1 — voir presence.service.ts. */
-        this.presence.isOnlineOrUnknown(dto.calleeUserId),
-      ]);
-      const tx2 = performance.now();
+        /* PARTIE 9.5 — mesuré en conditions réelles : dans une transaction,
+           `manager` est UNE connexion unique, donc les deux isUserBusy() ci-
+           dessous (avant cette partie) se sérialisaient déjà malgré l'appel
+           Promise.all — checkBusyPair() les réunit en une seule requête. La
+           présence, elle, utilise Redis (connexion différente) et part donc
+           réellement en parallèle. */
+        const [{ callerBusy, calleeBusy }, online] = await Promise.all([
+          this.checkBusyPair(callerUserId, dto.calleeUserId, manager),
+          /* isOnlineOrUnknown (pas isOnline) : une panne Redis ne doit jamais
+             bloquer silencieusement tous les appels 1:1 — voir presence.service.ts. */
+          this.presence.isOnlineOrUnknown(dto.calleeUserId),
+        ]);
+        const tx2 = performance.now();
 
-      if (callerBusy) {
+        if (callerBusy) {
+          throw new ForbiddenException('Vous êtes déjà en appel.');
+        }
+
+        if (calleeBusy) {
+          await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.BUSY, manager);
+          await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_BUSY,
+            'Utilisateur occupé', 'La personne que vous appelez est déjà en appel.');
+          return { outcome: 'busy' as const };
+        }
+
+        if (!online) {
+          await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.MISSED, manager);
+          await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_OFFLINE,
+            'Utilisateur hors ligne', 'La personne que vous appelez est actuellement hors ligne.');
+          await this.notifyCallee(dto.calleeUserId, callerUserId, NotificationType.CALL_MISSED,
+            'Appel manqué', 'Vous avez manqué un appel.');
+          return { outcome: 'offline' as const };
+        }
+
+        const call = manager.create(Call, {
+          callerId:       callerUserId,
+          calleeId:       dto.calleeUserId,
+          conversationId: dto.conversationId ?? null,
+          callType:       dto.callType,
+          status:         CallStatus.RINGING,
+          startedAt:      new Date(),
+        });
+
+        try {
+          const saved = await manager.save(call);
+          const tx3 = performance.now();
+          this.logger.verbose(
+            `[Perf][startCall][tx] lock=${(tx1 - tx0).toFixed(1)}ms busy/presence=${(tx2 - tx1).toFixed(1)}ms insert=${(tx3 - tx2).toFixed(1)}ms txTotal=${(tx3 - tx0).toFixed(1)}ms`,
+          );
+          return { outcome: 'ringing' as const, call: saved };
+        } catch (err) {
+          /* Ne devrait normalement jamais arriver — lockUsersForCall() rend
+             déjà cette section critique atomique — mais l'index unique
+             UNIQ_calls_active_pair (migration 1721400000003) reste le
+             dernier rempart si ce verrou était un jour contourné. */
+          if (isUniqueViolation(err)) {
+            throw new ConflictException('Un appel est déjà en cours avec cette personne.');
+          }
+          throw err;
+        }
+      });
+    } catch (err) {
+      /* Le verrou n'a pas pu être obtenu à temps (voir SET LOCAL
+         lock_timeout ci-dessus) — une transaction concurrente impliquant
+         l'un des deux utilisateurs est en train de s'exécuter. Réponse
+         honnête et rapide plutôt qu'une attente de plusieurs secondes. */
+      if (isLockTimeout(err)) {
         throw new ForbiddenException('Vous êtes déjà en appel.');
       }
-
-      if (calleeBusy) {
-        await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.BUSY, manager);
-        await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_BUSY,
-          'Utilisateur occupé', 'La personne que vous appelez est déjà en appel.');
-        return { outcome: 'busy' as const };
-      }
-
-      if (!online) {
-        await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.MISSED, manager);
-        await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_OFFLINE,
-          'Utilisateur hors ligne', 'La personne que vous appelez est actuellement hors ligne.');
-        await this.notifyCallee(dto.calleeUserId, callerUserId, NotificationType.CALL_MISSED,
-          'Appel manqué', 'Vous avez manqué un appel.');
-        return { outcome: 'offline' as const };
-      }
-
-      const call = manager.create(Call, {
-        callerId:       callerUserId,
-        calleeId:       dto.calleeUserId,
-        conversationId: dto.conversationId ?? null,
-        callType:       dto.callType,
-        status:         CallStatus.RINGING,
-        startedAt:      new Date(),
-      });
-
-      try {
-        const saved = await manager.save(call);
-        const tx3 = performance.now();
-        this.logger.verbose(
-          `[Perf][startCall][tx] lock=${(tx1 - tx0).toFixed(1)}ms busy/presence=${(tx2 - tx1).toFixed(1)}ms insert=${(tx3 - tx2).toFixed(1)}ms txTotal=${(tx3 - tx0).toFixed(1)}ms`,
-        );
-        return { outcome: 'ringing' as const, call: saved };
-      } catch (err) {
-        /* Ne devrait normalement jamais arriver — lockUsersForCall() rend
-           déjà cette section critique atomique — mais l'index unique
-           UNIQ_calls_active_pair (migration 1721400000003) reste le
-           dernier rempart si ce verrou était un jour contourné. */
-        if (isUniqueViolation(err)) {
-          throw new ConflictException('Un appel est déjà en cours avec cette personne.');
-        }
-        throw err;
-      }
-    });
+      throw err;
+    }
     const t3 = performance.now();
 
     this.logger.verbose(
