@@ -699,11 +699,17 @@ export function useAudioCall(props?: UseAudioCallProps) {
 
   /** Démarre un appel sortant (audio ou vidéo selon info.callType). */
   const startCall = useCallback(async (info: Omit<CallInfo, 'direction'>) => {
-    if (status !== 'idle') {
-      /* Silencieux jusqu'ici — si `status` reste coincé sur une valeur
-         non-idle après un appel précédent mal terminé, CE bouton ne fait
-         plus RIEN, pour toujours, sans le moindre signe visible. */
-      console.warn(`[Call] startCall ignoré — status="${status}" (attendu "idle")`);
+    /* callInfoRef (pas `status`) : endCall() le remet à null IMMÉDIATEMENT
+     * (dans cleanup()), avant même de passer par l'état d'affichage 'ended'
+     * — qui, lui, reste visible 1,5s ("Appel terminé") avant de repasser à
+     * 'idle'. Garder ce garde sur `status` empêchait de rappeler quiconque
+     * pendant ces 1,5s purement cosmétiques, alors que rien côté client ni
+     * serveur n'empêchait réellement un nouvel appel à ce moment-là. */
+    if (callInfoRef.current !== null) {
+      /* Silencieux jusqu'ici — si un appel précédent reste coincé sans
+         jamais avoir été nettoyé, CE bouton ne fait plus RIEN, pour
+         toujours, sans le moindre signe visible. */
+      console.warn(`[Call] startCall ignoré — un appel est déjà en cours (status="${status}")`);
       emit('call:busy', { conversationId: info.conversationId, callerUserId: info.remoteUserId });
       return;
     }
