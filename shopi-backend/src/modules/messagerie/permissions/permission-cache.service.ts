@@ -36,8 +36,14 @@ const PREFIX = 'perm:';
  *  conversation ou d'appel, puisque get()/set() sont AWAITÉS avant de
  *  continuer vers l'évaluateur réel (SQL, lui non affecté par Redis).
  *  Constaté en prod : /api/health/redis en timeout ⇒ ouverture d'une
- *  conversation ou tentative d'appel qui ne répondait jamais / très lent. */
-const REDIS_OP_TIMEOUT_MS = 2_000;
+ *  conversation ou tentative d'appel qui ne répondait jamais / très lent.
+ *
+ *  300ms plutôt que 2000ms : ce cache est lu dans le chemin critique de
+ *  CallService.assertCanCall() (avant même d'ouvrir la transaction
+ *  d'appel) — la latence Redis réelle observée est sub-milliseconde
+ *  (p95 < 2ms), donc 300ms plafonne largement un vrai accroc réseau sans
+ *  jamais retarder un appel/une conversation normale. */
+const REDIS_OP_TIMEOUT_MS = 300;
 
 /** Sérialisé dans Redis */
 interface CachedDecision {

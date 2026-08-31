@@ -54,8 +54,17 @@ const RATE_LIMIT_TTL_S  = 60;
  *  un Redis dégradé peut faire attendre `redis.incr()` de nombreuses
  *  secondes avant de retomber sur le catch, retardant d'autant la
  *  sonnerie côté destinataire — constaté en prod (délai de 16-21s entre
- *  "call:initiate REÇU" et la diffusion de call:incoming). */
-const REDIS_OP_TIMEOUT_MS = 2_000;
+ *  "call:initiate REÇU" et la diffusion de call:incoming).
+ *
+ *  300ms plutôt que les 2000ms d'origine : la latence Redis Cloud réelle
+ *  observée est sub-milliseconde (p95 < 2ms sur le tableau de bord) —
+ *  300ms laisse une marge très large pour un aller-retour normal, même
+ *  dégradé, tout en plafonnant un VRAI accroc réseau (ex. blip constaté
+ *  en prod) à une fraction de seconde au lieu de plusieurs secondes. Un
+ *  appel ne doit jamais faire attendre l'utilisateur pour un check
+ *  anti-spam qui, de toute façon, s'ouvre par défaut si Redis ne répond
+ *  pas (voir checkRateLimit ci-dessous). */
+const REDIS_OP_TIMEOUT_MS = 300;
 
 /** Code erreur Postgres "unique_violation" — TypeORM le recopie tel quel
  *  sur QueryFailedError (driver pg). Backstop de dernier ressort si le

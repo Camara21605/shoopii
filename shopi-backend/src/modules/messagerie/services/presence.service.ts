@@ -42,8 +42,14 @@ const KEY_SOCKETS  = (userId: string) => `presence:sockets:${userId}`;
  *  répondre (queue Redis pendant une reconnexion, cf. enableOfflineQueue
  *  dans app.module.ts) : isOnline() est appelée une fois PAR CONTACT dans
  *  MessagerieService.getConversations() — sans borne de temps, une panne
- *  Redis peut y cumuler des dizaines de secondes d'attente. */
-const PRESENCE_OP_TIMEOUT_MS = 2_000;
+ *  Redis peut y cumuler des dizaines de secondes d'attente.
+ *
+ *  300ms plutôt que 2000ms : isOnlineOrUnknown() est aussi dans le chemin
+ *  critique de CallService.startCall() (à l'intérieur de la transaction,
+ *  verrou consultatif tenu pendant l'attente) — la latence Redis réelle
+ *  observée est sub-milliseconde, donc 300ms plafonne largement un accroc
+ *  réel sans jamais retarder un appel normal. */
+const PRESENCE_OP_TIMEOUT_MS = 300;
 
 @Injectable()
 export class PresenceService implements OnModuleDestroy {
