@@ -60,27 +60,32 @@ import { CompanyTeamController } from './company-team.controller';
 import { TeamOwnerGuard }      from './guards/team-owner.guard';
 import { TeamPermissionGuard } from './guards/team-permission.guard';
 
+/* Réutilisée dans `imports` ET `exports` — voir la note sous `exports`
+ * ci-dessous pour la raison (TeamPermissionGuard, exporté vers d'autres
+ * modules, a besoin que ses dépendances @InjectRepository le soient aussi). */
+const teamTypeOrmModule = TypeOrmModule.forFeature([
+  /* Phase 1 */
+  CompanyTeamMember,
+  CompanyTeamPermission,
+  CompanyTeamActivityLog,
+  CompanyTeamAuditLog,
+  User,
+  Wallet,
+  Company,
+  PlatformSettings,
+  /* Phase 2 */
+  TeamPlanConfig,
+  CompanyPlanAssignment,
+  CompanyTeamInvitation,
+  TeamPermissionCategory,
+  TeamPermissionDefinition,
+  TeamPermissionTemplate,
+]);
+
 @Module({
   imports: [
     MailModule,
-    TypeOrmModule.forFeature([
-      /* Phase 1 */
-      CompanyTeamMember,
-      CompanyTeamPermission,
-      CompanyTeamActivityLog,
-      CompanyTeamAuditLog,
-      User,
-      Wallet,
-      Company,
-      PlatformSettings,
-      /* Phase 2 */
-      TeamPlanConfig,
-      CompanyPlanAssignment,
-      CompanyTeamInvitation,
-      TeamPermissionCategory,
-      TeamPermissionDefinition,
-      TeamPermissionTemplate,
-    ]),
+    teamTypeOrmModule,
   ],
   controllers: [CompanyTeamController],
   providers: [
@@ -109,6 +114,16 @@ import { TeamPermissionGuard } from './guards/team-permission.guard';
      * entreprise, produits, commandes…) d'importer CompanyTeamModule et
      * d'appliquer @RequiresTeamPermission sur ses propres routes. */
     TeamPermissionGuard,
+    /* OBLIGATOIRE pour que TeamPermissionGuard fonctionne une fois exporté :
+     * un provider utilisé via @UseGuards(GuardClass) dans un AUTRE module
+     * est instancié dans le contexte d'injection de CE module consommateur
+     * — ses propres dépendances (ici @InjectRepository(Company) et
+     * @InjectRepository(CompanyTeamMember)) doivent donc être également
+     * visibles depuis là, pas seulement déclarées ici. Sans ce ré-export,
+     * NestJS échoue au démarrage : "Please make sure that the argument
+     * CompanyTeamMemberRepository ... is available in the [ModuleXyz]
+     * module" dès qu'un AUTRE module utilise TeamPermissionGuard. */
+    teamTypeOrmModule,
   ],
 })
 export class CompanyTeamModule {}
