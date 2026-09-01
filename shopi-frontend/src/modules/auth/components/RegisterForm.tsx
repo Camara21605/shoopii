@@ -38,6 +38,14 @@ interface RegisterFormProps {
   prefilledCode?:  string;
   onlyClientRole?: boolean;
   onValidateStep:  (fields: (keyof RegisterFormData)[]) => boolean;
+  /** Invitation collaborateur (company-team) : rejoint une entreprise
+   *  EXISTANTE — pas de code d'activation ni de nom de boutique à
+   *  demander (contrairement à une inscription 'company' normale, qui
+   *  CRÉE une nouvelle entreprise). Voir Login.tsx, useCollabInviteParams. */
+  isCollabInvite?: boolean;
+  /** Poste renseigné par l'entreprise à l'invitation — affiché en lecture
+   *  seule (n'est jamais saisi par le collaborateur lui-même). */
+  collabJobTitle?: string;
 }
 
 const TOTAL_STEPS = 5;
@@ -70,7 +78,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   data, errors, selectedRole, isLoading,
   onDataChange, onRoleSelect, onSubmit, onSwitchToLogin,
   lockedRole = null, prefilledCode = '', onlyClientRole = false,
-  onValidateStep,
+  onValidateStep, isCollabInvite = false, collabJobTitle,
 }) => {
   const [step,     setStep]     = useState(1);
   const [animDir,  setAnimDir]  = useState<'forward' | 'backward'>('forward');
@@ -236,7 +244,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         <div className="role-info-text" dangerouslySetInnerHTML={{ __html: roleConfig.info }} />
       </div>
 
-      {roleConfig.code && (
+      {roleConfig.code && !isCollabInvite && (
         <div className="code-field show">
           {roleConfig.codeType === 'choice' ? (
             <CorrespondantCodeBlock
@@ -297,14 +305,31 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         placeholder="Votre nom de famille" value={data.lastName}
         onChange={val => onDataChange({ lastName: val })} error={errors.lastName}
       />
-      {roleConfig.shop && (
+      {isCollabInvite && collabJobTitle && (
+        <div className="field-group">
+          <div className="field-label">Poste</div>
+          <div className="field-wrap" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <i className="fas fa-briefcase" style={{ position: 'absolute', left: 12, color: 'var(--blue)', fontSize: 13, zIndex: 1 }} />
+            <input
+              className="field-input" type="text" value={collabJobTitle} readOnly
+              style={{ paddingLeft: 36, paddingRight: 38, background: 'var(--sky-2,#EEF3FD)', color: 'var(--navy)', cursor: 'not-allowed', border: '1.5px solid var(--blue)', fontWeight: 600 }}
+            />
+            <span style={{ position: 'absolute', right: 12, fontSize: 14, color: 'var(--blue)' }}>🔒</span>
+          </div>
+          <p style={{ margin: '5px 0 0', fontSize: 11, color: 'var(--blue)', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <i className="fas fa-circle-info" style={{ fontSize: 10 }} />
+            Défini par l'entreprise qui vous invite — non modifiable
+          </p>
+        </div>
+      )}
+      {roleConfig.shop && !isCollabInvite && (
         <FieldInput
           id="regShopName" label="Nom de la boutique / entreprise" icon="fas fa-store"
           placeholder="Nom de votre entreprise" value={data.shopName ?? ''}
           onChange={val => onDataChange({ shopName: val })}
         />
       )}
-      {selectedRole === 'company' && (
+      {selectedRole === 'company' && !isCollabInvite && (
         <div className="field-group">
           <div className="field-label">
             Type d&apos;entreprise <span style={{ color: 'var(--rose,red)' }}>*</span>

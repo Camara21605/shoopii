@@ -150,6 +150,13 @@
       "warn": "This password will only be shown once.",
       "gotIt": "I noted the password"
     },
+    "inviteLinkModal": {
+      "title": "Invitation link created",
+      "transmitPrefix": "Send this link to",
+      "instructions": "No email is sent automatically yet — copy this link and share it yourself (WhatsApp, SMS, email…).",
+      "warn": "This link expires in 48 hours.",
+      "gotIt": "I copied the link"
+    },
     "addModal": {
       "title": "Add a collaborator",
       "modeDirect": "Direct creation",
@@ -176,17 +183,17 @@
       },
       "permTemplate": "Permission template",
       "noTemplate": "— No template —",
-      "noteInvite": "An invitation email will be sent. The collaborator will choose their own password.",
+      "noteInvite": "An invitation link will be generated — share it with the collaborator yourself (no automatic email yet). They will choose their own password.",
       "noteDirect": "A temporary password will be generated and shown only once.",
       "cancel": "Cancel",
       "createAccount": "Create account",
-      "sendInvitation": "Send invitation",
+      "sendInvitation": "Create invitation link",
       "errors": {
         "firstName": "First name required",
         "lastName": "Last name required",
         "email": "Invalid email"
       },
-      "invitationSentToast": "Invitation sent to {{email}}.",
+      "invitationSentToast": "Invitation link created for {{email}}.",
       "createError": "Error while creating."
     }
   }

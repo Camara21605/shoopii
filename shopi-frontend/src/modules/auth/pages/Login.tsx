@@ -2,10 +2,11 @@
  * FICHIER : src/modules/auth/pages/Login.tsx
  * ============================================================ */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate }  from 'react-router-dom';
 import { apiFetch, tokenStorage } from '../../../shared/services/apiFetch';
 import { getRoleFromToken, getDashboardPath } from '../../../shared/services/authUtils';
+import { authService } from '../services/authService';
 
 import { LeftPanel }      from '../components/LeftPanel';
 import { LoginForm }      from '../components/LoginForm';
@@ -56,13 +57,30 @@ function useInviteParams() {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   Invitation COLLABORATEUR (company-team) — mécanisme distinct de
+   useInviteParams ci-dessus : ?collabToken=xxx au lieu de ?role&code&email.
+   Le compte créé rejoint une entreprise EXISTANTE (CompanyTeamMember),
+   pas de code d'activation à saisir. Contrairement au flux ci-dessus,
+   l'info (prénom/nom/email/poste) n'est PAS dans l'URL — elle doit être
+   récupérée depuis le serveur (GET /company-team/invitations/accept/:token,
+   public) avant de pouvoir pré-remplir quoi que ce soit.
+───────────────────────────────────────────────────────────────*/
+function useCollabToken(): string | null {
+  const [params] = useSearchParams();
+  const raw = params.get('collabToken')?.trim() ?? '';
+  return raw.length > 0 ? raw : null;
+}
+
+/* ─────────────────────────────────────────────────────────────
    COMPOSANT
 ───────────────────────────────────────────────────────────────*/
 const Login: React.FC = () => {
   // ✅ useSearchParams → lecture de l'URL APRÈS le montage du router
   const { lockedRole, prefilledCode, prefilledEmail, isInvited } = useInviteParams();
+  const collabToken   = useCollabToken();
   const navigate      = useNavigate();
   const [searchParams] = useSearchParams();
+  const [collabInviteError, setCollabInviteError] = useState<string | null>(null);
 
   const {
     activeTab,
@@ -83,6 +101,8 @@ const Login: React.FC = () => {
     showToast,
     // ✅ Nouveau : forcer le rôle depuis l'invitation
     setRegisterRole,
+    // ✅ Invitation collaborateur (company-team)
+    collabInvite, setCollabInvite,
     // ✅ 2FA — étape 2 du login
     twoFaChallengeToken,
     twoFaError,
@@ -152,6 +172,48 @@ const Login: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInvited]);
 
+  /* ✅ Invitation collaborateur (company-team) — récupère les infos
+   * (prénom/nom/email/poste) depuis le serveur puis pré-remplit
+   * Inscription. Contrairement au flux ?role&code&email ci-dessus, rien
+   * n'est disponible directement dans l'URL : il faut d'abord valider
+   * le jeton côté serveur (jeton invalide/expiré → message d'erreur,
+   * reste sur Connexion normale). */
+  useEffect(() => {
+    if (!collabToken) return;
+    let cancelled = false;
+
+    authService.getCollabInvitationInfo(collabToken)
+      .then(info => {
+        if (cancelled) return;
+        if (info.status !== 'pending') {
+          setCollabInviteError(
+            info.status === 'accepted'
+              ? 'Cette invitation a déjà été acceptée — connectez-vous directement.'
+              : 'Cette invitation a expiré ou a été annulée. Demandez-en une nouvelle.',
+          );
+          return;
+        }
+        switchTab('register');
+        setRegisterRole('company');
+        setRegisterData(prev => ({
+          ...prev,
+          email:     info.email,
+          firstName: info.firstName ?? prev.firstName,
+          lastName:  info.lastName  ?? prev.lastName,
+        }));
+        setCollabInvite({ token: collabToken, jobTitle: info.jobTitle });
+      })
+      .catch(err => {
+        if (cancelled) return;
+        setCollabInviteError(
+          (err as any)?.message ?? "Ce lien d'invitation est invalide ou a expiré.",
+        );
+      });
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collabToken]);
+
   useEffect(() => {
     const obs = new IntersectionObserver(
       entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); }),
@@ -163,7 +225,15 @@ const Login: React.FC = () => {
 
   const isMobile = window.innerWidth <= 900;
 
-  const registerSubtitle = isInvited && lockedRole
+  // lockedRole (?role&code&email) et collabInvite (?collabToken) sont deux
+  // mécanismes d'invitation distincts mais s'excluent mutuellement dans la
+  // pratique (URL différentes) — celui-ci unifie leur effet sur RegisterForm
+  // (masque le sélecteur de rôle, verrouille l'email pré-rempli).
+  const effectiveLockedRole = lockedRole ?? (collabInvite ? 'company' : null);
+
+  const registerSubtitle = collabInvite
+    ? 'Invitation collaborateur reçue. Complétez vos informations pour rejoindre la boutique.'
+    : isInvited && lockedRole
     ? `Invitation reçue — ${ROLE_CONFIGS[lockedRole]?.label ?? lockedRole}. Complétez vos informations.`
     : 'Seul le compte Client est disponible sans invitation. Rejoignez Shoneya gratuitement.';
 
@@ -219,6 +289,41 @@ const Login: React.FC = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Bandeau invitation collaborateur (company-team) */}
+                {activeTab === 'register' && collabInvite && (
+                  <div style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10,
+                    padding: '11px 14px', marginTop: 12,
+                    background: 'rgba(37,99,235,.07)',
+                    border: '1.5px solid rgba(37,99,235,.22)',
+                    borderRadius: 10,
+                  }}>
+                    <span style={{ fontSize: 20, flexShrink: 0 }}>✉️</span>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--blue, #1A4FC4)', marginBottom: 3 }}>
+                        Invitation collaborateur confirmée
+                      </div>
+                      <div style={{ color: 'var(--t2)', fontSize: 12 }}>
+                        Votre email est verrouillé. Choisissez simplement un mot de passe pour finaliser votre compte.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Erreur d'invitation collaborateur (jeton invalide/expiré) */}
+                {collabInviteError && (
+                  <div style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10,
+                    padding: '11px 14px', marginTop: 12,
+                    background: 'rgba(220,38,38,.07)',
+                    border: '1.5px solid rgba(220,38,38,.22)',
+                    borderRadius: 10,
+                  }}>
+                    <span style={{ fontSize: 20, flexShrink: 0 }}>⚠️</span>
+                    <div style={{ color: 'var(--t2)', fontSize: 12.5 }}>{collabInviteError}</div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -266,10 +371,12 @@ const Login: React.FC = () => {
                 onRoleSelect={role => selectRegisterRole(role)}
                 onSubmit={handleRegister}
                 onSwitchToLogin={() => switchTab('login')}
-                lockedRole={lockedRole}
+                lockedRole={effectiveLockedRole}
                 prefilledCode={prefilledCode}
-                onlyClientRole={!isInvited}
+                onlyClientRole={!isInvited && !collabInvite}
                 onValidateStep={validateRegisterStep}
+                isCollabInvite={collabInvite !== null}
+                collabJobTitle={collabInvite?.jobTitle}
               />
             )}
 
@@ -320,6 +427,7 @@ const Login: React.FC = () => {
               <SuccessScreen
                 action={successAction}
                 role={activeTab === 'login' ? loginRole : registerRole}
+                subtitleOverride={collabInvite ? 'Compte créé ! Connectez-vous avec votre nouveau mot de passe pour accéder à votre espace.' : undefined}
               />
             )}
 

@@ -64,6 +64,14 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
   const [showForgot,     setShowForgot]     = useState(false);
   const [toast,          setToast]          = useState<ToastState>({ msg: '', visible: false });
 
+  /* ── Invitation collaborateur (company-team) — voir Login.tsx,
+   * useCollabInviteParams. Distinct du mécanisme ?role&code&email
+   * (invitations livreur/correspondant, plus haut) : ici le compte créé
+   * rejoint une entreprise EXISTANTE (CompanyTeamMember), pas de code
+   * d'activation ni de nom de boutique à demander, et l'endpoint
+   * d'acceptation ne renvoie pas de JWT (pas de connexion automatique). */
+  const [collabInvite, setCollabInvite] = useState<{ token: string; jobTitle?: string } | null>(null);
+
   // ── 2FA — challenge posé par /auth/login quand le compte a activé la 2FA ──
   const [twoFaChallengeToken, setTwoFaChallengeToken] = useState<string | null>(null);
   const [twoFaError,          setTwoFaError]          = useState('');
@@ -165,6 +173,9 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
           : undefined;
 
       case 'activationCode': {
+        /* Invitation collaborateur : rejoint une entreprise existante,
+         * aucun code d'activation à demander (voir collabInvite). */
+        if (collabInvite) return undefined;
         const cfg = ROLE_CONFIGS[role];
         return cfg?.code && !data.activationCode?.trim()
           ? "Code d'activation requis pour ce rôle."
@@ -177,7 +188,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
       default:
         return undefined;
     }
-  }, []);
+  }, [collabInvite]);
 
   // Validation partielle d'un sous-ensemble de champs (navigation wizard)
   const validateRegisterStep = useCallback((fields: (keyof RegisterFormData)[]): boolean => {
@@ -434,6 +445,36 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
   const handleRegister = useCallback(async () => {
     if (!validateRegister()) return;
     setIsLoading(true);
+
+    /* Invitation collaborateur : endpoint distinct, pas de JWT en retour
+     * (voir CompanyTeamInvitationService.accept — ne connecte jamais
+     * automatiquement). On bascule vers Connexion avec l'email déjà
+     * rempli plutôt que de naviguer vers un dashboard. */
+    if (collabInvite) {
+      try {
+        await authService.acceptCollabInvitation(collabInvite.token, {
+          firstName: registerData.firstName,
+          lastName:  registerData.lastName,
+          password:  registerData.password,
+          phone:     registerData.phone || undefined,
+        });
+        setSuccessAction('Inscription');
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          setLoginData(prev => ({ ...prev, email: registerData.email }));
+          switchTab('login');
+          showToast('✅ Compte créé — connectez-vous avec votre nouveau mot de passe.');
+        }, 1800);
+      } catch (err) {
+        const msg = err instanceof ApiError ? err.message : "Erreur lors de l'inscription.";
+        setRegisterErrors({ general: msg });
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     try {
       const res = await authService.register({
         ...registerData,
@@ -455,7 +496,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
       setIsLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [registerData, registerRole, navigate, setUser]);
+  }, [registerData, registerRole, navigate, setUser, collabInvite, switchTab, showToast]);
 
   return {
     activeTab,
@@ -474,6 +515,8 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     selectRegisterRole,
     // ✅ Exposé pour que Login.tsx puisse forcer le rôle depuis l'invitation
     setRegisterRole,
+    // ✅ Invitation collaborateur — voir Login.tsx, useCollabInviteParams
+    collabInvite, setCollabInvite,
     handleLogin,
     handleRegister,
     validateRegisterStep,

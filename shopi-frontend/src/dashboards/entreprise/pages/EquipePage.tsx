@@ -183,7 +183,7 @@ export default function EquipePage() {
   const [savingPerm,  setSavingPerm]  = useState(false);
   const [activityTarget, setActivityTarget] = useState<TeamMember | null>(null);
   const [activity,    setActivity]    = useState<ActivityEntry[]>([]);
-  const [tempPwd,     setTempPwd]     = useState<{ name: string; pwd: string } | null>(null);
+  const [tempPwd,     setTempPwd]     = useState<{ name: string; pwd: string; kind: 'password' | 'inviteLink' } | null>(null);
   const [confirmAction, setConfirmAction] = useState<{
     title: string; message: string; action: () => Promise<void>;
   } | null>(null);
@@ -645,9 +645,9 @@ export default function EquipePage() {
       {showAdd && (
         <AddMemberModal
           onClose={() => setShowAdd(false)}
-          onSuccess={(name, pwd) => {
+          onSuccess={(name, pwdOrLink, kind) => {
             setShowAdd(false);
-            setTempPwd({ name, pwd });
+            setTempPwd({ name, pwd: pwdOrLink, kind });
             loadStats();
             loadMembers();
             loadInvitations();
@@ -773,33 +773,67 @@ export default function EquipePage() {
       {tempPwd && (
         <div className="eq-overlay" onClick={() => setTempPwd(null)}>
           <div className="eq-modal eq-modal-pwd" onClick={e => e.stopPropagation()}>
-            <div className="eq-modal-icon eq-modal-icon-key">
-              <i className="fas fa-key" />
-            </div>
-            <h3>{t('equipe.tempPwdModal.title')}</h3>
-            <p>
-              {t('equipe.tempPwdModal.transmitPrefix')} <strong>{tempPwd.name}</strong>.<br />
-              {t('equipe.tempPwdModal.mustChange')}
-            </p>
-            <div className="eq-pwd-box">
-              <span className="eq-pwd-val">{tempPwd.pwd}</span>
-              <button
-                className="eq-pwd-copy"
-                onClick={() => {
-                  navigator.clipboard.writeText(tempPwd.pwd);
-                  pop(t('equipe.toast.passwordCopied'), 's');
-                }}
-              >
-                <i className="fas fa-copy" />
-              </button>
-            </div>
-            <p className="eq-pwd-warn">
-              <i className="fas fa-triangle-exclamation" />
-              {t('equipe.tempPwdModal.warn')}
-            </p>
-            <button className="eq-btn-save" onClick={() => setTempPwd(null)}>
-              {t('equipe.tempPwdModal.gotIt')}
-            </button>
+            {tempPwd.kind === 'inviteLink' ? (
+              <>
+                <div className="eq-modal-icon eq-modal-icon-key">
+                  <i className="fas fa-link" />
+                </div>
+                <h3>{t('equipe.inviteLinkModal.title')}</h3>
+                <p>
+                  {t('equipe.inviteLinkModal.transmitPrefix')} <strong>{tempPwd.name}</strong>.<br />
+                  {t('equipe.inviteLinkModal.instructions')}
+                </p>
+                <div className="eq-pwd-box">
+                  <span className="eq-pwd-val" style={{ fontSize: 12, wordBreak: 'break-all' }}>{tempPwd.pwd}</span>
+                  <button
+                    className="eq-pwd-copy"
+                    onClick={() => {
+                      navigator.clipboard.writeText(tempPwd.pwd);
+                      pop(t('equipe.toast.passwordCopied'), 's');
+                    }}
+                  >
+                    <i className="fas fa-copy" />
+                  </button>
+                </div>
+                <p className="eq-pwd-warn">
+                  <i className="fas fa-triangle-exclamation" />
+                  {t('equipe.inviteLinkModal.warn')}
+                </p>
+                <button className="eq-btn-save" onClick={() => setTempPwd(null)}>
+                  {t('equipe.inviteLinkModal.gotIt')}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="eq-modal-icon eq-modal-icon-key">
+                  <i className="fas fa-key" />
+                </div>
+                <h3>{t('equipe.tempPwdModal.title')}</h3>
+                <p>
+                  {t('equipe.tempPwdModal.transmitPrefix')} <strong>{tempPwd.name}</strong>.<br />
+                  {t('equipe.tempPwdModal.mustChange')}
+                </p>
+                <div className="eq-pwd-box">
+                  <span className="eq-pwd-val">{tempPwd.pwd}</span>
+                  <button
+                    className="eq-pwd-copy"
+                    onClick={() => {
+                      navigator.clipboard.writeText(tempPwd.pwd);
+                      pop(t('equipe.toast.passwordCopied'), 's');
+                    }}
+                  >
+                    <i className="fas fa-copy" />
+                  </button>
+                </div>
+                <p className="eq-pwd-warn">
+                  <i className="fas fa-triangle-exclamation" />
+                  {t('equipe.tempPwdModal.warn')}
+                </p>
+                <button className="eq-btn-save" onClick={() => setTempPwd(null)}>
+                  {t('equipe.tempPwdModal.gotIt')}
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -844,7 +878,7 @@ export default function EquipePage() {
 
 interface AddMemberModalProps {
   onClose:   () => void;
-  onSuccess: (name: string, pwd: string) => void;
+  onSuccess: (name: string, pwdOrLink: string, kind: 'password' | 'inviteLink') => void;
 }
 
 function AddMemberModal({ onClose, onSuccess }: AddMemberModalProps) {
@@ -897,10 +931,17 @@ function AddMemberModal({ onClose, onSuccess }: AddMemberModalProps) {
 
     try {
       if (mode === 'invite') {
-        /* Invitation par email — phone n'est pas dans CreateInvitationDto */
-        await apiFetch('/company-team/invitations', { method: 'POST', body: basePayload });
+        /* Invitation par email — phone n'est pas dans CreateInvitationDto.
+         * Aucun email n'est envoyé automatiquement pour l'instant (voir
+         * noteInvite) — le lien renvoyé par le serveur (relatif, ex.
+         * /login?collabToken=xxx) doit être transformé en URL absolue
+         * pour être copiable/partageable tel quel. */
+        const res = await apiFetch<{ invitationLink: string }>(
+          '/company-team/invitations', { method: 'POST', body: basePayload },
+        );
         pop(t('equipe.addModal.invitationSentToast', { email: form.email }), 's');
-        onSuccess(`${form.firstName} ${form.lastName}`, '');
+        const fullLink = `${window.location.origin}${res.invitationLink}`;
+        onSuccess(`${form.firstName} ${form.lastName}`, fullLink, 'inviteLink');
       } else {
         /* Création directe avec MDP temporaire */
         const res = await apiFetch<{ member: TeamMember; temporaryPassword: string }>(
@@ -909,7 +950,7 @@ function AddMemberModal({ onClose, onSuccess }: AddMemberModalProps) {
             body: { ...basePayload, phone: form.phone.trim() || undefined },
           },
         );
-        onSuccess(`${form.firstName} ${form.lastName}`, res.temporaryPassword);
+        onSuccess(`${form.firstName} ${form.lastName}`, res.temporaryPassword, 'password');
       }
     } catch (err: any) {
       pop(err.message ?? t('equipe.addModal.createError'), 'e');

@@ -183,8 +183,13 @@ export class CompanyTeamInvitationService {
       success:           true,
     });
 
-    /* Construire le lien d'invitation (le frontend gère la page) */
-    const invitationLink = `/invitation/accept/${token}`;
+    /* Construire le lien d'invitation — /login gère déjà tout le mécanisme
+     * de pré-remplissage par paramètre d'URL (voir useCollabInviteParams
+     * dans Login.tsx, même principe que ?role&code&email pour les
+     * invitations livreur/correspondant). Pas de route /invitation/accept
+     * dédiée : /login existe déjà et sait afficher directement l'onglet
+     * Inscription pré-rempli. */
+    const invitationLink = `/login?collabToken=${token}`;
 
     const safeInvitation = saved as Omit<CompanyTeamInvitation, 'token'>;
     return { ...safeInvitation, invitationLink };
@@ -378,7 +383,7 @@ export class CompanyTeamInvitationService {
 
     return {
       message:        'Invitation renvoyée.',
-      invitationLink: `/invitation/accept/${newToken}`,
+      invitationLink: `/login?collabToken=${newToken}`,
     };
   }
 
@@ -409,6 +414,7 @@ export class CompanyTeamInvitationService {
     email: string;
     firstName?: string;
     lastName?: string;
+    jobTitle?: string;
     companyId: string;
     expiresAt: Date;
     status: InvitationStatus;
@@ -425,6 +431,7 @@ export class CompanyTeamInvitationService {
       email:     inv.email,
       firstName: inv.firstName,
       lastName:  inv.lastName,
+      jobTitle:  inv.jobTitle,
       companyId: inv.companyId,
       expiresAt: inv.expiresAt,
       status:    inv.status,

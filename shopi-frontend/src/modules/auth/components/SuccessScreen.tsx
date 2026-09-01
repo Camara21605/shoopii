@@ -14,9 +14,13 @@ import type { Role } from '../types';
 interface SuccessScreenProps {
   action: 'Connexion' | 'Inscription';
   role: Role;
+  /** Remplace le sous-titre par défaut ("...redirigé vers votre espace") —
+   *  utile quand la suite n'est PAS une redirection automatique vers un
+   *  dashboard (ex. invitation collaborateur : bascule vers Connexion). */
+  subtitleOverride?: string;
 }
 
-export const SuccessScreen: React.FC<SuccessScreenProps> = ({ action, role }) => {
+export const SuccessScreen: React.FC<SuccessScreenProps> = ({ action, role, subtitleOverride }) => {
   const isLogin = action === 'Connexion';
 
   return (
@@ -34,8 +38,10 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({ action, role }) =>
 
       {/* Sous-titre */}
       <p className="success-sub" id="successSub">
-        Bienvenue{!isLogin ? ' sur Shoneya' : ''} ! Vous allez être redirigé
-        vers {ROLE_DASHBOARD[role] || 'votre espace'}.
+        {subtitleOverride ?? (
+          <>Bienvenue{!isLogin ? ' sur Shoneya' : ''} ! Vous allez être redirigé
+          vers {ROLE_DASHBOARD[role] || 'votre espace'}.</>
+        )}
       </p>
 
       {/* Bouton d'accès au dashboard */}

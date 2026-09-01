@@ -150,6 +150,13 @@
       "warn": "Ce mot de passe ne sera affiché qu'une seule fois.",
       "gotIt": "J'ai noté le mot de passe"
     },
+    "inviteLinkModal": {
+      "title": "Lien d'invitation créé",
+      "transmitPrefix": "Envoyez ce lien à",
+      "instructions": "Aucun email n'est envoyé automatiquement pour l'instant — copiez ce lien et transmettez-le vous-même (WhatsApp, SMS, email…).",
+      "warn": "Ce lien expire dans 48 heures.",
+      "gotIt": "J'ai copié le lien"
+    },
     "addModal": {
       "title": "Ajouter un collaborateur",
       "modeDirect": "Création directe",
@@ -176,17 +183,17 @@
       },
       "permTemplate": "Modèle de permissions",
       "noTemplate": "— Aucun modèle —",
-      "noteInvite": "Un email d'invitation sera envoyé. Le collaborateur choisira son propre mot de passe.",
+      "noteInvite": "Un lien d'invitation sera généré — à transmettre vous-même au collaborateur (aucun email automatique pour l'instant). Il choisira son propre mot de passe.",
       "noteDirect": "Un mot de passe temporaire sera généré et affiché une seule fois.",
       "cancel": "Annuler",
       "createAccount": "Créer le compte",
-      "sendInvitation": "Envoyer l'invitation",
+      "sendInvitation": "Créer le lien d'invitation",
       "errors": {
         "firstName": "Prénom requis",
         "lastName": "Nom requis",
         "email": "Email invalide"
       },
-      "invitationSentToast": "Invitation envoyée à {{email}}.",
+      "invitationSentToast": "Lien d'invitation créé pour {{email}}.",
       "createError": "Erreur lors de la création."
     }
   }

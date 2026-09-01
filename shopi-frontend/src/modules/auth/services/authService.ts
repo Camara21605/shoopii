@@ -91,6 +91,42 @@ export async function register(
   return data;
 }
 
+/** Info publique d'une invitation collaborateur (email/prénom/nom/poste
+ *  pré-remplis) — GET /company-team/invitations/accept/:token, public. */
+export interface CollabInvitationInfo {
+  email:      string;
+  firstName?: string;
+  lastName?:  string;
+  jobTitle?:  string;
+  companyId:  string;
+  expiresAt:  string;
+  status:     string;
+}
+
+export async function getCollabInvitationInfo(token: string): Promise<CollabInvitationInfo> {
+  return apiFetch<CollabInvitationInfo>(`/company-team/invitations/accept/${token}`, {
+    method: 'GET',
+    public: true,
+  });
+}
+
+/**
+ * Accepte une invitation collaborateur et crée le compte — contrairement à
+ * register(), ne renvoie PAS de JWT (POST /company-team/invitations/accept/:token
+ * ne connecte pas automatiquement, voir CompanyTeamInvitationService.accept) :
+ * l'appelant doit rediriger vers l'onglet Connexion après succès.
+ */
+export async function acceptCollabInvitation(
+  token: string,
+  data: { firstName: string; lastName: string; password: string; phone?: string },
+): Promise<{ message: string; email: string }> {
+  return apiFetch<{ message: string; email: string }>(`/company-team/invitations/accept/${token}`, {
+    method: 'POST',
+    body:   data,
+    public: true,
+  });
+}
+
 export async function login(payload: LoginPayload): Promise<LoginResult> {
   const data = await apiFetch<LoginResult>('/auth/login', {
     method: 'POST',
@@ -206,6 +242,8 @@ export function isAuthenticated(): boolean {
 
 export const authService = {
   register,
+  getCollabInvitationInfo,
+  acceptCollabInvitation,
   login,
   chooseAccount,
   verifyTwoFaLogin,

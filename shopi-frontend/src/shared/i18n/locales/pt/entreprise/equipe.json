@@ -150,6 +150,13 @@
       "warn": "Esta palavra-passe só será exibida uma vez.",
       "gotIt": "Anotei a palavra-passe"
     },
+    "inviteLinkModal": {
+      "title": "Link de convite criado",
+      "transmitPrefix": "Envie este link a",
+      "instructions": "Nenhum email é enviado automaticamente por agora — copie este link e transmita-o você mesmo (WhatsApp, SMS, email…).",
+      "warn": "Este link expira em 48 horas.",
+      "gotIt": "Copiei o link"
+    },
     "addModal": {
       "title": "Adicionar um colaborador",
       "modeDirect": "Criação direta",
@@ -176,17 +183,17 @@
       },
       "permTemplate": "Modelo de permissões",
       "noTemplate": "— Nenhum modelo —",
-      "noteInvite": "Será enviado um email de convite. O colaborador escolherá a sua própria palavra-passe.",
+      "noteInvite": "Será gerado um link de convite — transmita-o você mesmo ao colaborador (sem email automático por agora). Ele escolherá a sua própria palavra-passe.",
       "noteDirect": "Será gerada uma palavra-passe temporária e exibida uma única vez.",
       "cancel": "Cancelar",
       "createAccount": "Criar a conta",
-      "sendInvitation": "Enviar o convite",
+      "sendInvitation": "Criar o link de convite",
       "errors": {
         "firstName": "Nome próprio obrigatório",
         "lastName": "Apelido obrigatório",
         "email": "Email inválido"
       },
-      "invitationSentToast": "Convite enviado para {{email}}.",
+      "invitationSentToast": "Link de convite criado para {{email}}.",
       "createError": "Erro na criação."
     }
   }

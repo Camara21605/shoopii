@@ -150,6 +150,13 @@
       "warn": "此密码只显示一次。",
       "gotIt": "我已记下密码"
     },
+    "inviteLinkModal": {
+      "title": "邀请链接已创建",
+      "transmitPrefix": "将此链接发送给",
+      "instructions": "目前不会自动发送邮件——请复制此链接并自行发送（WhatsApp、短信、邮件等）。",
+      "warn": "此链接将在 48 小时后过期。",
+      "gotIt": "我已复制链接"
+    },
     "addModal": {
       "title": "添加协作者",
       "modeDirect": "直接创建",
@@ -176,17 +183,17 @@
       },
       "permTemplate": "权限模板",
       "noTemplate": "— 无模板 —",
-      "noteInvite": "将发送邀请邮件。协作者将选择自己的密码。",
+      "noteInvite": "将生成一个邀请链接——请自行发送给协作者（目前没有自动邮件）。协作者将选择自己的密码。",
       "noteDirect": "将生成一个临时密码并只显示一次。",
       "cancel": "取消",
       "createAccount": "创建账户",
-      "sendInvitation": "发送邀请",
+      "sendInvitation": "创建邀请链接",
       "errors": {
         "firstName": "名字为必填项",
         "lastName": "姓氏为必填项",
         "email": "邮箱无效"
       },
-      "invitationSentToast": "邀请已发送到 {{email}}。",
+      "invitationSentToast": "已为 {{email}} 创建邀请链接。",
       "createError": "创建时出错。"
     }
   }
