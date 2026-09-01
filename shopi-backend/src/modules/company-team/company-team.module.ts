@@ -56,8 +56,9 @@ import { TeamEventBusService }               from './services/team-event-bus.ser
 /* ── Controller ── */
 import { CompanyTeamController } from './company-team.controller';
 
-/* ── Guard ── */
-import { TeamOwnerGuard } from './guards/team-owner.guard';
+/* ── Guards ── */
+import { TeamOwnerGuard }      from './guards/team-owner.guard';
+import { TeamPermissionGuard } from './guards/team-permission.guard';
 
 @Module({
   imports: [
@@ -94,8 +95,9 @@ import { TeamOwnerGuard } from './guards/team-owner.guard';
     CompanyTeamInvitationService,
     TeamPermissionDefinitionService,
     TeamPermissionTemplateService,
-    /* Guard */
+    /* Guards */
     TeamOwnerGuard,
+    TeamPermissionGuard,
   ],
   exports: [
     CompanyTeamService,
@@ -103,6 +105,10 @@ import { TeamOwnerGuard } from './guards/team-owner.guard';
     CompanyTeamActivityService,
     TeamPlanConfigService,
     TeamPermissionDefinitionService,
+    /* Guard exporté — permet à n'importe quel autre module (dashboard
+     * entreprise, produits, commandes…) d'importer CompanyTeamModule et
+     * d'appliquer @RequiresTeamPermission sur ses propres routes. */
+    TeamPermissionGuard,
   ],
 })
 export class CompanyTeamModule {}

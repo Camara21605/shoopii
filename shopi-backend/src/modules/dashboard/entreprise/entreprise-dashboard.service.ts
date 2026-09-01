@@ -51,8 +51,8 @@ export class EntrepriseDashboardService {
   // GET /dashboard/entreprise/overview
   // ══════════════════════════════════════════════════════════════
 
-  async getOverview(userId: string) {
-    const company = await this.resolveCompany(userId);
+  async getOverview(companyId: string) {
+    const company = await this.resolveCompany(companyId);
     if (!company) return this.emptyOverview();
 
     const now        = new Date();
@@ -122,8 +122,8 @@ export class EntrepriseDashboardService {
   // GET /dashboard/entreprise/analytics
   // ══════════════════════════════════════════════════════════════
 
-  async getAnalytics(userId: string) {
-    const company = await this.resolveCompany(userId);
+  async getAnalytics(companyId: string) {
+    const company = await this.resolveCompany(companyId);
     if (!company) return { caData: [], topProduits: [], categoryPerf: [] };
 
     const [caData, topProduits, categoryPerf] = await Promise.all([
@@ -139,8 +139,8 @@ export class EntrepriseDashboardService {
   // GET /dashboard/entreprise/finances
   // ══════════════════════════════════════════════════════════════
 
-  async getFinances(userId: string) {
-    const company = await this.resolveCompany(userId);
+  async getFinances(companyId: string) {
+    const company = await this.resolveCompany(companyId);
     if (!company) return this.emptyFinances();
 
     const wallet = await this.walletRepo.findOne({
@@ -217,8 +217,19 @@ export class EntrepriseDashboardService {
   // Helpers privés partagés
   // ══════════════════════════════════════════════════════════════
 
-  private async resolveCompany(userId: string): Promise<Company | null> {
-    return this.companyRepo.findOne({ where: { userId } });
+  /**
+   * Résout l'entreprise par son ID de profil (Company.id) — PAS par
+   * userId. Avant : { where: { userId } } ne trouvait l'entreprise QUE
+   * pour son propriétaire (Company.userId), jamais pour un collaborateur
+   * (qui n'a pas d'entité Company propre, voir CompanyTeamMember). Le
+   * contrôleur passe maintenant req.user.actorId — déjà résolu au login
+   * vers le bon companyId pour le propriétaire COMME pour ses
+   * collaborateurs (voir AuthService.findProfileId) — donc un simple
+   * lookup par id suffit ici, pour les deux cas. Sans ce correctif,
+   * overview/analytics/finances étaient TOUJOURS vides pour tout
+   * collaborateur, quelles que soient ses permissions. */
+  private async resolveCompany(companyId: string): Promise<Company | null> {
+    return this.companyRepo.findOne({ where: { id: companyId } });
   }
 
   /** CA mensuel réel des N derniers mois (Millions GNF, commandes livrées). */

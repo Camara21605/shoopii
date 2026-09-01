@@ -56,6 +56,13 @@ export interface TeamPermissions {
     viewTransactions: boolean;  /** Consulter les transactions */
     manageRefunds:    boolean;  /** Gérer les remboursements */
   };
+  /** Portefeuille (solde, retraits) — distinct de payments : payments
+   *  couvre les revenus/commandes de la boutique, wallet le solde
+   *  disponible et les demandes de retrait vers un compte externe. */
+  wallet: {
+    view:     boolean;  /** Voir le solde et l'historique du portefeuille */
+    withdraw: boolean;  /** Demander un retrait */
+  };
   /** Messagerie interne */
   messaging: {
     read: boolean;  /** Lire les messages */
@@ -101,6 +108,7 @@ export const DEFAULT_TEAM_PERMISSIONS: TeamPermissions = {
   orders:     { view: false, validate: false, cancel: false, edit: false },
   deliveries: { view: false, assign: false, edit: false },
   payments:   { view: false, viewTransactions: false, manageRefunds: false },
+  wallet:     { view: false, withdraw: false },
   messaging:  { read: false, send: false },
   statistics: { view: false },
   settings:   { view: false, edit: false },

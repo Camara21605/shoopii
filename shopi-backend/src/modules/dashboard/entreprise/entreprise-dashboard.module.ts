@@ -15,6 +15,7 @@ import { ParametresModule }     from './parametres.module';
 import { ReturnsModule }       from './returns/returns.module';
 import { ClientsModule }       from './clients/clients.module';
 import { FournisseursModule }  from './fournisseurs/fournisseurs.module';
+import { CompanyTeamModule }   from '../../company-team/company-team.module';
 
 // ── Entités TypeORM ──────────────────────────────────────────
 import { User }             from '../../../database/entities/user.entity';
@@ -87,6 +88,10 @@ import { CategoriesService }          from '../super-admin/categories/categories
     ReturnsModule,
     ClientsModule,
     FournisseursModule,
+    /* Fournit TeamPermissionGuard — applique réellement les permissions
+     * granulaires d'un collaborateur (voir @RequiresTeamPermission sur
+     * EntrepriseDashboardController.getFinances). */
+    CompanyTeamModule,
   ],
 
   controllers: [

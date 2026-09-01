@@ -53,9 +53,25 @@ export class CompanyTeamPermissionService {
       throw new NotFoundException(`Permissions introuvables pour le membre ${memberId}.`);
     }
 
-    /* Deep merge : fusionner groupe par groupe */
-    const merged: TeamPermissions = { ...perm.permissions };
+    /* Deep merge : fusionner groupe par groupe.
+     *
+     * `merged[group] && ...` ci-dessous ignorait silencieusement toute
+     * mise à jour d'un groupe absent du JSON déjà enregistré en base —
+     * exactement le cas d'un membre créé AVANT l'ajout d'un nouveau
+     * groupe de permissions (ex. `wallet`, ajouté après coup) : son JSON
+     * ne contient pas encore cette clé, donc cocher/décocher "Portefeuille"
+     * pour lui ne s'enregistrait jamais, malgré le principe affiché en
+     * en-tête de fichier ("ajouter un champ = déployer le code, aucune
+     * migration nécessaire") — vrai seulement pour les NOUVEAUX membres.
+     * On initialise maintenant le groupe manquant depuis
+     * DEFAULT_TEAM_PERMISSIONS avant de fusionner, pour que ce cas se
+     * corrige tout seul dès la première modification, sans script de
+     * migration séparé. */
+    const merged: TeamPermissions = JSON.parse(JSON.stringify(perm.permissions));
     for (const [group, actions] of Object.entries(updates) as [keyof TeamPermissions, Record<string, boolean>][]) {
+      if (!merged[group] && DEFAULT_TEAM_PERMISSIONS[group]) {
+        (merged[group] as Record<string, boolean>) = { ...(DEFAULT_TEAM_PERMISSIONS[group] as Record<string, boolean>) };
+      }
       if (merged[group] && typeof actions === 'object') {
         (merged[group] as Record<string, boolean>) = {
           ...(merged[group] as Record<string, boolean>),
