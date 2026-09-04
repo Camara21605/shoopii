@@ -61,11 +61,11 @@ export default function ParametresPage() {
     saveConfidentialite,
     savePreferences,
     suspendreCompte, supprimerCompte,
+    documents, uploadDocument,
   } = usePartenaireParametres();
 
-  /* Stubs pour les sections sans backend encore (paiement, documents) */
+  /* Stub pour la section sans backend encore (paiement) */
   const stubSave = async () => { /* champs non encore persistés */ };
-  const stubUploadDoc = async (_type: string, _file: File) => { /* idem */ };
 
   /* ── Toast (réutilisation du système partenaire) ── */
   const { toasts, pop: toast } = useToasts();
@@ -114,9 +114,9 @@ export default function ParametresPage() {
       case 'documents':
         return (
           <SecDocuments
-            data={data}
+            documents={documents}
             saving={saving}
-            onUploadDocument={stubUploadDoc}
+            onUploadDocument={uploadDocument}
             onToast={toast}
           />
         );
@@ -142,6 +142,7 @@ export default function ParametresPage() {
             {...sectionProps}
             onSaveSecurite={saveSecurite}
             onChangePassword={changePassword}
+            onLogout={handleLogout}
             onToast={toast}
           />
         );

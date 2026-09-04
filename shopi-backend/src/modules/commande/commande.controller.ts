@@ -25,6 +25,8 @@ import { ValiderEtapeDto } from './dto/valider-etape.dto';
 import { EnvoyerNotationsDto, LitigeDto } from './dto/notation.dto';
 import { RefuserMissionDto } from './dto/refuser-mission.dto';
 import { AssignLivreurDto } from './dto/assign-livreur.dto';
+import { TeamPermissionGuard }    from '../company-team/guards/team-permission.guard';
+import { RequiresTeamPermission } from '../company-team/decorators/requires-team-permission.decorator';
 
 /* ── /client/commandes ── */
 @Controller('client/commandes')
@@ -100,6 +102,8 @@ export class EntrepriseCommandeController {
   ) {}
 
   @Get()
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('orders', 'view')
   list(
     @CurrentUser() user: User,
     @Query('search') search?: string,
@@ -111,8 +115,14 @@ export class EntrepriseCommandeController {
     });
   }
 
-  /** Assigner ou changer le livreur sur une commande de l'entreprise */
+  /** Assigner ou changer le livreur sur une commande de l'entreprise —
+   * deliveries.assign, pas orders.edit : c'est une action de LIVRAISON
+   * (choisir/changer le livreur), pas une modification de la commande
+   * elle-même, et "assign" est précisément fait pour ce cas (voir
+   * TeamPermissions.deliveries dans company-team-permission.entity.ts). */
   @Patch(':id/livreur')
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'assign')
   assignerLivreur(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AssignLivreurDto,

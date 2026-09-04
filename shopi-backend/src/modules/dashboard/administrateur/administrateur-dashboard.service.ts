@@ -75,6 +75,8 @@ export class AdministrateurDashboardService {
   getValidations(userId: string)                   { return this.acteurs.getValidations(userId); }
   approveValidation(adminId: string, id: string)   { return this.acteurs.approveValidation(adminId, id); }
   rejectValidation(adminId: string, id: string)    { return this.acteurs.rejectValidation(adminId, id); }
+  suspendActeur(adminId: string, id: string, motif?: string) { return this.acteurs.suspendActeur(adminId, id, motif); }
+  reactivateActeur(adminId: string, id: string) { return this.acteurs.reactivateActeur(adminId, id); }
 
   // ── Partenaires ──────────────────────────────────────────────
   getPartenaires(userId: string, tier?: string, search?: string, page?: number, limit?: number) {
@@ -85,7 +87,11 @@ export class AdministrateurDashboardService {
   getSignalements(userId: string, page?: number, limit?: number) {
     return this.signalements.getSignalements(userId, page, limit);
   }
+  getSignalementById(userId: string, id: string) { return this.signalements.getSignalementById(userId, id); }
   resolveSignalement(adminId: string, id: string)  { return this.signalements.resolveSignalement(adminId, id); }
+  investigateSignalement(adminId: string, id: string) { return this.signalements.investigateSignalement(adminId, id); }
+  warnSignalement(adminId: string, id: string) { return this.signalements.warnSignalement(adminId, id); }
+  rejectSignalement(adminId: string, id: string, reason?: string) { return this.signalements.rejectSignalement(adminId, id, reason); }
 
   // ── Commandes + Finances ─────────────────────────────────────
   getCommandes(userId: string, onglet?: 'toutes' | 'encours' | 'litiges', page?: number, limit?: number) {

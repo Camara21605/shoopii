@@ -18,9 +18,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { PaiementSession }      from '../../../database/entities/paiement/paiement-session.entity';
-import { PaiementDistribution } from '../../../database/entities/paiement/paiement-distribution.entity';
+import { PaiementDistribution, DistributionActeurType } from '../../../database/entities/paiement/paiement-distribution.entity';
 import { Retrait }              from '../../../database/entities/paiement/retrait.entity';
 import { Wallet }               from '../../../database/entities/wallet.entity';
+
+/** Voir la même liste dans analytics.service.ts::COMMISSION_ACTEUR_TYPES */
+const COMMISSION_ACTEUR_TYPES: string[] = [
+  DistributionActeurType.PLATEFORME_PRODUIT,
+  DistributionActeurType.PLATEFORME_LIVRAISON,
+  DistributionActeurType.PARTENAIRE_PRODUIT,
+  DistributionActeurType.PARTENAIRE_LIVRAISON,
+  DistributionActeurType.ADMIN_PRODUIT,
+  DistributionActeurType.ADMIN_LIVRAISON,
+  DistributionActeurType.PLATEFORME,
+  DistributionActeurType.PARTENAIRE,
+];
 
 import {
   ReportFilter,
@@ -208,14 +220,15 @@ export class StatisticsService {
     const dist   = distRaw[0]   ?? {};
     const retrait= retraitRaw   ?? {};
     const wallet = walletRaw    ?? {};
+    const montantTotal = +dist.montantTotal || 0;
 
     return {
       userId,
       nom:             dist.nom            ?? '',
       role:            dist.role           ?? 'inconnu',
       nbCommandes:     +dist.nbCommandes   || 0,
-      montantTotal:    +dist.montantTotal  || 0,
-      commissions:     0,
+      montantTotal,
+      commissions:     COMMISSION_ACTEUR_TYPES.includes(dist.role) ? montantTotal : 0,
       nbRetraits:      +retrait.nbRetraits || 0,
       balanceActuelle: +wallet.balance     || 0,
     };

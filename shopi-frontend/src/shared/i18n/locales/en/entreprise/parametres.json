@@ -100,6 +100,9 @@
       "expressSub": "Delivery < 2h with an extra fee",
       "zonesTitle": "Delivery areas",
       "zonesSubtitle": "Select the districts you serve",
+      "zonesChargement": "Loading your areas…",
+      "aucuneZoneAssignee": "No delivery area has been assigned to you yet. Contact your administrator.",
+      "zoneAssignee": "Assigned area: {{nom}}",
       "zonesSelectionnees_one": "{{count}} area selected",
       "zonesSelectionnees_other": "{{count}} areas selected",
       "sauvegardeEnCours": "Saving…",
@@ -443,6 +446,11 @@
         "coverImage": "Cover photo",
         "returnPolicy": "Return policy"
       }
-    }
+    },
+    "accessDenied": {
+      "title": "Access denied",
+      "message": "You do not have access to settings. Contact the shop owner to request it."
+    },
+    "readOnly": "Read-only — you can view these settings but not edit them."
   }
 }

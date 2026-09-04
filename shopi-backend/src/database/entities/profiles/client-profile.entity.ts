@@ -172,6 +172,17 @@ export class Client {
   @Column({ type: 'json', nullable: true, select: false })
   codesSecoursHashed: string | null;
 
+  /**
+   * Préférences d'alertes de sécurité par email (section "Alertes de
+   * sécurité" des paramètres du compte). null = valeurs par défaut
+   * (toutes activées) — voir SecuriteService.DEFAULT_ALERT_SETTINGS.
+   * Format JSON : { connex, mdp, tentatives, transaction, pays }, chacun
+   * { email: boolean }. SMS/push pas encore branchés à une passerelle,
+   * volontairement absents de ce format tant qu'ils ne le sont pas.
+   */
+  @Column({ type: 'json', nullable: true })
+  securityAlertSettings: string | null;
+
   // ══════════════════════════════════════════════════════════
   // SECTION 6 — SESSIONS ACTIVES (JSON)
   // Format : [{ id, device, browser, os, ip, location, lastSeen, isCurrent, suspect? }]

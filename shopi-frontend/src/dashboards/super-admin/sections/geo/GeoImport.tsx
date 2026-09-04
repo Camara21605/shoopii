@@ -3,12 +3,18 @@
  * Import massif du référentiel géographique (CSV / Excel).
  * Drag & drop, prévisualisation, mapping colonnes, validation,
  * téléchargement de templates, historique des imports.
+ *
+ * L'import est réel — POST /geo/import/:niveau crée effectivement
+ * les lignes (mêmes validations que le formulaire standard). Le
+ * détail par ligne (créé / erreur) vient de la réponse serveur, pas
+ * d'une simulation aléatoire.
  * ================================================================ */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import s from '../GeoReferentielSection.module.css';
-import type { GeoLevel, ImportResult } from './geo.types';
+import type { GeoLevel, ImportResult, GeoAuditEntry } from './geo.types';
 import { GEO_LEVELS } from './geo.types';
+import { geoApi } from './geoApi';
 
 interface GeoImportProps {
   toast: (type: string, msg: string) => void;
@@ -24,28 +30,27 @@ const CSV_TEMPLATES: Partial<Record<GeoLevel, string>> = {
   zone:       'code,nom,communeCode,rayonKm,fraisLivraison,tempsEstime,description\nZ-KA-CENTRE,Kaloum Centre,CKA,3,5000,20,Zone centre',
 };
 
-const HISTORIQUE = [
-  { id: 'I001', niveau: 'quartier', fichier: 'quartiers_conakry.csv',     lignes: 8,  ok: 8,  erreurs: 0, quand: '15/01/2026 14:30' },
-  { id: 'I002', niveau: 'zone',     fichier: 'zones_livraison_v2.csv',    lignes: 10, ok: 9,  erreurs: 1, quand: '20/02/2026 10:15' },
-  { id: 'I003', niveau: 'commune',  fichier: 'communes_conakry.csv',      lignes: 5,  ok: 5,  erreurs: 0, quand: '01/03/2026 09:00' },
-];
-
 export default function GeoImport({ toast }: GeoImportProps) {
   const [niveau,   setNiveau]   = useState<GeoLevel>('quartier');
   const [dragging, setDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [preview,  setPreview]  = useState<string[][]>([]);
+  const [allRows,  setAllRows]  = useState<Record<string, string>[]>([]);
   const [result,   setResult]   = useState<ImportResult | null>(null);
   const [loading,  setLoading]  = useState(false);
+  const [historique, setHistorique] = useState<GeoAuditEntry[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const cfg = GEO_LEVELS.find(l => l.level === niveau)!;
 
-  /* ── Parse CSV (première lecture locale) ── */
-  const parseCSV = (text: string): string[][] => {
-    const lines = text.trim().split('\n').slice(0, 6);
-    return lines.map(l => l.split(',').map(c => c.replace(/^"|"$/g, '').trim()));
-  };
+  const loadHistorique = useCallback(() => {
+    geoApi.audit({ action: 'import' }).then(setHistorique).catch(() => {});
+  }, []);
+  useEffect(() => { loadHistorique(); }, [loadHistorique]);
+
+  /* ── Parse CSV complet (en-tête + toutes les lignes) ── */
+  const parseCSVFull = (text: string): string[][] =>
+    text.trim().split('\n').map(l => l.split(',').map(c => c.replace(/^"|"$/g, '').trim()));
 
   const handleFile = (file: File) => {
     if (!file.name.match(/\.(csv|xlsx|xls)$/i)) {
@@ -55,7 +60,15 @@ export default function GeoImport({ toast }: GeoImportProps) {
     setFileName(file.name);
     setResult(null);
     const reader = new FileReader();
-    reader.onload = e => setPreview(parseCSV(e.target?.result as string));
+    reader.onload = e => {
+      const full = parseCSVFull(e.target?.result as string);
+      setPreview(full.slice(0, 6));
+      const [header, ...dataRows] = full;
+      setAllRows(dataRows
+        .filter(r => r.some(c => c.length > 0))
+        .map(r => Object.fromEntries(header.map((h, i) => [h, r[i] ?? '']))),
+      );
+    };
     reader.readAsText(file);
   };
 
@@ -64,16 +77,20 @@ export default function GeoImport({ toast }: GeoImportProps) {
     handleFile(e.dataTransfer.files[0]);
   };
 
-  const simulerImport = async () => {
-    if (!fileName) return;
+  const lancerImport = async () => {
+    if (!fileName || allRows.length === 0) return;
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1500));
-    const total = preview.length > 1 ? preview.length - 1 : 5;
-    const erreurs = Math.random() > .7 ? [{ ligne: 3, message: 'Code déjà existant : KA-001' }] : [];
-    setResult({ total, created: total - erreurs.length, updated: 0, skipped: erreurs.length, errors: erreurs });
-    setLoading(false);
-    toast(erreurs.length ? 'info' : 'success',
-      erreurs.length ? `Import terminé avec ${erreurs.length} avertissement(s)` : `Import réussi — ${total} éléments traités`);
+    try {
+      const res = await geoApi.importRows(niveau, allRows);
+      setResult(res);
+      toast(res.errors.length ? 'info' : 'success',
+        res.errors.length ? `Import terminé avec ${res.errors.length} erreur(s)` : `Import réussi — ${res.created} élément(s) créé(s)`);
+      loadHistorique();
+    } catch (err: any) {
+      toast('error', err?.message ?? "Échec de l'import");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const downloadTemplate = () => {
@@ -103,7 +120,7 @@ export default function GeoImport({ toast }: GeoImportProps) {
           {/* Choix du niveau */}
           <div className={s.fld} style={{ marginBottom: 20, maxWidth: 340 }}>
             <label className={s.fldL}>Niveau géographique cible</label>
-            <select className={s.fldSel} value={niveau} onChange={e => { setNiveau(e.target.value as GeoLevel); setFileName(null); setPreview([]); setResult(null); }}>
+            <select className={s.fldSel} value={niveau} onChange={e => { setNiveau(e.target.value as GeoLevel); setFileName(null); setPreview([]); setAllRows([]); setResult(null); }}>
               {GEO_LEVELS.map(l => <option key={l.level} value={l.level}>{l.label}</option>)}
             </select>
           </div>
@@ -116,7 +133,7 @@ export default function GeoImport({ toast }: GeoImportProps) {
             onClick={() => fileRef.current?.click()}>
             <i className={`fas ${fileName ? 'fa-file-csv' : 'fa-cloud-arrow-up'}`} />
             {fileName
-              ? <><div className={s.dropTitle}>{fileName}</div><div className={s.dropSub}>Fichier sélectionné — prêt à importer</div></>
+              ? <><div className={s.dropTitle}>{fileName}</div><div className={s.dropSub}>{allRows.length} ligne{allRows.length > 1 ? 's' : ''} détectée{allRows.length > 1 ? 's' : ''} — prêt à importer</div></>
               : <><div className={s.dropTitle}>Déposez votre fichier ici</div><div className={s.dropSub}>CSV ou Excel · Colonnes : {CSV_TEMPLATES[niveau]?.split('\n')[0]}</div></>
             }
           </div>
@@ -133,7 +150,7 @@ export default function GeoImport({ toast }: GeoImportProps) {
               <div className={s.cardTitle}><i className="fas fa-eye" style={{ color: 'var(--sky)' }} /> Prévisualisation (5 premières lignes)</div>
               <div className={s.cardSub}>{preview[0]?.length ?? 0} colonnes détectées</div>
             </div>
-            <button className={s.btnPrimary} onClick={simulerImport}
+            <button className={s.btnPrimary} onClick={lancerImport}
               disabled={loading} style={{ opacity: loading ? .6 : 1 }}>
               <i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-upload'}`} />
               {loading ? 'Import en cours…' : 'Lancer l\'import'}
@@ -204,25 +221,29 @@ export default function GeoImport({ toast }: GeoImportProps) {
           <div className={s.cardTitle}><i className="fas fa-history" style={{ color: 'var(--violet)' }} /> Historique des imports</div>
         </div>
         <div className={s.cardBody}>
-          <div className={s.tableWrap}>
-            <table className={s.table}>
-              <thead>
-                <tr><th>Fichier</th><th>Niveau</th><th>Total</th><th>OK</th><th>Erreurs</th><th>Date</th></tr>
-              </thead>
-              <tbody>
-                {HISTORIQUE.map(h => (
-                  <tr key={h.id}>
-                    <td style={{ fontFamily: 'var(--font-m)', fontSize: 11 }}>{h.fichier}</td>
-                    <td><span className={`${s.bdg} ${s.bdgSky}`}>{h.niveau}</span></td>
-                    <td>{h.lignes}</td>
-                    <td style={{ color: 'var(--acid)', fontWeight: 700 }}>{h.ok}</td>
-                    <td style={{ color: h.erreurs > 0 ? 'var(--rose)' : 'var(--txt-3)', fontWeight: h.erreurs > 0 ? 700 : 400 }}>{h.erreurs}</td>
-                    <td style={{ color: 'var(--txt-3)', fontSize: 11 }}>{h.quand}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {historique.length === 0 ? (
+            <p style={{ textAlign: 'center', color: 'var(--txt-3)', padding: '20px 0', fontSize: 13 }}>
+              Aucun import effectué pour l&apos;instant
+            </p>
+          ) : (
+            <div className={s.tableWrap}>
+              <table className={s.table}>
+                <thead>
+                  <tr><th>Détails</th><th>Niveau</th><th>Auteur</th><th>Date</th></tr>
+                </thead>
+                <tbody>
+                  {historique.map(h => (
+                    <tr key={h.id}>
+                      <td style={{ fontSize: 12 }}>{h.details}</td>
+                      <td><span className={`${s.bdg} ${s.bdgSky}`}>{h.niveau}</span></td>
+                      <td style={{ fontSize: 11 }}>{h.auteur}</td>
+                      <td style={{ color: 'var(--txt-3)', fontSize: 11 }}>{h.quand}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 

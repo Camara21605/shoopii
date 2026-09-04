@@ -139,11 +139,27 @@
 /* ── Compteur ── */
 .compteur { font-size: 12px; color: var(--t3); margin-bottom: 12px; }
 
-/* ── Grille ── */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+/* ── Rangées de produits ──
+ * Chaque rangée défile horizontalement (jusqu'à 10 produits par rangée,
+ * voir chunk() dans ProduitsPage.tsx) plutôt qu'une grille qui enchaîne
+ * les lignes automatiquement — même largeur de carte fixe (200px, 140px
+ * sous 400px) qu'auparavant pour rester identique à la page d'accueil. */
+.gridRows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gridRow {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 6px; /* évite que la barre de scroll ne colle aux cartes */
+  scroll-snap-type: x proximity;
+}
+.gridRow .card {
+  flex: 0 0 200px;
+  width: 200px;
+  scroll-snap-align: start;
 }
 
 /* ── Carte produit ── */
@@ -164,7 +180,7 @@
 
 .cardImg {
   position: relative;
-  aspect-ratio: 4/2.8;
+  aspect-ratio: 4/3;
   background: linear-gradient(135deg, var(--g100), var(--g100));
   overflow: hidden;
   cursor: pointer;
@@ -658,22 +674,26 @@
 .deleteNote    { font-size: 12px; color: var(--t3); }
 
 /* ── Responsive ── */
-@media (max-width: 1200px) {
-  .grid        { grid-template-columns: repeat(3, 1fr); }
-}
 @media (max-width: 900px) {
-  .grid        { grid-template-columns: repeat(2, 1fr); }
   .statsRow    { grid-template-columns: repeat(2, 1fr); }
   .infoGrid    { grid-template-columns: 1fr 1fr; }
 }
+/* Mêmes seuils que la page d'accueil (.pgrid) pour que la carte produit
+ * garde exactement la même taille sur petit écran. */
+@media (max-width: 768px) {
+  .gridRows, .gridRow { gap: 10px; }
+}
 @media (max-width: 600px) {
-  .grid        { grid-template-columns: 1fr; }
   .statsRow    { grid-template-columns: repeat(2, 1fr); }
   .infoGrid    { grid-template-columns: 1fr; }
   .filtres     { flex-direction: column; align-items: stretch; }
 }
 @media (max-width: 420px) {
   .statsRow    { grid-template-columns: 1fr; }
+}
+@media (max-width: 400px) {
+  .gridRows, .gridRow { gap: 8px; }
+  .gridRow .card { flex-basis: 140px; width: 140px; }
 }
 
 /* ── Rangée : bouton "Créer une story" + stories déjà publiées ── */

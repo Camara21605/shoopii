@@ -49,6 +49,10 @@ interface Props {
   onJumpToMessage?: (msgId: string) => void;
   jumpToMessageId?: string | null;
   onJumpHandled?:  () => void;
+  /** false → masque la zone de saisie (collaborateur d'entreprise sans la
+   * permission messaging.send — voir MessagerieCore). Undefined/true = comportement
+   * inchangé pour tous les autres rôles/dashboards. */
+  canSend?: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -58,6 +62,7 @@ export default function ChatWindow({
   onSend, onTyping, onToggleInfo, onNewConv, onToast, onDelete, onUpdateGroup, onCall, onVideoCall, onMobileMenu,
   onLoadOlderMessages, onRetry, onArchiveConv, onDeleteConv,
   onJumpToMessage, jumpToMessageId, onJumpHandled,
+  canSend = true,
 }: Props) {
   const { t } = useTranslation();
   /** Message cité (réponse) — partagé entre MessagesZone (set) et MessageInput (affichage) */
@@ -124,14 +129,20 @@ export default function ChatWindow({
       />
 
       {/* ── Zone de saisie ── */}
-      <MessageInput
-        convId={conv.id}
-        replyTo={replyTo}
-        onSend={onSend}
-        onTyping={onTyping}
-        onToast={onToast}
-        onClearReply={() => setReplyTo(null)}
-      />
+      {canSend ? (
+        <MessageInput
+          convId={conv.id}
+          replyTo={replyTo}
+          onSend={onSend}
+          onTyping={onTyping}
+          onToast={onToast}
+          onClearReply={() => setReplyTo(null)}
+        />
+      ) : (
+        <div className={s.sendDisabled}>
+          <i className="fas fa-lock" /> {t('messagerie.messageInput.envoiNonAutorise')}
+        </div>
+      )}
 
     </div>
   );

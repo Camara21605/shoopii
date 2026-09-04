@@ -10,6 +10,7 @@
  * ============================================================ */
 
 import { Entity, PrimaryColumn, Column, UpdateDateColumn } from 'typeorm';
+import { ColumnNumericTransformer } from '../../database/transformers/column-numeric.transformer';
 
 /* ── Interfaces stockées en JSON ────────────────────────────── */
 
@@ -123,7 +124,7 @@ export class DeliverySetting {
   paymentFrequency!: string;
 
   /** Part Shopi sur chaque course (%) */
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 15 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 15, transformer: new ColumnNumericTransformer() })
   platformCommissionRate!: number;
 
   /* ── Événements de notification ──────────────────────────── */

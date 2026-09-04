@@ -385,7 +385,17 @@ export default function GeoReferentielSection({ toast, isActive }: Props) {
                 {levelCfg && (
                   <>
                     <button className={`${s.btnSecondary} ${s.btnSm}`}
-                      onClick={() => toast('info', `Export CSV des ${levelCfg.labelPlural} lancé`)}>
+                      onClick={() => {
+                        const items = levelItems();
+                        if (items.length === 0) { toast('info', 'Aucune donnée à exporter'); return; }
+                        const rows = items.map(it => `"${it.code}","${it.nom}","${(it.description ?? '').replace(/"/g, '""')}","${it.statut}","${it.auteur}","${it.createdAt}","${it.updatedAt}"`);
+                        const csv = ['code,nom,description,statut,auteur,createdAt,updatedAt', ...rows].join('\n');
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+                        a.download = `${view}-${Date.now()}.csv`;
+                        a.click();
+                        toast('success', `${items.length} ${levelCfg.labelPlural.toLowerCase()} exporté(e)s`);
+                      }}>
                       <i className="fas fa-download" /> Export CSV
                     </button>
                     <button className={`${s.btnSecondary} ${s.btnSm}`} onClick={() => setView('import')}>
@@ -455,7 +465,12 @@ export default function GeoReferentielSection({ toast, isActive }: Props) {
           ) : (
             <>
               {view === 'overview' && <GeoOverview stats={stats} onNavigate={navigateTo} />}
-              {view === 'tree'     && <GeoTreeView onNavigate={l => setView(l)} />}
+              {view === 'tree'     && (
+                <GeoTreeView
+                  data={{ pays, regions, prefectures, communes, quartiers, zones }}
+                  onNavigate={l => setView(l)}
+                />
+              )}
 
               {levelCfg && currentHandlers && (
                 <GeoLevel_Cmp

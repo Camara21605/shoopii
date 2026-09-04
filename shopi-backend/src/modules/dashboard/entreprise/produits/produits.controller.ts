@@ -44,6 +44,8 @@ import { RolesGuard }         from 'src/common/guards/roles.guard';
 import { Roles, CurrentUser } from 'src/common/decorators/roles.decorator';
 import { User }     from 'src/database/entities/user.entity';
 import { UserRole } from 'src/common/enums/user-role.enum';
+import { TeamPermissionGuard }     from 'src/modules/company-team/guards/team-permission.guard';
+import { RequiresTeamPermission }  from 'src/modules/company-team/decorators/requires-team-permission.decorator';
 
 @ApiTags('🛍️ Produits')
 @ApiBearerAuth()
@@ -58,6 +60,8 @@ export class ProduitsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'create')
   @ApiOperation({ summary: 'Créer un nouveau produit' })
   @ApiResponse({ status: 201, description: 'Produit créé.' })
   @ApiResponse({ status: 400, description: 'Données invalides ou catégorie hors type.' })
@@ -74,6 +78,8 @@ export class ProduitsController {
 
   @Get('check-slug')
   @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'view')
   @ApiOperation({ summary: 'Vérifier la disponibilité d\'un URL slug' })
   @ApiQuery({ name: 'slug',      required: true })
   @ApiQuery({ name: 'excludeId', required: false })
@@ -91,6 +97,8 @@ export class ProduitsController {
 
   @Get('categories')
   @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'view')
   @ApiOperation({
     summary: 'Catégories disponibles pour cette entreprise',
     description:
@@ -110,6 +118,8 @@ export class ProduitsController {
 
   @Get('stories')
   @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'view')
   @ApiOperation({ summary: "Toutes les stories de l'entreprise connectée, tous produits confondus" })
   listMyStories(
     @CurrentUser() user: User,
@@ -121,6 +131,8 @@ export class ProduitsController {
 
   @Get()
   @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'view')
   @ApiOperation({ summary: 'Lister les produits (paginé + filtres)' })
   list(
     @Query() dto: FilterProductsDto,
@@ -133,6 +145,8 @@ export class ProduitsController {
 
   @Get(':id')
   @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'view')
   @ApiOperation({ summary: 'Récupérer le détail complet d\'un produit' })
   @ApiParam({ name: 'id', description: 'UUID du produit' })
   @ApiResponse({ status: 404, description: 'Produit introuvable.' })
@@ -147,6 +161,8 @@ export class ProduitsController {
 
   @Get(':id/stats')
   @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'view')
   @ApiOperation({ summary: 'Statistiques d\'un produit' })
   @ApiParam({ name: 'id', description: 'UUID du produit' })
   stats(
@@ -160,6 +176,8 @@ export class ProduitsController {
 
   @Patch(':id')
   @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'edit')
   @ApiOperation({ summary: 'Modifier un produit existant' })
   @ApiParam({ name: 'id', description: 'UUID du produit' })
   update(
@@ -174,6 +192,8 @@ export class ProduitsController {
 
   @Patch(':id/publish')
   @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'edit')
   @ApiOperation({ summary: 'Publier un produit (draft → public)' })
   @ApiParam({ name: 'id', description: 'UUID du produit' })
   publish(
@@ -187,6 +207,8 @@ export class ProduitsController {
 
   @Patch(':id/archive')
   @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'edit')
   @ApiOperation({ summary: 'Archiver un produit (public → private)' })
   @ApiParam({ name: 'id', description: 'UUID du produit' })
   archive(
@@ -200,6 +222,8 @@ export class ProduitsController {
 
   @Get(':id/stories')
   @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'view')
   @ApiOperation({ summary: "Lister les stories publiées pour ce produit" })
   @ApiParam({ name: 'id', description: 'UUID du produit' })
   listStories(
@@ -214,6 +238,8 @@ export class ProduitsController {
   @Post(':id/stories')
   @HttpCode(HttpStatus.CREATED)
   @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'edit')
   @ApiOperation({ summary: "Publier une nouvelle story pour ce produit" })
   @ApiParam({ name: 'id', description: 'UUID du produit' })
   addStory(
@@ -229,6 +255,8 @@ export class ProduitsController {
   @Delete(':id/stories/:storyId')
   @HttpCode(HttpStatus.OK)
   @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'edit')
   @ApiOperation({ summary: "Retirer une story de ce produit" })
   @ApiParam({ name: 'id',      description: 'UUID du produit' })
   @ApiParam({ name: 'storyId', description: 'UUID de la story' })
@@ -245,6 +273,8 @@ export class ProduitsController {
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @Roles(UserRole.COMPANY, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('products', 'delete')
   @ApiOperation({ summary: 'Supprimer définitivement un produit' })
   @ApiParam({ name: 'id', description: 'UUID du produit' })
   delete(

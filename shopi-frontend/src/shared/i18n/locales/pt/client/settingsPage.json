@@ -56,7 +56,8 @@
       "descExcellent": "A sua conta está perfeitamente segura. Continue assim!",
       "descBien": "A sua conta está bem protegida. Algumas melhorias ainda são possíveis.",
       "descFaible": "Reforce a sua segurança completando as ações abaixo.",
-      "ameliorer": "Melhorar"
+      "ameliorer": "Melhorar",
+      "bientotDisponible": "Em breve — ainda não existe verificação por SMS."
     },
     "points": {
       "titre": "Os meus Shoneya Points",

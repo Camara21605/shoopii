@@ -199,6 +199,10 @@
       "sendError": "Erreur envoi",
       "replyPlaceholder": "Répondre au client…",
       "envoyer": "Envoyer"
+    },
+    "accessDenied": {
+      "title": "Accès non autorisé",
+      "message": "Vous n'avez pas accès aux retours et au SAV. Contactez le propriétaire de la boutique pour l'obtenir."
     }
   }
 }

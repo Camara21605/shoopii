@@ -28,6 +28,9 @@ import { Company } from 'src/database/entities/profiles/entreprise-profile.entit
 import { Category } from 'src/database/entities/entreprise.table/category.entity';
 import { TrendingProduct } from 'src/database/entities/entreprise.table/trending-product.entity';
 import { ProductCooccurrence } from 'src/database/entities/entreprise.table/product-cooccurrence.entity';
+import { CommandeItem } from 'src/database/entities/commande/commande-item.entity';
+import { ProductLike } from 'src/database/entities/entreprise.table/product-like.entity';
+import { Client } from 'src/database/entities/profiles/client-profile.entity';
 import type { PublicProduitResponse } from '../public/public.service';
 import {
   EXPLORE_DEFAULT_LIMIT, EXPLORE_MAX_LIMIT,
@@ -63,6 +66,12 @@ export class ExploreService {
     private readonly trendingRepo: Repository<TrendingProduct>,
     @InjectRepository(ProductCooccurrence)
     private readonly coocRepo: Repository<ProductCooccurrence>,
+    @InjectRepository(CommandeItem)
+    private readonly commandeItemRepo: Repository<CommandeItem>,
+    @InjectRepository(ProductLike)
+    private readonly likeRepo: Repository<ProductLike>,
+    @InjectRepository(Client)
+    private readonly clientRepo: Repository<Client>,
   ) {}
 
   // ── Grille principale — recherche + filtres + pagination ────────
@@ -79,6 +88,8 @@ export class ExploreService {
       .leftJoinAndSelect('p.company',        'company')
       .leftJoinAndSelect('p.wholesaleTiers', 'tiers')
       .where('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+      /* BUG CORRIGÉ — voir le commentaire sur loadPublicProducts() plus bas. */
+      .andWhere('(company."showOutOfStock" = true OR p.stock > 0)')
       .orderBy('p.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
@@ -173,6 +184,7 @@ export class ExploreService {
       .leftJoinAndSelect('p.category', 'category')
       .leftJoinAndSelect('p.company',  'company')
       .where('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+      .andWhere('(company."showOutOfStock" = true OR p.stock > 0)')
       .orderBy('p.createdAt', 'DESC')
       .take(max)
       .getMany();
@@ -198,6 +210,7 @@ export class ExploreService {
       .leftJoinAndSelect('p.category', 'category')
       .innerJoinAndSelect('p.company', 'company')
       .where('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+      .andWhere('(company."showOutOfStock" = true OR p.stock > 0)')
       .andWhere('LOWER(company.ville) = LOWER(:ville)', { ville: ville.trim() })
       .orderBy('p.createdAt', 'DESC')
       .take(max)
@@ -229,6 +242,89 @@ export class ExploreService {
       .map(p => this.toPublicProduit(p));
   }
 
+  // ── Pour vous — personnalisé à partir des likes + achats du client,
+  // via le cache product_cooccurrence déjà calculé (pas de nouveau
+  // moteur ML : on réutilise le signal "souvent acheté avec" existant,
+  // ancré sur les produits que CE client a lui-même aimés/achetés).
+  // Gouverné par Client.privacySettings.perso (section "Confidentialité
+  // du profil") — absent/true = personnalisé, false = repli sur les
+  // tendances globales (mêmes résultats pour tout le monde). ──────────
+
+  async pourVous(userId: string | undefined, limit = EXPLORE_SECTION_DEFAULT_LIMIT): Promise<PublicProduitResponse[]> {
+    const max = Math.min(limit, EXPLORE_SECTION_MAX_LIMIT);
+
+    if (!userId) return this.tendances(max);
+
+    const client = await this.clientRepo.findOne({ where: { userId }, select: ['id', 'privacySettings'] });
+    if (!client) return this.tendances(max);
+
+    const privacy = (client.privacySettings ?? {}) as Record<string, unknown>;
+    if (privacy.perso === false) return this.tendances(max);
+
+    const seedIds = await this.recentSignalProductIds(client.id);
+    if (seedIds.length === 0) return this.tendances(max);
+
+    const coocRows = await this.coocRepo
+      .createQueryBuilder('c')
+      .where('c.productId IN (:...ids)', { ids: seedIds })
+      .andWhere('c.relatedProductId NOT IN (:...exclude)', { exclude: seedIds })
+      .getMany();
+
+    if (coocRows.length === 0) return this.tendances(max);
+
+    /* Agrège les scores si plusieurs produits "vus" par le client pointent
+     * vers le même produit recommandé (plus il revient, plus il est pertinent). */
+    const scoreByProduct = new Map<string, number>();
+    for (const row of coocRows) {
+      scoreByProduct.set(row.relatedProductId, (scoreByProduct.get(row.relatedProductId) ?? 0) + row.coOccurrenceCount);
+    }
+
+    const rankedIds = [...scoreByProduct.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, max)
+      .map(([id]) => id);
+
+    const products = await this.loadPublicProducts(rankedIds);
+    const byId = new Map(products.map(p => [p.id, p]));
+    const result = rankedIds.map(id => byId.get(id)).filter((p): p is Product => !!p).map(p => this.toPublicProduit(p));
+
+    /* Le cache de cooccurrence peut être plus court que `max` (produits
+     * dépubliés, peu de recoupements) — complète avec les tendances
+     * globales sans doublons plutôt que de renvoyer une liste partielle. */
+    if (result.length < max) {
+      const seen = new Set([...seedIds, ...result.map(p => p.id)]);
+      const filler = (await this.tendances(max)).filter(p => !seen.has(p.id));
+      result.push(...filler.slice(0, max - result.length));
+    }
+
+    return result;
+  }
+
+  /** Produits likés + achetés récemment par ce client (signal de
+   * personnalisation) — bornés pour ne pas construire une clause IN
+   * démesurée sur un gros historique. */
+  private async recentSignalProductIds(clientId: string): Promise<string[]> {
+    const [likes, purchased] = await Promise.all([
+      this.likeRepo.find({
+        where: { clientId }, select: { productId: true },
+        order: { createdAt: 'DESC' }, take: 20,
+      }),
+      this.commandeItemRepo
+        .createQueryBuilder('ci')
+        .innerJoin('ci.commande', 'cmd')
+        .where('cmd.clientId = :clientId', { clientId })
+        .andWhere('ci.productId IS NOT NULL')
+        .orderBy('ci.createdAt', 'DESC')
+        .limit(20)
+        .getMany(),
+    ]);
+
+    const ids = new Set<string>();
+    for (const l of likes) ids.add(l.productId);
+    for (const p of purchased) if (p.productId) ids.add(p.productId);
+    return [...ids];
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────
 
   private async loadPublicProducts(ids: string[]): Promise<Product[]> {
@@ -242,6 +338,10 @@ export class ExploreService {
       .leftJoinAndSelect('p.wholesaleTiers', 'tiers')
       .where('p.id IN (:...ids)', { ids })
       .andWhere('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+      /* BUG CORRIGÉ — même correctif que PublicService.getBoutiqueProduits/
+       * listProduits : Company.showOutOfStock était enregistré mais jamais
+       * lu, y compris ici (grille "Explorer"). */
+      .andWhere('(company."showOutOfStock" = true OR p.stock > 0)')
       .getMany();
   }
 
@@ -253,7 +353,10 @@ export class ExploreService {
     const company = p.company as Company | undefined;
     const hasPromo = p.prixPromo != null && Number(p.prixPromo) < Number(p.prix);
     const prix       = hasPromo ? Number(p.prixPromo) : Number(p.prix);
-    const prixAncien = hasPromo ? Number(p.prix) : (p.prixAncien != null ? Number(p.prixAncien) : null);
+    const prixAncienRaw = hasPromo ? Number(p.prix) : (p.prixAncien != null ? Number(p.prixAncien) : null);
+    /* BUG CORRIGÉ — même correctif que PublicService : Company.showStrikePrice
+     * était enregistré mais jamais lu ici non plus. */
+    const prixAncien = (company?.showStrikePrice ?? true) ? prixAncienRaw : null;
 
     return {
       id:          p.id,
@@ -304,6 +407,8 @@ export class ExploreService {
           prixUnitaire: Number(t.prixUnitaire),
           ordre:        t.ordre,
         })),
+      returnPolicy: company?.returnPolicy ?? null,
+      createdAt:    p.createdAt.toISOString(),
     };
   }
 }

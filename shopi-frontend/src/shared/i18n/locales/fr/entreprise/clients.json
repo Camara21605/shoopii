@@ -96,6 +96,24 @@
       "offreFidelite": "Offre fidélité automatique",
       "rapportSegments": "Rapport segments PDF",
       "relanceInactifs": "Relance clients inactifs"
+    },
+    "crm": {
+      "erreurApercu": "Impossible de charger l'aperçu.",
+      "erreurEnvoi": "Échec de l'envoi.",
+      "erreurRapport": "Impossible de générer le rapport PDF.",
+      "destinataires_one": "{{count}} destinataire",
+      "destinataires_other": "{{count}} destinataires",
+      "aucunDestinataire": "Aucun client dans ce segment pour le moment.",
+      "sujet": "Sujet",
+      "message": "Message",
+      "annuler": "Annuler",
+      "envoyerA_one": "Envoyer à {{count}} client",
+      "envoyerA_other": "Envoyer à {{count}} clients",
+      "envoye_one": "✅ Envoyé à {{count}} client",
+      "envoye_other": "✅ Envoyé à {{count}} clients",
+      "resultatTitre": "{{sent}} / {{total}} envoyés",
+      "resultatEchecs": "{{count}} envoi(s) ont échoué.",
+      "fermer": "Fermer"
     }
   }
 }

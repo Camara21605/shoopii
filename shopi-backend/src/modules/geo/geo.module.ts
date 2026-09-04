@@ -7,6 +7,7 @@ import { GeoPrefecture } from '../../database/entities/geo/geo-prefecture.entity
 import { GeoCommune }    from '../../database/entities/geo/geo-commune.entity';
 import { GeoQuartier }   from '../../database/entities/geo/geo-quartier.entity';
 import { GeoZone }       from '../../database/entities/geo/geo-zone.entity';
+import { GeoAuditLog }   from '../../database/entities/geo/geo-audit-log.entity';
 import { Admin }         from '../../database/entities/profiles/admin-profile.entity';
 
 import { GeoService }    from './geo.service';
@@ -17,6 +18,7 @@ import { GeoController } from './geo.controller';
     TypeOrmModule.forFeature([
       GeoPays, GeoRegion, GeoPrefecture,
       GeoCommune, GeoQuartier, GeoZone,
+      GeoAuditLog,
       Admin,
     ]),
   ],

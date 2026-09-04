@@ -626,3 +626,11 @@
 .mpCaptionInp::-webkit-scrollbar { display: none; }
 
 @media (max-width: 640px) { .msgsZone { padding: 14px; } .inputArea { padding: 10px 14px; } }
+
+/* ── Saisie désactivée (collaborateur sans messaging.send) ── */
+.sendDisabled {
+  padding: 14px 20px; background: var(--g50); border-top: 1px solid var(--bdr);
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--t3);
+}
+.sendDisabled i { font-size: 12px; }

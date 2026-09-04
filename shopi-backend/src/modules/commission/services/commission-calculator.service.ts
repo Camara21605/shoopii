@@ -58,6 +58,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { CommissionRule }  from '../../../database/entities/paiement/commission-rule.entity';
+import { CompanySetting }  from '../../company-settings/company-settings.entity';
+import { PartnerSetting }  from '../../partner-settings/partner-settings.entity';
 import {
   CommissionContext,
   CommissionAmounts,
@@ -82,6 +84,16 @@ export class CommissionCalculatorService {
    * @param entreprise Hiérarchie entreprise (pour planMultiplier)
    * @param livreur  Hiérarchie livreur (null si absent)
    * @param correspondant Hiérarchie correspondant (null si absent)
+   * @param companySettings Config singleton "Entreprises" du Centre de
+   *        Gestion des Commissions (commissionType/Value/Min/Max/Brackets).
+   *        Si absente (table pas encore initialisée), on retombe sur
+   *        rule.tauxCommissionProduit — comportement identique à avant.
+   * @param partnerSettings Config singleton "Partenaires" du Centre de
+   *        Gestion des Commissions (commissionMode/defaultCommissionRate/tiers).
+   *        Remplace rule.ratioPartenaireProduit par le taux du tier du
+   *        partenaire quand un partenaire est présent — le ratio Shopi
+   *        reste celui de la règle, Admin absorbe le résidu (voir
+   *        resoudreRatioPartenaireProduit).
    * @returns CommissionAmounts avec tous les montants calculés
    */
   calculer(
@@ -90,6 +102,8 @@ export class CommissionCalculatorService {
     entreprise:    ActeurEntrepriseHierarchy,
     livreur:       ActeurLivraisonHierarchy | null,
     correspondant: ActeurLivraisonHierarchy | null,
+    companySettings: CompanySetting | null = null,
+    partnerSettings: PartnerSetting | null = null,
   ): CommissionAmounts {
 
     const sousTotal        = Math.round(context.sousTotal);
@@ -101,8 +115,14 @@ export class CommissionCalculatorService {
     const tauxLivraisonDecimal    = Number(rule.tauxCommissionLivraison) / 100;
     const planMultiplier          = entreprise.planMultiplier;
 
-    const tauxEffectifProduit     = tauxBaseDecimal * planMultiplier;
     const tauxEffectifLivraison   = tauxLivraisonDecimal;
+
+    /* ── 2. Commission produit — CompanySetting a priorité sur rule ── */
+
+    const { commissionProduitBrute, tauxEffectifProduit } = this.resoudreCommissionProduit(
+      sousTotal, tauxBaseDecimal, planMultiplier, companySettings,
+    );
+    const partEntreprise = sousTotal - commissionProduitBrute;
 
     this.logger.debug(
       `[Calc] Commande ${context.commandeId} — ` +
@@ -111,14 +131,17 @@ export class CommissionCalculatorService {
       `tauxLivraison: ${(tauxEffectifLivraison * 100).toFixed(3)}%`,
     );
 
-    /* ── 2. Commission produit ────────────────────────────── */
+    /* Répartition de la commission produit entre les 3 bénéficiaires.
+     * Le ratio Shopi reste celui de la règle (le "prix plateforme" ne
+     * bouge pas selon le partenaire) ; le ratio Partenaire vient de
+     * PartnerSettings quand un partenaire existe (sinon rule, inchangé) ;
+     * Admin absorbe le résidu (arrondi + ce que le partenaire ne prend
+     * pas), exactement comme avant. */
+    const ratioShopiProduitPct      = Number(rule.ratioShopiProduit);
+    const ratioPartenaireProduitPct = this.resoudreRatioPartenaireProduit(rule, entreprise, partnerSettings);
 
-    const commissionProduitBrute = this.floor(sousTotal * tauxEffectifProduit);
-    const partEntreprise         = sousTotal - commissionProduitBrute;
-
-    /* Répartition de la commission produit entre les 3 bénéficiaires */
-    const partShopiProduit      = this.floor(commissionProduitBrute * Number(rule.ratioShopiProduit) / 100);
-    const partPartenaireProduit = this.floor(commissionProduitBrute * Number(rule.ratioPartenaireProduit) / 100);
+    const partShopiProduit      = this.floor(commissionProduitBrute * ratioShopiProduitPct / 100);
+    const partPartenaireProduit = this.floor(commissionProduitBrute * ratioPartenaireProduitPct / 100);
     /* L'admin absorbe le résidu d'arrondi pour que la somme soit exacte */
     const partAdminProduit      = commissionProduitBrute - partShopiProduit - partPartenaireProduit;
 
@@ -184,6 +207,7 @@ export class CommissionCalculatorService {
       partShopiProduit,
       partPartenaireProduit,
       partAdminProduit,
+      ratioPartenaireProduitEffectif: ratioPartenaireProduitPct,
       commissionLivraisonBrute,
       partLivreur,
       partCorrespondant,
@@ -245,6 +269,78 @@ export class CommissionCalculatorService {
     return Math.max(0, commission);
   }
 
+  /**
+   * Résout le ratio Partenaire (%) sur la commission produit.
+   *
+   * Si PartnerSettings existe ET qu'un partenaire est présent sur cette
+   * commande, son taux REMPLACE rule.ratioPartenaireProduit (décision
+   * produit explicite — pas un bonus qui s'ajoute) :
+   *   'fixed'       → defaultCommissionRate pour tous
+   *   'tier'        → taux du tier atteint (le plus haut tier dont
+   *                    minCompanies <= partenaire.totalCompanies)
+   *   'progressive' → même résolution que 'tier' : aucune formule
+   *                    continue n'est configurable ailleurs que les
+   *                    paliers minCompanies des tiers eux-mêmes.
+   *
+   * Le ratio Shopi (rule.ratioShopiProduit) NE BOUGE PAS : c'est Admin qui
+   * absorbe la différence (résidu, cf. calculer() ci-dessus) — cohérent
+   * avec le rôle d'"absorbeur" qu'Admin a déjà pour les arrondis, et avec
+   * le fait qu'Admin supervise directement ce Partenaire dans la hiérarchie.
+   * Le taux du partenaire est plafonné à (100 - ratioShopi) pour ne
+   * jamais dépasser ce qu'il reste après la part Shopi.
+   *
+   * Retourne rule.ratioPartenaireProduit (comportement identique à avant)
+   * si PartnerSettings est absente ou si aucun partenaire n'est présent.
+   */
+  private resoudreRatioPartenaireProduit(
+    rule:            CommissionRule,
+    entreprise:      ActeurEntrepriseHierarchy,
+    partnerSettings: PartnerSetting | null,
+  ): number {
+    if (!partnerSettings || !entreprise.partenaireUserId) {
+      return Number(rule.ratioPartenaireProduit);
+    }
+    return this.resoudreTauxPartenaireProduit(
+      Number(rule.ratioPartenaireProduit),
+      Number(rule.ratioShopiProduit),
+      entreprise.partenaireTotalCompanies ?? 0,
+      partnerSettings,
+    );
+  }
+
+  /**
+   * Cœur de resoudreRatioPartenaireProduit() ci-dessus, extrait en méthode
+   * PUBLIQUE à primitives pour être appelable sans reconstruire un
+   * ActeurEntrepriseHierarchy complet — utilisée par
+   * PartenaireDashboardService.getCommissions() pour que le taux "Sur
+   * ventes entreprises" affiché au partenaire soit TOUJOURS exactement
+   * celui que CommissionEngine appliquera à sa prochaine commission,
+   * jamais une valeur dérivée séparément qui pourrait diverger.
+   */
+  resoudreTauxPartenaireProduit(
+    ratioParDefaut:  number,
+    ratioShopi:      number,
+    totalCompanies:  number,
+    partnerSettings: PartnerSetting | null,
+  ): number {
+    if (!partnerSettings) return ratioParDefaut;
+
+    let tauxPartenaire: number;
+    if (partnerSettings.commissionMode === 'fixed') {
+      tauxPartenaire = Number(partnerSettings.defaultCommissionRate);
+    } else {
+      /* 'tier' et 'progressive' — plus haut tier atteint par volume de recrutement */
+      const tiers = (partnerSettings.tiers ?? [])
+        .filter(t => t.enabled)
+        .sort((a, b) => b.minCompanies - a.minCompanies);
+      const tier = tiers.find(t => totalCompanies >= t.minCompanies);
+      tauxPartenaire = tier ? Number(tier.commission) : Number(partnerSettings.defaultCommissionRate);
+    }
+
+    const plafond = Math.max(0, 100 - ratioShopi);
+    return Math.min(Math.max(0, tauxPartenaire), plafond);
+  }
+
   /* ──────────────────────────────────────────────────────────
    * Helpers privés
    * ────────────────────────────────────────────────────────── */
@@ -258,5 +354,74 @@ export class CommissionCalculatorService {
    */
   private floor(amount: number): number {
     return Math.max(0, Math.floor(amount));
+  }
+
+  /**
+   * Résout la commission produit brute selon CompanySetting (Centre de
+   * Gestion des Commissions, onglet "Entreprises"), avec repli sur
+   * rule.tauxCommissionProduit si CompanySetting est absente.
+   *
+   * Les 3 modes (commissionType) :
+   *   'fixed'       → montant fixe par commande (GNF), × planMultiplier
+   *   'percentage'  → commissionValue en % du sousTotal
+   *   'progressive' → taux dégressif par tranche DE CETTE COMMANDE
+   *                   (commissionMin/Max sont documentées "par transaction"
+   *                   sur l'entité — aucun suivi du CA cumulé n'existe
+   *                   actuellement, donc la tranche est résolue sur le
+   *                   sousTotal de la commande en cours, pas un cumul).
+   *
+   * commissionMin/commissionMax s'appliquent aux 3 modes (plancher/plafond
+   * par commande, tel qu'affiché sans condition dans l'UI "Taux et plafonds").
+   *
+   * PUBLIC — également utilisée par les aperçus de revenu net affichés
+   * AVANT paiement (GET /dashboard/entreprise/commission-rate, ProduitsService
+   * .getProductStats, EntrepriseCommissionsParametresService), pour que ces
+   * aperçus appliquent exactement la même règle que le calcul réel et ne
+   * puissent plus diverger en dupliquant la formule à part.
+   */
+  resoudreCommissionProduit(
+    sousTotal:        number,
+    tauxBaseDecimal:  number,
+    planMultiplier:   number,
+    companySettings:  CompanySetting | null,
+  ): { commissionProduitBrute: number; tauxEffectifProduit: number } {
+
+    if (!companySettings) {
+      const tauxEffectifProduit = tauxBaseDecimal * planMultiplier;
+      return { commissionProduitBrute: this.floor(sousTotal * tauxEffectifProduit), tauxEffectifProduit };
+    }
+
+    const min = Number(companySettings.commissionMin) || 0;
+    const max = Number(companySettings.commissionMax) || 0;
+
+    const clamp = (commission: number): number => {
+      let c = commission;
+      if (max > 0) c = Math.min(c, max);
+      if (min > 0) c = Math.max(c, min);
+      return Math.min(Math.max(0, c), sousTotal); // jamais < 0 ni > sousTotal
+    };
+
+    if (companySettings.commissionType === 'fixed') {
+      const brut = this.floor(Number(companySettings.commissionValue) * planMultiplier);
+      const commissionProduitBrute = clamp(brut);
+      const tauxEffectifProduit = sousTotal > 0 ? commissionProduitBrute / sousTotal : 0;
+      return { commissionProduitBrute, tauxEffectifProduit };
+    }
+
+    let tauxPct: number;
+    if (companySettings.commissionType === 'progressive' && companySettings.commissionBrackets?.length) {
+      const bracket = companySettings.commissionBrackets.find(
+        b => sousTotal >= b.from && (b.to == null || sousTotal <= b.to),
+      ) ?? companySettings.commissionBrackets[companySettings.commissionBrackets.length - 1];
+      tauxPct = Number(bracket.rate);
+    } else {
+      /* 'percentage' (ou valeur de repli si commissionType inconnu) */
+      tauxPct = Number(companySettings.commissionValue);
+    }
+
+    const tauxEffectifProduit = (tauxPct / 100) * planMultiplier;
+    const commissionProduitBrute = clamp(this.floor(sousTotal * tauxEffectifProduit));
+
+    return { commissionProduitBrute, tauxEffectifProduit };
   }
 }

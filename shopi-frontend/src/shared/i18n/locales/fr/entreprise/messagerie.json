@@ -200,7 +200,8 @@
       "joindre": "Joindre",
       "emojis": "Émojis",
       "ecrireMessagePlaceholder": "Écrire un message…",
-      "messageVocalTitle": "Message vocal"
+      "messageVocalTitle": "Message vocal",
+      "envoiNonAutorise": "Vous n'avez pas la permission d'envoyer des messages"
     },
     "infoPanel": {
       "informations": "Informations",
@@ -242,6 +243,10 @@
       "searchPlaceholder": "Rechercher un utilisateur…",
       "aucunUtilisateur": "Aucun utilisateur trouvé",
       "saisirNom": "Saisissez un nom pour rechercher"
+    },
+    "accessDenied": {
+      "title": "Accès non autorisé",
+      "message": "Vous n'avez pas accès à la messagerie. Contactez le propriétaire de la boutique pour l'obtenir."
     }
   }
 }

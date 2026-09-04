@@ -127,6 +127,16 @@ export class UploadService {
     const result = await this.uploadToCloudinary(file.buffer, {
       folder,
       resource_type: 'raw',   // fichiers non-média
+      /* SÉCURITÉ — documents légaux (CNI, RCCM, relevé bancaire, NIF) :
+       * `type:'authenticated'` au lieu du défaut `type:'upload'`. Un
+       * fichier `upload` est servi par le CDN Cloudinary à QUICONQUE
+       * connaît/devine son URL, sans aucune vérification côté Cloudinary
+       * — inacceptable pour de la pièce d'identité ou un relevé bancaire.
+       * `authenticated` refuse toute requête sans signature valide et à
+       * durée limitée (voir DocumentsParametresService, qui ne stocke et
+       * n'expose plus que le public_id, jamais une URL directement
+       * consultable). */
+      type: 'authenticated',
     });
 
     return this.toUploadResult(result);
@@ -201,8 +211,44 @@ export class UploadService {
   // SUPPRESSION
   // ══════════════════════════════════════════════════════════════════════════
 
-  async delete(publicId: string, resourceType: 'image' | 'video' | 'raw' = 'image'): Promise<void> {
-    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+  /* `type` (delivery type Cloudinary — 'upload' public par défaut,
+   * 'authenticated' pour les documents légaux) fait partie de la clé
+   * d'identification de la ressource au même titre que resourceType :
+   * une destroy() avec le mauvais `type` ne trouve simplement rien à
+   * supprimer, voir uploadDocument() ci-dessus. */
+  async delete(
+    publicId: string,
+    resourceType: 'image' | 'video' | 'raw' = 'image',
+    type: 'upload' | 'authenticated' = 'upload',
+  ): Promise<void> {
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType, type });
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // URL SIGNÉE (documents type:'authenticated')
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Génère une URL Cloudinary signée pour un document uploadé en
+   * type:'authenticated' (voir uploadDocument() ci-dessus). Sans
+   * signature, Cloudinary répond 401 — la signature ne peut être produite
+   * que côté serveur (nécessite CLOUDINARY_API_SECRET), jamais côté
+   * client. Nécessairement générée à la demande par un endpoint authentifié
+   * (jamais stockée ni renvoyée en masse) : voir DocumentsService.
+   *
+   * Ce compte Cloudinary n'a pas l'add-on "Token-based authentication"
+   * activé (auth_token nécessite une clé CLOUDINARY_AUTH_TOKEN_KEY
+   * absente de la config) — cette URL signée n'expire donc pas dans le
+   * temps, mais reste bien plus sûre qu'une URL publique : elle ne peut
+   * être obtenue qu'en repassant par cet endpoint authentifié, jamais
+   * devinée ou construite par un tiers.
+   */
+  getSignedUrl(publicId: string, resourceType: 'image' | 'video' | 'raw' = 'raw'): string {
+    return cloudinary.url(publicId, {
+      resource_type: resourceType,
+      type:          'authenticated',
+      sign_url:      true,
+    });
   }
 
   // ══════════════════════════════════════════════════════════════════════════

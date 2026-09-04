@@ -48,8 +48,10 @@ import {
 
 import { AuthService, AuthResponse, AuthServiceResult, OtpVerifyResponse, AccountChoiceResult } from './auth.service';
 import { AccountLinkService, ClientAccountStatus } from './account-link.service';
+import { PlatformSettingsCacheService } from '../performance-engine/services/platform-settings-cache.service';
 import { RegisterDto }          from './dto/register.dto';
 import { LoginDto, ChooseAccountDto } from './dto/login.dto';
+import { VerifyEmailDto, ResendVerificationDto } from './dto/verify-email.dto';
 import {
   ForgotPasswordDto,
   VerifyOtpDto,
@@ -140,6 +142,7 @@ export class AuthController {
     private readonly accountLinkService: AccountLinkService,
     private readonly config:             ConfigService,
     private readonly twoFaService:       TwoFaService,
+    private readonly settingsCache:      PlatformSettingsCacheService,
   ) {
     this.isProd      = config.get<string>('NODE_ENV') === 'production';
     this.frontendUrl = config.get<string>('FRONTEND_URL') ?? 'http://localhost:5173';
@@ -168,9 +171,17 @@ export class AuthController {
     @Ip()   clientIp: string,
     @Req()  req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponse> {
+  ): Promise<AuthResponse | { requiresEmailVerification: true; email: string; userId: string }> {
     const userAgent = req.headers['user-agent'] ?? null;
     const result = await this.authService.register(dto, clientIp, userAgent);
+
+    /* Vérification email requise (PlatformSettings.emailVerifRequired) :
+     * aucun cookie posé — le frontend doit afficher l'écran de saisie du
+     * code puis appeler POST /auth/verify-email. */
+    if ('requiresEmailVerification' in result) {
+      return result;
+    }
+
     setAuthCookies(
       res, this.isProd,
       result.accessToken, 60 * 60 * 1000,          // accès : 1h
@@ -201,7 +212,7 @@ export class AuthController {
     @Ip()   clientIp: string,
     @Req()  req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponse | { requiresTwoFa: true; challengeToken: string } | AccountChoiceResult | { requiresSessionConfirm: true }> {
+  ): Promise<AuthResponse | { requiresTwoFa: true; challengeToken: string } | AccountChoiceResult | { requiresSessionConfirm: true } | { requiresEmailVerification: true; email: string; userId: string }> {
     const userAgent = req.headers['user-agent'] ?? null;
     const result = await this.authService.login(dto, clientIp, userAgent);
 
@@ -220,6 +231,13 @@ export class AuthController {
      * aucun cookie posé — le frontend doit rappeler POST /auth/login avec
      * confirmDisconnectOther:true après confirmation de l'utilisateur. */
     if ('requiresSessionConfirm' in result) {
+      return result;
+    }
+    /* Compte jamais vérifié (créé avant activation de emailVerifRequired
+     * exclu — voir le grandfathering en migration) : aucun cookie posé —
+     * le frontend doit afficher l'écran de code puis appeler
+     * POST /auth/verify-email. */
+    if ('requiresEmailVerification' in result) {
       return result;
     }
 
@@ -256,7 +274,7 @@ export class AuthController {
     @Ip()   clientIp: string,
     @Req()  req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponse | { requiresTwoFa: true; challengeToken: string } | { requiresSessionConfirm: true }> {
+  ): Promise<AuthResponse | { requiresTwoFa: true; challengeToken: string } | { requiresSessionConfirm: true } | { requiresEmailVerification: true; email: string; userId: string }> {
     const userAgent = req.headers['user-agent'] ?? null;
     const result = await this.authService.loginChooseAccount(
       dto.identifier, dto.password, dto.userId, dto.rememberMe ?? false, clientIp, userAgent,
@@ -272,6 +290,9 @@ export class AuthController {
     if ('requiresSessionConfirm' in result) {
       return result;
     }
+    if ('requiresEmailVerification' in result) {
+      return result;
+    }
 
     const accessMaxAge = dto.rememberMe ? 7 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000;
     setAuthCookies(
@@ -281,6 +302,48 @@ export class AuthController {
     );
     const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
     return publicResult;
+  }
+
+  // ── POST /auth/verify-email ───────────────────────────────────────────────
+  // Confirme le code envoyé par register() ou une tentative de login() sur
+  // un compte jamais vérifié (voir EmailVerificationRequiredResult).
+
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({ summary: "Confirmer le code de vérification d'email" })
+  @ApiBody({ type: VerifyEmailDto })
+  @ApiResponse({ status: 200, description: 'Email vérifié, connexion terminée.' })
+  @ApiResponse({ status: 400, description: 'Code incorrect ou expiré.' })
+  async verifyEmail(
+    @Body() dto: VerifyEmailDto,
+    @Ip()   clientIp: string,
+    @Req()  req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponse> {
+    const userAgent = req.headers['user-agent'] ?? null;
+    const result = await this.authService.verifyEmail(dto.userId, dto.code, clientIp, userAgent);
+    setAuthCookies(
+      res, this.isProd,
+      result.accessToken, 60 * 60 * 1000,
+      result.refreshToken, result.refreshTtlMs,
+    );
+    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
+    return publicResult;
+  }
+
+  // ── POST /auth/resend-verification ────────────────────────────────────────
+
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @ApiOperation({ summary: "Renvoyer le code de vérification d'email" })
+  @ApiBody({ type: ResendVerificationDto })
+  @ApiResponse({ status: 200, description: 'Nouveau code envoyé (si applicable).' })
+  async resendVerification(@Body() dto: ResendVerificationDto): Promise<{ message: string }> {
+    return this.authService.resendEmailVerification(dto.userId);
   }
 
   // ── POST /auth/2fa/verify-login ───────────────────────────────────────────
@@ -317,9 +380,17 @@ export class AuthController {
 
   // ── POST /auth/2fa/setup ──────────────────────────────────────────────────
 
+  /* SÉCURITÉ — ThrottlerGuard absent de ces 3 routes jusqu'ici, alors que
+   * /auth/verify-otp (même famille "code à 6 chiffres") en a un. Un JWT
+   * compromis pouvait marteler /2fa/confirm pour deviner le code TOTP
+   * (fenêtre de tolérance ±30s) sans aucune limite. Même limite que
+   * verify-otp (10/60s) sur les 3, par cohérence de la surface d'attaque
+   * (setup/disable exposent moins directement un secret à deviner, mais
+   * partagent le même risque de martèlement via JWT volé). */
   @Post('2fa/setup')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Générer un secret TOTP (2FA)',
@@ -335,7 +406,8 @@ export class AuthController {
 
   @Post('2fa/confirm')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Confirmer et activer la 2FA',
@@ -350,7 +422,8 @@ export class AuthController {
 
   @Post('2fa/disable')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Désactiver la 2FA', description: 'Nécessite le mot de passe actuel.' })
   @ApiBody({ type: DisableTwoFaDto })
@@ -689,5 +762,22 @@ export class AuthController {
     @CurrentUser() user: User,
   ) {
     return this.authService.getMe(user.id);
+  }
+
+  // ── GET /auth/session-policy ────────────────────────────────────────────
+  // BUG CORRIGÉ — PlatformSettings.sessionTimeoutMin (Paramètres Plateforme
+  // > Sécurité) se sauvegardait en base sans jamais être exposé au
+  // frontend : aucun mécanisme de déconnexion pour inactivité n'existait,
+  // ce réglage était 100% décoratif. Route dédiée (pas ajoutée à /auth/me,
+  // dont le type PublicUser est partagé dans tout le frontend) — appelée
+  // une fois après connexion pour armer le minuteur d'inactivité côté
+  // client (voir AppContext.tsx).
+  @Get('session-policy')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Politique de session active (timeout d'inactivité)" })
+  async getSessionPolicy(): Promise<{ sessionTimeoutMin: number }> {
+    const { sessionTimeoutMin } = await this.settingsCache.getSettings();
+    return { sessionTimeoutMin };
   }
 }

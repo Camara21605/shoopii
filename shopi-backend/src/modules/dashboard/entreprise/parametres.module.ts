@@ -20,9 +20,27 @@ import { User }             from 'src/database/entities/user.entity';
 import { CompanyHoraire }   from 'src/database/entities/entreprise.table/company-horaire.entity';
 import { PlatformSettings } from 'src/database/entities/platform-settings.entity';
 import { RefreshToken }     from 'src/database/entities/refresh-token.entity';
+import { CompanySetting }   from 'src/modules/company-settings/company-settings.entity';
+
+/* ── Référentiel géographique — résout la vraie zone de livraison
+ * attribuée à l'entreprise via son admin assigné (LivraisonParametresService
+ * .getZonesDisponibles), voir zone-admin/zone-admin.service.ts pour le
+ * précédent côté admin. */
+import { Admin }     from 'src/database/entities/profiles/admin-profile.entity';
+import { GeoZone }   from 'src/database/entities/geo/geo-zone.entity';
+import { GeoCommune } from 'src/database/entities/geo/geo-commune.entity';
 
 /* ── Module Upload (Cloudinary) ── */
 import { UploadModule }   from 'src/modules/upload/upload.module';
+
+/* ── Fournit TeamPermissionGuard — vérifie les permissions "Paramètres"
+ * d'un collaborateur (voir ParametresController @RequiresTeamPermission). */
+import { CompanyTeamModule } from 'src/modules/company-team/company-team.module';
+
+/* ── Fournit PublicBroadcastService — diffuse en direct les horaires
+ * mis à jour aux visiteurs de la fiche boutique publique (voir
+ * HorairesParametresService et public/public.gateway.ts). */
+import { PublicModule } from 'src/modules/public/public.module';
 
 /* ── Controller ── */
 import { ParametresController } from './parametres.controller';
@@ -49,10 +67,17 @@ import { DangerParametresService }     from './services/danger-parametres.servic
       CompanyHoraire,
       PlatformSettings,
       RefreshToken,
+      Admin,
+      GeoZone,
+      GeoCommune,
+      CompanySetting,
     ]),
 
     /* Module upload Cloudinary (logo, cover, documents) */
     UploadModule,
+
+    CompanyTeamModule,
+    PublicModule,
   ],
 
   controllers: [

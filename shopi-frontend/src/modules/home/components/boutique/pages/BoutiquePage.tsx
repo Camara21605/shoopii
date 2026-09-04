@@ -7,35 +7,42 @@
  *   GET /public/boutiques/:id/livreurs    → livreurs
  *   GET /public/boutiques/:id/correspondants → correspondants
  *
- *   Onglets sans API (encore en mock) :
- *   - Promotions  → PROMOS_MOCK
- *   - Avis        → AVIS_MOCK
+ *   Promotions et Avis utilisent désormais les vraies données déjà
+ *   chargées (promos, avisData) — plus de mock.
  *
  *   À propos / sidebar "Infos boutique" : utilisent désormais boutiqueInfo
  *   (vraies données déjà chargées ci-dessus pour BoutiqueCover/Identity) —
- *   BOUTIQUE_INFO mock supprimé. Restent en mock dans BoutiqueSidebar :
- *   CATEGORIES_BOUTIQUE (liste de catégories fixe, pas dérivée des vrais
- *   produits de la boutique) et les compteurs du filtre "Note minimale" —
- *   hors périmètre de cette passe, pas montrés/demandés par l'utilisateur.
+ *   BOUTIQUE_INFO mock supprimé. Catégories et fourchette de prix de la
+ *   sidebar dérivées des vrais produits (categoriesReelles, priceBounds).
+ *   Reste sans donnée réelle : le filtre "Note minimale" (aucune note par
+ *   PRODUIT n'existe dans le modèle de données — CompanyAvis note la
+ *   BOUTIQUE, pas un produit précis — retiré plutôt que d'afficher des
+ *   compteurs inventés, voir BoutiqueSidebar.tsx).
  */
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
+import { io } from 'socket.io-client';
 import { apiFetch, tokenStorage } from '../../../../../shared/services/apiFetch';
 import { useStartConversation }   from '../../../../../shared/hooks/useStartConversation';
 import { useProfileCall }         from '../../../../../shared/hooks/useProfileCall';
 import { useAuthGate }            from '../../../../../shared/hooks/useAuthGate';
 
+/* Même origine que useNotificationSocket.ts (VITE_API_URL sans le
+ * suffixe /api). Namespace /public : voir public.gateway.ts côté
+ * backend — aucune authentification requise, contrairement à
+ * /notifications, puisqu'un visiteur anonyme doit pouvoir recevoir les
+ * mises à jour en direct de la fiche boutique qu'il consulte. */
+const SOCKET_URL =
+  ((import.meta as any).env?.VITE_API_URL as string | undefined)?.replace('/api', '') ??
+  'http://localhost:3001';
+
 /* ── Layout global ── */
 import Header from '../../layout/Header';
 import Footer from '../../layout/Footer';
 
-/* ── Données mock restantes ── */
-import {
-  PROMOS_MOCK, AVIS_MOCK,
-  type BoutiqueInfo,
-} from '../data/boutiqueMockData';
+import type { BoutiqueInfo } from '../data/boutiqueMockData';
 import type { AvisResponse } from '../data/types';
 
 /* ── Sections boutique ── */
@@ -82,6 +89,15 @@ interface BoutiqueApi {
   totalAbonnes?:      number | null;  /* nombre de followers — calculé par le backend */
   isSuivi?:           boolean;        /* l'utilisateur connecté suit-il cette boutique ? */
   slogan?:            string | null;
+  /** Détail par jour — voir PublicBoutiqueResponse.horaires côté backend
+   *  (remplace openTime/closeTime ci-dessus, jamais renseignés). */
+  horaires?: { jour: string; ouverture: string | null; fermeture: string | null; actif: boolean }[];
+  /** Méthodes + zones de livraison (Paramètres > Livraison), voir
+   *  PublicBoutiqueResponse.livraison côté backend. */
+  livraison?: {
+    standard: boolean; livreursShopi: boolean; correspondants: boolean;
+    clickCollect: boolean; express: boolean; zones: string[];
+  };
 }
 
 interface ProduitApi {
@@ -98,6 +114,7 @@ interface ProduitApi {
   companyId:   string;
   companyName: string;
   companyLogo: string | null;
+  createdAt:   string;
 }
 
 export interface LivreurApi {
@@ -166,12 +183,54 @@ function toBoutiqueInfo(raw: any, t: TFunction): BoutiqueInfo {
         : t('boutiqueDetail.page.membreDepuis', { date: new Date(membreBrut).toLocaleDateString('fr-FR', { month:'long', year:'numeric' }) }))
     : t('boutiqueDetail.page.membreShopi');
 
-  /* Horaires */
+  /* Horaires — BUG CORRIGÉ : openTime/closeTime (Company) ne sont jamais
+   * renseignés nulle part côté backend (voir company-horaire.entity.ts :
+   * cette table les remplace). On utilise maintenant le vrai détail par
+   * jour (r.horaires, voir PublicBoutiqueResponse.horaires), avec un
+   * repli sur openTime/closeTime pour compatibilité si jamais présents. */
+  const rawHoraires: { jour: string; ouverture: string | null; fermeture: string | null; actif: boolean }[]
+    = Array.isArray(r.horaires) ? r.horaires : [];
+
+  const JOURS_LABELS: Record<string, string> = {
+    lundi:    t('boutiqueDetail.aPropos.jours.lundi'),
+    mardi:    t('boutiqueDetail.aPropos.jours.mardi'),
+    mercredi: t('boutiqueDetail.aPropos.jours.mercredi'),
+    jeudi:    t('boutiqueDetail.aPropos.jours.jeudi'),
+    vendredi: t('boutiqueDetail.aPropos.jours.vendredi'),
+    samedi:   t('boutiqueDetail.aPropos.jours.samedi'),
+    dimanche: t('boutiqueDetail.aPropos.jours.dimanche'),
+  };
+
+  /* BUG CORRIGÉ — la colonne Postgres `time` renvoie "HH:MM:SS" (avec
+   * secondes), affiché tel quel ("08:00:00 – 20:00:00") sans cette
+   * troncature. Même correctif que côté sauvegarde (useParametres.ts). */
+  const toHHMM = (v: string | null) => v ? v.slice(0, 5) : v;
+
+  const horairesDetail = rawHoraires.map(h => ({
+    jour:      h.jour,
+    label:     JOURS_LABELS[h.jour] ?? h.jour,
+    ouverture: toHHMM(h.ouverture),
+    fermeture: toHHMM(h.fermeture),
+    actif:     h.actif,
+  }));
+
+  /* Résumé compact "aujourd'hui" pour BoutiqueSidebar — jour local du
+   * visiteur, correspond à ce qu'il voit affiché en réalité au moment où
+   * il regarde la page. */
+  const JOURS_BY_GETDAY = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+  const jourAujourdhui  = JOURS_BY_GETDAY[new Date().getDay()];
+  const horaireAujourdhui = horairesDetail.find(h => h.jour === jourAujourdhui);
+
   const openTime  = r.openTime  ?? r.heureOuverture ?? '';
   const closeTime = r.closeTime ?? r.heureFermeture ?? '';
-  const horaires  = openTime && closeTime
-    ? `${openTime} – ${closeTime}`
-    : t('boutiqueDetail.page.horairesNonRenseignes');
+
+  const horaires = horaireAujourdhui
+    ? (horaireAujourdhui.actif && horaireAujourdhui.ouverture && horaireAujourdhui.fermeture
+        ? t('boutiqueDetail.aPropos.ouvertAujourdhui', { debut: horaireAujourdhui.ouverture, fin: horaireAujourdhui.fermeture })
+        : t('boutiqueDetail.aPropos.fermeAujourdhui'))
+    : (openTime && closeTime
+        ? `${openTime} – ${closeTime}`
+        : t('boutiqueDetail.page.horairesNonRenseignes'));
 
   return {
     nom,
@@ -183,6 +242,8 @@ function toBoutiqueInfo(raw: any, t: TFunction): BoutiqueInfo {
     membre,
     description,
     horaires,
+    horairesDetail,
+    livraison: r.livraison,
     adresse,
     tel:     businessPhone,
     email:   businessEmail,
@@ -243,12 +304,45 @@ export interface PromoPublic {
 // COMPOSANT PRINCIPAL
 // ─────────────────────────────────────────────────────────────
 
-export default function BoutiquePage() {
+interface Props {
+  /* BUG CORRIGÉ — l'aperçu entreprise ("Voir ma boutique") chargeait
+   * cette page dans une <iframe> pointant vers /boutique/:id?preview=1 :
+   * à chaque ouverture/actualisation, le navigateur rebootait
+   * l'application entière depuis zéro À L'INTÉRIEUR de l'iframe (nouveau
+   * bundle JS exécuté, nouveau routeur, nouvelle vérification de session
+   * /auth/me…) — plusieurs secondes pendant lesquelles l'en-tête générique
+   * du site (le même que sur Home) restait visible avant que le contenu
+   * boutique ne s'installe. companyIdOverride/previewOverride permettent
+   * à BoutiquePreviewPage.tsx de monter ce composant DIRECTEMENT dans
+   * l'arbre React du dashboard entreprise (un seul <BrowserRouter> pour
+   * toute l'app, voir router.tsx) plutôt que via une iframe — plus de
+   * redémarrage complet, le contenu s'affiche aussi vite qu'un
+   * changement de page normal. Sans override, comportement inchangé :
+   * lit companyId/preview depuis l'URL (route /boutique/:id). */
+  companyIdOverride?: string;
+  previewOverride?:   boolean;
+}
+
+export default function BoutiquePage({ companyIdOverride, previewOverride }: Props = {}) {
   const navigate       = useNavigate();
   const { t } = useTranslation();
-  const { id: companyId } = useParams<{ id: string }>();
+  const { id: companyIdFromUrl } = useParams<{ id: string }>();
   const [searchParams]    = useSearchParams();
-  const isPreview         = searchParams.get('preview') === '1';
+  const companyId         = companyIdOverride ?? companyIdFromUrl;
+  const isPreview         = previewOverride ?? (searchParams.get('preview') === '1');
+
+  /* BUG CORRIGÉ — BoutiqueIdentity.module.css/BoutiqueNav.module.css
+   * calaient leur position sticky sur un décalage FIXE de 66px pour le
+   * <Header> fixe du dessus — sauf qu'en mode aperçu (isPreview, "Voir
+   * ma boutique" depuis le dashboard entreprise, voir ci-dessous), ce
+   * <Header> n'est JAMAIS rendu (`{!isPreview && <Header/>}`). La barre
+   * d'identité se collait donc 66px trop bas, avec un vide au-dessus —
+   * et pendant le scroll, cet écart entre position réelle/attendue
+   * donnait l'impression que la barre "se décolle"/bouge, exactement
+   * dans le contexte où l'utilisateur teste (l'aperçu entreprise). */
+  useLayoutEffect(() => {
+    document.documentElement.style.setProperty('--boutique-header-h', isPreview ? '0px' : '66px');
+  }, [isPreview]);
 
   // ── Données API ──────────────────────────────────────────────
   const [boutique,       setBoutique]       = useState<BoutiqueApi | null>(null);
@@ -320,12 +414,15 @@ export default function BoutiquePage() {
       .finally(() => setAvisLoading(false));
   }, [onglet, companyId, avisData]);
 
-  // ── Chargement des données ───────────────────────────────────
-  useEffect(() => {
+  /* ── Chargement des données ───────────────────────────────────
+   * Extrait en fonction réutilisable : appelée au montage ET quand
+   * boutique:catalogue_updated arrive (voir l'effet socket plus bas) —
+   * `silent` évite de réafficher le skeleton complet le temps d'un simple
+   * rafraîchissement en arrière-plan (données déjà à l'écran). */
+  const loadBoutiqueData = useCallback((silent = false) => {
     if (!companyId) { setError(t('boutiqueDetail.page.idBoutiqueManquant')); setLoading(false); return; }
 
-    setLoading(true);
-    setError(null);
+    if (!silent) { setLoading(true); setError(null); }
 
     const suiviPromise = isLoggedIn
       ? apiFetch<{ isSuivi: boolean }>(`/suivis/entreprises/${companyId}/statut`).catch(() => null)
@@ -352,9 +449,45 @@ export default function BoutiquePage() {
         setLivreurs(Array.isArray(l) ? l : (l?.data ?? []));
         setCorrespondants(Array.isArray(co) ? co : (co?.data ?? []));
       })
-      .catch(() => setError(t('boutiqueDetail.page.erreurChargement')))
-      .finally(() => setLoading(false));
+      .catch(() => { if (!silent) setError(t('boutiqueDetail.page.erreurChargement')); })
+      .finally(() => { if (!silent) setLoading(false); });
   }, [companyId, isLoggedIn, t]);
+
+  useEffect(() => { loadBoutiqueData(); }, [loadBoutiqueData]);
+
+  /* ── Mises à jour en direct (horaires, catalogue…) ────────────────
+   * Namespace /public : aucune authentification (visiteur anonyme
+   * inclus), une seule room par fiche consultée. Connexion dédiée à
+   * cette page (pas de singleton comme useNotificationSocket) — se
+   * connecte/déconnecte avec le montage/démontage de cette page. Voir
+   * public.gateway.ts + HorairesParametresService/CatalogueParametresService
+   * côté backend. */
+  useEffect(() => {
+    if (!companyId) return;
+    const socket = io(`${SOCKET_URL}/public`, { transports: ['websocket', 'polling'] });
+
+    socket.on('connect', () => socket.emit('boutique:join', { companyId }));
+
+    socket.on('boutique:horaires_updated', (payload: { horaires: BoutiqueApi['horaires'] }) => {
+      setBoutique(b => b ? { ...b, horaires: payload.horaires } : b);
+    });
+
+    /* showOutOfStock/showStrikePrice/returnPolicy (Paramètres > Catalogue)
+     * touchent à la fois la fiche boutique ET la liste de produits (quels
+     * produits apparaissent, prix barré affiché ou non) — trop de surfaces
+     * pour pousser juste un champ comme pour les horaires : on recharge
+     * silencieusement ce que cette page affiche déjà. */
+    socket.on('boutique:catalogue_updated', () => loadBoutiqueData(true));
+
+    /* Méthodes/zones de livraison (Paramètres > Livraison) — même
+     * traitement que catalogue_updated : rechargement silencieux. */
+    socket.on('boutique:livraison_updated', () => loadBoutiqueData(true));
+
+    return () => {
+      socket.emit('boutique:leave', { companyId });
+      socket.disconnect();
+    };
+  }, [companyId, loadBoutiqueData]);
 
   // ── Filtres produits ─────────────────────────────────────────
   const [catActive,  setCatActive]  = useState('Tout');
@@ -362,15 +495,56 @@ export default function BoutiquePage() {
   const [filtrStock, setFiltrStock] = useState(false);
   const [filtrPromo, setFiltrPromo] = useState(false);
   const [filtrNew,   setFiltrNew]   = useState(false);
+  /* Bornes réelles dérivées des produits (voir priceRange plus bas) —
+   * null tant qu'aucun filtrage manuel n'a été appliqué : la sidebar
+   * affiche alors les bornes réelles sans qu'on ait à les dupliquer ici. */
+  const [priceMin, setPriceMin] = useState<number | null>(null);
+  const [priceMax, setPriceMax] = useState<number | null>(null);
+
+  /* BUG CORRIGÉ — un produit publié depuis moins de 14 jours est
+   * considéré "nouveau" ; cette classification n'existait nulle part
+   * (aucun champ `badge` côté API pour les produits boutique, voir
+   * public.service.ts::toPublicProduit), donc le filtre "Nouveautés
+   * seulement" ne filtrait jamais rien. */
+  const NOUVEAUTE_JOURS = 14;
+  const isNouveau = (p: ProduitApi) =>
+    Date.now() - new Date(p.createdAt).getTime() < NOUVEAUTE_JOURS * 24 * 60 * 60 * 1000;
+
+  /* Bornes réelles de prix parmi les produits de LA boutique — remplace
+   * l'ancien slider figé (0 → 30M, valeur par défaut 21M) qui n'avait
+   * aucun rapport avec les prix réellement pratiqués. */
+  const priceBounds = useMemo(() => {
+    if (produits.length === 0) return { min: 0, max: 0 };
+    const prices = produits.map(p => p.prix);
+    return { min: Math.min(...prices), max: Math.max(...prices) };
+  }, [produits]);
 
   // Convertit ProduitApi → format attendu par ProduitsSection
   const produitsFiltres = useMemo(() => {
+    const effMin = priceMin ?? priceBounds.min;
+    const effMax = priceMax ?? priceBounds.max;
+
     return produits
       .filter(p => {
         if (catActive !== 'Tout' && p.category?.nom !== catActive) return false;
         if (filtrStock && p.stock === 0)  return false;
         if (filtrPromo && !p.prixAncien)  return false;
+        if (filtrNew   && !isNouveau(p))  return false;
+        if (p.prix < effMin || p.prix > effMax) return false;
         return true;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case t('boutiqueDetail.sidebar.triOptions.prixCroissant'):   return a.prix - b.prix;
+          case t('boutiqueDetail.sidebar.triOptions.prixDecroissant'): return b.prix - a.prix;
+          case t('boutiqueDetail.sidebar.triOptions.nouveautes'):
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          /* "Mieux notées" / "Meilleures ventes" : aucune donnée réelle
+           * par produit n'existe encore pour les alimenter (pas de
+           * notation par produit, pas de compteur de ventes) — ordre
+           * inchangé plutôt que de trier sur une valeur inventée. */
+          default: return 0;
+        }
       })
       .map(p => ({
         id:     p.id,
@@ -383,11 +557,30 @@ export default function BoutiquePage() {
         note:   0,
         avis:   0,
         stock:  p.stock === 0 ? 'out' : p.stock < 5 ? 'low' : 'ok',
-        badge:  p.prixAncien ? 'promo' : null,
+        badge:  p.prixAncien ? 'promo' : isNouveau(p) ? 'new' : null,
         // Champ extra pour l'image
         imageUrl: p.images?.[0]?.url ?? null,
       }));
-  }, [produits, catActive, filtrStock, filtrPromo, filtrNew]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [produits, catActive, filtrStock, filtrPromo, filtrNew, priceMin, priceMax, priceBounds, sortBy, t]);
+
+  /* Catégories réelles de la boutique — remplace CATEGORIES_BOUTIQUE
+   * (liste fixe avec des compteurs inventés, sans rapport avec les
+   * produits réels de CETTE boutique — cliquer dessus filtrait sur un
+   * nom de catégorie qui ne correspondait à aucun produit réel). */
+  const categoriesReelles = useMemo(() => {
+    const map = new Map<string, { emoji: string; count: number }>();
+    for (const p of produits) {
+      const nom = p.category?.nom;
+      if (!nom) continue;
+      const entry = map.get(nom) ?? { emoji: p.category?.icone ?? '📦', count: 0 };
+      entry.count++;
+      map.set(nom, entry);
+    }
+    return [...map.entries()]
+      .map(([label, v]) => ({ label, emoji: v.emoji, count: v.count }))
+      .sort((a, b) => b.count - a.count);
+  }, [produits]);
 
   const filtreEnStockLabel     = t('boutiqueDetail.page.filtreEnStock');
   const filtreEnPromotionLabel = t('boutiqueDetail.page.filtreEnPromotion');
@@ -407,17 +600,22 @@ export default function BoutiquePage() {
     if (f === filtreNouveautesLabel)  setFiltrNew(false);
   }
 
-  // ── Counts ──────────────────────────────────────────────────
-  const counts = {
-    produits:       produitsFiltres.length,
-    promos:         PROMOS_MOCK.length,
-    livreurs:       livreurs.length,
-    correspondants: correspondants.length,
-    avis:           AVIS_MOCK.length * 49,
-  };
-
   // ── Infos boutique converties ────────────────────────────────
   const boutiqueInfo: BoutiqueInfo | null = boutique ? toBoutiqueInfo(boutique, t) : null;
+
+  // ── Counts ──────────────────────────────────────────────────
+  // BUG CORRIGÉ — promos/avis venaient de PROMOS_MOCK/AVIS_MOCK
+  // (données factices, "avis" était même multiplié par 49 sans raison)
+  // alors que les vraies données (promos, avisData) étaient déjà
+  // chargées et utilisées ailleurs dans cette page — juste jamais
+  // reliées à ce badge de comptage sur la barre d'onglets.
+  const counts = {
+    produits:       produitsFiltres.length,
+    promos:         promos.length,
+    livreurs:       livreurs.length,
+    correspondants: correspondants.length,
+    avis:           avisData?.totalRatings ?? boutiqueInfo?.totalRatings ?? 0,
+  };
 
   // ── Rendu loading / erreur ───────────────────────────────────
   if (loading) return (
@@ -492,6 +690,11 @@ export default function BoutiquePage() {
           onToast={showToast}
           onRequireAuth={openAuthModal}
           onSuiviChange={handleSuiviChange}
+          /* isPreview = ?preview=1, posé UNIQUEMENT par BoutiquePreviewPage.tsx
+           * ("Voir ma boutique" du dashboard entreprise) — jamais ailleurs
+           * dans le code. Une entreprise ne peut pas se suivre, s'appeler
+           * ou s'envoyer un message à elle-même. */
+          isOwnerPreview={isPreview}
           onMessage={() => {
             if (!isLoggedIn) { openAuthModal(); return; }
             if (!suivi)      { showToast(t('boutiqueDetail.page.abonnezVousMessage')); return; }
@@ -530,6 +733,12 @@ export default function BoutiquePage() {
               filtrStock={filtrStock} setFiltrStock={setFiltrStock}
               filtrPromo={filtrPromo} setFiltrPromo={setFiltrPromo}
               filtrNew={filtrNew}     setFiltrNew={setFiltrNew}
+              categories={categoriesReelles}
+              priceBounds={priceBounds}
+              priceMin={priceMin ?? priceBounds.min}
+              priceMax={priceMax ?? priceBounds.max}
+              setPriceMin={setPriceMin}
+              setPriceMax={setPriceMax}
               onToast={showToast}
               isOpen={filtresOpen}
               onClose={() => setFiltresOpen(false)}

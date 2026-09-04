@@ -2,14 +2,17 @@
  * FICHIER : src/dashboards/administrateur/pages/SignalementsPage.tsx
  * ================================================================ */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from '../styles/SignalementsPage.module.css';
 import { apiFetch } from '../../../shared/services/apiFetch';
 import Pagination from '../components/Pagination';
 
 interface SignalementsPageProps {
-  onSanction: (cible: string) => void;
+  onSanction: (targetUserId: string, cible: string) => void;
   onToast:    (msg: string, type?: 's' | 'i' | 'w') => void;
+  /** Deep-link "clic sur une notification" — id du signalement à afficher
+   * en priorité, qu'il soit ou non sur la page/onglet actuellement chargé. */
+  highlightId?: string | null;
 }
 
 const TYPE_LABEL: Record<string, string> = { par: 'Partenaire', ent: 'Entreprise', lvr: 'Livreur', cor: 'Correspondant' };
@@ -26,7 +29,7 @@ const ST: Record<string, { label: string; icon: string }> = {
 
 type Onglet = 'atraiter' | 'encours' | 'traites';
 
-export default function SignalementsPage({ onSanction, onToast }: SignalementsPageProps) {
+export default function SignalementsPage({ onSanction, onToast, highlightId }: SignalementsPageProps) {
   const [onglet,  setOnglet]  = useState<Onglet>('atraiter');
   const [page,    setPage]    = useState(1);
   const [data,    setData]    = useState<{ list: any[]; stats: any; total: number } | null>(null);
@@ -42,13 +45,57 @@ export default function SignalementsPage({ onSanction, onToast }: SignalementsPa
 
   useEffect(load, [page]);
 
-  const resolve = async (id: string, titre: string) => {
+  /* ── Signalement ciblé par une notification ──
+   * Fetch dédié (indépendant de la pagination/l'onglet actifs) — l'élément
+   * visé n'est pas forcément déjà chargé dans `data.list`. */
+  const [targeted, setTargeted] = useState<any | null>(null);
+  const fetchedForRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!highlightId) { setTargeted(null); fetchedForRef.current = null; return; }
+    if (fetchedForRef.current === highlightId) return;
+    fetchedForRef.current = highlightId;
+
+    apiFetch(`/dashboard/admin/signalements/${highlightId}`)
+      .then(d => setTargeted(d as any))
+      .catch(() => {
+        setTargeted(null);
+        onToast('Ce signalement est introuvable (peut-être déjà supprimé).', 'i');
+      });
+  }, [highlightId, onToast]);
+
+  const investigate = async (id: string, titre: string) => {
     try {
-      await apiFetch(`/dashboard/admin/signalements/${id}/resolve`, { method: 'PATCH' });
-      onToast('✅ Signalement résolu : ' + titre, 's');
+      await apiFetch(`/dashboard/admin/signalements/${id}/investigate`, { method: 'PATCH' });
+      onToast('🔍 Enquête ouverte sur ' + titre, 'i');
       load();
-    } catch {
-      onToast('Erreur lors de la résolution', 'w');
+    } catch (e: any) {
+      onToast(e?.message ?? "Erreur lors de l'ouverture de l'enquête", 'w');
+    }
+  };
+
+  const warn = async (id: string, titre: string) => {
+    try {
+      await apiFetch(`/dashboard/admin/signalements/${id}/warn`, { method: 'PATCH' });
+      onToast('⚠️ Avertissement envoyé à ' + titre, 'w');
+      load();
+    } catch (e: any) {
+      onToast(e?.message ?? "Erreur lors de l'envoi de l'avertissement", 'w');
+    }
+  };
+
+  /* BUG CORRIGÉ — "Classer sans suite" appelait resolve() : un signalement
+   * jugé infondé portait le même statut RESOLVED qu'un signalement
+   * réellement traité (avertissement/suspension), rendant les deux
+   * indiscernables. Le statut REJECTED (déjà anticipé dans ST ci-dessus,
+   * jamais atteignable jusqu'ici) est maintenant réellement utilisé. */
+  const reject = async (id: string, titre: string) => {
+    try {
+      await apiFetch(`/dashboard/admin/signalements/${id}/reject`, { method: 'PATCH' });
+      onToast('🗑️ Signalement rejeté : ' + titre, 'i');
+      load();
+    } catch (e: any) {
+      onToast(e?.message ?? 'Erreur lors du rejet', 'w');
     }
   };
 
@@ -75,6 +122,69 @@ export default function SignalementsPage({ onSanction, onToast }: SignalementsPa
           </div>
         </div>
       </div>
+
+      {/* ── Signalement ciblé par une notification ── */}
+      {targeted && (() => {
+        const stInfo = ST[targeted.statut] ?? ST.review;
+        return (
+          <div className={styles.targeted}>
+            <div className={styles.targetedHead}>
+              <i className="fas fa-bell" /> Signalement visé par la notification
+              <button className={styles.targetedClose} onClick={() => setTargeted(null)} title="Fermer">
+                <i className="fas fa-xmark" />
+              </button>
+            </div>
+            <div className={styles.item} style={{ paddingTop: 0, borderBottom: 'none' }}>
+              <div className={styles.av}>{targeted.avatar}</div>
+              <div className={styles.main}>
+                <div className={styles.top}>
+                  <span className={styles.nm}>{targeted.cible}</span>
+                  <span className={`${styles.sev} ${styles['sev_' + targeted.gravite]}`}>{GRAVITE_LABEL[targeted.gravite] ?? targeted.gravite}</span>
+                  <span className={`${styles.typePill} ${styles['t_' + targeted.type]}`}>
+                    <i className={`fas ${TYPE_ICON[targeted.type] ?? 'fa-user'}`} /> {TYPE_LABEL[targeted.type] ?? targeted.type}
+                  </span>
+                  <span className={`${styles.st} ${styles['st_' + targeted.statut]}`}>
+                    <i className={`fas ${stInfo.icon}`} /> {stInfo.label}
+                  </span>
+                </div>
+                <div className={styles.reason}>{targeted.raison}</div>
+                <div className={styles.meta}>
+                  <span><i className="fas fa-user" /> Signalé par : {targeted.signalePar}</span>
+                  <span><i className="fas fa-tag" /> {targeted.motifLabel}</span>
+                  <span><i className="fas fa-calendar" /> {targeted.quand}</span>
+                </div>
+                {targeted.statut === 'review' && (
+                  <div className={styles.acts}>
+                    <button className={`${styles.rbtn} ${styles.inv}`}
+                      onClick={() => { investigate(targeted.id, targeted.cible); setTargeted(null); }}>
+                      <i className="fas fa-magnifying-glass" /> Ouvrir une enquête
+                    </button>
+                    {targeted.targetUserId ? (
+                      <>
+                        <button className={`${styles.rbtn} ${styles.warn}`}
+                          onClick={() => warn(targeted.id, targeted.cible)}>
+                          <i className="fas fa-triangle-exclamation" /> Avertir
+                        </button>
+                        <button className={`${styles.rbtn} ${styles.susp}`} onClick={() => onSanction(targeted.targetUserId, targeted.cible)}>
+                          <i className="fas fa-ban" /> Suspendre
+                        </button>
+                      </>
+                    ) : (
+                      <span className={styles.noTarget} title="Ce signalement ne référence pas de compte identifié — impossible d'avertir ou de suspendre directement.">
+                        <i className="fas fa-circle-question" /> Compte non identifié
+                      </span>
+                    )}
+                    <button className={`${styles.rbtn} ${styles.rej}`}
+                      onClick={() => { reject(targeted.id, targeted.cible); setTargeted(null); }}>
+                      <i className="fas fa-xmark" /> Classer sans suite
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Stats ── */}
       <div className={styles.stats}>
@@ -133,29 +243,43 @@ export default function SignalementsPage({ onSanction, onToast }: SignalementsPa
                       {s.statut === 'review' && (
                         <>
                           <button className={`${styles.rbtn} ${styles.inv}`}
-                            onClick={() => onToast('🔍 Enquête ouverte sur ' + s.cible, 'i')}>
+                            onClick={() => investigate(s.id, s.cible)}>
                             <i className="fas fa-magnifying-glass" /> Ouvrir une enquête
                           </button>
-                          <button className={`${styles.rbtn} ${styles.warn}`}
-                            onClick={() => onToast('⚠️ Avertissement envoyé', 'w')}>
-                            <i className="fas fa-triangle-exclamation" /> Avertir
-                          </button>
-                          <button className={`${styles.rbtn} ${styles.susp}`} onClick={() => onSanction(s.cible)}>
-                            <i className="fas fa-ban" /> Suspendre
-                          </button>
+                          {s.targetUserId ? (
+                            <>
+                              <button className={`${styles.rbtn} ${styles.warn}`}
+                                onClick={() => warn(s.id, s.cible)}>
+                                <i className="fas fa-triangle-exclamation" /> Avertir
+                              </button>
+                              <button className={`${styles.rbtn} ${styles.susp}`} onClick={() => onSanction(s.targetUserId, s.cible)}>
+                                <i className="fas fa-ban" /> Suspendre
+                              </button>
+                            </>
+                          ) : (
+                            <span className={styles.noTarget} title="Ce signalement ne référence pas de compte identifié — impossible d'avertir ou de suspendre directement.">
+                              <i className="fas fa-circle-question" /> Compte non identifié
+                            </span>
+                          )}
                           <button className={`${styles.rbtn} ${styles.rej}`}
-                            onClick={() => resolve(s.id, s.cible)}>
+                            onClick={() => reject(s.id, s.cible)}>
                             <i className="fas fa-xmark" /> Classer sans suite
                           </button>
                         </>
                       )}
                       {s.statut === 'invest' && (
                         <>
-                          <button className={`${styles.rbtn} ${styles.susp}`} onClick={() => onSanction(s.cible)}>
-                            <i className="fas fa-ban" /> Suspendre maintenant
-                          </button>
+                          {s.targetUserId ? (
+                            <button className={`${styles.rbtn} ${styles.susp}`} onClick={() => onSanction(s.targetUserId, s.cible)}>
+                              <i className="fas fa-ban" /> Suspendre maintenant
+                            </button>
+                          ) : (
+                            <span className={styles.noTarget} title="Ce signalement ne référence pas de compte identifié — impossible de suspendre directement.">
+                              <i className="fas fa-circle-question" /> Compte non identifié
+                            </span>
+                          )}
                           <button className={`${styles.rbtn} ${styles.rej}`}
-                            onClick={() => resolve(s.id, s.cible)}>
+                            onClick={() => reject(s.id, s.cible)}>
                             <i className="fas fa-xmark" /> Clore sans suite
                           </button>
                         </>

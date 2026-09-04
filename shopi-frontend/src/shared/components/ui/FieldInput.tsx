@@ -32,6 +32,8 @@ interface FieldInputProps {
   /** Callback onInput (validation en temps réel) */
   onInput?: () => void;
   id?: string;
+  /** Grise et bloque la saisie (ex: inscription fermée pour ce rôle) */
+  disabled?: boolean;
 }
 
 /**
@@ -54,6 +56,7 @@ export const FieldInput: React.FC<FieldInputProps> = ({
   prefix,
   onInput,
   id,
+  disabled = false,
 }) => {
   /* Gestion du toggle mot de passe */
   const [showPwd, setShowPwd] = useState(false);
@@ -112,7 +115,8 @@ export const FieldInput: React.FC<FieldInputProps> = ({
           className={inputClass}
           placeholder={placeholder}
           value={value}
-          style={inputStyle}
+          disabled={disabled}
+          style={disabled ? { ...inputStyle, background: 'var(--g100, #F1F5F9)', color: 'var(--t3, #94a3b8)', cursor: 'not-allowed' } : inputStyle}
           autoComplete="off"
           onChange={e => onChange(e.target.value)}
           onInput={onInput}

@@ -31,10 +31,15 @@ interface Props {
   onRefund:   (id: string, montant?: number)               => Promise<void>;
   onAddNote:  (id: string, content: string)                => Promise<void>;
   onPop:      (msg: string, type?: string) => void;
+  /** false → collaborateur avec returns.view mais sans returns.process :
+   * masque les boutons d'action (accepter/refuser/rembourser/note), la
+   * consultation (infos/historique/preuves) et la fermeture restent
+   * disponibles. */
+  canProcess: boolean;
 }
 
 export default function RetourDetailModal({
-  returnId, onClose, onAccept, onRefuse, onRefund, onAddNote, onPop,
+  returnId, onClose, onAccept, onRefuse, onRefund, onAddNote, onPop, canProcess,
 }: Props) {
   const { t } = useTranslation();
   const { detail, loading, error, reload } = useRetourDetail(returnId);
@@ -415,12 +420,14 @@ export default function RetourDetailModal({
         {detail && !loading && (
           <div className={s.modalFoot}>
             <div style={{ display: 'flex', gap: 8, flex: 1 }}>
-              <button className={`${s.btn} ${s.btnGhost}`} style={{ fontSize: 12 }} onClick={() => { setShowNote(true); setShowAccept(false); setShowRefuse(false); }}>
-                <i className="fas fa-note-sticky" /> {t('retours.detail.footerNote')}
-              </button>
+              {canProcess && (
+                <button className={`${s.btn} ${s.btnGhost}`} style={{ fontSize: 12 }} onClick={() => { setShowNote(true); setShowAccept(false); setShowRefuse(false); }}>
+                  <i className="fas fa-note-sticky" /> {t('retours.detail.footerNote')}
+                </button>
+              )}
             </div>
 
-            {detail.status === 'pending' && (
+            {canProcess && detail.status === 'pending' && (
               <>
                 <button className={`${s.btn} ${s.btnDanger}`} onClick={() => { setShowRefuse(true); setShowAccept(false); setShowNote(false); }} disabled={saving}>
                   <i className="fas fa-xmark" /> {t('retours.detail.footerRefuser')}
@@ -431,14 +438,12 @@ export default function RetourDetailModal({
               </>
             )}
 
-            {(detail.status === 'accepted' || detail.status === 'received') && (
+            {canProcess && (detail.status === 'accepted' || detail.status === 'received') && (
               <button className={`${s.btn} ${s.btnPrimary}`} onClick={handleRefund} disabled={saving}>
                 {saving ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-coins" />}
                 {t('retours.detail.footerRembourser')}
               </button>
             )}
-
-            <button className={`${s.btn} ${s.btnGhost}`} onClick={onClose}>{t('retours.detail.footerFermer')}</button>
           </div>
         )}
       </div>

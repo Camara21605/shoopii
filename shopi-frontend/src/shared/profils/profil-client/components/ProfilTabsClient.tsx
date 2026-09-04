@@ -12,6 +12,7 @@ const TABS: { id: ClientTab; icon: string; label: string }[] = [
   { id: 'orders',    icon: 'fa-box',              label: 'Commandes'   },
   { id: 'subs',      icon: 'fa-bell',             label: 'Abonnements' },
   { id: 'favs',      icon: 'fa-heart',            label: 'Favoris'     },
+  { id: 'wishlist',  icon: 'fa-bookmark',         label: 'Souhaits'    },
   { id: 'reviews',   icon: 'fa-star',             label: 'Avis'        },
   { id: 'activity',  icon: 'fa-clock-rotate-left', label: 'Activité'   },
 ];

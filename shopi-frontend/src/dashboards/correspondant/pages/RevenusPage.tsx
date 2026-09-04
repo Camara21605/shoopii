@@ -13,12 +13,13 @@ interface Transaction {
 }
 interface RevBar { j: string; v: number; today?: boolean }
 interface RevenusData {
-  tauxCommission:   number;
-  totalRevenus:     number;
-  revenusThisMonth: number;
-  transactions:     Transaction[];
-  chartWeek:        RevBar[];
-  chartMonth:       RevBar[];
+  tauxCommission:      number;
+  totalRevenus:        number;
+  revenusThisMonth:    number;
+  commissionThisMonth: number;
+  transactions:        Transaction[];
+  chartWeek:           RevBar[];
+  chartMonth:          RevBar[];
 }
 
 export default function RevenusPage() {
@@ -33,9 +34,10 @@ export default function RevenusPage() {
     apiFetch<RevenusData>('/dashboard/correspondant/revenus').then(setData).catch(() => {});
   }, []);
 
-  const tauxCommission   = data?.tauxCommission   ?? 0;
-  const totalRevenus     = data?.totalRevenus     ?? 0;
-  const revenusThisMonth = data?.revenusThisMonth ?? 0;
+  const tauxCommission      = data?.tauxCommission      ?? 0;
+  const totalRevenus        = data?.totalRevenus        ?? 0;
+  const revenusThisMonth    = data?.revenusThisMonth    ?? 0;
+  const commissionThisMonth = data?.commissionThisMonth ?? 0;
 
   return (
     <div className={sh.page}>
@@ -77,7 +79,7 @@ export default function RevenusPage() {
           {[
             { lbl:'Revenus ce mois',                         val: fmtGNF(revenusThisMonth), sub:'+vs mois dernier',          ic:'fa-coins',     c:'var(--t2)' },
             { lbl:'Total revenus',                           val: fmtGNF(totalRevenus),     sub:'Depuis le début',            ic:'fa-chart-line', c:'var(--t2)' },
-            { lbl:`Commission Shoneya (${tauxCommission}%)`,   val: fmtGNF(Math.round(revenusThisMonth * tauxCommission / 100)), sub:'Déduit automatiquement', ic:'fa-percent', c:'var(--t2)' },
+            { lbl:`Commission Shoneya (${tauxCommission}%)`,   val: fmtGNF(commissionThisMonth), sub:'Déduit automatiquement', ic:'fa-percent', c:'var(--t2)' },
           ].map(item => (
             <div key={item.lbl} className={sh.card} style={{ padding:18, marginBottom:12 }}>
               <div style={{ display:'flex', alignItems:'center', gap:12 }}>

@@ -55,10 +55,16 @@ export default function AProposSection({ boutiqueInfo, createdAt, livreurs, onTo
     { val: boutiqueInfo.note > 0 ? boutiqueInfo.note.toFixed(1) : '—', lbl: t('boutiqueDetail.aPropos.noteMoyenne') },
   ];
 
-  /* Seules les infos pratiques réellement renseignées par la boutique
-   * s'affichent — une ligne "Site web : " vide n'apporte rien. */
+  /* Le détail horaires par jour a sa propre carte dédiée ci-dessous quand
+   * il est disponible (voir horairesDetail) — sinon on retombe sur la
+   * ligne résumée générique, comme avant. Seules les infos pratiques
+   * réellement renseignées par la boutique s'affichent — une ligne
+   * "Site web : " vide n'apporte rien. */
+  const hasHorairesDetail = (boutiqueInfo.horairesDetail?.length ?? 0) > 0;
   const infoRowsData = [
-    { ico:'🕐', bg:'bg1', title:t('boutiqueDetail.aPropos.horaires'),  sub: boutiqueInfo.horaires },
+    ...(!hasHorairesDetail
+      ? [{ ico:'🕐', bg:'bg1', title:t('boutiqueDetail.aPropos.horaires'), sub: boutiqueInfo.horaires }]
+      : []),
     { ico:'📍', bg:'bg2', title:t('boutiqueDetail.aPropos.adresse'),   sub: boutiqueInfo.adresse  },
     { ico:'📞', bg:'bg3', title:t('boutiqueDetail.aPropos.telephone'), sub: boutiqueInfo.tel      },
     { ico:'✉️', bg:'bg4', title:t('boutiqueDetail.aPropos.email'),     sub: boutiqueInfo.email    },
@@ -98,6 +104,60 @@ export default function AProposSection({ boutiqueInfo, createdAt, livreurs, onTo
           ))}
         </div>
       </div>
+      )}
+
+      {/* ── 2b. Horaires d'ouverture, détail par jour — visible par les
+             clients ET par l'entreprise elle-même (BoutiquePreviewPage
+             réutilise cette même page en mode aperçu). ── */}
+      {hasHorairesDetail && (
+        <div className={styles.card}>
+          <h3><i className="fas fa-clock" /> {t('boutiqueDetail.aPropos.horairesOuverture')}</h3>
+          <div>
+            {boutiqueInfo.horairesDetail!.map(h => (
+              <div key={h.jour} className={styles.horaireRow}>
+                <span className={styles.horaireJour}>{h.label}</span>
+                {h.actif && h.ouverture && h.fermeture
+                  ? <span className={styles.horairePlage}>{h.ouverture} – {h.fermeture}</span>
+                  : <span className={styles.horaireFerme}>{t('boutiqueDetail.aPropos.fermeCeJour')}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── 2c. Livraison — méthodes + zones desservies (Paramètres >
+             Livraison). BUG CORRIGÉ : ces réglages étaient enregistrés
+             mais jamais montrés nulle part, un client n'avait aucun moyen
+             de savoir si la boutique livre chez lui avant de commander. ── */}
+      {boutiqueInfo.livraison && (
+        <div className={styles.card}>
+          <h3><i className="fas fa-truck" /> {t('boutiqueDetail.aPropos.livraisonTitre')}</h3>
+          <div className={styles.infoRows}>
+            {[
+              { actif: boutiqueInfo.livraison.standard,       label: t('boutiqueDetail.aPropos.livraisonStandard') },
+              { actif: boutiqueInfo.livraison.livreursShopi,  label: t('boutiqueDetail.aPropos.livraisonLivreurs') },
+              { actif: boutiqueInfo.livraison.correspondants, label: t('boutiqueDetail.aPropos.livraisonCorrespondants') },
+              { actif: boutiqueInfo.livraison.clickCollect,   label: t('boutiqueDetail.aPropos.livraisonClickCollect') },
+              { actif: boutiqueInfo.livraison.express,        label: t('boutiqueDetail.aPropos.livraisonExpress') },
+            ].filter(m => m.actif).map(m => (
+              <div key={m.label} className={styles.livraisonMethod}>
+                <i className="fas fa-circle-check" style={{ color: 'var(--emerald,#059669)' }} />
+                <span>{m.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {boutiqueInfo.livraison.zones.length > 0 && (
+            <>
+              <div className={styles.livraisonZonesTitre}>{t('boutiqueDetail.aPropos.livraisonZones')}</div>
+              <div className={styles.livraisonZones}>
+                {boutiqueInfo.livraison.zones.map(z => (
+                  <span key={z} className={styles.zonePill}>{z}</span>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       )}
 
       {/* ── 3. Livreurs de la boutique (pleine largeur) — données réelles,

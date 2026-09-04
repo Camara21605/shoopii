@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useToast }       from '../../../shared/context/ToastContext';
 import { useRetours }     from '../hooks/useRetours';
 import { useSav }         from '../hooks/useSav';
+import { useTeamPermissions } from '../hooks/useTeamPermissions';
 
 import RetourStats       from './retours/RetourStats';
 import RetoursList       from './retours/RetoursList';
@@ -24,6 +25,8 @@ export default function RetoursPage() {
   const { t } = useTranslation();
   const { pop } = useToast();
   const [tab, setTab] = useState<MainTab>('retours');
+  const { can, isOwner, loading: permLoading } = useTeamPermissions();
+  const canProcess = isOwner || can('returns', 'process');
 
   /* ── Retours hook ── */
   const {
@@ -73,6 +76,21 @@ export default function RetoursPage() {
       pop(`❌ ${e?.message ?? t('retours.toasts.genericError')}`, 'e');
     }
   };
+
+  /* Un collaborateur sans returns.view ne doit jamais voir cette page —
+   * mise à jour instantanée si la permission est révoquée pendant qu'il y
+   * est déjà (voir useTeamPermissions : socket team:permissions_changed). */
+  if (!permLoading && !isOwner && !can('returns', 'view')) {
+    return (
+      <div className={`page on ${s.page}`} style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:300 }}>
+        <div style={{ textAlign:'center', color:'var(--t2)' }}>
+          <i className="fas fa-lock" style={{ fontSize:28, opacity:.5, marginBottom:12, display:'block' }} />
+          <strong>{t('retours.accessDenied.title')}</strong>
+          <div style={{ fontSize:13, marginTop:6 }}>{t('retours.accessDenied.message')}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`page on ${s.page}`} id="p-retours">
@@ -149,6 +167,7 @@ export default function RetoursPage() {
           onClose={close}
           onResolve={resolve}
           onPop={pop}
+          canProcess={canProcess}
         />
       )}
 
@@ -165,6 +184,7 @@ export default function RetoursPage() {
             catch { pop('❌ Erreur', 'e'); }
           }}
           onPop={pop}
+          canProcess={canProcess}
         />
       )}
     </div>

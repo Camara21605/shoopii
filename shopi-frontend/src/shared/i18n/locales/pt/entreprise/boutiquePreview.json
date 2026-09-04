@@ -46,6 +46,11 @@
       "LR": "Libéria",
       "SL": "Serra Leoa",
       "FR": "França"
-    }
+    },
+    "accessDenied": {
+      "title": "Acesso não autorizado",
+      "message": "Você não tem acesso à pré-visualização da loja. Contate o proprietário da loja para obtê-lo."
+    },
+    "loadError": "Não foi possível carregar a pré-visualização da loja."
   }
 }

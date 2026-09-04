@@ -39,6 +39,7 @@ import {
   MaxFileSizeValidator, FileTypeValidator,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request } from 'express';
 
 import { JwtAuthGuard }  from '../../../common/guards/auth.guard';
@@ -269,11 +270,27 @@ export class CorrespondantParametresController {
   }
 
   /**
+   * GET /correspondant/parametres/documents/:type/url
+   * Génère une URL Cloudinary signée à la demande pour que le
+   * correspondant consulte SON PROPRE document ("Voir le document").
+   * Jamais stockée — voir DocumentsService.getDocumentUrl.
+   */
+  @Get('documents/:type/url')
+  getDocumentUrl(@Req() req: Request, @Param('type') type: string) {
+    return this.documentsService.getDocumentUrl(this.uid(req), type as any);
+  }
+
+  /**
    * POST /correspondant/parametres/documents/:type
    * type = cni | bail | assurance | casier | registre
    * Upload document officiel (images + PDF — max 10 MB).
    */
+  /* SÉCURITÉ — ThrottlerGuard : upload lourd (10 MB) + coût Cloudinary,
+   * même correctif que ParametresController côté Entreprise (voir
+   * parametres.controller.ts). */
   @Post('documents/:type')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 3_600_000 } })
   @UseInterceptors(FileInterceptor('document'))
   uploadDocument(
     @Req() req: Request,

@@ -3,7 +3,7 @@
  * Section 3 — Horaires d'ouverture par jour de la semaine
  * PATCH /dashboard/entreprise/parametres/horaires
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData, HoraireJour } from '../../hooks/useParametres';
@@ -39,6 +39,10 @@ export default function HorairesSection({ data, saving, onDirty, onToast, saveHo
     dimanche: t('parametres.horaires.jours.dimanche'),
   };
   const [horaires, setHoraires] = useState<HoraireJour[]>(defaultHoraires());
+  /* true au montage ET après chaque rechargement depuis l'API — sans ce
+   * garde, l'auto-save ci-dessous se redéclenchait après CHAQUE
+   * chargement de données (y compris juste après avoir déjà sauvegardé). */
+  const skipNextSaveRef = useRef(true);
 
   /* Pré-remplir depuis les données API */
   useEffect(() => {
@@ -47,6 +51,7 @@ export default function HorairesSection({ data, saving, onDirty, onToast, saveHo
       const sorted = [...data.horaires].sort(
         (a, b) => JOURS.indexOf(a.jour) - JOURS.indexOf(b.jour)
       );
+      skipNextSaveRef.current = true;
       setHoraires(sorted);
     }
   }, [data]);
@@ -56,14 +61,20 @@ export default function HorairesSection({ data, saving, onDirty, onToast, saveHo
     onDirty();
   }
 
-  async function handleSave() {
-    try {
-      await saveHoraires(horaires);
-      onToast(t('parametres.horaires.savedToast'), 's');
-    } catch {
-      onToast(t('parametres.horaires.errorToast'), 'e');
-    }
-  }
+  /* Sauvegarde automatique — plus de bouton "Sauvegarder" : chaque
+   * changement (toggle, heure) déclenche un enregistrement après une
+   * courte pause (800ms), pour ne pas envoyer une requête à chaque
+   * frappe/glissement pendant que l'utilisateur ajuste encore l'heure. */
+  useEffect(() => {
+    if (skipNextSaveRef.current) { skipNextSaveRef.current = false; return; }
+    const timer = setTimeout(() => {
+      saveHoraires(horaires)
+        .then(() => onToast(t('parametres.horaires.savedToast'), 's'))
+        .catch(() => onToast(t('parametres.horaires.errorToast'), 'e'));
+    }, 800);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [horaires]);
 
   return (
     <>
@@ -130,11 +141,14 @@ export default function HorairesSection({ data, saving, onDirty, onToast, saveHo
           ))}
         </div>
 
-        <div className={s.saveRow} style={{ marginTop:20 }}>
-          <button className={s.saveBtn} onClick={handleSave} disabled={saving}>
-            {saving ? <><i className="fas fa-spinner fa-spin" /> {t('parametres.horaires.sauvegardeEnCours')}</> : <><i className="fas fa-cloud-arrow-up" /> {t('parametres.horaires.sauvegarderHoraires')}</>}
-          </button>
-        </div>
+        {/* Plus de bouton — chaque changement s'enregistre automatiquement
+         * (voir l'effet debounced ci-dessus). Seul indicateur restant :
+         * un état "en cours" discret pendant l'appel réseau. */}
+        {saving && (
+          <div style={{ marginTop:16, display:'flex', alignItems:'center', gap:7, fontSize:12.5, color:'var(--t3)' }}>
+            <i className="fas fa-spinner fa-spin" /> {t('parametres.horaires.sauvegardeEnCours')}
+          </div>
+        )}
       </FormCard>
     </>
   );

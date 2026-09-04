@@ -182,12 +182,13 @@ export class CommissionHierarchyService {
       nom:                 (company as any).companyName as string ?? 'Entreprise',
       plan,
       planMultiplier,
-      partenaireProfileId: company.partnerId,
-      partenaireUserId:    partnerInfo?.userId ?? null,
-      partenaireNom:       partnerInfo?.nom    ?? null,
-      adminProfileId:      company.adminId,
-      adminUserId:         adminInfo?.userId   ?? null,
-      adminNom:            adminInfo?.nom      ?? null,
+      partenaireProfileId:    company.partnerId,
+      partenaireUserId:       partnerInfo?.userId ?? null,
+      partenaireNom:          partnerInfo?.nom    ?? null,
+      partenaireTotalCompanies: partnerInfo?.totalCompanies ?? null,
+      adminProfileId:         company.adminId,
+      adminUserId:            adminInfo?.userId   ?? null,
+      adminNom:               adminInfo?.nom      ?? null,
     };
   }
 
@@ -331,20 +332,23 @@ export class CommissionHierarchyService {
    * ────────────────────────────────────────────────────────── */
 
   /**
-   * Charge un Partner par son profileId et retourne userId + nom.
+   * Charge un Partner par son profileId et retourne userId + nom
+   * (+ totalCompanies, utilisé par CommissionCalculatorService pour
+   * résoudre le tier de PartnerSettings côté commission produit).
    * Retourne null si introuvable (cas géré comme non bloquant).
    */
-  private async resolvePartner(partnerProfileId: string): Promise<{ userId: string; nom: string } | null> {
+  private async resolvePartner(partnerProfileId: string): Promise<{ userId: string; nom: string; totalCompanies: number } | null> {
     const partner = await this.partnerRepo.findOne({
       where:  { id: partnerProfileId },
-      select: ['id', 'userId', 'name'] as any,
+      select: ['id', 'userId', 'name', 'totalCompanies'] as any,
     });
 
     if (!partner) return null;
 
     return {
-      userId: (partner as any).userId as string,
-      nom:    (partner as any).name   as string ?? 'Partenaire',
+      userId:         (partner as any).userId as string,
+      nom:            (partner as any).name   as string ?? 'Partenaire',
+      totalCompanies: Number((partner as any).totalCompanies ?? 0),
     };
   }
 

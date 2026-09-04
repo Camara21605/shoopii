@@ -57,6 +57,7 @@ import { InvitationLivreurService }   from './services/invitation-livreur.servic
 import { MailModule }          from 'src/modules/email/email.module';
 import { CodesModule }         from 'src/modules/auth/code-creation/code-creation.module';
 import { NotificationsModule } from 'src/modules/notifications/notifications.module';
+import { CompanyTeamModule }   from 'src/modules/company-team/company-team.module';
 
 @Module({
   imports: [
@@ -68,6 +69,10 @@ import { NotificationsModule } from 'src/modules/notifications/notifications.mod
     CodesModule,
     MailModule,
     NotificationsModule,
+    /* Fournit TeamPermissionGuard — vérifie réellement les permissions
+     * "Livraisons" d'un collaborateur (voir LivreursController
+     * @RequiresTeamPermission('deliveries', …)). */
+    CompanyTeamModule,
   ],
 
   controllers: [

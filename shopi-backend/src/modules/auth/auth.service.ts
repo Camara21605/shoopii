@@ -24,7 +24,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { JwtService }       from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService }    from '@nestjs/config';
 import { InjectRedis }      from '@nestjs-modules/ioredis';
 import Redis                from 'ioredis';
@@ -38,7 +38,7 @@ import { RefreshToken }         from '../../database/entities/refresh-token.enti
 import { CompanyTeamMember, TeamMemberStatus } from '../../database/entities/company-team/company-team-member.entity';
 import { Admin }                from '../../database/entities/profiles/admin-profile.entity';
 import { Partner }              from '../../database/entities/profiles/partenaire-profile.entity';
-import { Company }              from '../../database/entities/profiles/entreprise-profile.entity';
+import { Company, CompanyStatus } from '../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery }             from '../../database/entities/profiles/livreur-profile.entity';
 import { Correspondent }        from '../../database/entities/profiles/correspondant-profile.entity';
 import { Client }               from '../../database/entities/profiles/client-profile.entity';
@@ -53,6 +53,9 @@ import type { JwtPayload }      from './strategies/jwt.strategy';
 import { TwoFaService }         from './twofa/twofa.service';
 import { SessionService }       from '../session/session.service';
 import { NotificationBroadcastService } from '../notifications/services/notification-broadcast.service';
+import { SecurityAlertsService } from '../security-alerts/security-alerts.service';
+import { GeoIpService }          from '../security-alerts/geo-ip.service';
+import { PlatformSettingsCacheService } from '../performance-engine/services/platform-settings-cache.service';
 
 /* ── Constantes ── */
 const BCRYPT_ROUNDS         = 12;
@@ -61,7 +64,6 @@ const JWT_TTL_SUPER         = '4h';   // Super admin : TTL max 4h, pas de refres
 const JWT_TTL_RESET         = '15m';
 const JWT_TTL_TWOFA         = '5m';   // défi 2FA — court, une seule tentative de connexion
 const OAUTH_CODE_TTL_SEC    = 60;     // Code OAuth à usage unique, expire en 60s
-const MAX_FAILED_LOGINS     = 5;
 const LOCKOUT_MINUTES       = 30;
 const OTP_EXPIRY_MINUTES    = 10;
 const OTP_MAX_ATTEMPTS      = 3;
@@ -114,6 +116,14 @@ export interface AuthResponse {
    *  autre appareil — le frontend affiche alors une notification
    *  informative (non alarmiste, voir mission §13). */
   sessionReplaced: boolean;
+  /** true si PlatformSettings.adminTwoFaRequired est activé, que ce
+   *  compte est ADMIN/SUPER_ADMIN, et que sa 2FA n'est pas encore
+   *  configurée — le frontend doit alors ouvrir TwoFaSetupModal de
+   *  façon non-dismissable avant de laisser l'accès normal. Fail-open
+   *  volontaire (login jamais bloqué par ce réglage) : verrouiller la
+   *  connexion elle-même risquerait de bannir le seul super-admin hors
+   *  de la plateforme si le toggle est activé par erreur. */
+  twoFaSetupRequired: boolean;
 }
 
 /** Type interne : refreshToken n'est PAS retourné dans le corps de la réponse HTTP.
@@ -154,6 +164,22 @@ export interface AccountChoiceResult {
  */
 export interface SessionConfirmResult {
   requiresSessionConfirm: true;
+}
+
+/**
+ * Retourné par register() (compte fraîchement créé) ou login()/finishLogin()
+ * (compte existant jamais vérifié) quand PlatformSettings.emailVerifRequired
+ * est activé et que ce compte n'a pas encore confirmé son adresse email.
+ * Aucun token émis. Le frontend doit afficher l'écran de saisie du code
+ * OTP puis appeler POST /auth/verify-email.
+ */
+export interface EmailVerificationRequiredResult {
+  requiresEmailVerification: true;
+  email:  string;
+  /** Identifie précisément le compte à vérifier — un même email peut
+   *  correspondre à plusieurs comptes de rôles différents (UNIQUE(email,role)),
+   *  l'email seul ne suffit pas à cibler POST /auth/verify-email. */
+  userId: string;
 }
 
 @Injectable()
@@ -204,6 +230,9 @@ export class AuthService implements OnModuleInit {
     private readonly twoFaService:        TwoFaService,
     private readonly sessionService:      SessionService,
     private readonly notificationBroadcast: NotificationBroadcastService,
+    private readonly securityAlertsService: SecurityAlertsService,
+    private readonly geoIpService:           GeoIpService,
+    private readonly settingsCache:          PlatformSettingsCacheService,
 
     @InjectRedis()
     private readonly redis: Redis,
@@ -285,13 +314,26 @@ export class AuthService implements OnModuleInit {
   // 1. INSCRIPTION
   // ══════════════════════════════════════════════════════════════════════════
 
-  async register(dto: RegisterDto, clientIp: string, userAgent: string | null = null): Promise<AuthServiceResult> {
+  async register(dto: RegisterDto, clientIp: string, userAgent: string | null = null): Promise<AuthServiceResult | EmailVerificationRequiredResult> {
 
     // Sécurité : empêcher la création d'un compte SUPER_ADMIN (ou de tout
     // futur rôle privilégié non listé) via l'inscription publique.
     if (!SELF_REGISTRABLE_ROLES.includes(dto.role as UserRole)) {
       this.logger.warn(`[REGISTER ❌ RÔLE INTERDIT] ${dto.email} a tenté de s'inscrire avec le rôle "${dto.role}".`);
       throw new ForbiddenException(`Le rôle "${dto.role}" ne peut pas être créé via l'inscription.`);
+    }
+
+    /* BUG CORRIGÉ — PlatformSettings.openSignup se sauvegardait bien en base
+     * (Paramètres Plateforme > Inscriptions) mais rien ne le lisait : un
+     * super-admin pouvait "fermer" l'inscription libre des clients sans
+     * aucun effet réel. Lu une seule fois ici et réutilisé plus bas pour
+     * codeRequiredForCompany — évite un second aller-retour Redis. */
+    const platformSettings = await this.settingsCache.getSettings();
+
+    if (dto.role === UserRole.CLIENT && !platformSettings.openSignup) {
+      throw new ForbiddenException(
+        'Les inscriptions sont actuellement fermées sur la plateforme.',
+      );
     }
 
     // Vérifier unicité email — SCOPÉE PAR RÔLE (UNIQUE(email, role) en base).
@@ -313,8 +355,20 @@ export class AuthService implements OnModuleInit {
     let validatedCodeId: string | null = null;
     let codeCompanyId:   string | null = null;
     let codeDeliveryId:  string | null = null;
+    let codePartnerId:   string | null = null;
 
-    if (ROLES_REQUIRING_CODE.includes(dto.role as UserRole)) {
+    /* BUG CORRIGÉ — PlatformSettings.codeRequiredForCompany n'était jamais lu :
+     * un code d'invitation était TOUJOURS exigé pour les comptes entreprise,
+     * quelle que soit la valeur choisie par le super-admin. Seul le rôle
+     * COMPANY est concerné par ce réglage — les autres rôles à code
+     * (ADMIN, DELIVERY, PARTNER, CORRESPONDENT) restent protégés
+     * inconditionnellement, ce réglage ne les couvre pas. */
+    const codeRequiredForThisRole =
+      dto.role === UserRole.COMPANY
+        ? platformSettings.codeRequiredForCompany
+        : ROLES_REQUIRING_CODE.includes(dto.role as UserRole);
+
+    if (codeRequiredForThisRole) {
       if (!dto.activationCode) {
         throw new BadRequestException(
           `Un code d'invitation est requis pour créer un compte ${dto.role}.`,
@@ -331,6 +385,10 @@ export class AuthService implements OnModuleInit {
 
       // ✅ Lire le deliveryId depuis la relation delivery sur CreationCode
       codeDeliveryId = await this.getCodeDeliveryId(validatedCodeId);
+
+      // ✅ Lire le partnerId depuis le code — voir getCodePartnerId() pour
+      // l'explication complète du bug que cette ligne corrige.
+      codePartnerId = await this.getCodePartnerId(validatedCodeId);
 
       // ✅ Vérifier que l'email correspond à celui de l'invitation (si nominatif)
       const codeTargetEmail = await this.getCodeTargetEmail(validatedCodeId);
@@ -353,6 +411,21 @@ export class AuthService implements OnModuleInit {
     if (dto.birthDate)   userExtras.birthDate   = new Date(dto.birthDate) as any;
     if (dto.gender)      userExtras.gender      = dto.gender as any;
 
+    /* BUG CORRIGÉ — PlatformSettings.emailVerifRequired se sauvegardait en
+     * base sans jamais être appliqué : aucun flux de vérification n'existait,
+     * tout compte était utilisable immédiatement quel que soit ce réglage.
+     * OTP généré ici (avant la transaction) pour être inséré avec le compte
+     * en une seule ligne — voir verifyEmail() plus bas pour la validation. */
+    const emailVerifRequired = platformSettings.emailVerifRequired;
+    let verifyOtpCode:   string | null = null;
+    let verifyOtpHash:   string | null = null;
+    let verifyOtpExpiry: Date   | null = null;
+    if (emailVerifRequired) {
+      verifyOtpCode   = crypto.randomInt(100_000, 999_999).toString();
+      verifyOtpHash   = await bcrypt.hash(verifyOtpCode, BCRYPT_ROUNDS);
+      verifyOtpExpiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60_000);
+    }
+
     let newUser: User;
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -368,11 +441,21 @@ export class AuthService implements OnModuleInit {
         password:   hashedPassword,
         role:       dto.role as UserRole,
         status:     UserStatus.ACTIVE,
+        ...(emailVerifRequired ? {
+          emailVerified:          false,
+          emailVerifyOtpHash:     verifyOtpHash,
+          emailVerifyOtpExpiry:   verifyOtpExpiry,
+          emailVerifyRequestedAt: new Date(),
+          emailVerifyRequestCount: 1,
+        } : {}),
         ...userExtras,
       });
       newUser = await queryRunner.manager.save(User, userEntity);
 
-      await this.createProfile(queryRunner.manager, newUser, dto, codeCompanyId, codeDeliveryId);
+      await this.createProfile(
+        queryRunner.manager, newUser, dto, codeCompanyId, codeDeliveryId,
+        platformSettings.manualVendorApproval, codePartnerId,
+      );
 
       const wallet = this.walletRepo.create({ userId: newUser.id });
       await queryRunner.manager.save(Wallet, wallet);
@@ -412,6 +495,30 @@ export class AuthService implements OnModuleInit {
 
     this.logger.log(`[REGISTER ✅] ${newUser.email} | ${newUser.role} | IP=${clientIp}`);
 
+    this.logEvent('register_success', {
+      userId: newUser.id, email: newUser.email, role: newUser.role,
+      ipAddress: clientIp, userAgent, success: true,
+    });
+
+    /* Vérification email requise — pas de token émis tant que le code OTP
+     * n'est pas confirmé (voir verifyEmail() ci-dessous, qui envoie l'email
+     * de bienvenue et connecte l'utilisateur une fois validé). L'email de
+     * bienvenue habituel est sciemment omis ici pour ne pas envoyer deux
+     * emails coup sur coup à l'inscription. */
+    if (emailVerifRequired && verifyOtpCode && verifyOtpExpiry) {
+      this.mailService
+        .sendEmailVerificationOtp({
+          toEmail:   newUser.email,
+          firstName: newUser.firstName,
+          otpCode:   verifyOtpCode,
+          expiresAt: verifyOtpExpiry,
+        })
+        .catch(err =>
+          this.logger.error(`[VÉRIF EMAIL ❌] ${newUser.email} | ${(err as Error).message}`),
+        );
+      return { requiresEmailVerification: true, email: newUser.email, userId: newUser.id };
+    }
+
     this.mailService
       .sendWelcomeEmail({
         toEmail:   newUser.email,
@@ -423,15 +530,185 @@ export class AuthService implements OnModuleInit {
         this.logger.error(`[WELCOME EMAIL ❌] ${newUser.email} | ${(err as Error).message}`),
       );
 
-    this.logEvent('register_success', {
-      userId: newUser.id, email: newUser.email, role: newUser.role,
-      ipAddress: clientIp, userAgent, success: true,
-    });
-
     /* Un compte fraîchement créé n'a jamais de session précédente —
      * issueTokensForUser() le gère nativement (sessionReplaced restera
      * false), pas besoin de dupliquer signJwt+issueRefreshToken ici. */
     return this.issueTokensForUser(newUser, false, clientIp, userAgent, dto.deviceId ?? null);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 1bis. VÉRIFICATION D'EMAIL À L'INSCRIPTION
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * POST /auth/verify-email — confirme le code OTP envoyé par register()
+   * (ou par une tentative de login() sur un compte jamais vérifié — voir
+   * finishLogin()). Ciblage par userId (pas par email seul, voir
+   * EmailVerificationRequiredResult) : pas d'ambiguïté de comptes liés à
+   * gérer ici, contrairement à verifyOtp() (mot de passe oublié).
+   *
+   * Succès → emailVerified=true, email de bienvenue envoyé, connexion
+   * immédiate (mêmes tokens qu'un login normal, meilleure UX que renvoyer
+   * vers l'écran de connexion juste après avoir saisi un code).
+   */
+  async verifyEmail(
+    userId:    string,
+    code:      string,
+    clientIp:  string,
+    userAgent: string | null = null,
+  ): Promise<AuthServiceResult> {
+    const INVALID_CODE = 'Code incorrect ou expiré. Vérifiez et réessayez.';
+
+    const user = await this.userRepo
+      .createQueryBuilder('u')
+      .select([
+        'u.id', 'u.email', 'u.firstName', 'u.lastName', 'u.username', 'u.role', 'u.status',
+        'u.emailVerified', 'u.emailVerifyOtpHash', 'u.emailVerifyOtpExpiry', 'u.emailVerifyOtpAttempts',
+      ])
+      .where('u.id = :id', { id: userId })
+      .getOne();
+
+    if (!user || user.status !== UserStatus.ACTIVE) {
+      throw new BadRequestException(INVALID_CODE);
+    }
+
+    if (user.emailVerified) {
+      // Déjà vérifié (double-clic, onglet dupliqué…) — pas une erreur,
+      // on connecte simplement l'utilisateur.
+      return this.issueTokensForUser(user, false, clientIp, userAgent, null);
+    }
+
+    if (!user.emailVerifyOtpHash || !user.emailVerifyOtpExpiry || user.emailVerifyOtpExpiry < new Date()) {
+      this.logEvent('email_verify_failed', {
+        userId: user.id, email: user.email, success: false, failureReason: 'OTP absent ou expiré',
+      });
+      throw new BadRequestException(
+        'Ce code a expiré. Demandez un nouveau code depuis la page de connexion.',
+      );
+    }
+
+    const attempts = user.emailVerifyOtpAttempts ?? 0;
+    if (attempts >= OTP_MAX_ATTEMPTS) {
+      await this.userRepo.update(user.id, {
+        emailVerifyOtpHash: null, emailVerifyOtpExpiry: null, emailVerifyOtpAttempts: 0,
+      });
+      this.logEvent('email_verify_failed', {
+        userId: user.id, email: user.email, success: false, failureReason: 'Trop de tentatives',
+      });
+      throw new BadRequestException(
+        'Trop de tentatives incorrectes. Votre code a été invalidé. Demandez-en un nouveau.',
+      );
+    }
+
+    const isValid = await bcrypt.compare(code.trim(), user.emailVerifyOtpHash);
+    if (!isValid) {
+      const remaining = OTP_MAX_ATTEMPTS - attempts - 1;
+      if (remaining <= 0) {
+        await this.userRepo.update(user.id, {
+          emailVerifyOtpHash: null, emailVerifyOtpExpiry: null, emailVerifyOtpAttempts: 0,
+        });
+        this.logEvent('email_verify_failed', {
+          userId: user.id, email: user.email, success: false,
+          failureReason: 'Code invalide — limite de tentatives atteinte',
+        });
+        throw new BadRequestException(
+          'Code incorrect. Votre code a été invalidé. Demandez-en un nouveau.',
+        );
+      }
+      await this.userRepo.update(user.id, { emailVerifyOtpAttempts: attempts + 1 });
+      this.logEvent('email_verify_failed', {
+        userId: user.id, email: user.email, success: false,
+        failureReason: `Code invalide — ${remaining} tentative(s) restante(s)`,
+      });
+      throw new BadRequestException(
+        `Code incorrect. Il vous reste ${remaining} tentative(s).`,
+      );
+    }
+
+    await this.userRepo.update(user.id, {
+      emailVerified: true,
+      emailVerifyOtpHash: null, emailVerifyOtpExpiry: null, emailVerifyOtpAttempts: 0,
+    });
+
+    this.logEvent('email_verify_success', { userId: user.id, email: user.email, success: true });
+    this.logger.log(`[VÉRIF EMAIL ✅] ${user.email}`);
+
+    this.mailService
+      .sendWelcomeEmail({
+        toEmail:   user.email,
+        firstName: user.firstName,
+        role:      user.role,
+        loginUrl:  `${this.config.get('FRONTEND_URL')}/login`,
+      })
+      .catch(err =>
+        this.logger.error(`[WELCOME EMAIL ❌] ${user.email} | ${(err as Error).message}`),
+      );
+
+    user.emailVerified = true;
+    return this.issueTokensForUser(user, false, clientIp, userAgent, null);
+  }
+
+  /**
+   * POST /auth/resend-verification — régénère et renvoie le code OTP de
+   * vérification d'email. Même fenêtre de rate limiting que forgotPassword()
+   * (OTP_RATE_LIMIT_MAX demandes / OTP_RATE_LIMIT_WINDOW min) pour éviter
+   * qu'un tiers ne spamme la boîte mail d'un inscrit.
+   */
+  async resendEmailVerification(userId: string): Promise<{ message: string }> {
+    const GENERIC_MSG = 'Si ce compte existe et attend une vérification, un nouveau code a été envoyé.';
+
+    const user = await this.userRepo
+      .createQueryBuilder('u')
+      .select([
+        'u.id', 'u.email', 'u.firstName', 'u.status', 'u.emailVerified',
+        'u.emailVerifyRequestedAt', 'u.emailVerifyRequestCount',
+      ])
+      .where('u.id = :id', { id: userId })
+      .getOne();
+
+    if (!user || user.status !== UserStatus.ACTIVE || user.emailVerified) {
+      return { message: GENERIC_MSG };
+    }
+
+    const windowStart = new Date(Date.now() - OTP_RATE_LIMIT_WINDOW * 60_000);
+    if (
+      user.emailVerifyRequestedAt &&
+      user.emailVerifyRequestedAt > windowStart &&
+      (user.emailVerifyRequestCount ?? 0) >= OTP_RATE_LIMIT_MAX
+    ) {
+      this.logger.warn(`[VÉRIF EMAIL RATE LIMIT 🚨] ${user.email}`);
+      return { message: GENERIC_MSG };
+    }
+
+    const otpCode   = crypto.randomInt(100_000, 999_999).toString();
+    const otpHash   = await bcrypt.hash(otpCode, BCRYPT_ROUNDS);
+    const otpExpiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60_000);
+    const newRequestCount =
+      user.emailVerifyRequestedAt && user.emailVerifyRequestedAt > windowStart
+        ? (user.emailVerifyRequestCount ?? 0) + 1
+        : 1;
+
+    await this.userRepo.update(user.id, {
+      emailVerifyOtpHash:      otpHash,
+      emailVerifyOtpExpiry:    otpExpiry,
+      emailVerifyOtpAttempts:  0,
+      emailVerifyRequestedAt:  new Date(),
+      emailVerifyRequestCount: newRequestCount,
+    });
+
+    this.mailService
+      .sendEmailVerificationOtp({
+        toEmail:   user.email,
+        firstName: user.firstName,
+        otpCode,
+        expiresAt: otpExpiry,
+      })
+      .catch((err: any) =>
+        this.logger.error(`[VÉRIF EMAIL RENVOI ❌] ${user.email} | ${err?.message ?? err}`),
+      );
+
+    this.logger.log(`[VÉRIF EMAIL RENVOYÉ] ${user.email} | Demandes=${newRequestCount}`);
+    return { message: GENERIC_MSG };
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -444,6 +721,8 @@ export class AuthService implements OnModuleInit {
     dto:           RegisterDto,
     codeCompanyId?:  string | null,
     codeDeliveryId?: string | null,
+    manualVendorApproval = true,
+    codePartnerId?:  string | null,
   ): Promise<void> {
     const fullName = `${user.firstName} ${user.lastName}`;
 
@@ -494,11 +773,16 @@ export class AuthService implements OnModuleInit {
       }
 
       case UserRole.COMPANY: {
+        /* BUG CORRIGÉ — PlatformSettings.manualVendorApproval se sauvegardait
+         * en base (Paramètres Plateforme > Inscriptions) mais chaque nouvelle
+         * entreprise démarrait TOUJOURS en 'pending', même quand le
+         * super-admin avait désactivé l'approbation manuelle. */
         const profile = manager.create(Company, {
           userId:        user.id,
           companyName:   dto.companyName?.trim() || dto.shopName?.trim() || fullName,
-          status:        'pending' as any,
+          status:        manualVendorApproval ? CompanyStatus.PENDING : CompanyStatus.ACTIVE,
           companyTypeId: (dto as any).companyTypeId ?? null,
+          partnerId:     codePartnerId ?? null,
           adresse:       loc.adresse,
           commune:       loc.commune,
           ville:         loc.ville,
@@ -519,6 +803,7 @@ export class AuthService implements OnModuleInit {
           phone:         dto.phone ?? null,
           status:        'pending' as any,
           availability:  'offline' as any,
+          partnerId:     codePartnerId ?? null,
           ville:         loc.ville,
           zone:          loc.commune ?? loc.ville,
           lastLatitude:  loc.latitude,
@@ -536,6 +821,7 @@ export class AuthService implements OnModuleInit {
           status:         'pending' as any,
           companyId:      codeCompanyId  ?? null,
           deliveryId:     codeDeliveryId ?? null,
+          partnerId:      codePartnerId  ?? null,
           depotAdresse:   loc.adresse,
           depotCommune:   loc.commune,
           depotVille:     loc.ville,
@@ -573,9 +859,29 @@ export class AuthService implements OnModuleInit {
     dto:       LoginDto,
     clientIp:  string,
     userAgent: string | null = null,
-  ): Promise<AuthServiceResult | TwoFaChallengeResult | AccountChoiceResult | SessionConfirmResult> {
+  ): Promise<AuthServiceResult | TwoFaChallengeResult | AccountChoiceResult | SessionConfirmResult | EmailVerificationRequiredResult> {
     const INVALID_MSG = 'Identifiants incorrects. Vérifiez votre email et mot de passe.';
     const candidates = await this.findAllByIdentifier(dto.identifier);
+
+    /* BUG CORRIGÉ — le verrouillage (maxLoginAttempts atteint) n'était
+     * révélé que via finishLogin(), atteignable UNIQUEMENT avec le bon
+     * mot de passe. Un compte verrouillé qui retapait un MAUVAIS mot de
+     * passe voyait donc indéfiniment "Identifiants incorrects", sans
+     * jamais apprendre que son compte était bloqué — pourtant le compteur
+     * de tentatives continuait bel et bien de s'incrémenter en base.
+     * Vérifié ici, avant toute comparaison de mot de passe, uniquement
+     * quand un seul candidat correspond : un compte verrouillé sur un
+     * couple pro+client lié ne doit pas empêcher la connexion de l'autre. */
+    if (candidates.length === 1 && candidates[0].lockedUntil && candidates[0].lockedUntil > new Date()) {
+      const locked = candidates[0];
+      const min = Math.ceil((locked.lockedUntil!.getTime() - Date.now()) / 60_000);
+      this.logEvent('login_locked', {
+        userId: locked.id, email: locked.email, role: locked.role,
+        ipAddress: clientIp, userAgent, success: false,
+        failureReason: `Verrouillé encore ${min} min`,
+      });
+      throw new UnauthorizedException(`Compte verrouillé. Réessayez dans ${min} minute(s).`);
+    }
 
     const matched = await this.verifyPasswordAgainstCandidates(candidates, dto.password);
 
@@ -653,7 +959,7 @@ export class AuthService implements OnModuleInit {
     userAgent:  string | null,
     deviceId:   string | null = null,
     confirmDisconnectOther: boolean = false,
-  ): Promise<AuthServiceResult | TwoFaChallengeResult | SessionConfirmResult> {
+  ): Promise<AuthServiceResult | TwoFaChallengeResult | SessionConfirmResult | EmailVerificationRequiredResult> {
     const INVALID_MSG = 'Identifiants incorrects. Vérifiez votre email et mot de passe.';
     /* On ne fait JAMAIS confiance au userId envoyé par le client seul — il doit
      * être l'un des candidats réels pour cet identifiant, mot de passe revérifié.
@@ -663,6 +969,18 @@ export class AuthService implements OnModuleInit {
     const candidates = await this.findAllByIdentifier(identifier);
     const chosen = candidates.find(c => c.id === userId);
     if (!chosen) throw new UnauthorizedException(INVALID_MSG);
+
+    /* BUG CORRIGÉ — même correctif que login() ci-dessus : sans ça, un
+     * compte verrouillé ne le révélait qu'avec le bon mot de passe. */
+    if (chosen.lockedUntil && chosen.lockedUntil > new Date()) {
+      const min = Math.ceil((chosen.lockedUntil.getTime() - Date.now()) / 60_000);
+      this.logEvent('login_locked', {
+        userId: chosen.id, email: chosen.email, role: chosen.role,
+        ipAddress: clientIp, userAgent, success: false,
+        failureReason: `Verrouillé encore ${min} min`,
+      });
+      throw new UnauthorizedException(`Compte verrouillé. Réessayez dans ${min} minute(s).`);
+    }
 
     const withPwd = await this.userRepo
       .createQueryBuilder('u')
@@ -694,7 +1012,7 @@ export class AuthService implements OnModuleInit {
     userAgent:  string | null,
     deviceId:   string | null = null,
     confirmDisconnectOther: boolean = false,
-  ): Promise<AuthServiceResult | TwoFaChallengeResult | SessionConfirmResult> {
+  ): Promise<AuthServiceResult | TwoFaChallengeResult | SessionConfirmResult | EmailVerificationRequiredResult> {
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       const min = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60_000);
       this.logEvent('login_locked', {
@@ -717,6 +1035,23 @@ export class AuthService implements OnModuleInit {
         ipAddress: clientIp, userAgent, success: false, failureReason: 'Compte suspendu',
       });
       throw new UnauthorizedException("Votre compte est suspendu. Contactez l'administrateur.");
+    }
+
+    /* BUG CORRIGÉ — PlatformSettings.emailVerifRequired se sauvegardait en
+     * base sans jamais être appliqué : un compte jamais vérifié (créé après
+     * activation de ce réglage — voir register()) se connectait normalement
+     * quel que soit user.emailVerified. Les comptes Google OAuth et invités
+     * company-team ont emailVerified=true dès leur création, ce gate ne les
+     * concerne jamais. */
+    if (!user.emailVerified) {
+      const { emailVerifRequired } = await this.settingsCache.getSettings();
+      if (emailVerifRequired) {
+        this.logEvent('login_email_unverified', {
+          userId: user.id, email: user.email, role: user.role,
+          ipAddress: clientIp, userAgent, success: true,
+        });
+        return { requiresEmailVerification: true, email: user.email, userId: user.id };
+      }
     }
 
     await this.userRepo.update(user.id, {
@@ -771,7 +1106,56 @@ export class AuthService implements OnModuleInit {
     });
     this.logger.log(`[LOGIN ✅] ${user.email} | ${user.role} | IP=${clientIp}`);
 
+    /* Alertes "nouvelle connexion" / "pays inhabituel" — calculées sur
+     * l'historique des RefreshToken AVANT que ce login-ci n'y ajoute sa
+     * propre ligne (sinon il se "verrait" toujours lui-même comme déjà
+     * connu). Fire-and-forget, ne doit jamais retarder/faire échouer la
+     * connexion. No-op silencieux pour tout rôle non-CLIENT. */
+    this.checkNewLoginSignals(user, clientIp, deviceId).catch(() => {});
+
     return this.issueTokensForUser(user, rememberMe, clientIp, userAgent, deviceId);
+  }
+
+  /** Détecte "nouvel appareil" et "pays inhabituel" à partir de
+   * l'historique RefreshToken de ce user (IP/deviceId déjà vus), puis
+   * déclenche les alertes correspondantes si activées. Aucune nouvelle
+   * table : réutilise les connexions déjà journalisées pour les sessions. */
+  private async checkNewLoginSignals(user: User, clientIp: string, deviceId: string | null): Promise<void> {
+    const history = await this.refreshTokenRepo.find({
+      where: { userId: user.id },
+      select: ['ipAddress', 'deviceId'],
+      order:  { createdAt: 'DESC' },
+      take:   50,
+    });
+
+    if (history.length === 0) return; // tout premier login connu : rien d'"inhabituel" à signaler
+
+    const knownDeviceIds = new Set(history.map(h => h.deviceId).filter(Boolean));
+    const isNewDevice = !!deviceId && !knownDeviceIds.has(deviceId);
+
+    if (isNewDevice) {
+      this.securityAlertsService.notifyIfEnabled(
+        user.id, 'connex',
+        'Nouvelle connexion détectée',
+        `Une connexion à votre compte a été détectée depuis un nouvel appareil (IP ${clientIp}). `
+        + 'Si ce n\'était pas vous, changez votre mot de passe immédiatement.',
+      ).catch(() => {});
+    }
+
+    const currentCountry = this.geoIpService.lookupCountry(clientIp);
+    if (currentCountry) {
+      const knownCountries = new Set(
+        history.map(h => this.geoIpService.lookupCountry(h.ipAddress)).filter((c): c is string => !!c),
+      );
+      if (knownCountries.size > 0 && !knownCountries.has(currentCountry)) {
+        this.securityAlertsService.notifyIfEnabled(
+          user.id, 'pays',
+          'Accès depuis un pays inhabituel',
+          `Votre compte vient d'être utilisé depuis un pays inhabituel (${currentCountry}). `
+          + 'Si ce n\'était pas vous, sécurisez votre compte dès que possible.',
+        ).catch(() => {});
+      }
+    }
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -896,7 +1280,7 @@ export class AuthService implements OnModuleInit {
       await this.revokeSessionAndNotify(user.id, previousSessionId, 'NEW_LOGIN');
     }
 
-    const accessToken = this.signJwt(user, false, actorId, sessionId);
+    const accessToken = await this.signJwt(user, false, actorId, sessionId);
 
     /* SUPER_ADMIN n'a pas de refresh token — il doit se reconnecter manuellement après 4h */
     let refreshToken: string | null = null;
@@ -913,7 +1297,23 @@ export class AuthService implements OnModuleInit {
 
     this.logger.log(`[AUTH] Session ${sessionId} créée pour ${user.email}${sessionReplaced ? ` (remplace ${previousSessionId})` : ''}`);
 
-    return { accessToken, refreshToken, refreshTtlMs, user: this.toPublicUser(user), sessionReplaced };
+    /* BUG CORRIGÉ — PlatformSettings.adminTwoFaRequired (Paramètres
+     * Plateforme > Sécurité) se sauvegardait en base sans jamais être lu :
+     * un admin/super-admin sans 2FA se connectait normalement quel que
+     * soit ce réglage. */
+    let twoFaSetupRequired = false;
+    if (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN) {
+      try {
+        const { adminTwoFaRequired } = await this.settingsCache.getSettings();
+        if (adminTwoFaRequired && !(await this.twoFaService.isEnabled(user.role as UserRole, user.id))) {
+          twoFaSetupRequired = true;
+        }
+      } catch {
+        // Cache indisponible → ne bloque jamais la connexion pour ça.
+      }
+    }
+
+    return { accessToken, refreshToken, refreshTtlMs, user: this.toPublicUser(user), sessionReplaced, twoFaSetupRequired };
   }
 
   /**
@@ -1277,6 +1677,33 @@ export class AuthService implements OnModuleInit {
   }
 
   /**
+   * Lire le partnerId depuis le code d'invitation.
+   *
+   * BUG CORRIGÉ — CreationCode.partnerId est bien renseigné à la génération
+   * du code (voir PartenaireDashboardService.generateCode()), mais
+   * register() ne le lisait JAMAIS : aucune Company/Delivery/Correspondent
+   * créée via un code partenaire ne voyait son propre partnerId renseigné.
+   * Conséquences en cascade, pour TOUT partenaire, sans exception :
+   *   - Dashboard partenaire ("Mes acteurs", Vue d'ensemble) : 0 acteurs
+   *     recrutés en permanence, quel que soit le nombre réel d'inscriptions
+   *     via ses codes (companyRepo/deliveryRepo/correspondantRepo.count()
+   *     filtrent sur partnerId — voir partenaire-dashboard.service.ts).
+   *   - Commissions : CommissionHierarchyService résout partenaireUserId
+   *     via Company.partnerId/Delivery.partnerId — toujours null, donc
+   *     resoudreRatioPartenaireProduit() retombait systématiquement sur le
+   *     ratio par défaut de la CommissionRule au lieu du taux réel du
+   *     partenaire : AUCUN partenaire n'a jamais été crédité de commission
+   *     sur les ventes des entreprises/livreurs qu'il a recrutés.
+   */
+  private async getCodePartnerId(codeId: string | null): Promise<string | null> {
+    if (!codeId) return null;
+    const code = await this.dataSource
+      .getRepository(CreationCode)
+      .findOne({ where: { id: codeId }, select: ['id', 'partnerId'] });
+    return code?.partnerId ?? null;
+  }
+
+  /**
    * Lire l'email cible du code pour vérifier que l'email
    * du formulaire correspond à l'email de l'invitation.
    *
@@ -1313,26 +1740,55 @@ export class AuthService implements OnModuleInit {
    * normal — ce chemin ne passait auparavant par aucun compteur d'échec.
    */
   async handleFailedLogin(user: User): Promise<void> {
+    /* BUG CORRIGÉ — le seuil était figé à MAX_FAILED_LOGINS (5) et ignorait
+     * PlatformSettings.maxLoginAttempts : le super-admin pouvait le régler
+     * sur 1 ou 20 sans le moindre effet réel sur le verrouillage. */
+    const { maxLoginAttempts } = await this.settingsCache.getSettings();
     const attempts = (user.failedLoginAttempts ?? 0) + 1;
     const updates: Partial<User> = { failedLoginAttempts: attempts };
-    if (attempts >= MAX_FAILED_LOGINS) {
+    if (attempts >= maxLoginAttempts) {
       updates.lockedUntil = new Date(Date.now() + LOCKOUT_MINUTES * 60_000);
       this.logger.warn(`[BRUTE-FORCE 🚨] ${user.email} → verrouillé`);
     }
     await this.userRepo.update(user.id, updates as any);
+
+    /* Alerte "tentatives de connexion échouées" — exactement à 3, avant
+     * le seuil de verrouillage (5). No-op silencieux pour tout rôle non-
+     * CLIENT (voir SecurityAlertsService.isEnabled). */
+    if (attempts === 3) {
+      this.securityAlertsService.notifyIfEnabled(
+        user.id, 'tentatives',
+        'Tentatives de connexion échouées',
+        '3 tentatives de connexion incorrectes consécutives ont été détectées sur votre compte. '
+        + 'Si ce n\'était pas vous, changez votre mot de passe dès que possible.',
+      ).catch(() => {});
+    }
   }
 
-  private signJwt(user: User, _rememberMe: boolean, actorId?: string, sessionId?: string): string {
+  private async signJwt(user: User, _rememberMe: boolean, actorId?: string, sessionId?: string): Promise<string> {
     const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role };
     if (actorId)   payload.actorId = actorId;
     if (sessionId) payload.sid     = sessionId;
 
-    /* Access token court (1h) pour tous les rôles non-super-admin.
-     * La persistance de session est assurée par le refresh token (24h ou 7j).
-     * SUPER_ADMIN n'a pas de refresh token — il doit se reconnecter après 4h. */
-    const expiresIn = user.role === UserRole.SUPER_ADMIN ? JWT_TTL_SUPER : JWT_TTL_ACCESS;
+    /* Access token pour tous les rôles non-super-admin : la durée par défaut
+     * est 1h (JWT_TTL_ACCESS), mais BUG CORRIGÉ — PlatformSettings.tokenValidityHours
+     * (Paramètres Plateforme > Sécurité, 1-168h) se sauvegardait en base sans
+     * jamais être lu ; ce toggle n'avait donc aucun effet réel. SUPER_ADMIN
+     * garde son plafond fixe de 4h (JWT_TTL_SUPER), volontairement non
+     * configurable pour ce rôle — pas de refresh token, reconnexion manuelle
+     * obligatoire après expiration. */
+    let expiresIn: string = JWT_TTL_ACCESS;
+    if (user.role === UserRole.SUPER_ADMIN) {
+      expiresIn = JWT_TTL_SUPER;
+    } else {
+      const { tokenValidityHours } = await this.settingsCache.getSettings();
+      if (tokenValidityHours > 0) expiresIn = `${tokenValidityHours}h`;
+    }
 
-    return this.jwtService.sign(payload, { expiresIn });
+    // `expiresIn` dynamique (résolu depuis PlatformSettings) — la surcharge
+    // typée de jsonwebtoken attend une chaîne littérale de type StringValue
+    // ('1h', '24h'…) que TypeScript ne peut pas prouver statiquement ici.
+    return this.jwtService.sign(payload, { expiresIn } as JwtSignOptions);
   }
 
   /** Retourne le UUID du profil associé à un utilisateur selon son rôle */
@@ -1486,7 +1942,7 @@ export class AuthService implements OnModuleInit {
     if (previousSessionId) {
       await this.revokeSessionAndNotify(user.id, previousSessionId, 'NEW_LOGIN');
     }
-    return this.signJwt(user, true, actorId, sessionId);
+    return await this.signJwt(user, true, actorId, sessionId);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1558,7 +2014,7 @@ export class AuthService implements OnModuleInit {
       ipAddress, userAgent, success: true,
     });
 
-    return { accessToken: jwt, refreshToken, refreshTtlMs: ttlMs, user: this.toPublicUser(user), sessionReplaced: false };
+    return { accessToken: jwt, refreshToken, refreshTtlMs: ttlMs, user: this.toPublicUser(user), sessionReplaced: false, twoFaSetupRequired: false };
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1735,7 +2191,7 @@ export class AuthService implements OnModuleInit {
     }
 
     const actorId    = await this.findProfileId(user.id, user.role as UserRole);
-    const accessToken = this.signJwt(user, false, actorId, record.sessionId ?? undefined);
+    const accessToken = await this.signJwt(user, false, actorId, record.sessionId ?? undefined);
     const refreshTtlMs = newExpiresAt.getTime() - Date.now();
 
     this.logEvent('token_refreshed', {
@@ -1744,7 +2200,7 @@ export class AuthService implements OnModuleInit {
     });
 
     this.logger.log(`[REFRESH ✅] ${user.email} | IP=${ipAddress}`);
-    return { accessToken, refreshToken: newRawToken, refreshTtlMs, user: this.toPublicUser(user), sessionReplaced: false };
+    return { accessToken, refreshToken: newRawToken, refreshTtlMs, user: this.toPublicUser(user), sessionReplaced: false, twoFaSetupRequired: false };
   }
 
   /** Non-private : réutilisé par AccountLinkService pour générer le username

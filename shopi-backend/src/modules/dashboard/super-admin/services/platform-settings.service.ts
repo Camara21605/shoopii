@@ -19,6 +19,8 @@ import {
 import { Type } from 'class-transformer';
 
 import { PlatformSettings } from '../../../../database/entities/platform-settings.entity';
+import { CommissionConfigService } from '../../../commission/services/commission-config.service';
+import { PlatformSettingsCacheService } from '../../../performance-engine/services/platform-settings-cache.service';
 
 /* ── DTO ────────────────────────────────────────────────────── */
 export class UpdatePlatformSettingsDto {
@@ -244,7 +246,22 @@ export class PlatformSettingsService {
   constructor(
     @InjectRepository(PlatformSettings)
     private readonly repo: Repository<PlatformSettings>,
+
+    private readonly commissionConfig: CommissionConfigService,
+    private readonly settingsCache: PlatformSettingsCacheService,
   ) {}
+
+  /** Champs dont la modification doit resynchroniser CommissionRule —
+   * ce sont les seuls que CommissionCalculatorService lit réellement
+   * (voir commission-config.service.ts::createOrUpdateRule). `platformCommission`
+   * n'en fait volontairement pas partie : ce champ est lu en direct par
+   * commande-creation.service.ts, hors du mécanisme CommissionRule. */
+  private static readonly COMMISSION_FIELDS: (keyof UpdatePlatformSettingsDto)[] = [
+    'tauxCommissionProduit', 'planMultiplierPro', 'planMultiplierPremium',
+    'ratioShopiProduit', 'ratioPartenaireProduit', 'ratioAdminProduit',
+    'tauxCommissionLivraison',
+    'ratioShopiLivraison', 'ratioPartenaireLivraison', 'ratioAdminLivraison',
+  ];
 
   /* ──────────────────────────────────────────────────────────
    * GET — Récupère la configuration (ou la crée si absente)
@@ -262,7 +279,7 @@ export class PlatformSettingsService {
   /* ──────────────────────────────────────────────────────────
    * PATCH — Met à jour un sous-ensemble de paramètres
    * ────────────────────────────────────────────────────────── */
-  async updateSettings(dto: UpdatePlatformSettingsDto): Promise<PlatformSettings> {
+  async updateSettings(dto: UpdatePlatformSettingsDto, changedByUserId?: string): Promise<PlatformSettings> {
     const settings = await this.getSettings();
 
     /* Validations métier */
@@ -402,19 +419,39 @@ export class PlatformSettingsService {
 
     const updated = await this.repo.save(settings);
     this.logger.log(`[SETTINGS] Mis à jour — maintenance=${updated.maintenanceMode} | txProduit=${updated.tauxCommissionProduit}% | txLivraison=${updated.tauxCommissionLivraison}%`);
+
+    /* Invalide immédiatement le cache Redis du singleton — sans ça,
+     * PlatformSettingsCacheService.getSettings() continuerait à servir
+     * l'ancienne config jusqu'à 5 min (TTL) à tout consommateur qui
+     * passe par le cache plutôt que par ce repo directement. */
+    await this.settingsCache.invalidate();
+
+    /* Resynchronise CommissionRule si un champ de commission a changé —
+     * sans ça, CommissionCalculatorService continue à utiliser la règle
+     * versionnée précédente (voir createOrUpdateRule, appelé nulle part
+     * ailleurs jusqu'ici : les changements ne prenaient jamais effet). */
+    const commissionChanged = PlatformSettingsService.COMMISSION_FIELDS.some(k => dto[k] !== undefined);
+    if (commissionChanged) {
+      if (changedByUserId) {
+        await this.commissionConfig.createOrUpdateRule(
+          changedByUserId,
+          'Modifié depuis le Centre de Gestion des Commissions (onglet Plateforme)',
+        );
+      } else {
+        this.logger.warn('[SETTINGS] Taux de commission modifiés sans changedByUserId — CommissionRule NON resynchronisée.');
+      }
+    }
+
     return updated;
   }
 
   /* ──────────────────────────────────────────────────────────
    * Purge du cache applicatif
-   * Dans l'état actuel (cache mémoire TypeORM), on réinitialise
-   * les QueryCache. À remplacer par un FLUSHDB Redis quand le
-   * cache Redis applicatif sera activé.
+   * Invalide le cache Redis PlatformSettings (PlatformSettingsCacheService)
+   * — le prochain getSettings() rechargera depuis la DB.
    * ────────────────────────────────────────────────────────── */
   async purgeCache(): Promise<{ message: string; purgéA: string }> {
-    try {
-      await this.repo.query('SELECT 1'); // connexion DB toujours vivante
-    } catch (_) { /* ignore */ }
+    await this.settingsCache.invalidate();
     this.logger.warn('[CACHE] Purge déclenchée par le super-admin.');
     return {
       message: 'Cache purgé avec succès',

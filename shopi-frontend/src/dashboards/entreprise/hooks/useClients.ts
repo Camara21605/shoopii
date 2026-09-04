@@ -10,7 +10,24 @@
  * ============================================================ */
 
 import { useState, useEffect, useCallback } from 'react';
-import { apiFetch } from '../../../shared/services/apiFetch';
+import { apiFetch, tokenStorage, BASE_URL } from '../../../shared/services/apiFetch';
+
+/* ── Actions CRM ── */
+
+export type CrmCampaignType = 'newsletter' | 'fidelite' | 'relance';
+
+export interface CrmPreview {
+  count:            number;
+  sample:           { fullName: string; email: string }[];
+  suggestedSubject: string;
+  suggestedMessage: string;
+}
+
+export interface CrmSendResult {
+  sent:   number;
+  failed: number;
+  total:  number;
+}
 
 /* ── Types ── */
 
@@ -106,6 +123,39 @@ export function useClients() {
     setFilters(prev => ({ ...prev, page }));
   }, []);
 
+  /* ── Actions CRM — aperçu avant envoi, jamais d'envoi direct ── */
+  const crmPreview = useCallback((type: CrmCampaignType) =>
+    apiFetch<CrmPreview>(`/dashboard/entreprise/clients/crm/${type}/preview`), []);
+
+  const crmSend = useCallback((type: CrmCampaignType, subject: string, message: string) =>
+    apiFetch<CrmSendResult>(`/dashboard/entreprise/clients/crm/${type}/send`, {
+      method: 'POST',
+      body:   { subject, message },
+    }), []);
+
+  /* Téléchargement du rapport PDF — apiFetch ne gère pas les réponses
+   * binaires (elle retomberait sur response.text(), qui corromprait le
+   * PDF) : fetch direct avec les mêmes en-têtes d'authentification. */
+  const downloadRapportPdf = useCallback(async (): Promise<void> => {
+    const headers: Record<string, string> = {};
+    const bearer = tokenStorage.get();
+    if (bearer) headers['Authorization'] = `Bearer ${bearer}`;
+
+    const res = await fetch(`${BASE_URL}/dashboard/entreprise/clients/rapport/pdf`, {
+      credentials: 'include',
+      headers,
+    });
+    if (!res.ok) throw new Error(`Erreur ${res.status}`);
+
+    const blob = await res.blob();
+    const a = Object.assign(document.createElement('a'), {
+      href:     URL.createObjectURL(blob),
+      download: 'rapport-clients.pdf',
+    });
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, []);
+
   return {
     clients:  result?.data    ?? [],
     stats:    result?.stats   ?? null,
@@ -117,5 +167,8 @@ export function useClients() {
     applyFilter,
     setPage,
     reload: load,
+    crmPreview,
+    crmSend,
+    downloadRapportPdf,
   };
 }

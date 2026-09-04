@@ -7,6 +7,7 @@ import { getOrCreateDeviceId }    from '../../../shared/services/deviceId';
 import type {
   AuthResponse,
   LoginResult,
+  RegisterResult,
   PublicUser,
   RegisterPayload,
   LoginPayload,
@@ -77,15 +78,18 @@ function buildRegisterPayload(
 
 export async function register(
   formData: RegisterFormData & { role: Role },
-): Promise<AuthResponse> {
+): Promise<RegisterResult> {
   const payload = buildRegisterPayload(formData);
   payload.deviceId = getOrCreateDeviceId();
 
-  const data = await apiFetch<AuthResponse>('/auth/register', {
+  const data = await apiFetch<RegisterResult>('/auth/register', {
     method: 'POST',
     body:   payload,
     public: true,
   });
+
+  // Vérification email requise : aucun token émis, voir EmailVerificationScreen.
+  if ('requiresEmailVerification' in data) return data;
 
   tokenStorage.set(data.accessToken);
   return data;
@@ -144,6 +148,9 @@ export async function login(payload: LoginPayload): Promise<LoginResult> {
   // l'utilisateur n'a pas confirmé vouloir déconnecter l'autre appareil
   // (rappel de login() ci-dessus avec confirmDisconnectOther:true).
   if ('requiresSessionConfirm' in data) return data;
+  // Compte jamais vérifié (PlatformSettings.emailVerifRequired) : pas de
+  // token tant que le code n'est pas confirmé via verifyEmail() ci-dessous.
+  if ('requiresEmailVerification' in data) return data;
   tokenStorage.set(data.accessToken);
   return data;
 }
@@ -153,16 +160,37 @@ export async function login(payload: LoginPayload): Promise<LoginResult> {
 export async function chooseAccount(
   identifier: string, password: string, userId: string, rememberMe?: boolean,
   confirmDisconnectOther?: boolean,
-): Promise<AuthResponse | TwoFaChallengeResponse | SessionConfirmResponse> {
-  const data = await apiFetch<AuthResponse | TwoFaChallengeResponse | SessionConfirmResponse>('/auth/login/choose-account', {
+): Promise<AuthResponse | TwoFaChallengeResponse | SessionConfirmResponse | import('../types').EmailVerificationRequiredResponse> {
+  const data = await apiFetch<AuthResponse | TwoFaChallengeResponse | SessionConfirmResponse | import('../types').EmailVerificationRequiredResponse>('/auth/login/choose-account', {
     method: 'POST',
     body:   { identifier, password, userId, rememberMe, confirmDisconnectOther, deviceId: getOrCreateDeviceId() },
     public: true,
   });
   if ('requiresTwoFa' in data) return data;
   if ('requiresSessionConfirm' in data) return data;
+  if ('requiresEmailVerification' in data) return data;
   tokenStorage.set(data.accessToken);
   return data;
+}
+
+/** Confirme le code OTP reçu par email — voir EmailVerificationScreen. */
+export async function verifyEmail(userId: string, code: string): Promise<AuthResponse> {
+  const data = await apiFetch<AuthResponse>('/auth/verify-email', {
+    method: 'POST',
+    body:   { userId, code },
+    public: true,
+  });
+  tokenStorage.set(data.accessToken);
+  return data;
+}
+
+/** Renvoie un nouveau code de vérification email. */
+export async function resendVerification(userId: string): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>('/auth/resend-verification', {
+    method: 'POST',
+    body:   { userId },
+    public: true,
+  });
 }
 
 export async function verifyTwoFaLogin(
@@ -236,8 +264,22 @@ export async function getMe(): Promise<PublicUser> {
   return apiFetch<PublicUser>('/auth/me');
 }
 
+/** PlatformSettings.sessionTimeoutMin (Paramètres Plateforme > Sécurité) —
+ *  utilisé par AppContext pour armer le minuteur de déconnexion automatique
+ *  après inactivité. */
+export async function getSessionPolicy(): Promise<{ sessionTimeoutMin: number }> {
+  return apiFetch<{ sessionTimeoutMin: number }>('/auth/session-policy');
+}
+
 export function isAuthenticated(): boolean {
   return !!tokenStorage.get();
+}
+
+/** PlatformSettings.openSignup / .codeRequiredForCompany — publique, lue
+ *  par useLoginPage pour griser les rôles fermés et ne plus exiger de
+ *  code d'inscription entreprise quand le super-admin l'a désactivé. */
+export async function getRegistrationPolicy(): Promise<{ openSignup: boolean; codeRequiredForCompany: boolean }> {
+  return apiFetch<{ openSignup: boolean; codeRequiredForCompany: boolean }>('/public/registration-policy', { public: true });
 }
 
 export const authService = {
@@ -247,10 +289,14 @@ export const authService = {
   login,
   chooseAccount,
   verifyTwoFaLogin,
+  verifyEmail,
+  resendVerification,
   logout,
   forgotPassword,
   verifyOtp,
   resetPassword,
   getMe,
+  getSessionPolicy,
+  getRegistrationPolicy,
   isAuthenticated,
 };

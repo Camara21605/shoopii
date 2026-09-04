@@ -25,6 +25,18 @@ const WAITING_DAYS = 3;
 
 type CodeStatus = 'valid' | 'expired' | 'revoked' | 'used';
 
+/**
+ * Le backend expose son statut interne 'pending' sous le libellé 'valid'
+ * dans les RÉPONSES (voir CodeCreationService.statusMap), mais son DTO de
+ * filtre (FilterCodesDto) valide `status` contre l'enum interne brut, qui
+ * n'a PAS de valeur 'valid' — seulement pending/used/expired/revoked.
+ * Sans cette table inverse, choisir "✅ Valides" dans le filtre envoyait
+ * `status=valid`, rejeté en 400 par class-validator.
+ */
+const STATUS_FILTER_TO_BACKEND: Record<CodeStatus, string> = {
+  valid: 'pending', used: 'used', expired: 'expired', revoked: 'revoked',
+};
+
 interface InvitationCode {
   id: string; value: string; role: string; status: CodeStatus;
   created: string; expires: string; uses: number; maxUses: number;
@@ -114,7 +126,7 @@ export default function InvitationsSection({ store, toast, isActive }: Props) {
       const result = await apiFetch<{ data: CodeResponse[]; total: number }>('/codes', {
         params: {
           role:   state.codeRoleFilter   !== 'all' ? state.codeRoleFilter   : undefined,
-          status: state.codeStatusFilter !== 'all' ? state.codeStatusFilter : undefined,
+          status: state.codeStatusFilter !== 'all' ? STATUS_FILTER_TO_BACKEND[state.codeStatusFilter as CodeStatus] : undefined,
           search: state.codeFilter       || undefined,
           limit:  100,
         },

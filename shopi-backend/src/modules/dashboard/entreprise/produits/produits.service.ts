@@ -33,6 +33,8 @@ import { Company, CompanyPlan } from 'src/database/entities/profiles/entreprise-
 import { PlatformSettings }    from 'src/database/entities/platform-settings.entity';
 import { User }           from 'src/database/entities/user.entity';
 import { UserRole }       from 'src/common/enums/user-role.enum';
+import { CompanySetting } from 'src/modules/company-settings/company-settings.entity';
+import { CommissionCalculatorService } from 'src/modules/commission/services/commission-calculator.service';
 
 import {
   CreateProductDto,
@@ -166,6 +168,10 @@ export class ProduitsService {
     @InjectRepository(ProductStory)
     private readonly storyRepo: Repository<ProductStory>,
 
+    @InjectRepository(CompanySetting)
+    private readonly companySettingRepo: Repository<CompanySetting>,
+
+    private readonly commissionCalculator: CommissionCalculatorService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -304,7 +310,15 @@ export class ProduitsService {
         prixAncien:   dto.prixAncien            ?? null,
         stock:        dto.stock                 ?? 0,
         seuil:        dto.seuil                 ?? null,
-        visibilite:   dto.visibilite            ?? ProductVisibility.DRAFT,
+        /* BUG CORRIGÉ — Company.autoPublish (Paramètres > Catalogue,
+         * "Publication automatique") était enregistré mais jamais lu : un
+         * nouveau produit partait toujours public par défaut, quel que
+         * soit ce réglage (le frontend l'applique désormais aussi, voir
+         * AjouterPage.tsx, mais la source de vérité reste ici — un appel
+         * direct à l'API ne pouvait pas le contourner). */
+        visibilite: companyProfile.autoPublish === false
+          ? ProductVisibility.DRAFT
+          : (dto.visibilite ?? ProductVisibility.DRAFT),
         condition:    dto.condition             ?? 'neuf',
         paysOrigine:  dto.paysOrigine           ?? 'GN',
         poids:        dto.poids                 ?? null,
@@ -658,23 +672,34 @@ export class ProduitsService {
 
     /* FIX M1 — Commission dynamique selon le plan de l'entreprise.
      * Avant : toujours 3% hardcodé, quelle que soit le plan (PRO/PREMIUM).
-     * Après : lit le plan de la boutique + les multiplicateurs de PlatformSettings. */
-    const [company, platform] = await Promise.all([
+     * Puis  : plan pris en compte, mais toujours indépendant de tout
+     *         override CompanySetting (fixe/progressif) du Centre de
+     *         Gestion des Commissions — une formule dupliquée de plus.
+     * Après : délègue à CommissionCalculatorService.resoudreCommissionProduit(),
+     *         LA MÊME fonction pure utilisée par le CommissionEngine à la
+     *         confirmation du paiement — cet aperçu ne peut plus diverger
+     *         du montant réellement prélevé. */
+    const [company, platform, companySettings] = await Promise.all([
       this.companyRepo.findOne({ where: { id: product.companyId }, select: ['plan'] }),
       this.platformRepo.findOne({ where: { id: 1 } }),
+      this.companySettingRepo.findOne({ where: { id: 1 } }),
     ]);
 
     const base     = +(platform?.tauxCommissionProduit ?? 6) / 100;
     const multPro  = +(platform?.planMultiplierPro     ?? 0.75);
     const multPrem = +(platform?.planMultiplierPremium ?? 0.5);
 
-    const tauxMap: Record<CompanyPlan, number> = {
-      [CompanyPlan.STANDARD]: base,
-      [CompanyPlan.PRO]:      base * multPro,
-      [CompanyPlan.PREMIUM]:  base * multPrem,
+    const planMultiplierMap: Record<CompanyPlan, number> = {
+      [CompanyPlan.STANDARD]: 1,
+      [CompanyPlan.PRO]:      multPro,
+      [CompanyPlan.PREMIUM]:  multPrem,
     };
-    const taux            = tauxMap[company?.plan ?? CompanyPlan.STANDARD];
-    const commissionShopi = Math.round(prix * taux);
+    const planMultiplier = planMultiplierMap[company?.plan ?? CompanyPlan.STANDARD];
+
+    const { commissionProduitBrute } = this.commissionCalculator.resoudreCommissionProduit(
+      prix, base, planMultiplier, companySettings ?? null,
+    );
+    const commissionShopi = commissionProduitBrute;
     const revenuNet       = prix - commissionShopi;
     const enRupture       = product.stock === 0;
     const seuilAtteint    = product.seuil !== null && product.stock <= product.seuil;

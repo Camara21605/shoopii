@@ -276,23 +276,3 @@
   animation: spin .7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Pied de panel ── */
-.foot {
-  border-top: 1px solid rgba(255,255,255,.07);
-  padding: 10px 16px;
-  flex-shrink: 0;
-}
-.footBtn {
-  width: 100%;
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 10px;
-  color: #A1A1AA;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 8px;
-  cursor: pointer;
-  transition: all .15s;
-}
-.footBtn:hover { background: rgba(255,255,255,.08); color: #F4F4F5; }

@@ -202,6 +202,22 @@ export class SessionService {
   }
 
   /**
+   * Lit les métadonnées (device/IP/user-agent/date de début) d'une session,
+   * sans en vérifier la validité — utilisé par l'écran "Sécurité" pour
+   * afficher la session actuelle réelle à l'utilisateur (voir
+   * SecuritePartenaireService et équivalents des autres dashboards).
+   * null si la session n'existe plus (expirée, remplacée, Redis en panne).
+   */
+  async getSessionMeta(sessionId: string | null | undefined): Promise<SessionMeta | null> {
+    if (!sessionId) return null;
+    const raw = await withRedisTimeout<string | null>(
+      () => this.redis.get(sessionMetaKey(sessionId)), null, REDIS_OP_TIMEOUT_MS, this.logger, 'getSessionMeta',
+    );
+    if (!raw) return null;
+    try { return JSON.parse(raw) as SessionMeta; } catch { return null; }
+  }
+
+  /**
    * Prolonge le TTL de la session active — appelé à chaque rotation de
    * refresh token pour qu'une session réellement utilisée ne se fasse
    * jamais expirer par TTL. Ne prolonge QUE si sessionId est toujours

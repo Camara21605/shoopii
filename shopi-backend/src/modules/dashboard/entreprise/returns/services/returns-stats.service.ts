@@ -23,8 +23,17 @@ export class ReturnsStatsService {
   ) {}
 
   async getStats(userId: string) {
-    /* FIX m4 — Lookup strict par userId uniquement. */
-    const company = await this.companyRepo.findOne({ where: { userId }, select: ['id'] });
+    /* BUG CORRIGÉ — le "FIX m4" précédent confondait un companyId FOURNI
+     * PAR LE CLIENT (falsifiable) avec l'actorId signé serveur dans le JWT
+     * (req.user.actorId ?? req.user.id, jamais falsifiable). Pour un
+     * compte COMPANY, actorId EST le Company.id — ce lookup strict par
+     * `userId` ne matchait donc quasiment jamais pour une vraie entreprise
+     * (stats toujours vides), sauf collision accidentelle avec une fiche
+     * fantôme (voir boutique-parametres.service.ts). `id` en priorité,
+     * `userId` en repli — même correctif que returns.service.ts/
+     * sav.service.ts/clients.service.ts. */
+    let company = await this.companyRepo.findOne({ where: { id: userId }, select: ['id'] });
+    if (!company) company = await this.companyRepo.findOne({ where: { userId }, select: ['id'] });
     if (!company) return this.emptyStats();
 
     const companyId = company.id;

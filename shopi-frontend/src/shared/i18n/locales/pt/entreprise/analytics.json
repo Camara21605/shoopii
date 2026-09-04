@@ -22,6 +22,10 @@
     "trafic": {
       "title": "Analytics de tráfego",
       "sub": "Visitas, fontes de tráfego, taxa de conversão e funil de vendas — em breve disponível."
+    },
+    "accessDenied": {
+      "title": "Acesso não autorizado",
+      "message": "Você não tem acesso às estatísticas. Contate o proprietário da loja para obtê-lo."
     }
   }
 }

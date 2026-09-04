@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 import { AdministrateurDashboardService, GenerateCodeDto } from './administrateur-dashboard.service';
+import { SuspendActeurDto } from './dto/suspend-acteur.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('dashboard/admin')
@@ -65,6 +66,16 @@ export class AdministrateurDashboardController {
     return this.svc.getActeurs(req.user.id, role, search, Number(page) || 1, Number(limit) || 20);
   }
 
+  @Patch('acteurs/:id/suspend')
+  suspendActeur(@Request() req: any, @Param('id') id: string, @Body() dto: SuspendActeurDto) {
+    return this.svc.suspendActeur(req.user.id, id, dto.motif);
+  }
+
+  @Patch('acteurs/:id/reactivate')
+  reactivateActeur(@Request() req: any, @Param('id') id: string) {
+    return this.svc.reactivateActeur(req.user.id, id);
+  }
+
   // ── Validations ─────────────────────────────────────────────
   @Get('validations')
   getValidations(@Request() req: any) { return this.svc.getValidations(req.user.id); }
@@ -97,9 +108,31 @@ export class AdministrateurDashboardController {
     return this.svc.getSignalements(req.user.id, Number(page) || 1, Number(limit) || 20);
   }
 
+  /* Deep-link "clic sur une notification" — l'élément visé n'est pas
+   * forcément sur la page/onglet actuellement chargé côté frontend. */
+  @Get('signalements/:id')
+  getSignalementById(@Request() req: any, @Param('id') id: string) {
+    return this.svc.getSignalementById(req.user.id, id);
+  }
+
   @Patch('signalements/:id/resolve')
   resolveSignalement(@Request() req: any, @Param('id') id: string) {
     return this.svc.resolveSignalement(req.user.id, id);
+  }
+
+  @Patch('signalements/:id/investigate')
+  investigateSignalement(@Request() req: any, @Param('id') id: string) {
+    return this.svc.investigateSignalement(req.user.id, id);
+  }
+
+  @Patch('signalements/:id/warn')
+  warnSignalement(@Request() req: any, @Param('id') id: string) {
+    return this.svc.warnSignalement(req.user.id, id);
+  }
+
+  @Patch('signalements/:id/reject')
+  rejectSignalement(@Request() req: any, @Param('id') id: string, @Body('reason') reason?: string) {
+    return this.svc.rejectSignalement(req.user.id, id, reason);
   }
 
   // ── Commandes ───────────────────────────────────────────────

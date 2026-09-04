@@ -3,7 +3,7 @@
  * Section 4 — Catalogue & Règles de publication
  * PATCH /dashboard/entreprise/parametres/catalogue
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData } from '../../hooks/useParametres';
@@ -50,6 +50,12 @@ export default function CatalogueSection({ data, saving, onDirty, onToast, saveC
   const [devise,          setDevise]          = useState('GNF');
   const [returnPolicy,    setReturnPolicy]    = useState('');
 
+  /* true au montage ET après chaque rechargement depuis l'API — même
+   * garde que HorairesSection.tsx pour éviter que l'auto-save ci-dessous
+   * ne se redéclenche juste après avoir reçu les données qu'il vient
+   * lui-même d'enregistrer. */
+  const skipNextSaveRef = useRef(true);
+
   useEffect(() => {
     if (!data) return;
     setShowOutOfStock(data.showOutOfStock  ?? true);
@@ -58,16 +64,26 @@ export default function CatalogueSection({ data, saving, onDirty, onToast, saveC
     setAllowReviews(data.allowReviews      ?? true);
     setDevise(data.devise                  ?? 'GNF');
     setReturnPolicy(data.returnPolicy      ?? '');
+    skipNextSaveRef.current = true;
   }, [data]);
 
   function mark(fn: () => void) { fn(); onDirty(); }
 
-  async function handleSave() {
-    try {
-      await saveCatalogue({ showOutOfStock, autoPublish, showStrikePrice, allowReviews, devise, returnPolicy });
-      onToast(t('parametres.catalogue.savedToast'), 's');
-    } catch { onToast(t('parametres.catalogue.errorToast'), 'e'); }
-  }
+  /* Sauvegarde automatique — plus de bouton "Sauvegarder" : chaque
+   * changement (toggle, devise, texte) déclenche un enregistrement après
+   * une courte pause (800ms), pour ne pas envoyer une requête à chaque
+   * frappe pendant que le texte de la politique de retour est en cours
+   * de rédaction. Même pattern que HorairesSection.tsx. */
+  useEffect(() => {
+    if (skipNextSaveRef.current) { skipNextSaveRef.current = false; return; }
+    const timer = setTimeout(() => {
+      saveCatalogue({ showOutOfStock, autoPublish, showStrikePrice, allowReviews, devise, returnPolicy })
+        .then(() => onToast(t('parametres.catalogue.savedToast'), 's'))
+        .catch(() => onToast(t('parametres.catalogue.errorToast'), 'e'));
+    }, 800);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showOutOfStock, autoPublish, showStrikePrice, allowReviews, devise, returnPolicy]);
 
   return (
     <>
@@ -109,11 +125,13 @@ export default function CatalogueSection({ data, saving, onDirty, onToast, saveC
           <div className={s.hint}><i className="fas fa-circle-info" /> {t('parametres.catalogue.politiqueHint')}</div>
         </div>
 
-        <div className={s.saveRow}>
-          <button className={s.saveBtn} onClick={handleSave} disabled={saving}>
-            {saving ? <><i className="fas fa-spinner fa-spin" /> {t('parametres.catalogue.sauvegardeEnCours')}</> : <><i className="fas fa-cloud-arrow-up" /> {t('parametres.catalogue.sauvegarderCatalogue')}</>}
-          </button>
-        </div>
+        {/* Plus de bouton — enregistrement automatique (voir l'effet
+         * debounced ci-dessus). Indicateur discret pendant l'appel réseau. */}
+        {saving && (
+          <div style={{ marginTop:16, display:'flex', alignItems:'center', gap:7, fontSize:12.5, color:'var(--t3)' }}>
+            <i className="fas fa-spinner fa-spin" /> {t('parametres.catalogue.sauvegardeEnCours')}
+          </div>
+        )}
       </FormCard>
     </>
   );

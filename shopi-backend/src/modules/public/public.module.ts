@@ -19,18 +19,37 @@ import { StoryLike }     from 'src/database/entities/entreprise.table/story-like
 import { Category }      from 'src/database/entities/entreprise.table/category.entity';
 import { SubCategory }   from 'src/database/entities/entreprise.table/sub-category.entity';
 import { User }          from 'src/database/entities/user.entity';
+import { Commande }      from 'src/database/entities/commande/commande.entity';
 
 import { NotificationsModule } from 'src/modules/notifications/notifications.module';
+import { PerformanceModule }   from 'src/modules/performance-engine/performance.module';
 
 import { PublicController } from './public.controller';
 import { PublicService }    from './public.service';
+import { PublicGateway }           from './public.gateway';
+import { PublicBroadcastService }  from './public-broadcast.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product, Company, Delivery, Correspondent, CorrespondantHoraire, CompanyAvis, Promotion, Follow, ProductStory, StoryView, StoryLike, Category, SubCategory, User]),
+    /* Commande ajouté pour GET /public/landing-stats (PublicService.getLandingStats
+     * lit la dernière commande livrée) — absent ici causait un crash au démarrage
+     * (CommandeRepository introuvable dans PublicModule). */
+    TypeOrmModule.forFeature([Product, Company, Delivery, Correspondent, CorrespondantHoraire, CompanyAvis, Promotion, Follow, ProductStory, StoryView, StoryLike, Category, SubCategory, User, Commande]),
     NotificationsModule, // NotificationBroadcastService — pousse story:viewed en direct au propriétaire de la story
+    PerformanceModule,   // PlatformSettingsCacheService — GET /public/branding
   ],
   controllers: [PublicController],
-  providers:   [PublicService],
+  providers:   [
+    PublicService,
+    /* Diffusion temps réel vers la page boutique publique (horaires, etc.)
+     * — voir public.gateway.ts pour le détail du namespace /public. */
+    PublicGateway,
+    PublicBroadcastService,
+  ],
+  exports: [
+    /* Permet à d'autres modules (ex: ParametresModule) d'émettre des mises
+     * à jour vers les visiteurs d'une fiche boutique après une sauvegarde. */
+    PublicBroadcastService,
+  ],
 })
 export class PublicModule {}

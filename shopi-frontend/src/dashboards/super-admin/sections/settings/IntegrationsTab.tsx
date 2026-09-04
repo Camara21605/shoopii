@@ -14,7 +14,6 @@
  *
  * Props spéciales :
  *   - toast    → fonction pour afficher un message de succès/erreur
- *   - onRegenApiKey → callback vers le parent pour régénérer la clé
  */
 
 import React, { useState } from 'react';
@@ -29,8 +28,6 @@ interface Props {
   settings:       PlatformSettings;
   set:            <K extends keyof PlatformSettings>(key: K, val: PlatformSettings[K]) => void;
   toast:          (msg: string, type?: 'success' | 'error' | 'info') => void;
-  onRegenApiKey:  () => void;        // Délégué au parent car déclenche un loading global
-  apiKeyRegenning: boolean;          // true pendant la simulation de régénération
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -56,8 +53,6 @@ export default function IntegrationsTab({
   settings,
   set,
   toast,
-  onRegenApiKey,
-  apiKeyRegenning,
 }: Props) {
   // Contrôle l'affichage de la clé API (masquée par défaut pour la sécurité)
   const [apiKeyVisible, setApiKeyVisible] = useState(false);
@@ -113,18 +108,28 @@ export default function IntegrationsTab({
           </div>
         </SettingRow>
 
-        {/* Régénération — opération destructive : l'ancienne clé sera immédiatement invalide */}
+        {/* BUG CORRIGÉ — ce bouton simulait une régénération (attente de
+         * 1.2s puis toast de succès) sans jamais appeler le backend, qui
+         * n'a d'ailleurs aucune colonne `apiKey` sur PlatformSettings :
+         * aucune clé n'existe ni ne peut être régénérée. Le clic affichait
+         * "Clé API régénérée" alors que le champ ci-dessus continuait à
+         * afficher "Non générée" juste en dessous — trompeur pour un
+         * admin qui s'attendrait à voir la clé changer. Désactivé avec un
+         * message honnête plutôt que de faire semblant : un vrai système
+         * de clé API (génération, hachage, authentification API externe,
+         * révocation) est une fonctionnalité à part entière, pas encore
+         * construite. */}
         <SettingRow
           label="Régénérer la clé"
-          desc="⚠️ L'ancienne clé sera immédiatement invalide — toutes les intégrations devront être mises à jour"
+          desc="Fonctionnalité pas encore disponible — aucun système de clé API n'existe côté serveur pour le moment."
         >
           <button
             className="btn-danger"
-            disabled={apiKeyRegenning}
-            onClick={onRegenApiKey}
-            style={{ padding: '8px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: apiKeyRegenning ? 'not-allowed' : 'pointer' }}
+            disabled
+            title="Pas encore disponible"
+            style={{ padding: '8px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'not-allowed', opacity: .5 }}
           >
-            {apiKeyRegenning ? '⏳ Régénération…' : '🔄 Régénérer'}
+            🔄 Régénérer
           </button>
         </SettingRow>
 

@@ -19,25 +19,26 @@ interface Props {
   saveTrigger:      number;
   onSaveSecurite:   (body: { twoFaEnabled: boolean; twoFaMethod?: string | null }) => Promise<void>;
   onChangePassword: (current: string, next: string, confirm: string) => Promise<void>;
+  onLogout:         () => void;
   onToast:          (msg: string, type?: 's' | 'i' | 'w') => void;
 }
 
 export default function SecSecurite({
   data, saving, dirty, markClean, saveTrigger,
-  onSaveSecurite, onChangePassword, onToast
+  onSaveSecurite, onChangePassword, onLogout, onToast
 }: Props) {
   const [pwdCurrent, setPwdCurrent] = useState('');
   const [pwdNew,     setPwdNew]     = useState('');
   const [pwdConfirm, setPwdConfirm] = useState('');
   const [pwdScore,   setPwdScore]   = useState(0);
-  const [twoFa,      setTwoFa]      = useState(true);
-  const [twoFaMethod,setTwoFaMethod]= useState('sms');
+  const [twoFa,      setTwoFa]      = useState(false);
+  const [twoFaMethod,setTwoFaMethod]= useState('totp');
   const [show2fa,    setShow2fa]    = useState(false);
 
   useEffect(() => {
     if (!data) return;
-    setTwoFa(data.twoFaEnabled ?? true);
-    setTwoFaMethod(data.twoFaMethod ?? 'sms');
+    setTwoFa(data.twoFaEnabled ?? false);
+    setTwoFaMethod(data.twoFaMethod ?? 'totp');
   }, [data]);
 
   useEffect(() => {
@@ -76,8 +77,11 @@ export default function SecSecurite({
     }
     /* Activation 2FA : passe par POST /auth/2fa/setup + /confirm (TwoFaService),
      * qui exige un code TOTP valide avant d'activer réellement — l'ancien
-     * chemin direct (twoFaEnabled:true) est désormais rejeté côté backend. */
-    if (twoFa && !data?.twoFaEnabled) {
+     * chemin direct (twoFaEnabled:true) est désormais rejeté côté backend.
+     * Seule la méthode 'totp' est réellement implémentée (voir toggle SMS
+     * désactivé ci-dessous) — cette condition ne peut donc plus être
+     * atteinte avec twoFaMethod==='sms'. */
+    if (twoFa && twoFaMethod === 'totp' && !data?.twoFaEnabled) {
       setShow2fa(true);
       return;
     }
@@ -137,11 +141,17 @@ export default function SecSecurite({
           <div className={s.trow}>
             <div className={s.trowIc}><i className="fas fa-mobile-screen" /></div>
             <div className={s.trowMain}>
-              <div className={s.trowT}>2FA par SMS</div>
+              <div className={s.trowT}>
+                2FA par SMS <span className={s.flOpt}>— bientôt disponible</span>
+              </div>
               <div className={s.trowD}>Un code vous est envoyé à chaque connexion.</div>
             </div>
-            <div className={`${s.toggle} ${twoFa && twoFaMethod === 'sms' ? s.toggleOn : ''}`}
-              onClick={() => { setTwoFa(true); setTwoFaMethod('sms'); dirty(); }} role="switch" />
+            {/* BUG CORRIGÉ — ce toggle activait en réalité la 2FA par
+             * application (TOTP) sans jamais envoyer le moindre SMS : aucune
+             * infrastructure d'envoi de code par SMS n'existe côté backend.
+             * Désactivé plutôt que de continuer à tromper l'utilisateur sur
+             * la méthode réellement activée. */}
+            <div className={s.toggle} style={{ opacity: .4, cursor: 'not-allowed' }} role="switch" aria-disabled="true" />
           </div>
           <div className={s.trow}>
             <div className={s.trowIc}><i className="fas fa-key" /></div>
@@ -150,35 +160,50 @@ export default function SecSecurite({
               <div className={s.trowD}>Google Authenticator, Authy…</div>
             </div>
             <div className={`${s.toggle} ${twoFa && twoFaMethod === 'totp' ? s.toggleOn : ''}`}
-              onClick={() => { setTwoFa(true); setTwoFaMethod('totp'); dirty(); }} role="switch" />
+              onClick={() => { setTwoFa(!twoFa); setTwoFaMethod('totp'); dirty(); }} role="switch" />
           </div>
         </div>
       </div>
 
-      {/* Sessions actives */}
+      {/* Sessions actives
+       * BUG CORRIGÉ — cette carte affichait 2 lignes 100% inventées
+       * ("Android · Conakry", "Windows · Conakry") avec un bouton
+       * "Déconnecter" qui ne faisait qu'un toast local, sans jamais rien
+       * révoquer côté serveur. Shoneya n'autorise qu'UNE SEULE session
+       * active par compte (une nouvelle connexion remplace la précédente,
+       * voir SessionService) — il ne peut donc jamais exister plusieurs
+       * appareils "actifs" à lister : on affiche la vraie session actuelle
+       * (device/navigateur/IP réels) et le bouton réutilise la vraie
+       * déconnexion (POST /auth/logout, déjà testée en production). */}
       <div className={s.fc}>
         <div className={s.fcHd}>
-          <div className={s.fcTtl}><i className="fas fa-desktop" /> Sessions actives</div>
+          <div className={s.fcTtl}><i className="fas fa-desktop" /> Session active</div>
         </div>
         <div className={s.fcBody}>
-          {/* TODO (backend) : GET /partenaire/parametres/sessions */}
-          <div className={s.sess}>
-            <div className={s.sessIc}><i className="fas fa-mobile-screen" /></div>
-            <div className={s.sessMain}>
-              <div className={s.sessNm}>Android · Conakry <span className={s.sessCur}>Cet appareil</span></div>
-              <div className={s.sessMeta}>Chrome Mobile · Actif maintenant</div>
+          {data?.currentSession ? (
+            <div className={s.sess}>
+              <div className={s.sessIc}>
+                <i className={`fas ${data.currentSession.device === 'Android' || data.currentSession.device === 'iOS' ? 'fa-mobile-screen' : 'fa-laptop'}`} />
+              </div>
+              <div className={s.sessMain}>
+                <div className={s.sessNm}>
+                  {data.currentSession.device} <span className={s.sessCur}>Cet appareil</span>
+                </div>
+                <div className={s.sessMeta}>
+                  {data.currentSession.browser} · Actif maintenant
+                  {data.currentSession.ipAddress ? ` · ${data.currentSession.ipAddress}` : ''}
+                </div>
+              </div>
+              <button
+                className={s.sessOut}
+                onClick={() => { onToast('🔒 Déconnexion en cours…', 'i'); onLogout(); }}
+              >
+                Déconnecter
+              </button>
             </div>
-          </div>
-          <div className={s.sess}>
-            <div className={s.sessIc}><i className="fas fa-laptop" /></div>
-            <div className={s.sessMain}>
-              <div className={s.sessNm}>Windows · Conakry</div>
-              <div className={s.sessMeta}>Chrome · Il y a 2 jours</div>
-            </div>
-            <button className={s.sessOut} onClick={() => onToast('🔒 Session déconnectée', 's')}>
-              Déconnecter
-            </button>
-          </div>
+          ) : (
+            <div className={s.sessMeta}>Informations de session indisponibles pour le moment.</div>
+          )}
         </div>
       </div>
 

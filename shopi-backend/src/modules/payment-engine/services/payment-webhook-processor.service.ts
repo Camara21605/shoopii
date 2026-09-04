@@ -32,9 +32,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Not, Repository } from 'typeorm';
 
 import { Commande, CommandeStatus } from '../../../database/entities/commande/commande.entity';
+import { Client }                   from '../../../database/entities/profiles/client-profile.entity';
 import { Wallet }                   from '../../../database/entities/wallet.entity';
 import {
   PaiementSession,
@@ -66,6 +67,9 @@ import {
   PaymentFailedEvent,
 } from '../events/payment.events';
 import { PaymentErreur, PaymentErreurType } from '../types/payment-engine.types';
+import { SecurityAlertsService } from '../../security-alerts/security-alerts.service';
+import { EventOrchestrationEngine } from '../../event-orchestration/event-orchestration.engine';
+import { EventSource, COMMISSION_EVENTS, CommissionDistributedPayload } from '../../event-orchestration/types/events.types';
 
 @Injectable()
 export class PaymentWebhookProcessorService {
@@ -88,12 +92,17 @@ export class PaymentWebhookProcessorService {
     @InjectRepository(WebhookEvent)
     private readonly webhookEventRepo: Repository<WebhookEvent>,
 
+    @InjectRepository(Client)
+    private readonly clientRepo: Repository<Client>,
+
     private readonly dataSource:        DataSource,
     private readonly commissionEngine:  CommissionEngine,
     private readonly providerFactory:   PaymentProviderFactory,
     private readonly escrowEngine:      EscrowEngine,
     private readonly notifEventSvc:     NotificationEventService,
     private readonly eventBus:          PaymentEventBus,
+    private readonly securityAlertsService: SecurityAlertsService,
+    private readonly orchestration:     EventOrchestrationEngine,
   ) {}
 
   /* ════════════════════════════════════════════════════════
@@ -180,6 +189,14 @@ export class PaymentWebhookProcessorService {
             payload.erreur ?? 'Refusé par le provider',
           ),
         );
+
+        /* Alerte "transaction refusée" — fire-and-forget, ne doit jamais
+         * retarder/faire échouer le traitement du webhook. No-op
+         * silencieux si le payeur n'est pas un CLIENT (voir
+         * SecurityAlertsService.isEnabled) ou si la commande/le client
+         * est introuvable (ex: commande supprimée entretemps). */
+        this.notifyPaymentDeclined(failedSession.commandeId, payload.erreur ?? 'Refusé par le provider')
+          .catch(() => {});
       }
 
       webhookEvent.status      = WebhookEventStatus.PROCESSED;
@@ -292,22 +309,55 @@ export class PaymentWebhookProcessorService {
     };
     const calcul = await this.commissionEngine.calculer(context);
 
-    /* ── Résoudre le wallet client pour l'EscrowEngine ───── */
-    let clientWallet = await this.walletRepo.findOne({ where: { userId: commande.clientId } });
+    /* ── Résoudre le wallet client pour l'EscrowEngine ─────
+     * BUG CORRIGÉ — commande.clientId est le PK du profil Client
+     * (Client.id, cf. @ManyToOne(() => Client) @JoinColumn({name:'clientId'})
+     * sur Commande), PAS le User.id réel. Wallet est keyé par le vrai
+     * User.id partout ailleurs (voir WalletService.getOrCreateWallet,
+     * appelé avec user.id sur tous ses sites d'appel). Sans cette
+     * résolution, l'escrow créait un wallet "fantôme" indexé par
+     * Client.id : les remboursements (escrow-refund.service.ts, qui
+     * réutilise ce clientWalletId en priorité) y créditaient des fonds
+     * que le client ne pouvait jamais voir dans son wallet réel. */
+    const clientProfile = await this.clientRepo.findOne({ where: { id: commande.clientId }, select: ['userId'] });
+    if (!clientProfile) throw new NotFoundException(`Profil client introuvable pour la commande ${commande.numero}`);
+    const clientUserId = clientProfile.userId;
+
+    let clientWallet = await this.walletRepo.findOne({ where: { userId: clientUserId } });
     if (!clientWallet) {
-      clientWallet = this.walletRepo.create({ userId: commande.clientId });
+      clientWallet = this.walletRepo.create({ userId: clientUserId });
       clientWallet = await this.walletRepo.save(clientWallet);
     }
 
     /* ── Transaction SQL : commande + distributions + session */
     const distributionIds: string[] = [];
 
-    await this.dataSource.transaction(async manager => {
+    try {
+      await this.dataSource.transaction(async manager => {
 
       /* 1. Commande → PAID */
       commande.status       = CommandeStatus.PAID;
       commande.refPaiement  = providerTransactionId;
       commande.datePaiement = new Date();
+
+      /* BUG CORRIGÉ — commande.commissionShopi était figé à la création
+       * de la commande (commande-creation.service.ts), calculé avec une
+       * formule indépendante (PlatformSettings.platformCommission, sans
+       * multiplicateur de plan ni override CompanySetting) et jamais
+       * recalé ensuite : la page de suivi client et les KPIs financiers
+       * du dashboard entreprise (entreprise-dashboard.service.ts) restaient
+       * durablement faux dès que le plan de la boutique ou son override
+       * de commission différait du cas STANDARD par défaut. On écrase ici
+       * cette estimation par le montant RÉEL calculé par le CommissionEngine
+       * (part PLATEFORME_PRODUIT, seule part figurant dans commissionShopi —
+       * la part livraison n'y a jamais été incluse, voir commande-query.service.ts). */
+      const partProduitPlateforme = calcul.parts.find(
+        p => p.acteurType === DistributionActeurType.PLATEFORME_PRODUIT,
+      );
+      if (partProduitPlateforme) {
+        commande.commissionShopi = Math.round(partProduitPlateforme.montant);
+      }
+
       await manager.save(Commande, commande);
 
       /* 2. Distributions (SANS manipulation wallet) */
@@ -356,19 +406,86 @@ export class PaymentWebhookProcessorService {
         session.webhookReceivedAt = new Date();
       }
       await manager.save(PaiementSession, session);
-    });
+      });
+    } catch (err) {
+      /* Race entre deux livraisons quasi-simultanées du même webhook :
+       * les deux passent le check "session CONFIRMED ?" ci-dessus avant
+       * que l'une des deux commite, puis la seconde viole la contrainte
+       * UQ_distribution_commande_acteur_type sur l'INSERT (protection
+       * réelle contre le double-crédit — la transaction est rollback
+       * automatiquement, aucun wallet n'est affecté deux fois). Sans ce
+       * catch, cette 2e livraison remontait en erreur 500 non catégorisée
+       * jusqu'au provider de paiement (retries/alerting inutiles) au lieu
+       * d'un no-op idempotent propre. */
+      const pgCode = (err as { code?: string })?.code;
+      if (pgCode === '23505') {
+        const fresh = await this.sessionRepo.findOne({ where: { id: sessionId } });
+        if (fresh?.status === PaiementSessionStatus.CONFIRMED) {
+          this.logger.warn(`[Confirm] Session ${sessionId} — webhook concurrent déjà traité par une autre requête, ignoré.`);
+          return;
+        }
+      }
+      throw err;
+    }
 
     this.logger.log(
       `[Confirm] ✅ Session ${sessionId} confirmée — ` +
       `${distributionIds.length} distributions créées`,
     );
 
+    /* ── Événement commission.distributed ──────────────────
+     * Émis maintenant que les PaiementDistribution sont persistées
+     * (voir CommissionDistributedEvent, commission.events.ts : "émis
+     * par le module appelant après sauvegarde"). Fire-and-forget via
+     * l'EventOrchestrationEngine — jamais bloquant pour la confirmation
+     * du paiement elle-même. */
+    try {
+      const shopiTotal = calcul.parts
+        .filter(p =>
+          p.acteurType === DistributionActeurType.PLATEFORME_PRODUIT ||
+          p.acteurType === DistributionActeurType.PLATEFORME_LIVRAISON ||
+          p.acteurType === DistributionActeurType.PLATEFORME,
+        )
+        .reduce((s, p) => s + p.montant, 0);
+
+      const partLivreur      = calcul.parts.find(p => p.acteurType === DistributionActeurType.LIVREUR);
+      const partCorrespondant = calcul.parts.find(p => p.acteurType === DistributionActeurType.CORRESPONDANT);
+
+      const payload: CommissionDistributedPayload = {
+        commandeId:     commande.id,
+        commandeRef:    commande.numero,
+        devise:         session.devise ?? 'GNF',
+        totalDistribue: calcul.totalDistribue,
+        shopiTotal,
+        livreurId:            commande.livreurId ?? undefined,
+        livreurAmount:        partLivreur?.montant,
+        correspondantId:      commande.correspondantId ?? undefined,
+        correspondantAmount:  partCorrespondant?.montant,
+        detailParActeur: calcul.parts.map(p => ({
+          acteurType: p.acteurType,
+          acteurId:   p.acteurUserId,
+          montant:    p.montant,
+          taux:       p.tauxApplique ?? 0,
+        })),
+      };
+
+      this.orchestration.publish(
+        COMMISSION_EVENTS.DISTRIBUTED,
+        payload,
+        EventSource.COMMISSION,
+        { correlationId: commande.id },
+      );
+    } catch (err) {
+      /* Ne doit jamais faire échouer la confirmation du paiement */
+      this.logger.error('[Confirm] Erreur publication commission.distributed:', err);
+    }
+
     /* ── EscrowEngine : chaîne de verrouillage ───────────── */
     const escrow = await this.escrowEngine.creer({
       commandeId:       commande.id,
       commandeNumero:   commande.numero,
       sessionId,
-      clientUserId:     commande.clientId,
+      clientUserId:     clientUserId,
       clientWalletId:   clientWallet.id,
       montantTotal:     Number(commande.total),
       currency:         session.devise ?? 'GNF',
@@ -408,7 +525,7 @@ export class PaymentWebhookProcessorService {
         session.id,
         commande.id,
         commande.numero,
-        commande.clientId,
+        clientUserId,
         session.provider,
         providerTransactionId,
         montantConfirme > 0 ? montantConfirme : Number(commande.total),
@@ -419,6 +536,48 @@ export class PaymentWebhookProcessorService {
     /* ── Notifications (fire-and-forget) ─────────────────── */
     this.sendPaiementNotifications(commande).catch(err =>
       this.logger.error('[Confirm] Erreur notifications:', err),
+    );
+
+    /* Alerte "transaction suspecte" (montant inhabituellement élevé) —
+     * le pendant "refusée" du même type d'alerte est géré côté échec du
+     * webhook, voir notifyPaymentDeclined(). Fire-and-forget. */
+    this.notifyIfUnusuallyHigh(commande).catch(() => {});
+  }
+
+  /** Alerte "transaction suspecte" — montant significativement supérieur
+   * à la moyenne des commandes payées précédentes de ce client. Même
+   * principe que AnomalyDetectorService.isWithdrawalAnomaly() (facteur ×
+   * moyenne + plancher absolu), mais appliqué aux achats client — cette
+   * comparaison n'existait nulle part pour les commandes avant ce jour. */
+  private async notifyIfUnusuallyHigh(commande: Commande): Promise<void> {
+    const ANOMALY_FACTOR = 3;
+    const ANOMALY_FLOOR  = 500_000; // GNF — jamais "suspect" en dessous, même si > 3x la moyenne
+    const HISTORY_SIZE   = 10;
+    const MIN_HISTORY    = 3;       // historique trop court → comparaison pas fiable, on ignore
+
+    const total = Number(commande.total);
+    if (total < ANOMALY_FLOOR) return;
+
+    const history = await this.commandeRepo.find({
+      where: { clientId: commande.clientId, status: CommandeStatus.PAID, id: Not(commande.id) },
+      select: ['total'],
+      order: { datePaiement: 'DESC' },
+      take: HISTORY_SIZE,
+    });
+    if (history.length < MIN_HISTORY) return;
+
+    const average = history.reduce((sum, h) => sum + Number(h.total), 0) / history.length;
+    if (total < average * ANOMALY_FACTOR) return;
+
+    const client = await this.clientRepo.findOne({ where: { id: commande.clientId }, select: ['userId'] });
+    if (!client) return;
+
+    await this.securityAlertsService.notifyIfEnabled(
+      client.userId, 'transaction',
+      'Transaction inhabituellement élevée',
+      `Votre commande ${commande.numero} d'un montant de ${total.toLocaleString('fr-FR')} GNF est nettement `
+      + `supérieure à vos achats habituels (moyenne récente : ${Math.round(average).toLocaleString('fr-FR')} GNF). `
+      + 'Si vous n\'êtes pas à l\'origine de cette commande, contactez le support immédiatement.',
     );
   }
 
@@ -464,5 +623,26 @@ export class PaymentWebhookProcessorService {
         body:          `Un colis vous est assigné (${commande.numero}).`,
       });
     }
+  }
+
+  /** Alerte "transaction refusée" — voir SecurityAlertsService. Résout le
+   * User depuis Commande.clientId, qui référence Client.id (le profil, PAS
+   * User.id — cf. Client { @PrimaryGeneratedColumn }, distinct de
+   * Client.userId) : il faut donc repasser par Client.userId pour trouver
+   * le bon destinataire, ne jamais utiliser clientId directement comme un
+   * userId. */
+  private async notifyPaymentDeclined(commandeId: string, raison: string): Promise<void> {
+    const commande = await this.commandeRepo.findOne({ where: { id: commandeId }, select: ['id', 'clientId', 'numero', 'total'] });
+    if (!commande) return;
+
+    const client = await this.clientRepo.findOne({ where: { id: commande.clientId }, select: ['userId'] });
+    if (!client) return;
+
+    await this.securityAlertsService.notifyIfEnabled(
+      client.userId, 'transaction',
+      'Transaction refusée',
+      `Le paiement de votre commande ${commande.numero} (${Number(commande.total).toLocaleString('fr-FR')} GNF) `
+      + `a été refusé (${raison}). Si vous n'êtes pas à l'origine de cette tentative, sécurisez votre compte.`,
+    );
   }
 }

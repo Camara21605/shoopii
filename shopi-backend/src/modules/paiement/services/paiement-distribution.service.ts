@@ -199,66 +199,6 @@ export class PaiementDistributionService {
     }
   }
 
-  /* ════════════════════════════════════════════════════════
-   * Annulation — retourne les fonds en escrow au client
-   ════════════════════════════════════════════════════════ */
-
-  /**
-   * Annule toutes les distributions en escrow pour une commande.
-   * Appelé lors d'une annulation / remboursement.
-   *
-   * Note : le remboursement vers le provider (vrai remboursement)
-   * est géré séparément par PaiementRemboursementService.
-   * Ici on ne fait que libérer les wallets des acteurs.
-   */
-  async annuler(commandeId: string, raison: string, adminUserId?: string): Promise<void> {
-
-    const distributions = await this.distributionRepo.find({
-      where: { commandeId, status: DistributionStatus.ESCROW },
-    });
-
-    if (distributions.length === 0) {
-      this.logger.log(`[Distribution/Annul] Commande ${commandeId} — rien à annuler`);
-      return;
-    }
-
-    const qr = this.dataSource.createQueryRunner();
-    await qr.connect();
-    await qr.startTransaction();
-
-    try {
-      const now = new Date();
-
-      for (const distribution of distributions) {
-
-        const wallet = await qr.manager.findOne(Wallet, { where: { id: distribution.walletId } });
-        if (!wallet) continue;
-
-        /* Décrémenter le pendingBalance */
-        wallet.pendingBalance = Math.max(0, Number(wallet.pendingBalance) - distribution.montant);
-        await qr.manager.save(Wallet, wallet);
-
-        /* Annuler la distribution */
-        distribution.status       = DistributionStatus.CANCELLED;
-        distribution.cancelledAt  = now;
-        distribution.cancelRaison = raison;
-        distribution.actionParUserId = adminUserId ?? null;
-        await qr.manager.save(PaiementDistribution, distribution);
-      }
-
-      await qr.commitTransaction();
-
-      this.logger.log(`[Distribution/Annul] Commande ${commandeId} — ${distributions.length} escrow annulés`);
-
-    } catch (err) {
-      await qr.rollbackTransaction();
-      this.logger.error(`[Distribution/Annul] Échec pour ${commandeId}:`, err);
-      throw err;
-    } finally {
-      await qr.release();
-    }
-  }
-
   /* ── Notifications ──────────────────────────────────────── */
 
   private async sendDistributionNotifications(

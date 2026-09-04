@@ -19,7 +19,6 @@ interface SidebarProps {
   zoneName?:      string;
   adminName?:     string;
   communesCount?: number;
-  unreadCount?:   number;
 }
 
 /* Sections de navigation avec leurs items (badges statiques hors notifications).
@@ -44,7 +43,6 @@ const NAV: { title: string; items: { id: AdminPage; icon: string; label: string;
     { id: 'commandes',     icon: 'fa-box',            label: 'Commandes' },
     { id: 'finances',      icon: 'fa-coins',          label: 'Finances' },
     { id: 'audit',         icon: 'fa-clipboard-list', label: "Journal d'audit" },
-    { id: 'notifications', icon: 'fa-bell',           label: 'Notifications', perm: 'notifs' },
   ]},
   { title: 'Support', items: [
     { id: 'support', icon: 'fa-headset', label: 'Support', perm: 'support' },
@@ -54,7 +52,7 @@ const NAV: { title: string; items: { id: AdminPage; icon: string; label: string;
   ]},
 ];
 
-export default function Sidebar({ activePage, open, onClose, onNavigate, onGenerate, geoPerms, zoneName, adminName, communesCount, unreadCount }: SidebarProps) {
+export default function Sidebar({ activePage, open, onClose, onNavigate, onGenerate, geoPerms, zoneName, adminName, communesCount }: SidebarProps) {
   const hasGeoAccess = Object.entries(geoPerms ?? {}).some(([k, v]) => k.startsWith('geo_') && v);
   /* Même logique que hasGeoAccess ci-dessus : tant que /my-permissions n'a
    * pas répondu, geoPerms vaut {} → tout item avec `perm` reste masqué
@@ -109,12 +107,6 @@ export default function Sidebar({ activePage, open, onClose, onNavigate, onGener
                   onClick={() => onNavigate(item.id)}>
                   <i className={`fas ${item.icon}`} />
                   <span>{item.label}</span>
-                  {/* Badge temps réel pour les notifications */}
-                  {item.id === 'notifications' && (unreadCount ?? 0) > 0 && (
-                    <span className={`${styles.badge} ${styles.badge_r}`}>
-                      {(unreadCount ?? 0) > 99 ? '99+' : unreadCount}
-                    </span>
-                  )}
                 </button>
               ))}
             </div>

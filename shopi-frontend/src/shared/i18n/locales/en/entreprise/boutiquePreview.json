@@ -46,6 +46,11 @@
       "LR": "Liberia",
       "SL": "Sierra Leone",
       "FR": "France"
-    }
+    },
+    "accessDenied": {
+      "title": "Access denied",
+      "message": "You do not have access to the shop preview. Contact the shop owner to request it."
+    },
+    "loadError": "Unable to load the shop preview."
   }
 }

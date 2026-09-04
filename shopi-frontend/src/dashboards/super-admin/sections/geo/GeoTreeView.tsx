@@ -2,34 +2,44 @@
  * FICHIER : sections/geo/GeoTreeView.tsx
  * Vue arborescente de toute la hiérarchie géographique.
  * Navigation, expansion/repli, indicateurs de statut.
+ * Données réelles — reçues en props depuis GeoReferentielSection
+ * (déjà chargées via geoApi.all()), pas de données mock.
  * ================================================================ */
 
 import { useState } from 'react';
 import s from '../GeoReferentielSection.module.css';
-import type { GeoLevel } from './geo.types';
+import type { GeoLevel, GeoItem } from './geo.types';
 import { GEO_LEVELS } from './geo.types';
-import {
-  MOCK_PAYS, MOCK_REGIONS, MOCK_PREFECTURES,
-  MOCK_COMMUNES, MOCK_QUARTIERS, MOCK_ZONES,
-} from './geo.data';
+
+interface TreeData {
+  pays:        GeoItem[];
+  regions:     GeoItem[];
+  prefectures: GeoItem[];
+  communes:    GeoItem[];
+  quartiers:   GeoItem[];
+  zones:       GeoItem[];
+}
 
 interface GeoTreeViewProps {
+  data:       TreeData;
   onNavigate: (level: GeoLevel, parentId?: string) => void;
 }
 
 /* ── Nœud récursif ── */
 interface TreeNodeProps {
-  id:       string;
-  code:     string;
-  nom:      string;
-  statut:   'actif' | 'inactif';
-  level:    GeoLevel;
-  depth:    number;
+  id:         string;
+  code:       string;
+  nom:        string;
+  statut:     'actif' | 'inactif';
+  level:      GeoLevel;
+  depth:      number;
+  forceOpen:  boolean;
+  data:       TreeData;
   onNavigate: (level: GeoLevel, parentId?: string) => void;
 }
 
-function TreeNode({ id, code, nom, statut, level, depth, onNavigate }: TreeNodeProps) {
-  const [open, setOpen] = useState(depth < 1);
+function TreeNode({ id, code, nom, statut, level, depth, forceOpen, data, onNavigate }: TreeNodeProps) {
+  const [open, setOpen] = useState(forceOpen || depth < 1);
   const cfg = GEO_LEVELS.find(l => l.level === level)!;
 
   /* Enfants selon le niveau courant */
@@ -37,15 +47,11 @@ function TreeNode({ id, code, nom, statut, level, depth, onNavigate }: TreeNodeP
 
   if (cfg.childLevel) {
     const childCfg = GEO_LEVELS.find(l => l.level === cfg.childLevel)!;
-    let source: { id: string; code: string; nom: string; statut: 'actif' | 'inactif'; parentId: string | null }[] = [];
-    switch (cfg.childLevel) {
-      case 'region':     source = MOCK_REGIONS;     break;
-      case 'prefecture': source = MOCK_PREFECTURES; break;
-      case 'commune':    source = MOCK_COMMUNES;    break;
-      case 'quartier':   source = MOCK_QUARTIERS;   break;
-      case 'zone':       source = MOCK_ZONES;       break;
-      default:           source = [];               break;
-    }
+    const sourceMap: Record<string, GeoItem[]> = {
+      region: data.regions, prefecture: data.prefectures, commune: data.communes,
+      quartier: data.quartiers, zone: data.zones,
+    };
+    const source = sourceMap[cfg.childLevel] ?? [];
     source.filter(x => x.parentId === id).forEach(x =>
       children.push({ id: x.id, code: x.code, nom: x.nom, statut: x.statut, childLevel: childCfg.level as GeoLevel }),
     );
@@ -89,7 +95,7 @@ function TreeNode({ id, code, nom, statut, level, depth, onNavigate }: TreeNodeP
               <TreeNode
                 key={ch.id} id={ch.id} code={ch.code} nom={ch.nom}
                 statut={ch.statut} level={ch.childLevel}
-                depth={depth + 1} onNavigate={onNavigate}
+                depth={depth + 1} forceOpen={forceOpen} data={data} onNavigate={onNavigate}
               />
             ))}
           </div>
@@ -100,11 +106,11 @@ function TreeNode({ id, code, nom, statut, level, depth, onNavigate }: TreeNodeP
 }
 
 /* ── Composant principal ── */
-export default function GeoTreeView({ onNavigate }: GeoTreeViewProps) {
+export default function GeoTreeView({ data, onNavigate }: GeoTreeViewProps) {
   const [search, setSearch] = useState('');
   const [expandAll, setExpandAll] = useState(false);
 
-  const filtered = MOCK_PAYS.filter(p =>
+  const filtered = data.pays.filter(p =>
     p.nom.toLowerCase().includes(search.toLowerCase()) ||
     p.code.toLowerCase().includes(search.toLowerCase()),
   );
@@ -145,8 +151,9 @@ export default function GeoTreeView({ onNavigate }: GeoTreeViewProps) {
             ))}
           </div>
 
-          {/* Arbre */}
-          <div className={s.tree}>
+          {/* Arbre — remonté (key) à chaque bascule "Tout développer/réduire"
+             pour que l'état initial de chaque nœud reflète le nouveau mode. */}
+          <div className={s.tree} key={expandAll ? 'expanded' : 'collapsed'}>
             {filtered.length === 0 && (
               <p style={{ textAlign: 'center', color: 'var(--txt-3)', fontSize: 13, padding: '20px 0' }}>Aucun résultat</p>
             )}
@@ -154,7 +161,7 @@ export default function GeoTreeView({ onNavigate }: GeoTreeViewProps) {
               <TreeNode
                 key={pays.id}
                 id={pays.id} code={pays.code} nom={pays.nom} statut={pays.statut}
-                level="pays" depth={0} onNavigate={onNavigate}
+                level="pays" depth={0} forceOpen={expandAll} data={data} onNavigate={onNavigate}
               />
             ))}
           </div>

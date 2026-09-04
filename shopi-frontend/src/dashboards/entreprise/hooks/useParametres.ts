@@ -201,8 +201,30 @@ export function useParametres() {
   // SECTION 3 — Horaires
   // ─────────────────────────────────────────────────────────────
 
+  /* BUG CORRIGÉ — `horaires` vient de l'état local de HorairesSection,
+   * initialisé depuis les données GET (qui incluent le vrai `id` de
+   * chaque ligne CompanyHoraire). Le DTO backend (HoraireJourDto) ne
+   * déclare pas `id` et rejette toute propriété non attendue
+   * (whitelist strict) → PATCH échouait systématiquement en 400
+   * ("property id should not exist"), pour TOUTE modification
+   * d'horaires depuis toujours. On n'envoie que les champs que le DTO
+   * accepte réellement — l'upsert backend se fait par jour, pas par id. */
+  /* BUG CORRIGÉ (2/2) — la colonne Postgres `time` renvoie "HH:MM:SS"
+   * (ex: "08:00:00"), pas "HH:MM" — le DTO backend exige strictement
+   * "HH:MM". Un jour jamais retouché dans l'UI (qui garde alors la valeur
+   * telle que chargée depuis le GET) échouait donc aussi la validation,
+   * même une fois le bug `id` ci-dessus corrigé. On tronque aux 5
+   * premiers caractères avant l'envoi — <input type="time"> produit déjà
+   * "HH:MM" nativement, ça ne change donc rien pour un jour retouché. */
   const saveHoraires = useCallback((horaires: HoraireJour[]) =>
-    patch('horaires', { horaires }), [patch]);
+    patch('horaires', {
+      horaires: horaires.map(({ jour, ouverture, fermeture, actif }) => ({
+        jour,
+        ouverture: ouverture ? ouverture.slice(0, 5) : ouverture,
+        fermeture: fermeture ? fermeture.slice(0, 5) : fermeture,
+        actif,
+      })),
+    }), [patch]);
 
   // ─────────────────────────────────────────────────────────────
   // SECTION 4 — Catalogue
@@ -237,24 +259,18 @@ export function useParametres() {
   // uploadDocument : POST multipart → apiFetch détecte FormData
   // ─────────────────────────────────────────────────────────────
 
-  // Mapping type document → champ dans ParametresData
-  const DOC_FIELD: Record<string, keyof ParametresData> = {
-    cni:      'ownerIdDocument',
-    rccm:     'documentRccm',
-    bancaire: 'documentBancaire',
-    photo:    'documentPhoto',
-    nif:      'documentNif',
-  };
-
+  /* SÉCURITÉ (backend) — l'API ne renvoie plus l'URL des 4 documents
+   * sensibles (CNI/RCCM/bancaire/NIF) après upload, seulement
+   * `{present:true}` (voir DocumentsParametresService.uploadDocument) :
+   * une pièce d'identité/relevé bancaire n'a rien à faire dans une
+   * réponse JSON visible depuis les DevTools, alors que l'UI n'a jamais
+   * utilisé que la présence/absence (DocumentsSection.tsx, isPresent).
+   * On recharge donc les paramètres plutôt que de deviner une valeur
+   * locale à partir d'un champ qui n'existe plus dans la réponse. */
   const uploadDocument = useCallback(async (type: string, file: File): Promise<void> => {
-    const res = await postFile(`documents/${type}`, file) as { url: string };
-
-    // Mise à jour locale du champ correspondant
-    const field = DOC_FIELD[type];
-    if (field) {
-      setData(prev => prev ? { ...prev, [field]: res.url } : prev);
-    }
-  }, [postFile]);
+    await postFile(`documents/${type}`, file);
+    await reload();
+  }, [postFile, reload]);
 
   // ─────────────────────────────────────────────────────────────
   // SECTION 9 — Sécurité

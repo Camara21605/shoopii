@@ -31,8 +31,9 @@
  * ─────────────────────────────────────────────────────────────
  * Ouverture  → wallets acteurs gelés (wallet.frozen = true)
  * REJET      → wallets dégelés (distributions RELEASED conservées)
- * REMBOURSEMENT → PaiementDistributionService.annuler() +
- *                 PaiementRefundService.rembourser()
+ * REMBOURSEMENT → EscrowRefundService.executerRemboursement()
+ *                 (annule les distributions ESCROW via WalletEngine,
+ *                 puis crédite le client — voir escrow-refund.service.ts)
  *
  * ENTITÉS QUI L'UTILISENT
  * ─────────────────────────────────────────────────────────────

@@ -119,9 +119,13 @@ export class CommissionEngine {
 
       await this.validatorSvc.validerTout(context, rule, skipDoublonCheck);
 
-      /* ── 3. Résoudre la hiérarchie des acteurs ──────────── */
+      /* ── 3. Résoudre la hiérarchie des acteurs + config entreprises ── */
 
-      const hierarchy = await this.hierarchySvc.resolveAll(context, rule!);
+      const [hierarchy, companySettings, partnerSettings] = await Promise.all([
+        this.hierarchySvc.resolveAll(context, rule!),
+        this.configSvc.getCompanySettings(),
+        this.configSvc.getPartnerSettings(),
+      ]);
 
       /* Avertissements non-bloquants sur la hiérarchie */
       this.validatorSvc.validerHierarchie(
@@ -155,6 +159,8 @@ export class CommissionEngine {
         hierarchy.entreprise,
         hierarchy.livreur,
         hierarchy.correspondant,
+        companySettings,
+        partnerSettings,
       );
 
       /* ── 5. Préparer la liste des parts ─────────────────── */
@@ -171,7 +177,10 @@ export class CommissionEngine {
         planEntreprise:          hierarchy.entreprise.plan,
         planMultiplier:          hierarchy.entreprise.planMultiplier,
         ratioShopiProduit:       Number(rule?.ratioShopiProduit       ?? 0),
-        ratioPartenaireProduit:  Number(rule?.ratioPartenaireProduit  ?? 0),
+        /* Taux RÉELLEMENT appliqué — peut différer de rule.ratioPartenaireProduit
+         * si PartnerSettings a substitué le taux du tier du partenaire (voir
+         * CommissionCalculatorService.resoudreRatioPartenaireProduit). */
+        ratioPartenaireProduit:  amounts.ratioPartenaireProduitEffectif,
         ratioAdminProduit:       Number(rule?.ratioAdminProduit       ?? 0),
         tauxCommissionLivraison: Number(rule?.tauxCommissionLivraison ?? 0),
         ratioShopiLivraison:     Number(rule?.ratioShopiLivraison     ?? 0),

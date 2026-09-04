@@ -59,6 +59,25 @@
 .pfav:hover { color: var(--rose); border-color: rgba(190,24,93,.3); transform: scale(1.1); }
 .pfavOn     { color: var(--rose) !important; background: var(--rs-bg) !important; border-color: rgba(190,24,93,.3) !important; }
 
+/* ── Bouton liste de souhaits (marque-page, à côté du cœur) ── */
+.pwish {
+  position: absolute;
+  top: 8px; right: 42px;
+  z-index: 2;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.92);
+  border: 1px solid var(--bdr);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--t3);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all .2s;
+  backdrop-filter: blur(4px);
+}
+.pwish:hover { color: var(--blue); border-color: rgba(37,99,235,.3); transform: scale(1.1); }
+.pwishOn     { color: var(--blue) !important; background: var(--sky) !important; border-color: rgba(37,99,235,.3) !important; }
+
 /* ── Zone image cliquable ── */
 .pimg {
   width: 100%;
@@ -647,6 +666,7 @@
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   .pfav         { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
+  .pwish        { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
   .pimg         { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
   .pcartDone    { background: rgba(4,120,87,.18) !important; border-color: rgba(4,120,87,.3) !important; }
   .pcartDone:hover { background: rgba(4,120,87,.25) !important; }
@@ -658,6 +678,7 @@
   .partageLienBtn:hover   { background: #2D2D30; }
 }
 :root[data-theme="dark"] .pfav         { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
+:root[data-theme="dark"] .pwish        { background: rgba(17,17,19,.85); border-color: rgba(255,255,255,.12); }
 :root[data-theme="dark"] .pimg         { background: linear-gradient(135deg,#1C1C1F,#2D2D30,#3D3D40); }
 :root[data-theme="dark"] .pcartDone    { background: rgba(4,120,87,.18) !important; border-color: rgba(4,120,87,.3) !important; }
 :root[data-theme="dark"] .pcartDone:hover { background: rgba(4,120,87,.25) !important; }

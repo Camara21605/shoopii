@@ -55,9 +55,20 @@ import {
 import { PaymentProviderFactory }       from '../providers/payment-provider.factory';
 import { PaiementWebhookService }       from './paiement-webhook.service';
 import type { InitierPaiementDto }      from '../dto/initier-paiement.dto';
+import { PlatformSettingsCacheService } from '../../performance-engine/services/platform-settings-cache.service';
+import type { PlatformSettings }        from '../../../database/entities/platform-settings.entity';
 
 /* ─── Durée de validité d'une session de paiement ────────────── */
 const SESSION_TTL_MS = 60 * 60 * 1000;  // 1 heure
+
+/** Association méthode de paiement mobile money → colonne PlatformSettings
+ *  correspondante. Les autres méthodes (carte, virement, wallet, cash) ne
+ *  sont pas concernées par ces interrupteurs. */
+const METHODE_SETTING_KEY: Partial<Record<MethodePaiementSession, keyof PlatformSettings>> = {
+  [MethodePaiementSession.ORANGE_MONEY]: 'orangeMoneyEnabled',
+  [MethodePaiementSession.MTN_MONEY]:    'mtnMoneyEnabled',
+  [MethodePaiementSession.WAVE]:         'waveEnabled',
+};
 
 @Injectable()
 export class PaiementInitiationService {
@@ -76,6 +87,12 @@ export class PaiementInitiationService {
     private readonly providerFactory: PaymentProviderFactory,
     private readonly webhookService:  PaiementWebhookService,
     private readonly config:          ConfigService,
+
+    /* BUG CORRIGÉ — PlatformSettings.mtnMoneyEnabled/orangeMoneyEnabled/
+     * waveEnabled (Paramètres Plateforme > Paiements) se sauvegardaient en
+     * base sans jamais être lus : un client pouvait payer par n'importe quel
+     * opérateur même désactivé par le super-admin. */
+    private readonly settingsCache: PlatformSettingsCacheService,
   ) {
     this.frontendUrl = config.get<string>('FRONTEND_URL') ?? 'http://localhost:5173';
     this.backendUrl  = config.get<string>('BACKEND_URL')  ?? 'http://localhost:3001';
@@ -157,7 +174,18 @@ export class PaiementInitiationService {
 
     /* ── 3. Résoudre le provider ────────────────────────────── */
 
-    const methode  = dto.methode as MethodePaiementSession;
+    const methode = dto.methode as MethodePaiementSession;
+
+    const settingKey = METHODE_SETTING_KEY[methode];
+    if (settingKey) {
+      const settings = await this.settingsCache.getSettings();
+      if (!settings[settingKey]) {
+        throw new BadRequestException(
+          `Le moyen de paiement "${methode}" n'est actuellement pas disponible sur la plateforme.`,
+        );
+      }
+    }
+
     const provider = this.providerFactory.resolve(methode);
 
     /* ── 4. Créer la PaiementSession ───────────────────────── */

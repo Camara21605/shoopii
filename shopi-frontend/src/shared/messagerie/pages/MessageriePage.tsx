@@ -14,6 +14,7 @@
  * Utilisée par tous les rôles (client, livreur, vendeur…)
  * qui accèdent à /messagerie depuis le site home.
  */
+import { useSearchParams } from 'react-router-dom';
 import MessagerieCore from '../MessagerieCore';
 import { useForceDarkTheme } from '../../context/ThemeContext';
 import s from '../styles/MessagerieLayout.module.css';
@@ -21,6 +22,12 @@ import s from '../styles/MessagerieLayout.module.css';
 export default function MessageriePage() {
   // ✅ Cette page n'a plus de mode clair — voir useForceDarkTheme.
   useForceDarkTheme();
+
+  /* ?conv={conversationId} — lien profond posé par une notification
+   * message.received / call.* (voir notificationUtils.resolveNavTarget
+   * et NotificationEventService.notifyMessageReceived). */
+  const [searchParams] = useSearchParams();
+  const initialConversationId = searchParams.get('conv') ?? undefined;
 
   return (
     // MessagerieCore occupe maintenant toute la hauteur de l'écran,
@@ -50,7 +57,7 @@ export default function MessageriePage() {
         ['--msg-bnav' as any]: '0px',
       }}
     >
-      <MessagerieCore />
+      <MessagerieCore initialConversationId={initialConversationId} />
     </div>
   );
 }

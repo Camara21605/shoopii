@@ -8,10 +8,12 @@
 
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { randomUUID } from 'crypto';
 
 import { User } from 'src/database/entities/user.entity';
+import { UserRole } from 'src/common/enums/user-role.enum';
+import { Partner } from 'src/database/entities/profiles/partenaire-profile.entity';
 import {
   Wallet,
   WalletCurrency,
@@ -22,6 +24,11 @@ import {
   TransactionType,
   WalletTransaction,
 } from 'src/database/entities/wallet-transaction.entity';
+import {
+  PaiementDistribution,
+  DistributionActeurType,
+  DistributionStatus,
+} from 'src/database/entities/paiement/paiement-distribution.entity';
 
 import {
   AddPaymentMethodDto,
@@ -30,6 +37,7 @@ import {
   WalletChartQueryDto,
   WalletOperationDto,
 } from './dto/wallet.dto';
+import { PlatformSettingsCacheService } from '../performance-engine/services/platform-settings-cache.service';
 
 @Injectable()
 export class WalletService {
@@ -41,7 +49,22 @@ export class WalletService {
     @InjectRepository(WalletTransaction)
     private readonly txRepo: Repository<WalletTransaction>,
 
+    @InjectRepository(PaiementDistribution)
+    private readonly distRepo: Repository<PaiementDistribution>,
+
+    @InjectRepository(Partner)
+    private readonly partnerRepo: Repository<Partner>,
+
     private readonly dataSource: DataSource,
+
+    /* BUG CORRIGÉ — PlatformSettings.minWithdrawalAmount/maxTransactionAmount/
+     * dailyWithdrawalLimit (Paramètres Plateforme > Paiements) se
+     * sauvegardaient en base sans jamais être lus : la seule route réelle
+     * de retrait (POST /wallet/withdraw → applyOperation ci-dessous)
+     * n'appliquait aucun de ces plafonds. Un pipeline distinct et bien
+     * écrit (settlement-engine/) applique déjà ces mêmes règles, mais
+     * n'est jamais appelé par aucun contrôleur — orphelin. */
+    private readonly settingsCache: PlatformSettingsCacheService,
   ) {}
 
   // ── Récupère (ou crée) le wallet d'un utilisateur ───────────────
@@ -66,10 +89,36 @@ export class WalletService {
     return wallet;
   }
 
+  /**
+   * Montant actuellement verrouillé par PlatformSettings.settlementDelayDays
+   * — voir le commentaire détaillé dans applyOperation(). Factorisé ici car
+   * réutilisé par getSummary() (affichage) et applyOperation() (contrôle).
+   */
+  private async computeSettlementLocked(
+    manager: EntityManager,
+    walletId: string,
+    settlementDelayDays: number,
+  ): Promise<number> {
+    if (!settlementDelayDays || settlementDelayDays <= 0) return 0;
+    const lockedSince = new Date(Date.now() - settlementDelayDays * 86_400_000);
+    const result = await manager
+      .createQueryBuilder(WalletTransaction, 'tx')
+      .select('COALESCE(SUM(tx.amount), 0)', 'total')
+      .where('tx.walletId = :walletId', { walletId })
+      .andWhere('tx.type = :type', { type: TransactionType.CREDIT })
+      .andWhere('tx.referenceType = :rt', { rt: 'escrow' })
+      .andWhere('tx.status = :status', { status: TransactionStatus.COMPLETED })
+      .andWhere('tx.createdAt > :lockedSince', { lockedSince })
+      .getRawOne<{ total: string }>();
+    return Number(result?.total ?? 0);
+  }
+
   // ── Résumé du portefeuille (solde, KPI, méthodes) ───────────────
 
   async getSummary(user: User) {
     const wallet = await this.getOrCreateWallet(user.id);
+    const { settlementDelayDays } = await this.settingsCache.getSettings();
+    const settlementLocked = await this.computeSettlementLocked(this.dataSource.manager, wallet.id, Number(settlementDelayDays));
 
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
@@ -90,11 +139,34 @@ export class WalletService {
       .filter(t => t.type === TransactionType.DEBIT)
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
-    const totalCommission = await this.txRepo
-      .createQueryBuilder('tx')
-      .where('tx.walletId = :walletId', { walletId: wallet.id })
-      .andWhere('tx.referenceType = :ref', { ref: 'commission' })
-      .select('COALESCE(SUM(tx.amount), 0)', 'total')
+    /* BUG CORRIGÉ — cette requête filtrait sur WalletTransaction.referenceType
+     * = 'commission', une valeur qui n'est écrite NULLE PART dans le code
+     * (grep exhaustif) : le flux réel (EscrowReleaseService → WalletEngine)
+     * écrit toujours referenceType = 'escrow', quel que soit l'acteurType.
+     * `totalCommission` retournait donc 0 pour absolument tous les rôles.
+     * On interroge maintenant directement la table faisant autorité
+     * (PaiementDistribution) — même motif que correspondant-dashboard.service.ts
+     * et admin-taux.service.ts — en ne sommant que les parts où ce user a
+     * effectivement joué un rôle de PRÉLÈVEUR de commission (partenaire,
+     * admin, plateforme), pas les parts ENTREPRISE/LIVREUR/CORRESPONDANT
+     * qui représentent leur revenu produit/livraison, pas une commission. */
+    const totalCommission = await this.distRepo
+      .createQueryBuilder('pd')
+      .select('COALESCE(SUM(CAST(pd.montant AS DECIMAL)), 0)', 'total')
+      .where('pd.acteurUserId = :uid', { uid: user.id })
+      .andWhere('pd.status = :s',      { s: DistributionStatus.RELEASED })
+      .andWhere('pd.acteurType IN (:...types)', {
+        types: [
+          DistributionActeurType.PLATEFORME_PRODUIT,
+          DistributionActeurType.PLATEFORME_LIVRAISON,
+          DistributionActeurType.PARTENAIRE_PRODUIT,
+          DistributionActeurType.PARTENAIRE_LIVRAISON,
+          DistributionActeurType.ADMIN_PRODUIT,
+          DistributionActeurType.ADMIN_LIVRAISON,
+          DistributionActeurType.PLATEFORME,   // legacy
+          DistributionActeurType.PARTENAIRE,   // legacy
+        ],
+      })
       .getRawOne<{ total: string }>();
 
     return {
@@ -112,6 +184,11 @@ export class WalletService {
       paymentMethods: wallet.paymentMethods ?? [],
       autoTransferEnabled: wallet.autoTransferEnabled,
       autoTransferMethodId: wallet.autoTransferMethodId,
+      /* PlatformSettings.settlementDelayDays — montant du solde encore en
+       * délai de règlement (non retirable) et montant réellement
+       * disponible au retrait dès maintenant. */
+      settlementLocked:      settlementLocked,
+      withdrawableBalance:   Math.max(Number(wallet.balance) - settlementLocked, 0),
     };
   }
 
@@ -242,13 +319,88 @@ export class WalletService {
 
       const isDebit = type === TransactionType.DEBIT || type === TransactionType.TRANSFER;
 
+      /* Plafonds plateforme (super-admin) — appliqués à TOUTE opération,
+       * avant les vérifications de solde spécifiques au débit. */
+      const platformSettings = await this.settingsCache.getSettings();
+
+      if (Number(platformSettings.maxTransactionAmount) > 0 &&
+          dto.amount > Number(platformSettings.maxTransactionAmount)) {
+        throw new BadRequestException(
+          `Le montant dépasse le plafond autorisé par transaction (${platformSettings.maxTransactionAmount}).`,
+        );
+      }
+
+      if (referenceType === 'withdraw' &&
+          Number(platformSettings.minWithdrawalAmount) > 0 &&
+          dto.amount < Number(platformSettings.minWithdrawalAmount)) {
+        throw new BadRequestException(
+          `Le montant minimum de retrait est de ${platformSettings.minWithdrawalAmount}.`,
+        );
+      }
+
       if (isDebit) {
+        /* Garde KYC partenaire — un partenaire dont les documents de
+         * vérification obligatoires (CNI + justificatif de domicile) ne
+         * sont pas fournis ne peut pas retirer ses commissions. Le
+         * justificatif d'activité reste optionnel, il ne bloque jamais.
+         * Ne s'applique qu'aux retraits (pas aux dépôts/transferts) et
+         * uniquement au rôle PARTNER — les autres rôles n'ont pas de
+         * profil Partner et ne sont pas concernés par ce KYC. */
+        if (referenceType === 'withdraw' && user.role === UserRole.PARTNER) {
+          const partner = await qr.manager.findOne(Partner, { where: { userId: user.id } });
+          if (!partner || !partner.documentCni || !partner.documentDomicile) {
+            throw new BadRequestException(
+              'Retrait bloqué : veuillez fournir votre pièce d\'identité (CNI) et votre '
+              + 'justificatif de domicile dans Paramètres > Documents & vérification avant '
+              + 'de pouvoir retirer vos commissions.',
+            );
+          }
+        }
+
         if (Number(wallet.balance) < dto.amount) {
           throw new BadRequestException('Solde insuffisant pour cette opération.');
         }
-        if (Number(wallet.dailyWithdrawLimit) > 0 &&
-            Number(wallet.todayWithdrawAmount) + dto.amount > Number(wallet.dailyWithdrawLimit)) {
+
+        /* Plafond journalier : le plafond spécifique au wallet (s'il est
+         * défini) prévaut sur le plafond plateforme par défaut — sinon
+         * c'est le réglage plateforme qui s'applique à tous. */
+        const dailyLimit = Number(wallet.dailyWithdrawLimit) > 0
+          ? Number(wallet.dailyWithdrawLimit)
+          : Number(platformSettings.dailyWithdrawalLimit);
+
+        if (dailyLimit > 0 &&
+            Number(wallet.todayWithdrawAmount) + dto.amount > dailyLimit) {
           throw new BadRequestException('Limite de retrait journalière dépassée.');
+        }
+
+        /* BUG CORRIGÉ — PlatformSettings.settlementDelayDays se sauvegardait
+         * en base sans jamais être appliqué : un vendeur pouvait retirer une
+         * vente confirmée à la seconde près. Le solde reste crédité et
+         * VISIBLE immédiatement (choix produit : ne pas dégrader l'affichage
+         * du solde) — seul le RETRAIT est bloqué tant que le produit des
+         * ventes récentes n'a pas dépassé ce délai.
+         *
+         * Approche "réserve glissante" : on ne trace pas quel retrait pioche
+         * dans quelle vente (le wallet n'a qu'un solde global) — on calcule
+         * plutôt le montant total des crédits escrow des N derniers jours et
+         * on le verrouille en bloc. Conservateur par construction : ne peut
+         * jamais SOUS-estimer le montant verrouillé, seulement le
+         * surestimer dans un cas limite (argent ancien déjà dépensé, argent
+         * récent qui arrive) — le même compromis qu'une réserve tournante
+         * classique (Stripe et similaires). */
+        if (referenceType === 'withdraw' && Number(platformSettings.settlementDelayDays) > 0) {
+          const locked      = await this.computeSettlementLocked(qr.manager, wallet.id, Number(platformSettings.settlementDelayDays));
+          const withdrawable = Number(wallet.balance) - locked;
+
+          if (dto.amount > withdrawable) {
+            throw new BadRequestException(
+              locked > 0
+                ? `Une partie de votre solde (${locked}) est encore en délai de règlement `
+                  + `(${platformSettings.settlementDelayDays} jour(s) après la vente). `
+                  + `Montant actuellement disponible au retrait : ${Math.max(withdrawable, 0)}.`
+                : 'Solde insuffisant pour cette opération.',
+            );
+          }
         }
       }
 

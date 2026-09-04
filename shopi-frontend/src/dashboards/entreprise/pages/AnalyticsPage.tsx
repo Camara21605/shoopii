@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../../../shared/services/apiFetch';
+import { useTeamPermissions } from '../hooks/useTeamPermissions';
 
 interface AnalyticsData {
   caData: { m: string; v: number }[];
@@ -22,6 +23,7 @@ export default function AnalyticsPage() {
   const { t } = useTranslation();
   const [data, setData]       = useState<AnalyticsData>(EMPTY);
   const [loading, setLoading] = useState(true);
+  const { can, isOwner, loading: permLoading } = useTeamPermissions();
 
   useEffect(() => {
     apiFetch<AnalyticsData>('/dashboard/entreprise/analytics')
@@ -32,6 +34,22 @@ export default function AnalyticsPage() {
 
   const { caData, topProduits, categoryPerf } = data;
   const maxCA = Math.max(1, ...caData.map(d => d.v));
+
+  /* Un collaborateur sans statistics.view ne doit jamais voir cette page —
+   * mise à jour instantanée si la permission est révoquée pendant qu'il y
+   * est déjà (voir useTeamPermissions : socket team:permissions_changed). */
+  if (!permLoading && !isOwner && !can('statistics', 'view')) {
+    return (
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        minHeight: 300, gap: 8, textAlign: 'center', color: 'var(--t2)', padding: 24,
+      }}>
+        <i className="fas fa-lock" style={{ fontSize: 28, opacity: .5 }} />
+        <strong>{t('analytics.accessDenied.title')}</strong>
+        <span style={{ fontSize: 13 }}>{t('analytics.accessDenied.message')}</span>
+      </div>
+    );
+  }
 
   return (
     <div className="page on" id="p-analytics">

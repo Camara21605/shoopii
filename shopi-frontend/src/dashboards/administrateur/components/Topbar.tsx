@@ -38,7 +38,6 @@ const TITLES: Record<AdminPage, [string, string]> = {
   stats:         ['Statistiques',       'Communes, litiges et activité de la zone'],
   support:       ['Support',            'File d’attente des tickets de votre zone'],
   audit:         ["Journal d'audit",    "Historique de vos actions d'administration"],
-  notifications: ['Notifications',      'Centre de notifications en temps réel'],
   parametres:    ['Paramètres',         'Configuration de votre compte administrateur'],
   geo:           ['Référentiel Géo',    'Gestion des communes et zones géographiques'],
 };

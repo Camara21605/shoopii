@@ -42,10 +42,36 @@ export class BoutiqueParametresService {
    * ────────────────────────────────────────────────────────── */
 
   async getParametres(userId: string): Promise<Company> {
+    /* BUG CORRIGÉ — le contrôleur passe `req.user.actorId ?? req.user.id` ;
+     * pour un compte COMPANY, actorId est le Company.id (propriétaire OU
+     * collaborateur, voir AuthService.findProfileId), jamais un User.id.
+     * `where:{userId}` seul ne matchait donc quasiment jamais et déclenchait
+     * la création d'une entreprise fantôme à chaque appel. On matche
+     * désormais sur `id` (cas normal, actorId) OU `userId` (cas de repli,
+     * si actorId était absent et que le param est un vrai User.id). */
+    /* BUG CORRIGÉ (suite, 2026-09-02) — le `where:[{id},{userId}]` ci-dessus
+     * restait un OR SQL en une seule requête, sans ordre garanti. Ça s'est
+     * avéré loin d'être théorique : une entreprise fantôme (créée par CE
+     * `if (!company)` ci-dessous, très probablement pendant une exécution
+     * d'un ancien build compilé — voir la confusion dist/main.js/start:dev
+     * récurrente sur ce projet) a fini avec un `userId` identique à l'`id`
+     * d'une vraie entreprise. Résultat : chaque appel `where:[{id},{userId}]`
+     * matchait alors LES DEUX fiches, et Postgres pouvait retourner l'une ou
+     * l'autre selon le plan de requête — des réglages (ex: "Afficher les
+     * prix barrés") ont ainsi pu être enregistrés sur la fiche fantôme,
+     * jamais lue par aucune page publique, au lieu de la vraie. On tente
+     * maintenant `id` en priorité, `userId` seulement en repli, dans deux
+     * requêtes séquentielles déterministes plutôt qu'un OR ambigu. */
     let company = await this.companyRepo.findOne({
-      where: { userId },
+      where: { id: userId },
       relations: ['companyType', 'horaires'],
     });
+    if (!company) {
+      company = await this.companyRepo.findOne({
+        where: { userId },
+        relations: ['companyType', 'horaires'],
+      });
+    }
 
     if (!company) {
       // Compte company sans profil (ex : insertion manuelle en BDD).
@@ -60,13 +86,33 @@ export class BoutiqueParametresService {
       this.logger.warn(`[PARAMETRES] Profil auto-créé pour userId=${userId}`);
 
       company = await this.companyRepo.findOne({
-        where: { userId },
+        where: { id: stub.id },
         relations: ['companyType', 'horaires'],
       });
 
       if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     }
 
+    return this.redactSensitiveDocuments(company);
+  }
+
+  /* SÉCURITÉ — GET /parametres renvoie l'entité Company quasi brute (elle
+   * alimente les 12 sections d'un coup, y compris DocumentsSection.tsx qui
+   * ne lit que la présence/absence d'un document, jamais sa valeur, voir
+   * DocumentsParametresService.getDocuments() pour le même correctif côté
+   * route dédiée). Sans ce filtre, le public_id Cloudinary des 4 pièces
+   * sensibles (CNI, RCCM, relevé bancaire, NIF — voir SENSITIVE_DOC_TYPES
+   * dans DocumentsParametresService) partait tel quel dans la réponse
+   * JSON, visible depuis les DevTools, pour une valeur que le frontend
+   * n'utilise que comme booléen. On la remplace par un marqueur opaque —
+   * toujours "truthy" pour `isPresent = !!url`, jamais exploitable. */
+  private redactSensitiveDocuments(company: Company): Company {
+    const REDACTED = '••••••';
+    if (company.ownerIdDocument)   company.ownerIdDocument   = REDACTED;
+    if (company.documentRccm)      company.documentRccm      = REDACTED;
+    if (company.documentBancaire)  company.documentBancaire  = REDACTED;
+    if (company.documentNif)       company.documentNif       = REDACTED;
+    // documentPhoto (vitrine boutique) n'est pas sensible — inchangé.
     return company;
   }
 
@@ -176,10 +222,19 @@ export class BoutiqueParametresService {
    * HELPERS PRIVÉS
    * ────────────────────────────────────────────────────────── */
 
-  /* FIX m4 — Lookup strict par userId uniquement; le fallback par companyId
-   * permettait l'accès cross-tenant si un UUID de boutique était connu. */
+  /* FIX m4 (historique) — le rejet du fallback par companyId visait un
+   * companyId fourni PAR LE CLIENT (query/body, donc falsifiable → accès
+   * cross-tenant). Ici, `userId` est en réalité `req.user.actorId`, signé
+   * côté serveur dans le JWT à la connexion (voir AuthService.findProfileId) —
+   * non falsifiable sans forger le JWT entier, donc le même risque ne
+   * s'applique pas. Sans le clause `id`, ce lookup ne matchait quasiment
+   * jamais (voir getParametres ci-dessus pour le détail du bug). */
+  /* BUG CORRIGÉ (suite) — même correctif que getParametres() ci-dessus :
+   * `id` en priorité, `userId` en repli déterministe, plutôt qu'un OR
+   * ambigu en une seule requête. */
   private async findCompanyOrFail(userId: string): Promise<Company> {
-    const company = await this.companyRepo.findOne({ where: { userId } });
+    let company = await this.companyRepo.findOne({ where: { id: userId } });
+    if (!company) company = await this.companyRepo.findOne({ where: { userId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }

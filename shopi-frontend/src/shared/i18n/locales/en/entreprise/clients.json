@@ -96,6 +96,24 @@
       "offreFidelite": "Automatic loyalty offer",
       "rapportSegments": "Segments PDF report",
       "relanceInactifs": "Re-engage inactive customers"
+    },
+    "crm": {
+      "erreurApercu": "Couldn't load the preview.",
+      "erreurEnvoi": "Failed to send.",
+      "erreurRapport": "Couldn't generate the PDF report.",
+      "destinataires_one": "{{count}} recipient",
+      "destinataires_other": "{{count}} recipients",
+      "aucunDestinataire": "No clients in this segment yet.",
+      "sujet": "Subject",
+      "message": "Message",
+      "annuler": "Cancel",
+      "envoyerA_one": "Send to {{count}} client",
+      "envoyerA_other": "Send to {{count}} clients",
+      "envoye_one": "✅ Sent to {{count}} client",
+      "envoye_other": "✅ Sent to {{count}} clients",
+      "resultatTitre": "{{sent}} / {{total}} sent",
+      "resultatEchecs": "{{count}} send(s) failed.",
+      "fermer": "Close"
     }
   }
 }

@@ -57,6 +57,8 @@ import { NotificationsModule }      from '../../notifications/notifications.modu
 import { ReportingModule }          from '../../reporting-engine/reporting.module';
 import { MessagerieModule }         from '../../messagerie/messagerie.module';
 import { CallModule }               from '../../call/call.module';
+import { PerformanceModule }        from '../../performance-engine/performance.module';
+import { CommissionModule }         from '../../commission/commission.module';
 
 @Module({
   imports: [
@@ -76,8 +78,10 @@ import { CallModule }               from '../../call/call.module';
     CategoriesModule,
     NotificationsModule,
     ReportingModule,
-    MessagerieModule, // pour BroadcastService.disconnectUser() (bannissement/suspension)
-    CallModule,       // pour CallService.endAllCallsForUser() (partie 4 — coupe les appels actifs/RINGING au bannissement)
+    MessagerieModule,   // pour BroadcastService.disconnectUser() (bannissement/suspension)
+    CallModule,         // pour CallService.endAllCallsForUser() (partie 4 — coupe les appels actifs/RINGING au bannissement)
+    PerformanceModule,  // pour RedisCacheService (ReportsService — invalidation du cache signalements)
+    CommissionModule,   // pour CommissionConfigService (PlatformSettingsService — resynchronise CommissionRule)
   ],
 
   controllers: [

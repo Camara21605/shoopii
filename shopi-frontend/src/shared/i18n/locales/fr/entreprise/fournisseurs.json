@@ -34,6 +34,10 @@
       "empty": "Ce fournisseur n'a aucun produit en gros publié pour le moment.",
       "moq_one": "Quantité min. : {{count}} unité",
       "moq_other": "Quantité min. : {{count}} unités"
+    },
+    "accessDenied": {
+      "title": "Accès non autorisé",
+      "message": "Vous n'avez pas accès aux fournisseurs. Contactez le propriétaire de la boutique pour l'obtenir."
     }
   }
 }

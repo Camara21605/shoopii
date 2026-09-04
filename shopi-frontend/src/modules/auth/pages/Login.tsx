@@ -13,6 +13,8 @@ import { LoginForm }      from '../components/LoginForm';
 import { RegisterForm }   from '../components/RegisterForm';
 import { ForgotPassword } from './ForgotPassword';
 import { TwoFaChallenge } from './TwoFaChallenge';
+import { EmailVerificationScreen } from './EmailVerificationScreen';
+import TwoFaSetupModal    from '../../../shared/components/TwoFaSetupModal';
 import { AccountChoiceScreen } from './AccountChoiceScreen';
 import { SessionConfirmScreen } from './SessionConfirmScreen';
 import { SuccessScreen }  from '../components/SuccessScreen';
@@ -119,6 +121,19 @@ const Login: React.FC = () => {
     sessionConfirmLoading,
     handleConfirmDisconnectOther,
     cancelSessionConfirm,
+    // ✅ 2FA obligatoire (super-admin) — configuration forcée avant accès dashboard
+    twoFaSetupPending,
+    finishTwoFaSetup,
+    // ✅ Vérification email obligatoire
+    emailVerifyPending,
+    emailVerifyError,
+    emailVerifyResending,
+    handleVerifyEmailCode,
+    handleResendEmailVerification,
+    cancelEmailVerify,
+    // ✅ Politique d'inscription publique
+    openSignup,
+    codeRequiredForCompany,
   } = useLoginPage({ initialTab: isInvited ? 'register' : 'login' });
 
   /* ── Retour du callback Google OAuth ──────────────────────────────────────
@@ -256,7 +271,7 @@ const Login: React.FC = () => {
             )}
 
             {/* En-tête */}
-            {!showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && !sessionConfirmPending && (
+            {!showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && !sessionConfirmPending && !emailVerifyPending && (
               <div className="form-hd">
                 <h2 className="form-title">
                   {activeTab === 'login' ? 'Connexion' : 'Créer mon compte'}
@@ -328,7 +343,7 @@ const Login: React.FC = () => {
             )}
 
             {/* Onglets */}
-            {!showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && !sessionConfirmPending && (
+            {!showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && !sessionConfirmPending && !emailVerifyPending && (
               <div className="form-tabs">
                 <button
                   className={`ftab${activeTab === 'login' ? ' active' : ''}`}
@@ -346,7 +361,7 @@ const Login: React.FC = () => {
             )}
 
             {/* Connexion */}
-            {activeTab === 'login' && !showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && !sessionConfirmPending && (
+            {activeTab === 'login' && !showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && !sessionConfirmPending && !emailVerifyPending && (
               <LoginForm
                 data={loginData}
                 errors={loginErrors}
@@ -374,6 +389,8 @@ const Login: React.FC = () => {
                 lockedRole={effectiveLockedRole}
                 prefilledCode={prefilledCode}
                 onlyClientRole={!isInvited && !collabInvite}
+                clientRegistrationClosed={!openSignup}
+                codeRequiredForCompany={codeRequiredForCompany}
                 onValidateStep={validateRegisterStep}
                 isCollabInvite={collabInvite !== null}
                 collabJobTitle={collabInvite?.jobTitle}
@@ -387,6 +404,29 @@ const Login: React.FC = () => {
                 error={twoFaError}
                 onVerify={handleVerifyTwoFa}
                 onCancel={cancelTwoFa}
+              />
+            )}
+
+            {/* Vérification email obligatoire (inscription ou compte jamais vérifié) */}
+            {emailVerifyPending && !showSuccess && (
+              <EmailVerificationScreen
+                email={emailVerifyPending.email}
+                isLoading={isLoading}
+                error={emailVerifyError}
+                onVerify={handleVerifyEmailCode}
+                onResend={handleResendEmailVerification}
+                resending={emailVerifyResending}
+                onCancel={cancelEmailVerify}
+              />
+            )}
+
+            {/* 2FA obligatoire (super-admin) — configuration forcée, non-fermable :
+                onClose est un no-op volontaire, contrairement aux 6 usages
+                d'opt-in volontaire de ce même modal ailleurs dans l'app. */}
+            {twoFaSetupPending && (
+              <TwoFaSetupModal
+                onClose={() => {}}
+                onEnabled={finishTwoFaSetup}
               />
             )}
 

@@ -91,6 +91,7 @@
 .state { font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: var(--pill); text-transform: uppercase; }
 .stateAct  { background: var(--em-bg); color: var(--emerald); }
 .statePend { background: var(--am-bg); color: var(--amber); }
+.stateSusp { background: rgba(220,38,38,.1); color: #DC2626; }
 .btn {
   font-size: 11.5px; font-weight: 700; font-family: var(--fb);
   color: var(--blue);

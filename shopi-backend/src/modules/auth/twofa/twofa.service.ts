@@ -42,6 +42,7 @@ import { Company } from '../../../database/entities/profiles/entreprise-profile.
 import { Delivery } from '../../../database/entities/profiles/livreur-profile.entity';
 import { Correspondent, TwoFaMethod } from '../../../database/entities/profiles/correspondant-profile.entity';
 import { Client } from '../../../database/entities/profiles/client-profile.entity';
+import { encryptTotpSecret, decryptTotpSecret } from '../../../common/utils/totp-crypto.util';
 
 authenticator.options = { window: 1 }; // tolère ±30s de dérive d'horloge
 
@@ -62,7 +63,12 @@ export class TwoFaService {
     @InjectRepository(Delivery)      private readonly deliveryRepo:      Repository<Delivery>,
     @InjectRepository(Correspondent) private readonly correspondentRepo: Repository<Correspondent>,
     @InjectRepository(Client)        private readonly clientRepo:        Repository<Client>,
-  ) {}
+  ) {
+    /* Échoue au DÉMARRAGE si TOTP_ENCRYPTION_KEY est absente/invalide plutôt
+     * que sur le premier setup()/confirm() d'un utilisateur en production —
+     * même logique que JwtStrategy pour JWT_SECRET (voir jwt.strategy.ts). */
+    encryptTotpSecret('boot-check');
+  }
 
   // ══════════════════════════════════════════════════════════
   // Résolution du profil (avec twoFaSecret — select:false partout)
@@ -108,7 +114,10 @@ export class TwoFaService {
     if (!found) throw new NotFoundException('Profil introuvable.');
 
     const secret = authenticator.generateSecret();
-    found.entity.twoFaSecret = secret;
+    /* Chiffré au repos (AES-256-GCM) — voir totp-crypto.util.ts. `secret` en
+     * clair reste local à cette fonction pour l'URI du QR code ci-dessous ;
+     * seule la version chiffrée part en base. */
+    found.entity.twoFaSecret = encryptTotpSecret(secret);
     await found.repo.save(found.entity);
 
     const otpauthUri = authenticator.keyuri(user.email, 'Shopi', secret);
@@ -127,7 +136,7 @@ export class TwoFaService {
       );
     }
 
-    const valid = authenticator.check(code, found.entity.twoFaSecret);
+    const valid = authenticator.check(code, decryptTotpSecret(found.entity.twoFaSecret));
     if (!valid) {
       throw new BadRequestException('Code invalide. Vérifiez l\'heure de votre appareil et réessayez.');
     }
@@ -180,6 +189,6 @@ export class TwoFaService {
   async verifyLoginCode(role: UserRole, userId: string, code: string): Promise<boolean> {
     const found = await this.loadProfile(role, userId);
     if (!found?.entity.twoFaEnabled || !found.entity.twoFaSecret) return false;
-    return authenticator.check(code, found.entity.twoFaSecret);
+    return authenticator.check(code, decryptTotpSecret(found.entity.twoFaSecret));
   }
 }

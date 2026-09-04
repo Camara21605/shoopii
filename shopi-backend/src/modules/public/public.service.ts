@@ -8,10 +8,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, MoreThan, In } from 'typeorm';
 
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
-import { Company }     from 'src/database/entities/profiles/entreprise-profile.entity';
+import { Company, CompanyStatus } from 'src/database/entities/profiles/entreprise-profile.entity';
 import { Delivery, DeliveryStatus } from 'src/database/entities/profiles/livreur-profile.entity';
 import { Correspondent, CorrespondantStatus, VerificationStatus } from 'src/database/entities/profiles/correspondant-profile.entity';
 import { JOURS_ORDER } from 'src/database/entities/profiles/correspondant-horaire.entity';
+import { JOURS_ORDER as COMPANY_JOURS_ORDER } from 'src/database/entities/entreprise.table/company-horaire.entity';
 import { CompanyAvis } from 'src/database/entities/entreprise.table/company-avis.entity';
 import { Promotion, PromoStatus } from 'src/database/entities/entreprise.table/promotion.entity';
 import { Follow, FollowStatus, TargetActorType } from 'src/database/entities/follow/follow.entity';
@@ -20,8 +21,11 @@ import { StoryView }   from 'src/database/entities/entreprise.table/story-view.e
 import { StoryLike }   from 'src/database/entities/entreprise.table/story-like.entity';
 import { Category }    from 'src/database/entities/entreprise.table/category.entity';
 import { SubCategory } from 'src/database/entities/entreprise.table/sub-category.entity';
-import { User }        from 'src/database/entities/user.entity';
+import { User, UserStatus } from 'src/database/entities/user.entity';
+import { UserRole }    from 'src/common/enums/user-role.enum';
+import { Commande, CommandeStatus } from 'src/database/entities/commande/commande.entity';
 import { NotificationBroadcastService } from 'src/modules/notifications/services/notification-broadcast.service';
+import { RedisCacheService } from 'src/modules/performance-engine/services/redis-cache.service';
 
 // ── Interfaces de réponse ─────────────────────────────────────
 
@@ -66,6 +70,12 @@ export interface PublicProduitResponse {
   livraisonCorrespondant: boolean;
   fraisLivraisonLocal:    number | null;
   delaiLivraison:         string;
+  /** Politique de retour de LA BOUTIQUE (Paramètres > Catalogue) — texte
+   *  libre à afficher sur la fiche produit, voir CatalogueSection.tsx. */
+  returnPolicy: string | null;
+  /** Date de publication (ISO) — permet au frontend de dériver un filtre
+   *  "Nouveautés" réel plutôt qu'un badge fixe non calculé. */
+  createdAt: string;
 }
 
 /* ✅ NOUVEAU — format retourné par getSimilaires */
@@ -112,6 +122,20 @@ export interface PublicBoutiqueResponse {
   createdAt:     string;
   totalAbonnes:  number;
   online:        boolean;
+  /** BUG CORRIGÉ — openTime/closeTime ci-dessus ne sont jamais renseignés
+   *  nulle part dans le code (company-horaire.entity.ts documente
+   *  explicitement que cette table les remplace) : la page publique
+   *  affichait donc toujours "Horaires non renseignés", quels que soient
+   *  les horaires par jour réellement configurés dans Paramètres. Détail
+   *  complet par jour, trié lundi→dimanche — [] si jamais configuré. */
+  horaires: { jour: string; ouverture: string | null; fermeture: string | null; actif: boolean }[];
+  /** BUG CORRIGÉ — Paramètres > Livraison (méthodes + zones) était
+   *  enregistré mais jamais exposé nulle part : un client n'avait aucun
+   *  moyen de savoir si cette boutique livre chez lui avant de commander. */
+  livraison: {
+    standard: boolean; livreursShopi: boolean; correspondants: boolean;
+    clickCollect: boolean; express: boolean; zones: string[];
+  };
 }
 
 export interface PublicLivreurResponse {
@@ -230,8 +254,127 @@ export class PublicService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
 
+    @InjectRepository(Commande)
+    private readonly commandeRepo: Repository<Commande>,
+
     private readonly broadcast: NotificationBroadcastService,
+
+    /* BUG CORRIGÉ — voir getLandingStats() : la page de connexion publique
+     * affichait des statistiques ("120K+ clients", "4K+ boutiques"…) et un
+     * fil d'activité ("Commande livrée", "Nouvelle boutique"…) 100% codés
+     * en dur, jamais rattachés à la moindre donnée réelle. */
+    private readonly cache: RedisCacheService,
   ) {}
+
+  // ── Statistiques + fil d'activité de la page de connexion publique ──
+
+  private landingRelativeTime(date: Date): string {
+    const diffSec = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+    if (diffSec < 60)    return "à l'instant";
+    if (diffSec < 3600)  return `il y a ${Math.floor(diffSec / 60)} minute${Math.floor(diffSec / 60) > 1 ? 's' : ''}`;
+    if (diffSec < 86400) return `il y a ${Math.floor(diffSec / 3600)} heure${Math.floor(diffSec / 3600) > 1 ? 's' : ''}`;
+    return `il y a ${Math.floor(diffSec / 86400)} jour${Math.floor(diffSec / 86400) > 1 ? 's' : ''}`;
+  }
+
+  /**
+   * GET /public/landing-stats — lu par LeftPanel.tsx (page /login).
+   *
+   * BUG CORRIGÉ — cette page publique affichait "120K+ clients actifs",
+   * "4K+ boutiques", "640+ livreurs", "98% satisfaction" et un fil
+   * d'activité ("Commande livrée", "FashionHub GN vient de s'inscrire"…)
+   * entièrement codés en dur — aucun de ces chiffres ni événements n'a
+   * jamais existé réellement sur la plateforme.
+   *
+   * Compteurs bruts (le frontend les formate en "120K+" etc. lui-même) ;
+   * satisfactionPct = % d'avis notés ≥4/5 (null si aucun avis — le
+   * frontend masque alors ce chiffre plutôt que d'afficher un faux 0%).
+   * Fil d'activité : seulement des événements RÉELLEMENT survenus — un
+   * emplacement sans événement disponible (ex: aucune commande livrée
+   * pour l'instant) est simplement omis, jamais remplacé par un exemple.
+   *
+   * Caché 2 min (Redis) : page publique à fort trafic, ces chiffres n'ont
+   * pas besoin d'être recalculés à chaque visite.
+   */
+  async getLandingStats(): Promise<{
+    stats: {
+      activeClients: number;
+      boutiques: number;
+      livreurs: number;
+      satisfactionPct: number | null;
+    };
+    activity: Array<{ type: string; icon: string; title: string; sub: string }>;
+  }> {
+    const CACHE_KEY = 'public:landing-stats';
+    const cached = await this.cache.get<Awaited<ReturnType<typeof this.getLandingStats>>>(CACHE_KEY);
+    if (cached) return cached;
+
+    const [activeClients, boutiques, livreurs, avisAgg, dernierCommande, dernièreBoutique, dernierAvis] =
+      await Promise.all([
+        this.userRepo.count({ where: { role: UserRole.CLIENT, status: UserStatus.ACTIVE } }),
+        this.companyRepo.count({ where: { status: CompanyStatus.ACTIVE } }),
+        this.deliveryRepo.count({ where: { status: DeliveryStatus.ACTIVE } }),
+        this.avisRepo
+          .createQueryBuilder('a')
+          .select('COUNT(*)', 'total')
+          .addSelect('COUNT(*) FILTER (WHERE a.note >= 4)', 'positifs')
+          .getRawOne<{ total: string; positifs: string }>(),
+        this.commandeRepo.findOne({
+          where: { status: CommandeStatus.DELIVERED },
+          order: { dateLivraisonEffective: 'DESC' },
+        }),
+        this.companyRepo.findOne({
+          where: { status: CompanyStatus.ACTIVE },
+          order: { createdAt: 'DESC' },
+        }),
+        this.avisRepo.findOne({ where: { note: 5 }, order: { createdAt: 'DESC' } }),
+      ]);
+
+    const totalAvis = Number(avisAgg?.total ?? 0);
+    const satisfactionPct = totalAvis > 0
+      ? Math.round((Number(avisAgg?.positifs ?? 0) / totalAvis) * 100)
+      : null;
+
+    const activity: Array<{ type: string; icon: string; title: string; sub: string }> = [];
+
+    if (dernierCommande?.dateLivraisonEffective) {
+      const lieu = [dernierCommande.communeLivraison, dernierCommande.villeLivraison].filter(Boolean).join(', ');
+      activity.push({
+        type:  'commande',
+        icon:  '📦',
+        title: 'Commande livrée',
+        sub:   [this.landingRelativeTime(dernierCommande.dateLivraisonEffective), lieu].filter(Boolean).join(' · '),
+      });
+    }
+
+    if (dernièreBoutique) {
+      activity.push({
+        type:  'boutique',
+        icon:  '🏪',
+        title: 'Nouvelle boutique',
+        sub:   `${dernièreBoutique.companyName} vient de s'inscrire`,
+      });
+    }
+
+    if (dernierAvis) {
+      const company = await this.companyRepo.findOne({ where: { id: dernierAvis.companyId }, select: ['companyName'] });
+      const avisCount = await this.avisRepo.count({ where: { companyId: dernierAvis.companyId } });
+      if (company) {
+        activity.push({
+          type:  'avis',
+          icon:  '⭐',
+          title: 'Avis 5 étoiles',
+          sub:   `${company.companyName} · ${avisCount} avis`,
+        });
+      }
+    }
+
+    const result = {
+      stats: { activeClients, boutiques, livreurs, satisfactionPct },
+      activity,
+    };
+    await this.cache.set(CACHE_KEY, result, 120);
+    return result;
+  }
 
   // ── Produits publics paginés ──────────────────────────────────
 
@@ -251,6 +394,10 @@ export class PublicService {
       .leftJoinAndSelect('p.company',        'company')
       .leftJoinAndSelect('p.wholesaleTiers', 'tiers')
       .where('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+      /* BUG CORRIGÉ — Company.showOutOfStock (Paramètres > Catalogue)
+       * était enregistré mais jamais lu : un produit épuisé restait
+       * toujours visible même boutique par boutique désactivée. */
+      .andWhere('(company."showOutOfStock" = true OR p.stock > 0)')
       .orderBy('p.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
@@ -351,7 +498,7 @@ export class PublicService {
     const [company, totalAbonnes] = await Promise.all([
       this.companyRepo.findOne({
         where: { id },
-        relations: ['companyType', 'user'],
+        relations: ['companyType', 'user', 'horaires'],
       }),
       this.followRepo.count({
         where: {
@@ -384,6 +531,8 @@ export class PublicService {
       .leftJoinAndSelect('p.wholesaleTiers', 'tiers')
       .where('p.companyId = :companyId', { companyId })
       .andWhere('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+      /* BUG CORRIGÉ — voir listProduits() ci-dessus pour le détail. */
+      .andWhere('(company."showOutOfStock" = true OR p.stock > 0)')
       .orderBy('p.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
@@ -487,12 +636,16 @@ export class PublicService {
     // companyName/logo/verified/ville toujours vides sur les produits publics).
     const company = await p.company;
     const { prix, prixAncien } = this.effectivePrix(p);
+    /* BUG CORRIGÉ — Company.showStrikePrice (Paramètres > Catalogue) était
+     * enregistré mais jamais lu nulle part : le prix barré s'affichait
+     * toujours, même désactivé par la boutique. */
+    const showStrike = company?.showStrikePrice ?? true;
     return {
       id:          p.id,
       nom:         p.nom,
       description: p.description,
       prix,
-      prixAncien,
+      prixAncien: showStrike ? prixAncien : null,
       marque:      p.marque,
       urlSlug:     p.urlSlug,
       stock:       p.stock,
@@ -537,6 +690,8 @@ export class PublicService {
         })),
       fraisLivraisonLocal:    p.fraisLivraisonLocal     ?? null,
       delaiLivraison:         p.delaiLivraison          ?? '1-3 jours',
+      returnPolicy: company?.returnPolicy ?? null,
+      createdAt:    p.createdAt.toISOString(),
     };
   }
 
@@ -548,12 +703,13 @@ export class PublicService {
     const remise   = prixAnc && prixAnc > prix
       ? Math.round((1 - prix / prixAnc) * 100)
       : 0;
+    const showStrike = company?.showStrikePrice ?? true;
 
     return {
       id:         p.id,
       nom:        p.nom,
       prix,
-      prixAncien: prixAnc,
+      prixAncien: showStrike ? prixAnc : null,
       imageUrl:   images[0]?.url ?? null,
       emoji:      p.category?.icone ?? '📦',
       shopNom:    company?.companyName ?? 'Boutique',
@@ -603,6 +759,17 @@ export class PublicService {
       createdAt:     new Date(c.createdAt).toISOString(),
       totalAbonnes,
       online,
+      horaires: [...(c.horaires ?? [])]
+        .sort((a, b) => COMPANY_JOURS_ORDER.indexOf(a.jour) - COMPANY_JOURS_ORDER.indexOf(b.jour))
+        .map(h => ({ jour: h.jour, ouverture: h.ouverture, fermeture: h.fermeture, actif: h.actif })),
+      livraison: {
+        standard:       c.livraisonStandard ?? true,
+        livreursShopi:  c.livraisonShopi    ?? true,
+        correspondants: c.livraisonCorresp  ?? false,
+        clickCollect:   c.clickCollect      ?? true,
+        express:        c.livraisonExpress  ?? false,
+        zones:          c.zonesLivraison    ?? [],
+      },
     };
   }
 
@@ -693,6 +860,23 @@ export class PublicService {
         domaine:       (c.companyType as any)?.nom   ?? null,
         domaineIcon:   (c.companyType as any)?.icone ?? null,
         membre,
+        /* BUG PRÉ-EXISTANT révélé par l'ajout du champ horaires ci-dessous
+         * (qui a fait sortir cet objet du cast permissif `as` — TypeScript
+         * ne vérifiait plus les propriétés manquantes tant que la forme
+         * globale se recoupait "suffisamment") : createdAt n'a jamais été
+         * renvoyé ici, alors qu'il est requis par PublicBoutiqueResponse. */
+        createdAt:     c.createdAt.toISOString(),
+        /* Pas de relation horaires chargée ici (liste paginée) — le détail
+         * complet n'est utile que sur la fiche boutique, voir getBoutique(). */
+        horaires:      [],
+        livraison: {
+          standard:       c.livraisonStandard ?? true,
+          livreursShopi:  c.livraisonShopi    ?? true,
+          correspondants: c.livraisonCorresp  ?? false,
+          clickCollect:   c.clickCollect      ?? true,
+          express:        c.livraisonExpress  ?? false,
+          zones:          c.zonesLivraison    ?? [],
+        },
         totalAbonnes:  0,
         online:        false,
       } as PublicBoutiqueResponse;
@@ -710,7 +894,7 @@ export class PublicService {
   async getBoutiqueAvis(companyId: string): Promise<{
     averageRating: number;
     totalRatings:  number;
-    avis:          { id: string; clientNom: string; clientInitiales: string; note: number; commentaire: string | null; date: string }[];
+    avis:          { id: string; clientNom: string; clientInitiales: string; note: number; commentaire: string | null; date: string; reponse: string | null }[];
   }> {
     const company = await this.companyRepo.findOne({
       where:  { id: companyId },
@@ -723,7 +907,7 @@ export class PublicService {
       where:  { companyId },
       order:  { createdAt: 'DESC' },
       take:   50,
-      select: ['id', 'clientNom', 'clientInitiales', 'note', 'commentaire', 'createdAt'],
+      select: ['id', 'clientNom', 'clientInitiales', 'note', 'commentaire', 'createdAt', 'reponse'],
     });
 
     return {
@@ -738,6 +922,9 @@ export class PublicService {
         date:             a.createdAt.toLocaleDateString('fr-FR', {
           day: '2-digit', month: 'long', year: 'numeric',
         }),
+        /* Réponse publique de la boutique — voir AvisService.repondre()
+         * côté dashboard entreprise. */
+        reponse:          a.reponse,
       })),
     };
   }

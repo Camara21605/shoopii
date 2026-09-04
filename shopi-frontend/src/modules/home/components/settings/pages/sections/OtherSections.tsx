@@ -193,7 +193,7 @@ export function NotifsSection({ onToast }: Props) {
  * ════════════════════════════════════════════════════════════ */
 export function ConfidentialiteSection({ onToast }: Props) {
   const { t } = useTranslation();
-  const defaultPrivacy = { historique:false, wishlist:true, perso:true, localisation:true, pubs:false };
+  const defaultPrivacy = { visibilite:'public', historique:false, wishlist:true, perso:true, localisation:true, pubs:false };
   const [prefs,   setPrefs]   = useState(defaultPrivacy);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
@@ -230,7 +230,7 @@ export function ConfidentialiteSection({ onToast }: Props) {
           : <>
             <div className={s.privRow}>
               <div className={s.privLeft}><div className={`${s.privIco} ${s.icoBlue}`}><i className="fas fa-user" /></div><div><div className={s.privTitle}>{t('settingsPage.confidentialite.visibiliteTitle')}</div><div className={s.privDesc}>{t('settingsPage.confidentialite.visibiliteDesc')}</div></div></div>
-              <select className={s.privSelect} defaultValue="public"><option value="public">{t('settingsPage.confidentialite.visibiliteOptions.toutLeMonde')}</option><option value="members">{t('settingsPage.confidentialite.visibiliteOptions.membresShopi')}</option><option value="nobody">{t('settingsPage.confidentialite.visibiliteOptions.personne')}</option></select>
+              <select className={s.privSelect} value={prefs.visibilite} onChange={e => setPrefs(prev => ({ ...prev, visibilite: e.target.value }))}><option value="public">{t('settingsPage.confidentialite.visibiliteOptions.toutLeMonde')}</option><option value="members">{t('settingsPage.confidentialite.visibiliteOptions.membresShopi')}</option><option value="nobody">{t('settingsPage.confidentialite.visibiliteOptions.personne')}</option></select>
             </div>
             {([
               { key:'historique' as const, ico:'icoTeal',    icon:'fa-bag-shopping',    title: t('settingsPage.confidentialite.rows.historique.title'),   desc: t('settingsPage.confidentialite.rows.historique.desc') },

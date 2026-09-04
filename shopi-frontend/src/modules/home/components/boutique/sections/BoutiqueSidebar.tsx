@@ -23,9 +23,10 @@
  * ============================================================
  */
 import { useTranslation } from 'react-i18next';
-import { CATEGORIES_BOUTIQUE } from '../data/boutiqueMockData';
 import type { BoutiqueInfo } from '../data/boutiqueMockData';
 import styles from '../styles/BoutiqueSidebar.module.css';
+
+interface CategorieReelle { label: string; emoji: string; count: number; }
 
 interface Props {
   catActive:    string;
@@ -38,6 +39,17 @@ interface Props {
   setFiltrPromo:(v: boolean) => void;
   filtrNew:     boolean;
   setFiltrNew:  (v: boolean) => void;
+  /* Catégories et fourchette de prix — dérivées des vrais produits de
+   * CETTE boutique côté BoutiquePage.tsx (categoriesReelles, priceBounds),
+   * remplacent l'ancienne liste CATEGORIES_BOUTIQUE figée (compteurs
+   * inventés, sans rapport avec les produits réels — cliquer dessus
+   * filtrait sur un nom de catégorie qui ne correspondait à aucun produit). */
+  categories:   CategorieReelle[];
+  priceBounds:  { min: number; max: number };
+  priceMin:     number;
+  priceMax:     number;
+  setPriceMin:  (v: number | null) => void;
+  setPriceMax:  (v: number | null) => void;
   onToast:      (m: string) => void;
   /* Mobile uniquement : la sidebar devient un tiroir superposé plutôt
    * que de s'empiler au-dessus de la grille produits (voir CSS). Sur
@@ -51,12 +63,13 @@ export default function BoutiqueSidebar({
   catActive, setCatActive, sortBy, setSortBy,
   filtrStock, setFiltrStock, filtrPromo, setFiltrPromo,
   filtrNew,   setFiltrNew,  onToast,
+  categories, priceBounds, priceMin, priceMax, setPriceMin, setPriceMax,
   isOpen = false, onClose, boutiqueInfo,
 }: Props) {
   const { t } = useTranslation();
 
   /* Nombre total de produits pour la catégorie "Tout" */
-  const totalProduits = CATEGORIES_BOUTIQUE.reduce((a, c) => a + c.count, 0);
+  const totalProduits = categories.reduce((a, c) => a + c.count, 0);
 
   return (
     <>
@@ -120,8 +133,8 @@ export default function BoutiqueSidebar({
               <span className={styles.catCnt}>{totalProduits}</span>
             </div>
 
-            {/* Une ligne par catégorie */}
-            {CATEGORIES_BOUTIQUE.map(c => (
+            {/* Une ligne par catégorie réellement présente dans cette boutique */}
+            {categories.map(c => (
               <div
                 key={c.label}
                 className={`${styles.catItem} ${catActive === c.label ? styles.catItemActive : ''}`}
@@ -136,61 +149,45 @@ export default function BoutiqueSidebar({
         </div>
       </div>
 
-      {/* ══ 3. Fourchette de prix ══ */}
+      {/* ══ 3. Fourchette de prix ══
+       * BUG CORRIGÉ — slider figé (0 → 30M, valeur par défaut 21M) et
+       * inputs non contrôlés (defaultValue seul, aucun onChange) : ça ne
+       * filtrait rien du tout, quel que soit le produit le plus cher de
+       * CETTE boutique. Bornes et valeurs réelles désormais. */}
       <div className={styles.card}>
         <div className={styles.cardHd}>
           <h4><i className="fas fa-coins" /> {t('boutiqueDetail.sidebar.prix')}</h4>
         </div>
         <div className={styles.cardBd}>
-          {/* Slider */}
+          {/* Slider — contrôle la borne haute */}
           <input
             type="range"
             className={styles.slider}
-            min={0} max={30000000}
-            defaultValue={21000000}
+            min={priceBounds.min}
+            max={priceBounds.max}
+            value={priceMax}
+            onChange={e => setPriceMax(Number(e.target.value))}
           />
           {/* Inputs min / max */}
           <div className={styles.priceInputs}>
-            <input type="text" className={styles.priceIn} placeholder="Min" defaultValue="0" />
-            <input type="text" className={styles.priceIn} placeholder="Max" defaultValue="21 000 000" />
-          </div>
-        </div>
-      </div>
-
-      {/* ══ 4. Note minimale ══ */}
-      <div className={styles.card}>
-        <div className={styles.cardHd}>
-          <h4><i className="fas fa-star" /> {t('boutiqueDetail.sidebar.noteMinimale')}</h4>
-        </div>
-        <div className={styles.cardBd}>
-          <div className={styles.ratingList}>
-            {[
-              { val: 5, cnt: '(204)', label: '★★★★★' },
-              { val: 4, cnt: '(234)', label: '★★★★☆' },
-              { val: 3, cnt: '(241)', label: '★★★☆☆' },
-            ].map(r => (
-              <label key={r.val} className={styles.ratingOpt}>
-                <input
-                  type="radio"
-                  name="rat"
-                  style={{ accentColor: 'var(--blue)' }}
-                  onChange={() => onToast(t('boutiqueDetail.sidebar.filtreEtoilesToast', { n: r.val }))}
-                />
-                <span className={styles.ratingStars}>{r.label}</span>
-                <span className={styles.ratingCnt}>{r.cnt}</span>
-              </label>
-            ))}
-            {/* Option "Tous" */}
-            <label className={styles.ratingOpt}>
-              <input
-                type="radio"
-                name="rat"
-                defaultChecked
-                style={{ accentColor: 'var(--blue)' }}
-                onChange={() => onToast(t('boutiqueDetail.sidebar.tousLesAvis'))}
-              />
-              <span className={styles.ratingAll}>{t('boutiqueDetail.sidebar.tousLesAvis')}</span>
-            </label>
+            <input
+              type="number"
+              className={styles.priceIn}
+              placeholder="Min"
+              min={priceBounds.min}
+              max={priceMax}
+              value={priceMin}
+              onChange={e => setPriceMin(e.target.value === '' ? priceBounds.min : Math.min(Number(e.target.value), priceMax))}
+            />
+            <input
+              type="number"
+              className={styles.priceIn}
+              placeholder="Max"
+              min={priceMin}
+              max={priceBounds.max}
+              value={priceMax}
+              onChange={e => setPriceMax(e.target.value === '' ? priceBounds.max : Math.max(Number(e.target.value), priceMin))}
+            />
           </div>
         </div>
       </div>

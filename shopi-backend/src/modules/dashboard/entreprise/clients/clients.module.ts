@@ -20,8 +20,14 @@ import { Commande }  from 'src/database/entities/commande/commande.entity';
 import { Follow }    from 'src/database/entities/follow/follow.entity';
 import { User }      from 'src/database/entities/user.entity';
 
+/* Actions CRM (newsletter/fidélité/relance) — voir CrmCampaignService,
+ * qui passe par NotificationEventService pour ne jamais envoyer d'email
+ * de façon synchrone dans la requête HTTP. */
+import { NotificationsModule } from 'src/modules/notifications/notifications.module';
+
 import { ClientsController } from './clients.controller';
 import { ClientsService }    from './clients.service';
+import { CrmCampaignService } from './crm-campaign.service';
 
 @Module({
   imports: [
@@ -32,9 +38,10 @@ import { ClientsService }    from './clients.service';
       Follow,    // abonnements boutique
       User,      // nom + email + photo
     ]),
+    NotificationsModule,
   ],
   controllers: [ClientsController],
-  providers:   [ClientsService],
+  providers:   [ClientsService, CrmCampaignService],
   exports:     [ClientsService],
 })
 export class ClientsModule {}

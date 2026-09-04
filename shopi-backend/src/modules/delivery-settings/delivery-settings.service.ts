@@ -23,6 +23,9 @@ import {
 } from './delivery-settings.entity';
 import { UpdateDeliverySettingsDto } from './delivery-settings.dto';
 import { Admin } from '../../database/entities/profiles/admin-profile.entity';
+import { PlatformSettings } from '../../database/entities/platform-settings.entity';
+import { CommissionConfigService } from '../commission/services/commission-config.service';
+import { PlatformSettingsCacheService } from '../performance-engine/services/platform-settings-cache.service';
 
 /* ── Valeurs par défaut ─────────────────────────────────────── */
 
@@ -99,7 +102,12 @@ export class DeliverySettingsService {
     @InjectRepository(Admin)
     private readonly adminRepo: Repository<Admin>,
 
+    @InjectRepository(PlatformSettings)
+    private readonly platformSettingsRepo: Repository<PlatformSettings>,
+
     private readonly dataSource: DataSource,
+    private readonly commissionConfig: CommissionConfigService,
+    private readonly settingsCache: PlatformSettingsCacheService,
   ) {}
 
   private normalize(cfg: DeliverySetting): NormalizedSettings {
@@ -126,7 +134,7 @@ export class DeliverySettingsService {
   }
 
   /* ── PUT ────────────────────────────────────────────────────── */
-  async updateSettings(dto: UpdateDeliverySettingsDto): Promise<NormalizedSettings> {
+  async updateSettings(dto: UpdateDeliverySettingsDto, changedByUserId?: string): Promise<NormalizedSettings> {
     const cfg = await this.getSettings();
 
     if (dto.assignmentStrategy       !== undefined) cfg.assignmentStrategy       = dto.assignmentStrategy;
@@ -151,6 +159,27 @@ export class DeliverySettingsService {
 
     const saved = await this.repo.save(cfg);
     this.logger.log(`[DELIVERY-SETTINGS] Mis à jour — stratégie=${saved.assignmentStrategy} | score_min=${saved.minScore}`);
+
+    /* platformCommissionRate duplique PlatformSettings.tauxCommissionLivraison
+     * (même rôle, deux formulaires) — sans cette resynchronisation, ce champ
+     * s'enregistrait ici mais le moteur de commission continuait à lire
+     * l'ancien taux dans PlatformSettings/CommissionRule. */
+    if (dto.platformCommissionRate !== undefined) {
+      await this.platformSettingsRepo.update({ id: 1 }, { tauxCommissionLivraison: dto.platformCommissionRate });
+      /* Écriture directe sur le repo (pas via PlatformSettingsService) —
+       * doit donc invalider le cache Redis elle-même, sinon la lecture
+       * cachée reste sur l'ancien taux jusqu'à 5 min (TTL). */
+      await this.settingsCache.invalidate();
+      if (changedByUserId) {
+        await this.commissionConfig.createOrUpdateRule(
+          changedByUserId,
+          'Modifié depuis le Centre de Gestion des Commissions (onglet Livreurs)',
+        );
+      } else {
+        this.logger.warn('[DELIVERY-SETTINGS] platformCommissionRate modifié sans changedByUserId — CommissionRule NON resynchronisée.');
+      }
+    }
+
     return this.normalize(saved);
   }
 

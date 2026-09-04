@@ -4,10 +4,11 @@
  * ============================================================ */
 
 import {
-  Controller, Get, Post, Body, Request,
-  UseGuards, InternalServerErrorException, Logger,
+  Controller, Get, Post, Body, Param, Request,
+  UseGuards, InternalServerErrorException, HttpException, Logger,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { IsEmail, IsIn, IsOptional } from 'class-validator';
 
 import { JwtAuthGuard } from '../../../common/guards/auth.guard';
 import { RolesGuard }   from '../../../common/guards/roles.guard';
@@ -16,8 +17,19 @@ import { UserRole }     from '../../../common/enums/user-role.enum';
 
 import { PartenaireDashboardService } from './partenaire-dashboard.service';
 
+/* BUG CORRIGÉ — aucun décorateur class-validator sur ce DTO : malgré le
+ * ValidationPipe global (whitelist + forbidNonWhitelisted), ces deux champs
+ * n'étaient jamais vérifiés en type/format. `type` invalide ou absent
+ * retombait silencieusement sur 'ent' (COMPANY) dans
+ * PartenaireDashboardService.generateCode() au lieu d'être rejeté — un
+ * partenaire pouvait ainsi générer un code pour le mauvais type d'acteur
+ * sans erreur explicite si le frontend envoyait une valeur inattendue. */
 class GenerateCodeDto {
+  @IsIn(['ent', 'lvr', 'cor', 'cli'])
   type!: string;
+
+  @IsOptional()
+  @IsEmail()
   targetEmail?: string;
 }
 
@@ -82,6 +94,23 @@ export class PartenaireDashboardController {
     } catch (err) {
       this.logger.error('getActeurs failed', err instanceof Error ? err.stack : String(err));
       throw new InternalServerErrorException('Erreur chargement acteurs');
+    }
+  }
+
+  /* Terminé — fiche détail derrière le bouton "Gérer" (ActeursPage.tsx).
+   * BUG CORRIGÉ (pattern présent partout dans ce fichier) — err instanceof
+   * HttpException doit être relancée telle quelle : sinon le 404 "Entreprise
+   * introuvable" / 400 "type invalide" levés par le service se
+   * transformaient systématiquement en 500 générique via le catch global. */
+  @ApiOperation({ summary: "Fiche détail d'un acteur recruté" })
+  @Get('acteurs/:type/:id')
+  async getActeurDetail(@Request() req: any, @Param('type') type: string, @Param('id') id: string) {
+    try {
+      return await this.svc.getActeurDetail(req.user.id, type, id);
+    } catch (err) {
+      if (err instanceof HttpException) throw err;
+      this.logger.error('getActeurDetail failed', err instanceof Error ? err.stack : String(err));
+      throw new InternalServerErrorException("Erreur chargement de la fiche acteur");
     }
   }
 

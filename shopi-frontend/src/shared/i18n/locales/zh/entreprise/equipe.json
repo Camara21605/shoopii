@@ -75,7 +75,6 @@
       "reactivateError": "重新激活时出错。",
       "deleted": "{{name}} 的访问权已撤销。",
       "resetPasswordError": "重置时出错。",
-      "permissionsUpdated": "权限已更新。",
       "permissionsUpdateError": "更新时出错。",
       "invitationResent": "邀请已重新发送。",
       "genericError": "错误。",
@@ -132,12 +131,22 @@
         "label": "钱包",
         "view": "查看",
         "withdraw": "提现"
+      },
+      "fournisseurs": {
+        "label": "供应商",
+        "view": "查看",
+        "connect": "连接",
+        "disconnect": "断开连接"
+      },
+      "boutique": {
+        "label": "我的店铺",
+        "view": "查看",
+        "edit": "编辑"
       }
     },
     "permPanel": {
       "title": "权限",
-      "cancel": "取消",
-      "save": "保存"
+      "close": "关闭"
     },
     "activityPanel": {
       "title": "最近活动",

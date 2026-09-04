@@ -31,6 +31,11 @@ export interface AuthResponse {
   /** true si cette connexion a fermé une session déjà active sur un
    *  autre appareil — affiche une notification informative. */
   sessionReplaced?: boolean;
+  /** true si PlatformSettings.adminTwoFaRequired est activé, que ce
+   *  compte est ADMIN/SUPER_ADMIN et que sa 2FA n'est pas encore
+   *  configurée — affiche TwoFaSetupModal en mode non-fermable avant
+   *  de laisser l'accès normal au dashboard. */
+  twoFaSetupRequired?: boolean;
 }
 
 /** Réponse de /auth/login quand le compte a la 2FA activée — aucun
@@ -58,7 +63,18 @@ export interface SessionConfirmResponse {
   requiresSessionConfirm: true;
 }
 
-export type LoginResult = AuthResponse | TwoFaChallengeResponse | AccountChoiceResponse | SessionConfirmResponse;
+/** Réponse de /auth/register ou /auth/login quand PlatformSettings.
+ *  emailVerifRequired est activé et que ce compte n'a pas encore confirmé
+ *  son adresse email — aucun cookie posé. Il faut afficher l'écran de code
+ *  puis appeler /auth/verify-email avec userId + code. */
+export interface EmailVerificationRequiredResponse {
+  requiresEmailVerification: true;
+  email:  string;
+  userId: string;
+}
+
+export type RegisterResult = AuthResponse | EmailVerificationRequiredResponse;
+export type LoginResult = AuthResponse | TwoFaChallengeResponse | AccountChoiceResponse | SessionConfirmResponse | EmailVerificationRequiredResponse;
 
 /** Métadonnées pays extraites du numéro de téléphone */
 export interface PhoneCountryMeta {

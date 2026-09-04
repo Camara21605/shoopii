@@ -90,6 +90,46 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
   const [sessionConfirmError,   setSessionConfirmError]   = useState('');
   const [sessionConfirmLoading, setSessionConfirmLoading] = useState(false);
 
+  /* ── 2FA obligatoire (PlatformSettings.adminTwoFaRequired) — la
+   * connexion est complétée avec succès (identifiants + éventuelle 2FA
+   * déjà existante OK) mais ce compte ADMIN/SUPER_ADMIN n'a pas encore
+   * configuré sa propre 2FA alors que le super-admin l'a rendue
+   * obligatoire. On retient la réponse de connexion sans encore
+   * naviguer vers le dashboard : TwoFaSetupModal s'affiche sans
+   * possibilité de fermeture, la navigation ne reprend qu'après
+   * confirmation du code TOTP. */
+  const [twoFaSetupPending, setTwoFaSetupPending] = useState<import('../types').AuthResponse | null>(null);
+
+  // ── Vérification email obligatoire (PlatformSettings.emailVerifRequired) ──
+  // Posé par register()/login()/chooseAccount() — voir EmailVerificationScreen.
+  const [emailVerifyPending, setEmailVerifyPending] = useState<{ email: string; userId: string } | null>(null);
+  const [emailVerifyError,   setEmailVerifyError]   = useState('');
+  const [emailVerifyResending, setEmailVerifyResending] = useState(false);
+
+  /* ── Politique d'inscription publique (PlatformSettings.openSignup /
+   * .codeRequiredForCompany) — lue une fois au montage, indépendamment de
+   * toute session. BUG CORRIGÉ : ces deux réglages bloquaient déjà
+   * l'inscription côté serveur, mais rien côté UI n'en tenait compte —
+   * "Client"/"Entreprise" restaient cliquables et le code restait exigé
+   * dans le formulaire même quand le super-admin l'avait désactivé,
+   * jusqu'à l'échec surprise à la toute fin de la soumission.
+   * Valeurs par défaut "ouvert"/"code requis" (comportement historique)
+   * tant que l'appel n'a pas répondu ou en cas d'échec réseau — jamais de
+   * blocage fantôme sur une simple erreur réseau. */
+  const [openSignup,              setOpenSignup]              = useState(true);
+  const [codeRequiredForCompany,  setCodeRequiredForCompany]  = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    authService.getRegistrationPolicy()
+      .then(p => {
+        if (cancelled) return;
+        setOpenSignup(p.openSignup);
+        setCodeRequiredForCompany(p.codeRequiredForCompany);
+      })
+      .catch(() => { /* silencieux — repli sur les valeurs par défaut ci-dessus */ });
+    return () => { cancelled = true; };
+  }, []);
+
   const showToast = useCallback((msg: string) => {
     setToast({ msg, visible: true });
     setTimeout(() => setToast({ msg: '', visible: false }), 3000);
@@ -177,7 +217,15 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
          * aucun code d'activation à demander (voir collabInvite). */
         if (collabInvite) return undefined;
         const cfg = ROLE_CONFIGS[role];
-        return cfg?.code && !data.activationCode?.trim()
+        /* BUG CORRIGÉ — ROLE_CONFIGS.company.code est statiquement `true` :
+         * le code restait exigé côté formulaire même quand le super-admin
+         * désactivait PlatformSettings.codeRequiredForCompany (Paramètres
+         * Plateforme > Inscriptions). Seul "company" a un réglage dynamique
+         * — les autres rôles (livreur, partenaire, correspondant, admin)
+         * gardent leur code obligatoire codé en dur, non concernés par ce
+         * réglage. */
+        const codeRequired = role === 'company' ? codeRequiredForCompany : cfg?.code;
+        return codeRequired && !data.activationCode?.trim()
           ? "Code d'activation requis pour ce rôle."
           : undefined;
       }
@@ -188,7 +236,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
       default:
         return undefined;
     }
-  }, [collabInvite]);
+  }, [collabInvite, codeRequiredForCompany]);
 
   // Validation partielle d'un sous-ensemble de champs (navigation wizard)
   const validateRegisterStep = useCallback((fields: (keyof RegisterFormData)[]): boolean => {
@@ -258,6 +306,12 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
 
   // Finalise une connexion réussie (login direct ou après vérif 2FA)
   const completeLogin = useCallback((res: import('../types').AuthResponse) => {
+    /* 2FA obligatoire mais pas encore configurée sur ce compte admin —
+     * on bloque avant toute navigation, voir twoFaSetupPending ci-dessus. */
+    if (res.twoFaSetupRequired) {
+      setTwoFaSetupPending(res);
+      return;
+    }
     setUser(res.user);
     setSuccessAction('Connexion');
     setShowSuccess(true);
@@ -270,6 +324,22 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     setTimeout(() => navigate(ROLE_ROUTES[res.user.role] ?? '/home'), 1500);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, setUser, showToast]);
+
+  // Appelé après confirmation réussie du code TOTP dans TwoFaSetupModal —
+  // reprend exactement le flux normal de fin de connexion.
+  const finishTwoFaSetup = useCallback(() => {
+    if (!twoFaSetupPending) return;
+    const res = twoFaSetupPending;
+    setTwoFaSetupPending(null);
+    setUser(res.user);
+    setSuccessAction('Connexion');
+    setShowSuccess(true);
+    if (res.sessionReplaced) {
+      showToast('ℹ️ Votre compte était déjà connecté sur un autre appareil. Cette ancienne session a été automatiquement fermée.');
+    }
+    setTimeout(() => navigate(ROLE_ROUTES[res.user.role] ?? '/home'), 1500);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [twoFaSetupPending, navigate, setUser, showToast]);
 
   // Soumission Login
   const handleLogin = useCallback(async () => {
@@ -294,6 +364,11 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
       if ('requiresSessionConfirm' in res) {
         setSessionConfirmError('');
         setSessionConfirmPending({ via: 'login' });
+        return;
+      }
+      if ('requiresEmailVerification' in res) {
+        setEmailVerifyError('');
+        setEmailVerifyPending({ email: res.email, userId: res.userId });
         return;
       }
       completeLogin(res);
@@ -326,6 +401,12 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
       if ('requiresSessionConfirm' in res) {
         setSessionConfirmError('');
         setSessionConfirmPending({ via: 'account', userId });
+        return;
+      }
+      if ('requiresEmailVerification' in res) {
+        setAccountChoiceOptions(null);
+        setEmailVerifyError('');
+        setEmailVerifyPending({ email: res.email, userId: res.userId });
         return;
       }
       setAccountChoiceOptions(null);
@@ -372,6 +453,13 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
           setSessionConfirmError('Une nouvelle connexion a eu lieu entre-temps. Réessayez.');
           return;
         }
+        if ('requiresEmailVerification' in res) {
+          setSessionConfirmPending(null);
+          setAccountChoiceOptions(null);
+          setEmailVerifyError('');
+          setEmailVerifyPending({ email: res.email, userId: res.userId });
+          return;
+        }
         setSessionConfirmPending(null);
         setAccountChoiceOptions(null);
         completeLogin(res);
@@ -399,6 +487,12 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
        * course très rare avec une 3e connexion entre-temps. */
       if ('requiresSessionConfirm' in res) {
         setSessionConfirmError('Une nouvelle connexion a eu lieu entre-temps. Réessayez.');
+        return;
+      }
+      if ('requiresEmailVerification' in res) {
+        setSessionConfirmPending(null);
+        setEmailVerifyError('');
+        setEmailVerifyPending({ email: res.email, userId: res.userId });
         return;
       }
       setSessionConfirmPending(null);
@@ -480,6 +574,14 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
         ...registerData,
         role: ROLE_MAP[registerRole] ?? registerRole,
       });
+      /* Vérification email requise (PlatformSettings.emailVerifRequired) :
+       * pas de connexion automatique tant que le code n'est pas confirmé —
+       * voir EmailVerificationScreen. */
+      if ('requiresEmailVerification' in res) {
+        setEmailVerifyError('');
+        setEmailVerifyPending({ email: res.email, userId: res.userId });
+        return;
+      }
       setUser(res.user);
       setSuccessAction('Inscription');
       setShowSuccess(true);
@@ -497,6 +599,44 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [registerData, registerRole, navigate, setUser, collabInvite, switchTab, showToast]);
+
+  // Soumission du code de vérification email
+  const handleVerifyEmailCode = useCallback(async (code: string) => {
+    if (!emailVerifyPending) return;
+    setEmailVerifyError('');
+    setIsLoading(true);
+    try {
+      const res = await authService.verifyEmail(emailVerifyPending.userId, code);
+      setEmailVerifyPending(null);
+      completeLogin(res);
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : 'Code invalide ou expiré. Réessayez.';
+      setEmailVerifyError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emailVerifyPending, completeLogin]);
+
+  // Renvoyer le code de vérification email
+  const handleResendEmailVerification = useCallback(async () => {
+    if (!emailVerifyPending) return;
+    setEmailVerifyResending(true);
+    try {
+      await authService.resendVerification(emailVerifyPending.userId);
+      showToast('📧 Un nouveau code a été envoyé.');
+    } catch {
+      showToast("❌ Impossible d'envoyer le code pour le moment.");
+    } finally {
+      setEmailVerifyResending(false);
+    }
+  }, [emailVerifyPending, showToast]);
+
+  // Retour à l'étape identifiants depuis l'écran de vérification email
+  const cancelEmailVerify = useCallback(() => {
+    setEmailVerifyPending(null);
+    setEmailVerifyError('');
+  }, []);
 
   return {
     activeTab,
@@ -537,5 +677,18 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     sessionConfirmLoading,
     handleConfirmDisconnectOther,
     cancelSessionConfirm,
+    // ✅ 2FA obligatoire (super-admin) — configuration forcée avant accès dashboard
+    twoFaSetupPending,
+    finishTwoFaSetup,
+    // ✅ Vérification email obligatoire — voir EmailVerificationScreen
+    emailVerifyPending,
+    emailVerifyError,
+    emailVerifyResending,
+    handleVerifyEmailCode,
+    handleResendEmailVerification,
+    cancelEmailVerify,
+    // ✅ Politique d'inscription publique — voir RoleSelector / RegisterForm
+    openSignup,
+    codeRequiredForCompany,
   };
 }

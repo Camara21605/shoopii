@@ -199,6 +199,10 @@
       "sendError": "发送错误",
       "replyPlaceholder": "回复客户…",
       "envoyer": "发送"
+    },
+    "accessDenied": {
+      "title": "无访问权限",
+      "message": "您没有退货和售后服务的访问权限，请联系店铺所有者获取。"
     }
   }
 }

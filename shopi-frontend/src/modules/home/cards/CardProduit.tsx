@@ -16,6 +16,7 @@ import type { TFunction } from 'i18next';
 import { apiFetch }     from '../../../shared/services/apiFetch';
 import { useCart }      from '../../../shared/context/CartContext';
 import { useFavoris }   from '../../../shared/context/FavorisContext';
+import { useWishlist }  from '../../../shared/context/WishlistContext';
 import { useAuthGate }  from '../../../shared/hooks/useAuthGate';
 import styles           from './CardProduit.module.css';
 
@@ -42,6 +43,7 @@ export interface ProductApi {
   venteEnGros?:    boolean;
   moq?:            number | null;
   wholesaleTiers?: { quantiteMin: number; quantiteMax: number | null; prixUnitaire: number; ordre: number }[];
+  createdAt?:      string;
 }
 
 interface BoutiqueApi {
@@ -177,6 +179,38 @@ function useFavorite(p: ProductApi, onToast: (m: string) => void, requireClient:
   };
 
   return { liked, handleToggle, loading };
+}
+
+// ─────────────────────────────────────────────────────────────
+// HOOK PARTAGÉ — logique du bouton liste de souhaits (🔖)
+//
+// Même pattern que useFavorite ci-dessus, mais persiste via
+// /client/wishlist/:id/toggle — liste personnelle distincte des
+// favoris (voir wishlist-item.entity.ts côté backend).
+// ─────────────────────────────────────────────────────────────
+
+function useWish(p: ProductApi, onToast: (m: string) => void, requireClient: (action: () => void) => void) {
+  const [loading, setLoading] = useState(false);
+  const { isSaved, toggle } = useWishlist();
+
+  const saved = isSaved(p.id);
+
+  const handleToggle = () => {
+    if (loading) return;
+    requireClient(async () => {
+      setLoading(true);
+      try {
+        const nowSaved = await toggle(p.id);
+        onToast(nowSaved ? '🔖 Ajouté à votre liste de souhaits' : '🔖 Retiré de votre liste de souhaits');
+      } catch (e: any) {
+        onToast(`❌ ${e?.message ?? 'Action impossible'}`);
+      } finally {
+        setLoading(false);
+      }
+    });
+  };
+
+  return { saved, handleToggle, loading };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -460,6 +494,9 @@ export default function CardProduit({ p, onToast }: Props) {
   /* ✅ Logique du bouton favori partagée */
   const { liked: fav, handleToggle: handleToggleFav } = useFavorite(p, onToast, requireClient);
 
+  /* ✅ Logique du bouton liste de souhaits partagée */
+  const { saved: wished, handleToggle: handleToggleWish } = useWish(p, onToast, requireClient);
+
   return (
     <>
       <div className={styles.pcard} onClick={() => navigate(`/produit/${p.id}`)} style={{ cursor: 'pointer' }}>
@@ -469,6 +506,11 @@ export default function CardProduit({ p, onToast }: Props) {
         <button className={`${styles.pfav} ${fav ? styles.pfavOn : ''}`}
           onClick={e => { e.stopPropagation(); handleToggleFav(); }}>
           <i className={fav ? 'fas fa-heart' : 'far fa-heart'} />
+        </button>
+
+        <button className={`${styles.pwish} ${wished ? styles.pwishOn : ''}`}
+          onClick={e => { e.stopPropagation(); handleToggleWish(); }}>
+          <i className={wished ? 'fas fa-bookmark' : 'far fa-bookmark'} />
         </button>
 
         <div className={styles.pimg}>

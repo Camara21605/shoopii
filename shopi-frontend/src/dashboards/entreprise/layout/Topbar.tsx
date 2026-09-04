@@ -88,11 +88,11 @@ const DRAWER_NAV: { id: EntreprisePage; icon: string; label: string; perm?: [str
   { id: 'promotions',     icon: 'fa-percent',       label: 'sidebar.items.promotions', perm: ['promotions','view'] },
   { id: 'analytics',      icon: 'fa-chart-line',    label: 'sidebar.items.analytics',  perm: ['statistics','view'] },
   { id: 'seo',            icon: 'fa-magnifying-glass-chart', label: 'sidebar.items.seo', perm: ['statistics','view'] },
-  { id: 'messages',       icon: 'fa-comment-dots',  label: 'sidebar.items.messages',    perm: ['messaging', 'view'] },
+  { id: 'messages',       icon: 'fa-comment-dots',  label: 'sidebar.items.messages',    perm: ['messaging', 'read'] },
   { id: 'livreurs',       icon: 'fa-motorcycle',    label: 'sidebar.items.livreurs',       perm: ['deliveries','view'] },
   { id: 'correspondants', icon: 'fa-map-pin',       label: 'sidebar.items.correspondants', perm: ['deliveries','view'] },
   { id: 'finances',       icon: 'fa-coins',         label: 'sidebar.items.finances',       perm: ['payments',  'view'] },
-  { id: 'portefeuille',   icon: 'fa-wallet',        label: 'sidebar.items.portefeuille',   perm: ['payments',  'viewTransactions'] },
+  { id: 'portefeuille',   icon: 'fa-wallet',        label: 'sidebar.items.portefeuille',   perm: ['wallet',  'view'] },
   { id: 'clients',        icon: 'fa-users',         label: 'sidebar.items.clients',        perm: ['orders',    'view'] },
   { id: 'avis',           icon: 'fa-star',          label: 'sidebar.items.avis',           perm: ['orders',    'view'] },
   { id: 'parametres',     icon: 'fa-gear',          label: 'sidebar.items.parametres',     perm: ['settings',  'view'] },
@@ -417,7 +417,7 @@ export default function Topbar({
               <span className="tb-badge">{orderUnread > 99 ? '99+' : orderUnread}</span>
             )}
           </button>
-          {(isOwner || !can || can('messaging', 'view')) && (
+          {(isOwner || !can || can('messaging', 'read')) && (
             <button className="tb-ic tb-ic-pin" title={t('topbar.tooltips.messages')}
               onClick={() => onNavigate('messages')}>
               <i className="fas fa-comment-dots"></i>
@@ -472,9 +472,11 @@ export default function Topbar({
                 <button className="tb-menu-it" onClick={() => { onNavigate('profil'); setAvatarOpen(false); }}>
                   <i className="fas fa-user"></i> {t('topbar.menu.profil')}
                 </button>
-                <button className="tb-menu-it" onClick={() => { onNavigate('boutique-preview'); setAvatarOpen(false); }}>
-                  <i className="fas fa-store"></i> {t('topbar.menu.voirBoutique')}
-                </button>
+                {(isOwner || !can || can('boutique', 'view')) && (
+                  <button className="tb-menu-it" onClick={() => { onNavigate('boutique-preview'); setAvatarOpen(false); }}>
+                    <i className="fas fa-store"></i> {t('topbar.menu.voirBoutique')}
+                  </button>
+                )}
                 <button className="tb-menu-it" onClick={handleSwitchHome}>
                   <i className="fas fa-house"></i> {t('topbar.menu.basculerAccueil')}
                 </button>
@@ -564,7 +566,7 @@ export default function Topbar({
 
             {/* Actions bas du drawer */}
             <div className="tb-drawer-foot">
-              {companyId && (
+              {companyId && (isOwner || !can || can('boutique', 'view')) && (
                 <button className="tb-drawer-home" onClick={() => { setMobileMenuOpen(false); onNavigate('boutique-preview'); }}>
                   <i className="fas fa-store"></i> {t('topbar.drawer.voirBoutique')}
                 </button>

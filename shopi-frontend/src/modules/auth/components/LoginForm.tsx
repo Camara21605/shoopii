@@ -6,6 +6,28 @@ import React from 'react';
 import { FieldInput } from '../../../shared/components/ui/FieldInput';
 import type { LoginFormData, FormErrors, Role } from '../types';
 
+/* BUG CORRIGÉ — errors.general affichait TOUJOURS le titre "Identifiants
+ * incorrects", quel que soit le vrai message renvoyé par le backend
+ * (compte verrouillé, trop de tentatives/429, etc.) — trompeur pour tout
+ * ce qui n'est pas réellement un mauvais mot de passe. Le titre est
+ * maintenant déduit du contenu du message. */
+function getGeneralErrorMeta(msg: string): { icon: string; title: string } {
+  const m = msg.toLowerCase();
+  if (m.includes('verrouillé')) {
+    return { icon: '🔒', title: 'Compte verrouillé' };
+  }
+  if (m.includes('trop de tentatives') || m.includes('too many requests')) {
+    return { icon: '⏳', title: 'Trop de tentatives' };
+  }
+  if (m.includes('suspendu')) {
+    return { icon: '🚫', title: 'Compte suspendu' };
+  }
+  if (m.includes('banni')) {
+    return { icon: '🚫', title: 'Compte banni' };
+  }
+  return { icon: '⚠️', title: 'Identifiants incorrects' };
+}
+
 interface LoginFormProps {
   data:              LoginFormData;
   errors:            FormErrors;
@@ -33,28 +55,31 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       {/* ── Erreur encadrée (une seule, peu importe la combinaison) ── */}
       {/* Affichée quand le backend retourne "identifiants incorrects",
           ou quand email/mot de passe sont manquants ou invalides */}
-      {(errors.general || errors.email || errors.password) && (
-        <div style={{
-          background:   'var(--rose-dim, #fff0f0)',
-          border:       '1.5px solid var(--rose, #e55)',
-          borderRadius: '10px',
-          padding:      '12px 16px',
-          marginBottom: '16px',
-          display:      'flex',
-          alignItems:   'flex-start',
-          gap:          '10px',
-        }}>
-          <span style={{ fontSize: '18px', flexShrink: 0 }}>{errors.general ? '⚠️' : '🔐'}</span>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--rose, #c33)', marginBottom: '2px' }}>
-              {errors.general ? 'Identifiants incorrects' : 'Connexion impossible'}
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--rose, #c33)', opacity: 0.85 }}>
-              {errors.general || errors.email || errors.password}
+      {(errors.general || errors.email || errors.password) && (() => {
+        const meta = errors.general ? getGeneralErrorMeta(errors.general) : { icon: '🔐', title: 'Connexion impossible' };
+        return (
+          <div style={{
+            background:   'var(--rose-dim, #fff0f0)',
+            border:       '1.5px solid var(--rose, #e55)',
+            borderRadius: '10px',
+            padding:      '12px 16px',
+            marginBottom: '16px',
+            display:      'flex',
+            alignItems:   'flex-start',
+            gap:          '10px',
+          }}>
+            <span style={{ fontSize: '18px', flexShrink: 0 }}>{meta.icon}</span>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--rose, #c33)', marginBottom: '2px' }}>
+                {meta.title}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--rose, #c33)', opacity: 0.85 }}>
+                {errors.general || errors.email || errors.password}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── Champs ── */}
       <div className="fields">

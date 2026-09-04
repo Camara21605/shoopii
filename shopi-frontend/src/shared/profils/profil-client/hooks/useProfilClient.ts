@@ -24,6 +24,8 @@ import type {
 } from '../services/profilClient.api';
 import { fetchMesFavoris } from '../../../services/favoris.api';
 import type { FavoriApi } from '../../../services/favoris.api';
+import { fetchMaWishlist } from '../../../services/wishlist.api';
+import type { WishlistItemApi } from '../../../services/wishlist.api';
 import { apiFetch } from '../../../services/apiFetch';
 import type {
   ClientProfil, ClientKpi, PayMethod, InfoRow,
@@ -215,6 +217,19 @@ function mapFavoris(api: FavoriApi[]): Favori[] {
   }));
 }
 
+/* Mapping liste de souhaits API → même type d'affichage Favori[]
+ * (champs identiques — voir wishlist.api.ts) */
+function mapWishlist(api: WishlistItemApi[]): Favori[] {
+  return api.map(f => ({
+    id:         f.productId,
+    emoji:      f.emoji,
+    nom:        f.nom,
+    prix:       f.prix,
+    prixAncien: f.prixAncien != null ? compactGnf(f.prixAncien) : undefined,
+    imageUrl:   f.imageUrl,
+  }));
+}
+
 /* Mapping abonnements API → type d'affichage Abonnement[] */
 function mapAbonnements(api: MesAbonnementsApi | null): Abonnement[] {
   if (!api) return [];
@@ -247,6 +262,7 @@ interface UseProfilClientReturn {
   commandes:   Commande[];
   abonnements: Abonnement[];
   favoris:     Favori[];
+  wishlist:    Favori[];
   avis:        Avis[];
   avisScore:   AvisScore;
   activites:   ActiviteJour[];
@@ -259,6 +275,7 @@ export function useProfilClient(): UseProfilClientReturn {
   const [api,       setApi]       = useState<ClientProfilApi | null>(null);
   const [abos,      setAbos]      = useState<MesAbonnementsApi | null>(null);
   const [favoris,   setFavoris]   = useState<Favori[]>([]);
+  const [wishlist,  setWishlist]  = useState<Favori[]>([]);
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState<string | null>(null);
@@ -295,11 +312,13 @@ export function useProfilClient(): UseProfilClientReturn {
       fetchMonProfil(),
       fetchMesAbonnements(),
       fetchMesFavoris().catch(() => [] as import('../../../services/favoris.api').FavoriApi[]),
+      fetchMaWishlist().catch(() => [] as import('../../../services/wishlist.api').WishlistItemApi[]),
     ])
-      .then(([profilData, abosData, favorisData]) => {
+      .then(([profilData, abosData, favorisData, wishlistData]) => {
         setApi(profilData);
         setAbos(abosData);
         setFavoris(mapFavoris(favorisData));
+        setWishlist(mapWishlist(wishlistData));
       })
       .catch(e => setError(e?.message ?? 'Impossible de charger le profil'))
       .finally(() => setLoading(false));
@@ -313,6 +332,7 @@ export function useProfilClient(): UseProfilClientReturn {
   /* ════════ Adaptation API → affichage ════════ */
 
   const profile: ClientProfil | null = api ? {
+    id:             api.id,
     initiales:      api.initiales,
     nomComplet:     api.nomComplet,
     localisation:   api.localisation,
@@ -374,6 +394,7 @@ export function useProfilClient(): UseProfilClientReturn {
     commandes,                 // ✅ API réelle (/client/commandes)
     abonnements,               // ✅ API réelle (/suivis/mes-abonnements)
     favoris,                   // ✅ API réelle (/client/favoris)
+    wishlist,                  // ✅ API réelle (/client/wishlist)
     avis:        [],            /* endpoint /client/avis non encore implémenté backend */
     avisScore:   AVIS_VIDE,    /* idem — pas de table avis en base pour l'instant */
     activites,                 // ✅ API réelle

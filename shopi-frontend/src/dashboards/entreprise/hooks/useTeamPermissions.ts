@@ -12,6 +12,14 @@
  *   plus de clignotement. L'API est ensuite appelée en arrière-plan
  *   pour mettre à jour le cache.
  *
+ * MISE À JOUR INSTANTANÉE :
+ *   Le backend émet 'team:permissions_changed' (socket, room privée de
+ *   l'utilisateur) dès que le propriétaire modifie les permissions de ce
+ *   collaborateur — ce hook recharge alors immédiatement, sans attendre
+ *   le polling ni un refresh de page (voir CompanyTeamPermissionService.
+ *   notifyPermissionChange côté backend). Le polling 30s ci-dessous n'est
+ *   plus qu'un filet de sécurité (socket manqué, onglet en arrière-plan…).
+ *
  * SÉCURITÉ :
  *   - Ce hook sert uniquement à afficher/masquer des éléments UI.
  *   - Le BACKEND reste la source de vérité : chaque API vérifie les permissions
@@ -26,6 +34,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch } from '../../../shared/services/apiFetch';
+import { useNotificationSocket } from '../../../shared/notifications/useNotificationSocket';
 
 interface MyPermissionsResponse {
   isOwner:     boolean;
@@ -86,12 +95,23 @@ export function useTeamPermissions(): UseTeamPermissionsReturn {
     return () => { cancelled = true; };
   }, [tick]);
 
-  /* Polling automatique — le propriétaire peut modifier les permissions
-     à tout moment ; le membre voit les changements sans refresh manuel. */
+  /* Polling automatique — filet de sécurité si le socket ci-dessous a raté
+     l'event (onglet en arrière-plan, reconnexion en cours…) ; le membre
+     voit quand même les changements sans refresh manuel, au pire après
+     POLL_INTERVAL_MS. */
   useEffect(() => {
     const id = setInterval(() => setTick(t => t + 1), POLL_INTERVAL_MS);
     return () => clearInterval(id);
   }, []);
+
+  /* Rechargement INSTANTANÉ — le backend émet 'team:permissions_changed' sur
+     la room privée notif:user:{userId} du collaborateur concerné dès que le
+     propriétaire modifie ses permissions (voir CompanyTeamPermissionService.
+     notifyPermissionChange). Réutilise le socket singleton /notifications
+     déjà connecté ailleurs dans l'app — pas de connexion supplémentaire. */
+  useNotificationSocket({
+    onTeamPermissionsChanged: () => setTick(t => t + 1),
+  });
 
   const can = useCallback(
     (group: string, action: string): boolean => {

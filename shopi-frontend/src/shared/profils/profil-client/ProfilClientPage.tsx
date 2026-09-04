@@ -32,6 +32,7 @@ import ProfilSidebarClient from './components/ProfilSidebarClient';
 import SectionOrders    from './sections/SectionOrders';
 import SectionSubs      from './sections/SectionSubs';
 import SectionFavs      from './sections/SectionFavs';
+import SectionWishlist  from './sections/SectionWishlist';
 import SectionReviews   from './sections/SectionReviews';
 import SectionActivity  from './sections/SectionActivity';
 
@@ -50,7 +51,7 @@ export default function ProfilClientPage() {
   /* ── Données dynamiques du profil ── */
   const {
     profile, kpis, pays, infos,
-    commandes, abonnements, favoris, avis, avisScore, activites,
+    commandes, abonnements, favoris, wishlist, avis, avisScore, activites,
     loading, error,
   } = useProfilClient();
 
@@ -120,6 +121,7 @@ export default function ProfilClientPage() {
             {tab === 'orders'    && <SectionOrders    commandes={commandes} loading={loading} />}
             {tab === 'subs'      && <SectionSubs      onToast={onToast} abonnements={abonnements} loading={loading} />}
             {tab === 'favs'      && <SectionFavs      onToast={onToast} favoris={favoris} />}
+            {tab === 'wishlist'  && <SectionWishlist  onToast={onToast} wishlist={wishlist} />}
             {tab === 'reviews'   && <SectionReviews   onToast={onToast} avis={avis} score={avisScore} />}
             {tab === 'activity'  && <SectionActivity  onToast={onToast} jours={activites} />}
           </div>

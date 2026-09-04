@@ -139,7 +139,13 @@ export class NotificationReminderService {
         priority:      NotificationPriority.LOW,
         title,
         body,
-        actionUrl:     '/notifications',
+        /* BUG CORRIGÉ — '/notifications' n'a jamais été une route côté
+         * frontend (le centre de notifications est un panneau déroulant
+         * dans la topbar, pas une page dédiée à cette URL pour la plupart
+         * des rôles — voir NotificationCenter.tsx). On redirige plutôt
+         * vers l'accueil du tableau de bord du destinataire, d'où il peut
+         * rouvrir la cloche lui-même. */
+        actionUrl:     this.resolveDashboardHomeUrl(actorType),
         payload:       { unreadCount },
         groupKey:      `digest:${actorType}:${actorId}`,
         expiresAt:     new Date(Date.now() + 7 * 24 * 60 * 60 * 1_000), // 7 jours
@@ -149,6 +155,21 @@ export class NotificationReminderService {
         `sendDigest échoué pour ${actorType}:${actorId}`,
         err,
       );
+    }
+  }
+
+  /** Racine du tableau de bord du rôle — voir router.tsx pour les routes
+   *  /dashboard/{role}/* réellement enregistrées. */
+  private resolveDashboardHomeUrl(actorType: NotificationActorType): string {
+    switch (actorType) {
+      case NotificationActorType.CLIENT:        return '/home';
+      case NotificationActorType.COMPANY:       return '/dashboard/entreprise';
+      case NotificationActorType.DELIVERY:      return '/dashboard/livreur';
+      case NotificationActorType.CORRESPONDENT: return '/dashboard/correspondant';
+      case NotificationActorType.PARTNER:       return '/dashboard/partenaire';
+      case NotificationActorType.ADMIN:         return '/dashboard/admin';
+      case NotificationActorType.SUPER_ADMIN:   return '/dashboard/super-admin';
+      default:                                  return '/home';
     }
   }
 }

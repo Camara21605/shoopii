@@ -112,6 +112,10 @@
       "ville": "المدينة",
       "villePlaceholder": "مثال: كوناكري",
       "reinitialiser": "إعادة تعيين",
+      "pourVous": {
+        "kick": "موصى به",
+        "title": "من أجلك"
+      },
       "tendances": {
         "kick": "شائع",
         "title": "الأكثر رواجًا"

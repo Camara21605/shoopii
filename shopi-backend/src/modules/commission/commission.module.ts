@@ -46,6 +46,8 @@ import { Correspondent }        from '../../database/entities/profiles/correspon
 import { Partner }              from '../../database/entities/profiles/partenaire-profile.entity';
 import { Admin }                from '../../database/entities/profiles/admin-profile.entity';
 import { User }                 from '../../database/entities/user.entity';
+import { CompanySetting }       from '../company-settings/company-settings.entity';
+import { PartnerSetting }       from '../partner-settings/partner-settings.entity';
 
 /* ── Services ────────────────────────────────────────────── */
 import { CommissionConfigService }      from './services/commission-config.service';
@@ -73,6 +75,8 @@ import { CommissionEngine } from './commission.engine';
       Partner,
       Admin,
       User,
+      CompanySetting,
+      PartnerSetting,
     ]),
   ],
 
@@ -92,6 +96,10 @@ import { CommissionEngine } from './commission.engine';
     CommissionEngine,
     CommissionConfigService,
     CommissionHistoryService,
+
+    /* Exporté pour les aperçus de revenu net avant paiement — voir
+     * resoudreCommissionProduit() dans commission-calculator.service.ts */
+    CommissionCalculatorService,
   ],
 })
 export class CommissionModule {}

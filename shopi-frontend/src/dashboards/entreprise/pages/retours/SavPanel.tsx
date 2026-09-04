@@ -27,12 +27,16 @@ interface Props {
   onClose:        (ticketId: string) => Promise<void>;
   onResolve:      (ticketId: string) => Promise<void>;
   onPop:          (msg: string, type?: string) => void;
+  /** false → collaborateur avec returns.view mais sans returns.process :
+   * consultation des tickets/conversations disponible, répondre/fermer/
+   * résoudre masqués. */
+  canProcess:     boolean;
 }
 
 export default function SavPanel({
   tickets, stats, loading, filters,
   onFilterChange,
-  onReply, onClose, onResolve, onPop,
+  onReply, onClose, onResolve, onPop, canProcess,
 }: Props) {
   const { t } = useTranslation();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -206,6 +210,7 @@ export default function SavPanel({
           onClose2={onClose}
           onResolve={onResolve}
           onPop={onPop}
+          canProcess={canProcess}
         />
       )}
     </div>
@@ -215,7 +220,7 @@ export default function SavPanel({
 /* ─────────────────────────────────────────────────────────── */
 
 function SavConversationModal({
-  ticketId, onClose, onReply, onClose2, onResolve, onPop,
+  ticketId, onClose, onReply, onClose2, onResolve, onPop, canProcess,
 }: {
   ticketId:  string;
   onClose:   () => void;
@@ -223,6 +228,7 @@ function SavConversationModal({
   onClose2:  (id: string) => Promise<void>;
   onResolve: (id: string) => Promise<void>;
   onPop:     (msg: string, type?: string) => void;
+  canProcess: boolean;
 }) {
   const { t } = useTranslation();
   const { detail, loading, addMessage } = useSavDetail(ticketId);
@@ -274,7 +280,7 @@ function SavConversationModal({
             {detail && <div className={s.modalSub}>{detail.subject} · {detail.clientName}</div>}
           </div>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            {detail && detail.status !== 'closed' && detail.status !== 'resolved' && (
+            {canProcess && detail && detail.status !== 'closed' && detail.status !== 'resolved' && (
               <>
                 <button className={`${s.btnSm} ${s.btnAccept}`} onClick={handleResolve}>
                   <i className="fas fa-check" /> {t('retours.sav.resoudre')}
@@ -323,7 +329,7 @@ function SavConversationModal({
         </div>
 
         {/* Réponse */}
-        {detail && detail.status !== 'closed' && (
+        {canProcess && detail && detail.status !== 'closed' && (
           <div style={{ padding: '12px 18px', borderTop: '1.5px solid var(--bdr)', background: 'var(--g50)', display: 'flex', gap: 10, alignItems: 'flex-end' }}>
             <textarea
               className={s.textarea}

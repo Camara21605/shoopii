@@ -11,6 +11,7 @@
  * ============================================================ */
 
 import { Entity, PrimaryColumn, Column, UpdateDateColumn } from 'typeorm';
+import { ColumnNumericTransformer } from '../../database/transformers/column-numeric.transformer';
 
 /* ── Types internes (stockés en JSON) ──────────────────────── */
 
@@ -53,15 +54,15 @@ export class CompanySetting {
   commissionType!: string;
 
   /** Taux principal (pourcentage ou montant selon commissionType) */
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 6 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 6, transformer: new ColumnNumericTransformer() })
   commissionValue!: number;
 
   /** Commission minimale appliquée par transaction */
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 500 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 500, transformer: new ColumnNumericTransformer() })
   commissionMin!: number;
 
   /** Plafond de commission par transaction */
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 500000 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 500000, transformer: new ColumnNumericTransformer() })
   commissionMax!: number;
 
   /** Tranches pour le mode progressif (JSON) */

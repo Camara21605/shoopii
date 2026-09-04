@@ -13,7 +13,13 @@ export default function Toast({ msg, type }: Props) {
   return (
     <div className={`${styles.tmsg} ${show ? styles.show : ''}`}>
       <i className={`fas ${ICONS[type] ?? 'fa-circle-info'}`} style={{ color: COLORS[type] ?? COLORS.i, fontSize: 14, flexShrink: 0 }} />
-      <span dangerouslySetInnerHTML={{ __html: msg }} />
+      {/* SÉCURITÉ — plusieurs appelants interpolent le nom d'un autre acteur
+       * (correspondant, livreur, boutique — choisi librement par lui) dans
+       * `msg` (voir ProfilCorrespondantReseauPage.tsx, ProfilLivreurReseauPage
+       * .tsx, BoutiquesPage.tsx) ; dangerouslySetInnerHTML l'aurait exécuté
+       * comme du HTML — XSS stockée. Aucun appelant n'a besoin de balises
+       * HTML dans son message : rendu en texte brut. */}
+      <span>{msg}</span>
     </div>
   );
 }

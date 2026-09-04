@@ -12,7 +12,6 @@
  *   onMarkAll   — marquer tout comme lu
  *   onDismiss   — supprimer 1 notif
  *   onClose     — fermer le panel
- *   onSeeAll    — naviguer vers la page complète
  * ================================================================ */
 
 import { useState } from 'react';
@@ -22,24 +21,37 @@ import type { AdminPage } from '../data/types';
 
 // ─── Helpers ───────────────────────────────────────────────────
 
+/** Modules "généraux" (Permissions Admins côté super-admin) → page admin
+ * correspondante. Miroir de GENERAL_LABELS dans admins.service.ts (backend) —
+ * utilisé pour rediriger avec précision les notifications admin_permission. */
+const PERM_TO_PAGE: Record<string, AdminPage> = {
+  partners:  'partenaires',
+  companies: 'acteurs',
+  delivery:  'acteurs',
+  customers: 'clients',
+  stats:     'stats',
+  reports:   'signalements',
+  support:   'support',
+  // 'notifs' : pas de page dédiée (dropdown uniquement) → overview
+};
+
 /**
- * Résout la page admin à afficher selon le resourceType de la notification.
+ * Résout la page admin + l'éventuel ID de ressource précise à cibler,
+ * selon le resourceType/resourceId/payload de la notification.
  * Garantit que l'admin reste dans le dashboard — aucun redirect vers le home.
  */
-function resolveAdminPage(resourceType: string | null): AdminPage {
-  switch (resourceType) {
-    case 'validation':    return 'validations';
-    case 'report':        return 'signalements';
-    case 'order':         return 'commandes';
-    case 'payment':
-    case 'commission':
-    case 'escrow':
-    case 'wallet':
-    case 'retrait':       return 'finances';
-    case 'account':       return 'acteurs';
-    case 'code':          return 'codes';
-    case 'support_ticket':return 'audit';
-    default:              return 'overview';
+function resolveNotifTarget(n: INotificationDto): { page: AdminPage; id?: string | null } {
+  switch (n.resourceType) {
+    case 'validation': return { page: 'validations',  id: n.resourceId };
+    case 'report':     return { page: 'signalements', id: n.resourceId };
+    case 'geo_permission':
+    case 'geo_assignment':
+      return { page: 'geo' };
+    case 'admin_permission': {
+      const perm = (n.payload as { perm?: string } | null)?.perm;
+      return { page: (perm && PERM_TO_PAGE[perm]) || 'overview' };
+    }
+    default: return { page: 'overview' };
   }
 }
 
@@ -84,8 +96,7 @@ interface NotifPanelProps {
   onMarkAll:   () => void;
   onDismiss:   (id: string) => void;
   onClose:     () => void;
-  onSeeAll:    () => void;
-  onNavigate:  (page: AdminPage) => void;
+  onNavigate:  (page: AdminPage, resourceId?: string | null) => void;
 }
 
 type Tab = 'all' | 'unread';
@@ -93,7 +104,7 @@ type Tab = 'all' | 'unread';
 export default function NotifPanel({
   items, unreadCount, loading,
   onMarkRead, onMarkAll, onDismiss,
-  onClose, onSeeAll, onNavigate,
+  onClose, onNavigate,
 }: NotifPanelProps) {
 
   const [tab, setTab] = useState<Tab>('all');
@@ -103,9 +114,9 @@ export default function NotifPanel({
   const handleClick = (n: INotificationDto) => {
     if (!n.isRead) onMarkRead(n.id);
     // Navigation interne au dashboard admin — jamais de redirect vers le home
-    const page = resolveAdminPage(n.resourceType);
+    const { page, id } = resolveNotifTarget(n);
     onClose();
-    onNavigate(page);
+    onNavigate(page, id);
   };
 
   return (
@@ -203,14 +214,6 @@ export default function NotifPanel({
               </button>
             </div>
           ))}
-        </div>
-
-        {/* ── Pied : voir tout ── */}
-        <div className={styles.foot}>
-          <button className={styles.footBtn} onClick={() => { onClose(); onSeeAll(); }}>
-            <i className="fas fa-list" style={{ marginRight: 6 }} />
-            Voir toutes les notifications
-          </button>
         </div>
       </div>
     </>

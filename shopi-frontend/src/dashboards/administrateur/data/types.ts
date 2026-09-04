@@ -21,7 +21,6 @@ export type AdminPage =
   | 'stats'
   | 'support'
   | 'audit'
-  | 'notifications'
   | 'geo'
   | 'parametres';
 

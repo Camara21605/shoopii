@@ -200,7 +200,8 @@
       "joindre": "إرفاق",
       "emojis": "رموز تعبيرية",
       "ecrireMessagePlaceholder": "اكتب رسالة…",
-      "messageVocalTitle": "رسالة صوتية"
+      "messageVocalTitle": "رسالة صوتية",
+      "envoiNonAutorise": "ليس لديك صلاحية إرسال الرسائل"
     },
     "infoPanel": {
       "informations": "معلومات",
@@ -242,6 +243,10 @@
       "searchPlaceholder": "ابحث عن مستخدم…",
       "aucunUtilisateur": "لا يوجد مستخدم",
       "saisirNom": "أدخل اسمًا للبحث"
+    },
+    "accessDenied": {
+      "title": "الوصول غير مسموح",
+      "message": "ليس لديك صلاحية الوصول إلى المراسلة. تواصل مع مالك المتجر للحصول عليها."
     }
   }
 }

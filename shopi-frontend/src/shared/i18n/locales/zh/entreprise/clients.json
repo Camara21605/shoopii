@@ -96,6 +96,24 @@
       "offreFidelite": "自动忠诚度优惠",
       "rapportSegments": "细分报告 PDF",
       "relanceInactifs": "重新联系不活跃客户"
+    },
+    "crm": {
+      "erreurApercu": "无法加载预览。",
+      "erreurEnvoi": "发送失败。",
+      "erreurRapport": "无法生成 PDF 报告。",
+      "destinataires_one": "{{count}} 位收件人",
+      "destinataires_other": "{{count}} 位收件人",
+      "aucunDestinataire": "该细分中目前没有客户。",
+      "sujet": "主题",
+      "message": "消息内容",
+      "annuler": "取消",
+      "envoyerA_one": "发送给 {{count}} 位客户",
+      "envoyerA_other": "发送给 {{count}} 位客户",
+      "envoye_one": "✅ 已发送给 {{count}} 位客户",
+      "envoye_other": "✅ 已发送给 {{count}} 位客户",
+      "resultatTitre": "已发送 {{sent}} / {{total}}",
+      "resultatEchecs": "{{count}} 次发送失败。",
+      "fermer": "关闭"
     }
   }
 }

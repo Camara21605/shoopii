@@ -55,13 +55,14 @@ export interface User {
 
 /* ── Signalements (alertes de modération) ─────────────────────────────────── */
 export interface Alert {
-  id:       string;
-  type:     'critical' | 'warning' | 'info';
-  icon:     string;
-  title:    string;
-  sub:      string;
-  time:     string;
-  resolved: boolean;
+  id:         string;
+  type:       'critical' | 'warning' | 'info';
+  icon:       string;
+  title:      string;
+  sub:        string;
+  time:       string;
+  resolved:   boolean;
+  resolvedAt: string | null;
 }
 
 /* ── Journal d'audit ──────────────────────────────────────────────────────── */

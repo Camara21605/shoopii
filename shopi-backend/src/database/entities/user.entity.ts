@@ -188,6 +188,34 @@ export class User {
   @Column({ type: 'int', default: 0 })
   resetOtpRequestCount: number;
 
+  /* ==========================================================
+   * VÉRIFICATION D'EMAIL À L'INSCRIPTION — OTP (NOUVEAUX CHAMPS)
+   *
+   * Champs dédiés, séparés des resetOtp* ci-dessus : les deux flux
+   * (mot de passe oublié / confirmation d'inscription) peuvent être en
+   * cours simultanément sur le même compte — partager le même stockage
+   * ferait que l'un écrase silencieusement le code de l'autre.
+   *
+   *   1. register()   → si PlatformSettings.emailVerifRequired, génère
+   *                      l'OTP, stocke emailVerifyOtpHash
+   *   2. verifyEmail() → vérifie, efface le hash, emailVerified = true
+   * ========================================================== */
+
+  @Column({ type: 'varchar', length: 255, nullable: true, select: false })
+  emailVerifyOtpHash: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  emailVerifyOtpExpiry: Date | null;
+
+  @Column({ type: 'int', default: 0 })
+  emailVerifyOtpAttempts: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  emailVerifyRequestedAt: Date | null;
+
+  @Column({ type: 'int', default: 0 })
+  emailVerifyRequestCount: number;
+
   /**
    * Date du dernier changement de mot de passe.
    * Permet d'invalider les JWT émis AVANT cette date.
@@ -207,6 +235,16 @@ export class User {
    */
   @Column({ type: 'timestamp', nullable: true })
   lastLogoutAt: Date | null;
+
+  /**
+   * Date du dernier changement de prénom/nom.
+   * Limite la modification du nom à une fois tous les 3 mois (mesure
+   * anti-fraude : empêche de changer d'identité affichée juste après
+   * un recrutement ou un signalement). null → jamais modifié, libre.
+   * Voir ProfilPartenaireService.updateProfil().
+   */
+  @Column({ type: 'timestamp', nullable: true })
+  nameChangedAt: Date | null;
 
   /* ==========================================================
    * PROFILS MÉTIER (inchangés)

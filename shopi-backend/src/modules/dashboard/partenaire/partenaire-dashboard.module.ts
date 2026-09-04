@@ -17,6 +17,10 @@ import { PaiementDistribution } from '../../../database/entities/paiement/paieme
 import { Wallet }               from '../../../database/entities/wallet.entity';
 import { Report }               from '../../../database/entities/report.entity';
 import { PlatformSettings }     from '../../../database/entities/platform-settings.entity';
+import { Commande }             from '../../../database/entities/commande/commande.entity';
+import { User }                 from '../../../database/entities/user.entity';
+import { PartnerSetting }       from '../../partner-settings/partner-settings.entity';
+import { CommissionModule }     from '../../commission/commission.module';
 
 import { PartenaireDashboardService }    from './partenaire-dashboard.service';
 import { PartenaireDashboardController } from './partenaire-dashboard.controller';
@@ -24,6 +28,11 @@ import { PartenaireDashboardController } from './partenaire-dashboard.controller
 @Module({
   imports: [
     PartenaireParametresModule,
+    /* CommissionCalculatorService.resoudreTauxPartenaireProduit() — voir
+     * getCommissions() : le taux "Sur ventes entreprises" affiché doit être
+     * calculé exactement comme le fait le CommissionEngine, pas une
+     * approximation séparée qui pourrait diverger. */
+    CommissionModule,
     TypeOrmModule.forFeature([
       Partner,
       Company,
@@ -34,6 +43,9 @@ import { PartenaireDashboardController } from './partenaire-dashboard.controller
       Wallet,
       Report,
       PlatformSettings,
+      Commande,
+      User,
+      PartnerSetting,
     ]),
   ],
   controllers: [PartenaireDashboardController],

@@ -57,6 +57,7 @@ import { WalletModule }        from '../wallet/wallet.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { CommissionModule }    from '../commission/commission.module';
 import { PaymentEngineModule } from '../payment-engine/payment-engine.module';
+import { PerformanceModule }   from '../performance-engine/performance.module';
 
 /* ── Providers ────────────────────────────────────────────── */
 import { InternalProvider }             from './providers/internal.provider';
@@ -100,6 +101,9 @@ import { PaiementController } from './paiement.controller';
 
     /* PaymentEngine — logique financière upgradée avec EscrowEngine */
     PaymentEngineModule,
+
+    /* PlatformSettingsCacheService — gating mtnMoneyEnabled/orangeMoneyEnabled/waveEnabled */
+    PerformanceModule,
   ],
 
   controllers: [PaiementController],
@@ -120,6 +124,9 @@ import { PaiementController } from './paiement.controller';
     /* Exporté pour CommandeModule et JobsModule */
     PaiementDistributionService,
     PaiementWebhookService,
+
+    /* Exporté pour CommandeCreationService — voir creerDepuisPanier() */
+    PaiementInitiationService,
   ],
 })
 export class PaiementModule {}

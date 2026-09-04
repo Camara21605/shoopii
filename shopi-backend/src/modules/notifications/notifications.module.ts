@@ -77,6 +77,7 @@ import { NotificationsController }      from './notifications.controller';
 import { NotificationsAdminController } from './notifications-admin.controller';
 import { NotificationStatsService }     from './services/notification-stats.service';
 import { SessionModule }                from '../session/session.module';
+import { PerformanceModule }            from '../performance-engine/performance.module';
 
 @Module({
   imports: [
@@ -115,6 +116,9 @@ import { SessionModule }                from '../session/session.module';
 
     // ── Session unique : validation du sid à la connexion socket ──
     SessionModule,
+
+    // ── PlatformSettingsCacheService : kill-switch global par canal ──
+    PerformanceModule,
   ],
 
   controllers: [NotificationsController, NotificationsAdminController],

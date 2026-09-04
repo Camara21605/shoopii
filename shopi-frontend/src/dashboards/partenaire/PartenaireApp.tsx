@@ -44,7 +44,7 @@ export default function PartenaireApp() {
       case 'codes':
         return <CodesPage onGenerate={() => s.setGenOpen(true)} onToast={pop} />;
       case 'acteurs':
-        return <ActeursPage onReport={s.ouvrirSignalement} onToast={pop} />;
+        return <ActeursPage onReport={(userId, nom) => s.ouvrirSignalement(nom, userId)} onToast={pop} />;
       case 'commissions':
         return <CommissionsPage onNavigate={handleNavigate} onToast={pop} />;
       case 'signalements':
@@ -101,6 +101,7 @@ export default function PartenaireApp() {
       {s.reportOpen && (
         <ReportModal
           defaultTarget={s.reportTarget}
+          defaultTargetUserId={s.reportTargetUserId}
           onClose={() => s.setReportOpen(false)}
           onSubmit={s.envoyerSignalement}
           onToast={pop}

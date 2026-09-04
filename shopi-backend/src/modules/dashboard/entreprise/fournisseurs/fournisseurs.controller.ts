@@ -19,6 +19,8 @@ import { RolesGuard }         from 'src/common/guards/roles.guard';
 import { Roles, CurrentUser } from 'src/common/decorators/roles.decorator';
 import { User }     from 'src/database/entities/user.entity';
 import { UserRole } from 'src/common/enums/user-role.enum';
+import { TeamPermissionGuard }    from 'src/modules/company-team/guards/team-permission.guard';
+import { RequiresTeamPermission } from 'src/modules/company-team/decorators/requires-team-permission.decorator';
 
 @ApiTags('🏭 Fournisseurs')
 @ApiBearerAuth()
@@ -33,6 +35,8 @@ export class FournisseursController {
 
   @Get('recherche')
   @Roles(UserRole.COMPANY)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('fournisseurs', 'view')
   @ApiOperation({ summary: 'Rechercher des entreprises Shopi vendant en gros, pour les connecter comme fournisseur' })
   @ApiQuery({ name: 'search', required: false })
   rechercher(
@@ -46,6 +50,8 @@ export class FournisseursController {
 
   @Get()
   @Roles(UserRole.COMPANY)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('fournisseurs', 'view')
   @ApiOperation({ summary: 'Liste des fournisseurs connectés' })
   mesFournisseurs(
     @CurrentUser() user: User,
@@ -58,6 +64,8 @@ export class FournisseursController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(UserRole.COMPANY)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('fournisseurs', 'connect')
   @ApiOperation({ summary: 'Connecter une entreprise Shopi comme fournisseur' })
   connecter(
     @CurrentUser() user: User,
@@ -70,6 +78,8 @@ export class FournisseursController {
 
   @Get(':id/catalogue')
   @Roles(UserRole.COMPANY)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('fournisseurs', 'view')
   @ApiOperation({ summary: "Catalogue de vente en gros d'un fournisseur connecté" })
   @ApiParam({ name: 'id', description: "UUID de l'entreprise fournisseur" })
   catalogue(
@@ -84,6 +94,8 @@ export class FournisseursController {
   @Delete(':linkId')
   @HttpCode(HttpStatus.OK)
   @Roles(UserRole.COMPANY)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('fournisseurs', 'disconnect')
   @ApiOperation({ summary: 'Déconnecter un fournisseur' })
   @ApiParam({ name: 'linkId', description: 'UUID de la connexion fournisseur' })
   deconnecter(

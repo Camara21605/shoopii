@@ -33,6 +33,7 @@ import { CompanyTeamMember }   from 'src/database/entities/company-team/company-
 import { AuthModule }                  from '../auth/auth.module';
 import { NotificationsModule }         from '../notifications/notifications.module';
 import { MessagingPermissionsModule }  from './permissions/messaging-permissions.module';
+import { CompanyTeamModule }           from '../company-team/company-team.module';
 
 import { MessagerieController }   from './messagerie.controller';
 import { MessagerieService }      from './messagerie.service';
@@ -63,7 +64,11 @@ import { BroadcastService }       from './services/broadcast.service';
     ]),
     AuthModule,
     NotificationsModule,
-    MessagingPermissionsModule,   // ← Moteur de permissions
+    MessagingPermissionsModule,   // ← Moteur de permissions (qui peut parler à qui)
+    /* Fournit TeamPermissionGuard — vérifie les permissions "Messagerie"
+     * d'un collaborateur d'entreprise (voir MessagerieController
+     * @RequiresTeamPermission('messaging', …)). */
+    CompanyTeamModule,
   ],
   controllers: [MessagerieController],
   providers: [

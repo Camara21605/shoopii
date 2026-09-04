@@ -28,7 +28,23 @@ interface OverviewData {
     mois:    { x: string; e: number; l: number }[];
     annee:   { x: string; e: number; l: number }[];
   };
-  activiteRecente: { icone: string; kind: string; texte: string; when: string }[];
+  activiteRecente: { icone: string; kind: string; texte: string; highlight?: string; when: string }[];
+}
+
+/* Met en gras `highlight` dans `texte` via JSX (échappé par React) — pas de
+ * dangerouslySetInnerHTML : `highlight` peut contenir un nom saisi librement
+ * par un utilisateur à l'inscription (voir partenaire-dashboard.service.ts). */
+function ActiviteTexte({ texte, highlight }: { texte: string; highlight?: string }) {
+  if (!highlight) return <>{texte}</>;
+  const idx = texte.indexOf(highlight);
+  if (idx === -1) return <>{texte}</>;
+  return (
+    <>
+      {texte.slice(0, idx)}
+      <b>{highlight}</b>
+      {texte.slice(idx + highlight.length)}
+    </>
+  );
 }
 
 const KPI_VARIANT = ['k1', 'k2', 'k3', 'k4'] as const;
@@ -163,7 +179,7 @@ export default function OverviewPage({ onNavigate, onGenerate }: Props) {
               <div key={i} className={styles.act}>
                 <div className={`${styles.actIc} ${styles['act_' + a.kind]}`}><i className={`fas ${a.icone}`} /></div>
                 <div>
-                  <div className={styles.actT} dangerouslySetInnerHTML={{ __html: a.texte }} />
+                  <div className={styles.actT}><ActiviteTexte texte={a.texte} highlight={a.highlight} /></div>
                   <div className={styles.actW}>{a.when}</div>
                 </div>
               </div>

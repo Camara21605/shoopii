@@ -56,7 +56,8 @@
       "descExcellent": "您的账户已得到完美保护。继续保持！",
       "descBien": "您的账户保护良好。仍有一些改进空间。",
       "descFaible": "通过完成以下操作加强您的安全。",
-      "ameliorer": "改进"
+      "ameliorer": "改进",
+      "bientotDisponible": "即将推出 — 目前尚无短信验证流程。"
     },
     "points": {
       "titre": "我的 Shoneya 积分",

@@ -17,6 +17,8 @@ import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard }   from 'src/common/guards/roles.guard';
 import { Roles }        from 'src/common/decorators/roles.decorator';
 import { UserRole }     from 'src/common/enums/user-role.enum';
+import { TeamPermissionGuard }    from 'src/modules/company-team/guards/team-permission.guard';
+import { RequiresTeamPermission } from 'src/modules/company-team/decorators/requires-team-permission.decorator';
 
 import { ReturnsService }      from './services/returns.service';
 import { ReturnsStatsService } from './services/returns-stats.service';
@@ -41,24 +43,32 @@ export class ReturnsController {
   ) {}
 
   /* ── Statistiques globales — AVANT :id ── */
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('returns', 'view')
   @Get('stats')
   getStats(@Req() req: any) {
     return this.returnsStatsService.getStats(req.user.actorId ?? req.user.id);
   }
 
   /* ── Liste paginée avec filtres ── */
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('returns', 'view')
   @Get()
   findAll(@Req() req: any, @Query() filters: FilterReturnsDto) {
     return this.returnsService.findAll(req.user.actorId ?? req.user.id, filters);
   }
 
   /* ── Détail d'un retour ── */
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('returns', 'view')
   @Get(':id')
   findOne(@Req() req: any, @Param('id', ParseUUIDPipe) id: string) {
     return this.returnsService.findOne(req.user.actorId ?? req.user.id, id);
   }
 
   /* ── Accepter un retour ── */
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('returns', 'process')
   @Patch(':id/accept')
   accept(
     @Req() req: any,
@@ -69,6 +79,8 @@ export class ReturnsController {
   }
 
   /* ── Refuser un retour ── */
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('returns', 'process')
   @Patch(':id/refuse')
   refuse(
     @Req() req: any,
@@ -79,6 +91,8 @@ export class ReturnsController {
   }
 
   /* ── Marquer comme reçu ── */
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('returns', 'process')
   @Patch(':id/received')
   markReceived(
     @Req() req: any,
@@ -88,6 +102,8 @@ export class ReturnsController {
   }
 
   /* ── Rembourser ── */
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('returns', 'process')
   @Patch(':id/refund')
   refund(
     @Req() req: any,
@@ -98,6 +114,8 @@ export class ReturnsController {
   }
 
   /* ── Ajouter note interne ── */
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('returns', 'process')
   @Post(':id/notes')
   addNote(
     @Req() req: any,
@@ -108,6 +126,8 @@ export class ReturnsController {
   }
 
   /* ── Changer priorité ── */
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('returns', 'process')
   @Patch(':id/priority')
   updatePriority(
     @Req() req: any,
@@ -118,6 +138,8 @@ export class ReturnsController {
   }
 
   /* ── Upload preuve (image/video/document) ── */
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('returns', 'process')
   @Post(':id/upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadEvidence(

@@ -15,7 +15,9 @@ import { ParametresModule }     from './parametres.module';
 import { ReturnsModule }       from './returns/returns.module';
 import { ClientsModule }       from './clients/clients.module';
 import { FournisseursModule }  from './fournisseurs/fournisseurs.module';
+import { AvisModule }          from './avis/avis.module';
 import { CompanyTeamModule }   from '../../company-team/company-team.module';
+import { CommissionModule }    from '../../commission/commission.module';
 
 // ── Entités TypeORM ──────────────────────────────────────────
 import { User }             from '../../../database/entities/user.entity';
@@ -39,6 +41,7 @@ import { Follow }         from '../../../database/entities/follow/follow.entity'
 import { ReturnRequest }  from '../../../database/entities/returns/return-request.entity';
 import { Wallet }         from '../../../database/entities/wallet.entity';
 import { WalletLedgerEntry } from '../../../database/entities/wallet-ledger-entry.entity';
+import { CompanySetting } from '../../company-settings/company-settings.entity';
 
 // ── Controllers ───────────────────────────────────────────────
 import { EntrepriseDashboardController } from './entreprise-dashboard.controller';
@@ -76,6 +79,7 @@ import { CategoriesService }          from '../super-admin/categories/categories
       ReturnRequest,
       Wallet,
       WalletLedgerEntry,
+      CompanySetting,
     ]),
 
     // ── Modules internes ─────────────────────────────────────────
@@ -88,10 +92,15 @@ import { CategoriesService }          from '../super-admin/categories/categories
     ReturnsModule,
     ClientsModule,
     FournisseursModule,
+    AvisModule,
     /* Fournit TeamPermissionGuard — applique réellement les permissions
      * granulaires d'un collaborateur (voir @RequiresTeamPermission sur
      * EntrepriseDashboardController.getFinances). */
     CompanyTeamModule,
+    /* CommissionCalculatorService.resoudreCommissionProduit() — même
+     * formule que le CommissionEngine, utilisée par getCommissionRate()
+     * pour que l'aperçu de revenu net ne diverge jamais du montant réel. */
+    CommissionModule,
   ],
 
   controllers: [

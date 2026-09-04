@@ -16,7 +16,9 @@ import { Repository }       from 'typeorm';
 import { AdminZoneService } from './admin-zone.service';
 import { Partner }          from '../../../../database/entities/profiles/partenaire-profile.entity';
 import { UserStatus }       from '../../../../database/entities/user.entity';
-import { initials, userName } from '../helpers/admin.helpers';
+import { Admin }            from '../../../../database/entities/profiles/admin-profile.entity';
+import { RedisCacheService } from '../../../performance-engine/services/redis-cache.service';
+import { initials, userName, mapSt } from '../helpers/admin.helpers';
 
 /** Dégradés de couleur attribués aux 3 premiers du classement. */
 const GRADS = [
@@ -25,27 +27,32 @@ const GRADS = [
   'linear-gradient(135deg,#047857,#34D399)', // 3ème — vert
 ];
 
+/** TTL du cache "partenaires bruts" — voir ACTEURS_CACHE_TTL_SEC dans
+ * admin-acteurs.service.ts (même invalidation active, même raisonnement). */
+const PARTENAIRES_CACHE_TTL_SEC = 20;
+
 @Injectable()
 export class AdminPartenairesService {
 
   constructor(
     private readonly zoneService: AdminZoneService,
+    private readonly cache:       RedisCacheService,
 
     @InjectRepository(Partner)
     private readonly partnerRepo: Repository<Partner>,
   ) {}
 
   /**
-   * Retourne la liste complète des partenaires de la zone,
-   * triée par nombre de recrues décroissant, avec :
-   *   • tier   — 'or' (1er), 'arg' (2e/3e), 'brz' (autres)
-   *   • top3   — les 3 premiers avec gradient pour le widget
-   *
-   * Le nombre de recrues = totalCompanies + totalDeliveries + totalCorrespondants
-   * (colonnes dénormalisées sur Partner, mises à jour par triggers / events).
+   * Charge + calcule le classement complet (avant filtre tier/recherche/
+   * pagination) — mis en cache court car c'est la partie coûteuse (jusqu'à
+   * 500 lignes + jointure `user`). Invalidé par AdminActeursService
+   * (clé `admin-partenaires-raw:${adminId}`) quand un statut change.
    */
-  async getPartenaires(userId: string, tier?: string, search?: string, page = 1, limit = 20) {
-    const admin    = await this.zoneService.adminOf(userId);
+  private async loadPartenairesBruts(admin: Admin) {
+    const cacheKey = `admin-partenaires-raw:${admin.id}`;
+    const cached = await this.cache.get<any[]>(cacheKey);
+    if (cached) return cached;
+
     const partners = await this.partnerRepo.find({
       where:     { adminId: admin.id },
       relations: ['user'],
@@ -65,6 +72,7 @@ export class AdminPartenairesService {
 
       return {
         id:         p.id,
+        userId:     p.user.id, // pour PATCH /acteurs/:id/suspend (attend un User.id, pas un Partner.id)
         nom,
         avatar:     initials(nom),
         commune:    (p as any).commune ?? '—',
@@ -78,10 +86,27 @@ export class AdminPartenairesService {
         // Score de confiance : élevé si actif, réduit si suspendu
         confiance:  p.user.status === UserStatus.ACTIVE
                     ? Math.min(98, 70 + recrues) : 40,
-        statut:     p.user.status === UserStatus.ACTIVE ? 'act' : 'pend',
+        statut:     mapSt(p.user.status),
         grad:       GRADS[Math.min(i, 2)],
       };
     });
+
+    await this.cache.set(cacheKey, full, PARTENAIRES_CACHE_TTL_SEC);
+    return full;
+  }
+
+  /**
+   * Retourne la liste complète des partenaires de la zone,
+   * triée par nombre de recrues décroissant, avec :
+   *   • tier   — 'or' (1er), 'arg' (2e/3e), 'brz' (autres)
+   *   • top3   — les 3 premiers avec gradient pour le widget
+   *
+   * Le nombre de recrues = totalCompanies + totalDeliveries + totalCorrespondants
+   * (colonnes dénormalisées sur Partner, mises à jour par triggers / events).
+   */
+  async getPartenaires(userId: string, tier?: string, search?: string, page = 1, limit = 20) {
+    const admin = await this.zoneService.adminOf(userId);
+    const full  = await this.loadPartenairesBruts(admin);
 
     // Top 3 pour le widget de mise en avant (sans données redondantes,
     // toujours calculé sur le classement complet, avant filtrage).

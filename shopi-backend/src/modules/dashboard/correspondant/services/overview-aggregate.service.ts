@@ -93,8 +93,16 @@ export class OverviewAggregateService {
       : [];
     const companyMap = new Map(companies.map(c => [c.id, c.companyName]));
 
+    /* SÉCURITÉ — `companyMap.get(c.companyId)` (Company.companyName, choisi
+     * librement par l'entreprise) était interpolé sans échappement dans une
+     * chaîne HTML rendue via dangerouslySetInnerHTML côté frontend : XSS
+     * stockée — une entreprise malveillante pouvait exécuter du JS dans la
+     * session du correspondant consultant son tableau de bord. `msg` est
+     * maintenant du texte brut ; `highlight` isole la partie à mettre en
+     * gras (le numéro de colis, généré par le système — sans risque). */
     const activite = recent.map(c => ({
-      msg: `Colis <b>${c.numero}</b> — ${companyMap.get(c.companyId) ?? 'boutique'} — ${STATUS_LABEL[c.status]}`,
+      msg: `Colis ${c.numero} — ${companyMap.get(c.companyId) ?? 'boutique'} — ${STATUS_LABEL[c.status]}`,
+      highlight: c.numero,
       t:   this.relTime(c.updatedAt),
     }));
 

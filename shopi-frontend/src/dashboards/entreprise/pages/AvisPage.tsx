@@ -221,8 +221,8 @@ export default function AvisPage() {
                     </div>
                   )}
 
-                  {/* Réponse existante */}
-                  {r.reponse && (
+                  {/* Réponse existante — masquée pendant l'édition (voir zone réponse ci-dessous) */}
+                  {r.reponse && replyBoxId !== r.id && (
                     <div style={{
                       padding:'10px 14px', background:'var(--g100)',
                       border:'1px solid var(--bdr2)', borderRadius:'var(--r-md)', marginBottom:10,
@@ -234,8 +234,8 @@ export default function AvisPage() {
                     </div>
                   )}
 
-                  {/* Zone réponse */}
-                  {!r.reponse && replyBoxId === r.id && (
+                  {/* Zone réponse (nouvelle réponse OU modification d'une réponse existante) */}
+                  {replyBoxId === r.id && (
                     <div style={{ marginBottom:10 }}>
                       <textarea
                         value={replyText}
@@ -273,23 +273,25 @@ export default function AvisPage() {
                   )}
 
                   {/* Actions */}
-                  <div style={{ display:'flex', gap:7 }}>
-                    {!r.reponse ? (
-                      <button className="ta-btn primary"
-                        onClick={() => { setReplyBoxId(r.id); setReplyText(''); }}>
-                        <i className="fas fa-reply" /> {t('avis.repondre')}
-                      </button>
-                    ) : (
+                  {replyBoxId !== r.id && (
+                    <div style={{ display:'flex', gap:7 }}>
+                      {!r.reponse ? (
+                        <button className="ta-btn primary"
+                          onClick={() => { setReplyBoxId(r.id); setReplyText(''); }}>
+                          <i className="fas fa-reply" /> {t('avis.repondre')}
+                        </button>
+                      ) : (
+                        <button className="ta-btn"
+                          onClick={() => { setReplyBoxId(r.id); setReplyText(r.reponse ?? ''); }}>
+                          <i className="fas fa-pen" /> {t('avis.modifierReponse')}
+                        </button>
+                      )}
                       <button className="ta-btn"
-                        onClick={() => pop(t('avis.modifierReponseToast'), 'i')}>
-                        <i className="fas fa-pen" /> {t('avis.modifierReponse')}
+                        onClick={() => pop(t('avis.signalerToast'), 'w')}>
+                        <i className="fas fa-flag" /> {t('avis.signaler')}
                       </button>
-                    )}
-                    <button className="ta-btn"
-                      onClick={() => pop(t('avis.signalerToast'), 'w')}>
-                      <i className="fas fa-flag" /> {t('avis.signaler')}
-                    </button>
-                  </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

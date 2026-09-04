@@ -225,6 +225,43 @@ export default function AjouterPage({ onNavigate, productId }: AjouterPageProps)
       .catch(() => { /* garde la valeur par défaut 3 % */ });
   }, []);
 
+  /* BUG CORRIGÉ — Company.autoPublish (Paramètres > Catalogue,
+   * "Publication automatique") était enregistré mais jamais lu : un
+   * nouveau produit partait toujours en visibilité "public" par défaut
+   * (FORM_INITIAL ci-dessus), quel que soit ce réglage. Seulement en
+   * mode CRÉATION — en édition, la visibilité vient du produit existant
+   * (chargé plus bas), pas de ce réglage.
+   *
+   * Même correctif pour Paramètres > Livraison (méthodes) : les 3 toggles
+   * livraison de CE formulaire partaient toujours sur standard+livreur
+   * activés / correspondant désactivé (FORM_INITIAL), sans tenir compte
+   * de ce que la boutique propose réellement. Ici ce sont de VRAIS
+   * défauts pré-remplis (pas une politique stricte comme autoPublish) —
+   * le vendeur peut toujours les décocher/cocher pour ce produit précis,
+   * exactement comme avant, juste avec un meilleur point de départ. */
+  useEffect(() => {
+    if (isEditMode) return;
+    fetch(`${API}/dashboard/entreprise/parametres`, {
+      headers: { Authorization: `Bearer ${getToken()}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then((data: {
+        autoPublish?: boolean;
+        livraisonStandard?: boolean; livraisonShopi?: boolean; livraisonCorresp?: boolean;
+      } | null) => {
+        if (!data) return;
+        setForm(f => ({
+          ...f,
+          visibilite: data.autoPublish === false ? 'draft' : f.visibilite,
+          livraisonStandard:      data.livraisonStandard      ?? f.livraisonStandard,
+          livraisonLivreur:       data.livraisonShopi         ?? f.livraisonLivreur,
+          livraisonCorrespondant: data.livraisonCorresp        ?? f.livraisonCorrespondant,
+        }));
+      })
+      .catch(() => { /* garde les défauts existants */ });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ─────────────────────────────────────────────────────────────
   // useEffect 1 — Charge les catégories depuis l'API
   // ─────────────────────────────────────────────────────────────

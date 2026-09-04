@@ -4,7 +4,7 @@
  * ============================================================ */
 
 import {
-  IsBoolean, IsEmail, IsEnum, IsNumber, IsOptional,
+  IsBoolean, IsEmail, IsEnum, IsIn, IsNumber, IsOptional,
   IsString, MaxLength, Min, ValidateNested, IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -80,6 +80,15 @@ export class UpdateQuestionsDto {
   @ValidateNested({ each: true })
   @Type(() => QuestionSecuriteItemDto)
   questions: QuestionSecuriteItemDto[];
+}
+
+/** Type d'alerte de sécurité — voir SecuriteService.DEFAULT_ALERT_SETTINGS */
+export const ALERT_TYPES = ['connex', 'mdp', 'tentatives', 'transaction', 'pays'] as const;
+export type AlertType = (typeof ALERT_TYPES)[number];
+
+export class UpdateAlertSettingDto {
+  @IsIn(ALERT_TYPES) type: AlertType;
+  @IsBoolean()        email: boolean;
 }
 
 /* ── Section 10 — Notifications ── */

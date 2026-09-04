@@ -83,6 +83,10 @@ const DEFAULT_CHANNEL_PREFERENCES: Record<
   [NotificationType.PROMO_ENDED]:           { in_app: true, push: false, email: false, sms: false },
   [NotificationType.PROMO_USED]:            { in_app: true, push: true,  email: false, sms: false },
   [NotificationType.PROMO_LIMIT_REACHED]:   { in_app: true, push: true,  email: false, sms: false },
+  // CRM entreprise — message envoyé par une boutique à ses clients
+  // (newsletter, offre fidélité, relance) : email activé par défaut,
+  // c'est le canal principal attendu pour ce type de message.
+  [NotificationType.CRM_MESSAGE]:           { in_app: true, push: true,  email: true,  sms: false },
   // Paiements
   [NotificationType.PAYMENT_RECEIVED]:      { in_app: true, push: true,  email: true,  sms: false },
   [NotificationType.PAYMENT_SENT]:          { in_app: true, push: true,  email: true,  sms: false },

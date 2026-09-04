@@ -29,6 +29,8 @@ import { CreateCommandeDto } from '../dto/create-commande.dto';
 import { CODE_EXPIRY_MS, genererCode, readPrix } from './commande.helpers';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 import { DeliveryGroupService } from 'src/modules/delivery-group/delivery-group.service';
+import { PaiementInitiationService } from 'src/modules/paiement/services/paiement-initiation.service';
+import { MethodePaiementSession } from '../../../database/entities/paiement/paiement-session.entity';
 
 @Injectable()
 export class CommandeCreationService {
@@ -45,6 +47,7 @@ export class CommandeCreationService {
     @InjectRepository(PlatformSettings)   private readonly platformSettingsRepo:  Repository<PlatformSettings>,
     private readonly notifEventSvc: NotificationEventService,
     private readonly deliveryGroupSvc: DeliveryGroupService,
+    private readonly paiementInitiationSvc: PaiementInitiationService,
   ) {}
 
   /* ════════════════════════════════════════════════════════
@@ -112,11 +115,15 @@ export class CommandeCreationService {
       const sousTotal      = items.reduce((s, pi) => s + readPrix(pi.produit) * pi.qty, 0);
       const fraisLivraison = 0;
 
-      /* Taux de commission lu depuis PlatformSettings (défaut 3 % si table vide) */
+      /* Estimation affichée avant paiement (défaut 6 % — aligné sur le défaut
+       * déclaré de PlatformSettings.platformCommission, voir l'entité). Ce
+       * n'est qu'un aperçu transitoire : dès que initier() ci-dessous aura
+       * confirmé le paiement, payment-webhook-processor.service.ts écrase ce
+       * champ avec le montant RÉEL calculé par le CommissionEngine. */
       const platformSettings  = await this.platformSettingsRepo.findOne({ where: { id: 1 } });
       const commissionRate    = platformSettings
         ? Number(platformSettings.platformCommission) / 100
-        : 0.03;
+        : 0.06;
       const commissionShopi   = Math.round(sousTotal * commissionRate);
       const total             = sousTotal + fraisLivraison;
 
@@ -129,7 +136,14 @@ export class CommandeCreationService {
         livreurAssignedBy: delivery ? 'client' : null,
         correspondantId: correspondant?.id ?? null,
         partenaireId: null,
-        status: CommandeStatus.PAID,
+        /* BUG CORRIGÉ — status était mis à PAID directement ici, sans jamais
+         * passer par PaiementInitiationService/CommissionEngine : aucune
+         * PaiementDistribution n'était jamais créée pour les commandes
+         * passées via le vrai parcours d'achat, donc aucun wallet acteur
+         * n'était jamais crédité (voir l'appel à initier() plus bas, qui
+         * fait passer la commande à PAID pour de vrai une fois le calcul
+         * de commission et le séquestre effectivement réalisés). */
+        status: CommandeStatus.PENDING,
         modeLivraison,
         sousTotal,
         fraisLivraison,
@@ -143,7 +157,6 @@ export class CommandeCreationService {
         adresseLivraison:  dto.adressePrecise     ?? dto.destination ?? null,
         notesClient:       dto.instructions       ?? null,
         methodePaiement:   dto.payMode            ?? null,
-        datePaiement: new Date(),
       });
       const saved = await this.commandeRepo.save(commande);
       if (!firstCommandeId) firstCommandeId = saved.id;
@@ -246,6 +259,19 @@ export class CommandeCreationService {
       }));
 
       await this.codeRepo.save(codes);
+
+      /* ── Paiement par solde Shopi (méthode WALLET → toujours résolue vers
+       * InternalProvider par PaymentProviderFactory, quel que soit
+       * PAYMENT_PROVIDER, car aucun provider externe ne supporte WALLET —
+       * voir payment-provider.factory.ts). Confirme synchroniquement :
+       * calcule la vraie répartition via CommissionEngine, crée les
+       * PaiementDistribution, verrouille l'escrow, et repasse la commande
+       * à PAID. Si ça échoue, la commande reste PENDING (état honnête —
+       * mieux qu'un faux PAID sans aucune distribution, comme avant). */
+      await this.paiementInitiationSvc.initier(user, {
+        commandeId: saved.id,
+        methode:    MethodePaiementSession.WALLET,
+      });
     }
 
     /* Vider le panier après création */

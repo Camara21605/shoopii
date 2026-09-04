@@ -3,7 +3,7 @@
  * ============================================================ */
 
 import React, {
-  createContext, useContext, useState, useEffect, useCallback,
+  createContext, useContext, useState, useEffect, useCallback, useRef,
   type ReactNode,
 } from 'react';
 import { authService } from '../../modules/auth/services/authService';
@@ -117,6 +117,61 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   useNotificationSocket({ onSessionRevoked: handleSessionRevoked });
+
+  /* ── Déconnexion automatique après inactivité ────────────────────
+   * BUG CORRIGÉ — PlatformSettings.sessionTimeoutMin (Paramètres
+   * Plateforme > Sécurité) se sauvegardait en base sans jamais être
+   * appliqué : aucun mécanisme de timeout d'inactivité n'existait,
+   * quelle que soit la valeur configurée par le super-admin.
+   * Récupéré une seule fois après connexion (pas de re-fetch à chaque
+   * activité) ; échec silencieux — indisponibilité du réglage ne doit
+   * jamais déconnecter quelqu'un par erreur. */
+  const [sessionTimeoutMin, setSessionTimeoutMin] = useState<number | null>(null);
+  const idleTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastResetRef  = useRef(0);
+
+  useEffect(() => {
+    if (!user) { setSessionTimeoutMin(null); return; }
+    let cancelled = false;
+    authService.getSessionPolicy()
+      .then(({ sessionTimeoutMin: min }) => { if (!cancelled) setSessionTimeoutMin(min); })
+      .catch(() => { /* silencieux — pas de timeout armé si indisponible */ });
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const handleIdleTimeout = useCallback(() => {
+    setUserState(null);
+    try { disconnectGlobalSocket(); } catch (e) { console.error('[Auth] disconnectGlobalSocket a échoué (timeout inactivité) :', e); }
+    try { disconnectNotificationSocket(); } catch (e) { console.error('[Auth] disconnectNotificationSocket a échoué (timeout inactivité) :', e); }
+    tokenStorage.remove();
+    try {
+      sessionStorage.setItem('shopi_session_revoked_message', "Vous avez été déconnecté automatiquement après une période d'inactivité.");
+    } catch { /* sessionStorage indisponible — la redirection reste correcte, juste sans message affiché */ }
+    window.location.href = '/login';
+  }, []);
+
+  useEffect(() => {
+    if (!user || !sessionTimeoutMin || sessionTimeoutMin <= 0) return;
+    const timeoutMs = sessionTimeoutMin * 60_000;
+
+    const resetTimer = () => {
+      // Throttle : évite de recréer le setTimeout à chaque pixel de mousemove.
+      const now = Date.now();
+      if (now - lastResetRef.current < 5_000) return;
+      lastResetRef.current = now;
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(handleIdleTimeout, timeoutMs);
+    };
+
+    const events: (keyof WindowEventMap)[] = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    events.forEach(e => window.addEventListener(e, resetTimer, { passive: true }));
+    resetTimer();
+
+    return () => {
+      events.forEach(e => window.removeEventListener(e, resetTimer));
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [user, sessionTimeoutMin, handleIdleTimeout]);
 
   return (
     <AppContext.Provider value={{

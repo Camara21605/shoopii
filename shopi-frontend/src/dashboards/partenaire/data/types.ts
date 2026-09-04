@@ -74,15 +74,6 @@ export interface Signalement {
   date:     string;
 }
 
-/* Une commission perçue */
-export interface CommissionLigne {
-  source:  string;
-  type:    ActeurType;
-  detail:  string;
-  date:    string;
-  montant: number;
-}
-
 /* KPI d'en-tête */
 export interface Kpi {
   cle:    string;

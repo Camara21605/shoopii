@@ -199,7 +199,8 @@
       "joindre": "附加",
       "emojis": "表情",
       "ecrireMessagePlaceholder": "输入消息…",
-      "messageVocalTitle": "语音消息"
+      "messageVocalTitle": "语音消息",
+      "envoiNonAutorise": "您没有发送消息的权限"
     },
     "infoPanel": {
       "informations": "信息",
@@ -241,6 +242,10 @@
       "searchPlaceholder": "搜索用户…",
       "aucunUtilisateur": "未找到用户",
       "saisirNom": "输入姓名以搜索"
+    },
+    "accessDenied": {
+      "title": "无访问权限",
+      "message": "您没有消息功能的访问权限，请联系店铺所有者获取。"
     }
   }
 }

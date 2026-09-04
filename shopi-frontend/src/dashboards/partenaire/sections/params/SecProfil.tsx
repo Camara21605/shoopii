@@ -66,16 +66,24 @@ export default function SecProfil({
     ? Math.round((STEPS.filter(s => s.check(data)).length / STEPS.length) * 100)
     : 0;
 
-  /* ── Sauvegarde ── */
+  /* ── Sauvegarde ──
+   * `phone` volontairement absent du payload : non modifiable, comme
+   * l'email. Le backend le rejette de toute façon (DTO sans ce champ +
+   * forbidNonWhitelisted) — l'exclure ici évite un 400 sur chaque
+   * sauvegarde de bio/nom. */
   async function handleSave() {
     try {
-      await onSave({ firstName: prenom, lastName: nom, phone, bio });
+      await onSave({ firstName: prenom, lastName: nom, bio });
       markClean();
       onToast('✅ Profil sauvegardé', 's');
-    } catch {
-      onToast('❌ Erreur lors de la sauvegarde', 'w');
+    } catch (err: any) {
+      onToast(err?.message || '❌ Erreur lors de la sauvegarde', 'w');
     }
   }
+
+  /* ── Verrou nom/prénom (3 mois entre deux changements) ── */
+  const nameLockedUntil = data?.nameChangeAllowedAt ? new Date(data.nameChangeAllowedAt) : null;
+  const nameLocked = !!nameLockedUntil && nameLockedUntil > new Date();
 
   /* ── Téléversement photo ── */
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -159,7 +167,7 @@ export default function SecProfil({
             </div>
             <div className={s.avTxt}>
               <h4>Photo de profil</h4>
-              <p>JPG, PNG ou WebP. Taille max. 2 Mo.</p>
+              <p>JPG, PNG, WebP ou GIF. Taille max. 5 Mo.</p>
               <div className={s.avBtns}>
                 <button className={s.btnPrimary} onClick={() => fileRef.current?.click()} disabled={uploading}>
                   {uploading ? 'Téléversement…' : 'Changer la photo'}
@@ -171,35 +179,45 @@ export default function SecProfil({
 
           <div className={s.grid2}>
             <div className={s.fg}>
-              <label className={s.fl}>Prénom</label>
+              <label className={s.fl}>
+                Prénom
+                {nameLocked && <span className={s.flOpt}> — verrouillé</span>}
+              </label>
               <input
                 className={s.fin}
                 value={prenom}
                 onChange={e => { setPrenom(e.target.value); dirty(); }}
                 placeholder="Votre prénom"
+                readOnly={nameLocked}
+                style={nameLocked ? { opacity: .6, cursor: 'not-allowed' } : undefined}
               />
             </div>
             <div className={s.fg}>
-              <label className={s.fl}>Nom</label>
+              <label className={s.fl}>
+                Nom
+                {nameLocked && <span className={s.flOpt}> — verrouillé</span>}
+              </label>
               <input
                 className={s.fin}
                 value={nom}
                 onChange={e => { setNom(e.target.value); dirty(); }}
                 placeholder="Votre nom"
+                readOnly={nameLocked}
+                style={nameLocked ? { opacity: .6, cursor: 'not-allowed' } : undefined}
               />
             </div>
           </div>
+          {nameLocked && nameLockedUntil && (
+            <span className={s.hint} style={{ display: 'block', marginTop: -8, marginBottom: 16 }}>
+              Le prénom et le nom ne peuvent être modifiés qu'une fois tous les 3 mois — prochaine
+              modification possible le {nameLockedUntil.toLocaleDateString('fr-FR')}.
+            </span>
+          )}
 
           <div className={s.grid2}>
             <div className={s.fg}>
-              <label className={s.fl}>Téléphone</label>
-              <input
-                className={s.fin}
-                value={phone}
-                onChange={e => { setPhone(e.target.value); dirty(); }}
-                placeholder="+224 6•• •• •• ••"
-                inputMode="tel"
-              />
+              <label className={s.fl}>Téléphone <span className={s.flOpt}>— non modifiable</span></label>
+              <input className={s.fin} value={phone} readOnly style={{ opacity: .6, cursor: 'not-allowed' }} placeholder="+224 6•• •• •• ••" />
             </div>
             <div className={s.fg}>
               <label className={s.fl}>Email <span className={s.flOpt}>— non modifiable</span></label>
@@ -233,7 +251,12 @@ export default function SecProfil({
               <span className={s.verifBadge}><i className="fas fa-circle-check" /> Partenaire vérifié</span>
             )}
             {data?.palier && (
-              <span className={s.goldBadge}><i className="fas fa-crown" /> Palier {data.palier} · {data.palier === 'gold' ? 'Niveau 3' : data.palier === 'silver' ? 'Niveau 2' : 'Niveau 1'}</span>
+              <span className={s.goldBadge}><i className="fas fa-crown" /> Palier {data.palier} · {
+                data.palier === 'platinum' ? 'Niveau 4'
+                : data.palier === 'gold'     ? 'Niveau 3'
+                : data.palier === 'silver'   ? 'Niveau 2'
+                : 'Niveau 1'
+              }</span>
             )}
             {data?.memberSince && (
               <span style={{ fontSize: 12, color: 'var(--t3)' }}>

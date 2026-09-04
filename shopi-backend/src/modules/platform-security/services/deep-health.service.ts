@@ -42,8 +42,10 @@ import { DataSource }         from 'typeorm';
 import { InjectRedis }        from '@nestjs-modules/ioredis';
 import { ConfigService }      from '@nestjs/config';
 import type Redis             from 'ioredis';
+import * as os                from 'os';
 
 import { ComponentHealth, HealthReport } from '../types/security.types';
+import { PlatformSettingsCacheService } from '../../performance-engine/services/platform-settings-cache.service';
 
 /* ============================================================
  * CONSTANTES
@@ -53,6 +55,10 @@ import { ComponentHealth, HealthReport } from '../types/security.types';
 const CHECK_TIMEOUT_MS = 5_000;
 /** Seuil d'alerte mémoire heap (%). */
 const MEMORY_WARN_PCT  = 85;
+/** Seuil d'alerte CPU (%) — repli si PlatformSettings est indisponible. */
+const CPU_WARN_PCT     = 80;
+/** Fenêtre d'échantillonnage pour mesurer l'usage CPU (ms). */
+const CPU_SAMPLE_MS    = 150;
 /** Variables d'environnement obligatoires pour le fonctionnement. */
 const REQUIRED_ENV_VARS = [
   'DATABASE_URL',
@@ -77,6 +83,12 @@ export class DeepHealthService {
     private readonly redis: Redis,
 
     private readonly config: ConfigService,
+
+    /* BUG CORRIGÉ — PlatformSettings.ramAlertPct (Paramètres Plateforme >
+     * Notifications) se sauvegardait en base sans jamais être lu : le seuil
+     * d'alerte mémoire était figé à MEMORY_WARN_PCT (85%) quelle que soit
+     * la valeur choisie par le super-admin. */
+    private readonly settingsCache: PlatformSettingsCacheService,
   ) {}
 
   /* ==========================================================
@@ -90,14 +102,15 @@ export class DeepHealthService {
   async checkAll(): Promise<HealthReport> {
     const start = Date.now();
 
-    const [db, red, proc, conf] = await Promise.all([
+    const [db, red, proc, cpu, conf] = await Promise.all([
       this.checkDatabase(),
       this.checkRedis(),
       this.checkProcess(),
+      this.checkCpu(),
       this.checkConfiguration(),
     ]);
 
-    const components  = [db, red, proc, conf];
+    const components  = [db, red, proc, cpu, conf];
     const hasDown     = components.some(c => c.status === 'down');
     const hasDegraded = components.some(c => c.status === 'degraded');
 
@@ -184,7 +197,7 @@ export class DeepHealthService {
    * Vérifie l'utilisation mémoire du processus Node.js.
    * Aucune dépendance externe — toujours synchrone.
    */
-  checkProcess(): ComponentHealth {
+  async checkProcess(): Promise<ComponentHealth> {
     const mem         = process.memoryUsage();
     const heapUsedMb  = Math.round(mem.heapUsed  / 1_048_576);
     const heapTotalMb = Math.round(mem.heapTotal / 1_048_576);
@@ -194,7 +207,15 @@ export class DeepHealthService {
     const rssMb       = Math.round(mem.rss / 1_048_576);
     const uptimeMin   = Math.round(process.uptime() / 60);
 
-    const status: ComponentHealth['status'] = usedPct >= MEMORY_WARN_PCT
+    let warnThreshold = MEMORY_WARN_PCT;
+    try {
+      warnThreshold = (await this.settingsCache.getSettings()).ramAlertPct;
+    } catch {
+      // Cache indisponible → repli sur le seuil par défaut, ne fait pas
+      // échouer le health check lui-même.
+    }
+
+    const status: ComponentHealth['status'] = usedPct >= warnThreshold
       ? 'degraded'
       : 'healthy';
 
@@ -212,7 +233,67 @@ export class DeepHealthService {
         nodeVersion:  process.version,
       },
       ...(status === 'degraded' && {
-        error: `Utilisation mémoire élevée : ${usedPct}% (seuil : ${MEMORY_WARN_PCT}%)`,
+        error: `Utilisation mémoire élevée : ${usedPct}% (seuil : ${warnThreshold}%)`,
+      }),
+    };
+  }
+
+  /**
+   * Mesure l'utilisation CPU globale de la machine (tous cœurs confondus)
+   * par échantillonnage : deux relevés de os.cpus() espacés de
+   * CPU_SAMPLE_MS, delta (total - idle) / delta total.
+   *
+   * BUG CORRIGÉ — PlatformSettings.cpuAlertPct (Paramètres Plateforme >
+   * Notifications) se sauvegardait en base sans qu'AUCUNE surveillance CPU
+   * n'existe nulle part dans le code pour l'utiliser : le champ était
+   * décoratif à 100%, contrairement à ramAlertPct qui avait au moins un
+   * seuil câblé (même si figé). `os.loadavg()` aurait été plus simple mais
+   * renvoie toujours [0,0,0] sur Windows — inutilisable pour du monitoring
+   * multi-plateforme (dev Windows / prod Linux sur Render).
+   */
+  async checkCpu(): Promise<ComponentHealth> {
+    const sampleStart = process.hrtime.bigint();
+    const before = os.cpus();
+    await new Promise(resolve => setTimeout(resolve, CPU_SAMPLE_MS));
+    const after  = os.cpus();
+    const sampleMs = Number(process.hrtime.bigint() - sampleStart) / 1_000_000;
+
+    let idleDelta = 0;
+    let totalDelta = 0;
+    for (let i = 0; i < after.length; i++) {
+      const a = after[i].times;
+      const b = before[i]?.times;
+      if (!b) continue;
+      idleDelta  += a.idle - b.idle;
+      totalDelta += (a.user + a.nice + a.sys + a.idle + a.irq) - (b.user + b.nice + b.sys + b.idle + b.irq);
+    }
+
+    const usedPct = totalDelta > 0
+      ? Math.round((1 - idleDelta / totalDelta) * 100)
+      : 0;
+
+    let warnThreshold = CPU_WARN_PCT;
+    try {
+      warnThreshold = (await this.settingsCache.getSettings()).cpuAlertPct;
+    } catch {
+      // Cache indisponible → repli sur le seuil par défaut.
+    }
+
+    const status: ComponentHealth['status'] = usedPct >= warnThreshold
+      ? 'degraded'
+      : 'healthy';
+
+    return {
+      name:      'cpu',
+      status,
+      latencyMs: Math.round(sampleMs),
+      checkedAt: new Date(),
+      details: {
+        cpuUsedPct: usedPct,
+        cores:      after.length,
+      },
+      ...(status === 'degraded' && {
+        error: `Utilisation CPU élevée : ${usedPct}% (seuil : ${warnThreshold}%)`,
       }),
     };
   }

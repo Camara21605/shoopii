@@ -112,6 +112,10 @@
       "ville": "Cidade",
       "villePlaceholder": "Ex: Conakry",
       "reinitialiser": "Repor",
+      "pourVous": {
+        "kick": "Recomendado",
+        "title": "Para você"
+      },
       "tendances": {
         "kick": "Popular",
         "title": "Tendências"

@@ -123,10 +123,19 @@ export class SecuriteParametresService {
   }
 
   /* ── HELPER ── */
-  /* FIX m4 — Lookup strict par userId uniquement; le fallback par companyId
-   * permettait l'accès cross-tenant si un UUID de boutique était connu. */
+  /* FIX m4 (historique, param client) — sans rapport ici : `userId` est en
+   * réalité req.user.actorId, signé serveur (voir boutique-parametres.
+   * service.ts pour le détail du bug que ce `[{id},{userId}]` corrige). */
+  /* BUG CORRIGÉ — l'ancien `where:[{id},{userId}]` était un OR SQL sans
+   * ordre garanti : quand une AUTRE entreprise a par accident un userId
+   * identique à l'id de celle-ci (bug de profil fantôme, voir getParametres
+   * dans boutique-parametres.service.ts), Postgres pouvait retourner l'une
+   * ou l'autre selon le plan de requête — a réellement fait persister des
+   * réglages sur la mauvaise fiche. `id` (cas normal, actorId) est
+   * désormais toujours tenté en priorité ; `userId` n'est qu'un repli. */
   private async findCompanyOrFail(userId: string): Promise<Company> {
-    const company = await this.companyRepo.findOne({ where: { userId } });
+    let company = await this.companyRepo.findOne({ where: { id: userId } });
+    if (!company) company = await this.companyRepo.findOne({ where: { userId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }

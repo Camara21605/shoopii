@@ -1,18 +1,40 @@
 /* BoutiqueNav.module.css */
-.nav   { background:var(--white); border-bottom:1px solid var(--bdr); position:sticky; top:calc(66px + 80px); z-index:799; }
+/* BUG CORRIGÉ — top:calc(66px + 80px) supposait DEUX choses fixes :
+ *   1. 80px pour la barre d'identité juste au-dessus, alors que sa
+ *      vraie hauteur varie (retour à la ligne du nom/meta, boutons qui
+ *      passent sur leur propre ligne ≤900px, et surtout isOwnerPreview
+ *      qui masque des boutons) — --boutique-identity-h est maintenant
+ *      mesurée en direct (ResizeObserver, voir BoutiqueIdentity.tsx).
+ *   2. 66px pour le <Header> fixe du dessus, qui n'est JAMAIS rendu en
+ *      mode aperçu entreprise (?preview=1) — --boutique-header-h vaut
+ *      alors 0px (voir BoutiquePage.tsx). Avec l'ancienne valeur figée,
+ *      la nav se collait 66px trop bas dans CE mode précis (l'aperçu
+ *      "Voir ma boutique"), avec un vide au-dessus qui donnait
+ *      l'impression que la barre bougeait/se décollait en scrollant. */
+.nav   { background:var(--white); border-bottom:1px solid var(--bdr); position:sticky; top:calc(var(--boutique-header-h, 66px) + var(--boutique-identity-h, 80px)); z-index:799; }
 .inner { max-width:1360px; margin:0 auto; padding:0 28px; display:flex; align-items:center; overflow-x:auto; scrollbar-width:none; }
 .inner::-webkit-scrollbar { display:none; }
 .btn   { padding:14px 20px; font-size:13px; font-weight:600; color:var(--t2); background:transparent; border:none; border-bottom:2.5px solid transparent; white-space:nowrap; cursor:pointer; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:6px; flex-shrink:0; }
 .btn:hover { color:var(--navy); }
 .btn i { font-size:15px; }
 .btnActive { color:var(--blue); border-bottom-color:var(--blue); }
+.label { white-space:nowrap; }
 .cnt { font-size:10px; background:var(--sky-2,#E2EAFB); color:var(--blue); padding:2px 7px; border-radius:999px; font-weight:700; }
 
-/* La barre d'identité au-dessus passe de 80px à 68px de haut ≤900px
-   (BoutiqueIdentity.module.css) — on aligne l'offset sticky en conséquence,
-   sinon la nav se colle trop bas et laisse un vide sous la barre d'identité. */
+/* L'offset sticky (.nav ci-dessus) n'a plus besoin d'être dupliqué ici :
+   --boutique-identity-h reflète déjà la vraie hauteur ≤900px (mesurée en
+   direct, voir BoutiqueIdentity.tsx). Seuls les paddings des boutons
+   changent à cette largeur. */
 @media (max-width:900px) {
-  .nav { top:calc(66px + 68px); }
   .btn { padding:12px 16px; }
   .btn i { font-size:14px; }
+}
+
+/* Le libellé reste visible même sur petit téléphone (pas de display:none
+ * ici) — la ligne défile déjà horizontalement (overflow-x:auto sur
+ * .inner), donc rien ne se coupe ; masquer le texte aurait juste
+ * reproduit le bug corrigé ci-dessus (icône seule, illisible) sur
+ * exactement les largeurs où ce libellé est le plus utile. */
+@media (max-width:480px) {
+  .btn { padding:12px 14px; gap:4px; }
 }

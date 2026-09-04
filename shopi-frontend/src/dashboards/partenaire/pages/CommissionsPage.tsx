@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import styles from '../styles/CommissionsPage.module.css';
 import KpiCard from '../components/KpiCard';
+import WithdrawModal from '../components/WithdrawModal';
 import { TYPE_LABEL, TYPE_ICON, fmtGnf } from '../data/partenaireData';
 import { apiFetch } from '@/shared/services/apiFetch';
 import type { PartenairePage } from '../data/types';
@@ -36,6 +37,7 @@ interface CommissionsData {
 export default function CommissionsPage({ onNavigate, onToast }: Props) {
   const [data, setData]       = useState<CommissionsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   useEffect(() => {
     apiFetch<CommissionsData>('/dashboard/partenaire/commissions')
@@ -65,7 +67,7 @@ export default function CommissionsPage({ onNavigate, onToast }: Props) {
           <div className={styles.balL}>Commissions disponibles</div>
           <div className={styles.balV}>{fmtGnf(balance)}</div>
           <div className={styles.balBtns}>
-            <button className={`${styles.cbb} ${styles.w}`} onClick={() => onToast('Demande de retrait envoyée', 's')}><i className="fas fa-arrow-up-from-bracket" /> Retirer</button>
+            <button className={`${styles.cbb} ${styles.w}`} onClick={() => setWithdrawOpen(true)} disabled={balance <= 0}><i className="fas fa-arrow-up-from-bracket" /> Retirer</button>
             <button className={styles.cbb} onClick={() => onNavigate('paiements')}><i className="fas fa-clock-rotate-left" /> Historique</button>
           </div>
         </div>
@@ -103,6 +105,15 @@ export default function CommissionsPage({ onNavigate, onToast }: Props) {
           </div>
         )}
       </div>
+
+      {withdrawOpen && (
+        <WithdrawModal
+          balance={balance}
+          onClose={() => setWithdrawOpen(false)}
+          onToast={onToast}
+          onSuccess={newBalance => setData(prev => prev ? { ...prev, balance: newBalance } : prev)}
+        />
+      )}
     </div>
   );
 }

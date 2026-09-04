@@ -33,6 +33,7 @@ import {
 } from '../../../database/entities/contact/contact-message.entity';
 import { CreateContactMessageDto } from '../dto/contact.dto';
 import { MailService } from '../../email/email.service';
+import { PlatformSettingsCacheService } from '../../performance-engine/services/platform-settings-cache.service';
 
 @Injectable()
 export class ContactService {
@@ -43,6 +44,12 @@ export class ContactService {
     private readonly repo:        Repository<ContactMessage>,
     private readonly mailService: MailService,
     private readonly config:      ConfigService,
+
+    /* BUG CORRIGÉ — PlatformSettings.supportEmail (Paramètres Plateforme >
+     * Général) se sauvegardait en base sans jamais être lu : l'email
+     * interne du formulaire de contact partait toujours vers la valeur
+     * codée en dur SUPPORT_EMAIL. */
+    private readonly settingsCache: PlatformSettingsCacheService,
   ) {}
 
   /* ── Soumission d'un message (route publique) ─────────────── */
@@ -85,7 +92,13 @@ export class ContactService {
     const saved = await this.repo.save(msg);
 
     /* Email interne vers l'équipe Shopi */
-    const supportEmail = this.config.get<string>('SUPPORT_EMAIL', 'support@shopi.gn');
+    let supportEmail = this.config.get<string>('SUPPORT_EMAIL', 'support@shopi.gn');
+    try {
+      const settings = await this.settingsCache.getSettings();
+      if (settings.supportEmail) supportEmail = settings.supportEmail;
+    } catch (e) {
+      this.logger.warn(`[CONTACT] Lecture PlatformSettings échouée, repli sur l'env : ${e}`);
+    }
     try {
       await this.mailService.sendContactEmail({
         toEmail:  supportEmail,

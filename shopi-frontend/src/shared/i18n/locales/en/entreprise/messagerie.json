@@ -200,7 +200,8 @@
       "joindre": "Attach",
       "emojis": "Emojis",
       "ecrireMessagePlaceholder": "Write a message…",
-      "messageVocalTitle": "Voice message"
+      "messageVocalTitle": "Voice message",
+      "envoiNonAutorise": "You do not have permission to send messages"
     },
     "infoPanel": {
       "informations": "Information",
@@ -242,6 +243,10 @@
       "searchPlaceholder": "Search a user…",
       "aucunUtilisateur": "No user found",
       "saisirNom": "Enter a name to search"
+    },
+    "accessDenied": {
+      "title": "Access denied",
+      "message": "You do not have access to messaging. Contact the shop owner to request it."
     }
   }
 }

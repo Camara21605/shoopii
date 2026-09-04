@@ -75,7 +75,6 @@
       "reactivateError": "Error while reactivating.",
       "deleted": "{{name}}'s access has been revoked.",
       "resetPasswordError": "Error while resetting password.",
-      "permissionsUpdated": "Permissions updated.",
       "permissionsUpdateError": "Error while updating.",
       "invitationResent": "Invitation resent.",
       "genericError": "Error.",
@@ -132,12 +131,22 @@
         "label": "Wallet",
         "view": "View",
         "withdraw": "Withdraw"
+      },
+      "fournisseurs": {
+        "label": "Suppliers",
+        "view": "View",
+        "connect": "Connect",
+        "disconnect": "Disconnect"
+      },
+      "boutique": {
+        "label": "My shop",
+        "view": "View",
+        "edit": "Edit"
       }
     },
     "permPanel": {
       "title": "Permissions",
-      "cancel": "Cancel",
-      "save": "Save"
+      "close": "Close"
     },
     "activityPanel": {
       "title": "Recent activity",

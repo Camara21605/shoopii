@@ -18,6 +18,8 @@ import { TwoFaService }        from './twofa/twofa.service';
 import { MailModule }          from '../email/email.module';
 import { SessionModule }       from '../session/session.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { SecurityAlertsModule } from '../security-alerts/security-alerts.module';
+import { PerformanceModule }    from '../performance-engine/performance.module';
 
 // ── Entité principale ─────────────────────────────────────────
 import { User }              from '../../database/entities/user.entity';
@@ -72,6 +74,8 @@ import { AccountLink }  from '../../database/entities/account-link.entity';
     MailModule,
     NotificationsModule,
     SessionModule,
+    SecurityAlertsModule,
+    PerformanceModule,
   ],
   controllers: [AuthController],
   providers: [

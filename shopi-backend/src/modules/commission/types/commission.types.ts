@@ -147,6 +147,14 @@ export interface ActeurEntrepriseHierarchy extends ActeurLivraisonHierarchy {
 
   /** Multiplicateur associé à ce plan (ex : 0.75 pour PRO) */
   planMultiplier: number;
+
+  /**
+   * Nombre d'entreprises recrutées par le Partenaire de cette entreprise
+   * (Partner.totalCompanies) — utilisé pour résoudre son tier dans
+   * PartnerSettings (Centre de Gestion des Commissions, onglet Partenaires).
+   * null si pas de partenaire.
+   */
+  partenaireTotalCompanies: number | null;
 }
 
 /**
@@ -202,6 +210,15 @@ export interface CommissionAmounts {
 
   /** Part Admin du Partenaire de l'entreprise sur la commission produit */
   partAdminProduit: number;
+
+  /**
+   * Ratio Partenaire (%) RÉELLEMENT appliqué sur la commission produit —
+   * peut différer de rule.ratioPartenaireProduit si PartnerSettings a
+   * remplacé le ratio global par le taux du tier du partenaire (voir
+   * CommissionCalculatorService.resoudreRatioPartenaireProduit). Utilisé
+   * pour le snapshot d'audit (CommissionEngine).
+   */
+  ratioPartenaireProduitEffectif: number;
 
   /* ── Commission livraison ───────────────────────────────── */
 

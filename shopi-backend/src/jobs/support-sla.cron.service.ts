@@ -34,6 +34,7 @@ import {
   SupportTicketStatus,
 } from '../database/entities/support/support-ticket.entity';
 import { MailService } from '../modules/email/email.service';
+import { PlatformSettingsCacheService } from '../modules/performance-engine/services/platform-settings-cache.service';
 
 @Injectable()
 export class SupportSlaCronService {
@@ -53,6 +54,13 @@ export class SupportSlaCronService {
      *   - Staging/dev : valeur courte (ex: 1h) pour tester sans attendre.
      * Défaut : 24h si la variable est absente (comportement antérieur). */
     private readonly config: ConfigService,
+
+    /* BUG CORRIGÉ — PlatformSettings.savResponseSlaHours et .supportEmail
+     * (Paramètres Plateforme > Inscriptions / Général) se sauvegardaient en
+     * base sans jamais être lus : ce cron utilisait exclusivement les
+     * variables d'environnement SLA_BREACH_HOURS / SUPPORT_EMAIL, rendant
+     * les réglages du super-admin sans aucun effet réel. */
+    private readonly settingsCache: PlatformSettingsCacheService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -69,9 +77,19 @@ export class SupportSlaCronService {
   @Cron('0 * * * *')
   async checkSlaBreaches(): Promise<void> {
 
-    /* Lire le seuil depuis l'environnement à chaque exécution du cron,
-     * pas seulement au démarrage — permet de modifier sans redéploiement. */
-    const BREACH_HOURS = this.config.get<number>('SLA_BREACH_HOURS', 24);
+    /* Lire le seuil depuis PlatformSettings (via le cache Redis) à chaque
+     * exécution du cron — permet au super-admin de le modifier sans
+     * redéploiement. Repli sur SLA_BREACH_HOURS/24h si le cache est
+     * indisponible (panne Redis/DB — ne doit pas faire échouer le cron). */
+    let BREACH_HOURS = this.config.get<number>('SLA_BREACH_HOURS', 24);
+    let supportEmailOverride: string | null = null;
+    try {
+      const settings = await this.settingsCache.getSettings();
+      BREACH_HOURS = settings.savResponseSlaHours;
+      supportEmailOverride = settings.supportEmail;
+    } catch (err) {
+      this.logger.warn(`[SLA] Impossible de lire PlatformSettings, repli sur l'env : ${(err as Error).message}`);
+    }
 
     this.logger.log(`[SLA] Vérification des violations SLA (seuil: ${BREACH_HOURS}h)…`);
 
@@ -129,7 +147,7 @@ export class SupportSlaCronService {
      * On envoie un seul email récapitulatif (pas un email par ticket)
      * pour ne pas spammer l'équipe support.
      * ─────────────────────────────────────────────────────── */
-    const supportEmail  = this.config.get<string>('SUPPORT_EMAIL', 'support@shopi.gn');
+    const supportEmail  = supportEmailOverride || this.config.get<string>('SUPPORT_EMAIL', 'support@shopi.gn');
     const frontendUrl   = this.config.get<string>('FRONTEND_URL',  'https://shopi.gn');
 
     /* Construction du tableau HTML des tickets en retard */

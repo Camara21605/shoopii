@@ -71,3 +71,15 @@
 
 @media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px)  { .stats { grid-template-columns: 1fr; } }
+
+/* ── Élément ciblé par une notification (deep-link) ── */
+.itemHighlight {
+  border-radius: var(--r-md);
+  padding-left: 10px; padding-right: 10px;
+  margin: 0 -10px;
+  animation: highlightPulse 2.2s ease-out;
+}
+@keyframes highlightPulse {
+  0%   { background: rgba(26,79,196,.14); box-shadow: 0 0 0 2px rgba(26,79,196,.35); }
+  100% { background: transparent; box-shadow: 0 0 0 2px rgba(26,79,196,0); }
+}

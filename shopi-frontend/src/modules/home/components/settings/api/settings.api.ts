@@ -43,6 +43,10 @@ export interface SecuriteData {
   dernierChangementMdp: string | null;
 }
 
+/** Type d'alerte de sécurité — voir SecurityAlertsService (backend) */
+export type AlertType = 'connex' | 'mdp' | 'tentatives' | 'transaction' | 'pays';
+export type AlertSettings = Record<AlertType, { email: boolean }>;
+
 export interface SessionItem {
   id: string; device: string; browser: string;
   os: string; ip: string; location: string;
@@ -91,6 +95,9 @@ export const settingsApi = {
   update2fa:            (dto: any) => apiFetch<{twoFaEnabled:boolean}>('/client/parametres/securite/2fa', { method:'PATCH', body:dto }),
   updateQuestions:      (dto: any) => apiFetch<{message:string}>('/client/parametres/securite/questions', { method:'PATCH', body:dto }),
   genererCodesSecours:  ()         => apiFetch<{codes:string[]}>('/client/parametres/securite/codes-secours', { method:'POST' }),
+  getAlertSettings:     ()         => apiFetch<AlertSettings>('/client/parametres/securite/alertes'),
+  updateAlertSetting:   (type: AlertType, email: boolean) =>
+    apiFetch<AlertSettings>('/client/parametres/securite/alertes', { method:'PATCH', body:{ type, email } }),
 
   /* ── Sessions ── */
   getSessions:       ()            => apiFetch<SessionItem[]>('/client/parametres/sessions'),

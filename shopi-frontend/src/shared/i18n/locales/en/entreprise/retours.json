@@ -199,6 +199,10 @@
       "sendError": "Send error",
       "replyPlaceholder": "Reply to the customer…",
       "envoyer": "Send"
+    },
+    "accessDenied": {
+      "title": "Access denied",
+      "message": "You do not have access to returns and support tickets. Contact the shop owner to request it."
     }
   }
 }

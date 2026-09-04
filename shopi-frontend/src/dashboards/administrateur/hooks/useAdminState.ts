@@ -25,7 +25,7 @@ export function useAdminState() {
   const [genOpen, setGenOpen] = useState(false);
 
   /* Modale sanction (suspension d'un compte) */
-  const [sanctionTarget, setSanctionTarget] = useState<string | null>(null);
+  const [sanctionTarget, setSanctionTarget] = useState<{ id: string; nom: string } | null>(null);
 
   /* Permissions de cet admin — modules généraux + géo (inclut
    * _paysAssigne: string | null). Nom historique "geoPerms" conservé
@@ -70,8 +70,8 @@ export function useAdminState() {
   }, []);
 
   /* Sanction — ouvre/ferme la modale de suspension.
-     En prod : POST /admin/acteurs/:id/suspendre { motif } */
-  const ouvrirSanction  = useCallback((cible: string) => setSanctionTarget(cible), []);
+     PATCH /dashboard/admin/acteurs/:id/suspend { motif } */
+  const ouvrirSanction  = useCallback((id: string, nom: string) => setSanctionTarget({ id, nom }), []);
   const fermerSanction  = useCallback(() => setSanctionTarget(null), []);
 
   return {

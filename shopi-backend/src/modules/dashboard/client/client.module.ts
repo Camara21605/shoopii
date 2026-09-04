@@ -17,6 +17,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationsModule } from '../../notifications/notifications.module';
 import { ReturnsModule }       from '../entreprise/returns/returns.module';
 import { ClientSavController } from './sav/client-sav.controller';
+import { SecurityAlertsModule } from '../../security-alerts/security-alerts.module';
+import { MailModule } from '../../email/email.module';
 
 import { User }           from '../../../database/entities/user.entity';
 import { Client }         from '../../../database/entities/profiles/client-profile.entity';
@@ -30,8 +32,12 @@ import { Correspondent }        from '../../../database/entities/profiles/corres
 import { CorrespondantHoraire } from '../../../database/entities/profiles/correspondant-horaire.entity';
 /* ✅ Entité likes (favoris) */
 import { ProductLike }          from '../../../database/entities/entreprise.table/product-like.entity';
+/* ✅ Liste de souhaits (distincte des favoris — voir wishlist-item.entity.ts) */
+import { WishlistItem }         from '../../../database/entities/entreprise.table/wishlist-item.entity';
 /* ✅ Révocation des sessions lors d'un changement de mot de passe */
 import { RefreshToken }         from '../../../database/entities/refresh-token.entity';
+/* ✅ Profil public client — compteur de commandes complétées */
+import { Commande }             from '../../../database/entities/commande/commande.entity';
 
 /* Controllers existants */
 import { ClientParametresController } from './client-parametres.controller';
@@ -43,6 +49,10 @@ import { ClientProfilController }     from './client-profil.controller';
 import { CorrespondantProfilController } from './correspondant-profil.controller';
 /* ✅ Nouveau controller favoris */
 import { FavorisController }          from './favoris.controller';
+/* ✅ Nouveau controller liste de souhaits */
+import { WishlistController }         from './wishlist.controller';
+/* ✅ Nouveau controller profil public client */
+import { ClientPublicProfilController } from './client-public-profil.controller';
 
 /* Services existants */
 import { ProfilService }    from './services/profil.service';
@@ -69,11 +79,17 @@ import { ClientProfilService }   from './client-profil.service';
 import { CorrespondantProfilService } from './correspondant-profil.service';
 /* ✅ Nouveau service favoris */
 import { FavorisService }             from './services/favoris.service';
+/* ✅ Nouveau service liste de souhaits */
+import { WishlistService }            from './services/wishlist.service';
+/* ✅ Nouveau service profil public client */
+import { ClientPublicProfilService }  from './client-public-profil.service';
 
 @Module({
   imports: [
     NotificationsModule,
     ReturnsModule,
+    SecurityAlertsModule,
+    MailModule,
     TypeOrmModule.forFeature([
       User,
       Client,
@@ -84,7 +100,9 @@ import { FavorisService }             from './services/favoris.service';
       Correspondent,         /* ✅ ajout */
       CorrespondantHoraire,  /* ✅ ajout */
       ProductLike,           /* ✅ ajout favoris */
+      WishlistItem,          /* ✅ ajout liste de souhaits */
       RefreshToken,          /* ✅ ajout — révocation sessions au changement MDP */
+      Commande,              /* ✅ ajout — profil public client (compteur commandes) */
     ]),
   ],
 
@@ -95,6 +113,8 @@ import { FavorisService }             from './services/favoris.service';
     ClientProfilController,        /* GET /client/profil */
     CorrespondantProfilController, /* GET /client/correspondants/:id */
     FavorisController,             /* GET/POST /client/favoris */
+    WishlistController,            /* GET/POST /client/wishlist */
+    ClientPublicProfilController,  /* GET /client/profils/:id */
     ClientSavController,           /* POST/GET /client/sav */
   ],
 
@@ -118,6 +138,8 @@ import { FavorisService }             from './services/favoris.service';
     ClientProfilService,            /* ✅ ajout */
     CorrespondantProfilService,     /* ✅ ajout */
     FavorisService,                 /* ✅ ajout */
+    WishlistService,                /* ✅ ajout */
+    ClientPublicProfilService,      /* ✅ ajout */
   ],
 
   exports: [
@@ -127,6 +149,7 @@ import { FavorisService }             from './services/favoris.service';
     ClientProfilService,            /* ✅ ajout */
     CorrespondantProfilService,     /* ✅ ajout */
     FavorisService,                 /* ✅ ajout */
+    WishlistService,                /* ✅ ajout — réutilisé par ExploreModule (pour-vous) */
   ],
 })
 export class ClientModule {}

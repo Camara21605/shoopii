@@ -432,10 +432,19 @@ export class SavService {
 
   /* ── Helpers ── */
 
-  /* FIX m4 — Lookup strict par userId uniquement; le fallback par companyId
-   * permettait l'accès cross-tenant si un UUID de boutique était connu. */
+  /* BUG CORRIGÉ — le "FIX m4" précédent confondait un companyId FOURNI
+   * PAR LE CLIENT (falsifiable → risque cross-tenant réel, où rejeter le
+   * fallback par `id` est justifié) avec l'actorId signé serveur dans le
+   * JWT (req.user.actorId ?? req.user.id, jamais falsifiable). Pour un
+   * compte COMPANY, actorId EST le Company.id — ce lookup strict par
+   * `userId` ne matchait donc quasiment jamais pour une vraie entreprise
+   * (404 systématique), sauf collision accidentelle avec une fiche
+   * fantôme (voir boutique-parametres.service.ts), auquel cas cette page
+   * affichait silencieusement les données de la MAUVAISE fiche. `id`
+   * (cas normal) est désormais tenté en priorité, `userId` en repli. */
   private async resolveCompany(userId: string): Promise<Company> {
-    const c = await this.companyRepo.findOne({ where: { userId }, select: ['id', 'companyName'] });
+    let c = await this.companyRepo.findOne({ where: { id: userId }, select: ['id', 'companyName'] });
+    if (!c) c = await this.companyRepo.findOne({ where: { userId }, select: ['id', 'companyName'] });
     if (!c) throw new NotFoundException('Profil entreprise introuvable.');
     return c;
   }

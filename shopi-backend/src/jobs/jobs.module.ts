@@ -29,6 +29,7 @@ import { Delivery }        from '../database/entities/profiles/livreur-profile.e
 import { Company }         from '../database/entities/profiles/entreprise-profile.entity';
 import { SupportTicket }   from '../database/entities/support/support-ticket.entity';
 import { MailModule }      from '../modules/email/email.module';
+import { PerformanceModule } from '../modules/performance-engine/performance.module';
 
 import { ExpiryCronService }        from './expiry-cron.service';
 import { SupportSlaCronService }    from './support-sla.cron.service';
@@ -57,6 +58,9 @@ import { DeliveryGroupModule }      from '../modules/delivery-group/delivery-gro
 
     /* DeliveryGroupModule pour le cron d'expiration 72h */
     DeliveryGroupModule,
+
+    /* PlatformSettingsCacheService pour SupportSlaCronService (SLA + email support dynamiques) */
+    PerformanceModule,
   ],
   providers: [
     ExpiryCronService,           /* Cron d'expiration codes + réactivation comptes */

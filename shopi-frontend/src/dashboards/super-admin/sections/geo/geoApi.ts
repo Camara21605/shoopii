@@ -6,7 +6,7 @@
  * ================================================================ */
 
 import { apiFetch } from '@/shared/services/apiFetch';
-import type { GeoItem, ZoneLivraison, AllGeoData } from './geo.types';
+import type { GeoItem, ZoneLivraison, AllGeoData, GeoLevel, GeoAuditEntry, ImportResult } from './geo.types';
 
 const BASE = '/geo';
 
@@ -42,9 +42,23 @@ function makeLevelApi(segment: string) {
   };
 }
 
+/* ── Journal d'audit ── */
+export interface GeoAuditListParams {
+  action?: string;
+  niveau?: string;
+  search?: string;
+}
+
 export const geoApi = {
   /** Charge les 6 niveaux en une requête — pour les sélecteurs en cascade */
   all: () => apiFetch<GeoAllResponse>(`${BASE}/all`),
+
+  /** Journal d'audit — GET /geo/audit */
+  audit: (p?: GeoAuditListParams) => apiFetch<GeoAuditEntry[]>(`${BASE}/audit`, { params: qp(p as GeoListParams) }),
+
+  /** Import massif — POST /geo/import/:niveau */
+  importRows: (niveau: GeoLevel, rows: Record<string, unknown>[]) =>
+    apiFetch<ImportResult>(`${BASE}/import/${niveau}`, { method: 'POST', body: { rows } }),
 
   pays:        makeLevelApi('pays'),
   regions:     makeLevelApi('regions'),

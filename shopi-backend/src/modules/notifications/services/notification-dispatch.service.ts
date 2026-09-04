@@ -38,6 +38,15 @@ import {
 } from '../interfaces/channel-strategy.interface';
 import type { IDeliveryResult } from '../interfaces/notification.interfaces';
 import { NotificationPreferenceService } from './notification-preference.service';
+import { PlatformSettingsCacheService } from '../../performance-engine/services/platform-settings-cache.service';
+import type { PlatformSettings } from '../../../database/entities/platform-settings.entity';
+
+/** Association canal → colonne PlatformSettings correspondante (IN_APP n'a pas de kill-switch global). */
+const CHANNEL_SETTING_KEY: Partial<Record<NotificationChannel, keyof PlatformSettings>> = {
+  [NotificationChannel.EMAIL]: 'emailNotifEnabled',
+  [NotificationChannel.PUSH]:  'pushNotifEnabled',
+  [NotificationChannel.SMS]:   'smsNotifEnabled',
+};
 
 /** Délai de backoff par numéro de tentative */
 const RETRY_DELAYS_MS = [5 * 60_000, 15 * 60_000, 30 * 60_000]; // 5min, 15min, 30min
@@ -61,6 +70,16 @@ export class NotificationDispatchService {
     private readonly logRepo: Repository<NotificationDeliveryLog>,
 
     private readonly prefService: NotificationPreferenceService,
+
+    /* BUG CORRIGÉ — PlatformSettings.emailNotifEnabled/pushNotifEnabled/
+     * smsNotifEnabled (Paramètres Plateforme > Notifications) se
+     * sauvegardaient en base sans jamais être lus : chaque strategy.canSend()
+     * ne vérifie QUE les préférences individuelles du destinataire, jamais
+     * cet interrupteur global. Un super-admin désactivant "Email" pour toute
+     * la plateforme n'avait donc aucun effet réel. Vérifié ici, au point de
+     * passage unique de tous les canaux externes, plutôt que dans chaque
+     * strategy — évite de dupliquer la lecture cache dans 3 fichiers. */
+    private readonly settingsCache: PlatformSettingsCacheService,
   ) {}
 
   // ─────────────────────────────────────────────────────────
@@ -107,6 +126,25 @@ export class NotificationDispatchService {
     }
   }
 
+  /**
+   * Interrupteur global plateforme pour un canal externe (EMAIL/PUSH/SMS).
+   * IN_APP n'a pas d'entrée dans CHANNEL_SETTING_KEY → toujours autorisé
+   * (c'est la cloche interne, jamais désactivable globalement).
+   * Fail-open si le cache est indisponible : une panne Redis/DB ne doit
+   * jamais silencieusement couper toutes les notifications de la plateforme.
+   */
+  private async isChannelEnabledPlatformWide(channel: NotificationChannel): Promise<boolean> {
+    const settingKey = CHANNEL_SETTING_KEY[channel];
+    if (!settingKey) return true;
+    try {
+      const settings = await this.settingsCache.getSettings();
+      return settings[settingKey] as unknown as boolean;
+    } catch (err) {
+      this.logger.warn(`Lecture PlatformSettings échouée pour le canal ${channel}, autorisé par défaut : ${(err as Error).message}`);
+      return true;
+    }
+  }
+
   // ─────────────────────────────────────────────────────────
   // DISPATCH PAR CANAL
   // ─────────────────────────────────────────────────────────
@@ -123,6 +161,17 @@ export class NotificationDispatchService {
     const strategy = this.strategies.find(s => s.channel === channel);
     if (!strategy) {
       this.logger.warn(`Aucune strategy pour le canal ${channel}`);
+      return;
+    }
+
+    // Interrupteur global plateforme (kill-switch super-admin) — avant toute
+    // vérification de préférence individuelle.
+    if (!(await this.isChannelEnabledPlatformWide(channel))) {
+      await this.createLog(notif.id, channel, {
+        channel,
+        success: false,
+        errorCode: 'CHANNEL_DISABLED_PLATFORM_WIDE',
+      }, DeliveryLogStatus.SKIPPED);
       return;
     }
 

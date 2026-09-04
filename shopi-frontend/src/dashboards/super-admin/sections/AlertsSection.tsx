@@ -19,7 +19,12 @@ export default function AlertsSection({ store, toast, isActive }: Props) {
   const criticals  = alerts.filter(a => a.type === 'critical' && !a.resolved).length;
   const warnings   = alerts.filter(a => a.type === 'warning'  && !a.resolved).length;
   const infos      = alerts.filter(a => a.type === 'info'     && !a.resolved).length;
-  const resolved7d = alerts.filter(a => a.resolved).length;
+  /* BUG CORRIGÉ — comptait TOUS les signalements résolus, quelle que soit
+   * leur ancienneté, malgré le libellé "Derniers 7 jours". */
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+  const resolved7d = alerts.filter(a =>
+    a.resolved && a.resolvedAt && (Date.now() - new Date(a.resolvedAt).getTime()) <= SEVEN_DAYS_MS,
+  ).length;
   const pending    = alerts.filter(a => !a.resolved).length;
 
   const TYPE_COLOR: Record<string, string> = {

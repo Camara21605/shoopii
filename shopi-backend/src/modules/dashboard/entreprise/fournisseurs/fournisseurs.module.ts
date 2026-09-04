@@ -14,6 +14,9 @@ import { ProductWholesaleTier } from 'src/database/entities/entreprise.table/pro
 import { FournisseursController } from './fournisseurs.controller';
 import { FournisseursService }    from './fournisseurs.service';
 import { AuthModule } from '../../../auth/auth.module';
+/* Fournit TeamPermissionGuard — vérifie les permissions "Fournisseurs"
+ * d'un collaborateur (voir FournisseursController @RequiresTeamPermission). */
+import { CompanyTeamModule } from 'src/modules/company-team/company-team.module';
 
 @Module({
   imports: [
@@ -25,6 +28,7 @@ import { AuthModule } from '../../../auth/auth.module';
       ProductWholesaleTier,
     ]),
     AuthModule,
+    CompanyTeamModule,
   ],
   controllers: [FournisseursController],
   providers:   [FournisseursService],

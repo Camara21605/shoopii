@@ -39,7 +39,8 @@ import { ProductStory } from '../database/entities/entreprise.table/product-stor
 import { StoryView }    from '../database/entities/entreprise.table/story-view.entity';
 import { StoryLike }    from '../database/entities/entreprise.table/story-like.entity';
 import { CompanySupplierLink } from '../database/entities/entreprise.table/company-supplier-link.entity';
-import { ProductLike } from '../database/entities/entreprise.table/product-like.entity';  
+import { ProductLike } from '../database/entities/entreprise.table/product-like.entity';
+import { WishlistItem } from '../database/entities/entreprise.table/wishlist-item.entity';
 import { PromotionProduct } from '../database/entities/entreprise.table/promotion-product.entity'; // ✅ AJOUTÉ : manquait l'import de PromotionProduct
 import { TrendingProduct }     from '../database/entities/entreprise.table/trending-product.entity';
 import { ProductCooccurrence } from '../database/entities/entreprise.table/product-cooccurrence.entity';
@@ -95,6 +96,7 @@ import { GeoPrefecture } from '../database/entities/geo/geo-prefecture.entity';
 import { GeoCommune }    from '../database/entities/geo/geo-commune.entity';
 import { GeoQuartier }   from '../database/entities/geo/geo-quartier.entity';
 import { GeoZone }       from '../database/entities/geo/geo-zone.entity';
+import { GeoAuditLog }   from '../database/entities/geo/geo-audit-log.entity';
 // ── Préférences d'apparence ────────────────────────────────────
 import { AppearancePreference } from '../database/entities/appearance-preference.entity';
 // ── Moteur de validation ───────────────────────────────────────
@@ -291,6 +293,7 @@ export const databaseConfigFactory = {
       StoryLike,
       CompanySupplierLink,
       ProductLike,
+      WishlistItem,
       TrendingProduct,
       ProductCooccurrence,
       CreationCode,
@@ -348,6 +351,7 @@ export const databaseConfigFactory = {
       GeoCommune,
       GeoQuartier,
       GeoZone,
+      GeoAuditLog,
       // ── Préférences d'apparence ───────────────────────────────
       AppearancePreference,
       // ── Moteur de validation ──────────────────────────────────

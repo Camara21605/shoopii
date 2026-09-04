@@ -20,8 +20,22 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { PaiementSession }     from '../../../database/entities/paiement/paiement-session.entity';
-import { PaiementDistribution } from '../../../database/entities/paiement/paiement-distribution.entity';
+import { PaiementDistribution, DistributionActeurType } from '../../../database/entities/paiement/paiement-distribution.entity';
 import { Retrait }             from '../../../database/entities/paiement/retrait.entity';
+
+/** Types d'acteur qui PRÉLÈVENT une commission (par opposition à
+ * ENTREPRISE/LIVREUR/CORRESPONDANT, qui reçoivent leur revenu produit/
+ * livraison — même distinction que dans WalletService.getSummary()). */
+const COMMISSION_ACTEUR_TYPES: string[] = [
+  DistributionActeurType.PLATEFORME_PRODUIT,
+  DistributionActeurType.PLATEFORME_LIVRAISON,
+  DistributionActeurType.PARTENAIRE_PRODUIT,
+  DistributionActeurType.PARTENAIRE_LIVRAISON,
+  DistributionActeurType.ADMIN_PRODUIT,
+  DistributionActeurType.ADMIN_LIVRAISON,
+  DistributionActeurType.PLATEFORME,
+  DistributionActeurType.PARTENAIRE,
+];
 
 import { KpiEngineService }   from './kpi-engine.service';
 import { ReportingCacheService } from './reporting-cache.service';
@@ -403,16 +417,22 @@ export class AnalyticsService {
       .limit(limit)
       .getRawMany();
 
-    return rows.map(r => ({
-      userId:          r.userId,
-      nom:             r.nom       ?? '',
-      role:            r.role,
-      nbCommandes:     +r.nbCommandes || 0,
-      montantTotal:    +r.montantTotal || 0,
-      commissions:     0, // non calculé ici — utiliser KpiEngine pour le détail
-      nbRetraits:      0,
-      balanceActuelle: 0,
-    }));
+    return rows.map(r => {
+      const montantTotal = +r.montantTotal || 0;
+      return {
+        userId:          r.userId,
+        nom:             r.nom       ?? '',
+        role:            r.role,
+        nbCommandes:     +r.nbCommandes || 0,
+        montantTotal,
+        /* montantTotal est déjà, pour un acteurType "préleveur de
+         * commission" (plateforme/partenaire/admin), le montant de
+         * commission perçu — pas une valeur distincte à recalculer. */
+        commissions:     COMMISSION_ACTEUR_TYPES.includes(r.role) ? montantTotal : 0,
+        nbRetraits:      0,
+        balanceActuelle: 0,
+      };
+    });
   }
 
   /**

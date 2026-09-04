@@ -163,6 +163,23 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     notificationService.markAllAsRead().catch(() => {});
   }, [socketMarkAllRead]);
 
+  /* Marquer tout comme lu à l'ouverture — une seule fois par "session"
+   * d'ouverture du panneau. Centralisé ici (le Provider n'est monté qu'une
+   * fois) plutôt que dans NotificationCenter (monté deux fois par
+   * Header.tsx — barre desktop + mobile — ce qui déclenchait l'appel
+   * PATCH /notifications/read-all en double à chaque ouverture). */
+  const markedThisSessionRef = useRef(false);
+  useEffect(() => {
+    if (!isOpen) {
+      markedThisSessionRef.current = false;
+      return;
+    }
+    if (!isLoading && !markedThisSessionRef.current) {
+      markedThisSessionRef.current = true;
+      markAllAsRead();
+    }
+  }, [isOpen, isLoading, markAllAsRead]);
+
   const deleteOne = useCallback((id: string) => {
     setNotifications(prev => {
       const target = prev.find(n => n.id === id);

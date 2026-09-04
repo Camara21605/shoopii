@@ -125,10 +125,21 @@ export class DangerParametresService {
     }
   }
 
-  /* FIX m4 — Lookup strict par userId uniquement; le fallback par companyId
-   * permettait l'accès cross-tenant si un UUID de boutique était connu. */
+  /* FIX m4 (historique, param client) — sans rapport ici : `userId` est en
+   * réalité req.user.actorId, signé serveur (voir boutique-parametres.
+   * service.ts pour le détail du bug que ce `[{id},{userId}]` corrige). */
+  /* BUG CORRIGÉ (suite) — le commentaire précédent affirmait qu'un OR
+   * `where:[{id},{userId}]` ne pouvait "que" bloquer en 404, jamais
+   * supprimer la mauvaise fiche. C'est faux dès qu'un profil fantôme
+   * existe (userId d'une fiche == id d'une autre, cf. le bug de création
+   * dans getParametres) : les DEUX fiches matchent alors l'OR, et l'ordre
+   * de retour SQL sans ORDER BY n'est pas garanti — supprimerBoutique()
+   * aurait pu supprimer la fiche fantôme OU la vraie selon le plan de
+   * requête. `id` (cas normal, actorId) est désormais toujours tenté en
+   * priorité ; `userId` n'est qu'un repli déterministe. */
   private async findCompanyOrFail(userId: string): Promise<Company> {
-    const company = await this.companyRepo.findOne({ where: { userId } });
+    let company = await this.companyRepo.findOne({ where: { id: userId } });
+    if (!company) company = await this.companyRepo.findOne({ where: { userId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }

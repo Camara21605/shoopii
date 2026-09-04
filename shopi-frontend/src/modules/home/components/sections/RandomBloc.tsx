@@ -6,9 +6,10 @@
  *   - onFollow centralisé (un seul POST) pour livreurs et correspondants
  *   - Plus aucun placeholder /* … 
  */
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { io } from 'socket.io-client';
 
 import type { BoutiqueCardData } from '../../data/types';
 import { getRoleFromToken } from '../../../../shared/services/authUtils';
@@ -26,6 +27,12 @@ import CardLivreur       from '../../cards/CardLivreur';
 import HScrollSection    from '../ui/HScrollSection';
 import SectionHeader     from '../ui/SectionHeader';
 import styles from './RandomBloc.module.css';
+
+/* Même origine que BoutiquePage.tsx (VITE_API_URL sans le suffixe /api).
+ * Namespace /public : aucune authentification requise. */
+const SOCKET_URL =
+  ((import.meta as any).env?.VITE_API_URL as string | undefined)?.replace('/api', '') ??
+  'http://localhost:3001';
 
 export type BlocKind = 'produits' | 'produits-gros' | 'entreprises' | 'correspondants' | 'livreurs';
 
@@ -134,12 +141,26 @@ function ProduitsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>voi
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState(false);
 
-  useEffect(() => {
+  const load = useCallback((silent = false) => {
+    if (!silent) setLoading(true);
     apiFetch<{ data: ProductApi[] }>('/public/produits', { public:true, params:{ limit:12, type:'detail' } })
       .then(res => setProduits(Array.isArray(res?.data) ? res.data : []))
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+      .catch(() => { if (!silent) setError(true); })
+      .finally(() => { if (!silent) setLoading(false); });
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  /* Écoute catalogue:changed (Paramètres > Catalogue de n'importe quelle
+   * entreprise) — diffusion globale, pas de room : Home mélange les
+   * produits de plusieurs entreprises, impossible de savoir à l'avance
+   * lesquelles concernent ce bloc. Rechargement silencieux, voir
+   * PublicBroadcastService.emitGlobal() côté backend. */
+  useEffect(() => {
+    const socket = io(`${SOCKET_URL}/public`, { transports: ['websocket', 'polling'] });
+    socket.on('catalogue:changed', () => load(true));
+    return () => { socket.disconnect(); };
+  }, [load]);
 
   if (loading) return (
     <div className={styles.pgrid}>
@@ -173,12 +194,22 @@ function ProduitsGrosBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState(false);
 
-  useEffect(() => {
+  const load = useCallback((silent = false) => {
+    if (!silent) setLoading(true);
     apiFetch<{ data: ProductApi[] }>('/public/produits', { public:true, params:{ limit:12, type:'gros' } })
       .then(res => setProduits(Array.isArray(res?.data) ? res.data : []))
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+      .catch(() => { if (!silent) setError(true); })
+      .finally(() => { if (!silent) setLoading(false); });
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  /* Voir ProduitsBloc ci-dessus pour le détail — même diffusion globale. */
+  useEffect(() => {
+    const socket = io(`${SOCKET_URL}/public`, { transports: ['websocket', 'polling'] });
+    socket.on('catalogue:changed', () => load(true));
+    return () => { socket.disconnect(); };
+  }, [load]);
 
   if (loading) return (
     <div className={styles.pgrid}>

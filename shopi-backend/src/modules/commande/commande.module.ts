@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationsModule }  from '../notifications/notifications.module';
 import { DeliveryGroupModule }  from '../delivery-group/delivery-group.module';
 import { PaiementModule }       from '../paiement/paiement.module';
+import { CompanyTeamModule }    from '../company-team/company-team.module';
 
 import { Commande } from '../../database/entities/commande/commande.entity';
 import { CommandeItem } from '../../database/entities/commande/commande-item.entity';
@@ -39,6 +40,10 @@ import { CommandeScheduler } from './commande.scheduler';
     NotificationsModule,
     DeliveryGroupModule,
     forwardRef(() => PaiementModule),
+    /* Fournit TeamPermissionGuard — vérifie réellement les permissions
+     * "Commandes" d'un collaborateur sur EntrepriseCommandeController
+     * (voir @RequiresTeamPermission('orders', …)). */
+    CompanyTeamModule,
     TypeOrmModule.forFeature([
       Commande,
       CommandeItem,

@@ -12,8 +12,15 @@
  * ================================================================ */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { io } from 'socket.io-client';
 import { apiFetch } from '../../../../../shared/services/apiFetch';
 import type { ProductApi } from '../../../cards/CardProduit';
+
+/* Même origine que BoutiquePage.tsx/RandomBloc.tsx — namespace /public,
+ * sans authentification. */
+const SOCKET_URL =
+  ((import.meta as any).env?.VITE_API_URL as string | undefined)?.replace('/api', '') ??
+  'http://localhost:3001';
 
 export interface ExploreFilters {
   search?:   string;
@@ -125,6 +132,17 @@ export function useExploreGrid(filters: ExploreFilters) {
   }, [fetchPage, loading, page]);
 
   const reload = useCallback(() => fetchPage(1, true), [fetchPage]);
+
+  /* Écoute catalogue:changed (Paramètres > Catalogue de n'importe quelle
+   * entreprise) — même diffusion globale que RandomBloc.tsx/ProduitPage.tsx.
+   * Le cache mémoire ci-dessus (persistant tant que l'onglet reste ouvert)
+   * doit être vidé, sinon reload() re-servirait les données périmées
+   * qu'il vient de mettre en cache. */
+  useEffect(() => {
+    const socket = io(`${SOCKET_URL}/public`, { transports: ['websocket', 'polling'] });
+    socket.on('catalogue:changed', () => { cache.clear(); fetchPage(1, true); });
+    return () => { socket.disconnect(); };
+  }, [fetchPage]);
 
   return {
     items, loading, error, total,

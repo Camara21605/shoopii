@@ -21,6 +21,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MailModule } from '../email/email.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 /* ── Entités Phase 1 ── */
 import { CompanyTeamMember }      from '../../database/entities/company-team/company-team-member.entity';
@@ -85,6 +86,9 @@ const teamTypeOrmModule = TypeOrmModule.forFeature([
 @Module({
   imports: [
     MailModule,
+    /* Fournit NotificationEventService — voir
+     * CompanyTeamPermissionService.notifyPermissionChange(). */
+    NotificationsModule,
     teamTypeOrmModule,
   ],
   controllers: [CompanyTeamController],

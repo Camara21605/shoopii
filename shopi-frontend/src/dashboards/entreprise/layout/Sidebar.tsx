@@ -60,7 +60,7 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
       { id: 'produits',   icon: 'fa-tag',         label: 'sidebar.items.produits',   badge: '124',              perm: ['products',   'view']   },
       { id: 'ajouter',    icon: 'fa-plus-circle', label: 'sidebar.items.ajouter',                               perm: ['products',   'create'] },
       { id: 'inventaire',   icon: 'fa-warehouse', label: 'sidebar.items.inventaire',   badge: '6', badgeClass: 'a', perm: ['products', 'view']   },
-      { id: 'fournisseurs', icon: 'fa-industry',  label: 'sidebar.items.fournisseurs',                              perm: ['products', 'view']   },
+      { id: 'fournisseurs', icon: 'fa-industry',  label: 'sidebar.items.fournisseurs',                              perm: ['fournisseurs', 'view']   },
       { id: 'promotions',   icon: 'fa-percent',   label: 'sidebar.items.promotions',   badge: '4', badgeClass: 'p', perm: ['promotions','view']  },
     ],
   },
@@ -82,7 +82,7 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
     title: 'sidebar.sections.financesClients',
     items: [
       { id: 'finances',     icon: 'fa-coins',  label: 'sidebar.items.finances',     perm: ['payments', 'view']             },
-      { id: 'portefeuille', icon: 'fa-wallet', label: 'sidebar.items.portefeuille', perm: ['payments', 'viewTransactions'] },
+      { id: 'portefeuille', icon: 'fa-wallet', label: 'sidebar.items.portefeuille', perm: ['wallet', 'view'] },
       { id: 'clients',  icon: 'fa-users', label: 'sidebar.items.clients', perm: ['orders', 'view'] },
       { id: 'avis',     icon: 'fa-star',  label: 'sidebar.items.avis',    badge: '8', badgeClass: 'a', perm: ['orders', 'view'] },
     ],
@@ -199,10 +199,12 @@ export default function Sidebar({
             </div>
           </>
         )}
-        <div className="nb" onClick={() => pop('👁️ Voir votre boutique publique', 'i')}>
-          <i className="fas fa-arrow-up-right-from-square"></i>
-          <span>{t('sidebar.items.voirBoutique')}</span>
-        </div>
+        {(isOwner || (can && can('boutique', 'view'))) && (
+          <div className="nb" onClick={() => onNavigate('boutique-preview')}>
+            <i className="fas fa-arrow-up-right-from-square"></i>
+            <span>{t('sidebar.items.voirBoutique')}</span>
+          </div>
+        )}
       </div>
 
       {/* ── Boutons bas ── */}

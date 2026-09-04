@@ -23,6 +23,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
+import { useTeamPermissions } from '../hooks/useTeamPermissions';
 import type { NavigateFn } from '../EntrepriseApp';
 import styles from './InventairePage.module.css';
 
@@ -617,6 +618,11 @@ function ModalSeuils({ produits, onClose, onSaved }: {
 export default function InventairePage({ onNavigate }: { onNavigate?: NavigateFn }) {
   const { pop } = useToast();
   const { t } = useTranslation();
+  /* Masque les actions de modification (stock, seuils, réapprovisionnement)
+   * pour un collaborateur sans la permission products.edit — le backend
+   * les bloque déjà (403), mais laisser le bouton visible pour le refuser
+   * ensuite au clic est une mauvaise expérience. */
+  const { can } = useTeamPermissions();
 
   // ── États principaux ─────────────────────────────────────────
   const [produits,  setProduits]  = useState<Produit[]>([]);
@@ -646,7 +652,19 @@ export default function InventairePage({ onNavigate }: { onNavigate?: NavigateFn
       const res = await fetch(`${API}/produits?limit=100`, {
         headers: { Authorization: `Bearer ${token()}` },
       });
-      if (!res.ok) throw new Error(`Erreur ${res.status}`);
+      if (!res.ok) {
+        /* Lit le vrai message backend (ex: 403 "Votre accès ne couvre pas
+         * cette action" pour un collaborateur sans la permission
+         * products.view) plutôt qu'un générique "Erreur 403" qui ne dit
+         * pas à l'utilisateur ce qui bloque ni quoi faire. */
+        let msg = `Erreur ${res.status}`;
+        try {
+          const body = await res.json();
+          if (typeof body?.message === 'string') msg = body.message;
+          else if (Array.isArray(body?.message) && body.message.length) msg = body.message[0];
+        } catch { /* réponse non-JSON — on garde le message générique */ }
+        throw new Error(msg);
+      }
       const data = await res.json();
       // L'API retourne { data: Produit[], total, page, pages }
       setProduits(data.data ?? []);
@@ -738,14 +756,18 @@ export default function InventairePage({ onNavigate }: { onNavigate?: NavigateFn
   const sansSeuil = produits.filter(p => p.seuil === null);
 
   // ── Actions rapides du panneau latéral ────────────────────────
+  // reapproAll et configAlertes modifient stock/seuils (products.edit) —
+  // retirées du tableau (pas juste désactivées) pour un collaborateur sans
+  // cette permission, cohérent avec les boutons Modifier de la liste/grille
+  // ci-dessous.
   const quickActions = [
-    {
+    ...(can('products', 'edit') ? [{
       ico:      '📦',
       label:    t('inventaire.quickActions.reapproAll'),
       sub:      t('inventaire.quickActions.reapproAllSub', { count: critiques.length }),
       onClick:  () => setModalReappro(critiques),
       disabled: critiques.length === 0,
-    },
+    }] : []),
     {
       ico:      '📊',
       label:    t('inventaire.quickActions.exportInventaire'),
@@ -753,7 +775,7 @@ export default function InventairePage({ onNavigate }: { onNavigate?: NavigateFn
       onClick:  handleExportCsv,
       disabled: stats.total === 0,
     },
-    {
+    ...(can('products', 'edit') ? [{
       ico:      '🔔',
       label:    t('inventaire.quickActions.configAlertes'),
       sub:      sansSeuil.length > 0
@@ -761,7 +783,7 @@ export default function InventairePage({ onNavigate }: { onNavigate?: NavigateFn
         : t('inventaire.quickActions.configAlertesSubDone'),
       onClick:  () => setModalSeuils(true),
       disabled: sansSeuil.length === 0,
-    },
+    }] : []),
     {
       ico:      '🔄',
       label:    t('inventaire.quickActions.syncStock'),
@@ -1090,22 +1112,26 @@ export default function InventairePage({ onNavigate }: { onNavigate?: NavigateFn
                         {/* ── Colonne : Boutons d'action ── */}
                         <td className={styles.td}>
                           <div className={styles.actions}>
-                            {/* Bouton principal : modifier le stock */}
-                            <button
-                              className={styles.btnModif}
-                              onClick={() => setModalProd(p)}
-                              title={t('inventaire.table.modifierTitle')}
-                            >
-                              <i className="fas fa-pen" /> {t('inventaire.table.modifier')}
-                            </button>
-                            {/* Bouton réappro rapide — ouvre la modale pour ce produit */}
-                            <button
-                              className={styles.btnReappro}
-                              onClick={() => setModalReappro([p])}
-                              title={t('inventaire.table.reapproTitle')}
-                            >
-                              <i className="fas fa-truck" />
-                            </button>
+                            {can('products', 'edit') && (
+                              <>
+                                {/* Bouton principal : modifier le stock */}
+                                <button
+                                  className={styles.btnModif}
+                                  onClick={() => setModalProd(p)}
+                                  title={t('inventaire.table.modifierTitle')}
+                                >
+                                  <i className="fas fa-pen" /> {t('inventaire.table.modifier')}
+                                </button>
+                                {/* Bouton réappro rapide — ouvre la modale pour ce produit */}
+                                <button
+                                  className={styles.btnReappro}
+                                  onClick={() => setModalReappro([p])}
+                                  title={t('inventaire.table.reapproTitle')}
+                                >
+                                  <i className="fas fa-truck" />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -1173,13 +1199,15 @@ export default function InventairePage({ onNavigate }: { onNavigate?: NavigateFn
                           </div>
                         </div>
                         {/* Bouton action rapide */}
-                        <button
-                          className={styles.alerteAction}
-                          onClick={() => setModalProd(p)}
-                          title={t('inventaire.table.modifierTitle')}
-                        >
-                          <i className="fas fa-pen" />
-                        </button>
+                        {can('products', 'edit') && (
+                          <button
+                            className={styles.alerteAction}
+                            onClick={() => setModalProd(p)}
+                            title={t('inventaire.table.modifierTitle')}
+                          >
+                            <i className="fas fa-pen" />
+                          </button>
+                        )}
                       </div>
                     );
                   })}

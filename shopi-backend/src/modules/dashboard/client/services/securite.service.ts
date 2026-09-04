@@ -7,6 +7,7 @@ import {
   BadRequestException, Injectable, Logger, NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository }        from '@nestjs/typeorm';
+import { ConfigService }           from '@nestjs/config';
 import { DeepPartial, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
@@ -16,7 +17,10 @@ import { Client }       from '../../../../database/entities/profiles/client-prof
 import { RefreshToken } from '../../../../database/entities/refresh-token.entity';
 import {
   ChangePasswordDto, UpdateSecuriteDto, UpdateQuestionsDto,
+  UpdateAlertSettingDto,
 } from '../dto/client-parametres.dto';
+import { MailService } from '../../../email/email.service';
+import { SecurityAlertsService, AlertSettings } from '../../../security-alerts/security-alerts.service';
 
 const CODE_SECOURS_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans 0/O/1/I ambigus
 
@@ -33,6 +37,10 @@ export class SecuriteService {
 
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepo: Repository<RefreshToken>,
+
+    private readonly mailService:          MailService,
+    private readonly securityAlertsService: SecurityAlertsService,
+    private readonly config:                ConfigService,
   ) {}
 
   /* ✅ FIX — early return, jamais null */
@@ -91,6 +99,23 @@ export class SecuriteService {
       { revoked: true },
     );
 
+    /* Alerte "changement de mot de passe" — respecte le réglage de
+     * l'utilisateur (section Alertes de sécurité), contrairement au
+     * même email envoyé par auth.service.ts::resetPassword() (flux
+     * "mot de passe oublié", toujours envoyé sans condition — trop
+     * critique pour une prise de contrôle de compte pour être
+     * désactivable). Fire-and-forget : un échec SMTP ne doit jamais
+     * faire échouer le changement de mot de passe lui-même. */
+    this.securityAlertsService.isEnabled(user.id, 'mdp').then(enabled => {
+      if (!enabled) return;
+      this.mailService.sendPasswordChangedEmail({
+        toEmail:   dbUser.email,
+        firstName: dbUser.firstName,
+        changedAt: dbUser.lastPasswordChangedAt!,
+        loginUrl:  `${this.config.get('FRONTEND_URL')}/login`,
+      }).catch(err => this.logger.error(`[PWD CHANGED EMAIL ❌] ${dbUser.email} | ${(err as Error).message}`));
+    }).catch(() => {});
+
     this.logger.log(`[PASSWORD CHANGE] userId=${user.id}`);
     return { message: 'Mot de passe modifié avec succès.' };
   }
@@ -113,10 +138,21 @@ export class SecuriteService {
     return { twoFaEnabled: false };
   }
 
-  /* ── PATCH — questions de sécurité ── */
+  /* ── PATCH — questions de sécurité ──
+   * FIX : les réponses servent de mot de passe secondaire (recherche
+   * d'un flux de récupération de compte) — elles doivent donc être
+   * hachées comme un mot de passe, jamais stockées en clair, conformément
+   * au commentaire de format sur Client.questionsSecurite. Normalisées
+   * (espaces + casse) avant hachage pour qu'une future vérification
+   * n'échoue pas sur "Paris" vs " paris " par exemple — toute future
+   * comparaison devra appliquer la même normalisation avant bcrypt.compare. */
   async updateQuestions(user: User, dto: UpdateQuestionsDto): Promise<{ message: string }> {
     const profile = await this.getOrCreate(user.id);                     // ✅ jamais null
-    (profile as any).questionsSecurite = JSON.stringify(dto.questions);
+    const hashed = await Promise.all(dto.questions.map(async q => ({
+      question: q.question,
+      reponse:  await bcrypt.hash(q.reponse.trim().toLowerCase(), 12),
+    })));
+    (profile as any).questionsSecurite = JSON.stringify(hashed);
     await this.clientRepo.save(profile);
     return { message: 'Questions de sécurité enregistrées.' };
   }
@@ -135,5 +171,16 @@ export class SecuriteService {
     await this.clientRepo.save(profile);
     this.logger.log(`[CODES SECOURS] userId=${user.id}`);
     return { codes };
+  }
+
+  /* ── GET — préférences d'alertes de sécurité ── */
+  async getAlertSettings(user: User): Promise<AlertSettings> {
+    return this.securityAlertsService.getSettings(user.id);
+  }
+
+  /* ── PATCH — une préférence d'alerte de sécurité (sauvegarde immédiate,
+   * une case à la fois — même pattern que le reste de l'app) ── */
+  async updateAlertSetting(user: User, dto: UpdateAlertSettingDto): Promise<AlertSettings> {
+    return this.securityAlertsService.updateSetting(user.id, dto.type, dto.email);
   }
 }

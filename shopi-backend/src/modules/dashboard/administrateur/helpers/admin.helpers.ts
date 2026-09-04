@@ -91,6 +91,28 @@ export function userName(u: User): string {
   return `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || u.email;
 }
 
+/**
+ * Échappe les caractères HTML spéciaux d'une chaîne.
+ *
+ * SÉCURITÉ — AuditLog.action est de l'HTML brut (balises <b> pour la mise
+ * en forme), rendu tel quel côté frontend via dangerouslySetInnerHTML
+ * (AuditPage.tsx). Toute valeur qui y est interpolée et qui n'est pas
+ * garantie 100% générée par le système (nom d'utilisateur choisi à
+ * l'inscription, titre de signalement saisi librement, etc.) DOIT passer
+ * par cette fonction avant interpolation — sinon un attaquant peut y glisser
+ * du HTML/JS qui s'exécutera dans la session de l'admin consultant le
+ * journal (XSS stockée constatée et corrigée dans admin-acteurs.service.ts
+ * et admin-signalements.service.ts).
+ */
+export function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── Statuts ──────────────────────────────────────────────────
 
 /**

@@ -35,6 +35,18 @@ const DOC_FIELD: Record<DocumentType, keyof Correspondent> = {
   registre:  'documentRegistre',
 };
 
+/* SÉCURITÉ — les 5 documents ici (dont un extrait de casier judiciaire,
+ * particulièrement sensible) partaient sur Cloudinary en type:'upload'
+ * public par défaut : leur URL était fetchable par quiconque la
+ * connaît/devine, sans aucune vérification Cloudinary, et repartait telle
+ * quelle dans les réponses API alors que le frontend n'utilise que le
+ * booléen présent/absent. Même correctif que le module Entreprise
+ * (documents-parametres.service.ts) : upload en type:'authenticated'
+ * (voir UploadService.uploadDocument), stockage d'un public_id plutôt
+ * qu'une URL, jamais renvoyé au client. `documentPhotos` (photos du
+ * point de dépôt, uploadées via uploadImage/type:'upload') reste public
+ * — ce sont des photos de vitrine, pas des pièces justificatives. */
+
 @Injectable()
 export class DocumentsService extends CorrespondantBaseService {
 
@@ -49,6 +61,24 @@ export class DocumentsService extends CorrespondantBaseService {
   }
 
   /**
+   * Génère une URL signée à la demande pour que le correspondant
+   * consulte SON PROPRE document ("Voir le document" dans SecDocuments.tsx)
+   * — jamais stockée, jamais renvoyée par getDocuments(). L'appartenance
+   * est vérifiée via findCorOrFail(userId) : impossible de consulter le
+   * document d'un autre correspondant en changeant juste le :type dans
+   * l'URL, puisque le public_id vient toujours du PROFIL de l'appelant.
+   */
+  async getDocumentUrl(userId: string, type: DocumentType): Promise<{ url: string }> {
+    if (!DOC_FIELD[type]) {
+      throw new BadRequestException(`Type invalide : "${type}".`);
+    }
+    const cor = await this.findCorOrFail(userId);
+    const publicId = cor[DOC_FIELD[type]] as string | null;
+    if (!publicId) throw new BadRequestException(`Document "${type}" non uploadé.`);
+    return { url: this.uploadService.getSignedUrl(publicId, 'raw') };
+  }
+
+  /**
    * Retourne le statut complet de chaque document.
    * Utilisé par SecDocuments au chargement de la section.
    */
@@ -57,11 +87,11 @@ export class DocumentsService extends CorrespondantBaseService {
     return {
       verificationStatus: cor.verificationStatus,
       documents: {
-        cni:       { url: cor.documentCni,       present: !!cor.documentCni       },
-        bail:      { url: cor.documentBail,      present: !!cor.documentBail      },
-        assurance: { url: cor.documentAssurance, present: !!cor.documentAssurance },
-        casier:    { url: cor.documentCasier,    present: !!cor.documentCasier    },
-        registre:  { url: cor.documentRegistre,  present: !!cor.documentRegistre  },
+        cni:       { present: !!cor.documentCni       },
+        bail:      { present: !!cor.documentBail      },
+        assurance: { present: !!cor.documentAssurance },
+        casier:    { present: !!cor.documentCasier    },
+        registre:  { present: !!cor.documentRegistre  },
         photos:    {
           urls:  cor.documentPhotos,
           count: cor.documentPhotos?.length ?? 0,
@@ -83,7 +113,7 @@ export class DocumentsService extends CorrespondantBaseService {
     userId: string,
     type: DocumentType,
     file: Express.Multer.File,
-  ): Promise<{ url: string; type: DocumentType; verificationStatus: VerificationStatus }> {
+  ): Promise<{ present: true; type: DocumentType; verificationStatus: VerificationStatus }> {
     if (!DOC_FIELD[type]) {
       throw new BadRequestException(
         `Type invalide : "${type}". Valeurs acceptées : ${Object.keys(DOC_FIELD).join(', ')}`,
@@ -93,12 +123,14 @@ export class DocumentsService extends CorrespondantBaseService {
     const cor = await this.findCorOrFail(userId);
 
     /* Supprimer l'ancienne version */
-    const ancienUrl = cor[DOC_FIELD[type]] as string | null;
-    if (ancienUrl) await this.deleteCloudinaryFile(ancienUrl);
+    const ancienneValeur = cor[DOC_FIELD[type]] as string | null;
+    if (ancienneValeur) await this.deleteStoredDocument(ancienneValeur);
 
-    /* Upload le nouveau */
+    /* Upload le nouveau — type:'authenticated' côté UploadService, on ne
+     * stocke que le public_id, jamais l'URL (voir commentaire en tête de
+     * fichier). */
     const result = await this.uploadService.uploadDocument(file, UPLOAD_FOLDERS.DOCUMENT);
-    (cor as any)[DOC_FIELD[type]] = result.url;
+    (cor as any)[DOC_FIELD[type]] = result.publicId;
 
     /* Passage en REVIEWING si les 2 docs principaux sont présents */
     if (cor.documentCni && cor.documentBail) {
@@ -108,7 +140,7 @@ export class DocumentsService extends CorrespondantBaseService {
     await this.corRepo.save(cor);
     this.logger.log(`[DOC] ${type} uploadé — userId=${userId}`);
 
-    return { url: result.url, type, verificationStatus: cor.verificationStatus };
+    return { present: true, type, verificationStatus: cor.verificationStatus };
   }
 
   /**
@@ -141,10 +173,10 @@ export class DocumentsService extends CorrespondantBaseService {
    */
   async deleteDocument(userId: string, type: DocumentType): Promise<{ message: string }> {
     const cor = await this.findCorOrFail(userId);
-    const url = cor[DOC_FIELD[type]] as string | null;
+    const valeur = cor[DOC_FIELD[type]] as string | null;
 
-    if (url) {
-      await this.deleteCloudinaryFile(url);
+    if (valeur) {
+      await this.deleteStoredDocument(valeur);
       (cor as any)[DOC_FIELD[type]] = null;
       await this.corRepo.save(cor);
     }
@@ -152,15 +184,18 @@ export class DocumentsService extends CorrespondantBaseService {
     return { message: `Document "${type}" supprimé avec succès.` };
   }
 
-  /** Supprime un fichier Cloudinary (silencieux en cas d'erreur) */
-  private async deleteCloudinaryFile(url: string): Promise<void> {
+  /**
+   * Supprime un document Cloudinary (silencieux en cas d'erreur). Les 5
+   * types gérés ici stockent tous un public_id brut, uploadés en
+   * type:'authenticated' (voir uploadDocument()) — jamais d'URL à
+   * parser, contrairement aux photos de dépôt (publiques, non gérées par
+   * cette méthode).
+   */
+  private async deleteStoredDocument(publicId: string): Promise<void> {
     try {
-      const match   = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
-      if (!match) return;
-      const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(url);
-      await this.uploadService.delete(match[1], isImage ? 'image' : 'raw');
+      await this.uploadService.delete(publicId, 'raw', 'authenticated');
     } catch {
-      this.logger.warn(`Cloudinary delete échoué : ${url}`);
+      this.logger.warn(`Cloudinary delete échoué : ${publicId}`);
     }
   }
 }

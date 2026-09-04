@@ -13,7 +13,7 @@
  *   - Boutons : S'abonner (toggle) | Message | Partager
  * ============================================================
  */
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BoutiqueInfo } from '../data/boutiqueMockData';
 import FollowButton from '../../../../../shared/components/FollowButton';
@@ -31,12 +31,40 @@ interface Props {
   onMessage:      () => void;
   onCall?:        () => void;
   onPartage:      () => void;
+  /** true → masque S'abonner/Message/Appeler : une entreprise ne peut pas
+   * se suivre, s'appeler ou s'envoyer un message à elle-même. Réservé au
+   * mode aperçu propriétaire (voir BoutiquePage.tsx, isPreview). */
+  isOwnerPreview?: boolean;
 }
 
-export default function BoutiqueIdentity({ boutiqueId, boutique, suivi, msgLoading, callLoading, onToast, onRequireAuth, onSuiviChange, onMessage, onCall, onPartage }: Props) {
+export default function BoutiqueIdentity({ boutiqueId, boutique, suivi, msgLoading, callLoading, onToast, onRequireAuth, onSuiviChange, onMessage, onCall, onPartage, isOwnerPreview }: Props) {
   const { t } = useTranslation();
+  const barRef = useRef<HTMLDivElement>(null);
+
+  /* BUG CORRIGÉ — BoutiqueNav.module.css calait sa position sticky sur
+   * une hauteur DEVINÉE (80px desktop / 68px ≤900px) pour cette barre,
+   * alors que sa vraie hauteur varie réellement : `.inner` a
+   * `flex-wrap:wrap` + `min-height` (pas une hauteur fixe), les boutons
+   * passent sur leur propre ligne ≤900px, et surtout — cas visible
+   * depuis le dashboard entreprise ("Voir ma boutique") — isOwnerPreview
+   * masque 2 des 3 boutons d'action, ce qui change le retour à la ligne
+   * et donc la hauteur réelle par rapport à la fiche publique. Résultat :
+   * la barre d'onglets se collait au mauvais endroit en scrollant
+   * (chevauchement ou vide selon le cas). On mesure maintenant la
+   * vraie hauteur et on l'expose en variable CSS globale, relue par
+   * BoutiqueNav.module.css — plus aucune valeur devinée. */
+  useLayoutEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    const apply = () => document.documentElement.style.setProperty('--boutique-identity-h', `${el.offsetHeight}px`);
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isOwnerPreview]);
+
   return (
-    <div className={styles.bar}>
+    <div className={styles.bar} ref={barRef}>
       <div className={styles.inner}>
 
         {/* ── Nom + badges ── */}
@@ -103,41 +131,45 @@ export default function BoutiqueIdentity({ boutiqueId, boutique, suivi, msgLoadi
 
         {/* ── Boutons d'action ── */}
         <div className={styles.actions}>
-          {/* S'abonner / Suivi(e) + menu ⋮ (désabonner/masquer/supprimer) */}
-          <FollowButton
-            actorType="entreprise"
-            id={boutiqueId}
-            name={boutique.nom}
-            isSuivi={suivi}
-            onToast={onToast}
-            onRequireAuth={onRequireAuth}
-            onChange={next => onSuiviChange(next.isSuivi)}
-          />
+          {!isOwnerPreview && (
+            <>
+              {/* S'abonner / Suivi(e) + menu ⋮ (désabonner/masquer/supprimer) */}
+              <FollowButton
+                actorType="entreprise"
+                id={boutiqueId}
+                name={boutique.nom}
+                isSuivi={suivi}
+                onToast={onToast}
+                onRequireAuth={onRequireAuth}
+                onChange={next => onSuiviChange(next.isSuivi)}
+              />
 
-          {/* Message — le parent gère l'auth/abonnement requis au clic */}
-          <button
-            className={styles.btnMsg}
-            onClick={onMessage}
-            disabled={msgLoading}
-            title={!suivi ? t('boutiqueDetail.identity.abonnezVousMessage') : t('boutiqueDetail.identity.envoyerMessageTitle')}
-            style={{ opacity: !suivi ? 0.65 : msgLoading ? 0.65 : 1, cursor: msgLoading ? 'not-allowed' : 'pointer' }}
-          >
-            <i className={`fas ${msgLoading ? 'fa-spinner fa-spin' : 'fa-comment-dots'}`} />
-            {msgLoading ? '…' : t('boutiqueDetail.identity.messageBtn')}
-          </button>
+              {/* Message — le parent gère l'auth/abonnement requis au clic */}
+              <button
+                className={styles.btnMsg}
+                onClick={onMessage}
+                disabled={msgLoading}
+                title={!suivi ? t('boutiqueDetail.identity.abonnezVousMessage') : t('boutiqueDetail.identity.envoyerMessageTitle')}
+                style={{ opacity: !suivi ? 0.65 : msgLoading ? 0.65 : 1, cursor: msgLoading ? 'not-allowed' : 'pointer' }}
+              >
+                <i className={`fas ${msgLoading ? 'fa-spinner fa-spin' : 'fa-comment-dots'}`} />
+                {msgLoading ? '…' : t('boutiqueDetail.identity.messageBtn')}
+              </button>
 
-          {/* Appeler — le parent gère l'auth/abonnement requis au clic */}
-          {onCall && (
-            <button
-              className={styles.btnMsg}
-              onClick={onCall}
-              disabled={callLoading}
-              title={!suivi ? t('boutiqueDetail.identity.abonnezVousAppel') : t('boutiqueDetail.identity.appelerTitle')}
-              style={{ opacity: !suivi ? 0.65 : callLoading ? 0.65 : 1, cursor: callLoading ? 'not-allowed' : 'pointer' }}
-            >
-              <i className={`fas ${callLoading ? 'fa-spinner fa-spin' : 'fa-phone'}`} />
-              {callLoading ? '…' : t('boutiqueDetail.identity.appelerBtn')}
-            </button>
+              {/* Appeler — le parent gère l'auth/abonnement requis au clic */}
+              {onCall && (
+                <button
+                  className={styles.btnMsg}
+                  onClick={onCall}
+                  disabled={callLoading}
+                  title={!suivi ? t('boutiqueDetail.identity.abonnezVousAppel') : t('boutiqueDetail.identity.appelerTitle')}
+                  style={{ opacity: !suivi ? 0.65 : callLoading ? 0.65 : 1, cursor: callLoading ? 'not-allowed' : 'pointer' }}
+                >
+                  <i className={`fas ${callLoading ? 'fa-spinner fa-spin' : 'fa-phone'}`} />
+                  {callLoading ? '…' : t('boutiqueDetail.identity.appelerBtn')}
+                </button>
+              )}
+            </>
           )}
 
           {/* Partager */}

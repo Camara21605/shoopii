@@ -77,6 +77,18 @@ export interface SendPasswordChangedEmailParams {
   loginUrl:  string;
 }
 
+/** Paramètres pour un email d'alerte de sécurité générique (section
+ * "Alertes de sécurité" des paramètres du compte — voir SecurityAlertsService) */
+export interface SendSecurityAlertEmailParams {
+  toEmail:    string;
+  firstName:  string;
+  /** Titre affiché en tête d'email, ex: "Nouvelle connexion détectée" */
+  title:      string;
+  /** Corps du message, ex: "Une connexion a été détectée depuis un nouvel appareil…" */
+  message:    string;
+  occurredAt: Date;
+}
+
 export interface SendContactEmailParams {
   toEmail:  string;
   toName?:  string;
@@ -286,6 +298,45 @@ export class MailService implements OnModuleInit {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
+  // 3bis. EMAIL OTP — VÉRIFICATION D'ADRESSE EMAIL (INSCRIPTION)
+  //
+  //  sendEmailVerificationOtp()
+  //  Envoyé après register() quand PlatformSettings.emailVerifRequired est
+  //  activé — bloque la connexion tant que ce code n'est pas confirmé
+  //  (voir AuthService.verifyEmail()).
+  // ══════════════════════════════════════════════════════════════════════════
+
+  async sendEmailVerificationOtp(params: SendPasswordResetOtpEmailParams): Promise<void> {
+    const { toEmail, firstName, otpCode, expiresAt } = params;
+
+    const expiryTime = expiresAt.toLocaleTimeString('fr-FR', {
+      hour: '2-digit', minute: '2-digit',
+    });
+
+    await this.send({
+      to:      toEmail,
+      subject: `Shopi — Confirmez votre adresse email (${expiryTime})`,
+      html:    this.buildOtpEmailHtml({ firstName, otpCode, expiryTime, purpose: 'email-verification' }),
+      text: [
+        `Bonjour ${firstName},`,
+        '',
+        'Votre code de confirmation Shopi :',
+        '',
+        `  ${otpCode}`,
+        '',
+        `Ce code est valable jusqu'à ${expiryTime}.`,
+        '',
+        "Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email.",
+        '',
+        '---',
+        'Shopi — shopi.gn',
+      ].join('\n'),
+    });
+
+    this.logger.log(`[VÉRIF EMAIL] Code envoyé à ${toEmail} | Expiration: ${expiryTime}`);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
   // 4. EMAIL DE CONFIRMATION DE CHANGEMENT DE MOT DE PASSE (NOUVEAU)
   //
   //  sendPasswordChangedEmail()
@@ -324,6 +375,56 @@ export class MailService implements OnModuleInit {
     });
 
     this.logger.log(`[PWD CHANGED] Email de confirmation envoyé à ${toEmail}`);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 4b. EMAIL D'ALERTE DE SÉCURITÉ GÉNÉRIQUE (NOUVEAU)
+  //
+  //  sendSecurityAlertEmail()
+  //  Couvre les 4 types d'alerte de la section "Alertes de sécurité" des
+  //  paramètres du compte autres que le changement de mot de passe (qui a
+  //  déjà son propre email dédié, sendPasswordChangedEmail ci-dessus) :
+  //  nouvelle connexion, tentatives de connexion échouées, transaction
+  //  suspecte/refusée, pays inhabituel. Un seul template partagé — seuls
+  //  le titre et le corps du message changent selon le type d'événement
+  //  (voir SecurityAlertsService, qui construit ces deux champs).
+  // ══════════════════════════════════════════════════════════════════════════
+
+  async sendSecurityAlertEmail(params: SendSecurityAlertEmailParams): Promise<void> {
+    const { toEmail, firstName, title, message, occurredAt } = params;
+
+    const occurredFormatted = occurredAt.toLocaleString('fr-FR', {
+      weekday: 'long', day: 'numeric', month: 'long',
+      year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+
+    const reportUrl  = `${this.frontendUrl}/support?subject=Activité+suspecte&type=security-alert`;
+    const settingsUrl = `${this.frontendUrl}/parametres?section=securite`;
+
+    await this.send({
+      to:      toEmail,
+      subject: `Shopi — Alerte de sécurité : ${title}`,
+      html:    this.buildSecurityAlertHtml({ firstName, title, message, occurredFormatted, reportUrl, settingsUrl }),
+      text: [
+        `Bonjour ${firstName},`,
+        '',
+        `${title} — ${occurredFormatted}`,
+        '',
+        message,
+        '',
+        'Si c\'était vous, vous pouvez ignorer cet email.',
+        '',
+        '⚠️ Si ce n\'était PAS vous, signalez-le immédiatement :',
+        reportUrl,
+        '',
+        `Gérer mes alertes de sécurité : ${settingsUrl}`,
+        '',
+        '---',
+        'Shopi — shopi.gn',
+      ].join('\n'),
+    });
+
+    this.logger.log(`[SECURITY ALERT] "${title}" envoyé à ${toEmail}`);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -589,7 +690,23 @@ export class MailService implements OnModuleInit {
     firstName:   string;
     otpCode:     string;
     expiryTime:  string;
+    /* BUG CORRIGÉ — ce template était figé sur "réinitialiser votre mot de
+     * passe", réutilisé tel quel pour l'email de vérification d'inscription
+     * aurait affiché un texte trompeur. Généralisé avec un `purpose` plutôt
+     * que dupliquer tout le HTML pour un seul changement de phrase. */
+    purpose?:    'password-reset' | 'email-verification';
   }): string {
+    const purpose = p.purpose ?? 'password-reset';
+    const introText = purpose === 'email-verification'
+      ? `Bonjour <strong>${p.firstName}</strong>, voici votre code pour confirmer votre adresse email Shopi.`
+      : `Bonjour <strong>${p.firstName}</strong>, voici votre code pour réinitialiser votre mot de passe Shopi.`;
+    const instructionsText = purpose === 'email-verification'
+      ? 'Retournez sur la page Shopi et saisissez ce code à 6 chiffres dans les cases prévues pour activer votre compte.'
+      : 'Retournez sur la page Shopi, saisissez ce code à 6 chiffres dans les cases prévues, puis créez votre nouveau mot de passe.';
+    const securityText = purpose === 'email-verification'
+      ? "Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email — aucun compte ne sera activé."
+      : "Si vous n'avez pas demandé ce code, ignorez cet email — votre mot de passe reste inchangé.";
+
     // Séparer les 6 chiffres pour l'affichage visuel
     const digits = p.otpCode.split('');
 
@@ -626,7 +743,7 @@ export class MailService implements OnModuleInit {
             Code de vérification
           </h1>
           <p style="margin:0 0 28px;font-size:14px;color:#475569;text-align:center;line-height:1.6;">
-            Bonjour <strong>${p.firstName}</strong>, voici votre code pour réinitialiser votre mot de passe Shopi.
+            ${introText}
           </p>
 
           <!-- Code OTP -->
@@ -657,7 +774,7 @@ export class MailService implements OnModuleInit {
           <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:20px;">
             <p style="margin:0;font-size:13.5px;color:#475569;line-height:1.7;">
               <strong>Comment utiliser ce code :</strong><br />
-              Retournez sur la page Shopi, saisissez ce code à 6 chiffres dans les cases prévues, puis créez votre nouveau mot de passe.
+              ${instructionsText}
             </p>
           </div>
 
@@ -665,7 +782,7 @@ export class MailService implements OnModuleInit {
           <div style="background:#fff8ed;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:12px 16px;">
             <p style="margin:0;font-size:12.5px;color:#92400e;line-height:1.6;">
               🛡️ <strong>Shopi ne vous demandera jamais ce code par téléphone ou SMS.</strong>
-              Si vous n'avez pas demandé ce code, ignorez cet email — votre mot de passe reste inchangé.
+              ${securityText}
             </p>
           </div>
 
@@ -734,6 +851,64 @@ export class MailService implements OnModuleInit {
               <a href="${p.reportUrl}" style="color:#b91c1c;font-weight:700;">Signalez-le immédiatement →</a>
             </p>
           </div>
+
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+  }
+
+  /** Template partagé — sendSecurityAlertEmail() (nouvelle connexion,
+   * tentatives échouées, transaction suspecte/refusée, pays inhabituel) */
+  private buildSecurityAlertHtml(p: {
+    firstName:         string;
+    title:             string;
+    message:           string;
+    occurredFormatted: string;
+    reportUrl:         string;
+    settingsUrl:       string;
+  }): string {
+    return `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"/></head>
+<body style="margin:0;padding:0;background:#f0f4ff;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:20px;padding:40px 36px;box-shadow:0 4px 24px rgba(30,64,175,.08);">
+        <tr><td>
+
+          <!-- En-tête -->
+          <div style="text-align:center;margin-bottom:24px;">
+            <div style="width:64px;height:64px;background:#fffbeb;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:28px;">🔔</div>
+          </div>
+
+          <h1 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#0f172a;text-align:center;">
+            ${p.title}
+          </h1>
+          <p style="margin:0 0 20px;font-size:12px;color:#94a3b8;text-align:center;">
+            ${p.occurredFormatted}
+          </p>
+
+          <p style="font-size:14px;color:#475569;line-height:1.7;margin:0 0 24px;">
+            Bonjour <strong>${p.firstName}</strong>,<br /><br />
+            ${p.message}
+          </p>
+
+          <!-- Alerte si ce n'était pas l'utilisateur -->
+          <div style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
+            <p style="margin:0;font-size:13px;color:#b91c1c;line-height:1.7;">
+              <strong>⚠️ Ce n'était pas vous ?</strong><br />
+              Si vous ne reconnaissez pas cette activité, votre compte est peut-être compromis.
+              <a href="${p.reportUrl}" style="color:#b91c1c;font-weight:700;">Signalez-le immédiatement →</a>
+            </p>
+          </div>
+
+          <p style="margin:0;font-size:11.5px;color:#94a3b8;text-align:center;">
+            <a href="${p.settingsUrl}" style="color:#94a3b8;">Gérer mes alertes de sécurité</a>
+          </p>
 
         </td></tr>
       </table>

@@ -468,20 +468,30 @@ export class EntrepriseDashboardService {
     dernieresCommandes: Awaited<ReturnType<EntrepriseDashboardService['derniereCommandes']>>,
     dernierAvis: CompanyAvis | null,
   ) {
-    const items: { icon: string; txt: string; time: string }[] = [];
+    /* SÉCURITÉ — `dernierAvis.clientNom` (nom choisi librement par le client
+     * qui a laissé l'avis) était interpolé sans échappement dans une chaîne
+     * HTML rendue via dangerouslySetInnerHTML côté frontend : XSS stockée —
+     * un client malveillant pouvait exécuter du JS dans la session de
+     * l'entreprise consultant son tableau de bord. `txt` est maintenant du
+     * texte brut ; `highlight` isole la partie à mettre en gras (jamais le
+     * nom du client). */
+    const items: { icon: string; txt: string; highlight: string; time: string }[] = [];
 
     for (const c of dernieresCommandes.slice(0, 3)) {
       items.push({
         icon: 'fa-box',
-        txt:  `<strong>Commande</strong> ${c.id} — ${c.nm}`,
+        txt:  `Commande ${c.id} — ${c.nm}`,
+        highlight: 'Commande',
         time: c.date,
       });
     }
 
     if (dernierAvis) {
+      const note = `Avis ${dernierAvis.note}★`;
       items.push({
         icon: 'fa-star',
-        txt:  `<strong>Avis ${dernierAvis.note}★</strong> reçu de ${dernierAvis.clientNom}`,
+        txt:  `${note} reçu de ${dernierAvis.clientNom}`,
+        highlight: note,
         time: dernierAvis.createdAt.toISOString(),
       });
     }

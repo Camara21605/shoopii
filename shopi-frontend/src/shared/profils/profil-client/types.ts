@@ -4,4 +4,4 @@
  * Type de l'onglet actif de la page profil client.
  * ================================================================ */
 
-export type ClientTab = 'orders' | 'subs' | 'favs' | 'reviews' | 'activity';
+export type ClientTab = 'orders' | 'subs' | 'favs' | 'wishlist' | 'reviews' | 'activity';

@@ -22,6 +22,10 @@
     "trafic": {
       "title": "Analytics de trafic",
       "sub": "Visites, sources de trafic, taux de conversion et entonnoir de vente — bientôt disponible."
+    },
+    "accessDenied": {
+      "title": "Accès non autorisé",
+      "message": "Vous n'avez pas accès aux statistiques. Contactez le propriétaire de la boutique pour l'obtenir."
     }
   }
 }

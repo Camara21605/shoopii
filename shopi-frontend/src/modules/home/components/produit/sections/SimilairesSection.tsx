@@ -1,10 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { io } from 'socket.io-client';
 import { produitApi, type SimilaireApi } from '../api/produit.api';
 import { useCart } from '../../../../../shared/context/CartContext';
 import { getRoleFromToken } from '../../../../../shared/services/authUtils';
 import styles from '../styles/SimilairesSection.module.css';
+
+/* Même origine que ProduitPage.tsx — namespace /public, sans authentification. */
+const SOCKET_URL =
+  ((import.meta as any).env?.VITE_API_URL as string | undefined)?.replace('/api', '') ??
+  'http://localhost:3001';
 
 interface Props {
   produitId: string;
@@ -29,14 +35,23 @@ export default function SimilairesSection({ produitId, onToast }: Props) {
   const isClient = getRoleFromToken() === 'client';
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const load = useCallback((silent = false) => {
     if (!produitId) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     produitApi.getSimilaires(produitId)
       .then(data => setProduits(data ?? []))
-      .catch(() => setProduits([]))
-      .finally(() => setLoading(false));
+      .catch(() => { if (!silent) setProduits([]); })
+      .finally(() => { if (!silent) setLoading(false); });
   }, [produitId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  /* Voir ProduitPage.tsx — même diffusion globale catalogue:changed. */
+  useEffect(() => {
+    const socket = io(`${SOCKET_URL}/public`, { transports: ['websocket', 'polling'] });
+    socket.on('catalogue:changed', () => load(true));
+    return () => { socket.disconnect(); };
+  }, [load]);
 
   if (loading) return (
     <section className={styles.sec}>

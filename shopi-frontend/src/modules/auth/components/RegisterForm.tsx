@@ -37,6 +37,13 @@ interface RegisterFormProps {
   lockedRole?:     UserRole | null;
   prefilledCode?:  string;
   onlyClientRole?: boolean;
+  /** PlatformSettings.openSignup désactivé — voir RoleSelector. */
+  clientRegistrationClosed?: boolean;
+  /** PlatformSettings.codeRequiredForCompany — quand false, "Entreprise"
+   *  devient sélectionnable sans invitation et le code n'est plus exigé.
+   *  true par défaut (comportement historique) tant que la politique
+   *  publique n'a pas encore répondu. */
+  codeRequiredForCompany?: boolean;
   onValidateStep:  (fields: (keyof RegisterFormData)[]) => boolean;
   /** Invitation collaborateur (company-team) : rejoint une entreprise
    *  EXISTANTE — pas de code d'activation ni de nom de boutique à
@@ -78,6 +85,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   data, errors, selectedRole, isLoading,
   onDataChange, onRoleSelect, onSubmit, onSwitchToLogin,
   lockedRole = null, prefilledCode = '', onlyClientRole = false,
+  clientRegistrationClosed = false, codeRequiredForCompany = true,
   onValidateStep, isCollabInvite = false, collabJobTitle,
 }) => {
   const [step,     setStep]     = useState(1);
@@ -86,6 +94,31 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
   const { strength, show: showStrength, checkStrength } = usePasswordStrength();
   const roleConfig = ROLE_CONFIGS[selectedRole];
+  /* BUG CORRIGÉ — roleConfig.code est statique (toujours true pour
+   * 'company') : le bloc code s'affichait encore même quand le
+   * super-admin avait désactivé PlatformSettings.codeRequiredForCompany.
+   * Seul "company" a un réglage dynamique, les autres rôles à code
+   * gardent leur comportement figé (code toujours obligatoire).
+   * Exception : une entreprise qui arrive via un VRAI lien d'invitation
+   * (lockedRole==='company') voit quand même le bloc code — ce code porte
+   * un lien réel (quel partenaire/admin l'a invitée), le cacher lui ferait
+   * perdre cette info même quand l'auto-inscription est ouverte. */
+  const codeRequiredForSelectedRole = selectedRole === 'company'
+    ? (codeRequiredForCompany || lockedRole === 'company')
+    : roleConfig.code;
+
+  /* BUG CORRIGÉ — quand le rôle sélectionné est fermé à l'inscription
+   * (client : openSignup=false : entreprise : codeRequiredForCompany=true
+   * sans invitation), seule la carte du RoleSelector était grisée : le
+   * reste du formulaire (email, mot de passe…) restait normalement
+   * saisissable, laissant croire que l'inscription pouvait aboutir alors
+   * qu'elle sera de toute façon rejetée à la soumission. Un lien
+   * d'invitation (lockedRole) rend toujours le rôle accessible, quel que
+   * soit ce calcul. */
+  const isSelectedRoleBlocked = !lockedRole && (
+    (selectedRole === 'client'  && clientRegistrationClosed) ||
+    (selectedRole === 'company' && onlyClientRole && codeRequiredForCompany)
+  );
 
   const [locationDone,        setLocationDone]        = useState(false);
   const [companyTypes,        setCompanyTypes]        = useState<CompanyTypeOption[]>([]);
@@ -194,7 +227,23 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   /* ── Step 1 : Compte ── */
   const renderStep1 = () => (
     <div className="fields">
-      {selectedRole === 'client' && !lockedRole && (
+      {isSelectedRoleBlocked && (
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', gap: '9px',
+          padding: '10px 13px', marginBottom: '4px',
+          background: 'rgba(220,38,38,.06)',
+          border: '1.5px solid rgba(220,38,38,.2)',
+          borderRadius: '10px', fontSize: '12px',
+          color: 'var(--rose, #DC2626)', lineHeight: 1.5,
+        }}>
+          <span style={{ fontSize: '16px', flexShrink: 0 }}>🚫</span>
+          <span>
+            <strong>Inscription {roleConfig.label} fermée pour le moment.</strong>{' '}
+            Choisissez un autre rôle ci-dessus ou revenez plus tard.
+          </span>
+        </div>
+      )}
+      {selectedRole === 'client' && !lockedRole && !isSelectedRoleBlocked && (
         <>
           <button
             type="button"
@@ -237,6 +286,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         label="Je m'inscris en tant que"
         lockedRole={lockedRole}
         onlyClientRole={!lockedRole && onlyClientRole}
+        clientRegistrationClosed={clientRegistrationClosed}
+        companyCodeRequired={codeRequiredForCompany}
       />
 
       <div className={`role-info${selectedRole !== 'client' ? ' show' : ''}`}>
@@ -244,7 +295,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         <div className="role-info-text" dangerouslySetInnerHTML={{ __html: roleConfig.info }} />
       </div>
 
-      {roleConfig.code && !isCollabInvite && (
+      {codeRequiredForSelectedRole && !isCollabInvite && (
         <div className="code-field show">
           {roleConfig.codeType === 'choice' ? (
             <CorrespondantCodeBlock
@@ -287,6 +338,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           id="regEmail" label="Email" icon="fas fa-envelope" type="email"
           placeholder="votre@email.com" value={data.email}
           onChange={val => onDataChange({ email: val })} error={errors.email}
+          disabled={isSelectedRoleBlocked}
         />
       )}
     </div>
@@ -592,7 +644,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           </button>
         )}
         {step < TOTAL_STEPS ? (
-          <button type="button" className="btn-next" onClick={goNext}>
+          <button
+            type="button"
+            className="btn-next"
+            onClick={goNext}
+            disabled={isSelectedRoleBlocked}
+            style={isSelectedRoleBlocked ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+          >
             Suivant <i className="fas fa-arrow-right" />
           </button>
         ) : (

@@ -90,6 +90,7 @@ export function makeEntrepriseHierarchy(
     partenaireProfileId: overrides.partenaireProfileId ?? null,
     partenaireUserId:    overrides.partenaireUserId    ?? null,
     partenaireNom:       overrides.partenaireNom       ?? null,
+    partenaireTotalCompanies: overrides.partenaireTotalCompanies ?? null,
     adminProfileId:      overrides.adminProfileId      ?? null,
     adminUserId:         overrides.adminUserId         ?? null,
     adminNom:            overrides.adminNom            ?? null,

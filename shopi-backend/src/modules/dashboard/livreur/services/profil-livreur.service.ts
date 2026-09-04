@@ -26,6 +26,14 @@ const DOC_FIELD_MAP: Record<DocumentType, keyof Delivery> = {
   casier:    'documentCasier',
 };
 
+/* SÉCURITÉ — CNI, permis de conduire, assurance, casier judiciaire :
+ * uploadés en type:'authenticated' (voir UploadService.uploadDocument),
+ * jamais en public type:'upload'. Le champ Delivery stocke un public_id
+ * Cloudinary, jamais une URL consultable directement, et aucune route ne
+ * renvoie plus cette valeur brute au client (seulement `present:boolean`
+ * — voir getDocuments() et le filtre dans getParametres()). Même
+ * correctif que les modules Entreprise et Correspondant. */
+
 @Injectable()
 export class ProfilLivreurService {
 
@@ -54,6 +62,20 @@ export class ProfilLivreurService {
       relations: ['horaires'],
     });
     if (!livreur) throw new NotFoundException('Profil livreur introuvable.');
+    return this.redactSensitiveDocuments(livreur);
+  }
+
+  /* SÉCURITÉ — voir commentaire en tête de fichier. getParametres()
+   * renvoie l'entité Delivery quasi brute (alimente toute la page
+   * paramètres, y compris SecDocuments.tsx qui ne lit que present/absent,
+   * jamais la valeur) : sans ce filtre, le public_id des 4 documents
+   * sensibles partait tel quel dans la réponse JSON. */
+  private redactSensitiveDocuments(livreur: Delivery): Delivery {
+    const REDACTED = '••••••';
+    if (livreur.documentCni)       livreur.documentCni       = REDACTED;
+    if (livreur.documentPermis)    livreur.documentPermis    = REDACTED;
+    if (livreur.documentAssurance) livreur.documentAssurance = REDACTED;
+    if (livreur.documentCasier)    livreur.documentCasier    = REDACTED;
     return livreur;
   }
 
@@ -106,10 +128,10 @@ export class ProfilLivreurService {
     return {
       verificationStatus: livreur.verificationStatus,
       documents: {
-        cni:       { url: livreur.documentCni,       present: !!livreur.documentCni       },
-        permis:    { url: livreur.documentPermis,    present: !!livreur.documentPermis    },
-        assurance: { url: livreur.documentAssurance, present: !!livreur.documentAssurance },
-        casier:    { url: livreur.documentCasier,    present: !!livreur.documentCasier    },
+        cni:       { present: !!livreur.documentCni       },
+        permis:    { present: !!livreur.documentPermis    },
+        assurance: { present: !!livreur.documentAssurance },
+        casier:    { present: !!livreur.documentCasier    },
       },
     };
   }
@@ -120,11 +142,11 @@ export class ProfilLivreurService {
       `Type invalide : "${type}". Valeurs acceptées : cni, permis, assurance, casier`,
     );
     const livreur = await this.findOrFail(userId);
-    const ancienneUrl = livreur[DOC_FIELD_MAP[type]] as string | null;
-    if (ancienneUrl) await this.deleteCloudinary(ancienneUrl);
+    const ancienneValeur = livreur[DOC_FIELD_MAP[type]] as string | null;
+    if (ancienneValeur) await this.deleteStoredDocument(ancienneValeur);
 
     const result = await this.uploadService.uploadDocument(file, UPLOAD_FOLDERS.DOCUMENT);
-    (livreur as any)[DOC_FIELD_MAP[type]] = result.url;
+    (livreur as any)[DOC_FIELD_MAP[type]] = result.publicId;
 
     if (livreur.documentCni && livreur.documentPermis) {
       livreur.verificationStatus = LivreurVerificationStatus.REVIEWING;
@@ -132,15 +154,15 @@ export class ProfilLivreurService {
 
     await this.livreurRepo.save(livreur);
     this.logger.log(`[DOC] ${type} uploadé — userId=${userId}`);
-    return { url: result.url, type };
+    return { present: true, type };
   }
 
   /* ── DELETE document ── */
   async deleteDocument(userId: string, type: DocumentType) {
     const livreur = await this.findOrFail(userId);
-    const url = livreur[DOC_FIELD_MAP[type]] as string | null;
-    if (url) {
-      await this.deleteCloudinary(url);
+    const valeur = livreur[DOC_FIELD_MAP[type]] as string | null;
+    if (valeur) {
+      await this.deleteStoredDocument(valeur);
       (livreur as any)[DOC_FIELD_MAP[type]] = null;
       await this.livreurRepo.save(livreur);
     }
@@ -154,6 +176,8 @@ export class ProfilLivreurService {
     return l;
   }
 
+  /** Pour photoUrl (avatar, public type:'upload') — extraction du
+   * public_id par regex depuis l'URL stockée. */
   private async deleteCloudinary(url: string): Promise<void> {
     try {
       const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
@@ -163,6 +187,16 @@ export class ProfilLivreurService {
       }
     } catch {
       this.logger.warn(`Cloudinary delete échoué : ${url}`);
+    }
+  }
+
+  /** Pour les 4 documents sensibles (type:'authenticated') — le champ
+   * stocke déjà un public_id brut, aucune extraction nécessaire. */
+  private async deleteStoredDocument(publicId: string): Promise<void> {
+    try {
+      await this.uploadService.delete(publicId, 'raw', 'authenticated');
+    } catch {
+      this.logger.warn(`Cloudinary delete échoué : ${publicId}`);
     }
   }
 }

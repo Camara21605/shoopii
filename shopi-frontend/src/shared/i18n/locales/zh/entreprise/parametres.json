@@ -100,6 +100,9 @@
       "expressSub": "2 小时内配送，收取额外费用",
       "zonesTitle": "配送区域",
       "zonesSubtitle": "选择您服务的区域",
+      "zonesChargement": "正在加载您的区域…",
+      "aucuneZoneAssignee": "尚未为您分配配送区域，请联系您的管理员。",
+      "zoneAssignee": "已分配区域：{{nom}}",
       "zonesSelectionnees_one": "已选择 {{count}} 个区域",
       "zonesSelectionnees_other": "已选择 {{count}} 个区域",
       "sauvegardeEnCours": "保存中…",
@@ -443,6 +446,11 @@
         "coverImage": "封面照片",
         "returnPolicy": "退货政策"
       }
-    }
+    },
+    "accessDenied": {
+      "title": "无访问权限",
+      "message": "您没有设置的访问权限，请联系店铺所有者获取。"
+    },
+    "readOnly": "只读 — 您可以查看这些设置，但无法编辑。"
   }
 }

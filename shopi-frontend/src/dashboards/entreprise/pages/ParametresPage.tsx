@@ -29,6 +29,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '../../../shared/context/ToastContext';
 import { useAppContext } from '../../../shared/context/AppContext';
 import { useParametres } from '../hooks/useParametres';
+import { useTeamPermissions } from '../hooks/useTeamPermissions';
 import SecLangue from '../../../shared/components/params/SecLangue';
 
 // Sections
@@ -81,6 +82,8 @@ export default function ParametresPage() {
   const { pop } = useToast();
   const { logout } = useAppContext();
   const navigate = useNavigate();
+  const { can, isOwner, loading: permLoading } = useTeamPermissions();
+  const canEdit = isOwner || can('settings', 'edit');
 
   /* Point unique de déconnexion pour ce dashboard — voir en bas de la
      sidebar interne des paramètres (persistant quelle que soit la
@@ -136,6 +139,24 @@ export default function ParametresPage() {
     setActiveSection(key);
     setSearchParams({ section: key }, { replace: true });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Accès refusé (collaborateur sans settings.view) — mise à jour
+  // instantanée si la permission est révoquée pendant qu'il est déjà sur
+  // la page (voir useTeamPermissions : socket team:permissions_changed).
+  // Vérifié AVANT loading/error : GET /dashboard/entreprise/parametres est
+  // gardé côté backend (settings.view), donc sans ce garde le collaborateur
+  // verrait un spinner puis une erreur générique "Impossible de charger…".
+  if (!permLoading && !isOwner && !can('settings', 'view')) {
+    return (
+      <div className="page on" style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'60vh' }}>
+        <div style={{ textAlign:'center', color:'var(--t2)' }}>
+          <i className="fas fa-lock" style={{ fontSize:28, opacity:.5, marginBottom:12, display:'block' }} />
+          <strong>{t('parametres.accessDenied.title')}</strong>
+          <div style={{ fontSize:13, marginTop:6 }}>{t('parametres.accessDenied.message')}</div>
+        </div>
+      </div>
+    );
   }
 
   // ── État de chargement ────────────────────────────────────
@@ -238,6 +259,30 @@ export default function ParametresPage() {
 
         {/* ── Contenu de la section active ── */}
         <main className={s.parametresContent}>
+          {activeSection === 'langue' && (
+            <SecLangue onPop={pop} />
+          )}
+
+          {!canEdit && activeSection !== 'langue' && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 10,
+              padding: '10px 14px', marginBottom: 16, fontSize: 12.5, fontWeight: 600, color: 'var(--t2)',
+            }}>
+              <i className="fas fa-lock" style={{ fontSize: 12 }} />
+              {t('parametres.readOnly')}
+            </div>
+          )}
+
+          {/* fieldset disabled cascade automatiquement à tous les inputs/
+           * boutons/selects/textareas descendants — évite de devoir gater
+           * individuellement chaque bouton "Enregistrer"/upload/suppression
+           * des 11 sections pour un collaborateur avec settings.view mais
+           * sans settings.edit. La section langue (préférence personnelle,
+           * pas un paramètre de la boutique) est rendue en dehors, jamais
+           * désactivée. */}
+          <fieldset disabled={!canEdit} style={{ border: 0, margin: 0, padding: 0 }}>
+
           {activeSection === 'boutique' && (
             <BoutiqueSection
               {...commonProps}
@@ -329,15 +374,13 @@ export default function ParametresPage() {
             />
           )}
 
-          {activeSection === 'langue' && (
-            <SecLangue onPop={pop} />
-          )}
-
           {activeSection === 'danger' && (
             <DangerSection
               {...commonProps}
             />
           )}
+
+          </fieldset>
         </main>
       </div>
     </div>

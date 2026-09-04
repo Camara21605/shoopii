@@ -34,6 +34,10 @@
       "empty": "This supplier has no wholesale product published yet.",
       "moq_one": "Min. quantity: {{count}} unit",
       "moq_other": "Min. quantity: {{count}} units"
+    },
+    "accessDenied": {
+      "title": "Access denied",
+      "message": "You do not have access to suppliers. Contact the shop owner to request it."
     }
   }
 }

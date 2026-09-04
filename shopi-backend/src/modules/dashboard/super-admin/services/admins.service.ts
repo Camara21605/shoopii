@@ -163,9 +163,12 @@ export class AdminsService {
         : (isGeo
             ? `Vous pouvez ${value ? 'désormais' : 'ne pouvez plus'} gérer les ${label} dans le référentiel géographique.`
             : `L'accès au module "${label}" vous a été ${value ? 'accordé' : 'retiré'}.`),
-      actionUrl:     '/dashboard/administrateur',
+      /* '/dashboard/administrateur' n'existe pas (router.tsx expose
+       * '/dashboard/admin/*') — voir notification-event.service.ts. */
+      actionUrl:     '/dashboard/admin',
       resourceType:  isGeo ? 'geo_permission' : 'admin_permission',
       resourceId:    admin.id,
+      payload:       { perm },
     }).catch(() => {/* notification non bloquante */});
 
     return { message: 'Permission mise à jour.', perms };
@@ -221,7 +224,7 @@ export class AdminsService {
         priority:      NotificationPriority.HIGH,
         title:         'Zone géographique assignée',
         body:          'Le super-administrateur vous a assigné une zone géographique. Connectez-vous pour gérer votre référentiel.',
-        actionUrl:     '/dashboard/administrateur',
+        actionUrl:     '/dashboard/admin',
         resourceType:  'geo_assignment',
         resourceId:    admin.id,
       }).catch(() => {});

@@ -40,6 +40,21 @@ interface RoleSelectorProps {
    * Ignoré si lockedRole est défini.
    */
   onlyClientRole?: boolean;
+  /**
+   * PlatformSettings.openSignup désactivé côté super-admin — le rôle
+   * "client" est grisé même hors mode invitation, avec un message dédié.
+   * Prioritaire sur onlyClientRole (qui rendait justement "client" seul
+   * disponible) : sans ce prop, le blocage serveur existait déjà mais
+   * rien ne le signalait avant la soumission du formulaire.
+   */
+  clientRegistrationClosed?: boolean;
+  /**
+   * PlatformSettings.codeRequiredForCompany désactivé — "company" devient
+   * sélectionnable en mode onlyClientRole (sans lien d'invitation), au même
+   * titre que "client". true par défaut (comportement historique : code
+   * toujours requis) tant que la politique publique n'a pas répondu.
+   */
+  companyCodeRequired?: boolean;
 }
 
 export const RoleSelector: React.FC<RoleSelectorProps> = ({
@@ -49,6 +64,8 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
   label         = 'Votre rôle',
   lockedRole    = null,
   onlyClientRole = false,
+  clientRegistrationClosed = false,
+  companyCodeRequired = true,
 }) => {
   // Exclure super_admin de la grille publique
   const roles = (Object.entries(ROLE_CONFIGS) as [UserRole, (typeof ROLE_CONFIGS)[UserRole]][])
@@ -60,9 +77,19 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
       // Mode invitation : seul le rôle invité est accessible
       return role !== lockedRole;
     }
+    // PlatformSettings.openSignup désactivé — "client" grisé même sans
+    // mode onlyClientRole (un lien d'invitation vise toujours un rôle
+    // pro, jamais "client", donc pas de conflit avec lockedRole ci-dessus).
+    if (role === 'client' && clientRegistrationClosed) {
+      return true;
+    }
     if (onlyClientRole) {
-      // Mode sans invitation : seul "client" est accessible
-      return role !== 'client';
+      // Mode sans invitation : "client" est toujours accessible, et
+      // "company" le devient aussi quand codeRequiredForCompany est
+      // désactivé — voir companyCodeRequired ci-dessus.
+      if (role === 'client') return false;
+      if (role === 'company' && !companyCodeRequired) return false;
+      return true;
     }
     return false;
   };
@@ -72,6 +99,9 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
     if (!isDisabled(role)) return undefined;
     if (lockedRole !== null) {
       return `Ce formulaire est réservé au rôle ${ROLE_CONFIGS[lockedRole]?.label ?? lockedRole}`;
+    }
+    if (role === 'client' && clientRegistrationClosed) {
+      return 'Les inscriptions clients sont temporairement fermées.';
     }
     if (onlyClientRole) {
       return 'Ce rôle nécessite une invitation par lien email';
@@ -111,24 +141,58 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
         )}
       </div>
 
-      {/* Bandeau informatif si mode client-only */}
-      {!lockedRole && onlyClientRole && (
-        <div style={{
-          display: 'flex', alignItems: 'flex-start', gap: '9px',
-          padding: '10px 13px', marginBottom: '12px',
-          background: 'rgba(245,158,11,.06)',
-          border: '1.5px solid rgba(245,158,11,.2)',
-          borderRadius: '10px', fontSize: '12px',
-          color: 'var(--amber, #D97706)', lineHeight: 1.5,
-        }}>
-          <span style={{ fontSize: '16px', flexShrink: 0 }}>ℹ️</span>
-          <span>
-            <strong>Inscription sans invitation :</strong> seul le compte Client est disponible.
-            Les autres rôles (Entreprise, Livreur, Partenaire…) nécessitent
-            un <strong>lien d'invitation</strong> envoyé par un administrateur Shoneya.
-          </span>
-        </div>
-      )}
+      {/* Bandeau informatif en mode sans invitation — texte adapté aux 4
+          combinaisons possibles (client ouvert/fermé × entreprise
+          ouverte/fermée), plutôt que de supposer que seul "client" peut
+          jamais être disponible en libre-service. */}
+      {!lockedRole && onlyClientRole && (() => {
+        const clientOpen  = !clientRegistrationClosed;
+        const companyOpen = !companyCodeRequired;
+
+        if (!clientOpen && !companyOpen) {
+          return (
+            <div style={{
+              display: 'flex', alignItems: 'flex-start', gap: '9px',
+              padding: '10px 13px', marginBottom: '12px',
+              background: 'rgba(220,38,38,.06)',
+              border: '1.5px solid rgba(220,38,38,.2)',
+              borderRadius: '10px', fontSize: '12px',
+              color: 'var(--rose, #DC2626)', lineHeight: 1.5,
+            }}>
+              <span style={{ fontSize: '16px', flexShrink: 0 }}>🚫</span>
+              <span>
+                <strong>Inscriptions temporairement fermées.</strong> La création de nouveaux comptes
+                sans invitation n'est pas disponible pour le moment. Réessayez plus tard ou
+                contactez le support.
+              </span>
+            </div>
+          );
+        }
+
+        const availableLabel = clientOpen && companyOpen
+          ? 'les comptes Client et Entreprise sont disponibles'
+          : clientOpen
+            ? 'seul le compte Client est disponible'
+            : 'seul le compte Entreprise est disponible';
+
+        return (
+          <div style={{
+            display: 'flex', alignItems: 'flex-start', gap: '9px',
+            padding: '10px 13px', marginBottom: '12px',
+            background: 'rgba(245,158,11,.06)',
+            border: '1.5px solid rgba(245,158,11,.2)',
+            borderRadius: '10px', fontSize: '12px',
+            color: 'var(--amber, #D97706)', lineHeight: 1.5,
+          }}>
+            <span style={{ fontSize: '16px', flexShrink: 0 }}>ℹ️</span>
+            <span>
+              <strong>Inscription sans invitation :</strong> {availableLabel}.
+              Les autres rôles nécessitent
+              un <strong>lien d'invitation</strong> envoyé par un administrateur Shoneya.
+            </span>
+          </div>
+        );
+      })()}
 
       <div className="rs-grid">
         {roles.map(([role, config]) => {

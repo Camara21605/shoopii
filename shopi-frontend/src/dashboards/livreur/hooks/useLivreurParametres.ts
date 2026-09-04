@@ -105,14 +105,19 @@ export function useLivreurParametres() {
     setData(prev => prev ? { ...prev, photoUrl: res.photoUrl } : prev);
   }, [postFile]);
 
+  /* SÉCURITÉ (backend) — l'API ne renvoie plus l'URL de ces documents
+   * sensibles (CNI, permis, assurance, casier judiciaire) après upload,
+   * seulement `{present:true}` : l'UI ne s'est jamais servie que de la
+   * présence/absence (SecDocuments.tsx). Valeur locale factice, juste
+   * pour marquer le champ comme présent. */
   const uploadDocument = useCallback(async (type: string, file: File) => {
-    const res = await postFile(`documents/${type}`, file) as { url: string };
+    const res = await postFile(`documents/${type}`, file) as { present: boolean };
     const map: Record<string, keyof LivreurData> = {
       cni:'documentCni', permis:'documentPermis',
       assurance:'documentAssurance', casier:'documentCasier',
     };
     const f = map[type];
-    if (f) setData(prev => prev ? { ...prev, [f]: res.url } : prev);
+    if (f && res.present) setData(prev => prev ? { ...prev, [f]: 'uploaded' } : prev);
   }, [postFile]);
 
   const deleteDocument = useCallback(async (type: string) => {

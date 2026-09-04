@@ -9,6 +9,7 @@
  * ============================================================ */
 
 import { Entity, PrimaryColumn, Column, UpdateDateColumn } from 'typeorm';
+import { ColumnNumericTransformer } from '../../database/transformers/column-numeric.transformer';
 
 /* ── Interfaces stockées en JSON ────────────────────────────── */
 
@@ -86,7 +87,7 @@ export class PartnerSetting {
   @Column({ type: 'varchar', length: 20, default: 'tier' })
   commissionMode!: string;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 5 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 5, transformer: new ColumnNumericTransformer() })
   defaultCommissionRate!: number;
 
   /* ── Validation ──────────────────────────────────────────── */

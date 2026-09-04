@@ -23,6 +23,7 @@ import {
   ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { JwtAuthGuard }       from 'src/common/guards/auth.guard';
 
 import { ProfilLivreurService }   from './services/profil-livreur.service';
@@ -114,13 +115,25 @@ export class LivreurParametresController {
    * Upload un document : POST /parametres/documents/cni
    * Types acceptés : cni | permis | assurance | casier
    */
+  /* SÉCURITÉ — deux manques comblés, mêmes correctifs que
+   * ParametresController (Entreprise) et CorrespondantParametresController :
+   *   1. Aucun FileTypeValidator ici jusqu'à présent — n'importe quel
+   *      fichier (exe, script…) était accepté, seule la taille était
+   *      vérifiée. Vérification par signature binaire réelle désormais
+   *      (voir FileTypeValidator, magic numbers via le package file-type).
+   *   2. ThrottlerGuard — upload lourd (10 MB) + coût Cloudinary. */
   @Post('documents/:type')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 3_600_000 } })
   @UseInterceptors(FileInterceptor('file'))
   uploadDocument(
     @Req() req: any,
     @Param('type') type: any,
     @UploadedFile(new ParseFilePipe({
-      validators: [new MaxFileSizeValidator({ maxSize: MB10 })],
+      validators: [
+        new MaxFileSizeValidator({ maxSize: MB10 }),
+        new FileTypeValidator({ fileType: /application\/pdf|image\/(jpeg|png|webp)/ }),
+      ],
     }))
     file: Express.Multer.File,
   ) {

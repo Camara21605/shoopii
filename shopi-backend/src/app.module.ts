@@ -60,7 +60,6 @@ import { EscrowEngineModule }      from './modules/escrow-engine/escrow-engine.m
 import { PaymentEngineModule }     from './modules/payment-engine/payment-engine.module';
 import { ResolutionEngineModule }  from './modules/resolution-engine/resolution-engine.module';
 import { SettlementEngineModule }    from './modules/settlement-engine/settlement-engine.module';
-import { FinancialConfigModule }    from './modules/financial-config-engine/financial-config.module';
 import { ReportingModule }              from './modules/reporting-engine/reporting.module';
 import { EventOrchestrationModule }    from './modules/event-orchestration/event-orchestration.module';
 import { PlatformSecurityModule }      from './modules/platform-security/platform-security.module';
@@ -93,7 +92,6 @@ import { PerformanceModule }           from './modules/performance-engine/perfor
     PaymentEngineModule,
     ResolutionEngineModule,
     SettlementEngineModule,
-    FinancialConfigModule,
     ReportingModule,
     CommandeModule,
     EventOrchestrationModule,

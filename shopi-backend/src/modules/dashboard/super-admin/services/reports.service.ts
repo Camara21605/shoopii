@@ -13,17 +13,26 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Report, ReportSeverity, ReportStatus } from '../../../../database/entities/report.entity';
 import { User } from '../../../../database/entities/user.entity';
+import { Admin } from '../../../../database/entities/profiles/admin-profile.entity';
 import { UserRole } from '../../../../common/enums/user-role.enum';
 import { AuditLogService } from './audit-log.service';
+import { NotificationEventService } from '../../../notifications/events/notification-event.service';
+import { RedisCacheService } from '../../../performance-engine/services/redis-cache.service';
+import { SIGNALEMENTS_CACHE_PREFIX } from '../../administrateur/services/admin-signalements.service';
 
 export interface AlertDto {
-  id:       string;
-  type:     ReportSeverity;
-  icon:     string;
-  title:    string;
-  sub:      string;
-  time:     string;
-  resolved: boolean;
+  id:         string;
+  type:       ReportSeverity;
+  icon:       string;
+  title:      string;
+  sub:        string;
+  time:       string;
+  resolved:   boolean;
+  /* BUG CORRIGÉ — le frontend affichait "Résolus (7j)" mais ne recevait
+   * aucune date de résolution : il comptait TOUS les signalements résolus,
+   * peu importe leur ancienneté. Exposé ici pour permettre le vrai filtre
+   * 7 jours côté AlertsSection.tsx. */
+  resolvedAt: string | null;
 }
 
 const SEVERITY_ICON: Record<ReportSeverity, string> = {
@@ -39,7 +48,12 @@ export class ReportsService {
     @InjectRepository(Report)
     private readonly reportRepo: Repository<Report>,
 
+    @InjectRepository(Admin)
+    private readonly adminRepo: Repository<Admin>,
+
     private readonly auditLog: AuditLogService,
+    private readonly notifEvents: NotificationEventService,
+    private readonly cache: RedisCacheService,
   ) {}
 
   private assertIsAdminOrSuperAdmin(caller: User): void {
@@ -78,8 +92,28 @@ export class ReportsService {
       status:       ReportStatus.PENDING,
     });
     const saved = await this.reportRepo.save(report);
+    await this.cache.delByPattern(SIGNALEMENTS_CACHE_PREFIX);
+
+    /* Report n'est pas rattaché à une zone admin (pas de colonne adminId —
+     * voir admin-signalements.service.ts) : tous les admins voient tous
+     * les signalements, donc tous sont notifiés. Fire-and-forget, ne doit
+     * jamais faire échouer la création du signalement elle-même. */
+    this.notifyAllAdmins(saved).catch(() => {});
 
     return this.toAlertDto(saved);
+  }
+
+  private async notifyAllAdmins(report: Report): Promise<void> {
+    const admins = await this.adminRepo.find({ select: { id: true } });
+    const severity = report.severity.toUpperCase() as 'CRITICAL' | 'WARNING' | 'INFO';
+    await Promise.all(admins.map(a =>
+      this.notifEvents.notifyAdminNewSignalement({
+        adminProfileId: a.id,
+        title:          report.title,
+        severity,
+        reportId:       report.id,
+      }),
+    ));
   }
 
   /* ── Résoudre un signalement (super-admin) ── */
@@ -97,6 +131,7 @@ export class ReportsService {
     report.resolvedAt = new Date();
     report.resolvedById = caller.id;
     await this.reportRepo.save(report);
+    await this.cache.delByPattern(SIGNALEMENTS_CACHE_PREFIX);
 
     await this.auditLog.log(
       caller, '✅',
@@ -115,8 +150,9 @@ export class ReportsService {
       icon:     SEVERITY_ICON[r.severity],
       title:    r.title,
       sub:      r.description ?? '',
-      time:     this.relativeTime(r.createdAt),
-      resolved: r.status === ReportStatus.RESOLVED,
+      time:       this.relativeTime(r.createdAt),
+      resolved:   r.status === ReportStatus.RESOLVED,
+      resolvedAt: r.resolvedAt ? r.resolvedAt.toISOString() : null,
     };
   }
 

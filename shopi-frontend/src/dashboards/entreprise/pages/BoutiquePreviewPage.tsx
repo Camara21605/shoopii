@@ -8,11 +8,27 @@ import type { TFunction } from 'i18next';
 import { MapContainer, TileLayer, Marker, ZoomControl, useMap, useMapEvents } from 'react-leaflet';
 import L from '../../../shared/location/leafletSetup';
 import { useParametres } from '../hooks/useParametres';
+import type { ParametresData } from '../hooks/useParametres';
+import { useTeamPermissions } from '../hooks/useTeamPermissions';
+import { apiFetch } from '../../../shared/services/apiFetch';
 import type { EntreprisePage } from '../types';
+/* BUG CORRIGÉ — l'aperçu était une <iframe> pointant vers
+ * /boutique/:id?preview=1 : à chaque ouverture/actualisation, tout le
+ * navigateur redémarrait l'application depuis zéro À L'INTÉRIEUR de
+ * l'iframe (nouveau bundle JS, nouvelle vérification de session…),
+ * plusieurs secondes pendant lesquelles l'en-tête générique du site
+ * restait visible avant que le contenu boutique ne s'installe. On monte
+ * maintenant BoutiquePage directement dans l'arbre React du dashboard
+ * (un seul <BrowserRouter> pour toute l'app, voir router.tsx) — plus de
+ * redémarrage, ni de synchronisation manuelle du thème sombre entre deux
+ * documents séparés (BoutiquePage lit directement le data-theme déjà
+ * posé sur ce même document par ThemeRouteSync). */
+import BoutiquePage from '../../../modules/home/components/boutique/pages/BoutiquePage';
 import {
   VILLES_SORTED, getCommunesByVille, getQuartiersByCommune, findVille,
 } from '../../../shared/location/data/geo-guinee';
 import { searchAddress } from '../../../shared/location/utils/nominatim';
+import styles from '../styles/BoutiquePreviewPage.module.css';
 
 /* Marqueur bleu personnalisé */
 const BLUE_ICON = L.divIcon({
@@ -117,8 +133,21 @@ const fg: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap:
 export default function BoutiquePreviewPage({ onNavigate }: Props) {
   const { t } = useTranslation();
   const PAYS_LIST = useMemo(() => getPaysList(t), [t]);
-  const { data, loading, saveContact } = useParametres();
-  const [iframeKey,  setIframeKey]  = useState(0);
+  /* saveContact seulement — le chargement passe par son propre fetch
+   * ci-dessous (gardé par boutique.view), pas par useParametres().reload()
+   * (gardé par settings.view) : un collaborateur avec boutique.view mais
+   * sans settings.view restait sinon bloqué sur un chargement infini
+   * (le 403 de useParametres() n'était jamais surfacé, juste `data` qui
+   * ne se remplissait jamais). */
+  const { saveContact } = useParametres();
+  const [data,       setData]       = useState<ParametresData | null>(null);
+  const [loading,    setLoading]    = useState(true);
+  const [loadError,  setLoadError]  = useState<string | null>(null);
+  const { can, isOwner, loading: permLoading } = useTeamPermissions();
+  const canEditBoutique = isOwner || can('boutique', 'edit');
+  /* Remonte BoutiquePage à neuf — remplace l'ancien rechargement d'iframe
+   * (setIframeKey) pour le bouton "Rafraîchir" de l'onglet Aperçu. */
+  const [previewKey, setPreviewKey]  = useState(0);
   const [activeTab,  setActiveTab]  = useState<Tab>('apercu');
   const [pays,       setPays]       = useState('GN');
   const [ville,      setVille]      = useState('');
@@ -133,7 +162,6 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
   const [saving,     setSaving]     = useState(false);
   const [saved,      setSaved]      = useState(false);
   const [error,      setError]      = useState<string | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isDark, setIsDark] = useState(() =>
     typeof window !== 'undefined'
       ? window.matchMedia('(prefers-color-scheme: dark)').matches ||
@@ -141,7 +169,25 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
       : false
   );
 
-  useEffect(() => { setIframeKey(k => k + 1); }, []);
+  /* Chargement dédié — voir la note sur `data`/`loading` ci-dessus. */
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    apiFetch<ParametresData>('/dashboard/entreprise/parametres/apercu')
+      .then(d => { if (!cancelled) { setData(d); setLoadError(null); } })
+      .catch((e: any) => { if (!cancelled) setLoadError(e?.message ?? t('boutiquePreview.loadError')); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* Repli instantané sur l'aperçu si boutique.edit est révoqué pendant que
+   * le collaborateur est déjà sur l'onglet Localisation (le sélecteur
+   * d'onglets étant masqué sans cette permission, il n'a alors plus aucun
+   * moyen d'y retourner lui-même). */
+  useEffect(() => {
+    if (!canEditBoutique && activeTab === 'localisation') setActiveTab('apercu');
+  }, [canEditBoutique, activeTab]);
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -155,15 +201,6 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => { mq.removeEventListener('change', onMQ); obs.disconnect(); };
   }, []);
-
-  useEffect(() => {
-    try {
-      const doc = iframeRef.current?.contentDocument;
-      if (!doc) return;
-      if (isDark) doc.documentElement.setAttribute('data-theme', 'dark');
-      else doc.documentElement.removeAttribute('data-theme');
-    } catch {}
-  }, [isDark]);
 
   useEffect(() => {
     if (!data) return;
@@ -232,6 +269,31 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
     } finally { setSaving(false); }
   };
 
+  /* Un collaborateur sans boutique.view ne doit jamais voir cette page —
+   * mise à jour instantanée si la permission est révoquée pendant qu'il y
+   * est déjà (voir useTeamPermissions : socket team:permissions_changed). */
+  if (!permLoading && !isOwner && !can('boutique', 'view')) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+      <div style={{ textAlign: 'center', color: 'var(--t2)' }}>
+        <i className="fas fa-lock" style={{ fontSize: 28, opacity: .5, marginBottom: 12, display: 'block' }} />
+        <strong>{t('boutiquePreview.accessDenied.title')}</strong>
+        <div style={{ fontSize: 13, marginTop: 6 }}>{t('boutiquePreview.accessDenied.message')}</div>
+      </div>
+    </div>
+  );
+
+  /* Erreur de chargement — évite un spinner infini (voir la note sur
+   * `data`/`loading` plus haut) si le fetch dédié échoue pour une autre
+   * raison qu'une permission manquante (déjà couverte au-dessus). */
+  if (!loading && loadError) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+      <div style={{ textAlign: 'center', color: 'var(--t1)' }}>
+        <i className="fas fa-triangle-exclamation" style={{ fontSize: 28, marginBottom: 12, display: 'block' }} />
+        {loadError}
+      </div>
+    </div>
+  );
+
   if (loading || !data) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--t3)' }}>
       <div style={{ textAlign: 'center' }}>
@@ -241,85 +303,87 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
     </div>
   );
 
-  const paysInfo    = PAYS_LIST.find(p => p.code === pays) ?? PAYS_LIST[0];
-  const boutiqueUrl = `/boutique/${data.id}?preview=1`;
+  const paysInfo = PAYS_LIST.find(p => p.code === pays) ?? PAYS_LIST[0];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 72px)' }}>
+    <div className={styles.root}>
 
       {/* ═══════════════ BANDEAU ═══════════════ */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', height: 54, background: 'var(--white)', borderBottom: '1px solid var(--bdr)', flexShrink: 0, gap: 12 }}>
+      <div className={styles.bandeau}>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className={styles.bandeauLeft}>
           <button onClick={() => onNavigate('profil')}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--g100)', border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--t2)' }}>
-            <i className="fas fa-arrow-left" /> {t('boutiquePreview.back')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--g100)', border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--t2)', flexShrink: 0 }}>
+            <i className="fas fa-arrow-left" /> <span className={styles.bandeauBackLabel}>{t('boutiquePreview.back')}</span>
           </button>
-          <div style={{ width: 1, height: 20, background: 'var(--bdr2)' }} />
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--navy)' }}>{data.companyName}</div>
-            <div style={{ fontSize: 11, color: 'var(--t3)' }}>
+          <div style={{ width: 1, height: 20, background: 'var(--bdr2)', flexShrink: 0 }} />
+          <div className={styles.bandeauNames}>
+            <div className={styles.bandeauName}>{data.companyName}</div>
+            <div className={styles.bandeauSub}>
               {activeTab === 'apercu' ? t('boutiquePreview.subtitleApercu') : t('boutiquePreview.subtitleLocalisation')}
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', background: 'var(--g100)', borderRadius: 9, padding: 3, gap: 2 }}>
-          {([
-            { key: 'apercu',       label: t('boutiquePreview.tabs.apercu'),       icon: 'fa-eye' },
-            { key: 'localisation', label: t('boutiquePreview.tabs.localisation'), icon: 'fa-map-location-dot' },
-          ] as { key: Tab; label: string; icon: string }[]).map(tabItem => (
-            <button key={tabItem.key} onClick={() => setActiveTab(tabItem.key)}
-              style={{ padding: '6px 14px', borderRadius: 7, border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .15s', background: activeTab === tabItem.key ? 'var(--white)' : 'transparent', color: activeTab === tabItem.key ? 'var(--navy)' : 'var(--t3)', boxShadow: activeTab === tabItem.key ? '0 1px 4px rgba(0,0,0,.10)' : 'none' }}>
-              <i className={`fas ${tabItem.icon}`} style={{ fontSize: 11 }} />{tabItem.label}
-            </button>
-          ))}
-        </div>
+        {/* Sélecteur d'onglets — masqué sans boutique.edit : "Localisation"
+         * EST l'onglet de modification, donc un collaborateur en lecture
+         * seule reste sur l'aperçu sans jamais pouvoir y accéder. */}
+        {canEditBoutique && (
+          <div className={styles.bandeauTabs}>
+            {([
+              { key: 'apercu',       label: t('boutiquePreview.tabs.apercu'),       icon: 'fa-eye' },
+              { key: 'localisation', label: t('boutiquePreview.tabs.localisation'), icon: 'fa-map-location-dot' },
+            ] as { key: Tab; label: string; icon: string }[]).map(tabItem => (
+              <button key={tabItem.key} onClick={() => setActiveTab(tabItem.key)}
+                style={{ padding: '6px 14px', borderRadius: 7, border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .15s', background: activeTab === tabItem.key ? 'var(--white)' : 'transparent', color: activeTab === tabItem.key ? 'var(--navy)' : 'var(--t3)', boxShadow: activeTab === tabItem.key ? '0 1px 4px rgba(0,0,0,.10)' : 'none', whiteSpace: 'nowrap' }}>
+                <i className={`fas ${tabItem.icon}`} style={{ fontSize: 11 }} />{tabItem.label}
+              </button>
+            ))}
+          </div>
+        )}
 
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className={styles.bandeauActions}>
           {activeTab === 'apercu' ? (
             <>
-              <button onClick={() => setIframeKey(k => k + 1)}
-                style={{ background: 'var(--g100)', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: 'var(--t3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => setPreviewKey(k => k + 1)}
+                style={{ background: 'var(--g100)', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: 'var(--t3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <i className="fas fa-rotate-right" style={{ fontSize: 13 }} />
               </button>
               <button onClick={() => window.open(`/boutique/${data.id}`, '_blank')}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                 <i className="fas fa-arrow-up-right-from-square" /> {t('boutiquePreview.ouvrir')}
               </button>
             </>
-          ) : (
+          ) : canEditBoutique ? (
             <button onClick={handleSave} disabled={saving || !ville}
-              style={{ display: 'flex', alignItems: 'center', gap: 7, background: saved ? 'var(--btn-h, #1C1C1F)' : 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 18px', fontSize: 12.5, fontWeight: 700, cursor: saving || !ville ? 'not-allowed' : 'pointer', opacity: !ville ? 0.5 : 1, transition: 'background .3s' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 7, background: saved ? 'var(--btn-h, #1C1C1F)' : 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 18px', fontSize: 12.5, fontWeight: 700, cursor: saving || !ville ? 'not-allowed' : 'pointer', opacity: !ville ? 0.5 : 1, transition: 'background .3s', whiteSpace: 'nowrap' }}>
               {saving ? <><i className="fas fa-circle-notch fa-spin" /> {t('boutiquePreview.enregistrement')}</>
                 : saved ? <><i className="fas fa-check" /> {t('boutiquePreview.enregistre')}</>
                   : <><i className="fas fa-cloud-arrow-up" /> {t('boutiquePreview.sauvegarderLocalisation')}</>}
             </button>
-          )}
+          ) : null}
         </div>
       </div>
 
-      {/* ═══════════════ APERÇU ═══════════════ */}
+      {/* ═══════════════ APERÇU ═══════════════
+       * Monté directement (plus d'iframe) — voir le commentaire en tête
+       * de fichier sur companyIdOverride/previewOverride. `key` force un
+       * remontage complet au clic sur "Rafraîchir" (même effet que
+       * l'ancien iframeKey), et style={{overflowY:'auto'}} recrée le
+       * cadre de défilement indépendant qu'offrait l'iframe (sans lui,
+       * cette zone ferait défiler toute la page du dashboard). */}
       {activeTab === 'apercu' && (
-        <iframe key={iframeKey} ref={iframeRef} src={boutiqueUrl} title={t('boutiquePreview.iframeTitle')}
-          style={{ flex: 1, border: 'none', width: '100%' }}
-          onLoad={() => {
-            try {
-              const doc = iframeRef.current?.contentDocument;
-              if (!doc) return;
-              if (isDark) doc.documentElement.setAttribute('data-theme', 'dark');
-              else doc.documentElement.removeAttribute('data-theme');
-            } catch {}
-          }}
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups" />
+        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+          <BoutiquePage key={previewKey} companyIdOverride={data.id} previewOverride />
+        </div>
       )}
 
       {/* ═══════════════ LOCALISATION ═══════════════ */}
-      {activeTab === 'localisation' && (
-        <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+      {activeTab === 'localisation' && canEditBoutique && (
+        <div className={styles.localisationWrap}>
 
-          {/* ── FORMULAIRE gauche ── */}
-          <div style={{ width: 340, flexShrink: 0, display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--bdr)', background: 'var(--white)', overflow: 'hidden' }}>
+          {/* ── FORMULAIRE gauche (passe au-dessus de la carte ≤860px) ── */}
+          <div className={styles.localisationForm}>
 
             {/* Header panneau */}
             <div style={{ padding: '16px 20px', background: 'linear-gradient(135deg,#0B1F3A,#1a3a6b)', flexShrink: 0 }}>
@@ -461,8 +525,8 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
             </div>
           </div>
 
-          {/* ── CARTE droite ── */}
-          <div style={{ flex: 1, position: 'relative', minWidth: 0 }}>
+          {/* ── CARTE droite (passe en dessous du formulaire ≤860px) ── */}
+          <div className={styles.localisationMap}>
 
             {/* Badge géocodage */}
             {geocoding && (

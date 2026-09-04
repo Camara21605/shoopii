@@ -3,10 +3,15 @@
  * Panneau de filtres latéral de la page boutique
  * ============================================================ */
 
-/* Sidebar sticky — reste visible pendant le scroll */
+/* Sidebar sticky — reste visible pendant le scroll.
+ * BUG CORRIGÉ — les 3 hauteurs empilées (header/identité/nav) étaient
+ * toutes devinées, y compris 66px pour le <Header> qui n'est jamais
+ * rendu en mode aperçu entreprise (?preview=1). Toutes mesurées en
+ * direct maintenant — voir BoutiquePage.tsx, BoutiqueIdentity.tsx,
+ * BoutiqueNav.tsx. */
 .sidebar {
   position: sticky;
-  top: calc(66px + 80px + 48px + 28px);
+  top: calc(var(--boutique-header-h, 66px) + var(--boutique-identity-h, 80px) + var(--boutique-nav-h, 48px) + 28px);
   display: flex;
   flex-direction: column;
   gap: 14px;

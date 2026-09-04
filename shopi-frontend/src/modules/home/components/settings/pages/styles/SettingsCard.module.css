@@ -130,6 +130,7 @@
 }
 .tog input:checked + .togSl { background: var(--blue); }
 .tog input:checked + .togSl::after { transform: translateX(18px); }
+.tog input:disabled + .togSl { opacity: .4; cursor: not-allowed; }
 
 /* ══ SECURITY ROWS ══ */
 .secRow {
@@ -151,6 +152,7 @@
 .statusOn   { background: rgba(4,120,87,.09);  color: var(--emerald); }
 .statusOff  { background: rgba(180,83,9,.09);  color: var(--amber); }
 .statusWarn { background: rgba(220,38,38,.08); color: var(--red); }
+.statusNeutral { background: var(--g100); color: var(--t3); }
 .secBtn {
   background: transparent; border: 1.5px solid var(--bdr2);
   border-radius: 8px; padding: 6px 14px;

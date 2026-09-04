@@ -28,6 +28,7 @@ interface Props {
   data:      CorrespondantData | null;
   onUpload:  (type: string, file: File) => Promise<void>;
   onDelete:  (type: string) => Promise<void>;
+  onViewUrl: (type: string) => Promise<string>;
 }
 
 const INFO = [
@@ -36,8 +37,21 @@ const INFO = [
   ['Contact équipe','verification@shopi.africa'],
 ];
 
-export default function SecDocuments({ data, onUpload, onDelete }: Props) {
+export default function SecDocuments({ data, onUpload, onDelete, onViewUrl }: Props) {
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  /* SÉCURITÉ (backend) — le document n'est plus servi par une URL
+   * publique permanente : on demande une URL signée fraîche à chaque
+   * clic (voir GET .../documents/:type/url) plutôt que de stocker un
+   * lien statique côté client. */
+  async function handleView(type: DocType) {
+    try {
+      const url = await onViewUrl(type);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (e: any) {
+      pop(`❌ ${e.message}`, 'e');
+    }
+  }
 
   /* Détermine le statut d'un document depuis les données API */
   function getStatus(docKey: keyof CorrespondantData): 'ok' | 'pend' | 'miss' {
@@ -97,12 +111,12 @@ export default function SecDocuments({ data, onUpload, onDelete }: Props) {
                   <div style={{ flex:1, minWidth:0 }}>
                     <div className={s.docNm}>{doc.nm}</div>
                     <div className={s.docSub}>{doc.sub}</div>
-                    {/* Lien vers le document uploadé */}
+                    {/* Lien vers le document uploadé — URL signée générée à la demande */}
                     {hasFile && (
-                      <a href={data![fieldKey] as string} target="_blank" rel="noreferrer"
-                        style={{ fontSize:10, color:'var(--t2)', marginTop:2, display:'inline-flex', alignItems:'center', gap:4 }}>
+                      <button onClick={() => handleView(docType)}
+                        style={{ fontSize:10, color:'var(--t2)', marginTop:2, display:'inline-flex', alignItems:'center', gap:4, background:'none', border:'none', padding:0, cursor:'pointer' }}>
                         <i className="fas fa-link" /> Voir le document
-                      </a>
+                      </button>
                     )}
                   </div>
                   <span className={`${s.docStatus} ${STATUS_CLS[status]}`}>{STATUS_LABEL[status]}</span>

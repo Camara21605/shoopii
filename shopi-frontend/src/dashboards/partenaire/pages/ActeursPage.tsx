@@ -6,10 +6,15 @@
 import { useState, useEffect } from 'react';
 import styles from '../styles/ActeursPage.module.css';
 import { apiFetch } from '@/shared/services/apiFetch';
+import ActeurDetailModal from '../components/ActeurDetailModal';
 import type { ActeurType } from '../data/types';
 
 interface Props {
-  onReport: (cible: string) => void;
+  /* BUG CORRIGÉ — n'envoyait que le nom affiché (texte libre) : l'admin ne
+   * pouvait jamais rattacher le signalement à un vrai compte (targetUserId
+   * toujours absent), ce qui bloquait aussi l'auto-suspension côté admin
+   * (AdminSignalementsService.warnSignalement exige un targetUserId). */
+  onReport: (userId: string, cible: string) => void;
   onToast:  (msg: string, type?: 's' | 'i' | 'w') => void;
 }
 
@@ -34,10 +39,11 @@ interface ActeursData {
 
 type Filter = 'all' | ActeurType;
 
-export default function ActeursPage({ onReport, onToast }: Props) {
+export default function ActeursPage({ onReport }: Props) {
   const [data, setData]       = useState<ActeursData | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter]   = useState<Filter>('all');
+  const [detailActor, setDetailActor] = useState<{ id: string; type: ActeurType } | null>(null);
 
   useEffect(() => {
     apiFetch<ActeursData>('/dashboard/partenaire/acteurs')
@@ -96,13 +102,22 @@ export default function ActeursPage({ onReport, onToast }: Props) {
 
               <div className={styles.foot}>
                 <div className={styles.footActs}>
-                  <button className={styles.gerer} onClick={() => onToast(`Profil de ${a.nom}`, 'i')}>Gérer</button>
-                  <button className={styles.flag} title="Signaler cet acteur" onClick={() => onReport(a.nom)}><i className="fas fa-flag" /></button>
+                  <button className={styles.gerer} onClick={() => setDetailActor({ id: a.id, type: a.type })}>Gérer</button>
+                  <button className={styles.flag} title="Signaler cet acteur" onClick={() => onReport(a.userId, a.nom)}><i className="fas fa-flag" /></button>
                 </div>
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      {detailActor && (
+        <ActeurDetailModal
+          actorId={detailActor.id}
+          type={detailActor.type}
+          onClose={() => setDetailActor(null)}
+          onReport={onReport}
+        />
       )}
     </div>
   );

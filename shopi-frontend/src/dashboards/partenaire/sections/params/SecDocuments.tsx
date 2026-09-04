@@ -6,23 +6,24 @@
 
 import { useRef } from 'react';
 import s from '../../styles/ParamsShared.module.css';
-import type { PartenaireData } from '../../hooks/usePartenaireParametres';
+import type { PartenaireDocumentsState } from '../../hooks/usePartenaireParametres';
 
 interface Props {
-  data:             PartenaireData | null;
+  documents:        PartenaireDocumentsState | null;
   saving:           boolean;
   onUploadDocument: (type: string, file: File) => Promise<void>;
   onToast:          (msg: string, type?: 's' | 'i' | 'w') => void;
 }
 
-/* Définition des documents */
+/* Définition des documents — la clé correspond au type attendu par
+   POST /dashboard/partenaire/parametres/documents/:type */
 const DOCS = [
-  { key: 'documentCni',      icon: 'fa-id-card',   label: "Pièce d'identité (CNI / Passeport)", required: true  },
-  { key: 'documentDomicile', icon: 'fa-file-invoice', label: 'Justificatif de domicile',          required: true  },
-  { key: 'documentActivite', icon: 'fa-briefcase',  label: "Justificatif d'activité",             required: false },
-];
+  { key: 'cni',      icon: 'fa-id-card',      label: "Pièce d'identité (CNI / Passeport)", required: true  },
+  { key: 'domicile', icon: 'fa-file-invoice', label: 'Justificatif de domicile',           required: true  },
+  { key: 'activite', icon: 'fa-briefcase',    label: "Justificatif d'activité",            required: false },
+] as const;
 
-export default function SecDocuments({ data, saving, onUploadDocument, onToast }: Props) {
+export default function SecDocuments({ documents, saving, onUploadDocument, onToast }: Props) {
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   async function handleUpload(type: string, e: React.ChangeEvent<HTMLInputElement>) {
@@ -31,18 +32,21 @@ export default function SecDocuments({ data, saving, onUploadDocument, onToast }
     try {
       await onUploadDocument(type, file);
       onToast('✅ Document téléversé avec succès', 's');
-    } catch {
-      onToast('❌ Échec du téléversement', 'w');
+    } catch (err: any) {
+      onToast(err?.message ?? '❌ Échec du téléversement', 'w');
+    } finally {
+      e.target.value = '';
     }
   }
 
-  function getDocState(key: string): 'ok' | 'wait' | 'todo' {
-    /* Les champs documentCni/documentDomicile/documentActivite ne sont pas
-       encore dans l'entité Partner — section affichée en mode "à configurer".
-       Sera enrichi quand les champs seront ajoutés à la DB. */
-    const url = (data as any)?.[key];
-    if (!url) return 'todo';
-    return 'ok';
+  /* En attente de vérification admin dès que les 2 documents obligatoires
+     sont présents mais que verificationStatus n'est pas encore "verified"
+     (voir DocumentsPartenaireService.uploadDocument côté backend). */
+  function getDocState(key: 'cni' | 'domicile' | 'activite'): 'ok' | 'wait' | 'todo' {
+    const present = documents?.documents?.[key]?.present ?? false;
+    if (!present) return 'todo';
+    if (documents?.verificationStatus === 'verified') return 'ok';
+    return 'wait';
   }
 
   const STATUS_LABELS: Record<string, { label: string; icon: string }> = {
@@ -80,15 +84,13 @@ export default function SecDocuments({ data, saving, onUploadDocument, onToast }
               <button
                 className={s.docAct}
                 disabled={saving}
-                onClick={() => {
-                  if (state === 'ok') { onToast('👁️ Aperçu du document', 'i'); }
-                  else { fileRefs.current[doc.key]?.click(); }
-                }}
+                onClick={() => fileRefs.current[doc.key]?.click()}
               >
-                {state === 'ok' ? 'Voir' : state === 'wait' ? 'Voir' : 'Ajouter'}
+                {state === 'todo' ? 'Ajouter' : 'Remplacer'}
               </button>
+              {/* Seul le PDF est accepté côté backend (UploadService.uploadDocument) */}
               <input
-                type="file" accept=".pdf,.jpg,.jpeg,.png"
+                type="file" accept=".pdf"
                 style={{ display: 'none' }}
                 ref={el => { fileRefs.current[doc.key] = el; }}
                 onChange={e => handleUpload(doc.key, e)}
@@ -96,15 +98,11 @@ export default function SecDocuments({ data, saving, onUploadDocument, onToast }
             </div>
           );
         })}
-        {/* Téléphone */}
-        <div className={s.docItem}>
-          <div className={`${s.docIc} ${s.docOk}`}><i className="fas fa-mobile-screen" /></div>
-          <div className={s.docMain}>
-            <div className={s.docNm}>Numéro de téléphone</div>
-            <div className={`${s.docSt} ${s.docStOk}`}><i className="fas fa-circle-check" /> Confirmé par SMS</div>
-          </div>
-          <button className={s.docAct} onClick={() => onToast('🔄 Renvoyer le code SMS', 'i')}>Modifier</button>
-        </div>
+      </div>
+      <div style={{ marginTop: 10, fontSize: 12, color: 'var(--t3)', lineHeight: 1.5 }}>
+        <i className="fas fa-lock" style={{ marginRight: 6 }} />
+        La pièce d'identité et le justificatif de domicile sont obligatoires : tant qu'ils
+        ne sont pas fournis, le retrait de vos commissions reste bloqué.
       </div>
     </div>
   );

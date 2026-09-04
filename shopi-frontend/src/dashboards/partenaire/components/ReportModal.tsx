@@ -13,8 +13,11 @@ type TargetType = 'ent' | 'lvr' | 'cor';
 
 interface Props {
   defaultTarget?: string;
+  /** id réel du compte visé (résolu au clic sur "Signaler cet acteur") —
+   *  absent quand ouvert depuis le bouton générique, sans acteur précis. */
+  defaultTargetUserId?: string;
   onClose:  () => void;
-  onSubmit: (cible: string, motif: MotifSignalement, gravite: Gravite, desc: string, motifLabel: string, targetType: TargetType) => Promise<string>;
+  onSubmit: (cible: string, motif: MotifSignalement, gravite: Gravite, desc: string, motifLabel: string, targetType: TargetType, targetUserId?: string) => Promise<string>;
   onToast:  (msg: string, type?: 's' | 'i' | 'w') => void;
 }
 
@@ -35,7 +38,7 @@ const TARGET_TYPES: { id: TargetType; icon: string; label: string }[] = [
   { id: 'cor', icon: 'fa-map-pin',    label: 'Correspondant' },
 ];
 
-export default function ReportModal({ defaultTarget = '', onClose, onSubmit, onToast }: Props) {
+export default function ReportModal({ defaultTarget = '', defaultTargetUserId, onClose, onSubmit, onToast }: Props) {
   const [cible, setCible]         = useState(defaultTarget);
   const [motif, setMotif]         = useState<MotifSignalement>('fraude');
   const [sev, setSev]             = useState<Gravite>('med');
@@ -49,7 +52,7 @@ export default function ReportModal({ defaultTarget = '', onClose, onSubmit, onT
     const motifLabel = REASONS.find(r => r.id === motif)?.nm ?? motif;
     setBusy(true);
     try {
-      const ref = await onSubmit(cible, motif, sev, desc, motifLabel, targetType);
+      const ref = await onSubmit(cible, motif, sev, desc, motifLabel, targetType, defaultTargetUserId);
       onClose();
       onToast("Signalement envoyé à l'équipe sécurité Shoneya", 's');
       setTimeout(() => onToast('Référence : ' + ref, 'i'), 700);

@@ -60,7 +60,19 @@ export class CommandeFeedbackService {
     /* 2. Note de l'entreprise */
     const entrepriseNote = dto.notes.find(n => n.role === 'entreprise');
 
-    if (entrepriseNote && commande.companyId) {
+    /* BUG CORRIGÉ — Company.allowReviews (Paramètres > Catalogue,
+     * "Autoriser les avis clients") était enregistré mais jamais lu :
+     * même désactivé, un acheteur confirmé pouvait toujours laisser un
+     * avis. La restriction "acheteur confirmé uniquement" (vérifiée
+     * juste au-dessus via commande.clientId === actorId) reste, elle,
+     * indépendante de ce toggle — les deux se cumulent. */
+    const allowReviews = entrepriseNote && commande.companyId
+      ? (await this.companyRepo.findOne({
+          where: { id: commande.companyId }, select: ['allowReviews'],
+        }))?.allowReviews ?? true
+      : true;
+
+    if (entrepriseNote && commande.companyId && allowReviews) {
 
       /* 3. Nom du client (snapshot) */
       let clientNom       = 'Client Shopi';

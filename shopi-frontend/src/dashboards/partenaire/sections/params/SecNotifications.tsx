@@ -1,12 +1,35 @@
 /* ================================================================
  * FICHIER : sections/params/SecNotifications.tsx
  * Section "Notifications" — alertes et canaux de communication.
- * API : onSave(dto) → PATCH /partenaire/parametres/notifications
+ *
+ * BUG CORRIGÉ — cette section lisait/écrivait exclusivement
+ * Partner.notifSettings (PATCH /partenaire/parametres/notifications), un
+ * blob JSON legacy que le moteur de notifications réel (NotificationService
+ * .resolveExternalChannels(), voir notification.service.ts) ne lit JAMAIS :
+ * activer/désactiver "Email"/"SMS"/"Push" ici n'avait donc AUCUN effet sur
+ * les notifications effectivement envoyées. Le vrai réglage vit dans
+ * NotificationPreference (GET/PATCH /notifications/preferences, déjà
+ * utilisé par tous les rôles) — "Canaux" et "Commission créditée" sont
+ * maintenant branchés dessus. Le canal "WhatsApp" a été retiré : il
+ * n'existe tout simplement pas dans NotificationChannel (in_app/push/
+ * email/sms uniquement) — c'était un bouton 100% décoratif.
+ *
+ * "Nouvel acteur activé" / "Suivi des signalements" / "Changement de
+ * palier" restent stockés dans Partner.notifSettings : ce sont des
+ * catégories, alors que le moteur réel ne filtre que par NotificationType
+ * précis (un par événement) — les regrouper sous un type générique unique
+ * les ferait se désactiver les uns les autres. "Nouvel acteur activé" a
+ * désormais un vrai déclencheur côté backend (voir
+ * NotificationEventService.notifyPartnerActeurActivated(), appelé depuis
+ * AdminActeursService.approveValidation()) mais n'est pas encore filtrable
+ * individuellement pour cette raison — reste toujours envoyé si les
+ * canaux globaux ci-dessous sont activés.
  * ================================================================ */
 
 import { useState, useEffect } from 'react';
 import s from '../../styles/ParamsShared.module.css';
 import type { PartenaireData } from '../../hooks/usePartenaireParametres';
+import { apiFetch } from '../../../../shared/services/apiFetch';
 
 interface Props {
   data:        PartenaireData | null;
@@ -18,31 +41,58 @@ interface Props {
   onToast:     (msg: string, type?: 's' | 'i' | 'w') => void;
 }
 
+/* Réponse de GET /notifications/preferences (NotificationPreference) —
+ * seuls les champs utilisés ici sont déclarés. */
+interface NotificationPreferences {
+  globalPushEnabled:  boolean;
+  globalEmailEnabled: boolean;
+  globalSmsEnabled:   boolean;
+  preferences: Record<string, { in_app?: boolean; push?: boolean; email?: boolean; sms?: boolean }> | null;
+}
+
+/* Type réel utilisé par le backend quand une commission est créditée —
+ * voir notifyCommissionReceived()/notifyWalletOperation() (CREDIT). */
+const COMMISSION_TYPE = 'payment.sent';
+
 export default function SecNotifications({
   data, saving, dirty, markClean, saveTrigger, onSave, onToast
 }: Props) {
+  /* ── Catégories encore stockées dans Partner.notifSettings ── */
   const [notifActeur, setNotifActeur] = useState(true);
-  const [notifComm,   setNotifComm]   = useState(true);
   const [notifSig,    setNotifSig]    = useState(true);
   const [notifPalier, setNotifPalier] = useState(true);
   const [notifNews,   setNotifNews]   = useState(false);
-  const [cEmail,      setCEmail]      = useState(true);
-  const [cSms,        setCSms]        = useState(true);
-  const [cWa,         setCWa]         = useState(true);
-  const [cPush,       setCPush]       = useState(false);
+
+  /* ── Canaux + "Commission créditée" — moteur réel ── */
+  const [prefsLoading, setPrefsLoading] = useState(true);
+  const [notifComm,    setNotifComm]    = useState(true);
+  const [cEmail,       setCEmail]       = useState(true);
+  const [cSms,         setCSms]         = useState(false);
+  const [cPush,        setCPush]        = useState(true);
 
   useEffect(() => {
     if (!data) return;
     setNotifActeur(data.notifActeurActive ?? true);
-    setNotifComm(data.notifCommission     ?? true);
     setNotifSig(data.notifSignalement     ?? true);
     setNotifPalier(data.notifPalier       ?? true);
     setNotifNews(data.notifNews           ?? false);
-    setCEmail(data.canalEmail             ?? true);
-    setCSms(data.canalSms                 ?? true);
-    setCWa(data.canalWhatsapp             ?? true);
-    setCPush(data.canalPush               ?? false);
   }, [data]);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch<NotificationPreferences>('/notifications/preferences')
+      .then(p => {
+        if (cancelled) return;
+        setCEmail(p.globalEmailEnabled);
+        setCSms(p.globalSmsEnabled);
+        setCPush(p.globalPushEnabled);
+        const commissionPref = p.preferences?.[COMMISSION_TYPE];
+        setNotifComm(commissionPref ? Object.values(commissionPref).some(Boolean) : true);
+      })
+      .catch(() => { /* réglages par défaut conservés en cas d'échec */ })
+      .finally(() => { if (!cancelled) setPrefsLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (saveTrigger > 0) handleSave();
@@ -51,11 +101,27 @@ export default function SecNotifications({
 
   async function handleSave() {
     try {
-      await onSave({
-        notifActeurActive: notifActeur, notifCommission: notifComm,
-        notifSignalement: notifSig, notifPalier, notifNews,
-        canalEmail: cEmail, canalSms: cSms, canalWhatsapp: cWa, canalPush: cPush,
-      });
+      await Promise.all([
+        onSave({
+          notifActeurActive: notifActeur,
+          notifSignalement:  notifSig,
+          notifPalier,
+          notifNews,
+        }),
+        apiFetch('/notifications/preferences', {
+          method: 'PATCH',
+          body: {
+            globalEmailEnabled: cEmail,
+            globalSmsEnabled:   cSms,
+            globalPushEnabled:  cPush,
+            preferences: {
+              [COMMISSION_TYPE]: {
+                in_app: notifComm, push: notifComm, email: notifComm, sms: notifComm,
+              },
+            },
+          },
+        }),
+      ]);
       markClean();
       onToast('✅ Notifications sauvegardées', 's');
     } catch {
@@ -74,7 +140,6 @@ export default function SecNotifications({
   const CANAUX: TRow[] = [
     { ic: 'fa-envelope',      t: 'Email',              d: '', val: cEmail, set: setCEmail },
     { ic: 'fa-comment-sms',   t: 'SMS',                d: '', val: cSms,   set: setCSms   },
-    { ic: 'fab fa-whatsapp',  t: 'WhatsApp',           d: '', val: cWa,    set: setCWa    },
     { ic: 'fa-bell',          t: 'Notifications push', d: '', val: cPush,  set: setCPush  },
   ];
 
@@ -114,7 +179,9 @@ export default function SecNotifications({
           <div className={s.fcTtl}><i className="fas fa-paper-plane" /> Canaux</div>
         </div>
         <div className={s.fcBody}>
-          {CANAUX.map(r => <TogRow key={r.t} row={r} />)}
+          {prefsLoading
+            ? <div style={{ padding: '10px 0', fontSize: 12.5, color: 'var(--t3)' }}>Chargement…</div>
+            : CANAUX.map(r => <TogRow key={r.t} row={r} />)}
         </div>
       </div>
     </>

@@ -1,5 +1,8 @@
 /* BoutiqueIdentity.module.css */
-.bar   { background:var(--white); border-bottom:1px solid var(--bdr); box-shadow:0 2px 8px rgba(11,31,58,.06); position:sticky; top:66px; z-index:800; }
+/* BUG CORRIGÉ — top:66px supposait le <Header> fixe toujours présent ;
+ * en mode aperçu entreprise (?preview=1), il n'est jamais rendu — voir
+ * BoutiquePage.tsx qui pose --boutique-header-h à 0px dans ce cas. */
+.bar   { background:var(--white); border-bottom:1px solid var(--bdr); box-shadow:0 2px 8px rgba(11,31,58,.06); position:sticky; top:var(--boutique-header-h, 66px); z-index:800; }
 .inner { max-width:1360px; margin:0 auto; padding:0 28px; display:flex; align-items:center; gap:20px; min-height:80px; padding-left:calc(28px + 112px + 20px); flex-wrap:wrap; }
 .nameBlock {}
 .title { font-family:var(--fd,'Fraunces',serif); font-size:22px; font-weight:800; color:var(--navy); letter-spacing:-.4px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }

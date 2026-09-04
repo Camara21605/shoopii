@@ -23,7 +23,7 @@
  *   1. Charger / sauvegarder les settings via le backend
  *   2. Gérer l'état activeTab
  *   3. Passer settings + set() à chaque onglet
- *   4. Gérer le loading/saving global (Sauvegarder, Purge cache, Regen API key)
+ *   4. Gérer le loading/saving global (Sauvegarder, Purge cache)
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -67,9 +67,6 @@ export default function SettingsSection({ toast, isActive, onLogout }: Props) {
   const [settings,         setSettings]        = useState<PlatformSettings>(DEFAULT_SETTINGS);
   const [settingsLoading,  setSettingsLoading] = useState(false);
   const [settingsSaving,   setSettingsSaving]  = useState(false);
-
-  /* ── API key regen ── */
-  const [apiKeyRegenning, setApiKeyRegenning] = useState(false);
 
   /* ─────────────────────────────────────────────────────────────
    * CHARGEMENT au montage et à chaque fois que la section devient active
@@ -123,17 +120,6 @@ export default function SettingsSection({ toast, isActive, onLogout }: Props) {
   const handlePurgeCache = useCallback(async () => {
     await apiFetch('/dashboard/super-admin/maintenance/cache-purge', { method: 'POST' });
   }, []);
-
-  /* ─────────────────────────────────────────────────────────────
-   * RÉGÉNÉRATION CLÉ API (simulée — 1.2s délai)
-   * ─────────────────────────────────────────────────────────────
-   */
-  const handleRegenApiKey = useCallback(async () => {
-    setApiKeyRegenning(true);
-    await new Promise(r => setTimeout(r, 1200));
-    setApiKeyRegenning(false);
-    toast('success', '🔑 Clé API régénérée. Mettez à jour vos intégrations.');
-  }, [toast]);
 
   /* ─────────────────────────────────────────────────────────────
    * ADAPTER toast → signature (msg, type?) attendue par les onglets
@@ -238,8 +224,6 @@ export default function SettingsSection({ toast, isActive, onLogout }: Props) {
               settings={settings}
               set={set}
               toast={tabToast}
-              onRegenApiKey={handleRegenApiKey}
-              apiKeyRegenning={apiKeyRegenning}
             />
           )}
           {activeTab === 'apparence'     && <ApparenceTab     settings={settings} set={set} />}

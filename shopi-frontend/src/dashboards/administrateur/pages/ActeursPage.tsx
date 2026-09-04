@@ -2,14 +2,14 @@
  * FICHIER : src/dashboards/administrateur/pages/ActeursPage.tsx
  * ================================================================ */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import styles from '../styles/ActeursPage.module.css';
 import { apiFetch } from '../../../shared/services/apiFetch';
 import Pagination from '../components/Pagination';
 import type { ActeurType } from '../data/types';
 
 interface ActeursPageProps {
-  onSanction: (cible: string) => void;
+  onSanction: (targetUserId: string, cible: string) => void;
   onToast:    (msg: string, type?: 's' | 'i' | 'w') => void;
   /* Permissions "Modules généraux" de l'admin connecté (super-admin →
    * Permissions Admins). Un type d'acteur sans permission correspondante
@@ -34,27 +34,56 @@ export default function ActeursPage({ onSanction, onToast, geoPerms }: ActeursPa
   const [page,      setPage]      = useState(1);
   const [data,      setData]      = useState<{ list: any[]; counts: Record<string, number>; total: number } | null>(null);
   const [loading,   setLoading]   = useState(true);
+  const [reactivating, setReactivating] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  /* Annule la requête précédente encore en vol avant d'en lancer une
+   * nouvelle — sans ça, taper vite dans la recherche peut faire revenir
+   * une ancienne réponse APRÈS la plus récente et afficher des résultats
+   * périmés (les requêtes ne sont pas garanties de répondre dans l'ordre). */
+  const load = useCallback(() => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setLoading(true);
+    return apiFetch('/dashboard/admin/acteurs', {
+      params: {
+        role:   filtre !== 'all' ? filtre : undefined,
+        search: recherche.trim() || undefined,
+        page:   String(page),
+        limit:  '20',
+      },
+      signal: controller.signal,
+    })
+      .then(d => setData(d as any))
+      .catch(e => { if (e?.name !== 'AbortError') console.error(e); })
+      .finally(() => { if (abortRef.current === controller) setLoading(false); });
+  }, [filtre, recherche, page]);
 
   /* Filtre, recherche et pagination sont appliqués côté backend —
    * débounce léger sur la recherche pour ne pas relancer une requête
    * à chaque frappe. */
   useEffect(() => {
-    setLoading(true);
-    const t = setTimeout(() => {
-      apiFetch('/dashboard/admin/acteurs', {
-        params: {
-          role:   filtre !== 'all' ? filtre : undefined,
-          search: recherche.trim() || undefined,
-          page:   String(page),
-          limit:  '20',
-        },
-      })
-        .then(d => setData(d as any))
-        .catch(console.error)
-        .finally(() => setLoading(false));
-    }, recherche ? 300 : 0);
+    const t = setTimeout(load, recherche ? 300 : 0);
     return () => clearTimeout(t);
-  }, [filtre, recherche, page]);
+  }, [load, recherche]);
+
+  /* Réactivation d'un compte suspendu — rechargement de la liste après
+   * succès pour refléter le nouveau statut immédiatement. */
+  const reactivate = async (id: string, nom: string) => {
+    if (reactivating) return;
+    setReactivating(id);
+    try {
+      await apiFetch(`/dashboard/admin/acteurs/${id}/reactivate`, { method: 'PATCH' });
+      onToast(`✅ Compte de ${nom} réactivé`, 's');
+      load();
+    } catch (e: any) {
+      onToast(e?.message ?? 'Erreur lors de la réactivation', 'w');
+    } finally {
+      setReactivating(null);
+    }
+  };
 
   /* Changer de filtre ou de recherche revient à la page 1 — géré ici
    * (plutôt qu'un useEffect séparé) pour éviter un double fetch : un
@@ -166,9 +195,9 @@ export default function ActeursPage({ onSanction, onToast, geoPerms }: ActeursPa
                               onClick={() => onToast('📁 Dossier de suspension', 'i')}>
                               <i className="fas fa-folder-open" />
                             </button>
-                            <button className={styles.raBtn} title="Réactiver"
-                              onClick={() => onToast('✅ Compte réactivé', 's')}>
-                              <i className="fas fa-rotate-left" />
+                            <button className={styles.raBtn} title="Réactiver" disabled={reactivating === a.id}
+                              onClick={() => reactivate(a.id, a.nom)}>
+                              <i className={`fas ${reactivating === a.id ? 'fa-spinner fa-spin' : 'fa-rotate-left'}`} />
                             </button>
                           </>
                         ) : (
@@ -178,7 +207,7 @@ export default function ActeursPage({ onSanction, onToast, geoPerms }: ActeursPa
                               <i className="fas fa-eye" />
                             </button>
                             <button className={`${styles.raBtn} ${styles.danger}`} title="Suspendre"
-                              onClick={() => onSanction(a.nom)}>
+                              onClick={() => onSanction(a.id, a.nom)}>
                               <i className="fas fa-ban" />
                             </button>
                           </>

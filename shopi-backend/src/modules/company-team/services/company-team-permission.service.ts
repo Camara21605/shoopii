@@ -12,7 +12,7 @@
  * DERNIERE MISE A JOUR : 2026-07-18
  * ============================================================ */
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -20,13 +20,24 @@ import {
   TeamPermissions,
   DEFAULT_TEAM_PERMISSIONS,
 } from '../../../database/entities/company-team/company-team-permission.entity';
+import { CompanyTeamMember } from '../../../database/entities/company-team/company-team-member.entity';
+import { NotificationEventService } from '../../notifications/events/notification-event.service';
+import { NotificationBroadcastService } from '../../notifications/services/notification-broadcast.service';
 
 @Injectable()
 export class CompanyTeamPermissionService {
 
+  private readonly logger = new Logger(CompanyTeamPermissionService.name);
+
   constructor(
     @InjectRepository(CompanyTeamPermission)
     private readonly permRepo: Repository<CompanyTeamPermission>,
+
+    @InjectRepository(CompanyTeamMember)
+    private readonly memberRepo: Repository<CompanyTeamMember>,
+
+    private readonly notifEvents: NotificationEventService,
+    private readonly broadcast:   NotificationBroadcastService,
   ) {}
 
   /**
@@ -81,7 +92,48 @@ export class CompanyTeamPermissionService {
     }
 
     perm.permissions = merged;
-    return this.permRepo.save(perm);
+    const saved = await this.permRepo.save(perm);
+
+    /* Alerte l'équipe + signal temps réel au collaborateur concerné (voir
+     * notifyPermissionChange ci-dessous) — fire-and-forget : un échec ne
+     * doit jamais faire échouer la mise à jour des permissions elle-même,
+     * déjà persistée à ce stade. */
+    this.notifyPermissionChange(memberId);
+
+    return saved;
+  }
+
+  /** Résout companyId + userId + nom d'affichage du membre puis déclenche
+   *  DEUX canaux — séparé de update() pour rester fire-and-forget sans
+   *  complexifier son flux principal (voir l'appel ci-dessus) :
+   *
+   *   1. Socket ciblé sur CE collaborateur précis (room notif:user:{userId},
+   *      jointe par CHAQUE socket connecté à SON propre userId réel — voir
+   *      NotificationGateway.handleConnection). Contrairement au point 2
+   *      ci-dessous, ce canal atteint fiablement LE bon navigateur même si
+   *      plusieurs collaborateurs de la même entreprise sont connectés en
+   *      même temps (emitToActor ne le garantirait pas : actorId=companyId
+   *      est partagé par tous, donc résolu vers un seul userId à la fois
+   *      côté cache Redis — voir NotificationBroadcastService). Écouté par
+   *      useTeamPermissions.ts (frontend) qui recharge SES permissions
+   *      immédiatement à la réception, sans attendre son polling 30s —
+   *      c'est ce qui fait disparaître/apparaître les boutons Modifier
+   *      instantanément, sans rafraîchir la page.
+   *   2. Notification persistée, adressée à toute l'équipe (voir
+   *      NotificationEventService.notifyTeamPermissionChanged). */
+  private notifyPermissionChange(memberId: string): void {
+    this.memberRepo.findOne({ where: { id: memberId }, relations: ['user'] })
+      .then(member => {
+        if (!member) return;
+        const memberName = [member.user?.firstName, member.user?.lastName].filter(Boolean).join(' ') || 'Un collaborateur';
+
+        this.broadcast.emitToUser(member.userId, 'team:permissions_changed', {
+          changedAt: new Date().toISOString(),
+        });
+
+        return this.notifEvents.notifyTeamPermissionChanged({ companyId: member.companyId, memberName });
+      })
+      .catch(err => this.logger.error('notifyPermissionChange failed', err));
   }
 
   /**

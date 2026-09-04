@@ -280,6 +280,44 @@ export class ReportingEngine {
   }
 
   /* ==========================================================
+   * TOP ACTEURS
+   *
+   * Terminé — AnalyticsService.getTopEntreprises/Livreurs/Partenaires
+   * et StatisticsService.getActeurStats existaient déjà, complets et
+   * corrects (calculs réels depuis PaiementDistribution), mais n'étaient
+   * exposés par aucune méthode de cette façade ni par aucune route :
+   * code mort, jamais atteignable. Voir GET /dashboard/super-admin/
+   * finances/top-acteurs et .../acteur/:userId dans super-admin.controller.ts.
+   * ========================================================== */
+
+  private defaultFilter(filter?: Partial<ReportFilter>): ReportFilter {
+    const now = new Date();
+    const dateFrom = filter?.dateFrom ?? new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const dateTo   = filter?.dateTo   ?? now;
+    return { ...filter, dateFrom, dateTo } as ReportFilter;
+  }
+
+  /** Top N entreprises par montant de distributions libérées */
+  async getTopEntreprises(filter?: Partial<ReportFilter>, limit = 10) {
+    return this.analytics.getTopEntreprises(this.defaultFilter(filter), limit);
+  }
+
+  /** Top N livreurs par montant de distributions libérées */
+  async getTopLivreurs(filter?: Partial<ReportFilter>, limit = 10) {
+    return this.analytics.getTopLivreurs(this.defaultFilter(filter), limit);
+  }
+
+  /** Top N partenaires par montant de commissions libérées */
+  async getTopPartenaires(filter?: Partial<ReportFilter>, limit = 10) {
+    return this.analytics.getTopPartenaires(this.defaultFilter(filter), limit);
+  }
+
+  /** Statistiques complètes d'un acteur individuel */
+  async getActeurStats(userId: string, filter?: Partial<ReportFilter>) {
+    return this.statistics.getActeurStats(userId, this.defaultFilter(filter));
+  }
+
+  /* ==========================================================
    * EXPORTS
    * ========================================================== */
 

@@ -38,7 +38,6 @@ const FinancesPage       = lazy(() => import('./pages/FinancesPage'));
 const StatsPage          = lazy(() => import('./pages/StatsPage'));
 const SupportPage        = lazy(() => import('./pages/SupportPage'));
 const AuditPage          = lazy(() => import('./pages/AuditPage'));
-const NotificationsPage  = lazy(() => import('./pages/NotificationsPage'));
 const ParametresPage     = lazy(() => import('./pages/ParametresPage'));
 const GeoReferentielPage = lazy(() => import('./pages/GeoReferentielPage'));
 
@@ -57,6 +56,37 @@ export default function AdministrateurApp() {
   /* ── Panel de notifications (dropdown topbar) ── */
   const [notifOpen, setNotifOpen] = useState(false);
 
+  /* ── Modale sanction (suspension d'un compte) ── */
+  const [sanctionBusy, setSanctionBusy] = useState(false);
+  const confirmSanction = async (motif: string) => {
+    const cible = s.sanctionTarget;
+    if (!cible || sanctionBusy) return;
+    setSanctionBusy(true);
+    try {
+      await apiFetch(`/dashboard/admin/acteurs/${cible.id}/suspend`, {
+        method: 'PATCH',
+        body:   { motif: motif || undefined },
+      });
+      s.fermerSanction();
+      pop(`🚫 ${cible.nom} suspendu — consigné au journal d'audit`, 'w');
+    } catch (e: any) {
+      pop(e?.message ?? 'Erreur lors de la suspension', 'w');
+    } finally {
+      setSanctionBusy(false);
+    }
+  };
+
+  /* ── Deep-link "clic sur une notification" ──
+   * Id de la ressource précise à surligner/afficher sur la page cible
+   * (ValidationsPage / SignalementsPage). Effacé dès qu'on navigue
+   * "normalement" (sidebar/topbar) ailleurs que via une notification. */
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const navigate = (page: typeof s.activePage) => { setHighlightId(null); s.navigate(page); };
+  const navigateFromNotif = (page: typeof s.activePage, resourceId?: string | null) => {
+    setHighlightId(resourceId ?? null);
+    s.navigate(page);
+  };
+
   useEffect(() => {
     fetchPrefs()
       .then(prefs => { applyPrefs(prefs); watchAutoTheme(prefs); })
@@ -74,7 +104,6 @@ export default function AdministrateurApp() {
   const PAGE_PERM: Partial<Record<typeof s.activePage, string>> = {
     partenaires:   'partners',
     signalements:  'reports',
-    notifications: 'notifs',
     clients:       'customers',
     stats:         'stats',
     support:       'support',
@@ -91,22 +120,21 @@ export default function AdministrateurApp() {
   /* ── PageRenderer ── */
   const renderPage = () => {
     switch (s.activePage) {
-      case 'overview':       return <OverviewPage onNavigate={s.navigate} />;
+      case 'overview':       return <OverviewPage onNavigate={navigate} />;
       case 'codes':          return <CodesPage onGenerate={() => s.setGenOpen(true)} onToast={pop} />;
       case 'partenaires':    return <PartenairesPage onSanction={s.ouvrirSanction} onToast={pop} />;
       case 'acteurs':        return <ActeursPage onSanction={s.ouvrirSanction} onToast={pop} geoPerms={s.geoPerms} />;
       case 'clients':        return <ClientsPage onToast={pop} />;
-      case 'validations':    return <ValidationsPage onToast={pop} />;
-      case 'signalements':   return <SignalementsPage onSanction={s.ouvrirSanction} onToast={pop} />;
+      case 'validations':    return <ValidationsPage onToast={pop} highlightId={highlightId} />;
+      case 'signalements':   return <SignalementsPage onSanction={s.ouvrirSanction} onToast={pop} highlightId={highlightId} />;
       case 'commandes':      return <CommandesPage onToast={pop} />;
       case 'finances':       return <FinancesPage onToast={pop} />;
       case 'stats':          return <StatsPage onToast={pop} />;
       case 'support':        return <SupportPage onToast={pop} />;
       case 'audit':          return <AuditPage onToast={pop} />;
-      case 'notifications':  return <NotificationsPage {...notifs} onToast={pop} onNavigate={s.navigate} />;
       case 'parametres':     return <ParametresPage onToast={pop} />;
       case 'geo':            return <GeoReferentielPage geoPerms={s.geoPerms} onToast={pop} />;
-      default:               return <OverviewPage onNavigate={s.navigate} />;
+      default:               return <OverviewPage onNavigate={navigate} />;
     }
   };
 
@@ -117,13 +145,12 @@ export default function AdministrateurApp() {
         activePage={s.activePage}
         open={s.sbOpen}
         onClose={() => s.setSbOpen(false)}
-        onNavigate={s.navigate}
+        onNavigate={navigate}
         onGenerate={() => s.setGenOpen(true)}
         geoPerms={s.geoPerms}
         zoneName={adminProfile?.zoneName}
         adminName={adminProfile?.adminName}
         communesCount={adminProfile?.communesCount}
-        unreadCount={notifs.unreadCount}
       />
 
       {/* ── Corps principal (topbar + page) ── */}
@@ -132,7 +159,7 @@ export default function AdministrateurApp() {
           activePage={s.activePage}
           onBurger={() => s.setSbOpen(true)}
           onGenerate={() => s.setGenOpen(true)}
-          onNavigate={s.navigate}
+          onNavigate={navigate}
           onToast={pop}
           unreadCount={notifs.unreadCount}
           onBell={() => setNotifOpen(o => !o)}
@@ -156,8 +183,7 @@ export default function AdministrateurApp() {
           onMarkAll={notifs.markAll}
           onDismiss={notifs.dismiss}
           onClose={() => setNotifOpen(false)}
-          onSeeAll={() => { s.navigate('notifications'); setNotifOpen(false); }}
-          onNavigate={s.navigate}
+          onNavigate={navigateFromNotif}
         />
       )}
 
@@ -171,12 +197,9 @@ export default function AdministrateurApp() {
       {s.sanctionTarget && (
         <SanctionModal
           target={s.sanctionTarget}
+          busy={sanctionBusy}
           onClose={s.fermerSanction}
-          onConfirm={() => {
-            const cible = s.sanctionTarget;
-            s.fermerSanction();
-            pop(`🚫 ${cible} suspendu — consigné au journal d'audit`, 'w');
-          }}
+          onConfirm={confirmSanction}
         />
       )}
 

@@ -2,10 +2,19 @@
  * FICHIER : src/modules/company-settings/company-settings.controller.ts
  *
  * Routes  : /api/company-settings/*
- * Guard   : JwtAuthGuard
+ * Guard   : JwtAuthGuard + RolesGuard (ADMIN, SUPER_ADMIN)
  *
- * SÉCURITÉ : getStats() et toutes les routes scopées extraient
- *            userId depuis req.user.id (JWT), jamais via query param.
+ * SÉCURITÉ : cette config singleton (commissionType/Value/Min/Max,
+ *            règles catégories…) n'avait AUCUNE restriction de rôle —
+ *            n'importe quel utilisateur authentifié (client, livreur,
+ *            partenaire…) pouvait lire ET RÉÉCRIRE la configuration de
+ *            commission entreprises pour TOUTE la plateforme. Restreint
+ *            au niveau contrôleur à ADMIN + SUPER_ADMIN : seul le
+ *            dashboard administrateur de zone (`EntreprisesSection.tsx`)
+ *            et le Centre de Commissions Super Admin consomment ces
+ *            routes (vérifié — aucun autre frontend ne les appelle).
+ *            getStats() extrait userId depuis req.user.id (JWT), jamais
+ *            via query param.
  * ================================================================ */
 
 import {
@@ -13,12 +22,16 @@ import {
   UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
 
-import { JwtAuthGuard }           from '../../common/guards/auth.guard';
+import { JwtAuthGuard }              from '../../common/guards/auth.guard';
+import { RolesGuard }                from '../../common/guards/roles.guard';
+import { Roles }                     from '../../common/decorators/roles.decorator';
+import { UserRole }                  from '../../common/enums/user-role.enum';
 import { CompanySettingsService }  from './company-settings.service';
 import { UpdateCompanySettingsDto } from './company-settings.dto';
 
 @Controller('company-settings')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export class CompanySettingsController {
 
   constructor(private readonly svc: CompanySettingsService) {}

@@ -35,6 +35,19 @@ import type {
  * Le frontend attend { value, created, expires, uses, ... }
  * Ce mapper assure la cohérence sans modifier le composant existant.
  */
+/**
+ * Le backend expose son statut interne 'pending' sous le libellé 'valid'
+ * dans les RÉPONSES (voir CodeCreationService.statusMap), mais son DTO de
+ * filtre (FilterCodesDto) valide `status` contre l'enum interne brut —
+ * qui n'a PAS de valeur 'valid'. Sans cette table inverse, sélectionner
+ * "Valide" dans le filtre envoyait `status=valid`, rejeté en 400 par
+ * class-validator ("status must be one of the following values: pending,
+ * used, expired, revoked").
+ */
+const STATUS_TO_BACKEND: Record<InvitationCode['status'], string> = {
+  valid: 'pending', used: 'used', expired: 'expired', revoked: 'revoked',
+};
+
 function mapCodeResponse(raw: Record<string, unknown>): InvitationCode {
   return {
     id:          raw.id          as string,
@@ -101,6 +114,10 @@ export async function generateBulkCodes(
 export async function listCodes(
   filters: FilterCodesParams = {},
 ): Promise<PaginatedCodes> {
+  const params = {
+    ...filters,
+    ...(filters.status && { status: STATUS_TO_BACKEND[filters.status] }),
+  };
   const raw = await apiFetch<{
     data:  Record<string, unknown>[];
     total: number;
@@ -108,7 +125,7 @@ export async function listCodes(
     pages: number;
   }>('/codes', {
     method: 'GET',
-    params: filters as Record<string, string | number | boolean | undefined>,
+    params: params as Record<string, string | number | boolean | undefined>,
   });
 
   return {

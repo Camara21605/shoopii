@@ -13,6 +13,8 @@
  *   notif:new          → { notification, unreadCount }
  *   notif:unread_count → { unreadCount }
  *   story:viewed       → { storyId, productId, viewsCount } (compteur de vues story en direct)
+ *   team:permissions_changed → { changedAt } (permissions collaborateur modifiées par le propriétaire —
+ *                               voir CompanyTeamPermissionService.notifyPermissionChange côté backend)
  *
  * EVENTS ÉMIS :
  *   notif:mark_read    → { notificationId }
@@ -39,6 +41,8 @@ export interface WsNotifUpdated { id: string; count: number; body: string; }
 
 export interface WsStoryViewed { storyId: string; productId: string; viewsCount: number; }
 
+export interface WsTeamPermissionsChanged { changedAt: string; }
+
 /** Émis par le backend quand une nouvelle connexion sur un autre
  *  appareil révoque la session courante (session unique par
  *  utilisateur — voir SessionService côté backend). */
@@ -54,6 +58,7 @@ export interface NotificationSocketCallbacks {
   onUpdated?:        (data: WsNotifUpdated)      => void;
   onSessionRevoked?: (data: WsSessionRevoked)     => void;
   onStoryViewed?:    (data: WsStoryViewed)        => void;
+  onTeamPermissionsChanged?: (data: WsTeamPermissionsChanged) => void;
 }
 
 // ── Singleton ─────────────────────────────────────────────────
@@ -169,6 +174,7 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
     const onUpdated        = (d: WsNotifUpdated)      => cbRef.current.onUpdated?.(d);
     const onSessionRevoked = (d: WsSessionRevoked)    => cbRef.current.onSessionRevoked?.(d);
     const onStoryViewed    = (d: WsStoryViewed)        => cbRef.current.onStoryViewed?.(d);
+    const onTeamPermissionsChanged = (d: WsTeamPermissionsChanged) => cbRef.current.onTeamPermissionsChanged?.(d);
 
     const onConnectError = (err: Error) =>
       console.warn('[NotifSocket] Connexion échouée:', err.message);
@@ -188,6 +194,7 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
     socket.on('notif:updated',      onUpdated);
     socket.on('session:revoked',    onSessionRevoked);
     socket.on('story:viewed',       onStoryViewed);
+    socket.on('team:permissions_changed', onTeamPermissionsChanged);
     socket.on('connect_error',      onConnectError);
     socket.on('disconnect',         onDisconnect);
 
@@ -200,6 +207,7 @@ export function useNotificationSocket(callbacks: NotificationSocketCallbacks) {
       socket.off('notif:updated',      onUpdated);
       socket.off('session:revoked',    onSessionRevoked);
       socket.off('story:viewed',       onStoryViewed);
+      socket.off('team:permissions_changed', onTeamPermissionsChanged);
       socket.off('connect_error',      onConnectError);
       socket.off('disconnect',         onDisconnect);
     };

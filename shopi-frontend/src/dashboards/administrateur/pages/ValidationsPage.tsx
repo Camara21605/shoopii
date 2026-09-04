@@ -2,20 +2,25 @@
  * FICHIER : src/dashboards/administrateur/pages/ValidationsPage.tsx
  * ================================================================ */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from '../styles/ValidationsPage.module.css';
-import { apiFetch } from '../../../shared/services/apiFetch';
+import { apiFetch, ApiError } from '../../../shared/services/apiFetch';
 
 interface ValidationsPageProps {
   onToast: (msg: string, type?: 's' | 'i' | 'w') => void;
+  /** Deep-link "clic sur une notification" — id du compte (User.id) à
+   * mettre en évidence, s'il est encore en attente de validation. */
+  highlightId?: string | null;
 }
 
 const TYPE_LABEL: Record<string, string> = { par: 'Partenaire', ent: 'Entreprise', lvr: 'Livreur', cor: 'Correspondant' };
 const TYPE_ICON:  Record<string, string> = { par: 'fa-handshake', ent: 'fa-store', lvr: 'fa-motorcycle', cor: 'fa-map-pin' };
 
-export default function ValidationsPage({ onToast }: ValidationsPageProps) {
+export default function ValidationsPage({ onToast, highlightId }: ValidationsPageProps) {
   const [data,    setData]    = useState<{ list: any[]; stats: any } | null>(null);
   const [loading, setLoading] = useState(true);
+  const highlightedRef = useRef<HTMLDivElement | null>(null);
+  const notifiedRef    = useRef<string | null>(null); // évite de re-toaster à chaque re-render
 
   const load = () => {
     setLoading(true);
@@ -27,13 +32,32 @@ export default function ValidationsPage({ onToast }: ValidationsPageProps) {
 
   useEffect(load, []);
 
+  /* Scroll + surlignage de l'élément visé par la notification, une fois
+   * la liste chargée. Si le compte a déjà été traité entre-temps (validé/
+   * refusé par un autre admin), on le signale plutôt que de rester muet. */
+  useEffect(() => {
+    if (!highlightId || loading || !data) return;
+    if (notifiedRef.current === highlightId) return;
+
+    const found = data.list.some((v: any) => v.id === highlightId);
+    if (found) {
+      highlightedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      onToast('Ce compte a déjà été traité.', 'i');
+    }
+    notifiedRef.current = highlightId;
+  }, [highlightId, loading, data, onToast]);
+
   const approve = async (id: string, nom: string) => {
     try {
       await apiFetch(`/dashboard/admin/validations/${id}/approve`, { method: 'PATCH' });
       onToast(`✅ ${nom} validé(e)`, 's');
       load();
-    } catch {
-      onToast('Erreur lors de la validation', 'w');
+    } catch (err) {
+      /* BUG CORRIGÉ — le message réel (ex: "documents KYC manquants") était
+       * remplacé par un texte générique, l'admin ne savait jamais POURQUOI
+       * une validation échouait (voir PlatformSettings.kycRequired). */
+      onToast(err instanceof ApiError ? err.message : 'Erreur lors de la validation', 'w');
     }
   };
 
@@ -77,7 +101,11 @@ export default function ValidationsPage({ onToast }: ValidationsPageProps) {
               </p>
             )}
             {list.map((v: any) => (
-              <div key={v.id} className={styles.item}>
+              <div
+                key={v.id}
+                ref={v.id === highlightId ? highlightedRef : undefined}
+                className={`${styles.item} ${v.id === highlightId ? styles.itemHighlight : ''}`}
+              >
                 <div className={`${styles.av} ${styles['av_' + v.type]}`}>{v.avatar}</div>
                 <div className={styles.main}>
                   <div className={styles.top}>

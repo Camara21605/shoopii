@@ -91,8 +91,20 @@ export function resolveNavTarget(notif: INotificationDto): string {
       : resId ? `/commande/${resId}/suivi` : '/home';
   }
 
-  // ── 3. Messages / conversations / appels (1:1 et groupe) → messagerie ─
-  if (prefix === 'message' || prefix === 'conversation' || prefix === 'call' || prefix === 'group_call') {
+  // ── 3a. Messages / appels 1:1 → messagerie, directement sur LA
+  //        conversation concernée si on la connaît (resourceId =
+  //        conversationId — voir notifyMessageReceived côté backend, et
+  //        call.service.ts pour call.* depuis peu). Sans elle (ex. vieil
+  //        appel sans conversation associée), fallback messagerie seule. ─
+  if (prefix === 'message' || prefix === 'conversation' || prefix === 'call') {
+    return resId ? `/messagerie?conv=${resId}` : '/messagerie';
+  }
+
+  // ── 3b. Appels de groupe → messagerie seule : resourceId ici est un
+  //        DeliveryGroup.id, PAS un conversationId (sémantique différente,
+  //        ?conv= le traiterait à tort comme une conversation 1:1) — et
+  //        aucune route dédiée aux groupes n'existe côté frontend. ─
+  if (prefix === 'group_call') {
     return '/messagerie';
   }
 

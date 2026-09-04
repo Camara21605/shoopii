@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import s from '../styles/SettingsCard.module.css';
 import { Toggle } from '../components/Toggle';
-import { settingsApi, type SecuriteData } from '../../api/settings.api';
+import { settingsApi, type SecuriteData, type AlertSettings, type AlertType } from '../../api/settings.api';
 import TwoFaSetupModal from '../../../../../../shared/components/TwoFaSetupModal';
 
 interface Props { onToast: (msg: string) => void; }
@@ -22,17 +22,14 @@ export default function SecuriteSection({ onToast }: Props) {
   const [codes,         setCodes]         = useState<string[] | null>(null);
   const [show2faModal,  setShow2faModal]  = useState(false);
 
+  /* Alertes de sécurité — chargées depuis le backend, un seul canal
+   * (email) réellement branché à un service d'envoi ; SMS/push restent
+   * grisés (pas de passerelle SMS ni de provider push côté serveur). */
+  const [alertSettings, setAlertSettings] = useState<AlertSettings | null>(null);
+  const [savingAlert,   setSavingAlert]   = useState<AlertType | null>(null);
+
   /* Formulaire mot de passe */
   const [pwdForm, setPwdForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-
-  /* Alertes de sécurité (état local pour réactivité UI) */
-  const [alerts, setAlerts] = useState({
-    connex:      { sms: true,  email: true,  push: true  },
-    mdp:         { sms: true,  email: true,  push: false },
-    tentatives:  { sms: true,  email: true,  push: false },
-    transaction: { sms: true,  email: true,  push: true  },
-    pays:        { sms: true,  email: true,  push: true  },
-  });
 
   /* Questions de sécurité */
   const [questions, setQuestions] = useState([
@@ -46,7 +43,26 @@ export default function SecuriteSection({ onToast }: Props) {
       .then(setSecurite)
       .catch(() => onToast('❌ Impossible de charger les données de sécurité'))
       .finally(() => setLoading(false));
+    settingsApi.getAlertSettings()
+      .then(setAlertSettings)
+      .catch(() => {}); // section non bloquante — un échec ici n'empêche pas le reste de la page
   }, []);
+
+  /* ── Basculer une préférence d'alerte (sauvegarde immédiate) ── */
+  async function toggleAlertSetting(type: AlertType, email: boolean) {
+    const prev = alertSettings;
+    setAlertSettings(s => s ? { ...s, [type]: { email } } : s); // optimiste
+    setSavingAlert(type);
+    try {
+      const updated = await settingsApi.updateAlertSetting(type, email);
+      setAlertSettings(updated);
+    } catch (err: any) {
+      setAlertSettings(prev); // rollback
+      onToast(`❌ ${err.message ?? 'Impossible de mettre à jour cette alerte'}`);
+    } finally {
+      setSavingAlert(null);
+    }
+  }
 
   /* ── Changer le mot de passe ── */
   async function savePassword() {
@@ -102,9 +118,6 @@ export default function SecuriteSection({ onToast }: Props) {
     } catch (err: any) { onToast(`❌ ${err.message}`); }
     finally { setGeneratingCodes(false); }
   }
-
-  const toggleAlert = (key: keyof typeof alerts, ch: 'sms'|'email'|'push') =>
-    setAlerts(prev => ({ ...prev, [key]: { ...prev[key], [ch]: !prev[key][ch] } }));
 
   /* Durée depuis dernier changement MDP */
   const joursDepuisMdp = securite?.dernierChangementMdp
@@ -319,7 +332,13 @@ export default function SecuriteSection({ onToast }: Props) {
         </div>
       </div>
 
-      {/* ── Alertes de sécurité ── */}
+      {/* ── Alertes de sécurité ──
+       * Le canal email est réellement envoyé par le backend
+       * (SecurityAlertsService + MailService.sendSecurityAlertEmail /
+       * sendPasswordChangedEmail) et sa préférence persiste via
+       * GET/PATCH /client/parametres/securite/alertes. SMS et push
+       * restent grisés : aucune passerelle SMS ni provider push
+       * n'existe côté serveur. */}
       <div className={s.card}>
         <div className={s.cardHd}>
           <div className={s.cardTitle}>
@@ -341,12 +360,27 @@ export default function SecuriteSection({ onToast }: Props) {
                 <div><div className={s.notifTitle}>{title}</div><div className={s.notifDesc}>{desc}</div></div>
               </div>
               <div className={s.notifChannels}>
-                {(['sms','email','push'] as const).map(ch => (
-                  <div key={ch} className={s.notifCh}>
-                    <Toggle checked={alerts[key][ch]} onChange={() => toggleAlert(key, ch)} />
-                    <span>{ch === 'sms' ? 'SMS' : ch === 'email' ? 'Email' : 'Push'}</span>
-                  </div>
-                ))}
+                {(['sms','email','push'] as const).map(ch => {
+                  if (ch !== 'email') {
+                    return (
+                      <div key={ch} className={s.notifCh} style={{ opacity: .45 }} title="Bientôt disponible">
+                        <Toggle checked={false} onChange={() => {}} disabled />
+                        <span>{ch === 'sms' ? 'SMS' : 'Push'}</span>
+                      </div>
+                    );
+                  }
+                  const checked = alertSettings?.[key]?.email ?? true;
+                  return (
+                    <div key={ch} className={s.notifCh}>
+                      <Toggle
+                        checked={checked}
+                        onChange={v => toggleAlertSetting(key, v)}
+                        disabled={!alertSettings || savingAlert === key}
+                      />
+                      <span>Email</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}

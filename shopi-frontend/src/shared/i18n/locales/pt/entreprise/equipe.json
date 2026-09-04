@@ -75,7 +75,6 @@
       "reactivateError": "Erro na reativação.",
       "deleted": "Acesso de {{name}} revogado.",
       "resetPasswordError": "Erro ao repor a palavra-passe.",
-      "permissionsUpdated": "Permissões atualizadas.",
       "permissionsUpdateError": "Erro na atualização.",
       "invitationResent": "Convite reenviado.",
       "genericError": "Erro.",
@@ -132,12 +131,22 @@
         "label": "Carteira",
         "view": "Ver",
         "withdraw": "Levantamento"
+      },
+      "fournisseurs": {
+        "label": "Fornecedores",
+        "view": "Ver",
+        "connect": "Conectar",
+        "disconnect": "Desconectar"
+      },
+      "boutique": {
+        "label": "Minha loja",
+        "view": "Ver",
+        "edit": "Editar"
       }
     },
     "permPanel": {
       "title": "Permissões",
-      "cancel": "Cancelar",
-      "save": "Guardar"
+      "close": "Fechar"
     },
     "activityPanel": {
       "title": "Atividade recente",

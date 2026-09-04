@@ -38,6 +38,13 @@ import { apiFetch } from '../../../shared/services/apiFetch';
 // individuels pour que les sections les lisent directement.
 // ─────────────────────────────────────────────────────────────
 
+export interface CurrentSessionInfo {
+  device:         string;
+  browser:        string;
+  ipAddress:      string | null;
+  connectedSince: string;
+}
+
 export interface PartenaireData {
   /* Identité */
   id:             string;
@@ -55,6 +62,8 @@ export interface PartenaireData {
   palier:         string;           // 'bronze' | 'silver' | 'gold' | 'platinum'
   isVerified:     boolean;
   memberSince:    string | null;    // ISO date
+  /** ISO date de déverrouillage du prénom/nom, ou null si déjà modifiable. */
+  nameChangeAllowedAt: string | null;
 
   /* Zone d'activité / localisation */
   zone:           string | null;
@@ -75,6 +84,9 @@ export interface PartenaireData {
   /* Sécurité */
   twoFaEnabled: boolean;
   twoFaMethod:  string | null;
+  /** Session réellement active (device/navigateur/IP/date) — null si indisponible.
+   *  Une seule session peut être active à la fois sur Shoneya (voir SessionService). */
+  currentSession: CurrentSessionInfo | null;
 
   /* Notifications — aplaties depuis notifSettings (JSON) */
   notifActeurActive:   boolean;
@@ -116,6 +128,7 @@ interface ApiResponse {
   palier:         string;
   isVerified:     boolean;
   memberSince:    string | null;
+  nameChangeAllowedAt: string | null;
   zone:           string | null;
   adresse:        string | null;
   commune:        string | null;
@@ -130,6 +143,7 @@ interface ApiResponse {
   totalCorrespondants:number;
   twoFaEnabled: boolean;
   twoFaMethod:  string | null;
+  currentSession: CurrentSessionInfo | null;
   /* Les 3 champs JSON retournés déjà parsés en objet ou null */
   notifSettings:   Record<string, boolean> | null;
   privacySettings: Record<string, boolean> | null;
@@ -159,6 +173,7 @@ function mapApiToData(r: ApiResponse): PartenaireData {
     palier:     r.palier,
     isVerified: r.isVerified,
     memberSince:r.memberSince,
+    nameChangeAllowedAt: r.nameChangeAllowedAt,
     zone:       r.zone,
     adresse:    r.adresse,
     commune:    r.commune,
@@ -173,6 +188,7 @@ function mapApiToData(r: ApiResponse): PartenaireData {
     totalCorrespondants:r.totalCorrespondants,
     twoFaEnabled: r.twoFaEnabled,
     twoFaMethod:  r.twoFaMethod,
+    currentSession: r.currentSession,
     /* Notifications */
     notifActeurActive:   n.notifActeurActive   ?? true,
     notifCommission:     n.notifCommission     ?? true,
@@ -197,11 +213,23 @@ function mapApiToData(r: ApiResponse): PartenaireData {
 // HOOK PRINCIPAL
 // ─────────────────────────────────────────────────────────────
 
+export interface PartenaireDocumentsState {
+  verificationStatus: string;
+  documents: {
+    cni:      { present: boolean };
+    domicile: { present: boolean };
+    activite: { present: boolean };
+  };
+}
+
 export function usePartenaireParametres() {
   const [data,    setData]    = useState<PartenaireData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
   const [error,   setError]   = useState<string | null>(null);
+
+  const [documents,        setDocuments]        = useState<PartenaireDocumentsState | null>(null);
+  const [documentsLoading, setDocumentsLoading]  = useState(true);
 
   /* ── Chargement depuis la base de données ── */
   const refresh = useCallback(async () => {
@@ -218,7 +246,21 @@ export function usePartenaireParametres() {
     }
   }, []);
 
+  /** GET /dashboard/partenaire/parametres/documents */
+  const refreshDocuments = useCallback(async () => {
+    setDocumentsLoading(true);
+    try {
+      const raw = await apiFetch<PartenaireDocumentsState>('/dashboard/partenaire/parametres/documents');
+      setDocuments(raw);
+    } catch {
+      setDocuments(null);
+    } finally {
+      setDocumentsLoading(false);
+    }
+  }, []);
+
   useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => { refreshDocuments(); }, [refreshDocuments]);
 
   /* ── Wrapper générique PATCH — retourne ApiResponse complète ── */
   async function patchFull(endpoint: string, body: unknown): Promise<void> {
@@ -348,6 +390,36 @@ export function usePartenaireParametres() {
     );
 
   // ─────────────────────────────────────────────────────────
+  // API : DOCUMENTS & VÉRIFICATION (KYC)
+  // ─────────────────────────────────────────────────────────
+
+  /** POST /dashboard/partenaire/parametres/documents/:type (multipart) */
+  const uploadDocument = useCallback(async (type: string, file: File): Promise<void> => {
+    setSaving(true);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      await apiFetch(`/dashboard/partenaire/parametres/documents/${type}`, {
+        method: 'POST', body: form,
+      });
+      await refreshDocuments();
+    } finally {
+      setSaving(false);
+    }
+  }, [refreshDocuments]);
+
+  /** DELETE /dashboard/partenaire/parametres/documents/:type */
+  const deleteDocument = useCallback(async (type: string): Promise<void> => {
+    setSaving(true);
+    try {
+      await apiFetch(`/dashboard/partenaire/parametres/documents/${type}`, { method: 'DELETE' });
+      await refreshDocuments();
+    } finally {
+      setSaving(false);
+    }
+  }, [refreshDocuments]);
+
+  // ─────────────────────────────────────────────────────────
   // API : ZONE DANGER
   // ─────────────────────────────────────────────────────────
 
@@ -385,5 +457,6 @@ export function usePartenaireParametres() {
     saveConfidentialite,
     savePreferences,
     suspendreCompte, supprimerCompte,
+    documents, documentsLoading, uploadDocument, deleteDocument,
   };
 }

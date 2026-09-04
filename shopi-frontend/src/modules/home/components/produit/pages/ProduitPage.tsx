@@ -2,7 +2,14 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
+import { io } from 'socket.io-client';
 import { apiFetch } from '../../../../../shared/services/apiFetch';
+
+/* Même origine que BoutiquePage.tsx/RandomBloc.tsx (VITE_API_URL sans le
+ * suffixe /api). Namespace /public : aucune authentification requise. */
+const SOCKET_URL =
+  ((import.meta as any).env?.VITE_API_URL as string | undefined)?.replace('/api', '') ??
+  'http://localhost:3001';
 
 import Header             from '../../layout/Header';
 import Footer             from '../../layout/Footer';
@@ -50,6 +57,9 @@ export interface ProduitApi {
   livraisonCorrespondant: boolean;
   fraisLivraisonLocal:    number | null;
   delaiLivraison:         string;
+  /** Politique de retour de LA BOUTIQUE (Paramètres > Catalogue) — texte
+   *  libre configuré par le vendeur, null si jamais renseigné. */
+  returnPolicy: string | null;
 }
 
 /** Étiquette + drapeau pour les pays déjà référencés dans GEO_DATA (produitMockData.ts)
@@ -133,13 +143,25 @@ export default function ProduitPage() {
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadProduit = useCallback((silent = false) => {
     if (!produitId) { setError(t('produitDetail.page.idManquant')); setLoading(false); return; }
+    if (!silent) setLoading(true);
     apiFetch<ProduitApi>(`/public/produits/${produitId}`, { public: true })
       .then(data => setProduitApi(data))
-      .catch(() => setError(t('produitDetail.page.introuvable')))
-      .finally(() => setLoading(false));
+      .catch(() => { if (!silent) setError(t('produitDetail.page.introuvable')); })
+      .finally(() => { if (!silent) setLoading(false); });
   }, [produitId, t]);
+
+  useEffect(() => { loadProduit(); }, [loadProduit]);
+
+  /* Écoute catalogue:changed (Paramètres > Catalogue de n'importe quelle
+   * entreprise) — diffusion globale, voir RandomBloc.tsx/BoutiquePage.tsx
+   * pour le même mécanisme. Rechargement silencieux du produit affiché. */
+  useEffect(() => {
+    const socket = io(`${SOCKET_URL}/public`, { transports: ['websocket', 'polling'] });
+    socket.on('catalogue:changed', () => loadProduit(true));
+    return () => { socket.disconnect(); };
+  }, [loadProduit]);
 
   const [qty,         setQty]         = useState(1);
   const [livraison,   setLivraison]   = useState<LivraisonState>(LIVRAISON_INIT);
@@ -271,6 +293,22 @@ export default function ProduitPage() {
                       } : undefined}
                     />
                   </div>
+
+                  {/* BUG CORRIGÉ — Company.returnPolicy (Paramètres > Catalogue)
+                   * était enregistré mais jamais affiché nulle part, alors que
+                   * son propre texte d'aide dit explicitement "Texte affiché
+                   * sur chaque fiche produit". */}
+                  {produitApi?.returnPolicy && (
+                    <div style={{
+                      display: 'flex', gap: 10, alignItems: 'flex-start',
+                      marginTop: 14, padding: '12px 14px',
+                      background: 'var(--g50)', border: '1px solid var(--bdr)',
+                      borderRadius: 12, fontSize: 12.5, color: 'var(--t2)', lineHeight: 1.5,
+                    }}>
+                      <i className="fas fa-rotate-left" style={{ color: 'var(--blue)', marginTop: 2 }} />
+                      <span>{produitApi.returnPolicy}</span>
+                    </div>
+                  )}
                 </ProduitInfoSection>
               </div>
 

@@ -30,6 +30,7 @@ import ProfilLivreurPage from '../shared/profils/profil-livreur/ProfilLivreurPag
 import ProfilClientPage  from '../shared/profils/profil-client/ProfilClientPage';
 import CorrespondantsPage from '../modules/home/components/correspondants/pages/CorrespondantsPage';
 import ProfilCorrespondantPage from '../shared/profils/profil-correspondant/pages/ProfilCorrespondantPage';
+import ProfilPublicClientPage from '../shared/profils/profil-public-client/ProfilPublicClientPage';
 import ComparerPage      from '../modules/home/components/compare/pages/ComparerPage';
 
 /* ── Help Center ── */
@@ -310,6 +311,7 @@ export const AppRouter: React.FC = () => (
           <Route path="/correspondants"     element={<CorrespondantsPage />} />
           <Route path="/livreurs/:id"       element={<ProfilLivreurPage />} />
           <Route path="/correspondants/:id" element={<ProfilCorrespondantPage />} />
+          <Route path="/clients/:id"        element={<ProfilPublicClientPage />} />
 
           {/* Pages client — protégées */}
           <Route path="/mon-profil"           element={<PrivateRoute><ProfilClientPage /></PrivateRoute>} />

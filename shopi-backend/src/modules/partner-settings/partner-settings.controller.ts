@@ -1,5 +1,12 @@
 /* ============================================================
  * FICHIER : src/modules/partner-settings/partner-settings.controller.ts
+ *
+ * SÉCURITÉ : config singleton (commissionMode/defaultCommissionRate/
+ *            tiers) — n'avait AUCUNE restriction de rôle, n'importe
+ *            quel utilisateur authentifié pouvait la réécrire pour
+ *            TOUTE la plateforme. Restreint à ADMIN + SUPER_ADMIN
+ *            (seuls consommateurs vérifiés : `PartenairesSection.tsx`
+ *            administrateur et le Centre de Commissions Super Admin).
  * ============================================================ */
 
 import {
@@ -7,11 +14,15 @@ import {
   UseGuards, Request,
 } from '@nestjs/common';
 import { JwtAuthGuard }              from '../../common/guards/auth.guard';
+import { RolesGuard }                from '../../common/guards/roles.guard';
+import { Roles }                     from '../../common/decorators/roles.decorator';
+import { UserRole }                  from '../../common/enums/user-role.enum';
 import { PartnerSettingsService }    from './partner-settings.service';
 import { UpdatePartnerSettingsDto }  from './partner-settings.dto';
 
 @Controller('partner-settings')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export class PartnerSettingsController {
 
   constructor(private readonly svc: PartnerSettingsService) {}

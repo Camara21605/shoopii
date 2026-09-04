@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
 import { fetchEntrepriseCommandes, assignerLivreurCommande, fetchAssignableLivreurs } from '../services/commandesApi';
+import { useTeamPermissions } from '../hooks/useTeamPermissions';
 import type { Order, OrderItem, OrderStatus } from '../types';
 import ChoisirLivreurModal from '../../../shared/components/ChoisirLivreurModal';
 import type { LivreurPickerItem } from '../../../shared/components/ChoisirLivreurModal';
@@ -170,6 +171,7 @@ export default function CommandesPage() {
   const { t }      = useTranslation();
   const { pop }    = useToast();
   const navigate   = useNavigate();
+  const { can }    = useTeamPermissions();
   const [activeFilter, setActiveFilter] = useState('all');
   const [orders,       setOrders]       = useState<Order[]>([]);
   const [loading,      setLoading]      = useState(true);
@@ -200,7 +202,15 @@ export default function CommandesPage() {
   useEffect(() => {
     fetchEntrepriseCommandes()
       .then(setOrders)
-      .catch(() => setOrders([]))
+      .catch((err: any) => {
+        setOrders([]);
+        /* err.message porte le vrai motif backend (ex: 403 "Votre accès ne
+         * couvre pas cette action" pour un collaborateur sans la permission
+         * orders.view) — sans ce toast, l'écran affichait juste "aucune
+         * commande" en silence, impossible à distinguer d'une boutique
+         * sans commande. */
+        pop(err?.message ?? "Impossible de charger les commandes.", 'e');
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -338,23 +348,27 @@ export default function CommandesPage() {
                   <td>{STATUS_LABELS[o.status]}</td>
                   <td style={{ fontSize:12, color:'var(--t2)' }}>{o.date}</td>
                   <td>
-                    <button
-                      onClick={e => { e.stopPropagation(); openAssignerLivreur(o); }}
-                      style={{
-                        background:'none', border:'none', cursor:'pointer', padding:0,
-                        textAlign:'left', display:'flex', flexDirection:'column', gap:2,
-                      }}
-                    >
-                      <span style={{ fontSize:12, color:'var(--t2)', textDecoration:'underline', textDecorationStyle:'dotted' }}>
-                        {o.livreur !== '—' ? o.livreur : 'Assigner'}
-                      </span>
-                      {o.livreurAssignmentStatus === 'pending' && (
-                        <span style={{ fontSize:10, fontWeight:700, color:'#D97706' }}>⏳ En attente</span>
-                      )}
-                      {o.livreurAssignmentStatus === 'refused' && (
-                        <span style={{ fontSize:10, fontWeight:700, color:'#DC2626' }}>✕ Refusé — à réassigner</span>
-                      )}
-                    </button>
+                    {can('deliveries', 'assign') ? (
+                      <button
+                        onClick={e => { e.stopPropagation(); openAssignerLivreur(o); }}
+                        style={{
+                          background:'none', border:'none', cursor:'pointer', padding:0,
+                          textAlign:'left', display:'flex', flexDirection:'column', gap:2,
+                        }}
+                      >
+                        <span style={{ fontSize:12, color:'var(--t2)', textDecoration:'underline', textDecorationStyle:'dotted' }}>
+                          {o.livreur !== '—' ? o.livreur : 'Assigner'}
+                        </span>
+                        {o.livreurAssignmentStatus === 'pending' && (
+                          <span style={{ fontSize:10, fontWeight:700, color:'#D97706' }}>⏳ En attente</span>
+                        )}
+                        {o.livreurAssignmentStatus === 'refused' && (
+                          <span style={{ fontSize:10, fontWeight:700, color:'#DC2626' }}>✕ Refusé — à réassigner</span>
+                        )}
+                      </button>
+                    ) : (
+                      <span style={{ fontSize:12, color:'var(--t2)' }}>{o.livreur}</span>
+                    )}
                   </td>
 
                   <td>

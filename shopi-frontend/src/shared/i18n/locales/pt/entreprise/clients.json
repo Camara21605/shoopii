@@ -96,6 +96,24 @@
       "offreFidelite": "Oferta de fidelidade automática",
       "rapportSegments": "Relatório de segmentos PDF",
       "relanceInactifs": "Relançar clientes inativos"
+    },
+    "crm": {
+      "erreurApercu": "Não foi possível carregar a pré-visualização.",
+      "erreurEnvoi": "Falha no envio.",
+      "erreurRapport": "Não foi possível gerar o relatório PDF.",
+      "destinataires_one": "{{count}} destinatário",
+      "destinataires_other": "{{count}} destinatários",
+      "aucunDestinataire": "Nenhum cliente neste segmento por enquanto.",
+      "sujet": "Assunto",
+      "message": "Mensagem",
+      "annuler": "Cancelar",
+      "envoyerA_one": "Enviar a {{count}} cliente",
+      "envoyerA_other": "Enviar a {{count}} clientes",
+      "envoye_one": "✅ Enviado a {{count}} cliente",
+      "envoye_other": "✅ Enviado a {{count}} clientes",
+      "resultatTitre": "{{sent}} / {{total}} enviados",
+      "resultatEchecs": "{{count}} envio(s) falharam.",
+      "fermer": "Fechar"
     }
   }
 }

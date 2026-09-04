@@ -361,7 +361,13 @@ export class Commande {
   @Column({ type: 'bigint', default: 0 })
   fraisLivraison: number;
 
-  /** Commission Shopi (3%) en GNF */
+  /**
+   * Commission Shopi (part PLATEFORME_PRODUIT) en GNF.
+   * Estimée à la création de la commande (taux courant, sans garantie de
+   * cohérence avec le plan/overrides de la boutique), puis RECALÉE sur le
+   * montant réel calculé par le CommissionEngine dès la confirmation du
+   * paiement (voir payment-webhook-processor.service.ts::confirmerPaiement).
+   */
   @Column({ type: 'bigint', default: 0 })
   commissionShopi: number;
 

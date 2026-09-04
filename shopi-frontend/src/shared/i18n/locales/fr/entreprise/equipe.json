@@ -75,7 +75,6 @@
       "reactivateError": "Erreur lors de la réactivation.",
       "deleted": "Accès de {{name}} révoqué.",
       "resetPasswordError": "Erreur lors de la réinitialisation.",
-      "permissionsUpdated": "Permissions mises à jour.",
       "permissionsUpdateError": "Erreur lors de la mise à jour.",
       "invitationResent": "Invitation renvoyée.",
       "genericError": "Erreur.",
@@ -132,12 +131,22 @@
         "label": "Portefeuille",
         "view": "Voir",
         "withdraw": "Retrait"
+      },
+      "fournisseurs": {
+        "label": "Fournisseurs",
+        "view": "Voir",
+        "connect": "Se connecter",
+        "disconnect": "Se déconnecter"
+      },
+      "boutique": {
+        "label": "Ma boutique",
+        "view": "Voir",
+        "edit": "Modifier"
       }
     },
     "permPanel": {
       "title": "Permissions",
-      "cancel": "Annuler",
-      "save": "Enregistrer"
+      "close": "Fermer"
     },
     "activityPanel": {
       "title": "Activité récente",

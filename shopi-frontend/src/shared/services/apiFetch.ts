@@ -16,7 +16,7 @@
  *   Migration progressive vers useAppContext() à faire sur chaque composant.
  * ========================================================= */
 
-const BASE_URL =
+export const BASE_URL =
   import.meta.env.VITE_API_URL ??
   'http://localhost:3001/api';
 

@@ -214,16 +214,34 @@ export function useCorrespondantParametres() {
     doSave('/correspondant/parametres/paiement', body), [doSave]);
 
   // ── §7 Documents ──────────────────────────────────────────
+  /* SÉCURITÉ (backend) — l'API ne renvoie plus l'URL des documents
+   * officiels après upload (CNI, bail, assurance, casier judiciaire,
+   * registre), seulement `{present:true}` (voir DocumentsService.
+   * uploadDocument côté backend) : ce sont des pièces sensibles, elles
+   * n'ont rien à faire dans une réponse JSON visible depuis les DevTools,
+   * alors que l'UI ne s'est jamais servie que de la présence/absence. On
+   * marque donc juste le champ comme "présent" avec une valeur locale
+   * factice plutôt que de dépendre d'une URL qui n'existe plus. */
   const uploadDocument = useCallback(async (type: string, file: File) => {
     const res = await doUpload(`/correspondant/parametres/documents/${type}`, 'document', file);
     const map: Record<string, keyof CorrespondantData> = {
       cni: 'documentCni', bail: 'documentBail', assurance: 'documentAssurance',
       casier: 'documentCasier', registre: 'documentRegistre',
     };
-    if (map[type] && res.url) {
-      setData(prev => prev ? { ...prev, [map[type]]: res.url } : prev);
+    if (map[type] && res.present) {
+      setData(prev => prev ? { ...prev, [map[type]]: 'uploaded' } : prev);
     }
   }, [doUpload]);
+
+  /* SÉCURITÉ (backend) — plus d'URL statique stockée pour ces documents
+   * sensibles : "Voir le document" doit maintenant demander une URL
+   * signée fraîche à chaque clic (voir GET .../documents/:type/url côté
+   * backend), plutôt que de dépendre d'un lien permanent stocké côté
+   * client. */
+  const getDocumentUrl = useCallback(async (type: string): Promise<string> => {
+    const res = await apiFetch<{ url: string }>(`/correspondant/parametres/documents/${type}/url`);
+    return res.url;
+  }, []);
 
   const deleteDocument = useCallback(async (type: string) => {
     await apiFetch(`/correspondant/parametres/documents/${type}`, { method: 'DELETE', body: '{}' });
@@ -268,7 +286,7 @@ export function useCorrespondantParametres() {
     regenererCode, saveEntites,
     saveColis,
     savePaiement,
-    uploadDocument, deleteDocument,
+    uploadDocument, deleteDocument, getDocumentUrl,
     saveSecurite, changePassword,
     saveNotifications,
     saveConfidentialite,

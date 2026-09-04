@@ -46,6 +46,11 @@
       "LR": "Libéria",
       "SL": "Sierra Leone",
       "FR": "France"
-    }
+    },
+    "accessDenied": {
+      "title": "Accès non autorisé",
+      "message": "Vous n'avez pas accès à l'aperçu de la boutique. Contactez le propriétaire de la boutique pour l'obtenir."
+    },
+    "loadError": "Impossible de charger l'aperçu de la boutique."
   }
 }

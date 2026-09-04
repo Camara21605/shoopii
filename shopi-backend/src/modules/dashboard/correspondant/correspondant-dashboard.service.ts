@@ -35,7 +35,7 @@ export class CorrespondantDashboardService {
     const now        = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [platform, totalRow, monthRow, recentDist, chartWeek, chartMonth] = await Promise.all([
+    const [platform, totalRow, monthRow, commissionRow, recentDist, chartWeek, chartMonth] = await Promise.all([
       this.platformRepo.findOne({ where: { id: 1 } }),
 
       this.distRepo
@@ -55,6 +55,32 @@ export class CorrespondantDashboardService {
         .andWhere('pd.createdAt >= :from', { from: monthStart })
         .getRawOne(),
 
+      /* BUG CORRIGÉ — le frontend recalculait "Commission Shoneya" en
+       * appliquant tauxCommission à revenusThisMonth, qui est DÉJÀ le net
+       * versé au correspondant (post-commission) : ça revenait à prélever
+       * une seconde commission sur un montant déjà net, un chiffre sans
+       * rapport avec ce que Shopi a réellement prélevé. La vraie commission
+       * prélevée sur les commandes que ce correspondant a traitées ce mois
+       * est la somme des parts PLATEFORME_LIVRAISON des MÊMES commandes. */
+      this.distRepo
+        .createQueryBuilder('pd')
+        .select('COALESCE(SUM(CAST(pd.montant AS DECIMAL)), 0)', 'total')
+        .where('pd.acteurType = :ptype', { ptype: DistributionActeurType.PLATEFORME_LIVRAISON })
+        .andWhere('pd.status = :ps',     { ps: DistributionStatus.RELEASED })
+        .andWhere('pd.createdAt >= :pfrom', { pfrom: monthStart })
+        .andWhere(qb => {
+          const sub = qb.subQuery()
+            .select('sub.commandeId')
+            .from(PaiementDistribution, 'sub')
+            .where('sub.acteurUserId = :cuid', { cuid: userId })
+            .andWhere('sub.acteurType = :ctype', { ctype: DistributionActeurType.CORRESPONDANT })
+            .andWhere('sub.status = :cs', { cs: DistributionStatus.RELEASED })
+            .andWhere('sub.createdAt >= :cfrom', { cfrom: monthStart })
+            .getQuery();
+          return 'pd.commandeId IN ' + sub;
+        })
+        .getRawOne(),
+
       this.distRepo.find({
         where: {
           acteurUserId: userId,
@@ -69,9 +95,10 @@ export class CorrespondantDashboardService {
     ]);
 
     return {
-      tauxCommission:   +(platform?.tauxCommissionLivraison ?? 10),
-      totalRevenus:     +totalRow?.total  || 0,
-      revenusThisMonth: +monthRow?.total  || 0,
+      tauxCommission:      +(platform?.tauxCommissionLivraison ?? 10),
+      totalRevenus:        +totalRow?.total      || 0,
+      revenusThisMonth:    +monthRow?.total      || 0,
+      commissionThisMonth: +commissionRow?.total || 0,
       transactions: recentDist.map(tx => ({
         id:      tx.id,
         source:  tx.commandeNumero ?? 'Relais colis',

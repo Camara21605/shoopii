@@ -75,7 +75,6 @@
       "reactivateError": "خطأ أثناء إعادة التفعيل.",
       "deleted": "تم إلغاء وصول {{name}}.",
       "resetPasswordError": "خطأ أثناء إعادة التعيين.",
-      "permissionsUpdated": "تم تحديث الصلاحيات.",
       "permissionsUpdateError": "خطأ أثناء التحديث.",
       "invitationResent": "تمت إعادة إرسال الدعوة.",
       "genericError": "خطأ.",
@@ -132,12 +131,22 @@
         "label": "المحفظة",
         "view": "عرض",
         "withdraw": "سحب"
+      },
+      "fournisseurs": {
+        "label": "الموردون",
+        "view": "عرض",
+        "connect": "اتصال",
+        "disconnect": "قطع الاتصال"
+      },
+      "boutique": {
+        "label": "متجري",
+        "view": "عرض",
+        "edit": "تعديل"
       }
     },
     "permPanel": {
       "title": "الصلاحيات",
-      "cancel": "إلغاء",
-      "save": "حفظ"
+      "close": "إغلاق"
     },
     "activityPanel": {
       "title": "النشاط الأخير",

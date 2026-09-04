@@ -97,6 +97,26 @@ export interface TeamPermissions {
     view:    boolean;
     process: boolean;
   };
+  /** Fournisseurs — recherche et gestion des boutiques Shopi connectées
+   *  comme grossistes (achat en gros pour réapprovisionner le catalogue). */
+  fournisseurs: {
+    view:       boolean;  /** Voir/rechercher les fournisseurs et leur catalogue */
+    connect:    boolean;  /** Se connecter à un nouveau fournisseur */
+    disconnect: boolean;  /** Se déconnecter d'un fournisseur */
+  };
+  /** Aperçu et fiche (adresse/localisation) de la boutique publique
+   *  (vitrine vue par les clients). NOTE : "edit" ne contrôle ici que
+   *  l'accès à l'onglet Localisation côté UI — la sauvegarde de la
+   *  position GPS reste, elle, réservée au propriétaire au niveau du
+   *  service (CompanyLocationService.updateLocation vérifie
+   *  company.userId === user.id) : un collaborateur avec boutique.edit
+   *  peut modifier adresse/ville/commune (PATCH .../parametres/contact,
+   *  gouverné par settings.edit) mais recevra un 403 sur la position GPS
+   *  précise tant que ce garde owner-only n'est pas revu séparément. */
+  boutique: {
+    view: boolean;  /** Voir l'aperçu de la boutique publique */
+    edit: boolean;  /** Accéder à l'onglet Localisation (modifier adresse/position) */
+  };
 }
 
 /**
@@ -115,6 +135,8 @@ export const DEFAULT_TEAM_PERMISSIONS: TeamPermissions = {
   team:       { view: false, create: false, edit: false, suspend: false, delete: false },
   promotions: { view: false, create: false, edit: false, delete: false },
   returns:    { view: false, process: false },
+  fournisseurs: { view: false, connect: false, disconnect: false },
+  boutique:     { view: false, edit: false },
 };
 
 /* ──────────────────────────────────────────────────────────────

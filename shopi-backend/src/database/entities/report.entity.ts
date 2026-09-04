@@ -21,8 +21,16 @@ export enum ReportSeverity {
 }
 
 export enum ReportStatus {
-  PENDING  = 'pending',
-  RESOLVED = 'resolved',
+  PENDING       = 'pending',
+  INVESTIGATING = 'investigating',
+  RESOLVED      = 'resolved',
+  /* AJOUTÉ — le frontend (admin comme partenaire) affichait déjà un statut
+   * "Rejeté" distinct (ST.rejected / SignalementStatut='rejected'), mais
+   * "Classer sans suite" appelait resolveSignalement() : un signalement
+   * dismissé sans fondement portait donc EXACTEMENT le même statut RESOLVED
+   * qu'un signalement réellement traité (avertissement/suspension) — les
+   * deux étaient indiscernables en base. */
+  REJECTED      = 'rejected',
 }
 
 @Entity('reports')
@@ -65,6 +73,25 @@ export class Report {
 
   @Column({ type: 'timestamp', nullable: true })
   resolvedAt: Date | null;
+
+  /**
+   * true si un admin a confirmé ce signalement comme fondé contre le
+   * compte visé (voir AdminSignalementsService.warnSignalement) — par
+   * opposition à un signalement simplement "résolu" (classé sans suite,
+   * infondé…). Seuls les signalements `founded=true` comptent pour
+   * PlatformSettings.reportsBeforeSuspend : compter n'importe quel
+   * signalement résolu permettrait à un tiers de faire suspendre un
+   * compte avec de faux signalements en masse.
+   */
+  @Column({ type: 'boolean', default: false })
+  founded: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  foundedAt: Date | null;
+
+  /** Motif optionnel saisi par l'admin lors d'un rejet (ReportStatus.REJECTED). */
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  rejectionReason: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

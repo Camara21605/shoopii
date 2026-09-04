@@ -13,7 +13,7 @@
  *   Ce composant enregistre seulement un handler "mise à jour locale"
  *   (applyCallEventLocally) pour l'update optimiste du state React.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation }    from 'react-i18next';
 import { useMessagerie }     from './hooks/useMessagerie';
 import { useDeliveryGroups } from './hooks/useDeliveryGroups';
@@ -30,7 +30,19 @@ import s from './styles/MessagerieLayout.module.css';
 
 // ─────────────────────────────────────────────────────────────
 
-export default function MessagerieCore() {
+interface Props {
+  /** false → masque la zone de saisie de ChatWindow (collaborateur d'entreprise
+   * sans la permission messaging.send). Undefined/true = comportement inchangé
+   * pour tous les autres rôles/dashboards (client, livreur, correspondant…),
+   * qui ne passent pas cette prop. */
+  canSend?: boolean;
+  /** UUID d'une conversation à ouvrir automatiquement au montage — utilisé
+   * par MessageriePage pour le lien profond `?conv=` (notifications
+   * message.received / call.* — voir notificationUtils.resolveNavTarget). */
+  initialConversationId?: string;
+}
+
+export default function MessagerieCore({ canSend = true, initialConversationId }: Props = {}) {
   const { t } = useTranslation();
   const { pop } = useToast();
   /* useCallback : référence stable, propagée jusqu'à MessageBubble (via
@@ -127,6 +139,20 @@ export default function MessagerieCore() {
     }
     setMobileOpen(false);
   }, [groups, selectGroup, selectConv, setActiveConvId, setMobileOpen]);
+
+  /* Lien profond depuis une notification : sélectionne la conversation
+   * demandée UNE SEULE fois au montage. Ne dépend pas du chargement de
+   * `conversations` — selectConv() récupère les messages par id
+   * indépendamment de la liste, la conversation apparaîtra dans ConvList
+   * dès qu'elle aura chargé. */
+  const initialConvAppliedRef = useRef(false);
+  useEffect(() => {
+    if (!initialConversationId || initialConvAppliedRef.current) return;
+    initialConvAppliedRef.current = true;
+    selectConv(initialConversationId);
+    selectGroup(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialConversationId]);
 
   // ── Données actives (conv ou groupe) ─────────────────────────
   const currentConv = activeGroupId ? activeGroup : activeConv;
@@ -421,6 +447,7 @@ export default function MessagerieCore() {
           ? () => initiateGroupCall(activeGroupId, 'video')
           : (activeUser ? handleVideoCall : undefined)}
         onMobileMenu={() => setMobileOpen(true)}
+        canSend={canSend}
       />
 
       {/* Colonne droite : panneau d'info (conv directe et groupe) */}

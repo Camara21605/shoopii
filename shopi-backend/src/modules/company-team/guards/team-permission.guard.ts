@@ -12,14 +12,25 @@
  * COMMENT ÇA MARCHE :
  *   - Aucune métadonnée @RequiresTeamPermission sur la route → laisse
  *     passer (comportement inchangé pour toutes les routes non migrées).
+ *   - Utilisateur dont le rôle n'est PAS "company" → accès complet
+ *     inconditionnel. Le système de permissions d'équipe n'existe QUE
+ *     pour les comptes company (propriétaire ou collaborateur) : un
+ *     admin/super-admin/client/livreur/partenaire/correspondant n'a ni
+ *     entité Company ni CompanyTeamMember, donc SANS ce cas il tomberait
+ *     dans le filet de sécurité ci-dessous et se ferait refuser l'accès.
+ *     Indispensable pour les contrôleurs partagés entre tous les rôles
+ *     (ex: MessagerieController, utilisé par client/livreur/… en plus des
+ *     entreprises) et pour les routes @Roles qui autorisent aussi ADMIN/
+ *     SUPER_ADMIN en plus de COMPANY (ex: LivreursController — "ADMIN →
+ *     tous les livreurs").
  *   - Utilisateur PROPRIÉTAIRE (Company.userId = user.id) → accès
  *     complet inconditionnel, jamais bloqué par ce garde.
  *   - Utilisateur COLLABORATEUR (CompanyTeamMember.userId = user.id) →
  *     vérifie CompanyTeamPermissionService.hasPermission(memberId,
  *     group, action) ; refuse (403) si absente.
- *   - Ni propriétaire ni membre d'équipe connu → refuse (ne devrait
- *     normalement jamais arriver derrière @Roles(UserRole.COMPANY),
- *     filet de sécurité).
+ *   - Ni admin, ni propriétaire, ni membre d'équipe connu → refuse (ne
+ *     devrait normalement jamais arriver derrière @Roles(UserRole.
+ *     COMPANY), filet de sécurité).
  *
  * UTILISATION (voir requires-team-permission.decorator.ts) :
  *   @UseGuards(JwtAuthGuard, RolesGuard, TeamPermissionGuard)
@@ -45,6 +56,7 @@ import { Company }           from '../../../database/entities/profiles/entrepris
 import { CompanyTeamMember } from '../../../database/entities/company-team/company-team-member.entity';
 import { CompanyTeamPermissionService } from '../services/company-team-permission.service';
 import { TEAM_PERMISSION_KEY, RequiredTeamPermission } from '../decorators/requires-team-permission.decorator';
+import { UserRole } from '../../../common/enums/user-role.enum';
 
 @Injectable()
 export class TeamPermissionGuard implements CanActivate {
@@ -70,8 +82,14 @@ export class TeamPermissionGuard implements CanActivate {
     if (!required) return true;
 
     const req  = context.switchToHttp().getRequest();
-    const user = req.user as { id?: string } | undefined;
+    const user = req.user as { id?: string; role?: string } | undefined;
     if (!user?.id) throw new ForbiddenException('Authentification requise.');
+
+    /* Rôle non-company → jamais soumis aux permissions granulaires d'une
+     * entreprise (n'a ni Company ni CompanyTeamMember). Couvre admin,
+     * super_admin, client, delivery, partner, correspondent — utile en
+     * particulier pour les contrôleurs partagés entre tous les rôles. */
+    if (user.role !== UserRole.COMPANY) return true;
 
     /* Propriétaire → accès complet, jamais soumis aux permissions
      * granulaires (mêmes critères que TeamOwnerGuard). */

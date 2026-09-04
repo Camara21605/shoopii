@@ -37,13 +37,23 @@
 .cmodal h3 { font-family: var(--fd); font-weight: 700; font-size: 19px; color: var(--navy); }
 .cmodal p { font-size: 13px; color: var(--t2); margin-top: 8px; line-height: 1.6; }
 
+.motif {
+  width: 100%; margin-top: 16px;
+  border: 1.5px solid var(--bdr); border-radius: var(--r-md);
+  padding: 10px 12px; font-size: 13px; font-family: var(--fb);
+  color: var(--navy); resize: none; text-align: left;
+}
+.motif:focus { outline: none; border-color: #DC2626; }
+
 .btns { display: flex; gap: 10px; margin-top: 22px; }
 .btns button {
   flex: 1; padding: 12px;
   border: none; border-radius: var(--r-md);
   font-size: 13px; font-weight: 700; font-family: var(--fb);
   cursor: pointer; transition: .15s;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
 }
+.btns button:disabled { opacity: .6; cursor: not-allowed; }
 .cancel { background: var(--g100); color: var(--t2); }
 .cancel:hover { background: var(--g200); }
 .confirm { background: #DC2626; color: #fff; }

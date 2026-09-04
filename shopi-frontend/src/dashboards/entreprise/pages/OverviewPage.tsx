@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
 import { apiFetch } from '../../../shared/services/apiFetch';
+import { useTeamPermissions } from '../hooks/useTeamPermissions';
 import './OverviewPage.css';
 
 interface OverviewPageProps {
@@ -34,7 +35,7 @@ interface OverviewData {
   categoryBreakdown: { label: string; pct: number }[];
   dernieresCommandes: { id: string; uuid?: string; em: string; nm: string; vt: string; client: string; price: number; status: string; date: string }[];
   stockAlertes: { em: string; nm: string; qty: number; min: number; type: 'red' | 'amber' }[];
-  activite: { icon: string; txt: string; time: string }[];
+  activite: { icon: string; txt: string; highlight?: string; time: string }[];
 }
 
 const EMPTY: OverviewData = {
@@ -52,6 +53,16 @@ const EMPTY: OverviewData = {
 /** Formate un nombre avec espaces insécables (ex: 12500000 → 12 500 000) */
 function fmt(n: number) {
   return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+/* Met en gras `highlight` dans `texte` via JSX (échappé par React) — pas de
+ * dangerouslySetInnerHTML : le texte peut contenir le nom d'un client saisi
+ * librement sur son avis (voir entreprise-dashboard.service.ts::buildActivite). */
+function ActiviteTxt({ txt, highlight }: { txt: string; highlight?: string }) {
+  if (!highlight) return <>{txt}</>;
+  const idx = txt.indexOf(highlight);
+  if (idx === -1) return <>{txt}</>;
+  return <>{txt.slice(0, idx)}<b>{highlight}</b>{txt.slice(idx + highlight.length)}</>;
 }
 
 /** KPI card individuelle (sans sparkline — pas de série journalière réelle disponible) */
@@ -78,6 +89,7 @@ function KpiCard({
 export default function OverviewPage({ onNavigate }: OverviewPageProps) {
   const { t } = useTranslation();
   const { pop } = useToast();
+  const { can } = useTeamPermissions();
   const navigate = useNavigate();
   const [data, setData]       = useState<OverviewData>(EMPTY);
   const [loading, setLoading] = useState(true);
@@ -139,9 +151,11 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
             <button className="hb1" onClick={() => onNavigate('commandes')}>
               <i className="fas fa-box"></i> {t('overview.hero.btnCommandes')}
             </button>
-            <button className="hb2" onClick={() => onNavigate('analytics')}>
-              <i className="fas fa-chart-line"></i> {t('overview.hero.btnAnalytics')}
-            </button>
+            {can('statistics', 'view') && (
+              <button className="hb2" onClick={() => onNavigate('analytics')}>
+                <i className="fas fa-chart-line"></i> {t('overview.hero.btnAnalytics')}
+              </button>
+            )}
             <button className="hb2" onClick={() => onNavigate('promotions')}>
               <i className="fas fa-percent"></i> {t('overview.hero.btnPromotions')}
             </button>
@@ -366,7 +380,7 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
                 {activite.map((a, i) => (
                   <div key={i} className="act-item">
                     <div className="act-dot order"><i className={`fas ${a.icon}`}></i></div>
-                    <div className="act-txt" dangerouslySetInnerHTML={{ __html: a.txt }} />
+                    <div className="act-txt"><ActiviteTxt txt={a.txt} highlight={a.highlight} /></div>
                     <div className="act-time">{a.time}</div>
                   </div>
                 ))}

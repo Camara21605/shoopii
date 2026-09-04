@@ -26,6 +26,9 @@ import cookieParser               from 'cookie-parser';
 import compression                from 'compression';
 import { AppModule }              from './app.module';
 import { csrfProtection }         from './common/middleware/csrf.middleware';
+import { maintenanceGuard }       from './common/middleware/maintenance.middleware';
+import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
+import { PlatformSettingsCacheService } from './modules/performance-engine/services/platform-settings-cache.service';
 
 const logger = new Logger('Bootstrap');
 
@@ -110,6 +113,20 @@ async function bootstrap() {
    * les routes. Voir csrf.middleware.ts pour le détail du modèle
    * de risque et pourquoi c'est nécessaire malgré sameSite. */
   app.use(csrfProtection(isProd));
+
+  /* ── Mode maintenance (PlatformSettings.maintenanceMode) ──────
+   * BUG CORRIGÉ — ce toggle ne bloquait rien jusqu'ici, voir
+   * maintenance.middleware.ts pour le détail. Résolu via le
+   * conteneur Nest (app.get) car il a besoin d'injection de
+   * dépendances (Redis via PlatformSettingsCacheService), contrairement
+   * à csrfProtection ci-dessus qui est une fonction pure sans DI. */
+  app.use(maintenanceGuard(app.get(PlatformSettingsCacheService)));
+
+  /* ── Message clair sur 429 (rate limit) ────────────────────────
+   * BUG CORRIGÉ — voir throttler-exception.filter.ts : sans lui, le
+   * message brut du package ("ThrottlerException: Too Many Requests")
+   * remontait tel quel jusqu'à l'utilisateur. */
+  app.useGlobalFilters(new ThrottlerExceptionFilter());
 
   /* ── Validation globale des DTO ─────────────────────────────── */
   app.useGlobalPipes(

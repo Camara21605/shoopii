@@ -29,6 +29,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useToast } from '../../../shared/context/ToastContext';
+import { useTeamPermissions } from '../hooks/useTeamPermissions';
 import styles from './CorrespondantsPage.module.css';
 import {
   livreursApi,
@@ -138,11 +139,12 @@ function BadgeAvail({ availability }: { availability: Availability }) {
 // MODALE PROFIL
 // ─────────────────────────────────────────────────────────────
 
-function ModalProfil({ l, onClose, onContact, onSuspend }: {
+function ModalProfil({ l, onClose, onContact, onSuspend, can }: {
   l:         LivreurResponse;
   onClose:   () => void;
   onContact: () => void;
   onSuspend: () => void;
+  can:       (group: string, action: string) => boolean;
 }) {
   const { t } = useTranslation();
   return (
@@ -223,14 +225,16 @@ function ModalProfil({ l, onClose, onContact, onSuspend }: {
         </div>
 
         <div className={styles.mFooter}>
-          {l.status === 'active' && (
+          {l.status === 'active' && can('deliveries', 'edit') && (
             <button className={styles.btnDanger} onClick={() => { onSuspend(); onClose(); }}>
               <i className="fas fa-ban" /> {t('livreurs.modalProfil.suspendre')}
             </button>
           )}
-          <button className={styles.btnSecondary} onClick={() => { onContact(); onClose(); }}>
-            <i className="fas fa-envelope" /> {t('livreurs.modalProfil.contacter')}
-          </button>
+          {can('deliveries', 'edit') && (
+            <button className={styles.btnSecondary} onClick={() => { onContact(); onClose(); }}>
+              <i className="fas fa-envelope" /> {t('livreurs.modalProfil.contacter')}
+            </button>
+          )}
           <a
             href={`https://wa.me/${(l.phone ?? '').replace(/\s+/g, '')}`}
             target="_blank" rel="noreferrer"
@@ -539,6 +543,7 @@ function ModalSuspendre({ l, onClose, onConfirm, loading }: {
 export default function LivreursPage() {
   const { t } = useTranslation();
   const { pop } = useToast();
+  const { can } = useTeamPermissions();
 
   // ── État données ────────────────────────────────────────────
   const [livreurs,       setLivreurs]       = useState<LivreurResponse[]>([]);
@@ -648,9 +653,11 @@ export default function LivreursPage() {
           <h1 className={styles.titre}>{t('livreurs.header.title')}</h1>
           <p className={styles.sousTitre}>{t('livreurs.header.subtitle')}</p>
         </div>
-        <button className={styles.btnAjouter} onClick={() => setModalInviter(true)}>
-          <i className="fas fa-user-plus" /> {t('livreurs.header.inviter')}
-        </button>
+        {can('deliveries', 'assign') && (
+          <button className={styles.btnAjouter} onClick={() => setModalInviter(true)}>
+            <i className="fas fa-user-plus" /> {t('livreurs.header.inviter')}
+          </button>
+        )}
       </div>
 
       {/* KPI CARDS */}
@@ -753,7 +760,9 @@ export default function LivreursPage() {
               <span className={styles.videIco}>🛵</span>
               <strong>{t('livreurs.empty.title')}</strong>
               <span>{t('livreurs.empty.sub')}</span>
-              <button className={styles.btnAjouter} onClick={() => setModalInviter(true)}><i className="fas fa-user-plus" /> {t('livreurs.empty.inviter')}</button>
+              {can('deliveries', 'assign') && (
+                <button className={styles.btnAjouter} onClick={() => setModalInviter(true)}><i className="fas fa-user-plus" /> {t('livreurs.empty.inviter')}</button>
+              )}
             </div>
           ) : vue === 'grille' ? (
             <div className={styles.grille}>
@@ -816,9 +825,11 @@ export default function LivreursPage() {
                     <button className={styles.cardBtnPrimary} onClick={() => setModalProfil(l)}>
                       <i className="fas fa-eye" /> {t('livreurs.card.voir')}
                     </button>
-                    <button className={styles.cardBtnIcon} onClick={() => setModalContact(l)} title={t('livreurs.card.contacter')}>
-                      <i className="fas fa-envelope" />
-                    </button>
+                    {can('deliveries', 'edit') && (
+                      <button className={styles.cardBtnIcon} onClick={() => setModalContact(l)} title={t('livreurs.card.contacter')}>
+                        <i className="fas fa-envelope" />
+                      </button>
+                    )}
                     <a
                       href={`https://wa.me/${(l.phone ?? '').replace(/\s+/g, '')}`}
                       target="_blank" rel="noreferrer"
@@ -873,7 +884,9 @@ export default function LivreursPage() {
                       <td className={styles.td}>
                         <div className={styles.listActions}>
                           <button className={styles.listeBtn} onClick={() => setModalProfil(l)} title={t('livreurs.card.voir')}><i className="fas fa-eye" /></button>
-                          <button className={styles.listeBtn} onClick={() => setModalContact(l)} title={t('livreurs.card.contacter')}><i className="fas fa-envelope" /></button>
+                          {can('deliveries', 'edit') && (
+                            <button className={styles.listeBtn} onClick={() => setModalContact(l)} title={t('livreurs.card.contacter')}><i className="fas fa-envelope" /></button>
+                          )}
                           <a href={`tel:${l.phone}`} className={styles.listeBtn} title={t('livreurs.card.appeler')}><i className="fas fa-phone" /></a>
                         </div>
                       </td>
@@ -938,7 +951,9 @@ export default function LivreursPage() {
                 { ico:'📢', l:t('livreurs.quickActions.diffuserMission'),       action: () => pop(t('livreurs.quickActions.diffusionToast'), 's')        },
                 { ico:'📊', l:t('livreurs.quickActions.rapportPerf'),       action: () => pop(t('livreurs.quickActions.rapportToast'), 's')      },
                 { ico:'🗺️', l:t('livreurs.quickActions.voirCarte'),    action: () => pop(t('livreurs.quickActions.carteToast'), 's')               },
-                { ico:'✅', l:t('livreurs.quickActions.validerEnAttente', { count: s.enAttente }), action: handleValiderTous                   },
+                ...(can('deliveries', 'assign')
+                  ? [{ ico:'✅', l:t('livreurs.quickActions.validerEnAttente', { count: s.enAttente }), action: handleValiderTous }]
+                  : []),
               ].map((a, i) => (
                 <button key={i} className={styles.quickAction} onClick={a.action}>
                   <span className={styles.quickIco}>{a.ico}</span>
@@ -958,6 +973,7 @@ export default function LivreursPage() {
           onClose={() => setModalProfil(null)}
           onContact={() => { setModalProfil(null); setModalContact(modalProfil); }}
           onSuspend={() => { setModalProfil(null); setModalSuspend(modalProfil); }}
+          can={can}
         />
       )}
       {modalInviter && (

@@ -35,17 +35,20 @@ import {
   Body, Req, Param, UploadedFile,
   UseGuards, UseInterceptors, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import type { DocumentType } from './services/documents-partenaire.service';
 import { FileInterceptor }     from '@nestjs/platform-express';
 import { memoryStorage }       from 'multer';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import type { Request }        from 'express';
 
 import { JwtAuthGuard }        from 'src/common/guards/auth.guard';
 
-import { ProfilPartenaireService }   from './services/profil-partenaire.service';
-import { SecuritePartenaireService } from './services/securite-partenaire.service';
-import { NotifsPartenaireService }   from './services/notifs-partenaire.service';
-import { DangerPartenaireService }   from './services/danger-partenaire.service';
+import { ProfilPartenaireService }    from './services/profil-partenaire.service';
+import { SecuritePartenaireService }  from './services/securite-partenaire.service';
+import { NotifsPartenaireService }    from './services/notifs-partenaire.service';
+import { DangerPartenaireService }    from './services/danger-partenaire.service';
+import { DocumentsPartenaireService } from './services/documents-partenaire.service';
 
 import {
   UpdatePartenaireProfilDto,
@@ -66,6 +69,12 @@ function userId(req: Request): string {
   return (req as any).user?.userId ?? (req as any).user?.id ?? (req as any).user?.sub;
 }
 
+/* ── Helper sessionId — voir JwtStrategy (claim `sid`), utilisé pour
+ * afficher la session actuelle réelle sur l'écran Sécurité. ── */
+function sessionId(req: Request): string | null {
+  return (req as any).user?.sessionId ?? null;
+}
+
 /* ═══════════════════════════════════════════════════════════ */
 
 @ApiTags('Partenaire — Paramètres')
@@ -75,10 +84,11 @@ function userId(req: Request): string {
 export class PartenaireParametresController {
 
   constructor(
-    private readonly profilService:   ProfilPartenaireService,
-    private readonly securiteService: SecuritePartenaireService,
-    private readonly notifsService:   NotifsPartenaireService,
-    private readonly dangerService:   DangerPartenaireService,
+    private readonly profilService:    ProfilPartenaireService,
+    private readonly securiteService:  SecuritePartenaireService,
+    private readonly notifsService:    NotifsPartenaireService,
+    private readonly dangerService:    DangerPartenaireService,
+    private readonly documentsService: DocumentsPartenaireService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -94,13 +104,13 @@ export class PartenaireParametresController {
   @ApiOperation({ summary: 'Données complètes pour toutes les sections paramètres' })
   @Get()
   getParametres(@Req() req: Request) {
-    return this.profilService.getParametres(userId(req));
+    return this.profilService.getParametres(userId(req), sessionId(req));
   }
 
   @ApiOperation({ summary: 'Modifier les informations personnelles et nom partenaire' })
   @Patch('profil')
   updateProfil(@Req() req: Request, @Body() dto: UpdatePartenaireProfilDto) {
-    return this.profilService.updateProfil(userId(req), dto);
+    return this.profilService.updateProfil(userId(req), dto, sessionId(req));
   }
 
   @ApiOperation({ summary: 'Téléverser la photo de profil (multipart/form-data)' })
@@ -117,7 +127,7 @@ export class PartenaireParametresController {
   @ApiOperation({ summary: 'Mettre à jour la zone d\'activité et la localisation' })
   @Patch('zone')
   updateZone(@Req() req: Request, @Body() dto: UpdatePartenaireZoneDto) {
-    return this.profilService.updateZone(userId(req), dto);
+    return this.profilService.updateZone(userId(req), dto, sessionId(req));
   }
 
   /* ──────────────────────────────────────────────────────────
@@ -127,10 +137,17 @@ export class PartenaireParametresController {
   @ApiOperation({ summary: 'Statut 2FA et sécurité du compte' })
   @Get('securite')
   getSecurite(@Req() req: Request) {
-    return this.securiteService.getSecurite(userId(req));
+    return this.securiteService.getSecurite(userId(req), sessionId(req));
   }
 
+  /* SÉCURITÉ — ThrottlerGuard absent de cette route jusqu'ici : un JWT
+   * volé/compromis pouvait marteler ce endpoint pour deviner le mot de
+   * passe actuel sans aucune limite (bcrypt.compare échoue silencieusement
+   * en 401, sans lockout ni ralentissement). Même mécanisme que
+   * /auth/verify-otp (10 tentatives / 60s) — voir auth.controller.ts. */
   @ApiOperation({ summary: 'Changer le mot de passe' })
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Patch('securite/password')
   updatePassword(@Req() req: Request, @Body() dto: UpdatePartenairePasswordDto) {
     return this.securiteService.updatePassword(userId(req), dto);
@@ -188,6 +205,33 @@ export class PartenaireParametresController {
   @Patch('preferences')
   updatePreferences(@Req() req: Request, @Body() dto: UpdatePartenairePreferencesDto) {
     return this.notifsService.updatePreferences(userId(req), dto);
+  }
+
+  /* ──────────────────────────────────────────────────────────
+   * DOCUMENTS & VÉRIFICATION (KYC)
+   * ────────────────────────────────────────────────────────── */
+
+  @ApiOperation({ summary: 'Statut des documents de vérification' })
+  @Get('documents')
+  getDocuments(@Req() req: Request) {
+    return this.documentsService.getDocuments(userId(req));
+  }
+
+  @ApiOperation({ summary: 'Téléverser un document (cni | domicile | activite)' })
+  @Post('documents/:type')
+  @UseInterceptors(FileInterceptor('file', MULTER_OPTS))
+  uploadDocument(
+    @Req() req: Request,
+    @Param('type') type: DocumentType,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.documentsService.uploadDocument(userId(req), type, file);
+  }
+
+  @ApiOperation({ summary: 'Supprimer un document de vérification' })
+  @Delete('documents/:type')
+  deleteDocument(@Req() req: Request, @Param('type') type: DocumentType) {
+    return this.documentsService.deleteDocument(userId(req), type);
   }
 
   /* ──────────────────────────────────────────────────────────

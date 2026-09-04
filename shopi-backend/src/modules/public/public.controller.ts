@@ -10,12 +10,70 @@ import type { Request } from 'express';
 import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt.guard';
 import { PublicService } from './public.service';
+import { PlatformSettingsCacheService } from '../performance-engine/services/platform-settings-cache.service';
 
 @ApiTags('Public')
 @Controller('public')
 export class PublicController {
 
-  constructor(private readonly publicService: PublicService) {}
+  constructor(
+    private readonly publicService: PublicService,
+
+    /* BUG CORRIGÉ — PlatformSettings.platformName/platformTagline/logoUrl/
+     * faviconUrl/primaryColor (Paramètres Plateforme > Général/Apparence)
+     * se sauvegardaient en base sans jamais être exposés au site public :
+     * aucune route publique ne les lisait, le frontend affichait des
+     * valeurs codées en dur ("Shoneya", couleur/logo statiques) quel que
+     * soit ce que le super-admin configurait. */
+    private readonly settingsCache: PlatformSettingsCacheService,
+  ) {}
+
+  // ── GET /public/branding ──────────────────────────────────────
+  // Identité de marque, lue par le frontend au démarrage (titre de page,
+  // favicon, couleur d'accent, logo). Volontairement minimal : ne retourne
+  // QUE les champs sûrs à exposer publiquement (jamais un champ interne/
+  // sensible de PlatformSettings).
+  @Get('branding')
+  @ApiOperation({ summary: "Identité de marque publique (nom, logo, couleur, favicon)" })
+  async getBranding() {
+    const s = await this.settingsCache.getSettings();
+    return {
+      platformName:    s.platformName,
+      platformTagline: s.platformTagline,
+      primaryColor:    s.primaryColor,
+      logoUrl:         s.logoUrl,
+      faviconUrl:      s.faviconUrl,
+    };
+  }
+
+  // ── GET /public/landing-stats ───────────────────────────────────
+  // Statistiques + fil d'activité réels de la page de connexion publique
+  // (LeftPanel.tsx) — voir PublicService.getLandingStats() pour le détail
+  // du bug corrigé (tout était codé en dur auparavant).
+  @Get('landing-stats')
+  @ApiOperation({ summary: "Statistiques et activité récente réelles pour la page de connexion" })
+  async getLandingStats() {
+    return this.publicService.getLandingStats();
+  }
+
+  // ── GET /public/registration-policy ────────────────────────────
+  // Lu par l'écran d'inscription public pour griser l'option "Client"
+  // quand PlatformSettings.openSignup est désactivé — sans ça, le
+  // réglage bloquait bien l'inscription côté serveur mais rien ne le
+  // signalait visuellement avant que l'utilisateur remplisse tout le
+  // formulaire et essuie un refus au moment de soumettre.
+  @Get('registration-policy')
+  @ApiOperation({ summary: "Politique d'inscription publique (inscription client/entreprise ouverte/fermée)" })
+  async getRegistrationPolicy() {
+    const s = await this.settingsCache.getSettings();
+    return {
+      openSignup: s.openSignup,
+      /* Lu par RoleSelector pour rendre "Entreprise" sélectionnable sans
+       * lien d'invitation, et par la validation du formulaire pour ne
+       * plus exiger de code — voir useLoginPage.ts validateRegisterField. */
+      codeRequiredForCompany: s.codeRequiredForCompany,
+    };
+  }
 
   @Get('produits')
   @ApiOperation({ summary: 'Produits publics paginés' })

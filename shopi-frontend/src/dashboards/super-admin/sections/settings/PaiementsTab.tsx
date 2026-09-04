@@ -41,10 +41,16 @@ export default function PaiementsTab({ settings, set }: Props) {
       {/* ── GROUPE 1 : Commission & Seuils ── */}
       <SettingGroup icon="💰" iconBg="var(--acid-dim)" title="Commission & Seuils">
 
-        {/* Pourcentage prélevé par Shoneya sur chaque transaction vendeur */}
+        {/* BUG CORRIGÉ — ce champ laissait croire qu'il pilotait la commission
+         * réellement prélevée. En réalité il ne fixe que la valeur affichée
+         * sur une commande à sa CRÉATION ; dès le paiement confirmé, le
+         * vrai moteur de commission (taux + répartition Shopi/Partenaire/
+         * Admin, onglet "Commissions" du menu) écrase cette valeur. Label
+         * et description corrigés pour ne plus laisser croire à un contrôle
+         * qu'il n'a pas. */}
         <SettingRow
-          label="Commission plateforme (%)"
-          desc="Prélevée sur chaque transaction vendeur → Shoneya (0–50%)"
+          label="Commission affichée à la création (%)"
+          desc="Valeur provisoire affichée sur la commande avant paiement — la répartition réelle est définie dans l'onglet « Commissions »"
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <input

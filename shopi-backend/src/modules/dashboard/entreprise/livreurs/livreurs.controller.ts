@@ -49,6 +49,8 @@ import { JwtAuthGuard }  from 'src/common/guards/auth.guard';
 import { RolesGuard }    from 'src/common/guards/roles.guard';
 import { Roles }         from 'src/common/decorators/roles.decorator';
 import { UserRole }      from 'src/common/enums/user-role.enum';
+import { TeamPermissionGuard }    from 'src/modules/company-team/guards/team-permission.guard';
+import { RequiresTeamPermission } from 'src/modules/company-team/decorators/requires-team-permission.decorator';
 
 import { LivreursService }          from './services/livreurs.service';
 import { InvitationLivreurService } from './services/invitation-livreur.service';
@@ -76,6 +78,8 @@ export class LivreursController {
 
   @Get('stats')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'view')
   async getStats(@Req() req: any) {
     return this.livreursService.getStats(req.user);
   }
@@ -87,6 +91,8 @@ export class LivreursController {
 
   @Get('zones')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'view')
   async getZones(@Req() req: any) {
     return this.livreursService.getZoneStats(req.user);
   }
@@ -98,6 +104,8 @@ export class LivreursController {
 
   @Get('activite-recente')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'view')
   async getActiviteRecente(@Req() req: any) {
     return this.livreursService.getRecentActivity(req.user);
   }
@@ -117,6 +125,8 @@ export class LivreursController {
   @Post('inviter')
   @HttpCode(HttpStatus.CREATED)
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'assign')
   async inviter(
     @Body() dto: InviterLivreurDto,
     @Req()  req: any,
@@ -138,6 +148,8 @@ export class LivreursController {
 
   @Get()
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'view')
   async findAll(
     @Query() dto: FilterLivreursDto,
     @Req()   req: any,
@@ -152,6 +164,8 @@ export class LivreursController {
 
   @Get(':id')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'view')
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @Req()                      req: any,
@@ -166,6 +180,8 @@ export class LivreursController {
 
   @Patch(':id')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'edit')
   async update(
     @Param('id', ParseUUIDPipe) id:  string,
     @Body()                     dto: UpdateLivreurDto,
@@ -181,6 +197,8 @@ export class LivreursController {
 
   @Patch(':id/suspendre')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'edit')
   async suspendre(
     @Param('id', ParseUUIDPipe) id:  string,
     @Body()                     dto: SuspendreDto,
@@ -195,6 +213,8 @@ export class LivreursController {
 
   @Patch(':id/reactiver')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'edit')
   async reactiver(
     @Param('id', ParseUUIDPipe) id: string,
     @Req()                      req: any,
@@ -209,6 +229,8 @@ export class LivreursController {
 
   @Patch(':id/valider')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'assign')
   async valider(
     @Param('id', ParseUUIDPipe) id: string,
     @Req()                      req: any,
@@ -224,6 +246,8 @@ export class LivreursController {
   @Post(':id/contacter')
   @HttpCode(HttpStatus.OK)
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'edit')
   async contacter(
     @Param('id', ParseUUIDPipe) id:  string,
     @Body()                     dto: ContacterLivreurDto,

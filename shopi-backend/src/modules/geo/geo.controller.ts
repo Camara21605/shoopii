@@ -7,6 +7,8 @@
  * Préfixe : /geo
  *
  *   GET    /geo/all
+ *   GET    /geo/audit             Journal d'audit (filtres action/niveau/search)
+ *   POST   /geo/import/:niveau    Import massif CSV — crée réellement les lignes
  *   GET    /geo/pays              GET    /geo/pays/:id
  *   POST   /geo/pays              PATCH  /geo/pays/:id
  *   DELETE /geo/pays/:id         PATCH  /geo/pays/:id/toggle
@@ -16,7 +18,7 @@
 import {
   Controller, Get, Post, Patch, Delete,
   Param, Body, Query, UseGuards, Request,
-  HttpCode, HttpStatus,
+  HttpCode, HttpStatus, BadRequestException,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
@@ -27,7 +29,15 @@ import { Public }       from '../../common/decorators/public.decorator';
 import { UserRole }     from '../../common/enums/user-role.enum';
 
 import { GeoService }        from './geo.service';
-import { CreateGeoItemDto }  from './geo.dto';
+import { CreateGeoItemDto, GeoImportDto } from './geo.dto';
+import type { GeoAuditNiveau } from '../../database/entities/geo/geo-audit-log.entity';
+
+const IMPORT_NIVEAUX: GeoAuditNiveau[] = ['pays', 'region', 'prefecture', 'commune', 'quartier', 'zone'];
+
+/* ── Identité de l'acteur pour le journal d'audit ── */
+function actor(req: any): { email: string; userId: string } {
+  return { email: req.user?.email ?? 'Super Admin', userId: req.user?.id ?? null };
+}
 
 @ApiTags('Référentiel Géographique')
 @ApiBearerAuth()
@@ -44,11 +54,11 @@ export class GeoController {
   @Get('items')
   @Public()
   @Roles()
-  @ApiOperation({ summary: 'Items géographiques actifs par niveau (pays/region/prefecture/commune/quartier) — route publique' })
-  itemsByNiveau(@Query('niveau') niveau: string) {
+  @ApiOperation({ summary: 'Items géographiques actifs par niveau (pays/region/prefecture/commune/quartier), optionnellement filtrés par parentId — route publique' })
+  itemsByNiveau(@Query('niveau') niveau: string, @Query('parentId') parentId?: string) {
     const valid = ['pays', 'region', 'prefecture', 'commune', 'quartier'] as const;
     if (!valid.includes(niveau as any)) return [];
-    return this.geo.itemsByNiveau(niveau as any);
+    return this.geo.itemsByNiveau(niveau as any, parentId);
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -74,6 +84,34 @@ export class GeoController {
   }
 
   /* ══════════════════════════════════════════════════════════
+   * JOURNAL D'AUDIT
+   * GET /geo/audit?action=create&niveau=zone&search=matoto
+   * ══════════════════════════════════════════════════════════ */
+  @Get('audit')
+  @ApiOperation({ summary: "Journal d'audit du référentiel géographique" })
+  findAllAudit(
+    @Query('action') action?: string,
+    @Query('niveau') niveau?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.geo.findAllAudit({ action, niveau, search });
+  }
+
+  /* ══════════════════════════════════════════════════════════
+   * IMPORT MASSIF
+   * POST /geo/import/:niveau  { rows: GeoImportRowDto[] }
+   * ══════════════════════════════════════════════════════════ */
+  @Post('import/:niveau')
+  @ApiOperation({ summary: 'Import massif CSV pour un niveau géographique donné' })
+  importRows(@Param('niveau') niveau: string, @Body() dto: GeoImportDto, @Request() req: any) {
+    if (!IMPORT_NIVEAUX.includes(niveau as GeoAuditNiveau)) {
+      throw new BadRequestException(`niveau doit être une valeur parmi: ${IMPORT_NIVEAUX.join(', ')}`);
+    }
+    const a = actor(req);
+    return this.geo.importRows(niveau as GeoAuditNiveau, dto.rows, a.email, a.userId);
+  }
+
+  /* ══════════════════════════════════════════════════════════
    * PAYS
    * ══════════════════════════════════════════════════════════ */
   @Get('pays')
@@ -83,30 +121,32 @@ export class GeoController {
 
   @Post('pays')
   @HttpCode(HttpStatus.CREATED)
-  createPays(@Body() dto: CreateGeoItemDto) {
-    return this.geo.createPays(dto);
+  createPays(@Body() dto: CreateGeoItemDto, @Request() req: any) {
+    const a = actor(req);
+    return this.geo.createPays(dto, a.email, a.userId);
   }
 
   @Patch('pays/:id')
   updatePays(@Param('id') id: string, @Body() dto: CreateGeoItemDto, @Request() req: any) {
-    return this.geo.updatePays(id, dto, req.user.role, req.user.id);
+    return this.geo.updatePays(id, dto, req.user.role, req.user.id, actor(req).email);
   }
 
   @Delete('pays/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   removePays(@Param('id') id: string, @Request() req: any) {
-    return this.geo.removePays(id, req.user.role, req.user.id);
+    return this.geo.removePays(id, req.user.role, req.user.id, actor(req).email);
   }
 
   @Patch('pays/:id/toggle')
   togglePays(@Param('id') id: string, @Request() req: any) {
-    return this.geo.togglePays(id, req.user.role, req.user.id);
+    return this.geo.togglePays(id, req.user.role, req.user.id, actor(req).email);
   }
 
   @Patch('pays/:id/delegation')
   @Roles(UserRole.SUPER_ADMIN)
-  delegationPays(@Param('id') id: string) {
-    return this.geo.toggleDelegationPays(id);
+  delegationPays(@Param('id') id: string, @Request() req: any) {
+    const a = actor(req);
+    return this.geo.toggleDelegationPays(id, a.email, a.userId);
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -119,30 +159,32 @@ export class GeoController {
 
   @Post('regions')
   @HttpCode(HttpStatus.CREATED)
-  createRegion(@Body() dto: CreateGeoItemDto) {
-    return this.geo.createRegion(dto);
+  createRegion(@Body() dto: CreateGeoItemDto, @Request() req: any) {
+    const a = actor(req);
+    return this.geo.createRegion(dto, a.email, a.userId);
   }
 
   @Patch('regions/:id')
   updateRegion(@Param('id') id: string, @Body() dto: CreateGeoItemDto, @Request() req: any) {
-    return this.geo.updateRegion(id, dto, req.user.role, req.user.id);
+    return this.geo.updateRegion(id, dto, req.user.role, req.user.id, actor(req).email);
   }
 
   @Delete('regions/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   removeRegion(@Param('id') id: string, @Request() req: any) {
-    return this.geo.removeRegion(id, req.user.role, req.user.id);
+    return this.geo.removeRegion(id, req.user.role, req.user.id, actor(req).email);
   }
 
   @Patch('regions/:id/toggle')
   toggleRegion(@Param('id') id: string, @Request() req: any) {
-    return this.geo.toggleRegion(id, req.user.role, req.user.id);
+    return this.geo.toggleRegion(id, req.user.role, req.user.id, actor(req).email);
   }
 
   @Patch('regions/:id/delegation')
   @Roles(UserRole.SUPER_ADMIN)
-  delegationRegion(@Param('id') id: string) {
-    return this.geo.toggleDelegationRegion(id);
+  delegationRegion(@Param('id') id: string, @Request() req: any) {
+    const a = actor(req);
+    return this.geo.toggleDelegationRegion(id, a.email, a.userId);
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -155,30 +197,32 @@ export class GeoController {
 
   @Post('prefectures')
   @HttpCode(HttpStatus.CREATED)
-  createPrefecture(@Body() dto: CreateGeoItemDto) {
-    return this.geo.createPrefecture(dto);
+  createPrefecture(@Body() dto: CreateGeoItemDto, @Request() req: any) {
+    const a = actor(req);
+    return this.geo.createPrefecture(dto, a.email, a.userId);
   }
 
   @Patch('prefectures/:id')
   updatePrefecture(@Param('id') id: string, @Body() dto: CreateGeoItemDto, @Request() req: any) {
-    return this.geo.updatePrefecture(id, dto, req.user.role, req.user.id);
+    return this.geo.updatePrefecture(id, dto, req.user.role, req.user.id, actor(req).email);
   }
 
   @Delete('prefectures/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   removePrefecture(@Param('id') id: string, @Request() req: any) {
-    return this.geo.removePrefecture(id, req.user.role, req.user.id);
+    return this.geo.removePrefecture(id, req.user.role, req.user.id, actor(req).email);
   }
 
   @Patch('prefectures/:id/toggle')
   togglePrefecture(@Param('id') id: string, @Request() req: any) {
-    return this.geo.togglePrefecture(id, req.user.role, req.user.id);
+    return this.geo.togglePrefecture(id, req.user.role, req.user.id, actor(req).email);
   }
 
   @Patch('prefectures/:id/delegation')
   @Roles(UserRole.SUPER_ADMIN)
-  delegationPrefecture(@Param('id') id: string) {
-    return this.geo.toggleDelegationPrefecture(id);
+  delegationPrefecture(@Param('id') id: string, @Request() req: any) {
+    const a = actor(req);
+    return this.geo.toggleDelegationPrefecture(id, a.email, a.userId);
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -191,30 +235,32 @@ export class GeoController {
 
   @Post('communes')
   @HttpCode(HttpStatus.CREATED)
-  createCommune(@Body() dto: CreateGeoItemDto) {
-    return this.geo.createCommune(dto);
+  createCommune(@Body() dto: CreateGeoItemDto, @Request() req: any) {
+    const a = actor(req);
+    return this.geo.createCommune(dto, a.email, a.userId);
   }
 
   @Patch('communes/:id')
   updateCommune(@Param('id') id: string, @Body() dto: CreateGeoItemDto, @Request() req: any) {
-    return this.geo.updateCommune(id, dto, req.user.role, req.user.id);
+    return this.geo.updateCommune(id, dto, req.user.role, req.user.id, actor(req).email);
   }
 
   @Delete('communes/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   removeCommune(@Param('id') id: string, @Request() req: any) {
-    return this.geo.removeCommune(id, req.user.role, req.user.id);
+    return this.geo.removeCommune(id, req.user.role, req.user.id, actor(req).email);
   }
 
   @Patch('communes/:id/toggle')
   toggleCommune(@Param('id') id: string, @Request() req: any) {
-    return this.geo.toggleCommune(id, req.user.role, req.user.id);
+    return this.geo.toggleCommune(id, req.user.role, req.user.id, actor(req).email);
   }
 
   @Patch('communes/:id/delegation')
   @Roles(UserRole.SUPER_ADMIN)
-  delegationCommune(@Param('id') id: string) {
-    return this.geo.toggleDelegationCommune(id);
+  delegationCommune(@Param('id') id: string, @Request() req: any) {
+    const a = actor(req);
+    return this.geo.toggleDelegationCommune(id, a.email, a.userId);
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -227,30 +273,32 @@ export class GeoController {
 
   @Post('quartiers')
   @HttpCode(HttpStatus.CREATED)
-  createQuartier(@Body() dto: CreateGeoItemDto) {
-    return this.geo.createQuartier(dto);
+  createQuartier(@Body() dto: CreateGeoItemDto, @Request() req: any) {
+    const a = actor(req);
+    return this.geo.createQuartier(dto, a.email, a.userId);
   }
 
   @Patch('quartiers/:id')
   updateQuartier(@Param('id') id: string, @Body() dto: CreateGeoItemDto, @Request() req: any) {
-    return this.geo.updateQuartier(id, dto, req.user.role, req.user.id);
+    return this.geo.updateQuartier(id, dto, req.user.role, req.user.id, actor(req).email);
   }
 
   @Delete('quartiers/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   removeQuartier(@Param('id') id: string, @Request() req: any) {
-    return this.geo.removeQuartier(id, req.user.role, req.user.id);
+    return this.geo.removeQuartier(id, req.user.role, req.user.id, actor(req).email);
   }
 
   @Patch('quartiers/:id/toggle')
   toggleQuartier(@Param('id') id: string, @Request() req: any) {
-    return this.geo.toggleQuartier(id, req.user.role, req.user.id);
+    return this.geo.toggleQuartier(id, req.user.role, req.user.id, actor(req).email);
   }
 
   @Patch('quartiers/:id/delegation')
   @Roles(UserRole.SUPER_ADMIN)
-  delegationQuartier(@Param('id') id: string) {
-    return this.geo.toggleDelegationQuartier(id);
+  delegationQuartier(@Param('id') id: string, @Request() req: any) {
+    const a = actor(req);
+    return this.geo.toggleDelegationQuartier(id, a.email, a.userId);
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -263,29 +311,31 @@ export class GeoController {
 
   @Post('zones')
   @HttpCode(HttpStatus.CREATED)
-  createZone(@Body() dto: CreateGeoItemDto) {
-    return this.geo.createZone(dto);
+  createZone(@Body() dto: CreateGeoItemDto, @Request() req: any) {
+    const a = actor(req);
+    return this.geo.createZone(dto, a.email, a.userId);
   }
 
   @Patch('zones/:id')
   updateZone(@Param('id') id: string, @Body() dto: CreateGeoItemDto, @Request() req: any) {
-    return this.geo.updateZone(id, dto, req.user.role, req.user.id);
+    return this.geo.updateZone(id, dto, req.user.role, req.user.id, actor(req).email);
   }
 
   @Delete('zones/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   removeZone(@Param('id') id: string, @Request() req: any) {
-    return this.geo.removeZone(id, req.user.role, req.user.id);
+    return this.geo.removeZone(id, req.user.role, req.user.id, actor(req).email);
   }
 
   @Patch('zones/:id/toggle')
   toggleZone(@Param('id') id: string, @Request() req: any) {
-    return this.geo.toggleZone(id, req.user.role, req.user.id);
+    return this.geo.toggleZone(id, req.user.role, req.user.id, actor(req).email);
   }
 
   @Patch('zones/:id/delegation')
   @Roles(UserRole.SUPER_ADMIN)
-  delegationZone(@Param('id') id: string) {
-    return this.geo.toggleDelegationZone(id);
+  delegationZone(@Param('id') id: string, @Request() req: any) {
+    const a = actor(req);
+    return this.geo.toggleDelegationZone(id, a.email, a.userId);
   }
 }

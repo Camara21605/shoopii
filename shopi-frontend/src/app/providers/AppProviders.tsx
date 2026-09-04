@@ -9,6 +9,7 @@ import { AppProvider } from '../../shared/context/AppContext'
 import { ToastProvider } from '../../shared/context/ToastContext'
 import { ThemeProvider } from '../../shared/context/ThemeContext'
 import ToastContainer from '../../shared/components/ui/ToastContainer'
+import BrandingLoader from '../../shared/components/BrandingLoader'
 import '../../shared/components/ui/ToastContainer.css'
 
 interface Props {
@@ -34,6 +35,7 @@ export function AppProviders({ children }: Props) {
     <ThemeProvider>
       <AppProvider>
         <ToastProvider>
+          <BrandingLoader />
           {children}
           <ToastContainer />
         </ToastProvider>

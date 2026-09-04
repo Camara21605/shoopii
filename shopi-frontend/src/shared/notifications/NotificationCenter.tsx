@@ -86,24 +86,12 @@ export default function NotificationCenter() {
 
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  /* Ref pour ne marquer qu'une seule fois par session d'ouverture du panneau.
-   * Reset à false quand le panneau se referme, pour que la prochaine ouverture
-   * déclenche à nouveau le marquage. */
-  const markedThisSessionRef = useRef(false);
-
-  /* Quand le panneau s'ouvre et que les données sont prêtes → tout marquer comme lu.
-   * Si les données sont encore en cours de chargement (1ère ouverture), l'effet se
-   * déclenche à nouveau quand isLoading passe à false. */
-  useEffect(() => {
-    if (!isOpen) {
-      markedThisSessionRef.current = false;
-      return;
-    }
-    if (!isLoading && !markedThisSessionRef.current) {
-      markedThisSessionRef.current = true;
-      markAllAsRead();
-    }
-  }, [isOpen, isLoading, markAllAsRead]);
+  /* Le marquage "tout lu" à l'ouverture est géré une seule fois dans
+   * NotificationProvider (voir NotificationContext.tsx) — pas ici. Header.tsx
+   * monte ce composant deux fois (barre desktop + mobile, l'une cachée en
+   * CSS) ; le Provider, lui, n'existe qu'une fois, donc y centraliser cette
+   * logique évite le double appel PATCH /notifications/read-all à chaque
+   * ouverture du panneau. */
 
   /* Exclure les notifications de type message.* — leur badge va sur le bouton messagerie */
   const visibleNotifs = notifications.filter(n => !n.type.startsWith('message'));
@@ -112,11 +100,23 @@ export default function NotificationCenter() {
    * unreadCount > 0 (liste vide). On utilise unreadCount comme fallback. */
   const badgeCount = notifications.length > 0 ? displayCount : unreadCount;
 
-  /* Fermer au clic extérieur */
+  /* Fermer au clic extérieur.
+   *
+   * BUG CORRIGÉ — Header.tsx monte DEUX <NotificationCenter /> en
+   * permanence (barre desktop + barre mobile, l'une des deux cachée via
+   * `display:none` CSS selon la largeur d'écran) qui partagent le même
+   * `isOpen` (contexte). Avec `wrapRef.current?.contains(e.target)`, un
+   * clic à l'intérieur du panneau VISIBLE était vu comme "extérieur" par
+   * l'instance CACHÉE (son wrapRef à elle ne contient jamais rien de ce
+   * qui est cliqué) → elle appelait close() sur l'état partagé et fermait
+   * le panneau avant que le clic (suppression / redirection) n'ait eu le
+   * temps de s'exécuter. On vérifie maintenant via `closest()` sur un
+   * attribut partagé par TOUTES les instances plutôt que sur une ref
+   * propre à celle-ci. */
   useEffect(() => {
     if (!isOpen) return;
     const fn = (e: MouseEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) close();
+      if (!(e.target as HTMLElement).closest?.('[data-notif-wrap]')) close();
     };
     document.addEventListener('mousedown', fn);
     return () => document.removeEventListener('mousedown', fn);
@@ -147,7 +147,7 @@ export default function NotificationCenter() {
   const previewNotifs = visibleNotifs.slice(0, PREVIEW_LIMIT);
 
   return (
-    <div className={s.wrap} ref={wrapRef}>
+    <div className={s.wrap} ref={wrapRef} data-notif-wrap>
       {/* ── Bouton cloche ──
           `tb-ic-pin` doit être sur le bouton lui-même (pas sur ce wrapper) :
           en mobile, Topbar.css cache tout `.tb-ic` sans `.tb-ic-pin` et

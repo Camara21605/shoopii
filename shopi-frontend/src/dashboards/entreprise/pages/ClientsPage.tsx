@@ -21,8 +21,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useToast }        from '../../../shared/context/ToastContext';
-import { useClients, type ClientSegment, type ClientRow } from '../hooks/useClients';
+import { useClients, type ClientSegment, type ClientRow, type CrmCampaignType } from '../hooks/useClients';
 import ClientProfilModal   from './ClientProfilModal';
+import CrmCampaignModal    from './CrmCampaignModal';
 
 /* ════════════════════════════════════════════════════════════
  * CONSTANTES DE STYLE
@@ -136,10 +137,26 @@ export default function ClientsPage() {
     clients, stats, total, pages,
     loading, error, filters,
     applyFilter, setPage, reload,
+    crmPreview, crmSend, downloadRapportPdf,
   } = useClients();
 
   /** Client sélectionné pour mini-profil (future modale) */
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  /** Action CRM en cours (ouvre la modale de confirmation) */
+  const [crmModal, setCrmModal] = useState<CrmCampaignType | null>(null);
+  const [rapportLoading, setRapportLoading] = useState(false);
+
+  async function handleRapportPdf() {
+    setRapportLoading(true);
+    try {
+      await downloadRapportPdf();
+    } catch (e: any) {
+      pop(e?.message ?? t('clients.crm.erreurRapport'), 'e');
+    } finally {
+      setRapportLoading(false);
+    }
+  }
 
   /* ────────────────────────────────────────────────────────────
    * RENDER
@@ -531,15 +548,16 @@ export default function ClientsPage() {
             <div className="ch"><div className="ch-t"><i className="fas fa-bolt" /> {t('clients.sidePanel.actionsCrm')}</div></div>
             <div className="cb" style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
               {[
-                { ico: '📧', l: t('clients.quickActions.newsletterVip'),     action: 'newsletter' },
-                { ico: '🎁', l: t('clients.quickActions.offreFidelite'), action: 'fidelite'   },
-                { ico: '📊', l: t('clients.quickActions.rapportSegments'),        action: 'rapport'    },
-                { ico: '🔔', l: t('clients.quickActions.relanceInactifs'),    action: 'relance'    },
+                { ico: '📧', l: t('clients.quickActions.newsletterVip'),  onClick: () => setCrmModal('newsletter') },
+                { ico: '🎁', l: t('clients.quickActions.offreFidelite'),  onClick: () => setCrmModal('fidelite')   },
+                { ico: '📊', l: t('clients.quickActions.rapportSegments'), onClick: handleRapportPdf, busy: rapportLoading },
+                { ico: '🔔', l: t('clients.quickActions.relanceInactifs'), onClick: () => setCrmModal('relance')    },
               ].map((a, i) => (
                 <button key={i}
-                  onClick={() => pop(`⚙️ ${a.l}`, 'i')}
-                  style={{ background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-md)', padding: '10px 14px', fontSize: 12.5, fontWeight: 600, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', textAlign: 'left', transition: 'all .15s' }}>
-                  <span style={{ fontSize: 15 }}>{a.ico}</span>
+                  onClick={a.onClick}
+                  disabled={a.busy}
+                  style={{ background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-md)', padding: '10px 14px', fontSize: 12.5, fontWeight: 600, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 9, cursor: a.busy ? 'default' : 'pointer', textAlign: 'left', transition: 'all .15s', opacity: a.busy ? .6 : 1 }}>
+                  <span style={{ fontSize: 15 }}>{a.busy ? <i className="fas fa-circle-notch fa-spin" /> : a.ico}</span>
                   {a.l}
                   <i className="fas fa-arrow-right" style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--t4)' }} />
                 </button>
@@ -555,6 +573,22 @@ export default function ClientsPage() {
       <ClientProfilModal
         clientId={selectedId}
         onClose={() => setSelectedId(null)}
+        onPop={(msg, type) => pop(msg, type as any)}
+      />
+    )}
+
+    {/* ── Modale campagne CRM (newsletter / fidélité / relance) ── */}
+    {crmModal !== null && (
+      <CrmCampaignModal
+        type={crmModal}
+        title={
+          crmModal === 'newsletter' ? t('clients.quickActions.newsletterVip')
+          : crmModal === 'fidelite' ? t('clients.quickActions.offreFidelite')
+          : t('clients.quickActions.relanceInactifs')
+        }
+        onClose={() => setCrmModal(null)}
+        onPreview={crmPreview}
+        onSend={crmSend}
         onPop={(msg, type) => pop(msg, type as any)}
       />
     )}

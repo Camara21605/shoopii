@@ -6,6 +6,7 @@
 
 /* ── Identité du client ── */
 export interface ClientProfil {
+  id:             string;
   initiales:      string;
   nomComplet:     string;
   localisation:   string;

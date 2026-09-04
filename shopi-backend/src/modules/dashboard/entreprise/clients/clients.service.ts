@@ -116,9 +116,25 @@ export class ClientsService {
    * MÉTHODE PRINCIPALE — liste paginée + statistiques
    * ════════════════════════════════════════════════════════════ */
   async getClients(userIdOrCompanyId: string, filters: ClientsFilters): Promise<ClientsResult> {
-    /* ── 1. Résoudre le profil entreprise ── */
-    /* FIX m4 — Lookup strict par userId; le fallback par companyId est supprimé. */
-    const company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id', 'companyName'] });
+    /* ── 1. Résoudre le profil entreprise ──
+     * BUG CORRIGÉ — le "FIX m4" précédent confondait deux scénarios : un
+     * companyId FOURNI PAR LE CLIENT (query/body, falsifiable → risque
+     * cross-tenant réel, où rejeter le fallback par `id` est justifié) et
+     * l'actorId signé serveur dans le JWT à la connexion (voir
+     * AuthService.findProfileId — jamais falsifiable sans forger le JWT
+     * entier). Ici c'est le second cas : le contrôleur passe toujours
+     * `req.user.actorId ?? req.user.id`, et pour un compte COMPANY,
+     * actorId EST le Company.id (propriétaire ou collaborateur), jamais
+     * Company.userId. Le lookup `where:{userId}` strict ne matchait donc
+     * quasiment JAMAIS pour une vraie entreprise (404 systématique) — sauf
+     * collision accidentelle avec une fiche fantôme dont le userId égale
+     * l'id d'une autre entreprise (voir le bug de profil fantôme dans
+     * boutique-parametres.service.ts), auquel cas cette page affichait
+     * silencieusement les données (vides) de la MAUVAISE fiche plutôt
+     * qu'une erreur. `id` (cas normal, actorId) est désormais tenté en
+     * priorité ; `userId` reste un repli déterministe. */
+    let company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId }, select: ['id', 'companyName'] });
+    if (!company) company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id', 'companyName'] });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
 
     /* ── 2. Charger acheteurs et abonnés en parallèle ── */
@@ -323,8 +339,10 @@ export class ClientsService {
    *   - 10 dernières commandes passées dans cette boutique
    * ════════════════════════════════════════════════════════════ */
   async getClientDetail(userIdOrCompanyId: string, clientId: string) {
-    /* Résoudre l'entreprise — FIX m4 : lookup strict par userId uniquement. */
-    const company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id', 'companyName'] });
+    /* Résoudre l'entreprise — voir getClients() ci-dessus pour le détail
+     * du correctif (id en priorité, userId en repli). */
+    let company = await this.companyRepo.findOne({ where: { id: userIdOrCompanyId }, select: ['id', 'companyName'] });
+    if (!company) company = await this.companyRepo.findOne({ where: { userId: userIdOrCompanyId }, select: ['id', 'companyName'] });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
 
     /* FIX I2 — IDOR : vérifier que le client a au moins une commande dans

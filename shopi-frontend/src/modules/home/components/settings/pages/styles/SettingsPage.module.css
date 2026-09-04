@@ -76,6 +76,7 @@
 .secItem.ok  { color: #059669; background: rgba(4,120,87,.09);   border-color: rgba(4,120,87,.2); }
 .secItem.warn{ color: #B45309; background: rgba(180,83,9,.09);   border-color: rgba(180,83,9,.2); }
 .secItem.bad { color: #DC2626; background: rgba(220,38,38,.08);  border-color: rgba(220,38,38,.2); }
+.secItem.neutral { color: var(--t3); background: var(--g100); border-color: var(--bdr2); }
 .secBannerBtn {
   background: var(--btn); color: #fff; border: none;
   border-radius: var(--pill); padding: 0 20px; height: 38px;

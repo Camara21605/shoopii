@@ -34,6 +34,8 @@ import { Repository, DataSource } from 'typeorm';
 
 import { PlatformSettings }  from '../../../database/entities/platform-settings.entity';
 import { CommissionRule }    from '../../../database/entities/paiement/commission-rule.entity';
+import { CompanySetting }    from '../../company-settings/company-settings.entity';
+import { PartnerSetting }    from '../../partner-settings/partner-settings.entity';
 import {
   CommissionRuleActivatedEvent,
   CommissionRuleDisabledEvent,
@@ -54,9 +56,35 @@ export class CommissionConfigService {
     @InjectRepository(CommissionRule)
     private readonly ruleRepo: Repository<CommissionRule>,
 
+    @InjectRepository(CompanySetting)
+    private readonly companySettingsRepo: Repository<CompanySetting>,
+
+    @InjectRepository(PartnerSetting)
+    private readonly partnerSettingsRepo: Repository<PartnerSetting>,
+
     private readonly dataSource:    DataSource,
     private readonly eventBus:      CommissionEventBus,
   ) {}
+
+  /**
+   * Retourne la config singleton CompanySetting (id=1), ou null si absente
+   * (table pas encore initialisée — le calculateur retombe alors sur le
+   * taux de rule.tauxCommissionProduit, comportement identique à avant).
+   * Lecture toujours fraîche (pas de cache) : contrairement à CommissionRule,
+   * CompanySetting n'est pas versionnée — un changement doit s'appliquer
+   * immédiatement, comme l'annonce déjà l'UI ("prend effet immédiatement").
+   */
+  async getCompanySettings(): Promise<CompanySetting | null> {
+    return this.companySettingsRepo.findOne({ where: { id: 1 } });
+  }
+
+  /**
+   * Retourne la config singleton PartnerSetting (id=1), ou null si absente.
+   * Même principe que getCompanySettings() — lecture fraîche, pas versionnée.
+   */
+  async getPartnerSettings(): Promise<PartnerSetting | null> {
+    return this.partnerSettingsRepo.findOne({ where: { id: 1 } });
+  }
 
   /* ──────────────────────────────────────────────────────────
    * getSettings() — charge le singleton PlatformSettings

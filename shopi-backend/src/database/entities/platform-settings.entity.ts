@@ -14,6 +14,7 @@ import {
   Entity, PrimaryColumn, Column,
   UpdateDateColumn,
 } from 'typeorm';
+import { ColumnNumericTransformer } from '../transformers/column-numeric.transformer';
 
 @Entity('platform_settings')
 export class PlatformSettings {
@@ -116,7 +117,7 @@ export class PlatformSettings {
    * Appliquée sur chaque transaction boutique → Shopi.
    * Plage autorisée : 0–50.
    */
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 6 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 6, transformer: new ColumnNumericTransformer() })
   platformCommission!: number;
 
   /**
@@ -131,18 +132,18 @@ export class PlatformSettings {
    * ══════════════════════════════════════════════════════════ */
 
   /** Montant minimum pour un retrait (en unité de la devise principale) */
-  @Column({ type: 'decimal', precision: 15, scale: 2, default: 10000 })
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 10000, transformer: new ColumnNumericTransformer() })
   minWithdrawalAmount!: number;
 
   /** Montant maximum autorisé par transaction */
-  @Column({ type: 'decimal', precision: 15, scale: 2, default: 5000000 })
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 5000000, transformer: new ColumnNumericTransformer() })
   maxTransactionAmount!: number;
 
   /**
    * Limite de retrait journalière globale (par acteur).
    * 0 = aucune limite globale (chaque wallet peut avoir sa propre limite).
    */
-  @Column({ type: 'decimal', precision: 15, scale: 2, default: 5000000 })
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 5000000, transformer: new ColumnNumericTransformer() })
   dailyWithdrawalLimit!: number;
 
   /** Délai de règlement en jours ouvrés */
@@ -177,7 +178,7 @@ export class PlatformSettings {
    * Appliqué sur sousTotal avant réduction par plan.
    * Défaut : 6 % (six pour cent).
    */
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 6 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 6, transformer: new ColumnNumericTransformer() })
   tauxCommissionProduit!: number;
 
   /**
@@ -185,35 +186,35 @@ export class PlatformSettings {
    * commission_effective = tauxCommissionProduit × planMultiplierPro
    * Exemple : 6 % × 0.75 = 4.5 %
    */
-  @Column({ type: 'decimal', precision: 4, scale: 3, default: 0.75 })
+  @Column({ type: 'decimal', precision: 4, scale: 3, default: 0.75, transformer: new ColumnNumericTransformer() })
   planMultiplierPro!: number;
 
   /**
    * Multiplicateur du taux pour les entreprises au plan PREMIUM.
    * Exemple : 6 % × 0.50 = 3 %
    */
-  @Column({ type: 'decimal', precision: 4, scale: 3, default: 0.5 })
+  @Column({ type: 'decimal', precision: 4, scale: 3, default: 0.5, transformer: new ColumnNumericTransformer() })
   planMultiplierPremium!: number;
 
   /**
    * Part de la commission produit allant à Shopi (%).
    * Doit vérifier : ratioShopiProduit + ratioPartenaireProduit + ratioAdminProduit = 100
    */
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 70 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 70, transformer: new ColumnNumericTransformer() })
   ratioShopiProduit!: number;
 
   /**
    * Part de la commission produit allant au Partenaire qui a créé l'entreprise (%).
    * Si l'entreprise n'a pas de partenaire → cette part va à Shopi.
    */
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 20 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 20, transformer: new ColumnNumericTransformer() })
   ratioPartenaireProduit!: number;
 
   /**
    * Part de la commission produit allant à l'Admin qui a créé le Partenaire (%).
    * Si l'entreprise n'a pas d'admin → cette part va à Shopi.
    */
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 10 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 10, transformer: new ColumnNumericTransformer() })
   ratioAdminProduit!: number;
 
   /* ══════════════════════════════════════════════════════════
@@ -228,22 +229,22 @@ export class PlatformSettings {
    * Taux brut de commission sur les frais de livraison (%).
    * Défaut : 10 % (dix pour cent).
    */
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 10 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 10, transformer: new ColumnNumericTransformer() })
   tauxCommissionLivraison!: number;
 
   /** Part Shopi de la commission livraison (%). */
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 60 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 60, transformer: new ColumnNumericTransformer() })
   ratioShopiLivraison!: number;
 
   /**
    * Part Partenaire de la commission livraison (%).
    * Partenaire = celui qui a créé le compte du livreur/correspondant.
    */
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 25 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 25, transformer: new ColumnNumericTransformer() })
   ratioPartenaireLivraison!: number;
 
   /** Part Admin de la commission livraison (%). */
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 15 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 15, transformer: new ColumnNumericTransformer() })
   ratioAdminLivraison!: number;
 
   /* ══════════════════════════════════════════════════════════
@@ -387,7 +388,7 @@ export class PlatformSettings {
    * ══════════════════════════════════════════════════════════ */
 
   /** Seuil au-delà duquel un retrait nécessite une validation manuelle (GNF). */
-  @Column({ type: 'decimal', precision: 15, scale: 2, default: 500000 })
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 500000, transformer: new ColumnNumericTransformer() })
   autoValidationThreshold!: number;
 
   /** Nombre maximal de tentatives de payout avant blocage définitif. */

@@ -17,6 +17,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
+import { useTeamPermissions } from '../hooks/useTeamPermissions';
 import styles from './FournisseursPage.module.css';
 
 // ─────────────────────────────────────────────────────────────
@@ -71,6 +72,9 @@ function fmt(n: number) {
 export default function FournisseursPage() {
   const { pop } = useToast();
   const { t } = useTranslation();
+  const { can, isOwner, loading: permLoading } = useTeamPermissions();
+  const canConnect = isOwner || can('fournisseurs', 'connect');
+  const canDisconnect = isOwner || can('fournisseurs', 'disconnect');
 
   const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
   const [loading,      setLoading]      = useState(true);
@@ -196,6 +200,21 @@ export default function FournisseursPage() {
     }
   }
 
+  // Un collaborateur sans fournisseurs.view ne doit jamais voir cette page —
+  // mise à jour instantanée si la permission est révoquée pendant qu'il y
+  // est déjà (voir useTeamPermissions : socket team:permissions_changed).
+  if (!permLoading && !isOwner && !can('fournisseurs', 'view')) {
+    return (
+      <div className={styles.page} style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:300 }}>
+        <div style={{ textAlign:'center', color:'var(--t2)' }}>
+          <i className="fas fa-lock" style={{ fontSize:28, opacity:.5, marginBottom:12, display:'block' }} />
+          <strong>{t('fournisseurs.accessDenied.title')}</strong>
+          <div style={{ fontSize:13, marginTop:6 }}>{t('fournisseurs.accessDenied.message')}</div>
+        </div>
+      </div>
+    );
+  }
+
   // ─────────────────────────────────────────────────────────────
   // RENDU
   // ─────────────────────────────────────────────────────────────
@@ -208,9 +227,11 @@ export default function FournisseursPage() {
           <h1 className={styles.titre}>{t('fournisseurs.header.title')}</h1>
           <p className={styles.sousTitre}>{t('fournisseurs.header.subtitle')}</p>
         </div>
-        <button className={styles.btnPrimary} onClick={ouvrirRecherche}>
-          <i className="fas fa-plus" /> {t('fournisseurs.header.connecter')}
-        </button>
+        {canConnect && (
+          <button className={styles.btnPrimary} onClick={ouvrirRecherche}>
+            <i className="fas fa-plus" /> {t('fournisseurs.header.connecter')}
+          </button>
+        )}
       </div>
 
       {/* ── Liste des fournisseurs connectés ── */}
@@ -224,9 +245,11 @@ export default function FournisseursPage() {
           <span className={styles.emptyIco}>🏭</span>
           <strong>{t('fournisseurs.empty.title')}</strong>
           <p>{t('fournisseurs.empty.sub')}</p>
-          <button className={styles.btnPrimary} onClick={ouvrirRecherche}>
-            <i className="fas fa-plus" /> {t('fournisseurs.header.connecter')}
-          </button>
+          {canConnect && (
+            <button className={styles.btnPrimary} onClick={ouvrirRecherche}>
+              <i className="fas fa-plus" /> {t('fournisseurs.header.connecter')}
+            </button>
+          )}
         </div>
       ) : (
         <div className={styles.grid}>
@@ -248,13 +271,15 @@ export default function FournisseursPage() {
                 <button className={styles.btnSecondary} onClick={() => voirCatalogue(f)}>
                   <i className="fas fa-boxes-stacked" /> {t('fournisseurs.card.voirCatalogue')}
                 </button>
-                <button
-                  className={styles.btnDanger}
-                  onClick={() => deconnecter(f)}
-                  title={t('fournisseurs.card.deconnecter')}
-                >
-                  <i className="fas fa-link-slash" />
-                </button>
+                {canDisconnect && (
+                  <button
+                    className={styles.btnDanger}
+                    onClick={() => deconnecter(f)}
+                    title={t('fournisseurs.card.deconnecter')}
+                  >
+                    <i className="fas fa-link-slash" />
+                  </button>
+                )}
               </div>
             </div>
           ))}

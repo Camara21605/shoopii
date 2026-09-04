@@ -16,8 +16,12 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /* ──────────────────────────────────────────────────────────────
  * 1. PROFIL — PATCH /dashboard/partenaire/parametres/profil
- * Modifie les champs de profil (User.firstName/lastName/email +
- * Partner.name/phone/bio).
+ * Modifie les champs de profil (User.firstName/lastName + Partner.name/bio).
+ *
+ * `phone` volontairement absent : le numéro n'est plus modifiable via cet
+ * endpoint (comme l'email) — avec forbidNonWhitelisted actif sur le
+ * ValidationPipe global, toute tentative d'envoi renvoie un 400 explicite
+ * plutôt que d'être silencieusement ignorée. Voir ProfilPartenaireService.
  * ────────────────────────────────────────────────────────────── */
 export class UpdatePartenaireProfilDto {
   @ApiPropertyOptional({ example: 'Mohamed' })
@@ -32,10 +36,6 @@ export class UpdatePartenaireProfilDto {
   @ApiPropertyOptional({ example: 'Partenaire Kaloum Express' })
   @IsOptional() @IsString() @MaxLength(255)
   name?: string;
-
-  @ApiPropertyOptional({ example: '+224 622 00 00 01' })
-  @IsOptional() @IsString() @MaxLength(20)
-  phone?: string;
 
   /** Bio / Présentation publique */
   @ApiPropertyOptional({ example: 'Partenaire Shopi à Conakry, spécialisé recrutement.' })

@@ -54,6 +54,7 @@ import { ComplianceService }       from './services/compliance.service';
 import { ObservabilityService }    from './services/observability.service';
 import { AnomalyDetectorService }  from './services/anomaly-detector.service';
 import { BackupStrategyService }   from './services/backup-strategy.service';
+import { PerformanceModule }       from '../performance-engine/performance.module';
 
 /* ── Scheduler ── */
 import { SecurityScheduler } from './scheduler/security.scheduler';
@@ -73,6 +74,7 @@ import { PlatformSecurityController } from './platform-security.controller';
       SystemMetric,
       PlatformIncident,
     ]),
+    PerformanceModule,
   ],
 
   controllers: [

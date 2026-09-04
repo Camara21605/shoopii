@@ -22,6 +22,10 @@
     "trafic": {
       "title": "Traffic analytics",
       "sub": "Visits, traffic sources, conversion rate and sales funnel — coming soon."
+    },
+    "accessDenied": {
+      "title": "Access denied",
+      "message": "You do not have access to statistics. Contact the shop owner to request it."
     }
   }
 }

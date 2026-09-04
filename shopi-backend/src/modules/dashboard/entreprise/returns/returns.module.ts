@@ -20,6 +20,11 @@ import { User }           from 'src/database/entities/user.entity';
 /* ── Upload ── */
 import { UploadModule } from 'src/modules/upload/upload.module';
 
+/* ── Fournit TeamPermissionGuard — vérifie les permissions "Retours & SAV"
+ * d'un collaborateur (voir ReturnsController/SavController
+ * @RequiresTeamPermission('returns', …)). */
+import { CompanyTeamModule } from 'src/modules/company-team/company-team.module';
+
 /* ── Controllers ── */
 import { ReturnsController } from './returns.controller';
 import { SavController }     from './sav.controller';
@@ -43,6 +48,7 @@ import { SavService }           from './services/sav.service';
       User,
     ]),
     UploadModule,
+    CompanyTeamModule,
   ],
 
   controllers: [

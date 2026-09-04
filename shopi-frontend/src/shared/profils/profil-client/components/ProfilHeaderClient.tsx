@@ -5,6 +5,7 @@
  * ================================================================ */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from '../styles/ProfilClient.module.css';
 import type { ClientProfil, ClientKpi } from '../data/profilClientData';
 import { settingsApi } from '../../../../modules/home/components/settings/api/settings.api';
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export default function ProfilHeaderClient({ client, kpis, onEdit, onShare, onMessage }: Props) {
+  const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(client.profilePicture ?? null);
 
   /* Charge la photo depuis /client/parametres/profil — source certifiée */
@@ -91,6 +93,9 @@ export default function ProfilHeaderClient({ client, kpis, onEdit, onShare, onMe
             </div>
 
             <div className={styles.idActs}>
+              <button className={styles.btn} onClick={() => navigate(`/clients/${client.id}`)}>
+                <i className="fas fa-eye" /> Voir mon profil public
+              </button>
               <button className={styles.btn} onClick={onShare}><i className="fas fa-share-nodes" /> Partager</button>
               <button className={styles.btn} onClick={onMessage}><i className="fas fa-message" /> Message</button>
               <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={onEdit}>

@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../shared/context/ToastContext';
 import { useNotificationSocket } from '../../../shared/notifications/useNotificationSocket';
+import { useTeamPermissions } from '../hooks/useTeamPermissions';
 import type { EntreprisePage } from '../types';
 import styles from './ProduitsPage.module.css';
 
@@ -52,6 +53,14 @@ const token = () => localStorage.getItem('shopi_access_token') ?? '';
 
 function fmt(n: number) {
   return n.toLocaleString('fr-FR');
+}
+
+/** Découpe un tableau en groupes de `size` — sert à répartir les produits
+ *  en rangées de 10, chacune défilable horizontalement (voir .gridRow). */
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
 }
 
 function visibiliteLabel(v: string, t: (k: string) => string) {
@@ -510,12 +519,14 @@ function ModalCreateStory({ produits, initialProduit, onClose }: {
   );
 }
 
-function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
-  produit:   Produit;
-  onClose:   () => void;
-  onEdit:    () => void;
-  onArchive: () => void;
-  onDelete:  () => void;
+function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete, can, commissionPct }: {
+  produit:       Produit;
+  onClose:       () => void;
+  onEdit:        () => void;
+  onArchive:     () => void;
+  onDelete:      () => void;
+  can:           (group: string, action: string) => boolean;
+  commissionPct: number;
 }) {
   const { t } = useTranslation();
   const [imgIdx, setImgIdx] = useState(0);
@@ -597,11 +608,11 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
               )}
               <div className={styles.commission}>
                 <span>{t('produits.modalVoir.commission')}</span>
-                <span>-{fmt(Math.round(produit.prix * 0.03))} GNF</span>
+                <span>-{fmt(Math.round(produit.prix * commissionPct / 100))} GNF</span>
               </div>
               <div className={styles.revenuNet}>
                 <span>{t('produits.modalVoir.revenuNet')}</span>
-                <strong>{fmt(Math.round(produit.prix * 0.97))} GNF</strong>
+                <strong>{fmt(Math.round(produit.prix * (1 - commissionPct / 100)))} GNF</strong>
               </div>
             </div>
 
@@ -719,15 +730,21 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete }: {
 
         {/* Footer actions */}
         <div className={styles.modalFooter}>
-          <button className={styles.btnDanger} onClick={onDelete}>
-            <i className="fas fa-trash" /> {t('produits.modalVoir.supprimer')}
-          </button>
-          <button className={styles.btnSecondary} onClick={onArchive}>
-            <i className="fas fa-archive" /> {t('produits.modalVoir.archiver')}
-          </button>
-          <button className={styles.btnPrimary} onClick={onEdit}>
-            <i className="fas fa-pen" /> {t('produits.modalVoir.modifier')}
-          </button>
+          {can('products', 'delete') && (
+            <button className={styles.btnDanger} onClick={onDelete}>
+              <i className="fas fa-trash" /> {t('produits.modalVoir.supprimer')}
+            </button>
+          )}
+          {can('products', 'edit') && (
+            <>
+              <button className={styles.btnSecondary} onClick={onArchive}>
+                <i className="fas fa-archive" /> {t('produits.modalVoir.archiver')}
+              </button>
+              <button className={styles.btnPrimary} onClick={onEdit}>
+                <i className="fas fa-pen" /> {t('produits.modalVoir.modifier')}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -922,12 +939,21 @@ function ModalDelete({ produit, onClose, onDeleted }: {
 export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
   const { t } = useTranslation();
   const { pop } = useToast();
+  /* Masque les actions Ajouter/Modifier/Supprimer pour un collaborateur qui
+   * n'a pas la permission correspondante — le backend les bloque déjà
+   * (403, voir ProduitsController), mais laisser le bouton visible pour
+   * ensuite le refuser au clic est une mauvaise expérience. isOwner a
+   * toujours tous les droits (voir useTeamPermissions). */
+  const { can } = useTeamPermissions();
 
   const [produits,   setProduits]   = useState<Produit[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [erreur,     setErreur]     = useState<string | null>(null);
   const [search,     setSearch]     = useState('');
   const [filtreVis,  setFiltreVis]  = useState('tous');
+
+  // ── Taux de commission plateforme (chargé depuis l'API — voir AjouterPage.tsx) ──
+  const [commissionPct, setCommissionPct] = useState<number>(3); // défaut 3 % en attendant
 
   const [modalVoir,    setModalVoir]    = useState<Produit | null>(null);
   const [modalModif,   setModalModif]   = useState<Produit | null>(null);
@@ -953,6 +979,17 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
   }, []);
 
   useEffect(() => { loadMyStories(); }, [loadMyStories]);
+
+  useEffect(() => {
+    fetch(`${API}/dashboard/entreprise/commission-rate`, {
+      headers: { Authorization: `Bearer ${token()}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { percentage: number } | null) => {
+        if (data?.percentage != null) setCommissionPct(data.percentage);
+      })
+      .catch(() => { /* garde la valeur par défaut 3 % */ });
+  }, []);
 
   // Compteur de vues instantané sur les tuiles de la tray, sans recharger la page.
   useNotificationSocket({
@@ -1036,9 +1073,11 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
           <h1 className={styles.titre}>{t('produits.header.title')}</h1>
           <p className={styles.sousTitre}>{t('produits.header.subtitle')}</p>
         </div>
-        <button className={styles.btnAjouter} onClick={() => onNavigate('ajouter')}>
-          <i className="fas fa-plus" /> {t('produits.header.nouveau')}
-        </button>
+        {can('products', 'create') && (
+          <button className={styles.btnAjouter} onClick={() => onNavigate('ajouter')}>
+            <i className="fas fa-plus" /> {t('produits.header.nouveau')}
+          </button>
+        )}
       </div>
 
       {/* ── Créer une story + mes stories déjà publiées (regroupées par produit), sur la même ligne ── */}
@@ -1151,7 +1190,7 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
               ? t('produits.empty.noneSub')
               : t('produits.empty.noResultsSub')}
           </div>
-          {produits.length === 0 && (
+          {produits.length === 0 && can('products', 'create') && (
             <button className={styles.btnAjouter} onClick={() => onNavigate('ajouter')}>
               <i className="fas fa-plus" /> {t('produits.empty.addFirst')}
             </button>
@@ -1163,14 +1202,16 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
             {t('produits.count', { count: produitsFiltres.length })}
             {search && ` ${t('produits.countFor', { search })}`}
           </div>
-          <div className={styles.grid}>
-            {produitsFiltres.map(p => {
-              const vis = visibiliteLabel(p.visibilite, t);
-              const stockCls = p.stock === 0 ? styles.stockOut :
-                (p.seuil && p.stock <= p.seuil) ? styles.stockLow : styles.stockOk;
+          <div className={styles.gridRows}>
+            {chunk(produitsFiltres, 10).map((ligne, ligneIdx) => (
+              <div key={ligneIdx} className={styles.gridRow}>
+                {ligne.map(p => {
+                  const vis = visibiliteLabel(p.visibilite, t);
+                  const stockCls = p.stock === 0 ? styles.stockOut :
+                    (p.seuil && p.stock <= p.seuil) ? styles.stockLow : styles.stockOk;
 
-              return (
-                <div key={p.id} className={styles.card}>
+                  return (
+                    <div key={p.id} className={styles.card}>
 
                   {/* Image */}
                   <div className={styles.cardImg} onClick={() => setModalVoir(p)}>
@@ -1227,31 +1268,39 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
                     >
                       <i className="fas fa-eye" />
                     </button>
-                    <button
-                      className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
-                      onClick={() => setModalModif(p)}
-                      title={t('produits.card.modifRapide')}
-                    >
-                      <i className="fas fa-pen" />
-                    </button>
-                    <button
-                      className={`${styles.actionBtn} ${styles.actionBtnFull}`}
-                      onClick={() => onNavigate('ajouter', p.id)}
-                      title={t('produits.card.modifComplet')}
-                    >
-                      <i className="fas fa-sliders" /> {t('produits.card.modifier')}
-                    </button>
-                    <button
-                      className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                      onClick={() => setModalDelete(p)}
-                      title={t('produits.card.supprimer')}
-                    >
-                      <i className="fas fa-trash" />
-                    </button>
+                    {can('products', 'edit') && (
+                      <>
+                        <button
+                          className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
+                          onClick={() => setModalModif(p)}
+                          title={t('produits.card.modifRapide')}
+                        >
+                          <i className="fas fa-pen" />
+                        </button>
+                        <button
+                          className={`${styles.actionBtn} ${styles.actionBtnFull}`}
+                          onClick={() => onNavigate('ajouter', p.id)}
+                          title={t('produits.card.modifComplet')}
+                        >
+                          <i className="fas fa-sliders" /> {t('produits.card.modifier')}
+                        </button>
+                      </>
+                    )}
+                    {can('products', 'delete') && (
+                      <button
+                        className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                        onClick={() => setModalDelete(p)}
+                        title={t('produits.card.supprimer')}
+                      >
+                        <i className="fas fa-trash" />
+                      </button>
+                    )}
                   </div>
-                </div>
-              );
-            })}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </>
       )}
@@ -1264,6 +1313,8 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
           onEdit={() => { setModalVoir(null); setModalModif(modalVoir); }}
           onArchive={() => handleArchive(modalVoir)}
           onDelete={() => { setModalDelete(modalVoir); setModalVoir(null); }}
+          can={can}
+          commissionPct={commissionPct}
         />
       )}
       {modalModif && (

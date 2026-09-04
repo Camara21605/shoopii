@@ -28,6 +28,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { EscrowEngineModule }  from '../escrow-engine/escrow-engine.module';
 import { CommissionModule }    from '../commission/commission.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { SecurityAlertsModule } from '../security-alerts/security-alerts.module';
+import { EventOrchestrationModule } from '../event-orchestration/event-orchestration.module';
 
 /* ── Entités ─────────────────────────────────────────────── */
 import { PaiementSession }      from '../../database/entities/paiement/paiement-session.entity';
@@ -38,6 +40,7 @@ import { WebhookEvent }         from '../../database/entities/paiement/webhook-e
 import { ProviderConfig }       from '../../database/entities/paiement/provider-config.entity';
 import { FinancialAuditLog }    from '../../database/entities/paiement/financial-audit-log.entity';
 import { Escrow }               from '../../database/entities/paiement/escrow.entity';
+import { Client }               from '../../database/entities/profiles/client-profile.entity';
 
 /* ── Providers existants (de PaiementModule) ─────────────── */
 import { InternalProvider }       from '../paiement/providers/internal.provider';
@@ -64,6 +67,7 @@ import { PaymentEngine }                 from './payment.engine';
       ProviderConfig,
       FinancialAuditLog,
       Escrow,
+      Client,
     ]),
 
     /* EscrowEngine — pour créer/verrouiller les séquestres */
@@ -74,6 +78,14 @@ import { PaymentEngine }                 from './payment.engine';
 
     /* Notifications — pour alerter les acteurs */
     NotificationsModule,
+
+    /* Alerte "transaction refusée" (section Alertes de sécurité) */
+    SecurityAlertsModule,
+
+    /* EventOrchestrationEngine — publie commission.distributed après
+     * persistance des PaiementDistribution (voir commission.events.ts,
+     * doc de CommissionDistributedEvent : "émis par le module appelant") */
+    EventOrchestrationModule,
   ],
 
   providers: [

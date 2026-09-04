@@ -96,6 +96,24 @@
       "offreFidelite": "عرض ولاء تلقائي",
       "rapportSegments": "تقرير الشرائح PDF",
       "relanceInactifs": "إعادة إشراك العملاء غير النشطين"
+    },
+    "crm": {
+      "erreurApercu": "تعذّر تحميل المعاينة.",
+      "erreurEnvoi": "فشل الإرسال.",
+      "erreurRapport": "تعذّر إنشاء تقرير PDF.",
+      "destinataires_one": "{{count}} مستلم",
+      "destinataires_other": "{{count}} مستلمين",
+      "aucunDestinataire": "لا يوجد عملاء في هذه الشريحة حاليًا.",
+      "sujet": "الموضوع",
+      "message": "الرسالة",
+      "annuler": "إلغاء",
+      "envoyerA_one": "إرسال إلى {{count}} عميل",
+      "envoyerA_other": "إرسال إلى {{count}} عملاء",
+      "envoye_one": "✅ تم الإرسال إلى {{count}} عميل",
+      "envoye_other": "✅ تم الإرسال إلى {{count}} عملاء",
+      "resultatTitre": "{{sent}} / {{total}} تم الإرسال",
+      "resultatEchecs": "فشل إرسال {{count}}.",
+      "fermer": "إغلاق"
     }
   }
 }

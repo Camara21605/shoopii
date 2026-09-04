@@ -112,6 +112,10 @@
       "ville": "城市",
       "villePlaceholder": "例如：科纳克里",
       "reinitialiser": "重置",
+      "pourVous": {
+        "kick": "推荐",
+        "title": "为你推荐"
+      },
       "tendances": {
         "kick": "热门",
         "title": "趋势"

@@ -199,6 +199,10 @@
       "sendError": "Erro no envio",
       "replyPlaceholder": "Responder ao cliente…",
       "envoyer": "Enviar"
+    },
+    "accessDenied": {
+      "title": "Acesso não autorizado",
+      "message": "Você não tem acesso a devoluções e atendimento. Contate o proprietário da loja para obtê-lo."
     }
   }
 }

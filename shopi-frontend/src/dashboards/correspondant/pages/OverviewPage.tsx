@@ -15,7 +15,7 @@ interface OverviewData {
   zoneNom: string;
   kpis: { missionsTotales: number; revenusCeMois: number; tauxSucces: number; partenairesActifs: number };
   relayFlow: { sources: number; destinations: number };
-  activite: { msg: string; t: string }[];
+  activite: { msg: string; highlight?: string; t: string }[];
   colisUrgent: ColisUrgent | null;
   colisCounts: { att: number; stock: number; dep: number; ret: number };
   livresCeMois: number;
@@ -35,6 +35,16 @@ const EMPTY: OverviewData = {
   livresCeMois: 0,
   objectifs: { missionsCeMois: 0, revenusCeMois: 0, tauxSucces: 100 },
 };
+
+/* Met en gras `highlight` dans `texte` via JSX (échappé par React) — pas de
+ * dangerouslySetInnerHTML : le message contient le nom d'une boutique choisi
+ * librement par l'entreprise (voir overview-aggregate.service.ts). */
+function ActiviteMsg({ msg, highlight }: { msg: string; highlight?: string }) {
+  if (!highlight) return <>{msg}</>;
+  const idx = msg.indexOf(highlight);
+  if (idx === -1) return <>{msg}</>;
+  return <>{msg.slice(0, idx)}<b>{highlight}</b>{msg.slice(idx + highlight.length)}</>;
+}
 
 export default function OverviewPage({ setPage }: Props) {
   const [data, setData]       = useState<OverviewData>(EMPTY);
@@ -187,7 +197,7 @@ export default function OverviewPage({ setPage }: Props) {
                     <i className="fas fa-box" style={{ color:'var(--t2)', fontSize:12 }} />
                   </div>
                   <div>
-                    <div style={{ fontSize:12, color:'var(--t2)', lineHeight:1.5 }} dangerouslySetInnerHTML={{ __html:a.msg }} />
+                    <div style={{ fontSize:12, color:'var(--t2)', lineHeight:1.5 }}><ActiviteMsg msg={a.msg} highlight={a.highlight} /></div>
                     <div style={{ fontSize:10, color:'var(--t4,#C5CAD3)', marginTop:2 }}>{a.t}</div>
                   </div>
                 </div>

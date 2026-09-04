@@ -3,7 +3,7 @@
  *
  * Centre de Gestion des Commissions — Super Admin
  * 4 onglets :
- *   1. Entreprises  — commissionType/Value/Min/Max/Brackets + par catégorie
+ *   1. Entreprises  — commissionType/Value/Min/Max/Brackets
  *   2. Partenaires  — commissionMode/defaultRate + taux par tier
  *   3. Livreurs     — platformCommissionRate
  *   4. Plateforme   — platformCommission global
@@ -17,15 +17,12 @@ import './CommissionsSection.css';
 import type {
   CommissionType,
   CommissionBracket,
-  CategoryRule,
-  CategoryItem,
   CompanySettings,
 } from '../../administrateur/services/company-settings.service';
 import {
   DEFAULT_BRACKETS,
   getSettings   as getCompanySettings,
   updateSettings as updateCompanySettings,
-  getCategoriesList,
 } from '../../administrateur/services/company-settings.service';
 
 import type {
@@ -64,6 +61,19 @@ interface PlatformSettings {
   [key: string]: unknown;
 }
 
+/* ── Historique des taux (CommissionRule versionnées) ──────────── */
+interface CommissionRuleHistory {
+  id:               string;
+  version:          number;
+  label:            string;
+  isActive:         boolean;
+  note:             string | null;
+  createdByUserId:  string | null;
+  activatedAt:      string;
+  deactivatedAt:    string | null;
+  nbDistributions:  number;
+}
+
 /* ── Props ────────────────────────────────────────────────────── */
 interface Props {
   isActive: boolean;
@@ -98,6 +108,40 @@ const PARTNER_MODES: {
   { id: 'progressive', icon: 'fa-chart-line',  color: '#7C3AED', bg: 'rgba(124,58,237,.1)', title: 'Progressif',   desc: 'Taux proportionnel au volume de recrutement.' },
 ];
 
+/* ── Répartition 3 acteurs "intelligente" ────────────────────────
+ * Quand l'admin modifie UN des 3 champs (Shoneya/Partenaires/Admin),
+ * les 2 autres se réajustent automatiquement pour que la somme reste
+ * exactement 100 %, en conservant leur proportion relative entre eux
+ * — plutôt que de laisser l'admin corriger les 3 champs à la main
+ * pour retomber pile sur 100. */
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+function rebalanceRatio3(
+  values:     [number, number, number],
+  changedIdx: 0 | 1 | 2,
+  rawValue:   number,
+): [number, number, number] {
+  const clamped = round2(Math.min(100, Math.max(0, rawValue)));
+  const [i1, i2] = ([0, 1, 2] as const).filter(i => i !== changedIdx) as [number, number];
+  const v1 = values[i1] ?? 0;
+  const v2 = values[i2] ?? 0;
+  const remaining = round2(100 - clamped);
+  const otherSum = v1 + v2;
+
+  /* Répartit `remaining` en conservant la proportion v1:v2 — si les deux
+   * étaient à 0 (cas dégénéré), on partage en deux plutôt que de diviser
+   * par zéro. Le second des deux absorbe le résidu d'arrondi pour que
+   * la somme retombe toujours exactement sur 100, jamais 99.99/100.01. */
+  const newV1 = otherSum <= 0 ? round2(remaining / 2) : round2(remaining * (v1 / otherSum));
+  const newV2 = round2(remaining - newV1);
+
+  const result: [number, number, number] = [0, 0, 0];
+  result[changedIdx] = clamped;
+  result[i1] = newV1;
+  result[i2] = newV2;
+  return result;
+}
+
 /* ================================================================
  * COMPOSANT PRINCIPAL
  * ================================================================ */
@@ -108,7 +152,6 @@ export default function CommissionsSection({ isActive, toast }: Props) {
   /* ── État — Entreprises ────────────────────────────────────── */
   const [compSaved,  setCompSaved]  = useState<CompanySettings | null>(null);
   const [compDraft,  setCompDraft]  = useState<CompanySettings | null>(null);
-  const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [compLoad,   setCompLoad]   = useState(true);
   const [compSaving, setCompSaving] = useState(false);
 
@@ -129,6 +172,10 @@ export default function CommissionsSection({ isActive, toast }: Props) {
   const [platDraft,  setPlatDraft]  = useState<PlatformSettings | null>(null);
   const [platLoad,   setPlatLoad]   = useState(true);
   const [platSaving, setPlatSaving] = useState(false);
+
+  /* ── État — Historique des taux ───────────────────────────── */
+  const [history,     setHistory]     = useState<CommissionRuleHistory[]>([]);
+  const [historyLoad, setHistoryLoad] = useState(true);
 
   /* ── Sums live pour validation des ratios ────────────────────── */
   const sumLivr = platDraft
@@ -152,12 +199,12 @@ export default function CommissionsSection({ isActive, toast }: Props) {
 
   /* ── Chargement au montage ────────────────────────────────── */
   const loadAll = useCallback(async () => {
-    const [comp, cats, part, deliv, plat] = await Promise.allSettled([
+    const [comp, part, deliv, plat, hist] = await Promise.allSettled([
       getCompanySettings(),
-      getCategoriesList(),
       getPartnerSettings(),
       getDeliverySettings(),
       apiFetch<PlatformSettings>('/dashboard/super-admin/settings'),
+      apiFetch<CommissionRuleHistory[]>('/dashboard/super-admin/commissions/history'),
     ]);
 
     if (comp.status === 'fulfilled') {
@@ -165,8 +212,6 @@ export default function CommissionsSection({ isActive, toast }: Props) {
       setCompDraft(structuredClone(comp.value));
     }
     setCompLoad(false);
-
-    if (cats.status === 'fulfilled') setCategories(cats.value);
 
     if (part.status === 'fulfilled') {
       setPartSaved(part.value);
@@ -185,17 +230,30 @@ export default function CommissionsSection({ isActive, toast }: Props) {
       setPlatDraft(structuredClone(plat.value));
     }
     setPlatLoad(false);
+
+    if (hist.status === 'fulfilled') setHistory(hist.value);
+    setHistoryLoad(false);
   }, []);
 
   useEffect(() => { if (isActive) void loadAll(); }, [isActive, loadAll]);
+
+  /* Rafraîchit l'historique des taux — appelé après toute sauvegarde qui
+   * touche un champ de commission de PlatformSettings (Plateforme et
+   * Livreurs déclenchent tous deux createOrUpdateRule() côté backend,
+   * donc une nouvelle version apparaît dans l'historique). */
+  const refreshHistory = () => {
+    apiFetch<CommissionRuleHistory[]>('/dashboard/super-admin/commissions/history')
+      .then(setHistory)
+      .catch(() => {});
+  };
 
   /* ── Sauvegarde — Entreprises ─────────────────────────────── */
   const saveComp = async () => {
     if (!compDraft) return;
     setCompSaving(true);
     try {
-      const { commissionType, commissionValue, commissionMin, commissionMax, commissionBrackets, categoryRules } = compDraft;
-      const saved = await updateCompanySettings({ commissionType, commissionValue, commissionMin, commissionMax, commissionBrackets, categoryRules });
+      const { commissionType, commissionValue, commissionMin, commissionMax, commissionBrackets } = compDraft;
+      const saved = await updateCompanySettings({ commissionType, commissionValue, commissionMin, commissionMax, commissionBrackets });
       setCompSaved(saved);
       setCompDraft(structuredClone(saved));
       toast('success', 'Commission entreprises sauvegardée');
@@ -248,6 +306,7 @@ export default function CommissionsSection({ isActive, toast }: Props) {
       setDelivDraft(structuredClone(savedDeliv));
       setPlatSaved(savedPlat);
       setPlatDraft(structuredClone(savedPlat));
+      refreshHistory();
       toast('success', 'Commission livreurs sauvegardée');
     } catch {
       toast('error', 'Erreur lors de la sauvegarde');
@@ -279,6 +338,7 @@ export default function CommissionsSection({ isActive, toast }: Props) {
       });
       setPlatSaved(updated);
       setPlatDraft(structuredClone(updated));
+      refreshHistory();
       toast('success', 'Paramètres plateforme sauvegardés');
     } catch {
       toast('error', 'Erreur lors de la sauvegarde');
@@ -290,19 +350,6 @@ export default function CommissionsSection({ isActive, toast }: Props) {
   /* ── Helpers setCompDraft ─────────────────────────────────── */
   const setComp = <K extends keyof CompanySettings>(k: K, v: CompanySettings[K]) =>
     setCompDraft(d => d ? { ...d, [k]: v } : d);
-
-  const getCatRule = (nom: string): CategoryRule =>
-    compDraft?.categoryRules.find((r: CategoryRule) => r.nom === nom) ?? { nom, enabled: true, commission: null };
-
-  const setCatRule = (nom: string, patch: Partial<CategoryRule>) =>
-    setCompDraft(d => {
-      if (!d) return d;
-      const exists = d.categoryRules.some((r: CategoryRule) => r.nom === nom);
-      if (exists) {
-        return { ...d, categoryRules: d.categoryRules.map((r: CategoryRule) => r.nom === nom ? { ...r, ...patch } : r) };
-      }
-      return { ...d, categoryRules: [...d.categoryRules, { nom, enabled: true, commission: null, ...patch }] };
-    });
 
   const addBracket = () =>
     setCompDraft(d => {
@@ -590,59 +637,6 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                   </div>
                 </div>
               )}
-
-              {/* Commission par catégorie */}
-              <div className="card">
-                <div className="card-head">
-                  <div>
-                    <div className="card-title"><i className="fas fa-tags" /> Commission par catégorie</div>
-                    <div className="card-sub">Définissez un taux spécifique par secteur d'activité (laissez vide pour appliquer le taux par défaut)</div>
-                  </div>
-                  <span style={{ fontSize: 12, color: 'var(--txt-2)', fontWeight: 600 }}>
-                    {categories.length > 0 ? `${categories.length} catégories` : 'Aucune catégorie'}
-                  </span>
-                </div>
-                <div className="card-body">
-                  {categories.length === 0 ? (
-                    <div style={{ padding: '28px 0', textAlign: 'center', color: 'var(--txt-2)', fontSize: 13 }}>
-                      <i className="fas fa-tags" style={{ fontSize: 24, display: 'block', marginBottom: 8, opacity: .4 }} />
-                      Aucune catégorie disponible — créez-en via le module Catalogue.
-                    </div>
-                  ) : (
-                    <div className="cat-grid">
-                      {categories.map((cat: CategoryItem) => {
-                        const rule = getCatRule(cat.nom);
-                        return (
-                          <div key={cat.id} className={`cat-card${rule.enabled ? '' : ' off'}`}>
-                            <div className="cat-header">
-                              <div className="cat-name">
-                                {cat.icone && <span>{cat.icone}</span>}
-                                {cat.nom}
-                              </div>
-                              <div
-                                className={`sw${rule.enabled ? ' on' : ''}`}
-                                onClick={() => setCatRule(cat.nom, { enabled: !rule.enabled })}
-                              />
-                            </div>
-                            {rule.enabled && (
-                              <div className="cat-comm-row">
-                                <span className="cat-comm-label">Commission :</span>
-                                <input type="number" className="cat-comm-input"
-                                  placeholder="Défaut" min={0} max={50} step={0.5}
-                                  value={rule.commission ?? ''}
-                                  onChange={e => setCatRule(cat.nom, {
-                                    commission: e.target.value === '' ? null : +e.target.value,
-                                  })} />
-                                <span style={{ fontSize: 11, color: 'var(--txt-2)' }}>%</span>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
             </>
           )}
         </>
@@ -982,14 +976,24 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                         { key: 'ratioShopiLivraison'      as const, label: 'Part Shoneya',           icon: 'fa-globe',     color: '#D97706', bg: 'rgba(217,119,6,.06)'    },
                         { key: 'ratioPartenaireLivraison' as const, label: 'Part Partenaires',     icon: 'fa-handshake', color: '#7C3AED', bg: 'rgba(124,58,237,.06)'   },
                         { key: 'ratioAdminLivraison'      as const, label: 'Part Administrateurs', icon: 'fa-shield',    color: '#0284C7', bg: 'rgba(2,132,199,.06)'    },
-                      ].map(r => (
+                      ].map((r, idx) => (
                         <div key={r.key} style={{ background: r.bg, borderRadius: 10, padding: '14px 16px' }}>
                           <div className="field-label" style={{ color: r.color, marginBottom: 8 }}>
                             <i className={`fas ${r.icon}`} style={{ marginRight: 5 }} />{r.label}
                           </div>
                           <input type="number" className="field-input" min={0} max={100} step={0.5}
                             value={platDraft[r.key] ?? 0}
-                            onChange={e => setPlatDraft(d => d ? { ...d, [r.key]: +e.target.value } : d)} />
+                            onChange={e => {
+                              const raw = e.target.value === '' ? 0 : +e.target.value;
+                              setPlatDraft(d => {
+                                if (!d) return d;
+                                const [shopi, part, admin] = rebalanceRatio3(
+                                  [d.ratioShopiLivraison ?? 60, d.ratioPartenaireLivraison ?? 25, d.ratioAdminLivraison ?? 15],
+                                  idx as 0 | 1 | 2, raw,
+                                );
+                                return { ...d, ratioShopiLivraison: shopi, ratioPartenaireLivraison: part, ratioAdminLivraison: admin };
+                              });
+                            }} />
                           <div className="field-unit" style={{ marginTop: 4 }}>% de la commission livraison</div>
                         </div>
                       ))}
@@ -1215,14 +1219,24 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                         { key: 'ratioShopiProduit'      as const, label: 'Part Shoneya',           icon: 'fa-globe',     color: '#D97706', bg: 'rgba(217,119,6,.06)'  },
                         { key: 'ratioPartenaireProduit' as const, label: 'Part Partenaires',     icon: 'fa-handshake', color: '#7C3AED', bg: 'rgba(124,58,237,.06)' },
                         { key: 'ratioAdminProduit'      as const, label: 'Part Administrateurs', icon: 'fa-shield',    color: '#0284C7', bg: 'rgba(2,132,199,.06)'  },
-                      ].map(r => (
+                      ].map((r, idx) => (
                         <div key={r.key} style={{ background: r.bg, borderRadius: 10, padding: '14px 16px' }}>
                           <div className="field-label" style={{ color: r.color, marginBottom: 8 }}>
                             <i className={`fas ${r.icon}`} style={{ marginRight: 5 }} />{r.label}
                           </div>
                           <input type="number" className="field-input" min={0} max={100} step={0.5}
                             value={platDraft?.[r.key] ?? 0}
-                            onChange={e => setPlatDraft(d => d ? { ...d, [r.key]: +e.target.value } : d)} />
+                            onChange={e => {
+                              const raw = e.target.value === '' ? 0 : +e.target.value;
+                              setPlatDraft(d => {
+                                if (!d) return d;
+                                const [shopi, part, admin] = rebalanceRatio3(
+                                  [d.ratioShopiProduit ?? 70, d.ratioPartenaireProduit ?? 20, d.ratioAdminProduit ?? 10],
+                                  idx as 0 | 1 | 2, raw,
+                                );
+                                return { ...d, ratioShopiProduit: shopi, ratioPartenaireProduit: part, ratioAdminProduit: admin };
+                              });
+                            }} />
                           <div className="field-unit" style={{ marginTop: 4 }}>% de la commission produit</div>
                         </div>
                       ))}
@@ -1300,6 +1314,60 @@ export default function CommissionsSection({ isActive, toast }: Props) {
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+
+              {/* Historique des taux — versions successives de CommissionRule */}
+              <div className="card" style={{ marginTop: 16 }}>
+                <div className="card-head">
+                  <div>
+                    <div className="card-title"><i className="fas fa-clock-rotate-left" /> Historique des taux</div>
+                    <div className="card-sub">Chaque changement de taux crée une nouvelle version — la version active est celle réellement appliquée aux paiements</div>
+                  </div>
+                  <span style={{ fontSize: 12, color: 'var(--txt-2)', fontWeight: 600 }}>
+                    {history.length > 0 ? `${history.length} version${history.length > 1 ? 's' : ''}` : ''}
+                  </span>
+                </div>
+                <div className="card-body">
+                  {historyLoad ? (
+                    <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--txt-2)', fontSize: 13 }}>
+                      <i className="fas fa-rotate-right fa-spin" /> Chargement…
+                    </div>
+                  ) : history.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--txt-2)', fontSize: 13 }}>
+                      Aucun historique disponible.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {history.map(rule => (
+                        <div key={rule.id} style={{
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          background: rule.isActive ? 'rgba(5,150,105,.06)' : 'var(--raised)',
+                          border: rule.isActive ? '1px solid rgba(5,150,105,.25)' : '1px solid transparent',
+                          borderRadius: 10, padding: '10px 14px',
+                        }}>
+                          <span style={{
+                            fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 999,
+                            background: rule.isActive ? 'rgba(5,150,105,.15)' : 'rgba(120,120,120,.15)',
+                            color:      rule.isActive ? '#059669' : 'var(--txt-2)',
+                            flexShrink: 0,
+                          }}>
+                            {rule.isActive ? 'ACTIVE' : `v${rule.version}`}
+                          </span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--txt-1)' }}>{rule.label}</div>
+                            {rule.note && (
+                              <div style={{ fontSize: 11, color: 'var(--txt-2)', marginTop: 2 }}>{rule.note}</div>
+                            )}
+                          </div>
+                          <div style={{ textAlign: 'right', flexShrink: 0, fontSize: 11, color: 'var(--txt-2)' }}>
+                            <div>{new Date(rule.activatedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                            <div>{rule.nbDistributions} distribution{rule.nbDistributions > 1 ? 's' : ''}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </>

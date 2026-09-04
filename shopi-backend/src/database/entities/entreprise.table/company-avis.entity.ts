@@ -47,6 +47,13 @@ export class CompanyAvis {
   @Column({ type: 'text', nullable: true })
   commentaire: string | null;
 
+  /** Réponse publique de la boutique à cet avis (Dashboard entreprise > Avis) */
+  @Column({ type: 'text', nullable: true })
+  reponse: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  respondedAt: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 }

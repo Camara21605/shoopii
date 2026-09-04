@@ -62,7 +62,7 @@ export default function ParametresPage() {
     regenererCode, saveEntites,
     saveColis,
     savePaiement,
-    uploadDocument, deleteDocument,
+    uploadDocument, deleteDocument, getDocumentUrl,
     saveSecurite, changePassword,
     saveNotifications,
     saveConfidentialite,
@@ -129,7 +129,7 @@ export default function ParametresPage() {
           onSave={savePaiement} />;
       case 'documents':
         return <SecDocuments data={data}
-          onUpload={uploadDocument} onDelete={deleteDocument} />;
+          onUpload={uploadDocument} onDelete={deleteDocument} onViewUrl={getDocumentUrl} />;
       case 'securite':
         return <SecSecurite {...base} data={data}
           onSave={saveSecurite} onChangePassword={changePassword} />;

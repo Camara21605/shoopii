@@ -24,6 +24,7 @@ import {
 } from 'src/database/entities/entreprise.table/company-horaire.entity';
 
 import { UpdateHorairesDto, HoraireJourDto } from '../dto/update-horaires.dto';
+import { PublicBroadcastService } from 'src/modules/public/public-broadcast.service';
 
 @Injectable()
 export class HorairesParametresService {
@@ -36,6 +37,10 @@ export class HorairesParametresService {
 
     @InjectRepository(CompanyHoraire)
     private readonly horaireRepo: Repository<CompanyHoraire>,
+
+    /* Diffuse en direct aux visiteurs actuellement sur la fiche boutique
+     * publique de cette entreprise — voir public/public.gateway.ts. */
+    private readonly publicBroadcast: PublicBroadcastService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -76,7 +81,9 @@ export class HorairesParametresService {
 
     this.logger.log(`[HORAIRES] ${dto.horaires.length} jours mis à jour — companyId=${company.id}`);
 
-    return this.getHoraires(userId);
+    const horaires = await this.getHoraires(userId);
+    this.broadcastHoraires(company.id, horaires);
+    return horaires;
   }
 
   /* ──────────────────────────────────────────────────────────
@@ -94,6 +101,7 @@ export class HorairesParametresService {
 
     this.logger.log(`[HORAIRE] ${jour} mis à jour — companyId=${company.id}`);
 
+    this.broadcastHoraires(company.id, await this.getHoraires(userId));
     return horaire;
   }
 
@@ -151,10 +159,35 @@ export class HorairesParametresService {
     );
   }
 
-  /* FIX m4 — Lookup strict par userId uniquement; le fallback par companyId
-   * permettait l'accès cross-tenant si un UUID de boutique était connu. */
+  /**
+   * Pousse les horaires à jour en direct vers quiconque consulte la fiche
+   * boutique publique de cette entreprise au même moment (visiteur, ou le
+   * propriétaire lui-même sur "Voir ma boutique") — plus besoin de
+   * recharger la page pour voir un changement. Même forme que
+   * PublicBoutiqueResponse.horaires (public.service.ts) pour que le
+   * frontend puisse appliquer directement le payload reçu.
+   */
+  private broadcastHoraires(companyId: string, horaires: CompanyHoraire[]): void {
+    this.publicBroadcast.emitToBoutique(companyId, 'boutique:horaires_updated', {
+      horaires: this.sortByWeekOrder(horaires).map(h => ({
+        jour: h.jour, ouverture: h.ouverture, fermeture: h.fermeture, actif: h.actif,
+      })),
+    });
+  }
+
+  /* FIX m4 (historique, param client) — sans rapport ici : `userId` est en
+   * réalité req.user.actorId, signé serveur (voir boutique-parametres.
+   * service.ts pour le détail du bug que ce `[{id},{userId}]` corrige). */
+  /* BUG CORRIGÉ — l'ancien `where:[{id},{userId}]` était un OR SQL sans
+   * ordre garanti : quand une AUTRE entreprise a par accident un userId
+   * identique à l'id de celle-ci (bug de profil fantôme, voir getParametres
+   * dans boutique-parametres.service.ts), Postgres pouvait retourner l'une
+   * ou l'autre selon le plan de requête — a réellement fait persister des
+   * réglages sur la mauvaise fiche. `id` (cas normal, actorId) est
+   * désormais toujours tenté en priorité ; `userId` n'est qu'un repli. */
   private async findCompanyOrFail(userId: string): Promise<Company> {
-    const company = await this.companyRepo.findOne({ where: { userId } });
+    let company = await this.companyRepo.findOne({ where: { id: userId } });
+    if (!company) company = await this.companyRepo.findOne({ where: { userId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company;
   }

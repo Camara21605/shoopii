@@ -100,6 +100,9 @@
       "expressSub": "توصيل خلال أقل من ساعتين برسوم إضافية",
       "zonesTitle": "مناطق التوصيل",
       "zonesSubtitle": "اختر البلديات التي تخدمها",
+      "zonesChargement": "جارٍ تحميل مناطقك…",
+      "aucuneZoneAssignee": "لم تُسند إليك أي منطقة توصيل بعد. تواصل مع المسؤول الخاص بك.",
+      "zoneAssignee": "المنطقة المسندة: {{nom}}",
       "zonesSelectionnees_one": "{{count}} منطقة مختارة",
       "zonesSelectionnees_other": "{{count}} مناطق مختارة",
       "sauvegardeEnCours": "جارٍ الحفظ…",
@@ -443,6 +446,11 @@
         "coverImage": "صورة الغلاف",
         "returnPolicy": "سياسة الإرجاع"
       }
-    }
+    },
+    "accessDenied": {
+      "title": "الوصول غير مسموح",
+      "message": "ليس لديك صلاحية الوصول إلى الإعدادات. تواصل مع مالك المتجر للحصول عليها."
+    },
+    "readOnly": "للقراءة فقط — يمكنك عرض هذه الإعدادات ولكن لا يمكنك تعديلها."
   }
 }

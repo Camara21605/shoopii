@@ -20,6 +20,8 @@ import * as bcrypt          from 'bcryptjs';
 import { Partner } from 'src/database/entities/profiles/partenaire-profile.entity';
 import { User }    from 'src/database/entities/user.entity';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
+import { SessionService } from 'src/modules/session/session.service';
+import { parseUserAgent } from 'src/common/utils/user-agent.util';
 import {
   UpdatePartenairePasswordDto,
   UpdatePartenaireTwoFaDto,
@@ -34,18 +36,39 @@ export class SecuritePartenaireService {
     @InjectRepository(Partner) private readonly partnerRepo: Repository<Partner>,
     @InjectRepository(User)    private readonly userRepo:    Repository<User>,
     @InjectRepository(RefreshToken) private readonly refreshTokenRepo: Repository<RefreshToken>,
+    private readonly sessionService: SessionService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
    * GET — Statut de sécurité du compte
+   *
+   * BUG CORRIGÉ — `sessions` était codé en dur à `[]` ("feature à
+   * brancher"), et le frontend affichait deux lignes 100% inventées
+   * ("Android · Conakry", "Windows · Conakry") sans lien avec la vraie
+   * activité du compte, avec un bouton "Déconnecter" qui ne faisait
+   * qu'un toast local sans rien révoquer côté serveur.
+   *
+   * Shoneya impose UNE SEULE session active par compte (voir
+   * SessionService, Redis `active_session:{userId}`) — se connecter
+   * ailleurs remplace atomiquement la session précédente. Il ne peut
+   * donc jamais exister plusieurs appareils "actifs" simultanément à
+   * afficher : on expose la VRAIE session actuelle (device/navigateur/IP
+   * réels, lus depuis Redis) plutôt que de simuler une liste multi-
+   * appareils qui contredirait le modèle de sécurité réel de la
+   * plateforme. Le bouton "Déconnecter" du frontend réutilise la
+   * déconnexion normale (POST /auth/logout, déjà réelle et testée).
    * ────────────────────────────────────────────────────────── */
-  async getSecurite(userId: string) {
+  async getSecurite(userId: string, currentSessionId?: string | null) {
     const partner = await this.findOrFail(userId);
+    const meta = await this.sessionService.getSessionMeta(currentSessionId);
     return {
       twoFaEnabled: partner.twoFaEnabled,
       twoFaMethod:  partner.twoFaMethod,
-      /* Pas de sessions actives dans cette version — feature à brancher */
-      sessions: [],
+      currentSession: meta ? {
+        ...parseUserAgent(meta.userAgent),
+        ipAddress:      meta.ipAddress,
+        connectedSince: meta.createdAt,
+      } : null,
     };
   }
 

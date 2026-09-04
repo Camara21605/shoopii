@@ -30,6 +30,8 @@
  *  PATCH  /client/parametres/securite/2fa      → 2FA
  *  PATCH  /client/parametres/securite/questions → questions
  *  POST   /client/parametres/securite/codes-secours → génération
+ *  GET    /client/parametres/securite/alertes   → préférences alertes sécurité
+ *  PATCH  /client/parametres/securite/alertes   → une préférence (email uniquement)
  *
  *  GET    /client/parametres/sessions           → sessions actives
  *  PATCH  /client/parametres/sessions/:id/revoquer → révoquer une
@@ -101,6 +103,7 @@ import {
   CreateAdresseDto, UpdateAdresseDto,
   AddPaiementDto,
   ChangePasswordDto, UpdateSecuriteDto, UpdateQuestionsDto,
+  UpdateAlertSettingDto,
   UpdateNotifsDto, UpdatePrivacyDto,
   UpdateApparenceDto, UpdateLangueDto,
 } from './dto/client-parametres.dto';
@@ -266,6 +269,17 @@ export class ClientParametresController {
   @HttpCode(HttpStatus.CREATED)
   genererCodesSecours(@CurrentUser() user: User) {
     return this.securiteService.genererCodesSecours(user);
+  }
+
+  @Get('securite/alertes')
+  getAlertSettings(@CurrentUser() user: User) {
+    return this.securiteService.getAlertSettings(user);
+  }
+
+  @Patch('securite/alertes')
+  @HttpCode(HttpStatus.OK)
+  updateAlertSetting(@Body() dto: UpdateAlertSettingDto, @CurrentUser() user: User) {
+    return this.securiteService.updateAlertSetting(user, dto);
   }
 
   /* ══════════════════════════════════════════════════════════

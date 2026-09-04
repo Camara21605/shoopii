@@ -100,6 +100,9 @@
       "expressSub": "Entrega < 2h com tarifa adicional",
       "zonesTitle": "Zonas de entrega",
       "zonesSubtitle": "Selecione as comunas que serve",
+      "zonesChargement": "Carregando suas zonas…",
+      "aucuneZoneAssignee": "Nenhuma zona de entrega foi atribuída a você ainda. Contate seu administrador.",
+      "zoneAssignee": "Zona atribuída: {{nom}}",
       "zonesSelectionnees_one": "{{count}} zona selecionada",
       "zonesSelectionnees_other": "{{count}} zonas selecionadas",
       "sauvegardeEnCours": "A guardar…",
@@ -443,6 +446,11 @@
       "products": "Produtos",
       "coverImage": "Foto de capa",
       "returnPolicy": "Política de devolução"
-    }
+    },
+    "accessDenied": {
+      "title": "Acesso não autorizado",
+      "message": "Você não tem acesso às configurações. Contate o proprietário da loja para obtê-lo."
+    },
+    "readOnly": "Somente leitura — você pode ver essas configurações, mas não editá-las."
   }
 }

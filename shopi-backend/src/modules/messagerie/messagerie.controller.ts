@@ -18,6 +18,15 @@
  *   DELETE /messages/:msgId                      → supprimer un message
  *   POST   /messages/:msgId/reactions            → toggle réaction emoji
  *   GET    /users/search?q=&type=                → rechercher utilisateurs
+ *
+ * PERMISSIONS D'ÉQUIPE (collaborateurs d'entreprise) :
+ *   Contrôleur partagé par TOUS les rôles (client, livreur, partenaire,
+ *   correspondant, entreprise, admin…) — TeamPermissionGuard ne s'applique
+ *   RÉELLEMENT qu'aux comptes company (voir team-permission.guard.ts :
+ *   bypass inconditionnel pour tout rôle ≠ company), donc aucun risque de
+ *   régression pour les autres rôles.
+ *   Routes de lecture (GET)      → messaging.read
+ *   Routes de mutation (POST/PATCH/DELETE) → messaging.send
  * ============================================================ */
 
 import {
@@ -28,6 +37,8 @@ import type { Request } from 'express';
 
 import { JwtAuthGuard }      from '../../common/guards/auth.guard';
 import { UserRole }          from '../../common/enums/user-role.enum';
+import { TeamPermissionGuard }    from '../company-team/guards/team-permission.guard';
+import { RequiresTeamPermission } from '../company-team/decorators/requires-team-permission.decorator';
 import { MessagerieService } from './messagerie.service';
 import {
   SendMessageDto,
@@ -57,6 +68,8 @@ export class MessagerieController {
   // ── Conversations ────────────────────────────────────────────
 
   @Get('conversations')
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'read')
   getConversations(
     @Req() req: Request,
     @Query('cursor') cursor?: string,
@@ -67,6 +80,8 @@ export class MessagerieController {
   }
 
   @Get('conversations/archived')
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'read')
   getArchivedConversations(
     @Req() req: Request,
     @Query('cursor') cursor?: string,
@@ -77,6 +92,8 @@ export class MessagerieController {
   }
 
   @Post('conversations')
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'send')
   startConversation(@Req() req: Request, @Body() dto: StartConversationDto) {
     const { userId, actorId, role, ip } = this.ctx(req);
     return this.svc.getOrCreateConversation(userId, role, dto, ip, actorId);
@@ -84,6 +101,8 @@ export class MessagerieController {
 
   @Delete('conversations/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'send')
   deleteConversation(@Req() req: Request, @Param('id') convId: string): Promise<void> {
     const { userId, actorId, role } = this.ctx(req);
     return this.svc.deleteConversation(userId, role, convId, actorId);
@@ -91,6 +110,8 @@ export class MessagerieController {
 
   @Patch('conversations/:id/archive')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'send')
   archiveConversation(
     @Req() req: Request,
     @Param('id') convId: string,
@@ -102,6 +123,8 @@ export class MessagerieController {
 
   @Patch('conversations/:id/pin')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'send')
   pinConversation(
     @Req() req: Request,
     @Param('id') convId: string,
@@ -113,6 +136,8 @@ export class MessagerieController {
 
   @Patch('conversations/:id/mute')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'send')
   muteConversation(
     @Req() req: Request,
     @Param('id') convId: string,
@@ -125,6 +150,8 @@ export class MessagerieController {
   // ── Messages ────────────────────────────────────────────────
 
   @Get('conversations/:id/messages')
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'read')
   getMessages(
     @Req() req: Request,
     @Param('id') convId: string,
@@ -138,6 +165,8 @@ export class MessagerieController {
   /* Recherche plein texte dans une conversation — texte des messages ET
    * noms de documents partagés. Alimente le bouton 🔍 du ChatHeader. */
   @Get('conversations/:id/messages/search')
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'read')
   searchMessages(
     @Req() req: Request,
     @Param('id') convId: string,
@@ -150,6 +179,8 @@ export class MessagerieController {
   /* Liste des commandes partagées entre les deux participants de cette
    * conversation — alimente le picker "🛒 Partager une commande". */
   @Get('conversations/:id/commandes')
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'read')
   getShareableCommandes(
     @Req() req: Request,
     @Param('id') convId: string,
@@ -161,6 +192,8 @@ export class MessagerieController {
   /* Catalogue public de la boutique participant à cette conversation —
    * alimente le picker "📦 Partager un produit". */
   @Get('conversations/:id/produits')
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'read')
   getShareableProduits(
     @Req() req: Request,
     @Param('id') convId: string,
@@ -170,6 +203,8 @@ export class MessagerieController {
   }
 
   @Post('conversations/:id/messages')
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'send')
   sendMessage(
     @Req() req: Request,
     @Param('id') convId: string,
@@ -181,6 +216,8 @@ export class MessagerieController {
 
   @Patch('conversations/:id/read')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'send')
   markAsRead(@Req() req: Request, @Param('id') convId: string): Promise<void> {
     const { userId, actorId, role } = this.ctx(req);
     return this.svc.markAsRead(userId, role, convId, actorId);
@@ -188,6 +225,8 @@ export class MessagerieController {
 
   @Patch('conversations/:id/unread')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'send')
   markAsUnread(@Req() req: Request, @Param('id') convId: string): Promise<void> {
     const { userId, actorId, role } = this.ctx(req);
     return this.svc.markAsUnread(userId, role, convId, actorId);
@@ -196,6 +235,8 @@ export class MessagerieController {
   // ── Actions sur un message ──────────────────────────────────
 
   @Patch('messages/:msgId')
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'send')
   editMessage(
     @Req() req: Request,
     @Param('msgId') msgId: string,
@@ -207,6 +248,8 @@ export class MessagerieController {
 
   @Delete('messages/:msgId')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'send')
   deleteMessage(
     @Req() req: Request,
     @Param('msgId') msgId: string,
@@ -218,6 +261,8 @@ export class MessagerieController {
 
   @Post('messages/:msgId/reactions')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'send')
   toggleReaction(
     @Req() req: Request,
     @Param('msgId') msgId: string,
@@ -230,6 +275,8 @@ export class MessagerieController {
   // ── Recherche ────────────────────────────────────────────────
 
   @Get('users/search')
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'read')
   searchUsers(
     @Req() req: Request,
     @Query('q')    q    = '',

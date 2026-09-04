@@ -105,6 +105,7 @@ export default function ExplorerSection({ onToast }: Props) {
     search: searchInput, category, minPrice, maxPrice, ville,
   });
 
+  const pourVous   = useExploreSection('/public/explore/pour-vous',  { limit: 12 });
   const tendances  = useExploreSection('/public/explore/tendances',  { limit: 12 });
   const nouveautes = useExploreSection('/public/explore/nouveautes', { limit: 12 });
   const proches    = useExploreSection('/public/explore/proches',    { ville, limit: 12 }, !!ville);
@@ -184,6 +185,10 @@ export default function ExplorerSection({ onToast }: Props) {
       )}
 
       {/* ── Sections intelligentes ── */}
+      <ExplorerCarousel
+        kick={t('home.explorer.pourVous.kick')} title={t('home.explorer.pourVous.title')} icon="fa-wand-magic-sparkles"
+        items={pourVous.items} loading={pourVous.loading} error={pourVous.error} onToast={onToast}
+      />
       <ExplorerCarousel
         kick={t('home.explorer.tendances.kick')} title={t('home.explorer.tendances.title')} icon="fa-fire"
         items={tendances.items} loading={tendances.loading} error={tendances.error} onToast={onToast}

@@ -2,13 +2,14 @@
  * FICHIER : sections/geo/GeoAudit.tsx
  * Journal d'audit du référentiel géographique.
  * Toutes les modifications sont tracées avec auteur, date, détails.
+ * Données réelles — GET /geo/audit (voir GeoService.logAudit()).
  * ================================================================ */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import s from '../GeoReferentielSection.module.css';
-import type { GeoAuditAction, GeoLevel } from './geo.types';
+import type { GeoAuditAction, GeoLevel, GeoAuditEntry } from './geo.types';
 import { GEO_LEVELS } from './geo.types';
-import { MOCK_GEO_AUDIT } from './geo.data';
+import { geoApi } from './geoApi';
 
 /* Styles / icônes par action */
 const ACTION_META: Record<GeoAuditAction, { icon: string; color: string; label: string }> = {
@@ -24,13 +25,27 @@ export default function GeoAudit() {
   const [action, setAction]   = useState<GeoAuditAction | 'all'>('all');
   const [niveau, setNiveau]   = useState<GeoLevel | 'all'>('all');
   const [search, setSearch]   = useState('');
+  const [entries, setEntries] = useState<GeoAuditEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState<string | null>(null);
 
-  const filtered = useMemo(() => MOCK_GEO_AUDIT.filter(e =>
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    geoApi.audit()
+      .then(setEntries)
+      .catch(err => setError(err?.message ?? "Impossible de charger le journal d'audit."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const filtered = useMemo(() => entries.filter(e =>
     (action === 'all' || e.action === action) &&
     (niveau === 'all' || e.niveau === niveau) &&
     (e.itemNom.toLowerCase().includes(search.toLowerCase()) ||
      e.auteur.toLowerCase().includes(search.toLowerCase()))
-  ), [action, niveau, search]);
+  ), [entries, action, niveau, search]);
 
   const exportCSV = () => {
     const rows = filtered.map(e => `"${e.id}","${e.action}","${e.niveau}","${e.itemNom}","${e.itemCode}","${e.auteur}","${e.quand}","${e.details}"`);
@@ -66,8 +81,11 @@ export default function GeoAudit() {
           {GEO_LEVELS.map(l => <option key={l.level} value={l.level}>{l.label}</option>)}
         </select>
 
-        <button className={`${s.btnSecondary} ${s.btnSm}`} onClick={exportCSV}>
+        <button className={`${s.btnSecondary} ${s.btnSm}`} onClick={exportCSV} disabled={filtered.length === 0}>
           <i className="fas fa-download" /> Export CSV
+        </button>
+        <button className={`${s.btnSecondary} ${s.btnSm}`} onClick={load} disabled={loading} title="Recharger">
+          <i className={`fas fa-rotate ${loading ? 'fa-spin' : ''}`} />
         </button>
       </div>
 
@@ -84,7 +102,7 @@ export default function GeoAudit() {
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', width: '100%' }}>
             {(Object.keys(ACTION_META) as GeoAuditAction[]).map(a => {
               const m = ACTION_META[a];
-              const count = MOCK_GEO_AUDIT.filter(e => e.action === a).length;
+              const count = entries.filter(e => e.action === a).length;
               return count > 0 ? (
                 <button key={a}
                   className={`${s.btnGhost} ${s.btnSm}`}
@@ -98,7 +116,21 @@ export default function GeoAudit() {
           </div>
         </div>
         <div className={s.cardBody}>
-          {filtered.length === 0 && (
+          {error && (
+            <div className={s.apiBanner}>
+              <i className="fas fa-triangle-exclamation" style={{ color: 'var(--rose)' }} />
+              <span style={{ flex: 1, color: 'var(--txt-2)' }}>{error}</span>
+              <button className={`${s.btnGhost} ${s.btnSm}`} onClick={load}>
+                <i className="fas fa-rotate" /> Réessayer
+              </button>
+            </div>
+          )}
+          {loading && entries.length === 0 && (
+            <p style={{ textAlign: 'center', color: 'var(--txt-3)', padding: '20px 0', fontSize: 13 }}>
+              <i className="fas fa-circle-notch fa-spin" /> Chargement…
+            </p>
+          )}
+          {!loading && filtered.length === 0 && !error && (
             <p style={{ textAlign: 'center', color: 'var(--txt-3)', padding: '20px 0', fontSize: 13 }}>
               Aucune entrée correspondante
             </p>

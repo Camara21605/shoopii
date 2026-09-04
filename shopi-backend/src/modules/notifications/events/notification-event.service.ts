@@ -123,6 +123,44 @@ export class NotificationEventService {
   ) {}
 
   // ─────────────────────────────────────────────────────────
+  // HELPER — destination "profil / compte" par rôle
+  // ─────────────────────────────────────────────────────────
+
+  /**
+   * BUG CORRIGÉ — plusieurs actionUrl ci-dessous pointaient vers '/profil'
+   * ou '/dashboard' (sans segment de rôle) : aucune des deux routes
+   * n'existe côté frontend (voir router.tsx — seuls /mon-profil et
+   * /dashboard/{role}/* sont enregistrées), donc le clic tombait
+   * systématiquement sur la route catch-all plutôt que sur le compte de
+   * l'acteur concerné. Centralisé ici plutôt que dupliqué à chaque appelant.
+   */
+  private resolveOwnAccountUrl(actorType: NotificationActorType): string {
+    switch (actorType) {
+      case NotificationActorType.CLIENT:        return '/mon-profil';
+      case NotificationActorType.COMPANY:       return '/dashboard/entreprise/profil';
+      case NotificationActorType.DELIVERY:      return '/dashboard/livreur/profil';
+      case NotificationActorType.CORRESPONDENT: return '/dashboard/correspondant/parametres';
+      case NotificationActorType.PARTNER:       return '/dashboard/partenaire/parametres';
+      default:                                  return '/home';
+    }
+  }
+
+  /**
+   * BUG CORRIGÉ — notifyNewFollower construisait `/profil/${type}/${id}`,
+   * une route qui n'a jamais existé côté frontend (aucune route
+   * générique /profil/:type/:id — voir router.tsx : seules /livreurs/:id,
+   * /correspondants/:id et /boutique/:id exposent un profil public).
+   */
+  private resolveFollowerProfileUrl(followerType: string, followerId: string): string {
+    switch (followerType) {
+      case NotificationActorType.COMPANY:       return `/boutique/${followerId}`;
+      case NotificationActorType.DELIVERY:      return `/livreurs/${followerId}`;
+      case NotificationActorType.CORRESPONDENT: return `/correspondants/${followerId}`;
+      default:                                  return '/home';
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
   // HELPER — photo de l'acteur déclencheur
   // ─────────────────────────────────────────────────────────
 
@@ -202,7 +240,7 @@ export class NotificationEventService {
         title:         'Nouvel abonné',
         body:          `${params.followerName} s'est abonné à votre profil`,
         imageUrl,
-        actionUrl:     `/profil/${params.followerType}/${params.followerId}`,
+        actionUrl:     this.resolveFollowerProfileUrl(params.followerType, params.followerId),
         groupKey:      `follow.new:${params.targetType}:${params.targetId}`,
         resourceType:  'follow',
         resourceId:    params.followId,
@@ -239,7 +277,12 @@ export class NotificationEventService {
         title:         'Nouveau message',
         body:          `${params.senderName} : ${params.preview.slice(0, 80)}`,
         imageUrl,
-        actionUrl:     `/chat/${params.conversationId}`,
+        /* BUG CORRIGÉ — '/chat/:id' n'a jamais existé côté frontend (seule
+         * route de messagerie enregistrée : /messagerie, sans segment
+         * dynamique). ?conv= est lu par MessageriePage pour sélectionner
+         * automatiquement LA conversation au chargement (voir
+         * MessagerieCore.tsx, prop initialConversationId). */
+        actionUrl:     `/messagerie?conv=${params.conversationId}`,
         groupKey:      `message.received:conversation:${params.conversationId}`,
         resourceType:  'conversation',
         resourceId:    params.conversationId,
@@ -425,12 +468,58 @@ export class NotificationEventService {
         priority:      NotificationPriority.HIGH,
         title:         params.title,
         body:          params.body,
-        actionUrl:     '/profil',
+        actionUrl:     this.resolveOwnAccountUrl(params.recipientType),
         resourceType:  'account',
         resourceId:    params.recipientId,
       });
     } catch (err) {
       this.logger.error(`notifyAccountStatusChanged (${params.type}) failed`, err);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // ÉQUIPE / COLLABORATEURS
+  // ─────────────────────────────────────────────────────────
+
+  /**
+   * Notifie qu'un collaborateur a vu ses permissions modifiées par le
+   * propriétaire (voir CompanyTeamPermissionService.update()).
+   *
+   * Adressée à NotificationActorType.COMPANY + recipientId=companyId,
+   * PAS au collaborateur individuellement : "mes notifications" se
+   * résout aujourd'hui via l'actorId du JWT, qui vaut companyId aussi
+   * bien pour le propriétaire QUE pour CHAQUE collaborateur (même
+   * entreprise — voir AuthService.findProfileId) — il n'existe pas
+   * encore de canal pour adresser un collaborateur individuellement
+   * sans passer par son propre userId, absent du modèle recipientId
+   * actuel (toujours un profileId, jamais un userId — voir l'en-tête
+   * de ce fichier). Reste utile comme fil d'activité partagé, visible
+   * par le propriétaire ET toute l'équipe.
+   *
+   * Type SYSTEM_ANNOUNCEMENT réutilisé volontairement plutôt qu'une
+   * nouvelle valeur d'enum dédiée (ex: TEAM_PERMISSION_CHANGED) : le
+   * type est un enum Postgres natif, une nouvelle valeur nécessite un
+   * ALTER TYPE en production (synchronize() ne suffit qu'en dev) — pas
+   * de risque de notification silencieusement perdue si ce déploiement
+   * n'a pas encore tourné.
+   */
+  async notifyTeamPermissionChanged(params: { companyId: string; memberName: string }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: NotificationActorType.COMPANY,
+        recipientId:   params.companyId,
+        actorType:     null,
+        actorId:       null,
+        type:          NotificationType.SYSTEM_ANNOUNCEMENT,
+        priority:      NotificationPriority.NORMAL,
+        title:         'Permissions mises à jour',
+        body:          `Les permissions de ${params.memberName} ont été modifiées.`,
+        actionUrl:     '/dashboard/entreprise/equipe',
+        resourceType:  'team_member',
+        resourceId:    params.companyId,
+      });
+    } catch (err) {
+      this.logger.error('notifyTeamPermissionChanged failed', err);
     }
   }
 
@@ -505,13 +594,59 @@ export class NotificationEventService {
         priority:      NotificationPriority.NORMAL,
         title:         params.title,
         body:          params.body,
-        actionUrl:     `/dashboard/promotions`,
+        /* BUG CORRIGÉ — segment /entreprise manquant, route inexistante. */
+        actionUrl:     `/dashboard/entreprise/promotions`,
         groupKey:      `${params.type}:${params.promoId}`,
         resourceType:  'promotion',
         resourceId:    params.promoId,
       });
     } catch (err) {
       this.logger.error(`notifyPromoEvent (${params.type}) failed`, err);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // CRM ENTREPRISE
+  // ─────────────────────────────────────────────────────────
+
+  /**
+   * Notifie un client d'un message CRM envoyé par une entreprise
+   * (Newsletter VIP, Offre fidélité, Relance clients inactifs — voir
+   * CrmCampaignService, Paramètres > Clients & Abonnés > Actions CRM).
+   *
+   * Pas de groupKey : chaque envoi de campagne est un message distinct,
+   * jamais agrégé avec le précédent (contrairement à notifyPromoEvent).
+   *
+   * Passe par NotificationService.create() → même pipeline que toute
+   * autre notification : insertion + emit Socket.IO IN_APP synchrones,
+   * dispatch EMAIL mis en file BullMQ et respectant les préférences
+   * propres du client (globalEmailEnabled, DND…) — jamais d'envoi SMTP
+   * synchrone dans la requête HTTP (voir notification.queue.ts).
+   */
+  async notifyCrmMessage(params: {
+    clientId:    string;
+    companyId:   string;
+    companyName: string;
+    subject:     string;
+    message:     string;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: NotificationActorType.CLIENT,
+        recipientId:   params.clientId,
+        actorType:     NotificationActorType.COMPANY,
+        actorId:       params.companyId,
+        type:          NotificationType.CRM_MESSAGE,
+        priority:      NotificationPriority.NORMAL,
+        title:         params.subject,
+        body:          params.message,
+        actionUrl:     `/boutique/${params.companyId}`,
+        resourceType:  'crm_campaign',
+        resourceId:    params.companyId,
+      });
+    } catch (err) {
+      this.logger.error(`notifyCrmMessage failed — clientId=${params.clientId}`, err);
+      throw err; // laisse CrmCampaignService compter cet envoi comme échoué
     }
   }
 
@@ -545,7 +680,8 @@ export class NotificationEventService {
         title:         'Nouvel avis reçu ⭐',
         body:          `${params.clientNom} a laissé un avis ${params.note}/5 sur votre boutique.`,
         imageUrl,
-        actionUrl:     '/dashboard/avis',
+        /* BUG CORRIGÉ — segment /entreprise manquant, route inexistante. */
+        actionUrl:     '/dashboard/entreprise/avis',
         groupKey:      `review.received:${params.companyId}`,
         resourceType:  'review',
         resourceId:    params.commandeId,
@@ -711,7 +847,10 @@ export class NotificationEventService {
         priority:      NotificationPriority.URGENT,
         title:         'Paiement échoué',
         body:          params.reason,
-        actionUrl:     `/commande/${params.commandeId}/paiement`,
+        /* BUG CORRIGÉ — /commande/:id/paiement n'existe pas côté frontend
+         * (seule /commande/:id/suivi est enregistrée ; le retry de
+         * paiement se fait depuis cette page). */
+        actionUrl:     `/commande/${params.commandeId}/suivi`,
         resourceType:  'payment',
         resourceId:    params.sessionId,
       });
@@ -785,6 +924,12 @@ export class NotificationEventService {
           ? '/dashboard/livreur/revenus'
           : params.recipientType === NotificationActorType.CORRESPONDENT
           ? '/dashboard/correspondant'
+          /* BUG CORRIGÉ — PARTNER retombait sur '/home' (route grand public,
+           * hors dashboard) faute de branche dédiée : un partenaire recevant
+           * une notif de crédit/débit wallet était redirigé n'importe où
+           * sauf vers ses commissions. */
+          : params.recipientType === NotificationActorType.PARTNER
+          ? '/dashboard/partenaire'
           : '/home',
         resourceType:  'wallet',
         resourceId:    params.walletId,
@@ -860,6 +1005,10 @@ export class NotificationEventService {
           ? '/dashboard/livreur/revenus'
           : params.recipientType === NotificationActorType.CORRESPONDENT
           ? '/dashboard/correspondant'
+          /* BUG CORRIGÉ — voir notifyWalletOperation ci-dessus, même trou
+           * pour PARTNER (un retrait de commission redirigeait vers '/home'). */
+          : params.recipientType === NotificationActorType.PARTNER
+          ? '/dashboard/partenaire'
           : '/home',
         resourceType:  'retrait',
         resourceId:    params.retraitId,
@@ -895,7 +1044,9 @@ export class NotificationEventService {
         priority:      NotificationPriority.HIGH,
         title:         params.title,
         body:          params.body,
-        actionUrl:     `/commande/${params.commandeId}/litige`,
+        /* BUG CORRIGÉ — /commande/:id/litige n'existe pas côté frontend
+         * (le litige se traite via une modale sur la page de suivi). */
+        actionUrl:     `/commande/${params.commandeId}/suivi`,
         resourceType:  'dispute',
         resourceId:    params.disputeId,
         payload:       { disputeRef: params.disputeRef, commandeRef: params.commandeRef, status: params.status },
@@ -929,6 +1080,10 @@ export class NotificationEventService {
           ? '/dashboard/livreur/revenus'
           : params.recipientType === NotificationActorType.CORRESPONDENT
           ? '/dashboard/correspondant'
+          /* BUG CORRIGÉ — voir notifyWalletOperation : PARTNER manquait ici
+           * aussi (commission créditée → redirection vers '/home'). */
+          : params.recipientType === NotificationActorType.PARTNER
+          ? '/dashboard/partenaire'
           : '/home',
         resourceType:  'commission',
         resourceId:    params.commandeId,
@@ -959,7 +1114,9 @@ export class NotificationEventService {
         priority:      params.severity === 'CRITICAL' ? NotificationPriority.URGENT : NotificationPriority.HIGH,
         title:         params.title,
         body:          params.body,
-        actionUrl:     '/admin/dashboard',
+        /* BUG CORRIGÉ — '/admin/dashboard' n'existe pas (router.tsx expose
+         * '/dashboard/admin/*', pas '/admin/dashboard'). */
+        actionUrl:     '/dashboard/admin',
         resourceType:  'system_alert',
         resourceId:    params.alertType,
         payload:       params.metadata,
@@ -1009,7 +1166,9 @@ export class NotificationEventService {
         priority:      NotificationPriority.HIGH,
         title:         'Nouvelle demande de validation',
         body:          `${params.acteurNom} demande la validation de son compte ${labelType}.`,
-        actionUrl:     '/dashboard/administrateur',
+        /* BUG CORRIGÉ — '/dashboard/administrateur' n'existe pas
+         * (router.tsx expose '/dashboard/admin/*', pas '/dashboard/administrateur'). */
+        actionUrl:     '/dashboard/admin',
         groupKey:      `admin.validation.request:${params.adminProfileId}`,
         resourceType:  'validation',
         resourceId:    params.userId,
@@ -1043,7 +1202,8 @@ export class NotificationEventService {
         priority:      isCritical ? NotificationPriority.URGENT : NotificationPriority.HIGH,
         title:         isCritical ? `Signalement critique ⚠️` : `Nouveau signalement`,
         body:          `"${params.title}" requiert votre attention.`,
-        actionUrl:     '/dashboard/administrateur',
+        /* BUG CORRIGÉ — voir notifyAdminValidationRequest ci-dessus. */
+        actionUrl:     '/dashboard/admin',
         groupKey:      `admin.signalement.new:${params.adminProfileId}`,
         resourceType:  'report',
         resourceId:    params.reportId,
@@ -1074,7 +1234,9 @@ export class NotificationEventService {
         priority:      NotificationPriority.HIGH,
         title:         'Compte validé ✅',
         body:          `Votre compte a été validé par l'administrateur. Bienvenue sur Shopi !`,
-        actionUrl:     '/dashboard',
+        /* BUG CORRIGÉ — '/dashboard' seul (sans segment de rôle) n'existe
+         * pas côté frontend. */
+        actionUrl:     this.resolveOwnAccountUrl(params.recipientType),
         resourceType:  'account',
         resourceId:    params.recipientId,
       });
@@ -1108,6 +1270,134 @@ export class NotificationEventService {
       });
     } catch (err) {
       this.logger.error('notifyActeurAccountRejected failed', err);
+    }
+  }
+
+  /**
+   * Notifie l'acteur que son compte, jusque-là actif, vient d'être
+   * suspendu par l'administrateur (action de modération — distincte du
+   * refus d'une demande d'inscription, voir notifyActeurAccountRejected).
+   *
+   * recipientId = profileId de l'acteur
+   */
+  async notifyActeurAccountSuspended(params: {
+    recipientType: NotificationActorType;
+    recipientId:   string;
+    motif?:        string | null;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.ADMIN,
+        actorId:       null,
+        type:          NotificationType.ACCOUNT_SUSPENDED,
+        priority:      NotificationPriority.URGENT,
+        title:         'Compte suspendu 🚫',
+        body:          params.motif
+          ? `Votre compte a été suspendu par l'administrateur. Motif : ${params.motif}`
+          : `Votre compte a été suspendu par l'administrateur. Contactez le support pour plus d'informations.`,
+        actionUrl:     '/support',
+        resourceType:  'account',
+        resourceId:    params.recipientId,
+      });
+    } catch (err) {
+      this.logger.error('notifyActeurAccountSuspended failed', err);
+    }
+  }
+
+  /**
+   * Notifie l'acteur qu'il a reçu un avertissement de l'administrateur
+   * suite à un signalement — sans suspension du compte.
+   *
+   * recipientId = profileId de l'acteur
+   */
+  async notifyActeurAccountWarned(params: {
+    recipientType: NotificationActorType;
+    recipientId:   string;
+    motif?:        string | null;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.ADMIN,
+        actorId:       null,
+        type:          NotificationType.SYSTEM_ANNOUNCEMENT,
+        priority:      NotificationPriority.URGENT,
+        title:         'Avertissement ⚠️',
+        body:          params.motif
+          ? `Vous avez reçu un avertissement de l'administrateur. Motif : ${params.motif}`
+          : `Vous avez reçu un avertissement de l'administrateur suite à un signalement.`,
+        actionUrl:     '/support',
+        resourceType:  'account',
+        resourceId:    params.recipientId,
+      });
+    } catch (err) {
+      this.logger.error('notifyActeurAccountWarned failed', err);
+    }
+  }
+
+  /**
+   * Notifie l'acteur que son compte, précédemment suspendu, vient d'être
+   * réactivé par l'administrateur.
+   *
+   * recipientId = profileId de l'acteur
+   */
+  async notifyActeurAccountReactivated(params: {
+    recipientType: NotificationActorType;
+    recipientId:   string;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.ADMIN,
+        actorId:       null,
+        type:          NotificationType.ACCOUNT_APPROVED,
+        priority:      NotificationPriority.HIGH,
+        title:         'Compte réactivé ✅',
+        body:          `Votre compte a été réactivé par l'administrateur. Vous pouvez de nouveau utiliser Shopi normalement.`,
+        actionUrl:     this.resolveOwnAccountUrl(params.recipientType),
+        resourceType:  'account',
+        resourceId:    params.recipientId,
+      });
+    } catch (err) {
+      this.logger.error('notifyActeurAccountReactivated failed', err);
+    }
+  }
+
+  /**
+   * Notifie le partenaire recruteur qu'un acteur qu'il a recruté (via son
+   * code de création) vient d'activer son compte — validé par un admin.
+   *
+   * Type SYSTEM_ANNOUNCEMENT réutilisé volontairement (même motif que
+   * notifyTeamPermissionChanged ci-dessus) : pas de valeur d'enum dédiée
+   * pour éviter le risque d'ALTER TYPE en production.
+   *
+   * recipientId = Partner.id (profileId), PAS le userId.
+   */
+  async notifyPartnerActeurActivated(params: {
+    recipientId: string;
+    acteurNom:   string;
+    acteurType:  'entreprise' | 'livreur';
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: NotificationActorType.PARTNER,
+        recipientId:   params.recipientId,
+        actorType:     NotificationActorType.SYSTEM,
+        actorId:       null,
+        type:          NotificationType.SYSTEM_ANNOUNCEMENT,
+        priority:      NotificationPriority.NORMAL,
+        title:         'Nouvel acteur activé 🎉',
+        body:          `${params.acteurNom} (${params.acteurType}) a activé son compte — recruté par vous.`,
+        actionUrl:     '/dashboard/partenaire',
+        resourceType:  'acteur',
+        resourceId:    params.recipientId,
+      });
+    } catch (err) {
+      this.logger.error('notifyPartnerActeurActivated failed', err);
     }
   }
 

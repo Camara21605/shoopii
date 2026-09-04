@@ -11,6 +11,7 @@ import { TrendingProduct } from 'src/database/entities/entreprise.table/trending
 import { ProductCooccurrence } from 'src/database/entities/entreprise.table/product-cooccurrence.entity';
 import { CommandeItem } from 'src/database/entities/commande/commande-item.entity';
 import { ProductLike } from 'src/database/entities/entreprise.table/product-like.entity';
+import { Client } from 'src/database/entities/profiles/client-profile.entity';
 
 import { ExploreController } from './explore.controller';
 import { ExploreService } from './explore.service';
@@ -19,7 +20,7 @@ import { ExploreScheduler } from './explore.scheduler';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Product, Category, TrendingProduct, ProductCooccurrence, CommandeItem, ProductLike,
+      Product, Category, TrendingProduct, ProductCooccurrence, CommandeItem, ProductLike, Client,
     ]),
   ],
   controllers: [ExploreController],

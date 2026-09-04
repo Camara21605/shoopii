@@ -640,16 +640,16 @@ export class CallService {
         if (calleeBusy) {
           await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.BUSY, manager);
           await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_BUSY,
-            'Utilisateur occupé', 'La personne que vous appelez est déjà en appel.');
+            'Utilisateur occupé', 'La personne que vous appelez est déjà en appel.', dto.conversationId);
           return { outcome: 'busy' as const };
         }
 
         if (!online) {
           await this.recordShortCircuit(callerUserId, dto, CallHistoryStatus.MISSED, manager);
           await this.notifyCaller(callerUserId, dto.calleeUserId, NotificationType.CALL_OFFLINE,
-            'Utilisateur hors ligne', 'La personne que vous appelez est actuellement hors ligne.');
+            'Utilisateur hors ligne', 'La personne que vous appelez est actuellement hors ligne.', dto.conversationId);
           await this.notifyCallee(dto.calleeUserId, callerUserId, NotificationType.CALL_MISSED,
-            'Appel manqué', 'Vous avez manqué un appel.');
+            'Appel manqué', 'Vous avez manqué un appel.', dto.conversationId);
           return { outcome: 'offline' as const };
         }
 
@@ -772,7 +772,7 @@ export class CallService {
       }
       await this.finalizeCall(call, CallHistoryStatus.REJECTED, manager);
       await this.notifyCaller(call.callerId, call.calleeId, NotificationType.CALL_REJECTED,
-        'Appel refusé', 'Votre appel a été refusé.');
+        'Appel refusé', 'Votre appel a été refusé.', call.conversationId);
     });
   }
 
@@ -790,7 +790,7 @@ export class CallService {
       /* Un appel jamais décroché qui se termine = manqué pour le destinataire. */
       if (!wasConnected) {
         await this.notifyCallee(call.calleeId, call.callerId, NotificationType.CALL_MISSED,
-          'Appel manqué', 'Vous avez manqué un appel.');
+          'Appel manqué', 'Vous avez manqué un appel.', call.conversationId);
       }
     });
   }
@@ -1099,20 +1099,23 @@ export class CallService {
   private async notifyCaller(
     callerUserId: string, calleeUserId: string,
     type: NotificationType, title: string, body: string,
+    conversationId?: string | null,
   ): Promise<void> {
-    await this.notify(callerUserId, calleeUserId, type, title, body);
+    await this.notify(callerUserId, calleeUserId, type, title, body, conversationId);
   }
 
   private async notifyCallee(
     calleeUserId: string, callerUserId: string,
     type: NotificationType, title: string, body: string,
+    conversationId?: string | null,
   ): Promise<void> {
-    await this.notify(calleeUserId, callerUserId, type, title, body);
+    await this.notify(calleeUserId, callerUserId, type, title, body, conversationId);
   }
 
   private async notify(
     recipientUserId: string, actorUserId: string,
     type: NotificationType, title: string, body: string,
+    conversationId?: string | null,
   ): Promise<void> {
     try {
       const recipient = await this.resolveNotificationRecipient(recipientUserId);
@@ -1128,7 +1131,14 @@ export class CallService {
         priority:      NotificationPriority.NORMAL,
         title,
         body,
-        resourceType:  'call',
+        /* BUG CORRIGÉ — sans conversationId, le clic sur une notif d'appel
+         * ne pouvait retomber que sur /messagerie en général (aucune
+         * conversation précise) — voir NotificationEventService pour
+         * l'équivalent message.received. Ici, actionUrl n'est PAS fixé :
+         * resourceId suffit, resolveNavTarget() (frontend) construit déjà
+         * /messagerie?conv={resourceId} pour resourceType='conversation'. */
+        resourceType:  conversationId ? 'conversation' : 'call',
+        resourceId:    conversationId ?? null,
       });
     } catch (e) {
       /* Une notification ratée ne doit jamais faire échouer l'appel lui-même. */

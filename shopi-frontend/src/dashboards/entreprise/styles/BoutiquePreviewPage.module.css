@@ -1,0 +1,110 @@
+/* ============================================================
+ * BoutiquePreviewPage.module.css
+ *
+ * BUG CORRIGÉ — toute cette page était en styles inline, sans la
+ * moindre media query : le bandeau (retour + nom + onglets Aperçu/
+ * Localisation + actions) est une seule ligne flex sans flex-wrap, et
+ * l'onglet Localisation affiche formulaire + carte cote à cote avec une
+ * largeur de formulaire figée (340px) — les deux débordaient ou se
+ * compressaient illisiblement sur petit écran, sans aucun repli.
+ * ============================================================ */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 72px);
+}
+
+/* ── Bandeau ── */
+.bandeau {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  row-gap: 8px;
+  padding: 10px 20px;
+  min-height: 54px;
+  background: var(--white);
+  border-bottom: 1px solid var(--bdr);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.bandeauLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0; /* autorise le nom à tronquer plutôt que déborder */
+}
+
+.bandeauNames { min-width: 0; }
+.bandeauName {
+  font-size: 13px; font-weight: 800; color: var(--navy);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bandeauSub { font-size: 11px; color: var(--t3); }
+
+.bandeauTabs {
+  display: flex;
+  background: var(--g100);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.bandeauActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ≤720px : le nom de boutique + retour occupent leur propre ligne,
+   onglets et actions se répartissent sur la suivante, centrés. */
+@media (max-width: 720px) {
+  .bandeau { padding: 10px 14px; }
+  .bandeauLeft { flex: 1 1 100%; }
+  .bandeauTabs { flex: 1 1 auto; justify-content: center; }
+}
+
+/* ≤480px : sous-titre masqué (le libellé de l'onglet actif suffit),
+   bouton Retour réduit à l'icône seule — gagne la place nécessaire
+   pour que le nom de boutique reste lisible. */
+@media (max-width: 480px) {
+  .bandeauSub { display: none; }
+  .bandeauBackLabel { display: none; }
+  .bandeauTabs button { padding: 6px 10px !important; font-size: 11px !important; }
+}
+
+/* ── Onglet Localisation : formulaire + carte ── */
+.localisationWrap {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.localisationForm {
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--bdr);
+  background: var(--white);
+  overflow: hidden;
+}
+
+.localisationMap {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+/* ≤860px : le formulaire (précis, saisie au clavier) passe au-dessus,
+   la carte en dessous avec une hauteur minimale confortable pour
+   glisser le marqueur au doigt — plus de largeur figée de 340px, qui
+   ne laissait quasiment aucune place à la carte sur mobile/tablette. */
+@media (max-width: 860px) {
+  .localisationWrap { flex-direction: column; overflow-y: auto; }
+  .localisationForm { width: 100%; border-right: none; border-bottom: 1px solid var(--bdr); }
+  .localisationMap { min-height: 380px; }
+}

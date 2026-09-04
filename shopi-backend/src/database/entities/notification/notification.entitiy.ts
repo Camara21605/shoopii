@@ -217,6 +217,9 @@ export enum NotificationType {
   PROMO_USED            = 'promo.used',             // un client a utilisé un code promo
   PROMO_LIMIT_REACHED   = 'promo.limit_reached',    // limite d'utilisations atteinte
 
+  // ── CRM ENTREPRISE ─────────────────────────────────────────
+  CRM_MESSAGE           = 'crm.message',            // message envoyé par une entreprise à ses clients (newsletter VIP, offre fidélité, relance)
+
   // ── PAIEMENTS ──────────────────────────────────────────────
   PAYMENT_RECEIVED      = 'payment.received',       // paiement reçu (entreprise)
   PAYMENT_SENT          = 'payment.sent',           // commission versée (livreur/correspondant)

@@ -14,23 +14,34 @@ interface Props {
   onSwitch: (id: PanelId) => void;
 }
 
-/* ── Calcul du score ── */
+/* ── Calcul du score ──
+ * "Mot de passe fort" a été retiré : un mot de passe est haché dès son
+ * enregistrement (voir SecuriteService.changePassword), sa force en clair
+ * n'est jamais connue côté serveur — l'item était donc toujours "ok" sans
+ * rien vérifier de réel. "Téléphone vérifié" reste affiché à titre
+ * informatif (voir `indisponibles` plus bas) mais sort du calcul du score :
+ * aucun flux de vérification SMS n'existe encore, l'item ne pouvait donc
+ * jamais devenir vert pour personne — le compter aurait plafonné
+ * injustement le score maximum atteignable de tout le monde à 85/100. */
 function calcScore(sec: SecuriteData, t: TFunction): {
   score: number;
   niveau: string;
   color: string;
   items: { label: string; ok: boolean }[];
+  indisponibles: { label: string }[];
 } {
   const items = [
-    { label: t('settingsPage.securityBanner.items.motDePasseFort'),        ok: true                         }, // 20 pts
-    { label: t('settingsPage.securityBanner.items.emailVerifie'),          ok: sec.emailVerified            }, // 20 pts
-    { label: t('settingsPage.securityBanner.items.telephoneVerifie'),      ok: sec.phoneVerified            }, // 15 pts
-    { label: t('settingsPage.securityBanner.items.twoFaActive'),           ok: sec.twoFaEnabled             }, // 25 pts
-    { label: t('settingsPage.securityBanner.items.questionsSecurite'),     ok: sec.questionsConfigurees >= 2 }, // 10 pts
-    { label: t('settingsPage.securityBanner.items.codesSecours'),          ok: sec.codesSecours > 0         }, // 10 pts
+    { label: t('settingsPage.securityBanner.items.emailVerifie'),          ok: sec.emailVerified            }, // 25 pts
+    { label: t('settingsPage.securityBanner.items.twoFaActive'),           ok: sec.twoFaEnabled             }, // 40 pts
+    { label: t('settingsPage.securityBanner.items.questionsSecurite'),     ok: sec.questionsConfigurees >= 2 }, // 15 pts
+    { label: t('settingsPage.securityBanner.items.codesSecours'),          ok: sec.codesSecours > 0         }, // 20 pts
   ];
-  const weights = [20, 20, 15, 25, 10, 10];
+  const weights = [25, 40, 15, 20];
   const score   = items.reduce((sum, it, i) => sum + (it.ok ? weights[i] : 0), 0);
+
+  const indisponibles = [
+    { label: t('settingsPage.securityBanner.items.telephoneVerifie') },
+  ];
 
   let niveau: string;
   let color:  string;
@@ -39,7 +50,7 @@ function calcScore(sec: SecuriteData, t: TFunction): {
   else if (score >= 50) { niveau = t('settingsPage.securityBanner.niveaux.moyen'); color = '#FB923C'; }
   else                  { niveau = t('settingsPage.securityBanner.niveaux.faible'); color = '#F87171'; }
 
-  return { score, niveau, color, items };
+  return { score, niveau, color, items, indisponibles };
 }
 
 export default function SecurityScoreBanner({ onSwitch }: Props) {
@@ -54,9 +65,9 @@ export default function SecurityScoreBanner({ onSwitch }: Props) {
   }, []);
 
   /* Valeurs par défaut pendant le chargement */
-  const { score, niveau, color, items } = securite
+  const { score, niveau, color, items, indisponibles } = securite
     ? calcScore(securite, t)
-    : { score: 0, niveau: '…', color: '#94a3b8', items: [] };
+    : { score: 0, niveau: '…', color: '#94a3b8', items: [], indisponibles: [] };
 
   const r      = 34;
   const circ   = 2 * Math.PI * r;
@@ -109,6 +120,12 @@ export default function SecurityScoreBanner({ onSwitch }: Props) {
           {items.map(it => (
             <span key={it.label} className={`${s.secItem} ${it.ok ? s.ok : s.warn}`}>
               <i className={`fas ${it.ok ? 'fa-check' : 'fa-triangle-exclamation'}`} />
+              {' '}{it.label}
+            </span>
+          ))}
+          {indisponibles.map(it => (
+            <span key={it.label} className={`${s.secItem} ${s.neutral}`} title={t('settingsPage.securityBanner.bientotDisponible')}>
+              <i className="fas fa-lock" />
               {' '}{it.label}
             </span>
           ))}

@@ -15,9 +15,11 @@
  *     un :id si on avait choisi /public/produits/explore).
  * ============================================================ */
 
-import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Query, Req, UseGuards } from '@nestjs/common';
+import type { Request } from 'express';
 import { ApiOperation, ApiQuery, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ExploreService } from './explore.service';
+import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt.guard';
 
 @ApiTags('Explore')
 @Controller('public/explore')
@@ -77,6 +79,15 @@ export class ExploreController {
     @Query('limit') limit?: string,
   ) {
     return this.exploreService.proches(ville, limit ? parseInt(limit, 10) : undefined);
+  }
+
+  @Get('pour-vous')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Recommandations personnalisées (likes + achats du client) — repli sur les tendances si non connecté ou perso désactivé' })
+  @ApiQuery({ name: 'limit', required: false })
+  pourVous(@Req() req: Request, @Query('limit') limit?: string) {
+    const userId = (req as any).user?.id as string | undefined;
+    return this.exploreService.pourVous(userId, limit ? parseInt(limit, 10) : undefined);
   }
 
   @Get(':id/souvent-achete-avec')

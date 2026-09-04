@@ -2,14 +2,14 @@
  * FICHIER : src/dashboards/administrateur/pages/PartenairesPage.tsx
  * ================================================================ */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import styles from '../styles/PartenairesPage.module.css';
 import { apiFetch } from '../../../shared/services/apiFetch';
 import Pagination from '../components/Pagination';
 import type { PartenaireTier } from '../data/types';
 
 interface PartenairesPageProps {
-  onSanction: (cible: string) => void;
+  onSanction: (targetUserId: string, cible: string) => void;
   onToast:    (msg: string, type?: 's' | 'i' | 'w') => void;
 }
 
@@ -21,24 +21,36 @@ export default function PartenairesPage({ onSanction, onToast }: PartenairesPage
   const [page,      setPage]      = useState(1);
   const [data,      setData]      = useState<{ list: any[]; top3: any[]; counts: Record<string, number>; total: number } | null>(null);
   const [loading,   setLoading]   = useState(true);
+  const abortRef = useRef<AbortController | null>(null);
+
+  /* Annule la requête précédente encore en vol avant d'en lancer une
+   * nouvelle — sans ça, taper vite dans la recherche peut faire revenir
+   * une ancienne réponse APRÈS la plus récente et afficher des résultats
+   * périmés (les requêtes ne sont pas garanties de répondre dans l'ordre). */
+  const load = useCallback(() => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setLoading(true);
+    return apiFetch('/dashboard/admin/partenaires', {
+      params: {
+        tier:   filtre !== 'all' ? filtre : undefined,
+        search: recherche.trim() || undefined,
+        page:   String(page),
+        limit:  '20',
+      },
+      signal: controller.signal,
+    })
+      .then(d => setData(d as any))
+      .catch(e => { if (e?.name !== 'AbortError') console.error(e); })
+      .finally(() => { if (abortRef.current === controller) setLoading(false); });
+  }, [filtre, recherche, page]);
 
   useEffect(() => {
-    setLoading(true);
-    const t = setTimeout(() => {
-      apiFetch('/dashboard/admin/partenaires', {
-        params: {
-          tier:   filtre !== 'all' ? filtre : undefined,
-          search: recherche.trim() || undefined,
-          page:   String(page),
-          limit:  '20',
-        },
-      })
-        .then(d => setData(d as any))
-        .catch(console.error)
-        .finally(() => setLoading(false));
-    }, recherche ? 300 : 0);
+    const t = setTimeout(load, recherche ? 300 : 0);
     return () => clearTimeout(t);
-  }, [filtre, recherche, page]);
+  }, [load, recherche]);
 
   const changeFiltre = (f: 'all' | PartenaireTier) => { setFiltre(f); setPage(1); };
   const changeRecherche = (v: string) => { setRecherche(v); setPage(1); };
@@ -114,14 +126,18 @@ export default function PartenairesPage({ onSanction, onToast }: PartenairesPage
                 <div className={styles.stat}><div className={styles.sv}>{p.confiance}</div><div className={styles.sl}>Confiance</div></div>
               </div>
               <div className={styles.foot}>
-                <span className={`${styles.state} ${p.statut === 'act' ? styles.stateAct : styles.statePend}`}>
-                  {p.statut === 'act' ? 'Actif' : 'En observation'}
+                <span className={`${styles.state} ${
+                  p.statut === 'act' ? styles.stateAct : p.statut === 'susp' ? styles.stateSusp : styles.statePend
+                }`}>
+                  {p.statut === 'act' ? 'Actif' : p.statut === 'susp' ? 'Suspendu' : 'En observation'}
                 </span>
                 <div className={styles.footBtns}>
                   <button className={styles.btn} onClick={() => onToast('👤 Profil de ' + p.nom, 'i')}>Gérer</button>
-                  <button className={styles.banBtn} title="Suspendre" onClick={() => onSanction(p.nom)}>
-                    <i className="fas fa-ban" />
-                  </button>
+                  {p.statut !== 'susp' && (
+                    <button className={styles.banBtn} title="Suspendre" onClick={() => onSanction(p.userId, p.nom)}>
+                      <i className="fas fa-ban" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

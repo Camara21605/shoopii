@@ -126,6 +126,11 @@ function getPermissionGroups(t: TFunction) {
       actions: [{ key: 'view', label: t('equipe.permGroups.returns.view') }, { key: 'process', label: t('equipe.permGroups.returns.process') }] },
     { key: 'wallet',     label: t('equipe.permGroups.wallet.label'),    icon: 'fa-wallet',
       actions: [{ key: 'view', label: t('equipe.permGroups.wallet.view') }, { key: 'withdraw', label: t('equipe.permGroups.wallet.withdraw') }] },
+    { key: 'fournisseurs', label: t('equipe.permGroups.fournisseurs.label'), icon: 'fa-industry',
+      actions: [{ key: 'view', label: t('equipe.permGroups.fournisseurs.view') }, { key: 'connect', label: t('equipe.permGroups.fournisseurs.connect') },
+                { key: 'disconnect', label: t('equipe.permGroups.fournisseurs.disconnect') }] },
+    { key: 'boutique', label: t('equipe.permGroups.boutique.label'), icon: 'fa-store',
+      actions: [{ key: 'view', label: t('equipe.permGroups.boutique.view') }, { key: 'edit', label: t('equipe.permGroups.boutique.edit') }] },
   ] as const;
 }
 
@@ -279,18 +284,41 @@ export default function EquipePage() {
     setPermState(m.permissions ? JSON.parse(JSON.stringify(m.permissions)) : {});
   };
 
-  const savePermissions = async () => {
+  /* Ferme le panneau et resynchronise la liste des membres (badges de
+   * permissions affichés sur chaque ligne) — un seul appel réseau à la
+   * fermeture plutôt qu'à chaque case cochée (voir toggleAction), pour ne
+   * pas spammer /company-team/members pendant une session de clics rapides. */
+  const closePermPanel = () => {
+    setPermTarget(null);
+    loadMembers();
+  };
+
+  /* Enregistre CHAQUE case cochée/décochée immédiatement — plus de bouton
+   * "Enregistrer" à cliquer séparément (voir le footer du panneau plus
+   * bas). Optimiste : la case bascule tout de suite, annulée si le PATCH
+   * échoue. N'envoie que le champ modifié (deep merge côté backend, voir
+   * CompanyTeamPermissionService.update) plutôt que tout permState — évite
+   * qu'un envoi en échouerait un autre écrase une case cochée entre-temps
+   * par un clic suivant. */
+  const toggleAction = async (groupKey: string, actionKey: string, value: boolean) => {
     if (!permTarget) return;
+    const prevValue = permState[groupKey]?.[actionKey] ?? false;
+
+    setPermState(prev => ({
+      ...prev,
+      [groupKey]: { ...(prev[groupKey] ?? {}), [actionKey]: value },
+    }));
     setSavingPerm(true);
     try {
       await apiFetch(`/company-team/members/${permTarget.id}/permissions`, {
         method: 'PATCH',
-        body:   { permissions: permState },
+        body:   { permissions: { [groupKey]: { [actionKey]: value } } },
       });
-      pop(t('equipe.toast.permissionsUpdated'), 's');
-      setPermTarget(null);
-      loadMembers();
     } catch (err: any) {
+      setPermState(prev => ({
+        ...prev,
+        [groupKey]: { ...(prev[groupKey] ?? {}), [actionKey]: prevValue },
+      }));
       pop(err.message ?? t('equipe.toast.permissionsUpdateError'), 'e');
     } finally {
       setSavingPerm(false);
@@ -659,7 +687,7 @@ export default function EquipePage() {
        * PANNEAU — Permissions
        * ══════════════════════════════════════════════ */}
       {permTarget && (
-        <div className="eq-overlay" onClick={() => setPermTarget(null)}>
+        <div className="eq-overlay" onClick={closePermPanel}>
           <div className="eq-panel" onClick={e => e.stopPropagation()}>
             <div className="eq-panel-header">
               <div>
@@ -668,13 +696,15 @@ export default function EquipePage() {
                 </div>
                 <div className="eq-panel-sub">
                   {permTarget.firstName} {permTarget.lastName}
+                  {savingPerm && <i className="fas fa-circle-notch fa-spin" style={{ marginLeft: 8 }} />}
                 </div>
               </div>
-              <button className="eq-close" onClick={() => setPermTarget(null)}>
+              <button className="eq-close" onClick={closePermPanel}>
                 <i className="fas fa-xmark" />
               </button>
             </div>
             <div className="eq-panel-body">
+              {/* Chaque case s'enregistre immédiatement au clic — voir toggleAction */}
               {PERMISSION_GROUPS.map(group => (
                 <div key={group.key} className="eq-perm-group">
                   <div className="eq-perm-group-title">
@@ -688,15 +718,7 @@ export default function EquipePage() {
                           <input
                             type="checkbox"
                             checked={checked}
-                            onChange={e => {
-                              setPermState(prev => ({
-                                ...prev,
-                                [group.key]: {
-                                  ...(prev[group.key] ?? {}),
-                                  [action.key]: e.target.checked,
-                                },
-                              }));
-                            }}
+                            onChange={e => toggleAction(group.key, action.key, e.target.checked)}
                           />
                           <span className="eq-perm-slider" />
                           <span className="eq-perm-label">{action.label}</span>
@@ -708,17 +730,8 @@ export default function EquipePage() {
               ))}
             </div>
             <div className="eq-panel-footer">
-              <button className="eq-btn-cancel" onClick={() => setPermTarget(null)}>
-                {t('equipe.permPanel.cancel')}
-              </button>
-              <button
-                className="eq-btn-save"
-                onClick={savePermissions}
-                disabled={savingPerm}
-              >
-                {savingPerm
-                  ? <i className="fas fa-circle-notch fa-spin" />
-                  : t('equipe.permPanel.save')}
+              <button className="eq-btn-save" onClick={closePermPanel}>
+                {t('equipe.permPanel.close')}
               </button>
             </div>
           </div>

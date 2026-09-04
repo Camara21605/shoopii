@@ -10,10 +10,12 @@ import {
 
 import { User } from '../user.entity';
 import { Admin } from './admin-profile.entity';
-import { Company } from './entreprise-profile.entity';
+import { Company, VerificationStatus } from './entreprise-profile.entity';
 import { Delivery } from './livreur-profile.entity';
 import { Correspondent } from './correspondant-profile.entity';
 import { CreationCode } from '../code-creation.entity';
+
+export { VerificationStatus };
 
 /* ============================================================
  * ENUM
@@ -173,8 +175,19 @@ export class Partner {
   @Column({ type: 'varchar', length: 20, nullable: true })
   twoFaMethod!: string | null;
 
-  /** Secret TOTP (Base32) — ne jamais exposer au frontend une fois confirmé. */
-  @Column({ type: 'varchar', length: 64, nullable: true })
+  /**
+   * Secret TOTP — chiffré au repos (AES-256-GCM, voir totp-crypto.util.ts).
+   *
+   * BUG CORRIGÉ — `select: false` manquait ici alors que les 5 autres rôles
+   * (Admin, Company, Delivery, Correspondent, Client) l'ont tous : ce champ
+   * était chargé par défaut sur CHAQUE `partnerRepo.findOne(...)` (profil,
+   * paramètres, etc.), pas seulement là où TwoFaService en a besoin.
+   *
+   * Longueur portée à 255 (était 64) — le format chiffré ("v1:" + base64
+   * de iv+authTag+ciphertext) fait ~83 caractères pour un secret standard
+   * de 20 octets, largement au-delà de l'ancienne limite.
+   */
+  @Column({ type: 'varchar', length: 255, nullable: true, select: false })
   twoFaSecret!: string | null;
 
   /* ============================================================
@@ -201,6 +214,34 @@ export class Partner {
    */
   @Column({ type: 'text', nullable: true })
   preferences!: string | null;
+
+  /* ============================================================
+   * DOCUMENTS & VÉRIFICATION KYC
+   *
+   * Stocke uniquement le public_id Cloudinary (jamais une URL), comme
+   * Company.ownerIdDocument/documentRccm/documentBancaire — voir
+   * DocumentsParametresService (module entreprise), pattern répliqué ici.
+   * CNI + justificatif de domicile sont obligatoires : voir la garde de
+   * retrait dans WalletService.applyOperation() qui bloque le retrait de
+   * commission tant que ces deux documents ne sont pas fournis.
+   * ============================================================ */
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  documentCni!: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  documentDomicile!: string | null;
+
+  /** Justificatif d'activité — optionnel, ne bloque jamais le retrait. */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  documentActivite!: string | null;
+
+  @Column({
+    type: 'enum',
+    enum: VerificationStatus,
+    default: VerificationStatus.PENDING,
+  })
+  verificationStatus!: VerificationStatus;
 
   /* ============================================================
    * STATS

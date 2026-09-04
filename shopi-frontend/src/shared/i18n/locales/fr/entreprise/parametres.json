@@ -100,6 +100,9 @@
       "expressSub": "Livraison < 2h avec supplément tarifaire",
       "zonesTitle": "Zones de livraison",
       "zonesSubtitle": "Sélectionnez les communes que vous desservez",
+      "zonesChargement": "Chargement de vos zones…",
+      "aucuneZoneAssignee": "Aucune zone de livraison ne vous a encore été assignée. Contactez votre administrateur.",
+      "zoneAssignee": "Zone assignée : {{nom}}",
       "zonesSelectionnees_one": "{{count}} zone sélectionnée",
       "zonesSelectionnees_other": "{{count}} zones sélectionnées",
       "sauvegardeEnCours": "Sauvegarde…",
@@ -443,6 +446,11 @@
         "coverImage": "Photo de couverture",
         "returnPolicy": "Politique retour"
       }
-    }
+    },
+    "accessDenied": {
+      "title": "Accès non autorisé",
+      "message": "Vous n'avez pas accès aux paramètres. Contactez le propriétaire de la boutique pour l'obtenir."
+    },
+    "readOnly": "Lecture seule — vous pouvez consulter ces paramètres mais pas les modifier."
   }
 }
