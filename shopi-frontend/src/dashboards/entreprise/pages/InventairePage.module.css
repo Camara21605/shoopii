@@ -147,16 +147,32 @@
   grid-template-columns: 1fr 300px;
   gap: 16px;
   align-items: flex-start;
+  /* BUG CORRIGÉ (cause réelle du "pas responsive", pas juste un seuil de
+   * media query manquant) — un enfant de grid a par défaut min-width:auto,
+   * c'est-à-dire qu'il refuse de rétrécir sous la largeur intrinsèque de
+   * son contenu. Le tableau (7 colonnes, cellules en white-space:nowrap)
+   * a une largeur intrinsèque bien supérieure à un écran de téléphone :
+   * sans ce min-width:0, la PISTE de grille elle-même s'élargissait pour
+   * accueillir le tableau en entier, entraînant toute la page (cartes KPI,
+   * panneau latéral, tout) dans un scroll horizontal — le overflow-x:auto
+   * posé sur .tableWrap ne servait donc jamais, la grille ne rétrécissait
+   * jamais jusque-là. */
+  min-width: 0;
 }
 
-/* Colonne principale (tableau) */
-.colMain {}
+/* Colonne principale (tableau) — même raison que .layout ci-dessus : cet
+   enfant direct de la grille doit explicitement pouvoir rétrécir sous la
+   largeur intrinsèque du tableau qu'il contient. */
+.colMain {
+  min-width: 0;
+}
 
 /* Colonne latérale (alertes + actions) */
 .colSide {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-width: 0;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1216,6 +1232,9 @@
 
 /* ══════════════════════════════════════════════════════════════
    RESPONSIVE
+   Seuils alignés sur EntrepriseApp.css (sidebar → bottom nav à
+   640px) et ProduitsPage.module.css (mêmes seuils que le reste du
+   dashboard entreprise, pour un rendu cohérent d'une page à l'autre).
    ══════════════════════════════════════════════════════════════ */
 @media (max-width: 1100px) {
   /* Sur tablette : panneau latéral en dessous du tableau */
@@ -1229,4 +1248,48 @@
   .colSide   { grid-template-columns: 1fr; }
   .toolbar   { flex-direction: column; align-items: stretch; }
   .searchWrap { min-width: unset; }
+}
+
+@media (max-width: 640px) {
+  /* BUG CORRIGÉ — en dessous de 640px (sidebar → bottom nav, voir
+   * EntrepriseApp.css), le header titre + les 2 boutons ("Exporter
+   * CSV", "Actualiser") restaient sur une ligne avec flex-wrap seul :
+   * les boutons finissaient écrasés/tronqués sur un écran de
+   * téléphone. Les deux passent en pleine largeur, empilés. */
+  .header { align-items: stretch; }
+  .headerActions { flex-direction: column; align-items: stretch; }
+  .btnSecondaryOutline,
+  .btnRecharger { justify-content: center; width: 100%; }
+
+  .titre { font-size: 19px; }
+
+  /* Cartes stats : 2 colonnes trop étroites une fois le padding du
+   * bottom nav pris en compte — passe à 1 colonne pleine largeur. */
+  .statsGrid { grid-template-columns: 1fr; }
+  .statCard  { padding: 13px; }
+
+  /* Modale : moins de marge autour + entêtes/pieds resserrés pour
+   * laisser un maximum d'espace utile au formulaire. */
+  .overlay { padding: 12px; }
+  .modalHeader, .modalBody, .modalFooter { padding-left: 16px; padding-right: 16px; }
+  .modalFooter { flex-wrap: wrap; }
+  .modalFooter .btnSecondary,
+  .modalFooter .btnPrimary { flex: 1; justify-content: center; }
+  .reapproTotal { flex-basis: 100%; margin-right: 0; margin-bottom: 4px; }
+}
+
+@media (max-width: 420px) {
+  /* Même seuil que ProduitsPage.module.css (.statsRow) — au-delà,
+   * même 1 colonne devient étriquée avec l'icône 42px + le texte. */
+  .statVal   { font-size: 19px; }
+  .statCard  { gap: 11px; }
+  .statIcon  { width: 36px; height: 36px; font-size: 16px; }
+
+  .filtreBtn { padding: 6px 10px; font-size: 11px; }
+
+  /* Boutons "Modifier" / réappro de la ligne tableau : l'un sous
+   * l'autre plutôt que côte à côte, pour rester lisibles au doigt
+   * malgré le scroll horizontal du tableau. */
+  .actions { flex-direction: column; align-items: stretch; }
+  .btnModif { justify-content: center; }
 }
