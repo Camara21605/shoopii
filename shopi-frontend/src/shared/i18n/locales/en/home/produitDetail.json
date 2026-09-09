@@ -118,7 +118,8 @@
       "messagerieOuverteToast": "💬 Messaging opened",
       "dejaAuPanierToast": "🛒 Already in your cart — head to the cart to change the quantity",
       "ajouteToast": "✅ Added to cart!",
-      "erreurToast": "❌ {{msg}}"
+      "erreurToast": "❌ {{msg}}",
+      "previewToast": "👁️ Your shop preview — purchase unavailable here"
     },
     "infoSection": {
       "sku": "SKU: {{sku}}",
@@ -242,7 +243,8 @@
       "produitIntrouvableDesc": "This product doesn't exist or hasn't been published yet.",
       "retourAccueil": "Back to home",
       "accueil": "Home",
-      "partagerTitre": "Share this product"
+      "partagerTitre": "Share this product",
+      "retourBoutique": "Back to shop"
     }
   }
 }

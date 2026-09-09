@@ -72,22 +72,55 @@ interface Props {
   /** Absents pour les groupes de livraison (pas de conversation 1:1 sous-jacente) — voir MessagerieCore. */
   onArchiveConv?: (convId: string) => void;
   onDeleteConv?:  (convId: string) => void;
+  /** Ouvre le sélecteur de fond d'écran — préférence globale (voir useWallpaper), pas propre à cette conversation. */
+  onOpenWallpaper?: () => void;
+  /** true si un fond d'écran est actif — l'en-tête devient transparent (le motif de .window
+   *  continue derrière elle, voir ChatWindow.tsx) et ses textes/icônes passent en clair. */
+  hasWallpaper?: boolean;
+  /* BUG CORRIGÉ — "Paramètres" s'affichait comme une fenêtre modale
+   * centrée (voir SettingsPanel.tsx avant ce correctif) alors que
+   * l'utilisateur voulait le même traitement que le panneau
+   * "Informations" (colonne latérale, voir InfoPanel.tsx) : l'état
+   * settingsOpen et le rendu de SettingsPanel remontent maintenant dans
+   * MessagerieCore, au même niveau que infoPanelOpen — ChatHeader se
+   * contente de déclencher l'ouverture via ce callback. */
+  onOpenSettings?: () => void;
+  /** Description actuelle du groupe (commande ou groupe libre) — affichée/éditable
+   *  via le petit bouton d'en-tête ci-dessous. Absent pour une conversation 1:1. */
+  groupDescription?: string;
+  /** BUG CORRIGÉ — la description se modifiait via une énorme bannière profil
+   *  affichée en permanence au-dessus des messages (voir l'ancien
+   *  GroupProfileBanner de MessagesZone.tsx) ; remplacée par ce petit bouton
+   *  d'en-tête, visible uniquement pour les groupes, qui ouvre le même
+   *  panneau d'édition (voir GroupDescriptionEditor ci-dessous). */
+  onUpdateGroupDescription?: (desc: string) => void;
+  /** BUG CORRIGÉ — le badge de rôle affichait toujours "📦 Livraison", même
+   *  pour un groupe libre (voir DeliveryGroupKind.CUSTOM / Conversation.
+   *  isCustomGroup) — même correctif que ConvList.tsx / InfoPanel.tsx. */
+  isCustomGroup?: boolean;
 }
 
 // ── Composant ─────────────────────────────────────────────────
 
 export default function ChatHeader({
   convId, user, members, infoPanelOpen, onToggleInfo, onToast, onCall, onVideoCall, onMobileMenu, onJumpToMessage,
-  convPinned = false, convMuted = false, onArchiveConv, onDeleteConv,
+  convPinned = false, convMuted = false, onArchiveConv, onDeleteConv, onOpenWallpaper, hasWallpaper = false,
+  onOpenSettings, groupDescription, onUpdateGroupDescription, isCustomGroup = false,
 }: Props) {
   const { t } = useTranslation();
   const roleConfig = getRoleConfig(t);
-  const rc       = roleConfig[user.role] ?? roleConfig['client'];
-  const isImgAva = user.ava?.startsWith('http');
   const isGroupe = user.role === 'groupe';
+  /* Un groupe libre n'est pas une "Livraison" — voir isCustomGroup ci-dessus. */
+  const rc = isGroupe && isCustomGroup
+    ? { ...roleConfig['groupe'], label: t('messagerie.infoPanel.groupeLibre'), icon: '👥' }
+    : roleConfig[user.role] ?? roleConfig['client'];
+  const isImgAva = user.ava?.startsWith('http');
 
-  /* Avatars empilés — on affiche max 2 + badge "+N" */
-  const showGroupAva   = isGroupe && !!members && members.length > 0;
+  /* Avatars empilés — on affiche max 2 + badge "+N", UNIQUEMENT si le
+   * groupe n'a pas de vraie photo de profil (voir InfoPanel.GroupAvatarEditor
+   * / useDeliveryGroups.updateGroupPhoto) : une fois une photo réglée, elle
+   * prime toujours sur les initiales empilées — même règle que WhatsApp. */
+  const showGroupAva   = isGroupe && !isImgAva && !!members && members.length > 0;
   const visibleMembers = showGroupAva ? members!.slice(0, 2) : [];
   const extraCount     = showGroupAva ? Math.max(0, members!.length - 2) : 0;
 
@@ -248,8 +281,11 @@ export default function ChatHeader({
     setDetailMember(null);
   }
 
+  /* ── Édition de la description du groupe ── */
+  const [descEditorOpen, setDescEditorOpen] = useState(false);
+
   return (
-    <div className={s.header}>
+    <div className={`${s.header} ${hasWallpaper ? s.headerOnWallpaper : ''}`}>
       {/* Bouton retour liste — mobile uniquement */}
       {onMobileMenu && (
         <button className={s.hdMobileBtn} onClick={onMobileMenu} title={t('messagerie.chatHeader.conversationsTitle')}>
@@ -265,10 +301,18 @@ export default function ChatHeader({
             background: isImgAva ? undefined : (showGroupAva ? 'transparent' : user.avaColor),
             padding:    isImgAva ? 0 : undefined,
             overflow:   'hidden',
-            cursor:     showGroupAva ? 'pointer' : 'default',
+            cursor:     showGroupAva || isGroupe ? 'pointer' : 'default',
           }}
-          onClick={togglePopup}
-          title={showGroupAva ? t('messagerie.chatHeader.voirMembres') : undefined}
+          /* BUG CORRIGÉ — "il faut mettre le profil dans la barre de la
+           * conversation aussi" : une fois une vraie photo de groupe réglée
+           * (voir InfoPanel.GroupAvatarEditor), showGroupAva devient false
+           * (plus d'initiales empilées, voir plus haut) et cliquer sur
+           * l'avatar ne faisait plus RIEN. Ouvre maintenant le panneau
+           * "Informations" (même profil que celui géré depuis là), comme
+           * WhatsApp/Telegram quand on touche la photo du groupe en haut
+           * d'une conversation. */
+          onClick={showGroupAva ? togglePopup : (isGroupe ? onToggleInfo : undefined)}
+          title={showGroupAva ? t('messagerie.chatHeader.voirMembres') : isGroupe ? t('messagerie.chatHeader.informations') : undefined}
         >
           {showGroupAva ? (
             /* Initiales empilées des membres */
@@ -376,27 +420,211 @@ export default function ChatHeader({
         <button className={`${s.hdBtn} ${infoPanelOpen ? s.active : ''}`} onClick={onToggleInfo} title={t('messagerie.chatHeader.informations')}>
           <i className="fas fa-circle-info" />
         </button>
-        {!isGroupe && (
-          <div ref={optionsRef} style={{ position: 'relative' }}>
-            <button className={`${s.hdBtn} ${optionsOpen ? s.active : ''}`} onClick={() => setOptionsOpen(p => !p)} title={t('messagerie.chatHeader.plus')}>
-              <i className="fas fa-ellipsis-vertical" />
-            </button>
-            {optionsOpen && (
-              <OptionsMenu
-                pinned={pinned}
-                muted={muted}
-                togglingPin={togglingPin}
-                togglingMute={togglingMute}
-                onTogglePin={togglePin}
-                onToggleMute={toggleMute}
-                onArchive={onArchiveConv ? () => { onArchiveConv(convId); setOptionsOpen(false); } : undefined}
-                onDelete={onDeleteConv ? () => { onDeleteConv(convId); setOptionsOpen(false); } : undefined}
-              />
-            )}
-          </div>
+        {/* Petit bouton "modifier la description" — groupes uniquement, voir
+         * onUpdateGroupDescription ci-dessus (remplace l'ancienne bannière). */}
+        {isGroupe && onUpdateGroupDescription && (
+          <button
+            className={`${s.hdBtn} ${descEditorOpen ? s.active : ''}`}
+            onClick={() => setDescEditorOpen(true)}
+            title={t('messagerie.messagesZone.modifierDescription')}
+          >
+            <i className="fas fa-align-left" />
+          </button>
         )}
+        {/* BUG CORRIGÉ — le bouton "⋮" entier était masqué pour toute
+         * conversation de groupe (commande) via `{!isGroupe && ...}`.
+         * Épingler/Couper les notifications ne s'appliquent en effet pas
+         * aux groupes (aucun endpoint backend, voir OptionsMenuProps
+         * ci-dessous), mais Archive/Supprimer sont déjà correctement
+         * conditionnés sur onArchiveConv/onDeleteConv (undefined pour un
+         * groupe, voir MessagerieCore.tsx), et surtout le fond d'écran
+         * (préférence globale, pas propre à la conversation) devenait, lui,
+         * injoignable depuis une conversation de commande sans raison. Le
+         * bouton reste maintenant toujours visible ; OptionsMenu masque
+         * lui-même chaque item dont le handler est absent. */}
+        <div ref={optionsRef} style={{ position: 'relative' }}>
+          <button className={`${s.hdBtn} ${optionsOpen ? s.active : ''}`} onClick={() => setOptionsOpen(p => !p)} title={t('messagerie.chatHeader.plus')}>
+            <i className="fas fa-ellipsis-vertical" />
+          </button>
+          {optionsOpen && (
+            <OptionsMenu
+              pinned={pinned}
+              muted={muted}
+              togglingPin={togglingPin}
+              togglingMute={togglingMute}
+              onTogglePin={isGroupe ? undefined : togglePin}
+              onToggleMute={isGroupe ? undefined : toggleMute}
+              onWallpaper={onOpenWallpaper ? () => { onOpenWallpaper(); setOptionsOpen(false); } : undefined}
+              onArchive={onArchiveConv ? () => { onArchiveConv(convId); setOptionsOpen(false); } : undefined}
+              onDelete={onDeleteConv ? () => { onDeleteConv(convId); setOptionsOpen(false); } : undefined}
+              onSettings={onOpenSettings ? () => { setOptionsOpen(false); onOpenSettings(); } : undefined}
+            />
+          )}
+        </div>
       </div>
+
+      {/* Panneau d'édition de la description — groupes uniquement */}
+      {descEditorOpen && onUpdateGroupDescription && (
+        <GroupDescriptionEditor
+          initialValue={groupDescription ?? ''}
+          onSave={onUpdateGroupDescription}
+          onClose={() => setDescEditorOpen(false)}
+        />
+      )}
     </div>
+  );
+}
+
+// ── Panneau d'édition de la description du groupe ──────────────
+// BUG CORRIGÉ — ce panneau (identique) était affiché en cliquant sur une
+// énorme bannière profil empilée en permanence au-dessus des messages
+// (voir l'historique de MessagesZone.tsx) ; il ne s'ouvre plus que depuis
+// le petit bouton d'en-tête ci-dessus.
+
+interface GroupDescEditorProps {
+  initialValue: string;
+  onSave:       (desc: string) => void;
+  onClose:      () => void;
+}
+
+/* Couleur de la barre de progression selon le remplissage */
+function descProgressColor(len: number): string {
+  if (len < 350) return '#10B981';
+  if (len < 450) return '#F59E0B';
+  return '#EF4444';
+}
+
+function GroupDescriptionEditor({ initialValue, onSave, onClose }: GroupDescEditorProps) {
+  const { t } = useTranslation();
+  const [draft, setDraft] = useState(initialValue);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => { setTimeout(() => inputRef.current?.focus(), 80); }, []);
+
+  function handleSave() { onSave(draft.trim()); onClose(); }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); handleSave(); }
+    if (e.key === 'Escape') onClose();
+  }
+
+  const pct = Math.round((draft.length / 500) * 100);
+
+  return (
+    <>
+      {/* Fond semi-transparent */}
+      <div
+        onClick={onClose}
+        style={{ position: 'fixed', inset: 0, zIndex: 1200, background: 'rgba(6,15,30,.45)' }}
+      />
+
+      {/* Panneau bas */}
+      <div style={{
+        position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1201,
+        background: 'var(--white)',
+        borderTopLeftRadius: 20, borderTopRightRadius: 20,
+        padding: '0 0 env(safe-area-inset-bottom, 12px)',
+        boxShadow: '0 -6px 30px rgba(6,15,30,.18)',
+      }}>
+        {/* Poignée */}
+        <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--g200,#e5e7eb)', margin: '12px auto 0' }} />
+
+        {/* Titre */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 800, color: 'var(--navy)' }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: 8,
+              background: 'rgba(14,116,144,.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <i className="fas fa-pen-to-square" style={{ fontSize: 11, color: 'var(--teal,#0E7490)' }} />
+            </div>
+            {t('messagerie.messagesZone.modifierDescription')}
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              width: 30, height: 30, borderRadius: 8,
+              background: 'var(--g100)', border: 'none',
+              color: 'var(--t3)', fontSize: 13, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <i className="fas fa-xmark" />
+          </button>
+        </div>
+
+        {/* Textarea */}
+        <div style={{ padding: '0 18px' }}>
+          <textarea
+            ref={inputRef}
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={t('messagerie.messagesZone.adressePlaceholder')}
+            maxLength={500}
+            rows={4}
+            style={{
+              width: '100%', resize: 'none', boxSizing: 'border-box',
+              background: 'var(--g50)',
+              border: '1.5px solid var(--teal,#0E7490)',
+              borderRadius: 12, padding: '12px 14px',
+              fontSize: 14, color: 'var(--t1)', lineHeight: 1.6,
+              outline: 'none', fontFamily: 'var(--fb)',
+              boxShadow: '0 0 0 3px rgba(14,116,144,.1)',
+            }}
+          />
+        </div>
+
+        {/* Compteur + barre */}
+        <div style={{ padding: '8px 18px 0' }}>
+          <div style={{ height: 3, borderRadius: 99, background: 'var(--g100)', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', width: `${pct}%`,
+              background: descProgressColor(draft.length),
+              borderRadius: 99, transition: 'width .2s, background .3s',
+            }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: descProgressColor(draft.length) }}>
+              {draft.length} / 500
+            </span>
+          </div>
+        </div>
+
+        {/* Boutons */}
+        <div style={{ display: 'flex', gap: 10, padding: '12px 18px 16px' }}>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1, padding: '12px 0', borderRadius: 12,
+              background: 'var(--g100)', border: 'none',
+              color: 'var(--t2)', fontSize: 14, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'var(--fb)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            }}
+          >
+            <i className="fas fa-xmark" style={{ fontSize: 12 }} />
+            {t('messagerie.messagesZone.annuler')}
+          </button>
+          <button
+            onClick={handleSave}
+            style={{
+              flex: 2, padding: '12px 0', borderRadius: 12,
+              background: 'linear-gradient(135deg,#0E7490,#0c6480)',
+              border: 'none', color: '#fff',
+              fontSize: 14, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'var(--fb)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              boxShadow: '0 4px 12px rgba(14,116,144,.4)',
+            }}
+          >
+            <i className="fas fa-check" style={{ fontSize: 12 }} />
+            {t('messagerie.messagesZone.enregistrer')}
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -558,13 +786,21 @@ interface OptionsMenuProps {
   muted:         boolean;
   togglingPin:   boolean;
   togglingMute:  boolean;
-  onTogglePin:   () => void;
-  onToggleMute:  () => void;
+  /* Optionnels — absents pour une conversation de groupe (commande) :
+   * épingler/couper les notifications n'existent pas côté backend pour
+   * les groupes de livraison (voir useDeliveryGroups.ts, pinned/muted y
+   * sont figés à false, aucun endpoint PATCH .../pin ou .../mute ne
+   * s'applique à un groupe). Voir ChatHeader ci-dessus. */
+  onTogglePin?:  () => void;
+  onToggleMute?: () => void;
+  onWallpaper?:  () => void;
   onArchive?:    () => void;
   onDelete?:     () => void;
+  /** "Paramètres" — toujours disponible (voir SettingsPanel), quel que soit le type de conversation. */
+  onSettings?:   () => void;
 }
 
-function OptionsMenu({ pinned, muted, togglingPin, togglingMute, onTogglePin, onToggleMute, onArchive, onDelete }: OptionsMenuProps) {
+function OptionsMenu({ pinned, muted, togglingPin, togglingMute, onTogglePin, onToggleMute, onWallpaper, onArchive, onDelete, onSettings }: OptionsMenuProps) {
   const { t } = useTranslation();
 
   const itemStyle: React.CSSProperties = {
@@ -588,31 +824,63 @@ function OptionsMenu({ pinned, muted, togglingPin, togglingMute, onTogglePin, on
         animation: 'popupIn .18s cubic-bezier(.34,1.56,.64,1) both', padding: '6px 0',
       }}
     >
-      <button
-        style={{ ...itemStyle, opacity: togglingPin ? .6 : 1 }}
-        disabled={togglingPin}
-        onClick={onTogglePin}
-        onMouseEnter={e => (e.currentTarget.style.background = 'var(--g50)')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-      >
-        <div style={{ ...iconWrap, background: 'rgba(180,83,9,.1)', color: '#B45309' }}>
-          <i className={`fas ${pinned ? 'fa-thumbtack-slash' : 'fa-thumbtack'}`} />
-        </div>
-        {pinned ? t('messagerie.chatHeader.desepingler') : t('messagerie.chatHeader.epingler')}
-      </button>
+      {onTogglePin && (
+        <button
+          style={{ ...itemStyle, opacity: togglingPin ? .6 : 1 }}
+          disabled={togglingPin}
+          onClick={onTogglePin}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--g50)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        >
+          <div style={{ ...iconWrap, background: 'rgba(180,83,9,.1)', color: '#B45309' }}>
+            <i className={`fas ${pinned ? 'fa-thumbtack-slash' : 'fa-thumbtack'}`} />
+          </div>
+          {pinned ? t('messagerie.chatHeader.desepingler') : t('messagerie.chatHeader.epingler')}
+        </button>
+      )}
 
-      <button
-        style={{ ...itemStyle, opacity: togglingMute ? .6 : 1 }}
-        disabled={togglingMute}
-        onClick={onToggleMute}
-        onMouseEnter={e => (e.currentTarget.style.background = 'var(--g50)')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-      >
-        <div style={{ ...iconWrap, background: 'rgba(109,40,217,.1)', color: '#6D28D9' }}>
-          <i className={`fas ${muted ? 'fa-bell' : 'fa-bell-slash'}`} />
-        </div>
-        {muted ? t('messagerie.chatHeader.reactiverNotifs') : t('messagerie.chatHeader.couperNotifs')}
-      </button>
+      {onToggleMute && (
+        <button
+          style={{ ...itemStyle, opacity: togglingMute ? .6 : 1 }}
+          disabled={togglingMute}
+          onClick={onToggleMute}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--g50)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        >
+          <div style={{ ...iconWrap, background: 'rgba(109,40,217,.1)', color: '#6D28D9' }}>
+            <i className={`fas ${muted ? 'fa-bell' : 'fa-bell-slash'}`} />
+          </div>
+          {muted ? t('messagerie.chatHeader.reactiverNotifs') : t('messagerie.chatHeader.couperNotifs')}
+        </button>
+      )}
+
+      {onWallpaper && (
+        <button
+          style={itemStyle}
+          onClick={onWallpaper}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--g50)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        >
+          <div style={{ ...iconWrap, background: 'rgba(14,165,233,.1)', color: '#0EA5E9' }}>
+            <i className="fas fa-image" />
+          </div>
+          {t('messagerie.wallpaper.titre')}
+        </button>
+      )}
+
+      {onSettings && (
+        <button
+          style={itemStyle}
+          onClick={onSettings}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--g50)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        >
+          <div style={{ ...iconWrap, background: 'rgba(107,114,128,.12)', color: '#4B5563' }}>
+            <i className="fas fa-gear" />
+          </div>
+          {t('messagerie.chatHeader.parametres')}
+        </button>
+      )}
 
       {onArchive && (
         <button

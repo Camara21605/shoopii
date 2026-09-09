@@ -134,10 +134,31 @@ const LIVRAISON_INIT: LivraisonState = {
   currentSpeed: 'standard', distZone: 'local',
 };
 
-export default function ProduitPage() {
+/* BUG CORRIGÉ — "Voir ma boutique" (dashboard entreprise) montait déjà
+ * BoutiquePage directement dans l'arbre React (voir BoutiquePreviewPage.
+ * tsx) mais cliquer un produit y appelait quand même navigate('/produit/
+ * :id') : un seul <BrowserRouter> pour toute l'app → l'entreprise
+ * quittait entièrement son dashboard pour la page produit PUBLIQUE (celle
+ * des clients), sans retour possible. productIdOverride/previewOverride/
+ * onBackOverride permettent maintenant d'afficher cette même page produit
+ * SANS navigation — montée en place, dans le même panneau d'aperçu —
+ * exactement le principe déjà en place pour BoutiquePage. En aperçu,
+ * achat/panier sont aussi désactivés (voir previewOverride passé à
+ * PanierPanel/ProduitInfoSection/SimilairesSection) : un propriétaire qui
+ * prévisualise sa boutique ne doit pas pouvoir déclencher une vraie
+ * commande sur son propre produit. */
+interface Props {
+  productIdOverride?: string;
+  previewOverride?:   boolean;
+  onBackOverride?:    () => void;
+}
+
+export default function ProduitPage({ productIdOverride, previewOverride, onBackOverride }: Props = {}) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { id: produitId } = useParams<{ id: string }>();
+  const { id: produitIdFromUrl } = useParams<{ id: string }>();
+  const produitId = productIdOverride ?? produitIdFromUrl;
+  const isPreview = previewOverride ?? false;
 
   const [produitApi, setProduitApi] = useState<ProduitApi | null>(null);
   const [loading,    setLoading]    = useState(true);
@@ -197,53 +218,76 @@ export default function ProduitPage() {
 
   if (loading) return (
     <div className={styles.root}>
-      <Header onToast={showToast} onLogin={() => navigate('/login')} onRegister={() => navigate('/register')} />
+      {!isPreview && <Header onToast={showToast} onLogin={() => navigate('/login')} onRegister={() => navigate('/register')} />}
       <SkeletonPage />
-      <Footer onToast={showToast} />
+      {!isPreview && <Footer onToast={showToast} />}
     </div>
   );
 
   if (error || !produitApi) return (
     <div className={styles.root}>
-      <Header onToast={showToast} onLogin={() => navigate('/login')} onRegister={() => navigate('/register')} />
+      {!isPreview && <Header onToast={showToast} onLogin={() => navigate('/login')} onRegister={() => navigate('/register')} />}
       <div style={{ padding:'80px 20px', textAlign:'center', color:'var(--t3)' }}>
         <div style={{ fontSize:64, marginBottom:16 }}>📦</div>
         <div style={{ fontSize:18, fontWeight:700, color:'var(--navy)', marginBottom:8 }}>{t('produitDetail.page.produitIntrouvableTitre')}</div>
         <div style={{ fontSize:14, marginBottom:24 }}>
           {error ?? t('produitDetail.page.produitIntrouvableDesc')}
         </div>
-        <button onClick={() => navigate('/home')}
+        <button onClick={() => (isPreview && onBackOverride ? onBackOverride() : navigate('/home'))}
           style={{ background:'var(--navy)', color:'#fff', border:'none', borderRadius:10, padding:'10px 24px', fontWeight:700, cursor:'pointer' }}>
           {t('produitDetail.page.retourAccueil')}
         </button>
       </div>
-      <Footer onToast={showToast} />
+      {!isPreview && <Footer onToast={showToast} />}
     </div>
   );
 
   const produit          = toProduitInfo(produitApi, t);
   const shareUrl         = `https://shopi.gn/produit/${produitApi.urlSlug ?? produitApi.id}`;
   const varianteCombinee = Object.values(selectedVariants).filter(Boolean).join(' · ') || undefined;
+  /* En aperçu, "Voir la boutique" doit rester DANS le dashboard (retour à
+   * la liste de produits déjà affichée par BoutiquePreviewPage) plutôt que
+   * de naviguer vers /boutique/:id — même raison que le reste du fichier. */
+  const handleBoutiqueClick = isPreview && onBackOverride
+    ? onBackOverride
+    : () => navigate(`/boutique/${produitApi.companyId}`);
 
   return (
     <div className={styles.root}>
 
-      <Header
-        onToast={showToast}
-        onLogin={() => navigate('/login')}
-        onRegister={() => navigate('/register')}
-      />
+      {!isPreview && (
+        <Header
+          onToast={showToast}
+          onLogin={() => navigate('/login')}
+          onRegister={() => navigate('/register')}
+        />
+      )}
+
+      {isPreview && onBackOverride && (
+        <button
+          onClick={onBackOverride}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 7, margin: '14px 0 0 20px',
+            background: 'var(--g100)', border: 'none', borderRadius: 8,
+            padding: '7px 14px', fontSize: 12.5, fontWeight: 700, color: 'var(--t2)', cursor: 'pointer',
+          }}
+        >
+          <i className="fas fa-arrow-left" /> {t('produitDetail.page.retourBoutique')}
+        </button>
+      )}
 
       <main className={styles.main}>
         <div className={styles.wrap}>
 
-          <nav className={styles.breadcrumb}>
-            <a href="/home">{t('produitDetail.page.accueil')}</a>
-            <i className="fas fa-chevron-right" />
-            <span>{produit.categorie}</span>
-            <i className="fas fa-chevron-right" />
-            <span className={styles.bcCurrent}>{produit.nom}</span>
-          </nav>
+          {!isPreview && (
+            <nav className={styles.breadcrumb}>
+              <a href="/home">{t('produitDetail.page.accueil')}</a>
+              <i className="fas fa-chevron-right" />
+              <span>{produit.categorie}</span>
+              <i className="fas fa-chevron-right" />
+              <span className={styles.bcCurrent}>{produit.nom}</span>
+            </nav>
+          )}
 
           <div className={styles.layout}>
 
@@ -276,9 +320,10 @@ export default function ProduitPage() {
                   onChangeQty={handleChangeQty}
                   onToast={showToast}
                   onPartage={() => setPartageOpen(true)}
-                  onBoutique={() => navigate(`/boutique/${produitApi.companyId}`)}
+                  onBoutique={handleBoutiqueClick}
                   selectedVariants={selectedVariants}
                   onVariantsChange={setSelectedVariants}
+                  previewOverride={isPreview}
                 >
                   <div ref={livraisonRef}>
                     <LivraisonSection
@@ -323,6 +368,7 @@ export default function ProduitPage() {
                 <SimilairesSection
                   produitId={produitApi.id}
                   onToast={showToast}
+                  previewOverride={isPreview}
                 />
               </div>
             </div>
@@ -336,15 +382,16 @@ export default function ProduitPage() {
                 onChangeQty={handleChangeQty}
                 livraison={livraison}
                 onToast={showToast}
-                onBoutique={() => navigate(`/boutique/${produitApi.companyId}`)}
+                onBoutique={handleBoutiqueClick}
                 onScrollLivr={scrollToLivraison}
+                previewOverride={isPreview}
               />
             </div>
           </div>
         </div>
       </main>
 
-      <Footer onToast={showToast} />
+      {!isPreview && <Footer onToast={showToast} />}
 
       {partageOpen && (
         <ModalPartage

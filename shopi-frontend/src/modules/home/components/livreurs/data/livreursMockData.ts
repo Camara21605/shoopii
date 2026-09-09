@@ -17,6 +17,9 @@ export interface LivreurItem {
   id:             string;
   fullName:       string;
   initials:       string;
+  /** Photo réelle du livreur (Delivery.photoUrl côté backend) — quand null,
+   *  la carte retombe sur les initiales + le gradient `avatarBg`. */
+  profilePicture: string | null;
   /** Gradient CSS pour l'avatar */
   avatarBg:       string;
   /** Couleur de la bande haut de carte */
@@ -71,6 +74,7 @@ export const MOCK_LIVREURS: LivreurItem[] = [
     id:             'liv-001',
     fullName:       'Mamadou Diallo',
     initials:       'MD',
+    profilePicture: null,
     avatarBg:       'linear-gradient(135deg,var(--btn),var(--btn-h))',
     bandVariant:    'green',
     zone:           'Kaloum · Conakry',
@@ -88,6 +92,7 @@ export const MOCK_LIVREURS: LivreurItem[] = [
     id:             'liv-002',
     fullName:       'Ibrahima Bah',
     initials:       'IB',
+    profilePicture: null,
     avatarBg:       'linear-gradient(135deg,var(--btn),var(--btn-h))',
     bandVariant:    'blue',
     zone:           'Ratoma · Conakry',
@@ -105,6 +110,7 @@ export const MOCK_LIVREURS: LivreurItem[] = [
     id:             'liv-003',
     fullName:       'Fatoumata Kouyaté',
     initials:       'FK',
+    profilePicture: null,
     avatarBg:       'linear-gradient(135deg,var(--btn),var(--btn-h))',
     bandVariant:    'amber',
     zone:           'Kaloum · Conakry',
@@ -122,6 +128,7 @@ export const MOCK_LIVREURS: LivreurItem[] = [
     id:             'liv-004',
     fullName:       'Alpha Sylla',
     initials:       'AS',
+    profilePicture: null,
     avatarBg:       'linear-gradient(135deg,var(--btn),var(--btn-h))',
     bandVariant:    'purple',
     zone:           'Matam · Conakry',
@@ -139,6 +146,7 @@ export const MOCK_LIVREURS: LivreurItem[] = [
     id:             'liv-005',
     fullName:       'Sekou Oumar Camara',
     initials:       'SO',
+    profilePicture: null,
     avatarBg:       'linear-gradient(135deg,var(--btn),var(--btn-h))',
     bandVariant:    'teal',
     zone:           'Dixinn · Conakry',
@@ -156,6 +164,7 @@ export const MOCK_LIVREURS: LivreurItem[] = [
     id:             'liv-006',
     fullName:       'Moussa Camara',
     initials:       'MC',
+    profilePicture: null,
     avatarBg:       'linear-gradient(135deg,var(--btn),var(--btn-h))',
     bandVariant:    'green',
     zone:           'Ratoma · Conakry',
@@ -173,6 +182,7 @@ export const MOCK_LIVREURS: LivreurItem[] = [
     id:             'liv-007',
     fullName:       'Binta Kourouma',
     initials:       'BK',
+    profilePicture: null,
     avatarBg:       'linear-gradient(135deg,var(--btn),var(--btn-h))',
     bandVariant:    'purple',
     zone:           'Matoto · Conakry',
@@ -190,6 +200,7 @@ export const MOCK_LIVREURS: LivreurItem[] = [
     id:             'liv-008',
     fullName:       'Ousmane Barry',
     initials:       'OB',
+    profilePicture: null,
     avatarBg:       'linear-gradient(135deg,var(--btn),var(--btn-h))',
     bandVariant:    'blue',
     zone:           'Kaloum · Conakry',

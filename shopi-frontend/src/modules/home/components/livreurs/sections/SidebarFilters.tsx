@@ -9,17 +9,56 @@
  * STYLES : ../styles/SidebarFilters.module.css
  * ================================================================ */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles                from '../styles/SidebarFilters.module.css';
 import type { LivreurItem }  from '../data/livreursMockData';
-import { ZONES_OPTIONS, VEHICULE_OPTIONS } from '../data/livreursMockData';
+import { VEHICULE_OPTIONS } from '../data/livreursMockData';
 import type { FilterState }  from '../hooks/useLivreurs';
+
+/** Nombre réel de livreurs par commune — GET /client/livreurs/zones. */
+export interface ZoneCount { value: string; label: string; count: number }
+
+/* Communes affichées tant que le compte réel n'a pas encore chargé (ou a
+ * échoué) — mêmes 5 communes que le backend, count à 0 plutôt qu'un chiffre
+ * inventé (voir BUG CORRIGÉ ci-dessous pour le contexte). */
+const ZONES_FALLBACK: ZoneCount[] = [
+  { value: 'all',    label: 'Toutes les zones', count: 0 },
+  { value: 'kaloum', label: 'Kaloum',           count: 0 },
+  { value: 'ratoma', label: 'Ratoma',           count: 0 },
+  { value: 'matam',  label: 'Matam',            count: 0 },
+  { value: 'dixinn', label: 'Dixinn',           count: 0 },
+  { value: 'matoto', label: 'Matoto',           count: 0 },
+];
+
+/* ── Avatar "Mes abonnements" — photo réelle si dispo, sinon initiales ──
+ * (même pattern que CardLivreurGrid/List — voir ces fichiers.) */
+function FollowedAvatar({ livreur }: { livreur: LivreurItem }) {
+  const [imgError, setImgError] = useState(false);
+  return (
+    <div
+      className={styles.followedAva}
+      style={livreur.profilePicture && !imgError ? undefined : { background: livreur.avatarBg }}
+    >
+      {livreur.profilePicture && !imgError
+        ? <img
+            className={styles.followedAvaImg}
+            src={livreur.profilePicture}
+            alt={livreur.fullName}
+            onError={() => setImgError(true)}
+          />
+        : livreur.initials
+      }
+    </div>
+  );
+}
 
 /* ── Props ── */
 interface SidebarFiltersProps {
   filters:          FilterState;
   myFollowed:       LivreurItem[];
+  /** null = pas encore chargé (voir ZONES_FALLBACK) */
+  zoneCounts:       ZoneCount[] | null;
   onZone:           (z: string) => void;
   onVehicleToggle:  (v: string) => void;
   onRating:         (r: number | null) => void;
@@ -31,14 +70,21 @@ interface SidebarFiltersProps {
  * COMPOSANT PRINCIPAL
  * ================================================================ */
 const SidebarFilters: React.FC<SidebarFiltersProps> = ({
-  filters, myFollowed,
+  filters, myFollowed, zoneCounts,
   onZone, onVehicleToggle, onRating, onAvailability, onReset,
 }) => {
   const { t } = useTranslation();
 
+  /* BUG CORRIGÉ — ZONES_OPTIONS (data/livreursMockData.ts) affichait des
+   * comptes 100% statiques (148/34/41/28/19/26) sans rapport avec le
+   * nombre réel de livreurs par commune. Vraies données depuis
+   * GET /client/livreurs/zones (voir LivreursPage.tsx), avec un repli
+   * "0" honnête (pas un chiffre inventé) tant que ça charge/échoue. */
+  const zones = zoneCounts ?? ZONES_FALLBACK;
+
   /* Labels traduits pour la zone "Toutes" et les véhicules (les noms
      de communes restent en français, ce sont des noms propres) */
-  const zoneLabel = (z: typeof ZONES_OPTIONS[number]) =>
+  const zoneLabel = (z: ZoneCount) =>
     z.value === 'all' ? t('livreursPage.sidebar.toutesLesZones') : z.label;
   const VEHICULE_LABELS: Record<string, string> = {
     moto: t('livreursPage.sidebar.vehicules.moto'),
@@ -68,7 +114,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
         </div>
         <div className={styles.cardBody}>
           <div className={styles.zoneList}>
-            {ZONES_OPTIONS.map(z => (
+            {zones.map(z => (
               <div
                 key={z.value}
                 className={`${styles.zoneChip} ${filters.selectedZone === z.value ? styles.zoneChipOn : ''}`}
@@ -186,12 +232,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
             <div className={styles.followedList}>
               {myFollowed.map(l => (
                 <div key={l.id} className={styles.followedItem}>
-                  <div
-                    className={styles.followedAva}
-                    style={{ background: l.avatarBg }}
-                  >
-                    {l.initials}
-                  </div>
+                  <FollowedAvatar livreur={l} />
                   <div>
                     <div className={styles.followedName}>{l.fullName}</div>
                     <div className={styles.followedMeta}>

@@ -22,7 +22,8 @@
 .miniCard{background:var(--g100);border:1px solid var(--bdr2);border-radius:14px;padding:16px 14px;width:128px;text-align:center;transition:background .15s}
 .miniCard:hover{background:var(--g200)}
 .miniAvaWrap{position:relative;display:inline-block;margin-bottom:10px}
-.miniAva{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:16px;font-weight:700;color:#fff;position:relative}
+.miniAva{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:16px;font-weight:700;color:#fff;position:relative;overflow:hidden}
+.miniAvaImg{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .miniDot{position:absolute;bottom:2px;right:2px;width:10px;height:10px;background:#fff;border-radius:50%;border:2px solid var(--btn-h)}
 .miniName{font-size:12px;font-weight:700;color:var(--t1);margin-bottom:2px}
 .miniZone{font-size:10.5px;color:var(--t3);margin-bottom:9px}

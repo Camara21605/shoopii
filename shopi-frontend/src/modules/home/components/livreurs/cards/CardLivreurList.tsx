@@ -8,7 +8,7 @@
  * reste juste un composant d'affichage. Route harmonisée : /livreurs/:id.
  * ================================================================ */
 
-import React            from 'react';
+import React, { useState } from 'react';
 import { useNavigate }  from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import styles           from '../styles/CardLivreurList.module.css';
@@ -33,6 +33,8 @@ const CardLivreurList: React.FC<CardLivreurListProps> = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { openAuthModal, authModal } = useAuthGate();
+  /* Voir le commentaire équivalent dans CardLivreurGrid.tsx. */
+  const [imgError, setImgError] = useState(false);
 
   const handleViewProfile = () => navigate(`/livreurs/${livreur.id}`);
 
@@ -45,8 +47,19 @@ const CardLivreurList: React.FC<CardLivreurListProps> = ({
       aria-label={t('livreursPage.card.livreurAriaLabel', { nom: livreur.fullName })}
     >
       {/* ── Avatar ── */}
-      <div className={styles.ava} style={{ background: livreur.avatarBg }}>
-        {livreur.initials}
+      <div
+        className={styles.ava}
+        style={livreur.profilePicture && !imgError ? undefined : { background: livreur.avatarBg }}
+      >
+        {livreur.profilePicture && !imgError
+          ? <img
+              className={styles.avaImg}
+              src={livreur.profilePicture}
+              alt={livreur.fullName}
+              onError={() => setImgError(true)}
+            />
+          : livreur.initials
+        }
         {livreur.disponible && <span className={styles.avaDot} aria-label={t('livreursPage.card.disponible')} />}
       </div>
 

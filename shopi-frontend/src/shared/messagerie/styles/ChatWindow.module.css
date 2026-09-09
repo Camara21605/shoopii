@@ -103,12 +103,69 @@
   .hdMobileBtn { display: flex; }
 }
 
+/* ── Fond d'écran actif — le motif est posé UNE SEULE FOIS sur .window
+   (voir ChatWindow.tsx) pour que le dessin reste continu sans coupure
+   entre l'en-tête et la zone de messages ; l'en-tête devient transparent
+   pour le laisser apparaître, et ses textes/icônes passent en clair
+   puisque tous les fonds de la galerie sont noirs (voir wallpaperPresets.
+   ts). .inputArea garde volontairement son propre fond opaque, exclu par
+   la demande. */
+.headerOnWallpaper {
+  background: transparent;
+  border-bottom-color: rgba(255,255,255,.14);
+  box-shadow: none;
+}
+.headerOnWallpaper .hdName,
+.headerOnWallpaper .hdAva { color: #fff; }
+.headerOnWallpaper .hdOnline { border-color: #0B0B0D; }
+.headerOnWallpaper .hdCtxLine { color: rgba(255,255,255,.6); }
+.headerOnWallpaper .hdSub { color: rgba(255,255,255,.45); }
+.headerOnWallpaper .hdSub.online { color: #34D399; }
+.headerOnWallpaper .hdBtn,
+.headerOnWallpaper .hdMobileBtn { color: rgba(255,255,255,.75); }
+.headerOnWallpaper .hdBtn:hover,
+.headerOnWallpaper .hdMobileBtn:hover { background: rgba(255,255,255,.12); color: #fff; }
+.headerOnWallpaper .hdBtn.active { background: rgba(255,255,255,.16); color: #fff; }
+
 /* ── Zone messages ── */
 .msgsZoneWrap { position: relative; flex: 1; min-height: 0; display: flex; }
 .msgsZone {
   flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
-  padding: 20px 22px 32px;
+  /* BUG CORRIGÉ — le padding-bottom (32px) dépassait largement les autres
+   * (20/22px) : même en bas de liste, un vide net séparait le dernier
+   * message du champ de saisie. Uniformisé avec le padding du haut. */
+  padding: 20px 22px;
   display: flex; flex-direction: column; gap: 2px;
+}
+/* BUG CORRIGÉ — un groupe de livraison avec assez de messages pour
+ * déborder de la zone visible devenait totalement figé : impossible de
+ * remonter voir les messages plus anciens, aucune molette/glissement
+ * n'y faisait quoi que ce soit (vérifié : les 30 bulles étaient bien
+ * présentes dans le DOM, avec leur vraie hauteur, mais .msgsZone.
+ * scrollHeight restait pourtant égal à .clientHeight — 0 débordement
+ * mesuré malgré un contenu bien plus haut que le conteneur).
+ *
+ * Cause réelle : `justify-content: flex-end` sur le conteneur qui défile
+ * LUI-MÊME (overflow-y:auto + flex-direction:column) — piège CSS connu
+ * des flexbox : quand le contenu déborde d'un conteneur flex-end, les
+ * moteurs ne créent pas d'espace de défilement pour la partie qui déborde
+ * en HAUT (flex-end pousse tout vers le bas, mais l'algorithme de
+ * scroll d'un flex container ignore ce débordement "au mauvais bout").
+ * Un correctif précédent (voir l'ancien commentaire, remplacé ici) avait
+ * ajouté flex-end pour coller les messages en bas d'une COURTE
+ * conversation — vérifié uniquement sur ce cas-là, jamais sur une
+ * conversation assez longue pour déborder : la régression n'est
+ * apparue que là.
+ *
+ * Correctif standard pour "coller en bas sans casser le scroll" : au
+ * lieu de justify-content sur le conteneur scrollable, un premier
+ * enfant (ici ::before) avec margin-top:auto absorbe tout l'espace
+ * libre — pousse les vrais messages vers le bas quand ils ne
+ * remplissent pas le conteneur, SANS toucher à l'algorithme de
+ * scroll/overflow (une simple marge, pas un alignement flex-end). */
+.msgsZone::before {
+  content: '';
+  margin-top: auto;
 }
 
 /* Boutons "aller au début" / "aller à la fin" — flottants, ne défilent
@@ -329,8 +386,28 @@
 .mlCoords { font-size: 10.5px; color: var(--t3); margin: 1px 0 3px; }
 .mlOpen { font-size: 11px; font-weight: 700; color: var(--teal,#0E7490); }
 
-/* Caption sous un média (image / vidéo / fichier) */
-.mediaCaption { margin-top: 4px; border-radius: var(--r-md) !important; }
+/* ── Média + légende dans le MÊME cadre (image / vidéo / fichier) ──────
+ * BUG CORRIGÉ — un média accompagné d'un texte s'affichait comme DEUX
+ * bulles empilées avec un espace entre elles (le média, puis une bulle de
+ * texte séparée juste en dessous) au lieu d'un seul bloc, contrairement à
+ * WhatsApp où le texte fait partie de la même carte que la photo/vidéo/
+ * fichier. .mediaCard n'est appliqué QUE si le message a une légende
+ * (msg.text) — sans légende, le média garde son rendu d'origine (voir
+ * MessageBubble.tsx, la classe est undefined dans ce cas). Le média
+ * imbriqué perd son propre fond/arrondi/marge (repris ci-dessous par type)
+ * pour ne laisser QU'UN SEUL fond et UN SEUL arrondi extérieur, comme une
+ * vraie carte unique. */
+.mediaCard { margin-top: 6px; max-width: 280px; border-radius: var(--r-lg); overflow: hidden; }
+.mediaCard.sent { background: var(--btn, #111113); }
+.mediaCard.recv { background: var(--g100); border: 1px solid var(--bdr); }
+.mediaCard .msgImg, .mediaCard .msgVideo, .mediaCard .msgFile {
+  margin-top: 0; max-width: none; border-radius: 0;
+  background: transparent; border: none;
+}
+.mediaCard .msgImgReal, .mediaCard .msgVideoEl { border-radius: 0; display: block; }
+.mediaCardCaption { padding: 7px 12px 9px; font-size: 13px; line-height: 1.55; word-break: break-word; }
+.mediaCard.sent .mediaCardCaption { color: rgba(255,255,255,.95); }
+.mediaCard.recv .mediaCardCaption { color: var(--t1); }
 
 /* Image */
 .msgImg { max-width: 260px; border-radius: var(--r-lg); overflow: hidden; margin-top: 6px; }

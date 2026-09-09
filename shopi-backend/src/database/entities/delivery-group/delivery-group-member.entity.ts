@@ -9,6 +9,9 @@ export enum GroupMemberType {
   COMPANY       = 'company',
   DELIVERY      = 'delivery',
   CORRESPONDENT = 'correspondent',
+  /** Uniquement pour un membre ajouté à un groupe CUSTOM (voir DeliveryGroupKind.CUSTOM) —
+   *  un groupe de commande n'implique jamais de partenaire. */
+  PARTNER       = 'partner',
 }
 
 @Index('IDX_dgm_group_user', ['groupId', 'userId'])
@@ -44,6 +47,16 @@ export class DeliveryGroupMember {
   /** false = ancien livreur retiré du groupe après remplacement. */
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
+
+  /** Administrateur du groupe (uniquement significatif pour DeliveryGroupKind.
+   *  CUSTOM — voir DeliveryGroupService.setMemberAdmin/assertGroupAdmin) : peut
+   *  changer la photo du groupe et nommer/retirer d'autres administrateurs,
+   *  comme sur WhatsApp/Telegram. Le créateur du groupe est admin par défaut
+   *  (voir createCustomGroup). Sans effet pour un groupe ORDER (auto-créé par
+   *  une commande, membres/permissions gérés par le système, pas de notion
+   *  d'admin). */
+  @Column({ type: 'boolean', default: false })
+  isAdmin: boolean;
 
   @Column({ type: 'timestamp', nullable: true })
   lastReadAt: Date | null;

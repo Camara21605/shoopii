@@ -12,26 +12,60 @@ export enum DeliveryGroupStatus {
   CANCELLED = 'cancelled',
 }
 
+/**
+ * ORDER  — groupe automatique existant, créé à la validation d'une
+ *          commande (voir createGroupForCommande). commandeId obligatoire.
+ * CUSTOM — groupe libre créé manuellement par un utilisateur depuis
+ *          "⋮ > Paramètres > Ajouter un groupe" (voir createCustomGroup) :
+ *          pas de commande, pas d'expiration automatique 72h, membres
+ *          choisis à la main. commandeId/commandeNumero/companyName
+ *          restent null ; `name` porte le titre donné par le créateur.
+ */
+export enum DeliveryGroupKind {
+  ORDER  = 'order',
+  CUSTOM = 'custom',
+}
+
 @Entity('delivery_groups')
 export class DeliveryGroup {
 
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  /** Référence unique de la commande associée (1 groupe par commande). */
+  @Column({ type: 'enum', enum: DeliveryGroupKind, default: DeliveryGroupKind.ORDER })
+  kind: DeliveryGroupKind;
+
+  /** Référence unique de la commande associée (1 groupe par commande).
+   *  null pour un groupe CUSTOM — un index unique Postgres autorise
+   *  plusieurs lignes à NULL sans conflit. */
   @Index({ unique: true })
-  @Column({ type: 'uuid' })
-  commandeId: string;
+  @Column({ type: 'uuid', nullable: true })
+  commandeId: string | null;
 
-  @Column({ type: 'varchar', length: 50 })
-  commandeNumero: string;
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  commandeNumero: string | null;
 
-  @Column({ type: 'varchar', length: 255 })
-  companyName: string;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  companyName: string | null;
+
+  /** Titre donné par le créateur — uniquement pour un groupe CUSTOM. */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  name: string | null;
+
+  /** users.id du créateur — uniquement pour un groupe CUSTOM. */
+  @Column({ type: 'uuid', nullable: true })
+  createdByUserId: string | null;
 
   /** Description libre modifiable par les membres (ex : instructions de livraison). */
   @Column({ type: 'varchar', length: 500, nullable: true, default: null })
   description: string | null;
+
+  /** Photo de profil du groupe (URL Cloudinary, dossier avatars) — modifiable
+   *  par n'importe quel membre actif, même règle que description ci-dessus.
+   *  null = pas de photo, le frontend retombe alors sur l'émoji par défaut
+   *  (📦 commande / 👥 groupe libre — voir useDeliveryGroups.groupToUser). */
+  @Column({ type: 'varchar', length: 500, nullable: true, default: null })
+  photoUrl: string | null;
 
   @Column({ type: 'enum', enum: DeliveryGroupStatus, default: DeliveryGroupStatus.ACTIVE })
   status: DeliveryGroupStatus;

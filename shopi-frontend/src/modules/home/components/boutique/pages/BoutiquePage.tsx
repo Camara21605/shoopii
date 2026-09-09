@@ -321,9 +321,13 @@ interface Props {
    * lit companyId/preview depuis l'URL (route /boutique/:id). */
   companyIdOverride?: string;
   previewOverride?:   boolean;
+  /** Fourni UNIQUEMENT en aperçu (voir isPreview ci-dessous) — affiche un
+   *  produit cliqué SANS naviguer nulle part, voir CardProduitBoutique.
+   *  onOpenProduct / BoutiquePreviewPage.tsx. */
+  onOpenProduct?: (id: string) => void;
 }
 
-export default function BoutiquePage({ companyIdOverride, previewOverride }: Props = {}) {
+export default function BoutiquePage({ companyIdOverride, previewOverride, onOpenProduct }: Props = {}) {
   const navigate       = useNavigate();
   const { t } = useTranslation();
   const { id: companyIdFromUrl } = useParams<{ id: string }>();
@@ -755,6 +759,8 @@ export default function BoutiquePage({ companyIdOverride, previewOverride }: Pro
                 onResetFiltres={() => { setCatActive('Tout'); setFiltrStock(false); setFiltrPromo(false); setFiltrNew(false); }}
                 onToast={showToast}
                 onOpenFiltres={() => setFiltresOpen(true)}
+                isOwnerPreview={isPreview}
+                onOpenProduct={onOpenProduct}
               />
             )}
             {onglet === 'promos'         && <PromotionsSection

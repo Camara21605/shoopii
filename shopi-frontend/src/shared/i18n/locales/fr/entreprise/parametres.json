@@ -349,7 +349,27 @@
           "sub": "Action irréversible — tous vos produits, commandes et historique de ventes seront supprimés.",
           "btn": "Supprimer la boutique"
         }
-      }
+      },
+      "comingSoon": "Bientôt disponible",
+      "ownerOnly": "Réservé au propriétaire de la boutique — les collaborateurs ne peuvent pas mettre en pause, désactiver ou supprimer la boutique.",
+      "modal": {
+        "pauseTitle": "Mettre la boutique en pause ?",
+        "pauseMsg": "Votre boutique sera masquée du public. Vous pourrez la réactiver à tout moment depuis cet écran.",
+        "disableTitle": "Désactiver le compte pendant 30 jours ?",
+        "disableMsg": "Votre profil sera masqué. Le compte sera automatiquement réactivé après 30 jours.",
+        "deleteTitle": "Supprimer définitivement la boutique ?",
+        "deleteMsg": "Cette action est irréversible. Tous vos produits, commandes et historique de ventes seront perdus.",
+        "passwordLabel": "Confirmez avec votre mot de passe",
+        "passwordPlaceholder": "••••••••",
+        "passwordRequired": "Le mot de passe est obligatoire pour confirmer cette action.",
+        "passwordIncorrect": "Mot de passe incorrect. Veuillez réessayer.",
+        "genericError": "❌ Opération impossible. Vérifiez votre connexion.",
+        "cancel": "Annuler",
+        "confirming": "En cours…"
+      },
+      "pauseSuccess": "⏸️ Boutique mise en pause",
+      "disableSuccess": "🚫 Compte désactivé pour 30 jours",
+      "deleteSuccess": "Boutique supprimée. Déconnexion…"
     },
     "boutique": {
       "savedToast": "✅ Boutique sauvegardée avec succès",

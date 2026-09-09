@@ -349,7 +349,27 @@
           "sub": "Irreversible action — all your products, orders and sales history will be deleted.",
           "btn": "Delete the store"
         }
-      }
+      },
+      "comingSoon": "Coming soon",
+      "ownerOnly": "Reserved for the store owner — collaborators can't pause, deactivate or delete the store.",
+      "modal": {
+        "pauseTitle": "Pause the store?",
+        "pauseMsg": "Your store will be hidden from the public. You can reactivate it anytime from this screen.",
+        "disableTitle": "Deactivate the account for 30 days?",
+        "disableMsg": "Your profile will be hidden. The account will be automatically reactivated after 30 days.",
+        "deleteTitle": "Permanently delete the store?",
+        "deleteMsg": "This action is irreversible. All your products, orders and sales history will be lost.",
+        "passwordLabel": "Confirm with your password",
+        "passwordPlaceholder": "••••••••",
+        "passwordRequired": "Password is required to confirm this action.",
+        "passwordIncorrect": "Incorrect password. Please try again.",
+        "genericError": "❌ Operation failed. Check your connection.",
+        "cancel": "Cancel",
+        "confirming": "Working…"
+      },
+      "pauseSuccess": "⏸️ Store paused",
+      "disableSuccess": "🚫 Account deactivated for 30 days",
+      "deleteSuccess": "Store deleted. Signing out…"
     },
     "boutique": {
       "savedToast": "✅ Store saved successfully",

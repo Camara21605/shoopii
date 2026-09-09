@@ -162,7 +162,8 @@ export interface WsReactionPayload {
 /** Nouveau message dans un groupe de livraison */
 export interface WsGroupNewMessagePayload {
   groupId:        string;
-  commandeNumero: string;
+  /** Absent pour un groupe libre (DeliveryGroupKind.CUSTOM) — pas de commande associée. */
+  commandeNumero?: string;
   message:        object;
 }
 
@@ -197,5 +198,9 @@ export interface WsGroupStatusPayload {
   memberCount?:   number;
   expiresAt?:     string;
   description?:   string;
+  photoUrl?:      string;
   newMember?:     { type: string; name: string };
+  /** event === 'group_member_admin_changed' — voir DeliveryGroupService.setMemberAdmin. */
+  memberId?:      string;
+  memberIsAdmin?: boolean;
 }

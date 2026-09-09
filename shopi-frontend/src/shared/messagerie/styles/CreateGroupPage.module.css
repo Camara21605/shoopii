@@ -1,0 +1,119 @@
+/* CreateGroupPage.module.css — "⋮ > Paramètres > Ajouter un groupe"
+ * Page plein-cadre qui REMPLACE ChatWindow dans la colonne centrale — pas
+ * une fenêtre modale flottante. Même traitement que "Nouveau groupe" côté
+ * WhatsApp : en-tête avec flèche retour, formulaire, barre d'actions en bas.
+ */
+
+.page {
+  flex: 1; display: flex; flex-direction: column;
+  overflow: hidden; background: var(--g50); min-width: 0;
+}
+
+.hd {
+  display: flex; align-items: center; gap: 13px;
+  padding: 14px 20px; background: var(--white);
+  border-bottom: 1px solid var(--bdr);
+  flex-shrink: 0; box-shadow: var(--sh-xs);
+}
+.hdBack {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--t2); font-size: 15px; flex-shrink: 0;
+  border: none; background: none; cursor: pointer; transition: all 0.2s;
+}
+.hdBack:hover { background: var(--sky, #EEF3FD); color: var(--navy); }
+.hdTitle { font-family: var(--fd); font-size: 15px; font-weight: 700; color: var(--navy); }
+
+.body {
+  padding: 22px 20px; overflow-y: auto; flex: 1;
+  max-width: 560px; width: 100%; margin: 0 auto; box-sizing: border-box;
+}
+
+.field { margin-bottom: 16px; }
+.label { display: block; font-size: 11.5px; font-weight: 700; color: var(--t3); margin-bottom: 6px; }
+
+.nameInput {
+  width: 100%; box-sizing: border-box;
+  border: 1.5px solid var(--bdr2); border-radius: var(--r-md);
+  padding: 11px 12px; font-size: 13.5px; color: var(--t1);
+  outline: none; transition: border-color .15s;
+  font-family: var(--fb); background: var(--white);
+}
+.nameInput:focus { border-color: var(--t2); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--sky,#EEF3FD); color: var(--navy);
+  border-radius: var(--pill); padding: 5px 6px 5px 12px;
+  font-size: 12px; font-weight: 700;
+}
+.chipX {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(0,0,0,.08); border: none; color: var(--t2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; cursor: pointer; flex-shrink: 0;
+}
+.chipX:hover { background: rgba(220,38,38,.15); color: var(--red,#DC2626); }
+
+.searchWrap {
+  position: relative; display: flex; align-items: center;
+  border: 1.5px solid var(--bdr2); border-radius: var(--pill);
+  padding: 0 12px; gap: 8px; background: var(--white);
+}
+.searchWrap i { color: var(--t3); font-size: 12px; }
+.searchInput {
+  flex: 1; border: none; outline: none; background: transparent;
+  padding: 10px 0; font-size: 13px; color: var(--t1); font-family: var(--fb);
+}
+
+.results { display: flex; flex-direction: column; gap: 2px; min-height: 60px; }
+.state { padding: 14px 4px; text-align: center; font-size: 12px; color: var(--t4); }
+
+.resultItem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 8px; border-radius: var(--r-md);
+  background: transparent; border: none; cursor: pointer;
+  text-align: left; font-family: var(--fb); transition: background .15s;
+  width: 100%;
+}
+.resultItem:hover { background: var(--white); }
+.resultItemActive { background: var(--sky,#EEF3FD); }
+.resultAva {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: var(--g100,#F1F3F5); display: flex; align-items: center;
+  justify-content: center; font-size: 14px; font-weight: 700; color: var(--navy);
+  overflow: hidden;
+}
+.resultAva img { width: 100%; height: 100%; object-fit: cover; }
+.resultInfo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.resultName { font-size: 12.5px; font-weight: 700; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.resultSub { font-size: 11px; color: var(--t3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.resultCheck { color: var(--teal,#0E7490); font-size: 15px; flex-shrink: 0; }
+
+.footer {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 14px 20px; border-top: 1px solid var(--bdr);
+  flex-shrink: 0; background: var(--white);
+}
+.footerInner { display: flex; justify-content: flex-end; gap: 8px; max-width: 560px; width: 100%; margin: 0 auto; }
+.btnSecondary {
+  background: var(--white); color: var(--t2);
+  border: 1.5px solid var(--bdr2); border-radius: var(--r-md);
+  padding: 9px 16px; font-size: 12.5px; font-weight: 700; cursor: pointer;
+  font-family: var(--fb);
+}
+.btnSecondary:hover { border-color: var(--t2); }
+.btnPrimary {
+  background: var(--btn, #111113); color: #fff; border: none;
+  border-radius: var(--r-md); padding: 9px 18px; font-size: 12.5px; font-weight: 800;
+  cursor: pointer; font-family: var(--fb); min-width: 90px;
+  display: flex; align-items: center; justify-content: center;
+}
+.btnPrimary:disabled { opacity: .5; cursor: not-allowed; }
+.btnPrimary:not(:disabled):hover { background: var(--btn-h, #1C1C1F); }
+
+@media (max-width: 640px) {
+  .body { padding: 16px 14px; }
+  .footer, .hd { padding-left: 14px; padding-right: 14px; }
+}

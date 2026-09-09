@@ -29,11 +29,17 @@ interface Props {
    * voir styles.mobileFiltresBtn (BoutiqueSidebar reste toujours en
    * colonne visible sur desktop, ce bouton n'y sert à rien). */
   onOpenFiltres?: () => void;
+  /** true UNIQUEMENT depuis "Voir ma boutique" du dashboard entreprise —
+   *  voir CardProduitBoutique.handleVoir pour la raison (évite de faire
+   *  quitter tout le dashboard vers la page produit publique). */
+  isOwnerPreview?: boolean;
+  /** Fourni UNIQUEMENT en aperçu — voir CardProduitBoutique.onOpenProduct. */
+  onOpenProduct?: (id: string) => void;
 }
 
 export default function ProduitsSection({
   produits, filtresActifs, onRemoveFiltreActif, onResetFiltres, onToast,
-  onOpenFiltres,
+  onOpenFiltres, isOwnerPreview, onOpenProduct,
 }: Props) {
   const { t } = useTranslation();
 
@@ -121,6 +127,8 @@ export default function ProduitsSection({
               p={p}
               isList={vue === 'liste'}
               onToast={onToast}
+              isOwnerPreview={isOwnerPreview}
+              onOpenProduct={onOpenProduct}
             />
           ))}
         </div>

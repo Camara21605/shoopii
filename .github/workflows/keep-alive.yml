@@ -17,6 +17,19 @@
 # NOTE : GitHub peut retarder légèrement un cron programmé lors
 #   de pics de charge sur ses runners — ce n'est pas garanti à
 #   la minute près, mais largement suffisant pour cet usage.
+#
+# URL — BUG CORRIGÉ : le nom de service dans render.yaml
+#   ("shopi-backend") ne correspond pas forcément à l'hôte
+#   .onrender.com réel. Vérifié en direct : "shoopii.onrender.com"
+#   ne répondait jamais (100s de timeout, aucun service réel
+#   derrière), alors que "shopi-backend.onrender.com" répond
+#   immédiatement (< 1s) — c'est le bon hôte.
+#
+# STATUT HTTP — volontairement pas de -f (fail-on-error) : le but
+#   est de réveiller/maintenir le process Node, pas de valider une
+#   route précise. Un 404/401 prouve tout autant que le serveur est
+#   éveillé et répond qu'un 200 ; seule une vraie panne réseau
+#   (timeout, connexion refusée) doit être signalée comme un échec.
 # ============================================================
 
 name: Keep backend alive (Render free tier)
@@ -30,7 +43,8 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping /api/health
+      - name: Ping le backend (n'importe quelle réponse HTTP = serveur éveillé)
         run: |
-          curl -fsS --max-time 30 https://shoopii.onrender.com/api/health || \
-          echo "⚠️ Ping échoué — le backend était peut-être déjà en train de se réveiller."
+          curl -sS --max-time 60 -o /dev/null -w "HTTP %{http_code} en %{time_total}s\n" \
+            https://shopi-backend.onrender.com/api/health || \
+          echo "⚠️ Ping échoué (panne réseau) — le backend était peut-être déjà en train de se réveiller."

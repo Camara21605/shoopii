@@ -8,7 +8,7 @@
  * STYLES : ../styles/SuggestionsRow.module.css
  * ================================================================ */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/SuggestionsRow.module.css';
 import { useAuthGate } from '../../../../../shared/hooks/useAuthGate';
@@ -67,6 +67,7 @@ interface SuggestItemProps {
 const SuggestItem: React.FC<SuggestItemProps> = ({ livreur, onToast, onChange }) => {
   const { t } = useTranslation();
   const { openAuthModal, authModal } = useAuthGate();
+  const [imgError, setImgError] = useState(false);
 
   return (
     <div className={styles.item} style={{ position: 'relative' }} role="listitem">
@@ -74,10 +75,18 @@ const SuggestItem: React.FC<SuggestItemProps> = ({ livreur, onToast, onChange })
       <div className={styles.avaWrap}>
         <div
           className={styles.ava}
-          style={{ background: livreur.avatarBg }}
+          style={livreur.profilePicture && !imgError ? undefined : { background: livreur.avatarBg }}
           aria-label={livreur.fullName}
         >
-          {livreur.initials}
+          {livreur.profilePicture && !imgError
+            ? <img
+                className={styles.avaImg}
+                src={livreur.profilePicture}
+                alt={livreur.fullName}
+                onError={() => setImgError(true)}
+              />
+            : livreur.initials
+          }
           {livreur.disponible && (
             <span className={styles.avaDot} aria-label={t('livreursPage.card.disponible')} />
           )}

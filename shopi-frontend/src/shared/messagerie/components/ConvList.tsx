@@ -360,6 +360,15 @@ function ConvList({
    * cascade des sections suivantes (pinned/regular/relatedContacts) à
    * partir de sa longueur, sans redéfinir la logique deux fois. */
   const visibleGroupsForList = tab === 'unread' ? filteredGroups.filter(g => g.unread > 0) : filteredGroups;
+  /* BUG CORRIGÉ — un groupe libre (créé via "Ajouter un groupe") apparaissait
+   * mélangé aux vrais groupes de livraison sous le même en-tête "📦 Groupes
+   * de livraison", alors qu'il n'a aucun lien avec une commande. Séparé en
+   * deux sous-listes selon isCustomGroup (voir useDeliveryGroups.groupToConv)
+   * pour leur donner chacun leur propre en-tête. */
+  const visibleOrderGroups  = visibleGroupsForList.filter(g => !g.isCustomGroup);
+  const visibleCustomGroups = visibleGroupsForList.filter(g => g.isCustomGroup);
+  const filteredOrderGroups  = filteredGroups.filter(g => !g.isCustomGroup);
+  const filteredCustomGroups = filteredGroups.filter(g => g.isCustomGroup);
 
   const switchTab = (key: Tab) => {
     setTab(key);
@@ -476,17 +485,36 @@ function ConvList({
               </div>
             ) : (
               <>
-                <div className={s.section}>{t('messagerie.convList.groupesDeLivraison')}</div>
-                {filteredGroups.map((g, i) => (
-                  <GroupConvItem
-                    key={`grp-${g.id}`}
-                    conv={g}
-                    user={groupUsersMap.get(g.id)}
-                    active={activeId === g.id}
-                    onSelect={onSelect}
-                    index={i}
-                  />
-                ))}
+                {filteredOrderGroups.length > 0 && (
+                  <>
+                    <div className={s.section}>📦 {t('messagerie.convList.groupesDeLivraison')}</div>
+                    {filteredOrderGroups.map((g, i) => (
+                      <GroupConvItem
+                        key={`grp-${g.id}`}
+                        conv={g}
+                        user={groupUsersMap.get(g.id)}
+                        active={activeId === g.id}
+                        onSelect={onSelect}
+                        index={i}
+                      />
+                    ))}
+                  </>
+                )}
+                {filteredCustomGroups.length > 0 && (
+                  <>
+                    <div className={s.section}>👥 {t('messagerie.convList.mesGroupes')}</div>
+                    {filteredCustomGroups.map((g, i) => (
+                      <GroupConvItem
+                        key={`grp-${g.id}`}
+                        conv={g}
+                        user={groupUsersMap.get(g.id)}
+                        active={activeId === g.id}
+                        onSelect={onSelect}
+                        index={filteredOrderGroups.length + i}
+                      />
+                    ))}
+                  </>
+                )}
               </>
             )}
           </>
@@ -531,13 +559,15 @@ function ConvList({
           </>
         ) : (
           <>
-            {/* Groupes de livraison — uniquement dans "Tous" et "Non lus".
-             * Les onglets de filtre par rôle (boutiques, livreurs…) ne montrent
-             * que des conversations P2P, jamais les groupes automatiques. */}
-            {(tab === 'all' || tab === 'unread') && visibleGroupsForList.length > 0 && (
+            {/* Groupes de livraison / groupes libres — uniquement dans "Tous" et
+             * "Non lus". Les onglets de filtre par rôle (boutiques, livreurs…)
+             * ne montrent que des conversations P2P, jamais les groupes.
+             * Deux en-têtes distincts (voir visibleOrderGroups/visibleCustomGroups
+             * ci-dessus) — un groupe libre n'est PAS un groupe de livraison. */}
+            {(tab === 'all' || tab === 'unread') && visibleOrderGroups.length > 0 && (
               <>
                 <div className={s.section}>📦 {t('messagerie.convList.groupesDeLivraison')}</div>
-                {visibleGroupsForList.map((g, i) => (
+                {visibleOrderGroups.map((g, i) => (
                   <GroupConvItem
                     key={`grp-${g.id}`}
                     conv={g}
@@ -545,6 +575,21 @@ function ConvList({
                     active={activeId === g.id}
                     onSelect={onSelect}
                     index={i}
+                  />
+                ))}
+              </>
+            )}
+            {(tab === 'all' || tab === 'unread') && visibleCustomGroups.length > 0 && (
+              <>
+                <div className={s.section}>👥 {t('messagerie.convList.mesGroupes')}</div>
+                {visibleCustomGroups.map((g, i) => (
+                  <GroupConvItem
+                    key={`grp-${g.id}`}
+                    conv={g}
+                    user={groupUsersMap.get(g.id)}
+                    active={activeId === g.id}
+                    onSelect={onSelect}
+                    index={visibleOrderGroups.length + i}
                   />
                 ))}
               </>
@@ -677,6 +722,14 @@ const GroupConvItem = memo(function GroupConvItem({ conv, user, active, onSelect
   const { t } = useTranslation();
   if (!user) return null;
 
+  /* BUG CORRIGÉ — user.ava était toujours rendu comme du TEXTE brut (émoji
+   * figé jusqu'ici) ; depuis qu'un groupe peut avoir une vraie photo (voir
+   * useDeliveryGroups.groupToUser/updateGroupPhoto), ava peut aussi être
+   * une URL Cloudinary — sans ce traitement, l'URL entière s'affichait en
+   * texte débordant dans la ligne de la liste. Même convention que
+   * ConvItem/RelatedContactItem juste en dessous (isImgAva + <img>). */
+  const isImgAva = user.ava.startsWith('http');
+
   const statusColor =
     conv.groupStatus === 'active'    ? '#10B981' :
     conv.groupStatus === 'completed' ? '#0E7490' :
@@ -695,8 +748,19 @@ const GroupConvItem = memo(function GroupConvItem({ conv, user, active, onSelect
     >
       {/* Avatar groupe */}
       <div className={s.avaWrap}>
-        <div className={s.ava} style={{ background: user.avaColor, fontSize: 22 }}>
-          {user.ava}
+        <div className={s.ava} style={{ background: isImgAva ? undefined : user.avaColor, fontSize: 22, overflow: 'hidden', padding: isImgAva ? 0 : undefined }}>
+          {isImgAva
+            ? <img src={cldAvatar(user.ava, 56)!} alt={user.name}
+                style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'inherit', display:'block' }}
+                loading="lazy"
+                onError={e => {
+                  const img = e.currentTarget as HTMLImageElement;
+                  img.style.display = 'none';
+                  (img.parentElement as HTMLElement).style.background = user.avaColor;
+                  (img.parentElement as HTMLElement).textContent = '📦';
+                }}
+              />
+            : user.ava}
         </div>
         <div
           className={s.roleBadge}

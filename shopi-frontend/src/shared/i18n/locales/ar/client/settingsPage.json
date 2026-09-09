@@ -385,7 +385,11 @@
       },
       "clicAgain": "انقر مرة أخرى للتأكيد",
       "confirmerBtn": "تأكيد",
-      "annulerBtn": "إلغاء"
+      "annulerBtn": "إلغاء",
+      "comingSoon": "قريبًا",
+      "passwordPlaceholder": "كلمة المرور الحالية",
+      "passwordRequired": "كلمة المرور مطلوبة للتأكيد",
+      "passwordIncorrect": "كلمة المرور غير صحيحة"
     },
     "profil": {
       "photoTitle": "صورة الملف الشخصي",

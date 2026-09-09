@@ -14,20 +14,32 @@ export default function Footer({ onToast }: FooterProps) {
   const { t } = useTranslation();
   const COLS: { titre: string; liens: FooterLink[] }[] = [
     { titre:t('publicFooter.cols.plateforme.titre'), liens:[
-      { label:t('publicFooter.cols.plateforme.explorerProduits') },
+      { label:t('publicFooter.cols.plateforme.explorerProduits'), to:'/explorer' },
       { label:t('publicFooter.cols.plateforme.boutiques'),     to:'/boutiques' },
       { label:t('publicFooter.cols.plateforme.livreurs'),      to:'/livreurs' },
+      /* "Partenaires" reste sans route : pas de page publique de découverte
+       * des partenaires (contrairement à /boutiques, /livreurs,
+       * /correspondants) — seul /dashboard/partenaire existe, réservé aux
+       * partenaires déjà inscrits. Toast honnête "bientôt disponible"
+       * plutôt qu'un lien vers une page qui n'existe pas. */
       { label:t('publicFooter.cols.plateforme.partenaires') },
       { label:t('publicFooter.cols.plateforme.correspondants'), to:'/correspondants' },
-      { label:t('publicFooter.cols.plateforme.offresPromos') },
+      { label:t('publicFooter.cols.plateforme.offresPromos'),  to:'/offres' },
     ]},
+    /* BUG CORRIGÉ — les 6 liens "Espace X" n'avaient aucune route (juste un
+     * toast factice), alors que CE SONT littéralement les dashboards réels
+     * de l'appli. RoleRoute (voir router.tsx) gère déjà tous les cas
+     * proprement : anonyme → /login, connecté avec le bon rôle → le
+     * dashboard, connecté avec un AUTRE rôle → son propre dashboard (pas
+     * d'erreur, pas de page cassée) — donc un simple lien suffit ici, sans
+     * logique d'auth à dupliquer dans le footer. */
     { titre:t('publicFooter.cols.acteurs.titre'), liens:[
-      { label:t('publicFooter.cols.acteurs.espaceClient') },
-      { label:t('publicFooter.cols.acteurs.espaceEntreprise') },
-      { label:t('publicFooter.cols.acteurs.espaceLivreur') },
-      { label:t('publicFooter.cols.acteurs.espacePartenaire') },
-      { label:t('publicFooter.cols.acteurs.espaceCorrespondant') },
-      { label:t('publicFooter.cols.acteurs.espaceAdmin') },
+      { label:t('publicFooter.cols.acteurs.espaceClient'),       to:'/home' },
+      { label:t('publicFooter.cols.acteurs.espaceEntreprise'),   to:'/dashboard/entreprise' },
+      { label:t('publicFooter.cols.acteurs.espaceLivreur'),      to:'/dashboard/livreur' },
+      { label:t('publicFooter.cols.acteurs.espacePartenaire'),   to:'/dashboard/partenaire' },
+      { label:t('publicFooter.cols.acteurs.espaceCorrespondant'),to:'/dashboard/correspondant' },
+      { label:t('publicFooter.cols.acteurs.espaceAdmin'),        to:'/dashboard/admin' },
     ]},
     { titre:t('publicFooter.cols.aide.titre'), liens:[
       { label:t('publicFooter.cols.aide.centreAide'),       to:'/aide' },
@@ -131,6 +143,15 @@ export default function Footer({ onToast }: FooterProps) {
               {t('publicFooter.copyright')}
             </p>
             <div className={styles.btmLinks}>
+              {/* BUG CORRIGÉ — ces 5 liens ne faisaient RIEN (preventDefault
+               * seul, aucun toast) : contrairement aux autres liens non
+               * développés du footer (colonnes, réseaux sociaux, stores),
+               * un clic ici ne donnait aucun retour visuel — l'utilisateur
+               * ne pouvait pas savoir si le lien était cassé ou juste pas
+               * encore prêt. Aucune de ces pages légales n'existe encore
+               * (vérifié dans router.tsx) ; on applique donc le même toast
+               * "bientôt disponible" que le reste du footer plutôt que de
+               * fabriquer un faux texte légal ou laisser un clic muet. */}
               {[
                 t('publicFooter.bottomLinks.mentionsLegales'),
                 t('publicFooter.bottomLinks.confidentialite'),
@@ -138,7 +159,7 @@ export default function Footer({ onToast }: FooterProps) {
                 t('publicFooter.bottomLinks.cgu'),
                 t('publicFooter.bottomLinks.accessibilite'),
               ].map(l => (
-                <a key={l} href="#" onClick={e => e.preventDefault()}>{l}</a>
+                <a key={l} href="#" onClick={e => { e.preventDefault(); onToast(t('publicFooter.linkToast', { label: l })); }}>{l}</a>
               ))}
             </div>
             <div className={styles.payments}>

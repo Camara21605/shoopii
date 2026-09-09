@@ -1,0 +1,61 @@
+/* MediaViewer.module.css — visionneuse plein écran IN-APP (image/vidéo) */
+
+.overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex; flex-direction: column;
+  animation: mvFadeIn .15s ease;
+}
+@keyframes mvFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; flex-shrink: 0;
+}
+.hdInfo { display: flex; flex-direction: column; min-width: 0; }
+.hdName { color: rgba(255,255,255,.92); font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60vw; }
+.hdDate { color: rgba(255,255,255,.55); font-size: 11px; margin-top: 1px; }
+.hdCount { color: rgba(255,255,255,.55); font-size: 11px; margin-top: 1px; }
+.hdActs { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.hdBtn {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,.85); font-size: 15px;
+  border: none; background: rgba(255,255,255,.08); cursor: pointer;
+  transition: background .18s;
+}
+.hdBtn:hover { background: rgba(255,255,255,.18); color: #fff; }
+
+/* ── Flèches de navigation ── */
+.navBtn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,.85); font-size: 17px;
+  border: none; background: rgba(255,255,255,.08); cursor: pointer;
+  transition: background .18s; z-index: 1;
+}
+.navBtn:hover { background: rgba(255,255,255,.18); color: #fff; }
+.navPrev { left: 16px; }
+.navNext { right: 16px; }
+@media (max-width: 640px) {
+  .navBtn { width: 38px; height: 38px; font-size: 14px; }
+  .navPrev { left: 6px; }
+  .navNext { right: 6px; }
+}
+
+.body {
+  flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;
+  padding: 0 24px 24px; cursor: zoom-out;
+}
+.mediaEl { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 4px; cursor: default; }
+.mediaEl:focus { outline: none; }
+
+.audioWrap {
+  background: var(--white, #fff);
+  border-radius: 18px;
+  padding: 28px 26px;
+  width: 100%;
+  max-width: 420px;
+  cursor: default;
+}

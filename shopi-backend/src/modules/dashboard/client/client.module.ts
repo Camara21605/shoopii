@@ -38,6 +38,8 @@ import { WishlistItem }         from '../../../database/entities/entreprise.tabl
 import { RefreshToken }         from '../../../database/entities/refresh-token.entity';
 /* ✅ Profil public client — compteur de commandes complétées */
 import { Commande }             from '../../../database/entities/commande/commande.entity';
+/* ✅ Journal d'audit — consigne les demandes RGPD (section Données) */
+import { AuditLog }             from '../../../database/entities/audit-log.entity';
 
 /* Controllers existants */
 import { ClientParametresController } from './client-parametres.controller';
@@ -103,6 +105,7 @@ import { ClientPublicProfilService }  from './client-public-profil.service';
       WishlistItem,          /* ✅ ajout liste de souhaits */
       RefreshToken,          /* ✅ ajout — révocation sessions au changement MDP */
       Commande,              /* ✅ ajout — profil public client (compteur commandes) */
+      AuditLog,              /* ✅ ajout — demandes RGPD (section Données) */
     ]),
   ],
 

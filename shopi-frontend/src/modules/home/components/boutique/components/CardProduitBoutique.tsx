@@ -21,6 +21,15 @@ interface Props {
   p:       ProduitBoutiqueAvecImage;
   isList:  boolean;
   onToast: (m: string) => void;
+  /** true UNIQUEMENT depuis "Voir ma boutique" du dashboard entreprise
+   *  (BoutiquePreviewPage → BoutiquePage isOwnerPreview) — voir handleVoir
+   *  ci-dessous pour la raison. */
+  isOwnerPreview?: boolean;
+  /** Fourni UNIQUEMENT en aperçu (voir isOwnerPreview) — affiche le produit
+   *  SANS naviguer nulle part (ni onglet courant, ni nouvel onglet), voir
+   *  BoutiquePreviewPage.tsx qui monte ProduitPage à la place de
+   *  BoutiquePage dans le même panneau. */
+  onOpenProduct?: (id: string) => void;
 }
 
 function getBadgeConfig(t: TFunction) {
@@ -48,7 +57,7 @@ function Stars({ n }: { n: number }) {
   );
 }
 
-export default function CardProduitBoutique({ p, isList, onToast }: Props) {
+export default function CardProduitBoutique({ p, isList, onToast, isOwnerPreview = false, onOpenProduct }: Props) {
   const { t } = useTranslation();
   const [fav, setFav] = useState(false);
   const navigate      = useNavigate();
@@ -56,11 +65,28 @@ export default function CardProduitBoutique({ p, isList, onToast }: Props) {
   const badge = p.badge ? getBadgeConfig(t)[p.badge] : null;
   const stock = getStockConfig(t)[p.stock];
 
-  // ✅ Navigue vers la page détail si on a un vrai ID produit
+  /* BUG CORRIGÉ — depuis que "Voir ma boutique" (dashboard entreprise)
+   * monte cette page directement dans l'arbre React de l'app au lieu
+   * d'une <iframe> (voir BoutiquePreviewPage.tsx), un seul <BrowserRouter>
+   * couvre TOUTE l'application : navigate() ici ne restait plus confiné à
+   * l'aperçu, il changeait l'URL de l'ONGLET ENTIER — l'entreprise
+   * quittait son propre dashboard pour atterrir sur la page produit
+   * PUBLIQUE (celle de la home), sans aucun moyen d'y revenir. Un premier
+   * correctif ouvrait cette page dans un NOUVEL onglet (comme le bouton
+   * "Ouvrir" de BoutiquePreviewPage.tsx) — encore insuffisant : ça reste
+   * "une autre page pour un autre type d'utilisateur" qui s'affiche.
+   * Maintenant : en aperçu, le produit s'affiche SANS QUITTER LE
+   * DASHBOARD ni ouvrir quoi que ce soit ailleurs — onOpenProduct fait
+   * remonter l'id à BoutiquePreviewPage, qui monte ProduitPage à la place
+   * de BoutiquePage dans le même panneau (voir onOpenProduct). */
   function handleVoir() {
     if (p.id && !p.id.startsWith('p')) {
       // ID UUID → vrai produit API
-      navigate(`/produit/${p.id}`);
+      if (isOwnerPreview && onOpenProduct) {
+        onOpenProduct(p.id);
+      } else {
+        navigate(`/produit/${p.id}`);
+      }
     } else {
       onToast(t('boutiqueDetail.cardProduit.detailToast', { nom: p.nom }));
     }

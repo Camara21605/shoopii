@@ -349,7 +349,27 @@
           "sub": "Ação irreversível — todos os seus produtos, encomendas e histórico de vendas serão eliminados.",
           "btn": "Eliminar a loja"
         }
-      }
+      },
+      "comingSoon": "Brevemente disponível",
+      "ownerOnly": "Reservado ao proprietário da loja — os colaboradores não podem pausar, desativar ou eliminar a loja.",
+      "modal": {
+        "pauseTitle": "Pôr a loja em pausa?",
+        "pauseMsg": "A sua loja será ocultada do público. Pode reativá-la a qualquer momento a partir deste ecrã.",
+        "disableTitle": "Desativar a conta durante 30 dias?",
+        "disableMsg": "O seu perfil será ocultado. A conta será reativada automaticamente após 30 dias.",
+        "deleteTitle": "Eliminar definitivamente a loja?",
+        "deleteMsg": "Esta ação é irreversível. Todos os seus produtos, encomendas e histórico de vendas serão perdidos.",
+        "passwordLabel": "Confirme com a sua palavra-passe",
+        "passwordPlaceholder": "••••••••",
+        "passwordRequired": "A palavra-passe é obrigatória para confirmar esta ação.",
+        "passwordIncorrect": "Palavra-passe incorreta. Tente novamente.",
+        "genericError": "❌ Operação impossível. Verifique a sua ligação.",
+        "cancel": "Cancelar",
+        "confirming": "A processar…"
+      },
+      "pauseSuccess": "⏸️ Loja em pausa",
+      "disableSuccess": "🚫 Conta desativada por 30 dias",
+      "deleteSuccess": "Loja eliminada. A terminar sessão…"
     },
     "boutique": {
       "savedToast": "✅ Loja guardada com sucesso",

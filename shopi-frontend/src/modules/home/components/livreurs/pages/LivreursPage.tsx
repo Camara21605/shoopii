@@ -28,11 +28,12 @@ import { useTranslation }   from 'react-i18next';
 /* ── Layout partagé du module home ── */
 import Header from '../../layout/Header';
 import LivreurViewerBanner from '../../../../../shared/components/LivreurViewerBanner';
+import { apiFetch } from '../../../../../shared/services/apiFetch';
 
 /* ── Sections de la page ── */
 import HeroBanner      from '../sections/HeroBanner';
 import FilterToolbar   from '../sections/FilterToolbar';
-import SidebarFilters  from '../sections/SidebarFilters';
+import SidebarFilters, { type ZoneCount } from '../sections/SidebarFilters';
 import SuggestionsRow  from '../sections/SuggestionsRow';
 
 /* ── Cards ── */
@@ -42,11 +43,16 @@ import CardLivreurList from '../cards/CardLivreurList';
 /* ── Hook logique ── */
 import { useLivreurs } from '../hooks/useLivreurs';
 
-/* ── Données statiques ── */
-import { HERO_STATS } from '../data/livreursMockData';
-
 /* ── Styles ── */
 import styles from '../styles/LivreursPage.module.css';
+
+/* ── Stats réseau réelles — GET /client/livreurs/stats ── */
+interface NetworkStats {
+  totalLivreurs:     number;
+  averageRating:     string;
+  totalLivraisons:   number;
+  communesCouvertes: number;
+}
 
 /* ── Toast simple interne (en attendant ToastContext) ── */
 interface ToastState { msg: string; type: 's' | 'i' | 'w' | 'e' }
@@ -58,16 +64,32 @@ const LivreursPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  /* ── Stats hero traduites ── */
-  const heroStats = HERO_STATS.map((s, i) => ({
-    ...s,
-    label: [
-      t('livreursPage.hero.stats.livreursActifs'),
-      t('livreursPage.hero.stats.noteMoyenne'),
-      t('livreursPage.hero.stats.livraisonsMois'),
-      t('livreursPage.hero.stats.communesCouvertes'),
-    ][i] ?? s.label,
-  }));
+  /* ── Stats hero réelles — GET /client/livreurs/stats ──
+   * BUG CORRIGÉ — HERO_STATS était un tableau 100% statique ("148 livreurs
+   * actifs", "4.7★"…) qui ne changeait jamais quel que soit le contenu
+   * réel de la base. Chargé une fois au montage ; tant que ça charge (ou
+   * en cas d'échec), on affiche "…" plutôt qu'un chiffre inventé. */
+  const [networkStats, setNetworkStats] = useState<NetworkStats | null>(null);
+  useEffect(() => {
+    apiFetch<NetworkStats>('/client/livreurs/stats').then(setNetworkStats).catch(() => {});
+  }, []);
+
+  const fmtCount = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}K+` : String(n);
+  const heroStats = [
+    { value: networkStats ? String(networkStats.totalLivreurs)        : '…', label: t('livreursPage.hero.stats.livreursActifs') },
+    { value: networkStats ? `${networkStats.averageRating}★`          : '…', label: t('livreursPage.hero.stats.noteMoyenne') },
+    { value: networkStats ? fmtCount(networkStats.totalLivraisons)    : '…', label: t('livreursPage.hero.stats.livraisonsMois') },
+    { value: networkStats ? String(networkStats.communesCouvertes)    : '…', label: t('livreursPage.hero.stats.communesCouvertes') },
+  ];
+
+  /* ── Compteurs de zone réels — GET /client/livreurs/zones ──
+   * BUG CORRIGÉ — la sidebar affichait ZONES_OPTIONS, des comptes par
+   * commune 100% statiques (148/34/41/28/19/26) sans rapport avec le
+   * nombre réel de livreurs par commune. */
+  const [zoneCounts, setZoneCounts] = useState<ZoneCount[] | null>(null);
+  useEffect(() => {
+    apiFetch<ZoneCount[]>('/client/livreurs/zones').then(setZoneCounts).catch(() => {});
+  }, []);
 
   /* ── Toast local ── */
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -87,6 +109,7 @@ const LivreursPage: React.FC = () => {
     onSearch, onFilter, onSort, onViewChange,
     onZone, onVehicleToggle, onRating, onAvailability,
     onReset, onChange,
+    hasMore, loadMore, loadingMore,
   } = useLivreurs(initialSearch);
 
   /* Si l'utilisateur relance une recherche depuis le Header en étant
@@ -140,6 +163,7 @@ const LivreursPage: React.FC = () => {
         <SidebarFilters
           filters={filters}
           myFollowed={myFollowed}
+          zoneCounts={zoneCounts}
           onZone={onZone}
           onVehicleToggle={onVehicleToggle}
           onRating={onRating}
@@ -240,14 +264,17 @@ const LivreursPage: React.FC = () => {
             </div>
           )}
 
-          {/* ── Charger plus ── */}
-          {!loading && filtered.length > 0 && (
+          {/* ── Charger plus — pagination réelle (voir useLivreurs.loadMore) ── */}
+          {!loading && filtered.length > 0 && hasMore && (
             <div className={styles.loadMore}>
               <button
                 className={styles.loadMoreBtn}
-                onClick={() => onToast(t('livreursPage.page.chargementToast'), 'i')}
+                onClick={loadMore}
+                disabled={loadingMore}
               >
-                <i className="fas fa-arrow-down" />
+                {loadingMore
+                  ? <i className="fas fa-circle-notch fa-spin" />
+                  : <i className="fas fa-arrow-down" />}
                 {t('livreursPage.page.chargerPlus')}
               </button>
             </div>

@@ -61,10 +61,12 @@
  *  GET    /client/parametres/donnees/rapport
  *  POST   /client/parametres/donnees/portabilite
  *
- *  PATCH  /client/parametres/danger/desactiver
- *  PATCH  /client/parametres/danger/revoquer
+ *  PATCH  /client/parametres/danger/desactiver   → { password } requis
  *  PATCH  /client/parametres/danger/reinitialiser
- *  DELETE /client/parametres/danger/supprimer
+ *  DELETE /client/parametres/danger/supprimer     → { password } requis
+ *
+ *  (danger/revoquer retiré — "révoquer les accès tiers" n'existe pas
+ *   comme fonctionnalité réelle, voir DangerService)
  * ============================================================ */
 
 import {
@@ -106,6 +108,7 @@ import {
   UpdateAlertSettingDto,
   UpdateNotifsDto, UpdatePrivacyDto,
   UpdateApparenceDto, UpdateLangueDto,
+  DangerConfirmDto,
 } from './dto/client-parametres.dto';
 
 @Controller('client/parametres')
@@ -418,14 +421,8 @@ export class ClientParametresController {
    ══════════════════════════════════════════════════════════ */
   @Patch('danger/desactiver')
   @HttpCode(HttpStatus.OK)
-  desactiver(@CurrentUser() user: User) {
-    return this.dangerService.desactiverCompte(user);
-  }
-
-  @Patch('danger/revoquer')
-  @HttpCode(HttpStatus.OK)
-  revoquer(@CurrentUser() user: User) {
-    return this.dangerService.revoquerAccesTiers(user);
+  desactiver(@Body() dto: DangerConfirmDto, @CurrentUser() user: User) {
+    return this.dangerService.desactiverCompte(user, dto.password);
   }
 
   @Patch('danger/reinitialiser')
@@ -436,7 +433,7 @@ export class ClientParametresController {
 
   @Delete('danger/supprimer')
   @HttpCode(HttpStatus.OK)
-  supprimer(@CurrentUser() user: User) {
-    return this.dangerService.supprimerCompte(user);
+  supprimer(@Body() dto: DangerConfirmDto, @CurrentUser() user: User) {
+    return this.dangerService.supprimerCompte(user, dto.password);
   }
 }

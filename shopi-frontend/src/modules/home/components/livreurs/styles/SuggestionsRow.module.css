@@ -8,7 +8,8 @@
 .divider{width:1px;height:40px;background:var(--bdr);flex-shrink:0}
 .item{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:60px;cursor:pointer}
 .avaWrap{position:relative;margin-bottom:2px}
-.ava{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-weight:700;font-size:14px;color:#fff;position:relative}
+.ava{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-weight:700;font-size:14px;color:#fff;position:relative;overflow:hidden}
+.avaImg{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .avaDot{width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid var(--btn-h);position:absolute;bottom:1px;right:1px}
 .name{font-size:10.5px;font-weight:700;color:var(--t1);text-align:center;white-space:nowrap}
 .zone{font-size:9.5px;color:var(--t3);text-align:center}

@@ -19,6 +19,10 @@ import type { LivreurItem }                          from '../data/livreursMockD
  *  de filtre (recherche, zone, note...) — évite un appel API par frappe. */
 const SEARCH_DEBOUNCE_MS = 300;
 
+/** Taille d'une page — "Charger plus" ajoute PAGE_SIZE livreurs de plus,
+ *  au lieu de l'ancien fetch unique limit=50 sans suite possible. */
+const PAGE_SIZE = 12;
+
 /* ── Types internes ── */
 export type ViewMode   = 'grid' | 'list';
 export type FilterType = 'all' | 'available' | 'followed' | 'moto' | 'voiture';
@@ -65,6 +69,13 @@ export interface UseLivreursReturn {
    *  dans la liste partagée — le composant fait lui-même l'appel API,
    *  ce hook n'a plus qu'à synchroniser son état local. */
   onChange:          (id: string, next: { isSuivi: boolean; hidden?: boolean; removed?: boolean }) => void;
+  /** Encore des livreurs à charger au-delà de `livreurs` pour les filtres actuels. */
+  hasMore:           boolean;
+  /** Charge la page suivante et l'ajoute à `livreurs` (bouton "Charger plus"). */
+  loadMore:          () => void;
+  /** Chargement en cours d'une page suivante (distinct de `loading`, qui ne
+   *  couvre que le chargement initial/le changement de filtres). */
+  loadingMore:       boolean;
 }
 
 /* ================================================================
@@ -75,6 +86,13 @@ export function useLivreurs(initialSearch?: string): UseLivreursReturn {
   const [livreurs, setLivreurs] = useState<LivreurItem[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState<string | null>(null);
+  /* Pagination réelle — `total` vient de la réponse paginée du backend
+   * ({ data, total, page, limit }), `pageRef` suit la page déjà chargée
+   * pour ces filtres (en ref, pas en state : ne doit pas redéclencher
+   * l'effet de filtrage ci-dessous, seul loadMore() l'incrémente). */
+  const [total,       setTotal]       = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const pageRef = useRef(1);
   /* initialSearch vient de la recherche générale du Header (navigate avec
    * state.search) — voir LivreursPage.tsx et Header.tsx handleSearchSubmit. */
   const [filters,  setFilters]  = useState<FilterState>(() => ({
@@ -102,30 +120,45 @@ export function useLivreurs(initialSearch?: string): UseLivreursReturn {
     return null;
   }, [filters.activeFilter, filters.selectedVehicles]);
 
+  /* Construit les query params communs au fetch initial et à loadMore —
+   * seul `page` diffère entre les deux appels. */
+  const buildParams = useCallback((page: number) => {
+    const params = new URLSearchParams();
+    if (filters.searchQuery.trim())              params.set('search', filters.searchQuery.trim());
+    if (filters.selectedZone !== 'all')           params.set('zone', filters.selectedZone);
+    if (singleVehicule)                           params.set('vehicule', singleVehicule);
+    if (filters.activeFilter === 'available' || filters.availabilityFilter === 'available') {
+      params.set('disponibleOnly', 'true');
+    }
+    if (filters.minRating !== null)               params.set('minRating', String(filters.minRating));
+    if (filters.sortBy !== 'proches')             params.set('sortBy', filters.sortBy);
+    params.set('page',  String(page));
+    params.set('limit', String(PAGE_SIZE));
+    return params;
+  }, [
+    filters.searchQuery, filters.selectedZone, filters.minRating,
+    filters.sortBy, filters.activeFilter, filters.availabilityFilter,
+    singleVehicule,
+  ]);
+
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(() => {
       setLoading(true);
       setError(null);
-
-      const params = new URLSearchParams();
-      if (filters.searchQuery.trim())              params.set('search', filters.searchQuery.trim());
-      if (filters.selectedZone !== 'all')           params.set('zone', filters.selectedZone);
-      if (singleVehicule)                           params.set('vehicule', singleVehicule);
-      if (filters.activeFilter === 'available' || filters.availabilityFilter === 'available') {
-        params.set('disponibleOnly', 'true');
-      }
-      if (filters.minRating !== null)               params.set('minRating', String(filters.minRating));
-      if (filters.sortBy !== 'proches')             params.set('sortBy', filters.sortBy);
-      params.set('limit', '50');
+      pageRef.current = 1;
 
       /* L'API renvoie un objet paginé { data, total, page, limit } */
-      apiFetch<{ data: LivreurItem[] }>(`/suivis/livreurs?${params.toString()}`)
-        .then(res => setLivreurs(Array.isArray(res?.data) ? res.data : []))
+      apiFetch<{ data: LivreurItem[]; total: number }>(`/suivis/livreurs?${buildParams(1).toString()}`)
+        .then(res => {
+          setLivreurs(Array.isArray(res?.data) ? res.data : []);
+          setTotal(res?.total ?? 0);
+        })
         .catch(() => {
           /* Fallback mock si l'API n'est pas prête */
           setLivreurs(MOCK_LIVREURS);
+          setTotal(MOCK_LIVREURS.length);
         })
         .finally(() => setLoading(false));
     }, SEARCH_DEBOUNCE_MS);
@@ -133,11 +166,27 @@ export function useLivreurs(initialSearch?: string): UseLivreursReturn {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [
-    filters.searchQuery, filters.selectedZone, filters.minRating,
-    filters.sortBy, filters.activeFilter, filters.availabilityFilter,
-    singleVehicule,
-  ]);
+  }, [buildParams]);
+
+  /* ── Charger plus — page suivante ajoutée à la liste existante ──
+   * BUG CORRIGÉ — le bouton "Charger plus" ne faisait qu'afficher un
+   * toast factice ("Chargement..."), aucune requête n'était jamais
+   * envoyée : au-delà des PAGE_SIZE premiers livreurs, le reste du
+   * réseau restait invisible quels que soient les filtres. */
+  const hasMore = livreurs.length < total;
+  const loadMore = useCallback(() => {
+    if (loadingMore || !hasMore) return;
+    const nextPage = pageRef.current + 1;
+    setLoadingMore(true);
+    apiFetch<{ data: LivreurItem[]; total: number }>(`/suivis/livreurs?${buildParams(nextPage).toString()}`)
+      .then(res => {
+        pageRef.current = nextPage;
+        setLivreurs(prev => [...prev, ...(Array.isArray(res?.data) ? res.data : [])]);
+        setTotal(res?.total ?? total);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingMore(false));
+  }, [buildParams, hasMore, loadingMore, total]);
 
   /* ── Résidu client : uniquement ce que le backend ne filtre pas ── */
   const filtered = useMemo<LivreurItem[]>(() => {
@@ -194,5 +243,6 @@ const onChange = useCallback((id: string, next: { isSuivi: boolean; hidden?: boo
     onSearch, onFilter, onSort, onViewChange,
     onZone, onVehicleToggle, onRating, onAvailability,
     onReset, onChange,
+    hasMore, loadMore, loadingMore,
   };
 }

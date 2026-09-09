@@ -9,6 +9,7 @@ import type { ChatMessage, ChatUser } from '../data/messagerieTypes';
 import { getRoleConfig } from '../data/messagerieTypes';
 import VoicePlayer from './VoicePlayer';
 import { cldAvatar, cldChatImage } from '../utils/chatUtils';
+import type { MediaViewerItem } from './MediaViewer';
 import s from '../styles/ChatWindow.module.css';
 
 interface Props {
@@ -25,10 +26,17 @@ interface Props {
   onDelete:    (msgId: string, mode: 'me' | 'everyone' | 'other') => void;
   /** Relance l'envoi d'un message resté en échec (msg.sendFailed) */
   onRetry?:    (msgId: string) => void;
+  /** BUG CORRIGÉ — cliquer une image ouvrait l'URL Cloudinary brute dans un
+   *  nouvel onglet (window.open), on quittait Shoneya. Ouvre maintenant la
+   *  visionneuse plein écran IN-APP (voir MediaViewer.tsx). Signature
+   *  `(items, index)` comme InfoPanel.tsx, mais ici toujours un item seul
+   *  (pas de flèches ← → depuis une bulle du fil — seule la liste "Médias
+   *  partagés" du panneau d'info connaît tous les médias de la conversation). */
+  onOpenMedia: (items: MediaViewerItem[], index: number) => void;
 }
 
 function MessageBubble({
-  msg, idx, msgs, user, isLastRead = false, highlighted = false, onReply, onToast, onDelete, onRetry,
+  msg, idx, msgs, user, isLastRead = false, highlighted = false, onReply, onToast, onDelete, onRetry, onOpenMedia,
 }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -167,33 +175,33 @@ function MessageBubble({
           )}
 
           {msg.type === 'image' && (
-            <>
+            <div className={msg.text ? `${s.mediaCard} ${isMe ? s.sent : s.recv}` : undefined}>
               <div className={s.msgImg}>
                 {msg.mediaUrl
                   ? <img src={cldChatImage(msg.mediaUrl, 480)!} alt={msg.mediaName ?? 'Photo'} className={s.msgImgReal}
                       loading="lazy"
-                      onClick={() => window.open(msg.mediaUrl!, '_blank')} />
+                      onClick={() => onOpenMedia([{ url: msg.mediaUrl!, type: 'image', name: msg.mediaName }], 0)} />
                   : <div className={s.msgImgPlaceholder}>📸</div>
                 }
               </div>
-              {msg.text && <div className={`${s.bubble} ${isMe ? s.sent : s.recv} ${s.mediaCaption}`}>{msg.text}</div>}
-            </>
+              {msg.text && <div className={s.mediaCardCaption}>{msg.text}</div>}
+            </div>
           )}
 
           {msg.type === 'video' && (
-            <>
+            <div className={msg.text ? `${s.mediaCard} ${isMe ? s.sent : s.recv}` : undefined}>
               <div className={s.msgVideo}>
                 {msg.mediaUrl
                   ? <video src={msg.mediaUrl} controls preload="metadata" className={s.msgVideoEl} />
                   : <div className={s.msgImgPlaceholder}>🎥</div>
                 }
               </div>
-              {msg.text && <div className={`${s.bubble} ${isMe ? s.sent : s.recv} ${s.mediaCaption}`}>{msg.text}</div>}
-            </>
+              {msg.text && <div className={s.mediaCardCaption}>{msg.text}</div>}
+            </div>
           )}
 
           {msg.type === 'file' && (
-            <>
+            <div className={msg.text ? `${s.mediaCard} ${isMe ? s.sent : s.recv}` : undefined}>
               <a href={msg.mediaUrl ?? '#'} target="_blank" rel="noreferrer" download={msg.mediaName}
                 className={s.msgFile} onClick={e => { if (!msg.mediaUrl) e.preventDefault(); }}>
                 <div className={s.mfIcon}><i className="fas fa-file-pdf" /></div>
@@ -203,8 +211,8 @@ function MessageBubble({
                 </div>
                 <i className="fas fa-arrow-up-right-from-square" style={{ color: 'var(--t3)', fontSize: 13 }} />
               </a>
-              {msg.text && <div className={`${s.bubble} ${isMe ? s.sent : s.recv} ${s.mediaCaption}`}>{msg.text}</div>}
-            </>
+              {msg.text && <div className={s.mediaCardCaption}>{msg.text}</div>}
+            </div>
           )}
 
           {msg.type === 'voice' && (
@@ -456,6 +464,7 @@ function arePropsEqual(prev: Props, next: Props): boolean {
   if (prev.onToast !== next.onToast) return false;
   if (prev.onDelete !== next.onDelete) return false;
   if (prev.onRetry !== next.onRetry) return false;
+  if (prev.onOpenMedia !== next.onOpenMedia) return false;
 
   const prevIsLast = prev.idx === prev.msgs.length - 1;
   const nextIsLast = next.idx === next.msgs.length - 1;

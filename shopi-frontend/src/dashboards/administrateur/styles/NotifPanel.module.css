@@ -261,6 +261,26 @@
 }
 .emptyIcon { font-size: 32px; opacity: .4; }
 
+/* ── Voir plus ── */
+.loadMore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(100% - 20px);
+  margin: 4px 10px 8px;
+  padding: 10px;
+  background: rgba(255,255,255,.05);
+  border: none;
+  border-radius: 10px;
+  color: #A1A1AA;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+}
+.loadMore:hover:not(:disabled) { background: rgba(255,255,255,.08); color: #F4F4F5; }
+.loadMore:disabled { color: #52525B; cursor: default; }
+
 /* ── Chargement ── */
 .loader {
   display: flex;

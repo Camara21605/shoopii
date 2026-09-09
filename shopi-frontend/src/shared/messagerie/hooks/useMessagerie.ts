@@ -27,6 +27,8 @@ interface ApiConv {
   contactLogo:    string | null;
   contactOnline:  boolean;
   contactUserId?: string | null;
+  contactSubtitle?: string;
+  contactMemberSince?: string | null;
   unreadCount:    number;
   lastMessage:    string | null;
   lastMessageAt:  string | null;
@@ -128,7 +130,8 @@ function apiConvToState(api: ApiConv, messages: ChatMessage[] = []): { conv: Con
     ava:      api.contactLogo ? api.contactLogo : initials(api.contactName) || '?',
     avaColor: 'linear-gradient(135deg,var(--sky,#EEF3FD),var(--sky-2,#E2EAFB))',
     online:   api.contactOnline,
-    context:  (api as any).contactSubtitle ?? undefined,
+    context:  api.contactSubtitle ?? undefined,
+    memberSince: api.contactMemberSince ?? null,
   };
   const conv: Conversation = {
     id:       api.id,

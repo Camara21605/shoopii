@@ -349,7 +349,27 @@
           "sub": "不可逆操作 — 您所有产品、订单和销售历史将被删除。",
           "btn": "删除店铺"
         }
-      }
+      },
+      "comingSoon": "即将推出",
+      "ownerOnly": "仅限店铺所有者操作 — 协作者无法暂停、停用或删除店铺。",
+      "modal": {
+        "pauseTitle": "暂停店铺？",
+        "pauseMsg": "您的店铺将对公众隐藏。您可以随时从此页面重新启用。",
+        "disableTitle": "停用账户 30 天？",
+        "disableMsg": "您的资料将被隐藏。账户将在 30 天后自动重新启用。",
+        "deleteTitle": "永久删除店铺？",
+        "deleteMsg": "此操作不可逆。您所有的产品、订单和销售历史都将丢失。",
+        "passwordLabel": "请输入密码确认",
+        "passwordPlaceholder": "••••••••",
+        "passwordRequired": "确认此操作需要输入密码。",
+        "passwordIncorrect": "密码错误，请重试。",
+        "genericError": "❌ 操作失败，请检查网络连接。",
+        "cancel": "取消",
+        "confirming": "处理中…"
+      },
+      "pauseSuccess": "⏸️ 店铺已暂停",
+      "disableSuccess": "🚫 账户已停用 30 天",
+      "deleteSuccess": "店铺已删除，正在退出登录…"
     },
     "boutique": {
       "savedToast": "✅ 店铺保存成功",

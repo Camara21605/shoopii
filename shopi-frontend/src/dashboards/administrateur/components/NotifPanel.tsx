@@ -7,7 +7,9 @@
  * Props :
  *   items       — liste des notifications (du hook useNotifications)
  *   unreadCount — nombre de non-lus (pour le badge)
- *   loading     — état de chargement initial
+ *   loading     — état de chargement (initial ET "voir plus")
+ *   hasMore     — encore une page à charger (cursor non nul)
+ *   onLoadMore  — charge la page suivante
  *   onMarkRead  — marquer 1 notif comme lue
  *   onMarkAll   — marquer tout comme lu
  *   onDismiss   — supprimer 1 notif
@@ -92,6 +94,8 @@ interface NotifPanelProps {
   items:       INotificationDto[];
   unreadCount: number;
   loading:     boolean;
+  hasMore:     boolean;
+  onLoadMore:  () => void;
   onMarkRead:  (id: string) => void;
   onMarkAll:   () => void;
   onDismiss:   (id: string) => void;
@@ -102,7 +106,7 @@ interface NotifPanelProps {
 type Tab = 'all' | 'unread';
 
 export default function NotifPanel({
-  items, unreadCount, loading,
+  items, unreadCount, loading, hasMore, onLoadMore,
   onMarkRead, onMarkAll, onDismiss,
   onClose, onNavigate,
 }: NotifPanelProps) {
@@ -155,11 +159,11 @@ export default function NotifPanel({
 
         {/* ── Corps : liste ── */}
         <div className={styles.list}>
-          {loading && (
+          {loading && items.length === 0 && (
             <div className={styles.loader}><div className={styles.spinner} /></div>
           )}
 
-          {!loading && visible.length === 0 && (
+          {!(loading && items.length === 0) && visible.length === 0 && (
             <div className={styles.empty}>
               <i className={`fas fa-bell-slash ${styles.emptyIcon}`} />
               <span>
@@ -214,6 +218,16 @@ export default function NotifPanel({
               </button>
             </div>
           ))}
+
+          {hasMore && (
+            <button
+              className={styles.loadMore}
+              onClick={onLoadMore}
+              disabled={loading}
+            >
+              {loading ? <div className={styles.spinner} /> : 'Voir plus'}
+            </button>
+          )}
         </div>
       </div>
     </>

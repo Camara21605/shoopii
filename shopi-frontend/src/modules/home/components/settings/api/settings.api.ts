@@ -129,9 +129,10 @@ export const settingsApi = {
   getRapport:       () => apiFetch<any>('/client/parametres/donnees/rapport'),
   portabilite:      () => apiFetch<{message:string}>('/client/parametres/donnees/portabilite',  { method:'POST' }),
 
-  /* ── Danger ── */
-  desactiver:      () => apiFetch<{message:string}>('/client/parametres/danger/desactiver',   { method:'PATCH' }),
-  revoquerTiers:   () => apiFetch<{message:string}>('/client/parametres/danger/revoquer',     { method:'PATCH' }),
-  reinitialiser:   () => apiFetch<{message:string}>('/client/parametres/danger/reinitialiser',{ method:'PATCH' }),
-  supprimer:       () => apiFetch<{message:string}>('/client/parametres/danger/supprimer',    { method:'DELETE' }),
+  /* ── Danger ──
+   * desactiver/supprimer exigent le mot de passe actuel (confirmation
+   * côté serveur) — voir DangerService.verifyPassword (backend). */
+  desactiver:      (password: string) => apiFetch<{message:string}>('/client/parametres/danger/desactiver',   { method:'PATCH', body:{ password } }),
+  reinitialiser:   ()                 => apiFetch<{message:string}>('/client/parametres/danger/reinitialiser',{ method:'PATCH' }),
+  supprimer:       (password: string) => apiFetch<{message:string}>('/client/parametres/danger/supprimer',    { method:'DELETE', body:{ password } }),
 };

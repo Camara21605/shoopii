@@ -179,6 +179,8 @@ export default function AdministrateurApp() {
           items={notifs.items}
           unreadCount={notifs.unreadCount}
           loading={notifs.loading}
+          hasMore={notifs.hasMore}
+          onLoadMore={notifs.loadMore}
           onMarkRead={notifs.markRead}
           onMarkAll={notifs.markAll}
           onDismiss={notifs.dismiss}

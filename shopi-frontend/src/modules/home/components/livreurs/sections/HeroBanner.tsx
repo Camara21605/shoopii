@@ -9,7 +9,7 @@
  * STYLES : ../styles/HeroBanner.module.css
  * ================================================================ */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles               from '../styles/HeroBanner.module.css';
 import { useAuthGate }      from '../../../../../shared/hooks/useAuthGate';
@@ -87,13 +87,25 @@ interface HeroMiniCardProps {
 
 const HeroMiniCard: React.FC<HeroMiniCardProps> = ({ livreur, onToast, onChange }) => {
   const { openAuthModal, authModal } = useAuthGate();
+  const [imgError, setImgError] = useState(false);
 
   return (
     <div className={styles.miniCard} style={{ position: 'relative' }}>
       {/* Avatar */}
       <div className={styles.miniAvaWrap}>
-        <div className={styles.miniAva} style={{ background: livreur.avatarBg }}>
-          {livreur.initials}
+        <div
+          className={styles.miniAva}
+          style={livreur.profilePicture && !imgError ? undefined : { background: livreur.avatarBg }}
+        >
+          {livreur.profilePicture && !imgError
+            ? <img
+                className={styles.miniAvaImg}
+                src={livreur.profilePicture}
+                alt={livreur.fullName}
+                onError={() => setImgError(true)}
+              />
+            : livreur.initials
+          }
           {livreur.disponible && <span className={styles.miniDot} aria-hidden="true" />}
         </div>
       </div>

@@ -3,12 +3,14 @@
  * FIX : helper getOrCreate avec early return
  * ============================================================ */
 
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository }                      from '@nestjs/typeorm';
 import { DeepPartial, Repository }               from 'typeorm';
+import * as bcrypt from 'bcryptjs';
 
 import { User }   from '../../../../database/entities/user.entity';
 import { Client } from '../../../../database/entities/profiles/client-profile.entity';
+import { AuditLog } from '../../../../database/entities/audit-log.entity';
 import {
   UpdateNotifsDto, UpdatePrivacyDto,
   UpdateApparenceDto, UpdateLangueDto,
@@ -179,13 +181,46 @@ export class DonneesService {
   private readonly logger = new Logger(DonneesService.name);
 
   constructor(
-    @InjectRepository(User)    private readonly userRepo:   Repository<User>,
-    @InjectRepository(Client)  private readonly clientRepo: Repository<Client>,
+    @InjectRepository(User)     private readonly userRepo:     Repository<User>,
+    @InjectRepository(Client)   private readonly clientRepo:   Repository<Client>,
+    @InjectRepository(AuditLog) private readonly auditLogRepo: Repository<AuditLog>,
   ) {}
 
-  async exportAll(user: User)            { this.logger.log(`[EXPORT] userId=${user.id}`); return { message: 'Export en préparation. Email dans 24h.' }; }
-  async exportCommandes(user: User)      { return { message: "Historique des commandes en cours d'export." }; }
-  async exportFactures(user: User)       { return { message: 'Factures en cours de génération.' }; }
+  /* Génération réelle du fichier (ZIP/CSV/PDF) et envoi email : pas encore
+   * automatisés — en attendant, chaque demande est consignée dans
+   * audit_logs (déjà lu par le dashboard admin, AuditPage) pour que le
+   * DPO puisse la traiter manuellement dans le délai annoncé à
+   * l'utilisateur. Avant ce correctif, ces actions ne faisaient QUE
+   * logger côté serveur (console) puis répondre un message de succès —
+   * la demande de l'utilisateur n'était donc jamais réellement enregistrée
+   * nulle part, ce qui viole la promesse RGPD affichée dans l'UI. */
+  private async logDemande(user: User, action: string): Promise<void> {
+    await this.auditLogRepo.save(this.auditLogRepo.create({
+      actorId:    user.id,
+      actorName:  `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email,
+      actorEmail: user.email,
+      icon:       '📄',
+      action,
+      targetType: 'rgpd_request',
+      targetId:   user.id,
+    }));
+  }
+
+  async exportAll(user: User) {
+    await this.logDemande(user, 'RGPD — demande d\'export complet des données (profil, commandes, messages, points)');
+    return { message: 'Demande enregistrée. Export envoyé par email sous 24h.' };
+  }
+
+  async exportCommandes(user: User) {
+    await this.logDemande(user, 'RGPD — demande d\'export de l\'historique des commandes');
+    return { message: 'Demande enregistrée. Export envoyé par email sous 24h.' };
+  }
+
+  async exportFactures(user: User) {
+    await this.logDemande(user, 'RGPD — demande d\'export des factures et reçus');
+    return { message: 'Demande enregistrée. Export envoyé par email sous 24h.' };
+  }
+
   async rapportConfidentialite(user: User) {
     return {
       donneesCollectees: ['Nom', 'Email', 'Téléphone', 'Adresses', 'Commandes', 'Points'],
@@ -195,7 +230,11 @@ export class DonneesService {
       contact:           'privacy@shopi.gn',
     };
   }
-  async demanderPortabilite(user: User) { return { message: 'Demande enregistrée. Délai légal : 30 jours.' }; }
+
+  async demanderPortabilite(user: User) {
+    await this.logDemande(user, 'RGPD — demande de portabilité des données');
+    return { message: 'Demande enregistrée. Délai légal : 30 jours.' };
+  }
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -210,7 +249,20 @@ export class DangerService {
     @InjectRepository(Client) private readonly clientRepo: Repository<Client>,
   ) {}
 
-  async desactiverCompte(user: User): Promise<{ message: string }> {
+  /* Vérifie le mot de passe actuel avant toute action irréversible ou à
+   * fort impact — sans ça, un JWT volé/laissé ouvert (poste partagé, XSS)
+   * suffisait à désactiver ou supprimer le compte en 2 clics, sans aucune
+   * seconde preuve d'identité (même faille que celle corrigée côté
+   * entreprise, voir danger-parametres.service.ts). */
+  private async verifyPassword(userId: string, password: string): Promise<void> {
+    const user = await this.userRepo.findOne({ where: { id: userId }, select: ['id', 'password'] });
+    if (!user) throw new NotFoundException('Utilisateur introuvable.');
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) throw new UnauthorizedException('Mot de passe incorrect. Action refusée.');
+  }
+
+  async desactiverCompte(user: User, password: string): Promise<{ message: string }> {
+    await this.verifyPassword(user.id, password);
     const dbUser = await this.userRepo.findOne({ where: { id: user.id } });
     if (!dbUser) throw new NotFoundException('Utilisateur introuvable.');
     (dbUser as any).status = 'inactive';
@@ -219,13 +271,13 @@ export class DangerService {
     return { message: 'Compte temporairement désactivé.' };
   }
 
-  async revoquerAccesTiers(user: User): Promise<{ message: string }> {
-    const p = await getOrCreate(this.clientRepo, user.id);
-    (p as any).twoFaEnabled = false;
-    (p as any).twoFaMethod  = null;
-    await this.clientRepo.save(p);
-    return { message: 'Tous les accès tiers ont été révoqués.' };
-  }
+  /* "Révoquer les accès tiers" a été retiré : le site ne propose aucune
+   * intégration OAuth/application tierce (vérifié — aucune entité ni route
+   * de ce type dans tout le backend). L'implémentation précédente
+   * désactivait silencieusement le 2FA de l'utilisateur sous cet intitulé
+   * trompeur — une régression de sécurité déguisée en action anodine.
+   * Le bouton correspondant est désormais désactivé côté frontend
+   * ("Bientôt disponible") plutôt que de faire semblant. */
 
   async reinitialiserPreferences(user: User): Promise<{ message: string }> {
     const p = await getOrCreate(this.clientRepo, user.id);
@@ -241,7 +293,8 @@ export class DangerService {
     return { message: 'Préférences réinitialisées.' };
   }
 
-  async supprimerCompte(user: User): Promise<{ message: string }> {
+  async supprimerCompte(user: User, password: string): Promise<{ message: string }> {
+    await this.verifyPassword(user.id, password);
     const dbUser = await this.userRepo.findOne({ where: { id: user.id } });
     if (!dbUser) throw new NotFoundException('Utilisateur introuvable.');
     dbUser.deletedAt        = new Date();

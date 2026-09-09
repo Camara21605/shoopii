@@ -30,6 +30,7 @@ import {
   MessageStatus,
 } from 'src/database/entities/messaging/message.entity';
 
+import { User }           from 'src/database/entities/user.entity';
 import { Client }        from 'src/database/entities/profiles/client-profile.entity';
 import { Company }       from 'src/database/entities/profiles/entreprise-profile.entity';
 import { Delivery }      from 'src/database/entities/profiles/livreur-profile.entity';
@@ -38,6 +39,7 @@ import { Partner }       from 'src/database/entities/profiles/partenaire-profile
 import { UserRole }      from 'src/common/enums/user-role.enum';
 import { Follow, FollowerActorType, TargetActorType } from 'src/database/entities/follow/follow.entity';
 import { UserContact }   from 'src/database/entities/contacts/user-contact.entity';
+import { BlockedUser }   from 'src/database/entities/messaging/blocked-user.entity';
 import { Commande, CommandeStatus } from 'src/database/entities/commande/commande.entity';
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
 import { CompanyTeamMember, TeamMemberStatus } from 'src/database/entities/company-team/company-team-member.entity';
@@ -46,6 +48,7 @@ import {
   SendMessageDto, StartConversationDto,
   EditMessageDto, DeleteMessageDto, ToggleReactionDto,
   ArchiveConversationDto, PinConversationDto, MuteConversationDto,
+  UpdateWallpaperDto,
 } from './dto/messagerie.dto';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
@@ -60,6 +63,8 @@ export interface ConvListItem {
   contactOnline:    boolean;
   contactUserId:    string | null;
   contactSubtitle:  string;
+  /** Date de création réelle du profil contact (ISO) — "Membre depuis" côté InfoPanel. */
+  contactMemberSince: string | null;
   unreadCount:      number;
   lastMessage:      string | null;
   lastMessageAt:    string | null;
@@ -116,6 +121,21 @@ export interface MessageSearchResult {
   createdAt:     string;
 }
 
+export interface MediaSummaryItem {
+  id:            string;
+  contentType:   string;
+  mediaUrl:      string | null;
+  mediaName:     string | null;
+  mediaMimeType: string | null;
+  createdAt:     string;
+}
+
+export interface MediaSummary {
+  totalMessages: number;
+  media:         MediaSummaryItem[];
+  isBlockedByMe: boolean;
+}
+
 export interface UserSearchItem {
   id:       string;
   type:     string;
@@ -149,9 +169,11 @@ export class MessagerieService {
     @InjectRepository(Partner)      private readonly partnerRepo: Repository<Partner>,
     @InjectRepository(Follow)       private readonly followRepo: Repository<Follow>,
     @InjectRepository(UserContact)  private readonly contactRepo: Repository<UserContact>,
+    @InjectRepository(BlockedUser)  private readonly blockedRepo: Repository<BlockedUser>,
     @InjectRepository(Commande)     private readonly commandeRepo: Repository<Commande>,
     @InjectRepository(Product)      private readonly productRepo: Repository<Product>,
     @InjectRepository(CompanyTeamMember) private readonly teamMemberRepo: Repository<CompanyTeamMember>,
+    @InjectRepository(User)         private readonly userRepo:    Repository<User>,
     /*
      * BroadcastService injecté optionnellement (@Optional) :
      * évite la dépendance circulaire MessagerieService ↔ Gateway.
@@ -171,7 +193,9 @@ export class MessagerieService {
   // HELPERS INTERNES
   // ══════════════════════════════════════════════════════════════
 
-  private roleToActorType(role: UserRole): ConversationActorType {
+  /* Public — réutilisé par DeliveryGroupService.createCustomGroup() pour
+   * résoudre le type d'acteur du créateur d'un groupe libre. */
+  roleToActorType(role: UserRole): ConversationActorType {
     const map: Partial<Record<UserRole, ConversationActorType>> = {
       [UserRole.CLIENT]:        ConversationActorType.CLIENT,
       [UserRole.COMPANY]:       ConversationActorType.COMPANY,
@@ -249,7 +273,8 @@ export class MessagerieService {
   /** Résout le profile ID à partir du userId et du rôle JWT.
    *  Pour le rôle COMPANY, actorId (= companyId) est utilisé en fallback
    *  pour les membres d'équipe qui n'ont pas de Company avec userId=user.id. */
-  private async resolveProfileId(userId: string, role: UserRole, actorId?: string): Promise<string> {
+  /* Public — même raison que roleToActorType() ci-dessus. */
+  async resolveProfileId(userId: string, role: UserRole, actorId?: string): Promise<string> {
     let profile: { id: string } | null = null;
     switch (role) {
       case UserRole.CLIENT:        profile = await this.clientRepo.findOne({ where: { userId }, select: ['id'] }); break;
@@ -267,8 +292,11 @@ export class MessagerieService {
   }
 
   /** Infos de contact d'un acteur (nom, logo, online, userId JWT) */
-  private async getContactInfo(type: ConversationActorType, id: string): Promise<{
-    name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null;
+  /* Rendu public — réutilisé par DeliveryGroupService.createCustomGroup()
+   * pour résoudre nom + userId de chaque membre choisi à la main lors de
+   * la création d'un groupe libre (voir DeliveryGroupKind.CUSTOM). */
+  async getContactInfo(type: ConversationActorType, id: string): Promise<{
+    name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null;
   }> {
     const userId = await this.resolveUserIdFromProfile(type, id);
     const online = userId ? await this.presence.isOnline(userId) : false;
@@ -282,6 +310,7 @@ export class MessagerieService {
           online,
           subtitle: 'Boutique Shopi',
           userId,
+          memberSince: co?.createdAt?.toISOString() ?? null,
         };
       }
       case ConversationActorType.DELIVERY: {
@@ -292,6 +321,7 @@ export class MessagerieService {
           online,
           subtitle: `Livreur · ${(d as any)?.zone ?? 'Conakry'}`,
           userId,
+          memberSince: (d as any)?.createdAt?.toISOString() ?? null,
         };
       }
       case ConversationActorType.CORRESPONDENT: {
@@ -303,6 +333,7 @@ export class MessagerieService {
           online,
           subtitle: `Correspondant · ${loc || 'Conakry'}`,
           userId,
+          memberSince: (c as any)?.createdAt?.toISOString() ?? null,
         };
       }
       case ConversationActorType.PARTNER: {
@@ -314,6 +345,7 @@ export class MessagerieService {
           online,
           subtitle: 'Partenaire',
           userId,
+          memberSince: (p as any)?.createdAt?.toISOString() ?? null,
         };
       }
       case ConversationActorType.CLIENT:
@@ -326,6 +358,7 @@ export class MessagerieService {
           online,
           subtitle: 'Client',
           userId,
+          memberSince: (cl as any)?.createdAt?.toISOString() ?? null,
         };
       }
     }
@@ -346,8 +379,8 @@ export class MessagerieService {
    */
   private async getContactInfoBulk(
     items: { type: ConversationActorType; id: string }[],
-  ): Promise<Map<string, { name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null }>> {
-    const result = new Map<string, { name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null }>();
+  ): Promise<Map<string, { name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null }>> {
+    const result = new Map<string, { name: string; logo: string | null; online: boolean; subtitle: string; userId: string | null; memberSince: string | null }>();
     if (items.length === 0) return result;
 
     const idsByType = new Map<ConversationActorType, Set<string>>();
@@ -401,27 +434,29 @@ export class MessagerieService {
       const uid   = userIdByKey.get(key) ?? null;
       const online = uid ? presenceMap.get(uid)?.online === true : false;
 
+      const memberSince: string | null = row?.createdAt?.toISOString() ?? null;
+
       switch (type) {
         case ConversationActorType.COMPANY:
-          result.set(key, { name: row?.companyName ?? 'Boutique', logo: row?.logo ?? null, online, subtitle: 'Boutique Shopi', userId: uid });
+          result.set(key, { name: row?.companyName ?? 'Boutique', logo: row?.logo ?? null, online, subtitle: 'Boutique Shopi', userId: uid, memberSince });
           break;
         case ConversationActorType.DELIVERY:
-          result.set(key, { name: row?.fullName ?? 'Livreur', logo: null, online, subtitle: `Livreur · ${row?.zone ?? 'Conakry'}`, userId: uid });
+          result.set(key, { name: row?.fullName ?? 'Livreur', logo: null, online, subtitle: `Livreur · ${row?.zone ?? 'Conakry'}`, userId: uid, memberSince });
           break;
         case ConversationActorType.CORRESPONDENT: {
           const loc = [row?.depotCommune, row?.depotVille].filter(Boolean).join(', ');
-          result.set(key, { name: row?.fullName ?? 'Correspondant', logo: null, online, subtitle: `Correspondant · ${loc || 'Conakry'}`, userId: uid });
+          result.set(key, { name: row?.fullName ?? 'Correspondant', logo: null, online, subtitle: `Correspondant · ${loc || 'Conakry'}`, userId: uid, memberSince });
           break;
         }
         case ConversationActorType.PARTNER: {
           const u = row?.user;
-          result.set(key, { name: u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Partenaire', logo: null, online, subtitle: 'Partenaire', userId: uid });
+          result.set(key, { name: u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Partenaire', logo: null, online, subtitle: 'Partenaire', userId: uid, memberSince });
           break;
         }
         case ConversationActorType.CLIENT:
         default: {
           const u = row?.user;
-          result.set(key, { name: u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Client', logo: u?.profilePicture ?? null, online, subtitle: 'Client', userId: uid });
+          result.set(key, { name: u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Client', logo: u?.profilePicture ?? null, online, subtitle: 'Client', userId: uid, memberSince });
           break;
         }
       }
@@ -543,7 +578,7 @@ export class MessagerieService {
       const { type: contactType, id: contactId } = contacts[i];
       const unreadCount  = amInitiator ? conv.unreadCountInitiator : conv.unreadCountRecipient;
       const contact = contactMap.get(`${contactType}:${contactId}`)
-        ?? { name: 'Utilisateur', logo: null, online: false, subtitle: '', userId: null };
+        ?? { name: 'Utilisateur', logo: null, online: false, subtitle: '', userId: null, memberSince: null };
 
       return {
         id:               conv.id,
@@ -554,6 +589,7 @@ export class MessagerieService {
         contactOnline:    contact.online,
         contactUserId:    contact.userId,
         contactSubtitle:  contact.subtitle,
+        contactMemberSince: contact.memberSince,
         unreadCount,
         lastMessage:      conv.lastMessagePreview,
         lastMessageAt:    conv.lastMessageAt?.toISOString() ?? null,
@@ -651,6 +687,7 @@ export class MessagerieService {
       contactOnline:    contact.online,
       contactUserId:    contact.userId,
       contactSubtitle:  contact.subtitle,
+      contactMemberSince: contact.memberSince,
       unreadCount,
       lastMessage:      conv.lastMessagePreview,
       lastMessageAt:    conv.lastMessageAt?.toISOString() ?? null,
@@ -680,6 +717,22 @@ export class MessagerieService {
     const amInitiator0 = conv.initiatorType === myType && conv.initiatorId === myId;
     const otherType0   = amInitiator0 ? conv.recipientType : conv.initiatorType;
     const otherId0      = amInitiator0 ? conv.recipientId   : conv.initiatorId;
+
+    /* BLOCAGE — un blocage dans UN SENS suffit à bloquer l'envoi dans les
+     * DEUX sens (voir blocked-user.entity.ts) : si l'un des deux
+     * participants a bloqué l'autre, personne ne peut plus écrire ici. */
+    const otherUserId0 = await this.resolveUserIdFromProfile(otherType0, otherId0);
+    if (otherUserId0) {
+      const blocked = await this.blockedRepo.findOne({
+        where: [
+          { blockerUserId: userId,      blockedUserId: otherUserId0 },
+          { blockerUserId: otherUserId0, blockedUserId: userId },
+        ],
+      });
+      if (blocked) {
+        throw new ForbiddenException("Vous ne pouvez pas envoyer de message à ce contact.");
+      }
+    }
 
     /* CARTE COMMANDE PARTAGÉE — le résumé (numéro, statut, total) est
      * reconstruit ici côté serveur depuis la BDD (jamais fait confiance au
@@ -1929,6 +1982,120 @@ export class MessagerieService {
         image: cover?.url ?? null,
       };
     });
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // FOND D'ÉCRAN DE LA MESSAGERIE
+  //
+  // Préférence globale par utilisateur (pas par conversation) — un seul
+  // fond appliqué à toutes ses conversations. Galerie FERMÉE fournie par
+  // le système (pas d'import d'image personnelle) : User.chatWallpaper
+  // ne peut valoir que null ou "preset:<key>", <key> validée contre
+  // WALLPAPER_PRESET_KEYS (voir UpdateWallpaperDto) — même liste que le
+  // frontend (wallpaperPresets.ts), tenue manuellement en synchronisation
+  // vu sa petite taille fixe.
+  // ══════════════════════════════════════════════════════════════
+
+  async getWallpaper(userId: string): Promise<{ wallpaper: string | null }> {
+    const user = await this.userRepo.findOne({ where: { id: userId }, select: ['id', 'chatWallpaper'] });
+    if (!user) throw new NotFoundException('Utilisateur introuvable.');
+    return { wallpaper: user.chatWallpaper };
+  }
+
+  async setWallpaper(userId: string, dto: UpdateWallpaperDto): Promise<{ wallpaper: string | null }> {
+    await this.userRepo.update({ id: userId }, { chatWallpaper: dto.wallpaper });
+    return { wallpaper: dto.wallpaper };
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // RÉSUMÉ MÉDIAS + NOMBRE RÉEL DE MESSAGES — panneau "Informations"
+  // ══════════════════════════════════════════════════════════════
+
+  /**
+   * BUG CORRIGÉ — le panneau "Informations" de la messagerie affichait
+   * `conv.messages.length` (nombre de messages déjà CHARGÉS côté
+   * frontend, sous-évalué tant que l'historique n'a pas été entièrement
+   * scrollé) et une grille d'émojis fixe ['📱','💻','🎧','📷','📦','📄']
+   * totalement déconnectée des vrais fichiers échangés. Ce endpoint
+   * fournit les deux à partir de la base : un COUNT réel et la vraie
+   * liste des messages de type média (le soft-delete TypeORM exclut
+   * déjà automatiquement les messages supprimés du COUNT/find).
+   */
+  async getMediaSummary(
+    userId: string, role: UserRole, convId: string, actorId?: string,
+  ): Promise<MediaSummary> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
+    const conv   = await this.assertConvAccess(convId, myType, myId);
+
+    const MEDIA_TYPES = [
+      MessageContentType.IMAGE, MessageContentType.VIDEO,
+      MessageContentType.AUDIO, MessageContentType.FILE,
+    ];
+
+    const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
+    const otherType    = amInitiator ? conv.recipientType : conv.initiatorType;
+    const otherId      = amInitiator ? conv.recipientId   : conv.initiatorId;
+    const otherUserId  = await this.resolveUserIdFromProfile(otherType, otherId);
+
+    const [totalMessages, mediaRows, blockedRow] = await Promise.all([
+      this.msgRepo.count({ where: { conversationId: convId } }),
+      this.msgRepo.find({
+        where:   { conversationId: convId, contentType: In(MEDIA_TYPES) },
+        order:   { createdAt: 'DESC' },
+        take:    60,
+      }),
+      otherUserId
+        ? this.blockedRepo.findOne({ where: { blockerUserId: userId, blockedUserId: otherUserId } })
+        : Promise.resolve(null),
+    ]);
+
+    return {
+      totalMessages,
+      media: mediaRows.map(m => ({
+        id:            m.id,
+        contentType:   m.contentType,
+        mediaUrl:      m.mediaUrl,
+        mediaName:     m.mediaName,
+        mediaMimeType: m.mediaMimeType,
+        createdAt:     m.createdAt.toISOString(),
+      })),
+      isBlockedByMe: !!blockedRow,
+    };
+  }
+
+  /**
+   * BUG CORRIGÉ — "Bloquer le contact" (InfoPanel.tsx) était un bouton
+   * factice (toast local, aucun appel réseau). Un blocage dans un sens
+   * bloque l'envoi de message dans les deux sens (voir sendMessage()) —
+   * la conversation et son historique restent visibles, seul l'envoi de
+   * nouveaux messages est refusé.
+   */
+  async setBlocked(
+    userId: string, role: UserRole, convId: string, blocked: boolean, actorId?: string,
+  ): Promise<{ blocked: boolean }> {
+    const myType = this.roleToActorType(role);
+    const myId   = await this.resolveProfileId(userId, role, actorId);
+    const conv   = await this.assertConvAccess(convId, myType, myId);
+
+    const amInitiator = conv.initiatorType === myType && conv.initiatorId === myId;
+    const otherType    = amInitiator ? conv.recipientType : conv.initiatorType;
+    const otherId      = amInitiator ? conv.recipientId   : conv.initiatorId;
+    const otherUserId  = await this.resolveUserIdFromProfile(otherType, otherId);
+    if (!otherUserId) throw new NotFoundException('Contact introuvable.');
+
+    if (blocked) {
+      const existing = await this.blockedRepo.findOne({ where: { blockerUserId: userId, blockedUserId: otherUserId } });
+      if (!existing) {
+        await this.blockedRepo.save(this.blockedRepo.create({ blockerUserId: userId, blockedUserId: otherUserId }));
+      }
+      this.logger.log(`[BLOCK] ${userId} a bloqué ${otherUserId}`);
+    } else {
+      await this.blockedRepo.delete({ blockerUserId: userId, blockedUserId: otherUserId });
+      this.logger.log(`[UNBLOCK] ${userId} a débloqué ${otherUserId}`);
+    }
+
+    return { blocked };
   }
 
   // ══════════════════════════════════════════════════════════════

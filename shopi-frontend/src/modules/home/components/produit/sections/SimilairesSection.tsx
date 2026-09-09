@@ -15,11 +15,17 @@ const SOCKET_URL =
 interface Props {
   produitId: string;
   onToast:   (m: string) => void;
+  /** true UNIQUEMENT depuis "Voir ma boutique" du dashboard entreprise —
+   *  voir PanierPanel.tsx pour la raison. Bloque aussi le clic carte
+   *  (navigate vers un AUTRE produit, potentiellement d'une autre
+   *  boutique — ferait quitter le dashboard entreprise comme le bug
+   *  déjà corrigé sur CardProduitBoutique.tsx). */
+  previewOverride?: boolean;
 }
 
 const BADGE_CLS: Record<string, string> = { hot:styles.badgeHot, new:styles.badgeNew, promo:styles.badgePromo };
 
-export default function SimilairesSection({ produitId, onToast }: Props) {
+export default function SimilairesSection({ produitId, onToast, previewOverride = false }: Props) {
   const { t } = useTranslation();
   const BADGE_CFG: Record<string, string> = {
     hot: t('produitDetail.similaires.badges.hot'),
@@ -73,6 +79,7 @@ export default function SimilairesSection({ produitId, onToast }: Props) {
   };
 
   async function handleAddToCart(p: SimilaireApi) {
+    if (previewOverride) { onToast(t('produitDetail.panier.previewToast')); return; }
     if (!isClient) { navigate('/login'); return; }
 
     /* ✅ Déjà dans le panier → rediriger vers le panier */
@@ -114,7 +121,14 @@ export default function SimilairesSection({ produitId, onToast }: Props) {
           const pct         = remise(p);
           const enPanier    = !!isInCart(p.id);
           return (
-            <div key={p.id} className={styles.card} onClick={() => navigate(`/produit/${p.id}`)}>
+            <div
+              key={p.id}
+              className={styles.card}
+              onClick={() => {
+                if (previewOverride) { onToast(t('produitDetail.panier.previewToast')); return; }
+                navigate(`/produit/${p.id}`);
+              }}
+            >
               {p.badge && <span className={`${styles.badge} ${BADGE_CLS[p.badge] ?? ''}`}>{BADGE_CFG[p.badge]}</span>}
               {pct && <span className={`${styles.badge} ${styles.badgePromo}`}>−{pct}%</span>}
 
@@ -157,26 +171,32 @@ export default function SimilairesSection({ produitId, onToast }: Props) {
                   )}
                 </div>
 
-                {/* ✅ Bouton change selon état panier */}
-                {enPanier ? (
-                  <button
-                    className={styles.btnAdd}
-                    onClick={e => { e.stopPropagation(); navigate('/commande'); }}
-                    style={{ background:'var(--emerald,#059669)', borderColor:'var(--emerald,#059669)' }}
-                  >
-                    <i className="fas fa-check" /> {t('produitDetail.similaires.voirLePanier')}
-                  </button>
-                ) : (
-                  <button
-                    className={styles.btnAdd}
-                    onClick={e => { e.stopPropagation(); handleAddToCart(p); }}
-                    disabled={adding === p.id}
-                  >
-                    {adding === p.id
-                      ? <i className="fas fa-circle-notch fa-spin" />
-                      : <><i className="fas fa-cart-plus" /> {t('produitDetail.similaires.ajouter')}</>
-                    }
-                  </button>
+                {/* ✅ Bouton change selon état panier — BUG CORRIGÉ : restait
+                 * affiché (juste bloqué par un toast au clic) dans l'aperçu
+                 * "Voir ma boutique" du dashboard entreprise ; retiré
+                 * entièrement en aperçu, même raison que PanierPanel.tsx/
+                 * ProduitInfoSection.tsx. */}
+                {!previewOverride && (
+                  enPanier ? (
+                    <button
+                      className={styles.btnAdd}
+                      onClick={e => { e.stopPropagation(); navigate('/commande'); }}
+                      style={{ background:'var(--emerald,#059669)', borderColor:'var(--emerald,#059669)' }}
+                    >
+                      <i className="fas fa-check" /> {t('produitDetail.similaires.voirLePanier')}
+                    </button>
+                  ) : (
+                    <button
+                      className={styles.btnAdd}
+                      onClick={e => { e.stopPropagation(); handleAddToCart(p); }}
+                      disabled={adding === p.id}
+                    >
+                      {adding === p.id
+                        ? <i className="fas fa-circle-notch fa-spin" />
+                        : <><i className="fas fa-cart-plus" /> {t('produitDetail.similaires.ajouter')}</>
+                      }
+                    </button>
+                  )
                 )}
               </div>
             </div>

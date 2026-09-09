@@ -153,6 +153,14 @@ export default function Topbar({
   const [avatarOpen,     setAvatarOpen]     = useState(false);
   const [monEspaceOpen,  setMonEspaceOpen]  = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  /* BUG CORRIGÉ — la barre de recherche globale (.tb-srch) est masquée en
+   * CSS sous 640px (voir Topbar.css) sans aucune alternative : impossible
+   * de chercher quoi que ce soit sur téléphone. Un bouton dédié ouvre
+   * maintenant une recherche plein écran sur mobile, réutilisant le même
+   * état/logique de recherche que la barre desktop (searchVal, debounce,
+   * Promise.allSettled…) — seul le conteneur d'affichage diffère. */
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const avatarRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const searchAbortRef = useRef<AbortController | null>(null);
@@ -241,11 +249,21 @@ export default function Topbar({
     return () => clearTimeout(timer);
   }, [searchVal]);
 
-  /* Verrouiller le scroll quand le drawer mobile est ouvert */
+  /* Verrouiller le scroll quand le drawer mobile ou la recherche plein
+     écran mobile est ouvert(e) */
   useEffect(() => {
-    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+    document.body.style.overflow = (mobileMenuOpen || mobileSearchOpen) ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
-  }, [mobileMenuOpen]);
+  }, [mobileMenuOpen, mobileSearchOpen]);
+
+  /* Ouvre le clavier directement + referme avec Échap */
+  useEffect(() => {
+    if (!mobileSearchOpen) return;
+    mobileSearchInputRef.current?.focus();
+    const fn = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileSearchOpen(false); };
+    document.addEventListener('keydown', fn);
+    return () => document.removeEventListener('keydown', fn);
+  }, [mobileSearchOpen]);
 
   /* Fermer le drawer mobile avec Escape */
   useEffect(() => {
@@ -283,6 +301,85 @@ export default function Topbar({
     searchResults.livreurs.length + searchResults.correspondants.length;
   const searchDropdownVisible = searchOpen && searchVal.trim().length >= 1;
 
+  /* Contenu du résultat de recherche — partagé entre le dropdown desktop
+     et la recherche plein écran mobile (voir mobileSearchOpen ci-dessus). */
+  const searchResultsBody = searchLoading ? (
+    <div className="tb-srch-state"><i className="fas fa-spinner fa-spin" /></div>
+  ) : searchError ? (
+    <div className="tb-srch-state tb-srch-state-error">
+      <i className="fas fa-triangle-exclamation" /> {t('topbar.search.error')}
+    </div>
+  ) : searchTotal === 0 ? (
+    <div className="tb-srch-state">{t('topbar.search.noResults', { query: searchVal.trim() })}</div>
+  ) : (
+    <>
+      {searchResults.produits.length > 0 && (
+        <div className="tb-srch-sec">
+          <div className="tb-srch-sec-title">{t('topbar.search.produits')}</div>
+          {searchResults.produits.map(p => (
+            <button key={p.id} className="tb-srch-item" onClick={() => { selectSearchResult('ajouter', p.id); setMobileSearchOpen(false); }}>
+              {p.images?.[0]
+                ? <img src={p.images[0].url} alt="" className="tb-srch-thumb" />
+                : <span className="tb-srch-thumb tb-srch-thumb-ico"><i className="fas fa-box" /></span>}
+              <span className="tb-srch-label">{p.nom}</span>
+              <span className="tb-srch-meta">{p.prix.toLocaleString('fr-FR')} GNF</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {searchResults.commandes.length > 0 && (
+        <div className="tb-srch-sec">
+          <div className="tb-srch-sec-title">{t('topbar.search.commandes')}</div>
+          {searchResults.commandes.map(c => (
+            <button key={c.uuid} className="tb-srch-item" onClick={() => { selectSearchResult('commandes'); setMobileSearchOpen(false); }}>
+              <span className="tb-srch-thumb tb-srch-thumb-ico"><i className="fas fa-box" /></span>
+              <span className="tb-srch-label">#{c.id} · {c.client}</span>
+              <span className="tb-srch-meta">{c.price.toLocaleString('fr-FR')} GNF</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {searchResults.clients.length > 0 && (
+        <div className="tb-srch-sec">
+          <div className="tb-srch-sec-title">{t('topbar.search.clients')}</div>
+          {searchResults.clients.map(c => (
+            <button key={c.id} className="tb-srch-item" onClick={() => { selectSearchResult('clients'); setMobileSearchOpen(false); }}>
+              {c.profilePicture
+                ? <img src={c.profilePicture} alt="" className="tb-srch-thumb" />
+                : <span className="tb-srch-thumb tb-srch-thumb-ico"><i className="fas fa-user" /></span>}
+              <span className="tb-srch-label">{c.fullName}</span>
+              <span className="tb-srch-meta">{c.email}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {searchResults.livreurs.length > 0 && (
+        <div className="tb-srch-sec">
+          <div className="tb-srch-sec-title">{t('topbar.search.livreurs')}</div>
+          {searchResults.livreurs.map(l => (
+            <button key={l.id} className="tb-srch-item" onClick={() => { selectSearchResult('livreurs'); setMobileSearchOpen(false); }}>
+              <span className="tb-srch-thumb tb-srch-thumb-ico">{l.avatarEmoji || '🏍️'}</span>
+              <span className="tb-srch-label">{l.fullName}</span>
+              <span className="tb-srch-meta">{l.zone ?? ''}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {searchResults.correspondants.length > 0 && (
+        <div className="tb-srch-sec">
+          <div className="tb-srch-sec-title">{t('topbar.search.correspondants')}</div>
+          {searchResults.correspondants.map(c => (
+            <button key={c.id} className="tb-srch-item" onClick={() => { selectSearchResult('correspondants'); setMobileSearchOpen(false); }}>
+              <span className="tb-srch-thumb tb-srch-thumb-ico">{c.avatarEmoji || '📍'}</span>
+              <span className="tb-srch-label">{c.fullName}</span>
+              <span className="tb-srch-meta">{c.ville}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  );
+
   return (
     <>
       <header className="topbar">
@@ -311,85 +408,22 @@ export default function Topbar({
 
           {searchDropdownVisible && (
             <div className="tb-srch-drop" onClick={e => e.stopPropagation()}>
-              {searchLoading ? (
-                <div className="tb-srch-state"><i className="fas fa-spinner fa-spin" /></div>
-              ) : searchError ? (
-                <div className="tb-srch-state tb-srch-state-error">
-                  <i className="fas fa-triangle-exclamation" /> {t('topbar.search.error')}
-                </div>
-              ) : searchTotal === 0 ? (
-                <div className="tb-srch-state">{t('topbar.search.noResults', { query: searchVal.trim() })}</div>
-              ) : (
-                <>
-                  {searchResults.produits.length > 0 && (
-                    <div className="tb-srch-sec">
-                      <div className="tb-srch-sec-title">{t('topbar.search.produits')}</div>
-                      {searchResults.produits.map(p => (
-                        <button key={p.id} className="tb-srch-item" onClick={() => selectSearchResult('ajouter', p.id)}>
-                          {p.images?.[0]
-                            ? <img src={p.images[0].url} alt="" className="tb-srch-thumb" />
-                            : <span className="tb-srch-thumb tb-srch-thumb-ico"><i className="fas fa-box" /></span>}
-                          <span className="tb-srch-label">{p.nom}</span>
-                          <span className="tb-srch-meta">{p.prix.toLocaleString('fr-FR')} GNF</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {searchResults.commandes.length > 0 && (
-                    <div className="tb-srch-sec">
-                      <div className="tb-srch-sec-title">{t('topbar.search.commandes')}</div>
-                      {searchResults.commandes.map(c => (
-                        <button key={c.uuid} className="tb-srch-item" onClick={() => selectSearchResult('commandes')}>
-                          <span className="tb-srch-thumb tb-srch-thumb-ico"><i className="fas fa-box" /></span>
-                          <span className="tb-srch-label">#{c.id} · {c.client}</span>
-                          <span className="tb-srch-meta">{c.price.toLocaleString('fr-FR')} GNF</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {searchResults.clients.length > 0 && (
-                    <div className="tb-srch-sec">
-                      <div className="tb-srch-sec-title">{t('topbar.search.clients')}</div>
-                      {searchResults.clients.map(c => (
-                        <button key={c.id} className="tb-srch-item" onClick={() => selectSearchResult('clients')}>
-                          {c.profilePicture
-                            ? <img src={c.profilePicture} alt="" className="tb-srch-thumb" />
-                            : <span className="tb-srch-thumb tb-srch-thumb-ico"><i className="fas fa-user" /></span>}
-                          <span className="tb-srch-label">{c.fullName}</span>
-                          <span className="tb-srch-meta">{c.email}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {searchResults.livreurs.length > 0 && (
-                    <div className="tb-srch-sec">
-                      <div className="tb-srch-sec-title">{t('topbar.search.livreurs')}</div>
-                      {searchResults.livreurs.map(l => (
-                        <button key={l.id} className="tb-srch-item" onClick={() => selectSearchResult('livreurs')}>
-                          <span className="tb-srch-thumb tb-srch-thumb-ico">{l.avatarEmoji || '🏍️'}</span>
-                          <span className="tb-srch-label">{l.fullName}</span>
-                          <span className="tb-srch-meta">{l.zone ?? ''}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {searchResults.correspondants.length > 0 && (
-                    <div className="tb-srch-sec">
-                      <div className="tb-srch-sec-title">{t('topbar.search.correspondants')}</div>
-                      {searchResults.correspondants.map(c => (
-                        <button key={c.id} className="tb-srch-item" onClick={() => selectSearchResult('correspondants')}>
-                          <span className="tb-srch-thumb tb-srch-thumb-ico">{c.avatarEmoji || '📍'}</span>
-                          <span className="tb-srch-label">{c.fullName}</span>
-                          <span className="tb-srch-meta">{c.ville}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
+              {searchResultsBody}
             </div>
           )}
         </div>
+
+        {/* Recherche mobile — bouton visible uniquement ≤640px (voir Topbar.css),
+            .tb-srch étant masquée à cette largeur. */}
+        <button
+          type="button"
+          className="tb-ic tb-ic-search"
+          title={t('topbar.searchPlaceholder')}
+          aria-label={t('topbar.searchPlaceholder')}
+          onClick={() => setMobileSearchOpen(true)}
+        >
+          <i className="fas fa-magnifying-glass"></i>
+        </button>
 
         {/* Actions rapides (desktop) */}
         <div className="tb-acts">
@@ -578,6 +612,34 @@ export default function Topbar({
                 <i className="fas fa-house"></i> {t('topbar.drawer.basculerAccueil')}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════ RECHERCHE PLEIN ÉCRAN MOBILE ════════ */}
+      {mobileSearchOpen && (
+        <div className="tb-mobile-srch" role="search">
+          <div className="tb-mobile-srch-hd">
+            <button className="tb-mobile-srch-back" onClick={() => setMobileSearchOpen(false)} aria-label={t('topbar.hamburgerAria')}>
+              <i className="fas fa-arrow-left"></i>
+            </button>
+            <input
+              ref={mobileSearchInputRef}
+              type="text"
+              placeholder={t('topbar.searchPlaceholder')}
+              value={searchVal}
+              onChange={e => setSearchVal(e.target.value)}
+            />
+            {searchVal && (
+              <button className="tb-mobile-srch-clear" onClick={() => setSearchVal('')} aria-label="Clear">
+                <i className="fas fa-xmark"></i>
+              </button>
+            )}
+          </div>
+          <div className="tb-mobile-srch-body">
+            {searchVal.trim().length >= 1
+              ? searchResultsBody
+              : <div className="tb-srch-state">{t('topbar.searchPlaceholder')}</div>}
           </div>
         </div>
       )}

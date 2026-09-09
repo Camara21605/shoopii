@@ -297,6 +297,61 @@ export function useParametres() {
     patch('confidentialite', body), [patch]);
 
   // ─────────────────────────────────────────────────────────────
+  // SECTION 12 — Zone sensible
+  //
+  // BUG CORRIGÉ — DangerSection.tsx (pause/désactiver/supprimer) n'appelait
+  // jamais l'API : les 3 boutons se contentaient d'un toast générique
+  // "confirmation requise" sans rien faire, alors que les 3 endpoints
+  // backend (PATCH danger/pause, PATCH danger/desactiver, DELETE
+  // danger/supprimer — mot de passe requis, voir DangerParametresService)
+  // sont réels et complets depuis le début, juste jamais câblés.
+  //
+  // Réponses différentes de `patch()` (pas un ParametresData complet) →
+  // fonctions dédiées plutôt que réutiliser patch(). pause/desactiver
+  // rechargent les données ensuite (le badge de statut dans la sidebar,
+  // sbcStatus, doit refléter le nouveau Company.status) ; supprimer ne
+  // recharge pas — le profil Company n'existe plus, l'appelant (
+  // ParametresPage) doit déconnecter l'utilisateur.
+  // ─────────────────────────────────────────────────────────────
+
+  const pauseBoutique = useCallback(async (password: string): Promise<{ message: string }> => {
+    setSaving(true);
+    try {
+      const res = await apiFetch<{ message: string }>(`${BASE}/danger/pause`, {
+        method: 'PATCH', body: { password },
+      });
+      await reload();
+      return res;
+    } finally {
+      setSaving(false);
+    }
+  }, [reload]);
+
+  const desactiverCompte = useCallback(async (password: string): Promise<{ message: string; reactivationAt: string }> => {
+    setSaving(true);
+    try {
+      const res = await apiFetch<{ message: string; reactivationAt: string }>(`${BASE}/danger/desactiver`, {
+        method: 'PATCH', body: { password },
+      });
+      await reload();
+      return res;
+    } finally {
+      setSaving(false);
+    }
+  }, [reload]);
+
+  const supprimerBoutique = useCallback(async (password: string): Promise<{ message: string }> => {
+    setSaving(true);
+    try {
+      return await apiFetch<{ message: string }>(`${BASE}/danger/supprimer`, {
+        method: 'DELETE', body: { password },
+      });
+    } finally {
+      setSaving(false);
+    }
+  }, []);
+
+  // ─────────────────────────────────────────────────────────────
 
   return {
     // État
@@ -332,5 +387,8 @@ export function useParametres() {
 
     // Section 11
     savePrivacy,
+
+    // Section 12
+    pauseBoutique, desactiverCompte, supprimerBoutique,
   };
 }

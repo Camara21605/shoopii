@@ -6,6 +6,7 @@
  * ROUTES :
  *   GET /client/livreurs          → liste + filtres + isSuivi
  *   GET /client/livreurs/stats    → stats réseau (hero banner)
+ *   GET /client/livreurs/zones    → nombre de livreurs par commune (sidebar)
  *   GET /client/livreurs/:id      → profil complet d'un livreur
  *
  * GUARD : OptionalJwtAuthGuard
@@ -41,6 +42,13 @@ export class LivreursClientController {
   @HttpCode(HttpStatus.OK)
   getStats() {
     return this.livreursService.getNetworkStats();
+  }
+
+  /* ── GET /client/livreurs/zones (déclaré AVANT :id) ── */
+  @Get('zones')
+  @HttpCode(HttpStatus.OK)
+  getZones() {
+    return this.livreursService.getZoneCounts();
   }
 
   /* ── GET /client/livreurs/:id ── */

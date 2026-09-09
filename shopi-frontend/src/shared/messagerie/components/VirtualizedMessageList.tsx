@@ -43,6 +43,7 @@ import { VariableSizeList } from 'react-window';
 import type { ListChildComponentProps } from 'react-window';
 import type { ChatMessage, ChatUser } from '../data/messagerieTypes';
 import MessageBubble from './MessageBubble';
+import type { MediaViewerItem } from './MediaViewer';
 import s from '../styles/ChatWindow.module.css';
 
 const ROW_HEIGHT_ESTIMATE   = 76;
@@ -68,6 +69,7 @@ interface Props {
   onToast:     (msg: string, type?: string) => void;
   onDelete:    (msgId: string, mode: 'me' | 'everyone' | 'other') => void;
   onRetry?:    (msgId: string) => void;
+  onOpenMedia: (items: MediaViewerItem[], index: number) => void;
   convId:      string;
   hasMoreMessages?: boolean;
   loadingOlder?:    boolean;
@@ -97,6 +99,7 @@ interface RowData {
   onToast:     Props['onToast'];
   onDelete:    Props['onDelete'];
   onRetry?:    Props['onRetry'];
+  onOpenMedia: Props['onOpenMedia'];
   reportSize:  (id: string, index: number, height: number) => void;
 }
 
@@ -146,7 +149,7 @@ function useAutoSize<T extends HTMLElement>() {
 }
 
 function Row({ index, style, data }: ListChildComponentProps<RowData>) {
-  const { messages, user, lastReadIdx, highlightedId, onReply, onToast, onDelete, onRetry, reportSize } = data;
+  const { messages, user, lastReadIdx, highlightedId, onReply, onToast, onDelete, onRetry, onOpenMedia, reportSize } = data;
   const msg = messages[index];
   const rowRef = useRef<HTMLDivElement>(null);
 
@@ -190,6 +193,7 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
           onToast={onToast}
           onDelete={onDelete}
           onRetry={onRetry}
+          onOpenMedia={onOpenMedia}
         />
       </div>
     </div>
@@ -197,7 +201,7 @@ function Row({ index, style, data }: ListChildComponentProps<RowData>) {
 }
 
 function VirtualizedMessageList({
-  messages, user, lastReadIdx, onReply, onToast, onDelete, onRetry,
+  messages, user, lastReadIdx, onReply, onToast, onDelete, onRetry, onOpenMedia,
   convId, hasMoreMessages, loadingOlder, onLoadOlderMessages, highlightedId, headerContent,
 }: Props, ref: Ref<VirtualizedMessageListHandle>) {
   const { ref: sizeRef, size } = useAutoSize<HTMLDivElement>();
@@ -215,10 +219,25 @@ function VirtualizedMessageList({
     return heightCache.current.get(id) ?? estimateRowHeight(messages, index);
   }, [messages]);
 
+  /* BUG CORRIGÉ — reportSize() ne mettait à jour que heightCache (une ref)
+   * et appelait resetAfterIndex() : ça force react-window à se
+   * redessiner LUI-MÊME en interne, mais ne déclenche AUCUN nouveau
+   * rendu de ce composant parent. Résultat : totalContentHeight/listHeight
+   * ci-dessous (calculés dans le corps du rendu) restaient calculés sur
+   * les toutes premières ESTIMATIONS (estimateRowHeight), jamais sur les
+   * hauteurs réellement mesurées ensuite par le ResizeObserver — le vide
+   * en bas de liste ne se corrigeait donc jamais après le montage, avec
+   * un écart imprévisible selon la justesse de l'estimation initiale
+   * (d'où "parfois corrigé, parfois pas"). measuredTick force ce
+   * composant à se re-rendre dès qu'une mesure RÉELLE change une valeur
+   * en cache, pour que listHeight se recalcule avec les vraies hauteurs. */
+  const [, setMeasuredTick] = useState(0);
+
   const reportSize = useCallback((id: string, index: number, height: number) => {
     if (heightCache.current.get(id) === height) return;
     heightCache.current.set(id, height);
     listRef.current?.resetAfterIndex(index, true);
+    setMeasuredTick(t => t + 1);
   }, []);
 
   /* ── 3 cas, comme la version native dans MessagesZone.tsx (voir son
@@ -274,13 +293,29 @@ function VirtualizedMessageList({
     },
   }), [messages]);
 
-  const itemData: RowData = { messages, user, lastReadIdx, highlightedId, onReply, onToast, onDelete, onRetry, reportSize };
+  const itemData: RowData = { messages, user, lastReadIdx, highlightedId, onReply, onToast, onDelete, onRetry, onOpenMedia, reportSize };
+
+  /* BUG CORRIGÉ — react-window n'a pas de notion native de "coller au bas"
+   * (contrairement au rendu natif, voir .msgsZone/justify-content:flex-end
+   * dans ChatWindow.module.css) : la List recevait toujours height=
+   * size.height, pleine hauteur du conteneur, même quand la conversation
+   * n'a que quelques messages — le contenu restait affiché en haut, avec
+   * un vide en dessous jusqu'au champ de saisie. On plafonne sa hauteur
+   * au contenu réel et on laisse le flex-end du conteneur pousser la
+   * liste (plus courte que le conteneur) vers le bas ; dès que le contenu
+   * dépasse size.height (beaucoup de messages), le min() reprend
+   * size.height et le comportement (scroll normal) est inchangé. */
+  const totalContentHeight = messages.reduce((sum, _m, i) => sum + getItemSize(i), 0);
+  const listHeight = Math.min(size.height, totalContentHeight);
 
   return (
     <div
       ref={sizeRef}
       className={s.msgsZone}
-      style={{ display: 'block', position: 'relative', overflow: 'hidden', padding: '20px 22px 32px' }}
+      style={{
+        display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+        position: 'relative', overflow: 'hidden', padding: '20px 22px',
+      }}
     >
       {loadingOlder && (
         <div className={s.sysMsg} style={{ position: 'absolute', top: 4, left: 0, right: 0, zIndex: 1 }}>
@@ -288,11 +323,11 @@ function VirtualizedMessageList({
         </div>
       )}
       {headerContent}
-      {size.width > 0 && size.height > 0 && messages.length > 0 && (
+      {size.width > 0 && listHeight > 0 && messages.length > 0 && (
         <VariableSizeList
           ref={listRef}
           width={size.width}
-          height={size.height}
+          height={listHeight}
           itemCount={messages.length}
           itemSize={getItemSize}
           itemData={itemData}

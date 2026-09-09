@@ -24,6 +24,15 @@ import type { EntreprisePage } from '../types';
  * documents séparés (BoutiquePage lit directement le data-theme déjà
  * posé sur ce même document par ThemeRouteSync). */
 import BoutiquePage from '../../../modules/home/components/boutique/pages/BoutiquePage';
+/* BUG CORRIGÉ — cliquer un produit depuis cet aperçu appelait navigate()
+ * (via CardProduitBoutique), qui — même raison que ci-dessus, un seul
+ * <BrowserRouter> pour toute l'app — faisait quitter TOUT le dashboard
+ * entreprise pour la page produit PUBLIQUE (celle des clients), sans
+ * retour possible. Même traitement que BoutiquePage : ProduitPage est
+ * monté directement ici (productIdOverride/previewOverride/onBackOverride)
+ * à la place de BoutiquePage quand un produit est sélectionné — jamais de
+ * navigation, jamais de nouvel onglet, voir previewProductId ci-dessous. */
+import ProduitPage from '../../../modules/home/components/produit/pages/ProduitPage';
 import {
   VILLES_SORTED, getCommunesByVille, getQuartiersByCommune, findVille,
 } from '../../../shared/location/data/geo-guinee';
@@ -149,6 +158,10 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
    * (setIframeKey) pour le bouton "Rafraîchir" de l'onglet Aperçu. */
   const [previewKey, setPreviewKey]  = useState(0);
   const [activeTab,  setActiveTab]  = useState<Tab>('apercu');
+  /* Produit affiché DANS le panneau d'aperçu (voir onOpenProduct plus bas) —
+   * null = liste des produits (BoutiquePage), sinon fiche produit
+   * (ProduitPage), toujours sans navigation ni nouvel onglet. */
+  const [previewProductId, setPreviewProductId] = useState<string | null>(null);
   const [pays,       setPays]       = useState('GN');
   const [ville,      setVille]      = useState('');
   const [commune,    setCommune]    = useState('');
@@ -345,11 +358,11 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
         <div className={styles.bandeauActions}>
           {activeTab === 'apercu' ? (
             <>
-              <button onClick={() => setPreviewKey(k => k + 1)}
+              <button onClick={() => { setPreviewProductId(null); setPreviewKey(k => k + 1); }}
                 style={{ background: 'var(--g100)', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: 'var(--t3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <i className="fas fa-rotate-right" style={{ fontSize: 13 }} />
               </button>
-              <button onClick={() => window.open(`/boutique/${data.id}`, '_blank')}
+              <button onClick={() => window.open(previewProductId ? `/produit/${previewProductId}` : `/boutique/${data.id}`, '_blank')}
                 style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--btn, #111113)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                 <i className="fas fa-arrow-up-right-from-square" /> {t('boutiquePreview.ouvrir')}
               </button>
@@ -374,7 +387,21 @@ export default function BoutiquePreviewPage({ onNavigate }: Props) {
        * cette zone ferait défiler toute la page du dashboard). */}
       {activeTab === 'apercu' && (
         <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-          <BoutiquePage key={previewKey} companyIdOverride={data.id} previewOverride />
+          {previewProductId ? (
+            <ProduitPage
+              key={previewProductId}
+              productIdOverride={previewProductId}
+              previewOverride
+              onBackOverride={() => setPreviewProductId(null)}
+            />
+          ) : (
+            <BoutiquePage
+              key={previewKey}
+              companyIdOverride={data.id}
+              previewOverride
+              onOpenProduct={setPreviewProductId}
+            />
+          )}
         </div>
       )}
 

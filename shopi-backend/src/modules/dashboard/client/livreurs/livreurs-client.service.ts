@@ -239,6 +239,38 @@ export class LivreursClientService {
   }
 
   /* ──────────────────────────────────────────────────────────────
+   * getZoneCounts
+   * Nombre de livreurs actifs par commune de Conakry, pour le filtre
+   * "Zone de livraison" de la sidebar /livreurs. Même correspondance
+   * zone/communesActives que applyFilters() (voir ci-dessous) — une
+   * commune peut être la zone principale du livreur OU une de ses
+   * communes actives secondaires.
+   * ────────────────────────────────────────────────────────────── */
+  async getZoneCounts(): Promise<{ value: string; label: string; count: number }[]> {
+    const COMMUNES = ['Kaloum', 'Ratoma', 'Matam', 'Dixinn', 'Matoto'];
+
+    const total = await this.buildBaseQuery().getCount();
+
+    /* BUG CORRIGÉ — Promise.all() lançait les 5 requêtes en parallèle sur
+     * le même client pg (pool à une seule connexion ici), ce qui déclenche
+     * "Calling client.query() when the client is already executing a
+     * query" côté driver et fait planter la requête en 500. Séquentiel,
+     * une requête à la fois — 5 COUNT() restent négligeables en latence. */
+    const perCommune: { value: string; label: string; count: number }[] = [];
+    for (const commune of COMMUNES) {
+      const count = await this.buildBaseQuery()
+        .andWhere(
+          '(LOWER(lp.zone) LIKE LOWER(:c) OR LOWER("lp"."communesActives"::text) LIKE LOWER(:c))',
+          { c: `%${commune}%` },
+        )
+        .getCount();
+      perCommune.push({ value: commune.toLowerCase(), label: commune, count });
+    }
+
+    return [{ value: 'all', label: 'Toutes les zones', count: total }, ...perCommune];
+  }
+
+  /* ──────────────────────────────────────────────────────────────
    * getFollowedIds (PUBLIC — utilisé aussi par SuivisModule)
    * Retourne un Set des id de PROFILS livreurs suivis par userId.
    *
@@ -365,10 +397,20 @@ export class LivreursClientService {
       qb.andWhere('LOWER(lp.fullName) LIKE LOWER(:search)', { search: `%${dto.search.trim()}%` });
     }
 
-    /* Zone : recherche dans zone OU communesActives (JSON) */
+    /* Zone : recherche dans zone OU communesActives (colonne JSON — cast en
+     * ::text obligatoire, LOWER()/LIKE ne s'appliquent pas directement à un
+     * type json en Postgres). Colonne explicitement quotée ("lp"."..."):
+     * le remplacement automatique alias.propriété → "alias"."colonne" de
+     * TypeORM ne reconnaît pas `lp.communesActives::text` (le cast juste
+     * après le nom de colonne casse la regex) et laissait passer un
+     * `lp.communesActives` NON quoté — Postgres le rabaisse alors en
+     * `communesactives` (minuscules), colonne inexistante.
+     * BUG CORRIGÉ — sans le cast ET le bon quoting, ce WHERE faisait
+     * planter la requête en 500 dès qu'une zone était fournie (le filtre
+     * "Zone de livraison" de la sidebar /livreurs était entièrement cassé). */
     if (dto.zone && dto.zone !== 'all') {
       qb.andWhere(
-        '(LOWER(lp.zone) LIKE LOWER(:zone) OR LOWER(lp.communesActives) LIKE LOWER(:zone))',
+        '(LOWER(lp.zone) LIKE LOWER(:zone) OR LOWER("lp"."communesActives"::text) LIKE LOWER(:zone))',
         { zone: `%${dto.zone}%` },
       );
     }

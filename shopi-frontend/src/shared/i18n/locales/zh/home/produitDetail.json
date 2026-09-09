@@ -118,7 +118,8 @@
       "messagerieOuverteToast": "💬 消息已打开",
       "dejaAuPanierToast": "🛒 已在您的购物车中 — 前往购物车修改数量",
       "ajouteToast": "✅ 已加入购物车！",
-      "erreurToast": "❌ {{msg}}"
+      "erreurToast": "❌ {{msg}}",
+      "previewToast": "👁️ 店铺预览 — 此处无法购买"
     },
     "infoSection": {
       "sku": "SKU：{{sku}}",
@@ -242,7 +243,8 @@
       "produitIntrouvableDesc": "此产品不存在或尚未发布。",
       "retourAccueil": "返回首页",
       "accueil": "首页",
-      "partagerTitre": "分享此产品"
+      "partagerTitre": "分享此产品",
+      "retourBoutique": "返回店铺"
     }
   }
 }

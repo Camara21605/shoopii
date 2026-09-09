@@ -21,10 +21,15 @@ import { useCallHistory }    from './hooks/useCallHistory';
 import { useGlobalCall }     from '../context/GlobalCallContext';
 import { useGroupCallCtx }  from '../context/GroupCallContext';
 import { useToast }          from '../context/ToastContext';
+import { useAppContext }     from '../context/AppContext';
 
 import ConvList     from './components/ConvList';
 import ChatWindow   from './sections/ChatWindow';
 import InfoPanel    from './sections/InfoPanel';
+import SettingsPanel    from './components/SettingsPanel';
+import CreateGroupPage from './components/CreateGroupPage';
+import MediaViewer  from './components/MediaViewer';
+import type { MediaViewerItem } from './components/MediaViewer';
 
 import s from './styles/MessagerieLayout.module.css';
 
@@ -126,7 +131,40 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
     sendGroupMessage,
     deleteGroupMessage,
     updateGroupDescription,
+    updateGroupPhoto,
+    setMemberAdmin,
+    createCustomGroup,
   } = useDeliveryGroups();
+
+  /* Identité du compte connecté — sert à déterminer si CE membre est
+   * administrateur du groupe actif (voir InfoPanel.GroupAvatarEditor /
+   * gestion des administrateurs). */
+  const { user: authUser } = useAppContext();
+
+  /* ── "⋮ > Paramètres > Ajouter un groupe" ──
+   * BUG CORRIGÉ — "Paramètres" s'affichait en fenêtre modale centrée ;
+   * demandé à la place au même endroit/de la même façon que le panneau
+   * "Informations" (colonne latérale, voir infoPanelOpen ci-dessous et
+   * InfoPanel.tsx) — settingsOpen vit donc ici, pas dans ChatHeader, et
+   * les deux panneaux sont mutuellement exclusifs (un seul à la fois
+   * dans cette colonne). */
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [createGroupOpen, setCreateGroupOpen] = useState(false);
+  /* Visionneuse plein écran IN-APP (image/vidéo/audio) — voir MediaViewer.tsx.
+   * BUG CORRIGÉ — cliquer un média ouvrait window.open(url, '_blank'),
+   * l'URL Cloudinary brute dans un nouvel onglet : on quittait Shoneya.
+   * `items`+`index` (pas juste un item unique) pour permettre les flèches
+   * ← → quand plusieurs médias sont ouverts ensemble (ex. depuis "Médias
+   * partagés" dans InfoPanel — voir openMedia() là-bas). */
+  const [mediaViewer, setMediaViewer] = useState<{ items: MediaViewerItem[]; index: number } | null>(null);
+  const openMediaViewer = useCallback((items: MediaViewerItem[], index: number) => {
+    setMediaViewer({ items, index });
+  }, []);
+  const handleGroupCreated = useCallback((groupId: string) => {
+    setActiveConvId(null);
+    selectGroup(groupId);
+    setMobileOpen(false);
+  }, [selectGroup, setActiveConvId, setMobileOpen]);
 
   // ── Sélection unifiée (conv ou groupe) ───────────────────────
   const handleSelect = useCallback((id: string) => {
@@ -419,38 +457,53 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
         onSelectCall={handleSelectCall}
       />
 
-      {/* Colonne centrale : fenêtre de chat */}
-      <ChatWindow
-        conv={currentConv}
-        user={currentUser}
-        members={activeGroupId ? activeGroupMembers : undefined}
-        infoPanelOpen={infoPanelOpen}
-        typingActivity={activeConvId ? typingMap.get(activeConvId) : undefined}
-        onSend={handleSend}
-        onTyping={activeGroupId ? undefined : sendTyping}
-        onToggleInfo={() => setInfoPanelOpen(p => !p)}
-        onNewConv={handleRequestNewConv}
-        onToast={toast}
-        onDelete={handleDelete}
-        onUpdateGroup={activeGroupId ? updateGroupDescription : undefined}
-        onLoadOlderMessages={handleLoadOlderMessages}
-        onRetry={handleRetry}
-        onArchiveConv={activeGroupId ? undefined : hideConversation}
-        onDeleteConv={activeGroupId ? undefined : deleteConversation}
-        onJumpToMessage={handleJumpToMessage}
-        jumpToMessageId={jumpTarget}
-        onJumpHandled={() => setJumpTarget(null)}
-        onCall={activeGroupId
-          ? () => initiateGroupCall(activeGroupId, 'audio')
-          : (activeUser ? handleCall : undefined)}
-        onVideoCall={activeGroupId
-          ? () => initiateGroupCall(activeGroupId, 'video')
-          : (activeUser ? handleVideoCall : undefined)}
-        onMobileMenu={() => setMobileOpen(true)}
-        canSend={canSend}
-      />
+      {/* Colonne centrale : fenêtre de chat, OU page "Nouveau groupe" (voir
+       * createGroupOpen — page plein-cadre, pas une modale, remplace donc
+       * ChatWindow dans le même emplacement plutôt que de flotter dessus). */}
+      {createGroupOpen ? (
+        <CreateGroupPage
+          onClose={() => setCreateGroupOpen(false)}
+          onCreate={createCustomGroup}
+          onCreated={handleGroupCreated}
+          onToast={toast}
+        />
+      ) : (
+        <ChatWindow
+          conv={currentConv}
+          user={currentUser}
+          members={activeGroupId ? activeGroupMembers : undefined}
+          infoPanelOpen={infoPanelOpen}
+          typingActivity={activeConvId ? typingMap.get(activeConvId) : undefined}
+          onSend={handleSend}
+          onTyping={activeGroupId ? undefined : sendTyping}
+          onToggleInfo={() => { setSettingsOpen(false); setInfoPanelOpen(p => !p); }}
+          onNewConv={handleRequestNewConv}
+          onToast={toast}
+          onDelete={handleDelete}
+          onUpdateGroup={activeGroupId ? updateGroupDescription : undefined}
+          onLoadOlderMessages={handleLoadOlderMessages}
+          onRetry={handleRetry}
+          onOpenMedia={openMediaViewer}
+          onArchiveConv={activeGroupId ? undefined : hideConversation}
+          onDeleteConv={activeGroupId ? undefined : deleteConversation}
+          onJumpToMessage={handleJumpToMessage}
+          jumpToMessageId={jumpTarget}
+          onJumpHandled={() => setJumpTarget(null)}
+          onCall={activeGroupId
+            ? () => initiateGroupCall(activeGroupId, 'audio')
+            : (activeUser ? handleCall : undefined)}
+          onVideoCall={activeGroupId
+            ? () => initiateGroupCall(activeGroupId, 'video')
+            : (activeUser ? handleVideoCall : undefined)}
+          onMobileMenu={() => setMobileOpen(true)}
+          canSend={canSend}
+          onOpenSettings={() => { setInfoPanelOpen(false); setSettingsOpen(true); }}
+        />
+      )}
 
-      {/* Colonne droite : panneau d'info (conv directe et groupe) */}
+      {/* Colonne droite : panneau d'info OU panneau paramètres (mutuellement
+       * exclusifs — voir settingsOpen ci-dessus) — même emplacement/présentation
+       * pour les deux (voir InfoPanel.tsx / SettingsPanel.tsx). */}
       {infoPanelOpen && (
         <InfoPanel
           conv={currentConv}
@@ -458,12 +511,34 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
           members={activeGroupId ? activeGroupMembers : undefined}
           onClose={() => setInfoPanelOpen(false)}
           onToast={toast}
+          onCall={activeGroupId
+            ? () => initiateGroupCall(activeGroupId, 'audio')
+            : (activeUser ? handleCall : undefined)}
+          onUpdateGroupPhoto={activeGroupId ? updateGroupPhoto : undefined}
+          onSetMemberAdmin={activeGroupId ? setMemberAdmin : undefined}
+          myUserId={authUser?.id}
+          onOpenMedia={openMediaViewer}
+        />
+      )}
+      {settingsOpen && (
+        <SettingsPanel
+          onClose={() => setSettingsOpen(false)}
+          onAddGroup={() => { setSettingsOpen(false); setCreateGroupOpen(true); }}
         />
       )}
 
       {/* Overlay mobile */}
       {mobileOpen && (
         <div className={s.overlay} onClick={() => setMobileOpen(false)} />
+      )}
+
+      {/* Visionneuse plein écran IN-APP (image/vidéo/audio cliqué) — voir mediaViewer ci-dessus. */}
+      {mediaViewer && (
+        <MediaViewer
+          items={mediaViewer.items}
+          initialIndex={mediaViewer.index}
+          onClose={() => setMediaViewer(null)}
+        />
       )}
 
       {/*

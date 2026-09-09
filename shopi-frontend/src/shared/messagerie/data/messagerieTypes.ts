@@ -14,6 +14,7 @@ export interface ChatUser {
   avaColor: string;      // gradient CSS background
   online:   boolean;
   context?: string;      // ex : "Commande SH-2025-0901"
+  memberSince?: string | null; // ISO — date réelle de création du profil
 }
 
 export type MessageType = 'text' | 'image' | 'video' | 'file' | 'voice' | 'product' | 'order' | 'location' | 'call';
@@ -74,6 +75,9 @@ export interface Conversation {
   messages: ChatMessage[];
   /** Groupe de livraison automatique */
   isGroup?:        boolean;
+  /** true = groupe libre créé via "Ajouter un groupe" (DeliveryGroupKind.CUSTOM),
+   *  false/undefined = groupe automatique lié à une commande — voir useDeliveryGroups.ts. */
+  isCustomGroup?:  boolean;
   groupStatus?:    'active' | 'completed' | 'expired' | 'cancelled';
   commandeNumero?: string;
   memberCount?:    number;
@@ -91,6 +95,9 @@ export interface GroupMember {
   actorId:     string;
   userId:      string;
   displayName: string;
+  /** Administrateur du groupe — uniquement significatif pour un groupe libre
+   *  (voir DeliveryGroupKind.CUSTOM côté backend / setMemberAdmin). */
+  isAdmin:     boolean;
   joinedAt:    string;
 }
 

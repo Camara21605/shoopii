@@ -310,7 +310,19 @@ export default function ProfilSection({ onToast }: Props) {
               : <span style={{ fontSize:9,fontWeight:700,color:'var(--amber)',background:'rgba(180,83,9,.09)',borderRadius:'var(--pill)',padding:'3px 9px' }}>⚠️ Non vérifié</span>
             }
           </div>
-          <div className={`${s.editForm} ${editContacts ? s.editFormOpen : ''}`}>
+          {/* BUG CORRIGÉ — l'email/téléphone étaient des <input> nus, sans
+           * <form> englobant. Chrome (et les autres navigateurs) regroupe
+           * tous les champs sans <form> ancêtre d'UNE MÊME PAGE dans un seul
+           * "formulaire" implicite pour l'autofill — la barre de recherche
+           * globale du Header (elle aussi un <input> nu, voir Header.tsx)
+           * se retrouvait dans ce même groupe. Résultat : en acceptant
+           * l'autofill "coordonnées" ici, Chrome recopiait l'e-mail dans la
+           * recherche globale, ailleurs sur la page. Un vrai <form> isole ce
+           * bloc du reste de la page pour l'autofill du navigateur. */}
+          <form
+            className={`${s.editForm} ${editContacts ? s.editFormOpen : ''}`}
+            onSubmit={e => e.preventDefault()}
+          >
             <div className={s.editGrid}>
               <div className={`${s.field} ${s.fieldFull}`}>
                 <label>Adresse e-mail</label>
@@ -323,13 +335,13 @@ export default function ProfilSection({ onToast }: Props) {
                 <span className={s.fieldHint}>Un code de vérification SMS sera envoyé</span>
               </div>
               <div className={s.fieldActions}>
-                <button className={s.btnSave} onClick={saveContacts} disabled={saving}>
+                <button type="button" className={s.btnSave} onClick={saveContacts} disabled={saving}>
                   {saving ? <><i className="fas fa-circle-notch fa-spin" /> Enregistrement…</> : 'Enregistrer les changements'}
                 </button>
-                <button className={s.btnCancel} onClick={() => setEditContacts(false)} disabled={saving}>Annuler</button>
+                <button type="button" className={s.btnCancel} onClick={() => setEditContacts(false)} disabled={saving}>Annuler</button>
               </div>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </>

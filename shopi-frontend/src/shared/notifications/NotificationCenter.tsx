@@ -15,9 +15,10 @@ import type { INotificationDto } from './types';
 import { relativeTime, getTypeMeta, resolveNavTarget } from './notificationUtils';
 import s from './NotificationCenter.module.css';
 
-/** Nombre de notifications affichées dans le panneau déroulant — seule
- *  interface de notifications du site (pas de page dédiée séparée). */
-const PREVIEW_LIMIT = 8;
+/* Le panneau affiche les notifications chargées (20 par page, voir
+ * NotificationContext.fetchList) avec un bouton "Voir plus" en bas qui
+ * charge la page suivante (hasMore/loadMore, cursor sur createdAt) — seule
+ * interface de notifications du site (pas de page dédiée séparée). */
 
 // ─── NotificationItem ─────────────────────────────────────────
 
@@ -80,7 +81,7 @@ export default function NotificationCenter() {
   const {
     unreadCount, notifications,
     isOpen, toggle, close,
-    isLoading,
+    isLoading, hasMore, loadMore,
     markAsRead, markAllAsRead, deleteOne,
   } = useNotifications();
 
@@ -144,8 +145,6 @@ export default function NotificationCenter() {
     }
   }
 
-  const previewNotifs = visibleNotifs.slice(0, PREVIEW_LIMIT);
-
   return (
     <div className={s.wrap} ref={wrapRef} data-notif-wrap>
       {/* ── Bouton cloche ──
@@ -206,8 +205,8 @@ export default function NotificationCenter() {
               </div>
             )}
 
-            {/* Items — aperçu limité aux PREVIEW_LIMIT plus récents */}
-            {previewNotifs.map(n => (
+            {/* Items — toutes les notifications actuellement chargées */}
+            {visibleNotifs.map(n => (
               <NotificationItem
                 key={n.id}
                 notif={n}
@@ -215,6 +214,19 @@ export default function NotificationCenter() {
                 onDelete={() => deleteOne(n.id)}
               />
             ))}
+
+            {/* Voir plus — charge la page suivante (cursor sur createdAt) */}
+            {hasMore && (
+              <button
+                className={s.loadMore}
+                onClick={loadMore}
+                disabled={isLoading}
+              >
+                {isLoading
+                  ? <i className="fas fa-circle-notch fa-spin" />
+                  : 'Voir plus'}
+              </button>
+            )}
           </div>
         </div>
       )}

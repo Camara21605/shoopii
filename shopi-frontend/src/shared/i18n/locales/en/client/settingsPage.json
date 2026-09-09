@@ -385,7 +385,11 @@
       },
       "clicAgain": "Click again to confirm",
       "confirmerBtn": "Confirm",
-      "annulerBtn": "Cancel"
+      "annulerBtn": "Cancel",
+      "comingSoon": "Coming soon",
+      "passwordPlaceholder": "Your current password",
+      "passwordRequired": "Password required to confirm",
+      "passwordIncorrect": "Incorrect password"
     },
     "profil": {
       "photoTitle": "Profile photo",

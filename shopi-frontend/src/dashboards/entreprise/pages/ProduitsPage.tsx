@@ -51,8 +51,17 @@ interface Produit {
 const API   = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
 const token = () => localStorage.getItem('shopi_access_token') ?? '';
 
-function fmt(n: number) {
-  return n.toLocaleString('fr-FR');
+/* BUG CORRIGÉ — l'API renvoie les colonnes numeric/decimal (prix,
+ * prixAncien) sous forme de CHAÎNE (comportement standard de pg/TypeORM
+ * pour ce type de colonne, pas un bug côté serveur) — String.prototype.
+ * toLocaleString() existe mais ne fait AUCUN formatage (renvoie la
+ * chaîne telle quelle), d'où "1200000 GNF" affiché sans espaces alors
+ * que "-72 000 GNF"/"1 128 000 GNF" (calculés via une multiplication,
+ * qui coerce déjà en number) s'affichaient correctement juste à côté.
+ * Number(n) rend fmt() robuste que l'appelant passe déjà un number ou
+ * encore la chaîne brute de l'API. */
+function fmt(n: number | string) {
+  return Number(n).toLocaleString('fr-FR');
 }
 
 /** Découpe un tableau en groupes de `size` — sert à répartir les produits
@@ -620,8 +629,8 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete, can, commiss
             <div className={styles.infoCard}>
               <div className={styles.infoCardTitle}><i className="fas fa-boxes-stacked" /> {t('produits.modalVoir.stock')}</div>
               <div className={`${styles.stockVal} ${
-                produit.stock === 0 ? styles.stockOut :
-                produit.seuil && produit.stock <= produit.seuil ? styles.stockLow : styles.stockOk
+                produit.stock === 0 ? styles.stockValOut :
+                produit.seuil && produit.stock <= produit.seuil ? styles.stockValLow : styles.stockValOk
               }`}>
                 {produit.stock}
                 <span>{t('produits.modalVoir.unites')}</span>
@@ -633,7 +642,10 @@ function ModalVoir({ produit, onClose, onEdit, onArchive, onDelete, can, commiss
               )}
               <div className={styles.stockBar}>
                 <div
-                  className={styles.stockBarFill}
+                  className={`${styles.stockBarFill} ${
+                    produit.stock === 0 ? styles.stockValOut :
+                    produit.seuil && produit.stock <= produit.seuil ? styles.stockValLow : styles.stockValOk
+                  }`}
                   style={{ width: `${Math.min(100, (produit.stock / ((produit.seuil ?? 10) * 3)) * 100)}%` }}
                 />
               </div>

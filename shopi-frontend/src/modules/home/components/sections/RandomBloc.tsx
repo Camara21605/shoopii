@@ -36,6 +36,17 @@ const SOCKET_URL =
 
 export type BlocKind = 'produits' | 'produits-gros' | 'entreprises' | 'correspondants' | 'livreurs';
 
+/* Un bloc de produits ne doit jamais afficher plus de BLOCK_SIZE produits —
+ * au-delà, un nouveau bloc (avec son propre petit en-tête) est créé
+ * automatiquement pour la suite, plutôt que de laisser grandir une seule
+ * grille sans fin. */
+const BLOCK_SIZE = 20;
+function chunkProduits<T>(items: T[]): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += BLOCK_SIZE) chunks.push(items.slice(i, i + BLOCK_SIZE));
+  return chunks;
+}
+
 /** Route "voir tout" par bloc — alimente le lien du SectionHeader. */
 const BLOC_LINK: Record<BlocKind, string> = {
   produits:        '/explorer',
@@ -143,7 +154,7 @@ function ProduitsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>voi
 
   const load = useCallback((silent = false) => {
     if (!silent) setLoading(true);
-    apiFetch<{ data: ProductApi[] }>('/public/produits', { public:true, params:{ limit:12, type:'detail' } })
+    apiFetch<{ data: ProductApi[] }>('/public/produits', { public:true, params:{ limit:60, type:'detail' } })
       .then(res => setProduits(Array.isArray(res?.data) ? res.data : []))
       .catch(() => { if (!silent) setError(true); })
       .finally(() => { if (!silent) setLoading(false); });
@@ -178,10 +189,23 @@ function ProduitsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>voi
     </div>
   );
 
+  const blocs = chunkProduits(produits);
+
   return (
-    <div className={styles.pgrid}>
-      {produits.map(p => <CardProduit key={p.id} p={p} onToast={onToast} />)}
-    </div>
+    <>
+      {blocs.map((bloc, i) => (
+        <div key={i}>
+          {i > 0 && (
+            <div style={{ marginTop: 28 }}>
+              <SectionHeader kick={`${t('home.randomBloc.produits.kick')} ${i + 1}`} title="" />
+            </div>
+          )}
+          <div className={styles.pgrid}>
+            {bloc.map(p => <CardProduit key={p.id} p={p} onToast={onToast} />)}
+          </div>
+        </div>
+      ))}
+    </>
   );
 }
 
@@ -196,7 +220,7 @@ function ProduitsGrosBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=
 
   const load = useCallback((silent = false) => {
     if (!silent) setLoading(true);
-    apiFetch<{ data: ProductApi[] }>('/public/produits', { public:true, params:{ limit:12, type:'gros' } })
+    apiFetch<{ data: ProductApi[] }>('/public/produits', { public:true, params:{ limit:60, type:'gros' } })
       .then(res => setProduits(Array.isArray(res?.data) ? res.data : []))
       .catch(() => { if (!silent) setError(true); })
       .finally(() => { if (!silent) setLoading(false); });
@@ -227,24 +251,37 @@ function ProduitsGrosBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=
     </div>
   );
 
+  const blocs = chunkProduits(produits);
+
   return (
-    <div className={styles.pgrid}>
-      {produits.map(p => (
-        <div key={p.id} style={{ position:'relative' }}>
-          {p.moq && (
-            <div style={{
-              position:'absolute', top:10, left:10, zIndex:2,
-              background:'#0B1F3A', color:'#fff',
-              fontSize:10, fontWeight:800, padding:'3px 9px',
-              borderRadius:99, letterSpacing:.4, lineHeight:1.4,
-            }}>
-              {t('home.randomBloc.moqUnites', { moq: p.moq })}
+    <>
+      {blocs.map((bloc, i) => (
+        <div key={i}>
+          {i > 0 && (
+            <div style={{ marginTop: 28 }}>
+              <SectionHeader kick={`${t('home.randomBloc.produitsGros.kick')} ${i + 1}`} title="" />
             </div>
           )}
-          <CardProduit p={p} onToast={onToast} />
+          <div className={styles.pgrid}>
+            {bloc.map(p => (
+              <div key={p.id} style={{ position:'relative' }}>
+                {p.moq && (
+                  <div style={{
+                    position:'absolute', top:10, left:10, zIndex:2,
+                    background:'#0B1F3A', color:'#fff',
+                    fontSize:10, fontWeight:800, padding:'3px 9px',
+                    borderRadius:99, letterSpacing:.4, lineHeight:1.4,
+                  }}>
+                    {t('home.randomBloc.moqUnites', { moq: p.moq })}
+                  </div>
+                )}
+                <CardProduit p={p} onToast={onToast} />
+              </div>
+            ))}
+          </div>
         </div>
       ))}
-    </div>
+    </>
   );
 }
 

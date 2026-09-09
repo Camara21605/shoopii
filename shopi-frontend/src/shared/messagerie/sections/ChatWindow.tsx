@@ -18,9 +18,13 @@ import type { Conversation, ChatUser, GroupMember } from '../data/messagerieType
 import type { MediaAttachment, ShareExtra }          from '../hooks/useMessagerie';
 import type { WsTyping }                            from '../hooks/useSocket';
 
-import ChatHeader    from '../components/ChatHeader';
-import MessagesZone  from '../components/MessagesZone';
-import MessageInput  from '../components/MessageInput';
+import ChatHeader       from '../components/ChatHeader';
+import MessagesZone     from '../components/MessagesZone';
+import MessageInput     from '../components/MessageInput';
+import WallpaperPicker  from '../components/WallpaperPicker';
+import type { MediaViewerItem } from '../components/MediaViewer';
+import { useWallpaper }        from '../hooks/useWallpaper';
+import { resolveWallpaperStyle } from '../utils/wallpaperPresets';
 import s from '../styles/ChatWindow.module.css';
 
 // ─────────────────────────────────────────────────────────────
@@ -43,8 +47,14 @@ interface Props {
   onMobileMenu?:   () => void;
   onLoadOlderMessages?: (convId: string) => void;
   onRetry?:        (msgId: string) => void;
+  /** Ouvre la visionneuse plein écran IN-APP (voir MediaViewer.tsx) — remplace window.open.
+   *  `index` permet les flèches ← → quand `items` contient plusieurs médias. */
+  onOpenMedia:     (items: MediaViewerItem[], index: number) => void;
   onArchiveConv?:  (convId: string) => void;
   onDeleteConv?:   (convId: string) => void;
+  /** Ouvre le panneau "Paramètres" (colonne latérale, même présentation
+   * que le panneau "Informations") — état/rendu vivent dans MessagerieCore. */
+  onOpenSettings?: () => void;
   /** "Aller au message" (résultat de recherche du ChatHeader) — voir MessagerieCore.handleJumpToMessage. */
   onJumpToMessage?: (msgId: string) => void;
   jumpToMessageId?: string | null;
@@ -60,13 +70,18 @@ interface Props {
 export default function ChatWindow({
   conv, user, members, infoPanelOpen, typingActivity,
   onSend, onTyping, onToggleInfo, onNewConv, onToast, onDelete, onUpdateGroup, onCall, onVideoCall, onMobileMenu,
-  onLoadOlderMessages, onRetry, onArchiveConv, onDeleteConv,
+  onLoadOlderMessages, onRetry, onOpenMedia, onArchiveConv, onDeleteConv,
   onJumpToMessage, jumpToMessageId, onJumpHandled,
-  canSend = true,
+  canSend = true, onOpenSettings,
 }: Props) {
   const { t } = useTranslation();
   /** Message cité (réponse) — partagé entre MessagesZone (set) et MessageInput (affichage) */
   const [replyTo, setReplyTo] = useState<{ sender: string; text: string } | null>(null);
+
+  /** Fond d'écran de la messagerie — préférence globale (voir useWallpaper). */
+  const { wallpaper, saving: wallpaperSaving, chooseWallpaper } = useWallpaper();
+  const [wallpaperPickerOpen, setWallpaperPickerOpen] = useState(false);
+  const wallpaperStyle = resolveWallpaperStyle(wallpaper);
 
   /* ── État vide ── */
   if (!conv || !user) {
@@ -92,7 +107,7 @@ export default function ChatWindow({
   }
 
   return (
-    <div className={s.window}>
+    <div className={s.window} style={wallpaperStyle}>
 
       {/* ── En-tête ── */}
       <ChatHeader
@@ -110,20 +125,25 @@ export default function ChatWindow({
         onArchiveConv={onArchiveConv}
         onDeleteConv={onDeleteConv}
         onJumpToMessage={onJumpToMessage}
+        onOpenWallpaper={() => setWallpaperPickerOpen(true)}
+        hasWallpaper={!!wallpaper}
+        onOpenSettings={onOpenSettings}
+        groupDescription={conv.description}
+        onUpdateGroupDescription={onUpdateGroup ? (desc: string) => onUpdateGroup(conv.id, desc) : undefined}
+        isCustomGroup={conv.isCustomGroup}
       />
 
       {/* ── Messages + indicateur typing ── */}
       <MessagesZone
         conv={conv}
         user={user}
-        members={members}
         typingActivity={typingActivity}
         onReply={setReplyTo}
         onToast={onToast}
         onDelete={onDelete}
-        onUpdateGroup={onUpdateGroup}
         onLoadOlderMessages={onLoadOlderMessages}
         onRetry={onRetry}
+        onOpenMedia={onOpenMedia}
         jumpToMessageId={jumpToMessageId}
         onJumpHandled={onJumpHandled}
       />
@@ -142,6 +162,17 @@ export default function ChatWindow({
         <div className={s.sendDisabled}>
           <i className="fas fa-lock" /> {t('messagerie.messageInput.envoiNonAutorise')}
         </div>
+      )}
+
+      {/* ── Sélecteur de fond d'écran (préférence globale) ── */}
+      {wallpaperPickerOpen && (
+        <WallpaperPicker
+          current={wallpaper}
+          saving={wallpaperSaving}
+          onChoose={chooseWallpaper}
+          onClose={() => setWallpaperPickerOpen(false)}
+          onToast={onToast}
+        />
       )}
 
     </div>

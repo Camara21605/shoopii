@@ -6,10 +6,32 @@
 import {
   IsEnum, IsNumber, IsOptional, IsString,
   IsUUID, MaxLength, Min, Max, IsBoolean, IsNotEmpty,
-  Length, IsIn,
+  Length, IsIn, ValidateIf,
 } from 'class-validator';
 import { ConversationActorType } from 'src/database/entities/messaging/conversation.entity';
 import { MessageContentType }    from 'src/database/entities/messaging/message.entity';
+
+// ── Fond d'écran de la messagerie ─────────────────────────────
+
+/**
+ * Galerie FERMÉE fournie par le système — l'utilisateur choisit un
+ * motif préconçu, jamais une image importée. Cette liste DOIT rester
+ * identique à WALLPAPER_PRESETS côté frontend (wallpaperPresets.ts) —
+ * pas de source commune vu la petite taille fixe, à tenir manuellement
+ * en synchronisation si un motif est ajouté/retiré.
+ */
+export const WALLPAPER_PRESET_KEYS = [
+  'doodles', 'dots', 'grid', 'leaves', 'stars', 'waves', 'diamonds', 'bubbles',
+] as const;
+
+const WALLPAPER_VALUES = WALLPAPER_PRESET_KEYS.map(k => `preset:${k}`);
+
+export class UpdateWallpaperDto {
+  /** null = revenir au fond par défaut. Sinon : "preset:<key>" (voir WALLPAPER_PRESET_KEYS). */
+  @ValidateIf((o: UpdateWallpaperDto) => o.wallpaper !== null)
+  @IsIn(WALLPAPER_VALUES)
+  wallpaper: string | null;
+}
 
 // ── Créer/récupérer une conversation ─────────────────────────
 
@@ -158,4 +180,9 @@ export class PinConversationDto {
 export class MuteConversationDto {
   @IsBoolean()
   muted: boolean;
+}
+
+export class SetBlockDto {
+  @IsBoolean()
+  blocked: boolean;
 }

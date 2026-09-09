@@ -7,13 +7,13 @@
  * ============================================================ */
 
 import {
-  ForbiddenException, Injectable, Logger, NotFoundException,
+  BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, LessThanOrEqual, Not, Repository } from 'typeorm';
 
 import {
-  DeliveryGroup, DeliveryGroupStatus,
+  DeliveryGroup, DeliveryGroupKind, DeliveryGroupStatus,
 } from '../../database/entities/delivery-group/delivery-group.entity';
 import {
   DeliveryGroupMember, GroupMemberType,
@@ -22,12 +22,15 @@ import {
   GroupMessage, GroupMessageContentType,
 } from '../../database/entities/delivery-group/group-message.entity';
 import { CommandeStatus } from '../../database/entities/commande/commande.entity';
+import { UserRole } from '../../common/enums/user-role.enum';
 
 import {
   SendGroupMessageDto, EditGroupMessageDto,
   DeleteGroupMessageDto, ToggleGroupReactionDto, UpdateGroupDto,
+  CreateCustomGroupDto,
 } from './dto/delivery-group.dto';
 import { BroadcastService } from '../messagerie/services/broadcast.service';
+import { MessagerieService } from '../messagerie/messagerie.service';
 
 // ── Constantes ────────────────────────────────────────────────
 
@@ -54,9 +57,111 @@ export class DeliveryGroupService {
     @InjectRepository(GroupMessage)
     private readonly msgRepo: Repository<GroupMessage>,
     private readonly broadcast: BroadcastService,
+    private readonly messagerie: MessagerieService,
   ) {}
 
-  // ── Création ─────────────────────────────────────────────────
+  // ── Création — groupe libre (⋮ > Paramètres > Ajouter un groupe) ─
+
+  /**
+   * BUG CORRIGÉ — "Ajouter un groupe" (menu ⋮ > Paramètres) n'existait
+   * pas : les seuls groupes possibles étaient auto-créés par une commande
+   * (voir createGroupForCommande ci-dessous). Ce groupe CUSTOM n'a ni
+   * commande ni expiration automatique — il vit tant que ses membres ne
+   * le suppriment pas (pas encore de suppression manuelle, à construire
+   * séparément si besoin).
+   */
+  async createCustomGroup(
+    creatorUserId: string, creatorRole: UserRole, creatorActorId: string | undefined,
+    dto: CreateCustomGroupDto,
+  ): Promise<object> {
+    const creatorType = this.messagerie.roleToActorType(creatorRole);
+    const creatorId   = await this.messagerie.resolveProfileId(creatorUserId, creatorRole, creatorActorId);
+    const creatorInfo = await this.messagerie.getContactInfo(creatorType, creatorId);
+
+    /* Résout chaque membre choisi (nom + vrai userId) — mêmes profils que
+     * la recherche d'utilisateurs (GET /messagerie/users/search). */
+    const resolved = await Promise.all(
+      dto.members.map(async ref => ({ ref, info: await this.messagerie.getContactInfo(ref.type, ref.id) })),
+    );
+
+    const seenUserIds = new Set<string>([creatorUserId]);
+    const members: Partial<DeliveryGroupMember>[] = [{
+      actorType:   creatorType as unknown as GroupMemberType,
+      actorId:     creatorId,
+      userId:      creatorUserId,
+      displayName: creatorInfo.name,
+      /* Le créateur est administrateur par défaut — voir setMemberAdmin/assertGroupAdmin. */
+      isAdmin:     true,
+    }];
+
+    for (const { ref, info } of resolved) {
+      if (!info.userId || seenUserIds.has(info.userId)) continue; // profil introuvable ou doublon (déjà ajouté / créateur lui-même)
+      seenUserIds.add(info.userId);
+      members.push({
+        actorType:   ref.type as unknown as GroupMemberType,
+        actorId:     ref.id,
+        userId:      info.userId,
+        displayName: info.name,
+      });
+    }
+
+    if (members.length < 2) {
+      throw new BadRequestException('Sélectionnez au moins un autre membre valide pour créer le groupe.');
+    }
+
+    const group = this.groupRepo.create({
+      kind:            DeliveryGroupKind.CUSTOM,
+      commandeId:      null,
+      commandeNumero:  null,
+      companyName:     null,
+      name:            dto.name.trim(),
+      createdByUserId: creatorUserId,
+      status:          DeliveryGroupStatus.ACTIVE,
+    });
+    const saved = await this.groupRepo.save(group);
+
+    await this.memberRepo.save(
+      members.map(m => this.memberRepo.create({ ...m, groupId: saved.id })),
+    );
+
+    await this.sendSystemMessage(
+      saved.id,
+      `🎉 ${creatorInfo.name} a créé le groupe "${saved.name}" avec ${members.length - 1} autre(s) membre(s).`,
+    );
+
+    /* Les autres membres n'ont, eux, pas encore ce groupe en mémoire —
+     * useDeliveryGroups.ts recharge la liste complète sur cet événement
+     * (voir onStatus > 'group_created'), commandeNumero/companyName ne
+     * sont donc utiles ici que pour les AUTRES types d'événement. */
+    const userIds = members.map(m => m.userId!);
+    this.broadcast.groupStatusChanged(userIds, {
+      event:       'group_created',
+      groupId:     saved.id,
+      memberCount: members.length,
+    });
+
+    this.logger.log(`[DeliveryGroup] Groupe libre "${saved.name}" créé par ${creatorUserId} (${saved.id})`);
+
+    return {
+      id:             saved.id,
+      kind:           saved.kind,
+      commandeId:     null,
+      commandeNumero: null,
+      companyName:    null,
+      name:           saved.name,
+      description:    null,
+      status:         saved.status,
+      expiresAt:      null,
+      completedAt:    null,
+      unreadCount:    0,
+      memberCount:    members.length,
+      lastMessage:    null,
+      lastMessageAt:  saved.createdAt.toISOString(),
+      createdAt:      saved.createdAt.toISOString(),
+    };
+  }
+
+  // ── Création — groupe de commande (automatique) ─────────────────
 
   /**
    * Appelé depuis CommandeCreationService après la sauvegarde
@@ -130,8 +235,8 @@ export class DeliveryGroupService {
       this.broadcast.groupStatusChanged(userIds, {
         event:          'group_created',
         groupId:        saved.id,
-        commandeNumero: saved.commandeNumero,
-        companyName:    saved.companyName,
+        commandeNumero: saved.commandeNumero ?? undefined,
+        companyName:    saved.companyName ?? undefined,
         memberCount:    members.length,
       });
 
@@ -281,10 +386,13 @@ export class DeliveryGroupService {
 
       return {
         id:             g.id,
+        kind:           g.kind,
         commandeId:     g.commandeId,
         commandeNumero: g.commandeNumero,
         companyName:    g.companyName,
+        name:           g.name,
         description:    g.description ?? null,
+        photoUrl:       g.photoUrl ?? null,
         status:         g.status,
         expiresAt:      g.expiresAt?.toISOString() ?? null,
         completedAt:    g.completedAt?.toISOString() ?? null,
@@ -382,7 +490,7 @@ export class DeliveryGroupService {
       userId,
       {
         groupId,
-        commandeNumero: group.commandeNumero,
+        commandeNumero: group.commandeNumero ?? undefined,
         message:        payload,
       },
     );
@@ -523,11 +631,18 @@ export class DeliveryGroupService {
 
   /** Modifie les informations éditables du groupe (description, …). */
   async updateGroupInfo(groupId: string, userId: string, dto: UpdateGroupDto): Promise<object> {
-    await this.assertMember(groupId, userId);
-    const group = await this.groupRepo.findOneOrFail({ where: { id: groupId } });
+    const member = await this.assertMember(groupId, userId);
+    const group  = await this.groupRepo.findOneOrFail({ where: { id: groupId } });
 
     if (dto.description !== undefined) {
       group.description = dto.description.trim() || null;
+    }
+    if (dto.photoUrl !== undefined) {
+      /* La photo ne peut être changée que par un administrateur — pour un
+       * groupe CUSTOM uniquement (voir assertGroupAdmin ; un groupe ORDER
+       * n'a pas de notion d'admin, comportement inchangé pour lui). */
+      this.assertGroupAdmin(group, member);
+      group.photoUrl = dto.photoUrl.trim() || null;
     }
     await this.groupRepo.save(group);
 
@@ -537,9 +652,10 @@ export class DeliveryGroupService {
       event:       'group_info_updated',
       groupId:     group.id,
       description: group.description ?? undefined,
+      photoUrl:    group.photoUrl ?? undefined,
     });
 
-    return { id: group.id, description: group.description };
+    return { id: group.id, description: group.description, photoUrl: group.photoUrl };
   }
 
   // ── Membres ───────────────────────────────────────────────────
@@ -557,6 +673,7 @@ export class DeliveryGroupService {
       actorId:     m.actorId,
       userId:      m.userId,
       displayName: m.displayName,
+      isAdmin:     m.isAdmin,
       joinedAt:    m.joinedAt?.toISOString() ?? null,
     }));
   }
@@ -579,6 +696,60 @@ export class DeliveryGroupService {
     const member = await this.memberRepo.findOne({ where: { groupId, userId, isActive: true } });
     if (!member) throw new ForbiddenException('Vous n\'êtes pas membre de ce groupe.');
     return member;
+  }
+
+  /**
+   * Un groupe ORDER (auto-créé par une commande) n'a pas de notion
+   * d'administrateur — tout membre garde le comportement historique
+   * (permissif). Pour un groupe CUSTOM, seul un administrateur passe ;
+   * le créateur original reste toujours autorisé même si `isAdmin` n'a
+   * jamais été posé correctement (filet de sécurité contre un groupe qui
+   * se retrouverait sans aucun administrateur).
+   */
+  private assertGroupAdmin(group: DeliveryGroup, member: DeliveryGroupMember): void {
+    if (group.kind !== DeliveryGroupKind.CUSTOM) return;
+    if (member.isAdmin) return;
+    if (group.createdByUserId && group.createdByUserId === member.userId) return;
+    throw new ForbiddenException('Seul un administrateur du groupe peut effectuer cette action.');
+  }
+
+  /**
+   * Nomme/retire un administrateur du groupe (⋮ groupe libre uniquement,
+   * comme WhatsApp/Telegram) — voir assertGroupAdmin ci-dessus.
+   */
+  async setMemberAdmin(
+    groupId: string, callerUserId: string, targetMemberId: string, isAdmin: boolean,
+  ): Promise<object> {
+    const caller = await this.assertMember(groupId, callerUserId);
+    const group  = await this.groupRepo.findOneOrFail({ where: { id: groupId } });
+
+    if (group.kind !== DeliveryGroupKind.CUSTOM) {
+      throw new BadRequestException('La gestion des administrateurs n\'est disponible que pour les groupes libres.');
+    }
+    this.assertGroupAdmin(group, caller);
+
+    const target = await this.memberRepo.findOne({ where: { id: targetMemberId, groupId, isActive: true } });
+    if (!target) throw new NotFoundException('Membre introuvable.');
+
+    target.isAdmin = isAdmin;
+    await this.memberRepo.save(target);
+
+    await this.sendSystemMessage(
+      groupId,
+      isAdmin
+        ? `👑 ${target.displayName} est maintenant administrateur du groupe.`
+        : `${target.displayName} n'est plus administrateur du groupe.`,
+    );
+
+    const members = await this.memberRepo.find({ where: { groupId, isActive: true } });
+    this.broadcast.groupStatusChanged(members.map(m => m.userId), {
+      event:         'group_member_admin_changed',
+      groupId,
+      memberId:      target.id,
+      memberIsAdmin: target.isAdmin,
+    });
+
+    return { id: target.id, isAdmin: target.isAdmin };
   }
 
   private async sendSystemMessage(groupId: string, text: string): Promise<void> {

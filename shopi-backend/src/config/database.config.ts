@@ -57,7 +57,8 @@ import {CommandeCode} from "../database/entities/commande/commande-code.entity";
 import { Conversation } from '../database/entities/messaging/conversation.entity';  
 import { ConversationPermission } from '../database/entities/messaging/conversation-permission.entity';
 import { LivreurHoraire} from '../database/entities/livreur.table/livreur-horaire.entity';
-import { Message } from '../database/entities/messaging/message.entity'; // ✅ AJOUTÉ : manquait l'import de Message  
+import { Message } from '../database/entities/messaging/message.entity'; // ✅ AJOUTÉ : manquait l'import de Message
+import { BlockedUser } from '../database/entities/messaging/blocked-user.entity';
 import { MessageReadReceipt } from 'src/database/entities/messaging/message-read-receipt.entity';
 import { Notification } from '../database/entities/notification/notification.entitiy';
 import { NotificationPreference } from '../database/entities/notification/notification-preference.entity';
@@ -305,6 +306,7 @@ export const databaseConfigFactory = {
       Conversation,
       ConversationPermission,
       Message,
+      BlockedUser,
       MessageReadReceipt,
       Notification,
       NotificationPreference,

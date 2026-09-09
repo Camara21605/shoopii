@@ -309,6 +309,15 @@ export class User {
   profilePicture: string | null;
 
   /**
+   * Fond d'écran de la messagerie (préférence globale, façon Telegram) —
+   * soit une clé de motif intégré (ex: "preset:doodles"), soit l'URL
+   * Cloudinary d'une image importée par l'utilisateur (voir
+   * MessagerieService.uploadWallpaperImage). null = fond par défaut.
+   */
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  chatWallpaper: string | null;
+
+  /**
    * Hash SHA-256 du numéro de téléphone en format E.164 (64 hex chars).
    * Permet la découverte de contacts sans stocker le numéro en clair.
    * Rempli à l'inscription si l'utilisateur fournit son numéro de téléphone.

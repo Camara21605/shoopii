@@ -9,15 +9,19 @@
  *   POST   /conversations                         → créer/récupérer
  *   GET    /conversations/:id/messages            → messages (pagination cursor : ?cursor=&limit= + replies)
  *   GET    /conversations/:id/messages/search?q=  → recherche plein texte dans la conversation
+ *   GET    /conversations/:id/media-summary        → nombre réel de messages + médias échangés (panneau Informations)
  *   POST   /conversations/:id/messages            → envoyer
  *   PATCH  /conversations/:id/read               → marquer lu
  *   PATCH  /conversations/:id/archive            → archiver
  *   PATCH  /conversations/:id/pin                → épingler / désépingler
  *   PATCH  /conversations/:id/mute               → couper / réactiver les notifications
+ *   PATCH  /conversations/:id/block              → bloquer / débloquer le contact (bidirectionnel à l'envoi)
  *   PATCH  /messages/:msgId                      → modifier un message
  *   DELETE /messages/:msgId                      → supprimer un message
  *   POST   /messages/:msgId/reactions            → toggle réaction emoji
  *   GET    /users/search?q=&type=                → rechercher utilisateurs
+ *   GET    /wallpaper                             → fond d'écran actuel (préférence compte)
+ *   PATCH  /wallpaper                             → changer le fond d'écran (galerie fermée, voir UpdateWallpaperDto)
  *
  * PERMISSIONS D'ÉQUIPE (collaborateurs d'entreprise) :
  *   Contrôleur partagé par TOUS les rôles (client, livreur, partenaire,
@@ -49,6 +53,8 @@ import {
   ArchiveConversationDto,
   PinConversationDto,
   MuteConversationDto,
+  UpdateWallpaperDto,
+  SetBlockDto,
 } from './dto/messagerie.dto';
 
 @Controller('messagerie')
@@ -147,6 +153,22 @@ export class MessagerieController {
     return this.svc.muteConversation(userId, role, convId, dto, actorId);
   }
 
+  /* BUG CORRIGÉ — "Bloquer le contact" (InfoPanel.tsx) était un bouton
+   * factice. Un blocage bloque l'envoi de messages dans les DEUX sens
+   * (voir MessagerieService.sendMessage) ; la conversation reste visible.
+   * Voir aussi GET .../media-summary qui renvoie isBlockedByMe. */
+  @Patch('conversations/:id/block')
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'send')
+  setBlocked(
+    @Req() req: Request,
+    @Param('id') convId: string,
+    @Body() dto: SetBlockDto,
+  ) {
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.setBlocked(userId, role, convId, dto.blocked, actorId);
+  }
+
   // ── Messages ────────────────────────────────────────────────
 
   @Get('conversations/:id/messages')
@@ -174,6 +196,22 @@ export class MessagerieController {
   ) {
     const { userId, actorId, role } = this.ctx(req);
     return this.svc.searchMessages(userId, role, convId, q, actorId);
+  }
+
+  /* Nombre réel de messages + vraie liste des médias échangés (images,
+   * vidéos, audios, documents) — alimente le panneau "Informations" côté
+   * chat (auparavant : compteur = messages chargés en mémoire côté
+   * frontend, grille de médias = 6 émojis fixes sans rapport avec les
+   * fichiers réels). Voir MessagerieService.getMediaSummary(). */
+  @Get('conversations/:id/media-summary')
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'read')
+  getMediaSummary(
+    @Req() req: Request,
+    @Param('id') convId: string,
+  ) {
+    const { userId, actorId, role } = this.ctx(req);
+    return this.svc.getMediaSummary(userId, role, convId, actorId);
   }
 
   /* Liste des commandes partagées entre les deux participants de cette
@@ -284,5 +322,22 @@ export class MessagerieController {
   ) {
     const { userId, actorId, role } = this.ctx(req);
     return this.svc.searchUsers(userId, role, q, type, actorId);
+  }
+
+  // ── Fond d'écran (préférence globale par utilisateur) ──────────
+  // Pas de TeamPermissionGuard ici : ce n'est pas un accès à du contenu
+  // de messagerie (messages/conversations) mais une préférence de compte,
+  // comme le mot de passe ou la photo de profil — même catégorie que
+  // ProfilPartenaireService.uploadPhoto(), jamais soumise aux permissions
+  // d'équipe "messaging".
+
+  @Get('wallpaper')
+  getWallpaper(@Req() req: Request) {
+    return this.svc.getWallpaper(this.ctx(req).userId);
+  }
+
+  @Patch('wallpaper')
+  setWallpaper(@Req() req: Request, @Body() dto: UpdateWallpaperDto) {
+    return this.svc.setWallpaper(this.ctx(req).userId, dto);
   }
 }

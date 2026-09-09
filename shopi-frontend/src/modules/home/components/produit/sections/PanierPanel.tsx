@@ -18,11 +18,17 @@ interface Props {
   onToast:      (m: string) => void;
   onBoutique:   () => void;
   onScrollLivr: () => void;
+  /** true UNIQUEMENT depuis "Voir ma boutique" du dashboard entreprise
+   *  (aperçu du propriétaire, produit affiché sans navigation ni nouvel
+   *  onglet — voir ProduitPage.tsx) : achat/panier désactivés — un
+   *  propriétaire qui prévisualise sa boutique ne doit pas pouvoir
+   *  déclencher une VRAIE commande sur son propre produit. */
+  previewOverride?: boolean;
 }
 
 export default function PanierPanel({
   produit, produitId, variante, qty, onChangeQty,
-  livraison, onToast, onBoutique, onScrollLivr,
+  livraison, onToast, onBoutique, onScrollLivr, previewOverride = false,
 }: Props) {
   const { t } = useTranslation();
   const [addingCart, setAddingCart] = useState(false);
@@ -52,6 +58,7 @@ export default function PanierPanel({
   const total   = produit.prix * qty + lvFee + corrFee;
 
   async function handleAddToCart() {
+    if (previewOverride) { onToast(t('produitDetail.panier.previewToast')); return; }
     if (!isClient)     { navigate('/login'); return; }
     if (isOutOfStock)  return;
 
@@ -71,6 +78,7 @@ export default function PanierPanel({
   }
 
   async function handleBuyNow() {
+    if (previewOverride) { onToast(t('produitDetail.panier.previewToast')); return; }
     if (!isClient)    { navigate('/login'); return; }
     if (isOutOfStock) return;
 
@@ -147,6 +155,16 @@ export default function PanierPanel({
 
   return (
     <div className={styles.panel}>
+      {/* BUG CORRIGÉ — tout ce bloc (prix + livraison + quantité + total +
+       * boutons Ajouter/Acheter) restait affiché dans l'aperçu "Voir ma
+       * boutique" du dashboard entreprise, avec seulement les boutons
+       * désactivés (toast au clic) : ça reste "quelque chose qui ressemble
+       * à un achat" visible pour rien. Retiré entièrement en aperçu — le
+       * prix du produit est déjà affiché dans ProduitInfoSection (colonne
+       * centrale), donc rien d'utile n'est perdu ; seule la carte vendeur
+       * ci-dessous (Voir boutique / Contacter, pas un flux d'achat) reste
+       * affichée dans les deux cas. */}
+      {!previewOverride && (
       <div className={styles.card}>
         <div className={styles.prix}>{produit.prix.toLocaleString('fr')} <span>GNF</span></div>
         {produit.ancien > produit.prix && (
@@ -231,6 +249,7 @@ export default function PanierPanel({
 
         <div className={styles.secure}><i className="fas fa-lock" /> {t('produitDetail.panier.paiementSecurise')}</div>
       </div>
+      )}
 
       <div className={styles.vendeurCard}>
         <div className={styles.vcTop}>

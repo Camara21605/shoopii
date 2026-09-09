@@ -6,7 +6,7 @@
  * Gère son propre état local — le parent (ChatWindow) n'a besoin
  * que des callbacks onSend, onTyping et onToast.
  */
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { MediaAttachment, ShareExtra } from '../hooks/useMessagerie';
 import type { WsTyping }        from '../hooks/useSocket';
@@ -67,6 +67,39 @@ export default function MessageInput({
 
   /* ── Throttle typing ── */
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /*
+   * BUG CORRIGÉ — le menu "Joindre" (et les pickers commande/produit ouverts
+   * depuis lui, ainsi que le picker emoji) ne se refermaient QUE via un
+   * clic sur un de leurs propres items (`item.action(); setAttOpen(false)`)
+   * ou en recliquant précisément sur le bouton trombone/emoji : cliquer
+   * n'importe où ailleurs (dans la conversation, sur le champ de texte…)
+   * ne les fermait jamais. `data-att`/`data-emoji` marquaient déjà bouton
+   * + contenu de chaque popover (voir OrderSharePicker/ProductSharePicker
+   * qui font stopPropagation() sur ces mêmes attributs) — le seul
+   * morceau manquant était CE listener document-level qui s'appuie dessus.
+   */
+  useEffect(() => {
+    if (!attOpen && !emojiOpen && !orderPickerOpen && !productPickerOpen) return;
+
+    function closeOnOutsideOrEscape(e: MouseEvent | KeyboardEvent) {
+      if (e.type === 'keydown') {
+        if ((e as KeyboardEvent).key !== 'Escape') return;
+        setAttOpen(false); setOrderPickerOpen(false); setProductPickerOpen(false); setEmojiOpen(false);
+        return;
+      }
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-att]'))   { setAttOpen(false); setOrderPickerOpen(false); setProductPickerOpen(false); }
+      if (!target.closest('[data-emoji]')) setEmojiOpen(false);
+    }
+
+    document.addEventListener('mousedown', closeOnOutsideOrEscape);
+    document.addEventListener('keydown', closeOnOutsideOrEscape);
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideOrEscape);
+      document.removeEventListener('keydown', closeOnOutsideOrEscape);
+    };
+  }, [attOpen, emojiOpen, orderPickerOpen, productPickerOpen]);
 
   // ── Texte ─────────────────────────────────────────────────────
 

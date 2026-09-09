@@ -385,7 +385,11 @@
       },
       "clicAgain": "Clique novamente para confirmar",
       "confirmerBtn": "Confirmar",
-      "annulerBtn": "Cancelar"
+      "annulerBtn": "Cancelar",
+      "comingSoon": "Em breve",
+      "passwordPlaceholder": "Sua senha atual",
+      "passwordRequired": "Senha necessária para confirmar",
+      "passwordIncorrect": "Senha incorreta"
     },
     "profil": {
       "photoTitle": "Foto de perfil",

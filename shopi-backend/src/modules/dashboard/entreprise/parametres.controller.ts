@@ -37,6 +37,7 @@ import { Roles }             from 'src/common/decorators/roles.decorator';
 import { UserRole }          from 'src/common/enums/user-role.enum';
 import { TeamPermissionGuard }    from 'src/modules/company-team/guards/team-permission.guard';
 import { RequiresTeamPermission } from 'src/modules/company-team/decorators/requires-team-permission.decorator';
+import { TeamOwnerGuard }         from 'src/modules/company-team/guards/team-owner.guard';
 
 /* ── Imports des 12 services ── */
 import { BoutiqueParametresService }    from './services/boutique-parametres.service';
@@ -391,32 +392,43 @@ export class ParametresController {
    * SECTION 12 — ZONE SENSIBLE
    * ════════════════════════════════════════════════════════ */
 
-  /** Mettre en pause — mot de passe requis. Pas d'action "danger" dédiée
-   * dans TeamPermissions.settings ({view, edit} seulement) — gaté avec
-   * settings.edit comme le reste de la section, ce qui est large pour une
-   * action de cette gravité mais correspond au découpage actuel du schéma
-   * de permissions (voir aussi : ces 3 routes danger/* ne sont pas encore
-   * appelées par DangerSection.tsx aujourd'hui, boutons non câblés). */
-  @UseGuards(TeamPermissionGuard)
-  @RequiresTeamPermission('settings', 'edit')
+  /* BUG CORRIGÉ (sécurité) — ces 3 routes n'étaient gardées que par
+   * TeamPermissionGuard + settings.edit : n'IMPORTE QUEL collaborateur
+   * ayant reçu la permission "Paramètres > Modifier" (accordée pour des
+   * tâches banales — horaires, catalogue…) pouvait mettre en pause,
+   * désactiver 30 jours ou SUPPRIMER DÉFINITIVEMENT toute la boutique.
+   * TeamOwnerGuard restreint maintenant ces 3 actions au seul
+   * propriétaire (company.userId = user.id) — un collaborateur, même
+   * avec tous les droits "Paramètres", n'a plus accès à cette section.
+   *
+   * BUG CORRIGÉ (fonctionnel, masqué par le précédent) — req.user.actorId
+   * vaut Company.id pour TOUT compte "company" (propriétaire ET
+   * collaborateur, voir AuthService.findProfileId) : le passer à
+   * DangerParametresService.verifyPassword(), qui cherche une ligne dans
+   * `users` par cet id, ne pouvait JAMAIS correspondre (Company.id et
+   * User.id sont des espaces d'UUID disjoints) — verifyPassword() aurait
+   * donc TOUJOURS levé "Utilisateur introuvable", quel que soit le mot de
+   * passe saisi. Avec TeamOwnerGuard ci-dessus, seul le propriétaire
+   * atteint ces routes : req.user.id (son vrai User.id, jamais l'actorId)
+   * est la valeur correcte à la fois pour verifyPassword() et pour
+   * findCompanyOrFail() (repli sur `where: { userId }`). */
+  @UseGuards(TeamOwnerGuard)
   @Patch('danger/pause')
   pauseBoutique(@Req() req: any, @Body() dto: DangerConfirmDto) {
-    return this.dangerService.pauseBoutique(req.user.actorId ?? req.user.id, dto);
+    return this.dangerService.pauseBoutique(req.user.id, dto);
   }
 
-  /** Désactiver 30 jours — mot de passe requis */
-  @UseGuards(TeamPermissionGuard)
-  @RequiresTeamPermission('settings', 'edit')
+  /** Désactiver 30 jours — mot de passe requis, propriétaire uniquement (voir ci-dessus) */
+  @UseGuards(TeamOwnerGuard)
   @Patch('danger/desactiver')
   desactiverCompte(@Req() req: any, @Body() dto: DangerConfirmDto) {
-    return this.dangerService.desactiverCompte(req.user.actorId ?? req.user.id, dto);
+    return this.dangerService.desactiverCompte(req.user.id, dto);
   }
 
-  /** Supprimer définitivement — mot de passe requis */
-  @UseGuards(TeamPermissionGuard)
-  @RequiresTeamPermission('settings', 'edit')
+  /** Supprimer définitivement — mot de passe requis, propriétaire uniquement (voir ci-dessus) */
+  @UseGuards(TeamOwnerGuard)
   @Delete('danger/supprimer')
   supprimerBoutique(@Req() req: any, @Body() dto: DangerConfirmDto) {
-    return this.dangerService.supprimerBoutique(req.user.actorId ?? req.user.id, dto);
+    return this.dangerService.supprimerBoutique(req.user.id, dto);
   }
 }

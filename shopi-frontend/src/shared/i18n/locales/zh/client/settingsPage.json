@@ -385,7 +385,11 @@
       },
       "clicAgain": "再次点击以确认",
       "confirmerBtn": "确认",
-      "annulerBtn": "取消"
+      "annulerBtn": "取消",
+      "comingSoon": "即将推出",
+      "passwordPlaceholder": "您的当前密码",
+      "passwordRequired": "需要密码才能确认",
+      "passwordIncorrect": "密码不正确"
     },
     "profil": {
       "photoTitle": "资料照片",

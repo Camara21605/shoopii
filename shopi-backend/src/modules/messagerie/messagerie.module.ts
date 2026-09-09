@@ -23,6 +23,7 @@ import { Correspondent } from 'src/database/entities/profiles/correspondant-prof
 import { Partner }      from 'src/database/entities/profiles/partenaire-profile.entity';
 import { Follow }       from 'src/database/entities/follow/follow.entity';
 import { UserContact }  from 'src/database/entities/contacts/user-contact.entity';
+import { BlockedUser }  from 'src/database/entities/messaging/blocked-user.entity';
 import { Commande }     from 'src/database/entities/commande/commande.entity';
 import { Product }      from 'src/database/entities/entreprise.table/product.entity';
 import { DeliveryGroup }       from 'src/database/entities/delivery-group/delivery-group.entity';
@@ -55,6 +56,7 @@ import { BroadcastService }       from './services/broadcast.service';
       Partner,
       Follow,
       UserContact,
+      BlockedUser,
       Commande,
       Product,
       DeliveryGroup,

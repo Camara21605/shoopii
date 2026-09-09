@@ -8,7 +8,7 @@
  * reste juste un composant d'affichage, route harmonisée : /livreurs/:id.
  * ================================================================ */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate }      from 'react-router-dom';
 import { useTranslation }   from 'react-i18next';
 import styles               from '../styles/CardLivreurGrid.module.css';
@@ -50,6 +50,10 @@ const CardLivreurGrid: React.FC<CardLivreurGridProps> = ({
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  /* Bascule vers le fallback initiales si l'URL de la photo est cassée
+   * (fichier supprimé, hébergeur down…) plutôt que de laisser une icône
+   * d'image brisée du navigateur. */
+  const [imgError, setImgError] = useState(false);
 
   const { openAuthModal, authModal } = useAuthGate();
 
@@ -68,8 +72,19 @@ const CardLivreurGrid: React.FC<CardLivreurGridProps> = ({
 
       {/* ── Avatar ── */}
       <div className={styles.avaWrap}>
-        <div className={styles.ava} style={{ background: livreur.avatarBg }}>
-          {livreur.initials}
+        <div
+          className={styles.ava}
+          style={livreur.profilePicture && !imgError ? undefined : { background: livreur.avatarBg }}
+        >
+          {livreur.profilePicture && !imgError
+            ? <img
+                className={styles.avaImg}
+                src={livreur.profilePicture}
+                alt={livreur.fullName}
+                onError={() => setImgError(true)}
+              />
+            : livreur.initials
+          }
           {livreur.disponible && <span className={styles.avaDot} aria-label={t('livreursPage.card.disponible')} />}
         </div>
         <div className={`${styles.availBadge} ${livreur.disponible ? styles.availOn : styles.availOff}`}>

@@ -118,7 +118,8 @@
       "messagerieOuverteToast": "💬 Mensagens abertas",
       "dejaAuPanierToast": "🛒 Já está no seu cesto — vá ao cesto para modificar a quantidade",
       "ajouteToast": "✅ Adicionado ao cesto!",
-      "erreurToast": "❌ {{msg}}"
+      "erreurToast": "❌ {{msg}}",
+      "previewToast": "👁️ Pré-visualização da sua loja — compra indisponível aqui"
     },
     "infoSection": {
       "sku": "SKU: {{sku}}",
@@ -242,7 +243,8 @@
       "produitIntrouvableDesc": "Este produto não existe ou ainda não foi publicado.",
       "retourAccueil": "Voltar ao início",
       "accueil": "Início",
-      "partagerTitre": "Partilhar este produto"
+      "partagerTitre": "Partilhar este produto",
+      "retourBoutique": "Voltar à loja"
     }
   }
 }

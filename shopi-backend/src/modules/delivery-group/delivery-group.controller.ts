@@ -12,10 +12,12 @@ import {
 import type { Request } from 'express';
 
 import { JwtAuthGuard }         from '../../common/guards/auth.guard';
+import { UserRole }             from '../../common/enums/user-role.enum';
 import { DeliveryGroupService } from './delivery-group.service';
 import {
   SendGroupMessageDto, EditGroupMessageDto,
   DeleteGroupMessageDto, ToggleGroupReactionDto, UpdateGroupDto,
+  CreateCustomGroupDto, SetMemberAdminDto,
 } from './dto/delivery-group.dto';
 
 @Controller('delivery-groups')
@@ -35,6 +37,16 @@ export class DeliveryGroupController {
     return this.svc.getGroupsForUser(this.uid(req));
   }
 
+  /* BUG CORRIGÉ — "Ajouter un groupe" (menu ⋮ > Paramètres) n'avait
+   * aucun endpoint : seuls les groupes auto-créés par une commande
+   * existaient. Voir DeliveryGroupService.createCustomGroup(). */
+  /** POST /delivery-groups — créer un groupe libre (membres choisis à la main) */
+  @Post()
+  createCustomGroup(@Req() req: Request, @Body() dto: CreateCustomGroupDto) {
+    const u = (req as any).user;
+    return this.svc.createCustomGroup(this.uid(req), u.role as UserRole, u.actorId as string | undefined, dto);
+  }
+
   /** PATCH /delivery-groups/:id — modifier la description du groupe */
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
@@ -50,6 +62,19 @@ export class DeliveryGroupController {
   @Get(':id/members')
   getMembers(@Req() req: Request, @Param('id') groupId: string) {
     return this.svc.getGroupMembers(groupId, this.uid(req));
+  }
+
+  /** PATCH /delivery-groups/:id/members/:memberId/admin — nommer/retirer un
+   *  administrateur (groupe libre uniquement, voir setMemberAdmin). */
+  @Patch(':id/members/:memberId/admin')
+  @HttpCode(HttpStatus.OK)
+  setMemberAdmin(
+    @Req()  req:      Request,
+    @Param('id')      groupId:  string,
+    @Param('memberId') memberId: string,
+    @Body()           dto:      SetMemberAdminDto,
+  ) {
+    return this.svc.setMemberAdmin(groupId, this.uid(req), memberId, dto.isAdmin);
   }
 
   /** GET /delivery-groups/:id/messages */

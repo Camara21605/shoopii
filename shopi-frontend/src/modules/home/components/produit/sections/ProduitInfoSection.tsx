@@ -41,13 +41,17 @@ interface Props {
   venteEnGros?:    boolean;
   moq?:            number | null;
   wholesaleTiers?: WholesaleTier[];
+  /** true UNIQUEMENT depuis "Voir ma boutique" du dashboard entreprise —
+   *  voir PanierPanel.tsx pour la raison (pas de vraie commande depuis
+   *  un aperçu propriétaire). */
+  previewOverride?: boolean;
 }
 
 export default function ProduitInfoSection({
   produit, produitId, qty, onChangeQty,
   onToast, onBoutique, children,
   variantes = [], selectedVariants: selectedProp, onVariantsChange,
-  venteEnGros = false, moq, wholesaleTiers = [],
+  venteEnGros = false, moq, wholesaleTiers = [], previewOverride = false,
 }: Props) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -120,6 +124,7 @@ export default function ProduitInfoSection({
 
   /* ── Ajouter au panier ── */
   function handleAddToCart() {
+    if (previewOverride) { onToast(t('produitDetail.panier.previewToast')); return; }
     requireClient(async () => {
       if (!produitId)   { onToast(t('produitDetail.infoSection.idManquantToast')); return; }
       if (isOutOfStock) { onToast(t('produitDetail.infoSection.ruptureToast')); return; }
@@ -137,6 +142,7 @@ export default function ProduitInfoSection({
 
   /* ── Acheter maintenant ── */
   function handleBuyNow() {
+    if (previewOverride) { onToast(t('produitDetail.panier.previewToast')); return; }
     requireClient(async () => {
       if (!produitId)   { onToast(t('produitDetail.infoSection.idManquantToast')); return; }
       if (isOutOfStock) { onToast(t('produitDetail.infoSection.ruptureToast')); return; }
@@ -301,56 +307,71 @@ export default function ProduitInfoSection({
         </div>
       )}
 
-      {/* ── Quantité ── */}
-      <div className={styles.qtyRow}>
-        <span className={styles.qtyLbl}>{t('produitDetail.infoSection.quantite')}</span>
-        <div className={styles.qtyCtrl}>
-          <button className={styles.qtyBtn} onClick={() => onChangeQty(-1)} disabled={qty <= 1}>
-            <i className="fas fa-minus" />
-          </button>
-          <span className={styles.qtyNum}>{qty}</span>
-          <button className={styles.qtyBtn} onClick={() => onChangeQty(1)} disabled={qty >= Math.min(5, produit.stock)}>
-            <i className="fas fa-plus" />
-          </button>
-        </div>
-        <span className={styles.qtyMax}>{t('produitDetail.infoSection.maxParCommande')}</span>
-      </div>
+      {/* ── Quantité / livraison / achat — MASQUÉS en aperçu entreprise ──
+       * BUG CORRIGÉ — "Ajouter au panier"/"Acheter maintenant" étaient
+       * seulement désactivés (toast au clic) mais restaient visibles dans
+       * l'aperçu "Voir ma boutique" du dashboard entreprise, avec tout le
+       * flux d'achat autour (quantité, choix du mode de livraison/adresse) :
+       * rien de tout ça n'a de sens pour un propriétaire qui prévisualise
+       * son PROPRE produit. Retiré entièrement de l'affichage (pas juste
+       * désactivé) — voir aussi PanierPanel.tsx (même traitement pour le
+       * bloc "achat" de la colonne de droite) et SimilairesSection.tsx
+       * (bouton "Ajouter" des produits similaires). */}
+      {!previewOverride && (
+        <>
+          <div className={styles.qtyRow}>
+            <span className={styles.qtyLbl}>{t('produitDetail.infoSection.quantite')}</span>
+            <div className={styles.qtyCtrl}>
+              <button className={styles.qtyBtn} onClick={() => onChangeQty(-1)} disabled={qty <= 1}>
+                <i className="fas fa-minus" />
+              </button>
+              <span className={styles.qtyNum}>{qty}</span>
+              <button className={styles.qtyBtn} onClick={() => onChangeQty(1)} disabled={qty >= Math.min(5, produit.stock)}>
+                <i className="fas fa-plus" />
+              </button>
+            </div>
+            <span className={styles.qtyMax}>{t('produitDetail.infoSection.maxParCommande')}</span>
+          </div>
 
-      {/* ── Slot LivraisonSection ── */}
-      {children}
+          {/* ── Slot LivraisonSection ── */}
+          {children}
+        </>
+      )}
 
       {/* ── Boutons CTA — connectés à CartContext ── */}
       <div className={styles.ctaRow}>
 
-        <div className={styles.btnRow1}>
-          {isOutOfStock ? (
-            <button className={styles.btnCart} disabled style={{ opacity:.5, cursor:'not-allowed' }}>
-              <i className="fas fa-ban" /> {t('produitDetail.infoSection.ruptureDeStock')}
-            </button>
-          ) : (
+        {!previewOverride && (
+          <div className={styles.btnRow1}>
+            {isOutOfStock ? (
+              <button className={styles.btnCart} disabled style={{ opacity:.5, cursor:'not-allowed' }}>
+                <i className="fas fa-ban" /> {t('produitDetail.infoSection.ruptureDeStock')}
+              </button>
+            ) : (
+              <button
+                className={styles.btnCart}
+                onClick={handleAddToCart}
+                disabled={addingCart || addingBuy}
+              >
+                {addingCart
+                  ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.infoSection.ajoutEnCours')}</>
+                  : <><i className="fas fa-cart-plus" /> {t('produitDetail.infoSection.ajouterAuPanier')}</>
+                }
+              </button>
+            )}
+
             <button
-              className={styles.btnCart}
-              onClick={handleAddToCart}
-              disabled={addingCart || addingBuy}
+              className={styles.btnBuy}
+              onClick={handleBuyNow}
+              disabled={addingCart || addingBuy || isOutOfStock}
             >
-              {addingCart
-                ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.infoSection.ajoutEnCours')}</>
-                : <><i className="fas fa-cart-plus" /> {t('produitDetail.infoSection.ajouterAuPanier')}</>
+              {addingBuy
+                ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.infoSection.redirection')}</>
+                : <><i className="fas fa-bolt" /> {t('produitDetail.infoSection.acheterMaintenant')}</>
               }
             </button>
-          )}
-
-          <button
-            className={styles.btnBuy}
-            onClick={handleBuyNow}
-            disabled={addingCart || addingBuy || isOutOfStock}
-          >
-            {addingBuy
-              ? <><i className="fas fa-circle-notch fa-spin" /> {t('produitDetail.infoSection.redirection')}</>
-              : <><i className="fas fa-bolt" /> {t('produitDetail.infoSection.acheterMaintenant')}</>
-            }
-          </button>
-        </div>
+          </div>
+        )}
 
         <div className={styles.btnRow2}>
           <button

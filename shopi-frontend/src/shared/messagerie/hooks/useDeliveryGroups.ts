@@ -15,10 +15,16 @@ import type { Conversation, ChatUser, ChatMessage, GroupMember } from '../data/m
 
 interface ApiGroup {
   id:             string;
-  commandeId:     string;
-  commandeNumero: string;
-  companyName:    string;
+  /** 'order' (commande, comportement historique) | 'custom' (groupe libre, voir createCustomGroup). */
+  kind?:          'order' | 'custom';
+  commandeId:     string | null;
+  commandeNumero: string | null;
+  companyName:    string | null;
+  /** Titre donné par le créateur — uniquement pour kind==='custom'. */
+  name?:          string | null;
   description:    string | null;
+  /** Photo de profil du groupe (URL Cloudinary) — null = émoji par défaut (voir groupToUser). */
+  photoUrl?:      string | null;
   status:         'active' | 'completed' | 'expired' | 'cancelled';
   expiresAt:      string | null;
   completedAt:    string | null;
@@ -126,26 +132,21 @@ function apiMsgToChat(m: ApiGroupMessage): ChatMessage {
 }
 
 function groupToConv(g: ApiGroup): Conversation {
-  const statusLabel = g.status === 'completed'
-    ? '✅ Livré'
-    : g.status === 'expired'
-      ? '🔒 Expiré'
-      : g.status === 'cancelled'
-        ? '❌ Annulé'
-        : '🚀 En cours';
+  const isCustom = g.kind === 'custom';
 
   return {
     id:             g.id,
     userId:         g.id,          // clé dans usersMap
     pinned:         false,
     unread:         g.unreadCount,
-    lastMsg:        g.lastMessage ?? `Groupe de livraison · ${g.commandeNumero}`,
+    lastMsg:        g.lastMessage ?? (isCustom ? `Groupe créé · ${g.name}` : `Groupe de livraison · ${g.commandeNumero}`),
     lastTime:       formatTime(g.lastMessageAt),
     muted:          false,
     messages:       [],
     isGroup:        true,
+    isCustomGroup:  isCustom,
     groupStatus:    g.status,
-    commandeNumero: g.commandeNumero,
+    commandeNumero: g.commandeNumero ?? undefined,
     memberCount:    g.memberCount,
     expiresAt:      g.expiresAt ?? undefined,
     description:    g.description ?? undefined,
@@ -153,18 +154,27 @@ function groupToConv(g: ApiGroup): Conversation {
 }
 
 function groupToUser(g: ApiGroup): ChatUser {
-  const expired = g.status === 'expired' || g.status === 'cancelled';
+  const expired   = g.status === 'expired' || g.status === 'cancelled';
+  const isCustom  = g.kind === 'custom';
+
   return {
     id:       g.id,
-    name:     `${g.companyName} · ${g.commandeNumero}`,
+    /* Groupe libre : titre donné par le créateur. Groupe de commande :
+     * comportement historique (boutique · numéro de commande). */
+    name:     isCustom ? (g.name ?? 'Groupe') : `${g.companyName} · ${g.commandeNumero}`,
     role:     'groupe',
-    ava:      '📦',
+    /* Photo réelle si le groupe en a une (voir updateGroupPhoto) — même
+     * convention que pour un contact (ava = URL http OU émoji, voir
+     * ChatHeader.isImgAva/cldAvatar) ; sinon émoji par défaut selon le type. */
+    ava:      g.photoUrl || (isCustom ? '👥' : '📦'),
     avaColor: expired ? 'rgba(107,114,128,.15)' : 'rgba(14,116,144,.12)',
     online:   false,
-    context:  g.status === 'active'    ? `${g.memberCount} membres`
-            : g.status === 'completed' ? `Expire le ${g.expiresAt ? new Date(g.expiresAt).toLocaleDateString('fr-FR') : '?'}`
-            : g.status === 'expired'   ? 'Groupe archivé'
-            : 'Commande annulée',
+    context:  isCustom
+      ? `${g.memberCount} membres`
+      : g.status === 'active'    ? `${g.memberCount} membres`
+      : g.status === 'completed' ? `Expire le ${g.expiresAt ? new Date(g.expiresAt).toLocaleDateString('fr-FR') : '?'}`
+      : g.status === 'expired'   ? 'Groupe archivé'
+      : 'Commande annulée',
   };
 }
 
@@ -195,6 +205,27 @@ export function useDeliveryGroups() {
   }, []);
 
   useEffect(() => { loadGroups(); }, [loadGroups]);
+
+  // ── Créer un groupe libre (⋮ > Paramètres > Ajouter un groupe) ──
+
+  /**
+   * BUG CORRIGÉ — "Ajouter un groupe" n'existait pas : voir
+   * DeliveryGroupService.createCustomGroup() côté backend. Recharge la
+   * liste complète après création (comme le fait déjà l'événement socket
+   * 'group_created' pour un membre invité) puis renvoie le nouveau
+   * groupId pour que l'appelant puisse le sélectionner immédiatement.
+   */
+  const createCustomGroup = useCallback(async (
+    name: string,
+    members: { type: string; id: string }[],
+  ): Promise<string> => {
+    const created = await apiFetch<ApiGroup>('/delivery-groups', {
+      method: 'POST',
+      body:   { name, members },
+    });
+    await loadGroups();
+    return created.id;
+  }, [loadGroups]);
 
   // ── Charger les messages d'un groupe ─────────────────────
 
@@ -274,6 +305,47 @@ export function useDeliveryGroups() {
       /* Rollback silencieux — le socket re-synchronisera si besoin */
     }
   }, []);
+
+  // ── Modifier la photo du groupe (une seule image, voir InfoPanel) ──
+
+  /**
+   * BUG CORRIGÉ — le profil du groupe n'avait aucune vraie photo, juste un
+   * émoji figé (📦/👥, voir groupToUser). `photoUrl` vit sur ChatUser.ava
+   * (pas sur Conversation) : c'est déjà la convention pour un contact
+   * normal (ava = URL http OU émoji), donc InfoPanel/ChatHeader l'affichent
+   * automatiquement sans code supplémentaire (isImgAva/cldAvatar).
+   */
+  const updateGroupPhoto = useCallback(async (groupId: string, photoUrl: string) => {
+    /* Mise à jour optimiste immédiate */
+    setUsers(prev => prev.map(u => u.id === groupId ? { ...u, ava: photoUrl } : u));
+    try {
+      await apiFetch(`/delivery-groups/${groupId}`, {
+        method: 'PATCH',
+        body:   { photoUrl },
+      });
+    } catch {
+      /* Rollback silencieux — le socket re-synchronisera si besoin */
+    }
+  }, []);
+
+  // ── Gestion des administrateurs (groupe libre, voir InfoPanel) ────
+
+  /**
+   * BUG CORRIGÉ — impossible de déléguer la gestion d'un groupe libre :
+   * seul le créateur pouvait en pratique changer quoi que ce soit
+   * d'important (photo), aucun moyen de nommer un autre administrateur
+   * comme sur WhatsApp/Telegram. Contrairement à updateGroupPhoto/
+   * updateGroupDescription, les erreurs remontent ici (pas de rollback
+   * silencieux) — l'appelant (InfoPanel) doit pouvoir afficher un vrai
+   * message d'échec (ex : tentative par un non-administrateur).
+   */
+  const setMemberAdmin = useCallback(async (groupId: string, memberId: string, isAdmin: boolean) => {
+    await apiFetch(`/delivery-groups/${groupId}/members/${memberId}/admin`, {
+      method: 'PATCH',
+      body:   { isAdmin },
+    });
+    await loadGroupMembers(groupId);
+  }, [loadGroupMembers]);
 
   // ── Supprimer un message de groupe ───────────────────────
 
@@ -365,14 +437,27 @@ export function useDeliveryGroups() {
         }));
       };
 
-      const onStatus = (p: { event: string; groupId: string; expiresAt?: string; description?: string | null }) => {
-        /* Mise à jour de la description depuis un autre membre */
+      const onStatus = (p: { event: string; groupId: string; expiresAt?: string; description?: string | null; photoUrl?: string | null }) => {
+        /* Mise à jour de la description/photo depuis un autre membre */
         if (p.event === 'group_info_updated') {
           setGroups(prev => prev.map(g =>
             g.id === p.groupId
               ? { ...g, description: p.description ?? undefined }
               : g,
           ));
+          if (p.photoUrl !== undefined) {
+            setUsers(prev => prev.map(u =>
+              u.id === p.groupId ? { ...u, ava: p.photoUrl || u.ava } : u,
+            ));
+          }
+          return;
+        }
+
+        /* Un membre a été nommé/retiré administrateur ailleurs (voir
+         * setMemberAdmin) — recharge la liste des membres si ce groupe est
+         * actuellement ouvert (badge "Admin" / droits de gestion à jour). */
+        if (p.event === 'group_member_admin_changed') {
+          if (activeGroupRef.current === p.groupId) loadGroupMembers(p.groupId);
           return;
         }
 
@@ -445,6 +530,9 @@ export function useDeliveryGroups() {
     sendGroupMessage,
     deleteGroupMessage,
     updateGroupDescription,
+    updateGroupPhoto,
+    setMemberAdmin,
     loadGroupMessages,
+    createCustomGroup,
   };
 }

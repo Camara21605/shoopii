@@ -106,7 +106,16 @@ export default function ParametresPage() {
     saveNotifs,
     savePrivacy,
     reload,
+    pauseBoutique, desactiverCompte, supprimerBoutique,
   } = useParametres();
+
+  /* Boutique supprimée avec succès (Zone sensible) — le profil Company
+   * n'existe plus, impossible de rester sur ce dashboard. Même geste que
+   * handleLogout ci-dessus. */
+  function handleDeleted() {
+    logout();
+    navigate('/login');
+  }
 
   const [searchParams, setSearchParams] = useSearchParams();
   const sectionFromUrl = searchParams.get('section') as SectionKey | null;
@@ -377,6 +386,11 @@ export default function ParametresPage() {
           {activeSection === 'danger' && (
             <DangerSection
               {...commonProps}
+              pauseBoutique={pauseBoutique}
+              desactiverCompte={desactiverCompte}
+              supprimerBoutique={supprimerBoutique}
+              onDeleted={handleDeleted}
+              isOwner={isOwner}
             />
           )}
 

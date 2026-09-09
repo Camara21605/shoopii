@@ -120,3 +120,9 @@ export class UpdateLangueDto {
   @IsOptional() @IsString()  devise?:       string; // 'GNF'|'USD'|'EUR'|'XOF'
   @IsOptional() @IsString()  timezone?:     string; // 'GMT+0'|'GMT+1'|...
 }
+
+/* ── Section 14 — Zone de danger ── mot de passe requis pour toute action
+ * irréversible ou à fort impact (désactivation, suppression du compte). */
+export class DangerConfirmDto {
+  @IsString() password: string;
+}
