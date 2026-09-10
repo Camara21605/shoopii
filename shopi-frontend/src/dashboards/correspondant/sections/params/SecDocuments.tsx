@@ -12,12 +12,24 @@ const DOC_FIELD: Record<DocType, keyof CorrespondantData> = {
   cni: 'documentCni', bail: 'documentBail', assurance: 'documentAssurance',
   casier: 'documentCasier', registre: 'documentRegistre',
 };
+
+/* BUG CORRIGÉ — "Photos du point de dépôt" partageait la même clé
+ * ('registre') que "Registre de commerce / NIF" : les deux lignes
+ * affichaient le même statut, leurs inputs fichier cachés se
+ * marchaient dessus (même clé dans fileRefs.current → le dernier monté
+ * "gagnait"), et un upload sur l'une écrasait en réalité le document
+ * "registre" de l'autre — alors qu'un vrai endpoint dédié existe côté
+ * backend pour les photos (POST .../documents/photos-depot, multi-
+ * fichiers, jamais appelé par ce composant). Isolée : cette ligne
+ * n'a plus de docType du tout, rendue en "Bientôt disponible" plutôt
+ * que de continuer à corrompre le document registre. */
+const PHOTOS_DEPOT_LABEL = 'Photos du point de dépôt';
+
 const DOC_TYPE_MAP: Record<string, DocType> = {
   "Carte nationale d'identité":                    'cni',
   'Bail commercial / Attestation de local':         'bail',
   "Attestation d'assurance responsabilité":         'assurance',
   'Casier judiciaire (B3)':                         'casier',
-  'Photos du point de dépôt':                       'registre', // handled separately
   'Registre de commerce / NIF':                     'registre',
 };
 
@@ -94,6 +106,26 @@ export default function SecDocuments({ data, onUpload, onDelete, onViewUrl }: Pr
         <div className={s.fcBody}>
           <div className={s.docList}>
             {DOCUMENTS.map(doc => {
+              if (doc.nm === PHOTOS_DEPOT_LABEL) {
+                return (
+                  <div key={doc.nm} className={s.docItem}>
+                    <div className={s.docIc} style={{ background:doc.bg }}>
+                      <i className={`fas ${doc.ic}`} style={{ color:doc.c, fontSize:15 }} />
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div className={s.docNm}>{doc.nm}</div>
+                      <div className={s.docSub}>{doc.sub}</div>
+                    </div>
+                    <span style={{ fontSize:10, fontWeight:800, padding:'4px 10px', borderRadius:'var(--pill)', background:'var(--g100)', color:'var(--t3)', border:'1px solid var(--bdr2)', textTransform:'uppercase' as const }}>
+                      Bientôt disponible
+                    </span>
+                    <div style={{ display:'flex', gap:5 }}>
+                      <button className={s.docUpload} disabled style={{ opacity:0.5, cursor:'not-allowed' }}>Uploader</button>
+                    </div>
+                  </div>
+                );
+              }
+
               const docType = DOC_TYPE_MAP[doc.nm] ?? 'cni';
               const fieldKey = DOC_FIELD[docType];
               const status   = getStatus(fieldKey);

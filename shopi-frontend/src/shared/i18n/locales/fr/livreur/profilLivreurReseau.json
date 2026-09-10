@@ -1,0 +1,23 @@
+{
+  "livreurProfilReseau": {
+    "backLabelDefault": "Retour aux livreurs",
+    "chargementProfil": "Chargement du profil…",
+    "livreurIntrouvable": "Livreur introuvable.",
+    "contacterToast": "📩 Contacter {{name}}",
+    "avisTitle": "Avis ({{count}})",
+    "avisText": "Les avis clients seront affichés ici prochainement.",
+    "historiqueTitle": "Historique",
+    "historiqueText": "L'historique des livraisons sera affiché ici prochainement."
+  },
+  "livreurMonProfil": {
+    "profilIntrouvable": "Profil introuvable.",
+    "retourAccueil": "Retour à l'accueil"
+  },
+  "livreurProfilCorrespondantReseau": {
+    "retourCorrespondants": "Retour aux correspondants",
+    "chargementProfil": "Chargement du profil…",
+    "correspondantIntrouvable": "Correspondant introuvable.",
+    "messageToast": "💬 Message à {{nom}}",
+    "lienCopieToast": "🔗 Lien du profil copié"
+  }
+}

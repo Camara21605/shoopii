@@ -1,0 +1,50 @@
+{
+  "livreurSecZone": {
+    "header": {
+      "titre": "Zones & Horaires",
+      "sub": "Définissez votre périmètre de livraison et vos plages horaires."
+    },
+    "typeCard": {
+      "titre": "Type de livraison",
+      "lockedTitle": "Type de livraison verrouillé",
+      "lockedSub": "Modifiable à partir du {{date}}. Vous pouvez modifier vos zones actives à tout moment.",
+      "chooseHint": "Choisissez votre périmètre d'intervention. Ce choix sera verrouillé pendant 6 mois."
+    },
+    "toasts": {
+      "typeSelected": "📦 {{label}}",
+      "allDaysOn": "✅ Tous les jours activés",
+      "planningCleared": "⚠️ Planning effacé",
+      "zonesSaved": "✅ Zones et disponibilité sauvegardées",
+      "saveError": "❌ Erreur lors de la sauvegarde",
+      "horairesSaved": "✅ Horaires sauvegardés"
+    },
+    "zonesCard": {
+      "titlePrefix": "Zones ",
+      "selected_one": "{{count}} sélectionnée",
+      "selected_other": "{{count}} sélectionnées",
+      "emptyGeo": "Aucune zone configurée dans le référentiel pour ce niveau.",
+      "instructions": "Activez les zones que vous acceptez de desservir.",
+      "distanceLabel": "Distance maximale par livraison",
+      "saveZones": "Sauvegarder les zones"
+    },
+    "planningCard": {
+      "titre": "Planning hebdomadaire",
+      "activerTout": "Tout activer",
+      "effacer": "Effacer",
+      "saveHoraires": "Sauvegarder les horaires"
+    },
+    "autoDispoCard": {
+      "titre": "Disponibilité automatique",
+      "badgeAuto": "Auto",
+      "badgeNouveau": "Nouveau"
+    },
+    "saving": "Sauvegarde…",
+    "jours": { "lun":"Lun","mar":"Mar","mer":"Mer","jeu":"Jeu","ven":"Ven","sam":"Sam","dim":"Dim" },
+    "autoDispo": {
+      "pauseAuto":    { "l": "Pause auto après 8h de travail", "sub": "Passe hors ligne automatiquement après 8h consécutives" },
+      "modeNuit":     { "l": "Mode nuit (22h – 6h)",           "sub": "Recevoir des missions la nuit avec majoration tarifaire" },
+      "repriseAuto":  { "l": "Reprise automatique",            "sub": "Repasser en ligne selon votre planning configuré" },
+      "pauseWeekend": { "l": "Pause le week-end",              "sub": "Ne pas recevoir de missions samedi et dimanche" }
+    }
+  }
+}

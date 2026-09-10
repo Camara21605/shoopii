@@ -1,0 +1,23 @@
+{
+  "livreurEnCours": {
+    "chargement": "Chargement de la mission en cours…",
+    "loadError": "❌ Impossible de charger la mission en cours",
+    "empty": {
+      "title": "Aucune mission en cours",
+      "sub": "Acceptez une mission depuis \"Missions disponibles\" pour commencer une livraison."
+    },
+    "telephoneNonRenseigne": "Non renseigné",
+    "clientInfo": {
+      "telephone": "Téléphone",
+      "adresse": "Adresse",
+      "instruction": "Instruction"
+    },
+    "appelerLeClient": "Appeler le client",
+    "appelClientToast": "📞 Appel client : {{telephone}}",
+    "etapesLivraison": "Étapes de la livraison",
+    "informationsClient": "Informations client",
+    "appeler": "Appeler",
+    "appelEnCoursToast": "📞 Appel en cours…",
+    "messagerie": "Messagerie"
+  }
+}

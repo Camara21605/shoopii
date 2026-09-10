@@ -9,6 +9,7 @@ import { NotificationsModule }  from '../notifications/notifications.module';
 import { DeliveryGroupModule }  from '../delivery-group/delivery-group.module';
 import { PaiementModule }       from '../paiement/paiement.module';
 import { CompanyTeamModule }    from '../company-team/company-team.module';
+import { GeoModule }            from '../geo/geo.module';
 
 import { Commande } from '../../database/entities/commande/commande.entity';
 import { CommandeItem } from '../../database/entities/commande/commande-item.entity';
@@ -44,6 +45,7 @@ import { CommandeScheduler } from './commande.scheduler';
      * "Commandes" d'un collaborateur sur EntrepriseCommandeController
      * (voir @RequiresTeamPermission('orders', …)). */
     CompanyTeamModule,
+    GeoModule,
     TypeOrmModule.forFeature([
       Commande,
       CommandeItem,

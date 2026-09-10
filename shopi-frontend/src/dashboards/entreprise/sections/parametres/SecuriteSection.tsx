@@ -5,27 +5,25 @@ import FormCard from '../../components/parametres/FormCard';
 import TwoFaSetupModal from '../../../../shared/components/TwoFaSetupModal';
 import type { ParametresData } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
+import type { ToastType } from '../../types';
 
 interface Props {
   data:     ParametresData | null;
   saving:   boolean;
   onDirty:  () => void;
-  onToast:  (m: string, t?: string) => void;
+  onToast:  (m: string, t?: ToastType) => void;
   save2FA:      (body: { twoFaEnabled: boolean; twoFaMethod?: string }) => Promise<void>;
   savePassword: (body: { currentPassword: string; newPassword: string; confirmPassword: string }) => Promise<void>;
   /** Recharge les paramètres depuis l'API — nécessaire après activation 2FA
    *  via TwoFaSetupModal, qui n'appelle pas save2FA (donc ne met pas
    *  data.twoFaEnabled à jour tout seul). */
   onReload:     () => void;
+  /** Déconnexion réelle — voir "Se déconnecter" sur la carte Session. */
+  onLogout:     () => void;
 }
 
-export default function SecuriteSection({ data, saving, onDirty, onToast, save2FA, savePassword, onReload }: Props) {
+export default function SecuriteSection({ data, saving, onDirty, onToast, save2FA, savePassword, onReload, onLogout }: Props) {
   const { t } = useTranslation();
-  const SESSIONS = [
-    { ic:'fa-desktop', nm:t('parametres.securite.sessions.chromeWindows'), sub:t('parametres.securite.sessions.chromeWindowsSub'), cur:true },
-    { ic:'fa-mobile-screen', nm:t('parametres.securite.sessions.safariIphone'), sub:t('parametres.securite.sessions.safariIphoneSub'), cur:false },
-    { ic:'fa-tablet-screen-button', nm:t('parametres.securite.sessions.chromeAndroid'), sub:t('parametres.securite.sessions.chromeAndroidSub'), cur:false },
-  ];
 
   const [pwdVis, setPwdVis] = useState({ c:false, n:false, cf:false });
   const [pwdCur, setPwdCur] = useState('');
@@ -185,22 +183,37 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
         )}
       </FormCard>
 
-      <FormCard title={t('parametres.securite.sessionsTitle')} icon="fa-desktop" subtitle={t('parametres.securite.sessionsSubtitle')}
-        action={<button style={{ background:'rgba(0,0,0,.06)', color:'var(--t2)', border:'1px solid var(--bdr2)', borderRadius:'var(--pill)', padding:'5px 13px', fontSize:11, fontWeight:700, cursor:'pointer' }} onClick={() => onToast(t('parametres.securite.toutesSessionsToast'), 'w')}><i className="fas fa-right-from-bracket" /> {t('parametres.securite.deconnecterTout')}</button>}
-      >
-        {SESSIONS.map(session => (
-          <div key={session.nm} className={s.item} style={{ border:'none', borderBottom:'1px solid var(--bdr)', borderRadius:0, padding:'12px 0' }}>
-            <div className={s.itemIco} style={{ background:'rgba(0,0,0,.06)', borderRadius:10 }}><i className={`fas ${session.ic}`} style={{ color:'var(--t2)' }} /></div>
+      {/* BUG CORRIGÉ — affichait 3 sessions ("Chrome Windows", "Safari
+       * iPhone", "Chrome Android") entièrement codées en dur, identiques
+       * pour tout le monde, avec "Révoquer"/"Déconnecter tout" qui ne
+       * faisaient qu'un toast sans jamais rien déconnecter. Shoneya
+       * n'autorise qu'UNE session active à la fois par compte (voir
+       * SessionService côté backend) : il n'y a donc jamais eu plusieurs
+       * appareils à lister. Remplacé par la vraie session active
+       * (device/navigateur/IP/date, voir BoutiqueParametresService.
+       * attachCurrentSession) avec un vrai bouton de déconnexion. */}
+      <FormCard title={t('parametres.securite.sessionsTitle')} icon="fa-desktop" subtitle={t('parametres.securite.sessionsSubtitle')}>
+        {data?.currentSession ? (
+          <div className={s.item} style={{ border:'none', padding:'12px 0' }}>
+            <div className={s.itemIco} style={{ background:'rgba(0,0,0,.06)', borderRadius:10 }}>
+              <i className="fas fa-desktop" style={{ color:'var(--t2)' }} />
+            </div>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:13, fontWeight:600, color:'var(--navy)' }}>
-                {session.nm}
-                {session.cur && <span className={`${s.badge} ${s.green}`} style={{ marginLeft:8, fontSize:10, verticalAlign:'middle' }}>{t('parametres.securite.sessionActuelle')}</span>}
+                {data.currentSession.device} · {data.currentSession.browser}
+                <span className={`${s.badge} ${s.green}`} style={{ marginLeft:8, fontSize:10, verticalAlign:'middle' }}>{t('parametres.securite.sessionActuelle')}</span>
               </div>
-              <div style={{ fontSize:11, color:'var(--t3)', marginTop:3 }}>{session.sub}</div>
+              <div style={{ fontSize:11, color:'var(--t3)', marginTop:3 }}>
+                {data.currentSession.ipAddress ?? '—'} · {t('parametres.securite.connecteDepuis', {
+                  date: new Date(data.currentSession.connectedSince).toLocaleDateString('fr-FR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }),
+                })}
+              </div>
             </div>
-            {!session.cur && <button className={`${s.itemBtn} ${s.itemBtnDanger}`} onClick={() => onToast(t('parametres.securite.sessionTermineeToast'), 'w')}>{t('parametres.securite.revoquer')}</button>}
+            <button className={`${s.itemBtn} ${s.itemBtnDanger}`} onClick={onLogout}>{t('parametres.securite.deconnecterBtn')}</button>
           </div>
-        ))}
+        ) : (
+          <div className={s.hint}><i className="fas fa-circle-info" /> {t('parametres.securite.sessionUnavailable')}</div>
+        )}
       </FormCard>
 
       {show2fa && (

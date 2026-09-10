@@ -11,7 +11,6 @@
         "paiement": "支付与开票",
         "commissions": "Shoneya 佣金",
         "documents": "文件与验证",
-        "confidentialiteSecurite": "隐私与安全",
         "securite": "安全",
         "notifs": "通知",
         "privacy": "隐私",
@@ -157,7 +156,11 @@
       "planStandardSub": "基础套餐 · 包含在注册中",
       "planProSub": "适用于高销量店铺",
       "planPremiumSub": "降低佣金 + 高级营销工具",
-      "tauxParVente": "{{taux}}% / 销售"
+      "tauxParVente": "{{taux}}% / 销售",
+      "confirmerChangementBtn": "确认切换到{{plan}}方案",
+      "changementEnCours": "正在更改方案…",
+      "planChangedToast": "✅ 方案已更改为{{plan}}",
+      "planChangeErrorToast": "❌ 更改方案时出错"
     },
     "documents": {
       "docs": {
@@ -237,20 +240,11 @@
         "emailBadge": "基础"
       },
       "sessionsTitle": "活跃会话",
-      "sessionsSubtitle": "连接到您店铺账户的设备",
-      "deconnecterTout": "全部断开",
-      "toutesSessionsToast": "🔐 所有会话已结束",
+      "sessionsSubtitle": "您的店铺账户同时只能有一个活跃会话",
       "sessionActuelle": "当前会话",
-      "revoquer": "撤销",
-      "sessionTermineeToast": "🔐 会话已结束",
-      "sessions": {
-        "chromeWindows": "Chrome · Windows 11",
-        "chromeWindowsSub": "科纳克里，几内亚 · 现在",
-        "safariIphone": "Safari · iPhone 14",
-        "safariIphoneSub": "科纳克里，几内亚 · 2 小时前",
-        "chromeAndroid": "Chrome · Android",
-        "chromeAndroidSub": "Coyah，几内亚 · 昨天 18:34"
-      }
+      "connecteDepuis": "自{{date}}起已连接",
+      "deconnecterBtn": "退出登录",
+      "sessionUnavailable": "会话信息暂时无法获取。"
     },
     "notifs": {
       "savedToast": "✅ 通知已保存",
@@ -455,9 +449,9 @@
       "prenomPlaceholder": "负责人的名字",
       "nom": "姓氏",
       "nomPlaceholder": "负责人的姓氏",
-      "responsableHintPart1": "名字和姓氏可在",
-      "responsableHintBold": "您的账户设置",
-      "responsableHintPart2": "中修改。",
+      "responsableHintPart1": "名字和姓氏为只读显示。直接编辑功能即将",
+      "responsableHintBold": "推出",
+      "responsableHintPart2": "。",
       "steps": {
         "logo": "徽标",
         "companyName": "名称与描述",

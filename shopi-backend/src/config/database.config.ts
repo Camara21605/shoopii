@@ -50,6 +50,7 @@ import {CorrespondantHoraire} from "../database/entities/profiles/correspondant-
 import {FollowBlock} from "../database/entities/follow/follow-block.entity";
 import { AuditLog } from '../database/entities/audit-log.entity';
 import { Report } from '../database/entities/report.entity';
+import { AdminCommunicationSettings } from '../database/entities/admin-communication-settings.entity';
 import {Follow} from "../database/entities/follow/follow.entity";
 import {FollowRequest} from "../database/entities/follow/follow-request.entity";
 import {CommandeItem} from "../database/entities/commande/commande-item.entity";
@@ -320,6 +321,7 @@ export const databaseConfigFactory = {
       FollowBlock,
       AuditLog,
       Report,
+      AdminCommunicationSettings,
       // ── Location ──────────────────────────────────────────
       CompanyBranch,
       LocationHistory,

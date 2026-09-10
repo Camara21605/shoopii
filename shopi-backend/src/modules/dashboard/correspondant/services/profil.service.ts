@@ -20,9 +20,18 @@ import { CorrespondantHoraire, DEFAULT_HORAIRES }
                             from '../../../../database/entities/profiles/correspondant-horaire.entity';
 import { User }             from '../../../../database/entities/user.entity';
 import { UploadService, UPLOAD_FOLDERS } from '../../../upload/upload.service';
+import { SessionService } from '../../../session/session.service';
+import { parseUserAgent } from '../../../../common/utils/user-agent.util';
 
 import { UpdateProfilDto }  from '../dto/correspondant-parametres.dto';
 import { CorrespondantBaseService } from './base.service';
+
+export interface CurrentSessionInfo {
+  device:         string;
+  browser:        string;
+  ipAddress:      string | null;
+  connectedSince: string;
+}
 
 @Injectable()
 export class ProfilService extends CorrespondantBaseService {
@@ -38,8 +47,32 @@ export class ProfilService extends CorrespondantBaseService {
 
     private readonly uploadService: UploadService,
     private readonly dataSource: DataSource,
+    private readonly sessionService: SessionService,
   ) {
     super(corRepo, userRepo);
+  }
+
+  /**
+   * BUG CORRIGÉ — la carte "Sessions actives" (SecSecurite.tsx) affichait
+   * 2 appareils ("iPhone 14 Pro", "MacBook Air") ENTIÈREMENT codés en dur,
+   * identiques pour tout le monde, avec "Déconnecter"/"Tout déconnecter"
+   * qui ne faisaient qu'un toast sans jamais rien déconnecter. Shoneya
+   * n'autorise qu'UNE session active à la fois par compte (voir
+   * SessionService) : il n'y a donc jamais eu plusieurs appareils à
+   * lister. Remplacé par la session RÉELLE actuellement active
+   * (device/navigateur/IP/date), même mécanisme que
+   * BoutiqueParametresService (entreprise) / ProfilLivreurService.
+   */
+  private async attachCurrentSession<T extends object>(payload: T, currentSessionId?: string | null): Promise<T & { currentSession: CurrentSessionInfo | null }> {
+    const meta = await this.sessionService.getSessionMeta(currentSessionId);
+    return {
+      ...payload,
+      currentSession: meta ? {
+        ...parseUserAgent(meta.userAgent),
+        ipAddress:      meta.ipAddress,
+        connectedSince: meta.createdAt,
+      } : null,
+    };
   }
 
   // ─── GET GLOBAL ────────────────────────────────────────────
@@ -52,7 +85,7 @@ export class ProfilService extends CorrespondantBaseService {
    *
    * Si aucun horaire en base → initialise avec DEFAULT_HORAIRES.
    */
-  async getParametres(userId: string) {
+  async getParametres(userId: string, currentSessionId?: string | null) {
     const cor  = await this.findCorOrFail(userId);
     const user = await this.findUserOrFail(userId);
 
@@ -70,7 +103,7 @@ export class ProfilService extends CorrespondantBaseService {
     }
 
     /* Fusion : champs User en premier, puis Correspondent */
-    return {
+    return this.attachCurrentSession({
       firstName:      user.firstName,
       lastName:       user.lastName,
       email:          user.email,
@@ -78,7 +111,7 @@ export class ProfilService extends CorrespondantBaseService {
       profilePicture: user.profilePicture,
       ...cor,
       horaires,
-    };
+    }, currentSessionId);
   }
 
   // ─── UPDATE PROFIL ─────────────────────────────────────────

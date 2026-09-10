@@ -30,8 +30,25 @@ services:
         generateValue: true     # Render génère une valeur aléatoire sécurisée
       - key: JWT_EXPIRES_IN
         value: "24h"
-      - key: REDIS_URL
-        sync: false             # À remplir avec votre URL Upstash/Railway
+      # BUG CORRIGÉ : "REDIS_URL" (une seule chaîne de connexion) n'est
+      # lu par AUCUN module du code — app.module.ts (RedisModule +
+      # BullModule) attend HOST/PORT/PASSWORD/TLS séparément. Avec l'ancien
+      # "REDIS_URL", REDIS_HOST restait vide → soit crash immédiat
+      # ("[Redis/ioredis] REDIS_HOST manquant"), soit — si REDIS_HOST avait
+      # été rajouté à la main dans le Dashboard Render avec une valeur
+      # obsolète/erronée — connexion refusée en boucle
+      # ([ioredis] ECONNREFUSED, "Toujours indisponible après 30 tentatives").
+      # Pour Upstash Redis (format attendu par le code) :
+      #   REDIS_HOST=xxxxx.upstash.io   REDIS_PORT=6379
+      #   REDIS_PASSWORD=xxxxx          REDIS_TLS=true
+      - key: REDIS_HOST
+        sync: false             # ex: xxxxx.upstash.io
+      - key: REDIS_PORT
+        value: "6379"
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: REDIS_TLS
+        value: "true"            # Upstash/Redis Cloud imposent TLS sur ce port
       - key: FRONTEND_URL
         sync: false             # URL de votre frontend déployé
       - key: SMTP_HOST

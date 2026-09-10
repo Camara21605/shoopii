@@ -3,6 +3,7 @@
  * ✅ CONNECTÉ — upload réel vers l'API + statut depuis les données
  */
 import React, { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { LivreurData } from '../../hooks/useLivreurParametres';
 import ps from '../../styles/ParamsShared.module.css';
 
@@ -15,21 +16,28 @@ interface Props {
 
 type DocKey = 'cni' | 'permis' | 'assurance' | 'casier';
 
-const DOCS: { type: DocKey; label: string; sub: string; icon: string; accept: string }[] = [
-  { type:'cni',      label:"CNI / Passeport",            sub:"Pièce d'identité officielle", icon:'fa-id-card',          accept:'image/*,application/pdf' },
-  { type:'permis',   label:"Permis de conduire",         sub:"Permis valide correspondant à votre véhicule", icon:'fa-car',               accept:'image/*,application/pdf' },
-  { type:'assurance',label:"Attestation d'assurance",   sub:"Couverture en cours de validité", icon:'fa-shield-halved',      accept:'application/pdf'         },
-  { type:'casier',   label:"Casier judiciaire",          sub:"Extrait de casier B3 récent (< 3 mois)", icon:'fa-file-shield',        accept:'application/pdf'         },
-];
+function buildDocs(t: (key: string) => string): { type: DocKey; label: string; sub: string; icon: string; accept: string }[] {
+  return [
+    { type:'cni',       label: t('livreurSecDocuments.docs.cni.label'),       sub: t('livreurSecDocuments.docs.cni.sub'),       icon:'fa-id-card',          accept:'image/*,application/pdf' },
+    { type:'permis',    label: t('livreurSecDocuments.docs.permis.label'),    sub: t('livreurSecDocuments.docs.permis.sub'),    icon:'fa-car',               accept:'image/*,application/pdf' },
+    { type:'assurance', label: t('livreurSecDocuments.docs.assurance.label'), sub: t('livreurSecDocuments.docs.assurance.sub'), icon:'fa-shield-halved',     accept:'application/pdf'         },
+    { type:'casier',    label: t('livreurSecDocuments.docs.casier.label'),    sub: t('livreurSecDocuments.docs.casier.sub'),    icon:'fa-file-shield',       accept:'application/pdf'         },
+  ];
+}
 
-const VERIFICATION_CFG: Record<string, { label: string; bg: string; color: string; icon: string }> = {
-  pending:   { label:'Non soumis',         bg:'rgba(0,0,0,.09)',  color:'#52525B',   icon:'fa-clock'         },
-  reviewing: { label:'En cours d\'examen', bg:'rgba(0,0,0,.09)', color:'var(--blue)', icon:'fa-magnifying-glass' },
-  verified:  { label:'✅ Compte vérifié',  bg:'var(--em-bg)',        color:'var(--emerald)', icon:'fa-shield-check' },
-  rejected:  { label:'❌ Dossier refusé', bg:'rgba(0,0,0,.09)', color:'var(--red)',  icon:'fa-circle-xmark'  },
-};
+function buildVerificationCfg(t: (key: string) => string): Record<string, { label: string; bg: string; color: string; icon: string }> {
+  return {
+    pending:   { label: t('livreurSecDocuments.verification.pending'),   bg:'rgba(0,0,0,.09)', color:'#52525B',     icon:'fa-clock'             },
+    reviewing: { label: t('livreurSecDocuments.verification.reviewing'), bg:'rgba(0,0,0,.09)', color:'var(--blue)', icon:'fa-magnifying-glass'  },
+    verified:  { label: t('livreurSecDocuments.verification.verified'),  bg:'var(--em-bg)',    color:'var(--emerald)', icon:'fa-shield-check'   },
+    rejected:  { label: t('livreurSecDocuments.verification.rejected'),  bg:'rgba(0,0,0,.09)', color:'var(--red)',  icon:'fa-circle-xmark'      },
+  };
+}
 
 export default function SecDocuments({ data, saving, onPop, uploadDocument }: Props) {
+  const { t } = useTranslation();
+  const DOCS = buildDocs(t);
+  const VERIFICATION_CFG = buildVerificationCfg(t);
   const refs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const verif = VERIFICATION_CFG[data?.verificationStatus ?? 'pending'];
@@ -44,13 +52,13 @@ export default function SecDocuments({ data, saving, onPop, uploadDocument }: Pr
   async function handleFile(type: DocKey, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) { onPop('❌ Fichier trop lourd — maximum 10 MB', 'e'); return; }
+    if (file.size > 10 * 1024 * 1024) { onPop(t('livreurSecDocuments.toasts.fileTooBig'), 'e'); return; }
     try {
-      onPop(`⏳ Upload "${DOCS.find(d=>d.type===type)?.label}" en cours…`, 'i');
+      onPop(t('livreurSecDocuments.toasts.uploading', { label: DOCS.find(d=>d.type===type)?.label }), 'i');
       await uploadDocument(type, file);
-      onPop(`✅ Document soumis — votre dossier est en cours d'examen`, 's');
+      onPop(t('livreurSecDocuments.toasts.submitted'), 's');
     } catch (err: any) {
-      onPop(err?.message ?? "❌ Échec de l'upload. Réessayez.", 'e');
+      onPop(err?.message ?? t('livreurSecDocuments.toasts.uploadError'), 'e');
     }
     e.target.value = '';
   }
@@ -58,8 +66,8 @@ export default function SecDocuments({ data, saving, onPop, uploadDocument }: Pr
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
       <div className={ps.psHd}>
-        <h2><i className="fas fa-file-shield" /> Documents & Vérification</h2>
-        <p>Documents obligatoires pour maintenir votre compte livreur actif sur Shoneya.</p>
+        <h2><i className="fas fa-file-shield" /> {t('livreurSecDocuments.header.titre')}</h2>
+        <p>{t('livreurSecDocuments.header.sub')}</p>
       </div>
 
       {/* Badge statut global */}
@@ -72,7 +80,7 @@ export default function SecDocuments({ data, saving, onPop, uploadDocument }: Pr
 
       <div className={`${ps.card} ${ps.cardLast}`}>
         <div className={ps.ch}>
-          <div className={ps.chT}><i className="fas fa-shield-check" /> Documents requis</div>
+          <div className={ps.chT}><i className="fas fa-shield-check" /> {t('livreurSecDocuments.requiredCard.titre')}</div>
         </div>
         <div className={ps.cb}>
           {DOCS.map((d, i) => {
@@ -92,7 +100,7 @@ export default function SecDocuments({ data, saving, onPop, uploadDocument }: Pr
                   <div style={{ fontSize:13, fontWeight:700, color:'var(--navy)' }}>{d.label}</div>
                   <div style={{ fontSize:11, color:'var(--t3)', marginTop:2 }}>
                     {present
-                      ? <><i className="fas fa-check-circle" style={{ color:'var(--emerald)' }} /> Document soumis</>
+                      ? <><i className="fas fa-check-circle" style={{ color:'var(--emerald)' }} /> {t('livreurSecDocuments.documentSoumis')}</>
                       : d.sub
                     }
                   </div>
@@ -104,7 +112,7 @@ export default function SecDocuments({ data, saving, onPop, uploadDocument }: Pr
                   color: present ? 'var(--emerald)' : 'var(--red)',
                   border:`1px solid ${present ? 'rgba(0,0,0,.2)' : 'rgba(0,0,0,.2)'}`,
                   flexShrink:0 }}>
-                  {present ? '✓ Soumis' : '⚠ Manquant'}
+                  {present ? t('livreurSecDocuments.badge.soumis') : t('livreurSecDocuments.badge.manquant')}
                 </span>
 
                 <input
@@ -117,7 +125,7 @@ export default function SecDocuments({ data, saving, onPop, uploadDocument }: Pr
                   style={{ background:'var(--sky)', color:'var(--blue)', border:'1px solid var(--sky-3)',
                     borderRadius:'var(--r-sm)', padding:'7px 14px', fontSize:11, fontWeight:700,
                     flexShrink:0, cursor:'pointer', opacity:saving ? 0.5 : 1 }}>
-                  {present ? 'Renouveler' : 'Uploader'}
+                  {present ? t('livreurSecDocuments.buttons.renouveler') : t('livreurSecDocuments.buttons.uploader')}
                 </button>
               </div>
             );
@@ -125,7 +133,7 @@ export default function SecDocuments({ data, saving, onPop, uploadDocument }: Pr
 
           <div className={ps.fiHint} style={{ marginTop:12 }}>
             <i className="fas fa-circle-info" />
-            Une fois les 4 documents soumis, votre dossier est examiné sous 48h par l'équipe Shoneya.
+            {t('livreurSecDocuments.footerHint')}
           </div>
         </div>
       </div>

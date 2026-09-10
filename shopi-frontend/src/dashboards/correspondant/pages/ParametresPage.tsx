@@ -132,7 +132,7 @@ export default function ParametresPage() {
           onUpload={uploadDocument} onDelete={deleteDocument} onViewUrl={getDocumentUrl} />;
       case 'securite':
         return <SecSecurite {...base} data={data}
-          onSave={saveSecurite} onChangePassword={changePassword} />;
+          onSave={saveSecurite} onChangePassword={changePassword} onLogout={handleLogout} />;
       case 'notifications':
         return <SecNotifications {...base} data={data}
           onSave={saveNotifications} />;

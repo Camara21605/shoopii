@@ -1,0 +1,26 @@
+{
+  "partenaireActeurs": {
+    "statuts": {
+      "act": "Active",
+      "pend": "Pending"
+    },
+    "reportTitle": "Report this actor",
+    "page": {
+      "filters": {
+        "all": "All",
+        "ent": "Businesses",
+        "lvr": "Delivery people",
+        "cor": "Correspondents"
+      },
+      "empty": "No actor in this category",
+      "gererBtn": "Manage"
+    },
+    "modal": {
+      "loadError": "Unable to load this actor's record.",
+      "statCommandes": "Orders",
+      "statCommission": "Commission earned",
+      "coordonneesLabel": "Contact details",
+      "memberSince": "Member since {{date}}"
+    }
+  }
+}

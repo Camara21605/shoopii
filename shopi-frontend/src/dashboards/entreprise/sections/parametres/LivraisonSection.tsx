@@ -8,13 +8,14 @@ import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData } from '../../hooks/useParametres';
 import { apiFetch } from '@/shared/services/apiFetch';
 import s from '../../styles/parametres/ParametresPage.module.css';
+import type { ToastType } from '../../types';
 
 interface ZoneCommune { id: string; nom: string; code: string; }
 interface ZonesDisponibles { zoneId: string | null; zoneNom: string | null; communes: ZoneCommune[]; }
 
 interface Props {
   data: ParametresData | null; saving: boolean;
-  onDirty: () => void; onToast: (m: string, t?: string) => void;
+  onDirty: () => void; onToast: (m: string, t?: ToastType) => void;
   saveLivraison: (b: Partial<ParametresData>) => Promise<void>;
 }
 

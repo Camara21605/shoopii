@@ -19,8 +19,17 @@ import { Repository } from 'typeorm';
 import { Company } from 'src/database/entities/profiles/entreprise-profile.entity';
 import { User }    from 'src/database/entities/user.entity';
 import { UploadService, UPLOAD_FOLDERS } from 'src/modules/upload/upload.service';
+import { SessionService } from 'src/modules/session/session.service';
+import { parseUserAgent } from 'src/common/utils/user-agent.util';
 
 import { UpdateBoutiqueDto, UpdateContactDto } from '../dto/update-boutique.dto';
+
+export interface CurrentSessionInfo {
+  device:         string;
+  browser:        string;
+  ipAddress:      string | null;
+  connectedSince: string;
+}
 
 @Injectable()
 export class BoutiqueParametresService {
@@ -35,13 +44,14 @@ export class BoutiqueParametresService {
     private readonly userRepo: Repository<User>,
 
     private readonly uploadService: UploadService,
+    private readonly sessionService: SessionService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
    * GET — Charger toutes les données paramètres de la boutique
    * ────────────────────────────────────────────────────────── */
 
-  async getParametres(userId: string): Promise<Company> {
+  async getParametres(userId: string, currentSessionId?: string | null): Promise<Company> {
     /* BUG CORRIGÉ — le contrôleur passe `req.user.actorId ?? req.user.id` ;
      * pour un compte COMPANY, actorId est le Company.id (propriétaire OU
      * collaborateur, voir AuthService.findProfileId), jamais un User.id.
@@ -93,7 +103,8 @@ export class BoutiqueParametresService {
       if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     }
 
-    return this.redactSensitiveDocuments(company);
+    const withOwner = await this.attachOwnerName(this.redactSensitiveDocuments(company));
+    return this.attachCurrentSession(withOwner, currentSessionId);
   }
 
   /* SÉCURITÉ — GET /parametres renvoie l'entité Company quasi brute (elle
@@ -116,11 +127,53 @@ export class BoutiqueParametresService {
     return company;
   }
 
+  /**
+   * BUG CORRIGÉ — la carte "Responsable & Propriétaire" (BoutiqueSection.tsx)
+   * affiche prénom/nom en lecture seule, mais GET /parametres ne les a
+   * jamais exposés (ni relation `user` chargée, ni champ dédié) : les deux
+   * champs étaient donc TOUJOURS vides, quel que soit le compte, sans
+   * qu'aucune erreur ne le signale. On charge ici uniquement firstName/
+   * lastName depuis User (jamais toute la relation `user` — voir
+   * redactSensitiveDocuments ci-dessus pour la même logique de ne jamais
+   * exposer plus que nécessaire dans cette réponse déjà volumineuse).
+   */
+  private async attachOwnerName(company: Company): Promise<Company> {
+    const owner = await this.userRepo.findOne({
+      where: { id: company.userId },
+      select: ['firstName', 'lastName'],
+    });
+    (company as any).ownerFirstName = owner?.firstName ?? null;
+    (company as any).ownerLastName  = owner?.lastName  ?? null;
+    return company;
+  }
+
+  /**
+   * BUG CORRIGÉ — la carte "Sessions actives" (SecuriteSection.tsx)
+   * affichait 3 appareils ("Chrome Windows", "Safari iPhone", "Chrome
+   * Android") ENTIÈREMENT codés en dur, identiques pour tout le monde,
+   * avec des boutons "Révoquer"/"Déconnecter tout" qui ne faisaient
+   * qu'un toast sans jamais rien déconnecter. Shoneya n'autorise qu'UNE
+   * session active à la fois par compte (voir SessionService) : il n'y a
+   * donc jamais eu plusieurs appareils à lister. Remplacé par la session
+   * RÉELLE actuellement active (device/navigateur/IP/date), même
+   * mécanisme que ProfilPartenaireService.toResponse() côté dashboard
+   * partenaire.
+   */
+  private async attachCurrentSession(company: Company, currentSessionId?: string | null): Promise<Company> {
+    const meta = await this.sessionService.getSessionMeta(currentSessionId);
+    (company as any).currentSession = meta ? {
+      ...parseUserAgent(meta.userAgent),
+      ipAddress:      meta.ipAddress,
+      connectedSince: meta.createdAt,
+    } as CurrentSessionInfo : null;
+    return company;
+  }
+
   /* ──────────────────────────────────────────────────────────
    * PATCH — Mettre à jour Boutique & Identité (section 1)
    * ────────────────────────────────────────────────────────── */
 
-  async updateBoutique(userId: string, dto: UpdateBoutiqueDto): Promise<Company> {
+  async updateBoutique(userId: string, dto: UpdateBoutiqueDto, currentSessionId?: string | null): Promise<Company> {
     const company = await this.findCompanyOrFail(userId);
 
     // On applique uniquement les champs fournis dans le DTO
@@ -129,14 +182,19 @@ export class BoutiqueParametresService {
     const updated = await this.companyRepo.save(company);
     this.logger.log(`[BOUTIQUE] Mis à jour — userId=${userId}`);
 
-    return updated;
+    /* La réponse remplace tout `data` côté frontend (patch() dans
+     * useParametres.ts) — sans ça, ownerFirstName/ownerLastName/
+     * currentSession disparaîtraient de l'écran jusqu'au prochain GET
+     * complet. */
+    const withOwner = await this.attachOwnerName(updated);
+    return this.attachCurrentSession(withOwner, currentSessionId);
   }
 
   /* ──────────────────────────────────────────────────────────
    * PATCH — Mettre à jour Contact & Localisation (section 2)
    * ────────────────────────────────────────────────────────── */
 
-  async updateContact(userId: string, dto: UpdateContactDto): Promise<Company> {
+  async updateContact(userId: string, dto: UpdateContactDto, currentSessionId?: string | null): Promise<Company> {
     const company = await this.findCompanyOrFail(userId);
 
     Object.assign(company, dto);
@@ -144,7 +202,8 @@ export class BoutiqueParametresService {
     const updated = await this.companyRepo.save(company);
     this.logger.log(`[CONTACT] Mis à jour — userId=${userId}`);
 
-    return updated;
+    const withOwner = await this.attachOwnerName(updated);
+    return this.attachCurrentSession(withOwner, currentSessionId);
   }
 
   /* ──────────────────────────────────────────────────────────

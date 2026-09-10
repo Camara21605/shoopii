@@ -1,0 +1,42 @@
+{
+  "livreurSecVehicule": {
+    "header": { "titre": "Véhicule & Capacité", "sub": "Informations sur votre véhicule de livraison." },
+    "vehicleTypes": {
+      "moto":     { "nm": "Moto",     "sub": "Livraisons rapides en ville · Idéal Conakry" },
+      "velo":     { "nm": "Vélo",     "sub": "Courses courtes · Éco-responsable" },
+      "voiture":  { "nm": "Voiture",  "sub": "Colis volumineux · Grand rayon" },
+      "tricycle": { "nm": "Tricycle", "sub": "Grande capacité · Zones périurbaines" }
+    },
+    "typeCard": { "titre": "Type de véhicule" },
+    "detailsCard": {
+      "titre": "Détails du véhicule",
+      "marque": "Marque",
+      "modele": "Modèle",
+      "annee": "Année",
+      "couleur": "Couleur",
+      "plaque": "Plaque",
+      "capaciteMax": "Capacité maximale"
+    },
+    "capacite": {
+      "cap10": "Jusqu'à 10 kg",
+      "cap20": "Jusqu'à 20 kg",
+      "cap50": "Jusqu'à 50 kg",
+      "cap50plus": "+50 kg"
+    },
+    "colisTypes": {
+      "electronique": "📱 Électronique",
+      "vetements": "👗 Vêtements",
+      "colisStandard": "📦 Colis standard",
+      "alimentation": "🍽️ Alimentation",
+      "pharmacie": "💊 Pharmacie",
+      "documents": "📄 Documents"
+    },
+    "colisLabel": "Types de colis acceptés",
+    "saving": "Sauvegarde…",
+    "saveButton": "Sauvegarder le véhicule",
+    "toasts": {
+      "saved": "✅ Informations véhicule sauvegardées",
+      "saveError": "❌ Erreur lors de la sauvegarde"
+    }
+  }
+}

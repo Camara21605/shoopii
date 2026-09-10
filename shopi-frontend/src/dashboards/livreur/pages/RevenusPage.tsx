@@ -1,5 +1,6 @@
 // src/dashboards/livreur/pages/RevenusPage.tsx
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { fmtGNF } from '../data/livreurData';
 import shared from '../styles/Shared.module.css';
 import { apiFetch } from '@/shared/services/apiFetch';
@@ -28,6 +29,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function RevenusPage({ onPop }: Props) {
+  const { t } = useTranslation();
   const [data,    setData]    = useState<RevenusData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -43,9 +45,9 @@ export default function RevenusPage({ onPop }: Props) {
   const transactions     = data?.transactions     ?? [];
 
   const STATS = [
-    { bg:'var(--tl-bg)', c:'var(--teal)',    ic:'fa-coins',             ttl:'Total revenus',    val: fmtGNF(totalRevenus)     },
-    { bg:'var(--em-bg)', c:'var(--emerald)', ic:'fa-hand-holding-dollar',ttl:'Ce mois',          val: fmtGNF(revenusThisMonth) },
-    { bg:'var(--sky-2)', c:'var(--blue)',    ic:'fa-percent',            ttl:'Taux Shoneya',       val: `${tauxCommission}%`     },
+    { bg:'var(--tl-bg)', c:'var(--teal)',    ic:'fa-coins',             ttl: t('livreurRevenus.stats.total'),      val: fmtGNF(totalRevenus)     },
+    { bg:'var(--em-bg)', c:'var(--emerald)', ic:'fa-hand-holding-dollar',ttl: t('livreurRevenus.stats.ceMois'),     val: fmtGNF(revenusThisMonth) },
+    { bg:'var(--sky-2)', c:'var(--blue)',    ic:'fa-percent',            ttl: t('livreurRevenus.stats.tauxShoneya'),val: `${tauxCommission}%`     },
   ];
 
   if (loading) return (
@@ -71,11 +73,11 @@ export default function RevenusPage({ onPop }: Props) {
       </div>
 
       <div className={`${shared.card} ${shared.cardLast}`}>
-        <div className={shared.ch}><div className={shared.chT}><i className="fas fa-list" /> Dernières transactions</div></div>
+        <div className={shared.ch}><div className={shared.chT}><i className="fas fa-list" /> {t('livreurRevenus.dernieresTransactions')}</div></div>
         <div className={shared.cb}>
           {transactions.length === 0 ? (
             <div style={{ padding:'32px', textAlign:'center', color:'var(--muted)', fontSize:14 }}>
-              Aucune transaction pour le moment
+              {t('livreurRevenus.empty')}
             </div>
           ) : transactions.map(tx => (
             <div key={tx.id} className={shared.txItem}>

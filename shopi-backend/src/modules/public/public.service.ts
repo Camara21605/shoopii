@@ -9,7 +9,7 @@ import { Repository, Not, MoreThan, In } from 'typeorm';
 
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
 import { Company, CompanyStatus } from 'src/database/entities/profiles/entreprise-profile.entity';
-import { Delivery, DeliveryStatus } from 'src/database/entities/profiles/livreur-profile.entity';
+import { Delivery, DeliveryStatus, DeliveryAvailability } from 'src/database/entities/profiles/livreur-profile.entity';
 import { Correspondent, CorrespondantStatus, VerificationStatus } from 'src/database/entities/profiles/correspondant-profile.entity';
 import { JOURS_ORDER } from 'src/database/entities/profiles/correspondant-horaire.entity';
 import { JOURS_ORDER as COMPANY_JOURS_ORDER } from 'src/database/entities/entreprise.table/company-horaire.entity';
@@ -22,6 +22,7 @@ import { StoryLike }   from 'src/database/entities/entreprise.table/story-like.e
 import { Category }    from 'src/database/entities/entreprise.table/category.entity';
 import { SubCategory } from 'src/database/entities/entreprise.table/sub-category.entity';
 import { User, UserStatus } from 'src/database/entities/user.entity';
+import { Partner, PartnerStatus } from 'src/database/entities/profiles/partenaire-profile.entity';
 import { UserRole }    from 'src/common/enums/user-role.enum';
 import { Commande, CommandeStatus } from 'src/database/entities/commande/commande.entity';
 import { NotificationBroadcastService } from 'src/modules/notifications/services/notification-broadcast.service';
@@ -147,6 +148,22 @@ export interface PublicLivreurResponse {
   emoji:        string;
   note:         number;
   trips:        number;
+  /* ✅ AJOUTÉ — tarif réel du livreur (Delivery.tarifBase), jusqu'ici
+   * absent de cette réponse : LivraisonSection.tsx (frontend) appelait
+   * un endpoint /public/livreurs?ville= qui n'a jamais existé, retombait
+   * donc systématiquement sur des livreurs fictifs (LIVREURS_DATA mock)
+   * avec des frais inventés. `online` et `distZone`/`source` permettent
+   * au frontend de calculer un vrai frais de livraison (baseFee × multiplicateurs
+   * vitesse/distance, déjà corrects côté frontend) au lieu d'un prix fictif. */
+  baseFee:      number;
+  online:       boolean;
+  /** Classification simple : ces livreurs sont rattachés à CETTE boutique,
+   *  donc traités comme couverture "locale" par défaut — pas de calcul
+   *  géographique réel (aucune colonne de coordonnées GPS boutique/livreur
+   *  exploitée ici), seulement utilisé pour l'estimation de délai (ETA)
+   *  côté frontend, jamais pour le calcul du prix lui-même. */
+  distZone:     'local' | 'near' | 'far';
+  source:       'boutique';
 }
 
 /*
@@ -257,6 +274,9 @@ export class PublicService {
     @InjectRepository(Commande)
     private readonly commandeRepo: Repository<Commande>,
 
+    @InjectRepository(Partner)
+    private readonly partnerRepo: Repository<Partner>,
+
     private readonly broadcast: NotificationBroadcastService,
 
     /* BUG CORRIGÉ — voir getLandingStats() : la page de connexion publique
@@ -265,6 +285,31 @@ export class PublicService {
      * en dur, jamais rattachés à la moindre donnée réelle. */
     private readonly cache: RedisCacheService,
   ) {}
+
+  /**
+   * GET /public/rejoindre/:slug — résolution du lien de parrainage personnel
+   * d'un partenaire (voir partenaire-profile.entity.ts § LIEN DE PARRAINAGE).
+   *
+   * Incrémente referralClicks à chaque résolution réussie (visite du lien),
+   * puis renvoie le strict minimum permettant à la page publique d'afficher
+   * "Invité par {name}" et de transmettre le slug vers /login?ref=slug —
+   * jamais d'information interne du partenaire (id exposé n'est PAS
+   * retourné : il est résolu à nouveau côté serveur lors de l'inscription,
+   * voir AuthService.getReferralPartnerId()).
+   */
+  async resolveReferral(slug: string): Promise<{ valid: true; partnerName: string }> {
+    const partner = await this.partnerRepo.findOne({
+      where: { referralSlug: slug },
+      select: ['id', 'name', 'status'],
+    });
+    if (!partner || partner.status === PartnerStatus.SUSPENDED) {
+      throw new NotFoundException('Ce lien de parrainage est invalide ou a expiré.');
+    }
+
+    await this.partnerRepo.increment({ id: partner.id }, 'referralClicks', 1);
+
+    return { valid: true, partnerName: partner.name };
+  }
 
   // ── Statistiques + fil d'activité de la page de connexion publique ──
 
@@ -569,6 +614,10 @@ export class PublicService {
       emoji:        l.deliveryEmoji || '🛵',
       note:         Number(l.averageRating) || 0,
       trips:        l.totalDeliveries ?? 0,
+      baseFee:      Number(l.tarifBase) || 0,
+      online:       l.availability === DeliveryAvailability.AVAILABLE,
+      distZone:     'local' as const,
+      source:       'boutique' as const,
     }));
   }
 

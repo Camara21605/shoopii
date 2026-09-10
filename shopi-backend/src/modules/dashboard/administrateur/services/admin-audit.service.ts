@@ -51,6 +51,8 @@ export class AdminAuditService {
       kind:   iconKind(a.icon, a.action),
       texte:  a.action,
       auteur: a.actorName,
+      ip:     a.ip ?? '—',
+      device: a.device ?? '—',
       quand:  relTime(a.createdAt),
     }));
 

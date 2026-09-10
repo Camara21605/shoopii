@@ -53,7 +53,7 @@ import s from '../styles/parametres/ParametresPage.module.css';
 
 type SectionKey =
   | 'boutique' | 'horaires' | 'catalogue' | 'livraison' | 'paiement'
-  | 'commissions' | 'documents' | 'confidentialiteSecurite' | 'securite' | 'notifs' | 'privacy' | 'langue' | 'danger';
+  | 'commissions' | 'documents' | 'securite' | 'notifs' | 'privacy' | 'langue' | 'danger';
 
 function getSidebarItems(t: TFunction): { key: SectionKey; icon: string; label: string; danger?: boolean }[] {
   return [
@@ -64,7 +64,6 @@ function getSidebarItems(t: TFunction): { key: SectionKey; icon: string; label: 
     { key:'paiement',     icon:'fa-credit-card',        label:t('parametres.sidebar.items.paiement')   },
     { key:'commissions',  icon:'fa-percent',            label:t('parametres.sidebar.items.commissions')        },
     { key:'documents',    icon:'fa-file-shield',        label:t('parametres.sidebar.items.documents') },
-    { key:'confidentialiteSecurite', icon:'fa-shield-halved', label:t('parametres.sidebar.items.confidentialiteSecurite') },
     { key:'securite',     icon:'fa-shield-halved',      label:t('parametres.sidebar.items.securite')                 },
     { key:'notifs',       icon:'fa-bell',               label:t('parametres.sidebar.items.notifs')            },
     { key:'privacy',      icon:'fa-eye-slash',          label:t('parametres.sidebar.items.privacy')          },
@@ -269,7 +268,10 @@ export default function ParametresPage() {
         {/* ── Contenu de la section active ── */}
         <main className={s.parametresContent}>
           {activeSection === 'langue' && (
-            <SecLangue onPop={pop} />
+            /* SecLangue n'appelle onPop qu'avec le type 's' (succès) — adaptateur
+             * pour matcher la signature (m,t?:ToastType) de pop() (voir même
+             * correctif dans partenaire/sections/params/SecPreferences.tsx). */
+            <SecLangue onPop={(m, ty) => pop(m, (ty as 's' | 'i' | 'w' | 'e') ?? 's')} />
           )}
 
           {!canEdit && activeSection !== 'langue' && (
@@ -345,27 +347,13 @@ export default function ParametresPage() {
             />
           )}
 
-          {activeSection === 'confidentialiteSecurite' && (
-            <>
-              <SecuriteSection
-                {...commonProps}
-                save2FA={save2FA}
-                savePassword={savePassword}
-                onReload={reload}
-              />
-              <PrivacySection
-                {...commonProps}
-                savePrivacy={savePrivacy}
-              />
-            </>
-          )}
-
           {activeSection === 'securite' && (
             <SecuriteSection
               {...commonProps}
               save2FA={save2FA}
               savePassword={savePassword}
               onReload={reload}
+              onLogout={handleLogout}
             />
           )}
 

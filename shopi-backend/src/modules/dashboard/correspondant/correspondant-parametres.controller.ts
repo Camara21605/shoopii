@@ -116,6 +116,13 @@ export class CorrespondantParametresController {
     return (req as any).user?.userId ?? (req as any).user?.id;
   }
 
+  /** Extrait sessionId (claim `sid`, voir JwtStrategy) — utilisé pour
+   * afficher la session actuelle réelle sur l'écran Sécurité (voir
+   * ProfilService.attachCurrentSession). */
+  private sessionId(req: Request): string | null {
+    return (req as any).user?.sessionId ?? null;
+  }
+
   // ═══════════════════════════════════════════════════════════
   // GET GLOBAL — toutes les sections en une requête
   // ═══════════════════════════════════════════════════════════
@@ -127,7 +134,7 @@ export class CorrespondantParametresController {
    */
   @Get()
   getParametres(@Req() req: Request) {
-    return this.profilService.getParametres(this.uid(req));
+    return this.profilService.getParametres(this.uid(req), this.sessionId(req));
   }
 
   // ═══════════════════════════════════════════════════════════

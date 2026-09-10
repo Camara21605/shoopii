@@ -2,6 +2,7 @@
 // Affiche le profil complet d'un livreur du réseau, sans le Header public,
 // intégré dans le dashboard livreur.
 
+import { useTranslation } from 'react-i18next';
 import { useLivreurProfile } from '../../../shared/profils/profil-livreur/hooks/useLivreurProfile';
 import { useAuthGate } from '../../../shared/hooks/useAuthGate';
 import ProfilHeader   from '../../../shared/profils/profil-livreur/components/ProfilHeader';
@@ -23,14 +24,16 @@ interface Props {
   backLabel?: string;
 }
 
-export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel = 'Retour aux livreurs' }: Props) {
+export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel }: Props) {
+  const { t } = useTranslation();
   const { profile, loading, error, tab, setTab, updateFollowState } = useLivreurProfile(id);
   const { openAuthModal, authModal } = useAuthGate();
+  const label = backLabel ?? t('livreurProfilReseau.backLabelDefault');
 
   const backBtn = (
     <div className={shared.page} style={{ paddingBottom: 0 }}>
       <button onClick={onBack} style={{ background: 'var(--white)', border: '1px solid var(--bdr)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--teal)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-        <i className="fas fa-arrow-left" /> {backLabel}
+        <i className="fas fa-arrow-left" /> {label}
       </button>
     </div>
   );
@@ -42,7 +45,7 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel =
         <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}>
             <i className="fas fa-spinner fa-spin" />
-            Chargement du profil…
+            {t('livreurProfilReseau.chargementProfil')}
           </div>
         </div>
       </>
@@ -56,14 +59,14 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel =
         <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}>
             <i className="fas fa-triangle-exclamation" />
-            {error ?? 'Livreur introuvable.'}
+            {error ?? t('livreurProfilReseau.livreurIntrouvable')}
           </div>
         </div>
       </>
     );
   }
 
-  const onContact = () => onPop(`📩 Contacter ${profile.fullName}`, 'i');
+  const onContact = () => onPop(t('livreurProfilReseau.contacterToast', { name: profile.fullName }), 'i');
 
   return (
     <>
@@ -88,12 +91,12 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel =
             {tab === 'localisation'  && <TabLocalisation  profile={profile} dark />}
             {tab === 'tarifs'        && <TabTarifs        profile={profile} />}
             {tab === 'avis'          && (
-              <TabPlaceholder icon="fa-star" title={`Avis (${profile.reviewsCount})`}
-                text="Les avis clients seront affichés ici prochainement." />
+              <TabPlaceholder icon="fa-star" title={t('livreurProfilReseau.avisTitle', { count: profile.reviewsCount })}
+                text={t('livreurProfilReseau.avisText')} />
             )}
             {tab === 'historique'    && (
-              <TabPlaceholder icon="fa-clock-rotate-left" title="Historique"
-                text="L'historique des livraisons sera affiché ici prochainement." />
+              <TabPlaceholder icon="fa-clock-rotate-left" title={t('livreurProfilReseau.historiqueTitle')}
+                text={t('livreurProfilReseau.historiqueText')} />
             )}
           </div>
 

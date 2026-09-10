@@ -1,0 +1,27 @@
+{
+  "livreurMissions": {
+    "filters": {
+      "tout": "Tout",
+      "express": "Express ⚡",
+      "standard": "Standard",
+      "urgentes": "Urgentes",
+      "proches": "Proches"
+    },
+    "autoAccept": "Auto-accepter missions <5km",
+    "enAttente": "en attente",
+    "chargement": "Chargement des missions…",
+    "empty": {
+      "title": "Aucune mission pour le moment",
+      "sub": "Vous serez notifié dès qu'un client vous choisira comme livreur."
+    },
+    "toasts": {
+      "loadError": "❌ Impossible de charger les missions",
+      "accepted": "✅ Mission {{id}} acceptée",
+      "acceptError": "❌ Impossible d'accepter cette mission",
+      "refused": "✕ Mission {{id}} refusée",
+      "refuseError": "❌ Impossible de refuser cette mission",
+      "autoAcceptOn": "🤖 Auto-acceptation activée",
+      "autoAcceptOff": "⏸️ Désactivée"
+    }
+  }
+}

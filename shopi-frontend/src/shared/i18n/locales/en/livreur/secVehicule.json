@@ -1,0 +1,42 @@
+{
+  "livreurSecVehicule": {
+    "header": { "titre": "Vehicle & Capacity", "sub": "Information about your delivery vehicle." },
+    "vehicleTypes": {
+      "moto":     { "nm": "Motorbike", "sub": "Fast city deliveries · Ideal for Conakry" },
+      "velo":     { "nm": "Bicycle",   "sub": "Short trips · Eco-friendly" },
+      "voiture":  { "nm": "Car",       "sub": "Bulky parcels · Longer range" },
+      "tricycle": { "nm": "Tricycle",  "sub": "High capacity · Suburban areas" }
+    },
+    "typeCard": { "titre": "Vehicle type" },
+    "detailsCard": {
+      "titre": "Vehicle details",
+      "marque": "Make",
+      "modele": "Model",
+      "annee": "Year",
+      "couleur": "Color",
+      "plaque": "License plate",
+      "capaciteMax": "Maximum capacity"
+    },
+    "capacite": {
+      "cap10": "Up to 10 kg",
+      "cap20": "Up to 20 kg",
+      "cap50": "Up to 50 kg",
+      "cap50plus": "+50 kg"
+    },
+    "colisTypes": {
+      "electronique": "📱 Electronics",
+      "vetements": "👗 Clothing",
+      "colisStandard": "📦 Standard parcel",
+      "alimentation": "🍽️ Food",
+      "pharmacie": "💊 Pharmacy",
+      "documents": "📄 Documents"
+    },
+    "colisLabel": "Accepted parcel types",
+    "saving": "Saving…",
+    "saveButton": "Save vehicle",
+    "toasts": {
+      "saved": "✅ Vehicle information saved",
+      "saveError": "❌ Error while saving"
+    }
+  }
+}

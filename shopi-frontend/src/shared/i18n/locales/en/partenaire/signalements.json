@@ -1,0 +1,59 @@
+{
+  "partenaireSignalements": {
+    "gravites": {
+      "low": "Minor",
+      "med": "Moderate",
+      "high": "Severe"
+    },
+    "page": {
+      "bannerTitle": "Help us keep Shoneya safe",
+      "bannerParagraph": "As a partner, you're on the front line. Report any actor with suspicious behavior. Every report is reviewed by the Shoneya security team.",
+      "bannerBtn": "Report a user",
+      "stats": {
+        "total": "Reports sent",
+        "enCours": "Under review",
+        "traites": "Processed / sanctioned",
+        "rejetes": "Rejected"
+      },
+      "cardTitle": "My reports",
+      "nouveauBtn": "New",
+      "empty": "No report submitted",
+      "statuts": {
+        "review": "Under review",
+        "invest": "Investigation in progress",
+        "resolved": "Account suspended",
+        "rejected": "Not upheld"
+      },
+      "signaleLe": "Reported on {{date}}"
+    },
+    "modal": {
+      "title": "Report a user",
+      "sub": "Your report is confidential and reviewed by the Shoneya security team.",
+      "cibleLabel": "User concerned",
+      "ciblePlaceholder": "Name, code or ID of the actor",
+      "motifLabel": "Reason for the report",
+      "reasons": {
+        "fraude":      { "nm": "Scam / Fraud",              "d": "Money theft, undelivered products, scam" },
+        "faux":        { "nm": "Fake account / Impersonation", "d": "Fake identity, account impersonating a real shop" },
+        "contrefacon": { "nm": "Counterfeiting",            "d": "Fake or non-compliant products" },
+        "abus":        { "nm": "Abusive behavior",          "d": "Off-app payments, threats, harassment" },
+        "autre":       { "nm": "Other",                     "d": "Any other suspicious behavior" }
+      },
+      "graviteLabel": "Severity level",
+      "descriptionLabel": "Detailed description",
+      "descriptionPlaceholder": "Describe precisely what happened: dates, amounts, any evidence…",
+      "preuvesLabel": "Evidence (optional)",
+      "dropZone": "Attach a screenshot or receipt",
+      "dropToast": "📎 File picker (screenshot, receipt…)",
+      "targetTypeLabel": "Type of account reported",
+      "envoi": "Sending…",
+      "envoyerBtn": "Send the report",
+      "note": "Abusive or repeated unfounded reports may affect your partner status.",
+      "errorCibleToast": "Enter the user concerned",
+      "errorDescToast": "Add a description",
+      "successToast": "Report sent to the Shoneya security team",
+      "referenceToast": "Reference: {{ref}}",
+      "errorSubmitToast": "Error sending the report"
+    }
+  }
+}

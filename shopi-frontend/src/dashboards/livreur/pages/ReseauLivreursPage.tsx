@@ -1,6 +1,7 @@
 // src/dashboards/livreur/pages/ReseauLivreursPage.tsx
 // Liste des autres livreurs à suivre, intégrée dans le dashboard livreur.
 
+import { useTranslation } from 'react-i18next';
 import { useLivreurs } from '../../../modules/home/components/livreurs/hooks/useLivreurs';
 import { useAuthGate } from '../../../shared/hooks/useAuthGate';
 import FollowButton    from '../../../shared/components/FollowButton';
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function ReseauLivreursPage({ onPop, onView }: Props) {
+  const { t } = useTranslation();
   const { filtered, loading, error, onChange } = useLivreurs();
   const { openAuthModal, authModal } = useAuthGate();
 
@@ -19,24 +21,24 @@ export default function ReseauLivreursPage({ onPop, onView }: Props) {
     <div className={shared.page}>
       <div className={`${shared.card} ${shared.cardLast}`}>
         <div className={shared.ch}>
-          <div className={shared.chT}><i className="fas fa-motorcycle" /> Livreurs</div>
+          <div className={shared.chT}><i className="fas fa-motorcycle" /> {t('livreurReseau.livreurs.titre')}</div>
         </div>
         <div className={shared.cb}>
           {loading && (
             <div style={{ textAlign: 'center', padding: 30, color: 'var(--t3)', fontSize: 13 }}>
-              <i className="fas fa-spinner fa-spin" /> Chargement…
+              <i className="fas fa-spinner fa-spin" /> {t('livreurReseau.livreurs.chargement')}
             </div>
           )}
 
           {error && !loading && (
             <div style={{ marginBottom: 14, padding: '10px 14px', background: '#FAFAFA', border: '1px solid #D4D4D8', borderRadius: 10, fontSize: 12.5, color: '#18181B' }}>
-              <i className="fas fa-triangle-exclamation" /> {error} — données de démonstration affichées.
+              <i className="fas fa-triangle-exclamation" /> {error} {t('livreurReseau.livreurs.erreurSuffix')}
             </div>
           )}
 
           {!loading && filtered.length === 0 && (
             <div style={{ textAlign: 'center', padding: 30, color: 'var(--t3)', fontSize: 13 }}>
-              Aucun livreur disponible.
+              {t('livreurReseau.livreurs.vide')}
             </div>
           )}
 
@@ -54,8 +56,8 @@ export default function ReseauLivreursPage({ onPop, onView }: Props) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 10, color: 'var(--t3)', marginTop: 2, flexWrap: 'wrap' }}>
                       <span>{l.zone}</span>
                       <span><i className="fas fa-star" style={{ color: 'var(--amber)' }} /> {l.averageRating}</span>
-                      <span>{l.totalLivraisons} livraisons</span>
-                      {l.disponible && <span style={{ background: 'var(--em-bg)', color: 'var(--emerald)', fontWeight: 700, padding: '1px 7px', borderRadius: 'var(--pill)' }}>Disponible</span>}
+                      <span>{t('livreurReseau.livreurs.livraisons', { count: l.totalLivraisons })}</span>
+                      {l.disponible && <span style={{ background: 'var(--em-bg)', color: 'var(--emerald)', fontWeight: 700, padding: '1px 7px', borderRadius: 'var(--pill)' }}>{t('livreurReseau.livreurs.disponible')}</span>}
                     </div>
                   </div>
                   <div onClick={e => e.stopPropagation()}>

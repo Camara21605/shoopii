@@ -6,6 +6,7 @@
  * distribue les fonctions de sauvegarde à chaque section.
  */
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLivreurParametres } from '../hooks/useLivreurParametres';
 import ParamNav from '../components/ParamNav';
 import type { ParamSectionId } from '../data/parametresData';
@@ -15,7 +16,6 @@ import styles from '../styles/ParametresPage.module.css';
 import SecProfil          from './params/SecProfil';
 import SecDocuments       from './params/SecDocuments';
 import SecZone            from './params/SecZone';
-import SecVitesses        from './params/SecVitesses';
 import SecVehicule        from './params/SecVehicule';
 import SecPaiement        from './params/SecPaiement';
 import SecSecurite        from './params/SecSecurite';
@@ -26,6 +26,7 @@ import SecDanger          from './params/SecDanger';
 interface Props { onBack: () => void; onPop: (m: string, t?: string) => void; onAvatarRefresh?: () => void; onLogout: () => void; }
 
 export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, onLogout }: Props) {
+  const { t } = useTranslation();
   const [section, setSection] = useState<ParamSectionId>('profil');
   const [isDirty, setIsDirty] = useState(false);
 
@@ -34,7 +35,7 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
     saveProfil, uploadPhoto,
     uploadDocument,
     saveZones, saveHoraires,
-    saveVitesses, saveVehicule,
+    saveVehicule,
     savePaiement,
     savePassword, saveTwoFa,
     saveNotifs, savePrivacy,
@@ -44,7 +45,7 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
   function markDirty() { setIsDirty(true); }
   function goTo(s: ParamSectionId) {
     if (isDirty && s !== section) {
-      const ok = window.confirm('Vous avez des modifications non sauvegardées. Quitter quand même ?');
+      const ok = window.confirm(t('livreurParametres.unsavedConfirm'));
       if (!ok) return;
     }
     setIsDirty(false);
@@ -56,7 +57,7 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'60vh', color:'var(--t3)' }}>
       <div style={{ textAlign:'center' }}>
         <i className="fas fa-spinner fa-spin" style={{ fontSize:28, display:'block', marginBottom:12 }} />
-        Chargement des paramètres…
+        {t('livreurParametres.chargement')}
       </div>
     </div>
   );
@@ -70,7 +71,7 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
         <button onClick={() => window.location.reload()}
           style={{ marginTop:16, background:'var(--btn)', color:'#fff', border:'none',
             borderRadius:'var(--pill)', padding:'10px 24px', cursor:'pointer', fontSize:13 }}>
-          Réessayer
+          {t('livreurParametres.reessayer')}
         </button>
       </div>
     </div>
@@ -82,10 +83,9 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
     profil:          <SecProfil          {...common} saveProfil={saveProfil} uploadPhoto={uploadPhoto} onAvatarRefresh={onAvatarRefresh} />,
     docs:            <SecDocuments       {...common} uploadDocument={uploadDocument} />,
     zone:            <SecZone            dirty={markDirty} onPop={onPop} saveZones={saveZones} saveHoraires={saveHoraires} data={data} saving={saving} />,
-    vitesses:        <SecVitesses        {...common} saveVitesses={saveVitesses} />,
     vehicule:        <SecVehicule        dirty={markDirty} onPop={onPop} saveVehicule={saveVehicule} data={data} saving={saving} />,
     paiement:        <SecPaiement        dirty={markDirty} onPop={onPop} savePaiement={savePaiement} data={data} saving={saving} />,
-    securite:        <SecSecurite        {...common} savePassword={savePassword} saveTwoFa={saveTwoFa} />,
+    securite:        <SecSecurite        {...common} savePassword={savePassword} saveTwoFa={saveTwoFa} onLogout={onLogout} />,
     notifs:          <SecNotifications   {...common} saveNotifs={saveNotifs} />,
     confidentialite: <SecConfidentialite {...common} savePrivacy={savePrivacy} />,
     langue:          <SecLangue onPop={onPop} />,
@@ -112,7 +112,7 @@ export default function LivreurParametresPage({ onBack, onPop, onAvatarRefresh, 
               }}
             >
               <i className="fas fa-right-from-bracket" style={{ width: 15, textAlign: 'center', fontSize: 13 }} />
-              Se déconnecter
+              {t('livreurParametres.seDeconnecter')}
             </button>
           </div>
         </div>

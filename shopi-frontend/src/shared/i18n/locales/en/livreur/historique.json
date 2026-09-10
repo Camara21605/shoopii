@@ -1,0 +1,33 @@
+{
+  "livreurHistorique": {
+    "filters": {
+      "tout": "All",
+      "livre": "Delivered",
+      "incident": "Issue",
+      "annule": "Cancelled"
+    },
+    "exporter": "Export",
+    "exportToast": "📥 CSV export downloaded",
+    "chargement": "Loading history…",
+    "loadError": "❌ Unable to load history",
+    "empty": {
+      "title": "No deliveries in history",
+      "sub": "Your completed missions will appear here."
+    },
+    "table": {
+      "id": "ID",
+      "produit": "Product",
+      "boutique": "Shop",
+      "distance": "Distance",
+      "vitesse": "Speed",
+      "statut": "Status",
+      "date": "Date",
+      "gain": "Earnings"
+    },
+    "status": {
+      "done": "✓ Delivered",
+      "iss": "⚠ Issue",
+      "can": "✕ Cancelled"
+    }
+  }
+}

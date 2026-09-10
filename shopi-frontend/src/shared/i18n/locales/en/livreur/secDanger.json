@@ -1,0 +1,44 @@
+{
+  "livreurSecDanger": {
+    "header": {
+      "titre": "Sensitive zone",
+      "sub": "Irreversible actions on your account. Each action requires your password."
+    },
+    "actionsSensibles": "Sensitive actions",
+    "actions": {
+      "pause": {
+        "ttl": "Pause your account",
+        "sub": "You will no longer receive missions. Reactivate at any time from this menu.",
+        "btn": "Pause",
+        "confirm": "Your account will be paused. You can reactivate it at any time."
+      },
+      "desactiver": {
+        "ttl": "Deactivate account",
+        "sub": "Account deactivated for 30 days. After that, manual reactivation will be required.",
+        "btn": "Deactivate",
+        "confirm": "Your account will be deactivated for 30 days."
+      },
+      "supprimer": {
+        "ttl": "Permanently delete account",
+        "sub": "Irreversible action. All your data, missions, and history will be deleted.",
+        "btn": "Delete permanently",
+        "confirm": "⚠️ WARNING: this action is IRREVERSIBLE. All your data will be deleted."
+      }
+    },
+    "modal": {
+      "confirmationRequise": "Confirmation required",
+      "saisirMotDePasse": "Enter your password to confirm",
+      "placeholderMotDePasse": "Your password",
+      "annuler": "Cancel",
+      "confirmer": "Confirm",
+      "enCours": "In progress…"
+    },
+    "toasts": {
+      "motDePasseRequis": "⚠️ Enter your password to confirm",
+      "pauseOk": "⏸️ Account paused",
+      "desactiverOk": "⚠️ Account deactivated",
+      "supprimerOk": "🗑️ Account permanently deleted",
+      "motDePasseIncorrect": "❌ Incorrect password — action refused"
+    }
+  }
+}

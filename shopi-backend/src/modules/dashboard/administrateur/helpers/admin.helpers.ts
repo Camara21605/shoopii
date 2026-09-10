@@ -6,6 +6,7 @@
  * ============================================================ */
 
 import { User, UserStatus } from '../../../../database/entities/user.entity';
+import { parseUserAgent }   from '../../../../common/utils/user-agent.util';
 
 // ── Temps relatif ────────────────────────────────────────────
 
@@ -125,6 +126,45 @@ export function mapSt(status: UserStatus): string {
   if (status === UserStatus.ACTIVE)  return 'act';
   if (status === UserStatus.PENDING) return 'pend';
   return 'susp';
+}
+
+// ── Contexte de connexion (AuditLog.ip / AuditLog.device) ────
+
+/**
+ * Extrait l'IP réelle et un libellé d'appareil lisible ("Chrome / Windows")
+ * de la requête HTTP courante, pour horodater les entrées d'AuditLog.
+ * Même logique d'extraction IP que company-team.controller.ts (X-Forwarded-For
+ * en priorité, sinon req.ip fourni par Express).
+ */
+export interface AuditMeta {
+  ip:     string | null;
+  device: string | null;
+}
+
+export function auditMeta(req: any): AuditMeta {
+  const forwarded = req?.headers?.['x-forwarded-for'] as string | undefined;
+  const ip = forwarded?.split(',')[0]?.trim() || req?.ip || null;
+
+  const ua = req?.headers?.['user-agent'] as string | undefined;
+  if (!ua) return { ip, device: null };
+
+  const { device, browser } = parseUserAgent(ua);
+  return { ip, device: `${browser} / ${device}` };
+}
+
+// ── Modèles de communication personnalisés ──────────────────
+
+/**
+ * Remplace les variables {{cle}} d'un modèle de message par leur valeur.
+ * Variables inconnues laissées telles quelles (pas d'erreur silencieuse
+ * qui masquerait une faute de frappe de l'admin dans son propre modèle).
+ * Exemple : interpolate('Bonjour {{acteur}}', { acteur: 'Mamadou' })
+ *        → 'Bonjour Mamadou'
+ */
+export function interpolate(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{\{\s*(\w+)\s*\}\}/g, (match, key) =>
+    key in vars ? vars[key] : match,
+  );
 }
 
 // ── Formatage de dates ───────────────────────────────────────

@@ -1,0 +1,29 @@
+{
+  "livreurSecPaiement": {
+    "header": { "titre": "Payment methods", "sub": "Configure how you receive your earnings." },
+    "freqCard": { "titre": "Transfer frequency" },
+    "freq": {
+      "quotidien":  { "nm": "Daily",     "sub": "Every morning at 8am — previous day's earnings", "badge": "Free" },
+      "hebdo":      { "nm": "Weekly",    "sub": "Every Monday — this week's earnings",             "badge": "Free" },
+      "bimensuel":  { "nm": "Bimonthly", "sub": "On the 1st and 15th of each month",               "badge": "Free" },
+      "mensuel":    { "nm": "Monthly",   "sub": "On the 1st of each month — previous month's earnings", "badge": "Free" }
+    },
+    "walletCard": {
+      "titre": "Shoneya Wallet",
+      "soldeDisponible": "Available balance",
+      "retirer": "Withdraw",
+      "historique": "History",
+      "comingSoon": "Coming soon"
+    },
+    "seuil": {
+      "label": "Automatic transfer threshold",
+      "hint": "Below this threshold, your earnings accumulate in your Wallet"
+    },
+    "saving": "Saving…",
+    "saveButton": "Save payment settings",
+    "toasts": {
+      "saved": "✅ Payment settings saved",
+      "saveError": "❌ Error while saving"
+    }
+  }
+}

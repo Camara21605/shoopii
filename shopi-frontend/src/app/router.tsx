@@ -53,6 +53,7 @@ import SupportStatsPage from '../modules/support/pages/SupportStatsPage';
 
 /* ── Pages / apps lazy-loadées ── */
 const Login          = lazy(() => import('../modules/auth/pages/Login'));
+const ReferralRedirectPage = lazy(() => import('../modules/auth/pages/ReferralRedirectPage'));
 const HomePage       = lazy(() => import('../modules/home/pages/HomePage'));
 const MessageriePage = lazy(() => import('../shared/messagerie/pages/MessageriePage'));
 const SuperAdminApp  = lazy(() => import('../dashboards/super-admin/SuperAdminApp'));
@@ -270,6 +271,10 @@ export const AppRouter: React.FC = () => (
           <Route path="/"         element={<SmartRedirect />} />
           <Route path="/login"    element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
           <Route path="/register" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+
+          {/* Lien de parrainage partenaire — résout le slug puis redirige
+              vers /login?ref=slug (voir ReferralRedirectPage). */}
+          <Route path="/rejoindre/:slug" element={<PublicOnlyRoute><ReferralRedirectPage /></PublicOnlyRoute>} />
 
           {/* Home — public + client */}
           <Route path="/home" element={<HomeRoute />} />

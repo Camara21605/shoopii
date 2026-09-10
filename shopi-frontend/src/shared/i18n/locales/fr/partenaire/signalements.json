@@ -1,0 +1,59 @@
+{
+  "partenaireSignalements": {
+    "gravites": {
+      "low": "Mineur",
+      "med": "Modéré",
+      "high": "Grave"
+    },
+    "page": {
+      "bannerTitle": "Aidez-nous à garder Shoneya sûr",
+      "bannerParagraph": "En tant que partenaire, vous êtes en première ligne. Signalez tout acteur au comportement suspect. Chaque signalement est examiné par l'équipe de sécurité Shoneya.",
+      "bannerBtn": "Signaler un utilisateur",
+      "stats": {
+        "total": "Signalements envoyés",
+        "enCours": "En cours d'examen",
+        "traites": "Traités / sanctionnés",
+        "rejetes": "Rejetés"
+      },
+      "cardTitle": "Mes signalements",
+      "nouveauBtn": "Nouveau",
+      "empty": "Aucun signalement soumis",
+      "statuts": {
+        "review": "En examen",
+        "invest": "Enquête en cours",
+        "resolved": "Compte suspendu",
+        "rejected": "Non retenu"
+      },
+      "signaleLe": "Signalé le {{date}}"
+    },
+    "modal": {
+      "title": "Signaler un utilisateur",
+      "sub": "Votre signalement est confidentiel et examiné par l'équipe de sécurité Shoneya.",
+      "cibleLabel": "Utilisateur concerné",
+      "ciblePlaceholder": "Nom, code ou identifiant de l'acteur",
+      "motifLabel": "Motif du signalement",
+      "reasons": {
+        "fraude":      { "nm": "Arnaque / Fraude",          "d": "Vol d'argent, produits non livrés, escroquerie" },
+        "faux":        { "nm": "Faux compte / Usurpation",  "d": "Fausse identité, compte usurpant une vraie boutique" },
+        "contrefacon": { "nm": "Contrefaçon",               "d": "Produits faux ou non conformes" },
+        "abus":        { "nm": "Comportement abusif",       "d": "Paiements hors-app, menaces, harcèlement" },
+        "autre":       { "nm": "Autre",                     "d": "Tout autre comportement suspect" }
+      },
+      "graviteLabel": "Niveau de gravité",
+      "descriptionLabel": "Description détaillée",
+      "descriptionPlaceholder": "Décrivez précisément ce qui s'est passé : dates, montants, preuves éventuelles…",
+      "preuvesLabel": "Preuves (optionnel)",
+      "dropZone": "Joindre une capture d'écran ou un reçu",
+      "dropToast": "📎 Sélecteur de fichier (capture, reçu…)",
+      "targetTypeLabel": "Type de compte signalé",
+      "envoi": "Envoi…",
+      "envoyerBtn": "Envoyer le signalement",
+      "note": "Les signalements abusifs ou répétés sans fondement peuvent affecter votre statut de partenaire.",
+      "errorCibleToast": "Indiquez l'utilisateur concerné",
+      "errorDescToast": "Ajoutez une description",
+      "successToast": "Signalement envoyé à l'équipe sécurité Shoneya",
+      "referenceToast": "Référence : {{ref}}",
+      "errorSubmitToast": "Erreur lors de l'envoi du signalement"
+    }
+  }
+}

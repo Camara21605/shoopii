@@ -70,6 +70,11 @@ import { OverviewAggregateService }    from './services/overview-aggregate.servi
 import { UploadModule }     from '../../upload/upload.module';
 import { MessagerieModule } from '../../messagerie/messagerie.module';
 
+/* ── Fournit SessionService.getSessionMeta — session réellement active
+ * (device/navigateur/IP/date), voir ProfilService.attachCurrentSession()
+ * pour le détail du bug corrigé (2 sessions factices affichées jusqu'ici). */
+import { SessionModule } from '../../session/session.module';
+
 @Module({
   imports: [
     /*
@@ -97,6 +102,7 @@ import { MessagerieModule } from '../../messagerie/messagerie.module';
 
     /* PresenceService (statut en ligne des livreurs) */
     MessagerieModule,
+    SessionModule,
   ],
 
   controllers: [

@@ -131,7 +131,7 @@ const LIVRAISON_INIT: LivraisonState = {
   selectedVille: null, selectedPays: null,
   isInternational: false, delivMode: null,
   selectedLvr: null, selectedCorr: null,
-  currentSpeed: 'standard', distZone: 'local',
+  currentSpeed: 'standard', distZone: 'local', zoneFee: 0,
 };
 
 /* BUG CORRIGÉ — "Voir ma boutique" (dashboard entreprise) montait déjà
@@ -329,6 +329,7 @@ export default function ProduitPage({ productIdOverride, previewOverride, onBack
                     <LivraisonSection
                       onChange={handleLivraisonChange}
                       onToast={showToast}
+                      companyId={produitApi?.companyId}
                       policy={produitApi ? {
                         standard:      produitApi.livraisonStandard      ?? true,
                         livreur:       produitApi.livraisonLivreur        ?? true,

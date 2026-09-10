@@ -47,6 +47,8 @@ export class DepotService extends CorrespondantBaseService {
     if (dto.depotCommune       !== undefined) cor.depotCommune       = dto.depotCommune       ?? null;
     if (dto.depotVille         !== undefined) cor.depotVille         = dto.depotVille         ?? null;
     if (dto.depotRepere        !== undefined) cor.depotRepere        = dto.depotRepere        ?? null;
+    if (dto.depotLatitude      !== undefined) cor.depotLatitude      = dto.depotLatitude      ?? null;
+    if (dto.depotLongitude     !== undefined) cor.depotLongitude     = dto.depotLongitude     ?? null;
     if (dto.depotPhone         !== undefined) cor.depotPhone         = dto.depotPhone         ?? null;
     if (dto.depotCapacite      !== undefined) cor.depotCapacite      = dto.depotCapacite      ?? null;
     if (dto.depotTypeLocal     !== undefined) cor.depotTypeLocal     = dto.depotTypeLocal     ?? null;

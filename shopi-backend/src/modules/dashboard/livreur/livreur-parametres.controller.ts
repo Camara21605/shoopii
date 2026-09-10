@@ -46,6 +46,13 @@ import { JourSemaine } from 'src/database/entities/livreur.table/livreur-horaire
 const MB5  = 5  * 1024 * 1024;
 const MB10 = 10 * 1024 * 1024;
 
+/* ── Helper sessionId — voir JwtStrategy (claim `sid`), utilisé pour
+ * afficher la session actuelle réelle sur l'écran Sécurité (voir
+ * ProfilLivreurService.attachCurrentSession). ── */
+function sessionId(req: any): string | null {
+  return req.user?.sessionId ?? null;
+}
+
 @UseGuards(JwtAuthGuard)
 @Controller('dashboard/livreur/parametres')
 export class LivreurParametresController {
@@ -74,7 +81,7 @@ export class LivreurParametresController {
    * ════════════════════════════════════════════════════════ */
   @Get()
   getAll(@Req() req: any) {
-    return this.profilService.getParametres(req.user.id);
+    return this.profilService.getParametres(req.user.id, sessionId(req));
   }
 
   /* ════════════════════════════════════════════════════════

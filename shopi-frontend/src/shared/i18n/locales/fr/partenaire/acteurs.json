@@ -1,0 +1,26 @@
+{
+  "partenaireActeurs": {
+    "statuts": {
+      "act": "Actif",
+      "pend": "En attente"
+    },
+    "reportTitle": "Signaler cet acteur",
+    "page": {
+      "filters": {
+        "all": "Tous",
+        "ent": "Entreprises",
+        "lvr": "Livreurs",
+        "cor": "Correspondants"
+      },
+      "empty": "Aucun acteur dans cette catégorie",
+      "gererBtn": "Gérer"
+    },
+    "modal": {
+      "loadError": "Impossible de charger la fiche de cet acteur.",
+      "statCommandes": "Commandes",
+      "statCommission": "Commission générée",
+      "coordonneesLabel": "Coordonnées",
+      "memberSince": "Membre depuis le {{date}}"
+    }
+  }
+}

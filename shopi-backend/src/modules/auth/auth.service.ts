@@ -37,7 +37,7 @@ import { AuthLog }              from '../../database/entities/auth-log.entity';
 import { RefreshToken }         from '../../database/entities/refresh-token.entity';
 import { CompanyTeamMember, TeamMemberStatus } from '../../database/entities/company-team/company-team-member.entity';
 import { Admin }                from '../../database/entities/profiles/admin-profile.entity';
-import { Partner }              from '../../database/entities/profiles/partenaire-profile.entity';
+import { Partner, PartnerStatus } from '../../database/entities/profiles/partenaire-profile.entity';
 import { Company, CompanyStatus } from '../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery }             from '../../database/entities/profiles/livreur-profile.entity';
 import { Correspondent }        from '../../database/entities/profiles/correspondant-profile.entity';
@@ -86,6 +86,19 @@ const ROLES_REQUIRING_CODE: UserRole[] = [
   UserRole.COMPANY,
   UserRole.DELIVERY,
   UserRole.PARTNER,
+  UserRole.CORRESPONDENT,
+];
+
+/**
+ * Rôles que le lien de parrainage d'un partenaire peut recruter — les
+ * mêmes que ceux que "Codes de création" peut cibler pour un partenaire
+ * (voir Partner.companies/deliveries/correspondants) MOINS ADMIN et
+ * PARTNER : un lien de parrainage recrute des ACTEURS pour le partenaire,
+ * jamais un nouvel admin ni un autre partenaire.
+ */
+const REFERRAL_ELIGIBLE_ROLES: UserRole[] = [
+  UserRole.COMPANY,
+  UserRole.DELIVERY,
   UserRole.CORRESPONDENT,
 ];
 
@@ -357,6 +370,14 @@ export class AuthService implements OnModuleInit {
     let codeDeliveryId:  string | null = null;
     let codePartnerId:   string | null = null;
 
+    /* ✅ Lien de parrainage — résolu AVANT le bloc code ci-dessous, pour
+     * pouvoir dispenser de code d'activation quand il est présent (voir
+     * son usage juste sous codeRequiredForThisRole). Retourne null pour
+     * un rôle non éligible (ADMIN, PARTNER, CLIENT) ou un slug inconnu. */
+    const referralPartnerId = dto.referralSlug
+      ? await this.getReferralPartnerId(dto.referralSlug, dto.role as UserRole)
+      : null;
+
     /* BUG CORRIGÉ — PlatformSettings.codeRequiredForCompany n'était jamais lu :
      * un code d'invitation était TOUJOURS exigé pour les comptes entreprise,
      * quelle que soit la valeur choisie par le super-admin. Seul le rôle
@@ -370,35 +391,45 @@ export class AuthService implements OnModuleInit {
 
     if (codeRequiredForThisRole) {
       if (!dto.activationCode) {
-        throw new BadRequestException(
-          `Un code d'invitation est requis pour créer un compte ${dto.role}.`,
+        /* ✅ Le lien de parrainage dispense de code d'activation — un
+         * partenaire identifié par referralPartnerId sponsorise déjà ce
+         * compte, exactement comme un code d'invitation le ferait. */
+        if (!referralPartnerId) {
+          throw new BadRequestException(
+            `Un code d'invitation est requis pour créer un compte ${dto.role}.`,
+          );
+        }
+      } else {
+        const validated = await this.codeCreationService.validateCode(
+          dto.activationCode,
+          dto.role as UserRole,
         );
-      }
-      const validated = await this.codeCreationService.validateCode(
-        dto.activationCode,
-        dto.role as UserRole,
-      );
-      validatedCodeId = validated.codeId;
+        validatedCodeId = validated.codeId;
 
-      // ✅ Lire le companyId depuis la relation company sur CreationCode
-      codeCompanyId = await this.getCodeCompanyId(validatedCodeId);
+        // ✅ Lire le companyId depuis la relation company sur CreationCode
+        codeCompanyId = await this.getCodeCompanyId(validatedCodeId);
 
-      // ✅ Lire le deliveryId depuis la relation delivery sur CreationCode
-      codeDeliveryId = await this.getCodeDeliveryId(validatedCodeId);
+        // ✅ Lire le deliveryId depuis la relation delivery sur CreationCode
+        codeDeliveryId = await this.getCodeDeliveryId(validatedCodeId);
 
-      // ✅ Lire le partnerId depuis le code — voir getCodePartnerId() pour
-      // l'explication complète du bug que cette ligne corrige.
-      codePartnerId = await this.getCodePartnerId(validatedCodeId);
+        // ✅ Lire le partnerId depuis le code — voir getCodePartnerId() pour
+        // l'explication complète du bug que cette ligne corrige.
+        codePartnerId = await this.getCodePartnerId(validatedCodeId);
 
-      // ✅ Vérifier que l'email correspond à celui de l'invitation (si nominatif)
-      const codeTargetEmail = await this.getCodeTargetEmail(validatedCodeId);
-      if (codeTargetEmail && codeTargetEmail.toLowerCase() !== dto.email.toLowerCase().trim()) {
-        throw new ForbiddenException(
-          `Ce code d'invitation a été émis pour "${codeTargetEmail}". ` +
-          `Utilisez l'adresse email indiquée dans votre email d'invitation.`,
-        );
+        // ✅ Vérifier que l'email correspond à celui de l'invitation (si nominatif)
+        const codeTargetEmail = await this.getCodeTargetEmail(validatedCodeId);
+        if (codeTargetEmail && codeTargetEmail.toLowerCase() !== dto.email.toLowerCase().trim()) {
+          throw new ForbiddenException(
+            `Ce code d'invitation a été émis pour "${codeTargetEmail}". ` +
+            `Utilisez l'adresse email indiquée dans votre email d'invitation.`,
+          );
+        }
       }
     }
+
+    /* Priorité au code d'invitation s'il en existe un (cas où les deux
+     * seraient fournis) ; sinon, l'attribution vient du lien de parrainage. */
+    const effectivePartnerId = codePartnerId ?? referralPartnerId;
 
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
     const username       = await this.generateUniqueUsername(dto.firstName, dto.lastName);
@@ -454,7 +485,7 @@ export class AuthService implements OnModuleInit {
 
       await this.createProfile(
         queryRunner.manager, newUser, dto, codeCompanyId, codeDeliveryId,
-        platformSettings.manualVendorApproval, codePartnerId,
+        platformSettings.manualVendorApproval, effectivePartnerId,
       );
 
       const wallet = this.walletRepo.create({ userId: newUser.id });
@@ -1701,6 +1732,25 @@ export class AuthService implements OnModuleInit {
       .getRepository(CreationCode)
       .findOne({ where: { id: codeId }, select: ['id', 'partnerId'] });
     return code?.partnerId ?? null;
+  }
+
+  /**
+   * Résout le partnerId depuis un slug de lien de parrainage
+   * (RegisterDto.referralSlug) — équivalent de getCodePartnerId() ci-
+   * dessus mais pour le lien plutôt qu'un code saisi manuellement.
+   *
+   * - Rôle non éligible (ADMIN, PARTNER, CLIENT) → null, ignoré silencieusement
+   *   (un lien de parrainage collé par erreur sur un autre formulaire ne
+   *   doit pas faire échouer l'inscription).
+   * - Slug inconnu ou partenaire suspendu → null, même raison.
+   */
+  private async getReferralPartnerId(slug: string, role: UserRole): Promise<string | null> {
+    if (!REFERRAL_ELIGIBLE_ROLES.includes(role)) return null;
+    const partner = await this.dataSource
+      .getRepository(Partner)
+      .findOne({ where: { referralSlug: slug }, select: ['id', 'status'] });
+    if (!partner || partner.status === PartnerStatus.SUSPENDED) return null;
+    return partner.id;
   }
 
   /**

@@ -1,0 +1,45 @@
+{
+  "partenaireLayout": {
+    "sidebar": {
+      "brandTag": "PARTNER",
+      "sections": {
+        "principal": "Main",
+        "acquisition": "Acquisition",
+        "revenus": "Revenue",
+        "performance": "Performance",
+        "securite": "Security",
+        "compte": "Account"
+      },
+      "items": {
+        "overview": "Overview",
+        "codes": "Creation codes",
+        "acteurs": "My actors",
+        "invitations": "Invitations",
+        "commissions": "Commissions",
+        "paiements": "Payments",
+        "stats": "Statistics",
+        "signalements": "Reports",
+        "parametres": "Settings"
+      },
+      "generateBtn": "Generate a code",
+      "menuAria": "Menu"
+    },
+    "topbar": {
+      "titles": {
+        "overview":     { "title": "Overview",             "subtitle": "Manage your network and recruitments" },
+        "codes":        { "title": "Creation codes",       "subtitle": "Generate and send codes to actors" },
+        "acteurs":      { "title": "My actors",            "subtitle": "The actors you have recruited" },
+        "invitations":  { "title": "Invitations",          "subtitle": "Track your referrals" },
+        "commissions":  { "title": "Commissions",          "subtitle": "Your partner earnings" },
+        "paiements":    { "title": "Payments",             "subtitle": "History of your withdrawals" },
+        "stats":        { "title": "Statistics",           "subtitle": "Your acquisition performance" },
+        "signalements": { "title": "Security & Reports",   "subtitle": "Report malicious users" },
+        "parametres":   { "title": "Settings",             "subtitle": "Configure your partner account" }
+      },
+      "reportTooltip": "Report a user",
+      "aideTooltip": "Help center",
+      "generateBtn": "Generate a code",
+      "menuAria": "Menu"
+    }
+  }
+}

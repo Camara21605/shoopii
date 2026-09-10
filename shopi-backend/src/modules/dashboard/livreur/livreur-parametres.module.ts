@@ -20,6 +20,11 @@ import { RefreshToken }   from 'src/database/entities/refresh-token.entity';
 /* ── Module Upload Cloudinary ── */
 import { UploadModule }   from 'src/modules/upload/upload.module';
 
+/* ── Fournit SessionService.getSessionMeta — session réellement active
+ * (device/navigateur/IP/date), voir SecuriteLivreurService.getSecurite()
+ * pour le détail du bug corrigé (2 sessions factices affichées jusqu'ici). */
+import { SessionModule } from 'src/modules/session/session.module';
+
 /* ── Controller ── */
 import { LivreurParametresController } from './livreur-parametres.controller';
 
@@ -42,6 +47,7 @@ import { DangerLivreurService }   from './services/danger-livreur.service';
       RefreshToken,   // révocation sessions au changement de mot de passe
     ]),
     UploadModule, // Cloudinary (photo + documents)
+    SessionModule,
   ],
 
   controllers: [

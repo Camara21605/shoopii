@@ -31,6 +31,10 @@ interface Props {
   showCorr: boolean;              /* true si boutique hors continent */
   livreurs: LivreurSuivi[];       /* ✅ livreurs suivis (dynamique) */
   loadingLivreurs?: boolean;      /* ✅ état de chargement */
+  /** Tarif RÉEL de la zone de livraison couvrant l'adresse saisie
+   *  (GeoZone.fraisLivraison — géré par un administrateur, PAS par le
+   *  livreur). Remplace lv.base dans le calcul du frais affiché. */
+  zoneFee:  number;
   onDel:    (m: 'std' | 'lvr') => void;
   onSelLvr: (id: string) => void; /* ✅ id = string */
   onSelCorr:(id: number) => void;
@@ -49,7 +53,7 @@ function getSpeedBtns(t: TFunction) {
 
 export default function LivraisonSection({
   delMode, selLvr, selCorr, curSpd, showCorr,
-  livreurs, loadingLivreurs = false,
+  livreurs, loadingLivreurs = false, zoneFee,
   onDel, onSelLvr, onSelCorr, onSpeed, onToast,
 }: Props) {
   const { t } = useTranslation();
@@ -57,10 +61,9 @@ export default function LivraisonSection({
 
   const spd = SPEEDS[curSpd];
 
-  /* Prix mini pour le label de l'option livreur (0 si aucun livreur) */
-  const minFee = livreurs.length
-    ? Math.min(...livreurs.map(l => lvFeeCalc(l.base, spd.m)))
-    : 0;
+  /* Même frais pour tous les livreurs suivis — le tarif vient de la ZONE
+   * de livraison (zoneFee), pas du livreur choisi. */
+  const minFee = livreurs.length ? lvFeeCalc(zoneFee, spd.m) : 0;
 
   return (
     <div className={`${styles.sc} ${styles.lit}`}>
@@ -168,7 +171,7 @@ export default function LivraisonSection({
 
               {/* Cartes livreurs */}
               {!loadingLivreurs && livreurs.map(lv => {
-                const fee = lvFeeCalc(lv.base, spd.m);
+                const fee = lvFeeCalc(zoneFee, spd.m);
                 return (
                   <div
                     key={lv.id}

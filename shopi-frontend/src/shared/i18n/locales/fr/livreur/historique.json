@@ -1,0 +1,33 @@
+{
+  "livreurHistorique": {
+    "filters": {
+      "tout": "Tout",
+      "livre": "Livré",
+      "incident": "Incident",
+      "annule": "Annulé"
+    },
+    "exporter": "Exporter",
+    "exportToast": "📥 Export CSV téléchargé",
+    "chargement": "Chargement de l'historique…",
+    "loadError": "❌ Impossible de charger l'historique",
+    "empty": {
+      "title": "Aucune livraison dans l'historique",
+      "sub": "Vos missions terminées apparaîtront ici."
+    },
+    "table": {
+      "id": "ID",
+      "produit": "Produit",
+      "boutique": "Boutique",
+      "distance": "Distance",
+      "vitesse": "Vitesse",
+      "statut": "Statut",
+      "date": "Date",
+      "gain": "Gain"
+    },
+    "status": {
+      "done": "✓ Livré",
+      "iss": "⚠ Incident",
+      "can": "✕ Annulé"
+    }
+  }
+}

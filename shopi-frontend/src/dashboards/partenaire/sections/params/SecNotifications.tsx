@@ -27,6 +27,7 @@
  * ================================================================ */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../../styles/ParamsShared.module.css';
 import type { PartenaireData } from '../../hooks/usePartenaireParametres';
 import { apiFetch } from '../../../../shared/services/apiFetch';
@@ -57,6 +58,7 @@ const COMMISSION_TYPE = 'payment.sent';
 export default function SecNotifications({
   data, saving, dirty, markClean, saveTrigger, onSave, onToast
 }: Props) {
+  const { t } = useTranslation();
   /* ── Catégories encore stockées dans Partner.notifSettings ── */
   const [notifActeur, setNotifActeur] = useState(true);
   const [notifSig,    setNotifSig]    = useState(true);
@@ -123,24 +125,24 @@ export default function SecNotifications({
         }),
       ]);
       markClean();
-      onToast('✅ Notifications sauvegardées', 's');
+      onToast(t('partenaireParametres.secNotifications.savedToast'), 's');
     } catch {
-      onToast('❌ Erreur lors de la sauvegarde', 'w');
+      onToast(t('partenaireParametres.secNotifications.errorToast'), 'w');
     }
   }
 
-  type TRow = { ic: string; t: string; d: string; val: boolean; set: (v: boolean) => void };
+  type TRow = { key: string; ic: string; t: string; d: string; val: boolean; set: (v: boolean) => void };
   const ALERTES: TRow[] = [
-    { ic: 'fa-user-plus',       t: 'Nouvel acteur activé',    d: "Quand un acteur que vous avez recruté crée son compte.",     val: notifActeur, set: setNotifActeur },
-    { ic: 'fa-coins',           t: 'Commission créditée',     d: 'À chaque commission ajoutée à votre solde.',               val: notifComm,   set: setNotifComm   },
-    { ic: 'fa-shield-halved',   t: 'Suivi des signalements',  d: 'Mises à jour sur les signalements que vous avez envoyés.', val: notifSig,    set: setNotifSig    },
-    { ic: 'fa-award',           t: 'Changement de palier',    d: 'Quand vous progressez vers un nouveau niveau partenaire.', val: notifPalier, set: setNotifPalier },
-    { ic: 'fa-bullhorn',        t: 'Offres & nouveautés Shoneya',d: 'Conseils, programmes et actualités partenaires.',          val: notifNews,   set: setNotifNews   },
+    { key: 'acteur', ic: 'fa-user-plus',     t: t('partenaireParametres.secNotifications.alertes.acteur.t'), d: t('partenaireParametres.secNotifications.alertes.acteur.d'), val: notifActeur, set: setNotifActeur },
+    { key: 'comm',   ic: 'fa-coins',         t: t('partenaireParametres.secNotifications.alertes.comm.t'),   d: t('partenaireParametres.secNotifications.alertes.comm.d'),   val: notifComm,   set: setNotifComm   },
+    { key: 'sig',    ic: 'fa-shield-halved', t: t('partenaireParametres.secNotifications.alertes.sig.t'),    d: t('partenaireParametres.secNotifications.alertes.sig.d'),    val: notifSig,    set: setNotifSig    },
+    { key: 'palier', ic: 'fa-award',         t: t('partenaireParametres.secNotifications.alertes.palier.t'), d: t('partenaireParametres.secNotifications.alertes.palier.d'), val: notifPalier, set: setNotifPalier },
+    { key: 'news',   ic: 'fa-bullhorn',      t: t('partenaireParametres.secNotifications.alertes.news.t'),   d: t('partenaireParametres.secNotifications.alertes.news.d'),   val: notifNews,   set: setNotifNews   },
   ];
   const CANAUX: TRow[] = [
-    { ic: 'fa-envelope',      t: 'Email',              d: '', val: cEmail, set: setCEmail },
-    { ic: 'fa-comment-sms',   t: 'SMS',                d: '', val: cSms,   set: setCSms   },
-    { ic: 'fa-bell',          t: 'Notifications push', d: '', val: cPush,  set: setCPush  },
+    { key: 'email', ic: 'fa-envelope',    t: t('partenaireParametres.secNotifications.canaux.email'), d: '', val: cEmail, set: setCEmail },
+    { key: 'sms',   ic: 'fa-comment-sms', t: t('partenaireParametres.secNotifications.canaux.sms'),   d: '', val: cSms,   set: setCSms   },
+    { key: 'push',  ic: 'fa-bell',        t: t('partenaireParametres.secNotifications.canaux.push'),  d: '', val: cPush,  set: setCPush  },
   ];
 
   function TogRow({ row }: { row: TRow }) {
@@ -165,23 +167,23 @@ export default function SecNotifications({
       <div className={s.fc}>
         <div className={s.fcHd}>
           <div>
-            <div className={s.fcTtl}><i className="fas fa-bell" /> Notifications</div>
-            <div className={s.fcSub}>Choisissez ce dont vous voulez être informé.</div>
+            <div className={s.fcTtl}><i className="fas fa-bell" /> {t('partenaireParametres.secNotifications.card1.title')}</div>
+            <div className={s.fcSub}>{t('partenaireParametres.secNotifications.card1.sub')}</div>
           </div>
         </div>
         <div className={s.fcBody}>
-          {ALERTES.map(r => <TogRow key={r.t} row={r} />)}
+          {ALERTES.map(r => <TogRow key={r.key} row={r} />)}
         </div>
       </div>
 
       <div className={s.fc}>
         <div className={s.fcHd}>
-          <div className={s.fcTtl}><i className="fas fa-paper-plane" /> Canaux</div>
+          <div className={s.fcTtl}><i className="fas fa-paper-plane" /> {t('partenaireParametres.secNotifications.card2Title')}</div>
         </div>
         <div className={s.fcBody}>
           {prefsLoading
-            ? <div style={{ padding: '10px 0', fontSize: 12.5, color: 'var(--t3)' }}>Chargement…</div>
-            : CANAUX.map(r => <TogRow key={r.t} row={r} />)}
+            ? <div style={{ padding: '10px 0', fontSize: 12.5, color: 'var(--t3)' }}>{t('partenaireParametres.secNotifications.chargement')}</div>
+            : CANAUX.map(r => <TogRow key={r.key} row={r} />)}
         </div>
       </div>
     </>

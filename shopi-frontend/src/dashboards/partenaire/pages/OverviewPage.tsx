@@ -4,6 +4,7 @@
  * ================================================================ */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/OverviewPage.module.css';
 import KpiCard from '../components/KpiCard';
 import { apiFetch } from '@/shared/services/apiFetch';
@@ -58,6 +59,7 @@ const fmtGnf = (n: number) => {
 };
 
 export default function OverviewPage({ onNavigate, onGenerate }: Props) {
+  const { t } = useTranslation();
   const [data, setData]         = useState<OverviewData | null>(null);
   const [loading, setLoading]   = useState(true);
   const [chartKey, setChartKey] = useState<ChartKey>('mois');
@@ -76,7 +78,7 @@ export default function OverviewPage({ onNavigate, onGenerate }: Props) {
 
   if (!data) return (
     <div style={{ padding: '48px', textAlign: 'center', color: 'var(--danger)' }}>
-      <i className="fas fa-circle-exclamation" /> Impossible de charger le tableau de bord
+      <i className="fas fa-circle-exclamation" /> {t('partenaireOverview.loadError')}
     </div>
   );
 
@@ -85,10 +87,10 @@ export default function OverviewPage({ onNavigate, onGenerate }: Props) {
   const { kpis, reseau, activiteRecente, partenaire } = data;
 
   const kpiCards = [
-    { value: String(kpis.totalActeurs),     label: 'Acteurs recrutés (total)' },
-    { value: String(kpis.codesActifs),       label: 'Codes actifs' },
-    { value: `${kpis.tauxConversion}`,       label: 'Taux de conversion', unit: '%' },
-    { value: fmtGnf(kpis.commissionsMonth),  label: 'Commissions ce mois' },
+    { value: String(kpis.totalActeurs),     label: t('partenaireOverview.kpis.totalActeurs') },
+    { value: String(kpis.codesActifs),       label: t('partenaireOverview.kpis.codesActifs') },
+    { value: `${kpis.tauxConversion}`,       label: t('partenaireOverview.kpis.tauxConversion'), unit: '%' },
+    { value: fmtGnf(kpis.commissionsMonth),  label: t('partenaireOverview.kpis.commissionsMonth') },
   ];
 
   return (
@@ -99,26 +101,26 @@ export default function OverviewPage({ onNavigate, onGenerate }: Props) {
         <div className={styles.heroGrid} />
         <div className={styles.heroIn}>
           <div>
-            <div className={styles.eyebrow}><i className="fas fa-bolt" /> Espace Partenaire</div>
+            <div className={styles.eyebrow}><i className="fas fa-bolt" /> {t('partenaireOverview.hero.eyebrow')}</div>
             <div className={styles.h}>
-              Bonjour {partenaire.name},<br />
-              vous avez recruté <em>{kpis.totalActeurs} acteurs</em> au total
+              {t('partenaireOverview.hero.greeting', { name: partenaire.name })}<br />
+              {t('partenaireOverview.hero.recruitedPrefix')} <em>{t('partenaireOverview.hero.recruitedCount', { count: kpis.totalActeurs })}</em> {t('partenaireOverview.hero.recruitedSuffix')}
             </div>
             <div className={styles.p}>
-              Continuez à faire grandir le réseau Shoneya. Chaque entreprise et livreur que vous recrutez vous rapporte une commission récurrente.
+              {t('partenaireOverview.hero.paragraph')}
             </div>
             <div className={styles.btns}>
-              <button className={styles.b1} onClick={onGenerate}><i className="fas fa-qrcode" /> Générer un code</button>
-              <button className={styles.b2} onClick={() => onNavigate('acteurs')}><i className="fas fa-people-group" /> Voir mes acteurs</button>
+              <button className={styles.b1} onClick={onGenerate}><i className="fas fa-qrcode" /> {t('partenaireOverview.hero.generateBtn')}</button>
+              <button className={styles.b2} onClick={() => onNavigate('acteurs')}><i className="fas fa-people-group" /> {t('partenaireOverview.hero.voirActeursBtn')}</button>
             </div>
           </div>
 
           <div className={styles.tier}>
             <div className={styles.tierRing}><i className="fas fa-award" /></div>
             <div>
-              <div className={styles.tierNm}>Partenaire {partenaire.zone ?? 'Shoneya'}</div>
-              <div className={styles.tierSub}>Statut : {partenaire.status}</div>
-              <div className={styles.tierProg}>{kpis.totalActeurs} acteurs dans votre réseau</div>
+              <div className={styles.tierNm}>{t('partenaireOverview.hero.tierName', { zone: partenaire.zone ?? 'Shoneya' })}</div>
+              <div className={styles.tierSub}>{t('partenaireOverview.hero.tierStatus', { status: partenaire.status })}</div>
+              <div className={styles.tierProg}>{t('partenaireOverview.hero.tierProgress', { count: kpis.totalActeurs })}</div>
               <div className={styles.tierBar}><span /></div>
             </div>
           </div>
@@ -137,12 +139,12 @@ export default function OverviewPage({ onNavigate, onGenerate }: Props) {
       <div className={styles.g2}>
         <div className={styles.card}>
           <div className={styles.ch}>
-            <div className={styles.chT}><i className="fas fa-chart-column" /> Recrutements</div>
+            <div className={styles.chT}><i className="fas fa-chart-column" /> {t('partenaireOverview.chart.title')}</div>
             <div className={styles.tabs}>
               {(['semaine', 'mois', 'annee'] as ChartKey[]).map(k => (
                 <button key={k} className={`${styles.tab} ${chartKey === k ? styles.tabOn : ''}`}
                   onClick={() => setChartKey(k)}>
-                  {k === 'semaine' ? 'Semaine' : k === 'mois' ? 'Mois' : 'Année'}
+                  {t(`partenaireOverview.chart.${k}`)}
                 </button>
               ))}
             </div>
@@ -164,17 +166,17 @@ export default function OverviewPage({ onNavigate, onGenerate }: Props) {
               ))}
             </div>
             <div className={styles.legend}>
-              <div className={styles.leg}><span className={styles.legD} style={{ background: 'var(--blue)' }} /> Entreprises</div>
-              <div className={styles.leg}><span className={styles.legD} style={{ background: 'var(--violet)' }} /> Livreurs & correspondants</div>
+              <div className={styles.leg}><span className={styles.legD} style={{ background: 'var(--blue)' }} /> {t('partenaireOverview.chart.legendEntreprises')}</div>
+              <div className={styles.leg}><span className={styles.legD} style={{ background: 'var(--violet)' }} /> {t('partenaireOverview.chart.legendLivreurs')}</div>
             </div>
           </div>
         </div>
 
         <div className={styles.card}>
-          <div className={styles.ch}><div className={styles.chT}><i className="fas fa-clock-rotate-left" /> Activité récente</div></div>
+          <div className={styles.ch}><div className={styles.chT}><i className="fas fa-clock-rotate-left" /> {t('partenaireOverview.activite.title')}</div></div>
           <div className={styles.cb}>
             {activiteRecente.length === 0 ? (
-              <div style={{ color: 'var(--muted)', padding: '16px 0', textAlign: 'center', fontSize: 14 }}>Aucune activité récente</div>
+              <div style={{ color: 'var(--muted)', padding: '16px 0', textAlign: 'center', fontSize: 14 }}>{t('partenaireOverview.activite.empty')}</div>
             ) : activiteRecente.map((a, i) => (
               <div key={i} className={styles.act}>
                 <div className={`${styles.actIc} ${styles['act_' + a.kind]}`}><i className={`fas ${a.icone}`} /></div>
@@ -191,14 +193,14 @@ export default function OverviewPage({ onNavigate, onGenerate }: Props) {
       {/* Répartition réseau */}
       <div className={styles.card}>
         <div className={styles.ch}>
-          <div className={styles.chT}><i className="fas fa-layer-group" /> Répartition de votre réseau</div>
-          <button className={styles.chLink} onClick={() => onNavigate('acteurs')}>Voir tout <i className="fas fa-arrow-right" /></button>
+          <div className={styles.chT}><i className="fas fa-layer-group" /> {t('partenaireOverview.repartition.title')}</div>
+          <button className={styles.chLink} onClick={() => onNavigate('acteurs')}>{t('partenaireOverview.repartition.voirTout')} <i className="fas fa-arrow-right" /></button>
         </div>
         <div className={styles.cb}>
           <div className={styles.repartition}>
-            <div className={styles.rep}><div className={styles.repV}>{reseau.entreprises}</div><div className={styles.repL}><i className="fas fa-store" style={{ color: 'var(--blue)' }} /> Entreprises</div></div>
-            <div className={styles.rep}><div className={styles.repV}>{reseau.livreurs}</div><div className={styles.repL}><i className="fas fa-motorcycle" style={{ color: 'var(--emerald)' }} /> Livreurs</div></div>
-            <div className={styles.rep}><div className={styles.repV}>{reseau.correspondants}</div><div className={styles.repL}><i className="fas fa-map-pin" style={{ color: 'var(--violet)' }} /> Correspondants</div></div>
+            <div className={styles.rep}><div className={styles.repV}>{reseau.entreprises}</div><div className={styles.repL}><i className="fas fa-store" style={{ color: 'var(--blue)' }} /> {t('partenaireOverview.repartition.entreprises')}</div></div>
+            <div className={styles.rep}><div className={styles.repV}>{reseau.livreurs}</div><div className={styles.repL}><i className="fas fa-motorcycle" style={{ color: 'var(--emerald)' }} /> {t('partenaireOverview.repartition.livreurs')}</div></div>
+            <div className={styles.rep}><div className={styles.repV}>{reseau.correspondants}</div><div className={styles.repL}><i className="fas fa-map-pin" style={{ color: 'var(--violet)' }} /> {t('partenaireOverview.repartition.correspondants')}</div></div>
           </div>
         </div>
       </div>

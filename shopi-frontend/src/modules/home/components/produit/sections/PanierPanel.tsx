@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { ProduitInfo } from '../data/produitMockData';
 import type { LivraisonState } from './LivraisonSection';
-import { SPEED_MUL, DIST_MUL } from '../data/produitMockData';
+import { SPEED_MUL } from '../data/produitMockData';
 import { useCart } from '../../../../../shared/context/CartContext';
 import { getRoleFromToken } from '../../../../../shared/services/authUtils';
 import styles from '../styles/PanierPanel.module.css';
@@ -45,11 +45,16 @@ export default function PanierPanel({
 
   const remisePct = Math.round((1 - produit.prix / produit.ancien) * 100);
 
+  /* BUG CORRIGÉ — utilisait livraison.selectedLvr.baseFee, le tarif PROPRE
+   * AU LIVREUR (Delivery.tarifBase, fixé par le livreur lui-même). Le
+   * tarif réel vient de la ZONE de livraison (GeoZone.fraisLivraison,
+   * gérée par un administrateur — permission "geo_zones" accordée par le
+   * super-admin), résolue dans LivraisonSection.tsx et transmise via
+   * livraison.zoneFee. */
   function calcLvFee(): number {
     if (!livraison.selectedLvr) return 0;
     return Math.round(
-      livraison.selectedLvr.baseFee *
-      (DIST_MUL[livraison.distZone] || 1) *
+      livraison.zoneFee *
       (SPEED_MUL[livraison.currentSpeed] || 1) / 1000
     ) * 1000;
   }

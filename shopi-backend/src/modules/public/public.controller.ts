@@ -75,6 +75,17 @@ export class PublicController {
     };
   }
 
+  /* ─── GET /public/rejoindre/:slug — résolution du lien de parrainage
+   * partenaire (voir PublicService.resolveReferral()). Placé avant
+   * /produits pour rester regroupé avec les routes "identité publique"
+   * ci-dessus plutôt que noyé dans le catalogue. ─── */
+  @Get('rejoindre/:slug')
+  @ApiOperation({ summary: "Résout un lien de parrainage partenaire et compte le clic" })
+  @ApiParam({ name: 'slug', type: 'string' })
+  resolveReferral(@Param('slug') slug: string) {
+    return this.publicService.resolveReferral(slug);
+  }
+
   @Get('produits')
   @ApiOperation({ summary: 'Produits publics paginés' })
   @ApiQuery({ name: 'page',       required: false })

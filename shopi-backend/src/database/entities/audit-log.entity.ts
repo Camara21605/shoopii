@@ -42,6 +42,13 @@ export class AuditLog {
   @Column({ type: 'uuid', nullable: true })
   targetId: string | null;
 
+  /* ── Contexte de connexion (optionnel — absent des entrées historiques) ── */
+  @Column({ type: 'varchar', length: 45, nullable: true })
+  ip: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  device: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 }

@@ -1,4 +1,5 @@
 // src/dashboards/livreur/components/Sidebar.tsx
+import { useTranslation } from 'react-i18next';
 import type { PageId } from '../data/livreurData';
 import { fmtGNF } from '../data/livreurData';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
@@ -27,35 +28,45 @@ function getInitials(name: string): string {
   return name.trim().split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
 }
 
-function buildNavPrincipal(encoursCount: number): NavItem[] {
+function buildNavPrincipal(t: (k: string) => string, encoursCount: number): NavItem[] {
   return [
-    { id:'overview',   icon:'fa-chart-pie',          label:"Vue d'ensemble"                                                       },
-    { id:'missions',   icon:'fa-motorcycle',          label:'Missions disponibles'                                                },
-    { id:'encours',    icon:'fa-route',               label:'En cours', ...(encoursCount > 0 ? { badge: encoursCount, bCls:'g' } : {}) },
-    { id:'historique', icon:'fa-clock-rotate-left',   label:'Historique'                                                          },
+    { id:'overview',   icon:'fa-chart-pie',          label: t('livreurLayout.sidebar.items.overview')                            },
+    { id:'missions',   icon:'fa-motorcycle',          label: t('livreurLayout.sidebar.items.missions')                           },
+    { id:'encours',    icon:'fa-route',               label: t('livreurLayout.sidebar.items.encours'), ...(encoursCount > 0 ? { badge: encoursCount, bCls:'g' } : {}) },
+    { id:'historique', icon:'fa-clock-rotate-left',   label: t('livreurLayout.sidebar.items.historique')                         },
   ];
 }
-const NAV_RESEAU: NavItem[] = [
-  { id:'boutiques', icon:'fa-store',       label:'Mes boutiques'                            },
-];
-const NAV_FINANCES: NavItem[] = [
-  { id:'revenus', icon:'fa-coins',  label:'Mes revenus'   },
-];
-const NAV_COMPTE: NavItem[] = [
-  { id:'zone',       icon:'fa-map-location-dot', label:'Ma zone de livraison'             },
-  { id:'evaluation', icon:'fa-user-plus',        label:'Ajouter un correspondant'         },
-  { id:'parametres', icon:'fa-gear',             label:'Paramètres'                       },
-];
+function buildNavReseau(t: (k: string) => string): NavItem[] {
+  return [
+    { id:'boutiques', icon:'fa-store', label: t('livreurLayout.sidebar.items.boutiques') },
+  ];
+}
+function buildNavFinances(t: (k: string) => string): NavItem[] {
+  return [
+    { id:'revenus', icon:'fa-coins', label: t('livreurLayout.sidebar.items.revenus') },
+  ];
+}
+function buildNavCompte(t: (k: string) => string): NavItem[] {
+  return [
+    { id:'zone',       icon:'fa-map-location-dot', label: t('livreurLayout.sidebar.items.zone')       },
+    { id:'evaluation', icon:'fa-user-plus',        label: t('livreurLayout.sidebar.items.evaluation') },
+    { id:'parametres', icon:'fa-gear',             label: t('livreurLayout.sidebar.items.parametres') },
+  ];
+}
 
 export default function Sidebar({
   activePage, isOpen, isOnline, todayEarn,
   avatarUrl, livreurName, rating, totalDeliveries, encoursCount = 0,
   onNavigate, onToggleOnline, onGoHome,
 }: Props) {
-  const navPrincipal = buildNavPrincipal(encoursCount);
-  const displayName  = livreurName || 'Mon profil';
+  const { t } = useTranslation();
+  const navPrincipal = buildNavPrincipal(t, encoursCount);
+  const navReseau    = buildNavReseau(t);
+  const navFinances  = buildNavFinances(t);
+  const navCompte    = buildNavCompte(t);
+  const displayName  = livreurName || t('livreurLayout.sidebar.defaultName');
   const ratingLabel  = typeof rating === 'number' && Number.isFinite(rating) ? rating.toFixed(1) : '—';
-  const deliveriesLabel = totalDeliveries != null ? `${totalDeliveries} livraison${totalDeliveries > 1 ? 's' : ''}` : '0 livraison';
+  const deliveriesLabel = t('livreurLayout.sidebar.deliveriesLabel', { count: totalDeliveries ?? 0 });
 
   return (
     <nav className={`${styles.sb} ${isOpen ? styles.open : ''}`}>
@@ -83,7 +94,7 @@ export default function Sidebar({
 
           {/* Gains du jour */}
           <div className={styles.todayEarn}>
-            <div className={styles.teLabel}>Gains aujourd'hui</div>
+            <div className={styles.teLabel}>{t('livreurLayout.sidebar.todayEarnLabel')}</div>
             <div className={styles.teVal}>{fmtGNF(todayEarn)}</div>
           </div>
 
@@ -91,7 +102,7 @@ export default function Sidebar({
           <div className={`${styles.onlineToggle} ${isOnline ? styles.onlineOn : styles.onlineOff}`}>
             <div className={styles.otTxt}>
               <span className={`${styles.otDot} ${isOnline ? styles.dotGreen : styles.dotGray}`} />
-              <span>{isOnline ? 'En ligne · disponible' : 'Hors ligne · pause'}</span>
+              <span>{isOnline ? t('livreurLayout.sidebar.online') : t('livreurLayout.sidebar.offline')}</span>
             </div>
             <label className={styles.otSwitch}>
               <input type="checkbox" checked={isOnline} onChange={onToggleOnline} />
@@ -114,18 +125,18 @@ export default function Sidebar({
           <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={onNavigate} />
         ))}
 
-        <div className={styles.sbSect}>Réseau &amp; Boutiques</div>
-        {NAV_RESEAU.map(item => (
+        <div className={styles.sbSect}>{t('livreurLayout.sidebar.sections.reseau')}</div>
+        {navReseau.map(item => (
           <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={onNavigate} />
         ))}
 
-        <div className={styles.sbSect}>Finances</div>
-        {NAV_FINANCES.map(item => (
+        <div className={styles.sbSect}>{t('livreurLayout.sidebar.sections.finances')}</div>
+        {navFinances.map(item => (
           <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={onNavigate} />
         ))}
 
-        <div className={styles.sbSect}>Mon compte</div>
-        {NAV_COMPTE.map(item => (
+        <div className={styles.sbSect}>{t('livreurLayout.sidebar.sections.compte')}</div>
+        {navCompte.map(item => (
           <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={onNavigate} />
         ))}
       </div>

@@ -1,0 +1,12 @@
+{
+  "livreurMissionCard": {
+    "badgeUrgent": "🔥 Urgent",
+    "badgeNew": "Awaiting your confirmation",
+    "badgePrep": "Being prepared",
+    "missionUrgente": "Urgent mission",
+    "voirCommande": "View order",
+    "accepter": "Accept",
+    "carte": "Map",
+    "refuserTitle": "Decline this mission"
+  }
+}

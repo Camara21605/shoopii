@@ -1,0 +1,36 @@
+{
+  "partenaireCommissions": {
+    "page": {
+      "balanceLabel": "Commissions disponibles",
+      "withdrawBtn": "Retirer",
+      "historiqueBtn": "Historique",
+      "kpis": {
+        "totalGagne": "Total gagné",
+        "ceMois": "Ce mois",
+        "tauxVentes": "Sur ventes entreprises",
+        "tauxLivraisons": "Sur courses livreurs"
+      },
+      "tableTitle": "Commissions récentes",
+      "empty": "Aucune commission pour le moment",
+      "columns": {
+        "source": "Source",
+        "type": "Type",
+        "detail": "Détail",
+        "date": "Date",
+        "montant": "Montant"
+      }
+    },
+    "withdrawModal": {
+      "title": "Retirer mes commissions",
+      "soldeDisponible": "Solde disponible : {{balance}}",
+      "montantLabel": "Montant à retirer (GNF)",
+      "montantPlaceholder": "Max. {{max}}",
+      "erreurSuperieur": "Montant supérieur au solde disponible",
+      "erreurInvalide": "Montant invalide",
+      "envoi": "Envoi…",
+      "confirmerBtn": "Confirmer le retrait",
+      "successToast": "Retrait de {{amount}} envoyé",
+      "errorToast": "Erreur lors du retrait"
+    }
+  }
+}

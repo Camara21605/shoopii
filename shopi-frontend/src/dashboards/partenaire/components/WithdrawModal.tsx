@@ -10,6 +10,7 @@
  * ================================================================ */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/GenerateCodeModal.module.css';
 import { withdrawWallet } from '@/shared/services/walletApi';
 import { fmtGnf } from '../data/partenaireData';
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function WithdrawModal({ balance, onClose, onToast, onSuccess }: Props) {
+  const { t } = useTranslation();
   const [amount, setAmount] = useState('');
   const [busy, setBusy]     = useState(false);
 
@@ -34,10 +36,10 @@ export default function WithdrawModal({ balance, onClose, onToast, onSuccess }: 
     try {
       const res = await withdrawWallet({ amount: amountNum });
       onSuccess(res.balance);
-      onToast(`Retrait de ${fmtGnf(amountNum)} envoyé`, 's');
+      onToast(t('partenaireCommissions.withdrawModal.successToast', { amount: fmtGnf(amountNum) }), 's');
       onClose();
     } catch (err: any) {
-      onToast(err?.message ?? 'Erreur lors du retrait', 'w');
+      onToast(err?.message ?? t('partenaireCommissions.withdrawModal.errorToast'), 'w');
     } finally {
       setBusy(false);
     }
@@ -48,12 +50,12 @@ export default function WithdrawModal({ balance, onClose, onToast, onSuccess }: 
       <div className={styles.modal}>
         <button className={styles.x} onClick={onClose}><i className="fas fa-xmark" /></button>
         <div className={styles.head}>
-          <div className={styles.title}>Retirer mes commissions</div>
-          <div className={styles.sub}>Solde disponible : {fmtGnf(balance)}</div>
+          <div className={styles.title}>{t('partenaireCommissions.withdrawModal.title')}</div>
+          <div className={styles.sub}>{t('partenaireCommissions.withdrawModal.soldeDisponible', { balance: fmtGnf(balance) })}</div>
         </div>
         <div className={styles.body}>
           <div className={styles.fld}>
-            <label className={styles.lbl}>Montant à retirer (GNF)</label>
+            <label className={styles.lbl}>{t('partenaireCommissions.withdrawModal.montantLabel')}</label>
             <input
               className={styles.in}
               type="number"
@@ -61,19 +63,19 @@ export default function WithdrawModal({ balance, onClose, onToast, onSuccess }: 
               max={balance}
               value={amount}
               onChange={e => setAmount(e.target.value)}
-              placeholder={`Max. ${balance.toLocaleString('fr-FR')}`}
+              placeholder={t('partenaireCommissions.withdrawModal.montantPlaceholder', { max: balance.toLocaleString('fr-FR') })}
               autoFocus
             />
             {amount.trim() !== '' && !valid && (
               <div style={{ fontSize: 11, color: 'var(--rose, #E11D48)', marginTop: 6 }}>
-                {amountNum > balance ? 'Montant supérieur au solde disponible' : 'Montant invalide'}
+                {amountNum > balance ? t('partenaireCommissions.withdrawModal.erreurSuperieur') : t('partenaireCommissions.withdrawModal.erreurInvalide')}
               </div>
             )}
           </div>
           <button className={styles.btn} onClick={submit} disabled={busy || !valid}>
             {busy
-              ? <><i className="fas fa-spinner fa-spin" /> Envoi…</>
-              : <><i className="fas fa-arrow-up-from-bracket" /> Confirmer le retrait</>
+              ? <><i className="fas fa-spinner fa-spin" /> {t('partenaireCommissions.withdrawModal.envoi')}</>
+              : <><i className="fas fa-arrow-up-from-bracket" /> {t('partenaireCommissions.withdrawModal.confirmerBtn')}</>
             }
           </button>
         </div>

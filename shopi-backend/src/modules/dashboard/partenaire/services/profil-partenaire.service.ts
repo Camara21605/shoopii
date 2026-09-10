@@ -19,6 +19,7 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In }   from 'typeorm';
+import * as crypto          from 'crypto';
 
 import { Partner }       from 'src/database/entities/profiles/partenaire-profile.entity';
 import { User }          from 'src/database/entities/user.entity';
@@ -73,6 +74,9 @@ export interface PartenaireParametresResponse {
   totalCompanies:     number;
   totalDeliveries:    number;
   totalCorrespondants:number;
+  /* Lien de parrainage */
+  referralSlug:       string | null;
+  referralClicks:     number;
   /* Sécurité */
   twoFaEnabled:   boolean;
   twoFaMethod:    string | null;
@@ -160,7 +164,8 @@ export class ProfilPartenaireService {
     ]);
     if (!partner) throw new NotFoundException('Profil partenaire introuvable.');
 
-    return this.toResponse(partner, user, currentSessionId);
+    const withSlug = await this.ensureReferralSlug(partner);
+    return this.toResponse(withSlug, user, currentSessionId);
   }
 
   /* ──────────────────────────────────────────────────────────
@@ -313,6 +318,30 @@ export class ProfilPartenaireService {
   }
 
   /* ──────────────────────────────────────────────────────────
+   * HELPER — génère paresseusement le slug de parrainage (une seule
+   * fois, jamais régénéré ensuite) — voir partenaire-profile.entity.ts
+   * § LIEN DE PARRAINAGE pour le mécanisme complet.
+   * ────────────────────────────────────────────────────────── */
+  private async ensureReferralSlug(partner: Partner): Promise<Partner> {
+    if (partner.referralSlug) return partner;
+
+    /* Pas de décomposition NFD/accents ici (contrairement à
+     * generateUniqueUsername() dans auth.service.ts) : un slug n'a pas
+     * besoin d'être lisible caractère par caractère, juste stable — les
+     * accents sont simplement filtrés par le remplacement ci-dessous. */
+    const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
+    const base = normalize(partner.name) || 'partenaire';
+
+    let slug = base;
+    while (await this.partnerRepo.findOne({ where: { referralSlug: slug } })) {
+      slug = `${base}-${crypto.randomBytes(3).toString('hex')}`;
+    }
+
+    partner.referralSlug = slug;
+    return this.partnerRepo.save(partner);
+  }
+
+  /* ──────────────────────────────────────────────────────────
    * HELPER — findOrFail
    * ────────────────────────────────────────────────────────── */
   async findOrFail(userId: string): Promise<Partner> {
@@ -359,6 +388,8 @@ export class ProfilPartenaireService {
       totalCompanies:     partner.totalCompanies,
       totalDeliveries:    partner.totalDeliveries,
       totalCorrespondants:partner.totalCorrespondants,
+      referralSlug:   partner.referralSlug   ?? null,
+      referralClicks: partner.referralClicks ?? 0,
       twoFaEnabled:   partner.twoFaEnabled,
       twoFaMethod:    partner.twoFaMethod  ?? null,
       currentSession,

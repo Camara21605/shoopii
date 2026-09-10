@@ -1,0 +1,27 @@
+{
+  "livreurMissions": {
+    "filters": {
+      "tout": "All",
+      "express": "Express ⚡",
+      "standard": "Standard",
+      "urgentes": "Urgent",
+      "proches": "Nearby"
+    },
+    "autoAccept": "Auto-accept missions <5km",
+    "enAttente": "pending",
+    "chargement": "Loading missions…",
+    "empty": {
+      "title": "No missions right now",
+      "sub": "You'll be notified as soon as a customer picks you as their courier."
+    },
+    "toasts": {
+      "loadError": "❌ Unable to load missions",
+      "accepted": "✅ Mission {{id}} accepted",
+      "acceptError": "❌ Unable to accept this mission",
+      "refused": "✕ Mission {{id}} declined",
+      "refuseError": "❌ Unable to decline this mission",
+      "autoAcceptOn": "🤖 Auto-accept enabled",
+      "autoAcceptOff": "⏸️ Disabled"
+    }
+  }
+}

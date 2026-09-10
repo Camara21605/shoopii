@@ -3,6 +3,7 @@
 // public, intégré dans le dashboard livreur.
 
 import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCorrespondantProfil } from '../../../shared/profils/profil-correspondant/hooks/useCorrespondantProfil';
 import { useAuthGate } from '../../../shared/hooks/useAuthGate';
 
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Props) {
+  const { t } = useTranslation();
   const {
     profil, loading, error, suivi, updateFollowState,
     aboutTags, infosPratiques, schedule, services, zones, paysPartenaires,
@@ -47,13 +49,13 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
   }, [onPop]);
 
   const onToast = useCallback((msg: string) => onPop(msg, 'i'), [onPop]);
-  const onMessage = useCallback(() => onPop(`💬 Message à ${profil?.nom}`, 'i'), [profil?.nom, onPop]);
-  const onShare   = useCallback(() => onPop('🔗 Lien du profil copié', 'i'), [onPop]);
+  const onMessage = useCallback(() => onPop(t('livreurProfilCorrespondantReseau.messageToast', { nom: profil?.nom }), 'i'), [profil?.nom, onPop, t]);
+  const onShare   = useCallback(() => onPop(t('livreurProfilCorrespondantReseau.lienCopieToast'), 'i'), [onPop, t]);
 
   const backBtn = (
     <div className={shared.page} style={{ paddingBottom: 0 }}>
       <button onClick={onBack} style={{ background: 'var(--white)', border: '1px solid var(--bdr)', borderRadius: 'var(--pill)', padding: '7px 16px', fontSize: 12, fontWeight: 700, color: 'var(--teal)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-        <i className="fas fa-arrow-left" /> Retour aux correspondants
+        <i className="fas fa-arrow-left" /> {t('livreurProfilCorrespondantReseau.retourCorrespondants')}
       </button>
     </div>
   );
@@ -63,7 +65,7 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
       <>
         {backBtn}
         <div className={`${styles.page} ${styles.pageDark}`}>
-          <div className={styles.state}><i className="fas fa-spinner fa-spin" /> Chargement du profil…</div>
+          <div className={styles.state}><i className="fas fa-spinner fa-spin" /> {t('livreurProfilCorrespondantReseau.chargementProfil')}</div>
         </div>
       </>
     );
@@ -76,7 +78,7 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
         <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}>
             <i className="fas fa-triangle-exclamation" />
-            {error ?? 'Correspondant introuvable.'}
+            {error ?? t('livreurProfilCorrespondantReseau.correspondantIntrouvable')}
           </div>
         </div>
       </>

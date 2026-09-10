@@ -4,6 +4,7 @@
  * ================================================================ */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/ActeursPage.module.css';
 import { apiFetch } from '@/shared/services/apiFetch';
 import ActeurDetailModal from '../components/ActeurDetailModal';
@@ -40,6 +41,7 @@ interface ActeursData {
 type Filter = 'all' | ActeurType;
 
 export default function ActeursPage({ onReport }: Props) {
+  const { t } = useTranslation();
   const [data, setData]       = useState<ActeursData | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter]   = useState<Filter>('all');
@@ -52,10 +54,10 @@ export default function ActeursPage({ onReport }: Props) {
   }, []);
 
   const filters: { id: Filter; icon?: string; label: string; count: () => number }[] = [
-    { id: 'all', label: 'Tous',          count: () => data?.total ?? 0 },
-    { id: 'ent', icon: 'fa-store',      label: 'Entreprises',    count: () => data?.nbCompanies ?? 0 },
-    { id: 'lvr', icon: 'fa-motorcycle', label: 'Livreurs',       count: () => data?.nbDeliveries ?? 0 },
-    { id: 'cor', icon: 'fa-map-pin',    label: 'Correspondants', count: () => data?.nbCorrespondants ?? 0 },
+    { id: 'all', label: t('partenaireActeurs.page.filters.all'), count: () => data?.total ?? 0 },
+    { id: 'ent', icon: 'fa-store',      label: t('partenaireActeurs.page.filters.ent'), count: () => data?.nbCompanies ?? 0 },
+    { id: 'lvr', icon: 'fa-motorcycle', label: t('partenaireActeurs.page.filters.lvr'), count: () => data?.nbDeliveries ?? 0 },
+    { id: 'cor', icon: 'fa-map-pin',    label: t('partenaireActeurs.page.filters.cor'), count: () => data?.nbCorrespondants ?? 0 },
   ];
 
   const list = (data?.acteurs ?? []).filter(a => filter === 'all' || a.type === filter);
@@ -81,7 +83,7 @@ export default function ActeursPage({ onReport }: Props) {
       {list.length === 0 ? (
         <div style={{ padding: '48px', textAlign: 'center', color: 'var(--muted)', fontSize: 14 }}>
           <i className="fas fa-users" style={{ fontSize: 32, marginBottom: 12, display: 'block', opacity: 0.4 }} />
-          Aucun acteur dans cette catégorie
+          {t('partenaireActeurs.page.empty')}
         </div>
       ) : (
         <div className={styles.grid}>
@@ -96,14 +98,14 @@ export default function ActeursPage({ onReport }: Props) {
                   <div className={styles.meta}>{a.meta}</div>
                 </div>
                 <span className={`${styles.state} ${styles['state_' + a.statut]}`}>
-                  {a.statut === 'act' ? 'Actif' : 'En attente'}
+                  {t(`partenaireActeurs.statuts.${a.statut}`)}
                 </span>
               </div>
 
               <div className={styles.foot}>
                 <div className={styles.footActs}>
-                  <button className={styles.gerer} onClick={() => setDetailActor({ id: a.id, type: a.type })}>Gérer</button>
-                  <button className={styles.flag} title="Signaler cet acteur" onClick={() => onReport(a.userId, a.nom)}><i className="fas fa-flag" /></button>
+                  <button className={styles.gerer} onClick={() => setDetailActor({ id: a.id, type: a.type })}>{t('partenaireActeurs.page.gererBtn')}</button>
+                  <button className={styles.flag} title={t('partenaireActeurs.reportTitle')} onClick={() => onReport(a.userId, a.nom)}><i className="fas fa-flag" /></button>
                 </div>
               </div>
             </div>

@@ -10,6 +10,7 @@
  * ================================================================ */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../../styles/ParamsShared.module.css';
 import type { PartenaireData } from '../../hooks/usePartenaireParametres';
 
@@ -32,24 +33,18 @@ interface PaiementMethode {
   isDefault: boolean;
 }
 
-/* Libellés et icônes des méthodes de paiement */
-const PAY_META: Record<string, { label: string; icon: string; logoCls: string }> = {
-  om:   { label: 'Orange Money',      icon: 'fa-mobile-screen-button', logoCls: s.payLogoOm   },
-  mtn:  { label: 'MTN Mobile Money',  icon: 'fa-mobile-screen-button', logoCls: s.payLogoMtn  },
-  bank: { label: 'Virement bancaire', icon: 'fa-building-columns',     logoCls: s.payLogoBank },
+/* Icônes des méthodes de paiement — Orange Money/MTN Mobile Money sont des
+ * noms de marque (non traduits, comme WhatsApp) ; seul "Virement bancaire"
+ * (bank) est un libellé générique traduit via t(). */
+const PAY_ICON: Record<string, { icon: string; logoCls: string }> = {
+  om:   { icon: 'fa-mobile-screen-button', logoCls: s.payLogoOm   },
+  mtn:  { icon: 'fa-mobile-screen-button', logoCls: s.payLogoMtn  },
+  bank: { icon: 'fa-building-columns',     logoCls: s.payLogoBank },
 };
+const PAY_BRAND_LABEL: Record<string, string> = { om: 'Orange Money', mtn: 'MTN Mobile Money' };
 
-const FREQUENCES = [
-  { val: 'weekly',  label: 'Hebdomadaire' },
-  { val: 'monthly', label: 'Mensuelle' },
-  { val: 'manual',  label: 'Manuelle (à la demande)' },
-];
-
-const STATUTS_FISCAUX = [
-  { val: 'particulier',       label: 'Particulier' },
-  { val: 'auto-entrepreneur', label: 'Auto-entrepreneur' },
-  { val: 'entreprise',        label: 'Entreprise' },
-];
+const FREQUENCE_IDS = ['weekly', 'monthly', 'manual'] as const;
+const STATUT_FISCAL_IDS = ['particulier', 'auto-entrepreneur', 'entreprise'] as const;
 
 /* Données demo — seront remplacées par les données API */
 const METHODES_DEMO: PaiementMethode[] = [
@@ -61,6 +56,7 @@ const METHODES_DEMO: PaiementMethode[] = [
 export default function SecPaiement({
   data: _data, saving, dirty, markClean, saveTrigger, onSave, onToast
 }: Props) {
+  const { t } = useTranslation();
   /* État entièrement local — pas encore stocké dans l'entité Partner */
   const [selectedMethod, setSelectedMethod] = useState<string | null>('om');
   const [frequence,  setFrequence]  = useState('monthly');
@@ -77,7 +73,11 @@ export default function SecPaiement({
   async function handleSave() {
     /* TODO (backend) : quand l'entité Partner aura les champs paiement */
     markClean();
-    onToast('⚠️ Paiement : fonctionnalité en cours d\'implémentation backend', 'w');
+    onToast(t('partenaireParametres.secPaiement.backendToast'), 'w');
+  }
+
+  function payLabel(type: string): string {
+    return PAY_BRAND_LABEL[type] ?? t('partenaireParametres.secPaiement.methodesCard.virementBancaire');
   }
 
   return (
@@ -86,13 +86,13 @@ export default function SecPaiement({
       <div className={s.fc}>
         <div className={s.fcHd}>
           <div>
-            <div className={s.fcTtl}><i className="fas fa-wallet" /> Coordonnées de versement</div>
-            <div className={s.fcSub}>Choisissez la méthode par défaut pour recevoir vos commissions.</div>
+            <div className={s.fcTtl}><i className="fas fa-wallet" /> {t('partenaireParametres.secPaiement.methodesCard.title')}</div>
+            <div className={s.fcSub}>{t('partenaireParametres.secPaiement.methodesCard.sub')}</div>
           </div>
         </div>
         <div className={s.fcBody}>
           {METHODES_DEMO.map(m => {
-            const meta = PAY_META[m.type] ?? PAY_META.om;
+            const meta = PAY_ICON[m.type] ?? PAY_ICON.om;
             const isOn = selectedMethod === m.type;
             return (
               <div
@@ -102,16 +102,16 @@ export default function SecPaiement({
               >
                 <div className={`${s.payLogo} ${meta.logoCls}`}><i className={`fas ${meta.icon}`} /></div>
                 <div className={s.payMain}>
-                  <div className={s.payNm}>{m.nom || meta.label}</div>
+                  <div className={s.payNm}>{m.nom || payLabel(m.type)}</div>
                   <div className={s.payNum}>{m.numero}</div>
                 </div>
-                {m.isDefault && <span className={s.payDefault}>Par défaut</span>}
+                {m.isDefault && <span className={s.payDefault}>{t('partenaireParametres.secPaiement.methodesCard.parDefaut')}</span>}
                 <div className={s.payRadio} />
               </div>
             );
           })}
-          <button className={s.addMethod} onClick={() => onToast('➕ Ajouter une méthode de versement', 'i')}>
-            <i className="fas fa-plus" /> Ajouter une méthode de versement
+          <button className={s.addMethod} onClick={() => onToast(t('partenaireParametres.secPaiement.methodesCard.ajouterToast'), 'w')}>
+            <i className="fas fa-plus" /> {t('partenaireParametres.secPaiement.methodesCard.ajouterBtn')}
           </button>
         </div>
       </div>
@@ -119,25 +119,25 @@ export default function SecPaiement({
       {/* ── Préférences de retrait ── */}
       <div className={s.fc}>
         <div className={s.fcHd}>
-          <div className={s.fcTtl}><i className="fas fa-money-bill-transfer" /> Préférences de retrait</div>
+          <div className={s.fcTtl}><i className="fas fa-money-bill-transfer" /> {t('partenaireParametres.secPaiement.preferencesCard.title')}</div>
         </div>
         <div className={s.fcBody}>
           <div className={s.grid2}>
             <div className={s.fg}>
-              <label className={s.fl}>Seuil de retrait automatique</label>
+              <label className={s.fl}>{t('partenaireParametres.secPaiement.preferencesCard.seuilLabel')}</label>
               <input
                 className={s.fin}
                 type="number"
                 value={seuil}
                 onChange={e => { setSeuil(e.target.value); dirty(); }}
-                placeholder="Ex: 500000 GNF"
+                placeholder={t('partenaireParametres.secPaiement.preferencesCard.seuilPlaceholder')}
               />
-              <span className={s.hint}>Versement auto dès que ce solde est atteint.</span>
+              <span className={s.hint}>{t('partenaireParametres.secPaiement.preferencesCard.seuilHint')}</span>
             </div>
             <div className={s.fg}>
-              <label className={s.fl}>Fréquence</label>
+              <label className={s.fl}>{t('partenaireParametres.secPaiement.preferencesCard.frequenceLabel')}</label>
               <select className={s.fin} value={frequence} onChange={e => { setFrequence(e.target.value); dirty(); }}>
-                {FREQUENCES.map(f => <option key={f.val} value={f.val}>{f.label}</option>)}
+                {FREQUENCE_IDS.map(id => <option key={id} value={id}>{t(`partenaireParametres.secPaiement.preferencesCard.frequences.${id}`)}</option>)}
               </select>
             </div>
           </div>
@@ -145,8 +145,8 @@ export default function SecPaiement({
           <div className={s.trow} style={{ borderTop: '1px solid var(--bdr)', paddingTop: 14 }}>
             <div className={s.trowIc}><i className="fas fa-bolt" /></div>
             <div className={s.trowMain}>
-              <div className={s.trowT}>Versement automatique</div>
-              <div className={s.trowD}>Recevez vos commissions sans demande manuelle.</div>
+              <div className={s.trowT}>{t('partenaireParametres.secPaiement.preferencesCard.virAutoTitle')}</div>
+              <div className={s.trowD}>{t('partenaireParametres.secPaiement.preferencesCard.virAutoDesc')}</div>
             </div>
             <div
               className={`${s.toggle} ${virAuto ? s.toggleOn : ''}`}
@@ -161,26 +161,26 @@ export default function SecPaiement({
       <div className={s.fc}>
         <div className={s.fcHd}>
           <div>
-            <div className={s.fcTtl}><i className="fas fa-file-invoice-dollar" /> Informations fiscales</div>
-            <div className={s.fcSub}>Nécessaires pour la facturation de vos commissions.</div>
+            <div className={s.fcTtl}><i className="fas fa-file-invoice-dollar" /> {t('partenaireParametres.secPaiement.fiscalCard.title')}</div>
+            <div className={s.fcSub}>{t('partenaireParametres.secPaiement.fiscalCard.sub')}</div>
           </div>
         </div>
         <div className={s.fcBody}>
           <div className={s.grid2}>
             <div className={s.fg}>
-              <label className={s.fl}>NIF <span className={s.flOpt}>optionnel</span></label>
+              <label className={s.fl}>{t('partenaireParametres.secPaiement.fiscalCard.nifLabel')} <span className={s.flOpt}>{t('partenaireParametres.secPaiement.fiscalCard.optionnel')}</span></label>
               <input
                 className={s.fin}
                 value={nif}
                 onChange={e => { setNif(e.target.value); dirty(); }}
-                placeholder="Ex. 123456789"
+                placeholder={t('partenaireParametres.secPaiement.fiscalCard.nifPlaceholder')}
               />
-              <span className={s.hint}>Requis au-delà d'un certain volume de commissions.</span>
+              <span className={s.hint}>{t('partenaireParametres.secPaiement.fiscalCard.nifHint')}</span>
             </div>
             <div className={s.fg}>
-              <label className={s.fl}>Statut</label>
+              <label className={s.fl}>{t('partenaireParametres.secPaiement.fiscalCard.statutLabel')}</label>
               <select className={s.fin} value={statutFisc} onChange={e => { setStatutFisc(e.target.value); dirty(); }}>
-                {STATUTS_FISCAUX.map(st => <option key={st.val} value={st.val}>{st.label}</option>)}
+                {STATUT_FISCAL_IDS.map(id => <option key={id} value={id}>{t(`partenaireParametres.secPaiement.fiscalCard.statuts.${id}`)}</option>)}
               </select>
             </div>
           </div>
@@ -190,7 +190,7 @@ export default function SecPaiement({
       {/* ── Derniers retraits (demo) ── */}
       <div className={s.fc}>
         <div className={s.fcHd}>
-          <div className={s.fcTtl}><i className="fas fa-clock-rotate-left" /> Derniers retraits</div>
+          <div className={s.fcTtl}><i className="fas fa-clock-rotate-left" /> {t('partenaireParametres.secPaiement.retraitsCard.title')}</div>
         </div>
         <div className={s.fcBody}>
           <div className={s.wdItem}>
@@ -199,15 +199,15 @@ export default function SecPaiement({
               <div className={s.wdNm}>Orange Money</div>
               <div className={s.wdMeta}>12 jan. 2025 · 14:32</div>
             </div>
-            <div><span className={s.wdAmt}>1 200 000 GNF</span><span className={`${s.wdSt} ${s.wdDone}`}>Versé</span></div>
+            <div><span className={s.wdAmt}>1 200 000 GNF</span><span className={`${s.wdSt} ${s.wdDone}`}>{t('partenaireParametres.secPaiement.retraitsCard.verse')}</span></div>
           </div>
           <div className={s.wdItem}>
             <div className={s.wdIc} style={{ background: 'var(--am-bg)', color: 'var(--amber)' }}><i className="fas fa-hourglass-half" /></div>
             <div className={s.wdMain}>
               <div className={s.wdNm}>MTN Mobile Money</div>
-              <div className={s.wdMeta}>Aujourd'hui · en traitement</div>
+              <div className={s.wdMeta}>{t('partenaireParametres.secPaiement.retraitsCard.aujourdhui')}</div>
             </div>
-            <div><span className={s.wdAmt}>650 000 GNF</span><span className={`${s.wdSt} ${s.wdPend}`}>En cours</span></div>
+            <div><span className={s.wdAmt}>650 000 GNF</span><span className={`${s.wdSt} ${s.wdPend}`}>{t('partenaireParametres.secPaiement.retraitsCard.enCours')}</span></div>
           </div>
         </div>
       </div>

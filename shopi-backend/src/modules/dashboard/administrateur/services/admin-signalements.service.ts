@@ -29,8 +29,9 @@ import { NotificationEventService } from '../../../notifications/events/notifica
 import { NotificationActorType }    from '../../../../database/entities/notification/notification.entitiy';
 import { RedisCacheService }        from '../../../performance-engine/services/redis-cache.service';
 import { PlatformSettingsCacheService } from '../../../performance-engine/services/platform-settings-cache.service';
-import { initials, relTime, userName, escapeHtml } from '../helpers/admin.helpers';
+import { initials, relTime, userName, escapeHtml, interpolate, AuditMeta } from '../helpers/admin.helpers';
 import { SEV_TO_GRAVITE }    from '../helpers/admin.constants';
+import { AdminCommunicationService } from './admin-communication.service';
 
 /** Report.status (base) → statut affiché côté frontend (voir Sidebar/onglets). */
 function mapStatut(status: ReportStatus): 'review' | 'invest' | 'resolved' | 'rejected' {
@@ -63,6 +64,7 @@ export class AdminSignalementsService {
     private readonly zoneService: AdminZoneService,
     private readonly notifEvents: NotificationEventService,
     private readonly cache:       RedisCacheService,
+    private readonly communication: AdminCommunicationService,
 
     @InjectRepository(Report)
     private readonly reportRepo: Repository<Report>,
@@ -233,7 +235,7 @@ export class AdminSignalementsService {
    *
    * L'action est journalisée dans AuditLog.
    */
-  async resolveSignalement(adminUserId: string, id: string) {
+  async resolveSignalement(adminUserId: string, id: string, meta?: AuditMeta) {
     const admin  = await this.zoneService.adminOf(adminUserId);
     const report = await this.reportRepo.findOne({ where: { id } });
 
@@ -255,6 +257,8 @@ export class AdminSignalementsService {
       action:     `a résolu le signalement « ${escapeHtml(report.title)} »`,
       targetType: 'report',
       targetId:   report.id,
+      ip:         meta?.ip ?? null,
+      device:     meta?.device ?? null,
     }));
 
     return { message: 'Signalement résolu.' };
@@ -265,7 +269,7 @@ export class AdminSignalementsService {
    * Purement un changement de statut interne — ne nécessite pas de compte
    * cible identifié, contrairement à warnSignalement ci-dessous.
    */
-  async investigateSignalement(adminUserId: string, id: string) {
+  async investigateSignalement(adminUserId: string, id: string, meta?: AuditMeta) {
     const admin  = await this.zoneService.adminOf(adminUserId);
     const report = await this.reportRepo.findOne({ where: { id } });
     if (!report) throw new NotFoundException('Signalement introuvable.');
@@ -288,6 +292,8 @@ export class AdminSignalementsService {
       action:     `a ouvert une enquête sur le signalement « ${escapeHtml(report.title)} »`,
       targetType: 'report',
       targetId:   report.id,
+      ip:         meta?.ip ?? null,
+      device:     meta?.device ?? null,
     }));
 
     return { message: 'Enquête ouverte.' };
@@ -299,7 +305,7 @@ export class AdminSignalementsService {
    * un signalement créé avec juste un nom libre (pas encore de sélecteur
    * de compte réel côté ReportModal) ne peut pas être ciblé ici.
    */
-  async warnSignalement(adminUserId: string, id: string) {
+  async warnSignalement(adminUserId: string, id: string, meta?: AuditMeta) {
     const admin  = await this.zoneService.adminOf(adminUserId);
     const report = await this.reportRepo.findOne({ where: { id } });
     if (!report) throw new NotFoundException('Signalement introuvable.');
@@ -321,12 +327,16 @@ export class AdminSignalementsService {
       action:     `a averti <b>${escapeHtml(userName(user))}</b> suite au signalement « ${escapeHtml(report.title)} »`,
       targetType: 'user',
       targetId:   report.targetUserId,
+      ip:         meta?.ip ?? null,
+      device:     meta?.device ?? null,
     }));
 
+    const warnedTpl = await this.communication.getTemplate(adminUserId, 'warned');
     await this.notifEvents.notifyActeurAccountWarned({
       recipientType: profile.actorType,
       recipientId:   profile.profileId,
       motif:         report.title,
+      customBody:    warnedTpl ? interpolate(warnedTpl, { acteur: userName(user), motif: report.title }) : null,
     });
 
     /* Marque CE signalement comme fondé — seul un avertissement (l'admin
@@ -355,7 +365,7 @@ export class AdminSignalementsService {
    * contraire — c'est précisément le mécanisme qui protège contre les
    * faux signalements en masse.
    */
-  async rejectSignalement(adminUserId: string, id: string, reason?: string) {
+  async rejectSignalement(adminUserId: string, id: string, reason?: string, meta?: AuditMeta) {
     const admin  = await this.zoneService.adminOf(adminUserId);
     const report = await this.reportRepo.findOne({ where: { id } });
     if (!report) throw new NotFoundException('Signalement introuvable.');
@@ -378,6 +388,8 @@ export class AdminSignalementsService {
       action:     `a rejeté le signalement « ${escapeHtml(report.title)} »${reason ? ` — ${escapeHtml(reason)}` : ''}`,
       targetType: 'report',
       targetId:   report.id,
+      ip:         meta?.ip ?? null,
+      device:     meta?.device ?? null,
     }));
 
     return { message: 'Signalement rejeté.' };

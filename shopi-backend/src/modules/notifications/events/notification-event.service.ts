@@ -1223,6 +1223,8 @@ export class NotificationEventService {
     recipientType: NotificationActorType;
     recipientId:   string;
     acteurNom:     string;
+    /** Modèle personnalisé de l'admin (voir AdminCommunicationService) — remplace le texte par défaut si fourni. */
+    customBody?:   string | null;
   }): Promise<void> {
     try {
       await this.notifService.create({
@@ -1233,7 +1235,7 @@ export class NotificationEventService {
         type:          NotificationType.ACCOUNT_APPROVED,
         priority:      NotificationPriority.HIGH,
         title:         'Compte validé ✅',
-        body:          `Votre compte a été validé par l'administrateur. Bienvenue sur Shopi !`,
+        body:          params.customBody || `Votre compte a été validé par l'administrateur. Bienvenue sur Shopi !`,
         /* BUG CORRIGÉ — '/dashboard' seul (sans segment de rôle) n'existe
          * pas côté frontend. */
         actionUrl:     this.resolveOwnAccountUrl(params.recipientType),
@@ -1253,6 +1255,7 @@ export class NotificationEventService {
   async notifyActeurAccountRejected(params: {
     recipientType: NotificationActorType;
     recipientId:   string;
+    customBody?:   string | null;
   }): Promise<void> {
     try {
       await this.notifService.create({
@@ -1263,7 +1266,7 @@ export class NotificationEventService {
         type:          NotificationType.ACCOUNT_SUSPENDED,
         priority:      NotificationPriority.HIGH,
         title:         'Demande refusée ❌',
-        body:          `Votre demande de compte n'a pas été acceptée. Contactez le support pour plus d'informations.`,
+        body:          params.customBody || `Votre demande de compte n'a pas été acceptée. Contactez le support pour plus d'informations.`,
         actionUrl:     '/support',
         resourceType:  'account',
         resourceId:    params.recipientId,
@@ -1284,6 +1287,7 @@ export class NotificationEventService {
     recipientType: NotificationActorType;
     recipientId:   string;
     motif?:        string | null;
+    customBody?:   string | null;
   }): Promise<void> {
     try {
       await this.notifService.create({
@@ -1294,9 +1298,9 @@ export class NotificationEventService {
         type:          NotificationType.ACCOUNT_SUSPENDED,
         priority:      NotificationPriority.URGENT,
         title:         'Compte suspendu 🚫',
-        body:          params.motif
+        body:          params.customBody || (params.motif
           ? `Votre compte a été suspendu par l'administrateur. Motif : ${params.motif}`
-          : `Votre compte a été suspendu par l'administrateur. Contactez le support pour plus d'informations.`,
+          : `Votre compte a été suspendu par l'administrateur. Contactez le support pour plus d'informations.`),
         actionUrl:     '/support',
         resourceType:  'account',
         resourceId:    params.recipientId,
@@ -1316,6 +1320,7 @@ export class NotificationEventService {
     recipientType: NotificationActorType;
     recipientId:   string;
     motif?:        string | null;
+    customBody?:   string | null;
   }): Promise<void> {
     try {
       await this.notifService.create({
@@ -1326,9 +1331,9 @@ export class NotificationEventService {
         type:          NotificationType.SYSTEM_ANNOUNCEMENT,
         priority:      NotificationPriority.URGENT,
         title:         'Avertissement ⚠️',
-        body:          params.motif
+        body:          params.customBody || (params.motif
           ? `Vous avez reçu un avertissement de l'administrateur. Motif : ${params.motif}`
-          : `Vous avez reçu un avertissement de l'administrateur suite à un signalement.`,
+          : `Vous avez reçu un avertissement de l'administrateur suite à un signalement.`),
         actionUrl:     '/support',
         resourceType:  'account',
         resourceId:    params.recipientId,
@@ -1347,6 +1352,7 @@ export class NotificationEventService {
   async notifyActeurAccountReactivated(params: {
     recipientType: NotificationActorType;
     recipientId:   string;
+    customBody?:   string | null;
   }): Promise<void> {
     try {
       await this.notifService.create({
@@ -1357,7 +1363,7 @@ export class NotificationEventService {
         type:          NotificationType.ACCOUNT_APPROVED,
         priority:      NotificationPriority.HIGH,
         title:         'Compte réactivé ✅',
-        body:          `Votre compte a été réactivé par l'administrateur. Vous pouvez de nouveau utiliser Shopi normalement.`,
+        body:          params.customBody || `Votre compte a été réactivé par l'administrateur. Vous pouvez de nouveau utiliser Shopi normalement.`,
         actionUrl:     this.resolveOwnAccountUrl(params.recipientType),
         resourceType:  'account',
         resourceId:    params.recipientId,

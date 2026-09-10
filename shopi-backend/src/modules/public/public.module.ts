@@ -20,6 +20,7 @@ import { Category }      from 'src/database/entities/entreprise.table/category.e
 import { SubCategory }   from 'src/database/entities/entreprise.table/sub-category.entity';
 import { User }          from 'src/database/entities/user.entity';
 import { Commande }      from 'src/database/entities/commande/commande.entity';
+import { Partner }       from 'src/database/entities/profiles/partenaire-profile.entity';
 
 import { NotificationsModule } from 'src/modules/notifications/notifications.module';
 import { PerformanceModule }   from 'src/modules/performance-engine/performance.module';
@@ -34,7 +35,9 @@ import { PublicBroadcastService }  from './public-broadcast.service';
     /* Commande ajouté pour GET /public/landing-stats (PublicService.getLandingStats
      * lit la dernière commande livrée) — absent ici causait un crash au démarrage
      * (CommandeRepository introuvable dans PublicModule). */
-    TypeOrmModule.forFeature([Product, Company, Delivery, Correspondent, CorrespondantHoraire, CompanyAvis, Promotion, Follow, ProductStory, StoryView, StoryLike, Category, SubCategory, User, Commande]),
+    /* Partner ajouté pour GET /public/rejoindre/:slug (lien de parrainage
+     * partenaire) — voir PublicService.resolveReferral(). */
+    TypeOrmModule.forFeature([Product, Company, Delivery, Correspondent, CorrespondantHoraire, CompanyAvis, Promotion, Follow, ProductStory, StoryView, StoryLike, Category, SubCategory, User, Commande, Partner]),
     NotificationsModule, // NotificationBroadcastService — pousse story:viewed en direct au propriétaire de la story
     PerformanceModule,   // PlatformSettingsCacheService — GET /public/branding
   ],

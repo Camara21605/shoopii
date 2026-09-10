@@ -139,8 +139,15 @@
 /* Bouton recherche mobile — voir .tb-ic-search dans la media query
    ≤640px : .tb-srch (recherche desktop) est masquée à cette largeur,
    ce bouton est la seule façon d'y accéder sur téléphone. Masqué par
-   défaut (desktop a déjà .tb-srch en ligne). */
-.tb-ic-search { display: none; }
+   défaut (desktop a déjà .tb-srch en ligne).
+   BUG CORRIGÉ — `.tb-ic-search{display:none}` et `.tb-ic{display:flex}`
+   ont la même spécificité (une classe chacun) ; comme `.tb-ic` est
+   déclaré plus bas dans ce fichier, il gagnait la cascade et affichait
+   ce bouton EN PLUS de la barre .tb-srch sur desktop (deux "recherches"
+   visibles en même temps dans le header). Sélecteur combiné
+   `.tb-ic.tb-ic-search` (2 classes) pour gagner face à `.tb-ic` seul,
+   quel que soit l'ordre des règles dans le fichier. */
+.tb-ic.tb-ic-search { display: none; }
 
 /* Bouton menu mobile (masqué sur desktop, affiché ≤640px) */
 .hamburger {
@@ -376,7 +383,11 @@
   .tb-acts { gap: 2px; }
   .tb-ava-wrap { display: block; }
 
-  .tb-ic-search { display: flex; }
+  /* Même sélecteur à 2 classes que la règle de base (voir plus haut) —
+   * sinon cette règle ≤640px, de spécificité plus faible, perdrait contre
+   * `.tb-ic.tb-ic-search{display:none}` et le bouton resterait caché
+   * même sur mobile. */
+  .tb-ic.tb-ic-search { display: flex; }
 
   .tb-bottomnav { display: flex; }
 

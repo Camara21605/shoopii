@@ -6,6 +6,22 @@
  *     → PATCH /correspondant/parametres/zone
  *   onSaveHoraires(horaires[])
  *     → PUT   /correspondant/parametres/zone/horaires
+ *
+ * BUG CORRIGÉ — chaque zone affichait un nombre de colis ("48 colis"…)
+ * entièrement codé en dur dans ZONES_INIT, jamais mis à jour par la
+ * moindre donnée réelle. Retiré plutôt que de continuer à l'afficher.
+ * L'activation/désactivation de zone, elle, EST réelle (persistée dans
+ * data.zonesActives) — seul le compteur était factice.
+ *
+ * LIMITE CONNUE (non corrigée) — contrairement aux dashboards entreprise/
+ * livreur, Correspondent n'a pas de colonne adminId/zoneId reliée au
+ * référentiel géographique réel (GeoZone) : la liste des 6 zones
+ * proposées ici reste une liste statique de communes de Conakry
+ * (ZONES_INIT), pas la vraie zone assignée par un administrateur — un
+ * correspondant basé ailleurs verrait des zones sans rapport avec son
+ * secteur. Corriger ça demanderait d'ajouter cette relation côté
+ * backend (nouvelle colonne + migration) — hors scope d'un correctif de
+ * données factices, à construire séparément si besoin.
  * ================================================================ */
 
 import React, { useState, useEffect } from 'react';
@@ -128,7 +144,6 @@ export default function SecZone({ data, saving, dirty, markClean, saveTrigger, o
                 onKeyDown={e => e.key === 'Enter' && toggleZone(zone.id)}>
                 <div className={s.zoEm}>{zone.em}</div>
                 <div className={s.zoNm}>{zone.nm}</div>
-                <div className={s.zoStat}>{zone.stat}</div>
               </div>
             ))}
           </div>

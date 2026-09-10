@@ -1,0 +1,30 @@
+{
+  "livreurParametres": {
+    "unsavedConfirm": "You have unsaved changes. Leave anyway?",
+    "chargement": "Loading settings…",
+    "reessayer": "Retry",
+    "seDeconnecter": "Log out",
+    "nav": {
+      "tableauDeBord": "Dashboard",
+      "groups": {
+        "identite": "Identity",
+        "activite": "Activity",
+        "finances": "Finances",
+        "compte": "Account"
+      },
+      "items": {
+        "profil": "Personal profile",
+        "docs": "Documents",
+        "zone": "Zones & Hours",
+        "vitesses": "Speeds & Rates",
+        "vehicule": "Vehicle",
+        "paiement": "Payment",
+        "securite": "Security",
+        "notifs": "Notifications",
+        "confidentialite": "Privacy",
+        "langue": "Language",
+        "danger": "Sensitive zone"
+      }
+    }
+  }
+}

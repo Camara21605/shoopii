@@ -11,7 +11,6 @@
         "paiement": "Payment & Billing",
         "commissions": "Shoneya Commissions",
         "documents": "Documents & Verification",
-        "confidentialiteSecurite": "Privacy & Security",
         "securite": "Security",
         "notifs": "Notifications",
         "privacy": "Privacy",
@@ -157,7 +156,11 @@
       "planStandardSub": "Basic plan · Included with your registration",
       "planProSub": "For high-volume stores",
       "planPremiumSub": "Reduced commissions + advanced marketing tools",
-      "tauxParVente": "{{taux}}% / sale"
+      "tauxParVente": "{{taux}}% / sale",
+      "confirmerChangementBtn": "Confirm switch to {{plan}} plan",
+      "changementEnCours": "Changing plan…",
+      "planChangedToast": "✅ Plan changed to {{plan}}",
+      "planChangeErrorToast": "❌ Error while changing plan"
     },
     "documents": {
       "docs": {
@@ -236,21 +239,12 @@
         "emailSub": "Code sent by email to your main address",
         "emailBadge": "Basic"
       },
-      "sessionsTitle": "Active sessions",
-      "sessionsSubtitle": "Devices connected to your store account",
-      "deconnecterTout": "Log out everywhere",
-      "toutesSessionsToast": "🔐 All sessions ended",
+      "sessionsTitle": "Active session",
+      "sessionsSubtitle": "Only one session can be active at a time on your store account",
       "sessionActuelle": "Current session",
-      "revoquer": "Revoke",
-      "sessionTermineeToast": "🔐 Session ended",
-      "sessions": {
-        "chromeWindows": "Chrome · Windows 11",
-        "chromeWindowsSub": "Conakry, Guinea · Now",
-        "safariIphone": "Safari · iPhone 14",
-        "safariIphoneSub": "Conakry, Guinea · 2 hours ago",
-        "chromeAndroid": "Chrome · Android",
-        "chromeAndroidSub": "Coyah, Guinea · Yesterday at 6:34 PM"
-      }
+      "connecteDepuis": "Connected since {{date}}",
+      "deconnecterBtn": "Log out",
+      "sessionUnavailable": "Session information unavailable at the moment."
     },
     "notifs": {
       "savedToast": "✅ Notifications saved",
@@ -455,8 +449,8 @@
       "prenomPlaceholder": "Manager's first name",
       "nom": "Last name",
       "nomPlaceholder": "Manager's last name",
-      "responsableHintPart1": "First and last name are changed in",
-      "responsableHintBold": "your account settings",
+      "responsableHintPart1": "First and last name are shown read-only. Direct editing will be",
+      "responsableHintBold": "available soon",
       "responsableHintPart2": ".",
       "steps": {
         "logo": "Logo",

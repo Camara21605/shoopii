@@ -1,0 +1,30 @@
+{
+  "livreurParametres": {
+    "unsavedConfirm": "Vous avez des modifications non sauvegardées. Quitter quand même ?",
+    "chargement": "Chargement des paramètres…",
+    "reessayer": "Réessayer",
+    "seDeconnecter": "Se déconnecter",
+    "nav": {
+      "tableauDeBord": "Tableau de bord",
+      "groups": {
+        "identite": "Identité",
+        "activite": "Activité",
+        "finances": "Finances",
+        "compte": "Compte"
+      },
+      "items": {
+        "profil": "Profil personnel",
+        "docs": "Documents",
+        "zone": "Zones & Horaires",
+        "vitesses": "Vitesses & Tarifs",
+        "vehicule": "Véhicule",
+        "paiement": "Paiement",
+        "securite": "Sécurité",
+        "notifs": "Notifications",
+        "confidentialite": "Confidentialité",
+        "langue": "Langue",
+        "danger": "Zone sensible"
+      }
+    }
+  }
+}

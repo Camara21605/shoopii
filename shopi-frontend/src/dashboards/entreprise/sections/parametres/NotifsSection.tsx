@@ -7,10 +7,11 @@ import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
+import type { ToastType } from '../../types';
 
 interface Props {
   data: ParametresData | null; saving: boolean;
-  onDirty: () => void; onToast: (m: string, t?: string) => void;
+  onDirty: () => void; onToast: (m: string, t?: ToastType) => void;
   saveNotifs: (b: Record<string, boolean>) => Promise<void>;
 }
 

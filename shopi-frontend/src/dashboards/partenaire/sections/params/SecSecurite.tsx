@@ -7,6 +7,7 @@
  * ================================================================ */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../../styles/ParamsShared.module.css';
 import type { PartenaireData } from '../../hooks/usePartenaireParametres';
 import TwoFaSetupModal from '../../../../shared/components/TwoFaSetupModal';
@@ -27,6 +28,7 @@ export default function SecSecurite({
   data, saving, dirty, markClean, saveTrigger,
   onSaveSecurite, onChangePassword, onLogout, onToast
 }: Props) {
+  const { t } = useTranslation();
   const [pwdCurrent, setPwdCurrent] = useState('');
   const [pwdNew,     setPwdNew]     = useState('');
   const [pwdConfirm, setPwdConfirm] = useState('');
@@ -56,22 +58,21 @@ export default function SecSecurite({
     setPwdScore(score);
   }
 
-  const PWD_LABELS = ['Trop faible', 'Faible', 'Moyen', 'Bon', 'Excellent'];
   const PWD_COLORS = ['', s.pw1, s.pw2, s.pw3, s.pw4];
 
   async function handleSave() {
     /* Changement de mot de passe si les champs sont remplis */
     if (pwdCurrent && pwdNew) {
       if (pwdNew !== pwdConfirm) {
-        onToast('⚠️ Les mots de passe ne correspondent pas', 'w');
+        onToast(t('partenaireParametres.secSecurite.toasts.pwdMismatch'), 'w');
         return;
       }
       try {
         await onChangePassword(pwdCurrent, pwdNew, pwdConfirm);
         setPwdCurrent(''); setPwdNew(''); setPwdConfirm(''); setPwdScore(0);
-        onToast('✅ Mot de passe mis à jour', 's');
+        onToast(t('partenaireParametres.secSecurite.toasts.pwdUpdated'), 's');
       } catch {
-        onToast('❌ Mot de passe actuel incorrect', 'w');
+        onToast(t('partenaireParametres.secSecurite.toasts.pwdIncorrect'), 'w');
         return;
       }
     }
@@ -89,9 +90,9 @@ export default function SecSecurite({
     try {
       await onSaveSecurite({ twoFaEnabled: twoFa, twoFaMethod: twoFa ? twoFaMethod : null });
       markClean();
-      onToast('✅ Sécurité sauvegardée', 's');
+      onToast(t('partenaireParametres.secSecurite.toasts.securiteSaved'), 's');
     } catch {
-      onToast('❌ Erreur lors de la sauvegarde', 'w');
+      onToast(t('partenaireParametres.secSecurite.toasts.error'), 'w');
     }
   }
 
@@ -100,22 +101,22 @@ export default function SecSecurite({
       {/* Mot de passe */}
       <div className={s.fc}>
         <div className={s.fcHd}>
-          <div className={s.fcTtl}><i className="fas fa-lock" /> Mot de passe</div>
+          <div className={s.fcTtl}><i className="fas fa-lock" /> {t('partenaireParametres.secSecurite.pwdCard.title')}</div>
         </div>
         <div className={s.fcBody}>
           <div className={s.fg}>
-            <label className={s.fl}>Mot de passe actuel</label>
+            <label className={s.fl}>{t('partenaireParametres.secSecurite.pwdCard.currentLabel')}</label>
             <input className={s.fin} type="password" value={pwdCurrent}
               onChange={e => { setPwdCurrent(e.target.value); dirty(); }} placeholder="••••••••" />
           </div>
           <div className={s.grid2}>
             <div className={s.fg}>
-              <label className={s.fl}>Nouveau mot de passe</label>
+              <label className={s.fl}>{t('partenaireParametres.secSecurite.pwdCard.newLabel')}</label>
               <input className={s.fin} type="password" value={pwdNew}
                 onChange={e => { setPwdNew(e.target.value); dirty(); checkPwd(e.target.value); }} placeholder="••••••••" />
             </div>
             <div className={s.fg}>
-              <label className={s.fl}>Confirmer</label>
+              <label className={s.fl}>{t('partenaireParametres.secSecurite.pwdCard.confirmLabel')}</label>
               <input className={s.fin} type="password" value={pwdConfirm}
                 onChange={e => { setPwdConfirm(e.target.value); dirty(); }} placeholder="••••••••" />
             </div>
@@ -127,7 +128,9 @@ export default function SecSecurite({
             ))}
           </div>
           <div className={s.pwdLabel}>
-            {pwdNew ? `Force : ${PWD_LABELS[pwdScore]}` : 'Utilisez au moins 8 caractères, une majuscule et un chiffre.'}
+            {pwdNew
+              ? t('partenaireParametres.secSecurite.pwdCard.forceLabel', { label: t(`partenaireParametres.secSecurite.pwdCard.levels.${pwdScore}`) })
+              : t('partenaireParametres.secSecurite.pwdCard.forceHint')}
           </div>
         </div>
       </div>
@@ -135,16 +138,16 @@ export default function SecSecurite({
       {/* 2FA */}
       <div className={s.fc}>
         <div className={s.fcHd}>
-          <div className={s.fcTtl}><i className="fas fa-shield-halved" /> Double authentification (2FA)</div>
+          <div className={s.fcTtl}><i className="fas fa-shield-halved" /> {t('partenaireParametres.secSecurite.twoFaCard.title')}</div>
         </div>
         <div className={s.fcBody}>
           <div className={s.trow}>
             <div className={s.trowIc}><i className="fas fa-mobile-screen" /></div>
             <div className={s.trowMain}>
               <div className={s.trowT}>
-                2FA par SMS <span className={s.flOpt}>— bientôt disponible</span>
+                {t('partenaireParametres.secSecurite.twoFaCard.smsTitle')} <span className={s.flOpt}>{t('partenaireParametres.secSecurite.twoFaCard.bientotDisponible')}</span>
               </div>
-              <div className={s.trowD}>Un code vous est envoyé à chaque connexion.</div>
+              <div className={s.trowD}>{t('partenaireParametres.secSecurite.twoFaCard.smsDesc')}</div>
             </div>
             {/* BUG CORRIGÉ — ce toggle activait en réalité la 2FA par
              * application (TOTP) sans jamais envoyer le moindre SMS : aucune
@@ -156,8 +159,8 @@ export default function SecSecurite({
           <div className={s.trow}>
             <div className={s.trowIc}><i className="fas fa-key" /></div>
             <div className={s.trowMain}>
-              <div className={s.trowT}>Application d'authentification</div>
-              <div className={s.trowD}>Google Authenticator, Authy…</div>
+              <div className={s.trowT}>{t('partenaireParametres.secSecurite.twoFaCard.appTitle')}</div>
+              <div className={s.trowD}>{t('partenaireParametres.secSecurite.twoFaCard.appDesc')}</div>
             </div>
             <div className={`${s.toggle} ${twoFa && twoFaMethod === 'totp' ? s.toggleOn : ''}`}
               onClick={() => { setTwoFa(!twoFa); setTwoFaMethod('totp'); dirty(); }} role="switch" />
@@ -177,7 +180,7 @@ export default function SecSecurite({
        * déconnexion (POST /auth/logout, déjà testée en production). */}
       <div className={s.fc}>
         <div className={s.fcHd}>
-          <div className={s.fcTtl}><i className="fas fa-desktop" /> Session active</div>
+          <div className={s.fcTtl}><i className="fas fa-desktop" /> {t('partenaireParametres.secSecurite.sessionCard.title')}</div>
         </div>
         <div className={s.fcBody}>
           {data?.currentSession ? (
@@ -187,22 +190,22 @@ export default function SecSecurite({
               </div>
               <div className={s.sessMain}>
                 <div className={s.sessNm}>
-                  {data.currentSession.device} <span className={s.sessCur}>Cet appareil</span>
+                  {data.currentSession.device} <span className={s.sessCur}>{t('partenaireParametres.secSecurite.sessionCard.cetAppareil')}</span>
                 </div>
                 <div className={s.sessMeta}>
-                  {data.currentSession.browser} · Actif maintenant
+                  {data.currentSession.browser} · {t('partenaireParametres.secSecurite.sessionCard.actifMaintenant')}
                   {data.currentSession.ipAddress ? ` · ${data.currentSession.ipAddress}` : ''}
                 </div>
               </div>
               <button
                 className={s.sessOut}
-                onClick={() => { onToast('🔒 Déconnexion en cours…', 'i'); onLogout(); }}
+                onClick={() => { onToast(t('partenaireParametres.secSecurite.toasts.loggingOut'), 'i'); onLogout(); }}
               >
-                Déconnecter
+                {t('partenaireParametres.secSecurite.sessionCard.deconnecterBtn')}
               </button>
             </div>
           ) : (
-            <div className={s.sessMeta}>Informations de session indisponibles pour le moment.</div>
+            <div className={s.sessMeta}>{t('partenaireParametres.secSecurite.sessionCard.unavailable')}</div>
           )}
         </div>
       </div>
@@ -213,7 +216,7 @@ export default function SecSecurite({
           onEnabled={() => {
             setTwoFaMethod('totp');
             markClean();
-            onToast('🔐 2FA activée avec succès', 's');
+            onToast(t('partenaireParametres.secSecurite.toasts.twoFaEnabled'), 's');
           }}
         />
       )}

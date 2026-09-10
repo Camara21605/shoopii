@@ -22,7 +22,7 @@ import {
 } from '../../../database/entities/follow/follow.entity';
 import { Client }        from '../../../database/entities/profiles/client-profile.entity';
 import { Company }       from '../../../database/entities/profiles/entreprise-profile.entity';
-import { Delivery }      from '../../../database/entities/profiles/livreur-profile.entity';
+import { Delivery, DeliveryAvailability } from '../../../database/entities/profiles/livreur-profile.entity';
 import { Correspondent } from '../../../database/entities/profiles/correspondant-profile.entity';
 
 /* ── Forme d'un abonnement renvoyé au frontend ── */
@@ -36,6 +36,14 @@ export interface AbonnementItem {
   type:      'boutiques' | 'livreurs' | 'correspondants';
   suivi:     boolean;                // toujours true ici (ce sont des abonnements)
   hidden:    boolean;                // masqué des listes de découverte, mais toujours suivi
+  /* ✅ AJOUTÉ (livreurs uniquement) — tarif de base réel (Delivery.tarifBase)
+   * et disponibilité. BUG CORRIGÉ : livreursSuivis.api.ts (frontend, page
+   * commande) utilisait un tarif fixe codé en dur (20 000 GNF) pour TOUS
+   * les livreurs suivis, quel que soit leur vrai tarifBase configuré dans
+   * Paramètres → Vitesses & Tarification. Absent (undefined) pour les
+   * boutiques/correspondants, qui n'ont pas de tarif propre. */
+  baseFee?:  number;
+  online?:   boolean;
 }
 
 export interface MesAbonnementsResponse {
@@ -129,7 +137,7 @@ export class MesAbonnementsService {
 
     const livreurs = await this.delivRepo.find({
       where:  { id: In(ids) },
-      select: ['id', 'fullName', 'zone', 'averageRating'] as any,
+      select: ['id', 'fullName', 'zone', 'averageRating', 'tarifBase', 'availability'] as any,
     });
 
     const counts = await this.countFollowers(TargetActorType.DELIVERY, ids);
@@ -144,6 +152,8 @@ export class MesAbonnementsService {
       type:      'livreurs' as const,
       suivi:     true,
       hidden:    hiddenIds.has(d.id),
+      baseFee:   Number((d as any).tarifBase ?? 0),
+      online:    (d as any).availability === DeliveryAvailability.AVAILABLE,
     }));
   }
 

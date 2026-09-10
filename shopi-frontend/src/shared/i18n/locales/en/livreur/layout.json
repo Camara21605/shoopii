@@ -1,0 +1,83 @@
+{
+  "livreurLayout": {
+    "sidebar": {
+      "todayEarnLabel": "Today's earnings",
+      "online": "Online · available",
+      "offline": "Offline · on break",
+      "defaultName": "My profile",
+      "deliveriesLabel_one": "{{count}} delivery",
+      "deliveriesLabel_other": "{{count}} deliveries",
+      "sections": {
+        "reseau": "Network & Shops",
+        "finances": "Finances",
+        "compte": "My account"
+      },
+      "items": {
+        "overview": "Overview",
+        "missions": "Available missions",
+        "encours": "In progress",
+        "historique": "History",
+        "boutiques": "My shops",
+        "revenus": "My earnings",
+        "zone": "My delivery zone",
+        "evaluation": "Add a correspondent",
+        "parametres": "Settings"
+      }
+    },
+    "topbar": {
+      "online": "Online · Available",
+      "offline": "Offline · On break",
+      "tooltipCorrespondants": "Follow correspondents",
+      "tooltipLivreurs": "Follow couriers",
+      "tooltipMessagerie": "Messages",
+      "tooltipAide": "Help center",
+      "menuAria": "Menu",
+      "drawer": {
+        "closeAria": "Close menu",
+        "online": "Online · available",
+        "offline": "Offline · on break",
+        "aide": "Help center"
+      }
+    },
+    "bottomNav": {
+      "correspondants": "Correspondents",
+      "livreurs": "Couriers"
+    },
+    "pageMeta": {
+      "overview":   { "title": "Overview",           "sub": "Dashboard · Saturday, January 18, 2025" },
+      "missions":   { "title": "Available missions", "sub": "8 missions waiting in your zone" },
+      "encours":    { "title": "Mission in progress","sub": "iPhone 15 Pro — TechStore Conakry · Express" },
+      "historique": { "title": "Delivery history",   "sub": "All your past missions" },
+      "boutiques":  { "title": "My shops",           "sub": "3 partner shops" },
+      "revenus":    { "title": "My earnings",        "sub": "Finances & performance — January 2025" },
+      "wallet":     { "title": "Shoneya Wallet",     "sub": "385,000 GNF available" },
+      "zone":       { "title": "My delivery zone",   "sub": "Kaloum · Dixinn · Matam · Ratoma" },
+      "evaluation": { "title": "Add a correspondent","sub": "Invite a relay point to join your network" },
+      "parametres": { "title": "Settings",           "sub": "Courier account configuration" },
+      "profil":     { "title": "My profile",         "sub": "Public information" },
+      "messagerie": { "title": "Messages",           "sub": "Chat with your customers and shops" },
+      "reseauCorrespondants": { "title": "Correspondents", "sub": "Follow correspondents in your network" },
+      "reseauLivreurs":       { "title": "Couriers",       "sub": "Follow other couriers in the Shoneya network" },
+      "profilCorrespondant":  { "title": "Correspondent profile", "sub": "Details and tracking" },
+      "profilLivreur":        { "title": "Courier profile",       "sub": "Details and tracking" }
+    },
+    "placeholder": {
+      "inProgress": "This section is being built.",
+      "backHome": "Back to home"
+    },
+    "speed": {
+      "eco": "🐢 Eco",
+      "std": "🚴 Standard",
+      "exp": "🚀 Express",
+      "ult": "⚡ Ultra"
+    },
+    "deliveryTypes": {
+      "entre_pays":        { "label": "Between countries",    "sub": "International deliveries" },
+      "entre_regions":     { "label": "Between regions",      "sub": "From one region to another" },
+      "entre_prefectures": { "label": "Between prefectures",  "sub": "Between administrative zones" },
+      "entre_villes":      { "label": "Between cities",       "sub": "From one city to another" },
+      "entre_communes":    { "label": "Between communes",     "sub": "Within the same urban area" },
+      "entre_quartiers":   { "label": "Between neighborhoods","sub": "Local deliveries" }
+    }
+  }
+}

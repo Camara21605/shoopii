@@ -12,6 +12,7 @@
  * ================================================================ */
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../../styles/ParamsShared.module.css';
 import type { PartenaireData } from '../../hooks/usePartenaireParametres';
 
@@ -28,15 +29,16 @@ interface Props {
 
 /* Pourcentage de complétion du profil */
 const STEPS = [
-  { label: 'Photo', check: (d: PartenaireData) => !!d.profilePicture },
-  { label: 'Prénom / Nom', check: (d: PartenaireData) => !!(d.firstName && d.lastName) },
-  { label: 'Bio', check: (d: PartenaireData) => !!d.bio },
-  { label: 'Téléphone', check: (d: PartenaireData) => !!d.phone },
+  { check: (d: PartenaireData) => !!d.profilePicture },
+  { check: (d: PartenaireData) => !!(d.firstName && d.lastName) },
+  { check: (d: PartenaireData) => !!d.bio },
+  { check: (d: PartenaireData) => !!d.phone },
 ];
 
 export default function SecProfil({
   data, saving, dirty, markClean, saveTrigger, onSave, onUploadPhoto, onToast
 }: Props) {
+  const { t } = useTranslation();
   const [prenom, setPrenom] = useState('');
   const [nom,    setNom]    = useState('');
   const [phone,  setPhone]  = useState('');
@@ -75,9 +77,9 @@ export default function SecProfil({
     try {
       await onSave({ firstName: prenom, lastName: nom, bio });
       markClean();
-      onToast('✅ Profil sauvegardé', 's');
+      onToast(t('partenaireParametres.secProfil.toasts.profilSaved'), 's');
     } catch (err: any) {
-      onToast(err?.message || '❌ Erreur lors de la sauvegarde', 'w');
+      onToast(err?.message || t('partenaireParametres.secProfil.toasts.profilError'), 'w');
     }
   }
 
@@ -92,9 +94,9 @@ export default function SecProfil({
     setUploading(true);
     try {
       await onUploadPhoto(file);
-      onToast('✅ Photo mise à jour', 's');
+      onToast(t('partenaireParametres.secProfil.toasts.photoSaved'), 's');
     } catch {
-      onToast('❌ Échec du téléversement', 'w');
+      onToast(t('partenaireParametres.secProfil.toasts.photoError'), 'w');
     } finally {
       setUploading(false);
     }
@@ -115,29 +117,29 @@ export default function SecProfil({
           >
             <div className={s.healthRingV}>
               <b>{donePct}%</b>
-              <span>Complété</span>
+              <span>{t('partenaireParametres.secProfil.health.completedLabel')}</span>
             </div>
           </div>
           <div className={s.healthTxt}>
             <h2>
-              {donePct < 80 ? 'Complétez votre profil' : 'Profil bien rempli'}
+              {donePct < 80 ? t('partenaireParametres.secProfil.health.titleLow') : t('partenaireParametres.secProfil.health.titleHigh')}
             </h2>
             <p>
               {donePct < 80
-                ? "Ajoutez vos informations manquantes pour renforcer votre crédibilité auprès des acteurs recrutés."
-                : "Votre profil partenaire est complet. Vous pouvez continuer à recruter avec confiance."}
+                ? t('partenaireParametres.secProfil.health.paragraphLow')
+                : t('partenaireParametres.secProfil.health.paragraphHigh')}
             </p>
           </div>
           <div className={s.healthStats}>
             <div className={s.hs}>
               <div className={s.hsIcOk}><i className="fas fa-circle-check" /></div>
-              <div className={s.hsV}>{data?.isVerified ? 'Vérifié' : 'En attente'}</div>
-              <div className={s.hsL}>Identité</div>
+              <div className={s.hsV}>{data?.isVerified ? t('partenaireParametres.secProfil.health.verifie') : t('partenaireParametres.secProfil.health.enAttente')}</div>
+              <div className={s.hsL}>{t('partenaireParametres.secProfil.health.identiteLabel')}</div>
             </div>
             <div className={s.hs}>
               <div className={data?.twoFaEnabled ? s.hsIcOk : s.hsIcWarn}><i className="fas fa-shield-halved" /></div>
-              <div className={s.hsV}>{data?.twoFaEnabled ? 'Activée' : 'Désactivée'}</div>
-              <div className={s.hsL}>Double auth.</div>
+              <div className={s.hsV}>{data?.twoFaEnabled ? t('partenaireParametres.secProfil.health.activee') : t('partenaireParametres.secProfil.health.desactivee')}</div>
+              <div className={s.hsL}>{t('partenaireParametres.secProfil.health.doubleAuthLabel')}</div>
             </div>
           </div>
         </div>
@@ -147,8 +149,8 @@ export default function SecProfil({
       <div className={s.fc}>
         <div className={s.fcHd}>
           <div>
-            <div className={s.fcTtl}><i className="fas fa-user" /> Informations personnelles</div>
-            <div className={s.fcSub}>Ces informations apparaissent sur votre profil partenaire.</div>
+            <div className={s.fcTtl}><i className="fas fa-user" /> {t('partenaireParametres.secProfil.infosCard.title')}</div>
+            <div className={s.fcSub}>{t('partenaireParametres.secProfil.infosCard.sub')}</div>
           </div>
         </div>
         <div className={s.fcBody}>
@@ -156,7 +158,7 @@ export default function SecProfil({
           <div className={s.avRow}>
             <div className={s.av} onClick={() => fileRef.current?.click()}>
               {data?.profilePicture
-                ? <img src={data.profilePicture} alt="Profil" />
+                ? <img src={data.profilePicture} alt={t('partenaireParametres.secProfil.infosCard.photoTitle')} />
                 : initiales}
               <div className={s.avCam}>
                 {uploading
@@ -166,11 +168,11 @@ export default function SecProfil({
               </div>
             </div>
             <div className={s.avTxt}>
-              <h4>Photo de profil</h4>
-              <p>JPG, PNG, WebP ou GIF. Taille max. 5 Mo.</p>
+              <h4>{t('partenaireParametres.secProfil.infosCard.photoTitle')}</h4>
+              <p>{t('partenaireParametres.secProfil.infosCard.photoDesc')}</p>
               <div className={s.avBtns}>
                 <button className={s.btnPrimary} onClick={() => fileRef.current?.click()} disabled={uploading}>
-                  {uploading ? 'Téléversement…' : 'Changer la photo'}
+                  {uploading ? t('partenaireParametres.secProfil.infosCard.photoUploading') : t('partenaireParametres.secProfil.infosCard.photoChangeBtn')}
                 </button>
               </div>
             </div>
@@ -180,28 +182,28 @@ export default function SecProfil({
           <div className={s.grid2}>
             <div className={s.fg}>
               <label className={s.fl}>
-                Prénom
-                {nameLocked && <span className={s.flOpt}> — verrouillé</span>}
+                {t('partenaireParametres.secProfil.infosCard.prenomLabel')}
+                {nameLocked && <span className={s.flOpt}>{t('partenaireParametres.secProfil.infosCard.verrouille')}</span>}
               </label>
               <input
                 className={s.fin}
                 value={prenom}
                 onChange={e => { setPrenom(e.target.value); dirty(); }}
-                placeholder="Votre prénom"
+                placeholder={t('partenaireParametres.secProfil.infosCard.prenomPlaceholder')}
                 readOnly={nameLocked}
                 style={nameLocked ? { opacity: .6, cursor: 'not-allowed' } : undefined}
               />
             </div>
             <div className={s.fg}>
               <label className={s.fl}>
-                Nom
-                {nameLocked && <span className={s.flOpt}> — verrouillé</span>}
+                {t('partenaireParametres.secProfil.infosCard.nomLabel')}
+                {nameLocked && <span className={s.flOpt}>{t('partenaireParametres.secProfil.infosCard.verrouille')}</span>}
               </label>
               <input
                 className={s.fin}
                 value={nom}
                 onChange={e => { setNom(e.target.value); dirty(); }}
-                placeholder="Votre nom"
+                placeholder={t('partenaireParametres.secProfil.infosCard.nomPlaceholder')}
                 readOnly={nameLocked}
                 style={nameLocked ? { opacity: .6, cursor: 'not-allowed' } : undefined}
               />
@@ -209,33 +211,32 @@ export default function SecProfil({
           </div>
           {nameLocked && nameLockedUntil && (
             <span className={s.hint} style={{ display: 'block', marginTop: -8, marginBottom: 16 }}>
-              Le prénom et le nom ne peuvent être modifiés qu'une fois tous les 3 mois — prochaine
-              modification possible le {nameLockedUntil.toLocaleDateString('fr-FR')}.
+              {t('partenaireParametres.secProfil.infosCard.nameLockedHint', { date: nameLockedUntil.toLocaleDateString('fr-FR') })}
             </span>
           )}
 
           <div className={s.grid2}>
             <div className={s.fg}>
-              <label className={s.fl}>Téléphone <span className={s.flOpt}>— non modifiable</span></label>
+              <label className={s.fl}>{t('partenaireParametres.secProfil.infosCard.telephoneLabel')} <span className={s.flOpt}>{t('partenaireParametres.secProfil.infosCard.nonModifiable')}</span></label>
               <input className={s.fin} value={phone} readOnly style={{ opacity: .6, cursor: 'not-allowed' }} placeholder="+224 6•• •• •• ••" />
             </div>
             <div className={s.fg}>
-              <label className={s.fl}>Email <span className={s.flOpt}>— non modifiable</span></label>
+              <label className={s.fl}>{t('partenaireParametres.secProfil.infosCard.emailLabel')} <span className={s.flOpt}>{t('partenaireParametres.secProfil.infosCard.nonModifiable')}</span></label>
               <input className={s.fin} value={email} readOnly style={{ opacity: .6, cursor: 'not-allowed' }} />
             </div>
           </div>
 
           <div className={s.fg} style={{ marginBottom: 0 }}>
-            <label className={s.fl}>Bio / Présentation <span className={s.flOpt}>optionnel</span></label>
+            <label className={s.fl}>{t('partenaireParametres.secProfil.infosCard.bioLabel')} <span className={s.flOpt}>{t('partenaireParametres.secProfil.infosCard.optionnel')}</span></label>
             <textarea
               className={s.fin}
               rows={3}
               value={bio}
               onChange={e => { setBio(e.target.value); dirty(); }}
-              placeholder="Présentez-vous en quelques mots…"
+              placeholder={t('partenaireParametres.secProfil.infosCard.bioPlaceholder')}
               style={{ resize: 'none' }}
             />
-            <span className={s.hint}>Visible sur votre profil public partenaire.</span>
+            <span className={s.hint}>{t('partenaireParametres.secProfil.infosCard.bioHint')}</span>
           </div>
         </div>
       </div>
@@ -243,24 +244,26 @@ export default function SecProfil({
       {/* ── Statut partenaire ── */}
       <div className={s.fc}>
         <div className={s.fcHd}>
-          <div className={s.fcTtl}><i className="fas fa-award" /> Statut partenaire</div>
+          <div className={s.fcTtl}><i className="fas fa-award" /> {t('partenaireParametres.secProfil.statutCard.title')}</div>
         </div>
         <div className={s.fcBody}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             {data?.isVerified && (
-              <span className={s.verifBadge}><i className="fas fa-circle-check" /> Partenaire vérifié</span>
+              <span className={s.verifBadge}><i className="fas fa-circle-check" /> {t('partenaireParametres.secProfil.statutCard.verifieBadge')}</span>
             )}
             {data?.palier && (
-              <span className={s.goldBadge}><i className="fas fa-crown" /> Palier {data.palier} · {
-                data.palier === 'platinum' ? 'Niveau 4'
-                : data.palier === 'gold'     ? 'Niveau 3'
-                : data.palier === 'silver'   ? 'Niveau 2'
-                : 'Niveau 1'
+              <span className={s.goldBadge}><i className="fas fa-crown" /> {t('partenaireParametres.secProfil.statutCard.palierPrefix')} {data.palier} · {
+                t('partenaireParametres.secProfil.statutCard.niveauLabel', { n:
+                  data.palier === 'platinum' ? 4
+                  : data.palier === 'gold'     ? 3
+                  : data.palier === 'silver'   ? 2
+                  : 1
+                })
               }</span>
             )}
             {data?.memberSince && (
               <span style={{ fontSize: 12, color: 'var(--t3)' }}>
-                Membre depuis {new Date(data.memberSince).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                {t('partenaireParametres.secProfil.statutCard.membreDepuis', { date: new Date(data.memberSince).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) })}
               </span>
             )}
           </div>

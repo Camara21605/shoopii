@@ -3,6 +3,7 @@
 // livraisons — dérivé des commandes (GET /dashboard/livreur/boutiques),
 // jamais une liste statique de "partenaires".
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { apiFetch } from '@/shared/services/apiFetch';
 import { useStartConversation } from '@/shared/hooks/useStartConversation';
 import shared from '../styles/Shared.module.css';
@@ -19,6 +20,7 @@ interface BoutiquesResult {
 }
 
 export default function BoutiquesPage({ onPop }: Props) {
+  const { t } = useTranslation();
   const [items, setItems]     = useState<BoutiqueItem[]>([]);
   const [total, setTotal]     = useState(0);
   const [loading, setLoading] = useState(true);
@@ -35,11 +37,11 @@ export default function BoutiquesPage({ onPop }: Props) {
     <div className={shared.page}>
       <div className={shared.g2}>
         <div>
-          <div style={{ fontFamily:'var(--fd)',fontSize:16,fontWeight:700,color:'var(--navy)',marginBottom:14 }}>Boutiques partenaires</div>
+          <div style={{ fontFamily:'var(--fd)',fontSize:16,fontWeight:700,color:'var(--navy)',marginBottom:14 }}>{t('livreurBoutiques.titre')}</div>
 
-          {loading && <div style={{ padding:'20px 0', color:'var(--t3)' }}>Chargement…</div>}
+          {loading && <div style={{ padding:'20px 0', color:'var(--t3)' }}>{t('livreurBoutiques.chargement')}</div>}
           {!loading && items.length === 0 && (
-            <div style={{ padding:'20px 0', color:'var(--t3)' }}>Aucune livraison effectuée pour une boutique pour le moment.</div>
+            <div style={{ padding:'20px 0', color:'var(--t3)' }}>{t('livreurBoutiques.empty')}</div>
           )}
 
           <div style={{ display:'flex',flexDirection:'column',gap:9 }}>
@@ -57,19 +59,19 @@ export default function BoutiquesPage({ onPop }: Props) {
                   <div style={{ display:'flex',alignItems:'center',gap:7,fontSize:10,color:'var(--t3)',marginTop:2,flexWrap:'wrap' }}>
                     <span>{b.cat}</span>
                     <span><i className="fas fa-star" style={{color:'var(--amber)'}} /> {b.rat.toFixed(1)}</span>
-                    <span>Depuis {b.since}</span>
-                    {b.pending>0 && <span style={{background:'var(--am-bg)',color:'var(--amber)',fontWeight:700,padding:'1px 7px',borderRadius:'var(--pill)'}}>{b.pending} en attente</span>}
+                    <span>{t('livreurBoutiques.depuis', { date: b.since })}</span>
+                    {b.pending>0 && <span style={{background:'var(--am-bg)',color:'var(--amber)',fontWeight:700,padding:'1px 7px',borderRadius:'var(--pill)'}}>{t('livreurBoutiques.enAttente', { count: b.pending })}</span>}
                   </div>
                 </div>
                 <div style={{ textAlign:'right',flexShrink:0 }}>
                   <div style={{ fontFamily:'var(--fd)',fontSize:14,fontWeight:800,color:'var(--blue)' }}>{b.delivs}</div>
-                  <div style={{ fontSize:9,color:'var(--t3)' }}>livr.</div>
+                  <div style={{ fontSize:9,color:'var(--t3)' }}>{t('livreurBoutiques.livrAbrev')}</div>
                 </div>
                 <button
                   onClick={e => { e.stopPropagation(); startConv('company', b.id, msg => onPop(msg,'w')); }}
                   style={{ background:'var(--sky)',color:'var(--blue)',border:'1px solid var(--sky-3)',borderRadius:'var(--pill)',padding:'6px 11px',fontSize:10,fontWeight:700,cursor:'pointer' }}
                 >
-                  Message
+                  {t('livreurBoutiques.message')}
                 </button>
               </div>
             ))}
@@ -77,10 +79,10 @@ export default function BoutiquesPage({ onPop }: Props) {
         </div>
 
         <div className={`${shared.card} ${shared.cardLast}`}>
-          <div className={shared.ch}><div className={shared.chT}><i className="fas fa-chart-pie" /> Répartition</div></div>
+          <div className={shared.ch}><div className={shared.chT}><i className="fas fa-chart-pie" /> {t('livreurBoutiques.repartition.titre')}</div></div>
           <div className={shared.cb}>
             {items.length === 0 && !loading && (
-              <div style={{ color:'var(--t3)', fontSize:12, textAlign:'center', padding:'8px 0' }}>Aucune donnée à répartir.</div>
+              <div style={{ color:'var(--t3)', fontSize:12, textAlign:'center', padding:'8px 0' }}>{t('livreurBoutiques.repartition.empty')}</div>
             )}
             {items.map(b => {
               const pct = total > 0 ? Math.round((b.delivs/total)*100) : 0;
@@ -98,8 +100,8 @@ export default function BoutiquesPage({ onPop }: Props) {
             })}
             {items.length > 0 && (
               <div style={{ paddingTop:11,borderTop:'1px solid var(--bdr)',fontSize:12,color:'var(--t2)',display:'flex',justifyContent:'space-between' }}>
-                <span>Total</span>
-                <strong style={{ color:'var(--navy)',fontFamily:'var(--fd)' }}>{total} livraisons</strong>
+                <span>{t('livreurBoutiques.repartition.total')}</span>
+                <strong style={{ color:'var(--navy)',fontFamily:'var(--fd)' }}>{t('livreurBoutiques.repartition.totalLivraisons', { count: total })}</strong>
               </div>
             )}
           </div>

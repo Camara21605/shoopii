@@ -31,6 +31,7 @@ import { NotificationEventService } from 'src/modules/notifications/events/notif
 import { DeliveryGroupService } from 'src/modules/delivery-group/delivery-group.service';
 import { PaiementInitiationService } from 'src/modules/paiement/services/paiement-initiation.service';
 import { MethodePaiementSession } from '../../../database/entities/paiement/paiement-session.entity';
+import { GeoService } from 'src/modules/geo/geo.service';
 
 @Injectable()
 export class CommandeCreationService {
@@ -48,6 +49,7 @@ export class CommandeCreationService {
     private readonly notifEventSvc: NotificationEventService,
     private readonly deliveryGroupSvc: DeliveryGroupService,
     private readonly paiementInitiationSvc: PaiementInitiationService,
+    private readonly geoService: GeoService,
   ) {}
 
   /* ════════════════════════════════════════════════════════
@@ -104,6 +106,20 @@ export class CommandeCreationService {
 
     let firstCommandeId: string | null = null;
 
+    /* BUG CORRIGÉ — fraisLivraison était fixé à 0 en dur pour TOUTE commande
+     * réelle, quel que soit le mode de livraison. Le vrai tarif vient
+     * maintenant de la zone de livraison couvrant la destination (GeoZone,
+     * gérée par un administrateur avec la permission "geo_zones" accordée
+     * par le super-admin — PAS fixé par le livreur lui-même, voir
+     * GeoService.resolveFraisLivraison()). Résolu une seule fois : la
+     * destination est la même pour tous les groupes boutique de cette
+     * commande. Reste à 0 pour le retrait en boutique (PICKUP) — la
+     * livraison standard reste gratuite comme affiché au checkout. */
+    const destinationLivraison = dto.communeLivraison ?? dto.villeLivraison ?? dto.destination ?? null;
+    const fraisLivraisonZone   = delivery
+      ? (await this.geoService.resolveFraisLivraison(destinationLivraison)).fraisLivraison
+      : 0;
+
     for (const [companyId, items] of groups) {
       const company = await this.companyRepo.findOne({ where: { id: companyId } });
       if (!company) continue;
@@ -113,7 +129,7 @@ export class CommandeCreationService {
       else if (correspondant) modeLivraison = ModeLivraison.CORRESPONDANT;
 
       const sousTotal      = items.reduce((s, pi) => s + readPrix(pi.produit) * pi.qty, 0);
-      const fraisLivraison = 0;
+      const fraisLivraison = fraisLivraisonZone;
 
       /* Estimation affichée avant paiement (défaut 6 % — aligné sur le défaut
        * déclaré de PlatformSettings.platformCommission, voir l'entité). Ce

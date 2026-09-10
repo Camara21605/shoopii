@@ -14,6 +14,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { PageId } from '../data/livreurData';
 import { fmtGNF, buildMapMissionState } from '../data/livreurData';
 import { fetchEnCours } from '../services/encours.api';
@@ -58,18 +59,19 @@ function activityIcon(type: string): { ic: string; c: string } {
   return { ic: 'fa-circle-info', c: 'var(--t3)' };
 }
 
-function relativeTime(dateStr: string): string {
+function relativeTime(t: (k: string, o?: Record<string, unknown>) => string, dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins  = Math.floor(diff / 60_000);
   const hours = Math.floor(diff / 3_600_000);
   const days  = Math.floor(diff / 86_400_000);
-  if (mins  < 1)  return 'À l\'instant';
-  if (mins  < 60) return `Il y a ${mins} min`;
-  if (hours < 24) return `Il y a ${hours}h`;
-  return `Il y a ${days}j`;
+  if (mins  < 1)  return t('livreurOverview.time.instant');
+  if (mins  < 60) return t('livreurOverview.time.minutesAgo', { count: mins });
+  if (hours < 24) return t('livreurOverview.time.heuresAgo', { count: hours });
+  return t('livreurOverview.time.joursAgo', { count: days });
 }
 
 export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [stats,      setStats]      = useState<StatsApi | null>(null);
@@ -173,7 +175,7 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
           <div className={styles.maBg} /><div className={styles.maGrid} />
           <div className={styles.maPulse}>🛵</div>
           <div className={styles.maInfo}>
-            <div className={styles.maLabel}>Mission active · {encours.id}</div>
+            <div className={styles.maLabel}>{t('livreurOverview.missionActive.label')} · {encours.id}</div>
             <div className={styles.maTitle}>{encours.nm}</div>
             <div className={styles.maMeta}>
               <span><i className="fas fa-store" /> {encours.shop}</span>
@@ -185,15 +187,15 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
             {hasEta && (
               <div className={`${styles.maTimer} ${isUrgent ? styles.timerUrgent : ''}`}>
                 <div className={`${styles.maTimerVal} ${isUrgent ? styles.timerValUrgent : ''}`}>{mm}:{ss}</div>
-                <div className={styles.maTimerLbl}>Temps restant</div>
+                <div className={styles.maTimerLbl}>{t('livreurOverview.missionActive.timeLeft')}</div>
               </div>
             )}
             <div className={styles.maActions}>
               <button className={styles.maBtnOk} onClick={() => navigate(`/commande/${encours.uuid}/suivi`)}>
-                <i className="fas fa-check-circle" /> Voir la commande
+                <i className="fas fa-check-circle" /> {t('livreurOverview.missionActive.voirCommande')}
               </button>
               <button className={styles.maBtnIssue} onClick={() => onNavigate('encours')}>
-                <i className="fas fa-route" /> Détails de la course
+                <i className="fas fa-route" /> {t('livreurOverview.missionActive.details')}
               </button>
             </div>
           </div>
@@ -208,7 +210,7 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
             <div className={shared.kpiIc}>🚚</div>
           </div>
           <div className={shared.kpiVal}>{stats?.deliveriesThisMonth ?? '—'}</div>
-          <div className={shared.kpiLbl}>Livraisons ce mois</div>
+          <div className={shared.kpiLbl}>{t('livreurOverview.kpis.livraisonsMois')}</div>
         </div>
 
         <div className={`${shared.kpi} ${shared.k2}`}>
@@ -217,7 +219,7 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
             <div className={shared.kpiIc}>💰</div>
           </div>
           <div className={shared.kpiVal}>{revenus ? fmtGNF(revenus.revenusThisMonth) : '—'}</div>
-          <div className={shared.kpiLbl}>Revenus ce mois</div>
+          <div className={shared.kpiLbl}>{t('livreurOverview.kpis.revenusMois')}</div>
         </div>
 
         <div className={`${shared.kpi} ${shared.k3}`}>
@@ -226,7 +228,7 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
             <div className={shared.kpiIc}>⭐</div>
           </div>
           <div className={shared.kpiVal}>{stats ? ratingValue.toFixed(1) : '—'}</div>
-          <div className={shared.kpiLbl}>Note moyenne</div>
+          <div className={shared.kpiLbl}>{t('livreurOverview.kpis.noteMoyenne')}</div>
         </div>
 
         <div className={`${shared.kpi} ${shared.k4}`}>
@@ -235,14 +237,14 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
             <div className={shared.kpiIc}>🏪</div>
           </div>
           <div className={shared.kpiVal}>{stats?.boutiquesAbonnees ?? '—'}</div>
-          <div className={shared.kpiLbl}>Boutiques abonnées</div>
+          <div className={shared.kpiLbl}>{t('livreurOverview.kpis.boutiquesAbonnees')}</div>
         </div>
       </div>
 
       {/* ── 3. Graphique des revenus — réel (GET /dashboard/livreur/revenus/chart) ── */}
       <div className={shared.card}>
         <div className={shared.ch}>
-          <div className={shared.chT}><i className="fas fa-chart-line" /> Revenus</div>
+          <div className={shared.chT}><i className="fas fa-chart-line" /> {t('livreurOverview.chart.title')}</div>
           <div className={styles.chartTabs}>
             {(['semaine', 'mois'] as const).map(mode => (
               <button
@@ -250,7 +252,7 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
                 className={`${styles.chartTab} ${chartMode === mode ? styles.chartTabOn : ''}`}
                 onClick={() => setChartMode(mode)}
               >
-                {mode === 'semaine' ? 'Semaine' : 'Mois'}
+                {mode === 'semaine' ? t('livreurOverview.chart.semaine') : t('livreurOverview.chart.mois')}
               </button>
             ))}
           </div>
@@ -258,7 +260,7 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
         <div className={shared.cb}>
           {chartData.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--t3)', fontSize: 13 }}>
-              Aucun revenu enregistré sur cette période.
+              {t('livreurOverview.chart.empty')}
             </div>
           ) : (
             <>
@@ -286,9 +288,9 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
                 ))}
               </div>
               <div className={styles.revFooter}>
-                <span>Total : <strong style={{ color: 'var(--navy)', fontFamily: 'var(--fd)' }}>{fmtGNF(chartTotal)}</strong></span>
+                <span>{t('livreurOverview.chart.totalLabel')} <strong style={{ color: 'var(--navy)', fontFamily: 'var(--fd)' }}>{fmtGNF(chartTotal)}</strong></span>
                 <span style={{ color: 'var(--teal)', fontWeight: 700 }}>
-                  Moy./jour : {fmtGNF(Math.round(chartTotal / Math.max(1, chartData.length)))}
+                  {t('livreurOverview.chart.moyJourLabel')} {fmtGNF(Math.round(chartTotal / Math.max(1, chartData.length)))}
                 </span>
               </div>
             </>
@@ -302,9 +304,9 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
         {/* Mes missions — réelles (GET /livreur/missions), déjà assignées à ce livreur */}
         <div className={shared.card}>
           <div className={shared.ch}>
-            <div className={shared.chT}><i className="fas fa-motorcycle" /> Mes missions</div>
+            <div className={shared.chT}><i className="fas fa-motorcycle" /> {t('livreurOverview.missions.title')}</div>
             <button className={shared.chA} onClick={() => onNavigate('missions')}>
-              Toutes
+              {t('livreurOverview.missions.toutes')}
               <span style={{ background: 'var(--red)', color: '#fff', fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 'var(--pill)', marginLeft: 3 }}>
                 {missions.length}
               </span>
@@ -314,7 +316,7 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
           <div className={shared.cb}>
             {missions.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--t3)', fontSize: 13 }}>
-                Aucune mission en cours pour le moment.
+                {t('livreurOverview.missions.empty')}
               </div>
             ) : (
               <div className={styles.missionList}>
@@ -337,7 +339,7 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
         <div>
           <div className={shared.card}>
             <div className={shared.ch}>
-              <div className={shared.chT}><i className="fas fa-star" /> Mon évaluation</div>
+              <div className={shared.chT}><i className="fas fa-star" /> {t('livreurOverview.evaluation.title')}</div>
             </div>
             <div className={shared.cb}>
               <div className={styles.evalBig}>
@@ -346,18 +348,18 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
                   {'★'.repeat(ratingStars)}{'☆'.repeat(5 - ratingStars)}
                 </div>
                 {!stats?.averageRating && (
-                  <div className={styles.evalSub}>Pas encore de note — effectuez vos premières livraisons.</div>
+                  <div className={styles.evalSub}>{t('livreurOverview.evaluation.noRatingYet')}</div>
                 )}
               </div>
             </div>
           </div>
 
           <div className={`${shared.card} ${shared.cardLast}`}>
-            <div className={shared.ch}><div className={shared.chT}><i className="fas fa-timeline" /> Activité récente</div></div>
+            <div className={shared.ch}><div className={shared.chT}><i className="fas fa-timeline" /> {t('livreurOverview.activite.title')}</div></div>
             <div className={shared.cb}>
               {activite.length === 0 ? (
                 <div style={{ color: 'var(--t3)', fontSize: 13, padding: '12px 0', textAlign: 'center' }}>
-                  Aucune activité récente
+                  {t('livreurOverview.activite.empty')}
                 </div>
               ) : (
                 activite.slice(0, 5).map(a => {
@@ -369,7 +371,7 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
                       </div>
                       <div>
                         <div className={styles.actMsg}>{a.title}</div>
-                        <div className={styles.actTime}>{relativeTime(a.createdAt)}</div>
+                        <div className={styles.actTime}>{relativeTime(t, a.createdAt)}</div>
                       </div>
                     </div>
                   );

@@ -6,6 +6,7 @@
  * Le bouton "Sauvegarder" incrémente saveTrigger → section active réagit.
  * ================================================================ */
 
+import { useTranslation } from 'react-i18next';
 import s from '../styles/SaveFloat.module.css';
 
 interface Props {
@@ -16,22 +17,23 @@ interface Props {
 }
 
 export default function SaveFloat({ show, saving, onSave, onCancel }: Props) {
+  const { t } = useTranslation();
   return (
     <div className={`${s.float} ${show ? s.show : ''}`} role="status" aria-live="polite">
       <span className={s.msg}>
         <i className="fas fa-circle-dot" />
-        Modifications non sauvegardées
+        {t('partenaireParametres.saveFloat.unsaved')}
       </span>
 
       <button className={s.btnSave} onClick={onSave} disabled={saving}>
         {saving
-          ? <><i className="fas fa-spinner fa-spin" /> Sauvegarde…</>
-          : <><i className="fas fa-check" /> Sauvegarder</>
+          ? <><i className="fas fa-spinner fa-spin" /> {t('partenaireParametres.saveFloat.saving')}</>
+          : <><i className="fas fa-check" /> {t('partenaireParametres.saveFloat.save')}</>
         }
       </button>
 
       <button className={s.btnCancel} onClick={onCancel} disabled={saving}>
-        Annuler
+        {t('partenaireParametres.saveFloat.cancel')}
       </button>
     </div>
   );

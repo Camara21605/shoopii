@@ -12,6 +12,9 @@ interface Props {
   sub:      string;
   checked:  boolean;
   badge?:   BadgeType;
+  /** Désactive le toggle — utilisé pour un réglage sans effet réel côté
+   *  backend, affiché honnêtement plutôt que retiré (voir SecSecurite.tsx). */
+  disabled?: boolean;
   onChange: (checked: boolean) => void;
 }
 
@@ -22,11 +25,11 @@ const BADGE_CFG: Record<Exclude<BadgeType, ''>, { label: string; cls: string }> 
   warn: { label:'Attention',  cls: s.badgeWarn },
 };
 
-export default function ToggleRow({ label, sub, checked, badge = '', onChange }: Props) {
+export default function ToggleRow({ label, sub, checked, badge = '', disabled = false, onChange }: Props) {
   const badgeCfg = badge ? BADGE_CFG[badge] : null;
 
   return (
-    <div className={s.togRow}>
+    <div className={s.togRow} style={disabled ? { opacity: 0.55 } : undefined}>
       <div>
         <div className={s.trLbl}>
           {label}
@@ -40,10 +43,11 @@ export default function ToggleRow({ label, sub, checked, badge = '', onChange }:
       </div>
 
       {/* Toggle switch */}
-      <label className={s.tog}>
+      <label className={s.tog} style={disabled ? { cursor: 'not-allowed' } : undefined}>
         <input
           type="checkbox"
           checked={checked}
+          disabled={disabled}
           onChange={e => onChange(e.target.checked)}
         />
         <span className={s.togs} />

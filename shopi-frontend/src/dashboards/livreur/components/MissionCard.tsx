@@ -1,8 +1,9 @@
 // src/dashboards/livreur/components/MissionCard.tsx
 // Carte de mission — reproduit exactement .mc du HTML.
 
+import { useTranslation } from 'react-i18next';
 import type { Mission } from '../data/livreurData';
-import { SPEED_LABEL, fmtGNF } from '../data/livreurData';
+import { buildSpeedLabel, fmtGNF } from '../data/livreurData';
 import styles from '../styles/MissionCard.module.css';
 import shared from '../styles/Shared.module.css';
 
@@ -24,7 +25,11 @@ const SPEED_CLS: Record<string, string> = {
 };
 
 export default function MissionCard({ mission: m, onAccept, onMap, onRefuse, onOpen }: Props) {
-  const badgeLabel = m.urgent ? '🔥 Urgent' : m.status === 'new' ? 'En attente de votre confirmation' : 'En préparation';
+  const { t } = useTranslation();
+  const SPEED_LABEL = buildSpeedLabel(t);
+  const badgeLabel = m.urgent
+    ? t('livreurMissionCard.badgeUrgent')
+    : m.status === 'new' ? t('livreurMissionCard.badgeNew') : t('livreurMissionCard.badgePrep');
   const badgeCls   = m.urgent ? styles.badgeUrgent : m.status === 'new' ? styles.badgeNew : styles.badgePrep;
 
   return (
@@ -71,7 +76,7 @@ export default function MissionCard({ mission: m, onAccept, onMap, onRefuse, onO
         </div>
         {m.urgent && (
           <div className={styles.mcMetaItem} style={{ color:'var(--red)' }}>
-            <i className="fas fa-fire" /> Mission urgente
+            <i className="fas fa-fire" /> {t('livreurMissionCard.missionUrgente')}
           </div>
         )}
       </div>
@@ -83,20 +88,20 @@ export default function MissionCard({ mission: m, onAccept, onMap, onRefuse, onO
             className={styles.btnAccept}
             onClick={e => { e.stopPropagation(); onAccept(m.id); }}
           >
-            <i className="fas fa-check" /> {m.status === 'prep' ? 'Voir la commande' : 'Accepter'}
+            <i className="fas fa-check" /> {m.status === 'prep' ? t('livreurMissionCard.voirCommande') : t('livreurMissionCard.accepter')}
           </button>
         )}
         <button
           className={styles.btnMap}
           onClick={e => { e.stopPropagation(); onMap(m); }}
         >
-          <i className="fas fa-map-location-dot" /> Carte
+          <i className="fas fa-map-location-dot" /> {t('livreurMissionCard.carte')}
         </button>
         {m.status === 'new' && (
           <button
             className={styles.btnX}
             onClick={e => { e.stopPropagation(); onRefuse(m); }}
-            title="Refuser cette mission"
+            title={t('livreurMissionCard.refuserTitle')}
           >
             <i className="fas fa-xmark" />
           </button>

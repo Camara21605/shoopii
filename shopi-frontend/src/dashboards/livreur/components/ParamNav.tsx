@@ -3,6 +3,7 @@
 // 10 items groupés : Identité / Activité / Finances / Compte
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ParamSectionId } from '../data/parametresData';
 import styles from '../styles/ParamNav.module.css';
 
@@ -19,47 +20,50 @@ type NavItem = {
   warn?: 'r' | 'a';       // rouge = danger, amber = docs
 };
 
-const GROUPS: { title: string; items: NavItem[] }[] = [
-  {
-    title: 'Identité',
-    items: [
-      { id:'profil', icon:'fa-user',         label:'Profil personnel'        },
-      { id:'docs',   icon:'fa-file-shield',  label:'Documents', warn:'a'     },
-    ],
-  },
-  {
-    title: 'Activité',
-    items: [
-      { id:'zone',     icon:'fa-map-location-dot', label:'Zones & Horaires'  },
-      { id:'vitesses', icon:'fa-gauge-high',        label:'Vitesses & Tarifs' },
-      { id:'vehicule', icon:'fa-motorcycle',         label:'Véhicule'          },
-    ],
-  },
-  {
-    title: 'Finances',
-    items: [
-      { id:'paiement', icon:'fa-wallet', label:'Paiement' },
-    ],
-  },
-  {
-    title: 'Compte',
-    items: [
-      { id:'securite',        icon:'fa-lock',               label:'Sécurité'           },
-      { id:'notifs',          icon:'fa-bell',               label:'Notifications'       },
-      { id:'confidentialite', icon:'fa-shield-halved',      label:'Confidentialité'     },
-      { id:'langue',          icon:'fa-language',           label:'Langue'              },
-      { id:'danger',          icon:'fa-triangle-exclamation', label:'Zone sensible', warn:'r' },
-    ],
-  },
-];
+function buildGroups(t: (key: string) => string): { title: string; items: NavItem[] }[] {
+  return [
+    {
+      title: t('livreurParametres.nav.groups.identite'),
+      items: [
+        { id:'profil', icon:'fa-user',         label: t('livreurParametres.nav.items.profil')        },
+        { id:'docs',   icon:'fa-file-shield',  label: t('livreurParametres.nav.items.docs'), warn:'a' },
+      ],
+    },
+    {
+      title: t('livreurParametres.nav.groups.activite'),
+      items: [
+        { id:'zone',     icon:'fa-map-location-dot', label: t('livreurParametres.nav.items.zone')     },
+        { id:'vehicule', icon:'fa-motorcycle',         label: t('livreurParametres.nav.items.vehicule') },
+      ],
+    },
+    {
+      title: t('livreurParametres.nav.groups.finances'),
+      items: [
+        { id:'paiement', icon:'fa-wallet', label: t('livreurParametres.nav.items.paiement') },
+      ],
+    },
+    {
+      title: t('livreurParametres.nav.groups.compte'),
+      items: [
+        { id:'securite',        icon:'fa-lock',               label: t('livreurParametres.nav.items.securite')        },
+        { id:'notifs',          icon:'fa-bell',               label: t('livreurParametres.nav.items.notifs')          },
+        { id:'confidentialite', icon:'fa-shield-halved',      label: t('livreurParametres.nav.items.confidentialite') },
+        { id:'langue',          icon:'fa-language',           label: t('livreurParametres.nav.items.langue')          },
+        { id:'danger',          icon:'fa-triangle-exclamation', label: t('livreurParametres.nav.items.danger'), warn:'r' },
+      ],
+    },
+  ];
+}
 
 export default function ParamNav({ active, onSelect, onBack }: Props) {
+  const { t } = useTranslation();
+  const GROUPS = buildGroups(t);
   return (
     <nav className={styles.nav}>
       {/* Retour dashboard */}
       <div className={styles.back} onClick={onBack}>
         <i className="fas fa-arrow-left" />
-        <span>Tableau de bord</span>
+        <span>{t('livreurParametres.nav.tableauDeBord')}</span>
       </div>
 
       {GROUPS.map(grp => (

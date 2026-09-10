@@ -1,0 +1,17 @@
+{
+  "livreurRefuseModal": {
+    "titre": "Decline mission {{id}}",
+    "warning": "This mission will be removed from your list. The company (or the customer) will need to choose another courier.",
+    "motifLabel": "Reason for declining (required)",
+    "reasons": {
+      "tropLoin": "Too far",
+      "indisponible": "Unavailable",
+      "horsZone": "Out of coverage area",
+      "autre": "Other"
+    },
+    "precisezPlaceholder": "Please specify the reason…",
+    "annuler": "Cancel",
+    "enCours": "In progress…",
+    "confirmer": "Confirm decline"
+  }
+}

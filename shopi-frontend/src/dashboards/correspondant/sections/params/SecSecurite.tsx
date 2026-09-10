@@ -1,9 +1,9 @@
 /* SecSecurite.tsx — VERSION CONNECTÉE */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import s from '../../styles/ParamsShared.module.css';
 import ToggleRow from './ToggleRow';
 import { pop } from '../../components/Toast';
-import { SESSIONS, SEC_TOGGLES, type ToggleRow as TRow } from '../../data/parametresData';
+import { SEC_TOGGLES, type ToggleRow as TRow } from '../../data/parametresData';
 import type { CorrespondantData } from '../../hooks/useCorrespondantParametres';
 import TwoFaSetupModal from '../../../../shared/components/TwoFaSetupModal';
 
@@ -12,23 +12,22 @@ interface Props {
   dirty: () => void; markClean: () => void; saveTrigger: number;
   onSave: (body: { twoFaEnabled?: boolean; twoFaMethod?: string }) => Promise<any>;
   onChangePassword: (body: { currentPassword: string; newPassword: string }) => Promise<any>;
+  /** Déconnexion réelle — voir "Se déconnecter" sur la carte Session. */
+  onLogout: () => void;
 }
 
-const SEC_KEYS: Record<number, string> = { 0:'sms', 1:'authenticator', 2:'alerteConnexion' };
 function strength(pwd: string) { let n=0; if(pwd.length>=8)n++; if(/[A-Z]/.test(pwd))n++; if(/[0-9]/.test(pwd))n++; if(/[^A-Za-z0-9]/.test(pwd))n++; return n; }
 const STR_COLOR = ['var(--red)','var(--amber)','var(--teal)','var(--emerald)'];
 const STR_LABEL = ['Trop faible','Faible','Bon','Fort'];
 
-export default function SecSecurite({ data, saving, dirty, markClean, saveTrigger, onSave, onChangePassword }: Props) {
+export default function SecSecurite({ data, saving, dirty, markClean, saveTrigger, onSave, onChangePassword, onLogout }: Props) {
   const [pwdAct,   setPwdAct]   = useState('');
   const [pwdNew,   setPwdNew]   = useState('');
   const [pwdConf,  setPwdConf]  = useState('');
   const [showPwd,  setShowPwd]  = useState([false,false,false]);
   const [secToggs, setSecToggs] = useState<TRow[]>(SEC_TOGGLES.map(t => ({ ...t })));
-  const [otp,      setOtp]      = useState(Array(6).fill(''));
   const [changing, setChanging] = useState(false);
   const [show2fa,  setShow2fa]  = useState(false);
-  const otpRefs = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null));
   const str = strength(pwdNew);
 
   /* ── Init 2FA depuis API ── */
@@ -71,12 +70,6 @@ export default function SecSecurite({ data, saving, dirty, markClean, saveTrigge
       pop('✅ Mot de passe modifié', 's');
     } catch (e: any) { pop(`❌ ${e.message}`, 'e'); }
     finally { setChanging(false); }
-  }
-
-  function handleOtp(i: number, val: string) {
-    const d = val.replace(/\D/,'').slice(-1);
-    setOtp(p => p.map((v, j) => j === i ? d : v));
-    if (d && i < 5) otpRefs[i + 1].current?.focus();
   }
 
   return (
@@ -136,52 +129,66 @@ export default function SecSecurite({ data, saving, dirty, markClean, saveTrigge
           </div>
         </div>
         <div className={s.fcBody}>
-          {secToggs.map((t, i) => (
-            <ToggleRow key={t.label} label={t.label} sub={t.sub} checked={t.checked} badge={t.badge}
-              onChange={v => { setSecToggs(p => p.map((x, j) => j === i ? { ...x, checked:v } : x)); dirty(); }} />
-          ))}
-          <div style={{ paddingTop:14, borderTop:'1px solid var(--bdr)', marginTop:2 }}>
-            <div style={{ fontSize:12, fontWeight:700, color:'var(--navy)', marginBottom:9 }}>Tester votre code 2FA</div>
-            <div className={s.otpRow}>
-              {otp.map((d, i) => (
-                <input key={i} ref={otpRefs[i]} className={s.otpD} type="text" maxLength={1} inputMode="numeric" value={d}
-                  onChange={e => handleOtp(i, e.target.value)}
-                  onKeyDown={e => e.key==='Backspace' && !otp[i] && i>0 && otpRefs[i-1].current?.focus()} />
-              ))}
-            </div>
-            <button onClick={() => pop('✅ Code 2FA vérifié avec succès','s')} style={{ marginTop:11, background:'var(--emerald)', color:'#fff', border:'none', borderRadius:'var(--pill)', padding:'9px 20px', fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
-              <i className="fas fa-check" /> Vérifier
-            </button>
-          </div>
+          {/* BUG CORRIGÉ — "Tester votre code 2FA" (6 cases + bouton
+           * "Vérifier") affichait TOUJOURS "Code 2FA vérifié avec succès"
+           * quel que soit ce qui était tapé, y compris rien du tout :
+           * aucune vérification réelle n'avait jamais lieu, et aucune
+           * route backend de test autonome n'existe (la vérification
+           * réelle se fait déjà pendant l'activation, via TwoFaSetupModal
+           * ci-dessous). Retiré plutôt que de continuer à prétendre
+           * vérifier quoi que ce soit. */}
+          {secToggs.map((t, i) => {
+            /* BUG CORRIGÉ — le 3e toggle ("Alerte connexion inconnue")
+             * n'a aucune colonne backend correspondante (seuls
+             * twoFaEnabled/twoFaMethod existent sur Correspondent) :
+             * jamais lu par handleSave2FA() ci-dessus, jamais envoyé au
+             * serveur — bascule sans aucun effet. Marqué honnêtement
+             * "Bientôt disponible" plutôt que de prétendre fonctionner. */
+            const comingSoon = i === 2;
+            return (
+              <ToggleRow key={t.label} label={comingSoon ? `${t.label} (bientôt disponible)` : t.label} sub={t.sub}
+                checked={comingSoon ? false : t.checked} badge={t.badge} disabled={comingSoon}
+                onChange={v => { if (!comingSoon) { setSecToggs(p => p.map((x, j) => j === i ? { ...x, checked:v } : x)); dirty(); } }} />
+            );
+          })}
         </div>
       </div>
 
-      {/* Sessions */}
+      {/* BUG CORRIGÉ — affichait 2 sessions ("iPhone 14 Pro", "MacBook
+       * Air") entièrement codées en dur, identiques pour tout le monde,
+       * avec "Déconnecter"/"Tout déconnecter" qui ne faisaient qu'un
+       * toast sans jamais rien déconnecter. Shoneya n'autorise qu'UNE
+       * session active à la fois par compte (voir SessionService côté
+       * backend) : il n'y a donc jamais eu plusieurs appareils à
+       * lister. Remplacé par la vraie session active (device/
+       * navigateur/IP/date, voir ProfilService.attachCurrentSession)
+       * avec un vrai bouton de déconnexion. */}
       <div className={s.fc}>
         <div className={s.fcHd}>
-          <div><div className={s.fcTtl}><i className="fas fa-clock-rotate-left" /> Sessions actives</div></div>
-          <button className={s.fcAction} onClick={() => pop('⚠️ Toutes les sessions déconnectées','w')}>
-            <i className="fas fa-right-from-bracket" /> Tout déconnecter
-          </button>
+          <div><div className={s.fcTtl}><i className="fas fa-clock-rotate-left" /> Session active</div></div>
         </div>
         <div className={s.fcBody}>
-          {SESSIONS.map(sess => (
-            <div key={sess.nm} className={s.sessionItem}>
-              <div className={s.sessionIc}><i className={`fas ${sess.ic}`} /></div>
+          {data?.currentSession ? (
+            <div className={s.sessionItem}>
+              <div className={s.sessionIc}><i className="fas fa-mobile-screen" /></div>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:13, fontWeight:700, color:'var(--navy)', display:'flex', alignItems:'center', gap:7 }}>
-                  {sess.nm}
-                  {sess.active && <span style={{ background:'var(--btn,#111113)', color:'#fff', fontSize:9, fontWeight:800, padding:'2px 8px', borderRadius:'var(--pill)' }}>Session actuelle</span>}
+                  {data.currentSession.device} · {data.currentSession.browser}
+                  <span style={{ background:'var(--btn,#111113)', color:'#fff', fontSize:9, fontWeight:800, padding:'2px 8px', borderRadius:'var(--pill)' }}>Session actuelle</span>
                 </div>
-                <div style={{ fontSize:11, color:'var(--t3)', marginTop:2 }}>{sess.detail}</div>
+                <div style={{ fontSize:11, color:'var(--t3)', marginTop:2 }}>
+                  {data.currentSession.ipAddress ?? '—'} · Connecté depuis le {new Date(data.currentSession.connectedSince).toLocaleDateString('fr-FR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}
+                </div>
               </div>
-              {!sess.active && (
-                <button onClick={() => pop('⚠️ Session déconnectée','w')} style={{ background:'var(--g100)', color:'var(--t1)', border:'1px solid var(--bdr2)', borderRadius:'var(--pill)', padding:'5px 13px', fontSize:11, fontWeight:700, cursor:'pointer' }}>
-                  Déconnecter
-                </button>
-              )}
+              <button onClick={onLogout} style={{ background:'var(--g100)', color:'var(--t1)', border:'1px solid var(--bdr2)', borderRadius:'var(--pill)', padding:'5px 13px', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                Se déconnecter
+              </button>
             </div>
-          ))}
+          ) : (
+            <div style={{ fontSize:12, color:'var(--t3)' }}>
+              <i className="fas fa-circle-info" /> Informations de session indisponibles pour le moment.
+            </div>
+          )}
         </div>
       </div>
 

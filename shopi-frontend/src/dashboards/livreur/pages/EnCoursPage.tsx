@@ -1,6 +1,7 @@
 // src/dashboards/livreur/pages/EnCoursPage.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import shared from '../styles/Shared.module.css';
 import styles from '../styles/EnCoursPage.module.css';
 import { fmtGNF } from '../data/livreurData';
@@ -16,6 +17,7 @@ interface Props {
 const POLL_MS = 30_000;
 
 export default function EnCoursPage({ onPop, onNavigate }: Props) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [mission, setMission] = useState<EnCoursApi | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,8 +27,9 @@ export default function EnCoursPage({ onPop, onNavigate }: Props) {
   const load = useCallback(() => {
     fetchEnCours()
       .then(setMission)
-      .catch(() => onPop('❌ Impossible de charger la mission en cours', 'e'))
+      .catch(() => onPop(t('livreurEnCours.loadError'), 'e'))
       .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -54,7 +57,7 @@ export default function EnCoursPage({ onPop, onNavigate }: Props) {
     return (
       <div className={shared.page}>
         <div style={{ padding:'60px 0', textAlign:'center', color:'var(--t3)', fontSize:14 }}>
-          <i className="fas fa-circle-notch fa-spin" /> Chargement de la mission en cours…
+          <i className="fas fa-circle-notch fa-spin" /> {t('livreurEnCours.chargement')}
         </div>
       </div>
     );
@@ -65,8 +68,8 @@ export default function EnCoursPage({ onPop, onNavigate }: Props) {
       <div className={shared.page}>
         <div style={{ padding:'60px 0', textAlign:'center', color:'var(--t3)' }}>
           <div style={{ fontSize:48, marginBottom:12 }}>🛵</div>
-          <div style={{ fontSize:14, fontWeight:700, color:'var(--navy)' }}>Aucune mission en cours</div>
-          <div style={{ fontSize:12, marginTop:4 }}>Acceptez une mission depuis "Missions disponibles" pour commencer une livraison.</div>
+          <div style={{ fontSize:14, fontWeight:700, color:'var(--navy)' }}>{t('livreurEnCours.empty.title')}</div>
+          <div style={{ fontSize:12, marginTop:4 }}>{t('livreurEnCours.empty.sub')}</div>
         </div>
       </div>
     );
@@ -82,13 +85,13 @@ export default function EnCoursPage({ onPop, onNavigate }: Props) {
   const urgent = hasEta && secs < 5 * 60;
 
   const clientInitiale = mission.client.nom.trim().charAt(0).toUpperCase() || '?';
-  const telephone = mission.client.telephone ?? 'Non renseigné';
+  const telephone = mission.client.telephone ?? t('livreurEnCours.telephoneNonRenseigne');
 
   const CLIENT_INFO = [
-    { ic:'fa-phone',        lbl:'Téléphone', val: telephone },
-    { ic:'fa-location-dot', lbl:'Adresse',   val: mission.client.adresse },
+    { ic:'fa-phone',        lbl: t('livreurEnCours.clientInfo.telephone'), val: telephone },
+    { ic:'fa-location-dot', lbl: t('livreurEnCours.clientInfo.adresse'),   val: mission.client.adresse },
     ...(mission.client.instructions
-      ? [{ ic:'fa-comment', lbl:'Instruction', val: mission.client.instructions }]
+      ? [{ ic:'fa-comment', lbl: t('livreurEnCours.clientInfo.instruction'), val: mission.client.instructions }]
       : []),
   ];
 
@@ -99,7 +102,7 @@ export default function EnCoursPage({ onPop, onNavigate }: Props) {
         <div className={styles.maBg} /><div className={styles.maGrid} />
         <div className={styles.maPulse}>🛵</div>
         <div className={styles.maInfo}>
-          <div className={styles.maLabel}>Mission active · {mission.id}</div>
+          <div className={styles.maLabel}>{t('livreurOverview.missionActive.label')} · {mission.id}</div>
           <div className={styles.maTitle}>{mission.nm}</div>
           <div className={styles.maMeta}>
             <span><i className="fas fa-store" /> {mission.shop}</span>
@@ -110,15 +113,15 @@ export default function EnCoursPage({ onPop, onNavigate }: Props) {
           {hasEta && (
             <div className={`${styles.maTimer} ${urgent ? styles.timerUrgent : ''}`}>
               <div className={`${styles.maTimerVal} ${urgent ? styles.timerValUrgent : ''}`}>{mm}:{ss}</div>
-              <div className={styles.maTimerLbl}>Temps restant</div>
+              <div className={styles.maTimerLbl}>{t('livreurOverview.missionActive.timeLeft')}</div>
             </div>
           )}
           <div className={styles.maActions}>
             <button className={styles.maBtnOk} onClick={() => navigate(`/commande/${mission.uuid}/suivi`)}>
-              <i className="fas fa-check-circle" /> Voir la commande
+              <i className="fas fa-check-circle" /> {t('livreurOverview.missionActive.voirCommande')}
             </button>
-            <button className={styles.maBtnIssue} onClick={() => onPop(`📞 Appel client : ${telephone}`, 'i')}>
-              <i className="fas fa-phone" /> Appeler le client
+            <button className={styles.maBtnIssue} onClick={() => onPop(t('livreurEnCours.appelClientToast', { telephone }), 'i')}>
+              <i className="fas fa-phone" /> {t('livreurEnCours.appelerLeClient')}
             </button>
           </div>
         </div>
@@ -127,7 +130,7 @@ export default function EnCoursPage({ onPop, onNavigate }: Props) {
       {/* Steps + Client */}
       <div className={shared.g2}>
         <div className={`${shared.card} ${shared.cardLast}`}>
-          <div className={shared.ch}><div className={shared.chT}><i className="fas fa-route" /> Étapes de la livraison</div></div>
+          <div className={shared.ch}><div className={shared.chT}><i className="fas fa-route" /> {t('livreurEnCours.etapesLivraison')}</div></div>
           <div className={shared.cb}>
             <div className={styles.steps}>
               {mission.steps.map((s, i) => (
@@ -148,7 +151,7 @@ export default function EnCoursPage({ onPop, onNavigate }: Props) {
           </div>
         </div>
         <div className={`${shared.card} ${shared.cardLast}`}>
-          <div className={shared.ch}><div className={shared.chT}><i className="fas fa-user-circle" /> Informations client</div></div>
+          <div className={shared.ch}><div className={shared.chT}><i className="fas fa-user-circle" /> {t('livreurEnCours.informationsClient')}</div></div>
           <div className={shared.cb}>
             <div className={styles.clientHd}>
               <div className={styles.clientAva}>{clientInitiale}</div>
@@ -166,11 +169,11 @@ export default function EnCoursPage({ onPop, onNavigate }: Props) {
               </div>
             ))}
             <div className={styles.clientBtns}>
-              <button className={styles.btnCall} onClick={() => onPop('📞 Appel en cours…', 'i')}>
-                <i className="fas fa-phone" /> Appeler
+              <button className={styles.btnCall} onClick={() => onPop(t('livreurEnCours.appelEnCoursToast'), 'i')}>
+                <i className="fas fa-phone" /> {t('livreurEnCours.appeler')}
               </button>
               <button className={styles.btnMsg} onClick={() => onNavigate('messagerie')}>
-                <i className="fas fa-comment-dots" /> Messagerie
+                <i className="fas fa-comment-dots" /> {t('livreurEnCours.messagerie')}
               </button>
             </div>
           </div>

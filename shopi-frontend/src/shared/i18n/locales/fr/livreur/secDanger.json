@@ -1,0 +1,44 @@
+{
+  "livreurSecDanger": {
+    "header": {
+      "titre": "Zone sensible",
+      "sub": "Actions irréversibles sur votre compte. Chaque action requiert votre mot de passe."
+    },
+    "actionsSensibles": "Actions sensibles",
+    "actions": {
+      "pause": {
+        "ttl": "Mettre le compte en pause",
+        "sub": "Vous ne recevrez plus de missions. Réactivez à tout moment depuis ce menu.",
+        "btn": "Mettre en pause",
+        "confirm": "Votre compte sera mis en pause. Vous pouvez réactiver à tout moment."
+      },
+      "desactiver": {
+        "ttl": "Désactiver le compte",
+        "sub": "Compte désactivé pendant 30 jours. Passé ce délai, une réactivation manuelle sera nécessaire.",
+        "btn": "Désactiver",
+        "confirm": "Votre compte sera désactivé pour 30 jours."
+      },
+      "supprimer": {
+        "ttl": "Supprimer définitivement le compte",
+        "sub": "Action irréversible. Toutes vos données, missions et historique seront supprimés.",
+        "btn": "Supprimer définitivement",
+        "confirm": "⚠️ ATTENTION : cette action est IRRÉVERSIBLE. Toutes vos données seront supprimées."
+      }
+    },
+    "modal": {
+      "confirmationRequise": "Confirmation requise",
+      "saisirMotDePasse": "Saisissez votre mot de passe pour confirmer",
+      "placeholderMotDePasse": "Votre mot de passe",
+      "annuler": "Annuler",
+      "confirmer": "Confirmer",
+      "enCours": "En cours…"
+    },
+    "toasts": {
+      "motDePasseRequis": "⚠️ Saisissez votre mot de passe pour confirmer",
+      "pauseOk": "⏸️ Compte mis en pause",
+      "desactiverOk": "⚠️ Compte désactivé",
+      "supprimerOk": "🗑️ Compte supprimé définitivement",
+      "motDePasseIncorrect": "❌ Mot de passe incorrect — action refusée"
+    }
+  }
+}

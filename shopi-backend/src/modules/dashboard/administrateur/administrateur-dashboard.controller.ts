@@ -4,12 +4,14 @@
  * ============================================================ */
 
 import {
-  Body, Controller, Delete, Get, Param, Patch, Post,
+  Body, Controller, Delete, Get, Param, Patch, Post, Put,
   Query, Request, UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 import { AdministrateurDashboardService, GenerateCodeDto } from './administrateur-dashboard.service';
 import { SuspendActeurDto } from './dto/suspend-acteur.dto';
+import { UpdateCommunicationDto } from './dto/update-communication.dto';
+import { auditMeta } from './helpers/admin.helpers';
 
 @UseGuards(JwtAuthGuard)
 @Controller('dashboard/admin')
@@ -41,17 +43,17 @@ export class AdministrateurDashboardController {
 
   @Post('codes')
   generateCode(@Request() req: any, @Body() body: GenerateCodeDto) {
-    return this.svc.generateCode(req.user.id, body);
+    return this.svc.generateCode(req.user.id, body, auditMeta(req));
   }
 
   @Delete('codes/:id')
   revokeCode(@Request() req: any, @Param('id') id: string) {
-    return this.svc.revokeCode(req.user.id, id);
+    return this.svc.revokeCode(req.user.id, id, auditMeta(req));
   }
 
   @Post('codes/:id/send-email')
   sendCodeByEmail(@Request() req: any, @Param('id') id: string) {
-    return this.svc.sendCodeByEmail(req.user.id, id);
+    return this.svc.sendCodeByEmail(req.user.id, id, auditMeta(req));
   }
 
   // ── Acteurs ─────────────────────────────────────────────────
@@ -68,12 +70,12 @@ export class AdministrateurDashboardController {
 
   @Patch('acteurs/:id/suspend')
   suspendActeur(@Request() req: any, @Param('id') id: string, @Body() dto: SuspendActeurDto) {
-    return this.svc.suspendActeur(req.user.id, id, dto.motif);
+    return this.svc.suspendActeur(req.user.id, id, dto.motif, auditMeta(req));
   }
 
   @Patch('acteurs/:id/reactivate')
   reactivateActeur(@Request() req: any, @Param('id') id: string) {
-    return this.svc.reactivateActeur(req.user.id, id);
+    return this.svc.reactivateActeur(req.user.id, id, auditMeta(req));
   }
 
   // ── Validations ─────────────────────────────────────────────
@@ -82,12 +84,12 @@ export class AdministrateurDashboardController {
 
   @Patch('validations/:id/approve')
   approveValidation(@Request() req: any, @Param('id') id: string) {
-    return this.svc.approveValidation(req.user.id, id);
+    return this.svc.approveValidation(req.user.id, id, auditMeta(req));
   }
 
   @Patch('validations/:id/reject')
   rejectValidation(@Request() req: any, @Param('id') id: string) {
-    return this.svc.rejectValidation(req.user.id, id);
+    return this.svc.rejectValidation(req.user.id, id, auditMeta(req));
   }
 
   // ── Partenaires ─────────────────────────────────────────────
@@ -117,22 +119,22 @@ export class AdministrateurDashboardController {
 
   @Patch('signalements/:id/resolve')
   resolveSignalement(@Request() req: any, @Param('id') id: string) {
-    return this.svc.resolveSignalement(req.user.id, id);
+    return this.svc.resolveSignalement(req.user.id, id, auditMeta(req));
   }
 
   @Patch('signalements/:id/investigate')
   investigateSignalement(@Request() req: any, @Param('id') id: string) {
-    return this.svc.investigateSignalement(req.user.id, id);
+    return this.svc.investigateSignalement(req.user.id, id, auditMeta(req));
   }
 
   @Patch('signalements/:id/warn')
   warnSignalement(@Request() req: any, @Param('id') id: string) {
-    return this.svc.warnSignalement(req.user.id, id);
+    return this.svc.warnSignalement(req.user.id, id, auditMeta(req));
   }
 
   @Patch('signalements/:id/reject')
   rejectSignalement(@Request() req: any, @Param('id') id: string, @Body('reason') reason?: string) {
-    return this.svc.rejectSignalement(req.user.id, id, reason);
+    return this.svc.rejectSignalement(req.user.id, id, reason, auditMeta(req));
   }
 
   // ── Commandes ───────────────────────────────────────────────
@@ -166,4 +168,13 @@ export class AdministrateurDashboardController {
   // ── Statistiques complémentaires ─────────────────────────────
   @Get('stats')
   getStats(@Request() req: any) { return this.svc.getStats(req.user.id); }
+
+  // ── Communication (message/signature d'invitation + modèles) ─
+  @Get('communication')
+  getCommunication(@Request() req: any) { return this.svc.getCommunication(req.user.id); }
+
+  @Put('communication')
+  updateCommunication(@Request() req: any, @Body() dto: UpdateCommunicationDto) {
+    return this.svc.updateCommunication(req.user.id, dto);
+  }
 }

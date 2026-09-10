@@ -8,7 +8,7 @@
  *
  * CHAQUE SECTION A SES ENDPOINTS PROPRES :
  *   Section 1+2  — GET/PATCH boutique, contact, logo, cover
- *   Section 3    — GET/PUT/PATCH horaires
+ *   Section 3    — GET/PATCH horaires
  *   Section 4    — PATCH catalogue
  *   Section 5    — PATCH livraison
  *   Section 6    — PATCH paiement
@@ -67,6 +67,13 @@ import { JourSemaine }          from 'src/database/entities/entreprise.table/com
 const MAX_IMAGE_SIZE = 5  * 1024 * 1024; // 5 MB
 const MAX_DOC_SIZE   = 10 * 1024 * 1024; // 10 MB
 
+/* ── Helper sessionId — voir JwtStrategy (claim `sid`), utilisé pour
+ * afficher la session actuelle réelle sur l'écran Sécurité (voir
+ * BoutiqueParametresService.attachCurrentSession). ── */
+function sessionId(req: any): string | null {
+  return req.user?.sessionId ?? null;
+}
+
 /* FIX C1 — Ajout RolesGuard + restriction COMPANY uniquement.
  * Sans ce correctif, tout utilisateur JWT (CLIENT, LIVREUR…)
  * pouvait appeler tous les endpoints paramètres. */
@@ -98,7 +105,7 @@ export class ParametresController {
   @RequiresTeamPermission('settings', 'view')
   @Get()
   getAll(@Req() req: any) {
-    return this.boutiqueService.getParametres(req.user.actorId ?? req.user.id);
+    return this.boutiqueService.getParametres(req.user.actorId ?? req.user.id, sessionId(req));
   }
 
   /** Identique à getAll() mais gardée par boutique.view au lieu de
@@ -118,7 +125,7 @@ export class ParametresController {
   @RequiresTeamPermission('settings', 'edit')
   @Patch('boutique')
   updateBoutique(@Req() req: any, @Body() dto: UpdateBoutiqueDto) {
-    return this.boutiqueService.updateBoutique(req.user.actorId ?? req.user.id, dto);
+    return this.boutiqueService.updateBoutique(req.user.actorId ?? req.user.id, dto, sessionId(req));
   }
 
   /** Mettre à jour Contact & Localisation */
@@ -126,7 +133,7 @@ export class ParametresController {
   @RequiresTeamPermission('settings', 'edit')
   @Patch('contact')
   updateContact(@Req() req: any, @Body() dto: UpdateContactDto) {
-    return this.boutiqueService.updateContact(req.user.actorId ?? req.user.id, dto);
+    return this.boutiqueService.updateContact(req.user.actorId ?? req.user.id, dto, sessionId(req));
   }
 
   /** Uploader le logo (multipart/form-data, champ "file") */

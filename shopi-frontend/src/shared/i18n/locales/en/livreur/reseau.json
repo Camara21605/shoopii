@@ -1,0 +1,22 @@
+{
+  "livreurReseau": {
+    "correspondants": {
+      "titre": "Correspondents",
+      "chargement": "Loading…",
+      "erreurSuffix": "— demo data shown.",
+      "vide": "No correspondent available.",
+      "missions_one": "{{count}} mission",
+      "missions_other": "{{count}} missions",
+      "enLigne": "Online"
+    },
+    "livreurs": {
+      "titre": "Couriers",
+      "chargement": "Loading…",
+      "erreurSuffix": "— demo data shown.",
+      "vide": "No courier available.",
+      "livraisons_one": "{{count}} delivery",
+      "livraisons_other": "{{count}} deliveries",
+      "disponible": "Available"
+    }
+  }
+}

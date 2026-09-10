@@ -4,6 +4,7 @@
  * Menu latéral du dashboard partenaire (navy).
  * ================================================================ */
 
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/Sidebar.module.css';
 import type { PartenairePage } from '../data/types';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
@@ -18,35 +19,39 @@ interface SidebarProps {
   partnerTier?: string;
 }
 
-const NAV = [
-  { title: 'Principal', items: [
-    { id: 'overview' as PartenairePage, icon: 'fa-chart-pie', label: "Vue d'ensemble" },
-  ]},
-  { title: 'Acquisition', items: [
-    { id: 'codes'        as PartenairePage, icon: 'fa-qrcode',        label: 'Codes de création', badge: '3',  badgeCls: 'a' },
-    { id: 'acteurs'      as PartenairePage, icon: 'fa-people-group',  label: 'Mes acteurs',       badge: '18', badgeCls: 'g' },
-    { id: 'invitations'  as PartenairePage, icon: 'fa-paper-plane',   label: 'Invitations' },
-  ]},
-  { title: 'Revenus', items: [
-    { id: 'commissions' as PartenairePage, icon: 'fa-hand-holding-dollar', label: 'Commissions' },
-    { id: 'paiements'   as PartenairePage, icon: 'fa-wallet',              label: 'Paiements' },
-  ]},
-  { title: 'Performance', items: [
-    { id: 'stats' as PartenairePage, icon: 'fa-chart-line', label: 'Statistiques' },
-  ]},
-  { title: 'Sécurité', items: [
-    { id: 'signalements' as PartenairePage, icon: 'fa-shield-halved', label: 'Signalements', badge: '2', badgeCls: 'a' },
-  ]},
-  { title: 'Compte', items: [
-    { id: 'parametres' as PartenairePage, icon: 'fa-gear', label: 'Paramètres' },
-  ]},
-];
+function buildNav(t: (k: string) => string) {
+  return [
+    { title: t('partenaireLayout.sidebar.sections.principal'), items: [
+      { id: 'overview' as PartenairePage, icon: 'fa-chart-pie', label: t('partenaireLayout.sidebar.items.overview') },
+    ]},
+    { title: t('partenaireLayout.sidebar.sections.acquisition'), items: [
+      { id: 'codes'        as PartenairePage, icon: 'fa-qrcode',        label: t('partenaireLayout.sidebar.items.codes'),   badge: '3',  badgeCls: 'a' },
+      { id: 'acteurs'      as PartenairePage, icon: 'fa-people-group',  label: t('partenaireLayout.sidebar.items.acteurs'), badge: '18', badgeCls: 'g' },
+      { id: 'invitations'  as PartenairePage, icon: 'fa-paper-plane',   label: t('partenaireLayout.sidebar.items.invitations') },
+    ]},
+    { title: t('partenaireLayout.sidebar.sections.revenus'), items: [
+      { id: 'commissions' as PartenairePage, icon: 'fa-hand-holding-dollar', label: t('partenaireLayout.sidebar.items.commissions') },
+      { id: 'paiements'   as PartenairePage, icon: 'fa-wallet',              label: t('partenaireLayout.sidebar.items.paiements') },
+    ]},
+    { title: t('partenaireLayout.sidebar.sections.performance'), items: [
+      { id: 'stats' as PartenairePage, icon: 'fa-chart-line', label: t('partenaireLayout.sidebar.items.stats') },
+    ]},
+    { title: t('partenaireLayout.sidebar.sections.securite'), items: [
+      { id: 'signalements' as PartenairePage, icon: 'fa-shield-halved', label: t('partenaireLayout.sidebar.items.signalements'), badge: '2', badgeCls: 'a' },
+    ]},
+    { title: t('partenaireLayout.sidebar.sections.compte'), items: [
+      { id: 'parametres' as PartenairePage, icon: 'fa-gear', label: t('partenaireLayout.sidebar.items.parametres') },
+    ]},
+  ];
+}
 
 export default function Sidebar({
   activePage, onNavigate, onGenerate,
   isOpen = false, onClose,
   partnerName = 'Mohamed Soumah', partnerTier = 'Partenaire Or · Conakry',
 }: SidebarProps) {
+  const { t } = useTranslation();
+  const NAV = buildNav(t);
   const initiales = partnerName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
   return (
@@ -60,7 +65,7 @@ export default function Sidebar({
         {/* Logo */}
         <div className={styles.logo}>
           <div className={styles.brand}>Sho<b>neya</b></div>
-          <span className={styles.tag}>PARTENAIRE</span>
+          <span className={styles.tag}>{t('partenaireLayout.sidebar.brandTag')}</span>
         </div>
 
         {/* Carte partenaire */}
@@ -104,7 +109,7 @@ export default function Sidebar({
         {/* CTA */}
         <div className={styles.cta}>
           <button className={styles.ctaBtn} onClick={onGenerate}>
-            <i className="fas fa-plus" /> Générer un code
+            <i className="fas fa-plus" /> {t('partenaireLayout.sidebar.generateBtn')}
           </button>
         </div>
       </nav>

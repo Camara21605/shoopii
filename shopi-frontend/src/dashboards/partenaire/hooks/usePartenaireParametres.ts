@@ -81,6 +81,10 @@ export interface PartenaireData {
   totalDeliveries:    number;
   totalCorrespondants:number;
 
+  /* Lien de parrainage — voir SecParrainage.tsx */
+  referralSlug:   string | null;
+  referralClicks: number;
+
   /* Sécurité */
   twoFaEnabled: boolean;
   twoFaMethod:  string | null;
@@ -141,6 +145,8 @@ interface ApiResponse {
   totalCompanies:     number;
   totalDeliveries:    number;
   totalCorrespondants:number;
+  referralSlug:   string | null;
+  referralClicks: number;
   twoFaEnabled: boolean;
   twoFaMethod:  string | null;
   currentSession: CurrentSessionInfo | null;
@@ -186,6 +192,8 @@ function mapApiToData(r: ApiResponse): PartenaireData {
     totalCompanies:     r.totalCompanies,
     totalDeliveries:    r.totalDeliveries,
     totalCorrespondants:r.totalCorrespondants,
+    referralSlug:   r.referralSlug,
+    referralClicks: r.referralClicks,
     twoFaEnabled: r.twoFaEnabled,
     twoFaMethod:  r.twoFaMethod,
     currentSession: r.currentSession,

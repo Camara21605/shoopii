@@ -257,6 +257,27 @@ export class Partner {
   totalCorrespondants!: number;
 
   /* ============================================================
+   * LIEN DE PARRAINAGE
+   *
+   * Slug stable, généré paresseusement (voir ProfilPartenaireService.
+   * getParametres()) à la première consultation de la section
+   * "Parrainage" — jamais régénéré ensuite, pour que le lien déjà
+   * partagé par le partenaire reste valide. Résolu publiquement par
+   * PublicController.resolveReferral() (GET /public/rejoindre/:slug),
+   * qui incrémente referralClicks à chaque visite, puis par
+   * AuthService.register() (champ RegisterDto.referralSlug) pour
+   * rattacher le nouvel acteur à ce partenaire — même rattachement que
+   * les codes de création, sans code à saisir.
+   * ============================================================ */
+
+  @Index({ unique: true, where: '"referralSlug" IS NOT NULL' })
+  @Column({ type: 'varchar', length: 64, nullable: true })
+  referralSlug!: string | null;
+
+  @Column({ type: 'int', default: 0 })
+  referralClicks!: number;
+
+  /* ============================================================
    * TIMESTAMPS
    * ============================================================ */
 

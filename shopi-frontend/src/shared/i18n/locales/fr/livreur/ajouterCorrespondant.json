@@ -1,0 +1,75 @@
+{
+  "livreurAjouterCorrespondant": {
+    "titre": "Ajouter un correspondant",
+    "typeLabel": {
+      "principal": "⭐ Principal",
+      "entrepot": "🏭 Entrepôt",
+      "export": "✈️ Export",
+      "relais": "📍 Relais"
+    },
+    "steps": { "informations": "Informations", "apercu": "Aperçu", "confirme": "Confirmé" },
+    "validation": {
+      "nomRequis": "⚠️ Le nom est requis",
+      "emailRequis": "⚠️ L'email est requis",
+      "emailInvalide": "⚠️ Email invalide"
+    },
+    "toasts": {
+      "invitationEnvoyee": "✅ Invitation envoyée à {{email}}",
+      "codeCopie": "📋 Code copié !"
+    },
+    "etape1": {
+      "nomLabel": "Nom du point relais *",
+      "nomPlaceholder": "Ex: RelaisPlus Kaloum",
+      "emailLabel": "Email de contact *",
+      "emailPlaceholder": "Ex: relais@gmail.com",
+      "emailHelper": "Le code d'invitation sera envoyé à cet email.",
+      "typeLabel": "Type de correspondant",
+      "typeOptions": {
+        "relais": "📍 Point relais — Dépôt/retrait colis",
+        "entrepot": "🏭 Entrepôt — Stockage régional",
+        "export": "✈️ Export — International",
+        "principal": "⭐ Principal — Hub central"
+      },
+      "villeLabel": "Ville",
+      "villePlaceholder": "Ex: Conakry",
+      "quartierLabel": "Quartier / Zone",
+      "quartierPlaceholder": "Ex: Kaloum, Matam…",
+      "messageLabel": "Message personnalisé",
+      "defaultMessage": "Bonjour,\n\nVous avez été sélectionné pour rejoindre le réseau de correspondants Shoneya.\n\nVeuillez utiliser le code ci-joint pour créer votre compte."
+    },
+    "etape2": {
+      "apercuTitle": "Aperçu de l'email qui sera envoyé",
+      "emailSubject": "Invitation Shoneya — Rejoignez notre réseau",
+      "aLabel": "À :",
+      "bonjour": "Bonjour",
+      "codeLabel": "Votre code d'invitation",
+      "codeValidite": "Valable 7 jours · Usage unique · Généré à l'envoi",
+      "villeRow": "Ville :",
+      "zoneRow": "Zone :",
+      "typeRow": "Type :",
+      "infoPart1": "Ce code expire dans ",
+      "infoBold1": "7 jours",
+      "infoPart2": ". Il peut être utilisé une seule fois. L'email sera envoyé depuis ",
+      "infoBold2": "noreply@shopi.gn",
+      "infoPart3": "."
+    },
+    "etape3": {
+      "titre": "Invitation envoyée !",
+      "codeEnvoyeA": "Code envoyé à",
+      "nom": "Nom",
+      "email": "Email",
+      "ville": "Ville",
+      "type": "Type",
+      "codeGenere": "Code d'invitation généré",
+      "copier": "Copier",
+      "expireLe": "Expire le {{date}} · Usage unique"
+    },
+    "actions": {
+      "suivant": "Suivant",
+      "retour": "Retour",
+      "envoiEnCours": "Envoi…",
+      "envoyerInvitation": "Envoyer l'invitation",
+      "ajouterAutre": "Ajouter un autre correspondant"
+    }
+  }
+}

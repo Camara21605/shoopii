@@ -1,0 +1,49 @@
+{
+  "livreurZone": {
+    "carteTitre": "Ma position en temps réel",
+    "fermer": "Fermer",
+    "sharing": {
+      "autoTitle": "Partage automatique actif",
+      "activeTitle": "Partage actif",
+      "offTitle": "Partage désactivé",
+      "autoSub": "Visible en direct par le client et la boutique de votre livraison en cours",
+      "activeSub": "Les boutiques et clients voient votre position",
+      "offSub": "Activez pour être visible sur la carte",
+      "stop": "⏹ Arrêter",
+      "start": "▶ Partager",
+      "cantStopToast": "🛵 Livraison en cours — le partage ne peut pas être arrêté.",
+      "stoppedToast": "⏹ Partage de position arrêté.",
+      "startedToast": "📍 Partage de position démarré."
+    },
+    "lat": "Lat :",
+    "lng": "Lng :",
+    "missionAddr": {
+      "boutiqueId": "Boutique · {{id}}",
+      "pays": "Pays :",
+      "ville": "Ville :",
+      "quartier": "Quartier :",
+      "positionApprox": " (position approximative)"
+    },
+    "maPosition": "Ma position",
+    "zones": {
+      "title": "Mes zones de livraison",
+      "dispoBadge_one": "{{dispo}}/{{total}} disponible",
+      "dispoBadge_other": "{{dispo}}/{{total}} disponibles",
+      "loading": "Chargement des zones…",
+      "noZonesTitle": "Aucune zone configurée",
+      "noZonesPrefix": "Rendez-vous dans ",
+      "noZonesBold": "Paramètres → Zones",
+      "noZonesSuffix": " pour définir votre périmètre.",
+      "activeFallback": "Zones actives",
+      "available": "Disponible",
+      "unavailable": "Non disponible",
+      "loadError": "Impossible de charger les zones.",
+      "dispoOnToast": "✅ Disponible sur {{zone}}",
+      "dispoOffToast": "⏸ Non disponible sur {{zone}}",
+      "dispoUpdateError": "❌ Impossible de mettre à jour la disponibilité"
+    },
+    "stats": {
+      "title": "Statistiques par zone"
+    }
+  }
+}

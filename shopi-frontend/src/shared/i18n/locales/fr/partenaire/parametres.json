@@ -1,0 +1,292 @@
+{
+  "partenaireParametres": {
+    "nav": {
+      "ariaLabel": "Navigation paramètres partenaire",
+      "groups": {
+        "identite": "Identité",
+        "activite": "Activité",
+        "finances": "Finances",
+        "compte": "Compte"
+      },
+      "items": {
+        "profil": "Profil",
+        "documents": "Vérification",
+        "zone": "Zone d'activité",
+        "parrainage": "Parrainage",
+        "paiement": "Paiement",
+        "notifications": "Notifications",
+        "securite": "Sécurité",
+        "confidentialite": "Confidentialité",
+        "preferences": "Préférences",
+        "danger": "Zone danger"
+      }
+    },
+    "page": {
+      "loading": "Chargement des paramètres…",
+      "deconnexion": "Se déconnecter",
+      "annulerToast": "↩️ Modifications annulées"
+    },
+    "saveFloat": {
+      "unsaved": "Modifications non sauvegardées",
+      "saving": "Sauvegarde…",
+      "save": "Sauvegarder",
+      "cancel": "Annuler"
+    },
+    "secProfil": {
+      "health": {
+        "completedLabel": "Complété",
+        "titleLow": "Complétez votre profil",
+        "titleHigh": "Profil bien rempli",
+        "paragraphLow": "Ajoutez vos informations manquantes pour renforcer votre crédibilité auprès des acteurs recrutés.",
+        "paragraphHigh": "Votre profil partenaire est complet. Vous pouvez continuer à recruter avec confiance.",
+        "identiteLabel": "Identité",
+        "verifie": "Vérifié",
+        "enAttente": "En attente",
+        "doubleAuthLabel": "Double auth.",
+        "activee": "Activée",
+        "desactivee": "Désactivée"
+      },
+      "infosCard": {
+        "title": "Informations personnelles",
+        "sub": "Ces informations apparaissent sur votre profil partenaire.",
+        "photoTitle": "Photo de profil",
+        "photoDesc": "JPG, PNG, WebP ou GIF. Taille max. 5 Mo.",
+        "photoUploading": "Téléversement…",
+        "photoChangeBtn": "Changer la photo",
+        "prenomLabel": "Prénom",
+        "nomLabel": "Nom",
+        "verrouille": " — verrouillé",
+        "prenomPlaceholder": "Votre prénom",
+        "nomPlaceholder": "Votre nom",
+        "nameLockedHint": "Le prénom et le nom ne peuvent être modifiés qu'une fois tous les 3 mois — prochaine modification possible le {{date}}.",
+        "telephoneLabel": "Téléphone",
+        "nonModifiable": "— non modifiable",
+        "emailLabel": "Email",
+        "bioLabel": "Bio / Présentation",
+        "optionnel": "optionnel",
+        "bioPlaceholder": "Présentez-vous en quelques mots…",
+        "bioHint": "Visible sur votre profil public partenaire."
+      },
+      "statutCard": {
+        "title": "Statut partenaire",
+        "verifieBadge": "Partenaire vérifié",
+        "palierPrefix": "Palier",
+        "niveauLabel": "Niveau {{n}}",
+        "membreDepuis": "Membre depuis {{date}}"
+      },
+      "toasts": {
+        "profilSaved": "✅ Profil sauvegardé",
+        "profilError": "❌ Erreur lors de la sauvegarde",
+        "photoSaved": "✅ Photo mise à jour",
+        "photoError": "❌ Échec du téléversement"
+      }
+    },
+    "secDocuments": {
+      "title": "Documents & vérification",
+      "sub": "La vérification renforce votre indice de confiance et débloque des paliers supérieurs.",
+      "docs": {
+        "cni": "Pièce d'identité (CNI / Passeport)",
+        "domicile": "Justificatif de domicile",
+        "activite": "Justificatif d'activité"
+      },
+      "optionnel": "(optionnel)",
+      "statuts": {
+        "ok": "Vérifié",
+        "wait": "En cours de vérification",
+        "todo": "Non fourni"
+      },
+      "ajouterBtn": "Ajouter",
+      "remplacerBtn": "Remplacer",
+      "uploadSuccessToast": "✅ Document téléversé avec succès",
+      "uploadErrorToast": "❌ Échec du téléversement",
+      "footerNote": "La pièce d'identité et le justificatif de domicile sont obligatoires : tant qu'ils ne sont pas fournis, le retrait de vos commissions reste bloqué."
+    },
+    "secZone": {
+      "title": "Zone d'activité",
+      "sub": "Les zones où vous recrutez des acteurs pour Shoneya.",
+      "villeLabel": "Ville principale",
+      "selectPlaceholder": "— Sélectionner —",
+      "chargement": "Chargement…",
+      "aucuneVille": "Aucune ville configurée par un administrateur pour le moment.",
+      "communeLabel": "Commune",
+      "aucuneCommune": "Aucune commune configurée pour \"{{ville}}\".",
+      "quartiersLabel": "Quartiers / marchés ciblés",
+      "selectCommuneHint": "Sélectionnez une commune pour voir ses quartiers.",
+      "aucunQuartier": "Aucun quartier configuré pour \"{{commune}}\".",
+      "footerHint": "Aide Shoneya à vous proposer des prospects proches.",
+      "savedToast": "✅ Zone d'activité sauvegardée",
+      "errorToast": "❌ Erreur lors de la sauvegarde"
+    },
+    "secParrainage": {
+      "title": "Votre lien de parrainage",
+      "sub": "Partagez ce lien : toute personne qui s'inscrit via lui vous est rattachée automatiquement.",
+      "boxTitle": "Lien d'invitation personnel",
+      "boxDesc": "En plus des codes de création, ce lien permet de recruter sans saisie de code.",
+      "copierBtn": "Copier",
+      "whatsapp": "WhatsApp",
+      "facebook": "Facebook",
+      "qrCode": "QR Code",
+      "copiedToast": "🔗 Lien de parrainage copié",
+      "linkLoading": "Génération du lien…",
+      "whatsappMessage": "Rejoignez le réseau Shoneya via mon lien de parrainage : {{link}}",
+      "statClics": "Clics sur le lien",
+      "statInscriptions": "Acteurs recrutés (total)",
+      "qrModalTitle": "QR code du lien de parrainage",
+      "qrCloseBtn": "Fermer"
+    },
+    "secPaiement": {
+      "methodesCard": {
+        "title": "Coordonnées de versement",
+        "sub": "Choisissez la méthode par défaut pour recevoir vos commissions.",
+        "parDefaut": "Par défaut",
+        "virementBancaire": "Virement bancaire",
+        "ajouterBtn": "Ajouter une méthode de versement",
+        "ajouterToast": "⚠️ Méthodes de versement : fonctionnalité en cours d'implémentation backend"
+      },
+      "preferencesCard": {
+        "title": "Préférences de retrait",
+        "seuilLabel": "Seuil de retrait automatique",
+        "seuilPlaceholder": "Ex: 500000 GNF",
+        "seuilHint": "Versement auto dès que ce solde est atteint.",
+        "frequenceLabel": "Fréquence",
+        "frequences": {
+          "weekly": "Hebdomadaire",
+          "monthly": "Mensuelle",
+          "manual": "Manuelle (à la demande)"
+        },
+        "virAutoTitle": "Versement automatique",
+        "virAutoDesc": "Recevez vos commissions sans demande manuelle."
+      },
+      "fiscalCard": {
+        "title": "Informations fiscales",
+        "sub": "Nécessaires pour la facturation de vos commissions.",
+        "nifLabel": "NIF",
+        "optionnel": "optionnel",
+        "nifPlaceholder": "Ex. 123456789",
+        "nifHint": "Requis au-delà d'un certain volume de commissions.",
+        "statutLabel": "Statut",
+        "statuts": {
+          "particulier": "Particulier",
+          "auto-entrepreneur": "Auto-entrepreneur",
+          "entreprise": "Entreprise"
+        }
+      },
+      "retraitsCard": {
+        "title": "Derniers retraits",
+        "verse": "Versé",
+        "enCours": "En cours",
+        "aujourdhui": "Aujourd'hui · en traitement"
+      },
+      "backendToast": "⚠️ Paiement : fonctionnalité en cours d'implémentation backend"
+    },
+    "secNotifications": {
+      "card1": {
+        "title": "Notifications",
+        "sub": "Choisissez ce dont vous voulez être informé."
+      },
+      "card2Title": "Canaux",
+      "chargement": "Chargement…",
+      "alertes": {
+        "acteur":  { "t": "Nouvel acteur activé",         "d": "Quand un acteur que vous avez recruté crée son compte." },
+        "comm":    { "t": "Commission créditée",          "d": "À chaque commission ajoutée à votre solde." },
+        "sig":     { "t": "Suivi des signalements",       "d": "Mises à jour sur les signalements que vous avez envoyés." },
+        "palier":  { "t": "Changement de palier",         "d": "Quand vous progressez vers un nouveau niveau partenaire." },
+        "news":    { "t": "Offres & nouveautés Shoneya",  "d": "Conseils, programmes et actualités partenaires." }
+      },
+      "canaux": {
+        "email": "Email",
+        "sms": "SMS",
+        "push": "Notifications push"
+      },
+      "savedToast": "✅ Notifications sauvegardées",
+      "errorToast": "❌ Erreur lors de la sauvegarde"
+    },
+    "secSecurite": {
+      "pwdCard": {
+        "title": "Mot de passe",
+        "currentLabel": "Mot de passe actuel",
+        "newLabel": "Nouveau mot de passe",
+        "confirmLabel": "Confirmer",
+        "forceLabel": "Force : {{label}}",
+        "forceHint": "Utilisez au moins 8 caractères, une majuscule et un chiffre.",
+        "levels": {
+          "0": "Trop faible",
+          "1": "Faible",
+          "2": "Moyen",
+          "3": "Bon",
+          "4": "Excellent"
+        }
+      },
+      "twoFaCard": {
+        "title": "Double authentification (2FA)",
+        "smsTitle": "2FA par SMS",
+        "bientotDisponible": "— bientôt disponible",
+        "smsDesc": "Un code vous est envoyé à chaque connexion.",
+        "appTitle": "Application d'authentification",
+        "appDesc": "Google Authenticator, Authy…"
+      },
+      "sessionCard": {
+        "title": "Session active",
+        "cetAppareil": "Cet appareil",
+        "actifMaintenant": "Actif maintenant",
+        "deconnecterBtn": "Déconnecter",
+        "unavailable": "Informations de session indisponibles pour le moment."
+      },
+      "toasts": {
+        "pwdMismatch": "⚠️ Les mots de passe ne correspondent pas",
+        "pwdUpdated": "✅ Mot de passe mis à jour",
+        "pwdIncorrect": "❌ Mot de passe actuel incorrect",
+        "securiteSaved": "✅ Sécurité sauvegardée",
+        "error": "❌ Erreur lors de la sauvegarde",
+        "loggingOut": "🔒 Déconnexion en cours…",
+        "twoFaEnabled": "🔐 2FA activée avec succès"
+      }
+    },
+    "secConfidentialite": {
+      "title": "Confidentialité",
+      "rows": {
+        "profilPublic":  { "t": "Profil partenaire public",     "d": "Votre profil est visible par les acteurs que vous recrutez." },
+        "afficherTel":   { "t": "Afficher mon téléphone",       "d": "Visible par vos acteurs recrutés uniquement." },
+        "classement":    { "t": "Apparaître dans le classement","d": "Votre nom peut figurer au classement des partenaires." }
+      },
+      "exportRow": {
+        "t": "Télécharger mes données",
+        "d": "Téléchargez une copie de vos données partenaire (fichier JSON).",
+        "btn": "Télécharger",
+        "toast": "📦 Fichier téléchargé"
+      },
+      "savedToast": "✅ Confidentialité sauvegardée",
+      "errorToast": "❌ Erreur lors de la sauvegarde"
+    },
+    "secDanger": {
+      "title": "Zone danger",
+      "sub": "Actions irréversibles. Procédez avec prudence.",
+      "pauseRow": {
+        "t": "Mettre mon compte en pause",
+        "d": "Suspend temporairement votre activité de partenaire. Vos acteurs et commissions sont conservés.",
+        "btn": "Mettre en pause"
+      },
+      "deleteRow": {
+        "t": "Supprimer mon compte partenaire",
+        "d": "Toutes vos données seront définitivement effacées. Cette action ne peut pas être annulée.",
+        "btn": "Supprimer"
+      },
+      "modal": {
+        "pauseTitle": "Mettre en pause ?",
+        "deleteTitle": "Supprimer votre compte ?",
+        "pauseDesc": "Votre activité sera suspendue. Vous pourrez la réactiver depuis ce même écran à tout moment.",
+        "deleteDesc": "Cette action est irréversible. Vos acteurs recrutés, commissions et historique seront définitivement perdus.",
+        "pwdLabel": "Confirmez avec votre mot de passe",
+        "pwdRequired": "Le mot de passe est obligatoire pour confirmer cette action.",
+        "pwdIncorrect": "Mot de passe incorrect. Veuillez réessayer.",
+        "cancelBtn": "Annuler",
+        "enCours": "En cours…",
+        "confirmPauseBtn": "Mettre en pause",
+        "confirmDeleteBtn": "Supprimer définitivement"
+      },
+      "pausedToast": "⏸️ Compte mis en pause",
+      "deleteScheduledToast": "Compte programmé pour suppression",
+      "genericErrorToast": "❌ Opération impossible. Vérifiez votre connexion."
+    }
+  }
+}

@@ -1,7 +1,7 @@
 // src/dashboards/livreur/pages/MonProfilLivreurPage.tsx
 // Affiche le profil public du livreur connecté, tel que les clients le voient.
 
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLivreurParametres } from '../hooks/useLivreurParametres';
 import ProfilLivreurReseauPage from './ProfilLivreurReseauPage';
 import type { PageId } from '../data/livreurData';
@@ -13,13 +13,14 @@ interface Props {
 }
 
 export default function MonProfilLivreurPage({ onPop, onNavigate }: Props) {
+  const { t } = useTranslation();
   const { data, loading, error } = useLivreurParametres();
 
   if (loading) {
     return (
       <div className={shared.page}>
         <div style={{ textAlign: 'center', padding: 40, color: 'var(--t3)', fontSize: 13 }}>
-          <i className="fas fa-spinner fa-spin" /> Chargement du profil…
+          <i className="fas fa-spinner fa-spin" /> {t('livreurProfilReseau.chargementProfil')}
         </div>
       </div>
     );
@@ -29,7 +30,7 @@ export default function MonProfilLivreurPage({ onPop, onNavigate }: Props) {
     return (
       <div className={shared.page}>
         <div style={{ textAlign: 'center', padding: 40, color: 'var(--t3)', fontSize: 13 }}>
-          <i className="fas fa-triangle-exclamation" /> {error ?? 'Profil introuvable.'}
+          <i className="fas fa-triangle-exclamation" /> {error ?? t('livreurMonProfil.profilIntrouvable')}
         </div>
       </div>
     );
@@ -40,7 +41,7 @@ export default function MonProfilLivreurPage({ onPop, onNavigate }: Props) {
       id={data.id}
       onBack={() => onNavigate('overview')}
       onPop={onPop}
-      backLabel="Retour à l'accueil"
+      backLabel={t('livreurMonProfil.retourAccueil')}
     />
   );
 }

@@ -8,7 +8,7 @@ import type {
   Alert, AuditEntry, Admin,
 } from '../types/codes.types';
 import {
-  MOCK_CODES, MOCK_HEALTH,
+  MOCK_CODES,
 } from '../data/mockDB';
 import {
   apiFetch, ApiError, tokenStorage,
@@ -74,7 +74,6 @@ export function useSuperAdminState() {
 
   /* ── Données encore en mock ── */
   const [codes,         setCodes]         = useState(MOCK_CODES);
-  const healthData = MOCK_HEALTH;
 
   /* ── Stats par rôle (badge sidebar) ── */
   const [roleStats, setRoleStats] = useState<Record<string, number>>({});
@@ -364,7 +363,6 @@ export function useSuperAdminState() {
     codes,
     alerts, alertsLoading, alertsError, reloadAlerts: loadAlerts,
     auditLog, auditLoading, auditError, reloadAudit: loadAudit,
-    healthData,
     pendingAlerts,
     navigate, navUsers,
     setSearch, setRoleFilter, setStatusFilter, setCountryFilter, goPage,

@@ -11,7 +11,6 @@
         "paiement": "الدفع والفواتير",
         "commissions": "عمولات Shoneya",
         "documents": "المستندات والتحقق",
-        "confidentialiteSecurite": "الخصوصية والأمان",
         "securite": "الأمان",
         "notifs": "الإشعارات",
         "privacy": "الخصوصية",
@@ -157,7 +156,11 @@
       "planStandardSub": "الخطة الأساسية · مشمولة في تسجيلك",
       "planProSub": "للمتاجر ذات حجم المبيعات الكبير",
       "planPremiumSub": "عمولات مخفضة + أدوات تسويق متقدمة",
-      "tauxParVente": "{{taux}}% / بيع"
+      "tauxParVente": "{{taux}}% / بيع",
+      "confirmerChangementBtn": "تأكيد التبديل إلى خطة {{plan}}",
+      "changementEnCours": "جارٍ تغيير الخطة…",
+      "planChangedToast": "✅ تم تغيير الخطة إلى {{plan}}",
+      "planChangeErrorToast": "❌ خطأ أثناء تغيير الخطة"
     },
     "documents": {
       "docs": {
@@ -236,21 +239,12 @@
         "emailSub": "رمز يُرسل إلى بريدك الإلكتروني الرئيسي عند كل تسجيل دخول",
         "emailBadge": "أساسي"
       },
-      "sessionsTitle": "الجلسات النشطة",
-      "sessionsSubtitle": "الأجهزة المتصلة بحساب متجرك",
-      "deconnecterTout": "تسجيل الخروج من الكل",
-      "toutesSessionsToast": "🔐 تم إنهاء جميع الجلسات",
+      "sessionsTitle": "الجلسة النشطة",
+      "sessionsSubtitle": "لا يمكن تفعيل أكثر من جلسة واحدة في نفس الوقت على حساب متجرك",
       "sessionActuelle": "الجلسة الحالية",
-      "revoquer": "إلغاء",
-      "sessionTermineeToast": "🔐 تم إنهاء الجلسة",
-      "sessions": {
-        "chromeWindows": "Chrome · Windows 11",
-        "chromeWindowsSub": "كوناكري، غينيا · الآن",
-        "safariIphone": "Safari · iPhone 14",
-        "safariIphoneSub": "كوناكري، غينيا · منذ ساعتين",
-        "chromeAndroid": "Chrome · Android",
-        "chromeAndroidSub": "Coyah، غينيا · أمس الساعة 18:34"
-      }
+      "connecteDepuis": "متصل منذ {{date}}",
+      "deconnecterBtn": "تسجيل الخروج",
+      "sessionUnavailable": "معلومات الجلسة غير متوفرة حاليًا."
     },
     "notifs": {
       "savedToast": "✅ تم حفظ الإشعارات",
@@ -455,8 +449,8 @@
       "prenomPlaceholder": "الاسم الأول للمسؤول",
       "nom": "الاسم",
       "nomPlaceholder": "اسم المسؤول",
-      "responsableHintPart1": "يتم تعديل الاسم الأول والاسم في",
-      "responsableHintBold": "إعدادات حسابك",
+      "responsableHintPart1": "الاسم الأول واسم العائلة معروضان للقراءة فقط. التعديل المباشر سيكون",
+      "responsableHintBold": "متاحًا قريبًا",
       "responsableHintPart2": ".",
       "steps": {
         "logo": "الشعار",

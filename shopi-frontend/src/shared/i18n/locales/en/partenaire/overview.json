@@ -1,0 +1,45 @@
+{
+  "partenaireOverview": {
+    "loadError": "Unable to load the dashboard",
+    "hero": {
+      "eyebrow": "Partner Space",
+      "greeting": "Hello {{name}},",
+      "recruitedPrefix": "you have recruited",
+      "recruitedCount_one": "{{count}} actor",
+      "recruitedCount_other": "{{count}} actors",
+      "recruitedSuffix": "in total",
+      "paragraph": "Keep growing the Shoneya network. Every business and delivery person you recruit earns you a recurring commission.",
+      "generateBtn": "Generate a code",
+      "voirActeursBtn": "View my actors",
+      "tierName": "Partner {{zone}}",
+      "tierStatus": "Status: {{status}}",
+      "tierProgress_one": "{{count}} actor in your network",
+      "tierProgress_other": "{{count}} actors in your network"
+    },
+    "kpis": {
+      "totalActeurs": "Actors recruited (total)",
+      "codesActifs": "Active codes",
+      "tauxConversion": "Conversion rate",
+      "commissionsMonth": "Commissions this month"
+    },
+    "chart": {
+      "title": "Recruitments",
+      "semaine": "Week",
+      "mois": "Month",
+      "annee": "Year",
+      "legendEntreprises": "Businesses",
+      "legendLivreurs": "Delivery & correspondents"
+    },
+    "activite": {
+      "title": "Recent activity",
+      "empty": "No recent activity"
+    },
+    "repartition": {
+      "title": "Your network breakdown",
+      "voirTout": "See all",
+      "entreprises": "Businesses",
+      "livreurs": "Delivery people",
+      "correspondants": "Correspondents"
+    }
+  }
+}

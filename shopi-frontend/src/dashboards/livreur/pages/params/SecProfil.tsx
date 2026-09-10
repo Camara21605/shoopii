@@ -3,6 +3,7 @@
  * ✅ CONNECTÉ À L'API
  */
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { EMOJIS } from '../../data/parametresData';
 import type { LivreurData } from '../../hooks/useLivreurParametres';
 import ps from '../../styles/ParamsShared.module.css';
@@ -17,16 +18,20 @@ interface Props {
   onAvatarRefresh?: () => void;
 }
 
-const PC_STEPS = [
-  { label:'Photo',    key:'photoUrl'    },
-  { label:'Identité', key:'fullName'    },
-  { label:'Zones',    key:'communesActives' },
-  { label:'Vehicule', key:'VehicleType' },
-  { label:'Horaires', key:'horaires'    },
-  { label:'Documents', key:'documentCni' },
-];
+function buildPcSteps(t: (key: string) => string) {
+  return [
+    { label: t('livreurSecProfil.steps.photo'),     key:'photoUrl'         },
+    { label: t('livreurSecProfil.steps.identite'),  key:'fullName'         },
+    { label: t('livreurSecProfil.steps.zones'),     key:'communesActives'  },
+    { label: t('livreurSecProfil.steps.vehicule'),  key:'VehicleType'      },
+    { label: t('livreurSecProfil.steps.horaires'),  key:'horaires'         },
+    { label: t('livreurSecProfil.steps.documents'), key:'documentCni'      },
+  ];
+}
 
 export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uploadPhoto, onAvatarRefresh }: Props) {
+  const { t } = useTranslation();
+  const PC_STEPS = buildPcSteps(t);
   const [selEmoji,   setSelEmoji]   = useState(0);
   const [firstName,  setFirstName]  = useState('');
   const [lastName,   setLastName]   = useState('');
@@ -64,27 +69,27 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
         bio, phone, email, langues, ville,
         deliveryEmoji: EMOJIS[selEmoji] ?? '🛵',
       });
-      onPop('✅ Profil sauvegardé avec succès', 's');
+      onPop(t('livreurSecProfil.toasts.saveSuccess'), 's');
       onAvatarRefresh?.();
     } catch (err: any) {
-      onPop(err?.message ?? '❌ Erreur lors de la sauvegarde', 'e');
+      onPop(err?.message ?? t('livreurSecProfil.toasts.saveError'), 'e');
     }
   }
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { onPop('❌ Photo trop lourde (max 5 MB)', 'e'); return; }
+    if (file.size > 5 * 1024 * 1024) { onPop(t('livreurSecProfil.toasts.photoTooBig'), 'e'); return; }
     if (!['image/jpeg','image/png','image/webp'].includes(file.type)) {
-      onPop('❌ Format invalide — JPG, PNG ou WebP uniquement', 'e'); return;
+      onPop(t('livreurSecProfil.toasts.photoInvalidFormat'), 'e'); return;
     }
     try {
-      onPop('⏳ Upload de la photo en cours…', 'i');
+      onPop(t('livreurSecProfil.toasts.photoUploading'), 'i');
       await uploadPhoto(file);
-      onPop('✅ Photo de profil mise à jour', 's');
+      onPop(t('livreurSecProfil.toasts.photoUpdated'), 's');
       onAvatarRefresh?.();
     } catch (err: any) {
-      onPop(err?.message ?? "❌ Échec de l'upload", 'e');
+      onPop(err?.message ?? t('livreurSecProfil.toasts.photoUploadError'), 'e');
     }
     e.target.value = '';
   }
@@ -92,8 +97,8 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
       <div className={ps.psHd}>
-        <h2><i className="fas fa-user" /> Profil personnel</h2>
-        <p>Ces informations apparaissent sur votre profil public — visibles par les boutiques et clients.</p>
+        <h2><i className="fas fa-user" /> {t('livreurSecProfil.header.titre')}</h2>
+        <p>{t('livreurSecProfil.header.sub')}</p>
       </div>
 
       {/* Complétion */}
@@ -102,10 +107,10 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
         <div className={ps.pcInner}>
           <div className={ps.pcCircle}>
             <div className={ps.pcPct}>{pct}%</div>
-            <div className={ps.pcPctL}>Profil</div>
+            <div className={ps.pcPctL}>{t('livreurSecProfil.completion.label')}</div>
           </div>
           <div className={ps.pcInfo}>
-            <div className={ps.pcTitle}>Profil complété à {pct}%{pct < 100 && ' — À compléter'}</div>
+            <div className={ps.pcTitle}>{t('livreurSecProfil.completion.titlePrefix', { pct })}{pct < 100 && t('livreurSecProfil.completion.titleSuffix')}</div>
             <div className={ps.pcBarBg}><div className={ps.pcBarFill} style={{ width:`${pct}%` }} /></div>
             <div className={ps.pcSteps}>
               {PC_STEPS.map(s => {
@@ -119,13 +124,13 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
             </div>
           </div>
           <div style={{ fontSize:11, color:'rgba(228,228,231,.45)', maxWidth:160, lineHeight:1.5, flexShrink:0 }}>
-            Un profil complet reçoit <strong style={{ color:'#000000' }}>3×</strong> plus de missions
+            {t('livreurSecProfil.completion.footerPart1')}<strong style={{ color:'#000000' }}>{t('livreurSecProfil.completion.footerBold')}</strong>{t('livreurSecProfil.completion.footerPart2')}
           </div>
         </div>
       </div>
 
       <div className={`${ps.card} ${ps.cardLast}`}>
-        <div className={ps.ch}><div className={ps.chT}><i className="fas fa-id-card" /> Identité & Photo</div></div>
+        <div className={ps.ch}><div className={ps.chT}><i className="fas fa-id-card" /> {t('livreurSecProfil.identiteCard.titre')}</div></div>
         <div className={ps.cb}>
 
           {/* Avatar */}
@@ -151,15 +156,15 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
               <button onClick={() => photoRef.current?.click()} disabled={saving}
                 style={{ background:'var(--tl-bg)', color:'var(--teal)', border:'1px solid rgba(0,0,0,.2)',
                   borderRadius:'var(--pill)', padding:'6px 14px', fontSize:11, fontWeight:700, width:'100%', cursor:'pointer' }}>
-                {saving ? <><i className="fas fa-spinner fa-spin" /></> : 'Changer'}
+                {saving ? <><i className="fas fa-spinner fa-spin" /></> : t('livreurSecProfil.avatar.changer')}
               </button>
             </div>
             <div style={{ flex:1, minWidth:200 }}>
               <div onClick={() => photoRef.current?.click()}
                 style={{ border:'2px dashed var(--bdr2)', borderRadius:'var(--r-xl)', padding:24, textAlign:'center', cursor:'pointer', background:'var(--g50)' }}>
                 <i className="fas fa-cloud-arrow-up" style={{ fontSize:26, color:'var(--t4)', display:'block', marginBottom:8 }} />
-                <div style={{ fontSize:13, fontWeight:700, color:'var(--navy)', marginBottom:4 }}>Glissez votre photo ici</div>
-                <div style={{ fontSize:11, color:'var(--t3)' }}>ou <span style={{ color:'var(--teal)', fontWeight:600 }}>parcourir</span> · JPG, PNG · max 5 MB</div>
+                <div style={{ fontSize:13, fontWeight:700, color:'var(--navy)', marginBottom:4 }}>{t('livreurSecProfil.avatar.dragTitle')}</div>
+                <div style={{ fontSize:11, color:'var(--t3)' }}>{t('livreurSecProfil.avatar.dragSubPrefix')}<span style={{ color:'var(--teal)', fontWeight:600 }}>{t('livreurSecProfil.avatar.dragSubBrowse')}</span>{t('livreurSecProfil.avatar.dragSubSuffix')}</div>
               </div>
             </div>
           </div>
@@ -167,7 +172,7 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
           {/* Emoji picker */}
           <div style={{ marginBottom:18 }}>
             <div className={ps.fiLabel} style={{ marginBottom:9 }}>
-              Icône de livraison <span className={ps.fiOpt}>affichée sur vos missions</span>
+              {t('livreurSecProfil.emoji.label')} <span className={ps.fiOpt}>{t('livreurSecProfil.emoji.sub')}</span>
             </div>
             <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
               {EMOJIS.map((em, i) => (
@@ -185,53 +190,53 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
           {/* Prénom + Nom */}
           <div className={ps.grid2} style={{ marginBottom:14 }}>
             <div className={ps.fiGroup}>
-              <div className={ps.fiLabel}>Prénom</div>
+              <div className={ps.fiLabel}>{t('livreurSecProfil.fields.prenom')}</div>
               <div className={ps.fiWrap}>
                 <i className="fas fa-user" style={{ position:'absolute', left:13, color:'var(--t3)', fontSize:13, pointerEvents:'none' }} />
-                <input className={ps.fiInput} value={firstName} onChange={e => { setFirstName(e.target.value); dirty(); }} placeholder="Prénom" />
+                <input className={ps.fiInput} value={firstName} onChange={e => { setFirstName(e.target.value); dirty(); }} placeholder={t('livreurSecProfil.fields.prenomPlaceholder')} />
               </div>
             </div>
             <div className={ps.fiGroup}>
-              <div className={ps.fiLabel}>Nom</div>
+              <div className={ps.fiLabel}>{t('livreurSecProfil.fields.nom')}</div>
               <div className={ps.fiWrap}>
                 <i className="fas fa-user" style={{ position:'absolute', left:13, color:'var(--t3)', fontSize:13, pointerEvents:'none' }} />
-                <input className={ps.fiInput} value={lastName} onChange={e => { setLastName(e.target.value); dirty(); }} placeholder="Nom de famille" />
+                <input className={ps.fiInput} value={lastName} onChange={e => { setLastName(e.target.value); dirty(); }} placeholder={t('livreurSecProfil.fields.nomPlaceholder')} />
               </div>
             </div>
           </div>
 
           {/* Bio */}
           <div className={ps.fiGroup} style={{ marginBottom:14 }}>
-            <div className={ps.fiLabel}>Bio publique <span className={ps.fiOpt}>visible sur votre profil</span></div>
+            <div className={ps.fiLabel}>{t('livreurSecProfil.fields.bio')} <span className={ps.fiOpt}>{t('livreurSecProfil.fields.bioSub')}</span></div>
             <div className={ps.fiWrap} style={{ alignItems:'flex-start' }}>
               <i className="fas fa-pen-to-square" style={{ position:'absolute', left:13, top:13, color:'var(--t3)', fontSize:13, pointerEvents:'none' }} />
               <textarea className={ps.fiInput}
                 style={{ paddingTop:11, minHeight:80, lineHeight:1.6, resize:'vertical' }}
                 value={bio} onChange={e => { setBio(e.target.value); dirty(); }}
-                placeholder="Décrivez votre expérience, vos zones et vos spécialités…" maxLength={500}
+                placeholder={t('livreurSecProfil.fields.bioPlaceholder')} maxLength={500}
               />
             </div>
-            <div className={ps.fiHint}><i className="fas fa-circle-info" /> {bio.length}/500 caractères</div>
+            <div className={ps.fiHint}><i className="fas fa-circle-info" /> {t('livreurSecProfil.fields.bioCompteur', { count: bio.length })}</div>
           </div>
 
           {/* Téléphone + Email */}
           <div className={ps.grid2} style={{ marginBottom:14 }}>
             <div className={ps.fiGroup}>
-              <div className={ps.fiLabel}>Téléphone principal</div>
+              <div className={ps.fiLabel}>{t('livreurSecProfil.fields.telephone')}</div>
               <div className={ps.fiWrap} style={{ position:'relative' }}>
                 <div className={ps.phonePfx}>🇬🇳 +224</div>
                 <input className={ps.fiInput} type="tel" value={phone}
                   onChange={e => { setPhone(e.target.value); dirty(); }}
-                  style={{ paddingLeft:90 }} placeholder="620 00 00 00" />
+                  style={{ paddingLeft:90 }} placeholder={t('livreurSecProfil.fields.telephonePlaceholder')} />
               </div>
-              <div className={ps.fiHint}><i className="fas fa-circle-info" /> Utilisé pour Orange Money et les appels clients</div>
+              <div className={ps.fiHint}><i className="fas fa-circle-info" /> {t('livreurSecProfil.fields.telephoneHint')}</div>
             </div>
             <div className={ps.fiGroup}>
-              <div className={ps.fiLabel}>Email</div>
+              <div className={ps.fiLabel}>{t('livreurSecProfil.fields.email')}</div>
               <div className={ps.fiWrap}>
                 <i className="fas fa-envelope" style={{ position:'absolute', left:13, color:'var(--t3)', fontSize:13, pointerEvents:'none' }} />
                 <input className={ps.fiInput} type="email" value={email}
-                  onChange={e => { setEmail(e.target.value); dirty(); }} placeholder="votre@email.com" />
+                  onChange={e => { setEmail(e.target.value); dirty(); }} placeholder={t('livreurSecProfil.fields.emailPlaceholder')} />
               </div>
             </div>
           </div>
@@ -239,15 +244,15 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
           {/* Langues + Ville */}
           <div className={ps.grid2}>
             <div className={ps.fiGroup}>
-              <div className={ps.fiLabel}>Langues parlées</div>
+              <div className={ps.fiLabel}>{t('livreurSecProfil.fields.langues')}</div>
               <div className={ps.fiWrap}>
                 <i className="fas fa-language" style={{ position:'absolute', left:13, color:'var(--t3)', fontSize:13, pointerEvents:'none' }} />
                 <input className={ps.fiInput} value={langues}
-                  onChange={e => { setLangues(e.target.value); dirty(); }} placeholder="Français, Pular, Soussou" />
+                  onChange={e => { setLangues(e.target.value); dirty(); }} placeholder={t('livreurSecProfil.fields.languesPlaceholder')} />
               </div>
             </div>
             <div className={ps.fiGroup}>
-              <div className={ps.fiLabel}>Ville de résidence</div>
+              <div className={ps.fiLabel}>{t('livreurSecProfil.fields.ville')}</div>
               <div className={ps.fiWrap}>
                 <i className="fas fa-city" style={{ position:'absolute', left:13, color:'var(--t3)', fontSize:13, pointerEvents:'none' }} />
                 <select className={ps.fiInput} value={ville}
@@ -269,8 +274,8 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
             padding:'12px 28px', fontSize:13, fontWeight:700, display:'flex', alignItems:'center', gap:8,
             cursor:'pointer', opacity:saving ? 0.6 : 1 }}>
           {saving
-            ? <><i className="fas fa-spinner fa-spin" /> Sauvegarde…</>
-            : <><i className="fas fa-cloud-arrow-up" /> Sauvegarder le profil</>
+            ? <><i className="fas fa-spinner fa-spin" /> {t('livreurSecProfil.save.saving')}</>
+            : <><i className="fas fa-cloud-arrow-up" /> {t('livreurSecProfil.save.button')}</>
           }
         </button>
       </div>

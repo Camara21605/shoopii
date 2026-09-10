@@ -1,0 +1,50 @@
+{
+  "livreurSecSecurite": {
+    "header": { "titre": "Sécurité & Connexion", "sub": "Protégez votre compte avec des couches de sécurité avancées." },
+    "pwdStrength": { "tropFaible": "Trop faible", "faible": "Faible", "bon": "Bon", "fort": "Fort" },
+    "pwdCard": {
+      "titre": "Changer le mot de passe",
+      "actuel": "Mot de passe actuel",
+      "nouveau": "Nouveau mot de passe",
+      "nouveauPlaceholder": "Min. 8 caractères",
+      "confirmer": "Confirmer",
+      "confirmerPlaceholder": "Répétez",
+      "mismatch": "Les mots de passe ne correspondent pas"
+    },
+    "saving": "Sauvegarde…",
+    "modifierMdp": "Modifier le mot de passe",
+    "toasts": {
+      "currentRequired": "⚠️ Saisissez votre mot de passe actuel",
+      "tooShort": "⚠️ Le nouveau mot de passe doit contenir au moins 8 caractères",
+      "mismatch": "❌ Les mots de passe ne correspondent pas",
+      "tooWeak": "⚠️ Mot de passe trop faible — ajoutez des majuscules et chiffres",
+      "pwdChanged": "✅ Mot de passe modifié avec succès",
+      "currentWrong": "❌ Mot de passe actuel incorrect",
+      "twoFaEnabled": "✅ Double authentification activée",
+      "twoFaDisabled": "⚠️ Double authentification désactivée",
+      "twoFaUpdateError": "❌ Erreur lors de la mise à jour",
+      "twoFaEnabledModal": "🔐 Double authentification activée"
+    },
+    "twoFaCard": {
+      "titre": "Authentification 2FA",
+      "active": " Activé",
+      "inactive": " Désactivé",
+      "activerLabel": "Activer la double authentification",
+      "activerSub": "Protège votre compte même si votre mot de passe est compromis",
+      "methodeLabel": "Méthode de vérification",
+      "methods": {
+        "sms":   { "label": "Code par SMS",             "sub": "Code envoyé à votre numéro à chaque connexion" },
+        "email": { "label": "Code par Email",            "sub": "Code envoyé à votre adresse email" },
+        "app":   { "label": "Application Authenticator", "sub": "Google Authenticator ou Authy — plus sécurisé" }
+      },
+      "enregistrer2fa": "Enregistrer la 2FA"
+    },
+    "sessionsCard": {
+      "titre": "Session active",
+      "sessionActuelle": "Session actuelle",
+      "connecteDepuis": "Connecté depuis le {{date}}",
+      "deconnecter": "Se déconnecter",
+      "unavailable": "Informations de session indisponibles pour le moment."
+    }
+  }
+}

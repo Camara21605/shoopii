@@ -230,12 +230,23 @@ export default function ProfilSection({ onToast }: SectionProps) {
         </div>
       </div>
 
-      {/* ── Carte statut du compte ── */}
+      {/* ── Carte statut du compte ──
+       * BUG CORRIGÉ — affichait "Aujourd'hui" (dernière connexion) et "1"
+       * (session active) codés en dur, jamais liés à la moindre donnée
+       * réelle — l'endpoint /my-profil ne renvoie même pas ces champs.
+       * Ces informations existent réellement dans la section Sécurité
+       * (data.lastLoginAt/lastLoginIp, voir SecuriteSection.tsx) : pas de
+       * raison de les dupliquer ici en verison fausse. Le bouton
+       * "Déconnecter toutes les sessions" ne faisait qu'un toast sans
+       * rien déconnecter, alors que Shoneya n'autorise qu'UNE session
+       * active à la fois par compte — retiré pour la même raison que
+       * son équivalent dans SecuriteSection.tsx. Ne reste que ce qui est
+       * réellement disponible ici : le statut du compte. */}
       <div className={styles.card}>
         <div className={styles.cardHead}>
           <div>
             <div className={styles.cardTitle}><i className="fas fa-shield-check" /> Statut du compte</div>
-            <div className={styles.cardSub}>Informations de session et état de sécurité</div>
+            <div className={styles.cardSub}>Niveau d&apos;accès et état du compte administrateur</div>
           </div>
           <span className={`${styles.bdg} ${statusBadge.cls}`}>
             <i className="fas fa-circle" /> {statusBadge.label}
@@ -243,18 +254,6 @@ export default function ProfilSection({ onToast }: SectionProps) {
         </div>
         <div className={styles.cardBody}>
           <div className={styles.miniKpis}>
-            <div className={styles.mkpi}>
-              <div className={styles.mkpiStripe} style={{ background: 'var(--blue)' }} />
-              <i className="fas fa-clock" style={{ color: 'var(--blue)', fontSize: 13 }} />
-              <div className={styles.mkpiV}>Aujourd&apos;hui</div>
-              <div className={styles.mkpiL}>Dernière connexion</div>
-            </div>
-            <div className={styles.mkpi}>
-              <div className={styles.mkpiStripe} style={{ background: 'var(--teal)' }} />
-              <i className="fas fa-laptop" style={{ color: 'var(--teal)', fontSize: 13 }} />
-              <div className={styles.mkpiV}>1</div>
-              <div className={styles.mkpiL}>Session active</div>
-            </div>
             <div className={styles.mkpi}>
               <div className={styles.mkpiStripe} style={{ background: 'var(--emerald)' }} />
               <i className="fas fa-key" style={{ color: 'var(--emerald)', fontSize: 13 }} />
@@ -267,15 +266,6 @@ export default function ProfilSection({ onToast }: SectionProps) {
               <div className={styles.mkpiV}>{profil?.status === 'active' ? '100%' : '—'}</div>
               <div className={styles.mkpiL}>Compte vérifié</div>
             </div>
-          </div>
-
-          <div className={styles.divider} />
-
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-            <button className={`${styles.btn} ${styles.btnRed} ${styles.btnSm}`}
-              onClick={() => onToast('Toutes les autres sessions ont été déconnectées', 'w')}>
-              <i className="fas fa-right-from-bracket" /> Déconnecter toutes les sessions
-            </button>
           </div>
         </div>
       </div>

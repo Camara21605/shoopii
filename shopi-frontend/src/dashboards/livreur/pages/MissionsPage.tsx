@@ -1,6 +1,7 @@
 // src/dashboards/livreur/pages/MissionsPage.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import MissionCard from '../components/MissionCard';
 import RefuseMissionModal from '../components/RefuseMissionModal';
 import { fetchMissions, accepterMission, refuserMission } from '../services/missions.api';
@@ -10,11 +11,15 @@ import shared from '../styles/Shared.module.css';
 
 interface Props { onPop: (m: string, t?: string) => void; }
 
-const FILTERS = ['Tout','Express ⚡','Standard','Urgentes','Proches'];
+/* Clés internes stables (comparaisons de code) — voir RefuseMissionModal.tsx
+ * pour le même raisonnement : le libellé affiché vient de t(), la clé sert
+ * uniquement à la logique de filtrage. */
+const FILTER_KEYS = ['tout', 'express', 'standard', 'urgentes', 'proches'] as const;
 
 export default function MissionsPage({ onPop }: Props) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  const [active,   setActive]   = useState('Tout');
+  const [active,   setActive]   = useState<typeof FILTER_KEYS[number]>('tout');
   const [missions, setMissions] = useState<MissionApi[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [autoAcc,  setAutoAcc]  = useState(true);
@@ -24,14 +29,15 @@ export default function MissionsPage({ onPop }: Props) {
   useEffect(() => {
     fetchMissions()
       .then(setMissions)
-      .catch(() => onPop('❌ Impossible de charger les missions', 'e'))
+      .catch(() => onPop(t('livreurMissions.toasts.loadError'), 'e'))
       .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filtered = active === 'Tout'       ? missions
-    : active === 'Express ⚡' ? missions.filter(m => m.speed === 'exp' || m.speed === 'ult')
-    : active === 'Standard'   ? missions.filter(m => m.speed === 'std')
-    : active === 'Urgentes'   ? missions.filter(m => m.urgent)
+  const filtered = active === 'tout'       ? missions
+    : active === 'express'   ? missions.filter(m => m.speed === 'exp' || m.speed === 'ult')
+    : active === 'standard'  ? missions.filter(m => m.speed === 'std')
+    : active === 'urgentes'  ? missions.filter(m => m.urgent)
     : missions.filter(m => parseInt(m.dist) <= 5);
 
   /* ── "Accepter" (status new → accepte réellement) ou "Voir la commande" (status prep/active → navigue) ── */
@@ -47,9 +53,9 @@ export default function MissionsPage({ onPop }: Props) {
     try {
       await accepterMission(m.uuid);
       setMissions(prev => prev.map(x => x.id === id ? { ...x, status: 'prep' } : x));
-      onPop(`✅ Mission ${m.id} acceptée`, 's');
+      onPop(t('livreurMissions.toasts.accepted', { id: m.id }), 's');
     } catch (err: any) {
-      onPop(err?.message ?? '❌ Impossible d\'accepter cette mission', 'e');
+      onPop(err?.message ?? t('livreurMissions.toasts.acceptError'), 'e');
     }
   };
 
@@ -60,10 +66,10 @@ export default function MissionsPage({ onPop }: Props) {
     try {
       await refuserMission(refusingMission.uuid, reason);
       setMissions(prev => prev.filter(x => x.id !== refusingMission.id));
-      onPop(`✕ Mission ${refusingMission.id} refusée`, 'w');
+      onPop(t('livreurMissions.toasts.refused', { id: refusingMission.id }), 'w');
       setRefusingMission(null);
     } catch (err: any) {
-      onPop(err?.message ?? '❌ Impossible de refuser cette mission', 'e');
+      onPop(err?.message ?? t('livreurMissions.toasts.refuseError'), 'e');
     } finally {
       setRefusing(false);
     }
@@ -86,37 +92,37 @@ export default function MissionsPage({ onPop }: Props) {
     <div className={shared.page}>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexWrap:'wrap', gap:10 }}>
         <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-          {FILTERS.map(f => (
+          {FILTER_KEYS.map(key => (
             <button
-              key={f}
-              className={`${shared.filterBtn} ${active===f ? shared.filterBtnOn : ''}`}
-              onClick={() => setActive(f)}
-            >{f}</button>
+              key={key}
+              className={`${shared.filterBtn} ${active===key ? shared.filterBtnOn : ''}`}
+              onClick={() => setActive(key)}
+            >{t(`livreurMissions.filters.${key}`)}</button>
           ))}
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <div style={{ display:'flex', alignItems:'center', gap:6 }}>
             <label className={shared.tog}>
-              <input type="checkbox" checked={autoAcc} onChange={e => { setAutoAcc(e.target.checked); onPop(e.target.checked ? '🤖 Auto-acceptation activée' : '⏸️ Désactivée', e.target.checked ? 's' : 'w'); }} />
+              <input type="checkbox" checked={autoAcc} onChange={e => { setAutoAcc(e.target.checked); onPop(e.target.checked ? t('livreurMissions.toasts.autoAcceptOn') : t('livreurMissions.toasts.autoAcceptOff'), e.target.checked ? 's' : 'w'); }} />
               <span className={shared.togs} />
             </label>
-            <span style={{ fontSize:12, color:'var(--t2)', fontWeight:600 }}>Auto-accepter missions &lt;5km</span>
+            <span style={{ fontSize:12, color:'var(--t2)', fontWeight:600 }}>{t('livreurMissions.autoAccept')}</span>
           </div>
-          <span style={{ fontSize:12, color:'var(--t3)' }}>· <strong style={{ color:'var(--navy)' }}>{count}</strong> en attente</span>
+          <span style={{ fontSize:12, color:'var(--t3)' }}>· <strong style={{ color:'var(--navy)' }}>{count}</strong> {t('livreurMissions.enAttente')}</span>
         </div>
       </div>
 
       {loading && (
         <div style={{ padding:'60px 0', textAlign:'center', color:'var(--t3)', fontSize:14 }}>
-          <i className="fas fa-circle-notch fa-spin" /> Chargement des missions…
+          <i className="fas fa-circle-notch fa-spin" /> {t('livreurMissions.chargement')}
         </div>
       )}
 
       {!loading && filtered.length === 0 && (
         <div style={{ padding:'60px 0', textAlign:'center', color:'var(--t3)' }}>
           <div style={{ fontSize:48, marginBottom:12 }}>📭</div>
-          <div style={{ fontSize:14, fontWeight:700, color:'var(--navy)' }}>Aucune mission pour le moment</div>
-          <div style={{ fontSize:12, marginTop:4 }}>Vous serez notifié dès qu'un client vous choisira comme livreur.</div>
+          <div style={{ fontSize:14, fontWeight:700, color:'var(--navy)' }}>{t('livreurMissions.empty.title')}</div>
+          <div style={{ fontSize:12, marginTop:4 }}>{t('livreurMissions.empty.sub')}</div>
         </div>
       )}
 

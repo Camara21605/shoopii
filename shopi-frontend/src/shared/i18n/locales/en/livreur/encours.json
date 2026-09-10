@@ -1,0 +1,23 @@
+{
+  "livreurEnCours": {
+    "chargement": "Loading current mission…",
+    "loadError": "❌ Unable to load current mission",
+    "empty": {
+      "title": "No mission in progress",
+      "sub": "Accept a mission from \"Available missions\" to start a delivery."
+    },
+    "telephoneNonRenseigne": "Not provided",
+    "clientInfo": {
+      "telephone": "Phone",
+      "adresse": "Address",
+      "instruction": "Instructions"
+    },
+    "appelerLeClient": "Call the customer",
+    "appelClientToast": "📞 Calling customer: {{telephone}}",
+    "etapesLivraison": "Delivery steps",
+    "informationsClient": "Customer information",
+    "appeler": "Call",
+    "appelEnCoursToast": "📞 Calling…",
+    "messagerie": "Messages"
+  }
+}

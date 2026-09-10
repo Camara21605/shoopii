@@ -5,9 +5,10 @@
  * ============================================================ */
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import shared from '../styles/Shared.module.css';
 import { apiFetch } from '../../../shared/services/apiFetch';
-import { DELIVERY_TYPES, GUINEA_ZONE_COORDS } from '../data/parametresData';
+import { buildDeliveryTypes, GUINEA_ZONE_COORDS } from '../data/parametresData';
 import type { MapMissionState } from '../data/livreurData';
 import type { MarkerConfig } from '../../../shared/location/components/LocationMap';
 import '../../../shared/location/styles/location.css';
@@ -88,6 +89,8 @@ function buildStats(zones: string[]) {
 }
 
 export default function ZonePage({ onPop, sharing, position, hasActiveMission, startSharing, stopSharing }: Props) {
+  const { t } = useTranslation();
+  const DELIVERY_TYPES = buildDeliveryTypes(t);
   const location = useLocation();
   const [profile,      setProfile]      = useState<ZoneProfile | null>(null);
   const [loadingZone,  setLoadingZone]  = useState(true);
@@ -107,7 +110,7 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
         /* Si jamais initialisé → toutes les zones sont disponibles par défaut */
         setDisponibles(saved !== null ? saved : zones);
       })
-      .catch(() => onPop('Impossible de charger les zones.', 'e'))
+      .catch(() => onPop(t('livreurZone.zones.loadError'), 'e'))
       .finally(() => setLoadingZone(false));
   }, []);
 
@@ -153,13 +156,13 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
       });
       onPop(
         next.includes(zone)
-          ? `✅ Disponible sur ${zone}`
-          : `⏸ Non disponible sur ${zone}`,
+          ? t('livreurZone.zones.dispoOnToast', { zone })
+          : t('livreurZone.zones.dispoOffToast', { zone }),
         'i',
       );
     } catch {
       setDisponibles(disponibles); // rollback
-      onPop(`❌ Impossible de mettre à jour la disponibilité`, 'e');
+      onPop(t('livreurZone.zones.dispoUpdateError'), 'e');
     } finally {
       setSavingDispo(false);
     }
@@ -171,12 +174,12 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
      * rendu ci-dessous), mais on verrouille aussi la fonction elle-même
      * pour ne jamais dépendre uniquement de l'UI. */
     if (sharing) {
-      if (hasActiveMission) { onPop('🛵 Livraison en cours — le partage ne peut pas être arrêté.', 'w'); return; }
+      if (hasActiveMission) { onPop(t('livreurZone.sharing.cantStopToast'), 'w'); return; }
       stopSharing();
-      onPop('⏹ Partage de position arrêté.', 'i');
+      onPop(t('livreurZone.sharing.stoppedToast'), 'i');
     } else {
       startSharing();
-      onPop('📍 Partage de position démarré.', 's');
+      onPop(t('livreurZone.sharing.startedToast'), 's');
     }
   };
 
@@ -197,7 +200,7 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
         <div style={{ fontSize: 12, lineHeight: 1.5 }}>
           <strong>{z}</strong><br />
           <span style={{ color: disponibles.includes(z) ? '#000000' : '#6b7280' }}>
-            {disponibles.includes(z) ? '✅ Disponible' : '⏸ Non disponible'}
+            {disponibles.includes(z) ? `✅ ${t('livreurZone.zones.available')}` : `⏸ ${t('livreurZone.zones.unavailable')}`}
           </span>
         </div>
       ),
@@ -215,7 +218,7 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
         popupContent: (
           <div style={{ fontSize: 12, lineHeight: 1.5 }}>
             <strong>{mapMission.shop}</strong><br />
-            <span style={{ color: '#6b7280' }}>Boutique · {mapMission.id}</span>
+            <span style={{ color: '#6b7280' }}>{t('livreurZone.missionAddr.boutiqueId', { id: mapMission.id })}</span>
           </div>
         ),
       });
@@ -239,7 +242,7 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
             <strong>{mapMission.client}</strong><br />
             <span style={{ color: '#6b7280' }}>
               {mapMission.clientCommune}
-              {clientIsApprox && ' (position approximative)'}
+              {clientIsApprox && t('livreurZone.missionAddr.positionApprox')}
             </span>
           </div>
         ),
@@ -247,7 +250,7 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
     }
   }
 
-  const allMarkers = [...(position ? [{ id:'me', position:{ latitude:position.latitude, longitude:position.longitude }, color:'green' as const, emoji:'🛵', popupContent:<div style={{fontWeight:700,fontSize:13}}>Ma position</div> }] : []), ...zoneMarkers, ...missionMarkers];
+  const allMarkers = [...(position ? [{ id:'me', position:{ latitude:position.latitude, longitude:position.longitude }, color:'green' as const, emoji:'🛵', popupContent:<div style={{fontWeight:700,fontSize:13}}>{t('livreurZone.maPosition')}</div> }] : []), ...zoneMarkers, ...missionMarkers];
   const { center: mapCenter, zoom: mapZoom } = missionMarkers.length > 0
     ? computeMapView(missionMarkers, null)
     : computeMapView(zoneMarkers, position ?? null);
@@ -260,7 +263,7 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
         <div className={`${shared.card} ${shared.cardLast}`}>
           <div className={shared.ch}>
             <div className={shared.chT}>
-              <i className="fas fa-map-location-dot" /> Ma position en temps réel
+              <i className="fas fa-map-location-dot" /> {t('livreurZone.carteTitre')}
             </div>
           </div>
           <div className={shared.cb}>
@@ -281,7 +284,7 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
                     background: 'transparent', border: 'none', color: 'var(--t3)',
                     cursor: 'pointer', fontSize: 13, padding: 4,
                   }}
-                  title="Fermer"
+                  title={t('livreurZone.fermer')}
                 >
                   <i className="fas fa-xmark" />
                 </button>
@@ -293,15 +296,15 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 14, color: sharing ? '#000000' : 'var(--t3)' }}>
                     {hasActiveMission
-                      ? 'Partage automatique actif'
-                      : sharing ? 'Partage actif' : 'Partage désactivé'}
+                      ? t('livreurZone.sharing.autoTitle')
+                      : sharing ? t('livreurZone.sharing.activeTitle') : t('livreurZone.sharing.offTitle')}
                   </div>
                   <div style={{ fontSize: 11.5, color: 'var(--t2)', marginTop: 2 }}>
                     {hasActiveMission
-                      ? 'Visible en direct par le client et la boutique de votre livraison en cours'
+                      ? t('livreurZone.sharing.autoSub')
                       : sharing
-                        ? 'Les boutiques et clients voient votre position'
-                        : 'Activez pour être visible sur la carte'}
+                        ? t('livreurZone.sharing.activeSub')
+                        : t('livreurZone.sharing.offSub')}
                   </div>
                 </div>
               </div>
@@ -315,7 +318,7 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
                     transition: 'background .15s',
                   }}
                 >
-                  {sharing ? '⏹ Arrêter' : '▶ Partager'}
+                  {sharing ? t('livreurZone.sharing.stop') : t('livreurZone.sharing.start')}
                 </button>
               )}
             </div>
@@ -336,8 +339,8 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
 
             {position && (
               <div style={{ marginTop: 8, fontSize: 11.5, color: 'var(--t2)', display: 'flex', gap: 16 }}>
-                <span>Lat : {position.latitude.toFixed(5)}</span>
-                <span>Lng : {position.longitude.toFixed(5)}</span>
+                <span>{t('livreurZone.lat')} {position.latitude.toFixed(5)}</span>
+                <span>{t('livreurZone.lng')} {position.longitude.toFixed(5)}</span>
               </div>
             )}
 
@@ -352,9 +355,9 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
                     🏪 {mapMission.shop}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--t2)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span>Pays : <strong style={{ color: 'var(--navy)' }}>{mapMission.companyPays ?? '—'}</strong></span>
-                    <span>Ville : <strong style={{ color: 'var(--navy)' }}>{mapMission.companyVille ?? '—'}</strong></span>
-                    <span>Quartier : <strong style={{ color: 'var(--navy)' }}>{mapMission.companyQuartier ?? '—'}</strong></span>
+                    <span>{t('livreurZone.missionAddr.pays')} <strong style={{ color: 'var(--navy)' }}>{mapMission.companyPays ?? '—'}</strong></span>
+                    <span>{t('livreurZone.missionAddr.ville')} <strong style={{ color: 'var(--navy)' }}>{mapMission.companyVille ?? '—'}</strong></span>
+                    <span>{t('livreurZone.missionAddr.quartier')} <strong style={{ color: 'var(--navy)' }}>{mapMission.companyQuartier ?? '—'}</strong></span>
                   </div>
                 </div>
                 <div style={{
@@ -365,9 +368,9 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
                     🏠 {mapMission.client}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--t2)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span>Pays : <strong style={{ color: 'var(--navy)' }}>{mapMission.companyPays ?? '—'}</strong></span>
-                    <span>Ville : <strong style={{ color: 'var(--navy)' }}>{mapMission.clientVille ?? '—'}</strong></span>
-                    <span>Quartier : <strong style={{ color: 'var(--navy)' }}>{mapMission.clientCommune ?? '—'}</strong></span>
+                    <span>{t('livreurZone.missionAddr.pays')} <strong style={{ color: 'var(--navy)' }}>{mapMission.companyPays ?? '—'}</strong></span>
+                    <span>{t('livreurZone.missionAddr.ville')} <strong style={{ color: 'var(--navy)' }}>{mapMission.clientVille ?? '—'}</strong></span>
+                    <span>{t('livreurZone.missionAddr.quartier')} <strong style={{ color: 'var(--navy)' }}>{mapMission.clientCommune ?? '—'}</strong></span>
                   </div>
                 </div>
               </div>
@@ -379,13 +382,13 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
         <div>
           <div className={shared.card} style={{ marginBottom: 16 }}>
             <div className={shared.ch}>
-              <div className={shared.chT}><i className="fas fa-location-dot" /> Mes zones de livraison</div>
+              <div className={shared.chT}><i className="fas fa-location-dot" /> {t('livreurZone.zones.title')}</div>
               {!loadingZone && zones.length > 0 && (
                 <span style={{
                   fontSize: 11, background: 'var(--tl-bg)', color: 'var(--teal)',
                   padding: '3px 10px', borderRadius: 'var(--pill)', fontWeight: 700,
                 }}>
-                  {disponibles.length}/{zones.length} disponible{disponibles.length > 1 ? 's' : ''}
+                  {t('livreurZone.zones.dispoBadge', { dispo: disponibles.length, total: zones.length })}
                 </span>
               )}
             </div>
@@ -394,14 +397,14 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
               {loadingZone ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, padding: '28px 0', color: 'var(--t3)', fontSize: 13 }}>
                   <i className="fas fa-circle-notch fa-spin" style={{ color: 'var(--teal)', fontSize: 16 }} />
-                  Chargement des zones…
+                  {t('livreurZone.zones.loading')}
                 </div>
 
               ) : zones.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '32px 0', color: 'var(--t3)', textAlign: 'center' }}>
                   <i className="fas fa-map-pin" style={{ fontSize: 28, opacity: .3 }} />
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t2)' }}>Aucune zone configurée</div>
-                  <div style={{ fontSize: 11.5 }}>Rendez-vous dans <strong>Paramètres → Zones</strong> pour définir votre périmètre.</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t2)' }}>{t('livreurZone.zones.noZonesTitle')}</div>
+                  <div style={{ fontSize: 11.5 }}>{t('livreurZone.zones.noZonesPrefix')}<strong>{t('livreurZone.zones.noZonesBold')}</strong>{t('livreurZone.zones.noZonesSuffix')}</div>
                 </div>
 
               ) : (
@@ -429,7 +432,7 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
                     marginBottom: 14,
                   }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 10, textAlign: 'center' }}>
-                      🗺️ {typeConf ? typeConf.label : 'Zones actives'}
+                      🗺️ {typeConf ? typeConf.label : t('livreurZone.zones.activeFallback')}
                     </div>
                     <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', justifyContent: 'center' }}>
                       {zones.map(z => {
@@ -481,7 +484,7 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
                               transition: 'background .2s',
                             }} />
                             <span style={{ color: isDispo ? 'var(--teal)' : 'var(--t4)', fontWeight: 600 }}>
-                              {isDispo ? 'Disponible' : 'Non disponible'}
+                              {isDispo ? t('livreurZone.zones.available') : t('livreurZone.zones.unavailable')}
                             </span>
                           </div>
                         </div>
@@ -506,7 +509,7 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
           {zones.length > 0 && (
             <div className={`${shared.card} ${shared.cardLast}`}>
               <div className={shared.ch}>
-                <div className={shared.chT}><i className="fas fa-chart-bar" /> Statistiques par zone</div>
+                <div className={shared.chT}><i className="fas fa-chart-bar" /> {t('livreurZone.stats.title')}</div>
               </div>
               <div className={shared.cb}>
                 {stats.map((s, i) => (
@@ -516,7 +519,7 @@ export default function ZonePage({ onPop, sharing, position, hasActiveMission, s
                         <i className="fas fa-location-dot" style={{ color: s.c, fontSize: 10 }} />
                         {s.z}
                       </span>
-                      <span style={{ fontWeight: 700, color: s.c }}>{s.nb} livr. · {s.pct}%</span>
+                      <span style={{ fontWeight: 700, color: s.c }}>{s.nb} {t('livreurBoutiques.livrAbrev')} · {s.pct}%</span>
                     </div>
                     <div style={{ background: 'var(--g100)', borderRadius: 'var(--pill)', height: 7, overflow: 'hidden' }}>
                       <div style={{ width: `${s.pct}%`, height: '100%', background: s.c, borderRadius: 'var(--pill)', transition: 'width .6s ease' }} />

@@ -1,0 +1,36 @@
+{
+  "partenaireCommissions": {
+    "page": {
+      "balanceLabel": "Available commissions",
+      "withdrawBtn": "Withdraw",
+      "historiqueBtn": "History",
+      "kpis": {
+        "totalGagne": "Total earned",
+        "ceMois": "This month",
+        "tauxVentes": "On business sales",
+        "tauxLivraisons": "On delivery runs"
+      },
+      "tableTitle": "Recent commissions",
+      "empty": "No commission yet",
+      "columns": {
+        "source": "Source",
+        "type": "Type",
+        "detail": "Detail",
+        "date": "Date",
+        "montant": "Amount"
+      }
+    },
+    "withdrawModal": {
+      "title": "Withdraw my commissions",
+      "soldeDisponible": "Available balance: {{balance}}",
+      "montantLabel": "Amount to withdraw (GNF)",
+      "montantPlaceholder": "Max. {{max}}",
+      "erreurSuperieur": "Amount exceeds available balance",
+      "erreurInvalide": "Invalid amount",
+      "envoi": "Sending…",
+      "confirmerBtn": "Confirm withdrawal",
+      "successToast": "Withdrawal of {{amount}} sent",
+      "errorToast": "Error during withdrawal"
+    }
+  }
+}

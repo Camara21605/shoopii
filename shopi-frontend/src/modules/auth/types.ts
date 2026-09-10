@@ -105,6 +105,9 @@ export interface RegisterPayload {
   password:       string;
   role:           UserRole;
   activationCode?: string;
+  /** Slug du lien de parrainage d'un partenaire (voir SecParrainage.tsx /
+   *  page publique /rejoindre/:slug) — alternative à activationCode. */
+  referralSlug?:   string;
   companyName?:    string;
   companyTypeId?:  string;
   // Pays détecté via indicatif
@@ -153,6 +156,10 @@ export interface RegisterFormData {
   password:        string;
   confirmPassword: string;
   activationCode:  string;
+  /** Slug du lien de parrainage porté par l'URL (?ref=slug sur /login) —
+   *  voir Login.tsx useReferralParam(). Transmis tel quel au backend,
+   *  qui l'ignore silencieusement s'il ne correspond à rien. */
+  referralSlug?:   string;
   shopName?:       string;
   terms?:          boolean;
   companyTypeId?:  string;

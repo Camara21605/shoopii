@@ -58,6 +58,14 @@ export default function CommandePage() {
   const [livreurs,        setLivreurs]        = useState<LivreurSuivi[]>([]);
   const [loadingLivreurs, setLoadingLivreurs]  = useState(true);
 
+  /* Tarif RÉEL de la zone de livraison couvrant l'adresse saisie
+   * (GeoZone.fraisLivraison — géré par un administrateur avec la
+   * permission "geo_zones" accordée par le super-admin). BUG CORRIGÉ :
+   * le frais utilisait auparavant lv.base, un tarif propre à chaque
+   * livreur (Delivery.tarifBase) — ce n'est pas le livreur qui fixe le
+   * prix. */
+  const [zoneFee, setZoneFee] = useState(0);
+
   /* ── Solde réel du portefeuille Shoneya du client (mode de paiement "Wallet") ── */
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [loadingWallet, setLoadingWallet] = useState(true);
@@ -109,12 +117,23 @@ export default function CommandePage() {
       .finally(() => setLoadingWallet(false));
   }, []);
 
+  /* ── Tarif réel de la zone couvrant l'adresse de livraison saisie ── */
+  useEffect(() => {
+    const dest = adresseLivraison?.commune || adresseLivraison?.ville;
+    if (!dest) { setZoneFee(0); return; }
+    apiFetch<{ fraisLivraison: number; zoneNom: string | null }>(
+      `/geo/frais-livraison?ville=${encodeURIComponent(dest)}`, { public: true },
+    )
+      .then(r => setZoneFee(r?.fraisLivraison ?? 0))
+      .catch(() => setZoneFee(0));
+  }, [adresseLivraison?.commune, adresseLivraison?.ville]);
+
   /* ── Calculs ──
      Correspondant non disponible (pas de boutique internationale détectée
      ni d'API de correspondants réels côté panier) — toujours désactivé. */
   const corrFee = 0;
   const lv      = delMode === 'lvr' ? livreurs.find(l => l.id === selLvr) ?? null : null;
-  const lvFee   = lv ? lvFeeCalc(lv.base, SPEEDS[curSpd].m) : 0;
+  const lvFee   = lv ? lvFeeCalc(zoneFee, SPEEDS[curSpd].m) : 0;
   const sub     = items.reduce((s, i) => s + i.prix * i.qty, 0);
   const disc    = promoActif ? Math.round(sub * 0.2) : 0;
   const total   = sub + corrFee + lvFee - disc;
@@ -370,6 +389,7 @@ export default function CommandePage() {
               showCorr={false}
               livreurs={livreurs}
               loadingLivreurs={loadingLivreurs}
+              zoneFee={zoneFee}
               onDel={setDelMode}
               onSelLvr={setSelLvr}
               onSelCorr={setSelCorr}
@@ -397,6 +417,7 @@ export default function CommandePage() {
               loading={loading}
               walletBalance={walletBalance}
               loadingWallet={loadingWallet}
+              zoneFee={zoneFee}
               onConfirm={askConfirm}
               onEdit={() => articlesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             />

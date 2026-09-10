@@ -16,10 +16,12 @@ import { Repository }       from 'typeorm';
 
 import { AdminZoneService }  from './admin-zone.service';
 import { CreationCode, CodeStatus } from '../../../../database/entities/code-creation.entity';
+import { AuditLog }          from '../../../../database/entities/audit-log.entity';
 import { GenerateCodeDto }   from '../dto/generate-code.dto';
 import { ROLE_PREFIX, ROLE_TO_SHORT } from '../helpers/admin.constants';
-import { randCode, fmtDate } from '../helpers/admin.helpers';
+import { randCode, fmtDate, escapeHtml, AuditMeta } from '../helpers/admin.helpers';
 import { MailService }       from '../../../email/email.service';
+import { AdminCommunicationService } from './admin-communication.service';
 
 @Injectable()
 export class AdminCodesService {
@@ -28,9 +30,13 @@ export class AdminCodesService {
   constructor(
     private readonly zoneService: AdminZoneService,
     private readonly mailService: MailService,
+    private readonly communication: AdminCommunicationService,
 
     @InjectRepository(CreationCode)
     private readonly codeRepo: Repository<CreationCode>,
+
+    @InjectRepository(AuditLog)
+    private readonly auditLogRepo: Repository<AuditLog>,
   ) {}
 
   /**
@@ -96,7 +102,7 @@ export class AdminCodesService {
    * de collision sur 36^5 ≈ 60M combinaisons est très faible,
    * mais le retry garantit la robustesse en production.
    */
-  async generateCode(userId: string, dto: GenerateCodeDto) {
+  async generateCode(userId: string, dto: GenerateCodeDto, meta?: AuditMeta) {
     const admin     = await this.zoneService.adminOf(userId);
     const prefix    = ROLE_PREFIX[dto.targetRole] ?? 'ACT';
     const validDays = dto.validityDays ?? 30;
@@ -128,6 +134,17 @@ export class AdminCodesService {
       }),
     );
 
+    await this.auditLogRepo.save(this.auditLogRepo.create({
+      actorId:    userId,
+      actorName:  admin.fullName,
+      icon:       '📋',
+      action:     `a généré un code d'invitation <b>${escapeHtml(ROLE_TO_SHORT[saved.targetRole] ?? saved.targetRole)}</b>${saved.targetEmail ? ` pour ${escapeHtml(saved.targetEmail)}` : ''}`,
+      targetType: 'code',
+      targetId:   saved.id,
+      ip:         meta?.ip ?? null,
+      device:     meta?.device ?? null,
+    }));
+
     return {
       id:           saved.id,
       code:         saved.code,
@@ -143,7 +160,7 @@ export class AdminCodesService {
    * enregistré sur le code. Seul le canal Email est opérationnel pour
    * l'instant — SMS et WhatsApp sont désactivés côté frontend.
    */
-  async sendCodeByEmail(userId: string, codeId: string) {
+  async sendCodeByEmail(userId: string, codeId: string, meta?: AuditMeta) {
     const admin = await this.zoneService.adminOf(userId);
     const code  = await this.codeRepo.findOne({ where: { id: codeId, adminId: admin.id } });
 
@@ -160,19 +177,34 @@ export class AdminCodesService {
       try { toName = JSON.parse(code.note).fullName; } catch { /* note non-JSON, ignoré */ }
     }
 
+    const extras = await this.communication.getInvitationExtras(userId);
+
     try {
       await this.mailService.sendInvitationEmail({
-        toEmail:    code.targetEmail,
+        toEmail:       code.targetEmail,
         toName,
-        code:       code.code,
-        targetRole: code.targetRole,
-        expiresAt:  code.expiresAt,
-        senderName: admin.fullName,
+        code:          code.code,
+        targetRole:    code.targetRole,
+        expiresAt:     code.expiresAt,
+        senderName:    admin.fullName,
+        customMessage: extras.message,
+        signature:     extras.signature,
       });
     } catch (err) {
       this.logger.warn(`[CODE EMAIL ⚠️] Échec d'envoi à ${code.targetEmail} : ${(err as Error).message}`);
       throw new BadRequestException('Échec de l\'envoi de l\'email. Réessayez plus tard.');
     }
+
+    await this.auditLogRepo.save(this.auditLogRepo.create({
+      actorId:    userId,
+      actorName:  admin.fullName,
+      icon:       '📋',
+      action:     `a envoyé le code <b>${escapeHtml(code.code)}</b> par email à ${escapeHtml(code.targetEmail)}`,
+      targetType: 'code',
+      targetId:   code.id,
+      ip:         meta?.ip ?? null,
+      device:     meta?.device ?? null,
+    }));
 
     return { message: `Email envoyé à ${code.targetEmail}.` };
   }
@@ -183,7 +215,7 @@ export class AdminCodesService {
    * Seuls les codes PENDING peuvent être révoqués :
    * un code déjà utilisé ou expiré ne peut pas être annulé.
    */
-  async revokeCode(userId: string, codeId: string) {
+  async revokeCode(userId: string, codeId: string, meta?: AuditMeta) {
     const admin = await this.zoneService.adminOf(userId);
     const code  = await this.codeRepo.findOne({ where: { id: codeId, adminId: admin.id } });
 
@@ -195,6 +227,17 @@ export class AdminCodesService {
     code.status    = CodeStatus.REVOKED;
     code.revokedAt = new Date();
     await this.codeRepo.save(code);
+
+    await this.auditLogRepo.save(this.auditLogRepo.create({
+      actorId:    userId,
+      actorName:  admin.fullName,
+      icon:       '🗑️',
+      action:     `a révoqué le code <b>${escapeHtml(code.code)}</b>`,
+      targetType: 'code',
+      targetId:   code.id,
+      ip:         meta?.ip ?? null,
+      device:     meta?.device ?? null,
+    }));
 
     return { message: 'Code révoqué.' };
   }

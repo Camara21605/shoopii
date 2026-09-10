@@ -1,0 +1,23 @@
+{
+  "livreurProfilReseau": {
+    "backLabelDefault": "Back to couriers",
+    "chargementProfil": "Loading profile…",
+    "livreurIntrouvable": "Courier not found.",
+    "contacterToast": "📩 Contact {{name}}",
+    "avisTitle": "Reviews ({{count}})",
+    "avisText": "Customer reviews will be shown here soon.",
+    "historiqueTitle": "History",
+    "historiqueText": "Delivery history will be shown here soon."
+  },
+  "livreurMonProfil": {
+    "profilIntrouvable": "Profile not found.",
+    "retourAccueil": "Back to home"
+  },
+  "livreurProfilCorrespondantReseau": {
+    "retourCorrespondants": "Back to correspondents",
+    "chargementProfil": "Loading profile…",
+    "correspondantIntrouvable": "Correspondent not found.",
+    "messageToast": "💬 Message to {{nom}}",
+    "lienCopieToast": "🔗 Profile link copied"
+  }
+}

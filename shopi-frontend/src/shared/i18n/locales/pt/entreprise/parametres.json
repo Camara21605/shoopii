@@ -11,7 +11,6 @@
         "paiement": "Pagamento & Faturação",
         "commissions": "Comissões Shoneya",
         "documents": "Documentos & Verificação",
-        "confidentialiteSecurite": "Privacidade e segurança",
         "securite": "Segurança",
         "notifs": "Notificações",
         "privacy": "Privacidade",
@@ -157,7 +156,11 @@
       "planStandardSub": "Plano de base · Incluído na sua inscrição",
       "planProSub": "Para lojas com alto volume de vendas",
       "planPremiumSub": "Comissões reduzidas + ferramentas de marketing avançadas",
-      "tauxParVente": "{{taux}}% / venda"
+      "tauxParVente": "{{taux}}% / venda",
+      "confirmerChangementBtn": "Confirmar mudança para o plano {{plan}}",
+      "changementEnCours": "Alterando plano…",
+      "planChangedToast": "✅ Plano alterado para {{plan}}",
+      "planChangeErrorToast": "❌ Erro ao alterar o plano"
     },
     "documents": {
       "docs": {
@@ -236,21 +239,12 @@
         "emailSub": "Código enviado por email para o seu endereço principal",
         "emailBadge": "Básico"
       },
-      "sessionsTitle": "Sessões ativas",
-      "sessionsSubtitle": "Dispositivos ligados à sua conta de loja",
-      "deconnecterTout": "Terminar todas",
-      "toutesSessionsToast": "🔐 Todas as sessões terminadas",
+      "sessionsTitle": "Sessão ativa",
+      "sessionsSubtitle": "Apenas uma sessão pode estar ativa por vez na sua conta de loja",
       "sessionActuelle": "Sessão atual",
-      "revoquer": "Revogar",
-      "sessionTermineeToast": "🔐 Sessão terminada",
-      "sessions": {
-        "chromeWindows": "Chrome · Windows 11",
-        "chromeWindowsSub": "Conacri, Guiné · Agora",
-        "safariIphone": "Safari · iPhone 14",
-        "safariIphoneSub": "Conacri, Guiné · Há 2 horas",
-        "chromeAndroid": "Chrome · Android",
-        "chromeAndroidSub": "Coyah, Guiné · Ontem às 18h34"
-      }
+      "connecteDepuis": "Conectado desde {{date}}",
+      "deconnecterBtn": "Encerrar sessão",
+      "sessionUnavailable": "Informações da sessão indisponíveis no momento."
     },
     "notifs": {
       "savedToast": "✅ Notificações guardadas",
@@ -455,8 +449,8 @@
       "prenomPlaceholder": "Nome próprio do responsável",
       "nom": "Apelido",
       "nomPlaceholder": "Apelido do responsável",
-      "responsableHintPart1": "O nome próprio e o apelido modificam-se nas",
-      "responsableHintBold": "definições da sua conta",
+      "responsableHintPart1": "Nome e sobrenome exibidos apenas para leitura. A edição direta estará",
+      "responsableHintBold": "disponível em breve",
       "responsableHintPart2": "."
     },
     "steps": {

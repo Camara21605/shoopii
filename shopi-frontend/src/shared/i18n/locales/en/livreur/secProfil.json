@@ -1,0 +1,61 @@
+{
+  "livreurSecProfil": {
+    "header": {
+      "titre": "Personal profile",
+      "sub": "This information appears on your public profile — visible to shops and customers."
+    },
+    "steps": {
+      "photo": "Photo",
+      "identite": "Identity",
+      "zones": "Zones",
+      "vehicule": "Vehicle",
+      "horaires": "Hours",
+      "documents": "Documents"
+    },
+    "completion": {
+      "label": "Profile",
+      "titlePrefix": "Profile {{pct}}% complete",
+      "titleSuffix": " — Complete it",
+      "footerPart1": "A complete profile gets ",
+      "footerBold": "3×",
+      "footerPart2": " more missions"
+    },
+    "identiteCard": { "titre": "Identity & Photo" },
+    "avatar": {
+      "changer": "Change",
+      "dragTitle": "Drag your photo here",
+      "dragSubPrefix": "or ",
+      "dragSubBrowse": "browse",
+      "dragSubSuffix": " · JPG, PNG · max 5 MB"
+    },
+    "emoji": { "label": "Delivery icon", "sub": "shown on your missions" },
+    "fields": {
+      "prenom": "First name",
+      "prenomPlaceholder": "First name",
+      "nom": "Last name",
+      "nomPlaceholder": "Last name",
+      "bio": "Public bio",
+      "bioSub": "visible on your profile",
+      "bioPlaceholder": "Describe your experience, zones and specialties…",
+      "bioCompteur": "{{count}}/500 characters",
+      "telephone": "Primary phone",
+      "telephoneHint": "Used for Orange Money and customer calls",
+      "telephonePlaceholder": "620 00 00 00",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "langues": "Languages spoken",
+      "languesPlaceholder": "French, Pular, Susu",
+      "ville": "City of residence"
+    },
+    "toasts": {
+      "saveSuccess": "✅ Profile saved successfully",
+      "saveError": "❌ Error while saving",
+      "photoTooBig": "❌ Photo too large (max 5 MB)",
+      "photoInvalidFormat": "❌ Invalid format — JPG, PNG or WebP only",
+      "photoUploading": "⏳ Uploading photo…",
+      "photoUpdated": "✅ Profile photo updated",
+      "photoUploadError": "❌ Upload failed"
+    },
+    "save": { "saving": "Saving…", "button": "Save profile" }
+  }
+}

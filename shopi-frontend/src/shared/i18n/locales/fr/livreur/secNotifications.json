@@ -1,0 +1,34 @@
+{
+  "livreurSecNotifications": {
+    "header": { "titre": "Notifications", "sub": "Choisissez quand et comment être alerté." },
+    "missionsCard": { "titre": "Missions & Livraisons" },
+    "financesCard": { "titre": "Finances & Gains" },
+    "canauxCard": { "titre": "Canaux de notification" },
+    "missions": {
+      "nouvelleMission": { "l": "Nouvelles missions disponibles", "sub": "Alerte dès qu'une mission correspond à votre zone" },
+      "missionAnnulee":  { "l": "Annulation de mission",          "sub": "Quand une boutique annule une mission assignée" },
+      "missionLivree":   { "l": "Mission livrée",                 "sub": "Confirmation quand une livraison est marquée terminée" },
+      "rappelMission":   { "l": "Rappel mission imminente",       "sub": "Rappel 15 min avant la limite d'une livraison" },
+      "messageClient":   { "l": "Message d'un client",            "sub": "Quand un client vous écrit au sujet d'une commande" },
+      "missionUrgente":  { "l": "Missions urgentes à proximité",  "sub": "Notification prioritaire pour les urgences" }
+    },
+    "finances": {
+      "gainRecu":         { "l": "Gain encaissé",       "sub": "Confirmation après chaque livraison payée" },
+      "virementEffectue": { "l": "Virement effectué",   "sub": "Notification après chaque virement" },
+      "rapportHebdo":     { "l": "Bilan hebdomadaire",  "sub": "Résumé gains chaque lundi matin" }
+    },
+    "canaux": {
+      "push":     { "l": "Notifications push (app)", "sub": "Sur votre smartphone via l'app Shoneya" },
+      "sms":      { "l": "SMS",                       "sub": "Messages texte pour alertes critiques" },
+      "email":    { "l": "Email",                     "sub": "Résumés et documents importants" },
+      "whatsapp": { "l": "WhatsApp",                  "sub": "Notifications via WhatsApp Business" }
+    },
+    "comingSoon": "Bientôt disponible",
+    "saving": "Sauvegarde…",
+    "saveButton": "Sauvegarder",
+    "toasts": {
+      "saved": "✅ Préférences de notifications sauvegardées",
+      "saveError": "❌ Erreur lors de la sauvegarde"
+    }
+  }
+}

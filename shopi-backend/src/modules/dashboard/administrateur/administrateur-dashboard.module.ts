@@ -29,6 +29,7 @@ import { AuditLog }             from '../../../database/entities/audit-log.entit
 import { User }                 from '../../../database/entities/user.entity';
 import { Commande }             from '../../../database/entities/commande/commande.entity';
 import { Client }               from '../../../database/entities/profiles/client-profile.entity';
+import { AdminCommunicationSettings } from '../../../database/entities/admin-communication-settings.entity';
 
 // ── Controller ───────────────────────────────────────────────
 import { AdministrateurDashboardController } from './administrateur-dashboard.controller';
@@ -48,6 +49,7 @@ import { AdminCommandesService }     from './services/admin-commandes.service';
 import { AdminAuditService }         from './services/admin-audit.service';
 import { AdminClientsService }       from './services/admin-clients.service';
 import { AdminStatsService }         from './services/admin-stats.service';
+import { AdminCommunicationService } from './services/admin-communication.service';
 
 /** Services de domaine — chacun gère un périmètre fonctionnel isolé. */
 const DOMAIN_SERVICES = [
@@ -62,6 +64,7 @@ const DOMAIN_SERVICES = [
   AdminAuditService,         // journal d'audit
   AdminClientsService,       // clients ayant commandé dans la zone (lecture seule)
   AdminStatsService,         // statistiques complémentaires (communes, litiges, rôles)
+  AdminCommunicationService, // message/signature d'invitation + modèles de notification
 ];
 
 @Module({
@@ -83,6 +86,7 @@ const DOMAIN_SERVICES = [
       User,
       Commande,
       Client,
+      AdminCommunicationSettings,
     ]),
   ],
   controllers: [AdministrateurDashboardController],

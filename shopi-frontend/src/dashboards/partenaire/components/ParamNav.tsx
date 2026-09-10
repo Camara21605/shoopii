@@ -11,8 +11,9 @@
  * ================================================================ */
 
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../styles/ParamNav.module.css';
-import { NAV_ITEMS, type SectionId } from '../data/parametresData';
+import { NAV_ITEMS, type SectionId, type NavGroupId } from '../data/parametresData';
 import type { PartenaireData } from '../hooks/usePartenaireParametres';
 
 interface Props {
@@ -23,7 +24,7 @@ interface Props {
 }
 
 /* Groupes dans l'ordre d'affichage */
-const GROUPS = ['Identité', 'Activité', 'Finances', 'Compte'] as const;
+const GROUPS: NavGroupId[] = ['identite', 'activite', 'finances', 'compte'];
 
 interface NavIndicator {
   pct?:      string;
@@ -89,15 +90,16 @@ function computeNavState(data: PartenaireData | null): Record<SectionId, NavIndi
 // ─────────────────────────────────────────────────────────────
 
 export default function ParamNav({ section, onSection, data }: Props) {
+  const { t } = useTranslation();
   const navState = useMemo(() => computeNavState(data), [data]);
 
   return (
-    <nav className={s.nav} aria-label="Navigation paramètres partenaire">
+    <nav className={s.nav} aria-label={t('partenaireParametres.nav.ariaLabel')}>
       {GROUPS.map(grp => {
         const items = NAV_ITEMS.filter(i => i.group === grp);
         return (
           <div key={grp} className={s.group}>
-            <div className={s.sect}>{grp}</div>
+            <div className={s.sect}>{t(`partenaireParametres.nav.groups.${grp}`)}</div>
             {items.map(item => {
               const indicator = navState[item.id] ?? {};
               return (
@@ -112,7 +114,7 @@ export default function ParamNav({ section, onSection, data }: Props) {
                   aria-current={section === item.id ? 'page' : undefined}
                 >
                   <i className={`fas ${item.icon} ${s.icon}`} />
-                  <span>{item.label}</span>
+                  <span>{t(`partenaireParametres.nav.items.${item.labelKey}`)}</span>
 
                   {/* % de complétion */}
                   {indicator.pct && !indicator.dotColor && (

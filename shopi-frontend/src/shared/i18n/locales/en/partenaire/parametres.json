@@ -1,0 +1,292 @@
+{
+  "partenaireParametres": {
+    "nav": {
+      "ariaLabel": "Partner settings navigation",
+      "groups": {
+        "identite": "Identity",
+        "activite": "Activity",
+        "finances": "Finances",
+        "compte": "Account"
+      },
+      "items": {
+        "profil": "Profile",
+        "documents": "Verification",
+        "zone": "Activity zone",
+        "parrainage": "Referral",
+        "paiement": "Payment",
+        "notifications": "Notifications",
+        "securite": "Security",
+        "confidentialite": "Privacy",
+        "preferences": "Preferences",
+        "danger": "Danger zone"
+      }
+    },
+    "page": {
+      "loading": "Loading settings…",
+      "deconnexion": "Log out",
+      "annulerToast": "↩️ Changes cancelled"
+    },
+    "saveFloat": {
+      "unsaved": "Unsaved changes",
+      "saving": "Saving…",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "secProfil": {
+      "health": {
+        "completedLabel": "Completed",
+        "titleLow": "Complete your profile",
+        "titleHigh": "Profile well filled out",
+        "paragraphLow": "Add your missing information to strengthen your credibility with recruited actors.",
+        "paragraphHigh": "Your partner profile is complete. You can keep recruiting with confidence.",
+        "identiteLabel": "Identity",
+        "verifie": "Verified",
+        "enAttente": "Pending",
+        "doubleAuthLabel": "2FA",
+        "activee": "Enabled",
+        "desactivee": "Disabled"
+      },
+      "infosCard": {
+        "title": "Personal information",
+        "sub": "This information appears on your partner profile.",
+        "photoTitle": "Profile photo",
+        "photoDesc": "JPG, PNG, WebP or GIF. Max size 5 MB.",
+        "photoUploading": "Uploading…",
+        "photoChangeBtn": "Change photo",
+        "prenomLabel": "First name",
+        "nomLabel": "Last name",
+        "verrouille": " — locked",
+        "prenomPlaceholder": "Your first name",
+        "nomPlaceholder": "Your last name",
+        "nameLockedHint": "First and last name can only be changed once every 3 months — next change possible on {{date}}.",
+        "telephoneLabel": "Phone",
+        "nonModifiable": "— not editable",
+        "emailLabel": "Email",
+        "bioLabel": "Bio / Introduction",
+        "optionnel": "optional",
+        "bioPlaceholder": "Introduce yourself in a few words…",
+        "bioHint": "Visible on your public partner profile."
+      },
+      "statutCard": {
+        "title": "Partner status",
+        "verifieBadge": "Verified partner",
+        "palierPrefix": "Tier",
+        "niveauLabel": "Level {{n}}",
+        "membreDepuis": "Member since {{date}}"
+      },
+      "toasts": {
+        "profilSaved": "✅ Profile saved",
+        "profilError": "❌ Error while saving",
+        "photoSaved": "✅ Photo updated",
+        "photoError": "❌ Upload failed"
+      }
+    },
+    "secDocuments": {
+      "title": "Documents & verification",
+      "sub": "Verification strengthens your trust score and unlocks higher tiers.",
+      "docs": {
+        "cni": "ID document (national ID / passport)",
+        "domicile": "Proof of address",
+        "activite": "Proof of activity"
+      },
+      "optionnel": "(optional)",
+      "statuts": {
+        "ok": "Verified",
+        "wait": "Under review",
+        "todo": "Not provided"
+      },
+      "ajouterBtn": "Add",
+      "remplacerBtn": "Replace",
+      "uploadSuccessToast": "✅ Document uploaded successfully",
+      "uploadErrorToast": "❌ Upload failed",
+      "footerNote": "The ID document and proof of address are mandatory: until they are provided, withdrawing your commissions remains blocked."
+    },
+    "secZone": {
+      "title": "Activity zone",
+      "sub": "The zones where you recruit actors for Shoneya.",
+      "villeLabel": "Main city",
+      "selectPlaceholder": "— Select —",
+      "chargement": "Loading…",
+      "aucuneVille": "No city configured by an administrator yet.",
+      "communeLabel": "District",
+      "aucuneCommune": "No district configured for \"{{ville}}\".",
+      "quartiersLabel": "Targeted neighborhoods / markets",
+      "selectCommuneHint": "Select a district to see its neighborhoods.",
+      "aucunQuartier": "No neighborhood configured for \"{{commune}}\".",
+      "footerHint": "Helps Shoneya suggest nearby prospects to you.",
+      "savedToast": "✅ Activity zone saved",
+      "errorToast": "❌ Error while saving"
+    },
+    "secParrainage": {
+      "title": "Your referral link",
+      "sub": "Share this link: anyone who signs up through it is automatically linked to you.",
+      "boxTitle": "Personal invitation link",
+      "boxDesc": "In addition to creation codes, this link lets you recruit without entering a code.",
+      "copierBtn": "Copy",
+      "whatsapp": "WhatsApp",
+      "facebook": "Facebook",
+      "qrCode": "QR Code",
+      "copiedToast": "🔗 Referral link copied",
+      "linkLoading": "Generating link…",
+      "whatsappMessage": "Join the Shoneya network through my referral link: {{link}}",
+      "statClics": "Link clicks",
+      "statInscriptions": "Actors recruited (total)",
+      "qrModalTitle": "Referral link QR code",
+      "qrCloseBtn": "Close"
+    },
+    "secPaiement": {
+      "methodesCard": {
+        "title": "Payout details",
+        "sub": "Choose the default method to receive your commissions.",
+        "parDefaut": "Default",
+        "virementBancaire": "Bank transfer",
+        "ajouterBtn": "Add a payout method",
+        "ajouterToast": "⚠️ Payout methods: backend implementation in progress"
+      },
+      "preferencesCard": {
+        "title": "Withdrawal preferences",
+        "seuilLabel": "Automatic withdrawal threshold",
+        "seuilPlaceholder": "E.g: 500000 GNF",
+        "seuilHint": "Auto payout as soon as this balance is reached.",
+        "frequenceLabel": "Frequency",
+        "frequences": {
+          "weekly": "Weekly",
+          "monthly": "Monthly",
+          "manual": "Manual (on request)"
+        },
+        "virAutoTitle": "Automatic payout",
+        "virAutoDesc": "Receive your commissions without a manual request."
+      },
+      "fiscalCard": {
+        "title": "Tax information",
+        "sub": "Needed for invoicing your commissions.",
+        "nifLabel": "Tax ID",
+        "optionnel": "optional",
+        "nifPlaceholder": "E.g. 123456789",
+        "nifHint": "Required beyond a certain commission volume.",
+        "statutLabel": "Status",
+        "statuts": {
+          "particulier": "Individual",
+          "auto-entrepreneur": "Sole trader",
+          "entreprise": "Business"
+        }
+      },
+      "retraitsCard": {
+        "title": "Recent withdrawals",
+        "verse": "Paid",
+        "enCours": "In progress",
+        "aujourdhui": "Today · processing"
+      },
+      "backendToast": "⚠️ Payment: feature still being implemented on the backend"
+    },
+    "secNotifications": {
+      "card1": {
+        "title": "Notifications",
+        "sub": "Choose what you want to be informed about."
+      },
+      "card2Title": "Channels",
+      "chargement": "Loading…",
+      "alertes": {
+        "acteur":  { "t": "New actor activated",     "d": "When an actor you recruited creates their account." },
+        "comm":    { "t": "Commission credited",     "d": "Every time a commission is added to your balance." },
+        "sig":     { "t": "Report follow-up",        "d": "Updates on the reports you have submitted." },
+        "palier":  { "t": "Tier change",              "d": "When you move up to a new partner level." },
+        "news":    { "t": "Shoneya offers & news",   "d": "Tips, programs and partner news." }
+      },
+      "canaux": {
+        "email": "Email",
+        "sms": "SMS",
+        "push": "Push notifications"
+      },
+      "savedToast": "✅ Notifications saved",
+      "errorToast": "❌ Error while saving"
+    },
+    "secSecurite": {
+      "pwdCard": {
+        "title": "Password",
+        "currentLabel": "Current password",
+        "newLabel": "New password",
+        "confirmLabel": "Confirm",
+        "forceLabel": "Strength: {{label}}",
+        "forceHint": "Use at least 8 characters, one uppercase letter and one digit.",
+        "levels": {
+          "0": "Too weak",
+          "1": "Weak",
+          "2": "Medium",
+          "3": "Good",
+          "4": "Excellent"
+        }
+      },
+      "twoFaCard": {
+        "title": "Two-factor authentication (2FA)",
+        "smsTitle": "2FA by SMS",
+        "bientotDisponible": "— coming soon",
+        "smsDesc": "A code is sent to you at every login.",
+        "appTitle": "Authenticator app",
+        "appDesc": "Google Authenticator, Authy…"
+      },
+      "sessionCard": {
+        "title": "Active session",
+        "cetAppareil": "This device",
+        "actifMaintenant": "Active now",
+        "deconnecterBtn": "Log out",
+        "unavailable": "Session information unavailable at the moment."
+      },
+      "toasts": {
+        "pwdMismatch": "⚠️ Passwords do not match",
+        "pwdUpdated": "✅ Password updated",
+        "pwdIncorrect": "❌ Current password incorrect",
+        "securiteSaved": "✅ Security saved",
+        "error": "❌ Error while saving",
+        "loggingOut": "🔒 Logging out…",
+        "twoFaEnabled": "🔐 2FA enabled successfully"
+      }
+    },
+    "secConfidentialite": {
+      "title": "Privacy",
+      "rows": {
+        "profilPublic":  { "t": "Public partner profile",  "d": "Your profile is visible to the actors you recruit." },
+        "afficherTel":   { "t": "Show my phone number",    "d": "Visible only to your recruited actors." },
+        "classement":    { "t": "Appear in the rankings",  "d": "Your name may appear in the partner rankings." }
+      },
+      "exportRow": {
+        "t": "Download my data",
+        "d": "Download a copy of your partner data (JSON file).",
+        "btn": "Download",
+        "toast": "📦 File downloaded"
+      },
+      "savedToast": "✅ Privacy saved",
+      "errorToast": "❌ Error while saving"
+    },
+    "secDanger": {
+      "title": "Danger zone",
+      "sub": "Irreversible actions. Proceed with caution.",
+      "pauseRow": {
+        "t": "Pause my account",
+        "d": "Temporarily suspends your partner activity. Your actors and commissions are kept.",
+        "btn": "Pause"
+      },
+      "deleteRow": {
+        "t": "Delete my partner account",
+        "d": "All your data will be permanently erased. This action cannot be undone.",
+        "btn": "Delete"
+      },
+      "modal": {
+        "pauseTitle": "Pause account?",
+        "deleteTitle": "Delete your account?",
+        "pauseDesc": "Your activity will be suspended. You can reactivate it from this same screen at any time.",
+        "deleteDesc": "This action is irreversible. Your recruited actors, commissions and history will be permanently lost.",
+        "pwdLabel": "Confirm with your password",
+        "pwdRequired": "Password is required to confirm this action.",
+        "pwdIncorrect": "Incorrect password. Please try again.",
+        "cancelBtn": "Cancel",
+        "enCours": "In progress…",
+        "confirmPauseBtn": "Pause",
+        "confirmDeleteBtn": "Delete permanently"
+      },
+      "pausedToast": "⏸️ Account paused",
+      "deleteScheduledToast": "Account scheduled for deletion",
+      "genericErrorToast": "❌ Operation failed. Check your connection."
+    }
+  }
+}

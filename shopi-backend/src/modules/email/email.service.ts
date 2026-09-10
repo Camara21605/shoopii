@@ -39,7 +39,10 @@ export interface SendInvitationEmailParams {
   targetRole:     UserRole | string;
   expiresAt:      Date;
   senderName:     string;
-  customMessage?: string;
+  /** Paragraphe libre de l'admin expéditeur — voir AdminCommunicationService. */
+  customMessage?: string | null;
+  /** Signature ajoutée en fin d'email — voir AdminCommunicationService. */
+  signature?:     string | null;
   ville?:         string;
   quartier?:      string;
   type?:          string;
@@ -138,6 +141,20 @@ const ROLE_META: Record<string, { label: string; emoji: string; color: string }>
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SÉCURITÉ — échappement HTML pour les champs libres injectés dans un template
+// (customMessage / signature d'un admin — voir AdminCommunicationService).
+// ─────────────────────────────────────────────────────────────────────────────
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SERVICE
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -187,6 +204,16 @@ export class MailService implements OnModuleInit {
       tls: {
         rejectUnauthorized: false,
       },
+      /*
+       * BUG CORRIGÉ (prod) : Render ne route pas l'IPv6 sortant → Gmail
+       * (smtp.gmail.com) résout parfois vers une adresse IPv6
+       * (ex: 2607:f8b0:400e:c07::6c) et la connexion échoue avec
+       * ENETUNREACH. `dns.setDefaultResultOrder('ipv4first')` dans main.ts
+       * ne suffit pas : Node ≥18 utilise Happy Eyeballs (autoSelectFamily)
+       * qui peut quand même tenter l'IPv6 en parallèle. On force IPv4 ici,
+       * comme pour la connexion Postgres (voir database.config.ts extra.family).
+       */
+      family: 4,
     } as any);
   }
 
@@ -220,7 +247,7 @@ export class MailService implements OnModuleInit {
   // ══════════════════════════════════════════════════════════════════════════
 
   async sendInvitationEmail(params: SendInvitationEmailParams): Promise<void> {
-    const { toEmail, code, targetRole, expiresAt, senderName } = params;
+    const { toEmail, code, targetRole, expiresAt, senderName, customMessage, signature } = params;
     const roleMeta = ROLE_META[targetRole] ?? { label: targetRole, emoji: '👤', color: '#1e40af' };
 
     const registerUrl = `${this.frontendUrl}/login?code=${encodeURIComponent(code)}&role=${encodeURIComponent(targetRole)}&email=${encodeURIComponent(toEmail)}`;
@@ -232,8 +259,8 @@ export class MailService implements OnModuleInit {
     await this.send({
       to:      toEmail,
       subject: `Votre accès Shopi — ${roleMeta.label}`,
-      html:    this.buildInvitationHtml({ toEmail, code, roleMeta, registerUrl, expiryFormatted, senderName }),
-      text:    this.buildInvitationText({ code, roleMeta, registerUrl, expiryFormatted, senderName }),
+      html:    this.buildInvitationHtml({ toEmail, code, roleMeta, registerUrl, expiryFormatted, senderName, customMessage, signature }),
+      text:    this.buildInvitationText({ code, roleMeta, registerUrl, expiryFormatted, senderName, customMessage, signature }),
     });
 
     this.logger.log(`[INVITATION] Email envoyé à ${toEmail} | Rôle: ${targetRole} | Code: ${code}`);
@@ -923,7 +950,19 @@ export class MailService implements OnModuleInit {
     toEmail: string; code: string;
     roleMeta: { label: string; emoji: string; color: string };
     registerUrl: string; expiryFormatted: string; senderName: string;
+    customMessage?: string | null; signature?: string | null;
   }): string {
+    /* Bloc optionnel — message personnalisé de l'admin (voir
+     * AdminCommunicationService). Échappé : texte libre saisi par un
+     * admin, jamais garanti sans balises/scripts avant interpolation HTML. */
+    const customBlock = p.customMessage ? `
+          <div style="background:#f8faff;border-left:3px solid #3b82f6;border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:20px;">
+            <p style="margin:0;font-size:13px;color:#334155;line-height:1.6;white-space:pre-wrap;">${escapeHtml(p.customMessage)}</p>
+          </div>` : '';
+    const signatureBlock = p.signature ? `
+        <tr><td style="padding:0 0 12px;text-align:center;">
+          <p style="margin:0;font-size:12px;color:#64748b;white-space:pre-wrap;">${escapeHtml(p.signature)}</p>
+        </td></tr>` : '';
     return `
 <!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/></head>
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:'Segoe UI',Arial,sans-serif;">
@@ -941,7 +980,7 @@ export class MailService implements OnModuleInit {
           <h1 style="margin:0 0 12px;font-size:22px;font-weight:800;color:#0f172a;">Vous êtes invité à rejoindre Shopi !</h1>
           <p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.6;">
             <strong>${p.senderName}</strong> vous a envoyé une invitation pour créer votre compte <strong>${p.roleMeta.label}</strong>.
-          </p>
+          </p>${customBlock}
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
             <tr><td style="background:#f8faff;border:2px dashed #3b82f6;border-radius:14px;padding:20px;text-align:center;">
               <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Code d'activation</div>
@@ -959,7 +998,7 @@ export class MailService implements OnModuleInit {
           <div style="background:#fff8ed;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:12px 16px;">
             <p style="margin:0;font-size:12.5px;color:#92400e;">⏰ <strong>Lien expire le ${p.expiryFormatted}.</strong></p>
           </div>
-        </td></tr>
+        </td></tr>${signatureBlock}
         <tr><td style="padding:20px 0;text-align:center;">
           <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi · <a href="${this.frontendUrl}" style="color:#3b82f6;">shopi.gn</a></p>
         </td></tr>
@@ -972,14 +1011,16 @@ export class MailService implements OnModuleInit {
   private buildInvitationText(p: {
     code: string; roleMeta: { label: string; emoji: string; color: string };
     registerUrl: string; expiryFormatted: string; senderName: string;
+    customMessage?: string | null; signature?: string | null;
   }): string {
     return [
       `Invitation Shopi — Créez votre compte ${p.roleMeta.label}`,
       `=`.repeat(50), '',
       `${p.senderName} vous a invité à rejoindre Shopi.`,
-      `Code d'activation : ${p.code}`, '',
+      ...(p.customMessage ? ['', p.customMessage] : []),
+      '', `Code d'activation : ${p.code}`, '',
       `Lien (valable jusqu'au ${p.expiryFormatted}) :`, p.registerUrl,
-      '', '---', 'Shopi — shopi.gn',
+      '', ...(p.signature ? [p.signature, ''] : []), '---', 'Shopi — shopi.gn',
     ].join('\n');
   }
 

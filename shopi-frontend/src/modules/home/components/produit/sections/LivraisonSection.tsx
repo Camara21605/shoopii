@@ -13,11 +13,11 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import {
   GEO_DATA, SHOP_CONTINENT,
-  SPEED_MUL, DIST_MUL, SPEED_ETA,
+  SPEED_MUL, SPEED_ETA,
   type Livreur, type Correspondant,
   LIVREURS_DATA, CORRESPONDANTS as CORRESP_MOCK,
 } from '../data/produitMockData';
-import type { DistZone, SpeedKey } from '../data/produitMockData';
+import type { SpeedKey } from '../data/produitMockData';
 import { produitApi, type LivreurApi, type CorrespondantApi } from '../api/produit.api';
 import styles from '../styles/LivraisonSection.module.css';
 
@@ -28,8 +28,13 @@ export interface LivraisonState {
   delivMode:       'standard' | 'livreur' | null;
   selectedLvr:     Livreur | null;
   selectedCorr:    Correspondant | null;
-  currentSpeed:    string;
+  currentSpeed:    SpeedKey;
   distZone:        'local' | 'near' | 'far';
+  /** Tarif RÉEL de la zone de livraison couvrant `selectedVille`
+   *  (GeoZone.fraisLivraison — géré par un administrateur, PAS par le
+   *  livreur). Source de vérité du frais facturé — voir PanierPanel.tsx
+   *  calcLvFee(), qui ne doit plus lire selectedLvr.baseFee. */
+  zoneFee:         number;
 }
 
 export interface LivraisonPolicy {
@@ -41,14 +46,26 @@ export interface LivraisonPolicy {
 }
 
 interface Props {
-  onChange: (state: LivraisonState) => void;
-  onToast:  (m: string) => void;
-  policy?:  LivraisonPolicy;  // filtre les modes selon la config produit
+  onChange:  (state: LivraisonState) => void;
+  onToast:   (m: string) => void;
+  policy?:   LivraisonPolicy;  // filtre les modes selon la config produit
+  /** Boutique du produit — sert à charger ses livreurs réels
+   *  (GET /public/boutiques/:id/livreurs, tarifs réels). */
+  companyId?: string;
 }
 
-/* ── Helpers ── */
-function calcFee(baseFee: number, distZone: string, speed: string): number {
-  return Math.round(baseFee * (DIST_MUL[distZone as DistZone] || 1) * (SPEED_MUL[speed as SpeedKey] || 1) / 1000) * 1000;
+/* ── Helpers ──
+ * BUG CORRIGÉ — le frais de livraison venait du `baseFee` PROPRE À CHAQUE
+ * LIVREUR (Delivery.tarifBase, fixé par le livreur lui-même). Le modèle
+ * réel : le tarif est fixé PAR ZONE de livraison (GeoZone.fraisLivraison),
+ * géré par un administrateur avec la permission "geo_zones" accordée par
+ * le super-admin — jamais par le livreur. `zoneFee` (résolu ci-dessous
+ * via produitApi.getFraisLivraison) remplace donc `baseFee` ; DIST_MUL
+ * devient inutile (la zone EST déjà le découpage par distance choisi par
+ * l'administrateur) — seul le multiplicateur de vitesse (fixe, plateforme)
+ * s'applique encore par-dessus. */
+function calcFee(zoneFee: number, speed: string): number {
+  return Math.round(zoneFee * (SPEED_MUL[speed as SpeedKey] || 1) / 1000) * 1000;
 }
 function getDistZone(ville: string, pays: string): 'local' | 'near' | 'far' {
   if (pays !== 'GN') return 'far';
@@ -63,10 +80,10 @@ function getDistBadge(isIntl: boolean, distZone: string, t: TFunction) {
   return                         { label:t('produitDetail.livraison.distBadge.farLabel'),    cls:styles.distFar,  note:t('produitDetail.livraison.distBadge.farNote')   };
 }
 
-/* Convertit LivreurApi → Livreur (type mock) */
+/* Convertit LivreurApi (réponse réelle du backend) → Livreur (type d'affichage) */
 function toLivreur(l: LivreurApi): Livreur {
-  return { id: parseInt(l.id) || 0, em: l.emoji, name: l.nom, zone: l.zone,
-    rating: String(l.rating), trips: String(l.totalTrips), online: l.online,
+  return { id: parseInt(l.id) || 0, em: l.emoji, name: l.fullName, zone: l.zone ?? '',
+    rating: l.note.toFixed(1), trips: String(l.trips), online: l.online,
     baseFee: l.baseFee, distZone: l.distZone, source: l.source };
 }
 function toCorrespondant(c: CorrespondantApi): Correspondant {
@@ -84,7 +101,7 @@ function getSpeedOptions(t: TFunction): { key: SpeedKey; icon: string; label: st
   ];
 }
 
-export default function LivraisonSection({ onChange, onToast, policy }: Props) {
+export default function LivraisonSection({ onChange, onToast, policy, companyId }: Props) {
   const { t } = useTranslation();
   const SPEED_OPTIONS = getSpeedOptions(t);
   /* ── Politique de livraison du produit (défauts permissifs) ── */
@@ -110,18 +127,37 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
   const [correspondants, setCorrespondants] = useState<Correspondant[]>([]);
   const [loadingLvr,     setLoadingLvr]     = useState(false);
   const [loadingCorr,    setLoadingCorr]    = useState(false);
+  /** Tarif RÉEL de la zone couvrant `ville` (GeoZone.fraisLivraison),
+   *  0 si aucune zone n'est configurée pour cette destination. */
+  const [zoneFee,        setZoneFee]        = useState(0);
 
-  /* ── Charger les livreurs quand une ville est sélectionnée ── */
+  /* ── Charger les livreurs réels de la boutique quand une ville est
+   * sélectionnée. BUG CORRIGÉ : appelait /public/livreurs?ville=, une
+   * route inexistante côté backend — tombait donc TOUJOURS sur le
+   * fallback mock (LIVREURS_DATA, frais inventés), même en production.
+   * La vraie route (/public/boutiques/:id/livreurs) a besoin du
+   * companyId du produit, pas de la ville — le mock ne reste utilisé
+   * que si companyId est absent ou si la boutique n'a réellement aucun
+   * livreur rattaché. ── */
   useEffect(() => {
     if (!ville) return;
+    if (!companyId) { setLivreurs(LIVREURS_DATA); return; }
     setLoadingLvr(true);
-    produitApi.getLivreurs(ville)
-      .then(data => {
-        if (data && data.length > 0) setLivreurs(data.map(toLivreur));
-        else setLivreurs(LIVREURS_DATA); // fallback mock
-      })
-      .catch(() => setLivreurs(LIVREURS_DATA))
+    produitApi.getLivreurs(companyId)
+      .then(data => setLivreurs(data ? data.map(toLivreur) : []))
+      /* Échec réseau/API → liste vide plutôt que le mock : un client ne
+       * doit jamais pouvoir "choisir" et payer un livreur fictif lors
+       * d'un vrai achat, même en cas de panne transitoire. */
+      .catch(() => setLivreurs([]))
       .finally(() => setLoadingLvr(false));
+  }, [ville, companyId]);
+
+  /* ── Charger le tarif réel de la zone couvrant la ville sélectionnée ── */
+  useEffect(() => {
+    if (!ville) { setZoneFee(0); return; }
+    produitApi.getFraisLivraison(ville)
+      .then(r => setZoneFee(r?.fraisLivraison ?? 0))
+      .catch(() => setZoneFee(0));
   }, [ville]);
 
   /* ── Charger les correspondants si boutique internationale ── */
@@ -142,9 +178,9 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
       selectedVille: ville || null, selectedPays: pays || null,
       isInternational: isIntl, delivMode: delMode,
       selectedLvr: selLvr, selectedCorr: selCorr,
-      currentSpeed: speed, distZone: distZ, ...overrides,
+      currentSpeed: speed, distZone: distZ, zoneFee, ...overrides,
     });
-  }, [ville, pays, isIntl, delMode, selLvr, selCorr, speed, distZ]);
+  }, [ville, pays, isIntl, delMode, selLvr, selCorr, speed, distZ, zoneFee]);
 
   function handleContinent(v: string) {
     setCont(v); setPays(''); setVille('');
@@ -179,7 +215,7 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
   }
   function handleSelLvr(l: Livreur) {
     setSelLvr(l);
-    const fee = calcFee(l.baseFee, distZ, speed);
+    const fee = calcFee(zoneFee, speed);
     onToast(t('produitDetail.livraison.livreurToast', { name: l.name, fee: fee.toLocaleString('fr') }));
     notify({ selectedLvr:l });
   }
@@ -351,7 +387,7 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
                 {loadingLvr
                   ? <span className={styles.modePrix}><i className="fas fa-circle-notch fa-spin" /></span>
                   : <span className={`${styles.modePrix} ${styles.modePrixTeal}`}>
-                      {t('produitDetail.livraison.aPartirDe', { montant: Math.min(...livreurs.map(l => calcFee(l.baseFee, distZ, speed))).toLocaleString('fr') })}
+                      {t('produitDetail.livraison.aPartirDe', { montant: calcFee(zoneFee, 'eco').toLocaleString('fr') })}
                     </span>
                 }
                 <div className={styles.modeDel}><i className="fas fa-bolt" /> {t('produitDetail.livraison.prixSelonDistance')}</div>
@@ -384,8 +420,13 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
 
               <div className={styles.livreurList}>
                 {livreurs.map(l => {
-                  const fee  = calcFee(l.baseFee, distZ, speed);
-                  const base = Math.round(l.baseFee * DIST_MUL[distZ] / 1000) * 1000;
+                  /* Même frais pour tous les livreurs de cette liste — le
+                   * tarif vient de la ZONE (zoneFee), pas du livreur choisi.
+                   * `base` = tarif de zone sans majoration de vitesse
+                   * (affiché barré uniquement si une vitesse payante est
+                   * sélectionnée). */
+                  const fee  = calcFee(zoneFee, speed);
+                  const base = Math.round(zoneFee / 1000) * 1000;
                   const eta  = SPEED_ETA[l.distZone]?.[speed] || SPEED_ETA['local'][speed];
                   const feeColor = distZ==='local'?'var(--teal)':distZ==='near'?'var(--blue)':'var(--amber)';
                   return (
@@ -426,7 +467,7 @@ export default function LivraisonSection({ onChange, onToast, policy }: Props) {
                   <div className={styles.summSep} />
                   <div className={styles.summItem}><span className={styles.summLbl}>{t('produitDetail.livraison.summary.vitesse')}</span><span className={styles.summVal}>{SPEED_OPTIONS.find(s=>s.key===speed)?.icon} {SPEED_OPTIONS.find(s=>s.key===speed)?.label}</span></div>
                   <div className={styles.summSep} />
-                  <div className={styles.summItem}><span className={styles.summLbl}>{t('produitDetail.livraison.summary.frais')}</span><span className={`${styles.summVal} ${styles.summValTeal}`}>{calcFee(selLvr.baseFee, distZ, speed).toLocaleString('fr')} GNF</span></div>
+                  <div className={styles.summItem}><span className={styles.summLbl}>{t('produitDetail.livraison.summary.frais')}</span><span className={`${styles.summVal} ${styles.summValTeal}`}>{calcFee(zoneFee, speed).toLocaleString('fr')} GNF</span></div>
                   <div className={styles.summSep} />
                   <div className={styles.summItem}><span className={styles.summLbl}>{t('produitDetail.livraison.summary.delai')}</span><span className={styles.summVal}>{SPEED_ETA[selLvr.distZone]?.[speed]}</span></div>
                 </div>

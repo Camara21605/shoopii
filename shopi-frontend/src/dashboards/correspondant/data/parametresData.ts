@@ -8,17 +8,16 @@ export interface Zone {
   id:   string;
   em:   string;
   nm:   string;
-  stat: string;
   on:   boolean;
 }
 
 export const ZONES_INIT: Zone[] = [
-  { id:'kaloum', em:'🏙️', nm:'Kaloum',  stat:'48 colis', on:true  },
-  { id:'dixinn', em:'🌿', nm:'Dixinn',  stat:'36 colis', on:true  },
-  { id:'matam',  em:'🏘️', nm:'Matam',   stat:'21 colis', on:true  },
-  { id:'ratoma', em:'🌆', nm:'Ratoma',  stat:'28 colis', on:true  },
-  { id:'matoto', em:'🌉', nm:'Matoto',  stat:'9 colis',  on:true  },
-  { id:'coyah',  em:'⛰️', nm:'Coyah',   stat:'0 colis',  on:false },
+  { id:'kaloum', em:'🏙️', nm:'Kaloum',  on:true  },
+  { id:'dixinn', em:'🌿', nm:'Dixinn',  on:true  },
+  { id:'matam',  em:'🏘️', nm:'Matam',   on:true  },
+  { id:'ratoma', em:'🌆', nm:'Ratoma',  on:true  },
+  { id:'matoto', em:'🌉', nm:'Matoto',  on:true  },
+  { id:'coyah',  em:'⛰️', nm:'Coyah',   on:false },
 ];
 
 /* ── Horaires ── */
@@ -75,18 +74,9 @@ export const DOCUMENTS: Document[] = [
   { ic:'fa-receipt',    bg:'var(--g100)', c:'var(--t2)', nm:'Registre de commerce / NIF',                  sub:'Pour facturation et commissions officielles',      st:'pend' },
 ];
 
-/* ── Sessions ── */
-export interface Session {
-  ic:     string;
-  nm:     string;
-  detail: string;
-  active: boolean;
-}
-
-export const SESSIONS: Session[] = [
-  { ic:'fa-mobile-screen', nm:'iPhone 14 Pro', detail:'Conakry, GN · Chrome · Maintenant', active:true  },
-  { ic:'fa-laptop',        nm:'MacBook Air',   detail:'Conakry, GN · Safari · Hier 18:45', active:false },
-];
+/* ── Sessions ──
+ * Session réelle unique : data.currentSession (voir SecSecurite.tsx et
+ * ProfilService.attachCurrentSession côté backend) — plus de liste mock. */
 
 /* ── Types de colis acceptés ── */
 export const COLIS_TYPES: string[] = [

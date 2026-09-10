@@ -1,0 +1,17 @@
+{
+  "livreurBoutiques": {
+    "titre": "Partner shops",
+    "chargement": "Loading…",
+    "empty": "No deliveries made for any shop yet.",
+    "depuis": "Since {{date}}",
+    "enAttente": "{{count}} pending",
+    "livrAbrev": "del.",
+    "message": "Message",
+    "repartition": {
+      "titre": "Breakdown",
+      "empty": "No data to break down.",
+      "total": "Total",
+      "totalLivraisons": "{{count}} deliveries"
+    }
+  }
+}

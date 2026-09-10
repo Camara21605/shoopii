@@ -1,0 +1,61 @@
+{
+  "livreurSecProfil": {
+    "header": {
+      "titre": "Profil personnel",
+      "sub": "Ces informations apparaissent sur votre profil public — visibles par les boutiques et clients."
+    },
+    "steps": {
+      "photo": "Photo",
+      "identite": "Identité",
+      "zones": "Zones",
+      "vehicule": "Véhicule",
+      "horaires": "Horaires",
+      "documents": "Documents"
+    },
+    "completion": {
+      "label": "Profil",
+      "titlePrefix": "Profil complété à {{pct}}%",
+      "titleSuffix": " — À compléter",
+      "footerPart1": "Un profil complet reçoit ",
+      "footerBold": "3×",
+      "footerPart2": " plus de missions"
+    },
+    "identiteCard": { "titre": "Identité & Photo" },
+    "avatar": {
+      "changer": "Changer",
+      "dragTitle": "Glissez votre photo ici",
+      "dragSubPrefix": "ou ",
+      "dragSubBrowse": "parcourir",
+      "dragSubSuffix": " · JPG, PNG · max 5 MB"
+    },
+    "emoji": { "label": "Icône de livraison", "sub": "affichée sur vos missions" },
+    "fields": {
+      "prenom": "Prénom",
+      "prenomPlaceholder": "Prénom",
+      "nom": "Nom",
+      "nomPlaceholder": "Nom de famille",
+      "bio": "Bio publique",
+      "bioSub": "visible sur votre profil",
+      "bioPlaceholder": "Décrivez votre expérience, vos zones et vos spécialités…",
+      "bioCompteur": "{{count}}/500 caractères",
+      "telephone": "Téléphone principal",
+      "telephoneHint": "Utilisé pour Orange Money et les appels clients",
+      "telephonePlaceholder": "620 00 00 00",
+      "email": "Email",
+      "emailPlaceholder": "votre@email.com",
+      "langues": "Langues parlées",
+      "languesPlaceholder": "Français, Pular, Soussou",
+      "ville": "Ville de résidence"
+    },
+    "toasts": {
+      "saveSuccess": "✅ Profil sauvegardé avec succès",
+      "saveError": "❌ Erreur lors de la sauvegarde",
+      "photoTooBig": "❌ Photo trop lourde (max 5 MB)",
+      "photoInvalidFormat": "❌ Format invalide — JPG, PNG ou WebP uniquement",
+      "photoUploading": "⏳ Upload de la photo en cours…",
+      "photoUpdated": "✅ Photo de profil mise à jour",
+      "photoUploadError": "❌ Échec de l'upload"
+    },
+    "save": { "saving": "Sauvegarde…", "button": "Sauvegarder le profil" }
+  }
+}

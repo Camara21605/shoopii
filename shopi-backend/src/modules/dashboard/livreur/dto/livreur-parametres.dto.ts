@@ -78,7 +78,7 @@ export class UpdateLivreurProfilDto {
 export class UpdateZonesDto {
   @IsOptional() @IsString() @MaxLength(30) deliveryType?: string;
   @IsOptional() @IsArray() @IsString({ each: true }) communesActives?: string[];
-  @IsOptional() @Transform(toNum) @IsNumber() @Min(1) @Max(100) distanceMax?: number;
+  @IsOptional() @Transform(toNum) @IsNumber() @Min(5) @Max(200) distanceMax?: number;
   @IsOptional() autoDispoSettings?: Record<string, boolean>;
 }
 

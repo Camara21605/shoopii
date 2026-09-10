@@ -11,7 +11,6 @@
         "paiement": "Paiement & Facturation",
         "commissions": "Commissions Shoneya",
         "documents": "Documents & Vérification",
-        "confidentialiteSecurite": "Confidentialité et sécurité",
         "securite": "Sécurité",
         "notifs": "Notifications",
         "privacy": "Confidentialité",
@@ -157,7 +156,11 @@
       "planStandardSub": "Plan de base · Inclus dans votre inscription",
       "planProSub": "Pour les boutiques à fort volume de ventes",
       "planPremiumSub": "Commissions réduites + outils marketing avancés",
-      "tauxParVente": "{{taux}}% / vente"
+      "tauxParVente": "{{taux}}% / vente",
+      "confirmerChangementBtn": "Confirmer le passage au plan {{plan}}",
+      "changementEnCours": "Changement en cours…",
+      "planChangedToast": "✅ Plan changé pour {{plan}}",
+      "planChangeErrorToast": "❌ Erreur lors du changement de plan"
     },
     "documents": {
       "docs": {
@@ -236,21 +239,12 @@
         "emailSub": "Code envoyé par email à votre adresse principale",
         "emailBadge": "Basique"
       },
-      "sessionsTitle": "Sessions actives",
-      "sessionsSubtitle": "Appareils connectés à votre compte boutique",
-      "deconnecterTout": "Déconnecter tout",
-      "toutesSessionsToast": "🔐 Toutes les sessions terminées",
+      "sessionsTitle": "Session active",
+      "sessionsSubtitle": "Une seule session peut être active à la fois sur votre compte boutique",
       "sessionActuelle": "Session actuelle",
-      "revoquer": "Révoquer",
-      "sessionTermineeToast": "🔐 Session terminée",
-      "sessions": {
-        "chromeWindows": "Chrome · Windows 11",
-        "chromeWindowsSub": "Conakry, Guinée · Maintenant",
-        "safariIphone": "Safari · iPhone 14",
-        "safariIphoneSub": "Conakry, Guinée · Il y a 2 heures",
-        "chromeAndroid": "Chrome · Android",
-        "chromeAndroidSub": "Coyah, Guinée · Hier à 18h34"
-      }
+      "connecteDepuis": "Connecté depuis le {{date}}",
+      "deconnecterBtn": "Se déconnecter",
+      "sessionUnavailable": "Informations de session indisponibles pour le moment."
     },
     "notifs": {
       "savedToast": "✅ Notifications sauvegardées",
@@ -455,8 +449,8 @@
       "prenomPlaceholder": "Prénom du responsable",
       "nom": "Nom",
       "nomPlaceholder": "Nom du responsable",
-      "responsableHintPart1": "Le prénom et le nom se modifient dans les",
-      "responsableHintBold": "paramètres de votre compte",
+      "responsableHintPart1": "Prénom et nom affichés en lecture seule. La modification directe sera",
+      "responsableHintBold": "bientôt disponible",
       "responsableHintPart2": ".",
       "steps": {
         "logo": "Logo",

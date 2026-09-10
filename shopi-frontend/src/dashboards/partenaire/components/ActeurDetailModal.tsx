@@ -10,9 +10,10 @@
  * ================================================================ */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from '../styles/GenerateCodeModal.module.css';
 import { apiFetch } from '@/shared/services/apiFetch';
-import { fmtGnf, TYPE_LABEL } from '../data/partenaireData';
+import { fmtGnf } from '../data/partenaireData';
 import type { ActeurType } from '../data/types';
 
 interface Props {
@@ -42,6 +43,7 @@ interface ActeurDetail {
 const TYPE_ICON: Record<string, string> = { ent: 'fa-store', lvr: 'fa-motorcycle', cor: 'fa-map-pin' };
 
 export default function ActeurDetailModal({ actorId, type, onClose, onReport }: Props) {
+  const { t } = useTranslation();
   const [data,    setData]    = useState<ActeurDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
@@ -51,7 +53,7 @@ export default function ActeurDetailModal({ actorId, type, onClose, onReport }: 
     setError(null);
     apiFetch<ActeurDetail>(`/dashboard/partenaire/acteurs/${type}/${actorId}`)
       .then(setData)
-      .catch(err => setError(err?.message ?? "Impossible de charger la fiche de cet acteur."))
+      .catch(err => setError(err?.message ?? t('partenaireActeurs.modal.loadError')))
       .finally(() => setLoading(false));
   }, [actorId, type]);
 
@@ -88,10 +90,10 @@ export default function ActeurDetailModal({ actorId, type, onClose, onReport }: 
                 <div>
                   <div className={styles.title}>{data.nom}</div>
                   <div className={styles.sub}>
-                    <i className={`fas ${TYPE_ICON[data.type] ?? 'fa-user'}`} /> {TYPE_LABEL[data.type] ?? data.type}
+                    <i className={`fas ${TYPE_ICON[data.type] ?? 'fa-user'}`} /> {t(`partenaireCodes.types.${data.type}`, { defaultValue: data.type })}
                     {' · '}
                     <span style={{ color: data.statut === 'act' ? '#059669' : '#D97706', fontWeight: 700 }}>
-                      {data.statut === 'act' ? 'Actif' : 'En attente'}
+                      {t(`partenaireActeurs.statuts.${data.statut}`)}
                     </span>
                   </div>
                 </div>
@@ -101,28 +103,28 @@ export default function ActeurDetailModal({ actorId, type, onClose, onReport }: 
             <div className={styles.body}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 18 }}>
                 <div style={{ background: 'var(--g50, #F9FAFB)', borderRadius: 10, padding: '12px 14px' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3, #9CA3AF)', textTransform: 'uppercase', letterSpacing: .5 }}>Commandes</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3, #9CA3AF)', textTransform: 'uppercase', letterSpacing: .5 }}>{t('partenaireActeurs.modal.statCommandes')}</div>
                   <div style={{ fontFamily: 'var(--fd)', fontSize: 20, fontWeight: 800, color: 'var(--navy, #0B1F3A)', marginTop: 4 }}>{data.nbCommandes}</div>
                 </div>
                 <div style={{ background: 'var(--g50, #F9FAFB)', borderRadius: 10, padding: '12px 14px' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3, #9CA3AF)', textTransform: 'uppercase', letterSpacing: .5 }}>Commission générée</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3, #9CA3AF)', textTransform: 'uppercase', letterSpacing: .5 }}>{t('partenaireActeurs.modal.statCommission')}</div>
                   <div style={{ fontFamily: 'var(--fd)', fontSize: 16, fontWeight: 800, color: '#059669', marginTop: 4 }}>{fmtGnf(data.commissionGeneree)}</div>
                 </div>
               </div>
 
               <div className={styles.fld}>
-                <label className={styles.lbl}>Coordonnées</label>
+                <label className={styles.lbl}>{t('partenaireActeurs.modal.coordonneesLabel')}</label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13, color: 'var(--t1, #111827)' }}>
                   <div><i className="fas fa-phone" style={{ width: 18, color: 'var(--t3, #9CA3AF)' }} /> {data.telephone ?? '—'}</div>
                   <div><i className="fas fa-envelope" style={{ width: 18, color: 'var(--t3, #9CA3AF)' }} /> {data.email ?? '—'}</div>
                   <div><i className="fas fa-location-dot" style={{ width: 18, color: 'var(--t3, #9CA3AF)' }} /> {[data.adresse, data.ville].filter(Boolean).join(', ') || '—'}</div>
-                  <div><i className="fas fa-calendar" style={{ width: 18, color: 'var(--t3, #9CA3AF)' }} /> Membre depuis le {new Date(data.memberSince).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                  <div><i className="fas fa-calendar" style={{ width: 18, color: 'var(--t3, #9CA3AF)' }} /> {t('partenaireActeurs.modal.memberSince', { date: new Date(data.memberSince).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) })}</div>
                 </div>
               </div>
 
               <button className={styles.btn} style={{ marginTop: 8, background: 'var(--rose, #E11D48)' }}
                 onClick={() => { onReport(data.userId, data.nom); onClose(); }}>
-                <i className="fas fa-flag" /> Signaler cet acteur
+                <i className="fas fa-flag" /> {t('partenaireActeurs.reportTitle')}
               </button>
             </div>
           </>

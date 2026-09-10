@@ -27,18 +27,6 @@ export interface SectionProps {
   onToast: (msg: string, type?: 's' | 'i' | 'w') => void;
 }
 
-/** Statut d'un service de santé */
-export type HealthStatus = 'ok' | 'warn' | 'err';
-
-export interface ServiceHealth {
-  id:      string;
-  nom:     string;
-  icon:    string;
-  pct:     number;
-  statut:  HealthStatus;
-  check:   string;
-}
-
 /** Entrée du journal d'activité */
 export type JournalKind = 'ok' | 'code' | 'warn' | 'ban';
 export interface JournalEntry {

@@ -1,0 +1,45 @@
+{
+  "partenaireOverview": {
+    "loadError": "Impossible de charger le tableau de bord",
+    "hero": {
+      "eyebrow": "Espace Partenaire",
+      "greeting": "Bonjour {{name}},",
+      "recruitedPrefix": "vous avez recruté",
+      "recruitedCount_one": "{{count}} acteur",
+      "recruitedCount_other": "{{count}} acteurs",
+      "recruitedSuffix": "au total",
+      "paragraph": "Continuez à faire grandir le réseau Shoneya. Chaque entreprise et livreur que vous recrutez vous rapporte une commission récurrente.",
+      "generateBtn": "Générer un code",
+      "voirActeursBtn": "Voir mes acteurs",
+      "tierName": "Partenaire {{zone}}",
+      "tierStatus": "Statut : {{status}}",
+      "tierProgress_one": "{{count}} acteur dans votre réseau",
+      "tierProgress_other": "{{count}} acteurs dans votre réseau"
+    },
+    "kpis": {
+      "totalActeurs": "Acteurs recrutés (total)",
+      "codesActifs": "Codes actifs",
+      "tauxConversion": "Taux de conversion",
+      "commissionsMonth": "Commissions ce mois"
+    },
+    "chart": {
+      "title": "Recrutements",
+      "semaine": "Semaine",
+      "mois": "Mois",
+      "annee": "Année",
+      "legendEntreprises": "Entreprises",
+      "legendLivreurs": "Livreurs & correspondants"
+    },
+    "activite": {
+      "title": "Activité récente",
+      "empty": "Aucune activité récente"
+    },
+    "repartition": {
+      "title": "Répartition de votre réseau",
+      "voirTout": "Voir tout",
+      "entreprises": "Entreprises",
+      "livreurs": "Livreurs",
+      "correspondants": "Correspondants"
+    }
+  }
+}

@@ -15,12 +15,13 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate as useRouterNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../../shared/services/apiFetch';
 import { useAppContext } from '../../shared/context/AppContext';
 import { useLivreurSharing } from '../../shared/location/hooks/useLocationSocket';
 import { fetchEnCours } from './services/encours.api';
 import type { PageId } from './data/livreurData';
-import { PAGE_META } from './data/livreurData';
+import { buildPageMeta } from './data/livreurData';
 
 import Sidebar         from './components/Sidebar';
 import Topbar          from './components/Topbar';
@@ -92,6 +93,7 @@ function parseSplat(splat: string): { page: PageId; viewedId?: string } {
 }
 
 export default function LivreurApp() {
+  const { t } = useTranslation();
   const routerNavigate = useRouterNavigate();
   const { logout } = useAppContext();
   const { '*': splat = '' } = useParams<{ '*': string }>();
@@ -214,7 +216,7 @@ export default function LivreurApp() {
     return () => document.removeEventListener('keydown', fn);
   }, []);
 
-  const meta = PAGE_META[page];
+  const meta = buildPageMeta(t)[page];
 
   return (
     <NotificationProvider>

@@ -1,0 +1,29 @@
+{
+  "livreurSecPaiement": {
+    "header": { "titre": "Modes de paiement", "sub": "Configurez comment recevoir vos gains." },
+    "freqCard": { "titre": "Fréquence de virement" },
+    "freq": {
+      "quotidien":  { "nm": "Quotidien",    "sub": "Chaque matin à 8h — gains de la veille",         "badge": "Gratuit" },
+      "hebdo":      { "nm": "Hebdomadaire", "sub": "Chaque lundi — gains de la semaine",              "badge": "Gratuit" },
+      "bimensuel":  { "nm": "Bimensuel",    "sub": "Le 1er et le 15 de chaque mois",                  "badge": "Gratuit" },
+      "mensuel":    { "nm": "Mensuel",      "sub": "Le 1er de chaque mois — gains du mois précédent", "badge": "Gratuit" }
+    },
+    "walletCard": {
+      "titre": "Wallet Shoneya",
+      "soldeDisponible": "Solde disponible",
+      "retirer": "Retirer",
+      "historique": "Historique",
+      "comingSoon": "Bientôt disponible"
+    },
+    "seuil": {
+      "label": "Seuil de virement automatique",
+      "hint": "En dessous de ce seuil, vos gains s'accumulent dans votre Wallet"
+    },
+    "saving": "Sauvegarde…",
+    "saveButton": "Sauvegarder le paiement",
+    "toasts": {
+      "saved": "✅ Paramètres de paiement sauvegardés",
+      "saveError": "❌ Erreur lors de la sauvegarde"
+    }
+  }
+}

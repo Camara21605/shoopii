@@ -42,6 +42,11 @@ import { CompanyTeamModule } from 'src/modules/company-team/company-team.module'
  * HorairesParametresService et public/public.gateway.ts). */
 import { PublicModule } from 'src/modules/public/public.module';
 
+/* ── Fournit SessionService.getSessionMeta — session réellement active
+ * (device/navigateur/IP/date), voir BoutiqueParametresService.getParametres()
+ * pour le détail du bug corrigé (3 sessions factices affichées jusqu'ici). */
+import { SessionModule } from 'src/modules/session/session.module';
+
 /* ── Controller ── */
 import { ParametresController } from './parametres.controller';
 
@@ -78,6 +83,7 @@ import { DangerParametresService }     from './services/danger-parametres.servic
 
     CompanyTeamModule,
     PublicModule,
+    SessionModule,
   ],
 
   controllers: [

@@ -24,7 +24,7 @@ function buildRegisterPayload(
 ): RegisterPayload {
   const {
     firstName, lastName, email, phone, password, role,
-    activationCode, shopName, companyTypeId,
+    activationCode, referralSlug, shopName, companyTypeId,
     // Pays
     countryCode, countryName, dialCode,
     // Localisation
@@ -44,6 +44,11 @@ function buildRegisterPayload(
   // Code d'activation — omis pour 'client' si vide
   if (activationCode && activationCode.trim() !== '') {
     payload.activationCode = activationCode.trim();
+  }
+
+  // Lien de parrainage (?ref=slug sur /login) — voir Login.tsx useReferralParam()
+  if (referralSlug && referralSlug.trim() !== '') {
+    payload.referralSlug = referralSlug.trim();
   }
 
   // Nom de boutique → companyName (seulement pour role='company')

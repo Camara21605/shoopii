@@ -28,7 +28,8 @@ import { AuditLog }         from '../../../../database/entities/audit-log.entity
 import { Admin }            from '../../../../database/entities/profiles/admin-profile.entity';
 import { PlatformSettingsCacheService } from '../../../performance-engine/services/platform-settings-cache.service';
 
-import { initials, userName, mapSt, relTime, escapeHtml } from '../helpers/admin.helpers';
+import { initials, userName, mapSt, relTime, escapeHtml, interpolate, AuditMeta } from '../helpers/admin.helpers';
+import { AdminCommunicationService } from './admin-communication.service';
 
 /** TTL du cache "acteurs bruts" — courte durée : ce sont des pages de
  * modération où l'admin agit puis regarde le résultat, une donnée
@@ -43,6 +44,7 @@ export class AdminActeursService {
     private readonly zoneService:    AdminZoneService,
     private readonly notifEvents:    NotificationEventService,
     private readonly cache:          RedisCacheService,
+    private readonly communication:  AdminCommunicationService,
 
     @InjectRepository(Partner)
     private readonly partnerRepo: Repository<Partner>,
@@ -391,7 +393,7 @@ export class AdminActeursService {
    * L'action est journalisée dans AuditLog et une notification
    * est envoyée à l'acteur concerné (in-app + push si activé).
    */
-  async approveValidation(adminUserId: string, targetUserId: string) {
+  async approveValidation(adminUserId: string, targetUserId: string, meta?: AuditMeta) {
     const admin = await this.zoneService.adminOf(adminUserId);
     const user  = await this.userRepo.findOne({ where: { id: targetUserId } });
     if (!user) throw new NotFoundException('Utilisateur introuvable.');
@@ -409,15 +411,21 @@ export class AdminActeursService {
       action:     `a validé le compte de <b>${escapeHtml(userName(user))}</b>`,
       targetType: 'user',
       targetId:   targetUserId,
+      ip:         meta?.ip ?? null,
+      device:     meta?.device ?? null,
     }));
 
-    // Notification asynchrone (fire-and-forget) à l'acteur validé
+    // Notification asynchrone (fire-and-forget) à l'acteur validé — utilise
+    // le modèle personnalisé de l'admin s'il en a défini un (voir
+    // AdminCommunicationService / CommunicationSection.tsx).
+    const approvedTpl = await this.communication.getTemplate(adminUserId, 'approved');
     this.resolveProfile(targetUserId, user.role).then(profile => {
       if (!profile) return;
       this.notifEvents.notifyActeurAccountApproved({
         recipientType: profile.actorType,
         recipientId:   profile.profileId,
         acteurNom:     userName(user),
+        customBody:    approvedTpl ? interpolate(approvedTpl, { acteur: userName(user) }) : null,
       });
     }).catch(() => {});
 
@@ -434,7 +442,7 @@ export class AdminActeursService {
    * L'action est journalisée dans AuditLog et une notification
    * est envoyée à l'acteur concerné pour l'informer du refus.
    */
-  async rejectValidation(adminUserId: string, targetUserId: string) {
+  async rejectValidation(adminUserId: string, targetUserId: string, meta?: AuditMeta) {
     const admin = await this.zoneService.adminOf(adminUserId);
     const user  = await this.userRepo.findOne({ where: { id: targetUserId } });
     if (!user) throw new NotFoundException('Utilisateur introuvable.');
@@ -450,14 +458,18 @@ export class AdminActeursService {
       action:     `a refusé le compte de <b>${escapeHtml(userName(user))}</b>`,
       targetType: 'user',
       targetId:   targetUserId,
+      ip:         meta?.ip ?? null,
+      device:     meta?.device ?? null,
     }));
 
     // Notification asynchrone (fire-and-forget) à l'acteur refusé
+    const rejectedTpl = await this.communication.getTemplate(adminUserId, 'rejected');
     this.resolveProfile(targetUserId, user.role).then(profile => {
       if (!profile) return;
       this.notifEvents.notifyActeurAccountRejected({
         recipientType: profile.actorType,
         recipientId:   profile.profileId,
+        customBody:    rejectedTpl ? interpolate(rejectedTpl, { acteur: userName(user) }) : null,
       });
     }).catch(() => {});
 
@@ -501,7 +513,7 @@ export class AdminActeursService {
    * quel admin pourrait suspendre l'acteur d'une AUTRE zone en appelant
    * la route directement avec un userId deviné/récupéré ailleurs.
    */
-  async suspendActeur(adminUserId: string, targetUserId: string, motif?: string) {
+  async suspendActeur(adminUserId: string, targetUserId: string, motif?: string, meta?: AuditMeta) {
     const admin = await this.zoneService.adminOf(adminUserId);
     const user  = await this.userRepo.findOne({ where: { id: targetUserId } });
     if (!user) throw new NotFoundException('Utilisateur introuvable.');
@@ -528,12 +540,16 @@ export class AdminActeursService {
         : `a suspendu le compte de <b>${escapeHtml(userName(user))}</b>`,
       targetType: 'user',
       targetId:   targetUserId,
+      ip:         meta?.ip ?? null,
+      device:     meta?.device ?? null,
     }));
 
+    const suspendedTpl = await this.communication.getTemplate(adminUserId, 'suspended');
     this.notifEvents.notifyActeurAccountSuspended({
       recipientType: profile.actorType,
       recipientId:   profile.profileId,
       motif:         motif ?? null,
+      customBody:    suspendedTpl ? interpolate(suspendedTpl, { acteur: userName(user), motif: motif ?? '' }) : null,
     }).catch(() => {});
 
     return { message: 'Compte suspendu.' };
@@ -543,7 +559,7 @@ export class AdminActeursService {
    * Réactive un acteur SUSPENDU de la zone (l'inverse de suspendActeur
    * ci-dessus) — même vérification de zone.
    */
-  async reactivateActeur(adminUserId: string, targetUserId: string) {
+  async reactivateActeur(adminUserId: string, targetUserId: string, meta?: AuditMeta) {
     const admin = await this.zoneService.adminOf(adminUserId);
     const user  = await this.userRepo.findOne({ where: { id: targetUserId } });
     if (!user) throw new NotFoundException('Utilisateur introuvable.');
@@ -568,11 +584,15 @@ export class AdminActeursService {
       action:     `a réactivé le compte de <b>${escapeHtml(userName(user))}</b>`,
       targetType: 'user',
       targetId:   targetUserId,
+      ip:         meta?.ip ?? null,
+      device:     meta?.device ?? null,
     }));
 
+    const reactivatedTpl = await this.communication.getTemplate(adminUserId, 'reactivated');
     this.notifEvents.notifyActeurAccountReactivated({
       recipientType: profile.actorType,
       recipientId:   profile.profileId,
+      customBody:    reactivatedTpl ? interpolate(reactivatedTpl, { acteur: userName(user) }) : null,
     }).catch(() => {});
 
     return { message: 'Compte réactivé.' };

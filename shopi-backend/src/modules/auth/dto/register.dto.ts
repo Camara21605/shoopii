@@ -73,6 +73,19 @@ export class RegisterDto {
   @Transform(({ value }) => (value as string | undefined)?.trim().toUpperCase())
   activationCode?: string;
 
+  /**
+   * Slug du lien de parrainage personnel d'un partenaire (voir
+   * partenaire-profile.entity.ts § LIEN DE PARRAINAGE). Alternative à
+   * activationCode : rattache le nouvel acteur (company/delivery/
+   * correspondent) au partenaire propriétaire du slug sans qu'aucun
+   * code n'ait été saisi — voir AuthService.getReferralPartnerId().
+   */
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  @Transform(({ value }) => (value as string | undefined)?.trim())
+  referralSlug?: string;
+
   // Nom de la boutique — accepté sous les deux clés (shopName = clé frontend)
   @IsOptional()
   @IsString()

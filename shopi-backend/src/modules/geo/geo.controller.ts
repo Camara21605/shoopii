@@ -75,6 +75,23 @@ export class GeoController {
   }
 
   /* ══════════════════════════════════════════════════════════
+   * FRAIS DE LIVRAISON RÉEL — accessible sans authentification
+   * GET /geo/frais-livraison?ville=Kaloum
+   *
+   * BUG CORRIGÉ : le checkout affichait/facturait un tarif inventé
+   * (celui saisi par le livreur lui-même, ou un mock) au lieu du vrai
+   * tarif de zone défini par l'administrateur (permission "geo_zones",
+   * accordée par le super-admin). Voir GeoService.resolveFraisLivraison().
+   * ══════════════════════════════════════════════════════════ */
+  @Get('frais-livraison')
+  @Public()
+  @Roles()
+  @ApiOperation({ summary: 'Tarif de livraison réel (GeoZone.fraisLivraison) pour une destination — route publique' })
+  getFraisLivraison(@Query('ville') ville?: string) {
+    return this.geo.resolveFraisLivraison(ville);
+  }
+
+  /* ══════════════════════════════════════════════════════════
    * ALL — charge tout en une seule requête (cascade selectors)
    * ══════════════════════════════════════════════════════════ */
   @Get('all')
@@ -108,7 +125,7 @@ export class GeoController {
       throw new BadRequestException(`niveau doit être une valeur parmi: ${IMPORT_NIVEAUX.join(', ')}`);
     }
     const a = actor(req);
-    return this.geo.importRows(niveau as GeoAuditNiveau, dto.rows, a.email, a.userId);
+    return this.geo.importRows(niveau as GeoAuditNiveau, dto.rows, a.email, a.userId, req.user.role);
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -313,7 +330,7 @@ export class GeoController {
   @HttpCode(HttpStatus.CREATED)
   createZone(@Body() dto: CreateGeoItemDto, @Request() req: any) {
     const a = actor(req);
-    return this.geo.createZone(dto, a.email, a.userId);
+    return this.geo.createZone(dto, a.email, a.userId, req.user.role);
   }
 
   @Patch('zones/:id')

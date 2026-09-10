@@ -1,0 +1,17 @@
+{
+  "livreurBoutiques": {
+    "titre": "Boutiques partenaires",
+    "chargement": "Chargement…",
+    "empty": "Aucune livraison effectuée pour une boutique pour le moment.",
+    "depuis": "Depuis {{date}}",
+    "enAttente": "{{count}} en attente",
+    "livrAbrev": "livr.",
+    "message": "Message",
+    "repartition": {
+      "titre": "Répartition",
+      "empty": "Aucune donnée à répartir.",
+      "total": "Total",
+      "totalLivraisons": "{{count}} livraisons"
+    }
+  }
+}

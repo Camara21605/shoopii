@@ -17,6 +17,7 @@
 
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import ParamNav  from '../components/ParamNav';
 import SaveFloat from '../components/SaveFloat';
@@ -40,6 +41,7 @@ import { useToasts, ToastStack }   from '../components/Toast';
 import p from '../styles/ParametresPage.module.css';
 
 export default function ParametresPage() {
+  const { t } = useTranslation();
   const { logout } = useAppContext();
   const navigate = useNavigate();
   const handleLogout = useCallback(() => {
@@ -59,7 +61,6 @@ export default function ParametresPage() {
     saveSecurite,  changePassword,
     saveNotifications,
     saveConfidentialite,
-    savePreferences,
     suspendreCompte, supprimerCompte,
     documents, uploadDocument,
   } = usePartenaireParametres();
@@ -83,7 +84,7 @@ export default function ParametresPage() {
   function handleCancel() {
     refresh();
     setIsDirty(false);
-    toast('↩️ Modifications annulées', 'i');
+    toast(t('partenaireParametres.page.annulerToast'), 'i');
   }
 
   /* Props communes à toutes les sections */
@@ -155,13 +156,7 @@ export default function ParametresPage() {
           />
         );
       case 'preferences':
-        return (
-          <SecPreferences
-            {...sectionProps}
-            onSave={savePreferences}
-            onToast={toast}
-          />
-        );
+        return <SecPreferences onToast={toast} />;
       case 'danger':
         return (
           <SecDanger
@@ -182,7 +177,7 @@ export default function ParametresPage() {
       <div className={p.page}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '40px 0', color: 'var(--t3)' }}>
           <i className="fas fa-spinner fa-spin" style={{ fontSize: 20 }} />
-          <span style={{ fontSize: 14 }}>Chargement des paramètres…</span>
+          <span style={{ fontSize: 14 }}>{t('partenaireParametres.page.loading')}</span>
         </div>
       </div>
     );
@@ -230,7 +225,7 @@ export default function ParametresPage() {
               }}
             >
               <i className="fas fa-right-from-bracket" style={{ width: 15, textAlign: 'center', fontSize: 13 }} />
-              Se déconnecter
+              {t('partenaireParametres.page.deconnexion')}
             </button>
           </div>
         </div>

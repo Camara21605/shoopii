@@ -1,5 +1,6 @@
 // src/dashboards/livreur/components/Topbar.tsx
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { PageId } from '../data/livreurData';
 import styles from '../styles/Topbar.module.css';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
@@ -34,17 +35,17 @@ function getInitials(name: string): string {
  * l'identique du drawer mobile du dashboard entreprise. */
 type DrawerItem = { id: PageId; icon: string; label: string; badge?: number };
 
-function buildDrawerNav(encoursCount: number): DrawerItem[] {
+function buildDrawerNav(t: (k: string) => string, encoursCount: number): DrawerItem[] {
   return [
-    { id: 'overview',   icon: 'fa-chart-pie',        label: "Vue d'ensemble" },
-    { id: 'missions',   icon: 'fa-motorcycle',       label: 'Missions disponibles' },
-    { id: 'encours',    icon: 'fa-route',            label: 'En cours', ...(encoursCount > 0 ? { badge: encoursCount } : {}) },
-    { id: 'historique', icon: 'fa-clock-rotate-left',label: 'Historique' },
-    { id: 'boutiques',  icon: 'fa-store',            label: 'Mes boutiques' },
-    { id: 'revenus',    icon: 'fa-coins',            label: 'Mes revenus' },
-    { id: 'zone',       icon: 'fa-map-location-dot', label: 'Ma zone de livraison' },
-    { id: 'evaluation', icon: 'fa-user-plus',        label: 'Ajouter un correspondant' },
-    { id: 'parametres', icon: 'fa-gear',             label: 'Paramètres' },
+    { id: 'overview',   icon: 'fa-chart-pie',        label: t('livreurLayout.sidebar.items.overview') },
+    { id: 'missions',   icon: 'fa-motorcycle',       label: t('livreurLayout.sidebar.items.missions') },
+    { id: 'encours',    icon: 'fa-route',            label: t('livreurLayout.sidebar.items.encours'), ...(encoursCount > 0 ? { badge: encoursCount } : {}) },
+    { id: 'historique', icon: 'fa-clock-rotate-left',label: t('livreurLayout.sidebar.items.historique') },
+    { id: 'boutiques',  icon: 'fa-store',            label: t('livreurLayout.sidebar.items.boutiques') },
+    { id: 'revenus',    icon: 'fa-coins',            label: t('livreurLayout.sidebar.items.revenus') },
+    { id: 'zone',       icon: 'fa-map-location-dot', label: t('livreurLayout.sidebar.items.zone') },
+    { id: 'evaluation', icon: 'fa-user-plus',        label: t('livreurLayout.sidebar.items.evaluation') },
+    { id: 'parametres', icon: 'fa-gear',             label: t('livreurLayout.sidebar.items.parametres') },
   ];
 }
 
@@ -54,10 +55,11 @@ export default function Topbar({
   menuOpen, onMenuToggle, onMenuClose,
   onNavigate,
 }: Props) {
+  const { t } = useTranslation();
   const initials = livreurName ? getInitials(livreurName) : '🛵';
   const { msgUnread } = useGlobalCall();
   const navigate = useNavigate();
-  const displayName = livreurName || 'Mon profil';
+  const displayName = livreurName || t('livreurLayout.sidebar.defaultName');
 
   function go(page: PageId) {
     onNavigate(page);
@@ -67,7 +69,7 @@ export default function Topbar({
   return (
     <>
     <header className={styles.topbar}>
-      <button className={styles.hamburger} onClick={onMenuToggle} aria-label="Menu">
+      <button className={styles.hamburger} onClick={onMenuToggle} aria-label={t('livreurLayout.topbar.menuAria')}>
         <i className="fas fa-bars" />
       </button>
 
@@ -79,19 +81,19 @@ export default function Topbar({
       <div className={styles.tbActs}>
         <div className={`${styles.statusPill} ${isOnline ? styles.statusOn : styles.statusOff}`}>
           <span className={`${styles.spDot} ${isOnline ? styles.spGreen : ''}`} />
-          {isOnline ? 'En ligne · Disponible' : 'Hors ligne · Pause'}
+          {isOnline ? t('livreurLayout.topbar.online') : t('livreurLayout.topbar.offline')}
         </div>
         <div className={`${styles.tbSep} ${styles.hideMobile}`} />
         <div className={styles.tbReseauGroup}>
-          <button className={styles.tbIc} onClick={() => onNavigate('reseauCorrespondants')} title="Suivre des correspondants">
+          <button className={styles.tbIc} onClick={() => onNavigate('reseauCorrespondants')} title={t('livreurLayout.topbar.tooltipCorrespondants')}>
             <i className="fas fa-warehouse" />
           </button>
-          <button className={styles.tbIc} onClick={() => onNavigate('reseauLivreurs')} title="Suivre des livreurs">
+          <button className={styles.tbIc} onClick={() => onNavigate('reseauLivreurs')} title={t('livreurLayout.topbar.tooltipLivreurs')}>
             <i className="fas fa-motorcycle" />
           </button>
         </div>
         <div className={styles.tbSep} />
-        <button className={`${styles.tbIc} ${styles.tbIcPin}`} onClick={() => onNavigate('messagerie')} title="Messagerie">
+        <button className={`${styles.tbIc} ${styles.tbIcPin}`} onClick={() => onNavigate('messagerie')} title={t('livreurLayout.topbar.tooltipMessagerie')}>
           <i className="fas fa-comment-dots" />
           {msgUnread > 0 && (
             <span className={styles.tbBadge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
@@ -104,8 +106,8 @@ export default function Topbar({
         <button
           className={`${styles.tbIc} ${styles.hideXs}`}
           onClick={() => navigate('/aide')}
-          title="Centre d'aide"
-          aria-label="Centre d'aide"
+          title={t('livreurLayout.topbar.tooltipAide')}
+          aria-label={t('livreurLayout.topbar.tooltipAide')}
         >
           <i className="fas fa-circle-question" />
         </button>
@@ -115,10 +117,10 @@ export default function Topbar({
         <div
           className={styles.tbAva}
           onClick={() => onNavigate('profil' as PageId)}
-          title={livreurName || 'Mon profil'}
+          title={displayName}
         >
           {avatarUrl
-            ? <img src={avatarUrl} alt={livreurName || 'Profil'} />
+            ? <img src={avatarUrl} alt={displayName} />
             : initials
           }
         </div>
@@ -128,7 +130,7 @@ export default function Topbar({
     {/* ════════ DRAWER MOBILE (menu complet) — même approche que le dashboard entreprise ════════ */}
     {menuOpen && (
       <div className={styles.tbDrawerOverlay} onClick={onMenuClose}>
-        <div className={styles.tbDrawer} role="dialog" aria-modal="true" aria-label="Menu"
+        <div className={styles.tbDrawer} role="dialog" aria-modal="true" aria-label={t('livreurLayout.topbar.menuAria')}
           onClick={e => e.stopPropagation()}>
 
           {/* En-tête livreur */}
@@ -140,10 +142,10 @@ export default function Topbar({
               <div className={styles.tbDrawerNm}>{displayName}</div>
               <div className={styles.tbDrawerSub}>
                 <span className={`${styles.spDot} ${isOnline ? styles.spGreen : ''}`} />
-                {isOnline ? 'En ligne · disponible' : 'Hors ligne · pause'}
+                {isOnline ? t('livreurLayout.topbar.drawer.online') : t('livreurLayout.topbar.drawer.offline')}
               </div>
             </div>
-            <button className={styles.tbDrawerX} onClick={onMenuClose} aria-label="Fermer le menu">
+            <button className={styles.tbDrawerX} onClick={onMenuClose} aria-label={t('livreurLayout.topbar.drawer.closeAria')}>
               <i className="fas fa-xmark" />
             </button>
           </div>
@@ -155,7 +157,7 @@ export default function Topbar({
 
           {/* Navigation complète */}
           <div className={styles.tbDrawerNav}>
-            {buildDrawerNav(encoursCount).map(item => (
+            {buildDrawerNav(t, encoursCount).map(item => (
               <button key={item.id}
                 className={styles.tbDrawerIt}
                 onClick={() => go(item.id)}>
@@ -171,7 +173,7 @@ export default function Topbar({
           {/* Actions bas du drawer */}
           <div className={styles.tbDrawerFoot}>
             <button className={styles.tbDrawerHome} onClick={() => { onMenuClose(); navigate('/aide'); }}>
-              <i className="fas fa-circle-question" /> Centre d'aide
+              <i className="fas fa-circle-question" /> {t('livreurLayout.topbar.drawer.aide')}
             </button>
           </div>
         </div>

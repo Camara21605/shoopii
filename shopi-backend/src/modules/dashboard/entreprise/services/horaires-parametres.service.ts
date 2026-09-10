@@ -3,7 +3,7 @@
  *
  * RÔLE : Gère les horaires d'ouverture (section 3)
  *   GET   /parametres/horaires         → lire les 7 horaires
- *   PUT   /parametres/horaires         → remplacer les 7 horaires d'un coup
+ *   PATCH /parametres/horaires         → remplacer les 7 horaires d'un coup
  *   PATCH /parametres/horaires/:jour   → modifier un seul jour
  *
  * Logique :

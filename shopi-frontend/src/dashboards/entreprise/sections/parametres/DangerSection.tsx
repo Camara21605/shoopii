@@ -14,12 +14,13 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import s from '../../styles/parametres/ParametresPage.module.css';
+import type { ToastType } from '../../types';
 
 type ConfirmAction = 'pause' | 'disable' | 'delete';
 
 interface Props {
   onDirty: () => void;
-  onToast: (m: string, t?: string) => void;
+  onToast: (m: string, t?: ToastType) => void;
   saving:  boolean;
   pauseBoutique:      (password: string) => Promise<{ message: string }>;
   desactiverCompte:   (password: string) => Promise<{ message: string; reactivationAt: string }>;

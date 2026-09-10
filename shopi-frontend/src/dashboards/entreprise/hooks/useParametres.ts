@@ -24,6 +24,13 @@ export interface HoraireJour {
   actif:     boolean;
 }
 
+export interface CurrentSessionInfo {
+  device:         string;
+  browser:        string;
+  ipAddress:      string | null;
+  connectedSince: string;
+}
+
 export interface ParametresData {
   // Section 1 — Boutique & Identité
   id:            string;
@@ -37,6 +44,10 @@ export interface ParametresData {
   website:       string | null;
   companyTypeId: string | null;
   companyType?:  { id: string; nom: string; icone: string | null };
+  /** Prénom/nom du propriétaire (User lié) — lecture seule, voir
+   *  BoutiqueSection.tsx "Responsable & Propriétaire". */
+  ownerFirstName: string | null;
+  ownerLastName:  string | null;
 
   // Section 2 — Contact & Localisation
   businessPhone: string | null;
@@ -95,6 +106,10 @@ export interface ParametresData {
   // Section 9 — Sécurité
   twoFaEnabled: boolean;
   twoFaMethod:  string | null;
+  /** Session réellement active (device/navigateur/IP/date) — null si
+   *  indisponible. Une seule session peut être active à la fois sur
+   *  Shoneya (voir SessionService), voir SecuriteSection.tsx. */
+  currentSession: CurrentSessionInfo | null;
 
   // Section 10 — Notifications
   notifSettings: Record<string, boolean> | null;
@@ -136,6 +151,15 @@ export function useParametres() {
 
   // ── Helper PATCH JSON ──────────────────────────────────────
   // apiFetch stringify body automatiquement si ce n'est pas FormData
+  //
+  // BUG CORRIGÉ — remplaçait tout `data` par la réponse PATCH brute. Or
+  // seuls les endpoints boutique/contact attachent ownerFirstName/
+  // ownerLastName/currentSession (voir BoutiqueParametresService) : après
+  // n'importe quelle AUTRE sauvegarde (catalogue, livraison, paiement,
+  // commissions — dont la réponse est un Company brut sans ces 3 champs
+  // additionnels), ces valeurs auraient disparu de l'écran jusqu'au
+  // prochain rechargement complet. Fusionner au lieu de remplacer :
+  // un champ absent de la réponse garde sa valeur déjà en mémoire.
   const patch = useCallback(async (endpoint: string, body: unknown): Promise<void> => {
     setSaving(true);
     try {
@@ -143,7 +167,36 @@ export function useParametres() {
         method: 'PATCH',
         body,
       });
-      setData(updated);
+      setData(prev => prev ? { ...prev, ...updated } : updated);
+    } finally {
+      setSaving(false);
+    }
+  }, []);
+
+  /* ── Helper PATCH pour les endpoints qui renvoient un objet PARTIEL
+   * (juste le blob JSON, pas un ParametresData complet) — notifications
+   * et confidentialité, voir Notifs/PrivacyParametresService.updateX()
+   * qui renvoient `company.notifSettings`/`company.privacySettings`
+   * seuls, jamais l'entité Company entière.
+   *
+   * BUG CORRIGÉ — saveNotifs/savePrivacy réutilisaient patch() ci-dessus,
+   * qui traitait ce blob partiel comme un ParametresData complet : avant
+   * le correctif de fusion ci-dessus, ça REMPLAÇAIT tout `data` par les
+   * 14 (ou 7) booléens seuls — plus aucune autre section n'avait de
+   * données jusqu'au prochain rechargement complet. Même après la
+   * fusion, le blob aurait atterri à plat sur `data` (`data.newOrder`…)
+   * au lieu de `data.notifSettings`, jamais relu par personne. On range
+   * maintenant explicitement le résultat dans la bonne clé imbriquée. */
+  const patchNested = useCallback(async (
+    endpoint: string, body: unknown, dataKey: 'notifSettings' | 'privacySettings',
+  ): Promise<void> => {
+    setSaving(true);
+    try {
+      const updated = await apiFetch<Record<string, boolean>>(`${BASE}/${endpoint}`, {
+        method: 'PATCH',
+        body,
+      });
+      setData(prev => prev ? { ...prev, [dataKey]: updated } : prev);
     } finally {
       setSaving(false);
     }
@@ -287,14 +340,14 @@ export function useParametres() {
   // ─────────────────────────────────────────────────────────────
 
   const saveNotifs = useCallback((body: Record<string, boolean>) =>
-    patch('notifications', body), [patch]);
+    patchNested('notifications', body, 'notifSettings'), [patchNested]);
 
   // ─────────────────────────────────────────────────────────────
   // SECTION 11 — Confidentialité
   // ─────────────────────────────────────────────────────────────
 
   const savePrivacy = useCallback((body: Record<string, boolean>) =>
-    patch('confidentialite', body), [patch]);
+    patchNested('confidentialite', body, 'privacySettings'), [patchNested]);
 
   // ─────────────────────────────────────────────────────────────
   // SECTION 12 — Zone sensible

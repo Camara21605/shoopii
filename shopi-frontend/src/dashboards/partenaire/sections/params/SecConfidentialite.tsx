@@ -2,9 +2,19 @@
  * FICHIER : sections/params/SecConfidentialite.tsx
  * Section "Confidentialité" — visibilité du profil et données.
  * API : onSave(dto) → PATCH /partenaire/parametres/confidentialite
+ *
+ * BUG CORRIGÉ — "Télécharger mes données" affichait un toast de succès
+ * ("Export en préparation") sans jamais rien télécharger ni appeler la
+ * moindre route : aucun endpoint d'export n'existe côté backend (vérifié
+ * sur tout /modules/dashboard/partenaire). Remplacé par un export réel :
+ * un fichier JSON généré côté client à partir de `data`, déjà chargé en
+ * mémoire — mêmes données que celles affichées dans les autres sections
+ * de ce dashboard, donc un export honnête plutôt qu'une fausse promesse
+ * de traitement serveur asynchrone qui n'existe pas.
  * ================================================================ */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../../styles/ParamsShared.module.css';
 import type { PartenaireData } from '../../hooks/usePartenaireParametres';
 
@@ -21,6 +31,7 @@ interface Props {
 export default function SecConfidentialite({
   data, saving, dirty, markClean, saveTrigger, onSave, onToast
 }: Props) {
+  const { t } = useTranslation();
   const [profilPublic,    setProfilPublic]    = useState(true);
   const [afficherTel,     setAfficherTel]     = useState(true);
   const [classement,      setClassement]      = useState(false);
@@ -41,27 +52,42 @@ export default function SecConfidentialite({
     try {
       await onSave({ profilPublic, afficherTelephone: afficherTel, apparaitreClassement: classement });
       markClean();
-      onToast('✅ Confidentialité sauvegardée', 's');
+      onToast(t('partenaireParametres.secConfidentialite.savedToast'), 's');
     } catch {
-      onToast('❌ Erreur lors de la sauvegarde', 'w');
+      onToast(t('partenaireParametres.secConfidentialite.errorToast'), 'w');
     }
   }
 
-  type Row = { ic: string; t: string; d: string; val: boolean; set: (v: boolean) => void; btn?: boolean; btnLabel?: string };
+  function exportData() {
+    if (!data) return;
+    const { ...exportable } = data;
+    const blob = new Blob([JSON.stringify(exportable, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `shoneya-partenaire-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    onToast(t('partenaireParametres.secConfidentialite.exportRow.toast'), 's');
+  }
+
+  type Row = { key: string; ic: string; t: string; d: string; val: boolean; set: (v: boolean) => void };
   const ROWS: Row[] = [
-    { ic: 'fa-eye',          t: 'Profil partenaire public',    d: 'Votre profil est visible par les acteurs que vous recrutez.',      val: profilPublic, set: setProfilPublic },
-    { ic: 'fa-phone',        t: 'Afficher mon téléphone',      d: 'Visible par vos acteurs recrutés uniquement.',                    val: afficherTel,  set: setAfficherTel  },
-    { ic: 'fa-ranking-star', t: 'Apparaître dans le classement',d: 'Votre nom peut figurer au classement des partenaires.',           val: classement,   set: setClassement   },
+    { key: 'profilPublic', ic: 'fa-eye',          t: t('partenaireParametres.secConfidentialite.rows.profilPublic.t'), d: t('partenaireParametres.secConfidentialite.rows.profilPublic.d'), val: profilPublic, set: setProfilPublic },
+    { key: 'afficherTel',  ic: 'fa-phone',        t: t('partenaireParametres.secConfidentialite.rows.afficherTel.t'),  d: t('partenaireParametres.secConfidentialite.rows.afficherTel.d'),  val: afficherTel,  set: setAfficherTel  },
+    { key: 'classement',   ic: 'fa-ranking-star', t: t('partenaireParametres.secConfidentialite.rows.classement.t'),   d: t('partenaireParametres.secConfidentialite.rows.classement.d'),   val: classement,   set: setClassement   },
   ];
 
   return (
     <div className={s.fc}>
       <div className={s.fcHd}>
-        <div className={s.fcTtl}><i className="fas fa-user-shield" /> Confidentialité</div>
+        <div className={s.fcTtl}><i className="fas fa-user-shield" /> {t('partenaireParametres.secConfidentialite.title')}</div>
       </div>
       <div className={s.fcBody}>
         {ROWS.map(r => (
-          <div className={s.trow} key={r.t}>
+          <div className={s.trow} key={r.key}>
             <div className={s.trowIc}><i className={`fas ${r.ic}`} /></div>
             <div className={s.trowMain}>
               <div className={s.trowT}>{r.t}</div>
@@ -78,11 +104,11 @@ export default function SecConfidentialite({
         <div className={s.trow}>
           <div className={s.trowIc}><i className="fas fa-download" /></div>
           <div className={s.trowMain}>
-            <div className={s.trowT}>Télécharger mes données</div>
-            <div className={s.trowD}>Recevez une copie de toutes vos données partenaire.</div>
+            <div className={s.trowT}>{t('partenaireParametres.secConfidentialite.exportRow.t')}</div>
+            <div className={s.trowD}>{t('partenaireParametres.secConfidentialite.exportRow.d')}</div>
           </div>
-          <button className={s.docAct} onClick={() => onToast('📦 Export en préparation', 's')}>
-            Demander
+          <button className={s.docAct} onClick={exportData} disabled={!data}>
+            {t('partenaireParametres.secConfidentialite.exportRow.btn')}
           </button>
         </div>
       </div>

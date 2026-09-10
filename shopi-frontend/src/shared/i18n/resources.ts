@@ -60,6 +60,38 @@ import frCompare                         from './locales/fr/home/compare.json';
 // client/
 import frSettingsPage    from './locales/fr/client/settingsPage.json';
 import frClientDashboard  from './locales/fr/client/dashboard.json';
+// partenaire/
+import frPartenaireLayout from './locales/fr/partenaire/layout.json';
+import frPartenaireOverview from './locales/fr/partenaire/overview.json';
+import frPartenaireCodes from './locales/fr/partenaire/codes.json';
+import frPartenaireActeurs from './locales/fr/partenaire/acteurs.json';
+import frPartenaireCommissions from './locales/fr/partenaire/commissions.json';
+import frPartenaireSignalements from './locales/fr/partenaire/signalements.json';
+import frPartenaireParametres from './locales/fr/partenaire/parametres.json';
+// livreur/
+import frLivreurLayout from './locales/fr/livreur/layout.json';
+import frLivreurOverview from './locales/fr/livreur/overview.json';
+import frLivreurMissionCard from './locales/fr/livreur/missionCard.json';
+import frLivreurRefuseModal from './locales/fr/livreur/refuseMissionModal.json';
+import frLivreurMissions from './locales/fr/livreur/missions.json';
+import frLivreurEnCours from './locales/fr/livreur/encours.json';
+import frLivreurHistorique from './locales/fr/livreur/historique.json';
+import frLivreurBoutiques from './locales/fr/livreur/boutiques.json';
+import frLivreurRevenus from './locales/fr/livreur/revenus.json';
+import frLivreurZone from './locales/fr/livreur/zone.json';
+import frLivreurAjouterCorrespondant from './locales/fr/livreur/ajouterCorrespondant.json';
+import frLivreurParametres from './locales/fr/livreur/parametres.json';
+import frLivreurSecProfil from './locales/fr/livreur/secProfil.json';
+import frLivreurSecDocuments from './locales/fr/livreur/secDocuments.json';
+import frLivreurSecZone from './locales/fr/livreur/secZone.json';
+import frLivreurSecVehicule from './locales/fr/livreur/secVehicule.json';
+import frLivreurSecPaiement from './locales/fr/livreur/secPaiement.json';
+import frLivreurSecSecurite from './locales/fr/livreur/secSecurite.json';
+import frLivreurSecNotifications from './locales/fr/livreur/secNotifications.json';
+import frLivreurSecConfidentialite from './locales/fr/livreur/secConfidentialite.json';
+import frLivreurSecDanger from './locales/fr/livreur/secDanger.json';
+import frLivreurReseau from './locales/fr/livreur/reseau.json';
+import frLivreurProfilReseau from './locales/fr/livreur/profilLivreurReseau.json';
 
 // ── Anglais ─────────────────────────────────────────────────
 // entreprise/
@@ -104,6 +136,38 @@ import enCompare                         from './locales/en/home/compare.json';
 // client/
 import enSettingsPage    from './locales/en/client/settingsPage.json';
 import enClientDashboard  from './locales/en/client/dashboard.json';
+// partenaire/
+import enPartenaireLayout from './locales/en/partenaire/layout.json';
+import enPartenaireOverview from './locales/en/partenaire/overview.json';
+import enPartenaireCodes from './locales/en/partenaire/codes.json';
+import enPartenaireActeurs from './locales/en/partenaire/acteurs.json';
+import enPartenaireCommissions from './locales/en/partenaire/commissions.json';
+import enPartenaireSignalements from './locales/en/partenaire/signalements.json';
+import enPartenaireParametres from './locales/en/partenaire/parametres.json';
+// livreur/
+import enLivreurLayout from './locales/en/livreur/layout.json';
+import enLivreurOverview from './locales/en/livreur/overview.json';
+import enLivreurMissionCard from './locales/en/livreur/missionCard.json';
+import enLivreurRefuseModal from './locales/en/livreur/refuseMissionModal.json';
+import enLivreurMissions from './locales/en/livreur/missions.json';
+import enLivreurEnCours from './locales/en/livreur/encours.json';
+import enLivreurHistorique from './locales/en/livreur/historique.json';
+import enLivreurBoutiques from './locales/en/livreur/boutiques.json';
+import enLivreurRevenus from './locales/en/livreur/revenus.json';
+import enLivreurZone from './locales/en/livreur/zone.json';
+import enLivreurAjouterCorrespondant from './locales/en/livreur/ajouterCorrespondant.json';
+import enLivreurParametres from './locales/en/livreur/parametres.json';
+import enLivreurSecProfil from './locales/en/livreur/secProfil.json';
+import enLivreurSecDocuments from './locales/en/livreur/secDocuments.json';
+import enLivreurSecZone from './locales/en/livreur/secZone.json';
+import enLivreurSecVehicule from './locales/en/livreur/secVehicule.json';
+import enLivreurSecPaiement from './locales/en/livreur/secPaiement.json';
+import enLivreurSecSecurite from './locales/en/livreur/secSecurite.json';
+import enLivreurSecNotifications from './locales/en/livreur/secNotifications.json';
+import enLivreurSecConfidentialite from './locales/en/livreur/secConfidentialite.json';
+import enLivreurSecDanger from './locales/en/livreur/secDanger.json';
+import enLivreurReseau from './locales/en/livreur/reseau.json';
+import enLivreurProfilReseau from './locales/en/livreur/profilLivreurReseau.json';
 
 // ── Arabe ───────────────────────────────────────────────────
 // entreprise/
@@ -246,6 +310,8 @@ const fr = {
   ...frPanierCommande, ...frFollowToggle, ...frLivreursPage, ...frCorrespondantsPage, ...frOffresPage, ...frSharedCards,
   ...frCompare,
   ...frSettingsPage, ...frClientDashboard,
+  ...frPartenaireLayout, ...frPartenaireOverview, ...frPartenaireCodes, ...frPartenaireActeurs, ...frPartenaireCommissions, ...frPartenaireSignalements, ...frPartenaireParametres,
+  ...frLivreurLayout, ...frLivreurOverview, ...frLivreurMissionCard, ...frLivreurRefuseModal, ...frLivreurMissions, ...frLivreurEnCours, ...frLivreurHistorique, ...frLivreurBoutiques, ...frLivreurRevenus, ...frLivreurZone, ...frLivreurAjouterCorrespondant, ...frLivreurParametres, ...frLivreurSecProfil, ...frLivreurSecDocuments, ...frLivreurSecZone, ...frLivreurSecVehicule, ...frLivreurSecPaiement, ...frLivreurSecSecurite, ...frLivreurSecNotifications, ...frLivreurSecConfidentialite, ...frLivreurSecDanger, ...frLivreurReseau, ...frLivreurProfilReseau,
 };
 
 const en = {
@@ -257,6 +323,8 @@ const en = {
   ...enPanierCommande, ...enFollowToggle, ...enLivreursPage, ...enCorrespondantsPage, ...enOffresPage, ...enSharedCards,
   ...enCompare,
   ...enSettingsPage, ...enClientDashboard,
+  ...enPartenaireLayout, ...enPartenaireOverview, ...enPartenaireCodes, ...enPartenaireActeurs, ...enPartenaireCommissions, ...enPartenaireSignalements, ...enPartenaireParametres,
+  ...enLivreurLayout, ...enLivreurOverview, ...enLivreurMissionCard, ...enLivreurRefuseModal, ...enLivreurMissions, ...enLivreurEnCours, ...enLivreurHistorique, ...enLivreurBoutiques, ...enLivreurRevenus, ...enLivreurZone, ...enLivreurAjouterCorrespondant, ...enLivreurParametres, ...enLivreurSecProfil, ...enLivreurSecDocuments, ...enLivreurSecZone, ...enLivreurSecVehicule, ...enLivreurSecPaiement, ...enLivreurSecSecurite, ...enLivreurSecNotifications, ...enLivreurSecConfidentialite, ...enLivreurSecDanger, ...enLivreurReseau, ...enLivreurProfilReseau,
 };
 
 const ar = {

@@ -15,9 +15,18 @@ import { Repository } from 'typeorm';
 import { Delivery, LivreurVerificationStatus } from 'src/database/entities/profiles/livreur-profile.entity';
 import { User }         from 'src/database/entities/user.entity';
 import { UploadService, UPLOAD_FOLDERS } from 'src/modules/upload/upload.service';
+import { SessionService } from 'src/modules/session/session.service';
+import { parseUserAgent } from 'src/common/utils/user-agent.util';
 import { UpdateLivreurProfilDto } from '../dto/livreur-parametres.dto';
 
 type DocumentType = 'cni' | 'permis' | 'assurance' | 'casier';
+
+export interface CurrentSessionInfo {
+  device:         string;
+  browser:        string;
+  ipAddress:      string | null;
+  connectedSince: string;
+}
 
 const DOC_FIELD_MAP: Record<DocumentType, keyof Delivery> = {
   cni:       'documentCni',
@@ -43,6 +52,7 @@ export class ProfilLivreurService {
     @InjectRepository(Delivery) private readonly livreurRepo: Repository<Delivery>,
     @InjectRepository(User)     private readonly userRepo:    Repository<User>,
     private readonly uploadService: UploadService,
+    private readonly sessionService: SessionService,
   ) {}
 
   /* ── GET léger : photo + nom uniquement ── */
@@ -56,13 +66,33 @@ export class ProfilLivreurService {
   }
 
   /* ── GET global ── */
-  async getParametres(userId: string): Promise<Delivery> {
+  async getParametres(userId: string, currentSessionId?: string | null): Promise<Delivery> {
     const livreur = await this.livreurRepo.findOne({
       where: { userId },
       relations: ['horaires'],
     });
     if (!livreur) throw new NotFoundException('Profil livreur introuvable.');
-    return this.redactSensitiveDocuments(livreur);
+    return this.attachCurrentSession(this.redactSensitiveDocuments(livreur), currentSessionId);
+  }
+
+  /**
+   * BUG CORRIGÉ — la carte "Sessions" (SecSecurite.tsx) affichait 2
+   * appareils ("iPhone", "MacBook") ENTIÈREMENT codés en dur, identiques
+   * pour tout le monde, avec "Déconnecter"/"Tout déconnecter" qui ne
+   * faisaient qu'un toast sans jamais rien déconnecter. Shoneya n'autorise
+   * qu'UNE session active à la fois par compte (voir SessionService) :
+   * il n'y a donc jamais eu plusieurs appareils à lister. Remplacé par la
+   * session RÉELLE actuellement active (device/navigateur/IP/date), même
+   * mécanisme que BoutiqueParametresService (entreprise) / ProfilPartenaireService.
+   */
+  private async attachCurrentSession(livreur: Delivery, currentSessionId?: string | null): Promise<Delivery> {
+    const meta = await this.sessionService.getSessionMeta(currentSessionId);
+    (livreur as any).currentSession = meta ? {
+      ...parseUserAgent(meta.userAgent),
+      ipAddress:      meta.ipAddress,
+      connectedSince: meta.createdAt,
+    } as CurrentSessionInfo : null;
+    return livreur;
   }
 
   /* SÉCURITÉ — voir commentaire en tête de fichier. getParametres()

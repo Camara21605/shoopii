@@ -1,0 +1,37 @@
+{
+  "livreurSecConfidentialite": {
+    "header": {
+      "titre": "Privacy",
+      "sub": "Control the visibility of your information and how your data is used on the platform."
+    },
+    "banner": {
+      "paramActifs_one": "{{count}} setting active out of {{total}}",
+      "paramActifs_other": "{{count}} settings active out of {{total}}",
+      "desc": "Your data is never sold to third parties. Shoneya respects your privacy.",
+      "partage": "shared"
+    },
+    "groups": {
+      "visibilite": { "title": "Public visibility",       "desc": "What shops and customers see on your profile." },
+      "donnees":    { "title": "Data & privacy",           "desc": "How Shoneya uses your data to improve the service." }
+    },
+    "groupBadge_one": "{{count}}/{{total}} active",
+    "groupBadge_other": "{{count}}/{{total}} active",
+    "items": {
+      "showRating":        { "l": "Show my rating",              "sub": "Your average rating is visible on your public profile" },
+      "showDeliveryCount": { "l": "Show my delivery count",      "sub": "Visible on your public profile" },
+      "showInSearch":      { "l": "Appear in search",            "sub": "Be found by new shops" },
+      "shareLocation":     { "l": "Real-time location",          "sub": "Shared only during an active delivery" },
+      "anonymizedStats":   { "l": "Anonymized statistics",       "sub": "Allow Shoneya to use your stats for its reports" },
+      "improveAlgo":       { "l": "Improve the algorithm",       "sub": "Help Shoneya better match you with missions using your data" }
+    },
+    "statusActif": "Active",
+    "statusInactif": "Inactive",
+    "legalNote": "In accordance with GDPR and local data protection laws, you can change these preferences at any time. Real-time location is always disabled outside active missions, regardless of this setting.",
+    "saving": "Saving…",
+    "saveButton": "Save preferences",
+    "toasts": {
+      "saved": "Privacy settings saved",
+      "saveError": "Error while saving"
+    }
+  }
+}

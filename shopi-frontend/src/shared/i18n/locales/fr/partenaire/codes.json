@@ -1,0 +1,70 @@
+{
+  "partenaireCodes": {
+    "types": {
+      "ent": "Entreprise",
+      "lvr": "Livreur",
+      "cor": "Correspondant",
+      "cli": "Client VIP"
+    },
+    "statuts": {
+      "used": "Utilisé",
+      "sent": "Envoyé",
+      "expired": "Expiré"
+    },
+    "copiedToast": "Code copié : {{code}}",
+    "page": {
+      "heroTitle": "Codes de création de compte",
+      "heroParagraph": "Générez un code unique, choisissez le type d'acteur, et envoyez-le. L'acteur l'utilise pour créer son compte — il sera automatiquement rattaché à vous.",
+      "generateBtn": "Générer un code",
+      "stats": {
+        "total": "Codes générés",
+        "used": "Utilisés (compte créé)",
+        "pending": "En attente d'utilisation",
+        "expired": "Expirés"
+      },
+      "tableTitle": "Historique des codes",
+      "empty": "Aucun code généré pour l'instant",
+      "columns": {
+        "code": "Code",
+        "type": "Type d'acteur",
+        "destinataire": "Destinataire",
+        "statut": "Statut",
+        "creeLe": "Créé le",
+        "actions": "Actions"
+      },
+      "resendWhatsappTitle": "Renvoyer via WhatsApp",
+      "resendWhatsappToast": "Code renvoyé via WhatsApp",
+      "resendSmsTitle": "SMS",
+      "resendSmsToast": "Code renvoyé par SMS",
+      "usedByTitle": "Utilisé par {{name}}",
+      "usedByToast": "Compte créé par {{name}}",
+      "regenerateTitle": "Régénérer"
+    },
+    "modal": {
+      "step1": {
+        "title": "Générer un code de création",
+        "sub": "Choisissez le type d'acteur à recruter",
+        "typeLabel": "Type d'acteur",
+        "emailLabel": "Email du destinataire (optionnel)",
+        "emailPlaceholder": "Ex. contact@techcorp.gn",
+        "generating": "Génération…",
+        "generateBtn": "Générer le code"
+      },
+      "generatedToast": "Code généré",
+      "generatedForToast": "Code généré pour {{email}}",
+      "errorToast": "Erreur lors de la génération du code",
+      "step2": {
+        "title": "Code généré ✓",
+        "sub": "Envoyez-le au destinataire pour qu'il crée son compte",
+        "resultLabel": "Code de création",
+        "resultExpiry": "Valable 7 jours · usage unique",
+        "whatsapp": "WhatsApp",
+        "sms": "SMS",
+        "copier": "Copier",
+        "whatsappToast": "Ouverture de WhatsApp…",
+        "smsToast": "SMS préparé",
+        "doneBtn": "Terminé"
+      }
+    }
+  }
+}

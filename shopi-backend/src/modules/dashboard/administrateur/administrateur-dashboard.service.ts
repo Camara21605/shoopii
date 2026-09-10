@@ -35,6 +35,9 @@ import { AdminCommandesService }     from './services/admin-commandes.service';
 import { AdminAuditService }         from './services/admin-audit.service';
 import { AdminClientsService }       from './services/admin-clients.service';
 import { AdminStatsService }         from './services/admin-stats.service';
+import { AdminCommunicationService } from './services/admin-communication.service';
+import { UpdateCommunicationDto }    from './dto/update-communication.dto';
+import { AuditMeta }                 from './helpers/admin.helpers';
 
 // Ré-export du DTO pour que le contrôleur puisse l'importer depuis ce fichier
 export { GenerateCodeDto } from './dto/generate-code.dto';
@@ -53,6 +56,7 @@ export class AdministrateurDashboardService {
     private readonly audit:        AdminAuditService,
     private readonly clients:      AdminClientsService,
     private readonly stats:        AdminStatsService,
+    private readonly communication: AdminCommunicationService,
   ) {}
 
   // ── Taux de commission ───────────────────────────────────────
@@ -64,19 +68,19 @@ export class AdministrateurDashboardService {
 
   // ── Codes de création ────────────────────────────────────────
   getCodes(userId: string, page?: number, limit?: number) { return this.codes.getCodes(userId, page, limit); }
-  generateCode(userId: string, dto: any)           { return this.codes.generateCode(userId, dto); }
-  revokeCode(userId: string, codeId: string)       { return this.codes.revokeCode(userId, codeId); }
-  sendCodeByEmail(userId: string, codeId: string)  { return this.codes.sendCodeByEmail(userId, codeId); }
+  generateCode(userId: string, dto: any, meta?: AuditMeta)          { return this.codes.generateCode(userId, dto, meta); }
+  revokeCode(userId: string, codeId: string, meta?: AuditMeta)      { return this.codes.revokeCode(userId, codeId, meta); }
+  sendCodeByEmail(userId: string, codeId: string, meta?: AuditMeta) { return this.codes.sendCodeByEmail(userId, codeId, meta); }
 
   // ── Acteurs de la zone + Validations ────────────────────────
   getActeurs(userId: string, role?: string, search?: string, page?: number, limit?: number) {
     return this.acteurs.getActeurs(userId, role, search, page, limit);
   }
   getValidations(userId: string)                   { return this.acteurs.getValidations(userId); }
-  approveValidation(adminId: string, id: string)   { return this.acteurs.approveValidation(adminId, id); }
-  rejectValidation(adminId: string, id: string)    { return this.acteurs.rejectValidation(adminId, id); }
-  suspendActeur(adminId: string, id: string, motif?: string) { return this.acteurs.suspendActeur(adminId, id, motif); }
-  reactivateActeur(adminId: string, id: string) { return this.acteurs.reactivateActeur(adminId, id); }
+  approveValidation(adminId: string, id: string, meta?: AuditMeta)   { return this.acteurs.approveValidation(adminId, id, meta); }
+  rejectValidation(adminId: string, id: string, meta?: AuditMeta)    { return this.acteurs.rejectValidation(adminId, id, meta); }
+  suspendActeur(adminId: string, id: string, motif?: string, meta?: AuditMeta) { return this.acteurs.suspendActeur(adminId, id, motif, meta); }
+  reactivateActeur(adminId: string, id: string, meta?: AuditMeta) { return this.acteurs.reactivateActeur(adminId, id, meta); }
 
   // ── Partenaires ──────────────────────────────────────────────
   getPartenaires(userId: string, tier?: string, search?: string, page?: number, limit?: number) {
@@ -88,10 +92,10 @@ export class AdministrateurDashboardService {
     return this.signalements.getSignalements(userId, page, limit);
   }
   getSignalementById(userId: string, id: string) { return this.signalements.getSignalementById(userId, id); }
-  resolveSignalement(adminId: string, id: string)  { return this.signalements.resolveSignalement(adminId, id); }
-  investigateSignalement(adminId: string, id: string) { return this.signalements.investigateSignalement(adminId, id); }
-  warnSignalement(adminId: string, id: string) { return this.signalements.warnSignalement(adminId, id); }
-  rejectSignalement(adminId: string, id: string, reason?: string) { return this.signalements.rejectSignalement(adminId, id, reason); }
+  resolveSignalement(adminId: string, id: string, meta?: AuditMeta)  { return this.signalements.resolveSignalement(adminId, id, meta); }
+  investigateSignalement(adminId: string, id: string, meta?: AuditMeta) { return this.signalements.investigateSignalement(adminId, id, meta); }
+  warnSignalement(adminId: string, id: string, meta?: AuditMeta) { return this.signalements.warnSignalement(adminId, id, meta); }
+  rejectSignalement(adminId: string, id: string, reason?: string, meta?: AuditMeta) { return this.signalements.rejectSignalement(adminId, id, reason, meta); }
 
   // ── Commandes + Finances ─────────────────────────────────────
   getCommandes(userId: string, onglet?: 'toutes' | 'encours' | 'litiges', page?: number, limit?: number) {
@@ -109,4 +113,8 @@ export class AdministrateurDashboardService {
 
   // ── Statistiques complémentaires ─────────────────────────────
   getStats(userId: string)                         { return this.stats.getStats(userId); }
+
+  // ── Communication (message/signature d'invitation + modèles) ─
+  getCommunication(userId: string)                              { return this.communication.getSettings(userId); }
+  updateCommunication(userId: string, dto: UpdateCommunicationDto) { return this.communication.updateSettings(userId, dto); }
 }

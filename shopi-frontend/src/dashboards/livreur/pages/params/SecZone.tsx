@@ -3,7 +3,8 @@
  * ✅ CONNECTÉ — type de livraison + zones dynamiques depuis le référentiel géo
  */
 import React, { useState, useEffect } from 'react';
-import { JOURS, AUTO_DISPO, DELIVERY_TYPES } from '../../data/parametresData';
+import { useTranslation } from 'react-i18next';
+import { buildJours, buildAutoDispo, buildDeliveryTypes } from '../../data/parametresData';
 import type { LivreurData, HoraireJour } from '../../hooks/useLivreurParametres';
 import { apiFetch } from '../../../../shared/services/apiFetch';
 import ps from '../../styles/ParamsShared.module.css';
@@ -31,6 +32,10 @@ interface Props {
 }
 
 export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHoraires }: Props) {
+  const { t } = useTranslation();
+  const DELIVERY_TYPES = buildDeliveryTypes(t);
+  const JOURS          = buildJours(t);
+  const AUTO_DISPO     = buildAutoDispo(t);
   const [deliveryType, setDeliveryType] = useState('');
   const [typeLocked,   setTypeLocked]   = useState(false);
   const [unlockDate,   setUnlockDate]   = useState('');
@@ -86,7 +91,7 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
     setDeliveryType(key);
     setActiveZones([]);
     dirty();
-    onPop(`📦 ${DELIVERY_TYPES.find(t => t.key === key)?.label}`, 'i');
+    onPop(t('livreurSecZone.toasts.typeSelected', { label: DELIVERY_TYPES.find(dt => dt.key === key)?.label }), 'i');
   }
 
   function toggleZone(nom: string) {
@@ -99,7 +104,7 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
   function setAllDays(on: boolean) {
     setHorOn(JOURS.map(() => on));
     dirty();
-    onPop(on ? '✅ Tous les jours activés' : '⚠️ Planning effacé', on ? 's' : 'w');
+    onPop(on ? t('livreurSecZone.toasts.allDaysOn') : t('livreurSecZone.toasts.planningCleared'), on ? 's' : 'w');
   }
 
   async function handleSaveZones() {
@@ -109,12 +114,12 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
         communesActives:   activeZones,
         distanceMax:       dist,
         autoDispoSettings: Object.fromEntries(
-          AUTO_DISPO.map((item, i) => [item.key ?? `auto${i}`, autoDisp[i]]),
+          AUTO_DISPO.map((_, i) => [`auto${i}`, autoDisp[i]]),
         ),
       } as any);
-      onPop('✅ Zones et disponibilité sauvegardées', 's');
+      onPop(t('livreurSecZone.toasts.zonesSaved'), 's');
     } catch (err: any) {
-      onPop(err?.message ?? '❌ Erreur lors de la sauvegarde', 'e');
+      onPop(err?.message ?? t('livreurSecZone.toasts.saveError'), 'e');
     }
   }
 
@@ -128,9 +133,9 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
         fermeture: horOn[i] ? horClose[i] : null,
       }));
       await saveHoraires(horaires);
-      onPop('✅ Horaires sauvegardés', 's');
+      onPop(t('livreurSecZone.toasts.horairesSaved'), 's');
     } catch (err: any) {
-      onPop(err?.message ?? '❌ Erreur lors de la sauvegarde', 'e');
+      onPop(err?.message ?? t('livreurSecZone.toasts.saveError'), 'e');
     }
   }
 
@@ -140,14 +145,14 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
       <div className={ps.psHd}>
-        <h2><i className="fas fa-map-location-dot" /> Zones & Horaires</h2>
-        <p>Définissez votre périmètre de livraison et vos plages horaires.</p>
+        <h2><i className="fas fa-map-location-dot" /> {t('livreurSecZone.header.titre')}</h2>
+        <p>{t('livreurSecZone.header.sub')}</p>
       </div>
 
       {/* ── CARD 1 : Type de livraison ── */}
       <div className={ps.card}>
         <div className={ps.ch}>
-          <div className={ps.chT}><i className="fas fa-route" /> Type de livraison</div>
+          <div className={ps.chT}><i className="fas fa-route" /> {t('livreurSecZone.typeCard.titre')}</div>
           {deliveryType && (
             <span style={{ fontSize:11, background:'var(--tl-bg)', color:'var(--teal)', padding:'3px 10px', borderRadius:'var(--pill)', fontWeight:700 }}>
               {currentTypeConf?.em} {currentTypeConf?.label}
@@ -166,9 +171,9 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
             }}>
               <i className="fas fa-lock" style={{ color:'#52525B', fontSize:15, flexShrink:0 }} />
               <div>
-                <div style={{ fontWeight:700, color:'#3F3F46' }}>Type de livraison verrouillé</div>
+                <div style={{ fontWeight:700, color:'#3F3F46' }}>{t('livreurSecZone.typeCard.lockedTitle')}</div>
                 <div style={{ color:'#27272A', marginTop:2 }}>
-                  Modifiable à partir du <strong>{unlockDate}</strong>. Vous pouvez modifier vos zones actives à tout moment.
+                  {t('livreurSecZone.typeCard.lockedSub', { date: unlockDate })}
                 </div>
               </div>
             </div>
@@ -177,7 +182,7 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
           {!deliveryType && !typeLocked && (
             <div style={{ fontSize:12, color:'var(--t3)', marginBottom:12, display:'flex', alignItems:'center', gap:6 }}>
               <i className="fas fa-circle-info" style={{ color:'var(--blue)' }} />
-              Choisissez votre périmètre d'intervention. Ce choix sera verrouillé pendant 6 mois.
+              {t('livreurSecZone.typeCard.chooseHint')}
             </div>
           )}
 
@@ -233,27 +238,27 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
           <div className={ps.ch}>
             <div className={ps.chT}>
               <i className="fas fa-location-dot" />
-              {' '}Zones {currentTypeConf?.label.toLowerCase()}
+              {' '}{t('livreurSecZone.zonesCard.titlePrefix')}{currentTypeConf?.label.toLowerCase()}
             </div>
             <span style={{ fontSize:12, color:'var(--teal)', fontWeight:700 }}>
-              {activeCount} sélectionnée{activeCount > 1 ? 's' : ''}
+              {t('livreurSecZone.zonesCard.selected', { count: activeCount })}
             </span>
           </div>
           <div className={ps.cb}>
             {geoLoading ? (
               <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:9, padding:'28px 0', color:'var(--t3)', fontSize:13 }}>
                 <i className="fas fa-circle-notch fa-spin" style={{ color:'var(--teal)', fontSize:16 }} />
-                Chargement des zones…
+                {t('livreurZone.zones.loading')}
               </div>
             ) : geoItems.length === 0 ? (
               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:'28px 0', color:'var(--t3)', textAlign:'center' }}>
                 <i className="fas fa-map-pin" style={{ fontSize:24, opacity:.35 }} />
-                <span style={{ fontSize:12 }}>Aucune zone configurée dans le référentiel pour ce niveau.</span>
+                <span style={{ fontSize:12 }}>{t('livreurSecZone.zonesCard.emptyGeo')}</span>
               </div>
             ) : (
               <>
                 <div style={{ fontSize:11.5, color:'var(--t3)', marginBottom:10 }}>
-                  Activez les zones que vous acceptez de desservir.
+                  {t('livreurSecZone.zonesCard.instructions')}
                 </div>
                 <div className={ps.zoneGrid}>
                   {geoItems.map(item => {
@@ -279,7 +284,7 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
             {/* Slider distance */}
             <div style={{ marginTop:14 }}>
               <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:7 }}>
-                <span style={{ color:'var(--t2)', fontWeight:600 }}>Distance maximale par livraison</span>
+                <span style={{ color:'var(--t2)', fontWeight:600 }}>{t('livreurSecZone.zonesCard.distanceLabel')}</span>
                 <span style={{ fontFamily:'var(--fd)', fontWeight:800, color:'var(--teal)' }}>{dist} km</span>
               </div>
               <input type="range" min={5} max={200} value={dist} step={5}
@@ -296,8 +301,8 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
                   padding:'10px 22px', fontSize:12, fontWeight:700, cursor:'pointer', opacity:saving?0.6:1,
                   display:'flex', alignItems:'center', gap:7 }}>
                 {saving
-                  ? <><i className="fas fa-spinner fa-spin" /> Sauvegarde…</>
-                  : <><i className="fas fa-cloud-arrow-up" /> Sauvegarder les zones</>}
+                  ? <><i className="fas fa-spinner fa-spin" /> {t('livreurSecZone.saving')}</>
+                  : <><i className="fas fa-cloud-arrow-up" /> {t('livreurSecZone.zonesCard.saveZones')}</>}
               </button>
             </div>
           </div>
@@ -311,7 +316,7 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
             style={{ background:'var(--teal)', color:'#fff', border:'none', borderRadius:'var(--pill)',
               padding:'10px 22px', fontSize:12, fontWeight:700, cursor:'pointer', opacity:0.4,
               display:'flex', alignItems:'center', gap:7 }}>
-            <i className="fas fa-cloud-arrow-up" /> Sauvegarder les zones
+            <i className="fas fa-cloud-arrow-up" /> {t('livreurSecZone.zonesCard.saveZones')}
           </button>
         </div>
       )}
@@ -319,13 +324,13 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
       {/* ── CARD 3 : Planning hebdomadaire ── */}
       <div className={ps.card}>
         <div className={ps.ch}>
-          <div className={ps.chT}><i className="fas fa-clock" /> Planning hebdomadaire</div>
+          <div className={ps.chT}><i className="fas fa-clock" /> {t('livreurSecZone.planningCard.titre')}</div>
           <div style={{ display:'flex', gap:6 }}>
-            <button className={ps.chAction} onClick={() => setAllDays(true)}>Tout activer</button>
+            <button className={ps.chAction} onClick={() => setAllDays(true)}>{t('livreurSecZone.planningCard.activerTout')}</button>
             <button onClick={() => setAllDays(false)}
               style={{ background:'var(--g50)', color:'var(--t2)', border:'1px solid var(--bdr2)',
                 borderRadius:'var(--pill)', padding:'5px 13px', fontSize:11, fontWeight:600, cursor:'pointer' }}>
-              Effacer
+              {t('livreurSecZone.planningCard.effacer')}
             </button>
           </div>
         </div>
@@ -355,8 +360,8 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
                 padding:'10px 22px', fontSize:12, fontWeight:700, cursor:'pointer', opacity:saving?0.6:1,
                 display:'flex', alignItems:'center', gap:7 }}>
               {saving
-                ? <><i className="fas fa-spinner fa-spin" /> Sauvegarde…</>
-                : <><i className="fas fa-cloud-arrow-up" /> Sauvegarder les horaires</>}
+                ? <><i className="fas fa-spinner fa-spin" /> {t('livreurSecZone.saving')}</>
+                : <><i className="fas fa-cloud-arrow-up" /> {t('livreurSecZone.planningCard.saveHoraires')}</>}
             </button>
           </div>
         </div>
@@ -364,7 +369,7 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
 
       {/* ── CARD 4 : Disponibilité automatique ── */}
       <div className={`${ps.card} ${ps.cardLast}`}>
-        <div className={ps.ch}><div className={ps.chT}><i className="fas fa-robot" /> Disponibilité automatique</div></div>
+        <div className={ps.ch}><div className={ps.chT}><i className="fas fa-robot" /> {t('livreurSecZone.autoDispoCard.titre')}</div></div>
         <div className={ps.cb}>
           {AUTO_DISPO.map((item, i) => (
             <div key={i} className={ps.setRow}>
@@ -373,7 +378,7 @@ export default function SecZone({ data, saving, dirty, onPop, saveZones, saveHor
                   {item.l}
                   {item.badge && (
                     <span className={`${ps.srBadge} ${item.badge==='rec' ? ps.badgeRec : ps.badgeNew}`}>
-                      {item.badge==='rec' ? 'Auto' : 'Nouveau'}
+                      {item.badge==='rec' ? t('livreurSecZone.autoDispoCard.badgeAuto') : t('livreurSecZone.autoDispoCard.badgeNouveau')}
                     </span>
                   )}
                 </div>

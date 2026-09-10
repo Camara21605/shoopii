@@ -115,24 +115,18 @@ export interface Avis {
   date:  string;
 }
 
-export interface Notif {
-  ic:     string;
-  bg:     string;
-  c:      string;
-  msg:    string;
-  t:      string;
-  unread: boolean;
-}
-
 // ─────────────────────────────────────────────────────────────
 // CONSTANTES VITESSE
 // ─────────────────────────────────────────────────────────────
-export const SPEED_LABEL: Record<SpeedKey, string> = {
-  eco: '🐢 Éco',
-  std: '🚴 Standard',
-  exp: '🚀 Express',
-  ult: '⚡ Ultra',
-};
+/** Traduit via `livreurLayout.speed.<key>` — voir locales/{fr,en}/livreur/layout.json. */
+export function buildSpeedLabel(t: (key: string) => string): Record<SpeedKey, string> {
+  return {
+    eco: t('livreurLayout.speed.eco'),
+    std: t('livreurLayout.speed.std'),
+    exp: t('livreurLayout.speed.exp'),
+    ult: t('livreurLayout.speed.ult'),
+  };
+}
 
 export const SPEED_CLASS: Record<SpeedKey, string> = {
   eco: 'speedEco',
@@ -144,24 +138,21 @@ export const SPEED_CLASS: Record<SpeedKey, string> = {
 // ─────────────────────────────────────────────────────────────
 // PAGE META
 // ─────────────────────────────────────────────────────────────
-export const PAGE_META: Record<PageId, { title: string; sub: string }> = {
-  overview:   { title: "Vue d'ensemble",          sub: "Tableau de bord · Samedi 18 janvier 2025"                },
-  missions:   { title: "Missions disponibles",    sub: "8 missions en attente dans votre zone"                   },
-  encours:    { title: "Mission en cours",         sub: "iPhone 15 Pro — TechStore Conakry · Express"             },
-  historique: { title: "Historique des livraisons",sub: "Toutes vos missions passées"                            },
-  boutiques:  { title: "Mes boutiques",           sub: "3 boutiques partenaires"                                 },
-  revenus:    { title: "Mes revenus",             sub: "Finances & performances — Janvier 2025"                  },
-  wallet:     { title: "Wallet Shoneya",            sub: "385 000 GNF disponibles"                                 },
-  zone:       { title: "Ma zone de livraison",    sub: "Kaloum · Dixinn · Matam · Ratoma"                        },
-  evaluation: { title: "Ajouter un correspondant",sub: "Invitez un point relais à rejoindre votre réseau"        },
-  parametres: { title: "Paramètres",              sub: "Configuration du compte livreur"                         },
-  profil:     { title: "Mon profil",              sub: "Informations publiques"                                  },
-  messagerie: { title: "Messagerie",              sub: "Discutez avec vos clients et boutiques"                  },
-  reseauCorrespondants: { title: "Correspondants", sub: "Suivez des correspondants de votre réseau"              },
-  reseauLivreurs:       { title: "Livreurs",       sub: "Suivez d'autres livreurs du réseau Shoneya"                },
-  profilCorrespondant:  { title: "Profil correspondant", sub: "Détails et suivi"                                  },
-  profilLivreur:        { title: "Profil livreur",       sub: "Détails et suivi"                                  },
-};
+/** Traduit via la clé i18n `livreurLayout.pageMeta.<page>.*` — voir
+ *  locales/{fr,en}/livreur/layout.json. Appelé avec le `t` du composant
+ *  consommateur (LivreurApp.tsx, PlaceholderPage.tsx) plutôt que figé
+ *  en constante, pour changer de langue sans recharger la page. */
+export function buildPageMeta(t: (key: string) => string): Record<PageId, { title: string; sub: string }> {
+  const pages: PageId[] = [
+    'overview', 'missions', 'encours', 'historique', 'boutiques', 'revenus', 'wallet',
+    'zone', 'evaluation', 'parametres', 'profil', 'messagerie',
+    'reseauCorrespondants', 'reseauLivreurs', 'profilCorrespondant', 'profilLivreur',
+  ];
+  return Object.fromEntries(pages.map(p => [
+    p,
+    { title: t(`livreurLayout.pageMeta.${p}.title`), sub: t(`livreurLayout.pageMeta.${p}.sub`) },
+  ])) as Record<PageId, { title: string; sub: string }>;
+}
 
 // ─────────────────────────────────────────────────────────────
 // MISSIONS
@@ -219,19 +210,6 @@ export const AVIS: Avis[] = [
   { bg:'linear-gradient(135deg,#EEF3FD,#E2EAFB)', init:'M', nm:'Mamadou K.',   stars:5, txt:"Livraison en 25 min chrono depuis Kaloum ! Professionnel, colis parfaitement protégé.", chips:['Ponctuel','Pro','Rapide'],        date:'12 jan.' },
   { bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)', init:'F', nm:'Fatoumata D.', stars:5, txt:"Très satisfaite. Communication parfaite, a appelé avant d'arriver. Je recommande.",    chips:['Sympa','Communicatif'],           date:'10 jan.' },
   { bg:'linear-gradient(135deg,#FAF5FF,#EDE9FE)', init:'I', nm:'Ibrahima S.',  stars:4, txt:"Bon service, léger retard dû à la circulation mais prévenu à l'avance.",              chips:['Honnête'],                        date:'8 jan.'  },
-];
-
-// ─────────────────────────────────────────────────────────────
-// NOTIFICATIONS
-// ─────────────────────────────────────────────────────────────
-export const NOTIFS: Notif[] = [
-  { ic:'fa-motorcycle',          bg:'var(--tl-bg)',  c:'var(--teal)',   msg:'<strong>Nouvelle mission urgente</strong> — MacBook Air M3, 45 000 GNF · Ultra',    t:'Il y a 35 min', unread:true  },
-  { ic:'fa-star',                bg:'var(--am-bg)',  c:'var(--amber)',  msg:'<strong>Nouvel avis 5⭐</strong> — Mamadou K. vous a noté après sa livraison',        t:'Il y a 2h',     unread:true  },
-  { ic:'fa-coins',               bg:'var(--em-bg)',  c:'var(--emerald)',msg:'+26 000 GNF encaissés — Livraison Express confirmée',                                 t:'Il y a 3h',     unread:true  },
-  { ic:'fa-store',               bg:'var(--sky-2)',  c:'var(--blue)',   msg:'<strong>FashionHub GN</strong> vous a ajouté comme livreur partenaire',               t:'Hier',          unread:false },
-  { ic:'fa-trophy',              bg:'var(--am-bg)',  c:'var(--amber)',  msg:'🏆 Vous avez atteint le badge <strong>Top Livreur</strong> du mois !',               t:'Hier',          unread:false },
-  { ic:'fa-triangle-exclamation',bg:'var(--or-bg)',  c:'var(--orange)', msg:"Rappel : votre assurance véhicule expire dans <strong>12 jours</strong>",            t:'Avant-hier',    unread:false },
-  { ic:'fa-bolt',                bg:'var(--tl-bg)',  c:'var(--teal)',   msg:'Forte demande prévisionnelle ce samedi 14h–18h dans votre zone',                      t:'Ce matin',      unread:false },
 ];
 
 // ─────────────────────────────────────────────────────────────

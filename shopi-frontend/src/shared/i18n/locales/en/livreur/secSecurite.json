@@ -1,0 +1,50 @@
+{
+  "livreurSecSecurite": {
+    "header": { "titre": "Security & Login", "sub": "Protect your account with advanced layers of security." },
+    "pwdStrength": { "tropFaible": "Very weak", "faible": "Weak", "bon": "Good", "fort": "Strong" },
+    "pwdCard": {
+      "titre": "Change password",
+      "actuel": "Current password",
+      "nouveau": "New password",
+      "nouveauPlaceholder": "Min. 8 characters",
+      "confirmer": "Confirm",
+      "confirmerPlaceholder": "Repeat",
+      "mismatch": "Passwords do not match"
+    },
+    "saving": "Saving…",
+    "modifierMdp": "Change password",
+    "toasts": {
+      "currentRequired": "⚠️ Enter your current password",
+      "tooShort": "⚠️ The new password must be at least 8 characters long",
+      "mismatch": "❌ Passwords do not match",
+      "tooWeak": "⚠️ Password too weak — add uppercase letters and numbers",
+      "pwdChanged": "✅ Password changed successfully",
+      "currentWrong": "❌ Current password incorrect",
+      "twoFaEnabled": "✅ Two-factor authentication enabled",
+      "twoFaDisabled": "⚠️ Two-factor authentication disabled",
+      "twoFaUpdateError": "❌ Error while updating",
+      "twoFaEnabledModal": "🔐 Two-factor authentication enabled"
+    },
+    "twoFaCard": {
+      "titre": "2FA Authentication",
+      "active": " Enabled",
+      "inactive": " Disabled",
+      "activerLabel": "Enable two-factor authentication",
+      "activerSub": "Protects your account even if your password is compromised",
+      "methodeLabel": "Verification method",
+      "methods": {
+        "sms":   { "label": "SMS code",             "sub": "Code sent to your number on every login" },
+        "email": { "label": "Email code",            "sub": "Code sent to your email address" },
+        "app":   { "label": "Authenticator app",     "sub": "Google Authenticator or Authy — more secure" }
+      },
+      "enregistrer2fa": "Save 2FA"
+    },
+    "sessionsCard": {
+      "titre": "Active session",
+      "sessionActuelle": "Current session",
+      "connecteDepuis": "Connected since {{date}}",
+      "deconnecter": "Log out",
+      "unavailable": "Session information unavailable at the moment."
+    }
+  }
+}

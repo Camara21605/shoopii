@@ -1,0 +1,11 @@
+{
+  "livreurRevenus": {
+    "stats": {
+      "total": "Total earnings",
+      "ceMois": "This month",
+      "tauxShoneya": "Shoneya rate"
+    },
+    "dernieresTransactions": "Recent transactions",
+    "empty": "No transactions yet"
+  }
+}

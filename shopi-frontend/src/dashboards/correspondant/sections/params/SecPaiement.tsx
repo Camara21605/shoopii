@@ -51,9 +51,15 @@ export default function SecPaiement({ data, saving, dirty, markClean, saveTrigge
       <div className={s.psHd}><h1><i className="fas fa-wallet" /> Paiement</h1><p>Méthodes de réception des commissions Shoneya.</p></div>
       <div className={s.fc}>
         <div className={s.fcHd}><div><div className={s.fcTtl}><i className="fas fa-money-bill-transfer" /> Méthodes de réception</div></div>
-          <button className={s.fcAction} onClick={() => pop('➕ Ajouter une méthode','i')}><i className="fas fa-plus" /> Ajouter</button>
+          <button className={s.fcAction} disabled title="Bientôt disponible" style={{ opacity:0.5, cursor:'not-allowed' }}><i className="fas fa-plus" /> Ajouter</button>
         </div>
         <div className={s.fcBody}>
+          {/* BUG CORRIGÉ — "Ajouter"/"Supprimer" affichaient un toast de
+           * succès factice sans jamais rien changer : aucune méthode
+           * n'était réellement ajoutée ni retirée de la liste ni de la
+           * sauvegarde. Seul "Défaut" est réel (modifie l'état local,
+           * persisté au clic sur Sauvegarder). Marqué honnêtement
+           * "Bientôt disponible" plutôt que de prétendre fonctionner. */}
           <div className={s.pmList}>
             {paiements.map((p, i) => (
               <div key={p.nm} className={`${s.pmItem} ${p.def ? s.pmDef : ''}`}>
@@ -61,7 +67,7 @@ export default function SecPaiement({ data, saving, dirty, markClean, saveTrigge
                 <div style={{ flex:1 }}><div className={s.pmNm}>{p.nm} {p.def && <span className={s.pmDefTag}>Par défaut</span>}</div><div className={s.pmSub}>{p.sub}</div></div>
                 <div className={s.pmActs}>
                   {!p.def && <button className={s.pmBtn} onClick={() => setDefault(i)}>Défaut</button>}
-                  <button className={`${s.pmBtn} ${s.pmBtnDanger}`} onClick={() => pop('🗑️ Supprimé','w')}><i className="fas fa-trash-can" /></button>
+                  <button className={`${s.pmBtn} ${s.pmBtnDanger}`} disabled title="Bientôt disponible" style={{ opacity:0.5, cursor:'not-allowed' }}><i className="fas fa-trash-can" /></button>
                 </div>
               </div>
             ))}

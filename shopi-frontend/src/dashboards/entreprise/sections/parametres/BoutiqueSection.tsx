@@ -12,6 +12,7 @@ import type { TFunction } from 'i18next';
 import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
+import type { ToastType } from '../../types';
 import {
   VILLES_SORTED, getCommunesByVille, getQuartiersByCommune,
 } from '../../../../shared/location/data/geo-guinee';
@@ -24,7 +25,7 @@ interface Props {
   data:         ParametresData | null;
   saving:       boolean;
   onDirty:      () => void;
-  onToast:      (m: string, t?: string) => void;
+  onToast:      (m: string, t?: ToastType) => void;
   saveBoutique: (body: Partial<ParametresData>) => Promise<void>;
   saveContact:  (body: Partial<ParametresData>) => Promise<void>;
   uploadLogo:   (file: File) => Promise<void>;
@@ -625,7 +626,7 @@ export default function BoutiqueSection({
             <div className={s.fw}>
               <i className={`fas fa-user ${s.fi}`} />
               <input className={s.fin}
-                defaultValue={data ? '' : ''}
+                value={data?.ownerFirstName ?? ''}
                 placeholder={t('parametres.boutique.prenomPlaceholder')}
                 readOnly
                 style={{ background:'var(--g100)', cursor:'not-allowed', color:'var(--t3)' }}
@@ -637,7 +638,7 @@ export default function BoutiqueSection({
             <div className={s.fw}>
               <i className={`fas fa-user ${s.fi}`} />
               <input className={s.fin}
-                defaultValue={data ? '' : ''}
+                value={data?.ownerLastName ?? ''}
                 placeholder={t('parametres.boutique.nomPlaceholder')}
                 readOnly
                 style={{ background:'var(--g100)', cursor:'not-allowed', color:'var(--t3)' }}

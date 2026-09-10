@@ -13,6 +13,12 @@
  *     URI otpauth:// affiché en lien cliquable + secret texte pour saisie manuelle
  *   - Infos de dernière connexion (IP + timestamp) depuis User.lastLoginAt/Ip
  *   - Clé API : UI informative seulement (non implémentée côté backend)
+ *
+ * BUG CORRIGÉ — "Déconnecter les autres sessions" ne faisait qu'un toast
+ * sans jamais rien déconnecter, alors même que Shoneya n'autorise qu'UNE
+ * session active à la fois par compte (voir SessionService côté
+ * backend) : il n'y a jamais eu d'"autres sessions" à déconnecter.
+ * Retiré plutôt que de continuer à prétendre qu'il y en aurait.
  * ================================================================ */
 
 import { useState, useEffect } from 'react';
@@ -327,13 +333,6 @@ export default function SecuriteSection({ onToast }: SectionProps) {
               </div>
             </div>
             <span className={styles.sessionCur}>Session actuelle</span>
-          </div>
-          <div className={styles.divider} />
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-            <button className={`${styles.btn} ${styles.btnRed} ${styles.btnSm}`}
-              onClick={() => onToast('Déconnexion de toutes les autres sessions', 'w')}>
-              <i className="fas fa-right-from-bracket" /> Déconnecter les autres sessions
-            </button>
           </div>
         </div>
       </div>

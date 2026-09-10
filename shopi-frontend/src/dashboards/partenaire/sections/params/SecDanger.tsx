@@ -8,6 +8,7 @@
  * ================================================================ */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../../styles/ParamsShared.module.css';
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function SecDanger({ onSuspendre, onSupprimer, onToast, saving }: Props) {
+  const { t } = useTranslation();
   const [confirm,  setConfirm]  = useState<'suspendre' | 'supprimer' | null>(null);
   const [password, setPassword] = useState('');
   const [pwdError, setPwdError] = useState('');
@@ -37,26 +39,26 @@ export default function SecDanger({ onSuspendre, onSupprimer, onToast, saving }:
   async function handleConfirm() {
     if (!confirm) return;
     if (!password.trim()) {
-      setPwdError('Le mot de passe est obligatoire pour confirmer cette action.');
+      setPwdError(t('partenaireParametres.secDanger.modal.pwdRequired'));
       return;
     }
     setPwdError('');
     try {
       if (confirm === 'suspendre') {
         await onSuspendre(password);
-        onToast('⏸️ Compte mis en pause', 's');
+        onToast(t('partenaireParametres.secDanger.pausedToast'), 's');
       } else {
         await onSupprimer(password);
-        onToast('Compte programmé pour suppression', 's');
+        onToast(t('partenaireParametres.secDanger.deleteScheduledToast'), 's');
       }
       closeConfirm();
     } catch (err: any) {
       /* Le backend renvoie 401 si le mot de passe est incorrect */
       const msg = err?.message ?? '';
       if (msg.toLowerCase().includes('incorrect') || msg.toLowerCase().includes('refusée')) {
-        setPwdError('Mot de passe incorrect. Veuillez réessayer.');
+        setPwdError(t('partenaireParametres.secDanger.modal.pwdIncorrect'));
       } else {
-        onToast('❌ Opération impossible. Vérifiez votre connexion.', 'w');
+        onToast(t('partenaireParametres.secDanger.genericErrorToast'), 'w');
         closeConfirm();
       }
     }
@@ -68,17 +70,17 @@ export default function SecDanger({ onSuspendre, onSupprimer, onToast, saving }:
         <div className={`${s.fcHd} ${s.fcHdDanger}`}>
           <div>
             <div className={`${s.fcTtl} ${s.fcTtlDanger}`}>
-              <i className="fas fa-triangle-exclamation" /> Zone danger
+              <i className="fas fa-triangle-exclamation" /> {t('partenaireParametres.secDanger.title')}
             </div>
-            <div className={s.fcSub}>Actions irréversibles. Procédez avec prudence.</div>
+            <div className={s.fcSub}>{t('partenaireParametres.secDanger.sub')}</div>
           </div>
         </div>
         <div className={s.fcBody}>
           <div className={s.dangerRow}>
             <div className={s.dangerMain}>
-              <div className={s.dangerT}>Mettre mon compte en pause</div>
+              <div className={s.dangerT}>{t('partenaireParametres.secDanger.pauseRow.t')}</div>
               <div className={s.dangerD}>
-                Suspend temporairement votre activité de partenaire. Vos acteurs et commissions sont conservés.
+                {t('partenaireParametres.secDanger.pauseRow.d')}
               </div>
             </div>
             <button
@@ -86,15 +88,15 @@ export default function SecDanger({ onSuspendre, onSupprimer, onToast, saving }:
               onClick={() => openConfirm('suspendre')}
               disabled={saving}
             >
-              Mettre en pause
+              {t('partenaireParametres.secDanger.pauseRow.btn')}
             </button>
           </div>
 
           <div className={s.dangerRow}>
             <div className={s.dangerMain}>
-              <div className={s.dangerT}>Supprimer mon compte partenaire</div>
+              <div className={s.dangerT}>{t('partenaireParametres.secDanger.deleteRow.t')}</div>
               <div className={s.dangerD}>
-                Toutes vos données seront définitivement effacées. Cette action ne peut pas être annulée.
+                {t('partenaireParametres.secDanger.deleteRow.d')}
               </div>
             </div>
             <button
@@ -102,7 +104,7 @@ export default function SecDanger({ onSuspendre, onSupprimer, onToast, saving }:
               onClick={() => openConfirm('supprimer')}
               disabled={saving}
             >
-              Supprimer
+              {t('partenaireParametres.secDanger.deleteRow.btn')}
             </button>
           </div>
         </div>
@@ -117,18 +119,18 @@ export default function SecDanger({ onSuspendre, onSupprimer, onToast, saving }:
             </div>
 
             <h3>
-              {confirm === 'suspendre' ? 'Mettre en pause ?' : 'Supprimer votre compte ?'}
+              {confirm === 'suspendre' ? t('partenaireParametres.secDanger.modal.pauseTitle') : t('partenaireParametres.secDanger.modal.deleteTitle')}
             </h3>
             <p>
               {confirm === 'suspendre'
-                ? 'Votre activité sera suspendue. Vous pourrez la réactiver depuis ce même écran à tout moment.'
-                : 'Cette action est irréversible. Vos acteurs recrutés, commissions et historique seront définitivement perdus.'}
+                ? t('partenaireParametres.secDanger.modal.pauseDesc')
+                : t('partenaireParametres.secDanger.modal.deleteDesc')}
             </p>
 
             {/* Champ mot de passe obligatoire */}
             <div style={{ marginTop: 18, textAlign: 'left' }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '.5px', display: 'block', marginBottom: 7 }}>
-                Confirmez avec votre mot de passe
+                {t('partenaireParametres.secDanger.modal.pwdLabel')}
               </label>
               <input
                 className={s.fin}
@@ -150,7 +152,7 @@ export default function SecDanger({ onSuspendre, onSupprimer, onToast, saving }:
 
             <div className={s.cmodalBtns}>
               <button className={s.cmCancel} onClick={closeConfirm} disabled={saving}>
-                Annuler
+                {t('partenaireParametres.secDanger.modal.cancelBtn')}
               </button>
               <button
                 className={s.cmConfirm}
@@ -158,8 +160,8 @@ export default function SecDanger({ onSuspendre, onSupprimer, onToast, saving }:
                 disabled={saving || !password.trim()}
               >
                 {saving
-                  ? <><i className="fas fa-spinner fa-spin" /> En cours…</>
-                  : confirm === 'suspendre' ? 'Mettre en pause' : 'Supprimer définitivement'}
+                  ? <><i className="fas fa-spinner fa-spin" /> {t('partenaireParametres.secDanger.modal.enCours')}</>
+                  : confirm === 'suspendre' ? t('partenaireParametres.secDanger.modal.confirmPauseBtn') : t('partenaireParametres.secDanger.modal.confirmDeleteBtn')}
               </button>
             </div>
           </div>

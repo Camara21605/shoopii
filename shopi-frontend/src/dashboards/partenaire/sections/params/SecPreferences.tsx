@@ -1,110 +1,40 @@
 /* ================================================================
  * FICHIER : sections/params/SecPreferences.tsx
- * Section "Préférences" — langue et apparence du dashboard.
- * API : onSave(dto) → PATCH /partenaire/parametres/preferences
+ * Section "Préférences" — langue du dashboard.
+ *
+ * BUG CORRIGÉ (langue) — la carte "Langue" listait Pular/Malinké/Soussou
+ * en plus du français, mais les stockait seulement dans un state local
+ * puis dans localStorage['shopi_lang'] SANS jamais appeler
+ * i18n.changeLanguage() : ces 3 langues ne sont pas dans resources.ts
+ * (seuls fr/en/ar/zh/pt sont de vraies locales i18next), donc les
+ * sélectionner ne changeait strictement rien, y compris pour "Français"
+ * (qui ne redéclenchait pas i18next non plus). Remplacé par le composant
+ * partagé <SecLangue> — déjà branché sur i18n.changeLanguage() +
+ * localStorage['shopi_lang'] via l'écouteur central dans
+ * shared/i18n/i18n.ts — utilisé à l'identique par les dashboards
+ * entreprise/livreur/correspondant (voir leurs ParametresPage.tsx
+ * respectifs).
+ *
+ * CARTE "APPARENCE" RETIRÉE — le choix clair/sombre ne pouvait jamais
+ * avoir le moindre effet : /dashboard/partenaire fait partie de
+ * DARK_FORCED_PREFIXES dans app/router.tsx (ThemeRouteSync), qui impose
+ * le thème sombre sur CE dashboard à chaque navigation, quelle que soit
+ * la préférence enregistrée. Choisir "Clair" ici sauvegardait une valeur
+ * qui était systématiquement écrasée à la navigation suivante — un choix
+ * qui ne pouvait jamais se réaliser plutôt qu'un bug ponctuel.
  * ================================================================ */
 
-import { useState, useEffect } from 'react';
-import s from '../../styles/ParamsShared.module.css';
-import type { PartenaireData } from '../../hooks/usePartenaireParametres';
+import SecLangue from '../../../../shared/components/params/SecLangue';
 
 interface Props {
-  data:        PartenaireData | null;
-  saving:      boolean;
-  dirty:       () => void;
-  markClean:   () => void;
-  saveTrigger: number;
-  onSave:      (body: Partial<PartenaireData>) => Promise<void>;
-  onToast:     (msg: string, type?: 's' | 'i' | 'w') => void;
+  onToast: (msg: string, type?: 's' | 'i' | 'w') => void;
 }
 
-const LANGUES = [
-  { val: 'fr',       label: '🇫🇷 Français' },
-  { val: 'pular',    label: 'Pular' },
-  { val: 'malinke',  label: 'Malinké' },
-  { val: 'soussou',  label: 'Soussou' },
-];
-
-const THEMES = [
-  { val: 'light', label: '☀️ Clair' },
-  { val: 'dark',  label: '🌙 Sombre' },
-];
-
-export default function SecPreferences({
-  data, saving, dirty, markClean, saveTrigger, onSave, onToast
-}: Props) {
-  const [langue,    setLangue]    = useState('fr');
-  const [apparence, setApparence] = useState('light');
-
-  useEffect(() => {
-    if (!data) return;
-    setLangue(data.langue      ?? 'fr');
-    setApparence(data.apparence ?? 'light');
-  }, [data]);
-
-  useEffect(() => {
-    if (saveTrigger > 0) handleSave();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [saveTrigger]);
-
-  async function handleSave() {
-    try {
-      await onSave({ langue, apparence });
-      /* Persist preference locally for immediate effect */
-      localStorage.setItem('shopi_lang', langue);
-      markClean();
-      onToast('✅ Préférences sauvegardées', 's');
-    } catch {
-      onToast('❌ Erreur lors de la sauvegarde', 'w');
-    }
-  }
-
+export default function SecPreferences({ onToast }: Props) {
   return (
-    <>
-      {/* Langue */}
-      <div className={s.fc}>
-        <div className={s.fcHd}>
-          <div>
-            <div className={s.fcTtl}><i className="fas fa-language" /> Langue</div>
-            <div className={s.fcSub}>Langue d'affichage de votre espace partenaire.</div>
-          </div>
-        </div>
-        <div className={s.fcBody}>
-          <div className={s.optGrid}>
-            {LANGUES.map(l => (
-              <div
-                key={l.val}
-                className={`${s.opt} ${langue === l.val ? s.optOn : ''}`}
-                onClick={() => { setLangue(l.val); dirty(); }}
-              >
-                <div className={s.optRadio} />
-                <div className={s.optL}>{l.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Apparence */}
-      <div className={s.fc}>
-        <div className={s.fcHd}>
-          <div className={s.fcTtl}><i className="fas fa-palette" /> Apparence</div>
-        </div>
-        <div className={s.fcBody}>
-          <div className={s.optGrid}>
-            {THEMES.map(t => (
-              <div
-                key={t.val}
-                className={`${s.opt} ${apparence === t.val ? s.optOn : ''}`}
-                onClick={() => { setApparence(t.val); dirty(); }}
-              >
-                <div className={s.optRadio} />
-                <div className={s.optL}>{t.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </>
+    /* Langue — composant partagé, réellement branché sur i18next.
+     * SecLangue n'appelle onPop qu'avec type 's' (succès) — adaptateur
+     * pour matcher la signature onToast(msg, 's'|'i'|'w') du dashboard. */
+    <SecLangue onPop={(m, ty) => onToast(m, (ty as 's' | 'i' | 'w') ?? 's')} />
   );
 }

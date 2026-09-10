@@ -46,9 +46,9 @@ export default function SecDepot({ data, saving, dirty, markClean, saveTrigger, 
     setVille(data.depotVille   ?? 'Conakry');
     setRepere(data.depotRepere ?? '');
     setPhone(data.depotPhone   ?? '');
-    if ((data as any).depotLatitude && (data as any).depotLongitude) {
+    if (data.depotLatitude && data.depotLongitude) {
       setLocationVal({
-        coordinates: { latitude: Number((data as any).depotLatitude), longitude: Number((data as any).depotLongitude) },
+        coordinates: { latitude: Number(data.depotLatitude), longitude: Number(data.depotLongitude) },
         address: null,
       });
     }

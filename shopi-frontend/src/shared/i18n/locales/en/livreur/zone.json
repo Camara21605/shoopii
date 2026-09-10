@@ -1,0 +1,49 @@
+{
+  "livreurZone": {
+    "carteTitre": "My live location",
+    "fermer": "Close",
+    "sharing": {
+      "autoTitle": "Automatic sharing active",
+      "activeTitle": "Sharing active",
+      "offTitle": "Sharing disabled",
+      "autoSub": "Visible live to the customer and shop of your current delivery",
+      "activeSub": "Shops and customers can see your position",
+      "offSub": "Enable to be visible on the map",
+      "stop": "⏹ Stop",
+      "start": "▶ Share",
+      "cantStopToast": "🛵 Delivery in progress — sharing cannot be stopped.",
+      "stoppedToast": "⏹ Location sharing stopped.",
+      "startedToast": "📍 Location sharing started."
+    },
+    "lat": "Lat:",
+    "lng": "Lng:",
+    "missionAddr": {
+      "boutiqueId": "Shop · {{id}}",
+      "pays": "Country:",
+      "ville": "City:",
+      "quartier": "District:",
+      "positionApprox": " (approximate position)"
+    },
+    "maPosition": "My position",
+    "zones": {
+      "title": "My delivery zones",
+      "dispoBadge_one": "{{dispo}}/{{total}} available",
+      "dispoBadge_other": "{{dispo}}/{{total}} available",
+      "loading": "Loading zones…",
+      "noZonesTitle": "No zone configured",
+      "noZonesPrefix": "Go to ",
+      "noZonesBold": "Settings → Zones",
+      "noZonesSuffix": " to set your coverage area.",
+      "activeFallback": "Active zones",
+      "available": "Available",
+      "unavailable": "Unavailable",
+      "loadError": "Unable to load zones.",
+      "dispoOnToast": "✅ Available in {{zone}}",
+      "dispoOffToast": "⏸ Unavailable in {{zone}}",
+      "dispoUpdateError": "❌ Unable to update availability"
+    },
+    "stats": {
+      "title": "Statistics by zone"
+    }
+  }
+}

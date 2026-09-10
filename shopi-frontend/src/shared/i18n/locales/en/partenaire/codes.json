@@ -1,0 +1,70 @@
+{
+  "partenaireCodes": {
+    "types": {
+      "ent": "Business",
+      "lvr": "Delivery person",
+      "cor": "Correspondent",
+      "cli": "VIP client"
+    },
+    "statuts": {
+      "used": "Used",
+      "sent": "Sent",
+      "expired": "Expired"
+    },
+    "copiedToast": "Code copied: {{code}}",
+    "page": {
+      "heroTitle": "Account creation codes",
+      "heroParagraph": "Generate a unique code, choose the actor type, and send it. The actor uses it to create their account — they will automatically be linked to you.",
+      "generateBtn": "Generate a code",
+      "stats": {
+        "total": "Codes generated",
+        "used": "Used (account created)",
+        "pending": "Pending use",
+        "expired": "Expired"
+      },
+      "tableTitle": "Code history",
+      "empty": "No code generated yet",
+      "columns": {
+        "code": "Code",
+        "type": "Actor type",
+        "destinataire": "Recipient",
+        "statut": "Status",
+        "creeLe": "Created on",
+        "actions": "Actions"
+      },
+      "resendWhatsappTitle": "Resend via WhatsApp",
+      "resendWhatsappToast": "Code resent via WhatsApp",
+      "resendSmsTitle": "SMS",
+      "resendSmsToast": "Code resent by SMS",
+      "usedByTitle": "Used by {{name}}",
+      "usedByToast": "Account created by {{name}}",
+      "regenerateTitle": "Regenerate"
+    },
+    "modal": {
+      "step1": {
+        "title": "Generate a creation code",
+        "sub": "Choose the actor type to recruit",
+        "typeLabel": "Actor type",
+        "emailLabel": "Recipient's email (optional)",
+        "emailPlaceholder": "e.g. contact@techcorp.gn",
+        "generating": "Generating…",
+        "generateBtn": "Generate the code"
+      },
+      "generatedToast": "Code generated",
+      "generatedForToast": "Code generated for {{email}}",
+      "errorToast": "Error generating the code",
+      "step2": {
+        "title": "Code generated ✓",
+        "sub": "Send it to the recipient so they can create their account",
+        "resultLabel": "Creation code",
+        "resultExpiry": "Valid for 7 days · single use",
+        "whatsapp": "WhatsApp",
+        "sms": "SMS",
+        "copier": "Copy",
+        "whatsappToast": "Opening WhatsApp…",
+        "smsToast": "SMS ready",
+        "doneBtn": "Done"
+      }
+    }
+  }
+}

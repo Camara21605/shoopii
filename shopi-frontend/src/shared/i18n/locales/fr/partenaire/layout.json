@@ -1,0 +1,45 @@
+{
+  "partenaireLayout": {
+    "sidebar": {
+      "brandTag": "PARTENAIRE",
+      "sections": {
+        "principal": "Principal",
+        "acquisition": "Acquisition",
+        "revenus": "Revenus",
+        "performance": "Performance",
+        "securite": "Sécurité",
+        "compte": "Compte"
+      },
+      "items": {
+        "overview": "Vue d'ensemble",
+        "codes": "Codes de création",
+        "acteurs": "Mes acteurs",
+        "invitations": "Invitations",
+        "commissions": "Commissions",
+        "paiements": "Paiements",
+        "stats": "Statistiques",
+        "signalements": "Signalements",
+        "parametres": "Paramètres"
+      },
+      "generateBtn": "Générer un code",
+      "menuAria": "Menu"
+    },
+    "topbar": {
+      "titles": {
+        "overview":     { "title": "Vue d'ensemble",          "subtitle": "Pilotez votre réseau et vos recrutements" },
+        "codes":        { "title": "Codes de création",       "subtitle": "Générez et envoyez des codes aux acteurs" },
+        "acteurs":      { "title": "Mes acteurs",             "subtitle": "Les acteurs que vous avez recrutés" },
+        "invitations":  { "title": "Invitations",             "subtitle": "Suivi de vos parrainages" },
+        "commissions":  { "title": "Commissions",             "subtitle": "Vos revenus de partenaire" },
+        "paiements":    { "title": "Paiements",               "subtitle": "Historique de vos retraits" },
+        "stats":        { "title": "Statistiques",            "subtitle": "Performance de votre acquisition" },
+        "signalements": { "title": "Sécurité & Signalements", "subtitle": "Signalez les utilisateurs malveillants" },
+        "parametres":   { "title": "Paramètres",              "subtitle": "Configuration de votre compte partenaire" }
+      },
+      "reportTooltip": "Signaler un utilisateur",
+      "aideTooltip": "Centre d'aide",
+      "generateBtn": "Générer un code",
+      "menuAria": "Menu"
+    }
+  }
+}

@@ -17,6 +17,7 @@
  * ================================================================ */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import s from '../../styles/ParamsShared.module.css';
 import type { PartenaireData } from '../../hooks/usePartenaireParametres';
 import { apiFetch } from '../../../../shared/services/apiFetch';
@@ -36,6 +37,7 @@ interface GeoItem { id: string; nom: string; code: string; }
 export default function SecZone({
   data, saving, dirty, markClean, saveTrigger, onSave, onToast
 }: Props) {
+  const { t } = useTranslation();
   const [ville,     setVille]     = useState('');
   const [commune,   setCommune]   = useState('');
   const [quartiers, setQuartiers] = useState<string[]>([]);
@@ -119,9 +121,9 @@ export default function SecZone({
     try {
       await onSave({ ville, commune, zone: quartiers.join(', ') });
       markClean();
-      onToast("✅ Zone d'activité sauvegardée", 's');
+      onToast(t('partenaireParametres.secZone.savedToast'), 's');
     } catch (err: any) {
-      onToast(err?.message ?? '❌ Erreur lors de la sauvegarde', 'w');
+      onToast(err?.message ?? t('partenaireParametres.secZone.errorToast'), 'w');
     }
   }
 
@@ -129,52 +131,52 @@ export default function SecZone({
     <div className={s.fc}>
       <div className={s.fcHd}>
         <div>
-          <div className={s.fcTtl}><i className="fas fa-location-dot" /> Zone d'activité</div>
-          <div className={s.fcSub}>Les zones où vous recrutez des acteurs pour Shoneya.</div>
+          <div className={s.fcTtl}><i className="fas fa-location-dot" /> {t('partenaireParametres.secZone.title')}</div>
+          <div className={s.fcSub}>{t('partenaireParametres.secZone.sub')}</div>
         </div>
       </div>
       <div className={s.fcBody}>
         <div className={s.grid2}>
           <div className={s.fg}>
-            <label className={s.fl}>Ville principale</label>
+            <label className={s.fl}>{t('partenaireParametres.secZone.villeLabel')}</label>
             <select
               className={s.fin}
               value={ville}
               disabled={villesLoading}
               onChange={e => handleVilleChange(e.target.value)}
             >
-              <option value="">— Sélectionner —</option>
+              <option value="">{t('partenaireParametres.secZone.selectPlaceholder')}</option>
               {villes.map(v => <option key={v.id} value={v.nom}>{v.nom}</option>)}
             </select>
-            {villesLoading && <span className={s.hint}>Chargement…</span>}
+            {villesLoading && <span className={s.hint}>{t('partenaireParametres.secZone.chargement')}</span>}
             {!villesLoading && villes.length === 0 && (
-              <span className={s.hint}>Aucune ville configurée par un administrateur pour le moment.</span>
+              <span className={s.hint}>{t('partenaireParametres.secZone.aucuneVille')}</span>
             )}
           </div>
           <div className={s.fg}>
-            <label className={s.fl}>Commune</label>
+            <label className={s.fl}>{t('partenaireParametres.secZone.communeLabel')}</label>
             <select
               className={s.fin}
               value={commune}
               onChange={e => handleCommuneChange(e.target.value)}
               disabled={!ville || communesLoading}
             >
-              <option value="">— Sélectionner —</option>
+              <option value="">{t('partenaireParametres.secZone.selectPlaceholder')}</option>
               {communes.map(c => <option key={c.id} value={c.nom}>{c.nom}</option>)}
             </select>
             {ville && !communesLoading && communes.length === 0 && (
-              <span className={s.hint}>Aucune commune configurée pour "{ville}".</span>
+              <span className={s.hint}>{t('partenaireParametres.secZone.aucuneCommune', { ville })}</span>
             )}
           </div>
         </div>
         <div className={s.fg} style={{ marginBottom: 0 }}>
-          <label className={s.fl}>Quartiers / marchés ciblés</label>
+          <label className={s.fl}>{t('partenaireParametres.secZone.quartiersLabel')}</label>
           {!commune ? (
-            <span className={s.hint}>Sélectionnez une commune pour voir ses quartiers.</span>
+            <span className={s.hint}>{t('partenaireParametres.secZone.selectCommuneHint')}</span>
           ) : quartierOptsLoading ? (
-            <span className={s.hint}>Chargement…</span>
+            <span className={s.hint}>{t('partenaireParametres.secZone.chargement')}</span>
           ) : quartierOpts.length === 0 ? (
-            <span className={s.hint}>Aucun quartier configuré pour "{commune}".</span>
+            <span className={s.hint}>{t('partenaireParametres.secZone.aucunQuartier', { commune })}</span>
           ) : (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
               {quartierOpts.map(q => {
@@ -202,7 +204,7 @@ export default function SecZone({
               })}
             </div>
           )}
-          <span className={s.hint}>Aide Shoneya à vous proposer des prospects proches.</span>
+          <span className={s.hint}>{t('partenaireParametres.secZone.footerHint')}</span>
         </div>
       </div>
     </div>

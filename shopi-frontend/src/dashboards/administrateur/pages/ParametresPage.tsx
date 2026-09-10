@@ -128,6 +128,37 @@ interface ParametresPageProps {
 /* ================================================================
  * Composant principal
  * ================================================================ */
+/* BUG CORRIGÉ — sur les 16 sections, 8 sont des maquettes 100% locales,
+ * sans le moindre appel réseau : chaque toggle/champ/bouton "Sauvegarder"
+ * ne modifie qu'un état React local, jamais persisté nulle part (les 8
+ * autres — profil/sécurité/notifications/zone/validations/entreprises/
+ * livreurs/partenaires — sont réellement connectées, soit directement
+ * via apiFetch, soit via un fichier services/*.service.ts dédié, voir
+ * leurs en-têtes respectifs). Le bouton flottant "Enregistrer les
+ * modifications" ci-dessous était lui-même un stub (voir son ancien
+ * commentaire "sera connecté au backend") : un setTimeout(800ms) suivi
+ * d'un toast de succès, sans jamais rien envoyer au serveur — de plus,
+ * il était totalement redondant pour les sections réelles, qui
+ * persistent déjà chacune leurs propres changements via leur propre
+ * bouton "Sauvegarder" interne. Retiré. Les sections non connectées
+ * sont maintenant grisées (désactivées) avec un bandeau explicite
+ * plutôt que de laisser croire qu'elles enregistrent quoi que ce soit.
+ * 'journal' retiré de cette liste : la section est maintenant reliée à
+ * GET /dashboard/admin/audit (voir JournalSection.tsx + AdminAuditService).
+ * 'apparence' retiré : ERREUR DE CLASSIFICATION CORRIGÉE — cette section
+ * était déjà 100% réelle (GET/PUT/POST /appearance via appearanceService.ts)
+ * et n'aurait jamais dû être grisée ici.
+ * 'sante' retiré : reliée à GET /platform-security/health|summary|alerts —
+ * routes déjà ouvertes au rôle ADMIN (voir SanteSection.tsx). Seules la
+ * conformité et les sauvegardes restent réservées au Super Admin.
+ * 'communication' retiré : reliée à GET/PUT /dashboard/admin/communication —
+ * message/signature d'invitation + modèles de notification (voir
+ * CommunicationSection.tsx + AdminCommunicationService). */
+const MOCK_SECTIONS = new Set<ParamSection>([
+  'finances',
+  'sauvegarde', 'confidentialite', 'avance',
+]);
+
 export default function ParametresPage({ onToast }: ParametresPageProps) {
   const { logout } = useAppContext();
   const navigate = useNavigate();
@@ -138,14 +169,6 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
 
   const [active,  setActive]  = useState<ParamSection>('profil');
   const [query,   setQuery]   = useState('');
-  const [dirty,   setDirty]   = useState(false);
-  const [saving,  setSaving]  = useState(false);
-
-  /* Intercepte les toasts de succès pour activer le bouton flottant */
-  const handleToast = useCallback((msg: string, type?: 's' | 'i' | 'w') => {
-    onToast(msg, type);
-    if (type === 's') setDirty(true);
-  }, [onToast]);
 
   /* Filtre la navigation latérale selon la recherche */
   const filteredGroups = NAV_GROUPS.map(g => ({
@@ -155,21 +178,13 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
       : g.items,
   })).filter(g => g.items.length > 0);
 
-  /* Sauvegarde globale (stub — sera connecté au backend) */
-  const saveAll = async () => {
-    setSaving(true);
-    await new Promise(r => setTimeout(r, 800));
-    setSaving(false);
-    setDirty(false);
-    onToast('Toutes les modifications ont été enregistrées', 's');
-  };
-
   /* Métadonnées de la section active */
   const meta = SEC_META[active];
+  const isMock = MOCK_SECTIONS.has(active);
 
   /* Rendu de la section active */
   const renderSection = () => {
-    const props = { onToast: handleToast };
+    const props = { onToast };
     switch (active) {
       case 'profil':          return <ProfilSection         {...props} />;
       case 'zone':            return <ZoneSection           {...props} />;
@@ -254,13 +269,39 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
           </div>
         </div>
 
-        {/* Rendu de la section active */}
+        {/* Bandeau honnête — cette section n'est pas encore reliée au
+            backend (voir MOCK_SECTIONS ci-dessus) : tout ce qui suit est
+            une maquette visuelle, rien n'est réellement enregistré. */}
+        {isMock && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            background: 'var(--g50, #F5F5F5)', border: '1px solid var(--bdr, #E4E4E7)',
+            borderRadius: 10, padding: '10px 16px', margin: '0 28px 16px',
+            fontSize: 12.5, fontWeight: 600, color: 'var(--t2, #52525B)',
+          }}>
+            <i className="fas fa-circle-info" style={{ color: 'var(--amber, #F59E0B)' }} />
+            Cette section est en aperçu — elle sera bientôt disponible et connectée au backend. Rien de ce qui suit n&apos;est encore enregistré.
+          </div>
+        )}
+
+        {/* Rendu de la section active — désactivée si maquette non
+            connectée. `<fieldset disabled>` cascade nativement sur les
+            vrais boutons/inputs (ex: "Sauvegarder"), mais ces sections
+            mock implémentent leurs interrupteurs comme de simples <div
+            onClick> (pas des <input type="checkbox">) que fieldset ne
+            neutralise pas — pointerEvents:'none' sur le wrapper bloque
+            tous les clics universellement, quelle que soit l'implémentation
+            interne, en plus d'estomper visuellement toute la section. */}
         <Suspense fallback={
           <div style={{ textAlign: 'center', padding: '3rem', opacity: .4 }}>
             <i className="fas fa-spinner fa-spin fa-2x" />
           </div>
         }>
-          {renderSection()}
+          <fieldset disabled={isMock} style={isMock
+            ? { border: 0, margin: 0, padding: 0, opacity: 0.6, pointerEvents: 'none' }
+            : { border: 0, margin: 0, padding: 0 }}>
+            {renderSection()}
+          </fieldset>
         </Suspense>
 
         {/* ── Déconnexion — en bas de la page paramètres, sous toutes
@@ -282,22 +323,6 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
         </div>
 
       </div>
-
-      {/* ════════════════════════════════
-       * BOUTON FLOTTANT « ENREGISTRER »
-       * ════════════════════════════════ */}
-      {dirty && (
-        <div className={styles.floatSave}>
-          <button
-            className={`${styles.floatSaveBtn} ${saving ? styles.floatSaveBusy : ''}`}
-            onClick={saveAll}
-          >
-            <div className={styles.saveDot} />
-            <i className={`fas ${saving ? 'fa-spinner fa-spin' : 'fa-floppy-disk'}`} />
-            {saving ? 'Enregistrement…' : 'Enregistrer les modifications'}
-          </button>
-        </div>
-      )}
 
     </div>
   );

@@ -4,8 +4,14 @@ import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import s from '../../styles/parametres/ParametresPage.module.css';
 import { apiFetch } from '@/shared/services/apiFetch';
+import type { ToastType } from '../../types';
 
-interface Props { onDirty: () => void; onToast: (m: string, t?: string) => void; }
+interface Props {
+  onDirty: () => void;
+  onToast: (m: string, t?: ToastType) => void;
+  saving:  boolean;
+  savePlan: (plan: string) => Promise<void>;
+}
 
 interface GrilleEntry { taux: number; label: string; }
 interface CommissionsData {
@@ -17,7 +23,7 @@ interface CommissionsData {
 
 const PLAN_EM:  Record<string, string> = { standard: '🟢', pro: '⭐', premium: '🏆' };
 
-export default function CommissionsSection({ onDirty, onToast }: Props) {
+export default function CommissionsSection({ onDirty, onToast, saving, savePlan }: Props) {
   const { t } = useTranslation();
   const PLAN_SUB: Record<string, string> = {
     standard: t('parametres.commissions.planStandardSub'),
@@ -28,8 +34,14 @@ export default function CommissionsSection({ onDirty, onToast }: Props) {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
 
+  /* BUG CORRIGÉ — appelait '/parametres/commissions' (sans le préfixe
+   * '/dashboard/entreprise' que porte TOUTE autre route de cette page,
+   * voir useParametres.ts BASE) : 404 systématique, silencieusement
+   * avalé par le .catch ci-dessous, qui retombait alors toujours sur les
+   * valeurs par défaut codées en dur (plans/tauxActuel '—') — jamais la
+   * vraie grille ni le vrai plan actuel de l'entreprise. */
   useEffect(() => {
-    apiFetch<CommissionsData>('/parametres/commissions')
+    apiFetch<CommissionsData>('/dashboard/entreprise/parametres/commissions')
       .then(d => { setData(d); setSelected(d.planActuel); })
       .catch(() => onToast(t('parametres.commissions.loadErrorToast'), 'w'))
       .finally(() => setLoading(false));
@@ -39,6 +51,24 @@ export default function CommissionsSection({ onDirty, onToast }: Props) {
   const plans   = data?.plans  ?? ['STANDARD', 'PRO', 'PREMIUM'];
   const current = data?.planActuel ?? 'STANDARD';
   const tauxActuel = data?.tauxActuel?.taux ?? '—';
+
+  /* BUG CORRIGÉ — sélectionner un plan (Pro/Premium) ne faisait
+   * strictement rien d'autre que marquer le formulaire "dirty" : la prop
+   * `savePlan` (réelle, PATCH /parametres/commissions) était passée par
+   * ParametresPage.tsx mais ni déclarée ni utilisée ici, et aucun bouton
+   * ne l'appelait — changer de plan n'a jamais été possible depuis
+   * cette page. */
+  async function handleChangePlan() {
+    if (!selected || selected === current) return;
+    try {
+      await savePlan(selected);
+      setData(prev => prev ? { ...prev, planActuel: selected } : prev);
+      onToast(t('parametres.commissions.planChangedToast', { plan: selected }), 's');
+    } catch {
+      onToast(t('parametres.commissions.planChangeErrorToast'), 'e');
+      setSelected(current);
+    }
+  }
 
   if (loading) return (
     <div style={{ padding: '48px', textAlign: 'center', color: 'var(--muted)' }}>
@@ -108,6 +138,17 @@ export default function CommissionsSection({ onDirty, onToast }: Props) {
             );
           })}
         </div>
+
+        {selected && selected !== current && (
+          <div className={s.saveRow}>
+            <button className={s.saveBtn} onClick={handleChangePlan} disabled={saving}>
+              {saving
+                ? <><i className="fas fa-spinner fa-spin" /> {t('parametres.commissions.changementEnCours')}</>
+                : <><i className="fas fa-crown" /> {t('parametres.commissions.confirmerChangementBtn', { plan: selected })}</>
+              }
+            </button>
+          </div>
+        )}
       </FormCard>
     </>
   );

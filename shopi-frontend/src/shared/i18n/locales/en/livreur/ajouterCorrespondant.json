@@ -1,0 +1,75 @@
+{
+  "livreurAjouterCorrespondant": {
+    "titre": "Add a correspondent",
+    "typeLabel": {
+      "principal": "⭐ Main hub",
+      "entrepot": "🏭 Warehouse",
+      "export": "✈️ Export",
+      "relais": "📍 Relay"
+    },
+    "steps": { "informations": "Information", "apercu": "Preview", "confirme": "Confirmed" },
+    "validation": {
+      "nomRequis": "⚠️ Name is required",
+      "emailRequis": "⚠️ Email is required",
+      "emailInvalide": "⚠️ Invalid email"
+    },
+    "toasts": {
+      "invitationEnvoyee": "✅ Invitation sent to {{email}}",
+      "codeCopie": "📋 Code copied!"
+    },
+    "etape1": {
+      "nomLabel": "Relay point name *",
+      "nomPlaceholder": "e.g. RelayPlus Kaloum",
+      "emailLabel": "Contact email *",
+      "emailPlaceholder": "e.g. relay@gmail.com",
+      "emailHelper": "The invitation code will be sent to this email.",
+      "typeLabel": "Correspondent type",
+      "typeOptions": {
+        "relais": "📍 Relay point — Parcel drop-off/pickup",
+        "entrepot": "🏭 Warehouse — Regional storage",
+        "export": "✈️ Export — International",
+        "principal": "⭐ Main hub — Central hub"
+      },
+      "villeLabel": "City",
+      "villePlaceholder": "e.g. Conakry",
+      "quartierLabel": "District / Zone",
+      "quartierPlaceholder": "e.g. Kaloum, Matam…",
+      "messageLabel": "Custom message",
+      "defaultMessage": "Hello,\n\nYou have been selected to join the Shoneya correspondent network.\n\nPlease use the code below to create your account."
+    },
+    "etape2": {
+      "apercuTitle": "Preview of the email that will be sent",
+      "emailSubject": "Shoneya Invitation — Join our network",
+      "aLabel": "To:",
+      "bonjour": "Hello",
+      "codeLabel": "Your invitation code",
+      "codeValidite": "Valid 7 days · Single use · Generated on send",
+      "villeRow": "City:",
+      "zoneRow": "Zone:",
+      "typeRow": "Type:",
+      "infoPart1": "This code expires in ",
+      "infoBold1": "7 days",
+      "infoPart2": ". It can only be used once. The email will be sent from ",
+      "infoBold2": "noreply@shopi.gn",
+      "infoPart3": "."
+    },
+    "etape3": {
+      "titre": "Invitation sent!",
+      "codeEnvoyeA": "Code sent to",
+      "nom": "Name",
+      "email": "Email",
+      "ville": "City",
+      "type": "Type",
+      "codeGenere": "Invitation code generated",
+      "copier": "Copy",
+      "expireLe": "Expires on {{date}} · Single use"
+    },
+    "actions": {
+      "suivant": "Next",
+      "retour": "Back",
+      "envoiEnCours": "Sending…",
+      "envoyerInvitation": "Send invitation",
+      "ajouterAutre": "Add another correspondent"
+    }
+  }
+}

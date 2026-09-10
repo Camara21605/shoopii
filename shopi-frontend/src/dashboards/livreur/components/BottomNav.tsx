@@ -3,6 +3,7 @@
 // Correspondants · Livreurs
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { PageId } from '../data/livreurData';
 import styles from '../styles/BottomNav.module.css';
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function BottomNav({ activePage, onNavigate }: Props) {
+  const { t } = useTranslation();
   const isCorrespondants = activePage === 'reseauCorrespondants' || activePage === 'profilCorrespondant';
   const isLivreurs       = activePage === 'reseauLivreurs'       || activePage === 'profilLivreur';
 
@@ -22,7 +24,7 @@ export default function BottomNav({ activePage, onNavigate }: Props) {
         onClick={() => onNavigate('reseauCorrespondants')}
       >
         <i className="fas fa-warehouse" />
-        <span>Correspondants</span>
+        <span>{t('livreurLayout.bottomNav.correspondants')}</span>
       </button>
 
       <button
@@ -30,7 +32,7 @@ export default function BottomNav({ activePage, onNavigate }: Props) {
         onClick={() => onNavigate('reseauLivreurs')}
       >
         <i className="fas fa-motorcycle" />
-        <span>Livreurs</span>
+        <span>{t('livreurLayout.bottomNav.livreurs')}</span>
       </button>
     </nav>
   );

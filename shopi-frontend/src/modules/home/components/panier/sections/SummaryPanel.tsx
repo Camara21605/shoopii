@@ -27,18 +27,23 @@ interface Props {
   /** Solde réel du portefeuille Shoneya — le paiement se fait toujours par ce solde. */
   walletBalance: number | null;
   loadingWallet: boolean;
+  /** Tarif RÉEL de la zone de livraison couvrant l'adresse saisie
+   *  (GeoZone.fraisLivraison — géré par un administrateur, PAS par le
+   *  livreur). BUG CORRIGÉ : utilisait selLvrObj.base (Delivery.tarifBase,
+   *  fixé par le livreur lui-même) pour calculer le total réellement payé. */
+  zoneFee:    number;
   onConfirm:  () => void;
   onEdit:     () => void;
 }
 
 export default function SummaryPanel({
   items, delMode, selLvrObj, corrFee, curSpd,
-  promoActif, etaDest, loading, walletBalance, loadingWallet, onConfirm, onEdit,
+  promoActif, etaDest, loading, walletBalance, loadingWallet, zoneFee, onConfirm, onEdit,
 }: Props) {
   const { t } = useTranslation();
   const sub   = items.reduce((s, i) => s + i.price * i.qty, 0);
   const lv    = selLvrObj;
-  const lvFee = lv ? lvFeeCalc(lv.base, SPEEDS[curSpd].m) : 0;
+  const lvFee = lv ? lvFeeCalc(zoneFee, SPEEDS[curSpd].m) : 0;
   const disc  = promoActif ? Math.round(sub * 0.2) : 0;
   const total = sub + lvFee + corrFee - disc;
   const sp    = SPEEDS[curSpd];

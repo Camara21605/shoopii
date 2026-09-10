@@ -3,7 +3,7 @@
  * ✅ CONNECTÉ — Confidentialité & données livreur
  */
 import { useState, useEffect } from 'react';
-import { PRIVACY_ITEMS } from '../../data/parametresData';
+import { useTranslation } from 'react-i18next';
 import type { LivreurData } from '../../hooks/useLivreurParametres';
 import ps from '../../styles/ParamsShared.module.css';
 
@@ -15,45 +15,72 @@ interface Props {
   savePrivacy: (body: Record<string, boolean>) => Promise<void>;
 }
 
-/* Clés backend — l'ordre doit correspondre à PRIVACY_ITEMS */
+/* BUG CORRIGÉ — 3 des 6 clés (showPhone, showHistory, personalizedAds)
+ * n'existaient sur AUCUNE colonne backend (voir NotifsLivreurService.
+ * DEFAULT_PRIVACY / UpdateLivreurPrivacyDto) : le ValidationPipe global
+ * (whitelist) les supprimait silencieusement avant même d'atteindre le
+ * service — ces 3 toggles avaient l'air fonctionnels (bascule, badge
+ * "Actif"/"Inactif") mais ne persistaient jamais rien. À l'inverse, 3
+ * vraies colonnes backend (showRating, showDeliveryCount, improveAlgo)
+ * n'étaient accessibles depuis aucune UI. Clés désormais alignées 1:1
+ * avec le DTO réel. */
 const PRIVACY_KEYS = [
-  'showPhone',
-  'showHistory',
+  'showRating',
+  'showDeliveryCount',
   'showInSearch',
   'shareLocation',
   'anonymizedStats',
-  'personalizedAds',
+  'improveAlgo',
 ];
+
+/* Traduit via `livreurSecConfidentialite.items.<key>.*` — voir
+ * locales/{fr,en}/livreur/secConfidentialite.json. Ordre = PRIVACY_KEYS
+ * ci-dessus. Seul consommateur : cette page. */
+function buildPrivacyItems(t: (key: string) => string) {
+  return [
+    { l: t('livreurSecConfidentialite.items.showRating.l'),        sub: t('livreurSecConfidentialite.items.showRating.sub'),        on:true  },
+    { l: t('livreurSecConfidentialite.items.showDeliveryCount.l'), sub: t('livreurSecConfidentialite.items.showDeliveryCount.sub'), on:true  },
+    { l: t('livreurSecConfidentialite.items.showInSearch.l'),      sub: t('livreurSecConfidentialite.items.showInSearch.sub'),      on:true  },
+    { l: t('livreurSecConfidentialite.items.shareLocation.l'),     sub: t('livreurSecConfidentialite.items.shareLocation.sub'),     on:true  },
+    { l: t('livreurSecConfidentialite.items.anonymizedStats.l'),   sub: t('livreurSecConfidentialite.items.anonymizedStats.sub'),   on:true  },
+    { l: t('livreurSecConfidentialite.items.improveAlgo.l'),       sub: t('livreurSecConfidentialite.items.improveAlgo.sub'),       on:true  },
+  ];
+}
 
 /* Métadonnées visuelles enrichies pour chaque item */
 const ITEM_META = [
-  { icon: 'fa-phone',              iconColor: 'var(--teal)',    iconBg: 'var(--tl-bg)'              },
-  { icon: 'fa-clock-rotate-left',  iconColor: 'var(--blue)',    iconBg: 'rgba(0,0,0,.08)'       },
+  { icon: 'fa-star',                iconColor: 'var(--teal)',    iconBg: 'var(--tl-bg)'          },
+  { icon: 'fa-box',                  iconColor: 'var(--blue)',    iconBg: 'rgba(0,0,0,.08)'       },
   { icon: 'fa-magnifying-glass',   iconColor: 'var(--teal)',    iconBg: 'var(--tl-bg)'              },
   { icon: 'fa-location-dot',       iconColor: 'var(--amber)',   iconBg: 'rgba(0,0,0,.09)'       },
   { icon: 'fa-chart-bar',          iconColor: 'var(--blue)',    iconBg: 'rgba(0,0,0,.08)'       },
-  { icon: 'fa-bullhorn',           iconColor: 'var(--t3)',      iconBg: 'var(--g100)'               },
+  { icon: 'fa-robot',               iconColor: 'var(--t3)',      iconBg: 'var(--g100)'               },
 ];
 
-/* Groupes thématiques */
-const GROUPS = [
-  {
-    id:    'visibilite',
-    icon:  'fa-eye',
-    title: 'Visibilité publique',
-    desc:  'Ce que les boutiques et clients voient sur votre profil.',
-    range: [0, 1, 2] as const,
-  },
-  {
-    id:    'donnees',
-    icon:  'fa-database',
-    title: 'Données & confidentialité',
-    desc:  'Comment Shoneya utilise vos données pour améliorer le service.',
-    range: [3, 4, 5] as const,
-  },
-];
+/* Groupes thématiques — traduit via `livreurSecConfidentialite.groups.<id>.*` */
+function buildGroups(t: (key: string) => string) {
+  return [
+    {
+      id:    'visibilite',
+      icon:  'fa-eye',
+      title: t('livreurSecConfidentialite.groups.visibilite.title'),
+      desc:  t('livreurSecConfidentialite.groups.visibilite.desc'),
+      range: [0, 1, 2] as const,
+    },
+    {
+      id:    'donnees',
+      icon:  'fa-database',
+      title: t('livreurSecConfidentialite.groups.donnees.title'),
+      desc:  t('livreurSecConfidentialite.groups.donnees.desc'),
+      range: [3, 4, 5] as const,
+    },
+  ];
+}
 
 export default function SecConfidentialite({ data, saving, dirty, onPop, savePrivacy }: Props) {
+  const { t } = useTranslation();
+  const PRIVACY_ITEMS = buildPrivacyItems(t);
+  const GROUPS = buildGroups(t);
   const [vals, setVals] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -71,9 +98,9 @@ export default function SecConfidentialite({ data, saving, dirty, onPop, savePri
   async function handleSave() {
     try {
       await savePrivacy(vals);
-      onPop('Paramètres de confidentialité sauvegardés', 's');
+      onPop(t('livreurSecConfidentialite.toasts.saved'), 's');
     } catch (err: any) {
-      onPop(err?.message ?? 'Erreur lors de la sauvegarde', 'e');
+      onPop(err?.message ?? t('livreurSecConfidentialite.toasts.saveError'), 'e');
     }
   }
 
@@ -86,8 +113,8 @@ export default function SecConfidentialite({ data, saving, dirty, onPop, savePri
 
       {/* En-tête de section */}
       <div className={ps.psHd}>
-        <h2><i className="fas fa-shield-halved" /> Confidentialité</h2>
-        <p>Contrôlez la visibilité de vos informations et l'utilisation de vos données sur la plateforme.</p>
+        <h2><i className="fas fa-shield-halved" /> {t('livreurSecConfidentialite.header.titre')}</h2>
+        <p>{t('livreurSecConfidentialite.header.sub')}</p>
       </div>
 
       {/* Bannière résumé */}
@@ -118,16 +145,16 @@ export default function SecConfidentialite({ data, saving, dirty, onPop, savePri
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, color: 'var(--navy)', marginBottom: 2 }}>
-            {activeCount} paramètre{activeCount > 1 ? 's' : ''} actif{activeCount > 1 ? 's' : ''} sur {totalCount}
+            {t('livreurSecConfidentialite.banner.paramActifs', { count: activeCount, total: totalCount })}
           </div>
-          <div>Vos données ne sont jamais vendues à des tiers. Shoneya respecte votre vie privée.</div>
+          <div>{t('livreurSecConfidentialite.banner.desc')}</div>
         </div>
         {/* Barre de progression */}
         <div style={{ flexShrink: 0, width: 56, textAlign: 'center' }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--teal)', fontFamily: 'var(--fd)' }}>
             {Math.round((activeCount / totalCount) * 100)}%
           </div>
-          <div style={{ fontSize: 9, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.5px' }}>partagé</div>
+          <div style={{ fontSize: 9, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.5px' }}>{t('livreurSecConfidentialite.banner.partage')}</div>
         </div>
       </div>
 
@@ -161,7 +188,7 @@ export default function SecConfidentialite({ data, saving, dirty, onPop, savePri
                 border:       `1px solid ${groupActive > 0 ? 'rgba(0,0,0,.2)' : 'var(--bdr2)'}`,
                 flexShrink:   0,
               }}>
-                {groupActive}/{groupItems.length} actif{groupActive > 1 ? 's' : ''}
+                {t('livreurSecConfidentialite.groupBadge', { count: groupActive, total: groupItems.length })}
               </div>
             </div>
 
@@ -221,7 +248,7 @@ export default function SecConfidentialite({ data, saving, dirty, onPop, savePri
                             textTransform: 'uppercase' as const,
                             transition:    'all .2s',
                           }}>
-                            {isOn ? 'Actif' : 'Inactif'}
+                            {isOn ? t('livreurSecConfidentialite.statusActif') : t('livreurSecConfidentialite.statusInactif')}
                           </span>
                         </div>
                         <div className={ps.srSub}>{item.sub}</div>
@@ -260,11 +287,7 @@ export default function SecConfidentialite({ data, saving, dirty, onPop, savePri
         lineHeight:   1.6,
       }}>
         <i className="fas fa-circle-info" style={{ color: 'var(--teal)', marginTop: 2, flexShrink: 0, fontSize: 12 }} />
-        <span>
-          Conformément au RGPD et aux lois locales sur la protection des données, vous pouvez modifier
-          ces préférences à tout moment. La localisation en temps réel est toujours désactivée hors
-          missions actives, quel que soit ce paramètre.
-        </span>
+        <span>{t('livreurSecConfidentialite.legalNote')}</span>
       </div>
 
       {/* Bouton sauvegarder */}
@@ -292,8 +315,8 @@ export default function SecConfidentialite({ data, saving, dirty, onPop, savePri
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
         >
           {saving
-            ? <><i className="fas fa-circle-notch fa-spin" /> Sauvegarde en cours…</>
-            : <><i className="fas fa-cloud-arrow-up" /> Sauvegarder les préférences</>
+            ? <><i className="fas fa-circle-notch fa-spin" /> {t('livreurSecConfidentialite.saving')}</>
+            : <><i className="fas fa-cloud-arrow-up" /> {t('livreurSecConfidentialite.saveButton')}</>
           }
         </button>
       </div>

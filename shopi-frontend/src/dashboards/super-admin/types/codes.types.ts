@@ -86,15 +86,6 @@ export interface Admin {
   paysAssigne: string | null;
 }
 
-/* ── Santé des services (mock — non branché sur une API réelle) ────────────── */
-export interface HealthService {
-  name:   string;
-  val:    number;
-  unit:   string;
-  color:  string;
-  status: string;
-}
-
 /* ── État global du hook useSuperAdminState ──────────────────────────────── */
 export interface SuperAdminState {
   section:          SectionId;

@@ -1,0 +1,43 @@
+{
+  "livreurOverview": {
+    "missionActive": {
+      "label": "Active mission",
+      "timeLeft": "Time remaining",
+      "voirCommande": "View order",
+      "details": "Trip details"
+    },
+    "kpis": {
+      "livraisonsMois": "Deliveries this month",
+      "revenusMois": "Earnings this month",
+      "noteMoyenne": "Average rating",
+      "boutiquesAbonnees": "Subscribed shops"
+    },
+    "chart": {
+      "title": "Earnings",
+      "semaine": "Week",
+      "mois": "Month",
+      "empty": "No earnings recorded for this period.",
+      "totalLabel": "Total:",
+      "moyJourLabel": "Avg./day:"
+    },
+    "missions": {
+      "title": "My missions",
+      "toutes": "All",
+      "empty": "No missions in progress right now."
+    },
+    "evaluation": {
+      "title": "My rating",
+      "noRatingYet": "No rating yet — complete your first deliveries."
+    },
+    "activite": {
+      "title": "Recent activity",
+      "empty": "No recent activity"
+    },
+    "time": {
+      "instant": "Just now",
+      "minutesAgo": "{{count}} min ago",
+      "heuresAgo": "{{count}}h ago",
+      "joursAgo": "{{count}}d ago"
+    }
+  }
+}

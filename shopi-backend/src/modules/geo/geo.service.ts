@@ -150,6 +150,29 @@ export class GeoService {
     }));
   }
 
+  /* ── BUG CORRIGÉ — Vérifie la permission granulaire "geo_zones" ────────
+   * DEFAULT_PERMISSIONS (admins.service.ts) définit "geo_zones" ("Zones
+   * de livraison") et le super-admin peut déjà l'accorder/la retirer via
+   * setPermission() (section "Permissions" du dashboard super-admin) —
+   * mais RIEN ne la vérifiait jamais côté serveur : n'importe quel admin
+   * pouvait créer/modifier/supprimer des zones (donc leur `fraisLivraison`,
+   * le tarif de livraison réellement facturé au client) que le super-admin
+   * la lui ait accordée ou non. Même famille de bug que celui corrigé pour
+   * TeamPermissionGuard (company-team) — "case cochée en base, jamais
+   * vérifiée". Un super-admin passe toujours (mêmes critères que
+   * assertEditable/assertCountryScope ci-dessous). ── */
+  private async assertZonePermission(callerRole: UserRole, userId?: string): Promise<void> {
+    if (callerRole !== UserRole.ADMIN) return;
+    if (!userId) throw new ForbiddenException('Authentification requise.');
+    const admin = await this.adminRepo.findOne({ where: { userId } });
+    const perms = admin?.permissions as Record<string, boolean> | null;
+    if (!perms?.geo_zones) {
+      throw new ForbiddenException(
+        "Vous n'avez pas la permission de gérer les zones de livraison. Contactez le super-administrateur.",
+      );
+    }
+  }
+
   /* ── Vérifie qu'un admin ne touche pas un item du super-admin ── */
   private async assertEditable(auteur: string, callerRole: UserRole, userId?: string): Promise<void> {
     if (callerRole === UserRole.ADMIN && SUPER_ADMIN_AUTHORS.has(auteur)) {
@@ -672,7 +695,13 @@ export class GeoService {
     return items.map(i => serialize(i as any, 0));
   }
 
-  async createZone(dto: CreateGeoItemDto, actorEmail = 'Super Admin', actorUserId: string | null = null): Promise<GeoItemResponse> {
+  async createZone(
+    dto: CreateGeoItemDto,
+    actorEmail = 'Super Admin',
+    actorUserId: string | null = null,
+    callerRole: UserRole = UserRole.SUPER_ADMIN,
+  ): Promise<GeoItemResponse> {
+    await this.assertZonePermission(callerRole, actorUserId ?? undefined);
     const existing = await this.zoneRepo.findOne({ where: { code: dto.code.toUpperCase() } });
     if (existing) throw new ConflictException(`Une zone avec le code "${dto.code}" existe déjà.`);
     const couvertureIds = dto.couvertureIds ?? [];
@@ -699,6 +728,7 @@ export class GeoService {
   }
 
   async updateZone(id: string, dto: CreateGeoItemDto, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<GeoItemResponse> {
+    await this.assertZonePermission(callerRole, userId);
     const item = await this.zoneRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Zone ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'zone', callerRole, userId);
@@ -726,6 +756,7 @@ export class GeoService {
   }
 
   async removeZone(id: string, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<void> {
+    await this.assertZonePermission(callerRole, userId);
     const item = await this.zoneRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Zone ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'zone', callerRole, userId);
@@ -738,6 +769,7 @@ export class GeoService {
   }
 
   async toggleZone(id: string, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<GeoItemResponse> {
+    await this.assertZonePermission(callerRole, userId);
     const item = await this.zoneRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Zone ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'zone', callerRole, userId);
@@ -797,6 +829,53 @@ export class GeoService {
     }));
   }
 
+  /* ── Cherche, parmi les zones ACTIVES d'un niveau de couverture donné,
+   * celle qui couvre l'id donné (couvertureIds est un tableau jsonb —
+   * filtré en mémoire, la table des zones reste de taille modeste). ── */
+  private async findZoneCovering(entityId: string, type: import('../../database/entities/geo/geo-zone.entity').ZoneCoverageType): Promise<GeoZone | null> {
+    const zones = await this.zoneRepo.find({ where: { couvertureType: type, statut: 'actif' } });
+    return zones.find(z => z.couvertureIds?.includes(entityId)) ?? null;
+  }
+
+  /* ── BUG CORRIGÉ — résout le VRAI tarif de livraison applicable à une
+   * destination (nom de commune ou de préfecture — "ville" au sens du
+   * frontend, voir villesByIndicatif() ci-dessous qui renvoie déjà des
+   * préfectures sous ce nom). Auparavant, commande-creation.service.ts
+   * fixait `fraisLivraison = 0` en dur pour TOUTE commande réelle, et le
+   * frontend affichait un tarif inventé (celui du livreur, ou un mock) au
+   * lieu de la vraie zone configurée par l'administrateur (super-admin →
+   * geo_zones). Remonte du niveau le plus précis (commune) au moins
+   * précis (préfecture → région parente) si aucune zone n'est configurée
+   * exactement sur la commune. Retourne fraisLivraison=0 et zoneNom=null
+   * si rien n'est configuré pour cette destination — jamais un montant
+   * inventé. ── */
+  async resolveFraisLivraison(villeNom?: string | null): Promise<{ fraisLivraison: number; zoneNom: string | null }> {
+    const nom = villeNom?.trim();
+    if (!nom) return { fraisLivraison: 0, zoneNom: null };
+
+    const commune = await this.commRepo.findOne({ where: { nom: ILike(nom) } });
+    if (commune) {
+      const zone = await this.findZoneCovering(commune.id, 'commune');
+      if (zone) return { fraisLivraison: zone.fraisLivraison, zoneNom: zone.nom };
+      if (commune.parentId) {
+        const prefZone = await this.findZoneCovering(commune.parentId, 'prefecture');
+        if (prefZone) return { fraisLivraison: prefZone.fraisLivraison, zoneNom: prefZone.nom };
+      }
+    }
+
+    const prefecture = await this.prefRepo.findOne({ where: { nom: ILike(nom) } });
+    if (prefecture) {
+      const zone = await this.findZoneCovering(prefecture.id, 'prefecture');
+      if (zone) return { fraisLivraison: zone.fraisLivraison, zoneNom: zone.nom };
+      if (prefecture.parentId) {
+        const regZone = await this.findZoneCovering(prefecture.parentId, 'region');
+        if (regZone) return { fraisLivraison: regZone.fraisLivraison, zoneNom: regZone.nom };
+      }
+    }
+
+    return { fraisLivraison: 0, zoneNom: null };
+  }
+
   /* ── Villes publiques par indicatif téléphonique ───────────────────────── */
 
   async villesByIndicatif(indicatif: string): Promise<{ id: string; nom: string; code: string }[]> {
@@ -836,6 +915,7 @@ export class GeoService {
     rows: GeoImportRowDto[],
     actorEmail: string,
     actorUserId: string | null,
+    callerRole: UserRole = UserRole.SUPER_ADMIN,
   ): Promise<GeoImportResultResponse> {
     const errors: { ligne: number; message: string }[] = [];
     let created = 0;
@@ -894,7 +974,7 @@ export class GeoService {
           case 'prefecture': await this.createPrefecture(dto, actorEmail, actorUserId); break;
           case 'commune':    await this.createCommune(dto, actorEmail, actorUserId);    break;
           case 'quartier':   await this.createQuartier(dto, actorEmail, actorUserId);   break;
-          case 'zone':       await this.createZone(dto, actorEmail, actorUserId);       break;
+          case 'zone':       await this.createZone(dto, actorEmail, actorUserId, callerRole); break;
         }
         created++;
       } catch (err) {

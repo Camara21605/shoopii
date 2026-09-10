@@ -1,0 +1,50 @@
+{
+  "livreurSecZone": {
+    "header": {
+      "titre": "Zones & Hours",
+      "sub": "Set your delivery coverage area and your working hours."
+    },
+    "typeCard": {
+      "titre": "Delivery type",
+      "lockedTitle": "Delivery type locked",
+      "lockedSub": "Changeable from {{date}}. You can update your active zones at any time.",
+      "chooseHint": "Choose your coverage area. This choice will be locked for 6 months."
+    },
+    "toasts": {
+      "typeSelected": "📦 {{label}}",
+      "allDaysOn": "✅ All days enabled",
+      "planningCleared": "⚠️ Schedule cleared",
+      "zonesSaved": "✅ Zones and availability saved",
+      "saveError": "❌ Error while saving",
+      "horairesSaved": "✅ Hours saved"
+    },
+    "zonesCard": {
+      "titlePrefix": "Zones ",
+      "selected_one": "{{count}} selected",
+      "selected_other": "{{count}} selected",
+      "emptyGeo": "No zone configured in the directory for this level.",
+      "instructions": "Enable the zones you agree to serve.",
+      "distanceLabel": "Maximum distance per delivery",
+      "saveZones": "Save zones"
+    },
+    "planningCard": {
+      "titre": "Weekly schedule",
+      "activerTout": "Enable all",
+      "effacer": "Clear",
+      "saveHoraires": "Save hours"
+    },
+    "autoDispoCard": {
+      "titre": "Automatic availability",
+      "badgeAuto": "Auto",
+      "badgeNouveau": "New"
+    },
+    "saving": "Saving…",
+    "jours": { "lun":"Mon","mar":"Tue","mer":"Wed","jeu":"Thu","ven":"Fri","sam":"Sat","dim":"Sun" },
+    "autoDispo": {
+      "pauseAuto":    { "l": "Auto-pause after 8h of work",  "sub": "Automatically go offline after 8 consecutive hours" },
+      "modeNuit":     { "l": "Night mode (10pm – 6am)",      "sub": "Receive missions at night with a rate surcharge" },
+      "repriseAuto":  { "l": "Automatic resume",             "sub": "Go back online according to your configured schedule" },
+      "pauseWeekend": { "l": "Weekend pause",                "sub": "Don't receive missions on Saturday and Sunday" }
+    }
+  }
+}

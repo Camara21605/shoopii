@@ -1,0 +1,37 @@
+{
+  "livreurSecConfidentialite": {
+    "header": {
+      "titre": "Confidentialité",
+      "sub": "Contrôlez la visibilité de vos informations et l'utilisation de vos données sur la plateforme."
+    },
+    "banner": {
+      "paramActifs_one": "{{count}} paramètre actif sur {{total}}",
+      "paramActifs_other": "{{count}} paramètres actifs sur {{total}}",
+      "desc": "Vos données ne sont jamais vendues à des tiers. Shoneya respecte votre vie privée.",
+      "partage": "partagé"
+    },
+    "groups": {
+      "visibilite": { "title": "Visibilité publique",         "desc": "Ce que les boutiques et clients voient sur votre profil." },
+      "donnees":    { "title": "Données & confidentialité",   "desc": "Comment Shoneya utilise vos données pour améliorer le service." }
+    },
+    "groupBadge_one": "{{count}}/{{total}} actif",
+    "groupBadge_other": "{{count}}/{{total}} actifs",
+    "items": {
+      "showRating":        { "l": "Afficher ma note",                "sub": "Votre note moyenne est visible sur votre profil public" },
+      "showDeliveryCount": { "l": "Afficher mon nombre de livraisons","sub": "Visible sur votre profil public" },
+      "showInSearch":      { "l": "Apparaître dans la recherche",     "sub": "Être trouvable par de nouvelles boutiques" },
+      "shareLocation":     { "l": "Localisation en temps réel",       "sub": "Partagée uniquement durant la livraison active" },
+      "anonymizedStats":   { "l": "Statistiques anonymisées",         "sub": "Permettre à Shoneya d'utiliser vos stats pour ses rapports" },
+      "improveAlgo":       { "l": "Améliorer l'algorithme",           "sub": "Aider Shoneya à mieux vous attribuer des missions grâce à vos données" }
+    },
+    "statusActif": "Actif",
+    "statusInactif": "Inactif",
+    "legalNote": "Conformément au RGPD et aux lois locales sur la protection des données, vous pouvez modifier ces préférences à tout moment. La localisation en temps réel est toujours désactivée hors missions actives, quel que soit ce paramètre.",
+    "saving": "Sauvegarde en cours…",
+    "saveButton": "Sauvegarder les préférences",
+    "toasts": {
+      "saved": "Paramètres de confidentialité sauvegardés",
+      "saveError": "Erreur lors de la sauvegarde"
+    }
+  }
+}

@@ -74,12 +74,27 @@ function useCollabToken(): string | null {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   Lien de PARRAINAGE partenaire — ?ref=slug, déposé par la page
+   publique /rejoindre/:slug (voir router.tsx + PublicReferralPage)
+   après résolution + comptage du clic côté backend. Contrairement à
+   useInviteParams ci-dessus, ne verrouille NI le rôle NI l'email : un
+   lien de parrainage ne cible aucun rôle précis (voir REFERRAL_ELIGIBLE_
+   ROLES côté backend) et n'est jamais nominatif.
+───────────────────────────────────────────────────────────────*/
+function useReferralParam(): string | null {
+  const [params] = useSearchParams();
+  const raw = params.get('ref')?.trim() ?? '';
+  return raw.length > 0 ? raw : null;
+}
+
+/* ─────────────────────────────────────────────────────────────
    COMPOSANT
 ───────────────────────────────────────────────────────────────*/
 const Login: React.FC = () => {
   // ✅ useSearchParams → lecture de l'URL APRÈS le montage du router
   const { lockedRole, prefilledCode, prefilledEmail, isInvited } = useInviteParams();
   const collabToken   = useCollabToken();
+  const referralSlug  = useReferralParam();
   const navigate      = useNavigate();
   const [searchParams] = useSearchParams();
   const [collabInviteError, setCollabInviteError] = useState<string | null>(null);
@@ -134,7 +149,7 @@ const Login: React.FC = () => {
     // ✅ Politique d'inscription publique
     openSignup,
     codeRequiredForCompany,
-  } = useLoginPage({ initialTab: isInvited ? 'register' : 'login' });
+  } = useLoginPage({ initialTab: (isInvited || referralSlug) ? 'register' : 'login' });
 
   /* ── Retour du callback Google OAuth ──────────────────────────────────────
      Le backend redirige vers /login?token=JWT  (succès)
@@ -186,6 +201,16 @@ const Login: React.FC = () => {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInvited]);
+
+  // ✅ Lien de parrainage (?ref=slug) — ouvre Inscription et transmet le
+  // slug tel quel dans registerData ; ne verrouille ni rôle ni email
+  // (voir useReferralParam ci-dessus).
+  useEffect(() => {
+    if (!referralSlug) return;
+    switchTab('register');
+    setRegisterData(prev => ({ ...prev, referralSlug }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [referralSlug]);
 
   /* ✅ Invitation collaborateur (company-team) — récupère les infos
    * (prénom/nom/email/poste) depuis le serveur puis pré-remplit

@@ -1,0 +1,17 @@
+{
+  "livreurRefuseModal": {
+    "titre": "Refuser la mission {{id}}",
+    "warning": "Cette mission sera retirée de votre liste. L'entreprise (ou le client) devra choisir un autre livreur.",
+    "motifLabel": "Motif du refus (obligatoire)",
+    "reasons": {
+      "tropLoin": "Trop loin",
+      "indisponible": "Indisponible",
+      "horsZone": "Zone hors couverture",
+      "autre": "Autre"
+    },
+    "precisezPlaceholder": "Précisez le motif…",
+    "annuler": "Annuler",
+    "enCours": "En cours…",
+    "confirmer": "Confirmer le refus"
+  }
+}

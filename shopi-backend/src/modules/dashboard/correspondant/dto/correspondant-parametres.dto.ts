@@ -12,7 +12,7 @@
 
 import {
   IsOptional, IsString, MaxLength, IsEnum,
-  IsBoolean, IsInt, IsArray, IsObject,
+  IsBoolean, IsInt, IsArray, IsObject, IsNumber,
   Min, Max, IsPositive, ValidateIf,
   Matches, ValidateNested,
 } from 'class-validator';
@@ -104,6 +104,21 @@ export class UpdateDepotDto {
 
   @IsOptional() @IsString()
   depotRepere?: string;
+
+  /**
+   * BUG CORRIGÉ — Correspondent.depotLatitude/depotLongitude existent
+   * bien comme colonnes (voir correspondant-profile.entity.ts) mais
+   * n'apparaissaient jamais dans ce DTO : le ValidationPipe global
+   * (whitelist) les supprimait silencieusement avant même d'atteindre
+   * DepotService.updateDepot() — le sélecteur GPS de SecDepot.tsx
+   * affichait "GPS enregistré : lat, lng" en confirmation, mais la
+   * position n'était en réalité jamais persistée.
+   */
+  @IsOptional() @IsNumber() @Min(-90) @Max(90)
+  depotLatitude?: number;
+
+  @IsOptional() @IsNumber() @Min(-180) @Max(180)
+  depotLongitude?: number;
 
   /**
    * Numéro public du relais affiché aux clients.

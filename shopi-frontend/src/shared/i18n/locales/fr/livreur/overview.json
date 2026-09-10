@@ -1,0 +1,43 @@
+{
+  "livreurOverview": {
+    "missionActive": {
+      "label": "Mission active",
+      "timeLeft": "Temps restant",
+      "voirCommande": "Voir la commande",
+      "details": "Détails de la course"
+    },
+    "kpis": {
+      "livraisonsMois": "Livraisons ce mois",
+      "revenusMois": "Revenus ce mois",
+      "noteMoyenne": "Note moyenne",
+      "boutiquesAbonnees": "Boutiques abonnées"
+    },
+    "chart": {
+      "title": "Revenus",
+      "semaine": "Semaine",
+      "mois": "Mois",
+      "empty": "Aucun revenu enregistré sur cette période.",
+      "totalLabel": "Total :",
+      "moyJourLabel": "Moy./jour :"
+    },
+    "missions": {
+      "title": "Mes missions",
+      "toutes": "Toutes",
+      "empty": "Aucune mission en cours pour le moment."
+    },
+    "evaluation": {
+      "title": "Mon évaluation",
+      "noRatingYet": "Pas encore de note — effectuez vos premières livraisons."
+    },
+    "activite": {
+      "title": "Activité récente",
+      "empty": "Aucune activité récente"
+    },
+    "time": {
+      "instant": "À l'instant",
+      "minutesAgo": "Il y a {{count}} min",
+      "heuresAgo": "Il y a {{count}}h",
+      "joursAgo": "Il y a {{count}}j"
+    }
+  }
+}
