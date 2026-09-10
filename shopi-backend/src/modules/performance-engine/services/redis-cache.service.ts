@@ -38,6 +38,7 @@ import { InjectRedis }        from '@nestjs-modules/ioredis';
 import Redis                  from 'ioredis';
 
 import { CacheStats } from '../types/performance.types';
+import { withRedisTimeout } from '../../../common/utils/redis-timeout.util';
 
 /* ============================================================
  * CONSTANTES
@@ -45,6 +46,19 @@ import { CacheStats } from '../types/performance.types';
 
 /** TTL par défaut : 5 minutes */
 const DEFAULT_TTL_SEC = 300;
+
+/** Délai max toléré pour un aller-retour Redis — voir redis-timeout.util.ts.
+ *  BUG CORRIGÉ : ce service n'avait jusqu'ici qu'un try/catch autour de
+ *  chaque appel ioredis, qui ne protège que contre un REJET explicite
+ *  (ECONNREFUSED, etc.). Un accroc de connexion (reconnexion en cours,
+ *  commande mise en attente dans la file offline d'ioredis) ne rejette
+ *  jamais — la promesse reste juste non résolue indéfiniment. Comme
+ *  PlatformSettingsCacheService (branding, maintenanceGuard, exécuté sur
+ *  QUASIMENT CHAQUE requête de la plateforme) dépend de ce service, un
+ *  simple accroc Redis pouvait geler silencieusement tout le site,
+ *  page après page — reproduit en direct : GET /public/branding sans
+ *  aucune réponse pendant 20-30s+ alors que /health restait rapide. */
+const REDIS_OP_TIMEOUT_MS = 2_000;
 
 /** TTL maximum autorisé : 24 heures */
 const MAX_TTL_SEC = 86_400;
@@ -81,9 +95,13 @@ export class RedisCacheService {
    * Ne propage jamais d'exception.
    */
   async get<T>(key: string): Promise<T | null> {
+    const TIMEOUT = Symbol('timeout');
     try {
-      const raw = await this.redis.get(this.prefix(key));
-      if (raw === null) {
+      const raw = await withRedisTimeout<string | null | typeof TIMEOUT>(
+        () => this.redis.get(this.prefix(key)),
+        TIMEOUT, REDIS_OP_TIMEOUT_MS, this.logger, `cache.get:${key}`,
+      );
+      if (raw === TIMEOUT || raw === null) {
         this.misses++;
         return null;
       }
@@ -111,11 +129,9 @@ export class RedisCacheService {
   async set<T>(key: string, value: T, ttlSec = DEFAULT_TTL_SEC): Promise<void> {
     try {
       const safeTtl = Math.min(Math.max(1, ttlSec), MAX_TTL_SEC);
-      await this.redis.set(
-        this.prefix(key),
-        JSON.stringify(value),
-        'EX',
-        safeTtl,
+      await withRedisTimeout(
+        () => this.redis.set(this.prefix(key), JSON.stringify(value), 'EX', safeTtl),
+        null, REDIS_OP_TIMEOUT_MS, this.logger, `cache.set:${key}`,
       );
     } catch (err) {
       this.logger.warn(`[Cache] set(${key}) erreur Redis: ${(err as Error).message}`);
@@ -132,7 +148,10 @@ export class RedisCacheService {
    */
   async del(key: string): Promise<void> {
     try {
-      await this.redis.del(this.prefix(key));
+      await withRedisTimeout(
+        () => this.redis.del(this.prefix(key)),
+        0, REDIS_OP_TIMEOUT_MS, this.logger, `cache.del:${key}`,
+      );
     } catch (err) {
       this.logger.warn(`[Cache] del(${key}) erreur Redis: ${(err as Error).message}`);
     }
@@ -192,7 +211,10 @@ export class RedisCacheService {
    */
   async exists(key: string): Promise<boolean> {
     try {
-      const n = await this.redis.exists(this.prefix(key));
+      const n = await withRedisTimeout(
+        () => this.redis.exists(this.prefix(key)),
+        0, REDIS_OP_TIMEOUT_MS, this.logger, `cache.exists:${key}`,
+      );
       return n > 0;
     } catch {
       return false;
@@ -204,7 +226,10 @@ export class RedisCacheService {
    */
   async ttl(key: string): Promise<number> {
     try {
-      return await this.redis.ttl(this.prefix(key));
+      return await withRedisTimeout(
+        () => this.redis.ttl(this.prefix(key)),
+        -1, REDIS_OP_TIMEOUT_MS, this.logger, `cache.ttl:${key}`,
+      );
     } catch {
       return -1;
     }
