@@ -176,6 +176,33 @@
     "toasts": {
       "loadError": "❌ خطأ في التحميل: {{message}}",
       "suspendu": "🚫 تم إيقاف {{name}}"
+    },
+    "reseau": {
+      "tabs": {
+        "equipe": "فريقي",
+        "suivis": "المتابَعون",
+        "decouvrir": "اكتشف"
+      },
+      "type": {
+        "regional": "إقليمي",
+        "zonal": "منطقي",
+        "national": "وطني"
+      },
+      "enLigne": "متصل",
+      "horsLigne": "غير متصل",
+      "loading": "جارٍ تحميل مراسلي المنصة…",
+      "searchPlaceholder": "ابحث عن مراسل في المنصة…",
+      "voirProfil": "عرض الملف الشخصي",
+      "missionsCount_one": "{{count}} مهمة",
+      "missionsCount_other": "{{count}} مهمة",
+      "emptySuivis": {
+        "title": "أنت لا تتابع أي مراسل",
+        "sub": "تابع المراسلين من قسم «اكتشف» لتجدهم هنا."
+      },
+      "emptyDecouvrir": {
+        "title": "لا يوجد مراسل لاكتشافه",
+        "sub": "أنت تتابع بالفعل جميع مراسلي المنصة، أو لا يوجد ما يطابق بحثك."
+      }
     }
   }
 }

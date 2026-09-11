@@ -34,10 +34,6 @@
       "galerie": "图库"
     },
     "sidebar": {
-      "contacterPrenom": "联系{{prenom}}",
-      "envoyerMessage": "发送消息",
-      "whatsappToast": "📱 WhatsApp",
-      "appelToast": "📞 通话",
       "contactsDetailles": "详细联系方式",
       "statistiques": "统计",
       "abonnesTitle": "关注者",

@@ -20,8 +20,6 @@
   margin-bottom: 20px;
   overflow: hidden;
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr auto;
 }
 .heroBg {
   position: absolute; inset: 0;
@@ -74,55 +72,31 @@
   display: flex; align-items: center; gap: 7px; cursor: pointer; transition: all .2s;
 }
 .hb2:hover { background: var(--g100); color: var(--t1); }
-.heroRight { padding: 22px 28px; display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
-.hs {
-  background: var(--white); border: 1.5px solid var(--bdr2);
-  border-radius: 16px; padding: 16px 20px; text-align: center; min-width: 100px; transition: all .2s;
-  box-shadow: var(--sh-xs);
-}
-.hs:hover { background: var(--sky); border-color: var(--bdrb); }
-.hsVal {
-  font-family: var(--fd, 'Syne', sans-serif); font-size: 22px; font-weight: 900;
-  color: var(--t1); letter-spacing: -.5px; line-height: 1;
-  display: flex; align-items: baseline; justify-content: center; gap: 4px;
-}
-.hsUnit  { font-size: 11px; font-weight: 700; color: var(--t2); }
-.hsLbl   { font-size: 9.5px; color: var(--t4); text-transform: uppercase; letter-spacing: .5px; margin-top: 3px; }
-.hsTrend { display: flex; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 800; margin-top: 5px; }
-.hsTrend.up { color: var(--t2); }
-.hsTrend.dn { color: var(--t1); }
-/* Workaround pour .up/.dn utilisés aussi comme classes simples */
-.up  { color: var(--t2); }
-.dn  { color: var(--t1); }
 
-/* ══ KPI GRID ══════════════════════════════════════════════════ */
-.kpiGrid { display: grid; grid-template-columns: repeat(4,1fr); gap: 13px; margin-bottom: 20px; }
-.kpi {
-  background: var(--white, #fff); border: 1.5px solid rgba(11,31,58,.08);
-  border-radius: 22px; padding: 20px;
-  box-shadow: 0 1px 4px rgba(11,31,58,.06);
-  position: relative; overflow: hidden; transition: all .25s;
+/* ══ KPI — ligne simple, sans cartes ══════════════════════════
+   Remplace l'ancien hero-right (3 cartes, masquées sur mobile) et
+   l'ancienne grille de 4 grandes cartes empilées (doublon quasi
+   complet du hero-right) par une seule ligne compacte, identique
+   sur toutes les tailles d'écran. */
+.kpiGrid {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 18px 30px; margin-bottom: 20px;
+  padding-bottom: 16px; border-bottom: 1px solid var(--bdr2);
 }
-.kpi:hover { border-color: rgba(128,128,128,.25); transform: translateY(-3px); box-shadow: 0 6px 24px rgba(11,31,58,.1); }
-.kpiStripe { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 3px 3px 0 0; }
-.k1 .kpiStripe { background: linear-gradient(90deg,var(--t2),var(--t2)); }
-.k2 .kpiStripe { background: linear-gradient(90deg,var(--t2),var(--t2)); }
-.k3 .kpiStripe { background: linear-gradient(90deg,var(--t2),var(--t2)); }
-.k4 .kpiStripe { background: linear-gradient(90deg,var(--t2),var(--t2)); }
-.kpiTop  { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 13px; }
-.kpiIcon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-.k1 .kpiIcon { background: var(--sky-2, var(--g100)); }
-.k2 .kpiIcon { background: rgba(128,128,128,.08); }
-.k3 .kpiIcon { background: rgba(128,128,128,.08); }
-.k4 .kpiIcon { background: rgba(128,128,128,.08); }
-.kpiBadge { font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 999px; }
+.kpi { display: flex; align-items: center; gap: 9px; }
+.kpiIcon { font-size: 17px; line-height: 1; flex-shrink: 0; }
+.kpiBadge { font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
 .kpiBadge.up  { background: rgba(128,128,128,.1);  color: var(--emerald, var(--t2)); }
 .kpiBadge.dn  { background: rgba(128,128,128,.1);   color: var(--t1); }
 .kpiBadge.neu { background: var(--g100, #F1F3F5); color: var(--t3, #9CA3AF); }
-/* Les composés utilisés avec styles[k.trend] */
+/* Composé utilisé via styles[k.trend] */
 .neu { background: var(--g100, #F1F3F5); color: var(--t3, #9CA3AF); }
-.kpiVal { font-family: var(--fd, 'Fraunces', serif); font-size: 27px; font-weight: 900; color: var(--navy, #0B1F3A); letter-spacing: -.5px; line-height: 1; }
-.kpiLbl { font-size: 12px; color: var(--t3, #9CA3AF); margin-top: 5px; font-weight: 600; }
+.kpiVal {
+  font-family: var(--fd, 'Fraunces', serif); font-size: 17px; font-weight: 900;
+  color: var(--navy, #0B1F3A); letter-spacing: -.3px; line-height: 1.2;
+  display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
+}
+.kpiLbl { font-size: 10.5px; color: var(--t3, #9CA3AF); margin-top: 2px; font-weight: 600; }
 
 /* ══ FILTRES ═══════════════════════════════════════════════════ */
 .filters     { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
@@ -546,9 +520,6 @@
   .tipsCard { grid-column: 1 / -1; }
 }
 @media (max-width: 860px) {
-  .hero       { grid-template-columns: 1fr; }
-  .heroRight  { display: none; }
-  .kpiGrid    { grid-template-columns: repeat(2,1fr); }
   .promoGrid  { grid-template-columns: 1fr; }
   .aside      { grid-template-columns: 1fr; }
   .typeGrid   { grid-template-columns: repeat(2,1fr); }
@@ -556,14 +527,14 @@
   .scopeOpt   { flex-wrap: wrap; }
 }
 @media (max-width: 560px) {
-  .kpiGrid    { grid-template-columns: 1fr 1fr; }
+  .kpiGrid    { gap: 12px 20px; }
   .filterTabs { overflow-x: auto; }
   .heroLeft   { padding: 20px; }
   .overlay    { padding: 10px; align-items: flex-end; }
   .modal      { border-radius: 20px 20px 0 0; max-height: 95vh; width: 100%; max-width: 100%; }
 }
 @media (max-width: 420px) {
-  .kpiGrid, .typeGrid { grid-template-columns: 1fr; }
+  .typeGrid { grid-template-columns: 1fr; }
 }
 
 

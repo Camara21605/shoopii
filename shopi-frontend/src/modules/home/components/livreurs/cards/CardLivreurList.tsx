@@ -1,11 +1,13 @@
 /* ================================================================
  * FICHIER : src/modules/home/components/livreurs/cards/CardLivreurList.tsx
  *
- * RÔLE : Carte livreur — vue LISTE (ligne horizontale compacte).
+ * RÔLE : Carte livreur — seule vue possible désormais (ligne horizontale
+ *        compacte). La vue grille (CardLivreurGrid) a été retirée : deux
+ *        vues à maintenir pour un seul usage réel côté utilisateurs.
  *
- * Même logique que CardLivreurGrid : le suivi est délégué au composant
- * partagé FollowButton (qui fait lui-même l'appel API), cette carte
- * reste juste un composant d'affichage. Route harmonisée : /livreurs/:id.
+ * Le suivi est délégué au composant partagé FollowButton (qui fait
+ * lui-même l'appel API), cette carte reste juste un composant
+ * d'affichage. Route harmonisée : /livreurs/:id.
  * ================================================================ */
 
 import React, { useState } from 'react';

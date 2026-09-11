@@ -15,6 +15,7 @@ import {
   CreateHelpArticleDto, UpdateHelpArticleDto,
   CreateFaqItemDto, UpdateFaqItemDto,
 } from '../dto/help.dto';
+import { HelpArticleStatus } from '../../../database/entities/help/help-article.entity';
 
 @Controller('admin/help')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -60,16 +61,36 @@ export class HelpAdminController {
   /* ── Articles ── */
 
   @Get('articles')
-  getArticles(@Query('page') page?: string, @Query('limit') limit?: string) {
+  getArticles(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('categoryId') categoryId?: string,
+  ) {
+    const validStatus = status && Object.values(HelpArticleStatus).includes(status as HelpArticleStatus)
+      ? (status as HelpArticleStatus)
+      : undefined;
     return this.articles.findAllAdmin(
       parseInt(page ?? '1', 10),
       parseInt(limit ?? '30', 10),
+      search || undefined,
+      validStatus,
+      categoryId || undefined,
     );
   }
 
   @Post('articles')
   createArticle(@Body() dto: CreateHelpArticleDto, @Request() req: any) {
     return this.articles.create(dto, req.user.id);
+  }
+
+  /* Contenu complet d'un article, tous statuts (draft/published/archived)
+   * — pour le formulaire d'édition admin. Voir HelpArticleService
+   * .findByIdAdmin() pour le contexte du bug corrigé. */
+  @Get('articles/:id')
+  getArticleById(@Param('id') id: string) {
+    return this.articles.findByIdAdmin(id);
   }
 
   @Patch('articles/:id')

@@ -196,6 +196,29 @@
     "toasts": {
       "loadError": "❌ Loading error: {{message}}",
       "suspendu": "🚫 {{name}} suspended"
+    },
+    "reseau": {
+      "tabs": {
+        "equipe": "My team",
+        "suivis": "Following",
+        "decouvrir": "Discover"
+      },
+      "loading": "Loading platform couriers…",
+      "searchPlaceholder": "Search a courier on the platform…",
+      "voirProfil": "View profile",
+      "disponible": "Available",
+      "indisponible": "Unavailable",
+      "livraisonsCount_one": "{{count}} delivery",
+      "livraisonsCount_other": "{{count}} deliveries",
+      "chargerPlus": "Load more",
+      "emptySuivis": {
+        "title": "You're not following any courier",
+        "sub": "Follow couriers from the \"Discover\" tab to find them here."
+      },
+      "emptyDecouvrir": {
+        "title": "No courier to discover",
+        "sub": "You're already following every courier on the platform, or none match your search."
+      }
     }
   }
 }

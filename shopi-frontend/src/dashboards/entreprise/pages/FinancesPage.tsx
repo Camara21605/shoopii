@@ -63,15 +63,15 @@ export default function FinancesPage() {
 
       <div className="kpi-grid">
         {BALANCE_STATS.map((s, i) => (
-          <div key={i} className={`kpi ${s.k}`}>
-            <div className="kpi-stripe"></div>
-            <div className="kpi-top">
-              <div className="kpi-icon">{s.ic}</div>
-              <span className="kpi-badge up">{s.trend}</span>
+          <div key={i} className="kpi">
+            <span className="kpi-icon">{s.ic}</span>
+            <div>
+              <div className="kpi-val">
+                {s.v} <span className="kpi-sub">{t('finances.gnf')}</span>
+                <span className="kpi-badge up">{s.trend}</span>
+              </div>
+              <div className="kpi-lbl">{s.l}</div>
             </div>
-            <div className="kpi-val" style={{ fontSize: 20 }}>{s.v}</div>
-            <div className="kpi-lbl">{s.l}</div>
-            <div className="kpi-sub">{t('finances.gnf')}</div>
           </div>
         ))}
       </div>

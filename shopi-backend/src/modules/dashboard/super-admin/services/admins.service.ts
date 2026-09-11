@@ -44,10 +44,15 @@ export const DEFAULT_PERMISSIONS: Record<string, boolean> = {
 };
 
 export interface AdminPermDto {
-  name:        string;
-  email:       string;
-  perms:       Record<string, boolean>;
-  paysAssigne: string | null;
+  name:          string;
+  email:         string;
+  perms:         Record<string, boolean>;
+  paysAssigne:   string | null;
+  /* "Communauté" support — voir SupportPermissionService.resolveAdminScope().
+   * Les trois sont indépendants : un admin peut avoir un pays assigné pour
+   * le référentiel géo ET une ville ou zone différente pour le support. */
+  villeAssignee: string | null;
+  zoneId:        string | null;
 }
 
 @Injectable()
@@ -80,10 +85,12 @@ export class AdminsService {
     });
 
     return admins.map(a => ({
-      name:        a.fullName,
-      email:       a.user?.email ?? '',
-      perms:       { ...DEFAULT_PERMISSIONS, ...(a.permissions ?? {}) },
-      paysAssigne: a.paysAssigne ?? null,
+      name:          a.fullName,
+      email:         a.user?.email ?? '',
+      perms:         { ...DEFAULT_PERMISSIONS, ...(a.permissions ?? {}) },
+      paysAssigne:   a.paysAssigne ?? null,
+      villeAssignee: a.villeAssignee ?? null,
+      zoneId:        a.zoneId ?? null,
     }));
   }
 
@@ -181,7 +188,9 @@ export class AdminsService {
     return {
       ...DEFAULT_PERMISSIONS,
       ...(admin.permissions ?? {}),
-      _paysAssigne: admin.paysAssigne ?? null,
+      _paysAssigne:   admin.paysAssigne ?? null,
+      _villeAssignee: admin.villeAssignee ?? null,
+      _zoneId:        admin.zoneId ?? null,
     };
   }
 
@@ -231,6 +240,98 @@ export class AdminsService {
     }
 
     return { message: 'Pays assigné mis à jour.', paysAssigne: paysId };
+  }
+
+  /* ── Assigner / retirer une ville (préfecture) à un admin — "communauté"
+   * support, voir SupportPermissionService.resolveAdminScope(). Même
+   * structure que setAssignedCountry(). ── */
+  async setAssignedVille(
+    email:  string,
+    villeId: string | null,
+    caller: User,
+  ): Promise<{ message: string; villeAssignee: string | null }> {
+    this.assertIsSuperAdmin(caller);
+
+    const admin = await this.adminRepo.findOne({
+      relations: ['user'],
+      where: { user: { email, role: UserRole.ADMIN } },
+    });
+    if (!admin) throw new NotFoundException('Administrateur introuvable.');
+
+    admin.villeAssignee = villeId;
+    await this.adminRepo.save(admin);
+
+    await this.auditLog.log(
+      caller, '🏙️',
+      villeId
+        ? `a assigné la ville "${villeId}" à ${email} (communauté support)`
+        : `a retiré l'assignation de ville de ${email} (communauté support)`,
+      { type: 'admin', id: admin.id },
+    );
+
+    if (villeId) {
+      this.notifSvc.create({
+        recipientType: NotificationActorType.ADMIN,
+        recipientId:   admin.id,
+        actorType:     NotificationActorType.SUPER_ADMIN,
+        actorId:       caller.id,
+        type:          NotificationType.ACCOUNT_APPROVED,
+        priority:      NotificationPriority.HIGH,
+        title:         'Communauté support assignée',
+        body:          'Le super-administrateur vous a assigné une ville — vous gérez désormais aussi le support des acteurs de cette ville.',
+        actionUrl:     '/dashboard/admin',
+        resourceType:  'support_communaute',
+        resourceId:    admin.id,
+      }).catch(() => {});
+    }
+
+    return { message: 'Ville assignée mise à jour.', villeAssignee: villeId };
+  }
+
+  /* ── Assigner / retirer une zone de livraison à un admin — "communauté"
+   * support la plus flexible (une GeoZone couvre un ensemble arbitraire
+   * d'éléments géo). Même structure que setAssignedCountry(). ── */
+  async setAssignedZone(
+    email:  string,
+    zoneId: string | null,
+    caller: User,
+  ): Promise<{ message: string; zoneId: string | null }> {
+    this.assertIsSuperAdmin(caller);
+
+    const admin = await this.adminRepo.findOne({
+      relations: ['user'],
+      where: { user: { email, role: UserRole.ADMIN } },
+    });
+    if (!admin) throw new NotFoundException('Administrateur introuvable.');
+
+    admin.zoneId = zoneId;
+    await this.adminRepo.save(admin);
+
+    await this.auditLog.log(
+      caller, '📍',
+      zoneId
+        ? `a assigné la zone "${zoneId}" à ${email} (communauté support)`
+        : `a retiré l'assignation de zone de ${email} (communauté support)`,
+      { type: 'admin', id: admin.id },
+    );
+
+    if (zoneId) {
+      this.notifSvc.create({
+        recipientType: NotificationActorType.ADMIN,
+        recipientId:   admin.id,
+        actorType:     NotificationActorType.SUPER_ADMIN,
+        actorId:       caller.id,
+        type:          NotificationType.ACCOUNT_APPROVED,
+        priority:      NotificationPriority.HIGH,
+        title:         'Communauté support assignée',
+        body:          'Le super-administrateur vous a assigné une zone — vous gérez désormais aussi le support des acteurs de cette zone.',
+        actionUrl:     '/dashboard/admin',
+        resourceType:  'support_communaute',
+        resourceId:    admin.id,
+      }).catch(() => {});
+    }
+
+    return { message: 'Zone assignée mise à jour.', zoneId };
   }
 
   /* ── Profil de l'admin connecté ── */

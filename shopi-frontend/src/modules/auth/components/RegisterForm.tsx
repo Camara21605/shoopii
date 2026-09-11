@@ -11,6 +11,7 @@ import { CodeBlock }              from './CodeBlock';
 import { CorrespondantCodeBlock } from './CorrespondantCodeBlock';
 import { PasswordStrengthBar }    from './PasswordStrengthBar';
 import LocationPermission         from './LocationPermission';
+import CompanyLocationSelect, { type CompanyLocationValue } from './CompanyLocationSelect';
 import { usePasswordStrength }    from '../hooks/usePasswordStrength';
 import { ROLE_CONFIGS }           from '../roleConfigs';
 import { apiFetch }               from '../../../shared/services/apiFetch';
@@ -20,7 +21,17 @@ import type {
 } from '../types';
 import type { PhoneCountryMeta } from './PhoneInput';
 
-const LOCATION_ROLES: UserRole[] = ['company', 'delivery', 'partner', 'correspondent'];
+/*
+ * BUG CORRIGÉ — la localisation était optionnelle pour tous (boutons
+ * "Ignorer" dans LocationPermission) et 'client' en était même exclu.
+ * Obligatoire désormais pour tous les rôles ci-dessous : détection
+ * automatique (GPS + repli carte manuelle) pour client/delivery/
+ * partner/correspondent, sélection manuelle dans le référentiel géo
+ * (Pays → Région → Préfecture → Commune) pour company — voir
+ * CompanyLocationSelect.tsx, une entreprise n'est pas forcément à
+ * l'endroit où elle s'inscrit.
+ */
+const LOCATION_ROLES: UserRole[] = ['client', 'company', 'delivery', 'partner', 'correspondent'];
 
 interface CompanyTypeOption { id: string; nom: string; icone: string | null; }
 interface VilleOption       { id: string; nom: string; code: string; }
@@ -53,6 +64,11 @@ interface RegisterFormProps {
   /** Poste renseigné par l'entreprise à l'invitation — affiché en lecture
    *  seule (n'est jamais saisi par le collaborateur lui-même). */
   collabJobTitle?: string;
+  /** Feedback léger (toast) — utilisé pour les liens CGU/confidentialité
+   *  de l'étape Sécurité : aucune de ces pages légales n'existe encore
+   *  (vérifié dans router.tsx, même constat que Footer.tsx), donc un
+   *  clic ne doit ni fabriquer un faux texte légal ni rester muet. */
+  onToast?: (msg: string) => void;
 }
 
 const TOTAL_STEPS = 5;
@@ -68,16 +84,19 @@ const STEP_META = [
 const STEP_INFO = [
   { title: 'Votre compte',       sub: 'Choisissez votre rôle et entrez votre email'   },
   { title: 'Votre identité',     sub: 'Prénom, nom et nom de votre structure'          },
-  { title: 'Votre profil',       sub: 'Date de naissance et genre (optionnel)'         },
+  { title: 'Votre profil',       sub: 'Date de naissance et genre'                     },
   { title: 'Vos coordonnées',    sub: "Numéro de téléphone et ville d'origine"         },
   { title: 'Votre mot de passe', sub: 'Sécurisez votre compte pour finaliser'          },
 ];
 
 const STEP_FIELDS: Record<number, (keyof RegisterFormData)[]> = {
   1: ['activationCode', 'email'],
-  2: ['firstName', 'lastName'],
-  3: [],
-  4: ['phone'],
+  /* shopName/companyTypeId : sans effet pour les rôles autres que
+   * "company" (voir validateRegisterField dans useLoginPage.ts) —
+   * inclus inconditionnellement ici, pas besoin de connaître le rôle. */
+  2: ['firstName', 'lastName', 'shopName', 'companyTypeId'],
+  3: ['birthDate', 'gender'],
+  4: ['phone', 'location'],
   5: ['password', 'confirmPassword', 'terms'],
 };
 
@@ -86,7 +105,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   onDataChange, onRoleSelect, onSubmit, onSwitchToLogin,
   lockedRole = null, prefilledCode = '', onlyClientRole = false,
   clientRegistrationClosed = false, codeRequiredForCompany = true,
-  onValidateStep, isCollabInvite = false, collabJobTitle,
+  onValidateStep, isCollabInvite = false, collabJobTitle, onToast,
 }) => {
   const [step,     setStep]     = useState(1);
   const [animDir,  setAnimDir]  = useState<'forward' | 'backward'>('forward');
@@ -188,17 +207,36 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     onDataChange({ countryCode: meta.countryCode, countryName: meta.countryName, dialCode: meta.dialCode });
   };
 
+  /* BUG CORRIGÉ — marquait toujours locationDone=true, même quand loc
+   * était null (bouton "Ignorer", désormais retiré de LocationPermission
+   * — voir ce fichier). Ne complète l'étape que sur une position
+   * effectivement fournie : la localisation est obligatoire. */
   const handleLocationComplete = (loc: RegistrationLocation | null) => {
-    if (loc) {
-      onDataChange({
-        latitude: loc.latitude ?? undefined, longitude: loc.longitude ?? undefined,
-        locationAccuracy: loc.locationAccuracy ?? undefined,
-        address: loc.address ?? undefined, city: loc.city ?? undefined,
-        district: loc.district ?? undefined, region: loc.region ?? undefined,
-        country: loc.country ?? undefined, postalCode: loc.postalCode ?? undefined,
-        gpsEnabled: loc.gpsEnabled ?? false,
-      } as any);
-    }
+    if (!loc) return;
+    onDataChange({
+      latitude: loc.latitude ?? undefined, longitude: loc.longitude ?? undefined,
+      locationAccuracy: loc.locationAccuracy ?? undefined,
+      address: loc.address ?? undefined, city: loc.city ?? undefined,
+      district: loc.district ?? undefined, region: loc.region ?? undefined,
+      country: loc.country ?? undefined, postalCode: loc.postalCode ?? undefined,
+      gpsEnabled: loc.gpsEnabled ?? false,
+    });
+    setLocationDone(true);
+  };
+
+  /* Localisation manuelle entreprise — voir CompanyLocationSelect.tsx.
+   * Alimente les mêmes champs "affichage" que handleLocationComplete
+   * (city/district/region/country → loc.* côté backend, auth.service.ts)
+   * + les références structurées companyPaysId/companyVilleId. */
+  const handleCompanyLocationComplete = (loc: CompanyLocationValue) => {
+    onDataChange({
+      companyPaysId:  loc.paysId,
+      companyVilleId: loc.prefectureId,
+      country:  loc.paysNom,
+      region:   loc.regionNom,
+      city:     loc.prefectureNom,
+      district: loc.communeNom,
+    });
     setLocationDone(true);
   };
 
@@ -378,7 +416,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         <FieldInput
           id="regShopName" label="Nom de la boutique / entreprise" icon="fas fa-store"
           placeholder="Nom de votre entreprise" value={data.shopName ?? ''}
-          onChange={val => onDataChange({ shopName: val })}
+          onChange={val => onDataChange({ shopName: val })} error={errors.shopName}
         />
       )}
       {selectedRole === 'company' && !isCollabInvite && (
@@ -391,8 +429,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             <select
               className="field-input"
               style={{ paddingLeft: 36, appearance: 'none', cursor: 'pointer' }}
-              value={(data as any).companyTypeId ?? ''}
-              onChange={e => onDataChange({ companyTypeId: e.target.value } as any)}
+              value={data.companyTypeId ?? ''}
+              onChange={e => onDataChange({ companyTypeId: e.target.value })}
               disabled={companyTypesLoading}
             >
               <option value="">{companyTypesLoading ? 'Chargement…' : "Choisir un type d'entreprise…"}</option>
@@ -402,6 +440,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             </select>
             <i className="fas fa-chevron-down" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--t3)', fontSize: 11, pointerEvents: 'none' }} />
           </div>
+          {errors.companyTypeId && (
+            <p style={{ margin: '5px 0 0', fontSize: 11, color: 'var(--rose,red)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <i className="fas fa-circle-exclamation" style={{ fontSize: 10 }} />
+              {errors.companyTypeId}
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -412,30 +456,30 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     <div className="fields">
       <div className="field-group">
         <div className="field-label">
-          Date de naissance{' '}
-          <span style={{ color: 'var(--t3)', fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 10 }}>
-            (optionnel)
-          </span>
+          Date de naissance <span style={{ color: 'var(--rose,red)' }}>*</span>
         </div>
         <div className="field-wrap">
           <i className="fas fa-calendar" style={{ position: 'absolute', left: 14, color: 'var(--t3)', fontSize: 13, pointerEvents: 'none', zIndex: 1 }} />
           <input
             type="date"
             className="field-input"
-            value={(data as any).birthDate ?? ''}
-            onChange={e => onDataChange({ birthDate: e.target.value } as any)}
+            value={data.birthDate ?? ''}
+            onChange={e => onDataChange({ birthDate: e.target.value })}
             max={new Date(new Date().setFullYear(new Date().getFullYear() - 13)).toISOString().split('T')[0]}
             style={{ paddingLeft: 40 }}
           />
         </div>
+        {errors.birthDate && (
+          <p style={{ margin: '5px 0 0', fontSize: 11, color: 'var(--rose,red)', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <i className="fas fa-circle-exclamation" style={{ fontSize: 10 }} />
+            {errors.birthDate}
+          </p>
+        )}
       </div>
 
       <div className="field-group">
         <div className="field-label">
-          Genre{' '}
-          <span style={{ color: 'var(--t3)', fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 10 }}>
-            (optionnel)
-          </span>
+          Genre <span style={{ color: 'var(--rose,red)' }}>*</span>
         </div>
         <div className="gender-grid">
           {[
@@ -446,14 +490,20 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           ].map(opt => (
             <button
               key={opt.value} type="button"
-              className={`gender-opt${(data as any).gender === opt.value ? ' selected' : ''}`}
-              onClick={() => onDataChange({ gender: opt.value } as any)}
+              className={`gender-opt${data.gender === opt.value ? ' selected' : ''}`}
+              onClick={() => onDataChange({ gender: opt.value })}
             >
               <span className="gender-opt-icon">{opt.icon}</span>
               <span className="gender-opt-lbl">{opt.label}</span>
             </button>
           ))}
         </div>
+        {errors.gender && (
+          <p style={{ margin: '5px 0 0', fontSize: 11, color: 'var(--rose,red)', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <i className="fas fa-circle-exclamation" style={{ fontSize: 10 }} />
+            {errors.gender}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -474,32 +524,35 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           Pays détecté : <strong>{data.countryName}</strong> ({data.dialCode})
         </div>
       )}
-      {needsLocation && !locationDone && (
+      {needsLocation && !locationDone && selectedRole === 'company' && (
+        <CompanyLocationSelect onComplete={handleCompanyLocationComplete} />
+      )}
+      {needsLocation && !locationDone && selectedRole !== 'company' && (
         <LocationPermission defaultCountryName={data.countryName} onComplete={handleLocationComplete} />
       )}
       {needsLocation && locationDone && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '9px 13px',
-          background: data.latitude ? '#ecfdf5' : 'var(--sky-2,#f0f4ff)',
-          border: `1.5px solid ${data.latitude ? '#a7f3d0' : 'var(--sky-3,#c7d9f8)'}`,
+          padding: '9px 13px', background: '#ecfdf5', border: '1.5px solid #a7f3d0',
           borderRadius: 10, fontSize: 12.5,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <i className={`fas ${data.latitude ? 'fa-location-dot' : 'fa-location-slash'}`}
-              style={{ color: data.latitude ? '#047857' : 'var(--t3)' }} />
-            {data.latitude
-              ? <span style={{ color: '#065f46', fontWeight: 600 }}>
-                  Position enregistrée{data.city ? ` — ${data.city}` : ''}
-                </span>
-              : <span style={{ color: 'var(--t2)' }}>Position ignorée</span>
-            }
+            <i className="fas fa-location-dot" style={{ color: '#047857' }} />
+            <span style={{ color: '#065f46', fontWeight: 600 }}>
+              Position enregistrée{data.city ? ` — ${data.city}` : ''}
+            </span>
           </div>
           <button type="button" onClick={() => setLocationDone(false)}
             style={{ background: 'none', border: 'none', color: 'var(--blue)', fontSize: 11.5, cursor: 'pointer', fontWeight: 600 }}>
             Modifier
           </button>
         </div>
+      )}
+      {needsLocation && errors.location && !locationDone && (
+        <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--rose,red)', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <i className="fas fa-circle-exclamation" style={{ fontSize: 10 }} />
+          {errors.location}
+        </p>
       )}
       {!needsLocation && (
         <div className="field-group">
@@ -551,6 +604,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           id="regPwd" label="Mot de passe" icon="fas fa-lock" type="password"
           placeholder="Créez un mot de passe fort" value={data.password}
           onChange={handlePasswordChange} error={errors.password}
+          autoComplete="new-password"
         />
         <PasswordStrengthBar strength={strength} show={showStrength} />
       </div>
@@ -558,6 +612,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         id="regPwd2" label="Confirmer le mot de passe" icon="fas fa-lock" type="password"
         placeholder="Répétez votre mot de passe" value={data.confirmPassword}
         onChange={val => onDataChange({ confirmPassword: val })} error={errors.confirmPassword}
+        autoComplete="new-password"
       />
       {errors.general && (
         <div style={{ color: 'var(--rose,red)', fontSize: 12, padding: '8px 12px', background: 'var(--rose-dim,#fff0f0)', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -574,9 +629,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           />
           <span>
             J&apos;accepte les{' '}
-            <a href="#" style={{ color: 'var(--blue)', fontWeight: 700 }} onClick={e => e.preventDefault()}>conditions d&apos;utilisation</a>
+            <a href="#" style={{ color: 'var(--blue)', fontWeight: 700 }}
+              onClick={e => { e.preventDefault(); onToast?.('📄 Conditions d\'utilisation — page bientôt disponible.'); }}>
+              conditions d&apos;utilisation
+            </a>
             {' '}et la{' '}
-            <a href="#" style={{ color: 'var(--blue)', fontWeight: 700 }} onClick={e => e.preventDefault()}>politique de confidentialité</a>
+            <a href="#" style={{ color: 'var(--blue)', fontWeight: 700 }}
+              onClick={e => { e.preventDefault(); onToast?.('📄 Politique de confidentialité — page bientôt disponible.'); }}>
+              politique de confidentialité
+            </a>
             {' '}de Shoneya. <span style={{ color: 'var(--rose,red)', fontWeight: 700 }}>*</span>
           </span>
         </label>

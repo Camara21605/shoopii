@@ -1,0 +1,42 @@
+/* ============================================================
+ * CorrespondantsKpi.module.css
+ *
+ * Surcharges des 4 cartes KPI de CorrespondantsPage.tsx (onglet
+ * "Mon équipe") — miroir exact de LivreursKpi.module.css.
+ *
+ * Objectif : les 4 cartes restent sur UNE seule ligne à toutes les
+ * largeurs, y compris mobile — CorrespondantsPage.module.css les
+ * empile en 2 puis 1 colonne sous 800px/420px, on force donc
+ * repeat(4, 1fr) en permanence, avec un resserrement supplémentaire
+ * en dessous de 520px pour garder chaque carte lisible.
+ * ============================================================ */
+
+.grid4 {
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+/* 4 colonnes en permanence → le texte ne doit jamais faire déborder
+   la carte ni casser la grille, quelle que soit la largeur. */
+.valTight,
+.labelTight,
+.subTight {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 520px) {
+  .cardTight {
+    padding: 6px 4px !important;
+    gap: 4px !important;
+  }
+  .iconTight {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 6px !important;
+    font-size: 9px !important;
+  }
+  .valTight   { font-size: 11px !important; }
+  .labelTight { font-size: 7px !important; line-height: 1.15 !important; }
+  .subTight   { display: none !important; }
+}

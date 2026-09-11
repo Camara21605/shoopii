@@ -100,14 +100,46 @@ export class HelpArticleService {
 
   /* ── Côté admin ──────────────────────────────────────────── */
 
-  async findAllAdmin(page = 1, limit = 30) {
-    const [data, total] = await this.artRepo.findAndCount({
-      select: ['id', 'slug', 'title', 'status', 'categoryId', 'viewCount', 'publishedAt', 'createdAt'],
-      order: { updatedAt: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+  /*
+   * Filtres optionnels ajoutés pour supporter une vraie pagination côté
+   * admin (HelpCenterSection.tsx) : sans ça, activer la pagination tout
+   * en gardant le filtrage recherche/statut/catégorie côté frontend
+   * aurait limité silencieusement ces filtres à la seule page chargée
+   * (un article correspondant à la recherche mais situé page 3 restait
+   * introuvable en étant sur la page 1).
+   */
+  async findAllAdmin(
+    page = 1, limit = 30,
+    search?: string, status?: HelpArticleStatus, categoryId?: string,
+  ) {
+    const qb = this.artRepo.createQueryBuilder('a')
+      .select([
+        'a.id', 'a.slug', 'a.title', 'a.status', 'a.categoryId', 'a.viewCount',
+        'a.publishedAt', 'a.createdAt', 'a.helpfulCount', 'a.notHelpfulCount',
+      ])
+      .orderBy('a.updatedAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    if (search)     qb.andWhere('a.title ILIKE :search', { search: `%${search}%` });
+    if (status)     qb.andWhere('a.status = :status', { status });
+    if (categoryId) qb.andWhere('a.categoryId = :categoryId', { categoryId });
+
+    const [data, total] = await qb.getManyAndCount();
     return { data, total, page, pages: Math.ceil(total / limit) };
+  }
+
+  /*
+   * BUG CORRIGÉ — le formulaire d'édition admin (HelpCenterSection.tsx
+   * openEdit) chargeait le contenu complet via GET /help/articles/:slug
+   * (route PUBLIQUE, findBySlug ci-dessus), qui filtre status:PUBLISHED.
+   * Un article vient toujours de naître en DRAFT (voir create()) : tenter
+   * de le modifier avant sa première publication renvoyait 404
+   * (ArticleNotFoundException), rendant tout brouillon non éditable. Cette
+   * méthode (contenu complet, tous statuts) est réservée à l'admin —
+   * findByIdOrFail() existait déjà mais n'était jamais exposée. */
+  async findByIdAdmin(id: string): Promise<HelpArticle> {
+    return this.findByIdOrFail(id);
   }
 
   async create(dto: CreateHelpArticleDto, authorId: string) {
@@ -188,7 +220,7 @@ export class HelpArticleService {
   }
 
   async getAnalytics() {
-    const [total, published, noResults] = await Promise.all([
+    const [total, published, noResults, satisfaction] = await Promise.all([
       this.artRepo.count(),
       this.artRepo.count({ where: { status: HelpArticleStatus.PUBLISHED } }),
       this.dataSource.query(
@@ -199,14 +231,26 @@ export class HelpArticleService {
          ORDER BY count DESC
          LIMIT 20`,
       ),
+      /* Totaux "utile / pas utile" tous articles confondus — permet un
+       * taux de satisfaction global affiché en Analytiques, plutôt que
+       * ces retours ne restant visibles que par article. */
+      this.artRepo
+        .createQueryBuilder('a')
+        .select('SUM(a.helpfulCount)', 'helpful')
+        .addSelect('SUM(a.notHelpfulCount)', 'notHelpful')
+        .getRawOne<{ helpful: string | null; notHelpful: string | null }>(),
     ]);
 
     const topViewed = await this.artRepo.find({
       where: { status: HelpArticleStatus.PUBLISHED },
-      select: ['id', 'slug', 'title', 'viewCount'],
+      select: ['id', 'slug', 'title', 'viewCount', 'helpfulCount', 'notHelpfulCount'],
       order: { viewCount: 'DESC' },
       take: 10,
     });
+
+    const helpfulTotal    = parseInt(satisfaction?.helpful ?? '0', 10) || 0;
+    const notHelpfulTotal = parseInt(satisfaction?.notHelpful ?? '0', 10) || 0;
+    const feedbackTotal   = helpfulTotal + notHelpfulTotal;
 
     return {
       total,
@@ -214,6 +258,13 @@ export class HelpArticleService {
       draft: total - published,
       topArticles:       topViewed,
       zeroResultQueries: noResults,
+      satisfaction: {
+        helpfulTotal,
+        notHelpfulTotal,
+        /* null si aucun retour n'a encore été soumis — distingue "0%" de
+         * "pas de données", important pour l'affichage admin. */
+        rate: feedbackTotal > 0 ? Math.round((helpfulTotal / feedbackTotal) * 100) : null,
+      },
     };
   }
 

@@ -34,10 +34,21 @@ import { Partner }       from '../../database/entities/profiles/partenaire-profi
 import { Company }       from '../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery }      from '../../database/entities/profiles/livreur-profile.entity';
 import { Correspondent } from '../../database/entities/profiles/correspondant-profile.entity';
+/* Admin — nécessaire pour SupportPermissionGuard (vérification permissions.support)
+ * et SupportPermissionService (communauté support pays/ville/zone) */
+import { Admin }         from '../../database/entities/profiles/admin-profile.entity';
+/* GeoZone — nécessaire pour SupportPermissionService (communauté "zone") */
+import { GeoZone }       from '../../database/entities/geo/geo-zone.entity';
+/* User — nécessaire pour ConversationService (résolution email pour la notif de réponse) */
+import { User }          from '../../database/entities/user.entity';
 
 import { MailModule }          from '../email/email.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { UploadModule }        from '../upload/upload.module';
+/* AuthModule — fournit JwtModule + SessionModule, nécessaires à
+ * SupportGateway pour authentifier les connexions Socket.IO (même
+ * pattern que MessagerieModule). */
+import { AuthModule }          from '../auth/auth.module';
 
 /* ── Sous-services (responsabilité unique) ─────────────────── */
 import { TicketService }       from './services/ticket.service';
@@ -56,12 +67,25 @@ import { SupportClientController } from './controllers/support-client.controller
 import { SupportAgentController }  from './controllers/support-agent.controller';
 import { SupportPublicController } from './controllers/support-public.controller';
 
+/* ── Garde de permission ──────────────────────────────────────── */
+import { SupportPermissionGuard } from './guards/support-permission.guard';
+
+/* ── Temps réel (fil de ticket en direct) ──────────────────────── */
+import { SupportGateway }           from './gateways/support.gateway';
+import { SupportBroadcastService }  from './services/support-broadcast.service';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       SupportTicket, SupportMessage, Attachment,
       /* Profils nécessaires pour SupportPermissionService */
       Partner, Company, Delivery, Correspondent,
+      /* Nécessaire pour SupportPermissionGuard + communauté support */
+      Admin,
+      /* Nécessaire pour SupportPermissionService (communauté "zone") */
+      GeoZone,
+      /* Nécessaire pour ConversationService (résolution email) */
+      User,
     ]),
 
     /* Emails de confirmation (création ticket) et notification (réponse agent) */
@@ -74,6 +98,9 @@ import { SupportPublicController } from './controllers/support-public.controller
     /* UploadModule — Cloudinary pour les pièces jointes support.
      * Exporte UploadService injecté dans AttachmentService. */
     UploadModule,
+
+    /* JwtModule + SessionModule pour SupportGateway (auth Socket.IO) */
+    AuthModule,
   ],
 
   providers: [
@@ -92,6 +119,13 @@ import { SupportPublicController } from './controllers/support-public.controller
     SupportStatsService,
     SupportExportService,
     SupportSuggestService,
+
+    /* Garde de permission — voir support-permission.guard.ts */
+    SupportPermissionGuard,
+
+    /* Temps réel — voir support.gateway.ts / support-broadcast.service.ts */
+    SupportGateway,
+    SupportBroadcastService,
   ],
 
   controllers: [

@@ -35,39 +35,25 @@
 .tabActiveBadge { background: rgba(255,255,255,.2); }
 .tabInactiveBadge { background: var(--sky-3); color: var(--t2); }
 
-/* ── KPI strip ── */
+/* ── KPI strip ── plus de cartes (bordure/ombre/fond) — juste
+   icône + valeur + libellé en ligne, séparés du reste par un simple
+   trait en bas. Classes partagées par RetourStats.tsx et SavPanel.tsx. */
 .kpiStrip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 18px 30px; margin-bottom: 18px;
+  padding-bottom: 14px; border-bottom: 1px solid var(--bdr);
 }
-@media (max-width: 900px) { .kpiStrip { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 500px) { .kpiStrip { grid-template-columns: 1fr; } }
 
-.kpiCard {
-  background: var(--white);
-  border: 1.5px solid var(--bdr);
-  border-radius: var(--r-xl);
-  padding: 16px 18px;
-  box-shadow: var(--sh-xs);
-  display: flex; flex-direction: column; gap: 4px;
-  position: relative; overflow: hidden;
-}
-.kpiStripe {
-  position: absolute; top: 0; left: 0; right: 0;
-  height: 3px; border-radius: 3px 3px 0 0;
-}
-.kpiIcon { font-size: 22px; margin-bottom: 6px; }
+.kpiCard { display: flex; align-items: center; gap: 8px; }
+.kpiIcon { font-size: 16px; line-height: 1; flex-shrink: 0; }
 .kpiVal {
   font-family: var(--fd,'Fraunces',serif);
-  font-size: 26px; font-weight: 900; color: var(--navy);
-  line-height: 1;
+  font-size: 16px; font-weight: 900; color: var(--navy);
+  line-height: 1.2; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
 }
-.kpiLbl { font-size: 11px; color: var(--t3); text-transform: uppercase; letter-spacing: .5px; }
+.kpiLbl { font-size: 10.5px; color: var(--t3); text-transform: uppercase; letter-spacing: .4px; margin-top: 2px; }
 .kpiBadge {
-  position: absolute; top: 14px; right: 14px;
-  font-size: 9.5px; font-weight: 900; padding: 2px 8px;
+  font-size: 9px; font-weight: 900; padding: 1px 7px;
   border-radius: 999px;
 }
 
@@ -358,7 +344,7 @@
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .toolbar { gap: 8px; }
-  .kpiStrip { grid-template-columns: repeat(2, 1fr); }
+  .kpiStrip { gap: 12px 20px; }
   .modal { max-width: 100% !important; margin: 0; border-radius: 20px 20px 0 0; max-height: 95vh; }
   .overlay { align-items: flex-end; padding: 0; }
 }

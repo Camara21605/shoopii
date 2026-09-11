@@ -196,6 +196,29 @@
     "toasts": {
       "loadError": "❌ Erreur de chargement : {{message}}",
       "suspendu": "🚫 {{name}} suspendu"
+    },
+    "reseau": {
+      "tabs": {
+        "equipe": "Mon équipe",
+        "suivis": "Abonnements",
+        "decouvrir": "Découvrir"
+      },
+      "loading": "Chargement des livreurs de la plateforme…",
+      "searchPlaceholder": "Rechercher un livreur de la plateforme…",
+      "voirProfil": "Voir profil",
+      "disponible": "Disponible",
+      "indisponible": "Indisponible",
+      "livraisonsCount_one": "{{count}} livraison",
+      "livraisonsCount_other": "{{count}} livraisons",
+      "chargerPlus": "Charger plus",
+      "emptySuivis": {
+        "title": "Vous ne suivez aucun livreur",
+        "sub": "Abonnez-vous à des livreurs depuis l'onglet « Découvrir » pour les retrouver ici."
+      },
+      "emptyDecouvrir": {
+        "title": "Aucun livreur à découvrir",
+        "sub": "Tous les livreurs de la plateforme sont déjà suivis, ou aucun ne correspond à votre recherche."
+      }
     }
   }
 }

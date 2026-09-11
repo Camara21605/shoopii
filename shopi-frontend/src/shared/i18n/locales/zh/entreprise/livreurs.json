@@ -196,6 +196,29 @@
     "toasts": {
       "loadError": "❌ 加载错误：{{message}}",
       "suspendu": "🚫 {{name}} 已暂停"
+    },
+    "reseau": {
+      "tabs": {
+        "equipe": "我的团队",
+        "suivis": "已关注",
+        "decouvrir": "发现"
+      },
+      "loading": "正在加载平台配送员…",
+      "searchPlaceholder": "搜索平台上的配送员…",
+      "voirProfil": "查看资料",
+      "disponible": "可接单",
+      "indisponible": "不可用",
+      "livraisonsCount_one": "{{count}} 次配送",
+      "livraisonsCount_other": "{{count}} 次配送",
+      "chargerPlus": "加载更多",
+      "emptySuivis": {
+        "title": "您还没有关注任何配送员",
+        "sub": "在「发现」标签中关注配送员，即可在此找到他们。"
+      },
+      "emptyDecouvrir": {
+        "title": "没有可发现的配送员",
+        "sub": "您已关注平台上的所有配送员，或没有配送员匹配您的搜索。"
+      }
     }
   }
 }

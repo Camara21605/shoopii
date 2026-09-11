@@ -38,6 +38,11 @@
       "beneficeSub": "Marge: {{marge}}% · Commissions: {{commission}} GNF",
       "margeBadge": "{{marge}}% marge"
     },
+    "tabs": {
+      "ventes": "Ventes",
+      "commandes": "Commandes",
+      "activite": "Activité"
+    },
     "charts": {
       "caMensuel": "Chiffre d'affaires mensuel",
       "noSalesDelivered": "Aucune vente livrée pour l'instant.",

@@ -63,6 +63,10 @@ import {
 } from '../../../../database/entities/follow/follow.entity';
 import { Client } from '../../../../database/entities/profiles/client-profile.entity';
 import { Correspondent } from '../../../../database/entities/profiles/correspondant-profile.entity';
+import { Company } from '../../../../database/entities/profiles/entreprise-profile.entity';
+
+/* ── Référentiel géographique réel (zones de livraison) ── */
+import { GeoService } from '../../../geo/geo.service';
 
 /* ── DTO ── */
 import { QueryLivreursDto } from './dto/query-livreurs.dto';
@@ -134,6 +138,11 @@ export class LivreursClientService {
 
     @InjectRepository(Correspondent)
     private readonly correspondantRepo: Repository<Correspondent>,
+
+    @InjectRepository(Company)
+    private readonly companyRepo: Repository<Company>,
+
+    private readonly geoService: GeoService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────────
@@ -150,15 +159,24 @@ export class LivreursClientService {
     /* Set des id de PROFILS livreurs suivis / masqués par l'utilisateur connecté.
      * hiddenIds doit être résolu AVANT la requête paginée (exclusion en SQL,
      * pas en JS après coup) sinon `total`/la pagination seraient faussés. */
-    const [followedIds, hiddenIds] = await Promise.all([
+    const [followedIds, hiddenIds, myCompanyId] = await Promise.all([
       this.getFollowedIds(userId),
       this.getHiddenIds(userId),
+      this.resolveOwnCompanyId(userId),
     ]);
 
     const qb = this.buildBaseQuery();
     this.applyFilters(qb, dto);
     if (hiddenIds.size > 0) {
       qb.andWhere('lp.id NOT IN (:...hiddenIds)', { hiddenIds: [...hiddenIds] });
+    }
+    /* Un livreur créé/invité par CETTE entreprise ne doit apparaître ni
+     * dans ses "Abonnements" ni dans son "Découvrir" — il est déjà dans
+     * "Mon équipe". Les AUTRES entreprises (et tout autre rôle) le voient
+     * normalement : exclusion résolue côté serveur depuis le JWT, jamais
+     * depuis une valeur envoyée par le client. */
+    if (myCompanyId) {
+      qb.andWhere('(lp.companyId IS NULL OR lp.companyId != :myCompanyId)', { myCompanyId });
     }
     this.applySorting(qb, dto);
     qb.skip((page - 1) * limit).take(limit);
@@ -240,31 +258,34 @@ export class LivreursClientService {
 
   /* ──────────────────────────────────────────────────────────────
    * getZoneCounts
-   * Nombre de livreurs actifs par commune de Conakry, pour le filtre
-   * "Zone de livraison" de la sidebar /livreurs. Même correspondance
-   * zone/communesActives que applyFilters() (voir ci-dessous) — une
-   * commune peut être la zone principale du livreur OU une de ses
-   * communes actives secondaires.
+   * Nombre de livreurs actifs par commune, pour le filtre "Zone de
+   * livraison" de la sidebar /livreurs. Les communes viennent du
+   * référentiel géographique réel (geo_communes, actives uniquement
+   * — voir GeoService.itemsByNiveau) et non plus d'une liste figée :
+   * la liste reflète donc exactement ce que les admins ont configuré
+   * dans la gestion des zones. Même correspondance zone/communesActives
+   * que applyFilters() (voir ci-dessous) — une commune peut être la
+   * zone principale du livreur OU une de ses communes actives
+   * secondaires.
    * ────────────────────────────────────────────────────────────── */
   async getZoneCounts(): Promise<{ value: string; label: string; count: number }[]> {
-    const COMMUNES = ['Kaloum', 'Ratoma', 'Matam', 'Dixinn', 'Matoto'];
+    const [total, communes] = await Promise.all([
+      this.buildBaseQuery().getCount(),
+      this.geoService.itemsByNiveau('commune'),
+    ]);
 
-    const total = await this.buildBaseQuery().getCount();
-
-    /* BUG CORRIGÉ — Promise.all() lançait les 5 requêtes en parallèle sur
-     * le même client pg (pool à une seule connexion ici), ce qui déclenche
-     * "Calling client.query() when the client is already executing a
-     * query" côté driver et fait planter la requête en 500. Séquentiel,
-     * une requête à la fois — 5 COUNT() restent négligeables en latence. */
+    /* Séquentiel (pas Promise.all) — le pool pg utilisé ici ne supporte
+     * pas plusieurs requêtes concurrentes sur le même client (voir bug
+     * historique déjà rencontré sur cette méthode). */
     const perCommune: { value: string; label: string; count: number }[] = [];
-    for (const commune of COMMUNES) {
+    for (const commune of communes) {
       const count = await this.buildBaseQuery()
         .andWhere(
           '(LOWER(lp.zone) LIKE LOWER(:c) OR LOWER("lp"."communesActives"::text) LIKE LOWER(:c))',
-          { c: `%${commune}%` },
+          { c: `%${commune.nom}%` },
         )
         .getCount();
-      perCommune.push({ value: commune.toLowerCase(), label: commune, count });
+      perCommune.push({ value: commune.nom.toLowerCase(), label: commune.nom, count });
     }
 
     return [{ value: 'all', label: 'Toutes les zones', count: total }, ...perCommune];
@@ -374,6 +395,33 @@ export class LivreursClientService {
     });
 
     return new Set(rows.map(r => r.targetId));
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * resolveOwnCompanyId (PRIVÉ)
+   * Résout le companyId de l'entreprise connectée (userId), pour
+   * exclure SES PROPRES livreurs des listes /suivis/livreurs
+   * (Abonnements/Découvrir — cf. getLivreurs()). Retourne null pour
+   * tout autre rôle (client, livreur, correspondant, anonyme) :
+   * aucune exclusion à appliquer dans ce cas.
+   *
+   * Résolu entièrement côté serveur depuis userId (issu du JWT) —
+   * jamais depuis une valeur transmise par le client.
+   * ────────────────────────────────────────────────────────────── */
+  private async resolveOwnCompanyId(userId?: string): Promise<string | null> {
+    if (!userId) return null;
+
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      select: ['id', 'role'],
+    });
+    if (!user || user.role !== UserRole.COMPANY) return null;
+
+    const company = await this.companyRepo.findOne({
+      where: { userId },
+      select: ['id'],
+    });
+    return company?.id ?? null;
   }
 
   /* ──────────────────────────────────────────────────────────────

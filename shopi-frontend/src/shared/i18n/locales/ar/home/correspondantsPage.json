@@ -42,17 +42,6 @@
       "correspondantCount_one": "{{count}} مراسل",
       "correspondantCount_other": "{{count}} مراسلين"
     },
-    "card": {
-      "enLigne": "متصل",
-      "horsLigne": "غير متصل",
-      "avisCount": "({{count}} تقييم)",
-      "missions": "المهام",
-      "fiabilite": "الموثوقية",
-      "experience": "الخبرة",
-      "abonne": "متابَع",
-      "suivre": "متابعة",
-      "voirProfilComplet": "عرض الملف الكامل ←"
-    },
     "sidebar": {
       "typeDeCorrespondant": "نوع المراسل",
       "types": {

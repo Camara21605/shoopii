@@ -26,11 +26,20 @@
  */
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../../shared/context/ToastContext';
 import { useTeamPermissions } from '../hooks/useTeamPermissions';
+import { useLivreurs } from '../../../modules/home/components/livreurs/hooks/useLivreurs';
+import type { LivreurItem } from '../../../modules/home/components/livreurs/data/livreursMockData';
+import { useAuthGate } from '../../../shared/hooks/useAuthGate';
+import FollowButton from '../../../shared/components/FollowButton';
+import rowStyles from '../../../modules/home/components/livreurs/styles/CardLivreurList.module.css';
 import styles from './CorrespondantsPage.module.css';
+import kpi from './LivreursKpi.module.css';
+import team from './TeamListRow.module.css';
 import {
   livreursApi,
   type LivreurResponse,
@@ -63,10 +72,22 @@ function fmtGnf(n: number): string {
   if (n >= 1_000)     return `${Math.round(n / 1_000)}K`;
   return n.toLocaleString('fr-FR');
 }
-function randomChars(n: number): string {
-  const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  return Array.from({ length: n }, () => alpha[Math.floor(Math.random() * alpha.length)]).join('');
+/** Message d'erreur sûr à afficher dans un toast, quelle que soit la
+ *  forme de l'exception attrapée (catch ne garantit pas un Error). */
+function getErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
 }
+
+// ─────────────────────────────────────────────────────────────
+// KPI CARDS — styles compacts (surcharge inline, sans toucher
+// CorrespondantsPage.module.css qui est partagé avec CorrespondantsPage.tsx)
+// ─────────────────────────────────────────────────────────────
+
+const statCardCompact:  CSSProperties = { padding: '9px 10px', gap: 8, borderRadius: 10 };
+const statIconCompact:  CSSProperties = { width: 26, height: 26, borderRadius: 7, fontSize: 11 };
+const statValCompact:   CSSProperties = { fontSize: 15, marginBottom: 0 };
+const statLabelCompact: CSSProperties = { fontSize: 10, lineHeight: 1.25 };
+const statSubCompact:   CSSProperties = { fontSize: 8.5, marginTop: 0 };
 
 // ─────────────────────────────────────────────────────────────
 // CONFIG VISUEL
@@ -270,8 +291,8 @@ function ModalContacter({ l, onClose }: { l: LivreurResponse; onClose: () => voi
       await livreursApi.contacter(l.id, { sujet: sujet.trim(), message: message.trim() });
       pop(t('livreurs.modalContacter.messageEnvoye', { name: l.fullName }), 's');
       onClose();
-    } catch (err: any) {
-      pop(`❌ ${err.message}`, 'e');
+    } catch (err) {
+      pop(`❌ ${getErrorMessage(err)}`, 'e');
     } finally { setLoading(false); }
   }
 
@@ -348,8 +369,8 @@ function ModalInviter({ onClose, onDone }: { onClose: () => void; onDone: () => 
       setResult(res);
       setEtape(3);
       pop(t('livreurs.modalInviter.invitationEnvoyee', { email }), 's');
-    } catch (err: any) {
-      pop(`❌ ${err.message}`, 'e');
+    } catch (err) {
+      pop(`❌ ${getErrorMessage(err)}`, 'e');
     } finally { setLoading(false); }
   }
 
@@ -537,6 +558,121 @@ function ModalSuspendre({ l, onClose, onConfirm, loading }: {
 }
 
 // ─────────────────────────────────────────────────────────────
+// LIGNE RÉSEAU — utilisée par les onglets "Abonnements" / "Découvrir"
+// (livreurs de toute la plateforme, distincts de l'équipe créée par
+// l'entreprise via /livreurs — cf. LivreurItem, GET /suivis/livreurs)
+//
+// Même habillage que CardLivreurList (page livreurs de home) — ligne
+// horizontale compacte type "liste d'amis" : avatar + infos à gauche,
+// note/actions à droite, séparateur fin entre lignes. Composant
+// dédié (plutôt que réutiliser CardLivreurList tel quel) car celui-ci
+// navigue en dur vers /livreurs/:id (vitrine publique) — ici on reste
+// dans le shell du dashboard entreprise.
+// ─────────────────────────────────────────────────────────────
+
+function LigneReseau({ l, onView, onPop, onRequireAuth, onChange }: {
+  l:             LivreurItem;
+  onView:        () => void;
+  onPop:         (m: string, t?: string) => void;
+  onRequireAuth: () => void;
+  onChange:      (id: string, next: { isSuivi: boolean; hidden?: boolean; removed?: boolean }) => void;
+}) {
+  const { t } = useTranslation();
+  const [imgError, setImgError] = useState(false);
+  return (
+    <div className={rowStyles.item} style={{ position: 'relative' }} onClick={onView} role="article">
+      <div className={rowStyles.ava} style={l.profilePicture && !imgError ? undefined : { background: l.avatarBg }}>
+        {l.profilePicture && !imgError
+          ? <img className={rowStyles.avaImg} src={l.profilePicture} alt={l.fullName} onError={() => setImgError(true)} />
+          : l.initials}
+        {l.disponible && <span className={rowStyles.avaDot} />}
+      </div>
+
+      <div className={rowStyles.info}>
+        <div className={rowStyles.name}>{l.fullName}</div>
+        <div className={rowStyles.meta}>
+          <span><i className="fas fa-map-pin" aria-hidden="true" /> {(l.zone || t('livreurs.card.zoneNonDefinie')).split('·')[0].trim()}</span>
+          <span>{l.vehicule}</span>
+          <span>
+            <i className="fas fa-circle" style={{ color: l.disponible ? 'var(--t1)' : 'var(--t4)', fontSize: 8 }} aria-hidden="true" />
+            {l.disponible ? t('livreurs.reseau.disponible') : t('livreurs.reseau.indisponible')}
+          </span>
+        </div>
+      </div>
+
+      <div className={rowStyles.right} onClick={e => e.stopPropagation()}>
+        <div className={rowStyles.ratingWrap}>
+          <div className={rowStyles.ratingVal}>{l.averageRating === 0 ? t('livreurs.na') : `${l.averageRating.toFixed(1)}★`}</div>
+          <div className={rowStyles.ratingLivs}>{t('livreurs.reseau.livraisonsCount', { count: l.totalLivraisons })}</div>
+        </div>
+        <FollowButton
+          actorType="livreur"
+          id={l.id}
+          name={l.fullName}
+          isSuivi={l.isSuivi}
+          onToast={onPop}
+          onRequireAuth={onRequireAuth}
+          onChange={next => onChange(l.id, next)}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// LIGNE ÉQUIPE — onglet "Mon équipe" (livreurs créés/invités par
+// l'entreprise, GET /livreurs). Remplace l'ancien <table> par une
+// rangée flexbox responsive (voir TeamListRow.module.css) : plus
+// de défilement horizontal forcé sur mobile, badges/actions
+// repassent sous l'avatar quand la largeur manque.
+// ─────────────────────────────────────────────────────────────
+
+function LigneEquipeLivreur({ l, can, onView, onContact }: {
+  l:          LivreurResponse;
+  can:        (group: string, action: string) => boolean;
+  onView:     () => void;
+  onContact:  () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className={`${team.row} ${l.status === 'suspended' ? team.rowMuted : ''}`}>
+      <div className={team.ava}>
+        <span>{l.avatarEmoji}</span>
+        <span className={team.avaDot} style={{ background: AVAIL_DOT[l.availability as Availability] }} />
+      </div>
+
+      <div className={team.info} onClick={onView} style={{ cursor: 'pointer' }}>
+        <div className={team.name}>{l.fullName}</div>
+        <div className={team.meta}>
+          <span><i className="fas fa-map-pin" aria-hidden="true" /> {l.zone ?? t('livreurs.card.zoneNonDefinie')}</span>
+          <span>{l.vehicleEmoji} {vehicleLabel(l.vehicleType as VehicleType, t)}</span>
+          <span><i className="fas fa-star" style={{ color: 'var(--t2)' }} aria-hidden="true" /> {l.averageRating === 0 ? t('livreurs.na') : l.averageRating.toFixed(1)}</span>
+          <span><i className="fas fa-box" aria-hidden="true" /> {t('livreurs.card.courses')} {l.totalDeliveries}</span>
+        </div>
+      </div>
+
+      <div className={team.badges}>
+        <BadgeAvail availability={l.availability as Availability} />
+        {l.status !== 'active' && (
+          <span className={`${styles.statutBadge} ${STATUS_CLS[l.status as LivreurStatus]}`}>{getStatusLabel(t)[l.status as LivreurStatus]}</span>
+        )}
+      </div>
+
+      <div className={team.actions}>
+        <button className={team.btnPrimary} onClick={onView}><i className="fas fa-eye" /> {t('livreurs.card.voir')}</button>
+        {can('deliveries', 'edit') && (
+          <button className={team.btnIcon} onClick={onContact} title={t('livreurs.card.contacter')}><i className="fas fa-envelope" /></button>
+        )}
+        <a href={`https://wa.me/${(l.phone ?? '').replace(/\s+/g, '')}`} target="_blank" rel="noreferrer" className={team.btnIcon} title={t('livreurs.card.whatsapp')}>
+          <i className="fab fa-whatsapp" />
+        </a>
+        <a href={`tel:${l.phone}`} className={team.btnIcon} title={t('livreurs.card.appeler')}><i className="fas fa-phone" /></a>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // COMPOSANT PRINCIPAL — 100% connecté au backend
 // ─────────────────────────────────────────────────────────────
 
@@ -544,6 +680,15 @@ export default function LivreursPage() {
   const { t } = useTranslation();
   const { pop } = useToast();
   const { can } = useTeamPermissions();
+  const navigate = useNavigate();
+
+  // ── Onglets : équipe créée par l'entreprise vs réseau plateforme ──
+  const [tab, setTab] = useState<'equipe' | 'suivis' | 'decouvrir'>('equipe');
+  const reseau = useLivreurs();
+  const { openAuthModal, authModal } = useAuthGate();
+  const suivis     = useMemo(() => reseau.filtered.filter(l => l.isSuivi),  [reseau.filtered]);
+  const decouvrir  = useMemo(() => reseau.filtered.filter(l => !l.isSuivi), [reseau.filtered]);
+  const reseauList = tab === 'suivis' ? suivis : decouvrir;
 
   // ── État données ────────────────────────────────────────────
   const [livreurs,       setLivreurs]       = useState<LivreurResponse[]>([]);
@@ -563,7 +708,6 @@ export default function LivreursPage() {
   const [search,       setSearch]       = useState('');
   const [filtreAvail,  setFiltreAvail]  = useState<'tous' | Availability>('tous');
   const [filtreStatut, setFiltreStatut] = useState<'tous' | LivreurStatus>('tous');
-  const [vue,          setVue]          = useState<'grille' | 'liste'>('grille');
 
   // ── Filtrage local ──────────────────────────────────────────
   const filtres = useMemo(() => livreurs.filter(l => {
@@ -593,13 +737,18 @@ export default function LivreursPage() {
       setZones(zonesData);
       setActivite(activiteData);
       setLivreurs(listData.data);
-    } catch (err: any) {
-      pop(t('livreurs.toasts.loadError', { message: err.message }), 'e');
+    } catch (err) {
+      pop(t('livreurs.toasts.loadError', { message: getErrorMessage(err) }), 'e');
     } finally {
       setLoading(false);
     }
   }, [pop, t]);
 
+  // Chargement initial — pattern standard "fetch on mount" (cf. doc React,
+  // "Fetching data"). loadData() est async : setLoading(true) s'exécute
+  // avant son premier await, donc de façon synchrone dans l'effet — c'est
+  // le comportement attendu pour afficher le spinner dès le montage.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadData(); }, [loadData]);
 
   // ══════════════════════════════════════════════════════════
@@ -613,8 +762,8 @@ export default function LivreursPage() {
       pop(t('livreurs.toasts.suspendu', { name: l.fullName }), 'w');
       setModalSuspend(null);
       loadData();
-    } catch (err: any) {
-      pop(`❌ ${err.message}`, 'e');
+    } catch (err) {
+      pop(`❌ ${getErrorMessage(err)}`, 'e');
     } finally { setSuspendLoading(false); }
   }
 
@@ -629,8 +778,8 @@ export default function LivreursPage() {
       await Promise.all(enAttente.map(l => livreursApi.valider(l.id)));
       pop(t('livreurs.quickActions.validesToast', { count: enAttente.length }), 's');
       loadData();
-    } catch (err: any) {
-      pop(`❌ ${err.message}`, 'e');
+    } catch (err) {
+      pop(`❌ ${getErrorMessage(err)}`, 'e');
     }
   }
 
@@ -647,53 +796,59 @@ export default function LivreursPage() {
   return (
     <div className={styles.page}>
 
-      {/* HEADER */}
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.titre}>{t('livreurs.header.title')}</h1>
-          <p className={styles.sousTitre}>{t('livreurs.header.subtitle')}</p>
-        </div>
-        {can('deliveries', 'assign') && (
-          <button className={styles.btnAjouter} onClick={() => setModalInviter(true)}>
-            <i className="fas fa-user-plus" /> {t('livreurs.header.inviter')}
+      {/* ONGLETS — équipe créée par l'entreprise / suivis / découvrir */}
+      <div className={styles.filtresBtns} style={{ marginBottom: 18 }}>
+        {([
+          { val: 'equipe',    label: t('livreurs.reseau.tabs.equipe'),    icon: 'fa-users'  },
+          { val: 'suivis',    label: t('livreurs.reseau.tabs.suivis'),    icon: 'fa-heart'  },
+          { val: 'decouvrir', label: t('livreurs.reseau.tabs.decouvrir'), icon: 'fa-compass' },
+        ] as const).map(tb => (
+          <button key={tb.val}
+            className={`${styles.filtreBtn} ${tab === tb.val ? styles.filtreBtnActive : ''}`}
+            onClick={() => setTab(tb.val)}>
+            <i className={`fas ${tb.icon}`} /> {tb.label}
           </button>
-        )}
+        ))}
       </div>
 
-      {/* KPI CARDS */}
-      <div className={styles.statsGrid}>
-        <div className={`${styles.statCard} ${styles.statBlue}`}>
-          <div className={styles.statIcon}><i className="fas fa-users" /></div>
-          <div>
-            <div className={styles.statVal}>{loading ? '…' : s.actifs}</div>
-            <div className={styles.statLabel}>{t('livreurs.kpi.actifs')}</div>
-            <div className={styles.statSub}>{t('livreurs.kpi.auTotal', { count: s.total })}</div>
+      {tab === 'equipe' && (
+      <>
+      {/* KPI CARDS — taille compacte, toujours sur une seule ligne (y compris mobile).
+          Surcharges inline (statCardCompact...) + kpi.module.css (grid4/*Tight) :
+          évite de toucher CorrespondantsPage.module.css, partagé avec CorrespondantsPage.tsx. */}
+      <div className={`${styles.statsGrid} ${kpi.grid4}`} style={{ gap: 6, marginBottom: 14 }}>
+        <div className={`${styles.statCard} ${styles.statBlue} ${kpi.cardTight}`} style={statCardCompact}>
+          <div className={`${styles.statIcon} ${kpi.iconTight}`} style={statIconCompact}><i className="fas fa-users" /></div>
+          <div style={{ minWidth: 0 }}>
+            <div className={`${styles.statVal} ${kpi.valTight}`} style={statValCompact}>{loading ? '…' : s.actifs}</div>
+            <div className={`${styles.statLabel} ${kpi.labelTight}`} style={statLabelCompact}>{t('livreurs.kpi.actifs')}</div>
+            <div className={`${styles.statSub} ${kpi.subTight}`} style={statSubCompact}>{t('livreurs.kpi.auTotal', { count: s.total })}</div>
           </div>
         </div>
-        <div className={`${styles.statCard} ${styles.statGreen}`}>
-          {s.disponibles > 0 && <div className={styles.pulseDot} />}
-          <div className={styles.statIcon}><i className="fas fa-circle-check" /></div>
-          <div>
-            <div className={styles.statVal}>{loading ? '…' : s.disponibles}</div>
-            <div className={styles.statLabel}>{t('livreurs.kpi.disponibles')}</div>
-            <div className={styles.statSub}>{t('livreurs.kpi.pretsALivrer')}</div>
+        <div className={`${styles.statCard} ${styles.statGreen} ${kpi.cardTight}`} style={statCardCompact}>
+          {s.disponibles > 0 && <div className={styles.pulseDot} style={{ top: 7, right: 7, width: 7, height: 7 }} />}
+          <div className={`${styles.statIcon} ${kpi.iconTight}`} style={statIconCompact}><i className="fas fa-circle-check" /></div>
+          <div style={{ minWidth: 0 }}>
+            <div className={`${styles.statVal} ${kpi.valTight}`} style={statValCompact}>{loading ? '…' : s.disponibles}</div>
+            <div className={`${styles.statLabel} ${kpi.labelTight}`} style={statLabelCompact}>{t('livreurs.kpi.disponibles')}</div>
+            <div className={`${styles.statSub} ${kpi.subTight}`} style={statSubCompact}>{t('livreurs.kpi.pretsALivrer')}</div>
           </div>
         </div>
-        <div className={`${styles.statCard} ${styles.statAmber}`}>
-          <div className={styles.statIcon}><i className="fas fa-motorcycle" /></div>
-          <div>
-            <div className={styles.statVal}>{loading ? '…' : s.enCourse}</div>
-            <div className={styles.statLabel}>{t('livreurs.kpi.enCourse')}</div>
-            <div className={styles.statSub}>{t('livreurs.kpi.actuellement')}</div>
+        <div className={`${styles.statCard} ${styles.statAmber} ${kpi.cardTight}`} style={statCardCompact}>
+          <div className={`${styles.statIcon} ${kpi.iconTight}`} style={statIconCompact}><i className="fas fa-motorcycle" /></div>
+          <div style={{ minWidth: 0 }}>
+            <div className={`${styles.statVal} ${kpi.valTight}`} style={statValCompact}>{loading ? '…' : s.enCourse}</div>
+            <div className={`${styles.statLabel} ${kpi.labelTight}`} style={statLabelCompact}>{t('livreurs.kpi.enCourse')}</div>
+            <div className={`${styles.statSub} ${kpi.subTight}`} style={statSubCompact}>{t('livreurs.kpi.actuellement')}</div>
           </div>
         </div>
-        <div className={`${styles.statCard} ${styles.statViolet}`}>
-          {s.enAttente > 0 && <div className={styles.pulseDot} />}
-          <div className={styles.statIcon}><i className="fas fa-box" /></div>
-          <div>
-            <div className={styles.statVal}>{loading ? '…' : s.livrAuj}</div>
-            <div className={styles.statLabel}>{t('livreurs.kpi.livraisonsAuj')}</div>
-            <div className={styles.statSub}>{s.enAttente > 0 ? t('livreurs.kpi.enAttenteSub', { count: s.enAttente }) : t('livreurs.kpi.cumulees')}</div>
+        <div className={`${styles.statCard} ${styles.statViolet} ${kpi.cardTight}`} style={statCardCompact}>
+          {s.enAttente > 0 && <div className={styles.pulseDot} style={{ top: 7, right: 7, width: 7, height: 7 }} />}
+          <div className={`${styles.statIcon} ${kpi.iconTight}`} style={statIconCompact}><i className="fas fa-box" /></div>
+          <div style={{ minWidth: 0 }}>
+            <div className={`${styles.statVal} ${kpi.valTight}`} style={statValCompact}>{loading ? '…' : s.livrAuj}</div>
+            <div className={`${styles.statLabel} ${kpi.labelTight}`} style={statLabelCompact}>{t('livreurs.kpi.livraisonsAuj')}</div>
+            <div className={`${styles.statSub} ${kpi.subTight}`} style={statSubCompact}>{s.enAttente > 0 ? t('livreurs.kpi.enAttenteSub', { count: s.enAttente }) : t('livreurs.kpi.cumulees')}</div>
           </div>
         </div>
       </div>
@@ -713,7 +868,7 @@ export default function LivreursPage() {
               ] as const).map(f => (
                 <button key={f.val}
                   className={`${styles.filtreBtn} ${filtreAvail === f.val ? styles.filtreBtnActive : ''}`}
-                  onClick={() => setFiltreAvail(f.val as any)}>
+                  onClick={() => setFiltreAvail(f.val)}>
                   {f.label}
                   <span style={{
                     padding: '1px 6px', borderRadius: 10, fontSize: 10.5, fontWeight: 700,
@@ -724,7 +879,7 @@ export default function LivreursPage() {
               ))}
             </div>
             <div className={styles.toolbarRight}>
-              <select className={styles.filtreSelect} value={filtreStatut} onChange={e => setFiltreStatut(e.target.value as any)}>
+              <select className={styles.filtreSelect} value={filtreStatut} onChange={e => setFiltreStatut(e.target.value as 'tous' | LivreurStatus)}>
                 <option value="tous">{t('livreurs.statutSelect.tousStatuts')}</option>
                 <option value="active">{t('livreurs.statutSelect.actifs')}</option>
                 <option value="pending">{t('livreurs.statutSelect.enAttente')}</option>
@@ -734,10 +889,6 @@ export default function LivreursPage() {
                 <i className="fas fa-magnifying-glass" />
                 <input className={styles.searchInput} placeholder={t('livreurs.search')} value={search} onChange={e => setSearch(e.target.value)} />
                 {search && <button className={styles.clearBtn} onClick={() => setSearch('')}><i className="fas fa-xmark" /></button>}
-              </div>
-              <div className={styles.vueBtns}>
-                <button className={`${styles.vueBtn} ${vue === 'grille' ? styles.vueBtnActive : ''}`} onClick={() => setVue('grille')}><i className="fas fa-grid-2" /></button>
-                <button className={`${styles.vueBtn} ${vue === 'liste'  ? styles.vueBtnActive : ''}`} onClick={() => setVue('liste')}><i className="fas fa-list" /></button>
               </div>
             </div>
           </div>
@@ -764,136 +915,17 @@ export default function LivreursPage() {
                 <button className={styles.btnAjouter} onClick={() => setModalInviter(true)}><i className="fas fa-user-plus" /> {t('livreurs.empty.inviter')}</button>
               )}
             </div>
-          ) : vue === 'grille' ? (
-            <div className={styles.grille}>
-              {filtres.map(l => (
-                <div key={l.id} className={`${styles.card} ${l.status === 'suspended' ? styles.cardSuspended : ''}`}>
-                  <div className={styles.cardHead}>
-                    <div className={styles.cardAvatar} style={{ position: 'relative' }}>
-                      <span style={{ fontSize: 22 }}>{l.avatarEmoji}</span>
-                      <span style={{
-                        position: 'absolute', bottom: -2, right: -2,
-                        width: 12, height: 12, borderRadius: '50%',
-                        background: AVAIL_DOT[l.availability as Availability],
-                        border: '2px solid #fff',
-                      }} />
-                    </div>
-                    <div className={styles.cardBadges}>
-                      <BadgeAvail availability={l.availability as Availability} />
-                      {l.status !== 'active' && (
-                        <span className={`${styles.statutBadge} ${STATUS_CLS[l.status as LivreurStatus]}`}>
-                          {getStatusLabel(t)[l.status as LivreurStatus]}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className={styles.cardBody}>
-                    <div className={styles.cardName}>{l.fullName}</div>
-                    <div className={styles.cardVille}><i className="fas fa-map-pin" /> {l.zone ?? t('livreurs.card.zoneNonDefinie')}</div>
-                    <div className={styles.cardZone} style={{ color:'var(--t2)', fontWeight:600 }}>
-                      {l.vehicleEmoji} {vehicleLabel(l.vehicleType as VehicleType, t)}
-                      {l.vehiclePlate && <span style={{ color:'var(--t3)', fontWeight:400 }}> · {l.vehiclePlate}</span>}
-                    </div>
-                  </div>
-
-                  <div className={styles.cardStats}>
-                    <div className={styles.cardStat}>
-                      <i className="fas fa-star" style={{ color:'var(--t2)', fontSize:11 }} />
-                      <strong>{l.averageRating === 0 ? t('livreurs.na') : l.averageRating.toFixed(1)}</strong>
-                      <span>{t('livreurs.card.note')}</span>
-                    </div>
-                    <div className={styles.cardStat}>
-                      <i className="fas fa-box" style={{ color:'var(--t2)', fontSize:11 }} />
-                      <strong>{l.totalDeliveries}</strong>
-                      <span>{t('livreurs.card.courses')}</span>
-                    </div>
-                    <div className={styles.cardStat}>
-                      <i className="fas fa-calendar-day" style={{ color:'var(--t2)', fontSize:11 }} />
-                      <strong>{l.todayDeliveries}</strong>
-                      <span>{t('livreurs.card.auj')}</span>
-                    </div>
-                  </div>
-
-                  <div className={styles.cardActivity}>
-                    <div className={styles.actDot} style={{ background: AVAIL_DOT[l.availability as Availability] }} />
-                    <span>{l.lastActivity}</span>
-                    <span className={styles.actTime}>{l.lastActivityAt}</span>
-                  </div>
-
-                  <div className={styles.cardActions}>
-                    <button className={styles.cardBtnPrimary} onClick={() => setModalProfil(l)}>
-                      <i className="fas fa-eye" /> {t('livreurs.card.voir')}
-                    </button>
-                    {can('deliveries', 'edit') && (
-                      <button className={styles.cardBtnIcon} onClick={() => setModalContact(l)} title={t('livreurs.card.contacter')}>
-                        <i className="fas fa-envelope" />
-                      </button>
-                    )}
-                    <a
-                      href={`https://wa.me/${(l.phone ?? '').replace(/\s+/g, '')}`}
-                      target="_blank" rel="noreferrer"
-                      className={styles.cardBtnIcon} title={t('livreurs.card.whatsapp')}
-                    >
-                      <i className="fab fa-whatsapp" style={{ color: 'var(--t2)', fontSize: 14 }} />
-                    </a>
-                    <a href={`tel:${l.phone}`} className={styles.cardBtnIcon} title={t('livreurs.card.appeler')}>
-                      <i className="fas fa-phone" />
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
           ) : (
-            <div className={styles.listeWrap}>
-              <table className={styles.liste}>
-                <thead>
-                  <tr>
-                    {[t('livreurs.table.livreur'),t('livreurs.table.zone'),t('livreurs.table.vehicule'),t('livreurs.table.note'),t('livreurs.table.courses'),t('livreurs.table.auj'),t('livreurs.table.disponibilite'),t('livreurs.table.statut'),t('livreurs.table.actions')].map(h => (
-                      <th key={h} className={styles.th}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtres.map(l => (
-                    <tr key={l.id} className={`${styles.tr} ${l.status === 'suspended' ? styles.trSuspended : ''}`}>
-                      <td className={styles.td}>
-                        <div className={styles.listCell}>
-                          <div className={styles.listAvatar} style={{ position: 'relative' }}>
-                            <span style={{ fontSize: 18 }}>{l.avatarEmoji}</span>
-                            <span style={{
-                              position: 'absolute', bottom: -1, right: -1,
-                              width: 10, height: 10, borderRadius: '50%',
-                              background: AVAIL_DOT[l.availability as Availability],
-                              border: '2px solid #fff',
-                            }} />
-                          </div>
-                          <div>
-                            <div className={styles.listNom}>{l.fullName}</div>
-                            <div className={styles.listEmail}>{l.email}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className={styles.td}><div className={styles.listVille}><i className="fas fa-map-pin" /> {l.zone ?? '–'}</div></td>
-                      <td className={styles.td}><span style={{ fontSize:12, color:'var(--t2)', fontWeight:600 }}>{l.vehicleEmoji} {vehicleLabel(l.vehicleType as VehicleType, t)}</span></td>
-                      <td className={styles.td}><div className={styles.listRating}><i className="fas fa-star" style={{ color:'var(--t2)', fontSize:11 }} /><strong>{l.averageRating === 0 ? t('livreurs.na') : l.averageRating.toFixed(1)}</strong></div></td>
-                      <td className={styles.td}><strong style={{ color:'var(--navy)', fontFamily:'var(--fd)' }}>{l.totalDeliveries}</strong></td>
-                      <td className={styles.td}><strong style={{ color:'var(--t2)', fontFamily:'var(--fd)' }}>{l.todayDeliveries}</strong></td>
-                      <td className={styles.td}><BadgeAvail availability={l.availability as Availability} /></td>
-                      <td className={styles.td}><span className={`${styles.statutBadge} ${STATUS_CLS[l.status as LivreurStatus]}`}>{getStatusLabel(t)[l.status as LivreurStatus]}</span></td>
-                      <td className={styles.td}>
-                        <div className={styles.listActions}>
-                          <button className={styles.listeBtn} onClick={() => setModalProfil(l)} title={t('livreurs.card.voir')}><i className="fas fa-eye" /></button>
-                          {can('deliveries', 'edit') && (
-                            <button className={styles.listeBtn} onClick={() => setModalContact(l)} title={t('livreurs.card.contacter')}><i className="fas fa-envelope" /></button>
-                          )}
-                          <a href={`tel:${l.phone}`} className={styles.listeBtn} title={t('livreurs.card.appeler')}><i className="fas fa-phone" /></a>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className={team.list}>
+              {filtres.map(l => (
+                <LigneEquipeLivreur
+                  key={l.id}
+                  l={l}
+                  can={can}
+                  onView={() => setModalProfil(l)}
+                  onContact={() => setModalContact(l)}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -965,6 +997,79 @@ export default function LivreursPage() {
           </div>
         </div>
       </div>
+      </>
+      )}
+
+      {/* RÉSEAU — livreurs suivis / à découvrir sur toute la plateforme */}
+      {tab !== 'equipe' && (
+        <div className={styles.layout}>
+          <div className={styles.colMain}>
+            <div className={styles.toolbar}>
+              <div className={styles.toolbarRight} style={{ marginLeft: 'auto' }}>
+                <div className={styles.searchWrap}>
+                  <i className="fas fa-magnifying-glass" />
+                  <input
+                    className={styles.searchInput}
+                    placeholder={t('livreurs.reseau.searchPlaceholder')}
+                    value={reseau.filters.searchQuery}
+                    onChange={e => reseau.onSearch(e.target.value)}
+                  />
+                  {reseau.filters.searchQuery && (
+                    <button className={styles.clearBtn} onClick={() => reseau.onSearch('')}><i className="fas fa-xmark" /></button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {reseauList.length > 0 && (
+              <div className={styles.compteur}>{t('livreurs.compteur', { count: reseauList.length })}</div>
+            )}
+
+            {reseau.error && !reseau.loading && (
+              <div style={{ marginBottom: 14, padding: '10px 14px', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 10, fontSize: 12.5, color: 'var(--t1)' }}>
+                <i className="fas fa-triangle-exclamation" /> {reseau.error}
+              </div>
+            )}
+
+            {reseau.loading ? (
+              <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--t3)' }}>
+                <i className="fas fa-spinner fa-spin" style={{ fontSize: 28, display: 'block', marginBottom: 12 }} />
+                {t('livreurs.reseau.loading')}
+              </div>
+            ) : reseauList.length === 0 ? (
+              <div className={styles.vide}>
+                <span className={styles.videIco}>🛵</span>
+                <strong>{t(tab === 'suivis' ? 'livreurs.reseau.emptySuivis.title' : 'livreurs.reseau.emptyDecouvrir.title')}</strong>
+                <span>{t(tab === 'suivis' ? 'livreurs.reseau.emptySuivis.sub' : 'livreurs.reseau.emptyDecouvrir.sub')}</span>
+              </div>
+            ) : (
+              <>
+                <div className={styles.sideCard} style={{ padding: '0 18px' }}>
+                  {reseauList.map(l => (
+                    <LigneReseau
+                      key={l.id}
+                      l={l}
+                      onView={() => navigate(`/dashboard/entreprise/reseau/livreurs/${l.id}`)}
+                      onPop={pop}
+                      onRequireAuth={openAuthModal}
+                      onChange={reseau.onChange}
+                    />
+                  ))}
+                </div>
+                {reseau.hasMore && (
+                  <div style={{ textAlign: 'center', marginTop: 18 }}>
+                    <button className={styles.btnSecondary} onClick={reseau.loadMore} disabled={reseau.loadingMore}>
+                      {reseau.loadingMore ? <i className="fas fa-spinner fa-spin" /> : t('livreurs.reseau.chargerPlus')}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {authModal}
 
       {/* MODALES */}
       {modalProfil && (

@@ -221,6 +221,12 @@
 .badgeWaiting  { background: color-mix(in srgb, var(--acid) 15%, transparent); color: var(--acid); }
 .badgeClosed   { background: color-mix(in srgb, var(--txt-3) 15%, transparent); color: var(--txt-3); }
 
+/* Badges de priorité */
+.prioLow     { background: color-mix(in srgb, var(--txt-3) 15%, transparent); color: var(--txt-3); }
+.prioNormal  { background: color-mix(in srgb, var(--sky)   15%, transparent); color: var(--sky);   }
+.prioHigh    { background: color-mix(in srgb, var(--gold)  15%, transparent); color: var(--gold);  }
+.prioUrgent  { background: color-mix(in srgb, var(--rose)  15%, transparent); color: var(--rose);  }
+
 /* ── Barres horizontales (répartition par statut) ──────────── */
 .barList {
   display: flex;
@@ -292,3 +298,129 @@
   background: none;
   border: none;
 }
+
+/* ── Barre de filtres (file d'attente globale) ─────────────── */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 8px 12px;
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+.searchBox input {
+  border: none;
+  background: none;
+  outline: none;
+  color: var(--txt-1);
+  font-size: 13px;
+  width: 100%;
+}
+
+.resetBtn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--txt-3);
+  border-radius: 9px;
+  padding: 8px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.resetBtn:hover { color: var(--txt-1); }
+
+/* ── Tableau file d'attente (liste complète, avec filtres) ─── */
+.queueTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+.queueTable th {
+  text-align: left;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--txt-3);
+  font-weight: 700;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.queueTable td {
+  padding: 10px;
+  font-size: 12.5px;
+  color: var(--txt-1);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.queueRow { cursor: pointer; transition: background .15s; }
+.queueRow:hover { background: var(--raised); }
+
+/* Ligne avec message(s) client non lu(s) par l'agent */
+.queueRowUnread .queueRef,
+.queueRowUnread .queueSubject { font-weight: 700; color: var(--txt-1); }
+
+.unreadDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rose);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rose) 20%, transparent);
+}
+
+.queueRef {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--sky);
+  font-size: 12px;
+}
+
+.queueSubject {
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agentCell { font-size: 12px; color: var(--txt-2); }
+.agentUnassigned { color: var(--rose); font-weight: 600; }
+
+/* Badges canal — une teinte neutre par défaut, cohérente avec .badge */
+.channelBadge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--txt-2) 12%, transparent);
+  color: var(--txt-2);
+  white-space: nowrap;
+}
+
+/* ── Pagination ─────────────────────────────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-top: 4px;
+}
+.pageBtn {
+  background: var(--raised);
+  border: 1px solid var(--border);
+  color: var(--txt-1);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.pageBtn:disabled { opacity: .4; cursor: not-allowed; }
+.pageInfo { font-size: 12px; color: var(--txt-3); }

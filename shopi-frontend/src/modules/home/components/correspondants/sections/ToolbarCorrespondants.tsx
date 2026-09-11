@@ -1,30 +1,30 @@
 /* ================================================================
  * FICHIER : correspondants/sections/ToolbarCorrespondants.tsx
  *
- * Barre d'outils : recherche, filtres rapides, tri, compteur,
- * bascule vue grille/liste.
+ * Barre d'outils : recherche, filtres rapides, tri, compteur, +
+ * bascule "Hors ligne" (mobile uniquement — voir styles.mobileOnly).
  * ================================================================ */
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/Correspondants.module.css';
-import type { FiltreRapide, VueMode, TriOption } from '../data/types';
+import type { FiltreRapide, TriOption } from '../data/types';
 
 interface Props {
   recherche:   string;
   filtre:      FiltreRapide;
   tri:         TriOption;
-  vue:         VueMode;
   count:       number;
+  statut:      'all' | 'online' | 'offline';
   onRecherche: (v: string) => void;
   onFiltre:    (f: FiltreRapide) => void;
   onTri:       (t: TriOption) => void;
-  onVue:       (v: VueMode) => void;
+  onStatut:    (s: 'all' | 'online' | 'offline') => void;
 }
 
 export default function ToolbarCorrespondants({
-  recherche, filtre, tri, vue, count,
-  onRecherche, onFiltre, onTri, onVue,
+  recherche, filtre, tri, count, statut,
+  onRecherche, onFiltre, onTri, onStatut,
 }: Props) {
   const { t } = useTranslation();
   const FILTRES: { id: FiltreRapide; icon: string; label: string }[] = [
@@ -72,18 +72,18 @@ export default function ToolbarCorrespondants({
           <option value="nom">{t('correspondantsPage.toolbar.sorts.nomAZ')}</option>
         </select>
 
+        {/* Disponibilité (mobile uniquement — sur desktop, voir la sidebar
+         * section Disponibilité, pour ne pas dupliquer) */}
+        <button
+          className={`${styles.fbtn} ${styles.mobileOnly} ${statut === 'offline' ? styles.fbtnOn : ''}`}
+          onClick={() => onStatut(statut === 'offline' ? 'all' : 'offline')}
+        >
+          <i className="fas fa-moon" />
+          {t('correspondantsPage.sidebar.horsLigne')}
+        </button>
+
         {/* Compteur */}
         <span className={styles.cntPill}>{t('correspondantsPage.toolbar.correspondantCount', { count })}</span>
-
-        {/* Vue */}
-        <div className={styles.vwBtns}>
-          <button className={`${styles.vbtn} ${vue === 'grid' ? styles.vbtnOn : ''}`} onClick={() => onVue('grid')}>
-            <i className="fas fa-th-large" />
-          </button>
-          <button className={`${styles.vbtn} ${vue === 'list' ? styles.vbtnOn : ''}`} onClick={() => onVue('list')}>
-            <i className="fas fa-list" />
-          </button>
-        </div>
       </div>
     </div>
   );

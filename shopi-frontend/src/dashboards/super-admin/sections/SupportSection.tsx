@@ -2,57 +2,78 @@
  * FICHIER : src/dashboards/super-admin/sections/SupportSection.tsx
  *
  * RÔLE :
- *   Section "Support client" intégrée dans le dashboard super-admin.
+ *   Centre de support client — vue globale multi-zone du super-admin.
+ *   Contrairement au dashboard admin (portée limitée aux acteurs
+ *   supervisés), le super-admin voit TOUS les tickets de la plateforme
+ *   (SupportPermissionService → null = aucun filtre) et peut réassigner
+ *   un ticket à n'importe quel admin ayant la permission "support"
+ *   (PermissionsSection.tsx), à travers toutes les zones/pays.
+ *
  *   Affiche :
- *     ① 5 KPI cards  (total, actifs, SLA violations, CSAT, délai réponse)
- *     ② Grille 2 colonnes :
- *         - colonne gauche  : 10 tickets récents (ouverts / en cours)
- *         - colonne droite  : répartition par statut (barres horizontales)
- *     ③ Bouton export CSV  (réutilise l'endpoint /api/support/agent/export)
+ *     ① 5 KPI cards (total, actifs, SLA violations, CSAT, délai réponse)
+ *     ② Filtres : recherche, statut, priorité, type, canal, agent assigné
+ *     ③ File d'attente globale paginée — clic sur une ligne → modal détail
+ *        (réponse, statut, priorité, réassignation — voir SupportTicketModal)
+ *     ④ Répartition par statut + par canal (barres horizontales)
+ *     ⑤ Export CSV
  *
  * API :
- *   GET /api/support/agent/stats   → SupportOverview (voir support-stats.service.ts)
- *   GET /api/support/agent/tickets → liste paginée (filtrée open/in_progress)
- *   GET /api/support/agent/export  → téléchargement CSV (déclenché côté navigateur)
+ *   GET /support/agent/stats   → SupportOverview (avec byChannel)
+ *   GET /support/agent/tickets → liste paginée + filtres avancés
+ *   GET /support/agent/agents  → admins éligibles à la réassignation
+ *   GET /support/agent/export  → CSV
  *
- * THÈME :
- *   Variables CSS de super-admin.css (--surface, --raised, --border,
- *   --txt-1/2/3, --sky, --acid, --gold, --rose, --violet…)
+ * Avant cette page, le super-admin n'avait qu'un widget en lecture
+ * seule dont les liens renvoyaient vers la page CLIENT d'un ticket
+ * (scopée sur l'utilisateur courant) — aucune action n'était possible.
  * ============================================================ */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { apiFetch }  from '../../../shared/services/apiFetch';
+import SupportTicketModal from '../components/SupportTicketModal';
 import s from './SupportSection.module.css';
 
 // ─────────────────────────────────────────────────────────────
-// 1. Types  (miroir du backend SupportOverview)
+// 1. Types
 // ─────────────────────────────────────────────────────────────
 
-/** Résumé global des tickets retourné par /api/support/agent/stats */
 interface SupportOverview {
   total:           number;
-  byStatus:        { status: string; count: number }[];
-  byType:          { type: string;   count: number }[];
-  avgResponseTime: number | null;  // en heures
-  csat:            number | null;  // note moyenne /5
-  slaViolations:   number;         // tickets SLA dépassé
+  byStatus:        { status: string;  count: number }[];
+  byType:          { type: string;    count: number }[];
+  byChannel:       { channel: string; count: number }[];
+  avgResponseTime: number | null;
+  csat:            number | null;
+  slaViolations:   number;
+  unreadCount:     number;
 }
 
-/** Un ticket tel que retourné par la liste agent */
 interface TicketSummary {
-  id:        string;
-  reference: string;
-  subject:   string;
-  status:    string;
-  priority:  string;
-  createdAt: string;
+  id:            string;
+  reference:     string;
+  subject:       string;
+  status:        string;
+  priority:      string;
+  channel:       string;
+  agentId:       string | null;
+  createdAt:     string;
+  /* Nombre de messages client non lus par l'agent — remis à 0 par le
+   * backend dès que l'agent ouvre le détail (GET .../tickets/:id).
+   * Voir ticket.service.ts findOneAsAgentScoped(). */
+  unreadByAgent: number;
+}
+
+interface AgentOption {
+  id:          string;
+  name:        string;
+  email:       string;
+  paysAssigne: string | null;
 }
 
 // ─────────────────────────────────────────────────────────────
-// 2. Helpers
+// 2. Libellés
 // ─────────────────────────────────────────────────────────────
 
-/** Libellé français pour chaque statut */
 const STATUS_LABEL: Record<string, string> = {
   open:         'Ouvert',
   in_progress:  'En cours',
@@ -61,7 +82,19 @@ const STATUS_LABEL: Record<string, string> = {
   closed:       'Fermé',
 };
 
-/** Couleur de barre par statut */
+const PRIORITY_LABEL: Record<string, string> = {
+  low: 'Basse', normal: 'Normale', high: 'Haute', urgent: 'Urgente',
+};
+
+const CHANNEL_LABEL: Record<string, string> = {
+  client:    '🛍️ Client',
+  company:   '🏪 Entreprise',
+  partner:   '🤝 Partenaire',
+  delivery:  '🛵 Livreur',
+  internal:  '🔒 Interne',
+  anonymous: '👤 Anonyme',
+};
+
 const STATUS_COLOR: Record<string, string> = {
   open:         'var(--sky)',
   in_progress:  'var(--gold)',
@@ -70,7 +103,6 @@ const STATUS_COLOR: Record<string, string> = {
   closed:       'var(--txt-3)',
 };
 
-/** Classe CSS du badge de statut */
 function badgeClass(status: string): string {
   if (status === 'open')         return s.badgeOpen;
   if (status === 'in_progress')  return s.badgeProgress;
@@ -78,12 +110,17 @@ function badgeClass(status: string): string {
   return s.badgeClosed;
 }
 
-/** Formate une date ISO en "DD/MM/YYYY" */
+function prioClass(priority: string): string {
+  if (priority === 'low')    return s.prioLow;
+  if (priority === 'high')   return s.prioHigh;
+  if (priority === 'urgent') return s.prioUrgent;
+  return s.prioNormal;
+}
+
 function fmt(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR');
 }
 
-/** Télécharge le CSV en créant un <a> temporaire */
 function downloadCsv(): void {
   const a = document.createElement('a');
   a.href = '/api/support/agent/export';
@@ -91,66 +128,111 @@ function downloadCsv(): void {
   a.remove();
 }
 
+const LIMIT = 20;
+
 // ─────────────────────────────────────────────────────────────
 // 3. Composant principal
 // ─────────────────────────────────────────────────────────────
 
 interface Props {
-  /** Contrôle la visibilité : pattern de super-admin.css (.section + .active) */
   isActive: boolean;
+  toast:    (type: string, msg: string) => void;
+  /** Notifie le parent (badge sidebar) à chaque rechargement des stats. */
+  onStatsChange?: (slaViolations: number, unreadCount: number) => void;
 }
 
-export default function SupportSection({ isActive }: Props) {
+export default function SupportSection({ isActive, toast, onStatsChange }: Props) {
 
-  // ─── État local ─────────────────────────────────────────────
+  // ─── État ────────────────────────────────────────────────
   const [stats,   setStats]   = useState<SupportOverview | null>(null);
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
+  const [total,   setTotal]   = useState(0);
+  const [agents,  setAgents]  = useState<AgentOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
 
-  // ─── Chargement des données ─────────────────────────────────
-  const load = useCallback(async () => {
+  const [search,     setSearch]     = useState('');
+  const [statusF,    setStatusF]    = useState('');
+  const [priorityF,  setPriorityF]  = useState('');
+  const [typeF,      setTypeF]      = useState('');
+  const [channelF,   setChannelF]   = useState('');
+  const [agentF,     setAgentF]     = useState('');
+  const [page,       setPage]       = useState(1);
+
+  const [openTicket, setOpenTicket] = useState<string | null>(null);
+
+  // ─── Chargement stats + agents (une fois par activation) ──
+  const loadOverview = useCallback(async () => {
+    try {
+      const [statsRes, agentsRes] = await Promise.all([
+        apiFetch<SupportOverview>('/support/agent/stats'),
+        apiFetch<AgentOption[]>('/support/agent/agents'),
+      ]);
+      setStats(statsRes);
+      setAgents(agentsRes ?? []);
+      onStatsChange?.(statsRes.slaViolations, statsRes.unreadCount);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erreur de chargement');
+    }
+  }, [onStatsChange]);
+
+  // ─── Chargement liste tickets (filtres + pagination) ──────
+  const loadTickets = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Requêtes parallèles : stats KPI + liste des tickets récents ouverts
-      const [statsRes, ticketsRes] = await Promise.all([
-        apiFetch<SupportOverview>('/support/agent/stats'),
-        apiFetch<{ data: TicketSummary[]; total: number }>(
-          '/support/agent/tickets?page=1&limit=10&status=open'
-        ),
-      ]);
-      setStats(statsRes);
-      setTickets(ticketsRes.data ?? []);
+      const res = await apiFetch<{ data: TicketSummary[]; total: number }>('/support/agent/tickets', {
+        params: {
+          status:   statusF   || undefined,
+          priority: priorityF || undefined,
+          type:     typeF     || undefined,
+          channel:  channelF  || undefined,
+          agentId:  agentF    || undefined,
+          search:   search    || undefined,
+          page,
+          limit: LIMIT,
+        },
+      });
+      setTickets(res.data ?? []);
+      setTotal(res.total ?? 0);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur de chargement');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [statusF, priorityF, typeF, channelF, agentF, search, page]);
 
-  // Charger quand la section devient visible (évite les appels inutiles
-  // quand une autre section est affichée)
-  useEffect(() => {
-    if (isActive) load();
-  }, [isActive, load]);
+  useEffect(() => { if (isActive) loadOverview(); }, [isActive, loadOverview]);
+  useEffect(() => { if (isActive) loadTickets(); }, [isActive, loadTickets]);
 
-  // ─── Calculs dérivés ────────────────────────────────────────
+  // Revenir à la page 1 quand un filtre change
+  useEffect(() => { setPage(1); }, [statusF, priorityF, typeF, channelF, agentF, search]);
 
-  // Nombre de tickets actifs = open + in_progress + waiting_user
+  const resetFilters = () => {
+    setSearch(''); setStatusF(''); setPriorityF(''); setTypeF(''); setChannelF(''); setAgentF('');
+  };
+
+  const agentName = (agentId: string | null): string => {
+    if (!agentId) return 'Non assigné';
+    return agents.find(a => a.id === agentId)?.name ?? '—';
+  };
+
   const activeCount = stats
     ? (stats.byStatus.find(b => b.status === 'open')?.count         ?? 0)
     + (stats.byStatus.find(b => b.status === 'in_progress')?.count  ?? 0)
     + (stats.byStatus.find(b => b.status === 'waiting_user')?.count ?? 0)
     : 0;
 
-  // Total pour calculer les pourcentages des barres
   const totalForBars = stats?.total ?? 1;
+  const totalPages = Math.max(1, Math.ceil(total / LIMIT));
+
+  const handleChanged = useCallback(() => {
+    loadTickets();
+    loadOverview();
+  }, [loadTickets, loadOverview]);
 
   // ─── Rendu ─────────────────────────────────────────────────
   return (
-    /* Le pattern CSS module super-admin :
-     * .section = display:none  |  .section.active = display:flex */
     <section className={`${s.section}${isActive ? ` ${s.active}` : ''}`}>
 
       {/* ①  En-tête ─────────────────────────────────────────── */}
@@ -158,161 +240,201 @@ export default function SupportSection({ isActive }: Props) {
         <div className={s.headerLeft}>
           <div className={s.title}>🎫 Support client</div>
           <div className={s.subtitle}>
-            Centre d'assistance — tickets, SLA et satisfaction
+            Vue globale — tous les tickets de la plateforme, toutes zones confondues
           </div>
         </div>
         <div className={s.actions}>
-          {/* Export CSV — déclenche /api/support/agent/export */}
           <button className={`${s.btn} ${s.btnOutline}`} onClick={downloadCsv}>
             ⬇ Exporter CSV
           </button>
-          {/* Lien vers la page analytics dédiée (SupportStatsPage) */}
-          <a
-            href="/support/stats"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${s.btn} ${s.btnPrimary}`}
-          >
-            📊 Stats avancées
-          </a>
         </div>
       </div>
 
-      {/* ─── États chargement / erreur ────────────────────── */}
-      {loading && <div className={s.loading}>Chargement…</div>}
-      {error   && <div className={s.loading} style={{ color: 'var(--rose)' }}>{error}</div>}
+      {error && <div className={s.loading} style={{ color: 'var(--rose)' }}>{error}</div>}
 
       {stats && (
         <>
           {/* ②  KPI Cards ─────────────────────────────────── */}
           <div className={s.kpiGrid}>
-
-            {/* Card 1 : total tickets */}
             <div className={s.kpi}>
-              <div className={s.kpiIcon} style={{ background: 'color-mix(in srgb,var(--sky) 15%,transparent)' }}>
-                🎫
-              </div>
+              <div className={s.kpiIcon} style={{ background: 'color-mix(in srgb,var(--sky) 15%,transparent)' }}>🎫</div>
               <div className={s.kpiVal}>{stats.total}</div>
               <div className={s.kpiLabel}>Total tickets</div>
             </div>
-
-            {/* Card 2 : tickets actifs */}
             <div className={s.kpi}>
-              <div className={s.kpiIcon} style={{ background: 'color-mix(in srgb,var(--acid) 15%,transparent)' }}>
-                🔥
-              </div>
+              <div className={s.kpiIcon} style={{ background: 'color-mix(in srgb,var(--acid) 15%,transparent)' }}>🔥</div>
               <div className={s.kpiVal}>{activeCount}</div>
               <div className={s.kpiLabel}>En cours</div>
             </div>
-
-            {/* Card 3 : violations SLA — rouge si > 0 */}
+            <div className={`${s.kpi}${stats.unreadCount > 0 ? ` ${s.kpiDanger}` : ''}`}>
+              <div className={s.kpiIcon} style={{ background: 'color-mix(in srgb,var(--rose) 15%,transparent)' }}>✉️</div>
+              <div className={s.kpiVal}>{stats.unreadCount}</div>
+              <div className={s.kpiLabel}>Non lus</div>
+            </div>
             <div className={`${s.kpi}${stats.slaViolations > 0 ? ` ${s.kpiDanger}` : ''}`}>
-              <div className={s.kpiIcon} style={{ background: 'color-mix(in srgb,var(--rose) 15%,transparent)' }}>
-                ⏰
-              </div>
+              <div className={s.kpiIcon} style={{ background: 'color-mix(in srgb,var(--rose) 15%,transparent)' }}>⏰</div>
               <div className={s.kpiVal}>{stats.slaViolations}</div>
               <div className={s.kpiLabel}>SLA dépassés</div>
             </div>
-
-            {/* Card 4 : satisfaction client */}
             <div className={s.kpi}>
-              <div className={s.kpiIcon} style={{ background: 'color-mix(in srgb,var(--gold) 15%,transparent)' }}>
-                ⭐
-              </div>
-              <div className={s.kpiVal}>
-                {stats.csat != null ? stats.csat.toFixed(1) : '—'}
-              </div>
+              <div className={s.kpiIcon} style={{ background: 'color-mix(in srgb,var(--gold) 15%,transparent)' }}>⭐</div>
+              <div className={s.kpiVal}>{stats.csat != null ? stats.csat.toFixed(1) : '—'}</div>
               <div className={s.kpiLabel}>CSAT /5</div>
             </div>
-
-            {/* Card 5 : délai première réponse */}
             <div className={s.kpi}>
-              <div className={s.kpiIcon} style={{ background: 'color-mix(in srgb,var(--violet) 15%,transparent)' }}>
-                ⚡
-              </div>
-              <div className={s.kpiVal}>
-                {stats.avgResponseTime != null
-                  ? `${stats.avgResponseTime.toFixed(1)}h`
-                  : '—'}
-              </div>
+              <div className={s.kpiIcon} style={{ background: 'color-mix(in srgb,var(--violet) 15%,transparent)' }}>⚡</div>
+              <div className={s.kpiVal}>{stats.avgResponseTime != null ? `${stats.avgResponseTime.toFixed(1)}h` : '—'}</div>
               <div className={s.kpiLabel}>Délai réponse</div>
             </div>
-
           </div>
 
-          {/* ③  Grille 2 colonnes ─────────────────────────── */}
-          <div className={s.grid2}>
+          {/* ③  File d'attente globale ─────────────────────── */}
+          <div className={s.card}>
+            <div className={s.cardTitle}>📥 File d'attente globale ({total})</div>
 
-            {/* ── Colonne gauche : tickets récents ouverts ── */}
-            <div className={s.card}>
-              <div className={s.cardTitle}>🕐 Tickets récents (ouverts)</div>
-              <div className={s.ticketTable}>
-                {tickets.length === 0 && (
-                  <div className={s.empty}>Aucun ticket ouvert</div>
-                )}
-                {tickets.map(t => (
-                  <a
-                    key={t.id}
-                    /* Lien vers la page agent du ticket
-                     * (cette page est à implémenter dans Phase 6) */
-                    href={`/support/tickets/${t.id}`}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <div className={s.ticketRow}>
-                      <div>
-                        <div className={s.ticketRef}>{t.reference}</div>
-                        <div className={s.ticketSubject}>{t.subject}</div>
-                        <div className={s.ticketMeta}>{fmt(t.createdAt)}</div>
-                      </div>
-                      <span className={`${s.badge} ${badgeClass(t.status)}`}>
-                        {STATUS_LABEL[t.status] ?? t.status}
-                      </span>
-                    </div>
-                  </a>
-                ))}
+            {/* Filtres */}
+            <div className={s.filters}>
+              <div className={s.searchBox}>
+                <span>🔍</span>
+                <input
+                  type="text"
+                  placeholder="Référence, sujet…"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
               </div>
-              {/* Lien vers la page stats complète */}
-              <button
-                className={s.seeAll}
-                onClick={() => { window.location.href = '/support/stats'; }}
-              >
-                Voir tous les tickets →
-              </button>
+              <select className="sel" value={statusF} onChange={e => setStatusF(e.target.value)}>
+                <option value="">Tous statuts</option>
+                {Object.entries(STATUS_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+              </select>
+              <select className="sel" value={priorityF} onChange={e => setPriorityF(e.target.value)}>
+                <option value="">Toutes priorités</option>
+                {Object.entries(PRIORITY_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+              </select>
+              <select className="sel" value={channelF} onChange={e => setChannelF(e.target.value)}>
+                <option value="">Tous canaux</option>
+                {Object.entries(CHANNEL_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+              </select>
+              <select className="sel" value={agentF} onChange={e => setAgentF(e.target.value)}>
+                <option value="">Tous agents</option>
+                <option value="unassigned">Non assignés</option>
+                {agents.map(a => <option key={a.id} value={a.id}>{a.name}{a.paysAssigne ? ` (${a.paysAssigne})` : ''}</option>)}
+              </select>
+              {(search || statusF || priorityF || channelF || agentF || typeF) && (
+                <button className={s.resetBtn} onClick={resetFilters}>✕ Réinitialiser</button>
+              )}
             </div>
 
-            {/* ── Colonne droite : répartition par statut ─── */}
+            {/* Tableau */}
+            {loading ? (
+              <div className={s.loading}>Chargement…</div>
+            ) : tickets.length === 0 ? (
+              <div className={s.empty}>Aucun ticket ne correspond à ces filtres</div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className={s.queueTable}>
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Référence</th>
+                      <th>Sujet</th>
+                      <th>Canal</th>
+                      <th>Statut</th>
+                      <th>Priorité</th>
+                      <th>Agent</th>
+                      <th>Créé le</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tickets.map(t => {
+                      const unread = t.unreadByAgent > 0;
+                      return (
+                        <tr key={t.id} className={`${s.queueRow}${unread ? ` ${s.queueRowUnread}` : ''}`} onClick={() => setOpenTicket(t.id)}>
+                          <td>
+                            {unread && (
+                              <span className={s.unreadDot} title={`${t.unreadByAgent} message(s) non lu(s)`} />
+                            )}
+                          </td>
+                          <td className={s.queueRef}>{t.reference}</td>
+                          <td className={s.queueSubject}>{t.subject}</td>
+                          <td><span className={s.channelBadge}>{CHANNEL_LABEL[t.channel] ?? t.channel}</span></td>
+                          <td><span className={`${s.badge} ${badgeClass(t.status)}`}>{STATUS_LABEL[t.status] ?? t.status}</span></td>
+                          <td><span className={`${s.badge} ${prioClass(t.priority)}`}>{PRIORITY_LABEL[t.priority] ?? t.priority}</span></td>
+                          <td className={`${s.agentCell} ${!t.agentId ? s.agentUnassigned : ''}`}>{agentName(t.agentId)}</td>
+                          <td>{fmt(t.createdAt)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {total > LIMIT && (
+              <div className={s.pagination}>
+                <button className={s.pageBtn} disabled={page <= 1} onClick={() => setPage(p => p - 1)}>← Précédent</button>
+                <span className={s.pageInfo}>Page {page} / {totalPages}</span>
+                <button className={s.pageBtn} disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Suivant →</button>
+              </div>
+            )}
+          </div>
+
+          {/* ④  Répartition statut + canal ──────────────────── */}
+          <div className={s.grid2}>
             <div className={s.card}>
               <div className={s.cardTitle}>📊 Répartition par statut</div>
               <div className={s.barList}>
-                {stats.byStatus.length === 0 && (
-                  <div className={s.empty}>Aucune donnée</div>
-                )}
+                {stats.byStatus.length === 0 && <div className={s.empty}>Aucune donnée</div>}
                 {stats.byStatus.map(b => (
                   <div key={b.status} className={s.barItem}>
                     <div className={s.barTop}>
-                      <span className={s.barLabel}>
-                        {STATUS_LABEL[b.status] ?? b.status}
-                      </span>
+                      <span className={s.barLabel}>{STATUS_LABEL[b.status] ?? b.status}</span>
                       <span className={s.barCount}>{b.count}</span>
                     </div>
                     <div className={s.barTrack}>
-                      <div
-                        className={s.barFill}
-                        style={{
-                          width: `${(b.count / Math.max(1, totalForBars)) * 100}%`,
-                          background: STATUS_COLOR[b.status] ?? 'var(--sky)',
-                        }}
-                      />
+                      <div className={s.barFill} style={{ width: `${(b.count / Math.max(1, totalForBars)) * 100}%`, background: STATUS_COLOR[b.status] ?? 'var(--sky)' }} />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
+            <div className={s.card}>
+              <div className={s.cardTitle}>🌐 Répartition par canal</div>
+              <div className={s.barList}>
+                {stats.byChannel.length === 0 && <div className={s.empty}>Aucune donnée</div>}
+                {stats.byChannel.map(b => (
+                  <div key={b.channel} className={s.barItem}>
+                    <div className={s.barTop}>
+                      <span className={s.barLabel}>{CHANNEL_LABEL[b.channel] ?? b.channel}</span>
+                      <span className={s.barCount}>{b.count}</span>
+                    </div>
+                    <div className={s.barTrack}>
+                      <div className={s.barFill} style={{ width: `${(b.count / Math.max(1, totalForBars)) * 100}%`, background: 'var(--sky)' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </>
       )}
 
+      {openTicket && (
+        <SupportTicketModal
+          ticketId={openTicket}
+          agents={agents}
+          /* Ouvrir le ticket marque unreadByAgent=0 côté serveur (voir
+           * findOneAsAgentScoped) — il faut recharger la liste à la
+           * fermeture, pas seulement après une mutation, sinon le
+           * badge "non lu" reste affiché à tort tant qu'aucune action
+           * n'a été prise sur le ticket. */
+          onClose={() => { setOpenTicket(null); handleChanged(); }}
+          toast={toast}
+          onChanged={handleChanged}
+        />
+      )}
     </section>
   );
 }

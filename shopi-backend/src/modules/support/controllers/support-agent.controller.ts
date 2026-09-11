@@ -4,6 +4,7 @@
  * RÔLE : Endpoints réservés aux agents de support (ADMIN + SUPER_ADMIN + PARTNER).
  *
  * ROUTES :
+ *   GET  /support/agent/agents            → agents éligibles à l'assignation (super_admin)
  *   GET  /support/agent/tickets           → liste avec filtres (portée hiérarchique)
  *   GET  /support/agent/tickets/:id       → détail + messages (portée hiérarchique)
  *   POST /support/agent/tickets/:id/reply → répondre (ou note interne — admin/super_admin)
@@ -22,8 +23,11 @@
  *
  * SÉCURITÉ :
  *   Tous les endpoints exigent :
- *     1. JwtAuthGuard → token JWT valide (cookie ou Bearer)
- *     2. RolesGuard   → rôle SUPER_ADMIN, ADMIN ou PARTNER (niveau contrôleur)
+ *     1. JwtAuthGuard           → token JWT valide (cookie ou Bearer)
+ *     2. RolesGuard             → rôle SUPER_ADMIN, ADMIN ou PARTNER (niveau contrôleur)
+ *     3. SupportPermissionGuard → pour un ADMIN, exige Admin.permissions.support
+ *        (accordée par le super-admin — voir PermissionsSection.tsx côté
+ *        frontend). SUPER_ADMIN et PARTNER ne sont pas soumis à ce flag.
  *   Certains endpoints restreignent davantage via @Roles handler-level.
  *   La portée hiérarchique est vérifiée dans SupportService.assertAgentAccess().
  *
@@ -49,6 +53,7 @@ import { JwtAuthGuard }  from '../../../common/guards/auth.guard';
 import { RolesGuard }    from '../../../common/guards/roles.guard';
 import { Roles }         from '../../../common/decorators/roles.decorator';
 import { UserRole }      from '../../../common/enums/user-role.enum';
+import { SupportPermissionGuard } from '../guards/support-permission.guard';
 
 import { SupportService }       from '../services/support.service';
 
@@ -66,7 +71,7 @@ import { SupportTicketPriority } from '../../../database/entities/support/suppor
  * Roles (ctrl): SUPER_ADMIN, ADMIN, PARTNER
  * ───────────────────────────────────────────────────────────── */
 @Controller('support/agent')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, SupportPermissionGuard)
 @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.PARTNER)
 export class SupportAgentController {
 
@@ -76,6 +81,20 @@ export class SupportAgentController {
      * getStatsAsAgent/exportCsvAsAgent — Phase 4 + correctif scope). */
     private readonly svc: SupportService,
   ) {}
+
+  /* ──────────────────────────────────────────────────────────
+   * GET /support/agent/agents
+   *
+   * Liste les admins ayant la permission "support" accordée par le
+   * super-admin — alimente le sélecteur de réassignation de la vue
+   * multi-zone super-admin. Réservé au super-admin : lui seul réassigne
+   * des tickets entre agents à travers les zones.
+   * ────────────────────────────────────────────────────────── */
+  @Get('agents')
+  @Roles(UserRole.SUPER_ADMIN)
+  listAgents() {
+    return this.svc.listAgents();
+  }
 
   /* ══════════════════════════════════════════════════════════
    * TICKETS — LECTURE (SUPER_ADMIN + ADMIN + PARTNER)
@@ -95,6 +114,8 @@ export class SupportAgentController {
    *   status   — 'open' | 'in_progress' | 'waiting_user' | 'resolved' | 'closed'
    *   type     — 'billing' | 'technical' | 'general' | …
    *   priority — 'low' | 'normal' | 'high' | 'urgent'
+   *   channel  — 'client' | 'company' | 'partner' | 'delivery' | 'internal' | 'anonymous'
+   *   agentId  — UUID d'un agent précis, ou 'unassigned' (file d'attente commune)
    *   search   — recherche dans référence + sujet (ILIKE)
    *   page     — numéro de page (défaut: 1)
    *   limit    — tickets par page (défaut: 20, max: 50)
@@ -133,14 +154,18 @@ export class SupportAgentController {
    * QUERY PARAM :
    *   internal=true → note interne (non visible par l'utilisateur)
    * BODY :
-   *   content   — texte du message (1 à 5000 caractères)
-   *   userEmail — email du client (pour la notif email côté agent)
+   *   content — texte du message (1 à 5000 caractères)
+   *
+   * L'email de notification client est résolu côté serveur depuis
+   * ticket.userId (voir ConversationService.replyAsAgent) — le frontend
+   * n'a plus besoin de fournir userEmail (il n'avait de toute façon
+   * aucun moyen fiable de le connaître, voir le correctif associé).
    * ────────────────────────────────────────────────────────── */
   @Post('tickets/:id/reply')
   reply(
     @Req() req: any,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: ReplySupportTicketDto & { userEmail?: string },
+    @Body() body: ReplySupportTicketDto,
     @Query('internal') internal?: string,
   ) {
     const agent = req.user as any;
@@ -149,7 +174,6 @@ export class SupportAgentController {
       agent.role,
       agent.id,
       agent.firstName ?? agent.email,
-      body.userEmail ?? '',
       id,
       { content: body.content },
       internal === 'true',

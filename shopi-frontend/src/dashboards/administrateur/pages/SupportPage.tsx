@@ -30,6 +30,7 @@ interface SupportOverview {
   avgResponseTime: number | null;
   csat: number | null;
   slaViolations: number;
+  unreadCount: number;
 }
 
 export default function SupportPage({ onToast }: SupportPageProps) {
@@ -78,6 +79,7 @@ export default function SupportPage({ onToast }: SupportPageProps) {
         <div className={styles.kpis}>
           <KpiCard variant="k1" icon="fa-headset" value={String(stats.total)} label="Total tickets" />
           <KpiCard variant="k2" icon="fa-fire" value={String(activeCount)} label="Tickets actifs" />
+          <KpiCard variant="k4" icon="fa-envelope" value={String(stats.unreadCount)} label="Non lus" />
           <KpiCard variant="k4" icon="fa-clock" value={String(stats.slaViolations)} label="SLA dépassés" />
           <KpiCard variant="k3" icon="fa-star" value={stats.csat != null ? stats.csat.toFixed(1) : '—'} unit="/5" label="Satisfaction (CSAT)" />
         </div>
@@ -108,21 +110,25 @@ export default function SupportPage({ onToast }: SupportPageProps) {
           <div className={styles.tblWrap}>
             <table className={styles.table}>
               <thead>
-                <tr><th>Référence</th><th>Sujet</th><th>Statut</th><th>Priorité</th><th>Créé le</th></tr>
+                <tr><th></th><th>Référence</th><th>Sujet</th><th>Statut</th><th>Priorité</th><th>Créé le</th></tr>
               </thead>
               <tbody>
                 {tickets.length === 0 && (
-                  <tr><td colSpan={5} style={{ textAlign: 'center', opacity: .5, padding: '2rem' }}>Aucun ticket.</td></tr>
+                  <tr><td colSpan={6} style={{ textAlign: 'center', opacity: .5, padding: '2rem' }}>Aucun ticket.</td></tr>
                 )}
-                {tickets.map(t => (
-                  <tr key={t.id} className={styles.row} onClick={() => setOpenTicket(t.id)}>
-                    <td className={styles.refCell}>{t.reference}</td>
-                    <td>{t.subject}</td>
-                    <td><span className={`${styles.stPill} ${styles['st_' + t.status]}`}>{STATUS_LABEL[t.status] ?? t.status}</span></td>
-                    <td><span className={`${styles.prPill} ${styles['pr_' + t.priority]}`}>{PRIORITY_LABEL[t.priority] ?? t.priority}</span></td>
-                    <td>{new Date(t.createdAt).toLocaleDateString('fr-FR')}</td>
-                  </tr>
-                ))}
+                {tickets.map(t => {
+                  const unread = (t.unreadByAgent ?? 0) > 0;
+                  return (
+                    <tr key={t.id} className={`${styles.row}${unread ? ` ${styles.rowUnread}` : ''}`} onClick={() => setOpenTicket(t.id)}>
+                      <td>{unread && <span className={styles.unreadDot} title={`${t.unreadByAgent} message(s) non lu(s)`} />}</td>
+                      <td className={styles.refCell}>{t.reference}</td>
+                      <td className={styles.subjCell}>{t.subject}</td>
+                      <td><span className={`${styles.stPill} ${styles['st_' + t.status]}`}>{STATUS_LABEL[t.status] ?? t.status}</span></td>
+                      <td><span className={`${styles.prPill} ${styles['pr_' + t.priority]}`}>{PRIORITY_LABEL[t.priority] ?? t.priority}</span></td>
+                      <td>{new Date(t.createdAt).toLocaleDateString('fr-FR')}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -133,7 +139,10 @@ export default function SupportPage({ onToast }: SupportPageProps) {
         <TicketDetailModal
           ticketId={openTicket}
           currentUserId={user.id}
-          onClose={() => setOpenTicket(null)}
+          /* Ouvrir le ticket marque unreadByAgent=0 côté serveur — il faut
+           * recharger la liste à la fermeture, pas seulement après une
+           * mutation, sinon le badge "non lu" reste affiché à tort. */
+          onClose={() => { setOpenTicket(null); load(); }}
           onToast={onToast}
           onChanged={load}
         />

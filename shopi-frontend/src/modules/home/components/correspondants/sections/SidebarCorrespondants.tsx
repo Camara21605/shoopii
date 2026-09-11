@@ -47,7 +47,7 @@ export default function SidebarCorrespondants({
     { val: 0, label: t('correspondantsPage.sidebar.ratingOpts.toutesLesNotes'), stars: 0 },
   ];
   return (
-    <aside>
+    <aside className={styles.sidebar}>
       {/* ── Type ── */}
       <div className={styles.sf}>
         <div className={styles.sfh}>

@@ -44,11 +44,14 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService }      from '@nestjs/config';
+import { InjectRepository }   from '@nestjs/typeorm';
+import { Repository }         from 'typeorm';
 
 import {
   SupportTicket,
   SupportTicketPriority,
 } from '../../../database/entities/support/support-ticket.entity';
+import { Admin, AdminStatus } from '../../../database/entities/profiles/admin-profile.entity';
 import { SupportMessage } from '../../../database/entities/support/support-message.entity';
 import { Attachment }     from '../../../database/entities/support/attachment.entity';
 
@@ -89,6 +92,10 @@ export class SupportService {
     private readonly exportSvc:      SupportExportService,
     private readonly mailService:    MailService,
     private readonly config:         ConfigService,
+
+    /* Nécessaire pour listAgents() — voir plus bas */
+    @InjectRepository(Admin)
+    private readonly adminRepo: Repository<Admin>,
   ) {}
 
   /* ════════════════════════════════════════════════════════════
@@ -101,8 +108,8 @@ export class SupportService {
     userName:  string,
     userEmail: string,
     dto:       CreateSupportTicketDto,
-  ): Promise<SupportTicket> {
-    const ticket = await this.ticketSvc.create(userId, userRole, userName, dto);
+  ): Promise<{ ticket: SupportTicket; firstMessageId: string }> {
+    const { ticket, firstMessageId } = await this.ticketSvc.create(userId, userRole, userName, dto);
 
     try {
       await this.mailService.sendSupportTicketConfirmation({
@@ -116,7 +123,7 @@ export class SupportService {
       this.logger.warn(`[SUPPORT] Email confirmation échoué pour ${userEmail}: ${e}`);
     }
 
-    return ticket;
+    return { ticket, firstMessageId };
   }
 
   findByUser(
@@ -158,6 +165,30 @@ export class SupportService {
    * ════════════════════════════════════════════════════════════ */
 
   /**
+   * Liste les admins éligibles à l'assignation de tickets (permission
+   * "support" accordée par le super-admin — voir PermissionsSection.tsx
+   * et SupportPermissionGuard). Réservé au super-admin : c'est lui seul
+   * qui réassigne des tickets entre agents à travers les zones (vue
+   * globale multi-admin du dashboard super-admin).
+   */
+  async listAgents(): Promise<{ id: string; name: string; email: string; paysAssigne: string | null }[]> {
+    const admins = await this.adminRepo.find({
+      relations: ['user'],
+      where: { status: AdminStatus.ACTIVE },
+      order: { fullName: 'ASC' },
+    });
+
+    return admins
+      .filter(a => (a.permissions as Record<string, boolean> | null)?.support)
+      .map(a => ({
+        id:          a.userId,
+        name:        a.fullName,
+        email:       a.user?.email ?? '',
+        paysAssigne: a.paysAssigne ?? null,
+      }));
+  }
+
+  /**
    * Liste paginée des tickets dans la portée de l'agent.
    * SUPER_ADMIN : tous les tickets.
    * ADMIN       : tickets des acteurs qu'il supervise.
@@ -190,7 +221,6 @@ export class SupportService {
     role:       string,
     agentId:    string,
     agentName:  string,
-    userEmail:  string,
     ticketId:   string,
     dto:        ReplySupportTicketDto,
     isInternal: boolean,
@@ -203,7 +233,7 @@ export class SupportService {
       throw new InternalMessageForbiddenException();
     }
 
-    return this.convSvc.replyAsAgent(agentId, agentName, userEmail, ticketId, dto, isInternal);
+    return this.convSvc.replyAsAgent(agentId, agentName, ticketId, dto, isInternal);
   }
 
   async updateStatus(
@@ -352,6 +382,55 @@ export class SupportService {
   /* ════════════════════════════════════════════════════════════
    * UTILITAIRE PRIVÉ
    * ════════════════════════════════════════════════════════════ */
+
+  /**
+   * Version booléenne (ne lance jamais) de la vérification d'accès —
+   * utilisée par SupportGateway pour autoriser join_ticket (rejoindre
+   * la room temps réel d'un ticket) sans dupliquer la logique de
+   * portée hiérachique déjà centralisée ici.
+   *
+   * Couvre les DEUX côtés d'une conversation de ticket :
+   *   - l'auteur (client/entreprise/livreur/partenaire/correspondant)
+   *     via ticket.userId === userId (même contrôle IDOR que les
+   *     méthodes "ByUser" ci-dessus) ;
+   *   - un agent (super_admin/admin/partner) via la même portée
+   *     hiérarchique que resolveVisibleUserIds(), ET, pour un ADMIN,
+   *     la même permission "support" que SupportPermissionGuard côté
+   *     REST — sinon un admin sans cette permission pourrait quand
+   *     même écouter les messages en direct via ce gateway, en
+   *     contournant le garde REST.
+   *
+   * @param userId  User.id de l'appelant (identité de connexion)
+   * @param actorId Profil de l'appelant si agent (Admin.id/Partner.id) —
+   *                voir SupportPermissionService.resolveVisibleUserIds()
+   */
+  async canAccessTicket(
+    userId:   string,
+    actorId:  string | undefined,
+    role:     string,
+    ticketId: string,
+  ): Promise<boolean> {
+    const ticket = await this.ticketSvc.findRaw(ticketId).catch(() => null);
+    if (!ticket) return false;
+
+    if (ticket.userId === userId) return true;
+
+    if (role === UserRole.SUPER_ADMIN) return true;
+
+    if (role === UserRole.ADMIN) {
+      const admin = await this.adminRepo.findOne({ where: { userId }, select: ['permissions'] });
+      const perms = admin?.permissions as Record<string, boolean> | null;
+      if (!perms?.support) return false;
+    }
+
+    if (role === UserRole.ADMIN || role === UserRole.PARTNER) {
+      const visibleIds = await this.permissionSvc.resolveVisibleUserIds(actorId, role);
+      if (visibleIds === null) return true;
+      return !!ticket.userId && visibleIds.has(ticket.userId);
+    }
+
+    return false;
+  }
 
   /**
    * Vérifie que l'agent (actorId + role) a la portée nécessaire pour

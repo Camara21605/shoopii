@@ -19,20 +19,18 @@ import type { FilterState }  from '../hooks/useLivreurs';
 /** Nombre réel de livreurs par commune — GET /client/livreurs/zones. */
 export interface ZoneCount { value: string; label: string; count: number }
 
-/* Communes affichées tant que le compte réel n'a pas encore chargé (ou a
- * échoué) — mêmes 5 communes que le backend, count à 0 plutôt qu'un chiffre
- * inventé (voir BUG CORRIGÉ ci-dessous pour le contexte). */
+/* Repli tant que GET /client/livreurs/zones n'a pas encore répondu (ou a
+ * échoué) — les vraies communes viennent du référentiel géo (voir
+ * LivreursClientService.getZoneCounts côté backend) et ne sont pas connues
+ * à l'avance côté front, donc on n'affiche ici que "Toutes les zones"
+ * plutôt que d'inventer une liste de communes qui pourrait ne pas
+ * correspondre à ce qui est réellement configuré. */
 const ZONES_FALLBACK: ZoneCount[] = [
-  { value: 'all',    label: 'Toutes les zones', count: 0 },
-  { value: 'kaloum', label: 'Kaloum',           count: 0 },
-  { value: 'ratoma', label: 'Ratoma',           count: 0 },
-  { value: 'matam',  label: 'Matam',            count: 0 },
-  { value: 'dixinn', label: 'Dixinn',           count: 0 },
-  { value: 'matoto', label: 'Matoto',           count: 0 },
+  { value: 'all', label: 'Toutes les zones', count: 0 },
 ];
 
 /* ── Avatar "Mes abonnements" — photo réelle si dispo, sinon initiales ──
- * (même pattern que CardLivreurGrid/List — voir ces fichiers.) */
+ * (même pattern que CardLivreurList — voir ce fichier.) */
 function FollowedAvatar({ livreur }: { livreur: LivreurItem }) {
   const [imgError, setImgError] = useState(false);
   return (

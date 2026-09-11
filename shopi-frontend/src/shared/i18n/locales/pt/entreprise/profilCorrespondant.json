@@ -34,10 +34,6 @@
       "galerie": "Galeria"
     },
     "sidebar": {
-      "contacterPrenom": "Contactar {{prenom}}",
-      "envoyerMessage": "Enviar uma mensagem",
-      "whatsappToast": "📱 WhatsApp",
-      "appelToast": "📞 Chamada",
       "contactsDetailles": "Contactos detalhados",
       "statistiques": "Estatísticas",
       "abonnesTitle": "Subscritores",

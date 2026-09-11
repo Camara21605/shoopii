@@ -419,6 +419,7 @@ const Login: React.FC = () => {
                 onValidateStep={validateRegisterStep}
                 isCollabInvite={collabInvite !== null}
                 collabJobTitle={collabInvite?.jobTitle}
+                onToast={showToast}
               />
             )}
 

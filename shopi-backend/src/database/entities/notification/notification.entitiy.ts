@@ -253,13 +253,19 @@ export enum NotificationType {
   INVITATION_CODE_USED  = 'invitation.code_used',   // code d'invitation utilisé
 
   // ── SUPPORT TICKETS ────────────────────────────────────────
-  // Ajoutées en Phase 5 du Help Center.
+  // Ajoutées en Phase 5 du Help Center. SUPPORT_TICKET_USER_REPLY ajoutée
+  // ensuite : l'agent (assigné) ou le super-admin (ticket non assigné)
+  // doit être notifié quand le client répond — auparavant seul le
+  // compteur unreadByAgent (badge passif) existait, aucune notification
+  // active.
   // En production, exécuter avant déploiement :
   //   ALTER TYPE notification_type_enum ADD VALUE 'support.ticket_created';
   //   ALTER TYPE notification_type_enum ADD VALUE 'support.ticket_reply';
+  //   ALTER TYPE notification_type_enum ADD VALUE 'support.ticket_user_reply';
   // En développement (synchronize:true), TypeORM gère l'ajout automatiquement.
-  SUPPORT_TICKET_CREATED = 'support.ticket_created', // accusé de réception ticket créé
-  SUPPORT_TICKET_REPLY   = 'support.ticket_reply',   // agent a répondu au ticket
+  SUPPORT_TICKET_CREATED   = 'support.ticket_created',    // accusé de réception ticket créé
+  SUPPORT_TICKET_REPLY     = 'support.ticket_reply',      // agent a répondu au ticket
+  SUPPORT_TICKET_USER_REPLY = 'support.ticket_user_reply', // client a répondu — agent/super-admin
 
   // ── APPELS AUDIO/VIDÉO ─────────────────────────────────────
   // En production, exécuter avant déploiement :

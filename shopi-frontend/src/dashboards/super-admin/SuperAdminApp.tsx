@@ -47,6 +47,7 @@ export default function SuperAdminApp() {
   const [sidebarOpen,   setSidebarOpen]  = useState(false);
   const [toasts,        setToasts]       = useState<{ id: number; type: string; msg: string }[]>([]);
   const [slaViolations, setSlaViolations] = useState(0);
+  const [unreadTickets, setUnreadTickets] = useState(0);
 
   const toast = useCallback((type: string, msg: string) => {
     const id = Date.now();
@@ -56,6 +57,14 @@ export default function SuperAdminApp() {
 
   const removeToast = useCallback((id: number) => {
     setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  /* Référence stable — sinon SupportSection.loadOverview() (useCallback
+   * dépendant de cette prop) changerait d'identité à chaque rendu,
+   * redéclenchant son effet et rappelant onStatsChange en boucle. */
+  const handleSupportStatsChange = useCallback((sla: number, unread: number) => {
+    setSlaViolations(sla);
+    setUnreadTickets(unread);
   }, []);
 
   const handleLogout = useCallback(() => {
@@ -70,8 +79,8 @@ export default function SuperAdminApp() {
   }, []);
 
   useEffect(() => {
-    apiFetch<{ slaViolations: number }>('/support/agent/stats')
-      .then(data => setSlaViolations(data.slaViolations ?? 0))
+    apiFetch<{ slaViolations: number; unreadCount: number }>('/support/agent/stats')
+      .then(data => { setSlaViolations(data.slaViolations ?? 0); setUnreadTickets(data.unreadCount ?? 0); })
       .catch(() => {});
   }, []);
 
@@ -99,6 +108,7 @@ export default function SuperAdminApp() {
         pendingAlerts={store.pendingAlerts}
         validCodesCount={validCodesCount}
         slaViolations={slaViolations}
+        unreadTickets={unreadTickets}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
@@ -130,7 +140,16 @@ export default function SuperAdminApp() {
             {sec === 'settings'            && <SettingsSection toast={toast} isActive onLogout={handleLogout} />}
             {sec === 'permissions'         && <PermissionsSection store={store} toast={toast} isActive />}
             {sec === 'notifications-admin' && <NotificationsAdminSection isActive />}
-            {sec === 'support'             && <SupportSection isActive />}
+            {sec === 'support'             && (
+              <SupportSection
+                isActive
+                toast={toast}
+                /* Garde le badge "non lus" de la sidebar synchronisé en
+                 * direct pendant que l'agent traite des tickets, sans
+                 * attendre un nouveau montage de la page. */
+                onStatsChange={handleSupportStatsChange}
+              />
+            )}
             {sec === 'help-center'         && <HelpCenterSection isActive />}
             {sec === 'geo-referentiel'     && <GeoReferentielSection isActive toast={toast} />}
             {sec === 'commissions'         && <CommissionsSection isActive toast={toast} />}

@@ -49,9 +49,6 @@
       "rechercherLivreurAria": "Rechercher un livreur",
       "effacerRechercheAria": "Effacer la recherche",
       "trierLivreursAria": "Trier les livreurs",
-      "modeAffichageAria": "Mode d'affichage",
-      "vueGrille": "Vue grille",
-      "vueListe": "Vue liste",
       "livreurCount_one": "{{count}} livreur",
       "livreurCount_other": "{{count}} livreurs",
       "filters": {
@@ -96,8 +93,6 @@
       "tousLesLivreurs": "Tous les livreurs",
       "livreurDansRegion_one": "{{count}} livreur dans votre région",
       "livreurDansRegion_other": "{{count}} livreurs dans votre région",
-      "vueGrille": "Vue grille",
-      "vueListe": "Vue liste",
       "impossibleDeCharger": "Impossible de charger les livreurs",
       "aucunLivreurTrouve": "Aucun livreur trouvé",
       "essayezModifier": "Essayez de modifier vos filtres ou votre recherche.",

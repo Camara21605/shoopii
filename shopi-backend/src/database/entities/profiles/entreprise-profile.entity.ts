@@ -267,6 +267,16 @@ export class Company {
   @Column({ type: 'varchar', length: 100, default: 'GN' })
   pays!: string;
 
+  /* ── Références géo structurées — voir partenaire-profile.entity.ts
+   * pour l'explication complète (paysId/villeId, GeoResolutionService). */
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  paysId!: string | null;
+
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  villeId!: string | null;
+
   /**
    * ✅ NOUVEAU — Repère / indication de localisation.
    * Aide les livreurs à trouver la boutique.

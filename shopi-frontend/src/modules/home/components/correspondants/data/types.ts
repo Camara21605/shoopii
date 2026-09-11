@@ -28,8 +28,5 @@ export interface Correspondant {
 /* Filtres rapides de la barre d'outils */
 export type FiltreRapide = 'all' | 'available' | 'followed' | 'regional' | 'zonal' | 'national';
 
-/* Mode d'affichage */
-export type VueMode = 'grid' | 'list';
-
 /* Options de tri */
 export type TriOption = 'pertinence' | 'note' | 'missions' | 'nom';

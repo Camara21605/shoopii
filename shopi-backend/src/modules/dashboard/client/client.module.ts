@@ -19,6 +19,9 @@ import { ReturnsModule }       from '../entreprise/returns/returns.module';
 import { ClientSavController } from './sav/client-sav.controller';
 import { SecurityAlertsModule } from '../../security-alerts/security-alerts.module';
 import { MailModule } from '../../email/email.module';
+/* ✅ Référentiel géographique réel — communes actives pour le filtre
+ * "Zone de livraison" de LivreursClientService.getZoneCounts() */
+import { GeoModule } from '../../geo/geo.module';
 
 import { User }           from '../../../database/entities/user.entity';
 import { Client }         from '../../../database/entities/profiles/client-profile.entity';
@@ -27,6 +30,9 @@ import { Product }        from '../../../database/entities/entreprise.table/prod
 /* Entités livreurs */
 import { Delivery }       from '../../../database/entities/profiles/livreur-profile.entity';
 import { Follow }         from '../../../database/entities/follow/follow.entity';
+/* ✅ Résolution du companyId de l'entreprise connectée — exclut ses
+ * propres livreurs de GET /suivis/livreurs (LivreursClientService) */
+import { Company }        from '../../../database/entities/profiles/entreprise-profile.entity';
 /* ✅ Entités correspondant (profil) */
 import { Correspondent }        from '../../../database/entities/profiles/correspondant-profile.entity';
 import { CorrespondantHoraire } from '../../../database/entities/profiles/correspondant-horaire.entity';
@@ -92,6 +98,7 @@ import { ClientPublicProfilService }  from './client-public-profil.service';
     ReturnsModule,
     SecurityAlertsModule,
     MailModule,
+    GeoModule,
     TypeOrmModule.forFeature([
       User,
       Client,
@@ -99,6 +106,7 @@ import { ClientPublicProfilService }  from './client-public-profil.service';
       Product,
       Delivery,
       Follow,
+      Company,                /* ✅ ajout — LivreursClientService.resolveOwnCompanyId */
       Correspondent,         /* ✅ ajout */
       CorrespondantHoraire,  /* ✅ ajout */
       ProductLike,           /* ✅ ajout favoris */

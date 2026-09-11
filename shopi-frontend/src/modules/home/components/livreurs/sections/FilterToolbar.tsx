@@ -11,25 +11,24 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/FilterToolbar.module.css';
-import type { FilterType, SortOption, ViewMode, FilterState } from '../hooks/useLivreurs';
+import type { FilterType, SortOption, FilterState } from '../hooks/useLivreurs';
 
 /* ── Props ── */
 interface FilterToolbarProps {
   filters:        FilterState;
   totalCount:     number;
-  viewMode:       ViewMode;
   onSearch:       (v: string) => void;
   onFilter:       (f: FilterType) => void;
   onSort:         (s: SortOption) => void;
-  onViewChange:   (v: ViewMode) => void;
+  onAvailability: (v: 'all' | 'available' | 'busy') => void;
 }
 
 /* ================================================================
  * COMPOSANT PRINCIPAL
  * ================================================================ */
 const FilterToolbar: React.FC<FilterToolbarProps> = ({
-  filters, totalCount, viewMode,
-  onSearch, onFilter, onSort, onViewChange,
+  filters, totalCount,
+  onSearch, onFilter, onSort, onAvailability,
 }) => {
   const { t } = useTranslation();
 
@@ -95,6 +94,17 @@ const FilterToolbar: React.FC<FilterToolbarProps> = ({
           </React.Fragment>
         ))}
 
+        {/* ── Disponibilité (mobile uniquement — sur desktop, voir
+         * SidebarFilters section Disponibilité, pour ne pas dupliquer) ── */}
+        <button
+          className={`${styles.filterBtn} ${styles.mobileOnly} ${filters.availabilityFilter === 'busy' ? styles.on : ''}`}
+          onClick={() => onAvailability(filters.availabilityFilter === 'busy' ? 'all' : 'busy')}
+          aria-pressed={filters.availabilityFilter === 'busy'}
+        >
+          <i className="fas fa-gear" aria-hidden="true" />
+          {t('livreursPage.sidebar.enCourse')}
+        </button>
+
         {/* Séparateur avant le tri */}
         <div className={styles.sep} aria-hidden="true" />
 
@@ -113,26 +123,6 @@ const FilterToolbar: React.FC<FilterToolbarProps> = ({
         {/* ── Compteur résultats ── */}
         <div className={styles.countPill} aria-live="polite">
           {t('livreursPage.toolbar.livreurCount', { count: totalCount })}
-        </div>
-
-        {/* ── Toggle vue grille / liste ── */}
-        <div className={styles.viewBtns} role="group" aria-label={t('livreursPage.toolbar.modeAffichageAria')}>
-          <button
-            className={`${styles.vBtn} ${viewMode === 'grid' ? styles.vBtnOn : ''}`}
-            onClick={() => onViewChange('grid')}
-            title={t('livreursPage.toolbar.vueGrille')}
-            aria-pressed={viewMode === 'grid'}
-          >
-            <i className="fas fa-th-large" aria-hidden="true" />
-          </button>
-          <button
-            className={`${styles.vBtn} ${viewMode === 'list' ? styles.vBtnOn : ''}`}
-            onClick={() => onViewChange('list')}
-            title={t('livreursPage.toolbar.vueListe')}
-            aria-pressed={viewMode === 'list'}
-          >
-            <i className="fas fa-list" aria-hidden="true" />
-          </button>
         </div>
 
       </div>

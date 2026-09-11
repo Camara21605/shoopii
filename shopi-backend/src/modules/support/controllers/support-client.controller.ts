@@ -95,8 +95,13 @@ export class SupportClientController {
    * Crée un nouveau ticket de support.
    * Un email de confirmation est envoyé à l'utilisateur.
    *
-   * BODY : CreateSupportTicketDto
+   * BODY   : CreateSupportTicketDto
    *   { type, subject, firstMessage, relatedOrderId? }
+   * RETOUR : { ticket, firstMessageId } — firstMessageId permet au
+   *   frontend de joindre immédiatement une pièce jointe au ticket
+   *   fraîchement créé (POST .../messages/:msgId/attachments), sans
+   *   quoi il fallait rouvrir le ticket après coup pour connaître
+   *   l'id du premier message.
    * ────────────────────────────────────────────────────────── */
   @Post('tickets')
   create(@Req() req: any, @Body() dto: CreateSupportTicketDto) {

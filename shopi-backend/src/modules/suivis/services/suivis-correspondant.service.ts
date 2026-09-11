@@ -85,6 +85,14 @@ export class SuivisCorrespondantService extends SuivisBaseService {
     const hiddenIds: string[] = skipSuivi
       ? []
       : await this.getMyHiddenIds(userId, role);
+    /* Un correspondant créé/invité par CETTE entreprise ne doit apparaître
+     * ni dans ses "Abonnements" ni dans son "Découvrir" — il est déjà dans
+     * "Mon équipe". Les AUTRES entreprises le voient normalement.
+     * Résolu côté serveur depuis (userId, role) issus du JWT — jamais
+     * depuis une valeur transmise par le client. */
+    const myCompanyId: string | null = skipSuivi || role !== UserRole.COMPANY
+      ? null
+      : (await this.companyRepo.findOne({ where: { userId }, select: ['id'] }))?.id ?? null;
 
     const qb = this.correspondantRepo
       .createQueryBuilder('cor')
@@ -92,6 +100,10 @@ export class SuivisCorrespondantService extends SuivisBaseService {
       .leftJoinAndSelect('cor.user', 'user')
       /* Inclure pending pour le dev (statut par défaut à la création) */
       .where('cor.status IN (:...statuses)', { statuses: ['active', 'pending'] });
+
+    if (myCompanyId) {
+      qb.andWhere('(cor.companyId IS NULL OR cor.companyId != :myCompanyId)', { myCompanyId });
+    }
 
     if (filters?.commune) qb.andWhere('cor.depotCommune = :commune', { commune: filters.commune });
     if (filters?.ville)   qb.andWhere('cor.depotVille = :ville',     { ville:   filters.ville   });

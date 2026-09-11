@@ -201,10 +201,18 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
       case 'phone':
         return !data.phone.trim() ? 'Téléphone requis.' : undefined;
 
+      /*
+       * BUG CORRIGÉ — cette validation n'exigeait pas de caractère
+       * spécial, alors que le backend (register.dto.ts, @Matches) l'a
+       * toujours exigé. Un mot de passe comme "Password1" passait donc
+       * cette étape et le clic "Créer mon compte", pour être rejeté
+       * ensuite par le serveur (400) — rejet que l'utilisateur ne
+       * pouvait pas anticiper. Règle désormais identique des deux côtés.
+       */
       case 'password':
         if (data.password.length < 8) return 'Mot de passe trop court (8 caractères min).';
-        if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(data.password))
-          return 'Doit contenir une majuscule, une minuscule et un chiffre.';
+        if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/.test(data.password))
+          return 'Doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial.';
         return undefined;
 
       case 'confirmPassword':
@@ -232,6 +240,71 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
 
       case 'terms':
         return !data.terms ? "Vous devez accepter les conditions d'utilisation pour continuer." : undefined;
+
+      /*
+       * BUG CORRIGÉ — shopName et companyTypeId n'étaient validés nulle
+       * part (ni dans STEP_FIELDS/validateRegister, ni ici : le
+       * `default: return undefined` les laissait toujours passer). Un
+       * compte entreprise pouvait donc être créé sans nom de boutique
+       * ni type — uniquement pour le rôle "company", et jamais pour un
+       * collaborateur invité (isCollabInvite/collabInvite : il rejoint
+       * une entreprise déjà existante, voir RegisterForm.tsx
+       * `roleConfig.shop && !isCollabInvite`).
+       */
+      case 'shopName':
+        if (role !== 'company' || collabInvite) return undefined;
+        return !data.shopName?.trim() ? 'Nom de la boutique / entreprise requis.' : undefined;
+
+      case 'companyTypeId':
+        if (role !== 'company' || collabInvite) return undefined;
+        return !data.companyTypeId?.trim() ? "Type d'entreprise requis." : undefined;
+
+      /*
+       * BUG CORRIGÉ — date de naissance et genre étaient affichés
+       * "(optionnel)" à l'étape Profil mais doivent en réalité être
+       * obligatoires, pour tous les rôles (décision explicite,
+       * confirmée y compris pour le rôle client). Exclus pour un
+       * collaborateur invité (collabInvite) : ce parcours rejoint une
+       * entreprise EXISTANTE via une route et un payload dédiés
+       * (acceptCollabInvitation → POST /company-team/invitations/
+       * accept/:token, { firstName, lastName, password, phone? }) qui
+       * ne transmettent jamais birthDate/gender — les rendre
+       * obligatoires ici bloquerait cette inscription pour des données
+       * qui ne seraient de toute façon jamais envoyées.
+       */
+      case 'birthDate':
+        if (collabInvite) return undefined;
+        return !data.birthDate?.trim() ? 'Date de naissance requise.' : undefined;
+
+      case 'gender':
+        if (collabInvite) return undefined;
+        return !data.gender?.trim() ? 'Genre requis.' : undefined;
+
+      /*
+       * BUG CORRIGÉ — la localisation (LocationPermission /
+       * CompanyLocationSelect) n'était validée nulle part : les boutons
+       * "Ignorer" permettaient de finir l'inscription sans aucune
+       * position. Désormais obligatoire pour client/delivery/partner/
+       * correspondent (latitude+longitude, détection auto) et company
+       * (companyPaysId+companyVilleId, sélection manuelle dans le
+       * référentiel géo — voir CompanyLocationSelect.tsx). Non concerné
+       * : rôles hors LOCATION_ROLES (RegisterForm.tsx) et collabInvite,
+       * qui rejoint une entreprise existante sans redemander sa position.
+       */
+      case 'location': {
+        if (collabInvite) return undefined;
+        if (role === 'company') {
+          return (!data.companyPaysId || !data.companyVilleId)
+            ? "La localisation de l'entreprise est obligatoire."
+            : undefined;
+        }
+        if (role === 'client' || role === 'delivery' || role === 'partner' || role === 'correspondent') {
+          return (data.latitude == null || data.longitude == null)
+            ? 'La localisation est obligatoire.'
+            : undefined;
+        }
+        return undefined;
+      }
 
       default:
         return undefined;
@@ -262,6 +335,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     const fields: (keyof RegisterFormData)[] = [
       'firstName', 'lastName', 'email', 'phone',
       'password', 'confirmPassword', 'activationCode', 'terms',
+      'shopName', 'companyTypeId', 'birthDate', 'gender', 'location',
     ];
     const errs: FormErrors = {};
     fields.forEach(field => {

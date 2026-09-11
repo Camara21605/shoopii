@@ -65,27 +65,6 @@ function ActiviteTxt({ txt, highlight }: { txt: string; highlight?: string }) {
   return <>{txt.slice(0, idx)}<b>{highlight}</b>{txt.slice(idx + highlight.length)}</>;
 }
 
-/** KPI card individuelle (sans sparkline — pas de série journalière réelle disponible) */
-function KpiCard({
-  variant, icon, badge, badgeType, value, label, sub,
-}: {
-  variant: string; icon: string; badge: string; badgeType: 'up' | 'dn' | 'neu';
-  value: string; label: string; sub: string;
-}) {
-  return (
-    <div className={`kpi ${variant}`}>
-      <div className="kpi-stripe"></div>
-      <div className="kpi-top">
-        <div className="kpi-icon">{icon}</div>
-        <span className={`kpi-badge ${badgeType}`}>{badge}</span>
-      </div>
-      <div className="kpi-val">{value}</div>
-      <div className="kpi-lbl">{label}</div>
-      <div className="kpi-sub">{sub}</div>
-    </div>
-  );
-}
-
 export default function OverviewPage({ onNavigate }: OverviewPageProps) {
   const { t } = useTranslation();
   const { pop } = useToast();
@@ -93,6 +72,11 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
   const navigate = useNavigate();
   const [data, setData]       = useState<OverviewData>(EMPTY);
   const [loading, setLoading] = useState(true);
+  /* Page à onglets — trop d'informations à la fois perdait l'utilisateur
+   * (retours utilisateur) : seuls le héro + les KPIs restent toujours
+   * visibles, le reste (graphiques, commandes, activité) est réparti
+   * dans 3 onglets consultés un par un. */
+  const [tab, setTab] = useState<'ventes' | 'commandes' | 'activite'>('ventes');
 
   useEffect(() => {
     apiFetch<OverviewData>('/dashboard/entreprise/overview')
@@ -181,106 +165,124 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
         </div>
       </div>
 
-      {/* ── KPI GRID ── */}
-      <div className="kpi-grid">
-        <KpiCard
-          variant="k1" icon="💰" badge={caTrend.label} badgeType={caTrend.type}
-          value={fmt(kpis.caCeMois)} label={t('overview.kpi.ca')} sub="GNF"
-        />
-        <KpiCard
-          variant="k2" icon="📦" badge={cmdTrend.label} badgeType={cmdTrend.type}
-          value={String(kpis.commandesCeMois)} label={t('overview.kpi.commandes')}
-          sub={t('overview.kpi.commandesSub', { enAttente: kpis.enAttente, livrees: kpis.livrees, enCours: kpis.enCours })}
-        />
-        <KpiCard
-          variant="k3" icon="🛍️" badge={t('overview.hero.total')} badgeType="neu"
-          value={fmt(kpis.abonnes)} label={t('overview.kpi.abonnes')} sub={t('overview.kpi.abonnesSub')}
-        />
-        <KpiCard
-          variant="k4" icon="⭐" badge={t('overview.hero.avis', { count: kpis.totalAvis })} badgeType="neu"
-          value={kpis.noteMoyenne.toFixed(1)} label={t('overview.kpi.note')} sub={t('overview.kpi.noteSub', { count: kpis.totalAvis })}
-        />
-        <KpiCard
-          variant="k5" icon="🔄" badge={String(kpis.retoursCeMois)} badgeType="neu"
-          value={String(kpis.retoursCeMois)} label={t('overview.kpi.retours')}
-          sub={t('overview.kpi.retoursSub', { enTraitement: kpis.retoursEnTraitement, rembourses: kpis.retoursRembourses })}
-        />
-        <KpiCard
-          variant="k6" icon="💸" badge={t('overview.kpi.margeBadge', { marge: kpis.margePct })} badgeType="neu"
-          value={fmt(kpis.beneficeNet)} label={t('overview.kpi.benefice')}
-          sub={t('overview.kpi.beneficeSub', { marge: kpis.margePct, commission: fmt(kpis.commissionCeMois) })}
-        />
+      {/* ── ONGLETS ── */}
+      <div className="ov-tabs">
+        <button className={`ov-tab ${tab === 'ventes' ? 'ov-tab-on' : ''}`} onClick={() => setTab('ventes')}>
+          <i className="fas fa-chart-line"></i> {t('overview.tabs.ventes')}
+        </button>
+        <button className={`ov-tab ${tab === 'commandes' ? 'ov-tab-on' : ''}`} onClick={() => setTab('commandes')}>
+          <i className="fas fa-box"></i> {t('overview.tabs.commandes')}
+          {stockAlertes.length > 0 && <span className="ov-tab-badge">{stockAlertes.length}</span>}
+        </button>
+        <button className={`ov-tab ${tab === 'activite' ? 'ov-tab-on' : ''}`} onClick={() => setTab('activite')}>
+          <i className="fas fa-timeline"></i> {t('overview.tabs.activite')}
+        </button>
       </div>
 
-      {/* ── CA + TOP PRODUITS ── */}
-      <div className="g3">
-        <div className="card">
-          <div className="ch">
-            <div className="ch-t"><i className="fas fa-chart-line"></i> {t('overview.charts.caMensuel')}</div>
+      {/* ── ONGLET VENTES : CA + TOP PRODUITS + RÉPARTITION ── */}
+      {tab === 'ventes' && (
+        <>
+          <div className="ov-line">
+            <i className="fas fa-sack-dollar"></i>
+            {t('overview.kpi.benefice')} : <b>{fmt(kpis.beneficeNet)} GNF</b>
+            <span className="ov-line-sub">{t('overview.kpi.beneficeSub', { marge: kpis.margePct, commission: fmt(kpis.commissionCeMois) })}</span>
           </div>
-          <div className="cb">
-            {caData.length === 0 && !loading && (
-              <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)' }}>{t('overview.charts.noSalesDelivered')}</div>
-            )}
-            <div className="chart-bars">
-              {caData.map((d, i) => (
-                <div className="c-bar-wrap" key={i}>
-                  <div
-                    className="c-bar"
-                    style={{
-                      height: `${(d.v / maxCA) * 100}%`,
-                      background: i === caData.length - 1 ? 'var(--t2)' : 'var(--sky-3)',
-                    }}
-                  >
-                    <div className="c-bar-v">{d.v}M</div>
-                  </div>
-                  <div className="c-lbl">{d.m}</div>
-                </div>
-              ))}
-            </div>
-            <div className="chart-legend">
-              <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--t2)' }}></div>{t('overview.charts.legendCurrent')}</div>
-              <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--sky-3)' }}></div>{t('overview.charts.legendPrevious')}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="ch">
-            <div className="ch-t"><i className="fas fa-trophy"></i> {t('overview.charts.topProduits')}</div>
-          </div>
-          <div className="cb">
-            {topProduits.length === 0 && !loading && (
-              <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)' }}>{t('overview.charts.noSales')}</div>
-            )}
-            {topProduits.map((p, i) => {
-              const mx = Math.max(1, ...topProduits.map(x => x.ventes));
-              return (
-                <div key={i} className="tp-row">
-                  <div className="tp-rank">{i + 1}</div>
-                  <div className="tp-em">{p.em}</div>
-                  <div className="tp-info">
-                    <div className="tp-nm">{p.nm}</div>
-                    <div className="tp-bar">
-                      <div className="tp-bar-fill" style={{ width: `${(p.ventes / mx) * 100}%` }} />
+          <div className="g3">
+            <div className="card">
+              <div className="ch">
+                <div className="ch-t"><i className="fas fa-chart-line"></i> {t('overview.charts.caMensuel')}</div>
+              </div>
+              <div className="cb">
+                {caData.length === 0 && !loading && (
+                  <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)' }}>{t('overview.charts.noSalesDelivered')}</div>
+                )}
+                <div className="chart-bars">
+                  {caData.map((d, i) => (
+                    <div className="c-bar-wrap" key={i}>
+                      <div
+                        className="c-bar"
+                        style={{
+                          height: `${(d.v / maxCA) * 100}%`,
+                          background: i === caData.length - 1 ? 'var(--t2)' : 'var(--sky-3)',
+                        }}
+                      >
+                        <div className="c-bar-v">{d.v}M</div>
+                      </div>
+                      <div className="c-lbl">{d.m}</div>
                     </div>
-                  </div>
-                  <div className="tp-stats">
-                    <div className="tp-ventes">{t('overview.charts.ventes', { count: p.ventes })}</div>
-                    <div className={`tp-trend ${p.trend === 'up' ? 'up' : p.trend === 'dn' ? 'dn' : 'neu'}`}>
-                      {p.trend === 'up' ? '↑' : p.trend === 'dn' ? '↓' : '—'} {p.ca}
+                  ))}
+                </div>
+                <div className="chart-legend">
+                  <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--t2)' }}></div>{t('overview.charts.legendCurrent')}</div>
+                  <div className="cl-item"><div className="cl-dot" style={{ background: 'var(--sky-3)' }}></div>{t('overview.charts.legendPrevious')}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="ch">
+                <div className="ch-t"><i className="fas fa-trophy"></i> {t('overview.charts.topProduits')}</div>
+              </div>
+              <div className="cb">
+                {topProduits.length === 0 && !loading && (
+                  <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)' }}>{t('overview.charts.noSales')}</div>
+                )}
+                {topProduits.map((p, i) => {
+                  const mx = Math.max(1, ...topProduits.map(x => x.ventes));
+                  return (
+                    <div key={i} className="tp-row">
+                      <div className="tp-rank">{i + 1}</div>
+                      <div className="tp-em">{p.em}</div>
+                      <div className="tp-info">
+                        <div className="tp-nm">{p.nm}</div>
+                        <div className="tp-bar">
+                          <div className="tp-bar-fill" style={{ width: `${(p.ventes / mx) * 100}%` }} />
+                        </div>
+                      </div>
+                      <div className="tp-stats">
+                        <div className="tp-ventes">{t('overview.charts.ventes', { count: p.ventes })}</div>
+                        <div className={`tp-trend ${p.trend === 'up' ? 'up' : p.trend === 'dn' ? 'dn' : 'neu'}`}>
+                          {p.trend === 'up' ? '↑' : p.trend === 'dn' ? '↓' : '—'} {p.ca}
+                        </div>
+                      </div>
                     </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="ch"><div className="ch-t"><i className="fas fa-chart-pie"></i> {t('overview.donut.title')}</div></div>
+            <div className="cb">
+              {categoryBreakdown.length === 0 && !loading ? (
+                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('overview.charts.noSales')}</div>
+              ) : (
+                <div className="donut-wrap">
+                  <div className="donut" style={{ background: `conic-gradient(${segments.join(',')})` }}></div>
+                  <div className="donut-legend">
+                    {categoryBreakdown.map(c => (
+                      <div className="dl-item" key={c.label}>
+                        <div className="dl-left"><div className="dl-dot" style={{ background: 'var(--t2)' }}></div>{c.label}</div>
+                        <div className="dl-pct">{c.pct}%</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              );
-            })}
+              )}
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
 
-      {/* ── ALERTES + DONUT + COMMANDES + ACTIVITÉ ── */}
-      <div className="g3r">
-        <div>
+      {/* ── ONGLET COMMANDES : ALERTES + DERNIÈRES COMMANDES ── */}
+      {tab === 'commandes' && (
+        <>
+          <div className="ov-line">
+            <i className="fas fa-rotate-left"></i>
+            {t('overview.kpi.retours')} : <b>{kpis.retoursCeMois}</b>
+            <span className="ov-line-sub">{t('overview.kpi.retoursSub', { enTraitement: kpis.retoursEnTraitement, rembourses: kpis.retoursRembourses })}</span>
+          </div>
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
               <div className="ch-t"><i className="fas fa-triangle-exclamation"></i> {t('overview.alerts.title')}</div>
@@ -310,29 +312,6 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
           </div>
 
           <div className="card">
-            <div className="ch"><div className="ch-t"><i className="fas fa-chart-pie"></i> {t('overview.donut.title')}</div></div>
-            <div className="cb">
-              {categoryBreakdown.length === 0 && !loading ? (
-                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('overview.charts.noSales')}</div>
-              ) : (
-                <div className="donut-wrap">
-                  <div className="donut" style={{ background: `conic-gradient(${segments.join(',')})` }}></div>
-                  <div className="donut-legend">
-                    {categoryBreakdown.map(c => (
-                      <div className="dl-item" key={c.label}>
-                        <div className="dl-left"><div className="dl-dot" style={{ background: 'var(--t2)' }}></div>{c.label}</div>
-                        <div className="dl-pct">{c.pct}%</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div className="card" style={{ marginBottom: 14 }}>
             <div className="ch">
               <div className="ch-t"><i className="fas fa-box"></i> {t('overview.orders.title')}</div>
               <button className="sh-action" onClick={() => onNavigate('commandes')}>
@@ -369,26 +348,29 @@ export default function OverviewPage({ onNavigate }: OverviewPageProps) {
               )}
             </div>
           </div>
+        </>
+      )}
 
-          <div className="card">
-            <div className="ch"><div className="ch-t"><i className="fas fa-timeline"></i> {t('overview.activity.title')}</div></div>
-            <div className="cb">
-              {activite.length === 0 && !loading && (
-                <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('overview.activity.empty')}</div>
-              )}
-              <div className="act-list">
-                {activite.map((a, i) => (
-                  <div key={i} className="act-item">
-                    <div className="act-dot order"><i className={`fas ${a.icon}`}></i></div>
-                    <div className="act-txt"><ActiviteTxt txt={a.txt} highlight={a.highlight} /></div>
-                    <div className="act-time">{a.time}</div>
-                  </div>
-                ))}
-              </div>
+      {/* ── ONGLET ACTIVITÉ ── */}
+      {tab === 'activite' && (
+        <div className="card">
+          <div className="ch"><div className="ch-t"><i className="fas fa-timeline"></i> {t('overview.activity.title')}</div></div>
+          <div className="cb">
+            {activite.length === 0 && !loading && (
+              <div style={{ textAlign: 'center', padding: 16, color: 'var(--t3)' }}>{t('overview.activity.empty')}</div>
+            )}
+            <div className="act-list">
+              {activite.map((a, i) => (
+                <div key={i} className="act-item">
+                  <div className="act-dot order"><i className={`fas ${a.icon}`}></i></div>
+                  <div className="act-txt"><ActiviteTxt txt={a.txt} highlight={a.highlight} /></div>
+                  <div className="act-time">{a.time}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

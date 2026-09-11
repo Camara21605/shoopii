@@ -64,19 +64,22 @@ export default function RetourStats({ stats, loading }: Props) {
 
   return (
     <>
-      {/* ── KPI Cards ── */}
+      {/* ── KPI — ligne simple, sans cartes ── */}
       <div className={s.kpiStrip}>
         {kpis.map((k, i) => (
           <div key={i} className={s.kpiCard}>
-            <div className={s.kpiStripe} style={{ background: k.color }} />
-            {k.badge && (
-              <span className={s.kpiBadge} style={{ background: k.badgeBg, color: k.badgeColor }}>
-                {k.badge}
-              </span>
-            )}
-            <div className={s.kpiIcon}>{k.ico}</div>
-            <div className={s.kpiVal}>{k.val}</div>
-            <div className={s.kpiLbl}>{k.label}</div>
+            <span className={s.kpiIcon}>{k.ico}</span>
+            <div>
+              <div className={s.kpiVal}>
+                {k.val}
+                {k.badge && (
+                  <span className={s.kpiBadge} style={{ background: k.badgeBg, color: k.badgeColor }}>
+                    {k.badge}
+                  </span>
+                )}
+              </div>
+              <div className={s.kpiLbl}>{k.label}</div>
+            </div>
           </div>
         ))}
       </div>
@@ -123,8 +126,10 @@ export default function RetourStats({ stats, loading }: Props) {
             </div>
             <div className="cb">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {/* "Taux d'acceptation" retiré d'ici — déjà affiché comme
+                    valeur de la carte KPI "Acceptés" juste au-dessus,
+                    doublon exact plutôt qu'une information nouvelle. */}
                 {[
-                  { label: t('retours.stats.tauxAcceptation'), val: `${stats.tauxAcceptation}%`, color: 'var(--t2)', bg: 'var(--g100)' },
                   { label: t('retours.stats.delaiMoyen'), val: `${stats.delaiMoyenHeures}h`, color: 'var(--t2)', bg: 'var(--g100)' },
                   { label: t('retours.stats.retoursRefuses'), val: `${fmt(stats.refused)}`, color: 'var(--t1)', bg: 'var(--g100)' },
                   { label: t('retours.stats.remboursementsEffectues'), val: `${fmt(stats.refunded)}`, color: 'var(--t2)', bg: 'var(--g100)' },

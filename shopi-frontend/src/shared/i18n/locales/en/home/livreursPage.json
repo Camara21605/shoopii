@@ -49,9 +49,6 @@
       "rechercherLivreurAria": "Search for a delivery agent",
       "effacerRechercheAria": "Clear search",
       "trierLivreursAria": "Sort delivery agents",
-      "modeAffichageAria": "Display mode",
-      "vueGrille": "Grid view",
-      "vueListe": "List view",
       "livreurCount_one": "{{count}} delivery agent",
       "livreurCount_other": "{{count}} delivery agents",
       "filters": {
@@ -96,8 +93,6 @@
       "tousLesLivreurs": "All delivery agents",
       "livreurDansRegion_one": "{{count}} delivery agent in your area",
       "livreurDansRegion_other": "{{count}} delivery agents in your area",
-      "vueGrille": "Grid view",
-      "vueListe": "List view",
       "impossibleDeCharger": "Unable to load delivery agents",
       "aucunLivreurTrouve": "No delivery agent found",
       "essayezModifier": "Try changing your filters or search.",

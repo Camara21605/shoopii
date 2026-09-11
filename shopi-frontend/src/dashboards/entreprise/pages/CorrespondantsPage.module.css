@@ -883,3 +883,30 @@
 @media (max-width: 420px) {
   .statsGrid, .kpiGrid { grid-template-columns: 1fr; }
 }
+
+/* ── Téléphones (≤480px) — modales et barre d'outils ──────────
+   Zones qui n'avaient pas de repli mobile : les boutons de pied de
+   modale (jusqu'à 4 sur ModalProfil livreur) débordaient sans wrap,
+   l'indicateur d'étapes de ModalInviter (3 libellés + connecteurs)
+   n'avait aucun moyen de rétrécir, et le champ de recherche gardait
+   un min-width fixe même une fois la toolbar repassée en colonne. */
+@media (max-width: 480px) {
+  .mHeader { flex-wrap: wrap; }
+
+  .mFooter { flex-wrap: wrap; }
+  .mFooter > button,
+  .mFooter > a {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .etapes { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+  .etapeLabel { display: none; }
+
+  .searchWrap { min-width: 0; flex: 1 1 140px; }
+  .filtreSelect { flex: 1 1 140px; }
+
+  .codeRow { flex-wrap: wrap; }
+  .emailCodeValue { font-size: 22px; letter-spacing: 2px; }
+  .codeVal        { font-size: 20px; letter-spacing: 2px; }
+}

@@ -18,7 +18,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useToast }         from '../../../shared/context/ToastContext';
-import type { PromoStatus } from '../types';
+import type { PromoStatus, ToastType } from '../types';
 import styles               from './PromotionsPage.module.css';
 import { apiFetch }         from '../../../shared/services/apiFetch';
 import {
@@ -111,10 +111,14 @@ function PromoCard({
 }: {
   p:          PromoResponse;
   products:   Produit[];
-  onActivate: (id: string) => Promise<void>;
-  onPause:    (id: string) => Promise<void>;
+  /* promotionsApi.activate/pause résolvent avec la PromoResponse mise à
+   * jour — le résultat n'est simplement jamais utilisé ici (onRefresh()
+   * recharge la liste juste après), d'où Promise<unknown> plutôt que
+   * Promise<void>, qui ne correspondrait pas à leur vraie signature. */
+  onActivate: (id: string) => Promise<unknown>;
+  onPause:    (id: string) => Promise<unknown>;
   onRefresh:  () => void;
-  onToast:    (m: string, t: string) => void;
+  onToast:    (m: string, t: ToastType) => void;
   onEdit:     (p: PromoResponse) => void;
 }) {
   const { t } = useTranslation();
@@ -611,36 +615,31 @@ export default function PromotionsPage() {
             <button className={styles.hb2} onClick={() => pop(t('promotions.hero.exportToast'),'i')}><i className="fas fa-download" /> {t('promotions.hero.exportBtn')}</button>
           </div>
         </div>
-        <div className={styles.heroRight}>
-          {[
-            { val: stats ? String(stats.actives)        : '…', unit:t('promotions.hero.statsActives'), lbl:t('promotions.hero.lblPromotions'),  trend:'+1',   up:true },
-            { val: stats ? String(stats.totalUses)       : '…', unit:t('promotions.hero.statsTotal'),   lbl:t('promotions.hero.lblUtilisations'),trend:'+28%', up:true },
-            { val: stats ? formatCa(stats.totalCa)       : '…', unit:t('promotions.hero.statsGnf'),     lbl:t('promotions.hero.lblCaGenere'),   trend:'+12%', up:true },
-          ].map((s,i) => (
-            <div key={i} className={styles.hs}>
-              <div className={styles.hsVal}>{s.val}<span className={styles.hsUnit}>{s.unit}</span></div>
-              <div className={styles.hsLbl}>{s.lbl}</div>
-              <div className={`${styles.hsTrend} ${s.up ? styles.up : styles.dn}`}>
-                <i className={`fas fa-arrow-trend-${s.up?'up':'down'}`} /> {s.trend}
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
 
-      {/* ════ KPIs ════════════════════════════════════════════ */}
+      {/* ════ KPIs — ligne simple, sans cartes ════════════════
+          Remplace l'ancien duo hero-right + kpiGrid : les deux
+          affichaient les 3 mêmes chiffres (actives/utilisations/CA),
+          en double sur grand écran ET le hero-right disparaissait
+          complètement sur mobile (display:none) — sur mobile
+          l'utilisateur ne voyait donc QUE la version la plus lourde
+          (4 grandes cartes empilées). Une seule ligne compacte,
+          visible partout, sans doublon. */}
       <div className={styles.kpiGrid}>
         {kpiCards.map((k,i) => (
-          <div key={i} className={`${styles.kpi} ${styles[k.k]}`}>
-            <div className={styles.kpiStripe} />
-            <div className={styles.kpiTop}>
-              <div className={styles.kpiIcon}>{k.ic}</div>
-              <span className={`${styles.kpiBadge} ${styles[k.trend as keyof typeof styles] ?? ''}`}>
-                {k.trend==='up'?'↑':k.trend==='dn'?'↓':'—'} {k.sub}
-              </span>
+          <div key={i} className={styles.kpi}>
+            <span className={styles.kpiIcon}>{k.ic}</span>
+            <div>
+              <div className={styles.kpiVal}>
+                {loading ? <span className={styles.skeleton} /> : k.val}
+                {k.sub && (
+                  <span className={`${styles.kpiBadge} ${styles[k.trend as keyof typeof styles] ?? ''}`}>
+                    {k.trend==='up'?'↑':k.trend==='dn'?'↓':'—'} {k.sub}
+                  </span>
+                )}
+              </div>
+              <div className={styles.kpiLbl}>{k.lbl}</div>
             </div>
-            <div className={styles.kpiVal}>{loading ? <span className={styles.skeleton} /> : k.val}</div>
-            <div className={styles.kpiLbl}>{k.lbl}</div>
           </div>
         ))}
       </div>

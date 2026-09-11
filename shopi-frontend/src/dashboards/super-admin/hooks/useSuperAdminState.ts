@@ -352,6 +352,23 @@ export function useSuperAdminState() {
     setAdmins(prev => prev.map(a => a.email === email ? { ...a, paysAssigne: paysId } : a));
   }, []);
 
+  /* "Communauté" support — voir SupportPermissionService.resolveAdminScope() */
+  const setAdminVilleAssignee = useCallback(async (email: string, villeId: string | null) => {
+    await apiFetch<{ message: string; villeAssignee: string | null }>(
+      `/dashboard/super-admin/admins/${encodeURIComponent(email)}/ville-assignee`,
+      { method: 'PATCH', body: { villeId } },
+    );
+    setAdmins(prev => prev.map(a => a.email === email ? { ...a, villeAssignee: villeId } : a));
+  }, []);
+
+  const setAdminZoneAssignee = useCallback(async (email: string, zoneId: string | null) => {
+    await apiFetch<{ message: string; zoneId: string | null }>(
+      `/dashboard/super-admin/admins/${encodeURIComponent(email)}/zone-assignee`,
+      { method: 'PATCH', body: { zoneId } },
+    );
+    setAdmins(prev => prev.map(a => a.email === email ? { ...a, zoneId } : a));
+  }, []);
+
   const pendingAlerts = alerts.filter(a => !a.resolved).length;
 
   return {
@@ -371,7 +388,7 @@ export function useSuperAdminState() {
     setCodeQty, setCodeFilter, setCodeStatusFilter, setCodeRoleFilter,
     generateCodes, revokeCode,
     resolveAlert,
-    toggleAdminPerm, setAdminPaysAssigne,
+    toggleAdminPerm, setAdminPaysAssigne, setAdminVilleAssignee, setAdminZoneAssignee,
   };
 }
 

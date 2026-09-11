@@ -110,6 +110,14 @@ export interface RegisterPayload {
   referralSlug?:   string;
   companyName?:    string;
   companyTypeId?:  string;
+  /* BUG CORRIGÉ — buildRegisterPayload() (authService.ts) ne les
+   * transmettait pas du tout : le formulaire les exigeait désormais
+   * (validateRegisterField), mais l'appel réseau les laissait de côté
+   * silencieusement, ce qui aurait fait échouer TOUTE inscription
+   * contre la validation backend (RegisterDto, elle aussi rendue
+   * obligatoire). */
+  birthDate?:      string;
+  gender?:         string;
   // Pays détecté via indicatif
   countryCode?:    string;
   countryName?:    string;
@@ -125,6 +133,9 @@ export interface RegisterPayload {
   country?:        string;
   postalCode?:     string;
   gpsEnabled?:     boolean;
+  /* Localisation manuelle entreprise — voir CompanyLocationSelect.tsx */
+  companyPaysId?:  string;
+  companyVilleId?: string;
   deviceId?:       string;
 }
 
@@ -180,6 +191,18 @@ export interface RegisterFormData {
   country?:        string;
   postalCode?:     string;
   gpsEnabled?:     boolean;
+  /* Localisation manuelle entreprise — voir CompanyLocationSelect.tsx.
+   * UUID GeoPays / GeoPrefecture ("ville" = préfecture dans ce
+   * référentiel, même convention que Company.villeId). */
+  companyPaysId?:  string;
+  companyVilleId?: string;
+  /* Clé de validation "virtuelle" — jamais lue/écrite comme donnée de
+   * formulaire (la position réelle vit dans latitude/longitude ou
+   * companyPaysId/companyVilleId ci-dessus). N'existe que pour pouvoir
+   * inclure 'location' dans STEP_FIELDS/validateRegister (typés
+   * `keyof RegisterFormData`) et déclencher validateRegisterField('location', …)
+   * — voir useLoginPage.ts. */
+  location?:       never;
 }
 
 export type CorrespondantType = 'company' | 'delivery';
@@ -194,6 +217,21 @@ export interface FormErrors {
   activationCode?:  string;
   terms?:           string;
   general?:         string;
+  /* Compte "entreprise" uniquement — voir validateRegisterField()
+   * dans useLoginPage.ts (BUG CORRIGÉ : ces deux champs n'étaient
+   * jamais validés, ni côté client ni côté serveur). */
+  shopName?:        string;
+  companyTypeId?:   string;
+  /* Tous rôles — devenus obligatoires sur demande explicite (l'étape
+   * "Profil" affichait "(optionnel)" mais devait en réalité exiger ces
+   * deux champs, comme shopName/companyTypeId ci-dessus). */
+  birthDate?:       string;
+  gender?:          string;
+  /* Localisation obligatoire (voir LOCATION_ROLES dans RegisterForm.tsx)
+   * — un seul message, la validation porte sur le couple latitude/
+   * longitude (auto) ou companyPaysId/companyVilleId (entreprise), pas
+   * sur un champ de formulaire unique affiché individuellement. */
+  location?:        string;
 }
 
 export interface RoleConfig {

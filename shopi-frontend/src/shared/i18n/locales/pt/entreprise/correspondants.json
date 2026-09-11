@@ -176,6 +176,33 @@
     "toasts": {
       "loadError": "❌ Erro de carregamento: {{message}}",
       "suspendu": "🚫 {{name}} suspenso"
+    },
+    "reseau": {
+      "tabs": {
+        "equipe": "A minha equipa",
+        "suivis": "A seguir",
+        "decouvrir": "Descobrir"
+      },
+      "type": {
+        "regional": "Regional",
+        "zonal": "Zonal",
+        "national": "Nacional"
+      },
+      "enLigne": "Online",
+      "horsLigne": "Offline",
+      "loading": "A carregar os correspondentes da plataforma…",
+      "searchPlaceholder": "Pesquisar um correspondente na plataforma…",
+      "voirProfil": "Ver perfil",
+      "missionsCount_one": "{{count}} missão",
+      "missionsCount_other": "{{count}} missões",
+      "emptySuivis": {
+        "title": "Não está a seguir nenhum correspondente",
+        "sub": "Siga correspondentes a partir do separador «Descobrir» para os encontrar aqui."
+      },
+      "emptyDecouvrir": {
+        "title": "Nenhum correspondente para descobrir",
+        "sub": "Já está a seguir todos os correspondentes da plataforma, ou nenhum corresponde à sua pesquisa."
+      }
     }
   }
 }

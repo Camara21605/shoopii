@@ -34,6 +34,16 @@ interface FieldInputProps {
   id?: string;
   /** Grise et bloque la saisie (ex: inscription fermée pour ce rôle) */
   disabled?: boolean;
+  /**
+   * BUG CORRIGÉ — autoComplete="off" était codé en dur sur TOUS les
+   * champs, y compris les mots de passe : ça bloque les gestionnaires
+   * de mots de passe (Chrome, 1Password…) qui s'appuient sur les
+   * valeurs standard ("new-password", "current-password"…) pour
+   * proposer/enregistrer un mot de passe fort. Laisse "off" par défaut
+   * (comportement inchangé pour les champs qui n'en spécifient pas),
+   * mais permet à chaque appelant de préciser la valeur adaptée.
+   */
+  autoComplete?: string;
 }
 
 /**
@@ -57,6 +67,7 @@ export const FieldInput: React.FC<FieldInputProps> = ({
   onInput,
   id,
   disabled = false,
+  autoComplete = 'off',
 }) => {
   /* Gestion du toggle mot de passe */
   const [showPwd, setShowPwd] = useState(false);
@@ -117,7 +128,7 @@ export const FieldInput: React.FC<FieldInputProps> = ({
           value={value}
           disabled={disabled}
           style={disabled ? { ...inputStyle, background: 'var(--g100, #F1F5F9)', color: 'var(--t3, #94a3b8)', cursor: 'not-allowed' } : inputStyle}
-          autoComplete="off"
+          autoComplete={autoComplete}
           onChange={e => onChange(e.target.value)}
           onInput={onInput}
         />

@@ -5,7 +5,6 @@
  *          - Chargement API GET /suivis/livreurs
  *          - Filtrage / tri / recherche
  *          - Toggle follow/unfollow (optimiste)
- *          - Gestion de la vue (grille / liste)
  *
  * PATTERN : Sépare la logique (hook) de l'affichage (composants)
  * ================================================================ */
@@ -24,7 +23,6 @@ const SEARCH_DEBOUNCE_MS = 300;
 const PAGE_SIZE = 12;
 
 /* ── Types internes ── */
-export type ViewMode   = 'grid' | 'list';
 export type FilterType = 'all' | 'available' | 'followed' | 'moto' | 'voiture';
 export type SortOption = 'note' | 'livraisons' | 'disponible' | 'proches';
 
@@ -55,11 +53,9 @@ export interface UseLivreursReturn {
   loading:           boolean;
   error:             string | null;
   filters:           FilterState;
-  viewMode:          ViewMode;
   onSearch:          (v: string) => void;
   onFilter:          (f: FilterType) => void;
   onSort:            (s: SortOption) => void;
-  onViewChange:      (v: ViewMode) => void;
   onZone:            (z: string) => void;
   onVehicleToggle:   (v: string) => void;
   onRating:          (r: number | null) => void;
@@ -99,7 +95,6 @@ export function useLivreurs(initialSearch?: string): UseLivreursReturn {
     ...INITIAL_FILTERS,
     searchQuery: initialSearch ?? '',
   }));
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
  /* ── Chargement depuis l'API, recherche/filtres réellement exécutés
   * côté backend (GET /suivis/livreurs supporte search/zone/vehicule/
@@ -223,7 +218,6 @@ const onChange = useCallback((id: string, next: { isSuivi: boolean; hidden?: boo
   const onSearch         = useCallback((v: string)   => setFilters(f => ({ ...f, searchQuery:        v    })), []);
   const onFilter         = useCallback((f: FilterType)=> setFilters(p => ({ ...p, activeFilter:       f    })), []);
   const onSort           = useCallback((s: SortOption)=> setFilters(f => ({ ...f, sortBy:             s    })), []);
-  const onViewChange     = useCallback((v: ViewMode)  => setViewMode(v),                                        []);
   const onZone           = useCallback((z: string)    => setFilters(f => ({ ...f, selectedZone:       z    })), []);
   const onRating         = useCallback((r: number|null)=>setFilters(f => ({ ...f, minRating:          r    })), []);
   const onAvailability   = useCallback((v: 'all'|'available'|'busy') =>
@@ -239,8 +233,8 @@ const onChange = useCallback((id: string, next: { isSuivi: boolean; hidden?: boo
 
   return {
     livreurs, filtered, loading, error,
-    filters, viewMode,
-    onSearch, onFilter, onSort, onViewChange,
+    filters,
+    onSearch, onFilter, onSort,
     onZone, onVehicleToggle, onRating, onAvailability,
     onReset, onChange,
     hasMore, loadMore, loadingMore,

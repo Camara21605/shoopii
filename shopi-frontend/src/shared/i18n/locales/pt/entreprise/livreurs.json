@@ -196,6 +196,29 @@
     "toasts": {
       "loadError": "❌ Erro de carregamento: {{message}}",
       "suspendu": "🚫 {{name}} suspenso"
+    },
+    "reseau": {
+      "tabs": {
+        "equipe": "A minha equipa",
+        "suivis": "A seguir",
+        "decouvrir": "Descobrir"
+      },
+      "loading": "A carregar os entregadores da plataforma…",
+      "searchPlaceholder": "Pesquisar um entregador na plataforma…",
+      "voirProfil": "Ver perfil",
+      "disponible": "Disponível",
+      "indisponible": "Indisponível",
+      "livraisonsCount_one": "{{count}} entrega",
+      "livraisonsCount_other": "{{count}} entregas",
+      "chargerPlus": "Carregar mais",
+      "emptySuivis": {
+        "title": "Não está a seguir nenhum entregador",
+        "sub": "Siga entregadores a partir do separador «Descobrir» para os encontrar aqui."
+      },
+      "emptyDecouvrir": {
+        "title": "Nenhum entregador para descobrir",
+        "sub": "Já está a seguir todos os entregadores da plataforma, ou nenhum corresponde à sua pesquisa."
+      }
     }
   }
 }

@@ -149,14 +149,35 @@ export class Admin {
    * UUID du pays assigné à cet admin.
    * L'admin ne peut gérer que les éléments géographiques appartenant
    * à ce pays. Null = aucun pays assigné (accès géo refusé).
+   *
+   * Sert aussi de "communauté" support (voir villeAssignee, zoneId) :
+   * un admin avec la permission "support" et un pays assigné voit,
+   * en plus des acteurs qu'il a personnellement créés, tous les
+   * tickets des acteurs dont paysId correspond — voir
+   * SupportPermissionService.resolveAdminScope().
    */
   @Column({ type: 'uuid', nullable: true, name: 'paysAssigne' })
   paysAssigne: string | null;
 
   /**
+   * UUID de la préfecture ("ville") assignée à cet admin — référence
+   * geo_prefectures.id. Même principe que paysAssigne mais à un niveau
+   * plus fin — "communauté" support par ville plutôt que par pays.
+   * Pas de FK formelle (même convention que paysAssigne/zoneId).
+   */
+  @Column({ type: 'uuid', nullable: true, name: 'villeAssignee' })
+  villeAssignee: string | null;
+
+  /**
    * UUID de la zone de livraison assignée (référence geo_zones.id).
    * Pas de FK formelle pour éviter les dépendances circulaires.
    * Null = zone assignée via le champ texte `zone` uniquement.
+   *
+   * "Communauté" support la plus flexible des trois : une GeoZone
+   * couvre elle-même un ensemble arbitraire d'éléments géo
+   * (couvertureType + couvertureIds), donc l'assigner comme communauté
+   * revient à déléguer la portée support à la zone déjà définie dans
+   * le référentiel géographique.
    */
   @Column({ type: 'uuid', nullable: true, name: 'zoneAssigneId' })
   zoneId: string | null;

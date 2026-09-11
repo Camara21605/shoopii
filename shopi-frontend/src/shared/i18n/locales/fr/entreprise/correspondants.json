@@ -176,6 +176,33 @@
     "toasts": {
       "loadError": "❌ Erreur de chargement : {{message}}",
       "suspendu": "🚫 {{name}} suspendu"
+    },
+    "reseau": {
+      "tabs": {
+        "equipe": "Mon équipe",
+        "suivis": "Abonnements",
+        "decouvrir": "Découvrir"
+      },
+      "type": {
+        "regional": "Régional",
+        "zonal": "Zonal",
+        "national": "National"
+      },
+      "enLigne": "En ligne",
+      "horsLigne": "Hors ligne",
+      "loading": "Chargement des correspondants de la plateforme…",
+      "searchPlaceholder": "Rechercher un correspondant de la plateforme…",
+      "voirProfil": "Voir profil",
+      "missionsCount_one": "{{count}} mission",
+      "missionsCount_other": "{{count}} missions",
+      "emptySuivis": {
+        "title": "Vous ne suivez aucun correspondant",
+        "sub": "Abonnez-vous à des correspondants depuis l'onglet « Découvrir » pour les retrouver ici."
+      },
+      "emptyDecouvrir": {
+        "title": "Aucun correspondant à découvrir",
+        "sub": "Tous les correspondants de la plateforme sont déjà suivis, ou aucun ne correspond à votre recherche."
+      }
     }
   }
 }

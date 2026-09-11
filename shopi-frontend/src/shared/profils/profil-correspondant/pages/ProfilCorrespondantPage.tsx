@@ -143,19 +143,11 @@ export default function ProfilCorrespondantPage() {
           </main>
 
           <ProfilSidebar
-            id={profil.id}
-            nom={profil.nom}
             contacts={contacts}
             stats={statsSidebar}
             abonnes={profil.abonnes}
             verifications={verifications}
             similaires={similaires}
-            suivi={suivi}
-            callLoading={callLoading}
-            onRequireAuth={openAuthModal}
-            onFollowChange={updateFollowState}
-            onMessage={onMessage}
-            onCall={onCall}
             onToast={onToast}
           />
         </div>

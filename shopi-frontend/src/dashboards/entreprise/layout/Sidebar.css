@@ -935,91 +935,43 @@ input, select, textarea { font-family: var(--fb); }
 
 
 /* ════════════════════════════════════════════════════════════
-   7. GRILLE KPI
-   4 colonnes de métriques clés (CA, commandes, clients, note).
+   7. LIGNE KPI — ligne simple, sans cartes
+   Copie de la version simplifiée de OverviewPage.css. Ce fichier
+   est chargé globalement (dès le montage du Sidebar) alors que
+   OverviewPage.css n'est chargé que si la page Vue d'ensemble a
+   déjà été visitée dans la session : sans cette copie à jour,
+   un utilisateur arrivant directement sur Clients/Avis/Finances
+   verrait encore les anciennes grandes cartes (bordure/ombre/fond),
+   qui n'ont jamais été qu'un doublon des mêmes chiffres affichés
+   ailleurs sur ces pages. Voir OverviewPage.css pour le détail.
    ════════════════════════════════════════════════════════════ */
 
 .kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 13px;
-  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 28px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--bdr);
 }
 
-/* Carte KPI individuelle */
-.kpi {
-  background: var(--white);
-  border: 1.5px solid var(--bdr);
-  border-radius: var(--r-xl);
-  padding: 20px;
-  box-shadow: var(--sh-xs);
-  position: relative; overflow: hidden;
-  transition: all .25s; cursor: default;
-  /* ⚠️ min-width:0 nécessaire : les montants (espaces insécables
-     entre les milliers) ne peuvent jamais wrapper. Sans ça, la
-     colonne de grille s'élargit pour les contenir et fait déborder
-     toute la page horizontalement une fois la grille passée en
-     2 puis 1 colonne sur mobile. */
-  min-width: 0;
-}
-.kpi:hover {
-  border-color: var(--bdrb);
-  transform: translateY(-3px);
-  box-shadow: var(--sh-md);
-}
+.kpi { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.kpi-icon { font-size: 16px; line-height: 1; flex-shrink: 0; }
+.kpi-badge { font-size: 9px; font-weight: 800; padding: 1px 7px; border-radius: var(--pill); background: var(--g100); }
+.kpi-badge.up  { color: var(--emerald); }
+.kpi-badge.dn  { color: var(--red); }
+.kpi-badge.neu { color: var(--t3); }
 
-/* Bande de couleur en haut de la carte */
-.kpi-stripe {
-  position: absolute; top: 0; left: 0; right: 0;
-  height: 3px;
-  border-radius: 3px 3px 0 0;
-}
-.kpi.k1 .kpi-stripe { background: linear-gradient(90deg, var(--t2), var(--t2)); } /* Bleu */
-.kpi.k2 .kpi-stripe { background: linear-gradient(90deg, var(--t2), var(--t2)); } /* Vert */
-.kpi.k3 .kpi-stripe { background: linear-gradient(90deg, var(--t2), var(--t2)); } /* Ambre */
-.kpi.k4 .kpi-stripe { background: linear-gradient(90deg, var(--t2), var(--t2)); } /* Violet */
-.kpi.k5 .kpi-stripe { background: linear-gradient(90deg, var(--t1), var(--t2)); } /* Rose */
-.kpi.k6 .kpi-stripe { background: linear-gradient(90deg, var(--t2), var(--t2)); } /* Teal */
-
-/* En-tête de la carte : icône + badge de variation */
-.kpi-top {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  margin-bottom: 13px;
-}
-
-/* Icône carrée */
-.kpi-icon {
-  width: 42px; height: 42px;
-  border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-}
-.kpi.k1 .kpi-icon { background: var(--sky-2); }
-.kpi.k2 .kpi-icon { background: var(--g100); }
-.kpi.k3 .kpi-icon { background: var(--g100); }
-.kpi.k4 .kpi-icon { background: var(--g100); }
-.kpi.k5 .kpi-icon { background: var(--g100); }
-.kpi.k6 .kpi-icon { background: var(--g100); }
-
-/* Badge +/- % */
-.kpi-badge { font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: var(--pill); }
-.kpi-badge.up  { background: rgba(128,128,128, .1);  color: var(--t2); } /* Hausse verte */
-.kpi-badge.dn  { background: rgba(128,128,128, .1); color: var(--t1); }      /* Baisse rouge */
-.kpi-badge.neu { background: var(--g100); color: var(--t3); }                 /* Neutre */
-
-/* Valeur principale */
 .kpi-val {
   font-family: var(--fd);
-  font-size: clamp(16px, 5.5vw, 27px); font-weight: var(--fw-black);
-  color: var(--t1); letter-spacing: var(--ls-tight); line-height: 1.15;
+  font-size: 15px; font-weight: var(--fw-black);
+  color: var(--t1); letter-spacing: -0.3px; line-height: 1.25;
+  display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
   overflow-wrap: anywhere;
 }
-.kpi-lbl { font-size: 12.5px; color: var(--t3); margin-top: 5px; font-weight: var(--fw-medium); line-height: var(--lh-snug); }
-.kpi-sub { font-size: 11px; color: var(--t4); margin-top: 3px; }
-
-/* Mini sparkline en bas de la carte */
-.kpi-spark { display: flex; align-items: flex-end; gap: 2px; height: 28px; margin-top: 10px; }
-.kpi-sp-b  { flex: 1; border-radius: 2px 2px 0 0; min-width: 4px; opacity: .6; }
+.kpi-lbl { font-size: 10.5px; color: var(--t3); margin-top: 2px; font-weight: var(--fw-medium); line-height: var(--lh-snug); }
+.kpi-sub { font-size: 10px; color: var(--t4); margin-top: 1px; }
 
 
 /* ════════════════════════════════════════════════════════════
@@ -1856,7 +1808,6 @@ select.pf-in {
 
 /* Tablette large : grilles réduites */
 @media (max-width: 1300px) {
-  .kpi-grid     { grid-template-columns: repeat(2, 1fr); }
   .hero         { grid-template-columns: 1fr; }
   .hero-right   { padding: 16px 28px; padding-top: 0; }
   .prod-grid    { grid-template-columns: repeat(2, 1fr); }
@@ -1900,7 +1851,6 @@ select.pf-in {
   .sb     { transform: translateX(-100%); }
   .topbar { left: 0; }
 
-  .kpi-grid       { grid-template-columns: 1fr 1fr; }
   .prod-grid      { grid-template-columns: 1fr 1fr; }
   .ret-stat       { grid-template-columns: 1fr 1fr; }
   /* ✅ Grilles qui restaient bloquées à 2-3-4 colonnes en permanence
@@ -1933,7 +1883,7 @@ select.pf-in {
 /* Petits téléphones (≤420px) : tout en 1 colonne, plus aucune grille
    à 2 colonnes ne tient confortablement en dessous de cette largeur. */
 @media (max-width: 420px) {
-  .kpi-grid, .prod-grid, .ret-stat, .fin-summary,
+  .prod-grid, .ret-stat, .fin-summary,
   .promo-grid, .analytics-grid, .g4, .seg-grid {
     grid-template-columns: 1fr;
   }

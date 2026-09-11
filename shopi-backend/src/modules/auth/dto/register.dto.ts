@@ -18,9 +18,17 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { UserRole }  from '../../../common/enums/user-role.enum';
+
+/* Rôles dont la localisation est détectée automatiquement (GPS, avec
+ * repli sur pointage manuel carte) plutôt que choisie manuellement dans
+ * le référentiel géo — voir la section "Localisation" plus bas. */
+const AUTO_LOCATION_ROLES: UserRole[] = [
+  UserRole.CLIENT, UserRole.DELIVERY, UserRole.PARTNER, UserRole.CORRESPONDENT,
+];
 
 export class RegisterDto {
 
@@ -94,28 +102,49 @@ export class RegisterDto {
   @Transform(({ value }) => (value as string | undefined)?.trim())
   companyName?: string;
 
-  @IsOptional()
+  /*
+   * BUG CORRIGÉ — @IsOptional() rendait ce champ optionnel pour TOUS
+   * les rôles, y compris "company" : une inscription entreprise sans
+   * nom de boutique était acceptée silencieusement (AuthService
+   * retombait alors sur fullName comme nom d'entreprise). @ValidateIf
+   * remplace @IsOptional() : validé uniquement quand role === COMPANY,
+   * ignoré (comme avant) pour tous les autres rôles.
+   */
+  @ValidateIf(o => o.role === UserRole.COMPANY)
   @IsString()
+  @IsNotEmpty({ message: 'Le nom de la boutique est obligatoire pour un compte entreprise.' })
   @MinLength(2,   { message: 'Le nom de la boutique doit contenir au moins 2 caractères.' })
   @MaxLength(100, { message: 'Le nom de la boutique ne peut pas dépasser 100 caractères.' })
   @Transform(({ value }) => (value as string | undefined)?.trim())
   shopName?: string;
 
+  /*
+   * BUG CORRIGÉ — @IsOptional() : le formulaire d'inscription affichait
+   * "(optionnel)" pour ces deux champs, mais doivent en réalité être
+   * obligatoires pour tous les rôles (décision explicite, y compris
+   * pour le rôle client). Le parcours "collaborateur invité" (rejoint
+   * une entreprise existante) n'est pas concerné : il passe par une
+   * route et un DTO entièrement différents (POST /company-team/
+   * invitations/accept/:token), jamais par RegisterDto.
+   */
   // Date de naissance (format YYYY-MM-DD)
-  @IsOptional()
+  @IsNotEmpty({ message: 'La date de naissance est obligatoire.' })
   @IsDateString({}, { message: 'La date de naissance doit être au format YYYY-MM-DD.' })
-  birthDate?: string;
+  birthDate: string;
 
   // Genre
-  @IsOptional()
+  @IsNotEmpty({ message: 'Le genre est obligatoire.' })
   @IsString()
   @IsIn(['male', 'female', 'other', 'prefer_not'], {
     message: "Le genre doit être 'male', 'female', 'other' ou 'prefer_not'.",
   })
-  gender?: string;
+  gender: string;
 
-  @IsOptional()
+  /* BUG CORRIGÉ — même correctif que shopName ci-dessus : obligatoire
+   * uniquement pour un compte "company". */
+  @ValidateIf(o => o.role === UserRole.COMPANY)
   @IsString()
+  @IsNotEmpty({ message: "Le type d'entreprise est obligatoire pour un compte entreprise." })
   @IsUUID('all', { message: 'companyTypeId doit être un UUID valide.' })
   companyTypeId?: string;
 
@@ -139,21 +168,52 @@ export class RegisterDto {
   @MaxLength(10)
   dialCode?: string;
 
-  // ── Localisation GPS (optionnelle à l'inscription) ────────────────────────
-
-  @IsOptional()
-  @IsNumber()
+  /*
+   * ── Localisation ──────────────────────────────────────────────────────
+   *
+   * BUG CORRIGÉ — entièrement @IsOptional() : le formulaire d'inscription
+   * proposait des boutons "Ignorer" à chaque étape de la demande de
+   * position, et rien ne l'exigeait ici — n'importe quel compte pouvait
+   * être créé sans aucune localisation.
+   *
+   * Désormais obligatoire, avec deux mécanismes selon le rôle :
+   *   - AUTO_LOCATION_ROLES (client/delivery/partner/correspondent) :
+   *     position détectée automatiquement (GPS ou pointage manuel sur
+   *     carte en repli) — latitude/longitude requis.
+   *   - COMPANY : l'admin choisit l'adresse de SON ENTREPRISE via une
+   *     chaîne de sélection Pays → Région → Préfecture → Commune
+   *     (référentiel géo existant), pas une position GPS du moment —
+   *     companyPaysId/companyVilleId requis à la place.
+   */
+  @ValidateIf(o => AUTO_LOCATION_ROLES.includes(o.role))
+  @IsNumber({}, { message: 'La localisation est obligatoire.' })
   @Min(-90)
   @Max(90)
   @Type(() => Number)
   latitude?: number;
 
-  @IsOptional()
-  @IsNumber()
+  @ValidateIf(o => AUTO_LOCATION_ROLES.includes(o.role))
+  @IsNumber({}, { message: 'La localisation est obligatoire.' })
   @Min(-180)
   @Max(180)
   @Type(() => Number)
   longitude?: number;
+
+  /* Choix manuel entreprise — UUID GeoPays / GeoPrefecture (voir
+   * modules/geo). "Ville" désigne une GeoPrefecture dans ce référentiel,
+   * convention déjà utilisée par Company.villeId (entreprise-profile
+   * .entity.ts) et par le tunnel de commande (villesByIndicatif()). */
+  @ValidateIf(o => o.role === UserRole.COMPANY)
+  @IsString()
+  @IsNotEmpty({ message: "La localisation de l'entreprise est obligatoire." })
+  @IsUUID('all', { message: 'companyPaysId doit être un UUID valide.' })
+  companyPaysId?: string;
+
+  @ValidateIf(o => o.role === UserRole.COMPANY)
+  @IsString()
+  @IsNotEmpty({ message: "La localisation de l'entreprise est obligatoire." })
+  @IsUUID('all', { message: 'companyVilleId doit être un UUID valide.' })
+  companyVilleId?: string;
 
   /** Précision GPS en mètres */
   @IsOptional()

@@ -47,6 +47,7 @@ import { useTicketDetail }  from '../hooks/useSupport';
 import { supportApi }       from '../services/support.api';
 import type { SupportAttachment } from '../services/support.api';
 import { useForceDarkTheme } from '../../../shared/context/ThemeContext';
+import { useSupportSocket } from '../../../shared/support/useSupportSocket';
 
 /* ════════════════════════════════════════════════════════════════
  * CONSTANTES MÉTIER
@@ -241,6 +242,16 @@ export default function TicketDetailPage() {
 
   const { id }                              = useParams<{ id: string }>();
   const { detail, loading, error, refresh } = useTicketDetail(id);
+
+  /* Communication instantanée — l'agent qui répond pendant que ce
+   * ticket est ouvert doit apparaître immédiatement, sans que le
+   * client ait à recharger la page. refresh() (déjà utilisé par
+   * handleReply) recharge le fil complet avec pièces jointes — plus
+   * sûr ici qu'un ajout optimiste, vu que la page affiche aussi les
+   * pièces jointes (absentes du payload socket, minimal). */
+  useSupportSocket(id ?? null, {
+    onNewMessage: (d) => { if (d.ticketId === id) refresh(); },
+  });
 
   /* ── État formulaire de réponse ───────────────────────────── */
   const [reply,    setReply]    = useState('');

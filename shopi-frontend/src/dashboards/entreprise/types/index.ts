@@ -19,8 +19,8 @@ export type OrderStatus = 'new' | 'prep' | 'ship' | 'del' | 'can';
 /** Statut d'un retour */
 export type ReturnStatus = 'pending' | 'approved' | 'refused';
 
-/** Statut d'une promotion */
-export type PromoStatus = 'active' | 'scheduled' | 'draft';
+/** Statut d'une promotion — miroir de PromoStatus (backend, promotion.entity.ts) */
+export type PromoStatus = 'active' | 'scheduled' | 'draft' | 'paused' | 'ended';
 
 /** Niveau de stock d'un produit */
 export type StockLevel = 'ok' | 'low' | 'out';

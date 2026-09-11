@@ -64,7 +64,7 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
     return (
       <>
         {backBtn}
-        <div className={styles.page}>
+        <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}><i className="fas fa-spinner fa-spin" /> {t('profilCorrespondant.loading')}</div>
         </div>
       </>
@@ -75,7 +75,7 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
     return (
       <>
         {backBtn}
-        <div className={styles.page}>
+        <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}>
             <i className="fas fa-triangle-exclamation" />
             {error ?? t('profilCorrespondant.notFoundFallback')}
@@ -88,7 +88,7 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
   return (
     <>
       {backBtn}
-      <div className={styles.page}>
+      <div className={`${styles.page} ${styles.pageDark}`}>
         <ProfilHeader
           profil={profil}
           suivi={suivi}
@@ -122,17 +122,11 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
           </main>
 
           <ProfilSidebar
-            id={profil.id}
-            nom={profil.nom}
             contacts={contacts}
             stats={statsSidebar}
             abonnes={profil.abonnes}
             verifications={verifications}
             similaires={similaires}
-            suivi={suivi}
-            onRequireAuth={openAuthModal}
-            onFollowChange={updateFollowState}
-            onMessage={onMessage}
             onToast={onToast}
           />
         </div>

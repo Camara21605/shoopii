@@ -22,6 +22,7 @@ import {
   SupportTicketType,
   SupportTicketStatus,
   SupportTicketPriority,
+  SupportChannel,
 } from '../../../database/entities/support/support-ticket.entity';
 
 export class CreateSupportTicketDto {
@@ -84,6 +85,20 @@ export class FilterSupportTicketsDto {
   @IsOptional()
   @IsEnum(SupportTicketPriority)
   priority?: SupportTicketPriority;
+
+  /* Canal d'origine du ticket — voir SupportChannel (client/company/
+   * partner/delivery/internal/anonymous). Vue multi-audience super-admin. */
+  @IsOptional()
+  @IsEnum(SupportChannel)
+  channel?: SupportChannel;
+
+  /* UUID d'un agent précis, ou littéral 'unassigned' pour les tickets
+   * sans agentId (file d'attente commune). Voir ticket.service.ts
+   * findAllScoped() pour la traduction en clause SQL. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  agentId?: string;
 
   @IsOptional()
   @IsString()

@@ -9,9 +9,14 @@ import { GeoQuartier }   from '../../database/entities/geo/geo-quartier.entity';
 import { GeoZone }       from '../../database/entities/geo/geo-zone.entity';
 import { GeoAuditLog }   from '../../database/entities/geo/geo-audit-log.entity';
 import { Admin }         from '../../database/entities/profiles/admin-profile.entity';
+/* Nécessaires pour GeoResolutionService (résolution paysId/villeId) */
+import { Partner }  from '../../database/entities/profiles/partenaire-profile.entity';
+import { Company }  from '../../database/entities/profiles/entreprise-profile.entity';
+import { Delivery } from '../../database/entities/profiles/livreur-profile.entity';
 
-import { GeoService }    from './geo.service';
-import { GeoController } from './geo.controller';
+import { GeoService }           from './geo.service';
+import { GeoResolutionService } from './geo-resolution.service';
+import { GeoController }        from './geo.controller';
 
 @Module({
   imports: [
@@ -20,10 +25,11 @@ import { GeoController } from './geo.controller';
       GeoCommune, GeoQuartier, GeoZone,
       GeoAuditLog,
       Admin,
+      Partner, Company, Delivery,
     ]),
   ],
-  providers:   [GeoService],
+  providers:   [GeoService, GeoResolutionService],
   controllers: [GeoController],
-  exports:     [GeoService],
+  exports:     [GeoService, GeoResolutionService],
 })
 export class GeoModule {}

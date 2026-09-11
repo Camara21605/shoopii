@@ -37,7 +37,6 @@ import SidebarFilters, { type ZoneCount } from '../sections/SidebarFilters';
 import SuggestionsRow  from '../sections/SuggestionsRow';
 
 /* ── Cards ── */
-import CardLivreurGrid from '../cards/CardLivreurGrid';
 import CardLivreurList from '../cards/CardLivreurList';
 
 /* ── Hook logique ── */
@@ -105,8 +104,8 @@ const LivreursPage: React.FC = () => {
   /* ── Toute la logique vient du hook ── */
   const {
     livreurs, filtered, loading, error,
-    filters, viewMode,
-    onSearch, onFilter, onSort, onViewChange,
+    filters,
+    onSearch, onFilter, onSort,
     onZone, onVehicleToggle, onRating, onAvailability,
     onReset, onChange,
     hasMore, loadMore, loadingMore,
@@ -149,11 +148,10 @@ const LivreursPage: React.FC = () => {
       <FilterToolbar
         filters={filters}
         totalCount={filtered.length}
-        viewMode={viewMode}
         onSearch={onSearch}
         onFilter={onFilter}
         onSort={onSort}
-        onViewChange={onViewChange}
+        onAvailability={onAvailability}
       />
 
       {/* ── Corps de la page ── */}
@@ -189,28 +187,12 @@ const LivreursPage: React.FC = () => {
                 {t('livreursPage.page.livreurDansRegion', { count: filtered.length })}
               </div>
             </div>
-            <div className={styles.viewBtns}>
-              <button
-                className={`${styles.vBtn} ${viewMode === 'grid' ? styles.vBtnOn : ''}`}
-                onClick={() => onViewChange('grid')}
-                title={t('livreursPage.page.vueGrille')}
-              >
-                <i className="fas fa-th-large" />
-              </button>
-              <button
-                className={`${styles.vBtn} ${viewMode === 'list' ? styles.vBtnOn : ''}`}
-                onClick={() => onViewChange('list')}
-                title={t('livreursPage.page.vueListe')}
-              >
-                <i className="fas fa-list" />
-              </button>
-            </div>
           </div>
 
           {/* ── État chargement ── */}
           {loading && (
-            <div className={styles.skeletonGrid}>
-              {[...Array(8)].map((_, i) => (
+            <div className={styles.skeletonList}>
+              {[...Array(6)].map((_, i) => (
                 <div key={i} className={styles.skeleton} />
               ))}
             </div>
@@ -236,22 +218,11 @@ const LivreursPage: React.FC = () => {
             </div>
           )}
 
-          {/* ── Vue GRILLE ── */}
-          {!loading && !error && viewMode === 'grid' && filtered.length > 0 && (
-            <div className={styles.cardsGrid}>
-              {filtered.map(livreur => (
-                <CardLivreurGrid
-                  key={livreur.id}
-                  livreur={livreur}
-                  onToast={onToast}
-                  onChange={onChange}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* ── Vue LISTE ── */}
-          {!loading && !error && viewMode === 'list' && filtered.length > 0 && (
+          {/* ── Liste des livreurs — toujours en liste, jamais en grille
+           * (retirée à la demande explicite : la grille de vignettes
+           * n'apportait rien de plus qu'une liste, deux vues à maintenir
+           * pour un seul usage réel côté utilisateurs). ── */}
+          {!loading && !error && filtered.length > 0 && (
             <div>
               {filtered.map(livreur => (
                 <CardLivreurList

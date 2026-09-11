@@ -100,15 +100,20 @@ export default function ProfilHeader({ profil, suivi, callLoading, onToast, onRe
               <button className={styles.btnMsg} onClick={onMessage}>
                 <i className="fas fa-comment-dots" /> {t('profilCorrespondant.contacter')}
               </button>
-              <FollowButton
-                actorType="correspondant"
-                id={profil.id}
-                name={profil.nom}
-                isSuivi={suivi}
-                onToast={onToast}
-                onRequireAuth={onRequireAuth}
-                onChange={onFollowChange}
-              />
+              {/* Masqué en mobile (voir .idFollowWrap) — remplacé par le
+               * même bouton dans la barre d'action fixe en bas d'écran,
+               * pour ne pas l'afficher deux fois à la fois. */}
+              <div className={styles.idFollowWrap}>
+                <FollowButton
+                  actorType="correspondant"
+                  id={profil.id}
+                  name={profil.nom}
+                  isSuivi={suivi}
+                  onToast={onToast}
+                  onRequireAuth={onRequireAuth}
+                  onChange={onFollowChange}
+                />
+              </div>
             </div>
           </div>
         </div>

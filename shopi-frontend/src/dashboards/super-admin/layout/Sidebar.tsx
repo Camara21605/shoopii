@@ -20,6 +20,8 @@ interface SidebarProps {
   pendingAlerts:   number;
   validCodesCount: number;
   slaViolations:   number;
+  /** Tickets avec au moins un message client non lu par l'agent (unreadByAgent > 0) */
+  unreadTickets:   number;
   isOpen:          boolean;
   onClose:         () => void;
 }
@@ -59,7 +61,7 @@ function NavGroup({ label, children }: { label: string; children: React.ReactNod
 export default function Sidebar({
   activeSection, navigate, navUsers,
   totalUsers, roleStats, pendingAlerts, validCodesCount,
-  slaViolations,
+  slaViolations, unreadTickets,
   isOpen, onClose,
 }: SidebarProps) {
   const rs = (role: string) => roleStats[role] || undefined;
@@ -120,9 +122,10 @@ export default function Sidebar({
             onClick={go(() => navigate('alerts'))} />
           <NavItem icon="🔔" label="Notifications" active={activeSection==='notifications-admin'}
             onClick={go(() => navigate('notifications-admin'))} />
-          {/* Support — badge rouge si des tickets SLA sont en retard */}
+          {/* Support — priorité au badge "non lus" (messages client en attente
+              de lecture), sinon badge SLA si des tickets sont en retard. */}
           <NavItem icon="🎫" label="Support client" active={activeSection==='support'}
-            badge={slaViolations > 0 ? slaViolations : undefined} badgeClass="nc-red"
+            badge={unreadTickets > 0 ? unreadTickets : (slaViolations > 0 ? slaViolations : undefined)} badgeClass="nc-red"
             onClick={go(() => navigate('support'))} />
           <NavItem icon="📜" label="Journal audit" active={activeSection==='audit'}
             onClick={go(() => navigate('audit'))} />

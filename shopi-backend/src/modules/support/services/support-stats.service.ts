@@ -35,6 +35,11 @@ export interface TicketTypeCount {
   count: number;
 }
 
+export interface TicketChannelCount {
+  channel: string;  // ex: 'client', 'company', 'delivery'…
+  count:   number;
+}
+
 export interface DailyCount {
   date:     string; // format ISO 'YYYY-MM-DD'
   created:  number; // tickets ouverts ce jour
@@ -51,8 +56,10 @@ export interface SupportOverview {
   avgFirstResponseH:  number;  // délai moyen 1ère réponse en heures
   avgCsat:            number;  // note CSAT moyenne (0 si aucune note)
   slaBreachedCount:   number;  // tickets > 24h sans réponse d'agent
+  unreadCount:        number;  // tickets avec une réponse client non lue par l'agent
   byStatus:           TicketStatusCount[];
   byType:             TicketTypeCount[];
+  byChannel:          TicketChannelCount[];
   last7Days:          DailyCount[];
 }
 
@@ -84,7 +91,7 @@ export class SupportStatsService {
       return {
         total: 0, openCount: 0, inProgressCount: 0, waitingUserCount: 0,
         resolvedCount: 0, closedCount: 0, avgFirstResponseH: 0, avgCsat: 0,
-        slaBreachedCount: 0, byStatus: [], byType: [],
+        slaBreachedCount: 0, unreadCount: 0, byStatus: [], byType: [], byChannel: [],
         last7Days: this.emptyLast7Days(),
       };
     }
@@ -125,6 +132,23 @@ export class SupportStatsService {
       count: parseInt(r.count, 10),
     }));
 
+    /* ── 2bis. Comptage par canal (client/company/partner/delivery/
+     * internal/anonymous) — vue multi-audience super-admin, même
+     * principe que byType. ─────────────────────────────────── */
+    const byChannelQb = this.ticketRepo
+      .createQueryBuilder('t')
+      .select('t.channel', 'channel')
+      .addSelect('COUNT(t.id)', 'count')
+      .groupBy('t.channel')
+      .orderBy('COUNT(t.id)', 'DESC');
+    if (ids) byChannelQb.where('t.userId IN (:...ids)', { ids });
+    const byChannelRaw: { channel: string; count: string }[] = await byChannelQb.getRawMany();
+
+    const byChannel: TicketChannelCount[] = byChannelRaw.map(r => ({
+      channel: r.channel,
+      count:   parseInt(r.count, 10),
+    }));
+
     /* ── 3. Métriques globales en une seule requête ─────────
      *
      * - AVG(EXTRACT(EPOCH FROM (firstResponseAt - createdAt))/3600)
@@ -150,6 +174,7 @@ export class SupportStatsService {
              AND t.status NOT IN ('resolved','closed')
              AND t."createdAt" < NOW() - INTERVAL '24 hours'
          ) AS "slaBreached"`,
+        `COUNT(t.id) FILTER (WHERE t."unreadByAgent" > 0) AS "unread"`,
       ]);
     if (ids) metricsQb.where('t.userId IN (:...ids)', { ids });
     const metricsRaw = await metricsQb.getRawOne();
@@ -220,8 +245,10 @@ export class SupportStatsService {
       avgFirstResponseH: Math.round((parseFloat(metricsRaw.avgResponseH) || 0) * 10) / 10,
       avgCsat:           Math.round((parseFloat(metricsRaw.avgCsat) || 0) * 10) / 10,
       slaBreachedCount:  parseInt(metricsRaw.slaBreached, 10) || 0,
+      unreadCount:       parseInt(metricsRaw.unread, 10) || 0,
       byStatus,
       byType,
+      byChannel,
       last7Days,
     };
   }

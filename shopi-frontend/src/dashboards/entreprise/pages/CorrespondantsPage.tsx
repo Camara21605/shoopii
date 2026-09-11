@@ -33,10 +33,19 @@
  */
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../../shared/context/ToastContext';
+import { useCorrespondants } from '../../../modules/home/components/correspondants/hooks/useCorrespondants';
+import type { Correspondant } from '../../../modules/home/components/correspondants/data/types';
+import { useAuthGate } from '../../../shared/hooks/useAuthGate';
+import FollowButton from '../../../shared/components/FollowButton';
+import rowStyles from '../../../modules/home/components/livreurs/styles/CardLivreurList.module.css';
 import styles from './CorrespondantsPage.module.css';
+import kpi from './CorrespondantsKpi.module.css';
+import team from './TeamListRow.module.css';
 import {
   correspondantsApi,
   type CorrespondantResponse,
@@ -60,7 +69,7 @@ function typeLabel(type: CorrespondantType, t: TFunction): string {
   }[type];
 }
 
-function typeCls(type: CorrespondantType, s: any): string {
+function typeCls(type: CorrespondantType, s: typeof styles): string {
   return {
     principal: s.badgePrincipal,
     entrepot:  s.badgeEntrepot,
@@ -69,7 +78,7 @@ function typeCls(type: CorrespondantType, s: any): string {
   }[type];
 }
 
-function statutCls(status: CorrespondantStatus, s: any): string {
+function statutCls(status: CorrespondantStatus, s: typeof styles): string {
   return {
     active:    s.statutActive,
     pending:   s.statutPending,
@@ -79,6 +88,129 @@ function statutCls(status: CorrespondantStatus, s: any): string {
 
 function statutLabel(status: CorrespondantStatus, t: TFunction): string {
   return { active: t('correspondants.status.active'), pending: t('correspondants.status.pending'), suspended: t('correspondants.status.suspended') }[status];
+}
+
+/** Message d'erreur sûr à afficher dans un toast, quelle que soit la
+ *  forme de l'exception attrapée (catch ne garantit pas un Error). */
+function getErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
+// ─────────────────────────────────────────────────────────────
+// KPI CARDS — styles compacts (surcharge inline, cf. CorrespondantsKpi.module.css
+// pour la contrainte "toujours sur une ligne" en media query)
+// ─────────────────────────────────────────────────────────────
+
+const statCardCompact:  CSSProperties = { padding: '9px 10px', gap: 8, borderRadius: 10 };
+const statIconCompact:  CSSProperties = { width: 26, height: 26, borderRadius: 7, fontSize: 11 };
+const statValCompact:   CSSProperties = { fontSize: 15, marginBottom: 0 };
+const statLabelCompact: CSSProperties = { fontSize: 10, lineHeight: 1.25 };
+const statSubCompact:   CSSProperties = { fontSize: 8.5, marginTop: 0 };
+
+// ─────────────────────────────────────────────────────────────
+// LIGNE RÉSEAU — utilisée par les onglets "Abonnements" / "Découvrir"
+// (correspondants de toute la plateforme, distincts de l'équipe créée
+// par l'entreprise via /correspondants — cf. Correspondant, GET /suivis/correspondants)
+//
+// Même habillage que CardLivreurList (page livreurs de home / onglets
+// réseau de LivreursPage.tsx) — ligne horizontale compacte type "liste
+// d'amis" : avatar + infos à gauche, note/actions à droite.
+// ─────────────────────────────────────────────────────────────
+
+const CORR_AVA_BG: Record<Correspondant['type'], string> = {
+  regional: 'linear-gradient(135deg,#3B0764,#7C3AED)',
+  zonal:    'linear-gradient(135deg,#1e3a8a,#1549B8)',
+  national: 'linear-gradient(135deg,#78350F,#B45309)',
+};
+
+function LigneReseauCorrespondant({ c, onView, onPop, onRequireAuth, onChange }: {
+  c:             Correspondant;
+  onView:        () => void;
+  onPop:         (m: string, t?: string) => void;
+  onRequireAuth: () => void;
+  onChange:      (id: string, next: { isSuivi: boolean; hidden?: boolean; removed?: boolean }) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className={rowStyles.item} style={{ position: 'relative' }} onClick={onView} role="article">
+      <div className={rowStyles.ava} style={{ background: CORR_AVA_BG[c.type] ?? CORR_AVA_BG.regional }}>
+        {c.initiales}
+        {c.enLigne && <span className={rowStyles.avaDot} />}
+      </div>
+
+      <div className={rowStyles.info}>
+        <div className={rowStyles.name}>{c.nom}</div>
+        <div className={rowStyles.meta}>
+          <span><i className="fas fa-map-pin" aria-hidden="true" /> {c.zone}</span>
+          <span>{t(`correspondants.reseau.type.${c.type}`)}</span>
+          <span>
+            <i className="fas fa-circle" style={{ color: c.enLigne ? 'var(--t1)' : 'var(--t4)', fontSize: 8 }} aria-hidden="true" />
+            {c.enLigne ? t('correspondants.reseau.enLigne') : t('correspondants.reseau.horsLigne')}
+          </span>
+        </div>
+      </div>
+
+      <div className={rowStyles.right} onClick={e => e.stopPropagation()}>
+        <div className={rowStyles.ratingWrap}>
+          <div className={rowStyles.ratingVal}>{c.note === 0 ? t('correspondants.na') : `${c.note.toFixed(1)}★`}</div>
+          <div className={rowStyles.ratingLivs}>{t('correspondants.reseau.missionsCount', { count: c.missions })}</div>
+        </div>
+        <FollowButton
+          actorType="correspondant"
+          id={c.id}
+          name={c.nom}
+          isSuivi={c.suivi}
+          onToast={onPop}
+          onRequireAuth={onRequireAuth}
+          onChange={next => onChange(c.id, next)}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// LIGNE ÉQUIPE — onglet "Mon équipe" (correspondants créés/invités
+// par l'entreprise, GET /correspondants). Remplace l'ancien <table>
+// par une rangée flexbox responsive (voir TeamListRow.module.css) :
+// plus de défilement horizontal forcé sur mobile, badges/actions
+// repassent sous l'avatar quand la largeur manque.
+// ─────────────────────────────────────────────────────────────
+
+function LigneEquipeCorrespondant({ c, onView, onContact }: {
+  c:         CorrespondantResponse;
+  onView:    () => void;
+  onContact: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className={`${team.row} ${c.status === 'suspended' ? team.rowMuted : ''}`}>
+      <div className={team.ava}><span>{c.avatarEmoji}</span></div>
+
+      <div className={team.info} onClick={onView} style={{ cursor: 'pointer' }}>
+        <div className={team.name}>{c.fullName}</div>
+        <div className={team.meta}>
+          <span><i className="fas fa-map-pin" aria-hidden="true" /> {c.ville} · {c.quartier}</span>
+          <span><i className="fas fa-star" style={{ color: 'var(--t2)' }} aria-hidden="true" /> {c.averageRating === 0 ? t('correspondants.na') : c.averageRating.toFixed(1)}</span>
+          <span><i className="fas fa-box" aria-hidden="true" /> {t('correspondants.card.ceMois')} {c.thisMonth}</span>
+          <span>{t('correspondants.card.total')} {c.totalMissions}</span>
+        </div>
+      </div>
+
+      <div className={team.badges}>
+        <span className={`${styles.typeBadge} ${typeCls(c.type, styles)}`}>{typeLabel(c.type, t)}</span>
+        {c.status !== 'active' && (
+          <span className={`${styles.statutBadge} ${statutCls(c.status, styles)}`}>{statutLabel(c.status, t)}</span>
+        )}
+      </div>
+
+      <div className={team.actions}>
+        <button className={team.btnPrimary} onClick={onView}><i className="fas fa-eye" /> {t('correspondants.card.voir')}</button>
+        <button className={team.btnIcon} onClick={onContact} title={t('correspondants.card.contacter')}><i className="fas fa-envelope" /></button>
+        <a href={`tel:${c.phone}`} className={team.btnIcon} title={t('correspondants.card.appeler')}><i className="fas fa-phone" /></a>
+      </div>
+    </div>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -233,8 +365,8 @@ function ModalInviter({ onClose }: { onClose: () => void }) {
       setInvitationResult(result);
       setEtape(3);
       pop(t('correspondants.modalInviter.invitationEnvoyee', { email }), 's');
-    } catch (err: any) {
-      pop(`❌ ${err.message}`, 'e');
+    } catch (err) {
+      pop(`❌ ${getErrorMessage(err)}`, 'e');
     } finally {
       setLoading(false);
     }
@@ -423,8 +555,8 @@ function ModalContacter({ c, onClose }: {
       await correspondantsApi.contacter(c.id, { sujet: sujet.trim(), message: message.trim() });
       pop(t('correspondants.modalContacter.messageEnvoye', { name: c.fullName }), 's');
       onClose();
-    } catch (err: any) {
-      pop(`❌ ${err.message}`, 'e');
+    } catch (err) {
+      pop(`❌ ${getErrorMessage(err)}`, 'e');
     } finally {
       setLoading(false);
     }
@@ -508,6 +640,21 @@ function ModalSuspendre({ c, onClose, onConfirm, loading }: {
 export default function CorrespondantsPage() {
   const { t } = useTranslation();
   const { pop } = useToast();
+  const navigate = useNavigate();
+
+  // ── Onglets : équipe créée par l'entreprise vs réseau plateforme ──
+  const [tab, setTab] = useState<'equipe' | 'suivis' | 'decouvrir'>('equipe');
+  const reseau = useCorrespondants();
+  const { openAuthModal, authModal } = useAuthGate();
+  const [reseauSearch, setReseauSearch] = useState('');
+  const reseauFiltered = useMemo(() => {
+    const q = reseauSearch.trim().toLowerCase();
+    if (!q) return reseau.correspondants;
+    return reseau.correspondants.filter(c => c.nom.toLowerCase().includes(q) || c.zone.toLowerCase().includes(q));
+  }, [reseau.correspondants, reseauSearch]);
+  const suivis     = useMemo(() => reseauFiltered.filter(c => c.suivi),  [reseauFiltered]);
+  const decouvrir  = useMemo(() => reseauFiltered.filter(c => !c.suivi), [reseauFiltered]);
+  const reseauList = tab === 'suivis' ? suivis : decouvrir;
 
   // ── État données — tout vient de l'API ─────────────────────
   const [correspondants,  setCorrespondants]  = useState<CorrespondantResponse[]>([]);
@@ -527,7 +674,6 @@ export default function CorrespondantsPage() {
   const [search,       setSearch]       = useState('');
   const [filtreType,   setFiltreType]   = useState<'tous' | CorrespondantType>('tous');
   const [filtreStatut, setFiltreStatut] = useState<'tous' | CorrespondantStatus>('tous');
-  const [vue,          setVue]          = useState<'grille' | 'liste'>('grille');
 
   // ── Filtrage local (sur les données déjà chargées) ──────────
   const filtres = useMemo(() => correspondants.filter(c => {
@@ -559,13 +705,18 @@ export default function CorrespondantsPage() {
       setZones(zonesData);
       setActivite(activiteData);
       setCorrespondants(listData.data);
-    } catch (err: any) {
-      pop(t('correspondants.toasts.loadError', { message: err.message }), 'e');
+    } catch (err) {
+      pop(t('correspondants.toasts.loadError', { message: getErrorMessage(err) }), 'e');
     } finally {
       setLoading(false);
     }
   }, [pop, t]);
 
+  // Chargement initial — pattern standard "fetch on mount" (cf. doc React,
+  // "Fetching data"). loadData() est async : setLoading(true) s'exécute
+  // avant son premier await, donc de façon synchrone dans l'effet — c'est
+  // le comportement attendu pour afficher le spinner dès le montage.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadData(); }, [loadData]);
 
   // ══════════════════════════════════════════════════════════════
@@ -581,8 +732,8 @@ export default function CorrespondantsPage() {
       pop(t('correspondants.toasts.suspendu', { name: c.fullName }), 'w');
       setModalSuspend(null);
       loadData(); // Recharge la liste depuis l'API
-    } catch (err: any) {
-      pop(`❌ ${err.message}`, 'e');
+    } catch (err) {
+      pop(`❌ ${getErrorMessage(err)}`, 'e');
     } finally {
       setSuspendLoading(false);
     }
@@ -596,8 +747,8 @@ export default function CorrespondantsPage() {
       await Promise.all(enAttente.map(c => correspondantsApi.valider(c.id)));
       pop(t('correspondants.quickActions.validesToast', { count: enAttente.length }), 's');
       loadData();
-    } catch (err: any) {
-      pop(`❌ ${err.message}`, 'e');
+    } catch (err) {
+      pop(`❌ ${getErrorMessage(err)}`, 'e');
     }
   }
 
@@ -612,50 +763,58 @@ export default function CorrespondantsPage() {
   return (
     <div className={styles.page}>
 
-      {/* HEADER */}
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.titre}>{t('correspondants.header.title')}</h1>
-          <p className={styles.sousTitre}>{t('correspondants.header.subtitle')}</p>
-        </div>
-        <button className={styles.btnAjouter} onClick={() => setModalInviter(true)}>
-          <i className="fas fa-user-plus" /> {t('correspondants.header.inviter')}
-        </button>
+      {/* ONGLETS — équipe créée par l'entreprise / suivis / découvrir */}
+      <div className={styles.filtresBtns} style={{ marginBottom: 18 }}>
+        {([
+          { val: 'equipe',    label: t('correspondants.reseau.tabs.equipe'),    icon: 'fa-users'  },
+          { val: 'suivis',    label: t('correspondants.reseau.tabs.suivis'),    icon: 'fa-heart'  },
+          { val: 'decouvrir', label: t('correspondants.reseau.tabs.decouvrir'), icon: 'fa-compass' },
+        ] as const).map(tb => (
+          <button key={tb.val}
+            className={`${styles.filtreBtn} ${tab === tb.val ? styles.filtreBtnActive : ''}`}
+            onClick={() => setTab(tb.val)}>
+            <i className={`fas ${tb.icon}`} /> {tb.label}
+          </button>
+        ))}
       </div>
 
-      {/* STATS — depuis GET /correspondants/stats */}
-      <div className={styles.statsGrid}>
-        <div className={`${styles.statCard} ${styles.statBlue}`}>
-          <div className={styles.statIcon}><i className="fas fa-network-wired" /></div>
-          <div>
-            <div className={styles.statVal}>{loading ? '…' : statsDisplay.actifs}</div>
-            <div className={styles.statLabel}>{t('correspondants.stats.actifs')}</div>
-            <div className={styles.statSub}>{t('correspondants.stats.auTotal', { count: statsDisplay.total })}</div>
+      {tab === 'equipe' && (
+      <>
+      {/* STATS — depuis GET /correspondants/stats — taille compacte, toujours sur
+          une seule ligne (y compris mobile). Surcharges inline (statCardCompact...)
+          + kpi.module.css (grid4/*Tight). */}
+      <div className={`${styles.statsGrid} ${kpi.grid4}`} style={{ gap: 6, marginBottom: 14 }}>
+        <div className={`${styles.statCard} ${styles.statBlue} ${kpi.cardTight}`} style={statCardCompact}>
+          <div className={`${styles.statIcon} ${kpi.iconTight}`} style={statIconCompact}><i className="fas fa-network-wired" /></div>
+          <div style={{ minWidth: 0 }}>
+            <div className={`${styles.statVal} ${kpi.valTight}`} style={statValCompact}>{loading ? '…' : statsDisplay.actifs}</div>
+            <div className={`${styles.statLabel} ${kpi.labelTight}`} style={statLabelCompact}>{t('correspondants.stats.actifs')}</div>
+            <div className={`${styles.statSub} ${kpi.subTight}`} style={statSubCompact}>{t('correspondants.stats.auTotal', { count: statsDisplay.total })}</div>
           </div>
         </div>
-        <div className={`${styles.statCard} ${styles.statGreen}`}>
-          <div className={styles.statIcon}><i className="fas fa-box" /></div>
-          <div>
-            <div className={styles.statVal}>{loading ? '…' : statsDisplay.thisMonth}</div>
-            <div className={styles.statLabel}>{t('correspondants.stats.commandesCeMois')}</div>
-            <div className={styles.statSub}>{t('correspondants.stats.traiteesParReseau')}</div>
+        <div className={`${styles.statCard} ${styles.statGreen} ${kpi.cardTight}`} style={statCardCompact}>
+          <div className={`${styles.statIcon} ${kpi.iconTight}`} style={statIconCompact}><i className="fas fa-box" /></div>
+          <div style={{ minWidth: 0 }}>
+            <div className={`${styles.statVal} ${kpi.valTight}`} style={statValCompact}>{loading ? '…' : statsDisplay.thisMonth}</div>
+            <div className={`${styles.statLabel} ${kpi.labelTight}`} style={statLabelCompact}>{t('correspondants.stats.commandesCeMois')}</div>
+            <div className={`${styles.statSub} ${kpi.subTight}`} style={statSubCompact}>{t('correspondants.stats.traiteesParReseau')}</div>
           </div>
         </div>
-        <div className={`${styles.statCard} ${styles.statAmber}`}>
-          <div className={styles.statIcon}><i className="fas fa-city" /></div>
-          <div>
-            <div className={styles.statVal}>{loading ? '…' : statsDisplay.villes}</div>
-            <div className={styles.statLabel}>{t('correspondants.stats.villesCouvertes')}</div>
-            <div className={styles.statSub}>{t('correspondants.stats.plusInternational')}</div>
+        <div className={`${styles.statCard} ${styles.statAmber} ${kpi.cardTight}`} style={statCardCompact}>
+          <div className={`${styles.statIcon} ${kpi.iconTight}`} style={statIconCompact}><i className="fas fa-city" /></div>
+          <div style={{ minWidth: 0 }}>
+            <div className={`${styles.statVal} ${kpi.valTight}`} style={statValCompact}>{loading ? '…' : statsDisplay.villes}</div>
+            <div className={`${styles.statLabel} ${kpi.labelTight}`} style={statLabelCompact}>{t('correspondants.stats.villesCouvertes')}</div>
+            <div className={`${styles.statSub} ${kpi.subTight}`} style={statSubCompact}>{t('correspondants.stats.plusInternational')}</div>
           </div>
         </div>
-        <div className={`${styles.statCard} ${styles.statViolet}`}>
-          {statsDisplay.enAttente > 0 && <div className={styles.pulseDot} />}
-          <div className={styles.statIcon}><i className="fas fa-clock" /></div>
-          <div>
-            <div className={styles.statVal}>{loading ? '…' : statsDisplay.enAttente}</div>
-            <div className={styles.statLabel}>{t('correspondants.stats.enAttente')}</div>
-            <div className={styles.statSub}>{t('correspondants.stats.validationRequise')}</div>
+        <div className={`${styles.statCard} ${styles.statViolet} ${kpi.cardTight}`} style={statCardCompact}>
+          {statsDisplay.enAttente > 0 && <div className={styles.pulseDot} style={{ top: 7, right: 7, width: 7, height: 7 }} />}
+          <div className={`${styles.statIcon} ${kpi.iconTight}`} style={statIconCompact}><i className="fas fa-clock" /></div>
+          <div style={{ minWidth: 0 }}>
+            <div className={`${styles.statVal} ${kpi.valTight}`} style={statValCompact}>{loading ? '…' : statsDisplay.enAttente}</div>
+            <div className={`${styles.statLabel} ${kpi.labelTight}`} style={statLabelCompact}>{t('correspondants.stats.enAttente')}</div>
+            <div className={`${styles.statSub} ${kpi.subTight}`} style={statSubCompact}>{t('correspondants.stats.validationRequise')}</div>
           </div>
         </div>
       </div>
@@ -676,7 +835,7 @@ export default function CorrespondantsPage() {
               ))}
             </div>
             <div className={styles.toolbarRight}>
-              <select className={styles.filtreSelect} value={filtreStatut} onChange={e => setFiltreStatut(e.target.value as any)}>
+              <select className={styles.filtreSelect} value={filtreStatut} onChange={e => setFiltreStatut(e.target.value as 'tous' | CorrespondantStatus)}>
                 <option value="tous">{t('correspondants.statutSelect.tousStatuts')}</option>
                 <option value="active">{t('correspondants.statutSelect.actifs')}</option>
                 <option value="pending">{t('correspondants.statutSelect.enAttente')}</option>
@@ -686,10 +845,6 @@ export default function CorrespondantsPage() {
                 <i className="fas fa-magnifying-glass" />
                 <input className={styles.searchInput} placeholder={t('correspondants.search')} value={search} onChange={e => setSearch(e.target.value)} />
                 {search && <button className={styles.clearBtn} onClick={() => setSearch('')}><i className="fas fa-xmark" /></button>}
-              </div>
-              <div className={styles.vueBtns}>
-                <button className={`${styles.vueBtn} ${vue === 'grille' ? styles.vueBtnActive : ''}`} onClick={() => setVue('grille')}><i className="fas fa-grid-2" /></button>
-                <button className={`${styles.vueBtn} ${vue === 'liste'  ? styles.vueBtnActive : ''}`} onClick={() => setVue('liste')}><i className="fas fa-list" /></button>
               </div>
             </div>
           </div>
@@ -714,81 +869,16 @@ export default function CorrespondantsPage() {
               <span>{t('correspondants.empty.sub')}</span>
               <button className={styles.btnAjouter} onClick={() => setModalInviter(true)}><i className="fas fa-user-plus" /> {t('correspondants.empty.inviter')}</button>
             </div>
-          ) : vue === 'grille' ? (
-            <div className={styles.grille}>
-              {filtres.map(c => (
-                <div key={c.id} className={`${styles.card} ${c.status === 'suspended' ? styles.cardSuspended : ''}`}>
-                  <div className={styles.cardHead}>
-                    <div className={styles.cardAvatar}>{c.avatarEmoji}</div>
-                    <div className={styles.cardBadges}>
-                      <span className={`${styles.typeBadge} ${typeCls(c.type, styles)}`}>{typeLabel(c.type, t)}</span>
-                      {c.status !== 'active' && (
-                        <span className={`${styles.statutBadge} ${statutCls(c.status, styles)}`}>{statutLabel(c.status, t)}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className={styles.cardBody}>
-                    <div className={styles.cardName}>{c.fullName}</div>
-                    <div className={styles.cardVille}><i className="fas fa-map-pin" /> {c.ville} · {c.quartier}</div>
-                    <div className={styles.cardZone}><i className="fas fa-map" /> {c.zone}</div>
-                  </div>
-                  <div className={styles.cardStats}>
-                    <div className={styles.cardStat}><strong>{c.thisMonth}</strong><span>{t('correspondants.card.ceMois')}</span></div>
-                    <div className={styles.cardStat}><strong>{c.totalMissions}</strong><span>{t('correspondants.card.total')}</span></div>
-                    <div className={styles.cardStat}>
-                      <i className="fas fa-star" style={{ color:'var(--t2)', fontSize:11 }} />
-                      <strong>{c.averageRating === 0 ? t('correspondants.na') : c.averageRating.toFixed(1)}</strong>
-                      <span>{t('correspondants.card.note')}</span>
-                    </div>
-                  </div>
-                  <div className={styles.cardActivity}>
-                    <div className={styles.actDot} />
-                    <span>{c.lastActivity}</span>
-                    <span className={styles.actTime}>{c.lastActivityAt}</span>
-                  </div>
-                  <div className={styles.cardActions}>
-                    <button className={styles.cardBtnPrimary} onClick={() => setModalProfil(c)}><i className="fas fa-eye" /> {t('correspondants.card.voir')}</button>
-                    <button className={styles.cardBtnIcon} onClick={() => setModalContact(c)} title={t('correspondants.card.contacter')}><i className="fas fa-envelope" /></button>
-                    <a href={`tel:${c.phone}`} className={styles.cardBtnIcon} title={t('correspondants.card.appeler')}><i className="fas fa-phone" /></a>
-                  </div>
-                </div>
-              ))}
-            </div>
           ) : (
-            <div className={styles.listeWrap}>
-              <table className={styles.liste}>
-                <thead>
-                  <tr>
-                    {[t('correspondants.table.correspondant'),t('correspondants.table.ville'),t('correspondants.table.type'),t('correspondants.table.ceMois'),t('correspondants.table.total'),t('correspondants.table.note'),t('correspondants.table.statut'),t('correspondants.table.actions')].map(h => (
-                      <th key={h} className={styles.th}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtres.map(c => (
-                    <tr key={c.id} className={`${styles.tr} ${c.status === 'suspended' ? styles.trSuspended : ''}`}>
-                      <td className={styles.td}>
-                        <div className={styles.listCell}>
-                          <div className={styles.listAvatar}>{c.avatarEmoji}</div>
-                          <div><div className={styles.listNom}>{c.fullName}</div><div className={styles.listEmail}>{c.email}</div></div>
-                        </div>
-                      </td>
-                      <td className={styles.td}><div className={styles.listVille}><i className="fas fa-map-pin" /> {c.ville}</div></td>
-                      <td className={styles.td}><span className={`${styles.typeBadge} ${typeCls(c.type, styles)}`}>{typeLabel(c.type, t)}</span></td>
-                      <td className={styles.td}><strong style={{ color:'var(--navy)', fontFamily:'var(--fd)' }}>{c.thisMonth}</strong></td>
-                      <td className={styles.td}><strong style={{ color:'var(--navy)' }}>{c.totalMissions}</strong></td>
-                      <td className={styles.td}><div className={styles.listRating}><i className="fas fa-star" style={{ color:'var(--t2)', fontSize:11 }} /><strong>{c.averageRating === 0 ? t('correspondants.na') : c.averageRating.toFixed(1)}</strong></div></td>
-                      <td className={styles.td}><span className={`${styles.statutBadge} ${statutCls(c.status, styles)}`}>{statutLabel(c.status, t)}</span></td>
-                      <td className={styles.td}>
-                        <div className={styles.listActions}>
-                          <button className={styles.listeBtn} onClick={() => setModalProfil(c)} title={t('correspondants.card.voir')}><i className="fas fa-eye" /></button>
-                          <button className={styles.listeBtn} onClick={() => setModalContact(c)} title={t('correspondants.card.contacter')}><i className="fas fa-envelope" /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className={team.list}>
+              {filtres.map(c => (
+                <LigneEquipeCorrespondant
+                  key={c.id}
+                  c={c}
+                  onView={() => setModalProfil(c)}
+                  onContact={() => setModalContact(c)}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -855,6 +945,70 @@ export default function CorrespondantsPage() {
           </div>
         </div>
       </div>
+      </>
+      )}
+
+      {/* RÉSEAU — correspondants suivis / à découvrir sur toute la plateforme */}
+      {tab !== 'equipe' && (
+        <div className={styles.layout}>
+          <div className={styles.colMain}>
+            <div className={styles.toolbar}>
+              <div className={styles.toolbarRight} style={{ marginLeft: 'auto' }}>
+                <div className={styles.searchWrap}>
+                  <i className="fas fa-magnifying-glass" />
+                  <input
+                    className={styles.searchInput}
+                    placeholder={t('correspondants.reseau.searchPlaceholder')}
+                    value={reseauSearch}
+                    onChange={e => setReseauSearch(e.target.value)}
+                  />
+                  {reseauSearch && (
+                    <button className={styles.clearBtn} onClick={() => setReseauSearch('')}><i className="fas fa-xmark" /></button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {reseauList.length > 0 && (
+              <div className={styles.compteur}>{t('correspondants.compteur', { count: reseauList.length })}</div>
+            )}
+
+            {reseau.error && !reseau.loading && (
+              <div style={{ marginBottom: 14, padding: '10px 14px', background: 'var(--g100)', border: '1px solid var(--bdr2)', borderRadius: 10, fontSize: 12.5, color: 'var(--t1)' }}>
+                <i className="fas fa-triangle-exclamation" /> {reseau.error}
+              </div>
+            )}
+
+            {reseau.loading ? (
+              <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--t3)' }}>
+                <i className="fas fa-spinner fa-spin" style={{ fontSize: 28, display: 'block', marginBottom: 12 }} />
+                {t('correspondants.reseau.loading')}
+              </div>
+            ) : reseauList.length === 0 ? (
+              <div className={styles.vide}>
+                <span className={styles.videIco}>🗺️</span>
+                <strong>{t(tab === 'suivis' ? 'correspondants.reseau.emptySuivis.title' : 'correspondants.reseau.emptyDecouvrir.title')}</strong>
+                <span>{t(tab === 'suivis' ? 'correspondants.reseau.emptySuivis.sub' : 'correspondants.reseau.emptyDecouvrir.sub')}</span>
+              </div>
+            ) : (
+              <div className={styles.sideCard} style={{ padding: '0 18px' }}>
+                {reseauList.map(c => (
+                  <LigneReseauCorrespondant
+                    key={c.id}
+                    c={c}
+                    onView={() => navigate(`/dashboard/entreprise/reseau/correspondants/${c.id}`)}
+                    onPop={pop}
+                    onRequireAuth={openAuthModal}
+                    onChange={reseau.onChange}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {authModal}
 
       {/* MODALES */}
       {modalProfil && (

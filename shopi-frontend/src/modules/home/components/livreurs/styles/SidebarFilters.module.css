@@ -44,3 +44,7 @@
 .followedName{font-size:12px;font-weight:700;color:var(--t1)}
 .followedMeta{font-size:10.5px;color:var(--t3)}
 .followedDot{margin-left:auto;width:8px;height:8px;border-radius:50%;flex-shrink:0}
+/* Mobile : sidebar de filtres avancés (zone/véhicule/note/disponibilité/
+ * abonnements) masquée — seuls le menu (Header) et la liste des livreurs
+ * doivent rester (demande explicite). */
+@media(max-width:768px){.sidebar{display:none}}

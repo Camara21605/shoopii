@@ -2,7 +2,16 @@
  * FilterToolbar.module.css — Barre d'outils sticky
  * ================================================================ */
 .toolbar{background:var(--white);border-bottom:1px solid var(--bdr);position:sticky;top:var(--hdr,66px);z-index:100}
-.inner{max-width:1200px;margin:0 auto;padding:0 28px;display:flex;align-items:center;gap:10px;height:54px;overflow-x:auto}
+/* BUG CORRIGÉ (la "barre blanche" avec flèches ‹ › sous le menu) — ce
+ * n'était pas une bordure CSS mais la VRAIE scrollbar horizontale native
+ * de Windows/Chrome : avec le bouton "En course" ajouté en mobile, le
+ * contenu (recherche + filtres + tri + compteur) dépasse la largeur de
+ * l'écran, et overflow-x:auto affiche alors la scrollbar native du
+ * système. Le défilement reste actif, seule la barre est masquée
+ * visuellement (scrollbar-width/-ms-overflow-style + pseudo-élément
+ * ::-webkit-scrollbar ci-dessous). */
+.inner{max-width:1200px;margin:0 auto;padding:0 28px;display:flex;align-items:center;gap:10px;height:54px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+.inner::-webkit-scrollbar{display:none;height:0;width:0}
 .searchWrap{display:flex;align-items:center;gap:8px;background:var(--g50,#F8F9FA);border:1.5px solid var(--bdr);border-radius:10px;padding:0 12px;height:36px;min-width:200px;flex:1;max-width:340px;transition:border-color .15s}
 .searchWrap:focus-within{border-color:var(--navy)}
 .searchWrap i{color:var(--t3);font-size:13px;flex-shrink:0}
@@ -15,7 +24,12 @@
 .sep{width:1px;height:20px;background:var(--bdr);flex-shrink:0}
 .sortSelect{border:1.5px solid var(--bdr);border-radius:10px;padding:0 10px;height:36px;font-size:12.5px;font-family:var(--fb);color:var(--t2);background:none;cursor:pointer;outline:none}
 .countPill{background:var(--g100,#F1F3F5);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;color:var(--t3);white-space:nowrap;margin-left:auto}
-.viewBtns{display:flex;gap:4px}
-.vBtn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--bdr);background:none;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--t3);cursor:pointer;transition:all .15s}
-.vBtnOn{border-color:var(--btn) !important;color:#fff !important;background:var(--btn) !important}
-.vBtn:hover{border-color:var(--bdr2);color:var(--t1);background:var(--g100)}
+/* Filtre "En course" (disponibilité) — ne s'affiche qu'en mobile : sur
+ * desktop, ce même filtre existe déjà dans SidebarFilters (section
+ * Disponibilité) donc l'ajouter aussi ici dupliquerait l'information. */
+.mobileOnly{display:none}
+@media(max-width:768px){.mobileOnly{display:flex}}
+/* Mobile : retire la ligne de séparation entre la barre d'outils (menu)
+ * et la rangée "Suggestions" juste en dessous — les deux s'enchaînent
+ * sans ligne visible. */
+@media(max-width:768px){.toolbar{border-bottom:none}}

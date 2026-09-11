@@ -822,6 +822,14 @@ export class AuthService implements OnModuleInit {
           codePostal:    loc.codePostal,
           latitude:      loc.latitude,
           longitude:     loc.longitude,
+          /* Références structurées directes — voir RegisterDto
+           * companyPaysId/companyVilleId : l'admin choisit son
+           * entreprise dans le référentiel géo (Pays → Région →
+           * Préfecture → Commune) à l'inscription, donc paysId/villeId
+           * sont connus immédiatement (pas besoin d'attendre le
+           * rapprochement par texte de GeoResolutionService). */
+          paysId:        dto.companyPaysId  ?? null,
+          villeId:       dto.companyVilleId ?? null,
         });
         await manager.save(Company, profile);
         break;
@@ -866,10 +874,23 @@ export class AuthService implements OnModuleInit {
       }
 
       case UserRole.CLIENT: {
+        /* BUG CORRIGÉ — le client était le seul rôle dont la
+         * localisation d'inscription (loc.*) n'était jamais persistée
+         * — Client n'avait même pas les colonnes pour l'accueillir
+         * (voir client-profile.entity.ts). Désormais obligatoire à
+         * l'inscription pour ce rôle (voir RegisterDto), au même titre
+         * que pour livreur/partenaire/correspondant. */
         const profile = manager.create(Client, {
           userId:   user.id,
           fullName,
           status:   'active' as any,
+          adresse:   loc.adresse,
+          commune:   loc.commune,
+          ville:     loc.ville,
+          region:    loc.region,
+          pays:      loc.pays,
+          latitude:  loc.latitude,
+          longitude: loc.longitude,
         });
         await manager.save(Client, profile);
         break;

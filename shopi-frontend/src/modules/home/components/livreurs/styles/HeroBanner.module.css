@@ -31,3 +31,7 @@
 .miniBtn:hover{background:var(--g200)}
 .miniBtnOn{background:var(--btn) !important;border-color:var(--btn) !important;color:#fff !important}
 @media(max-width:860px){.right{display:none}.title{font-size:26px}.hero{padding:24px 16px 20px}}
+/* Mobile : la bannière hero (stats réseau, livreurs vedettes) n'est pas
+ * essentielle sur petit écran — seuls le menu (Header) et la liste des
+ * livreurs doivent rester (demande explicite). */
+@media(max-width:768px){.hero{display:none}}

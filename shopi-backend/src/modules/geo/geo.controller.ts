@@ -29,6 +29,7 @@ import { Public }       from '../../common/decorators/public.decorator';
 import { UserRole }     from '../../common/enums/user-role.enum';
 
 import { GeoService }        from './geo.service';
+import { GeoResolutionService } from './geo-resolution.service';
 import { CreateGeoItemDto, GeoImportDto } from './geo.dto';
 import type { GeoAuditNiveau } from '../../database/entities/geo/geo-audit-log.entity';
 
@@ -45,7 +46,34 @@ function actor(req: any): { email: string; userId: string } {
 @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
 @Controller('geo')
 export class GeoController {
-  constructor(private readonly geo: GeoService) {}
+  constructor(
+    private readonly geo: GeoService,
+    private readonly geoResolution: GeoResolutionService,
+  ) {}
+
+  /* ══════════════════════════════════════════════════════════
+   * RÉSOLUTION GÉO DES ACTEURS (paysId/villeId structurés)
+   *
+   * Alimente la "communauté" support d'un admin (paysAssigne/
+   * villeAssignee/zoneId) — voir geo-resolution.service.ts pour le
+   * détail. Réservé au super-admin.
+   * ══════════════════════════════════════════════════════════ */
+
+  /* GET /geo/resolve-actors/status — combien d'acteurs ont une ville
+   * texte mais pas encore de villeId résolu (avant de lancer le recalcul). */
+  @Get('resolve-actors/status')
+  @Roles(UserRole.SUPER_ADMIN)
+  getResolveActorsStatus() {
+    return this.geoResolution.getUnresolvedCounts();
+  }
+
+  /* POST /geo/resolve-actors — recalcule paysId/villeId pour tous les
+   * partenaires/entreprises/livreurs à partir de leurs champs ville/pays. */
+  @Post('resolve-actors')
+  @Roles(UserRole.SUPER_ADMIN)
+  resolveActors() {
+    return this.geoResolution.recomputeAllActors();
+  }
 
   /* ══════════════════════════════════════════════════════════
    * ITEMS PUBLICS PAR NIVEAU — accessibles sans authentification

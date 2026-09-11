@@ -89,6 +89,28 @@ export class ModerationController {
     return this.adminsService.setAssignedCountry(email, body.paysId ?? null, req.user);
   }
 
+  /** Ville (préfecture) assignée à un admin — "communauté" support (super-admin uniquement) */
+  @Patch('admins/:email/ville-assignee')
+  @Roles(UserRole.SUPER_ADMIN)
+  async setAdminVilleAssignee(
+    @Param('email') email: string,
+    @Body() body: { villeId: string | null },
+    @Request() req: any,
+  ) {
+    return this.adminsService.setAssignedVille(email, body.villeId ?? null, req.user);
+  }
+
+  /** Zone de livraison assignée à un admin — "communauté" support (super-admin uniquement) */
+  @Patch('admins/:email/zone-assignee')
+  @Roles(UserRole.SUPER_ADMIN)
+  async setAdminZoneAssignee(
+    @Param('email') email: string,
+    @Body() body: { zoneId: string | null },
+    @Request() req: any,
+  ) {
+    return this.adminsService.setAssignedZone(email, body.zoneId ?? null, req.user);
+  }
+
   /** Permissions de l'admin connecté — accessible par le rôle ADMIN */
   @Get('my-permissions')
   async getMyPermissions(@Request() req: any) {

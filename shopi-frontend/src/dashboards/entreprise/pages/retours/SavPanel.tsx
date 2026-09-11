@@ -68,10 +68,11 @@ export default function SavPanel({
             { ico: '⏱️', label: t('retours.sav.stats.delaiMoy'), val: `${stats.avgResponseMinutes}m`, color: 'var(--t2)', bg: 'var(--g100)' },
           ].map((k, i) => (
             <div key={i} className={s.kpiCard}>
-              <div className={s.kpiStripe} style={{ background: k.color }} />
-              <div className={s.kpiIcon}>{k.ico}</div>
-              <div className={s.kpiVal}>{k.val}</div>
-              <div className={s.kpiLbl}>{k.label}</div>
+              <span className={s.kpiIcon}>{k.ico}</span>
+              <div>
+                <div className={s.kpiVal}>{k.val}</div>
+                <div className={s.kpiLbl}>{k.label}</div>
+              </div>
             </div>
           ))}
         </div>

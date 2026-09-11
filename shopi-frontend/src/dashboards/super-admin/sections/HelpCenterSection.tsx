@@ -24,7 +24,20 @@ import React, {
   useEffect, useState, useCallback, useRef,
 } from 'react';
 import { apiFetch } from '../../../shared/services/apiFetch';
+import MarkdownRenderer from '../../../modules/help/components/MarkdownRenderer';
 import s from './HelpCenterSection.module.css';
+
+/** Dérive un slug URL-safe à partir d'un titre (minuscules, accents
+ *  retirés, espaces/ponctuation → tirets). Utilisé pour pré-remplir le
+ *  slug d'un nouvel article/catégorie tant que l'admin ne l'a pas
+ *  modifié à la main. */
+function slugify(text: string): string {
+  return text
+    .normalize('NFD').replace(/[̀-ͯ]/g, '') // retire les accents
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 // ─────────────────────────────────────────────────────────────
 // 1. Types (miroir des entités backend)
@@ -43,28 +56,32 @@ interface HelpCategory {
 }
 
 interface HelpArticle {
-  id:          string;
-  slug:        string;
-  title:       string;
-  excerpt:     string | null;
-  status:      ArticleStatus;
-  viewCount:   number;
-  categoryId:  string | null;
-  publishedAt: string | null;
-  createdAt:   string;
+  id:              string;
+  slug:            string;
+  title:           string;
+  excerpt:         string | null;
+  status:          ArticleStatus;
+  viewCount:       number;
+  helpfulCount:    number;
+  notHelpfulCount: number;
+  categoryId:      string | null;
+  publishedAt:     string | null;
+  createdAt:       string;
 }
 
 interface HelpFaqItem {
   id:           string;
   categorySlug: string;
   question:     string;
+  answer:       string;
   isPublished:  boolean;
   displayOrder: number;
 }
 
 interface Analytics {
-  topArticles:    { id: string; title: string; viewCount: number }[];
+  topArticles: { id: string; title: string; viewCount: number; helpfulCount: number; notHelpfulCount: number }[];
   zeroResultQueries: { query: string; count: number }[];
+  satisfaction: { helpfulTotal: number; notHelpfulTotal: number; rate: number | null };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -72,6 +89,8 @@ interface Analytics {
 // ─────────────────────────────────────────────────────────────
 
 type Tab = 'articles' | 'categories' | 'faq' | 'analytics';
+
+const ARTICLES_PAGE_SIZE = 20;
 
 // ─────────────────────────────────────────────────────────────
 // 3. Composant Modal générique (éditeur)
@@ -126,6 +145,9 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
   const [loading,  setLoading]  = useState(true);
   const [search,   setSearch]   = useState('');
   const [statusF,  setStatusF]  = useState('');
+  const [categoryF, setCategoryF] = useState('');
+  const [page,     setPage]     = useState(1);
+  const [total,    setTotal]    = useState(0);
 
   /* État du modal d'édition — null = fermé */
   const [editing, setEditing] = useState<Partial<HelpArticle & {
@@ -134,6 +156,10 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
     audience:  string;
   }> | null>(null);
   const [saving, setSaving] = useState(false);
+  /* true dès que l'admin modifie le slug à la main — désactive alors
+   * l'auto-génération depuis le titre pour ne pas écraser son choix. */
+  const [slugTouched, setSlugTouched] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
 
   /* Formulaire du modal */
   const [form, setForm] = useState({
@@ -149,29 +175,45 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
     setLoading(true);
     try {
       const res = await apiFetch<{ data: HelpArticle[]; total: number }>(
-        '/admin/help/articles?page=1&limit=100'
+        '/admin/help/articles',
+        { params: {
+          page, limit: ARTICLES_PAGE_SIZE,
+          search: search || undefined,
+          status: statusF || undefined,
+          categoryId: categoryF || undefined,
+        } },
       );
       setArticles(res.data ?? []);
+      setTotal(res.total ?? 0);
     } catch {
       toast('Erreur lors du chargement des articles', 'err');
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, page, search, statusF, categoryF]);
 
   useEffect(() => { load(); }, [load]);
+
+  /* Revenir à la page 1 quand un filtre change — sinon on peut se
+   * retrouver sur une page qui n'existe plus dans le résultat filtré. */
+  useEffect(() => { setPage(1); }, [search, statusF, categoryF]);
 
   /* Ouvrir le modal pour créer */
   const openCreate = () => {
     setForm({ slug: '', title: '', excerpt: '', content: '', categoryId: '', audience: '' });
+    setSlugTouched(false);
+    setPreviewMode(false);
     setEditing({});
   };
 
   /* Ouvrir le modal pour modifier */
   const openEdit = async (article: HelpArticle) => {
     try {
-      /* Charger le contenu complet de l'article (excerpt + content non renvoyés en liste) */
-      const full = await apiFetch<HelpArticle & { content: string }>(`/help/articles/${article.slug}`);
+      /* BUG CORRIGÉ — utilisait GET /help/articles/:slug (route PUBLIQUE,
+       * articles PUBLISHED uniquement) : un brouillon (statut par défaut
+       * à la création) renvoyait 404, rendant tout article non-publié
+       * impossible à modifier. Route admin dédiée, tous statuts. */
+      const full = await apiFetch<HelpArticle & { content: string }>(`/admin/help/articles/${article.id}`);
       setForm({
         slug:       full.slug,
         title:      full.title,
@@ -180,6 +222,10 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
         categoryId: full.categoryId ?? '',
         audience:   '',
       });
+      /* Un article existant a déjà un slug choisi — ne jamais le
+       * réécrire automatiquement si l'admin retouche le titre. */
+      setSlugTouched(true);
+      setPreviewMode(false);
       setEditing(article);
     } catch {
       toast('Impossible de charger cet article', 'err');
@@ -252,12 +298,11 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
     } catch { toast('Erreur lors de la suppression', 'err'); }
   };
 
-  /* Filtrage local */
-  const filtered = articles.filter(a => {
-    const matchSearch = !search || a.title.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = !statusF || a.status === statusF;
-    return matchSearch && matchStatus;
-  });
+  /* Filtrage désormais côté serveur (search/statusF/categoryF envoyés en
+   * query params par load()) — nécessaire pour rester correct une fois
+   * la pagination réelle en place (un filtrage purement local n'aurait
+   * porté que sur la page actuellement chargée). */
+  const totalPages = Math.max(1, Math.ceil(total / ARTICLES_PAGE_SIZE));
 
   /* Libellé de statut */
   const statusLabel: Record<ArticleStatus, string> = {
@@ -288,7 +333,7 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
           <option value="published">Publiés</option>
           <option value="archived">Archivés</option>
         </select>
-        <select className={s.filterSelect} defaultValue="">
+        <select className={s.filterSelect} value={categoryF} onChange={e => setCategoryF(e.target.value)}>
           <option value="">Toutes catégories</option>
           {categories.map(c => (
             <option key={c.id} value={c.id}>{c.name}</option>
@@ -299,11 +344,11 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
 
       {/* ── Liste ── */}
       {loading && <div className={s.loading}>Chargement…</div>}
-      {!loading && filtered.length === 0 && (
+      {!loading && articles.length === 0 && (
         <div className={s.empty}>Aucun article trouvé</div>
       )}
       <div className={s.grid}>
-        {filtered.map(a => (
+        {articles.map(a => (
           <div key={a.id} className={s.row}>
             <div className={s.rowLeft}>
               <div className={s.rowTitle}>{a.title}</div>
@@ -312,6 +357,9 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
                   {statusLabel[a.status]}
                 </span>
                 <span>👁 {a.viewCount}</span>
+                {(a.helpfulCount > 0 || a.notHelpfulCount > 0) && (
+                  <span title="Retours clients">👍 {a.helpfulCount} · 👎 {a.notHelpfulCount}</span>
+                )}
                 <span>{a.slug}</span>
                 {a.publishedAt && (
                   <span>Publié le {new Date(a.publishedAt).toLocaleDateString('fr-FR')}</span>
@@ -348,6 +396,15 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
         ))}
       </div>
 
+      {/* ── Pagination ── */}
+      {!loading && total > ARTICLES_PAGE_SIZE && (
+        <div className={s.pagination}>
+          <button className={s.pageBtn} disabled={page <= 1} onClick={() => setPage(p => p - 1)}>← Précédent</button>
+          <span className={s.pageInfo}>Page {page} / {totalPages} · {total} article{total > 1 ? 's' : ''}</span>
+          <button className={s.pageBtn} disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Suivant →</button>
+        </div>
+      )}
+
       {/* ── Modal édition article ── */}
       {editing !== null && (
         <Modal
@@ -362,7 +419,10 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
               className={s.input}
               placeholder="Titre de l'article"
               value={form.title}
-              onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+              onChange={e => {
+                const title = e.target.value;
+                setForm(f => ({ ...f, title, slug: slugTouched ? f.slug : slugify(title) }));
+              }}
             />
           </div>
           <div className={s.field}>
@@ -371,7 +431,7 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
               className={s.input}
               placeholder="comment-creer-un-compte"
               value={form.slug}
-              onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
+              onChange={e => { setSlugTouched(true); setForm(f => ({ ...f, slug: e.target.value })); }}
             />
           </div>
           <div className={s.field}>
@@ -397,13 +457,27 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
             />
           </div>
           <div className={s.field}>
-            <label className={s.label}>Contenu (Markdown) *</label>
-            <textarea
-              className={s.textarea}
-              placeholder="# Titre&#10;&#10;Contenu en Markdown…"
-              value={form.content}
-              onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
-            />
+            <div className={s.previewToggleRow}>
+              <label className={s.label}>Contenu (Markdown) *</label>
+              <div className={s.previewToggle}>
+                <button type="button" className={!previewMode ? s.previewTabActive : s.previewTab} onClick={() => setPreviewMode(false)}>✍️ Éditer</button>
+                <button type="button" className={previewMode ? s.previewTabActive : s.previewTab} onClick={() => setPreviewMode(true)}>👁 Aperçu</button>
+              </div>
+            </div>
+            {previewMode ? (
+              <div className={s.markdownPreview}>
+                {form.content
+                  ? <MarkdownRenderer content={form.content} />
+                  : <span className={s.previewEmpty}>Rien à prévisualiser — écrivez du contenu dans l'onglet "Éditer".</span>}
+              </div>
+            ) : (
+              <textarea
+                className={s.textarea}
+                placeholder="# Titre&#10;&#10;Contenu en Markdown…"
+                value={form.content}
+                onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
+              />
+            )}
           </div>
           <div className={s.field}>
             <label className={s.label}>Audience (séparée par virgules)</label>
@@ -426,19 +500,22 @@ function ArticlesTab({ categories, toast }: ArticlesTabProps) {
 
 interface CategoriesTabProps {
   categories: HelpCategory[];
+  loading:    boolean;
   onReload:   () => void;
   toast:      (msg: string, type?: 'ok' | 'err') => void;
 }
 
-function CategoriesTab({ categories, onReload, toast }: CategoriesTabProps) {
+function CategoriesTab({ categories, loading, onReload, toast }: CategoriesTabProps) {
   const [editing, setEditing] = useState<HelpCategory | null | 'new'>(null);
   const [saving,  setSaving]  = useState(false);
+  const [slugTouched, setSlugTouched] = useState(false);
   const [form, setForm] = useState({
     slug: '', name: '', description: '', icon: '', displayOrder: '0',
   });
 
   const openCreate = () => {
     setForm({ slug: '', name: '', description: '', icon: '', displayOrder: '0' });
+    setSlugTouched(false);
     setEditing('new');
   };
 
@@ -450,7 +527,24 @@ function CategoriesTab({ categories, onReload, toast }: CategoriesTabProps) {
       icon:         cat.icon ?? '',
       displayOrder: String(cat.displayOrder),
     });
+    setSlugTouched(true);
     setEditing(cat);
+  };
+
+  /* Réordonner : échange displayOrder avec le voisin (haut/bas) —
+   * remplace le simple champ numérique comme moyen principal de trier,
+   * plus fiable qu'éditer des nombres à la main un par un. */
+  const move = async (index: number, dir: -1 | 1) => {
+    const target = categories[index + dir];
+    const current = categories[index];
+    if (!target) return;
+    try {
+      await Promise.all([
+        apiFetch(`/admin/help/categories/${current.id}`, { method: 'PATCH', body: { displayOrder: target.displayOrder } }),
+        apiFetch(`/admin/help/categories/${target.id}`,  { method: 'PATCH', body: { displayOrder: current.displayOrder } }),
+      ]);
+      onReload();
+    } catch { toast('Erreur lors du réordonnancement', 'err'); }
   };
 
   const handleSave = async () => {
@@ -497,10 +591,15 @@ function CategoriesTab({ categories, onReload, toast }: CategoriesTabProps) {
         <button className={s.btnPrimary} onClick={openCreate}>+ Nouvelle catégorie</button>
       </div>
 
+      {loading && <div className={s.loading}>Chargement…</div>}
       <div className={s.grid}>
-        {categories.length === 0 && <div className={s.empty}>Aucune catégorie</div>}
-        {categories.map(cat => (
-          <div key={cat.id} className={s.row}>
+        {!loading && categories.length === 0 && <div className={s.empty}>Aucune catégorie</div>}
+        {categories.map((cat, i) => (
+          <div key={cat.id} className={`${s.row} ${s.rowReorderable}`}>
+            <div className={s.reorderCol}>
+              <button className={s.iconBtnSmall} title="Monter" disabled={i === 0} onClick={() => move(i, -1)}>▲</button>
+              <button className={s.iconBtnSmall} title="Descendre" disabled={i === categories.length - 1} onClick={() => move(i, 1)}>▼</button>
+            </div>
             <div className={s.rowLeft}>
               <div className={s.rowTitle}>
                 {cat.icon && <span style={{ marginRight: 8 }}>{cat.icon}</span>}
@@ -537,12 +636,15 @@ function CategoriesTab({ categories, onReload, toast }: CategoriesTabProps) {
           <div className={s.field}>
             <label className={s.label}>Slug * (URL)</label>
             <input className={s.input} placeholder="aide-commandes" value={form.slug}
-              onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} />
+              onChange={e => { setSlugTouched(true); setForm(f => ({ ...f, slug: e.target.value })); }} />
           </div>
           <div className={s.field}>
             <label className={s.label}>Nom *</label>
             <input className={s.input} placeholder="Commandes et paiements" value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+              onChange={e => {
+                const name = e.target.value;
+                setForm(f => ({ ...f, name, slug: slugTouched ? f.slug : slugify(name) }));
+              }} />
           </div>
           <div className={s.field}>
             <label className={s.label}>Description</label>
@@ -600,13 +702,38 @@ function FaqTab({ categories, toast }: FaqTabProps) {
   };
 
   const openEdit = (item: HelpFaqItem) => {
+    /* BUG CORRIGÉ — answer était initialisé à '' au lieu de item.answer.
+     * handleSave() envoie `form.answer || '(à compléter)'` : modifier une
+     * FAQ existante (ex: juste changer l'ordre d'affichage) sans retaper
+     * la réponse effaçait silencieusement la vraie réponse en base,
+     * remplacée par le texte "(à compléter)". item.answer est déjà
+     * disponible (findAllAdmin renvoie l'entité complète, sans select
+     * restrictif — voir help-faq.service.ts). */
     setForm({
       categorySlug: item.categorySlug,
       question:     item.question,
-      answer:       '',
+      answer:       item.answer,
       displayOrder: String(item.displayOrder),
     });
     setEditing(item);
+  };
+
+  /* Réordonner au sein de la même catégorie — faqItems est déjà trié
+   * categorySlug puis displayOrder côté backend (findAllAdmin), donc
+   * les items d'une même catégorie sont toujours contigus : le voisin
+   * direct dans le tableau suffit, à condition qu'il partage la même
+   * categorySlug (sinon on a atteint la frontière du groupe). */
+  const move = async (index: number, dir: -1 | 1) => {
+    const current = faqItems[index];
+    const target  = faqItems[index + dir];
+    if (!target || target.categorySlug !== current.categorySlug) return;
+    try {
+      await Promise.all([
+        apiFetch(`/admin/help/faq/${current.id}`, { method: 'PATCH', body: { displayOrder: target.displayOrder } }),
+        apiFetch(`/admin/help/faq/${target.id}`,  { method: 'PATCH', body: { displayOrder: current.displayOrder } }),
+      ]);
+      load();
+    } catch { toast('Erreur lors du réordonnancement', 'err'); }
   };
 
   const handleSave = async () => {
@@ -658,8 +785,15 @@ function FaqTab({ categories, toast }: FaqTabProps) {
       {!loading && faqItems.length === 0 && <div className={s.empty}>Aucune FAQ</div>}
 
       <div className={s.grid}>
-        {faqItems.map(item => (
-          <div key={item.id} className={s.row}>
+        {faqItems.map((item, i) => {
+          const canMoveUp   = i > 0 && faqItems[i - 1].categorySlug === item.categorySlug;
+          const canMoveDown = i < faqItems.length - 1 && faqItems[i + 1].categorySlug === item.categorySlug;
+          return (
+          <div key={item.id} className={`${s.row} ${s.rowReorderable}`}>
+            <div className={s.reorderCol}>
+              <button className={s.iconBtnSmall} title="Monter" disabled={!canMoveUp} onClick={() => move(i, -1)}>▲</button>
+              <button className={s.iconBtnSmall} title="Descendre" disabled={!canMoveDown} onClick={() => move(i, 1)}>▼</button>
+            </div>
             <div className={s.rowLeft}>
               <div className={s.rowTitle}>{item.question}</div>
               <div className={s.rowMeta}>
@@ -679,7 +813,8 @@ function FaqTab({ categories, toast }: FaqTabProps) {
               >🗑️</button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {editing !== null && (
@@ -739,6 +874,24 @@ function AnalyticsTab({ toast }: { toast: (msg: string, type?: 'ok' | 'err') => 
   if (!data)   return <div className={s.error}>Erreur de chargement</div>;
 
   return (
+    <>
+      {/* ── Satisfaction globale ── */}
+      <div className={s.analyticsCard} style={{ marginBottom: 20 }}>
+        <div className={s.analyticsCardTitle}>⭐ Satisfaction globale</div>
+        {data.satisfaction.rate === null ? (
+          <div className={s.empty}>Aucun retour client soumis pour l'instant</div>
+        ) : (
+          <div className={s.satisfactionRow}>
+            <div className={s.satisfactionRate}>{data.satisfaction.rate}%</div>
+            <div className={s.satisfactionDetail}>
+              👍 {data.satisfaction.helpfulTotal} utile{data.satisfaction.helpfulTotal > 1 ? 's' : ''}
+              {' · '}
+              👎 {data.satisfaction.notHelpfulTotal} pas utile{data.satisfaction.notHelpfulTotal > 1 ? 's' : ''}
+            </div>
+          </div>
+        )}
+      </div>
+
     <div className={s.analyticsGrid}>
       {/* ── Top articles consultés ── */}
       <div className={s.analyticsCard}>
@@ -750,7 +903,12 @@ function AnalyticsTab({ toast }: { toast: (msg: string, type?: 'ok' | 'err') => 
               #{i + 1}
             </span>
             <span className={s.analyticsRowTitle}>{a.title}</span>
-            <span className={s.analyticsRowVal}>👁 {a.viewCount}</span>
+            <span className={s.analyticsRowVal}>
+              👁 {a.viewCount}
+              {(a.helpfulCount > 0 || a.notHelpfulCount > 0) && (
+                <> · 👍 {a.helpfulCount} 👎 {a.notHelpfulCount}</>
+              )}
+            </span>
           </div>
         ))}
       </div>
@@ -772,6 +930,7 @@ function AnalyticsTab({ toast }: { toast: (msg: string, type?: 'ok' | 'err') => 
         ))}
       </div>
     </div>
+    </>
   );
 }
 
@@ -787,6 +946,11 @@ interface Props {
 export default function HelpCenterSection({ isActive }: Props) {
   const [tab,        setTab]        = useState<Tab>('articles');
   const [categories, setCategories] = useState<HelpCategory[]>([]);
+  /* BUG CORRIGÉ — contrairement aux onglets Articles/FAQ, il n'y avait
+   * aucun indicateur de chargement ici : au premier montage, la liste
+   * vide (avant que la requête n'aboutisse) était indiscernable d'un
+   * "aucune catégorie" réel. */
+  const [catLoading, setCatLoading] = useState(true);
   const [toastMsg,   setToastMsg]   = useState<{ text: string; type: 'ok' | 'err' } | null>(null);
 
   /* Système de toast léger interne */
@@ -797,11 +961,14 @@ export default function HelpCenterSection({ isActive }: Props) {
 
   /* Charger les catégories au montage et à chaque reload demandé */
   const loadCategories = useCallback(async () => {
+    setCatLoading(true);
     try {
       const data = await apiFetch<HelpCategory[]>('/admin/help/categories');
       setCategories(data ?? []);
     } catch {
       toast('Erreur chargement catégories', 'err');
+    } finally {
+      setCatLoading(false);
     }
   }, [toast]);
 
@@ -864,7 +1031,7 @@ export default function HelpCenterSection({ isActive }: Props) {
           <ArticlesTab categories={categories} toast={toast} />
         )}
         {tab === 'categories' && (
-          <CategoriesTab categories={categories} onReload={loadCategories} toast={toast} />
+          <CategoriesTab categories={categories} loading={catLoading} onReload={loadCategories} toast={toast} />
         )}
         {tab === 'faq' && (
           <FaqTab categories={categories} toast={toast} />

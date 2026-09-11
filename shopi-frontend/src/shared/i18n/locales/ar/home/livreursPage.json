@@ -49,9 +49,6 @@
       "rechercherLivreurAria": "البحث عن عامل توصيل",
       "effacerRechercheAria": "مسح البحث",
       "trierLivreursAria": "ترتيب عمال التوصيل",
-      "modeAffichageAria": "وضع العرض",
-      "vueGrille": "عرض شبكي",
-      "vueListe": "عرض قائمة",
       "livreurCount_one": "عامل توصيل {{count}}",
       "livreurCount_other": "{{count}} عامل توصيل",
       "filters": {
@@ -96,8 +93,6 @@
       "tousLesLivreurs": "جميع عمال التوصيل",
       "livreurDansRegion_one": "عامل توصيل {{count}} في منطقتك",
       "livreurDansRegion_other": "{{count}} عامل توصيل في منطقتك",
-      "vueGrille": "عرض شبكي",
-      "vueListe": "عرض قائمة",
       "impossibleDeCharger": "تعذّر تحميل عمال التوصيل",
       "aucunLivreurTrouve": "لم يتم العثور على أي عامل توصيل",
       "essayezModifier": "حاول تعديل الفلاتر أو البحث.",

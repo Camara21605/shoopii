@@ -42,17 +42,6 @@
       "correspondantCount_one": "{{count}} correspondente",
       "correspondantCount_other": "{{count}} correspondentes"
     },
-    "card": {
-      "enLigne": "Online",
-      "horsLigne": "Offline",
-      "avisCount": "({{count}} avaliações)",
-      "missions": "Missões",
-      "fiabilite": "Fiabilidade",
-      "experience": "Experiência",
-      "abonne": "Subscrito",
-      "suivre": "Seguir",
-      "voirProfilComplet": "Ver o perfil completo →"
-    },
     "sidebar": {
       "typeDeCorrespondant": "Tipo de correspondente",
       "types": {

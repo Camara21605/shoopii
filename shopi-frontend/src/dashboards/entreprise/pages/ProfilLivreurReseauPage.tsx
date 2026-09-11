@@ -41,7 +41,7 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel }
     return (
       <>
         {backBtn}
-        <div className={styles.page}>
+        <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}>
             <i className="fas fa-spinner fa-spin" />
             {t('profilLivreur.loading')}
@@ -55,7 +55,7 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel }
     return (
       <>
         {backBtn}
-        <div className={styles.page}>
+        <div className={`${styles.page} ${styles.pageDark}`}>
           <div className={styles.state}>
             <i className="fas fa-triangle-exclamation" />
             {error ?? t('profilLivreur.notFound')}
@@ -70,13 +70,14 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel }
   return (
     <>
       {backBtn}
-      <div className={styles.page}>
+      <div className={`${styles.page} ${styles.pageDark}`}>
         <ProfilHeader
           profile={profile}
           onToast={onPop}
           onRequireAuth={openAuthModal}
           onFollowChange={updateFollowState}
           onContact={onContact}
+          dark
         />
 
         <div className={styles.pw}>

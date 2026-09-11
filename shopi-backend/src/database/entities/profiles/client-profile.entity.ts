@@ -107,6 +107,39 @@ export class Client {
   @Column({ type: 'varchar', length: 200, nullable: true })
   bio: string | null;
 
+  /*
+   * ✅ NOUVEAU — Localisation générale du compte (détectée
+   * automatiquement à l'inscription, voir LocationPermission côté
+   * frontend et AuthService.createProfile côté backend). Distincte de
+   * `adresses` ci-dessous, qui est le carnet d'adresses de LIVRAISON
+   * (plusieurs entrées, saisies après coup) : ceci est une position
+   * unique représentant la zone du client, dans le même esprit que les
+   * colonnes latitude/longitude/ville des autres profils (Partner,
+   * Delivery, Company…).
+   */
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  adresse: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  commune: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  ville: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  region: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  pays: string | null;
+
+  @Index()
+  @Column({ type: 'decimal', precision: 9, scale: 6, nullable: true })
+  latitude: number | null;
+
+  @Index()
+  @Column({ type: 'decimal', precision: 9, scale: 6, nullable: true })
+  longitude: number | null;
+
   // ══════════════════════════════════════════════════════════
   // SECTION 2 — ADRESSES DE LIVRAISON (JSON)
   // Format : [{ id, nom, fullName, adresse, commune, ville, phone, isDefault }]

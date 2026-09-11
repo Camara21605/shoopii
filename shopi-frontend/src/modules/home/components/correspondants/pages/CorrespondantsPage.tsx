@@ -4,7 +4,8 @@
  * RÔLE : Page liste publique des correspondants (route /correspondants).
  *        Utilise le MÊME Header que le reste du site.
  *
- *   Hero + Toolbar (recherche/filtres/tri/vue) + Sidebar filtres + grille.
+ *   Hero + Toolbar (recherche/filtres/tri) + Sidebar filtres + liste
+ *   (liste uniquement, pas de grille — voir Correspondants.module.css).
  *
  * DONNÉES : GET /suivis/correspondants via useCorrespondants().
  *   Le filtrage/tri/recherche se fait côté client sur la liste chargée.
@@ -23,11 +24,10 @@ import { useCorrespondants } from '../hooks/useCorrespondants';
 import HeroCorrespondants    from '../sections/HeroCorrespondants';
 import ToolbarCorrespondants from '../sections/ToolbarCorrespondants';
 import SidebarCorrespondants from '../sections/SidebarCorrespondants';
-import CardCorrespondant     from '../components/CardCorrespondant';
 import ListItemCorrespondant from '../components/ListItemCorrespondant';
 
 import type {
-  CorrType, FiltreRapide, VueMode, TriOption,
+  CorrType, FiltreRapide, TriOption,
 } from '../data/types';
 import styles from '../styles/Correspondants.module.css';
 
@@ -53,7 +53,6 @@ export default function CorrespondantsPage() {
   }, [initialSearch]);
   const [filtre,    setFiltre]    = useState<FiltreRapide>('all');
   const [tri,       setTri]       = useState<TriOption>('pertinence');
-  const [vue,       setVue]       = useState<VueMode>('grid');
   const [typeActif, setTypeActif] = useState<CorrType | 'all'>('all');
   const [commune,   setCommune]   = useState('all');
   const [noteMin,   setNoteMin]   = useState(0);
@@ -192,12 +191,13 @@ export default function CorrespondantsPage() {
 
         {/* Toolbar */}
         <ToolbarCorrespondants
-          recherche={recherche} filtre={filtre} tri={tri} vue={vue}
-          count={visibles.length}
-          onRecherche={setRecherche} onFiltre={setFiltre} onTri={setTri} onVue={setVue}
+          recherche={recherche} filtre={filtre} tri={tri}
+          count={visibles.length} statut={statut}
+          onRecherche={setRecherche} onFiltre={setFiltre} onTri={setTri} onStatut={setStatut}
         />
 
-        {/* Corps : sidebar + grille */}
+        {/* Corps : sidebar + liste (grille retirée — liste uniquement,
+         * même demande explicite que livreurs/LivreursPage) */}
         <div className={styles.bodyWrap}>
           <SidebarCorrespondants
             typeActif={typeActif} onType={setTypeActif}
@@ -208,7 +208,7 @@ export default function CorrespondantsPage() {
             countType={countType}
           />
 
-          <main>
+          <main className={styles.mainCol}>
             <div className={styles.secH}>
               <div>
                 <div className={styles.secTtl}>{t('correspondantsPage.page.correspondantsDisponibles')}</div>
@@ -228,12 +228,6 @@ export default function CorrespondantsPage() {
               <div className={styles.state}>
                 <i className="fas fa-user-slash" />
                 {t('correspondantsPage.page.aucunCorrespondant')}
-              </div>
-            ) : vue === 'grid' ? (
-              <div className={styles.grid}>
-                {visibles.map(c => (
-                  <CardCorrespondant key={c.id} c={c} onToast={onToast} onView={handleView} onChange={onChange} />
-                ))}
               </div>
             ) : (
               <div>

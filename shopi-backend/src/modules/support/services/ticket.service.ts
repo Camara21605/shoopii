@@ -68,12 +68,20 @@ export class TicketService {
 
   /* ── Création d'un ticket ────────────────────────────────── */
 
+  /*
+   * BUG CORRIGÉ — ne renvoyait que le ticket, jamais l'id du premier
+   * message. NewTicketPage.tsx (frontend) n'avait donc AUCUN moyen de
+   * joindre une pièce jointe au moment de la création du ticket : la
+   * route d'upload (POST .../messages/:msgId/attachments) exige un
+   * messageId existant, qu'on ne pouvait obtenir qu'en rouvrant le
+   * ticket après coup. Renvoie désormais aussi firstMessageId.
+   */
   async create(
     userId:    string,
     userRole:  string,
     userName:  string,
     dto:       CreateSupportTicketDto,
-  ): Promise<SupportTicket> {
+  ): Promise<{ ticket: SupportTicket; firstMessageId: string }> {
     const reference = await this.generateReference();
 
     const ticket = this.ticketRepo.create({
@@ -100,10 +108,10 @@ export class TicketService {
       senderId:   userId,
       senderName: userName,
     });
-    await this.msgRepo.save(firstMsg);
+    const savedMsg = await this.msgRepo.save(firstMsg);
 
     this.logger.log(`[TICKET] ${saved.reference} créé par ${userId} (${userRole})`);
-    return saved;
+    return { ticket: saved, firstMessageId: savedMsg.id };
   }
 
   /* ── Côté client ─────────────────────────────────────────── */
@@ -138,9 +146,14 @@ export class TicketService {
 
     /* Chargement des pièces jointes via la relation OneToMany.
      * TypeORM filtre automatiquement les attachments soft-deleted (deletedAt IS NULL).
-     * Sans 'relations', attachments serait un tableau vide (eager: false sur l'entité). */
+     * Sans 'relations', attachments serait un tableau vide (eager: false sur l'entité).
+     *
+     * BUG CORRIGÉ — isInternal: false manquait ici : les notes internes
+     * agent↔agent (jamais destinées au client, voir ReplySupportTicketDto
+     * ?internal=true dans support-agent.controller.ts) étaient renvoyées
+     * telles quelles au client via GET /support/client/tickets/:id. */
     const messages = await this.msgRepo.find({
-      where:     { ticketId },
+      where:     { ticketId, isInternal: false },
       order:     { createdAt: 'ASC' },
       relations: ['attachments'],
     });
@@ -199,6 +212,12 @@ export class TicketService {
     if (filters.status)   qb.andWhere('t.status = :status',     { status: filters.status });
     if (filters.type)     qb.andWhere('t.type = :type',         { type: filters.type });
     if (filters.priority) qb.andWhere('t.priority = :priority', { priority: filters.priority });
+    if (filters.channel)  qb.andWhere('t.channel = :channel',   { channel: filters.channel });
+    if (filters.agentId === 'unassigned') {
+      qb.andWhere('t.agentId IS NULL');
+    } else if (filters.agentId) {
+      qb.andWhere('t.agentId = :agentId', { agentId: filters.agentId });
+    }
     if (filters.search) {
       qb.andWhere(
         '(t.reference ILIKE :s OR t.subject ILIKE :s)',

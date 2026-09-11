@@ -8,9 +8,30 @@
  * supplémentaire n'est nécessaire ici.
  * ================================================================ */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, type ChangeEvent } from 'react';
 import styles from '../styles/TicketDetailModal.module.css';
 import { apiFetch } from '../../../shared/services/apiFetch';
+import { useSupportSocket } from '../../../shared/support/useSupportSocket';
+
+/** Types autorisés (validés côté serveur) et taille max — mêmes règles
+ *  que le formulaire client (modules/support/pages/TicketDetailPage.tsx). */
+const ALLOWED_MIME_TYPES = new Set([
+  'application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm',
+]);
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const FILE_ACCEPT = 'application/pdf,image/jpeg,image/png,image/webp,video/mp4,video/webm';
+
+function fmtBytes(bytes: number): string {
+  if (bytes < 1_024)     return `${bytes} B`;
+  if (bytes < 1_048_576) return `${(bytes / 1_024).toFixed(1)} KB`;
+  return `${(bytes / 1_048_576).toFixed(1)} MB`;
+}
+function mimeIcon(mimeType: string): string {
+  if (mimeType === 'application/pdf') return 'fa-file-pdf';
+  if (mimeType.startsWith('image/'))  return 'fa-file-image';
+  if (mimeType.startsWith('video/'))  return 'fa-file-video';
+  return 'fa-file';
+}
 
 interface TicketDetailModalProps {
   ticketId: string;
@@ -35,6 +56,9 @@ export default function TicketDetailModal({ ticketId, currentUserId, onClose, on
   const [internal, setInternal] = useState(false);
   const [sending,  setSending]  = useState(false);
   const [saving,   setSaving]   = useState(false);
+  const [attachFile, setAttachFile] = useState<File | null>(null);
+  const [attachErr,  setAttachErr]  = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -47,16 +71,57 @@ export default function TicketDetailModal({ ticketId, currentUserId, onClose, on
 
   useEffect(load, [load]);
 
+  /* Communication instantanée — voir SupportTicketModal.tsx
+   * (super-admin) pour la même logique commentée en détail. */
+  useSupportSocket(ticketId, {
+    onNewMessage: (d) => {
+      if (d.ticketId !== ticketId) return;
+      setMessages(prev => prev.some(m => m.id === d.message.id) ? prev : [...prev, d.message]);
+      onChanged();
+    },
+  });
+
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!ALLOWED_MIME_TYPES.has(file.type)) {
+      setAttachErr('Format non autorisé. Formats acceptés : PDF, PNG, JPG, WebP, MP4, WebM.');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setAttachErr(`Fichier trop lourd (${fmtBytes(file.size)}). Taille maximale : 10 MB.`);
+      return;
+    }
+    setAttachErr(null);
+    setAttachFile(file);
+  };
+
   const reply = async () => {
     if (!content.trim() || sending) return;
     setSending(true);
     try {
-      await apiFetch(`/support/agent/tickets/${ticketId}/reply${internal ? '?internal=true' : ''}`, {
-        method: 'POST',
-        body: { content: content.trim(), userEmail: ticket?.userEmail },
-      });
+      const msg = await apiFetch<{ id: string }>(
+        `/support/agent/tickets/${ticketId}/reply${internal ? '?internal=true' : ''}`,
+        { method: 'POST', body: { content: content.trim() } },
+      );
       setContent('');
       setInternal(false);
+
+      if (attachFile) {
+        try {
+          const form = new FormData();
+          form.append('file', attachFile);
+          await apiFetch(
+            `/support/agent/tickets/${ticketId}/messages/${msg.id}/attachments`,
+            { method: 'POST', body: form },
+          );
+          setAttachFile(null);
+        } catch {
+          onToast("Message envoyé, mais la pièce jointe n'a pas pu être jointe.", 'w');
+        }
+      }
+
       onToast(internal ? '📝 Note interne ajoutée' : '✅ Réponse envoyée', 's');
       load();
       onChanged();
@@ -154,7 +219,26 @@ export default function TicketDetailModal({ ticketId, currentUserId, onClose, on
                     {m.isInternal && <span className={styles.internalBadge}>Note interne</span>}
                     <span className={styles.msgWhen}>{new Date(m.createdAt).toLocaleString('fr-FR')}</span>
                   </div>
-                  <div className={styles.msgBody}>{m.content}</div>
+                  <div className={styles.msgBody}>
+                    {m.content}
+                    {m.attachments && m.attachments.length > 0 && (
+                      <div className={styles.attList}>
+                        {m.attachments.map((att: any) => (
+                          <a key={att.id} href={att.secureUrl} target="_blank" rel="noopener noreferrer" className={styles.attCard}>
+                            {att.mimeType?.startsWith('image/') ? (
+                              <img src={att.secureUrl} alt={att.originalFilename} className={styles.attThumb} />
+                            ) : (
+                              <span className={styles.attIconWrap}><i className={`fas ${mimeIcon(att.mimeType)}`} /></span>
+                            )}
+                            <span className={styles.attBody}>
+                              <span className={styles.attName}>{att.originalFilename}</span>
+                              <span className={styles.attMeta}>{att.extension?.toUpperCase()} · {fmtBytes(att.sizeBytes)}</span>
+                            </span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -167,11 +251,26 @@ export default function TicketDetailModal({ ticketId, currentUserId, onClose, on
                 onChange={e => setContent(e.target.value)}
                 rows={3}
               />
+              <input ref={fileInputRef} type="file" accept={FILE_ACCEPT} onChange={handleFileSelect} style={{ display: 'none' }} disabled={sending} />
+
+              {attachFile && (
+                <div className={styles.fileChip} style={{ marginTop: 8 }}>
+                  <i className={`fas ${mimeIcon(attachFile.type)}`} />
+                  <span>{attachFile.name}</span>
+                  <span style={{ opacity: .6 }}>{fmtBytes(attachFile.size)}</span>
+                  <button type="button" onClick={() => setAttachFile(null)}><i className="fas fa-times" /></button>
+                </div>
+              )}
+              {attachErr && <div style={{ color: 'var(--red, #dc2626)', fontSize: 11.5, marginTop: 6 }}>{attachErr}</div>}
+
               <div className={styles.replyRow}>
                 <label className={styles.internalToggle}>
                   <input type="checkbox" checked={internal} onChange={e => setInternal(e.target.checked)} />
                   Note interne (non visible par le client)
                 </label>
+                <button type="button" className={styles.attachBtn} disabled={sending} onClick={() => fileInputRef.current?.click()}>
+                  <i className="fas fa-paperclip" /> {attachFile ? 'Changer' : 'Joindre'}
+                </button>
                 <button className={styles.sendBtn} disabled={!content.trim() || sending} onClick={reply}>
                   <i className={`fas ${sending ? 'fa-spinner fa-spin' : 'fa-paper-plane'}`} /> Envoyer
                 </button>

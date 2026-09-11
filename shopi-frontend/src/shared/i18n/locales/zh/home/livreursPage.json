@@ -49,9 +49,6 @@
       "rechercherLivreurAria": "搜索配送员",
       "effacerRechercheAria": "清除搜索",
       "trierLivreursAria": "排序配送员",
-      "modeAffichageAria": "显示模式",
-      "vueGrille": "网格视图",
-      "vueListe": "列表视图",
       "livreurCount_one": "{{count}} 名配送员",
       "livreurCount_other": "{{count}} 名配送员",
       "filters": {
@@ -96,8 +93,6 @@
       "tousLesLivreurs": "所有配送员",
       "livreurDansRegion_one": "您所在地区有 {{count}} 名配送员",
       "livreurDansRegion_other": "您所在地区有 {{count}} 名配送员",
-      "vueGrille": "网格视图",
-      "vueListe": "列表视图",
       "impossibleDeCharger": "无法加载配送员",
       "aucunLivreurTrouve": "未找到配送员",
       "essayezModifier": "尝试修改筛选条件或搜索。",

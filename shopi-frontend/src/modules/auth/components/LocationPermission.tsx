@@ -9,9 +9,15 @@
  *   idle → [Clic GPS] → loading → granted (carte auto)
  *                     → denied  (carte manuelle)
  *   idle → [Choisir sur carte] → manual (carte manuelle)
- *   idle → [Ignorer] → emit null
  *
- * UTILISÉ dans RegisterForm pour : company, delivery, partner, correspondent
+ * BUG CORRIGÉ — les boutons "Ignorer" (idle ET carte) permettaient de
+ * finaliser l'inscription sans aucune localisation, alors que
+ * needsLocation/STEP_FIELDS la traitent comme obligatoire. Retirés :
+ * il faut confirmer une position (GPS ou pointage manuel) pour avancer.
+ *
+ * UTILISÉ dans RegisterForm pour : client, delivery, partner, correspondent
+ * (company utilise CompanyLocationSelect — sélection manuelle dans le
+ * référentiel géo, pas une position GPS du moment).
  * ============================================================ */
 
 import { useState, useCallback, lazy, Suspense } from 'react';
@@ -191,34 +197,22 @@ export default function LocationPermission({
         Utiliser ma position GPS
       </button>
 
-      {/* Actions secondaires */}
-      <div style={{ display:'flex', gap:8 }}>
-        <button
-          type="button"
-          onClick={() => setState('manual')}
-          style={{
-            flex:1, padding:'9px 12px', borderRadius:9,
-            border:'1.5px solid var(--blue)', background:'transparent',
-            color:'var(--blue)', fontSize:12.5, fontWeight:600,
-            cursor:'pointer',
-          }}
-        >
-          <i className="fas fa-map-location-dot" style={{ marginRight:5 }} />
-          Choisir sur la carte
-        </button>
-        <button
-          type="button"
-          onClick={() => onComplete(null)}
-          style={{
-            flex:1, padding:'9px 12px', borderRadius:9,
-            border:'1.5px solid var(--border, #e5e7eb)', background:'transparent',
-            color:'var(--t2)', fontSize:12.5, fontWeight:500,
-            cursor:'pointer',
-          }}
-        >
-          Ignorer pour l'instant
-        </button>
-      </div>
+      {/* Action secondaire — plus de bouton "Ignorer" : la localisation
+       * est désormais obligatoire pour ces rôles (voir LOCATION_ROLES /
+       * needsLocation dans RegisterForm.tsx). */}
+      <button
+        type="button"
+        onClick={() => setState('manual')}
+        style={{
+          width:'100%', padding:'9px 12px', borderRadius:9,
+          border:'1.5px solid var(--blue)', background:'transparent',
+          color:'var(--blue)', fontSize:12.5, fontWeight:600,
+          cursor:'pointer',
+        }}
+      >
+        <i className="fas fa-map-location-dot" style={{ marginRight:5 }} />
+        Choisir sur la carte
+      </button>
     </div>
   );
 
@@ -323,17 +317,6 @@ export default function LocationPermission({
           }}
         >
           <i className="fas fa-arrow-left" style={{ marginRight:5 }} />Retour
-        </button>
-        <button
-          type="button"
-          onClick={() => onComplete(null)}
-          style={{
-            padding:'9px 14px', borderRadius:9,
-            border:'1.5px solid var(--border,#e5e7eb)', background:'transparent',
-            color:'var(--t2)', fontSize:12.5, cursor:'pointer',
-          }}
-        >
-          Ignorer
         </button>
         <button
           type="button"

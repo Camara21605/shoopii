@@ -176,6 +176,33 @@
     "toasts": {
       "loadError": "❌ 加载错误：{{message}}",
       "suspendu": "🚫 {{name}} 已暂停"
+    },
+    "reseau": {
+      "tabs": {
+        "equipe": "我的团队",
+        "suivis": "已关注",
+        "decouvrir": "发现"
+      },
+      "type": {
+        "regional": "区域",
+        "zonal": "地区",
+        "national": "全国"
+      },
+      "enLigne": "在线",
+      "horsLigne": "离线",
+      "loading": "正在加载平台代理商…",
+      "searchPlaceholder": "搜索平台上的代理商…",
+      "voirProfil": "查看资料",
+      "missionsCount_one": "{{count}} 个任务",
+      "missionsCount_other": "{{count}} 个任务",
+      "emptySuivis": {
+        "title": "您还没有关注任何代理商",
+        "sub": "在「发现」标签中关注代理商，即可在此找到他们。"
+      },
+      "emptyDecouvrir": {
+        "title": "没有可发现的代理商",
+        "sub": "您已关注平台上的所有代理商，或没有代理商匹配您的搜索。"
+      }
     }
   }
 }

@@ -176,6 +176,33 @@
     "toasts": {
       "loadError": "❌ Loading error: {{message}}",
       "suspendu": "🚫 {{name}} suspended"
+    },
+    "reseau": {
+      "tabs": {
+        "equipe": "My team",
+        "suivis": "Following",
+        "decouvrir": "Discover"
+      },
+      "type": {
+        "regional": "Regional",
+        "zonal": "Zonal",
+        "national": "National"
+      },
+      "enLigne": "Online",
+      "horsLigne": "Offline",
+      "loading": "Loading platform correspondents…",
+      "searchPlaceholder": "Search a correspondent on the platform…",
+      "voirProfil": "View profile",
+      "missionsCount_one": "{{count}} mission",
+      "missionsCount_other": "{{count}} missions",
+      "emptySuivis": {
+        "title": "You're not following any correspondent",
+        "sub": "Follow correspondents from the \"Discover\" tab to find them here."
+      },
+      "emptyDecouvrir": {
+        "title": "No correspondent to discover",
+        "sub": "You're already following every correspondent on the platform, or none match your search."
+      }
     }
   }
 }

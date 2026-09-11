@@ -112,14 +112,15 @@ export default function AvisPage() {
             ),                                               l:t('avis.kpi.satisfaction'),          sub:t('avis.kpi.quatreEtCinqEtoiles') },
           { ic:'⏳', v: loading ? '…' : String(nbSansReponse), l:t('avis.kpi.sansReponse'),      sub:t('avis.kpi.aTraiter') },
         ].map((s, i) => (
-          <div key={i} className={`kpi k${i+1}`}>
-            <div className="kpi-stripe" />
-            <div className="kpi-top">
-              <div className="kpi-icon">{s.ic}</div>
-              <span className="kpi-badge neu">{s.sub}</span>
+          <div key={i} className="kpi">
+            <span className="kpi-icon">{s.ic}</span>
+            <div>
+              <div className="kpi-val">
+                {s.v}
+                <span className="kpi-badge neu">{s.sub}</span>
+              </div>
+              <div className="kpi-lbl">{s.l}</div>
             </div>
-            <div className="kpi-val">{s.v}</div>
-            <div className="kpi-lbl">{s.l}</div>
           </div>
         ))}
       </div>

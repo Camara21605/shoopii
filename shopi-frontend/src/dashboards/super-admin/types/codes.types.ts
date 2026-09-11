@@ -80,10 +80,13 @@ export interface AuditEntry {
 
 /* ── Administrateurs secondaires & permissions ───────────────────────────── */
 export interface Admin {
-  name:        string;
-  email:       string;
-  perms:       Record<string, boolean>;
-  paysAssigne: string | null;
+  name:          string;
+  email:         string;
+  perms:         Record<string, boolean>;
+  paysAssigne:   string | null;
+  /* "Communauté" support — voir SupportPermissionService.resolveAdminScope() côté backend. */
+  villeAssignee: string | null;
+  zoneId:        string | null;
 }
 
 /* ── État global du hook useSuperAdminState ──────────────────────────────── */

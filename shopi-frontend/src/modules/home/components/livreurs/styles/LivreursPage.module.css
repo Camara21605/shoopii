@@ -2,21 +2,24 @@
  * LivreursPage.module.css — Page principale Livreurs
  * ================================================================ */
 .page{background:var(--g50,#F8F9FA);min-height:100vh}
-.body{max-width:1200px;margin:0 auto;padding:22px 28px 80px;display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start}
-.mainCol{display:flex;flex-direction:column}
-/* En-tête section */
+.body{max-width:1200px;margin:0 auto;padding:22px 28px 80px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px;align-items:start}
+/* min-width:0 — sans ça, un enfant élargi (ex. SuggestionsRow.row, qui
+ * défile horizontalement) impose sa largeur de contenu à cette colonne
+ * (comportement par défaut d'un item de grid/flex), ce qui élargit toute
+ * la page au-delà du viewport ; comme le body global a overflow-x:hidden
+ * (voir global.home.css), le surplus n'était pas juste "à faire défiler"
+ * mais complètement inaccessible/masqué. */
+.mainCol{display:flex;flex-direction:column;min-width:0}
+/* En-tête section — plus de toggle grille/liste : la liste est
+ * désormais la seule vue possible (voir CardLivreurList.tsx). */
 .secRow{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .secTitle{font-family:var(--fd);font-size:17px;font-weight:700;color:var(--navy)}
 .secSub{font-size:12px;color:var(--t3);margin-top:1px}
-.viewBtns{display:flex;gap:4px}
-.vBtn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--bdr);background:none;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--t3);cursor:pointer;transition:all .15s}
-.vBtnOn{border-color:var(--btn);color:#fff;background:var(--btn)}
-.vBtn:hover{border-color:var(--bdr2);color:var(--t1);background:var(--g100)}
-/* Grille cartes */
-.cardsGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-bottom:20px}
-/* Skeleton chargement */
-.skeletonGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-bottom:20px}
-.skeleton{background:linear-gradient(90deg,var(--g100,#F1F3F5) 25%,var(--white) 50%,var(--g100,#F1F3F5) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:16px;height:290px}
+/* Skeleton chargement — même forme de ligne que CardLivreurList,
+ * pour ne pas "sauter" visuellement une fois les vraies données
+ * chargées. */
+.skeletonList{display:flex;flex-direction:column}
+.skeleton{background:linear-gradient(90deg,var(--g100,#F1F3F5) 25%,var(--white) 50%,var(--g100,#F1F3F5) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:10px;height:66px;margin-bottom:10px}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 /* État vide */
 .empty{padding:60px 20px;text-align:center}
@@ -29,7 +32,39 @@
 .loadMoreBtn:hover{border-color:var(--bdr2);color:var(--t1);background:var(--g100)}
 /* Responsive */
 @media(max-width:860px){
-  .body{grid-template-columns:1fr;padding:14px 12px}
-  .cardsGrid,.skeletonGrid{grid-template-columns:repeat(2,1fr)}
+  .body{grid-template-columns:minmax(0,1fr);padding:14px 12px}
 }
-@media(max-width:460px){.cardsGrid,.skeletonGrid{grid-template-columns:1fr}}
+/* Bottom-nav mobile fixe (62px + zone de sécurité iPhone) — sans cette
+ * marge, le bas de page (bouton "Charger plus"/dernières lignes de la
+ * liste) se retrouvait caché derrière (même correctif que OffresPage/
+ * CommandePage/ProduitPage — voir Header.module.css .bottomNav). */
+@media(max-width:768px){
+  .body{padding-bottom:calc(62px + 24px + env(safe-area-inset-bottom,0px))}
+}
+/* Mobile : le hero et la sidebar avancée restent masqués (voir leurs
+ * .module.css respectifs) — aucun espace au-dessus : la rangée
+ * "Suggestions" s'enchaîne directement sous la barre d'outils (menu),
+ * sans bande vide entre les deux. */
+@media(max-width:768px){
+  .body{padding-top:0}
+}
+/* BUG CORRIGÉ (la vraie "barre blanche") — le Header du site est en
+ * position:fixed (66px de haut, hors flux) et ne réserve donc AUCUN
+ * espace lui-même : sur desktop, HeroBanner (très haut) pousse
+ * naturellement la barre d'outils bien au-delà de 66px, donc son
+ * sticky (top:66px) ne s'active qu'après un certain défilement — pas
+ * de souci. Mais en mobile, HeroBanner est masqué (display:none) donc
+ * la barre d'outils devient le 1er élément du flux, à une position
+ * naturelle de 0 — 66px de MOINS que son seuil sticky. Le sticky la
+ * "colle" donc immédiatement à 66px dès le chargement, mais son
+ * EMPLACEMENT RÉSERVÉ dans le flux reste calculé à sa position
+ * naturelle (0). Résultat : un décalage de 66px entre où elle est
+ * réservée dans le flux et où elle est réellement affichée — ce qui
+ * la fait chevaucher (en opaque, blanc) le haut de la rangée
+ * "Suggestions" juste en dessous, masquant une partie de son contenu.
+ * Correction : on réserve nous-mêmes ces 66px en haut de page, pour
+ * que la position naturelle de la barre d'outils soit déjà exactement
+ * 66px (= son seuil sticky), sans aucun décalage. */
+@media(max-width:768px){
+  .page{padding-top:var(--hdr,66px)}
+}

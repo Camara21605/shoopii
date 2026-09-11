@@ -42,17 +42,6 @@
       "correspondantCount_one": "{{count}} 名代理商",
       "correspondantCount_other": "{{count}} 名代理商"
     },
-    "card": {
-      "enLigne": "在线",
-      "horsLigne": "离线",
-      "avisCount": "（{{count}} 条评价）",
-      "missions": "任务",
-      "fiabilite": "可靠性",
-      "experience": "经验",
-      "abonne": "已关注",
-      "suivre": "关注",
-      "voirProfilComplet": "查看完整资料 →"
-    },
     "sidebar": {
       "typeDeCorrespondant": "代理商类型",
       "types": {

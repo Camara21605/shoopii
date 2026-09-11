@@ -1,7 +1,12 @@
 /* ================================================================
  * SuggestionsRow.module.css — Rangée suggestions
  * ================================================================ */
-.row{background:var(--white);border:1px solid var(--bdr);border-radius:14px;padding:13px 18px;margin-bottom:18px;display:flex;align-items:center;gap:12px;overflow-x:auto}
+/* scrollbar-width/-ms-overflow-style + ::-webkit-scrollbar : masque la
+ * scrollbar native (même correctif que FilterToolbar.module.css .inner)
+ * — le défilement horizontal reste actif dès qu'il y a plus de
+ * suggestions que de place visible. */
+.row{background:var(--white);border:1px solid var(--bdr);border-radius:14px;padding:13px 18px;margin-bottom:18px;display:flex;align-items:center;gap:12px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+.row::-webkit-scrollbar{display:none;height:0;width:0}
 .label{font-size:12px;font-weight:800;color:var(--navy);white-space:nowrap;min-width:90px}
 .labelTitle{display:block}
 .labelSub{display:block;font-size:10px;color:var(--t3);font-weight:500;margin-top:1px}
@@ -15,3 +20,7 @@
 .zone{font-size:9.5px;color:var(--t3);text-align:center}
 .followBtn{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;border:1.5px solid var(--bdr2);color:var(--t2);background:var(--g100);cursor:pointer;font-family:var(--fb);transition:all .15s}
 .followBtn:hover,.followBtnOn{background:var(--btn);border-color:var(--btn);color:#fff}
+/* Mobile : retire le contour de la rangée — avec la barre d'outils (menu)
+ * juste au-dessus (dont la bordure basse est aussi retirée), les deux
+ * s'enchaînent sans aucune ligne visible entre elles. */
+@media(max-width:768px){.row{border:none}}

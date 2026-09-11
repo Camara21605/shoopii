@@ -103,9 +103,16 @@ export const supportApi = {
 
   /* ── Tickets ──────────────────────────────────────────────── */
 
-  /** Crée un ticket de support. Retourne le ticket créé. */
+  /*
+   * BUG CORRIGÉ — ne renvoyait que le ticket, sans l'id du premier
+   * message : impossible d'attacher un fichier au moment de la
+   * création (la route d'upload exige un messageId existant). Voir
+   * NewTicketPage.tsx, qui peut désormais joindre un fichier dès
+   * l'ouverture du ticket au lieu d'attendre une réponse ultérieure.
+   */
+  /** Crée un ticket de support. Retourne le ticket créé + l'id de son premier message. */
   createTicket: (payload: CreateTicketPayload) =>
-    apiFetch<SupportTicketSummary>('/support/client/tickets', {
+    apiFetch<{ ticket: SupportTicketSummary; firstMessageId: string }>('/support/client/tickets', {
       method: 'POST',
       body:   payload,
     }),

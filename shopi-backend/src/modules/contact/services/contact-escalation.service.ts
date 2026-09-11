@@ -77,7 +77,7 @@ export class ContactEscalationService {
     /* Création du ticket de support.
      * Si le contact est un visiteur non connecté (userId null),
      * on utilise un identifiant fictif — SupportTicket.userId est nullable. */
-    const ticket = await this.supportService.createTicket(
+    const { ticket } = await this.supportService.createTicket(
       contact.userId ?? `contact:${contactId}`,
       'client',
       contact.name,

@@ -196,6 +196,29 @@
     "toasts": {
       "loadError": "❌ خطأ في التحميل: {{message}}",
       "suspendu": "🚫 تم إيقاف {{name}}"
+    },
+    "reseau": {
+      "tabs": {
+        "equipe": "فريقي",
+        "suivis": "المتابَعون",
+        "decouvrir": "اكتشف"
+      },
+      "loading": "جارٍ تحميل عمال توصيل المنصة…",
+      "searchPlaceholder": "ابحث عن عامل توصيل في المنصة…",
+      "voirProfil": "عرض الملف الشخصي",
+      "disponible": "متاح",
+      "indisponible": "غير متاح",
+      "livraisonsCount_one": "{{count}} توصيلة",
+      "livraisonsCount_other": "{{count}} توصيلة",
+      "chargerPlus": "تحميل المزيد",
+      "emptySuivis": {
+        "title": "أنت لا تتابع أي عامل توصيل",
+        "sub": "تابع عمال التوصيل من قسم «اكتشف» لتجدهم هنا."
+      },
+      "emptyDecouvrir": {
+        "title": "لا يوجد عامل توصيل لاكتشافه",
+        "sub": "أنت تتابع بالفعل جميع عمال التوصيل في المنصة، أو لا يوجد ما يطابق بحثك."
+      }
     }
   }
 }

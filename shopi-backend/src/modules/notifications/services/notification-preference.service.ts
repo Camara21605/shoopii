@@ -117,8 +117,9 @@ const DEFAULT_CHANNEL_PREFERENCES: Record<
   [NotificationType.SYSTEM_MAINTENANCE]:    { in_app: true, push: true,  email: true,  sms: false },
   [NotificationType.SYSTEM_ANNOUNCEMENT]:   { in_app: true, push: false, email: false, sms: false },
   // Support tickets (Phase 6) — notification haute priorité par défaut
-  [NotificationType.SUPPORT_TICKET_CREATED]: { in_app: true, push: true,  email: true,  sms: false },
-  [NotificationType.SUPPORT_TICKET_REPLY]:   { in_app: true, push: true,  email: true,  sms: false },
+  [NotificationType.SUPPORT_TICKET_CREATED]:   { in_app: true, push: true,  email: true,  sms: false },
+  [NotificationType.SUPPORT_TICKET_REPLY]:     { in_app: true, push: true,  email: true,  sms: false },
+  [NotificationType.SUPPORT_TICKET_USER_REPLY]: { in_app: true, push: true,  email: false, sms: false },
   // Appels audio/vidéo — sensible au temps, jamais par email/sms
   [NotificationType.CALL_MISSED]:           { in_app: true, push: true,  email: false, sms: false },
   [NotificationType.CALL_REJECTED]:         { in_app: true, push: false, email: false, sms: false },

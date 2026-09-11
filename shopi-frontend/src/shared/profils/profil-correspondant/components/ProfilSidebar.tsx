@@ -5,60 +5,29 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/ProfilCorrespondant.module.css';
-import FollowButton from '../../../components/FollowButton';
 import type { ContactRow, VerifRow, SimilaireItem } from '../data/types';
 
 interface Props {
-  id:            string;
-  nom:           string;
   contacts:      ContactRow[];
   stats:         { v: string; l: string }[];
   abonnes:       number;
   verifications: VerifRow[];
   similaires:    SimilaireItem[];
-  suivi:         boolean;
-  callLoading?:  boolean;
-  onRequireAuth: () => void;
-  onFollowChange:(next: { isSuivi: boolean }) => void;
-  onMessage:     () => void;
-  onCall?:       () => void;
   onToast:       (m: string, type?: 's' | 'i' | 'w' | 'e') => void;
 }
 
+/* Contacter/Appeler/S'abonner retirés de cette sidebar — ils dupliquaient
+ * exactement les mêmes actions déjà présentes dans ProfilHeader (bouton
+ * "Appeler"/"Contacter"/FollowButton) ; demande explicite de suppression
+ * définitive des boutons répétés. */
 export default function ProfilSidebar({
-  id, nom, contacts, stats, abonnes, verifications, similaires,
-  suivi, callLoading, onRequireAuth, onFollowChange, onMessage, onCall, onToast,
+  contacts, stats, abonnes, verifications, similaires, onToast,
 }: Props) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const prenom = nom.split(' ')[0];
 
   return (
     <aside>
-      {/* Contacter */}
-      <div className={styles.card}>
-        <div className={styles.ch}><div className={styles.ct}><i className="fas fa-headset" /> {t('profilCorrespondant.sidebar.contacterPrenom', { prenom })}</div></div>
-        <div className={styles.cb}>
-          <div className={styles.sideBtns}>
-            <button className={`${styles.sideBtn} ${styles.sbPrimary}`} onClick={onMessage}>
-              <i className="fas fa-comment-dots" /> {t('profilCorrespondant.sidebar.envoyerMessage')}
-            </button>
-            <button className={`${styles.sideBtn} ${styles.sbWa}`} onClick={() => onToast(t('profilCorrespondant.sidebar.whatsappToast'))}>
-              <i className="fab fa-whatsapp" /> WhatsApp
-            </button>
-            <button
-              className={`${styles.sideBtn} ${styles.sbCall}`}
-              onClick={onCall ?? (() => onToast(t('profilCorrespondant.sidebar.appelToast')))}
-              disabled={callLoading}
-            >
-              {callLoading
-                ? <><i className="fas fa-spinner fa-spin" /> …</>
-                : <><i className="fas fa-phone" /> {t('profilCorrespondant.appeler')}</>}
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Contacts détaillés */}
       {contacts.length > 0 && (
         <div className={styles.card}>
@@ -99,26 +68,16 @@ export default function ProfilSidebar({
         </div>
       )}
 
-      {/* Abonnés */}
-      <div className={styles.card} style={{ position: 'relative' }}>
+      {/* Abonnés — juste le compteur ; le bouton S'abonner reste dans
+       * ProfilHeader (retiré ici, c'était le même bouton répété). */}
+      <div className={styles.card}>
         <div className={styles.ch}><div className={styles.ct}><i className="fas fa-users" /> {t('profilCorrespondant.sidebar.abonnesTitle')}</div></div>
         <div className={styles.cb}>
-          <div className={styles.folWrap}>
-            <span className={styles.folCnt} style={{ marginRight: 8 }}>
-              {abonnes > 0
-                ? t('profilCorrespondant.sidebar.abonneCount', { count: abonnes })
-                : t('profilCorrespondant.sidebar.aucunAbonne')}
-            </span>
-          </div>
-          <FollowButton
-            actorType="correspondant"
-            id={id}
-            name={nom}
-            isSuivi={suivi}
-            onToast={onToast}
-            onRequireAuth={onRequireAuth}
-            onChange={onFollowChange}
-          />
+          <span className={styles.folCnt}>
+            {abonnes > 0
+              ? t('profilCorrespondant.sidebar.abonneCount', { count: abonnes })
+              : t('profilCorrespondant.sidebar.aucunAbonne')}
+          </span>
         </div>
       </div>
 

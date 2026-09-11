@@ -25,11 +25,14 @@ function buildRegisterPayload(
   const {
     firstName, lastName, email, phone, password, role,
     activationCode, referralSlug, shopName, companyTypeId,
+    // Profil — voir RegisterFormData.birthDate/gender (devenus obligatoires)
+    birthDate, gender,
     // Pays
     countryCode, countryName, dialCode,
     // Localisation
     latitude, longitude, locationAccuracy,
     address, city, district, region, country, postalCode, gpsEnabled,
+    companyPaysId, companyVilleId,
   } = formData;
 
   const payload: RegisterPayload = {
@@ -60,6 +63,17 @@ function buildRegisterPayload(
   if (role === 'company' && companyTypeId && companyTypeId.trim() !== '') {
     payload.companyTypeId = companyTypeId.trim();
   }
+
+  // Date de naissance / genre — obligatoires pour tous rôles (voir
+  // validateRegisterField dans useLoginPage.ts), sauf collaborateur
+  // invité (formData ne les contient alors jamais, rien à filtrer ici).
+  if (birthDate) payload.birthDate = birthDate;
+  if (gender)    payload.gender    = gender;
+
+  // Localisation manuelle entreprise (référentiel géo) — voir
+  // CompanyLocationSelect.tsx.
+  if (role === 'company' && companyPaysId)  payload.companyPaysId  = companyPaysId;
+  if (role === 'company' && companyVilleId) payload.companyVilleId = companyVilleId;
 
   // Pays détecté via indicatif
   if (countryCode) payload.countryCode = countryCode;

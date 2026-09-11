@@ -1444,4 +1444,51 @@ export class NotificationEventService {
       this.logger.error(`notifySupportTicketReply (${params.ticketRef}) failed`, err);
     }
   }
+
+  /**
+   * Le CLIENT (ou tout auteur de ticket) a répondu — à notifier :
+   * l'agent assigné (ticket.agentId résolu par l'appelant), ou à défaut
+   * le(s) super-admin(s) si le ticket n'est encore assigné à personne.
+   * Voir ConversationService.replyByUser() pour la résolution du
+   * destinataire (agent vs super-admin, portée globale par défaut).
+   */
+  async notifySupportTicketUserReply(params: {
+    recipientType:  string;
+    recipientId:    string;
+    userName:       string;
+    ticketId:       string;
+    ticketRef:      string;
+    ticketSubject:  string;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: params.recipientType as NotificationActorType,
+        recipientId:   params.recipientId,
+        /* actorType SYSTEM : la notification représente un événement
+         * (réponse client), pas une action d'un autre agent. */
+        actorType:     NotificationActorType.SYSTEM,
+        actorId:       null,
+        type:          NotificationType.SUPPORT_TICKET_USER_REPLY,
+        priority:      NotificationPriority.HIGH,
+        title:         'Nouvelle réponse client',
+        body:          `${params.userName} a répondu au ticket "${params.ticketSubject}"`,
+        actionUrl:     params.recipientType === NotificationActorType.SUPER_ADMIN
+          ? '/dashboard/super-admin'
+          : '/dashboard/admin',
+        /* groupKey : une seule notif "réponse client" par ticket à la
+         * fois — si le client enchaîne plusieurs messages rapidement,
+         * elles s'agrègent au lieu de spammer l'agent. */
+        groupKey:      `support.user_reply:${params.ticketId}`,
+        resourceType:  'support_ticket',
+        resourceId:    params.ticketId,
+        payload: {
+          ticketId:  params.ticketId,
+          ticketRef: params.ticketRef,
+          userName:  params.userName,
+        },
+      });
+    } catch (err) {
+      this.logger.error(`notifySupportTicketUserReply (${params.ticketRef}) failed`, err);
+    }
+  }
 }

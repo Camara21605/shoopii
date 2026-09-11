@@ -91,6 +91,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           value={data.email}
           onChange={val => onDataChange({ email: val })}
           error={undefined} // on gère l'erreur globalement au-dessus
+          autoComplete="username"
         />
 
         <FieldInput
@@ -107,6 +108,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           value={data.password}
           onChange={val => onDataChange({ password: val })}
           error={undefined} // on gère l'erreur globalement au-dessus
+          autoComplete="current-password"
         />
       </div>
 

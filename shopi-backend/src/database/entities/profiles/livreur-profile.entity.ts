@@ -160,6 +160,18 @@ export class Delivery {
   @Column({ type: 'varchar', length: 100, nullable: true })
   ville!: string | null;
 
+  /* ── Références géo structurées — voir partenaire-profile.entity.ts
+   * pour l'explication complète (paysId/villeId, GeoResolutionService).
+   * Pas de champ pays texte ici : paysId est déduit de villeId en
+   * remontant la hiérarchie (préfecture → région → pays). */
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  paysId!: string | null;
+
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  villeId!: string | null;
+
   @Column({ type: 'varchar', length: 10, default: '🛵' })
   deliveryEmoji!: string;
 

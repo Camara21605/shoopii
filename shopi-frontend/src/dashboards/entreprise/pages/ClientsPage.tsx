@@ -209,14 +209,15 @@ export default function ClientsPage() {
             sub:  t('clients.kpi.premiereCommande'),
           },
         ].map((s, i) => (
-          <div key={i} className={`kpi ${s.k}`}>
-            <div className="kpi-stripe" />
-            <div className="kpi-top">
-              <div className="kpi-icon">{s.ico}</div>
-              <span className="kpi-badge neu">{s.sub}</span>
+          <div key={i} className="kpi">
+            <span className="kpi-icon">{s.ico}</span>
+            <div>
+              <div className="kpi-val">
+                {s.val}
+                <span className="kpi-badge neu">{s.sub}</span>
+              </div>
+              <div className="kpi-lbl">{s.lbl}</div>
             </div>
-            <div className="kpi-val">{s.val}</div>
-            <div className="kpi-lbl">{s.lbl}</div>
           </div>
         ))}
       </div>
@@ -525,11 +526,12 @@ export default function ClientsPage() {
               <div className="ch-t"><i className="fas fa-chart-bar" /> {t('clients.sidePanel.metriquesCles')}</div>
             </div>
             <div className="cb">
+              {/* "Total clients" et "CA total" retirés d'ici — déjà
+                  affichés dans la ligne de KPIs tout en haut de page,
+                  doublon exact plutôt qu'une information nouvelle. */}
               {[
-                { ico: '👥', l: t('clients.kpi.totalClients'),    v: loading ? '…' : String(stats?.total ?? 0)                     },
                 { ico: '🛒', l: t('clients.sidePanel.acheteurs'),        v: loading ? '…' : String(stats?.buyers ?? 0)                    },
                 { ico: '👁️',  l: t('clients.sidePanel.abonnesBoutique'), v: loading ? '…' : String(stats?.abonnes ?? 0)                   },
-                { ico: '💰', l: t('clients.sidePanel.caTotal'),         v: loading ? '…' : `${fmtGNF(stats?.caTotal ?? 0)} GNF`          },
                 { ico: '🛍️', l: t('clients.sidePanel.panierMoyen'),     v: loading ? '…' : `${fmtGNF(stats?.panierMoyen ?? 0)} GNF`      },
               ].map((s, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '9px 12px', background: 'var(--g50)', border: '1px solid var(--bdr)', borderRadius: 'var(--r-md)', marginBottom: 8 }}>

@@ -134,6 +134,22 @@ export class Partner {
   @Column({ type: 'varchar', length: 100, default: 'GN' })
   pays!: string;
 
+  /* ── Références géo structurées (résolues depuis ville/pays ci-dessus) ──
+   * ville/pays sont du texte libre saisi par l'acteur — non fiable pour
+   * filtrer (ex: portée support d'un admin par communauté géo assignée).
+   * paysId/villeId sont peuplées par GeoResolutionService (rapprochement
+   * nom → référentiel geo_pays/geo_prefectures), en une fois au moment de
+   * la création/mise à jour du profil ou via le recalcul manuel super-admin
+   * — jamais par correspondance de texte à la lecture. Pas de FK formelle
+   * (même convention que paysAssigne/zoneId sur Admin). */
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  paysId!: string | null;
+
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  villeId!: string | null;
+
   @Column({ type: 'varchar', length: 20, nullable: true })
   codePostal!: string | null;
 
