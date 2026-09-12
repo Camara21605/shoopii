@@ -16,7 +16,6 @@ export type ParamSection =
   | 'finances'
   | 'communication'
   | 'journal'
-  | 'apparence'
   | 'sauvegarde'
   | 'confidentialite'
   | 'avance'

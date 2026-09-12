@@ -2,7 +2,7 @@
  * FICHIER : src/dashboards/administrateur/pages/ParametresPage.tsx
  *
  * Centre de configuration complet de l'administrateur Shoneya.
- * 16 sections organisées en sidebar interne avec navigation rapide.
+ * 15 sections organisées en sidebar interne avec navigation rapide.
  *
  * Architecture :
  *  - sidebar interne (230px) avec groupes + recherche rapide
@@ -33,7 +33,6 @@ const PartenairesSection    = lazy(() => import('./parametres/PartenairesSection
 const FinancesSection       = lazy(() => import('./parametres/FinancesSection'));
 const CommunicationSection  = lazy(() => import('./parametres/CommunicationSection'));
 const JournalSection        = lazy(() => import('./parametres/JournalSection'));
-const ApparenceSection      = lazy(() => import('./parametres/ApparenceSection'));
 const SauvegardeSection     = lazy(() => import('./parametres/SauvegardeSection'));
 const ConfidentialiteSection = lazy(() => import('./parametres/ConfidentialiteSection'));
 const AvanceSection         = lazy(() => import('./parametres/AvanceSection'));
@@ -60,7 +59,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'profil',          label: 'Profil',               icon: 'fa-user-circle' },
       { id: 'securite',        label: 'Sécurité',             icon: 'fa-shield-halved', badge: '2' },
-      { id: 'apparence',       label: 'Apparence',            icon: 'fa-palette' },
     ],
   },
   {
@@ -102,7 +100,6 @@ const NAV_GROUPS: NavGroup[] = [
 const SEC_META: Record<ParamSection, { title: string; sub: string; group: string }> = {
   profil:          { title: 'Profil administrateur', sub: 'Identité, avatar et informations de compte',                   group: 'Compte' },
   securite:        { title: 'Sécurité',              sub: 'Mot de passe, 2FA, sessions actives et clés API',              group: 'Compte' },
-  apparence:       { title: 'Apparence',             sub: 'Thème, couleur d\'accent, typographie et densité',             group: 'Compte' },
   zone:            { title: 'Zone & Couverture',     sub: 'Zone géographique, communes et alertes',                       group: 'Ma zone' },
   validations:     { title: 'Validations',           sub: 'Mode, délais et règles par type d\'acteur',                   group: 'Ma zone' },
   entreprises:     { title: 'Entreprises',           sub: 'Commission, documents requis et catégories autorisées',        group: 'Acteurs' },
@@ -128,7 +125,7 @@ interface ParametresPageProps {
 /* ================================================================
  * Composant principal
  * ================================================================ */
-/* BUG CORRIGÉ — sur les 16 sections, 8 sont des maquettes 100% locales,
+/* BUG CORRIGÉ — sur les 15 sections, 8 sont des maquettes 100% locales,
  * sans le moindre appel réseau : chaque toggle/champ/bouton "Sauvegarder"
  * ne modifie qu'un état React local, jamais persisté nulle part (les 8
  * autres — profil/sécurité/notifications/zone/validations/entreprises/
@@ -145,9 +142,6 @@ interface ParametresPageProps {
  * plutôt que de laisser croire qu'elles enregistrent quoi que ce soit.
  * 'journal' retiré de cette liste : la section est maintenant reliée à
  * GET /dashboard/admin/audit (voir JournalSection.tsx + AdminAuditService).
- * 'apparence' retiré : ERREUR DE CLASSIFICATION CORRIGÉE — cette section
- * était déjà 100% réelle (GET/PUT/POST /appearance via appearanceService.ts)
- * et n'aurait jamais dû être grisée ici.
  * 'sante' retiré : reliée à GET /platform-security/health|summary|alerts —
  * routes déjà ouvertes au rôle ADMIN (voir SanteSection.tsx). Seules la
  * conformité et les sauvegardes restent réservées au Super Admin.
@@ -197,7 +191,6 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
       case 'finances':        return <FinancesSection       {...props} />;
       case 'communication':   return <CommunicationSection  {...props} />;
       case 'journal':         return <JournalSection        {...props} />;
-      case 'apparence':       return <ApparenceSection      {...props} />;
       case 'sauvegarde':      return <SauvegardeSection     {...props} />;
       case 'confidentialite': return <ConfidentialiteSection {...props} />;
       case 'avance':          return <AvanceSection         {...props} />;

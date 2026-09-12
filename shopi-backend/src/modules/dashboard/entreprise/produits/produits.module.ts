@@ -22,6 +22,10 @@ import { CategoriesModule }  from '../../super-admin/categories/categories.modul
 import { NotificationsModule } from 'src/modules/notifications/notifications.module';
 import { CompanyTeamModule } from 'src/modules/company-team/company-team.module';
 import { CommissionModule }  from 'src/modules/commission/commission.module';
+/* PublicBroadcastService.emitGlobal('stories:changed', …) — pousse en
+ * temps réel l'ajout d'une story vers tous les visiteurs du home connectés
+ * au namespace /public (voir ProduitsService.createProduct/addProductStory). */
+import { PublicModule } from 'src/modules/public/public.module';
 import { ProductsScheduler } from './products.scheduler';
 
 @Module({
@@ -51,6 +55,7 @@ import { ProductsScheduler } from './products.scheduler';
     /* CommissionCalculatorService.resoudreCommissionProduit() — voir
      * ProduitsService.getProductStats() */
     CommissionModule,
+    PublicModule,
   ],
   controllers: [ProduitsController],
   providers:   [ProduitsService, ProductsScheduler],

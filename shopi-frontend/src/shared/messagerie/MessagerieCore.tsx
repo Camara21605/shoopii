@@ -93,6 +93,7 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
     infoPanelOpen,
     mobileOpen,
     loadingConvs,
+    convsLoadError,
     loadingMoreConvs,
     hasMoreConvs,
     loadMoreConversations,
@@ -422,6 +423,24 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
         }}>
           <i className="fas fa-circle-exclamation" />
           {t('messagerie.core.disconnected')}
+        </div>
+      )}
+
+      {/* Erreur de chargement de la liste — auparavant avalée en silence
+       * (.catch(() => {})), ce qui laissait la liste vide sans aucun indice
+       * ni dans l'UI ni en console, impossible à diagnostiquer. */}
+      {convsLoadError && !loadingConvs && conversations.length === 0 && (
+        <div style={{
+          position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 9999, maxWidth: '90vw',
+          background: 'rgba(220,38,38,.95)', color: '#fff',
+          padding: '8px 18px', borderRadius: 12,
+          fontSize: 12, fontWeight: 700,
+          display: 'flex', alignItems: 'center', gap: 7,
+          boxShadow: '0 4px 20px rgba(0,0,0,.3)',
+        }}>
+          <i className="fas fa-circle-exclamation" />
+          Impossible de charger les conversations : {convsLoadError}
         </div>
       )}
 

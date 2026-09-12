@@ -224,7 +224,24 @@ export class MailService implements OnModuleInit {
       return;
     }
     try {
-      await this.transporter.verify();
+      /* BUG CORRIGÉ (prod) : transporter.verify() sans borne attend le
+       * connectionTimeout par défaut de nodemailer (2 minutes) avant
+       * d'échouer si le serveur SMTP est injoignable/lent. onModuleInit()
+       * est awaited AVANT app.listen() dans le cycle de vie NestJS — un
+       * SMTP indisponible bloquait donc le démarrage entier du backend
+       * pendant 2 minutes, largement au-delà de la fenêtre de scan de
+       * port de Render (~1 min), qui déclarait le déploiement en échec
+       * ("No open ports detected") alors que l'app aurait fini par
+       * démarrer normalement juste après. Le SMTP n'est pas critique au
+       * démarrage (voir la dégradation gracieuse déjà en place dans le
+       * catch ci-dessous) : on borne donc l'attente à 5s. */
+      const VERIFY_TIMEOUT_MS = 5_000;
+      await Promise.race([
+        this.transporter.verify(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error(`Délai dépassé après ${VERIFY_TIMEOUT_MS}ms`)), VERIFY_TIMEOUT_MS),
+        ),
+      ]);
       this.logger.log(`[SMTP] ✅ Connexion établie avec ${this.config.get('SMTP_HOST')} (${this.smtpUser})`);
     } catch (err: any) {
       this.logger.error(

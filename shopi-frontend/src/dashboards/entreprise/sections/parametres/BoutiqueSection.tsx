@@ -13,9 +13,19 @@ import FormCard from '../../components/parametres/FormCard';
 import type { ParametresData } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
 import type { ToastType } from '../../types';
+import { apiFetch } from '../../../../shared/services/apiFetch';
 import {
   VILLES_SORTED, getCommunesByVille, getQuartiersByCommune,
 } from '../../../../shared/location/data/geo-guinee';
+
+/* BUG CORRIGÉ — le <select> "Type d'entreprise" n'offrait jamais que
+ * l'option vide + (si déjà défini) le type ACTUEL de l'entreprise : il
+ * n'y avait donc aucun moyen réel de choisir/corriger un type, en
+ * particulier pour une entreprise dont companyTypeId est resté NULL
+ * (créée avant validation, ou jamais renseigné). Liste réelle chargée
+ * depuis GET /company-types (même endpoint public que la page
+ * /types/:id — voir TypeEntrepriseSection.tsx). */
+interface CompanyTypeOption { id: string; nom: string; icone: string | null; actif: boolean }
 
 // ─────────────────────────────────────────────────────────────
 // PROPS
@@ -53,6 +63,13 @@ export default function BoutiqueSection({
   const [tags,          setTags]          = useState('');
   const [status,        setStatus]        = useState('active');
   const [companyTypeId, setCompanyTypeId] = useState('');
+  const [types,         setTypes]         = useState<CompanyTypeOption[]>([]);
+
+  useEffect(() => {
+    apiFetch<CompanyTypeOption[]>('/company-types', { public: true })
+      .then(list => setTypes((list ?? []).filter(ty => ty.actif)))
+      .catch(() => setTypes([]));
+  }, []);
 
   // ── État formulaire contact (section 2) ──────────────────
   const [businessPhone, setBusinessPhone] = useState('');
@@ -410,7 +427,14 @@ export default function BoutiqueSection({
                 value={companyTypeId}
                 onChange={e => { setCompanyTypeId(e.target.value); onDirty(); }}>
                 <option value="">{t('parametres.boutique.selectionnerType')}</option>
-                {data?.companyType && (
+                {types.map(ty => (
+                  <option key={ty.id} value={ty.id}>{ty.icone ? `${ty.icone} ` : ''}{ty.nom}</option>
+                ))}
+                {/* Filet de sécurité : si le type actuel de l'entreprise n'est
+                 * plus dans la liste active (désactivé depuis), on l'affiche
+                 * quand même pour ne pas faire disparaître la sélection en
+                 * cours sous ses yeux. */}
+                {data?.companyType && !types.some(ty => ty.id === data.companyType!.id) && (
                   <option value={data.companyType.id}>{data.companyType.nom}</option>
                 )}
               </select>

@@ -88,6 +88,7 @@
         "active": "Active",
         "dejaActive": "Already in a story — wait for it to expire to republish",
         "expiree": "Expired",
+        "expireDans": "Expires in {{time}}",
         "expireLe": "Expires on {{date}}",
         "vues": "{{count}} views",
         "quiAVu": "Seen by",

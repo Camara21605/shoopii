@@ -11,13 +11,14 @@
  * ============================================================ */
 
 import {
-  Injectable, NotFoundException, Logger,
+  Injectable, NotFoundException, BadRequestException, Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Company } from 'src/database/entities/profiles/entreprise-profile.entity';
 import { User }    from 'src/database/entities/user.entity';
+import { CompanyType } from 'src/database/entities/entreprise.table/company-type.entity';
 import { UploadService, UPLOAD_FOLDERS } from 'src/modules/upload/upload.service';
 import { SessionService } from 'src/modules/session/session.service';
 import { parseUserAgent } from 'src/common/utils/user-agent.util';
@@ -42,6 +43,9 @@ export class BoutiqueParametresService {
 
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+
+    @InjectRepository(CompanyType)
+    private readonly companyTypeRepo: Repository<CompanyType>,
 
     private readonly uploadService: UploadService,
     private readonly sessionService: SessionService,
@@ -175,6 +179,18 @@ export class BoutiqueParametresService {
 
   async updateBoutique(userId: string, dto: UpdateBoutiqueDto, currentSessionId?: string | null): Promise<Company> {
     const company = await this.findCompanyOrFail(userId);
+
+    /* BUG CORRIGÉ — le DTO ne validait que le FORMAT UUID de companyTypeId
+     * (@IsUUID), jamais son EXISTENCE réelle dans company_types : un id
+     * syntaxiquement valide mais inexistant (type supprimé depuis,
+     * faute de frappe côté appelant, etc.) était accepté et enregistré
+     * tel quel — silencieusement invisible ensuite sur toute page qui
+     * filtre par type (ex. /types/:id), sans jamais remonter d'erreur. */
+    if (dto.companyTypeId) {
+      const type = await this.companyTypeRepo.findOne({ where: { id: dto.companyTypeId } });
+      if (!type) throw new BadRequestException("Type d'entreprise introuvable.");
+      if (!type.actif) throw new BadRequestException("Ce type d'entreprise n'est plus disponible.");
+    }
 
     // On applique uniquement les champs fournis dans le DTO
     Object.assign(company, dto);

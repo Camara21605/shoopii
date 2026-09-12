@@ -88,6 +88,7 @@
         "active": "نشطة",
         "dejaActive": "منشورة بالفعل كقصة — انتظر انتهاءها لإعادة النشر",
         "expiree": "منتهية",
+        "expireDans": "تنتهي خلال {{time}}",
         "expireLe": "تنتهي في {{date}}",
         "vues": "{{count}} مشاهدة",
         "quiAVu": "شاهدها",

@@ -24,6 +24,7 @@ import CommandePage      from '../modules/home/components/panier/pages/CommandeP
 import SettingsPage      from '../modules/home/components/settings/pages/SettingsPage';
 import LivreursPage      from '../modules/home/components/livreurs/pages/LivreursPage';
 import BoutiquesPage     from '../modules/home/components/boutiques/pages/BoutiquesPage';
+import TypeEntreprisePage from '../modules/home/components/typeEntreprise/pages/TypeEntreprisePage';
 import ExplorerPage      from '../modules/home/components/explorer/pages/ExplorerPage';
 import OffresPage        from '../modules/home/components/offres/pages/OffresPage';
 import ProfilLivreurPage from '../shared/profils/profil-livreur/ProfilLivreurPage';
@@ -304,6 +305,9 @@ export const AppRouter: React.FC = () => (
 
           {/* Boutiques — publique */}
           <Route path="/boutiques"          element={<BoutiquesPage />} />
+
+          {/* Type d'entreprise — publique (produits + catégories de ce type) */}
+          <Route path="/types/:id"          element={<TypeEntreprisePage />} />
 
           {/* Offres / promotions — publique */}
           <Route path="/offres"             element={<OffresPage />} />

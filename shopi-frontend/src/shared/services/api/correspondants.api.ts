@@ -67,6 +67,9 @@ export interface CorrespondantResponse {
   lastActivityAt:string;
   companyId:     string | null;
   userId:        string;
+  /** L'entreprise connectée suit-elle ce correspondant ? Conditionne
+   *  l'affichage de Message/Appeler dans CorrespondantsPage.tsx. */
+  isSuivi:       boolean;
 }
 
 /** KPI cards du haut de page */

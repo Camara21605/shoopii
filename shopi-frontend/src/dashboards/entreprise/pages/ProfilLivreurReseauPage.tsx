@@ -5,6 +5,8 @@
 import { useTranslation } from 'react-i18next';
 import { useLivreurProfile } from '../../../shared/profils/profil-livreur/hooks/useLivreurProfile';
 import { useAuthGate } from '../../../shared/hooks/useAuthGate';
+import { useStartConversation } from '../../../shared/hooks/useStartConversation';
+import { useProfileCall } from '../../../shared/hooks/useProfileCall';
 import ProfilHeader   from '../../../shared/profils/profil-livreur/components/ProfilHeader';
 import ProfilTabs     from '../../../shared/profils/profil-livreur/components/ProfilTabs';
 import TabInfo        from '../../../shared/profils/profil-livreur/components/TabInfo';
@@ -27,6 +29,12 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel }
   const { t } = useTranslation();
   const { profile, loading, error, tab, setTab, updateFollowState } = useLivreurProfile(id);
   const { openAuthModal, authModal } = useAuthGate();
+  /* Message/Appel réels — même mécanisme que la page profil publique
+   * (POST /messagerie/conversations puis ouverture de LA conversation
+   * concernant CE livreur, pas un simple toast factice comme avant).
+   * Appelés avant tout `return` anticipé (règle des Hooks). */
+  const { start: startConv } = useStartConversation();
+  const { call: callProfile, loading: callLoading } = useProfileCall();
   const backLabelResolved = backLabel ?? t('profilLivreur.retourLivreurs');
 
   const backBtn = (
@@ -65,7 +73,8 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel }
     );
   }
 
-  const onContact = () => onPop(t('profilLivreur.reseauPage.contacterToast', { nom: profile.fullName }), 'i');
+  const onContact = () => startConv('delivery', id, (msg: string) => onPop(msg, 'e'));
+  const onCall    = () => callProfile('delivery', id, profile.fullName, profile.profilePicture, (msg: string) => onPop(msg, 'e'));
 
   return (
     <>
@@ -73,10 +82,12 @@ export default function ProfilLivreurReseauPage({ id, onBack, onPop, backLabel }
       <div className={`${styles.page} ${styles.pageDark}`}>
         <ProfilHeader
           profile={profile}
+          callLoading={callLoading}
           onToast={onPop}
           onRequireAuth={openAuthModal}
           onFollowChange={updateFollowState}
           onContact={onContact}
+          onCall={onCall}
           dark
         />
 

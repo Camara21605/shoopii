@@ -98,6 +98,29 @@ interface MyStory extends ProductStory {
   productNom: string;
 }
 
+/** ✅ BUG CORRIGÉ — le backend renvoyait `status: 'published'` figé pour
+ *  toujours (aucun CRON ne le faisait jamais passer à 'expired'), donc une
+ *  story vieille de plusieurs semaines s'affichait "Active" indéfiniment
+ *  ici, alors qu'elle avait déjà disparu du home depuis longtemps (qui,
+ *  lui, filtre correctement sur expiresAt). Le backend dérive maintenant
+ *  aussi le statut depuis expiresAt (voir produits.service.ts), mais on
+ *  le vérifie ici en plus, sans dépendre uniquement de ce que renvoie l'API. */
+function isStoryActive(s: ProductStory): boolean {
+  return s.status === 'published' && new Date(s.expiresAt).getTime() > Date.now();
+}
+
+/** "23h45" / "45 min" — compte à rebours lisible jusqu'à expiresAt, affiché
+ *  sur le badge de chaque story (toutes celles rendues ici sont déjà
+ *  actives, voir isStoryActive) pour que l'entreprise sache combien de
+ *  temps il lui reste avant de disparaître du home. */
+function formatExpiryCountdown(expiresAt: string): string {
+  const minutes = Math.max(1, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 60000));
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
+}
+
 // ─────────────────────────────────────────────────────────────
 // GESTION DES STORIES D'UN PRODUIT — réutilisé dans ModalVoir
 // et dans ModalCreateStory (bouton général "Créer une story").
@@ -190,24 +213,27 @@ function StoriesManager({ produit }: { produit: Produit }) {
 
   // Une image déjà publiée en story active ne peut pas être sélectionnée à nouveau
   // tant que cette story n'a pas expiré.
-  const activeUrls = new Set(stories.filter(s => s.status === 'published').map(s => s.mediaUrl));
+  const activeStories = stories.filter(isStoryActive);
+  const activeUrls = new Set(activeStories.map(s => s.mediaUrl));
 
   return (
     <>
-      {/* Stories déjà publiées */}
+      {/* Stories déjà publiées — une story expirée disparaît complètement de
+       * cette liste (elle a déjà disparu du home au même instant), plutôt
+       * que de rester affichée avec un badge "Expirée". */}
       {storiesLoading ? (
         <div className={styles.storiesEmpty}>{t('produits.modalVoir.stories.chargement')}</div>
-      ) : stories.length === 0 ? (
+      ) : activeStories.length === 0 ? (
         <div className={styles.storiesEmpty}>{t('produits.modalVoir.stories.aucune')}</div>
       ) : (
         <div className={styles.storiesGrid}>
-          {stories.map(s => (
+          {activeStories.map(s => (
             <div key={s.id} className={styles.storyCardItem}>
               <img src={s.mediaUrl} alt="" />
-              <span className={`${styles.storyStatusBadge} ${s.status === 'published' ? styles.storyStatusActive : styles.storyStatusExpired}`}>
-                {s.status === 'published'
-                  ? t('produits.modalVoir.stories.active')
-                  : t('produits.modalVoir.stories.expiree')}
+              {/* L'heure d'expiration ne s'affiche qu'au clic (voir StoryGroupViewer),
+               * pas en permanence sur la vignette. */}
+              <span className={`${styles.storyStatusBadge} ${styles.storyStatusActive}`}>
+                {t('produits.modalVoir.stories.active')}
               </span>
               <button className={styles.storyDeleteBtn} onClick={() => handleDeleteStory(s.id)}
                 title={t('produits.modalVoir.supprimer')}>
@@ -388,7 +414,15 @@ function StoryGroupViewer({ productNom, stories, initialIndex, onClose, onDelete
             ))}
           </div>
           <div className={styles.pvHd}>
-            <span className={styles.pvHdNom}>{productNom}</span>
+            {/* L'heure d'expiration ne s'affiche qu'ici, au clic sur la story
+             * (pas en permanence sur la vignette/tuile de la liste). */}
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span className={styles.pvHdNom} style={{ flex: 'unset' }}>{productNom}</span>
+              <span style={{ fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,.65)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <i className="fas fa-clock" style={{ marginRight: 4 }} />
+                {t('produits.modalVoir.stories.expireDans', { time: formatExpiryCountdown(current.expiresAt) })}
+              </span>
+            </div>
             <button className={styles.pvViewsBtn} onClick={openViewers} title={t('produits.modalVoir.stories.quiAVu')}>
               <i className="fas fa-eye" /> {current.viewsCount}
             </button>
@@ -1102,8 +1136,11 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
           <span className={styles.creerStoryTileLabel}>{t('produits.creerStory.bouton')}</span>
         </button>
 
+        {/* Une story expirée disparaît complètement de ce bandeau (et de son
+         * groupe par produit) — un produit dont toutes les stories ont
+         * expiré ne s'affiche plus du tout ici. */}
         {!myStoriesLoading && Object.values(
-          myStories.reduce((acc, s) => {
+          myStories.filter(isStoryActive).reduce((acc, s) => {
             (acc[s.productId] ??= { productId: s.productId, productNom: s.productNom, items: [] }).items.push(s);
             return acc;
           }, {} as Record<string, { productId: string; productNom: string; items: MyStory[] }>)
@@ -1115,8 +1152,10 @@ export default function ProduitsPage({ onNavigate }: ProduitsPageProps) {
               onClick={() => setViewerGroup({ productNom: group.productNom, stories: group.items, startAt: 0 })}
             >
               <img src={cover.mediaUrl} alt={group.productNom} />
-              <span className={`${styles.storyStatusBadge} ${cover.status === 'published' ? styles.storyStatusActive : styles.storyStatusExpired}`}>
-                {cover.status === 'published' ? t('produits.modalVoir.stories.active') : t('produits.modalVoir.stories.expiree')}
+              {/* L'heure d'expiration ne s'affiche qu'au clic, dans le visualiseur
+               * (StoryGroupViewer) — pas en permanence sur la tuile. */}
+              <span className={`${styles.storyStatusBadge} ${styles.storyStatusActive}`}>
+                {t('produits.modalVoir.stories.active')}
               </span>
               <span className={styles.myStoryViews} title={t('produits.modalVoir.stories.vues', { count: totalVues })}>
                 <i className="fas fa-eye" /> {totalVues}

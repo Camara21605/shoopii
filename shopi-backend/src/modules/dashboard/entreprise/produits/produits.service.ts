@@ -27,6 +27,7 @@ import { ProductVariant } from 'src/database/entities/entreprise.table/product-v
 import { ProductSpec }    from 'src/database/entities/entreprise.table/product-spec.entity';
 import { ProductWholesaleTier } from 'src/database/entities/entreprise.table/product-wholesale-tier.entity';
 import { ProductStory, StoryMediaType, StoryStatus } from 'src/database/entities/entreprise.table/product-story.entity';
+import { PublicBroadcastService } from 'src/modules/public/public-broadcast.service';
 import { Category }       from 'src/database/entities/entreprise.table/category.entity';
 import { SubCategory }    from 'src/database/entities/entreprise.table/sub-category.entity';
 import { Company, CompanyPlan } from 'src/database/entities/profiles/entreprise-profile.entity';
@@ -173,6 +174,12 @@ export class ProduitsService {
 
     private readonly commissionCalculator: CommissionCalculatorService,
     private readonly dataSource: DataSource,
+
+    /* Pousse 'stories:changed' en temps réel à tous les visiteurs du home
+     * connectés au namespace /public — voir createProduct()/addProductStory()
+     * ci-dessous. Même mécanisme déjà utilisé par 'catalogue:changed'
+     * (catalogue-parametres.service.ts). */
+    private readonly publicBroadcast: PublicBroadcastService,
   ) {}
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -433,6 +440,13 @@ export class ProduitsService {
     }
 
     this.logger.log(`[CREATE PRODUCT ✅] ID=${newProduct.id} | Nom="${dto.nom}" | Company=${companyProfile.id}`);
+
+    // Temps réel : émis seulement après le commit réussi (jamais dans la
+    // transaction elle-même) — même mécanisme que addProductStory().
+    if (dto.stories?.length) {
+      this.publicBroadcast.emitGlobal('stories:changed', { companyId: companyProfile.id, productId: newProduct.id });
+    }
+
     return this.getProduct(newProduct.id, user);
   }
 
@@ -782,6 +796,10 @@ export class ProduitsService {
       duration:   5,
     });
     await this.storyRepo.save(story);
+    // Temps réel : le home (et la page boutique) doivent afficher la
+    // nouvelle story instantanément, sans que les visiteurs déjà sur la
+    // page aient besoin de recharger — voir PublicBroadcastService.
+    this.publicBroadcast.emitGlobal('stories:changed', { companyId: product.companyId, productId });
     return this.toStoryResponse(story);
   }
 
@@ -792,13 +810,25 @@ export class ProduitsService {
     await this.storyRepo.remove(story);
   }
 
+  /* ✅ BUG CORRIGÉ — `s.status` n'est jamais mis à jour après la création
+   * (aucun CRON ne le fait passer à EXPIRED malgré le commentaire de
+   * l'entité qui le promet) : une story créée il y a des semaines restait
+   * affichée "Active" indéfiniment côté dashboard entreprise, même
+   * longtemps après avoir réellement disparu du home (qui, lui, filtre
+   * correctement sur expiresAt > now — voir PublicService.getHomeStories).
+   * On dérive donc le statut effectif de expiresAt plutôt que de faire
+   * confiance à la colonne status, sans jamais écraser un ARCHIVED. */
   private toStoryResponse(s: ProductStory): ProductStoryResponse {
+    const effectiveStatus =
+      s.status === StoryStatus.PUBLISHED && s.expiresAt.getTime() <= Date.now()
+        ? StoryStatus.EXPIRED
+        : s.status;
     return {
       id:         s.id,
       mediaUrl:   s.mediaUrl,
       mediaType:  s.mediaType,
       caption:    s.caption,
-      status:     s.status,
+      status:     effectiveStatus,
       expiresAt:  s.expiresAt.toISOString(),
       createdAt:  s.createdAt.toISOString(),
       viewsCount: s.viewsCount,

@@ -1,0 +1,20 @@
+{
+  "typeEntreprisePage": {
+    "subtitleCount_one": "{{count}} 件商品",
+    "subtitleCount_other": "{{count}} 件商品",
+    "subtitleDefault": "探索该企业类型的商品",
+    "typeErrorTitle": "无法加载该企业类型",
+    "entreprises": "企业",
+    "voirToutesEntreprises": "查看所有企业",
+    "toutesCategories": "✦ 所有分类",
+    "produits": "商品",
+    "loading": "加载中…",
+    "resultCount_one": "{{count}} 件商品",
+    "resultCount_other": "{{count}} 件商品",
+    "errorTitle": "无法加载商品",
+    "retry": "重试",
+    "emptyTitle": "未找到商品",
+    "emptyText": "该分类目前暂无商品。",
+    "loadMore": "加载更多商品"
+  }
+}

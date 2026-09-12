@@ -6,6 +6,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCorrespondantProfil } from '../../../shared/profils/profil-correspondant/hooks/useCorrespondantProfil';
 import { useAuthGate } from '../../../shared/hooks/useAuthGate';
+import { useStartConversation } from '../../../shared/hooks/useStartConversation';
+import { useProfileCall } from '../../../shared/hooks/useProfileCall';
 
 import ProfilHeader  from '../../../shared/profils/profil-correspondant/components/ProfilHeader';
 import ProfilTabs    from '../../../shared/profils/profil-correspondant/components/ProfilTabs';
@@ -49,7 +51,20 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
   }, [onPop]);
 
   const onToast = useCallback((msg: string) => onPop(msg, 'i'), [onPop]);
-  const onMessage = useCallback(() => onPop(t('livreurProfilCorrespondantReseau.messageToast', { nom: profil?.nom }), 'i'), [profil?.nom, onPop, t]);
+
+  /* Message/Appel réels — même mécanisme que la page profil publique
+   * (POST /messagerie/conversations puis ouverture de LA conversation
+   * concernant CE correspondant, pas un simple toast factice comme
+   * avant). */
+  const { start: startConv } = useStartConversation();
+  const { call: callProfile, loading: callLoading } = useProfileCall();
+  const onMessage = useCallback(() => {
+    startConv('correspondent', id, (msg: string) => onToast(msg));
+  }, [startConv, id, onToast]);
+  const onCall = useCallback(() => {
+    callProfile('correspondent', id, profil?.nom ?? 'Correspondant', null, (msg: string) => onToast(msg));
+  }, [callProfile, id, profil, onToast]);
+
   const onShare   = useCallback(() => onPop(t('livreurProfilCorrespondantReseau.lienCopieToast'), 'i'), [onPop, t]);
 
   const backBtn = (
@@ -92,11 +107,13 @@ export default function ProfilCorrespondantReseauPage({ id, onBack, onPop }: Pro
         <ProfilHeader
           profil={profil}
           suivi={suivi}
+          callLoading={callLoading}
           onToast={onToast}
           onRequireAuth={openAuthModal}
           onFollowChange={updateFollowState}
           onMessage={onMessage}
           onShare={onShare}
+          onCall={onCall}
         />
 
         {error && (

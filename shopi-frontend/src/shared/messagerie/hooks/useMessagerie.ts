@@ -209,6 +209,11 @@ export function useMessagerie() {
   const [infoPanelOpen,     setInfoPanelOpen]     = useState(false);
   const [mobileOpen,        setMobileOpen]        = useState(() => window.innerWidth <= 640);
   const [loadingConvs,      setLoadingConvs]      = useState(true);
+  /** Message de la dernière erreur de chargement de la liste (null si succès
+   *  ou pas encore chargé). L'appel était auparavant en `.catch(() => {})` :
+   *  toute erreur (403, 500, réseau…) laissait juste la liste vide sans
+   *  aucun indice, à l'écran comme en console — impossible à diagnostiquer. */
+  const [convsLoadError,    setConvsLoadError]    = useState<string | null>(null);
   /** true pendant un appel loadMoreConversations() (infinite scroll de la liste) */
   const [loadingMoreConvs,  setLoadingMoreConvs]  = useState(false);
   /** false une fois qu'on sait qu'il n'y a plus de conversation à charger — pilote l'affichage de la sentinelle IntersectionObserver */
@@ -447,8 +452,14 @@ export function useMessagerie() {
         setUsers(newUsers);
         convCursorRef.current = page?.nextCursor ?? null;
         setHasMoreConvs(!!page?.hasMore);
+        setConvsLoadError(null);
       })
-      .catch(() => {})
+      .catch((err: unknown) => {
+        if (ignore) return;
+        const msg = err instanceof Error ? err.message : String(err);
+        setConvsLoadError(msg);
+        console.error('[messagerie] GET /messagerie/conversations a échoué :', err);
+      })
       .finally(() => { if (!ignore) setLoadingConvs(false); });
 
     return () => { ignore = true; };
@@ -1000,6 +1011,7 @@ export function useMessagerie() {
     infoPanelOpen,
     mobileOpen,
     loadingConvs,
+    convsLoadError,     // message de la dernière erreur de chargement (null si OK)
     loadingMoreConvs,   // true pendant loadMoreConversations() (infinite scroll liste)
     hasMoreConvs,       // pilote l'affichage de la sentinelle IntersectionObserver
     loadMoreConversations,

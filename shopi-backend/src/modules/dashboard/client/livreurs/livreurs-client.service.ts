@@ -326,6 +326,18 @@ export class LivreursClientService {
         followerType = FollowerActorType.CORRESPONDENT;
         followerId   = (await this.correspondantRepo.findOne({ where: { userId }, select: ['id'] }))?.id;
         break;
+      /* ✅ BUG CORRIGÉ — le rôle COMPANY (entreprise) retombait dans le
+       * `default` CLIENT ci-dessous, qui cherche un profil Client
+       * inexistant pour une entreprise → followerId toujours undefined
+       * → Set toujours vide → isSuivi=false même après abonnement réel
+       * (le toggle, lui, résout correctement via companyRepo — cf.
+       * SuivisBaseService.getFollowerProfileId). Résultat : le bouton
+       * "S'abonner" ne se mettait jamais à jour, et un second clic
+       * désabonnait au lieu de réabonner. */
+      case UserRole.COMPANY:
+        followerType = FollowerActorType.COMPANY;
+        followerId   = (await this.companyRepo.findOne({ where: { userId }, select: ['id'] }))?.id;
+        break;
       default:
         followerType = FollowerActorType.CLIENT;
         followerId   = (await this.clientRepo.findOne({ where: { userId }, select: ['id'] }))?.id;
@@ -374,6 +386,18 @@ export class LivreursClientService {
       case UserRole.CORRESPONDENT:
         followerType = FollowerActorType.CORRESPONDENT;
         followerId   = (await this.correspondantRepo.findOne({ where: { userId }, select: ['id'] }))?.id;
+        break;
+      /* ✅ BUG CORRIGÉ — le rôle COMPANY (entreprise) retombait dans le
+       * `default` CLIENT ci-dessous, qui cherche un profil Client
+       * inexistant pour une entreprise → followerId toujours undefined
+       * → Set toujours vide → isSuivi=false même après abonnement réel
+       * (le toggle, lui, résout correctement via companyRepo — cf.
+       * SuivisBaseService.getFollowerProfileId). Résultat : le bouton
+       * "S'abonner" ne se mettait jamais à jour, et un second clic
+       * désabonnait au lieu de réabonner. */
+      case UserRole.COMPANY:
+        followerType = FollowerActorType.COMPANY;
+        followerId   = (await this.companyRepo.findOne({ where: { userId }, select: ['id'] }))?.id;
         break;
       default:
         followerType = FollowerActorType.CLIENT;

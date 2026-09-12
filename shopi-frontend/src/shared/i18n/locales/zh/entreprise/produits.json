@@ -88,6 +88,7 @@
         "active": "进行中",
         "dejaActive": "已在故事中发布——请等待过期后再重新发布",
         "expiree": "已过期",
+        "expireDans": "{{time}}后过期",
         "expireLe": "{{date}} 过期",
         "vues": "{{count}} 次观看",
         "quiAVu": "观看者",

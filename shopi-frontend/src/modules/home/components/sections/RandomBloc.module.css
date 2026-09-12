@@ -8,4 +8,13 @@
    grand écran au lieu de s'étirer. */
 .pgrid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 14px; }
 @media (max-width: 768px)  { .pgrid { gap: 10px; } .wrap { padding: 0 16px; } }
-@media (max-width: 400px)  { .pgrid { grid-template-columns: repeat(auto-fill,minmax(140px,1fr)); gap: 8px; } }
+/* BUG CORRIGÉ — avec minmax(200px,1fr), tout téléphone dont la largeur de
+ * contenu tombe entre 200 et 410px (la quasi-totalité des téléphones
+ * réels : 360-430px de large moins le padding) ne pouvait former qu'UNE
+ * seule colonne — et cette unique colonne s'étirait alors via 1fr pour
+ * remplir toute la largeur, donnant une carte géante en pleine largeur
+ * au lieu d'une grille. Colonnes forcées à 2 sur téléphone pour que ça
+ * "divise en deux" quel que soit le modèle, au lieu de dépendre d'un
+ * seuil de largeur minimale qui ne matchait presque jamais un vrai
+ * téléphone. */
+@media (max-width: 640px)  { .pgrid { grid-template-columns: repeat(2, 1fr); gap: 8px; } }

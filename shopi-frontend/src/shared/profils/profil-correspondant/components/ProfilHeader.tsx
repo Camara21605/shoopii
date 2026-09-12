@@ -90,16 +90,21 @@ export default function ProfilHeader({ profil, suivi, callLoading, onToast, onRe
               <button className={styles.btnShare} onClick={onShare} title={t('profilCorrespondant.partager')}>
                 <i className="fas fa-share-nodes" />
               </button>
-              {onCall && (
+              {/* Appeler/Message réservés aux abonnés — tant que l'utilisateur
+               * ne suit pas ce correspondant, ces boutons restent masqués
+               * (pas seulement désactivés) et réapparaissent dès l'abonnement. */}
+              {suivi && onCall && (
                 <button className={styles.btnMsg} onClick={onCall} disabled={callLoading}>
                   {callLoading
                     ? <><i className="fas fa-spinner fa-spin" /> …</>
                     : <><i className="fas fa-phone" /> {t('profilCorrespondant.appeler')}</>}
                 </button>
               )}
-              <button className={styles.btnMsg} onClick={onMessage}>
-                <i className="fas fa-comment-dots" /> {t('profilCorrespondant.contacter')}
-              </button>
+              {suivi && (
+                <button className={styles.btnMsg} onClick={onMessage}>
+                  <i className="fas fa-comment-dots" /> {t('profilCorrespondant.contacter')}
+                </button>
+              )}
               {/* Masqué en mobile (voir .idFollowWrap) — remplacé par le
                * même bouton dans la barre d'action fixe en bas d'écran,
                * pour ne pas l'afficher deux fois à la fois. */}

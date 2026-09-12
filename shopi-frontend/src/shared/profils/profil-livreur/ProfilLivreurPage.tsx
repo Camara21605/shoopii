@@ -147,9 +147,12 @@ export default function ProfilLivreurPage({ onToast = () => {} }: Props) {
 
         {/* BARRE D'ACTIONS MOBILE */}
         <div className={styles.actionBar}>
-          <button className={styles.abMsg} onClick={onContact}>
-            <i className="fas fa-message" /> {t('profilLivreur.contacter')}
-          </button>
+          {/* Réservé aux abonnés — même règle que le bouton équivalent de ProfilHeader */}
+          {profile.isSuivi && (
+            <button className={styles.abMsg} onClick={onContact}>
+              <i className="fas fa-message" /> {t('profilLivreur.contacter')}
+            </button>
+          )}
           <FollowButton
             actorType="livreur"
             id={profile.id}

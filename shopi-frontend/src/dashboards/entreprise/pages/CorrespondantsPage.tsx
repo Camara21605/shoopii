@@ -41,6 +41,8 @@ import { useToast } from '../../../shared/context/ToastContext';
 import { useCorrespondants } from '../../../modules/home/components/correspondants/hooks/useCorrespondants';
 import type { Correspondant } from '../../../modules/home/components/correspondants/data/types';
 import { useAuthGate } from '../../../shared/hooks/useAuthGate';
+import { useStartConversation } from '../../../shared/hooks/useStartConversation';
+import { useProfileCall } from '../../../shared/hooks/useProfileCall';
 import FollowButton from '../../../shared/components/FollowButton';
 import rowStyles from '../../../modules/home/components/livreurs/styles/CardLivreurList.module.css';
 import styles from './CorrespondantsPage.module.css';
@@ -177,12 +179,15 @@ function LigneReseauCorrespondant({ c, onView, onPop, onRequireAuth, onChange }:
 // repassent sous l'avatar quand la largeur manque.
 // ─────────────────────────────────────────────────────────────
 
-function LigneEquipeCorrespondant({ c, onView, onContact }: {
-  c:         CorrespondantResponse;
-  onView:    () => void;
-  onContact: () => void;
+function LigneEquipeCorrespondant({ c, onView, onPop }: {
+  c:      CorrespondantResponse;
+  onView: () => void;
+  onPop:  (m: string, type?: string) => void;
 }) {
   const { t } = useTranslation();
+  const { start: startConv } = useStartConversation();
+  const { call: callProfile, loading: callLoading } = useProfileCall();
+
   return (
     <div className={`${team.row} ${c.status === 'suspended' ? team.rowMuted : ''}`}>
       <div className={team.ava}><span>{c.avatarEmoji}</span></div>
@@ -206,8 +211,24 @@ function LigneEquipeCorrespondant({ c, onView, onContact }: {
 
       <div className={team.actions}>
         <button className={team.btnPrimary} onClick={onView}><i className="fas fa-eye" /> {t('correspondants.card.voir')}</button>
-        <button className={team.btnIcon} onClick={onContact} title={t('correspondants.card.contacter')}><i className="fas fa-envelope" /></button>
-        <a href={`tel:${c.phone}`} className={team.btnIcon} title={t('correspondants.card.appeler')}><i className="fas fa-phone" /></a>
+        {/* Message/Appeler réservés aux abonnés — même règle que sur le
+         * profil réseau : masqués tant que l'entreprise ne suit pas ce
+         * correspondant, réapparaissent dès l'abonnement. */}
+        {c.isSuivi && (
+          <button className={team.btnIcon} onClick={() => startConv('correspondent', c.id, (msg: string) => onPop(msg, 'e'))} title={t('correspondants.card.message')}>
+            <i className="fas fa-comment-dots" />
+          </button>
+        )}
+        {c.isSuivi && (
+          <button
+            className={team.btnIcon}
+            onClick={() => callProfile('correspondent', c.id, c.fullName, null, (msg: string) => onPop(msg, 'e'))}
+            disabled={callLoading}
+            title={t('correspondants.card.appeler')}
+          >
+            {callLoading ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-phone" />}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -876,7 +897,7 @@ export default function CorrespondantsPage() {
                   key={c.id}
                   c={c}
                   onView={() => setModalProfil(c)}
-                  onContact={() => setModalContact(c)}
+                  onPop={pop}
                 />
               ))}
             </div>

@@ -17,7 +17,6 @@
     "retourCorrespondants": "Retour aux correspondants",
     "chargementProfil": "Chargement du profil…",
     "correspondantIntrouvable": "Correspondant introuvable.",
-    "messageToast": "💬 Message à {{nom}}",
     "lienCopieToast": "🔗 Lien du profil copié"
   }
 }

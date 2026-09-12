@@ -54,6 +54,9 @@ export interface LivreurResponse {
   lastActivityAt:       string;
   companyId:            string | null;
   userId:               string;
+  /** L'entreprise connectée suit-elle ce livreur ? Conditionne
+   *  l'affichage de Message/Appeler dans LivreursPage.tsx. */
+  isSuivi:              boolean;
 }
 
 export interface LivreurStats {

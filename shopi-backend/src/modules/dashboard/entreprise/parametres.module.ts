@@ -30,6 +30,10 @@ import { Admin }     from 'src/database/entities/profiles/admin-profile.entity';
 import { GeoZone }   from 'src/database/entities/geo/geo-zone.entity';
 import { GeoCommune } from 'src/database/entities/geo/geo-commune.entity';
 
+/* ── Vérifie l'existence réelle du type d'entreprise soumis (PATCH
+ * /parametres/boutique) — voir BoutiqueParametresService.updateBoutique. */
+import { CompanyType } from 'src/database/entities/entreprise.table/company-type.entity';
+
 /* ── Module Upload (Cloudinary) ── */
 import { UploadModule }   from 'src/modules/upload/upload.module';
 
@@ -76,6 +80,7 @@ import { DangerParametresService }     from './services/danger-parametres.servic
       GeoZone,
       GeoCommune,
       CompanySetting,
+      CompanyType,
     ]),
 
     /* Module upload Cloudinary (logo, cover, documents) */

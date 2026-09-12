@@ -1,0 +1,20 @@
+{
+  "typeEntreprisePage": {
+    "subtitleCount_one": "منتج {{count}} متاح",
+    "subtitleCount_other": "{{count}} منتج متاح",
+    "subtitleDefault": "اكتشف منتجات هذا النوع من الأعمال",
+    "typeErrorTitle": "تعذّر تحميل نوع النشاط هذا",
+    "entreprises": "الشركات",
+    "voirToutesEntreprises": "عرض جميع الشركات",
+    "toutesCategories": "✦ جميع الفئات",
+    "produits": "المنتجات",
+    "loading": "جارٍ التحميل…",
+    "resultCount_one": "منتج {{count}}",
+    "resultCount_other": "{{count}} منتج",
+    "errorTitle": "تعذّر تحميل المنتجات",
+    "retry": "إعادة المحاولة",
+    "emptyTitle": "لم يتم العثور على منتجات",
+    "emptyText": "لا توجد منتجات متاحة في هذه الفئة حاليًا.",
+    "loadMore": "عرض المزيد من المنتجات"
+  }
+}

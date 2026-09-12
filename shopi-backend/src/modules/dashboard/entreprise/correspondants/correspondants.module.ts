@@ -16,6 +16,8 @@ import { Delivery }
   from 'src/database/entities/profiles/livreur-profile.entity';
 import { CreationCode }
   from 'src/database/entities/code-creation.entity';
+import { Follow }
+  from 'src/database/entities/follow/follow.entity';
 
 import { CorrespondantsController } from './correspondants.controller';
 import { CorrespondantsService }    from './services/correspondants.service';
@@ -33,6 +35,7 @@ import { NotificationsModule } from 'src/modules/notifications/notifications.mod
       Company,
       Delivery,
       CreationCode,
+      Follow,   // isSuivi — l'entreprise suit-elle ce correspondant ?
     ]),
 
     MailModule,

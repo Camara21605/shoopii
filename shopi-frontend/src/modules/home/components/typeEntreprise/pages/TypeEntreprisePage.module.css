@@ -1,0 +1,78 @@
+/* ================================================================
+ * TypeEntreprisePage.module.css — Page "/types/:id"
+ * Mêmes conventions que BoutiquesPage.module.css (skeleton/empty/grille).
+ * ================================================================ */
+/* BUG CORRIGÉ — le Header du site est en position:fixed (66px de haut,
+ * voir Header.module.css .hdr) et ne réserve donc aucun espace dans le
+ * flux normal ; sans compensation, le haut de .body (donc le hero) se
+ * retrouvait caché derrière. Même correctif que HomePage.tsx (qui,
+ * lui, l'applique en inline style) — ici directement sur .body. */
+.page { background: var(--g50,#F8F9FA); min-height: 100vh; }
+.body { max-width: 1200px; margin: 0 auto; padding: calc(22px + var(--hdr,66px)) 28px 80px; }
+
+.hero {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px; margin-bottom: 18px;
+  background: var(--white); border: 1.5px solid var(--bdr);
+  border-radius: 16px;
+  border-left: 4px solid var(--type-color, var(--blue));
+}
+.heroIco {
+  width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  background: color-mix(in srgb, var(--type-color, var(--blue)) 12%, transparent);
+}
+.heroTitle { font-family: var(--fd); font-size: 20px; font-weight: 800; color: var(--navy); }
+.heroSub   { font-size: 13px; color: var(--t3); margin-top: 3px; }
+
+.secRow { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 14px; }
+.secTitle { font-family: var(--fd); font-size: 17px; font-weight: 700; color: var(--navy); }
+.secSub   { font-size: 12px; color: var(--t3); margin-top: 1px; }
+
+/* Grille produits — colonnes forcées (pas d'auto-fill/minmax) : voir
+ * RandomBloc.module.css .pgrid pour le même bug déjà corrigé — un seuil
+ * de largeur minimale ne cadre jamais proprement un vrai téléphone,
+ * donc 2 colonnes fixes en dessous de 640px plutôt que d'en dépendre. */
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 16px; margin-bottom: 20px; }
+@media (max-width: 768px) { .pgrid { gap: 10px; } }
+@media (max-width: 640px) { .pgrid { grid-template-columns: repeat(2, 1fr); gap: 8px; } }
+
+/* Skeleton chargement */
+.skeleton {
+  background: linear-gradient(90deg,var(--g100,#F1F3F5) 25%,var(--white) 50%,var(--g100,#F1F3F5) 75%);
+  background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 16px; height: 300px;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* État vide / erreur */
+.empty { padding: 60px 20px; text-align: center; }
+.empty i { font-size: 48px; color: var(--t4); opacity: .4; margin-bottom: 16px; display: block; }
+.emptyTitle { font-family: var(--fd); font-size: 18px; font-weight: 600; color: var(--t2); margin-bottom: 6px; }
+.emptyText  { font-size: 13.5px; color: var(--t3); margin-bottom: 16px; }
+.retryBtn {
+  border: 1.5px solid var(--blue); border-radius: 10px; background: var(--blue); color: #fff;
+  font-size: 13px; font-weight: 700; padding: 10px 24px; cursor: pointer; font-family: var(--fb);
+  display: inline-flex; align-items: center; gap: 7px; transition: all .15s;
+}
+.retryBtn:hover { opacity: .9; }
+
+/* Charger plus */
+.loadMore { text-align: center; padding: 20px 0; }
+.loadMoreBtn {
+  border: 1.5px solid var(--bdr2); border-radius: 10px; background: var(--white); color: var(--t2);
+  font-size: 13px; font-weight: 700; padding: 11px 28px; cursor: pointer; font-family: var(--fb);
+  display: inline-flex; align-items: center; gap: 7px; transition: all .15s;
+}
+.loadMoreBtn:hover { border-color: var(--bdr2); color: var(--t1); background: var(--g100); }
+.loadMoreBtn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Responsive */
+@media (max-width: 860px) {
+  .body { padding: calc(14px + var(--hdr,66px)) 12px 14px; }
+}
+/* Bottom-nav mobile fixe (62px + zone de sécurité iPhone) — même
+ * correctif que LivreursPage/CorrespondantsPage.module.css .body. */
+@media (max-width: 768px) {
+  .body { padding-bottom: calc(62px + 24px + env(safe-area-inset-bottom,0px)); }
+}

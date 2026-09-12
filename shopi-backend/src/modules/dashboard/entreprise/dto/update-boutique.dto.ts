@@ -8,7 +8,7 @@
  * ============================================================ */
 
 import {
-  IsString, IsOptional, IsEmail, IsUrl,
+  IsString, IsOptional, IsEmail, IsUrl, IsUUID,
   IsEnum, MaxLength, ValidateIf,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
@@ -53,8 +53,12 @@ export class UpdateBoutiqueDto {
   @IsEnum(CompanyStatus)
   status?: CompanyStatus;
 
+  /* BUG CORRIGÉ — @IsString() seul acceptait n'importe quelle chaîne (pas
+   * forcément un UUID valide) ; @IsUUID ici, l'EXISTENCE réelle dans
+   * company_types est vérifiée côté service (voir
+   * BoutiqueParametresService.updateBoutique). */
   @IsOptional()
-  @IsString()
+  @IsUUID()
   companyTypeId?: string;
 }
 

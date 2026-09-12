@@ -288,10 +288,13 @@
 .actionBtnPrimary:hover { background: var(--t2); color: #fff; }
 .actionBtnFull {
   flex: 1;
+  min-width: 0;
   width: auto;
   font-size: 12px;
   font-weight: 700;
   gap: 5px;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .actionBtnDanger:hover { border-color: var(--t2); color: var(--t2); background: var(--g100); }
 
@@ -721,10 +724,17 @@
   .statsRow    { grid-template-columns: repeat(2, 1fr); }
   .infoGrid    { grid-template-columns: 1fr 1fr; }
 }
-/* Mêmes seuils que la page d'accueil (.pgrid) pour que la carte produit
- * garde exactement la même taille sur petit écran. */
+/* BUG CORRIGÉ — la carte gardait une largeur fixe (200px, puis 140px
+ * sous 400px) quel que soit l'écran : sur un téléphone normal (~375-
+ * 428px), 200px (ou même 140px + l'espace restant) ne cadrait jamais
+ * proprement 2 cartes pile à l'écran — la 2e carte se retrouvait
+ * coupée sur le bord, ou un large vide restait après elle. La largeur
+ * est maintenant calculée pour que EXACTEMENT 2 cartes remplissent la
+ * largeur visible (le reste du "chunk" de produits reste accessible en
+ * glissant horizontalement, scroll-snap déjà en place). */
 @media (max-width: 768px) {
   .gridRows, .gridRow { gap: 10px; }
+  .gridRow .card { flex: 0 0 calc((100% - 10px) / 2); width: calc((100% - 10px) / 2); }
 }
 @media (max-width: 600px) {
   .statsRow    { grid-template-columns: repeat(2, 1fr); }
@@ -736,7 +746,16 @@
 }
 @media (max-width: 400px) {
   .gridRows, .gridRow { gap: 8px; }
-  .gridRow .card { flex-basis: 140px; width: 140px; }
+  .gridRow .card { flex: 0 0 calc((100% - 8px) / 2); width: calc((100% - 8px) / 2); }
+  /* BUG CORRIGÉ — le correctif anti-déformation (voir .cardBody/.cardNom
+   * plus haut) réservait une hauteur minimale pensée pour la carte
+   * large (200px) ; sur la carte étroite ce plancher fixe ajoutait du
+   * vide et faisait paraître les cartes plus grandes qu'avant en
+   * mobile. On retire le plancher ici (la carte redevient aussi
+   * compacte qu'avant) — l'ellipsis/line-clamp restent actifs et
+   * empêchent toujours un texte trop long de déformer la carte. */
+  .cardBody { min-height: 0; }
+  .cardNom  { min-height: 0; }
 }
 
 /* ── Rangée : bouton "Créer une story" + stories déjà publiées ── */

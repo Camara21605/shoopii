@@ -33,6 +33,8 @@ import {
   NotificationType,
 } from 'src/database/entities/notification/notification.entitiy';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
+import { Follow, FollowStatus, FollowerActorType, TargetActorType }
+  from 'src/database/entities/follow/follow.entity';
 
 export interface CorrespondantResponse {
   id: string; fullName: string; email: string; phone: string | null;
@@ -42,6 +44,9 @@ export interface CorrespondantResponse {
   zone: string | null; joinedAt: string;
   lastActivity: string; lastActivityAt: string;
   companyId: string | null; userId: string;
+  /** L'entreprise connectée suit-elle ce correspondant (POST /suivis/correspondants/:id) ?
+   *  Conditionne l'affichage des boutons Message/Appeler dans CorrespondantsPage.tsx. */
+  isSuivi: boolean;
 }
 
 export interface CorrespondantStats {
@@ -73,6 +78,9 @@ export class CorrespondantsService {
     @InjectRepository(Company)
     private readonly companyRepo: Repository<Company>,
 
+    @InjectRepository(Follow)
+    private readonly followRepo: Repository<Follow>,
+
     private readonly notifEventSvc: NotificationEventService,
   ) {}
 
@@ -84,6 +92,24 @@ export class CorrespondantsService {
     if (!company && actorId) company = await this.companyRepo.findOne({ where: { id: actorId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
     return company.id;
+  }
+
+  /* ── isSuivi : correspondants de l'équipe que l'entreprise suit
+   * (POST /suivis/correspondants/:id) — pour conditionner Message/
+   * Appeler dans CorrespondantsPage.tsx (onglet "Mon équipe"). ── */
+  private async getFollowedCorrespondantIds(companyId: string | null): Promise<Set<string>> {
+    if (!companyId) return new Set<string>();
+    const rows = await this.followRepo.find({
+      where: {
+        followerType: FollowerActorType.COMPANY,
+        followerId:   companyId,
+        targetType:   TargetActorType.CORRESPONDENT,
+        isSubscribed: true,
+        status:       FollowStatus.ACTIVE,
+      },
+      select: ['targetId'],
+    });
+    return new Set(rows.map(r => r.targetId));
   }
 
   /* ── Extraire la ville ── */
@@ -109,7 +135,7 @@ export class CorrespondantsService {
 }
 
   /* ── Mapper vers la réponse frontend ── */
-  private toResponse(c: Correspondent): CorrespondantResponse {
+  private toResponse(c: Correspondent, followedIds: Set<string> = new Set()): CorrespondantResponse {
     const type     = this.extractType(c);
     const ville    = this.extractVille(c);
     const quartier = c.zone ? c.zone.split('·')[0].trim() : ville;
@@ -139,6 +165,7 @@ export class CorrespondantsService {
       lastActivityAt:'',
       companyId:     c.companyId,
       userId:        c.userId,
+      isSuivi:       followedIds.has(c.id),
     };
   }
 
@@ -177,8 +204,9 @@ export class CorrespondantsService {
     }
 
     const [raw, total] = await qb.getManyAndCount();
+    const followedIds = await this.getFollowedCorrespondantIds(companyId);
     return {
-      data:  raw.map(c => this.toResponse(c)),
+      data:  raw.map(c => this.toResponse(c, followedIds)),
       total, page,
       pages: Math.ceil(total / limit),
     };
@@ -198,7 +226,8 @@ export class CorrespondantsService {
     if (companyId && c.companyId !== companyId) {
       throw new ForbiddenException('Accès refusé — ce correspondant n\'appartient pas à votre réseau.');
     }
-    return this.toResponse(c);
+    const followedIds = await this.getFollowedCorrespondantIds(companyId);
+    return this.toResponse(c, followedIds);
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -262,7 +291,8 @@ export class CorrespondantsService {
     qb.orderBy('c.updatedAt', 'DESC').take(5);
 
     const recent = await qb.getMany();
-    return recent.map(c => this.toResponse(c));
+    const followedIds = await this.getFollowedCorrespondantIds(companyId);
+    return recent.map(c => this.toResponse(c, followedIds));
   }
 
   /* ═══════════════════════════════════════════════════════════

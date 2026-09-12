@@ -49,6 +49,9 @@ import {
 import {
   Company,
 } from 'src/database/entities/profiles/entreprise-profile.entity';
+import {
+  Follow,
+} from 'src/database/entities/follow/follow.entity';
 
 import { LivreursController }         from './livreurs.controller';
 import { LivreursService }            from './services/livreurs.service';
@@ -64,6 +67,7 @@ import { CompanyTeamModule }   from 'src/modules/company-team/company-team.modul
     TypeOrmModule.forFeature([
       Delivery,   // Profils des livreurs
       Company,    // Pour résoudre companyId depuis userId JWT
+      Follow,     // isSuivi — l'entreprise suit-elle ce livreur ?
     ]),
 
     CodesModule,

@@ -35,6 +35,8 @@ import { useTeamPermissions } from '../hooks/useTeamPermissions';
 import { useLivreurs } from '../../../modules/home/components/livreurs/hooks/useLivreurs';
 import type { LivreurItem } from '../../../modules/home/components/livreurs/data/livreursMockData';
 import { useAuthGate } from '../../../shared/hooks/useAuthGate';
+import { useStartConversation } from '../../../shared/hooks/useStartConversation';
+import { useProfileCall } from '../../../shared/hooks/useProfileCall';
 import FollowButton from '../../../shared/components/FollowButton';
 import rowStyles from '../../../modules/home/components/livreurs/styles/CardLivreurList.module.css';
 import styles from './CorrespondantsPage.module.css';
@@ -627,13 +629,16 @@ function LigneReseau({ l, onView, onPop, onRequireAuth, onChange }: {
 // repassent sous l'avatar quand la largeur manque.
 // ─────────────────────────────────────────────────────────────
 
-function LigneEquipeLivreur({ l, can, onView, onContact }: {
-  l:          LivreurResponse;
-  can:        (group: string, action: string) => boolean;
-  onView:     () => void;
-  onContact:  () => void;
+function LigneEquipeLivreur({ l, can, onView, onPop }: {
+  l:     LivreurResponse;
+  can:   (group: string, action: string) => boolean;
+  onView: () => void;
+  onPop:  (m: string, type?: string) => void;
 }) {
   const { t } = useTranslation();
+  const { start: startConv } = useStartConversation();
+  const { call: callProfile, loading: callLoading } = useProfileCall();
+
   return (
     <div className={`${team.row} ${l.status === 'suspended' ? team.rowMuted : ''}`}>
       <div className={team.ava}>
@@ -660,13 +665,27 @@ function LigneEquipeLivreur({ l, can, onView, onContact }: {
 
       <div className={team.actions}>
         <button className={team.btnPrimary} onClick={onView}><i className="fas fa-eye" /> {t('livreurs.card.voir')}</button>
-        {can('deliveries', 'edit') && (
-          <button className={team.btnIcon} onClick={onContact} title={t('livreurs.card.contacter')}><i className="fas fa-envelope" /></button>
+        {/* Message/Appeler réservés aux abonnés — même règle que sur le
+         * profil réseau : masqués tant que l'entreprise ne suit pas ce
+         * livreur, réapparaissent dès l'abonnement. */}
+        {can('deliveries', 'edit') && l.isSuivi && (
+          <button className={team.btnIcon} onClick={() => startConv('delivery', l.id, (msg: string) => onPop(msg, 'e'))} title={t('livreurs.card.message')}>
+            <i className="fas fa-comment-dots" />
+          </button>
         )}
         <a href={`https://wa.me/${(l.phone ?? '').replace(/\s+/g, '')}`} target="_blank" rel="noreferrer" className={team.btnIcon} title={t('livreurs.card.whatsapp')}>
           <i className="fab fa-whatsapp" />
         </a>
-        <a href={`tel:${l.phone}`} className={team.btnIcon} title={t('livreurs.card.appeler')}><i className="fas fa-phone" /></a>
+        {l.isSuivi && (
+          <button
+            className={team.btnIcon}
+            onClick={() => callProfile('delivery', l.id, l.fullName, null, (msg: string) => onPop(msg, 'e'))}
+            disabled={callLoading}
+            title={t('livreurs.card.appeler')}
+          >
+            {callLoading ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-phone" />}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -923,7 +942,7 @@ export default function LivreursPage() {
                   l={l}
                   can={can}
                   onView={() => setModalProfil(l)}
-                  onContact={() => setModalContact(l)}
+                  onPop={pop}
                 />
               ))}
             </div>

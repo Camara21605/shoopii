@@ -18,6 +18,14 @@ import { FournisseursModule }  from './fournisseurs/fournisseurs.module';
 import { AvisModule }          from './avis/avis.module';
 import { CompanyTeamModule }   from '../../company-team/company-team.module';
 import { CommissionModule }    from '../../commission/commission.module';
+/* ✅ ProduitsService est redéclaré ici en providers (voir plus bas) EN PLUS
+ * d'être fourni par ProduitsModule — deux instances distinctes existent
+ * donc dans le graphe de DI, chacune limitée aux imports de SON PROPRE
+ * module hôte. PublicModule (PublicBroadcastService.emitGlobal, utilisé
+ * par ProduitsService pour 'stories:changed') doit donc être importé ICI
+ * aussi, sinon Nest échoue à résoudre PublicBroadcastService pour cette
+ * seconde instance au démarrage (UnknownDependenciesException). */
+import { PublicModule }        from '../../public/public.module';
 
 // ── Entités TypeORM ──────────────────────────────────────────
 import { User }             from '../../../database/entities/user.entity';
@@ -101,6 +109,7 @@ import { CategoriesService }          from '../super-admin/categories/categories
      * formule que le CommissionEngine, utilisée par getCommissionRate()
      * pour que l'aperçu de revenu net ne diverge jamais du montant réel. */
     CommissionModule,
+    PublicModule,
   ],
 
   controllers: [

@@ -44,6 +44,8 @@ import { User }
   from 'src/database/entities/user.entity';
 import { UserRole }
   from 'src/common/enums/user-role.enum';
+import { Follow, FollowStatus, FollowerActorType, TargetActorType }
+  from 'src/database/entities/follow/follow.entity';
 
 import {
   FilterLivreursDto,
@@ -81,6 +83,9 @@ export interface LivreurResponse {
   lastActivityAt:       string;
   companyId:            string | null;
   userId:               string;
+  /** L'entreprise connectée suit-elle ce livreur (POST /suivis/livreurs/:id) ?
+   *  Conditionne l'affichage des boutons Message/Appeler dans LivreursPage.tsx. */
+  isSuivi:              boolean;
 }
 
 export interface LivreurStats {
@@ -137,6 +142,9 @@ export class LivreursService {
     @InjectRepository(Company)
     private readonly companyRepo: Repository<Company>,
 
+    @InjectRepository(Follow)
+    private readonly followRepo: Repository<Follow>,
+
     private readonly notifEventSvc: NotificationEventService,
   ) {}
 
@@ -161,6 +169,27 @@ export class LivreursService {
   }
 
   // ══════════════════════════════════════════════════════════
+  // PRIVÉ — isSuivi : livreurs de l'équipe que l'entreprise suit
+  // (POST /suivis/livreurs/:id) — pour conditionner Message/Appeler
+  // dans LivreursPage.tsx (onglet "Mon équipe").
+  // ══════════════════════════════════════════════════════════
+
+  private async getFollowedDeliveryIds(companyId: string | null): Promise<Set<string>> {
+    if (!companyId) return new Set<string>();
+    const rows = await this.followRepo.find({
+      where: {
+        followerType: FollowerActorType.COMPANY,
+        followerId:   companyId,
+        targetType:   TargetActorType.DELIVERY,
+        isSubscribed: true,
+        status:       FollowStatus.ACTIVE,
+      },
+      select: ['targetId'],
+    });
+    return new Set(rows.map(r => r.targetId));
+  }
+
+  // ══════════════════════════════════════════════════════════
   // PRIVÉ — Charger les emails depuis la table users
   // ══════════════════════════════════════════════════════════
 
@@ -181,6 +210,7 @@ export class LivreursService {
 
   private toResponse(
     d: Delivery & { userEmail?: string },
+    followedIds: Set<string> = new Set(),
   ): LivreurResponse {
     const vt = d.VehicleType ?? VehicleType.MOTO;
     return {
@@ -205,6 +235,7 @@ export class LivreursService {
       lastActivityAt:       '',
       companyId:            d.companyId,
       userId:               d.userId,
+      isSuivi:              followedIds.has(d.id),
     };
   }
 
@@ -250,8 +281,11 @@ export class LivreursService {
     }
 
     const [raw, total] = await qb.getManyAndCount();
-    const emailMap = await this.loadEmails(raw.map(d => d.userId));
-    const data = raw.map(d => this.toResponse({ ...d, userEmail: emailMap[d.userId] ?? '' }));
+    const [emailMap, followedIds] = await Promise.all([
+      this.loadEmails(raw.map(d => d.userId)),
+      this.getFollowedDeliveryIds(companyId),
+    ]);
+    const data = raw.map(d => this.toResponse({ ...d, userEmail: emailMap[d.userId] ?? '' }, followedIds));
 
     return { data, total, page, pages: Math.ceil(total / limit) };
   }
@@ -268,8 +302,11 @@ export class LivreursService {
     if (companyId && d.companyId !== companyId) {
       throw new ForbiddenException("Accès refusé — ce livreur n'appartient pas à votre entreprise.");
     }
-    const emailMap = await this.loadEmails([d.userId]);
-    return this.toResponse({ ...d, userEmail: emailMap[d.userId] ?? '' });
+    const [emailMap, followedIds] = await Promise.all([
+      this.loadEmails([d.userId]),
+      this.getFollowedDeliveryIds(companyId),
+    ]);
+    return this.toResponse({ ...d, userEmail: emailMap[d.userId] ?? '' }, followedIds);
   }
 
   // ══════════════════════════════════════════════════════════
@@ -338,8 +375,11 @@ export class LivreursService {
     qb.orderBy('d.updatedAt', 'DESC').take(5);
 
     const recent = await qb.getMany();
-    const emailMap = await this.loadEmails(recent.map(d => d.userId));
-    return recent.map(d => this.toResponse({ ...d, userEmail: emailMap[d.userId] ?? '' }));
+    const [emailMap, followedIds] = await Promise.all([
+      this.loadEmails(recent.map(d => d.userId)),
+      this.getFollowedDeliveryIds(companyId),
+    ]);
+    return recent.map(d => this.toResponse({ ...d, userEmail: emailMap[d.userId] ?? '' }, followedIds));
   }
 
   // ══════════════════════════════════════════════════════════

@@ -71,16 +71,21 @@ export default function ProfilHeader({ profile, callLoading, onToast, onRequireA
             </div>
 
             <div className={styles.idActs}>
-              {onCall && (
+              {/* Appeler/Contacter réservés aux abonnés — tant que l'utilisateur
+               * ne suit pas ce livreur, ces boutons restent masqués (pas
+               * seulement désactivés) et réapparaissent dès l'abonnement. */}
+              {profile.isSuivi && onCall && (
                 <button className={`${styles.btn} ${styles.btnMsg}`} onClick={onCall} disabled={callLoading}>
                   {callLoading
                     ? <><i className="fas fa-spinner fa-spin" /> …</>
                     : <><i className="fas fa-phone" /> {t('profilLivreur.appeler')}</>}
                 </button>
               )}
-              <button className={`${styles.btn} ${styles.btnMsg}`} onClick={onContact}>
-                <i className="fas fa-message" /> {t('profilLivreur.contacter')}
-              </button>
+              {profile.isSuivi && (
+                <button className={`${styles.btn} ${styles.btnMsg}`} onClick={onContact}>
+                  <i className="fas fa-message" /> {t('profilLivreur.contacter')}
+                </button>
+              )}
               <FollowButton
                 actorType="livreur"
                 id={profile.id}

@@ -88,6 +88,7 @@
         "active": "Active",
         "dejaActive": "Déjà en story — attendez l'expiration pour la republier",
         "expiree": "Expirée",
+        "expireDans": "Expire dans {{time}}",
         "expireLe": "Expire le {{date}}",
         "vues": "{{count}} vues",
         "quiAVu": "Qui a vu",

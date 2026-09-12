@@ -1,0 +1,20 @@
+{
+  "typeEntreprisePage": {
+    "subtitleCount_one": "{{count}} product available",
+    "subtitleCount_other": "{{count}} products available",
+    "subtitleDefault": "Discover products from this business type",
+    "typeErrorTitle": "Unable to load this business type",
+    "entreprises": "Businesses",
+    "voirToutesEntreprises": "See all businesses",
+    "toutesCategories": "✦ All categories",
+    "produits": "Products",
+    "loading": "Loading…",
+    "resultCount_one": "{{count}} product",
+    "resultCount_other": "{{count}} products",
+    "errorTitle": "Unable to load products",
+    "retry": "Retry",
+    "emptyTitle": "No products found",
+    "emptyText": "No products are available in this category yet.",
+    "loadMore": "Load more products"
+  }
+}

@@ -20,6 +20,10 @@ import { CorrespondantHoraire, JOURS_ORDER }
 import { Follow, FollowStatus, TargetActorType, FollowerActorType }
   from '../../../database/entities/follow/follow.entity';
 import { Client }       from '../../../database/entities/profiles/client-profile.entity';
+import { Company }      from '../../../database/entities/profiles/entreprise-profile.entity';
+import { Delivery }     from '../../../database/entities/profiles/livreur-profile.entity';
+import { User }         from '../../../database/entities/user.entity';
+import { UserRole }     from '../../../common/enums/user-role.enum';
 
 import {
   CorrespondantProfilResponse, CorrTypeDto, BadgeDto, HoraireDto, InfoPratiqueDto,
@@ -54,6 +58,12 @@ export class CorrespondantProfilService {
     private readonly followRepo: Repository<Follow>,
     @InjectRepository(Client)
     private readonly clientRepo: Repository<Client>,
+    @InjectRepository(Company)
+    private readonly companyRepo: Repository<Company>,
+    @InjectRepository(Delivery)
+    private readonly deliveryRepo: Repository<Delivery>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) {}
 
   /* ──────────────────────────────────────────────────────────────
@@ -238,18 +248,26 @@ export class CorrespondantProfilService {
     });
   }
 
-  /* L'utilisateur courant suit-il ce correspondant ? */
+  /* L'utilisateur courant suit-il ce correspondant ?
+   *
+   * ✅ BUG CORRIGÉ — cette méthode ne cherchait QUE dans clientRepo,
+   * quel que soit le rôle réel de l'utilisateur connecté : pour une
+   * entreprise, un livreur ou un autre correspondant, `client` était
+   * toujours null → isSuivi=false en permanence, même juste après un
+   * abonnement réel (le toggle, lui, résout correctement le profil
+   * suiveur selon le rôle — cf. SuivisBaseService.getFollowerProfileId).
+   * Le bouton "S'abonner" ne se mettait donc jamais à jour pour ces
+   * rôles, et un second clic désabonnait au lieu de réabonner. */
   private async isSuivi(correspondantId: string, userId?: string): Promise<boolean> {
     if (!userId) return false;
 
-    /* Trouver le profil client de l'utilisateur (le follower) */
-    const client = await this.clientRepo.findOne({ where: { userId } });
-    if (!client) return false;
+    const followerId = await this.resolveFollowerProfileId(userId);
+    if (!followerId) return false;
 
     const follow = await this.followRepo.findOne({
       where: {
-        followerType: FollowerActorType.CLIENT,
-        followerId:   client.id,
+        followerType: followerId.type,
+        followerId:   followerId.id,
         targetType:   TargetActorType.CORRESPONDENT,
         targetId:     correspondantId,
         isSubscribed: true,
@@ -257,5 +275,34 @@ export class CorrespondantProfilService {
       },
     });
     return !!follow;
+  }
+
+  /** Résout (type, id) du profil "suiveur" de userId selon son rôle réel
+   *  — même logique que SuivisBaseService.getFollowerProfileId, dupliquée
+   *  ici car ce service n'en hérite pas. */
+  private async resolveFollowerProfileId(
+    userId: string,
+  ): Promise<{ type: FollowerActorType; id: string } | null> {
+    const user = await this.userRepo.findOne({ where: { id: userId }, select: ['id', 'role'] });
+    if (!user) return null;
+
+    switch (user.role) {
+      case UserRole.COMPANY: {
+        const company = await this.companyRepo.findOne({ where: { userId }, select: ['id'] });
+        return company ? { type: FollowerActorType.COMPANY, id: company.id } : null;
+      }
+      case UserRole.DELIVERY: {
+        const delivery = await this.deliveryRepo.findOne({ where: { userId }, select: ['id'] });
+        return delivery ? { type: FollowerActorType.DELIVERY, id: delivery.id } : null;
+      }
+      case UserRole.CORRESPONDENT: {
+        const correspondant = await this.corrRepo.findOne({ where: { userId }, select: ['id'] });
+        return correspondant ? { type: FollowerActorType.CORRESPONDENT, id: correspondant.id } : null;
+      }
+      default: {
+        const client = await this.clientRepo.findOne({ where: { userId }, select: ['id'] });
+        return client ? { type: FollowerActorType.CLIENT, id: client.id } : null;
+      }
+    }
   }
 }

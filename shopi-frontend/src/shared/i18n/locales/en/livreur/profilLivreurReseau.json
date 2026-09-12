@@ -17,7 +17,6 @@
     "retourCorrespondants": "Back to correspondents",
     "chargementProfil": "Loading profile…",
     "correspondantIntrouvable": "Correspondent not found.",
-    "messageToast": "💬 Message to {{nom}}",
     "lienCopieToast": "🔗 Profile link copied"
   }
 }

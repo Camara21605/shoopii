@@ -88,22 +88,24 @@ export class PublicController {
 
   @Get('produits')
   @ApiOperation({ summary: 'Produits publics paginés' })
-  @ApiQuery({ name: 'page',       required: false })
-  @ApiQuery({ name: 'limit',      required: false })
-  @ApiQuery({ name: 'categoryId', required: false })
-  @ApiQuery({ name: 'search',     required: false })
-  @ApiQuery({ name: 'type',       required: false, description: 'detail | gros' })
+  @ApiQuery({ name: 'page',          required: false })
+  @ApiQuery({ name: 'limit',         required: false })
+  @ApiQuery({ name: 'categoryId',    required: false })
+  @ApiQuery({ name: 'companyTypeId', required: false, description: "Ne renvoie que les produits d'entreprises de ce type" })
+  @ApiQuery({ name: 'search',        required: false })
+  @ApiQuery({ name: 'type',          required: false, description: 'detail | gros' })
   listProduits(
-    @Query('page')       page?:       string,
-    @Query('limit')      limit?:      string,
-    @Query('categoryId') categoryId?: string,
-    @Query('search')     search?:     string,
-    @Query('type')       type?:       string,
+    @Query('page')          page?:          string,
+    @Query('limit')         limit?:         string,
+    @Query('categoryId')    categoryId?:    string,
+    @Query('companyTypeId') companyTypeId?: string,
+    @Query('search')        search?:        string,
+    @Query('type')          type?:          string,
   ) {
     return this.publicService.listProduits({
       page:  page  ? parseInt(page)  : 1,
       limit: limit ? parseInt(limit) : 20,
-      categoryId, search, type,
+      categoryId, companyTypeId, search, type,
     });
   }
 

@@ -425,11 +425,11 @@ export class PublicService {
 
   async listProduits(params: {
     page: number; limit: number;
-    categoryId?: string; search?: string;
+    categoryId?: string; companyTypeId?: string; search?: string;
     type?: string;
   }): Promise<{ data: PublicProduitResponse[]; total: number; page: number; pages: number }> {
 
-    const { page, limit, categoryId, search, type } = params;
+    const { page, limit, categoryId, companyTypeId, search, type } = params;
 
     const qb = this.productRepo
       .createQueryBuilder('p')
@@ -452,6 +452,7 @@ export class PublicService {
     if (type === 'detail') qb.andWhere('p.venteEnGros = :vg', { vg: false });
 
     if (categoryId) qb.andWhere('p.categoryId = :catId', { catId: categoryId });
+    if (companyTypeId) qb.andWhere('company.companyTypeId = :companyTypeId', { companyTypeId });
     if (search?.trim()) {
       const term = `%${search.trim().toLowerCase()}%`;
       qb.andWhere(

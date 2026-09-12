@@ -14,9 +14,16 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { io } from 'socket.io-client';
 import { apiFetch }         from '../../../../shared/services/apiFetch';
 import { getRoleFromToken } from '../../../../shared/services/authUtils';
 import styles from '../../styles/HomeStoriesStrip.module.css';
+
+/* Même origine que RandomBloc.tsx/BoutiquePage.tsx (VITE_API_URL sans le
+ * suffixe /api). Namespace /public : aucune authentification requise. */
+const SOCKET_URL =
+  ((import.meta as any).env?.VITE_API_URL as string | undefined)?.replace('/api', '') ??
+  'http://localhost:3001';
 
 // ── Palette couleurs (couleur dominante / accent) ─────────────
 const COLOR_PAIRS = [
@@ -106,7 +113,8 @@ export default function HomeStoriesStrip({ onToast, companyId }: Props) {
   const stripRef = useRef<HTMLDivElement>(null);
 
   // ── Fetch (filtré sur companyId depuis la page boutique) ────
-  useEffect(() => {
+  const load = useCallback((silent = false) => {
+    if (!silent) setLoading(true);
     const url = companyId ? `/public/boutiques/${companyId}/stories` : '/public/stories';
     apiFetch<ApiStory[]>(url, { public: true })
       .then(data => {
@@ -133,6 +141,25 @@ export default function HomeStoriesStrip({ onToast, companyId }: Props) {
       .catch(() => setBubbles([]))
       .finally(() => setLoading(false));
   }, [companyId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  /* Temps réel — une entreprise qui ajoute une story doit apparaître
+   * instantanément ici pour tous les visiteurs déjà sur la page, sans
+   * recharger. 'stories:changed' est diffusé globalement (pas de room :
+   * le home mélange les stories de plusieurs entreprises, impossible de
+   * savoir à l'avance laquelle concerne cette bulle) — voir
+   * PublicBroadcastService.emitGlobal() côté backend (ProduitsService).
+   * Sur la page boutique (companyId fourni), on ignore les événements
+   * d'une AUTRE boutique pour éviter un rechargement inutile. */
+  useEffect(() => {
+    const socket = io(`${SOCKET_URL}/public`, { transports: ['websocket', 'polling'] });
+    socket.on('stories:changed', (payload: { companyId?: string }) => {
+      if (companyId && payload?.companyId && payload.companyId !== companyId) return;
+      load(true);
+    });
+    return () => { socket.disconnect(); };
+  }, [load, companyId]);
 
   // ── Drag-to-scroll ─────────────────────────────────────────
   const isDragging = useRef(false);

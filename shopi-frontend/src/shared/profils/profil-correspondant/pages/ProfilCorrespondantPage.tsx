@@ -116,7 +116,7 @@ export default function ProfilCorrespondantPage() {
   return (
     <>
       {header}
-      <div className={`${styles.page} ${styles.pageDark}`}>
+      <div className={`${styles.page} ${styles.pageDark} ${styles.hasActionBar}`}>
 
         <ProfilHeader
           profil={profil}
@@ -152,11 +152,23 @@ export default function ProfilCorrespondantPage() {
           />
         </div>
 
-        {/* Barre d'action mobile fixe */}
+        {/* Barre d'action mobile fixe — reprend Appeler + Message, masqués
+         * dans l'en-tête en dessous de 900px (voir .hasActionBar) pour ne
+         * pas les afficher deux fois. */}
         <div className={styles.actionBar}>
-          <button className={styles.abMsg} onClick={onMessage}>
-            <i className="fas fa-comment-dots" /> {t('profilCorrespondant.contacter')}
-          </button>
+          {/* Réservé aux abonnés — même règle que le bouton équivalent de ProfilHeader */}
+          {suivi && (
+            <button className={styles.abMsg} onClick={onCall} disabled={callLoading}>
+              {callLoading
+                ? <><i className="fas fa-spinner fa-spin" /> …</>
+                : <><i className="fas fa-phone" /> {t('profilCorrespondant.appeler')}</>}
+            </button>
+          )}
+          {suivi && (
+            <button className={styles.abMsg} onClick={onMessage}>
+              <i className="fas fa-comment-dots" /> {t('profilCorrespondant.contacter')}
+            </button>
+          )}
           <FollowButton
             actorType="correspondant"
             id={profil.id}

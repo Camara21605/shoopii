@@ -89,7 +89,7 @@ export default function TypeEntrepriseSection() {
                 <div
                   key={ct.id}
                   className={styles.card}
-                  onClick={() => navigate(`/boutiques?type=${ct.id}`)}
+                  onClick={() => navigate(`/types/${ct.id}`)}
                   style={{
                     '--card-color': color,
                     '--card-bg':    bg,
