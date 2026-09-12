@@ -304,6 +304,11 @@ export class AuthService implements OnModuleInit {
         password: hashedPassword,
         role:     UserRole.SUPER_ADMIN,
         status:   UserStatus.ACTIVE,
+        /* Ce compte est provisionné côté serveur au démarrage (pas via
+         * l'inscription publique) — jamais d'email de vérification à
+         * envoyer, et le bloquer derrière la vérification d'email
+         * empêcherait toute connexion tant que personne n'y a pensé. */
+        emailVerified: true,
       });
       const saved = await this.userRepo.save(superAdmin);
       await this.walletRepo.save(this.walletRepo.create({ userId: saved.id }));
