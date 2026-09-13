@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository }        from '@nestjs/typeorm';
 import { ConfigService }           from '@nestjs/config';
+import { getPrimaryFrontendUrl }   from '../../../../common/utils/frontend-url.util';
 import { DeepPartial, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
@@ -112,7 +113,7 @@ export class SecuriteService {
         toEmail:   dbUser.email,
         firstName: dbUser.firstName,
         changedAt: dbUser.lastPasswordChangedAt!,
-        loginUrl:  `${this.config.get('FRONTEND_URL')}/login`,
+        loginUrl:  `${getPrimaryFrontendUrl(this.config)}/login`,
       }).catch(err => this.logger.error(`[PWD CHANGED EMAIL ❌] ${dbUser.email} | ${(err as Error).message}`));
     }).catch(() => {});
 

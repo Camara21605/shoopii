@@ -35,6 +35,7 @@ import {
 } from '../database/entities/support/support-ticket.entity';
 import { MailService } from '../modules/email/email.service';
 import { PlatformSettingsCacheService } from '../modules/performance-engine/services/platform-settings-cache.service';
+import { getPrimaryFrontendUrl } from '../common/utils/frontend-url.util';
 
 @Injectable()
 export class SupportSlaCronService {
@@ -148,7 +149,7 @@ export class SupportSlaCronService {
      * pour ne pas spammer l'équipe support.
      * ─────────────────────────────────────────────────────── */
     const supportEmail  = supportEmailOverride || this.config.get<string>('SUPPORT_EMAIL', 'support@shopi.gn');
-    const frontendUrl   = this.config.get<string>('FRONTEND_URL',  'https://shopi.gn');
+    const frontendUrl   = getPrimaryFrontendUrl(this.config);
 
     /* Construction du tableau HTML des tickets en retard */
     const ticketRows = breachedTickets.map(t => {

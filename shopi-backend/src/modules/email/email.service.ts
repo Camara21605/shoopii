@@ -25,6 +25,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserRole } from '../../common/enums/user-role.enum';
+import { getPrimaryFrontendUrl } from '../../common/utils/frontend-url.util';
 
 /*
  * BASCULE SMTP → API HTTP BREVO (prod) :
@@ -183,7 +184,7 @@ export class MailService implements OnModuleInit {
   constructor(private readonly config: ConfigService) {
     this.apiKey      = config.get<string>('BREVO_API_KEY', '');
     this.fromEmail   = config.get<string>('SMTP_FROM',    'noreply@shopi.gn');
-    this.frontendUrl = config.get<string>('FRONTEND_URL', 'https://shopi.gn');
+    this.frontendUrl = getPrimaryFrontendUrl(config);
   }
 
   /* ── Vérification de la clé API Brevo au démarrage ────────────────────── */

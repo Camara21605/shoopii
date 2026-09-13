@@ -23,6 +23,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository }   from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { ConfigService }      from '@nestjs/config';
+import { getPrimaryFrontendUrl } from '../../../common/utils/frontend-url.util';
 
 import {
   SupportMessage,
@@ -271,7 +272,7 @@ export class ConversationService {
               agentName,
               reference: ticket.reference,
               subject:   ticket.subject,
-              ticketUrl: `${this.config.get('FRONTEND_URL', 'https://shopi.gn')}/support/tickets/${ticketId}`,
+              ticketUrl: `${getPrimaryFrontendUrl(this.config)}/support/tickets/${ticketId}`,
             });
           } catch (e) {
             this.logger.warn(`[CONV] Email reply failed for ${user.email}: ${e}`);

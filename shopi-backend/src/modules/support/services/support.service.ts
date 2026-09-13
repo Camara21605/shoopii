@@ -44,6 +44,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService }      from '@nestjs/config';
+import { getPrimaryFrontendUrl } from '../../../common/utils/frontend-url.util';
 import { InjectRepository }   from '@nestjs/typeorm';
 import { Repository }         from 'typeorm';
 
@@ -117,7 +118,7 @@ export class SupportService {
         firstName: userName,
         reference: ticket.reference,
         subject:   dto.subject,
-        ticketUrl: `${this.config.get('FRONTEND_URL', 'https://shopi.gn')}/support/tickets/${ticket.id}`,
+        ticketUrl: `${getPrimaryFrontendUrl(this.config)}/support/tickets/${ticket.id}`,
       });
     } catch (e) {
       this.logger.warn(`[SUPPORT] Email confirmation échoué pour ${userEmail}: ${e}`);

@@ -35,10 +35,22 @@ import type {
   WsUnfollowedPayload,
 } from '../dto/suivis.dto';
 
+/* BUG CORRIGÉ (prod) : FRONTEND_URL peut contenir plusieurs origines
+ * séparées par des virgules (voir main.ts, nécessaire pour le CORS
+ * Express sur plusieurs domaines). Passée telle quelle ici, Socket.IO
+ * la traite comme UNE SEULE origine littérale (la chaîne complète avec
+ * virgules) — qui ne correspond jamais à un en-tête Origin réel envoyé
+ * par un navigateur, rejetant silencieusement toute connexion WebSocket
+ * quel que soit le domaine appelant. On éclate donc la liste ici aussi,
+ * le package cors sous-jacent de Socket.IO accepte un tableau d'origines. */
+const suivisAllowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map(s => s.trim()).filter(Boolean)
+  : '*';
+
 @WebSocketGateway({
   namespace: '/suivis',
   cors: {
-    origin: process.env.FRONTEND_URL ?? '*',
+    origin: suivisAllowedOrigins,
     credentials: true,
   },
 })

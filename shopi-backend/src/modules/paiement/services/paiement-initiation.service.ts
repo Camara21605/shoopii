@@ -39,6 +39,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService }    from '@nestjs/config';
+import { getPrimaryFrontendUrl } from '../../../common/utils/frontend-url.util';
 import { Repository }       from 'typeorm';
 import { randomUUID }       from 'crypto';
 
@@ -94,7 +95,7 @@ export class PaiementInitiationService {
      * opérateur même désactivé par le super-admin. */
     private readonly settingsCache: PlatformSettingsCacheService,
   ) {
-    this.frontendUrl = config.get<string>('FRONTEND_URL') ?? 'http://localhost:5173';
+    this.frontendUrl = getPrimaryFrontendUrl(config, 'http://localhost:5173');
     this.backendUrl  = config.get<string>('BACKEND_URL')  ?? 'http://localhost:3001';
   }
 

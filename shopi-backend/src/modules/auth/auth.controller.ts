@@ -36,6 +36,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard }     from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
+import { getPrimaryFrontendUrl } from '../../common/utils/frontend-url.util';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import {
@@ -145,7 +146,7 @@ export class AuthController {
     private readonly settingsCache:      PlatformSettingsCacheService,
   ) {
     this.isProd      = config.get<string>('NODE_ENV') === 'production';
-    this.frontendUrl = config.get<string>('FRONTEND_URL') ?? 'http://localhost:5173';
+    this.frontendUrl = getPrimaryFrontendUrl(config, 'http://localhost:5173');
   }
 
   // ── POST /auth/register ───────────────────────────────────────────────────

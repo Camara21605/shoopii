@@ -32,6 +32,7 @@ import * as bcrypt          from 'bcryptjs';
 import * as crypto          from 'crypto';
 
 import { UserRole }             from 'src/common/enums/user-role.enum';
+import { getPrimaryFrontendUrl } from 'src/common/utils/frontend-url.util';
 import { User, UserStatus }     from '../../database/entities/user.entity';
 import { AuthLog }              from '../../database/entities/auth-log.entity';
 import { RefreshToken }         from '../../database/entities/refresh-token.entity';
@@ -560,7 +561,7 @@ export class AuthService implements OnModuleInit {
         toEmail:   newUser.email,
         firstName: newUser.firstName,
         role:      newUser.role,
-        loginUrl:  `${this.config.get('FRONTEND_URL')}/login`,
+        loginUrl:  `${getPrimaryFrontendUrl(this.config)}/login`,
       })
       .catch(err =>
         this.logger.error(`[WELCOME EMAIL ❌] ${newUser.email} | ${(err as Error).message}`),
@@ -674,7 +675,7 @@ export class AuthService implements OnModuleInit {
         toEmail:   user.email,
         firstName: user.firstName,
         role:      user.role,
-        loginUrl:  `${this.config.get('FRONTEND_URL')}/login`,
+        loginUrl:  `${getPrimaryFrontendUrl(this.config)}/login`,
       })
       .catch(err =>
         this.logger.error(`[WELCOME EMAIL ❌] ${user.email} | ${(err as Error).message}`),
@@ -1679,7 +1680,7 @@ export class AuthService implements OnModuleInit {
         toEmail:   user.email,
         firstName: user.firstName,
         changedAt: new Date(),
-        loginUrl:  `${this.config.get('FRONTEND_URL')}/login`,
+        loginUrl:  `${getPrimaryFrontendUrl(this.config)}/login`,
       })
       .catch(err =>
         this.logger.error(`[PWD CHANGED EMAIL ❌] ${user.email} | ${(err as Error).message}`),
@@ -1985,7 +1986,7 @@ export class AuthService implements OnModuleInit {
         toEmail:  user.email,
         firstName: user.firstName,
         role:      user.role,
-        loginUrl:  `${this.config.get('FRONTEND_URL')}/login`,
+        loginUrl:  `${getPrimaryFrontendUrl(this.config)}/login`,
       }).catch(err =>
         this.logger.error(`[WELCOME GOOGLE ❌] ${user!.email} | ${(err as Error).message}`),
       );
