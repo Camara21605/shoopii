@@ -1,34 +1,27 @@
 /* ============================================================
  * FICHIER : src/modules/notifications/strategies/email-channel.strategy.ts
  *
- * RÔLE : Strategy EMAIL — envoie via Nodemailer (SMTP).
+ * RÔLE : Strategy EMAIL — envoie via l'API HTTP Brevo.
  *
  * CONFIG (variables d'environnement) :
- *   MAIL_HOST    — serveur SMTP (ex: smtp.gmail.com)   — fallback SMTP_HOST
- *   MAIL_PORT    — port SMTP (défaut: 587)              — fallback SMTP_PORT
- *   MAIL_SECURE  — TLS forcé sur port 465 (défaut: auto selon le port)
- *   MAIL_USER    — adresse d'authentification SMTP      — fallback SMTP_USER
- *   MAIL_PASS    — mot de passe SMTP / App Password      — fallback SMTP_PASS
- *   MAIL_FROM    — adresse expéditeur (défaut: SMTP_FROM ou noreply@shopi.app)
+ *   BREVO_API_KEY — clé API Brevo (format xkeysib-...)   — fallback: canal désactivé
+ *   MAIL_FROM     — adresse expéditeur (défaut: SMTP_FROM ou noreply@shopi.app)
  *
- * FALLBACK SMTP_* : ce canal notifications et MailService (emails
- * d'authentification — src/modules/email/email.service.ts) partagent
- * le même compte SMTP en pratique. Avant ce fallback, ce canal restait
- * désactivé dès que seules les variables SMTP_* (déjà configurées et
- * fonctionnelles pour les emails d'auth) étaient définies — MAIL_HOST
- * n'était jamais renseigné nulle part, donc canSend() retournait
- * toujours false et AUCUNE notification par email ne partait jamais,
- * silencieusement (juste un warn au démarrage, jamais revu ensuite).
+ * BUG CORRIGÉ (prod) : ce canal envoyait auparavant en SMTP brut
+ * (nodemailer, port 587) — Render (plan free) restreint/bloque les
+ * connexions sortantes sur ce port (vérifié par test direct : succès
+ * instantané hors Render, échec systématique par timeout depuis Render).
+ * Bascule vers l'API HTTP Brevo (port 443, jamais bloqué), même
+ * correctif que MailService (src/modules/email/email.service.ts) —
+ * voir ce fichier pour le détail complet du diagnostic.
  *
  * GESTION DES ERREURS :
- *   - Bounce / adresse invalide → isPermanentFailure: true
- *   - Rate limit / réseau → isPermanentFailure: false (retry BullMQ)
+ *   - HTTP 400 (adresse/paramètre invalide) → isPermanentFailure: true
+ *   - Autre (réseau, 5xx, rate limit) → isPermanentFailure: false (retry BullMQ)
  * ============================================================ */
 
 import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createTransport } from 'nodemailer';
-import type { Transporter } from 'nodemailer';
 import {
   Notification, NotificationChannel, NotificationPriority,
 } from 'src/database/entities/notification/notification.entitiy';
@@ -37,13 +30,7 @@ import type { IChannelStrategy }       from '../interfaces/channel-strategy.inte
 import type { IDeliveryResult }        from '../interfaces/notification.interfaces';
 import { isDndActive }                 from '../utils/dnd.util';
 
-/** Codes d'erreur Nodemailer considérés permanents (pas de retry) */
-const PERMANENT_ERROR_CODES = new Set([
-  'EENVELOPE',      // adresse invalide
-  'bounce',
-  'invalid_email',
-  'user_not_found',
-]);
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
 @Injectable()
 export class EmailChannelStrategy implements IChannelStrategy {
@@ -51,7 +38,7 @@ export class EmailChannelStrategy implements IChannelStrategy {
   readonly channel = NotificationChannel.EMAIL;
 
   private readonly logger      = new Logger(EmailChannelStrategy.name);
-  private readonly transporter: Transporter | null;
+  private readonly apiKey:     string;
   private readonly fromAddress: string;
 
   constructor(
@@ -62,9 +49,12 @@ export class EmailChannelStrategy implements IChannelStrategy {
     @Optional()
     private readonly config?: ConfigService,
   ) {
+    this.apiKey = config?.get<string>('BREVO_API_KEY') ?? '';
     this.fromAddress =
       config?.get<string>('MAIL_FROM') ?? config?.get<string>('SMTP_FROM') ?? 'noreply@shopi.app';
-    this.transporter = this.buildTransporter();
+    if (!this.apiKey) {
+      this.logger.warn('BREVO_API_KEY non configurée — canal EMAIL désactivé');
+    }
   }
 
   canSend(pref: NotificationPreference, notif: Notification): boolean {
@@ -73,7 +63,7 @@ export class EmailChannelStrategy implements IChannelStrategy {
     const typePref = pref.preferences?.[notif.type];
     if (typePref && typePref.email === false)                           return false;
     if (!pref.notificationEmail)                                        return false;
-    if (!this.transporter)                                              return false;
+    if (!this.apiKey)                                                   return false;
     return true;
   }
 
@@ -85,13 +75,28 @@ export class EmailChannelStrategy implements IChannelStrategy {
     const start   = Date.now();
 
     try {
-      await this.transporter!.sendMail({
-        from:    this.fromAddress,
-        to:      emailTo,
-        subject: notif.title,
-        html:    this.buildHtml(notif),
-        text:    notif.body,
+      const res = await fetch(BREVO_API_URL, {
+        method:  'POST',
+        headers: {
+          accept:         'application/json',
+          'content-type': 'application/json',
+          'api-key':      this.apiKey,
+        },
+        body: JSON.stringify({
+          sender:      { name: 'Shopi', email: this.fromAddress },
+          to:          [{ email: emailTo }],
+          subject:     notif.title,
+          htmlContent: this.buildHtml(notif),
+          textContent: notif.body,
+        }),
       });
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        const err  = new Error(`HTTP ${res.status} ${res.statusText} — ${body}`) as Error & { status: number };
+        err.status = res.status;
+        throw err;
+      }
 
       this.logger.debug(
         `EMAIL sent notif=${notif.id} to=${emailTo} duration=${Date.now() - start}ms`,
@@ -104,13 +109,12 @@ export class EmailChannelStrategy implements IChannelStrategy {
         meta:       { emailUsed: emailTo },
       };
     } catch (err: any) {
-      const errorCode   = err?.code ?? err?.response?.code ?? 'EMAIL_ERROR';
-      const isPermanent = PERMANENT_ERROR_CODES.has(errorCode);
+      const errorCode   = err?.status ? `HTTP_${err.status}` : 'EMAIL_ERROR';
+      const isPermanent = err?.status === 400;
 
       this.logger.warn(
         `EMAIL failed notif=${notif.id} to=${emailTo} `
-        + `code=${errorCode} responseCode=${err?.responseCode ?? 'N/A'} `
-        + `permanent=${isPermanent} message=${err?.message ?? 'N/A'}`,
+        + `code=${errorCode} permanent=${isPermanent} message=${err?.message ?? 'N/A'}`,
       );
 
       return {
@@ -126,35 +130,6 @@ export class EmailChannelStrategy implements IChannelStrategy {
   }
 
   // ─── Helpers privés ───────────────────────────────────────
-
-  private buildTransporter(): Transporter | null {
-    const host = this.config?.get<string>('MAIL_HOST') ?? this.config?.get<string>('SMTP_HOST');
-    if (!host) {
-      this.logger.warn('MAIL_HOST/SMTP_HOST non configuré — canal EMAIL désactivé');
-      return null;
-    }
-
-    const port = this.config!.get<number>('MAIL_PORT') ?? this.config!.get<number>('SMTP_PORT', 587);
-    const user = this.config!.get<string>('MAIL_USER') ?? this.config!.get<string>('SMTP_USER', '');
-    /* Supprime les espaces dans le mot de passe App Password Gmail
-     * (les utilisateurs copient souvent "xxxx xxxx xxxx xxxx") —
-     * même correctif que MailService.send() pour les emails d'auth. */
-    const rawPass = this.config!.get<string>('MAIL_PASS') ?? this.config!.get<string>('SMTP_PASS', '');
-    const pass    = rawPass.replace(/\s/g, '');
-
-    if (!user || !pass) {
-      this.logger.warn('MAIL_USER/SMTP_USER ou MAIL_PASS/SMTP_PASS absent — canal EMAIL désactivé');
-      return null;
-    }
-
-    return createTransport({
-      host,
-      port,
-      secure: this.config!.get<boolean>('MAIL_SECURE', port === 465),
-      auth: { user, pass },
-      tls: { rejectUnauthorized: false },
-    } as any);
-  }
 
   private buildHtml(notif: Notification): string {
     const safeUrl     = this.sanitizeUrl(notif.actionUrl);

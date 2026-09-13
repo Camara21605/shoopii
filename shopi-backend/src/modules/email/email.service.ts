@@ -24,9 +24,24 @@
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
-import type { Transporter } from 'nodemailer';
 import { UserRole } from '../../common/enums/user-role.enum';
+
+/*
+ * BASCULE SMTP → API HTTP BREVO (prod) :
+ * Render (plan free) restreint/bloque les connexions sortantes sur le
+ * port SMTP 587 — vérifié par un test direct (échec systématique, timeout,
+ * alors que le même envoi réussit instantanément depuis un environnement
+ * sans cette restriction). Résultat : AUCUN email ne partait jamais en
+ * production, malgré des identifiants et un domaine parfaitement
+ * configurés côté Brevo.
+ *
+ * L'API HTTP de Brevo (https://api.brevo.com/v3/smtp/email) fait un seul
+ * aller-retour HTTPS sur le port 443 — jamais bloqué par un hébergeur,
+ * contrairement au port SMTP. Nécessite une clé API dédiée
+ * (BREVO_API_KEY, format xkeysib-...), différente des identifiants SMTP
+ * (SMTP_USER/SMTP_PASS) qui ne servaient qu'au protocole SMTP.
+ */
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERFACES
@@ -161,101 +176,41 @@ function escapeHtml(s: string): string {
 @Injectable()
 export class MailService implements OnModuleInit {
   private readonly logger      = new Logger(MailService.name);
-  private readonly transporter: Transporter;
-  private readonly fromEmail:   string;
+  private readonly apiKey:     string;
+  private readonly fromEmail:  string;
   private readonly frontendUrl: string;
-  private readonly smtpUser:    string;
 
   constructor(private readonly config: ConfigService) {
-    const port   = config.get<number>('SMTP_PORT', 587);
-    const secure = port === 465;
-
-    this.smtpUser    = config.get<string>('SMTP_USER', '');
+    this.apiKey      = config.get<string>('BREVO_API_KEY', '');
     this.fromEmail   = config.get<string>('SMTP_FROM',    'noreply@shopi.gn');
     this.frontendUrl = config.get<string>('FRONTEND_URL', 'https://shopi.gn');
-
-    /* Suppression des espaces dans le mot de passe App Password Gmail
-       (les utilisateurs copient souvent "xxxx xxxx xxxx xxxx") */
-    const rawPass = config.get<string>('SMTP_PASS', '');
-    const smtpPass = rawPass.replace(/\s/g, '');
-
-    this.transporter = nodemailer.createTransport({
-      host:   config.get<string>('SMTP_HOST', 'smtp.gmail.com'),
-      port,
-      secure,
-      auth: {
-        user: this.smtpUser,
-        pass: smtpPass,
-      },
-      /*
-       * Pool de connexions : réutilise la même connexion TCP+TLS+Auth
-       * entre les emails → supprime le délai de handshake (2-3s) pour
-       * les envois successifs.
-       *
-       * maxMessages: 20  → recycle la connexion après 20 emails
-       *                    (évite que Gmail coupe une connexion trop ancienne)
-       * socketTimeout: 30s → coupe les connexions inactives proprement
-       * maxConnections: 1  → Gmail autorise 1 connexion simultanée
-       */
-      pool:           true,
-      maxConnections: 1,
-      maxMessages:    20,
-      socketTimeout:  30_000,
-      tls: {
-        rejectUnauthorized: false,
-      },
-      /*
-       * BUG CORRIGÉ (prod) : Render ne route pas l'IPv6 sortant → Gmail
-       * (smtp.gmail.com) résout parfois vers une adresse IPv6
-       * (ex: 2607:f8b0:400e:c07::6c) et la connexion échoue avec
-       * ENETUNREACH. `dns.setDefaultResultOrder('ipv4first')` dans main.ts
-       * ne suffit pas : Node ≥18 utilise Happy Eyeballs (autoSelectFamily)
-       * qui peut quand même tenter l'IPv6 en parallèle. On force IPv4 ici,
-       * comme pour la connexion Postgres (voir database.config.ts extra.family).
-       */
-      family: 4,
-    } as any);
   }
 
-  /* ── Vérification de la connexion SMTP au démarrage ───────────────────── */
+  /* ── Vérification de la clé API Brevo au démarrage ────────────────────── */
   async onModuleInit(): Promise<void> {
-    if (!this.smtpUser) {
-      this.logger.warn('[SMTP] ⚠️  SMTP_USER non configuré — emails désactivés.');
+    if (!this.apiKey) {
+      this.logger.warn('[Brevo] ⚠️  BREVO_API_KEY non configurée — emails désactivés.');
       return;
     }
     try {
-      /* BUG CORRIGÉ (prod) : transporter.verify() sans borne attend le
-       * connectionTimeout par défaut de nodemailer (2 minutes) avant
-       * d'échouer si le serveur SMTP est injoignable/lent. onModuleInit()
-       * est awaited AVANT app.listen() dans le cycle de vie NestJS — un
-       * SMTP indisponible bloquait donc le démarrage entier du backend
-       * pendant 2 minutes, largement au-delà de la fenêtre de scan de
-       * port de Render (~1 min), qui déclarait le déploiement en échec
-       * ("No open ports detected") alors que l'app aurait fini par
-       * démarrer normalement juste après. Le SMTP n'est pas critique au
-       * démarrage (voir la dégradation gracieuse déjà en place dans le
-       * catch ci-dessous) : on borne donc l'attente à 5s. */
+      /* Même principe que l'ancien check SMTP : ne jamais bloquer
+       * app.listen() plus de quelques secondes si Brevo est lent/injoignable
+       * au démarrage — voir historique de ce fichier (incident Render). */
       const VERIFY_TIMEOUT_MS = 5_000;
-      await Promise.race([
-        this.transporter.verify(),
-        new Promise((_, reject) =>
+      const res = await Promise.race([
+        fetch('https://api.brevo.com/v3/account', {
+          headers: { accept: 'application/json', 'api-key': this.apiKey },
+        }),
+        new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error(`Délai dépassé après ${VERIFY_TIMEOUT_MS}ms`)), VERIFY_TIMEOUT_MS),
         ),
       ]);
-      this.logger.log(`[SMTP] ✅ Connexion établie avec ${this.config.get('SMTP_HOST')} (${this.smtpUser})`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      this.logger.log(`[Brevo] ✅ Clé API valide (${this.fromEmail})`);
     } catch (err: any) {
-      this.logger.error(
-        `[SMTP] ❌ Connexion IMPOSSIBLE — emails ne seront pas envoyés.`,
-      );
-      this.logger.error(
-        `[SMTP] → Code : ${err.code ?? 'UNKNOWN'} | Message : ${err.message}`,
-      );
-      this.logger.error(
-        `[SMTP] → Vérifiez SMTP_HOST, SMTP_PORT, SMTP_USER et SMTP_PASS dans .env`,
-      );
-      this.logger.error(
-        `[SMTP] → Pour Gmail : utilisez un App Password (sans espaces) depuis https://myaccount.google.com/apppasswords`,
-      );
+      this.logger.error(`[Brevo] ❌ Vérification impossible — emails ne seront pas envoyés.`);
+      this.logger.error(`[Brevo] → Message : ${err.message}`);
+      this.logger.error(`[Brevo] → Vérifiez BREVO_API_KEY et SMTP_FROM`);
     }
   }
 
@@ -502,7 +457,7 @@ export class MailService implements OnModuleInit {
 
     await this.send({
       to:      toEmail,
-      from:    `"${fromName} via Shopi" <${this.fromEmail}>`,
+      fromName: `${fromName} via Shopi`,
       subject: `📩 ${sujet}`,
       html:    this.buildContactHtml({ toName, fromName, sujet, message }),
       text:    `Message de ${fromName}\n\nSujet : ${sujet}\n\n${message}\n\n---\nEnvoyé via Shopi`,
@@ -685,10 +640,8 @@ export class MailService implements OnModuleInit {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // HELPER D'ENVOI CENTRALISÉ
-  // Gère automatiquement ECONNRESET : si la connexion poolée est morte,
-  // nodemailer (pool:true) la recrée — on laisse l'erreur remonter
-  // pour qu'elle soit loguée sans crasher le handler HTTP appelant.
+  // HELPER D'ENVOI CENTRALISÉ — API HTTP Brevo (voir note en tête de fichier :
+  // remplace l'ancien envoi SMTP, bloqué par Render en sortie sur le port 587).
   // ══════════════════════════════════════════════════════════════════════════
 
   private async send(opts: {
@@ -696,31 +649,40 @@ export class MailService implements OnModuleInit {
     subject:  string;
     html:     string;
     text:     string;
-    from?:    string;
+    /** Nom affiché de l'expéditeur — l'adresse reste toujours this.fromEmail
+     *  (Brevo n'autorise l'envoi que depuis une adresse expéditeur vérifiée,
+     *  voir sendContactEmail() pour l'usage de ce champ). */
+    fromName?: string;
   }): Promise<void> {
-    const from = opts.from ?? `"Shopi" <${this.fromEmail}>`;
+    if (!this.apiKey) {
+      this.logger.warn(`[Brevo] Envoi ignoré (BREVO_API_KEY absente) → ${opts.to}`);
+      return;
+    }
     try {
-      const info = await this.transporter.sendMail({
-        from,
-        to:         opts.to,
-        replyTo:    this.fromEmail,
-        subject:    opts.subject,
-        html:       opts.html,
-        text:       opts.text,
-        /*
-         * Pas de headers "bulk" pour les emails transactionnels (invitations).
-         * - Precedence:bulk et X-Priority déclenchent les filtres spam.
-         * - List-Unsubscribe est réservé aux newsletters, pas aux invitations.
-         */
+      const res = await fetch(BREVO_API_URL, {
+        method:  'POST',
+        headers: {
+          accept:         'application/json',
+          'content-type': 'application/json',
+          'api-key':      this.apiKey,
+        },
+        body: JSON.stringify({
+          sender:      { name: opts.fromName ?? 'Shopi', email: this.fromEmail },
+          to:          [{ email: opts.to }],
+          replyTo:     { email: this.fromEmail },
+          subject:     opts.subject,
+          htmlContent: opts.html,
+          textContent: opts.text,
+        }),
       });
-      this.logger.debug(`[SMTP] ✉ Envoyé à ${opts.to} | messageId: ${info.messageId} | response: ${info.response}`);
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status} ${res.statusText} — ${body}`);
+      }
+      const info = await res.json().catch(() => ({}) as { messageId?: string });
+      this.logger.debug(`[Brevo] ✉ Envoyé à ${opts.to} | messageId: ${info.messageId ?? 'N/A'}`);
     } catch (err: any) {
-      this.logger.error(
-        `[SMTP] ❌ Échec d'envoi à ${opts.to} — code=${err.code ?? 'N/A'} `
-        + `responseCode=${err.responseCode ?? 'N/A'} response=${err.response ?? 'N/A'} `
-        + `message=${err.message}`,
-        err.stack,
-      );
+      this.logger.error(`[Brevo] ❌ Échec d'envoi à ${opts.to} — ${err.message}`, err.stack);
       throw err;
     }
   }
