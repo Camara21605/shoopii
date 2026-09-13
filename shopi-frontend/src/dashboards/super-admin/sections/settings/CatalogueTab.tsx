@@ -57,7 +57,7 @@ function ModalConfirmDel({
   onConfirm: () => void;
 }) {
   return (
-    <div className="modal-overlay" onClick={onCancel}>
+    <div className="modal-overlay open" onClick={onCancel}>
       <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
         <div className="modal-head">
           <div className="modal-title">⚠️ {title}</div>
@@ -507,7 +507,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
 
       {/* ── MODALE : Créer un type d'entreprise ── */}
       {modalType && (
-        <div className="modal-overlay" onClick={() => setModalType(false)}>
+        <div className="modal-overlay open" onClick={() => setModalType(false)}>
           <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
             <div className="modal-head">
               <div className="modal-title">🏷️ Nouveau type d'entreprise</div>
@@ -551,7 +551,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
                 <IconPicker
                   value={newTypeIcone}
                   onChange={setNewTypeIcone}
-                  groups={iconGroupsForType}
+                  groups={iconGroupsForType({ nom: newTypeNom, slug: newTypeSlug })}
                 />
               </div>
 
@@ -599,7 +599,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
 
       {/* ── MODALE : Créer une catégorie ── */}
       {modalCat && (
-        <div className="modal-overlay" onClick={() => setModalCat(false)}>
+        <div className="modal-overlay open" onClick={() => setModalCat(false)}>
           <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 460 }}>
             <div className="modal-head">
               <div className="modal-title">📂 Nouvelle catégorie</div>
@@ -642,7 +642,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
 
               <div>
                 <label className="form-label">Icône</label>
-                <IconPicker value={newCatIcone} onChange={setNewCatIcone} groups={iconGroupsForType} />
+                <IconPicker value={newCatIcone} onChange={setNewCatIcone} groups={iconGroupsForType({ nom: newCatNom, slug: newCatSlug })} />
               </div>
 
               <div>
@@ -678,7 +678,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
 
       {/* ── MODALE : Créer une sous-catégorie ── */}
       {modalSub && (
-        <div className="modal-overlay" onClick={() => { setModalSub(false); setNewSubCatId(''); }}>
+        <div className="modal-overlay open" onClick={() => { setModalSub(false); setNewSubCatId(''); }}>
           <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
             <div className="modal-head">
               <div className="modal-title">📁 Nouvelle sous-catégorie</div>

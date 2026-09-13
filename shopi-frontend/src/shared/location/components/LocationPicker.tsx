@@ -101,6 +101,15 @@ export default function LocationPicker({
   const tile = darkMode ? DARK_TILE : OSM_TILE;
 
   const [position,    setPosition]    = useState<Coordinates>(value?.coordinates ?? DEFAULT_CENTER);
+  /* BUG CORRIGÉ — sans ce booléen, le marqueur s'affichait DÉJÀ posé sur
+   * DEFAULT_CENTER (Conakry centre-ville, un point plausible en Guinée)
+   * même quand personne n'avait encore rien choisi (ex. repli GPS refusé
+   * dans LocationPermission.tsx) — un utilisateur pressé pouvait croire
+   * que sa position réelle était déjà détectée et confirmer directement,
+   * enregistrant Conakry-centre au lieu de sa vraie adresse. Le marqueur
+   * ne s'affiche désormais que si une position a RÉELLEMENT été choisie
+   * (valeur initiale fournie, ou clic/drag/recherche/GPS de l'utilisateur). */
+  const [hasSelection, setHasSelection] = useState<boolean>(!!value?.coordinates);
   const [gpsLoading,  setGpsLoading]  = useState(false);
   const [gpsPos,      setGpsPos]      = useState<Coordinates | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -110,11 +119,12 @@ export default function LocationPicker({
 
   // Sync de l'extérieur → intérieur
   useEffect(() => {
-    if (value?.coordinates) setPosition(value.coordinates);
+    if (value?.coordinates) { setPosition(value.coordinates); setHasSelection(true); }
   }, [value?.coordinates]);
 
   const handlePositionChange = useCallback(async (coords: Coordinates) => {
     setPosition(coords);
+    setHasSelection(true);
     setRevLoading(true);
     const addr = await reverseGeocode(coords.latitude, coords.longitude);
     setRevLoading(false);
@@ -209,13 +219,24 @@ export default function LocationPicker({
           <ZoomControl position="bottomright" />
           <FlyTo center={position} />
           <ClickHandler onClick={handlePositionChange} />
-          <DraggableMarker position={position} onDragEnd={handlePositionChange} />
+          {hasSelection && <DraggableMarker position={position} onDragEnd={handlePositionChange} />}
           {gpsPos && <Marker position={[gpsPos.latitude, gpsPos.longitude]} icon={GPS_ICON} />}
         </MapContainer>
+        {!hasSelection && (
+          <div style={{
+            position: 'absolute', left: 10, right: 10, bottom: 10, zIndex: 500,
+            background: 'rgba(17,17,19,.82)', color: '#fff',
+            borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 600,
+            display: 'flex', alignItems: 'center', gap: 7, pointerEvents: 'none',
+          }}>
+            <i className="fas fa-hand-pointer" />
+            Cliquez sur la carte à votre position exacte — aucun repère n'est encore posé.
+          </div>
+        )}
       </div>
 
       {/* Infos adresse */}
-      {(value?.address || revLoading) && (
+      {hasSelection && (value?.address || revLoading) && (
         <div style={{
           marginTop: 10, padding: '10px 14px',
           background: 'var(--sky-2, #f0f4ff)', borderRadius: 8,
@@ -230,13 +251,20 @@ export default function LocationPicker({
         </div>
       )}
 
-      {/* Coordonnées */}
+      {/* Coordonnées — n'affiche jamais DEFAULT_CENTER comme si c'était
+       * une vraie sélection (voir hasSelection ci-dessus). */}
       <div style={{
         marginTop: 8, display: 'flex', gap: 10,
         fontSize: 11.5, color: 'var(--t3)',
       }}>
-        <span>Lat : {position.latitude.toFixed(6)}</span>
-        <span>Lng : {position.longitude.toFixed(6)}</span>
+        {hasSelection ? (
+          <>
+            <span>Lat : {position.latitude.toFixed(6)}</span>
+            <span>Lng : {position.longitude.toFixed(6)}</span>
+          </>
+        ) : (
+          <span>Aucune position sélectionnée</span>
+        )}
       </div>
     </div>
   );

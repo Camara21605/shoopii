@@ -28,8 +28,7 @@ interface Props {
   settings:       PlatformSettings;
   set:            <K extends keyof PlatformSettings>(key: K, val: PlatformSettings[K]) => void;
   toast:          (msg: string, type?: 'success' | 'error' | 'info') => void;
-  handleSave:     () => void;        // Sauvegarde immédiate après toggle maintenance
-  settingsSaving: boolean;           // true pendant la sauvegarde globale
+  saving:         boolean;           // true pendant la sauvegarde auto en cours (voir set())
   lastSaved:      string | null;     // ISO date de la dernière sauvegarde
   onPurgeCache:   () => Promise<void>; // Appel API POST /maintenance/cache-purge
 }
@@ -116,21 +115,19 @@ export default function DangerTab({
   settings,
   set,
   toast,
-  handleSave,
-  settingsSaving,
+  saving,
   lastSaved,
   onPurgeCache,
 }: Props) {
   // Loading local pour la purge du cache (indépendant du saving global)
   const [cachePurging, setCachePurging] = useState(false);
 
-  // Toggle maintenance + sauvegarde immédiate pour que le changement soit actif
+  // Toggle maintenance — set() sauvegarde déjà automatiquement et
+  // immédiatement pour un booléen (voir SettingsSection.set()), aucun
+  // déclenchement manuel supplémentaire n'est nécessaire ici.
   const handleMaintenanceToggle = () => {
     const newVal = !settings.maintenanceMode;
     set('maintenanceMode', newVal);
-    // On déclenche la sauvegarde globale directement (le parent save après set)
-    // Délai minimal pour que le state local se mette à jour avant le save
-    setTimeout(() => handleSave(), 50);
     toast(
       newVal
         ? '🔴 Mode maintenance activé — la plateforme est hors ligne'
@@ -214,11 +211,11 @@ export default function DangerTab({
           {/* Bouton d'activation/désactivation */}
           <button
             className={settings.maintenanceMode ? 'btn-accent' : 'btn-danger'}
-            disabled={settingsSaving}
+            disabled={saving}
             onClick={handleMaintenanceToggle}
-            style={{ padding: '8px 18px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: settingsSaving ? 'not-allowed' : 'pointer' }}
+            style={{ padding: '8px 18px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}
           >
-            {settingsSaving ? '⏳ Sauvegarde…'
+            {saving ? '⏳ Sauvegarde…'
               : settings.maintenanceMode ? '🟢 Désactiver la maintenance'
               : '🔴 Activer la maintenance'}
           </button>

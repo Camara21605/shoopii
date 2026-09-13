@@ -6,21 +6,29 @@
  *        ou propose une carte interactive si l'utilisateur refuse.
  *
  * FLUX :
- *   idle → [Clic GPS] → loading → granted (carte auto)
- *                     → denied  (carte manuelle)
- *   idle → [Choisir sur carte] → manual (carte manuelle)
+ *   idle → [Clic GPS] → loading → granted (carte auto, marqueur ajustable)
+ *                     → denied  (carte manuelle — UNIQUEMENT en repli GPS)
  *
  * BUG CORRIGÉ — les boutons "Ignorer" (idle ET carte) permettaient de
  * finaliser l'inscription sans aucune localisation, alors que
  * needsLocation/STEP_FIELDS la traitent comme obligatoire. Retirés :
  * il faut confirmer une position (GPS ou pointage manuel) pour avancer.
  *
+ * BUG CORRIGÉ (2026-09-13) — l'écran initial proposait AUSSI "Choisir sur
+ * la carte" comme option équivalente au GPS : pour un particulier
+ * (client/livreur/correspondant/partenaire), sa position EST sa position
+ * actuelle, il n'y a pas de raison de lui laisser sciemment l'éviter dès
+ * le départ. Seule l'action GPS est proposée désormais ; la carte
+ * manuelle ne réapparaît que si le GPS échoue vraiment (refusé,
+ * indisponible, délai dépassé) — un repli, plus un choix.
+ *
  * UTILISÉ dans RegisterForm pour : client, delivery, partner, correspondent
  * (company utilise CompanyLocationSelect — sélection manuelle dans le
- * référentiel géo, pas une position GPS du moment).
+ * référentiel géo, une entreprise n'étant pas forcément à l'endroit où
+ * son propriétaire s'inscrit).
  * ============================================================ */
 
-import { useState, useCallback, lazy, Suspense } from 'react';
+import { useState, useCallback, useRef, useEffect, lazy, Suspense } from 'react';
 import { reverseGeocode }           from '../../../shared/location/utils/nominatim';
 import '../../../shared/location/styles/location.css';
 import type { RegistrationLocation } from '../types';
@@ -29,6 +37,19 @@ import type { LocationPickerValue }  from '../../../shared/location/components/L
 const LocationPicker = lazy(() => import('../../../shared/location/components/LocationPicker'));
 
 type PermState = 'idle' | 'loading' | 'granted' | 'denied' | 'manual' | 'done';
+
+/* BUG CORRIGÉ (précision GPS) — un seul getCurrentPosition() acceptait la
+ * TOUTE PREMIÈRE position renvoyée par le navigateur, souvent la plus
+ * grossière (triangulation Wi-Fi/IP quasi instantanée) avant qu'un
+ * meilleur relevé (Wi-Fi affiné, voire GPS matériel sur mobile) n'ait le
+ * temps d'arriver — d'où une position "réelle" mais très imprécise.
+ * watchPosition() écoute plusieurs relevés successifs et ne retient que
+ * le MEILLEUR (accuracy la plus faible), jusqu'à ce que la précision soit
+ * bonne (≤ GOOD_ACCURACY_M) ou que MAX_WATCH_MS soit écoulé — la
+ * géolocalisation à un instant T est un extremum en amélioration, pas une
+ * valeur figée, sur la plupart des puces GPS/Wi-Fi. */
+const GOOD_ACCURACY_M = 50;
+const MAX_WATCH_MS     = 15_000;
 
 interface Props {
   /** Pays par défaut pré-sélectionné (depuis indicatif téléphonique) */
@@ -45,6 +66,60 @@ export default function LocationPermission({
   const [errorMsg,    setErrorMsg]    = useState<string | null>(null);
   const [pickerValue, setPickerValue] = useState<LocationPickerValue | null>(null);
   const [detectedAddr, setDetectedAddr] = useState<RegistrationLocation | null>(null);
+  /* Précision (mètres) du MEILLEUR relevé reçu jusqu'ici pendant l'écoute
+   * — affichée en direct pour que l'utilisateur voie réellement la
+   * précision s'améliorer, plutôt qu'un simple spinner opaque. */
+  const [liveAccuracy, setLiveAccuracy] = useState<number | null>(null);
+
+  const watchIdRef  = useRef<number | null>(null);
+  const timeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bestFixRef  = useRef<{ latitude: number; longitude: number; accuracy: number } | null>(null);
+  const settledRef  = useRef(false);
+
+  const stopWatch = useCallback(() => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
+  // Coupe proprement l'écoute GPS si le composant est démonté en cours de route
+  useEffect(() => () => stopWatch(), [stopWatch]);
+
+  /* Fige le meilleur relevé reçu (ou le repli GPS le plus récent en cas de
+   * timeout sans repère "bon") et lance le geocoding inverse une seule
+   * fois, plutôt qu'à chaque mise à jour de watchPosition. */
+  const settleWithBestFix = useCallback(async () => {
+    if (settledRef.current) return;
+    const fix = bestFixRef.current;
+    if (!fix) return; // rien reçu du tout — laissé à l'appelant (timeout → erreur)
+    settledRef.current = true;
+    stopWatch();
+
+    const { latitude, longitude, accuracy } = fix;
+    const geo = await reverseGeocode(latitude, longitude);
+
+    const result: RegistrationLocation = {
+      latitude,
+      longitude,
+      locationAccuracy: accuracy,
+      gpsEnabled:       true,
+      address:    geo?.adresse    ?? geo?.displayName ?? undefined,
+      city:       geo?.ville      ?? undefined,
+      district:   geo?.commune    ?? geo?.quartier    ?? undefined,
+      region:     geo?.region     ?? undefined,
+      country:    geo?.pays       ?? undefined,
+      postalCode: geo?.codePostal ?? undefined,
+    };
+
+    setDetectedAddr(result);
+    setPickerValue({ coordinates: { latitude, longitude }, address: geo });
+    setState('granted');
+  }, [stopWatch]);
 
   /* ── Demande de permission GPS ──────────────────────────── */
   const requestGps = useCallback(() => {
@@ -56,46 +131,57 @@ export default function LocationPermission({
 
     setState('loading');
     setErrorMsg(null);
+    setLiveAccuracy(null);
+    bestFixRef.current = null;
+    settledRef.current = false;
 
-    navigator.geolocation.getCurrentPosition(
-      async pos => {
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      pos => {
         const { latitude, longitude, accuracy } = pos.coords;
-
-        // Reverse geocoding via Nominatim
-        const geo = await reverseGeocode(latitude, longitude);
-
-        const result: RegistrationLocation = {
-          latitude,
-          longitude,
-          locationAccuracy: accuracy,
-          gpsEnabled:       true,
-          address:    geo?.adresse    ?? geo?.displayName ?? undefined,
-          city:       geo?.ville      ?? undefined,
-          district:   geo?.commune    ?? geo?.quartier    ?? undefined,
-          region:     geo?.region     ?? undefined,
-          country:    geo?.pays       ?? undefined,
-          postalCode: geo?.codePostal ?? undefined,
-        };
-
-        setDetectedAddr(result);
-        setPickerValue({
-          coordinates: { latitude, longitude },
-          address:     geo,
-        });
-        setState('granted');
+        const best = bestFixRef.current;
+        /* Ne remplace le meilleur relevé que si celui-ci est vraiment
+         * meilleur (accuracy plus faible = plus précis) — un relevé
+         * ultérieur peut être PIRE (Wi-Fi qui perd un point d'accès), on
+         * ne régresse jamais volontairement. */
+        if (!best || accuracy < best.accuracy) {
+          bestFixRef.current = { latitude, longitude, accuracy };
+          setLiveAccuracy(accuracy);
+        }
+        if (accuracy <= GOOD_ACCURACY_M) settleWithBestFix();
       },
       err => {
+        if (bestFixRef.current) {
+          // Une erreur ponctuelle après avoir déjà reçu un relevé exploitable
+          // (ex. le capteur se coupe) ne doit pas jeter une position valide.
+          settleWithBestFix();
+          return;
+        }
         const messages: Record<number, string> = {
           1: 'Permission refusée. Choisissez votre position manuellement.',
           2: 'Position indisponible. Choisissez votre position manuellement.',
           3: 'Délai expiré. Choisissez votre position manuellement.',
         };
+        stopWatch();
         setErrorMsg(messages[err.code] ?? 'Erreur GPS.');
         setState('denied');
       },
-      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 0 },
+      { enableHighAccuracy: true, timeout: MAX_WATCH_MS, maximumAge: 0 },
     );
-  }, []);
+
+    /* Filet de sécurité : au-delà de MAX_WATCH_MS, on se contente du
+     * meilleur relevé obtenu jusque-là (même imparfait) plutôt que de
+     * laisser l'utilisateur bloqué indéfiniment en attente d'un relevé
+     * "parfait" qui n'arrivera peut-être jamais sur cet appareil. */
+    timeoutRef.current = setTimeout(() => {
+      if (bestFixRef.current) {
+        settleWithBestFix();
+      } else {
+        stopWatch();
+        setErrorMsg('Position indisponible. Choisissez votre position manuellement.');
+        setState('denied');
+      }
+    }, MAX_WATCH_MS);
+  }, [settleWithBestFix, stopWatch]);
 
   /* ── Confirmation de la position ────────────────────────── */
   const confirm = useCallback(() => {
@@ -161,17 +247,19 @@ export default function LocationPermission({
         </div>
         <div>
           <div style={{ fontWeight:700, fontSize:14.5, color:'var(--navy)' }}>
-            Ajoutez votre localisation
+            Localisez-moi automatiquement
           </div>
           <div style={{ fontSize:12.5, color:'var(--t2)', marginTop:3, lineHeight:1.5 }}>
             {defaultCountryName
-              ? `Pays détecté : ${defaultCountryName}. Précisez votre position pour être trouvé facilement.`
-              : 'Précisez votre position pour apparaître dans les recherches locales.'}
+              ? `Pays détecté : ${defaultCountryName}. Autorisez la géolocalisation pour être trouvé facilement, sans rien saisir.`
+              : 'Autorisez la géolocalisation pour apparaître dans les recherches locales, sans rien saisir.'}
           </div>
         </div>
       </div>
 
-      {/* Bouton GPS principal */}
+      {/* Seule action proposée — pas de choix "carte manuelle" en
+       * alternative : voir BUG CORRIGÉ (2026-09-13) en en-tête de fichier.
+       * La carte ne réapparaît qu'en repli si le GPS échoue. */}
       <button
         type="button"
         onClick={requestGps}
@@ -189,29 +277,11 @@ export default function LocationPermission({
           alignItems:   'center',
           justifyContent: 'center',
           gap:          8,
-          marginBottom: 10,
           boxShadow:    '0 3px 10px rgba(26,79,196,.3)',
         }}
       >
         <i className="fas fa-location-crosshairs" />
-        Utiliser ma position GPS
-      </button>
-
-      {/* Action secondaire — plus de bouton "Ignorer" : la localisation
-       * est désormais obligatoire pour ces rôles (voir LOCATION_ROLES /
-       * needsLocation dans RegisterForm.tsx). */}
-      <button
-        type="button"
-        onClick={() => setState('manual')}
-        style={{
-          width:'100%', padding:'9px 12px', borderRadius:9,
-          border:'1.5px solid var(--blue)', background:'transparent',
-          color:'var(--blue)', fontSize:12.5, fontWeight:600,
-          cursor:'pointer',
-        }}
-      >
-        <i className="fas fa-map-location-dot" style={{ marginRight:5 }} />
-        Choisir sur la carte
+        Autoriser la localisation
       </button>
     </div>
   );
@@ -226,8 +296,14 @@ export default function LocationPermission({
     }}>
       <i className="fas fa-location-crosshairs"
         style={{ fontSize:28, color:'var(--blue)', marginBottom:10, display:'block', animation:'spin 1.5s linear infinite' }} />
-      <div style={{ fontWeight:700, fontSize:14, color:'var(--navy)' }}>Localisation en cours…</div>
-      <div style={{ fontSize:12, color:'var(--t2)', marginTop:4 }}>Veuillez autoriser l'accès dans votre navigateur.</div>
+      <div style={{ fontWeight:700, fontSize:14, color:'var(--navy)' }}>
+        {liveAccuracy === null ? 'Localisation en cours…' : 'Amélioration de la précision…'}
+      </div>
+      <div style={{ fontSize:12, color:'var(--t2)', marginTop:4 }}>
+        {liveAccuracy === null
+          ? "Veuillez autoriser l'accès dans votre navigateur."
+          : `Précision actuelle : ± ${Math.round(liveAccuracy)} m — recherche d'un relevé plus précis…`}
+      </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -238,27 +314,47 @@ export default function LocationPermission({
     <div style={{ marginBottom: 4 }}>
 
       {/* Message contextuel */}
-      {state === 'granted' && detectedAddr && (
-        <div style={{
-          display:'flex', alignItems:'center', gap:8,
-          padding:'10px 14px', background:'#ecfdf5',
-          border:'1.5px solid #a7f3d0', borderRadius:10, marginBottom:10,
-          fontSize:12.5,
-        }}>
-          <i className="fas fa-circle-check" style={{ color:'#047857', fontSize:14 }} />
-          <div>
-            <strong style={{ color:'#065f46' }}>Position détectée</strong>
-            {detectedAddr.city && (
-              <span style={{ color:'#047857', marginLeft:6 }}>
-                {[detectedAddr.district, detectedAddr.city, detectedAddr.region].filter(Boolean).join(', ')}
-              </span>
-            )}
-            <div style={{ color:'var(--t3)', fontSize:11, marginTop:2 }}>
-              Déplacez le marqueur si nécessaire.
+      {state === 'granted' && detectedAddr && (() => {
+        /* BUG CORRIGÉ — locationAccuracy (mètres, fournie par le
+         * navigateur) était capturée mais jamais montrée : sur desktop
+         * (sans puce GPS), la position vient du Wi-Fi/IP et peut être
+         * approximative de plusieurs km sans que rien ne le signale —
+         * l'utilisateur croit alors, à tort, que "sa vraie position"
+         * n'a pas été récupérée alors que le point EST réel, juste
+         * imprécis. Avertissement explicite au-delà de 3 km, avec
+         * invitation claire à corriger sur la carte. */
+        const accuracy = detectedAddr.locationAccuracy;
+        const isImprecise = typeof accuracy === 'number' && accuracy > 3000;
+        return (
+          <div style={{
+            display:'flex', alignItems:'center', gap:8,
+            padding:'10px 14px',
+            background:   isImprecise ? '#fffbeb' : '#ecfdf5',
+            border:       `1.5px solid ${isImprecise ? '#fde68a' : '#a7f3d0'}`,
+            borderRadius: 10, marginBottom: 10, fontSize: 12.5,
+          }}>
+            <i
+              className={`fas ${isImprecise ? 'fa-triangle-exclamation' : 'fa-circle-check'}`}
+              style={{ color: isImprecise ? '#B45309' : '#047857', fontSize: 14 }}
+            />
+            <div>
+              <strong style={{ color: isImprecise ? '#92400E' : '#065f46' }}>
+                {isImprecise ? 'Position approximative' : 'Position détectée'}
+              </strong>
+              {detectedAddr.city && (
+                <span style={{ color: isImprecise ? '#92400E' : '#047857', marginLeft:6 }}>
+                  {[detectedAddr.district, detectedAddr.city, detectedAddr.region].filter(Boolean).join(', ')}
+                </span>
+              )}
+              <div style={{ color:'var(--t3)', fontSize:11, marginTop:2 }}>
+                {isImprecise
+                  ? `Précision faible (± ${Math.round(accuracy! / 1000)} km, courant sur ordinateur sans GPS) — vérifiez et déplacez le marqueur sur votre adresse exacte.`
+                  : 'Déplacez le marqueur si nécessaire.'}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {(state === 'denied' || state === 'manual') && (
         <div style={{
