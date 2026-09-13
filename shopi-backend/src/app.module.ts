@@ -142,6 +142,22 @@ import { PerformanceModule }           from './modules/performance-engine/perfor
             ...(useTls && { tls: {} }),
 
             /*
+             * BUG CORRIGÉ (prod) : Render ne route pas l'IPv6 sortant de
+             * façon fiable — déjà rencontré pour Postgres (database.config.ts
+             * extra.family) et l'ancien SMTP Gmail (main.ts). Le DNS du
+             * fournisseur Redis managé peut résoudre vers une adresse IPv6,
+             * provoquant des échecs de connexion (ECONNREFUSED/ENETUNREACH)
+             * répétés et prolongés depuis Render spécifiquement — reproduit :
+             * la même connexion réussit instantanément hors de cet
+             * environnement avec les mêmes identifiants. Node ≥18 utilise
+             * Happy Eyeballs (autoSelectFamily) qui peut quand même tenter
+             * l'IPv6 en parallèle malgré dns.setDefaultResultOrder('ipv4first')
+             * dans main.ts — on force donc IPv4 ici aussi, au niveau du
+             * driver ioredis.
+             */
+            family: 4,
+
+            /*
              * lazyConnect: true → ioredis ne tente PAS de connexion
              * immédiatement au démarrage de NestJS.
              * Évite les crashs si Redis est momentanément indisponible.
@@ -199,6 +215,10 @@ import { PerformanceModule }           from './modules/performance-engine/perfor
             port,
             ...(password && { password }),
             ...(useTls && { tls: {} }),
+            /* BUG CORRIGÉ (prod) — voir RedisModule ci-dessus pour le
+             * détail complet : Render ne route pas l'IPv6 sortant de façon
+             * fiable, on force IPv4. */
+            family: 4,
             maxRetriesPerRequest: null,    // obligatoire BullMQ v5+
             /* true : les commandes émises pendant une reconnexion
              * transitoire sont mises en buffer plutôt que de faire planter
