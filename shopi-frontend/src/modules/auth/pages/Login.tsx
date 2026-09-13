@@ -405,7 +405,16 @@ const Login: React.FC = () => {
             )}
 
             {/* Inscription */}
-            {activeTab === 'register' && !showSuccess && !showForgot && (
+            {/* BUG CORRIGÉ — cette garde ne vérifiait ni !emailVerifyPending
+             * ni !twoFaChallengeToken/!accountChoiceOptions/!sessionConfirmPending
+             * (contrairement à LoginForm juste au-dessus, qui les vérifie
+             * tous) : une fois l'inscription soumise et la vérification
+             * email requise (emailVerifyPending devient truthy sans que
+             * activeTab ni showSuccess/showForgot ne changent), le
+             * formulaire d'inscription (mot de passe, etc.) restait affiché
+             * EN MÊME TEMPS qu'EmailVerificationScreen — les deux écrans se
+             * superposaient au lieu de s'enchaîner proprement. */}
+            {activeTab === 'register' && !showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && !sessionConfirmPending && !emailVerifyPending && (
               <RegisterForm
                 data={registerData}
                 errors={registerErrors}

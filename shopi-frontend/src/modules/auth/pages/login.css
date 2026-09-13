@@ -65,9 +65,24 @@
   --sh-b:    0 8px 32px rgba(0,0,0,.25);
 
   position: relative; z-index: 1;
-  min-height: 100vh;
+  /* BUG CORRIGÉ — "page qui bouge" : min-height:100vh laisse la ligne de
+   * grille grandir librement selon le contenu (ex. selon l'étape
+   * d'inscription en cours, ou avant/après la suppression du stepper et
+   * des onglets) ; dès que .right-panel dépassait 100vh, c'est TOUTE LA
+   * PAGE qui grandissait et défilait — .bg-atm/.bg-grid (position:fixed,
+   * donc immobiles) se décalaient alors visuellement de tout le reste
+   * (logo/tagline du panneau gauche compris), qui lui scrollait avec la
+   * page. Hauteur désormais FIXE (jamais plus grande que l'écran) via
+   * grid-template-rows: minmax(0,1fr) — .right-panel garde déjà
+   * overflow-y:auto (voir plus bas) : seul CE panneau défile en interne
+   * si son contenu est trop grand, le cadre de la page ne bouge plus,
+   * ni en desktop ni en mobile. */
+  height: 100vh;
+  height: 100dvh; /* ignore la barre d'adresse mobile qui apparaît/disparaît */
+  overflow: hidden;
   display: grid;
   grid-template-columns: 1fr 520px;
+  grid-template-rows: minmax(0, 1fr);
   background: linear-gradient(135deg, #0f172a, #020617);
 
 }
@@ -78,7 +93,16 @@
   flex-direction: column;
   justify-content: space-between;
   padding: 48px;
+  /* Filet de sécurité — voir .page : la ligne de grille est désormais
+   * bornée à la hauteur de l'écran ; si ce contenu (logo/tagline/cartes)
+   * était malgré tout trop grand à un gabarit donné, il défile ici plutôt
+   * que de faire à nouveau grandir toute la page. Scrollbar masquée, même
+   * raison que .right-panel : le défilement reste actif. */
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.left-panel::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
 /* Logo */
 .logo {
@@ -205,12 +229,26 @@
 .right-panel {
   background: var(--white);
   display: flex; flex-direction: column;
-  justify-content: center; align-items: center;
+  /* CONFIRMÉ PAR L'UTILISATEUR : "centré" et "ne bouge jamais de haut en
+   * bas" sont incompatibles — centrer un bloc verticalement recalcule sa
+   * position à chaque changement de hauteur (Connexion ↔ Inscription,
+   * étape courte ↔ étape longue, écran de vérification email…), donc TOUT
+   * centrage (même "safe center") fait strictement remonter/descendre le
+   * formulaire selon sa hauteur du moment. Priorité explicite donnée à
+   * "ne bouge pas" : ancré en haut (flex-start), position Y strictement
+   * identique quel que soit le contenu affiché — plus aucun mouvement
+   * vertical, dans aucun cas. */
+  justify-content: flex-start; align-items: center;
   padding: 48px 52px;
   position: relative;
   overflow: hidden;
   overflow-y: auto;
+  /* Scrollbar native masquée — le défilement reste actif (overflow-y:auto
+   * ci-dessus), seule la barre visuelle disparaît. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.right-panel::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .right-panel::before {
   content: '';
   position: absolute;
@@ -671,7 +709,11 @@
 @media (max-width: 900px) {
   .page { grid-template-columns: 1fr; }
   .left-panel { display: none; }
-  .right-panel { padding: 40px 28px; min-height: 100vh; }
+  /* min-height:100vh retiré — redondant et contre-productif : .page a
+   * déjà une hauteur fixe (grid-template-rows: minmax(0,1fr)), .right-panel
+   * remplit donc déjà exactement l'écran et défile en interne
+   * (overflow-y:auto) si son contenu est plus grand. */
+  .right-panel { padding: 40px 28px; }
   .form-wrap { max-width: 100%; }
 }
 @media (max-width: 480px) {

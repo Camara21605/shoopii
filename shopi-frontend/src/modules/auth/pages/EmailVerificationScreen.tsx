@@ -36,6 +36,24 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
     return () => clearTimeout(t);
   }, [cooldown]);
 
+  /* Après un code refusé, effacer les 6 cases et rendre la main sur la
+   * première plutôt que de laisser l'utilisateur supprimer chaque
+   * chiffre un par un pour ressaisir — plus rapide à corriger. */
+  useEffect(() => {
+    if (!error) return;
+    refs.current.forEach(el => { if (el) el.value = ''; });
+    setCode('');
+    refs.current[0]?.focus();
+  }, [error]);
+
+  /* Vérifie automatiquement dès que les 6 chiffres sont saisis (saisie au
+   * clavier ou collés) — évite un clic supplémentaire sur "Confirmer" pour
+   * l'usage le plus courant (code correct du premier coup). */
+  useEffect(() => {
+    if (code.length === 6 && !isLoading) onVerify(code);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code]);
+
   const handleInput = (idx: number, val: string) => {
     const char = val.replace(/\D/g, '').slice(-1);
     const el = refs.current[idx];
