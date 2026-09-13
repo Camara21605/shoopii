@@ -73,14 +73,6 @@ interface RegisterFormProps {
 
 const TOTAL_STEPS = 5;
 
-const STEP_META = [
-  { label: 'Compte'   },
-  { label: 'Identité' },
-  { label: 'Profil'   },
-  { label: 'Contact'  },
-  { label: 'Sécurité' },
-];
-
 const STEP_INFO = [
   { title: 'Votre compte',       sub: 'Choisissez votre rôle et entrez votre email'   },
   { title: 'Votre identité',     sub: 'Prénom, nom et nom de votre structure'          },
@@ -96,7 +88,14 @@ const STEP_FIELDS: Record<number, (keyof RegisterFormData)[]> = {
    * inclus inconditionnellement ici, pas besoin de connaître le rôle. */
   2: ['firstName', 'lastName', 'shopName', 'companyTypeId'],
   3: ['birthDate', 'gender'],
-  4: ['phone', 'location'],
+  /* 'location' et 'city' sont mutuellement exclusifs en pratique (voir
+   * validateRegisterField dans useLoginPage.ts) : 'location' ne s'applique
+   * que hors invitation (GPS/carte), 'city' uniquement pour un utilisateur
+   * invité par lien (lockedRole, champ "Ville d'origine" — voir
+   * needsLocation ci-dessous). Les inclure tous les deux ici est sans
+   * risque, chacun renvoie `undefined` (pas d'erreur) quand il ne
+   * s'applique pas au parcours en cours. */
+  4: ['phone', 'location', 'city'],
   5: ['password', 'confirmPassword', 'terms'],
 };
 
@@ -556,7 +555,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       )}
       {!needsLocation && (
         <div className="field-group">
-          <div className="field-label">Ville d'origine</div>
+          <div className="field-label">Ville d'origine <span style={{ color: 'var(--rose,red)' }}>*</span></div>
           {villesLoading ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--t3)', padding: '10px 4px' }}>
               <i className="fas fa-circle-notch fa-spin" style={{ color: 'var(--blue)' }} />
@@ -590,6 +589,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                 style={{ paddingLeft: 40 }}
               />
             </div>
+          )}
+          {errors.city && (
+            <p style={{ margin: '5px 0 0', fontSize: 11, color: 'var(--rose,red)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <i className="fas fa-circle-exclamation" style={{ fontSize: 10 }} />
+              {errors.city}
+            </p>
           )}
         </div>
       )}
@@ -666,25 +671,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
   return (
     <div id="registerForm">
-
-      {/* ── Indicateur d'étapes ── */}
-      <div className="stepper">
-        {STEP_META.map((sm, i) => {
-          const n   = i + 1;
-          const cls = n < step ? 'done' : n === step ? 'active' : '';
-          return (
-            <div key={n} className={`stepper-item ${cls}`}>
-              <div className="stepper-dot">
-                {n < step
-                  ? <i className="fas fa-check" style={{ fontSize: 10 }} />
-                  : n
-                }
-              </div>
-              <div className="stepper-lbl">{sm.label}</div>
-            </div>
-          );
-        })}
-      </div>
 
       {/* ── Titre de l'étape ── */}
       <div className="step-subtitle">

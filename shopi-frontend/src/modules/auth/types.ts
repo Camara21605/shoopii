@@ -232,6 +232,10 @@ export interface FormErrors {
    * longitude (auto) ou companyPaysId/companyVilleId (entreprise), pas
    * sur un champ de formulaire unique affiché individuellement. */
   location?:        string;
+  /* "Ville d'origine" — seul champ de localisation demandé à un
+   * utilisateur invité par lien (lockedRole), à la place du couple
+   * latitude/longitude (voir 'city' dans validateRegisterField). */
+  city?:            string;
 }
 
 export interface RoleConfig {

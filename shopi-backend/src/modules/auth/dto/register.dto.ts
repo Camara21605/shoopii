@@ -184,15 +184,30 @@ export class RegisterDto {
    *     chaîne de sélection Pays → Région → Préfecture → Commune
    *     (référentiel géo existant), pas une position GPS du moment —
    *     companyPaysId/companyVilleId requis à la place.
+   *
+   * BUG CORRIGÉ (2) — un utilisateur inscrit via un lien d'invitation
+   * (?role&code&email) ne voit JAMAIS l'étape GPS/carte côté frontend
+   * (RegisterForm.tsx needsLocation=false quand lockedRole est défini) :
+   * il ne renseigne qu'un champ "Ville d'origine" (city) à la place.
+   * Comme latitude/longitude étaient exigés ici pour TOUS les
+   * AUTO_LOCATION_ROLES sans exception, un partenaire/livreur/
+   * correspondant invité ne pouvait JAMAIS finaliser son inscription —
+   * le serveur rejetait systématiquement en 400 une requête qui ne
+   * pouvait par construction jamais contenir ces deux champs. Le
+   * backend n'a aucun moyen de savoir si CE rôle est actuellement "en
+   * ligne" de saisie de l'un ou l'autre (c'est une décision du seul
+   * frontend, lockedRole) : la validation accepte donc désormais l'UN
+   * OU L'AUTRE (coordonnées GPS, ou ville d'origine), peu importe lequel
+   * a effectivement été transmis — voir @ValidateIf sur `city` plus bas.
    */
-  @ValidateIf(o => AUTO_LOCATION_ROLES.includes(o.role))
+  @ValidateIf(o => AUTO_LOCATION_ROLES.includes(o.role) && !o.city?.trim())
   @IsNumber({}, { message: 'La localisation est obligatoire.' })
   @Min(-90)
   @Max(90)
   @Type(() => Number)
   latitude?: number;
 
-  @ValidateIf(o => AUTO_LOCATION_ROLES.includes(o.role))
+  @ValidateIf(o => AUTO_LOCATION_ROLES.includes(o.role) && !o.city?.trim())
   @IsNumber({}, { message: 'La localisation est obligatoire.' })
   @Min(-180)
   @Max(180)
@@ -227,8 +242,15 @@ export class RegisterDto {
   @MaxLength(500)
   address?: string;
 
-  @IsOptional()
+  /* Requis pour AUTO_LOCATION_ROLES uniquement quand aucune coordonnée GPS
+   * n'a été transmise (flux d'invitation par lien — voir le commentaire
+   * détaillé au-dessus de `latitude`) : c'est l'un OU l'autre, jamais
+   * aucun des deux. Toujours optionnel pour "company" (localisation gérée
+   * via companyPaysId/companyVilleId) et pour les rôles hors
+   * AUTO_LOCATION_ROLES. */
+  @ValidateIf(o => AUTO_LOCATION_ROLES.includes(o.role) && (o.latitude == null || o.longitude == null))
   @IsString()
+  @IsNotEmpty({ message: "Ville d'origine requise." })
   @MaxLength(100)
   city?: string;
 

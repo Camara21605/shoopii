@@ -149,7 +149,7 @@ const Login: React.FC = () => {
     // ✅ Politique d'inscription publique
     openSignup,
     codeRequiredForCompany,
-  } = useLoginPage({ initialTab: (isInvited || referralSlug) ? 'register' : 'login' });
+  } = useLoginPage({ initialTab: (isInvited || referralSlug) ? 'register' : 'login', lockedRole });
 
   /* ── Retour du callback Google OAuth ──────────────────────────────────────
      Le backend redirige vers /login?token=JWT  (succès)
@@ -367,19 +367,23 @@ const Login: React.FC = () => {
               </div>
             )}
 
-            {/* Onglets */}
-            {!showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && !sessionConfirmPending && !emailVerifyPending && (
+            {/* Onglets — masqués une fois sur Inscription : une fois qu'on
+             * crée son compte (surtout via un lien d'invitation, où l'email
+             * et le rôle sont déjà verrouillés), afficher "Connexion" comme
+             * option concurrente au même niveau que le stepper 5 étapes est
+             * redondant et donne un aspect moins soigné. Le retour vers
+             * Connexion reste possible à tout moment via "Déjà un compte ?
+             * Se connecter" en bas du formulaire (RegisterForm.tsx), donc
+             * aucune fonctionnalité n'est perdue. */}
+            {activeTab === 'login' && !showSuccess && !showForgot && !twoFaChallengeToken && !accountChoiceOptions && !sessionConfirmPending && !emailVerifyPending && (
               <div className="form-tabs">
-                <button
-                  className={`ftab${activeTab === 'login' ? ' active' : ''}`}
-                  onClick={() => switchTab('login')}
-                >
+                {/* Ce bloc n'affiche jamais que "Connexion" (voir la garde
+                 * activeTab==='login' ci-dessus) — "Inscription" n'y est
+                 * donc jamais l'onglet actif, plus besoin d'un ternaire dessus. */}
+                <button className="ftab active" onClick={() => switchTab('login')}>
                   <i className="fas fa-right-to-bracket" /> Connexion
                 </button>
-                <button
-                  className={`ftab${activeTab === 'register' ? ' active' : ''}`}
-                  onClick={() => switchTab('register')}
-                >
+                <button className="ftab" onClick={() => switchTab('register')}>
                   <i className="fas fa-user-plus" /> Inscription
                 </button>
               </div>

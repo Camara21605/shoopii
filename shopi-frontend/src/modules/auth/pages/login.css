@@ -563,66 +563,6 @@
 }
 .btn-go:hover { background: var(--navy-2); transform: translateY(-2px); box-shadow: var(--sh-b); }
 
-/* ══ STEP WIZARD ══ */
-.stepper {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
-.stepper-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-}
-.stepper-item:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 14px;
-  left: 50%;
-  right: -50%;
-  height: 2px;
-  background: var(--bdr2);
-  transition: background .35s ease;
-  z-index: 0;
-}
-.stepper-item.done:not(:last-child)::after { background: var(--t2); }
-.stepper-dot {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700;
-  background: var(--g100);
-  border: 2px solid var(--bdr2);
-  color: var(--t3);
-  position: relative; z-index: 1;
-  flex-shrink: 0;
-  transition: background .3s, border-color .3s, box-shadow .3s;
-}
-.stepper-item.active .stepper-dot {
-  background: #111113;
-  border-color: #111113;
-  color: #fff;
-  box-shadow: 0 0 0 4px rgba(0,0,0,.12);
-}
-.stepper-item.done .stepper-dot {
-  background: #111113;
-  border-color: #111113;
-  color: #fff;
-}
-.stepper-lbl {
-  font-size: 9px; font-weight: 600;
-  color: var(--t4);
-  margin-top: 5px;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: .3px;
-  line-height: 1.3;
-}
-.stepper-item.active .stepper-lbl { color: var(--t2); font-weight: 700; }
-.stepper-item.done   .stepper-lbl { color: var(--t2); }
-
 /* Step subtitle */
 .step-subtitle {
   text-align: center;

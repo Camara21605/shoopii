@@ -43,10 +43,17 @@ const ROLE_ROUTES: Record<string, string> = {
 
 interface UseLoginPageOptions {
   initialTab?: Tab;
+  /** Rôle verrouillé par un lien d'invitation (?role&code&email) — voir
+   *  Login.tsx useInviteParams/effectiveLockedRole. Quand présent, le
+   *  parcours saute la localisation GPS (RegisterForm.tsx needsLocation)
+   *  au profit d'un simple champ "Ville d'origine" : la validation doit
+   *  le savoir pour exiger le bon champ (voir 'location'/'city' dans
+   *  validateRegisterField ci-dessous). */
+  lockedRole?: UserRole | null;
 }
 
 export function useLoginPage(options: UseLoginPageOptions = {}) {
-  const { initialTab = 'login' } = options;
+  const { initialTab = 'login', lockedRole = null } = options;
 
   const navigate    = useNavigate();
   const { setUser } = useAppContext();
@@ -291,8 +298,24 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
        * : rôles hors LOCATION_ROLES (RegisterForm.tsx) et collabInvite,
        * qui rejoint une entreprise existante sans redemander sa position.
        */
+      /*
+       * BUG CORRIGÉ — un utilisateur invité par lien (?role&code&email,
+       * lockedRole) ne voit jamais l'étape GPS/carte (needsLocation=false
+       * dans RegisterForm.tsx) : à la place, un simple champ "Ville
+       * d'origine" (data.city) lui est proposé. Cette validation exigeait
+       * pourtant latitude/longitude dans TOUS les cas pour ces rôles,
+       * sans jamais tenir compte de lockedRole — un partenaire/livreur/
+       * correspondant invité ne pouvait donc JAMAIS finaliser son
+       * inscription (le champ qu'on lui montre — la ville — n'était de
+       * toute façon pas celui vérifié ici). Voir le cas 'city' juste
+       * après pour le champ réellement exigé dans ce parcours.
+       */
+      case 'city':
+        if (!lockedRole) return undefined; // hors invitation : pas de champ "Ville d'origine" affiché (voir needsLocation)
+        return !data.city?.trim() ? "Ville d'origine requise." : undefined;
+
       case 'location': {
-        if (collabInvite) return undefined;
+        if (collabInvite || lockedRole) return undefined;
         if (role === 'company') {
           return (!data.companyPaysId || !data.companyVilleId)
             ? "La localisation de l'entreprise est obligatoire."
@@ -335,7 +358,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     const fields: (keyof RegisterFormData)[] = [
       'firstName', 'lastName', 'email', 'phone',
       'password', 'confirmPassword', 'activationCode', 'terms',
-      'shopName', 'companyTypeId', 'birthDate', 'gender', 'location',
+      'shopName', 'companyTypeId', 'birthDate', 'gender', 'location', 'city',
     ];
     const errs: FormErrors = {};
     fields.forEach(field => {
