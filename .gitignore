@@ -19,6 +19,16 @@
 # Brouillons/exports logo bruts (non utilisés par le code, trop volumineux)
 /LOGO DE SHONEYA/
 
+# Android (TWA / Play Store) — la clé de signature ne doit JAMAIS être commitée :
+# la perdre ou la divulguer empêche définitivement de publier une mise à jour
+# de l'app sur le même listing Play Store. À sauvegarder ailleurs (gestionnaire
+# de mots de passe / coffre-fort), pas dans Git.
+android-twa/*.keystore
+android-twa/.gradle/
+android-twa/local.properties
+android-twa/app/build/
+android-twa/**/*.iml
+
 # VS Code
 .vscode/
 
