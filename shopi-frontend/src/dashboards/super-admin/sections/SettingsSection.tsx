@@ -143,20 +143,36 @@ export default function SettingsSection({ toast, isActive, onLogout }: Props) {
     savingRef.current = true;
     do {
       pendingRef.current = false;
-      if (dirtyKeysRef.current.size === 0) break; // rien à sauvegarder (ex: flush au démontage sans modif)
+      /* Snapshot des clés à envoyer CE tour-ci — si un nouveau set() arrive
+       * pendant l'await ci-dessous, il s'ajoute à dirtyKeysRef mais ne doit
+       * ni être inclus dans cette requête déjà partie, ni être perdu : voir
+       * les deux boucles for ci-dessous qui n'agissent que sur `keysToSend`,
+       * jamais sur dirtyKeysRef.current dans son ensemble (BUG CORRIGÉ —
+       * un .clear() global ici faisait disparaître silencieusement tout
+       * changement arrivé pendant qu'une autre sauvegarde était en vol :
+       * deux toggles cliqués rapidement → le second n'était jamais envoyé
+       * ET revenait visuellement en arrière à la réponse de la 1ère requête). */
+      const keysToSend = Array.from(dirtyKeysRef.current);
+      if (keysToSend.length === 0) break; // rien à sauvegarder (ex: flush au démontage sans modif)
       setSaveStatus('saving');
       setSaveError(null);
       try {
         const payload: Partial<PlatformSettings> = {};
-        for (const key of dirtyKeysRef.current) {
+        for (const key of keysToSend) {
           (payload as Record<string, unknown>)[key] = settingsRef.current[key];
         }
         const updated = await apiFetch<PlatformSettings>('/dashboard/super-admin/settings', {
           method: 'PATCH',
           body: payload,
         });
-        dirtyKeysRef.current.clear(); // seulement en cas de succès — un échec garde les clés pour le retry
-        setSettings(prev => ({ ...prev, ...updated }));
+        for (const key of keysToSend) dirtyKeysRef.current.delete(key);
+        setSettings(prev => {
+          const next = { ...prev, updatedAt: updated.updatedAt };
+          for (const key of keysToSend) {
+            (next as Record<string, unknown>)[key] = (updated as Record<string, unknown>)[key];
+          }
+          return next;
+        });
         setSaveStatus('saved');
       } catch (err) {
         setSaveStatus('error');
@@ -193,6 +209,21 @@ export default function SettingsSection({ toast, isActive, onLogout }: Props) {
    */
   const set = useCallback(<K extends keyof PlatformSettings>(key: K, val: PlatformSettings[K]) => {
     setSettings(prev => ({ ...prev, [key]: val }));
+    /* BUG CORRIGÉ — settingsRef n'était synchronisé que par un useEffect
+     * sur [settings], qui ne s'exécute qu'APRÈS le rendu suivant. Pour un
+     * toggle (sauvegarde immédiate, 100% synchrone : set() → scheduleSave
+     * → persistNow() dans le même tick, sans le moindre await entre les
+     * deux), persistNow() lisait donc settingsRef.current AVANT que cet
+     * effet ait eu la moindre chance de tourner — il envoyait encore
+     * l'ANCIENNE valeur du champ qu'on vient pourtant de cocher/décocher.
+     * Le serveur sauvegardait fidèlement cette ancienne valeur et la
+     * renvoyait, ce qui faisait revenir le toggle en arrière tout en
+     * affichant "sauvegardé" (la requête réussissait, juste avec la
+     * mauvaise valeur). Les champs texte/nombre (débounce 600ms) étaient
+     * épargnés : largement le temps pour React de committer et de
+     * déclencher l'effet avant l'envoi réel. Fix : on tient settingsRef
+     * à jour ICI, de façon synchrone, au lieu d'attendre l'effet. */
+    settingsRef.current = { ...settingsRef.current, [key]: val };
     // Avant la fin du chargement initial, on laisse l'UI réagir mais on
     // ne sauvegarde pas encore — évite d'écraser les vraies valeurs
     // serveur avec DEFAULT_SETTINGS si une interaction survient dans la
