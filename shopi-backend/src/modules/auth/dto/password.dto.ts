@@ -70,26 +70,6 @@ export class VerifyOtpDto {
 //    Utilise le resetToken JWT retourné par /auth/verify-otp
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 4. GOOGLE OAUTH EXCHANGE — POST /auth/google/exchange
-//    Échange le code one-time (UUID v4, 60s TTL) contre un AuthResponse
-// ─────────────────────────────────────────────────────────────────────────────
-
-export class ExchangeOAuthCodeDto {
-
-  @ApiProperty({ description: 'Code UUID v4 one-time reçu en query-param après le callback Google' })
-  @IsString()
-  @IsNotEmpty({ message: 'Le code OAuth est obligatoire.' })
-  @IsUUID(4, { message: 'Code OAuth invalide.' })
-  code: string;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 3. RESET PASSWORD — POST /auth/reset-password
-//    Étape 3 du flux "mot de passe oublié"
-//    Utilise le resetToken JWT retourné par /auth/verify-otp
-// ─────────────────────────────────────────────────────────────────────────────
-
 export class ResetPasswordDto {
 
   @ApiProperty({ description: 'Token JWT retourné par POST /auth/verify-otp (valable 15 min)' })

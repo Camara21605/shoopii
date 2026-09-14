@@ -9,6 +9,7 @@
       "suivre": "متابعة هذا الشريك"
     },
     "entreprise": {
+      "roleLabel": "شركة",
       "verifie": "موثّق",
       "villeDefault": "Conakry",
       "commandes": "الطلبات",
@@ -18,6 +19,7 @@
       "sabonner": "متابعة"
     },
     "livreur": {
+      "roleLabel": "موصّل",
       "disponible": "متاح",
       "enCourse": "في مهمة",
       "livraisons": "التوصيلات",
@@ -26,6 +28,7 @@
       "connectezVous": "سجّلوا الدخول للمتابعة"
     },
     "correspondant": {
+      "roleLabel": "مراسل",
       "typeLabel": {
         "regional": "إقليمي",
         "zonal": "منطقي",

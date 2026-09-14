@@ -3,7 +3,10 @@
  *
  * ✅ NAVIGATION URL-BASED :
  *    La page active est lue depuis l'URL (useParams) et écrite
- *    avec useNavigate. Un rafraîchissement conserve la page courante.
+ *    avec useNavigate — permet la navigation interne normale.
+ *    Un montage FRAIS du shell (rechargement du navigateur, ou
+ *    déconnexion/reconnexion) retombe toujours sur la vue d'ensemble,
+ *    voir l'effet de redirection au montage dans EntrepriseLayout.
  *
  * Exemples d'URL :
  *   /dashboard/entreprise/                       → overview
@@ -198,6 +201,17 @@ function EntrepriseLayout() {
   const { '*': splat = '' }  = useParams<{ '*': string }>();
   const navigate             = useNavigate();
   const { page, productId, viewedId } = parseSplat(splat);
+
+  /* Un montage FRAIS de ce shell (rechargement du navigateur, ou retour ici
+   * après une déconnexion/reconnexion — dans les deux cas /dashboard/entreprise/*
+   * est remonté depuis zéro) doit toujours retomber sur la vue d'ensemble,
+   * même si l'URL pointe encore sur une sous-page visitée avant. La
+   * navigation interne normale (clic sidebar/topbar) ne remonte PAS ce
+   * composant — seul un montage initial passe ici, une seule fois. */
+  useEffect(() => {
+    if (splat) navigate('/dashboard/entreprise', { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ── Permissions du user courant (propriétaire ou membre) ── */
   const { can, isOwner } = useTeamPermissions();

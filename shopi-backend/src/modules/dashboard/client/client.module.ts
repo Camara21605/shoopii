@@ -22,6 +22,9 @@ import { MailModule } from '../../email/email.module';
 /* ✅ Référentiel géographique réel — communes actives pour le filtre
  * "Zone de livraison" de LivreursClientService.getZoneCounts() */
 import { GeoModule } from '../../geo/geo.module';
+/* ✅ TwoFaService — vérifie mot de passe + code TOTP avant de désactiver
+ * la 2FA (voir SecuriteService.update2fa) */
+import { TwoFaModule } from '../../auth/twofa/twofa.module';
 
 import { User }           from '../../../database/entities/user.entity';
 import { Client }         from '../../../database/entities/profiles/client-profile.entity';
@@ -99,6 +102,7 @@ import { ClientPublicProfilService }  from './client-public-profil.service';
     SecurityAlertsModule,
     MailModule,
     GeoModule,
+    TwoFaModule,
     TypeOrmModule.forFeature([
       User,
       Client,

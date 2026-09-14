@@ -184,6 +184,10 @@ export class UpdateLivreurTwoFaDto {
   @ValidateIf(o => notEmpty(o, 'twoFaMethod'))
   @IsIn(['app', 'sms', 'email'])
   twoFaMethod?: string | null;
+
+  /* Requis pour désactiver la 2FA — voir SecuriteLivreurService.updateTwoFa(). */
+  @IsOptional() @IsString() currentPassword?: string;
+  @IsOptional() @IsString() code?:            string;
 }
 
 /* ─────────────────────────────────────────────────────────────

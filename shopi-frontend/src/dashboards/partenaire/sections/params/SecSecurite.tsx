@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import s from '../../styles/ParamsShared.module.css';
 import type { PartenaireData } from '../../hooks/usePartenaireParametres';
 import TwoFaSetupModal from '../../../../shared/components/TwoFaSetupModal';
+import DisableTwoFaModal from '../../../../shared/components/DisableTwoFaModal';
 
 interface Props {
   data:             PartenaireData | null;
@@ -18,7 +19,7 @@ interface Props {
   dirty:            () => void;
   markClean:        () => void;
   saveTrigger:      number;
-  onSaveSecurite:   (body: { twoFaEnabled: boolean; twoFaMethod?: string | null }) => Promise<void>;
+  onSaveSecurite:   (body: { twoFaEnabled: boolean; twoFaMethod?: string | null; currentPassword?: string; code?: string }) => Promise<void>;
   onChangePassword: (current: string, next: string, confirm: string) => Promise<void>;
   onLogout:         () => void;
   onToast:          (msg: string, type?: 's' | 'i' | 'w') => void;
@@ -36,6 +37,7 @@ export default function SecSecurite({
   const [twoFa,      setTwoFa]      = useState(false);
   const [twoFaMethod,setTwoFaMethod]= useState('totp');
   const [show2fa,    setShow2fa]    = useState(false);
+  const [showDisable2fa, setShowDisable2fa] = useState(false);
 
   useEffect(() => {
     if (!data) return;
@@ -86,7 +88,13 @@ export default function SecSecurite({
       setShow2fa(true);
       return;
     }
-    /* Paramètres 2FA (uniquement désactivation ou re-sauvegarde inchangée) */
+    /* Désactivation : mot de passe + code TOTP requis (voir DisableTwoFaModal)
+     * — sinon une session volée suffirait à tuer la 2FA sans le second facteur. */
+    if (!twoFa && data?.twoFaEnabled) {
+      setShowDisable2fa(true);
+      return;
+    }
+    /* Paramètres 2FA (uniquement re-sauvegarde inchangée) */
     try {
       await onSaveSecurite({ twoFaEnabled: twoFa, twoFaMethod: twoFa ? twoFaMethod : null });
       markClean();
@@ -94,6 +102,12 @@ export default function SecSecurite({
     } catch {
       onToast(t('partenaireParametres.secSecurite.toasts.error'), 'w');
     }
+  }
+
+  async function confirmDisable2fa(currentPassword: string, code: string) {
+    await onSaveSecurite({ twoFaEnabled: false, twoFaMethod: null, currentPassword, code });
+    markClean();
+    onToast(t('partenaireParametres.secSecurite.toasts.securiteSaved'), 's');
   }
 
   return (
@@ -218,6 +232,13 @@ export default function SecSecurite({
             markClean();
             onToast(t('partenaireParametres.secSecurite.toasts.twoFaEnabled'), 's');
           }}
+        />
+      )}
+
+      {showDisable2fa && (
+        <DisableTwoFaModal
+          onClose={() => setShowDisable2fa(false)}
+          onConfirm={confirmDisable2fa}
         />
       )}
     </>

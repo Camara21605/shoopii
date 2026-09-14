@@ -6,11 +6,12 @@ import { pop } from '../../components/Toast';
 import { SEC_TOGGLES, type ToggleRow as TRow } from '../../data/parametresData';
 import type { CorrespondantData } from '../../hooks/useCorrespondantParametres';
 import TwoFaSetupModal from '../../../../shared/components/TwoFaSetupModal';
+import DisableTwoFaModal from '../../../../shared/components/DisableTwoFaModal';
 
 interface Props {
   data: CorrespondantData | null; saving: boolean;
   dirty: () => void; markClean: () => void; saveTrigger: number;
-  onSave: (body: { twoFaEnabled?: boolean; twoFaMethod?: string }) => Promise<any>;
+  onSave: (body: { twoFaEnabled?: boolean; twoFaMethod?: string; currentPassword?: string; code?: string }) => Promise<any>;
   onChangePassword: (body: { currentPassword: string; newPassword: string }) => Promise<any>;
   /** Déconnexion réelle — voir "Se déconnecter" sur la carte Session. */
   onLogout: () => void;
@@ -28,6 +29,7 @@ export default function SecSecurite({ data, saving, dirty, markClean, saveTrigge
   const [secToggs, setSecToggs] = useState<TRow[]>(SEC_TOGGLES.map(t => ({ ...t })));
   const [changing, setChanging] = useState(false);
   const [show2fa,  setShow2fa]  = useState(false);
+  const [showDisable2fa, setShowDisable2fa] = useState(false);
   const str = strength(pwdNew);
 
   /* ── Init 2FA depuis API ── */
@@ -52,12 +54,24 @@ export default function SecSecurite({ data, saving, dirty, markClean, saveTrigge
       setShow2fa(true);
       return;
     }
+    /* Désactivation : mot de passe + code TOTP requis (voir DisableTwoFaModal)
+     * — sinon une session volée suffirait à tuer la 2FA sans le second facteur. */
+    if (!enabling && data?.twoFaEnabled) {
+      setShowDisable2fa(true);
+      return;
+    }
     const method = secToggs[0].checked ? 'sms' : secToggs[1].checked ? 'authenticator' : null;
     try {
       await onSave({ twoFaEnabled: enabling, twoFaMethod: method as any });
       markClean();
       pop('✅ Sécurité mise à jour', 's');
     } catch (e: any) { pop(`❌ ${e.message}`, 'e'); }
+  }
+
+  async function confirmDisable2fa(currentPassword: string, code: string) {
+    await onSave({ twoFaEnabled: false, currentPassword, code });
+    markClean();
+    pop('✅ Sécurité mise à jour', 's');
   }
 
   async function handleChangePwd() {
@@ -206,6 +220,13 @@ export default function SecSecurite({ data, saving, dirty, markClean, saveTrigge
             markClean();
             pop('🔐 2FA activée avec succès', 's');
           }}
+        />
+      )}
+
+      {showDisable2fa && (
+        <DisableTwoFaModal
+          onClose={() => setShowDisable2fa(false)}
+          onConfirm={confirmDisable2fa}
         />
       )}
     </div>

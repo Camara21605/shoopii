@@ -356,7 +356,7 @@ export class ParametresController {
   @RequiresTeamPermission('settings', 'edit')
   @Patch('securite/2fa')
   updateTwoFa(@Req() req: any, @Body() dto: UpdateTwoFaDto) {
-    return this.securiteService.updateTwoFa(req.user.actorId ?? req.user.id, dto);
+    return this.securiteService.updateTwoFa(req.user.actorId ?? req.user.id, dto, req.user.id);
   }
 
   /* ════════════════════════════════════════════════════════

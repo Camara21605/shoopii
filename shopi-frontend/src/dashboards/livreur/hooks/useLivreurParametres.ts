@@ -202,7 +202,7 @@ export function useLivreurParametres() {
   /* BUG CORRIGÉ — updateTwoFa() ne renvoie que { twoFaEnabled, message },
    * jamais un LivreurData complet — merge ciblé sur les 2 seuls champs
    * concernés plutôt que de remplacer tout `data`. */
-  const saveTwoFa = useCallback(async (b: { twoFaEnabled: boolean; twoFaMethod?: string }): Promise<void> => {
+  const saveTwoFa = useCallback(async (b: { twoFaEnabled: boolean; twoFaMethod?: string; currentPassword?: string; code?: string }): Promise<void> => {
     setSaving(true);
     try {
       const res = await apiFetch<{ twoFaEnabled: boolean; twoFaMethod?: string }>(`${BASE}/securite/2fa`, { method:'PATCH', body:b });

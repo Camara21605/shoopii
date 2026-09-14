@@ -329,7 +329,7 @@ export function useParametres() {
   // SECTION 9 — Sécurité
   // ─────────────────────────────────────────────────────────────
 
-  const save2FA = useCallback((body: { twoFaEnabled: boolean; twoFaMethod?: string }) =>
+  const save2FA = useCallback((body: { twoFaEnabled: boolean; twoFaMethod?: string; currentPassword?: string; code?: string }) =>
     patch('securite/2fa', body), [patch]);
 
   const savePassword = useCallback((body: { currentPassword: string; newPassword: string; confirmPassword: string }) =>

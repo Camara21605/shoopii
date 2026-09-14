@@ -8,6 +8,7 @@ import s from '../styles/SettingsCard.module.css';
 import { Toggle } from '../components/Toggle';
 import { settingsApi, type SecuriteData, type AlertSettings, type AlertType } from '../../api/settings.api';
 import TwoFaSetupModal from '../../../../../../shared/components/TwoFaSetupModal';
+import DisableTwoFaModal from '../../../../../../shared/components/DisableTwoFaModal';
 
 interface Props { onToast: (msg: string) => void; }
 
@@ -21,6 +22,7 @@ export default function SecuriteSection({ onToast }: Props) {
   const [generatingCodes, setGeneratingCodes] = useState(false);
   const [codes,         setCodes]         = useState<string[] | null>(null);
   const [show2faModal,  setShow2faModal]  = useState(false);
+  const [showDisable2fa, setShowDisable2fa] = useState(false);
 
   /* Alertes de sécurité — chargées depuis le backend, un seul canal
    * (email) réellement branché à un service d'envoi ; SMS/push restent
@@ -84,13 +86,12 @@ export default function SecuriteSection({ onToast }: Props) {
     finally { setSavingPwd(false); }
   }
 
-  /* ── Toggle 2FA ── */
-  async function toggle2fa(enabled: boolean) {
-    try {
-      await settingsApi.update2fa({ twoFaEnabled: enabled, twoFaMethod: enabled ? 'sms' : undefined });
-      setSecurite(prev => prev ? { ...prev, twoFaEnabled: enabled } : prev);
-      onToast(enabled ? '🔐 2FA activé avec succès' : '⚠️ 2FA désactivé');
-    } catch (err: any) { onToast(`❌ ${err.message}`); }
+  /* ── Désactiver 2FA — mot de passe + code TOTP requis (voir DisableTwoFaModal)
+   * pour qu'une session volée ne suffise pas à tuer la 2FA sans le second facteur. */
+  async function handleDisable2fa(currentPassword: string, code: string) {
+    await settingsApi.update2fa({ twoFaEnabled: false, currentPassword, code });
+    setSecurite(prev => prev ? { ...prev, twoFaEnabled: false } : prev);
+    onToast('⚠️ 2FA désactivé');
   }
 
   /* ── Sauvegarder questions ── */
@@ -203,7 +204,7 @@ export default function SecuriteSection({ onToast }: Props) {
             </span>
             <button
               className={`${s.secBtn} ${!securite?.twoFaEnabled ? s.secBtnPrim : ''}`}
-              onClick={() => securite?.twoFaEnabled ? toggle2fa(false) : setShow2faModal(true)}
+              onClick={() => securite?.twoFaEnabled ? setShowDisable2fa(true) : setShow2faModal(true)}
             >
               {securite?.twoFaEnabled ? 'Désactiver' : <><i className="fas fa-plus" /> Activer</>}
             </button>
@@ -394,6 +395,13 @@ export default function SecuriteSection({ onToast }: Props) {
             setSecurite(prev => prev ? { ...prev, twoFaEnabled: true } : prev);
             onToast('🔐 2FA activée avec succès');
           }}
+        />
+      )}
+
+      {showDisable2fa && (
+        <DisableTwoFaModal
+          onClose={() => setShowDisable2fa(false)}
+          onConfirm={handleDisable2fa}
         />
       )}
     </>

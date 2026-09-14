@@ -14,11 +14,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
+import { authenticator } from 'otplib';
 
 import { Company } from 'src/database/entities/profiles/entreprise-profile.entity';
 import { User }    from 'src/database/entities/user.entity';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import { UpdateTwoFaDto, UpdatePasswordDto } from '../dto/update-securite.dto';
+import { decryptTotpSecret } from 'src/common/utils/totp-crypto.util';
 
 @Injectable()
 export class SecuriteParametresService {
@@ -87,9 +89,19 @@ export class SecuriteParametresService {
    * n'active la 2FA qu'après un code TOTP valide. Cet endpoint ne
    * permet plus qu'une désactivation directe — l'activer sans jamais
    * vérifier un code ne protégeait rien.
+   *
+   * Désactivation : exige le mot de passe actuel ET un code TOTP valide,
+   * sinon une session volée (XSS, token dérobé) suffirait à tuer la 2FA
+   * de toute l'entreprise sans jamais posséder le second facteur. Comme
+   * pour securite/password, le mot de passe est vérifié contre LA
+   * PERSONNE qui appelle (propriétaire ou collaborateur autorisé
+   * "settings:edit"), jamais contre un compte tiers — voir callerUserId,
+   * toujours req.user.id côté controller. Le code TOTP, lui, est vérifié
+   * contre le secret partagé de l'entreprise (2FA au niveau boutique, pas
+   * personnelle à chaque collaborateur).
    * ────────────────────────────────────────────────────────── */
 
-  async updateTwoFa(userId: string, dto: UpdateTwoFaDto): Promise<Company> {
+  async updateTwoFa(userId: string, dto: UpdateTwoFaDto, callerUserId: string): Promise<Company> {
     const company = await this.findCompanyOrFail(userId);
 
     if (dto.twoFaEnabled) {
@@ -97,6 +109,24 @@ export class SecuriteParametresService {
         "Activez la 2FA via POST /auth/2fa/setup puis /auth/2fa/confirm (vérification du code requise).",
       );
     }
+    if (!dto.currentPassword || !dto.code) {
+      throw new BadRequestException('Mot de passe actuel et code de vérification requis.');
+    }
+    if (!company.twoFaSecret) {
+      throw new BadRequestException('La 2FA n\'est pas configurée sur ce compte.');
+    }
+
+    const caller = await this.userRepo.findOne({
+      where:  { id: callerUserId },
+      select: ['id', 'password'],
+    });
+    if (!caller) throw new NotFoundException('Utilisateur introuvable.');
+
+    const validPassword = await bcrypt.compare(dto.currentPassword, caller.password);
+    if (!validPassword) throw new UnauthorizedException('Mot de passe actuel incorrect.');
+
+    const validCode = authenticator.check(dto.code, decryptTotpSecret(company.twoFaSecret));
+    if (!validCode) throw new UnauthorizedException('Code de vérification incorrect.');
 
     company.twoFaEnabled = false;
     company.twoFaMethod  = null;

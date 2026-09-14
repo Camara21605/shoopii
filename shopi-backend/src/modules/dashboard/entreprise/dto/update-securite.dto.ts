@@ -18,6 +18,18 @@ export class UpdateTwoFaDto {
   @IsString()
   @IsIn(['app', 'sms', 'email'])
   twoFaMethod?: string;
+
+  /* Requis pour désactiver la 2FA — voir SecuriteParametresService.updateTwoFa().
+   * currentPassword est vérifié contre LA PERSONNE qui appelle (propriétaire
+   * ou collaborateur, jamais l'entreprise), code contre le secret TOTP
+   * partagé de l'entreprise — même principe que securite/password. */
+  @IsOptional()
+  @IsString()
+  currentPassword?: string;
+
+  @IsOptional()
+  @IsString()
+  code?: string;
 }
 
 /* ── Changement de mot de passe ── */

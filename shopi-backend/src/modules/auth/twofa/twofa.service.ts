@@ -150,10 +150,17 @@ export class TwoFaService {
   }
 
   // ══════════════════════════════════════════════════════════
-  // 3. DISABLE — désactive (mot de passe actuel requis)
+  // 3. DISABLE — désactive (mot de passe actuel + code TOTP requis)
   // ══════════════════════════════════════════════════════════
 
-  async disable(user: User, currentPassword: string): Promise<{ message: string }> {
+  /**
+   * Le mot de passe seul ne suffit plus : sinon un attaquant qui phishe
+   * le mot de passe pourrait désactiver la 2FA sans jamais posséder le
+   * second facteur, ce qui annule la protection dans exactement le
+   * scénario qu'elle est censée couvrir. Le code TOTP prouve la
+   * possession de l'authenticator, en plus du mot de passe.
+   */
+  async disable(user: User, currentPassword: string, code: string): Promise<{ message: string }> {
     const dbUser = await this.userRepo
       .createQueryBuilder('u')
       .addSelect('u.password')
@@ -161,11 +168,14 @@ export class TwoFaService {
       .getOne();
     if (!dbUser) throw new NotFoundException('Utilisateur introuvable.');
 
-    const valid = await bcrypt.compare(currentPassword, dbUser.password);
-    if (!valid) throw new UnauthorizedException('Mot de passe actuel incorrect.');
+    const validPassword = await bcrypt.compare(currentPassword, dbUser.password);
+    if (!validPassword) throw new UnauthorizedException('Mot de passe actuel incorrect.');
 
     const found = await this.loadProfile(user.role as UserRole, user.id);
-    if (!found) throw new NotFoundException('Profil introuvable.');
+    if (!found?.entity.twoFaSecret) throw new NotFoundException('Profil introuvable.');
+
+    const validCode = authenticator.check(code, decryptTotpSecret(found.entity.twoFaSecret));
+    if (!validCode) throw new UnauthorizedException('Code de vérification incorrect.');
 
     found.entity.twoFaEnabled = false;
     found.entity.twoFaMethod  = null;

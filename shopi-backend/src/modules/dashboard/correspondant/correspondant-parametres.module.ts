@@ -75,6 +75,9 @@ import { MessagerieModule } from '../../messagerie/messagerie.module';
  * pour le détail du bug corrigé (2 sessions factices affichées jusqu'ici). */
 import { SessionModule } from '../../session/session.module';
 
+/* ── TwoFaService — mot de passe + code TOTP requis pour désactiver la 2FA ── */
+import { TwoFaModule } from '../../auth/twofa/twofa.module';
+
 @Module({
   imports: [
     /*
@@ -103,6 +106,7 @@ import { SessionModule } from '../../session/session.module';
     /* PresenceService (statut en ligne des livreurs) */
     MessagerieModule,
     SessionModule,
+    TwoFaModule,
   ],
 
   controllers: [

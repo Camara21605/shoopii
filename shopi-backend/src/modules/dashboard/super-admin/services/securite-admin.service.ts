@@ -26,6 +26,7 @@ import * as bcrypt          from 'bcryptjs';
 
 import { Admin } from '../../../../database/entities/profiles/admin-profile.entity';
 import { User }  from '../../../../database/entities/user.entity';
+import { TwoFaService } from '../../../auth/twofa/twofa.service';
 
 /* Génération/vérification TOTP réelle : voir TwoFaService
  * (src/modules/auth/twofa/twofa.service.ts), qui est l'unique source
@@ -46,6 +47,7 @@ export class SecuriteAdminService {
   constructor(
     @InjectRepository(Admin) private readonly adminRepo: Repository<Admin>,
     @InjectRepository(User)  private readonly userRepo:  Repository<User>,
+    private readonly twoFaService: TwoFaService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -145,25 +147,28 @@ export class SecuriteAdminService {
    * par POST /auth/2fa/setup puis /auth/2fa/confirm (TwoFaService),
    * qui n'active la 2FA qu'après un code valide — un secret jamais
    * confirmé ne bascule plus jamais twoFaEnabled à true. Cet endpoint
-   * ne permet plus qu'une désactivation directe.
+   * ne permet plus qu'une désactivation directe, qui exige à son tour
+   * le mot de passe actuel ET un code TOTP valide (voir TwoFaService.
+   * disable) — un compte admin est la cible la plus sensible de toute
+   * la plateforme, une session volée ne doit jamais suffire à en
+   * désactiver la 2FA.
    * ────────────────────────────────────────────────────────── */
   async toggleTwoFa(
     userId: string,
-    dto: { twoFaEnabled: boolean; twoFaMethod?: string },
+    dto: { twoFaEnabled: boolean; twoFaMethod?: string; currentPassword?: string; code?: string },
   ) {
-    const admin = await this.adminRepo.findOne({ where: { userId } });
-    if (!admin) throw new NotFoundException('Profil administrateur introuvable.');
-
     if (dto.twoFaEnabled) {
       throw new BadRequestException(
         "Activez la 2FA via POST /auth/2fa/setup puis /auth/2fa/confirm (vérification du code requise).",
       );
     }
+    if (!dto.currentPassword || !dto.code) {
+      throw new BadRequestException('Mot de passe actuel et code de vérification requis.');
+    }
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Utilisateur introuvable.');
 
-    admin.twoFaEnabled = false;
-    admin.twoFaMethod  = null;
-    admin.twoFaSecret  = null;
-    await this.adminRepo.save(admin);
+    await this.twoFaService.disable(user, dto.currentPassword, dto.code);
 
     this.logger.log(`[2FA] Désactivée — adminUserId=${userId}`);
     return { twoFaEnabled: false, message: '2FA désactivée.' };

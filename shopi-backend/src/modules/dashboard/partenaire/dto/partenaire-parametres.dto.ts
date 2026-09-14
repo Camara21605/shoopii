@@ -114,6 +114,10 @@ export class UpdatePartenaireTwoFaDto {
   @ApiPropertyOptional({ example: 'sms', enum: ['sms', 'app', 'email'] })
   @IsOptional() @IsString() @IsIn(['sms', 'app', 'email'])
   twoFaMethod?: string;
+
+  /* Requis pour désactiver la 2FA — voir SecuritePartenaireService.updateTwoFa(). */
+  @IsOptional() @IsString() currentPassword?: string;
+  @IsOptional() @IsString() code?:            string;
 }
 
 /* ──────────────────────────────────────────────────────────────

@@ -9,6 +9,7 @@
       "suivre": "Suivre ce partenaire"
     },
     "entreprise": {
+      "roleLabel": "Entreprise",
       "verifie": "Vérifié",
       "villeDefault": "Conakry",
       "commandes": "Commandes",
@@ -18,6 +19,7 @@
       "sabonner": "S'abonner"
     },
     "livreur": {
+      "roleLabel": "Livreur",
       "disponible": "Disponible",
       "enCourse": "En course",
       "livraisons": "Livraisons",
@@ -26,6 +28,7 @@
       "connectezVous": "Connectez-vous pour suivre"
     },
     "correspondant": {
+      "roleLabel": "Correspondant",
       "typeLabel": {
         "regional": "Régional",
         "zonal": "Zonal",

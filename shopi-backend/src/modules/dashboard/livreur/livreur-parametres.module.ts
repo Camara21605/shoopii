@@ -25,6 +25,10 @@ import { UploadModule }   from 'src/modules/upload/upload.module';
  * pour le détail du bug corrigé (2 sessions factices affichées jusqu'ici). */
 import { SessionModule } from 'src/modules/session/session.module';
 
+/* ── Fournit TwoFaService — mot de passe + code TOTP requis pour désactiver
+ * la 2FA, voir SecuriteLivreurService.updateTwoFa() ── */
+import { TwoFaModule } from 'src/modules/auth/twofa/twofa.module';
+
 /* ── Controller ── */
 import { LivreurParametresController } from './livreur-parametres.controller';
 
@@ -48,6 +52,7 @@ import { DangerLivreurService }   from './services/danger-livreur.service';
     ]),
     UploadModule, // Cloudinary (photo + documents)
     SessionModule,
+    TwoFaModule,
   ],
 
   controllers: [

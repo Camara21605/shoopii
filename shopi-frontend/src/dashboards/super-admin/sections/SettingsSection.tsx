@@ -95,6 +95,16 @@ export default function SettingsSection({ toast, isActive, onLogout }: Props) {
   const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savingRef    = useRef(false);      // requête PATCH en vol
   const pendingRef   = useRef(false);      // un nouveau save est dû dès la fin du courant
+  /* Clés réellement modifiées par set() depuis la dernière sauvegarde
+   * réussie — voir le commentaire détaillé sur persistNow() : sans ça,
+   * ce composant PATCHait l'objet settings ENTIER à chaque frappe, y
+   * compris des champs qu'il n'affiche/ne modifie jamais (ex: les 10
+   * ratios de commission, gérés exclusivement par CommissionsSection),
+   * simplement parce que le GET initial les avait chargés dans l'état
+   * local. Un toggle changé ici renvoyait alors une vieille valeur de
+   * ratio (parfois 0/0/0) et déclenchait à tort la validation "somme
+   * des ratios = 100 %" côté backend. */
+  const dirtyKeysRef = useRef(new Set<keyof PlatformSettings>());
 
   /* ─────────────────────────────────────────────────────────────
    * CHARGEMENT au montage et à chaque fois que la section devient active
@@ -119,6 +129,9 @@ export default function SettingsSection({ toast, isActive, onLogout }: Props) {
 
   /* ─────────────────────────────────────────────────────────────
    * SAUVEGARDE — PATCH /dashboard/super-admin/settings
+   * N'envoie QUE les clés marquées "dirty" par set() (voir dirtyKeysRef
+   * ci-dessus) — jamais l'objet settings entier, pour ne jamais
+   * réexpédier des champs que cet écran n'a pas touchés.
    * Coalescée : une seule requête en vol à la fois (voir pendingRef).
    * Boucle plutôt que récursion (persistNow s'appelant elle-même) —
    * une fonction auto-référencée dans un useCallback empêche React
@@ -130,16 +143,19 @@ export default function SettingsSection({ toast, isActive, onLogout }: Props) {
     savingRef.current = true;
     do {
       pendingRef.current = false;
+      if (dirtyKeysRef.current.size === 0) break; // rien à sauvegarder (ex: flush au démontage sans modif)
       setSaveStatus('saving');
       setSaveError(null);
       try {
-        // On exclut id, updatedAt et apiKey — champs en lecture seule
-        const { id, updatedAt, apiKey, ...payload } = settingsRef.current;
-        void id; void updatedAt; void apiKey;
+        const payload: Partial<PlatformSettings> = {};
+        for (const key of dirtyKeysRef.current) {
+          (payload as Record<string, unknown>)[key] = settingsRef.current[key];
+        }
         const updated = await apiFetch<PlatformSettings>('/dashboard/super-admin/settings', {
           method: 'PATCH',
           body: payload,
         });
+        dirtyKeysRef.current.clear(); // seulement en cas de succès — un échec garde les clés pour le retry
         setSettings(prev => ({ ...prev, ...updated }));
         setSaveStatus('saved');
       } catch (err) {
@@ -182,6 +198,7 @@ export default function SettingsSection({ toast, isActive, onLogout }: Props) {
     // serveur avec DEFAULT_SETTINGS si une interaction survient dans la
     // fenêtre (très courte) du tout premier chargement.
     if (!loadedRef.current) return;
+    dirtyKeysRef.current.add(key);
     scheduleSave(typeof val === 'boolean');
   }, [scheduleSave]);
 

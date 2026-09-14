@@ -24,6 +24,7 @@ import { User }          from '../../../../database/entities/user.entity';
 import { RefreshToken }  from '../../../../database/entities/refresh-token.entity';
 import { UpdateSecuriteDto, ChangePasswordDto } from '../dto/correspondant-parametres.dto';
 import { CorrespondantBaseService }             from './base.service';
+import { TwoFaService } from '../../../auth/twofa/twofa.service';
 
 @Injectable()
 export class SecuriteService extends CorrespondantBaseService {
@@ -35,6 +36,7 @@ export class SecuriteService extends CorrespondantBaseService {
     @InjectRepository(User)          userRepo: Repository<User>,
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepo: Repository<RefreshToken>,
+    private readonly twoFaService: TwoFaService,
   ) {
     super(corRepo, userRepo);
   }
@@ -43,22 +45,28 @@ export class SecuriteService extends CorrespondantBaseService {
    * Désactive la 2FA. L'activation réelle (secret + vérification TOTP)
    * passe désormais par POST /auth/2fa/setup puis /auth/2fa/confirm
    * (TwoFaService) — un secret jamais confirmé par un code valide
-   * ne peut plus activer twoFaEnabled.
+   * ne peut plus activer twoFaEnabled. La désactivation exige à son tour
+   * le mot de passe actuel ET un code TOTP valide (voir TwoFaService.disable) —
+   * sinon une session volée suffirait à tuer la 2FA sans jamais posséder
+   * le second facteur.
    */
   async updateSecurite(userId: string, dto: UpdateSecuriteDto): Promise<Correspondent> {
-    const cor = await this.findCorOrFail(userId);
+    await this.findCorOrFail(userId);
 
     if (dto.twoFaEnabled) {
       throw new BadRequestException(
         "Activez la 2FA via POST /auth/2fa/setup puis /auth/2fa/confirm (vérification du code requise).",
       );
     }
+    if (!dto.currentPassword || !dto.code) {
+      throw new BadRequestException('Mot de passe actuel et code de vérification requis.');
+    }
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('Utilisateur introuvable.');
 
-    cor.twoFaEnabled = false;
-    cor.twoFaMethod  = null;
-    cor.twoFaSecret  = null;
+    await this.twoFaService.disable(user, dto.currentPassword, dto.code);
 
-    const updated = await this.corRepo.save(cor);
+    const updated = await this.findCorOrFail(userId);
     this.logger.log(`[2FA] Désactivée — userId=${userId}`);
     return updated;
   }

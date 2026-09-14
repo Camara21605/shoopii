@@ -18,6 +18,7 @@ import { Delivery } from 'src/database/entities/profiles/livreur-profile.entity'
 import { User }     from 'src/database/entities/user.entity';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import { UpdateLivreurPasswordDto, UpdateLivreurTwoFaDto } from '../dto/livreur-parametres.dto';
+import { TwoFaService } from 'src/modules/auth/twofa/twofa.service';
 
 /* ═══════════════════════════════════════════════════════════ */
 
@@ -30,6 +31,7 @@ export class SecuriteLivreurService {
     @InjectRepository(Delivery) private readonly livreurRepo: Repository<Delivery>,
     @InjectRepository(User)     private readonly userRepo:    Repository<User>,
     @InjectRepository(RefreshToken) private readonly refreshTokenRepo: Repository<RefreshToken>,
+    private readonly twoFaService: TwoFaService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -85,18 +87,21 @@ export class SecuriteLivreurService {
    * plus qu'une désactivation directe.
    * ────────────────────────────────────────────────────────── */
   async updateTwoFa(userId: string, dto: UpdateLivreurTwoFaDto) {
-    const livreur = await this.findOrFail(userId);
-
     if (dto.twoFaEnabled) {
       throw new BadRequestException(
         "Activez la 2FA via POST /auth/2fa/setup puis /auth/2fa/confirm (vérification du code requise).",
       );
     }
+    /* Mot de passe + code TOTP requis — sinon une session volée (XSS,
+     * token dérobé) suffirait à désactiver la 2FA sans jamais posséder
+     * le second facteur, ce qui annule sa protection. */
+    if (!dto.currentPassword || !dto.code) {
+      throw new BadRequestException('Mot de passe actuel et code de vérification requis.');
+    }
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Utilisateur introuvable.');
 
-    livreur.twoFaEnabled = false;
-    livreur.twoFaMethod  = null;
-    livreur.twoFaSecret  = null;
-    await this.livreurRepo.save(livreur);
+    await this.twoFaService.disable(user, dto.currentPassword, dto.code);
     this.logger.log(`[2FA] Désactivée — userId=${userId}`);
     return { twoFaEnabled: false, message: '2FA désactivée avec succès.' };
   }

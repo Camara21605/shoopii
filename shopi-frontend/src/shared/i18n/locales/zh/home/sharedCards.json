@@ -9,6 +9,7 @@
       "suivre": "关注该合作伙伴"
     },
     "entreprise": {
+      "roleLabel": "企业",
       "verifie": "已验证",
       "villeDefault": "科纳克里",
       "commandes": "订单",
@@ -18,6 +19,7 @@
       "sabonner": "关注"
     },
     "livreur": {
+      "roleLabel": "骑手",
       "disponible": "空闲",
       "enCourse": "配送中",
       "livraisons": "配送次数",
@@ -26,6 +28,7 @@
       "connectezVous": "登录后即可关注"
     },
     "correspondant": {
+      "roleLabel": "联络员",
       "typeLabel": {
         "regional": "区域级",
         "zonal": "地区级",

@@ -172,10 +172,12 @@ export class ModerationController {
    * Body : { twoFaEnabled: boolean; twoFaMethod?: 'app' | 'sms' | 'email' }
    * Quand twoFaEnabled=true + method='app' :
    *   → retourne { otpAuthUri, secret } pour générer le QR code côté frontend.
+   * Pour désactiver (twoFaEnabled: false) : currentPassword + code TOTP
+   * requis (voir SecuriteAdminService.toggleTwoFa).
    */
   @Patch('my-securite/2fa')
   async toggleMyTwoFa(
-    @Body() body: { twoFaEnabled: boolean; twoFaMethod?: string },
+    @Body() body: { twoFaEnabled: boolean; twoFaMethod?: string; currentPassword?: string; code?: string },
     @Request() req: any,
   ) {
     return this.securiteAdminService.toggleTwoFa(req.user.id, body);

@@ -26,6 +26,7 @@ import styles from '../../styles/ParametresPage.module.css';
 import type { SectionProps } from './types';
 import { apiFetch } from '../../../../shared/services/apiFetch';
 import TwoFaSetupModal from '../../../../shared/components/TwoFaSetupModal';
+import DisableTwoFaModal from '../../../../shared/components/DisableTwoFaModal';
 
 /* ── Types retournés par GET /my-securite ── */
 interface ScoreItem {
@@ -83,8 +84,8 @@ export default function SecuriteSection({ onToast }: SectionProps) {
   const [pwd, setPwd] = useState({ old: '', new1: '', new2: '' });
 
   /* ── 2FA ── */
-  const [saving2fa,    setSaving2fa]    = useState(false);
   const [show2fa,      setShow2fa]      = useState(false);
+  const [showDisable2fa, setShowDisable2fa] = useState(false);
 
   /* ── Chargement des données de sécurité ── */
   useEffect(() => {
@@ -138,7 +139,7 @@ export default function SecuriteSection({ onToast }: SectionProps) {
    * le backend pour twoFaEnabled:true. Seule la désactivation reste
    * gérée par cet endpoint.
    * ────────────────────────────────────────────────────────── */
-  async function toggleTwoFa() {
+  function toggleTwoFa() {
     if (!data) return;
 
     if (!data.twoFaEnabled) {
@@ -146,19 +147,19 @@ export default function SecuriteSection({ onToast }: SectionProps) {
       return;
     }
 
-    setSaving2fa(true);
-    try {
-      const res = await apiFetch<{ twoFaEnabled: boolean; message: string }>(
-        '/dashboard/super-admin/my-securite/2fa',
-        { method: 'PATCH', body: { twoFaEnabled: false } },
-      );
-      setData(prev => prev ? { ...prev, twoFaEnabled: res.twoFaEnabled, twoFaMethod: null } : prev);
-      onToast(res.message, 'w');
-    } catch (err: any) {
-      onToast(err.message ?? 'Erreur lors de la modification 2FA', 'w');
-    } finally {
-      setSaving2fa(false);
-    }
+    /* Désactivation : mot de passe + code TOTP requis (voir DisableTwoFaModal)
+     * — un compte admin est la cible la plus sensible de la plateforme, une
+     * session volée ne doit jamais suffire à en désactiver la 2FA. */
+    setShowDisable2fa(true);
+  }
+
+  async function confirmDisable2fa(currentPassword: string, code: string) {
+    const res = await apiFetch<{ twoFaEnabled: boolean; message: string }>(
+      '/dashboard/super-admin/my-securite/2fa',
+      { method: 'PATCH', body: { twoFaEnabled: false, currentPassword, code } },
+    );
+    setData(prev => prev ? { ...prev, twoFaEnabled: res.twoFaEnabled, twoFaMethod: null } : prev);
+    onToast(res.message, 'w');
   }
 
   /* ── Skeleton de chargement ── */
@@ -287,8 +288,7 @@ export default function SecuriteSection({ onToast }: SectionProps) {
           {/* Bascule (toggle) qui appelle l'API à chaque clic */}
           <div
             className={`${styles.sw} ${data?.twoFaEnabled ? styles.swOn : ''}`}
-            style={saving2fa ? { opacity: 0.5, pointerEvents: 'none' } : undefined}
-            onClick={() => !saving2fa && toggleTwoFa()}
+            onClick={toggleTwoFa}
           />
         </div>
 
@@ -310,6 +310,13 @@ export default function SecuriteSection({ onToast }: SectionProps) {
             setData(prev => prev ? { ...prev, twoFaEnabled: true, twoFaMethod: 'app' } : prev);
             onToast('2FA activée avec succès', 's');
           }}
+        />
+      )}
+
+      {showDisable2fa && (
+        <DisableTwoFaModal
+          onClose={() => setShowDisable2fa(false)}
+          onConfirm={confirmDisable2fa}
         />
       )}
 

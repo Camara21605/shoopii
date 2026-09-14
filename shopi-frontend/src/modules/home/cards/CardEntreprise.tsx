@@ -37,91 +37,54 @@ export default function CardEntreprise({ e, onToast, onRemoved }: Props) {
   const ds = domainStyle(e.domaine);
   const { openAuthModal, authModal } = useAuthGate();
 
-  const rating = e.averageRating > 0 ? e.averageRating.toFixed(1) : '—';
-  const orders = e.totalOrders  > 0 ? `${e.totalOrders}+` : '0';
-  const avis   = e.totalRatings > 0 ? e.totalRatings.toString() : '—';
+  const handle = [e.domaine, e.ville].filter(Boolean).join(' · ');
 
   return (
     <div className={styles.coCard} onClick={() => navigate(`/boutique/${e.id}`)} style={{ cursor: 'pointer' }}>
 
-      {/* ── Bannière colorée ── */}
+      {/* ── Badge de rôle ── */}
+      <span className={`${styles.roleBadge} ${styles.roleBadgeEntreprise}`}>
+        <i className="fas fa-store" /> {t('sharedCards.entreprise.roleLabel')}
+      </span>
+
+      {/* ── Avatar rond ── */}
       <div
-        className={styles.coBanner}
-        style={{ background: `linear-gradient(135deg, ${ds.bg}, ${ds.bg2})` }}
-      />
-
-      {/* ── Badge vérifié ── */}
-      {e.verified && (
-        <div className={styles.coVerif}>
-          <i className="fas fa-circle-check" /> {t('sharedCards.entreprise.verifie')}
-        </div>
-      )}
-
-      {/* ── Body ── */}
-      <div className={styles.coBody}>
-
-        {/* Logo débordant */}
-        <div
-          className={`${styles.coLogo} ${e.logo ? styles.coLogoImage : ''}`}
-          style={{ background: e.logo ? undefined : ds.bg }}
-        >
-          {e.logo
-            ? <img className={styles.coLogoImg} src={e.logo} alt={e.companyName} />
-            : <span className={styles.coInitials} style={{ color: ds.color }}>
-                {initials(e.companyName)}
-              </span>
-          }
-        </div>
-
-        {/* Titre + domaine */}
-        <div className={styles.coHead}>
-          <div className={styles.coName}>{e.companyName}</div>
-          {e.domaine && (
-            <span className={styles.coDom} style={{ color: ds.color, background: ds.bg }}>
-              {e.domaine}
+        className={`${styles.coLogo} ${e.logo ? styles.coLogoImage : ''}`}
+        style={{ background: e.logo ? undefined : ds.bg }}
+      >
+        {e.logo
+          ? <img className={styles.coLogoImg} src={e.logo} alt={e.companyName} />
+          : <span className={styles.coInitials} style={{ color: ds.color }}>
+              {initials(e.companyName)}
             </span>
-          )}
-        </div>
+        }
+      </div>
 
-        {/* Ville */}
-        <div className={styles.coType}>
-          <i className={`fas fa-location-dot ${styles.coTypeIcon}`} />
-          {e.ville ?? t('sharedCards.entreprise.villeDefault')}
-        </div>
-
-        {/* Description */}
-        {e.description && (
-          <div className={styles.coDesc}>{e.description}</div>
-        )}
-
-        {/* Stats */}
-        <div className={styles.coStats}>
-          <div className={styles.coStat}>
-            <span className={styles.coStatVal}>{orders}</span>
-            <span className={styles.coStatLbl}>{t('sharedCards.entreprise.commandes')}</span>
-          </div>
-          <div className={styles.coStat}>
-            <span className={styles.coStatVal}>{rating}</span>
-            <span className={styles.coStatLbl}>{t('sharedCards.entreprise.note')}</span>
-          </div>
-          <div className={styles.coStat}>
-            <span className={styles.coStatVal}>{avis}</span>
-            <span className={styles.coStatLbl}>{t('sharedCards.entreprise.avis')}</span>
-          </div>
-        </div>
-
-        {/* Bouton */}
-        <div className={`${styles.coBtns} ${styles.coBtns1}`} onClick={ev => ev.stopPropagation()}>
-          <FollowButton
-            actorType="entreprise"
-            id={e.id}
-            name={e.companyName}
-            isSuivi={e.isSuivi ?? false}
-            onToast={onToast}
-            onRequireAuth={openAuthModal}
-            onChange={next => { if (next.removed) onRemoved?.(e.id); }}
+      {/* Nom + badge vérifié */}
+      <div className={styles.coNameRow}>
+        <span className={styles.coName}>{e.companyName}</span>
+        {e.verified && (
+          <i
+            className={`fas fa-circle-check ${styles.coVerif}`}
+            title={t('sharedCards.entreprise.verifie')}
           />
-        </div>
+        )}
+      </div>
+
+      {/* Domaine · ville (façon @handle) */}
+      {handle && <div className={styles.coHandle}>{handle}</div>}
+
+      {/* Bouton */}
+      <div className={styles.coBtnWrap} onClick={ev => ev.stopPropagation()}>
+        <FollowButton
+          actorType="entreprise"
+          id={e.id}
+          name={e.companyName}
+          isSuivi={e.isSuivi ?? false}
+          onToast={onToast}
+          onRequireAuth={openAuthModal}
+          onChange={next => { if (next.removed) onRemoved?.(e.id); }}
+        />
       </div>
 
       {authModal}

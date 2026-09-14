@@ -117,7 +117,7 @@ function EntreprisesBloc({ onToast }: { onToast:(m:string)=>void }) {
 
   if (loading) return (
     <HScrollSection>
-      {[...Array(4)].map((_,i) => <SkeletonCard key={i} height={260} />)}
+      {[...Array(4)].map((_,i) => <SkeletonCard key={i} height={190} />)}
     </HScrollSection>
   );
 

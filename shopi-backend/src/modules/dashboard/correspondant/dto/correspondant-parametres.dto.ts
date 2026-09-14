@@ -245,6 +245,10 @@ export class UpdateSecuriteDto {
 
   @IsOptional() @IsEnum(TwoFaMethod)
   twoFaMethod?: TwoFaMethod;
+
+  /* Requis pour désactiver la 2FA — voir SecuriteService.updateSecurite(). */
+  @IsOptional() @IsString() currentPassword?: string;
+  @IsOptional() @IsString() code?:            string;
 }
 
 export class ChangePasswordDto {

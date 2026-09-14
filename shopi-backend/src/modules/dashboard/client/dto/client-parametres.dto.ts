@@ -68,6 +68,12 @@ export class ChangePasswordDto {
 export class UpdateSecuriteDto {
   @IsOptional() @IsBoolean() twoFaEnabled?: boolean;
   @IsOptional() @IsString()  twoFaMethod?:  string; // 'sms'|'totp'|'fido2'
+
+  /* Requis pour désactiver la 2FA — voir SecuriteService.update2fa().
+   * Optionnels dans le DTO (validés à la main dans le service) pour ne
+   * pas casser un futur appel qui ne concernerait que twoFaMethod seul. */
+  @IsOptional() @IsString() currentPassword?: string;
+  @IsOptional() @IsString() code?:            string;
 }
 
 export class QuestionSecuriteItemDto {

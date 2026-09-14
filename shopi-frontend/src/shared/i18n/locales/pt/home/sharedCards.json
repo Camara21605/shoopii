@@ -9,6 +9,7 @@
       "suivre": "Seguir este parceiro"
     },
     "entreprise": {
+      "roleLabel": "Empresa",
       "verifie": "Verificado",
       "villeDefault": "Conacri",
       "commandes": "Pedidos",
@@ -18,6 +19,7 @@
       "sabonner": "Seguir"
     },
     "livreur": {
+      "roleLabel": "Entregador",
       "disponible": "Disponível",
       "enCourse": "Em entrega",
       "livraisons": "Entregas",
@@ -26,6 +28,7 @@
       "connectezVous": "Faça login para seguir"
     },
     "correspondant": {
+      "roleLabel": "Correspondente",
       "typeLabel": {
         "regional": "Regional",
         "zonal": "Zonal",

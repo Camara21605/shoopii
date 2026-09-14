@@ -25,6 +25,14 @@ export class DisableTwoFaDto {
   @IsString()
   @IsNotEmpty({ message: 'Le mot de passe actuel est obligatoire.' })
   currentPassword: string;
+
+  @ApiProperty({ example: '482931', description: "Code TOTP actuel — preuve de possession de l'authenticator, requis en plus du mot de passe" })
+  @IsString()
+  @IsNotEmpty({ message: 'Le code de vérification est obligatoire.' })
+  @Length(6, 6, { message: 'Le code doit contenir exactement 6 chiffres.' })
+  @Matches(/^\d{6}$/, { message: 'Le code doit être composé uniquement de chiffres.' })
+  @Transform(({ value }) => (value as string).trim())
+  code: string;
 }
 
 export class VerifyTwoFaLoginDto {

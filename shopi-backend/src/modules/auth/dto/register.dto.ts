@@ -22,6 +22,7 @@ import {
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { UserRole }  from '../../../common/enums/user-role.enum';
+import { MinAgeForRole } from '../../../common/validators/min-age-for-role.validator';
 
 /* Rôles dont la localisation est détectée automatiquement (GPS, avec
  * repli sur pointage manuel carte) plutôt que choisie manuellement dans
@@ -130,6 +131,10 @@ export class RegisterDto {
   // Date de naissance (format YYYY-MM-DD)
   @IsNotEmpty({ message: 'La date de naissance est obligatoire.' })
   @IsDateString({}, { message: 'La date de naissance doit être au format YYYY-MM-DD.' })
+  /* Âge minimum différent selon le rôle choisi (livreur/entreprise/
+   * correspondant : 18 ans, partenaire : 20 ans, administrateur : 25 ans,
+   * aucune restriction pour un client) — voir MinAgeForRole. */
+  @MinAgeForRole()
   birthDate: string;
 
   // Genre

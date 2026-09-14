@@ -5,7 +5,10 @@
 //
 // ✅ NAVIGATION URL-BASED :
 //    La page active est lue depuis l'URL (useParams) et écrite avec
-//    useNavigate. Un rafraîchissement conserve la page courante.
+//    useNavigate — permet la navigation interne normale. Un montage FRAIS
+//    du shell (rechargement du navigateur, ou déconnexion/reconnexion)
+//    retombe toujours sur la vue d'ensemble (voir l'effet de redirection
+//    au montage dans LivreurApp).
 //
 // Exemples d'URL :
 //   /dashboard/livreur/                       → overview
@@ -99,6 +102,16 @@ export default function LivreurApp() {
   const { '*': splat = '' } = useParams<{ '*': string }>();
   const { page, viewedId } = parseSplat(splat);
   const isMessagesPage = page === 'messagerie';
+
+  /* Un montage FRAIS de ce shell (rechargement du navigateur, ou retour ici
+   * après une déconnexion/reconnexion) doit toujours retomber sur la vue
+   * d'ensemble, même si l'URL pointe encore sur une sous-page visitée avant.
+   * La navigation interne normale (clic sidebar/topbar) ne remonte PAS ce
+   * composant — seul un montage initial passe ici, une seule fois. */
+  useEffect(() => {
+    if (splat) routerNavigate('/dashboard/livreur', { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isOnline,    setIsOnline]    = useState(true);

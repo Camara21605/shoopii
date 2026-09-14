@@ -275,7 +275,7 @@ export function useCorrespondantParametres() {
   }, []);
 
   // ── §8 Sécurité ───────────────────────────────────────────
-  const saveSecurite = useCallback((body: { twoFaEnabled?: boolean; twoFaMethod?: string }) =>
+  const saveSecurite = useCallback((body: { twoFaEnabled?: boolean; twoFaMethod?: string; currentPassword?: string; code?: string }) =>
     doSave('/correspondant/parametres/securite', body), [doSave]);
 
   /** Vérifie User.password → met à jour User.password + User.lastPasswordChangedAt */

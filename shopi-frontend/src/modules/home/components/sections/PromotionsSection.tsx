@@ -30,7 +30,7 @@ const TYPE_BG: Record<string, string> = {
 
 /** Formate la valeur d'une promo pour l'affichage (−20%, −5 000 GNF, Livraison…). */
 function formatPct(p: PublicPromo, t: TFunction): string {
-  if (p.valueType === 'percent' && p.valeur != null) return `−${p.valeur}%`;
+  if (p.valueType === 'percent' && p.valeur != null) return `−${Number(p.valeur)}%`;
   if (p.valueType === 'fixed'   && p.valeur != null) return `−${Number(p.valeur).toLocaleString('fr-FR')} GNF`;
   if (p.type === 'free-ship') return t('home.promotions.livraison');
   return t('home.promotions.promo');

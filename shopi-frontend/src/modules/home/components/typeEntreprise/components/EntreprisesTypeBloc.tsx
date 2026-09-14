@@ -44,7 +44,7 @@ function chunk<T>(items: T[], size: number): T[][] {
 
 const SkeletonCard = () => (
   <div style={{
-    height: 260, borderRadius: 16, flexShrink: 0, width: 220,
+    height: 190, borderRadius: 20, flexShrink: 0, width: 190,
     background: 'linear-gradient(90deg,#f1f5f9 25%,#f8fafc 50%,#f1f5f9 75%)',
     backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite',
   }} />

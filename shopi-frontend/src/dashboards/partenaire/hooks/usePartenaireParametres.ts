@@ -351,7 +351,7 @@ export function usePartenaireParametres() {
   }, []);
 
   /** PATCH /dashboard/partenaire/parametres/securite/2fa */
-  const saveSecurite = (body: { twoFaEnabled: boolean; twoFaMethod?: string | null }) =>
+  const saveSecurite = (body: { twoFaEnabled: boolean; twoFaMethod?: string | null; currentPassword?: string; code?: string }) =>
     patchPartial(
       '/dashboard/partenaire/parametres/securite/2fa',
       body,

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import FormCard from '../../components/parametres/FormCard';
 import TwoFaSetupModal from '../../../../shared/components/TwoFaSetupModal';
+import DisableTwoFaModal from '../../../../shared/components/DisableTwoFaModal';
 import type { ParametresData } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
 import type { ToastType } from '../../types';
@@ -12,7 +13,7 @@ interface Props {
   saving:   boolean;
   onDirty:  () => void;
   onToast:  (m: string, t?: ToastType) => void;
-  save2FA:      (body: { twoFaEnabled: boolean; twoFaMethod?: string }) => Promise<void>;
+  save2FA:      (body: { twoFaEnabled: boolean; twoFaMethod?: string; currentPassword?: string; code?: string }) => Promise<void>;
   savePassword: (body: { currentPassword: string; newPassword: string; confirmPassword: string }) => Promise<void>;
   /** Recharge les paramètres depuis l'API — nécessaire après activation 2FA
    *  via TwoFaSetupModal, qui n'appelle pas save2FA (donc ne met pas
@@ -32,7 +33,7 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
   const [pwdStr, setPwdStr] = useState(0);
   const [savingPwd, setSavingPwd] = useState(false);
   const [show2fa, setShow2fa] = useState(false);
-  const [saving2fa, setSaving2fa] = useState(false);
+  const [showDisable2fa, setShowDisable2fa] = useState(false);
 
   function checkPwd(v: string) {
     let score = 0;
@@ -72,17 +73,12 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
 
   /* Activation 2FA : passe par POST /auth/2fa/setup + /confirm (TwoFaService),
    * qui exige un code TOTP valide avant d'activer réellement — l'ancien
-   * chemin direct (twoFaEnabled:true) est désormais rejeté côté backend. */
-  async function handleDisable2fa() {
-    setSaving2fa(true);
-    try {
-      await save2FA({ twoFaEnabled: false });
-      onToast('2FA désactivée', 'w');
-    } catch (err: any) {
-      onToast(err?.message ?? 'Erreur lors de la désactivation', 'e');
-    } finally {
-      setSaving2fa(false);
-    }
+   * chemin direct (twoFaEnabled:true) est désormais rejeté côté backend.
+   * Désactivation : exige mot de passe + code TOTP (voir DisableTwoFaModal)
+   * — sinon une session volée suffirait à tuer la 2FA sans le second facteur. */
+  async function handleDisable2fa(currentPassword: string, code: string) {
+    await save2FA({ twoFaEnabled: false, currentPassword, code });
+    onToast('2FA désactivée', 'w');
   }
 
   return (
@@ -164,13 +160,9 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
             <button
               className={s.saveBtn}
               style={{ background: 'var(--red, #DC2626)' }}
-              onClick={handleDisable2fa}
-              disabled={saving2fa}
+              onClick={() => setShowDisable2fa(true)}
             >
-              {saving2fa
-                ? <><i className="fas fa-spinner fa-spin" /> …</>
-                : <><i className="fas fa-shield-xmark" /> Désactiver la 2FA</>
-              }
+              <i className="fas fa-shield-xmark" /> Désactiver la 2FA
             </button>
           </>
         ) : (
@@ -220,6 +212,13 @@ export default function SecuriteSection({ data, saving, onDirty, onToast, save2F
         <TwoFaSetupModal
           onClose={() => setShow2fa(false)}
           onEnabled={() => { onReload(); onToast('2FA activée avec succès', 's'); }}
+        />
+      )}
+
+      {showDisable2fa && (
+        <DisableTwoFaModal
+          onClose={() => setShowDisable2fa(false)}
+          onConfirm={handleDisable2fa}
         />
       )}
     </>

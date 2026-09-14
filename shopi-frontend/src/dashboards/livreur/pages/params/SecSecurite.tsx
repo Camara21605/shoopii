@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import type { LivreurData } from '../../hooks/useLivreurParametres';
 import ps from '../../styles/ParamsShared.module.css';
 import TwoFaSetupModal from '../../../../shared/components/TwoFaSetupModal';
+import DisableTwoFaModal from '../../../../shared/components/DisableTwoFaModal';
 
 interface Props {
   data:         LivreurData | null;
@@ -14,7 +15,7 @@ interface Props {
   dirty:        () => void;
   onPop:        (m: string, t?: string) => void;
   savePassword: (b: { currentPassword: string; newPassword: string; confirmPassword: string }) => Promise<void>;
-  saveTwoFa:   (b: { twoFaEnabled: boolean; twoFaMethod?: string }) => Promise<void>;
+  saveTwoFa:   (b: { twoFaEnabled: boolean; twoFaMethod?: string; currentPassword?: string; code?: string }) => Promise<void>;
   /** Déconnexion réelle — voir "Se déconnecter" sur la carte Session. */
   onLogout:    () => void;
 }
@@ -42,6 +43,7 @@ export default function SecSecurite({ data, saving, dirty, onPop, savePassword, 
   const [twoFaOn,     setTwoFaOn]     = useState(data?.twoFaEnabled ?? false);
   const [twoFaMethod, setTwoFaMethod] = useState(data?.twoFaMethod ?? 'sms');
   const [show2fa,     setShow2fa]     = useState(false);
+  const [showDisable2fa, setShowDisable2fa] = useState(false);
   const str = pwdStrength(t, newPwd);
 
   async function handlePasswordSave() {
@@ -66,12 +68,23 @@ export default function SecSecurite({ data, saving, dirty, onPop, savePassword, 
       setShow2fa(true);
       return;
     }
+    /* Désactivation : mot de passe + code TOTP requis (voir DisableTwoFaModal)
+     * — sinon une session volée suffirait à tuer la 2FA sans le second facteur. */
+    if (!twoFaOn && data?.twoFaEnabled) {
+      setShowDisable2fa(true);
+      return;
+    }
     try {
       await saveTwoFa({ twoFaEnabled:twoFaOn, twoFaMethod:twoFaOn ? twoFaMethod : undefined });
       onPop(twoFaOn ? t('livreurSecSecurite.toasts.twoFaEnabled') : t('livreurSecSecurite.toasts.twoFaDisabled'), twoFaOn ? 's' : 'w');
     } catch (err: any) {
       onPop(err?.message ?? t('livreurSecSecurite.toasts.twoFaUpdateError'), 'e');
     }
+  }
+
+  async function confirmDisable2fa(currentPassword: string, code: string) {
+    await saveTwoFa({ twoFaEnabled: false, currentPassword, code });
+    onPop(t('livreurSecSecurite.toasts.twoFaDisabled'), 'w');
   }
 
   return (
@@ -256,6 +269,13 @@ export default function SecSecurite({ data, saving, dirty, onPop, savePassword, 
             setTwoFaMethod('app');
             onPop(t('livreurSecSecurite.toasts.twoFaEnabledModal'), 's');
           }}
+        />
+      )}
+
+      {showDisable2fa && (
+        <DisableTwoFaModal
+          onClose={() => setShowDisable2fa(false)}
+          onConfirm={confirmDisable2fa}
         />
       )}
     </div>

@@ -27,6 +27,8 @@ import { GeoQuartier }   from 'src/database/entities/geo/geo-quartier.entity';
 import { UploadModule } from 'src/modules/upload/upload.module';
 /* ── Session actuelle réelle (écran Sécurité) ── */
 import { SessionModule } from 'src/modules/session/session.module';
+/* ── TwoFaService — mot de passe + code TOTP requis pour désactiver la 2FA ── */
+import { TwoFaModule } from 'src/modules/auth/twofa/twofa.module';
 
 /* ── Controller ── */
 import { PartenaireParametresController } from './partenaire-parametres.controller';
@@ -53,6 +55,7 @@ import { DocumentsPartenaireService } from './services/documents-partenaire.serv
     ]),
     UploadModule, // Cloudinary (photo de profil)
     SessionModule, // SessionService.getSessionMeta — session actuelle réelle
+    TwoFaModule,
   ],
 
   controllers: [

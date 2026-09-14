@@ -12,9 +12,8 @@ import { AuthController }      from './auth.controller';
 import { AuthService }         from './auth.service';
 import { AccountLinkService }  from './account-link.service';
 import { JwtStrategy }         from './strategies/jwt.strategy';
-import { GoogleStrategy }      from './strategies/google.strategy';
 import { CodeCreationService } from './code-creation/code-creation.service';
-import { TwoFaService }        from './twofa/twofa.service';
+import { TwoFaModule }         from './twofa/twofa.module';
 import { MailModule }          from '../email/email.module';
 import { SessionModule }       from '../session/session.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -76,16 +75,15 @@ import { AccountLink }  from '../../database/entities/account-link.entity';
     SessionModule,
     SecurityAlertsModule,
     PerformanceModule,
+    TwoFaModule,
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
     AccountLinkService,
     JwtStrategy,
-    GoogleStrategy,
     CodeCreationService,
-    TwoFaService,
   ],
-  exports: [AuthService, JwtModule, PassportModule, TwoFaService, SessionModule],
+  exports: [AuthService, JwtModule, PassportModule, TwoFaModule, SessionModule],
 })
 export class AuthModule {}

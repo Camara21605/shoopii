@@ -3,9 +3,7 @@
  * ============================================================ */
 
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate }  from 'react-router-dom';
-import { apiFetch, tokenStorage } from '../../../shared/services/apiFetch';
-import { getRoleFromToken, getDashboardPath } from '../../../shared/services/authUtils';
+import { useSearchParams } from 'react-router-dom';
 import { authService } from '../services/authService';
 
 import { LeftPanel }      from '../components/LeftPanel';
@@ -95,8 +93,6 @@ const Login: React.FC = () => {
   const { lockedRole, prefilledCode, prefilledEmail, isInvited } = useInviteParams();
   const collabToken   = useCollabToken();
   const referralSlug  = useReferralParam();
-  const navigate      = useNavigate();
-  const [searchParams] = useSearchParams();
   const [collabInviteError, setCollabInviteError] = useState<string | null>(null);
 
   const {
@@ -150,38 +146,6 @@ const Login: React.FC = () => {
     openSignup,
     codeRequiredForCompany,
   } = useLoginPage({ initialTab: (isInvited || referralSlug) ? 'register' : 'login', lockedRole });
-
-  /* ── Retour du callback Google OAuth ──────────────────────────────────────
-     Le backend redirige vers /login?token=JWT  (succès)
-     ou                       /login?error=msg  (échec).
-     Ce useEffect doit être APRÈS useLoginPage pour avoir accès à showToast.
-  ─────────────────────────────────────────────────────────────────────────── */
-  useEffect(() => {
-    const code  = searchParams.get('code');
-    const role  = searchParams.get('role');
-    const error = searchParams.get('error');
-
-    // ?code sans ?role → callback Google OAuth (pas un lien d'invitation)
-    if (code && !role) {
-      window.history.replaceState({}, '', '/login');
-      apiFetch<{ accessToken: string }>('/auth/google/exchange', {
-        method: 'POST',
-        body: { code },
-      })
-        .then(result => {
-          tokenStorage.set(result.accessToken);
-          const userRole = getRoleFromToken();
-          navigate(getDashboardPath(userRole), { replace: true });
-        })
-        .catch(err => {
-          showToast(`❌ ${(err as any)?.message ?? 'Erreur de connexion Google'}`);
-        });
-    } else if (error) {
-      showToast(`❌ ${decodeURIComponent(error)}`);
-      window.history.replaceState({}, '', '/login');
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // ✅ Pré-remplir email + forcer le rôle au montage
   useEffect(() => {

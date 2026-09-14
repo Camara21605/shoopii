@@ -24,6 +24,44 @@ const INITIAL_REGISTER_DATA: RegisterFormData = {
   birthDate: '', gender: '',
 };
 
+/* Âge minimum à l'inscription selon le rôle choisi — doit rester
+ * synchronisé avec MIN_AGE_BY_ROLE côté backend (register.dto.ts /
+ * min-age-for-role.validator.ts), qui reste la source de vérité :
+ * ce contrôle frontend n'est qu'un retour immédiat à l'utilisateur,
+ * le serveur revalide systématiquement. Client : aucune restriction. */
+const MIN_AGE_BY_ROLE: Partial<Record<Role, number>> = {
+  client:        18,
+  delivery:      18,
+  company:       18,
+  correspondent: 18,
+  partner:       20,
+  admin:         25,
+};
+
+const ROLE_AGE_LABEL: Record<string, string> = {
+  client: 'client', delivery: 'livreur', company: 'entreprise', correspondent: 'correspondant',
+  partner: 'partenaire', admin: 'administrateur',
+};
+
+function computeAge(birthDateStr: string): number {
+  const birth = new Date(birthDateStr);
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const monthDiff = now.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+function validateMinAgeForRole(birthDateStr: string, role: Role): string | undefined {
+  const minAge = MIN_AGE_BY_ROLE[role];
+  if (!minAge) return undefined;
+  if (Number.isNaN(new Date(birthDateStr).getTime())) return undefined;
+  if (computeAge(birthDateStr) < minAge) {
+    return `Vous devez avoir au moins ${minAge} ans pour vous inscrire en tant que ${ROLE_AGE_LABEL[role]}.`;
+  }
+  return undefined;
+}
+
 const ROLE_MAP: Record<string, UserRole> = {
   admin: 'admin', entreprise: 'company', company: 'company',
   livreur: 'delivery', delivery: 'delivery',
@@ -281,7 +319,8 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
        */
       case 'birthDate':
         if (collabInvite) return undefined;
-        return !data.birthDate?.trim() ? 'Date de naissance requise.' : undefined;
+        if (!data.birthDate?.trim()) return 'Date de naissance requise.';
+        return validateMinAgeForRole(data.birthDate, role);
 
       case 'gender':
         if (collabInvite) return undefined;

@@ -59,6 +59,8 @@ import { MessagerieModule }         from '../../messagerie/messagerie.module';
 import { CallModule }               from '../../call/call.module';
 import { PerformanceModule }        from '../../performance-engine/performance.module';
 import { CommissionModule }         from '../../commission/commission.module';
+/* ── TwoFaService — mot de passe + code TOTP requis pour désactiver la 2FA ── */
+import { TwoFaModule } from '../../auth/twofa/twofa.module';
 
 @Module({
   imports: [
@@ -82,6 +84,7 @@ import { CommissionModule }         from '../../commission/commission.module';
     CallModule,         // pour CallService.endAllCallsForUser() (partie 4 — coupe les appels actifs/RINGING au bannissement)
     PerformanceModule,  // pour RedisCacheService (ReportsService — invalidation du cache signalements)
     CommissionModule,   // pour CommissionConfigService (PlatformSettingsService — resynchronise CommissionRule)
+    TwoFaModule,
   ],
 
   controllers: [

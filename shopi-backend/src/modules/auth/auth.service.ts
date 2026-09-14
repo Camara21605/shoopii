@@ -64,7 +64,6 @@ const JWT_TTL_ACCESS        = '1h';   // Access token court — refresh tokens p
 const JWT_TTL_SUPER         = '4h';   // Super admin : TTL max 4h, pas de refresh token
 const JWT_TTL_RESET         = '15m';
 const JWT_TTL_TWOFA         = '5m';   // défi 2FA — court, une seule tentative de connexion
-const OAUTH_CODE_TTL_SEC    = 60;     // Code OAuth à usage unique, expire en 60s
 const LOCKOUT_MINUTES       = 30;
 const OTP_EXPIRY_MINUTES    = 10;
 const OTP_MAX_ATTEMPTS      = 3;
@@ -1098,9 +1097,9 @@ export class AuthService implements OnModuleInit {
     /* BUG CORRIGÉ — PlatformSettings.emailVerifRequired se sauvegardait en
      * base sans jamais être appliqué : un compte jamais vérifié (créé après
      * activation de ce réglage — voir register()) se connectait normalement
-     * quel que soit user.emailVerified. Les comptes Google OAuth et invités
-     * company-team ont emailVerified=true dès leur création, ce gate ne les
-     * concerne jamais. */
+     * quel que soit user.emailVerified. Les comptes invités company-team
+     * ont emailVerified=true dès leur création, ce gate ne les concerne
+     * jamais. */
     if (!user.emailVerified) {
       const { emailVerifRequired } = await this.settingsCache.getSettings();
       if (emailVerifRequired) {
@@ -1241,8 +1240,23 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Compte inactif. Reconnectez-vous.');
     }
 
+    /* Le mot de passe a déjà remis failedLoginAttempts à 0 (voir finishLogin) —
+     * ce même compteur/verrou est réutilisé ici pour le code 2FA : sans ça,
+     * un attaquant en possession du mot de passe pourrait brute-forcer le
+     * TOTP à 6 chiffres sans aucune limite au-delà du throttle générique
+     * (10 req/min par IP, contournable en distribuant les requêtes). */
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const min = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60_000);
+      this.logEvent('login_2fa_failed', {
+        userId: user.id, email: user.email, role: user.role,
+        ipAddress: clientIp, userAgent, success: false, failureReason: `Verrouillé encore ${min} min`,
+      });
+      throw new UnauthorizedException(`Compte verrouillé. Réessayez dans ${min} minute(s).`);
+    }
+
     const valid = await this.twoFaService.verifyLoginCode(user.role as UserRole, user.id, code);
     if (!valid) {
+      await this.handleFailedLogin(user);
       this.logEvent('login_2fa_failed', {
         userId: user.id, email: user.email, role: user.role,
         ipAddress: clientIp, userAgent, success: false, failureReason: 'Code 2FA incorrect',
@@ -1250,7 +1264,12 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Code de vérification incorrect.');
     }
 
-    await this.userRepo.update(user.id, { lastLoginAt: new Date(), lastLoginIp: clientIp });
+    await this.userRepo.update(user.id, {
+      failedLoginAttempts: 0,
+      lockedUntil:         null,
+      lastLoginAt:         new Date(),
+      lastLoginIp:         clientIp,
+    });
 
     /* Défi émis par AccountLinkService.switchAccount() (payload.switchFrom
      * présent) plutôt que par un login classique : pose la grâce pour ne
@@ -1382,7 +1401,7 @@ export class AuthService implements OnModuleInit {
   private async revokeSessionAndNotify(
     userId:    string,
     sessionId: string,
-    reason:    'NEW_LOGIN' | 'USER_LOGOUT',
+    reason:    'NEW_LOGIN' | 'USER_LOGOUT' | 'TOKEN_REUSE',
   ): Promise<void> {
     await this.refreshTokenRepo.update(
       { sessionId, revoked: false },
@@ -1393,6 +1412,11 @@ export class AuthService implements OnModuleInit {
       this.notificationBroadcast.emitToSession(sessionId, 'session:revoked', {
         reason,
         message: 'Votre compte vient d\'être connecté sur un autre appareil. Pour des raisons de sécurité, cette session a été fermée.',
+      });
+    } else if (reason === 'TOKEN_REUSE') {
+      this.notificationBroadcast.emitToSession(sessionId, 'session:revoked', {
+        reason,
+        message: 'Activité suspecte détectée sur votre session. Pour votre sécurité, elle a été fermée — reconnectez-vous.',
       });
     }
     this.logger.log(`[AUTH] Session précédente ${sessionId} révoquée (${reason}) pour user=${userId}`);
@@ -1640,9 +1664,12 @@ export class AuthService implements OnModuleInit {
     if (!newPassword || newPassword.length < 8) {
       throw new BadRequestException('Le mot de passe doit faire au moins 8 caractères.');
     }
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
+    /* Doit rester alignée avec ResetPasswordDto.newPassword (password.dto.ts)
+     * — cette revalidation server-side est une seconde ligne de défense si
+     * cette méthode est un jour appelée hors du pipeline @Body() + DTO. */
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/.test(newPassword)) {
       throw new BadRequestException(
-        'Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre.',
+        'Le mot de passe doit contenir au moins : 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.',
       );
     }
 
@@ -1911,190 +1938,6 @@ export class AuthService implements OnModuleInit {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // 7. CONNEXION / INSCRIPTION VIA GOOGLE OAUTH
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Appelé après validation du token Google.
-   * - Si l'email existe déjà → connexion directe (tout rôle accepté)
-   * - Sinon → création d'un compte CLIENT automatiquement
-   * Retourne un JWT signé.
-   */
-  async googleLogin(googleUser: {
-    email: string; firstName: string; lastName: string; picture?: string | null;
-  }): Promise<string> {
-    const email = googleUser.email.toLowerCase().trim();
-
-    /* email n'est plus unique tous rôles confondus (comptes liés pro↔client).
-     * Google ne fournit qu'un email, pas de mot de passe pour désambiguïser
-     * comme en login classique — on privilégie le compte CLIENT (c'est
-     * l'identité par défaut pour l'OAuth grand public), sinon le premier
-     * trouvé. Un utilisateur avec un compte pro + client liés voulant
-     * spécifiquement se connecter en pro via Google devra utiliser le
-     * login classique ou le switch depuis "Mon espace". */
-    const matches = await this.userRepo.find({ where: { email } });
-    let user = matches.find(u => u.role === UserRole.CLIENT) ?? matches[0] ?? null;
-
-    if (user) {
-      if (user.status === UserStatus.BANNED)
-        throw new UnauthorizedException('Votre compte est banni. Contactez le support Shopi.');
-      if (user.status === UserStatus.SUSPENDED)
-        throw new UnauthorizedException('Votre compte est suspendu. Contactez l\'administrateur.');
-      user.lastLoginAt = new Date();
-      await this.userRepo.save(user);
-      return this.issueGoogleSessionJwt(user);
-    }
-
-    /* ── Nouveau compte CLIENT ── */
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      const username  = await this.generateUniqueUsername(
-        googleUser.firstName || 'User', googleUser.lastName || '',
-      );
-      const randomPwd = await bcrypt.hash(
-        crypto.randomBytes(32).toString('hex'), BCRYPT_ROUNDS,
-      );
-
-      const userEntity = this.userRepo.create({
-        firstName:      googleUser.firstName || 'Utilisateur',
-        lastName:       googleUser.lastName  || '',
-        email,
-        username,
-        password:       randomPwd,
-        role:           UserRole.CLIENT,
-        status:         UserStatus.ACTIVE,
-        emailVerified:  true,
-        profilePicture: googleUser.picture ?? null,
-        lastLoginAt:    new Date(),
-      });
-      user = await queryRunner.manager.save(User, userEntity);
-
-      await queryRunner.manager.save(Client, this.clientRepo.create({
-        userId:   user.id,
-        fullName: `${user.firstName} ${user.lastName}`.trim(),
-        status:   'active' as any,
-      }));
-
-      await queryRunner.manager.save(Wallet, this.walletRepo.create({ userId: user.id }));
-
-      await queryRunner.commitTransaction();
-
-      this.mailService.sendWelcomeEmail({
-        toEmail:  user.email,
-        firstName: user.firstName,
-        role:      user.role,
-        loginUrl:  `${getPrimaryFrontendUrl(this.config)}/login`,
-      }).catch(err =>
-        this.logger.error(`[WELCOME GOOGLE ❌] ${user!.email} | ${(err as Error).message}`),
-      );
-
-      this.logger.log(`[GOOGLE REGISTER ✅] ${user.email}`);
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
-
-    return this.issueGoogleSessionJwt(user!);
-  }
-
-  /**
-   * Démarre une session unique et signe l'access token pour un login
-   * Google — partagé entre le cas "compte existant" et "nouveau compte
-   * client" de googleLogin(). Le flow OAuth est un aller-retour de
-   * redirection (googleLogin() → Redis oauth_code → exchangeGoogleOAuthCode()),
-   * donc contrairement à issueTokensForUser() le refresh token n'est PAS
-   * émis ici : exchangeGoogleOAuthCode() le fait, en réutilisant le même
-   * sessionId lu depuis le claim `sid` de ce JWT déjà signé — pas besoin
-   * de le faire transiter autrement à travers la redirection.
-   */
-  private async issueGoogleSessionJwt(user: User): Promise<string> {
-    const actorId = await this.findProfileId(user.id, user.role as UserRole);
-    const { sessionId, previousSessionId } =
-      await this.sessionService.startSession(user.id, null, null, null);
-    if (previousSessionId) {
-      await this.revokeSessionAndNotify(user.id, previousSessionId, 'NEW_LOGIN');
-    }
-    return await this.signJwt(user, true, actorId, sessionId);
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // 8. GOOGLE OAUTH — CODE À USAGE UNIQUE (anti-JWT-in-URL)
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Génère un code aléatoire à usage unique (UUID) et stocke le JWT associé
-   * dans Redis avec une expiration de 60 secondes.
-   *
-   * Pourquoi : éviter de mettre le JWT directement dans l'URL de redirection
-   * (historique navigateur, logs serveur, header Referer).
-   * Le code court est non-sensible (aléatoire, expire en 60s, usage unique).
-   */
-  async createGoogleOAuthCode(jwt: string): Promise<string> {
-    const code = crypto.randomUUID();
-    await this.redis.setex(`oauth_code:${code}`, OAUTH_CODE_TTL_SEC, jwt);
-    return code;
-  }
-
-  /**
-   * Échange le code OAuth contre le JWT, puis détruit le code (usage unique).
-   * Lance UnauthorizedException si le code est expiré ou inexistant.
-   */
-  async exchangeGoogleOAuthCode(
-    code:      string,
-    ipAddress: string | null = null,
-    userAgent: string | null = null,
-  ): Promise<AuthServiceResult> {
-    const key = `oauth_code:${code}`;
-    const jwt = await this.redis.get(key);
-
-    if (!jwt) {
-      throw new UnauthorizedException(
-        'Code OAuth invalide ou expiré (60 secondes). Reconnectez-vous via Google.',
-      );
-    }
-
-    await this.redis.del(key);
-
-    let payload: JwtPayload;
-    try {
-      payload = this.jwtService.verify<JwtPayload>(jwt, {
-        secret: this.config.get<string>('JWT_SECRET'),
-      });
-    } catch {
-      throw new UnauthorizedException('Token OAuth invalide. Reconnectez-vous.');
-    }
-
-    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
-    if (!user) throw new NotFoundException('Compte introuvable.');
-
-    /* Le code OAuth est valable 60s (voir createGoogleOAuthCode) — fenêtre
-     * assez courte, mais une autre connexion a pu théoriquement survenir
-     * entre-temps et remplacer la session démarrée par googleLogin(). On
-     * n'émet jamais de refresh token pour une session déjà supplantée. */
-    if (payload.sid && !(await this.sessionService.validateSession(user.id, payload.sid))) {
-      throw new UnauthorizedException('Session expirée. Reconnectez-vous.');
-    }
-
-    const ttlMs    = REFRESH_TTL_NORMAL_MS;
-    const expiresAt = new Date(Date.now() + ttlMs);
-    const { rawToken: refreshToken } = await this.issueRefreshToken(
-      user.id, ipAddress, userAgent, expiresAt, payload.sid ?? null, null,
-    );
-
-    this.logEvent('login_success', {
-      userId: user.id, email: user.email, role: user.role,
-      ipAddress, userAgent, success: true,
-    });
-
-    return { accessToken: jwt, refreshToken, refreshTtlMs: ttlMs, user: this.toPublicUser(user), sessionReplaced: false, twoFaSetupRequired: false };
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
   // AUDIT LOG — journalisation des événements de sécurité (fire-and-forget)
   // ══════════════════════════════════════════════════════════════════════════
 
@@ -2207,21 +2050,43 @@ export class AuthService implements OnModuleInit {
   ): Promise<AuthServiceResult> {
     const tokenHash = crypto.createHash('sha256').update(rawRefreshToken).digest('hex');
 
-    /* tokenHash a select:false → on doit l'expliciter dans le queryBuilder */
+    /* tokenHash a select:false → on doit l'expliciter dans le queryBuilder.
+     * Pas de filtre `revoked = false` ici : on a besoin de retrouver le
+     * token même s'il a déjà été révoqué (rotation précédente), pour
+     * distinguer "jamais existé" de "rejoué après rotation" ci-dessous. */
     const record = await this.refreshTokenRepo
       .createQueryBuilder('rt')
       .addSelect('rt.tokenHash')
-      .where('rt.tokenHash = :hash',   { hash: tokenHash })
-      .andWhere('rt.revoked = false')
-      .andWhere('rt.expiresAt > :now', { now: new Date() })
+      .where('rt.tokenHash = :hash', { hash: tokenHash })
       .getOne();
 
-    if (!record) {
+    if (!record || record.expiresAt <= new Date()) {
       this.logEvent('token_refresh_failed', {
         ipAddress, userAgent, success: false,
-        failureReason: 'Token introuvable, révoqué ou expiré',
+        failureReason: 'Token introuvable, expiré ou déjà purgé',
       });
       throw new UnauthorizedException('Session expirée. Veuillez vous reconnecter.');
+    }
+
+    /* Détection de vol (Refresh Token Rotation) : ce hash correspond à un
+     * token déjà révoqué — donc déjà consommé par une rotation antérieure.
+     * Un client légitime ne rejoue jamais un token qu'il a déjà échangé ;
+     * ce n'est possible que si le raw token a fuité et qu'un attaquant
+     * (ou l'appareil légitime après une désynchronisation réseau) l'utilise
+     * après coup. Par précaution, on révoque toute la famille de tokens de
+     * cette session plutôt que ce seul token. */
+    if (record.revoked) {
+      if (record.sessionId) {
+        await this.sessionService.endSession(record.userId, record.sessionId);
+        await this.revokeSessionAndNotify(record.userId, record.sessionId, 'TOKEN_REUSE');
+      } else {
+        await this.revokeAllRefreshTokens(record.userId);
+      }
+      this.logEvent('token_refresh_failed', {
+        userId: record.userId, ipAddress, userAgent, success: false,
+        failureReason: 'Réutilisation d\'un refresh token révoqué — vol suspecté, session révoquée',
+      });
+      throw new UnauthorizedException('Session invalidée pour raison de sécurité. Veuillez vous reconnecter.');
     }
 
     const user = await this.userRepo.findOne({ where: { id: record.userId } });

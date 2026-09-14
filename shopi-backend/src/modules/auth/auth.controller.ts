@@ -9,9 +9,6 @@
  *   POST /auth/forgot-password     → Étape 1 — envoie OTP (5 req/min)
  *   POST /auth/verify-otp          → Étape 2 — vérifie OTP → resetToken (10 req/min)
  *   POST /auth/reset-password      → Étape 3 — nouveau mot de passe (5 req/min)
- *   GET  /auth/google              → Lance le flux OAuth2 Google
- *   GET  /auth/google/callback     → Callback Google → code one-time → redirect
- *   POST /auth/google/exchange     → Échange code one-time → JWT + cookies
  *   GET  /auth/me                  → Profil connecté (JWT)
  *   GET  /auth/client-account/status  → État du compte client lié ("Mon espace")
  *   POST /auth/create-linked-client   → Création rapide du compte client lié (10 req/min)
@@ -34,9 +31,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { AuthGuard }     from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
-import { getPrimaryFrontendUrl } from '../../common/utils/frontend-url.util';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import {
@@ -57,7 +52,6 @@ import {
   ForgotPasswordDto,
   VerifyOtpDto,
   ResetPasswordDto,
-  ExchangeOAuthCodeDto,
 }                               from './dto/password.dto';
 import { CreateLinkedClientDto, LinkExistingClientDto } from './dto/account-link.dto';
 import { JwtAuthGuard }         from '../../common/guards/auth.guard';
@@ -136,7 +130,6 @@ function setAuthCookies(
 export class AuthController {
 
   private readonly isProd:      boolean;
-  private readonly frontendUrl: string;
 
   constructor(
     private readonly authService:        AuthService,
@@ -145,8 +138,7 @@ export class AuthController {
     private readonly twoFaService:       TwoFaService,
     private readonly settingsCache:      PlatformSettingsCacheService,
   ) {
-    this.isProd      = config.get<string>('NODE_ENV') === 'production';
-    this.frontendUrl = getPrimaryFrontendUrl(config, 'http://localhost:5173');
+    this.isProd = config.get<string>('NODE_ENV') === 'production';
   }
 
   // ── POST /auth/register ───────────────────────────────────────────────────
@@ -426,10 +418,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard, ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Désactiver la 2FA', description: 'Nécessite le mot de passe actuel.' })
+  @ApiOperation({ summary: 'Désactiver la 2FA', description: 'Nécessite le mot de passe actuel ET un code TOTP valide.' })
   @ApiBody({ type: DisableTwoFaDto })
   async disableTwoFa(@CurrentUser() user: User, @Body() dto: DisableTwoFaDto) {
-    return this.twoFaService.disable(user, dto.currentPassword);
+    return this.twoFaService.disable(user, dto.currentPassword, dto.code);
   }
 
   // ── POST /auth/refresh ────────────────────────────────────────────────────
@@ -471,7 +463,8 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ThrottlerGuard)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Se déconnecter',
@@ -566,62 +559,6 @@ export class AuthController {
   ): Promise<{ message: string }> {
     const userAgent = req.headers['user-agent'] ?? null;
     return this.authService.resetPassword(dto.resetToken, dto.newPassword, clientIp, userAgent);
-  }
-
-  // ── GET /auth/google ──────────────────────────────────────────────────────
-
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  googleRedirect() {
-    // Passport redirige automatiquement vers la page de consentement Google.
-  }
-
-  // ── GET /auth/google/callback ─────────────────────────────────────────────
-
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  async googleCallback(
-    @Req() req: any,
-    @Res() res: Response,
-  ): Promise<void> {
-    try {
-      const jwt  = await this.authService.googleLogin(req.user);
-      const code = await this.authService.createGoogleOAuthCode(jwt);
-      res.redirect(`${this.frontendUrl}/login?code=${code}`);
-    } catch (err) {
-      const msg = encodeURIComponent((err as Error).message ?? 'Erreur Google');
-      res.redirect(`${this.frontendUrl}/login?error=${msg}`);
-    }
-  }
-
-  // ── POST /auth/google/exchange ────────────────────────────────────────────
-
-  @Post('google/exchange')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Échanger un code OAuth temporaire contre un JWT',
-    description:
-      'Échange le code UUID one-time reçu via query-param après le callback Google ' +
-      "contre un AuthResponse complet. Code valable 60 secondes, usage unique.",
-  })
-  @ApiBody({ type: ExchangeOAuthCodeDto })
-  @ApiResponse({ status: 200, description: 'JWT retourné, cookie posé.' })
-  @ApiResponse({ status: 400, description: 'Code expiré ou invalide.' })
-  async googleExchange(
-    @Body() dto: ExchangeOAuthCodeDto,
-    @Ip()   clientIp: string,
-    @Req()  req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponse> {
-    const userAgent = req.headers['user-agent'] ?? null;
-    const result = await this.authService.exchangeGoogleOAuthCode(dto.code, clientIp, userAgent);
-    setAuthCookies(
-      res, this.isProd,
-      result.accessToken, 7 * 24 * 60 * 60 * 1000,
-      result.refreshToken, result.refreshTtlMs,
-    );
-    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
-    return publicResult;
   }
 
   // ═══════════════════════════════════════════════════════════════════════

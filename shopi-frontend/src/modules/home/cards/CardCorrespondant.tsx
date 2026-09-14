@@ -19,24 +19,18 @@ interface Props {
   onRemoved?: (id: string) => void;
 }
 
+/* Card minimale — même principe que CardEntreprise : avatar + nom +
+ * région + suivre. Les infos détaillées (missions, sous-type, bio…)
+ * ne s'affichent que sur la page de profil, ouverte au clic sur la card. */
 export default function CardCorrespondant({ c, onToast, onRemoved }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const TYPE_LABEL: Record<string, string> = {
-    regional: t('sharedCards.correspondant.typeLabel.regional'),
-    zonal: t('sharedCards.correspondant.typeLabel.zonal'),
-    national: t('sharedCards.correspondant.typeLabel.national'),
-  };
 
-  const id       = c?.id ?? '';
-  const name     = c?.fullName ?? c?.nom ?? '';
-  const photo    = c?.profilePicture ?? null;
-  const region   = c?.region ?? '';
-  const type     = c?.typeCorrespondant ?? c?.type ?? 'regional';
-  const bio      = c?.bio ?? c?.desc ?? null;
-  const missions = Number(c?.totalMissions ?? c?.missions ?? 0);
-  const rating   = Number(c?.averageRating ?? c?.note ?? 0);
-  const online   = c?.online ?? false;
+  const id     = c?.id ?? '';
+  const name   = c?.fullName ?? c?.nom ?? '';
+  const photo  = c?.profilePicture ?? null;
+  const region = c?.region ?? '';
+  const online = c?.online ?? false;
 
   const { openAuthModal, authModal } = useAuthGate();
 
@@ -44,99 +38,57 @@ export default function CardCorrespondant({ c, onToast, onRemoved }: Props) {
     .map((w: string) => w[0]?.toUpperCase() ?? '').join('') || '?';
 
   return (
-    <div className={styles.crCard} style={{ position: 'relative' }}>
+    <div className={styles.wkCard} onClick={() => id ? navigate(`/profil/correspondant/${id}`) : onToast(`📍 ${name}`, 'i')}>
 
-      {/* ── Bannière ── */}
-      <div className={styles.crBanner}>
-        {online && (
-          <span style={{
-            fontSize: 9.5, fontWeight: 800, color: '#34D399',
-            background: 'rgba(52,211,153,.15)', border: '1px solid rgba(52,211,153,.3)',
-            borderRadius: 999, padding: '2px 9px',
-            display: 'flex', alignItems: 'center', gap: 5,
-          }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#34D399', boxShadow: '0 0 5px #34D399' }} />
-            {t('sharedCards.correspondant.enLigne')}
-          </span>
+      {/* ── Badge de rôle ── */}
+      <span className={`${styles.roleBadge} ${styles.roleBadgeCorrespondant}`}>
+        <i className="fas fa-handshake" /> {t('sharedCards.correspondant.roleLabel')}
+      </span>
+
+      {/* Avatar */}
+      <div className={styles.wkAw}>
+        {photo && (
+          <img
+            src={photo} alt={name}
+            className={styles.wkAva}
+            style={{ objectFit: 'cover', borderRadius: '50%' }}
+            onError={e => {
+              e.currentTarget.style.display = 'none';
+              const n = e.currentTarget.nextElementSibling as HTMLElement | null;
+              if (n) n.style.display = 'flex';
+            }}
+          />
         )}
+        <div className={styles.wkAva} style={{
+          display: photo ? 'none' : 'flex',
+          alignItems: 'center', justifyContent: 'center',
+          fontSize: c?.emoji ? 28 : 20,
+        }}>
+          {c?.emoji ?? initials}
+        </div>
+        <div className={`${styles.wkDot} ${online ? styles.wkDotOn : styles.wkDotOff}`}
+          title={online ? t('sharedCards.correspondant.enLigne') : t('sharedCards.correspondant.horsLigne')} />
       </div>
 
-      {/* ── Body ── */}
-      <div className={styles.crBody}>
+      {/* Nom */}
+      <div className={styles.wkNm}>{name || '—'}</div>
 
-        {/* Avatar */}
-        <div className={styles.crAw}>
-          {photo && (
-            <img
-              src={photo} alt={name}
-              className={styles.crAva}
-              style={{ objectFit: 'cover', borderRadius: '50%' }}
-              onError={e => {
-                e.currentTarget.style.display = 'none';
-                const n = e.currentTarget.nextElementSibling as HTMLElement | null;
-                if (n) n.style.display = 'flex';
-              }}
-            />
-          )}
-          <div className={styles.crAva} style={{
-            display: photo ? 'none' : 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            background: 'linear-gradient(135deg,#1C1C1F,#2D2D30)',
-            color: '#fff', fontFamily: 'var(--fd)', fontWeight: 800,
-            fontSize: c?.emoji ? 28 : 20,
-          }}>
-            {c?.emoji ?? initials}
-          </div>
-          <div className={`${styles.crOl} ${online ? styles.crOlOn : styles.crOlOff}`}
-            title={online ? t('sharedCards.correspondant.enLigne') : t('sharedCards.correspondant.horsLigne')} />
-        </div>
+      {/* Région */}
+      <div className={styles.wkLoc}>
+        <i className="fas fa-map-pin" /> {region || '—'}
+      </div>
 
-        {/* Nom */}
-        <div className={styles.crNm}>{name || '—'}</div>
-
-        {/* Région */}
-        <div className={styles.crRegion}>
-          <i className="fas fa-map-pin" /> {region || '—'}
-        </div>
-
-        {/* Badge type */}
-        <span className={styles.crType}>{TYPE_LABEL[type] ?? type}</span>
-
-        {/* Bio */}
-        <div className={styles.crDesc}>{bio || t('sharedCards.correspondant.aucuneDescription')}</div>
-
-        {/* Stats */}
-        <div className={styles.crStatsRow}>
-          <div className={styles.crStat}>
-            <span className={styles.crStatVal}>{missions.toLocaleString('fr-FR')}</span>
-            <span className={styles.crStatLbl}>{t('sharedCards.correspondant.missions')}</span>
-          </div>
-          <div className={styles.crStat}>
-            <span className={styles.crStatVal}>{rating > 0 ? rating.toFixed(1) : '—'}</span>
-            <span className={styles.crStatLbl}>{t('sharedCards.correspondant.note')}</span>
-          </div>
-        </div>
-
-        {/* Boutons */}
-        <div className={styles.crBtns}>
-          <button
-            className={styles.crV}
-            onClick={() => id ? navigate(`/profil/correspondant/${id}`) : onToast(`📍 ${name}`, 'i')}
-            title={t('sharedCards.correspondant.voirProfil')}
-            aria-label={t('sharedCards.correspondant.voirProfil')}
-          >
-            <i className="fas fa-user" />
-          </button>
-          <FollowButton
-            actorType="correspondant"
-            id={id}
-            name={name}
-            isSuivi={c?.isSuivi ?? false}
-            onToast={onToast}
-            onRequireAuth={openAuthModal}
-            onChange={next => { if (next.removed) onRemoved?.(id); }}
-          />
-        </div>
+      {/* Bouton */}
+      <div className={styles.wkBtnWrap} onClick={ev => ev.stopPropagation()}>
+        <FollowButton
+          actorType="correspondant"
+          id={id}
+          name={name}
+          isSuivi={c?.isSuivi ?? false}
+          onToast={onToast}
+          onRequireAuth={openAuthModal}
+          onChange={next => { if (next.removed) onRemoved?.(id); }}
+        />
       </div>
 
       {authModal}

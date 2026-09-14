@@ -39,7 +39,7 @@ export interface UserListResponse {
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
 
 const INITIAL_STATE: SuperAdminState = {
-  section:          (localStorage.getItem('shoneya-super-admin-section') as SectionId) || 'overview',
+  section:          'overview',
   roleFilter:       'all',
   statusFilter:     'all',
   countryFilter:    'all',
@@ -182,11 +182,6 @@ export function useSuperAdminState() {
   ]);
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
-
-  /* ── Section active (persistée pour survivre à un rechargement) ── */
-  useEffect(() => {
-    localStorage.setItem('shoneya-super-admin-section', state.section);
-  }, [state.section]);
 
   /* ── Navigation ── */
   const navigate = useCallback((section: SectionId) => {

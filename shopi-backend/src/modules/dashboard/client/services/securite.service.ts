@@ -22,6 +22,7 @@ import {
 } from '../dto/client-parametres.dto';
 import { MailService } from '../../../email/email.service';
 import { SecurityAlertsService, AlertSettings } from '../../../security-alerts/security-alerts.service';
+import { TwoFaService } from '../../../auth/twofa/twofa.service';
 
 const CODE_SECOURS_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans 0/O/1/I ambigus
 
@@ -42,6 +43,7 @@ export class SecuriteService {
     private readonly mailService:          MailService,
     private readonly securityAlertsService: SecurityAlertsService,
     private readonly config:                ConfigService,
+    private readonly twoFaService:          TwoFaService,
   ) {}
 
   /* ✅ FIX — early return, jamais null */
@@ -131,11 +133,13 @@ export class SecuriteService {
         "Activez la 2FA via POST /auth/2fa/setup puis /auth/2fa/confirm (vérification du code requise).",
       );
     }
-    const profile = await this.getOrCreate(user.id);                     // ✅ jamais null
-    (profile as any).twoFaEnabled = false;
-    (profile as any).twoFaMethod  = null;
-    (profile as any).twoFaSecret  = null;
-    await this.clientRepo.save(profile);
+    /* Mot de passe + code TOTP requis — sinon une session volée (XSS,
+     * token dérobé) suffirait à désactiver la 2FA sans jamais posséder
+     * le second facteur, ce qui annule sa protection. */
+    if (!dto.currentPassword || !dto.code) {
+      throw new BadRequestException('Mot de passe actuel et code de vérification requis.');
+    }
+    await this.twoFaService.disable(user, dto.currentPassword, dto.code);
     return { twoFaEnabled: false };
   }
 
