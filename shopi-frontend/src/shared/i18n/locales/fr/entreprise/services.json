@@ -1,0 +1,99 @@
+{
+  "services": {
+    "header": {
+      "title": "Mes services",
+      "subtitle": "Gérez vos prestations",
+      "nouveau": "Ajouter un service"
+    },
+    "stats": {
+      "total": "Total",
+      "publies": "Publiés",
+      "brouillons": "Brouillons"
+    },
+    "search": "Rechercher un service…",
+    "filters": {
+      "tous": "Tous",
+      "publics": "Publiés",
+      "brouillons": "Brouillons",
+      "prives": "Privés"
+    },
+    "loading": "Chargement des services…",
+    "retry": "Réessayer",
+    "empty": {
+      "noneTitle": "Aucun service pour le moment",
+      "noneSub": "Ajoutez votre première prestation pour commencer à recevoir des demandes.",
+      "noResultsTitle": "Aucun résultat",
+      "noResultsSub": "Essayez une autre recherche ou un autre filtre.",
+      "addFirst": "Ajouter mon premier service"
+    },
+    "count": "{{count}} service(s)",
+    "countFor": "pour « {{search}} »",
+    "card": {
+      "voir": "Voir",
+      "voirDetail": "Voir le détail",
+      "modifRapide": "Modification rapide",
+      "modifComplet": "Modifier",
+      "modifier": "Modifier",
+      "supprimer": "Supprimer"
+    },
+    "visibilite": {
+      "public": "Publié",
+      "draft": "Brouillon",
+      "private": "Privé"
+    },
+    "pricingType": {
+      "fixe": "Prix fixe",
+      "horaire": "Tarif horaire",
+      "sur_devis": "Sur devis"
+    },
+    "modalVoir": {
+      "prix": "Tarif",
+      "commission": "Commission plateforme",
+      "revenuNet": "Revenu net estimé",
+      "duree": "Durée",
+      "minutes": "min",
+      "nonRenseigne": "Non renseigné",
+      "modePrestation": "Mode de prestation",
+      "surPlace": "Sur place",
+      "domicile": "À domicile",
+      "distance": "À distance",
+      "reservation": "Réservation",
+      "reservationRequise": "Réservation requise",
+      "sansRendezVous": "Sans rendez-vous",
+      "description": "Description",
+      "inclus": "Ce qui est inclus",
+      "tags": "Tags",
+      "ajouteLe": "Ajouté le",
+      "noImage": "Aucune image",
+      "supprimer": "Supprimer",
+      "archiver": "Archiver",
+      "modifier": "Modifier"
+    },
+    "modalModifier": {
+      "title": "Modification rapide",
+      "visibilite": "Visibilité",
+      "optPublic": "Publié",
+      "optDraft": "Brouillon",
+      "optPrivate": "Privé",
+      "annuler": "Annuler",
+      "saving": "Enregistrement…",
+      "save": "Enregistrer",
+      "info": "Pour modifier le prix, la description ou les médias, utilisez « Modifier »."
+    },
+    "modalDelete": {
+      "title": "Supprimer ce service ?",
+      "confirm": "Vous êtes sur le point de supprimer « {{nom}} ».",
+      "irreversible": "Cette action est irréversible.",
+      "annuler": "Annuler",
+      "deleting": "Suppression…",
+      "confirmBtn": "Supprimer définitivement"
+    },
+    "toasts": {
+      "updated": "Service mis à jour",
+      "deleted": "Service supprimé",
+      "archived": "Service archivé",
+      "archiveError": "Échec de l'archivage",
+      "genericError": "Une erreur est survenue"
+    }
+  }
+}

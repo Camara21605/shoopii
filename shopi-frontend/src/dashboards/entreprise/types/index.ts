@@ -179,6 +179,11 @@ export type EntreprisePage =
   | 'inventaire'
   | 'fournisseurs'
   | 'promotions'
+  /** Catalogue services — comptes businessModel==='services' uniquement,
+   *  remplace produits/ajouter/inventaire/fournisseurs/promotions dans la
+   *  sidebar (voir buildNavSections dans Sidebar.tsx). */
+  | 'services'
+  | 'ajouter-service'
   | 'analytics'
   | 'messages'
   | 'seo'

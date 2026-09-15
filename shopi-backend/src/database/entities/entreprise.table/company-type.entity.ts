@@ -31,6 +31,17 @@ import {
 import { Category } from './category.entity';
 import { Company }  from '../profiles/entreprise-profile.entity';
 
+/** Permet à l'admin de taguer chaque type d'entreprise pour filtrer le
+ *  sélecteur de type à l'inscription selon le businessModel choisi (voir
+ *  Company.businessModel) — ex: "Restaurant" → products, "Coiffure" →
+ *  services. `NEUTRAL` (valeur par défaut) reste proposé aux deux, pour
+ *  ne rien casser tant qu'un super-admin n'a pas catégorisé un type. */
+export enum CompanyTypeNature {
+  PRODUCTS = 'products',
+  SERVICES = 'services',
+  NEUTRAL  = 'neutral',
+}
+
 @Entity('company_types')
 export class CompanyType {
 
@@ -92,6 +103,15 @@ export class CompanyType {
    */
   @Column({ type: 'boolean', default: true })
   actif: boolean;
+
+  /**
+   * Produits, services, ou neutre (les deux) — voir CompanyTypeNature.
+   * Filtre le sélecteur de type à l'inscription entreprise selon le
+   * businessModel choisi (voir RegisterForm.tsx + catalogue.controller.ts
+   * GET /company-types?nature=).
+   */
+  @Column({ type: 'enum', enum: CompanyTypeNature, default: CompanyTypeNature.NEUTRAL })
+  nature: CompanyTypeNature;
 
   /* ==========================================================
    * RELATIONS

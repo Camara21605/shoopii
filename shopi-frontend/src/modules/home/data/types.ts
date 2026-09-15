@@ -9,6 +9,9 @@ export interface BoutiqueCardData {
   totalRatings:  number;
   ville:         string | null;
   verified:      boolean;
+  /** Modèle économique de la boutique — voir Company.businessModel côté
+   *  backend. Pilote le badge produits/services sur CardEntreprise. */
+  businessModel: 'products' | 'services';
   domaine:       string | null;
   isSuivi?:      boolean;
 }

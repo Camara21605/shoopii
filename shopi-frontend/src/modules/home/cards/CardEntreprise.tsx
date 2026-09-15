@@ -80,6 +80,11 @@ export default function CardEntreprise({ e, onToast, onRemoved, listMode = false
               title={t('sharedCards.entreprise.verifie')}
             />
           )}
+          {/* Badge produits/services — voir Company.businessModel côté backend */}
+          <i
+            className={`fas ${e.businessModel === 'services' ? 'fa-concierge-bell' : 'fa-box'} ${styles.coVerif}`}
+            title={e.businessModel === 'services' ? t('sharedCards.entreprise.venteServices') : t('sharedCards.entreprise.venteProduits')}
+          />
         </div>
 
         {/* Domaine · ville (façon @handle) */}

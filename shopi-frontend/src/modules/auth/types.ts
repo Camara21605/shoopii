@@ -116,6 +116,8 @@ export interface RegisterPayload {
    * 3 autres messages), le champ requis n'étant jamais transmis. */
   shopName?:       string;
   companyName?:    string;
+  /** Voir RegisterFormData.businessModel. */
+  businessModel?:  'products' | 'services';
   companyTypeId?:  string;
   /* BUG CORRIGÉ — buildRegisterPayload() (authService.ts) ne les
    * transmettait pas du tout : le formulaire les exigeait désormais
@@ -179,6 +181,11 @@ export interface RegisterFormData {
    *  qui l'ignore silencieusement s'il ne correspond à rien. */
   referralSlug?:   string;
   shopName?:       string;
+  /** Modèle économique — 'products' vend des biens physiques, 'services'
+   *  propose des prestations. Exclusif, choisi une fois à l'inscription,
+   *  fixe (voir Company.businessModel côté backend). Uniquement pour
+   *  role==='company'. */
+  businessModel?:  'products' | 'services';
   terms?:          boolean;
   companyTypeId?:  string;
   birthDate?:      string;
@@ -227,6 +234,7 @@ export interface FormErrors {
   /* Compte "entreprise" uniquement — voir validateRegisterField()
    * dans useLoginPage.ts (BUG CORRIGÉ : ces deux champs n'étaient
    * jamais validés, ni côté client ni côté serveur). */
+  businessModel?:   string;
   shopName?:        string;
   companyTypeId?:   string;
   /* Tous rôles — devenus obligatoires sur demande explicite (l'étape

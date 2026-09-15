@@ -17,10 +17,12 @@ import { tokenStorage }    from '../../../../shared/services/apiFetch';
 import { apiFetch }   from '../../../../shared/services/apiFetch';
 
 import type { ProductApi }            from '../../cards/CardProduit';
+import type { ServiceApi }            from '../../cards/CardService';
 import type { CorrespondantCardData } from '../../cards/CardCorrespondant';
 import type { LivreurCardData }       from '../../cards/CardLivreur';
 
 import CardProduit       from '../../cards/CardProduit';
+import CardService       from '../../cards/CardService';
 import CardEntreprise    from '../../cards/CardEntreprise';
 import CardCorrespondant from '../../cards/CardCorrespondant';
 import CardLivreur       from '../../cards/CardLivreur';
@@ -34,7 +36,7 @@ const SOCKET_URL =
   ((import.meta as any).env?.VITE_API_URL as string | undefined)?.replace('/api', '') ??
   'http://localhost:3001';
 
-export type BlocKind = 'produits' | 'produits-gros' | 'entreprises' | 'correspondants' | 'livreurs';
+export type BlocKind = 'produits' | 'produits-gros' | 'services' | 'entreprises' | 'correspondants' | 'livreurs';
 
 /* Un bloc de produits ne doit jamais afficher plus de BLOCK_SIZE produits —
  * au-delà, un nouveau bloc (avec son propre petit en-tête) est créé
@@ -51,6 +53,10 @@ function chunkProduits<T>(items: T[]): T[][] {
 const BLOC_LINK: Record<BlocKind, string> = {
   produits:        '/explorer',
   'produits-gros': '/explorer',
+  /* Pas de scope /explorer dédié aux services (hors scope MVP, voir le
+   * plan Produits/Services) — renvoie vers le toggle Produits/Services/
+   * Tout déjà câblé sur /boutiques (voir BoutiquesPage.tsx). */
+  services:        '/boutiques?mode=services',
   entreprises:     '/boutiques',
   correspondants:  '/correspondants',
   livreurs:        '/livreurs',
@@ -202,6 +208,72 @@ function ProduitsBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>voi
           )}
           <div className={styles.pgrid}>
             {bloc.map(p => <CardProduit key={p.id} p={p} onToast={onToast} />)}
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * BLOC SERVICES — GET /public/services
+ * Miroir de ProduitsBloc — sans lui, une prestation de service publiée
+ * n'apparaissait nulle part sur la home (seulement via /boutiques?mode=
+ * services ou la fiche d'un type d'entreprise "services", jamais dans le
+ * flux principal que les clients parcourent par défaut).
+ ───────────────────────────────────────────────────────────── */
+function ServicesBloc({ onToast }: { onToast:(m:string, t?:'s'|'i'|'w'|'e')=>void }) {
+  const { t } = useTranslation();
+  const [services, setServices] = useState<ServiceApi[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState(false);
+
+  const load = useCallback((silent = false) => {
+    if (!silent) setLoading(true);
+    apiFetch<{ data: ServiceApi[] }>('/public/services', { public:true, params:{ limit:60 } })
+      .then(res => setServices(Array.isArray(res?.data) ? res.data : []))
+      .catch(() => { if (!silent) setError(true); })
+      .finally(() => { if (!silent) setLoading(false); });
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  /* Même diffusion globale que ProduitsBloc — voir ce bloc pour le détail. */
+  useEffect(() => {
+    const socket = io(`${SOCKET_URL}/public`, { transports: ['websocket', 'polling'] });
+    socket.on('catalogue:changed', () => load(true));
+    return () => { socket.disconnect(); };
+  }, [load]);
+
+  if (loading) return (
+    <div className={styles.pgrid}>
+      {[...Array(8)].map((_,i) => (
+        <div key={i} style={{ height:320, borderRadius:16,
+          background:'linear-gradient(90deg,#f1f5f9 25%,#f8fafc 50%,#f1f5f9 75%)',
+          backgroundSize:'200% 100%', animation:'shimmer 1.4s infinite' }} />
+      ))}
+    </div>
+  );
+
+  if (error || services.length === 0) return (
+    <div style={{ padding:'40px 0', textAlign:'center', color:'var(--t3)', fontSize:14 }}>
+      {error ? `⚠️ ${t('home.randomBloc.errorServices')}` : t('home.randomBloc.emptyServices')}
+    </div>
+  );
+
+  const blocs = chunkProduits(services);
+
+  return (
+    <>
+      {blocs.map((bloc, i) => (
+        <div key={i}>
+          {i > 0 && (
+            <div style={{ marginTop: 28 }}>
+              <SectionHeader kick={`${t('home.randomBloc.services.kick')} ${i + 1}`} title="" />
+            </div>
+          )}
+          <div className={styles.pgrid}>
+            {bloc.map(s => <CardService key={s.id} s={s} onToast={onToast} />)}
           </div>
         </div>
       ))}
@@ -409,6 +481,7 @@ export default function RandomBloc({ kind, index, onToast }: Props) {
         />
         {kind === 'produits'       && <ProduitsBloc       onToast={onToast} />}
         {kind === 'produits-gros'  && <ProduitsGrosBloc   onToast={onToast} />}
+        {kind === 'services'       && <ServicesBloc       onToast={onToast} />}
         {kind === 'correspondants' && <CorrespondantsBloc onToast={onToast} />}
         {kind === 'livreurs'       && <LivreursBloc       onToast={onToast} />}
         {kind === 'entreprises'    && <EntreprisesBloc    onToast={onToast} />}

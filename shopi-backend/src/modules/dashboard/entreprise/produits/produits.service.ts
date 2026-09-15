@@ -20,7 +20,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
-import { CompanyType } from 'src/database/entities/entreprise.table/company-type.entity';
+import { CompanyType, CompanyTypeNature } from 'src/database/entities/entreprise.table/company-type.entity';
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
 import { ProductMedia, MediaType } from 'src/database/entities/entreprise.table/product-media.entity';
 import { ProductVariant } from 'src/database/entities/entreprise.table/product-variant.entity';
@@ -30,7 +30,7 @@ import { ProductStory, StoryMediaType, StoryStatus } from 'src/database/entities
 import { PublicBroadcastService } from 'src/modules/public/public-broadcast.service';
 import { Category }       from 'src/database/entities/entreprise.table/category.entity';
 import { SubCategory }    from 'src/database/entities/entreprise.table/sub-category.entity';
-import { Company, CompanyPlan } from 'src/database/entities/profiles/entreprise-profile.entity';
+import { Company, CompanyPlan, CompanyBusinessModel } from 'src/database/entities/profiles/entreprise-profile.entity';
 import { PlatformSettings }    from 'src/database/entities/platform-settings.entity';
 import { User }           from 'src/database/entities/user.entity';
 import { UserRole }       from 'src/common/enums/user-role.enum';
@@ -204,20 +204,27 @@ export class ProduitsService {
     const qb = this.categoryRepo
       .createQueryBuilder('cat')
       .leftJoinAndSelect('cat.subCategories', 'sub', 'sub.actif = :actif', { actif: true })
+      .leftJoin('cat.companyType', 'ct')
       .where('cat.actif = :actif', { actif: true })
       .orderBy('cat.ordre', 'ASC')
       .addOrderBy('sub.ordre', 'ASC');
 
-    // ✅ Filtre par type si l'entreprise en a un
-    // Inclut aussi les catégories "génériques" (companyTypeId IS NULL)
-    // qui sont accessibles à tous les types d'entreprise
+    /* SÉCURITÉ / SÉPARATION — un compte PRODUCTS ne doit voir QUE des
+     * catégories dont le type d'entreprise parent est explicitement
+     * 'products' ou 'neutral', jamais 'services'. L'ancien filtre
+     * "OR companyTypeId IS NULL" laissait passer les catégories
+     * génériques SANS AUCUNE vérification de nature — remplacé par une
+     * exigence stricte de nature compatible (voir même correctif dans
+     * PrestationsService.getCategoriesPourEntreprise). Une catégorie sans
+     * type parent du tout (orphelin) est désormais exclue plutôt
+     * qu'accessible à tous par défaut. */
+    qb.andWhere("ct.nature != :excludedNature", { excludedNature: CompanyTypeNature.SERVICES });
     if (company.companyTypeId) {
       qb.andWhere(
-        '(cat.companyTypeId = :typeId OR cat.companyTypeId IS NULL)',
-        { typeId: company.companyTypeId },
+        '(cat.companyTypeId = :typeId OR ct.nature = :neutral)',
+        { typeId: company.companyTypeId, neutral: CompanyTypeNature.NEUTRAL },
       );
     }
-    // Si pas de type assigné → toutes les catégories (fallback)
 
     const cats = await qb.getMany();
 
@@ -236,7 +243,12 @@ export class ProduitsService {
   async createProduct(dto: CreateProductDto, user: User): Promise<ProductResponse> {
 
     // ── Résolution catégorie ──────────────────────────────────────────────
-    const category = await this.categoryRepo.findOne({ where: { id: dto.categoryId } });
+    // relations: ['companyType'] — nécessaire pour la vérification de nature
+    // ci-dessous (séparation produits/services, voir plus bas).
+    const category = await this.categoryRepo.findOne({
+      where: { id: dto.categoryId },
+      relations: ['companyType'],
+    });
     if (!category) {
       throw new NotFoundException(`Catégorie introuvable (ID: ${dto.categoryId}).`);
     }
@@ -269,6 +281,15 @@ export class ProduitsService {
       );
     }
 
+    /* Garde symétrique de PrestationsService.createService — un compte
+     * enregistré comme prestataire de services ne peut pas créer de
+     * fiche produit, même via un appel API direct. */
+    if (companyProfile.businessModel !== CompanyBusinessModel.PRODUCTS) {
+      throw new ForbiddenException(
+        "Ce compte est enregistré comme prestataire de services — la création de produits n'est pas disponible.",
+      );
+    }
+
     // ✅ CORRECTION : Vérifie que la catégorie appartient au type de l'entreprise
     // Bloque si les deux ont un type ET qu'ils sont différents
     if (
@@ -279,6 +300,21 @@ export class ProduitsService {
       throw new BadRequestException(
         `La catégorie "${category.nom}" n'appartient pas au type d'entreprise de votre compte. ` +
         `Veuillez choisir une catégorie correspondant à votre type d'activité.`,
+      );
+    }
+
+    /* SÉCURITÉ — étanchéité produits/services au niveau catégorie.
+     * L'égalité companyTypeId ci-dessus ne suffit PAS à elle seule : une
+     * catégorie "générique" (companyTypeId=null, cross-type) passait ce
+     * test sans jamais être vérifiée sur sa nature, ouvrant une brèche où
+     * un compte PRODUCTS pouvait publier sous une catégorie en réalité
+     * dédiée aux services (et vice versa). Toute catégorie utilisable ici
+     * doit désormais être rattachée à un CompanyType dont la nature est
+     * explicitement 'products' (ou 'neutral', valeur assumée par le
+     * super-admin) — jamais 'services'. */
+    if (!category.companyType || category.companyType.nature === CompanyTypeNature.SERVICES) {
+      throw new BadRequestException(
+        `La catégorie "${category.nom}" est réservée aux prestations de service, pas aux produits.`,
       );
     }
 
@@ -467,6 +503,25 @@ export class ProduitsService {
     }
 
     if (dto.images !== undefined) this.validateMediaQuota(dto.images);
+
+    /* SÉCURITÉ — même vérification de nature qu'à la création (voir
+     * createProduct) : le changement de catégorie en modification n'était
+     * jusqu'ici soumis à AUCUN contrôle, laissant un produit basculer sur
+     * une catégorie réservée aux services via un simple PATCH. */
+    if (dto.categoryId && dto.categoryId !== product.categoryId) {
+      const newCategory = await this.categoryRepo.findOne({
+        where: { id: dto.categoryId },
+        relations: ['companyType'],
+      });
+      if (!newCategory) {
+        throw new NotFoundException(`Catégorie introuvable (ID: ${dto.categoryId}).`);
+      }
+      if (!newCategory.companyType || newCategory.companyType.nature === CompanyTypeNature.SERVICES) {
+        throw new BadRequestException(
+          `La catégorie "${newCategory.nom}" est réservée aux prestations de service, pas aux produits.`,
+        );
+      }
+    }
 
     const qr = this.dataSource.createQueryRunner();
     await qr.connect();

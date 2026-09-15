@@ -37,10 +37,22 @@ import { CompanyType }    from '../entreprise.table/company-type.entity';
 import { CompanyHoraire } from '../entreprise.table/company-horaire.entity'; // ← NOUVELLE TABLE
 import { CreationCode }   from '../code-creation.entity';
 import { Product }        from '../entreprise.table/product.entity';
+import { Service }        from '../entreprise.table/service.entity';
 import { Delivery }       from './livreur-profile.entity';
 import { Correspondent }  from './correspondant-profile.entity';
 import { ProductStory }   from '../entreprise.table/product-story.entity';
 import { Promotion }      from '../entreprise.table/promotion.entity';
+
+/* ── Modèle économique — choisi une fois à l'inscription, exclusif et
+ * fixe (voir RegisterDto.businessModel) : une entreprise vend soit des
+ * produits physiques (stock, livraison…), soit propose des services
+ * (durée, tarification horaire/sur devis, zone d'intervention…), jamais
+ * les deux. Détermine quel module de fiche (Product vs Service) le
+ * dashboard entreprise expose (voir Sidebar.tsx). */
+export enum CompanyBusinessModel {
+  PRODUCTS = 'products',
+  SERVICES = 'services',
+}
 
 /* ── Statut boutique ──────────────────────────────────────── */
 export enum CompanyStatus {
@@ -71,6 +83,21 @@ export class Company {
 
   @PrimaryGeneratedColumn('uuid')
   id!: string;
+
+  /* ══════════════════════════════════════════════════════════
+   * SECTION 0 — MODÈLE ÉCONOMIQUE
+   * Choisi une fois à l'inscription (RegisterDto.businessModel),
+   * exclusif et fixe — voir CompanyBusinessModel ci-dessus.
+   * ══════════════════════════════════════════════════════════ */
+
+  /* default: 'products' — permet à TypeORM synchronize (dev, DB_SYNC=true)
+   * d'ajouter cette colonne NOT NULL sur une table déjà peuplée sans erreur
+   * "contains null values" ; même valeur de backfill que la migration
+   * 1721400000023-company-business-model.ts pour les entreprises déjà
+   * existantes (créées avant l'introduction de ce champ). */
+  @Index()
+  @Column({ type: 'enum', enum: CompanyBusinessModel, default: CompanyBusinessModel.PRODUCTS })
+  businessModel!: CompanyBusinessModel;
 
   /* ══════════════════════════════════════════════════════════
    * RELATIONS EXISTANTES (inchangées)
@@ -135,6 +162,10 @@ export class Company {
 
   @OneToMany(() => Product, p => p.company, { cascade: true })
   products!: Product[];
+
+  /** Prestations de service — peuplé uniquement quand businessModel===SERVICES. */
+  @OneToMany(() => Service, s => s.company, { cascade: true })
+  services!: Service[];
 
   @OneToMany(() => Delivery, d => d.company)
   deliveries!: Delivery[];

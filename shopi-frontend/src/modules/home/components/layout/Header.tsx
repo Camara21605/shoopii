@@ -64,8 +64,8 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
    * "Livreurs"/"Correspondants" → leurs pages avec state.search (ces
    * pages n'ont pas d'entrée URL dédiée — voir useLivreurs.ts et
    * CorrespondantsPage.tsx). */
-  type SearchScope = 'tout' | 'produits' | 'boutiques' | 'livreurs' | 'correspondants';
-  type SuggType = 'produit' | 'boutique' | 'livreur' | 'correspondant';
+  type SearchScope = 'tout' | 'produits' | 'services' | 'boutiques' | 'livreurs' | 'correspondants';
+  type SuggType = 'produit' | 'service' | 'boutique' | 'livreur' | 'correspondant';
   interface LiveSuggestion { id: string; type: SuggType; label: string; sublabel?: string; image?: string | null; action: () => void }
   const [searchQuery, setSearchQuery] = useState('');
   const [searchScope, setSearchScope] = useState<SearchScope>('tout');
@@ -128,6 +128,7 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
   const SEARCH_SCOPES: { key: SearchScope; label: string }[] = [
     { key: 'tout',           label: t('publicHeader.searchScopes.tout')           },
     { key: 'produits',       label: t('publicHeader.searchScopes.produits')       },
+    { key: 'services',       label: t('publicHeader.searchScopes.services')       },
     { key: 'boutiques',      label: t('publicHeader.searchScopes.boutiques')      },
     { key: 'livreurs',       label: t('publicHeader.searchScopes.livreurs')       },
     { key: 'correspondants', label: t('publicHeader.searchScopes.correspondants') },
@@ -138,6 +139,7 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
    * redondant puisque tous les résultats sont déjà du même type). */
   const TYPE_ICON: Record<SuggType, string> = {
     produit:       'fa-box',
+    service:       'fa-concierge-bell',
     boutique:      'fa-store',
     livreur:       'fa-motorcycle',
     correspondant: 'fa-map-pin',
@@ -162,6 +164,21 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
         sublabel: p.prix != null ? `${Number(p.prix).toLocaleString('fr')} GNF` : undefined,
         image: p.images?.[0]?.url ?? null,
         action: () => { navigate(`/produit/${p.id}`); setSearchFocus(false); },
+      })))
+      .catch(() => []);
+  }
+  /* Recherche directe sur /public/services?search= — pas de moteur
+   * /public/explore pour les services (hors scope MVP, voir le plan
+   * Produits/Services), même pattern que fetchBoutiqueSuggestions. */
+  function fetchServiceSuggestions(q: string, limit: number): Promise<LiveSuggestion[]> {
+    return apiFetch<{ data: any[] }>(`/public/services?search=${encodeURIComponent(q)}&limit=${limit}`)
+      .then(res => (res?.data ?? []).map(s => ({
+        id: s.id, type: 'service' as const, label: s.nom,
+        sublabel: s.pricingType === 'sur_devis'
+          ? t('publicHeader.searchSurDevis')
+          : (s.prix != null ? `${Number(s.prix).toLocaleString('fr')} GNF` : undefined),
+        image: s.media?.[0]?.url ?? null,
+        action: () => { navigate(`/boutique/${s.companyId}`); setSearchFocus(false); },
       })))
       .catch(() => []);
   }
@@ -231,15 +248,18 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
         fetchCorrespondantSuggestions(q, 5).then(finish);
       } else if (searchScope === 'produits') {
         fetchProduitSuggestions(q, 5).then(finish);
+      } else if (searchScope === 'services') {
+        fetchServiceSuggestions(q, 5).then(finish);
       } else {
         /* "Tout" — un peu de chaque type */
         Promise.all([
           fetchProduitSuggestions(q, 2),
+          fetchServiceSuggestions(q, 2),
           fetchBoutiqueSuggestions(q, 2),
           fetchLivreurSuggestions(q, 2),
           fetchCorrespondantSuggestions(q, 2),
-        ]).then(([produits, boutiques, livreurs, correspondants]) => {
-          finish([...produits, ...boutiques, ...livreurs, ...correspondants]);
+        ]).then(([produits, services, boutiques, livreurs, correspondants]) => {
+          finish([...produits, ...services, ...boutiques, ...livreurs, ...correspondants]);
         });
       }
     }, SEARCH_DEBOUNCE_MS);
@@ -255,6 +275,11 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
     setSuggActiveIndex(-1);
     if (searchScope === 'boutiques') {
       navigate(`/boutiques?search=${encodeURIComponent(q)}`);
+    } else if (searchScope === 'services') {
+      /* Pas de page de résultats service dédiée (hors scope MVP) — la
+       * recherche services renvoie vers les boutiques de services dont
+       * le nom correspond, filtrées par le toggle Produits/Services/Tout. */
+      navigate(`/boutiques?mode=services&search=${encodeURIComponent(q)}`);
     } else if (searchScope === 'livreurs') {
       navigate('/livreurs', { state: { search: q } });
     } else if (searchScope === 'correspondants') {

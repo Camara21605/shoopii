@@ -6,6 +6,7 @@ import { Module }        from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { Product }     from 'src/database/entities/entreprise.table/product.entity';
+import { Service }      from 'src/database/entities/entreprise.table/service.entity';
 import { Company }     from 'src/database/entities/profiles/entreprise-profile.entity';
 import { Delivery }    from 'src/database/entities/profiles/livreur-profile.entity';
 import { Correspondent }        from 'src/database/entities/profiles/correspondant-profile.entity';
@@ -37,7 +38,7 @@ import { PublicBroadcastService }  from './public-broadcast.service';
      * (CommandeRepository introuvable dans PublicModule). */
     /* Partner ajouté pour GET /public/rejoindre/:slug (lien de parrainage
      * partenaire) — voir PublicService.resolveReferral(). */
-    TypeOrmModule.forFeature([Product, Company, Delivery, Correspondent, CorrespondantHoraire, CompanyAvis, Promotion, Follow, ProductStory, StoryView, StoryLike, Category, SubCategory, User, Commande, Partner]),
+    TypeOrmModule.forFeature([Product, Service, Company, Delivery, Correspondent, CorrespondantHoraire, CompanyAvis, Promotion, Follow, ProductStory, StoryView, StoryLike, Category, SubCategory, User, Commande, Partner]),
     NotificationsModule, // NotificationBroadcastService — pousse story:viewed en direct au propriétaire de la story
     PerformanceModule,   // PlatformSettingsCacheService — GET /public/branding
   ],

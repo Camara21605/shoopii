@@ -23,6 +23,9 @@ export interface CompanyTypeInfo {
   couleur:       string | null;
   nbCategories:  number;
   nbEntreprises: number;
+  /** Filtre produits/services de TypeEntreprisePage.tsx — voir
+   *  useServicesByType.ts et CompanyType.nature côté backend. */
+  nature:        'products' | 'services' | 'neutral';
 }
 
 export interface TypeCategory {

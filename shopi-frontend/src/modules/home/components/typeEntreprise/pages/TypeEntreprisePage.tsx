@@ -19,9 +19,11 @@ import { useTranslation } from 'react-i18next';
 
 import Header from '../../layout/Header';
 import CardProduit from '../../../cards/CardProduit';
+import CardService from '../../../cards/CardService';
 import TypeCategoryFilterBar from '../components/TypeCategoryFilterBar';
 import EntreprisesTypeBloc from '../components/EntreprisesTypeBloc';
 import { useProduitsByType } from '../hooks/useProduitsByType';
+import { useServicesByType } from '../hooks/useServicesByType';
 
 import styles from './TypeEntreprisePage.module.css';
 
@@ -40,10 +42,29 @@ export default function TypeEntreprisePage() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  /* Résultats produits — source du hero/catégories/typeError, utilisés
+   * quel que soit `nature` (voir plus bas). */
   const {
     typeInfo, typeError, categories,
-    produits, loading, error, total, hasMore, loadMore, reload,
+    produits, loading: loadingProduits, error: errorProduits,
+    total: totalProduits, hasMore: hasMoreProduits, loadMore: loadMoreProduits, reload: reloadProduits,
   } = useProduitsByType(typeId, categoryId);
+
+  /* Résultats services — hook dédié dupliqué (voir en-tête du fichier),
+   * n'alimente la grille QUE quand ce type d'entreprise est nature='services'. */
+  const {
+    services, loading: loadingServices, error: errorServices,
+    total: totalServices, hasMore: hasMoreServices, loadMore: loadMoreServices, reload: reloadServices,
+  } = useServicesByType(typeId, categoryId);
+
+  const isServiceType = typeInfo?.nature === 'services';
+  const loading  = isServiceType ? loadingServices : loadingProduits;
+  const error    = isServiceType ? errorServices    : errorProduits;
+  const total    = isServiceType ? totalServices    : totalProduits;
+  const hasMore  = isServiceType ? hasMoreServices  : hasMoreProduits;
+  const loadMore = isServiceType ? loadMoreServices : loadMoreProduits;
+  const reload   = isServiceType ? reloadServices   : reloadProduits;
+  const items    = isServiceType ? services : produits;
 
   const setCategoryId = (id: string | undefined) => {
     const params = new URLSearchParams(searchParams);
@@ -97,22 +118,22 @@ export default function TypeEntreprisePage() {
 
         <div className={styles.secRow}>
           <div>
-            <div className={styles.secTitle}>{t('typeEntreprisePage.produits')}</div>
+            <div className={styles.secTitle}>{isServiceType ? t('typeEntreprisePage.services') : t('typeEntreprisePage.produits')}</div>
             <div className={styles.secSub}>
-              {loading && produits.length === 0 ? t('typeEntreprisePage.loading') : t('typeEntreprisePage.resultCount', { count: total })}
+              {loading && items.length === 0 ? t('typeEntreprisePage.loading') : t('typeEntreprisePage.resultCount', { count: total })}
             </div>
           </div>
         </div>
 
         {/* ── État chargement (première page) ── */}
-        {loading && produits.length === 0 && (
+        {loading && items.length === 0 && (
           <div className={styles.pgrid}>
             {[...Array(8)].map((_, i) => <div key={i} className={styles.skeleton} />)}
           </div>
         )}
 
         {/* ── État erreur ── */}
-        {error && !loading && produits.length === 0 && (
+        {error && !loading && items.length === 0 && (
           <div className={styles.empty}>
             <i className="fas fa-triangle-exclamation" />
             <div className={styles.emptyTitle}>{t('typeEntreprisePage.errorTitle')}</div>
@@ -124,7 +145,7 @@ export default function TypeEntreprisePage() {
         )}
 
         {/* ── État vide ── */}
-        {!loading && !error && produits.length === 0 && (
+        {!loading && !error && items.length === 0 && (
           <div className={styles.empty}>
             <i className="fas fa-box-open" />
             <div className={styles.emptyTitle}>{t('typeEntreprisePage.emptyTitle')}</div>
@@ -132,15 +153,17 @@ export default function TypeEntreprisePage() {
           </div>
         )}
 
-        {/* ── Grille produits ── */}
-        {produits.length > 0 && (
+        {/* ── Grille produits/services ── */}
+        {items.length > 0 && (
           <div className={styles.pgrid}>
-            {produits.map(p => <CardProduit key={p.id} p={p} onToast={onToast} />)}
+            {isServiceType
+              ? services.map(s => <CardService key={s.id} s={s} onToast={onToast} />)
+              : produits.map(p => <CardProduit key={p.id} p={p} onToast={onToast} />)}
           </div>
         )}
 
         {/* ── Charger plus ── */}
-        {!error && hasMore && produits.length > 0 && (
+        {!error && hasMore && items.length > 0 && (
           <div className={styles.loadMore}>
             <button className={styles.loadMoreBtn} onClick={loadMore} disabled={loading}>
               {loading

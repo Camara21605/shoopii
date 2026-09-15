@@ -2,7 +2,7 @@
 // FICHIER : src/modules/auth/hooks/useLoginPage.ts
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate }   from 'react-router-dom';
 import { authService }   from '../services/authService';
 import { ApiError }      from '../../../shared/services/apiFetch';
@@ -88,10 +88,15 @@ interface UseLoginPageOptions {
    *  le savoir pour exiger le bon champ (voir 'location'/'city' dans
    *  validateRegisterField ci-dessous). */
   lockedRole?: UserRole | null;
+  /** Lien de vérification email en un clic (?verifyUserId&verifyCode&verifyEmail)
+   *  — voir Login.tsx useVerifyLinkParams. Quand présent, déclenche
+   *  automatiquement handleVerifyEmailCode() au montage, sans attendre
+   *  que l'utilisateur retape le code à la main. */
+  verifyLinkParams?: { userId: string; email: string; code: string } | null;
 }
 
 export function useLoginPage(options: UseLoginPageOptions = {}) {
-  const { initialTab = 'login', lockedRole = null } = options;
+  const { initialTab = 'login', lockedRole = null, verifyLinkParams = null } = options;
 
   const navigate    = useNavigate();
   const { setUser } = useAppContext();
@@ -310,6 +315,10 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
        * une entreprise déjà existante, voir RegisterForm.tsx
        * `roleConfig.shop && !isCollabInvite`).
        */
+      case 'businessModel':
+        if (role !== 'company' || collabInvite) return undefined;
+        return !data.businessModel ? 'Choisissez "Produits" ou "Services".' : undefined;
+
       case 'shopName':
         if (role !== 'company' || collabInvite) return undefined;
         return !data.shopName?.trim() ? 'Nom de la boutique / entreprise requis.' : undefined;
@@ -769,12 +778,18 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
   }, [registerData, registerRole, navigate, setUser, collabInvite, switchTab, showToast, maybeUploadRegisterLogo]);
 
   // Soumission du code de vérification email
-  const handleVerifyEmailCode = useCallback(async (code: string) => {
-    if (!emailVerifyPending) return;
+  /* `target` optionnel — permet à l'auto-vérification par lien (voir l'effet
+   * verifyLinkParams plus bas) de fournir userId directement plutôt que de
+   * dépendre de emailVerifyPending, qui n'a pas encore eu le temps d'être
+   * mis à jour par React au moment où cet effet appelle cette fonction
+   * (setEmailVerifyPending + handleVerifyEmailCode dans le même tick). */
+  const handleVerifyEmailCode = useCallback(async (code: string, target?: { userId: string }) => {
+    const pending = target ?? emailVerifyPending;
+    if (!pending) return;
     setEmailVerifyError('');
     setIsLoading(true);
     try {
-      const res = await authService.verifyEmail(emailVerifyPending.userId, code);
+      const res = await authService.verifyEmail(pending.userId, code);
       setEmailVerifyPending(null);
       completeLogin(res);
     } catch (err) {
@@ -785,6 +800,23 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [emailVerifyPending, completeLogin]);
+
+  /* Auto-vérification depuis le lien d'activation en un clic de l'email
+   * (?verifyUserId&verifyCode&verifyEmail — voir Login.tsx useVerifyLinkParams
+   * et email.service.ts sendEmailVerificationOtp). Affiche l'écran de
+   * vérification (comme un flux normal) ET soumet immédiatement le code
+   * reçu dans l'URL — l'utilisateur voit brièvement l'écran passer en
+   * "vérification…" puis atterrit connecté, sans rien taper. En cas
+   * d'échec (code expiré/déjà utilisé), l'écran reste affiché avec
+   * l'erreur, champ vide, prêt pour une saisie manuelle ou un renvoi. */
+  const autoVerifyTriedRef = useRef(false);
+  useEffect(() => {
+    if (!verifyLinkParams || autoVerifyTriedRef.current) return;
+    autoVerifyTriedRef.current = true;
+    setEmailVerifyPending({ email: verifyLinkParams.email, userId: verifyLinkParams.userId });
+    void handleVerifyEmailCode(verifyLinkParams.code, { userId: verifyLinkParams.userId });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [verifyLinkParams]);
 
   // Renvoyer le code de vérification email
   const handleResendEmailVerification = useCallback(async () => {

@@ -26,13 +26,13 @@
 
 import {
   Body, Controller, Delete, Get, HttpCode, HttpStatus,
-  Param, ParseUUIDPipe, Patch, Post, UseGuards,
+  Param, ParseUUIDPipe, Patch, Post, Query, UseGuards,
 } from '@nestjs/common';
 import {
-  ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags,
+  ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags,
 } from '@nestjs/swagger';
 import {
-  IsBoolean, IsNotEmpty, IsNumber, IsOptional,
+  IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional,
   IsString, IsUUID, MaxLength, Min,
 } from 'class-validator';
 import { Type }                             from 'class-transformer';
@@ -42,6 +42,7 @@ import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard }   from 'src/common/guards/roles.guard';
 import { Roles }        from 'src/common/decorators/roles.decorator';
 import { UserRole }     from 'src/common/enums/user-role.enum';
+import { CompanyTypeNature } from 'src/database/entities/entreprise.table/company-type.entity';
 
 import {
   CompanyTypesService,
@@ -81,6 +82,10 @@ export class CreateCompanyTypeDto {
   @ApiPropertyOptional({ example: 1 })
   @IsOptional() @Type(() => Number) @IsNumber() @Min(1)
   ordre?: number;
+
+  @ApiPropertyOptional({ enum: CompanyTypeNature, description: "Filtre le sélecteur de type à l'inscription selon le modèle économique choisi." })
+  @IsOptional() @IsEnum(CompanyTypeNature)
+  nature?: CompanyTypeNature;
 }
 
 export class UpdateCompanyTypeDto {
@@ -104,6 +109,10 @@ export class UpdateCompanyTypeDto {
 
   @ApiPropertyOptional() @IsOptional() @IsBoolean()
   actif?: boolean;
+
+  @ApiPropertyOptional({ enum: CompanyTypeNature })
+  @IsOptional() @IsEnum(CompanyTypeNature)
+  nature?: CompanyTypeNature;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -233,9 +242,10 @@ export class CatalogueController {
   // Utilisé lors de l'inscription d'une entreprise
 
   @ApiOperation({ summary: "Lister tous les types d'entreprise" })
+  @ApiQuery({ name: 'nature', required: false, enum: CompanyTypeNature, description: "Filtre selon le modèle économique choisi à l'inscription (un type 'neutral' est toujours inclus)." })
   @Get('company-types')
-  findAllTypes(): Promise<CompanyTypeResponse[]> {
-    return this.companyTypesService.findAll();
+  findAllTypes(@Query('nature') nature?: CompanyTypeNature): Promise<CompanyTypeResponse[]> {
+    return this.companyTypesService.findAll(nature);
   }
 
   @ApiOperation({ summary: "Récupérer un type d'entreprise par ID" })

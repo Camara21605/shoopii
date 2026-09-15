@@ -14,6 +14,11 @@
     "emptyTitle": "No business found",
     "emptyText": "No business is available in this category.",
     "loadMore": "Load more shops",
+    "mode": {
+      "tout": "All",
+      "produits": "Products",
+      "services": "Services"
+    },
     "filterBar": {
       "toutesCategories": "✦ All categories",
       "toutesSousCategories": "All subcategories"

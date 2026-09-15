@@ -25,6 +25,8 @@ import frCommandes            from './locales/fr/entreprise/commandes.json';
 import frRetours               from './locales/fr/entreprise/retours.json';
 import frProduits               from './locales/fr/entreprise/produits.json';
 import frAjouter                 from './locales/fr/entreprise/ajouter.json';
+import frServices                from './locales/fr/entreprise/services.json';
+import frAjouterService           from './locales/fr/entreprise/ajouterService.json';
 import frInventaire               from './locales/fr/entreprise/inventaire.json';
 import frFournisseurs           from './locales/fr/entreprise/fournisseurs.json';
 import frPromotions                from './locales/fr/entreprise/promotions.json';
@@ -102,6 +104,8 @@ import enCommandes            from './locales/en/entreprise/commandes.json';
 import enRetours               from './locales/en/entreprise/retours.json';
 import enProduits               from './locales/en/entreprise/produits.json';
 import enAjouter                 from './locales/en/entreprise/ajouter.json';
+import enServices                from './locales/en/entreprise/services.json';
+import enAjouterService           from './locales/en/entreprise/ajouterService.json';
 import enInventaire               from './locales/en/entreprise/inventaire.json';
 import enFournisseurs           from './locales/en/entreprise/fournisseurs.json';
 import enPromotions                from './locales/en/entreprise/promotions.json';
@@ -307,7 +311,7 @@ import ptSettingsPage    from './locales/pt/client/settingsPage.json';
 import ptClientDashboard  from './locales/pt/client/dashboard.json';
 
 const fr = {
-  ...frLayout, ...frOverview, ...frCommandes, ...frRetours, ...frProduits, ...frAjouter, ...frInventaire, ...frFournisseurs,
+  ...frLayout, ...frOverview, ...frCommandes, ...frRetours, ...frProduits, ...frAjouter, ...frServices, ...frAjouterService, ...frInventaire, ...frFournisseurs,
   ...frPromotions, ...frAnalytics, ...frLivreurs, ...frCorrespondants, ...frProfilCorrespondant, ...frProfilLivreur,
   ...frFinances, ...frWallet, ...frClients, ...frClientProfil, ...frAvis, ...frParametres, ...frEquipe,
   ...frBoutiquePreview, ...frMessagerie, ...frSeo,
@@ -320,7 +324,7 @@ const fr = {
 };
 
 const en = {
-  ...enLayout, ...enOverview, ...enCommandes, ...enRetours, ...enProduits, ...enAjouter, ...enInventaire, ...enFournisseurs,
+  ...enLayout, ...enOverview, ...enCommandes, ...enRetours, ...enProduits, ...enAjouter, ...enServices, ...enAjouterService, ...enInventaire, ...enFournisseurs,
   ...enPromotions, ...enAnalytics, ...enLivreurs, ...enCorrespondants, ...enProfilCorrespondant, ...enProfilLivreur,
   ...enFinances, ...enWallet, ...enClients, ...enClientProfil, ...enAvis, ...enParametres, ...enEquipe,
   ...enBoutiquePreview, ...enMessagerie, ...enSeo,

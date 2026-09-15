@@ -71,6 +71,7 @@ export default function HomePage() {
     'produits',
     'entreprises',
     'produits-gros',
+    'services',
     'correspondants',
     'livreurs',
   ]));

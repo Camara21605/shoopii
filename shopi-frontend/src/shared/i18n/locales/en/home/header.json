@@ -12,10 +12,12 @@
     "searchScopes": {
       "tout": "All",
       "produits": "Products",
+      "services": "Services",
       "boutiques": "Shops",
       "livreurs": "Couriers",
       "correspondants": "Correspondents"
     },
+    "searchSurDevis": "Quote on request",
     "searchScopeAria": "Choose search type",
     "searchInputAria": "Search the platform",
     "searchLoading": "Searching…",

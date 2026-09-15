@@ -192,6 +192,9 @@ export interface TypeLocal {
   couleur:       string | null;  // Couleur hex de l'étiquette
   ordre:         number;         // Ordre d'affichage dans la liste
   actif:         boolean;
+  /** Filtre le sélecteur de type à l'inscription entreprise selon le
+   *  modèle économique choisi (produits/services) — voir RegisterForm.tsx. */
+  nature:        'products' | 'services' | 'neutral';
   nbCategories:  number;         // Nombre de catégories liées
   nbEntreprises: number;         // Nombre d'entreprises utilisant ce type
 }

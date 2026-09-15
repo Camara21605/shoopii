@@ -11,6 +11,8 @@
     "entreprise": {
       "roleLabel": "Entreprise",
       "verifie": "Vérifié",
+      "venteProduits": "Vend des produits",
+      "venteServices": "Propose des services",
       "villeDefault": "Conakry",
       "commandes": "Commandes",
       "note": "Note ⭐",
@@ -105,6 +107,19 @@
         "prixParUnite": "Prix / unité",
         "economie": "Économie",
         "note": "Ajoutez le produit au panier avec la quantité souhaitée. Le prix dégressif s'applique automatiquement à la commande."
+      }
+    },
+    "service": {
+      "duree": "{{min}}–{{max}} min",
+      "modeSurPlace": "Sur place",
+      "modeDomicile": "À domicile",
+      "modeDistance": "À distance",
+      "surDevis": "Sur devis",
+      "parHeure": "/h",
+      "demanderDevis": "Demander un devis",
+      "contacterBoutique": "Contacter la boutique",
+      "modalEntreprise": {
+        "servicePublieLabel": "Prestation publiée par cette boutique"
       }
     }
   }

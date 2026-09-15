@@ -101,6 +101,13 @@ export default function CatalogueTab({ isActive, toast }: Props) {
   const [newTypeCoul,  setNewTypeCoul]  = useState('');
   const [newTypeDesc,  setNewTypeDesc]  = useState('');
   const [newTypeOrdre, setNewTypeOrdre] = useState('');
+  /* '' = aucun choix encore fait — voir handleAjouterType : contrairement
+   * à avant, plus de repli silencieux sur 'neutral'. Un type "neutre" est
+   * un choix ADMIS mais désormais toujours EXPLICITE, sélectionné à la
+   * main, jamais la valeur par défaut d'un champ jamais touché — c'est
+   * précisément ce défaut silencieux qui faisait apparaître le même type
+   * d'entreprise à l'inscription aussi bien côté produits que services. */
+  const [newTypeNature, setNewTypeNature] = useState<'products' | 'services' | 'neutral' | ''>('');
   const [typeErreur,   setTypeErreur]   = useState('');
 
   /* ── Modales Catégories ── */
@@ -163,6 +170,10 @@ export default function CatalogueTab({ isActive, toast }: Props) {
 
   const handleAjouterType = async () => {
     if (!newTypeNom.trim()) { setTypeErreur('Le nom du type est obligatoire.'); return; }
+    if (!newTypeNature) {
+      setTypeErreur('Choisissez si ce type concerne des produits, des services, ou les deux (neutre).');
+      return;
+    }
     try {
       const created = await apiFetch<TypeLocal>('/company-types', {
         method: 'POST',
@@ -173,6 +184,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
           couleur: newTypeCoul.trim() || undefined,
           description: newTypeDesc.trim() || undefined,
           ordre: newTypeOrdre ? parseInt(newTypeOrdre) : undefined,
+          nature: newTypeNature,
         },
       });
       // Ajoute le nouveau type en local sans recharger toute la liste
@@ -180,10 +192,31 @@ export default function CatalogueTab({ isActive, toast }: Props) {
       // Ferme la modale et réinitialise le formulaire
       setModalType(false);
       setNewTypeNom(''); setNewTypeSlug(''); setNewTypeIcone('');
-      setNewTypeCoul(''); setNewTypeDesc(''); setNewTypeOrdre('');
+      setNewTypeCoul(''); setNewTypeDesc(''); setNewTypeOrdre(''); setNewTypeNature('');
       toast(`✅ Type "${created.nom}" créé`, 'success');
     } catch (err) {
       setTypeErreur(err instanceof ApiError ? err.message : 'Erreur réseau.');
+    }
+  };
+
+  /* Reclassement rapide d'un type déjà existant — jusqu'ici la nature
+   * n'était réglable qu'à LA CRÉATION (aucune modale "modifier le type"
+   * n'existe) : un type resté 'neutral' (la totalité des types créés
+   * avant l'introduction de ce champ) n'avait donc aucun moyen d'être
+   * corrigé sans le supprimer et le recréer — impossible dès qu'une
+   * entreprise l'utilise déjà (voir handleSupprimerType, bloqué dans ce
+   * cas). Ce sélecteur inline sur le badge de nature comble ce trou. */
+  const handleChangerNatureType = async (type: TypeLocal, nature: 'products' | 'services' | 'neutral') => {
+    if (nature === type.nature) return;
+    try {
+      const updated = await apiFetch<TypeLocal>(`/company-types/${type.id}`, {
+        method: 'PATCH',
+        body: { nature },
+      });
+      setTypes(prev => prev.map(t => t.id === type.id ? { ...t, nature: updated.nature } : t));
+      toast(`✅ "${type.nom}" reclassé en ${nature === 'products' ? 'Produits' : nature === 'services' ? 'Services' : 'Neutre'}`, 'success');
+    } catch (err) {
+      toast(err instanceof ApiError ? err.message : 'Erreur lors du reclassement.', 'error');
     }
   };
 
@@ -344,6 +377,22 @@ export default function CatalogueTab({ isActive, toast }: Props) {
           </button>
         </div>
 
+        {/* Types encore 'neutral' — invisibles à l'inscription (voir
+         * CompanyTypesService.findAll, correspondance stricte sans repli
+         * neutre) tant qu'ils ne sont pas explicitement reclassés ici. */}
+        {!typeLoading && types.some(t => t.nature === 'neutral') && (
+          <div style={{
+            margin: '0 16px 12px', padding: '10px 14px',
+            background: 'rgba(251,191,36,.1)', border: '1px solid rgba(251,191,36,.35)',
+            borderRadius: 8, fontSize: 12, color: 'var(--txt-2)',
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <i className="fas fa-triangle-exclamation" style={{ color: 'var(--gold)' }} />
+            {types.filter(t => t.nature === 'neutral').length} type(s) non classé(s) produits/services (⚪) —
+            invisibles à l'inscription tant qu'ils ne sont pas reclassés (cliquez le type puis modifiez sa nature).
+          </div>
+        )}
+
         {typeLoading ? (
           <div style={{ padding: '20px', textAlign: 'center', color: 'var(--txt-3)' }}>Chargement…</div>
         ) : (
@@ -362,8 +411,26 @@ export default function CatalogueTab({ isActive, toast }: Props) {
               >
                 <span style={{ fontSize: 22, flexShrink: 0 }}>{type.icone || '🏢'}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--txt-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--txt-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 6 }}>
                     {type.nom}
+                    {/* Sélecteur nature — reclasse ce type sans passer par une
+                        suppression/recréation (impossible dès qu'une entreprise
+                        l'utilise déjà). ⚪ = non classé, invisible à l'inscription
+                        (voir bandeau d'alerte au-dessus de la grille). */}
+                    <select
+                      value={type.nature}
+                      onClick={e => e.stopPropagation()}
+                      onChange={e => { e.stopPropagation(); handleChangerNatureType(type, e.target.value as 'products' | 'services' | 'neutral'); }}
+                      title={type.nature === 'products' ? 'Produits' : type.nature === 'services' ? 'Services' : 'Neutre — non catégorisé, invisible à l\'inscription'}
+                      style={{
+                        fontSize: 11, flexShrink: 0, border: 'none', background: 'transparent',
+                        cursor: 'pointer', color: 'inherit', fontFamily: 'inherit',
+                      }}
+                    >
+                      <option value="products">📦 Produits</option>
+                      <option value="services">🛠️ Services</option>
+                      <option value="neutral">⚪ Neutre</option>
+                    </select>
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--txt-3)', marginTop: 2 }}>
                     {type.nbCategories} cat. · {type.nbEntreprises} entreprise{type.nbEntreprises !== 1 ? 's' : ''}
@@ -571,6 +638,26 @@ export default function CatalogueTab({ isActive, toast }: Props) {
                   placeholder="0"
                   style={{ width: 100 }}
                 />
+              </div>
+
+              {/* Nature — filtre le sélecteur de type à l'inscription selon
+                  le modèle économique choisi (produits/services). */}
+              <div>
+                <label className="form-label">Nature *</label>
+                <select
+                  className="sel"
+                  value={newTypeNature}
+                  onChange={e => { setNewTypeNature(e.target.value as 'products' | 'services' | 'neutral'); setTypeErreur(''); }}
+                >
+                  <option value="" disabled>— Choisir (obligatoire) —</option>
+                  <option value="products">📦 Produits</option>
+                  <option value="services">🛠️ Services</option>
+                  <option value="neutral">⚪ Neutre (proposé aux deux — rare, à réserver aux types vraiment mixtes)</option>
+                </select>
+                <div style={{ fontSize: 10, color: 'var(--txt-3)', marginTop: 4 }}>
+                  Détermine si ce type apparaît pour une entreprise "produits", "services", ou les deux, à l'inscription.
+                  Choix obligatoire — un type non classé n'apparaît nulle part à l'inscription.
+                </div>
               </div>
 
               {/* Erreur si présente */}

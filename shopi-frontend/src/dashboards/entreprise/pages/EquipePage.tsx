@@ -102,11 +102,23 @@ interface ActivityEntry {
  * cette liste sans modifier ce fichier.
  * ══════════════════════════════════════════════════════════════ */
 
-function getPermissionGroups(t: TFunction) {
+/** Groupe "Produits" OU "Services" selon Company.businessModel — jamais
+ *  les deux (modèle exclusif, voir Sidebar.buildNavSections côté layout
+ *  entreprise pour le même principe). Un propriétaire "services" n'a donc
+ *  aucun moyen d'accorder des permissions "products" à un collaborateur
+ *  (et inversement) : cohérent avec le fait que ces routes n'existent
+ *  même pas pour son compte (403 businessModel côté backend). */
+function getPermissionGroups(t: TFunction, businessModel: 'products' | 'services' = 'products') {
+  const catalogueGroup = businessModel === 'services'
+    ? { key: 'services',  label: t('equipe.permGroups.services.label'),  icon: 'fa-concierge-bell',
+        actions: [{ key: 'view', label: t('equipe.permGroups.services.view') }, { key: 'create', label: t('equipe.permGroups.services.create') },
+                  { key: 'edit', label: t('equipe.permGroups.services.edit') }, { key: 'delete', label: t('equipe.permGroups.services.delete') }] }
+    : { key: 'products',  label: t('equipe.permGroups.products.label'),  icon: 'fa-tag',
+        actions: [{ key: 'view', label: t('equipe.permGroups.products.view') }, { key: 'create', label: t('equipe.permGroups.products.create') },
+                  { key: 'edit', label: t('equipe.permGroups.products.edit') }, { key: 'delete', label: t('equipe.permGroups.products.delete') }] };
+
   return [
-    { key: 'products',   label: t('equipe.permGroups.products.label'),   icon: 'fa-tag',
-      actions: [{ key: 'view', label: t('equipe.permGroups.products.view') }, { key: 'create', label: t('equipe.permGroups.products.create') },
-                { key: 'edit', label: t('equipe.permGroups.products.edit') }, { key: 'delete', label: t('equipe.permGroups.products.delete') }] },
+    catalogueGroup,
     { key: 'orders',     label: t('equipe.permGroups.orders.label'),     icon: 'fa-box',
       actions: [{ key: 'view', label: t('equipe.permGroups.orders.view') }, { key: 'validate', label: t('equipe.permGroups.orders.validate') },
                 { key: 'cancel', label: t('equipe.permGroups.orders.cancel') }, { key: 'edit', label: t('equipe.permGroups.orders.edit') }] },
@@ -126,12 +138,17 @@ function getPermissionGroups(t: TFunction) {
       actions: [{ key: 'view', label: t('equipe.permGroups.returns.view') }, { key: 'process', label: t('equipe.permGroups.returns.process') }] },
     { key: 'wallet',     label: t('equipe.permGroups.wallet.label'),    icon: 'fa-wallet',
       actions: [{ key: 'view', label: t('equipe.permGroups.wallet.view') }, { key: 'withdraw', label: t('equipe.permGroups.wallet.withdraw') }] },
-    { key: 'fournisseurs', label: t('equipe.permGroups.fournisseurs.label'), icon: 'fa-industry',
-      actions: [{ key: 'view', label: t('equipe.permGroups.fournisseurs.view') }, { key: 'connect', label: t('equipe.permGroups.fournisseurs.connect') },
-                { key: 'disconnect', label: t('equipe.permGroups.fournisseurs.disconnect') }] },
+    /* Fournisseurs (réapprovisionnement en gros) — n'a de sens que pour un
+     * catalogue de biens physiques, aucune page équivalente n'existe côté
+     * sidebar pour un compte services (voir Sidebar.CATALOGUE_SERVICES). */
+    ...(businessModel === 'services' ? [] : [
+      { key: 'fournisseurs', label: t('equipe.permGroups.fournisseurs.label'), icon: 'fa-industry',
+        actions: [{ key: 'view', label: t('equipe.permGroups.fournisseurs.view') }, { key: 'connect', label: t('equipe.permGroups.fournisseurs.connect') },
+                  { key: 'disconnect', label: t('equipe.permGroups.fournisseurs.disconnect') }] },
+    ]),
     { key: 'boutique', label: t('equipe.permGroups.boutique.label'), icon: 'fa-store',
       actions: [{ key: 'view', label: t('equipe.permGroups.boutique.view') }, { key: 'edit', label: t('equipe.permGroups.boutique.edit') }] },
-  ] as const;
+  ];
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -166,7 +183,18 @@ function statusLabel(s: TeamMember['status'], t: TFunction) {
 export default function EquipePage() {
   const { pop } = useToast();
   const { t } = useTranslation();
-  const PERMISSION_GROUPS = getPermissionGroups(t);
+
+  /* businessModel de la boutique connectée — détermine si l'éditeur de
+   * permissions propose le groupe "Produits" ou "Services" (jamais les
+   * deux, voir getPermissionGroups ci-dessus). */
+  const [businessModel, setBusinessModel] = useState<'products' | 'services'>('products');
+  useEffect(() => {
+    apiFetch<{ businessModel?: 'products' | 'services' }>('/dashboard/entreprise/parametres')
+      .then(data => { if (data?.businessModel) setBusinessModel(data.businessModel); })
+      .catch(() => {});
+  }, []);
+
+  const PERMISSION_GROUPS = getPermissionGroups(t, businessModel);
 
   /* ── Onglets ── */
   const [activeTab, setActiveTab] = useState<'members' | 'invitations'>('members');

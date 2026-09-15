@@ -40,6 +40,10 @@ import { StoryView }    from '../database/entities/entreprise.table/story-view.e
 import { StoryLike }    from '../database/entities/entreprise.table/story-like.entity';
 import { CompanySupplierLink } from '../database/entities/entreprise.table/company-supplier-link.entity';
 import { ProductLike } from '../database/entities/entreprise.table/product-like.entity';
+import { Service }       from '../database/entities/entreprise.table/service.entity';
+import { ServiceMedia }  from '../database/entities/entreprise.table/service-media.entity';
+import { ServiceSpec }   from '../database/entities/entreprise.table/service-spec.entity';
+import { ServiceLike }   from '../database/entities/entreprise.table/service-like.entity';
 import { WishlistItem } from '../database/entities/entreprise.table/wishlist-item.entity';
 import { PromotionProduct } from '../database/entities/entreprise.table/promotion-product.entity'; // ✅ AJOUTÉ : manquait l'import de PromotionProduct
 import { TrendingProduct }     from '../database/entities/entreprise.table/trending-product.entity';
@@ -288,6 +292,12 @@ export const databaseConfigFactory = {
       ProductWholesaleTier,
       ProductMedia,
       Promotion,
+
+      // 7bis. Prestations de service — dépend de Company (businessModel=services)
+      Service,
+      ServiceMedia,
+      ServiceSpec,
+      ServiceLike,
 
       // 8. EN DERNIER — dépend de tous les profils
       ProductStory,

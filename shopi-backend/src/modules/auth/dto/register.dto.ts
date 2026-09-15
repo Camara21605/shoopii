@@ -23,6 +23,7 @@ import {
 import { Transform, Type } from 'class-transformer';
 import { UserRole }  from '../../../common/enums/user-role.enum';
 import { MinAgeForRole } from '../../../common/validators/min-age-for-role.validator';
+import { CompanyBusinessModel } from '../../../database/entities/profiles/entreprise-profile.entity';
 
 /* Rôles dont la localisation est détectée automatiquement (GPS, avec
  * repli sur pointage manuel carte) plutôt que choisie manuellement dans
@@ -154,6 +155,15 @@ export class RegisterDto {
     message: "Le genre doit être 'male', 'female', 'other' ou 'prefer_not'.",
   })
   gender: string;
+
+  /* Modèle économique — exclusif et fixé à l'inscription (voir
+   * Company.businessModel) : une entreprise vend soit des produits
+   * physiques, soit propose des services, jamais les deux. Même
+   * pattern @ValidateIf que shopName/companyTypeId ci-dessous. */
+  @ValidateIf(o => o.role === UserRole.COMPANY)
+  @IsEnum(CompanyBusinessModel, { message: "Le modèle d'activité doit être 'products' ou 'services'." })
+  @IsNotEmpty({ message: "Le modèle d'activité est obligatoire pour un compte entreprise." })
+  businessModel?: CompanyBusinessModel;
 
   /* BUG CORRIGÉ — même correctif que shopName ci-dessus : obligatoire
    * uniquement pour un compte "company". */

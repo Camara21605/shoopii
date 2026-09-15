@@ -24,7 +24,7 @@ function buildRegisterPayload(
 ): RegisterPayload {
   const {
     firstName, lastName, email, phone, password, role,
-    activationCode, referralSlug, shopName, companyTypeId,
+    activationCode, referralSlug, shopName, businessModel, companyTypeId,
     // Profil — voir RegisterFormData.birthDate/gender (devenus obligatoires)
     birthDate, gender,
     // Pays
@@ -64,6 +64,11 @@ function buildRegisterPayload(
   if (role === 'company' && shopName && shopName.trim() !== '') {
     payload.shopName    = shopName.trim();
     payload.companyName = shopName.trim();
+  }
+
+  // Modèle économique (seulement pour role='company')
+  if (role === 'company' && businessModel) {
+    payload.businessModel = businessModel;
   }
 
   // Type d'entreprise (seulement pour role='company')

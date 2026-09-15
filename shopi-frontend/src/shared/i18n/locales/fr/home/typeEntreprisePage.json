@@ -8,6 +8,7 @@
     "voirToutesEntreprises": "Voir toutes les entreprises",
     "toutesCategories": "✦ Toutes catégories",
     "produits": "Produits",
+    "services": "Services",
     "loading": "Chargement…",
     "resultCount_one": "{{count}} produit",
     "resultCount_other": "{{count}} produits",

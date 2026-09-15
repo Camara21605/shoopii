@@ -11,6 +11,8 @@
     "entreprise": {
       "roleLabel": "Company",
       "verifie": "Verified",
+      "venteProduits": "Sells products",
+      "venteServices": "Offers services",
       "villeDefault": "Conakry",
       "commandes": "Orders",
       "note": "Rating ⭐",
@@ -105,6 +107,19 @@
         "prixParUnite": "Price / unit",
         "economie": "Savings",
         "note": "Add the product to your cart with the desired quantity. The tiered price applies automatically to the order."
+      }
+    },
+    "service": {
+      "duree": "{{min}}–{{max}} min",
+      "modeSurPlace": "On-site",
+      "modeDomicile": "At client's location",
+      "modeDistance": "Remote",
+      "surDevis": "Quote on request",
+      "parHeure": "/h",
+      "demanderDevis": "Request a quote",
+      "contacterBoutique": "Contact the shop",
+      "modalEntreprise": {
+        "servicePublieLabel": "Service published by this shop"
       }
     }
   }

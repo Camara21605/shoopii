@@ -15,6 +15,8 @@
       "retours": "Returns & Support",
       "produits": "Products",
       "ajouter": "Add product",
+      "services": "Services",
+      "ajouterService": "Add a service",
       "inventaire": "Inventory",
       "fournisseurs": "Suppliers",
       "promotions": "Promotions",
@@ -135,6 +137,14 @@
       "equipe": {
         "title": "Team",
         "subtitle": "Members and permissions of your store"
+      },
+      "services": {
+        "title": "Services catalog",
+        "subtitle": "Manage your service offerings"
+      },
+      "ajouterService": {
+        "title": "Add a service",
+        "subtitle": "Create and publish a new service"
       }
     },
     "searchPlaceholder": "Search orders, products, customers…",

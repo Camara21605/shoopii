@@ -8,7 +8,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, MoreThan, In } from 'typeorm';
 
 import { Product, ProductVisibility } from 'src/database/entities/entreprise.table/product.entity';
-import { Company, CompanyStatus } from 'src/database/entities/profiles/entreprise-profile.entity';
+import { Service, ServiceVisibility } from 'src/database/entities/entreprise.table/service.entity';
+import { Company, CompanyStatus, CompanyBusinessModel } from 'src/database/entities/profiles/entreprise-profile.entity';
 import { Delivery, DeliveryStatus, DeliveryAvailability } from 'src/database/entities/profiles/livreur-profile.entity';
 import { Correspondent, CorrespondantStatus, VerificationStatus } from 'src/database/entities/profiles/correspondant-profile.entity';
 import { JOURS_ORDER } from 'src/database/entities/profiles/correspondant-horaire.entity';
@@ -79,6 +80,46 @@ export interface PublicProduitResponse {
   createdAt: string;
 }
 
+/** Prestation de service publique — miroir de PublicProduitResponse pour
+ *  les champs communs (médias, catégorie, entreprise), avec les champs
+ *  propres à un service (tarification, durée, mode de prestation) à la
+ *  place de stock/marque/variantes/livraison. Voir service.entity.ts. */
+export interface PublicServiceResponse {
+  id:          string;
+  nom:         string;
+  description: string | null;
+  tags:        string | null;
+  urlSlug:     string | null;
+  visibilite:  string;
+  pricingType: string;
+  prix:        number | null;
+  prixAncien:  number | null;
+  dureeMinMinutes: number | null;
+  dureeMaxMinutes: number | null;
+  capaciteMax:     number | null;
+  surPlaceEntreprise: boolean;
+  aDomicile:          boolean;
+  aDistance:          boolean;
+  zoneCouverture:      string | null;
+  fraisDeplacement:    number | null;
+  reservationRequise:  boolean;
+  delaiReponse:        string;
+  politiqueAnnulation: string;
+  garantiePaiement:     boolean;
+  garantieSatisfaction: boolean;
+  media:       { id: string; url: string; ordre: number; alt: string | null; type: string }[];
+  category:    { id: string; nom: string; icone: string | null };
+  subCategory: { id: string; nom: string } | null;
+  specs:       { id: string; cle: string; valeur: string; ordre: number }[];
+  companyId:   string;
+  companyName: string;
+  companyLogo: string | null;
+  companyVerified: boolean;
+  companyVille:    string | null;
+  companyPays:     string;
+  createdAt: string;
+}
+
 /* ✅ NOUVEAU — format retourné par getSimilaires */
 export interface SimilaireResponse {
   id:         string;
@@ -114,6 +155,10 @@ export interface PublicBoutiqueResponse {
   pays:          string;
   adresse:       string | null;
   verified:      boolean;
+  /** Modèle économique de la boutique — voir Company.businessModel. Pilote
+   *  le badge produits/services sur CardEntreprise et le toggle Produits/
+   *  Services/Tout de BoutiquesPage côté client. */
+  businessModel: 'products' | 'services';
   domaine:       string | null;
   domaineIcon:   string | null;
   membre:        string;
@@ -234,6 +279,9 @@ export class PublicService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepo: Repository<Product>,
+
+    @InjectRepository(Service)
+    private readonly serviceRepo: Repository<Service>,
 
     @InjectRepository(Company)
     private readonly companyRepo: Repository<Company>,
@@ -439,6 +487,15 @@ export class PublicService {
       .leftJoinAndSelect('p.company',        'company')
       .leftJoinAndSelect('p.wholesaleTiers', 'tiers')
       .where('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+      /* SÉCURITÉ — une entreprise suspendue ou en attente de validation ne
+       * doit plus apparaître dans la découverte publique, même si ses
+       * produits sont restés en visibilite=public. Avant ce correctif,
+       * aucun endpoit /public/produits* ne relisait Company.status — un
+       * lien direct/partagé/indexé vers un produit restait pleinement
+       * consultable après suspension de la boutique. Même correctif
+       * appliqué à getProduit/listServices/getService/getBoutique*
+       * ci-dessous. */
+      .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
       /* BUG CORRIGÉ — Company.showOutOfStock (Paramètres > Catalogue)
        * était enregistré mais jamais lu : un produit épuisé restait
        * toujours visible même boutique par boutique désactivée. */
@@ -480,11 +537,66 @@ export class PublicService {
       .leftJoinAndSelect('p.variantes',      'variantes')
       .where('p.id = :id', { id })
       .andWhere('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+      .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
       .orderBy('images.ordre', 'ASC')
       .getOne();
 
     if (!product) throw new NotFoundException('Produit introuvable ou non publié.');
     return this.toPublicProduit(product);
+  }
+
+  // ── Services publics paginés ────────────────────────────────────
+
+  async listServices(params: {
+    page: number; limit: number;
+    categoryId?: string; companyTypeId?: string; search?: string;
+  }): Promise<{ data: PublicServiceResponse[]; total: number; page: number; pages: number }> {
+
+    const { page, limit, categoryId, companyTypeId, search } = params;
+
+    const qb = this.serviceRepo
+      .createQueryBuilder('s')
+      .leftJoinAndSelect('s.media',       'media')
+      .leftJoinAndSelect('s.category',    'category')
+      .leftJoinAndSelect('s.subCategory', 'subCategory')
+      .leftJoinAndSelect('s.company',     'company')
+      .where('s.visibilite = :vis', { vis: ServiceVisibility.PUBLIC })
+      /* SÉCURITÉ — voir le commentaire détaillé dans listProduits(). */
+      .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
+      .orderBy('s.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    if (categoryId) qb.andWhere('s.categoryId = :catId', { catId: categoryId });
+    if (companyTypeId) qb.andWhere('company.companyTypeId = :companyTypeId', { companyTypeId });
+    if (search?.trim()) {
+      const term = `%${search.trim().toLowerCase()}%`;
+      qb.andWhere(`(LOWER(s.nom) LIKE :term OR LOWER(COALESCE(s.tags, '')) LIKE :term)`, { term });
+    }
+
+    const [services, total] = await qb.getManyAndCount();
+    const data = await Promise.all(services.map(s => this.toPublicService(s)));
+    return { data, total, page, pages: Math.ceil(total / limit) };
+  }
+
+  // ── Détail service ──────────────────────────────────────────────
+
+  async getService(id: string): Promise<PublicServiceResponse> {
+    const service = await this.serviceRepo
+      .createQueryBuilder('s')
+      .leftJoinAndSelect('s.media',       'media')
+      .leftJoinAndSelect('s.category',    'category')
+      .leftJoinAndSelect('s.subCategory', 'subCategory')
+      .leftJoinAndSelect('s.company',     'company')
+      .leftJoinAndSelect('s.specs',       'specs')
+      .where('s.id = :id', { id })
+      .andWhere('s.visibilite = :vis', { vis: ServiceVisibility.PUBLIC })
+      .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
+      .orderBy('media.ordre', 'ASC')
+      .getOne();
+
+    if (!service) throw new NotFoundException('Service introuvable ou non publié.');
+    return this.toPublicService(service);
   }
 
   // ✅ ── Produits similaires ─────────────────────────────────────
@@ -508,6 +620,7 @@ export class PublicService {
       .leftJoinAndSelect('p.company',  'company')
       .where('p.id != :id',    { id: produitId })
       .andWhere('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+      .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
       .orderBy('p.createdAt', 'DESC')
       .take(max);
 
@@ -528,6 +641,7 @@ export class PublicService {
         .where('p.id != :id',    { id: produitId })
         .andWhere('p.id NOT IN (:...ids)', { ids: [produitId, ...existingIds] })
         .andWhere('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+        .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
         .orderBy('p.createdAt', 'DESC')
         .take(max - results.length)
         .getMany();
@@ -542,8 +656,13 @@ export class PublicService {
 
   async getBoutique(id: string): Promise<PublicBoutiqueResponse> {
     const [company, totalAbonnes] = await Promise.all([
+      /* SÉCURITÉ — une entreprise suspendue/en attente de validation ne
+       * doit plus être consultable via un lien direct (voir le même
+       * correctif détaillé dans listProduits()). N'affecte pas l'aperçu
+       * propriétaire (BoutiquePreviewPage.tsx), qui passe par un endpoint
+       * authentifié distinct, pas /public/boutiques/:id. */
       this.companyRepo.findOne({
-        where: { id },
+        where: { id, status: CompanyStatus.ACTIVE },
         relations: ['companyType', 'user', 'horaires'],
       }),
       this.followRepo.count({
@@ -577,6 +696,8 @@ export class PublicService {
       .leftJoinAndSelect('p.wholesaleTiers', 'tiers')
       .where('p.companyId = :companyId', { companyId })
       .andWhere('p.visibilite = :vis', { vis: ProductVisibility.PUBLIC })
+      /* SÉCURITÉ — voir listProduits() ci-dessus pour le détail. */
+      .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
       /* BUG CORRIGÉ — voir listProduits() ci-dessus pour le détail. */
       .andWhere('(company."showOutOfStock" = true OR p.stock > 0)')
       .orderBy('p.createdAt', 'DESC')
@@ -594,6 +715,40 @@ export class PublicService {
 
     const [products, total] = await qb.getManyAndCount();
     const data = await Promise.all(products.map(p => this.toPublicProduit(p)));
+    return { data, total, page, pages: Math.ceil(total / limit) };
+  }
+
+  // ── Services d'une boutique ───────────────────────────────────
+
+  async getBoutiqueServices(
+    companyId: string,
+    params: { page: number; limit: number; categoryId?: string; search?: string },
+  ): Promise<{ data: PublicServiceResponse[]; total: number; page: number; pages: number }> {
+
+    const { page, limit, categoryId, search } = params;
+
+    const qb = this.serviceRepo
+      .createQueryBuilder('s')
+      .leftJoinAndSelect('s.media',       'media')
+      .leftJoinAndSelect('s.category',    'category')
+      .leftJoinAndSelect('s.subCategory', 'subCategory')
+      .leftJoinAndSelect('s.company',     'company')
+      .where('s.companyId = :companyId', { companyId })
+      .andWhere('s.visibilite = :vis', { vis: ServiceVisibility.PUBLIC })
+      /* SÉCURITÉ — voir listProduits() pour le détail. */
+      .andWhere('company.status = :companyStatus', { companyStatus: CompanyStatus.ACTIVE })
+      .orderBy('s.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    if (categoryId) qb.andWhere('s.categoryId = :catId', { catId: categoryId });
+    if (search?.trim()) {
+      const term = `%${search.trim().toLowerCase()}%`;
+      qb.andWhere(`(LOWER(s.nom) LIKE :term OR LOWER(COALESCE(s.tags, '')) LIKE :term)`, { term });
+    }
+
+    const [services, total] = await qb.getManyAndCount();
+    const data = await Promise.all(services.map(s => this.toPublicService(s)));
     return { data, total, page, pages: Math.ceil(total / limit) };
   }
 
@@ -745,6 +900,55 @@ export class PublicService {
     };
   }
 
+  /** Miroir de toPublicProduit() pour une prestation de service — voir
+   *  PublicServiceResponse pour le détail des champs. */
+  private async toPublicService(s: Service): Promise<PublicServiceResponse> {
+    const company = await s.company;
+    return {
+      id:          s.id,
+      nom:         s.nom,
+      description: s.description,
+      tags:        s.tags,
+      urlSlug:     s.urlSlug,
+      visibilite:  s.visibilite,
+      pricingType: s.pricingType,
+      prix:        s.prix,
+      prixAncien:  s.prixAncien,
+      dureeMinMinutes: s.dureeMinMinutes,
+      dureeMaxMinutes: s.dureeMaxMinutes,
+      capaciteMax:     s.capaciteMax,
+      surPlaceEntreprise: s.surPlaceEntreprise,
+      aDomicile:          s.aDomicile,
+      aDistance:          s.aDistance,
+      zoneCouverture:      s.zoneCouverture,
+      fraisDeplacement:    s.fraisDeplacement,
+      reservationRequise:  s.reservationRequise,
+      delaiReponse:        s.delaiReponse,
+      politiqueAnnulation: s.politiqueAnnulation,
+      garantiePaiement:     s.garantiePaiement,
+      garantieSatisfaction: s.garantieSatisfaction,
+      media: (s.media ?? [])
+        .sort((a, b) => a.ordre - b.ordre)
+        .map(m => ({ id: m.id, url: m.url, ordre: m.ordre, alt: m.alt, type: m.type })),
+      category: {
+        id:    s.category?.id    ?? '',
+        nom:   s.category?.nom   ?? '',
+        icone: s.category?.icone ?? null,
+      },
+      subCategory: s.subCategory ? { id: s.subCategory.id, nom: s.subCategory.nom } : null,
+      specs: (s.specs ?? [])
+        .sort((a, b) => a.ordre - b.ordre)
+        .map(sp => ({ id: sp.id, cle: sp.cle, valeur: sp.valeur, ordre: sp.ordre })),
+      companyId:   s.companyId,
+      companyName: company?.companyName ?? '',
+      companyLogo: company?.logo        ?? null,
+      companyVerified: company?.verificationStatus === 'verified',
+      companyVille:    company?.ville ?? null,
+      companyPays:     company?.pays  ?? 'GN',
+      createdAt: s.createdAt.toISOString(),
+    };
+  }
+
   /* ✅ NOUVEAU mapper similaires */
   private async toSimilaire(p: Product): Promise<SimilaireResponse> {
     const company = await p.company;
@@ -803,6 +1007,7 @@ export class PublicService {
       pays:          c.pays              ?? 'GN',
       adresse:       c.adresse,
       verified:      c.verificationStatus === 'verified',
+      businessModel: c.businessModel ?? CompanyBusinessModel.PRODUCTS,
       domaine:       (c.companyType as any)?.nom   ?? null,
       domaineIcon:   (c.companyType as any)?.icone ?? null,
       membre,
@@ -829,8 +1034,9 @@ export class PublicService {
   async listBoutiques(params: {
     page: number; limit: number; search?: string;
     categoryId?: string; subCategoryId?: string; companyTypeId?: string;
+    businessModel?: 'products' | 'services';
   }): Promise<{ data: PublicBoutiqueResponse[]; total: number; page: number }> {
-    const { page, limit, search, categoryId, subCategoryId, companyTypeId } = params;
+    const { page, limit, search, categoryId, subCategoryId, companyTypeId, businessModel } = params;
 
     if (categoryId && !(await this.categoryRepo.existsBy({ id: categoryId }))) {
       throw new NotFoundException('Catégorie introuvable.');
@@ -855,6 +1061,10 @@ export class PublicService {
       qb.andWhere('c.companyTypeId = :companyTypeId', { companyTypeId });
     }
 
+    if (businessModel) {
+      qb.andWhere('c."businessModel" = :businessModel', { businessModel });
+    }
+
     /* Sous-requêtes EXISTS/IN plutôt que des JOIN : évite les doublons
      * d'entreprise sans recourir à SELECT DISTINCT, qui échoue ici car
      * Company a des colonnes `json` (notifSettings, tags...) sans opérateur
@@ -866,16 +1076,21 @@ export class PublicService {
      * n'est alimentée par AUCUN endroit du code (ni dashboard entreprise, ni
      * super-admin) — filtrer dessus renvoyait toujours 0 résultat même pour
      * des entreprises actives avec un vrai catalogue. */
+    /* OR'd sur products ET services : une boutique de services reste
+     * trouvable par catégorie (les deux tables partagent le même
+     * référentiel Category/SubCategory — voir service.entity.ts). */
     if (categoryId) {
       qb.andWhere(
-        'c.id IN (SELECT "companyId" FROM products WHERE "categoryId" = :categoryId AND "visibilite" = :vis)',
+        `(c.id IN (SELECT "companyId" FROM products WHERE "categoryId" = :categoryId AND "visibilite" = :vis)
+          OR c.id IN (SELECT "companyId" FROM services WHERE "categoryId" = :categoryId AND "visibilite" = :vis))`,
         { categoryId, vis: ProductVisibility.PUBLIC },
       );
     }
 
     if (subCategoryId) {
       qb.andWhere(
-        'c.id IN (SELECT "companyId" FROM products WHERE "subCategoryId" = :subCategoryId AND "visibilite" = :vis)',
+        `(c.id IN (SELECT "companyId" FROM products WHERE "subCategoryId" = :subCategoryId AND "visibilite" = :vis)
+          OR c.id IN (SELECT "companyId" FROM services WHERE "subCategoryId" = :subCategoryId AND "visibilite" = :vis))`,
         { subCategoryId, vis: ProductVisibility.PUBLIC },
       );
     }
@@ -907,6 +1122,7 @@ export class PublicService {
         pays:          c.pays              ?? 'GN',
         adresse:       c.adresse,
         verified:      c.verificationStatus === 'verified',
+        businessModel: c.businessModel ?? CompanyBusinessModel.PRODUCTS,
         domaine:       (c.companyType as any)?.nom   ?? null,
         domaineIcon:   (c.companyType as any)?.icone ?? null,
         membre,

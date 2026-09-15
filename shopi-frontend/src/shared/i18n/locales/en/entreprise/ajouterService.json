@@ -1,0 +1,193 @@
+{
+  "ajouterService": {
+    "header": {
+      "createTitle": "Add a service",
+      "createSubtitle": "Create and publish a new service",
+      "editTitle": "Edit service",
+      "editSubtitle": "Update this service's information",
+      "editModeBadge": "Edit mode",
+      "cancel": "Cancel",
+      "draft": "Save as draft",
+      "publish": "Publish",
+      "update": "Update",
+      "saving": "Saving…",
+      "publishing": "Publishing…",
+      "updating": "Updating…"
+    },
+    "loadingService": "Loading service…",
+    "organisation": {
+      "title": "Organization",
+      "categorie": "Category",
+      "sousCategorie": "Subcategory",
+      "choisir": "Choose…",
+      "loadingCats": "Loading categories…",
+      "noCategorie": "No category available",
+      "retry": "Retry",
+      "langue": "Language",
+      "langueFr": "French",
+      "langueEn": "English",
+      "langueAr": "Arabic",
+      "visibilite": "Visibility",
+      "optPublic": "Public",
+      "optDraft": "Draft",
+      "optPrivate": "Private",
+      "tagsSeo": "Tags (SEO)",
+      "tagsPlaceholder": "E.g: haircut, styling, blowout"
+    },
+    "infosBase": {
+      "title": "General information",
+      "nom": "Service name",
+      "nomPlaceholder": "E.g: Haircut & Blowout",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe your service in detail…",
+      "descCounter": "{{count}} characters {{status}}",
+      "descMinRecommande": "(100 recommended)"
+    },
+    "tarification": {
+      "title": "Pricing",
+      "pricingType": "Pricing type",
+      "pricingFixe": "Fixed price",
+      "pricingHoraire": "Hourly rate",
+      "pricingDevis": "Quote on request",
+      "prix": "Price (GNF)",
+      "prixPlaceholder": "E.g: 50000",
+      "prixHint": "Hourly rate",
+      "prixAncien": "Crossed-out price (promo)",
+      "prixAncienPlaceholder": "E.g: 70000",
+      "reduction": "-{{pct}}% off"
+    },
+    "duree": {
+      "title": "Duration & capacity",
+      "dureeMin": "Min. duration (minutes)",
+      "dureeMax": "Max. duration (minutes)",
+      "capaciteMax": "Max capacity (people)",
+      "capaciteMaxPlaceholder": "E.g: 10 — leave empty if unlimited"
+    },
+    "modePrestation": {
+      "title": "Service mode",
+      "surPlace": "On-site",
+      "surPlaceSub": "The client comes to you",
+      "domicile": "At client's location",
+      "domicileSub": "You travel to the client",
+      "distance": "Remote",
+      "distanceSub": "Video call, phone, online",
+      "zoneCouverture": "Coverage area",
+      "zoneCouverturePlaceholder": "E.g: Kaloum, Dixinn, Ratoma",
+      "fraisDeplacement": "Travel fee (GNF)",
+      "fraisDeplacementPlaceholder": "0 = free"
+    },
+    "reservation": {
+      "title": "Booking & cancellation",
+      "reservationRequise": "Booking required",
+      "reservationRequiseSub": "Disable for a walk-in service",
+      "delaiReponse": "Response time",
+      "delaiOptions": {
+        "immediate": "Immediate",
+        "24h": "Within 24h",
+        "48h": "Within 48h",
+        "7j": "Within 7 days"
+      },
+      "politiqueAnnulation": "Cancellation policy",
+      "politiqueOptions": {
+        "flexible": "Flexible",
+        "moderee": "Moderate",
+        "stricte": "Strict",
+        "non_remboursable": "Non-refundable"
+      }
+    },
+    "garanties": {
+      "title": "Displayed guarantees",
+      "paiement": "Secure payment",
+      "paiementSub": "Payment is protected until service delivery",
+      "satisfaction": "Satisfaction guaranteed",
+      "satisfactionSub": "Free redo if unsatisfied"
+    },
+    "medias": {
+      "title": "Media",
+      "loading": "Uploading…",
+      "dropTitle": "Click to add photos/videos",
+      "dropSub": "or drag and drop your files here",
+      "quota": "{{images}} images + {{videos}} video maximum",
+      "principale": "Main"
+    },
+    "specs": {
+      "title": "What's included",
+      "critereCount": "{{count}} items",
+      "critere": "Item",
+      "criterePlaceholder": "E.g: Appointment duration",
+      "valeur": "Detail",
+      "valeurPlaceholder": "E.g: 45 minutes",
+      "add": "Add an item",
+      "defaultInclus1": "Appointment duration",
+      "defaultInclus2": "Equipment provided"
+    },
+    "seo": {
+      "title": "Search engine optimization (SEO)",
+      "score": "SEO score",
+      "titreSeo": "SEO title",
+      "titrePlaceholder": "Title optimized for search engines",
+      "titreIdeal": "50-70 characters ideal",
+      "descriptionSeo": "SEO description",
+      "descriptionPlaceholder": "Summary shown in search results",
+      "descriptionIdeal": "120-160 characters ideal",
+      "urlSlug": "Custom URL",
+      "qualite": "Listing quality",
+      "criteres": {
+        "nom": "Descriptive name",
+        "description": "Detailed description (100+ characters)",
+        "titreSeo": "SEO title filled in",
+        "descriptionSeo": "SEO description filled in",
+        "urlSlug": "Custom URL filled in",
+        "tags": "Tags filled in",
+        "image": "At least one image",
+        "prix": "Price filled in"
+      }
+    },
+    "revenus": {
+      "title": "Revenue preview",
+      "prixVente": "Selling price",
+      "commission": "Commission ({{pct}}%)",
+      "revenuNet": "Net revenue"
+    },
+    "actions": {
+      "retour": "Back",
+      "fixErrorsTitle": "Fix the following errors"
+    },
+    "validation": {
+      "nomRequired": "The service name is required",
+      "nomMinLength": "The name must be at least 3 characters",
+      "prixRequired": "Price is required (unless pricing is « quote on request »)",
+      "prixPositive": "Price must be a number greater than 0",
+      "categorieRequired": "Category is required",
+      "fixErrors": "Fix the form errors"
+    },
+    "toasts": {
+      "networkError": "Network error — check your connection",
+      "networkErrorBackend": "Could not reach the server — check your connection",
+      "networkErrorNest": "Network error — could not reach the server",
+      "sessionExpired": "Session expired — please sign in again",
+      "sessionExpiredReconnect": "Session expired — please sign in again",
+      "sessionExpiredFull": "Your session has expired — please sign in again",
+      "categoriesServerError": "Server error ({{status}}) while loading categories",
+      "unexpectedFormat": "Unexpected response format",
+      "mediaUploaded": "{{count}} media added",
+      "maxMedia": "Maximum {{count}} media per service",
+      "maxMediaRestIgnored": "Maximum {{count}} media — some files were ignored",
+      "maxVideo": "Maximum {{count}} video — « {{name}} » ignored",
+      "maxImages": "Maximum {{count}} images — « {{name}} » ignored",
+      "fileTooLarge": "« {{name}} » exceeds the maximum size ({{max}})",
+      "serviceLoadServerError": "Server error ({{status}}) while loading service",
+      "serviceLoadError": "Error while loading: {{message}}",
+      "serviceDataLoaded": "Service data loaded",
+      "updateSuccess": "Service updated successfully",
+      "draftSaved": "Draft saved",
+      "publishSuccess": "Service published successfully",
+      "publishFailed": "Publication failed",
+      "unexpectedError": "An unexpected error occurred",
+      "serverErrorGeneric": "Server error ({{status}})",
+      "forbidden": "Action not allowed for this account",
+      "slugTaken": "This URL is already in use",
+      "serverError500": "Server error — please try again later"
+    }
+  }
+}

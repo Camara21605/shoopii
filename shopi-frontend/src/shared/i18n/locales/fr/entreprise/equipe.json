@@ -89,6 +89,13 @@
         "edit": "Modifier",
         "delete": "Supprimer"
       },
+      "services": {
+        "label": "Services",
+        "view": "Voir",
+        "create": "Créer",
+        "edit": "Modifier",
+        "delete": "Supprimer"
+      },
       "orders": {
         "label": "Commandes",
         "view": "Voir",

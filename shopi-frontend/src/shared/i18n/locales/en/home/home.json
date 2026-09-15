@@ -81,6 +81,10 @@
         "kick": "Wholesale",
         "link": "See all wholesale products"
       },
+      "services": {
+        "kick": "Services",
+        "link": "See all services"
+      },
       "entreprises": {
         "kick": "Shops",
         "link": "All shops"
@@ -102,7 +106,9 @@
       "emptyLivreurs": "No delivery agent available.",
       "emptyCorrespondants": "No correspondent available.",
       "errorProduits": "Unable to load products.",
-      "errorProduitsGros": "Unable to load wholesale products."
+      "errorProduitsGros": "Unable to load wholesale products.",
+      "emptyServices": "No service available at the moment.",
+      "errorServices": "Unable to load services."
     },
     "explorer": {
       "searchPlaceholder": "Search for a product…",

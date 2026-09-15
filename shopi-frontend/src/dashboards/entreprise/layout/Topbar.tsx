@@ -41,6 +41,8 @@ interface TopbarProps {
   companyEmail?:  string;
   companyVille?:  string;
   companyPays?:   string;
+  /** Filtre le catalogue produits/services du drawer mobile — voir Sidebar.tsx. */
+  businessModel?: 'products' | 'services';
   can?:           CanFn;
   isOwner?:       boolean;
 }
@@ -74,18 +76,35 @@ const TITLES: Record<EntreprisePage, [string, string]> = {
   profilCorrespondantReseau: ['topbar.titles.profilCorrespondantReseau.title', 'topbar.titles.profilCorrespondantReseau.subtitle'],
   profilLivreurReseau:       ['topbar.titles.profilLivreurReseau.title',      'topbar.titles.profilLivreurReseau.subtitle'],
   equipe:         ['topbar.titles.equipe.title',         'topbar.titles.equipe.subtitle'],
+  services:         ['topbar.titles.services.title',         'topbar.titles.services.subtitle'],
+  'ajouter-service': ['topbar.titles.ajouterService.title',  'topbar.titles.ajouterService.subtitle'],
 };
 
 /* Items du drawer mobile (navigation complète) — réutilise les mêmes clés
-   que Sidebar.tsx (sidebar.items.*) puisque les libellés sont identiques. */
-const DRAWER_NAV: { id: EntreprisePage; icon: string; label: string; perm?: [string, string] }[] = [
+   que Sidebar.tsx (sidebar.items.*) puisque les libellés sont identiques.
+   Le bloc catalogue est conditionnel (produits VS services) — voir
+   Sidebar.buildNavSections, même logique dupliquée ici pour le drawer. */
+type DrawerItem = { id: EntreprisePage; icon: string; label: string; perm?: [string, string] };
+
+const DRAWER_NAV_BASE: DrawerItem[] = [
   { id: 'overview',       icon: 'fa-chart-pie',    label: 'sidebar.items.overview' },
   { id: 'commandes',      icon: 'fa-box',           label: 'sidebar.items.commandes',  perm: ['orders',    'view'] },
   { id: 'retours',        icon: 'fa-rotate-left',   label: 'sidebar.items.retours',     perm: ['returns',   'view'] },
+];
+
+const DRAWER_NAV_PRODUITS: DrawerItem[] = [
   { id: 'produits',       icon: 'fa-tag',           label: 'sidebar.items.produits',    perm: ['products',  'view'] },
   { id: 'ajouter',        icon: 'fa-plus-circle',   label: 'sidebar.items.ajouter',     perm: ['products',  'create'] },
   { id: 'inventaire',     icon: 'fa-warehouse',     label: 'sidebar.items.inventaire',  perm: ['products',  'view'] },
   { id: 'promotions',     icon: 'fa-percent',       label: 'sidebar.items.promotions', perm: ['promotions','view'] },
+];
+
+const DRAWER_NAV_SERVICES: DrawerItem[] = [
+  { id: 'services',         icon: 'fa-concierge-bell', label: 'sidebar.items.services',       perm: ['services', 'view']   },
+  { id: 'ajouter-service',  icon: 'fa-plus-circle',    label: 'sidebar.items.ajouterService',  perm: ['services', 'create'] },
+];
+
+const DRAWER_NAV_REST: DrawerItem[] = [
   { id: 'analytics',      icon: 'fa-chart-line',    label: 'sidebar.items.analytics',  perm: ['statistics','view'] },
   { id: 'seo',            icon: 'fa-magnifying-glass-chart', label: 'sidebar.items.seo', perm: ['statistics','view'] },
   { id: 'livreurs',       icon: 'fa-motorcycle',    label: 'sidebar.items.livreurs',       perm: ['deliveries','view'] },
@@ -96,6 +115,14 @@ const DRAWER_NAV: { id: EntreprisePage; icon: string; label: string; perm?: [str
   { id: 'avis',           icon: 'fa-star',          label: 'sidebar.items.avis',           perm: ['orders',    'view'] },
   { id: 'parametres',     icon: 'fa-gear',          label: 'sidebar.items.parametres',     perm: ['settings',  'view'] },
 ];
+
+function buildDrawerNav(businessModel?: 'products' | 'services'): DrawerItem[] {
+  return [
+    ...DRAWER_NAV_BASE,
+    ...(businessModel === 'services' ? DRAWER_NAV_SERVICES : DRAWER_NAV_PRODUITS),
+    ...DRAWER_NAV_REST,
+  ];
+}
 
 /* ─────────────────────────────────────────────────────────────
    RECHERCHE GLOBALE — types de résultats (un sous-ensemble minimal
@@ -137,6 +164,7 @@ export default function Topbar({
   companyId,
   companyLogo, companyName,
   companyStatus, companyEmail, companyVille, companyPays,
+  businessModel,
   can, isOwner = false,
 }: TopbarProps) {
   const { t } = useTranslation();
@@ -581,7 +609,7 @@ export default function Topbar({
 
             {/* Navigation complète */}
             <div className="tb-drawer-nav">
-              {DRAWER_NAV.filter(item => {
+              {buildDrawerNav(businessModel).filter(item => {
                 if (!item.perm) return true;
                 if (isOwner) return true;
                 if (!can) return true;

@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 // ── Modules réutilisables ────────────────────────────────────
 import { CategoriesModule }     from '../super-admin/categories/categories.module';
 import { ProduitsModule }       from './produits/produits.module';
+import { PrestationsModule }    from './prestations/prestations.module';
 import { PromotionsModule }     from '../../promotions/promotions.module';
 import { CorrespondantsModule } from './correspondants/correspondants.module';
 import { LivreursModule }       from './livreurs/livreurs.module';
@@ -93,6 +94,7 @@ import { CategoriesService }          from '../super-admin/categories/categories
     // ── Modules internes ─────────────────────────────────────────
     CategoriesModule,
     ProduitsModule,
+    PrestationsModule,
     PromotionsModule,
     CorrespondantsModule,
     LivreursModule,

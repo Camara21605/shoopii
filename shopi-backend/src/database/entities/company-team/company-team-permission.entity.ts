@@ -37,6 +37,14 @@ export interface TeamPermissions {
     edit:   boolean;  /** Modifier un produit */
     delete: boolean;  /** Supprimer un produit */
   };
+  /** Gestion du catalogue de prestations (comptes businessModel=services
+   *  uniquement — voir Company.businessModel et PrestationsController). */
+  services: {
+    view:   boolean;  /** Voir les prestations */
+    create: boolean;  /** Créer une prestation */
+    edit:   boolean;  /** Modifier une prestation */
+    delete: boolean;  /** Supprimer une prestation */
+  };
   /** Gestion des commandes */
   orders: {
     view:     boolean;  /** Voir les commandes */
@@ -125,6 +133,7 @@ export interface TeamPermissions {
  */
 export const DEFAULT_TEAM_PERMISSIONS: TeamPermissions = {
   products:   { view: false, create: false, edit: false, delete: false },
+  services:   { view: false, create: false, edit: false, delete: false },
   orders:     { view: false, validate: false, cancel: false, edit: false },
   deliveries: { view: false, assign: false, edit: false },
   payments:   { view: false, viewTransactions: false, manageRefunds: false },

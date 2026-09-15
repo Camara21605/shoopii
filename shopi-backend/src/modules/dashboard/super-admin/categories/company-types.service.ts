@@ -33,7 +33,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository }       from 'typeorm';
 
-import { CompanyType } from '../../../../database/entities/entreprise.table/company-type.entity';
+import { CompanyType, CompanyTypeNature } from '../../../../database/entities/entreprise.table/company-type.entity';
 import { Category }    from '../../../../database/entities/entreprise.table/category.entity';
 
 // ─────────────────────────────────────────────────────────────
@@ -47,6 +47,9 @@ export interface CreateCompanyTypeDto {
   icone?:       string;
   couleur?:     string;
   ordre?:       number;
+  /** Produits, services, ou neutre (les deux) — filtre le sélecteur de
+   *  type à l'inscription selon le businessModel choisi. */
+  nature?:      CompanyTypeNature;
 }
 
 export interface UpdateCompanyTypeDto {
@@ -57,6 +60,7 @@ export interface UpdateCompanyTypeDto {
   couleur?:     string;
   ordre?:       number;
   actif?:       boolean;
+  nature?:      CompanyTypeNature;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -72,6 +76,7 @@ export interface CompanyTypeResponse {
   couleur:      string | null;
   ordre:        number;
   actif:        boolean;
+  nature:       CompanyTypeNature;
   /** Nombre de catégories rattachées à ce type */
   nbCategories: number;
   /** Nombre d'entreprises ayant ce type */
@@ -102,8 +107,24 @@ export class CompanyTypesService {
   //    Trié par ordre ASC, puis nom ASC
   // ══════════════════════════════════════════════════════════════
 
-  async findAll(): Promise<CompanyTypeResponse[]> {
+  /** `nature` optionnel — filtre le dropdown de type à l'inscription
+   *  selon le businessModel choisi.
+   *
+   * SÉCURITÉ / SÉPARATION — correspondance STRICTE, sans repli sur
+   * 'neutral' : un vendeur "produits" ne doit JAMAIS voir le même type
+   * qu'un vendeur "services", et inversement. `neutral` était au départ
+   * une valeur passe-partout (et surtout la valeur PAR DÉFAUT silencieuse
+   * de tout type créé sans choix explicite — voir create() ci-dessous) :
+   * l'inclure ici aurait recréé exactement le chevauchement que le
+   * modèle exclusif Company.businessModel est censé empêcher. Un type
+   * resté 'neutral' (non encore classé par le super-admin) n'apparaît
+   * donc plus DU TOUT à l'inscription tant qu'il n'a pas été
+   * explicitement reclassé 'products' ou 'services' (voir le badge
+   * "non classé" dans CatalogueTab.tsx). Sans filtre (`nature` absent,
+   * ex: super-admin), comportement inchangé — tous les types renvoyés. */
+  async findAll(nature?: CompanyTypeNature): Promise<CompanyTypeResponse[]> {
     const types = await this.typeRepo.find({
+      where:     nature ? { nature } : undefined,
       relations: ['categories', 'companies'],
       order:     { ordre: 'ASC', nom: 'ASC' },
     });
@@ -162,6 +183,7 @@ export class CompanyTypesService {
       couleur:     dto.couleur?.trim()     || null,
       ordre,
       actif:       true,
+      nature:      dto.nature ?? CompanyTypeNature.NEUTRAL,
     });
 
     const saved = await this.typeRepo.save(type);
@@ -203,6 +225,7 @@ export class CompanyTypesService {
     if (dto.couleur     !== undefined) type.couleur     = dto.couleur?.trim()     || null;
     if (dto.ordre       !== undefined) type.ordre       = dto.ordre;
     if (dto.actif       !== undefined) type.actif       = dto.actif;
+    if (dto.nature      !== undefined) type.nature      = dto.nature;
 
     await this.typeRepo.save(type);
     this.logger.log(`[UPDATE TYPE ✅] ID=${id}`);
@@ -275,6 +298,7 @@ export class CompanyTypesService {
       couleur:       type.couleur,
       ordre:         type.ordre,
       actif:         type.actif,
+      nature:        type.nature,
       nbCategories:  type.categories?.length  ?? 0,
       nbEntreprises: type.companies?.length   ?? 0,
       createdAt:     type.createdAt?.toISOString() ?? '',

@@ -101,7 +101,7 @@ const STEP_FIELDS: Record<StepKey, (keyof RegisterFormData)[]> = {
   /* shopName/companyTypeId : sans effet pour les rôles autres que
    * "company" (voir validateRegisterField dans useLoginPage.ts) —
    * inclus inconditionnellement ici, pas besoin de connaître le rôle. */
-  identity: ['firstName', 'lastName', 'shopName', 'companyTypeId'],
+  identity: ['firstName', 'lastName', 'businessModel', 'shopName', 'companyTypeId'],
   logo:     [], // facultatif — rien à valider pour avancer
   profile:  ['birthDate', 'gender'],
   /* 'location' et 'city' sont mutuellement exclusifs en pratique (voir
@@ -207,14 +207,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRole]);
 
+  /* Filtré par businessModel une fois choisi (?nature=) — le backend
+   * renvoie ce type + les types 'neutral', jamais l'autre modèle (voir
+   * CompanyTypesService.findAll). Tant que businessModel n'est pas
+   * encore choisi, on ne charge rien : le dropdown reste vide/désactivé
+   * (voir plus bas) pour éviter de proposer un type incohérent. */
   useEffect(() => {
-    if (selectedRole !== 'company') return;
+    if (selectedRole !== 'company' || !data.businessModel) { setCompanyTypes([]); return; }
     setCompanyTypesLoading(true);
-    apiFetch<CompanyTypeOption[]>('/company-types')
+    apiFetch<CompanyTypeOption[]>(`/company-types?nature=${data.businessModel}`)
       .then(d => setCompanyTypes(d ?? []))
       .catch(() => setCompanyTypes([]))
       .finally(() => setCompanyTypesLoading(false));
-  }, [selectedRole]);
+  }, [selectedRole, data.businessModel]);
 
   const emailIsLocked = Boolean(lockedRole !== null && data.email?.trim().length > 0);
 
@@ -448,18 +453,56 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       {selectedRole === 'company' && !isCollabInvite && (
         <div className="field-group">
           <div className="field-label">
+            Que proposez-vous ? <span style={{ color: 'var(--rose,red)' }}>*</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {([
+              { value: 'products' as const, icon: 'fa-box', label: 'Produits physiques', sub: 'Biens en stock, livrés' },
+              { value: 'services' as const, icon: 'fa-screwdriver-wrench', label: 'Services', sub: 'Prestations, rendez-vous' },
+            ]).map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onDataChange({ businessModel: opt.value, companyTypeId: '' })}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                  padding: '14px 10px', borderRadius: 12, cursor: 'pointer',
+                  border: `2px solid ${data.businessModel === opt.value ? 'var(--blue)' : 'var(--bdr2, #E2E8F0)'}`,
+                  background: data.businessModel === opt.value ? 'var(--sky-2, #EEF3FD)' : 'var(--white, #fff)',
+                }}
+              >
+                <i className={`fas ${opt.icon}`} style={{ fontSize: 20, color: data.businessModel === opt.value ? 'var(--blue)' : 'var(--t3)' }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{opt.label}</span>
+                <span style={{ fontSize: 10.5, color: 'var(--t3)' }}>{opt.sub}</span>
+              </button>
+            ))}
+          </div>
+          {errors.businessModel && (
+            <p style={{ margin: '5px 0 0', fontSize: 11, color: 'var(--rose,red)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <i className="fas fa-circle-exclamation" style={{ fontSize: 10 }} />
+              {errors.businessModel}
+            </p>
+          )}
+        </div>
+      )}
+      {selectedRole === 'company' && !isCollabInvite && (
+        <div className="field-group">
+          <div className="field-label">
             Type d&apos;entreprise <span style={{ color: 'var(--rose,red)' }}>*</span>
           </div>
           <div className="field-wrap" style={{ position: 'relative' }}>
             <i className="fas fa-store" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--blue)', fontSize: 13, zIndex: 1, pointerEvents: 'none' }} />
             <select
               className="field-input"
-              style={{ paddingLeft: 36, appearance: 'none', cursor: 'pointer' }}
+              style={{ paddingLeft: 36, appearance: 'none', cursor: data.businessModel ? 'pointer' : 'not-allowed' }}
               value={data.companyTypeId ?? ''}
               onChange={e => onDataChange({ companyTypeId: e.target.value })}
-              disabled={companyTypesLoading}
+              disabled={companyTypesLoading || !data.businessModel}
             >
-              <option value="">{companyTypesLoading ? 'Chargement…' : "Choisir un type d'entreprise…"}</option>
+              <option value="">
+                {!data.businessModel ? 'Choisissez d\'abord "Produits" ou "Services" ci-dessus'
+                  : companyTypesLoading ? 'Chargement…' : "Choisir un type d'entreprise…"}
+              </option>
               {companyTypes.map(t => (
                 <option key={t.id} value={t.id}>{t.icone ? `${t.icone} ` : ''}{t.nom}</option>
               ))}

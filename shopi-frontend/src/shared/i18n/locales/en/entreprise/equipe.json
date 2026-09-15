@@ -89,6 +89,13 @@
         "edit": "Edit",
         "delete": "Delete"
       },
+      "services": {
+        "label": "Services",
+        "view": "View",
+        "create": "Create",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
       "orders": {
         "label": "Orders",
         "view": "View",

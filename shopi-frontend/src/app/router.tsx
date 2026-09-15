@@ -20,6 +20,7 @@ import { useForceDarkTheme }  from '../shared/context/ThemeContext';
 /* ── Pages publiques (import direct) ── */
 import BoutiquePage      from '../modules/home/components/boutique/pages/BoutiquePage';
 import ProduitPage       from '../modules/home/components/produit/pages/ProduitPage';
+import ServiceDetailPage from '../modules/home/components/service/pages/ServiceDetailPage';
 import CommandePage      from '../modules/home/components/panier/pages/CommandePage';
 import SettingsPage      from '../modules/home/components/settings/pages/SettingsPage';
 import LivreursPage      from '../modules/home/components/livreurs/pages/LivreursPage';
@@ -283,6 +284,7 @@ export const AppRouter: React.FC = () => (
           {/* Pages produits — publiques */}
           <Route path="/boutique/:id" element={<BoutiquePage />} />
           <Route path="/produit/:id"  element={<ProduitPage />} />
+          <Route path="/service/:id" element={<ServiceDetailPage />} />
 
           {/* Help Center — publiques */}
           <Route path="/aide"                        element={<HelpHomePage />} />

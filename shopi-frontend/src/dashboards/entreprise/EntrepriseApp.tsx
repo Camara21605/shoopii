@@ -40,6 +40,8 @@ const CommandesPage                 = lazy(() => import('./pages/CommandesPage')
 const RetoursPage                   = lazy(() => import('./pages/RetoursPage'));
 const ProduitsPage                  = lazy(() => import('./pages/ProduitsPage'));
 const AjouterProduitPage            = lazy(() => import('./pages/AjouterPage'));
+const ServicesPage                  = lazy(() => import('./pages/ServicesPage'));
+const AjouterServicePage            = lazy(() => import('./pages/AjouterServicePage'));
 const InventairePage                = lazy(() => import('./pages/InventairePage'));
 const FournisseursPage              = lazy(() => import('./pages/FournisseursPage'));
 const PromotionsPage                = lazy(() => import('./pages/PromotionsPage'));
@@ -81,6 +83,7 @@ function buildPath(page: EntreprisePage, id?: string): string {
   switch (page) {
     case 'overview':                  return '';
     case 'ajouter':                   return id ? `ajouter/${id}` : 'ajouter';
+    case 'ajouter-service':           return id ? `ajouter-service/${id}` : 'ajouter-service';
     case 'reseauCorrespondants':      return 'reseau/correspondants';
     case 'reseauLivreurs':            return 'reseau/livreurs';
     case 'profilCorrespondantReseau': return id ? `reseau/correspondants/${id}` : 'reseau/correspondants';
@@ -117,10 +120,14 @@ function parseSplat(splat: string): { page: EntreprisePage; productId?: string; 
   /* Ajouter produit : ajouter / ajouter/{productId} */
   if (a === 'ajouter') return { page: 'ajouter', productId: b };
 
+  /* Ajouter service : ajouter-service / ajouter-service/{serviceId} —
+   * réutilise le même champ productId (id générique de l'élément édité). */
+  if (a === 'ajouter-service') return { page: 'ajouter-service', productId: b };
+
   /* Pages directes */
   const DIRECT_PAGES: EntreprisePage[] = [
     'commandes', 'retours', 'produits', 'inventaire', 'fournisseurs',
-    'promotions', 'analytics', 'messages', 'seo',
+    'promotions', 'services', 'analytics', 'messages', 'seo',
     'livreurs', 'correspondants', 'finances', 'portefeuille',
     'clients', 'avis', 'parametres', 'profil', 'boutique-preview', 'equipe',
   ];
@@ -150,6 +157,8 @@ function PageRenderer({
     case 'retours':        return <RetoursPage />;
     case 'produits':       return <ProduitsPage onNavigate={onNavigate} />;
     case 'ajouter':        return <AjouterProduitPage onNavigate={onNavigate} productId={productId} />;
+    case 'services':       return <ServicesPage onNavigate={onNavigate} />;
+    case 'ajouter-service': return <AjouterServicePage onNavigate={onNavigate} serviceId={productId} />;
     case 'inventaire':     return <InventairePage onNavigate={onNavigate} />;
     case 'fournisseurs':   return <FournisseursPage />;
     case 'promotions':     return <PromotionsPage />;
@@ -194,6 +203,9 @@ interface BoutiqueProfile {
   businessEmail: string | null;
   ville:         string | null;
   pays:          string | null;
+  /** Modèle économique du compte — filtre le catalogue de la sidebar/drawer
+   *  entre produits et services (voir Sidebar.buildNavSections). */
+  businessModel: 'products' | 'services';
 }
 
 function EntrepriseLayout() {
@@ -261,6 +273,7 @@ function EntrepriseLayout() {
           onNavigate={handleNavigate}
           companyLogo={profile?.logo}
           companyName={profile?.companyName}
+          businessModel={profile?.businessModel}
           can={can}
           isOwner={isOwner}
         />
@@ -276,6 +289,7 @@ function EntrepriseLayout() {
           companyEmail={profile?.businessEmail ?? undefined}
           companyVille={profile?.ville ?? undefined}
           companyPays={profile?.pays ?? undefined}
+          businessModel={profile?.businessModel}
           can={can}
           isOwner={isOwner}
         />
@@ -308,8 +322,8 @@ function EntrepriseLayout() {
         <div className="fab">
           <button
             className="fab-main"
-            onClick={() => handleNavigate('ajouter')}
-            title="Ajouter un produit"
+            onClick={() => handleNavigate(profile?.businessModel === 'services' ? 'ajouter-service' : 'ajouter')}
+            title={profile?.businessModel === 'services' ? 'Ajouter un service' : 'Ajouter un produit'}
           >
             <i className="fas fa-plus" />
           </button>

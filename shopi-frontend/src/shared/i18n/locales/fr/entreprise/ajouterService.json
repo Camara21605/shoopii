@@ -1,0 +1,193 @@
+{
+  "ajouterService": {
+    "header": {
+      "createTitle": "Ajouter un service",
+      "createSubtitle": "Créez et publiez une nouvelle prestation",
+      "editTitle": "Modifier le service",
+      "editSubtitle": "Mettez à jour les informations de cette prestation",
+      "editModeBadge": "Mode édition",
+      "cancel": "Annuler",
+      "draft": "Enregistrer en brouillon",
+      "publish": "Publier",
+      "update": "Mettre à jour",
+      "saving": "Enregistrement…",
+      "publishing": "Publication…",
+      "updating": "Mise à jour…"
+    },
+    "loadingService": "Chargement du service…",
+    "organisation": {
+      "title": "Organisation",
+      "categorie": "Catégorie",
+      "sousCategorie": "Sous-catégorie",
+      "choisir": "Choisir…",
+      "loadingCats": "Chargement des catégories…",
+      "noCategorie": "Aucune catégorie disponible",
+      "retry": "Réessayer",
+      "langue": "Langue",
+      "langueFr": "Français",
+      "langueEn": "Anglais",
+      "langueAr": "Arabe",
+      "visibilite": "Visibilité",
+      "optPublic": "Publique",
+      "optDraft": "Brouillon",
+      "optPrivate": "Privée",
+      "tagsSeo": "Tags (SEO)",
+      "tagsPlaceholder": "Ex: coiffure, coupe, brushing"
+    },
+    "infosBase": {
+      "title": "Informations générales",
+      "nom": "Nom de la prestation",
+      "nomPlaceholder": "Ex: Coupe & Brushing",
+      "description": "Description",
+      "descriptionPlaceholder": "Décrivez votre prestation en détail…",
+      "descCounter": "{{count}} caractères {{status}}",
+      "descMinRecommande": "(100 recommandés)"
+    },
+    "tarification": {
+      "title": "Tarification",
+      "pricingType": "Type de tarif",
+      "pricingFixe": "Prix fixe",
+      "pricingHoraire": "Tarif horaire",
+      "pricingDevis": "Sur devis",
+      "prix": "Prix (GNF)",
+      "prixPlaceholder": "Ex: 50000",
+      "prixHint": "Tarif par heure",
+      "prixAncien": "Prix barré (promo)",
+      "prixAncienPlaceholder": "Ex: 70000",
+      "reduction": "-{{pct}}% de réduction"
+    },
+    "duree": {
+      "title": "Durée & capacité",
+      "dureeMin": "Durée min. (minutes)",
+      "dureeMax": "Durée max. (minutes)",
+      "capaciteMax": "Capacité max (personnes)",
+      "capaciteMaxPlaceholder": "Ex: 10 — laisser vide si pas de limite"
+    },
+    "modePrestation": {
+      "title": "Mode de prestation",
+      "surPlace": "Sur place",
+      "surPlaceSub": "Le client se déplace chez vous",
+      "domicile": "À domicile",
+      "domicileSub": "Vous vous déplacez chez le client",
+      "distance": "À distance",
+      "distanceSub": "Visio, téléphone, en ligne",
+      "zoneCouverture": "Zone d'intervention",
+      "zoneCouverturePlaceholder": "Ex: Kaloum, Dixinn, Ratoma",
+      "fraisDeplacement": "Frais de déplacement (GNF)",
+      "fraisDeplacementPlaceholder": "0 = gratuit"
+    },
+    "reservation": {
+      "title": "Réservation & annulation",
+      "reservationRequise": "Réservation requise",
+      "reservationRequiseSub": "Désactivez pour un service « sans rendez-vous »",
+      "delaiReponse": "Délai de réponse",
+      "delaiOptions": {
+        "immediate": "Immédiat",
+        "24h": "Sous 24h",
+        "48h": "Sous 48h",
+        "7j": "Sous 7 jours"
+      },
+      "politiqueAnnulation": "Politique d'annulation",
+      "politiqueOptions": {
+        "flexible": "Flexible",
+        "moderee": "Modérée",
+        "stricte": "Stricte",
+        "non_remboursable": "Non remboursable"
+      }
+    },
+    "garanties": {
+      "title": "Garanties affichées",
+      "paiement": "Paiement sécurisé",
+      "paiementSub": "Le paiement est protégé jusqu'à la prestation",
+      "satisfaction": "Satisfait ou refait",
+      "satisfactionSub": "Reprise gratuite en cas d'insatisfaction"
+    },
+    "medias": {
+      "title": "Médias",
+      "loading": "Envoi en cours…",
+      "dropTitle": "Cliquez pour ajouter des photos/vidéos",
+      "dropSub": "ou glissez-déposez vos fichiers ici",
+      "quota": "{{images}} images + {{videos}} vidéo maximum",
+      "principale": "Principale"
+    },
+    "specs": {
+      "title": "Ce qui est inclus",
+      "critereCount": "{{count}} éléments",
+      "critere": "Élément",
+      "criterePlaceholder": "Ex: Durée du rendez-vous",
+      "valeur": "Détail",
+      "valeurPlaceholder": "Ex: 45 minutes",
+      "add": "Ajouter un élément",
+      "defaultInclus1": "Durée du rendez-vous",
+      "defaultInclus2": "Matériel fourni"
+    },
+    "seo": {
+      "title": "Référencement (SEO)",
+      "score": "Score SEO",
+      "titreSeo": "Titre SEO",
+      "titrePlaceholder": "Titre optimisé pour les moteurs de recherche",
+      "titreIdeal": "50-70 caractères idéal",
+      "descriptionSeo": "Description SEO",
+      "descriptionPlaceholder": "Résumé affiché dans les résultats de recherche",
+      "descriptionIdeal": "120-160 caractères idéal",
+      "urlSlug": "URL personnalisée",
+      "qualite": "Qualité de la fiche",
+      "criteres": {
+        "nom": "Nom descriptif",
+        "description": "Description détaillée (100+ caractères)",
+        "titreSeo": "Titre SEO renseigné",
+        "descriptionSeo": "Description SEO renseignée",
+        "urlSlug": "URL personnalisée renseignée",
+        "tags": "Tags renseignés",
+        "image": "Au moins une image",
+        "prix": "Prix renseigné"
+      }
+    },
+    "revenus": {
+      "title": "Aperçu des revenus",
+      "prixVente": "Prix de vente",
+      "commission": "Commission ({{pct}}%)",
+      "revenuNet": "Revenu net"
+    },
+    "actions": {
+      "retour": "Retour",
+      "fixErrorsTitle": "Corrigez les erreurs suivantes"
+    },
+    "validation": {
+      "nomRequired": "Le nom de la prestation est obligatoire",
+      "nomMinLength": "Le nom doit contenir au moins 3 caractères",
+      "prixRequired": "Le prix est obligatoire (sauf en tarification « sur devis »)",
+      "prixPositive": "Le prix doit être un nombre supérieur à 0",
+      "categorieRequired": "La catégorie est obligatoire",
+      "fixErrors": "Corrigez les erreurs du formulaire"
+    },
+    "toasts": {
+      "networkError": "Erreur réseau — vérifiez votre connexion",
+      "networkErrorBackend": "Impossible de contacter le serveur — vérifiez votre connexion",
+      "networkErrorNest": "Erreur réseau — impossible de contacter le serveur",
+      "sessionExpired": "Session expirée — reconnectez-vous",
+      "sessionExpiredReconnect": "Session expirée — merci de vous reconnecter",
+      "sessionExpiredFull": "Votre session a expiré — reconnectez-vous",
+      "categoriesServerError": "Erreur serveur ({{status}}) lors du chargement des catégories",
+      "unexpectedFormat": "Format de réponse inattendu",
+      "mediaUploaded": "{{count}} média(s) ajouté(s)",
+      "maxMedia": "Maximum {{count}} médias par prestation",
+      "maxMediaRestIgnored": "Maximum {{count}} médias — certains fichiers ont été ignorés",
+      "maxVideo": "Maximum {{count}} vidéo — « {{name}} » ignorée",
+      "maxImages": "Maximum {{count}} images — « {{name}} » ignorée",
+      "fileTooLarge": "« {{name}} » dépasse la taille maximale ({{max}})",
+      "serviceLoadServerError": "Erreur serveur ({{status}}) lors du chargement du service",
+      "serviceLoadError": "Erreur lors du chargement : {{message}}",
+      "serviceDataLoaded": "Données du service chargées",
+      "updateSuccess": "Service mis à jour avec succès",
+      "draftSaved": "Brouillon enregistré",
+      "publishSuccess": "Service publié avec succès",
+      "publishFailed": "Échec de la publication",
+      "unexpectedError": "Une erreur inattendue s'est produite",
+      "serverErrorGeneric": "Erreur serveur ({{status}})",
+      "forbidden": "Action non autorisée pour ce compte",
+      "slugTaken": "Cette URL est déjà utilisée",
+      "serverError500": "Erreur serveur — réessayez plus tard"
+    }
+  }
+}

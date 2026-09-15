@@ -81,6 +81,10 @@
         "kick": "Vente en gros",
         "link": "Voir tous les produits en gros"
       },
+      "services": {
+        "kick": "Prestations",
+        "link": "Voir tous les services"
+      },
       "entreprises": {
         "kick": "Boutiques",
         "link": "Toutes les boutiques"
@@ -102,7 +106,9 @@
       "emptyLivreurs": "Aucun livreur disponible.",
       "emptyCorrespondants": "Aucun correspondant disponible.",
       "errorProduits": "Impossible de charger les produits.",
-      "errorProduitsGros": "Impossible de charger les produits en gros."
+      "errorProduitsGros": "Impossible de charger les produits en gros.",
+      "emptyServices": "Aucun service disponible pour le moment.",
+      "errorServices": "Impossible de charger les services."
     },
     "explorer": {
       "searchPlaceholder": "Rechercher un produit…",

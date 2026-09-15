@@ -20,6 +20,9 @@ interface SidebarProps {
   onNavigate:   (page: EntreprisePage) => void;
   companyLogo?: string | null;
   companyName?: string;
+  /** Filtre le bloc "Catalogue" entre produits et services — voir
+   *  buildNavSections() plus bas et Company.businessModel côté backend. */
+  businessModel?: 'products' | 'services';
   /** Vérifie si l'utilisateur courant a une permission */
   can?:         CanFn;
   /** true si c'est le propriétaire (toutes permissions accordées) */
@@ -45,59 +48,79 @@ interface NavItem {
    voir src/shared/i18n/locales/{fr,en}/common.json → sidebar.*), pas du
    texte en dur — NAV_SECTIONS reste une constante de module (pas de hook
    ici), la résolution `t(clé)` se fait au rendu dans le composant. */
-const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
-  {
-    title: 'sidebar.sections.principal',
-    items: [
-      { id: 'overview',      icon: 'fa-chart-pie', label: 'sidebar.items.overview' },
-      { id: 'commandes', icon: 'fa-box',         label: 'sidebar.items.commandes', badge: '14', badgeClass: 'r', perm: ['orders',  'view'] },
-      { id: 'retours',   icon: 'fa-rotate-left', label: 'sidebar.items.retours',   badge: '3',  badgeClass: 'a', perm: ['returns', 'view'] },
-    ],
-  },
-  {
-    title: 'sidebar.sections.catalogue',
-    items: [
-      { id: 'produits',   icon: 'fa-tag',         label: 'sidebar.items.produits',   badge: '124',              perm: ['products',   'view']   },
-      { id: 'ajouter',    icon: 'fa-plus-circle', label: 'sidebar.items.ajouter',                               perm: ['products',   'create'] },
-      { id: 'inventaire',   icon: 'fa-warehouse', label: 'sidebar.items.inventaire',   badge: '6', badgeClass: 'a', perm: ['products', 'view']   },
-      { id: 'fournisseurs', icon: 'fa-industry',  label: 'sidebar.items.fournisseurs',                              perm: ['fournisseurs', 'view']   },
-      { id: 'promotions',   icon: 'fa-percent',   label: 'sidebar.items.promotions',   badge: '4', badgeClass: 'p', perm: ['promotions','view']  },
-    ],
-  },
-  {
-    title: 'sidebar.sections.marketing',
-    items: [
-      { id: 'analytics', icon: 'fa-chart-line',             label: 'sidebar.items.analytics', perm: ['statistics', 'view'] },
-      { id: 'seo',       icon: 'fa-magnifying-glass-chart', label: 'sidebar.items.seo',       perm: ['statistics', 'view'] },
-    ],
-  },
-  {
-    title: 'sidebar.sections.reseauLogistique',
-    items: [
-      { id: 'livreurs',       icon: 'fa-motorcycle', label: 'sidebar.items.livreurs',       badge: '6', badgeClass: 'g', perm: ['deliveries', 'view'] },
-      { id: 'correspondants', icon: 'fa-map-pin',    label: 'sidebar.items.correspondants', badge: '3', badgeClass: 'p', perm: ['deliveries', 'view'] },
-    ],
-  },
-  {
-    title: 'sidebar.sections.financesClients',
-    items: [
-      { id: 'finances',     icon: 'fa-coins',  label: 'sidebar.items.finances',     perm: ['payments', 'view']             },
-      { id: 'portefeuille', icon: 'fa-wallet', label: 'sidebar.items.portefeuille', perm: ['wallet', 'view'] },
-      { id: 'clients',  icon: 'fa-users', label: 'sidebar.items.clients', perm: ['orders', 'view'] },
-      { id: 'avis',     icon: 'fa-star',  label: 'sidebar.items.avis',    badge: '8', badgeClass: 'a', perm: ['orders', 'view'] },
-    ],
-  },
-  {
-    title: 'sidebar.sections.equipe',
-    items: [
-      { id: 'equipe', icon: 'fa-users-gear', label: 'sidebar.items.equipeGestion', perm: ['team', 'view'] },
-    ],
-  },
+/** Bloc "Catalogue" pour un compte businessModel==='products' (par défaut). */
+const CATALOGUE_PRODUITS: NavItem[] = [
+  { id: 'produits',   icon: 'fa-tag',         label: 'sidebar.items.produits',   badge: '124',              perm: ['products',   'view']   },
+  { id: 'ajouter',    icon: 'fa-plus-circle', label: 'sidebar.items.ajouter',                               perm: ['products',   'create'] },
+  { id: 'inventaire',   icon: 'fa-warehouse', label: 'sidebar.items.inventaire',   badge: '6', badgeClass: 'a', perm: ['products', 'view']   },
+  { id: 'fournisseurs', icon: 'fa-industry',  label: 'sidebar.items.fournisseurs',                              perm: ['fournisseurs', 'view']   },
+  { id: 'promotions',   icon: 'fa-percent',   label: 'sidebar.items.promotions',   badge: '4', badgeClass: 'p', perm: ['promotions','view']  },
 ];
+
+/** Bloc "Catalogue" pour un compte businessModel==='services' — remplace
+ *  entièrement le bloc produits (stock/fournisseurs/promotions n'ont pas de
+ *  sens pour une prestation, voir service.entity.ts "hors scope MVP"). */
+const CATALOGUE_SERVICES: NavItem[] = [
+  { id: 'services',        icon: 'fa-concierge-bell', label: 'sidebar.items.services',       perm: ['services', 'view']   },
+  { id: 'ajouter-service', icon: 'fa-plus-circle',    label: 'sidebar.items.ajouterService',             perm: ['services', 'create'] },
+];
+
+/**
+ * Construit les sections de navigation selon le modèle économique du
+ * compte connecté — un compte "produits" et un compte "services" ne
+ * voient jamais les deux catalogues à la fois (voir Company.businessModel,
+ * modèle exclusif fixé à l'inscription).
+ */
+function buildNavSections(businessModel?: 'products' | 'services'): { title: string; items: NavItem[] }[] {
+  const catalogueItems = businessModel === 'services' ? CATALOGUE_SERVICES : CATALOGUE_PRODUITS;
+  return [
+    {
+      title: 'sidebar.sections.principal',
+      items: [
+        { id: 'overview',      icon: 'fa-chart-pie', label: 'sidebar.items.overview' },
+        { id: 'commandes', icon: 'fa-box',         label: 'sidebar.items.commandes', badge: '14', badgeClass: 'r', perm: ['orders',  'view'] },
+        { id: 'retours',   icon: 'fa-rotate-left', label: 'sidebar.items.retours',   badge: '3',  badgeClass: 'a', perm: ['returns', 'view'] },
+      ],
+    },
+    {
+      title: 'sidebar.sections.catalogue',
+      items: catalogueItems,
+    },
+    {
+      title: 'sidebar.sections.marketing',
+      items: [
+        { id: 'analytics', icon: 'fa-chart-line',             label: 'sidebar.items.analytics', perm: ['statistics', 'view'] },
+        { id: 'seo',       icon: 'fa-magnifying-glass-chart', label: 'sidebar.items.seo',       perm: ['statistics', 'view'] },
+      ],
+    },
+    {
+      title: 'sidebar.sections.reseauLogistique',
+      items: [
+        { id: 'livreurs',       icon: 'fa-motorcycle', label: 'sidebar.items.livreurs',       badge: '6', badgeClass: 'g', perm: ['deliveries', 'view'] },
+        { id: 'correspondants', icon: 'fa-map-pin',    label: 'sidebar.items.correspondants', badge: '3', badgeClass: 'p', perm: ['deliveries', 'view'] },
+      ],
+    },
+    {
+      title: 'sidebar.sections.financesClients',
+      items: [
+        { id: 'finances',     icon: 'fa-coins',  label: 'sidebar.items.finances',     perm: ['payments', 'view']             },
+        { id: 'portefeuille', icon: 'fa-wallet', label: 'sidebar.items.portefeuille', perm: ['wallet', 'view'] },
+        { id: 'clients',  icon: 'fa-users', label: 'sidebar.items.clients', perm: ['orders', 'view'] },
+        { id: 'avis',     icon: 'fa-star',  label: 'sidebar.items.avis',    badge: '8', badgeClass: 'a', perm: ['orders', 'view'] },
+      ],
+    },
+    {
+      title: 'sidebar.sections.equipe',
+      items: [
+        { id: 'equipe', icon: 'fa-users-gear', label: 'sidebar.items.equipeGestion', perm: ['team', 'view'] },
+      ],
+    },
+  ];
+}
 
 export default function Sidebar({
   activePage, onNavigate,
-  companyLogo, companyName,
+  companyLogo, companyName, businessModel,
   can, isOwner = false,
 }: SidebarProps) {
   const { pop } = useToast();
@@ -161,7 +184,7 @@ export default function Sidebar({
 
       {/* ── Navigation ── */}
       <div className="sb-nav">
-        {NAV_SECTIONS.map(section => {
+        {buildNavSections(businessModel).map(section => {
           const visibleItems = section.items.filter(isVisible);
           if (visibleItems.length === 0) return null;
           return (

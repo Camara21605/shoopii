@@ -8,6 +8,7 @@
     "voirToutesEntreprises": "See all businesses",
     "toutesCategories": "✦ All categories",
     "produits": "Products",
+    "services": "Services",
     "loading": "Loading…",
     "resultCount_one": "{{count}} product",
     "resultCount_other": "{{count}} products",

@@ -12,6 +12,23 @@ import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt.guard';
 import { PublicService } from './public.service';
 import { PlatformSettingsCacheService } from '../performance-engine/services/platform-settings-cache.service';
 
+/** Borne haute absolue de `limit` sur tout endpoint public paginé —
+ *  sans ça, `?limit=999999` (ou une valeur non numérique donnant NaN une
+ *  fois passée à TypeORM .take()) forçait un chargement massif/instable
+ *  sur des tables qui grossissent avec le temps (voir audit performance :
+ *  ces endpoints tournent à chaque affichage du home/boutiques/fiche). */
+const MAX_PUBLIC_LIMIT = 100;
+
+/** Parse + borne un paramètre `limit`/`page` reçu en query string —
+ *  jamais NaN, jamais négatif, jamais au-delà de MAX_PUBLIC_LIMIT pour
+ *  `limit`. Centralisé ici pour que chaque route paginée de ce contrôleur
+ *  applique la même garde plutôt que de repartir de `parseInt(x)` nu. */
+function parsePositiveInt(raw: string | undefined, fallback: number, max?: number): number {
+  const n = raw !== undefined ? parseInt(raw, 10) : NaN;
+  const safe = Number.isFinite(n) && n > 0 ? n : fallback;
+  return max ? Math.min(safe, max) : safe;
+}
+
 @ApiTags('Public')
 @Controller('public')
 export class PublicController {
@@ -103,8 +120,8 @@ export class PublicController {
     @Query('type')          type?:          string,
   ) {
     return this.publicService.listProduits({
-      page:  page  ? parseInt(page)  : 1,
-      limit: limit ? parseInt(limit) : 20,
+      page:  parsePositiveInt(page, 1),
+      limit: parsePositiveInt(limit, 20, MAX_PUBLIC_LIMIT),
       categoryId, companyTypeId, search, type,
     });
   }
@@ -125,7 +142,35 @@ export class PublicController {
     @Param('id', ParseUUIDPipe) id: string,
     @Query('limit') limit?: string,
   ) {
-    return this.publicService.getSimilaires(id, limit ? parseInt(limit) : 5);
+    return this.publicService.getSimilaires(id, parsePositiveInt(limit, 5, MAX_PUBLIC_LIMIT));
+  }
+
+  @Get('services')
+  @ApiOperation({ summary: 'Prestations de service publiques paginées' })
+  @ApiQuery({ name: 'page',          required: false })
+  @ApiQuery({ name: 'limit',         required: false })
+  @ApiQuery({ name: 'categoryId',    required: false })
+  @ApiQuery({ name: 'companyTypeId', required: false, description: "Ne renvoie que les services d'entreprises de ce type" })
+  @ApiQuery({ name: 'search',        required: false })
+  listServices(
+    @Query('page')          page?:          string,
+    @Query('limit')         limit?:         string,
+    @Query('categoryId')    categoryId?:    string,
+    @Query('companyTypeId') companyTypeId?: string,
+    @Query('search')        search?:        string,
+  ) {
+    return this.publicService.listServices({
+      page:  parsePositiveInt(page, 1),
+      limit: parsePositiveInt(limit, 20, MAX_PUBLIC_LIMIT),
+      categoryId, companyTypeId, search,
+    });
+  }
+
+  @Get('services/:id')
+  @ApiOperation({ summary: 'Détail service public' })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
+  getService(@Param('id', ParseUUIDPipe) id: string) {
+    return this.publicService.getService(id);
   }
 
   @Get('boutiques')
@@ -136,6 +181,7 @@ export class PublicController {
   @ApiQuery({ name: 'categoryId',    required: false })
   @ApiQuery({ name: 'subCategoryId', required: false })
   @ApiQuery({ name: 'companyTypeId', required: false })
+  @ApiQuery({ name: 'businessModel', required: false, description: 'products | services' })
   listBoutiques(
     @Query('page')          page?:          string,
     @Query('limit')         limit?:         string,
@@ -143,11 +189,12 @@ export class PublicController {
     @Query('categoryId')    categoryId?:    string,
     @Query('subCategoryId') subCategoryId?: string,
     @Query('companyTypeId') companyTypeId?: string,
+    @Query('businessModel') businessModel?: 'products' | 'services',
   ) {
     return this.publicService.listBoutiques({
-      page:  page  ? parseInt(page)  : 1,
-      limit: limit ? parseInt(limit) : 12,
-      search, categoryId, subCategoryId, companyTypeId,
+      page:  parsePositiveInt(page, 1),
+      limit: parsePositiveInt(limit, 12, MAX_PUBLIC_LIMIT),
+      search, categoryId, subCategoryId, companyTypeId, businessModel,
     });
   }
 
@@ -173,8 +220,29 @@ export class PublicController {
     @Query('search')     search?:     string,
   ) {
     return this.publicService.getBoutiqueProduits(id, {
-      page:  page  ? parseInt(page)  : 1,
-      limit: limit ? parseInt(limit) : 20,
+      page:  parsePositiveInt(page, 1),
+      limit: parsePositiveInt(limit, 20, MAX_PUBLIC_LIMIT),
+      categoryId, search,
+    });
+  }
+
+  @Get('boutiques/:id/services')
+  @ApiOperation({ summary: "Services publics d'une boutique" })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
+  @ApiQuery({ name: 'page',       required: false })
+  @ApiQuery({ name: 'limit',      required: false })
+  @ApiQuery({ name: 'categoryId', required: false })
+  @ApiQuery({ name: 'search',     required: false })
+  getBoutiqueServices(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('page')       page?:       string,
+    @Query('limit')      limit?:      string,
+    @Query('categoryId') categoryId?: string,
+    @Query('search')     search?:     string,
+  ) {
+    return this.publicService.getBoutiqueServices(id, {
+      page:  parsePositiveInt(page, 1),
+      limit: parsePositiveInt(limit, 20, MAX_PUBLIC_LIMIT),
       categoryId, search,
     });
   }

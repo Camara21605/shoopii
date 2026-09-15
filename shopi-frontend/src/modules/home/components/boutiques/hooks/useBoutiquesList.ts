@@ -23,6 +23,8 @@ export interface BoutiquesFilters {
   subCategoryId?: string;
   companyTypeId?: string;
   search?:        string;
+  /** Toggle Produits / Services / Tout (omis) — voir BoutiquesPage.tsx. */
+  businessModel?: 'products' | 'services';
 }
 
 interface BoutiquesResponse {
@@ -42,6 +44,7 @@ function cacheKey(filters: BoutiquesFilters, debouncedSearch: string, page: numb
     categoryId:    filters.categoryId    ?? null,
     subCategoryId: filters.subCategoryId ?? null,
     companyTypeId: filters.companyTypeId ?? null,
+    businessModel: filters.businessModel ?? null,
     search:        debouncedSearch       || null,
     page,
   });
@@ -127,6 +130,7 @@ export function useBoutiquesList(filters: BoutiquesFilters) {
           categoryId:    filters.categoryId,
           subCategoryId: filters.subCategoryId,
           companyTypeId: filters.companyTypeId,
+          businessModel: filters.businessModel,
           search:        debouncedSearch || undefined,
         },
       });
@@ -142,14 +146,14 @@ export function useBoutiquesList(filters: BoutiquesFilters) {
     } finally {
       setLoading(false);
     }
-  }, [filters.categoryId, filters.subCategoryId, filters.companyTypeId, debouncedSearch]);
+  }, [filters.categoryId, filters.subCategoryId, filters.companyTypeId, filters.businessModel, debouncedSearch]);
 
   /* ── Rechargement complet quand les filtres (hors pagination) changent ── */
   useEffect(() => {
     fetchPage(1, true);
     return () => abortRef.current?.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.categoryId, filters.subCategoryId, filters.companyTypeId, debouncedSearch]);
+  }, [filters.categoryId, filters.subCategoryId, filters.companyTypeId, filters.businessModel, debouncedSearch]);
 
   const loadMore = useCallback(() => {
     if (!loading) fetchPage(page + 1, false);

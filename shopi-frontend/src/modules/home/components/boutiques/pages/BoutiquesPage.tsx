@@ -35,6 +35,8 @@ export default function BoutiquesPage() {
   const categoryId    = searchParams.get('category')    ?? undefined;
   const subCategoryId = searchParams.get('subcategory') ?? undefined;
   const companyTypeId = searchParams.get('type')        ?? undefined;
+  const modeParam      = searchParams.get('mode');
+  const businessModel  = modeParam === 'products' || modeParam === 'services' ? modeParam : undefined;
   const [searchInput, setSearchInput] = useState(searchParams.get('search') ?? '');
 
   const updateParams = (next: Record<string, string | undefined>) => {
@@ -46,7 +48,7 @@ export default function BoutiquesPage() {
   };
 
   const { boutiques, loading, error, total, hasMore, loadMore, reload, removeLocal } = useBoutiquesList({
-    categoryId, subCategoryId, companyTypeId, search: searchInput,
+    categoryId, subCategoryId, companyTypeId, businessModel, search: searchInput,
   });
 
   return (
@@ -75,6 +77,28 @@ export default function BoutiquesPage() {
               updateParams({ search: e.target.value || undefined });
             }}
           />
+        </div>
+
+        <div className={styles.filterBar} style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          {([
+            { val: undefined,   label: t('boutiquesPage.mode.tout') },
+            { val: 'products' as const, label: t('boutiquesPage.mode.produits') },
+            { val: 'services' as const, label: t('boutiquesPage.mode.services') },
+          ]).map(opt => (
+            <button
+              key={opt.label}
+              onClick={() => updateParams({ mode: opt.val })}
+              style={{
+                padding: '6px 14px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
+                border: businessModel === opt.val ? '1.5px solid var(--t2)' : '1.5px solid var(--bdr2)',
+                background: businessModel === opt.val ? 'var(--t2)' : 'var(--white)',
+                color: businessModel === opt.val ? '#fff' : 'var(--t2)',
+                cursor: 'pointer',
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
 
         <div className={styles.filterBar}>

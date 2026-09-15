@@ -1,0 +1,99 @@
+{
+  "services": {
+    "header": {
+      "title": "My services",
+      "subtitle": "Manage your services",
+      "nouveau": "Add a service"
+    },
+    "stats": {
+      "total": "Total",
+      "publies": "Published",
+      "brouillons": "Drafts"
+    },
+    "search": "Search a service…",
+    "filters": {
+      "tous": "All",
+      "publics": "Published",
+      "brouillons": "Drafts",
+      "prives": "Private"
+    },
+    "loading": "Loading services…",
+    "retry": "Retry",
+    "empty": {
+      "noneTitle": "No services yet",
+      "noneSub": "Add your first service to start receiving requests.",
+      "noResultsTitle": "No results",
+      "noResultsSub": "Try another search or filter.",
+      "addFirst": "Add my first service"
+    },
+    "count": "{{count}} service(s)",
+    "countFor": "for « {{search}} »",
+    "card": {
+      "voir": "View",
+      "voirDetail": "View details",
+      "modifRapide": "Quick edit",
+      "modifComplet": "Edit",
+      "modifier": "Edit",
+      "supprimer": "Delete"
+    },
+    "visibilite": {
+      "public": "Published",
+      "draft": "Draft",
+      "private": "Private"
+    },
+    "pricingType": {
+      "fixe": "Fixed price",
+      "horaire": "Hourly rate",
+      "sur_devis": "Quote on request"
+    },
+    "modalVoir": {
+      "prix": "Rate",
+      "commission": "Platform commission",
+      "revenuNet": "Estimated net revenue",
+      "duree": "Duration",
+      "minutes": "min",
+      "nonRenseigne": "Not specified",
+      "modePrestation": "Service mode",
+      "surPlace": "On-site",
+      "domicile": "At client's location",
+      "distance": "Remote",
+      "reservation": "Booking",
+      "reservationRequise": "Booking required",
+      "sansRendezVous": "Walk-in",
+      "description": "Description",
+      "inclus": "What's included",
+      "tags": "Tags",
+      "ajouteLe": "Added on",
+      "noImage": "No image",
+      "supprimer": "Delete",
+      "archiver": "Archive",
+      "modifier": "Edit"
+    },
+    "modalModifier": {
+      "title": "Quick edit",
+      "visibilite": "Visibility",
+      "optPublic": "Published",
+      "optDraft": "Draft",
+      "optPrivate": "Private",
+      "annuler": "Cancel",
+      "saving": "Saving…",
+      "save": "Save",
+      "info": "To edit price, description or media, use « Edit »."
+    },
+    "modalDelete": {
+      "title": "Delete this service?",
+      "confirm": "You are about to delete « {{nom}} ».",
+      "irreversible": "This action is irreversible.",
+      "annuler": "Cancel",
+      "deleting": "Deleting…",
+      "confirmBtn": "Delete permanently"
+    },
+    "toasts": {
+      "updated": "Service updated",
+      "deleted": "Service deleted",
+      "archived": "Service archived",
+      "archiveError": "Failed to archive",
+      "genericError": "An error occurred"
+    }
+  }
+}

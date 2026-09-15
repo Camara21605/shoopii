@@ -558,6 +558,7 @@ export class AuthService implements OnModuleInit {
           firstName: newUser.firstName,
           otpCode:   verifyOtpCode,
           expiresAt: verifyOtpExpiry,
+          userId:    newUser.id,
         })
         .catch(err =>
           this.logger.error(`[VÉRIF EMAIL ❌] ${newUser.email} | ${(err as Error).message}`),
@@ -748,6 +749,7 @@ export class AuthService implements OnModuleInit {
         firstName: user.firstName,
         otpCode,
         expiresAt: otpExpiry,
+        userId:    user.id,
       })
       .catch((err: any) =>
         this.logger.error(`[VÉRIF EMAIL RENVOI ❌] ${user.email} | ${err?.message ?? err}`),
@@ -827,6 +829,7 @@ export class AuthService implements OnModuleInit {
           userId:        user.id,
           companyName:   dto.companyName?.trim() || dto.shopName?.trim() || fullName,
           status:        manualVendorApproval ? CompanyStatus.PENDING : CompanyStatus.ACTIVE,
+          businessModel: (dto as any).businessModel,
           companyTypeId: (dto as any).companyTypeId ?? null,
           partnerId:     codePartnerId ?? null,
           adresse:       loc.adresse,
