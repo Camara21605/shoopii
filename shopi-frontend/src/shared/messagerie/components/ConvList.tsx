@@ -13,6 +13,7 @@ import { getRoleFromToken } from '../../services/authUtils';
 import { apiFetch } from '../../services/apiFetch';
 import type { CallHistoryItem } from '../hooks/useCallHistory';
 import { useContactSync } from '../hooks/useContactSync';
+import ContactSyncPrompt from './ContactSyncPrompt';
 import { cldAvatar } from '../utils/chatUtils';
 import s from '../styles/ConvList.module.css';
 
@@ -224,6 +225,36 @@ function ConvList({
     if (myRole === 'client') setTab('contacts');
   };
 
+  /* ── Invite automatique de synchro contacts (1ère visite) ──────────
+   * Affichée une seule fois par appareil (localStorage) — jamais si
+   * l'API Contact Picker n'existe pas sur ce navigateur (desktop,
+   * iOS Safari). Accepter déclenche directement syncFromDevice() —
+   * le sélecteur natif du navigateur reste incontournable (voir
+   * ContactSyncPrompt.tsx), mais l'utilisateur n'a ensuite plus rien
+   * à faire côté app : les contacts trouvés atterrissent seuls dans
+   * l'onglet "Contacts", sans écran de sélection propre à Shoneya. */
+  const CONTACT_PROMPT_KEY = 'shopi_contact_sync_prompted';
+  const [showAutoPrompt, setShowAutoPrompt] = useState(false);
+
+  useEffect(() => {
+    const supported = 'contacts' in navigator && 'ContactsManager' in window;
+    if (!supported) return;
+    try {
+      if (localStorage.getItem(CONTACT_PROMPT_KEY)) return;
+    } catch { return; }
+    setShowAutoPrompt(true);
+  }, []);
+
+  const dismissAutoPrompt = () => {
+    setShowAutoPrompt(false);
+    try { localStorage.setItem(CONTACT_PROMPT_KEY, '1'); } catch { /* ignore */ }
+  };
+
+  const acceptAutoPrompt = async () => {
+    dismissAutoPrompt();
+    await handleSyncContacts();
+  };
+
   /* Si l'onglet actif n'est plus dans la liste visible, revenir à "Tous" */
   useEffect(() => {
     if (!visibleSet.has(tab)) setTab('all');
@@ -415,6 +446,17 @@ function ConvList({
 
   return (
     <aside className={`${s.aside} ${mobileOpen ? s.mobileOpen : ''}`}>
+
+      {showAutoPrompt && (
+        <ContactSyncPrompt
+          onAccept={acceptAutoPrompt}
+          onDismiss={dismissAutoPrompt}
+          title={t('messagerie.convList.contactPromptTitle')}
+          description={t('messagerie.convList.contactPromptDesc')}
+          acceptLabel={t('messagerie.convList.contactPromptAccept')}
+          laterLabel={t('messagerie.convList.contactPromptLater')}
+        />
+      )}
 
       {/* Recherche + bouton nouveau message */}
       <div className={s.searchWrap}>
