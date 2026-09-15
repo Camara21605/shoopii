@@ -108,6 +108,25 @@ export default function InscriptionsTab({ settings, set }: Props) {
           />
         </SettingRow>
 
+        {/* Activé : chaque création de compte (tous rôles) doit confirmer un
+         *  code envoyé par email avant d'avoir accès à son compte (voir
+         *  AuthService.register() côté backend — envoie l'OTP et ne délivre
+         *  aucun token tant qu'il n'est pas validé).
+         *  Désactivé : accès immédiat dès l'étape mot de passe franchie, sans
+         *  étape supplémentaire. Ce réglage pilotait déjà cette logique côté
+         *  backend, seul le contrôle manquait ici — il ne vivait jusque-là
+         *  que dans l'onglet Sécurité (retiré de là, voir SecurityTab.tsx,
+         *  pour ne garder qu'un seul endroit où le modifier). */}
+        <SettingRow
+          label="Validation par email obligatoire"
+          desc="Chaque création de compte doit confirmer un code reçu par email avant d'accéder à son compte"
+        >
+          <Toggle
+            checked={settings.emailVerifRequired}
+            onChange={v => set('emailVerifRequired', v)}
+          />
+        </SettingRow>
+
       </SettingGroup>
 
       {/* ── GROUPE 2 : Validation vendeurs ── */}
@@ -165,6 +184,7 @@ export default function InscriptionsTab({ settings, set }: Props) {
         <SettingRow label="Récapitulatif politique" desc="Règles actuellement en vigueur">
           <div style={{ fontSize: 11, color: 'var(--txt-3)', textAlign: 'right', lineHeight: 1.9 }}>
             {settings.kycRequired ? '✅ KYC requis' : '⬜ KYC optionnel'}<br />
+            {settings.emailVerifRequired ? '✅ Email requis' : '⬜ Email non requis'}<br />
             {settings.manualVendorApproval ? '✅ Approbation manuelle' : '⬜ Auto-activation vendeurs'}<br />
             Suspension après{' '}
             <strong style={{ color: 'var(--txt-1)' }}>

@@ -86,13 +86,31 @@ function useReferralParam(): string | null {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   Lien de VÉRIFICATION EMAIL en un clic — ?verifyUserId&verifyCode&
+   verifyEmail, déposé par le bouton "Activer mon compte" de l'email
+   de confirmation (voir shopi-backend email.service.ts,
+   sendEmailVerificationOtp). Contrairement à useInviteParams, ce lien
+   ne sert pas à préremplir un formulaire : il déclenche directement
+   la vérification du code (voir useLoginPage → verifyLinkParams).
+───────────────────────────────────────────────────────────────*/
+function useVerifyLinkParams(): { userId: string; email: string; code: string } | null {
+  const [params] = useSearchParams();
+  const userId = params.get('verifyUserId')?.trim() ?? '';
+  const code   = params.get('verifyCode')?.trim()   ?? '';
+  const email  = params.get('verifyEmail')?.trim()  ?? '';
+  if (!userId || !email || !/^\d{6}$/.test(code)) return null;
+  return { userId, email, code };
+}
+
+/* ─────────────────────────────────────────────────────────────
    COMPOSANT
 ───────────────────────────────────────────────────────────────*/
 const Login: React.FC = () => {
   // ✅ useSearchParams → lecture de l'URL APRÈS le montage du router
   const { lockedRole, prefilledCode, prefilledEmail, isInvited } = useInviteParams();
-  const collabToken   = useCollabToken();
-  const referralSlug  = useReferralParam();
+  const collabToken     = useCollabToken();
+  const referralSlug    = useReferralParam();
+  const verifyLinkParams = useVerifyLinkParams();
   const [collabInviteError, setCollabInviteError] = useState<string | null>(null);
 
   const {
@@ -146,7 +164,7 @@ const Login: React.FC = () => {
     // ✅ Politique d'inscription publique
     openSignup,
     codeRequiredForCompany,
-  } = useLoginPage({ initialTab: (isInvited || referralSlug) ? 'register' : 'login', lockedRole });
+  } = useLoginPage({ initialTab: (isInvited || referralSlug) ? 'register' : 'login', lockedRole, verifyLinkParams });
 
   // ✅ Pré-remplir email + forcer le rôle au montage
   useEffect(() => {

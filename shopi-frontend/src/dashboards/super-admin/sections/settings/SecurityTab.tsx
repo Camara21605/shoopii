@@ -91,15 +91,10 @@ export default function SecurityTab({ settings, set }: Props) {
       {/* ── GROUPE 1 : Authentification ── */}
       <SettingGroup icon="🔐" iconBg="var(--rose-dim)" title="Authentification">
 
-        <SettingRow
-          label="Vérification email obligatoire"
-          desc="Les utilisateurs doivent confirmer leur email à l'inscription"
-        >
-          <Toggle
-            checked={settings.emailVerifRequired}
-            onChange={v => set('emailVerifRequired', v)}
-          />
-        </SettingRow>
+        {/* Le réglage "Vérification email obligatoire" (settings.emailVerifRequired)
+         *  se modifie désormais depuis l'onglet Inscriptions, avec le reste de
+         *  la politique d'inscription — un seul endroit pour l'éditer. Il
+         *  reste pris en compte ici dans SecurityScore ci-dessus (critère 1). */}
 
         <SettingRow
           label="2FA pour les admins"

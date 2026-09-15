@@ -88,6 +88,15 @@ export interface SendPasswordResetOtpEmailParams {
   expiresAt: Date;
 }
 
+/** Paramètres pour l'email OTP de vérification d'adresse (inscription) —
+ *  `userId` en plus de SendPasswordResetOtpEmailParams : nécessaire pour
+ *  construire le lien de vérification en un clic (voir sendEmailVerificationOtp
+ *  ci-dessous), absent du flux mot de passe (resté volontairement OTP-only,
+ *  voir l'en-tête de ce fichier). */
+export interface SendEmailVerificationOtpParams extends SendPasswordResetOtpEmailParams {
+  userId: string;
+}
+
 /** Paramètres pour l'email de confirmation de changement de mot de passe */
 export interface SendPasswordChangedEmailParams {
   toEmail:   string;
@@ -306,17 +315,26 @@ export class MailService implements OnModuleInit {
   //  (voir AuthService.verifyEmail()).
   // ══════════════════════════════════════════════════════════════════════════
 
-  async sendEmailVerificationOtp(params: SendPasswordResetOtpEmailParams): Promise<void> {
-    const { toEmail, firstName, otpCode, expiresAt } = params;
+  async sendEmailVerificationOtp(params: SendEmailVerificationOtpParams): Promise<void> {
+    const { toEmail, firstName, otpCode, expiresAt, userId } = params;
 
     const expiryTime = expiresAt.toLocaleTimeString('fr-FR', {
       hour: '2-digit', minute: '2-digit',
     });
 
+    /* Lien de vérification en un clic — même principe que registerUrl dans
+     * sendInvitationEmail() (code en clair dans l'URL, jamais persisté que
+     * haché en base). Ouvre /login, que Login.tsx détecte (voir
+     * useVerifyLinkParams) pour vérifier le code automatiquement sans que
+     * l'utilisateur ait à le retaper — la saisie manuelle des 6 chiffres
+     * reste possible en repli si le lien ne fonctionne pas (client mail qui
+     * pré-visite les liens, code expiré, etc.). */
+    const verifyUrl = `${this.frontendUrl}/login?verifyUserId=${encodeURIComponent(userId)}&verifyCode=${encodeURIComponent(otpCode)}&verifyEmail=${encodeURIComponent(toEmail)}`;
+
     await this.send({
       to:      toEmail,
       subject: `Shopi — Confirmez votre adresse email (${expiryTime})`,
-      html:    this.buildOtpEmailHtml({ firstName, otpCode, expiryTime, purpose: 'email-verification' }),
+      html:    this.buildOtpEmailHtml({ firstName, otpCode, expiryTime, purpose: 'email-verification', verifyUrl }),
       text: [
         `Bonjour ${firstName},`,
         '',
@@ -325,6 +343,9 @@ export class MailService implements OnModuleInit {
         `  ${otpCode}`,
         '',
         `Ce code est valable jusqu'à ${expiryTime}.`,
+        '',
+        'Ou cliquez sur ce lien pour activer votre compte automatiquement :',
+        verifyUrl,
         '',
         "Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email.",
         '',
@@ -702,13 +723,18 @@ export class MailService implements OnModuleInit {
      * aurait affiché un texte trompeur. Généralisé avec un `purpose` plutôt
      * que dupliquer tout le HTML pour un seul changement de phrase. */
     purpose?:    'password-reset' | 'email-verification';
+    /** Présent uniquement pour purpose='email-verification' — affiche un
+     *  bouton "Activer mon compte" en plus du code (voir sendEmailVerificationOtp). */
+    verifyUrl?:  string;
   }): string {
     const purpose = p.purpose ?? 'password-reset';
     const introText = purpose === 'email-verification'
       ? `Bonjour <strong>${p.firstName}</strong>, voici votre code pour confirmer votre adresse email Shopi.`
       : `Bonjour <strong>${p.firstName}</strong>, voici votre code pour réinitialiser votre mot de passe Shopi.`;
     const instructionsText = purpose === 'email-verification'
-      ? 'Retournez sur la page Shopi et saisissez ce code à 6 chiffres dans les cases prévues pour activer votre compte.'
+      ? (p.verifyUrl
+          ? 'Cliquez sur le bouton ci-dessus pour activer votre compte automatiquement, ou retournez sur la page Shopi et saisissez ce code à 6 chiffres dans les cases prévues.'
+          : 'Retournez sur la page Shopi et saisissez ce code à 6 chiffres dans les cases prévues pour activer votre compte.')
       : 'Retournez sur la page Shopi, saisissez ce code à 6 chiffres dans les cases prévues, puis créez votre nouveau mot de passe.';
     const securityText = purpose === 'email-verification'
       ? "Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email — aucun compte ne sera activé."
@@ -776,6 +802,29 @@ export class MailService implements OnModuleInit {
               </div>
             </td></tr>
           </table>
+
+          ${p.verifyUrl ? `
+          <!-- Bouton activation en un clic -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+            <tr><td align="center">
+              <a href="${p.verifyUrl}" style="
+                display:inline-block;background:linear-gradient(135deg,#1e40af,#3b82f6);
+                color:#fff;text-decoration:none;font-size:14px;font-weight:800;
+                padding:14px 32px;border-radius:12px;
+              ">✅ Activer mon compte</a>
+              <div style="font-size:11.5px;color:#94a3b8;margin-top:10px;">
+                Ce bouton confirme votre code automatiquement — pas besoin de le saisir.
+              </div>
+            </td></tr>
+          </table>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            <tr><td>
+              <div style="border-top:1px solid #e2e8f0;text-align:center;padding-top:16px;font-size:11px;color:#94a3b8;">
+                — ou saisissez le code manuellement ci-dessous —
+              </div>
+            </td></tr>
+          </table>
+          ` : ''}
 
           <!-- Instructions -->
           <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:20px;">
