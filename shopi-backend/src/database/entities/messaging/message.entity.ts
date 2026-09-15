@@ -220,7 +220,11 @@ export class Message {
   @JoinColumn({ name: 'conversationId' })
   conversation: Conversation;
 
-  @Index()
+  /* Pas d'@Index() ici : IDX_msg_conversation_date (conversationId,
+   * createdAt) ci-dessus couvre déjà les recherches par conversationId
+   * seul (règle du préfixe gauche des index B-tree) — un index dédié
+   * en plus serait redondant et ralentirait chaque INSERT (table à très
+   * fort volume d'écriture). */
   @Column({ name: 'conversationId', type: 'uuid' })
   conversationId: string;
 

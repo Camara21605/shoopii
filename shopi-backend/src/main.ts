@@ -21,7 +21,7 @@ setDefaultResultOrder('ipv4first');
 import { NestFactory }            from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { IoAdapter }              from '@nestjs/platform-socket.io';
+import { RedisIoAdapter }         from './common/adapters/redis-io.adapter';
 import cookieParser               from 'cookie-parser';
 import compression                from 'compression';
 import { AppModule }              from './app.module';
@@ -139,7 +139,14 @@ async function bootstrap() {
   );
 
   /* ── WebSocket ─────────────────────────────────────────────── */
-  app.useWebSocketAdapter(new IoAdapter(app));
+  /* Redis pub/sub adapter — sans ça, Socket.IO garde les rooms/broadcasts
+   * en mémoire locale au process : si Render scale un jour à 2+ instances,
+   * deux utilisateurs connectés à des instances différentes cessent de se
+   * voir en temps réel (messages, typing, accusés de lecture) de façon
+   * intermittente et difficile à diagnostiquer. Voir redis-io.adapter.ts. */
+  const redisIoAdapter = new RedisIoAdapter(app);
+  await redisIoAdapter.connectToRedis();
+  app.useWebSocketAdapter(redisIoAdapter);
 
   /* ── Préfixe global ─────────────────────────────────────────── */
   app.setGlobalPrefix('api');
