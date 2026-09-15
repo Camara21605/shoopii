@@ -13,13 +13,9 @@ import styles from './HScrollSection.module.css';
 interface Props {
   children: React.ReactNode;
   dark?:    boolean;
-  /** Sous 640px, remplace le scroll horizontal par une liste verticale
-   *  simple (pas de flèches/fades, cartes empilées pleine largeur) —
-   *  utilisé uniquement par les blocs "Entreprises" (home + page type). */
-  listOnMobile?: boolean;
 }
 
-export default function HScrollSection({ children, dark = false, listOnMobile = false }: Props) {
+export default function HScrollSection({ children, dark = false }: Props) {
   const ref      = useRef<HTMLDivElement>(null);
   const [canLeft,  setCanLeft]  = useState(false);
   const [canRight, setCanRight] = useState(true);
@@ -46,16 +42,16 @@ export default function HScrollSection({ children, dark = false, listOnMobile = 
     ref.current?.scrollBy({ left: dir * 280, behavior: 'smooth' });
 
   return (
-    <div className={`${styles.wrap} ${listOnMobile ? styles.listWrap : ''}`}>
+    <div className={styles.wrap}>
 
       {/* Gradient fade gauche */}
       {canLeft && (
         <div className={`${styles.fadeLeft} ${dark ? styles.fadeLeftDark : ''}`} />
       )}
 
-      {/* Contenu scrollable (liste verticale sous 640px si listOnMobile) */}
+      {/* Contenu scrollable */}
       <div
-        className={`${styles.hs} ${listOnMobile ? styles.hsList : ''}`}
+        className={styles.hs}
         ref={ref}
         style={{ scrollSnapType: 'x mandatory' }}
       >

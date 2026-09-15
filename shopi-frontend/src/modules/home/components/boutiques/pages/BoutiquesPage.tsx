@@ -129,7 +129,7 @@ export default function BoutiquesPage() {
         {boutiques.length > 0 && (
           <div className={styles.cardsGrid}>
             {boutiques.map(b => (
-              <CardEntreprise key={b.id} e={b} onToast={onToast} onRemoved={removeLocal} />
+              <CardEntreprise key={b.id} e={b} onToast={onToast} onRemoved={removeLocal} listMode />
             ))}
           </div>
         )}

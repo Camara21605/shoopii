@@ -29,9 +29,14 @@ interface Props {
   /** Appelé quand l'utilisateur choisit "Supprimer" dans le menu ⋮ —
    *  le parent doit retirer cette boutique de sa liste locale. */
   onRemoved?: (id: string) => void;
+  /** true UNIQUEMENT sur la page "/boutiques" — bascule la carte en ligne
+   *  de liste (sans bordure) sous 640px. Ailleurs (home, page type
+   *  d'entreprise), la carte garde son apparence habituelle même en
+   *  mobile — voir .coListMode dans Cards.module.css. */
+  listMode?:  boolean;
 }
 
-export default function CardEntreprise({ e, onToast, onRemoved }: Props) {
+export default function CardEntreprise({ e, onToast, onRemoved, listMode = false }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const ds = domainStyle(e.domaine);
@@ -40,7 +45,11 @@ export default function CardEntreprise({ e, onToast, onRemoved }: Props) {
   const handle = [e.domaine, e.ville].filter(Boolean).join(' · ');
 
   return (
-    <div className={styles.coCard} onClick={() => navigate(`/boutique/${e.id}`)} style={{ cursor: 'pointer' }}>
+    <div
+      className={`${styles.coCard} ${listMode ? styles.coListMode : ''}`}
+      onClick={() => navigate(`/boutique/${e.id}`)}
+      style={{ cursor: 'pointer' }}
+    >
 
       {/* ── Avatar rond ── */}
       <div

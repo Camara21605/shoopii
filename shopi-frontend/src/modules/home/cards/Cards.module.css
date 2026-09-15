@@ -734,12 +734,15 @@
 .coBtnWrap { margin-top: 6px; }
 
 /* ══════════════════════════════════════════════════════════════
-   Mode liste (mobile) — home + page "/boutiques" : plus de grille ni
-   de carte encadrée, une ligne pleine largeur sans bordure/ombre par
-   entreprise (avatar à gauche, infos au centre, bouton à droite).
-   ══════════════════════════════════════════════════════════════ */
+   Mode liste (mobile) — UNIQUEMENT la page "/boutiques" (voir prop
+   `listMode` de CardEntreprise, classe .coListMode ajoutée en plus de
+   .coCard) : plus de carte encadrée, une ligne pleine largeur sans
+   bordure/ombre par entreprise (avatar à gauche, infos au centre,
+   bouton à droite). Ailleurs (home, page type d'entreprise), .coCard
+   reste une carte classique même en mobile — voir .coCard tout court
+   ci-dessus, non affecté par ce bloc. */
 @media (max-width: 640px) {
-  .coCard {
+  .coCard.coListMode {
     flex: 1 1 100%;
     width: 100%;
     flex-direction: row;
@@ -752,17 +755,17 @@
     box-shadow: none;
     border-bottom: 1px solid var(--bdr);
   }
-  .coInfo > .roleBadge {
+  .coListMode .coInfo > .roleBadge {
     position: static;
     align-self: flex-start;
     margin-bottom: 2px;
     backdrop-filter: none;
   }
-  .coLogo { width: 48px; height: 48px; font-size: 18px; margin-bottom: 0; }
-  .coInfo { align-items: flex-start; flex: 1; min-width: 0; }
-  .coNameRow { justify-content: flex-start; width: 100%; }
-  .coHandle { text-align: left; }
-  .coBtnWrap { margin-top: 0; flex-shrink: 0; }
+  .coListMode .coLogo { width: 48px; height: 48px; font-size: 18px; margin-bottom: 0; }
+  .coListMode .coInfo { align-items: flex-start; flex: 1; min-width: 0; }
+  .coListMode .coNameRow { justify-content: flex-start; width: 100%; }
+  .coListMode .coHandle { text-align: left; }
+  .coListMode .coBtnWrap { margin-top: 0; flex-shrink: 0; }
 }
 
 /* ══════════════════════════════════════════════════════════════
