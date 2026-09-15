@@ -21,7 +21,7 @@ setDefaultResultOrder('ipv4first');
 import { NestFactory }            from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { RedisIoAdapter }         from './common/adapters/redis-io.adapter';
+import { IoAdapter }              from '@nestjs/platform-socket.io';
 import cookieParser               from 'cookie-parser';
 import compression                from 'compression';
 import { AppModule }              from './app.module';
@@ -139,14 +139,15 @@ async function bootstrap() {
   );
 
   /* ── WebSocket ─────────────────────────────────────────────── */
-  /* Redis pub/sub adapter — sans ça, Socket.IO garde les rooms/broadcasts
-   * en mémoire locale au process : si Render scale un jour à 2+ instances,
-   * deux utilisateurs connectés à des instances différentes cessent de se
-   * voir en temps réel (messages, typing, accusés de lecture) de façon
-   * intermittente et difficile à diagnostiquer. Voir redis-io.adapter.ts. */
-  const redisIoAdapter = new RedisIoAdapter(app);
-  await redisIoAdapter.connectToRedis();
-  app.useWebSocketAdapter(redisIoAdapter);
+  /* ⚠️ ROLLBACK D'URGENCE (2026-09-15) — RedisIoAdapter (voir
+   * redis-io.adapter.ts) a fait boucler le process en crash en production
+   * juste après le boot (probablement au premier client Socket.IO réel :
+   * jamais reproduit localement, où aucun navigateur ne s'était connecté).
+   * Revenu à l'adaptateur en mémoire locale le temps de diagnostiquer sans
+   * navigateur, potentiellement en isolant subClient/pubClient et les
+   * versions ioredis/@socket.io/redis-adapter. NE PAS réactiver
+   * RedisIoAdapter sans avoir reproduit puis corrigé le crash. */
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   /* ── Préfixe global ─────────────────────────────────────────── */
   app.setGlobalPrefix('api');
