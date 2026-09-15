@@ -61,7 +61,11 @@
   .body { padding: 14px 12px; }
   .cardsGrid, .skeletonGrid { grid-template-columns: repeat(2,1fr); }
 }
-@media (max-width: 460px) {
-  .cardsGrid, .skeletonGrid { grid-template-columns: 1fr; }
+@media (max-width: 640px) {
+  /* Liste verticale au lieu d'une grille de cartes — voir .coCard
+   * (Cards.module.css) qui bascule en ligne de liste sans bordure
+   * à la même largeur. */
+  .cardsGrid { display: flex; flex-direction: column; gap: 0; }
+  .skeletonGrid { grid-template-columns: 1fr; }
   .searchBox { max-width: 100%; }
 }

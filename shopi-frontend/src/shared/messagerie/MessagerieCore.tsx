@@ -114,6 +114,7 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
     markConvAsUnread,
     markConvAsRead,
     applyCallEventLocally,
+    resolveCallEvent,
     startNewConv,
     setInfoPanelOpen,
     setMobileOpen,
@@ -250,6 +251,7 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
   const {
     startCall,
     registerCallEventHandler,
+    registerCallEventResolvedHandler,
     syncMsgUnread,
   } = useGlobalCall();
 
@@ -266,17 +268,25 @@ export default function MessagerieCore({ canSend = true, initialConversationId }
    *   2. Persiste l'événement via REST (fait lui-même, pas besoin ici)
    */
   useEffect(() => {
-    registerCallEventHandler((event) => {
-      applyCallEventLocally(
-        event.conversationId,
-        event.status,
-        event.direction,
-        event.duration,
-        event.callType,
-      );
-    });
+    registerCallEventHandler((event) => applyCallEventLocally(
+      event.conversationId,
+      event.status,
+      event.direction,
+      event.duration,
+      event.callType,
+    ));
     return () => registerCallEventHandler(null);
   }, [registerCallEventHandler, applyCallEventLocally]);
+
+  /* Réconciliation — voir GlobalCallContext.registerCallEventResolvedHandler
+   * et useMessagerie.resolveCallEvent pour le bug que ça corrige (doublon
+   * permanent des bulles d'appel). */
+  useEffect(() => {
+    registerCallEventResolvedHandler((convId, tmpId, saved) => {
+      resolveCallEvent(convId, tmpId, saved as Parameters<typeof resolveCallEvent>[2]);
+    });
+    return () => registerCallEventResolvedHandler(null);
+  }, [registerCallEventResolvedHandler, resolveCallEvent]);
 
   /* Synchronise le badge du header en temps réel :
    * quand l'utilisateur lit une conversation, totalUnread décrémente

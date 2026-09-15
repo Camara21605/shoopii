@@ -116,7 +116,7 @@ function EntreprisesBloc({ onToast }: { onToast:(m:string)=>void }) {
   );
 
   if (loading) return (
-    <HScrollSection>
+    <HScrollSection listOnMobile>
       {[...Array(4)].map((_,i) => <SkeletonCard key={i} height={190} />)}
     </HScrollSection>
   );
@@ -128,7 +128,7 @@ function EntreprisesBloc({ onToast }: { onToast:(m:string)=>void }) {
   );
 
   return (
-    <HScrollSection>
+    <HScrollSection listOnMobile>
       {listeEnrichie.map(e => (
         <CardEntreprise
           key={e.id} e={e} onToast={onToast}

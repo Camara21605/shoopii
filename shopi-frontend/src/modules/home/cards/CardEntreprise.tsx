@@ -42,11 +42,6 @@ export default function CardEntreprise({ e, onToast, onRemoved }: Props) {
   return (
     <div className={styles.coCard} onClick={() => navigate(`/boutique/${e.id}`)} style={{ cursor: 'pointer' }}>
 
-      {/* ── Badge de rôle ── */}
-      <span className={`${styles.roleBadge} ${styles.roleBadgeEntreprise}`}>
-        <i className="fas fa-store" /> {t('sharedCards.entreprise.roleLabel')}
-      </span>
-
       {/* ── Avatar rond ── */}
       <div
         className={`${styles.coLogo} ${e.logo ? styles.coLogoImage : ''}`}
@@ -60,19 +55,27 @@ export default function CardEntreprise({ e, onToast, onRemoved }: Props) {
         }
       </div>
 
-      {/* Nom + badge vérifié */}
-      <div className={styles.coNameRow}>
-        <span className={styles.coName}>{e.companyName}</span>
-        {e.verified && (
-          <i
-            className={`fas fa-circle-check ${styles.coVerif}`}
-            title={t('sharedCards.entreprise.verifie')}
-          />
-        )}
-      </div>
+      {/* Nom + sous-titre — regroupés pour la mise en page en ligne de
+       * liste sous 640px (voir .coInfo dans Cards.module.css). */}
+      <div className={styles.coInfo}>
+        {/* ── Badge de rôle ── */}
+        <span className={`${styles.roleBadge} ${styles.roleBadgeEntreprise}`}>
+          <i className="fas fa-store" /> {t('sharedCards.entreprise.roleLabel')}
+        </span>
 
-      {/* Domaine · ville (façon @handle) */}
-      {handle && <div className={styles.coHandle}>{handle}</div>}
+        <div className={styles.coNameRow}>
+          <span className={styles.coName}>{e.companyName}</span>
+          {e.verified && (
+            <i
+              className={`fas fa-circle-check ${styles.coVerif}`}
+              title={t('sharedCards.entreprise.verifie')}
+            />
+          )}
+        </div>
+
+        {/* Domaine · ville (façon @handle) */}
+        {handle && <div className={styles.coHandle}>{handle}</div>}
+      </div>
 
       {/* Bouton */}
       <div className={styles.coBtnWrap} onClick={ev => ev.stopPropagation()}>

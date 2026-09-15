@@ -283,18 +283,6 @@ function VirtualizedMessageList({
     }
   }, [convId, hasMoreMessages, loadingOlder, onLoadOlderMessages]);
 
-  useImperativeHandle(ref, () => ({
-    scrollToStart: () => listRef.current?.scrollTo(0),
-    scrollToEnd:   () => listRef.current?.scrollToItem(Math.max(0, messages.length - 1), 'end'),
-    scrollToMessage: (id: string) => {
-      const idx = messages.findIndex(m => m.id === id);
-      if (idx === -1) return;
-      listRef.current?.scrollToItem(idx, 'center');
-    },
-  }), [messages]);
-
-  const itemData: RowData = { messages, user, lastReadIdx, highlightedId, onReply, onToast, onDelete, onRetry, onOpenMedia, reportSize };
-
   /* BUG CORRIGÉ — react-window n'a pas de notion native de "coller au bas"
    * (contrairement au rendu natif, voir .msgsZone/justify-content:flex-end
    * dans ChatWindow.module.css) : la List recevait toujours height=
@@ -307,6 +295,45 @@ function VirtualizedMessageList({
    * size.height et le comportement (scroll normal) est inchangé. */
   const totalContentHeight = messages.reduce((sum, _m, i) => sum + getItemSize(i), 0);
   const listHeight = Math.min(size.height, totalContentHeight);
+
+  /* BUG CORRIGÉ (mobile) — sur téléphone, l'ouverture/fermeture du clavier
+   * logiciel redimensionne .msgsZoneWrap (donc `size.height` via
+   * useAutoSize) SANS toucher à `messages`/`convId` : l'effet ci-dessus ne
+   * se redéclenche pas, et la liste garde l'ancien offset de scroll figé
+   * au moment du redimensionnement. Symptôme observé : à la fermeture du
+   * clavier (la zone regagne de la hauteur), un vide apparaît SOUS le
+   * dernier message, entre les bulles et le champ de saisie — la liste
+   * n'est plus réellement collée en bas alors qu'elle l'était juste avant.
+   * On ne re-colle en bas QUE si l'utilisateur y était déjà (à
+   * SNAP_THRESHOLD px près) juste avant le redimensionnement, pour ne
+   * jamais faire sauter quelqu'un qui lisait volontairement l'historique
+   * plus haut pendant que le clavier bougeait. */
+  const SNAP_THRESHOLD = 48;
+  const prevSizeHeightRef = useRef(0);
+  useEffect(() => {
+    const prevHeight = prevSizeHeightRef.current;
+    prevSizeHeightRef.current = size.height;
+    if (prevHeight === 0 || size.height === prevHeight || messages.length === 0) return;
+
+    const maxOffset = Math.max(0, totalContentHeight - listHeight);
+    const wasNearBottom = maxOffset - lastScrollOffsetRef.current <= SNAP_THRESHOLD;
+    if (wasNearBottom) {
+      requestAnimationFrame(() => listRef.current?.scrollToItem(messages.length - 1, 'end'));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [size.height]);
+
+  useImperativeHandle(ref, () => ({
+    scrollToStart: () => listRef.current?.scrollTo(0),
+    scrollToEnd:   () => listRef.current?.scrollToItem(Math.max(0, messages.length - 1), 'end'),
+    scrollToMessage: (id: string) => {
+      const idx = messages.findIndex(m => m.id === id);
+      if (idx === -1) return;
+      listRef.current?.scrollToItem(idx, 'center');
+    },
+  }), [messages]);
+
+  const itemData: RowData = { messages, user, lastReadIdx, highlightedId, onReply, onToast, onDelete, onRetry, onOpenMedia, reportSize };
 
   return (
     <div

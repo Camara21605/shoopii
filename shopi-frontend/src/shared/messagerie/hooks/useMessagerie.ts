@@ -163,7 +163,13 @@ function apiMsgToChat(m: ApiMessage): ChatMessage {
     id:        m.id,
     from:      m.fromMe ? 'me' : m.senderId,
     type:      CONTENT_TYPE_MAP[m.contentType] ?? 'text',
-    text:      m.content ?? undefined,
+    /* BUG CORRIGÉ — pour contentType='call', `content` est le JSON sérialisé
+     * de callMeta (status/direction/duration/callType), PAS un texte à
+     * afficher. Le laisser dans `text` polluait l'estimation de hauteur de
+     * VirtualizedMessageList (comptée comme si c'était un vrai texte,
+     * potentiellement plusieurs "lignes") et aurait affiché ce JSON brut
+     * dans l'aperçu "répondre à…" si on répond à un appel. */
+    text:      m.contentType === 'call' ? undefined : (m.content ?? undefined),
     time:      fmtTime(m.createdAt),
     read:      !!m.readAt,
     mediaUrl:  m.mediaUrl  ?? undefined,
@@ -251,7 +257,9 @@ export function useMessagerie() {
       id:          message.id,
       from:        message.senderId,
       type:        CONTENT_TYPE_MAP[message.contentType] ?? 'text',
-      text:        message.content ?? undefined,
+      /* Même correctif que apiMsgToChat ci-dessus — `content` d'un message
+       * 'call' est le JSON de callMeta, pas un texte affichable. */
+      text:        message.contentType === 'call' ? undefined : (message.content ?? undefined),
       mediaUrl:    message.mediaUrl  ?? undefined,
       mediaName:   message.mediaName ?? undefined,
       mediaMime:   message.mediaMimeType ?? undefined,
@@ -816,14 +824,22 @@ export function useMessagerie() {
    * Met à jour LOCALEMENT la liste de messages après un appel.
    * Utilisé par GlobalCallProvider via registerCallEventHandler :
    * le provider gère la persistance REST, cette fonction gère l'UI optimiste.
-   */
+   *
+   * Retourne l'id temporaire généré ("tmp-call-…") — GlobalCallProvider le
+   * transmet à resolveCallEvent() une fois la persistance REST terminée
+   * (voir ce commentaire là-bas pour le bug que ça corrige : sans ce lien,
+   * ce message optimiste n'était JAMAIS remplacé/retiré, et le message
+   * confirmé par le serveur arrivait ensuite via le socket comme une
+   * DEUXIÈME bulle distincte — doublon permanent "Appel refusé"/"Appel
+   * refusé" visible dans la conversation, avec les décalages de hauteur
+   * que ça entraîne dans la liste virtualisée). */
   const applyCallEventLocally = useCallback((
     convId:    string,
     status:    'completed' | 'missed' | 'rejected' | 'cancelled' | 'busy',
     direction: 'outgoing' | 'incoming',
     duration?: number,
     callType?: 'audio' | 'video',
-  ) => {
+  ): string => {
     const meta    = { status, direction, duration, callType: callType ?? 'audio' };
     const icon    = callType === 'video' ? '📹' : '📞';
     const preview = status === 'completed'  ? `${icon} Appel ${callType === 'video' ? 'vidéo' : 'audio'}${duration ? ` · ${Math.floor(duration/60)}:${String(duration%60).padStart(2,'0')}` : ''}`
@@ -832,12 +848,13 @@ export function useMessagerie() {
       : status === 'cancelled' ? `${icon} Appel annulé`
       : `${icon} Appel occupé`;
 
+    const tmpId = 'tmp-call-' + Date.now();
     setConversations(prev => bumpToFront(prev, convId, c => ({
       ...c,
       lastMsg:  preview,
       lastTime: nowTime(),
       messages: [...c.messages, {
-        id:       'tmp-call-' + Date.now(),
+        id:       tmpId,
         from:     direction === 'outgoing' ? 'me' : convId,
         type:     'call' as const,
         time:     nowTime(),
@@ -845,6 +862,23 @@ export function useMessagerie() {
         callMeta: meta,
       }],
     })));
+    return tmpId;
+  }, []);
+
+  /**
+   * Remplace le message optimiste "tmp-call-…" (voir applyCallEventLocally)
+   * par le message réellement persisté côté serveur — appelé par
+   * GlobalCallProvider une fois son POST /messagerie/.../messages résolu.
+   * `saved` absent (échec réseau) → on garde l'optimiste tel quel, même
+   * logique que sendCallEvent ci-dessus.
+   */
+  const resolveCallEvent = useCallback((convId: string, tmpId: string, saved?: ApiMessage) => {
+    if (!saved) return;
+    setConversations(prev => prev.map(c =>
+      c.id === convId
+        ? { ...c, messages: c.messages.map(m => m.id === tmpId ? apiMsgToChat(saved) : m) }
+        : c,
+    ));
   }, []);
 
   // ── Modifier un message (texte, délai 24h) ───────────────
@@ -1035,6 +1069,7 @@ export function useMessagerie() {
     toggleReaction,
     sendCallEvent,
     applyCallEventLocally,
+    resolveCallEvent,
     startNewConv,
     setInfoPanelOpen,
     setMobileOpen,

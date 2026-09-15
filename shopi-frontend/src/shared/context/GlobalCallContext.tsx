@@ -78,10 +78,30 @@ export interface GlobalCallContextValue {
   /**
    * Permet à MessagerieCore de brancher une fonction qui met à jour
    * localement la liste des messages après un appel (update optimiste).
-   * Appeler avec null au démontage pour nettoyer.
+   * Le handler retourne l'id temporaire du message optimiste créé (voir
+   * useMessagerie.applyCallEventLocally) — utilisé pour le réconcilier
+   * avec le message réel une fois persisté (voir registerCallEventResolvedHandler
+   * ci-dessous). Appeler avec null au démontage pour nettoyer.
    */
   registerCallEventHandler: (
-    handler: ((event: CallEventPayload) => void) | null
+    handler: ((event: CallEventPayload) => string | void) | null
+  ) => void;
+
+  /**
+   * BUG CORRIGÉ — persistCallEvent() postait l'événement d'appel côté
+   * serveur en fire-and-forget, sans jamais reconnecter le message
+   * optimiste créé par registerCallEventHandler ci-dessus à sa version
+   * confirmée par le serveur. Cette dernière arrivait ensuite via le
+   * socket ('new_message') comme un message ENTIÈREMENT NOUVEAU (id
+   * serveur différent de "tmp-call-…") : le garde anti-doublon de
+   * handleNewMessage (comparaison par id) ne le reconnaissait pas comme
+   * le même événement, et les DEUX bulles restaient affichées en
+   * permanence ("Appel refusé" en double, jamais nettoyé). Permet à
+   * useMessagerie de brancher resolveCallEvent(), appelé une fois la
+   * persistance REST terminée (avec le message serveur si succès).
+   */
+  registerCallEventResolvedHandler: (
+    handler: ((convId: string, tmpId: string, saved?: unknown) => void) | null
   ) => void;
 }
 
@@ -94,7 +114,10 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
   const location           = useLocation();
 
   /* Ref vers le handler optionnel de MessagerieCore (mise à jour locale) */
-  const callEventHandlerRef = useRef<((e: CallEventPayload) => void) | null>(null);
+  const callEventHandlerRef = useRef<((e: CallEventPayload) => string | void) | null>(null);
+  /* Ref vers le handler de réconciliation optionnel de MessagerieCore
+   * (remplace le message optimiste par sa version confirmée serveur) */
+  const callEventResolvedRef = useRef<((convId: string, tmpId: string, saved?: unknown) => void) | null>(null);
 
   // ── Compteur global de messages non lus ─────────────────────
 
@@ -126,9 +149,9 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
 
   // ── Persistance REST de l'événement d'appel ─────────────────
 
-  const persistCallEvent = useCallback(async (event: CallEventPayload) => {
+  const persistCallEvent = useCallback(async (event: CallEventPayload, tmpId?: string) => {
     try {
-      await apiFetch(`/messagerie/conversations/${event.conversationId}/messages`, {
+      const saved = await apiFetch(`/messagerie/conversations/${event.conversationId}/messages`, {
         method: 'POST',
         body: {
           contentType: 'call',
@@ -140,8 +163,13 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
           }),
         },
       });
+      /* tmpId absent → aucun message optimiste à réconcilier (l'utilisateur
+       * n'était pas sur /messagerie quand l'appel s'est terminé) — la conv
+       * chargera ce message normalement à sa prochaine ouverture. */
+      if (tmpId) callEventResolvedRef.current?.(event.conversationId, tmpId, saved);
     } catch {
-      /* L'historique d'appel sera visible au prochain chargement de la conversation */
+      /* L'historique d'appel sera visible au prochain chargement de la conversation —
+       * le message optimiste (s'il existe) reste affiché tel quel. */
     }
   }, []);
 
@@ -156,10 +184,11 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
     toggleMute, toggleVideo, toggleSpeaker, flipCamera, toggleScreenShare,
   } = useAudioCall({
     onCallEvent: (event) => {
-      /* 1. Mise à jour locale optimiste (si MessagerieCore est monté) */
-      callEventHandlerRef.current?.(event);
+      /* 1. Mise à jour locale optimiste (si MessagerieCore est monté) —
+       * récupère l'id temporaire créé pour pouvoir le réconcilier ensuite. */
+      const tmpId = callEventHandlerRef.current?.(event) || undefined;
       /* 2. Persistance REST — toujours, quelle que soit la page courante */
-      void persistCallEvent(event);
+      void persistCallEvent(event, tmpId);
     },
     /* Le hook ne sait pas afficher de toast (pas de contexte React) — il
        délègue au système UI Shoneya existant (partie 8, remplace les alert()
@@ -311,8 +340,15 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
   // ── Enregistrement du handler MessagerieCore ─────────────────
 
   const registerCallEventHandler = useCallback(
-    (handler: ((event: CallEventPayload) => void) | null) => {
+    (handler: ((event: CallEventPayload) => string | void) | null) => {
       callEventHandlerRef.current = handler;
+    },
+    [],
+  );
+
+  const registerCallEventResolvedHandler = useCallback(
+    (handler: ((convId: string, tmpId: string, saved?: unknown) => void) | null) => {
+      callEventResolvedRef.current = handler;
     },
     [],
   );
@@ -330,6 +366,7 @@ export function GlobalCallProvider({ children }: { children: React.ReactNode }) 
       msgUnread,
       syncMsgUnread: setMsgUnread,
       registerCallEventHandler,
+      registerCallEventResolvedHandler,
     }}>
       {children}
 

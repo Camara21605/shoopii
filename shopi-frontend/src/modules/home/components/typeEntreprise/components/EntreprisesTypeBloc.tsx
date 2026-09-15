@@ -81,7 +81,7 @@ export default function EntreprisesTypeBloc({ typeId, onToast }: Props) {
           linkText={t('typeEntreprisePage.voirToutesEntreprises')}
           onLink={() => navigate(`/boutiques?type=${typeId}`)}
         />
-        <HScrollSection>
+        <HScrollSection listOnMobile>
           {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
         </HScrollSection>
         <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
@@ -101,7 +101,7 @@ export default function EntreprisesTypeBloc({ typeId, onToast }: Props) {
             linkText={i === 0 ? t('typeEntreprisePage.voirToutesEntreprises') : undefined}
             onLink={i === 0 ? () => navigate(`/boutiques?type=${typeId}`) : undefined}
           />
-          <HScrollSection>
+          <HScrollSection listOnMobile>
             {bloc.map(e => (
               <CardEntreprise
                 key={e.id} e={e} onToast={onToast}

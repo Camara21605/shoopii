@@ -23,6 +23,18 @@
 .dark:hover { background: var(--blue); border-color: var(--blue); }
 @media (max-width: 640px) { .arr { display: none; } }
 
+/* ─── Mode liste (mobile) ───────────────────────────────────── */
+@media (max-width: 640px) {
+  .hsList {
+    flex-direction: column;
+    overflow-x: visible;
+    gap: 0;
+    padding-bottom: 0;
+    scroll-snap-type: none;
+  }
+  .listWrap .arrows { display: none; }
+}
+
 /* ─── Dark mode ─────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   .arr:hover { background: #1C1C1F; border-color: rgba(255,255,255,.2); }
