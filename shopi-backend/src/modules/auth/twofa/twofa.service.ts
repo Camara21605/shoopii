@@ -84,7 +84,15 @@ export class TwoFaService {
         .where(`${alias}.userId = :userId`, { userId });
 
     switch (role) {
+      /* ADMIN et SUPER_ADMIN partagent la même table Admin (voir
+       * admin-profile.entity.ts) — seul le champ User.role les distingue.
+       * BUG CORRIGÉ : SUPER_ADMIN tombait dans le `default: return null`
+       * ci-dessous, donc POST /auth/2fa/setup répondait 404 "Profil
+       * introuvable" pour ce rôle, bloquant la configuration 2FA
+       * obligatoire imposée aux comptes admin (voir AuthResponse.
+       * twoFaSetupRequired dans AuthService.login()). */
       case UserRole.ADMIN:
+      case UserRole.SUPER_ADMIN:
         return this.wrap(this.adminRepo, await base(this.adminRepo, 'a').getOne());
       case UserRole.PARTNER:
         return this.wrap(this.partnerRepo, await base(this.partnerRepo, 'p').getOne());
