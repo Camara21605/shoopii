@@ -74,14 +74,16 @@
 .btn:hover { opacity: 0.85; }
 
 .btnPrimary {
-  background: var(--sky);
-  color: #fff;
+  background: #fff;
+  color: #0A0A0A;
+  font-weight: 800;
 }
 
 .btnOutline {
-  background: transparent;
+  background: #fff;
   border: 1.5px solid var(--border);
-  color: var(--txt-1);
+  color: #0A0A0A;
+  font-weight: 800;
 }
 
 /* ── Grille des KPI cards ─────────────────────────────────── */

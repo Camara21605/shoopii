@@ -34,7 +34,6 @@ export const TABS: {
   { id: 'paiements',     icon: '💳', label: 'Paiements',     color: 'var(--violet)' },
   { id: 'notifications', icon: '🔔', label: 'Notifications', color: 'var(--gold)'   },
   { id: 'integrations',  icon: '🔗', label: 'Intégrations',  color: 'var(--sky)'    },
-  { id: 'apparence',     icon: '🎨', label: 'Apparence',     color: 'var(--violet)' },
   { id: 'danger',        icon: '⚠️', label: 'Danger',        color: 'var(--rose)'   },
 ];
 

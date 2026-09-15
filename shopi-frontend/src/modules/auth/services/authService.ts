@@ -54,8 +54,15 @@ function buildRegisterPayload(
     payload.referralSlug = referralSlug.trim();
   }
 
-  // Nom de boutique → companyName (seulement pour role='company')
+  /* Nom de boutique — envoyé sous les DEUX clés attendues par le backend
+   * (RegisterDto) : `shopName` est le champ réellement obligatoire pour
+   * role='company' (@ValidateIf + @IsNotEmpty) ; `companyName` n'est que
+   * @IsOptional() mais reste envoyé pour compatibilité avec le code qui
+   * le lit encore (voir auth.service.ts::createProfile()). BUG CORRIGÉ —
+   * seul `companyName` était envoyé, jamais `shopName` : le backend
+   * rejetait alors TOUTE inscription entreprise en 400. */
   if (role === 'company' && shopName && shopName.trim() !== '') {
+    payload.shopName    = shopName.trim();
     payload.companyName = shopName.trim();
   }
 
@@ -112,6 +119,23 @@ export async function register(
 
   tokenStorage.set(data.accessToken);
   return data;
+}
+
+/** Upload du logo choisi à l'inscription (role='company') — appelé
+ *  séparément juste APRÈS un register()/verifyEmail() réussi, une fois
+ *  authentifié (cookies posés) : POST /auth/register est un body JSON,
+ *  aucun upload de fichier n'y est possible, et aucun endpoint d'upload
+ *  de cette app n'accepte de requête anonyme (voir UploadModule/
+ *  ParametresController, tous derrière JwtAuthGuard). Réutilise
+ *  l'endpoint déjà existant pour changer le logo depuis Paramètres >
+ *  Boutique — TeamPermissionGuard laisse toujours passer le propriétaire. */
+export async function uploadCompanyLogo(file: File): Promise<{ logo: string }> {
+  const form = new FormData();
+  form.append('file', file);
+  return apiFetch<{ logo: string }>('/dashboard/entreprise/parametres/logo', {
+    method: 'POST',
+    body:   form,
+  });
 }
 
 /** Info publique d'une invitation collaborateur (email/prénom/nom/poste
@@ -303,6 +327,7 @@ export async function getRegistrationPolicy(): Promise<{ openSignup: boolean; co
 
 export const authService = {
   register,
+  uploadCompanyLogo,
   getCollabInvitationInfo,
   acceptCollabInvitation,
   login,

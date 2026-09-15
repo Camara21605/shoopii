@@ -33,19 +33,29 @@ const AUTO_LOCATION_ROLES: UserRole[] = [
 
 export class RegisterDto {
 
+  /* Une entreprise n'a pas de "prénom"/"nom" — seul shopName est demandé
+   * pour ce rôle (voir plus bas). RegisterDto n'est de toute façon jamais
+   * utilisé par le parcours "collaborateur invité" (rejoint une entreprise
+   * EXISTANTE via POST /company-team/invitations/accept/:token, un DTO
+   * entièrement différent) : ici, role===COMPANY signifie toujours
+   * "création d'une nouvelle entreprise", jamais un collaborateur. Voir
+   * AuthService.register() pour la valeur de repli (dérivée de shopName)
+   * quand ces champs sont absents. */
+  @ValidateIf(o => o.role !== UserRole.COMPANY)
   @IsString()
   @IsNotEmpty({ message: 'Le prénom est obligatoire.' })
   @MinLength(2,  { message: 'Le prénom doit contenir au moins 2 caractères.' })
   @MaxLength(50, { message: 'Le prénom ne peut pas dépasser 50 caractères.' })
-  @Transform(({ value }) => (value as string).trim())
-  firstName: string;
+  @Transform(({ value }) => (value as string | undefined)?.trim())
+  firstName?: string;
 
+  @ValidateIf(o => o.role !== UserRole.COMPANY)
   @IsString()
   @IsNotEmpty({ message: 'Le nom est obligatoire.' })
   @MinLength(2,  { message: 'Le nom doit contenir au moins 2 caractères.' })
   @MaxLength(50, { message: 'Le nom ne peut pas dépasser 50 caractères.' })
-  @Transform(({ value }) => (value as string).trim())
-  lastName: string;
+  @Transform(({ value }) => (value as string | undefined)?.trim())
+  lastName?: string;
 
   @IsEmail({}, { message: 'Adresse email invalide.' })
   @IsNotEmpty({ message: "L'email est obligatoire." })

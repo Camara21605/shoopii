@@ -437,7 +437,17 @@ export class AuthService implements OnModuleInit {
     const effectivePartnerId = codePartnerId ?? referralPartnerId;
 
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
-    const username       = await this.generateUniqueUsername(dto.firstName, dto.lastName);
+
+    /* Une entreprise n'a pas de "prénom"/"nom" (voir RegisterDto — ces
+     * champs ne sont plus exigés pour role===COMPANY) : on retombe sur le
+     * nom de la boutique pour peupler User.firstName/lastName (colonnes
+     * NOT NULL), qui reste cohérent avec l'email de bienvenue ("Bienvenue,
+     * {firstName} !") et la génération du nom d'utilisateur ci-dessous. */
+    const effectiveFirstName = dto.firstName?.trim()
+      || dto.shopName?.trim() || dto.companyName?.trim() || 'Entreprise';
+    const effectiveLastName = dto.lastName?.trim() || '';
+
+    const username = await this.generateUniqueUsername(effectiveFirstName, effectiveLastName);
 
     /* ── Construire les champs User enrichis ─────────────────── */
     const userExtras: Partial<User> = {};
@@ -469,8 +479,8 @@ export class AuthService implements OnModuleInit {
 
     try {
       const userEntity = this.userRepo.create({
-        firstName:  dto.firstName,
-        lastName:   dto.lastName,
+        firstName:  effectiveFirstName,
+        lastName:   effectiveLastName,
         email:      dto.email,
         phone:      dto.phone ?? null,
         username,
@@ -2152,7 +2162,10 @@ export class AuthService implements OnModuleInit {
       s.toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]/g, '');
-    const base = `${normalize(firstName)}.${normalize(lastName)}`;
+    /* lastName vide (compte entreprise, voir register()) \u2192 pas de point
+     * de s\u00e9paration en trop ("moncommerce." au lieu de "moncommerce"). */
+    const normLast = normalize(lastName);
+    const base = normLast ? `${normalize(firstName)}.${normLast}` : normalize(firstName);
     let username = base;
     let suffix   = 1;
 

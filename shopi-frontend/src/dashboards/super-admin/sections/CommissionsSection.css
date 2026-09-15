@@ -477,16 +477,21 @@
   cursor: not-allowed;
 }
 .btn-blue {
-  background: #0284C7;
-  color: #fff;
+  background: #fff;
+  color: #0A0A0A;
+  font-weight: 800;
 }
 .btn-blue:hover:not(:disabled) {
-  background: #0273b0;
+  opacity: .85;
 }
 .btn-secondary {
-  background: var(--raised);
-  color: var(--txt-1);
+  background: #fff;
+  color: #0A0A0A;
+  font-weight: 800;
   border: 1px solid var(--border);
+}
+.btn-secondary:hover:not(:disabled) {
+  opacity: .85;
 }
 .btn-sm {
   padding: 6px 12px;

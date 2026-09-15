@@ -101,6 +101,13 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
   const [registerRole,   setRegisterRole]   = useState<Role>('client');
   const [loginData,      setLoginData]      = useState<LoginFormData>(INITIAL_LOGIN_DATA);
   const [registerData,   setRegisterData]   = useState<RegisterFormData>(INITIAL_REGISTER_DATA);
+  /* Logo entreprise choisi à l'étape "Identité" — jamais envoyé dans le
+   * payload JSON de POST /auth/register (impossible, ce n'est pas un
+   * fichier). Uploadé séparément juste après une inscription/connexion
+   * réussie, une fois les cookies d'authentification posés (voir
+   * maybeUploadRegisterLogo ci-dessous) — aucun endpoint d'upload de ce
+   * projet n'accepte de requête anonyme. */
+  const [registerLogoFile, setRegisterLogoFile] = useState<File | null>(null);
   const [loginErrors,    setLoginErrors]    = useState<FormErrors>({});
   const [registerErrors, setRegisterErrors] = useState<FormErrors>({});
   const [isLoading,      setIsLoading]      = useState(false);
@@ -232,10 +239,17 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     role:  Role,
   ): string | undefined => {
     switch (field) {
+      /* Une entreprise n'a pas de "prénom"/"nom" — seul le nom de la
+       * boutique (shopName) est demandé pour ce rôle, voir plus bas.
+       * Exception : un COLLABORATEUR invité (collabInvite) rejoint une
+       * entreprise EXISTANTE en tant que personne réelle — son propre
+       * prénom/nom reste exigé (voir acceptCollabInvitation). */
       case 'firstName':
+        if (role === 'company' && !collabInvite) return undefined;
         return !data.firstName.trim() ? 'Prénom requis.' : undefined;
 
       case 'lastName':
+        if (role === 'company' && !collabInvite) return undefined;
         return !data.lastName.trim() ? 'Nom requis.' : undefined;
 
       case 'email':
@@ -440,6 +454,22 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     });
   }, [registerRole, validateRegisterField]);
 
+  /* Envoie le logo choisi à l'étape "Identité" — pertinent uniquement
+   * juste après la CRÉATION d'un compte entreprise (registerLogoFile
+   * reste null dans tout autre contexte : connexion normale, 2FA,
+   * session-confirm… donc no-op silencieux partout ailleurs). Ne peut
+   * être envoyé qu'une fois les cookies d'authentification posés —
+   * aucun endpoint d'upload de ce projet n'accepte de requête anonyme,
+   * voir POST /dashboard/entreprise/parametres/logo (uploadCompanyLogo). */
+  const maybeUploadRegisterLogo = useCallback((role: string) => {
+    if (role !== 'company' || !registerLogoFile) return;
+    const file = registerLogoFile;
+    setRegisterLogoFile(null);
+    authService.uploadCompanyLogo(file).catch(() => {
+      showToast("⚠️ Compte créé, mais le logo n'a pas pu être envoyé — ajoutez-le depuis Paramètres > Boutique.");
+    });
+  }, [registerLogoFile, showToast]);
+
   // Finalise une connexion réussie (login direct ou après vérif 2FA)
   const completeLogin = useCallback((res: import('../types').AuthResponse) => {
     /* 2FA obligatoire mais pas encore configurée sur ce compte admin —
@@ -449,6 +479,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
       return;
     }
     setUser(res.user);
+    maybeUploadRegisterLogo(res.user.role);
     setSuccessAction('Connexion');
     setShowSuccess(true);
     /* Session unique : ce compte était déjà connecté sur un autre appareil,
@@ -459,7 +490,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     }
     setTimeout(() => navigate(ROLE_ROUTES[res.user.role] ?? '/home'), 1500);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, setUser, showToast]);
+  }, [navigate, setUser, showToast, maybeUploadRegisterLogo]);
 
   // Appelé après confirmation réussie du code TOTP dans TwoFaSetupModal —
   // reprend exactement le flux normal de fin de connexion.
@@ -719,6 +750,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
         return;
       }
       setUser(res.user);
+      maybeUploadRegisterLogo(res.user.role);
       setSuccessAction('Inscription');
       setShowSuccess(true);
       setTimeout(() => navigate(ROLE_ROUTES[res.user.role] ?? '/home'), 1500);
@@ -734,7 +766,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
       setIsLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [registerData, registerRole, navigate, setUser, collabInvite, switchTab, showToast]);
+  }, [registerData, registerRole, navigate, setUser, collabInvite, switchTab, showToast, maybeUploadRegisterLogo]);
 
   // Soumission du code de vérification email
   const handleVerifyEmailCode = useCallback(async (code: string) => {
@@ -779,6 +811,8 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     loginRole,    registerRole,
     loginData,    setLoginData,
     registerData, setRegisterData,
+    // ✅ Logo entreprise choisi à l'inscription — voir maybeUploadRegisterLogo
+    registerLogoFile, setRegisterLogoFile,
     // ✅ Met à jour registerData ET valide instantanément les champs modifiés
     handleRegisterChange,
     loginErrors,  registerErrors,

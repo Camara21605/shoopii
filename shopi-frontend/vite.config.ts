@@ -32,6 +32,20 @@ export default defineConfig({
          * commandes, prix) doivent toujours venir du serveur, pas d'un
          * cache Workbox périmé. */
         navigateFallbackDenylist: [/^\/api\//],
+        /* BUG CORRIGÉ — precacheAndRoute() (comportement par défaut de
+         * generateSW) mettait aussi en cache et interceptait les chunks
+         * JS/CSS hashés (assets/*.js, assets/*.css), qui sont DÉJÀ chargés
+         * par le navigateur via les <link rel="modulepreload"> que Vite
+         * génère dans index.html. Cette double prise en charge (preload
+         * réseau direct + interception par le service worker) produisait
+         * l'avertissement Chrome "cross-world service worker resource
+         * mismatch" — le service worker répondait à la requête à la place
+         * du preload réseau, rendant ce dernier inutilisé. On limite donc
+         * le précache Workbox au strict app-shell (HTML/manifest/icônes) :
+         * cette app dépend de toute façon entièrement de l'API réseau
+         * (voir navigateFallbackDenylist ci-dessus), l'usage hors-ligne des
+         * chunks JS/CSS n'apportait donc aucune valeur réelle. */
+        globPatterns: ['**/*.{html,webmanifest,ico,png,svg}'],
       },
     }),
   ],

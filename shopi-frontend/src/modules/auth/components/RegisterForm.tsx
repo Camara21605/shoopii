@@ -1,9 +1,10 @@
 /* ================================================================
  * src/modules/auth/components/RegisterForm.tsx
- * Formulaire d'inscription en 5 étapes.
+ * Formulaire d'inscription — 5 étapes (6 pour une entreprise, avec le
+ * logo de la boutique en étape dédiée). Voir `steps` plus bas.
  * ================================================================ */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { RoleSelector }           from './RoleSelector';
 import { FieldInput }             from '../../../shared/components/ui/FieldInput';
 import { PhoneInput }             from './PhoneInput';
@@ -69,25 +70,40 @@ interface RegisterFormProps {
    *  (vérifié dans router.tsx, même constat que Footer.tsx), donc un
    *  clic ne doit ni fabriquer un faux texte légal ni rester muet. */
   onToast?: (msg: string) => void;
+  /** Logo choisi pour la boutique (role='company' uniquement) — jamais
+   *  envoyé dans POST /auth/register (ce n'est pas du JSON) : conservé
+   *  ici pour être uploadé séparément juste après une inscription
+   *  réussie, une fois authentifié (voir useLoginPage::
+   *  maybeUploadRegisterLogo). Optionnel — une entreprise peut toujours
+   *  l'ajouter plus tard depuis Paramètres > Boutique. */
+  logoFile?:      File | null;
+  onLogoChange?:  (file: File | null) => void;
 }
 
-const TOTAL_STEPS = 5;
+/* Étape "Logo" : uniquement pour une inscription entreprise (jamais pour
+ * un collaborateur invité, qui rejoint une boutique EXISTANTE — voir
+ * isCollabInvite). Le nombre total d'étapes et leur ordre dépendent donc
+ * du rôle : voir `steps` (calculé dans le composant, ci-dessous), qui
+ * remplace TOTAL_STEPS/STEP_INFO/STEP_FIELDS indexés par numéro fixe. */
+type StepKey = 'account' | 'identity' | 'logo' | 'profile' | 'contact' | 'password';
 
-const STEP_INFO = [
-  { title: 'Votre compte',       sub: 'Choisissez votre rôle et entrez votre email'   },
-  { title: 'Votre identité',     sub: 'Prénom, nom et nom de votre structure'          },
-  { title: 'Votre profil',       sub: 'Date de naissance et genre'                     },
-  { title: 'Vos coordonnées',    sub: "Numéro de téléphone et ville d'origine"         },
-  { title: 'Votre mot de passe', sub: 'Sécurisez votre compte pour finaliser'          },
-];
+const STEP_INFO: Record<StepKey, { title: string; sub: string }> = {
+  account:  { title: 'Votre compte',       sub: 'Choisissez votre rôle et entrez votre email' },
+  identity: { title: 'Votre identité',     sub: 'Prénom, nom et nom de votre structure'        },
+  logo:     { title: 'Votre logo',         sub: 'Ajoutez le logo de votre entreprise (facultatif)'    },
+  profile:  { title: 'Votre profil',       sub: 'Date de naissance et genre'                   },
+  contact:  { title: 'Vos coordonnées',    sub: "Numéro de téléphone et ville d'origine"        },
+  password: { title: 'Votre mot de passe', sub: 'Sécurisez votre compte pour finaliser'         },
+};
 
-const STEP_FIELDS: Record<number, (keyof RegisterFormData)[]> = {
-  1: ['activationCode', 'email'],
+const STEP_FIELDS: Record<StepKey, (keyof RegisterFormData)[]> = {
+  account: ['activationCode', 'email'],
   /* shopName/companyTypeId : sans effet pour les rôles autres que
    * "company" (voir validateRegisterField dans useLoginPage.ts) —
    * inclus inconditionnellement ici, pas besoin de connaître le rôle. */
-  2: ['firstName', 'lastName', 'shopName', 'companyTypeId'],
-  3: ['birthDate', 'gender'],
+  identity: ['firstName', 'lastName', 'shopName', 'companyTypeId'],
+  logo:     [], // facultatif — rien à valider pour avancer
+  profile:  ['birthDate', 'gender'],
   /* 'location' et 'city' sont mutuellement exclusifs en pratique (voir
    * validateRegisterField dans useLoginPage.ts) : 'location' ne s'applique
    * que hors invitation (GPS/carte), 'city' uniquement pour un utilisateur
@@ -95,8 +111,8 @@ const STEP_FIELDS: Record<number, (keyof RegisterFormData)[]> = {
    * needsLocation ci-dessous). Les inclure tous les deux ici est sans
    * risque, chacun renvoie `undefined` (pas d'erreur) quand il ne
    * s'applique pas au parcours en cours. */
-  4: ['phone', 'location', 'city'],
-  5: ['password', 'confirmPassword', 'terms'],
+  contact:  ['phone', 'location', 'city'],
+  password: ['password', 'confirmPassword', 'terms'],
 };
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({
@@ -105,13 +121,48 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   lockedRole = null, prefilledCode = '', onlyClientRole = false,
   clientRegistrationClosed = false, codeRequiredForCompany = true,
   onValidateStep, isCollabInvite = false, collabJobTitle, onToast,
+  logoFile = null, onLogoChange,
 }) => {
   const [step,     setStep]     = useState(1);
   const [animDir,  setAnimDir]  = useState<'forward' | 'backward'>('forward');
   const [navCount, setNavCount] = useState(0);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+  /* Prévisualisation locale — révoque l'URL objet précédente pour éviter
+   * une fuite mémoire à chaque changement/démontage. */
+  useEffect(() => {
+    if (!logoFile) { setLogoPreview(null); return; }
+    const url = URL.createObjectURL(logoFile);
+    setLogoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [logoFile]);
+
+  function handleLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { onToast?.('❌ Le logo ne doit pas dépasser 5 Mo.'); return; }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      onToast?.('❌ Formats acceptés : JPEG, PNG ou WebP.'); return;
+    }
+    onLogoChange?.(file);
+  }
 
   const { strength, show: showStrength, checkStrength } = usePasswordStrength();
   const roleConfig = ROLE_CONFIGS[selectedRole];
+
+  /* Étape "Logo" insérée uniquement pour une inscription entreprise (pas
+   * pour un collaborateur invité, qui rejoint une boutique EXISTANTE).
+   * Le rôle n'est modifiable qu'à l'étape 1 (RoleSelector, plus bas) :
+   * `steps` ne peut donc changer de forme que quand `step === 1`, jamais
+   * pendant qu'un utilisateur avance dans les étapes suivantes. */
+  const steps: StepKey[] = [
+    'account', 'identity',
+    ...(selectedRole === 'company' && !isCollabInvite ? (['logo'] as const) : []),
+    'profile', 'contact', 'password',
+  ];
+  const totalSteps = steps.length;
   /* BUG CORRIGÉ — roleConfig.code est statique (toujours true pour
    * 'company') : le bloc code s'affichait encore même quand le
    * super-admin avait désactivé PlatformSettings.codeRequiredForCompany.
@@ -147,6 +198,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   const needsLocation = LOCATION_ROLES.includes(selectedRole) && !lockedRole;
 
   useEffect(() => { setLocationDone(false); }, [selectedRole]);
+
+  /* Un logo choisi pour "entreprise" n'a plus de sens si l'utilisateur
+   * change finalement de rôle — évite de l'uploader silencieusement
+   * après coup pour un compte non-company. */
+  useEffect(() => {
+    if (selectedRole !== 'company') onLogoChange?.(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRole]);
 
   useEffect(() => {
     if (selectedRole !== 'company') return;
@@ -240,7 +299,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   };
 
   const goNext = () => {
-    if (onValidateStep(STEP_FIELDS[step] ?? [])) {
+    const key = steps[step - 1];
+    if (onValidateStep(STEP_FIELDS[key] ?? [])) {
       setAnimDir('forward');
       setNavCount(n => n + 1);
       setStep(s => s + 1);
@@ -343,16 +403,24 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   /* ── Step 2 : Identité ── */
   const renderStep2 = () => (
     <div className="fields">
-      <FieldInput
-        id="regFirstName" label="Prénom" icon="fas fa-user"
-        placeholder="Votre prénom" value={data.firstName}
-        onChange={val => onDataChange({ firstName: val })} error={errors.firstName}
-      />
-      <FieldInput
-        id="regLastName" label="Nom" icon="fas fa-user"
-        placeholder="Votre nom de famille" value={data.lastName}
-        onChange={val => onDataChange({ lastName: val })} error={errors.lastName}
-      />
+      {/* Une entreprise n'a pas de "prénom"/"nom" — seul le nom de la
+       * boutique (shopName, plus bas) est demandé. Un collaborateur
+       * invité (isCollabInvite) rejoint une entreprise EXISTANTE en tant
+       * que personne réelle : son propre prénom/nom reste demandé. */}
+      {(selectedRole !== 'company' || isCollabInvite) && (
+        <>
+          <FieldInput
+            id="regFirstName" label="Prénom" icon="fas fa-user"
+            placeholder="Votre prénom" value={data.firstName}
+            onChange={val => onDataChange({ firstName: val })} error={errors.firstName}
+          />
+          <FieldInput
+            id="regLastName" label="Nom" icon="fas fa-user"
+            placeholder="Votre nom de famille" value={data.lastName}
+            onChange={val => onDataChange({ lastName: val })} error={errors.lastName}
+          />
+        </>
+      )}
       {isCollabInvite && collabJobTitle && (
         <div className="field-group">
           <div className="field-label">Poste</div>
@@ -406,6 +474,57 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           )}
         </div>
       )}
+    </div>
+  );
+
+  /* ── Step "Logo" (company uniquement) — sa propre étape, comme les
+   * autres champs, plutôt que noyé dans l'étape Identité. ── */
+  const renderStepLogo = () => (
+    <div className="fields">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '8px 0' }}>
+        <div
+          onClick={() => logoInputRef.current?.click()}
+          title="Choisir un logo"
+          style={{
+            width: 120, height: 120, borderRadius: '50%', flexShrink: 0,
+            border: '2px dashed var(--bdr2, #E2E8F0)', background: 'var(--sky-2, #EEF3FD)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', overflow: 'hidden',
+          }}
+        >
+          {logoPreview
+            ? <img src={logoPreview} alt="Logo de l'entreprise" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <i className="fas fa-store" style={{ fontSize: 40, color: 'var(--blue)' }} />}
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            type="button"
+            onClick={() => logoInputRef.current?.click()}
+            style={{ background: 'none', border: '1.5px solid var(--bdr2, #E2E8F0)', borderRadius: 10, padding: '9px 18px', fontSize: 13, fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}
+          >
+            <i className="fas fa-upload" /> {logoPreview ? 'Changer le logo' : 'Choisir un logo'}
+          </button>
+          {logoPreview && (
+            <button
+              type="button"
+              onClick={() => onLogoChange?.(null)}
+              style={{ background: 'none', border: '1.5px solid var(--bdr2, #E2E8F0)', borderRadius: 10, padding: '9px 18px', fontSize: 13, fontWeight: 700, color: 'var(--rose,red)', cursor: 'pointer' }}
+            >
+              Retirer
+            </button>
+          )}
+        </div>
+        <p style={{ margin: 0, fontSize: 12, color: 'var(--t3)', textAlign: 'center' }}>
+          JPEG, PNG ou WebP — 5 Mo max.<br />Facultatif — vous pourrez aussi l&apos;ajouter plus tard depuis Paramètres.
+        </p>
+        <input
+          ref={logoInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          style={{ display: 'none' }}
+          onChange={handleLogoSelect}
+        />
+      </div>
     </div>
   );
 
@@ -616,17 +735,18 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   );
 
   const renderStep = () => {
-    switch (step) {
-      case 1: return renderStep1();
-      case 2: return renderStep2();
-      case 3: return renderStep3();
-      case 4: return renderStep4();
-      case 5: return renderStep5();
+    switch (steps[step - 1]) {
+      case 'account':  return renderStep1();
+      case 'identity': return renderStep2();
+      case 'logo':     return renderStepLogo();
+      case 'profile':  return renderStep3();
+      case 'contact':  return renderStep4();
+      case 'password': return renderStep5();
       default: return null;
     }
   };
 
-  const info = STEP_INFO[step - 1];
+  const info = STEP_INFO[steps[step - 1]];
 
   return (
     <div id="registerForm">
@@ -649,7 +769,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             <i className="fas fa-arrow-left" /> Retour
           </button>
         )}
-        {step < TOTAL_STEPS ? (
+        {step < totalSteps ? (
           <button
             type="button"
             className="btn-next"

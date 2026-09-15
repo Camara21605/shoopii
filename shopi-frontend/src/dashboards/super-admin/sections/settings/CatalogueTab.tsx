@@ -461,13 +461,12 @@ export default function CatalogueTab({ isActive, toast }: Props) {
                           </button>
                         </div>
                       ))}
-                      {/* Bouton ajout sous-catégorie rapide */}
+                      {/* Bouton ajout sous-catégorie rapide — même style bouton
+                       * principal (blanc/noir) que les autres boutons de création
+                       * ("+ Nouveau type", "+ Nouvelle catégorie"...). */}
                       <button
-                        className="btn-ghost"
-                        style={{
-                          fontSize: 11, padding: '4px 10px', borderRadius: 8,
-                          border: '1px dashed var(--border)', color: 'var(--txt-3)',
-                        }}
+                        className="btn btn-primary"
+                        style={{ fontSize: 11, padding: '4px 10px', borderRadius: 8 }}
                         onClick={() => { setNewSubCatId(cat.id); setModalSub(true); }}
                       >
                         + sous-cat

@@ -132,10 +132,10 @@
 .bdgSky  { background: var(--sky-dim);  color: var(--sky); }
 
 /* ── Buttons ── */
-.btnPrimary { background: var(--acid); color: #000; border: none; border-radius: var(--r-sm); padding: 9px 16px; font-size: 12px; font-weight: 700; font-family: var(--font-b); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: all .13s; }
-.btnPrimary:hover { filter: brightness(1.1); }
-.btnSecondary { background: var(--surface); color: var(--txt-1); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 9px 16px; font-size: 12px; font-weight: 600; font-family: var(--font-b); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: all .13s; }
-.btnSecondary:hover { background: var(--hover); }
+.btnPrimary { background: #fff; color: #0A0A0A; border: none; border-radius: var(--r-sm); padding: 9px 16px; font-size: 12px; font-weight: 800; font-family: var(--font-b); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: all .13s; }
+.btnPrimary:hover { filter: brightness(.95); }
+.btnSecondary { background: #fff; color: #0A0A0A; border: 1px solid var(--border); border-radius: var(--r-sm); padding: 9px 16px; font-size: 12px; font-weight: 800; font-family: var(--font-b); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: all .13s; }
+.btnSecondary:hover { opacity: .85; }
 .btnDanger { background: var(--rose-dim); color: var(--rose); border: 1px solid rgba(255,68,100,.2); border-radius: var(--r-sm); padding: 9px 16px; font-size: 12px; font-weight: 600; font-family: var(--font-b); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
 .btnDanger:hover { background: rgba(255,68,100,.18); }
 .btnSm { padding: 6px 12px; font-size: 11px; }

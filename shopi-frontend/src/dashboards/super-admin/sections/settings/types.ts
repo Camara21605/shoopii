@@ -16,7 +16,7 @@
 /* ─────────────────────────────────────────────────────────────
  * ONGLETS
  * ─────────────────────────────────────────────────────────────
- * Union string-littérale qui identifie chacun des 9 onglets.
+ * Union string-littérale qui identifie chacun des 8 onglets.
  * Utilisée pour l'état activeTab dans l'orchestrateur.
  */
 export type SettingsTab =
@@ -27,7 +27,6 @@ export type SettingsTab =
   | 'paiements'      // Commission, seuils, fournisseurs mobile money
   | 'notifications'  // Email, Push, SMS, seuils alertes
   | 'integrations'   // API key, webhooks, analytics
-  | 'apparence'      // Thème, couleurs, logo
   | 'danger';        // Maintenance, cache, export
 
 /* ─────────────────────────────────────────────────────────────

@@ -100,6 +100,7 @@ const Login: React.FC = () => {
     loginRole,    registerRole,
     loginData,    setLoginData,
     registerData, setRegisterData, handleRegisterChange,
+    registerLogoFile, setRegisterLogoFile,
     loginErrors,  registerErrors,
     isLoading,
     showSuccess,  successAction,
@@ -397,6 +398,8 @@ const Login: React.FC = () => {
                 isCollabInvite={collabInvite !== null}
                 collabJobTitle={collabInvite?.jobTitle}
                 onToast={showToast}
+                logoFile={registerLogoFile}
+                onLogoChange={setRegisterLogoFile}
               />
             )}
 

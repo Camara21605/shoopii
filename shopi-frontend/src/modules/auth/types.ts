@@ -108,6 +108,13 @@ export interface RegisterPayload {
   /** Slug du lien de parrainage d'un partenaire (voir SecParrainage.tsx /
    *  page publique /rejoindre/:slug) — alternative à activationCode. */
   referralSlug?:   string;
+  /* BUG CORRIGÉ — buildRegisterPayload() n'envoyait QUE companyName,
+   * jamais shopName. Le backend (RegisterDto) a deux champs distincts :
+   * companyName (purement optionnel) et shopName (le seul réellement
+   * @ValidateIf(role===COMPANY)+@IsNotEmpty) — toute inscription
+   * entreprise échouait donc en 400 ("shopName must be a string" +
+   * 3 autres messages), le champ requis n'étant jamais transmis. */
+  shopName?:       string;
   companyName?:    string;
   companyTypeId?:  string;
   /* BUG CORRIGÉ — buildRegisterPayload() (authService.ts) ne les

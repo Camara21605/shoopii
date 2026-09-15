@@ -16,7 +16,6 @@
  *   settings/PaiementsTab.tsx     → commission, seuils, mobile money
  *   settings/NotificationsTab.tsx → email, push, SMS, alertes CPU/RAM
  *   settings/IntegrationsTab.tsx  → API key, analytics, webhook
- *   settings/ApparenceTab.tsx     → thème, couleur, logo, favicon
  *   settings/DangerTab.tsx        → maintenance, cache, export JSON
  *
  * Responsabilités de cet orchestrateur :
@@ -57,7 +56,6 @@ import CatalogueTab     from './settings/CatalogueTab';
 import PaiementsTab     from './settings/PaiementsTab';
 import NotificationsTab from './settings/NotificationsTab';
 import IntegrationsTab  from './settings/IntegrationsTab';
-import ApparenceTab     from './settings/ApparenceTab';
 import DangerTab        from './settings/DangerTab';
 
 /* ─────────────────────────────────────────────────────────────
@@ -269,7 +267,6 @@ export default function SettingsSection({ toast, isActive, onLogout }: Props) {
     { id: 'paiements',     icon: '💳', color: 'var(--violet)' },
     { id: 'notifications', icon: '🔔', color: 'var(--gold)'   },
     { id: 'integrations',  icon: '🔗', color: 'var(--sky)'    },
-    { id: 'apparence',     icon: '🎨', color: 'var(--violet)' },
     { id: 'danger',        icon: '⚠️', color: 'var(--rose)'   },
   ].find(t => t.id === activeTab)!;
 
@@ -370,7 +367,6 @@ export default function SettingsSection({ toast, isActive, onLogout }: Props) {
           toast={tabToast}
         />
       )}
-      {activeTab === 'apparence'     && <ApparenceTab     settings={settings} set={set} />}
       {activeTab === 'danger'        && (
         <DangerTab
           settings={settings}
