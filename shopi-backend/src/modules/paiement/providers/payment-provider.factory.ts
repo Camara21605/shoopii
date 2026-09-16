@@ -110,7 +110,13 @@ export class PaymentProviderFactory {
 
   /**
    * Retourne le provider par son nom exact.
-   * Utilisé pour le traitement des webhooks entrants.
+   * Utilisé pour le traitement des webhooks entrants ET pour les
+   * remboursements (qui résolvent le provider RÉEL stocké sur la session,
+   * jamais une entrée attaquant — voir payment-refund.service.ts). Ne
+   * PAS restreindre "internal" ici pour ne pas casser ce second usage
+   * légitime en mode dev — le garde-fou webhook HTTP se trouve dans
+   * PaymentWebhookProcessorService.handleWebhook(), seul point où le nom
+   * du provider vient d'un paramètre d'URL non fiable.
    */
   resolveByName(name: string): IPaymentProvider {
     const found = this.providers.find(p => p.name === name);

@@ -116,6 +116,23 @@ export class PaymentWebhookProcessorService {
     sourceIp?:    string,
   ): Promise<{ received: boolean }> {
 
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — "internal" ne doit JAMAIS être
+     * atteignable via cet endpoint HTTP public, quel que soit
+     * PAYMENT_PROVIDER. InternalProvider.parseWebhook() ne vérifie AUCUNE
+     * signature par conception (voir son commentaire : confirmation
+     * envoyée directement par PaiementInitiationService en mode interne,
+     * jamais via HTTP — "n'est appelée qu'en test unitaire"). Avant ce
+     * correctif, POST /paiement/webhook/internal restait pourtant
+     * atteignable par n'importe qui, permettant de forger une confirmation
+     * de paiement de toutes pièces — y compris quand PAYMENT_PROVIDER=
+     * internal est le mode réellement actif (l'app ne configure pas
+     * encore FedaPay en production à ce jour). */
+    if (providerName === 'internal') {
+      throw new BadRequestException(
+        'Le provider "internal" ne peut pas recevoir de webhook via cet endpoint public.',
+      );
+    }
+
     /* ── 1. Résoudre le provider ──────────────────────────── */
     let provider;
     try {

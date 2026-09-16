@@ -157,16 +157,29 @@ export class FedaPayProvider implements IPaymentProvider {
   /* ── parseWebhook ───────────────────────────────────────── */
 
   async parseWebhook(rawBody: string, headers: Record<string, string>): Promise<WebhookPayload> {
-    /* Vérification de la signature HMAC-SHA256 */
+    /* Vérification de la signature HMAC-SHA256 — FAIL-CLOSED.
+     * ⚠️ FAILLE CORRIGÉE (audit sécurité) : l'ancienne condition
+     * `if (this.webhookSecret && signature)` ne vérifiait la signature
+     * QUE si les DEUX étaient présents — il suffisait à un attaquant
+     * d'omettre l'en-tête x-fedapay-signature pour que la vérification
+     * soit entièrement sautée et le payload accepté tel quel. Un webhook
+     * sans signature valide doit maintenant être rejeté systématiquement,
+     * jamais traité comme approuvé par défaut. */
     const signature = headers['x-fedapay-signature'] ?? headers['X-Fedapay-Signature'];
-    if (this.webhookSecret && signature) {
-      const expected = createHmac('sha256', this.webhookSecret)
-        .update(rawBody)
-        .digest('hex');
 
-      if (!this.timingSafeCompare(expected, signature)) {
-        throw new Error('[FedaPay] Signature webhook invalide — payload ignoré');
-      }
+    if (!this.webhookSecret) {
+      throw new Error('[FedaPay] FEDAPAY_WEBHOOK_SECRET non configuré — webhook rejeté.');
+    }
+    if (!signature) {
+      throw new Error('[FedaPay] En-tête de signature manquant — webhook rejeté.');
+    }
+
+    const expected = createHmac('sha256', this.webhookSecret)
+      .update(rawBody)
+      .digest('hex');
+
+    if (!this.timingSafeCompare(expected, signature)) {
+      throw new Error('[FedaPay] Signature webhook invalide — payload ignoré');
     }
 
     const payload = JSON.parse(rawBody) as {
