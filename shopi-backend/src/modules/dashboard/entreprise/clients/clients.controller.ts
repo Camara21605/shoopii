@@ -18,6 +18,8 @@ import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard }   from 'src/common/guards/roles.guard';
 import { Roles }        from 'src/common/decorators/roles.decorator';
 import { UserRole }     from 'src/common/enums/user-role.enum';
+import { TeamPermissionGuard }    from 'src/modules/company-team/guards/team-permission.guard';
+import { RequiresTeamPermission } from 'src/modules/company-team/decorators/requires-team-permission.decorator';
 
 import { ClientsService, ClientsFilters, ClientSegment } from './clients.service';
 import { CrmCampaignService } from './crm-campaign.service';
@@ -82,7 +84,15 @@ export class ClientsController {
    * Envoi réel — après confirmation côté frontend. Limité pour éviter
    * qu'un compte compromis n'envoie un flot de campagnes.
    */
-  @UseGuards(ThrottlerGuard)
+  /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — cette route envoie un email
+   * réel (sujet/message libres) à tout un segment de clients au nom de
+   * l'entreprise ; elle n'était protégée que par @Roles(COMPANY), qui
+   * ne distingue pas propriétaire/collaborateur. Réutilise le groupe
+   * de permission existant "messaging" (déjà exposé dans l'écran
+   * Équipe) — envoyer une campagne CRM est une forme de communication
+   * au nom de l'entreprise. */
+  @UseGuards(ThrottlerGuard, TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'send')
   @Throttle({ default: { limit: 5, ttl: 3_600_000 } })
   @Post('crm/:type/send')
   crmSend(

@@ -27,6 +27,7 @@ import { MailModule }  from 'src/modules/email/email.module';
 
 import { CodesModule }         from 'src/modules/auth/code-creation/code-creation.module';
 import { NotificationsModule } from 'src/modules/notifications/notifications.module';
+import { CompanyTeamModule }   from 'src/modules/company-team/company-team.module';
 
 @Module({
   imports: [
@@ -41,6 +42,10 @@ import { NotificationsModule } from 'src/modules/notifications/notifications.mod
     MailModule,
     CodesModule,
     NotificationsModule,
+    /* Pour TeamPermissionGuard (voir correspondants.controller.ts) —
+     * audit sécurité : ces routes n'étaient protégées que par @Roles(COMPANY),
+     * qui ne distingue pas propriétaire/collaborateur. */
+    CompanyTeamModule,
   ],
 
   controllers: [

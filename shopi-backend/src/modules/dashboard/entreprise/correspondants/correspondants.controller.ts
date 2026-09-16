@@ -64,6 +64,8 @@ import { JwtAuthGuard }  from 'src/common/guards/auth.guard';
 import { RolesGuard }    from 'src/common/guards/roles.guard';
 import { Roles }         from 'src/common/decorators/roles.decorator';
 import { UserRole }      from 'src/common/enums/user-role.enum';
+import { TeamPermissionGuard }    from 'src/modules/company-team/guards/team-permission.guard';
+import { RequiresTeamPermission } from 'src/modules/company-team/decorators/requires-team-permission.decorator';
 
 import { CorrespondantsService } from './services/correspondants.service';
 import { InvitationService }     from './services/invitation.service';
@@ -75,6 +77,17 @@ import {
   SuspendreDto,
 } from './dto/correspondant.dto';
 
+/* ⚠️ FAILLE CORRIGÉE (audit sécurité) — ces routes n'étaient protégées
+ * que par @Roles(COMPANY), qui ne distingue pas le propriétaire d'un
+ * collaborateur (CompanyTeamMember) : un collaborateur à qui le
+ * propriétaire a retiré toute permission pouvait quand même inviter/
+ * suspendre/réactiver/valider/contacter des correspondants. Ajout de
+ * TeamPermissionGuard, réutilisant le groupe existant "deliveries"
+ * (les correspondants sont le réseau de points relais/livraison de
+ * l'entreprise) — aucun nouveau groupe de permission n'était nécessaire,
+ * les cases "Livraisons" déjà présentes dans l'écran Équipe suffisent.
+ * Le propriétaire n'est jamais bloqué par ce garde (voir
+ * TeamPermissionGuard). */
 @Controller('correspondants')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CorrespondantsController {
@@ -97,6 +110,8 @@ export class CorrespondantsController {
 
   @Get('stats')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'view')
   async getStats(@Req() req: any) {
     return this.correspondantsService.getStats(req.user);
   }
@@ -114,6 +129,8 @@ export class CorrespondantsController {
 
   @Get('zones')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'view')
   async getZones(@Req() req: any) {
     return this.correspondantsService.getZoneStats(req.user);
   }
@@ -129,6 +146,8 @@ export class CorrespondantsController {
 
   @Get('activite-recente')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'view')
   async getActiviteRecente(@Req() req: any) {
     return this.correspondantsService.getRecentActivity(req.user);
   }
@@ -159,6 +178,8 @@ export class CorrespondantsController {
   @Post('inviter')
   @HttpCode(HttpStatus.CREATED)
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'edit')
   async inviter(
     @Body() dto: InviterCorrespondantDto,
     @Req()  req: any,
@@ -184,6 +205,8 @@ export class CorrespondantsController {
 
   @Get()
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'view')
   async findAll(
     @Query() dto: FilterCorrespondantsDto,
     @Req()   req: any,
@@ -202,6 +225,8 @@ export class CorrespondantsController {
 
   @Get(':id')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'view')
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @Req()                      req: any,
@@ -220,6 +245,8 @@ export class CorrespondantsController {
 
   @Patch(':id')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'edit')
   async update(
     @Param('id', ParseUUIDPipe) id:  string,
     @Body()                     dto: UpdateCorrespondantDto,
@@ -241,6 +268,8 @@ export class CorrespondantsController {
 
   @Patch(':id/suspendre')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'edit')
   async suspendre(
     @Param('id', ParseUUIDPipe) id:  string,
     @Body()                     dto: SuspendreDto,
@@ -260,6 +289,8 @@ export class CorrespondantsController {
 
   @Patch(':id/reactiver')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'edit')
   async reactiver(
     @Param('id', ParseUUIDPipe) id: string,
     @Req()                      req: any,
@@ -278,6 +309,8 @@ export class CorrespondantsController {
 
   @Patch(':id/valider')
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'edit')
   async valider(
     @Param('id', ParseUUIDPipe) id: string,
     @Req()                      req: any,
@@ -299,6 +332,8 @@ export class CorrespondantsController {
   @Post(':id/contacter')
   @HttpCode(HttpStatus.OK)
   @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'edit')
   async contacter(
     @Param('id', ParseUUIDPipe) id:  string,
     @Body()                     dto: ContacterCorrespondantDto,

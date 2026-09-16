@@ -24,6 +24,7 @@ import { User }      from 'src/database/entities/user.entity';
  * qui passe par NotificationEventService pour ne jamais envoyer d'email
  * de façon synchrone dans la requête HTTP. */
 import { NotificationsModule } from 'src/modules/notifications/notifications.module';
+import { CompanyTeamModule }   from 'src/modules/company-team/company-team.module';
 
 import { ClientsController } from './clients.controller';
 import { ClientsService }    from './clients.service';
@@ -39,6 +40,8 @@ import { CrmCampaignService } from './crm-campaign.service';
       User,      // nom + email + photo
     ]),
     NotificationsModule,
+    /* Pour TeamPermissionGuard sur crmSend (voir clients.controller.ts). */
+    CompanyTeamModule,
   ],
   controllers: [ClientsController],
   providers:   [ClientsService, CrmCampaignService],

@@ -16,6 +16,8 @@ import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard }   from 'src/common/guards/roles.guard';
 import { Roles }        from 'src/common/decorators/roles.decorator';
 import { UserRole }     from 'src/common/enums/user-role.enum';
+import { TeamPermissionGuard }    from 'src/modules/company-team/guards/team-permission.guard';
+import { RequiresTeamPermission } from 'src/modules/company-team/decorators/requires-team-permission.decorator';
 
 import { AvisService } from './avis.service';
 import { RepondreAvisDto } from './dto/repondre-avis.dto';
@@ -32,6 +34,13 @@ export class AvisController {
     return this.avisService.getAvis(req.user.actorId ?? req.user.id);
   }
 
+  /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — répondre publiquement à un
+   * avis engage la voix de l'entreprise ; cette route n'était protégée
+   * que par @Roles(COMPANY). Réutilise le groupe existant "messaging"
+   * (déjà exposé dans l'écran Équipe), même raisonnement que
+   * clients.controller.ts::crmSend. */
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('messaging', 'send')
   @Post(':id/reponse')
   repondre(
     @Req() req: any,
