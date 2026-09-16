@@ -33,6 +33,7 @@ import { NotificationService }     from './services/notification.service';
 import { ListNotificationsQueryDto } from './dto/list-notifications.query.dto';
 import { UpdatePreferencesDto }    from './dto/update-preferences.dto';
 import { RegisterPushTokenDto }    from './dto/register-push-token.dto';
+import { MarkReadByTypesDto }      from './dto/mark-read-by-types.dto';
 import { NotificationActorType }   from 'src/database/entities/notification/notification.entitiy';
 import { ROLE_TO_ACTOR_TYPE }      from './utils/actor-type.util';
 
@@ -102,6 +103,20 @@ export class NotificationsController {
     return { unreadCount: count };
   }
 
+  /**
+   * GET /notifications/unread-by-type
+   *
+   * Compte les notifications non lues, groupées par NotificationType.
+   * Alimente les badges "par onglet" des sidebars (dashboard entreprise,
+   * etc.) — chaque dashboard mappe localement les types pertinents vers
+   * ses propres onglets (voir sidebar-badges.ts côté frontend).
+   */
+  @Get('unread-by-type')
+  async getUnreadCountByType(@Request() req: any) {
+    const { actorType, actorId } = this.resolveActor(req);
+    return this.service.getUnreadCountByType(actorType, actorId);
+  }
+
   // ─────────────────────────────────────────────────────────
   // MARQUER COMME LU
   // ─────────────────────────────────────────────────────────
@@ -119,6 +134,25 @@ export class NotificationsController {
   async markAllAsRead(@Request() req: any) {
     const { actorType, actorId } = this.resolveActor(req);
     return this.service.markAllAsRead(actorType, actorId);
+  }
+
+  /**
+   * PATCH /notifications/read-by-types
+   *
+   * Marque lues toutes les notifications non lues d'un ou plusieurs
+   * NotificationType — utilisé quand l'utilisateur visite un onglet
+   * précis de sa sidebar (voir NotificationService.markAsReadByTypes).
+   *
+   * ⚠️ Doit être AVANT /:id/read pour éviter le conflit de route.
+   */
+  @Patch('read-by-types')
+  @HttpCode(HttpStatus.OK)
+  async markAsReadByTypes(
+    @Request() req: any,
+    @Body()    dto: MarkReadByTypesDto,
+  ) {
+    const { actorType, actorId } = this.resolveActor(req);
+    return this.service.markAsReadByTypes(actorType, actorId, dto.types);
   }
 
   /**

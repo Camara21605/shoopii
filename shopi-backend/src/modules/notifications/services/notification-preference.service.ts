@@ -344,10 +344,28 @@ export class NotificationPreferenceService {
     actorType: NotificationActorType,
     actorId:   string,
   ): Promise<number> {
+    return this.decrementUnreadBy(actorType, actorId, 1);
+  }
+
+  /**
+   * Décrémente le compteur de `n` (ne passe pas sous 0) — généralisation
+   * de decrementUnread() ci-dessus pour NotificationService.
+   * markAsReadByTypes(), qui marque lues plusieurs notifications d'un
+   * coup (un onglet de sidebar entier) plutôt qu'une seule.
+   */
+  async decrementUnreadBy(
+    actorType: NotificationActorType,
+    actorId:   string,
+    n:         number,
+  ): Promise<number> {
+    if (n <= 0) {
+      const pref = await this.repo.findOne({ where: { actorType, actorId } });
+      return pref?.unreadCount ?? 0;
+    }
     const result = await this.repo
       .createQueryBuilder()
       .update(NotificationPreference)
-      .set({ unreadCount: () => 'GREATEST("unreadCount" - 1, 0)' })
+      .set({ unreadCount: () => `GREATEST("unreadCount" - ${n}, 0)` })
       .where('"actorType" = :actorType AND "actorId" = :actorId', { actorType, actorId })
       .returning('"unreadCount"')
       .execute();

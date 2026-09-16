@@ -165,6 +165,35 @@ export class NotificationRepository {
   }
 
   /**
+   * Compte les notifications non lues d'un acteur, GROUPÉES PAR TYPE.
+   *
+   * Alimente les badges "par onglet" des sidebars (ex: dashboard
+   * entreprise — Commandes/Avis/Produits...), chaque dashboard mappant
+   * localement les NotificationType pertinents vers son propre onglet
+   * (voir sidebar-badges.ts côté frontend) plutôt que de dupliquer cette
+   * logique de regroupement ici, qui diffère par rôle.
+   */
+  async countUnreadByType(
+    recipientType: NotificationActorType,
+    recipientId:   string,
+  ): Promise<Record<string, number>> {
+    const rows = await this.repo
+      .createQueryBuilder('n')
+      .select('n.type', 'type')
+      .addSelect('COUNT(*)', 'count')
+      .where('n.recipientType = :recipientType', { recipientType })
+      .andWhere('n.recipientId = :recipientId', { recipientId })
+      .andWhere('n.isRead = false')
+      .andWhere('(n.expiresAt IS NULL OR n.expiresAt > :now)', { now: new Date() })
+      .groupBy('n.type')
+      .getRawMany<{ type: string; count: string }>();
+
+    const result: Record<string, number> = {};
+    for (const row of rows) result[row.type] = parseInt(row.count, 10);
+    return result;
+  }
+
+  /**
    * Cherche une notification non-lue existante avec le même groupKey.
    *
    * Utilisé par NotificationService.create() pour décider s'il
@@ -282,6 +311,32 @@ export class NotificationRepository {
       { recipientType, recipientId, isRead: false },
       { isRead: true, readAt: new Date() },
     );
+    return result.affected ?? 0;
+  }
+
+  /**
+   * Marque comme lues toutes les notifications non lues d'un acteur dont
+   * le type figure dans `types` — utilisé quand l'utilisateur visite un
+   * onglet précis de sa sidebar (ex: "Commandes"), pour n'effacer QUE le
+   * badge de cet onglet sans toucher aux autres notifications non lues.
+   *
+   * @returns Nombre de notifications mises à jour
+   */
+  async markAsReadByTypes(
+    recipientType: NotificationActorType,
+    recipientId:   string,
+    types:         NotificationType[],
+  ): Promise<number> {
+    if (types.length === 0) return 0;
+    const result = await this.repo
+      .createQueryBuilder()
+      .update(Notification)
+      .set({ isRead: true, readAt: new Date() })
+      .where('"recipientType" = :recipientType', { recipientType })
+      .andWhere('"recipientId" = :recipientId', { recipientId })
+      .andWhere('"isRead" = false')
+      .andWhere('"type" IN (:...types)', { types })
+      .execute();
     return result.affected ?? 0;
   }
 

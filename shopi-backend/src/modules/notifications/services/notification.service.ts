@@ -235,6 +235,18 @@ export class NotificationService {
     return this.notifRepo.countUnread(actorType, actorId);
   }
 
+  /**
+   * Compte les non-lues groupées par NotificationType — alimente les
+   * badges par onglet des sidebars (voir NotificationRepository.
+   * countUnreadByType pour le détail).
+   */
+  async getUnreadCountByType(
+    actorType: NotificationActorType,
+    actorId:   string,
+  ): Promise<Record<string, number>> {
+    return this.notifRepo.countUnreadByType(actorType, actorId);
+  }
+
   // ═════════════════════════════════════════════════════════
   // MARQUER COMME LU
   // ═════════════════════════════════════════════════════════
@@ -269,6 +281,26 @@ export class NotificationService {
     await this.prefService.resetUnread(actorType, actorId);
     // Sync temps réel du badge → 0
     await this.broadcast.emitUnreadCount(actorType, actorId, 0);
+    return { updated };
+  }
+
+  /**
+   * Marque lues toutes les notifications non lues d'un des types donnés —
+   * utilisé quand l'utilisateur visite un onglet précis de sa sidebar
+   * (ex: "Commandes"), pour n'effacer QUE le badge de cet onglet.
+   * Décrémente le compteur global (topbar) de la même quantité plutôt
+   * que de le remettre à 0, puisque d'autres types restent non lus.
+   */
+  async markAsReadByTypes(
+    actorType: NotificationActorType,
+    actorId:   string,
+    types:     NotificationType[],
+  ): Promise<{ updated: number }> {
+    const updated = await this.notifRepo.markAsReadByTypes(actorType, actorId, types);
+    if (updated > 0) {
+      const newCount = await this.prefService.decrementUnreadBy(actorType, actorId, updated);
+      await this.broadcast.emitUnreadCount(actorType, actorId, newCount);
+    }
     return { updated };
   }
 

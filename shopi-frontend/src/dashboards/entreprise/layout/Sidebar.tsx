@@ -10,6 +10,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { EntreprisePage } from '../types';
 import { useToast } from '../../../shared/context/ToastContext';
+import { useSidebarBadges } from '../hooks/useSidebarBadges';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
 import './Sidebar.css';
 
@@ -38,7 +39,9 @@ interface NavItem {
   id:          EntreprisePage;
   icon:        string;
   label:       string;
-  badge?:      string;
+  /** Style de couleur du badge (rouge/ambre/vert/violet…) — le NOMBRE
+   *  affiché, lui, est toujours calculé en direct (voir useSidebarBadges),
+   *  jamais une valeur codée en dur ici. */
   badgeClass?: string;
   /** Permission requise : [group, action] */
   perm?:       [string, string];
@@ -50,11 +53,11 @@ interface NavItem {
    ici), la résolution `t(clé)` se fait au rendu dans le composant. */
 /** Bloc "Catalogue" pour un compte businessModel==='products' (par défaut). */
 const CATALOGUE_PRODUITS: NavItem[] = [
-  { id: 'produits',   icon: 'fa-tag',         label: 'sidebar.items.produits',   badge: '124',              perm: ['products',   'view']   },
-  { id: 'ajouter',    icon: 'fa-plus-circle', label: 'sidebar.items.ajouter',                               perm: ['products',   'create'] },
-  { id: 'inventaire',   icon: 'fa-warehouse', label: 'sidebar.items.inventaire',   badge: '6', badgeClass: 'a', perm: ['products', 'view']   },
-  { id: 'fournisseurs', icon: 'fa-industry',  label: 'sidebar.items.fournisseurs',                              perm: ['fournisseurs', 'view']   },
-  { id: 'promotions',   icon: 'fa-percent',   label: 'sidebar.items.promotions',   badge: '4', badgeClass: 'p', perm: ['promotions','view']  },
+  { id: 'produits',     icon: 'fa-tag',       label: 'sidebar.items.produits',                    perm: ['products',   'view']   },
+  { id: 'ajouter',      icon: 'fa-plus-circle', label: 'sidebar.items.ajouter',                   perm: ['products',   'create'] },
+  { id: 'inventaire',   icon: 'fa-warehouse', label: 'sidebar.items.inventaire', badgeClass: 'a',  perm: ['products', 'view']   },
+  { id: 'fournisseurs', icon: 'fa-industry',  label: 'sidebar.items.fournisseurs',                perm: ['fournisseurs', 'view']   },
+  { id: 'promotions',   icon: 'fa-percent',   label: 'sidebar.items.promotions', badgeClass: 'p',  perm: ['promotions','view']  },
 ];
 
 /** Bloc "Catalogue" pour un compte businessModel==='services' — remplace
@@ -78,8 +81,11 @@ function buildNavSections(businessModel?: 'products' | 'services'): { title: str
       title: 'sidebar.sections.principal',
       items: [
         { id: 'overview',      icon: 'fa-chart-pie', label: 'sidebar.items.overview' },
-        { id: 'commandes', icon: 'fa-box',         label: 'sidebar.items.commandes', badge: '14', badgeClass: 'r', perm: ['orders',  'view'] },
-        { id: 'retours',   icon: 'fa-rotate-left', label: 'sidebar.items.retours',   badge: '3',  badgeClass: 'a', perm: ['returns', 'view'] },
+        { id: 'commandes', icon: 'fa-box',         label: 'sidebar.items.commandes', badgeClass: 'r', perm: ['orders',  'view'] },
+        /* Pas de badge live pour "Retours" — aucun NotificationType dédié
+         * n'existe encore côté backend (voir SIDEBAR_BADGE_TYPES) ; mieux
+         * vaut aucun chiffre qu'un chiffre inventé. */
+        { id: 'retours',   icon: 'fa-rotate-left', label: 'sidebar.items.retours',   perm: ['returns', 'view'] },
       ],
     },
     {
@@ -96,8 +102,8 @@ function buildNavSections(businessModel?: 'products' | 'services'): { title: str
     {
       title: 'sidebar.sections.reseauLogistique',
       items: [
-        { id: 'livreurs',       icon: 'fa-motorcycle', label: 'sidebar.items.livreurs',       badge: '6', badgeClass: 'g', perm: ['deliveries', 'view'] },
-        { id: 'correspondants', icon: 'fa-map-pin',    label: 'sidebar.items.correspondants', badge: '3', badgeClass: 'p', perm: ['deliveries', 'view'] },
+        { id: 'livreurs',       icon: 'fa-motorcycle', label: 'sidebar.items.livreurs',       badgeClass: 'g', perm: ['deliveries', 'view'] },
+        { id: 'correspondants', icon: 'fa-map-pin',    label: 'sidebar.items.correspondants', badgeClass: 'p', perm: ['deliveries', 'view'] },
       ],
     },
     {
@@ -106,7 +112,7 @@ function buildNavSections(businessModel?: 'products' | 'services'): { title: str
         { id: 'finances',     icon: 'fa-coins',  label: 'sidebar.items.finances',     perm: ['payments', 'view']             },
         { id: 'portefeuille', icon: 'fa-wallet', label: 'sidebar.items.portefeuille', perm: ['wallet', 'view'] },
         { id: 'clients',  icon: 'fa-users', label: 'sidebar.items.clients', perm: ['orders', 'view'] },
-        { id: 'avis',     icon: 'fa-star',  label: 'sidebar.items.avis',    badge: '8', badgeClass: 'a', perm: ['orders', 'view'] },
+        { id: 'avis',     icon: 'fa-star',  label: 'sidebar.items.avis',    badgeClass: 'a', perm: ['orders', 'view'] },
       ],
     },
     {
@@ -125,6 +131,12 @@ export default function Sidebar({
 }: SidebarProps) {
   const { pop } = useToast();
   const { t } = useTranslation();
+  const { getBadge, clearBadge } = useSidebarBadges();
+
+  const handleItemClick = (id: EntreprisePage) => {
+    clearBadge(id);
+    onNavigate(id);
+  };
 
   const initiales = (companyName ?? 'TC')
     .split(' ')
@@ -190,21 +202,24 @@ export default function Sidebar({
           return (
             <React.Fragment key={section.title}>
               <div className="sb-sect">{t(section.title)}</div>
-              {visibleItems.map(item => (
-                <div
-                  key={item.id}
-                  className={`nb${activePage === item.id ? ' on' : ''}`}
-                  onClick={() => onNavigate(item.id)}
-                >
-                  <i className={`fas ${item.icon}`}></i>
-                  <span>{t(item.label)}</span>
-                  {item.badge && (
-                    <span className={`nb-badge${item.badgeClass ? ` ${item.badgeClass}` : ''}`}>
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-              ))}
+              {visibleItems.map(item => {
+                const count = getBadge(item.id);
+                return (
+                  <div
+                    key={item.id}
+                    className={`nb${activePage === item.id ? ' on' : ''}`}
+                    onClick={() => handleItemClick(item.id)}
+                  >
+                    <i className={`fas ${item.icon}`}></i>
+                    <span>{t(item.label)}</span>
+                    {count > 0 && (
+                      <span className={`nb-badge${item.badgeClass ? ` ${item.badgeClass}` : ''}`}>
+                        {count > 99 ? '99+' : count}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </React.Fragment>
           );
         })}
