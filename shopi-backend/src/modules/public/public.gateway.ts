@@ -36,10 +36,12 @@ import { Logger } from '@nestjs/common';
 import type { Server, Socket } from 'socket.io';
 
 import { PublicBroadcastService } from './public-broadcast.service';
+import { getSocketAllowedOrigins } from '../../common/utils/socket-cors.util';
 
 @WebSocketGateway({
   namespace: '/public',
-  cors: { origin: true, credentials: true },
+  /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — voir socket-cors.util.ts. */
+  cors: { origin: getSocketAllowedOrigins(), credentials: true },
   transports: ['websocket', 'polling'],
 })
 export class PublicGateway implements OnGatewayInit {

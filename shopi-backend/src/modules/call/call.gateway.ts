@@ -28,6 +28,7 @@ import type { Server } from 'socket.io';
 
 import type { AuthenticatedSocket } from '../messagerie/interfaces/messaging.interfaces';
 import { CallService } from './call.service';
+import { getSocketAllowedOrigins } from '../../common/utils/socket-cors.util';
 import { CallStatus, CallType } from 'src/database/entities/call/call.entity';
 import {
   CallInitiateDto, CallAcceptDto, CallRejectDto, CallEndDto, CallBusyDto,
@@ -58,7 +59,9 @@ const SIGNAL_FLOOD_WINDOW_MS = 10_000;
 @UseFilters(WsValidationExceptionFilter)
 @WebSocketGateway({
   namespace: '/messaging',
-  cors: { origin: true, credentials: true },
+  /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — origin:true acceptait
+   * n'importe quelle origine ; voir socket-cors.util.ts. */
+  cors: { origin: getSocketAllowedOrigins(), credentials: true },
   transports: ['websocket', 'polling'],
 })
 export class CallGateway implements OnGatewayDisconnect {

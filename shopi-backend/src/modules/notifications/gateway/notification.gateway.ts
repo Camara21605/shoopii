@@ -57,16 +57,14 @@ import { NotificationBroadcastService } from '../services/notification-broadcast
 import { NotificationService }          from '../services/notification.service';
 import { ROLE_TO_ACTOR_TYPE }           from '../utils/actor-type.util';
 import { SessionService }               from '../../session/session.service';
+import { getSocketAllowedOrigins }      from '../../../common/utils/socket-cors.util';
 
 @WebSocketGateway({
   namespace: '/notifications',
   cors: {
-    /*
-     * Identique à MessagerieGateway :
-     * origin:true → reflète l'entête Origin du client.
-     * Évite les problèmes credentials:true + origin:'*' (bloqué navigateur).
-     */
-    origin:      true,
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — origin:true acceptait
+     * n'importe quelle origine ; voir socket-cors.util.ts. */
+    origin:      getSocketAllowedOrigins(),
     credentials: true,
   },
   transports: ['websocket', 'polling'],

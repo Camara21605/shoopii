@@ -68,6 +68,7 @@ import { BroadcastService } from '../services/broadcast.service';
 import { MessagerieService } from '../messagerie.service';
 import { SessionService }   from '../../session/session.service';
 import { NotificationBroadcastService } from '../../notifications/services/notification-broadcast.service';
+import { getSocketAllowedOrigins } from '../../../common/utils/socket-cors.util';
 import type {
   AuthenticatedSocket,
   WsJoinConvPayload,
@@ -81,16 +82,13 @@ const TYPING_THROTTLE_MS = 1500;
 @WebSocketGateway({
   namespace: '/messaging',
   cors: {
-    /*
-     * NE PAS utiliser process.env ici : les décorateurs sont évalués
-     * à l'import du fichier, AVANT que dotenv charge le .env.
-     * process.env.FRONTEND_URL === undefined → fallback '*'.
-     * Or   credentials:true  +  origin:'*'  = BLOQUÉ par les navigateurs (spec CORS).
-     *
-     * Solution : origin:true = "réfléchir l'entête Origin du client"
-     * → autorise n'importe quelle origine avec credentials, sans wildcard.
-     */
-    origin:      true,
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — origin:true acceptait
+     * n'importe quelle origine avec credentials:true. Voir
+     * socket-cors.util.ts pour la whitelist + pourquoi lire
+     * process.env directement fonctionne malgré l'ordre d'évaluation
+     * des décorateurs (Render injecte les env vars avant le premier
+     * import Node — contrairement à un .env local chargé par dotenv). */
+    origin:      getSocketAllowedOrigins(),
     credentials: true,
   },
   transports: ['websocket', 'polling'],

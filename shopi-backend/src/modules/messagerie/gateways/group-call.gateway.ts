@@ -65,6 +65,7 @@ import { NotificationEventService } from 'src/modules/notifications/events/notif
 import type { AuthenticatedSocket } from '../interfaces/messaging.interfaces';
 import { SocketFloodGuard } from '../utils/socket-flood-guard';
 import { WsValidationExceptionFilter } from '../filters/ws-validation.filter';
+import { getSocketAllowedOrigins } from '../../../common/utils/socket-cors.util';
 import {
   GroupCallInitiateDto, GroupCallRefDto, GroupCallOfferDto, GroupCallAnswerDto,
   GroupCallIceCandidateDto, GroupCallToggleMediaDto,
@@ -123,7 +124,8 @@ interface ActiveGroupCall {
 @UseFilters(WsValidationExceptionFilter)
 @WebSocketGateway({
   namespace:  '/messaging',
-  cors:       { origin: true, credentials: true },
+  /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — voir socket-cors.util.ts. */
+  cors:       { origin: getSocketAllowedOrigins(), credentials: true },
   transports: ['websocket', 'polling'],
 })
 export class GroupCallGateway implements OnGatewayDisconnect {

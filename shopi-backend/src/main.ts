@@ -22,6 +22,7 @@ import { NestFactory }            from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { IoAdapter }              from '@nestjs/platform-socket.io';
+import helmet                     from 'helmet';
 import cookieParser               from 'cookie-parser';
 import compression                from 'compression';
 import { AppModule }              from './app.module';
@@ -92,6 +93,22 @@ async function bootstrap() {
      * csrf.middleware.ts pour pourquoi ce canal est nécessaire en prod). */
     exposedHeaders: ['X-CSRF-Token'],
   });
+
+  /* ── En-têtes de sécurité HTTP (helmet) ────────────────────────
+   * ⚠️ FAILLE CORRIGÉE (audit sécurité) — aucun en-tête de sécurité
+   * n'était appliqué (pas de X-Frame-Options, pas de HSTS applicatif) :
+   * une page tierce pouvait embarquer l'API en iframe (clickjacking sur
+   * des actions sensibles), et une XSS résiduelle n'avait aucune couche
+   * de défense CSP supplémentaire.
+   * crossOriginResourcePolicy: 'cross-origin' — sans ça, le défaut
+   * "same-origin" de helmet peut faire bloquer par le navigateur les
+   * réponses de cette API par le frontend Vercel (origine différente) ;
+   * la restriction d'accès reste entièrement gérée par CORS ci-dessus
+   * (whitelist stricte + credentials), ce header n'a pas besoin d'ajouter
+   * une seconde barrière ici. */
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  }));
 
   /* ── Compression gzip/brotli des réponses ─────────────────────
    * Aucune compression n'était appliquée : chaque réponse JSON

@@ -62,17 +62,18 @@ import { SupportService } from '../services/support.service';
 import { SupportBroadcastService } from '../services/support-broadcast.service';
 import type { AuthenticatedSocket } from '../../messagerie/interfaces/messaging.interfaces';
 import { NotificationBroadcastService } from '../../notifications/services/notification-broadcast.service';
+import { getSocketAllowedOrigins } from '../../../common/utils/socket-cors.util';
 
 interface WsTicketRoomPayload { ticketId: string }
 
 @WebSocketGateway({
   namespace: '/support',
   cors: {
-    /* NE PAS utiliser process.env ici : les décorateurs sont évalués à
-     * l'import du fichier, AVANT que dotenv charge le .env — même
-     * remarque que messagerie.gateway.ts. origin:true = réfléchit
-     * l'Origin du client, compatible credentials:true sans wildcard. */
-    origin:      true,
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — origin:true acceptait
+     * n'importe quelle origine ; voir socket-cors.util.ts pour pourquoi
+     * process.env fonctionne bien ici malgré l'ordre d'évaluation des
+     * décorateurs (Render injecte les env vars avant le premier import). */
+    origin:      getSocketAllowedOrigins(),
     credentials: true,
   },
   transports: ['websocket', 'polling'],

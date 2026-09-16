@@ -53,6 +53,7 @@ import { GeoService }             from '../services/geo.service';
 import type { ILocationUpdatePayload } from '../interfaces/location.interfaces';
 import { SessionService }         from '../../session/session.service';
 import { NotificationBroadcastService } from '../../notifications/services/notification-broadcast.service';
+import { getSocketAllowedOrigins } from '../../../common/utils/socket-cors.util';
 
 /** Intervalle minimum entre deux émissions par livreur (ms) */
 const THROTTLE_MS = 1_000;
@@ -78,7 +79,9 @@ interface SharingSession {
 @WebSocketGateway({
   namespace: '/location',
   cors: {
-    origin:      true,
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — origin:true acceptait
+     * n'importe quelle origine ; voir socket-cors.util.ts. */
+    origin:      getSocketAllowedOrigins(),
     credentials: true,
   },
   transports: ['websocket', 'polling'],
