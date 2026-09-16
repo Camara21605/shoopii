@@ -445,6 +445,77 @@ export class WalletMovementService {
   }
 
   /* ==========================================================
+   * 6bis. LIBÉRER UN ESCROW (pendingBalance → balance)
+   * ========================================================== */
+
+  /**
+   * ⚠️ CORRIGÉ (audit sécurité) — WalletEngine routait auparavant
+   * ESCROW_RELEASE vers crediter(), qui ne fait qu'AJOUTER le montant
+   * au balanceType demandé (ici PENDING, voir escrow-release.service.ts)
+   * sans jamais le retirer ni le transférer vers `balance` : l'argent
+   * gagné à la livraison gonflait indéfiniment pendingBalance sans
+   * jamais devenir disponible/retirable (voir wallet.entity.ts,
+   * documentation du cycle : "RELEASE → pendingBalance-- | balance++").
+   * Cette méthode dédiée fait le VRAI transfert des deux côtés, sur le
+   * modèle de liberer() (RESERVED → BALANCE) mais pour PENDING → BALANCE.
+   */
+  async libererEscrow(
+    wallet: Wallet,
+    ctx: WalletOperationContext,
+    qr: QueryRunner,
+  ): Promise<WalletOperationResult> {
+    const pendingBefore = wallet.pendingBalance;
+    const pendingAfter  = pendingBefore - ctx.amount;
+    const balanceBefore = wallet.balance;
+    const balanceAfter  = balanceBefore + ctx.amount;
+
+    wallet.pendingBalance    = pendingAfter;
+    wallet.balance           = balanceAfter;
+    wallet.lastTransactionAt = new Date();
+    const savedWallet = await qr.manager.save(Wallet, wallet);
+
+    const tx = await this.creerTransaction(wallet.id, {
+      type: TransactionType.CREDIT,
+      amount: ctx.amount,
+      balanceBefore: pendingBefore,
+      balanceAfter:  pendingAfter,
+      operationType: WalletOperationType.ESCROW_RELEASE,
+      balanceType: BalanceType.PENDING,
+      idempotencyKey: ctx.idempotencyKey ?? null,
+      performedBy: ctx.performedByUserId ?? null,
+      performedByRole: ctx.performedByRole ?? null,
+      note:        ctx.note     ?? null,
+      ipAddress:   ctx.ipAddress ?? null,
+      description: ctx.description ?? 'Libération séquestre',
+      referenceType: ctx.referenceType ?? null,
+      referenceId:   ctx.referenceId   ?? null,
+      metadata:      ctx.metadata      ?? null,
+    }, qr);
+
+    const ledgerEntry = await this.ledgerService.enregistrerCredit({
+      walletId: wallet.id,
+      transactionId: tx.id,
+      operationType: WalletOperationType.ESCROW_RELEASE,
+      amount: ctx.amount,
+      currency: savedWallet.currency,
+      balanceType: BalanceType.BALANCE,
+      balanceBefore,
+      balanceAfter,
+      description: ctx.description ?? 'Libération séquestre',
+      referenceType: ctx.referenceType ?? null,
+      referenceId:   ctx.referenceId   ?? null,
+      performedByUserId: ctx.performedByUserId ?? null,
+      performedByRole:   ctx.performedByRole   ?? null,
+      ipAddress: ctx.ipAddress ?? null,
+      metadata: { ...ctx.metadata, pendingBefore, pendingAfter },
+    }, qr);
+
+    await this.completerTransaction(tx.id, qr);
+
+    return this.buildResult(tx.id, ledgerEntry.id, ctx, BalanceType.PENDING, pendingBefore, pendingAfter, savedWallet);
+  }
+
+  /* ==========================================================
    * 7. INITIER RETRAIT (reservedBalance → withdrawingBalance)
    * ========================================================== */
 

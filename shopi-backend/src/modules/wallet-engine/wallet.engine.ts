@@ -297,12 +297,26 @@ export class WalletEngine {
    * Détermine si l'opération est un débit (solde source décroît).
    */
   private isDebitOperation(op: WalletOperationType): boolean {
+    /* ⚠️ CORRIGÉ (audit sécurité) :
+     * - ESCROW_CREDIT RETIRÉ de cette liste — c'est un CRÉDIT vers
+     *   pendingBalance (premier argent qui y entre pour cette
+     *   distribution), pas un débit : le classer comme débit forçait
+     *   validerSolde(wallet, amount, PENDING) à exiger pendingBalance
+     *   déjà >= amount AVANT même de créditer, ce qui bloquait le tout
+     *   premier verrouillage d'escrow sur un wallet neuf (pendingBalance
+     *   = 0) — voir escrow-manager.service.ts::verrouillerFonds().
+     * - ESCROW_RELEASE et ESCROW_CANCEL AJOUTÉS — ce sont de vrais
+     *   débits de pendingBalance (voir libererEscrow() et le routage
+     *   ESCROW_CANCEL → debiter() ci-dessous), qui doivent être
+     *   validés AVANT exécution comme tout autre débit.
+     */
     const debits: WalletOperationType[] = [
       WalletOperationType.WITHDRAWAL_INIT,
       WalletOperationType.BLOCK,
       WalletOperationType.RESERVE,
       WalletOperationType.TRANSFER_OUT,
-      WalletOperationType.ESCROW_CREDIT,
+      WalletOperationType.ESCROW_RELEASE,
+      WalletOperationType.ESCROW_CANCEL,
     ];
     return debits.includes(op);
   }
@@ -317,7 +331,13 @@ export class WalletEngine {
       [WalletOperationType.REFUND]:             this.movementService.crediter.bind(this.movementService),
       [WalletOperationType.TRANSFER_IN]:        this.movementService.crediter.bind(this.movementService),
       [WalletOperationType.ADJUSTMENT]:         this.movementService.crediter.bind(this.movementService),
-      [WalletOperationType.ESCROW_RELEASE]:     this.movementService.crediter.bind(this.movementService),
+      /* ⚠️ CORRIGÉ (audit sécurité) — ESCROW_RELEASE utilisait crediter(),
+       * qui se contente d'AJOUTER le montant au balanceType demandé
+       * (PENDING) sans jamais le transférer vers `balance` : l'argent
+       * gagné à la livraison n'était donc jamais réellement disponible/
+       * retirable. libererEscrow() fait le vrai transfert PENDING→BALANCE
+       * (voir son commentaire dans wallet-movement.service.ts). */
+      [WalletOperationType.ESCROW_RELEASE]:     this.movementService.libererEscrow.bind(this.movementService),
       [WalletOperationType.ESCROW_CREDIT]:      this.movementService.crediter.bind(this.movementService),
       [WalletOperationType.TRANSFER_OUT]:       this.movementService.debiter.bind(this.movementService),
       [WalletOperationType.WITHDRAWAL_INIT]:    this.movementService.initierRetrait.bind(this.movementService),
@@ -327,7 +347,18 @@ export class WalletEngine {
       [WalletOperationType.UNBLOCK]:            this.movementService.debloquer.bind(this.movementService),
       [WalletOperationType.RESERVE]:            this.movementService.reserver.bind(this.movementService),
       [WalletOperationType.RELEASE]:            this.movementService.liberer.bind(this.movementService),
-      [WalletOperationType.ESCROW_CANCEL]:      this.movementService.liberer.bind(this.movementService),
+      /* ⚠️ CORRIGÉ (audit sécurité) — ESCROW_CANCEL utilisait liberer(),
+       * qui manipule EN DUR reservedBalance/balance quel que soit
+       * ctx.balanceType — alors que l'argent à annuler est dans
+       * pendingBalance (crédité par ESCROW_CREDIT), pas reservedBalance.
+       * Résultat : soit l'annulation échouait systématiquement
+       * (reservedBalance insuffisant), soit elle ponctionnait à tort des
+       * fonds réservés pour un retrait légitime sans lien. debiter() est
+       * déjà générique via ctx.balanceType (= PENDING ici, voir
+       * escrow-refund.service.ts) — décrémente pendingBalance seul, sans
+       * contrepartie sur ce wallet (le client est remboursé séparément
+       * via une opération REFUND sur SON propre wallet). */
+      [WalletOperationType.ESCROW_CANCEL]:      this.movementService.debiter.bind(this.movementService),
       [WalletOperationType.CORRECTION]:         this.movementService.crediter.bind(this.movementService),
     };
 
