@@ -35,6 +35,7 @@ import { Repository }         from 'typeorm';
 import { Attachment }     from '../../../database/entities/support/attachment.entity';
 import { SupportMessage } from '../../../database/entities/support/support-message.entity';
 import { UploadService, UPLOAD_FOLDERS } from '../../upload/upload.service';
+import { validateMagicBytes } from '../../../common/utils/magic-bytes.util';
 
 import {
   AttachmentNotFoundException,
@@ -62,63 +63,9 @@ const ALLOWED_ATTACHMENT_MIME_TYPES: Record<string, string> = {
   'video/webm':      'webm',
 };
 
-/* ── Magic bytes validation ──────────────────────────────────── */
-
-/**
- * Vérifie les magic bytes (signature binaire) du buffer pour confirmer
- * que le type MIME déclaré correspond au contenu réel du fichier.
- *
- * Un attaquant peut falsifier le header Content-Type et envoyer un
- * fichier HTML ou JS avec mimetype "image/png" pour exécuter du code
- * côté client si ce fichier est servi depuis le CDN.
- *
- * La vérification des magic bytes lit les octets réels du buffer APRÈS
- * la liste blanche MIME, ajoutant une couche de défense en profondeur.
- *
- * Référence : https://en.wikipedia.org/wiki/List_of_file_signatures
- * OWASP A05:2021 – Security Misconfiguration
- */
-function validateMagicBytes(buffer: Buffer, mimeType: string): boolean {
-  /* Un fichier trop petit pour contenir une signature valide est rejeté. */
-  if (buffer.length < 12) return false;
-
-  switch (mimeType) {
-    case 'application/pdf':
-      /* Signature PDF : %PDF  (hex: 25 50 44 46) */
-      return buffer.slice(0, 4).toString('ascii') === '%PDF';
-
-    case 'image/jpeg':
-      /* Signature JPEG : FF D8 FF (Start Of Image + marqueur APP) */
-      return buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
-
-    case 'image/png':
-      /* Signature PNG : 89 50 4E 47 0D 0A 1A 0A (8 octets) */
-      return buffer[0] === 0x89 && buffer[1] === 0x50 &&
-             buffer[2] === 0x4E && buffer[3] === 0x47 &&
-             buffer[4] === 0x0D && buffer[5] === 0x0A &&
-             buffer[6] === 0x1A && buffer[7] === 0x0A;
-
-    case 'image/webp':
-      /* Signature WebP : RIFF????WEBP (offset 0-3 = RIFF, offset 8-11 = WEBP) */
-      return buffer.slice(0, 4).toString('ascii') === 'RIFF' &&
-             buffer.slice(8, 12).toString('ascii') === 'WEBP';
-
-    case 'video/mp4':
-      /* Signature MP4 : box "ftyp" à l'offset 4 (ISO 14496-12).
-       * Les 4 premiers octets sont la taille de la box (variable). */
-      return buffer.slice(4, 8).toString('ascii') === 'ftyp';
-
-    case 'video/webm':
-      /* Signature WebM/MKV : En-tête EBML — 1A 45 DF A3 */
-      return buffer[0] === 0x1A && buffer[1] === 0x45 &&
-             buffer[2] === 0xDF && buffer[3] === 0xA3;
-
-    default:
-      /* Type inconnu → rejeté (fail-closed).
-       * Ne jamais autoriser un type non listé même s'il passe la liste blanche. */
-      return false;
-  }
-}
+/* Magic bytes (validateMagicBytes) — voir common/utils/magic-bytes.util.ts,
+ * partagé avec UploadService depuis l'audit sécurité qui a trouvé que
+ * upload.service.ts ne validait, lui, que le Content-Type déclaré. */
 
 /* ════════════════════════════════════════════════════════════════
  * SERVICE

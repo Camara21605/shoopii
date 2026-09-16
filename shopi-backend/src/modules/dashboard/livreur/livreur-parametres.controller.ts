@@ -23,6 +23,7 @@ import {
   ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage }   from 'multer';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { JwtAuthGuard }       from 'src/common/guards/auth.guard';
 
@@ -45,6 +46,13 @@ import { JourSemaine } from 'src/database/entities/livreur.table/livreur-horaire
 
 const MB5  = 5  * 1024 * 1024;
 const MB10 = 10 * 1024 * 1024;
+
+/* ⚠️ FAILLE CORRIGÉE (audit sécurité) — MaxFileSizeValidator (plus bas)
+ * ne rejette qu'APRÈS que multer ait bufferisé tout le fichier en RAM ;
+ * limits.fileSize ici agit comme garde-fou au niveau du parsing
+ * multipart lui-même (DoS mémoire par upload massif répété). */
+const imageMulterOpts = { storage: memoryStorage(), limits: { fileSize: MB5 } };
+const docMulterOpts   = { storage: memoryStorage(), limits: { fileSize: MB10 } };
 
 /* ── Helper sessionId — voir JwtStrategy (claim `sid`), utilisé pour
  * afficher la session actuelle réelle sur l'écran Sécurité (voir
@@ -95,7 +103,7 @@ export class LivreurParametresController {
 
   /** Upload photo de profil : POST /parametres/photo (champ "file") */
   @Post('photo')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', imageMulterOpts))
   uploadPhoto(
     @Req() req: any,
     @UploadedFile(new ParseFilePipe({
@@ -132,7 +140,7 @@ export class LivreurParametresController {
   @Post('documents/:type')
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 3_600_000 } })
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', docMulterOpts))
   uploadDocument(
     @Req() req: any,
     @Param('type') type: any,

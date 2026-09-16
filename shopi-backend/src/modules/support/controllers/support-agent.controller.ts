@@ -44,8 +44,13 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage }   from 'multer';
 
 /* multerMemory : stockage en buffer (pas de disque) pour la validation
- * magic bytes et l'upload direct vers Cloudinary depuis le buffer. */
-const multerMemory = { storage: memoryStorage() };
+ * magic bytes et l'upload direct vers Cloudinary depuis le buffer.
+ * ⚠️ FAILLE CORRIGÉE (audit sécurité) — limits.fileSize ajouté (10 MB,
+ * même valeur que MAX_ATTACHMENT_SIZE dans attachment.service.ts) :
+ * sans ça, multer bufferise tout le corps de la requête en RAM avant
+ * même que AttachmentService ne vérifie file.size, permettant un DoS
+ * mémoire par upload massif répété. */
+const multerMemory = { storage: memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } };
 /* Response gardé pour typer res.setHeader/res.send dans exportCsv. */
 import type { Response } from 'express';
 

@@ -30,6 +30,7 @@ import {
   ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage }   from 'multer';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { JwtAuthGuard }      from 'src/common/guards/auth.guard';
 import { RolesGuard }        from 'src/common/guards/roles.guard';
@@ -66,6 +67,13 @@ import { JourSemaine }          from 'src/database/entities/entreprise.table/com
 /* ── Limites upload ── */
 const MAX_IMAGE_SIZE = 5  * 1024 * 1024; // 5 MB
 const MAX_DOC_SIZE   = 10 * 1024 * 1024; // 10 MB
+
+/* ⚠️ FAILLE CORRIGÉE (audit sécurité) — MaxFileSizeValidator (plus bas)
+ * ne rejette qu'APRÈS que multer ait bufferisé tout le fichier en RAM ;
+ * limits.fileSize ici agit comme garde-fou au niveau du parsing
+ * multipart lui-même (DoS mémoire par upload massif répété). */
+const imageMulterOpts = { storage: memoryStorage(), limits: { fileSize: MAX_IMAGE_SIZE } };
+const docMulterOpts   = { storage: memoryStorage(), limits: { fileSize: MAX_DOC_SIZE } };
 
 /* ── Helper sessionId — voir JwtStrategy (claim `sid`), utilisé pour
  * afficher la session actuelle réelle sur l'écran Sécurité (voir
@@ -140,7 +148,7 @@ export class ParametresController {
   @UseGuards(TeamPermissionGuard)
   @RequiresTeamPermission('settings', 'edit')
   @Post('logo')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', imageMulterOpts))
   uploadLogo(
     @Req() req: any,
     @UploadedFile(new ParseFilePipe({
@@ -158,7 +166,7 @@ export class ParametresController {
   @UseGuards(TeamPermissionGuard)
   @RequiresTeamPermission('settings', 'edit')
   @Post('cover')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', imageMulterOpts))
   uploadCover(
     @Req() req: any,
     @UploadedFile(new ParseFilePipe({
@@ -301,7 +309,7 @@ export class ParametresController {
   @Throttle({ default: { limit: 10, ttl: 3_600_000 } })
   @RequiresTeamPermission('settings', 'edit')
   @Post('documents/:type')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', docMulterOpts))
   uploadDocument(
     @Req() req: any,
     @Param('type') type: any,

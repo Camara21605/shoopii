@@ -12,6 +12,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage }   from 'multer';
 
 import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard }   from 'src/common/guards/roles.guard';
@@ -31,6 +32,11 @@ import {
 const MB5  = 5  * 1024 * 1024;
 const MB50 = 50 * 1024 * 1024;
 const MB10 = 10 * 1024 * 1024;
+/* ⚠️ FAILLE CORRIGÉE (audit sécurité) — MaxFileSizeValidator (plus bas)
+ * ne rejette qu'APRÈS que multer ait bufferisé tout le fichier en RAM ;
+ * limits.fileSize ici agit comme garde-fou au niveau du parsing
+ * multipart lui-même (DoS mémoire par upload massif répété). */
+const evidenceMulterOpts = { storage: memoryStorage(), limits: { fileSize: MB50 } };
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.COMPANY)
@@ -141,7 +147,7 @@ export class ReturnsController {
   @UseGuards(TeamPermissionGuard)
   @RequiresTeamPermission('returns', 'process')
   @Post(':id/upload')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', evidenceMulterOpts))
   async uploadEvidence(
     @Req() req: any,
     @Param('id', ParseUUIDPipe) id: string,

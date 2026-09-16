@@ -62,8 +62,14 @@ import {
  *
  * memoryStorage est obligatoire pour que AttachmentService puisse
  * lire les magic bytes (les 12 premiers octets du buffer).
+ *
+ * ⚠️ FAILLE CORRIGÉE (audit sécurité) — limits.fileSize ajouté (10 MB,
+ * même valeur que MAX_ATTACHMENT_SIZE dans attachment.service.ts) :
+ * sans ça, multer bufferise tout le corps de la requête en RAM avant
+ * même que AttachmentService ne vérifie file.size, permettant un DoS
+ * mémoire par upload massif répété.
  * ─────────────────────────────────────────────────────────────── */
-const multerMemory = { storage: memoryStorage() };
+const multerMemory = { storage: memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } };
 
 /* ─────────────────────────────────────────────────────────────
  * CONTRÔLEUR CLIENT

@@ -61,8 +61,12 @@ import {
   PartenaireDangerConfirmDto,
 } from './dto/partenaire-parametres.dto';
 
-/* ── Multer en mémoire (pas de fichier disque) ── */
-const MULTER_OPTS = { storage: memoryStorage() };
+/* ── Multer en mémoire (pas de fichier disque) ──────────────────
+ * ⚠️ FAILLE CORRIGÉE (audit sécurité) — sans limits.fileSize, multer
+ * bufferise l'intégralité du corps de la requête en RAM avant tout
+ * contrôle applicatif de taille, permettant un DoS mémoire par upload
+ * massif répété. */
+const MULTER_OPTS = { storage: memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } };
 
 /* ── Helper userId ── */
 function userId(req: Request): string {

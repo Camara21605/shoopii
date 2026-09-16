@@ -19,10 +19,20 @@ import { JwtAuthGuard }   from '../../common/guards/auth.guard';
 import { RolesGuard }     from '../../common/guards/roles.guard';
 import { Roles }          from '../../common/decorators/roles.decorator';
 import { UserRole }       from '../../common/enums/user-role.enum';
-import { UploadService, UPLOAD_FOLDERS } from './upload.service';
+import { UploadService, UPLOAD_FOLDERS, MAX_IMAGE_SIZE, MAX_VIDEO_SIZE, MAX_DOC_SIZE } from './upload.service';
 
-/* ── Config multer en mémoire (pas de disque) ── */
-const memoryMulter = { storage: memoryStorage() };
+/* ── Config multer en mémoire (pas de disque) ──────────────────
+ * ⚠️ FAILLE CORRIGÉE (audit sécurité) — sans `limits.fileSize`, multer
+ * (memoryStorage) bufferise l'INTÉGRALITÉ du corps de la requête en RAM
+ * AVANT que UploadService ne vérifie file.size — un utilisateur authentifié
+ * pouvait envoyer des requêtes de plusieurs centaines de Mo/Go en boucle
+ * pour épuiser la mémoire du process. La limite ici agit comme garde-fou
+ * dur au niveau du parsing multipart lui-même ; les tailles reprennent
+ * exactement les constantes déjà utilisées par UploadService (source
+ * unique de vérité, pas de nombre magique dupliqué). */
+const memoryMulterImage    = { storage: memoryStorage(), limits: { fileSize: MAX_IMAGE_SIZE } };
+const memoryMulterVideo    = { storage: memoryStorage(), limits: { fileSize: MAX_VIDEO_SIZE } };
+const memoryMulterDocument = { storage: memoryStorage(), limits: { fileSize: MAX_DOC_SIZE } };
 
 @Controller('upload')
 @UseGuards(JwtAuthGuard)
@@ -36,7 +46,7 @@ export class UploadController {
    * Retourne : { url, publicId, width, height, format, size }
    ────────────────────────────────────────────────────────── */
   @Post('image')
-  @UseInterceptors(FileInterceptor('file', memoryMulter))
+  @UseInterceptors(FileInterceptor('file', memoryMulterImage))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('Aucun fichier reçu.');
     return this.uploadService.uploadImage(file, UPLOAD_FOLDERS.PRODUCT);
@@ -50,7 +60,7 @@ export class UploadController {
    * Retourne : { url, publicId, width, height, format, size }
    ────────────────────────────────────────────────────────── */
   @Post('image/product')
-  @UseInterceptors(FileInterceptor('file', memoryMulter))
+  @UseInterceptors(FileInterceptor('file', memoryMulterImage))
   async uploadProductImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('Aucun fichier reçu.');
     return this.uploadService.uploadImage(
@@ -66,7 +76,7 @@ export class UploadController {
    * Optimisé : redimensionné à 400×400 max, converti WebP
    ────────────────────────────────────────────────────────── */
   @Post('avatar')
-  @UseInterceptors(FileInterceptor('file', memoryMulter))
+  @UseInterceptors(FileInterceptor('file', memoryMulterImage))
   async uploadAvatar(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('Aucun fichier reçu.');
     return this.uploadService.uploadImage(
@@ -89,7 +99,7 @@ export class UploadController {
   @Post('company/:type')
   @UseGuards(RolesGuard)
   @Roles(UserRole.COMPANY)
-  @UseInterceptors(FileInterceptor('file', memoryMulter))
+  @UseInterceptors(FileInterceptor('file', memoryMulterImage))
   async uploadCompanyImage(
     @UploadedFile() file: Express.Multer.File,
     @Param('type')  type: string,
@@ -109,7 +119,7 @@ export class UploadController {
    * Upload vidéo produit → dossier videos
    ────────────────────────────────────────────────────────── */
   @Post('video')
-  @UseInterceptors(FileInterceptor('file', memoryMulter))
+  @UseInterceptors(FileInterceptor('file', memoryMulterVideo))
   async uploadVideo(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('Aucun fichier reçu.');
     return this.uploadService.uploadVideo(file, UPLOAD_FOLDERS.VIDEO);
@@ -120,7 +130,7 @@ export class UploadController {
    * Upload document PDF → dossier documents
    ────────────────────────────────────────────────────────── */
   @Post('document')
-  @UseInterceptors(FileInterceptor('file', memoryMulter))
+  @UseInterceptors(FileInterceptor('file', memoryMulterDocument))
   async uploadDocument(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('Aucun fichier reçu.');
     return this.uploadService.uploadDocument(file, UPLOAD_FOLDERS.DOCUMENT);
@@ -132,7 +142,7 @@ export class UploadController {
    * Retourne : { url, publicId, format, size }
    ────────────────────────────────────────────────────────── */
   @Post('audio')
-  @UseInterceptors(FileInterceptor('file', memoryMulter))
+  @UseInterceptors(FileInterceptor('file', memoryMulterVideo))
   async uploadAudio(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('Aucun fichier audio reçu.');
     return this.uploadService.uploadAudio(file, UPLOAD_FOLDERS.VIDEO);

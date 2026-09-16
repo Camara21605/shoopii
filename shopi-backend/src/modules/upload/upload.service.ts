@@ -3,6 +3,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import * as streamifier from 'streamifier';
+import { validateMagicBytes } from '../../common/utils/magic-bytes.util';
 
 // ── Dossiers Cloudinary par type de contenu ───────────────────────────────────
 export const UPLOAD_FOLDERS = {
@@ -26,9 +27,13 @@ export interface UploadResult {
 }
 
 // ── Limites ───────────────────────────────────────────────────────────────────
-const MAX_IMAGE_SIZE = 5  * 1024 * 1024;  // 5 MB
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024;  // 50 MB
-const MAX_DOC_SIZE   = 10 * 1024 * 1024;  // 10 MB
+// Exportées pour être réutilisées comme `limits.fileSize` multer au niveau
+// des interceptors (voir upload.controller.ts) — sans ça, memoryStorage()
+// bufferise tout le corps de la requête en RAM avant même que ces contrôles
+// applicatifs ne s'exécutent, permettant un DoS mémoire par upload massif.
+export const MAX_IMAGE_SIZE = 5  * 1024 * 1024;  // 5 MB
+export const MAX_VIDEO_SIZE = 50 * 1024 * 1024;  // 50 MB
+export const MAX_DOC_SIZE   = 10 * 1024 * 1024;  // 10 MB
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
@@ -62,6 +67,14 @@ export class UploadService {
     if (file.size > MAX_IMAGE_SIZE) {
       throw new BadRequestException(`Image trop lourde. Maximum : 5 MB.`);
     }
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — la liste blanche ci-dessus ne
+     * vérifie que le Content-Type DÉCLARÉ par le client (falsifiable) ;
+     * voir magic-bytes.util.ts. */
+    if (!validateMagicBytes(file.buffer, file.mimetype)) {
+      throw new BadRequestException(
+        `Le contenu du fichier ne correspond pas au format déclaré (${file.mimetype}).`,
+      );
+    }
 
     // ── Upload vers Cloudinary ────────────────────────────────────────────
     const result = await this.uploadToCloudinary(file.buffer, {
@@ -94,6 +107,12 @@ export class UploadService {
     if (file.size > MAX_VIDEO_SIZE) {
       throw new BadRequestException(`Vidéo trop lourde. Maximum : 50 MB.`);
     }
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — voir magic-bytes.util.ts. */
+    if (!validateMagicBytes(file.buffer, file.mimetype)) {
+      throw new BadRequestException(
+        `Le contenu du fichier ne correspond pas au format déclaré (${file.mimetype}).`,
+      );
+    }
 
     const result = await this.uploadToCloudinary(file.buffer, {
       folder,
@@ -122,6 +141,15 @@ export class UploadService {
     }
     if (file.size > MAX_DOC_SIZE) {
       throw new BadRequestException(`Document trop lourd. Maximum : 10 MB.`);
+    }
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — c'était le cas le plus grave :
+     * ces documents (CNI, RCCM, relevé bancaire) n'étaient validés que
+     * sur le Content-Type déclaré, jamais reconvertis par Cloudinary
+     * (contrairement aux images) — voir magic-bytes.util.ts. */
+    if (!validateMagicBytes(file.buffer, file.mimetype)) {
+      throw new BadRequestException(
+        `Le contenu du fichier ne correspond pas au format déclaré (${file.mimetype}).`,
+      );
     }
 
     const result = await this.uploadToCloudinary(file.buffer, {

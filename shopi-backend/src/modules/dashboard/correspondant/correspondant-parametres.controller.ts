@@ -39,6 +39,7 @@ import {
   MaxFileSizeValidator, FileTypeValidator,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request } from 'express';
 
@@ -88,6 +89,13 @@ const DOC_VALIDATORS = [
   new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
   new FileTypeValidator({ fileType: /^(image\/(jpeg|jpg|png|webp)|application\/pdf)$/ }),
 ];
+
+/* ⚠️ FAILLE CORRIGÉE (audit sécurité) — les validateurs ci-dessus ne
+ * rejettent qu'APRÈS que multer ait bufferisé tout le fichier en RAM ;
+ * limits.fileSize ici agit comme garde-fou au niveau du parsing
+ * multipart lui-même (DoS mémoire par upload massif répété). */
+const imageMulterOpts = { storage: memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } };
+const docMulterOpts   = { storage: memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } };
 
 // ─────────────────────────────────────────────────────────────
 
@@ -156,7 +164,7 @@ export class CorrespondantParametresController {
    * Upload → User.profilePicture (JPG/PNG/WebP — max 5 MB)
    */
   @Post('profil/photo')
-  @UseInterceptors(FileInterceptor('photo'))
+  @UseInterceptors(FileInterceptor('photo', imageMulterOpts))
   uploadPhoto(
     @Req() req: Request,
     @UploadedFile(new ParseFilePipe({ validators: IMAGE_VALIDATORS }))
@@ -298,7 +306,7 @@ export class CorrespondantParametresController {
   @Post('documents/:type')
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 3_600_000 } })
-  @UseInterceptors(FileInterceptor('document'))
+  @UseInterceptors(FileInterceptor('document', docMulterOpts))
   uploadDocument(
     @Req() req: Request,
     @Param('type') type: string,
@@ -323,7 +331,7 @@ export class CorrespondantParametresController {
    * Upload multiple de photos du dépôt (max 5 fichiers — 5 MB chacun).
    */
   @Post('documents/photos-depot')
-  @UseInterceptors(FilesInterceptor('photos', 5))
+  @UseInterceptors(FilesInterceptor('photos', 5, imageMulterOpts))
   uploadPhotosDepot(@Req() req: Request, @UploadedFiles() files: Express.Multer.File[]) {
     return this.documentsService.uploadPhotosDepot(this.uid(req), files);
   }
