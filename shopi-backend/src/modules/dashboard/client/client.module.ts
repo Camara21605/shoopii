@@ -41,6 +41,9 @@ import { Correspondent }        from '../../../database/entities/profiles/corres
 import { CorrespondantHoraire } from '../../../database/entities/profiles/correspondant-horaire.entity';
 /* ✅ Entité likes (favoris) */
 import { ProductLike }          from '../../../database/entities/entreprise.table/product-like.entity';
+/* ✅ Entités prestations de service (favoris services) */
+import { Service }              from '../../../database/entities/entreprise.table/service.entity';
+import { ServiceLike }          from '../../../database/entities/entreprise.table/service-like.entity';
 /* ✅ Liste de souhaits (distincte des favoris — voir wishlist-item.entity.ts) */
 import { WishlistItem }         from '../../../database/entities/entreprise.table/wishlist-item.entity';
 /* ✅ Révocation des sessions lors d'un changement de mot de passe */
@@ -60,6 +63,8 @@ import { ClientProfilController }     from './client-profil.controller';
 import { CorrespondantProfilController } from './correspondant-profil.controller';
 /* ✅ Nouveau controller favoris */
 import { FavorisController }          from './favoris.controller';
+/* ✅ Nouveau controller favoris (prestations de service) */
+import { ServiceFavorisController }   from './service-favoris.controller';
 /* ✅ Nouveau controller liste de souhaits */
 import { WishlistController }         from './wishlist.controller';
 /* ✅ Nouveau controller profil public client */
@@ -90,6 +95,8 @@ import { ClientProfilService }   from './client-profil.service';
 import { CorrespondantProfilService } from './correspondant-profil.service';
 /* ✅ Nouveau service favoris */
 import { FavorisService }             from './services/favoris.service';
+/* ✅ Nouveau service favoris (prestations de service) */
+import { ServiceFavorisService }      from './services/service-favoris.service';
 /* ✅ Nouveau service liste de souhaits */
 import { WishlistService }            from './services/wishlist.service';
 /* ✅ Nouveau service profil public client */
@@ -114,6 +121,8 @@ import { ClientPublicProfilService }  from './client-public-profil.service';
       Correspondent,         /* ✅ ajout */
       CorrespondantHoraire,  /* ✅ ajout */
       ProductLike,           /* ✅ ajout favoris */
+      Service,               /* ✅ ajout favoris services */
+      ServiceLike,           /* ✅ ajout favoris services */
       WishlistItem,          /* ✅ ajout liste de souhaits */
       RefreshToken,          /* ✅ ajout — révocation sessions au changement MDP */
       Commande,              /* ✅ ajout — profil public client (compteur commandes) */
@@ -128,6 +137,7 @@ import { ClientPublicProfilService }  from './client-public-profil.service';
     ClientProfilController,        /* GET /client/profil */
     CorrespondantProfilController, /* GET /client/correspondants/:id */
     FavorisController,             /* GET/POST /client/favoris */
+    ServiceFavorisController,      /* GET/POST /client/favoris-services */
     WishlistController,            /* GET/POST /client/wishlist */
     ClientPublicProfilController,  /* GET /client/profils/:id */
     ClientSavController,           /* POST/GET /client/sav */
@@ -153,6 +163,7 @@ import { ClientPublicProfilService }  from './client-public-profil.service';
     ClientProfilService,            /* ✅ ajout */
     CorrespondantProfilService,     /* ✅ ajout */
     FavorisService,                 /* ✅ ajout */
+    ServiceFavorisService,          /* ✅ ajout */
     WishlistService,                /* ✅ ajout */
     ClientPublicProfilService,      /* ✅ ajout */
   ],
@@ -164,6 +175,7 @@ import { ClientPublicProfilService }  from './client-public-profil.service';
     ClientProfilService,            /* ✅ ajout */
     CorrespondantProfilService,     /* ✅ ajout */
     FavorisService,                 /* ✅ ajout */
+    ServiceFavorisService,          /* ✅ ajout */
     WishlistService,                /* ✅ ajout — réutilisé par ExploreModule (pour-vous) */
   ],
 })

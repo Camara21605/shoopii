@@ -27,36 +27,46 @@ import { apiFetch } from '../../../shared/services/apiFetch';
 import { useNotificationSocket } from '../../../shared/notifications/useNotificationSocket';
 
 /** Onglet sidebar → NotificationType pertinents (voir notification.entitiy.ts
- *  côté backend pour la liste complète). Un onglet absent de cette map
- *  (ex: "retours" — aucun NotificationType dédié n'existe encore pour les
- *  retours) n'affiche simplement aucun badge, plutôt qu'un chiffre inventé. */
+ *  côté backend pour la liste complète). Un onglet absent de cette map, ou
+ *  ne listant QUE des types jamais réellement créés par un `.create()` côté
+ *  backend, n'affiche simplement aucun badge, plutôt qu'un chiffre inventé —
+ *  vérifié par grep sur chaque type avant ajout ici (voir historique).
+ *
+ * "livreurs" et "correspondants" sont volontairement ABSENTS : tous leurs
+ * NotificationType (delivery.*, colis.*) existent dans l'enum et ont une
+ * préférence par défaut, mais aucun n'est jamais créé nulle part dans le
+ * backend — les afficher produirait un badge qui reste à 0 en permanence. */
 export const SIDEBAR_BADGE_TYPES: Partial<Record<string, string[]>> = {
   commandes: [
     'order.placed', 'order.cancelled', 'order.refunded', 'order.status_changed',
   ],
+  /* product.liked_agg/approved/rejected retirés — jamais créés (voir note ci-dessus). */
   produits: [
-    'product.liked', 'product.liked_agg', 'product.approved', 'product.rejected',
+    'product.liked',
   ],
-  /* Alertes de stock — sur l'onglet Inventaire (page dédiée au stock),
-   * pas Produits (catalogue), plus logique pour l'utilisateur. */
+  /* product.out_of_stock/back_in_stock retirés — jamais créés ; stock.low/
+   * stock.critical sont réels (voir products.scheduler.ts). */
   inventaire: [
-    'product.out_of_stock', 'product.back_in_stock', 'stock.low', 'stock.critical',
+    'stock.low', 'stock.critical',
   ],
   promotions: [
     'promo.active', 'promo.ending_soon', 'promo.ended', 'promo.used', 'promo.limit_reached',
-  ],
-  livreurs: [
-    'delivery.assigned', 'delivery.picked_up', 'delivery.en_route',
-    'delivery.arrived', 'delivery.completed', 'delivery.failed', 'delivery.returned',
-  ],
-  correspondants: [
-    'colis.deposited', 'colis.awaiting', 'colis.urgent', 'colis.transferred', 'colis.return',
   ],
   finances: [
     'payment.received', 'payment.failed', 'payment.refund_done',
   ],
   avis: [
     'review.received', 'review.replied',
+  ],
+  /* Demande de retour client — voir ReturnsService.createByClient()
+   * → NotificationEventService.notifyReturnRequested(). */
+  retours: [
+    'return.requested',
+  ],
+  /* Prestation ajoutée aux favoris — voir ServiceFavorisService.toggle()
+   * → NotificationEventService.notifyServiceLiked(). */
+  services: [
+    'service.liked',
   ],
 };
 

@@ -77,6 +77,10 @@ const DEFAULT_CHANNEL_PREFERENCES: Record<
   [NotificationType.PRODUCT_PRICE_DROP]:    { in_app: true, push: true,  email: false, sms: false },
   [NotificationType.PRODUCT_APPROVED]:      { in_app: true, push: true,  email: true,  sms: false },
   [NotificationType.PRODUCT_REJECTED]:      { in_app: true, push: true,  email: true,  sms: false },
+  // Services (miroir de PRODUCT_LIKED)
+  [NotificationType.SERVICE_LIKED]:         { in_app: true, push: false, email: false, sms: false },
+  // Retours
+  [NotificationType.RETURN_REQUESTED]:      { in_app: true, push: true,  email: true,  sms: false },
   // Promotions
   [NotificationType.PROMO_ACTIVE]:          { in_app: true, push: true,  email: false, sms: false },
   [NotificationType.PROMO_ENDING_SOON]:     { in_app: true, push: true,  email: true,  sms: false },

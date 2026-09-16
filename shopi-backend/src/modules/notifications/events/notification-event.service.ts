@@ -478,6 +478,70 @@ export class NotificationEventService {
   }
 
   // ─────────────────────────────────────────────────────────
+  // MISSIONS LIVREUR — diffusion (voir LivreurMission entity)
+  // ─────────────────────────────────────────────────────────
+
+  /**
+   * Notifie chaque livreur disponible d'une entreprise qu'une nouvelle
+   * mission vient d'être diffusée. Type SYSTEM_ANNOUNCEMENT réutilisé
+   * volontairement (même raisonnement que notifyTeamPermissionChanged
+   * ci-dessous : un nouveau type d'enum Postgres natif nécessiterait un
+   * ALTER TYPE en production).
+   */
+  async notifyMissionAvailable(params: {
+    deliveryIds: string[];
+    missionId:   string;
+    title:       string;
+    urgent:      boolean;
+  }): Promise<void> {
+    await Promise.all(params.deliveryIds.map(async deliveryId => {
+      try {
+        await this.notifService.create({
+          recipientType: NotificationActorType.DELIVERY,
+          recipientId:   deliveryId,
+          actorType:     null,
+          actorId:       null,
+          type:          NotificationType.SYSTEM_ANNOUNCEMENT,
+          priority:      params.urgent ? NotificationPriority.HIGH : NotificationPriority.NORMAL,
+          title:         params.urgent ? '📦 Mission urgente disponible' : '📦 Nouvelle mission disponible',
+          body:          params.title,
+          actionUrl:     '/dashboard/livreur',
+          resourceType:  'livreur_mission',
+          resourceId:    params.missionId,
+        });
+      } catch (err) {
+        this.logger.error(`notifyMissionAvailable (livreur ${deliveryId}) failed`, err);
+      }
+    }));
+  }
+
+  /** Notifie l'entreprise qu'un livreur a accepté sa mission diffusée. */
+  async notifyMissionAccepted(params: {
+    companyId:   string;
+    missionId:   string;
+    missionTitle: string;
+    livreurName: string;
+  }): Promise<void> {
+    try {
+      await this.notifService.create({
+        recipientType: NotificationActorType.COMPANY,
+        recipientId:   params.companyId,
+        actorType:     NotificationActorType.DELIVERY,
+        actorId:       null,
+        type:          NotificationType.SYSTEM_ANNOUNCEMENT,
+        priority:      NotificationPriority.NORMAL,
+        title:         '✅ Mission acceptée',
+        body:          `${params.livreurName} a accepté la mission "${params.missionTitle}".`,
+        actionUrl:     '/dashboard/entreprise/livreurs',
+        resourceType:  'livreur_mission',
+        resourceId:    params.missionId,
+      });
+    } catch (err) {
+      this.logger.error('notifyMissionAccepted failed', err);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
   // ÉQUIPE / COLLABORATEURS
   // ─────────────────────────────────────────────────────────
 
@@ -728,6 +792,82 @@ export class NotificationEventService {
       });
     } catch (err) {
       this.logger.error('notifyProductLiked failed', err);
+    }
+  }
+
+  /**
+   * Notifie l'entreprise qu'un client a ajouté une PRESTATION à ses
+   * favoris — miroir exact de notifyProductLiked() ci-dessus pour
+   * l'entité Service dédiée (voir service.entity.ts).
+   *
+   * groupKey = service.liked:{serviceId}
+   *   → tous les likes de la même prestation = 1 notif avec count++.
+   */
+  async notifyServiceLiked(params: {
+    companyId:   string;
+    serviceId:   string;
+    serviceName: string;
+    clientId:    string;
+  }): Promise<void> {
+    try {
+      const imageUrl = await this.resolveActorPhoto(NotificationActorType.CLIENT, params.clientId);
+      await this.notifService.create({
+        recipientType: NotificationActorType.COMPANY,
+        recipientId:   params.companyId,
+        actorType:     NotificationActorType.CLIENT,
+        actorId:       params.clientId,
+        type:          NotificationType.SERVICE_LIKED,
+        priority:      NotificationPriority.LOW,
+        title:         'Prestation ajoutée aux favoris ❤️',
+        body:          `"${params.serviceName}" a été ajoutée aux favoris.`,
+        imageUrl,
+        /* Redirige vers la page "Mes Services" du dashboard entreprise */
+        actionUrl:     `/dashboard/entreprise/services`,
+        groupKey:      `service.liked:${params.serviceId}`,
+        resourceType:  'service',
+        resourceId:    params.serviceId,
+      });
+    } catch (err) {
+      this.logger.error('notifyServiceLiked failed', err);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // RETOURS
+  // ─────────────────────────────────────────────────────────
+
+  /**
+   * Notifie l'entreprise qu'un client a demandé un retour.
+   *
+   * Pas de groupKey : contrairement à un like, chaque retour est un
+   * événement métier distinct qui doit rester individuellement visible
+   * (traitement/décision requis), jamais agrégé silencieusement.
+   */
+  async notifyReturnRequested(params: {
+    companyId:      string;
+    returnId:       string;
+    reference:      string;
+    productName:    string;
+    clientId:       string;
+  }): Promise<void> {
+    try {
+      const imageUrl = await this.resolveActorPhoto(NotificationActorType.CLIENT, params.clientId);
+      await this.notifService.create({
+        recipientType: NotificationActorType.COMPANY,
+        recipientId:   params.companyId,
+        actorType:     NotificationActorType.CLIENT,
+        actorId:       params.clientId,
+        type:          NotificationType.RETURN_REQUESTED,
+        priority:      NotificationPriority.HIGH,
+        title:         'Nouvelle demande de retour ↩️',
+        body:          `${params.reference} — "${params.productName}"`,
+        imageUrl,
+        actionUrl:     `/dashboard/entreprise/retours`,
+        resourceType:  'return',
+        resourceId:    params.returnId,
+      });
+    } catch (err) {
+      this.logger.error('notifyReturnRequested failed', err);
     }
   }
 

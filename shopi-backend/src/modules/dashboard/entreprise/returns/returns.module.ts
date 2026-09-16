@@ -25,6 +25,11 @@ import { UploadModule } from 'src/modules/upload/upload.module';
  * @RequiresTeamPermission('returns', …)). */
 import { CompanyTeamModule } from 'src/modules/company-team/company-team.module';
 
+/* NotificationEventService.notifyReturnRequested() — voir
+ * ReturnsService.createByClient(), alimente le badge "Retours" de la
+ * sidebar entreprise (useSidebarBadges.ts). */
+import { NotificationsModule } from 'src/modules/notifications/notifications.module';
+
 /* ── Controllers ── */
 import { ReturnsController } from './returns.controller';
 import { SavController }     from './sav.controller';
@@ -49,6 +54,7 @@ import { SavService }           from './services/sav.service';
     ]),
     UploadModule,
     CompanyTeamModule,
+    NotificationsModule,
   ],
 
   controllers: [

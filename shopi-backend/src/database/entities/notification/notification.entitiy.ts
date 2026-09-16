@@ -210,6 +210,18 @@ export enum NotificationType {
   PRODUCT_APPROVED      = 'product.approved',       // produit validé par l'admin
   PRODUCT_REJECTED      = 'product.rejected',       // produit refusé par l'admin
 
+  // ── PRESTATIONS DE SERVICE ──────────────────────────────────
+  // Miroir de PRODUCT_LIKED pour Service (entité dédiée, voir
+  // service.entity.ts) — même mécanisme d'agrégation par groupKey.
+  SERVICE_LIKED         = 'service.liked',          // quelqu'un like une prestation
+
+  // ── RETOURS ────────────────────────────────────────────────
+  // Notifie l'entreprise qu'un client a initié un retour (voir
+  // ReturnsService.createByClient). RETURN_STATUS_CHANGED côté client
+  // n'est pas encore émis (hors scope de cet ajout, symétrique à
+  // ORDER_STATUS_CHANGED côté commande).
+  RETURN_REQUESTED      = 'return.requested',       // nouveau retour demandé par un client
+
   // ── PROMOTIONS ─────────────────────────────────────────────
   PROMO_ACTIVE          = 'promo.active',           // promo planifiée → active
   PROMO_ENDING_SOON     = 'promo.ending_soon',      // promo expire dans 24h

@@ -13,6 +13,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate }  from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiFetch }     from '../../../shared/services/apiFetch';
+import { useServiceFavoris } from '../../../shared/context/ServiceFavorisContext';
+import { useAuthGate }  from '../../../shared/hooks/useAuthGate';
 import styles           from './CardProduit.module.css';
 
 // ─────────────────────────────────────────────────────────────
@@ -106,6 +108,38 @@ function modeLabels(s: ServiceApi, t: (k: string) => string): string[] {
   if (s.aDomicile)          modes.push(t('sharedCards.service.modeDomicile'));
   if (s.aDistance)          modes.push(t('sharedCards.service.modeDistance'));
   return modes;
+}
+
+// ─────────────────────────────────────────────────────────────
+// HOOK PARTAGÉ — logique du bouton favori (❤️)
+//
+// Miroir exact de useFavorite (CardProduit.tsx) pour l'entité Service —
+// persiste via /client/favoris-services/:id/toggle.
+// ─────────────────────────────────────────────────────────────
+
+function useFavorite(s: ServiceApi, onToast: (m: string) => void, requireClient: (action: () => void) => void) {
+  const { t } = useTranslation();
+  const [loading, setLoading] = useState(false);
+  const { isLiked, toggle } = useServiceFavoris();
+
+  const liked = isLiked(s.id);
+
+  const handleToggle = () => {
+    if (loading) return;
+    requireClient(async () => {
+      setLoading(true);
+      try {
+        const nowLiked = await toggle(s.id);
+        onToast(nowLiked ? t('sharedCards.produit.favoriAjoute') : t('sharedCards.produit.favoriRetire'));
+      } catch (e: any) {
+        onToast(`❌ ${e?.message ?? t('sharedCards.produit.favoriErrorFallback')}`);
+      } finally {
+        setLoading(false);
+      }
+    });
+  };
+
+  return { liked, handleToggle, loading };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -208,10 +242,16 @@ function ModalEntreprise({ s, onClose }: { s: ServiceApi; onClose: () => void })
 // COMPOSANT PRINCIPAL
 // ─────────────────────────────────────────────────────────────
 
-export default function CardService({ s, onToast: _onToast }: Props) {
+export default function CardService({ s, onToast }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [modalEntreprise, setModalEntreprise] = useState(false);
+
+  /* ✅ Garde d'authentification partagée (miroir CardProduit) */
+  const { requireClient, authModal } = useAuthGate();
+
+  /* ✅ Logique du bouton favori partagée */
+  const { liked: fav, handleToggle: handleToggleFav } = useFavorite(s, onToast, requireClient);
 
   const media  = mainMedia(s);
   const em     = emoji(s);
@@ -226,6 +266,11 @@ export default function CardService({ s, onToast: _onToast }: Props) {
   return (
     <>
       <div className={styles.pcard} onClick={() => navigate(`/service/${s.id}`)} style={{ cursor: 'pointer' }}>
+
+        <button className={`${styles.pfav} ${fav ? styles.pfavOn : ''}`}
+          onClick={e => { e.stopPropagation(); handleToggleFav(); }}>
+          <i className={fav ? 'fas fa-heart' : 'far fa-heart'} />
+        </button>
 
         <div className={styles.pimg}>
           {media
@@ -275,6 +320,7 @@ export default function CardService({ s, onToast: _onToast }: Props) {
       </div>
 
       {modalEntreprise && <ModalEntreprise s={s} onClose={() => setModalEntreprise(false)} />}
+      {authModal}
     </>
   );
 }

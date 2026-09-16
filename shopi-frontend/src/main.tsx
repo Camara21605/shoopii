@@ -14,6 +14,8 @@ import './styles/global.css';
 import { CartProvider } from './shared/context/CartContext';
 /* ✅ Contexte favoris global (cœur ❤️ synchronisé partout) */
 import { FavorisProvider } from './shared/context/FavorisContext';
+/* ✅ Contexte favoris prestations global (cœur ❤️ services synchronisé partout) */
+import { ServiceFavorisProvider } from './shared/context/ServiceFavorisContext';
 /* ✅ Contexte liste de souhaits global (🔖 synchronisé partout) */
 import { WishlistProvider } from './shared/context/WishlistContext';
 /* ✅ Contexte comparaison produits global (⚖️ badge + page /comparer) */
@@ -23,11 +25,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <CartProvider>
       <FavorisProvider>
-        <WishlistProvider>
-          <CompareProvider>
-            <App />
-          </CompareProvider>
-        </WishlistProvider>
+        <ServiceFavorisProvider>
+          <WishlistProvider>
+            <CompareProvider>
+              <App />
+            </CompareProvider>
+          </WishlistProvider>
+        </ServiceFavorisProvider>
       </FavorisProvider>
     </CartProvider>
   </React.StrictMode>

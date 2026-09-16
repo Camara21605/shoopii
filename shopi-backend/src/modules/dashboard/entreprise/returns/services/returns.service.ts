@@ -27,6 +27,8 @@ import { User }
   from 'src/database/entities/user.entity';
 import { UploadService, UPLOAD_FOLDERS }
   from 'src/modules/upload/upload.service';
+import { NotificationEventService }
+  from 'src/modules/notifications/events/notification-event.service';
 
 import {
   AcceptReturnDto, RefuseReturnDto, RefundReturnDto,
@@ -53,6 +55,7 @@ export class ReturnsService {
     @InjectRepository(User)           private readonly userRepo:     Repository<User>,
     private readonly uploadService: UploadService,
     private readonly dataSource:    DataSource,
+    private readonly notifEventSvc: NotificationEventService,
   ) {}
 
   /* ══════════════════════════════════════════════════════════
@@ -229,6 +232,18 @@ export class ReturnsService {
 
     /* Audit trail */
     await this.addHistory(saved.id, 'created', {}, clientUserId, 'client');
+
+    /* Notifie l'entreprise — alimente le badge "Retours" de sa sidebar
+     * (voir useSidebarBadges.ts côté frontend). Fire-and-forget : un échec
+     * d'envoi ne doit jamais faire échouer la création du retour lui-même
+     * (même principe que notifyProductLiked ailleurs dans le code). */
+    void this.notifEventSvc.notifyReturnRequested({
+      companyId:   commande.companyId,
+      returnId:    saved.id,
+      reference,
+      productName: dto.productName,
+      clientId:    client.id,
+    });
 
     this.logger.log(`[RETURN] Créé ${reference} — clientId=${client.id}`);
     return saved;
