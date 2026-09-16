@@ -8,6 +8,7 @@
 
 import styles from '../styles/Sidebar.module.css';
 import type { AdminPage } from '../data/types';
+import { useSidebarBadges } from '../hooks/useSidebarBadges';
 
 interface SidebarProps {
   activePage:     AdminPage;
@@ -52,7 +53,10 @@ const NAV: { title: string; items: { id: AdminPage; icon: string; label: string;
   ]},
 ];
 
+const KIND_TO_CLASS: Record<string, string> = { warn: 'badge_a', alert: 'badge_r', ok: 'badge_g', info: 'badge_a' };
+
 export default function Sidebar({ activePage, open, onClose, onNavigate, onGenerate, geoPerms, zoneName, adminName, communesCount }: SidebarProps) {
+  const { badges } = useSidebarBadges();
   const hasGeoAccess = Object.entries(geoPerms ?? {}).some(([k, v]) => k.startsWith('geo_') && v);
   /* Même logique que hasGeoAccess ci-dessus : tant que /my-permissions n'a
    * pas répondu, geoPerms vaut {} → tout item avec `perm` reste masqué
@@ -101,14 +105,22 @@ export default function Sidebar({ activePage, open, onClose, onNavigate, onGener
             return (
             <div key={section.title}>
               <div className={styles.sect}>{section.title}</div>
-              {visibleItems.map(item => (
-                <button key={item.id}
-                  className={`${styles.nb} ${activePage === item.id ? styles.on : ''}`}
-                  onClick={() => onNavigate(item.id)}>
-                  <i className={`fas ${item.icon}`} />
-                  <span>{item.label}</span>
-                </button>
-              ))}
+              {visibleItems.map(item => {
+                const badge = badges[item.id];
+                return (
+                  <button key={item.id}
+                    className={`${styles.nb} ${activePage === item.id ? styles.on : ''}`}
+                    onClick={() => onNavigate(item.id)}>
+                    <i className={`fas ${item.icon}`} />
+                    <span>{item.label}</span>
+                    {badge && (
+                      <span className={`${styles.badge} ${styles[KIND_TO_CLASS[badge.kind]] ?? ''}`}>
+                        {badge.v > 99 ? '99+' : badge.v}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
             );
           })}
