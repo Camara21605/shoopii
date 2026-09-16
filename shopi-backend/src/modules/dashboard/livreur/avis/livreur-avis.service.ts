@@ -18,6 +18,8 @@ import { In, Repository } from 'typeorm';
 import { Delivery }    from 'src/database/entities/profiles/livreur-profile.entity';
 import { LivreurAvis } from 'src/database/entities/livreur.table/livreur-avis.entity';
 import { Commande }    from 'src/database/entities/commande/commande.entity';
+import { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 export interface LivreurAvisRow {
   id:              string;
@@ -35,9 +37,10 @@ export interface LivreurAvisRow {
 export class LivreurAvisService {
 
   constructor(
-    @InjectRepository(Delivery)    private readonly livreurRepo: Repository<Delivery>,
-    @InjectRepository(LivreurAvis) private readonly avisRepo:    Repository<LivreurAvis>,
+    @InjectRepository(Delivery)    private readonly livreurRepo:  Repository<Delivery>,
+    @InjectRepository(LivreurAvis) private readonly avisRepo:     Repository<LivreurAvis>,
     @InjectRepository(Commande)    private readonly commandeRepo: Repository<Commande>,
+    private readonly notifEventSvc: NotificationEventService,
   ) {}
 
   /* ══════════════════════════════════════════════════════════════
@@ -116,6 +119,21 @@ export class LivreurAvisService {
     avis.respondedAt = new Date();
     await this.avisRepo.save(avis);
 
+    /* Notifie le client — alimente le badge "Avis" de son profil
+     * (voir useSidebarBadges.ts côté client). Fire-and-forget. */
+    const commande = await this.commandeRepo.findOne({
+      where: { id: avis.commandeId }, select: ['clientId'],
+    });
+    if (commande?.clientId) {
+      void this.notifEventSvc.notifyReviewReplied({
+        clientId:   commande.clientId,
+        actorType:  NotificationActorType.DELIVERY,
+        actorId:    livreur.id,
+        actorName:  livreur.fullName,
+        commandeId: avis.commandeId,
+      });
+    }
+
     return { ok: true };
   }
 
@@ -126,7 +144,7 @@ export class LivreurAvisService {
   private async resolveLivreur(userId: string): Promise<Delivery> {
     const livreur = await this.livreurRepo.findOne({
       where:  { userId },
-      select: ['id'],
+      select: ['id', 'fullName'],
     });
     if (!livreur) throw new NotFoundException('Profil livreur introuvable.');
     return livreur;

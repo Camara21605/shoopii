@@ -18,6 +18,8 @@ import { In, Repository } from 'typeorm';
 import { Correspondent }     from 'src/database/entities/profiles/correspondant-profile.entity';
 import { CorrespondantAvis } from 'src/database/entities/correspondant.table/correspondant-avis.entity';
 import { Commande }          from 'src/database/entities/commande/commande.entity';
+import { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 export interface CorrespondantAvisRow {
   id:              string;
@@ -35,9 +37,10 @@ export interface CorrespondantAvisRow {
 export class CorrespondantAvisService {
 
   constructor(
-    @InjectRepository(Correspondent)     private readonly corRepo:  Repository<Correspondent>,
-    @InjectRepository(CorrespondantAvis) private readonly avisRepo: Repository<CorrespondantAvis>,
+    @InjectRepository(Correspondent)     private readonly corRepo:     Repository<Correspondent>,
+    @InjectRepository(CorrespondantAvis) private readonly avisRepo:    Repository<CorrespondantAvis>,
     @InjectRepository(Commande)          private readonly commandeRepo: Repository<Commande>,
+    private readonly notifEventSvc: NotificationEventService,
   ) {}
 
   /* ══════════════════════════════════════════════════════════════
@@ -113,6 +116,21 @@ export class CorrespondantAvisService {
     avis.respondedAt = new Date();
     await this.avisRepo.save(avis);
 
+    /* Notifie le client — alimente le badge "Avis" de son profil
+     * (voir useSidebarBadges.ts côté client). Fire-and-forget. */
+    const commande = await this.commandeRepo.findOne({
+      where: { id: avis.commandeId }, select: ['clientId'],
+    });
+    if (commande?.clientId) {
+      void this.notifEventSvc.notifyReviewReplied({
+        clientId:   commande.clientId,
+        actorType:  NotificationActorType.CORRESPONDENT,
+        actorId:    cor.id,
+        actorName:  cor.fullName,
+        commandeId: avis.commandeId,
+      });
+    }
+
     return { ok: true };
   }
 
@@ -123,7 +141,7 @@ export class CorrespondantAvisService {
   private async resolveCorrespondant(userId: string): Promise<Correspondent> {
     const cor = await this.corRepo.findOne({
       where:  { userId },
-      select: ['id'],
+      select: ['id', 'fullName'],
     });
     if (!cor) throw new NotFoundException('Profil correspondant introuvable.');
     return cor;

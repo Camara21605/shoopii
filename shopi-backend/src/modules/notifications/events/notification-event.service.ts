@@ -825,6 +825,45 @@ export class NotificationEventService {
     }
   }
 
+  /**
+   * Notifie le CLIENT qu'un acteur (entreprise/livreur/correspondant) a
+   * répondu à SON avis — générique par nature (contrairement à
+   * notifyReviewReceived/notifyLivreurReviewReceived/
+   * notifyCorrespondantReviewReceived, qui sont scindées car chaque
+   * destinataire diffère, ici le CLIENT est toujours le destinataire,
+   * seul l'auteur de la réponse change) : voir AvisService.repondre()
+   * (entreprise), LivreurAvisService.repondre(), CorrespondantAvisService
+   * .repondre() — toutes appellent cette même méthode.
+   */
+  async notifyReviewReplied(params: {
+    clientId:   string;
+    actorType:  NotificationActorType;
+    actorId:    string;
+    actorName:  string;
+    commandeId: string;
+  }): Promise<void> {
+    try {
+      const imageUrl = await this.resolveActorPhoto(params.actorType, params.actorId);
+      await this.notifService.create({
+        recipientType: NotificationActorType.CLIENT,
+        recipientId:   params.clientId,
+        actorType:     params.actorType,
+        actorId:       params.actorId,
+        type:          NotificationType.REVIEW_REPLIED,
+        priority:      NotificationPriority.LOW,
+        title:         'Réponse à votre avis 💬',
+        body:          `${params.actorName} a répondu à votre avis.`,
+        imageUrl,
+        actionUrl:     '/mon-profil?tab=reviews',
+        groupKey:      `review.replied:${params.commandeId}`,
+        resourceType:  'review',
+        resourceId:    params.commandeId,
+      });
+    } catch (err) {
+      this.logger.error('notifyReviewReplied failed', err);
+    }
+  }
+
   // ─────────────────────────────────────────────────────────
   // PRODUITS CATALOG
   // ─────────────────────────────────────────────────────────

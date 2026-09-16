@@ -20,6 +20,9 @@ import { In, Repository } from 'typeorm';
 import { Company } from 'src/database/entities/profiles/entreprise-profile.entity';
 import { CompanyAvis } from 'src/database/entities/entreprise.table/company-avis.entity';
 import { CommandeItem } from 'src/database/entities/commande/commande-item.entity';
+import { Commande } from 'src/database/entities/commande/commande.entity';
+import { NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
+import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 export interface AvisRow {
   id:          string;
@@ -37,9 +40,11 @@ export interface AvisRow {
 export class AvisService {
 
   constructor(
-    @InjectRepository(Company)      private readonly companyRepo: Repository<Company>,
-    @InjectRepository(CompanyAvis)  private readonly avisRepo:    Repository<CompanyAvis>,
-    @InjectRepository(CommandeItem) private readonly itemRepo:    Repository<CommandeItem>,
+    @InjectRepository(Company)      private readonly companyRepo:  Repository<Company>,
+    @InjectRepository(CompanyAvis)  private readonly avisRepo:     Repository<CompanyAvis>,
+    @InjectRepository(CommandeItem) private readonly itemRepo:     Repository<CommandeItem>,
+    @InjectRepository(Commande)     private readonly commandeRepo: Repository<Commande>,
+    private readonly notifEventSvc: NotificationEventService,
   ) {}
 
   /* ══════════════════════════════════════════════════════════════
@@ -131,6 +136,21 @@ export class AvisService {
     avis.reponse     = reponse;
     avis.respondedAt = new Date();
     await this.avisRepo.save(avis);
+
+    /* Notifie le client — alimente le badge "Avis" de son profil
+     * (voir useSidebarBadges.ts côté client). Fire-and-forget. */
+    const commande = await this.commandeRepo.findOne({
+      where: { id: avis.commandeId }, select: ['clientId'],
+    });
+    if (commande?.clientId) {
+      void this.notifEventSvc.notifyReviewReplied({
+        clientId:   commande.clientId,
+        actorType:  NotificationActorType.COMPANY,
+        actorId:    company.id,
+        actorName:  company.companyName,
+        commandeId: avis.commandeId,
+      });
+    }
 
     return { ok: true };
   }
