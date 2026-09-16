@@ -13,24 +13,54 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { User }        from '../../../database/entities/user.entity';
-import { Commande, CommandeStatus } from '../../../database/entities/commande/commande.entity';
+import { Commande, CommandeStatus, LivreurAssignmentStatus } from '../../../database/entities/commande/commande.entity';
 import { Company }     from '../../../database/entities/profiles/entreprise-profile.entity';
+import { Delivery }    from '../../../database/entities/profiles/livreur-profile.entity';
 import { Client }      from '../../../database/entities/profiles/client-profile.entity';
 import { CompanyAvis } from '../../../database/entities/entreprise.table/company-avis.entity';
+import { LivreurAvis } from '../../../database/entities/livreur.table/livreur-avis.entity';
 import { NotificationActorType } from '../../../database/entities/notification/notification.entitiy';
 import { NotificationEventService } from '../../notifications/events/notification-event.service';
 
 import { EnvoyerNotationsDto, LitigeDto } from '../dto/notation.dto';
 
+interface ClientSnapshot {
+  clientNom:       string;
+  clientInitiales: string;
+}
+
 @Injectable()
 export class CommandeFeedbackService {
   constructor(
-    @InjectRepository(Commande)    private readonly commandeRepo: Repository<Commande>,
-    @InjectRepository(Company)     private readonly companyRepo:  Repository<Company>,
-    @InjectRepository(Client)      private readonly clientRepo:   Repository<Client>,
-    @InjectRepository(CompanyAvis) private readonly avisRepo:     Repository<CompanyAvis>,
+    @InjectRepository(Commande)    private readonly commandeRepo:   Repository<Commande>,
+    @InjectRepository(Company)     private readonly companyRepo:    Repository<Company>,
+    @InjectRepository(Delivery)    private readonly deliveryRepo:   Repository<Delivery>,
+    @InjectRepository(Client)      private readonly clientRepo:     Repository<Client>,
+    @InjectRepository(CompanyAvis) private readonly avisRepo:       Repository<CompanyAvis>,
+    @InjectRepository(LivreurAvis) private readonly livreurAvisRepo: Repository<LivreurAvis>,
     private readonly notifEventSvc: NotificationEventService,
   ) {}
+
+  /** Snapshot nom/initiales du client au moment de l'avis — partagé entre
+   *  la note entreprise et la note livreur d'une même commande. */
+  private buildClientSnapshot(user: User): ClientSnapshot {
+    let clientNom       = 'Client Shopi';
+    let clientInitiales = 'C';
+    try {
+      const firstName = user.firstName ?? '';
+      const lastName  = user.lastName  ?? '';
+      const fullName  = `${firstName} ${lastName}`.trim();
+      if (fullName) {
+        clientNom = fullName;
+        clientInitiales = [firstName[0], lastName[0]]
+          .filter(Boolean)
+          .join('')
+          .toUpperCase()
+          .slice(0, 2) || 'C';
+      }
+    } catch { /* silencieux */ }
+    return { clientNom, clientInitiales };
+  }
 
   /* ════════════════════════════════════════════════════════
    * POST /commandes/:id/notes
@@ -44,7 +74,7 @@ export class CommandeFeedbackService {
     /* 1. Vérifier la commande */
     const commande = await this.commandeRepo.findOne({
       where:  { id: commandeId },
-      select: ['id', 'companyId', 'clientId', 'status'],
+      select: ['id', 'companyId', 'clientId', 'status', 'livreurId', 'livreurAssignmentStatus'],
     });
     if (!commande) throw new NotFoundException('Commande introuvable.');
 
@@ -75,21 +105,7 @@ export class CommandeFeedbackService {
     if (entrepriseNote && commande.companyId && allowReviews) {
 
       /* 3. Nom du client (snapshot) */
-      let clientNom       = 'Client Shopi';
-      let clientInitiales = 'C';
-      try {
-        const firstName = user.firstName ?? '';
-        const lastName  = user.lastName  ?? '';
-        const fullName  = `${firstName} ${lastName}`.trim();
-        if (fullName) {
-          clientNom = fullName;
-          clientInitiales = [firstName[0], lastName[0]]
-            .filter(Boolean)
-            .join('')
-            .toUpperCase()
-            .slice(0, 2) || 'C';
-        }
-      } catch { /* silencieux */ }
+      const { clientNom, clientInitiales } = this.buildClientSnapshot(user);
 
       /* 4. Sauvegarder l'avis (ignore si déjà existant pour cette commande) */
       const existingAvis = await this.avisRepo.findOne({ where: { commandeId } });
@@ -128,6 +144,61 @@ export class CommandeFeedbackService {
         company.averageRating = newAvg;
         company.totalRatings  = newTotal;
         await this.companyRepo.save(company);
+      }
+    }
+
+    /* 6. Note du livreur — miroir du bloc entreprise ci-dessus, pour
+     * l'acteur DELIVERY. N'a de sens QUE si un livreur a réellement pris
+     * en charge cette commande (livreurId renseigné ET son assignation
+     * ACCEPTED — un livreur PENDING n'a jamais livré, et un livreur
+     * REFUSED voit `livreurId` remis à null par CommandeLivreurAssignment
+     * Service, donc ce filtre exclut déjà ce cas). Avant ce correctif,
+     * une note "livreur" était acceptée par la validation (le DTO
+     * autorise role:'livreur') mais silencieusement ignorée ici : aucun
+     * avis, aucune notification, aucune mise à jour de Delivery.averageRating. */
+    const livreurNote = dto.notes.find(n => n.role === 'livreur');
+    if (
+      livreurNote &&
+      commande.livreurId &&
+      commande.livreurAssignmentStatus === LivreurAssignmentStatus.ACCEPTED
+    ) {
+      const { clientNom, clientInitiales } = this.buildClientSnapshot(user);
+
+      const existingLivreurAvis = await this.livreurAvisRepo.findOne({ where: { commandeId } });
+      if (!existingLivreurAvis) {
+        const avis = this.livreurAvisRepo.create({
+          livreurId:   commande.livreurId,
+          commandeId,
+          clientNom,
+          clientInitiales,
+          note:        livreurNote.note,
+          commentaire: livreurNote.commentaire ?? null,
+        });
+        await this.livreurAvisRepo.save(avis);
+
+        void this.notifEventSvc.notifyLivreurReviewReceived({
+          livreurId:  commande.livreurId,
+          clientId:   commande.clientId,
+          clientNom,
+          note:       livreurNote.note,
+          commandeId,
+        });
+      }
+
+      const delivery = await this.deliveryRepo.findOne({
+        where:  { id: commande.livreurId },
+        select: ['id', 'averageRating', 'totalRatings'],
+      });
+      if (delivery && !existingLivreurAvis) {
+        const oldTotal = delivery.totalRatings ?? 0;
+        const oldAvg   = Number(delivery.averageRating) || 0;
+        const newTotal = oldTotal + 1;
+        const newAvg   = parseFloat(
+          ((oldAvg * oldTotal + livreurNote.note) / newTotal).toFixed(2),
+        );
+        delivery.averageRating = newAvg;
+        delivery.totalRatings  = newTotal;
+        await this.deliveryRepo.save(delivery);
       }
     }
 

@@ -71,6 +71,7 @@ import { NotificationDeliveryLog } from '../database/entities/notification/notif
 import { CompanyType }    from '../database/entities/entreprise.table/company-type.entity';
 import { CompanyHoraire } from '../database/entities/entreprise.table/company-horaire.entity';
 import { CompanyAvis }    from '../database/entities/entreprise.table/company-avis.entity';
+import { LivreurAvis }    from '../database/entities/livreur.table/livreur-avis.entity';
 // ── Location ───────────────────────────────────────────────────────────────────
 import { CompanyBranch }    from '../database/entities/location/company-branch.entity';
 import { LocationHistory }  from '../database/entities/location/location-history.entity';
@@ -324,6 +325,7 @@ export const databaseConfigFactory = {
       NotificationDeliveryLog,
       CompanyHoraire,
       CompanyAvis,
+      LivreurAvis,
       LivreurHoraire,
       CorrespondantHoraire,
       Follow,

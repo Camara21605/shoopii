@@ -36,6 +36,10 @@ import { Company }               from '../../../database/entities/profiles/entre
 /* ── Module Paramètres (assemble les 8 services + controller) ── */
 import { LivreurParametresModule } from './livreur-parametres.module';
 
+/* ── Module Avis — page "Évaluation" (lecture + réponse aux avis créés
+ * par CommandeFeedbackService.envoyerNotations) ── */
+import { LivreurAvisModule } from './avis/livreur-avis.module';
+
 /* ── Controller principal du dashboard ── */
 import { LivreurDashboardController } from './livreur-dashboard.controller';
 
@@ -69,6 +73,9 @@ import { BoutiquesManagementService } from './services/boutiques-management.serv
      *     NotifsLivreurService, DangerLivreurService
      */
     LivreurParametresModule,
+
+    /* Page "Évaluation" — GET/POST /dashboard/livreur/avis */
+    LivreurAvisModule,
   ],
 
   controllers: [

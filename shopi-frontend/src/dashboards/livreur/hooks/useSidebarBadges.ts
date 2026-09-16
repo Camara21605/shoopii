@@ -21,10 +21,10 @@
  *     un type générique partagé avec d'autres annonces système sans
  *     rapport, donc impossible à filtrer proprement par onglet. Un
  *     futur MISSION_AVAILABLE dédié réglerait ça.
- *   - "evaluation" : NotificationType.REVIEW_RECEIVED existe comme
- *     mécanisme mais n'est jamais déclenché pour un destinataire
- *     livreur (commande-feedback.service.ts ne traite que la note
- *     "entreprise" — il n'existe même pas de table d'avis livreur).
+ *   - "evaluation" : réel depuis l'ajout du système d'avis livreur —
+ *     voir LivreurAvis entity + CommandeFeedbackService.envoyerNotations
+ *     (traite désormais aussi la note "livreur", pas seulement
+ *     "entreprise") → NotificationEventService.notifyLivreurReviewReceived.
  *   - "encours" a déjà un badge réel mais non lié aux notifications
  *     (nombre de missions actives, voir LivreurApp.tsx) — laissé tel
  *     quel, ne pas dupliquer ici.
@@ -41,6 +41,9 @@ export const SIDEBAR_BADGE_TYPES: Partial<Record<string, string[]>> = {
    * backend (notifyWalletOperation/notifyWithdrawalStatus), déjà
    * déclenchés pour un wallet DELIVERY (voir wallet.subscriber.ts). */
   revenus: ['payment.received', 'payment.sent', 'payment.failed'],
+  /* Avis client sur une livraison — voir LivreurAvisModule
+   * (GET /dashboard/livreur/avis) pour la page qui affiche ces avis. */
+  evaluation: ['review.received'],
 };
 
 export function useSidebarBadges() {

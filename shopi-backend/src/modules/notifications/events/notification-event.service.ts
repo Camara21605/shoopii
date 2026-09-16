@@ -755,6 +755,41 @@ export class NotificationEventService {
     }
   }
 
+  /**
+   * Notifie le LIVREUR qu'un client a laissé un avis sur SA livraison —
+   * miroir exact de notifyReviewReceived() ci-dessus pour l'acteur
+   * DELIVERY (voir CommandeFeedbackService.envoyerNotations, qui traite
+   * désormais aussi la note "livreur" en plus de la note "entreprise").
+   */
+  async notifyLivreurReviewReceived(params: {
+    livreurId:  string;
+    clientId:   string;
+    clientNom:  string;
+    note:       number;
+    commandeId: string;
+  }): Promise<void> {
+    try {
+      const imageUrl = await this.resolveActorPhoto(NotificationActorType.CLIENT, params.clientId);
+      await this.notifService.create({
+        recipientType: NotificationActorType.DELIVERY,
+        recipientId:   params.livreurId,
+        actorType:     NotificationActorType.CLIENT,
+        actorId:       params.clientId,
+        type:          NotificationType.REVIEW_RECEIVED,
+        priority:      NotificationPriority.NORMAL,
+        title:         'Nouvel avis reçu ⭐',
+        body:          `${params.clientNom} a laissé un avis ${params.note}/5 sur votre livraison.`,
+        imageUrl,
+        actionUrl:     '/dashboard/livreur/evaluation',
+        groupKey:      `review.received:${params.livreurId}`,
+        resourceType:  'review',
+        resourceId:    params.commandeId,
+      });
+    } catch (err) {
+      this.logger.error('notifyLivreurReviewReceived failed', err);
+    }
+  }
+
   // ─────────────────────────────────────────────────────────
   // PRODUITS CATALOG
   // ─────────────────────────────────────────────────────────

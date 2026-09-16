@@ -41,7 +41,7 @@ import BoutiquesPage   from './pages/BoutiquesPage';
 import RevenusPage     from './pages/RevenusPage';
 import WalletPage      from './pages/WalletPage';
 import ZonePage        from './pages/ZonePage';
-import AjouterCorrespondantPage from './pages/AjouterCorrespondantPage';
+import EvaluationPage  from './pages/EvaluationPage';
 import ParametresPage  from './pages/LivreurParametresPage';
 import MessagesPage    from './pages/MessagesPage';
 import ReseauCorrespondantsPage from './pages/ReseauCorrespondantsPage';
@@ -298,7 +298,11 @@ export default function LivreurApp() {
             stopSharing={sharingCtl.stopSharing}
           />
         )}
-        {page === 'evaluation'  && <AjouterCorrespondantPage onPop={pop} />}
+        {/* BUG CORRIGÉ — cette page rendait AjouterCorrespondantPage (page
+         * sans rapport, jamais liée à un vrai PageId par ailleurs) au lieu
+         * de la vraie page d'évaluation : l'onglet "Évaluation" de la
+         * sidebar était en réalité inatteignable jusqu'ici. */}
+        {page === 'evaluation'  && <EvaluationPage onPop={pop} />}
         {page === 'parametres'  && (
           <ParametresPage onBack={() => navigate('overview')} onPop={pop} onAvatarRefresh={refreshAvatar} onLogout={handleLogout} />
         )}
