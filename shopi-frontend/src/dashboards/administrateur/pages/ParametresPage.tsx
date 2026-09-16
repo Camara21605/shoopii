@@ -12,11 +12,12 @@
  *  - chaque section est un composant isolé dans pages/parametres/
  * ================================================================ */
 
-import { useState, useCallback, lazy, Suspense } from 'react';
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/ParametresPage.module.css';
 import type { ParamSection } from './parametres/types';
 import { useAppContext } from '../../../shared/context/AppContext';
+import { apiFetch } from '../../../shared/services/apiFetch';
 
 /* ── Imports des 16 sections — chargées à la demande (une seule
  * section est visible à la fois) au lieu d'être toutes regroupées
@@ -45,7 +46,6 @@ interface NavItem {
   id:    ParamSection;
   label: string;
   icon:  string;
-  badge?: string; /* nombre d'alertes éventuel */
 }
 
 interface NavGroup {
@@ -58,7 +58,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Compte',
     items: [
       { id: 'profil',          label: 'Profil',               icon: 'fa-user-circle' },
-      { id: 'securite',        label: 'Sécurité',             icon: 'fa-shield-halved', badge: '2' },
+      { id: 'securite',        label: 'Sécurité',             icon: 'fa-shield-halved' },
     ],
   },
   {
@@ -91,7 +91,7 @@ const NAV_GROUPS: NavGroup[] = [
       { id: 'sauvegarde',      label: 'Sauvegarde',           icon: 'fa-database' },
       { id: 'confidentialite', label: 'Confidentialité',      icon: 'fa-lock' },
       { id: 'avance',          label: 'Paramètres avancés',   icon: 'fa-sliders' },
-      { id: 'sante',           label: 'Santé du système',     icon: 'fa-heart-pulse', badge: '3' },
+      { id: 'sante',           label: 'Santé du système',     icon: 'fa-heart-pulse' },
     ],
   },
 ];
@@ -164,6 +164,28 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
   const [active,  setActive]  = useState<ParamSection>('profil');
   const [query,   setQuery]   = useState('');
 
+  /* BUG CORRIGÉ — "Sécurité" et "Santé du système" affichaient des badges
+   * codés en dur ('2'/'3'), identiques pour tout le monde. Les deux
+   * sections sont pourtant déjà réellement connectées (SecuriteSection/
+   * SanteSection) — seul le badge de la nav ne lisait pas ces données
+   * avant que l'admin ne clique dessus. */
+  const [navBadges, setNavBadges] = useState<Partial<Record<ParamSection, string>>>({});
+
+  useEffect(() => {
+    apiFetch<{ scoreItems: { ok: boolean }[] }>('/dashboard/super-admin/my-securite')
+      .then(data => {
+        const pending = (data.scoreItems ?? []).filter(i => !i.ok).length;
+        if (pending > 0) setNavBadges(prev => ({ ...prev, securite: String(pending) }));
+      })
+      .catch(() => { /* silencieux — pas de badge plutôt qu'une erreur visible */ });
+
+    apiFetch<{ count: number }>('/platform-security/alerts')
+      .then(data => {
+        if (data.count > 0) setNavBadges(prev => ({ ...prev, sante: String(data.count) }));
+      })
+      .catch(() => {});
+  }, []);
+
   /* Filtre la navigation latérale selon la recherche */
   const filteredGroups = NAV_GROUPS.map(g => ({
     ...g,
@@ -232,7 +254,7 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
                 >
                   <i className={`fas ${item.icon}`} />
                   {item.label}
-                  {item.badge && <span className={styles.sbBadge}>{item.badge}</span>}
+                  {navBadges[item.id] && <span className={styles.sbBadge}>{navBadges[item.id]}</span>}
                 </button>
               ))}
             </div>
