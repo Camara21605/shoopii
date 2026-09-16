@@ -94,11 +94,36 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   return <>{children}</>;
 };
 
-/** Redirige les utilisateurs déjà connectés vers leur dashboard. */
+/* SÉCURITÉ / BUG CORRIGÉ — un lien d'invitation (parrainage partenaire
+ * ?ref=, activation ?role&code, collaborateur ?collabToken, vérification
+ * email ?verifyUserId) était systématiquement AVALÉ par PublicOnlyRoute
+ * dès qu'une session — même celle d'un compte totalement différent,
+ * restée active sur le même navigateur — était encore valide : la
+ * redirection vers le dashboard de CE compte-là se déclenchait avant
+ * même que /login n'ait eu la moindre chance de lire le paramètre.
+ * Ce qui a fait croire à un "lien cassé" (montre toujours le 1er compte
+ * connecté ; ne se met à fonctionner qu'après avoir vidé le cache, qui
+ * efface justement cette session parasite) est exactement ce garde,
+ * appliqué sans jamais regarder à QUOI l'URL correspondait. Présence
+ * d'un de ces paramètres → on affiche la page d'invitation/connexion
+ * quoi qu'il arrive, jamais une redirection automatique vers un AUTRE
+ * compte que celui explicitement visé par le lien. */
+const INVITE_CONTEXT_PARAMS = ['ref', 'code', 'collabToken', 'verifyUserId'];
+
+function hasInviteContext(search: string, pathname: string): boolean {
+  if (pathname.startsWith('/rejoindre/')) return true;
+  const params = new URLSearchParams(search);
+  return INVITE_CONTEXT_PARAMS.some(key => !!params.get(key)?.trim());
+}
+
+/** Redirige les utilisateurs déjà connectés vers leur dashboard — sauf si
+ *  l'URL porte un contexte d'invitation explicite (voir hasInviteContext). */
 const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading, user } = useAppContext();
+  const location = useLocation();
   if (isLoading) return <Loader />;
   if (!isAuthenticated) return <>{children}</>;
+  if (hasInviteContext(location.search, location.pathname)) return <>{children}</>;
   const role = user?.role ?? null;
   if (role === 'client') return <Navigate to="/home" replace />;
   return <Navigate to={getDashboardPath(role)} replace />;

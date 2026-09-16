@@ -57,6 +57,36 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setUserState(u);
   }, []);
 
+  /* ── SÉCURITÉ — bfcache (back/forward cache) du navigateur ──────────
+   * BUG CORRIGÉ : sur un appareil partagé (ou un même navigateur avec
+   * plusieurs comptes utilisés à des moments différents), naviguer avec
+   * le bouton "précédent"/"suivant" pouvait réafficher instantanément un
+   * dashboard ENTIER (avec toutes ses données déjà en mémoire) d'un
+   * compte pourtant déconnecté depuis — par ex. revenir sur le dashboard
+   * entreprise alors que la session active est désormais celle d'un
+   * compte partenaire. Cause : le bfcache des navigateurs modernes
+   * (Chrome/Firefox/Safari) ne recharge PAS la page en pareil cas — il
+   * suspend puis restaure TOUT l'état JS déjà exécuté (React compris),
+   * sans jamais ré-exécuter le moindre useEffect au montage. Le
+   * useEffect ci-dessus (GET /auth/me à chaque VRAI montage) ne se
+   * redéclenche donc jamais, et l'écran affiché reste celui — obsolète —
+   * du compte précédent, quelle que soit la session réellement active
+   * côté serveur au même instant.
+   *
+   * `pageshow` avec `event.persisted === true` est le signal standard
+   * (MDN) qu'une page vient d'être restaurée depuis le bfcache plutôt que
+   * chargée normalement. La seule réponse fiable est un rechargement
+   * complet : il relance TOUT (ce provider, le routeur, chaque dashboard)
+   * depuis zéro, donc revérifie la session réelle via le cookie httpOnly
+   * actuel — jamais via un état JS potentiellement obsolète. */
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) window.location.reload();
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
+
   // ── Déconnexion ───────────────────────────────────────────
   const logout = useCallback(() => {
     // UI mise à jour immédiatement; authService.logout() révoque les refresh
