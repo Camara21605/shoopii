@@ -107,9 +107,19 @@ import { SUIVIS_QUEUE }  from './suivis.queue';
     /*
      * JwtModule pour vérifier les tokens dans le WebSocket Gateway.
      * Le secret doit correspondre à celui utilisé dans AuthModule.
-     */
+     *
+     * ⚠️ FAILLE CORRIGÉE (audit sécurité) — le fallback codé en dur
+     * 'shopi-secret' aurait permis à quiconque connaît le code source de
+     * forger un JWT valide si JWT_SECRET venait à manquer en production.
+     * Risque déjà atténué en pratique (JwtStrategy, utilisé par le
+     * garde HTTP global, fait planter le démarrage si JWT_SECRET est
+     * absent — ce fallback ne devrait donc jamais s'activer), mais un
+     * secret prévisible ne doit jamais traîner dans le code par
+     * principe. Sans fallback, `secret` est simplement `undefined` si
+     * la variable manque — la vérification de token échoue alors
+     * proprement au lieu d'accepter un secret connu de tous. */
     JwtModule.register({
-      secret: process.env.JWT_SECRET ?? 'shopi-secret',
+      secret: process.env.JWT_SECRET,
     }),
   ],
 

@@ -1674,6 +1674,25 @@ export class AuthService implements OnModuleInit {
       throw new NotFoundException('Compte introuvable ou inactif.');
     }
 
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — ce resetToken (JWT, 15 min,
+     * sans jti/denylist) était rejouable plusieurs fois tant qu'il
+     * n'avait pas expiré. Même principe que JwtStrategy.validate() pour
+     * les tokens d'accès normaux : un token émis AVANT le dernier
+     * changement de mot de passe est considéré périmé, même s'il n'a
+     * pas atteint sa date d'expiration JWT. Comme resetPassword() met à
+     * jour lastPasswordChangedAt à CHAQUE usage réussi (voir plus bas),
+     * ceci rend le token à usage unique : la 2e tentative de rejeu voit
+     * lastPasswordChangedAt déjà plus récent que payload.iat et échoue. */
+    if (user.lastPasswordChangedAt && payload.iat !== undefined) {
+      const tokenIssuedAt   = new Date(payload.iat * 1000);
+      const passwordChanged = new Date(user.lastPasswordChangedAt);
+      if (passwordChanged > tokenIssuedAt) {
+        throw new BadRequestException(
+          'Ce lien de réinitialisation a déjà été utilisé. Recommencez depuis le début.',
+        );
+      }
+    }
+
     if (!newPassword || newPassword.length < 8) {
       throw new BadRequestException('Le mot de passe doit faire au moins 8 caractères.');
     }
