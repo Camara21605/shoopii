@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { PageId } from '../data/livreurData';
 import { fmtGNF } from '../data/livreurData';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
+import { useSidebarBadges } from '../hooks/useSidebarBadges';
 import styles from '../styles/Sidebar.module.css';
 
 interface Props {
@@ -60,10 +61,22 @@ export default function Sidebar({
   onNavigate, onToggleOnline, onGoHome,
 }: Props) {
   const { t } = useTranslation();
+  const { getBadge, clearBadge } = useSidebarBadges();
   const navPrincipal = buildNavPrincipal(t, encoursCount);
   const navReseau    = buildNavReseau(t);
-  const navFinances  = buildNavFinances(t);
+  /* Badge live (paiements portefeuille non vus) — voir useSidebarBadges.
+   * `encours` garde son propre badge non-notification (encoursCount),
+   * jamais mélangé avec ce mécanisme. */
+  const navFinances  = buildNavFinances(t).map(item => {
+    const count = getBadge(item.id);
+    return count > 0 ? { ...item, badge: count, bCls: item.bCls ?? 'g' } : item;
+  });
   const navCompte    = buildNavCompte(t);
+
+  const handleNavigate = (id: PageId) => {
+    clearBadge(id);
+    onNavigate(id);
+  };
   const displayName  = livreurName || t('livreurLayout.sidebar.defaultName');
   const ratingLabel  = typeof rating === 'number' && Number.isFinite(rating) ? rating.toFixed(1) : '—';
   const deliveriesLabel = t('livreurLayout.sidebar.deliveriesLabel', { count: totalDeliveries ?? 0 });
@@ -122,22 +135,22 @@ export default function Sidebar({
       {/* Nav */}
       <div className={styles.sbNav}>
         {navPrincipal.map(item => (
-          <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={onNavigate} />
+          <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={handleNavigate} />
         ))}
 
         <div className={styles.sbSect}>{t('livreurLayout.sidebar.sections.reseau')}</div>
         {navReseau.map(item => (
-          <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={onNavigate} />
+          <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={handleNavigate} />
         ))}
 
         <div className={styles.sbSect}>{t('livreurLayout.sidebar.sections.finances')}</div>
         {navFinances.map(item => (
-          <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={onNavigate} />
+          <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={handleNavigate} />
         ))}
 
         <div className={styles.sbSect}>{t('livreurLayout.sidebar.sections.compte')}</div>
         {navCompte.map(item => (
-          <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={onNavigate} />
+          <NavBtn key={item.id} item={item} active={activePage === item.id} onNavigate={handleNavigate} />
         ))}
       </div>
     </nav>

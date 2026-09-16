@@ -6,6 +6,7 @@ import styles from '../styles/Topbar.module.css';
 import NotificationCenter from '../../../shared/notifications/NotificationCenter';
 import { useGlobalCall } from '../../../shared/context/GlobalCallContext';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
+import { useSidebarBadges } from '../hooks/useSidebarBadges';
 
 interface Props {
   title:        string;
@@ -58,13 +59,24 @@ export default function Topbar({
   const { t } = useTranslation();
   const initials = livreurName ? getInitials(livreurName) : '🛵';
   const { msgUnread } = useGlobalCall();
+  const { getBadge, clearBadge } = useSidebarBadges();
   const navigate = useNavigate();
   const displayName = livreurName || t('livreurLayout.sidebar.defaultName');
 
   function go(page: PageId) {
+    clearBadge(page);
     onNavigate(page);
     onMenuClose();
   }
+
+  /* Injecte les badges live (paiements non vus) sur le drawer mobile —
+   * même donnée que Sidebar.tsx, `encoursCount` reste géré séparément
+   * (déjà passé à buildDrawerNav). */
+  const drawerNav = buildDrawerNav(t, encoursCount).map(item => {
+    if (item.badge !== undefined) return item;
+    const count = getBadge(item.id);
+    return count > 0 ? { ...item, badge: count } : item;
+  });
 
   return (
     <>
@@ -157,7 +169,7 @@ export default function Topbar({
 
           {/* Navigation complète */}
           <div className={styles.tbDrawerNav}>
-            {buildDrawerNav(t, encoursCount).map(item => (
+            {drawerNav.map(item => (
               <button key={item.id}
                 className={styles.tbDrawerIt}
                 onClick={() => go(item.id)}>
