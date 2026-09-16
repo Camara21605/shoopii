@@ -180,7 +180,8 @@
     "bottomNav": {
       "accueil": "Accueil",
       "commandes": "Commandes",
-      "produits": "Produits"
+      "produits": "Produits",
+      "services": "Services"
     },
     "drawer": {
       "menuAria": "Menu de navigation",

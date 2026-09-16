@@ -238,6 +238,25 @@ function EntrepriseLayout() {
       .catch(() => {});
   }, []);
 
+  /* SÉCURITÉ — garde de dernier recours, indépendante de la sidebar/topbar/
+   * FAB : même si un de ces menus redirige un jour à nouveau vers la
+   * mauvaise page (voir le bug corrigé sur le bottom nav mobile, qui
+   * pointait "produits" en dur quel que soit businessModel), la page
+   * elle-même ne doit jamais pouvoir rester affichée pour le mauvais
+   * modèle économique. Contrairement au premier useEffect ci-dessus (qui
+   * ne joue qu'au montage initial), celui-ci réagit à CHAQUE changement
+   * de page/profil — une navigation interne vers une page interdite est
+   * donc renvoyée à l'aperçu immédiatement, avant même un rendu visible. */
+  useEffect(() => {
+    if (!profile) return;
+    const produitsOnly = ['produits', 'ajouter', 'inventaire', 'fournisseurs', 'promotions'];
+    const servicesOnly = ['services', 'ajouter-service'];
+    const interdite =
+      (profile.businessModel === 'services' && produitsOnly.includes(page)) ||
+      (profile.businessModel === 'products' && servicesOnly.includes(page));
+    if (interdite) navigate('/dashboard/entreprise', { replace: true });
+  }, [profile, page, navigate]);
+
   /* Le dashboard entreprise n'a pas de mode clair : le thème sombre est
      forcé de façon centralisée par ThemeRouteSync (src/app/router.tsx),
      dès que l'URL correspond à /dashboard/entreprise — pas ici. Deux

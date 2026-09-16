@@ -571,10 +571,22 @@ export default function Topbar({
           )}
         </button>
 
-        <button className={`bn-it${activePage === 'produits' ? ' on' : ''}`}
-          onClick={() => onNavigate('produits')}>
-          <i className="fas fa-tag"></i><span>{t('topbar.bottomNav.produits')}</span>
-        </button>
+        {/* BUG CORRIGÉ — ce 3e onglet était codé en dur sur "Produits" quel
+         * que soit le businessModel du compte connecté : un compte services
+         * voyait "Produits" dans la barre du bas et atterrissait sur
+         * AjouterPage (produit) au lieu de AjouterServicePage. Même bascule
+         * que Sidebar.buildNavSections/Topbar.buildDrawerNav. */}
+        {businessModel === 'services' ? (
+          <button className={`bn-it${activePage === 'services' ? ' on' : ''}`}
+            onClick={() => onNavigate('services')}>
+            <i className="fas fa-concierge-bell"></i><span>{t('topbar.bottomNav.services')}</span>
+          </button>
+        ) : (
+          <button className={`bn-it${activePage === 'produits' ? ' on' : ''}`}
+            onClick={() => onNavigate('produits')}>
+            <i className="fas fa-tag"></i><span>{t('topbar.bottomNav.produits')}</span>
+          </button>
+        )}
       </nav>
 
       {/* ════════ DRAWER MOBILE (menu complet) ════════ */}
