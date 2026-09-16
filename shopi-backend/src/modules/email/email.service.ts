@@ -511,11 +511,11 @@ export class MailService implements OnModuleInit {
             <div style="width:64px;height:64px;background:#eff6ff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:28px;">🎫</div>
           </div>
           <h1 style="margin:0 0 8px;font-size:20px;font-weight:800;color:#0f172a;text-align:center;">Ticket créé avec succès</h1>
-          <p style="margin:0 0 20px;font-size:14px;color:#475569;text-align:center;">Bonjour <strong>${firstName}</strong>, votre demande d'assistance a bien été reçue.</p>
+          <p style="margin:0 0 20px;font-size:14px;color:#475569;text-align:center;">Bonjour <strong>${escapeHtml(firstName)}</strong>, votre demande d'assistance a bien été reçue.</p>
           <div style="background:#f8faff;border:1.5px solid #bfdbfe;border-radius:12px;padding:16px 20px;margin-bottom:24px;">
             <div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Référence</div>
-            <div style="font-family:'Courier New',monospace;font-size:20px;font-weight:900;color:#1e40af;">${reference}</div>
-            <div style="font-size:13px;color:#475569;margin-top:8px;">${subject}</div>
+            <div style="font-family:'Courier New',monospace;font-size:20px;font-weight:900;color:#1e40af;">${escapeHtml(reference)}</div>
+            <div style="font-size:13px;color:#475569;margin-top:8px;">${escapeHtml(subject)}</div>
           </div>
           <p style="font-size:13.5px;color:#475569;line-height:1.7;margin:0 0 24px;">Notre équipe va examiner votre demande et vous répondra dans les <strong>24 heures ouvrées</strong>. Vous recevrez une notification par email dès qu'un agent vous répond.</p>
           <table width="100%" cellpadding="0" cellspacing="0">
@@ -561,9 +561,9 @@ export class MailService implements OnModuleInit {
             <div style="width:64px;height:64px;background:#ecfdf5;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:28px;">💬</div>
           </div>
           <h1 style="margin:0 0 8px;font-size:20px;font-weight:800;color:#0f172a;text-align:center;">Nouvelle réponse à votre ticket</h1>
-          <p style="font-size:14px;color:#475569;text-align:center;margin:0 0 20px;"><strong>${agentName}</strong> a répondu à votre demande <strong>${reference}</strong>.</p>
+          <p style="font-size:14px;color:#475569;text-align:center;margin:0 0 20px;"><strong>${escapeHtml(agentName)}</strong> a répondu à votre demande <strong>${escapeHtml(reference)}</strong>.</p>
           <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px 20px;margin-bottom:24px;">
-            <div style="font-size:13px;color:#166534;">${subject}</div>
+            <div style="font-size:13px;color:#166534;">${escapeHtml(subject)}</div>
           </div>
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr><td align="center">
@@ -604,8 +604,8 @@ export class MailService implements OnModuleInit {
           <div style="font-size:48px;margin-bottom:16px;">✅</div>
           <h1 style="margin:0 0 12px;font-size:20px;font-weight:800;color:#0f172a;">Message bien reçu !</h1>
           <p style="font-size:14px;color:#475569;line-height:1.7;margin:0 0 20px;">
-            Bonjour <strong>${firstName}</strong>,<br/>nous avons bien reçu votre message concernant :<br/>
-            <strong style="color:#1e40af;">${subject}</strong>
+            Bonjour <strong>${escapeHtml(firstName)}</strong>,<br/>nous avons bien reçu votre message concernant :<br/>
+            <strong style="color:#1e40af;">${escapeHtml(subject)}</strong>
           </p>
           <p style="font-size:13.5px;color:#64748b;line-height:1.7;">Notre équipe vous répondra dans les <strong>48 heures ouvrées</strong>.<br/>Pour un suivi plus rapide, créez un ticket de support.</p>
         </td></tr>
@@ -1227,6 +1227,14 @@ export class MailService implements OnModuleInit {
   private buildContactHtml(p: {
     toName?: string; fromName: string; sujet: string; message: string;
   }): string {
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — name/sujet/message viennent
+     * du formulaire de contact PUBLIC (non authentifié, voir
+     * ContactController.submit) et étaient injectés bruts dans ce
+     * template HTML : un visiteur pouvait envoyer du HTML/JS/phishing
+     * (ex: un faux bouton, un pixel de tracking) affiché tel quel dans
+     * l'email reçu par l'équipe support. escapeHtml() existe déjà dans
+     * ce fichier pour exactement ce cas (voir son usage dans
+     * sendAdminCommunicationEmail) mais n'était pas appliqué ici. */
     return `
 <!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/></head>
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:'Segoe UI',Arial,sans-serif;">
@@ -1236,14 +1244,14 @@ export class MailService implements OnModuleInit {
         <tr><td>
           <h1 style="margin:0 0 18px;font-size:22px;color:#0f172a;">📩 Nouveau message</h1>
           <p style="font-size:14px;color:#475569;line-height:1.7;">
-            Bonjour <strong>${p.toName ?? 'Correspondant'}</strong>,<br />
-            Vous avez reçu un message de <strong>${p.fromName}</strong> via Shoneya.
+            Bonjour <strong>${escapeHtml(p.toName ?? 'Correspondant')}</strong>,<br />
+            Vous avez reçu un message de <strong>${escapeHtml(p.fromName)}</strong> via Shoneya.
           </p>
           <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:14px 18px;border-radius:10px;margin:20px 0;">
             <div style="font-size:12px;color:#64748b;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Sujet</div>
-            <div style="font-size:17px;color:#0f172a;font-weight:700;">${p.sujet}</div>
+            <div style="font-size:17px;color:#0f172a;font-weight:700;">${escapeHtml(p.sujet)}</div>
           </div>
-          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;color:#334155;font-size:14px;line-height:1.8;white-space:pre-line;">${p.message}</div>
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;color:#334155;font-size:14px;line-height:1.8;white-space:pre-line;">${escapeHtml(p.message)}</div>
         </td></tr>
       </table>
     </td></tr>
