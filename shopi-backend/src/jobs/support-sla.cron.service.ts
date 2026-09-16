@@ -168,8 +168,8 @@ export class SupportSlaCronService {
       /* On réutilise sendContactEmail en mode alerte interne */
       await this.mailService.sendContactEmail({
         toEmail:  supportEmail,
-        toName:   'Équipe Support Shopi',
-        fromName: 'Système SLA Shopi',
+        toName:   'Équipe Support Shoneya',
+        fromName: 'Système SLA Shoneya',
         sujet:    `⚠️ ${breachedTickets.length} ticket(s) SLA dépassé(s) (>${BREACH_HOURS}h) — action requise`,
         message:  `
           <h2 style="color:#dc2626;margin:0 0 16px;">Alerte SLA Support</h2>

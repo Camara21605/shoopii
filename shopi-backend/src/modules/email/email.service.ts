@@ -192,7 +192,7 @@ export class MailService implements OnModuleInit {
 
   constructor(private readonly config: ConfigService) {
     this.apiKey      = config.get<string>('BREVO_API_KEY', '');
-    this.fromEmail   = config.get<string>('SMTP_FROM',    'noreply@shopi.gn');
+    this.fromEmail   = config.get<string>('SMTP_FROM',    'noreply@shoneya.com');
     this.frontendUrl = getPrimaryFrontendUrl(config);
   }
 
@@ -240,7 +240,7 @@ export class MailService implements OnModuleInit {
 
     await this.send({
       to:      toEmail,
-      subject: `Votre accès Shopi — ${roleMeta.label}`,
+      subject: `Votre accès Shoneya — ${roleMeta.label}`,
       html:    this.buildInvitationHtml({ toEmail, code, roleMeta, registerUrl, expiryFormatted, senderName, customMessage, signature }),
       text:    this.buildInvitationText({ code, roleMeta, registerUrl, expiryFormatted, senderName, customMessage, signature }),
     });
@@ -258,9 +258,9 @@ export class MailService implements OnModuleInit {
 
     await this.send({
       to:      toEmail,
-      subject: `🎉 Bienvenue sur Shopi, ${firstName} !`,
+      subject: `🎉 Bienvenue sur Shoneya, ${firstName} !`,
       html:    this.buildWelcomeHtml({ firstName, roleMeta, loginUrl }),
-      text:    `Bonjour ${firstName},\n\nVotre compte ${roleMeta.label} sur Shopi a été créé avec succès.\n\nConnectez-vous ici : ${loginUrl}`,
+      text:    `Bonjour ${firstName},\n\nVotre compte ${roleMeta.label} sur Shoneya a été créé avec succès.\n\nConnectez-vous ici : ${loginUrl}`,
     });
 
     this.logger.log(`[BIENVENUE] Email envoyé à ${toEmail} | Rôle: ${role}`);
@@ -284,12 +284,12 @@ export class MailService implements OnModuleInit {
 
     await this.send({
       to:      toEmail,
-      subject: `Shopi — Vérification de connexion (${expiryTime})`,
+      subject: `Shoneya — Vérification de connexion (${expiryTime})`,
       html:    this.buildOtpEmailHtml({ firstName, otpCode, expiryTime }),
       text: [
         `Bonjour ${firstName},`,
         '',
-        'Votre code de vérification Shopi :',
+        'Votre code de vérification Shoneya :',
         '',
         `  ${otpCode}`,
         '',
@@ -299,7 +299,7 @@ export class MailService implements OnModuleInit {
         'Votre mot de passe reste inchangé.',
         '',
         '---',
-        'Shopi — shopi.gn',
+        'Shoneya — shoneya.com',
       ].join('\n'),
     });
 
@@ -333,12 +333,12 @@ export class MailService implements OnModuleInit {
 
     await this.send({
       to:      toEmail,
-      subject: `Shopi — Confirmez votre adresse email (${expiryTime})`,
+      subject: `Shoneya — Confirmez votre adresse email (${expiryTime})`,
       html:    this.buildOtpEmailHtml({ firstName, otpCode, expiryTime, purpose: 'email-verification', verifyUrl }),
       text: [
         `Bonjour ${firstName},`,
         '',
-        'Votre code de confirmation Shopi :',
+        'Votre code de confirmation Shoneya :',
         '',
         `  ${otpCode}`,
         '',
@@ -350,7 +350,7 @@ export class MailService implements OnModuleInit {
         "Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email.",
         '',
         '---',
-        'Shopi — shopi.gn',
+        'Shoneya — shoneya.com',
       ].join('\n'),
     });
 
@@ -378,12 +378,12 @@ export class MailService implements OnModuleInit {
 
     await this.send({
       to:      toEmail,
-      subject: `Shopi — Modification du mot de passe le ${changedAt.toLocaleDateString('fr-FR')}`,
+      subject: `Shoneya — Modification du mot de passe le ${changedAt.toLocaleDateString('fr-FR')}`,
       html:    this.buildPasswordChangedHtml({ firstName, changedFormatted, loginUrl, reportUrl }),
       text: [
         `Bonjour ${firstName},`,
         '',
-        `Votre mot de passe Shopi a été modifié le ${changedFormatted}.`,
+        `Votre mot de passe Shoneya a été modifié le ${changedFormatted}.`,
         '',
         'Si c\'était vous, vous pouvez ignorer cet email.',
         '',
@@ -391,7 +391,7 @@ export class MailService implements OnModuleInit {
         reportUrl,
         '',
         '---',
-        'Shopi — shopi.gn',
+        'Shoneya — shoneya.com',
       ].join('\n'),
     });
 
@@ -424,7 +424,7 @@ export class MailService implements OnModuleInit {
 
     await this.send({
       to:      toEmail,
-      subject: `Shopi — Alerte de sécurité : ${title}`,
+      subject: `Shoneya — Alerte de sécurité : ${title}`,
       html:    this.buildSecurityAlertHtml({ firstName, title, message, occurredFormatted, reportUrl, settingsUrl }),
       text: [
         `Bonjour ${firstName},`,
@@ -441,7 +441,7 @@ export class MailService implements OnModuleInit {
         `Gérer mes alertes de sécurité : ${settingsUrl}`,
         '',
         '---',
-        'Shopi — shopi.gn',
+        'Shoneya — shoneya.com',
       ].join('\n'),
     });
 
@@ -462,7 +462,7 @@ export class MailService implements OnModuleInit {
 
     await this.send({
       to:      toEmail,
-      subject: '🔒 Réinitialisation de votre mot de passe Shopi',
+      subject: '🔒 Réinitialisation de votre mot de passe Shoneya',
       html:    this.buildPasswordResetHtml({ firstName, resetUrl, expiryFormatted }),
       text:    `Bonjour ${firstName},\n\nLien de réinitialisation (valable jusqu'à ${expiryFormatted}) :\n${resetUrl}`,
     });
@@ -479,10 +479,10 @@ export class MailService implements OnModuleInit {
 
     await this.send({
       to:      toEmail,
-      fromName: `${fromName} via Shopi`,
+      fromName: `${fromName} via Shoneya`,
       subject: `📩 ${sujet}`,
       html:    this.buildContactHtml({ toName, fromName, sujet, message }),
-      text:    `Message de ${fromName}\n\nSujet : ${sujet}\n\n${message}\n\n---\nEnvoyé via Shopi`,
+      text:    `Message de ${fromName}\n\nSujet : ${sujet}\n\n${message}\n\n---\nEnvoyé via Shoneya`,
     });
 
     this.logger.log(`[CONTACT EMAIL] Email envoyé à ${toEmail} | Sujet: ${sujet}`);
@@ -496,7 +496,7 @@ export class MailService implements OnModuleInit {
     const { toEmail, firstName, reference, subject, ticketUrl } = params;
     await this.send({
       to:      toEmail,
-      subject: `Shopi Support — Ticket ${reference} créé`,
+      subject: `Shoneya Support — Ticket ${reference} créé`,
       html: `
 <!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/></head>
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:'Segoe UI',Arial,sans-serif;">
@@ -504,7 +504,7 @@ export class MailService implements OnModuleInit {
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:20px;padding:40px 36px;box-shadow:0 4px 24px rgba(30,64,175,.08);">
         <tr><td align="center" style="padding-bottom:20px;">
-          <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:16px;padding:10px 20px;color:#fff;font-size:22px;font-weight:900;display:inline-block;">Shopi Support</div>
+          <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:16px;padding:10px 20px;color:#fff;font-size:22px;font-weight:900;display:inline-block;">Shoneya Support</div>
         </td></tr>
         <tr><td>
           <div style="text-align:center;margin-bottom:20px;">
@@ -527,13 +527,13 @@ export class MailService implements OnModuleInit {
           </table>
         </td></tr>
         <tr><td style="padding:20px 0;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a></p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;">Shoneya · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shoneya.com</a></p>
         </td></tr>
       </table>
     </td></tr>
   </table>
 </body></html>`,
-      text: `Bonjour ${firstName},\n\nVotre ticket de support ${reference} a été créé.\nSujet : ${subject}\n\nSuivre : ${ticketUrl}\n\nShopi`,
+      text: `Bonjour ${firstName},\n\nVotre ticket de support ${reference} a été créé.\nSujet : ${subject}\n\nSuivre : ${ticketUrl}\n\nShoneya`,
     });
     this.logger.log(`[SUPPORT] Email confirmation envoyé à ${toEmail} | ${reference}`);
   }
@@ -546,7 +546,7 @@ export class MailService implements OnModuleInit {
     const { toEmail, agentName, reference, subject, ticketUrl } = params;
     await this.send({
       to:      toEmail,
-      subject: `Shopi Support — Nouvelle réponse [${reference}]`,
+      subject: `Shoneya Support — Nouvelle réponse [${reference}]`,
       html: `
 <!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/></head>
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:'Segoe UI',Arial,sans-serif;">
@@ -554,7 +554,7 @@ export class MailService implements OnModuleInit {
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:20px;padding:40px 36px;box-shadow:0 4px 24px rgba(30,64,175,.08);">
         <tr><td align="center" style="padding-bottom:20px;">
-          <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:16px;padding:10px 20px;color:#fff;font-size:22px;font-weight:900;display:inline-block;">Shopi Support</div>
+          <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:16px;padding:10px 20px;color:#fff;font-size:22px;font-weight:900;display:inline-block;">Shoneya Support</div>
         </td></tr>
         <tr><td>
           <div style="text-align:center;margin-bottom:20px;">
@@ -574,13 +574,13 @@ export class MailService implements OnModuleInit {
           </table>
         </td></tr>
         <tr><td style="padding:20px 0;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a></p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;">Shoneya · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shoneya.com</a></p>
         </td></tr>
       </table>
     </td></tr>
   </table>
 </body></html>`,
-      text: `${agentName} a répondu à votre ticket ${reference}.\nSujet : ${subject}\n\nVoir : ${ticketUrl}\n\nShopi`,
+      text: `${agentName} a répondu à votre ticket ${reference}.\nSujet : ${subject}\n\nVoir : ${ticketUrl}\n\nShoneya`,
     });
     this.logger.log(`[SUPPORT] Email réponse envoyé à ${toEmail} | ${reference}`);
   }
@@ -593,7 +593,7 @@ export class MailService implements OnModuleInit {
     const { toEmail, firstName, subject } = params;
     await this.send({
       to:      toEmail,
-      subject: 'Shopi — Nous avons bien reçu votre message',
+      subject: 'Shoneya — Nous avons bien reçu votre message',
       html: `
 <!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/></head>
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:'Segoe UI',Arial,sans-serif;">
@@ -610,13 +610,13 @@ export class MailService implements OnModuleInit {
           <p style="font-size:13.5px;color:#64748b;line-height:1.7;">Notre équipe vous répondra dans les <strong>48 heures ouvrées</strong>.<br/>Pour un suivi plus rapide, créez un ticket de support.</p>
         </td></tr>
         <tr><td style="padding:20px 0;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a></p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;">Shoneya · <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shoneya.com</a></p>
         </td></tr>
       </table>
     </td></tr>
   </table>
 </body></html>`,
-      text: `Bonjour ${firstName},\n\nNous avons bien reçu votre message : ${subject}\n\nShopi`,
+      text: `Bonjour ${firstName},\n\nNous avons bien reçu votre message : ${subject}\n\nShoneya`,
     });
   }
 
@@ -634,8 +634,8 @@ export class MailService implements OnModuleInit {
     const loginUrl = `${this.frontendUrl}/login`;
 
     const subject = isReset
-      ? `Shopi — Votre nouveau mot de passe temporaire`
-      : `Shopi — Bienvenue dans l'équipe${companyName ? ` ${companyName}` : ''} !`;
+      ? `Shoneya — Votre nouveau mot de passe temporaire`
+      : `Shoneya — Bienvenue dans l'équipe${companyName ? ` ${companyName}` : ''} !`;
 
     await this.send({
       to:      toEmail,
@@ -644,7 +644,7 @@ export class MailService implements OnModuleInit {
       text: [
         isReset
           ? `Bonjour ${firstName},\n\nVotre mot de passe a été réinitialisé par votre administrateur.`
-          : `Bonjour ${firstName},\n\nVotre compte collaborateur Shopi${companyName ? ` (${companyName})` : ''} a été créé.`,
+          : `Bonjour ${firstName},\n\nVotre compte collaborateur Shoneya${companyName ? ` (${companyName})` : ''} a été créé.`,
         '',
         `Email        : ${toEmail}`,
         `Mot de passe : ${password}`,
@@ -653,7 +653,7 @@ export class MailService implements OnModuleInit {
         `Vous devrez changer ce mot de passe lors de votre première connexion.`,
         '',
         '---',
-        'Shopi — shopi.gn',
+        'Shoneya — shoneya.com',
         'Ne partagez jamais ce mot de passe.',
       ].join('\n'),
     });
@@ -689,7 +689,7 @@ export class MailService implements OnModuleInit {
           'api-key':      this.apiKey,
         },
         body: JSON.stringify({
-          sender:      { name: opts.fromName ?? 'Shopi', email: this.fromEmail },
+          sender:      { name: opts.fromName ?? 'Shoneya', email: this.fromEmail },
           to:          [{ email: opts.to }],
           replyTo:     { email: this.fromEmail },
           subject:     opts.subject,
@@ -729,13 +729,13 @@ export class MailService implements OnModuleInit {
   }): string {
     const purpose = p.purpose ?? 'password-reset';
     const introText = purpose === 'email-verification'
-      ? `Bonjour <strong>${p.firstName}</strong>, voici votre code pour confirmer votre adresse email Shopi.`
-      : `Bonjour <strong>${p.firstName}</strong>, voici votre code pour réinitialiser votre mot de passe Shopi.`;
+      ? `Bonjour <strong>${p.firstName}</strong>, voici votre code pour confirmer votre adresse email Shoneya.`
+      : `Bonjour <strong>${p.firstName}</strong>, voici votre code pour réinitialiser votre mot de passe Shoneya.`;
     const instructionsText = purpose === 'email-verification'
       ? (p.verifyUrl
-          ? 'Cliquez sur le bouton ci-dessus pour activer votre compte automatiquement, ou retournez sur la page Shopi et saisissez ce code à 6 chiffres dans les cases prévues.'
-          : 'Retournez sur la page Shopi et saisissez ce code à 6 chiffres dans les cases prévues pour activer votre compte.')
-      : 'Retournez sur la page Shopi, saisissez ce code à 6 chiffres dans les cases prévues, puis créez votre nouveau mot de passe.';
+          ? 'Cliquez sur le bouton ci-dessus pour activer votre compte automatiquement, ou retournez sur la page Shoneya et saisissez ce code à 6 chiffres dans les cases prévues.'
+          : 'Retournez sur la page Shoneya et saisissez ce code à 6 chiffres dans les cases prévues pour activer votre compte.')
+      : 'Retournez sur la page Shoneya, saisissez ce code à 6 chiffres dans les cases prévues, puis créez votre nouveau mot de passe.';
     const securityText = purpose === 'email-verification'
       ? "Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email — aucun compte ne sera activé."
       : "Si vous n'avez pas demandé ce code, ignorez cet email — votre mot de passe reste inchangé.";
@@ -749,7 +749,7 @@ export class MailService implements OnModuleInit {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Code de vérification Shopi</title>
+  <title>Code de vérification Shoneya</title>
 </head>
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4ff;padding:40px 16px;">
@@ -837,7 +837,7 @@ export class MailService implements OnModuleInit {
           <!-- Alerte sécurité -->
           <div style="background:#fff8ed;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:12px 16px;">
             <p style="margin:0;font-size:12.5px;color:#92400e;line-height:1.6;">
-              🛡️ <strong>Shopi ne vous demandera jamais ce code par téléphone ou SMS.</strong>
+              🛡️ <strong>Shoneya ne vous demandera jamais ce code par téléphone ou SMS.</strong>
               ${securityText}
             </p>
           </div>
@@ -847,8 +847,8 @@ export class MailService implements OnModuleInit {
         <!-- Footer -->
         <tr><td style="padding:24px 0;text-align:center;">
           <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.8;">
-            Shopi — La marketplace de référence<br />
-            <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a>
+            Shoneya — La marketplace de référence<br />
+            <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shoneya.com</a>
           </p>
         </td></tr>
 
@@ -887,7 +887,7 @@ export class MailService implements OnModuleInit {
 
           <p style="font-size:14px;color:#475569;line-height:1.7;margin:0 0 20px;">
             Bonjour <strong>${p.firstName}</strong>,<br /><br />
-            Votre mot de passe Shopi a été modifié avec succès le <strong>${p.changedFormatted}</strong>.
+            Votre mot de passe Shoneya a été modifié avec succès le <strong>${p.changedFormatted}</strong>.
           </p>
 
           <!-- Bouton connexion -->
@@ -999,14 +999,14 @@ export class MailService implements OnModuleInit {
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:20px;padding:40px 36px;box-shadow:0 4px 24px rgba(30,64,175,.08);">
         <tr><td align="center" style="padding-bottom:20px;">
-          <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:16px;padding:10px 20px;color:#fff;font-size:22px;font-weight:900;display:inline-block;">Shopi</div>
+          <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:16px;padding:10px 20px;color:#fff;font-size:22px;font-weight:900;display:inline-block;">Shoneya</div>
         </td></tr>
         <tr><td>
           <div style="background:${p.roleMeta.color}12;border:1.5px solid ${p.roleMeta.color}30;border-radius:12px;padding:14px 20px;text-align:center;margin-bottom:24px;">
             <span style="font-size:28px;">${p.roleMeta.emoji}</span>
             <div style="font-size:13px;font-weight:700;color:${p.roleMeta.color};text-transform:uppercase;letter-spacing:1.5px;margin-top:6px;">Invitation ${p.roleMeta.label}</div>
           </div>
-          <h1 style="margin:0 0 12px;font-size:22px;font-weight:800;color:#0f172a;">Vous êtes invité à rejoindre Shopi !</h1>
+          <h1 style="margin:0 0 12px;font-size:22px;font-weight:800;color:#0f172a;">Vous êtes invité à rejoindre Shoneya !</h1>
           <p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.6;">
             <strong>${p.senderName}</strong> vous a envoyé une invitation pour créer votre compte <strong>${p.roleMeta.label}</strong>.
           </p>${customBlock}
@@ -1029,7 +1029,7 @@ export class MailService implements OnModuleInit {
           </div>
         </td></tr>${signatureBlock}
         <tr><td style="padding:20px 0;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#94a3b8;">Shopi · <a href="${this.frontendUrl}" style="color:#3b82f6;">shopi.gn</a></p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;">Shoneya · <a href="${this.frontendUrl}" style="color:#3b82f6;">shoneya.com</a></p>
         </td></tr>
       </table>
     </td></tr>
@@ -1043,13 +1043,13 @@ export class MailService implements OnModuleInit {
     customMessage?: string | null; signature?: string | null;
   }): string {
     return [
-      `Invitation Shopi — Créez votre compte ${p.roleMeta.label}`,
+      `Invitation Shoneya — Créez votre compte ${p.roleMeta.label}`,
       `=`.repeat(50), '',
-      `${p.senderName} vous a invité à rejoindre Shopi.`,
+      `${p.senderName} vous a invité à rejoindre Shoneya.`,
       ...(p.customMessage ? ['', p.customMessage] : []),
       '', `Code d'activation : ${p.code}`, '',
       `Lien (valable jusqu'au ${p.expiryFormatted}) :`, p.registerUrl,
-      '', ...(p.signature ? [p.signature, ''] : []), '---', 'Shopi — shopi.gn',
+      '', ...(p.signature ? [p.signature, ''] : []), '---', 'Shoneya — shoneya.com',
     ].join('\n');
   }
 
@@ -1067,7 +1067,7 @@ export class MailService implements OnModuleInit {
         <tr><td align="center">
           <div style="font-size:48px;margin-bottom:12px;">🎉</div>
           <h1 style="margin:0 0 12px;font-size:22px;font-weight:800;color:#0f172a;">Bienvenue, ${p.firstName} !</h1>
-          <p style="font-size:14px;color:#475569;margin:0 0 24px;">Votre compte <strong>${p.roleMeta.label}</strong> sur Shopi est actif.</p>
+          <p style="font-size:14px;color:#475569;margin:0 0 24px;">Votre compte <strong>${p.roleMeta.label}</strong> sur Shoneya est actif.</p>
           <a href="${p.loginUrl}" style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;font-size:14px;font-weight:700;text-decoration:none;padding:13px 32px;border-radius:12px;display:inline-block;">
             ${p.roleMeta.emoji} Accéder à mon espace →
           </a>
@@ -1120,8 +1120,8 @@ export class MailService implements OnModuleInit {
       : `Bienvenue dans l'équipe${p.companyName ? ` <strong style="color:#1e40af">${p.companyName}</strong>` : ''} !`;
 
     const intro = p.isReset
-      ? `Votre administrateur a réinitialisé votre mot de passe Shopi. Utilisez les identifiants ci-dessous pour vous reconnecter.`
-      : `Votre compte collaborateur Shopi vient d'être créé. Voici vos identifiants de connexion.`;
+      ? `Votre administrateur a réinitialisé votre mot de passe Shoneya. Utilisez les identifiants ci-dessous pour vous reconnecter.`
+      : `Votre compte collaborateur Shoneya vient d'être créé. Voici vos identifiants de connexion.`;
 
     return `
 <!DOCTYPE html>
@@ -1132,10 +1132,10 @@ export class MailService implements OnModuleInit {
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
 
-        <!-- Logo Shopi -->
+        <!-- Logo Shoneya -->
         <tr><td align="center" style="padding-bottom:24px;">
           <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:16px;padding:10px 24px;color:#fff;font-size:22px;font-weight:900;letter-spacing:-.5px;display:inline-block;">
-            Shopi
+            Shoneya
           </div>
         </td></tr>
 
@@ -1194,7 +1194,7 @@ export class MailService implements OnModuleInit {
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
             <tr><td align="center">
               <a href="${p.loginUrl}" style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;font-size:14px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:12px;display:inline-block;">
-                Se connecter à Shopi →
+                Se connecter à Shoneya →
               </a>
             </td></tr>
           </table>
@@ -1202,7 +1202,7 @@ export class MailService implements OnModuleInit {
           <!-- Sécurité -->
           <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;">
             <p style="margin:0;font-size:12.5px;color:#64748b;line-height:1.7;">
-              🛡️ <strong>Shopi ne vous demandera jamais ce mot de passe par téléphone ou email.</strong>
+              🛡️ <strong>Shoneya ne vous demandera jamais ce mot de passe par téléphone ou email.</strong>
               Si vous n'attendiez pas ce message, contactez immédiatement votre administrateur.
             </p>
           </div>
@@ -1212,8 +1212,8 @@ export class MailService implements OnModuleInit {
         <!-- Footer -->
         <tr><td style="padding:24px 0;text-align:center;">
           <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.8;">
-            Shopi — La marketplace de référence<br/>
-            <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shopi.gn</a>
+            Shoneya — La marketplace de référence<br/>
+            <a href="${this.frontendUrl}" style="color:#3b82f6;text-decoration:none;">shoneya.com</a>
           </p>
         </td></tr>
 
@@ -1237,7 +1237,7 @@ export class MailService implements OnModuleInit {
           <h1 style="margin:0 0 18px;font-size:22px;color:#0f172a;">📩 Nouveau message</h1>
           <p style="font-size:14px;color:#475569;line-height:1.7;">
             Bonjour <strong>${p.toName ?? 'Correspondant'}</strong>,<br />
-            Vous avez reçu un message de <strong>${p.fromName}</strong> via Shopi.
+            Vous avez reçu un message de <strong>${p.fromName}</strong> via Shoneya.
           </p>
           <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:14px 18px;border-radius:10px;margin:20px 0;">
             <div style="font-size:12px;color:#64748b;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Sujet</div>

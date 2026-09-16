@@ -5,7 +5,7 @@
  *
  * CONFIG (variables d'environnement) :
  *   BREVO_API_KEY — clé API Brevo (format xkeysib-...)   — fallback: canal désactivé
- *   MAIL_FROM     — adresse expéditeur (défaut: SMTP_FROM ou noreply@shopi.app)
+ *   MAIL_FROM     — adresse expéditeur (défaut: SMTP_FROM ou noreply@shoneya.com)
  *
  * BUG CORRIGÉ (prod) : ce canal envoyait auparavant en SMTP brut
  * (nodemailer, port 587) — Render (plan free) restreint/bloque les
@@ -51,7 +51,7 @@ export class EmailChannelStrategy implements IChannelStrategy {
   ) {
     this.apiKey = config?.get<string>('BREVO_API_KEY') ?? '';
     this.fromAddress =
-      config?.get<string>('MAIL_FROM') ?? config?.get<string>('SMTP_FROM') ?? 'noreply@shopi.app';
+      config?.get<string>('MAIL_FROM') ?? config?.get<string>('SMTP_FROM') ?? 'noreply@shoneya.com';
     if (!this.apiKey) {
       this.logger.warn('BREVO_API_KEY non configurée — canal EMAIL désactivé');
     }
@@ -83,7 +83,7 @@ export class EmailChannelStrategy implements IChannelStrategy {
           'api-key':      this.apiKey,
         },
         body: JSON.stringify({
-          sender:      { name: 'Shopi', email: this.fromAddress },
+          sender:      { name: 'Shoneya', email: this.fromAddress },
           to:          [{ email: emailTo }],
           subject:     notif.title,
           htmlContent: this.buildHtml(notif),
@@ -155,7 +155,7 @@ export class EmailChannelStrategy implements IChannelStrategy {
         ${actionBlock}
         <hr style="border:none;border-top:1px solid #eee;margin-top:30px">
         <p style="font-size:11px;color:#aaa">
-          Vous recevez cet email car vous êtes inscrit sur Shopi.<br>
+          Vous recevez cet email car vous êtes inscrit sur Shoneya.<br>
           <a href="#" style="color:#aaa">Se désabonner des notifications email</a>
         </p>
       </body>
