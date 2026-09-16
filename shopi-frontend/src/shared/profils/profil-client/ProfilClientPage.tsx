@@ -15,7 +15,7 @@
  * ================================================================ */
 
 import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 /* ── Header global partagé ── */
 import Header from '../../../modules/home/components/layout/Header';
@@ -35,13 +35,22 @@ import SectionFavs      from './sections/SectionFavs';
 import SectionWishlist  from './sections/SectionWishlist';
 import SectionReviews   from './sections/SectionReviews';
 import SectionActivity  from './sections/SectionActivity';
+import SectionReturns   from './sections/SectionReturns';
 
 import type { ClientTab } from './types';
 import styles from './styles/ProfilClient.module.css';
 
+const VALID_TABS: ClientTab[] = ['orders', 'returns', 'subs', 'favs', 'wishlist', 'reviews', 'activity'];
+
 export default function ProfilClientPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<ClientTab>('orders');
+  const [searchParams] = useSearchParams();
+  /* Permet un lien direct vers un onglet précis (ex: notification de
+   * retour → /mon-profil?tab=returns) sans casser le défaut habituel. */
+  const initialTab = searchParams.get('tab') as ClientTab | null;
+  const [tab, setTab] = useState<ClientTab>(
+    initialTab && VALID_TABS.includes(initialTab) ? initialTab : 'orders',
+  );
 
   /* Toast global (même mécanisme que le routeur) */
   const onToast = useCallback((msg: string, _type?: 's' | 'i' | 'w' | 'e') => {
@@ -119,6 +128,7 @@ export default function ProfilClientPage() {
             <ProfilTabsClient active={tab} onChange={setTab} />
 
             {tab === 'orders'    && <SectionOrders    commandes={commandes} loading={loading} />}
+            {tab === 'returns'   && <SectionReturns   onToast={onToast} />}
             {tab === 'subs'      && <SectionSubs      onToast={onToast} abonnements={abonnements} loading={loading} />}
             {tab === 'favs'      && <SectionFavs      onToast={onToast} favoris={favoris} />}
             {tab === 'wishlist'  && <SectionWishlist  onToast={onToast} wishlist={wishlist} />}

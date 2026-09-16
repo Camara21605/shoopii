@@ -29,6 +29,7 @@ import CommissionsCard from '../sections/CommissionsCard';
 import DoneBanner from '../sections/DoneBanner';
 import RatingModal from '../sections/RatingModal';
 import IssueModal from '../sections/IssueModal';
+import ReturnRequestModal from '../sections/ReturnRequestModal';
 import type { ActeurRole, TypeProbleme } from '../data/types';
 import { useForceDarkTheme } from '../../../shared/context/ThemeContext';
 import { assignerLivreurClient } from '../services/commande.api';
@@ -62,6 +63,7 @@ export default function CommandePage({ role = 'client', useApi = false, onToast 
   const [showInvoice, setShowInvoice] = useState(false);
   const [showRating,  setShowRating]  = useState(false);
   const [showIssue,   setShowIssue]   = useState(false);
+  const [showReturn,  setShowReturn]  = useState(false);
   const [invoiceShownOnce, setInvoiceShownOnce] = useState(false);
 
   /* Choisir un autre livreur (après refus du précédent) */
@@ -304,7 +306,11 @@ export default function CommandePage({ role = 'client', useApi = false, onToast 
           )}
 
           {c.done && (
-            <DoneBanner onRate={() => setShowRating(true)} onIssue={() => setShowIssue(true)} />
+            <DoneBanner
+              onRate={() => setShowRating(true)}
+              onIssue={() => setShowIssue(true)}
+              onReturn={role === 'client' ? () => setShowReturn(true) : undefined}
+            />
           )}
 
           <ProgressBar
@@ -348,6 +354,14 @@ export default function CommandePage({ role = 'client', useApi = false, onToast 
       )}
       {showIssue && (
         <IssueModal onClose={() => setShowIssue(false)} onSubmit={handleIssueSubmit} />
+      )}
+      {showReturn && id && (
+        <ReturnRequestModal
+          commandeId={id}
+          articles={c.commande.articles}
+          onClose={() => setShowReturn(false)}
+          onToast={toast}
+        />
       )}
       {showChoisirLivreur && (
         <ChoisirLivreurModal

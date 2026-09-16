@@ -102,6 +102,7 @@ export class CommandeQueryService {
     }
 
     const articles = commande.items.map(item => ({
+      productId: item.productId ?? null,
       emoji:    '📦',
       imageUrl: item.imageProduit ?? null,
       nom:      item.nomProduit,

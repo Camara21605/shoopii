@@ -45,7 +45,10 @@ export interface CommandeDetailResponse {
   datePaiement: string;
   destination: string;
   acteurs: Acteur[];
-  articles: { emoji: string; imageUrl: string | null; nom: string; boutique: string; qty: number; prix: number }[];
+  /** productId nullable si le produit a été supprimé depuis (voir
+   * commande-item.entity.ts) — un tel article n'est alors plus éligible
+   * à une demande de retour (ReturnsService.createByClient l'exigerait). */
+  articles: { productId: string | null; emoji: string; imageUrl: string | null; nom: string; boutique: string; qty: number; prix: number }[];
   montant: { sousTotal: number; livraison: number; fraisCorrespondant: number; total: number };
   commissions: Commission[];
   codes: Record<ActeurRole, string>;

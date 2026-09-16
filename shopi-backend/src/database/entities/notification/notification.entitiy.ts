@@ -216,11 +216,14 @@ export enum NotificationType {
   SERVICE_LIKED         = 'service.liked',          // quelqu'un like une prestation
 
   // ── RETOURS ────────────────────────────────────────────────
-  // Notifie l'entreprise qu'un client a initié un retour (voir
-  // ReturnsService.createByClient). RETURN_STATUS_CHANGED côté client
-  // n'est pas encore émis (hors scope de cet ajout, symétrique à
-  // ORDER_STATUS_CHANGED côté commande).
+  // RETURN_REQUESTED  : notifie l'entreprise qu'un client a initié un
+  //   retour (voir ReturnsService.createByClient).
+  // RETURN_STATUS_CHANGED : notifie le CLIENT qu'une décision a été
+  //   prise sur SA demande (accepté/refusé/remboursé) — symétrique à
+  //   ORDER_STATUS_CHANGED côté commande (voir ReturnsService.accept/
+  //   refuse/refund).
   RETURN_REQUESTED      = 'return.requested',       // nouveau retour demandé par un client
+  RETURN_STATUS_CHANGED = 'return.status_changed',  // décision entreprise sur un retour
 
   // ── PROMOTIONS ─────────────────────────────────────────────
   PROMO_ACTIVE          = 'promo.active',           // promo planifiée → active

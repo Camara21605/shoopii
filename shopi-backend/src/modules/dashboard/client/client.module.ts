@@ -69,6 +69,8 @@ import { ServiceFavorisController }   from './service-favoris.controller';
 import { WishlistController }         from './wishlist.controller';
 /* ✅ Nouveau controller profil public client */
 import { ClientPublicProfilController } from './client-public-profil.controller';
+/* ✅ Nouveau controller demandes de retour */
+import { ClientReturnsController }      from './returns/client-returns.controller';
 
 /* Services existants */
 import { ProfilService }    from './services/profil.service';
@@ -141,6 +143,7 @@ import { ClientPublicProfilService }  from './client-public-profil.service';
     WishlistController,            /* GET/POST /client/wishlist */
     ClientPublicProfilController,  /* GET /client/profils/:id */
     ClientSavController,           /* POST/GET /client/sav */
+    ClientReturnsController,       /* POST/GET /client/returns */
   ],
 
   providers: [

@@ -872,6 +872,44 @@ export class NotificationEventService {
   }
 
   /**
+   * Notifie le CLIENT qu'une décision a été prise sur SA demande de
+   * retour (accepté/refusé/remboursé) — voir ReturnsService.accept/
+   * refuse/refund. Symétrique à notifyOrderStatusChanged côté commande.
+   *
+   * Pas de groupKey : chaque décision est un événement distinct que le
+   * client doit voir individuellement (contrairement à un like agrégé).
+   */
+  async notifyReturnStatusChanged(params: {
+    clientId:    string;
+    companyId:   string;
+    returnId:    string;
+    reference:   string;
+    productName: string;
+    title:       string;
+    body:        string;
+  }): Promise<void> {
+    try {
+      const imageUrl = await this.resolveActorPhoto(NotificationActorType.COMPANY, params.companyId);
+      await this.notifService.create({
+        recipientType: NotificationActorType.CLIENT,
+        recipientId:   params.clientId,
+        actorType:     NotificationActorType.COMPANY,
+        actorId:       params.companyId,
+        type:          NotificationType.RETURN_STATUS_CHANGED,
+        priority:      NotificationPriority.HIGH,
+        title:         params.title,
+        body:          params.body,
+        imageUrl,
+        actionUrl:     `/mon-profil?tab=returns`,
+        resourceType:  'return',
+        resourceId:    params.returnId,
+      });
+    } catch (err) {
+      this.logger.error('notifyReturnStatusChanged failed', err);
+    }
+  }
+
+  /**
    * Notifie un acteur d'un changement de statut de commande.
    *
    * Cas d'usage :
@@ -1375,7 +1413,7 @@ export class NotificationEventService {
         type:          NotificationType.ACCOUNT_APPROVED,
         priority:      NotificationPriority.HIGH,
         title:         'Compte validé ✅',
-        body:          params.customBody || `Votre compte a été validé par l'administrateur. Bienvenue sur Shopi !`,
+        body:          params.customBody || `Votre compte a été validé par l'administrateur. Bienvenue sur Shoneya !`,
         /* BUG CORRIGÉ — '/dashboard' seul (sans segment de rôle) n'existe
          * pas côté frontend. */
         actionUrl:     this.resolveOwnAccountUrl(params.recipientType),
@@ -1503,7 +1541,7 @@ export class NotificationEventService {
         type:          NotificationType.ACCOUNT_APPROVED,
         priority:      NotificationPriority.HIGH,
         title:         'Compte réactivé ✅',
-        body:          params.customBody || `Votre compte a été réactivé par l'administrateur. Vous pouvez de nouveau utiliser Shopi normalement.`,
+        body:          params.customBody || `Votre compte a été réactivé par l'administrateur. Vous pouvez de nouveau utiliser Shoneya normalement.`,
         actionUrl:     this.resolveOwnAccountUrl(params.recipientType),
         resourceType:  'account',
         resourceId:    params.recipientId,

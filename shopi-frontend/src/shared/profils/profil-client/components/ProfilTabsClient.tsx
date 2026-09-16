@@ -10,6 +10,7 @@ import type { ClientTab } from '../types';
 
 const TABS: { id: ClientTab; icon: string; label: string }[] = [
   { id: 'orders',    icon: 'fa-box',              label: 'Commandes'   },
+  { id: 'returns',   icon: 'fa-rotate-left',      label: 'Retours'     },
   { id: 'subs',      icon: 'fa-bell',             label: 'Abonnements' },
   { id: 'favs',      icon: 'fa-heart',            label: 'Favoris'     },
   { id: 'wishlist',  icon: 'fa-bookmark',         label: 'Souhaits'    },

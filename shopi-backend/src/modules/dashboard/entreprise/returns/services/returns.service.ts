@@ -40,6 +40,15 @@ import {
 const REF_PAD = 5;
 function padRef(n: number) { return String(n).padStart(REF_PAD, '0'); }
 
+/* Délai (en jours) après livraison pendant lequel un client peut encore
+ * demander un retour — au-delà, la commande est considérée close côté
+ * après-vente (le client garde toujours la messagerie SAV pour un litige). */
+const RETURN_WINDOW_DAYS = 15;
+
+/* Actions d'historique purement internes (jamais montrées au client —
+ * peuvent contenir des notes privées de l'équipe, voir addNote()). */
+const INTERNAL_ONLY_HISTORY_ACTIONS = new Set(['note_added']);
+
 @Injectable()
 export class ReturnsService {
 
@@ -188,27 +197,73 @@ export class ReturnsService {
   }
 
   /* ══════════════════════════════════════════════════════════
-   * CRÉER — côté client (appelé depuis client controller)
+   * CRÉER — côté client (appelé depuis ClientReturnsController)
+   *
+   * ROBUSTESSE — tout ce qui identifie l'article et son prix est
+   * DÉRIVÉ SERVEUR depuis le CommandeItem réel, jamais accepté tel quel
+   * depuis le client (voir CreateReturnDto — productName/montantDemande
+   * ont été retirés des champs acceptés) :
+   *   1. la commande doit appartenir au client ET être livrée
+   *   2. la fenêtre de retour (RETURN_WINDOW_DAYS) ne doit pas être dépassée
+   *   3. l'article (productId) doit réellement faire partie de la commande
+   *   4. la quantité ne peut pas dépasser la quantité commandée, ni la
+   *      quantité déjà couverte par une demande antérieure non refusée
+   *      (empêche de réclamer deux fois le remboursement du même article)
+   *   5. montantDemande = prixUnitaire × quantity (snapshot commande),
+   *      jamais une valeur fournie par le client
    ══════════════════════════════════════════════════════════ */
   async createByClient(clientUserId: string, dto: CreateReturnDto) {
-    /* Vérifier que le client existe */
     const client = await this.clientRepo.findOne({ where: { userId: clientUserId } });
     if (!client) throw new NotFoundException('Profil client introuvable.');
 
-    /* Vérifier que la commande appartient au client */
     const commande = await this.commandeRepo.findOne({
-      where: { id: dto.commandeId, clientId: client.id },
-      select: ['id', 'companyId', 'status', 'total'],
+      where:     { id: dto.commandeId, clientId: client.id },
+      relations: ['items'],
     });
     if (!commande) throw new NotFoundException('Commande introuvable.');
 
-    /* Vérifier que la commande est dans un état retournable */
     const RETURNABLE = ['delivered', 'auto_delivered'];
     if (!RETURNABLE.includes(commande.status)) {
       throw new BadRequestException('Cette commande ne peut pas faire l\'objet d\'un retour.');
     }
 
-    /* Générer la référence */
+    const deliveredAt = commande.dateLivraisonEffective ?? commande.updatedAt;
+    const deadline = new Date(deliveredAt);
+    deadline.setDate(deadline.getDate() + RETURN_WINDOW_DAYS);
+    if (new Date() > deadline) {
+      throw new BadRequestException(
+        `Le délai de retour de ${RETURN_WINDOW_DAYS} jours après livraison est dépassé.`,
+      );
+    }
+
+    const item = (commande.items ?? []).find(i => i.productId === dto.productId);
+    if (!item) {
+      throw new NotFoundException('Cet article ne fait pas partie de cette commande.');
+    }
+
+    if (dto.quantity > item.quantite) {
+      throw new BadRequestException(
+        `Quantité invalide — vous avez commandé ${item.quantite} exemplaire(s) de cet article.`,
+      );
+    }
+
+    /* Empêche de réclamer deux fois le même article : on comptabilise la
+     * quantité déjà couverte par une demande non refusée (un retour refusé
+     * ne consomme pas la quantité — le client peut retenter). */
+    const existing = await this.returnRepo.find({
+      where:  { commandeId: commande.id, productId: dto.productId },
+      select: ['quantity', 'status'],
+    });
+    const dejaReclame = existing
+      .filter(r => r.status !== ReturnStatus.REFUSED)
+      .reduce((sum, r) => sum + r.quantity, 0);
+    if (dejaReclame + dto.quantity > item.quantite) {
+      throw new BadRequestException(
+        'Une demande de retour existe déjà pour la quantité maximale de cet article.',
+      );
+    }
+
+    const montantDemande = Math.round(Number(item.prixUnitaire) * dto.quantity);
     const reference = await this.generateReference('RET');
 
     const ret = this.returnRepo.create({
@@ -216,11 +271,12 @@ export class ReturnsService {
       commandeId:     commande.id,
       clientId:       client.id,
       companyId:      commande.companyId,
-      productId:      dto.productId ?? null,
-      productName:    dto.productName,
-      productVariant: dto.productVariant ?? null,
+      productId:      item.productId,
+      productName:    item.nomProduit,
+      productImage:   item.imageProduit,
+      productVariant: item.varianteChoisie,
       quantity:       dto.quantity,
-      montantDemande: dto.montantDemande,
+      montantDemande,
       reason:         dto.reason,
       description:    dto.description,
       returnType:     dto.returnType ?? ReturnType.REFUND,
@@ -241,11 +297,112 @@ export class ReturnsService {
       companyId:   commande.companyId,
       returnId:    saved.id,
       reference,
-      productName: dto.productName,
+      productName: item.nomProduit,
       clientId:    client.id,
     });
 
     this.logger.log(`[RETURN] Créé ${reference} — clientId=${client.id}`);
+    return saved;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+   * LISTE PAGINÉE — côté client (ses propres demandes uniquement)
+   ══════════════════════════════════════════════════════════ */
+  async findAllByClient(clientUserId: string, filters: FilterReturnsDto) {
+    const client = await this.clientRepo.findOne({ where: { userId: clientUserId } });
+    if (!client) throw new NotFoundException('Profil client introuvable.');
+
+    const { page = 1, limit = 20, status, sortBy = 'createdAt', sortOrder = 'DESC' } = filters;
+
+    const qb = this.returnRepo
+      .createQueryBuilder('r')
+      .where('r.clientId = :clientId', { clientId: client.id })
+      .orderBy(`r.${sortBy}`, sortOrder)
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    if (status) qb.andWhere('r.status = :status', { status });
+
+    const [data, total] = await qb.getManyAndCount();
+
+    return {
+      data: data.map(r => this.toClientSummary(r)),
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    };
+  }
+
+  /* ══════════════════════════════════════════════════════════
+   * DÉTAIL — côté client
+   *
+   * SÉCURITÉ VIE PRIVÉE : ne renvoie JAMAIS noteInterne, ni les entrées
+   * d'historique internes (voir INTERNAL_ONLY_HISTORY_ACTIONS) — ce sont
+   * des annotations privées de l'équipe entreprise, jamais destinées au
+   * client (contrairement à noteClient, qui lui est adressé).
+   ══════════════════════════════════════════════════════════ */
+  async findOneByClient(clientUserId: string, returnId: string) {
+    const client = await this.clientRepo.findOne({ where: { userId: clientUserId } });
+    if (!client) throw new NotFoundException('Profil client introuvable.');
+
+    const ret = await this.returnRepo.findOne({
+      where:     { id: returnId, clientId: client.id },
+      relations: ['evidences', 'history'],
+    });
+    if (!ret) throw new NotFoundException('Demande de retour introuvable.');
+
+    const history = [...(ret.history ?? [])]
+      .filter(h => !INTERNAL_ONLY_HISTORY_ACTIONS.has(h.action))
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      .map(h => ({ action: h.action, actorRole: h.actorRole, createdAt: h.createdAt }));
+
+    return {
+      ...this.toClientSummary(ret),
+      description: ret.description,
+      history,
+      evidences: ret.evidences ?? [],
+    };
+  }
+
+  /* ══════════════════════════════════════════════════════════
+   * UPLOAD PREUVE — côté client
+   *
+   * Restreint au statut PENDING : une fois que l'entreprise a statué,
+   * la preuve ne peut plus influencer une décision déjà prise (elle
+   * reste disponible via la messagerie SAV pour un litige).
+   ══════════════════════════════════════════════════════════ */
+  async uploadEvidenceByClient(
+    clientUserId: string, returnId: string,
+    file: Express.Multer.File,
+    type: 'image' | 'video' | 'document',
+  ) {
+    const client = await this.clientRepo.findOne({ where: { userId: clientUserId } });
+    if (!client) throw new NotFoundException('Profil client introuvable.');
+
+    const ret = await this.returnRepo.findOne({ where: { id: returnId, clientId: client.id } });
+    if (!ret) throw new NotFoundException('Demande de retour introuvable.');
+
+    if (ret.status !== ReturnStatus.PENDING) {
+      throw new BadRequestException(
+        'Impossible d\'ajouter une preuve — cette demande est déjà en cours de traitement.',
+      );
+    }
+
+    const uploadResult = await this.doUpload(file, type);
+
+    const evidence = this.evidenceRepo.create({
+      returnRequestId: ret.id,
+      url:        uploadResult.url,
+      publicId:   uploadResult.publicId,
+      type:       type as EvidenceType,
+      filename:   file.originalname,
+      size:       uploadResult.size,
+      uploadedBy: 'client',
+    });
+    const saved = await this.evidenceRepo.save(evidence);
+
+    await this.addHistory(ret.id, 'evidence_uploaded', { type }, clientUserId, 'client');
+
     return saved;
   }
 
@@ -279,6 +436,18 @@ export class ReturnsService {
       }));
     });
 
+    if (ret.clientId) {
+      void this.notifEventSvc.notifyReturnStatusChanged({
+        clientId:    ret.clientId,
+        companyId:   ret.companyId,
+        returnId:    ret.id,
+        reference:   ret.reference,
+        productName: ret.productName,
+        title:       'Retour accepté ✅',
+        body:        `${ret.reference} — "${ret.productName}" : votre demande a été acceptée.`,
+      });
+    }
+
     this.logger.log(`[RETURN] Accepté ${ret.reference} — userId=${userId}`);
     return this.findOne(userId, returnId);
   }
@@ -311,6 +480,18 @@ export class ReturnsService {
         actorRole:'enterprise',
       }));
     });
+
+    if (ret.clientId) {
+      void this.notifEventSvc.notifyReturnStatusChanged({
+        clientId:    ret.clientId,
+        companyId:   ret.companyId,
+        returnId:    ret.id,
+        reference:   ret.reference,
+        productName: ret.productName,
+        title:       'Retour refusé',
+        body:        `${ret.reference} — "${ret.productName}" : votre demande a été refusée.`,
+      });
+    }
 
     this.logger.log(`[RETURN] Refusé ${ret.reference} — userId=${userId}`);
     return this.findOne(userId, returnId);
@@ -371,6 +552,18 @@ export class ReturnsService {
       }));
     });
 
+    if (ret.clientId) {
+      void this.notifEventSvc.notifyReturnStatusChanged({
+        clientId:    ret.clientId,
+        companyId:   ret.companyId,
+        returnId:    ret.id,
+        reference:   ret.reference,
+        productName: ret.productName,
+        title:       'Retour remboursé 💸',
+        body:        `${ret.reference} — "${ret.productName}" : ${Number(ret.montantAccorde ?? 0).toLocaleString('fr-FR')} GNF remboursés.`,
+      });
+    }
+
     this.logger.log(`[RETURN] Remboursé ${ret.reference} — userId=${userId}`);
     return this.findOne(userId, returnId);
   }
@@ -424,14 +617,7 @@ export class ReturnsService {
   ) {
     const { ret } = await this.resolveReturn(userId, returnId);
 
-    let uploadResult: { url: string; publicId: string; size: number };
-    if (type === 'image') {
-      uploadResult = await this.uploadService.uploadImage(file, UPLOAD_FOLDERS.DOCUMENT);
-    } else if (type === 'video') {
-      uploadResult = await this.uploadService.uploadVideo(file, UPLOAD_FOLDERS.DOCUMENT);
-    } else {
-      uploadResult = await this.uploadService.uploadDocument(file, UPLOAD_FOLDERS.DOCUMENT);
-    }
+    const uploadResult = await this.doUpload(file, type);
 
     const evidence = this.evidenceRepo.create({
       returnRequestId: ret.id,
@@ -488,6 +674,15 @@ export class ReturnsService {
     return { ret, company };
   }
 
+  private async doUpload(
+    file: Express.Multer.File,
+    type: 'image' | 'video' | 'document',
+  ): Promise<{ url: string; publicId: string; size: number }> {
+    if (type === 'image') return this.uploadService.uploadImage(file, UPLOAD_FOLDERS.DOCUMENT);
+    if (type === 'video') return this.uploadService.uploadVideo(file, UPLOAD_FOLDERS.DOCUMENT);
+    return this.uploadService.uploadDocument(file, UPLOAD_FOLDERS.DOCUMENT);
+  }
+
   private async generateReference(prefix: 'RET' | 'SAV'): Promise<string> {
     /* FIX M2 — Remplace le COUNT() non atomique par un UUID partiel + timestamp.
      * Avant : deux requêtes concurrentes lisaient le même count → même référence.
@@ -532,6 +727,29 @@ export class ReturnsService {
       montantDemande: Number(r.montantDemande),
       montantAccorde: r.montantAccorde !== null ? Number(r.montantAccorde) : null,
       evidenceCount:  (r.evidences ?? []).length,
+      createdAt:      r.createdAt,
+      updatedAt:      r.updatedAt,
+    };
+  }
+
+  /* Vue client — exclut délibérément noteInterne, priority et assigneeId
+   * (détails internes de traitement, jamais destinés au client). */
+  private toClientSummary(r: ReturnRequest) {
+    return {
+      id:             r.id,
+      reference:      r.reference,
+      commandeId:     r.commandeId,
+      productId:      r.productId,
+      productName:    r.productName,
+      productImage:   r.productImage,
+      productVariant: r.productVariant,
+      quantity:       r.quantity,
+      reason:         r.reason,
+      returnType:     r.returnType,
+      status:         r.status,
+      montantDemande: Number(r.montantDemande),
+      montantAccorde: r.montantAccorde !== null ? Number(r.montantAccorde) : null,
+      noteClient:     r.noteClient,
       createdAt:      r.createdAt,
       updatedAt:      r.updatedAt,
     };

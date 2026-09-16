@@ -27,6 +27,8 @@ export interface Acteur {
 
 /* Une ligne d'article de la commande */
 export interface ArticleCommande {
+  /** null si le produit a été supprimé depuis — pas éligible à un retour */
+  productId?: string | null;
   emoji:     string;
   /** URL Cloudinary snapshot (null si produit supprimé ou non renseigné) */
   imageUrl?: string | null;

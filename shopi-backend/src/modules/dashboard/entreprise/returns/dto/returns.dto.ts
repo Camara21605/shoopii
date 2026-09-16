@@ -4,26 +4,24 @@
  * ============================================================ */
 
 import {
-  IsEnum, IsInt, IsOptional, IsString, IsUUID,
+  IsEnum, IsIn, IsInt, IsOptional, IsString, IsUUID,
   Max, MaxLength, Min, MinLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ReturnReason, ReturnStatus, ReturnType, ReturnPriority } from 'src/database/entities/returns/return-request.entity';
 
-/* ── Créer une demande de retour (côté client) ── */
+/* ── Créer une demande de retour (côté client) ──
+ * SÉCURITÉ : contrairement à une version antérieure, le client NE fournit
+ * PLUS productName/productVariant/montantDemande — ces valeurs sont
+ * dérivées côté serveur depuis le CommandeItem réel (voir
+ * ReturnsService.createByClient), pour empêcher un client de réclamer un
+ * remboursement sur un montant ou un article qu'il invente. */
 export class CreateReturnDto {
   @IsUUID()
   commandeId: string;
 
   @IsUUID()
-  @IsOptional()
-  productId?: string;
-
-  @IsString() @MinLength(2) @MaxLength(255)
-  productName: string;
-
-  @IsString() @IsOptional() @MaxLength(255)
-  productVariant?: string;
+  productId: string;
 
   @IsEnum(ReturnReason)
   reason: ReturnReason;
@@ -37,10 +35,6 @@ export class CreateReturnDto {
   @IsInt() @Min(1) @Max(100)
   @Type(() => Number)
   quantity: number;
-
-  @IsInt() @Min(0)
-  @Type(() => Number)
-  montantDemande: number;
 }
 
 /* ── Accepter un retour ── */
@@ -113,9 +107,15 @@ export class FilterReturnsDto {
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100)
   limit?: number = 20;
 
-  @IsOptional() @IsString()
+  /* SÉCURITÉ — @IsIn (et pas seulement @IsString) : ces valeurs sont
+   * interpolées telles quelles dans un ORDER BY (voir ReturnsService.
+   * findAll/findAllByClient) ; un simple @IsString laisserait passer une
+   * chaîne arbitraire jusqu'au générateur SQL de TypeORM. Désormais
+   * exposé aussi côté client (ClientReturnsController) — la validation
+   * doit donc tenir sans dépendre de la confiance accordée à l'appelant. */
+  @IsOptional() @IsIn(['createdAt', 'updatedAt', 'status', 'montantDemande'])
   sortBy?: 'createdAt' | 'updatedAt' | 'status' | 'montantDemande' = 'createdAt';
 
-  @IsOptional() @IsString()
+  @IsOptional() @IsIn(['ASC', 'DESC'])
   sortOrder?: 'ASC' | 'DESC' = 'DESC';
 }

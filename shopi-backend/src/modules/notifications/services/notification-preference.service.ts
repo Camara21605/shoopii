@@ -81,6 +81,7 @@ const DEFAULT_CHANNEL_PREFERENCES: Record<
   [NotificationType.SERVICE_LIKED]:         { in_app: true, push: false, email: false, sms: false },
   // Retours
   [NotificationType.RETURN_REQUESTED]:      { in_app: true, push: true,  email: true,  sms: false },
+  [NotificationType.RETURN_STATUS_CHANGED]: { in_app: true, push: true,  email: true,  sms: false },
   // Promotions
   [NotificationType.PROMO_ACTIVE]:          { in_app: true, push: true,  email: false, sms: false },
   [NotificationType.PROMO_ENDING_SOON]:     { in_app: true, push: true,  email: true,  sms: false },
