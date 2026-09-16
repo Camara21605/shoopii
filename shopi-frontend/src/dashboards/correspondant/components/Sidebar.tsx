@@ -3,6 +3,8 @@ import React from 'react';
 import s from '../styles/Sidebar.module.css';
 import { pop } from './Toast';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
+import { useSidebarBadges } from '../hooks/useSidebarBadges';
+import type { CorrespondantBadges } from '../hooks/useSidebarBadges';
 import type { PageId } from '../data/correspondantData';
 
 interface Props {
@@ -15,32 +17,39 @@ interface Props {
 }
 interface NavItem { id: PageId; icon: string; label: string; badge?: string; badgeCls?: string; }
 
-const GROUPS: { title: string | null; items: NavItem[] }[] = [
-  { title: null, items: [
-    { id: 'overview',   icon: 'fa-chart-pie',         label: "Vue d'ensemble" },
-    { id: 'colis',      icon: 'fa-box',               label: 'Colis en dépôt',      badge: '14',     badgeCls: '' },
-    { id: 'transferts', icon: 'fa-arrows-rotate',     label: 'Transferts actifs',   badge: '3',      badgeCls: s.badgeT },
-    { id: 'retours',    icon: 'fa-rotate-left',       label: 'Retours & litiges',   badge: '2',      badgeCls: s.badgeR },
-  ]},
-  { title: 'Mes relations', items: [
-    { id: 'boutiques',  icon: 'fa-store',             label: 'Boutiques partenaires', badge: '4',    badgeCls: s.badgeB },
-    { id: 'livreurs',   icon: 'fa-motorcycle',        label: 'Livreurs locaux',     badge: '7',      badgeCls: s.badgeT },
-    { id: 'clients',    icon: 'fa-users',             label: 'Clients zone' },
-  ]},
-  { title: 'Finances & Compte', items: [
-    { id: 'revenus',     icon: 'fa-coins',             label: 'Mes revenus' },
-    { id: 'portefeuille', icon: 'fa-wallet',           label: 'Portefeuille' },
-    { id: 'zone',       icon: 'fa-map-location-dot',  label: 'Ma zone' },
-    { id: 'evaluation', icon: 'fa-star',              label: 'Mon évaluation',      badge: '★ 4.9' },
-    { id: 'parametres', icon: 'fa-gear',              label: 'Paramètres' },
-  ]},
-];
+/* Badges calculés en direct (voir useSidebarBadges) — plus aucune valeur
+ * codée en dur ici. Un onglet sans donnée réelle correspondante n'a
+ * simplement pas de badge (ex: "clients", "revenus", "zone"). */
+function buildGroups(b: CorrespondantBadges): { title: string | null; items: NavItem[] }[] {
+  return [
+    { title: null, items: [
+      { id: 'overview',   icon: 'fa-chart-pie',         label: "Vue d'ensemble" },
+      { id: 'colis',      icon: 'fa-box',               label: 'Colis en dépôt',      ...(b.colis      ? { badge: String(b.colis),      badgeCls: '' }        : {}) },
+      { id: 'transferts', icon: 'fa-arrows-rotate',     label: 'Transferts actifs',   ...(b.transferts ? { badge: String(b.transferts), badgeCls: s.badgeT }  : {}) },
+      { id: 'retours',    icon: 'fa-rotate-left',       label: 'Retours & litiges',   ...(b.retours    ? { badge: String(b.retours),    badgeCls: s.badgeR }  : {}) },
+    ]},
+    { title: 'Mes relations', items: [
+      { id: 'boutiques',  icon: 'fa-store',             label: 'Boutiques partenaires', ...(b.boutiques ? { badge: String(b.boutiques), badgeCls: s.badgeB } : {}) },
+      { id: 'livreurs',   icon: 'fa-motorcycle',        label: 'Livreurs locaux',     ...(b.livreurs   ? { badge: String(b.livreurs),   badgeCls: s.badgeT }  : {}) },
+      { id: 'clients',    icon: 'fa-users',             label: 'Clients zone' },
+    ]},
+    { title: 'Finances & Compte', items: [
+      { id: 'revenus',     icon: 'fa-coins',             label: 'Mes revenus' },
+      { id: 'portefeuille', icon: 'fa-wallet',           label: 'Portefeuille' },
+      { id: 'zone',       icon: 'fa-map-location-dot',  label: 'Ma zone' },
+      { id: 'evaluation', icon: 'fa-star',              label: 'Mon évaluation',      ...(b.evaluation ? { badge: b.evaluation } : {}) },
+      { id: 'parametres', icon: 'fa-gear',              label: 'Paramètres' },
+    ]},
+  ];
+}
 
 export default function Sidebar({ page, setPage, open, onClose, nomUtilisateur, photoUrl }: Props) {
   const displayName = nomUtilisateur ?? '—';
   const initiales   = nomUtilisateur
     ? nomUtilisateur.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
     : '?';
+  const { badges } = useSidebarBadges();
+  const GROUPS = buildGroups(badges);
   const go = (id: PageId) => { setPage(id); onClose(); };
   return (
     <nav className={`${s.sb} ${open ? s.open : ''}`}>

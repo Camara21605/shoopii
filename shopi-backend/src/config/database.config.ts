@@ -72,6 +72,7 @@ import { CompanyType }    from '../database/entities/entreprise.table/company-ty
 import { CompanyHoraire } from '../database/entities/entreprise.table/company-horaire.entity';
 import { CompanyAvis }    from '../database/entities/entreprise.table/company-avis.entity';
 import { LivreurAvis }    from '../database/entities/livreur.table/livreur-avis.entity';
+import { CorrespondantAvis } from '../database/entities/correspondant.table/correspondant-avis.entity';
 // ── Location ───────────────────────────────────────────────────────────────────
 import { CompanyBranch }    from '../database/entities/location/company-branch.entity';
 import { LocationHistory }  from '../database/entities/location/location-history.entity';
@@ -326,6 +327,7 @@ export const databaseConfigFactory = {
       CompanyHoraire,
       CompanyAvis,
       LivreurAvis,
+      CorrespondantAvis,
       LivreurHoraire,
       CorrespondantHoraire,
       Follow,

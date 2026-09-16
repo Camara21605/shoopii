@@ -78,6 +78,10 @@ import { SessionModule } from '../../session/session.module';
 /* ── TwoFaService — mot de passe + code TOTP requis pour désactiver la 2FA ── */
 import { TwoFaModule } from '../../auth/twofa/twofa.module';
 
+/* ── Module Avis — page "Évaluation" (lecture + réponse aux avis créés
+ * par CommandeFeedbackService.envoyerNotations) ── */
+import { CorrespondantAvisModule } from './avis/correspondant-avis.module';
+
 @Module({
   imports: [
     /*
@@ -107,6 +111,9 @@ import { TwoFaModule } from '../../auth/twofa/twofa.module';
     MessagerieModule,
     SessionModule,
     TwoFaModule,
+
+    /* Page "Évaluation" — GET/POST /dashboard/correspondant/avis */
+    CorrespondantAvisModule,
   ],
 
   controllers: [

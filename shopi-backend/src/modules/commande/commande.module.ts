@@ -23,6 +23,7 @@ import { Delivery } from '../../database/entities/profiles/livreur-profile.entit
 import { Correspondent } from '../../database/entities/profiles/correspondant-profile.entity';
 import { CompanyAvis }   from '../../database/entities/entreprise.table/company-avis.entity';
 import { LivreurAvis }   from '../../database/entities/livreur.table/livreur-avis.entity';
+import { CorrespondantAvis } from '../../database/entities/correspondant.table/correspondant-avis.entity';
 import { PlatformSettings } from '../../database/entities/platform-settings.entity';
 import { Localisation } from '../../database/entities/localisation.entity';
 
@@ -60,6 +61,7 @@ import { CommandeScheduler } from './commande.scheduler';
       Correspondent,
       CompanyAvis,
       LivreurAvis,
+      CorrespondantAvis,
       PlatformSettings,
       Localisation,
     ]),

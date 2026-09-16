@@ -16,9 +16,11 @@ import { User }        from '../../../database/entities/user.entity';
 import { Commande, CommandeStatus, LivreurAssignmentStatus } from '../../../database/entities/commande/commande.entity';
 import { Company }     from '../../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery }    from '../../../database/entities/profiles/livreur-profile.entity';
+import { Correspondent } from '../../../database/entities/profiles/correspondant-profile.entity';
 import { Client }      from '../../../database/entities/profiles/client-profile.entity';
 import { CompanyAvis } from '../../../database/entities/entreprise.table/company-avis.entity';
 import { LivreurAvis } from '../../../database/entities/livreur.table/livreur-avis.entity';
+import { CorrespondantAvis } from '../../../database/entities/correspondant.table/correspondant-avis.entity';
 import { NotificationActorType } from '../../../database/entities/notification/notification.entitiy';
 import { NotificationEventService } from '../../notifications/events/notification-event.service';
 
@@ -35,9 +37,11 @@ export class CommandeFeedbackService {
     @InjectRepository(Commande)    private readonly commandeRepo:   Repository<Commande>,
     @InjectRepository(Company)     private readonly companyRepo:    Repository<Company>,
     @InjectRepository(Delivery)    private readonly deliveryRepo:   Repository<Delivery>,
+    @InjectRepository(Correspondent) private readonly correspondantRepo: Repository<Correspondent>,
     @InjectRepository(Client)      private readonly clientRepo:     Repository<Client>,
     @InjectRepository(CompanyAvis) private readonly avisRepo:       Repository<CompanyAvis>,
     @InjectRepository(LivreurAvis) private readonly livreurAvisRepo: Repository<LivreurAvis>,
+    @InjectRepository(CorrespondantAvis) private readonly correspondantAvisRepo: Repository<CorrespondantAvis>,
     private readonly notifEventSvc: NotificationEventService,
   ) {}
 
@@ -74,7 +78,7 @@ export class CommandeFeedbackService {
     /* 1. Vérifier la commande */
     const commande = await this.commandeRepo.findOne({
       where:  { id: commandeId },
-      select: ['id', 'companyId', 'clientId', 'status', 'livreurId', 'livreurAssignmentStatus'],
+      select: ['id', 'companyId', 'clientId', 'status', 'livreurId', 'livreurAssignmentStatus', 'correspondantId'],
     });
     if (!commande) throw new NotFoundException('Commande introuvable.');
 
@@ -199,6 +203,56 @@ export class CommandeFeedbackService {
         delivery.averageRating = newAvg;
         delivery.totalRatings  = newTotal;
         await this.deliveryRepo.save(delivery);
+      }
+    }
+
+    /* 7. Note du correspondant — même miroir, pour l'acteur CORRESPONDENT.
+     * Pas d'équivalent de LivreurAssignmentStatus ici : un correspondant
+     * n'a pas de flux d'acceptation/refus séparé (contrairement au
+     * livreur) — dès que la commande atteint l'état "terminée" (seul
+     * moment où ce formulaire de notation est proposé, voir DoneBanner/
+     * RatingModal), un correspondantId renseigné a nécessairement déjà
+     * validé son code (la chaîne de validation ne peut pas se terminer
+     * sinon). commande.correspondantId truthy suffit donc. */
+    const correspondantNote = dto.notes.find(n => n.role === 'correspondant');
+    if (correspondantNote && commande.correspondantId) {
+      const { clientNom, clientInitiales } = this.buildClientSnapshot(user);
+
+      const existingCorAvis = await this.correspondantAvisRepo.findOne({ where: { commandeId } });
+      if (!existingCorAvis) {
+        const avis = this.correspondantAvisRepo.create({
+          correspondantId: commande.correspondantId,
+          commandeId,
+          clientNom,
+          clientInitiales,
+          note:        correspondantNote.note,
+          commentaire: correspondantNote.commentaire ?? null,
+        });
+        await this.correspondantAvisRepo.save(avis);
+
+        void this.notifEventSvc.notifyCorrespondantReviewReceived({
+          correspondantId: commande.correspondantId,
+          clientId:        commande.clientId,
+          clientNom,
+          note:             correspondantNote.note,
+          commandeId,
+        });
+      }
+
+      const correspondant = await this.correspondantRepo.findOne({
+        where:  { id: commande.correspondantId },
+        select: ['id', 'averageRating', 'totalRatings'],
+      });
+      if (correspondant && !existingCorAvis) {
+        const oldTotal = correspondant.totalRatings ?? 0;
+        const oldAvg   = Number(correspondant.averageRating) || 0;
+        const newTotal = oldTotal + 1;
+        const newAvg   = parseFloat(
+          ((oldAvg * oldTotal + correspondantNote.note) / newTotal).toFixed(2),
+        );
+        correspondant.averageRating = newAvg;
+        correspondant.totalRatings  = newTotal;
+        await this.correspondantRepo.save(correspondant);
       }
     }
 

@@ -790,6 +790,41 @@ export class NotificationEventService {
     }
   }
 
+  /**
+   * Notifie le CORRESPONDANT qu'un client a laissé un avis sur SON relais
+   * — miroir exact de notifyLivreurReviewReceived() ci-dessus pour
+   * l'acteur CORRESPONDENT (voir CommandeFeedbackService.envoyerNotations,
+   * qui traite désormais aussi la note "correspondant").
+   */
+  async notifyCorrespondantReviewReceived(params: {
+    correspondantId: string;
+    clientId:        string;
+    clientNom:       string;
+    note:            number;
+    commandeId:      string;
+  }): Promise<void> {
+    try {
+      const imageUrl = await this.resolveActorPhoto(NotificationActorType.CLIENT, params.clientId);
+      await this.notifService.create({
+        recipientType: NotificationActorType.CORRESPONDENT,
+        recipientId:   params.correspondantId,
+        actorType:     NotificationActorType.CLIENT,
+        actorId:       params.clientId,
+        type:          NotificationType.REVIEW_RECEIVED,
+        priority:      NotificationPriority.NORMAL,
+        title:         'Nouvel avis reçu ⭐',
+        body:          `${params.clientNom} a laissé un avis ${params.note}/5 sur votre relais.`,
+        imageUrl,
+        actionUrl:     '/dashboard/correspondant',
+        groupKey:      `review.received:${params.correspondantId}`,
+        resourceType:  'review',
+        resourceId:    params.commandeId,
+      });
+    } catch (err) {
+      this.logger.error('notifyCorrespondantReviewReceived failed', err);
+    }
+  }
+
   // ─────────────────────────────────────────────────────────
   // PRODUITS CATALOG
   // ─────────────────────────────────────────────────────────

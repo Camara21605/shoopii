@@ -524,6 +524,12 @@ export class Correspondent {
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
   averageRating: number;
 
+  /** Nombre d'avis reçus — dénominateur de la moyenne glissante ci-dessus
+   *  (voir CommandeFeedbackService.envoyerNotations). Distinct de
+   *  totalMissions : une mission n'est pas toujours notée. */
+  @Column({ type: 'int', default: 0 })
+  totalRatings: number;
+
   @CreateDateColumn()
   createdAt: Date;
 
