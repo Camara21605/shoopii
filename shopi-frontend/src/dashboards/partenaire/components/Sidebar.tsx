@@ -8,6 +8,8 @@ import { useTranslation } from 'react-i18next';
 import styles from '../styles/Sidebar.module.css';
 import type { PartenairePage } from '../data/types';
 import WalletQuickBar from '../../../shared/components/portefeuille/WalletQuickBar';
+import { useSidebarBadges } from '../hooks/useSidebarBadges';
+import type { PartenaireBadges } from '../hooks/useSidebarBadges';
 
 interface SidebarProps {
   activePage:   PartenairePage;
@@ -15,18 +17,19 @@ interface SidebarProps {
   onGenerate:   () => void;
   isOpen?:      boolean;
   onClose?:     () => void;
-  partnerName?: string;
-  partnerTier?: string;
 }
 
-function buildNav(t: (k: string) => string) {
+/* Badges calculés en direct (voir useSidebarBadges) — plus aucune valeur
+ * codée en dur ici. Un onglet sans donnée réelle correspondante n'a
+ * simplement pas de badge. */
+function buildNav(t: (k: string) => string, b: PartenaireBadges) {
   return [
     { title: t('partenaireLayout.sidebar.sections.principal'), items: [
       { id: 'overview' as PartenairePage, icon: 'fa-chart-pie', label: t('partenaireLayout.sidebar.items.overview') },
     ]},
     { title: t('partenaireLayout.sidebar.sections.acquisition'), items: [
-      { id: 'codes'        as PartenairePage, icon: 'fa-qrcode',        label: t('partenaireLayout.sidebar.items.codes'),   badge: '3',  badgeCls: 'a' },
-      { id: 'acteurs'      as PartenairePage, icon: 'fa-people-group',  label: t('partenaireLayout.sidebar.items.acteurs'), badge: '18', badgeCls: 'g' },
+      { id: 'codes'        as PartenairePage, icon: 'fa-qrcode',        label: t('partenaireLayout.sidebar.items.codes'),   ...(b.codes   ? { badge: String(b.codes),   badgeCls: 'a' } : {}) },
+      { id: 'acteurs'      as PartenairePage, icon: 'fa-people-group',  label: t('partenaireLayout.sidebar.items.acteurs'), ...(b.acteurs ? { badge: String(b.acteurs), badgeCls: 'g' } : {}) },
       { id: 'invitations'  as PartenairePage, icon: 'fa-paper-plane',   label: t('partenaireLayout.sidebar.items.invitations') },
     ]},
     { title: t('partenaireLayout.sidebar.sections.revenus'), items: [
@@ -37,7 +40,7 @@ function buildNav(t: (k: string) => string) {
       { id: 'stats' as PartenairePage, icon: 'fa-chart-line', label: t('partenaireLayout.sidebar.items.stats') },
     ]},
     { title: t('partenaireLayout.sidebar.sections.securite'), items: [
-      { id: 'signalements' as PartenairePage, icon: 'fa-shield-halved', label: t('partenaireLayout.sidebar.items.signalements'), badge: '2', badgeCls: 'a' },
+      { id: 'signalements' as PartenairePage, icon: 'fa-shield-halved', label: t('partenaireLayout.sidebar.items.signalements'), ...(b.signalements ? { badge: String(b.signalements), badgeCls: 'a' } : {}) },
     ]},
     { title: t('partenaireLayout.sidebar.sections.compte'), items: [
       { id: 'parametres' as PartenairePage, icon: 'fa-gear', label: t('partenaireLayout.sidebar.items.parametres') },
@@ -48,11 +51,15 @@ function buildNav(t: (k: string) => string) {
 export default function Sidebar({
   activePage, onNavigate, onGenerate,
   isOpen = false, onClose,
-  partnerName = 'Mohamed Soumah', partnerTier = 'Partenaire Or · Conakry',
 }: SidebarProps) {
   const { t } = useTranslation();
-  const NAV = buildNav(t);
-  const initiales = partnerName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  const { badges, partnerName, partnerZone } = useSidebarBadges();
+  const NAV = buildNav(t, badges);
+  const displayName = partnerName ?? '—';
+  const tierLabel   = partnerZone ? `Partenaire · ${partnerZone}` : 'Partenaire';
+  const initiales   = partnerName
+    ? partnerName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
+    : '?';
 
   return (
     <>
@@ -73,8 +80,8 @@ export default function Sidebar({
           <div className={styles.meCard} onClick={() => onNavigate('parametres')}>
             <div className={styles.meAv}>{initiales}</div>
             <div>
-              <div className={styles.meNm}>{partnerName}</div>
-              <div className={styles.meRl}><span className={styles.dot} /> {partnerTier}</div>
+              <div className={styles.meNm}>{displayName}</div>
+              <div className={styles.meRl}><span className={styles.dot} /> {tierLabel}</div>
             </div>
           </div>
         </div>
