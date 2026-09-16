@@ -236,14 +236,25 @@
 }
 @media (max-width: 640px) {
   .hero-left  { padding: 20px 18px; }
+  /* BUG CORRIGÉ — la grille 2×2 (puis 1 colonne sous 420px, voir l'ancien
+   * bloc ci-dessous) empilait les 4 stats sur plusieurs lignes en mobile.
+   * Demande explicite : les 4 restent sur UNE SEULE ligne quelle que soit
+   * la largeur — flex + rétrécissement du texte plutôt qu'un retour à la
+   * ligne, avec un défilement horizontal en dernier recours si un écran
+   * est vraiment trop étroit pour les 4 (scrollbar masquée). */
   .hero-right {
-    display: grid; grid-template-columns: 1fr 1fr;
-    padding: 14px 16px; gap: 8px;
+    display: flex; flex-wrap: nowrap; overflow-x: auto;
+    padding: 12px 14px; gap: 10px;
+    scrollbar-width: none; -ms-overflow-style: none;
   }
-  /* Grille 2 colonnes : le trait vertical (border-left) de la version
-     bureau n'a plus de sens ici (2e colonne collée au bord droit,
-     1re ligne/2e ligne désalignées) — retiré au profit du simple gap. */
-  .hs        { min-width: 0; padding: 0; border-left: none; }
+  .hero-right::-webkit-scrollbar { display: none; width: 0; height: 0; }
+  /* Chiffres centrés dans chaque carte plutôt qu'alignés à gauche — plus
+   * lisible maintenant que les 4 cartes sont compactes sur une ligne. */
+  .hs { min-width: 0; flex: 1 1 0; padding: 0; border-left: none; text-align: center; }
+  .hs-v     { font-size: 12.5px; }
+  .hs-u     { font-size: 8.5px; margin-left: 1px; }
+  .hs-l     { font-size: 7.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hs-trend { font-size: 7.5px; gap: 2px; white-space: nowrap; justify-content: center; }
   .donut-wrap { flex-direction: column; align-items: stretch; }
 
   /* Top produits : la colonne "ventes/tendance" à droite + le nom
@@ -251,9 +262,6 @@
      libère de la place en masquant le rang numéroté. */
   .tp-row  { gap: 8px; }
   .tp-rank { display: none; }
-}
-@media (max-width: 420px) {
-  .hero-right { grid-template-columns: 1fr; }
 }
 
 

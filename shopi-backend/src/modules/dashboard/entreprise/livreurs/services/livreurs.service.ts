@@ -86,6 +86,12 @@ export interface LivreurResponse {
   /** L'entreprise connectée suit-elle ce livreur (POST /suivis/livreurs/:id) ?
    *  Conditionne l'affichage des boutons Message/Appeler dans LivreursPage.tsx. */
   isSuivi:              boolean;
+  /** Dernière position connue — alimentée par le partage de position en
+   *  temps réel du livreur (voir location.gateway.ts). null tant que le
+   *  livreur n'a jamais partagé sa position. Utilisé par "Voir carte des
+   *  livreurs" (actions rapides) — un instantané, PAS un suivi live. */
+  lastLatitude:         number | null;
+  lastLongitude:        number | null;
 }
 
 export interface LivreurStats {
@@ -236,6 +242,8 @@ export class LivreursService {
       companyId:            d.companyId,
       userId:               d.userId,
       isSuivi:              followedIds.has(d.id),
+      lastLatitude:         d.lastLatitude  != null ? Number(d.lastLatitude)  : null,
+      lastLongitude:        d.lastLongitude != null ? Number(d.lastLongitude) : null,
     };
   }
 

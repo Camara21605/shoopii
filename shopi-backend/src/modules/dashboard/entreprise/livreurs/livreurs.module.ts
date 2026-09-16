@@ -52,10 +52,14 @@ import {
 import {
   Follow,
 } from 'src/database/entities/follow/follow.entity';
+import {
+  LivreurMission,
+} from 'src/database/entities/livreur.table/livreur-mission.entity';
 
 import { LivreursController }         from './livreurs.controller';
 import { LivreursService }            from './services/livreurs.service';
 import { InvitationLivreurService }   from './services/invitation-livreur.service';
+import { MissionsService }            from './services/missions.service';
 
 import { MailModule }          from 'src/modules/email/email.module';
 import { CodesModule }         from 'src/modules/auth/code-creation/code-creation.module';
@@ -65,9 +69,10 @@ import { CompanyTeamModule }   from 'src/modules/company-team/company-team.modul
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Delivery,   // Profils des livreurs
-      Company,    // Pour résoudre companyId depuis userId JWT
-      Follow,     // isSuivi — l'entreprise suit-elle ce livreur ?
+      Delivery,        // Profils des livreurs
+      Company,         // Pour résoudre companyId depuis userId JWT
+      Follow,          // isSuivi — l'entreprise suit-elle ce livreur ?
+      LivreurMission,  // Missions diffusées (actions rapides)
     ]),
 
     CodesModule,
@@ -86,6 +91,7 @@ import { CompanyTeamModule }   from 'src/modules/company-team/company-team.modul
   providers: [
     LivreursService,            // CRUD + stats + zones + activité
     InvitationLivreurService,   // Invitation + contact
+    MissionsService,            // Missions diffusées (actions rapides)
   ],
 
   exports: [

@@ -21,6 +21,8 @@ import { fetchEnCours } from '../services/encours.api';
 import type { EnCoursApi } from '../services/encours.api';
 import { fetchMissions, accepterMission, refuserMission } from '../services/missions.api';
 import type { MissionApi } from '../services/missions.api';
+import { fetchMissionsDisponibles, accepterMissionDisponible } from '../services/missions-disponibles.api';
+import type { MissionDisponible } from '../services/missions-disponibles.api';
 import { fetchStats, fetchRevenus, fetchRevenusChart } from '../services/overview.api';
 import type { StatsApi, RevenusApi, RevenusChartPoint } from '../services/overview.api';
 import { apiFetch } from '@/shared/services/apiFetch';
@@ -84,17 +86,36 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
   const [now,        setNow]        = useState(Date.now());
   const [refusingMission, setRefusingMission] = useState<MissionApi | null>(null);
   const [refusing,        setRefusing]        = useState(false);
+  /* Missions DIFFUSÉES par l'entreprise, pas encore acceptées — distinct
+   * de `missions` ci-dessus (commandes déjà assignées à CE livreur). */
+  const [dispos,          setDispos]          = useState<MissionDisponible[]>([]);
+  const [acceptingDispoId, setAcceptingDispoId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStats().then(setStats).catch(() => {});
     fetchRevenus().then(d => { setRevenus(d); setTodayEarn(d.revenusThisMonth); }).catch(() => {});
     fetchEnCours().then(setEncours).catch(() => {});
     fetchMissions().then(setMissions).catch(() => {});
+    fetchMissionsDisponibles().then(setDispos).catch(() => {});
     apiFetch<ActivityItem[]>('/dashboard/livreur/activite')
       .then(data => { if (data) setActivite(data); })
       .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleAccepterDispo = useCallback(async (m: MissionDisponible) => {
+    setAcceptingDispoId(m.id);
+    try {
+      await accepterMissionDisponible(m.id);
+      setDispos(prev => prev.filter(d => d.id !== m.id));
+      onPop(`✅ Mission "${m.title}" acceptée`, 's');
+    } catch (err: any) {
+      onPop(err?.message ?? "❌ Impossible d'accepter cette mission — un autre livreur l'a peut-être déjà prise.", 'e');
+      fetchMissionsDisponibles().then(setDispos).catch(() => {});
+    } finally {
+      setAcceptingDispoId(null);
+    }
+  }, [onPop]);
 
   useEffect(() => {
     fetchRevenusChart(chartMode).then(setChartData).catch(() => setChartData([]));
@@ -197,6 +218,46 @@ export default function OverviewPage({ onNavigate, onPop, setTodayEarn }: Props)
               <button className={styles.maBtnIssue} onClick={() => onNavigate('encours')}>
                 <i className="fas fa-route" /> {t('livreurOverview.missionActive.details')}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 1bis. Missions diffusées par l'entreprise — pas encore acceptées
+           (distinct des missions ci-dessus, déjà assignées à ce livreur).
+           Masqué entièrement s'il n'y en a aucune, même logique que le
+           reste de cette page (voir en-tête du fichier). ── */}
+      {dispos.length > 0 && (
+        <div className={shared.card}>
+          <div className={shared.ch}>
+            <div className={shared.chT}><i className="fas fa-bullhorn" /> Missions disponibles</div>
+          </div>
+          <div className={shared.cb}>
+            <div className={styles.missionList}>
+              {dispos.map(m => (
+                <div key={m.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  border: '1px solid var(--bdr, #E5E7EB)', borderRadius: 12, padding: '10px 14px',
+                  marginBottom: 8,
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>
+                      {m.urgent && <span style={{ color: 'var(--red, #DC2626)' }}>🔴 </span>}{m.title}
+                    </div>
+                    <div style={{ fontSize: 11.5, color: 'var(--t3)', marginTop: 2 }}>
+                      {[m.zone, m.reward ? `${m.reward.toLocaleString('fr-FR')} GNF` : null].filter(Boolean).join(' · ') || 'Détails à confirmer avec l\'entreprise'}
+                    </div>
+                  </div>
+                  <button
+                    className={styles.chartTab}
+                    style={{ background: 'var(--teal)', color: '#fff', flexShrink: 0, padding: '8px 16px' }}
+                    onClick={() => handleAccepterDispo(m)}
+                    disabled={acceptingDispoId === m.id}
+                  >
+                    {acceptingDispoId === m.id ? <i className="fas fa-spinner fa-spin" /> : <>Accepter</>}
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>

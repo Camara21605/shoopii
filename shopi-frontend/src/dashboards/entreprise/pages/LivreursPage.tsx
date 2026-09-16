@@ -51,7 +51,11 @@ import {
   type LivreurStatus,
   type VehicleType,
   type InvitationLivreurResponse,
+  type LivreurMission,
+  type MissionStatus,
 } from '../../../shared/services/api/livreurs.api';
+import LocationMap, { type MarkerConfig } from '../../../shared/location/components/LocationMap';
+import { DEFAULT_CENTER } from '../../../shared/location/utils/geoUtils';
 
 // ─────────────────────────────────────────────────────────────
 // HELPERS
@@ -692,6 +696,310 @@ function LigneEquipeLivreur({ l, can, onView, onPop }: {
 }
 
 // ─────────────────────────────────────────────────────────────
+// MODALE — "Diffuser une mission" (actions rapides)
+//
+// Crée une mission (POST /livreurs/missions) puis liste les missions
+// déjà diffusées par l'entreprise (GET /livreurs/missions), avec leur
+// statut (ouverte / acceptée par X / terminée / annulée) — un livreur
+// disponible peut l'accepter depuis SON dashboard (voir
+// getMissionsDisponibles/accepterMission côté backend).
+// ─────────────────────────────────────────────────────────────
+
+const MISSION_STATUT_LABEL: Record<MissionStatus, string> = {
+  open: 'Ouverte', accepted: 'Acceptée', completed: 'Terminée', cancelled: 'Annulée',
+};
+const MISSION_STATUT_CLASS: Record<MissionStatus, string> = {
+  open: styles.statutActive, accepted: styles.statutPending,
+  completed: styles.statutActive, cancelled: styles.statutSuspended,
+};
+
+function ModalDiffuserMission({ onClose }: { onClose: () => void }) {
+  const { pop } = useToast();
+  const [title,       setTitle]       = useState('');
+  const [description, setDescription] = useState('');
+  const [zone,        setZone]        = useState('');
+  const [reward,      setReward]      = useState('');
+  const [urgent,      setUrgent]      = useState(false);
+  const [saving,      setSaving]      = useState(false);
+
+  const [missions, setMissions] = useState<LivreurMission[]>([]);
+  const [loadingList, setLoadingList] = useState(true);
+
+  const loadMissions = useCallback(async () => {
+    setLoadingList(true);
+    try {
+      setMissions(await livreursApi.getMissions());
+    } catch (err) {
+      pop(`❌ ${getErrorMessage(err)}`, 'e');
+    } finally { setLoadingList(false); }
+  }, [pop]);
+
+  useEffect(() => { loadMissions(); }, [loadMissions]);
+
+  async function handleDiffuser() {
+    if (!title.trim()) { pop('Le titre de la mission est obligatoire.', 'w'); return; }
+    setSaving(true);
+    try {
+      await livreursApi.creerMission({
+        title:       title.trim(),
+        description: description.trim() || undefined,
+        zone:        zone.trim() || undefined,
+        reward:      reward ? Number(reward) : undefined,
+        urgent,
+      });
+      pop('📢 Mission diffusée aux livreurs disponibles', 's');
+      setTitle(''); setDescription(''); setZone(''); setReward(''); setUrgent(false);
+      loadMissions();
+    } catch (err) {
+      pop(`❌ ${getErrorMessage(err)}`, 'e');
+    } finally { setSaving(false); }
+  }
+
+  async function handleAnnuler(id: string) {
+    try {
+      await livreursApi.annulerMission(id);
+      pop('Mission annulée', 'w');
+      loadMissions();
+    } catch (err) {
+      pop(`❌ ${getErrorMessage(err)}`, 'e');
+    }
+  }
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={`${styles.modal} ${styles.modalMd}`} onClick={e => e.stopPropagation()}>
+        <div className={styles.mHeader}>
+          <div>
+            <div className={styles.mTitle}><i className="fas fa-bullhorn" /> Diffuser une mission</div>
+            <div className={styles.mSub}>Proposée à tous vos livreurs disponibles — le premier à l'accepter la reçoit.</div>
+          </div>
+          <button className={styles.closeBtn} onClick={onClose}><i className="fas fa-xmark" /></button>
+        </div>
+        <div className={styles.mBody}>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}><i className="fas fa-heading" /> Titre *</label>
+            <input className={styles.formInput} placeholder="Ex : Récupérer un colis chez le fournisseur" value={title} onChange={e => setTitle(e.target.value)} />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}><i className="fas fa-align-left" /> Description</label>
+            <textarea className={styles.formTextarea} rows={3} placeholder="Détails utiles au livreur…" value={description} onChange={e => setDescription(e.target.value)} />
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.formLabel}><i className="fas fa-map-pin" /> Zone</label>
+              <input className={styles.formInput} placeholder="Ex : Kaloum" value={zone} onChange={e => setZone(e.target.value)} />
+            </div>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.formLabel}><i className="fas fa-coins" /> Récompense (GNF)</label>
+              <input className={styles.formInput} type="number" min={0} placeholder="Optionnel" value={reward} onChange={e => setReward(e.target.value)} />
+            </div>
+          </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: 'var(--t2)', cursor: 'pointer', marginBottom: 4 }}>
+            <input type="checkbox" checked={urgent} onChange={e => setUrgent(e.target.checked)} />
+            <i className="fas fa-triangle-exclamation" style={{ color: 'var(--rose, #DC2626)' }} /> Mission urgente
+          </label>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 18 }}>
+            <button className={styles.btnPrimary} onClick={handleDiffuser} disabled={saving}>
+              {saving ? <><i className="fas fa-spinner fa-spin" /> Diffusion…</> : <><i className="fas fa-bullhorn" /> Diffuser</>}
+            </button>
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--bdr, #E5E7EB)', paddingTop: 14 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--t2)', marginBottom: 10 }}>Missions diffusées</div>
+            {loadingList ? (
+              <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--t3)' }}><i className="fas fa-spinner fa-spin" /></div>
+            ) : missions.length === 0 ? (
+              <div style={{ fontSize: 12.5, color: 'var(--t3)', textAlign: 'center', padding: '10px 0' }}>Aucune mission diffusée pour l'instant.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 220, overflowY: 'auto' }}>
+                {missions.map(m => (
+                  <div key={m.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    border: '1px solid var(--bdr, #E5E7EB)', borderRadius: 10, padding: '8px 12px',
+                  }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--navy)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {m.urgent && '🔴 '}{m.title}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--t3)' }}>
+                        {m.zone ? `${m.zone} · ` : ''}
+                        {m.status === 'accepted' && m.assignedDeliveryName ? `Acceptée par ${m.assignedDeliveryName}` : MISSION_STATUT_LABEL[m.status]}
+                      </div>
+                    </div>
+                    <span className={`${styles.statutBadge} ${MISSION_STATUT_CLASS[m.status]}`}>{MISSION_STATUT_LABEL[m.status]}</span>
+                    {m.status === 'open' && (
+                      <button className={styles.closeBtn} title="Annuler" onClick={() => handleAnnuler(m.id)}>
+                        <i className="fas fa-xmark" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// MODALE — "Rapport performances" (actions rapides)
+// Purement calculée depuis les données déjà chargées sur la page
+// (stats/livreurs/zones) — aucun appel API supplémentaire.
+// ─────────────────────────────────────────────────────────────
+
+function ModalRapportPerformance({ onClose, livreurs, stats, zones }: {
+  onClose:  () => void;
+  livreurs: LivreurResponse[];
+  stats:    { total: number; actifs: number; disponibles: number; enCourse: number; horsLigne: number; livrAuj: number };
+  zones:    ZoneStat[];
+}) {
+  const actifs = livreurs.filter(l => l.status === 'active');
+  const topNote = [...actifs].sort((a, b) => b.averageRating - a.averageRating).slice(0, 5);
+  const topLivraisons = [...actifs].sort((a, b) => b.totalDeliveries - a.totalDeliveries).slice(0, 5);
+  const totalLivraisons = actifs.reduce((s, l) => s + l.totalDeliveries, 0);
+  const totalReussies    = actifs.reduce((s, l) => s + l.successfulDeliveries, 0);
+  const tauxReussiteGlobal = totalLivraisons === 0 ? 0 : Math.round((totalReussies / totalLivraisons) * 100);
+  const noteMoyenne = actifs.length === 0 ? 0 : actifs.reduce((s, l) => s + l.averageRating, 0) / actifs.length;
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={`${styles.modal} ${styles.modalMd}`} onClick={e => e.stopPropagation()}>
+        <div className={styles.mHeader}>
+          <div>
+            <div className={styles.mTitle}><i className="fas fa-chart-line" /> Rapport de performances</div>
+            <div className={styles.mSub}>Basé sur {actifs.length} livreur{actifs.length > 1 ? 's' : ''} actif{actifs.length > 1 ? 's' : ''}</div>
+          </div>
+          <button className={styles.closeBtn} onClick={onClose}><i className="fas fa-xmark" /></button>
+        </div>
+        <div className={styles.mBody}>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, marginBottom: 20 }}>
+            {[
+              { label: 'Taux de réussite', val: `${tauxReussiteGlobal}%` },
+              { label: 'Note moyenne', val: `${noteMoyenne.toFixed(1)}★` },
+              { label: 'Livraisons totales', val: totalLivraisons.toLocaleString('fr-FR') },
+              { label: 'Livraisons aujourd\'hui', val: stats.livrAuj.toLocaleString('fr-FR') },
+            ].map((k, i) => (
+              <div key={i} style={{ border: '1px solid var(--bdr, #E5E7EB)', borderRadius: 12, padding: '10px 12px', textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--navy)' }}>{k.val}</div>
+                <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 2 }}>{k.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--t2)', marginBottom: 8 }}>🏆 Meilleures notes</div>
+          {topNote.length === 0 ? (
+            <div style={{ fontSize: 12, color: 'var(--t3)', marginBottom: 18 }}>Aucune donnée pour l'instant.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 18 }}>
+              {topNote.map((l, i) => (
+                <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
+                  <span style={{ width: 18, color: 'var(--t3)', fontWeight: 700 }}>{i + 1}.</span>
+                  <span style={{ flex: 1, fontWeight: 600, color: 'var(--navy)' }}>{l.fullName}</span>
+                  <span style={{ color: '#F59E0B', fontWeight: 700 }}>{l.averageRating > 0 ? `${l.averageRating.toFixed(1)}★` : '—'}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--t2)', marginBottom: 8 }}>📦 Plus de livraisons</div>
+          {topLivraisons.length === 0 ? (
+            <div style={{ fontSize: 12, color: 'var(--t3)', marginBottom: 18 }}>Aucune donnée pour l'instant.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 18 }}>
+              {topLivraisons.map((l, i) => (
+                <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
+                  <span style={{ width: 18, color: 'var(--t3)', fontWeight: 700 }}>{i + 1}.</span>
+                  <span style={{ flex: 1, fontWeight: 600, color: 'var(--navy)' }}>{l.fullName}</span>
+                  <span style={{ color: 'var(--navy)', fontWeight: 700 }}>{l.totalDeliveries}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {zones.length > 0 && (
+            <>
+              <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--t2)', marginBottom: 8 }}>🗺️ Répartition par zone</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {zones.map((z, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
+                    <span style={{ flex: 1, color: 'var(--navy)' }}>{z.zone}</span>
+                    <span style={{ color: 'var(--t3)' }}>{z.pct}%</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// MODALE — "Voir carte des livreurs" (actions rapides)
+// Instantané des dernières positions connues (Delivery.lastLatitude/
+// lastLongitude) — PAS un suivi live (voir commentaire de
+// LivreurResponse.lastLatitude côté backend). Réutilise LocationMap,
+// déjà utilisé par le reste de la messagerie/localisation.
+// ─────────────────────────────────────────────────────────────
+
+function ModalCarteLivreurs({ onClose, livreurs }: { onClose: () => void; livreurs: LivreurResponse[] }) {
+  const positionnes = livreurs.filter(l => l.lastLatitude != null && l.lastLongitude != null);
+
+  const center = positionnes.length > 0
+    ? {
+        latitude:  positionnes.reduce((s, l) => s + (l.lastLatitude as number), 0) / positionnes.length,
+        longitude: positionnes.reduce((s, l) => s + (l.lastLongitude as number), 0) / positionnes.length,
+      }
+    : DEFAULT_CENTER;
+
+  const markers: MarkerConfig[] = positionnes.map(l => ({
+    id:       l.id,
+    position: { latitude: l.lastLatitude as number, longitude: l.lastLongitude as number },
+    color:    l.availability === 'available' ? 'green' : l.availability === 'on_delivery' ? 'orange' : 'blue',
+    emoji:    '🛵',
+    popupContent: (
+      <div style={{ fontSize: 12.5 }}>
+        <strong>{l.fullName}</strong><br />
+        {l.zone ?? 'Zone non définie'}
+      </div>
+    ),
+  }));
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={`${styles.modal} ${styles.modalMd}`} onClick={e => e.stopPropagation()}>
+        <div className={styles.mHeader}>
+          <div>
+            <div className={styles.mTitle}><i className="fas fa-map-location-dot" /> Carte des livreurs</div>
+            <div className={styles.mSub}>
+              {positionnes.length > 0
+                ? `${positionnes.length} livreur${positionnes.length > 1 ? 's' : ''} positionné${positionnes.length > 1 ? 's' : ''} — dernière position connue`
+                : "Aucun livreur n'a encore partagé sa position"}
+            </div>
+          </div>
+          <button className={styles.closeBtn} onClick={onClose}><i className="fas fa-xmark" /></button>
+        </div>
+        <div className={styles.mBody} style={{ padding: 0 }}>
+          {positionnes.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--t3)' }}>
+              <i className="fas fa-map-location-dot" style={{ fontSize: 28, display: 'block', marginBottom: 10 }} />
+              La position d'un livreur apparaît ici dès qu'il la partage depuis son application (pendant une course active).
+            </div>
+          ) : (
+            <LocationMap center={center} zoom={12} height="440px" markers={markers} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // COMPOSANT PRINCIPAL — 100% connecté au backend
 // ─────────────────────────────────────────────────────────────
 
@@ -722,6 +1030,9 @@ export default function LivreursPage() {
   const [modalInviter, setModalInviter] = useState(false);
   const [modalContact, setModalContact] = useState<LivreurResponse | null>(null);
   const [modalSuspend, setModalSuspend] = useState<LivreurResponse | null>(null);
+  const [modalMission, setModalMission] = useState(false);
+  const [modalRapport, setModalRapport] = useState(false);
+  const [modalCarte,   setModalCarte]   = useState(false);
 
   // ── Filtres ─────────────────────────────────────────────────
   const [search,       setSearch]       = useState('');
@@ -999,9 +1310,9 @@ export default function LivreursPage() {
             <div className={styles.sideCardHeader}><div className={styles.sideCardTitle}><i className="fas fa-bolt" /> {t('livreurs.sidePanel.actionsRapides')}</div></div>
             <div className={styles.sideCardBody}>
               {[
-                { ico:'📢', l:t('livreurs.quickActions.diffuserMission'),       action: () => pop(t('livreurs.quickActions.diffusionToast'), 's')        },
-                { ico:'📊', l:t('livreurs.quickActions.rapportPerf'),       action: () => pop(t('livreurs.quickActions.rapportToast'), 's')      },
-                { ico:'🗺️', l:t('livreurs.quickActions.voirCarte'),    action: () => pop(t('livreurs.quickActions.carteToast'), 's')               },
+                { ico:'📢', l:t('livreurs.quickActions.diffuserMission'), action: () => setModalMission(true)  },
+                { ico:'📊', l:t('livreurs.quickActions.rapportPerf'),     action: () => setModalRapport(true)  },
+                { ico:'🗺️', l:t('livreurs.quickActions.voirCarte'),      action: () => setModalCarte(true)    },
                 ...(can('deliveries', 'assign')
                   ? [{ ico:'✅', l:t('livreurs.quickActions.validerEnAttente', { count: s.enAttente }), action: handleValiderTous }]
                   : []),
@@ -1113,6 +1424,15 @@ export default function LivreursPage() {
           onConfirm={() => handleSuspendre(modalSuspend)}
           loading={suspendLoading}
         />
+      )}
+      {modalMission && (
+        <ModalDiffuserMission onClose={() => setModalMission(false)} />
+      )}
+      {modalRapport && (
+        <ModalRapportPerformance onClose={() => setModalRapport(false)} livreurs={livreurs} stats={s} zones={zones} />
+      )}
+      {modalCarte && (
+        <ModalCarteLivreurs onClose={() => setModalCarte(false)} livreurs={livreurs} />
       )}
     </div>
   );

@@ -57,6 +57,39 @@ export interface LivreurResponse {
   /** L'entreprise connectée suit-elle ce livreur ? Conditionne
    *  l'affichage de Message/Appeler dans LivreursPage.tsx. */
   isSuivi:              boolean;
+  /** Dernière position connue (instantané, pas un suivi live) — null si
+   *  le livreur n'a jamais partagé sa position. Voir "Voir carte des livreurs". */
+  lastLatitude:         number | null;
+  lastLongitude:        number | null;
+}
+
+// ─────────────────────────────────────────────────────────────
+// MISSIONS — "Diffuser une mission" (actions rapides)
+// ─────────────────────────────────────────────────────────────
+
+export type MissionStatus = 'open' | 'accepted' | 'completed' | 'cancelled';
+
+export interface LivreurMission {
+  id:                   string;
+  title:                string;
+  description:          string | null;
+  zone:                 string | null;
+  reward:               number | null;
+  urgent:               boolean;
+  status:               MissionStatus;
+  assignedDeliveryId:   string | null;
+  assignedDeliveryName?: string | null;
+  createdAt:            string;
+  acceptedAt:           string | null;
+  completedAt:          string | null;
+}
+
+export interface CreateMissionDto {
+  title:        string;
+  description?: string;
+  zone?:        string;
+  reward?:      number;
+  urgent?:      boolean;
 }
 
 export interface LivreurStats {
@@ -198,5 +231,21 @@ export const livreursApi = {
       method: 'POST',
       body:   dto,
     });
+  },
+
+  // ── POST /livreurs/missions ────────────────────────────
+  // ModalDiffuserMission → "Diffuser"
+  creerMission(dto: CreateMissionDto): Promise<LivreurMission> {
+    return apiFetch<LivreurMission>('/livreurs/missions', { method: 'POST', body: dto });
+  },
+
+  // ── GET /livreurs/missions ─────────────────────────────
+  getMissions(): Promise<LivreurMission[]> {
+    return apiFetch<LivreurMission[]>('/livreurs/missions');
+  },
+
+  // ── PATCH /livreurs/missions/:id/annuler ───────────────
+  annulerMission(id: string): Promise<LivreurMission> {
+    return apiFetch<LivreurMission>(`/livreurs/missions/${id}/annuler`, { method: 'PATCH' });
   },
 };

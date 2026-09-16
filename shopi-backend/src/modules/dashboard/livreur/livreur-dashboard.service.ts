@@ -5,16 +5,18 @@
  *        getMissions() branché sur la table `commandes`.
  * ============================================================ */
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, MoreThanOrEqual, Repository } from 'typeorm';
 
-import { Delivery }  from 'src/database/entities/profiles/livreur-profile.entity';
+import { Delivery, DeliveryStatus }  from 'src/database/entities/profiles/livreur-profile.entity';
 import { Commande, CommandeStatus } from 'src/database/entities/commande/commande.entity';
 import { Notification, NotificationActorType } from 'src/database/entities/notification/notification.entitiy';
 import { PlatformSettings }    from 'src/database/entities/platform-settings.entity';
 import { PaiementDistribution, DistributionActeurType, DistributionStatus } from 'src/database/entities/paiement/paiement-distribution.entity';
 import { Follow, FollowerActorType, TargetActorType } from 'src/database/entities/follow/follow.entity';
+import { LivreurMission, MissionStatus } from 'src/database/entities/livreur.table/livreur-mission.entity';
+import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 
 /** Statuts d'une livraison effectivement terminée (compte "livraisons du mois") */
 const DELIVERED_STATUSES: CommandeStatus[] = [
@@ -61,6 +63,11 @@ export class LivreurDashboardService {
 
     @InjectRepository(Follow)
     private readonly followRepo: Repository<Follow>,
+
+    @InjectRepository(LivreurMission)
+    private readonly missionRepo: Repository<LivreurMission>,
+
+    private readonly notifEventSvc: NotificationEventService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
@@ -316,5 +323,84 @@ export class LivreurDashboardService {
       isRead:    n.isRead,
       createdAt: n.createdAt,
     }));
+  }
+
+  /* ──────────────────────────────────────────────────────────
+   * GET MISSIONS DISPONIBLES — missions 'open' diffusées par
+   * l'entreprise de CE livreur (voir MissionsService.create côté
+   * entreprise) — GET /dashboard/livreur/missions/disponibles.
+   * Un livreur indépendant (companyId null) n'en voit jamais : ces
+   * missions n'existent que par diffusion d'une entreprise précise.
+   * ────────────────────────────────────────────────────────── */
+  async getMissionsDisponibles(userId: string) {
+    const livreur = await this.livreurRepo.findOne({
+      where:  { userId },
+      select: ['id', 'companyId'],
+    });
+    if (!livreur) throw new NotFoundException('Profil livreur introuvable.');
+    if (!livreur.companyId) return [];
+
+    const missions = await this.missionRepo.find({
+      where:  { companyId: livreur.companyId, status: MissionStatus.OPEN },
+      order:  { urgent: 'DESC', createdAt: 'DESC' },
+    });
+
+    return missions.map(m => ({
+      id:          m.id,
+      title:       m.title,
+      description: m.description,
+      zone:        m.zone,
+      reward:      m.reward != null ? Number(m.reward) : null,
+      urgent:      m.urgent,
+      createdAt:   m.createdAt.toISOString(),
+    }));
+  }
+
+  /* ──────────────────────────────────────────────────────────
+   * ACCEPTER MISSION — PATCH /dashboard/livreur/missions/:id/accepter
+   *
+   * UPDATE conditionnel (status='open' → 'accepted') plutôt qu'un
+   * findOne+save classique : deux livreurs qui acceptent la MÊME
+   * mission au même instant ne doivent jamais la "gagner" tous les
+   * deux — seule la requête dont le WHERE status='open' matche encore
+   * au moment de l'exécution modifie une ligne (affected=1), l'autre
+   * arrive après coup sur affected=0 et reçoit un 409 propre plutôt
+   * qu'un succès silencieux qui écraserait l'acceptation du premier.
+   * ────────────────────────────────────────────────────────── */
+  async accepterMission(missionId: string, userId: string) {
+    const livreur = await this.livreurRepo.findOne({
+      where:  { userId },
+      select: ['id', 'fullName', 'companyId', 'status'],
+    });
+    if (!livreur) throw new NotFoundException('Profil livreur introuvable.');
+
+    const mission = await this.missionRepo.findOne({ where: { id: missionId } });
+    if (!mission) throw new NotFoundException('Mission introuvable.');
+    if (mission.companyId !== livreur.companyId) {
+      throw new ForbiddenException("Cette mission n'appartient pas à votre entreprise.");
+    }
+    if (livreur.status !== DeliveryStatus.ACTIVE) {
+      throw new ForbiddenException('Votre compte doit être actif pour accepter une mission.');
+    }
+
+    const result = await this.missionRepo
+      .createQueryBuilder()
+      .update(LivreurMission)
+      .set({ status: MissionStatus.ACCEPTED, assignedDeliveryId: livreur.id, acceptedAt: new Date() })
+      .where('id = :id AND status = :open', { id: missionId, open: MissionStatus.OPEN })
+      .execute();
+
+    if (!result.affected) {
+      throw new ConflictException('Cette mission vient déjà d\'être acceptée par un autre livreur.');
+    }
+
+    void this.notifEventSvc.notifyMissionAccepted({
+      companyId:    mission.companyId,
+      missionId:    mission.id,
+      missionTitle: mission.title,
+      livreurName:  livreur.fullName,
+    });
+
+    return { id: mission.id, status: MissionStatus.ACCEPTED };
   }
 }

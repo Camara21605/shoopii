@@ -6,7 +6,7 @@
  *   GET /dashboard/livreur/missions → missions actives / récentes
  * ============================================================ */
 
-import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Patch, Query, UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard }                        from 'src/common/guards/auth.guard';
 import { LivreurDashboardService }          from './livreur-dashboard.service';
 import { BoutiquesManagementService }       from './services/boutiques-management.service';
@@ -30,6 +30,19 @@ export class LivreurDashboardController {
   @Get('missions')
   getMissions(@Req() req: any) {
     return this.dashboardService.getMissions(req.user.id);
+  }
+
+  /** Missions diffusées par l'entreprise, pas encore acceptées — voir
+   *  "Diffuser une mission" côté LivreursPage.tsx (entreprise). */
+  @Get('missions/disponibles')
+  getMissionsDisponibles(@Req() req: any) {
+    return this.dashboardService.getMissionsDisponibles(req.user.id);
+  }
+
+  /** Accepte une mission diffusée — premier arrivé, premier servi. */
+  @Patch('missions/:id/accepter')
+  accepterMission(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
+    return this.dashboardService.accepterMission(id, req.user.id);
   }
 
   /** 15 notifications récentes (activité du jour) */

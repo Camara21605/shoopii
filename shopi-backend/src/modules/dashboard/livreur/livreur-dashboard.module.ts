@@ -7,7 +7,9 @@
  *
  * SOUS-DOMAINES GÉRÉS :
  *   - Stats & métriques livreur      → LivreurDashboardService
- *   - Missions actives               → MissionsService (à créer)
+ *   - Missions actives (commandes)   → LivreurDashboardService.getMissions()
+ *   - Missions diffusées disponibles → LivreurDashboardService.getMissionsDisponibles()/accepterMission()
+ *     (voir LivreurMission entity + MissionsService côté entreprise, qui les crée)
  *   - Paramètres complets (10 sec.)  → LivreurParametresModule
  *
  * ROUTES ENREGISTRÉES :
@@ -32,6 +34,7 @@ import { PlatformSettings }      from '../../../database/entities/platform-setti
 import { PaiementDistribution }  from '../../../database/entities/paiement/paiement-distribution.entity';
 import { Follow }                from '../../../database/entities/follow/follow.entity';
 import { Company }               from '../../../database/entities/profiles/entreprise-profile.entity';
+import { LivreurMission }        from '../../../database/entities/livreur.table/livreur-mission.entity';
 
 /* ── Module Paramètres (assemble les 8 services + controller) ── */
 import { LivreurParametresModule } from './livreur-parametres.module';
@@ -39,6 +42,9 @@ import { LivreurParametresModule } from './livreur-parametres.module';
 /* ── Module Avis — page "Évaluation" (lecture + réponse aux avis créés
  * par CommandeFeedbackService.envoyerNotations) ── */
 import { LivreurAvisModule } from './avis/livreur-avis.module';
+
+/* ── Événements de notification (missions diffusées) ── */
+import { NotificationsModule } from '../../notifications/notifications.module';
 
 /* ── Controller principal du dashboard ── */
 import { LivreurDashboardController } from './livreur-dashboard.controller';
@@ -62,6 +68,7 @@ import { BoutiquesManagementService } from './services/boutiques-management.serv
       PaiementDistribution,
       Follow,
       Company,
+      LivreurMission,
     ]),
 
     /*
@@ -73,6 +80,9 @@ import { BoutiquesManagementService } from './services/boutiques-management.serv
      *     NotifsLivreurService, DangerLivreurService
      */
     LivreurParametresModule,
+
+    /* Fournit NotificationEventService — notifyMissionAccepted(). */
+    NotificationsModule,
 
     /* Page "Évaluation" — GET/POST /dashboard/livreur/avis */
     LivreurAvisModule,

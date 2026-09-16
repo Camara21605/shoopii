@@ -54,6 +54,7 @@ import { RequiresTeamPermission } from 'src/modules/company-team/decorators/requ
 
 import { LivreursService }          from './services/livreurs.service';
 import { InvitationLivreurService } from './services/invitation-livreur.service';
+import { MissionsService }          from './services/missions.service';
 import {
   FilterLivreursDto,
   UpdateLivreurDto,
@@ -61,6 +62,7 @@ import {
   ContacterLivreurDto,
   SuspendreDto,
 } from './dto/livreur.dto';
+import { CreateMissionDto } from './dto/mission.dto';
 
 @Controller('livreurs')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -69,6 +71,7 @@ export class LivreursController {
   constructor(
     private readonly livreursService:     LivreursService,
     private readonly invitationService:   InvitationLivreurService,
+    private readonly missionsService:     MissionsService,
   ) {}
 
   // ════════════════════════════════════════════════════════
@@ -155,6 +158,42 @@ export class LivreursController {
     @Req()   req: any,
   ) {
     return this.livreursService.findAll(dto, req.user);
+  }
+
+  // ════════════════════════════════════════════════════════
+  // MISSIONS — bouton "Diffuser une mission" (actions rapides)
+  // ⚠️ Déclarées AVANT /:id pour éviter le conflit de routing.
+  // ════════════════════════════════════════════════════════
+
+  @Post('missions')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'assign')
+  async creerMission(
+    @Body() dto: CreateMissionDto,
+    @Req()  req: any,
+  ) {
+    return this.missionsService.create(dto, req.user);
+  }
+
+  @Get('missions')
+  @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'view')
+  async listerMissions(@Req() req: any) {
+    return this.missionsService.findAll(req.user);
+  }
+
+  @Patch('missions/:id/annuler')
+  @Roles(UserRole.COMPANY, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('deliveries', 'assign')
+  async annulerMission(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req()                      req: any,
+  ) {
+    return this.missionsService.cancel(id, req.user);
   }
 
   // ════════════════════════════════════════════════════════
