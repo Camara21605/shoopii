@@ -52,6 +52,7 @@ import { User, UserStatus }       from '../../../database/entities/user.entity';
 import { GeoService }             from '../services/geo.service';
 import type { ILocationUpdatePayload } from '../interfaces/location.interfaces';
 import { SessionService }         from '../../session/session.service';
+import { NotificationBroadcastService } from '../../notifications/services/notification-broadcast.service';
 
 /** Intervalle minimum entre deux émissions par livreur (ms) */
 const THROTTLE_MS = 1_000;
@@ -108,11 +109,18 @@ export class LocationGateway
     private readonly userRepo:  Repository<User>,
 
     private readonly sessionService: SessionService,
+    private readonly notifBroadcast: NotificationBroadcastService,
   ) {}
 
   /* ── Init ─────────────────────────────────────────────────── */
 
   afterInit(): void {
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — sans ceci, une session
+     * révoquée ne coupait jamais un socket déjà ouvert sur ce namespace
+     * (suivi GPS temps réel) : voir NotificationBroadcastService
+     * .emitToSession() et le socket.join('session:...') dans
+     * handleConnection ci-dessous. */
+    this.notifBroadcast.registerSessionServer(this.server);
     this.logger.log('📍 Gateway /location initialisée');
   }
 
@@ -170,6 +178,8 @@ export class LocationGateway
       }
 
       await socket.join(`user:${payload.sub}`);
+      /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — voir afterInit() ci-dessus. */
+      if (payload.sid) await socket.join(`session:${payload.sid}`);
 
       socket.emit('location:connected', {
         userId:   payload.sub,

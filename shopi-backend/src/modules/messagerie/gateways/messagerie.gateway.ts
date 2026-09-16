@@ -67,6 +67,7 @@ import { PresenceService }  from '../services/presence.service';
 import { BroadcastService } from '../services/broadcast.service';
 import { MessagerieService } from '../messagerie.service';
 import { SessionService }   from '../../session/session.service';
+import { NotificationBroadcastService } from '../../notifications/services/notification-broadcast.service';
 import type {
   AuthenticatedSocket,
   WsJoinConvPayload,
@@ -112,6 +113,7 @@ export class MessagerieGateway
     private readonly broadcast:     BroadcastService,
     private readonly msgService:    MessagerieService,
     private readonly sessionService: SessionService,
+    private readonly notifBroadcast: NotificationBroadcastService,
     @InjectRepository(Conversation)
     private readonly convRepo:      Repository<Conversation>,
     @InjectRepository(User)
@@ -126,6 +128,11 @@ export class MessagerieGateway
     // Enregistre le server dans BroadcastService pour permettre
     // à MessagerieService (REST) de broadcaster via ce gateway.
     this.broadcast.setServer(server);
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — sans ceci, une session
+     * révoquée (nouvel appareil, vol de refresh token détecté) ne
+     * coupait jamais un socket déjà ouvert sur ce namespace : voir
+     * NotificationBroadcastService.emitToSession(). */
+    this.notifBroadcast.registerSessionServer(server);
     this.logger.log('🔌 Gateway /messaging initialisée');
   }
 
@@ -186,6 +193,11 @@ export class MessagerieGateway
 
       // ── 3. Rejoindre la room privée ─────────────────────
       await socket.join(`user:${userId}`);
+      /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — nécessaire pour que
+       * NotificationBroadcastService.emitToSession() puisse couper CE
+       * socket précis si sa session est révoquée (voir afterInit
+       * ci-dessus et revokeSessionAndNotify() dans auth.service.ts). */
+      if (payload.sid) await socket.join(`session:${payload.sid}`);
 
       // ── 4. Mettre à jour la présence dans Redis ─────────
       await this.presence.onConnect(userId, socket.id);

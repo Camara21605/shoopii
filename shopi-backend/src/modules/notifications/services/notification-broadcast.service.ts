@@ -38,6 +38,19 @@ export class NotificationBroadcastService {
 
   private server: Server | null = null;
 
+  /**
+   * ⚠️ FAILLE CORRIGÉE (audit sécurité) — emitToSession() ne coupait QUE
+   * les sockets du namespace /notifications (le seul à appeler setServer()
+   * ci-dessus). Une session révoquée (nouvel appareil, vol de refresh
+   * token détecté) laissait donc un socket déjà ouvert sur /messaging,
+   * /location ou /support pleinement actif jusqu'à expiration naturelle
+   * du token — l'attaquant continuait de recevoir des messages, suivre un
+   * livreur ou interagir sur un ticket support. Chaque gateway concerné
+   * s'enregistre maintenant ici via registerSessionServer(), et
+   * emitToSession() coupe la session sur TOUS les namespaces enregistrés.
+   */
+  private readonly sessionServers: Server[] = [];
+
   private readonly logger = new Logger(NotificationBroadcastService.name);
 
   constructor(
@@ -56,6 +69,18 @@ export class NotificationBroadcastService {
   setServer(server: Server): void {
     this.server = server;
     this.logger.log('🔌 NotificationBroadcastService: server Socket.IO enregistré');
+  }
+
+  /**
+   * Enregistre un serveur Socket.IO supplémentaire (un namespace) pour la
+   * révocation de session — voir le commentaire sur `sessionServers`
+   * ci-dessus. À appeler depuis afterInit() de chaque gateway dont les
+   * sockets doivent être coupés quand la session de leur utilisateur est
+   * révoquée (en plus de NotificationGateway, qui appelle déjà setServer()
+   * et est donc inclus séparément dans emitToSession()).
+   */
+  registerSessionServer(server: Server): void {
+    this.sessionServers.push(server);
   }
 
   // ─────────────────────────────────────────────────────────
@@ -157,11 +182,16 @@ export class NotificationBroadcastService {
    * client de recevoir l'event avant la coupure de connexion.
    */
   emitToSession(sessionId: string, event: string, payload: unknown): void {
-    if (!this.server) return;
     const room = `session:${sessionId}`;
-    this.server.to(room).emit(event, payload);
-    setTimeout(() => {
-      this.server?.in(room).disconnectSockets(true);
-    }, 300);
+    /* NotificationGateway (this.server) + tous les gateways enregistrés
+     * via registerSessionServer() (messagerie, appels, tracking, support)
+     * — voir le commentaire sur `sessionServers` plus haut dans ce fichier. */
+    const servers = this.server ? [this.server, ...this.sessionServers] : this.sessionServers;
+    for (const server of servers) {
+      server.to(room).emit(event, payload);
+      setTimeout(() => {
+        server.in(room).disconnectSockets(true);
+      }, 300);
+    }
   }
 }

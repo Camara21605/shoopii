@@ -61,6 +61,7 @@ import { SessionService } from '../../session/session.service';
 import { SupportService } from '../services/support.service';
 import { SupportBroadcastService } from '../services/support-broadcast.service';
 import type { AuthenticatedSocket } from '../../messagerie/interfaces/messaging.interfaces';
+import { NotificationBroadcastService } from '../../notifications/services/notification-broadcast.service';
 
 interface WsTicketRoomPayload { ticketId: string }
 
@@ -87,12 +88,19 @@ export class SupportGateway
     private readonly sessionService: SessionService,
     private readonly supportService: SupportService,
     private readonly broadcast:      SupportBroadcastService,
+    private readonly notifBroadcast: NotificationBroadcastService,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
   ) {}
 
   afterInit(server: Server): void {
     this.broadcast.setServer(server);
+    /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — sans ceci, une session
+     * révoquée ne coupait jamais un socket déjà ouvert sur ce namespace
+     * (tickets support) : voir NotificationBroadcastService
+     * .emitToSession() et le socket.join('session:...') dans
+     * handleConnection ci-dessous. */
+    this.notifBroadcast.registerSessionServer(server);
     this.logger.log('🔌 Gateway /support initialisée');
   }
 
@@ -132,6 +140,9 @@ export class SupportGateway
       socket.data.userId   = userId;
       socket.data.userRole = payload.role;
       socket.data.actorId  = payload.actorId;
+
+      /* ⚠️ FAILLE CORRIGÉE (audit sécurité) — voir afterInit() ci-dessus. */
+      if (payload.sid) await socket.join(`session:${payload.sid}`);
 
       socket.emit('connected', { userId, socketId: socket.id, timestamp: new Date().toISOString() });
       this.logger.log(`✅ Connecté user=${userId} socket=${socket.id}`);

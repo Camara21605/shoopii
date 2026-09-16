@@ -35,6 +35,7 @@ import { ActorSearchService }            from './services/actor-search.service';
 /* ── Gateway ─────────────────────────────────────────────── */
 import { LocationGateway }  from './gateways/location.gateway';
 import { SessionModule }    from '../session/session.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 /* ── Controllers ─────────────────────────────────────────── */
 import { ClientAddressController }           from './controllers/client-address.controller';
@@ -71,6 +72,10 @@ import { ActorSearchController }             from './controllers/actor-search.co
     }),
 
     SessionModule,
+    /* Pour LocationGateway.afterInit() → NotificationBroadcastService
+     * .registerSessionServer() — voir notification-broadcast.service.ts
+     * (révocation de session propagée à ce namespace WebSocket). */
+    NotificationsModule,
   ],
 
   controllers: [
