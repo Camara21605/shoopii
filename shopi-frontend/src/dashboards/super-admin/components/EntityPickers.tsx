@@ -9,33 +9,60 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 // ── Icônes proposées, regroupées par univers métier ───────────
+// Couvre les 15 grands domaines du référentiel de types d'entreprises
+// vendant des produits (Alimentation, Mode, Beauté, Maison, Électronique,
+// Bricolage, Automobile, Santé, Agriculture, Bébé, Papeterie/loisirs,
+// Divers) + les 3 groupes génériques d'origine (Commerce/Services/Autre),
+// conservés pour les types de services et les cas non couverts ailleurs.
 const ICON_GROUPS: { label: string; icons: string[] }[] = [
+  { label: 'Alimentation & boissons', icons: ['🥩', '🐟', '🍞', '🥐', '🧀', '🥛', '🍯', '🌶️', '🍚', '🍱', '🍽️', '🍔', '🍕', '🥗', '🍣', '☕', '🧃', '🍰'] },
+  { label: 'Mode & habillement',      icons: ['👔', '👗', '🧥', '👖', '🧵', '🧶', '👘', '👞', '👟', '👜', '💍', '⌚', '👓', '🧣', '🥻', '👙'] },
+  { label: 'Beauté & soins',          icons: ['💄', '🧴', '💅', '💇‍♀️', '💇‍♂️', '🧼', '🌿', '✨', '🪒'] },
+  { label: 'Maison & décoration',     icons: ['🛋️', '🖼️', '🛏️', '🪟', '🍳', '🥘', '🔌', '💡', '🧺', '🧹', '🪴', '🕯️', '🚪'] },
+  { label: 'Électronique & technologie', icons: ['📱', '💻', '🖥️', '📺', '🎮', '☀️', '🔋', '📷', '🤖', '⚡', '🎧', '🖨️'] },
+  { label: 'Bricolage & quincaillerie', icons: ['🔨', '🧱', '🎨', '🚿', '🪚', '🔧', '🛠️', '🪛', '🔩', '🧰', '🏗️'] },
+  { label: 'Automobile & transport',  icons: ['🚗', '🏍️', '🛞', '🚲', '🛢️', '⛽', '🚙', '🛺', '🔧'] },
+  { label: 'Santé & pharmacie',       icons: ['💊', '🏥', '⚕️', '🩺', '🧪', '🦷', '💉', '🦴', '🩹'] },
+  { label: 'Agriculture & élevage',   icons: ['🌱', '🌾', '🐄', '🐓', '🐐', '🚜', '🌳', '🐝', '🐖'] },
+  { label: 'Bébé & enfants',          icons: ['🍼', '🧸', '👶', '🎲', '🚼', '🧷'] },
+  { label: 'Papeterie, culture & loisirs', icons: ['📚', '📓', '✏️', '📿', '🎸', '⚽', '🎣', '🎨', '🎭', '📖', '🎻', '🎬', '🎁'] },
+  { label: 'Divers & services',       icons: ['💐', '🐾', '🔥', '🪑', '🖨️', '📦', '💼', '🧳', '💒', '⛺', '🚚', '🏷️'] },
   { label: 'Commerce',     icons: ['🏪', '🏬', '🛍️', '🛒', '🏢', '🏭', '💳', '🏷️'] },
-  { label: 'Restauration', icons: ['🍽️', '🍔', '🍕', '☕', '🍰', '🍷', '🥗', '🍣'] },
-  { label: 'Santé',        icons: ['💊', '🏥', '⚕️', '🩺', '🧪', '🦷'] },
   { label: 'Services',     icons: ['🔧', '💇', '🧹', '🚗', '🏠', '📦', '🚚', '🛠️'] },
-  { label: 'Loisirs',      icons: ['🎮', '🎬', '📚', '🎨', '⚽', '🎵', '🌸', '🎁'] },
   { label: 'Autre',        icons: ['📍', '⭐', '✨', '🌍', '🔑', '💼'] },
 ];
 
 // ── Détermine les groupes d'icônes pertinents pour un type d'entreprise ──
-// Se base sur le nom/slug du type (ex: "Restaurant" → groupe "Restauration").
-// Le groupe "Autre" est toujours proposé en complément.
+// Se base sur le nom/slug du type (ex: "Boucherie" → "Alimentation &
+// boissons"). Un type peut recouper plusieurs domaines (ex: "Coiffure"
+// → Beauté & soins + Services) : tous les groupes correspondants sont
+// renvoyés, pas seulement le premier. Le groupe "Autre" est toujours
+// proposé en complément par IconPicker.
 const TYPE_KEYWORDS: { match: RegExp; groups: string[] }[] = [
-  { match: /restaur|resto|alimen|repas|food|boisson/i, groups: ['Restauration'] },
-  { match: /pharma|sant|clinique|hopital|medic/i,       groups: ['Santé'] },
-  { match: /servic|reparation|nettoy|transport|livr|garage|coiffure/i, groups: ['Services'] },
-  { match: /loisir|divertiss|culture|sport|jeu|cinema/i, groups: ['Loisirs'] },
-  { match: /boutique|commerce|shop|market|magasin/i,    groups: ['Commerce'] },
+  { match: /alimen|epicer|supermarch|boucher|poissonn|boulanger|patisser|fruit|legume|cereale|legumineuse|huile|condiment|torrefac|cafe|depot.*boisson|\beau\b|cremer|laitier|miel|ruche|epice|aromate|traiteur|snack|restaur|resto|repas|food|boisson/i, groups: ['Alimentation & boissons'] },
+  { match: /pret-a-porter|friperie|tissu|pagne|wax|couture|tailleur|chaussure|maroquinerie|bijou|montre|optique|lunette|foulard|chapeau|boubou|traditionnel|lingerie|perruque|extension|mode|habill|vetement/i, groups: ['Mode & habillement'] },
+  { match: /cosmetique|parfum|capillaire|soin.*peau|savon|manucure|onglerie|coiffure|beaut/i, groups: ['Beauté & soins'] },
+  { match: /meuble|mobilier|decoration|literie|matelas|rideau|textile|vaisselle|ustensile|electromenager|luminaire|tapis|moquette|menager|maison/i, groups: ['Maison & décoration'] },
+  { match: /telephon|informatique|ordinateur|televi|audio|console|jeu.*video|panneau.*solaire|batterie|onduleur|electronique|appareil.*photo|gadget|connect|technolog/i, groups: ['Électronique & technologie'] },
+  { match: /quincaillerie|materiaux|construction|ciment|beton|peinture|revetement|plomberie|electricite|carrelage|menuiserie|serrurerie|outil|bricolage/i, groups: ['Bricolage & quincaillerie'] },
+  { match: /piece.*auto|piece.*moto|pneu|\bmoto\b|velo|lubrifiant|huile.*moteur|station-service|automobile|\bauto\b|transport/i, groups: ['Automobile & transport'] },
+  { match: /pharma|parapharma|materiel.*medical|herboriste|plante.*medic|complement.*aliment|orthopedi|sant|clinique|hopital|medic/i, groups: ['Santé & pharmacie'] },
+  { match: /semence|intrant|engrais|pesticide|materiel.*agricole|betail|volaille|animaux|veterinaire|pepinier|agricult|elevage/i, groups: ['Agriculture & élevage'] },
+  { match: /puericulture|jouet|couche|hygiene.*bebe|educatif|bebe|enfant/i, groups: ['Bébé & enfants'] },
+  { match: /librairie|papeterie|fourniture.*bureau|instrument.*musique|article.*sport|artisanat|oeuvre.*art|materiel.*peche|religieux|loisir|divertiss|culture|sport|\bjeu\b|cinema/i, groups: ['Papeterie, culture & loisirs'] },
+  { match: /fleuriste|animalerie|entretien|nettoyage|gaz.*domestique|charbon|bois.*chauffe|imprimerie|serigraphie|grossiste|vente.*gros|location-vente|evenementiel|valise|bagage|mariage/i, groups: ['Divers & services'] },
+  { match: /reparation|transport|livr|garage/i, groups: ['Services'] },
+  { match: /boutique|commerce|shop|market|magasin/i, groups: ['Commerce'] },
 ];
 
 export function iconGroupsForType(type?: { nom?: string; slug?: string } | null): string[] {
   if (!type) return [];
   const ref = `${type.nom ?? ''} ${type.slug ?? ''}`;
+  const matched = new Set<string>();
   for (const { match, groups } of TYPE_KEYWORDS) {
-    if (match.test(ref)) return groups;
+    if (match.test(ref)) groups.forEach(g => matched.add(g));
   }
-  return [];
+  return [...matched];
 }
 
 interface IconPickerProps {
