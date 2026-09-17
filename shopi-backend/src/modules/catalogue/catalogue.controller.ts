@@ -26,8 +26,9 @@
 
 import {
   Body, Controller, Delete, Get, HttpCode, HttpStatus,
-  Param, ParseUUIDPipe, Patch, Post, Query, UseGuards,
+  Param, ParseUUIDPipe, Patch, Post, Query, Req, UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import {
   ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags,
 } from '@nestjs/swagger';
@@ -39,6 +40,7 @@ import { Type }                             from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from 'src/common/guards/auth.guard';
+import { OptionalJwtAuthGuard } from 'src/common/guards/optional-jwt.guard';
 import { RolesGuard }   from 'src/common/guards/roles.guard';
 import { Roles }        from 'src/common/decorators/roles.decorator';
 import { UserRole }     from 'src/common/enums/user-role.enum';
@@ -54,6 +56,8 @@ import {
   CategoryResponse,
   SubCategoryResponse,
 } from '../dashboard/super-admin/categories/categories.service';
+
+import { CatalogueAffinityService } from './catalogue-affinity.service';
 
 // ══════════════════════════════════════════════════════════════
 // DTOs — TYPES D'ENTREPRISE
@@ -235,17 +239,49 @@ export class CatalogueController {
   constructor(
     private readonly companyTypesService: CompanyTypesService,
     private readonly categoriesService:   CategoriesService,
+    private readonly affinityService:     CatalogueAffinityService,
   ) {}
+
+  /** userId JWT (undefined si visiteur anonyme, voir OptionalJwtAuthGuard). */
+  private userIdFromReq(req: Request): string | undefined {
+    const u = (req as any).user;
+    return u?.userId ?? u?.id ?? undefined;
+  }
+
+  /** BUG ÉVITÉ — ces mêmes routes GET publiques sont aussi utilisées par
+   *  CatalogueTab.tsx (super-admin) pour LISTER le catalogue à gérer/
+   *  réordonner (@ordre) : un super-admin, une entreprise, etc. n'ont
+   *  aucun profil Client, donc affinityService.resolveClientId() renvoie
+   *  toujours null pour eux — les traiter comme "anonyme" aurait mélangé
+   *  aléatoirement la liste d'administration à chaque rechargement.
+   *  Seuls un VRAI rôle client (personnalisé) et un visiteur SANS TOKEN
+   *  du tout (mélangé, pour varier l'affichage) sortent de l'ordre admin
+   *  d'origine — tout autre rôle connecté le conserve tel quel. */
+  private async personalizeList<T>(
+    req: Request, items: T[], getId: (item: T) => string, dimension: Parameters<CatalogueAffinityService['scoreByDimension']>[1],
+  ): Promise<T[]> {
+    const user = (req as any).user;
+    if (!user) return CatalogueAffinityService.shuffle(items);
+    if (user.role !== UserRole.CLIENT) return items;
+
+    const clientId = await this.affinityService.resolveClientId(this.userIdFromReq(req));
+    if (!clientId) return items; // opt-out perso, ou profil client introuvable → ordre stable
+
+    const scores = await this.affinityService.scoreByDimension(clientId, dimension);
+    return this.affinityService.personalize(items, getId, scores);
+  }
 
   // ── Types d'entreprise — LECTURE PUBLIQUE ─────────────────────
   // Pas de @UseGuards → accessible sans token
   // Utilisé lors de l'inscription d'une entreprise
 
-  @ApiOperation({ summary: "Lister tous les types d'entreprise" })
+  @ApiOperation({ summary: "Lister tous les types d'entreprise — ordre personnalisé selon les goûts du client connecté (repli aléatoire sinon)" })
   @ApiQuery({ name: 'nature', required: false, enum: CompanyTypeNature, description: "Filtre selon le modèle économique choisi à l'inscription (un type 'neutral' est toujours inclus)." })
   @Get('company-types')
-  findAllTypes(@Query('nature') nature?: CompanyTypeNature): Promise<CompanyTypeResponse[]> {
-    return this.companyTypesService.findAll(nature);
+  @UseGuards(OptionalJwtAuthGuard)
+  async findAllTypes(@Req() req: Request, @Query('nature') nature?: CompanyTypeNature): Promise<CompanyTypeResponse[]> {
+    const types = await this.companyTypesService.findAll(nature);
+    return this.personalizeList(req, types, t => t.id, 'companyType');
   }
 
   @ApiOperation({ summary: "Récupérer un type d'entreprise par ID" })
@@ -257,13 +293,16 @@ export class CatalogueController {
     return this.companyTypesService.findOne(id);
   }
 
-  @ApiOperation({ summary: "Lister les catégories d'un type" })
+  @ApiOperation({ summary: "Lister les catégories d'un type — ordre personnalisé selon les goûts du client connecté (repli aléatoire sinon)" })
   @ApiParam({ name: 'typeId', type: 'string', format: 'uuid' })
   @Get('company-types/:typeId/categories')
-  findCategoriesByType(
+  @UseGuards(OptionalJwtAuthGuard)
+  async findCategoriesByType(
+    @Req() req: Request,
     @Param('typeId', ParseUUIDPipe) typeId: string,
   ): Promise<CategoryResponse[]> {
-    return this.categoriesService.findAllByType(typeId);
+    const categories = await this.categoriesService.findAllByType(typeId);
+    return this.personalizeCategories(req, categories);
   }
 
   // ── Types d'entreprise — MUTATIONS (token + SUPER_ADMIN) ───────
@@ -305,10 +344,12 @@ export class CatalogueController {
 
   // ── Catégories — LECTURE PUBLIQUE ─────────────────────────────
 
-  @ApiOperation({ summary: 'Lister toutes les catégories' })
+  @ApiOperation({ summary: 'Lister toutes les catégories — ordre personnalisé selon les goûts du client connecté (repli aléatoire sinon)' })
   @Get('categories')
-  findAllCategories(): Promise<CategoryResponse[]> {
-    return this.categoriesService.findAll();
+  @UseGuards(OptionalJwtAuthGuard)
+  async findAllCategories(@Req() req: Request): Promise<CategoryResponse[]> {
+    const categories = await this.categoriesService.findAll();
+    return this.personalizeCategories(req, categories);
   }
 
   @ApiOperation({ summary: 'Récupérer une catégorie par ID' })
@@ -320,13 +361,47 @@ export class CatalogueController {
     return this.categoriesService.findOne(id);
   }
 
-  @ApiOperation({ summary: "Lister les sous-catégories d'une catégorie" })
+  @ApiOperation({ summary: "Lister les sous-catégories d'une catégorie — ordre personnalisé selon les goûts du client connecté (repli aléatoire sinon)" })
   @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
   @Get('categories/:id/sub-categories')
-  findSubCats(
+  @UseGuards(OptionalJwtAuthGuard)
+  async findSubCats(
+    @Req() req: Request,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<SubCategoryResponse[]> {
-    return this.categoriesService.findSubCatsByCategory(id);
+    const subCats = await this.categoriesService.findSubCatsByCategory(id);
+    return this.personalizeList(req, subCats, s => s.id, 'subCategory');
+  }
+
+  /** Réordonne une liste de catégories ET, pour chacune, ses
+   *  sous-catégories nichées — factorisé car réutilisé par
+   *  findAllCategories() et findCategoriesByType(). Ne recalcule PAS
+   *  resolveClientId/scoreByDimension une fois par catégorie (N+1) :
+   *  résolus une seule fois puis appliqués à chaque sous-liste. */
+  private async personalizeCategories(req: Request, categories: CategoryResponse[]): Promise<CategoryResponse[]> {
+    const user = (req as any).user;
+
+    if (!user) {
+      return CatalogueAffinityService.shuffle(categories).map(c => ({
+        ...c,
+        subCategories: CatalogueAffinityService.shuffle(c.subCategories),
+      }));
+    }
+    if (user.role !== UserRole.CLIENT) return categories; // admin/entreprise… : ordre stable
+
+    const clientId = await this.affinityService.resolveClientId(this.userIdFromReq(req));
+    if (!clientId) return categories; // opt-out perso, ou profil client introuvable
+
+    const [catScores, subScores] = await Promise.all([
+      this.affinityService.scoreByDimension(clientId, 'category'),
+      this.affinityService.scoreByDimension(clientId, 'subCategory'),
+    ]);
+
+    const ranked = this.affinityService.personalize(categories, c => c.id, catScores);
+    return ranked.map(c => ({
+      ...c,
+      subCategories: this.affinityService.personalize(c.subCategories, s => s.id, subScores),
+    }));
   }
 
   // ── Catégories — MUTATIONS (token + SUPER_ADMIN) ──────────────
