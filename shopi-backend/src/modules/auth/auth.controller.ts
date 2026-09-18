@@ -141,6 +141,38 @@ export class AuthController {
     this.isProd = config.get<string>('NODE_ENV') === 'production';
   }
 
+  /* Clients natifs (app mobile) — ils n'ont ni cookie jar fiable ni
+   * stockage httpOnly : ils annoncent X-Client-Platform: mobile et gèrent
+   * eux-mêmes leurs tokens (Keychain/Keystore). Le web, lui, ne reçoit
+   * JAMAIS le refresh token dans le corps (cookie httpOnly uniquement). */
+  private isMobileClient(req: Request): boolean {
+    return req.headers['x-client-platform'] === 'mobile';
+  }
+
+  /**
+   * Pose les cookies (web) et construit la réponse publique.
+   * `includeRefreshInBody` = vrai uniquement pour un client mobile qui
+   * s'authentifie avec des identifiants (login/2FA/inscription) ou qui a
+   * lui-même présenté son refresh token dans le corps (refresh) — jamais
+   * pour une requête web : une XSS ne peut donc pas extraire le refresh
+   * token en appelant /auth/refresh avec les cookies.
+   */
+  private issueSession<T extends { accessToken: string; refreshToken: string | null; refreshTtlMs: number }>(
+    req: Request,
+    res: Response,
+    result: T,
+    accessMaxAgeMs: number,
+    includeRefreshInBody: boolean = this.isMobileClient(req),
+  ) {
+    setAuthCookies(
+      res, this.isProd,
+      result.accessToken, accessMaxAgeMs,
+      result.refreshToken, result.refreshTtlMs,
+    );
+    const { refreshToken, refreshTtlMs, ...publicResult } = result;
+    return includeRefreshInBody ? { ...publicResult, refreshToken, refreshTtlMs } : publicResult;
+  }
+
   // ── POST /auth/register ───────────────────────────────────────────────────
 
   @Post('register')
@@ -175,13 +207,7 @@ export class AuthController {
       return result;
     }
 
-    setAuthCookies(
-      res, this.isProd,
-      result.accessToken, 60 * 60 * 1000,          // accès : 1h
-      result.refreshToken, result.refreshTtlMs,
-    );
-    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
-    return publicResult;
+    return this.issueSession(req, res, result, 60 * 60 * 1000);   // accès : 1h
   }
 
   // ── POST /auth/login ──────────────────────────────────────────────────────
@@ -237,13 +263,7 @@ export class AuthController {
     /* Access token : TTL identique au JWT (1h pour tous, 4h pour SUPER_ADMIN).
      * Refresh token : 24h session normale, 7j si rememberMe. */
     const accessMaxAge = dto.rememberMe ? 7 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000;
-    setAuthCookies(
-      res, this.isProd,
-      result.accessToken, accessMaxAge,
-      result.refreshToken, result.refreshTtlMs,
-    );
-    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
-    return publicResult;
+    return this.issueSession(req, res, result, accessMaxAge);
   }
 
   // ── POST /auth/login/choose-account ───────────────────────────────────────
@@ -288,13 +308,7 @@ export class AuthController {
     }
 
     const accessMaxAge = dto.rememberMe ? 7 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000;
-    setAuthCookies(
-      res, this.isProd,
-      result.accessToken, accessMaxAge,
-      result.refreshToken, result.refreshTtlMs,
-    );
-    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
-    return publicResult;
+    return this.issueSession(req, res, result, accessMaxAge);
   }
 
   // ── POST /auth/verify-email ───────────────────────────────────────────────
@@ -317,13 +331,7 @@ export class AuthController {
   ): Promise<AuthResponse> {
     const userAgent = req.headers['user-agent'] ?? null;
     const result = await this.authService.verifyEmail(dto.userId, dto.code, clientIp, userAgent);
-    setAuthCookies(
-      res, this.isProd,
-      result.accessToken, 60 * 60 * 1000,
-      result.refreshToken, result.refreshTtlMs,
-    );
-    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
-    return publicResult;
+    return this.issueSession(req, res, result, 60 * 60 * 1000);
   }
 
   // ── POST /auth/resend-verification ────────────────────────────────────────
@@ -362,13 +370,7 @@ export class AuthController {
   ): Promise<AuthResponse> {
     const userAgent = req.headers['user-agent'] ?? null;
     const result = await this.authService.verifyTwoFaLogin(dto.challengeToken, dto.code, clientIp, userAgent);
-    setAuthCookies(
-      res, this.isProd,
-      result.accessToken, 60 * 60 * 1000,
-      result.refreshToken, result.refreshTtlMs,
-    );
-    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
-    return publicResult;
+    return this.issueSession(req, res, result, 60 * 60 * 1000);
   }
 
   // ── POST /auth/2fa/setup ──────────────────────────────────────────────────
@@ -444,19 +446,26 @@ export class AuthController {
     @Ip()   clientIp: string,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
-    const rawRefreshToken = (req.cookies as Record<string, string>)?.[REFRESH_COOKIE];
+    const cookieToken = (req.cookies as Record<string, string>)?.[REFRESH_COOKIE];
+
+    /* Client mobile : présente son refresh token dans le corps (stocké en
+     * Keychain/Keystore). Accepté UNIQUEMENT avec l'en-tête mobile — et le
+     * nouveau refresh token n'est alors renvoyé dans le corps QUE dans ce
+     * cas. Une requête web (cookie) ne reçoit jamais le refresh token dans
+     * le corps, même en forgeant l'en-tête : une XSS ne peut donc pas
+     * l'extraire en appelant /auth/refresh. */
+    const bodyToken = this.isMobileClient(req)
+      ? (req.body as { refreshToken?: unknown } | undefined)?.refreshToken
+      : undefined;
+    const fromBody = typeof bodyToken === 'string' && bodyToken.length > 0;
+    const rawRefreshToken = fromBody ? (bodyToken as string) : cookieToken;
+
     if (!rawRefreshToken) {
       throw new UnauthorizedException('Session expirée. Veuillez vous reconnecter.');
     }
     const userAgent = req.headers['user-agent'] ?? null;
     const result = await this.authService.refreshTokens(rawRefreshToken, clientIp, userAgent);
-    setAuthCookies(
-      res, this.isProd,
-      result.accessToken, 60 * 60 * 1000,
-      result.refreshToken, result.refreshTtlMs,
-    );
-    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
-    return publicResult;
+    return this.issueSession(req, res, result, 60 * 60 * 1000, fromBody) as AuthResponse;
   }
 
   // ── POST /auth/logout ─────────────────────────────────────────────────────
@@ -598,12 +607,11 @@ export class AuthController {
   async createLinkedClient(
     @Body() dto: CreateLinkedClientDto,
     @CurrentUser() user: User,
+    @Req()  req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
     const result = await this.accountLinkService.createLinkedClient(user.id, dto.password);
-    setAuthCookies(res, this.isProd, result.accessToken, 60 * 60 * 1000, result.refreshToken, result.refreshTtlMs);
-    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
-    return publicResult;
+    return this.issueSession(req, res, result, 60 * 60 * 1000);
   }
 
   // ── POST /auth/link-existing-client ───────────────────────────────────────
@@ -627,12 +635,11 @@ export class AuthController {
   async linkExistingClient(
     @Body() dto: LinkExistingClientDto,
     @CurrentUser() user: User,
+    @Req()  req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
     const result = await this.accountLinkService.linkExistingClient(user.id, dto);
-    setAuthCookies(res, this.isProd, result.accessToken, 60 * 60 * 1000, result.refreshToken, result.refreshTtlMs);
-    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
-    return publicResult;
+    return this.issueSession(req, res, result, 60 * 60 * 1000);
   }
 
   // ── POST /auth/switch-account ─────────────────────────────────────────────
@@ -653,6 +660,7 @@ export class AuthController {
   @ApiResponse({ status: 429, description: 'Trop de tentatives.' })
   async switchAccount(
     @CurrentUser() user: User,
+    @Req()  req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse | { requiresTwoFa: true; challengeToken: string }> {
     const result = await this.accountLinkService.switchAccount(user.id);
@@ -661,9 +669,7 @@ export class AuthController {
       return result;
     }
 
-    setAuthCookies(res, this.isProd, result.accessToken, 60 * 60 * 1000, result.refreshToken, result.refreshTtlMs);
-    const { refreshToken: _rt, refreshTtlMs: _ms, ...publicResult } = result;
-    return publicResult;
+    return this.issueSession(req, res, result, 60 * 60 * 1000);
   }
 
   // ── DELETE /auth/account-link ─────────────────────────────────────────────
