@@ -22,6 +22,7 @@ import CardProduit from '../../../cards/CardProduit';
 import CardService from '../../../cards/CardService';
 import TypeCategoryFilterBar from '../components/TypeCategoryFilterBar';
 import EntreprisesTypeBloc from '../components/EntreprisesTypeBloc';
+import CatalogueIcon from '../../ui/CatalogueIcon';
 import { useProduitsByType } from '../hooks/useProduitsByType';
 import { useServicesByType } from '../hooks/useServicesByType';
 
@@ -85,7 +86,7 @@ export default function TypeEntreprisePage() {
         {/* ── En-tête du type d'entreprise ── */}
         {typeInfo && (
           <div className={styles.hero} style={{ '--type-color': typeInfo.couleur ?? 'var(--blue)' } as React.CSSProperties}>
-            <div className={styles.heroIco}>{typeInfo.icone ?? '🏢'}</div>
+            <div className={styles.heroIco}><CatalogueIcon imageUrl={typeInfo.imageUrl} icone={typeInfo.icone} fallback="🏢" /></div>
             <div>
               <div className={styles.heroTitle}>{typeInfo.nom}</div>
               <div className={styles.heroSub}>

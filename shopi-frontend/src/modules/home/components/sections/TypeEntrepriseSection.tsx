@@ -15,10 +15,12 @@
  *   nbEntreprises → count (nombre de boutiques)
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiFetch }   from '../../../../shared/services/apiFetch';
+import HScrollSection from '../ui/HScrollSection';
+import CatalogueIcon from '../ui/CatalogueIcon';
 import styles         from './TypeEntrepriseSection.module.css';
 
 interface CompanyTypeApi {
@@ -26,6 +28,7 @@ interface CompanyTypeApi {
   slug:          string;
   nom:           string;
   icone:         string | null;
+  imageUrl:      string | null;
   couleur:       string | null;
   ordre:         number;
   actif:         boolean;
@@ -42,12 +45,19 @@ function makeBg(color: string): string {
 /* Fallback si aucune couleur n'est définie */
 const DEFAULT_COLOR = 'var(--blue)';
 
+/* La home n'affiche qu'UN bloc (~30 types, défilement horizontal) ; le
+ * reste du catalogue est accessible via la carte finale / le lien
+ * "Catalogue" qui mènent à /catalogue. */
+const HOME_BLOCK_SIZE = 30;
+
 export default function TypeEntrepriseSection() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [types,   setTypes]   = useState<CompanyTypeApi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
+  const shown  = useMemo(() => types.slice(0, HOME_BLOCK_SIZE), [types]);
+  const hidden = types.length - shown.length;
 
   useEffect(() => {
     apiFetch<CompanyTypeApi[]>('/company-types', { public: true })
@@ -77,48 +87,63 @@ export default function TypeEntrepriseSection() {
 
         {/* ── Liste ── */}
         {!loading && !error && (
-          <div className={styles.grid}>
-            {types.length === 0 ? (
-              <div className={styles.empty}>
-                {t('home.typeEntreprise.empty')}
-              </div>
-            ) : types.map(ct => {
-              const color = ct.couleur ?? DEFAULT_COLOR;
-              const bg    = makeBg(color);
-              return (
+          types.length === 0 ? (
+            <div className={styles.empty}>
+              {t('home.typeEntreprise.empty')}
+            </div>
+          ) : (
+            <div className={styles.blocks}>
+              <button className={styles.catalogueLink} onClick={() => navigate('/catalogue')}>
+                {t('cataloguePage.title')} <i className="fas fa-arrow-right" />
+              </button>
+              <HScrollSection>
+                {shown.map(ct => {
+                  const color = ct.couleur ?? DEFAULT_COLOR;
+                  const bg    = makeBg(color);
+                  return (
+                    <div
+                      key={ct.id}
+                      className={styles.card}
+                      onClick={() => navigate(`/types/${ct.id}`)}
+                      style={{
+                        '--card-color': color,
+                        '--card-bg':    bg,
+                      } as React.CSSProperties}
+                    >
+                      <div
+                        className={styles.ico}
+                        style={{
+                          background: bg,
+                          border: `1.5px solid color-mix(in srgb, ${color} 20%, transparent)`,
+                        }}
+                      >
+                        <CatalogueIcon imageUrl={ct.imageUrl} icone={ct.icone} fallback="🏢" />
+                      </div>
+                      <div className={styles.label}>{ct.nom}</div>
+                      <div className={styles.count}>
+                        {ct.nbEntreprises > 0
+                          ? t('home.typeEntreprise.boutiqueCount', { count: ct.nbEntreprises })
+                          : ct.nbCategories > 0
+                            ? t('home.typeEntreprise.categorieCount', { count: ct.nbCategories })
+                            : '—'}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Carte finale : ouvre le catalogue complet */}
                 <div
-                  key={ct.id}
-                  className={styles.card}
-                  onClick={() => navigate(`/types/${ct.id}`)}
-                  style={{
-                    '--card-color': color,
-                    '--card-bg':    bg,
-                  } as React.CSSProperties}
+                  className={`${styles.card} ${styles.moreCard}`}
+                  onClick={() => navigate('/catalogue')}
+                  role="link"
                 >
-                  <div
-                    className={styles.ico}
-                    style={{
-                      background: bg,
-                      border: `1.5px solid color-mix(in srgb, ${color} 20%, transparent)`,
-                    }}
-                  >
-                    {ct.icone ?? '🏢'}
-                  </div>
-                  <div className={styles.label}>{ct.nom}</div>
-                  <div className={styles.count}>
-                    {ct.nbEntreprises > 0
-                      ? t('home.typeEntreprise.boutiqueCount', { count: ct.nbEntreprises })
-                      : ct.nbCategories > 0
-                        ? t('home.typeEntreprise.categorieCount', { count: ct.nbCategories })
-                        : '—'}
-                  </div>
-                  <div className={styles.arrow}>
-                    <i className="fas fa-arrow-right" />
-                  </div>
+                  <div className={styles.ico}><i className="fas fa-table-cells-large" /></div>
+                  <div className={styles.label}>{t('cataloguePage.seeAll')}</div>
+                  <div className={styles.count}>{hidden > 0 ? `+${hidden}` : '—'}</div>
                 </div>
-              );
-            })}
-          </div>
+              </HScrollSection>
+            </div>
+          )
         )}
       </div>
     </section>

@@ -1,0 +1,23 @@
+{
+  "cataloguePage": {
+    "title": "Catalogue",
+    "tabs": {
+      "tout": "Tout",
+      "produits": "Produits",
+      "services": "Services"
+    },
+    "allCompanies": "Toutes les entreprises",
+    "seeAll": "Voir tout",
+    "companies": "Entreprises",
+    "loading": "Chargement…",
+    "noCategories": "Aucune catégorie pour ce type d'entreprise.",
+    "noCompanies": "Aucune entreprise disponible ici pour le moment.",
+    "errorLoad": "Impossible de charger le catalogue",
+    "retry": "Réessayer",
+    "nature": {
+      "products": "Produits",
+      "services": "Services",
+      "neutral": "Mixte"
+    }
+  }
+}

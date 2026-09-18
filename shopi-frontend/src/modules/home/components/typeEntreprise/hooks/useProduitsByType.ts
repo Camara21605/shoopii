@@ -20,6 +20,7 @@ export interface CompanyTypeInfo {
   nom:           string;
   description:   string | null;
   icone:         string | null;
+  imageUrl?:     string | null;
   couleur:       string | null;
   nbCategories:  number;
   nbEntreprises: number;
@@ -32,6 +33,7 @@ export interface TypeCategory {
   id:    string;
   nom:   string;
   icone: string | null;
+  imageUrl?: string | null;
 }
 
 interface ProduitsResponse {

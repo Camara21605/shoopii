@@ -147,6 +147,15 @@
   .mobileTopActions { display: flex; }
 }
 
+/* Petits écrans : la barre du haut porte 7 icônes une fois connecté
+ * (recherche, messages, notifications, panier, adresses, menu, avatar) —
+ * on resserre les boutons pour que rien ne déborde sur le logo. */
+@media (max-width: 480px) {
+  .wrap { padding: 0 12px; }
+  .mobileTopActions { gap: 0; }
+  .mobileTopActions .iconBtn { width: 32px; }
+}
+
 /* Barre recherche mobile dépliable */
 .mobileSearchBar {
   padding: 8px 0 12px;

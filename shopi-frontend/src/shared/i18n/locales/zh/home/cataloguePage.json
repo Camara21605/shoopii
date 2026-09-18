@@ -1,0 +1,23 @@
+{
+  "cataloguePage": {
+    "title": "目录",
+    "tabs": {
+      "tout": "全部",
+      "produits": "商品",
+      "services": "服务"
+    },
+    "allCompanies": "所有商家",
+    "seeAll": "查看全部",
+    "companies": "商家",
+    "loading": "加载中…",
+    "noCategories": "该商家类型暂无分类。",
+    "noCompanies": "此处暂无可用商家。",
+    "errorLoad": "无法加载目录",
+    "retry": "重试",
+    "nature": {
+      "products": "商品",
+      "services": "服务",
+      "neutral": "综合"
+    }
+  }
+}

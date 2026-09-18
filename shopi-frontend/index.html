@@ -19,6 +19,13 @@
         } catch (e) {
           document.documentElement.setAttribute('data-theme', 'dark');
         }
+        /* Police "style X" (voir tokens.css :root[data-site="home"]) posée
+         * AVANT le premier rendu — sans ça la police serif d'origine
+         * clignoterait un instant sur les pages publiques. Tenu à jour
+         * ensuite à chaque navigation par SiteScopeSync (router.tsx). */
+        var p = location.pathname;
+        var scoped = /^\/(dashboard|login|register|rejoindre)(\/|$)/.test(p);
+        document.documentElement.setAttribute('data-site', scoped ? 'app' : 'home');
       })();
     </script>
 

@@ -91,6 +91,12 @@
   /* ── Typographie ─────────────────────────────────────────── */
   --fd:      'Fraunces', Georgia, serif;
   --fb:      'DM Sans', sans-serif;
+  /* Pile de polices de X (ex-Twitter) sur le web : Chirp étant propriétaire,
+   * X retombe sur la police système de chaque appareil (SF sur iOS/Mac,
+   * Segoe UI sur Windows, Roboto sur Android) — même rendu, aucun
+   * téléchargement de police. Utilisée par les pages publiques (voir
+   * :root[data-site="home"] plus bas), pas par les dashboards. */
+  --font-x:  -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   /* ── Boutons (neutralisés — pas de fond bleu) ────────────── */
   --btn:            #111113;
@@ -179,4 +185,15 @@
   --btn-primary-bg: var(--navy);
   --topbar-bg:      rgba(255,255,255,.97);
   --topbar-border:  rgba(11,31,58,.08);
+}
+
+/* ── Police "style X" — pages publiques uniquement ─────────────
+ * data-site="home" est posé sur <html> par index.html (avant le premier
+ * rendu) puis tenu à jour par SiteScopeSync (router.tsx) : toute route
+ * hors /dashboard, /login, /register, /rejoindre. Remplace la serif
+ * Fraunces (titres) et DM Sans (texte) par la police système de X ;
+ * les dashboards gardent leur typographie d'origine. */
+:root[data-site="home"] {
+  --fd: var(--font-x);
+  --fb: var(--font-x);
 }

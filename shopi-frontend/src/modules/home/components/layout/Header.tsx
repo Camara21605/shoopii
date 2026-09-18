@@ -97,6 +97,7 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
   const isLivreurs       = location.pathname === '/livreurs';
   const isCorrespondants = location.pathname === '/correspondants';
   const isBoutiques      = location.pathname === '/boutiques';
+  const isCatalogue      = location.pathname === '/catalogue';
   const isMessagerie     = location.pathname === '/messagerie';
   const isCommande       = location.pathname.startsWith('/commande');
   const isAdresses       = location.pathname === '/mes-adresses';
@@ -671,6 +672,17 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
               </button>
 
               {isLoggedIn && <NotificationCenter />}
+
+              {/* ✅ Panier — déplacé ici depuis la bottom nav (remplacé par Catalogue) */}
+              <button className={`${styles.iconBtn} ${isCommande ? styles.iconBtnActive : ''}`}
+                onClick={() => clientAction(() => navigate('/commande'))}
+                title={t('publicHeader.panier')} aria-label={t('publicHeader.panier')}>
+                <i className="fas fa-bag-shopping" />
+                {isClient && cartCount > 0 && (
+                  <span className={styles.badge}>{cartCount > 99 ? '99+' : cartCount}</span>
+                )}
+              </button>
+
               <button className={styles.iconBtn}
                 onClick={() => clientAction(() => navigate('/mes-adresses'))} title={t('publicHeader.adresses')}>
                 <i className="fas fa-location-dot" />
@@ -872,16 +884,22 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
           <i className="fas fa-motorcycle" />
         </button>
 
-        {/* Panier — badge dynamique CartContext */}
+        {/* ✅ Relais (correspondants) — à côté de Livreurs, actif sur /correspondants */}
         <button
-          className={styles.bnItem}
-          onClick={() => clientAction(() => navigate('/commande'))}
-          title={t('publicHeader.panier')} aria-label={t('publicHeader.panier')}
+          className={`${styles.bnItem} ${isCorrespondants ? styles.bnActive : ''}`}
+          onClick={() => navigate('/correspondants')}
+          title={t('publicHeader.nav.relais')} aria-label={t('publicHeader.nav.relais')}
         >
-          <i className="fas fa-bag-shopping" />
-          {isClient && cartCount > 0 && (
-            <span className={styles.bnBadge}>{cartCount > 99 ? '99+' : cartCount}</span>
-          )}
+          <i className="fas fa-map-pin" />
+        </button>
+
+        {/* ✅ Catalogue — remplace le panier (désormais dans la barre du haut) */}
+        <button
+          className={`${styles.bnItem} ${isCatalogue ? styles.bnActive : ''}`}
+          onClick={() => navigate('/catalogue')}
+          title={t('cataloguePage.title')} aria-label={t('cataloguePage.title')}
+        >
+          <i className="fas fa-table-cells-large" />
         </button>
 
       </nav>

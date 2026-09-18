@@ -1,0 +1,23 @@
+{
+  "cataloguePage": {
+    "title": "الكتالوج",
+    "tabs": {
+      "tout": "الكل",
+      "produits": "المنتجات",
+      "services": "الخدمات"
+    },
+    "allCompanies": "جميع الشركات",
+    "seeAll": "عرض الكل",
+    "companies": "الشركات",
+    "loading": "جارٍ التحميل…",
+    "noCategories": "لا توجد فئات لهذا النوع من الشركات.",
+    "noCompanies": "لا توجد شركة متاحة هنا حالياً.",
+    "errorLoad": "تعذّر تحميل الكتالوج",
+    "retry": "إعادة المحاولة",
+    "nature": {
+      "products": "منتجات",
+      "services": "خدمات",
+      "neutral": "مختلط"
+    }
+  }
+}

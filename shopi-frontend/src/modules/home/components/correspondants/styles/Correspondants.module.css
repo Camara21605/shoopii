@@ -23,16 +23,16 @@
 .heroCircle2 { position:absolute; width:120px; height:120px; border-radius:50%; background:rgba(124,58,237,.12); bottom:30px; right:260px; }
 .heroIn { max-width:1200px; margin:0 auto; position:relative; z-index:1; display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:20px; }
 .heroSup { display:inline-flex; align-items:center; gap:6px; background:rgba(124,58,237,.1); border:1px solid rgba(124,58,237,.25); border-radius:20px; padding:4px 13px; font-size:11px; font-weight:700; color:var(--co); margin-bottom:14px; letter-spacing:.3px; }
-.heroTitle { font-family:'Fraunces',serif; font-size:34px; font-weight:700; color:var(--n); letter-spacing:-.5px; line-height:1.1; margin-bottom:10px; }
+.heroTitle { font-family: var(--fd,'Fraunces',serif); font-size:34px; font-weight:700; color:var(--n); letter-spacing:-.5px; line-height:1.1; margin-bottom:10px; }
 .heroTitle em { color:var(--co); font-style:normal; }
 .heroSub { font-size:13.5px; color:var(--t2); line-height:1.65; max-width:520px; margin-bottom:22px; }
 .heroKpis { display:flex; gap:26px; flex-wrap:wrap; }
 .hk { text-align:center; }
-.hkVal { font-family:'Fraunces',serif; font-size:22px; font-weight:700; color:var(--n); line-height:1; }
+.hkVal { font-family: var(--fd,'Fraunces',serif); font-size:22px; font-weight:700; color:var(--n); line-height:1; }
 .hkLbl { font-size:10.5px; color:var(--t3); margin-top:2px; font-weight:500; }
 .heroRight { display:flex; gap:10px; flex-shrink:0; }
 .hcard { background:var(--g50); border:1px solid var(--bdr); border-radius:14px; padding:16px 14px; width:128px; text-align:center; }
-.hcardAva { width:50px; height:50px; border-radius:50%; margin:0 auto 9px; display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:16px; font-weight:700; color:#fff; position:relative; }
+.hcardAva { width:50px; height:50px; border-radius:50%; margin:0 auto 9px; display:flex; align-items:center; justify-content:center; font-family: var(--fd,'Fraunces',serif); font-size:16px; font-weight:700; color:#fff; position:relative; }
 .hcardDot { width:10px; height:10px; background:#10B981; border-radius:50%; border:2px solid var(--g50); position:absolute; bottom:2px; right:2px; }
 .hcardNm { font-size:11.5px; font-weight:700; color:var(--n); margin-bottom:2px; }
 .hcardType { font-size:10px; color:var(--t3); margin-bottom:9px; }
@@ -119,7 +119,7 @@
 
 /* ════════ SECTION HEADER ════════ */
 .secH { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-.secTtl { font-family:'Fraunces',serif; font-size:17px; font-weight:700; color:var(--n); }
+.secTtl { font-family: var(--fd,'Fraunces',serif); font-size:17px; font-weight:700; color:var(--n); }
 .secSub { font-size:12px; color:var(--t3); margin-top:1px; }
 
 /* ════════ LIST VIEW ════════
@@ -129,7 +129,7 @@
 .listItem { background:transparent; border:none; border-bottom:1px solid var(--bdr); display:flex; align-items:center; gap:14px; padding:16px 6px; cursor:pointer; transition:background-color .15s; }
 .listItem:last-child { border-bottom:none; }
 .listItem:hover { background-color:var(--g100); }
-.liAva { width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:16px; font-weight:700; color:#fff; position:relative; flex-shrink:0; }
+.liAva { width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family: var(--fd,'Fraunces',serif); font-size:16px; font-weight:700; color:#fff; position:relative; flex-shrink:0; }
 .liDot { width:13px; height:13px; background:#10B981; border-radius:50%; border:2.5px solid var(--wh); position:absolute; bottom:1px; right:1px; }
 .liInf { flex:1; min-width:0; }
 .liNm { font-size:13.5px; font-weight:800; color:var(--n); margin-bottom:2px; }

@@ -188,7 +188,8 @@ export interface TypeLocal {
   slug:          string;   // Identifiant technique (ex: "restaurant")
   nom:           string;
   description:   string | null;
-  icone:         string | null;  // Emoji (ex: "🍔")
+  icone:         string | null;  // Emoji (ex: "🍔") — repli si pas d'image
+  imageUrl:      string | null;  // Image téléversée par le super-admin
   couleur:       string | null;  // Couleur hex de l'étiquette
   ordre:         number;         // Ordre d'affichage dans la liste
   actif:         boolean;
@@ -205,6 +206,7 @@ export interface CatLocal {
   nom:           string;
   slug:          string;
   icone:         string | null;
+  imageUrl:      string | null;
   couleur:       string | null;
   description:   string | null;
   ordre:         number;
@@ -219,6 +221,8 @@ export interface SubLocal {
   nom:        string;
   slug:       string;
   icone:      string | null;
+  imageUrl:   string | null;
+  description?: string | null;
   ordre:      number;
   categoryId: string;  // ID de la catégorie parente
 }

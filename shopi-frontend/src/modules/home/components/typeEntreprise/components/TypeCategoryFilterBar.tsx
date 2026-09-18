@@ -8,6 +8,7 @@
  * ================================================================ */
 
 import { useTranslation } from 'react-i18next';
+import CatalogueIcon from '../../ui/CatalogueIcon';
 import styles from './TypeCategoryFilterBar.module.css';
 import type { TypeCategory } from '../hooks/useProduitsByType';
 
@@ -36,7 +37,7 @@ export default function TypeCategoryFilterBar({ categories, activeCategoryId, on
           className={`${styles.chip} ${activeCategoryId === c.id ? styles.chipOn : ''}`}
           onClick={() => onSelect(c.id)}
         >
-          {c.icone ?? '📁'} {c.nom}
+          <CatalogueIcon imageUrl={c.imageUrl} icone={c.icone} fallback="📁" inline={18} /> {c.nom}
         </button>
       ))}
     </div>

@@ -9,7 +9,7 @@
  *   ✅ Guards migrés vers useAppContext() — plus de tokenStorage dans les guards
  * ================================================================ */
 
-import React, { lazy, Suspense, useEffect } from 'react';
+import React, { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { GlobalCallProvider } from '../shared/context/GlobalCallContext';
 import { GroupCallProvider }  from '../shared/context/GroupCallContext';
@@ -25,6 +25,7 @@ import CommandePage      from '../modules/home/components/panier/pages/CommandeP
 import SettingsPage      from '../modules/home/components/settings/pages/SettingsPage';
 import LivreursPage      from '../modules/home/components/livreurs/pages/LivreursPage';
 import BoutiquesPage     from '../modules/home/components/boutiques/pages/BoutiquesPage';
+import CataloguePage from '../modules/home/components/catalogue/pages/CataloguePage';
 import TypeEntreprisePage from '../modules/home/components/typeEntreprise/pages/TypeEntreprisePage';
 import ExplorerPage      from '../modules/home/components/explorer/pages/ExplorerPage';
 import OffresPage        from '../modules/home/components/offres/pages/OffresPage';
@@ -195,6 +196,23 @@ const ThemeRouteSync: React.FC = () => {
 };
 
 /**
+ * SiteScopeSync — pose data-site="home"|"app" sur <html> selon la route,
+ * pour que la police "style X" (tokens.css :root[data-site="home"]) ne
+ * s'applique qu'aux pages publiques. Même valeur initiale que le script
+ * inline de index.html (aucun flash), ici pour suivre la navigation SPA
+ * (ex. /home → /dashboard/... sans rechargement).
+ */
+const APP_SCOPE_RE = /^\/(dashboard|login|register|rejoindre)(\/|$)/;
+
+const SiteScopeSync: React.FC = () => {
+  const { pathname } = useLocation();
+  useLayoutEffect(() => {
+    document.documentElement.setAttribute('data-site', APP_SCOPE_RE.test(pathname) ? 'app' : 'home');
+  }, [pathname]);
+  return null;
+};
+
+/**
  * ScrollToTop — remonte en haut de page à chaque changement de route.
  *
  * React Router (BrowserRouter) ne le fait PAS automatiquement — sans ce
@@ -292,6 +310,7 @@ export const AppRouter: React.FC = () => (
     <GlobalCallProvider>
       <GroupCallProvider>
       <ThemeRouteSync />
+      <SiteScopeSync />
       <ScrollToTop />
       <Suspense fallback={<Loader />}>
         <Routes>
@@ -335,6 +354,7 @@ export const AppRouter: React.FC = () => (
 
           {/* Type d'entreprise — publique (produits + catégories de ce type) */}
           <Route path="/types/:id"          element={<TypeEntreprisePage />} />
+          <Route path="/catalogue"          element={<CataloguePage />} />
 
           {/* Offres / promotions — publique */}
           <Route path="/offres"             element={<OffresPage />} />

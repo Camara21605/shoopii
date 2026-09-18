@@ -50,6 +50,7 @@ import frHome                from './locales/fr/home/home.json';
 import frHeader               from './locales/fr/home/header.json';
 import frFooter                from './locales/fr/home/footer.json';
 import frBoutiquesPage          from './locales/fr/home/boutiquesPage.json';
+import frCataloguePage          from './locales/fr/home/cataloguePage.json';
 import frTypeEntreprisePage    from './locales/fr/home/typeEntreprisePage.json';
 import frBoutiqueDetail          from './locales/fr/home/boutiqueDetail.json';
 import frProduitDetail            from './locales/fr/home/produitDetail.json';
@@ -129,6 +130,7 @@ import enHome                from './locales/en/home/home.json';
 import enHeader               from './locales/en/home/header.json';
 import enFooter                from './locales/en/home/footer.json';
 import enBoutiquesPage          from './locales/en/home/boutiquesPage.json';
+import enCataloguePage          from './locales/en/home/cataloguePage.json';
 import enTypeEntreprisePage    from './locales/en/home/typeEntreprisePage.json';
 import enBoutiqueDetail          from './locales/en/home/boutiqueDetail.json';
 import enProduitDetail            from './locales/en/home/produitDetail.json';
@@ -206,6 +208,7 @@ import arHome                from './locales/ar/home/home.json';
 import arHeader               from './locales/ar/home/header.json';
 import arFooter                from './locales/ar/home/footer.json';
 import arBoutiquesPage          from './locales/ar/home/boutiquesPage.json';
+import arCataloguePage          from './locales/ar/home/cataloguePage.json';
 import arTypeEntreprisePage    from './locales/ar/home/typeEntreprisePage.json';
 import arBoutiqueDetail          from './locales/ar/home/boutiqueDetail.json';
 import arProduitDetail            from './locales/ar/home/produitDetail.json';
@@ -251,6 +254,7 @@ import zhHome                from './locales/zh/home/home.json';
 import zhHeader               from './locales/zh/home/header.json';
 import zhFooter                from './locales/zh/home/footer.json';
 import zhBoutiquesPage          from './locales/zh/home/boutiquesPage.json';
+import zhCataloguePage          from './locales/zh/home/cataloguePage.json';
 import zhTypeEntreprisePage    from './locales/zh/home/typeEntreprisePage.json';
 import zhBoutiqueDetail          from './locales/zh/home/boutiqueDetail.json';
 import zhProduitDetail            from './locales/zh/home/produitDetail.json';
@@ -296,6 +300,7 @@ import ptHome                from './locales/pt/home/home.json';
 import ptHeader               from './locales/pt/home/header.json';
 import ptFooter                from './locales/pt/home/footer.json';
 import ptBoutiquesPage          from './locales/pt/home/boutiquesPage.json';
+import ptCataloguePage          from './locales/pt/home/cataloguePage.json';
 import ptTypeEntreprisePage    from './locales/pt/home/typeEntreprisePage.json';
 import ptBoutiqueDetail          from './locales/pt/home/boutiqueDetail.json';
 import ptProduitDetail            from './locales/pt/home/produitDetail.json';
@@ -315,7 +320,7 @@ const fr = {
   ...frPromotions, ...frAnalytics, ...frLivreurs, ...frCorrespondants, ...frProfilCorrespondant, ...frProfilLivreur,
   ...frFinances, ...frWallet, ...frClients, ...frClientProfil, ...frAvis, ...frParametres, ...frEquipe,
   ...frBoutiquePreview, ...frMessagerie, ...frSeo,
-  ...frHome, ...frHeader, ...frFooter, ...frBoutiquesPage, ...frTypeEntreprisePage, ...frBoutiqueDetail, ...frProduitDetail,
+  ...frHome, ...frHeader, ...frFooter, ...frBoutiquesPage, ...frCataloguePage, ...frTypeEntreprisePage, ...frBoutiqueDetail, ...frProduitDetail,
   ...frPanierCommande, ...frFollowToggle, ...frLivreursPage, ...frCorrespondantsPage, ...frOffresPage, ...frSharedCards,
   ...frCompare,
   ...frSettingsPage, ...frClientDashboard,
@@ -328,7 +333,7 @@ const en = {
   ...enPromotions, ...enAnalytics, ...enLivreurs, ...enCorrespondants, ...enProfilCorrespondant, ...enProfilLivreur,
   ...enFinances, ...enWallet, ...enClients, ...enClientProfil, ...enAvis, ...enParametres, ...enEquipe,
   ...enBoutiquePreview, ...enMessagerie, ...enSeo,
-  ...enHome, ...enHeader, ...enFooter, ...enBoutiquesPage, ...enTypeEntreprisePage, ...enBoutiqueDetail, ...enProduitDetail,
+  ...enHome, ...enHeader, ...enFooter, ...enBoutiquesPage, ...enCataloguePage, ...enTypeEntreprisePage, ...enBoutiqueDetail, ...enProduitDetail,
   ...enPanierCommande, ...enFollowToggle, ...enLivreursPage, ...enCorrespondantsPage, ...enOffresPage, ...enSharedCards,
   ...enCompare,
   ...enSettingsPage, ...enClientDashboard,
@@ -341,7 +346,7 @@ const ar = {
   ...arPromotions, ...arAnalytics, ...arLivreurs, ...arCorrespondants, ...arProfilCorrespondant, ...arProfilLivreur,
   ...arFinances, ...arWallet, ...arClients, ...arClientProfil, ...arAvis, ...arParametres, ...arEquipe,
   ...arBoutiquePreview, ...arMessagerie, ...arSeo,
-  ...arHome, ...arHeader, ...arFooter, ...arBoutiquesPage, ...arTypeEntreprisePage, ...arBoutiqueDetail, ...arProduitDetail,
+  ...arHome, ...arHeader, ...arFooter, ...arBoutiquesPage, ...arCataloguePage, ...arTypeEntreprisePage, ...arBoutiqueDetail, ...arProduitDetail,
   ...arPanierCommande, ...arFollowToggle, ...arLivreursPage, ...arCorrespondantsPage, ...arOffresPage, ...arSharedCards,
   ...arCompare,
   ...arSettingsPage, ...arClientDashboard,
@@ -352,7 +357,7 @@ const zh = {
   ...zhPromotions, ...zhAnalytics, ...zhLivreurs, ...zhCorrespondants, ...zhProfilCorrespondant, ...zhProfilLivreur,
   ...zhFinances, ...zhWallet, ...zhClients, ...zhClientProfil, ...zhAvis, ...zhParametres, ...zhEquipe,
   ...zhBoutiquePreview, ...zhMessagerie, ...zhSeo,
-  ...zhHome, ...zhHeader, ...zhFooter, ...zhBoutiquesPage, ...zhTypeEntreprisePage, ...zhBoutiqueDetail, ...zhProduitDetail,
+  ...zhHome, ...zhHeader, ...zhFooter, ...zhBoutiquesPage, ...zhCataloguePage, ...zhTypeEntreprisePage, ...zhBoutiqueDetail, ...zhProduitDetail,
   ...zhPanierCommande, ...zhFollowToggle, ...zhLivreursPage, ...zhCorrespondantsPage, ...zhOffresPage, ...zhSharedCards,
   ...zhCompare,
   ...zhSettingsPage, ...zhClientDashboard,
@@ -363,7 +368,7 @@ const pt = {
   ...ptPromotions, ...ptAnalytics, ...ptLivreurs, ...ptCorrespondants, ...ptProfilCorrespondant, ...ptProfilLivreur,
   ...ptFinances, ...ptWallet, ...ptClients, ...ptClientProfil, ...ptAvis, ...ptParametres, ...ptEquipe,
   ...ptBoutiquePreview, ...ptMessagerie, ...ptSeo,
-  ...ptHome, ...ptHeader, ...ptFooter, ...ptBoutiquesPage, ...ptTypeEntreprisePage, ...ptBoutiqueDetail, ...ptProduitDetail,
+  ...ptHome, ...ptHeader, ...ptFooter, ...ptBoutiquesPage, ...ptCataloguePage, ...ptTypeEntreprisePage, ...ptBoutiqueDetail, ...ptProduitDetail,
   ...ptPanierCommande, ...ptFollowToggle, ...ptLivreursPage, ...ptCorrespondantsPage, ...ptOffresPage, ...ptSharedCards,
   ...ptCompare,
   ...ptSettingsPage, ...ptClientDashboard,

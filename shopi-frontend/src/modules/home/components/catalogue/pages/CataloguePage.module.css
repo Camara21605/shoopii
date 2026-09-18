@@ -1,0 +1,165 @@
+/* ================================================================
+ * CataloguePage.module.css — Page "/catalogue"
+ * Mise en page en deux colonnes qui remplissent l'écran : chaque colonne
+ * défile indépendamment (colonne des types à gauche, contenu à droite).
+ * Le Header du site est en position:fixed (66px) → compensé par le
+ * padding-top de .page (même raison que TypeEntreprisePage.module.css).
+ * ================================================================ */
+.page {
+  background: var(--white);
+  height: 100vh; height: 100dvh;
+  padding-top: var(--hdr, 66px);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Onglets Tout / Produits / Services ─────────────────────────── */
+.tabs {
+  display: flex; gap: 6px; flex-shrink: 0;
+  padding: 0 16px; border-bottom: 1px solid var(--bdr);
+  background: var(--white); overflow-x: auto; scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  position: relative; flex: 0 0 auto; background: none; border: none; cursor: pointer;
+  padding: 13px 16px 12px; font-size: 15px; font-weight: 700; color: var(--t3);
+  font-family: var(--fb);
+}
+.tabOn { color: var(--t1); }
+.tabOn::after {
+  content: ''; position: absolute; left: 16px; right: 16px; bottom: 0;
+  height: 3px; border-radius: 3px; background: var(--t1);
+}
+
+/* ── Deux colonnes ──────────────────────────────────────────────── */
+.split {
+  flex: 1; min-height: 0; width: 100%; max-width: 1200px; margin: 0 auto;
+  display: grid; grid-template-columns: 240px minmax(0, 1fr);
+}
+
+/* Colonne gauche */
+.side {
+  overflow-y: auto; background: var(--g50); border-right: 1px solid var(--bdr);
+  padding-bottom: 24px; scrollbar-width: thin;
+}
+.sideItem {
+  display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
+  background: transparent; border: none; cursor: pointer;
+  padding: 14px 14px; font-size: 14px; font-weight: 500; color: var(--t1);
+  font-family: var(--fb); line-height: 1.25;
+}
+.sideOn { background: var(--t1); color: var(--white); font-weight: 700; }
+.sideEmoji { flex-shrink: 0; font-size: 16px; width: 26px; height: 26px; border-radius: 50%; text-align: center; display: inline-flex; align-items: center; justify-content: center; }
+.sideName  { min-width: 0; overflow-wrap: anywhere; }
+.sideGroup {
+  display: flex; align-items: center; gap: 7px;
+  padding: 16px 14px 6px; font-size: 10.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .8px; color: var(--t4);
+}
+.sideSkeleton {
+  height: 20px; margin: 14px; border-radius: 6px;
+  background: linear-gradient(90deg, var(--g100,#F1F3F6) 25%, var(--white) 50%, var(--g100,#F1F3F6) 75%);
+  background-size: 200% 100%; animation: catShimmer 1.4s ease-in-out infinite;
+}
+
+/* Panneau droit */
+.panel { overflow-y: auto; padding: 14px 18px 32px; scrollbar-width: thin; }
+.panelHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.panelTitle {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  font-size: 17px; font-weight: 800; color: var(--t1);
+}
+.panelMore {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
+  background: transparent; border: none; cursor: pointer; color: var(--t3); font-size: 13px;
+}
+
+.natureTag {
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
+  padding: 3px 8px; border-radius: 999px; color: #fff; background: #6B7280;
+}
+.natureTag[data-nature="products"] { background: #2563EB; }
+.natureTag[data-nature="services"] { background: #059669; }
+
+/* Grille de pastilles (3 colonnes sur mobile, plus large sur grand écran) */
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 10px; }
+
+.tile {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: none; border: none; padding: 0; cursor: pointer; min-width: 0;
+  font-family: var(--fb);
+}
+.tileImg {
+  position: relative; width: 100%; max-width: 92px; aspect-ratio: 1 / 1; border-radius: 50%;
+  background: var(--g100, #F1F3F6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 34px; color: var(--t1);
+}
+.seeAllIco { font-size: 26px; color: var(--t1); }
+.logoImg { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.initial { font-size: 30px; font-weight: 800; color: var(--t2); }
+.tileLabel {
+  width: 100%; text-align: center; font-size: 12.5px; line-height: 1.25; color: var(--t2);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+/* Pastille "produits / services" posée sur chaque entreprise/type */
+.tileBadge {
+  position: absolute; right: 0; bottom: 2px; width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: #fff; background: #6B7280; border: 2px solid var(--white);
+}
+.tileBadge[data-nature="products"] { background: #2563EB; }
+.tileBadge[data-nature="services"] { background: #059669; }
+
+.tileSkeleton {
+  width: 100%; max-width: 92px; aspect-ratio: 1 / 1; border-radius: 50%;
+  background: linear-gradient(90deg, var(--g100,#F1F3F6) 25%, var(--white) 50%, var(--g100,#F1F3F6) 75%);
+  background-size: 200% 100%; animation: catShimmer 1.4s ease-in-out infinite;
+}
+@keyframes catShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Sections */
+.sectionRow { display: flex; align-items: center; justify-content: space-between; margin: 26px 0 14px; }
+.sectionTitle { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; color: var(--t1); }
+.sectionCount {
+  font-size: 11px; font-weight: 700; color: var(--t3); background: var(--g100, #F1F3F6);
+  padding: 2px 8px; border-radius: 999px;
+}
+.sectionLink {
+  background: none; border: none; cursor: pointer; font-size: 12.5px; font-weight: 700;
+  color: var(--t2); font-family: var(--fb); display: inline-flex; align-items: center; gap: 6px;
+}
+.hint { margin-top: 14px; font-size: 13px; color: var(--t3); }
+
+.state { padding: 60px 20px; text-align: center; color: var(--t3); font-size: 14px; }
+.state i { display: block; font-size: 40px; opacity: .4; margin-bottom: 14px; }
+.retry {
+  margin-top: 14px; border: 1.5px solid var(--bdr2); border-radius: 10px; background: var(--white);
+  color: var(--t1); font-size: 13px; font-weight: 700; padding: 9px 22px; cursor: pointer; font-family: var(--fb);
+}
+
+/* ── Grand écran ────────────────────────────────────────────────── */
+@media (min-width: 900px) {
+  .grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 22px 14px; }
+  .panel { padding: 20px 28px 40px; }
+}
+
+/* ── Mobile : colonne des types plus étroite + place pour la bottom nav ── */
+@media (max-width: 640px) {
+  .page { padding-bottom: 62px; }
+  .tab { font-size: 14px; padding: 12px 12px 11px; }
+  .tabOn::after { left: 12px; right: 12px; }
+  .split { grid-template-columns: 30% minmax(0, 1fr); }
+  .sideItem { padding: 13px 10px; font-size: 13px; gap: 6px; }
+  .sideEmoji { display: none; }
+  .sideGroup { padding: 14px 10px 4px; font-size: 9.5px; }
+  .panel { padding: 12px 12px 28px; }
+  .panelTitle { font-size: 14.5px; }
+  .tileLabel { font-size: 11.5px; }
+  .tileImg { font-size: 28px; }
+}

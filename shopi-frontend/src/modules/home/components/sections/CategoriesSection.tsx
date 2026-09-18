@@ -15,12 +15,14 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiFetch }  from '../../../../shared/services/apiFetch';
+import CatalogueIcon from '../ui/CatalogueIcon';
 import styles        from './CategoriesSection.module.css';
 
 interface CategoryApi {
   id:            string;
   nom:           string;
   icone:         string | null;
+  imageUrl:      string | null;
   slug:          string;
   ordre:         number;
   actif:         boolean;
@@ -94,7 +96,7 @@ export default function CategoriesSection() {
                 className={`${styles.cat} ${active === c.nom ? styles.catOn : ''}`}
                 onClick={() => handleClickCategory(c)}
               >
-                <div className={styles.catEm}>{c.icone ?? '📁'}</div>
+                <div className={styles.catEm}><CatalogueIcon imageUrl={c.imageUrl} icone={c.icone} fallback="📁" /></div>
                 <div className={styles.catNm}>{c.nom}</div>
                 <div className={styles.catCt}>
                   {c.subCategories?.length > 0

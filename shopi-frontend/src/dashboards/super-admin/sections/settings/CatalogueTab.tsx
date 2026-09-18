@@ -11,8 +11,13 @@
  *
  * Architecture :
  *   - Tout l'état local est ici (types, categories, modales, selects)
- *   - 6 modales gérées : créer type, supprimer type, créer cat,
- *     supprimer cat, créer sous-cat, supprimer sous-cat
+ *   - 6 modales gérées : créer/modifier type, supprimer type,
+ *     créer/modifier cat, supprimer cat, créer/modifier sous-cat,
+ *     supprimer sous-cat (les modales de création servent aussi
+ *     à l'édition : `editType` / `editCat` / `editSub`)
+ *   - Chaque entité porte une IMAGE téléversée par le super-admin
+ *     (remplace l'ancien sélecteur d'emoji ; l'emoji des données
+ *     antérieures reste affiché en repli tant qu'aucune image n'est ajoutée)
  *   - Appels API directs via apiFetch (pas de prop callback)
  *
  * Props reçues du parent :
@@ -22,7 +27,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiFetch, ApiError }                       from '../../../../shared/services/apiFetch';
-import { IconPicker, ColorPicker, iconGroupsForType } from '../../components/EntityPickers';
+import { ColorPicker }                              from '../../components/EntityPickers';
+import { ImageUploader, CatalogueThumb }            from '../../components/ImageUploader';
 import { toSlug }                                   from './utils';
 import type { TypeLocal, CatLocal, SubLocal }       from './types';
 
@@ -97,7 +103,8 @@ export default function CatalogueTab({ isActive, toast }: Props) {
   // Champs du formulaire de création de type
   const [newTypeNom,   setNewTypeNom]   = useState('');
   const [newTypeSlug,  setNewTypeSlug]  = useState('');
-  const [newTypeIcone, setNewTypeIcone] = useState('');
+  const [newTypeImage, setNewTypeImage] = useState('');
+  const [editType,     setEditType]     = useState<TypeLocal | null>(null);   // type en cours de modification
   const [newTypeCoul,  setNewTypeCoul]  = useState('');
   const [newTypeDesc,  setNewTypeDesc]  = useState('');
   const [newTypeOrdre, setNewTypeOrdre] = useState('');
@@ -116,7 +123,9 @@ export default function CatalogueTab({ isActive, toast }: Props) {
 
   const [newCatNom,   setNewCatNom]   = useState('');
   const [newCatSlug,  setNewCatSlug]  = useState('');
-  const [newCatIcone, setNewCatIcone] = useState('');
+  const [newCatImage, setNewCatImage] = useState('');
+  const [newCatTypeId, setNewCatTypeId] = useState('');
+  const [editCat,      setEditCat]     = useState<CatLocal | null>(null);
   const [newCatCoul,  setNewCatCoul]  = useState('');
   const [newCatDesc,  setNewCatDesc]  = useState('');
   const [newCatOrdre, setNewCatOrdre] = useState('');
@@ -129,7 +138,8 @@ export default function CatalogueTab({ isActive, toast }: Props) {
   const [newSubNom,   setNewSubNom]   = useState('');
   const [newSubSlug,  setNewSubSlug]  = useState('');
   const [newSubCatId, setNewSubCatId] = useState('');
-  const [newSubIcone, setNewSubIcone] = useState('');
+  const [newSubImage, setNewSubImage] = useState('');
+  const [editSub,      setEditSub]     = useState<SubLocal | null>(null);
   const [newSubOrdre, setNewSubOrdre] = useState('');
   const [subErreur,   setSubErreur]   = useState('');
 
@@ -168,19 +178,62 @@ export default function CatalogueTab({ isActive, toast }: Props) {
     setTypeErreur('');
   }, []);
 
-  const handleAjouterType = async () => {
+  const resetTypeForm = () => {
+    setEditType(null);
+    setNewTypeNom(''); setNewTypeSlug(''); setNewTypeImage('');
+    setNewTypeCoul(''); setNewTypeDesc(''); setNewTypeOrdre(''); setNewTypeNature('');
+    setTypeErreur('');
+  };
+
+  const openNewType = () => { resetTypeForm(); setModalType(true); };
+
+  /* Édition : la modale de création est réutilisée, pré-remplie. Le slug
+   * n'est PAS régénéré depuis le nom (il sert dans les URLs/seeds). */
+  const openEditType = (type: TypeLocal) => {
+    resetTypeForm();
+    setEditType(type);
+    setNewTypeNom(type.nom);
+    setNewTypeSlug(type.slug);
+    setNewTypeImage(type.imageUrl ?? '');
+    setNewTypeCoul(type.couleur ?? '');
+    setNewTypeDesc(type.description ?? '');
+    setNewTypeOrdre(type.ordre ? String(type.ordre) : '');
+    setNewTypeNature(type.nature);
+    setModalType(true);
+  };
+
+  const closeTypeModal = () => { setModalType(false); resetTypeForm(); };
+
+  const handleSauverType = async () => {
     if (!newTypeNom.trim()) { setTypeErreur('Le nom du type est obligatoire.'); return; }
     if (!newTypeNature) {
       setTypeErreur('Choisissez si ce type concerne des produits, des services, ou les deux (neutre).');
       return;
     }
     try {
+      if (editType) {
+        const updated = await apiFetch<TypeLocal>(`/company-types/${editType.id}`, {
+          method: 'PATCH',
+          body: {
+            nom:         newTypeNom.trim(),
+            imageUrl:    newTypeImage,                 // '' = retirer l'image
+            couleur:     newTypeCoul.trim(),
+            description: newTypeDesc.trim(),
+            ordre:       newTypeOrdre ? parseInt(newTypeOrdre) : undefined,
+            nature:      newTypeNature,
+          },
+        });
+        setTypes(prev => prev.map(t => t.id === editType.id ? { ...t, ...updated } : t));
+        closeTypeModal();
+        toast(`✅ Type "${updated.nom}" modifié`, 'success');
+        return;
+      }
       const created = await apiFetch<TypeLocal>('/company-types', {
         method: 'POST',
         body: {
           nom: newTypeNom.trim(),
           slug: newTypeSlug || toSlug(newTypeNom),
-          icone: newTypeIcone.trim() || undefined,
+          imageUrl: newTypeImage || undefined,
           couleur: newTypeCoul.trim() || undefined,
           description: newTypeDesc.trim() || undefined,
           ordre: newTypeOrdre ? parseInt(newTypeOrdre) : undefined,
@@ -189,10 +242,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
       });
       // Ajoute le nouveau type en local sans recharger toute la liste
       setTypes(prev => [...prev, { ...created, nbCategories: 0, nbEntreprises: 0 }]);
-      // Ferme la modale et réinitialise le formulaire
-      setModalType(false);
-      setNewTypeNom(''); setNewTypeSlug(''); setNewTypeIcone('');
-      setNewTypeCoul(''); setNewTypeDesc(''); setNewTypeOrdre(''); setNewTypeNature('');
+      closeTypeModal();
       toast(`✅ Type "${created.nom}" créé`, 'success');
     } catch (err) {
       setTypeErreur(err instanceof ApiError ? err.message : 'Erreur réseau.');
@@ -241,15 +291,66 @@ export default function CatalogueTab({ isActive, toast }: Props) {
     setNewCatNom(val); setNewCatSlug(toSlug(val)); setCatErreur('');
   }, []);
 
-  const handleAjouterCat = async () => {
+  const resetCatForm = () => {
+    setEditCat(null);
+    setNewCatNom(''); setNewCatSlug(''); setNewCatImage(''); setNewCatTypeId('');
+    setNewCatCoul(''); setNewCatDesc(''); setNewCatOrdre(''); setCatErreur('');
+  };
+
+  const openNewCat = () => { resetCatForm(); setModalCat(true); };
+
+  const openEditCat = (cat: CatLocal) => {
+    resetCatForm();
+    setEditCat(cat);
+    setNewCatNom(cat.nom);
+    setNewCatSlug(cat.slug);
+    setNewCatImage(cat.imageUrl ?? '');
+    setNewCatTypeId(cat.companyTypeId ?? typeSelId);
+    setNewCatCoul(cat.couleur ?? '');
+    setNewCatDesc(cat.description ?? '');
+    setNewCatOrdre(cat.ordre ? String(cat.ordre) : '');
+    setModalCat(true);
+  };
+
+  const closeCatModal = () => { setModalCat(false); resetCatForm(); };
+
+  const handleSauverCat = async () => {
     if (!newCatNom.trim()) { setCatErreur('Le nom de la catégorie est obligatoire.'); return; }
     try {
+      if (editCat) {
+        const updated = await apiFetch<CatLocal>(`/categories/${editCat.id}`, {
+          method: 'PATCH',
+          body: {
+            nom:           newCatNom.trim(),
+            imageUrl:      newCatImage,                // '' = retirer l'image
+            couleur:       newCatCoul.trim(),
+            description:   newCatDesc.trim(),
+            ordre:         newCatOrdre ? parseInt(newCatOrdre) : undefined,
+            companyTypeId: newCatTypeId || undefined,
+          },
+        });
+        const moved = !!newCatTypeId && newCatTypeId !== typeSelId;
+        if (moved) {
+          // La catégorie change de type : elle quitte la liste du type affiché
+          setCategories(prev => prev.filter(c => c.id !== editCat.id));
+          if (catSelId === editCat.id) setCatSelId('');
+          setTypes(prev => prev.map(t =>
+            t.id === typeSelId ? { ...t, nbCategories: Math.max(0, t.nbCategories - 1) }
+            : t.id === newCatTypeId ? { ...t, nbCategories: t.nbCategories + 1 } : t));
+        } else {
+          setCategories(prev => prev.map(c => c.id === editCat.id
+            ? { ...c, ...updated, subCategories: c.subCategories } : c));
+        }
+        closeCatModal();
+        toast(`✅ Catégorie "${updated.nom}" modifiée`, 'success');
+        return;
+      }
       const created = await apiFetch<CatLocal>('/categories', {
         method: 'POST',
         body: {
           nom: newCatNom.trim(),
           slug: newCatSlug || toSlug(newCatNom),
-          icone: newCatIcone.trim() || undefined,
+          imageUrl: newCatImage || undefined,
           couleur: newCatCoul.trim() || undefined,
           description: newCatDesc.trim() || undefined,
           ordre: newCatOrdre ? parseInt(newCatOrdre) : undefined,
@@ -259,9 +360,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
       setCategories(prev => [...prev, { ...created, subCategories: created.subCategories ?? [] }]);
       // Met à jour le compteur du type parent
       setTypes(prev => prev.map(t => t.id === typeSelId ? { ...t, nbCategories: t.nbCategories + 1 } : t));
-      setModalCat(false);
-      setNewCatNom(''); setNewCatSlug(''); setNewCatIcone('');
-      setNewCatCoul(''); setNewCatDesc(''); setNewCatOrdre('');
+      closeCatModal();
       toast(`✅ Catégorie "${created.nom}" créée`, 'success');
     } catch (err) {
       setCatErreur(err instanceof ApiError ? err.message : 'Erreur réseau.');
@@ -289,18 +388,58 @@ export default function CatalogueTab({ isActive, toast }: Props) {
     setNewSubNom(val); setNewSubSlug(toSlug(val)); setSubErreur('');
   }, []);
 
-  const handleAjouterSub = async () => {
+  const resetSubForm = () => {
+    setEditSub(null);
+    setNewSubNom(''); setNewSubSlug(''); setNewSubImage('');
+    setNewSubOrdre(''); setNewSubCatId(''); setSubErreur('');
+  };
+
+  const openNewSub = (catId: string) => { resetSubForm(); setNewSubCatId(catId); setModalSub(true); };
+
+  const openEditSub = (sub: SubLocal) => {
+    resetSubForm();
+    setEditSub(sub);
+    setNewSubNom(sub.nom);
+    setNewSubSlug(sub.slug);
+    setNewSubImage(sub.imageUrl ?? '');
+    setNewSubOrdre(sub.ordre ? String(sub.ordre) : '');
+    setNewSubCatId(sub.categoryId);
+    setModalSub(true);
+  };
+
+  const closeSubModal = () => { setModalSub(false); resetSubForm(); };
+
+  const handleSauverSub = async () => {
     const catId = newSubCatId || catSelId;
     if (!newSubNom.trim()) { setSubErreur('Le nom est obligatoire.'); return; }
     if (!catId)            { setSubErreur('Choisissez une catégorie parente.'); return; }
     try {
+      if (editSub) {
+        const updated = await apiFetch<SubLocal>(`/sub-categories/${editSub.id}`, {
+          method: 'PATCH',
+          body: {
+            nom:        newSubNom.trim(),
+            imageUrl:   newSubImage,                   // '' = retirer l'image
+            ordre:      newSubOrdre ? parseInt(newSubOrdre) : undefined,
+            categoryId: catId,
+          },
+        });
+        // Retire de l'ancienne catégorie, puis (ré)insère dans la bonne
+        setCategories(prev => prev.map(c => {
+          const without = (c.subCategories ?? []).filter(x => x.id !== editSub.id);
+          return c.id === catId ? { ...c, subCategories: [...without, { ...editSub, ...updated }] } : { ...c, subCategories: without };
+        }));
+        closeSubModal();
+        toast(`✅ Sous-catégorie "${updated.nom}" modifiée`, 'success');
+        return;
+      }
       const created = await apiFetch<SubLocal>('/sub-categories', {
         method: 'POST',
         body: {
           nom: newSubNom.trim(),
           slug: newSubSlug || toSlug(newSubNom),
           categoryId: catId,
-          icone: newSubIcone.trim() || undefined,
+          imageUrl: newSubImage || undefined,
           ordre: newSubOrdre ? parseInt(newSubOrdre) : undefined,
         },
       });
@@ -308,9 +447,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
       setCategories(prev => prev.map(c =>
         c.id === catId ? { ...c, subCategories: [...(c.subCategories ?? []), created] } : c,
       ));
-      setModalSub(false);
-      setNewSubNom(''); setNewSubSlug(''); setNewSubIcone('');
-      setNewSubOrdre(''); setNewSubCatId('');
+      closeSubModal();
       toast(`✅ Sous-catégorie "${created.nom}" créée`, 'success');
     } catch (err) {
       setSubErreur(err instanceof ApiError ? err.message : 'Erreur réseau.');
@@ -372,7 +509,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
             <div className="sg-title">Types d'entreprise</div>
           </div>
           {/* Bouton créer un nouveau type */}
-          <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 14px' }} onClick={() => setModalType(true)}>
+          <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 14px' }} onClick={openNewType}>
             + Nouveau type
           </button>
         </div>
@@ -409,7 +546,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
                   display: 'flex', alignItems: 'center', gap: 10,
                 }}
               >
-                <span style={{ fontSize: 22, flexShrink: 0 }}>{type.icone || '🏢'}</span>
+                <CatalogueThumb imageUrl={type.imageUrl} icone={type.icone} fallback="🏢" size={38} radius="50%" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--txt-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 6 }}>
                     {type.nom}
@@ -436,6 +573,15 @@ export default function CatalogueTab({ isActive, toast }: Props) {
                     {type.nbCategories} cat. · {type.nbEntreprises} entreprise{type.nbEntreprises !== 1 ? 's' : ''}
                   </div>
                 </div>
+                {/* Modifier — stopPropagation pour éviter la sélection */}
+                <button
+                  className="btn-ghost"
+                  style={{ padding: '4px 6px', fontSize: 13, flexShrink: 0 }}
+                  onClick={e => { e.stopPropagation(); openEditType(type); }}
+                  title="Modifier ce type"
+                >
+                  ✏️
+                </button>
                 {/* Bouton suppression — stopPropagation pour éviter la sélection */}
                 <button
                   className="btn-ghost"
@@ -465,7 +611,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
               {/* Nom du type sélectionné dans le titre pour le contexte */}
               <div className="sg-title">Catégories — <em style={{ fontWeight: 400, fontSize: 13 }}>{typeActive?.nom}</em></div>
             </div>
-            <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 14px' }} onClick={() => setModalCat(true)}>
+            <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 14px' }} onClick={openNewCat}>
               + Nouvelle catégorie
             </button>
           </div>
@@ -487,13 +633,21 @@ export default function CatalogueTab({ isActive, toast }: Props) {
                     }}
                     onClick={() => setCatSelId(catSelId === cat.id ? '' : cat.id)}
                   >
-                    <span style={{ fontSize: 18 }}>{cat.icone || '📂'}</span>
+                    <CatalogueThumb imageUrl={cat.imageUrl} icone={cat.icone} fallback="📂" size={32} radius="50%" />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 600, fontSize: 12.5, color: 'var(--txt-1)' }}>{cat.nom}</div>
                       <div style={{ fontSize: 10, color: 'var(--txt-3)' }}>
                         {(cat.subCategories ?? []).length} sous-catégorie{(cat.subCategories ?? []).length !== 1 ? 's' : ''}
                       </div>
                     </div>
+                    <button
+                      className="btn-ghost"
+                      style={{ padding: '4px 6px', fontSize: 13 }}
+                      onClick={e => { e.stopPropagation(); openEditCat(cat); }}
+                      title="Modifier la catégorie"
+                    >
+                      ✏️
+                    </button>
                     <button
                       className="btn-ghost"
                       style={{ padding: '4px 6px', fontSize: 13 }}
@@ -516,8 +670,16 @@ export default function CatalogueTab({ isActive, toast }: Props) {
                             borderRadius: 8, padding: '4px 10px', fontSize: 11.5,
                           }}
                         >
-                          <span>{sub.icone || '•'}</span>
+                          <CatalogueThumb imageUrl={sub.imageUrl} icone={sub.icone} fallback="•" size={22} radius="50%" />
                           <span style={{ color: 'var(--txt-1)', fontWeight: 600 }}>{sub.nom}</span>
+                          <button
+                            className="btn-ghost"
+                            style={{ padding: '2px 4px', fontSize: 11 }}
+                            onClick={() => openEditSub(sub)}
+                            title="Modifier"
+                          >
+                            ✏️
+                          </button>
                           <button
                             className="btn-ghost"
                             style={{ padding: '2px 4px', fontSize: 11 }}
@@ -534,7 +696,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
                       <button
                         className="btn btn-primary"
                         style={{ fontSize: 11, padding: '4px 10px', borderRadius: 8 }}
-                        onClick={() => { setNewSubCatId(cat.id); setModalSub(true); }}
+                        onClick={() => openNewSub(cat.id)}
                       >
                         + sous-cat
                       </button>
@@ -559,7 +721,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
           <button
             className="btn btn-secondary"
             style={{ fontSize: 12 }}
-            onClick={() => { setNewSubCatId(catSelId); setModalSub(true); }}
+            onClick={() => openNewSub(catSelId)}
           >
             + Sous-catégorie dans "{catActive?.nom}"
           </button>
@@ -573,11 +735,11 @@ export default function CatalogueTab({ isActive, toast }: Props) {
 
       {/* ── MODALE : Créer un type d'entreprise ── */}
       {modalType && (
-        <div className="modal-overlay open" onClick={() => setModalType(false)}>
+        <div className="modal-overlay open" onClick={closeTypeModal}>
           <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
             <div className="modal-head">
-              <div className="modal-title">🏷️ Nouveau type d'entreprise</div>
-              <button className="modal-close" onClick={() => setModalType(false)}>✕</button>
+              <div className="modal-title">🏷️ {editType ? "Modifier le type d'entreprise" : "Nouveau type d'entreprise"}</div>
+              <button className="modal-close" onClick={closeTypeModal}>✕</button>
             </div>
 
             <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -611,14 +773,10 @@ export default function CatalogueTab({ isActive, toast }: Props) {
                 />
               </div>
 
-              {/* Sélecteur d'icône */}
+              {/* Image téléversée par le super-admin (remplace l'ancien emoji) */}
               <div>
-                <label className="form-label">Icône</label>
-                <IconPicker
-                  value={newTypeIcone}
-                  onChange={setNewTypeIcone}
-                  groups={iconGroupsForType({ nom: newTypeNom, slug: newTypeSlug })}
-                />
+                <label className="form-label">Image</label>
+                <ImageUploader value={newTypeImage} onChange={setNewTypeImage} />
               </div>
 
               {/* Sélecteur de couleur */}
@@ -666,8 +824,8 @@ export default function CatalogueTab({ isActive, toast }: Props) {
             </div>
 
             <div style={{ display: 'flex', gap: 10, padding: '0 20px 20px', justifyContent: 'flex-end' }}>
-              <button className="btn btn-secondary" onClick={() => setModalType(false)}>Annuler</button>
-              <button className="btn btn-primary"   onClick={handleAjouterType}>Créer le type</button>
+              <button className="btn btn-secondary" onClick={closeTypeModal}>Annuler</button>
+              <button className="btn btn-primary"   onClick={handleSauverType}>{editType ? 'Enregistrer' : 'Créer le type'}</button>
             </div>
           </div>
         </div>
@@ -685,23 +843,33 @@ export default function CatalogueTab({ isActive, toast }: Props) {
 
       {/* ── MODALE : Créer une catégorie ── */}
       {modalCat && (
-        <div className="modal-overlay open" onClick={() => setModalCat(false)}>
+        <div className="modal-overlay open" onClick={closeCatModal}>
           <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 460 }}>
             <div className="modal-head">
-              <div className="modal-title">📂 Nouvelle catégorie</div>
-              <button className="modal-close" onClick={() => setModalCat(false)}>✕</button>
+              <div className="modal-title">📂 {editCat ? 'Modifier la catégorie' : 'Nouvelle catégorie'}</div>
+              <button className="modal-close" onClick={closeCatModal}>✕</button>
             </div>
 
             <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-              {/* Type parent en lecture seule */}
-              {typeActive && (
+              {/* Édition : le type parent peut être changé */}
+              {editCat && (
+                <div>
+                  <label className="form-label">Type d'entreprise</label>
+                  <select className="sel" value={newCatTypeId} onChange={e => setNewCatTypeId(e.target.value)}>
+                    {types.map(t => <option key={t.id} value={t.id}>{t.nom}</option>)}
+                  </select>
+                </div>
+              )}
+
+              {/* Création : type parent en lecture seule */}
+              {!editCat && typeActive && (
                 <div style={{
                   background: 'var(--raised)', border: '1px solid var(--border)',
                   borderRadius: 8, padding: '8px 12px', fontSize: 12,
                   display: 'flex', alignItems: 'center', gap: 8, color: 'var(--txt-2)',
                 }}>
-                  <span>{typeActive.icone || '🏢'}</span>
+                  <CatalogueThumb imageUrl={typeActive.imageUrl} icone={typeActive.icone} fallback="🏢" size={22} radius="50%" />
                   Type parent : <strong>{typeActive.nom}</strong>
                 </div>
               )}
@@ -727,8 +895,8 @@ export default function CatalogueTab({ isActive, toast }: Props) {
               </div>
 
               <div>
-                <label className="form-label">Icône</label>
-                <IconPicker value={newCatIcone} onChange={setNewCatIcone} groups={iconGroupsForType({ nom: newCatNom, slug: newCatSlug })} />
+                <label className="form-label">Image</label>
+                <ImageUploader value={newCatImage} onChange={setNewCatImage} />
               </div>
 
               <div>
@@ -745,8 +913,8 @@ export default function CatalogueTab({ isActive, toast }: Props) {
             </div>
 
             <div style={{ display: 'flex', gap: 10, padding: '0 20px 20px', justifyContent: 'flex-end' }}>
-              <button className="btn btn-secondary" onClick={() => setModalCat(false)}>Annuler</button>
-              <button className="btn btn-primary"   onClick={handleAjouterCat}>Créer la catégorie</button>
+              <button className="btn btn-secondary" onClick={closeCatModal}>Annuler</button>
+              <button className="btn btn-primary"   onClick={handleSauverCat}>{editCat ? 'Enregistrer' : 'Créer la catégorie'}</button>
             </div>
           </div>
         </div>
@@ -764,11 +932,11 @@ export default function CatalogueTab({ isActive, toast }: Props) {
 
       {/* ── MODALE : Créer une sous-catégorie ── */}
       {modalSub && (
-        <div className="modal-overlay open" onClick={() => { setModalSub(false); setNewSubCatId(''); }}>
+        <div className="modal-overlay open" onClick={closeSubModal}>
           <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
             <div className="modal-head">
-              <div className="modal-title">📁 Nouvelle sous-catégorie</div>
-              <button className="modal-close" onClick={() => { setModalSub(false); setNewSubCatId(''); }}>✕</button>
+              <div className="modal-title">📁 {editSub ? 'Modifier la sous-catégorie' : 'Nouvelle sous-catégorie'}</div>
+              <button className="modal-close" onClick={closeSubModal}>✕</button>
             </div>
 
             <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -783,7 +951,7 @@ export default function CatalogueTab({ isActive, toast }: Props) {
                 >
                   <option value="">-- Choisir --</option>
                   {categories.map(c => (
-                    <option key={c.id} value={c.id}>{c.icone} {c.nom}</option>
+                    <option key={c.id} value={c.id}>{c.nom}</option>
                   ))}
                 </select>
               </div>
@@ -804,8 +972,8 @@ export default function CatalogueTab({ isActive, toast }: Props) {
               </div>
 
               <div>
-                <label className="form-label">Icône (emoji optionnel)</label>
-                <input className="input-field" type="text" value={newSubIcone} onChange={e => setNewSubIcone(e.target.value)} placeholder="🍕" style={{ width: 80 }} />
+                <label className="form-label">Image</label>
+                <ImageUploader value={newSubImage} onChange={setNewSubImage} />
               </div>
 
               <div>
@@ -817,8 +985,8 @@ export default function CatalogueTab({ isActive, toast }: Props) {
             </div>
 
             <div style={{ display: 'flex', gap: 10, padding: '0 20px 20px', justifyContent: 'flex-end' }}>
-              <button className="btn btn-secondary" onClick={() => { setModalSub(false); setNewSubCatId(''); }}>Annuler</button>
-              <button className="btn btn-primary"   onClick={handleAjouterSub}>Créer</button>
+              <button className="btn btn-secondary" onClick={closeSubModal}>Annuler</button>
+              <button className="btn btn-primary"   onClick={handleSauverSub}>{editSub ? 'Enregistrer' : 'Créer'}</button>
             </div>
           </div>
         </div>
