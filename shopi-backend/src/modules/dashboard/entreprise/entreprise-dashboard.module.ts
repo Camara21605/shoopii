@@ -55,7 +55,6 @@ import { CompanySetting } from '../../company-settings/company-settings.entity';
 // ── Controllers ───────────────────────────────────────────────
 import { EntrepriseDashboardController } from './entreprise-dashboard.controller';
 import { ProduitsController }            from './produits/produits.controller';
-import { CategoriesController }          from '../super-admin/categories/categories.controller';
 
 // ── Services ──────────────────────────────────────────────────
 import { EntrepriseDashboardService } from './entreprise-dashboard.service';
@@ -117,7 +116,11 @@ import { CategoriesService }          from '../super-admin/categories/categories
   controllers: [
     EntrepriseDashboardController,
     ProduitsController,
-    CategoriesController,
+    /* CatalogueController (alias CategoriesController) n'est PLUS déclaré ici :
+     * il l'est déjà dans CatalogueModule (importé ci-dessus sous l'alias
+     * CategoriesModule). Le déclarer aussi ici dupliquait ses routes et
+     * empêchait le démarrage dès que le contrôleur a reçu une dépendance
+     * (CatalogueAffinityService) fournie par CatalogueModule seulement. */
   ],
 
   providers: [
