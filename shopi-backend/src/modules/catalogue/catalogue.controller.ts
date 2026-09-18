@@ -79,6 +79,10 @@ export class CreateCompanyTypeDto {
   @IsOptional() @IsString() @MaxLength(50)
   icone?: string;
 
+  @ApiPropertyOptional({ description: "URL de l'image (Cloudinary) — vide pour retirer" })
+  @IsOptional() @IsString() @MaxLength(500)
+  imageUrl?: string;
+
   @ApiPropertyOptional({ example: '#059669' })
   @IsOptional() @IsString() @MaxLength(7)
   couleur?: string;
@@ -104,6 +108,9 @@ export class UpdateCompanyTypeDto {
 
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(50)
   icone?: string;
+
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(500)
+  imageUrl?: string;
 
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(7)
   couleur?: string;
@@ -135,6 +142,9 @@ export class CreateCategoryDto {
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(50)
   icone?: string;
 
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(500)
+  imageUrl?: string;
+
   @ApiPropertyOptional({ example: '#059669' })
   @IsOptional() @IsString() @MaxLength(7)
   couleur?: string;
@@ -158,6 +168,9 @@ export class UpdateCategoryDto {
 
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(50)
   icone?: string;
+
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(500)
+  imageUrl?: string;
 
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(7)
   couleur?: string;
@@ -195,6 +208,9 @@ export class CreateSubCategoryDto {
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(50)
   icone?: string;
 
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(500)
+  imageUrl?: string;
+
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(255)
   description?: string;
 
@@ -214,6 +230,9 @@ export class UpdateSubCategoryDto {
 
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(50)
   icone?: string;
+
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(500)
+  imageUrl?: string;
 
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(255)
   description?: string;
@@ -416,6 +435,7 @@ export class CatalogueController {
       nom:           body.nom,
       slug:          body.slug,
       icone:         body.icone,
+      imageUrl:      body.imageUrl,
       couleur:       body.couleur,
       description:   body.description,
       ordre:         body.ordre,
@@ -437,6 +457,7 @@ export class CatalogueController {
       nom:           body.nom,
       slug:          body.slug,
       icone:         body.icone,
+      imageUrl:      body.imageUrl,
       couleur:       body.couleur,
       description:   body.description,
       ordre:         body.ordre,
@@ -471,6 +492,7 @@ export class CatalogueController {
       slug:        body.slug,
       categoryId:  body.categoryId,
       icone:       body.icone,
+      imageUrl:      body.imageUrl,
       description: body.description,
       ordre:       body.ordre,
     });
@@ -491,6 +513,7 @@ export class CatalogueController {
       slug:        body.slug,
       categoryId:  body.categoryId,
       icone:       body.icone,
+      imageUrl:      body.imageUrl,
       description: body.description,
       ordre:       body.ordre,
       actif:       body.actif,

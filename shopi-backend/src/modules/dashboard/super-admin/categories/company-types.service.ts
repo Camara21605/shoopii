@@ -35,6 +35,7 @@ import { Repository }       from 'typeorm';
 
 import { CompanyType, CompanyTypeNature } from '../../../../database/entities/entreprise.table/company-type.entity';
 import { Category }    from '../../../../database/entities/entreprise.table/category.entity';
+import { formatTypeName } from '../../../../common/utils/catalogue-case.util';
 
 // ─────────────────────────────────────────────────────────────
 // DTOs INTERNES
@@ -45,6 +46,7 @@ export interface CreateCompanyTypeDto {
   nom:          string;
   description?: string;
   icone?:       string;
+  imageUrl?:    string;
   couleur?:     string;
   ordre?:       number;
   /** Produits, services, ou neutre (les deux) — filtre le sélecteur de
@@ -57,6 +59,7 @@ export interface UpdateCompanyTypeDto {
   nom?:         string;
   description?: string;
   icone?:       string;
+  imageUrl?:    string;
   couleur?:     string;
   ordre?:       number;
   actif?:       boolean;
@@ -73,6 +76,7 @@ export interface CompanyTypeResponse {
   nom:          string;
   description:  string | null;
   icone:        string | null;
+  imageUrl:     string | null;
   couleur:      string | null;
   ordre:        number;
   actif:        boolean;
@@ -167,9 +171,9 @@ export class CompanyTypesService {
     }
 
     // Unicité nom
-    const nomExistant = await this.typeRepo.findOne({ where: { nom: dto.nom.trim() } });
+    const nomExistant = await this.typeRepo.findOne({ where: { nom: formatTypeName(dto.nom) } });
     if (nomExistant) {
-      throw new ConflictException(`Un type nommé "${dto.nom.trim()}" existe déjà.`);
+      throw new ConflictException(`Un type nommé "${formatTypeName(dto.nom)}" existe déjà.`);
     }
 
     // Ordre automatique si non fourni
@@ -177,9 +181,10 @@ export class CompanyTypesService {
 
     const type = this.typeRepo.create({
       slug,
-      nom:         dto.nom.trim(),
+      nom:         formatTypeName(dto.nom),
       description: dto.description?.trim() || null,
       icone:       dto.icone?.trim()       || null,
+      imageUrl:    dto.imageUrl?.trim()    || null,
       couleur:     dto.couleur?.trim()     || null,
       ordre,
       actif:       true,
@@ -213,15 +218,16 @@ export class CompanyTypesService {
     }
 
     if (dto.nom !== undefined) {
-      const conflit = await this.typeRepo.findOne({ where: { nom: dto.nom.trim() } });
+      const conflit = await this.typeRepo.findOne({ where: { nom: formatTypeName(dto.nom) } });
       if (conflit && conflit.id !== id) {
-        throw new ConflictException(`Un type nommé "${dto.nom.trim()}" existe déjà.`);
+        throw new ConflictException(`Un type nommé "${formatTypeName(dto.nom)}" existe déjà.`);
       }
-      type.nom = dto.nom.trim();
+      type.nom = formatTypeName(dto.nom);
     }
 
     if (dto.description !== undefined) type.description = dto.description?.trim() || null;
     if (dto.icone       !== undefined) type.icone       = dto.icone?.trim()       || null;
+    if (dto.imageUrl    !== undefined) type.imageUrl    = dto.imageUrl?.trim()    || null;
     if (dto.couleur     !== undefined) type.couleur     = dto.couleur?.trim()     || null;
     if (dto.ordre       !== undefined) type.ordre       = dto.ordre;
     if (dto.actif       !== undefined) type.actif       = dto.actif;
@@ -295,6 +301,7 @@ export class CompanyTypesService {
       nom:           type.nom,
       description:   type.description,
       icone:         type.icone,
+      imageUrl:      type.imageUrl,
       couleur:       type.couleur,
       ordre:         type.ordre,
       actif:         type.actif,

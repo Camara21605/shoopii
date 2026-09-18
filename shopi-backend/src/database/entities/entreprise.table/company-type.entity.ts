@@ -83,6 +83,13 @@ export class CompanyType {
   icone: string | null;
 
   /**
+   * Image téléversée par le super-admin (URL Cloudinary). Remplace l'icône
+   * emoji à l'affichage ; `icone` reste le repli tant qu'aucune image n'existe.
+   */
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  imageUrl: string | null;
+
+  /**
    * Couleur hexadécimale associée au type.
    * Utilisée dans les badges et les chips UI.
    * Ex : "#059669"

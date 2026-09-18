@@ -42,6 +42,7 @@ import { Repository }       from 'typeorm';
 import { Category }    from '../../../../database/entities/entreprise.table/category.entity';
 import { SubCategory } from '../../../../database/entities/entreprise.table/sub-category.entity';
 import { CompanyType } from '../../../../database/entities/entreprise.table/company-type.entity';
+import { formatCategoryName, formatSubCategoryName } from '../../../../common/utils/catalogue-case.util';
 
 // ─────────────────────────────────────────────────────────────
 // DTOs INTERNES
@@ -51,6 +52,7 @@ export interface CreateCategoryDto {
   nom:            string;
   slug:           string;
   icone?:         string;
+  imageUrl?:      string;
   couleur?:       string;
   description?:   string;
   ordre?:         number;
@@ -61,6 +63,7 @@ export interface UpdateCategoryDto {
   nom?:           string;
   slug?:          string;
   icone?:         string;
+  imageUrl?:      string;
   couleur?:       string;
   description?:   string;
   ordre?:         number;
@@ -73,6 +76,7 @@ export interface CreateSubCategoryDto {
   slug:         string;
   categoryId:   string;
   icone?:       string;
+  imageUrl?:    string;
   description?: string;
   ordre?:       number;
 }
@@ -82,6 +86,7 @@ export interface UpdateSubCategoryDto {
   slug?:        string;
   categoryId?:  string;
   icone?:       string;
+  imageUrl?:    string;
   description?: string;
   ordre?:       number;
   actif?:       boolean;
@@ -97,6 +102,7 @@ export interface CategoryResponse {
   nom:            string;
   slug:           string;
   icone:          string | null;
+  imageUrl:       string | null;
   couleur:        string | null;
   description:    string | null;
   ordre:          number;
@@ -112,6 +118,7 @@ export interface SubCategoryResponse {
   nom:          string;
   slug:         string;
   icone:        string | null;
+  imageUrl:     string | null;
   description:  string | null;
   ordre:        number;
   actif:        boolean;
@@ -196,8 +203,8 @@ export class CategoriesService {
     const slug = this.normalizeSlug(dto.slug);
 
     // Unicité nom
-    const nomExist = await this.catRepo.findOne({ where: { nom: dto.nom.trim() } });
-    if (nomExist) throw new ConflictException(`Catégorie "${dto.nom.trim()}" déjà existante.`);
+    const nomExist = await this.catRepo.findOne({ where: { nom: formatCategoryName(dto.nom) } });
+    if (nomExist) throw new ConflictException(`Catégorie "${formatCategoryName(dto.nom)}" déjà existante.`);
 
     // Unicité slug
     const slugExist = await this.catRepo.findOne({ where: { slug } });
@@ -212,9 +219,10 @@ export class CategoriesService {
     const ordre = dto.ordre ?? ((await this.catRepo.count()) + 1);
 
     const cat = this.catRepo.create({
-      nom:           dto.nom.trim(),
+      nom:           formatCategoryName(dto.nom),
       slug,
       icone:         dto.icone?.trim()       || null,
+      imageUrl:      dto.imageUrl?.trim()    || null,
       couleur:       dto.couleur?.trim()     || null,
       description:   dto.description?.trim() || null,
       ordre,
@@ -237,10 +245,10 @@ export class CategoriesService {
     if (!cat) throw new NotFoundException(`Catégorie introuvable (ID: ${id}).`);
 
     if (dto.nom !== undefined) {
-      const conflit = await this.catRepo.findOne({ where: { nom: dto.nom.trim() } });
+      const conflit = await this.catRepo.findOne({ where: { nom: formatCategoryName(dto.nom) } });
       if (conflit && conflit.id !== id)
-        throw new ConflictException(`Catégorie "${dto.nom.trim()}" déjà existante.`);
-      cat.nom = dto.nom.trim();
+        throw new ConflictException(`Catégorie "${formatCategoryName(dto.nom)}" déjà existante.`);
+      cat.nom = formatCategoryName(dto.nom);
     }
     if (dto.slug !== undefined) {
       const slug = this.normalizeSlug(dto.slug);
@@ -250,6 +258,7 @@ export class CategoriesService {
       cat.slug = slug;
     }
     if (dto.icone       !== undefined) cat.icone       = dto.icone?.trim()       || null;
+    if (dto.imageUrl    !== undefined) cat.imageUrl    = dto.imageUrl?.trim()    || null;
     if (dto.couleur     !== undefined) cat.couleur     = dto.couleur?.trim()     || null;
     if (dto.description !== undefined) cat.description = dto.description?.trim() || null;
     if (dto.ordre       !== undefined) cat.ordre       = dto.ordre;
@@ -325,17 +334,18 @@ export class CategoriesService {
 
     // Unicité nom dans la même catégorie
     const existante = await this.subRepo.findOne({
-      where: { nom: dto.nom.trim(), categoryId: dto.categoryId },
+      where: { nom: formatSubCategoryName(dto.nom), categoryId: dto.categoryId },
     });
     if (existante)
-      throw new ConflictException(`Sous-catégorie "${dto.nom.trim()}" existe déjà dans "${cat.nom}".`);
+      throw new ConflictException(`Sous-catégorie "${formatSubCategoryName(dto.nom)}" existe déjà dans "${cat.nom}".`);
 
     const ordre = dto.ordre ?? ((await this.subRepo.count({ where: { categoryId: dto.categoryId } })) + 1);
 
     const sub = this.subRepo.create({
-      nom:         dto.nom.trim(),
+      nom:         formatSubCategoryName(dto.nom),
       slug,
       icone:       dto.icone?.trim()       || null,
+      imageUrl:    dto.imageUrl?.trim()    || null,
       description: dto.description?.trim() || null,
       ordre,
       actif:       true,
@@ -359,13 +369,14 @@ export class CategoriesService {
 
     if (dto.nom !== undefined) {
       const catId = dto.categoryId ?? sub.categoryId;
-      const conflit = await this.subRepo.findOne({ where: { nom: dto.nom.trim(), categoryId: catId } });
+      const conflit = await this.subRepo.findOne({ where: { nom: formatSubCategoryName(dto.nom), categoryId: catId } });
       if (conflit && conflit.id !== id)
-        throw new ConflictException(`Sous-catégorie "${dto.nom.trim()}" existe déjà dans cette catégorie.`);
-      sub.nom = dto.nom.trim();
+        throw new ConflictException(`Sous-catégorie "${formatSubCategoryName(dto.nom)}" existe déjà dans cette catégorie.`);
+      sub.nom = formatSubCategoryName(dto.nom);
     }
     if (dto.slug        !== undefined) sub.slug        = this.normalizeSlug(dto.slug);
     if (dto.icone       !== undefined) sub.icone       = dto.icone?.trim()       || null;
+    if (dto.imageUrl    !== undefined) sub.imageUrl    = dto.imageUrl?.trim()    || null;
     if (dto.description !== undefined) sub.description = dto.description?.trim() || null;
     if (dto.ordre       !== undefined) sub.ordre       = dto.ordre;
     if (dto.actif       !== undefined) sub.actif       = dto.actif;
@@ -420,6 +431,7 @@ export class CategoriesService {
       nom:           cat.nom,
       slug:          cat.slug,
       icone:         cat.icone,
+      imageUrl:      cat.imageUrl,
       couleur:       cat.couleur,
       description:   cat.description,
       ordre:         cat.ordre,
@@ -438,6 +450,7 @@ export class CategoriesService {
       nom:         sub.nom,
       slug:        sub.slug,
       icone:       sub.icone,
+      imageUrl:    sub.imageUrl,
       description: sub.description,
       ordre:       sub.ordre,
       actif:       sub.actif,

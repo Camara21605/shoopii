@@ -61,6 +61,13 @@ export class SubCategory {
   icone: string | null;
 
   /**
+   * Image téléversée par le super-admin (URL Cloudinary). Remplace l'icône
+   * emoji à l'affichage ; `icone` reste le repli tant qu'aucune image n'existe.
+   */
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  imageUrl: string | null;
+
+  /**
    * Description courte affichée dans les filtres et tooltips.
    */
   @Column({ type: 'varchar', length: 255, nullable: true })

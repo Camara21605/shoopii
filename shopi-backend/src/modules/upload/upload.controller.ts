@@ -71,6 +71,21 @@ export class UploadController {
   }
 
   /* ──────────────────────────────────────────────────────────
+   * POST /upload/image/catalogue
+   * Image d'un type d'entreprise / d'une catégorie / d'une sous-catégorie
+   * → dossier catalogue. Réservé au SUPER_ADMIN (seul rôle qui gère le
+   * catalogue, voir CatalogueController). Carré 512×512 max, WebP.
+   ────────────────────────────────────────────────────────── */
+  @Post('image/catalogue')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
+  @UseInterceptors(FileInterceptor('file', memoryMulterImage))
+  async uploadCatalogueImage(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Aucun fichier reçu.');
+    return this.uploadService.uploadImage(file, UPLOAD_FOLDERS.CATALOGUE, { width: 512, height: 512 });
+  }
+
+  /* ──────────────────────────────────────────────────────────
    * POST /upload/avatar
    * Upload d'une photo de profil → dossier avatars
    * Optimisé : redimensionné à 400×400 max, converti WebP
