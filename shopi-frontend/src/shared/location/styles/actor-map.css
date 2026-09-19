@@ -218,3 +218,23 @@
 }
 .am-placepin__body > i { transform: rotate(45deg); color: #fff; font-size: 14px; }
 .am-placepin__dot { position: absolute; left: 50%; bottom: 2px; width: 8px; height: 8px; margin-left: -4px; background: #312E81; border-radius: 50%; opacity: .55; }
+
+/* ── Noms des villes, communes et quartiers (façon Google Maps) ── */
+.am-lbl-wrap { background: none; border: none; }
+.am-lbl {
+  position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px;
+  white-space: nowrap; pointer-events: none; font-family: 'Inter', system-ui, sans-serif; line-height: 1.15; letter-spacing: .1px;
+}
+.am-lbl--light { color: #3C4043; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0 0 4px #fff, 0 0 6px #fff; }
+.am-lbl--dark  { color: #F1F3F4; text-shadow: -1px -1px 0 rgba(0,0,0,.75), 1px -1px 0 rgba(0,0,0,.75), -1px 1px 0 rgba(0,0,0,.75), 1px 1px 0 rgba(0,0,0,.75), 0 0 5px rgba(0,0,0,.85); }
+.am-lbl--c { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; }
+.am-lbl--t { font-size: 13px; font-weight: 700; }
+.am-lbl--s { font-size: 13px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; }
+.am-lbl--q { font-size: 12px; font-weight: 500; }
+.am-lbl--light.am-lbl--q { color: #5F6368; }
+.am-lbl__dot { width: 7px; height: 7px; border-radius: 50%; background: #5F6368; border: 1.5px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+.am-lbl--dark .am-lbl__dot { background: #fff; border-color: rgba(0,0,0,.6); }
+.am-lbl--active { color: #3730A3; font-weight: 800; }
+.am-lbl--dark.am-lbl--active { color: #C7D2FE; }
+.am-lbl--v { font-size: 11.5px; font-weight: 500; }
+.am-lbl--light.am-lbl--v { color: #6B7075; }

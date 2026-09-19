@@ -10,7 +10,7 @@
  * affichée sur la carte (obligation de leurs conditions d'utilisation).
  * ================================================================ */
 
-import { OSM_TILE, DARK_TILE } from './geoUtils';
+import { DARK_TILE } from './geoUtils';
 
 export type MapStyleId = 'plan' | 'relief' | 'satellite';
 
@@ -32,12 +32,22 @@ export interface MapStyleDef {
   labels?: TileDef;
 }
 
+const VOYAGER_TILE: TileDef = {
+  url:         'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com">CARTO</a>',
+  subdomains:  'abcd',
+  maxZoom:     19,
+};
+
 const ESRI_ATTR = 'Imagerie © <a href="https://www.esri.com">Esri</a>, Maxar, Earthstar Geographics';
 
 export const MAP_STYLES: Record<MapStyleId, MapStyleDef> = {
   plan: {
     id: 'plan', label: 'Plan', icon: 'fa-map',
-    base: dark => ({ ...(dark ? DARK_TILE : OSM_TILE), maxNativeZoom: 19 }),
+    /* Clair : CARTO Voyager (rendu proche de Google Maps) ; sombre : CARTO Dark Matter */
+    base: dark => dark
+      ? { ...DARK_TILE, maxNativeZoom: 19 }
+      : { ...VOYAGER_TILE, maxNativeZoom: 19 },
   },
   relief: {
     id: 'relief', label: 'Relief', icon: 'fa-mountain',

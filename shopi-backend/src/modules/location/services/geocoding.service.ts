@@ -23,6 +23,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService }      from '@nestjs/config';
 
 import { GUINEA_CITIES, GUINEA_BBOX } from '../data/guinea-gazetteer';
+import { PLACE_COORDS } from '../data/guinea-place-coords';
 
 export interface PlaceInput {
   ville?:    string | null;
@@ -94,6 +95,9 @@ export class GeocodingService {
     const key = this.keyOf(place);
     if (!key) return null;
 
+    const known = this.staticPosition(place);
+    if (known) return known;
+
     const hit = this.cache.get(key);
     if (hit && this.isFresh(hit)) {
       if (hit.value) return hit.value;
@@ -114,6 +118,9 @@ export class GeocodingService {
   async resolveAwait(place: PlaceInput): Promise<ApproxPosition | null> {
     const key = this.keyOf(place);
     if (!key) return null;
+
+    const known = this.staticPosition(place);
+    if (known) return known;
 
     const hit = this.cache.get(key);
     if (hit && hit.refined && this.isFresh(hit)) return hit.value ?? this.cityFallback(place);
@@ -142,6 +149,19 @@ export class GeocodingService {
     if (this.freeCache.size >= 500) { const k = this.freeCache.keys().next().value; if (k !== undefined) this.freeCache.delete(k); }
     this.freeCache.set(key, { v, at: Date.now() });
     return v;
+  }
+
+  /** Quartier ou commune du référentiel : coordonnées figées (guinea-place-coords.ts), sans réseau. */
+  private staticPosition(p: PlaceInput): ApproxPosition | null {
+    const q = fold(p.quartier), c = fold(p.commune), v = fold(p.ville);
+    const tries: [string, ApproxPrecision][] = [];
+    if (q) tries.push([`${q}|${c}|${v}`, 'quartier'], [`${q}||${v}`, 'quartier']);
+    if (c && c !== v) tries.push([`${c}||${v}`, 'commune']);
+    for (const [k, precision] of tries) {
+      const hit = PLACE_COORDS[k];
+      if (hit) return { lat: hit[0], lng: hit[1], precision };
+    }
+    return null;
   }
 
   /** Centre de la ville connue (via la ville, sinon la commune qui porte souvent le même nom). */

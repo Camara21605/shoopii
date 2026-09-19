@@ -33,6 +33,7 @@ import { useActorMapSearch }   from '../hooks/useActorMapSearch';
 import { usePlaceSuggestions } from '../hooks/usePlaceSuggestions';
 import { GPS_ICON }            from './LocationMap';
 import RoutePolyline           from './RoutePolyline';
+import PlaceLabels             from './PlaceLabels';
 import { fetchRoute, type RouteResult } from '../services/routingApi';
 import { locatePlace, type MapActor, type MapActorRole, type MapPlace } from '../services/mapSearchApi';
 import { MAP_STYLES, MAP_STYLE_ORDER, readStoredStyle, storeStyle, type MapStyleId } from '../utils/mapLayers';
@@ -465,6 +466,10 @@ export default function ActorMapExplorer({ onToast }: Props) {
                 maxZoom={styleDef.labels.maxZoom} maxNativeZoom={styleDef.labels.maxNativeZoom} zIndex={400}
               />
             )}
+            {/* Noms des villes, communes et quartiers (façon Google Maps) */}
+            {labelsOn && (
+              <PlaceLabels tone={mapStyle === 'satellite' || dark ? 'dark' : 'light'} skipOsm={mapStyle !== 'satellite'} active={place?.name ?? null} />
+            )}
             <ZoomControl position="bottomright" />
             <MapController results={results} selected={selected} me={me} recenter={recenter} onArrive={openPopup} place={place} />
 
@@ -561,12 +566,10 @@ export default function ActorMapExplorer({ onToast }: Props) {
                 <i className={`fas ${MAP_STYLES[id].icon}`} aria-hidden="true" /> <span>{MAP_STYLES[id].label}</span>
               </button>
             ))}
-            {styleDef.labels && (
-              <button type="button" className="am-style am-style--opt" aria-pressed={labelsOn}
-                onClick={() => setLabelsOn(v => !v)} title="Afficher les noms des lieux">
-                <i className="fas fa-tag" aria-hidden="true" /> <span>Noms</span>
-              </button>
-            )}
+            <button type="button" className="am-style am-style--opt" aria-pressed={labelsOn}
+              onClick={() => setLabelsOn(v => !v)} title="Afficher les noms des villes et quartiers">
+              <i className="fas fa-tag" aria-hidden="true" /> <span>Noms</span>
+            </button>
           </div>
 
           {/* Bandeau d'infos sur la carte */}
