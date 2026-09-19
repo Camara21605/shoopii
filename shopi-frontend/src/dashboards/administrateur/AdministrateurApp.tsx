@@ -11,6 +11,7 @@ import LoadingScreen from '../../shared/components/LoadingScreen';
 import styles from './styles/AdminApp.module.css';
 import { useAdminState } from './hooks/useAdminState';
 import { useNotifications } from './hooks/useNotifications';
+import { AdminProfileProvider } from './hooks/useAdminProfile';
 import { apiFetch } from '../../shared/services/apiFetch';
 import { useToasts, ToastStack } from './components/Toast';
 import {
@@ -41,14 +42,19 @@ const AuditPage          = lazy(() => import('./pages/AuditPage'));
 const ParametresPage     = lazy(() => import('./pages/ParametresPage'));
 const GeoReferentielPage = lazy(() => import('./pages/GeoReferentielPage'));
 
+/* Le profil (nom, photo, poste, zone) vit dans AdminProfileProvider : sidebar,
+ * topbar et page Paramètres le partagent et se mettent à jour ensemble. */
 export default function AdministrateurApp() {
+  return (
+    <AdminProfileProvider>
+      <AdminShell />
+    </AdminProfileProvider>
+  );
+}
+
+function AdminShell() {
   const { toasts, pop } = useToasts();
   const s = useAdminState();
-
-  /* ── Profil admin (sidebar) ── */
-  const [adminProfile, setAdminProfile] = useState<{
-    adminName: string; zoneName: string; communesCount: number;
-  } | null>(null);
 
   /* ── Notifications temps réel ── */
   const notifs = useNotifications();
@@ -90,9 +96,6 @@ export default function AdministrateurApp() {
   useEffect(() => {
     fetchPrefs()
       .then(prefs => { applyPrefs(prefs); watchAutoTheme(prefs); })
-      .catch(() => {});
-    apiFetch('/dashboard/admin/me')
-      .then(d => setAdminProfile(d as any))
       .catch(() => {});
   }, []);
 
@@ -148,9 +151,6 @@ export default function AdministrateurApp() {
         onNavigate={navigate}
         onGenerate={() => s.setGenOpen(true)}
         geoPerms={s.geoPerms}
-        zoneName={adminProfile?.zoneName}
-        adminName={adminProfile?.adminName}
-        communesCount={adminProfile?.communesCount}
       />
 
       {/* ── Corps principal (topbar + page) ── */}

@@ -7,63 +7,67 @@ import { useState, useEffect, useRef } from 'react';
 import styles from '../../styles/ParametresPage.module.css';
 import type { SectionProps } from './types';
 import { apiFetch, tokenStorage } from '../../../../shared/services/apiFetch';
+import { adminInitials, useAdminProfile, type AdminProfile } from '../../hooks/useAdminProfile';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
 
-interface Profil {
-  firstName:      string;
-  lastName:       string;
-  email:          string;
-  phone:          string;
-  zone:           string;
-  bio:            string;
-  status:         string;
-  profilePicture: string | null;
-}
+const PHONE_RE = /^\+?[0-9 ().-]{6,20}$/;
 
 export default function ProfilSection({ onToast }: SectionProps) {
-  const [profil,    setProfil]    = useState<Profil | null>(null);
-  const [loading,   setLoading]   = useState(true);
+  /* Profil partagé avec la sidebar et la topbar : patch() les met à jour
+   * immédiatement après chaque enregistrement. */
+  const { profile, patch } = useAdminProfile();
+  const loading = profile === null;
+
   const [saving,    setSaving]    = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dirty,     setDirty]     = useState(false);
+  const [errors,    setErrors]    = useState<Record<string, string>>({});
 
-  /* champs éditables (dérivés du profil chargé) */
+  /* champs éditables (initialisés depuis le profil chargé) */
   const [firstName, setFirstName] = useState('');
   const [lastName,  setLastName]  = useState('');
   const [phone,     setPhone]     = useState('');
-  const [zone,      setZone]      = useState('');
+  const [jobTitle,  setJobTitle]  = useState('');
   const [bio,       setBio]       = useState('');
 
   const fileRef = useRef<HTMLInputElement>(null);
 
-  /* ── Chargement initial ── */
+  const fill = (p: AdminProfile) => {
+    setFirstName(p.firstName); setLastName(p.lastName); setPhone(p.phone);
+    setJobTitle(p.jobTitle);   setBio(p.bio);
+    setErrors({}); setDirty(false);
+  };
+
+  /* Première arrivée du profil → remplit le formulaire (jamais écrasé ensuite
+   * tant que l'admin est en train de modifier) */
+  const filled = useRef(false);
   useEffect(() => {
-    apiFetch<Profil>('/dashboard/super-admin/my-profil')
-      .then(data => {
-        setProfil(data);
-        setFirstName(data.firstName);
-        setLastName(data.lastName);
-        setPhone(data.phone);
-        setZone(data.zone);
-        setBio(data.bio);
-      })
-      .catch(() => onToast('Impossible de charger le profil', 'w'))
-      .finally(() => setLoading(false));
-  }, []);
+    if (profile && !filled.current) { filled.current = true; fill(profile); }
+  }, [profile]);
 
   const mark = () => setDirty(true);
 
+  function validate(): boolean {
+    const e: Record<string, string> = {};
+    if (!firstName.trim()) e.firstName = 'Le prénom est obligatoire.';
+    if (!lastName.trim())  e.lastName  = 'Le nom de famille est obligatoire.';
+    if (phone.trim() && !PHONE_RE.test(phone.trim())) e.phone = 'Numéro invalide (ex : +224 620 12 47 85).';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
   /* ── Sauvegarde ── */
   async function save() {
+    if (!validate()) { onToast('Corrigez les champs en erreur', 'w'); return; }
     setSaving(true);
     try {
-      await apiFetch('/dashboard/super-admin/my-profil', {
+      const updated = await apiFetch<AdminProfile>('/dashboard/super-admin/my-profil', {
         method: 'PATCH',
-        body: { firstName, lastName, phone, zone, bio },
+        body: { firstName, lastName, phone, jobTitle, bio },
       });
-      setProfil(prev => prev ? { ...prev, firstName, lastName, phone, zone, bio } : prev);
-      setDirty(false);
+      patch(updated);      /* sidebar + topbar + cette page */
+      fill(updated);
       onToast('Profil enregistré avec succès', 's');
     } catch (err: any) {
       onToast(err.message ?? 'Erreur lors de la sauvegarde', 'w');
@@ -95,7 +99,7 @@ export default function ProfilSection({ onToast }: SectionProps) {
       }
       const { url } = await uploadRes.json();
       await apiFetch('/dashboard/super-admin/my-profil/avatar', { method: 'PATCH', body: { avatarUrl: url } });
-      setProfil(prev => prev ? { ...prev, profilePicture: url } : prev);
+      patch({ profilePicture: url });
       window.dispatchEvent(new CustomEvent('avatar-updated', { detail: url }));
       onToast('Photo de profil mise à jour !', 's');
     } catch (err: any) {
@@ -107,10 +111,11 @@ export default function ProfilSection({ onToast }: SectionProps) {
   }
 
   async function removeAvatar() {
-    if (!profil?.profilePicture) return;
+    if (!profile?.profilePicture) return;
     try {
       await apiFetch('/dashboard/super-admin/my-profil/avatar', { method: 'PATCH', body: { avatarUrl: null } });
-      setProfil(prev => prev ? { ...prev, profilePicture: null } : prev);
+      patch({ profilePicture: null });
+      window.dispatchEvent(new CustomEvent('avatar-updated', { detail: '' }));
       onToast('Photo supprimée', 's');
     } catch {
       onToast('Impossible de supprimer la photo', 'w');
@@ -118,11 +123,11 @@ export default function ProfilSection({ onToast }: SectionProps) {
   }
 
   /* ── Initiales pour le placeholder ── */
-  const initiales = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || 'AD';
+  const initiales = adminInitials({ firstName, lastName, fullName: `${firstName} ${lastName}`.trim() });
 
-  const statusBadge = profil?.status === 'active'
+  const statusBadge = profile?.status === 'active'
     ? { cls: styles.bdgGreen, label: 'Actif' }
-    : profil?.status === 'suspended'
+    : profile?.status === 'suspended'
       ? { cls: styles.bdgRed,   label: 'Suspendu' }
       : { cls: styles.bdgAmber, label: 'En attente' };
 
@@ -149,17 +154,23 @@ export default function ProfilSection({ onToast }: SectionProps) {
             <div className={styles.cardSub}>Informations personnelles et photo de profil</div>
           </div>
           {dirty && (
-            <button className={`${styles.btn} ${styles.btnBlue} ${styles.btnSm}`}
-              onClick={save} disabled={saving}>
-              {saving ? <><i className="fas fa-spinner fa-spin" /> Enregistrement…</> : <><i className="fas fa-check" /> Enregistrer</>}
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
+                onClick={() => profile && fill(profile)} disabled={saving}>
+                Annuler
+              </button>
+              <button className={`${styles.btn} ${styles.btnBlue} ${styles.btnSm}`}
+                onClick={save} disabled={saving}>
+                {saving ? <><i className="fas fa-spinner fa-spin" /> Enregistrement…</> : <><i className="fas fa-check" /> Enregistrer</>}
+              </button>
+            </div>
           )}
         </div>
         <div className={styles.cardBody}>
           {/* Avatar + nom */}
           <div className={styles.avatarRow}>
             <div className={styles.avatarWrap}>
-              {profil?.profilePicture
+              {profile?.profilePicture
                 ? <img src={profil.profilePicture} alt="avatar" className={styles.avatarCircle}
                     style={{ objectFit: 'cover', padding: 0 }} />
                 : <div className={styles.avatarCircle}>{initiales}</div>
@@ -169,8 +180,8 @@ export default function ProfilSection({ onToast }: SectionProps) {
               </div>
             </div>
             <div className={styles.avatarInfo}>
-              <div className={styles.avatarName}>{firstName} {lastName}</div>
-              <div className={styles.avatarRole}>{zone || 'Administrateur'}</div>
+              <div className={styles.avatarName}>{`${firstName} ${lastName}`.trim() || 'Administrateur'}</div>
+              <div className={styles.avatarRole}>{jobTitle || 'Administrateur'}</div>
               <div className={styles.avatarActs}>
                 <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
                   onChange={handleFileChange} />
@@ -178,7 +189,7 @@ export default function ProfilSection({ onToast }: SectionProps) {
                   onClick={() => fileRef.current?.click()} disabled={uploading}>
                   {uploading ? <><i className="fas fa-spinner fa-spin" /> Upload…</> : <><i className="fas fa-upload" /> Changer la photo</>}
                 </button>
-                {profil?.profilePicture && (
+                {profile?.profilePicture && (
                   <button className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
                     onClick={removeAvatar}>
                     <i className="fas fa-trash" /> Supprimer
@@ -192,28 +203,31 @@ export default function ProfilSection({ onToast }: SectionProps) {
           <div className={styles.formGrid}>
             <div className={styles.fld}>
               <label className={styles.fldL}>Prénom</label>
-              <input className={styles.fldIn} value={firstName}
+              <input className={styles.fldIn} value={firstName} maxLength={100} autoComplete="given-name"
                 onChange={e => { setFirstName(e.target.value); mark(); }} />
+              {errors.firstName && <span className={styles.fldHint} style={{ color: '#DC2626' }}>{errors.firstName}</span>}
             </div>
             <div className={styles.fld}>
               <label className={styles.fldL}>Nom de famille</label>
-              <input className={styles.fldIn} value={lastName}
+              <input className={styles.fldIn} value={lastName} maxLength={100} autoComplete="family-name"
                 onChange={e => { setLastName(e.target.value); mark(); }} />
+              {errors.lastName && <span className={styles.fldHint} style={{ color: '#DC2626' }}>{errors.lastName}</span>}
             </div>
             <div className={styles.fld}>
               <label className={styles.fldL}>Téléphone</label>
-              <input className={styles.fldIn} value={phone} type="tel"
+              <input className={styles.fldIn} value={phone} type="tel" maxLength={20} autoComplete="tel"
                 onChange={e => { setPhone(e.target.value); mark(); }} />
+              {errors.phone && <span className={styles.fldHint} style={{ color: '#DC2626' }}>{errors.phone}</span>}
             </div>
             <div className={styles.fld}>
               <label className={styles.fldL}>Adresse e-mail</label>
-              <input className={styles.fldIn} value={profil?.email ?? ''} type="email" readOnly
+              <input className={styles.fldIn} value={profile?.email ?? ''} type="email" readOnly
                 style={{ opacity: 0.6, cursor: 'default' }} />
             </div>
             <div className={styles.fld}>
               <label className={styles.fldL}>Poste / Titre</label>
-              <input className={styles.fldIn} value={zone}
-                onChange={e => { setZone(e.target.value); mark(); }} />
+              <input className={styles.fldIn} value={jobTitle} maxLength={100} placeholder="Ex : Responsable de zone Conakry"
+                onChange={e => { setJobTitle(e.target.value); mark(); }} />
             </div>
           </div>
 
@@ -257,14 +271,28 @@ export default function ProfilSection({ onToast }: SectionProps) {
             <div className={styles.mkpi}>
               <div className={styles.mkpiStripe} style={{ background: 'var(--emerald)' }} />
               <i className="fas fa-key" style={{ color: 'var(--emerald)', fontSize: 13 }} />
-              <div className={styles.mkpiV}>Admin</div>
+              <div className={styles.mkpiV}>Administrateur</div>
               <div className={styles.mkpiL}>Niveau d&apos;accès</div>
             </div>
             <div className={styles.mkpi}>
               <div className={styles.mkpiStripe} style={{ background: 'var(--violet)' }} />
               <i className="fas fa-shield-halved" style={{ color: 'var(--violet)', fontSize: 13 }} />
-              <div className={styles.mkpiV}>{profil?.status === 'active' ? '100%' : '—'}</div>
+              <div className={styles.mkpiV}>{profile?.status === 'active' ? 'Vérifié' : 'En attente'}</div>
               <div className={styles.mkpiL}>Compte vérifié</div>
+            </div>
+            <div className={styles.mkpi}>
+              <div className={styles.mkpiStripe} style={{ background: 'var(--teal)' }} />
+              <i className="fas fa-map-location-dot" style={{ color: 'var(--teal)', fontSize: 13 }} />
+              <div className={styles.mkpiV}>{profile?.zone || '—'}</div>
+              <div className={styles.mkpiL}>Zone</div>
+            </div>
+            <div className={styles.mkpi}>
+              <div className={styles.mkpiStripe} style={{ background: 'var(--blue)' }} />
+              <i className="fas fa-calendar-check" style={{ color: 'var(--blue)', fontSize: 13 }} />
+              <div className={styles.mkpiV}>
+                {profile?.memberSince ? new Date(profile.memberSince).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }) : '—'}
+              </div>
+              <div className={styles.mkpiL}>Membre depuis</div>
             </div>
           </div>
         </div>

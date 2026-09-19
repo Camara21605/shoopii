@@ -75,8 +75,28 @@
 }
 .new:hover { background: var(--adm-btn-h); transform: translateY(-1px); box-shadow: var(--sh-b); }
 
+/* Pastille profil (photo + nom + poste) */
+.me {
+  display: flex; align-items: center; gap: 9px;
+  height: 38px; padding: 0 12px 0 4px;
+  background: var(--g50); border: 1px solid var(--bdr); border-radius: var(--pill);
+  cursor: pointer; transition: all .2s; font-family: var(--fb);
+}
+.me:hover { background: var(--sky); border-color: var(--sky-3); }
+.meAv {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--teal), #22D3EE);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-family: var(--fd); font-weight: 800; font-size: 11px;
+}
+.meTxt { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; min-width: 0; }
+.meNm { font-size: 12px; font-weight: 700; color: var(--navy); max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meRl { font-size: 10px; color: var(--t3); max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 @media (max-width: 860px) {
   .topbar { left: 0; }
+  .meTxt { display: none; }
+  .me { padding: 0 4px; }
   .burger { display: flex; }
 }
 @media (max-width: 560px) {

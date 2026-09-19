@@ -6,13 +6,14 @@
  * ============================================================ */
 
 import {
-  BadRequestException, ForbiddenException,
+  BadRequestException, ConflictException, ForbiddenException,
   Injectable, NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Admin } from '../../../../database/entities/profiles/admin-profile.entity';
-import { User } from '../../../../database/entities/user.entity';
+import { User, UserStatus } from '../../../../database/entities/user.entity';
+import { UpdateMyProfilDto } from '../dto/update-my-profil.dto';
 import { UserRole } from '../../../../common/enums/user-role.enum';
 import { AuditLogService } from './audit-log.service';
 import { NotificationService } from '../../../notifications/services/notification.service';
@@ -53,6 +54,15 @@ export interface AdminPermDto {
    * le référentiel géo ET une ville ou zone différente pour le support. */
   villeAssignee: string | null;
   zoneId:        string | null;
+}
+
+/* Bloc identité de l'administrateur connecté */
+export interface AdminProfilResponse {
+  firstName: string; lastName: string; fullName: string;
+  email: string; phone: string;
+  zone: string; jobTitle: string; bio: string;
+  status: string; profilePicture: string | null;
+  memberSince: string | null;
 }
 
 @Injectable()
@@ -334,65 +344,85 @@ export class AdminsService {
     return { message: 'Zone assignée mise à jour.', zoneId };
   }
 
-  /* ── Profil de l'admin connecté ── */
-  async getMyProfil(userId: string): Promise<{
-    firstName: string; lastName: string; email: string;
-    phone: string; zone: string; bio: string;
-    status: string; profilePicture: string | null;
-  }> {
+  /* ── Profil de l'admin connecté ──
+   * Source unique du bloc identité affiché partout dans le dashboard
+   * administrateur (sidebar, topbar, page Paramètres → Profil). */
+  async getMyProfil(userId: string): Promise<AdminProfilResponse> {
     const admin = await this.adminRepo.findOne({ where: { userId }, relations: ['user'] });
-    if (admin) {
-      return {
-        firstName:      admin.user.firstName        ?? '',
-        lastName:       admin.user.lastName         ?? '',
-        email:          admin.user.email            ?? '',
-        phone:          admin.user.phone ?? admin.phone ?? '',
-        zone:           admin.zone                  ?? '',
-        bio:            admin.bio                   ?? '',
-        status:         admin.status,
-        profilePicture: admin.user.profilePicture   ?? null,
-      };
-    }
+    if (admin) return this.toProfilResponse(admin);
+
     /* Fallback : super_admin n'a pas d'entité Admin — on lit directement le User */
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('Profil introuvable.');
+    const firstName = user.firstName ?? '';
+    const lastName  = user.lastName  ?? '';
     return {
-      firstName:      user.firstName      ?? '',
-      lastName:       user.lastName       ?? '',
-      email:          user.email          ?? '',
-      phone:          user.phone          ?? '',
+      firstName, lastName,
+      fullName:       `${firstName} ${lastName}`.trim(),
+      email:          user.email  ?? '',
+      phone:          user.phone  ?? '',
       zone:           '',
+      jobTitle:       '',
       bio:            '',
       status:         'active',
       profilePicture: user.profilePicture ?? null,
+      memberSince:    user.createdAt ? new Date(user.createdAt).toISOString() : null,
     };
   }
 
-  async updateMyProfil(
-    userId: string,
-    dto: { firstName?: string; lastName?: string; phone?: string; zone?: string; bio?: string },
-  ): Promise<{ message: string }> {
+  private toProfilResponse(admin: Admin): AdminProfilResponse {
+    const user      = admin.user;
+    const firstName = user.firstName ?? '';
+    const lastName  = user.lastName  ?? '';
+    /* Le statut réel est celui du compte : un admin suspendu/banni l'est via
+     * son User (voir suspend/ban), admin.status seul restait 'pending' à vie. */
+    const status = user.status === UserStatus.SUSPENDED || user.status === UserStatus.BANNED ? 'suspended'
+                 : user.status === UserStatus.ACTIVE ? 'active'
+                 : admin.status;
+    return {
+      firstName, lastName,
+      fullName:       admin.fullName || `${firstName} ${lastName}`.trim(),
+      email:          user.email ?? '',
+      phone:          user.phone ?? admin.phone ?? '',
+      zone:           admin.zone     ?? '',
+      jobTitle:       admin.jobTitle ?? '',
+      bio:            admin.bio      ?? '',
+      status,
+      profilePicture: user.profilePicture ?? null,
+      memberSince:    user.createdAt ? new Date(user.createdAt).toISOString() : null,
+    };
+  }
+
+  async updateMyProfil(userId: string, dto: UpdateMyProfilDto): Promise<AdminProfilResponse> {
     const admin = await this.adminRepo.findOne({ where: { userId }, relations: ['user'] });
     if (!admin) throw new NotFoundException('Profil administrateur introuvable.');
 
     if (dto.firstName !== undefined) admin.user.firstName = dto.firstName;
     if (dto.lastName  !== undefined) admin.user.lastName  = dto.lastName;
     if (dto.phone     !== undefined) {
-      admin.user.phone = dto.phone;
-      admin.phone      = dto.phone;
+      admin.user.phone = dto.phone || null as any;
+      admin.phone      = dto.phone || null;
     }
     if (dto.firstName !== undefined || dto.lastName !== undefined) {
       const first = dto.firstName ?? admin.user.firstName ?? '';
       const last  = dto.lastName  ?? admin.user.lastName  ?? '';
       admin.fullName = `${first} ${last}`.trim();
     }
-    if (dto.zone !== undefined) admin.zone = dto.zone || null;
-    if (dto.bio  !== undefined) admin.bio  = dto.bio  || null;
+    if (dto.jobTitle !== undefined) admin.jobTitle = dto.jobTitle || null;
+    if (dto.bio      !== undefined) admin.bio      = dto.bio      || null;
 
-    await this.userRepo.save(admin.user);
-    await this.adminRepo.save(admin);
+    try {
+      await this.userRepo.save(admin.user);
+      await this.adminRepo.save(admin);
+    } catch (err: any) {
+      /* 23505 = violation d'unicité : UNIQ_user_phone_role / UNIQ_user_phoneHash_role */
+      if (err?.code === '23505') {
+        throw new ConflictException('Ce numéro de téléphone est déjà utilisé par un autre compte.');
+      }
+      throw err;
+    }
 
-    return { message: 'Profil mis à jour avec succès.' };
+    return this.toProfilResponse(admin);
   }
 
   async updateMyAvatar(userId: string, avatarUrl: string | null): Promise<{ profilePicture: string | null }> {

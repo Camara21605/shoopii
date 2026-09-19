@@ -794,7 +794,9 @@ export class AuthService implements OnModuleInit {
           fullName,
           phone:    dto.phone ?? null,
           zone:     loc.ville,
-          status:   'pending' as any,
+          /* Compte créé sur invitation du super-admin : actif d'emblée (resté
+           * 'pending' à vie jusqu'ici — voir migration 1721400000030). */
+          status:   'active' as any,
         });
         await manager.save(Admin, profile);
         break;

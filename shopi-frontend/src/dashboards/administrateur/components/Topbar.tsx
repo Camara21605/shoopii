@@ -8,6 +8,8 @@
 
 import styles from '../styles/Topbar.module.css';
 import type { AdminPage } from '../data/types';
+import { useAdminProfile } from '../hooks/useAdminProfile';
+import AdminAvatar from './AdminAvatar';
 
 interface TopbarProps {
   activePage:  AdminPage;
@@ -49,6 +51,7 @@ export default function Topbar({
   const [title, sub] = TITLES[activePage] ?? ['', ''];
   void onToast; // prop conservée pour compatibilité ascendante
   const canSeeReports = geoPerms?.reports === true;
+  const { profile } = useAdminProfile();
 
   return (
     <header className={styles.topbar}>
@@ -87,6 +90,15 @@ export default function Topbar({
         {/* CTA générer un code */}
         <button className={styles.new} onClick={onGenerate}>
           <i className="fas fa-plus" /> <span>Générer un code</span>
+        </button>
+
+        {/* Profil de l'admin connecté → page Paramètres */}
+        <button className={styles.me} title="Mon profil" onClick={() => onNavigate('parametres')}>
+          <AdminAvatar className={styles.meAv} />
+          <span className={styles.meTxt}>
+            <span className={styles.meNm}>{profile?.fullName || 'Administrateur'}</span>
+            <span className={styles.meRl}>{profile?.jobTitle || 'Administrateur'}</span>
+          </span>
         </button>
       </div>
     </header>

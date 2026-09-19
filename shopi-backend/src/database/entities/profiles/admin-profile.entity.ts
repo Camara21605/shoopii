@@ -112,6 +112,10 @@ export class Admin {
   @Column({ type: 'varchar', length: 200, nullable: true })
   bio: string | null;
 
+  /** Poste / titre affiché sous le nom (distinct de `zone`, qui est le nom de la zone). */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  jobTitle: string | null;
+
   // ── AUTHENTIFICATION À DEUX FACTEURS (2FA) ─────────────────
 
   /** 2FA activée ou non pour ce compte admin */

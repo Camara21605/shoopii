@@ -27,6 +27,7 @@ import { ReportsService }        from '../services/reports.service';
 import { AuditLogService }        from '../services/audit-log.service';
 import { AdminsService }          from '../services/admins.service';
 import { SecuriteAdminService }   from '../services/securite-admin.service';
+import { UpdateMyProfilDto }      from '../dto/update-my-profil.dto';
 
 @Controller('dashboard/super-admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -125,7 +126,7 @@ export class ModerationController {
 
   @Patch('my-profil')
   async updateMyProfil(
-    @Body() body: { firstName?: string; lastName?: string; phone?: string; zone?: string; bio?: string },
+    @Body() body: UpdateMyProfilDto,
     @Request() req: any,
   ) {
     return this.adminsService.updateMyProfil(req.user.id, body);

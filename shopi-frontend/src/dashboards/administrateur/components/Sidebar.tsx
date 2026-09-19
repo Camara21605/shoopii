@@ -9,6 +9,8 @@
 import styles from '../styles/Sidebar.module.css';
 import type { AdminPage } from '../data/types';
 import { useSidebarBadges } from '../hooks/useSidebarBadges';
+import { useAdminProfile } from '../hooks/useAdminProfile';
+import AdminAvatar from './AdminAvatar';
 
 interface SidebarProps {
   activePage:     AdminPage;
@@ -17,9 +19,6 @@ interface SidebarProps {
   onNavigate:     (page: AdminPage) => void;
   onGenerate:     () => void;
   geoPerms?:      Record<string, boolean | string | null>;
-  zoneName?:      string;
-  adminName?:     string;
-  communesCount?: number;
 }
 
 /* Sections de navigation avec leurs items (badges statiques hors notifications).
@@ -55,8 +54,9 @@ const NAV: { title: string; items: { id: AdminPage; icon: string; label: string;
 
 const KIND_TO_CLASS: Record<string, string> = { warn: 'badge_a', alert: 'badge_r', ok: 'badge_g', info: 'badge_a' };
 
-export default function Sidebar({ activePage, open, onClose, onNavigate, onGenerate, geoPerms, zoneName, adminName, communesCount }: SidebarProps) {
+export default function Sidebar({ activePage, open, onClose, onNavigate, onGenerate, geoPerms }: SidebarProps) {
   const { badges } = useSidebarBadges();
+  const { profile, zoneName, communesCount } = useAdminProfile();
   const hasGeoAccess = Object.entries(geoPerms ?? {}).some(([k, v]) => k.startsWith('geo_') && v);
   /* Même logique que hasGeoAccess ci-dessus : tant que /my-permissions n'a
    * pas répondu, geoPerms vaut {} → tout item avec `perm` reste masqué
@@ -81,18 +81,18 @@ export default function Sidebar({ activePage, open, onClose, onNavigate, onGener
         <div className={styles.me}>
           {/* Clic → page paramètres */}
           <div className={styles.meCard} onClick={() => onNavigate('parametres')}>
-            <div className={styles.meAv}>AC</div>
-            <div>
-              <div className={styles.meNm}>{adminName ?? 'Admin'}</div>
-              <div className={styles.meRl}><span className={styles.dot} /> Administrateur·rice</div>
+            <AdminAvatar className={styles.meAv} />
+            <div className={styles.meTxt}>
+              <div className={styles.meNm}>{profile?.fullName || 'Administrateur'}</div>
+              <div className={styles.meRl}><span className={styles.dot} /> {profile?.jobTitle || 'Administrateur·rice'}</div>
             </div>
           </div>
           {/* Infos de la zone */}
           <div className={styles.zone}>
             <i className="fas fa-map-location-dot" />
             <div>
-              <div className={styles.zoneNm}>{zoneName ?? 'Zone'}</div>
-              <div className={styles.zoneSub}>{communesCount ?? 0} communes</div>
+              <div className={styles.zoneNm}>{zoneName || 'Zone'}</div>
+              <div className={styles.zoneSub}>{communesCount} commune{communesCount > 1 ? 's' : ''}</div>
             </div>
           </div>
         </div>
