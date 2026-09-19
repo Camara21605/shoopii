@@ -127,7 +127,7 @@ function CountryPicker({ value, onSelect, onClear, autoFilled }: CountryPickerPr
         )}
       </div>
       {open && (
-        <div style={{
+        <div className={s.noScroll} style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200,
           background: 'var(--raised)', border: '1px solid var(--border)',
           borderRadius: 'var(--r-md)', marginTop: 4, maxHeight: 260,
@@ -451,7 +451,7 @@ function ZoneCoverageSelector({ allData, couvertureType, couvertureIds, onTypeCh
             </div>
           )
           : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))',
+            <div className={s.noScroll} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))',
               gap: 5, maxHeight: 200, overflowY: 'auto',
               padding: 10, background: 'var(--surface)', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)' }}>
               {entityList.map(e => {

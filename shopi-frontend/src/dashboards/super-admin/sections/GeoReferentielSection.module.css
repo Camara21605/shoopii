@@ -161,7 +161,13 @@
   max-height: 90vh; overflow-y: auto;
   overscroll-behavior: contain;  /* empêche le scroll de la page en arrière-plan */
   animation: slideUp .2s;
+  /* Défilement conservé mais barre masquée (formulaires plus propres) */
+  scrollbar-width: none; -ms-overflow-style: none;
 }
+.modal::-webkit-scrollbar { display: none; }
+/* Listes défilantes à l'intérieur d'un formulaire (pays, couverture de zone) */
+.noScroll { scrollbar-width: none; -ms-overflow-style: none; }
+.noScroll::-webkit-scrollbar { display: none; }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes slideFromBottom { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
@@ -199,7 +205,8 @@
 .fldIn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 12px; font-size: 13px; color: var(--txt-1); font-family: var(--font-b); outline: none; transition: border-color .15s; width: 100%; }
 .fldIn:focus { border-color: var(--acid); }
 .fldSel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 12px; font-size: 13px; color: var(--txt-1); font-family: var(--font-b); outline: none; cursor: pointer; width: 100%; }
-.fldArea { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 12px; font-size: 13px; color: var(--txt-1); font-family: var(--font-b); outline: none; resize: vertical; min-height: 70px; width: 100%; }
+.fldArea { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 12px; font-size: 13px; color: var(--txt-1); font-family: var(--font-b); outline: none; resize: none; min-height: 70px; width: 100%; scrollbar-width: none; }
+.fldArea::-webkit-scrollbar { display: none; }
 .fldHint { font-size: 10.5px; color: var(--txt-3); }
 .required { color: var(--rose); }
 
@@ -425,6 +432,4 @@
 @media (max-width: 960px) {
   .content::-webkit-scrollbar { width: 0; }
   .sbNav::-webkit-scrollbar   { width: 0; }
-  .modal::-webkit-scrollbar   { width: 4px; }
-  .modal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 }
