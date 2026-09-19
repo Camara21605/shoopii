@@ -64,7 +64,13 @@ export default defineConfig({
      * déclenche un ré-optimize + rechargement complet de la page,
      * perçu comme "la navigation devient lente d'un coup". Les lister
      * ici les fait pré-bundler dès le démarrage du serveur dev. */
-    include: ['socket.io-client', 'leaflet', 'react-leaflet', 'qrcode'],
+    include: ['socket.io-client', 'leaflet', 'react-leaflet', '@react-leaflet/core', 'qrcode'],
+    /* Scanne TOUT le code source au démarrage (et pas seulement ce que l'entrée atteint par
+     * des imports statiques) : chaque dépendance des pages chargées à la demande (carte,
+     * dashboards…) est ainsi pré-compilée d'emblée. Sinon Vite la découvre en cours de
+     * route, ré-optimise, change le hash `?v=` des modules et le navigateur, resté sur
+     * l'ancien, reçoit « 504 Outdated Optimize Dep » (page blanche / ErrorBoundary). */
+    entries: ['index.html', 'src/**/*.{ts,tsx}', '!src/**/*.{test,spec}.{ts,tsx}'],
   },
 
   server: {
