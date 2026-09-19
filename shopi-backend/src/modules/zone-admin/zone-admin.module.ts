@@ -12,6 +12,8 @@ import { GeoCommune } from '../../database/entities/geo/geo-commune.entity';
 import { Partner }    from '../../database/entities/profiles/partenaire-profile.entity';
 import { Company }    from '../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery }   from '../../database/entities/profiles/livreur-profile.entity';
+import { Correspondent } from '../../database/entities/profiles/correspondant-profile.entity';
+import { Commande }    from '../../database/entities/commande/commande.entity';
 
 import { ZoneAdminService }    from './zone-admin.service';
 import { ZoneAdminController } from './zone-admin.controller';
@@ -25,6 +27,8 @@ import { ZoneAdminController } from './zone-admin.controller';
       Partner,
       Company,
       Delivery,
+      Correspondent,
+      Commande,
     ]),
   ],
   providers:   [ZoneAdminService],

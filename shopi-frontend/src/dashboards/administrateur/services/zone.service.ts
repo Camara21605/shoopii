@@ -45,55 +45,32 @@ export interface ZoneStatistiques {
   commandesAnnulees:   number;
   livraisonsEnCours:   number;
   litigesOuverts:      number;
-  signalementsActifs:  number;
   acteurTotal:         number;
-  sante:               number;
+  /** null tant qu'aucune commande n'existe (rien à évaluer) */
+  sante:               number | null;
 }
 
 export interface CommuneCouverture {
   id:          string;
   nom:         string;
   code:        string;
+  /** part des acteurs de la zone situés dans cette commune */
   pct:         number;
   acteurs:     number;
+  partenaires: number;
   livreurs:    number;
   entreprises: number;
-  clients:     number;
   commandes:   number;
-  croissance:  number;
   sante:       'good' | 'medium' | 'low';
   latitude:    number | null;
   longitude:   number | null;
-}
-
-export interface ZoneActeurs {
-  partenaires:        number;
-  entreprises:        number;
-  livreurs:           number;
-  correspondants:     number;
-  clients:            number;
-  commandes:          number;
-  litigesOuverts:     number;
-  signalementsActifs: number;
 }
 
 export type AlertPreferences = Record<string, boolean>;
 
 /* ── Préférences par défaut (utilisées si le backend ne répond pas) */
 export const DEFAULT_ALERT_PREFS: AlertPreferences = {
-  grave:               true,
-  validation:          true,
-  litige:              false,
-  nouvelleEntreprise:  false,
-  nouveauPartenaire:   false,
-  nouveauLivreur:      false,
-  commandeImportante:  false,
-  hausseInhabituelle:  false,
-  baisseVentes:        false,
-  signalementCritique: true,
-  paiementEchoue:      false,
-  livreurInactif:      false,
-  tentativeFraude:     true,
+  signalement: true,
 };
 
 /* ================================================================
@@ -106,10 +83,6 @@ export async function getMyZone(): Promise<ZoneInfo> {
 
 export async function getStatistiques(): Promise<ZoneStatistiques> {
   return apiFetch<ZoneStatistiques>('/zones/statistiques');
-}
-
-export async function getActeurs(): Promise<ZoneActeurs> {
-  return apiFetch<ZoneActeurs>('/zones/acteurs');
 }
 
 export async function getCouverture(): Promise<CommuneCouverture[]> {

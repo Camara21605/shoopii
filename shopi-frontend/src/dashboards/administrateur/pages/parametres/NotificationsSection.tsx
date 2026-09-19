@@ -49,8 +49,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /* Notifications que le backend crée réellement pour un administrateur */
 const RECEIVED: { icon: string; label: string; desc: string }[] = [
-  { icon: 'fa-user-check',  label: 'Demandes de validation',        desc: 'Un compte de votre zone attend votre approbation' },
-  { icon: 'fa-flag',        label: 'Signalements',                  desc: 'Nouveau signalement, critique en priorité urgente' },
+  { icon: 'fa-flag',        label: 'Signalements',                  desc: 'Nouveau signalement (les critiques sont toujours envoyés — voir Zone → Alertes)' },
   { icon: 'fa-server',      label: 'Alertes système & maintenance', desc: 'Incidents plateforme et fenêtres de maintenance' },
   { icon: 'fa-user-shield', label: 'Accès & zone',                  desc: 'Permissions, pays ou zone modifiés par le super-administrateur' },
 ];

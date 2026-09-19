@@ -15,11 +15,16 @@ import {
 } from '@nestjs/common';
 
 import { JwtAuthGuard }             from '../../common/guards/auth.guard';
+import { RolesGuard }               from '../../common/guards/roles.guard';
+import { Roles }                    from '../../common/decorators/roles.decorator';
+import { UserRole }                 from '../../common/enums/user-role.enum';
 import { ZoneAdminService }          from './zone-admin.service';
 import { UpdateAlertPreferencesDto } from './zone-admin.dto';
 
+/* Réservé aux administrateurs : sans RolesGuard, tout utilisateur connecté atteignait ces routes. */
 @Controller('zones')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
 export class ZoneAdminController {
 
   constructor(private readonly zoneService: ZoneAdminService) {}
@@ -43,17 +48,8 @@ export class ZoneAdminController {
   }
 
   /* ──────────────────────────────────────────────────────────────
-   * GET /api/zones/acteurs
-   * Décompte des acteurs par type.
-   * ────────────────────────────────────────────────────────────── */
-  @Get('acteurs')
-  getActeurs(@Request() req: { user: { id: string } }) {
-    return this.zoneService.getActeurs(req.user.id);
-  }
-
-  /* ──────────────────────────────────────────────────────────────
    * GET /api/zones/couverture
-   * Taux de couverture par commune.
+   * Répartition réelle des acteurs et des commandes par commune.
    * ────────────────────────────────────────────────────────────── */
   @Get('couverture')
   getCouverture(@Request() req: { user: { id: string } }) {

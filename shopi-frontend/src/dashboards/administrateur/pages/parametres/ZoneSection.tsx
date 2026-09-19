@@ -59,21 +59,12 @@ const COMMUNE_ICON = (sante: 'good' | 'medium' | 'low') => L.divIcon({
 /* ── Coordonnées par défaut (Conakry) ───────────────────────── */
 const DEFAULT_CENTER: [number, number] = [9.6412, -13.5784];
 
-/* ── Labels des préférences d'alertes ──────────────────────── */
+/* ── Préférences d'alertes ─────────────────────────────────────
+ * Une seule est réellement appliquée côté serveur (voir
+ * NotificationEventService.notifyAdminNewSignalement). L'ancien écran en
+ * proposait 13, enregistrées mais jamais lues : retirées. */
 const ALERT_LABELS: { key: string; label: string; desc: string; icon: string; color: string }[] = [
-  { key: 'grave',              label: 'Signalement grave',           desc: "Notification immédiate pour tout signalement critique.",           icon: 'fa-flag',                 color: 'tIcRed'   },
-  { key: 'validation',         label: 'Validation en attente > 24h', desc: "Rappel quotidien si une validation n’est pas traitée sous 24h.", icon: 'fa-user-check',         color: 'tIcAmber' },
-  { key: 'litige',             label: 'Nouveau litige',              desc: "Alerte à chaque ouverture d’un dossier de litige.",            icon: 'fa-scale-balanced',       color: 'tIcTeal'  },
-  { key: 'nouvelleEntreprise', label: 'Nouvelle entreprise',         desc: "Notification lors de l’inscription d’une nouvelle entreprise.", icon: 'fa-store',              color: 'tIcTeal'  },
-  { key: 'nouveauPartenaire',  label: 'Nouveau partenaire',          desc: "Alerte à chaque nouvelle inscription partenaire dans la zone.",    icon: 'fa-handshake',            color: 'tIcTeal'  },
-  { key: 'nouveauLivreur',     label: 'Nouveau livreur',             desc: "Notification lorsqu’un livreur rejoint votre zone.",               icon: 'fa-motorcycle',           color: 'tIcTeal'  },
-  { key: 'commandeImportante', label: 'Commande importante',         desc: "Alerte pour les commandes dépassant un seuil de montant.",         icon: 'fa-bag-shopping',         color: 'tIcAmber' },
-  { key: 'hausseInhabituelle', label: 'Hausse inhabituelle',         desc: "Détection automatique d’une montée anormale d’activité.", icon: 'fa-arrow-trend-up', color: 'tIcAmber' },
-  { key: 'baisseVentes',       label: 'Baisse des ventes',           desc: "Alerte si le volume hebdomadaire chute de plus de 20%.",               icon: 'fa-arrow-trend-down',     color: 'tIcRed'   },
-  { key: 'signalementCritique',label: 'Signalement critique',        desc: "Notification prioritaire pour les fraudes ou abus caractérisés.", icon: 'fa-triangle-exclamation', color: 'tIcRed' },
-  { key: 'paiementEchoue',     label: 'Paiement échoué',   desc: "Alerte lors d’un échec de transaction de paiement.",          icon: 'fa-credit-card',          color: 'tIcRed'   },
-  { key: 'livreurInactif',     label: 'Livreur inactif',             desc: "Notification si un livreur n’a pas eu d’activité depuis 7 jours.", icon: 'fa-person-biking', color: 'tIcAmber' },
-  { key: 'tentativeFraude',    label: 'Tentative de fraude',         desc: "Alerte immédiate si un comportement frauduleux est détecté.", icon: 'fa-shield-halved',  color: 'tIcRed'   },
+  { key: 'signalement', label: 'Nouveaux signalements', desc: "Notification à chaque nouveau signalement non critique. Les signalements critiques sont toujours envoyés.", icon: 'fa-flag', color: 'tIcRed' },
 ];
 
 /* ── Map des classes CSS d'icônes d'alerte ──────────────────── */
@@ -133,7 +124,20 @@ function SkeletonBars() {
 /* ================================================================
  * SOUS-COMPOSANT — ANNEAU SANTÉ SVG
  * ================================================================ */
-function SanteRing({ pct }: { pct: number }) {
+function SanteRing({ pct }: { pct: number | null }) {
+  if (pct === null) {
+    return (
+      <div className={zStyles.santeRing}>
+        <div className={zStyles.santeInfo}>
+          <div className={zStyles.santeScore}>—</div>
+          <div className={zStyles.santeLabel}>Santé de la zone</div>
+          <div style={{ marginTop: 6, fontSize: 11, color: 'var(--t3)' }}>
+            Calculée dès la première commande (part des commandes sans litige).
+          </div>
+        </div>
+      </div>
+    );
+  }
   const r   = 30;
   const circ = 2 * Math.PI * r;
   const fill = ((pct / 100) * circ);
@@ -218,8 +222,8 @@ export default function ZoneSection({ onToast }: SectionProps) {
       const saved = await updatePreferences(alertPrefs);
       setSavedPrefs(saved);
       onToast('Préférences d\'alertes sauvegardées', 's');
-    } catch {
-      onToast('Échec de la sauvegarde', 'w');
+    } catch (err: any) {
+      onToast(err?.message ?? 'Échec de la sauvegarde', 'w');
     } finally {
       setSavingAlerts(false);
     }
@@ -331,7 +335,7 @@ export default function ZoneSection({ onToast }: SectionProps) {
                     <div className={styles.mkpi}>
                       <div className={styles.mkpiStripe} style={{ background: 'var(--emerald)' }} />
                       <i className="fas fa-heart-pulse" style={{ color: 'var(--emerald)', fontSize: 13 }} />
-                      <div className={styles.mkpiV}>{stats?.sante ?? '—'}%</div>
+                      <div className={styles.mkpiV}>{stats?.sante != null ? `${stats.sante}%` : '—'}</div>
                       <div className={styles.mkpiL}>Santé</div>
                     </div>
                     <div className={styles.mkpi}>
@@ -349,6 +353,14 @@ export default function ZoneSection({ onToast }: SectionProps) {
                   </div>
 
                   <div className={styles.divider} />
+
+                  {info.zoneId === null && (
+                    <div style={{ background: 'var(--am-bg)', color: 'var(--amber)', borderRadius: 10, padding: '10px 14px', fontSize: 12.5, marginBottom: 14 }}>
+                      <i className="fas fa-triangle-exclamation" style={{ marginRight: 6 }} />
+                      Aucune zone de livraison n&apos;est rattachée à votre compte : les communes, la carte et la répartition
+                      par commune restent vides. Contactez le super-administrateur.
+                    </div>
+                  )}
 
                   {/* Champs d'identité */}
                   <div className={zStyles.zoneIdentityGrid}>
@@ -455,7 +467,7 @@ export default function ZoneSection({ onToast }: SectionProps) {
           <div className={styles.cardHead}>
             <div>
               <div className={styles.cardTitle}><i className="fas fa-chart-bar" /> Statistiques de la zone</div>
-              <div className={styles.cardSub}>Métriques agrégées en temps réel</div>
+              <div className={styles.cardSub}>Acteurs que vous avez invités (directement ou via vos partenaires) et leurs commandes</div>
             </div>
             <button className={zStyles.refreshBtn} onClick={() => load(true)} disabled={syncing}>
               <i className={`fas fa-arrows-rotate ${syncing ? zStyles.spinning : ''}`} />
@@ -482,7 +494,7 @@ export default function ZoneSection({ onToast }: SectionProps) {
                     { label: 'Commandes du jour',     v: stats.commandesJour,      icon: 'fa-clock',              color: 'var(--teal)',   bg: 'rgba(14,116,144,.1)',     stripe: 'var(--teal)'    },
                     { label: 'Livraisons en cours',   v: stats.livraisonsEnCours,  icon: 'fa-truck-fast',         color: 'var(--blue)',   bg: 'var(--sky)',              stripe: 'var(--blue)'    },
                     { label: 'Litiges ouverts',       v: stats.litigesOuverts,     icon: 'fa-scale-balanced',     color: '#DC2626',       bg: 'rgba(220,38,38,.09)',     stripe: '#DC2626'        },
-                    { label: 'Signalements actifs',   v: stats.signalementsActifs, icon: 'fa-flag',               color: '#DC2626',       bg: 'rgba(220,38,38,.09)',     stripe: '#DC2626'        },
+                    { label: 'Clients servis',        v: stats.clients,            icon: 'fa-user-group',         color: 'var(--violet)', bg: 'var(--vl-bg)',            stripe: 'var(--violet)'  },
                     { label: 'Commandes terminées',   v: stats.commandesTerminees, icon: 'fa-circle-check',       color: 'var(--emerald)', bg: 'var(--em-bg)',          stripe: 'var(--emerald)' },
                     { label: 'Commandes annulées',    v: stats.commandesAnnulees,  icon: 'fa-circle-xmark',       color: '#DC2626',       bg: 'rgba(220,38,38,.09)',     stripe: '#DC2626'        },
                   ].map((c, i) => (
@@ -509,8 +521,8 @@ export default function ZoneSection({ onToast }: SectionProps) {
         <div className={styles.card}>
           <div className={styles.cardHead}>
             <div>
-              <div className={styles.cardTitle}><i className="fas fa-map-location-dot" /> Couverture par commune</div>
-              <div className={styles.cardSub}>Taux de couverture calculé automatiquement par le backend</div>
+              <div className={styles.cardTitle}><i className="fas fa-map-location-dot" /> Acteurs par commune</div>
+              <div className={styles.cardSub}>Où se trouvent vos acteurs, d'après la commune qu'ils ont déclarée</div>
             </div>
           </div>
           <div className={styles.cardBody}>
@@ -549,6 +561,11 @@ export default function ZoneSection({ onToast }: SectionProps) {
                   ))}
                 </div>
 
+                <div style={{ fontSize: 11.5, color: 'var(--t3)', margin: '-8px 0 14px', lineHeight: 1.6 }}>
+                  <i className="fas fa-circle-info" style={{ marginRight: 6 }} />
+                  Couverture : <b>Bon</b> = au moins une entreprise et un livreur dans la commune, <b>Moyen</b> = l&apos;un des deux, <b>Faible</b> = aucun.
+                </div>
+
                 <div className={styles.divider} />
 
                 {/* Tableau des communes */}
@@ -557,11 +574,12 @@ export default function ZoneSection({ onToast }: SectionProps) {
                     <thead>
                       <tr>
                         <th>Commune</th>
-                        <th>Couverture</th>
+                        <th>Part des acteurs</th>
                         <th>Acteurs</th>
                         <th>Livreurs</th>
                         <th>Entreprises</th>
-                        <th>Santé</th>
+                        <th>Commandes</th>
+                        <th>Couverture</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -579,6 +597,7 @@ export default function ZoneSection({ onToast }: SectionProps) {
                           <td style={{ fontWeight: 700 }}>{fmt(c.acteurs)}</td>
                           <td>{fmt(c.livreurs)}</td>
                           <td>{fmt(c.entreprises)}</td>
+                          <td>{fmt(c.commandes)}</td>
                           <td>
                             <span className={`${zStyles.communeBadge} ${
                               c.sante === 'good' ? zStyles.communeBadgeGood
@@ -655,8 +674,8 @@ export default function ZoneSection({ onToast }: SectionProps) {
                         >
                           <Popup>
                             <strong>{c.nom}</strong><br />
-                            Couverture : <b>{c.pct}%</b><br />
-                            Acteurs : {fmt(c.acteurs)}
+                            Acteurs : <b>{fmt(c.acteurs)}</b> ({c.pct}% de la zone)<br />
+                            Commandes : {fmt(c.commandes)}
                           </Popup>
                         </Marker>
                       ))}
@@ -666,9 +685,9 @@ export default function ZoneSection({ onToast }: SectionProps) {
                   <div className={zStyles.mapOverlay}>
                     <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .5, color: 'var(--t3)', marginBottom: 8 }}>Légende</div>
                     {[
-                      { color: '#047857', label: 'Bonne couverture' },
-                      { color: '#B45309', label: 'Couverture moyenne' },
-                      { color: '#DC2626', label: 'Faible couverture' },
+                      { color: '#047857', label: 'Entreprise + livreur' },
+                      { color: '#B45309', label: 'Un seul des deux' },
+                      { color: '#DC2626', label: 'Aucun acteur' },
                     ].map(l => (
                       <div key={l.label} className={zStyles.mapLegendRow}>
                         <div className={zStyles.mapDot} style={{ background: l.color }} />
@@ -695,8 +714,8 @@ export default function ZoneSection({ onToast }: SectionProps) {
         <div className={styles.card}>
           <div className={styles.cardHead}>
             <div>
-              <div className={styles.cardTitle}><i className="fas fa-bell" /> Préférences d'alertes</div>
-              <div className={styles.cardSub}>Notifications synchronisées sur tous vos appareils</div>
+              <div className={styles.cardTitle}><i className="fas fa-bell" /> Alertes de la zone</div>
+              <div className={styles.cardSub}>Ce que vous pouvez activer ou désactiver</div>
             </div>
           </div>
           <div className={styles.cardBody}>
@@ -738,24 +757,24 @@ export default function ZoneSection({ onToast }: SectionProps) {
                     <div className={styles.tTitle}>{a.label}</div>
                     <div className={styles.tDesc}>{a.desc}</div>
                   </div>
-                  <div
+                  <button
+                    type="button"
                     className={`${styles.sw} ${alertPrefs[a.key] ? styles.swOn : ''}`}
                     onClick={() => toggleAlert(a.key)}
                     role="switch"
+                    aria-label={a.label}
                     aria-checked={alertPrefs[a.key] ?? false}
-                    tabIndex={0}
-                    onKeyDown={e => (e.key === ' ' || e.key === 'Enter') && toggleAlert(a.key)}
                   />
                 </div>
               ))}
             </div>
 
-            {!alertsDirty && !loading && (
-              <div style={{ marginTop: 16, fontSize: 11.5, color: 'var(--t3)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <i className="fas fa-circle-check" style={{ color: 'var(--emerald)' }} />
-                Préférences synchronisées avec le serveur
-              </div>
-            )}
+            <div style={{ marginTop: 16, fontSize: 12, color: 'var(--t3)', lineHeight: 1.6 }}>
+              <i className="fas fa-circle-info" style={{ marginRight: 6 }} />
+              Les alertes de commandes importantes, de paiements échoués, de livreurs inactifs ou de baisse d&apos;activité
+              ne sont pas encore disponibles : elles apparaîtront ici dès leur mise en service.
+              La réception des notifications (e-mail, mode silencieux) se règle dans l&apos;onglet « Notifications ».
+            </div>
           </div>
         </div>
       )}

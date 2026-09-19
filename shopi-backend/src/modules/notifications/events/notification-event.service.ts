@@ -25,6 +25,7 @@ import {
   NotificationPriority,
 } from 'src/database/entities/notification/notification.entitiy';
 import { NotificationService } from '../services/notification.service';
+import { Admin } from '../../../database/entities/profiles/admin-profile.entity';
 
 // ─── Interfaces des paramètres ────────────────────────────────
 
@@ -1480,6 +1481,13 @@ export class NotificationEventService {
   }): Promise<void> {
     const isCritical = params.severity === 'CRITICAL';
     try {
+      /* Préférence de l'admin (Paramètres → Zone → Alertes) : un signalement non
+       * critique peut être désactivé ; un signalement CRITIQUE est toujours envoyé. */
+      if (!isCritical) {
+        const admin = await this.dataSource.getRepository(Admin)
+          .findOne({ where: { id: params.adminProfileId }, select: ['id', 'alertPreferences'] });
+        if (admin?.alertPreferences?.signalement === false) return;
+      }
       await this.notifService.create({
         recipientType: NotificationActorType.ADMIN,
         recipientId:   params.adminProfileId,
