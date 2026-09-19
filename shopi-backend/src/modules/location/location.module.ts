@@ -33,6 +33,7 @@ import { CorrespondantLocationService }  from './services/correspondant-location
 import { ActorSearchService }            from './services/actor-search.service';
 import { ActorMapService }               from './services/actor-map.service';
 import { GeocodingService }              from './services/geocoding.service';
+import { PlaceSearchService }            from './services/place-search.service';
 
 /* ── Gateway ─────────────────────────────────────────────── */
 import { LocationGateway }  from './gateways/location.gateway';
@@ -102,6 +103,7 @@ import { ActorMapController }                from './controllers/actor-map.contr
     ActorSearchService,
     ActorMapService,
     GeocodingService,
+    PlaceSearchService,
     LocationGateway,
   ],
 

@@ -67,3 +67,41 @@ export function searchMapActors(params: MapSearchParams, signal?: AbortSignal): 
 
   return apiFetch<MapSearchResponse>('/location/map/search', { params: qs, signal } as any);
 }
+
+/* ── Lieux (villes, communes, quartiers) ─────────────────────── */
+
+export type PlaceKind = 'ville' | 'commune' | 'quartier';
+
+export interface MapPlace {
+  key:     string;
+  name:    string;
+  type:    PlaceKind;
+  ville:   string;
+  commune: string | null;
+  /** « Boussoura · Kaloum, Conakry » */
+  label:   string;
+}
+
+export interface LocatedPlace {
+  lat:       number;
+  lng:       number;
+  precision: 'quartier' | 'commune' | 'ville';
+  label?:    string;
+}
+
+/** Suggestions locales (aucun appel externe côté serveur) — utilisable à la frappe. */
+export async function suggestPlaces(q: string, signal?: AbortSignal): Promise<MapPlace[]> {
+  const r = await apiFetch<{ places: MapPlace[] }>('/location/map/places', { params: { q }, signal } as any);
+  return r.places ?? [];
+}
+
+/** Coordonnées d'un lieu choisi (une requête par choix). `type: 'libre'` = texte tapé tel quel. */
+export async function locatePlace(
+  input: { nom: string; type: PlaceKind | 'libre'; commune?: string | null; ville?: string | null },
+): Promise<LocatedPlace | null> {
+  const params: Record<string, string> = { nom: input.nom, type: input.type };
+  if (input.commune) params.commune = input.commune;
+  if (input.ville)   params.ville   = input.ville;
+  const r = await apiFetch<{ position: LocatedPlace | null }>('/location/map/locate', { params });
+  return r.position;
+}

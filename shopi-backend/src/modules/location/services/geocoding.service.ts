@@ -66,8 +66,11 @@ export class GeocodingService {
   private readonly cache   = new Map<string, CacheEntry>();
   private readonly queue: { key: string; place: PlaceInput }[] = [];
   private readonly queued  = new Set<string>();
+  private readonly freeCache = new Map<string, { v: { lat: number; lng: number; label: string } | null; at: number }>();
   private running = false;
   private lastCallAt = 0;
+  /** Chaîne d'attente commune : garantit ≥ 1,1 s entre deux appels Nominatim, quel que soit l'appelant. */
+  private gate: Promise<void> = Promise.resolve();
 
   private readonly baseUrl: string;
   private readonly email:   string | null;
@@ -101,6 +104,44 @@ export class GeocodingService {
     /* Pas (encore) de résultat précis : centre de la ville, et affinage à venir */
     this.scheduleRefine(key, place);
     return this.cityFallback(place);
+  }
+
+  /**
+   * Position d'un lieu CHOISI par l'utilisateur (quartier, commune, ville) : on attend le
+   * géocodage précis (au plus quelques secondes) pour zoomer au bon endroit ; repli sur le
+   * centre de la ville. Une seule requête par choix : conforme à l'usage de Nominatim.
+   */
+  async resolveAwait(place: PlaceInput): Promise<ApproxPosition | null> {
+    const key = this.keyOf(place);
+    if (!key) return null;
+
+    const hit = this.cache.get(key);
+    if (hit && hit.refined && this.isFresh(hit)) return hit.value ?? this.cityFallback(place);
+
+    if (this.enabled && (fold(place.quartier) || (fold(place.commune) && fold(place.commune) !== fold(place.ville)))) {
+      const value = await this.geocode(place);
+      this.store(key, { value, at: Date.now(), refined: true });
+      if (value) return value;
+    }
+    return this.cityFallback(place);
+  }
+
+  /**
+   * Recherche LIBRE d'un lieu (point de repère, rue, quartier absent du référentiel…) : une
+   * requête Nominatim par demande explicite de l'utilisateur (jamais à la frappe), mise en cache.
+   */
+  async searchFree(text: string): Promise<{ lat: number; lng: number; label: string } | null> {
+    const key = fold(text);
+    if (key.length < 3 || !this.enabled) return null;
+
+    const hit = this.freeCache.get(key);
+    if (hit && Date.now() - hit.at < (hit.v ? POSITIVE_TTL_MS : NEGATIVE_TTL_MS)) return hit.v;
+
+    const r = await this.nominatimRaw(`${text.trim()}, Guinée`);
+    const v = r ? { lat: r.lat, lng: r.lng, label: r.display.split(',').slice(0, 3).join(',').trim() } : null;
+    if (this.freeCache.size >= 500) { const k = this.freeCache.keys().next().value; if (k !== undefined) this.freeCache.delete(k); }
+    this.freeCache.set(key, { v, at: Date.now() });
+    return v;
   }
 
   /** Centre de la ville connue (via la ville, sinon la commune qui porte souvent le même nom). */
@@ -142,9 +183,6 @@ export class GeocodingService {
         const job = this.queue.shift()!;
         this.queued.delete(job.key);
 
-        const wait = this.lastCallAt + MIN_GAP_MS - Date.now();
-        if (wait > 0) await new Promise(r => setTimeout(r, wait));
-
         const value = await this.geocode(job.place);
         this.store(job.key, { value, at: Date.now(), refined: true });
       }
@@ -171,16 +209,29 @@ export class GeocodingService {
     if (parts.commune && fold(parts.commune) !== fold(parts.ville)) attempts.push({ q: [parts.commune, parts.ville].filter(Boolean).join(', '), precision: 'commune' });
 
     for (const a of attempts) {
-      const wait = this.lastCallAt + MIN_GAP_MS - Date.now();
-      if (wait > 0) await new Promise(r => setTimeout(r, wait));
       const hit = await this.nominatim(`${a.q}, Guinée`);
       if (hit) return { ...hit, precision: a.precision };
     }
     return null;
   }
 
+  private throttle(): Promise<void> {
+    const turn = this.gate.then(async () => {
+      const wait = this.lastCallAt + MIN_GAP_MS - Date.now();
+      if (wait > 0) await new Promise(r => setTimeout(r, wait));
+      this.lastCallAt = Date.now();
+    });
+    this.gate = turn.catch(() => undefined);
+    return turn;
+  }
+
   private async nominatim(q: string): Promise<{ lat: number; lng: number } | null> {
-    this.lastCallAt = Date.now();
+    const r = await this.nominatimRaw(q);
+    return r ? { lat: r.lat, lng: r.lng } : null;
+  }
+
+  private async nominatimRaw(q: string): Promise<{ lat: number; lng: number; display: string } | null> {
+    await this.throttle();
     try {
       const url = `${this.baseUrl}/search?format=jsonv2&limit=1&countrycodes=gn&q=${encodeURIComponent(q)}`
         + (this.email ? `&email=${encodeURIComponent(this.email)}` : '');
@@ -189,13 +240,13 @@ export class GeocodingService {
         signal:  AbortSignal.timeout(HTTP_TIMEOUT_MS),
       });
       if (!res.ok) return null;
-      const rows = await res.json() as { lat?: string; lon?: string }[];
+      const rows = await res.json() as { lat?: string; lon?: string; display_name?: string }[];
       const r = rows?.[0];
       const lat = Number(r?.lat), lng = Number(r?.lon);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
       /* Garde-fou : un homonyme à l'étranger ne doit jamais placer un acteur hors de Guinée */
       if (lat < GUINEA_BBOX.latMin || lat > GUINEA_BBOX.latMax || lng < GUINEA_BBOX.lngMin || lng > GUINEA_BBOX.lngMax) return null;
-      return { lat, lng };
+      return { lat, lng, display: r?.display_name ?? q };
     } catch (err) {
       this.logger.debug(`Nominatim indisponible pour « ${q} » : ${(err as Error).message}`);
       return null;

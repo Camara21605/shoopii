@@ -5,7 +5,7 @@
  * ============================================================ */
 
 import { Type } from 'class-transformer';
-import { IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min } from 'class-validator';
+import { IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 export class ActorMapQueryDto {
   /** Nom, quartier, commune ou ville. Vide = « autour de moi » (lat/lng requis). */
@@ -32,4 +32,25 @@ export class ActorMapQueryDto {
 
   @IsOptional() @Type(() => Number) @IsNumber() @Min(1) @Max(60)
   limit?: number;
+}
+
+/** GET /location/map/places?q= — suggestions de lieux (villes, communes, quartiers). */
+export class PlacesQueryDto {
+  @IsString() @MinLength(2) @MaxLength(60)
+  q: string;
+}
+
+/** GET /location/map/locate — coordonnées d'un lieu choisi. */
+export class LocateQueryDto {
+  @IsString() @IsNotEmpty() @MaxLength(80)
+  nom: string;
+
+  @IsIn(['ville', 'commune', 'quartier', 'libre'])
+  type: 'ville' | 'commune' | 'quartier' | 'libre';
+
+  @IsOptional() @IsString() @MaxLength(80)
+  commune?: string;
+
+  @IsOptional() @IsString() @MaxLength(80)
+  ville?: string;
 }

@@ -13,7 +13,10 @@
  *    ville, distance, note, disponibilité, itinéraire, partage).
  *  - Un acteur sans GPS est situé d'après son quartier / sa ville : son
  *    épingle est en pointillés avec un cercle « position approximative ».
- *  - État partageable dans l'URL (?q=…&t=…&focus=role:id), navigation
+ *  - LIEUX : la recherche propose aussi les quartiers, communes et villes ;
+ *    choisir un lieu zoome dessus et liste ce qui s'y trouve alentour.
+ *  - FONDS DE CARTE : Plan / Relief / Satellite (avec noms des lieux), au choix.
+ *  - État partageable dans l'URL (?q=…&t=…&focus=role:id&fond=…), navigation
  *    clavier, annonces pour lecteurs d'écran, carte claire/sombre.
  * ================================================================ */
 
@@ -27,11 +30,13 @@ import '../styles/actor-map.css';
 
 import { useGeolocation }      from '../hooks/useGeolocation';
 import { useActorMapSearch }   from '../hooks/useActorMapSearch';
+import { usePlaceSuggestions } from '../hooks/usePlaceSuggestions';
 import { GPS_ICON }            from './LocationMap';
 import RoutePolyline           from './RoutePolyline';
 import { fetchRoute, type RouteResult } from '../services/routingApi';
-import type { MapActor, MapActorRole } from '../services/mapSearchApi';
-import { OSM_TILE, DARK_TILE, DEFAULT_CENTER, formatDistance } from '../utils/geoUtils';
+import { locatePlace, type MapActor, type MapActorRole, type MapPlace } from '../services/mapSearchApi';
+import { MAP_STYLES, MAP_STYLE_ORDER, readStoredStyle, storeStyle, type MapStyleId } from '../utils/mapLayers';
+import { DEFAULT_CENTER, formatDistance } from '../utils/geoUtils';
 import type { Coordinates }    from '../types/location.types';
 
 /* ── Présentation par type ─────────────────────────────────── */
@@ -71,6 +76,18 @@ function pinIcon(role: MapActorRole, selected: boolean, approx: boolean): L.DivI
   return icon;
 }
 
+/* Lieu choisi (quartier, commune, ville) : repère indigo, distinct des points rouges des acteurs */
+const PLACE_ICON = L.divIcon({
+  className: '',
+  html: '<div class="am-placepin"><span class="am-placepin__body"><i class="fas fa-location-crosshairs"></i></span><span class="am-placepin__dot"></span></div>',
+  iconSize: [36, 44], iconAnchor: [18, 42], popupAnchor: [0, -40],
+});
+
+/** Lieu actif : position + nom, et rayon de recherche adapté à son échelle. */
+interface ActivePlace { name: string; label: string; lat: number; lng: number; kind: 'quartier' | 'commune' | 'ville' | 'libre'; approx: boolean }
+const PLACE_ZOOM:   Record<ActivePlace['kind'], number> = { quartier: 16, commune: 14, ville: 12, libre: 16 };
+const PLACE_RADIUS: Record<ActivePlace['kind'], number> = { quartier: 3,  commune: 8,  ville: 25, libre: 3  };
+
 function useIsDark(): boolean {
   const read = () => {
     const t = document.documentElement.getAttribute('data-theme');
@@ -95,9 +112,16 @@ interface ControllerProps {
   me:       Coordinates | null;
   recenter: number;               // incrémenté par « Ma position »
   onArrive: () => void;           // fin de l'animation vers la sélection (ouvre la fiche)
+  place:    ActivePlace | null;
 }
-function MapController({ results, selected, me, recenter, onArrive }: ControllerProps) {
+function MapController({ results, selected, me, recenter, onArrive, place }: ControllerProps) {
   const map = useMap();
+
+  /* Lieu choisi : on vole vers lui (les épingles alentour sont cadrées ensuite, s'il y en a) */
+  useEffect(() => {
+    if (place) map.flyTo([place.lat, place.lng], PLACE_ZOOM[place.kind], { duration: .9 });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [place?.lat, place?.lng, map]);
 
   /* Nouveaux résultats → on cadre l'ensemble des épingles (et le client s'il est proche) */
   const resultsKey = results.map(keyOf).join(',');
@@ -190,13 +214,25 @@ export default function ActorMapExplorer({ onToast }: Props) {
   const [nearby,   setNearby]   = useState(params.get('near') === '1');
   const [radiusKm, setRadiusKm] = useState(Number(params.get('r')) || 10);
   const [selKey,   setSelKey]   = useState<string | null>(params.get('focus'));
+  const [mapStyle, setMapStyle] = useState<MapStyleId>(() => {
+    const f = params.get('fond');
+    return f && f in MAP_STYLES ? (f as MapStyleId) : readStoredStyle();
+  });
+  const [labelsOn, setLabelsOn] = useState(true);
+  const [place,    setPlace]    = useState<ActivePlace | null>(null);
+  const [placeBusy, setPlaceBusy] = useState(false);
   const [recenter, setRecenter] = useState(0);
   const [route,    setRoute]    = useState<RouteResult | null>(null);
   const [routing,  setRouting]  = useState(false);
 
+  /* Autour d'un lieu choisi, les distances se comptent depuis LE LIEU ; sinon depuis le client */
+  const origin: Coordinates | null = place ? { latitude: place.lat, longitude: place.lng } : me;
+  const originName = place ? place.name : 'vous';
+
   const { results, meta, loading, error, searched, retry } = useActorMapSearch({
-    query, types, origin: me, nearby, radiusKm,
+    query, types, origin, nearby, radiusKm,
   });
+  const placeSuggestions = usePlaceSuggestions(query);
 
   const selected = useMemo(() => results.find(r => keyOf(r) === selKey) ?? null, [results, selKey]);
 
@@ -205,14 +241,15 @@ export default function ActorMapExplorer({ onToast }: Props) {
     /* On ne touche qu'à NOS paramètres : la page hôte garde les siens (ex. l'onglet actif) */
     setParams(prev => {
       const next = new URLSearchParams(prev);
-      ['q', 't', 'near', 'r', 'focus'].forEach(k => next.delete(k));
+      ['q', 't', 'near', 'r', 'focus', 'fond'].forEach(k => next.delete(k));
+      if (mapStyle !== 'plan') next.set('fond', mapStyle);
       if (query.trim()) next.set('q', query.trim());
       if (types.length !== ALL_ROLES.length) next.set('t', types.join(','));
       if (nearby) { next.set('near', '1'); next.set('r', String(radiusKm)); }
       if (selKey) next.set('focus', selKey);
       return next;
     }, { replace: true });
-  }, [query, types, nearby, radiusKm, selKey, setParams]);
+  }, [query, types, nearby, radiusKm, selKey, mapStyle, setParams]);
 
   /* Un lien partagé (?focus=role:id) : on sélectionne dès que le résultat est chargé */
   useEffect(() => {
@@ -233,13 +270,37 @@ export default function ActorMapExplorer({ onToast }: Props) {
 
   const toggleNearby = () => {
     if (!nearby && !me) { geo.refresh(); onToast?.('Autorisez la géolocalisation pour chercher autour de vous.', 'i'); }
+    setPlace(null);
     setNearby(n => !n);
     setSelKey(null);
   };
 
   const select = useCallback((a: MapActor) => setSelKey(keyOf(a)), []);
 
-  const clearAll = () => { setQuery(''); setNearby(false); setSelKey(null); setRoute(null); };
+  const clearAll = () => { setQuery(''); setNearby(false); setSelKey(null); setRoute(null); setPlace(null); };
+
+  const changeStyle = (id: MapStyleId) => { setMapStyle(id); storeStyle(id); };
+
+  /* Choisir un lieu : on récupère ses coordonnées (une requête), on y vole, puis on liste
+   * ce qui se trouve alentour (mode « autour de » centré sur le lieu). */
+  const goToPlace = async (input: { nom: string; type: MapPlace['type'] | 'libre'; commune?: string | null; ville?: string | null; label: string }) => {
+    setPlaceBusy(true);
+    try {
+      const pos = await locatePlace(input);
+      if (!pos) { onToast?.(`Lieu introuvable : « ${input.nom} ».`, 'w'); return; }
+      const kind = input.type;
+      setPlace({
+        name: input.nom, label: pos.label ?? input.label, lat: pos.lat, lng: pos.lng, kind,
+        approx: pos.precision !== 'quartier' || kind === 'ville' || kind === 'commune',
+      });
+      setQuery('');
+      setSelKey(null);
+      setRadiusKm(PLACE_RADIUS[kind]);
+      setNearby(true);
+    } catch {
+      onToast?.('Impossible de localiser ce lieu pour le moment.', 'w');
+    } finally { setPlaceBusy(false); }
+  };
 
   /* ── Itinéraire depuis le client jusqu'à l'acteur sélectionné ── */
   const showRoute = async (a: MapActor) => {
@@ -260,10 +321,11 @@ export default function ActorMapExplorer({ onToast }: Props) {
     } catch { /* partage annulé */ }
   };
 
-  const tile   = dark ? DARK_TILE : OSM_TILE;
-  const center = me ?? DEFAULT_CENTER;
+  const styleDef = MAP_STYLES[mapStyle];
+  const baseTile = styleDef.base(dark);
+  const center   = me ?? DEFAULT_CENTER;
   const trimmed = query.trim();
-  const idle    = !trimmed && !nearby;
+  const idle    = !trimmed && !nearby && !place;
 
   return (
     <section className="am" aria-label="Carte de recherche des entreprises, livreurs et correspondants">
@@ -273,9 +335,9 @@ export default function ActorMapExplorer({ onToast }: Props) {
           <i className="fas fa-magnifying-glass" aria-hidden="true" />
           <input
             type="search" value={query} autoComplete="off" spellCheck={false} maxLength={80}
-            placeholder="Nom, quartier ou ville — ex. « Kaloum », « pharmacie », « Boussoura »…"
+            placeholder="Entreprise, livreur, correspondant, quartier ou ville — ex. « Kaloum », « pharmacie »…"
             aria-label="Rechercher une entreprise, un livreur ou un correspondant"
-            onChange={e => { setQuery(e.target.value); setSelKey(null); }}
+            onChange={e => { setQuery(e.target.value); setSelKey(null); if (place) { setPlace(null); setNearby(false); } }}
             onKeyDown={e => {
               if (e.key === 'Escape') clearAll();
               if (e.key === 'Enter' && results[0]) select(results[0]);
@@ -321,6 +383,28 @@ export default function ActorMapExplorer({ onToast }: Props) {
             </div>
           )}
 
+          {/* LIEUX : quartiers, communes, villes correspondant à la saisie */}
+          {trimmed.length >= 2 && (
+            <div className="am-places" role="group" aria-label="Lieux">
+              <div className="am-count"><b>Lieux</b></div>
+              {placeSuggestions.map(pl => (
+                <button key={pl.key} type="button" className="am-place" disabled={placeBusy}
+                  onClick={() => goToPlace({ nom: pl.name, type: pl.type, commune: pl.commune, ville: pl.ville, label: pl.label })}>
+                  <i className="fas fa-location-dot" aria-hidden="true" />
+                  <span><strong>{pl.name}</strong> <small>{pl.type === 'ville' ? 'Ville' : pl.type === 'commune' ? 'Commune' : 'Quartier'}</small>
+                    <em>{pl.label}</em></span>
+                </button>
+              ))}
+              {trimmed.length >= 3 && (
+                <button type="button" className="am-place am-place--free" disabled={placeBusy}
+                  onClick={() => goToPlace({ nom: trimmed, type: 'libre', label: trimmed })}>
+                  <i className={`fas ${placeBusy ? 'fa-circle-notch am-spin' : 'fa-magnifying-glass-location'}`} aria-hidden="true" />
+                  <span><strong>Chercher « {trimmed} » sur la carte</strong><em>Rue, point de repère, quartier…</em></span>
+                </button>
+              )}
+            </div>
+          )}
+
           {!idle && loading && !results.length && [0, 1, 2, 3].map(i => <div key={i} className="am-skel" />)}
 
           {!idle && error && !loading && (
@@ -331,7 +415,7 @@ export default function ActorMapExplorer({ onToast }: Props) {
             </div>
           )}
 
-          {!idle && !error && nearby && !trimmed && !me && (
+          {!idle && !error && nearby && !trimmed && !me && !place && (
             <div className="am-state">
               <i className="fas fa-location-crosshairs" />
               <h4>Position nécessaire</h4>
@@ -365,12 +449,37 @@ export default function ActorMapExplorer({ onToast }: Props) {
 
         <div className="am-map">
           <MapContainer
-            center={[center.latitude, center.longitude]} zoom={13}
+            center={[center.latitude, center.longitude]} zoom={13} maxZoom={19}
             scrollWheelZoom zoomControl={false} style={{ height: '100%', width: '100%' }}
           >
-            <TileLayer url={tile.url} attribution={tile.attribution} maxZoom={tile.maxZoom} />
+            {/* Fond de carte : Plan / Relief / Satellite — `key` = changement net de couche */}
+            <TileLayer
+              key={`${mapStyle}-${dark}`}
+              url={baseTile.url} attribution={baseTile.attribution} subdomains={baseTile.subdomains ?? 'abc'}
+              maxZoom={baseTile.maxZoom} maxNativeZoom={baseTile.maxNativeZoom}
+            />
+            {/* Satellite hybride : noms des lieux (villes, quartiers, routes) par-dessus l'image */}
+            {styleDef.labels && labelsOn && (
+              <TileLayer
+                key={`${mapStyle}-labels`} url={styleDef.labels.url} attribution={styleDef.labels.attribution}
+                maxZoom={styleDef.labels.maxZoom} maxNativeZoom={styleDef.labels.maxNativeZoom} zIndex={400}
+              />
+            )}
             <ZoomControl position="bottomright" />
-            <MapController results={results} selected={selected} me={me} recenter={recenter} onArrive={openPopup} />
+            <MapController results={results} selected={selected} me={me} recenter={recenter} onArrive={openPopup} place={place} />
+
+            {/* Lieu choisi : repère + zone de recherche */}
+            {place && (
+              <>
+                <Marker position={[place.lat, place.lng]} icon={PLACE_ICON} zIndexOffset={500}>
+                  <Popup className="loc-popup"><div className="am-pop"><h4>{place.name}</h4><div className="am-pop__note">{place.label}</div></div></Popup>
+                </Marker>
+                {nearby && (
+                  <Circle center={[place.lat, place.lng]} radius={radiusKm * 1000}
+                    pathOptions={{ color: '#4F46E5', weight: 1.5, dashArray: '6 6', fillColor: '#4F46E5', fillOpacity: .05 }} />
+                )}
+              </>
+            )}
 
             {/* Position du client : point bleu + précision */}
             {me && <Marker position={[me.latitude, me.longitude]} icon={GPS_ICON} interactive={false} />}
@@ -378,7 +487,7 @@ export default function ActorMapExplorer({ onToast }: Props) {
               <Circle center={[me.latitude, me.longitude]} radius={geo.accuracy}
                 pathOptions={{ color: '#2563EB', weight: 1, fillOpacity: .08 }} />
             )}
-            {nearby && me && (
+            {nearby && me && !place && (
               <Circle center={[me.latitude, me.longitude]} radius={radiusKm * 1000}
                 pathOptions={{ color: '#2563EB', weight: 1.5, dashArray: '6 6', fillOpacity: .03 }} />
             )}
@@ -421,7 +530,7 @@ export default function ActorMapExplorer({ onToast }: Props) {
                       </div>
                       {a.address && <div className="am-pop__note">{a.address}</div>}
                       <div className="am-pop__note">
-                        {a.distanceKm != null && <>À <b>{formatDistance(a.distanceKm)}</b> de vous · </>}
+                        {a.distanceKm != null && <>À <b>{formatDistance(a.distanceKm)}</b> {place ? `de ${originName}` : 'de vous'} · </>}
                         {PRECISION_LABEL[a.precision]}
                         {a.available === true && ' · Disponible'}
                         {a.available === false && ' · Indisponible'}
@@ -444,8 +553,29 @@ export default function ActorMapExplorer({ onToast }: Props) {
             {route && <RoutePolyline route={route} color="#E11D48" />}
           </MapContainer>
 
+          {/* Fond de carte : Plan / Relief / Satellite */}
+          <div className="am-styles" role="radiogroup" aria-label="Fond de carte">
+            {MAP_STYLE_ORDER.map(id => (
+              <button key={id} type="button" role="radio" aria-checked={mapStyle === id}
+                className="am-style" onClick={() => changeStyle(id)} title={MAP_STYLES[id].label}>
+                <i className={`fas ${MAP_STYLES[id].icon}`} aria-hidden="true" /> <span>{MAP_STYLES[id].label}</span>
+              </button>
+            ))}
+            {styleDef.labels && (
+              <button type="button" className="am-style am-style--opt" aria-pressed={labelsOn}
+                onClick={() => setLabelsOn(v => !v)} title="Afficher les noms des lieux">
+                <i className="fas fa-tag" aria-hidden="true" /> <span>Noms</span>
+              </button>
+            )}
+          </div>
+
           {/* Bandeau d'infos sur la carte */}
           <div className="am-hud" aria-hidden="true">
+            {place && (
+              <span style={{ cursor: 'pointer' }} onClick={() => { setPlace(null); setNearby(false); }} title="Retirer le lieu">
+                <i className="fas fa-location-crosshairs" style={{ color: '#4F46E5' }} />{place.name}{nearby ? ` · ${meta.total} autour` : ''} ✕
+              </span>
+            )}
             {route && <span><i className="fas fa-route" />{route.totalDistanceTxt} · {route.totalDurationTxt}</span>}
             {selected?.approx && <span><i className="fas fa-circle-info" />Position approximative — l’acteur n’a pas partagé de GPS</span>}
             {me && (
