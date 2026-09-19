@@ -32,7 +32,7 @@ export default function CatalogueIcon({ imageUrl, icone, fallback, inline }: Pro
     return (
       <img
         src={imageUrl} alt="" loading="lazy" draggable={false}
-        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit', display: 'block' }}
+        style={{ width: '100%', height: '100%', maxWidth: '100%', maxHeight: '100%', minWidth: 0, minHeight: 0, objectFit: 'cover', borderRadius: 'inherit', display: 'block' }}
       />
     );
   }

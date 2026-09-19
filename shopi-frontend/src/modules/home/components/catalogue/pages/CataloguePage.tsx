@@ -25,6 +25,7 @@ import {
 } from '../hooks/useCatalogueExplorer';
 
 import styles from './CataloguePage.module.css';
+import { typeName, categoryName } from '../../../../../shared/utils/catalogueCase';
 
 const NATURE_ICON: Record<Nature, string> = {
   products: 'fa-bag-shopping',
@@ -48,7 +49,7 @@ function Tile({ label, onClick, color, children, badge, badgeTitle }: TileProps)
         className={styles.tileImg}
         style={color ? { background: `color-mix(in srgb, ${color} 14%, var(--g100,#F1F3F6))` } : undefined}
       >
-        {children}
+        <span className={styles.tileMedia}>{children}</span>
         {badge && (
           <span className={styles.tileBadge} title={badgeTitle} data-nature={badge}>
             <i className={`fas ${NATURE_ICON[badge]}`} />
@@ -159,7 +160,7 @@ export default function CataloguePage() {
                       onClick={() => setParams({ type: ty.id })}
                     >
                       <span className={styles.sideEmoji}><CatalogueIcon imageUrl={ty.imageUrl} icone={ty.icone} fallback="🏢" /></span>
-                      <span className={styles.sideName}>{ty.nom}</span>
+                      <span className={styles.sideName}>{typeName(ty.nom)}</span>
                     </button>
                   ))}
                 </div>
@@ -183,7 +184,7 @@ export default function CataloguePage() {
               {/* En-tête du panneau */}
               <div className={styles.panelHead}>
                 <div className={styles.panelTitle}>
-                  {activeType ? activeType.nom : t('cataloguePage.allCompanies')}
+                  {activeType ? typeName(activeType.nom) : t('cataloguePage.allCompanies')}
                   {activeType && (
                     <span className={styles.natureTag} data-nature={activeType.nature}>
                       {natureLabel(activeType.nature)}
@@ -212,7 +213,7 @@ export default function CataloguePage() {
                   ? categories.map(c => (
                       <Tile
                         key={c.id}
-                        label={c.nom}
+                        label={categoryName(c.nom)}
                         color={c.couleur ?? activeType.couleur}
                         onClick={() => goBoutiques([`type=${activeType.id}`, `category=${c.id}`])}
                       >
@@ -222,7 +223,7 @@ export default function CataloguePage() {
                   : visibleTypes.map(ty => (
                       <Tile
                         key={ty.id}
-                        label={ty.nom}
+                        label={typeName(ty.nom)}
                         color={ty.couleur}
                         badge={ty.nature}
                         badgeTitle={natureLabel(ty.nature)}

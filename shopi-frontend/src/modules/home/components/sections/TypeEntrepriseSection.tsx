@@ -22,6 +22,7 @@ import { apiFetch }   from '../../../../shared/services/apiFetch';
 import HScrollSection from '../ui/HScrollSection';
 import CatalogueIcon from '../ui/CatalogueIcon';
 import styles         from './TypeEntrepriseSection.module.css';
+import { typeName } from '../../../../shared/utils/catalogueCase';
 
 interface CompanyTypeApi {
   id:            string;
@@ -119,7 +120,7 @@ export default function TypeEntrepriseSection() {
                       >
                         <CatalogueIcon imageUrl={ct.imageUrl} icone={ct.icone} fallback="🏢" />
                       </div>
-                      <div className={styles.label}>{ct.nom}</div>
+                      <div className={styles.label}>{typeName(ct.nom)}</div>
                       <div className={styles.count}>
                         {ct.nbEntreprises > 0
                           ? t('home.typeEntreprise.boutiqueCount', { count: ct.nbEntreprises })

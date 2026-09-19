@@ -16,6 +16,7 @@ import { produitApi } from '../../produit/api/produit.api';
 import type { ProduitApi } from '../../produit/pages/ProduitPage';
 
 import styles from './ComparerPage.module.css';
+import { categoryName } from '../../../../../shared/utils/catalogueCase';
 
 interface ToastState { msg: string; type: 's' | 'i' | 'w' | 'e' }
 
@@ -142,7 +143,7 @@ export default function ComparerPage() {
                 </tr>
                 <tr>
                   <td className={styles.rowLabel}>{t('compare.categorie')}</td>
-                  {produits.map(p => <td key={p.id} className={styles.cell}>{p.category?.nom ?? '—'}</td>)}
+                  {produits.map(p => <td key={p.id} className={styles.cell}>{p.category?.nom ? categoryName(p.category.nom) : '—'}</td>)}
                 </tr>
                 <tr>
                   <td className={styles.rowLabel}>{t('compare.marque')}</td>

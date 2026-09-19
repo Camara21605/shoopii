@@ -27,6 +27,7 @@ import { useProduitsByType } from '../hooks/useProduitsByType';
 import { useServicesByType } from '../hooks/useServicesByType';
 
 import styles from './TypeEntreprisePage.module.css';
+import { typeName } from '../../../../../shared/utils/catalogueCase';
 
 interface ToastState { msg: string; type: 's' | 'i' | 'w' | 'e' }
 
@@ -88,7 +89,7 @@ export default function TypeEntreprisePage() {
           <div className={styles.hero} style={{ '--type-color': typeInfo.couleur ?? 'var(--blue)' } as React.CSSProperties}>
             <div className={styles.heroIco}><CatalogueIcon imageUrl={typeInfo.imageUrl} icone={typeInfo.icone} fallback="🏢" /></div>
             <div>
-              <div className={styles.heroTitle}>{typeInfo.nom}</div>
+              <div className={styles.heroTitle}>{typeName(typeInfo.nom)}</div>
               <div className={styles.heroSub}>
                 {total > 0
                   ? t('typeEntreprisePage.subtitleCount', { count: total })

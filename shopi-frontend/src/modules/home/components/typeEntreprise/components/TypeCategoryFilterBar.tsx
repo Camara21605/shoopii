@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import CatalogueIcon from '../../ui/CatalogueIcon';
 import styles from './TypeCategoryFilterBar.module.css';
 import type { TypeCategory } from '../hooks/useProduitsByType';
+import { categoryName } from '../../../../../shared/utils/catalogueCase';
 
 interface Props {
   categories:      TypeCategory[];
@@ -37,7 +38,7 @@ export default function TypeCategoryFilterBar({ categories, activeCategoryId, on
           className={`${styles.chip} ${activeCategoryId === c.id ? styles.chipOn : ''}`}
           onClick={() => onSelect(c.id)}
         >
-          <CatalogueIcon imageUrl={c.imageUrl} icone={c.icone} fallback="📁" inline={18} /> {c.nom}
+          <CatalogueIcon imageUrl={c.imageUrl} icone={c.icone} fallback="📁" inline={18} /> {categoryName(c.nom)}
         </button>
       ))}
     </div>

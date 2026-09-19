@@ -9,10 +9,12 @@
 .subChips { padding-top: 2px; border-top: 1px dashed var(--bdr2); }
 
 .chip {
-  flex: 0 0 auto; display: flex; align-items: center; gap: 6px;
+  flex: 0 0 auto;
   background: var(--white); border: 1.5px solid var(--bdr2); border-radius: 999px;
   padding: 9px 16px; font-size: 12.5px; font-weight: 700; color: var(--t1);
   cursor: pointer; white-space: nowrap; transition: all .2s; scroll-snap-align: start;
+  /* Nom long : la puce garde une largeur plafonnée (texte tronqué en …) au lieu de s'étirer */
+  display: block; max-width: 220px; overflow: hidden; text-overflow: ellipsis;
 }
 .chip:hover { border-color: var(--blue); transform: translateY(-2px); }
 .chipOn { background: var(--sky); border-color: var(--blue); color: var(--blue); }

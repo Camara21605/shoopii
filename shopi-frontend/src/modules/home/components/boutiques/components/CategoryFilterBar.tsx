@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../../../../../shared/services/apiFetch';
 import CatalogueIcon from '../../ui/CatalogueIcon';
 import styles from './CategoryFilterBar.module.css';
+import { categoryName, subCategoryName } from '../../../../../shared/utils/catalogueCase';
 
 interface SubCategoryApi {
   id:  string;
@@ -76,7 +77,7 @@ export default function CategoryFilterBar({
               onSelectSubCategory(undefined);
             }}
           >
-            <CatalogueIcon imageUrl={c.imageUrl} icone={c.icone} fallback="📁" inline={18} /> {c.nom}
+            <CatalogueIcon imageUrl={c.imageUrl} icone={c.icone} fallback="📁" inline={18} /> {categoryName(c.nom)}
           </button>
         ))}
       </div>
@@ -95,7 +96,7 @@ export default function CategoryFilterBar({
               className={`${styles.chip} ${styles.chipSub} ${activeSubCategoryId === s.id ? styles.chipOn : ''}`}
               onClick={() => onSelectSubCategory(s.id)}
             >
-              {s.nom}
+              {subCategoryName(s.nom)}
             </button>
           ))}
         </div>

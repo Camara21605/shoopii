@@ -10,7 +10,7 @@
  * définie ici — le "skeleton" rendait des <div> sans aucune taille ni
  * style, donc invisibles pendant le chargement.) */
 .skeleton {
-  flex: 0 0 auto; min-width: 84px; height: 88px; border-radius: 14px;
+  flex: 0 0 92px; width: 92px; height: 112px; border-radius: 14px;
   background: linear-gradient(90deg, var(--g100,#F1F3F6) 25%, var(--g50,#F7F8FA) 50%, var(--g100,#F1F3F6) 75%);
   background-size: 200% 100%;
   animation: catSkeletonShimmer 1.4s ease-in-out infinite;
@@ -19,20 +19,28 @@
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
-.cat { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 5px; background: var(--white); border: 1.5px solid var(--bdr2); border-radius: 14px; padding: 12px 10px; min-width: 84px; cursor: pointer; box-shadow: 0 1px 4px rgba(11,31,58,.05); transition: all .22s; scroll-snap-align: start; }
+/* Taille FIXE : la carte garde la même forme quelle que soit la longueur du nom
+ * (le nom est limité à 2 lignes, voir .catNm) — avant, min-width seul la laissait
+ * s'élargir avec les noms longs. */
+.cat { flex: 0 0 92px; width: 92px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 5px; background: var(--white); border: 1.5px solid var(--bdr2); border-radius: 14px; padding: 12px 8px; cursor: pointer; box-shadow: 0 1px 4px rgba(11,31,58,.05); transition: all .22s; scroll-snap-align: start; }
 .cat:hover { border-color: var(--blue); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(11,31,58,.1); }
 .catOn { background: var(--sky); border-color: var(--blue); box-shadow: 0 4px 16px rgba(26,79,196,.15); }
-.catEm { width: 36px; height: 36px; border-radius: 10px; background: var(--g100); display: flex; align-items: center; justify-content: center; font-size: 16px; transition: transform .2s; }
+.catEm { width: 36px; height: 36px; border-radius: 10px; overflow: hidden; flex-shrink: 0; background: var(--g100); display: flex; align-items: center; justify-content: center; font-size: 16px; transition: transform .2s; }
 .cat:hover .catEm { transform: scale(1.1); }
 .catOn .catEm { background: var(--sky-2); }
-.catNm { font-size: 10.5px; font-weight: 700; color: var(--t1); text-align: center; line-height: 1.2; }
-.catCt { font-size: 9px; color: var(--t4); }
+.catNm {
+  width: 100%; font-size: 10.5px; font-weight: 700; color: var(--t1); text-align: center; line-height: 1.2;
+  /* 2 lignes max + hauteur réservée : un nom court et un nom long occupent la même place */
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  overflow-wrap: anywhere; min-height: 2.4em;
+}
+.catCt { max-width: 100%; font-size: 9px; color: var(--t4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 @media (max-width: 640px) {
   .cats { gap: 6px; }
-  .cat { min-width: 62px; padding: 8px 6px; gap: 3px; border-radius: 12px; }
+  .cat { flex-basis: 68px; width: 68px; padding: 8px 4px; gap: 3px; border-radius: 12px; }
   .catEm { width: 28px; height: 28px; font-size: 13px; border-radius: 8px; }
-  .catNm { font-size: 8.5px; line-height: 1.15; }
+  .catNm { font-size: 8.5px; line-height: 1.15; min-height: 2.3em; }
   .catCt { font-size: 7.5px; }
-  .skeleton { min-width: 62px; height: 64px; border-radius: 12px; }
+  .skeleton { flex-basis: 68px; width: 68px; height: 84px; border-radius: 12px; }
 }

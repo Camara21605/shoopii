@@ -25,6 +25,7 @@ import ModalPartage from '../../produit/components/ModalPartage';
 
 import type { ServiceApi } from '../../../cards/CardService';
 import styles from '../../produit/styles/ProduitPage.module.css';
+import { categoryName } from '../../../../../shared/utils/catalogueCase';
 
 // ─────────────────────────────────────────────────────────────
 // HELPERS
@@ -147,7 +148,7 @@ export default function ServiceDetailPage() {
           <nav className={styles.breadcrumb}>
             <a href="/home">Accueil</a>
             <i className="fas fa-chevron-right" />
-            <span>{service.category?.nom}</span>
+            <span>{categoryName(service.category?.nom)}</span>
             <i className="fas fa-chevron-right" />
             <span className={styles.bcCurrent}>{service.nom}</span>
           </nav>
@@ -193,7 +194,7 @@ export default function ServiceDetailPage() {
                     <i className="fas fa-concierge-bell" style={{ marginRight: 5 }} />Service
                   </span>
                   {service.category?.nom && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)' }}>{service.category.icone} {service.category.nom}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)' }}>{service.category.icone} {categoryName(service.category.nom)}</span>
                   )}
                 </div>
 

@@ -49,7 +49,7 @@
   font-family: var(--fb); line-height: 1.25;
 }
 .sideOn { background: var(--t1); color: var(--white); font-weight: 700; }
-.sideEmoji { flex-shrink: 0; font-size: 16px; width: 26px; height: 26px; border-radius: 50%; text-align: center; display: inline-flex; align-items: center; justify-content: center; }
+.sideEmoji { flex-shrink: 0; overflow: hidden; font-size: 16px; width: 26px; height: 26px; border-radius: 50%; text-align: center; display: inline-flex; align-items: center; justify-content: center; }
 .sideName  { min-width: 0; overflow-wrap: anywhere; }
 .sideGroup {
   display: flex; align-items: center; gap: 7px;
@@ -94,6 +94,14 @@
   background: var(--g100, #F1F3F6);
   display: flex; align-items: center; justify-content: center;
   font-size: 34px; color: var(--t1);
+}
+/* Calque du média : remplit EXACTEMENT le cercle (inset:0) et rogne tout ce qui
+ * dépasse. height:100% sur l'image ne marchait pas ici — la hauteur du cercle vient
+ * de aspect-ratio, donc n'est pas « définie » pour un enfant en pourcentage : une
+ * image haute débordait du cadre. */
+.tileMedia {
+  position: absolute; inset: 0; border-radius: 50%; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
 }
 .seeAllIco { font-size: 26px; color: var(--t1); }
 .logoImg { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }

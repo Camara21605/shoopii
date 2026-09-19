@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { apiFetch }  from '../../../../shared/services/apiFetch';
 import CatalogueIcon from '../ui/CatalogueIcon';
 import styles        from './CategoriesSection.module.css';
+import { categoryName } from '../../../../shared/utils/catalogueCase';
 
 interface CategoryApi {
   id:            string;
@@ -97,7 +98,7 @@ export default function CategoriesSection() {
                 onClick={() => handleClickCategory(c)}
               >
                 <div className={styles.catEm}><CatalogueIcon imageUrl={c.imageUrl} icone={c.icone} fallback="📁" /></div>
-                <div className={styles.catNm}>{c.nom}</div>
+                <div className={styles.catNm}>{categoryName(c.nom)}</div>
                 <div className={styles.catCt}>
                   {c.subCategories?.length > 0
                     ? t('home.categories.sousCat', { count: c.subCategories.length })
