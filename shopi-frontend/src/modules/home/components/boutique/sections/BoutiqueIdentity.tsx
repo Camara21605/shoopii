@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import type { BoutiqueInfo } from '../data/boutiqueMockData';
 import FollowButton from '../../../../../shared/components/FollowButton';
 import styles from '../styles/BoutiqueIdentity.module.css';
+import ActorLocation from '../../../../../shared/location/components/ActorLocation';
 
 interface Props {
   boutiqueId:     string;
@@ -82,7 +83,7 @@ export default function BoutiqueIdentity({ boutiqueId, boutique, suivi, msgLoadi
               <i className="fas fa-microchip" /> {boutique.domaine}
             </span>
             <span className={styles.metaItem}>
-              <i className="fas fa-location-dot" style={{ color:'var(--blue)' }} /> {boutique.localisation || boutique.ville}
+              <i className="fas fa-location-dot" style={{ color:'var(--blue)' }} /> <ActorLocation value={boutique} fallback={boutique.ville} />
             </span>
             <span className={styles.metaItem}>
               <i className="fas fa-calendar" style={{ color:'var(--t4)' }} /> {boutique.membre}

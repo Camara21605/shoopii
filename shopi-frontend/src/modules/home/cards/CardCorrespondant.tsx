@@ -3,7 +3,7 @@ import { useTranslation }      from 'react-i18next';
 import styles                  from './Cards.module.css';
 import { useAuthGate }         from '../../../shared/hooks/useAuthGate';
 import FollowButton            from '../../../shared/components/FollowButton';
-import { locationLabel }        from '../../../shared/location/utils/locationLabel';
+import ActorLocation from '../../../shared/location/components/ActorLocation';
 
 export interface CorrespondantCardData {
   id: string; fullName: string; profilePicture: string | null;
@@ -32,7 +32,6 @@ export default function CardCorrespondant({ c, onToast, onRemoved }: Props) {
   const id     = c?.id ?? '';
   const name   = c?.fullName ?? c?.nom ?? '';
   const photo  = c?.profilePicture ?? null;
-  const region = locationLabel(c);   /* « Quartier, Ville » */
   const online = c?.online ?? false;
 
   const { openAuthModal, authModal } = useAuthGate();
@@ -78,7 +77,7 @@ export default function CardCorrespondant({ c, onToast, onRemoved }: Props) {
 
       {/* Région */}
       <div className={styles.wkLoc}>
-        <i className="fas fa-map-pin" /> {region || '—'}
+        <i className="fas fa-map-pin" /> <ActorLocation value={c} fallback="—" />
       </div>
 
       {/* Bouton */}

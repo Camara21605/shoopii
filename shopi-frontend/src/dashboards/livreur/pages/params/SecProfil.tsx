@@ -64,8 +64,8 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
 
   /* % complétion dynamique */
   const pct = data ? Math.round(
-    [data.photoUrl, data.fullName, data.communesActives?.length, data.VehicleType, data.horaires?.length, data.documentCni]
-      .filter(Boolean).length / 6 * 100
+    [data.photoUrl, data.fullName, data.communesActives?.length, data.VehicleType, data.horaires?.length, data.documentCni, data.quartier]
+      .filter(Boolean).length / 7 * 100
   ) : 0;
 
   async function handleSave() {

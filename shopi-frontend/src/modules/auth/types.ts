@@ -238,6 +238,7 @@ export interface FormErrors {
   activationCode?:  string;
   terms?:           string;
   general?:         string;
+  quartier?:        string;
   /* Compte "entreprise" uniquement — voir validateRegisterField()
    * dans useLoginPage.ts (BUG CORRIGÉ : ces deux champs n'étaient
    * jamais validés, ni côté client ni côté serveur). */

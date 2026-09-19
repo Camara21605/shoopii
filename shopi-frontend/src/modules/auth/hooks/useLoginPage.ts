@@ -378,6 +378,17 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
        * toute façon pas celui vérifié ici). Voir le cas 'city' juste
        * après pour le champ réellement exigé dans ce parcours.
        */
+      /* Le client doit voir dans quel QUARTIER se trouve l'entreprise, le livreur ou le
+       * correspondant : sans quartier, sa carte et son profil ne peuvent pas le dire. */
+      case 'quartier':
+        if (collabInvite) return undefined;
+        if (role === 'company' || role === 'delivery' || role === 'correspondent') {
+          return !data.quartier?.trim()
+            ? 'Le quartier est obligatoire : les clients doivent savoir où vous trouver.'
+            : undefined;
+        }
+        return undefined;
+
       case 'city':
         if (!lockedRole) return undefined; // hors invitation : pas de champ "Ville d'origine" affiché (voir needsLocation)
         return !data.city?.trim() ? "Ville d'origine requise." : undefined;
@@ -426,7 +437,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     const fields: (keyof RegisterFormData)[] = [
       'firstName', 'lastName', 'email', 'phone',
       'password', 'confirmPassword', 'activationCode', 'terms',
-      'shopName', 'companyTypeId', 'categoryIds', 'birthDate', 'gender', 'location', 'city',
+      'shopName', 'companyTypeId', 'categoryIds', 'birthDate', 'gender', 'location', 'city', 'quartier',
     ];
     const errs: FormErrors = {};
     fields.forEach(field => {

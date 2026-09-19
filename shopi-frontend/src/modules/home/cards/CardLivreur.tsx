@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import styles           from './Cards.module.css';
 import { useAuthGate }  from '../../../shared/hooks/useAuthGate';
 import FollowButton     from '../../../shared/components/FollowButton';
-import { locationLabel } from '../../../shared/location/utils/locationLabel';
+import ActorLocation from '../../../shared/location/components/ActorLocation';
 
 export interface LivreurCardData {
   id: string; fullName: string; profilePicture: string | null;
@@ -33,7 +33,6 @@ export default function CardLivreur({ l, onToast, onRemoved }: Props) {
   const id       = l?.id ?? '';
   const name     = l?.fullName ?? '';
   const photo    = l?.profilePicture ?? null;
-  const zone     = locationLabel(l);   /* « Quartier, Ville » */
   const vehicule = l?.vehicule ?? '';
   const dispo    = l?.disponible ?? false;
 
@@ -80,7 +79,7 @@ export default function CardLivreur({ l, onToast, onRemoved }: Props) {
 
       {/* Zone */}
       <div className={styles.wkLoc}>
-        <i className="fas fa-map-pin" /> {zone || '—'}
+        <i className="fas fa-map-pin" /> <ActorLocation value={l} fallback="—" />
       </div>
 
       {/* Moyen de transport */}

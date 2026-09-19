@@ -5,6 +5,7 @@ import type { BoutiqueCardData } from '../data/types';
 import { useAuthGate } from '../../../shared/hooks/useAuthGate';
 import FollowButton from '../../../shared/components/FollowButton';
 import { locationLabel } from '../../../shared/location/utils/locationLabel';
+import ActorLocation from '../../../shared/location/components/ActorLocation';
 
 const DOMAIN_COLORS: Record<string, { bg: string; bg2: string; color: string }> = {
   'Électronique': { bg:'rgba(37,99,235,.18)',   bg2:'rgba(37,99,235,.08)',  color:'#1D4ED8' },
@@ -95,7 +96,7 @@ export default function CardEntreprise({ e, onToast, onRemoved, listMode = false
         {/* Quartier, Ville */}
         {location && (
           <div className={styles.coLoc} title={location}>
-            <i className="fas fa-location-dot" aria-hidden="true" /> {location}
+            <i className="fas fa-location-dot" aria-hidden="true" /> <ActorLocation value={e} />
           </div>
         )}
       </div>

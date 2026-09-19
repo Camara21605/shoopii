@@ -116,8 +116,13 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
     setQuartierId('');
     setQuartiers([]);
     if (!id) return;
-    emit(id, '');
-    loadNiveau('quartier', id, setQuartiers);
+    /* Le formulaire ne passe à la suite qu'une fois le QUARTIER connu : on attend donc la
+     * liste des quartiers de la commune. Aucun quartier répertorié → on remonte tout de
+     * suite ; le quartier est alors saisi à la main dans le formulaire d'inscription. */
+    loadNiveau('quartier', id, items => {
+      setQuartiers(items);
+      if (items.length === 0) emit(id, '');
+    });
   };
 
   const handleQuartier = (id: string) => {
@@ -179,9 +184,9 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
 
       {communeId && (quartiers.length > 0 || loading === 'quartier') && (
         <div style={{ marginTop: 10 }}>
-          <label style={lblStyle}>Quartier</label>
+          <label style={lblStyle}>Quartier *</label>
           <select style={selStyle} value={quartierId} onChange={e => handleQuartier(e.target.value)} disabled={loading === 'quartier'}>
-            <option value="">{loading === 'quartier' ? 'Chargement…' : '— Choisir un quartier (facultatif) —'}</option>
+            <option value="">{loading === 'quartier' ? 'Chargement…' : '— Choisir un quartier —'}</option>
             {quartiers.map(q => <option key={q.id} value={q.id}>{q.nom}</option>)}
           </select>
         </div>

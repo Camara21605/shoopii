@@ -16,6 +16,7 @@ import type { BoutiqueInfo } from '../data/boutiqueMockData';
 import type { LivreurApi } from '../pages/BoutiquePage';
 import styles from '../styles/AProposSection.module.css';
 import { locationLabel } from '../../../../../shared/location/utils/locationLabel';
+import ActorLocation from '../../../../../shared/location/components/ActorLocation';
 
 interface Props {
   boutiqueInfo: BoutiqueInfo;
@@ -179,7 +180,7 @@ export default function AProposSection({ boutiqueInfo, createdAt, livreurs, onTo
                   <div className={styles.livrNom}>{l.fullName}</div>
                   {locationLabel(l) && (
                     <div className={styles.livrZone}>
-                      <i className="fas fa-map-pin" /> {locationLabel(l)}
+                      <i className="fas fa-map-pin" /> <ActorLocation value={l} />
                     </div>
                   )}
                 </div>

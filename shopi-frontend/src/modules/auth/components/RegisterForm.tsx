@@ -116,7 +116,7 @@ const STEP_FIELDS: Record<StepKey, (keyof RegisterFormData)[]> = {
    * needsLocation ci-dessous). Les inclure tous les deux ici est sans
    * risque, chacun renvoie `undefined` (pas d'erreur) quand il ne
    * s'applique pas au parcours en cours. */
-  contact:  ['phone', 'location', 'city'],
+  contact:  ['phone', 'location', 'city', 'quartier'],
   password: ['password', 'confirmPassword', 'terms'],
 };
 
@@ -636,6 +636,37 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     </div>
   );
 
+  /* Quartier — obligatoire pour entreprise / livreur / correspondant : c'est ce que le client
+   * voit sur leurs cartes et profils. Prérempli par le GPS / la carte / le sélecteur quand
+   * ils le connaissent, toujours modifiable. */
+  const needsQuartier = ['company', 'delivery', 'correspondent'].includes(selectedRole);
+  const renderQuartier = () => needsQuartier && (!needsLocation || locationDone) && (
+    <div className="field-group">
+      <div className="field-label">Quartier <span style={{ color: 'var(--rose,red)' }}>*</span></div>
+      <div className="field-wrap" style={{ position: 'relative' }}>
+        <i className="fas fa-location-dot" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--t3)', fontSize: 13, pointerEvents: 'none', zIndex: 1 }} />
+        <input
+          type="text"
+          className="field-input"
+          placeholder="Ex : Boussoura, Almamya, Madina…"
+          maxLength={100}
+          value={(data as any).quartier ?? ''}
+          onChange={e => onDataChange({ quartier: e.target.value } as any)}
+          style={{ paddingLeft: 40 }}
+        />
+      </div>
+      <p style={{ margin: '5px 0 0', fontSize: 11, color: 'var(--t3)' }}>
+        Les clients verront ce quartier sur votre carte et votre profil.
+      </p>
+      {errors.quartier && (
+        <p style={{ margin: '5px 0 0', fontSize: 11, color: 'var(--rose,red)', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <i className="fas fa-circle-exclamation" style={{ fontSize: 10 }} />
+          {errors.quartier}
+        </p>
+      )}
+    </div>
+  );
+
   /* ── Step 4 : Contact ── */
   const renderStep4 = () => (
     <div className="fields">
@@ -676,6 +707,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           </button>
         </div>
       )}
+      {needsLocation && renderQuartier()}
       {needsLocation && errors.location && !locationDone && (
         <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--rose,red)', display: 'flex', alignItems: 'center', gap: 5 }}>
           <i className="fas fa-circle-exclamation" style={{ fontSize: 10 }} />
@@ -727,6 +759,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           )}
         </div>
       )}
+      {!needsLocation && renderQuartier()}
     </div>
   );
 
