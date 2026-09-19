@@ -24,6 +24,11 @@ import { SessionService } from 'src/modules/session/session.service';
 import { parseUserAgent } from 'src/common/utils/user-agent.util';
 
 import { UpdateBoutiqueDto, UpdateContactDto } from '../dto/update-boutique.dto';
+import { Category } from 'src/database/entities/entreprise.table/category.entity';
+import {
+  countActiveCategoriesOfType, getSelectedCategoryIds, replaceSelectedCategories,
+  validateCategoryIdsForType,
+} from 'src/common/utils/company-categories.util';
 
 export interface CurrentSessionInfo {
   device:         string;
@@ -192,10 +197,20 @@ export class BoutiqueParametresService {
       if (!type.actif) throw new BadRequestException("Ce type d'entreprise n'est plus disponible.");
     }
 
+    /* Changer de type d'entreprise rend caduque la sélection de catégories
+     * (elles appartenaient à l'ancien type) : elle est réinitialisée, et
+     * l'entreprise doit re-choisir ses catégories parmi celles du nouveau
+     * type (Paramètres > Boutique > Catégories de mon activité). */
+    const typeChanged = !!dto.companyTypeId && dto.companyTypeId !== company.companyTypeId;
+
     // On applique uniquement les champs fournis dans le DTO
     Object.assign(company, dto);
 
     const updated = await this.companyRepo.save(company);
+    if (typeChanged) {
+      await replaceSelectedCategories(this.companyRepo.manager, company.id, []);
+      this.logger.log(`[BOUTIQUE] Type changé — sélection de catégories réinitialisée — companyId=${company.id}`);
+    }
     this.logger.log(`[BOUTIQUE] Mis à jour — userId=${userId}`);
 
     /* La réponse remplace tout `data` côté frontend (patch() dans
@@ -307,6 +322,77 @@ export class BoutiqueParametresService {
   /* BUG CORRIGÉ (suite) — même correctif que getParametres() ci-dessus :
    * `id` en priorité, `userId` en repli déterministe, plutôt qu'un OR
    * ambigu en une seule requête. */
+  /* ──────────────────────────────────────────────────────────
+   * Catégories de mon activité — GET / PUT
+   * Seules ces catégories sont proposées pour créer un produit / une
+   * prestation (voir common/utils/company-categories.util.ts).
+   * ────────────────────────────────────────────────────────── */
+
+  async getMyCategories(userId: string) {
+    const company = await this.findCompanyOrFail(userId);
+    const manager = this.companyRepo.manager;
+
+    const selectedIds = await getSelectedCategoryIds(manager, company.id);
+    const available = company.companyTypeId
+      ? await manager.getRepository(Category).find({
+          where: { companyTypeId: company.companyTypeId, actif: true },
+          order: { ordre: 'ASC', nom: 'ASC' },
+        })
+      : [];
+    const availableIds = new Set(available.map(c => c.id));
+
+    return {
+      companyTypeId: company.companyTypeId,
+      /* true = aucune sélection enregistrée : par repli, TOUTES les catégories
+       * du type sont utilisables (entreprise antérieure à la règle). */
+      usingFallback: selectedIds.length === 0,
+      selectedIds:   selectedIds.filter(id => availableIds.has(id)),
+      available: available.map(c => ({
+        id: c.id, nom: c.nom, icone: c.icone, imageUrl: c.imageUrl, couleur: c.couleur,
+      })),
+    };
+  }
+
+  async updateMyCategories(userId: string, categoryIds: string[]) {
+    const company = await this.findCompanyOrFail(userId);
+    const manager = this.companyRepo.manager;
+
+    if (!company.companyTypeId) {
+      throw new BadRequestException("Choisissez d'abord votre type d'entreprise.");
+    }
+
+    const ids = [...new Set(categoryIds)];
+    if (ids.length === 0 && (await countActiveCategoriesOfType(manager, company.companyTypeId)) > 0) {
+      throw new BadRequestException('Choisissez au moins une catégorie.');
+    }
+    await validateCategoryIdsForType(manager, company.companyTypeId, ids);
+
+    /* On ne retire pas une catégorie encore utilisée : ses produits /
+     * prestations deviendraient orphelins de la liste de l'entreprise. */
+    const previous = await getSelectedCategoryIds(manager, company.id);
+    const removed  = previous.filter(id => !ids.includes(id));
+    if (removed.length > 0) {
+      const used: { nom: string; n: string }[] = await manager.query(
+        `SELECT c."nom" AS nom, COUNT(*)::text AS n FROM (
+           SELECT "categoryId" FROM products WHERE "companyId" = $1 AND "categoryId" = ANY($2::uuid[])
+           UNION ALL
+           SELECT "categoryId" FROM services WHERE "companyId" = $1 AND "categoryId" = ANY($2::uuid[])
+         ) u JOIN categories c ON c.id = u."categoryId" GROUP BY c."nom"`,
+        [company.id, removed],
+      );
+      if (used.length > 0) {
+        throw new BadRequestException(
+          'Impossible de retirer : ' + used.map(u => `"${u.nom}" (${u.n} produit(s)/service(s))`).join(', ') +
+          '. Supprimez ou déplacez-les d\'abord.',
+        );
+      }
+    }
+
+    await replaceSelectedCategories(manager, company.id, ids);
+    this.logger.log(`[CATEGORIES] Sélection mise à jour — companyId=${company.id} (${ids.length})`);
+    return this.getMyCategories(userId);
+  }
+
   private async findCompanyOrFail(userId: string): Promise<Company> {
     let company = await this.companyRepo.findOne({ where: { id: userId } });
     if (!company) company = await this.companyRepo.findOne({ where: { userId } });

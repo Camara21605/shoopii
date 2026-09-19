@@ -10,6 +10,8 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import FormCard from '../../components/parametres/FormCard';
+import BoutiqueCategoriesCard from './BoutiqueCategoriesCard';
+import { typeName } from '../../../../shared/utils/catalogueCase';
 import type { ParametresData } from '../../hooks/useParametres';
 import s from '../../styles/parametres/ParametresPage.module.css';
 import type { ToastType } from '../../types';
@@ -25,7 +27,7 @@ import {
  * (créée avant validation, ou jamais renseigné). Liste réelle chargée
  * depuis GET /company-types (même endpoint public que la page
  * /types/:id — voir TypeEntrepriseSection.tsx). */
-interface CompanyTypeOption { id: string; nom: string; icone: string | null; actif: boolean }
+interface CompanyTypeOption { id: string; nom: string; icone: string | null; actif: boolean; nature?: 'products' | 'services' | 'neutral' }
 
 // ─────────────────────────────────────────────────────────────
 // PROPS
@@ -427,15 +429,19 @@ export default function BoutiqueSection({
                 value={companyTypeId}
                 onChange={e => { setCompanyTypeId(e.target.value); onDirty(); }}>
                 <option value="">{t('parametres.boutique.selectionnerType')}</option>
-                {types.map(ty => (
-                  <option key={ty.id} value={ty.id}>{ty.icone ? `${ty.icone} ` : ''}{ty.nom}</option>
-                ))}
+                {/* Seulement les types compatibles avec le modèle de l'entreprise
+                 * (produits / services) — même règle qu'à l'inscription. */}
+                {types
+                  .filter(ty => !data?.businessModel || !ty.nature || ty.nature === 'neutral' || ty.nature === data.businessModel)
+                  .map(ty => (
+                    <option key={ty.id} value={ty.id}>{ty.icone ? `${ty.icone} ` : ''}{typeName(ty.nom)}</option>
+                  ))}
                 {/* Filet de sécurité : si le type actuel de l'entreprise n'est
                  * plus dans la liste active (désactivé depuis), on l'affiche
                  * quand même pour ne pas faire disparaître la sélection en
                  * cours sous ses yeux. */}
                 {data?.companyType && !types.some(ty => ty.id === data.companyType!.id) && (
-                  <option value={data.companyType.id}>{data.companyType.nom}</option>
+                  <option value={data.companyType.id}>{typeName(data.companyType.nom)}</option>
                 )}
               </select>
             </div>
@@ -496,6 +502,12 @@ export default function BoutiqueSection({
           </button>
         </div>
       </FormCard>
+
+      {/* ══════════════════════════════════════════════════════
+       * CATÉGORIES DE MON ACTIVITÉ — les seules proposées pour les
+       * produits / services (voir BoutiqueCategoriesCard).
+       * ══════════════════════════════════════════════════════ */}
+      <BoutiqueCategoriesCard companyTypeId={data?.companyTypeId} onToast={onToast} />
 
       {/* ══════════════════════════════════════════════════════
        * CONTACT & LOCALISATION

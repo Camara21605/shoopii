@@ -3,6 +3,8 @@
  * ============================================================ */
 
 import {
+  ArrayMaxSize,
+  IsArray,
   IsBoolean,
   IsDateString,
   IsEmail,
@@ -172,6 +174,18 @@ export class RegisterDto {
   @IsNotEmpty({ message: "Le type d'entreprise est obligatoire pour un compte entreprise." })
   @IsUUID('all', { message: 'companyTypeId doit être un UUID valide.' })
   companyTypeId?: string;
+
+  /* Catégories choisies par l'entreprise APRÈS le choix de son type
+   * (étape dédiée du formulaire d'inscription) : ce sont les SEULES
+   * catégories qu'elle pourra ensuite utiliser pour ses produits/services.
+   * Validées dans AuthService (existent, actives, appartiennent à
+   * companyTypeId ; au moins une dès que le type en propose). Ignoré pour
+   * tout rôle autre que "company". */
+  @IsOptional()
+  @IsArray({ message: 'categoryIds doit être une liste.' })
+  @ArrayMaxSize(200, { message: 'Trop de catégories sélectionnées.' })
+  @IsUUID('all', { each: true, message: 'Chaque catégorie doit être un UUID valide.' })
+  categoryIds?: string[];
 
   // ── Informations pays (détectées via indicatif téléphonique) ──────────────
 

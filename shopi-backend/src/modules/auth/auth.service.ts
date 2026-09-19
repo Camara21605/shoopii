@@ -57,6 +57,10 @@ import { NotificationBroadcastService } from '../notifications/services/notifica
 import { SecurityAlertsService } from '../security-alerts/security-alerts.service';
 import { GeoIpService }          from '../security-alerts/geo-ip.service';
 import { PlatformSettingsCacheService } from '../performance-engine/services/platform-settings-cache.service';
+import { Category } from 'src/database/entities/entreprise.table/category.entity';
+import {
+  countActiveCategoriesOfType, validateCategoryIdsForType,
+} from 'src/common/utils/company-categories.util';
 
 /* ── Constantes ── */
 const BCRYPT_ROUNDS         = 12;
@@ -475,6 +479,12 @@ export class AuthService implements OnModuleInit {
       verifyOtpExpiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60_000);
     }
 
+    /* RÈGLE — une entreprise choisit, juste après son type, les catégories de
+     * CE type qu'elle exploitera (voir company-categories.util.ts). Contrôlé
+     * ICI, avant toute écriture (utilisateur, wallet, code consommé) : une
+     * sélection invalide ne doit laisser aucun compte à moitié créé. */
+    const companyCategories = await this.resolveCompanyCategories(dto);
+
     let newUser: User;
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -503,7 +513,7 @@ export class AuthService implements OnModuleInit {
 
       await this.createProfile(
         queryRunner.manager, newUser, dto, codeCompanyId, codeDeliveryId,
-        platformSettings.manualVendorApproval, effectivePartnerId, effectiveAdminId,
+        platformSettings.manualVendorApproval, effectivePartnerId, companyCategories, effectiveAdminId,
       );
 
       const wallet = this.walletRepo.create({ userId: newUser.id });
@@ -763,6 +773,37 @@ export class AuthService implements OnModuleInit {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
+  // CATÉGORIES CHOISIES À L'INSCRIPTION (rôle company)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Retourne les catégories validées (vide pour tout rôle autre que company).
+   * - chaque id doit exister, être actif et appartenir au type choisi ;
+   * - au moins une catégorie est TOUJOURS exigée : le choix est obligatoire.
+   *   Un type sans aucune catégorie active ne peut donc pas être choisi à
+   *   l'inscription (l'admin doit d'abord lui en ajouter).
+   */
+  private async resolveCompanyCategories(dto: RegisterDto): Promise<Category[]> {
+    if (dto.role !== UserRole.COMPANY) return [];
+
+    const typeId = dto.companyTypeId;
+    if (!typeId) return [];   // déjà refusé par la validation du DTO (companyTypeId obligatoire)
+
+    const ids = dto.categoryIds ?? [];
+    const manager = this.dataSource.manager;
+
+    if (ids.length === 0) {
+      const available = await countActiveCategoriesOfType(manager, typeId);
+      throw new BadRequestException(
+        available > 0
+          ? "Choisissez au moins une catégorie pour votre type d'entreprise."
+          : "Ce type d'entreprise n'a pas encore de catégorie disponible : choisissez-en un autre.",
+      );
+    }
+    return validateCategoryIdsForType(manager, typeId, ids);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
   // CRÉATION DES PROFILS — adaptée aux vraies entités
   // ══════════════════════════════════════════════════════════════════════════
 
@@ -774,6 +815,7 @@ export class AuthService implements OnModuleInit {
     codeDeliveryId?: string | null,
     manualVendorApproval = true,
     codePartnerId?:  string | null,
+    companyCategories: Category[] = [],
     codeAdminId?:    string | null,
   ): Promise<void> {
     const fullName = `${user.firstName} ${user.lastName}`;
@@ -838,6 +880,7 @@ export class AuthService implements OnModuleInit {
           status:        manualVendorApproval ? CompanyStatus.PENDING : CompanyStatus.ACTIVE,
           businessModel: (dto as any).businessModel,
           companyTypeId: (dto as any).companyTypeId ?? null,
+          categories:    companyCategories,
           partnerId:     codePartnerId ?? null,
           adminId:       codeAdminId   ?? null,
           adresse:       loc.adresse,

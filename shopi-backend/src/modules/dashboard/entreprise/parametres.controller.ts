@@ -24,7 +24,7 @@
  * ============================================================ */
 
 import {
-  Controller, Get, Patch, Post, Delete,
+  Controller, Get, Patch, Post, Put, Delete,
   Body, Param, UseGuards, Req,
   UseInterceptors, UploadedFile,
   ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
@@ -54,7 +54,7 @@ import { PrivacyParametresService }     from './services/privacy-parametres.serv
 import { DangerParametresService, DangerConfirmDto } from './services/danger-parametres.service';
 
 /* ── Imports des DTOs ── */
-import { UpdateBoutiqueDto, UpdateContactDto } from './dto/update-boutique.dto';
+import { UpdateBoutiqueDto, UpdateContactDto, UpdateBoutiqueCategoriesDto } from './dto/update-boutique.dto';
 import { UpdateHorairesDto, HoraireJourDto }   from './dto/update-horaires.dto';
 import { UpdateCatalogueDto }   from './dto/update-catalogue.dto';
 import { UpdateLivraisonDto }   from './dto/update-livraison.dto';
@@ -134,6 +134,22 @@ export class ParametresController {
   @Patch('boutique')
   updateBoutique(@Req() req: any, @Body() dto: UpdateBoutiqueDto) {
     return this.boutiqueService.updateBoutique(req.user.actorId ?? req.user.id, dto, sessionId(req));
+  }
+
+  /** Catégories de mon activité : sélection actuelle + catégories du type */
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('settings', 'view')
+  @Get('boutique/categories')
+  getMyCategories(@Req() req: any) {
+    return this.boutiqueService.getMyCategories(req.user.actorId ?? req.user.id);
+  }
+
+  /** Remplacer la sélection de catégories (seules celles-ci servent aux produits/services) */
+  @UseGuards(TeamPermissionGuard)
+  @RequiresTeamPermission('settings', 'edit')
+  @Put('boutique/categories')
+  updateMyCategories(@Req() req: any, @Body() dto: UpdateBoutiqueCategoriesDto) {
+    return this.boutiqueService.updateMyCategories(req.user.actorId ?? req.user.id, dto.categoryIds);
   }
 
   /** Mettre à jour Contact & Localisation */

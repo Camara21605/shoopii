@@ -43,6 +43,8 @@ export interface ParametresData {
   tags:          string | null;
   website:       string | null;
   companyTypeId: string | null;
+  /** Modèle économique fixé à l'inscription (produits OU services). */
+  businessModel?: 'products' | 'services';
   companyType?:  { id: string; nom: string; icone: string | null };
   /** Prénom/nom du propriétaire (User lié) — lecture seule, voir
    *  BoutiqueSection.tsx "Responsable & Propriétaire". */

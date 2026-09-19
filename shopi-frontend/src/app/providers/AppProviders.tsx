@@ -10,6 +10,7 @@ import { ToastProvider } from '../../shared/context/ToastContext'
 import { ThemeProvider } from '../../shared/context/ThemeContext'
 import ToastContainer from '../../shared/components/ui/ToastContainer'
 import BrandingLoader from '../../shared/components/BrandingLoader'
+import InlineSelectDropdown from '../../shared/components/ui/InlineSelectDropdown'
 import '../../shared/components/ui/ToastContainer.css'
 
 interface Props {
@@ -38,6 +39,8 @@ export function AppProviders({ children }: Props) {
           <BrandingLoader />
           {children}
           <ToastContainer />
+          {/* Listes déroulantes intégrées au champ sur mobile (plus de sélecteur plein écran) */}
+          <InlineSelectDropdown />
         </ToastProvider>
       </AppProvider>
     </ThemeProvider>

@@ -21,6 +21,8 @@ import type {
   CorrespondantType, RegistrationLocation,
 } from '../types';
 import type { PhoneCountryMeta } from './PhoneInput';
+import { RegisterCategoriesStep } from './RegisterCategoriesStep';
+import { CompanyTypeCombobox, type CompanyTypeOption } from './CompanyTypeCombobox';
 
 /*
  * BUG CORRIGÉ — la localisation était optionnelle pour tous (boutons
@@ -34,7 +36,6 @@ import type { PhoneCountryMeta } from './PhoneInput';
  */
 const LOCATION_ROLES: UserRole[] = ['client', 'company', 'delivery', 'partner', 'correspondent'];
 
-interface CompanyTypeOption { id: string; nom: string; icone: string | null; }
 interface VilleOption       { id: string; nom: string; code: string; }
 
 interface RegisterFormProps {
@@ -85,11 +86,12 @@ interface RegisterFormProps {
  * isCollabInvite). Le nombre total d'étapes et leur ordre dépendent donc
  * du rôle : voir `steps` (calculé dans le composant, ci-dessous), qui
  * remplace TOTAL_STEPS/STEP_INFO/STEP_FIELDS indexés par numéro fixe. */
-type StepKey = 'account' | 'identity' | 'logo' | 'profile' | 'contact' | 'password';
+type StepKey = 'account' | 'identity' | 'categories' | 'logo' | 'profile' | 'contact' | 'password';
 
 const STEP_INFO: Record<StepKey, { title: string; sub: string }> = {
   account:  { title: 'Votre compte',       sub: 'Choisissez votre rôle et entrez votre email' },
   identity: { title: 'Votre identité',     sub: 'Prénom, nom et nom de votre structure'        },
+  categories: { title: 'Vos catégories', sub: "Choisissez les catégories de votre activité" },
   logo:     { title: 'Votre logo',         sub: 'Ajoutez le logo de votre entreprise (facultatif)'    },
   profile:  { title: 'Votre profil',       sub: 'Date de naissance et genre'                   },
   contact:  { title: 'Vos coordonnées',    sub: "Numéro de téléphone et ville d'origine"        },
@@ -102,6 +104,9 @@ const STEP_FIELDS: Record<StepKey, (keyof RegisterFormData)[]> = {
    * "company" (voir validateRegisterField dans useLoginPage.ts) —
    * inclus inconditionnellement ici, pas besoin de connaître le rôle. */
   identity: ['firstName', 'lastName', 'businessModel', 'shopName', 'companyTypeId'],
+  /* Au moins une catégorie, toujours — voir validateRegisterField('categoryIds')
+   * dans useLoginPage.ts. */
+  categories: ['categoryIds'],
   logo:     [], // facultatif — rien à valider pour avancer
   profile:  ['birthDate', 'gender'],
   /* 'location' et 'city' sont mutuellement exclusifs en pratique (voir
@@ -159,7 +164,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
    * pendant qu'un utilisateur avance dans les étapes suivantes. */
   const steps: StepKey[] = [
     'account', 'identity',
-    ...(selectedRole === 'company' && !isCollabInvite ? (['logo'] as const) : []),
+    /* Après le choix du type : choix des catégories de ce type, puis logo. */
+    ...(selectedRole === 'company' && !isCollabInvite ? (['categories', 'logo'] as const) : []),
     'profile', 'contact', 'password',
   ];
   const totalSteps = steps.length;
@@ -463,7 +469,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
               <button
                 key={opt.value}
                 type="button"
-                onClick={() => onDataChange({ businessModel: opt.value, companyTypeId: '' })}
+                onClick={() => onDataChange({ businessModel: opt.value, companyTypeId: '', categoryIds: [] })}
                 style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
                   padding: '14px 10px', borderRadius: 12, cursor: 'pointer',
@@ -490,25 +496,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           <div className="field-label">
             Type d&apos;entreprise <span style={{ color: 'var(--rose,red)' }}>*</span>
           </div>
-          <div className="field-wrap" style={{ position: 'relative' }}>
-            <i className="fas fa-store" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--blue)', fontSize: 13, zIndex: 1, pointerEvents: 'none' }} />
-            <select
-              className="field-input"
-              style={{ paddingLeft: 36, appearance: 'none', cursor: data.businessModel ? 'pointer' : 'not-allowed' }}
-              value={data.companyTypeId ?? ''}
-              onChange={e => onDataChange({ companyTypeId: e.target.value })}
-              disabled={companyTypesLoading || !data.businessModel}
-            >
-              <option value="">
-                {!data.businessModel ? 'Choisissez d\'abord "Produits" ou "Services" ci-dessus'
-                  : companyTypesLoading ? 'Chargement…' : "Choisir un type d'entreprise…"}
-              </option>
-              {companyTypes.map(t => (
-                <option key={t.id} value={t.id}>{t.icone ? `${t.icone} ` : ''}{t.nom}</option>
-              ))}
-            </select>
-            <i className="fas fa-chevron-down" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--t3)', fontSize: 11, pointerEvents: 'none' }} />
-          </div>
+          {/* Liste alphabétique + recherche intégrée (voir CompanyTypeCombobox). */}
+          <CompanyTypeCombobox
+            options={companyTypes}
+            value={data.companyTypeId ?? ''}
+            onChange={id => onDataChange({ companyTypeId: id, categoryIds: [] })}
+            disabled={!data.businessModel}
+            loading={companyTypesLoading}
+            disabledHint={'Choisissez d\'abord "Produits" ou "Services" ci-dessus'}
+          />
           {errors.companyTypeId && (
             <p style={{ margin: '5px 0 0', fontSize: 11, color: 'var(--rose,red)', display: 'flex', alignItems: 'center', gap: 5 }}>
               <i className="fas fa-circle-exclamation" style={{ fontSize: 10 }} />
@@ -518,6 +514,17 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         </div>
       )}
     </div>
+  );
+
+  /* ── Step "Catégories" (company uniquement) — juste après le type. ── */
+  const renderStepCategories = () => (
+    <RegisterCategoriesStep
+      typeId={data.companyTypeId ?? ''}
+      typeLabel={companyTypes.find(t => t.id === data.companyTypeId)?.nom}
+      selectedIds={data.categoryIds ?? []}
+      onChange={ids => onDataChange({ categoryIds: ids })}
+      error={errors.categoryIds}
+    />
   );
 
   /* ── Step "Logo" (company uniquement) — sa propre étape, comme les
@@ -781,6 +788,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     switch (steps[step - 1]) {
       case 'account':  return renderStep1();
       case 'identity': return renderStep2();
+      case 'categories': return renderStepCategories();
       case 'logo':     return renderStepLogo();
       case 'profile':  return renderStep3();
       case 'contact':  return renderStep4();

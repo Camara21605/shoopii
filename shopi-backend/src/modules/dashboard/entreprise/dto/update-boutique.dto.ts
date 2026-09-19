@@ -8,6 +8,7 @@
  * ============================================================ */
 
 import {
+  ArrayMaxSize, IsArray,
   IsString, IsOptional, IsEmail, IsUrl, IsUUID,
   IsEnum, MaxLength, ValidateIf,
 } from 'class-validator';
@@ -112,4 +113,12 @@ export class UpdateContactDto {
   @IsString()
   @MaxLength(500)
   repere?: string;
+}
+
+/** PUT /dashboard/entreprise/parametres/boutique/categories */
+export class UpdateBoutiqueCategoriesDto {
+  @IsArray({ message: 'categoryIds doit être une liste.' })
+  @ArrayMaxSize(200, { message: 'Trop de catégories sélectionnées.' })
+  @IsUUID('all', { each: true, message: 'Chaque catégorie doit être un UUID valide.' })
+  categoryIds!: string[];
 }

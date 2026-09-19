@@ -43,6 +43,9 @@ import {
   FilterProductsDto,
   AddProductStoryDto,
 } from './dto/create-product.dto';
+import {
+  getAllowedCategories, assertCategoryAllowed,
+} from 'src/common/utils/company-categories.util';
 
 export interface ProductStoryResponse {
   id:         string;
@@ -201,32 +204,12 @@ export class ProduitsService {
     if (!company && actorId) company = await this.companyRepo.findOne({ where: { id: actorId } });
     if (!company) throw new NotFoundException('Profil entreprise introuvable.');
 
-    const qb = this.categoryRepo
-      .createQueryBuilder('cat')
-      .leftJoinAndSelect('cat.subCategories', 'sub', 'sub.actif = :actif', { actif: true })
-      .leftJoin('cat.companyType', 'ct')
-      .where('cat.actif = :actif', { actif: true })
-      .orderBy('cat.ordre', 'ASC')
-      .addOrderBy('sub.ordre', 'ASC');
-
-    /* SÉCURITÉ / SÉPARATION — un compte PRODUCTS ne doit voir QUE des
-     * catégories dont le type d'entreprise parent est explicitement
-     * 'products' ou 'neutral', jamais 'services'. L'ancien filtre
-     * "OR companyTypeId IS NULL" laissait passer les catégories
-     * génériques SANS AUCUNE vérification de nature — remplacé par une
-     * exigence stricte de nature compatible (voir même correctif dans
-     * PrestationsService.getCategoriesPourEntreprise). Une catégorie sans
-     * type parent du tout (orphelin) est désormais exclue plutôt
-     * qu'accessible à tous par défaut. */
-    qb.andWhere("ct.nature != :excludedNature", { excludedNature: CompanyTypeNature.SERVICES });
-    if (company.companyTypeId) {
-      qb.andWhere(
-        '(cat.companyTypeId = :typeId OR ct.nature = :neutral)',
-        { typeId: company.companyTypeId, neutral: CompanyTypeNature.NEUTRAL },
-      );
-    }
-
-    const cats = await qb.getMany();
+    /* RÈGLE — l'entreprise ne voit que les catégories qu'elle a CHOISIES à
+     * l'inscription (company_categories), toutes issues de son type ; repli
+     * sur toutes celles de son type tant qu'elle n'a rien choisi. Un compte
+     * PRODUITS n'obtient jamais de catégorie d'un type 'services' (étanchéité
+     * produits/services). Voir common/utils/company-categories.util.ts. */
+    const cats = await getAllowedCategories(this.categoryRepo.manager, company, CompanyTypeNature.SERVICES);
 
     return cats.map(c => ({
       id:    c.id,
@@ -317,6 +300,9 @@ export class ProduitsService {
         `La catégorie "${category.nom}" est réservée aux prestations de service, pas aux produits.`,
       );
     }
+
+    /* RÈGLE — seulement les catégories choisies par l'entreprise. */
+    await assertCategoryAllowed(this.categoryRepo.manager, companyProfile, category, CompanyTypeNature.SERVICES);
 
     // ── Génération slug ───────────────────────────────────────────────────
     const slug = dto.urlSlug
@@ -519,6 +505,27 @@ export class ProduitsService {
       if (!newCategory.companyType || newCategory.companyType.nature === CompanyTypeNature.SERVICES) {
         throw new BadRequestException(
           `La catégorie "${newCategory.nom}" est réservée aux prestations de service, pas aux produits.`,
+        );
+      }
+      /* RÈGLE — la nouvelle catégorie doit faire partie de celles choisies
+       * par l'entreprise propriétaire du produit (le SUPER_ADMIN, qui peut
+       * modifier n'importe quel produit, n'est pas soumis à cette sélection). */
+      if (user.role !== UserRole.SUPER_ADMIN) {
+        const owner = await this.companyRepo.findOne({ where: { id: product.companyId } });
+        if (owner) await assertCategoryAllowed(this.categoryRepo.manager, owner, newCategory, CompanyTypeNature.SERVICES);
+      }
+    }
+
+    /* Une sous-catégorie doit toujours appartenir à la catégorie effective
+     * du produit (nouvelle catégorie si elle change, sinon l'actuelle). */
+    if (dto.subCategoryId) {
+      const effectiveCategoryId = dto.categoryId ?? product.categoryId;
+      const sub = await this.subCatRepo.findOne({
+        where: { id: dto.subCategoryId, category: { id: effectiveCategoryId } },
+      });
+      if (!sub) {
+        throw new NotFoundException(
+          `Sous-catégorie introuvable ou n'appartient pas à la catégorie sélectionnée.`,
         );
       }
     }

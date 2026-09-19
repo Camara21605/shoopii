@@ -119,6 +119,8 @@ export interface RegisterPayload {
   /** Voir RegisterFormData.businessModel. */
   businessModel?:  'products' | 'services';
   companyTypeId?:  string;
+  /** Catégories choisies (role='company') — voir RegisterCategoriesStep. */
+  categoryIds?:    string[];
   /* BUG CORRIGÉ — buildRegisterPayload() (authService.ts) ne les
    * transmettait pas du tout : le formulaire les exigeait désormais
    * (validateRegisterField), mais l'appel réseau les laissait de côté
@@ -188,6 +190,8 @@ export interface RegisterFormData {
   businessModel?:  'products' | 'services';
   terms?:          boolean;
   companyTypeId?:  string;
+  /** Catégories choisies à l'étape dédiée (role='company') : les seules utilisables ensuite. */
+  categoryIds?:    string[];
   birthDate?:      string;
   gender?:         string;
   // Pays détecté via indicatif téléphonique
@@ -237,6 +241,7 @@ export interface FormErrors {
   businessModel?:   string;
   shopName?:        string;
   companyTypeId?:   string;
+  categoryIds?:     string;
   /* Tous rôles — devenus obligatoires sur demande explicite (l'étape
    * "Profil" affichait "(optionnel)" mais devait en réalité exiger ces
    * deux champs, comme shopName/companyTypeId ci-dessus). */

@@ -83,6 +83,8 @@ export interface CompanyTypeResponse {
   nature:       CompanyTypeNature;
   /** Nombre de catégories rattachées à ce type */
   nbCategories: number;
+  /** Catégories ACTIVES uniquement — un type sans catégorie active ne peut pas être choisi à l'inscription. */
+  nbCategoriesActives: number;
   /** Nombre d'entreprises ayant ce type */
   nbEntreprises: number;
   createdAt:    string;
@@ -307,6 +309,7 @@ export class CompanyTypesService {
       actif:         type.actif,
       nature:        type.nature,
       nbCategories:  type.categories?.length  ?? 0,
+      nbCategoriesActives: (type.categories ?? []).filter(c => c.actif).length,
       nbEntreprises: type.companies?.length   ?? 0,
       createdAt:     type.createdAt?.toISOString() ?? '',
     };

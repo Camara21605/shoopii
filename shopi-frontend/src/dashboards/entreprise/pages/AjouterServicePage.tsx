@@ -675,7 +675,15 @@ export default function AjouterServicePage({ onNavigate, serviceId }: AjouterSer
                     ) : categoriesApi.length === 0 ? (
                       <option value="">{t('ajouterService.organisation.noCategorie')}</option>
                     ) : (
-                      categoriesApi.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)
+                      <>
+                        {/* Édition d'une fiche dont la catégorie n'est (plus) parmi celles choisies
+                            par l'entreprise : on la garde sélectionnable pour ne pas fausser l'affichage
+                            — la changer vers une autre catégorie reste limité à la sélection. */}
+                        {form.categorieId && !categoriesApi.some(c => c.id === form.categorieId) && (
+                          <option value={form.categorieId}>{form.categorie}</option>
+                        )}
+                        {categoriesApi.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
+                      </>
                     )}
                   </select>
                 )}

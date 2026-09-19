@@ -327,6 +327,12 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
         if (role !== 'company' || collabInvite) return undefined;
         return !data.companyTypeId?.trim() ? "Type d'entreprise requis." : undefined;
 
+      /* OBLIGATOIRE : au moins une catégorie pour une entreprise. Le backend
+       * revérifie de toute façon (AuthService.resolveCompanyCategories). */
+      case 'categoryIds':
+        if (role !== 'company' || collabInvite) return undefined;
+        return !(data.categoryIds?.length) ? 'Choisissez au moins une catégorie.' : undefined;
+
       /*
        * BUG CORRIGÉ — date de naissance et genre étaient affichés
        * "(optionnel)" à l'étape Profil mais doivent en réalité être
@@ -420,7 +426,7 @@ export function useLoginPage(options: UseLoginPageOptions = {}) {
     const fields: (keyof RegisterFormData)[] = [
       'firstName', 'lastName', 'email', 'phone',
       'password', 'confirmPassword', 'activationCode', 'terms',
-      'shopName', 'companyTypeId', 'birthDate', 'gender', 'location', 'city',
+      'shopName', 'companyTypeId', 'categoryIds', 'birthDate', 'gender', 'location', 'city',
     ];
     const errs: FormErrors = {};
     fields.forEach(field => {

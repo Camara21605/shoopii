@@ -33,6 +33,9 @@ import {
   UpdateServiceDto,
   FilterServicesDto,
 } from './dto/create-service.dto';
+import {
+  getAllowedCategories, assertCategoryAllowed,
+} from 'src/common/utils/company-categories.util';
 
 export interface ServiceResponse {
   id:          string;
@@ -125,26 +128,12 @@ export class PrestationsService {
   async getCategoriesPourEntreprise(user: User): Promise<CategorieDisponible[]> {
     const company = await this.resolveCompany(user);
 
-    const qb = this.categoryRepo
-      .createQueryBuilder('cat')
-      .leftJoinAndSelect('cat.subCategories', 'sub', 'sub.actif = :actif', { actif: true })
-      .leftJoin('cat.companyType', 'ct')
-      .where('cat.actif = :actif', { actif: true })
-      .orderBy('cat.ordre', 'ASC')
-      .addOrderBy('sub.ordre', 'ASC');
-
-    /* SÉCURITÉ / SÉPARATION — même correctif que ProduitsService : une
-     * catégorie sans type parent nature-compatible n'est plus accessible
-     * par défaut (voir le commentaire détaillé côté ProduitsService). */
-    qb.andWhere("ct.nature != :excludedNature", { excludedNature: CompanyTypeNature.PRODUCTS });
-    if (company.companyTypeId) {
-      qb.andWhere(
-        '(cat.companyTypeId = :typeId OR ct.nature = :neutral)',
-        { typeId: company.companyTypeId, neutral: CompanyTypeNature.NEUTRAL },
-      );
-    }
-
-    const cats = await qb.getMany();
+    /* RÈGLE — l'entreprise ne voit que les catégories qu'elle a CHOISIES à
+     * l'inscription (company_categories), toutes issues de son type ; repli
+     * sur toutes celles de son type tant qu'elle n'a rien choisi. Un compte
+     * SERVICES n'obtient jamais de catégorie d'un type 'products'. Voir
+     * common/utils/company-categories.util.ts. */
+    const cats = await getAllowedCategories(this.categoryRepo.manager, company, CompanyTypeNature.PRODUCTS);
     return cats.map(c => ({
       id:    c.id,
       nom:   c.nom,
@@ -204,6 +193,9 @@ export class PrestationsService {
         `La catégorie "${category.nom}" est réservée aux produits, pas aux prestations de service.`,
       );
     }
+
+    /* RÈGLE — seulement les catégories choisies par l'entreprise. */
+    await assertCategoryAllowed(this.categoryRepo.manager, company, category, CompanyTypeNature.PRODUCTS);
 
     /* Tarification : prix requis sauf "sur devis" (déjà exprimé côté DTO
      * via @ValidateIf, revalidé ici pour couvrir un appel direct hors
@@ -344,6 +336,23 @@ export class PrestationsService {
         throw new BadRequestException(
           `La catégorie "${newCategory.nom}" est réservée aux produits, pas aux prestations de service.`,
         );
+      }
+      /* RÈGLE — la nouvelle catégorie doit faire partie de celles choisies
+       * par l'entreprise propriétaire de la prestation (SUPER_ADMIN exempté). */
+      if (user.role !== UserRole.SUPER_ADMIN) {
+        const owner = await this.companyRepo.findOne({ where: { id: service.companyId } });
+        if (owner) await assertCategoryAllowed(this.categoryRepo.manager, owner, newCategory, CompanyTypeNature.PRODUCTS);
+      }
+    }
+
+    /* Une sous-catégorie doit toujours appartenir à la catégorie effective. */
+    if (dto.subCategoryId) {
+      const effectiveCategoryId = dto.categoryId ?? service.categoryId;
+      const sub = await this.subCatRepo.findOne({
+        where: { id: dto.subCategoryId, category: { id: effectiveCategoryId } },
+      });
+      if (!sub) {
+        throw new NotFoundException(`Sous-catégorie introuvable ou n'appartient pas à la catégorie sélectionnée.`);
       }
     }
 

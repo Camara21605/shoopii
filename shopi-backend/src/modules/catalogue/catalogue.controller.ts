@@ -319,8 +319,14 @@ export class CatalogueController {
   async findCategoriesByType(
     @Req() req: Request,
     @Param('typeId', ParseUUIDPipe) typeId: string,
+    @Query('tri') tri?: string,
   ): Promise<CategoryResponse[]> {
     const categories = await this.categoriesService.findAllByType(typeId);
+    /* ?tri=ordre : ordre du catalogue tel que défini par le super-admin,
+     * sans mélange ni personnalisation — utilisé par le choix des catégories
+     * à l'inscription entreprise, où une liste qui change d'ordre à chaque
+     * chargement (visiteur anonyme = mélangé) serait déroutante. */
+    if (tri === 'ordre') return categories;
     return this.personalizeCategories(req, categories);
   }
 
