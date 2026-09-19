@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import styles from '../styles/GenerateCodeModal.module.css';
 import type { ActeurType } from '../data/types';
-import { apiFetch } from '../../../shared/services/apiFetch';
+import { apiFetch, ApiError } from '../../../shared/services/apiFetch';
 
 interface GenerateCodeModalProps {
   onClose:    () => void;
@@ -45,6 +45,9 @@ export default function GenerateCodeModal({ onClose, onToast }: GenerateCodeModa
   const [generating, setGenerating] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  /* Message serveur affiché sous le champ email — typiquement "un compte
+   * existe déjà avec cette adresse" (409), à montrer tel quel à l'admin. */
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   const emailValid = EMAIL_RE.test(email.trim());
 
@@ -52,6 +55,7 @@ export default function GenerateCodeModal({ onClose, onToast }: GenerateCodeModa
   const generer = async () => {
     if (generating || !emailValid) return;
     setGenerating(true);
+    setEmailError(null);
     try {
       const res = await apiFetch<{ id: string; code: string }>('/dashboard/admin/codes', {
         method: 'POST',
@@ -66,8 +70,13 @@ export default function GenerateCodeModal({ onClose, onToast }: GenerateCodeModa
       setEmailSent(false);
       setStep(2);
       onToast(`✅ Code généré${nom.trim() ? ' pour ' + nom.trim() : ''}`, 's');
-    } catch {
-      onToast('Impossible de générer le code. Réessayez.', 'w');
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        setEmailError(err.message);
+        onToast('⚠️ ' + err.message, 'w');
+      } else {
+        onToast(err instanceof ApiError && err.message ? err.message : 'Impossible de générer le code. Réessayez.', 'w');
+      }
     } finally {
       setGenerating(false);
     }
@@ -134,10 +143,16 @@ export default function GenerateCodeModal({ onClose, onToast }: GenerateCodeModa
               </div>
               <div className={styles.fld}>
                 <label className={styles.fldL}>Email du destinataire <span className={styles.required}>*</span></label>
-                <input className={styles.fldIn} value={email} onChange={e => setEmail(e.target.value)}
+                <input className={styles.fldIn} value={email}
+                  onChange={e => { setEmail(e.target.value); if (emailError) setEmailError(null); }}
                   placeholder="destinataire@exemple.com" type="email" required />
                 {email.trim().length > 0 && !emailValid && (
                   <div className={styles.fldErr}>Email invalide.</div>
+                )}
+                {emailError && (
+                  <div className={styles.fldErr} role="alert">
+                    <i className="fas fa-circle-exclamation" /> {emailError}
+                  </div>
                 )}
               </div>
               <button className={styles.mBtn} onClick={generer} disabled={generating || !emailValid}

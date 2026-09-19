@@ -22,6 +22,8 @@ import { ROLE_PREFIX, ROLE_TO_SHORT } from '../helpers/admin.constants';
 import { randCode, fmtDate, escapeHtml, AuditMeta } from '../helpers/admin.helpers';
 import { MailService }       from '../../../email/email.service';
 import { AdminCommunicationService } from './admin-communication.service';
+import { User }              from '../../../../database/entities/user.entity';
+import { assertNoAccountForInvitation, normalizeEmail } from '../../../../common/utils/invitation-email.util';
 
 @Injectable()
 export class AdminCodesService {
@@ -37,6 +39,9 @@ export class AdminCodesService {
 
     @InjectRepository(AuditLog)
     private readonly auditLogRepo: Repository<AuditLog>,
+
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) {}
 
   /**
@@ -104,6 +109,14 @@ export class AdminCodesService {
    */
   async generateCode(userId: string, dto: GenerateCodeDto, meta?: AuditMeta) {
     const admin     = await this.zoneService.adminOf(userId);
+
+    /* Refuse d'inviter une adresse qui a DÉJÀ un compte de ce rôle : le
+     * destinataire ne pourrait jamais s'inscrire avec ce code (l'inscription
+     * lève un 409), l'admin doit le savoir tout de suite plutôt que de
+     * découvrir un code "envoyé" inutilisable. */
+    const targetEmail = normalizeEmail(dto.targetEmail);
+    await assertNoAccountForInvitation(this.userRepo, targetEmail, dto.targetRole);
+
     const prefix    = ROLE_PREFIX[dto.targetRole] ?? 'ACT';
     const validDays = dto.validityDays ?? 30;
     const expiresAt = new Date(Date.now() + validDays * 86_400_000);
@@ -123,7 +136,7 @@ export class AdminCodesService {
       this.codeRepo.create({
         code,
         targetRole:    dto.targetRole,
-        targetEmail:   dto.targetEmail ?? null,
+        targetEmail,
         note:          dto.targetName ? JSON.stringify({ fullName: dto.targetName }) : null,
         validityDays:  validDays,
         expiresAt,
@@ -171,6 +184,10 @@ export class AdminCodesService {
     if (code.status !== CodeStatus.PENDING) {
       throw new BadRequestException('Ce code n\'est plus en attente d\'utilisation.');
     }
+
+    /* Le compte a pu être créé entre la génération du code et l'envoi
+     * (autre canal, inscription spontanée…). */
+    await assertNoAccountForInvitation(this.userRepo, code.targetEmail, code.targetRole);
 
     let toName: string | undefined;
     if (code.note) {

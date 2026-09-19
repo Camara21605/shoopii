@@ -227,6 +227,12 @@ export default function InvitationsSection({ store, toast, isActive }: Props) {
       setFormErrors({});
       await loadCodes();
     } catch (err) {
+      /* 409 = "un compte existe déjà" / "un code valide existe déjà" : la
+       * modale reste ouverte et le message s'affiche sous le champ email
+       * (en plus du toast) pour que l'admin sache quoi corriger. */
+      if (err instanceof ApiError && err.status === 409) {
+        setFormErrors(prev => ({ ...prev, email: err.message }));
+      }
       toast('error', `❌ ${err instanceof ApiError ? err.message : 'Erreur'}`);
     } finally {
       setLoadingInvite(false);

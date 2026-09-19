@@ -81,6 +81,9 @@ export class PartenaireDashboardController {
     try {
       return await this.svc.generateCode(req.user.id, dto);
     } catch (err) {
+      /* Les erreurs métier (ex. 409 "un compte existe déjà avec cet email")
+       * doivent atteindre le client telles quelles, pas devenir un 500. */
+      if (err instanceof HttpException) throw err;
       this.logger.error('generateCode failed', err instanceof Error ? err.stack : String(err));
       throw new InternalServerErrorException('Erreur génération code');
     }

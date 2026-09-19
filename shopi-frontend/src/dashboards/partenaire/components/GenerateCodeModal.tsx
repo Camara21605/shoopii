@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/GenerateCodeModal.module.css';
 import type { ActeurType } from '../data/types';
+import { ApiError } from '../../../shared/services/apiFetch';
 
 interface Props {
   onClose:    () => void;
@@ -42,8 +43,10 @@ export default function GenerateCodeModal({ onClose, onGenerate, onToast }: Prop
       setCode(c);
       setStep(2);
       onToast(email ? t('partenaireCodes.modal.generatedForToast', { email }) : t('partenaireCodes.modal.generatedToast'), 's');
-    } catch {
-      onToast(t('partenaireCodes.modal.errorToast'), 'w');
+    } catch (err) {
+      /* 409 = un compte existe déjà avec cet email : le message du serveur
+       * est explicite et destiné à l'utilisateur, on l'affiche tel quel. */
+      onToast(err instanceof ApiError && err.status === 409 ? '⚠️ ' + err.message : t('partenaireCodes.modal.errorToast'), 'w');
     } finally {
       setBusy(false);
     }

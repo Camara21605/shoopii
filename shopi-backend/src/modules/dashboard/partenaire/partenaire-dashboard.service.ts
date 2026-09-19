@@ -31,6 +31,7 @@ import { Wallet }  from '../../../database/entities/wallet.entity';
 import { Report, ReportStatus, ReportSeverity } from '../../../database/entities/report.entity';
 import { PlatformSettings } from '../../../database/entities/platform-settings.entity';
 import { UserRole } from '../../../common/enums/user-role.enum';
+import { assertNoAccountForInvitation, normalizeEmail } from '../../../common/utils/invitation-email.util';
 
 /* Types de distribution qui correspondent aux revenus du partenaire */
 const PARTNER_DIST_TYPES = [
@@ -388,6 +389,12 @@ export class PartenaireDashboardService {
   async generateCode(userId: string, dto: { type: string; targetEmail?: string }) {
     const partner    = await this.findPartner(userId);
     const targetRole = TYPE_TO_ROLE[dto.type] ?? UserRole.COMPANY;
+
+    /* Adresse déjà titulaire d'un compte de ce rôle → refus explicite (409)
+     * plutôt qu'un code inutilisable (l'inscription échouerait). */
+    if (dto.targetEmail) {
+      await assertNoAccountForInvitation(this.userRepo, dto.targetEmail, targetRole);
+    }
     const prefix     = TYPE_TO_PREFIX[dto.type] ?? 'ENT';
 
     /* Format : {PREFIX}-{5chars} = 9 chars max, compatible varchar(12) */
@@ -401,7 +408,7 @@ export class PartenaireDashboardService {
     const entity = this.codeRepo.create({
       code,
       targetRole,
-      targetEmail:   dto.targetEmail ?? null,
+      targetEmail:   dto.targetEmail ? normalizeEmail(dto.targetEmail) : null,
       validityDays:  7,
       expiresAt,
       maxUses:       1,
