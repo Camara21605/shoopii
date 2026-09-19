@@ -10,8 +10,8 @@
  * ============================================================ */
 
 import {
-  IsBoolean, IsObject, IsOptional,
-  IsString, Matches,
+  IsBoolean, IsEmail, IsObject, IsOptional,
+  IsString, Matches, MaxLength, ValidateIf,
 } from 'class-validator';
 import type { NotificationChannelPreference } from 'src/database/entities/notification/notification-preference.entity';
 
@@ -71,6 +71,8 @@ export class UpdatePreferencesDto {
    * Ex: "Africa/Conakry", "Europe/Paris", "America/New_York"
    */
   @IsString()
+  @MaxLength(64)
+  @Matches(/^(UTC|[A-Za-z_]+(\/[A-Za-z0-9_+-]+){1,2})$/, { message: 'timezone doit être un fuseau IANA (ex: Africa/Conakry)' })
   @IsOptional()
   timezone?: string;
 
@@ -91,15 +93,18 @@ export class UpdatePreferencesDto {
 
   // ── Coordonnées alternatives ──────────────────────────────
 
-  @IsString()
-  @IsOptional()
+  /* '' = effacer l'adresse (les e-mails ne sont alors plus envoyés) */
+  @ValidateIf((_, v) => v !== undefined && v !== null && v !== '')
+  @IsEmail({}, { message: 'notificationEmail doit être une adresse e-mail valide' })
+  @MaxLength(255)
   notificationEmail?: string;
 
   /**
    * Format E.164 : "+224622345678"
    */
-  @IsString()
-  @Matches(/^\+\d{10,15}$/, { message: 'phoneUsed doit être au format E.164 (+XXXXXXXXXX)' })
-  @IsOptional()
+  /* '' = effacer le numéro — jusqu'ici une chaîne vide échouait au format E.164,
+   * donc tout PATCH envoyé avec un numéro vide (cas courant) était refusé. */
+  @ValidateIf((_, v) => v !== undefined && v !== null && v !== '')
+  @Matches(/^\+\d{10,15}$/, { message: 'notificationPhone doit être au format E.164 (+XXXXXXXXXX)' })
   notificationPhone?: string;
 }
