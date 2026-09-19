@@ -61,6 +61,10 @@ import { PerformanceModule }        from '../../performance-engine/performance.m
 import { CommissionModule }         from '../../commission/commission.module';
 /* ── TwoFaService — mot de passe + code TOTP requis pour désactiver la 2FA ── */
 import { TwoFaModule } from '../../auth/twofa/twofa.module';
+/* Sécurité du compte admin : session réelle (Redis) + e-mail d'alerte + révocation des tokens */
+import { SessionModule } from '../../session/session.module';
+import { MailModule }    from '../../email/email.module';
+import { RefreshToken }  from '../../../database/entities/refresh-token.entity';
 
 @Module({
   imports: [
@@ -75,6 +79,7 @@ import { TwoFaModule } from '../../auth/twofa/twofa.module';
       PlatformSettings, // pour PlatformSettingsService
       Product,          // pour getPlatformStats → COUNT produits publiés
       Commande,         // pour getPlatformStats → COUNT commandes
+      RefreshToken,     // révocation des sessions au changement de mot de passe admin
     ]),
 
     CategoriesModule,
@@ -85,6 +90,8 @@ import { TwoFaModule } from '../../auth/twofa/twofa.module';
     PerformanceModule,  // pour RedisCacheService (ReportsService — invalidation du cache signalements)
     CommissionModule,   // pour CommissionConfigService (PlatformSettingsService — resynchronise CommissionRule)
     TwoFaModule,
+    SessionModule,
+    MailModule,
   ],
 
   controllers: [

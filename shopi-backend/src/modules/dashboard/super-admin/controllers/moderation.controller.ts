@@ -18,6 +18,7 @@ import {
   Request,
   ParseUUIDPipe,
 } from '@nestjs/common';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../../../common/guards/auth.guard';
 import { RolesGuard }   from '../../../../common/guards/roles.guard';
 import { Roles }        from '../../../../common/decorators/roles.decorator';
@@ -28,6 +29,7 @@ import { AuditLogService }        from '../services/audit-log.service';
 import { AdminsService }          from '../services/admins.service';
 import { SecuriteAdminService }   from '../services/securite-admin.service';
 import { UpdateMyProfilDto }      from '../dto/update-my-profil.dto';
+import { ChangeMyPasswordDto, UpdateMyTwoFaDto } from '../dto/my-securite.dto';
 
 @Controller('dashboard/super-admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -146,12 +148,12 @@ export class ModerationController {
 
   /**
    * GET my-securite
-   * Retourne le score de sécurité, le statut 2FA,
-   * et les informations de dernière connexion.
+   * Retourne le score de sécurité, le statut 2FA, la dernière connexion
+   * et la session actuelle réelle (appareil / navigateur / IP).
    */
   @Get('my-securite')
   async getMySecurite(@Request() req: any) {
-    return this.securiteAdminService.getSecurite(req.user.id);
+    return this.securiteAdminService.getSecurite(req.user.id, req.user.sessionId ?? null);
   }
 
   /**
@@ -159,9 +161,14 @@ export class ModerationController {
    * Valide l'ancien mot de passe et applique le nouveau (bcrypt 12).
    * Body : { currentPassword, newPassword, confirmPassword }
    */
+  /* SÉCURITÉ — limité à 10 essais / 60 s : sans cela, un JWT volé pouvait
+   * marteler cette route pour deviner le mot de passe actuel (même garde que
+   * les autres dashboards). */
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Patch('my-securite/password')
   async changeMyPassword(
-    @Body() body: { currentPassword: string; newPassword: string; confirmPassword: string },
+    @Body() body: ChangeMyPasswordDto,
     @Request() req: any,
   ) {
     return this.securiteAdminService.changePassword(req.user.id, body);
@@ -176,9 +183,11 @@ export class ModerationController {
    * Pour désactiver (twoFaEnabled: false) : currentPassword + code TOTP
    * requis (voir SecuriteAdminService.toggleTwoFa).
    */
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Patch('my-securite/2fa')
   async toggleMyTwoFa(
-    @Body() body: { twoFaEnabled: boolean; twoFaMethod?: string; currentPassword?: string; code?: string },
+    @Body() body: UpdateMyTwoFaDto,
     @Request() req: any,
   ) {
     return this.securiteAdminService.toggleTwoFa(req.user.id, body);

@@ -99,7 +99,7 @@ const NAV_GROUPS: NavGroup[] = [
 /* Métadonnées par section (titre + sous-titre) */
 const SEC_META: Record<ParamSection, { title: string; sub: string; group: string }> = {
   profil:          { title: 'Profil administrateur', sub: 'Identité, avatar et informations de compte',                   group: 'Compte' },
-  securite:        { title: 'Sécurité',              sub: 'Mot de passe, 2FA, sessions actives et clés API',              group: 'Compte' },
+  securite:        { title: 'Sécurité',              sub: 'Mot de passe, double authentification et session actuelle',              group: 'Compte' },
   zone:            { title: 'Zone & Couverture',     sub: 'Zone géographique, communes et alertes',                       group: 'Ma zone' },
   validations:     { title: 'Validations',           sub: 'Mode, délais et règles par type d\'acteur',                   group: 'Ma zone' },
   entreprises:     { title: 'Entreprises',           sub: 'Commission, documents requis et catégories autorisées',        group: 'Acteurs' },
@@ -184,6 +184,19 @@ export default function ParametresPage({ onToast }: ParametresPageProps) {
         if (data.count > 0) setNavBadges(prev => ({ ...prev, sante: String(data.count) }));
       })
       .catch(() => {});
+
+    /* SecuriteSection prévient dès que le nombre de critères manquants change
+     * (2FA activée, etc.) : le badge du menu reste juste sans recharger. */
+    const onSecurity = (e: Event) => {
+      const n = Number((e as CustomEvent<number>).detail) || 0;
+      setNavBadges(prev => {
+        const next = { ...prev };
+        if (n > 0) next.securite = String(n); else delete next.securite;
+        return next;
+      });
+    };
+    window.addEventListener('admin-security-updated', onSecurity);
+    return () => window.removeEventListener('admin-security-updated', onSecurity);
   }, []);
 
   /* Filtre la navigation latérale selon la recherche */

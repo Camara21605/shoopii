@@ -1,19 +1,20 @@
 /* ============================================================
  * FICHIER : src/modules/dashboard/super-admin/services/securite-admin.service.ts
  *
- * RÔLE : Sécurité du compte administrateur.
+ * RÔLE : Sécurité du compte administrateur (Paramètres → Sécurité).
  *
  * ENDPOINTS servis (via ModerationController) :
- *   GET   /dashboard/super-admin/my-securite          → score + 2FA + infos session
+ *   GET   /dashboard/super-admin/my-securite          → score + 2FA + session
  *   PATCH /dashboard/super-admin/my-securite/password → changer le mot de passe
- *   PATCH /dashboard/super-admin/my-securite/2fa      → activer / désactiver la 2FA
+ *   PATCH /dashboard/super-admin/my-securite/2fa      → désactiver la 2FA
  *
  * PATTERNS :
- *   - Le mot de passe est hashé avec bcrypt (rounds = 12).
- *   - La 2FA utilise TOTP (RFC 6238) via un secret Base32 généré côté
- *     backend et un URI otpauth:// compatible Google Authenticator / Authy.
- *   - Le score de sécurité est calculé dynamiquement à partir des champs
- *     User et Admin (emailVerified, phoneVerified, twoFaEnabled…).
+ *   - Mot de passe hashé avec bcrypt (12 rounds) ; changement = tokens de
+ *     rafraîchissement révoqués + e-mail d'alerte (comme les autres rôles).
+ *   - 2FA TOTP : activation via POST /auth/2fa/setup + /confirm (TwoFaService).
+ *   - Score calculé dynamiquement depuis les vrais champs User/Admin.
+ *   - Session actuelle lue depuis Redis (SessionService) — vrai appareil,
+ *     navigateur et IP, pas un texte fixe.
  * ============================================================ */
 
 import {
@@ -21,142 +22,155 @@ import {
   UnauthorizedException, Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ConfigService }    from '@nestjs/config';
 import { Repository }       from 'typeorm';
 import * as bcrypt          from 'bcryptjs';
 
-import { Admin } from '../../../../database/entities/profiles/admin-profile.entity';
-import { User }  from '../../../../database/entities/user.entity';
+import { Admin }        from '../../../../database/entities/profiles/admin-profile.entity';
+import { User, UserStatus } from '../../../../database/entities/user.entity';
+import { RefreshToken } from '../../../../database/entities/refresh-token.entity';
 import { TwoFaService } from '../../../auth/twofa/twofa.service';
+import { SessionService } from '../../../session/session.service';
+import { MailService }  from '../../../email/email.service';
+import { parseUserAgent } from '../../../../common/utils/user-agent.util';
+import { getPrimaryFrontendUrl } from '../../../../common/utils/frontend-url.util';
+import { ChangeMyPasswordDto, UpdateMyTwoFaDto } from '../dto/my-securite.dto';
 
-/* Génération/vérification TOTP réelle : voir TwoFaService
- * (src/modules/auth/twofa/twofa.service.ts), qui est l'unique source
- * de vérité pour les 6 rôles — voir POST /auth/2fa/setup + /confirm. */
-
-/* ─── Poids des indicateurs du score de sécurité ──────────── */
 /* Chaque critère vaut 20 points → score max = 100 */
 const SCORE_WEIGHT = 20;
 
-/* ═══════════════════════════════════════════════════════════════
- * SERVICE
- * ═══════════════════════════════════════════════════════════════ */
 @Injectable()
 export class SecuriteAdminService {
 
   private readonly logger = new Logger(SecuriteAdminService.name);
 
   constructor(
-    @InjectRepository(Admin) private readonly adminRepo: Repository<Admin>,
-    @InjectRepository(User)  private readonly userRepo:  Repository<User>,
-    private readonly twoFaService: TwoFaService,
+    @InjectRepository(Admin)        private readonly adminRepo:        Repository<Admin>,
+    @InjectRepository(User)         private readonly userRepo:         Repository<User>,
+    @InjectRepository(RefreshToken) private readonly refreshTokenRepo: Repository<RefreshToken>,
+    private readonly twoFaService:   TwoFaService,
+    private readonly sessionService: SessionService,
+    private readonly mailService:    MailService,
+    private readonly config:         ConfigService,
   ) {}
 
   /* ──────────────────────────────────────────────────────────
-   * GET — Score de sécurité + statut 2FA + infos session
+   * GET — Score de sécurité + statut 2FA + session actuelle
    * ────────────────────────────────────────────────────────── */
-  async getSecurite(userId: string) {
-    /* Charger admin + user en une seule requête */
-    const admin = await this.adminRepo.findOne({
-      where:     { userId },
-      relations: ['user'],
-    });
+  async getSecurite(userId: string, currentSessionId?: string | null) {
+    const admin = await this.adminRepo.findOne({ where: { userId }, relations: ['user'] });
     if (!admin) throw new NotFoundException('Profil administrateur introuvable.');
 
-    /* ── Critères du score de sécurité ── */
+    /* BUG CORRIGÉ — `User.password` est en `select: false` : via la relation
+     * `admin.user` il valait toujours `undefined`, donc « Mot de passe défini »
+     * s'affichait « Manquant » pour tout le monde. Lecture explicite du hash. */
+    const withPwd = await this.userRepo.findOne({
+      where: { id: userId }, select: ['id', 'password', 'lastPasswordChangedAt'],
+    });
+    const hasPassword = !!withPwd?.password;
+
+    /* BUG CORRIGÉ — « Compte en bonne santé » se basait sur admin.status, resté
+     * 'pending' à vie ; le statut réel est celui du compte utilisateur. */
+    const accountHealthy = admin.user.status === UserStatus.ACTIVE;
+
     const scoreItems = [
-      /* Mot de passe : toujours vrai (hash bcrypt en base → mot de passe défini) */
-      { label: 'Mot de passe défini',       ok: !!admin.user.password, key: 'password' },
-      /* 2FA configurée */
-      { label: 'Authentification 2FA',      ok: admin.twoFaEnabled,   key: 'twoFa'    },
-      /* Email vérifié */
-      { label: 'E-mail vérifié',            ok: admin.user.emailVerified, key: 'email' },
-      /* Téléphone renseigné et vérifié */
-      { label: 'Téléphone vérifié',         ok: admin.user.phoneVerified, key: 'phone' },
-      /* Compte actif (pas suspendu) */
-      { label: 'Compte en bonne santé',     ok: admin.status === 'active', key: 'status' },
+      { key: 'password', label: 'Mot de passe défini', ok: hasPassword,
+        hint: 'Définissez un mot de passe.' },
+      { key: 'twoFa', label: 'Authentification 2FA', ok: admin.twoFaEnabled,
+        hint: 'Activez la double authentification (carte « 2FA » ci-dessous).' },
+      { key: 'email', label: 'E-mail vérifié', ok: !!admin.user.emailVerified,
+        hint: 'Confirmez votre adresse e-mail.' },
+      { key: 'phone', label: 'Téléphone vérifié', ok: !!admin.user.phoneVerified,
+        hint: admin.user.phone || admin.phone
+          ? 'Faites vérifier votre numéro de téléphone.'
+          : 'Renseignez votre numéro dans l\'onglet Profil.' },
+      { key: 'status', label: 'Compte en bonne santé', ok: accountHealthy,
+        hint: 'Votre compte n\'est pas actif : contactez le super-administrateur.' },
     ];
 
     const score = scoreItems.filter(i => i.ok).length * SCORE_WEIGHT;
 
+    const meta = await this.sessionService.getSessionMeta(currentSessionId);
+
     return {
-      /* Score et détail des critères */
       score,
+      level: score >= 80 ? 'bon' : score >= 60 ? 'moyen' : 'faible',
+      pending: scoreItems.filter(i => !i.ok).length,
       scoreItems,
 
-      /* Statut 2FA */
       twoFaEnabled: admin.twoFaEnabled,
       twoFaMethod:  admin.twoFaMethod ?? null,
 
-      /* Informations de session (champs User) */
-      lastLoginAt: admin.user.lastLoginAt   ?? null,
-      lastLoginIp: admin.user.lastLoginIp   ?? null,
-      emailVerified: admin.user.emailVerified,
-      phoneVerified: admin.user.phoneVerified,
+      lastLoginAt:       admin.user.lastLoginAt ?? null,
+      lastLoginIp:       admin.user.lastLoginIp ?? null,
+      passwordChangedAt: withPwd?.lastPasswordChangedAt ?? null,
+      emailVerified:     admin.user.emailVerified,
+      phoneVerified:     admin.user.phoneVerified,
+
+      /* Session actuelle réelle (Shoneya n'autorise qu'UNE session active par
+       * compte : il n'y a jamais de liste d'appareils à afficher). */
+      currentSession: meta
+        ? { ...parseUserAgent(meta.userAgent), ipAddress: meta.ipAddress, connectedSince: meta.createdAt }
+        : null,
     };
   }
 
   /* ──────────────────────────────────────────────────────────
    * PATCH — Changer le mot de passe
    *
-   * Validation :
-   *   1. Les deux nouveaux mots de passe correspondent.
-   *   2. Le nouveau est différent de l'ancien.
-   *   3. L'ancien mot de passe bcrypt est correct.
+   * Validation (format : ChangeMyPasswordDto) : confirmation identique,
+   * différent de l'actuel, ancien mot de passe correct.
+   * Effets : JWT antérieurs invalidés (lastPasswordChangedAt), refresh
+   * tokens révoqués, e-mail d'alerte envoyé. La session courante est donc
+   * fermée : le frontend reconnecte l'administrateur.
    * ────────────────────────────────────────────────────────── */
-  async changePassword(
-    userId: string,
-    dto: { currentPassword: string; newPassword: string; confirmPassword: string },
-  ): Promise<{ message: string }> {
-
-    /* Validation des champs */
+  async changePassword(userId: string, dto: ChangeMyPasswordDto): Promise<{ message: string }> {
     if (dto.newPassword !== dto.confirmPassword) {
       throw new BadRequestException('Les deux nouveaux mots de passe ne correspondent pas.');
     }
     if (dto.newPassword === dto.currentPassword) {
-      throw new BadRequestException('Le nouveau mot de passe doit être différent de l\'actuel.');
-    }
-    if (dto.newPassword.length < 8) {
-      throw new BadRequestException('Le mot de passe doit contenir au moins 8 caractères.');
+      throw new BadRequestException("Le nouveau mot de passe doit être différent de l'actuel.");
     }
 
-    /* Charger le hash (select: false par défaut → sélection explicite) */
+    /* select: false par défaut → sélection explicite du hash */
     const user = await this.userRepo.findOne({
-      where:  { id: userId },
-      select: ['id', 'password'],
+      where: { id: userId }, select: ['id', 'password', 'email', 'firstName'],
     });
     if (!user) throw new NotFoundException('Utilisateur introuvable.');
 
-    /* Vérifier l'ancien mot de passe */
     const isValid = await bcrypt.compare(dto.currentPassword, user.password);
-    if (!isValid) {
-      throw new UnauthorizedException('Mot de passe actuel incorrect.');
-    }
+    if (!isValid) throw new UnauthorizedException('Mot de passe actuel incorrect.');
 
-    /* Hasher et sauvegarder le nouveau (cost factor 12) */
-    user.password            = await bcrypt.hash(dto.newPassword, 12);
+    user.password              = await bcrypt.hash(dto.newPassword, 12);
     user.lastPasswordChangedAt = new Date();
     await this.userRepo.save(user);
 
-    this.logger.log(`[SÉCURITÉ] Mot de passe changé — adminUserId=${userId}`);
-    return { message: 'Mot de passe mis à jour avec succès.' };
+    /* Sans cette révocation, un refresh token volé sur un autre appareil
+     * survivrait au changement de mot de passe (voir SecuriteService client). */
+    await this.refreshTokenRepo.update({ userId, revoked: false }, { revoked: true });
+
+    /* Alerte e-mail — fire-and-forget : un échec SMTP ne doit jamais faire
+     * échouer le changement lui-même. Toujours envoyée pour un compte admin. */
+    this.mailService.sendPasswordChangedEmail({
+      toEmail:   user.email,
+      firstName: user.firstName,
+      changedAt: user.lastPasswordChangedAt!,
+      loginUrl:  `${getPrimaryFrontendUrl(this.config)}/login`,
+    }).catch(err => this.logger.error(`[PWD CHANGED EMAIL ❌] ${user.email} | ${(err as Error).message}`));
+
+    this.logger.log(`[SÉCURITÉ] Mot de passe changé + tokens révoqués — adminUserId=${userId}`);
+    return { message: 'Mot de passe mis à jour. Reconnectez-vous avec le nouveau mot de passe.' };
   }
 
   /* ──────────────────────────────────────────────────────────
    * PATCH — Désactiver la 2FA
    *
-   * L'activation réelle (secret + vérification TOTP) passe désormais
-   * par POST /auth/2fa/setup puis /auth/2fa/confirm (TwoFaService),
-   * qui n'active la 2FA qu'après un code valide — un secret jamais
-   * confirmé ne bascule plus jamais twoFaEnabled à true. Cet endpoint
-   * ne permet plus qu'une désactivation directe, qui exige à son tour
-   * le mot de passe actuel ET un code TOTP valide (voir TwoFaService.
-   * disable) — un compte admin est la cible la plus sensible de toute
-   * la plateforme, une session volée ne doit jamais suffire à en
-   * désactiver la 2FA.
+   * L'activation passe par POST /auth/2fa/setup puis /confirm (aucun secret
+   * non confirmé n'active la 2FA). La désactivation exige le mot de passe ET
+   * un code TOTP valide : un compte admin est la cible la plus sensible, une
+   * session volée ne doit jamais suffire à retirer ce second facteur.
    * ────────────────────────────────────────────────────────── */
-  async toggleTwoFa(
-    userId: string,
-    dto: { twoFaEnabled: boolean; twoFaMethod?: string; currentPassword?: string; code?: string },
-  ) {
+  async toggleTwoFa(userId: string, dto: UpdateMyTwoFaDto) {
     if (dto.twoFaEnabled) {
       throw new BadRequestException(
         "Activez la 2FA via POST /auth/2fa/setup puis /auth/2fa/confirm (vérification du code requise).",
