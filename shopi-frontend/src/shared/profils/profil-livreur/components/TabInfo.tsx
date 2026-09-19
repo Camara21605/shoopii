@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import styles from '../styles/ProfilLivreur.module.css';
 import type { LivreurProfile } from '../types';
 import { locationParts } from '../../../location/utils/locationLabel';
+import ActorDistance from '../../../location/components/ActorDistance';
 
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 
@@ -51,7 +52,7 @@ export default function TabInfo({ profile }: { profile: LivreurProfile }) {
                 {quartier && (
                   <div className={styles.ir}>
                     <div className={styles.irLbl}><i className="fas fa-map-pin" /> {t('profilLivreur.tabInfo.quartier', 'Quartier')}</div>
-                    <div className={styles.irVal}>{quartier}</div>
+                    <div className={styles.irVal}>{quartier}<ActorDistance role="delivery" id={profile.id} /></div>
                   </div>
                 )}
               </>

@@ -4,6 +4,7 @@ import styles                  from './Cards.module.css';
 import { useAuthGate }         from '../../../shared/hooks/useAuthGate';
 import FollowButton            from '../../../shared/components/FollowButton';
 import ActorLocation from '../../../shared/location/components/ActorLocation';
+import ActorDistance from '../../../shared/location/components/ActorDistance';
 
 export interface CorrespondantCardData {
   id: string; fullName: string; profilePicture: string | null;
@@ -77,7 +78,7 @@ export default function CardCorrespondant({ c, onToast, onRemoved }: Props) {
 
       {/* Région */}
       <div className={styles.wkLoc}>
-        <i className="fas fa-map-pin" /> <ActorLocation value={c} fallback="—" />
+        <i className="fas fa-map-pin" /> <ActorLocation value={c} fallback="—" /><ActorDistance role="correspondent" id={c?.id} />
       </div>
 
       {/* Bouton */}

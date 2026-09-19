@@ -4,6 +4,7 @@ import styles           from './Cards.module.css';
 import { useAuthGate }  from '../../../shared/hooks/useAuthGate';
 import FollowButton     from '../../../shared/components/FollowButton';
 import ActorLocation from '../../../shared/location/components/ActorLocation';
+import ActorDistance from '../../../shared/location/components/ActorDistance';
 
 export interface LivreurCardData {
   id: string; fullName: string; profilePicture: string | null;
@@ -79,7 +80,7 @@ export default function CardLivreur({ l, onToast, onRemoved }: Props) {
 
       {/* Zone */}
       <div className={styles.wkLoc}>
-        <i className="fas fa-map-pin" /> <ActorLocation value={l} fallback="—" />
+        <i className="fas fa-map-pin" /> <ActorLocation value={l} fallback="—" /><ActorDistance role="delivery" id={l?.id} />
       </div>
 
       {/* Moyen de transport */}

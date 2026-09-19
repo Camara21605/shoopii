@@ -5,7 +5,7 @@
  * ============================================================ */
 
 import { Type } from 'class-transformer';
-import { IsInt, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsUUID, ValidateNested, IsInt, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 export class ActorMapQueryDto {
   /** Nom, quartier, commune ou ville. Vide = « autour de moi » (lat/lng requis). */
@@ -62,4 +62,26 @@ export class RoadsQueryDto {
 
   @Type(() => Number) @IsInt() @Min(0) @Max(16383)
   y: number;
+}
+
+/** Un acteur dont on veut la distance. */
+export class DistanceActorDto {
+  @IsIn(['vendor', 'delivery', 'correspondent'])
+  role: 'vendor' | 'delivery' | 'correspondent';
+
+  @IsUUID()
+  id: string;
+}
+
+/** POST /location/distances — distance du client à chacun des acteurs listés. */
+export class DistancesDto {
+  @Type(() => Number) @IsNumber() @Min(-90)  @Max(90)
+  lat: number;
+
+  @Type(() => Number) @IsNumber() @Min(-180) @Max(180)
+  lng: number;
+
+  @IsArray() @ArrayMinSize(1) @ArrayMaxSize(60)
+  @ValidateNested({ each: true }) @Type(() => DistanceActorDto)
+  actors: DistanceActorDto[];
 }

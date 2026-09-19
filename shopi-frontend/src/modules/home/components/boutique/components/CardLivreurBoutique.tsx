@@ -20,6 +20,7 @@ import type { LivreurApi } from '../pages/BoutiquePage';
 import styles from '../styles/CardsLivreur.module.css';
 import { locationLabel } from '../../../../../shared/location/utils/locationLabel';
 import ActorLocation from '../../../../../shared/location/components/ActorLocation';
+import ActorDistance from '../../../../../shared/location/components/ActorDistance';
 
 interface Props {
   l:       LivreurApi;
@@ -63,7 +64,7 @@ export default function CardLivreurBoutique({ l, onToast }: Props) {
       {/* ── Zone de livraison ── */}
       {locationLabel(l) && (
         <div className={styles.zone}>
-          <i className="fas fa-map-pin" /> <ActorLocation value={l} />
+          <i className="fas fa-map-pin" /> <ActorLocation value={l} /><ActorDistance role="delivery" id={l?.id} />
         </div>
       )}
 

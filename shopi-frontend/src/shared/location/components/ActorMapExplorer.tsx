@@ -29,6 +29,7 @@ import '../styles/location.css';
 import '../styles/actor-map.css';
 
 import { useGeolocation }      from '../hooks/useGeolocation';
+import { publishClientPosition } from '../hooks/useClientPosition';
 import { useActorMapSearch }   from '../hooks/useActorMapSearch';
 import { usePlaceSuggestions } from '../hooks/usePlaceSuggestions';
 import { GPS_ICON }            from './LocationMap';
@@ -207,6 +208,8 @@ export default function ActorMapExplorer({ onToast }: Props) {
   const dark = useIsDark();
   const geo  = useGeolocation({ watch: true });
   const me   = geo.position;
+  /* La position obtenue ici sert aussi aux distances affichées sur les cartes et profils */
+  useEffect(() => { if (me) publishClientPosition(me.latitude, me.longitude); }, [me?.latitude, me?.longitude]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   /* État initial lu dans l'URL — le lien est partageable */
   const [query,    setQuery]    = useState(params.get('q') ?? '');

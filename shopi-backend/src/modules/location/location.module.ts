@@ -35,6 +35,7 @@ import { ActorMapService }               from './services/actor-map.service';
 import { GeocodingService }              from './services/geocoding.service';
 import { PlaceSearchService }            from './services/place-search.service';
 import { RoadNetworkService }            from './services/road-network.service';
+import { ActorDistanceService }          from './services/actor-distance.service';
 
 /* ── Gateway ─────────────────────────────────────────────── */
 import { LocationGateway }  from './gateways/location.gateway';
@@ -106,6 +107,7 @@ import { ActorMapController }                from './controllers/actor-map.contr
     GeocodingService,
     PlaceSearchService,
     RoadNetworkService,
+    ActorDistanceService,
     LocationGateway,
   ],
 

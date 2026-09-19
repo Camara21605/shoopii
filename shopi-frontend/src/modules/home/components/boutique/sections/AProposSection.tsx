@@ -17,6 +17,7 @@ import type { LivreurApi } from '../pages/BoutiquePage';
 import styles from '../styles/AProposSection.module.css';
 import { locationLabel } from '../../../../../shared/location/utils/locationLabel';
 import ActorLocation from '../../../../../shared/location/components/ActorLocation';
+import ActorDistance from '../../../../../shared/location/components/ActorDistance';
 
 interface Props {
   boutiqueInfo: BoutiqueInfo;
@@ -180,7 +181,7 @@ export default function AProposSection({ boutiqueInfo, createdAt, livreurs, onTo
                   <div className={styles.livrNom}>{l.fullName}</div>
                   {locationLabel(l) && (
                     <div className={styles.livrZone}>
-                      <i className="fas fa-map-pin" /> <ActorLocation value={l} />
+                      <i className="fas fa-map-pin" /> <ActorLocation value={l} /><ActorDistance role="delivery" id={l?.id} />
                     </div>
                   )}
                 </div>
