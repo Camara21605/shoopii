@@ -435,6 +435,9 @@ export class AuthService implements OnModuleInit {
     /* Priorité au code d'invitation s'il en existe un (cas où les deux
      * seraient fournis) ; sinon, l'attribution vient du lien de parrainage. */
     const effectivePartnerId = codePartnerId ?? referralPartnerId;
+    /* Admin de rattachement : celui qui a émis le code, sinon celui du partenaire
+     * parrain — voir resolveActorAdminId(). */
+    const effectiveAdminId = await this.resolveActorAdminId(validatedCodeId, effectivePartnerId);
 
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
 
@@ -500,7 +503,7 @@ export class AuthService implements OnModuleInit {
 
       await this.createProfile(
         queryRunner.manager, newUser, dto, codeCompanyId, codeDeliveryId,
-        platformSettings.manualVendorApproval, effectivePartnerId,
+        platformSettings.manualVendorApproval, effectivePartnerId, effectiveAdminId,
       );
 
       const wallet = this.walletRepo.create({ userId: newUser.id });
@@ -771,6 +774,7 @@ export class AuthService implements OnModuleInit {
     codeDeliveryId?: string | null,
     manualVendorApproval = true,
     codePartnerId?:  string | null,
+    codeAdminId?:    string | null,
   ): Promise<void> {
     const fullName = `${user.firstName} ${user.lastName}`;
 
@@ -817,6 +821,7 @@ export class AuthService implements OnModuleInit {
           codePostal: loc.codePostal,
           latitude:  loc.latitude,
           longitude: loc.longitude,
+          adminId:   codeAdminId ?? null,
         });
         await manager.save(Partner, profile);
         break;
@@ -834,6 +839,7 @@ export class AuthService implements OnModuleInit {
           businessModel: (dto as any).businessModel,
           companyTypeId: (dto as any).companyTypeId ?? null,
           partnerId:     codePartnerId ?? null,
+          adminId:       codeAdminId   ?? null,
           adresse:       loc.adresse,
           commune:       loc.commune,
           ville:         loc.ville,
@@ -863,6 +869,7 @@ export class AuthService implements OnModuleInit {
           status:        'pending' as any,
           availability:  'offline' as any,
           partnerId:     codePartnerId ?? null,
+          adminId:       codeAdminId   ?? null,
           ville:         loc.ville,
           zone:          loc.commune ?? loc.ville,
           lastLatitude:  loc.latitude,
@@ -1820,6 +1827,33 @@ export class AuthService implements OnModuleInit {
       .getRepository(CreationCode)
       .findOne({ where: { id: codeId }, select: ['id', 'partnerId'] });
     return code?.partnerId ?? null;
+  }
+
+  /**
+   * Admin de zone auquel rattacher le nouveau compte (Company/Delivery/Partner.adminId).
+   *
+   * BUG CORRIGÉ — comme pour partnerId (voir getCodePartnerId), register() ne
+   * renseignait JAMAIS adminId : aucun acteur invité par un administrateur (ni
+   * par un partenaire de cet administrateur) ne lui était rattaché, donc toutes
+   * les pages "de la zone" (commandes, acteurs, finances, commissions admin)
+   * restaient vides en permanence.
+   *   1. code émis par un admin  → CreationCode.adminId ;
+   *   2. sinon, acteur recruté par un partenaire → partenaire.adminId.
+   */
+  private async resolveActorAdminId(codeId: string | null, partnerId: string | null): Promise<string | null> {
+    if (codeId) {
+      const code = await this.dataSource
+        .getRepository(CreationCode)
+        .findOne({ where: { id: codeId }, select: ['id', 'adminId'] });
+      if (code?.adminId) return code.adminId;
+    }
+    if (partnerId) {
+      const partner = await this.dataSource
+        .getRepository(Partner)
+        .findOne({ where: { id: partnerId }, select: ['id', 'adminId'] });
+      return partner?.adminId ?? null;
+    }
+    return null;
   }
 
   /**

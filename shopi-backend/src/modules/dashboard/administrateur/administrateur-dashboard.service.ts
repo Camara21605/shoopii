@@ -31,7 +31,7 @@ import { AdminCodesService }         from './services/admin-codes.service';
 import { AdminActeursService }       from './services/admin-acteurs.service';
 import { AdminPartenairesService }   from './services/admin-partenaires.service';
 import { AdminSignalementsService }  from './services/admin-signalements.service';
-import { AdminCommandesService }     from './services/admin-commandes.service';
+import { AdminCommandesService, CommandeFilters } from './services/admin-commandes.service';
 import { AdminAuditService }         from './services/admin-audit.service';
 import { AdminClientsService }       from './services/admin-clients.service';
 import { AdminStatsService }         from './services/admin-stats.service';
@@ -98,9 +98,11 @@ export class AdministrateurDashboardService {
   rejectSignalement(adminId: string, id: string, reason?: string, meta?: AuditMeta) { return this.signalements.rejectSignalement(adminId, id, reason, meta); }
 
   // ── Commandes + Finances ─────────────────────────────────────
-  getCommandes(userId: string, onglet?: 'toutes' | 'encours' | 'litiges', page?: number, limit?: number) {
-    return this.commandes.getCommandes(userId, onglet, page, limit);
+  getCommandes(userId: string, filters?: CommandeFilters, page?: number, limit?: number) {
+    return this.commandes.getCommandes(userId, filters, page, limit);
   }
+  exportCommandes(userId: string, filters?: CommandeFilters) { return this.commandes.exportCommandes(userId, filters); }
+  getCommandeDetail(userId: string, commandeId: string)      { return this.commandes.getCommandeDetail(userId, commandeId); }
   getFinances(userId: string)                      { return this.commandes.getFinances(userId); }
 
   // ── Journal d'audit ──────────────────────────────────────────

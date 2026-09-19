@@ -4,12 +4,13 @@
  * ============================================================ */
 
 import {
-  Body, Controller, Delete, Get, Param, Patch, Post, Put,
+  Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Put,
   Query, Request, UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 import { AdministrateurDashboardService, GenerateCodeDto } from './administrateur-dashboard.service';
 import { SuspendActeurDto } from './dto/suspend-acteur.dto';
+import { parseCommandeFilters } from './services/admin-commandes.service';
 import { UpdateCommunicationDto } from './dto/update-communication.dto';
 import { auditMeta } from './helpers/admin.helpers';
 
@@ -141,11 +142,29 @@ export class AdministrateurDashboardController {
   @Get('commandes')
   getCommandes(
     @Request() req: any,
-    @Query('onglet') onglet?: 'toutes' | 'encours' | 'litiges',
-    @Query('page')   page?:   string,
-    @Query('limit')  limit?:  string,
+    @Query('onglet')  onglet?:  string,
+    @Query('search')  search?:  string,
+    @Query('periode') periode?: string,
+    @Query('page')    page?:    string,
+    @Query('limit')   limit?:   string,
   ) {
-    return this.svc.getCommandes(req.user.id, onglet, Number(page) || 1, Number(limit) || 20);
+    return this.svc.getCommandes(req.user.id, parseCommandeFilters(onglet, search, periode), Number(page) || 1, Number(limit) || 20);
+  }
+
+  /* Déclarée AVANT commandes/:id, sinon "export" serait lu comme un identifiant */
+  @Get('commandes/export')
+  exportCommandes(
+    @Request() req: any,
+    @Query('onglet')  onglet?:  string,
+    @Query('search')  search?:  string,
+    @Query('periode') periode?: string,
+  ) {
+    return this.svc.exportCommandes(req.user.id, parseCommandeFilters(onglet, search, periode));
+  }
+
+  @Get('commandes/:id')
+  getCommandeDetail(@Request() req: any, @Param('id', ParseUUIDPipe) id: string) {
+    return this.svc.getCommandeDetail(req.user.id, id);
   }
 
   // ── Audit ───────────────────────────────────────────────────

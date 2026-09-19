@@ -102,17 +102,40 @@ export interface SignalementRecu {
   quand:      string;
 }
 
-/* Commande de la zone */
-export type CommandeStatut = 'paid' | 'prep' | 'ship' | 'relay' | 'done' | 'dispute';
+/* Commandes de la zone — voir GET /dashboard/admin/commandes */
+export type CommandeStatut = 'prep' | 'ship' | 'relay' | 'done' | 'dispute' | 'cancel' | 'refund';
+export type CommandeOnglet  = 'toutes' | 'encours' | 'livrees' | 'litiges' | 'annulees';
+export type CommandePeriode = '7' | '30' | '90' | 'tout';
 
 export interface Commande {
-  id:         string;            // "#CMD-88412"
+  uuid:       string;            // identifiant technique (détail)
+  id:         string;            // numéro affiché, ex. "CMD-2025-00123"
   quand:      string;
+  createdAt:  string;
   client:     string;
   entreprise: string;
+  livreur:    string | null;
   montant:    number;            // en GNF
-  progression: 0 | 1 | 2 | 3 | 4; // étapes validées de la chaîne
+  chaine:     { valides: number; total: number }; // codes de validation validés / attendus
   statut:     CommandeStatut;
+}
+
+export interface CommandeStats {
+  total: number; livrees: number; tauxReussite: number;
+  enCours: number; litiges: number; annulees: number; volumeLivre: number;
+}
+
+export interface CommandeDetail {
+  uuid: string; numero: string; statut: CommandeStatut; createdAt: string;
+  datePaiement: string | null; dateLivraisonEstimee: string | null;
+  dateLivraisonEffective: string | null; autoValidationAt: string | null;
+  modeLivraison: string; methodePaiement: string | null;
+  montants: { sousTotal: number; fraisLivraison: number; commissionShopi: number; total: number };
+  client:    { nom: string; telephone: string | null };
+  livraison: { ville: string | null; commune: string | null; adresse: string | null; notes: string | null };
+  acteurs:   { role: string; nom: string; dansZone: boolean }[];
+  articles:  { nom: string; variante: string | null; quantite: number; prixUnitaire: number; sousTotal: number }[];
+  chaine:    { ordre: number; acteurType: string; acteurNom: string; statut: string; validatedAt: string | null; expiresAt: string }[];
 }
 
 /* Flux financier de la zone */

@@ -130,7 +130,7 @@ function AdminShell() {
       case 'clients':        return <ClientsPage onToast={pop} />;
       case 'validations':    return <ValidationsPage onToast={pop} highlightId={highlightId} />;
       case 'signalements':   return <SignalementsPage onSanction={s.ouvrirSanction} onToast={pop} highlightId={highlightId} />;
-      case 'commandes':      return <CommandesPage onToast={pop} />;
+      case 'commandes':      return <CommandesPage onToast={pop} onGenerate={() => s.setGenOpen(true)} />;
       case 'finances':       return <FinancesPage onToast={pop} />;
       case 'stats':          return <StatsPage onToast={pop} />;
       case 'support':        return <SupportPage onToast={pop} />;
