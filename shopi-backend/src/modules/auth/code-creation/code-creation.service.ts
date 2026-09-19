@@ -77,14 +77,10 @@ export class CodeCreationService {
       throw new ForbiddenException(`Le super-admin ne peut pas inviter un "${ROLE_LABELS[dto.targetRole] ?? dto.targetRole}".`);
     }
     const normalizedEmail = dto.targetEmail.toLowerCase().trim();
-    /* Scopé par rôle (UNIQUE(email, role) désormais) : un email peut déjà
-     * être pris par un compte d'un AUTRE rôle (ex. client) sans empêcher
-     * l'invitation pour CE rôle précis — seul un compte du même rôle cible
-     * doit bloquer l'invitation. */
-    const existingUser = await this.userRepo.findOne({
-      where: { email: normalizedEmail, role: dto.targetRole as UserRole },
-    });
-    if (existingUser) throw new ConflictException(`Un compte Shopi existe déjà pour "${normalizedEmail}".`);
+    /* Refuse toute adresse déjà utilisée par un compte pro (quel que soit le
+     * rôle visé) ou par un compte du même rôle — voir invitation-email.util.
+     * Seul un compte client seul reste autorisé (comptes liés). */
+    await assertNoAccountForInvitation(this.userRepo, normalizedEmail, dto.targetRole as UserRole);
     const activePending = await this.codeRepo.findOne({ where: { targetEmail: normalizedEmail, status: CodeStatus.PENDING } });
     if (activePending) throw new ConflictException(`Un code valide existe déjà pour "${normalizedEmail}".`);
     const validityDays = dto.validityDays ?? DEFAULT_VALIDITY_DAYS;

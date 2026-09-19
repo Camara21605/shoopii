@@ -10,7 +10,7 @@
  *   • revokeCode     — révocation d'un code PENDING uniquement
  * ============================================================ */
 
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository }       from 'typeorm';
 
@@ -115,7 +115,20 @@ export class AdminCodesService {
      * lève un 409), l'admin doit le savoir tout de suite plutôt que de
      * découvrir un code "envoyé" inutilisable. */
     const targetEmail = normalizeEmail(dto.targetEmail);
-    await assertNoAccountForInvitation(this.userRepo, targetEmail, dto.targetRole);
+    const { linkedClient } = await assertNoAccountForInvitation(this.userRepo, targetEmail, dto.targetRole);
+
+    /* Un code encore valide existe déjà pour cette adresse : en générer un
+     * second créerait deux codes actifs pour la même personne (doublons vus
+     * dans l'historique). L'admin doit d'abord révoquer l'ancien. */
+    const activePending = await this.codeRepo.findOne({
+      where: { targetEmail, status: CodeStatus.PENDING },
+    });
+    if (activePending && activePending.expiresAt.getTime() > Date.now()) {
+      throw new ConflictException(
+        `Un code valide existe déjà pour l'adresse ${targetEmail} (${activePending.code}). ` +
+        `Révoquez-le avant d'en générer un nouveau.`,
+      );
+    }
 
     const prefix    = ROLE_PREFIX[dto.targetRole] ?? 'ACT';
     const validDays = dto.validityDays ?? 30;
@@ -165,6 +178,11 @@ export class AdminCodesService {
       destinataire: saved.targetEmail ?? null,
       statut:       'sent',
       creeLe:       fmtDate(saved.createdAt),
+      /* Adresse déjà titulaire d'un compte CLIENT : invitation autorisée
+       * (comptes liés), mais l'admin en est prévenu. */
+      notice: linkedClient
+        ? `Cette adresse possède déjà un compte Client : l'invité créera un compte ${ROLE_TO_SHORT[saved.targetRole] ?? ''} lié au même email.`
+        : null,
     };
   }
 

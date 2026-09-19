@@ -55,7 +55,7 @@ export default function GenerateCodeModal({ onClose, onToast }: GenerateCodeModa
     setGenerating(true);
     setEmailError(null);
     try {
-      const res = await apiFetch<{ id: string; code: string }>('/dashboard/admin/codes', {
+      const res = await apiFetch<{ id: string; code: string; notice?: string | null }>('/dashboard/admin/codes', {
         method: 'POST',
         body: {
           targetRole:  TYPE_TO_ROLE[selType],
@@ -66,7 +66,7 @@ export default function GenerateCodeModal({ onClose, onToast }: GenerateCodeModa
       setCodeId(res.id);
       setEmailSent(false);
       setStep(2);
-      onToast('✅ Code généré', 's');
+      onToast(res.notice ? 'ℹ️ ' + res.notice : '✅ Code généré', res.notice ? 'i' : 's');
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         setEmailError(err.message);
