@@ -12,6 +12,7 @@ import { CreationCode, CodeStatus } from '../../../database/entities/code-creati
 import { User, UserStatus }         from '../../../database/entities/user.entity';
 import { UserRole }                 from '../../../common/enums/user-role.enum';
 import { MailService }              from '../../email/email.service';
+import { assertNoAccountForInvitation } from '../../../common/utils/invitation-email.util';
 import { GenerateAndSendCodeDto, GenerateBulkCodesDto } from './dto/generate-and-send.dto';
 import { FilterCodesDto }           from './dto/filter-codes.dto';
 
@@ -143,6 +144,10 @@ export class CodeCreationService {
     companyId: string | null; deliveryId?: string | null; generatedById: string; note?: string;
   }): Promise<{ code: string; codeId: string; expiresAt: Date }> {
     const { targetRole, targetEmail, companyId, deliveryId, generatedById, note } = params;
+    /* Une invitation vers une adresse qui a DÉJÀ un compte de ce rôle serait
+     * inutilisable (l'inscription lève un 409) : refus explicite avec un
+     * message lisible par l'entreprise/le livreur qui invite. */
+    await assertNoAccountForInvitation(this.userRepo, targetEmail, targetRole);
     const existing = await this.codeRepo.findOne({ where: { targetEmail, status: CodeStatus.PENDING } });
     if (existing) return { code: existing.code, codeId: existing.id, expiresAt: existing.expiresAt };
     const entry = this.codeRepo.create({

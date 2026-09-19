@@ -133,9 +133,10 @@ export interface FilterLivreursDto {
 }
 
 export interface InviterDto {
-  fullName:    string;
+  /** SEUL champ requis : le reste est renseigné par le livreur à l'inscription. */
   email:       string;
-  vehicleType: VehicleType;
+  fullName?:   string;
+  vehicleType?: VehicleType;
   zone?:       string;
   message?:    string;
 }

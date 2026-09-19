@@ -125,13 +125,15 @@ export class InviterLivreurDto {
    * Nom complet du livreur invité.
    * Utilisé dans l'email d'invitation et pré-rempli dans le profil.
    */
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'Le nom complet est obligatoire.' })
   @MaxLength(255)
-  fullName: string;
+  fullName?: string;
 
   /**
    * Email de contact — l'invitation sera envoyée ici.
+   * SEUL champ obligatoire : nom, véhicule, zone et message sont désormais
+   * facultatifs, le livreur les renseigne lui-même à l'inscription.
    */
   @IsEmail({}, { message: 'Email invalide.' })
   @IsNotEmpty({ message: "L'email est obligatoire." })
@@ -141,8 +143,9 @@ export class InviterLivreurDto {
    * Type de véhicule du livreur.
    * Sélectionné dans le select de ModalInviter.
    */
+  @IsOptional()
   @IsEnum(VehicleType, { message: 'Type de véhicule invalide.' })
-  vehicleType: VehicleType;
+  vehicleType?: VehicleType;
 
   /**
    * Zone de livraison prévue.

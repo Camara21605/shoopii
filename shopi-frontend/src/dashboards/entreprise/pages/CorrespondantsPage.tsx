@@ -353,19 +353,17 @@ function ModalInviter({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const { pop } = useToast();
   const [etape,    setEtape]    = useState<1 | 2 | 3>(1);
-  const [nom,      setNom]      = useState('');
   const [email,    setEmail]    = useState('');
-  const [ville,    setVille]    = useState('');
-  const [quartier, setQuartier] = useState('');
-  const [type,     setType]     = useState<CorrespondantType>('relais');
-  const [message,  setMessage]  = useState(() => t('correspondants.modalInviter.defaultMessage'));
+  /* Formulaire réduit à l'email : nom, type, ville et quartier sont
+   * renseignés par le correspondant à l'inscription. Le message
+   * d'accompagnement n'est plus saisi mais reste envoyé (texte par défaut). */
+  const message = t('correspondants.modalInviter.defaultMessage');
   const [loading,  setLoading]  = useState(false);
 
   // ✅ Le code vient maintenant de la réponse API (pas genererCode())
   const [invitationResult, setInvitationResult] = useState<InvitationResponse | null>(null);
 
   function validerEtape1() {
-    if (!nom.trim())   { pop(t('correspondants.modalInviter.nomRequis'), 'w');   return; }
     if (!email.trim()) { pop(t('correspondants.modalInviter.emailRequis'), 'w'); return; }
     if (!email.includes('@') || !email.includes('.')) { pop(t('correspondants.modalInviter.emailInvalide'), 'w'); return; }
     setEtape(2);
@@ -376,12 +374,8 @@ function ModalInviter({ onClose }: { onClose: () => void }) {
     setLoading(true);
     try {
       const result = await correspondantsApi.inviter({
-        fullName: nom.trim(),
         email:    email.trim(),
-        type,
-        ville:    ville.trim() || undefined,
-        quartier: quartier.trim() || undefined,
-        message:  message.trim() || undefined,
+        message,
       });
       setInvitationResult(result);
       setEtape(3);
@@ -424,41 +418,10 @@ function ModalInviter({ onClose }: { onClose: () => void }) {
         <div className={styles.mBody}>
           {/* ÉTAPE 1 — inchangée */}
           {etape === 1 && (
-            <div className={styles.formCols}>
-              <div className={styles.formCol}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-store" /> {t('correspondants.modalInviter.nomPointRelais')}</label>
-                  <input className={styles.formInput} placeholder={t('correspondants.modalInviter.nomPlaceholder')} value={nom} onChange={e => setNom(e.target.value)} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-envelope" /> {t('correspondants.modalInviter.emailContact')}</label>
-                  <input type="email" className={styles.formInput} placeholder={t('correspondants.modalInviter.emailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} />
-                  <p className={styles.formHint}><i className="fas fa-circle-info" /> {t('correspondants.modalInviter.codeEmailHint')}</p>
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-tag" /> {t('correspondants.modalInviter.typeCorrespondant')}</label>
-                  <select className={styles.formSelect} value={type} onChange={e => setType(e.target.value as CorrespondantType)}>
-                    <option value="relais">{t('correspondants.modalInviter.optRelais')}</option>
-                    <option value="entrepot">{t('correspondants.modalInviter.optEntrepot')}</option>
-                    <option value="export">{t('correspondants.modalInviter.optExport')}</option>
-                    <option value="principal">{t('correspondants.modalInviter.optPrincipal')}</option>
-                  </select>
-                </div>
-              </div>
-              <div className={styles.formCol}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-city" /> {t('correspondants.modalInviter.ville')}</label>
-                  <input className={styles.formInput} placeholder={t('correspondants.modalInviter.villePlaceholder')} value={ville} onChange={e => setVille(e.target.value)} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-map-pin" /> {t('correspondants.modalInviter.quartierZone')}</label>
-                  <input className={styles.formInput} placeholder={t('correspondants.modalInviter.quartierPlaceholder')} value={quartier} onChange={e => setQuartier(e.target.value)} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-message" /> {t('correspondants.modalInviter.messagePersonnalise')}</label>
-                  <textarea className={styles.formTextarea} rows={5} value={message} onChange={e => setMessage(e.target.value)} />
-                </div>
-              </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}><i className="fas fa-envelope" /> {t('correspondants.modalInviter.emailContact')}</label>
+              <input type="email" className={styles.formInput} placeholder={t('correspondants.modalInviter.emailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} autoFocus />
+              <p className={styles.formHint}><i className="fas fa-circle-info" /> {t('correspondants.modalInviter.codeEmailHint')}</p>
             </div>
           )}
 
@@ -475,18 +438,13 @@ function ModalInviter({ onClose }: { onClose: () => void }) {
                   </div>
                 </div>
                 <div className={styles.emailBody}>
-                  <p>{t('correspondants.modalInviter.bonjour')} <strong>{nom}</strong>,</p>
+                  <p>{t('correspondants.modalInviter.bonjour')},</p>
                   <p style={{ whiteSpace: 'pre-line', fontSize: 13, color: 'var(--t2)', lineHeight: 1.6 }}>{message}</p>
                   <div className={styles.emailCode}>
                     <div className={styles.emailCodeLabel}>{t('correspondants.modalInviter.codeInvitationLabel')}</div>
                     {/* ✅ Code généré par le backend — affiché seulement à l'étape 3 */}
                     <div className={styles.emailCodeValue} style={{ letterSpacing: '0.3em', color: 'var(--t3)' }}>{previewCode}</div>
                     <div className={styles.emailCodeNote}>{t('correspondants.modalInviter.codeInvitationNote')}</div>
-                  </div>
-                  <div className={styles.emailInfo}>
-                    {ville && <div><i className="fas fa-city" /> {t('correspondants.modalInviter.villeLabelInline')} <strong>{ville}</strong></div>}
-                    {quartier && <div><i className="fas fa-map-pin" /> {t('correspondants.modalInviter.zoneLabelInline')} <strong>{quartier}</strong></div>}
-                    <div><i className="fas fa-tag" /> {t('correspondants.modalInviter.typeLabelInline')} <strong>{typeLabel(type, t)}</strong></div>
                   </div>
                 </div>
               </div>
@@ -504,10 +462,7 @@ function ModalInviter({ onClose }: { onClose: () => void }) {
               <div className={styles.successTitle}>{t('correspondants.modalInviter.invitationEnvoyeeTitle')}</div>
               <div className={styles.successSub}>{t('correspondants.modalInviter.codeEnvoyeA', { email: invitationResult.email })}</div>
               <div className={styles.successRecap}>
-                <div className={styles.recapRow}><span>{t('correspondants.modalInviter.recapNom')}</span><strong>{invitationResult.fullName}</strong></div>
                 <div className={styles.recapRow}><span>{t('correspondants.modalInviter.recapEmail')}</span><strong>{invitationResult.email}</strong></div>
-                {ville && <div className={styles.recapRow}><span>{t('correspondants.modalInviter.recapVille')}</span><strong>{ville}</strong></div>}
-                <div className={styles.recapRow}><span>{t('correspondants.modalInviter.recapType')}</span><strong>{typeLabel(type, t)}</strong></div>
               </div>
               {/* ✅ Code réel venant du backend */}
               <div className={styles.codeBox}>

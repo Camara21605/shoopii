@@ -8,7 +8,7 @@
 .head { padding: 22px 24px 0; }
 .title { font-family: var(--fd); font-weight: 700; font-size: 19px; color: var(--navy); }
 .sub { font-size: 12.5px; color: var(--t3); margin-top: 4px; }
-.body { padding: 20px 24px; max-height: 70vh; overflow-y: auto; }
+.body { padding: 20px 24px; max-height: 70vh; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
 
 .fld { margin-bottom: 16px; }
 .lbl { font-size: 11px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 7px; display: block; }
@@ -92,3 +92,5 @@
 :root[data-theme="light"] .t_ent.on i { color: var(--navy); }
 :root[data-theme="light"] .btn { background: var(--navy); }
 :root[data-theme="light"] .sendBtn.sms:hover { border-color: var(--navy); background: var(--g50); color: var(--navy); }
+/* Défilement conservé, barre masquée (formulaire modal) */
+.body::-webkit-scrollbar { display: none; }

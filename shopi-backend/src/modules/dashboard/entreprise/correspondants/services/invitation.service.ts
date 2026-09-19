@@ -91,7 +91,7 @@ import {
 export interface InvitationResponse {
   code:      string;
   email:     string;
-  fullName:  string;
+  fullName?: string;
   expiresAt: string;
   codeId:    string;
 }

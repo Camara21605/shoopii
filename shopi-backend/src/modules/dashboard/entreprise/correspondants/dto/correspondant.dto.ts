@@ -161,13 +161,15 @@ export class InviterCorrespondantDto {
    * Affiché dans l'email d'invitation et pré-rempli dans le profil.
    * Ex: "RelaisPlus Kaloum"
    */
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'Le nom du point relais est obligatoire.' })
   @MaxLength(255)
-  fullName: string;
+  fullName?: string;
 
   /**
    * Email de contact — l'invitation sera envoyée ici.
+   * SEUL champ obligatoire : nom, type, ville, quartier et message sont
+   * facultatifs, le correspondant les renseigne à l'inscription.
    * Le code d'activation (10 chiffres) sera joint à cet email.
    */
   @IsEmail({}, { message: 'Email invalide.' })
@@ -178,8 +180,9 @@ export class InviterCorrespondantDto {
    * Type de correspondant invité.
    * Utilisé pour configurer les permissions et le dashboard du compte.
    */
+  @IsOptional()
   @IsEnum(CorrespondantType, { message: 'Type invalide : relais, entrepot, export, principal' })
-  type: CorrespondantType;
+  type?: CorrespondantType;
 
   /**
    * Ville du point relais.

@@ -346,16 +346,15 @@ function ModalInviter({ onClose, onDone }: { onClose: () => void; onDone: () => 
   const { t } = useTranslation();
   const { pop } = useToast();
   const [etape,    setEtape]    = useState<1 | 2 | 3>(1);
-  const [nom,      setNom]      = useState('');
   const [email,    setEmail]    = useState('');
-  const [zone,     setZone]     = useState('');
-  const [vehicule, setVehicule] = useState<VehicleType>('moto');
-  const [message,  setMessage]  = useState(() => t('livreurs.modalInviter.defaultMessage'));
+  /* Formulaire réduit à l'email : nom, véhicule et zone sont renseignés par
+   * le livreur lui-même à l'inscription. Le message d'accompagnement n'est
+   * plus saisi mais reste envoyé (texte par défaut inchangé). */
+  const message = t('livreurs.modalInviter.defaultMessage');
   const [loading,  setLoading]  = useState(false);
   const [result,   setResult]   = useState<InvitationLivreurResponse | null>(null);
 
   function validerEtape1() {
-    if (!nom.trim())   { pop(t('livreurs.modalInviter.nomRequis'), 'w');   return; }
     if (!email.trim()) { pop(t('livreurs.modalInviter.emailRequis'), 'w'); return; }
     if (!email.includes('@')) { pop(t('livreurs.modalInviter.emailInvalide'), 'w'); return; }
     setEtape(2);
@@ -366,11 +365,8 @@ function ModalInviter({ onClose, onDone }: { onClose: () => void; onDone: () => 
     setLoading(true);
     try {
       const res = await livreursApi.inviter({
-        fullName:    nom.trim(),
         email:       email.trim(),
-        vehicleType: vehicule,
-        zone:        zone.trim() || undefined,
-        message:     message.trim() || undefined,
+        message,
       });
       setResult(res);
       setEtape(3);
@@ -406,39 +402,10 @@ function ModalInviter({ onClose, onDone }: { onClose: () => void; onDone: () => 
         <div className={styles.mBody}>
           {/* ÉTAPE 1 */}
           {etape === 1 && (
-            <div className={styles.formCols}>
-              <div className={styles.formCol}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-user" /> {t('livreurs.modalInviter.nomComplet')}</label>
-                  <input className={styles.formInput} placeholder={t('livreurs.modalInviter.nomPlaceholder')} value={nom} onChange={e => setNom(e.target.value)} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-envelope" /> {t('livreurs.modalInviter.emailContact')}</label>
-                  <input type="email" className={styles.formInput} placeholder={t('livreurs.modalInviter.emailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} />
-                  <p className={styles.formHint}><i className="fas fa-circle-info" /> {t('livreurs.modalInviter.codeEmailHint')}</p>
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-car" /> {t('livreurs.modalInviter.typeVehicule')}</label>
-                  <select className={styles.formSelect} value={vehicule} onChange={e => setVehicule(e.target.value as VehicleType)}>
-                    <option value="moto">🛵 {t('livreurs.vehicle.moto')}</option>
-                    <option value="voiture">🚗 {t('livreurs.vehicle.voiture')}</option>
-                    <option value="velo">🚲 {t('livreurs.vehicle.velo')}</option>
-                    <option value="tricycle">🛺 {t('livreurs.vehicle.tricycle')}</option>
-                    <option value="camion">🚚 {t('livreurs.vehicle.camion')}</option>
-                    <option value="pieton">🚶 {t('livreurs.vehicle.pieton')}</option>
-                  </select>
-                </div>
-              </div>
-              <div className={styles.formCol}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-map-pin" /> {t('livreurs.modalInviter.zoneLivraison')}</label>
-                  <input className={styles.formInput} placeholder={t('livreurs.modalInviter.zonePlaceholder')} value={zone} onChange={e => setZone(e.target.value)} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}><i className="fas fa-message" /> {t('livreurs.modalInviter.messagePersonnalise')}</label>
-                  <textarea className={styles.formTextarea} rows={7} value={message} onChange={e => setMessage(e.target.value)} />
-                </div>
-              </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}><i className="fas fa-envelope" /> {t('livreurs.modalInviter.emailContact')}</label>
+              <input type="email" className={styles.formInput} placeholder={t('livreurs.modalInviter.emailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} autoFocus />
+              <p className={styles.formHint}><i className="fas fa-circle-info" /> {t('livreurs.modalInviter.codeEmailHint')}</p>
             </div>
           )}
 
@@ -455,16 +422,12 @@ function ModalInviter({ onClose, onDone }: { onClose: () => void; onDone: () => 
                   </div>
                 </div>
                 <div className={styles.emailBody}>
-                  <p>{t('livreurs.modalInviter.bonjour')} <strong>{nom}</strong>,</p>
+                  <p>{t('livreurs.modalInviter.bonjour')},</p>
                   <p style={{ whiteSpace: 'pre-line', fontSize: 13, color: 'var(--t2)', lineHeight: 1.6 }}>{message}</p>
                   <div className={styles.emailCode}>
                     <div className={styles.emailCodeLabel}>{t('livreurs.modalInviter.codeInvitationLabel')}</div>
                     <div className={styles.emailCodeValue} style={{ letterSpacing: '0.3em', color: 'var(--t3)' }}>••••-••••-••</div>
                     <div className={styles.emailCodeNote}>{t('livreurs.modalInviter.codeInvitationNote')}</div>
-                  </div>
-                  <div className={styles.emailInfo}>
-                    {zone && <div><i className="fas fa-map-pin" /> {t('livreurs.modalInviter.zoneLabelInline')} <strong>{zone}</strong></div>}
-                    <div><i className="fas fa-car" /> {t('livreurs.modalInviter.vehiculeLabelInline')} <strong>{vehicleEmoji(vehicule)} {vehicleLabel(vehicule, t)}</strong></div>
                   </div>
                 </div>
               </div>
@@ -482,10 +445,7 @@ function ModalInviter({ onClose, onDone }: { onClose: () => void; onDone: () => 
               <div className={styles.successTitle}>{t('livreurs.modalInviter.invitationEnvoyeeTitle')}</div>
               <div className={styles.successSub}>{t('livreurs.modalInviter.codeEnvoyeA', { email: result.email })}</div>
               <div className={styles.successRecap}>
-                <div className={styles.recapRow}><span>{t('livreurs.modalInviter.recapNom')}</span><strong>{result.fullName}</strong></div>
                 <div className={styles.recapRow}><span>{t('livreurs.modalInviter.recapEmail')}</span><strong>{result.email}</strong></div>
-                {zone && <div className={styles.recapRow}><span>{t('livreurs.modalInviter.recapZone')}</span><strong>{zone}</strong></div>}
-                <div className={styles.recapRow}><span>{t('livreurs.modalInviter.recapVehicule')}</span><strong>{vehicleEmoji(vehicule)} {vehicleLabel(vehicule, t)}</strong></div>
               </div>
               <div className={styles.codeBox}>
                 <div className={styles.codeBoxLabel}>{t('livreurs.modalInviter.codeGenereLabel')}</div>

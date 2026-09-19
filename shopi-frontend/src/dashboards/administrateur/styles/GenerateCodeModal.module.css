@@ -28,7 +28,7 @@
 .head { padding: 22px 24px 0; }
 .title { font-family: var(--fd); font-weight: 700; font-size: 19px; color: var(--navy); }
 .sub { font-size: 12.5px; color: var(--t3); margin-top: 4px; }
-.body { padding: 20px 24px; max-height: 70vh; overflow-y: auto; }
+.body { padding: 20px 24px; max-height: 70vh; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
 
 .x {
   position: absolute; top: 18px; right: 18px;
@@ -120,3 +120,5 @@
 .mBtn:hover { background: var(--adm-btn-h); box-shadow: var(--sh-b); }
 .mBtn:disabled { opacity: .6; cursor: not-allowed; }
 .mBtn:disabled:hover { background: var(--adm-btn); box-shadow: none; }
+/* Défilement conservé, barre masquée (formulaire modal) */
+.body::-webkit-scrollbar { display: none; }

@@ -639,7 +639,7 @@
 .closeBtn:hover { background: var(--g100); border-color: var(--t2); color: var(--t2); }
 
 /* Corps scrollable */
-.mBody { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+.mBody { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; scrollbar-width: none; -ms-overflow-style: none; }
 
 /* Pied */
 .mFooter {
@@ -883,3 +883,5 @@
 @media (max-width: 420px) {
   .statsGrid, .kpiGrid { grid-template-columns: 1fr; }
 }
+/* Défilement conservé, barre masquée (formulaire modal) */
+.mBody::-webkit-scrollbar { display: none; }

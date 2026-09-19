@@ -37,8 +37,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default function GenerateCodeModal({ onClose, onToast }: GenerateCodeModalProps) {
   const [step, setStep]       = useState<1 | 2>(1);
   const [selType, setSelType] = useState<ActeurType>('par');
-  const [nom, setNom]         = useState('');
-  const [tel, setTel]         = useState('');
   const [email, setEmail]     = useState('');
   const [code, setCode]       = useState('');
   const [codeId, setCodeId]   = useState('');
@@ -62,14 +60,13 @@ export default function GenerateCodeModal({ onClose, onToast }: GenerateCodeModa
         body: {
           targetRole:  TYPE_TO_ROLE[selType],
           targetEmail: email.trim(),
-          targetName:  nom.trim() || null,
         },
       });
       setCode(res.code);
       setCodeId(res.id);
       setEmailSent(false);
       setStep(2);
-      onToast(`✅ Code généré${nom.trim() ? ' pour ' + nom.trim() : ''}`, 's');
+      onToast('✅ Code généré', 's');
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         setEmailError(err.message);
@@ -130,16 +127,6 @@ export default function GenerateCodeModal({ onClose, onToast }: GenerateCodeModa
                     </div>
                   ))}
                 </div>
-              </div>
-              <div className={styles.fld}>
-                <label className={styles.fldL}>Nom du destinataire (optionnel)</label>
-                <input className={styles.fldIn} value={nom} onChange={e => setNom(e.target.value)}
-                  placeholder="Ex. Fatoumata Camara" />
-              </div>
-              <div className={styles.fld}>
-                <label className={styles.fldL}>Téléphone (optionnel)</label>
-                <input className={styles.fldIn} value={tel} onChange={e => setTel(e.target.value)}
-                  placeholder="+224 6•• •• •• ••" inputMode="tel" />
               </div>
               <div className={styles.fld}>
                 <label className={styles.fldL}>Email du destinataire <span className={styles.required}>*</span></label>

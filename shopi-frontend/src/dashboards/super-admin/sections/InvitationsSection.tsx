@@ -209,9 +209,10 @@ export default function InvitationsSection({ store, toast, isActive }: Props) {
         body: {
           targetEmail:  form.email.trim().toLowerCase(),
           targetRole:   form.role,
-          validityDays: form.validity,
+          /* Invitation nominative : seul l'email (et le rôle) sont saisis —
+           * validité 30 j et usage unique par défaut, pas de note. */
+          validityDays: 30,
           maxUses:      1,
-          note:         form.note.trim() || null,
         },
       });
 
@@ -504,31 +505,6 @@ export default function InvitationsSection({ store, toast, isActive }: Props) {
                 {formErrors.email && (
                   <div style={{ fontSize:11, color:'var(--rose)', marginTop:4 }}>⚠ {formErrors.email}</div>
                 )}
-              </div>
-
-              {/* Validité */}
-              <div className="mf" style={{ marginBottom:0 }}>
-                <label>Durée de validité (jours)</label>
-                <input
-                  className="input-field"
-                  type="number" min={1} max={365}
-                  value={form.validity}
-                  onChange={e => setForm(f => ({ ...f, validity: +e.target.value }))}
-                  disabled={loadingInvite}
-                />
-              </div>
-
-              {/* Note */}
-              <div className="mf" style={{ marginBottom:0 }}>
-                <label>Note interne (optionnel)</label>
-                <input
-                  className="input-field"
-                  type="text"
-                  placeholder="ex: Partenaire recommandé par Moussa"
-                  value={form.note}
-                  onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
-                  disabled={loadingInvite}
-                />
               </div>
             </div>
 

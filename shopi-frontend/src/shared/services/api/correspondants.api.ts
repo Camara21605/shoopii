@@ -101,7 +101,7 @@ export interface CorrespondantListResponse {
 export interface InvitationResponse {
   code:      string;   // format "XXXX-XXX-XXX" — à copier par l'entreprise
   email:     string;
-  fullName:  string;
+  fullName?: string;
   expiresAt: string;
   codeId:    string;
 }
@@ -117,9 +117,10 @@ export interface FilterCorrespondantsDto {
 
 /** Corps POST /correspondants/inviter (ModalInviter étape 1) */
 export interface InviterDto {
-  fullName:  string;
+  /** SEUL champ requis : le reste est renseigné par le correspondant à l'inscription. */
   email:     string;
-  type:      CorrespondantType;
+  fullName?: string;
+  type?:     CorrespondantType;
   ville?:    string;
   quartier?: string;
   message?:  string;

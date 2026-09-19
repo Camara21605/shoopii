@@ -62,7 +62,7 @@ import {
 export interface InvitationLivreurResponse {
   code:      string;    // XXXX-XXXX-XX — affiché dans ModalInviter étape 3
   email:     string;
-  fullName:  string;
+  fullName?: string;
   expiresAt: string;
   codeId:    string;
 }
