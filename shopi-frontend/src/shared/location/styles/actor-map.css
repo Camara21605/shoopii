@@ -1,0 +1,179 @@
+/* ================================================================
+ * FICHIER : src/shared/location/styles/actor-map.css
+ * Carte de recherche des entreprises / livreurs / correspondants
+ * (ActorMapExplorer). Préfixe `am-` : aucune collision avec location.css.
+ * Couleurs via les variables du thème (clair / sombre).
+ * ================================================================ */
+
+.am {
+  --am-red:   #E11D48;
+  --am-red-2: #BE123C;
+  --am-bg:    var(--white, #fff);
+  --am-bg-2:  var(--g50, #F7F7F8);
+  --am-line:  var(--bdr, #E4E4E7);
+  --am-txt:   var(--t1, #111113);
+  --am-txt-2: var(--t2, #52525B);
+  --am-txt-3: var(--t3, #71717A);
+  --am-blue:  var(--blue, #1A4FC4);
+
+  background: var(--am-bg);
+  border: 1px solid var(--am-line);
+  border-radius: 18px;
+  overflow: hidden;
+  color: var(--am-txt);
+}
+
+/* ── Barre de recherche ───────────────────────────────────── */
+.am-top { padding: 14px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--am-line); }
+.am-search {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--am-bg-2); border: 1.5px solid var(--am-line); border-radius: 14px;
+  padding: 0 12px; height: 48px; transition: border-color .15s, box-shadow .15s;
+}
+.am-search:focus-within { border-color: var(--am-red); box-shadow: 0 0 0 3px rgba(225,29,72,.12); background: var(--am-bg); }
+.am-search > i { color: var(--am-txt-3); font-size: 14px; }
+.am-search input {
+  flex: 1; min-width: 0; border: none; background: none; outline: none;
+  font: inherit; font-size: 14.5px; color: var(--am-txt);
+}
+.am-search input::placeholder { color: var(--am-txt-3); }
+.am-clear {
+  width: 28px; height: 28px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--am-line); color: var(--am-txt-2); font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+.am-clear:hover { background: var(--am-txt-3); color: #fff; }
+.am-spin { color: var(--am-red); font-size: 14px; animation: am-rot .8s linear infinite; }
+@keyframes am-rot { to { transform: rotate(360deg); } }
+
+.am-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.am-chip {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  border: 1.5px solid var(--am-line); background: var(--am-bg); color: var(--am-txt-2);
+  border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 12.5px; font-weight: 600;
+  transition: all .15s;
+}
+.am-chip:hover { border-color: var(--am-txt-3); }
+.am-chip[aria-pressed="true"] { background: var(--am-red); border-color: var(--am-red); color: #fff; }
+.am-chip small { font-weight: 700; opacity: .8; }
+.am-chip--geo[aria-pressed="true"] { background: var(--am-blue); border-color: var(--am-blue); }
+.am-radius {
+  border: 1.5px solid var(--am-line); background: var(--am-bg); color: var(--am-txt-2);
+  border-radius: 999px; padding: 5px 10px; font: inherit; font-size: 12.5px; font-weight: 600;
+}
+.am-sep { flex: 1; }
+
+/* ── Corps : liste + carte ────────────────────────────────── */
+.am-body { display: grid; grid-template-columns: 340px 1fr; min-height: 540px; }
+.am-list {
+  border-right: 1px solid var(--am-line); overflow-y: auto; max-height: 540px;
+  scrollbar-width: thin; padding: 8px;
+}
+.am-map { position: relative; min-height: 540px; }
+.am-map .leaflet-container { height: 100%; width: 100%; min-height: 540px; font-family: inherit; }
+
+.am-count { font-size: 12px; color: var(--am-txt-3); padding: 6px 8px 8px; }
+.am-count b { color: var(--am-txt); }
+
+.am-item {
+  display: flex; gap: 11px; width: 100%; text-align: left; cursor: pointer;
+  background: none; border: 1.5px solid transparent; border-radius: 14px; padding: 10px;
+  font: inherit; color: inherit; transition: background .12s, border-color .12s;
+}
+.am-item:hover { background: var(--am-bg-2); }
+.am-item[aria-selected="true"] { background: rgba(225,29,72,.06); border-color: var(--am-red); }
+.am-item:focus-visible { outline: 2px solid var(--am-red); outline-offset: 1px; }
+.am-ava {
+  width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; overflow: hidden;
+  background: var(--am-bg-2); display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.am-ava img { width: 100%; height: 100%; object-fit: cover; }
+.am-meta { min-width: 0; flex: 1; }
+.am-name { font-weight: 700; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.am-role { font-size: 11px; color: var(--am-txt-3); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+.am-loc { font-size: 12.5px; color: var(--am-txt-2); margin-top: 2px; display: flex; gap: 5px; align-items: baseline; }
+.am-loc i { color: var(--am-red); font-size: 11px; }
+.am-loc strong { color: var(--am-txt); }
+.am-sub { display: flex; gap: 10px; flex-wrap: wrap; font-size: 11.5px; color: var(--am-txt-3); margin-top: 3px; }
+.am-badge {
+  display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 1px 8px;
+  font-size: 10.5px; font-weight: 700; background: var(--am-bg-2); color: var(--am-txt-2);
+}
+.am-badge--ok  { background: rgba(4,120,87,.12); color: #047857; }
+.am-badge--off { background: rgba(113,113,122,.14); color: var(--am-txt-3); }
+.am-badge--approx { background: rgba(225,29,72,.10); color: var(--am-red-2); }
+
+/* ── États vides / chargement ─────────────────────────────── */
+.am-state { text-align: center; padding: 36px 18px; color: var(--am-txt-3); font-size: 13px; line-height: 1.6; }
+.am-state > i { font-size: 28px; color: var(--am-red); opacity: .7; display: block; margin-bottom: 10px; }
+.am-state h4 { margin: 0 0 4px; font-size: 14.5px; color: var(--am-txt); }
+.am-btn {
+  margin-top: 10px; cursor: pointer; border: none; border-radius: 999px; padding: 8px 16px;
+  background: var(--am-red); color: #fff; font: inherit; font-size: 12.5px; font-weight: 700;
+}
+.am-btn--ghost { background: var(--am-bg-2); color: var(--am-txt); border: 1.5px solid var(--am-line); }
+.am-skel { height: 64px; border-radius: 14px; margin: 6px 0; background: linear-gradient(90deg, var(--am-bg-2), var(--am-line), var(--am-bg-2)); background-size: 200% 100%; animation: am-shimmer 1.2s infinite; }
+@keyframes am-shimmer { to { background-position: -200% 0; } }
+
+/* ── Épingle ROUGE ────────────────────────────────────────── */
+.am-pin { position: relative; width: 38px; height: 46px; }
+.am-pin__body {
+  position: absolute; left: 3px; top: 0; width: 32px; height: 32px;
+  background: var(--am-red); border: 2.5px solid #fff; border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg); box-shadow: 0 4px 10px rgba(190,18,60,.45);
+  display: flex; align-items: center; justify-content: center; transition: transform .2s ease, box-shadow .2s;
+}
+.am-pin__body > span { transform: rotate(45deg); font-size: 15px; line-height: 1; filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+.am-pin__dot {           /* petit point au sol, sous la pointe */
+  position: absolute; left: 50%; bottom: 2px; width: 8px; height: 8px; margin-left: -4px;
+  background: var(--am-red-2); border-radius: 50%; opacity: .55;
+}
+.am-pin--approx .am-pin__body { background: rgba(225,29,72,.88); border-style: dashed; }
+.am-pin--sel { z-index: 1000 !important; }
+.am-pin--sel .am-pin__body { transform: rotate(-45deg) scale(1.22); box-shadow: 0 8px 18px rgba(190,18,60,.6); }
+.am-pin--sel::before {    /* onde qui pulse autour du point sélectionné */
+  content: ''; position: absolute; left: 50%; bottom: -6px; width: 16px; height: 16px; margin-left: -8px;
+  border-radius: 50%; background: rgba(225,29,72,.45); animation: am-pulse 1.6s ease-out infinite;
+}
+@keyframes am-pulse { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(4.2); opacity: 0; } }
+.am-pin--drop { animation: am-drop .45s cubic-bezier(.2,.9,.3,1.3) both; }
+@keyframes am-drop { from { transform: translateY(-26px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .am-pin--sel::before, .am-pin--drop, .am-spin, .am-skel { animation: none; }
+}
+
+/* ── Fenêtre d'infos (popup) ──────────────────────────────── */
+.am-pop { min-width: 230px; max-width: 270px; font-family: inherit; }
+.am-pop__head { display: flex; gap: 10px; align-items: center; }
+.am-pop h4 { margin: 0; font-size: 14px; line-height: 1.25; }
+.am-pop__loc { margin: 8px 0 2px; font-size: 13px; }
+.am-pop__loc strong { color: #111; }
+.am-pop__note { font-size: 11.5px; color: #71717A; margin: 4px 0; line-height: 1.45; }
+.am-pop__actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.am-pop__actions button, .am-pop__actions a {
+  flex: 1 1 auto; text-align: center; cursor: pointer; text-decoration: none;
+  border: 1.5px solid #E4E4E7; background: #fff; color: #111; border-radius: 10px;
+  padding: 7px 10px; font: inherit; font-size: 12px; font-weight: 700;
+}
+.am-pop__actions .am-primary { background: var(--am-red, #E11D48); border-color: var(--am-red, #E11D48); color: #fff; }
+
+/* ── Superposition d'infos sur la carte ───────────────────── */
+.am-hud {
+  position: absolute; z-index: 500; left: 12px; bottom: 12px; right: 60px; pointer-events: none;
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.am-hud > span {
+  pointer-events: auto; background: rgba(255,255,255,.94); color: #111; backdrop-filter: blur(6px);
+  border: 1px solid rgba(0,0,0,.08); border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+.am-hud i { color: var(--am-red, #E11D48); margin-right: 5px; }
+
+/* ── Mobile : la carte passe au-dessus, la liste dessous ──── */
+@media (max-width: 900px) {
+  .am-body { grid-template-columns: 1fr; min-height: 0; }
+  .am-map { order: -1; min-height: 340px; height: 52vh; }
+  .am-map .leaflet-container { min-height: 340px; }
+  .am-list { border-right: none; border-top: 1px solid var(--am-line); max-height: none; }
+}

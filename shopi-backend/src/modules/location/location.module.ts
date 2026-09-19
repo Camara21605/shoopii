@@ -31,6 +31,8 @@ import { DeliveryLocationService }       from './services/delivery-location.serv
 import { CompanyLocationService }        from './services/company-location.service';
 import { CorrespondantLocationService }  from './services/correspondant-location.service';
 import { ActorSearchService }            from './services/actor-search.service';
+import { ActorMapService }               from './services/actor-map.service';
+import { GeocodingService }              from './services/geocoding.service';
 
 /* ── Gateway ─────────────────────────────────────────────── */
 import { LocationGateway }  from './gateways/location.gateway';
@@ -44,6 +46,7 @@ import { CompanyLocationController }         from './controllers/company-locatio
 import { CorrespondantLocationController }   from './controllers/correspondant-location.controller';
 import { TrackingController }                from './controllers/tracking.controller';
 import { ActorSearchController }             from './controllers/actor-search.controller';
+import { ActorMapController }                from './controllers/actor-map.controller';
 
 @Module({
   imports: [
@@ -85,6 +88,7 @@ import { ActorSearchController }             from './controllers/actor-search.co
     CorrespondantLocationController,
     TrackingController,
     ActorSearchController,
+    ActorMapController,
   ],
 
   providers: [
@@ -96,6 +100,8 @@ import { ActorSearchController }             from './controllers/actor-search.co
     CompanyLocationService,
     CorrespondantLocationService,
     ActorSearchService,
+    ActorMapService,
+    GeocodingService,
     LocationGateway,
   ],
 
