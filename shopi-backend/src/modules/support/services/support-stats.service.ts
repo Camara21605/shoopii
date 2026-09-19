@@ -57,6 +57,14 @@ export interface SupportOverview {
   avgCsat:            number;  // note CSAT moyenne (0 si aucune note)
   slaBreachedCount:   number;  // tickets > 24h sans réponse d'agent
   unreadCount:        number;  // tickets avec une réponse client non lue par l'agent
+  /* Alias attendus par les dashboards (admin de zone + super-admin) : ils
+   * lisaient slaViolations / csat / avgResponseTime, des champs que l'API
+   * ne renvoyait pas → "undefined" sur la carte SLA, CSAT toujours "—" même
+   * avec des notes, et badge SLA de la sidebar toujours à 0. csat et
+   * avgResponseTime valent null (et non 0) quand il n'existe aucune donnée. */
+  slaViolations:      number;
+  csat:               number | null;
+  avgResponseTime:    number | null;
   byStatus:           TicketStatusCount[];
   byType:             TicketTypeCount[];
   byChannel:          TicketChannelCount[];
@@ -91,7 +99,9 @@ export class SupportStatsService {
       return {
         total: 0, openCount: 0, inProgressCount: 0, waitingUserCount: 0,
         resolvedCount: 0, closedCount: 0, avgFirstResponseH: 0, avgCsat: 0,
-        slaBreachedCount: 0, unreadCount: 0, byStatus: [], byType: [], byChannel: [],
+        slaBreachedCount: 0, unreadCount: 0,
+        slaViolations: 0, csat: null, avgResponseTime: null,
+        byStatus: [], byType: [], byChannel: [],
         last7Days: this.emptyLast7Days(),
       };
     }
@@ -246,6 +256,11 @@ export class SupportStatsService {
       avgCsat:           Math.round((parseFloat(metricsRaw.avgCsat) || 0) * 10) / 10,
       slaBreachedCount:  parseInt(metricsRaw.slaBreached, 10) || 0,
       unreadCount:       parseInt(metricsRaw.unread, 10) || 0,
+      slaViolations:     parseInt(metricsRaw.slaBreached, 10) || 0,
+      csat:              (parseFloat(metricsRaw.avgCsat) || 0) > 0
+                           ? Math.round(parseFloat(metricsRaw.avgCsat) * 10) / 10 : null,
+      avgResponseTime:   (parseFloat(metricsRaw.avgResponseH) || 0) > 0
+                           ? Math.round(parseFloat(metricsRaw.avgResponseH) * 10) / 10 : null,
       byStatus,
       byType,
       byChannel,

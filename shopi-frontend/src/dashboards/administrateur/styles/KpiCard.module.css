@@ -42,3 +42,28 @@
 .v { font-family: var(--fd); font-weight: 800; font-size: 28px; color: var(--navy); letter-spacing: -.5px; line-height: 1; }
 .v small { font-size: 14px; color: var(--t3); font-weight: 600; }
 .l { font-size: 12.5px; color: var(--t3); margin-top: 6px; }
+
+/* ── Variante compacte — bandeau de 5 cartes sur UNE seule ligne (page
+ * Support). Ne touche pas les autres pages qui utilisent KpiCard. ── */
+.compact { padding: 14px 16px; min-width: 0; }
+.compact:hover { transform: none; }
+.compact .top { margin-bottom: 10px; }
+.compact .ic { width: 36px; height: 36px; border-radius: 11px; font-size: 15px; }
+.compact .v { font-size: 24px; }
+.compact .v small { font-size: 12px; }
+.compact .l { font-size: 12px; margin-top: 5px; }
+
+@media (max-width: 900px) {
+  .compact { padding: 12px 10px; }
+  .compact .ic { width: 32px; height: 32px; font-size: 13px; }
+  .compact .v { font-size: 20px; }
+}
+@media (max-width: 560px) {
+  .compact { padding: 9px 4px 8px; text-align: center; border-radius: 12px; }
+  .compact .stripe { height: 2px; }
+  .compact .top { justify-content: center; margin-bottom: 6px; }
+  .compact .ic { width: 26px; height: 26px; border-radius: 8px; font-size: 11px; }
+  .compact .v { font-size: 16px; letter-spacing: -.3px; }
+  .compact .v small { display: none; }
+  .compact .l { font-size: 9px; line-height: 1.25; margin-top: 4px; overflow-wrap: anywhere; }
+}

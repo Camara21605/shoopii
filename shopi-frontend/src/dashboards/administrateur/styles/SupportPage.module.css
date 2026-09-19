@@ -4,7 +4,7 @@
  * d'ActeursPage.module.css + les KPI cards partagées.
  * ================================================================ */
 
-.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 22px; }
 
 .card { background: var(--white); border: 1px solid var(--bdr); border-radius: var(--r-lg); overflow: hidden; }
 .ch {
@@ -76,9 +76,9 @@
 .pr_high   { background: var(--am-bg); color: var(--amber); }
 .pr_urgent { background: rgba(220,38,38,.1); color: #DC2626; }
 
-@media (max-width: 1100px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px) { .kpis { gap: 8px; } }
 @media (max-width: 560px) {
-  .kpis { grid-template-columns: 1fr; }
+  .kpis { gap: 5px; }
   .searchIn input { width: 100%; }
   .filters { width: 100%; }
 }

@@ -77,11 +77,11 @@ export default function SupportPage({ onToast }: SupportPageProps) {
       {/* ── KPIs ── */}
       {stats && (
         <div className={styles.kpis}>
-          <KpiCard variant="k1" icon="fa-headset" value={String(stats.total)} label="Total tickets" />
-          <KpiCard variant="k2" icon="fa-fire" value={String(activeCount)} label="Tickets actifs" />
-          <KpiCard variant="k4" icon="fa-envelope" value={String(stats.unreadCount)} label="Non lus" />
-          <KpiCard variant="k4" icon="fa-clock" value={String(stats.slaViolations)} label="SLA dépassés" />
-          <KpiCard variant="k3" icon="fa-star" value={stats.csat != null ? stats.csat.toFixed(1) : '—'} unit="/5" label="Satisfaction (CSAT)" />
+          <KpiCard variant="k1" icon="fa-headset" value={String(stats.total)} label="Total tickets" compact />
+          <KpiCard variant="k2" icon="fa-fire" value={String(activeCount)} label="Tickets actifs" compact />
+          <KpiCard variant="k4" icon="fa-envelope" value={String(stats.unreadCount)} label="Non lus" compact />
+          <KpiCard variant="k4" icon="fa-clock" value={String(stats.slaViolations)} label="SLA dépassés" compact />
+          <KpiCard variant="k3" icon="fa-star" value={stats.csat != null ? stats.csat.toFixed(1) : '—'} unit="/5" label="Satisfaction (CSAT)" compact />
         </div>
       )}
 

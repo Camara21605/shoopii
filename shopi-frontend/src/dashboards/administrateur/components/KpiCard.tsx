@@ -16,14 +16,16 @@ interface KpiCardProps {
   label:   string;   // libellé sous la valeur
   delta?:  string;   // variation, ex. "+24" ou "+18%"
   trend?:  'up' | 'down';
+  /** Version réduite pour aligner plusieurs cartes sur une seule ligne. */
+  compact?: boolean;
 }
 
 /* React.memo justifié : composant purement présentationnel, ré-utilisé
  * 3-4 fois par page (Overview/Stats/Support) avec des props primitives
  * stables — évite un re-render de chaque carte quand une seule change. */
-function KpiCard({ variant, icon, value, unit, label, delta, trend }: KpiCardProps) {
+function KpiCard({ variant, icon, value, unit, label, delta, trend, compact }: KpiCardProps) {
   return (
-    <div className={`${styles.kpi} ${styles[variant]}`}>
+    <div className={`${styles.kpi} ${styles[variant]}${compact ? ` ${styles.compact}` : ''}`}>
       {/* Barre colorée à gauche (couleur selon la variante) */}
       <div className={styles.stripe} />
 
