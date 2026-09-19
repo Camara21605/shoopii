@@ -28,6 +28,7 @@ import { UserRole }     from '../../../common/enums/user-role.enum';
 import {
   CorrespondantProfilResponse, CorrTypeDto, BadgeDto, HoraireDto, InfoPratiqueDto,
 } from './dto/correspondant-profil.response';
+import { actorLocation } from '../../../common/utils/actor-location.util';
 
 /* En ligne si dernière connexion < 15 minutes */
 const ONLINE_DELAY_MS = 15 * 60 * 1000;
@@ -101,8 +102,8 @@ export class CorrespondantProfilService {
     const nbAbonnes   = await this.countAbonnes(id);
 
     /* 5. Localisation lisible */
-    const localisation = [cor.depotCommune, cor.depotVille].filter(Boolean).join(', ')
-      || cor.zone || 'Conakry, Guinée';
+    const loc          = actorLocation({ ville: cor.depotVille, commune: cor.depotCommune, quartier: cor.depotQuartier });
+    const localisation = loc.localisation || cor.zone || '';
 
     return {
       /* Identité */
@@ -202,7 +203,7 @@ export class CorrespondantProfilService {
   /* Grille d'infos pratiques à partir des champs dépôt */
   private buildInfosPratiques(cor: Correspondent, u: any): InfoPratiqueDto[] {
     return [
-      { icone: 'fa-location-dot', label: 'Adresse du dépôt',     valeur: cor.depotAdresse || '—', sub: [cor.depotCommune, cor.depotVille].filter(Boolean).join(', ') },
+      { icone: 'fa-location-dot', label: 'Adresse du dépôt',     valeur: cor.depotAdresse || '—', sub: actorLocation({ ville: cor.depotVille, commune: cor.depotCommune, quartier: cor.depotQuartier }).localisation ?? '' },
       { icone: 'fa-box',          label: 'Capacité de stockage', valeur: cor.depotCapacite || '—', sub: cor.depotAcces || 'Stockage sécurisé' },
       { icone: 'fa-phone',        label: 'Contact direct',       valeur: cor.depotPhone || u?.phone || '—', sub: 'Disponible aux heures d\'ouverture' },
       { icone: 'fa-language',     label: 'Langues parlées',      valeur: cor.langues || 'Français', sub: '' },

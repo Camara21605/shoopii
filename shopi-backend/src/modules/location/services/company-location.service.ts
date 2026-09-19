@@ -42,7 +42,7 @@ export class CompanyLocationService {
     const company = await this.companyRepo.findOne({
       where:  { id: companyId },
       select: [
-        'id', 'companyName', 'adresse', 'commune', 'ville',
+        'id', 'companyName', 'adresse', 'commune', 'quartier', 'ville',
         'region', 'pays', 'codePostal', 'repere',
         'latitude', 'longitude',
       ] as any,
@@ -63,6 +63,7 @@ export class CompanyLocationService {
     Object.assign(company, {
       adresse:   dto.adresse   ?? company.adresse,
       commune:   dto.commune   ?? company.commune,
+      quartier:  dto.quartier  ?? company.quartier,
       ville:     dto.ville     ?? company.ville,
       region:    dto.region    ?? (company as any).region,
       pays:      dto.pays      ?? company.pays,

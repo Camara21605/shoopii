@@ -91,6 +91,7 @@ export interface RegistrationLocation {
   address?:          string;
   city?:             string;
   district?:         string;
+  quartier?:         string;
   region?:           string;
   country?:          string;
   postalCode?:       string;
@@ -140,6 +141,7 @@ export interface RegisterPayload {
   address?:        string;
   city?:           string;
   district?:       string;
+  quartier?:       string;
   region?:         string;
   country?:        string;
   postalCode?:     string;
@@ -205,6 +207,7 @@ export interface RegisterFormData {
   address?:        string;
   city?:           string;
   district?:       string;
+  quartier?:       string;
   region?:         string;
   country?:        string;
   postalCode?:     string;

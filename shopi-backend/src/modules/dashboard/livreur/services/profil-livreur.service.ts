@@ -120,7 +120,11 @@ export class ProfilLivreurService {
     if (dto.phone         !== undefined) livreur.phone         = dto.phone         ?? null;
     if (dto.email         !== undefined) livreur.email         = dto.email         ?? null;
     if (dto.langues       !== undefined) livreur.langues       = dto.langues       ?? null;
-    if (dto.ville         !== undefined) livreur.ville         = dto.ville         ?? null;
+    /* Ville / commune / quartier : espaces normalisés, vide = effacé (jamais de valeur inventée) */
+    const loc = (v?: string | null) => (v ?? '').replace(/\s+/g, ' ').trim() || null;
+    if (dto.ville         !== undefined) livreur.ville         = loc(dto.ville);
+    if (dto.commune       !== undefined) livreur.commune       = loc(dto.commune);
+    if (dto.quartier      !== undefined) livreur.quartier      = loc(dto.quartier);
     if (dto.deliveryEmoji !== undefined) livreur.deliveryEmoji = dto.deliveryEmoji ?? '🛵';
 
     // ✅ fullName recalculé automatiquement

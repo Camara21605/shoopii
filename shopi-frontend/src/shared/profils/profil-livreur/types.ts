@@ -20,6 +20,11 @@ export interface LivreurProfile {
   fullName:        string;
   profilePicture:  string | null;
   zone:            string;
+  /** Ville / quartier réels (voir actorLocation() côté API) */
+  ville?:          string | null;
+  commune?:        string | null;
+  quartier?:       string | null;
+  localisation?:   string | null;
   vehicule:        string;        // libellé formaté "🛵 Honda Wave"
   vehiculeType:    string;
   totalLivraisons: number;

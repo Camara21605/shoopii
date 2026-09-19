@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { LivreurApi } from '../pages/BoutiquePage';
 import styles from '../styles/CardsLivreur.module.css';
+import { locationLabel } from '../../../../../shared/location/utils/locationLabel';
 
 interface Props {
   l:       LivreurApi;
@@ -59,9 +60,9 @@ export default function CardLivreurBoutique({ l, onToast }: Props) {
       <div className={styles.nom}>{l.fullName}</div>
 
       {/* ── Zone de livraison ── */}
-      {l.zone && (
+      {locationLabel(l) && (
         <div className={styles.zone}>
-          <i className="fas fa-map-pin" /> {l.zone}
+          <i className="fas fa-map-pin" /> {locationLabel(l)}
         </div>
       )}
 

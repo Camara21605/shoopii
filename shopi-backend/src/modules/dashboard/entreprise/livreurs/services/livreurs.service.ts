@@ -56,6 +56,7 @@ import {
   NotificationType,
 } from 'src/database/entities/notification/notification.entitiy';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
+import { actorLocation } from '../../../../../common/utils/actor-location.util';
 
 // ─────────────────────────────────────────────────────────────
 // INTERFACES DE RÉPONSE — alignées sur LivreursPage.tsx
@@ -67,6 +68,10 @@ export interface LivreurResponse {
   email:                string;        // depuis users.email
   phone:                string | null;
   zone:                 string | null;
+  ville:                string | null;
+  commune:              string | null;
+  quartier:             string | null;
+  localisation:         string | null;
   VehicleType:          string;
   vehiculePlaque:         string | null;
   vehiculeEmoji:         string;
@@ -224,7 +229,9 @@ export class LivreursService {
       fullName:             d.fullName,
       email:                d.userEmail ?? '',
       phone:                d.phone,
-      zone:                 d.zone,
+      /* `zone` = « Quartier, Ville » réels (les écrans l'affichent tel quel) ; repli sur l'ancien texte libre */
+      zone:                 actorLocation({ ville: d.ville, commune: d.commune, quartier: d.quartier }).localisation ?? d.zone,
+      ...actorLocation({ ville: d.ville, commune: d.commune, quartier: d.quartier }),
       VehicleType:          vt,
       vehiculePlaque:        d.vehiculePlaque,
       vehiculeEmoji:         VEHICLE_EMOJI[vt] ?? '🛵',

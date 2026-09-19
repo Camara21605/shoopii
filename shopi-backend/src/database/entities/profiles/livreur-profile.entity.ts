@@ -160,6 +160,14 @@ export class Delivery {
   @Column({ type: 'varchar', length: 100, nullable: true })
   ville!: string | null;
 
+  /** Commune / arrondissement de base du livreur (ex : "Kaloum"). */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  commune!: string | null;
+
+  /** Quartier de base du livreur (ex : "Boussoura"). */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  quartier!: string | null;
+
   /* ── Références géo structurées — voir partenaire-profile.entity.ts
    * pour l'explication complète (paysId/villeId, GeoResolutionService).
    * Pas de champ pays texte ici : paysId est déduit de villeId en

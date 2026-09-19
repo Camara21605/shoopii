@@ -286,7 +286,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       latitude: loc.latitude ?? undefined, longitude: loc.longitude ?? undefined,
       locationAccuracy: loc.locationAccuracy ?? undefined,
       address: loc.address ?? undefined, city: loc.city ?? undefined,
-      district: loc.district ?? undefined, region: loc.region ?? undefined,
+      district: loc.district ?? undefined, quartier: loc.quartier ?? undefined, region: loc.region ?? undefined,
       country: loc.country ?? undefined, postalCode: loc.postalCode ?? undefined,
       gpsEnabled: loc.gpsEnabled ?? false,
     });
@@ -305,6 +305,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       region:   loc.regionNom,
       city:     loc.prefectureNom,
       district: loc.communeNom,
+      quartier: loc.quartierNom || undefined,
     });
     setLocationDone(true);
   };

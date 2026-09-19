@@ -298,6 +298,12 @@ export class RegisterDto {
   @MaxLength(100)
   district?: string;
 
+  /** Quartier (niveau sous la commune) — entreprise, livreur, correspondant. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  quartier?: string;
+
   @IsOptional()
   @IsString()
   @MaxLength(100)

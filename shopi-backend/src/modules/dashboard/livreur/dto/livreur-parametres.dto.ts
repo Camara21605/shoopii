@@ -69,6 +69,8 @@ export class UpdateLivreurProfilDto {
   @IsOptional() @IsString() @MaxLength(1000) bio?: string;
   @IsOptional() @IsString() @MaxLength(255)  langues?: string;
   @IsOptional() @IsString() @MaxLength(100)  ville?: string;
+  @IsOptional() @IsString() @MaxLength(100)  commune?: string;
+  @IsOptional() @IsString() @MaxLength(100)  quartier?: string;
   @IsOptional() @IsString() @MaxLength(10)   deliveryEmoji?: string;
 }
 

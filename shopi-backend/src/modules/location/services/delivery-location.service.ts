@@ -97,6 +97,8 @@ export class DeliveryLocationService {
 
     Object.assign(delivery, {
       ville:            dto.ville            ?? delivery.ville,
+      commune:          dto.commune          ?? delivery.commune,
+      quartier:         dto.quartier         ?? delivery.quartier,
       zone:             dto.zone             ?? (delivery as any).zone,
       communesActives:  dto.communesActives  != null
                           ? JSON.stringify(dto.communesActives)

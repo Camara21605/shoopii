@@ -64,6 +64,7 @@ export interface CorrespondantData {
   /* §2 Dépôt */
   depotNom:        string | null; depotAdresse:    string | null;
   depotCommune:    string | null; depotVille:      string | null;
+  depotQuartier:   string | null;
   depotRepere:     string | null;
   depotLatitude:   number | null; depotLongitude:  number | null;
   depotPhone:      string | null; // ≠ User.phone (numéro public du relais)

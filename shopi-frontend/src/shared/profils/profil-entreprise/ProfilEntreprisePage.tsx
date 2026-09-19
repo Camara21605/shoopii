@@ -2,6 +2,7 @@ import { useRef, type ChangeEvent } from 'react';
 import { useParametres } from '../../../dashboards/entreprise/hooks/useParametres';
 import type { HoraireJour } from '../../../dashboards/entreprise/hooks/useParametres';
 import type { EntreprisePage } from '../../../dashboards/entreprise/types';
+import { locationLabel } from '../../location/utils/locationLabel';
 
 interface Props {
   onNavigate: (page: EntreprisePage) => void;
@@ -206,9 +207,9 @@ export default function ProfilEntreprisePage({ onNavigate }: Props) {
               </p>
             )}
             <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap', fontSize:12, color:'var(--t3)' }}>
-              {(data.ville || data.pays) && (
+              {(locationLabel(data as any) || data.pays) && (
                 <span><i className="fas fa-map-pin" style={{ color:'var(--blue)', marginRight:5 }} />
-                  {[data.ville, data.pays].filter(Boolean).join(', ')}
+                  {[locationLabel(data as any), data.pays].filter(Boolean).join(', ')}
                 </span>
               )}
               {data.businessEmail && (
@@ -283,7 +284,7 @@ export default function ProfilEntreprisePage({ onNavigate }: Props) {
               data.businessPhone && { i:'fa-phone',       v: data.businessPhone },
               data.businessEmail && { i:'fa-envelope',    v: data.businessEmail },
               data.whatsapp      && { i:'fa-whatsapp',    v: data.whatsapp      },
-              data.adresse       && { i:'fa-location-dot',v: [data.adresse, data.commune, data.ville].filter(Boolean).join(', ') },
+              data.adresse       && { i:'fa-location-dot',v: [data.adresse, locationLabel(data as any)].filter(Boolean).join(', ') },
               data.repere        && { i:'fa-map',         v: data.repere        },
             ].filter(Boolean).map((row: any) => (
               <div key={row.v} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 0', borderBottom:'1px solid var(--bdr)' }}>

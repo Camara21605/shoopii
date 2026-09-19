@@ -70,6 +70,7 @@ import { GeoService } from '../../../geo/geo.service';
 
 /* ── DTO ── */
 import { QueryLivreursDto } from './dto/query-livreurs.dto';
+import { actorLocation } from '../../../../common/utils/actor-location.util';
 
 /* ════════════════════════════════════════════════════════════════
  * TYPES DE RETOUR (contrat avec le frontend)
@@ -81,6 +82,10 @@ export interface LivreurCardData {
   fullName:        string;
   profilePicture:  string | null;
   zone:            string;
+  ville:           string | null;
+  commune:         string | null;
+  quartier:        string | null;
+  localisation:    string | null;
   vehicule:        string;   // libellé formaté avec emoji
   vehiculeType:    string;   // type brut (moto, voiture…)
   totalLivraisons: number;
@@ -536,7 +541,8 @@ export class LivreursClientService {
       id:              profile.id, // id du PROFIL livreur (pour le follow)
       fullName:        this.resolveName(profile),
       profilePicture:  profile.photoUrl ?? null,
-      zone:            profile.zone ?? 'Conakry',
+      zone:            actorLocation({ ville: profile.ville, commune: profile.commune, quartier: profile.quartier }).localisation ?? profile.zone ?? '',
+      ...actorLocation({ ville: profile.ville, commune: profile.commune, quartier: profile.quartier }),
       vehicule:        this.formatVehicule(profile.VehicleType, profile.vehiculeModele),
       vehiculeType:    profile.VehicleType ?? 'moto',
       totalLivraisons: profile.totalDeliveries ?? 0,

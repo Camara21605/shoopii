@@ -26,6 +26,11 @@ export class UpdateCorrespondantLocationDto {
   @IsOptional()
   @IsString()
   @MaxLength(100)
+  depotQuartier?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
   depotVille?: string;
 
   @IsOptional()

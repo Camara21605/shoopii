@@ -115,7 +115,7 @@ const HeroMiniCard: React.FC<HeroMiniCardProps> = ({ livreur, onToast, onChange 
         {livreur.fullName.split(' ')[0]} {livreur.fullName.split(' ')[1]?.[0]}.
       </div>
       <div className={styles.miniZone}>
-        <i className="fas fa-map-pin" aria-hidden="true" /> {livreur.zone.split(' ')[0]}
+        <i className="fas fa-map-pin" aria-hidden="true" /> {livreur.zone}
       </div>
 
       {/* Bouton suivre */}

@@ -35,10 +35,11 @@ import {
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
 import { Follow, FollowStatus, FollowerActorType, TargetActorType }
   from 'src/database/entities/follow/follow.entity';
+import { actorLocation } from '../../../../../common/utils/actor-location.util';
 
 export interface CorrespondantResponse {
   id: string; fullName: string; email: string; phone: string | null;
-  ville: string; quartier: string; adresse: string | null;
+  ville: string; quartier: string; commune: string | null; localisation: string | null; adresse: string | null;
   type: string; status: string; avatarEmoji: string;
   totalMissions: number; thisMonth: number; averageRating: number;
   zone: string | null; joinedAt: string;
@@ -119,7 +120,7 @@ export class CorrespondantsService {
       if (parts.length >= 2) return parts[parts.length - 1];
     }
     if (c.zone) return c.zone.split('·')[0].trim();
-    return 'Conakry';
+    return '';
   }
 
   /* ── Extraire le type ── */
@@ -137,8 +138,11 @@ export class CorrespondantsService {
   /* ── Mapper vers la réponse frontend ── */
   private toResponse(c: Correspondent, followedIds: Set<string> = new Set()): CorrespondantResponse {
     const type     = this.extractType(c);
-    const ville    = this.extractVille(c);
-    const quartier = c.zone ? c.zone.split('·')[0].trim() : ville;
+    /* Ville / quartier RÉELS du dépôt (depotVille / depotQuartier), sinon repli sur les anciens
+     * champs texte — plus de 'Conakry' inventé quand rien n'est renseigné. */
+    const loc      = actorLocation({ ville: c.depotVille, commune: c.depotCommune, quartier: c.depotQuartier });
+    const ville    = loc.ville    ?? this.extractVille(c);
+    const quartier = loc.quartier ?? (c.zone ? c.zone.split('·')[0].trim() : '');
 
     return {
       id:            c.id,
@@ -152,14 +156,16 @@ export class CorrespondantsService {
       phone:         c.user?.phone         ?? null,
       ville,
       quartier,
-      adresse:       c.address,
+      commune:       loc.commune,
+      localisation:  actorLocation({ ville, quartier }).localisation,
+      adresse:       c.depotAdresse ?? c.address,
       type,
       status:        c.status,
       avatarEmoji:   TYPE_EMOJI[type]       ?? '📦',
       totalMissions: c.totalMissions        ?? 0,
       thisMonth:     0,
       averageRating: Number(c.averageRating) || 0,
-      zone:          c.zone,
+      zone:          loc.localisation ?? c.zone,   /* « Quartier, Ville » réels, repli sur l'ancien texte */
       joinedAt:      c.createdAt?.toISOString() ?? '',
       lastActivity:  'Aucune activité récente',
       lastActivityAt:'',

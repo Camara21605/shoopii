@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import type { BoutiqueInfo } from '../data/boutiqueMockData';
 import type { LivreurApi } from '../pages/BoutiquePage';
 import styles from '../styles/AProposSection.module.css';
+import { locationLabel } from '../../../../../shared/location/utils/locationLabel';
 
 interface Props {
   boutiqueInfo: BoutiqueInfo;
@@ -176,9 +177,9 @@ export default function AProposSection({ boutiqueInfo, createdAt, livreurs, onTo
                 {/* Infos */}
                 <div className={styles.livrInfos}>
                   <div className={styles.livrNom}>{l.fullName}</div>
-                  {l.zone && (
+                  {locationLabel(l) && (
                     <div className={styles.livrZone}>
-                      <i className="fas fa-map-pin" /> {l.zone}
+                      <i className="fas fa-map-pin" /> {locationLabel(l)}
                     </div>
                   )}
                 </div>

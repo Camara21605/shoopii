@@ -34,7 +34,7 @@ export class CorrespondantLocationService {
     const corr = await this.corrRepo.findOne({
       where:  { id: corrId },
       select: [
-        'id', 'fullName', 'depotNom', 'depotAdresse', 'depotCommune',
+        'id', 'fullName', 'depotNom', 'depotAdresse', 'depotCommune', 'depotQuartier',
         'depotVille', 'depotRegion', 'depotCodePostal', 'depotRepere',
         'depotLatitude', 'depotLongitude', 'depotPhone',
         'zonesActives',
@@ -57,6 +57,7 @@ export class CorrespondantLocationService {
       depotNom:       dto.depotNom       ?? corr.depotNom,
       depotAdresse:   dto.depotAdresse   ?? corr.depotAdresse,
       depotCommune:   dto.depotCommune   ?? corr.depotCommune,
+      depotQuartier:  dto.depotQuartier  ?? corr.depotQuartier,
       depotVille:     dto.depotVille     ?? corr.depotVille,
       depotRegion:    dto.depotRegion    !== undefined ? dto.depotRegion    : (corr as any).depotRegion,
       depotCodePostal: dto.depotCodePostal !== undefined ? dto.depotCodePostal : (corr as any).depotCodePostal,

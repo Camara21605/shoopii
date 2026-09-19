@@ -32,6 +32,8 @@ export interface CompanyLocationValue {
   prefectureId:  string;
   prefectureNom: string;
   communeNom:    string;
+  /** Quartier — optionnel (aucun quartier n'est peut-être répertorié pour cette commune) */
+  quartierNom?:  string;
 }
 
 interface Props {
@@ -43,12 +45,14 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
   const [regions,    setRegions]    = useState<GeoItem[]>([]);
   const [prefectures, setPrefectures] = useState<GeoItem[]>([]);
   const [communes,   setCommunes]   = useState<GeoItem[]>([]);
-  const [loading,    setLoading]    = useState<'pays' | 'region' | 'prefecture' | 'commune' | null>('pays');
+  const [quartiers,  setQuartiers]  = useState<GeoItem[]>([]);
+  const [loading,    setLoading]    = useState<'pays' | 'region' | 'prefecture' | 'commune' | 'quartier' | null>('pays');
 
   const [paysId,       setPaysId]       = useState('');
   const [regionId,     setRegionId]     = useState('');
   const [prefectureId, setPrefectureId] = useState('');
   const [communeId,    setCommuneId]    = useState('');
+  const [quartierId,   setQuartierId]   = useState('');
 
   useEffect(() => {
     setLoading('pays');
@@ -59,7 +63,7 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
   }, []);
 
   const loadNiveau = useCallback((
-    niveau: 'region' | 'prefecture' | 'commune',
+    niveau: 'region' | 'prefecture' | 'commune' | 'quartier',
     parentId: string,
     setter: (items: GeoItem[]) => void,
   ) => {
@@ -72,39 +76,53 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
 
   const handlePays = (id: string) => {
     setPaysId(id);
-    setRegionId(''); setPrefectureId(''); setCommuneId('');
-    setRegions([]); setPrefectures([]); setCommunes([]);
+    setRegionId(''); setPrefectureId(''); setCommuneId(''); setQuartierId('');
+    setRegions([]); setPrefectures([]); setCommunes([]); setQuartiers([]);
     if (id) loadNiveau('region', id, setRegions);
   };
 
   const handleRegion = (id: string) => {
     setRegionId(id);
-    setPrefectureId(''); setCommuneId('');
-    setPrefectures([]); setCommunes([]);
+    setPrefectureId(''); setCommuneId(''); setQuartierId('');
+    setPrefectures([]); setCommunes([]); setQuartiers([]);
     if (id) loadNiveau('prefecture', id, setPrefectures);
   };
 
   const handlePrefecture = (id: string) => {
     setPrefectureId(id);
-    setCommuneId('');
-    setCommunes([]);
+    setCommuneId(''); setQuartierId('');
+    setCommunes([]); setQuartiers([]);
     if (id) loadNiveau('commune', id, setCommunes);
   };
 
-  const handleCommune = (id: string) => {
-    setCommuneId(id);
-    if (!id) return;
+  /* Remonte la localisation complète (le quartier est facultatif) */
+  const emit = (cId: string, qId: string) => {
     const p  = pays.find(x => x.id === paysId);
     const r  = regions.find(x => x.id === regionId);
     const pr = prefectures.find(x => x.id === prefectureId);
-    const c  = communes.find(x => x.id === id);
+    const c  = communes.find(x => x.id === cId);
     if (!p || !r || !pr || !c) return;
     onComplete({
       paysId:        p.id,  paysNom:       p.nom,
       regionNom:     r.nom,
       prefectureId:  pr.id, prefectureNom: pr.nom,
       communeNom:    c.nom,
+      quartierNom:   quartiers.find(x => x.id === qId)?.nom,
     });
+  };
+
+  const handleCommune = (id: string) => {
+    setCommuneId(id);
+    setQuartierId('');
+    setQuartiers([]);
+    if (!id) return;
+    emit(id, '');
+    loadNiveau('quartier', id, setQuartiers);
+  };
+
+  const handleQuartier = (id: string) => {
+    setQuartierId(id);
+    emit(communeId, id);
   };
 
   const selStyle: CSSProperties = {
@@ -158,6 +176,16 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
           {communes.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
         </select>
       </div>
+
+      {communeId && (quartiers.length > 0 || loading === 'quartier') && (
+        <div style={{ marginTop: 10 }}>
+          <label style={lblStyle}>Quartier</label>
+          <select style={selStyle} value={quartierId} onChange={e => handleQuartier(e.target.value)} disabled={loading === 'quartier'}>
+            <option value="">{loading === 'quartier' ? 'Chargement…' : '— Choisir un quartier (facultatif) —'}</option>
+            {quartiers.map(q => <option key={q.id} value={q.id}>{q.nom}</option>)}
+          </select>
+        </div>
+      )}
 
       {communeId && (
         <div style={{

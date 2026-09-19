@@ -51,6 +51,7 @@ import {
   UpdateWallpaperDto,
 } from './dto/messagerie.dto';
 import { NotificationEventService } from 'src/modules/notifications/events/notification-event.service';
+import { actorLocation } from '../../common/utils/actor-location.util';
 
 // ── Interfaces de réponse ─────────────────────────────────────
 
@@ -319,19 +320,19 @@ export class MessagerieService {
           name:     (d as any)?.fullName ?? 'Livreur',
           logo:     null,
           online,
-          subtitle: `Livreur · ${(d as any)?.zone ?? 'Conakry'}`,
+          subtitle: `Livreur · ${actorLocation({ ville: (d as any)?.ville, commune: (d as any)?.commune, quartier: (d as any)?.quartier }).localisation ?? (d as any)?.zone ?? '—'}`,
           userId,
           memberSince: (d as any)?.createdAt?.toISOString() ?? null,
         };
       }
       case ConversationActorType.CORRESPONDENT: {
         const c = await this.corrRepo.findOne({ where: { id } });
-        const loc = [(c as any)?.depotCommune, (c as any)?.depotVille].filter(Boolean).join(', ');
+        const loc = actorLocation({ ville: (c as any)?.depotVille, commune: (c as any)?.depotCommune, quartier: (c as any)?.depotQuartier }).localisation ?? '';
         return {
           name:     (c as any)?.fullName ?? 'Correspondant',
           logo:     null,
           online,
-          subtitle: `Correspondant · ${loc || 'Conakry'}`,
+          subtitle: `Correspondant · ${loc || '—'}`,
           userId,
           memberSince: (c as any)?.createdAt?.toISOString() ?? null,
         };
@@ -441,11 +442,11 @@ export class MessagerieService {
           result.set(key, { name: row?.companyName ?? 'Boutique', logo: row?.logo ?? null, online, subtitle: 'Boutique Shopi', userId: uid, memberSince });
           break;
         case ConversationActorType.DELIVERY:
-          result.set(key, { name: row?.fullName ?? 'Livreur', logo: null, online, subtitle: `Livreur · ${row?.zone ?? 'Conakry'}`, userId: uid, memberSince });
+          result.set(key, { name: row?.fullName ?? 'Livreur', logo: null, online, subtitle: `Livreur · ${actorLocation({ ville: row?.ville, commune: row?.commune, quartier: row?.quartier }).localisation ?? row?.zone ?? '—'}`, userId: uid, memberSince });
           break;
         case ConversationActorType.CORRESPONDENT: {
-          const loc = [row?.depotCommune, row?.depotVille].filter(Boolean).join(', ');
-          result.set(key, { name: row?.fullName ?? 'Correspondant', logo: null, online, subtitle: `Correspondant · ${loc || 'Conakry'}`, userId: uid, memberSince });
+          const loc = actorLocation({ ville: row?.depotVille, commune: row?.depotCommune, quartier: row?.depotQuartier }).localisation ?? '';
+          result.set(key, { name: row?.fullName ?? 'Correspondant', logo: null, online, subtitle: `Correspondant · ${loc || '—'}`, userId: uid, memberSince });
           break;
         }
         case ConversationActorType.PARTNER: {
@@ -1215,7 +1216,7 @@ export class MessagerieService {
         type:     ConversationActorType.COMPANY,
         name:     co.companyName,
         logo:     co.logo ?? null,
-        subtitle: `Boutique · ${co.ville || 'Conakry'}`,
+        subtitle: `Boutique · ${actorLocation({ ville: co.ville, commune: (co as any).commune, quartier: (co as any).quartier }).localisation ?? '—'}`,
         online:   coPresence.get((co as any).user?.id)?.online === true,
       }));
     }
@@ -1237,7 +1238,7 @@ export class MessagerieService {
         type:     ConversationActorType.DELIVERY,
         name:     (d as any).fullName ?? 'Livreur',
         logo:     null,
-        subtitle: `Livreur · ${(d as any).zone ?? 'Conakry'}`,
+        subtitle: `Livreur · ${actorLocation({ ville: (d as any).ville, commune: (d as any).commune, quartier: (d as any).quartier }).localisation ?? (d as any).zone ?? '—'}`,
         online:   dPresence.get((d as any).user?.id)?.online === true,
       }));
     }
@@ -1255,13 +1256,13 @@ export class MessagerieService {
       const cUserIds  = filtered.map(c => (c as any).user?.id).filter(Boolean) as string[];
       const cPresence = await this.presence.getBulkPresence(cUserIds);
       filtered.forEach(c => {
-        const loc = [(c as any).depotCommune, (c as any).depotVille].filter(Boolean).join(', ');
+        const loc = actorLocation({ ville: (c as any).depotVille, commune: (c as any).depotCommune, quartier: (c as any).depotQuartier }).localisation ?? '';
         results.push({
           id:       c.id,
           type:     ConversationActorType.CORRESPONDENT,
           name:     (c as any).fullName ?? 'Correspondant',
           logo:     null,
-          subtitle: `Correspondant · ${loc || 'Conakry'}`,
+          subtitle: `Correspondant · ${loc || '—'}`,
           online:   cPresence.get((c as any).user?.id)?.online === true,
         });
       });

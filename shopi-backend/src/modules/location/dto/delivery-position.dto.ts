@@ -58,6 +58,16 @@ export class UpdateDeliveryZoneDto {
   @MaxLength(100)
   zone?: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  commune?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  quartier?: string;
+
   /** Communes actives (JSON array) */
   @IsOptional()
   communesActives?: string[];

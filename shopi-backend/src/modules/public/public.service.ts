@@ -28,6 +28,7 @@ import { UserRole }    from 'src/common/enums/user-role.enum';
 import { Commande, CommandeStatus } from 'src/database/entities/commande/commande.entity';
 import { NotificationBroadcastService } from 'src/modules/notifications/services/notification-broadcast.service';
 import { RedisCacheService } from 'src/modules/performance-engine/services/redis-cache.service';
+import { actorLocation } from '../../common/utils/actor-location.util';
 
 // ── Interfaces de réponse ─────────────────────────────────────
 
@@ -152,6 +153,10 @@ export interface PublicBoutiqueResponse {
   totalRatings:  number;
   commune:       string | null;
   ville:         string | null;
+  /** Quartier (à défaut la commune) — voir actorLocation() */
+  quartier:      string | null;
+  /** Texte prêt à afficher : "Quartier, Ville" */
+  localisation:  string | null;
   pays:          string;
   adresse:       string | null;
   verified:      boolean;
@@ -188,6 +193,10 @@ export interface PublicLivreurResponse {
   id:           string;
   fullName:     string;
   zone:         string | null;
+  ville:        string | null;
+  commune:      string | null;
+  quartier:     string | null;
+  localisation: string | null;
   availability: string;
   phone:        string | null;
   emoji:        string;
@@ -225,7 +234,9 @@ export interface PublicCorrespondantResponse {
   id:                string;
   fullName:          string;
   ville:             string | null;
+  commune:           string | null;
   quartier:          string | null;
+  localisation:      string | null;
   note:              number;
   missions:          number;
   verified:          boolean;
@@ -765,6 +776,7 @@ export class PublicService {
       id:           l.id,
       fullName:     l.fullName,
       zone:         l.zone     ?? null,
+      ...actorLocation({ ville: l.ville, commune: l.commune, quartier: l.quartier }),
       availability: l.availability,
       phone:        l.phone    ?? null,
       emoji:        l.deliveryEmoji || '🛵',
@@ -802,8 +814,7 @@ export class PublicService {
       return {
         id:                c.id,
         fullName:          c.fullName,
-        ville:             c.depotVille   ?? null,
-        quartier:          c.depotCommune ?? null,
+        ...actorLocation({ ville: c.depotVille, commune: c.depotCommune, quartier: c.depotQuartier }),
         note:              Number(c.averageRating) || 0,
         missions:          c.totalMissions ?? 0,
         verified:          c.verificationStatus === VerificationStatus.VERIFIED,
@@ -1002,8 +1013,7 @@ export class PublicService {
       averageRating: Number(c.averageRating) || 0,
       totalOrders:   c.totalOrders   || 0,
       totalRatings:  c.totalRatings  || 0,
-      commune:       (c as any).commune  ?? null,
-      ville:         c.ville             ?? 'Conakry',
+      ...actorLocation({ ville: c.ville, commune: (c as any).commune, quartier: (c as any).quartier }),
       pays:          c.pays              ?? 'GN',
       adresse:       c.adresse,
       verified:      c.verificationStatus === 'verified',
@@ -1117,8 +1127,7 @@ export class PublicService {
         averageRating: Number(c.averageRating) || 0,
         totalOrders:   c.totalOrders  || 0,
         totalRatings:  c.totalRatings || 0,
-        commune:       (c as any).commune  ?? null,
-        ville:         c.ville             ?? 'Conakry',
+        ...actorLocation({ ville: c.ville, commune: (c as any).commune, quartier: (c as any).quartier }),
         pays:          c.pays              ?? 'GN',
         adresse:       c.adresse,
         verified:      c.verificationStatus === 'verified',

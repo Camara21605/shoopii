@@ -12,6 +12,7 @@ import type { CorrespondantData } from '../../hooks/useCorrespondantParametres';
 import type { ToggleRow as TRow } from '../../data/parametresData';
 import '../../../../shared/location/styles/location.css';
 import type { LocationPickerValue } from '../../../../shared/location/components/LocationPicker';
+import VilleCommuneQuartier from '../../../../shared/location/components/VilleCommuneQuartier';
 
 const LocationPicker = lazy(() => import('../../../../shared/location/components/LocationPicker'));
 
@@ -27,8 +28,10 @@ interface Props {
 export default function SecDepot({ data, saving, dirty, markClean, saveTrigger, onSave }: Props) {
   const [nom,       setNom]       = useState('');
   const [adresse,   setAdresse]   = useState('');
-  const [commune,   setCommune]   = useState('Kaloum');
-  const [ville,     setVille]     = useState('Conakry');
+  /* Aucune valeur par défaut : l'ancien formulaire forçait « Kaloum / Conakry » */
+  const [commune,   setCommune]   = useState('');
+  const [quartier,  setQuartier]  = useState('');
+  const [ville,     setVille]     = useState('');
   const [repere,    setRepere]    = useState('');
   const [phone,     setPhone]     = useState('');
   const [capacite,  setCapacite]  = useState("Jusqu'à 50 colis");
@@ -42,8 +45,9 @@ export default function SecDepot({ data, saving, dirty, markClean, saveTrigger, 
     if (!data) return;
     setNom(data.depotNom       ?? '');
     setAdresse(data.depotAdresse ?? '');
-    setCommune(data.depotCommune ?? 'Kaloum');
-    setVille(data.depotVille   ?? 'Conakry');
+    setCommune(data.depotCommune ?? '');
+    setQuartier(data.depotQuartier ?? '');
+    setVille(data.depotVille   ?? '');
     setRepere(data.depotRepere ?? '');
     setPhone(data.depotPhone   ?? '');
     if (data.depotLatitude && data.depotLongitude) {
@@ -77,7 +81,7 @@ export default function SecDepot({ data, saving, dirty, markClean, saveTrigger, 
 
     try {
       await onSave({
-        depotNom: nom, depotAdresse: adresse, depotCommune: commune, depotVille: ville,
+        depotNom: nom, depotAdresse: adresse, depotCommune: commune, depotQuartier: quartier, depotVille: ville,
         depotRepere: repere, depotPhone: phone, depotCapacite: capacite,
         depotTypeLocal: typeLocal, depotAcces: acces, depotAccessOptions,
         ...(locationVal?.coordinates && {
@@ -122,25 +126,14 @@ export default function SecDepot({ data, saving, dirty, markClean, saveTrigger, 
               <input className={s.fin} value={adresse} onChange={e => { setAdresse(e.target.value); dirty(); }} />
             </div>
           </div>
-          <div className={s.grid2}>
-            <div className={s.fg}>
-              <div className={s.fl}>Commune / Quartier *</div>
-              <div className={s.fw}>
-                <i className="fas fa-map-pin" style={{ position:'absolute', left:13, color:'var(--t3)', fontSize:13, pointerEvents:'none', zIndex:1 }} />
-                <select className={s.fin} value={commune} onChange={e => { setCommune(e.target.value); dirty(); }}>
-                  {['Kaloum','Dixinn','Matam','Ratoma','Matoto'].map(c => <option key={c}>{c}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className={s.fg}>
-              <div className={s.fl}>Ville *</div>
-              <div className={s.fw}>
-                <i className="fas fa-city" style={{ position:'absolute', left:13, color:'var(--t3)', fontSize:13, pointerEvents:'none', zIndex:1 }} />
-                <select className={s.fin} value={ville} onChange={e => { setVille(e.target.value); dirty(); }}>
-                  {['Conakry','Kindia','Boké','Labé'].map(v => <option key={v}>{v}</option>)}
-                </select>
-              </div>
-            </div>
+          {/* Ville → commune → quartier (référentiel de la Guinée, saisie libre possible) */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(190px, 1fr))', gap:14 }}>
+            <VilleCommuneQuartier
+              value={{ ville, commune, quartier }}
+              onChange={v => { setVille(v.ville); setCommune(v.commune); setQuartier(v.quartier); dirty(); }}
+              classes={{ group: s.fg, label: s.fl, input: s.fin, wrap: s.fw }}
+              labels={{ ville: 'Ville *', commune: 'Commune', quartier: 'Quartier *' }}
+            />
           </div>
           <div className={s.fg}>
             <div className={s.fl}>Repère / Indication</div>

@@ -3,10 +3,13 @@ import { useTranslation }      from 'react-i18next';
 import styles                  from './Cards.module.css';
 import { useAuthGate }         from '../../../shared/hooks/useAuthGate';
 import FollowButton            from '../../../shared/components/FollowButton';
+import { locationLabel }        from '../../../shared/location/utils/locationLabel';
 
 export interface CorrespondantCardData {
   id: string; fullName: string; profilePicture: string | null;
   region: string; typeCorrespondant: 'regional' | 'zonal' | 'national';
+  /** Ville / quartier réels — voir actorLocation() côté API */
+  ville?: string | null; commune?: string | null; quartier?: string | null; localisation?: string | null;
   bio: string | null; totalMissions: number; averageRating: number;
   online: boolean; isSuivi: boolean;
 }
@@ -29,7 +32,7 @@ export default function CardCorrespondant({ c, onToast, onRemoved }: Props) {
   const id     = c?.id ?? '';
   const name   = c?.fullName ?? c?.nom ?? '';
   const photo  = c?.profilePicture ?? null;
-  const region = c?.region ?? '';
+  const region = locationLabel(c);   /* « Quartier, Ville » */
   const online = c?.online ?? false;
 
   const { openAuthModal, authModal } = useAuthGate();

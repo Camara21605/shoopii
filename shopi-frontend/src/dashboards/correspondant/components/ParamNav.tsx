@@ -96,7 +96,7 @@ function computeNavState(
   const depotPct = calcPct([
     filled(data.depotNom),
     filled(data.depotAdresse),
-    filled(data.depotCommune),
+    filled(data.depotQuartier ?? data.depotCommune),
     filled(data.depotVille),
     filled(data.depotPhone),
     filled(data.depotCapacite),

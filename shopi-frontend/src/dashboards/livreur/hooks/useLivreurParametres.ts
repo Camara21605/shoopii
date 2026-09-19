@@ -34,6 +34,8 @@ export interface LivreurData {
   bio: string | null;
   langues: string | null;
   ville: string | null;
+  commune: string | null;
+  quartier: string | null;
   deliveryEmoji: string;
   status: string;
   availability: string;

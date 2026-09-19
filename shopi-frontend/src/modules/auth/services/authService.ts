@@ -31,7 +31,7 @@ function buildRegisterPayload(
     countryCode, countryName, dialCode,
     // Localisation
     latitude, longitude, locationAccuracy,
-    address, city, district, region, country, postalCode, gpsEnabled,
+    address, city, district, quartier, region, country, postalCode, gpsEnabled,
     companyPaysId, companyVilleId,
   } = formData;
 
@@ -104,6 +104,7 @@ function buildRegisterPayload(
   if (address)           payload.address   = address;
   if (city)              payload.city      = city;
   if (district)          payload.district  = district;
+  if (quartier)          payload.quartier  = quartier;
   if (region)            payload.region    = region;
   if (country)           payload.country   = country;
   if (postalCode)        payload.postalCode = postalCode;

@@ -44,8 +44,11 @@ export class DepotService extends CorrespondantBaseService {
 
     if (dto.depotNom           !== undefined) cor.depotNom           = dto.depotNom           ?? null;
     if (dto.depotAdresse       !== undefined) cor.depotAdresse       = dto.depotAdresse       ?? null;
-    if (dto.depotCommune       !== undefined) cor.depotCommune       = dto.depotCommune       ?? null;
-    if (dto.depotVille         !== undefined) cor.depotVille         = dto.depotVille         ?? null;
+    /* Ville / commune / quartier : espaces normalisés, vide = effacé */
+    const loc = (v?: string | null) => (v ?? '').replace(/\s+/g, ' ').trim() || null;
+    if (dto.depotCommune       !== undefined) cor.depotCommune       = loc(dto.depotCommune);
+    if (dto.depotQuartier      !== undefined) cor.depotQuartier      = loc(dto.depotQuartier);
+    if (dto.depotVille         !== undefined) cor.depotVille         = loc(dto.depotVille);
     if (dto.depotRepere        !== undefined) cor.depotRepere        = dto.depotRepere        ?? null;
     if (dto.depotLatitude      !== undefined) cor.depotLatitude      = dto.depotLatitude      ?? null;
     if (dto.depotLongitude     !== undefined) cor.depotLongitude     = dto.depotLongitude     ?? null;

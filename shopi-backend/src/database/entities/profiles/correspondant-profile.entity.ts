@@ -219,9 +219,13 @@ export class Correspondent {
   @Column({ type: 'text', nullable: true })
   depotAdresse: string | null;
 
-  /** Commune / quartier (ex : "Kaloum") */
+  /** Commune / arrondissement (ex : "Kaloum") */
   @Column({ type: 'varchar', length: 100, nullable: true })
   depotCommune: string | null;
+
+  /** Quartier du dépôt (ex : "Boussoura") — distinct de la commune. */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  depotQuartier: string | null;
 
   /** Ville du dépôt (ex : "Conakry") */
   @Column({ type: 'varchar', length: 100, nullable: true })

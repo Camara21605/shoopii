@@ -53,6 +53,9 @@ export interface BoutiqueInfo {
   coverImage?:  string | null;
   domaine:      string;
   ville:        string;
+  /** Quartier (à défaut la commune) et texte « Quartier, Ville » — voir actorLocation() côté API */
+  quartier?:    string;
+  localisation?: string;
   membre:       string;
   description:  string;
   /** Résumé court (ex: "Ouvert · 08:00–20:00" ou "Fermé aujourd'hui") —

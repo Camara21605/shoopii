@@ -100,6 +100,9 @@ export class UpdateDepotDto {
   depotCommune?: string;
 
   @IsOptional() @IsString() @MaxLength(100)
+  depotQuartier?: string;
+
+  @IsOptional() @IsString() @MaxLength(100)
   depotVille?: string;
 
   @IsOptional() @IsString()

@@ -3,10 +3,13 @@ import { useTranslation } from 'react-i18next';
 import styles           from './Cards.module.css';
 import { useAuthGate }  from '../../../shared/hooks/useAuthGate';
 import FollowButton     from '../../../shared/components/FollowButton';
+import { locationLabel } from '../../../shared/location/utils/locationLabel';
 
 export interface LivreurCardData {
   id: string; fullName: string; profilePicture: string | null;
   zone: string; vehicule: string; totalLivraisons: number;
+  /** Ville / quartier réels — voir actorLocation() côté API */
+  ville?: string | null; commune?: string | null; quartier?: string | null; localisation?: string | null;
   averageRating: number; disponible: boolean; isSuivi: boolean;
   emoji?: string;
 }
@@ -30,7 +33,7 @@ export default function CardLivreur({ l, onToast, onRemoved }: Props) {
   const id       = l?.id ?? '';
   const name     = l?.fullName ?? '';
   const photo    = l?.profilePicture ?? null;
-  const zone     = l?.zone ?? '';
+  const zone     = locationLabel(l);   /* « Quartier, Ville » */
   const vehicule = l?.vehicule ?? '';
   const dispo    = l?.disponible ?? false;
 

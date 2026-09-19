@@ -4,6 +4,7 @@ import styles from './Cards.module.css';
 import type { BoutiqueCardData } from '../data/types';
 import { useAuthGate } from '../../../shared/hooks/useAuthGate';
 import FollowButton from '../../../shared/components/FollowButton';
+import { locationLabel } from '../../../shared/location/utils/locationLabel';
 
 const DOMAIN_COLORS: Record<string, { bg: string; bg2: string; color: string }> = {
   'Électronique': { bg:'rgba(37,99,235,.18)',   bg2:'rgba(37,99,235,.08)',  color:'#1D4ED8' },
@@ -42,7 +43,9 @@ export default function CardEntreprise({ e, onToast, onRemoved, listMode = false
   const ds = domainStyle(e.domaine);
   const { openAuthModal, authModal } = useAuthGate();
 
-  const handle = [e.domaine, e.ville].filter(Boolean).join(' · ');
+  /* Domaine (façon @handle) puis, sur sa propre ligne, « Quartier, Ville » */
+  const handle   = e.domaine ?? '';
+  const location = locationLabel(e);
 
   return (
     <div
@@ -87,8 +90,14 @@ export default function CardEntreprise({ e, onToast, onRemoved, listMode = false
           />
         </div>
 
-        {/* Domaine · ville (façon @handle) */}
+        {/* Domaine (façon @handle) */}
         {handle && <div className={styles.coHandle}>{handle}</div>}
+        {/* Quartier, Ville */}
+        {location && (
+          <div className={styles.coLoc} title={location}>
+            <i className="fas fa-location-dot" aria-hidden="true" /> {location}
+          </div>
+        )}
       </div>
 
       {/* Bouton */}

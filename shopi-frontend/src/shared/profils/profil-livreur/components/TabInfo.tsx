@@ -7,6 +7,7 @@
 import { useTranslation } from 'react-i18next';
 import styles from '../styles/ProfilLivreur.module.css';
 import type { LivreurProfile } from '../types';
+import { locationParts } from '../../../location/utils/locationLabel';
 
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 
@@ -37,10 +38,30 @@ export default function TabInfo({ profile }: { profile: LivreurProfile }) {
       <div className={styles.card}>
         <div className={styles.ch}><div className={styles.ct}><i className="fas fa-circle-info" /> {t('profilLivreur.tabInfo.informationsPratiques')}</div></div>
         <div className={styles.infoGrid}>
-          <div className={styles.ir}>
-            <div className={styles.irLbl}><i className="fas fa-map-pin" /> {t('profilLivreur.tabInfo.zonePrincipale')}</div>
-            <div className={styles.irVal}>{profile.zone}</div>
-          </div>
+          {(() => {
+            const { ville, quartier } = locationParts(profile);
+            return (ville || quartier) ? (
+              <>
+                {ville && (
+                  <div className={styles.ir}>
+                    <div className={styles.irLbl}><i className="fas fa-city" /> {t('profilLivreur.tabInfo.ville', 'Ville')}</div>
+                    <div className={styles.irVal}>{ville}</div>
+                  </div>
+                )}
+                {quartier && (
+                  <div className={styles.ir}>
+                    <div className={styles.irLbl}><i className="fas fa-map-pin" /> {t('profilLivreur.tabInfo.quartier', 'Quartier')}</div>
+                    <div className={styles.irVal}>{quartier}</div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className={styles.ir}>
+                <div className={styles.irLbl}><i className="fas fa-map-pin" /> {t('profilLivreur.tabInfo.zonePrincipale')}</div>
+                <div className={styles.irVal}>{profile.zone || '—'}</div>
+              </div>
+            );
+          })()}
           {profile.telephone && (
             <div className={styles.ir}>
               <div className={styles.irLbl}><i className="fas fa-phone" /> {t('profilLivreur.tabInfo.contactDirect')}</div>

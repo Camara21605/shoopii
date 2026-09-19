@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { EMOJIS } from '../../data/parametresData';
 import type { LivreurData } from '../../hooks/useLivreurParametres';
 import ps from '../../styles/ParamsShared.module.css';
+import VilleCommuneQuartier from '../../../../shared/location/components/VilleCommuneQuartier';
 
 interface Props {
   data:             LivreurData | null;
@@ -39,7 +40,10 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
   const [phone,      setPhone]      = useState('');
   const [email,      setEmail]      = useState('');
   const [langues,    setLangues]    = useState('');
-  const [ville,      setVille]      = useState('Conakry');
+  /* Aucune valeur par défaut : l'ancien formulaire forçait « Conakry » à tout livreur */
+  const [ville,      setVille]      = useState('');
+  const [commune,    setCommune]    = useState('');
+  const [quartier,   setQuartier]   = useState('');
   const photoRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -51,7 +55,9 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
     setPhone(data.phone     ?? '');
     setEmail(data.email     ?? '');
     setLangues(data.langues ?? '');
-    setVille(data.ville     ?? 'Conakry');
+    setVille(data.ville     ?? '');
+    setCommune(data.commune ?? '');
+    setQuartier(data.quartier ?? '');
     const emojiIdx = EMOJIS.indexOf(data.deliveryEmoji ?? '🛵');
     if (emojiIdx >= 0) setSelEmoji(emojiIdx);
   }, [data]);
@@ -66,7 +72,7 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
     try {
       await saveProfil({
         firstName, lastName,
-        bio, phone, email, langues, ville,
+        bio, phone, email, langues, ville, commune, quartier,
         deliveryEmoji: EMOJIS[selEmoji] ?? '🛵',
       });
       onPop(t('livreurSecProfil.toasts.saveSuccess'), 's');
@@ -251,19 +257,20 @@ export default function SecProfil({ data, saving, dirty, onPop, saveProfil, uplo
                   onChange={e => { setLangues(e.target.value); dirty(); }} placeholder={t('livreurSecProfil.fields.languesPlaceholder')} />
               </div>
             </div>
-            <div className={ps.fiGroup}>
-              <div className={ps.fiLabel}>{t('livreurSecProfil.fields.ville')}</div>
-              <div className={ps.fiWrap}>
-                <i className="fas fa-city" style={{ position:'absolute', left:13, color:'var(--t3)', fontSize:13, pointerEvents:'none' }} />
-                <select className={ps.fiInput} value={ville}
-                  onChange={e => { setVille(e.target.value); dirty(); }}
-                  style={{ appearance:'none', paddingRight:30 }}>
-                  {['Conakry','Kindia','Boké','Labé','Kankan','Faranah','Mamou','N\'Zérékoré'].map(v => (
-                    <option key={v}>{v}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+          </div>
+
+          {/* Ville → commune → quartier (référentiel de la Guinée, saisie libre possible) */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(190px, 1fr))', gap:14, marginTop:14 }}>
+            <VilleCommuneQuartier
+              value={{ ville, commune, quartier }}
+              onChange={v => { setVille(v.ville); setCommune(v.commune); setQuartier(v.quartier); dirty(); }}
+              classes={{ group: ps.fiGroup, label: ps.fiLabel, input: ps.fiInput, wrap: ps.fiWrap }}
+              labels={{
+                ville:    t('livreurSecProfil.fields.ville', 'Ville'),
+                commune:  t('livreurSecProfil.fields.commune', 'Commune'),
+                quartier: t('livreurSecProfil.fields.quartier', 'Quartier'),
+              }}
+            />
           </div>
         </div>
       </div>

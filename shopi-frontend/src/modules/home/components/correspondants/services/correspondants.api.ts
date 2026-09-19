@@ -8,6 +8,7 @@
  * ================================================================ */
 
 import { apiFetch } from '../../../../../shared/services/apiFetch';
+import { locationLabel } from '../../../../../shared/location/utils/locationLabel';
 import type { Correspondant, CorrType } from '../data/types';
 
 /* ── Forme brute renvoyée par le backend (getCorrespondantsWithSuiviStatus) ── */
@@ -26,7 +27,10 @@ interface CorrespondantApi {
   nbAvis?:           number;
   fiabilite?:        number;
   experience?:       string;
-  commune?:          string;
+  commune?:          string | null;
+  ville?:            string | null;
+  quartier?:         string | null;
+  localisation?:     string | null;
 }
 
 /* ── Filtres acceptés par l'API ── */
@@ -50,7 +54,7 @@ function adapt(c: CorrespondantApi): Correspondant {
     id:         c.id,
     nom:        c.fullName || 'Correspondant',
     initiales:  initiales(c.fullName || 'CO'),
-    zone:       c.region || 'Conakry',
+    zone:       locationLabel(c) || c.region || '',   // « Quartier, Ville » — plus de ville inventée
     commune:    (c.commune ?? c.region ?? '').toLowerCase(),
     bio:        c.bio ?? 'Correspondant Shoneya vérifié.',
     type:       c.typeCorrespondant ?? 'regional',

@@ -25,6 +25,7 @@ import { SuivisBaseService } from './suivis-base.service';
 import { SuivisGateway }     from '../gateways/suivis.gateway';
 import { SUIVIS_QUEUE }      from '../suivis.queue';
 import { UserRole }          from '../../../common/enums/user-role.enum';
+import { actorLocation } from '../../../common/utils/actor-location.util';
 
 /* Rôles sans profil follower */
 const SKIP_ROLES: UserRole[] = [UserRole.SUPER_ADMIN, UserRole.ADMIN];
@@ -148,8 +149,9 @@ export class SuivisCorrespondantService extends SuivisBaseService {
         id:                cor.id,
         fullName:          cor.fullName        || 'Sans nom',
         profilePicture:    cor.user?.profilePicture ?? null,
-        region:            [cor.depotCommune, cor.depotVille].filter(Boolean).join(', ') || 'Conakry',
-        commune:           (cor.depotCommune ?? '').toLowerCase(),   /* ✅ ajout */
+        /* `region` conservé pour les anciens écrans = "Quartier, Ville" (plus de ville inventée) */
+        region:            actorLocation({ ville: cor.depotVille, commune: cor.depotCommune, quartier: cor.depotQuartier }).localisation ?? '',
+        ...actorLocation({ ville: cor.depotVille, commune: cor.depotCommune, quartier: cor.depotQuartier }),
         typeCorrespondant: cor.typeCorrespondant,
         bio:               cor.bio ?? null,
         totalMissions:     cor.totalMissions   ?? 0,

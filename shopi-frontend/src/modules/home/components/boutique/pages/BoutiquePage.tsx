@@ -60,6 +60,7 @@ import AProposSection        from '../sections/AProposSection';
 import ModalPartage          from '../components/ModalPartage';
 
 import styles from '../styles/BoutiquePage.module.css';
+import { locationLabel } from '../../../../../shared/location/utils/locationLabel';
 
 // ─────────────────────────────────────────────────────────────
 // TYPES API
@@ -121,6 +122,10 @@ export interface LivreurApi {
   id:           string;
   fullName:     string;
   zone:         string | null;
+  ville?:        string | null;
+  commune?:      string | null;
+  quartier?:     string | null;
+  localisation?: string | null;
   availability: string;
   phone:        string | null;
   emoji:        string;
@@ -132,7 +137,9 @@ export interface CorrespondantApi {
   id:                string;
   fullName:          string;
   ville:             string | null;
+  commune?:          string | null;
   quartier:          string | null;
+  localisation?:     string | null;
   note:              number;
   missions:          number;
   verified:          boolean;
@@ -157,8 +164,11 @@ function toBoutiqueInfo(raw: any, t: TFunction): BoutiqueInfo {
   const businessPhone = r.businessPhone ?? r.phone  ?? r.tel    ?? '';
   const businessEmail = r.businessEmail ?? r.email  ?? '';
   const website     = r.website     ?? r.site       ?? '';
-  const ville       = r.ville       ?? r.city       ?? r.localisation ?? 'Conakry, Guinée';
-  const adresse     = r.adresse     ?? r.address    ?? ville;
+  /* Ville et quartier RÉELS — plus de « Conakry, Guinée » inventé quand rien n'est renseigné */
+  const ville       = r.ville       ?? r.city       ?? '';
+  const quartier    = r.quartier    ?? r.commune    ?? '';
+  const localisation = locationLabel({ localisation: r.localisation, quartier, ville });
+  const adresse     = r.adresse     ?? r.address    ?? localisation;
   const averageRating = r.averageRating ?? r.rating ?? r.note ?? r.moyenneNote ?? 0;
   const totalOrders   = r.totalOrders  ?? r.totalCommandes ?? r.orders ?? 0;
   const totalAbonnes  = r.totalAbonnes ?? r.abonnes ?? r.subscribers ?? null;
@@ -239,6 +249,8 @@ function toBoutiqueInfo(raw: any, t: TFunction): BoutiqueInfo {
     coverImage,
     domaine,
     ville,
+    quartier,
+    localisation,
     membre,
     description,
     horaires,
@@ -345,7 +357,7 @@ export default function BoutiquePage({ companyIdOverride, previewOverride, onOpe
    * donnait l'impression que la barre "se décolle"/bouge, exactement
    * dans le contexte où l'utilisateur teste (l'aperçu entreprise). */
   useLayoutEffect(() => {
-    document.documentElement.style.setProperty('--boutique-header-h', isPreview ? '0px' : '66px');
+    document.documentElement.style.setProperty('--boutique-header-h', isPreview ? '0px' : 'calc(66px + var(--hdr-extra, 0px))');
   }, [isPreview]);
 
   // ── Données API ──────────────────────────────────────────────

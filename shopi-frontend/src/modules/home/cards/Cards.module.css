@@ -730,6 +730,14 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
 }
 
+/* ── Localisation : Quartier, Ville ── */
+.coLoc {
+  font-size: 11.5px; color: var(--t2); display: flex; align-items: center; justify-content: center; gap: 4px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+}
+.coLoc i { color: var(--blue); font-size: 10px; flex-shrink: 0; }
+.coListMode .coLoc { justify-content: flex-start; }
+
 /* ── Bouton ── */
 .coBtnWrap { margin-top: 6px; }
 

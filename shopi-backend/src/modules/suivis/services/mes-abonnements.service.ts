@@ -24,6 +24,7 @@ import { Client }        from '../../../database/entities/profiles/client-profil
 import { Company }       from '../../../database/entities/profiles/entreprise-profile.entity';
 import { Delivery, DeliveryAvailability } from '../../../database/entities/profiles/livreur-profile.entity';
 import { Correspondent } from '../../../database/entities/profiles/correspondant-profile.entity';
+import { actorLocation } from '../../../common/utils/actor-location.util';
 
 /* ── Forme d'un abonnement renvoyé au frontend ── */
 export interface AbonnementItem {
@@ -121,7 +122,7 @@ export class MesAbonnementsService {
       nom:       (co as any).companyName ?? 'Entreprise',
       categorie: (co as any).description
                    ? String((co as any).description).slice(0, 40)
-                   : [(co as any).commune, (co as any).ville].filter(Boolean).join(', ') || 'Boutique',
+                   : actorLocation({ ville: (co as any).ville, commune: (co as any).commune, quartier: (co as any).quartier }).localisation || 'Boutique',
       emoji:     '🏪',
       abonnes:   counts[co.id] ?? 0,
       note:      0,                         // pas de note entreprise pour l'instant
@@ -137,7 +138,7 @@ export class MesAbonnementsService {
 
     const livreurs = await this.delivRepo.find({
       where:  { id: In(ids) },
-      select: ['id', 'fullName', 'zone', 'averageRating', 'tarifBase', 'availability'] as any,
+      select: ['id', 'fullName', 'zone', 'ville', 'commune', 'quartier', 'averageRating', 'tarifBase', 'availability'] as any,
     });
 
     const counts = await this.countFollowers(TargetActorType.DELIVERY, ids);
@@ -145,7 +146,7 @@ export class MesAbonnementsService {
     return livreurs.map(d => ({
       id:        d.id,
       nom:       (d as any).fullName ?? 'Livreur',
-      categorie: (d as any).zone ?? 'Conakry',
+      categorie: actorLocation({ ville: (d as any).ville, commune: (d as any).commune, quartier: (d as any).quartier }).localisation ?? (d as any).zone ?? 'Livreur',
       emoji:     '🛵',
       abonnes:   counts[d.id] ?? 0,
       note:      Number((d as any).averageRating ?? 0),
@@ -163,7 +164,7 @@ export class MesAbonnementsService {
 
     const corrs = await this.corrRepo.find({
       where:  { id: In(ids) },
-      select: ['id', 'fullName', 'depotCommune', 'depotVille', 'averageRating'] as any,
+      select: ['id', 'fullName', 'depotCommune', 'depotQuartier', 'depotVille', 'averageRating'] as any,
     });
 
     const counts = await this.countFollowers(TargetActorType.CORRESPONDENT, ids);
@@ -171,7 +172,7 @@ export class MesAbonnementsService {
     return corrs.map(c => ({
       id:        c.id,
       nom:       (c as any).fullName ?? 'Correspondant',
-      categorie: [(c as any).depotCommune, (c as any).depotVille].filter(Boolean).join(', ') || 'Conakry',
+      categorie: actorLocation({ ville: (c as any).depotVille, commune: (c as any).depotCommune, quartier: (c as any).depotQuartier }).localisation ?? 'Correspondant',
       emoji:     '🤝',
       abonnes:   counts[c.id] ?? 0,
       note:      Number((c as any).averageRating ?? 0),

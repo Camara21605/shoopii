@@ -19,6 +19,10 @@ export interface LivreurApi {
   id:           string;
   fullName:     string;
   zone:         string | null;
+  ville?:        string | null;
+  commune?:      string | null;
+  quartier?:     string | null;
+  localisation?: string | null;
   availability: string;
   phone:        string | null;
   emoji:        string;

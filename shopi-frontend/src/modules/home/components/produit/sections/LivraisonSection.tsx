@@ -20,6 +20,7 @@ import {
 import type { SpeedKey } from '../data/produitMockData';
 import { produitApi, type LivreurApi, type CorrespondantApi } from '../api/produit.api';
 import styles from '../styles/LivraisonSection.module.css';
+import { locationLabel } from '../../../../../shared/location/utils/locationLabel';
 
 export interface LivraisonState {
   selectedVille:   string | null;
@@ -82,7 +83,7 @@ function getDistBadge(isIntl: boolean, distZone: string, t: TFunction) {
 
 /* Convertit LivreurApi (réponse réelle du backend) → Livreur (type d'affichage) */
 function toLivreur(l: LivreurApi): Livreur {
-  return { id: parseInt(l.id) || 0, em: l.emoji, name: l.fullName, zone: l.zone ?? '',
+  return { id: parseInt(l.id) || 0, em: l.emoji, name: l.fullName, zone: locationLabel(l),
     rating: l.note.toFixed(1), trips: String(l.trips), online: l.online,
     baseFee: l.baseFee, distZone: l.distZone, source: l.source };
 }

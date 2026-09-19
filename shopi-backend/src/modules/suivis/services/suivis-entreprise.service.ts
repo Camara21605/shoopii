@@ -25,6 +25,7 @@ import { SuivisBaseService } from './suivis-base.service';
 import { SuivisGateway }     from '../gateways/suivis.gateway';
 import { SUIVIS_QUEUE }      from '../suivis.queue';
 import { UserRole }          from '../../../common/enums/user-role.enum';
+import { actorLocation } from '../../../common/utils/actor-location.util';
 
 @Injectable()
 export class SuivisEntrepriseService extends SuivisBaseService {
@@ -98,6 +99,7 @@ export class SuivisEntrepriseService extends SuivisBaseService {
         'co.description',
         'co.logo',
         'co.commune',
+        'co.quartier',
         'co.ville',
         'co.status',
         'user.lastLoginAt',
@@ -119,7 +121,9 @@ export class SuivisEntrepriseService extends SuivisBaseService {
         companyName:   (co as any).companyName,
         logo:          (co as any).logo ?? null,
         description:   (co as any).description ?? null,
-        region:        [(co as any).commune, (co as any).ville].filter(Boolean).join(', '),
+        /* `region` conservé pour les anciens écrans = "Quartier, Ville" */
+        region:        actorLocation({ ville: (co as any).ville, commune: (co as any).commune, quartier: (co as any).quartier }).localisation ?? '',
+        ...actorLocation({ ville: (co as any).ville, commune: (co as any).commune, quartier: (co as any).quartier }),
         online:        (co as any).user?.lastLoginAt
                          ? (now - new Date((co as any).user.lastLoginAt).getTime()) < threshold
                          : false,

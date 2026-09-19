@@ -28,6 +28,7 @@ import { SuivisBaseService } from './suivis-base.service';
 import { SuivisGateway }     from '../gateways/suivis.gateway';
 import { SUIVIS_QUEUE }      from '../suivis.queue';
 import { UserRole }          from '../../../common/enums/user-role.enum';
+import { actorLocation } from '../../../common/utils/actor-location.util';
 
 /* Rôles sans profil follower */
 const SKIP_ROLES: UserRole[] = [UserRole.SUPER_ADMIN, UserRole.ADMIN];
@@ -111,7 +112,9 @@ export class SuivisLivreurService extends SuivisBaseService {
           id:             del.id,
           fullName:       del.fullName        || 'Sans nom',
           profilePicture: del.user?.profilePicture ?? null,
-          zone:           del.zone            ?? 'Conakry',
+          /* `zone` conservé pour les anciens écrans : jamais de ville inventée */
+          zone:           actorLocation({ ville: del.ville, commune: del.commune, quartier: del.quartier }).localisation ?? del.zone ?? '',
+          ...actorLocation({ ville: del.ville, commune: del.commune, quartier: del.quartier }),
           vehicule:       del.VehicleType    ?? null,
           bio:            del.bio             ?? null,
           totalLivraisons: del.totalDeliveries ?? 0,
