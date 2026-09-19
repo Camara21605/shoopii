@@ -214,8 +214,8 @@
   --coral-dim:  rgba(255,138,101,.15);
 
   /* Typographie */
-  --font-h:     'Fraunces', Georgia, serif;
-  --font-b:     'DM Sans', sans-serif;
+  --font-h:     var(--font-x, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
+  --font-b:     var(--font-x, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
   --font-m:     'Courier New', monospace;
 
   /* Misc */
