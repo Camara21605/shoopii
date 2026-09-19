@@ -53,6 +53,9 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
   const [prefectureId, setPrefectureId] = useState('');
   const [communeId,    setCommuneId]    = useState('');
   const [quartierId,   setQuartierId]   = useState('');
+  /* Quartier absent de la liste (ou aucune liste pour la commune) : saisi à la main, puis confirmé */
+  const [quartierLibre, setQuartierLibre] = useState('');
+  const [confirmed,     setConfirmed]     = useState(false);
 
   useEffect(() => {
     setLoading('pays');
@@ -75,28 +78,29 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
   }, []);
 
   const handlePays = (id: string) => {
-    setPaysId(id);
+    setPaysId(id); setConfirmed(false); setQuartierLibre('');
     setRegionId(''); setPrefectureId(''); setCommuneId(''); setQuartierId('');
     setRegions([]); setPrefectures([]); setCommunes([]); setQuartiers([]);
     if (id) loadNiveau('region', id, setRegions);
   };
 
   const handleRegion = (id: string) => {
-    setRegionId(id);
+    setRegionId(id); setConfirmed(false); setQuartierLibre('');
     setPrefectureId(''); setCommuneId(''); setQuartierId('');
     setPrefectures([]); setCommunes([]); setQuartiers([]);
     if (id) loadNiveau('prefecture', id, setPrefectures);
   };
 
   const handlePrefecture = (id: string) => {
-    setPrefectureId(id);
+    setPrefectureId(id); setConfirmed(false); setQuartierLibre('');
     setCommuneId(''); setQuartierId('');
     setCommunes([]); setQuartiers([]);
     if (id) loadNiveau('commune', id, setCommunes);
   };
 
-  /* Remonte la localisation complète (le quartier est facultatif) */
-  const emit = (cId: string, qId: string) => {
+  /* Remonte la localisation complète — le quartier est OBLIGATOIRE : choisi dans la liste
+   * (`qId`) ou saisi à la main (`libre`, quartier non répertorié). */
+  const emit = (cId: string, qId: string, libre = '') => {
     const p  = pays.find(x => x.id === paysId);
     const r  = regions.find(x => x.id === regionId);
     const pr = prefectures.find(x => x.id === prefectureId);
@@ -107,28 +111,35 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
       regionNom:     r.nom,
       prefectureId:  pr.id, prefectureNom: pr.nom,
       communeNom:    c.nom,
-      quartierNom:   quartiers.find(x => x.id === qId)?.nom,
+      quartierNom:   libre.trim() || quartiers.find(x => x.id === qId)?.nom,
     });
+    setConfirmed(true);
   };
 
   const handleCommune = (id: string) => {
     setCommuneId(id);
-    setQuartierId('');
+    setQuartierId(''); setQuartierLibre(''); setConfirmed(false);
     setQuartiers([]);
     if (!id) return;
-    /* Le formulaire ne passe à la suite qu'une fois le QUARTIER connu : on attend donc la
-     * liste des quartiers de la commune. Aucun quartier répertorié → on remonte tout de
-     * suite ; le quartier est alors saisi à la main dans le formulaire d'inscription. */
-    loadNiveau('quartier', id, items => {
-      setQuartiers(items);
-      if (items.length === 0) emit(id, '');
-    });
+    /* On charge les quartiers de la commune ; le client doit voir où se trouve l'entreprise,
+     * donc rien n'est confirmé tant que le quartier n'est pas identifié (liste ou saisie). */
+    loadNiveau('quartier', id, setQuartiers);
   };
+
+  const AUTRE = '__autre__';
 
   const handleQuartier = (id: string) => {
     setQuartierId(id);
-    emit(communeId, id);
+    setConfirmed(false);
+    if (id && id !== AUTRE) emit(communeId, id);
   };
+
+  const confirmLibre = () => {
+    if (quartierLibre.trim().length >= 2) emit(communeId, '', quartierLibre);
+  };
+
+  /* Saisie à la main : aucune liste pour cette commune, ou « Autre quartier » choisi */
+  const manual = !!communeId && loading !== 'quartier' && (quartiers.length === 0 || quartierId === AUTRE);
 
   const selStyle: CSSProperties = {
     width: '100%', padding: '10px 14px', borderRadius: 10,
@@ -184,22 +195,49 @@ export default function CompanyLocationSelect({ onComplete }: Props) {
 
       {communeId && (quartiers.length > 0 || loading === 'quartier') && (
         <div style={{ marginTop: 10 }}>
-          <label style={lblStyle}>Quartier *</label>
+          <label style={lblStyle}>Votre quartier * <span style={{ fontWeight: 400, color: 'var(--t3)' }}>— les clients le verront sur votre profil et la carte</span></label>
           <select style={selStyle} value={quartierId} onChange={e => handleQuartier(e.target.value)} disabled={loading === 'quartier'}>
-            <option value="">{loading === 'quartier' ? 'Chargement…' : '— Choisir un quartier —'}</option>
+            <option value="">{loading === 'quartier' ? 'Chargement…' : '— Choisir votre quartier —'}</option>
             {quartiers.map(q => <option key={q.id} value={q.id}>{q.nom}</option>)}
+            <option value={AUTRE}>Autre quartier (non listé)…</option>
           </select>
         </div>
       )}
 
-      {communeId && (
+      {manual && (
+        <div style={{ marginTop: 10 }}>
+          <label style={lblStyle}>
+            {quartiers.length === 0 ? 'Votre quartier *' : 'Nom de votre quartier *'}
+            {quartiers.length === 0 && <span style={{ fontWeight: 400, color: 'var(--t3)' }}> — aucun quartier n'est encore répertorié pour cette commune</span>}
+          </label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              type="text" maxLength={100} value={quartierLibre}
+              placeholder="Ex : Boussoura, Almamya, Madina…"
+              onChange={e => { setQuartierLibre(e.target.value); setConfirmed(false); }}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); confirmLibre(); } }}
+              style={{ ...selStyle, cursor: 'text', flex: 1 }}
+            />
+            <button type="button" onClick={confirmLibre} disabled={quartierLibre.trim().length < 2}
+              style={{
+                padding: '0 16px', borderRadius: 10, border: 'none', fontWeight: 700, fontSize: 13,
+                background: quartierLibre.trim().length < 2 ? '#cbd5e1' : 'var(--blue,#1A4FC4)', color: '#fff',
+                cursor: quartierLibre.trim().length < 2 ? 'not-allowed' : 'pointer',
+              }}>
+              Confirmer
+            </button>
+          </div>
+        </div>
+      )}
+
+      {confirmed && (
         <div style={{
           marginTop: 12, padding: '8px 12px', background: '#fff',
           border: '1px solid var(--border,#e5e7eb)', borderRadius: 8,
           fontSize: 11.5, color: 'var(--t2)', display: 'flex', alignItems: 'center', gap: 7,
         }}>
           <i className="fas fa-circle-check" style={{ color: '#047857', fontSize: 12 }} />
-          Localisation confirmée
+          Localisation confirmée — quartier identifié
         </div>
       )}
     </div>

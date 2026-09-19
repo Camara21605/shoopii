@@ -298,10 +298,14 @@ export class RegisterDto {
   @MaxLength(100)
   district?: string;
 
-  /** Quartier (niveau sous la commune) — entreprise, livreur, correspondant. */
-  @IsOptional()
+  /** Quartier (niveau sous la commune) — OBLIGATOIRE pour une entreprise (les clients doivent
+   * savoir dans quel quartier elle se trouve) ; optionnel pour les autres rôles. */
+  @ValidateIf(o => o.role === UserRole.COMPANY || o.quartier != null)
   @IsString()
+  @IsNotEmpty({ message: 'Le quartier est obligatoire : les clients doivent savoir où trouver votre entreprise.' })
+  @MinLength(2, { message: 'Le quartier doit contenir au moins 2 caractères.' })
   @MaxLength(100)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   quartier?: string;
 
   @IsOptional()

@@ -640,7 +640,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
    * voit sur leurs cartes et profils. Prérempli par le GPS / la carte / le sélecteur quand
    * ils le connaissent, toujours modifiable. */
   const needsQuartier = ['company', 'delivery', 'correspondent'].includes(selectedRole);
-  const renderQuartier = () => needsQuartier && (!needsLocation || locationDone) && (
+  /* Entreprise : le quartier est identifié directement dans CompanyLocationSelect (liste ou saisie
+   * confirmée) ; on ne le redemande donc pas ici. */
+  const renderQuartier = () => needsQuartier && selectedRole !== 'company' && (!needsLocation || locationDone) && (
     <div className="field-group">
       <div className="field-label">Quartier <span style={{ color: 'var(--rose,red)' }}>*</span></div>
       <div className="field-wrap" style={{ position: 'relative' }}>
@@ -698,7 +700,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <i className="fas fa-location-dot" style={{ color: '#047857' }} />
             <span style={{ color: '#065f46', fontWeight: 600 }}>
-              Position enregistrée{data.city ? ` — ${data.city}` : ''}
+              Position enregistrée{data.city ? ` — ${[(data as any).quartier, data.city].filter(Boolean).join(', ')}` : ''}
             </span>
           </div>
           <button type="button" onClick={() => setLocationDone(false)}
@@ -708,6 +710,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         </div>
       )}
       {needsLocation && renderQuartier()}
+      {needsLocation && selectedRole === 'company' && errors.quartier && (
+        <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--rose,red)', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <i className="fas fa-circle-exclamation" style={{ fontSize: 10 }} />
+          {errors.quartier}
+        </p>
+      )}
       {needsLocation && errors.location && !locationDone && (
         <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--rose,red)', display: 'flex', alignItems: 'center', gap: 5 }}>
           <i className="fas fa-circle-exclamation" style={{ fontSize: 10 }} />
