@@ -51,6 +51,11 @@ const KEY_SOCKETS  = (userId: string) => `presence:sockets:${userId}`;
  *  réel sans jamais retarder un appel normal. */
 const PRESENCE_OP_TIMEOUT_MS = 300;
 
+/** Écritures de présence (connexion / déconnexion / heartbeat) : hors chemin
+ *  critique d'un appel, donc un peu plus de marge que les lectures — mais
+ *  toujours bornées, jamais suspendues sur une panne Redis. */
+const PRESENCE_WRITE_TIMEOUT_MS = 1000;
+
 @Injectable()
 export class PresenceService implements OnModuleDestroy {
   private readonly logger = new Logger(PresenceService.name);
@@ -67,28 +72,39 @@ export class PresenceService implements OnModuleDestroy {
    */
   async onConnect(userId: string, socketId: string): Promise<void> {
     try {
-      const pipeline = this.redis.pipeline();
+      /* BUG CORRIGÉ — ces écritures n'avaient AUCUNE borne de temps : ioredis
+       * (enableOfflineQueue: true, voir app.module.ts) met les commandes en
+       * file pendant une panne Redis, donc `await pipeline.exec()` restait
+       * suspendu jusqu'à ~1 min. Or MessagerieGateway.handleConnection()
+       * attend cette méthode AVANT d'émettre `connected` et de prévenir les
+       * contacts : pendant une panne Redis, plus aucune connexion temps réel
+       * ne se terminait. Même disjoncteur partagé que la lecture de présence
+       * (withRedisTimeout) : une panne déjà détectée court-circuite
+       * immédiatement, sans rejouer le timeout à chaque connexion. */
+      await withRedisTimeout(async () => {
+        const pipeline = this.redis.pipeline();
 
-      // Ajoute le socketId dans un Set pour tracking multi-appareils
-      pipeline.sadd(KEY_SOCKETS(userId), socketId);
+        // Ajoute le socketId dans un Set pour tracking multi-appareils
+        pipeline.sadd(KEY_SOCKETS(userId), socketId);
 
-      // Définit la présence avec TTL auto-expirante
-      const presence: UserPresence = {
-        online:   true,
-        lastSeen: new Date().toISOString(),
-        sockets:  0,  // mis à jour en dessous
-      };
+        // Définit la présence avec TTL auto-expirante
+        const presence: UserPresence = {
+          online:   true,
+          lastSeen: new Date().toISOString(),
+          sockets:  0,  // mis à jour en dessous
+        };
 
-      pipeline.setex(
-        KEY_PRESENCE(userId),
-        PRESENCE_TTL_S,
-        JSON.stringify(presence),
-      );
+        pipeline.setex(
+          KEY_PRESENCE(userId),
+          PRESENCE_TTL_S,
+          JSON.stringify(presence),
+        );
 
-      await pipeline.exec();
+        await pipeline.exec();
 
-      // Met à jour le compteur sockets dans la clé présence
-      await this.refreshPresence(userId);
+        // Met à jour le compteur sockets dans la clé présence
+        await this.refreshPresence(userId);
+      }, undefined, PRESENCE_WRITE_TIMEOUT_MS, this.logger, 'presence.onConnect');
 
       this.logger.debug(`[Presence] ONLINE userId=${userId} socket=${socketId}`);
     } catch (err) {
@@ -111,34 +127,38 @@ export class PresenceService implements OnModuleDestroy {
    */
   async onDisconnect(userId: string, socketId: string): Promise<boolean> {
     try {
-      // Retire le socket du Set
-      await this.redis.srem(KEY_SOCKETS(userId), socketId);
+      /* Borné comme onConnect() (voir son commentaire) : fallback false =
+       * « on ne sait pas », donc aucun broadcast « hors ligne » erroné. */
+      return await withRedisTimeout<boolean>(async () => {
+        // Retire le socket du Set
+        await this.redis.srem(KEY_SOCKETS(userId), socketId);
 
-      // Compte les sockets restants
-      const remaining = await this.redis.scard(KEY_SOCKETS(userId));
+        // Compte les sockets restants
+        const remaining = await this.redis.scard(KEY_SOCKETS(userId));
 
-      if (remaining === 0) {
-        // Plus aucun socket → passe hors ligne
-        const presence: UserPresence = {
-          online:   false,
-          lastSeen: new Date().toISOString(),
-          sockets:  0,
-        };
+        if (remaining === 0) {
+          // Plus aucun socket → passe hors ligne
+          const presence: UserPresence = {
+            online:   false,
+            lastSeen: new Date().toISOString(),
+            sockets:  0,
+          };
 
-        // Garde la clé 24h pour afficher "vu il y a Xh" côté client
-        await this.redis.setex(
-          KEY_PRESENCE(userId),
-          60 * 60 * 24,
-          JSON.stringify(presence),
-        );
+          // Garde la clé 24h pour afficher "vu il y a Xh" côté client
+          await this.redis.setex(
+            KEY_PRESENCE(userId),
+            60 * 60 * 24,
+            JSON.stringify(presence),
+          );
 
-        this.logger.debug(`[Presence] OFFLINE userId=${userId}`);
-        return true;
-      }
+          this.logger.debug(`[Presence] OFFLINE userId=${userId}`);
+          return true;
+        }
 
-      // Encore des sockets actifs — rafraîchit le TTL
-      await this.refreshPresence(userId);
-      return false;
+        // Encore des sockets actifs — rafraîchit le TTL
+        await this.refreshPresence(userId);
+        return false;
+      }, false, PRESENCE_WRITE_TIMEOUT_MS, this.logger, 'presence.onDisconnect');
     } catch (err) {
       // Redis indisponible : on n'empêche jamais la déconnexion du socket.
       this.logger.warn(`[Presence] Redis indisponible (onDisconnect userId=${userId}) : ${(err as Error).message}`);
@@ -156,7 +176,7 @@ export class PresenceService implements OnModuleDestroy {
    */
   async heartbeat(userId: string): Promise<void> {
     try {
-      await this.refreshPresence(userId);
+      await withRedisTimeout(() => this.refreshPresence(userId), undefined, PRESENCE_WRITE_TIMEOUT_MS, this.logger, 'presence.heartbeat');
     } catch (err) {
       this.logger.warn(`[Presence] Redis indisponible (heartbeat userId=${userId}) : ${(err as Error).message}`);
     }
