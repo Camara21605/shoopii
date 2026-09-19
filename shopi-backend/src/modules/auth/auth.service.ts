@@ -24,6 +24,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
+import { hashUserPhone } from '../../common/utils/phone-hash.util';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService }    from '@nestjs/config';
 import { InjectRedis }      from '@nestjs-modules/ioredis';
@@ -374,6 +375,26 @@ export class AuthService implements OnModuleInit {
       throw new ConflictException('Cette adresse email est déjà associée à un compte Shopi.');
     }
 
+    /* BUG CORRIGÉ — seul l'email était contrôlé ici. Le téléphone est aussi
+     * unique par rôle en base (UNIQ_user_phone_role) ET via son empreinte
+     * normalisée (UNIQ_user_phoneHash_role : "+224 620…" et "00224620…" sont
+     * le même numéro). Un numéro déjà pris déclenchait une violation SQL
+     * attrapée plus bas, renvoyée au client en 500 générique « Erreur lors de
+     * la création du compte » — impossible à comprendre ou à corriger. */
+    if (dto.phone) {
+      const phoneHash = hashUserPhone(dto.phone);
+      const phoneExists = await this.userRepo.findOne({
+        where: [
+          { phone: dto.phone, role: dto.role as UserRole },
+          ...(phoneHash ? [{ phoneHash, role: dto.role as UserRole }] : []),
+        ],
+        withDeleted: true,
+      });
+      if (phoneExists) {
+        throw new ConflictException('Ce numéro de téléphone est déjà associé à un compte Shopi.');
+      }
+    }
+
     let validatedCodeId: string | null = null;
     let codeCompanyId:   string | null = null;
     let codeDeliveryId:  string | null = null;
@@ -539,12 +560,33 @@ export class AuthService implements OnModuleInit {
       await queryRunner.commitTransaction();
     } catch (err) {
       await queryRunner.rollbackTransaction();
-      this.logger.error(`[REGISTER ❌] ${dto.email} | ${(err as Error).message}`);
+      /* Détails SQL (code Postgres, contrainte, table, colonne) : sans eux le
+       * seul message « Erreur lors de la création du compte » ne permet pas de
+       * savoir POURQUOI l'insertion a échoué. Jamais renvoyés au client. */
+      const dbErr = err as { message?: string; code?: string; constraint?: string; table?: string; column?: string; detail?: string };
+      this.logger.error(
+        `[REGISTER ❌] ${dto.email} | ${dbErr.message} | pgCode=${dbErr.code ?? '-'} ` +
+        `constraint=${dbErr.constraint ?? '-'} table=${dbErr.table ?? '-'} column=${dbErr.column ?? '-'}`,
+      );
       if (
         err instanceof BadRequestException ||
         err instanceof ConflictException   ||
         err instanceof ForbiddenException
       ) throw err;
+
+      /* 23505 = violation d'unicité (course entre deux inscriptions, ou
+       * contrainte que les contrôles ci-dessus n'ont pas vue) : c'est un
+       * conflit utilisateur (409, message exploitable), pas une panne serveur. */
+      if (dbErr.code === '23505') {
+        const c = dbErr.constraint ?? '';
+        if (c.includes('phone')) {
+          throw new ConflictException('Ce numéro de téléphone est déjà associé à un compte Shopi.');
+        }
+        if (c.includes('email')) {
+          throw new ConflictException('Cette adresse email est déjà associée à un compte Shopi.');
+        }
+        throw new ConflictException('Un compte existe déjà avec ces informations.');
+      }
       throw new InternalServerErrorException(
         'Erreur lors de la création du compte. Veuillez réessayer.',
       );
