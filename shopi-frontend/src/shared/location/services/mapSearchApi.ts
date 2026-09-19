@@ -105,3 +105,14 @@ export async function locatePlace(
   const r = await apiFetch<{ position: LocatedPlace | null }>('/location/map/locate', { params });
   return r.position;
 }
+
+/* ── Réseau de chemins (routes + sentiers piétons) ───────────── */
+
+/** m autoroute/nationale · p primaire · s secondaire · t tertiaire · r rue/ruelle · k piste · f chemin piéton · e escalier */
+export type RoadClass = 'm' | 'p' | 's' | 't' | 'r' | 'k' | 'f' | 'e';
+export type RoadWay   = [id: number, cls: RoadClass, coords: number[]];
+
+/** Tuile z14 (grille XYZ) — voir RoadNetworkService côté API. */
+export function fetchRoadTile(x: number, y: number, signal?: AbortSignal): Promise<{ ways: RoadWay[] }> {
+  return apiFetch<{ ways: RoadWay[] }>('/location/map/roads', { params: { x: String(x), y: String(y) }, signal } as any);
+}

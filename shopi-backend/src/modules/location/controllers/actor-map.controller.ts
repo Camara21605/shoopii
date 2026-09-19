@@ -10,7 +10,8 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../../common/guards/auth.guard';
 import { ActorMapService } from '../services/actor-map.service';
 import { PlaceSearchService } from '../services/place-search.service';
-import { ActorMapQueryDto, LocateQueryDto, PlacesQueryDto } from '../dto/actor-map.dto';
+import { RoadNetworkService } from '../services/road-network.service';
+import { ActorMapQueryDto, LocateQueryDto, PlacesQueryDto, RoadsQueryDto } from '../dto/actor-map.dto';
 
 @Controller('location/map')
 @UseGuards(JwtAuthGuard)
@@ -18,6 +19,7 @@ export class ActorMapController {
   constructor(
     private readonly svc:    ActorMapService,
     private readonly places: PlaceSearchService,
+    private readonly roads:  RoadNetworkService,
   ) {}
 
   /* 60 requêtes / minute : la recherche est déclenchée à la frappe (avec délai côté client) */
@@ -34,6 +36,14 @@ export class ActorMapController {
   @Throttle({ default: { limit: 60, ttl: 60_000 } })
   suggestPlaces(@Query() dto: PlacesQueryDto) {
     return { places: this.places.suggestions(dto.q) };
+  }
+
+  /* Chemins (routes + sentiers piétons) d'une tuile z14 : 240 / minute (le client charge ~4 à 9 tuiles par vue) */
+  @Get('roads')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 240, ttl: 60_000 } })
+  roadNetwork(@Query() dto: RoadsQueryDto) {
+    return this.roads.tile(dto.x, dto.y);
   }
 
   /* Coordonnées d'UN lieu choisi (géocodage précis) : 20 / minute suffisent — un clic = un appel */

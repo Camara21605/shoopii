@@ -5,7 +5,7 @@
  * ============================================================ */
 
 import { Type } from 'class-transformer';
-import { IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { IsInt, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 export class ActorMapQueryDto {
   /** Nom, quartier, commune ou ville. Vide = « autour de moi » (lat/lng requis). */
@@ -53,4 +53,13 @@ export class LocateQueryDto {
 
   @IsOptional() @IsString() @MaxLength(80)
   ville?: string;
+}
+
+/** GET /location/map/roads?x=&y= — tuile z14 (x, y de la grille XYZ). */
+export class RoadsQueryDto {
+  @Type(() => Number) @IsInt() @Min(0) @Max(16383)
+  x: number;
+
+  @Type(() => Number) @IsInt() @Min(0) @Max(16383)
+  y: number;
 }

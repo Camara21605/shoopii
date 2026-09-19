@@ -238,3 +238,26 @@
 .am-lbl--dark.am-lbl--active { color: #C7D2FE; }
 .am-lbl--v { font-size: 11.5px; font-weight: 500; }
 .am-lbl--light.am-lbl--v { color: #6B7075; }
+
+/* ── Légende des chemins ──────────────────────────────────── */
+.am-legend {
+  position: absolute; z-index: 550; left: 12px; bottom: 54px; max-width: 210px; padding: 8px 10px; border-radius: 12px;
+  background: rgba(255,255,255,.95); color: #202124; backdrop-filter: blur(6px); border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 2px 10px rgba(0,0,0,.16); font-size: 11.5px; line-height: 1.35;
+}
+.am-legend__title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; font-size: 12px; }
+.am-legend ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.am-legend li { display: flex; align-items: center; gap: 8px; }
+.am-legend__note { color: #5F6368; margin-top: 4px; }
+.am-lg { display: inline-block; width: 26px; height: 0; border-top: 3px solid; flex: none; }
+.am-lg--m { border-color: #F97316; border-top-width: 5px; }
+.am-lg--s { border-color: #FBBF24; border-top-width: 4px; }
+.am-lg--r { border-color: #9AA0A6; }
+.am-lg--k { border-color: #B45309; border-top-style: dashed; border-top-width: 2px; }
+.am-lg--f { border-color: #15803D; border-top-style: dotted; border-top-width: 3px; }
+.am-lg--e { border-color: #DC2626; border-top-style: dotted; border-top-width: 3px; }
+@media (max-width: 900px) { .am-legend { bottom: 48px; max-width: 168px; } .am-legend li { font-size: 11px; } }
+
+.am-alt { display: grid; gap: 2px; min-width: 150px; font-family: inherit; }
+.am-alt i { color: #4F46E5; margin-right: 6px; }
+.am-alt small { color: #71717A; font-size: 10.5px; }

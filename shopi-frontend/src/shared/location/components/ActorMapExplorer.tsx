@@ -34,6 +34,8 @@ import { usePlaceSuggestions } from '../hooks/usePlaceSuggestions';
 import { GPS_ICON }            from './LocationMap';
 import RoutePolyline           from './RoutePolyline';
 import PlaceLabels             from './PlaceLabels';
+import RoadNetwork, { ROADS_MIN_ZOOM, type RoadStatus } from './RoadNetwork';
+import AltitudeProbe           from './AltitudeProbe';
 import { fetchRoute, type RouteResult } from '../services/routingApi';
 import { locatePlace, type MapActor, type MapActorRole, type MapPlace } from '../services/mapSearchApi';
 import { MAP_STYLES, MAP_STYLE_ORDER, readStoredStyle, storeStyle, type MapStyleId } from '../utils/mapLayers';
@@ -220,6 +222,9 @@ export default function ActorMapExplorer({ onToast }: Props) {
     return f && f in MAP_STYLES ? (f as MapStyleId) : readStoredStyle();
   });
   const [labelsOn, setLabelsOn] = useState(true);
+  /* Chemins : `null` = automatique (visibles en Relief et Satellite, où les tuiles n'en montrent guère ; masqués en Plan qui les dessine déjà) */
+  const [roadsPref, setRoadsPref] = useState<boolean | null>(null);
+  const [roadStatus, setRoadStatus] = useState<RoadStatus>({ visible: false, loading: false, error: false });
   const [place,    setPlace]    = useState<ActivePlace | null>(null);
   const [placeBusy, setPlaceBusy] = useState(false);
   const [recenter, setRecenter] = useState(0);
@@ -323,6 +328,7 @@ export default function ActorMapExplorer({ onToast }: Props) {
   };
 
   const styleDef = MAP_STYLES[mapStyle];
+  const roadsOn  = roadsPref ?? mapStyle !== 'plan';
   const baseTile = styleDef.base(dark);
   const center   = me ?? DEFAULT_CENTER;
   const trimmed = query.trim();
@@ -467,6 +473,8 @@ export default function ActorMapExplorer({ onToast }: Props) {
               />
             )}
             {/* Noms des villes, communes et quartiers (façon Google Maps) */}
+            {roadsOn && <RoadNetwork tone={mapStyle === 'satellite' || dark ? 'dark' : 'light'} onStatus={setRoadStatus} />}
+            {mapStyle === 'relief' && <AltitudeProbe />}
             {labelsOn && (
               <PlaceLabels tone={mapStyle === 'satellite' || dark ? 'dark' : 'light'} skipOsm={mapStyle !== 'satellite'} active={place?.name ?? null} />
             )}
@@ -566,11 +574,40 @@ export default function ActorMapExplorer({ onToast }: Props) {
                 <i className={`fas ${MAP_STYLES[id].icon}`} aria-hidden="true" /> <span>{MAP_STYLES[id].label}</span>
               </button>
             ))}
+            <button type="button" className="am-style am-style--opt" aria-pressed={roadsOn}
+              onClick={() => setRoadsPref(!roadsOn)} title="Afficher les routes et les chemins piétons">
+              <i className="fas fa-road" aria-hidden="true" /> <span>Chemins</span>
+            </button>
             <button type="button" className="am-style am-style--opt" aria-pressed={labelsOn}
               onClick={() => setLabelsOn(v => !v)} title="Afficher les noms des villes et quartiers">
               <i className="fas fa-tag" aria-hidden="true" /> <span>Noms</span>
             </button>
           </div>
+
+          {/* Légende des chemins */}
+          {roadsOn && (
+            <div className="am-legend" role="group" aria-label="Légende des chemins">
+              <div className="am-legend__title">
+                <b>Chemins</b>
+                {roadStatus.loading && <i className="fas fa-circle-notch am-spin" aria-label="Chargement" />}
+              </div>
+              {roadStatus.error ? (
+                <div className="am-legend__note">Chemins momentanément indisponibles.</div>
+              ) : !roadStatus.visible ? (
+                <div className="am-legend__note"><i className="fas fa-magnifying-glass-plus" /> Zoomez (niveau {ROADS_MIN_ZOOM}+) pour voir tous les chemins.</div>
+              ) : (
+                <ul>
+                  <li><i className="am-lg am-lg--m" /> Route principale</li>
+                  <li><i className="am-lg am-lg--s" /> Route secondaire</li>
+                  <li><i className="am-lg am-lg--r" /> Rue, ruelle</li>
+                  <li><i className="am-lg am-lg--k" /> Piste</li>
+                  <li><i className="am-lg am-lg--f" /> Chemin piéton</li>
+                  <li><i className="am-lg am-lg--e" /> Escalier</li>
+                </ul>
+              )}
+              {mapStyle === 'relief' && <div className="am-legend__note"><i className="fas fa-hand-pointer" /> Touchez la carte pour connaître l’altitude.</div>}
+            </div>
+          )}
 
           {/* Bandeau d'infos sur la carte */}
           <div className="am-hud" aria-hidden="true">
