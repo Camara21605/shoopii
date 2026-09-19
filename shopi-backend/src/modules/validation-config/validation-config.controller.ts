@@ -16,11 +16,18 @@ import {
 } from '@nestjs/common';
 
 import { JwtAuthGuard }              from '../../common/guards/auth.guard';
+import { RolesGuard }                from '../../common/guards/roles.guard';
+import { Roles }                     from '../../common/decorators/roles.decorator';
+import { UserRole }                  from '../../common/enums/user-role.enum';
 import { ValidationConfigService }    from './validation-config.service';
 import { UpdateValidationConfigDto }  from './validation-config.dto';
 
+/* SÉCURITÉ — jusqu'ici JwtAuthGuard seul : n'importe quel utilisateur connecté (un simple
+ * client) pouvait lire ET modifier (PUT) cette configuration commune à toute la plateforme.
+ * Réservé aux administrateurs. */
 @Controller('validation-config')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export class ValidationConfigController {
 
   constructor(private readonly svc: ValidationConfigService) {}
