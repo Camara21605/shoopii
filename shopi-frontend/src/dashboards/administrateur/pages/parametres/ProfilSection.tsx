@@ -171,7 +171,7 @@ export default function ProfilSection({ onToast }: SectionProps) {
           <div className={styles.avatarRow}>
             <div className={styles.avatarWrap}>
               {profile?.profilePicture
-                ? <img src={profil.profilePicture} alt="avatar" className={styles.avatarCircle}
+                ? <img src={profile.profilePicture} alt="avatar" className={styles.avatarCircle}
                     style={{ objectFit: 'cover', padding: 0 }} />
                 : <div className={styles.avatarCircle}>{initiales}</div>
               }

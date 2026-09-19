@@ -545,7 +545,7 @@ export default function GeoModal({ mode, level, item, allData, parents, onSave, 
   useEffect(() => {
     if (item) {
       /* Anciennes données saisies en minuscules : affichées (et réenregistrées) en majuscules */
-      const raw = item as Record<string, unknown>;
+      const raw = item as unknown as Record<string, unknown>;
       setForm({
         ...(raw as Record<string, string>),
         nom: toName(String(raw.nom ?? '')),
