@@ -26,7 +26,7 @@
   box-shadow: var(--sh-md, 0 8px 24px rgba(11,31,58,.1));
   padding: 8px;
   position: sticky;
-  top: calc(var(--hdr, 64px) + 12px);
+  top: calc(var(--hdr, 64px) + 12px + var(--hdr-extra, 0px));
   z-index: 50;
   margin-bottom: 20px;
 }
@@ -69,7 +69,7 @@
 
 /* ── Responsive — la barre reste horizontale, seuls les espacements réduisent ── */
 @media (max-width: 640px) {
-  .tabs { padding: 6px; gap: 4px; top: calc(var(--hdr, 60px) + 8px); margin-bottom: 16px; }
+  .tabs { padding: 6px; gap: 4px; top: calc(var(--hdr, 60px) + 8px + var(--hdr-extra, 0px)); margin-bottom: 16px; }
   .item { padding: 8px 12px; font-size: 12px; }
 }
 @media (max-width: 380px) {

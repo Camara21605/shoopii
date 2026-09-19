@@ -3,7 +3,9 @@
  * Mêmes conventions que LivreursPage.module.css (skeleton/empty/grille).
  * ================================================================ */
 .page { background: var(--g50,#F8F9FA); min-height: 100vh; }
-.body { max-width: 1200px; margin: 0 auto; padding: 22px 28px 80px; }
+/* Le Header est en position:fixed : sans ce décalage le titre "Toutes les boutiques" se
+ * retrouvait caché derrière (même correctif que TypeEntreprisePage.module.css). */
+.body { max-width: 1200px; margin: 0 auto; padding: calc(22px + var(--hdr,66px)) 28px 80px; }
 
 .hero { padding: 8px 0 18px; }
 .heroTitle { font-family: var(--fd); font-size: 22px; font-weight: 800; color: var(--navy); }
@@ -58,7 +60,7 @@
 
 /* Responsive */
 @media (max-width: 860px) {
-  .body { padding: 14px 12px; }
+  .body { padding: calc(14px + var(--hdr,66px)) 12px 14px; }
   .cardsGrid, .skeletonGrid { grid-template-columns: repeat(2,1fr); }
 }
 @media (max-width: 640px) {

@@ -289,7 +289,7 @@
 @media (max-width: 640px) {
   .panel {
     position: fixed;
-    top: 62px; /* var(--hdr) */
+    top: calc(62px + var(--hdr-extra, 0px)); /* var(--hdr) + rangée en plus de l'en-tête mobile */
     left: 0;
     right: 0;
     width: 100%;

@@ -1,7 +1,7 @@
 /* ================================================================
  * FilterToolbar.module.css — Barre d'outils sticky
  * ================================================================ */
-.toolbar{background:var(--white);border-bottom:1px solid var(--bdr);position:sticky;top:var(--hdr,66px);z-index:100}
+.toolbar{background:var(--white);border-bottom:1px solid var(--bdr);position:sticky;top:calc(var(--hdr,66px) + var(--hdr-extra, 0px));z-index:100}
 /* BUG CORRIGÉ (la "barre blanche" avec flèches ‹ › sous le menu) — ce
  * n'était pas une bordure CSS mais la VRAIE scrollbar horizontale native
  * de Windows/Chrome : avec le bouton "En course" ajouté en mobile, le

@@ -51,7 +51,6 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
   const [scrolled,     setScrolled]     = useState(false);
   const [mobileOpen,   setMobileOpen]   = useState(false);
   const [searchFocus,  setSearchFocus]  = useState(false);
-  const [mobileSearch, setMobileSearch] = useState(false);
   const [avatarOpen,   setAvatarOpen]   = useState(false);
   const [avatarUrl,    setAvatarUrl]    = useState<string | null>(null);
   const [activeNav,    setActiveNav]    = useState<NavKey | null>(null);
@@ -272,7 +271,6 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
     const q = searchQuery.trim();
     if (!q) return;
     setSearchFocus(false);
-    setMobileSearch(false);
     setSuggActiveIndex(-1);
     if (searchScope === 'boutiques') {
       navigate(`/boutiques?search=${encodeURIComponent(q)}`);
@@ -379,7 +377,6 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
       setScrolled(window.scrollY > 10);
       setScopeMenuOpen(false);
       setSearchFocus(false);
-      setMobileSearch(false);
     };
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
@@ -473,6 +470,139 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
     /* État local (Explorer, Offres, Boutiques) */
     return activeNav === l.key;
   }
+
+  /* Panneau de suggestions de recherche mobile — partagé par la barre dépliable (autres pages)
+   * et par le champ intégré de l'accueil (2e rangée). */
+  const mobileSuggestions = (wrapStyle: React.CSSProperties) =>
+    (searchFocus && (hasQuery || activeList.length > 0)) ? (
+                <div className={styles.srchSugg} role="listbox" style={wrapStyle}>
+                  {hasQuery && suggestLoading && (
+                    <div className={styles.ssLoading}>
+                      <i className="fas fa-circle-notch fa-spin" /> {t('publicHeader.searchLoading')}
+                    </div>
+                  )}
+                  {hasQuery && !suggestLoading && liveSuggestions.length === 0 && (
+                    <div className={styles.ssEmpty}>{t('publicHeader.searchNoResults', { query: searchQuery.trim() })}</div>
+                  )}
+                  {activeList.map((s, i) => (
+                    <div key={s.image !== undefined ? `${i}-${s.label}` : i} role="option" aria-selected={suggActiveIndex === i}
+                      className={`${styles.ssIt} ${suggActiveIndex === i ? styles.ssItFocused : ''}`}
+                      onMouseEnter={() => setSuggActiveIndex(i)}
+                      onClick={() => { s.action(); setSearchFocus(false); setSuggActiveIndex(-1); }}>
+                      {s.image !== undefined ? (
+                        <span className={styles.ssImgWrap}>
+                          {s.image
+                            ? <img src={s.image} alt="" className={styles.ssImg} />
+                            : <div className={styles.ssImgPlaceholder} />}
+                          {searchScope === 'tout' && s.type && (
+                            <span className={styles.ssTypeBadge}><i className={`fas ${TYPE_ICON[s.type]}`} /></span>
+                          )}
+                        </span>
+                      ) : (
+                        <i className={`fas ${s.icon}`} />
+                      )}
+                      <span className={styles.ssText}>
+                        {s.label}
+                        {s.sublabel && <span className={styles.ssSub}>{s.sublabel}</span>}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+    ) : null;
+
+  /* Champ de recherche intégré à la 2e rangée de l'accueil (mobile) : il occupe tout
+   * l'espace laissé par les icônes de droite. Mêmes états/handlers que la barre dépliable. */
+  const searchField = (
+    <div className={styles.subSearch}>
+      <i className="fas fa-magnifying-glass" aria-hidden />
+      <input
+        className={styles.subSearchIn} type="text" enterKeyHint="search"
+        placeholder={t('publicHeader.searchPlaceholder')}
+        aria-label={t('publicHeader.searchInputAria')}
+        autoComplete="off"
+        value={searchQuery}
+        onChange={e => { setSearchQuery(e.target.value); setSuggActiveIndex(-1); }}
+        onKeyDown={handleSearchKeyDown}
+        onFocus={() => setSearchFocus(true)}
+        onBlur={() => setTimeout(() => setSearchFocus(false), 200)}
+      />
+      {hasQuery && (
+        <button
+          type="button" className={styles.subSearchGo} aria-label={t('publicHeader.searchAria')}
+          onMouseDown={e => e.preventDefault()} onClick={handleSearchSubmit}
+        >
+          <i className="fas fa-arrow-right" />
+        </button>
+      )}
+    </div>
+  );
+
+  /* ── Éléments de la barre mobile (réutilisés par l'en-tête classique ET la barre scindée de l'accueil) ── */
+  const msgBtn = (
+              <button className={`${styles.iconBtn} ${isMessagerie ? styles.iconBtnActive : ''}`}
+                onClick={() => isLoggedIn ? navigate('/messagerie') : openAuthModal()} title={t('publicHeader.messagerie')}>
+                <i className="fas fa-comment-dots" />
+                {canMessage && msgUnread > 0 && !isMessagerie && (
+                  <span className={styles.badge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
+                )}
+              </button>
+  );
+  const notifBtn = isLoggedIn ? <NotificationCenter /> : null;
+  const cartBtn = (
+              <button className={`${styles.iconBtn} ${isCommande ? styles.iconBtnActive : ''}`}
+                onClick={() => clientAction(() => navigate('/commande'))}
+                title={t('publicHeader.panier')} aria-label={t('publicHeader.panier')}>
+                <i className="fas fa-bag-shopping" />
+                {isClient && cartCount > 0 && (
+                  <span className={styles.badge}>{cartCount > 99 ? '99+' : cartCount}</span>
+                )}
+              </button>
+  );
+  const locBtn = (
+              <button className={styles.iconBtn}
+                onClick={() => clientAction(() => navigate('/mes-adresses'))} title={t('publicHeader.adresses')}>
+                <i className="fas fa-location-dot" />
+              </button>
+  );
+  const menuBtn = (
+              <button className={styles.iconBtn} data-mobile-menu
+                onClick={() => setMobileOpen(o => !o)} aria-label={t('publicHeader.menu')}>
+                <i className={`fas ${mobileOpen ? 'fa-xmark' : 'fa-bars'}`} />
+              </button>
+  );
+  const accountBtn = (
+    <>
+              {isAnonymous && (
+                <button className={styles.avatar} onClick={handleLoginClick} title={t('publicHeader.connexion')} style={{ fontSize:11, fontWeight:700 }}>
+                  <i className="fas fa-right-to-bracket" />
+                </button>
+              )}
+              {isClient && (
+                <div ref={avatarRefMobile} style={{ position:'relative' }}>
+                  <button className={styles.avatar} onClick={() => setAvatarOpen(o => !o)} title={t('publicHeader.monCompte')}>
+                    {avatarUrl
+                      ? <img src={avatarUrl} alt="profil" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                      : userInitial}
+                  </button>
+                  {avatarOpen && (
+                    <div style={{ position:'fixed', top: 102, right:8, background:'var(--white)', border:'1px solid var(--bdr2)', borderRadius:14, padding:6, minWidth:190, boxShadow:'0 8px 32px rgba(11,31,58,.14)', zIndex:600 }}>
+                      {/* ✅ Mon profil → /mon-profil (mobile) */}
+                      <button onClick={() => { navigate('/mon-profil'); setAvatarOpen(false); }}
+                        style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer' }}>
+                        <i className="fas fa-user" style={{ color:'var(--blue)', width:14 }} /> {t('publicHeader.monProfil')}
+                      </button>
+                      <AccountSwitchLink render={({ label, onClick, pending }) => (
+                        <button disabled={pending} onClick={() => { onClick(); setAvatarOpen(false); }}
+                          style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer' }}>
+                          <i className="fas fa-right-left" style={{ color:'var(--blue)', width:14 }} /> Basculer vers mon espace {label}
+                        </button>
+                      )} />
+                    </div>
+                  )}
+                </div>
+              )}
+    </>
+  );
 
   return (
     <NotificationProvider>
@@ -656,133 +786,30 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
               </button>
             </div>
 
-            {/* Actions Mobile Top Bar */}
-            <div className={styles.mobileTopActions}>
-              <button className={`${styles.iconBtn} ${styles.mobileSearchToggle}`} onClick={() => setMobileSearch(s => !s)} title={t('publicHeader.searchAria')}>
-                <i className={`fas ${mobileSearch ? 'fa-xmark' : 'fa-magnifying-glass'}`} />
-              </button>
-
-              {/* ✅ Messagerie — ajouté en mobile */}
-              <button className={`${styles.iconBtn} ${isMessagerie ? styles.iconBtnActive : ''}`}
-                onClick={() => isLoggedIn ? navigate('/messagerie') : openAuthModal()} title={t('publicHeader.messagerie')}>
-                <i className="fas fa-comment-dots" />
-                {canMessage && msgUnread > 0 && !isMessagerie && (
-                  <span className={styles.badge}>{msgUnread > 99 ? '99+' : msgUnread}</span>
-                )}
-              </button>
-
-              {isLoggedIn && <NotificationCenter />}
-
-              {/* ✅ Panier — déplacé ici depuis la bottom nav (remplacé par Catalogue) */}
-              <button className={`${styles.iconBtn} ${isCommande ? styles.iconBtnActive : ''}`}
-                onClick={() => clientAction(() => navigate('/commande'))}
-                title={t('publicHeader.panier')} aria-label={t('publicHeader.panier')}>
-                <i className="fas fa-bag-shopping" />
-                {isClient && cartCount > 0 && (
-                  <span className={styles.badge}>{cartCount > 99 ? '99+' : cartCount}</span>
-                )}
-              </button>
-
-              <button className={styles.iconBtn}
-                onClick={() => clientAction(() => navigate('/mes-adresses'))} title={t('publicHeader.adresses')}>
-                <i className="fas fa-location-dot" />
-              </button>
-              <button className={styles.iconBtn} data-mobile-menu
-                onClick={() => setMobileOpen(o => !o)} aria-label={t('publicHeader.menu')}>
-                <i className={`fas ${mobileOpen ? 'fa-xmark' : 'fa-bars'}`} />
-              </button>
-
-              {isAnonymous && (
-                <button className={styles.avatar} onClick={handleLoginClick} title={t('publicHeader.connexion')} style={{ fontSize:11, fontWeight:700 }}>
-                  <i className="fas fa-right-to-bracket" />
-                </button>
-              )}
-              {isClient && (
-                <div ref={avatarRefMobile} style={{ position:'relative' }}>
-                  <button className={styles.avatar} onClick={() => setAvatarOpen(o => !o)} title={t('publicHeader.monCompte')}>
-                    {avatarUrl
-                      ? <img src={avatarUrl} alt="profil" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                      : userInitial}
-                  </button>
-                  {avatarOpen && (
-                    <div style={{ position:'fixed', top:66, right:8, background:'var(--white)', border:'1px solid var(--bdr2)', borderRadius:14, padding:6, minWidth:190, boxShadow:'0 8px 32px rgba(11,31,58,.14)', zIndex:600 }}>
-                      {/* ✅ Mon profil → /mon-profil (mobile) */}
-                      <button onClick={() => { navigate('/mon-profil'); setAvatarOpen(false); }}
-                        style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer' }}>
-                        <i className="fas fa-user" style={{ color:'var(--blue)', width:14 }} /> {t('publicHeader.monProfil')}
-                      </button>
-                      <AccountSwitchLink render={({ label, onClick, pending }) => (
-                        <button disabled={pending} onClick={() => { onClick(); setAvatarOpen(false); }}
-                          style={{ width:'100%', display:'flex', alignItems:'center', gap:9, background:'none', border:'none', padding:'10px 12px', borderRadius:9, fontSize:13, fontWeight:600, color:'var(--t1)', cursor:'pointer' }}>
-                          <i className="fas fa-right-left" style={{ color:'var(--blue)', width:14 }} /> Basculer vers mon espace {label}
-                        </button>
-                      )} />
-                    </div>
-                  )}
-                </div>
-              )}
+            {/* Actions Mobile Top Bar — 3 boutons ronds : localisation, messagerie, menu */}
+            <div className={`${styles.mobileTopActions} ${styles.mobileTopRound}`}>
+              {locBtn}
+              {msgBtn}
+              {menuBtn}
             </div>
           </div>
 
-          {mobileSearch && (
-            <div className={styles.mobileSearchBar}>
-              <div className={styles.srchBox} style={{ borderRadius:12 }}>
-                <input className={styles.srchIn} type="text"
-                  placeholder={t('publicHeader.searchPlaceholder')}
-                  aria-label={t('publicHeader.searchInputAria')}
-                  autoComplete="off" autoFocus
-                  value={searchQuery}
-                  onChange={e => { setSearchQuery(e.target.value); setSuggActiveIndex(-1); }}
-                  onKeyDown={e => {
-                    if (e.key === 'Escape' && !hasQuery) { setMobileSearch(false); return; }
-                    handleSearchKeyDown(e);
-                  }}
-                  onFocus={() => setSearchFocus(true)}
-                  onBlur={() => setTimeout(() => setSearchFocus(false), 200)}
-                />
-                <button className={styles.srchGo} aria-label={t('publicHeader.searchAria')} onClick={handleSearchSubmit}>
-                  <i className="fas fa-magnifying-glass" />
-                </button>
-              </div>
-              {searchFocus && (hasQuery || activeList.length > 0) && (
-                <div className={styles.srchSugg} role="listbox" style={{ position: 'static', marginTop: 6 }}>
-                  {hasQuery && suggestLoading && (
-                    <div className={styles.ssLoading}>
-                      <i className="fas fa-circle-notch fa-spin" /> {t('publicHeader.searchLoading')}
-                    </div>
-                  )}
-                  {hasQuery && !suggestLoading && liveSuggestions.length === 0 && (
-                    <div className={styles.ssEmpty}>{t('publicHeader.searchNoResults', { query: searchQuery.trim() })}</div>
-                  )}
-                  {activeList.map((s, i) => (
-                    <div key={s.image !== undefined ? `${i}-${s.label}` : i} role="option" aria-selected={suggActiveIndex === i}
-                      className={`${styles.ssIt} ${suggActiveIndex === i ? styles.ssItFocused : ''}`}
-                      onMouseEnter={() => setSuggActiveIndex(i)}
-                      onClick={() => { s.action(); setSearchFocus(false); setSuggActiveIndex(-1); setMobileSearch(false); }}>
-                      {s.image !== undefined ? (
-                        <span className={styles.ssImgWrap}>
-                          {s.image
-                            ? <img src={s.image} alt="" className={styles.ssImg} />
-                            : <div className={styles.ssImgPlaceholder} />}
-                          {searchScope === 'tout' && s.type && (
-                            <span className={styles.ssTypeBadge}><i className={`fas ${TYPE_ICON[s.type]}`} /></span>
-                          )}
-                        </span>
-                      ) : (
-                        <i className={`fas ${s.icon}`} />
-                      )}
-                      <span className={styles.ssText}>
-                        {s.label}
-                        {s.sublabel && <span className={styles.ssSub}>{s.sublabel}</span>}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+          {/* Mobile (toutes les pages) : 2e rangée — champ de recherche (tout l'espace restant) + notifications, panier, compte à droite */}
+          <div className={styles.mobileSubBar}>
+            {searchField}
+            <div className={styles.subActions}>
+              {notifBtn}
+              {cartBtn}
+              {accountBtn}
             </div>
-          )}
+          </div>
+          {/* Suggestions sous l'en-tête (l'en-tête a une hauteur fixe : le panneau s'y superpose) */}
+          <div className={styles.subSuggWrap}>{mobileSuggestions({ position: 'static' })}</div>
         </div>
       </header>
+      {/* Mobile : l'en-tête fait 102px au lieu de 66px ; toutes les pages compensent 66px,
+       * ce bloc réserve les 36px manquants dans le flux (voir --hdr-extra, tokens.css). */}
+      <div className={styles.hdrExtraSpacer} aria-hidden />
 
       {/* Drawer Mobile */}
       {mobileOpen && (

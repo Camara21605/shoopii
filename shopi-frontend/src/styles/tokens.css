@@ -82,6 +82,9 @@
 
   /* ── Layout ──────────────────────────────────────────────── */
   --hdr:     66px;
+  /* Hauteur EN PLUS de --hdr de l'en-tête public sur mobile (2 rangées = 102px) : sert aux éléments
+   * collés/fixés sous l'en-tête (sticky, barres fixes). Le contenu, lui, est décalé par .hdrExtraSpacer. */
+  --hdr-extra: 0px;
   --sb:      268px;
 
   /* ── Transitions ─────────────────────────────────────────── */
@@ -197,3 +200,5 @@
   --fd: var(--font-x);
   --fb: var(--font-x);
 }
+
+@media (max-width: 768px) { :root { --hdr-extra: 36px; } }

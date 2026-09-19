@@ -42,7 +42,7 @@
 .layout { display: grid; grid-template-columns: 252px minmax(0,1fr); gap: 24px; align-items: start; }
 
 /* ══ BARRE LATÉRALE ══════════════════════════════════════════════ */
-.sidebar { position: sticky; top: calc(var(--hdr,66px) + 20px); min-width: 0; }
+.sidebar { position: sticky; top: calc(var(--hdr,66px) + 20px + var(--hdr-extra, 0px)); min-width: 0; }
 .sidebarCard {
   background: var(--white); border: 1.5px solid var(--bdr); border-radius: 20px;
   padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0;

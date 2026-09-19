@@ -40,11 +40,11 @@
 .hcardBtn:hover { background:rgba(124,58,237,.2); }
 
 /* ════════ TOOLBAR ════════ */
-/* top:var(--hdr,66px) — le Header du site est en position:fixed (66px de
+/* top:calc(var(--hdr,66px) + var(--hdr-extra, 0px)) — le Header du site est en position:fixed (66px de
  * haut) ; avec top:0 la barre restait "collée" derrière le Header une fois
  * son état sticky activé (BUG CORRIGÉ, même correctif que
  * livreurs/FilterToolbar.module.css). */
-.toolbar { background:var(--wh); border-bottom:1px solid var(--bdr); position:sticky; top:var(--hdr,66px); z-index:100; }
+.toolbar { background:var(--wh); border-bottom:1px solid var(--bdr); position:sticky; top:calc(var(--hdr,66px) + var(--hdr-extra, 0px)); z-index:100; }
 /* scrollbar-width/-ms-overflow-style + ::-webkit-scrollbar : masque la
  * scrollbar horizontale native (visible dès que le contenu — recherche +
  * filtres + tri — dépasse la largeur de l'écran en mobile). */
@@ -170,7 +170,7 @@
  * haut de page pour annuler tout décalage (même correctif que
  * livreurs/LivreursPage.module.css .page). */
 @media (max-width:768px) {
-  .page { padding-top:var(--hdr,66px); }
+  .page { padding-top:calc(var(--hdr,66px) + var(--hdr-extra, 0px)); }
 }
 /* Bottom-nav mobile fixe (62px + zone de sécurité iPhone) — sans cette
  * marge, le bas de la liste se retrouve caché derrière (même correctif

@@ -4,7 +4,7 @@
 
 .bar {
   position: fixed;
-  top: 66px;
+  top: calc(66px + var(--hdr-extra, 0px));
   left: 0; right: 0;
   z-index: 200;
   background: #FFFFFF;
