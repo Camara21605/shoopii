@@ -6,15 +6,27 @@
  * selon le niveau visé.
  * ================================================================ */
 
-import { IsString, IsOptional, IsEnum, IsArray, IsNumber, MinLength } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsArray, IsNumber, MinLength, MaxLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+
+/* Noms géographiques : espaces normalisés + MAJUSCULES dès la frontière HTTP
+ * (le service re-normalise aussi, pour les imports CSV qui n'y passent pas). */
+const toGeoName = ({ value }: { value: unknown }) =>
+  typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().toLocaleUpperCase('fr-FR') : value;
+const toGeoCode = ({ value }: { value: unknown }) =>
+  typeof value === 'string' ? value.replace(/\s+/g, '').toUpperCase() : value;
 
 export class CreateGeoItemDto {
+  @Transform(toGeoName)
   @IsString()
-  @MinLength(1)
+  @MinLength(1, { message: 'Le nom est obligatoire.' })
+  @MaxLength(255)
   nom: string;
 
+  @Transform(toGeoCode)
   @IsString()
-  @MinLength(1)
+  @MinLength(1, { message: 'Le code est obligatoire.' })
+  @MaxLength(50)
   code: string;
 
   @IsOptional() @IsString()
@@ -37,7 +49,7 @@ export class CreateGeoItemDto {
   @IsOptional() @IsString() devise?: string;
 
   /* Region / Prefecture */
-  @IsOptional() @IsString() chef_lieu?: string;
+  @Transform(toGeoName) @IsOptional() @IsString() chef_lieu?: string;
 
   /* Commune */
   @IsOptional()

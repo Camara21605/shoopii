@@ -14,7 +14,7 @@
  * ================================================================ */
 
 import {
-  Injectable, NotFoundException, ConflictException, ForbiddenException,
+  Injectable, NotFoundException, ConflictException, ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, In } from 'typeorm';
@@ -84,6 +84,24 @@ function buildWhere(params?: GeoListParams) {
 /* ── Auteurs réservés au super-admin (items non modifiables par un admin) ── */
 const SUPER_ADMIN_AUTHORS = new Set(['Super Admin', 'Système', 'System']);
 
+/* ── Permission granulaire (admins.service.ts DEFAULT_PERMISSIONS) requise
+ * pour gérer chaque niveau — vérifiée côté serveur, pas seulement masquée
+ * dans l'interface. ── */
+const LEVEL_PERMISSION: Record<GeoAuditNiveau, { perm: string; label: string }> = {
+  pays:       { perm: 'geo_pays',        label: 'les pays' },
+  region:     { perm: 'geo_regions',     label: 'les régions' },
+  prefecture: { perm: 'geo_prefectures', label: 'les préfectures' },
+  commune:    { perm: 'geo_communes',    label: 'les communes' },
+  quartier:   { perm: 'geo_quartiers',   label: 'les quartiers' },
+  zone:       { perm: 'geo_zones',       label: 'les zones de livraison' },
+};
+
+/* Noms géographiques toujours stockés en MAJUSCULES, espaces normalisés
+ * ("  conakry   kaloum " → "CONAKRY KALOUM"), quelle que soit la saisie. */
+export function normalizeGeoName(value: string): string {
+  return value.replace(/\s+/g, ' ').trim().toLocaleUpperCase('fr-FR');
+}
+
 /* ── Colonne(s) "code parent" acceptée(s) dans un CSV d'import, par niveau ── */
 const IMPORT_PARENT_COLUMNS: Record<Exclude<GeoAuditNiveau, 'pays'>, string> = {
   region:     'paysCode',
@@ -150,26 +168,52 @@ export class GeoService {
     }));
   }
 
-  /* ── BUG CORRIGÉ — Vérifie la permission granulaire "geo_zones" ────────
-   * DEFAULT_PERMISSIONS (admins.service.ts) définit "geo_zones" ("Zones
-   * de livraison") et le super-admin peut déjà l'accorder/la retirer via
-   * setPermission() (section "Permissions" du dashboard super-admin) —
-   * mais RIEN ne la vérifiait jamais côté serveur : n'importe quel admin
-   * pouvait créer/modifier/supprimer des zones (donc leur `fraisLivraison`,
-   * le tarif de livraison réellement facturé au client) que le super-admin
-   * la lui ait accordée ou non. Même famille de bug que celui corrigé pour
-   * TeamPermissionGuard (company-team) — "case cochée en base, jamais
-   * vérifiée". Un super-admin passe toujours (mêmes critères que
-   * assertEditable/assertCountryScope ci-dessous). ── */
-  private async assertZonePermission(callerRole: UserRole, userId?: string): Promise<void> {
+  /* ── Vérifie la permission granulaire du niveau (geo_pays … geo_zones).
+   * Le super-admin peut l'accorder/la retirer via setPermission() ; avant ce
+   * garde, seule "geo_zones" était contrôlée côté serveur — un admin sans
+   * "geo_communes" pouvait quand même créer/modifier des communes en appelant
+   * l'API directement ("case cochée en base, jamais vérifiée"). Un super-admin
+   * passe toujours. ── */
+  private async assertLevelPermission(niveau: GeoAuditNiveau, callerRole: UserRole, userId?: string | null): Promise<void> {
     if (callerRole !== UserRole.ADMIN) return;
     if (!userId) throw new ForbiddenException('Authentification requise.');
     const admin = await this.adminRepo.findOne({ where: { userId } });
     const perms = admin?.permissions as Record<string, boolean> | null;
-    if (!perms?.geo_zones) {
+    const { perm, label } = LEVEL_PERMISSION[niveau];
+    if (!perms?.[perm]) {
       throw new ForbiddenException(
-        "Vous n'avez pas la permission de gérer les zones de livraison. Contactez le super-administrateur.",
+        `Vous n'avez pas la permission de gérer ${label}. Contactez le super-administrateur.`,
       );
+    }
+  }
+
+  /* ── Le parent choisi doit exister au niveau supérieur ── */
+  private async assertParentExists(niveau: GeoAuditNiveau, parentId: string | null | undefined): Promise<void> {
+    const parentRepo: Partial<Record<GeoAuditNiveau, [Repository<any>, string]>> = {
+      region:     [this.paysRepo, 'pays'],
+      prefecture: [this.regRepo,  'région'],
+      commune:    [this.prefRepo, 'préfecture'],
+      quartier:   [this.commRepo, 'commune'],
+    };
+    const entry = parentRepo[niveau];
+    if (!entry) return;
+    if (!parentId) throw new BadRequestException(`La localisation hiérarchique est obligatoire : choisissez la ${entry[1]} parente.`);
+    if (!(await entry[0].exist({ where: { id: parentId } }))) {
+      throw new BadRequestException(`La ${entry[1]} parente sélectionnée est introuvable.`);
+    }
+  }
+
+  /* ── Deux éléments d'un même parent ne portent pas le même nom
+   * (comparaison en majuscules : "kaloum" et "KALOUM" sont le même). ── */
+  private async assertNameAvailable(
+    repo: Repository<any>, nom: string, parentId: string | null, article: string, excludeId?: string,
+  ): Promise<void> {
+    const qb = repo.createQueryBuilder('g').where('UPPER(g.nom) = :nom', { nom });
+    if (parentId) qb.andWhere('g.parentId = :pid', { pid: parentId });
+    else          qb.andWhere('g.parentId IS NULL');
+    if (excludeId) qb.andWhere('g.id != :id', { id: excludeId });
+    if (await qb.getCount()) {
+      throw new ConflictException(`${article} « ${nom} » existe déjà à cet emplacement.`);
     }
   }
 
@@ -299,16 +343,19 @@ export class GeoService {
     return items.map(i => serialize(i as any, childMap.get(i.id) ?? 0));
   }
 
-  async createPays(dto: CreateGeoItemDto, actorEmail = 'Super Admin', actorUserId: string | null = null): Promise<GeoItemResponse> {
+  async createPays(dto: CreateGeoItemDto, actorEmail = 'Super Admin', actorUserId: string | null = null, callerRole: UserRole = UserRole.SUPER_ADMIN): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('pays', callerRole, actorUserId);
+    await this.assertCountryScope(null, 'pays', callerRole, actorUserId ?? undefined);
+    await this.assertNameAvailable(this.paysRepo, normalizeGeoName(dto.nom), null, 'Un pays');
     const existing = await this.paysRepo.findOne({ where: { code: dto.code.toUpperCase() } });
     if (existing) throw new ConflictException(`Un pays avec le code "${dto.code}" existe déjà.`);
     const entity = this.paysRepo.create({
       code: dto.code.toUpperCase(),
-      nom: dto.nom,
+      nom: normalizeGeoName(dto.nom),
       description: dto.description ?? '',
       statut: dto.statut ?? 'actif',
       parentId: null,
-      auteur: dto.auteur ?? 'Super Admin',
+      auteur: callerRole === UserRole.ADMIN ? 'Administrateur' : (dto.auteur ?? 'Super Admin'),
       iso3: dto.iso3 ?? '',
       indicatif: dto.indicatif ?? '',
       devise: dto.devise ?? '',
@@ -322,16 +369,22 @@ export class GeoService {
   }
 
   async updatePays(id: string, dto: CreateGeoItemDto, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('pays', callerRole, userId);
     const item = await this.paysRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Pays ${id} introuvable.`);
     await this.assertCountryScope(null, 'pays', callerRole, userId, item.id);
     await this.assertEditable(item.auteur, callerRole, userId);
+    const newNom = dto.nom?.trim() ? normalizeGeoName(dto.nom) : item.nom;
+    const newParent = item.parentId;
+    if (newNom !== item.nom.toLocaleUpperCase('fr-FR') || newParent !== item.parentId) {
+      await this.assertNameAvailable(this.paysRepo, newNom, newParent, 'Un pays', item.id);
+    }
     Object.assign(item, {
-      ...(dto.nom         && { nom: dto.nom }),
+      ...(dto.nom?.trim()         && { nom: normalizeGeoName(dto.nom) }),
       ...(dto.code        && { code: dto.code.toUpperCase() }),
       ...(dto.description !== undefined && { description: dto.description }),
       ...(dto.statut      && { statut: dto.statut }),
-      ...(dto.auteur      && { auteur: dto.auteur }),
+      ...(dto.auteur      && callerRole === UserRole.SUPER_ADMIN && { auteur: dto.auteur }),
       ...(dto.iso3        !== undefined && { iso3: dto.iso3 }),
       ...(dto.indicatif   !== undefined && { indicatif: dto.indicatif }),
       ...(dto.devise      !== undefined && { devise: dto.devise }),
@@ -346,6 +399,7 @@ export class GeoService {
   }
 
   async removePays(id: string, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<void> {
+    await this.assertLevelPermission('pays', callerRole, userId);
     const item = await this.paysRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Pays ${id} introuvable.`);
     await this.assertCountryScope(null, 'pays', callerRole, userId, item.id);
@@ -358,6 +412,7 @@ export class GeoService {
   }
 
   async togglePays(id: string, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('pays', callerRole, userId);
     const item = await this.paysRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Pays ${id} introuvable.`);
     await this.assertCountryScope(null, 'pays', callerRole, userId, item.id);
@@ -381,17 +436,21 @@ export class GeoService {
     return items.map(i => serialize(i as any, childMap.get(i.id) ?? 0));
   }
 
-  async createRegion(dto: CreateGeoItemDto, actorEmail = 'Super Admin', actorUserId: string | null = null): Promise<GeoItemResponse> {
+  async createRegion(dto: CreateGeoItemDto, actorEmail = 'Super Admin', actorUserId: string | null = null, callerRole: UserRole = UserRole.SUPER_ADMIN): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('region', callerRole, actorUserId);
+    await this.assertParentExists('region', dto.parentId);
+    await this.assertCountryScope(dto.parentId ?? null, 'region', callerRole, actorUserId ?? undefined);
+    await this.assertNameAvailable(this.regRepo, normalizeGeoName(dto.nom), dto.parentId ?? null, 'Une région');
     const existing = await this.regRepo.findOne({ where: { code: dto.code.toUpperCase() } });
     if (existing) throw new ConflictException(`Une région avec le code "${dto.code}" existe déjà.`);
     const entity = this.regRepo.create({
       code:        dto.code.toUpperCase(),
-      nom:         dto.nom,
+      nom:         normalizeGeoName(dto.nom),
       description: dto.description ?? '',
       statut:      dto.statut ?? 'actif',
       parentId:    dto.parentId ?? null,
-      auteur:      dto.auteur ?? 'Super Admin',
-      chef_lieu:   dto.chef_lieu ?? '',
+      auteur:      callerRole === UserRole.ADMIN ? 'Administrateur' : (dto.auteur ?? 'Super Admin'),
+      chef_lieu:   normalizeGeoName(dto.chef_lieu ?? ''),
     });
     const saved = await this.regRepo.save(entity);
     void this.logAudit({
@@ -402,18 +461,25 @@ export class GeoService {
   }
 
   async updateRegion(id: string, dto: CreateGeoItemDto, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('region', callerRole, userId);
     const item = await this.regRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Région ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'region', callerRole, userId);
     await this.assertEditable(item.auteur, callerRole, userId);
+    if (dto.parentId) await this.assertParentExists('region', dto.parentId);
+    const newNom = dto.nom?.trim() ? normalizeGeoName(dto.nom) : item.nom;
+    const newParent = (dto.parentId !== undefined ? (dto.parentId || null) : item.parentId);
+    if (newNom !== item.nom.toLocaleUpperCase('fr-FR') || newParent !== item.parentId) {
+      await this.assertNameAvailable(this.regRepo, newNom, newParent, 'Une région', item.id);
+    }
     Object.assign(item, {
-      ...(dto.nom         && { nom: dto.nom }),
+      ...(dto.nom?.trim()         && { nom: normalizeGeoName(dto.nom) }),
       ...(dto.code        && { code: dto.code.toUpperCase() }),
       ...(dto.description !== undefined && { description: dto.description }),
       ...(dto.statut      && { statut: dto.statut }),
       ...(dto.parentId    !== undefined && { parentId: dto.parentId || null }),
-      ...(dto.auteur      && { auteur: dto.auteur }),
-      ...(dto.chef_lieu   !== undefined && { chef_lieu: dto.chef_lieu }),
+      ...(dto.auteur      && callerRole === UserRole.SUPER_ADMIN && { auteur: dto.auteur }),
+      ...(dto.chef_lieu   !== undefined && { chef_lieu: normalizeGeoName(dto.chef_lieu) }),
     });
     const saved = await this.regRepo.save(item);
     void this.logAudit({
@@ -425,6 +491,7 @@ export class GeoService {
   }
 
   async removeRegion(id: string, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<void> {
+    await this.assertLevelPermission('region', callerRole, userId);
     const item = await this.regRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Région ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'region', callerRole, userId);
@@ -437,6 +504,7 @@ export class GeoService {
   }
 
   async toggleRegion(id: string, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('region', callerRole, userId);
     const item = await this.regRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Région ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'region', callerRole, userId);
@@ -460,17 +528,21 @@ export class GeoService {
     return items.map(i => serialize(i as any, childMap.get(i.id) ?? 0));
   }
 
-  async createPrefecture(dto: CreateGeoItemDto, actorEmail = 'Super Admin', actorUserId: string | null = null): Promise<GeoItemResponse> {
+  async createPrefecture(dto: CreateGeoItemDto, actorEmail = 'Super Admin', actorUserId: string | null = null, callerRole: UserRole = UserRole.SUPER_ADMIN): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('prefecture', callerRole, actorUserId);
+    await this.assertParentExists('prefecture', dto.parentId);
+    await this.assertCountryScope(dto.parentId ?? null, 'prefecture', callerRole, actorUserId ?? undefined);
+    await this.assertNameAvailable(this.prefRepo, normalizeGeoName(dto.nom), dto.parentId ?? null, 'Une préfecture');
     const existing = await this.prefRepo.findOne({ where: { code: dto.code.toUpperCase() } });
     if (existing) throw new ConflictException(`Une préfecture avec le code "${dto.code}" existe déjà.`);
     const entity = this.prefRepo.create({
       code:        dto.code.toUpperCase(),
-      nom:         dto.nom,
+      nom:         normalizeGeoName(dto.nom),
       description: dto.description ?? '',
       statut:      dto.statut ?? 'actif',
       parentId:    dto.parentId ?? null,
-      auteur:      dto.auteur ?? 'Super Admin',
-      chef_lieu:   dto.chef_lieu ?? '',
+      auteur:      callerRole === UserRole.ADMIN ? 'Administrateur' : (dto.auteur ?? 'Super Admin'),
+      chef_lieu:   normalizeGeoName(dto.chef_lieu ?? ''),
     });
     const saved = await this.prefRepo.save(entity);
     void this.logAudit({
@@ -481,18 +553,25 @@ export class GeoService {
   }
 
   async updatePrefecture(id: string, dto: CreateGeoItemDto, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('prefecture', callerRole, userId);
     const item = await this.prefRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Préfecture ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'prefecture', callerRole, userId);
     await this.assertEditable(item.auteur, callerRole, userId);
+    if (dto.parentId) await this.assertParentExists('prefecture', dto.parentId);
+    const newNom = dto.nom?.trim() ? normalizeGeoName(dto.nom) : item.nom;
+    const newParent = (dto.parentId !== undefined ? (dto.parentId || null) : item.parentId);
+    if (newNom !== item.nom.toLocaleUpperCase('fr-FR') || newParent !== item.parentId) {
+      await this.assertNameAvailable(this.prefRepo, newNom, newParent, 'Une préfecture', item.id);
+    }
     Object.assign(item, {
-      ...(dto.nom         && { nom: dto.nom }),
+      ...(dto.nom?.trim()         && { nom: normalizeGeoName(dto.nom) }),
       ...(dto.code        && { code: dto.code.toUpperCase() }),
       ...(dto.description !== undefined && { description: dto.description }),
       ...(dto.statut      && { statut: dto.statut }),
       ...(dto.parentId    !== undefined && { parentId: dto.parentId || null }),
-      ...(dto.auteur      && { auteur: dto.auteur }),
-      ...(dto.chef_lieu   !== undefined && { chef_lieu: dto.chef_lieu }),
+      ...(dto.auteur      && callerRole === UserRole.SUPER_ADMIN && { auteur: dto.auteur }),
+      ...(dto.chef_lieu   !== undefined && { chef_lieu: normalizeGeoName(dto.chef_lieu) }),
     });
     const saved = await this.prefRepo.save(item);
     void this.logAudit({
@@ -504,6 +583,7 @@ export class GeoService {
   }
 
   async removePrefecture(id: string, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<void> {
+    await this.assertLevelPermission('prefecture', callerRole, userId);
     const item = await this.prefRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Préfecture ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'prefecture', callerRole, userId);
@@ -516,6 +596,7 @@ export class GeoService {
   }
 
   async togglePrefecture(id: string, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('prefecture', callerRole, userId);
     const item = await this.prefRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Préfecture ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'prefecture', callerRole, userId);
@@ -539,16 +620,20 @@ export class GeoService {
     return items.map(i => serialize(i as any, childMap.get(i.id) ?? 0));
   }
 
-  async createCommune(dto: CreateGeoItemDto, actorEmail = 'Super Admin', actorUserId: string | null = null): Promise<GeoItemResponse> {
+  async createCommune(dto: CreateGeoItemDto, actorEmail = 'Super Admin', actorUserId: string | null = null, callerRole: UserRole = UserRole.SUPER_ADMIN): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('commune', callerRole, actorUserId);
+    await this.assertParentExists('commune', dto.parentId);
+    await this.assertCountryScope(dto.parentId ?? null, 'commune', callerRole, actorUserId ?? undefined);
+    await this.assertNameAvailable(this.commRepo, normalizeGeoName(dto.nom), dto.parentId ?? null, 'Une commune');
     const existing = await this.commRepo.findOne({ where: { code: dto.code.toUpperCase() } });
     if (existing) throw new ConflictException(`Une commune avec le code "${dto.code}" existe déjà.`);
     const entity = this.commRepo.create({
       code:        dto.code.toUpperCase(),
-      nom:         dto.nom,
+      nom:         normalizeGeoName(dto.nom),
       description: dto.description ?? '',
       statut:      dto.statut ?? 'actif',
       parentId:    dto.parentId ?? null,
-      auteur:      dto.auteur ?? 'Super Admin',
+      auteur:      callerRole === UserRole.ADMIN ? 'Administrateur' : (dto.auteur ?? 'Super Admin'),
       type:        dto.type ?? 'urbaine',
     });
     const saved = await this.commRepo.save(entity);
@@ -560,17 +645,24 @@ export class GeoService {
   }
 
   async updateCommune(id: string, dto: CreateGeoItemDto, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('commune', callerRole, userId);
     const item = await this.commRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Commune ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'commune', callerRole, userId);
     await this.assertEditable(item.auteur, callerRole, userId);
+    if (dto.parentId) await this.assertParentExists('commune', dto.parentId);
+    const newNom = dto.nom?.trim() ? normalizeGeoName(dto.nom) : item.nom;
+    const newParent = (dto.parentId !== undefined ? (dto.parentId || null) : item.parentId);
+    if (newNom !== item.nom.toLocaleUpperCase('fr-FR') || newParent !== item.parentId) {
+      await this.assertNameAvailable(this.commRepo, newNom, newParent, 'Une commune', item.id);
+    }
     Object.assign(item, {
-      ...(dto.nom         && { nom: dto.nom }),
+      ...(dto.nom?.trim()         && { nom: normalizeGeoName(dto.nom) }),
       ...(dto.code        && { code: dto.code.toUpperCase() }),
       ...(dto.description !== undefined && { description: dto.description }),
       ...(dto.statut      && { statut: dto.statut }),
       ...(dto.parentId    !== undefined && { parentId: dto.parentId || null }),
-      ...(dto.auteur      && { auteur: dto.auteur }),
+      ...(dto.auteur      && callerRole === UserRole.SUPER_ADMIN && { auteur: dto.auteur }),
       ...(dto.type        && { type: dto.type }),
     });
     const saved = await this.commRepo.save(item);
@@ -583,6 +675,7 @@ export class GeoService {
   }
 
   async removeCommune(id: string, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<void> {
+    await this.assertLevelPermission('commune', callerRole, userId);
     const item = await this.commRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Commune ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'commune', callerRole, userId);
@@ -595,6 +688,7 @@ export class GeoService {
   }
 
   async toggleCommune(id: string, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('commune', callerRole, userId);
     const item = await this.commRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Commune ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'commune', callerRole, userId);
@@ -619,16 +713,20 @@ export class GeoService {
     return items.map(i => serialize(i as any, 0));
   }
 
-  async createQuartier(dto: CreateGeoItemDto, actorEmail = 'Super Admin', actorUserId: string | null = null): Promise<GeoItemResponse> {
+  async createQuartier(dto: CreateGeoItemDto, actorEmail = 'Super Admin', actorUserId: string | null = null, callerRole: UserRole = UserRole.SUPER_ADMIN): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('quartier', callerRole, actorUserId);
+    await this.assertParentExists('quartier', dto.parentId);
+    await this.assertCountryScope(dto.parentId ?? null, 'quartier', callerRole, actorUserId ?? undefined);
+    await this.assertNameAvailable(this.quartRepo, normalizeGeoName(dto.nom), dto.parentId ?? null, 'Un quartier');
     const existing = await this.quartRepo.findOne({ where: { code: dto.code.toUpperCase() } });
     if (existing) throw new ConflictException(`Un quartier avec le code "${dto.code}" existe déjà.`);
     const entity = this.quartRepo.create({
       code:        dto.code.toUpperCase(),
-      nom:         dto.nom,
+      nom:         normalizeGeoName(dto.nom),
       description: dto.description ?? '',
       statut:      dto.statut ?? 'actif',
       parentId:    dto.parentId ?? null,
-      auteur:      dto.auteur ?? 'Super Admin',
+      auteur:      callerRole === UserRole.ADMIN ? 'Administrateur' : (dto.auteur ?? 'Super Admin'),
       population:  dto.population ?? 0,
     });
     const saved = await this.quartRepo.save(entity);
@@ -640,17 +738,24 @@ export class GeoService {
   }
 
   async updateQuartier(id: string, dto: CreateGeoItemDto, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('quartier', callerRole, userId);
     const item = await this.quartRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Quartier ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'quartier', callerRole, userId);
     await this.assertEditable(item.auteur, callerRole, userId);
+    if (dto.parentId) await this.assertParentExists('quartier', dto.parentId);
+    const newNom = dto.nom?.trim() ? normalizeGeoName(dto.nom) : item.nom;
+    const newParent = (dto.parentId !== undefined ? (dto.parentId || null) : item.parentId);
+    if (newNom !== item.nom.toLocaleUpperCase('fr-FR') || newParent !== item.parentId) {
+      await this.assertNameAvailable(this.quartRepo, newNom, newParent, 'Un quartier', item.id);
+    }
     Object.assign(item, {
-      ...(dto.nom         && { nom: dto.nom }),
+      ...(dto.nom?.trim()         && { nom: normalizeGeoName(dto.nom) }),
       ...(dto.code        && { code: dto.code.toUpperCase() }),
       ...(dto.description !== undefined && { description: dto.description }),
       ...(dto.statut      && { statut: dto.statut }),
       ...(dto.parentId    !== undefined && { parentId: dto.parentId || null }),
-      ...(dto.auteur      && { auteur: dto.auteur }),
+      ...(dto.auteur      && callerRole === UserRole.SUPER_ADMIN && { auteur: dto.auteur }),
       ...(dto.population  !== undefined && { population: dto.population }),
     });
     const saved = await this.quartRepo.save(item);
@@ -662,6 +767,7 @@ export class GeoService {
   }
 
   async removeQuartier(id: string, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<void> {
+    await this.assertLevelPermission('quartier', callerRole, userId);
     const item = await this.quartRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Quartier ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'quartier', callerRole, userId);
@@ -674,6 +780,7 @@ export class GeoService {
   }
 
   async toggleQuartier(id: string, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<GeoItemResponse> {
+    await this.assertLevelPermission('quartier', callerRole, userId);
     const item = await this.quartRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Quartier ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'quartier', callerRole, userId);
@@ -701,17 +808,17 @@ export class GeoService {
     actorUserId: string | null = null,
     callerRole: UserRole = UserRole.SUPER_ADMIN,
   ): Promise<GeoItemResponse> {
-    await this.assertZonePermission(callerRole, actorUserId ?? undefined);
+    await this.assertLevelPermission('zone', callerRole, actorUserId);
     const existing = await this.zoneRepo.findOne({ where: { code: dto.code.toUpperCase() } });
     if (existing) throw new ConflictException(`Une zone avec le code "${dto.code}" existe déjà.`);
     const couvertureIds = dto.couvertureIds ?? [];
     const entity = this.zoneRepo.create({
       code:           dto.code.toUpperCase(),
-      nom:            dto.nom,
+      nom:            normalizeGeoName(dto.nom),
       description:    dto.description ?? '',
       statut:         dto.statut ?? 'actif',
       parentId:       couvertureIds[0] ?? null,
-      auteur:         dto.auteur ?? 'Super Admin',
+      auteur:         callerRole === UserRole.ADMIN ? 'Administrateur' : (dto.auteur ?? 'Super Admin'),
       couvertureType: dto.couvertureType ?? 'commune',
       couvertureIds,
       rayonKm:        dto.rayonKm ?? 0,
@@ -728,18 +835,18 @@ export class GeoService {
   }
 
   async updateZone(id: string, dto: CreateGeoItemDto, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<GeoItemResponse> {
-    await this.assertZonePermission(callerRole, userId);
+    await this.assertLevelPermission('zone', callerRole, userId);
     const item = await this.zoneRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Zone ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'zone', callerRole, userId);
     await this.assertEditable(item.auteur, callerRole, userId);
     const couvertureIds = dto.couvertureIds ?? item.couvertureIds;
     Object.assign(item, {
-      ...(dto.nom             && { nom: dto.nom }),
+      ...(dto.nom?.trim()             && { nom: normalizeGeoName(dto.nom) }),
       ...(dto.code            && { code: dto.code.toUpperCase() }),
       ...(dto.description     !== undefined && { description: dto.description }),
       ...(dto.statut          && { statut: dto.statut }),
-      ...(dto.auteur          && { auteur: dto.auteur }),
+      ...(dto.auteur          && callerRole === UserRole.SUPER_ADMIN && { auteur: dto.auteur }),
       ...(dto.couvertureType  && { couvertureType: dto.couvertureType }),
       couvertureIds,
       parentId: couvertureIds[0] ?? item.parentId,
@@ -756,7 +863,7 @@ export class GeoService {
   }
 
   async removeZone(id: string, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<void> {
-    await this.assertZonePermission(callerRole, userId);
+    await this.assertLevelPermission('zone', callerRole, userId);
     const item = await this.zoneRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Zone ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'zone', callerRole, userId);
@@ -769,7 +876,7 @@ export class GeoService {
   }
 
   async toggleZone(id: string, callerRole: UserRole, userId: string, actorEmail = 'Super Admin'): Promise<GeoItemResponse> {
-    await this.assertZonePermission(callerRole, userId);
+    await this.assertLevelPermission('zone', callerRole, userId);
     const item = await this.zoneRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException(`Zone ${id} introuvable.`);
     await this.assertCountryScope(item.parentId, 'zone', callerRole, userId);
@@ -969,11 +1076,11 @@ export class GeoService {
         };
 
         switch (niveau) {
-          case 'pays':       await this.createPays(dto, actorEmail, actorUserId);       break;
-          case 'region':     await this.createRegion(dto, actorEmail, actorUserId);     break;
-          case 'prefecture': await this.createPrefecture(dto, actorEmail, actorUserId); break;
-          case 'commune':    await this.createCommune(dto, actorEmail, actorUserId);    break;
-          case 'quartier':   await this.createQuartier(dto, actorEmail, actorUserId);   break;
+          case 'pays':       await this.createPays(dto, actorEmail, actorUserId, callerRole);       break;
+          case 'region':     await this.createRegion(dto, actorEmail, actorUserId, callerRole);     break;
+          case 'prefecture': await this.createPrefecture(dto, actorEmail, actorUserId, callerRole); break;
+          case 'commune':    await this.createCommune(dto, actorEmail, actorUserId, callerRole);    break;
+          case 'quartier':   await this.createQuartier(dto, actorEmail, actorUserId, callerRole);   break;
           case 'zone':       await this.createZone(dto, actorEmail, actorUserId, callerRole); break;
         }
         created++;

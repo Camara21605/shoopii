@@ -168,21 +168,17 @@ export default function GeoReferentielPage({ geoPerms, onToast }: Props) {
     const flip = (s: GeoItem['statut']) => s === 'actif' ? 'inactif' : 'actif';
 
     return {
-      onAdd: (item: Partial<GeoItem>) => {
-        const tmpId = `__tmp_${Date.now()}`;
-        const now   = new Date().toISOString();
-        setter(prev => [...prev, { ...item, id: tmpId, enfants: 0, createdAt: now, updatedAt: now } as AnyGeoItem]);
-        api.create(item)
-          .then(c => setter(prev => prev.map(x => x.id === tmpId ? c as AnyGeoItem : x)))
-          .catch(e => { setter(prev => prev.filter(x => x.id !== tmpId)); toast('error', e?.message ?? 'Erreur création'); });
+      /* Création / modification : on attend la réponse du serveur (Promise) pour
+       * que le formulaire reste ouvert et affiche l'erreur (doublon, permission…)
+       * au lieu de fermer puis d'annuler en silence. */
+      onAdd: async (item: Partial<GeoItem>) => {
+        const created = await api.create(item);
+        setter(prev => [...prev, created as AnyGeoItem]);
       },
 
-      onEdit: (id: string, data: Partial<GeoItem>) => {
-        let old: AnyGeoItem | undefined;
-        setter(prev => { old = prev.find(x => x.id === id); return prev.map(x => x.id === id ? { ...x, ...data } as AnyGeoItem : x); });
-        api.update(id, data)
-          .then(u => setter(prev => prev.map(x => x.id === id ? u as AnyGeoItem : x)))
-          .catch(e => { if (old) setter(prev => prev.map(x => x.id === id ? old! : x)); toast('error', e?.message ?? 'Erreur modification'); });
+      onEdit: async (id: string, data: Partial<GeoItem>) => {
+        const updated = await api.update(id, data);
+        setter(prev => prev.map(x => x.id === id ? updated as AnyGeoItem : x));
       },
 
       onDelete: (id: string) => {

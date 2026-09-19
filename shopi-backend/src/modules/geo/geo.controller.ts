@@ -168,7 +168,7 @@ export class GeoController {
   @HttpCode(HttpStatus.CREATED)
   createPays(@Body() dto: CreateGeoItemDto, @Request() req: any) {
     const a = actor(req);
-    return this.geo.createPays(dto, a.email, a.userId);
+    return this.geo.createPays(dto, a.email, a.userId, req.user.role);
   }
 
   @Patch('pays/:id')
@@ -206,7 +206,7 @@ export class GeoController {
   @HttpCode(HttpStatus.CREATED)
   createRegion(@Body() dto: CreateGeoItemDto, @Request() req: any) {
     const a = actor(req);
-    return this.geo.createRegion(dto, a.email, a.userId);
+    return this.geo.createRegion(dto, a.email, a.userId, req.user.role);
   }
 
   @Patch('regions/:id')
@@ -244,7 +244,7 @@ export class GeoController {
   @HttpCode(HttpStatus.CREATED)
   createPrefecture(@Body() dto: CreateGeoItemDto, @Request() req: any) {
     const a = actor(req);
-    return this.geo.createPrefecture(dto, a.email, a.userId);
+    return this.geo.createPrefecture(dto, a.email, a.userId, req.user.role);
   }
 
   @Patch('prefectures/:id')
@@ -282,7 +282,7 @@ export class GeoController {
   @HttpCode(HttpStatus.CREATED)
   createCommune(@Body() dto: CreateGeoItemDto, @Request() req: any) {
     const a = actor(req);
-    return this.geo.createCommune(dto, a.email, a.userId);
+    return this.geo.createCommune(dto, a.email, a.userId, req.user.role);
   }
 
   @Patch('communes/:id')
@@ -320,7 +320,7 @@ export class GeoController {
   @HttpCode(HttpStatus.CREATED)
   createQuartier(@Body() dto: CreateGeoItemDto, @Request() req: any) {
     const a = actor(req);
-    return this.geo.createQuartier(dto, a.email, a.userId);
+    return this.geo.createQuartier(dto, a.email, a.userId, req.user.role);
   }
 
   @Patch('quartiers/:id')

@@ -20,8 +20,10 @@ interface GeoLevelProps {
   /** Fallback plat (rétrocompatibilité) */
   parents?: { id: string; nom: string }[];
   toast:    (type: string, msg: string) => void;
-  onAdd?:   (item: Partial<GeoItem>) => void;
-  onEdit?:  (id: string, data: Partial<GeoItem>) => void;
+  /* Si le handler renvoie une Promise, la fenêtre reste ouverte jusqu'à la
+   * réponse du serveur et affiche son erreur (doublon, permission…). */
+  onAdd?:   (item: Partial<GeoItem>) => void | Promise<unknown>;
+  onEdit?:  (id: string, data: Partial<GeoItem>) => void | Promise<unknown>;
   onDelete?:(id: string) => void;
   onToggle?:(id: string) => void;
   /** Retourne true si cet item est en lecture seule (ex: créé par le super-admin) */
@@ -58,6 +60,8 @@ export default function GeoLevel({ level, items, allData, parents, toast, onAdd,
   const [modal,     setModal]     = useState<{ mode: 'create' | 'edit'; item?: AnyGeoItem } | null>(null);
   const [deleteId,  setDeleteId]  = useState<string | null>(null);
   const [selected,  setSelected]  = useState<Set<string>>(new Set());
+  const [saving,    setSaving]    = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   /* ── Filtrage ── */
   const filtered = useMemo(() => items.filter(it =>
@@ -95,22 +99,32 @@ export default function GeoLevel({ level, items, allData, parents, toast, onAdd,
     setSelected(selected.size === pageItems.length ? new Set() : new Set(pageItems.map(i => i.id)));
 
   /* ── Sauvegarde ── */
-  const handleSave = (data: Partial<GeoItem>) => {
+  const handleSave = async (data: Partial<GeoItem>) => {
     /* Ne pas envoyer les champs générés par le serveur (ValidationPipe
      * avec forbidNonWhitelisted rejette toute propriété hors DTO). */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id: _, enfants: __, createdAt: ___, updatedAt: ____, ...clean } = data as Record<string, unknown>;
     const payload = clean as Partial<GeoItem>;
 
-    if (modal?.mode === 'create') {
-      onAdd?.({ ...payload, auteur: creatorLabel });
-      toast('success', `${cfg.label} créé(e) : ${data.nom}`);
-    } else {
-      onEdit?.(modal!.item!.id, payload);
-      toast('success', `${cfg.label} modifié(e) : ${data.nom}`);
+    setSaveError(null);
+    setSaving(true);
+    try {
+      if (modal?.mode === 'create') {
+        await onAdd?.({ ...payload, auteur: creatorLabel });
+        toast('success', `${cfg.label} créé(e) : ${data.nom}`);
+      } else {
+        await onEdit?.(modal!.item!.id, payload);
+        toast('success', `${cfg.label} modifié(e) : ${data.nom}`);
+      }
+      setModal(null);
+    } catch (e) {
+      setSaveError((e as { message?: string })?.message ?? 'Enregistrement impossible.');
+    } finally {
+      setSaving(false);
     }
-    setModal(null);
   };
+
+  const closeModal = () => { setModal(null); setSaveError(null); };
 
   /* ── Suppression ── */
   const confirmDelete = () => {
@@ -142,7 +156,7 @@ export default function GeoLevel({ level, items, allData, parents, toast, onAdd,
           <button className={`${s.btnSecondary} ${s.btnSm}`} onClick={exportCSV}>
             <i className="fas fa-download" /> Export CSV
           </button>
-          <button className={`${s.btnPrimary} ${s.btnSm}`} onClick={() => setModal({ mode: 'create' })}>
+          <button className={`${s.btnPrimary} ${s.btnSm}`} onClick={() => { setSaveError(null); setModal({ mode: 'create' }); }}>
             <i className="fas fa-plus" /> Nouveau
           </button>
         </div>
@@ -296,7 +310,7 @@ export default function GeoLevel({ level, items, allData, parents, toast, onAdd,
                               </span>
                             )}
                             <button className={`${s.btnGhost} ${s.btnSm} ${s.btnIc}`} title="Modifier"
-                              onClick={() => setModal({ mode: 'edit', item: it })}>
+                              onClick={() => { setSaveError(null); setModal({ mode: 'edit', item: it }); }}>
                               <i className="fas fa-pen" />
                             </button>
                             <button className={`${s.btnGhost} ${s.btnSm} ${s.btnIc}`}
@@ -341,7 +355,8 @@ export default function GeoLevel({ level, items, allData, parents, toast, onAdd,
       {/* ── Modal Création / Édition ── */}
       {modal && (
         <GeoModal mode={modal.mode} level={level} item={modal.item}
-          allData={allData} parents={parents} onSave={handleSave} onClose={() => setModal(null)} />
+          allData={allData} parents={parents} onSave={handleSave} onClose={closeModal}
+          saving={saving} error={saveError} />
       )}
 
       {/* ── Modal Confirmation suppression ── */}

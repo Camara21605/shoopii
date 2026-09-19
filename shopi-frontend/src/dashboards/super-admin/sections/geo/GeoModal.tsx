@@ -38,7 +38,20 @@ interface GeoModalProps {
   parents?: { id: string; nom: string }[];
   onSave:  (data: Partial<GeoItem>) => void;
   onClose: () => void;
+  /** Enregistrement en cours (bouton bloqué, évite le double envoi) */
+  saving?: boolean;
+  /** Message d'erreur renvoyé par le serveur (doublon, permission…) */
+  error?:  string | null;
 }
+
+/* Noms géographiques : toujours en MAJUSCULES, espaces multiples réduits
+ * (le serveur applique la même règle — voir normalizeGeoName). Pendant la
+ * saisie on garde un éventuel espace final pour pouvoir taper un 2e mot. */
+const toName = (v: string) => v.replace(/^\s+/, '').replace(/\s{2,}/g, ' ').toLocaleUpperCase('fr-FR');
+const toCode = (v: string) => v.replace(/\s+/g, '').toUpperCase();
+const NUMERIC_KEYS = new Set(['population', 'rayonKm', 'fraisLivraison', 'tempsEstime']);
+const NAME_KEYS    = new Set(['chef_lieu']);
+const UPPER_KEYS   = new Set(['iso3', 'devise']);
 
 /* ================================================================
  * CHAMPS SPÉCIFIQUES PAR NIVEAU
@@ -102,7 +115,7 @@ function CountryPicker({ value, onSelect, onClear, autoFilled }: CountryPickerPr
           onFocus={() => setOpen(true)} autoComplete="off" />
         {autoFilled && (
           <span style={{ position: 'absolute', right: 32, top: '50%', transform: 'translateY(-50%)', fontSize: 18 }}>
-            {COUNTRIES_DB.find(c => c.nom === query)?.drapeau ?? ''}
+            {COUNTRIES_DB.find(c => c.nom.toLocaleUpperCase('fr-FR') === query.toLocaleUpperCase('fr-FR'))?.drapeau ?? ''}
           </span>
         )}
         {(query || autoFilled) && (
@@ -504,18 +517,20 @@ function ZoneCoverageSelector({ allData, couvertureType, couvertureIds, onTypeCh
 /* ================================================================
  * COMPOSANT PRINCIPAL
  * ================================================================ */
-export default function GeoModal({ mode, level, item, allData, parents, onSave, onClose }: GeoModalProps) {
+export default function GeoModal({ mode, level, item, allData, parents, onSave, onClose, saving = false, error = null }: GeoModalProps) {
   const cfg = GEO_LEVELS.find(l => l.level === level)! as GeoLevelConfig;
 
   /* ── État du formulaire ── */
   const [form, setForm] = useState<Record<string, string>>({
-    nom:         item?.nom         ?? '',
+    nom:         toName(item?.nom ?? ''),
     code:        item?.code        ?? '',
     description: item?.description ?? '',
     statut:      item?.statut      ?? 'actif',
     parentId:    item?.parentId    ?? '',
   });
   const [autoFilled, setAutoFilled] = useState(mode === 'edit' && level === 'pays');
+  /* Les messages "champ obligatoire" n'apparaissent qu'après une tentative d'envoi */
+  const [submitted, setSubmitted] = useState(false);
 
   /* ── États spécifiques Zone ── */
   const zoneItem = (level === 'zone' && item) ? item as ZoneLivraison : undefined;
@@ -529,7 +544,14 @@ export default function GeoModal({ mode, level, item, allData, parents, onSave, 
   /* ── Sync édition ── */
   useEffect(() => {
     if (item) {
-      setForm({ ...(item as Record<string, unknown> as Record<string, string>) });
+      /* Anciennes données saisies en minuscules : affichées (et réenregistrées) en majuscules */
+      const raw = item as Record<string, unknown>;
+      setForm({
+        ...(raw as Record<string, string>),
+        nom: toName(String(raw.nom ?? '')),
+        ...(raw.chef_lieu != null ? { chef_lieu: toName(String(raw.chef_lieu)) } : {}),
+        parentId: String(raw.parentId ?? ''),
+      });
       if (level === 'pays') setAutoFilled(true);
       if (level === 'zone') {
         const z = item as ZoneLivraison;
@@ -539,11 +561,11 @@ export default function GeoModal({ mode, level, item, allData, parents, onSave, 
     }
   }, [item, level]);
 
-  const set = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }));
+  const set = (key: string, val: string) => setForm(f => ({ ...f, [key]: NAME_KEYS.has(key) ? toName(val) : UPPER_KEYS.has(key) ? val.toUpperCase() : val }));
 
   /* ── Auto-remplissage pays ── */
   const handleCountrySelect = (c: WorldCountry) => {
-    setForm(f => ({ ...f, nom: c.nom, code: c.iso2, iso2: c.iso2, iso3: c.iso3, indicatif: c.indicatif, devise: c.devise }));
+    setForm(f => ({ ...f, nom: toName(c.nom), code: c.iso2, iso2: c.iso2, iso3: c.iso3, indicatif: c.indicatif, devise: c.devise }));
     setAutoFilled(true);
   };
   const handleClearCountry = () => {
@@ -552,28 +574,49 @@ export default function GeoModal({ mode, level, item, allData, parents, onSave, 
   };
 
   /* ── Soumission ── */
-  const handleSubmit = () => {
-    if (!form.nom?.trim() || !form.code?.trim()) return;
-    if (level === 'zone' && couvertureIds.length === 0) return;
-
-    const parentId = level === 'zone'
-      ? (couvertureIds[0] ?? null)
-      : (form.parentId || null);
-
-    onSave({
-      ...form,
-      nom:      form.nom.trim(),
-      code:     form.code.trim().toUpperCase(),
-      parentId,
-      statut:   form.statut as 'actif' | 'inactif',
-      ...(level === 'zone' ? { couvertureType, couvertureIds } : {}),
-    });
-  };
-
   const extra            = EXTRA_FIELDS[level] ?? [];
   const hasCascade       = level !== 'pays' && level !== 'zone' && !!allData;
   const hasSimpleParent  = level !== 'pays' && level !== 'zone' && !allData && !!(parents?.length);
-  const isFormValid      = !!(form.nom?.trim() && form.code?.trim() && (level !== 'zone' || couvertureIds.length > 0));
+  const needsParent      = hasCascade || hasSimpleParent;
+
+  /* ── Validation ── */
+  const errors = {
+    nom:    form.nom?.trim()  ? '' : 'Le nom est obligatoire.',
+    code:   form.code?.trim() ? '' : 'Le code est obligatoire.',
+    parent: needsParent && !form.parentId ? 'Choisissez la localisation complète (jusqu\'au niveau parent).' : '',
+    zone:   level === 'zone' && couvertureIds.length === 0 ? 'Sélectionnez au moins une entité géographique.' : '',
+  };
+  const isFormValid = !errors.nom && !errors.code && !errors.parent && !errors.zone;
+
+  /* ── Soumission ──
+   * Le payload est construit champ par champ : envoyer l'objet complet de
+   * l'élément (latitude, longitude, createdAt…) est rejeté par la validation
+   * stricte du serveur (forbidNonWhitelisted) et rendait la modification
+   * impossible. */
+  const handleSubmit = () => {
+    setSubmitted(true);
+    if (!isFormValid || saving) return;
+
+    const payload: Record<string, unknown> = {
+      nom:         toName(form.nom).trim(),
+      code:        toCode(form.code),
+      description: (form.description ?? '').trim(),
+      statut:      form.statut as 'actif' | 'inactif',
+      parentId:    level === 'zone' ? (couvertureIds[0] ?? null) : (form.parentId || null),
+    };
+    for (const xf of extra) {
+      const v = form[xf.key];
+      if (NUMERIC_KEYS.has(xf.key))       payload[xf.key] = Math.max(0, Number(v) || 0);
+      else if (xf.key === 'type')         payload[xf.key] = v || 'urbaine';
+      else if (v !== undefined && v !== null) payload[xf.key] = NAME_KEYS.has(xf.key) ? toName(String(v)).trim() : String(v).trim();
+    }
+    if (level === 'pays' && form.iso2) payload.iso2 = toCode(form.iso2);
+    if (level === 'zone') Object.assign(payload, { couvertureType, couvertureIds });
+
+    onSave(payload as Partial<GeoItem>);
+  };
+
+  const errStyle: React.CSSProperties = { fontSize: 11, color: 'var(--rose)', marginTop: 3 };
 
   /* ================================================================
    * RENDU
@@ -618,13 +661,15 @@ export default function GeoModal({ mode, level, item, allData, parents, onSave, 
                 <div className={s.fldFull} style={{ borderTop: '1px solid var(--border)', margin: '2px 0' }} />
                 <div className={`${s.fld} ${s.fldFull}`}>
                   <label className={s.fldL}>Nom <span className={s.required}>*</span></label>
-                  <input className={s.fldIn} value={form.nom ?? ''} placeholder="Ex : Guinée" onChange={e => set('nom', e.target.value)} />
+                  <input className={s.fldIn} value={form.nom ?? ''} placeholder="Ex : GUINÉE" maxLength={255} onChange={e => set('nom', toName(e.target.value))} />
+                  {submitted && errors.nom && <span style={errStyle}>{errors.nom}</span>}
                 </div>
                 <div className={s.fld}>
                   <label className={s.fldL}>Code / ISO 2 <span className={s.required}>*</span></label>
-                  <input className={s.fldIn} value={form.code ?? ''} placeholder="Ex: GN"
-                    onChange={e => set('code', e.target.value.toUpperCase())}
+                  <input className={s.fldIn} value={form.code ?? ''} placeholder="Ex: GN" maxLength={50}
+                    onChange={e => set('code', toCode(e.target.value))}
                     style={{ fontFamily: 'var(--font-m)', letterSpacing: 2 }} />
+                  {submitted && errors.code && <span style={errStyle}>{errors.code}</span>}
                 </div>
                 <div className={s.fld}>
                   <label className={s.fldL}>Statut</label>
@@ -656,6 +701,7 @@ export default function GeoModal({ mode, level, item, allData, parents, onSave, 
                     </label>
                     <CascadeSelector level={level} allData={allData!}
                       value={form.parentId ?? ''} onChange={id => set('parentId', id)} />
+                    {submitted && errors.parent && <span style={errStyle}>{errors.parent}</span>}
                   </div>
                 )}
                 {hasSimpleParent && (
@@ -667,18 +713,22 @@ export default function GeoModal({ mode, level, item, allData, parents, onSave, 
                       <option value="">— Sélectionner —</option>
                       {parents!.map(p => <option key={p.id} value={p.id}>{p.nom}</option>)}
                     </select>
+                    {submitted && errors.parent && <span style={errStyle}>{errors.parent}</span>}
                   </div>
                 )}
                 <div className={s.fldFull} style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
                 <div className={`${s.fld} ${s.fldFull}`}>
                   <label className={s.fldL}>Nom <span className={s.required}>*</span></label>
-                  <input className={s.fldIn} value={form.nom ?? ''} placeholder={`Nom du/de la ${cfg.label}…`} onChange={e => set('nom', e.target.value)} />
+                  <input className={s.fldIn} value={form.nom ?? ''} placeholder={`Nom du/de la ${cfg.label}…`} maxLength={255} onChange={e => set('nom', toName(e.target.value))} />
+                  <span className={s.fldHint}>Enregistré automatiquement en majuscules.</span>
+                  {submitted && errors.nom && <span style={errStyle}>{errors.nom}</span>}
                 </div>
                 <div className={s.fld}>
                   <label className={s.fldL}>Code <span className={s.required}>*</span></label>
-                  <input className={s.fldIn} value={form.code ?? ''} placeholder="ex: GN-C"
-                    onChange={e => set('code', e.target.value.toUpperCase())} style={{ fontFamily: 'var(--font-m)' }} />
+                  <input className={s.fldIn} value={form.code ?? ''} placeholder="ex: GN-C" maxLength={50}
+                    onChange={e => set('code', toCode(e.target.value))} style={{ fontFamily: 'var(--font-m)' }} />
                   <span className={s.fldHint}>Identifiant unique.</span>
+                  {submitted && errors.code && <span style={errStyle}>{errors.code}</span>}
                 </div>
                 <div className={s.fld}>
                   <label className={s.fldL}>Statut</label>
@@ -710,12 +760,14 @@ export default function GeoModal({ mode, level, item, allData, parents, onSave, 
                 {/* Nom + Code + Statut */}
                 <div className={`${s.fld} ${s.fldFull}`}>
                   <label className={s.fldL}>Nom de la zone <span className={s.required}>*</span></label>
-                  <input className={s.fldIn} value={form.nom ?? ''} placeholder="Ex : Centre-Ville Élargi…" onChange={e => set('nom', e.target.value)} />
+                  <input className={s.fldIn} value={form.nom ?? ''} placeholder="Ex : CENTRE-VILLE ÉLARGI…" maxLength={255} onChange={e => set('nom', toName(e.target.value))} />
+                  {submitted && errors.nom && <span style={errStyle}>{errors.nom}</span>}
                 </div>
                 <div className={s.fld}>
                   <label className={s.fldL}>Code <span className={s.required}>*</span></label>
-                  <input className={s.fldIn} value={form.code ?? ''} placeholder="ex: Z-KA-CENTRE"
-                    onChange={e => set('code', e.target.value.toUpperCase())} style={{ fontFamily: 'var(--font-m)' }} />
+                  <input className={s.fldIn} value={form.code ?? ''} placeholder="ex: Z-KA-CENTRE" maxLength={50}
+                    onChange={e => set('code', toCode(e.target.value))} style={{ fontFamily: 'var(--font-m)' }} />
+                  {submitted && errors.code && <span style={errStyle}>{errors.code}</span>}
                 </div>
                 <div className={s.fld}>
                   <label className={s.fldL}>Statut</label>
@@ -773,11 +825,18 @@ export default function GeoModal({ mode, level, item, allData, parents, onSave, 
         </div>
 
         {/* ── Pied ── */}
+        {error && (
+          <div role="alert" style={{ margin: '0 20px 10px', padding: '9px 14px', fontSize: 12.5, color: 'var(--rose)',
+            background: 'rgba(225,29,72,.08)', border: '1px solid rgba(225,29,72,.25)', borderRadius: 'var(--r-sm)',
+            display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <i className="fas fa-triangle-exclamation" style={{ marginTop: 2 }} /> <span>{error}</span>
+          </div>
+        )}
         <div className={s.modalFoot}>
-          <button className={s.btnSecondary} onClick={onClose}>Annuler</button>
-          <button className={s.btnPrimary} onClick={handleSubmit} disabled={!isFormValid}>
-            <i className="fas fa-check" />
-            {mode === 'create' ? 'Créer' : 'Enregistrer'}
+          <button className={s.btnSecondary} onClick={onClose} disabled={saving}>Annuler</button>
+          <button className={s.btnPrimary} onClick={handleSubmit} disabled={saving}>
+            <i className={`fas ${saving ? 'fa-circle-notch fa-spin' : 'fa-check'}`} />
+            {saving ? 'Enregistrement…' : mode === 'create' ? 'Créer' : 'Enregistrer'}
             {level === 'zone' && couvertureIds.length > 0 && (
               <span style={{ marginLeft: 6, fontSize: 10, opacity: .8 }}>({couvertureIds.length} entité{couvertureIds.length > 1 ? 's' : ''})</span>
             )}
