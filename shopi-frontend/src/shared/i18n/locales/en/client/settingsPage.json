@@ -70,7 +70,10 @@
       "prochainPts": "pts",
       "pointsGagnes": "Points earned this month",
       "pointsUtilises": "Points used",
-      "expirationProchaine": "Next expiration"
+      "expirationProchaine": "Next expiration",
+      "loadError": "Unable to load your points.",
+      "reessayer": "Retry",
+      "inactif": "The Shoneya Points program is not open yet: no points are awarded for now. Your level and balance will appear here once it opens."
     },
     "activite": {
       "titre": "Activity log",

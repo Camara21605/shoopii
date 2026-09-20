@@ -70,7 +70,10 @@
       "prochainPts": "分",
       "pointsGagnes": "本月获得积分",
       "pointsUtilises": "已使用积分",
-      "expirationProchaine": "下次过期"
+      "expirationProchaine": "下次过期",
+      "loadError": "无法加载您的积分。",
+      "reessayer": "重试",
+      "inactif": "Shoneya 积分计划尚未开放，目前不发放积分。开放后，您的等级和余额将显示在此处。"
     },
     "activite": {
       "titre": "活动日志",

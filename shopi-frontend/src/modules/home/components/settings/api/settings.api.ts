@@ -32,6 +32,8 @@ export interface PointsData {
   niveau: string; prochainNiveau: string | null;
   seuilProchain: number | null; progression: number;
   expirationProchaine: string | null;
+  /** false = aucun point n'a encore jamais été attribué (programme pas encore ouvert) */
+  actif: boolean;
 }
 
 export interface SecuriteData {

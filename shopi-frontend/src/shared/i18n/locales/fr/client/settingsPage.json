@@ -70,7 +70,10 @@
       "prochainPts": "pts",
       "pointsGagnes": "Points gagnés ce mois",
       "pointsUtilises": "Points utilisés",
-      "expirationProchaine": "Expiration prochaine"
+      "expirationProchaine": "Expiration prochaine",
+      "loadError": "Impossible de charger vos points.",
+      "reessayer": "Réessayer",
+      "inactif": "Le programme Shoneya Points n'est pas encore ouvert : aucun point n'est attribué pour l'instant. Votre niveau et votre solde apparaîtront ici dès l'ouverture."
     },
     "activite": {
       "titre": "Journal d'activité",

@@ -4,17 +4,19 @@
  * CONNECTÉ — GET /client/parametres/points
  * ================================================================ */
 
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { settingsApi, type PointsData } from '../../api/settings.api';
 
 export function PointsSection() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [pts,     setPts]     = useState<PointsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState(false);
   const fillRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setError(false);
     settingsApi.getPoints()
       .then(data => {
         setPts(data);
@@ -22,8 +24,19 @@ export function PointsSection() {
           if (fillRef.current) fillRef.current.style.width = `${data.progression}%`;
         }, 300);
       })
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  /* Erreur : message + « Réessayer » (avant : roue de chargement infinie) */
+  if (!loading && error) return (
+    <div style={{ background:'var(--white)', border:'1.5px solid var(--bdr)', borderRadius:'var(--r-xl)', padding:28, marginBottom:20, textAlign:'center', color:'var(--t3)', fontSize:13 }}>
+      {t('settingsPage.points.loadError')}{' '}
+      <button type="button" onClick={() => { setLoading(true); load(); }} style={{ background:'none', border:'none', cursor:'pointer', fontWeight:700, color:'var(--blue)' }}>{t('settingsPage.points.reessayer')}</button>
+    </div>
+  );
 
   if (loading || !pts) return (
     <div style={{ background:'var(--white)', border:'1.5px solid var(--bdr)', borderRadius:'var(--r-xl)', padding:28, marginBottom:20 }}>
@@ -55,7 +68,7 @@ export function PointsSection() {
           {[
             { v: pts.pointsGagnes,   l: t('settingsPage.points.pointsGagnes') },
             { v: pts.pointsUtilises, l: t('settingsPage.points.pointsUtilises') },
-            { v: pts.expirationProchaine ?? '—', l: t('settingsPage.points.expirationProchaine') },
+            { v: pts.expirationProchaine ? new Date(pts.expirationProchaine).toLocaleDateString(i18n.language, { dateStyle: 'medium' }) : '—', l: t('settingsPage.points.expirationProchaine') },
           ].map((st, i) => (
             <div key={i} style={{ background:'var(--g50)', border:'1px solid var(--bdr)', borderRadius:'var(--r-md)', padding:12 }}>
               <div style={{ fontFamily:'var(--fd)', fontSize:16, fontWeight:700, color:'var(--t1)' }}>{typeof st.v === 'number' ? st.v.toLocaleString('fr-FR') : st.v}</div>
@@ -63,6 +76,12 @@ export function PointsSection() {
             </div>
           ))}
         </div>
+        {!pts.actif && (
+          <div style={{ display:'flex', gap:10, alignItems:'flex-start', marginTop:16, padding:'12px 14px', borderRadius:'var(--r-md)', background:'var(--sky)', border:'1px solid var(--sky-3)', fontSize:12, color:'var(--t2)', lineHeight:1.6 }}>
+            <i className="fas fa-circle-info" style={{ color:'var(--blue)', marginTop:2 }} />
+            <div>{t('settingsPage.points.inactif')}</div>
+          </div>
+        )}
       </div>
     </div>
   );
